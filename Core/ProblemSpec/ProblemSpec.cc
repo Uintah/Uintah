@@ -16,9 +16,13 @@
 #include <xercesc/dom/DOMImplementation.hpp>
 #include <xercesc/dom/DOMImplementationRegistry.hpp>
 #include <xercesc/dom/DOMElement.hpp>
+#include <xercesc/dom/DOMException.hpp>
 #include <xercesc/dom/DOMNode.hpp>
 #include <xercesc/dom/DOMText.hpp>
 #include <xercesc/dom/DOMNamedNodeMap.hpp>
+#include <xercesc/dom/DOMWriter.hpp>
+#include <xercesc/framework/LocalFileFormatTarget.hpp>
+#include <xercesc/framework/StdOutFormatTarget.hpp>
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/util/XMLString.hpp>
 #include <xercesc/util/PlatformUtils.hpp>
@@ -165,7 +169,6 @@ ProblemSpecP ProblemSpec::removeChild(ProblemSpecP child) {
   else 
     return 0;
 }
-
 
 //______________________________________________________________________
 //
@@ -1092,6 +1095,9 @@ ProblemSpecP ProblemSpec::createElement(char* str) {
 }
 void ProblemSpec::appendText(const char* str) {
   XMLCh* newstr = XMLString::transcode(str);
+  DOMNode* dn = d_node;
+  DOMDocument* dd = d_node->getOwnerDocument();
+  DOMNode* dt = dd->createTextNode(newstr);
   d_node->appendChild(d_node->getOwnerDocument()->createTextNode(newstr));
   delete [] newstr;
 }
@@ -1100,6 +1106,7 @@ void ProblemSpec::appendText(const char* str) {
 // preceded by \n with tabs tabs (default 0), and followed by a newline
 ProblemSpecP ProblemSpec::appendChild(const char *str, int tabs) {
   ostringstream ostr;
+  ostr.clear();
   ostr << "\n";
   for (int i = 0; i < tabs; i++)
     ostr << "\t";
@@ -1122,6 +1129,59 @@ void ProblemSpec::appendChild(ProblemSpecP pspec) {
   d_node->appendChild(pspec->d_node);
 }
 
+void ProblemSpec::addStylesheet(char* type, char* name) {
+   ASSERT((strcmp(type, "css") == 0) || strcmp(type, "xsl") == 0);
+
+   XMLCh* str1 = XMLString::transcode("xml-stylesheet");
+
+   ostringstream str;
+   str << " type=\"text/" << type << "\" href=\"" << name << "\"";
+   XMLCh* str2 = XMLString::transcode(str.str().c_str());
+
+   DOMProcessingInstruction* pi = d_node->getOwnerDocument()->createProcessingInstruction(str1,str2);
+
+   delete [] str1;
+   delete [] str2;
+
+   d_node->getOwnerDocument()->insertBefore((DOMNode*)pi, (DOMNode*)(d_node->getOwnerDocument()->getDocumentElement()));
+
+}
+
+// filename is a default param (NULL)
+//   call with no parameters or NULL to output
+//   to stdout
+void ProblemSpec::output(char* filename) const {
+  XMLCh* tempStr = XMLString::transcode("LS");
+  DOMImplementation *impl = DOMImplementationRegistry::getDOMImplementation(tempStr);
+  delete [] tempStr;
+
+  DOMWriter* writer = ((DOMImplementationLS*)impl)->createDOMWriter();
+  if (writer->canSetFeature(XMLUni::fgDOMWRTFormatPrettyPrint, true))
+    writer->setFeature(XMLUni::fgDOMWRTFormatPrettyPrint, true);
+
+  XMLFormatTarget *target;
+  if (filename == NULL)
+    target = new StdOutFormatTarget();
+  else
+    target = new LocalFileFormatTarget(filename);
+
+  try {
+    // do the serialization through DOMWriter::writeNode();
+    writer->writeNode(target, *(d_node->getOwnerDocument()));
+  }
+  catch (const XMLException& toCatch) {
+    char* message = XMLString::transcode(toCatch.getMessage());
+    string ex(message);
+    delete [] message;
+    throw ProblemSetupException(ex);
+  }
+  catch (const DOMException& toCatch) {
+    char* message = XMLString::transcode(toCatch.msg);
+    string ex(message);
+    delete [] message;
+    throw ProblemSetupException(ex);
+  }
+}
 
 void ProblemSpec::releaseDocument() {
   d_node->getOwnerDocument()->release();
@@ -1216,6 +1276,14 @@ std::ostream& operator<<(std::ostream& target, const DOMNode* toWrite) {
       //   name.
       //MLCh *enc_name = XMLPlatformUtils::fgTransService->getEncodingName();
       target << "<?xml version='1.0' encoding='ISO-8859-1' ?>\n";
+
+      DOMNode *brother = toWrite->getNextSibling();
+      while(brother != 0)
+        {
+          target << brother << endl;
+          brother = brother->getNextSibling();
+        }
+
       DOMNode *child = toWrite->getFirstChild();
       while(child != 0)
         {
