@@ -10,6 +10,8 @@
 #include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h> 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -31,6 +33,7 @@
 #include <Packages/Uintah/Core/Grid/SymmetryBoundCond.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
@@ -63,6 +66,12 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   d_rigid_body = false;
   d_numIterations=0;
   d_doGridReset = true;
+  d_conv_crit_disp   = 1.e-10;
+  d_conv_crit_energy = 4.e-10;
+  d_forceIncrementFactor = 1.0;
+  d_integrator = Implicit;
+  d_dynamic = true;
+  d_useLoadCurves = false;
 }
 
 bool ImpMPM::restartableTimesteps()
@@ -101,21 +110,18 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
    if (mpm_ps) {
      mpm_ps->get("time_integrator",integrator_type);
      mpm_ps->get("do_grid_reset",  d_doGridReset);
+     mpm_ps->get("ForceBC_force_increment_factor",d_forceIncrementFactor);
+     mpm_ps->get("use_load_curves", d_useLoadCurves);
      if (integrator_type == "implicit"){
        d_integrator = Implicit;
-       d_conv_crit_disp   = 1.e-10;
-       d_conv_crit_energy = 4.e-10;
        mpm_ps->get("convergence_criteria_disp",  d_conv_crit_disp);
        mpm_ps->get("convergence_criteria_energy",d_conv_crit_energy);
+       mpm_ps->get("dynamic",d_dynamic);
      }
-     else
-       if (integrator_type == "explicit")
-	 d_integrator = Explicit;
-   } else
-     d_integrator = Implicit;
-
-    if (!mpm_ps->get("dynamic",dynamic))
-       dynamic = true;
+     else{
+      throw ProblemSetupException("Can't use explicit integration with -impm");
+     }
+   }
 
    //Search for the MaterialProperties block and then get the MPM section
 
@@ -139,6 +145,13 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
       cout << "single" << endl;
    }
 
+   if(d_useLoadCurves){
+    MPMPhysicalBCFactory::create(prob_spec);
+    if( (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size()==0) {
+     throw ProblemSetupException("No load curve in ups, d_useLoadCurve==true?");
+    }
+   }
+
    int numMatls=0;
    for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
@@ -148,9 +161,6 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      sharedState->registerMPMMaterial(mat);
      numMatls++;
    }
-   string solver;
-   if (!mpm_ps->get("solver",solver))
-     solver = "simple";
 
 #ifdef HAVE_PETSC
    d_solver = vector<MPMPetscSolver*>(numMatls);
@@ -265,6 +275,7 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
     d_perproc_patches->addReference();
   }
 
+  scheduleApplyExternalLoads(             sched, d_perproc_patches,matls);
   scheduleInterpolateParticlesToGrid(     sched, d_perproc_patches,matls);
   scheduleDestroyMatrix(                  sched, d_perproc_patches,matls,false);
   scheduleCreateMatrix(                   sched, d_perproc_patches,matls);
@@ -285,6 +296,21 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
 				    lb->pParticleIDLabel, matls);
 }
 
+void ImpMPM::scheduleApplyExternalLoads(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls)
+                                                                                
+{
+  Task* t=scinew Task("MPM::applyExternalLoads",
+                    this, &ImpMPM::applyExternalLoads);
+                                                                                
+  t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
+  t->computes(             lb->pExtForceLabel_preReloc);
+
+  sched->addTask(t, patches, matls);
+                                                                                
+}
+
 void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 						const PatchSet* patches,
 						const MaterialSet* matls)
@@ -298,13 +324,13 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 
   Task* t = scinew Task("ImpMPM::interpolateParticlesToGrid",
 			this,&ImpMPM::interpolateParticlesToGrid);
-  t->requires(Task::OldDW, lb->pMassLabel,         Ghost::AroundNodes,1);
-  t->requires(Task::OldDW, lb->pVolumeLabel,       Ghost::AroundNodes,1);
-  t->requires(Task::OldDW, lb->pVolumeOldLabel,    Ghost::AroundNodes,1);
-  t->requires(Task::OldDW, lb->pAccelerationLabel, Ghost::AroundNodes,1);
-  t->requires(Task::OldDW, lb->pVelocityLabel,     Ghost::AroundNodes,1);
-  t->requires(Task::OldDW, lb->pXLabel,            Ghost::AroundNodes,1);
-  t->requires(Task::OldDW, lb->pExternalForceLabel,Ghost::AroundNodes,1);
+  t->requires(Task::OldDW, lb->pMassLabel,             Ghost::AroundNodes,1);
+  t->requires(Task::OldDW, lb->pVolumeLabel,           Ghost::AroundNodes,1);
+  t->requires(Task::OldDW, lb->pVolumeOldLabel,        Ghost::AroundNodes,1);
+  t->requires(Task::OldDW, lb->pAccelerationLabel,     Ghost::AroundNodes,1);
+  t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::AroundNodes,1);
+  t->requires(Task::OldDW, lb->pXLabel,                Ghost::AroundNodes,1);
+  t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,Ghost::AroundNodes,1);
 
   t->computes(lb->gMassLabel);
   t->computes(lb->gMassLabel,d_sharedState->getAllInOneMatl(),
@@ -621,7 +647,6 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pAccelerationLabel_preReloc);
   t->computes(lb->pXLabel_preReloc);
   t->computes(lb->pXXLabel);
-  t->computes(lb->pExtForceLabel_preReloc);
   t->computes(lb->pParticleIDLabel_preReloc);
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pVolumeLabel_preReloc);
@@ -800,6 +825,101 @@ void ImpMPM::iterate(const ProcessorGroup*,
   new_dw->setScrubbing(new_dw_scrubmode);
 }
 
+void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
+{
+  // Get the current time
+  double time = d_sharedState->getElapsedTime();
+  cout_doing << "Current Time (applyExternalLoads) = " << time << endl;
+                                                                                
+  // Calculate the force vector at each particle for each bc
+  std::vector<double> forceMagPerPart;
+  std::vector<NormalForceBC*> nfbcP;
+  if (d_useLoadCurves) {
+    // Currently, only one load curve at a time is supported, but
+    // I've left the infrastructure in place to go to multiple
+    for (int ii = 0;
+             ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
+
+      string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+      if (bcs_type == "Pressure") {
+        cerr << "Pressure BCs not supported in ImpMPM" << endl;
+      }
+      if (bcs_type == "NormalForce") {
+        NormalForceBC* nfbc =
+         dynamic_cast<NormalForceBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+        nfbcP.push_back(nfbc);
+
+        // Calculate the force per particle at current time
+        forceMagPerPart.push_back(nfbc->getLoad(time));
+      }
+    }
+  }
+                                                                                
+  // Loop thru patches to update external force vector
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+                                                                                
+    cout_doing <<"Doing applyExternalLoads on patch "
+               << patch->getID() << "\t MPM"<< endl;
+                                                                                
+    // Place for user defined loading scenarios to be defined,
+    // otherwise pExternalForce is just carried forward.
+                                                                                
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+                                                                                
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+                                                                                
+      if (d_useLoadCurves) {
+        // Get the external force data and allocate new space for
+        // external force
+        constParticleVariable<Vector> pExternalForce;
+        ParticleVariable<Vector> pExternalForce_new;
+        old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
+        new_dw->allocateAndPut(pExternalForce_new,
+                               lb->pExtForceLabel_preReloc,  pset);
+
+        double mag = forceMagPerPart[0];
+        // Iterate over the particles
+        ParticleSubset::iterator iter = pset->begin();
+        for(;iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          // For particles with an existing external force, apply the
+          // new magnitude to the same direction.
+          if(pExternalForce[idx].length() > 1.e-7){
+            pExternalForce_new[idx] = mag*
+                       (pExternalForce[idx]/pExternalForce[idx].length());
+          } else{
+            pExternalForce_new[idx] = Vector(0.,0.,0.);
+          }
+        }
+      } else {
+                                                                                
+        // Get the external force data and allocate new space for
+        // external force and copy the data
+        constParticleVariable<Vector> pExternalForce;
+        ParticleVariable<Vector> pExternalForce_new;
+        old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
+        new_dw->allocateAndPut(pExternalForce_new,
+                               lb->pExtForceLabel_preReloc,  pset);
+                                                                                
+        // Iterate over the particles
+        ParticleSubset::iterator iter = pset->begin();
+        for(;iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          pExternalForce_new[idx] = pExternalForce[idx]*d_forceIncrementFactor;
+        }
+      }
+    } // matl loop
+  }  // patch loop
+}
+
 void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset* ,
@@ -830,13 +950,13 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 					       Ghost::AroundNodes, 1,
 					       lb->pXLabel);
 
-      old_dw->get(px,             lb->pXLabel,             pset);
-      old_dw->get(pmass,          lb->pMassLabel,          pset);
-      old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
-      old_dw->get(pvolumeold,     lb->pVolumeOldLabel,     pset);
-      old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
-      old_dw->get(pacceleration,  lb->pAccelerationLabel,  pset);
-      old_dw->get(pexternalforce, lb->pExternalForceLabel, pset);
+      old_dw->get(px,             lb->pXLabel,                 pset);
+      old_dw->get(pmass,          lb->pMassLabel,              pset);
+      old_dw->get(pvolume,        lb->pVolumeLabel,            pset);
+      old_dw->get(pvolumeold,     lb->pVolumeOldLabel,         pset);
+      old_dw->get(pvelocity,      lb->pVelocityLabel,          pset);
+      old_dw->get(pacceleration,  lb->pAccelerationLabel,      pset);
+      new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
 
       // Create arrays for the grid data
       NCVariable<double> gmass,gvolume;
@@ -887,7 +1007,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	  if(patch->containsNode(ni[k])) {
 	    gmass[ni[k]]          += pmass[idx]          * S[k];
 	    gvolume[ni[k]]        += pvolumeold[idx]     * S[k];
-	    gexternalforce[ni[k]] += pexternalforce[idx] * S[k];
+            gexternalforce[ni[k]] += pexternalforce[idx] * S[k];
 	    gvelocity_old[ni[k]]  += pmom                * S[k];
 	    gacceleration[ni[k]]  += pmassacc            * S[k];
 	  }
@@ -1358,7 +1478,7 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
 				 DataWarehouse* /*old_dw*/,
 				 DataWarehouse* new_dw)
 {
-  if (!dynamic)
+  if (!d_dynamic)
     return;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1526,7 +1646,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
         v[2] = extForce[n].z() + intForce[n].z();
 
         // temp2 = M*a^(k-1)(t+dt)
-        if (dynamic) {
+        if (d_dynamic) {
           v[0] -= (dispNew[n].x()*fodts - velocity[n].x()*fodt -
                    accel[n].x())*mass[n];
           v[1] -= (dispNew[n].y()*fodts - velocity[n].y()*fodt -
@@ -1674,7 +1794,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
       parent_new_dw->get(contact,      lb->gContactLabel,  dwi,patch,gnone,0);
 
       double oneifdyn = 0.;
-      if(dynamic){
+      if(d_dynamic){
         oneifdyn = 1.;
       }
 
@@ -1819,7 +1939,7 @@ void ImpMPM::computeAcceleration(const ProcessorGroup*,
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw)
 {
-  if (!dynamic)
+  if (!d_dynamic)
     return;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1928,9 +2048,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(newpvolumeold,lb->pVolumeOldLabel_preReloc, pset);
       new_dw->allocateAndPut(pTemp,      lb->pTemperatureLabel_preReloc, pset);
       new_dw->allocateAndPut(pDisp,      lb->pDispLabel_preReloc,        pset);
-      new_dw->allocateAndPut(pexternalForceNew,
-			     lb->pExtForceLabel_preReloc,pset);
-      pexternalForceNew.copyData(pexternalForce);
 
       new_dw->get(dispNew,      lb->dispNewLabel,      dwindex, patch, gac, 1);
       new_dw->get(gacceleration,lb->gAccelerationLabel,dwindex, patch, gac, 1);
