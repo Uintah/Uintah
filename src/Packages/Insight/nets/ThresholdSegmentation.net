@@ -17,9 +17,24 @@
 
 # SCI Network 1.0
 
-set DATADIR $env(INSIGHT_DATA)
+set DATADIR .
+if [info exists env(INSIGHT_DATA)] {
+   set DATADIR $env(INSIGHT_DATA)
+}
 
 ::netedit dontschedule
+
+global userName
+set userName ""
+
+global runDate
+set runDate ""
+
+global runTime
+set runTime ""
+
+global notes
+set notes ""
 
 set m0 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat2D" 10 10]
 set m1 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat2D" 217 10]
@@ -34,6 +49,7 @@ set m9 [addModuleAtPosition "Insight" "Converters" "ImageToField" 546 117]
 set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 546 324]
 set m11 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 737 114]
 set m12 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 737 210]
+set m13 [addModuleAtPosition "Insight" "Filters" "CannySegmentationLevelSetImageFilter" 410 2]
 
 addConnection $m1 0 $m2 0
 addConnection $m2 0 $m3 1
@@ -60,15 +76,15 @@ set $m2-time_step {0.25}
 set $m2-iterations {10}
 set $m2-conductance_parameter {1}
 set $m3-notes {}
-set $m3-lower_threshold {210}
-set $m3-upper_threshold {250}
+set $m3-lower_threshold {140}
+set $m3-upper_threshold {190}
 set $m3-curvature_scaling {1}
 set $m3-propagation_scaling {1}
-set $m3-edge_weight {0}
-set $m3-max_iterations {300}
+set $m3-edge_weight {0.0}
+set $m3-max_iterations {1500}
 set $m3-max_rms_change {0.02}
 set $m3-reverse_expansion_direction {1}
-set $m3-isovalue {0.5}
+set $m3-isovalue {127.5}
 set $m3-smoothing_iterations {0}
 set $m3-smoothing_time_step {0.1}
 set $m3-smoothing_conductance {0.5}
@@ -76,9 +92,9 @@ set $m4-notes {}
 set $m4-copy {0}
 set $m5-notes {}
 set $m5-tcl_status {Calling GenStandardColorMaps!}
-set $m5-positionList {{0 40} {532 0}}
-set $m5-nodeList {795 1157}
-set $m5-width {532}
+set $m5-positionList {{0 38} {394 4}}
+set $m5-nodeList {769 1320}
+set $m5-width {398}
 set $m5-height {40}
 set $m5-mapType {3}
 set $m5-minRes {12}
@@ -103,6 +119,7 @@ set $m7-vectors-on {0}
 set $m7-normalize-vectors {}
 set $m7-has_vector_data {0}
 set $m7-bidirectional {0}
+set $m7-vector-usedefcolor {0}
 set $m7-tensors-on {0}
 set $m7-has_tensor_data {0}
 set $m7-scalars-on {0}
@@ -199,8 +216,6 @@ set $m8-ViewWindow_0-global-type {Gouraud}
 set $m8-ViewWindow_0-ortho-view {0}
 set $m8-ViewWindow_0-unused {1}
 set $m8-ViewWindow_0-unused {1}
-set $m8-ViewWindow_0-unused {1}
-set $m8-ViewWindow_0-unused {1}
 set $m9-notes {}
 set $m9-copy {0}
 set $m10-notes {}
@@ -216,6 +231,7 @@ set $m10-vectors-on {0}
 set $m10-normalize-vectors {}
 set $m10-has_vector_data {0}
 set $m10-bidirectional {0}
+set $m10-vector-usedefcolor {0}
 set $m10-tensors-on {0}
 set $m10-has_tensor_data {0}
 set $m10-scalars-on {0}
@@ -273,5 +289,15 @@ set $m12-isFixed {0}
 set $m12-min {0}
 set $m12-max {251}
 set $m12-makeSymmetric {0}
+set $m13-notes {}
+set $m13-iterations {10}
+set $m13-reverse_expansion_direction {1}
+set $m13-max_rms_change {0.001}
+set $m13-threshold {0.001}
+set $m13-variance {10}
+set $m13-propagation_scaling {1.0}
+set $m13-advection_scaling {1.0}
+set $m13-curvature_scaling {1.0}
+set $m13-isovalue {1}
 
 ::netedit scheduleok

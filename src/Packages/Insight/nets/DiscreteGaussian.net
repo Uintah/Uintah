@@ -18,7 +18,10 @@
 
 # SCI Network 1.0
 
-set DATADIR $env(INSIGHT_DATA)
+set DATADIR .
+if [info exists env(INSIGHT_DATA)] {
+   set DATADIR $env(INSIGHT_DATA)
+}
 
 ::netedit dontschedule
 
