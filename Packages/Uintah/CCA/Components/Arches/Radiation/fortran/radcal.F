@@ -118,10 +118,10 @@ c     Convert to (1/m)
 
 160             CONTINUE
 
-c                 FV = SFV(I,J,K)
-c                 CALL SOOT(I,J,K,OMEGA,FV,OPL,TEMP,ABSKP)
+                 FV = SFV(I,J,K)
+                 CALL SOOT(OMEGA,FV,ABSKP)
 
-c                 ABSKG(I,J,K)=ABSKG(I,J,K)+ABSKP
+                 ABSKG(I,J,K)=ABSKG(I,J,K)+ABSKP
 C     Calculate blackbody emissive intensity (emissive power / pi)
 C     Based on function for fractional emission in each waveband 
 C     provided by Chang and Rhee (1984).
