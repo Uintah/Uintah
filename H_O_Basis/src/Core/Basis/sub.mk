@@ -30,6 +30,7 @@ SRCS     +=      $(SRCDIR)/CrvLinearLgn.cc             \
                  $(SRCDIR)/QuadBilinearLgn.cc          \
                  $(SRCDIR)/TetLinearLgn.cc             \
                  $(SRCDIR)/TriLinearLgn.cc             \
+                 $(SRCDIR)/TriQuadraticLgn.cc             \
 
 
 PSELIBS :=
