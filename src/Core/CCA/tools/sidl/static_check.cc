@@ -87,10 +87,10 @@ void Package::gatherSymbols(SymbolTable* names)
 void Interface::staticCheck(SymbolTable* names)
 {
   /* Handle builtin types - Object  */
-  if(mymethods && !interface_extends && fullname() != ".CIA.Interface"){
+  if(mymethods && !interface_extends && fullname() != ".SIDL.Interface"){
     if(!interface_extends)
       interface_extends=new ScopedNameList();
-    interface_extends->prepend(new ScopedName("CIA", "Interface"));
+    interface_extends->prepend(new ScopedName("SIDL", "Interface"));
   }
 
   /* Check extends list */
@@ -162,8 +162,8 @@ void Interface::gatherSymbols(SymbolTable* names)
 void Class::staticCheck(SymbolTable* names)
 {
   /* Handle builtin types - Object  */
-  if(mymethods && !class_extends && fullname() != ".CIA.Object"){
-    class_extends=new ScopedName("CIA", "Object");
+  if(mymethods && !class_extends && fullname() != ".SIDL.Object"){
+    class_extends=new ScopedName("SIDL", "Object");
   }
 
   /* Check extends class */
@@ -420,10 +420,10 @@ void Method::staticCheck(SymbolTable* names)
 		 << (*iter)->getName() << '\n';
 	    exit(1);
 	  }
-	  Class* t=c->findParent(".CIA.Throwable");
+	  Class* t=c->findParent(".SIDL.BaseException");
 	  if(!t){
 	    cerr << curfile << ':' << lineno
-		 << ": (127) method must throw a derivative of .CIA.Throwable: "
+		 << ": (127) method must throw a derivative of .SIDL.BaseException: "
 		 << (*iter)->getName() << '\n';
 	    exit(1);
 	  }
