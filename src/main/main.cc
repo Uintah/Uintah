@@ -194,6 +194,7 @@ main(int argc, char *argv[] )
   gui->eval("set DataflowTCL "PSECORETCL,result);
   gui->eval("set CoreTCL "SCICORETCL,result);
   gui->eval("set SCIRUN_SRCDIR "SCIRUN_SRCDIR,result);
+  gui->eval("set SCIRUN_OBJDIR "SCIRUN_OBJDIR,result);
   gui->eval("lappend auto_path "SCICORETCL,result);
   gui->eval("lappend auto_path "PSECORETCL,result);
   gui->eval("lappend auto_path "ITCL_WIDGETS,result);
@@ -309,7 +310,10 @@ main(int argc, char *argv[] )
 
   // load the packages
   packageDB->loadPackage();
-
+  
+  // Check the dynamic compilation directory for validity
+  gui->eval("getOnTheFlyLibsDir",result);
+  setenv ("SCIRUN_ON_THE_FLY_LIBS_DIR",result.c_str(),true);
 
   // Activate "File" menu sub-menus once packages are all loaded.
   gui->execute("activate_file_submenus");
