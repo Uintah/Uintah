@@ -21,6 +21,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Containers/Array1.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 
 #include <iostream>
@@ -132,7 +133,8 @@ NrrdJoin::execute()
     ++pi; ++i;
   }
   
-  Nrrd* arr[nrrds.size()];
+  Array1<Nrrd*> arr(nrrds.size());
+//  Nrrd* arr[nrrds.size()];
   if (do_join) {
 
     NrrdData *onrrd = new NrrdData(true);
@@ -183,7 +185,7 @@ NrrdJoin::execute()
     }
     
     onrrd->nrrd = nrrdNew();
-    if (nrrdJoin(onrrd->nrrd, arr, nrrds.size(), axis, incr_dim_.get())) {
+    if (nrrdJoin(onrrd->nrrd, &(arr[0]), nrrds.size(), axis, incr_dim_.get())) {
       char *err = biffGetDone(NRRD);
       error(string("Join Error: ") +  err);
       free(err);
