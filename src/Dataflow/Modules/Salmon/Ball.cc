@@ -155,8 +155,8 @@ void BallData::Draw(void)
     glLoadIdentity();
     glScaled(r,r,r);
     GLUquadricObj *qobj = gluNewQuadric();
-    gluQuadricDrawStyle(qobj, GLU_FILL);      
-    gluQuadricNormals(qobj, GLU_SMOOTH);
+    gluQuadricDrawStyle(qobj, (GLenum)GLU_FILL);      
+    gluQuadricNormals(qobj, (GLenum)GLU_SMOOTH);
     glShadeModel(GL_SMOOTH);
     glDisable(GL_LIGHTING);
 //    gluSphere(qobj,1.0,30,30);
@@ -296,6 +296,9 @@ void Ball_DrawResultArc(BallData *ball)
 
 //
 // $Log$
+// Revision 1.2  1999/11/16 23:16:17  dav
+// Added typecast to GLenum for linux compile
+//
 // Revision 1.1  1999/07/27 16:57:50  mcq
 // Initial commit
 //
