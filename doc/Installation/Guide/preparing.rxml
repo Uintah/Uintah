@@ -32,15 +32,11 @@ DEALINGS IN THE SOFTWARE.
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
 <section id="sec.prepare">
-  <title id="title.prepare">Before Starting &sr;</title>
+  <title id="title.prepare">Before Starting SCIRun</title>
 
   <para>
-    Before starting &sr;:
+    Before starting SCIRun:
     <itemizedlist>
-      <listitem os="osx">
-	<para>Increase the open files limit&#x2014;
-	<xref linkend="sec.prepare.limits"/></para>
-      </listitem>
       <listitem>
 	<para>Understand <firstterm>dynamic compilation</firstterm>&#x2014;
 	<xref linkend="sec.dyncomp"/></para>
@@ -54,30 +50,14 @@ DEALINGS IN THE SOFTWARE.
     The following sections discuss each of these tasks.
   </para>
 
-  <section os="osx" id="sec.prepare.limits">
-    <title id="sec.title.prepare.limits">Increasing the Open Files Limit
-    </title>
-    <para>
-      Before starting &sr; the limit on the number of open files must be
-      increased.  Users of csh-type shells must type the command:
-      <literallayout class="monospaced">
-limit descriptors unlimited
-      </literallayout>
-      Users of sh-type shells must type:
-      <literallayout class="monospaced">
-ulimit -n unlimited
-      </literallayout>
-    </para>
-  </section>
-
   <section id="sec.dyncomp">
     <title id="title.dyncomp">Dynamic Compilation</title>
 
-    <para>Before starting &sr; users
+    <para>Before starting SCIRun users
     should be aware of a feature called <firstterm>Dynamic
     Compilation</firstterm>.</para>
 
-    <para>Dynamic compilation is a technique used by &sr; to discover
+    <para>Dynamic compilation is a technique used by SCIRun to discover
     and generate code for the data types and algorithms used by
     modules.  This is done at runtime and is done once for each
     new data type and algorithm encountered.  This technique provides a
@@ -108,13 +88,13 @@ setenv SCIRUN_ON_THE_FLY_LIBS_DIR ~/scratch/SCIRun_otfl
       The location of the <quote>on-the-fly</quote> directory can also be
       changed by setting the value of
       <envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar> in the
-      <filename>.scirunrc</filename> file. This file is read by &sr; at
+      <filename>.scirunrc</filename> file. This file is read by SCIRun at
       startup. <filename>.scirunrc</filename> could contain, for example:
       <literallayout class="monospaced">
-SCIRUN_ON_THE_FLY_LIBS_DIR=$(HOME)/&sr;_otf
+SCIRUN_ON_THE_FLY_LIBS_DIR=$(HOME)/SCIRun_otf
       </literallayout>
       See the <ulink url= "(%= doc.treeUrl(%Q{doc/User/Guide/usersguide/srug4_5.html}) %)">
-      <citetitle>&sr; Users Guide</citetitle></ulink> for more information
+      <citetitle>SCIRun Users Guide</citetitle></ulink> for more information
       on the use of <filename>.scirunrc</filename>.
     </para>
 
@@ -125,7 +105,7 @@ SCIRUN_ON_THE_FLY_LIBS_DIR=$(HOME)/&sr;_otf
 
     <para>
       The environment variables <envar>SCIRUN_DATA</envar> and
-      <envar>SCIRUN_DATASET</envar> specify the complete path to a &sr;
+      <envar>SCIRUN_DATASET</envar> specify the complete path to a SCIRun
       <firstterm>data set</firstterm>.  <envar>SCIRUN_DATA</envar> specifies
       a directory that contains a collection of data set directories.
       <envar>SCIRUN_DATA</envar> is used in conjunction with
@@ -134,22 +114,22 @@ SCIRUN_ON_THE_FLY_LIBS_DIR=$(HOME)/&sr;_otf
     </para>
 
     <para>
-      When working with &sr;'s <ulink url="(%= doc.treeUrl(%Q{doc/User/Tutorials/SCIRun_Intro/index.html}) %)">tutorial</ulink>, 
+      When working with SCIRun's <ulink url="(%= doc.treeUrl(%Q{doc/User/Tutorials/SCIRun_Intro/index.html}) %)">tutorial</ulink>, 
       the value of <envar>SCIRUN_DATA</envar> must refer to the sample
-      data sets directory, <filename>&sr;Data</filename>.  
+      data sets directory, <filename>SCIRunData</filename>.  
     </para>
     <para>
       for sh-type shells type:
       <literallayout class="monospaced">
-SCIRUN_DATA=<replaceable>path-to-&sr;Data</replaceable>
+SCIRUN_DATA=<replaceable>path-to-SCIRunData</replaceable>
 export SCIRUN_DATA
       </literallayout>
       for csh-type shells type:
       <literallayout class="monospaced">
-setenv SCIRUN_DATA <replaceable>path-to-&sr;Data</replaceable>
+setenv SCIRUN_DATA <replaceable>path-to-SCIRunData</replaceable>
       </literallayout>
       <envar>SCIRUN_DATASET</envar> must refer to one of the data set
-      directories within <filename>&sr;Data</filename>,
+      directories within <filename>SCIRunData</filename>,
       e.g. <filename>utahtorso</filename>:
       <literallayout class="monospaced">
 SCIRUN_DATASET=utahtorso

@@ -94,7 +94,6 @@ DEALINGS IN THE SOFTWARE.
       From <acronym>SCI</acronym>'s <ulink
       url="http://software.sci.utah.edu/archive_entry.html">software
       archive</ulink> page download the following files:
-
       <itemizedlist>
 	<listitem>
 	  <para>
@@ -123,23 +122,24 @@ DEALINGS IN THE SOFTWARE.
 
   <section id="sec.rpm_install">
     <title>Installing</title>
-
-
     <para>
-      The following procedure installs the documentation
-      in the directory <filename>/usr/local</filename>
+      The following procedure installs SCIRun in directory
+      <filename>/usr/local/SCIRun</filename>.  After intallation is complete,
+      commands for starting SCIRun and its PowerApps can be found in
+      <filename>/usr/local/SCIRun/bin</filename>
+      (<filename>/usr/local/SCIRun/bin/scirun</filename>,
+      <filename>/usr/local/SCIRun/bin/BioImage, etc.</filename>)
     </para>
     <para>
-      Use the <command>su</command> command to become the root user.  Then
-      <command>cd</command> to the directory containing the compressed
-      documentation tarball and type:
+      Use the <command>su</command> command to become the root user.
+      Then <command>cd</command> to the directory containing the
+      SCIRun RPM and type:
       <literallayout class="monospaced">
 rpm -ivh SCIRun-<!--%= doc.version %-->-<replaceable>system</replaceable>.rpm
       </literallayout>
     </para>
     <para>The RPM should take approximately one minute to
-      install.</para>
-
+    install.</para>
     <para>
       Type <command>exit</command> to leave the root account.
     </para>

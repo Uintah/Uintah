@@ -44,8 +44,8 @@ DEALINGS IN THE SOFTWARE.
       functions for the parallel solution of partial differential equations.
     </para>
     <para>
-      When <acronym>PETSc</acronym> libraries are installed, and &sr;
-      is configured to use them, &sr;'s SolveMatrix module enables the
+      When <acronym>PETSc</acronym> libraries are installed, and SCIRun
+      is configured to use them, SCIRun's SolveMatrix module enables the
       use of <acronym>PETSc</acronym> solvers.
     </para>
     <para>
@@ -54,7 +54,7 @@ DEALINGS IN THE SOFTWARE.
     </para>
     <para>
       <acronym>PETSc</acronym> is built and installed from its source
-      code distribution.  &sr; supports <acronym>PETSc</acronym>
+      code distribution.  SCIRun supports <acronym>PETSc</acronym>
       versions 2.1.5 and 2.1.6.  These are older versions of PETSc and
       are available via a web browser from the following site:
       <literallayout class="monospaced">
@@ -66,18 +66,18 @@ DEALINGS IN THE SOFTWARE.
 	<itemizedlist>
 	  <listitem os="linux">
 	    <para>
-	      The &sr; <phraseos="linux"><acronym>RPM</acronym></phrase><phrase
+	      The SCIRun <phrase os="linux"><acronym>RPM</acronym></phrase><phrase
               os="osx"><acronym>DMG</acronym></phrase> distribution does
 	      <emphasis>not</emphasis> include support for
 	      <acronym>PETSc</acronym>.  <acronym>PETSc</acronym>
-	      support is available only through the &sr; source code
+	      support is available only through the SCIRun source code
 	      distribution.
 	    </para>
 	  </listitem>
 	  <listitem>
 	    <para>
-	      &sr;  supports only the uniprocessor build of
-	      <acronym>PETSc</acronym>.  &sr; assumes a shared memory
+	      SCIRun  supports only the uniprocessor build of
+	      <acronym>PETSc</acronym>.  SCIRun assumes a shared memory
 	      architecture, while multi-processor
 	      <acronym>PETSc</acronym> assumes a distributed memory
 	      architecture.
@@ -98,7 +98,7 @@ DEALINGS IN THE SOFTWARE.
 	  <listitem>
 	    <para>
 	      <acronym>PETSc</acronym> must be installed before
-	      installing &sr;. See <xref
+	      installing SCIRun. See <xref
 	      
 	      linkend="sec.petsc_inst"/> for
 	      <acronym>PETSc</acronym> installation instructions.
@@ -106,10 +106,10 @@ DEALINGS IN THE SOFTWARE.
 	  </listitem>
 	  <listitem>
 	    <para>
-	      &sr; must be configured to support
+	      SCIRun must be configured to support
 	      <acronym>PETSc</acronym>.  See <xref
 	      linkend="sec.petsc_sr_config"/> for information on
-	      configuring &sr; to use <acronym>PETSc</acronym>.
+	      configuring SCIRun to use <acronym>PETSc</acronym>.
 	    </para>
 	  </listitem>
 	</itemizedlist>
@@ -199,9 +199,9 @@ setenv PETSC_DIR `pwd`
 	  </para>
 	</listitem>
 	<listitem>
-	  <para os="osx" class="monospaced">
+	  <para os="osx">
 	    Configure <acronym>PETSc</acronym>:
-	    <literallayout>
+	    <literallayout class="monospaced">
 ./config/configure.py --with-mpi=0
 	    </literallayout>
 	  </para>
@@ -234,11 +234,11 @@ make test
   </section>
 
   <section id="sec.petsc_sr_config">
-    <title id="title.petsc_sr_config">&sr; <acronym>PETSc</acronym>
+    <title id="title.petsc_sr_config">SCIRun <acronym>PETSc</acronym>
     Configure Options</title>
 
     <para>The configure options below add support for PETSc
-    in &sr;.  Include these options in the &sr;
+    in SCIRun.  Include these options in the SCIRun
     <command>configure</command> command (see <xref linkend="sec.build-sr"
     />).
     <variablelist>
@@ -277,22 +277,22 @@ make test
       </varlistentry>
     </variablelist>
     </para>
-    <para>Here is an example &sr;  <command>configure</command> command:
+    <para>Here is an example SCIRun  <command>configure</command> command:
     <literallayout class="monospaced">
 ../src/configure \
 --enable-package="BioPSE MatlabInterface Teem" \
 --with-unipetsc=/usr/local/petsc \
-<phrase os="linux;irix">--with-thirdparty=/usr/local/&sr;/Thirdparty/1.22.0/Irix/CC-32bit \
+<phrase os="linux;irix">--with-thirdparty=/usr/local/SCIRun/Thirdparty/1.22.0/Irix/CC-32bit \
 --with-blas=/usr/local/lib \
 --with-lapack=/usr/local/lib</phrase>
-<phrase os="osx">--with-thirdparty=/usr/local/&sr;/Thirdparty_osx</phrase>
+<phrase os="osx">--with-thirdparty=/usr/local/SCIRun/Thirdparty_osx</phrase>
     </literallayout></para>
   </section>
 
   <section>
     <title>The SolveMatrix Module</title>
 
-    <para>When &sr; is built with <acronym>PETSc</acronym> support, the
+    <para>When SCIRun is built with <acronym>PETSc</acronym> support, the
     SolveMatrix module allows the user choose to from one of 12
     <acronym>PETSc</acronym> solvers.</para>
 
