@@ -61,10 +61,10 @@ using SCIRun::Thread;
 #define ADD_BRICKBRACK
 #define ADD_VIS_FEM
 #define ADD_HEAD
-#define ADD_CSAFE_FIRE
-#define ADD_GEO_DATA
-#define ADD_SHEEP
-#define ADD_DTIGLYPH
+//#define ADD_CSAFE_FIRE
+//#define ADD_GEO_DATA
+//#define ADD_SHEEP
+//#define ADD_DTIGLYPH
 
 #ifdef ADD_DTIGLYPH
 
@@ -1033,6 +1033,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   CutGroup *vcut = new CutGroup(vcpdpy, true);
   vcut->add(vinst);
+  vcut->name_ = "Visible Femarle Cut Plane";
 
   vinst->addCPDpy(vcpdpy);
 #endif
@@ -1123,6 +1124,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   CutGroup *fire_cut = new CutGroup(fcpdpy, true);
   fire_cut->add(fire_inst);
+  fire_cut->name_ = "CSAFE Fire Cut";
 
   fire_inst->addCPDpy(fcpdpy);
 #endif

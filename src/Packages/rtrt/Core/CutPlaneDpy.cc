@@ -35,19 +35,19 @@ namespace rtrt {
 CutPlaneDpy::CutPlaneDpy(const Vector& n, const Point& cen)
   : PlaneDpy(n, cen), cen(cen)
 {
+  set_resolution(150,150);
   on = true;
   dscale = 0.5;
   doanimate = true;
-  set_resolution(150,150);
 }
 CutPlaneDpy::CutPlaneDpy(const Vector& n, const double d)
   : PlaneDpy(n, d)
 {
+  set_resolution(150,150);
   cen = Point(0,0,0)+n*d;
   on = true;
   dscale = 0.5;
   doanimate = true;
-  set_resolution(150,150);
 }
 
 CutPlaneDpy::~CutPlaneDpy()
@@ -274,7 +274,6 @@ void CutPlaneDpy::button_motion(MouseButton button, const int x, const int y) {
 
 void CutPlaneDpy::button_released(MouseButton button, const int x, const int y)
 {
-  doanimate = prev_doanimate;
   if (button == MouseButton1) {
     starty=y;
     move(x, y);
@@ -323,6 +322,7 @@ void CutPlaneDpy::button_released(MouseButton button, const int x, const int y)
     rotsphere=false;
     redraw=true;
   }
+  doanimate = prev_doanimate;
 }
 
 void CutPlaneDpy::move(int x, int y)
