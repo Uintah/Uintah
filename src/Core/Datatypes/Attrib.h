@@ -41,7 +41,7 @@ public:
   // GROUP:  Constructors/Destructor
   //////////
   //
-  Attrib(): d_unitName("OM"), d_authorName("Alex"), d_date("october 30"), d_orgName("U"), d_name("justName"){};
+  Attrib(){};
   virtual ~Attrib() { };
   
   // GROUP: Class interface functions
@@ -52,7 +52,7 @@ public:
   // Casts down to handle to attribute of specific type.
   // Returns empty handle if it was not successeful cast
   template <class T> LockingHandle<T> downcast(T*) {
-    T* rep = dynamic_cast<T *>(this);
+    T* rep = dynamic_cast<T*>(this);
     return LockingHandle<T>(rep);
   }
 
