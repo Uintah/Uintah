@@ -1846,7 +1846,7 @@ AC_SUBST(NBITS)
 ##  SCI_LAB_TP_DEFAULT is used to add "standard" library search paths
 ##  for those of us who are too lazy to type out all the --with paths
 
-TP_VERSION=1.7.0
+TP_VERSION=1.7
 TP_ARCH=`uname -s`
 TP_COMPILER=gcc-3.0.4
 ac_try="$CC -v > /dev/null 2> conftest.out"

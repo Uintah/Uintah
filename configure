@@ -3551,7 +3551,7 @@ echo "configure:3507: checking for `basename $MAKE` version 3.78.1" >&5
     fi
   
 
-for ac_prog in mawk gawk nawk awk
+for ac_prog in gawk mawk nawk awk
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -3862,7 +3862,7 @@ else
 #line 3863 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw ();
 #endif
 #include <stdio.h>
 main()
@@ -3927,7 +3927,7 @@ esac
 ##  SCI_LAB_TP_DEFAULT is used to add "standard" library search paths
 ##  for those of us who are too lazy to type out all the --with paths
 
-TP_VERSION=1.7.0
+TP_VERSION=1.7
 TP_ARCH=`uname -s`
 TP_COMPILER=gcc-3.0.4
 ac_try="$CC -v > /dev/null 2> conftest.out"
@@ -40342,7 +40342,7 @@ fi
 
 if test "$HAVE_LIB_F" && test "$HAVE_LIB_BLAS"; then
   if test "$with_lapack"; then
-    dirs="$with_lapack/lib $LIB_DIR_BLAS $SCI_LAB_TP_LIBS"
+    dirs="$with_lapack/lib $with_lapack $LIB_DIR_BLAS $SCI_LAB_TP_LIBS"
   else
     dirs="$LIB_DIR_BLAS $SCI_LAB_TP_LIBS"
   fi
@@ -42995,7 +42995,7 @@ if test "$HAVE_LIB_MPI" && test "$HAVE_LIB_BLAS" &&
        echo "   paths:      $dirs"
        echo "   lib name:   petsc"
        echo "   function:   main"
-       echo "   other-libs: "
+       echo "   other-libs: $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_FLAG"
        echo "   c++ lib:    "
        echo "   optional:   optional"
     fi
@@ -43079,7 +43079,7 @@ echo "configure:43072: checking for main in -lpetsc" >&5
     ##########################
     ## OTHER-LIBRARIES parameter
 
-    _SCI_OTHER_LIBS_=""
+    _SCI_OTHER_LIBS_="$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_FLAG"
 
     if test -z "main"; then
 
@@ -43614,7 +43614,9 @@ EOF
        echo "   paths:      $LIB_DIR_PETSC"
        echo "   lib name:   petscvec"
        echo "   function:   main"
-       echo "   other-libs: $PETSC_LIB_FLAG"
+       echo "   other-libs: $PETSC_LIB_FLAG \
+		$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_FLAG \
+		$F_LIB_FLAG"
        echo "   c++ lib:    "
        echo "   optional:   optional"
     fi
@@ -43673,7 +43675,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for file libpetscvec.so and libpetscvec.a""... $ac_c" 1>&6
-echo "configure:43677: checking for file libpetscvec.so and libpetscvec.a" >&5
+echo "configure:43679: checking for file libpetscvec.so and libpetscvec.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -43681,13 +43683,13 @@ echo "configure:43677: checking for file libpetscvec.so and libpetscvec.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpetscvec""... $ac_c" 1>&6
-echo "configure:43685: checking for -lpetscvec" >&5
+echo "configure:43687: checking for -lpetscvec" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpetscvec""... $ac_c" 1>&6
-echo "configure:43691: checking for main in -lpetscvec" >&5
+echo "configure:43693: checking for main in -lpetscvec" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -43698,7 +43700,9 @@ echo "configure:43691: checking for main in -lpetscvec" >&5
     ##########################
     ## OTHER-LIBRARIES parameter
 
-    _SCI_OTHER_LIBS_="$PETSC_LIB_FLAG"
+    _SCI_OTHER_LIBS_="$PETSC_LIB_FLAG \
+		$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_FLAG \
+		$F_LIB_FLAG"
 
     if test -z "main"; then
 
@@ -43930,7 +43934,9 @@ EOF
        echo "   paths:      $LIB_DIR_PETSC"
        echo "   lib name:   petscmat"
        echo "   function:   main"
-       echo "   other-libs: $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG"
+       echo "   other-libs: $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG \
+		$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_FLAG \
+		$F_LIB_FLAG"
        echo "   c++ lib:    "
        echo "   optional:   optional"
     fi
@@ -43989,7 +43995,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for file libpetscmat.so and libpetscmat.a""... $ac_c" 1>&6
-echo "configure:43993: checking for file libpetscmat.so and libpetscmat.a" >&5
+echo "configure:43999: checking for file libpetscmat.so and libpetscmat.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -43997,13 +44003,13 @@ echo "configure:43993: checking for file libpetscmat.so and libpetscmat.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpetscmat""... $ac_c" 1>&6
-echo "configure:44001: checking for -lpetscmat" >&5
+echo "configure:44007: checking for -lpetscmat" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpetscmat""... $ac_c" 1>&6
-echo "configure:44007: checking for main in -lpetscmat" >&5
+echo "configure:44013: checking for main in -lpetscmat" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -44014,7 +44020,9 @@ echo "configure:44007: checking for main in -lpetscmat" >&5
     ##########################
     ## OTHER-LIBRARIES parameter
 
-    _SCI_OTHER_LIBS_="$PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG"
+    _SCI_OTHER_LIBS_="$PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG \
+		$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_FLAG \
+		$F_LIB_FLAG"
 
     if test -z "main"; then
 
@@ -44246,7 +44254,9 @@ EOF
        echo "   paths:      $LIB_DIR_PETSC"
        echo "   lib name:   petscdm"
        echo "   function:   main"
-       echo "   other-libs: $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG"
+       echo "   other-libs: $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG \
+		$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_FLAG \
+		$F_LIB_FLAG"
        echo "   c++ lib:    "
        echo "   optional:   optional"
     fi
@@ -44305,7 +44315,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for file libpetscdm.so and libpetscdm.a""... $ac_c" 1>&6
-echo "configure:44309: checking for file libpetscdm.so and libpetscdm.a" >&5
+echo "configure:44319: checking for file libpetscdm.so and libpetscdm.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -44313,13 +44323,13 @@ echo "configure:44309: checking for file libpetscdm.so and libpetscdm.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpetscdm""... $ac_c" 1>&6
-echo "configure:44317: checking for -lpetscdm" >&5
+echo "configure:44327: checking for -lpetscdm" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpetscdm""... $ac_c" 1>&6
-echo "configure:44323: checking for main in -lpetscdm" >&5
+echo "configure:44333: checking for main in -lpetscdm" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -44330,7 +44340,9 @@ echo "configure:44323: checking for main in -lpetscdm" >&5
     ##########################
     ## OTHER-LIBRARIES parameter
 
-    _SCI_OTHER_LIBS_="$PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG"
+    _SCI_OTHER_LIBS_="$PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG \
+		$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_FLAG \
+		$F_LIB_FLAG"
 
     if test -z "main"; then
 
@@ -44562,7 +44574,9 @@ EOF
        echo "   paths:      $LIB_DIR_PETSC"
        echo "   lib name:   petsccontrib"
        echo "   function:   main"
-       echo "   other-libs: $PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG"
+       echo "   other-libs: $PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG \
+		$PETSC_LIB_FLAG $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG \
+		$BLAS_LIB_FLAG $F_LIB_FLAG"
        echo "   c++ lib:    "
        echo "   optional:   optional"
     fi
@@ -44621,7 +44635,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for file libpetsccontrib.so and libpetsccontrib.a""... $ac_c" 1>&6
-echo "configure:44625: checking for file libpetsccontrib.so and libpetsccontrib.a" >&5
+echo "configure:44639: checking for file libpetsccontrib.so and libpetsccontrib.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -44629,13 +44643,13 @@ echo "configure:44625: checking for file libpetsccontrib.so and libpetsccontrib.
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpetsccontrib""... $ac_c" 1>&6
-echo "configure:44633: checking for -lpetsccontrib" >&5
+echo "configure:44647: checking for -lpetsccontrib" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpetsccontrib""... $ac_c" 1>&6
-echo "configure:44639: checking for main in -lpetsccontrib" >&5
+echo "configure:44653: checking for main in -lpetsccontrib" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -44646,7 +44660,9 @@ echo "configure:44639: checking for main in -lpetsccontrib" >&5
     ##########################
     ## OTHER-LIBRARIES parameter
 
-    _SCI_OTHER_LIBS_="$PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG"
+    _SCI_OTHER_LIBS_="$PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG \
+		$PETSC_LIB_FLAG $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG \
+		$BLAS_LIB_FLAG $F_LIB_FLAG"
 
     if test -z "main"; then
 
@@ -44878,7 +44894,9 @@ EOF
        echo "   paths:      $LIB_DIR_PETSC"
        echo "   lib name:   petscsles"
        echo "   function:   main"
-       echo "   other-libs: $PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG"
+       echo "   other-libs: $PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG \
+		$PETSC_LIB_FLAG $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG \
+		$BLAS_LIB_FLAG $F_LIB_FLAG"
        echo "   c++ lib:    "
        echo "   optional:   optional"
     fi
@@ -44937,7 +44955,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for file libpetscsles.so and libpetscsles.a""... $ac_c" 1>&6
-echo "configure:44941: checking for file libpetscsles.so and libpetscsles.a" >&5
+echo "configure:44959: checking for file libpetscsles.so and libpetscsles.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -44945,13 +44963,13 @@ echo "configure:44941: checking for file libpetscsles.so and libpetscsles.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpetscsles""... $ac_c" 1>&6
-echo "configure:44949: checking for -lpetscsles" >&5
+echo "configure:44967: checking for -lpetscsles" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpetscsles""... $ac_c" 1>&6
-echo "configure:44955: checking for main in -lpetscsles" >&5
+echo "configure:44973: checking for main in -lpetscsles" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -44962,7 +44980,9 @@ echo "configure:44955: checking for main in -lpetscsles" >&5
     ##########################
     ## OTHER-LIBRARIES parameter
 
-    _SCI_OTHER_LIBS_="$PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG"
+    _SCI_OTHER_LIBS_="$PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG \
+		$PETSC_LIB_FLAG $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG \
+		$BLAS_LIB_FLAG $F_LIB_FLAG"
 
     if test -z "main"; then
 
@@ -45194,9 +45214,10 @@ EOF
        echo "   paths:      $LIB_DIR_PETSC"
        echo "   lib name:   petscsnes"
        echo "   function:   main"
-       echo "   other-libs: \
-     $PETSCSLES_LIB_FLAG $PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG        \
-     $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG"
+       echo "   other-libs: $PETSCSLES_LIB_FLAG $PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG \
+		$PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG \
+		$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_FLAG \
+		$F_LIB_FLAG"
        echo "   c++ lib:    "
        echo "   optional:   optional"
     fi
@@ -45255,7 +45276,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for file libpetscsnes.so and libpetscsnes.a""... $ac_c" 1>&6
-echo "configure:45259: checking for file libpetscsnes.so and libpetscsnes.a" >&5
+echo "configure:45280: checking for file libpetscsnes.so and libpetscsnes.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -45263,13 +45284,13 @@ echo "configure:45259: checking for file libpetscsnes.so and libpetscsnes.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpetscsnes""... $ac_c" 1>&6
-echo "configure:45267: checking for -lpetscsnes" >&5
+echo "configure:45288: checking for -lpetscsnes" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpetscsnes""... $ac_c" 1>&6
-echo "configure:45273: checking for main in -lpetscsnes" >&5
+echo "configure:45294: checking for main in -lpetscsnes" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -45280,9 +45301,10 @@ echo "configure:45273: checking for main in -lpetscsnes" >&5
     ##########################
     ## OTHER-LIBRARIES parameter
 
-    _SCI_OTHER_LIBS_="\
-     $PETSCSLES_LIB_FLAG $PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG        \
-     $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG"
+    _SCI_OTHER_LIBS_="$PETSCSLES_LIB_FLAG $PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG \
+		$PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG \
+		$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_FLAG \
+		$F_LIB_FLAG"
 
     if test -z "main"; then
 
@@ -45515,8 +45537,10 @@ EOF
        echo "   lib name:   petscts"
        echo "   function:   main"
        echo "   other-libs: \
-     $PETSCSNES_LIB_FLAG $PETSCSLES_LIB_FLAG $PETSCDM_LIB_FLAG       \
-     $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG"
+		$PETSCSNES_LIB_FLAG $PETSCSLES_LIB_FLAG $PETSCDM_LIB_FLAG \
+		$PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG \
+		$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_FLAG \
+		$F_LIB_FLAG"
        echo "   c++ lib:    "
        echo "   optional:   optional"
     fi
@@ -45575,7 +45599,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for file libpetscts.so and libpetscts.a""... $ac_c" 1>&6
-echo "configure:45579: checking for file libpetscts.so and libpetscts.a" >&5
+echo "configure:45603: checking for file libpetscts.so and libpetscts.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -45583,13 +45607,13 @@ echo "configure:45579: checking for file libpetscts.so and libpetscts.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpetscts""... $ac_c" 1>&6
-echo "configure:45587: checking for -lpetscts" >&5
+echo "configure:45611: checking for -lpetscts" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpetscts""... $ac_c" 1>&6
-echo "configure:45593: checking for main in -lpetscts" >&5
+echo "configure:45617: checking for main in -lpetscts" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -45601,8 +45625,10 @@ echo "configure:45593: checking for main in -lpetscts" >&5
     ## OTHER-LIBRARIES parameter
 
     _SCI_OTHER_LIBS_="\
-     $PETSCSNES_LIB_FLAG $PETSCSLES_LIB_FLAG $PETSCDM_LIB_FLAG       \
-     $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG"
+		$PETSCSNES_LIB_FLAG $PETSCSLES_LIB_FLAG $PETSCDM_LIB_FLAG \
+		$PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG \
+		$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_FLAG \
+		$F_LIB_FLAG"
 
     if test -z "main"; then
 
@@ -45836,7 +45862,8 @@ EOF
      INC_PETSC_H="$INC_PETSC_H -I$LIB_DIR_PETSC/../../../bmake/$PETSC_ARCH"
      PETSC_EXTRA_LIB_FLAG="$PETSCCONTRIB_LIB_FLAG \
        $PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG $PETSCSLES_LIB_FLAG \
-       $PETSCSNES_LIB_FLAG $PETSCTS_LIB_FLAG $PETSCVEC_LIB_FLAG"
+       $PETSCSNES_LIB_FLAG $PETSCTS_LIB_FLAG $PETSCVEC_LIB_FLAG \
+       $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $F_LIB_FLAG"
   fi 
 else
   echo "configure: warning: One or more of MPI or BLAS or LAPACK is missing." 1>&2
@@ -45891,7 +45918,7 @@ if test "$DEF_PETSC" &&
 
     if test "$debugging" = "yes"; then
        echo "SCI CHECK HEADERS:"
-       echo "   paths:       $LIB_DIR_PETSC/../../../include"
+       echo "   paths:       $LIB_DIR_PETSC/../../../include /usr/include/petsc"
        echo "   headers:     petsc.h petscsles.h"
        echo "   other-paths: $INC_MPIUNI_H -I$LIB_DIR_PETSC/../../../bmake/$PETSC_ARCH"
        echo "   c++ lib:     "
@@ -45905,7 +45932,7 @@ if test "$DEF_PETSC" &&
     # In other words, to see if the compiler can find it by itself
     # before we test explicit paths.
 
-    _SCI_CHECK_PATHS_="$LIB_DIR_PETSC/../../../include NO_EXPLICIT_PATH"
+    _SCI_CHECK_PATHS_="$LIB_DIR_PETSC/../../../include /usr/include/petsc NO_EXPLICIT_PATH"
     ########################
     # HEADERS parameter:
 
@@ -45956,7 +45983,7 @@ if test "$DEF_PETSC" &&
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:45960: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:45987: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -46072,7 +46099,7 @@ echo "configure:45960: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:46076: checking for $_HEADER_" >&5
+echo "configure:46103: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -46282,7 +46309,7 @@ fi
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:46286: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:46313: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -46398,7 +46425,7 @@ echo "configure:46286: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:46402: checking for $_HEADER_" >&5
+echo "configure:46429: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -46537,9 +46564,9 @@ esac
 
 # This is typical on SGI and ??
 echo $ac_n "checking for uuid_create in sys/uuid.h""... $ac_c" 1>&6
-echo "configure:46541: checking for uuid_create in sys/uuid.h" >&5
+echo "configure:46568: checking for uuid_create in sys/uuid.h" >&5
 cat > conftest.$ac_ext <<EOF
-#line 46543 "configure"
+#line 46570 "configure"
 #include "confdefs.h"
 #include <sys/types.h>
              extern "C" {
@@ -46552,7 +46579,7 @@ char* uuid_str;
 	 uuid_create(&uuid, &status);
 ; return 0; }
 EOF
-if { (eval echo configure:46556: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:46583: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   have_uuid=yes
          cat >> confdefs.h <<\EOF
@@ -46571,9 +46598,9 @@ echo "$ac_t""$have_uuid" 1>&6
 if test "$have_uuid" != "yes"; then
   # This is typical on linux and ??
   echo $ac_n "checking for uuid_generate in uuid/uuid.h""... $ac_c" 1>&6
-echo "configure:46575: checking for uuid_generate in uuid/uuid.h" >&5
+echo "configure:46602: checking for uuid_generate in uuid/uuid.h" >&5
   cat > conftest.$ac_ext <<EOF
-#line 46577 "configure"
+#line 46604 "configure"
 #include "confdefs.h"
 
 extern "C" { // The linux uuid.h doesn't have this, so we need exter C here
@@ -46586,7 +46613,7 @@ uuid_t uuid;
 	 uuid_unparse(uuid, uuid_str);
 ; return 0; }
 EOF
-if { (eval echo configure:46590: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:46617: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   have_uuid=yes
          cat >> confdefs.h <<\EOF
@@ -46605,12 +46632,12 @@ fi
 
 if test "$have_uuid" = "yes"; then
   echo $ac_n "checking for uuid library""... $ac_c" 1>&6
-echo "configure:46609: checking for uuid library" >&5
+echo "configure:46636: checking for uuid library" >&5
   old_LIBS=$LIBS
   for i in "" -luuid; do
     LIBS="$old_LIBS $i"
     cat > conftest.$ac_ext <<EOF
-#line 46614 "configure"
+#line 46641 "configure"
 #include "confdefs.h"
 
 #if HAVE_SYS_UUID_H
@@ -46648,7 +46675,7 @@ int main() {
 	
 ; return 0; }
 EOF
-if { (eval echo configure:46652: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:46679: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   
   UUID_LIB=$i
