@@ -163,6 +163,8 @@ private:
 private:
 
       double d_deltaT;
+      int d_nofScalars;
+
       PhysicalConstants* d_physicalConsts;
       NonlinearSolver* d_nlSolver;
       // properties...solves density, temperature and species concentrations
@@ -177,9 +179,7 @@ private:
       //    const VarLabel* d_deltLabel;
       const VarLabel* d_densityLabel;
       const VarLabel* d_pressureLabel;
-      const VarLabel* d_xScalarLabel;
-      const VarLabel* d_yScalarLabel;
-      const VarLabel* d_zScalarLabel;
+      vector<const VarLabel*> d_scalarLabel;
       const VarLabel* d_uVelocityLabel;
       const VarLabel* d_vVelocityLabel;
       const VarLabel* d_wVelocityLabel;
@@ -192,6 +192,10 @@ private:
 
 //
 // $Log$
+// Revision 1.25  2000/06/12 21:29:59  bbanerje
+// Added first Fortran routines, added Stencil Matrix where needed,
+// removed unnecessary CCVariables (e.g., sources etc.)
+//
 // Revision 1.24  2000/06/07 06:13:54  bbanerje
 // Changed CCVariable<Vector> to CCVariable<double> for most cases.
 // Some of these variables may not be 3D Vectors .. they may be Stencils

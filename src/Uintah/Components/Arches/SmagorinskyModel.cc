@@ -40,7 +40,7 @@ SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):
                                                  TurbulenceModel(), 
                                                  d_physicalConsts(phyConsts)
 {
-  // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
+  // BB : (**WARNING**) velocity is set as CCVariable (should be FCVariable)
   d_uVelocityLabel = scinew VarLabel("uVelocity",
 				    CCVariable<double>::getTypeDescription() );
   d_vVelocityLabel = scinew VarLabel("vVelocity",
@@ -51,6 +51,26 @@ SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityLabel = scinew VarLabel("viscosity",
 				   CCVariable<double>::getTypeDescription() );
+  d_cellTypeLabel = scinew VarLabel("celltype",
+				   CCVariable<int>::getTypeDescription() );
+  // BB : (**WARNING**) velocity src is set as CCVariable (should be FCVariable)
+  d_uLinSrcLabel = scinew VarLabel("uLinearSrc",
+				    CCVariable<double>::getTypeDescription() );
+  // BB : (**WARNING**) velocity src is set as CCVariable (should be FCVariable)
+  d_vLinSrcLabel = scinew VarLabel("vLinearSrc",
+				    CCVariable<double>::getTypeDescription() );
+  // BB : (**WARNING**) velocity src is set as CCVariable (should be FCVariable)
+  d_wLinSrcLabel = scinew VarLabel("wLinearSrc",
+				    CCVariable<double>::getTypeDescription() );
+  // BB : (**WARNING**) velocity src is set as CCVariable (should be FCVariable)
+  d_uNonLinSrcLabel = scinew VarLabel("uNonLinearSrc",
+				    CCVariable<double>::getTypeDescription() );
+  // BB : (**WARNING**) velocity src is set as CCVariable (should be FCVariable)
+  d_vNonLinSrcLabel = scinew VarLabel("vNonLinearSrc",
+				    CCVariable<double>::getTypeDescription() );
+  // BB : (**WARNING**) velocity src is set as CCVariable (should be FCVariable)
+  d_wNonLinSrcLabel = scinew VarLabel("wNonLinearSrc",
+				    CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -122,26 +142,26 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorContext* pc,
   // Get the velocity, density and viscosity from the old data warehouse
   // (tmp) velocity should be FCVariable
   int matlIndex = 0;
-  int nofGhostCells = 1;
+  int numGhostCells = 1;
   CCVariable<double> uVelocity;
   old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
+	      numGhostCells);
   CCVariable<double> vVelocity;
   old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
+	      numGhostCells);
   CCVariable<double> wVelocity;
   old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
+	      numGhostCells);
 
   CCVariable<double> density;
   old_dw->get(density, d_densityLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
+	      numGhostCells);
 
   CCVariable<double> viscosity;
   old_dw->get(viscosity, d_viscosityLabel, matlIndex, patch, Ghost::None,
-	      nofGhostCells);
+	      numGhostCells);
 
-#ifdef NOT_SURE_WHAT_THIS_DOES
+#ifdef WONT_COMPILE_YET
   // using chain of responsibility pattern for getting cell information
   DataWarehouseP top_dw = new_dw->getTop();
   PerPatch<CellInformation*> cellinfop;
@@ -167,7 +187,7 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorContext* pc,
   CCVariable<double> new_viscosity;
   new_dw->allocate(new_viscosity, d_viscosityLabel, matlIndex, patch);
 
-#ifdef NOT_COMPILED_YET
+#ifdef WONT_COMPILE_YET
   FORT_SMAGMODEL(new_viscosity, velocity, viscosity, density, mol_viscos,
 		 lowIndex, highIndex,
 		 cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
@@ -190,17 +210,33 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorContext* pc,
 //****************************************************************************
 void SmagorinskyModel::calcVelocityWallBC(const ProcessorContext* pc,
 					  const Patch* patch,
-					  const DataWarehouseP& old_dw,
+					  DataWarehouseP& old_dw,
 					  DataWarehouseP& new_dw,
 					  int index)
 {
-#if 0
-  FCVariable<Vector> velocity;
-  old_dw->get(velocity, "velocity", patch, 1);
+  int matlIndex = 0;
+  int numGhostCells = 1;
+  CCVariable<double> uVelocity;
+  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> vVelocity;
+  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> wVelocity;
+  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  //FCVariable<Vector> velocity;
+  //old_dw->get(velocity, "velocity", patch, 1);
+
   CCVariable<double> density;
-  old_dw->get(density, "density", patch, 1);
+  old_dw->get(density, d_densityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  //old_dw->get(density, "density", patch, 1);
+
   // using chain of responsibility pattern for getting cell information
   DataWarehouseP top_dw = new_dw->getTop();
+
+#ifdef WONT_COMPILE_YET
   PerPatch<CellInformation*> cellinfop;
   if(top_dw->exists("cellinfo", patch)){
     top_dw->get(cellinfop, "cellinfo", patch);
@@ -209,66 +245,126 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorContext* pc,
     top_dw->put(cellinfop, "cellinfo", patch);
   } 
   CellInformation* cellinfo = cellinfop;
-  Array3Index lowIndex = patch->getLowIndex();
-  Array3Index highIndex = patch->getHighIndex();
+#endif
+
+  IntVector lowIndex = patch->getCellLowIndex();
+  IntVector highIndex = patch->getCellHighIndex();
+
   // stores cell type info for the patch with the ghost cell type
   CCVariable<int> cellType;
-  top_dw->get(cellType, "CellType", patch, 1);
-  //get Molecular Viscosity of the fluid
-    //get physical constants
-  double mol_viscos; // molecular viscosity
-  mol_viscos = d_physicalConsts->getMolecularViscosity();
-  cellFieldType walltype = WALLTYPE;
-  if (Index == 1) {
-    //SP term in Arches
-    FCVariable<double> uLinearSrc;
-    new_dw->get(uLinearSrc, "uLinearSource", patch, 0);
-    // SU in Arches
-    FCVariable<double> uNonlinearSource;
-    new_dw->get(uNonlinearSrc, "uNonlinearSource", patch, 0);
-    // compute momentum source because of turbulence
-    FORT_BCUTURB(uLinearSrc, uNonlinearSrc, velocity,  
-		 density, mol_viscos, lowIndex, highIndex,
-		 cellType, cellinfo->x, cellinfo->y, cellinfo->z,
-		 cellinfo->xu, cellinfo->yv, cellinfo->zw);
-    new_dw->put(uLinearSrc, "uLinearSource", patch);
-    new_dw->put(uNonlinearSrc, "uNonlinearSource", patch);
-  }
+  top_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  //top_dw->get(cellType, "CellType", patch, 1);
 
-  else if (Index == 2) {
-    //SP term in Arches
-    FCVariable<double> vLinearSrc;
-    new_dw->get(vLinearSrc, "vLinearSource", patch, 0);
-    // SU in Arches
-    FCVariable<double> vNonlinearSource;
-    new_dw->get(vNonlinearSrc, "vNonlinearSource", patch, 0);
-    // compute momentum source because of turbulence
-    FORT_BCVTURB(vLinearSrc, vNonlinearSrc, velocity,  
-		 density, mol_viscos, lowIndex, highIndex,
-		 cellType, cellinfo->x, cellinfo->y, cellinfo->z,
-		 cellinfo->xu, cellinfo->yv, cellinfo->zw);
-    new_dw->put(vLinearSrc, "vLinearSource", patch);
-    new_dw->put(vNonlinearSrc, "vNonlinearSource", patch);
-  }
-  else if (Index == 3) {
-    //SP term in Arches
-    FCVariable<double> wLinearSrc;
-    new_dw->get(wLinearSrc, "wLinearSource", patch, 0);
-    // SU in Arches
-    FCVariable<double> wNonlinearSource;
-    new_dw->get(wNonlinearSrc, "wNonlinearSource", patch, 0);
-    // compute momentum source because of turbulence
-    FORT_BCWTURB(wLinearSrc, wNonlinearSrc, velocity,  
-		 density, mol_viscos, lowIndex, highIndex,
-		 cellType, cellinfo->x, cellinfo->y, cellinfo->z,
-		 cellinfo->xu, cellinfo->yv, cellinfo->zw);
-    new_dw->put(wLinearSrc, "wLinearSource", patch);
-    new_dw->put(wNonlinearSrc, "wNonlinearSource", patch);
-  }
-    else {
-    cerr << "Invalid Index value" << endl;
-  }
+  //get Molecular Viscosity of the fluid
+  double mol_viscos = d_physicalConsts->getMolecularViscosity();
+
+#ifdef WONT_COMPILE_YET
+  cellFieldType walltype = WALLTYPE;
 #endif
+
+  numGhostCells = 0;
+
+  switch(index) {
+  case 1:
+    {
+      //SP term in Arches
+      CCVariable<double> uLinearSrc;
+      new_dw->get(uLinearSrc, d_uLinSrcLabel, matlIndex, patch, Ghost::None,
+		  numGhostCells);
+      //FCVariable<double> uLinearSrc;
+      //new_dw->get(uLinearSrc, "uLinearSource", patch, 0);
+
+      // SU in Arches
+      CCVariable<double> uNonLinearSrc;
+      new_dw->get(uNonLinearSrc, d_uNonLinSrcLabel, matlIndex, patch, Ghost::None,
+		  numGhostCells);
+      //FCVariable<double> uNonlinearSource;
+      //new_dw->get(uNonlinearSrc, "uNonlinearSource", patch, 0);
+
+#ifdef WONT_COMPILE_YET
+      // compute momentum source because of turbulence
+      FORT_BCUTURB(uLinearSrc, uNonlinearSrc, velocity,  
+		   density, mol_viscos, lowIndex, highIndex,
+		   cellType, cellinfo->x, cellinfo->y, cellinfo->z,
+		   cellinfo->xu, cellinfo->yv, cellinfo->zw);
+#endif
+
+      new_dw->put(uLinearSrc, d_uLinSrcLabel, matlIndex, patch);
+      new_dw->put(uNonLinearSrc, d_uNonLinSrcLabel, matlIndex, patch);
+      //new_dw->put(uLinearSrc, "uLinearSource", patch);
+      //new_dw->put(uNonlinearSrc, "uNonlinearSource", patch);
+
+      break;
+    }
+  case 2:  
+    {
+      //SP term in Arches
+      CCVariable<double> vLinearSrc;
+      new_dw->get(vLinearSrc, d_vLinSrcLabel, matlIndex, patch, Ghost::None,
+		  numGhostCells);
+      //FCVariable<double> vLinearSrc;
+      //new_dw->get(vLinearSrc, "vLinearSource", patch, 0);
+
+      // SU in Arches
+      CCVariable<double> vNonLinearSrc;
+      new_dw->get(vNonLinearSrc, d_vNonLinSrcLabel, matlIndex, patch, Ghost::None,
+		  numGhostCells);
+      //FCVariable<double> vNonlinearSource;
+      //new_dw->get(vNonlinearSrc, "vNonlinearSource", patch, 0);
+
+#ifdef WONT_COMPILE_YET
+      // compute momentum source because of turbulence
+      FORT_BCVTURB(vLinearSrc, vNonlinearSrc, velocity,  
+		   density, mol_viscos, lowIndex, highIndex,
+		   cellType, cellinfo->x, cellinfo->y, cellinfo->z,
+		   cellinfo->xu, cellinfo->yv, cellinfo->zw);
+#endif
+
+      new_dw->put(vLinearSrc, d_vLinSrcLabel, matlIndex, patch);
+      new_dw->put(vNonLinearSrc, d_vNonLinSrcLabel, matlIndex, patch);
+      //new_dw->put(vLinearSrc, "vLinearSource", patch);
+      //new_dw->put(vNonlinearSrc, "vNonlinearSource", patch);
+
+      break;
+    }
+  case 3:
+    {
+      //SP term in Arches
+      CCVariable<double> wLinearSrc;
+      new_dw->get(wLinearSrc, d_wLinSrcLabel, matlIndex, patch, Ghost::None,
+		  numGhostCells);
+      //FCVariable<double> wLinearSrc;
+      //new_dw->get(wLinearSrc, "wLinearSource", patch, 0);
+
+      // SU in Arches
+      CCVariable<double> wNonLinearSrc;
+      new_dw->get(wNonLinearSrc, d_wNonLinSrcLabel, matlIndex, patch, Ghost::None,
+		  numGhostCells);
+      //FCVariable<double> wNonlinearSource;
+      //new_dw->get(wNonlinearSrc, "wNonlinearSource", patch, 0);
+
+#ifdef WONT_COMPILE_YET
+      // compute momentum source because of turbulence
+      FORT_BCWTURB(wLinearSrc, wNonlinearSrc, velocity,  
+		   density, mol_viscos, lowIndex, highIndex,
+		   cellType, cellinfo->x, cellinfo->y, cellinfo->z,
+		   cellinfo->xu, cellinfo->yv, cellinfo->zw);
+#endif
+
+      new_dw->put(wLinearSrc, d_wLinSrcLabel, matlIndex, patch);
+      new_dw->put(wNonLinearSrc, d_wNonLinSrcLabel, matlIndex, patch);
+      //new_dw->put(wLinearSrc, "wLinearSource", patch);
+          //new_dw->put(wNonlinearSrc, "wNonlinearSource", patch);
+
+      break;
+    }
+  default:
+    {
+      throw InvalidValue("Invalid Index value in CalcVelWallBC");
+      break;
+    }
+  }
 }
 
 
@@ -285,6 +381,10 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorContext* pc,
 
 //
 // $Log$
+// Revision 1.11  2000/06/12 21:30:00  bbanerje
+// Added first Fortran routines, added Stencil Matrix where needed,
+// removed unnecessary CCVariables (e.g., sources etc.)
+//
 // Revision 1.10  2000/06/07 06:13:56  bbanerje
 // Changed CCVariable<Vector> to CCVariable<double> for most cases.
 // Some of these variables may not be 3D Vectors .. they may be Stencils

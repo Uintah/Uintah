@@ -1,5 +1,5 @@
 //
-// $Id : $
+// $Id$
 //
 
 #ifndef Uintah_Components_Arches_Source_h
@@ -201,6 +201,10 @@ private:
   
 //
 // $Log$
+// Revision 1.10  2000/06/12 21:30:00  bbanerje
+// Added first Fortran routines, added Stencil Matrix where needed,
+// removed unnecessary CCVariables (e.g., sources etc.)
+//
 // Revision 1.9  2000/06/07 06:13:57  bbanerje
 // Changed CCVariable<Vector> to CCVariable<double> for most cases.
 // Some of these variables may not be 3D Vectors .. they may be Stencils

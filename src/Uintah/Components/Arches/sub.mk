@@ -18,18 +18,24 @@ SRCS     += $(SRCDIR)/Arches.cc $(SRCDIR)/BoundaryCondition.cc \
 	$(SRCDIR)/Source.cc
 
 
-#SUBDIRS := $(SRCDIR)/fortran
+SUBDIRS := $(SRCDIR)/fortran
 
-#include $(SRCTOP)/scripts/recurse.mk
+include $(SRCTOP)/scripts/recurse.mk
 
 PSELIBS := Uintah/Parallel Uintah/Interface Uintah/Grid Uintah/Exceptions \
 	   SCICore/Exceptions
 LIBS := $(XML_LIBRARY) -lftn -lm -lblas
 
+CFLAGS := -g -fullwarn -xansi -LANG:std  -n32 -mips4  -DSTL_SGI_THREADS
+
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.13  2000/06/12 21:30:01  bbanerje
+# Added first Fortran routines, added Stencil Matrix where needed,
+# removed unnecessary CCVariables (e.g., sources etc.)
+#
 # Revision 1.12  2000/06/04 22:40:16  bbanerje
 # Added Cocoon stuff, changed task, require, compute, get, put arguments
 # to reflect new declarations. Changed sub.mk to include all the new files.

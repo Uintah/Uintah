@@ -37,6 +37,9 @@ WARNING
 none
 ****************************************/
 
+#include <Uintah/Components/Arches/StencilMatrix.h>
+#include <Uintah/Grid/CCVariable.h>
+#include <Uintah/Grid/FCVariable.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Interface/SchedulerP.h>
@@ -49,7 +52,7 @@ none
 namespace Uintah {
 namespace ArchesSpace {
 
-class StencilMatrix;
+//class StencilMatrix;
 using namespace SCICore::Containers;
 
 class Discretization {
@@ -149,12 +152,12 @@ private:
    
       // Stencil weights.
       // Array of size NDIM and of depth determined by stencil coefficients
-      StencilMatrix* d_press_stencil_matrix;
+      StencilMatrix<CCVariable<double> >* d_press_stencil_matrix;
       // stores coefficients for all the velocity components
       // coefficients should be saved on staggered grid
-      StencilMatrix* d_mom_stencil_matrix;
+      StencilMatrix<CCVariable<double> >* d_mom_stencil_matrix;
       // coefficients for all the scalar components
-      StencilMatrix* d_scalar_stencil_matrix;
+      StencilMatrix<CCVariable<double> >* d_scalar_stencil_matrix;
 
       // const VarLabel*
       const VarLabel* d_uVelocityLabel;
@@ -175,6 +178,10 @@ private:
   
 //
 // $Log$
+// Revision 1.14  2000/06/12 21:29:59  bbanerje
+// Added first Fortran routines, added Stencil Matrix where needed,
+// removed unnecessary CCVariables (e.g., sources etc.)
+//
 // Revision 1.13  2000/06/07 06:13:54  bbanerje
 // Changed CCVariable<Vector> to CCVariable<double> for most cases.
 // Some of these variables may not be 3D Vectors .. they may be Stencils

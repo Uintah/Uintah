@@ -32,6 +32,7 @@ none
 ****************************************/
 #ifndef included_BoundaryCondition
 #define included_BoundaryCondition
+#include <Uintah/Components/Arches/StencilMatrix.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Interface/SchedulerP.h>
@@ -43,7 +44,7 @@ none
 #include <vector>
 namespace Uintah {
 namespace ArchesSpace {
-class StencilMatrix;
+//class StencilMatrix;
  using namespace SCICore::Containers;
 
  class TurbulenceModel;

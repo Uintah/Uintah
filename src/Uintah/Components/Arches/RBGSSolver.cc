@@ -9,6 +9,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/Arches/Source.h>
 #include <Uintah/Components/Arches/BoundaryCondition.h>
 #include <Uintah/Components/Arches/TurbulenceModel.h>
+#include <Uintah/Components/Arches/StencilMatrix.h>
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Interface/ProblemSpec.h>
@@ -28,17 +29,9 @@ RBGSSolver::RBGSSolver()
 {
   d_pressureLabel = scinew VarLabel("pressure",
 				    CCVariable<double>::getTypeDescription() );
-  d_xPresCoefLabel = scinew VarLabel("xPressureCoeff",
+  d_presCoefLabel = scinew VarLabel("xPressureCoeff",
 				    CCVariable<double>::getTypeDescription() );
-  d_yPresCoefLabel = scinew VarLabel("yPressureCoeff",
-				    CCVariable<double>::getTypeDescription() );
-  d_zPresCoefLabel = scinew VarLabel("zPressureCoeff",
-				    CCVariable<double>::getTypeDescription() );
-  d_xPresNonLinSrcLabel = scinew VarLabel("xPressureNonlinearSource",
-				    CCVariable<double>::getTypeDescription() );
-  d_yPresNonLinSrcLabel = scinew VarLabel("yPressureNonlinearSource",
-				    CCVariable<double>::getTypeDescription() );
-  d_zPresNonLinSrcLabel = scinew VarLabel("zPressureNonlinearSource",
+  d_presNonLinSrcLabel = scinew VarLabel("xPressureNonlinearSource",
 				    CCVariable<double>::getTypeDescription() );
   d_presResidualLabel = scinew VarLabel("pressureResidual",
 				    CCVariable<double>::getTypeDescription() );
@@ -98,11 +91,7 @@ RBGSSolver::sched_pressureSolve(const LevelP& level,
       // not sure if the var is of type CCVariable or FCVariable
       tsk->requires(old_dw, d_pressureLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(new_dw, d_xPresCoefLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_yPresCoefLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_zPresCoefLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_presCoefLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
       // computes global residual
@@ -122,26 +111,14 @@ RBGSSolver::sched_pressureSolve(const LevelP& level,
       // not sure if the var is of type CCVariable or FCVariable
       tsk->requires(old_dw, d_pressureLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(new_dw, d_xPresCoefLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_presCoefLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(new_dw, d_yPresCoefLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_zPresCoefLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_xPresNonLinSrcLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_yPresNonLinSrcLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_zPresNonLinSrcLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_presNonLinSrcLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
       // computes 
-      tsk->computes(new_dw, d_xPresCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_yPresCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_zPresCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_xPresNonLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_yPresNonLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_zPresNonLinSrcLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_presCoefLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_presNonLinSrcLabel, matlIndex, patch);
 
       sched->addTask(tsk);
     }
@@ -158,17 +135,9 @@ RBGSSolver::sched_pressureSolve(const LevelP& level,
       // not sure if the var is of type CCVariable or FCVariable
       tsk->requires(old_dw, d_pressureLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(new_dw, d_xPresCoefLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_presCoefLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(new_dw, d_yPresCoefLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_zPresCoefLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_xPresNonLinSrcLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_yPresNonLinSrcLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_zPresNonLinSrcLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_presNonLinSrcLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
       // Computes
@@ -215,6 +184,7 @@ RBGSSolver::press_underrelax(const ProcessorContext*,
 {
   int numGhostCells = 0;
   int matlIndex = 0;
+  int nofStencils = 7;
 
   // Get the pressure from the old DW and pressure coefficients and non-linear
   // source terms from the new DW
@@ -222,25 +192,14 @@ RBGSSolver::press_underrelax(const ProcessorContext*,
   old_dw->get(pressure, d_pressureLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
-  CCVariable<double> xPressCoeff;
-  new_dw->get(xPressCoeff, d_xPresCoefLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  CCVariable<double> yPressCoeff;
-  new_dw->get(yPressCoeff, d_yPresCoefLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  CCVariable<double> zPressCoeff;
-  new_dw->get(zPressCoeff, d_zPresCoefLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-
-  CCVariable<double> xPressNlSrc;
-  new_dw->get(xPressNlSrc, d_xPresNonLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  CCVariable<double> yPressNlSrc;
-  new_dw->get(yPressNlSrc, d_yPresNonLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  CCVariable<double> zPressNlSrc;
-  new_dw->get(zPressNlSrc, d_zPresNonLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
+  StencilMatrix<CCVariable<double> > pressCoeff;
+  for (int ii = 0; ii < nofStencils; ii++) {
+     new_dw->get(pressCoeff[ii], d_presCoefLabel, matlIndex, patch, Ghost::None,
+		 numGhostCells);
+  }
+  CCVariable<double> pressNonLinSrc;
+  new_dw->get(pressNonLinSrc, d_presNonLinSrcLabel, matlIndex, patch, 
+	      Ghost::None, numGhostCells);
  
   // Get the patch bounds
   IntVector lowIndex = patch->getCellLowIndex();
@@ -253,12 +212,10 @@ RBGSSolver::press_underrelax(const ProcessorContext*,
 #endif
 
   // Write the pressure Coefficients and nonlinear source terms into new DW
-  new_dw->put(xPressCoeff, d_xPresCoefLabel, matlIndex, patch);
-  new_dw->put(yPressCoeff, d_yPresCoefLabel, matlIndex, patch);
-  new_dw->put(zPressCoeff, d_zPresCoefLabel, matlIndex, patch);
-  new_dw->put(xPressNlSrc, d_xPresNonLinSrcLabel, matlIndex, patch);
-  new_dw->put(yPressNlSrc, d_yPresNonLinSrcLabel, matlIndex, patch);
-  new_dw->put(zPressNlSrc, d_zPresNonLinSrcLabel, matlIndex, patch);
+  for (int ii = 0; ii < nofStencils; ii++) {
+    new_dw->put(pressCoeff[ii], d_presCoefLabel, matlIndex, patch);
+  }
+  new_dw->put(pressNonLinSrc, d_presNonLinSrcLabel, matlIndex, patch);
 }
 
 //****************************************************************************
@@ -272,6 +229,7 @@ RBGSSolver::press_lisolve(const ProcessorContext*,
 {
   int numGhostCells = 0;
   int matlIndex = 0;
+  int nofStencils = 7;
 
   // Get the pressure from the old DW and pressure coefficients and non-linear
   // source terms from the new DW
@@ -279,25 +237,15 @@ RBGSSolver::press_lisolve(const ProcessorContext*,
   old_dw->get(pressure, d_pressureLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
-  CCVariable<double> xPressCoeff;
-  new_dw->get(xPressCoeff, d_xPresCoefLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  CCVariable<double> yPressCoeff;
-  new_dw->get(yPressCoeff, d_yPresCoefLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  CCVariable<double> zPressCoeff;
-  new_dw->get(zPressCoeff, d_zPresCoefLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
+  StencilMatrix<CCVariable<double> > pressCoeff;
+  for (int ii = 0; ii < nofStencils; ii++) {
+    new_dw->get(pressCoeff[ii], d_presCoefLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+  }
 
-  CCVariable<double> xPressNlSrc;
-  new_dw->get(xPressNlSrc, d_xPresNonLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  CCVariable<double> yPressNlSrc;
-  new_dw->get(yPressNlSrc, d_yPresNonLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  CCVariable<double> zPressNlSrc;
-  new_dw->get(zPressNlSrc, d_zPresNonLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
+  CCVariable<double> pressNonLinSrc;
+  new_dw->get(pressNonLinSrc, d_presNonLinSrcLabel, matlIndex, patch, 
+	      Ghost::None, numGhostCells);
  
   IntVector lowIndex = patch->getCellLowIndex();
   IntVector highIndex = patch->getCellHighIndex();
@@ -402,6 +350,10 @@ RBGSSolver::scalar_residCalculation(const ProcessorContext* ,
 
 //
 // $Log$
+// Revision 1.6  2000/06/12 21:29:59  bbanerje
+// Added first Fortran routines, added Stencil Matrix where needed,
+// removed unnecessary CCVariables (e.g., sources etc.)
+//
 // Revision 1.5  2000/06/07 06:13:56  bbanerje
 // Changed CCVariable<Vector> to CCVariable<double> for most cases.
 // Some of these variables may not be 3D Vectors .. they may be Stencils

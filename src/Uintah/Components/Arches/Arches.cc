@@ -4,6 +4,7 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/Arches.h>
+#include <Uintah/Components/Arches/ArchesFort.h>
 #include <Uintah/Components/Arches/PicardNonlinearSolver.h>
 #include <Uintah/Components/Arches/PhysicalConstants.h>
 #include <Uintah/Components/Arches/SmagorinskyModel.h>
@@ -46,12 +47,6 @@ Arches::Arches( int MpiRank, int MpiProcesses ) :
 				   CCVariable<double>::getTypeDescription() );
   d_pressureLabel = scinew VarLabel("pressure", 
 				    CCVariable<double>::getTypeDescription() );
-  d_xScalarLabel = scinew VarLabel("xScalar", 
-				  CCVariable<double>::getTypeDescription() );
-  d_yScalarLabel = scinew VarLabel("yScalar", 
-				  CCVariable<double>::getTypeDescription() );
-  d_zScalarLabel = scinew VarLabel("zScalar", 
-				  CCVariable<double>::getTypeDescription() );
   d_uVelocityLabel = scinew VarLabel("uVelocity", 
 				    CCVariable<double>::getTypeDescription() );
   d_vVelocityLabel = scinew VarLabel("vVelocity", 
@@ -92,9 +87,18 @@ Arches::problemSetup(const ProblemSpecP& params,
   //d_physicalConsts->problemSetup(params);
   d_physicalConsts->problemSetup(db);
 
-  // read properties, boundary and turbulence model
+  // read properties
   d_props = scinew Properties();
   d_props->problemSetup(db);
+  d_nofScalars = d_props->getNumMixVars();
+
+  // Create the labels for the scalars
+  for (int ii = 0; ii < d_nofScalars; ii++) {
+    d_scalarLabel.push_back(scinew VarLabel("scalar"+(char)(ii), 
+				  CCVariable<double>::getTypeDescription() ));
+  }
+
+  // read turbulence model
   string turbModel;
   db->require("turbulence_model", turbModel);
   if (turbModel == "smagorinsky") 
@@ -102,6 +106,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   else 
     throw InvalidValue("Turbulence Model not supported" + turbModel);
   d_turbModel->problemSetup(db);
+
+  // read boundary
   d_boundaryCondition = scinew BoundaryCondition(d_turbModel, d_props);
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->problemSetup(db);
@@ -166,9 +172,9 @@ Arches::scheduleInitialize(const LevelP& level,
       tsk->computes(dw, d_vVelocityLabel, matlIndex, patch);
       tsk->computes(dw, d_wVelocityLabel, matlIndex, patch);
       tsk->computes(dw, d_pressureLabel, matlIndex, patch);
-      tsk->computes(dw, d_xScalarLabel, matlIndex, patch);
-      tsk->computes(dw, d_yScalarLabel, matlIndex, patch);
-      tsk->computes(dw, d_zScalarLabel, matlIndex, patch);
+      for (int ii = 0; ii < d_nofScalars; ii++) {
+        tsk->computes(dw, d_scalarLabel[ii], matlIndex, patch);
+      }
       tsk->computes(dw, d_densityLabel, matlIndex, patch);
       tsk->computes(dw, d_viscosityLabel, matlIndex, patch);
       sched->addTask(tsk);
@@ -254,9 +260,7 @@ Arches::paramInit(const ProcessorContext* ,
   CCVariable<double> vVelocity;
   CCVariable<double> wVelocity;
   CCVariable<double> pressure;
-  CCVariable<double> xScalar;
-  CCVariable<double> yScalar;
-  CCVariable<double> zScalar;
+  vector<CCVariable<double> > scalar(d_nofScalars);
   CCVariable<double> density;
   CCVariable<double> viscosity;
 
@@ -267,29 +271,55 @@ Arches::paramInit(const ProcessorContext* ,
   old_dw->allocate(vVelocity, d_vVelocityLabel, matlIndex, patch);
   old_dw->allocate(wVelocity, d_wVelocityLabel, matlIndex, patch);
   old_dw->allocate(pressure, d_pressureLabel, matlIndex, patch);
-  old_dw->allocate(xScalar, d_xScalarLabel, matlIndex, patch);
-  old_dw->allocate(yScalar, d_yScalarLabel, matlIndex, patch);
-  old_dw->allocate(zScalar, d_zScalarLabel, matlIndex, patch);
+  for (int ii = 0; ii < d_nofScalars; ii++) {
+    old_dw->allocate(scalar[ii], d_scalarLabel[ii], matlIndex, patch);
+  }
   old_dw->allocate(density, d_densityLabel, matlIndex, patch);
   old_dw->allocate(viscosity, d_viscosityLabel, matlIndex, patch);
   cerr << "Actual initialization - after allocation\n";
 
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
+  // ** WARNING **  this needs to be changed soon (6/9/2000)
+  // IntVector domainLow = patch->getCellLowIndex();
+  // IntVector domainHigh = patch->getCellHighIndex();
+  // IntVector indexLow = patch->getCellLowIndex();
+  // IntVector indexHigh = patch->getCellHighIndex();
+  int domainLow[3], domainHigh[3];
+  int indexLow[3], indexHigh[3];
+  domainLow[0] = (patch->getCellLowIndex()).x()+1;
+  domainLow[1] = (patch->getCellLowIndex()).y()+1;
+  domainLow[2] = (patch->getCellLowIndex()).z()+1;
+  domainHigh[0] = (patch->getCellHighIndex()).x();
+  domainHigh[1] = (patch->getCellHighIndex()).y();
+  domainHigh[2] = (patch->getCellHighIndex()).z();
+  for (int ii = 0; ii < 3; ii++) {
+    indexLow[ii] = domainLow[ii]+1;
+    indexHigh[ii] = domainHigh[ii]-1;
+  }
+ 
+  double uVal = 0.0, vVal = 0.0, wVal = 0.0;
+  double pVal = 0.0, denVal = 0.0;
+  double visVal = d_physicalConsts->getMolecularViscosity();
+  FORT_INIT(domainLow, domainHigh, indexLow, indexHigh,
+	    uVelocity.getPointer(), &uVal, vVelocity.getPointer(), &vVal, 
+	    wVelocity.getPointer(), &wVal,
+	    pressure.getPointer(), &pVal, density.getPointer(), &denVal, 
+	    viscosity.getPointer(), &visVal);
+  for (int ii = 0; ii < d_nofScalars; ii++) {
+    double scalVal = 0.0;
+    FORT_INIT_SCALAR(domainLow, domainHigh,
+		     indexLow, indexHigh, 
+		     scalar[ii].getPointer(), &scalVal);
+  }
 
-#ifdef WONT_COMPILE_YET
-  FORT_INIT(velocity, pressure, scalar, density, viscosity,
-	    lowIndex, highIndex);
-#endif
   cerr << "Actual initialization - before put : old_dw = " 
        << old_dw <<"\n";
   old_dw->put(uVelocity, d_uVelocityLabel, matlIndex, patch);
   old_dw->put(vVelocity, d_vVelocityLabel, matlIndex, patch);
   old_dw->put(wVelocity, d_wVelocityLabel, matlIndex, patch);
   old_dw->put(pressure, d_pressureLabel, matlIndex, patch);
-  old_dw->put(xScalar, d_xScalarLabel, matlIndex, patch);
-  old_dw->put(yScalar, d_yScalarLabel, matlIndex, patch);
-  old_dw->put(zScalar, d_zScalarLabel, matlIndex, patch);
+  for (int ii = 0; ii < d_nofScalars; ii++) {
+    old_dw->put(scalar[ii], d_scalarLabel[ii], matlIndex, patch);
+  }
   old_dw->put(density, d_densityLabel, matlIndex, patch);
   old_dw->put(viscosity, d_viscosityLabel, matlIndex, patch);
   cerr << "Actual initialization - after put \n";
@@ -319,6 +349,10 @@ Arches::paramInit(const ProcessorContext* ,
 
 //
 // $Log$
+// Revision 1.35  2000/06/12 21:29:59  bbanerje
+// Added first Fortran routines, added Stencil Matrix where needed,
+// removed unnecessary CCVariables (e.g., sources etc.)
+//
 // Revision 1.34  2000/06/07 06:13:53  bbanerje
 // Changed CCVariable<Vector> to CCVariable<double> for most cases.
 // Some of these variables may not be 3D Vectors .. they may be Stencils
