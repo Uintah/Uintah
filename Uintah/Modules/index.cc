@@ -13,6 +13,7 @@ MP(ParticleGridVisControl)
 MP(PartToGeom)
 MP(RescaleParticleColorMap)
 MP(cfdGridLines)
+MP(GridLines)
 MP(VizControl)
 MP(ParticleDB)
 MP(RunSimulation)
@@ -22,6 +23,7 @@ MP(ParticleViz)
 MP(ParticleSetReader)
 MP(TriangleReader)
 MP(MPReader)
+MP(MPReaderMultiFile)
 // Writeres
 MP(MPWriter)
 
@@ -39,6 +41,7 @@ void initPackage(const clString& tcl) {
   RM("MPMViz", "Part To Geom", make_PartToGeom, tcl+"/PartToGeom.tcl");
   RM("MPMViz", "Rescale Particle Color Map", make_RescaleParticleColorMap, tcl+"/RescaleParticleColorMap.tcl");
   RM("MPMViz", "cfd Grid Lines", make_cfdGridLines, tcl+"/cfdGridLines.tcl");
+  RM("MPMViz", "Grid Lines", make_GridLines, tcl+"/GridLines.tcl");
   RM("MPMViz", "Viz Control", make_VizControl, tcl+"/VizControl.tcl");
 #ifdef SCI_PARALLEL
   RM("MPMViz", "Particle DB", make_ParticleDB, tcl+"/ParticleDB.tcl");
@@ -48,6 +51,7 @@ void initPackage(const clString& tcl) {
   // Readers
   RM("Readers", "Particle Set Reader", make_ParticleSetReader, "");
   RM("Readers", "MP Reader", make_MPReader, tcl+"/MPReader.tcl");
+  RM("Readers", "MP Reader Multi File", make_MPReaderMultiFile, tcl+"/MPReaderMultiFile.tcl");
   RM("Readers", "Triangle Reader", make_TriangleReader, tcl+"/TriangleReader.tcl");
   // Writers
   RM("Writers", "MP Writer", make_MPWriter, tcl+"/MPWriter.tcl");
