@@ -1134,6 +1134,10 @@ SCI_ARG_WITH(globus,
   [  --with-globus=DIR                 Use the globus installation in DIR],
   [with_globus="$withval"],
   [with_globus=""])
+SCI_ARG_WITH(insight,
+  [  --with-insight=DIR                     Use the Insight installation in DIR],
+  [with_insight="$withval"],
+  [with_insight=""])
 SCI_ARG_WITH(qt,
   [  --with-qt=DIR                     Use the Qt installation in DIR],
   [with_qt="$withval"],
@@ -1665,7 +1669,7 @@ case $host in
   *-darwin*)
     LDRUN_PREFIX="-L"
     CFLAGS="$CFLAGS -fno-common -dynamic -fcoalesce-templates -Wno-long-double -I/sw/include -L/sw/lib"
-    SOFLAGS="-dynamiclib -init __ZNSt8ios_base4InitC4Ev \$(SCIRUN_OBJTOP)/osx/osx_init.o  ${SOFLAGS}"
+    SOFLAGS="-dynamiclib -init __ZNSt8ios_base4InitC4Ev \${LIBDIR}/../osx/osx_init.o  ${SOFLAGS}"
     ;;
   *)
     #
@@ -3074,6 +3078,39 @@ AC_SUBST(GLOBUS_LIB_DIR_FLAG)
 AC_SUBST(GLOBUS_EXTRA_LIB_FLAG)
 AC_SUBST(INC_GLOBUS_H)
 AC_SUBST(DEF_GLOBUS)
+
+##  --  search for Insight  ----------------------------------------------------
+
+AC_MSG_CHECKING(for Insight.)
+
+if test "$with_insight"; then
+  dir="$with_insight"
+else
+  dir="/usr/local"
+fi
+
+if test -a "$dir/lib/InsightToolkit/ITKConfig.cmake"; then
+   INSIGHT_LIB_FLAG="-lVXLNumerics -lITKIO -lITKBasicFilters -lITKAlgorithms -lITKMetaIO -litkpng -litkzlib -lITKCommon "
+    INSIGHT_LIB_DIR_FLAG="-L$dir/lib/InsightToolkit"
+    dir=$dir/include/InsightToolkit 
+
+    INC_INSIGHT_H="-I$dir -I$dir/Common -I$dir/BasicFilters -I$dir/Algorithms -I$dir/IO -I$dir/Numerics -I$dir/Numerics/vxl -I$dir/Numerics/vxl/vnl -I$dir/Numerics/vxl/vcl -I$dir/SpatialObject -I$dir/Utilities"
+    DEF_INSIGHT="#define HAVE_INSIGHT"
+    HAVE_INSIGHT="yes"
+
+    AC_MSG_RESULT($dir)
+
+else
+  echo
+  AC_MSG_ERROR(Insight instalation not found.)
+  echo
+fi
+
+AC_SUBST(HAVE_INSIGHT)
+AC_SUBST(INSIGHT_LIB_FLAG)
+AC_SUBST(INSIGHT_LIB_DIR_FLAG)
+AC_SUBST(INC_INSIGHT_H)
+AC_SUBST(DEF_INSIGHT)
 
 ##  --  search for Qt  ----------------------------------------------------
 
