@@ -116,6 +116,7 @@ public:
       const int base = (idx / PRISM_NEDGES) * PRISM_NNODES;
       switch (idx % PRISM_NEDGES)
       {
+      default:
       case 0: return pair<Node::index_type,Node::index_type>(base+0,base+1);
       case 1: return pair<Node::index_type,Node::index_type>(base+0,base+2);
       case 2: return pair<Node::index_type,Node::index_type>(base+0,base+3);
