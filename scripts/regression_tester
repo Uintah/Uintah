@@ -5,6 +5,7 @@
 hostname=`uname -n`
 
 test_dir=/home/jas/SCIRun/TestData
+did_mount=0
 
 hostname_test=`uname -n | grep inf`
 
@@ -12,7 +13,11 @@ if test "$hostname" = "$hostname_test";
     then
     test_dir=/usr/sci/projects/Uintah/tester/Linux-TestData
 else
-    /home/jas/bin/mount_testdata
+    if test ! -d $test_dir/dbg
+    then 
+    	/home/jas/bin/mount_testdata;
+	did_mount=1;
+    fi
 fi
 
 #Set the default TestData directory
@@ -426,8 +431,7 @@ if test $do_remove -eq 1; then
     REMOVE
 fi
 
-if test "$hostname" != "$hostname_test";
-    then
+if test "$hostname" != "$hostname_test" && test $did_mount -eq 1; then
     /home/jas/bin/unmount_testdata
 fi
 
