@@ -22,7 +22,7 @@
 #include <Packages/rtrt/Core/Box.h>
 #include <Packages/rtrt/Core/SpinningInstance.h>
 #include <Packages/rtrt/Core/DynamicInstance.h>
-#if !defined(linux)
+#ifdef HAVE_SOUND
 #  include <Packages/rtrt/Sound/Sound.h>
 #endif
 #include <Core/Geometry/Point.h>
@@ -96,7 +96,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 			 bgcolor, cdown, cup, groundplane,
 			 ambient_scale, Arc_Ambient);
 
-#if !defined(linux)
+#ifdef HAVE_SOUND
   vector<Point> loc; loc.push_back(Point(5,5,5));
   Sound * sound = new Sound( "cool_music.wav", "cool", loc, 10, true );
   scene->addSound( sound );
