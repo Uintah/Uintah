@@ -1,4 +1,3 @@
-
 /*
  *  Roe.h: The Geometry Viewer Window
  *
@@ -26,11 +25,10 @@
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <PSECommon/Modules/Salmon/BallAux.h>
-#ifdef __sgi
+
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
 #include <PSECommon/Modules/Salmon/SCIBaWGL.h>
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-#endif
 
 namespace SCICore {
   namespace GeomSpace {
@@ -128,12 +126,10 @@ protected:
 
     int maxtag;
 
-#ifdef __sgi
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
     SCIBaWGL* bawgl;
     int bawgl_error;
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-#endif
 
     Point orig_eye;
     Vector frame_up;
@@ -190,9 +186,7 @@ public:
     clString id;
     int need_redraw;
 
-#ifdef __sgi
     SCIBaWGL* get_bawgl(void) { return(bawgl); }
-#endif
 
     Roe(Salmon *s, const clString& id);
     Roe(const Roe&);
@@ -213,11 +207,9 @@ public:
     void redraw_if_needed();
     void force_redraw();
 
-#ifdef __sgi
     //>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     void bawgl_pick(int action, GLint iv[3], GLfloat fv[4]);
     //<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#endif
 
     void mouse_translate(int, int, int, int, int, int);
     void mouse_scale(int, int, int, int, int, int);
@@ -254,11 +246,10 @@ public:
 
     // Stereo
     TCLint do_stereo;
-#ifdef __sgi
+
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
     TCLint do_bawgl;
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-#endif
 
     TCLint drawimg;
 
@@ -296,6 +287,9 @@ public:
 
 //
 // $Log$
+// Revision 1.10  1999/11/19 19:46:24  kuzimmer
+// Took out #ifdef __sgi in Roe.h.
+//
 // Revision 1.9  1999/11/16 00:47:26  yarden
 // put "#ifdef __sgi" around code for BAWGL
 //
