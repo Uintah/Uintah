@@ -165,7 +165,11 @@ CalcFMField<ElecField, CondField, PointField>::calc_parallel(int proc,
     mag_field = interp_value_[proc];
 
     Vector normal;
-    normal = Point(0,0,0) - pt;//detfld_->value(ind);
+    normal = detfld_->value(ind);
+    // the following for verification against sphere.
+    //    normal = pt - Point(0,0,0);
+    //normal.normalize();
+
     // start of B(P) stuff
 
     PFieldNIter dip_iter, dip_end;
@@ -287,12 +291,11 @@ CalcFMField<ElecField, CondField, PointField>::set_parallel_data(
 		      Handle<ChangeFieldDataTypeAlgoCreate> create_algo)
 {
   int chunk = 0;
+  typename PointField::mesh_handle_type mag_mesh = detfld_->get_typed_mesh();
   vector<vector<pair<double, Vector> > >::iterator iter = data_out_.begin();
   while (iter != data_out_.end()) {
     vector<pair<double, Vector> > &dat = *iter++;
-    typename PointField::mesh_handle_type mag_mesh = detfld_->get_typed_mesh();
     
-
     PFieldNIter fld_iter, end;
     pair<PFieldNIter, PFieldNIter> iters = piters_[chunk++];
     fld_iter = iters.first;
@@ -303,7 +306,7 @@ CalcFMField<ElecField, CondField, PointField>::set_parallel_data(
     while (fld_iter != end) {
       // set in field.
       PFieldNIndex ind = *fld_iter; 
-      create_algo->set_val_scalar(magnitudes, ind, dat[i].first);
+      create_algo->set_val_scalar(magnitudes, &ind, dat[i].first);
       fout->set_value(dat[i].second, ind);
       //cout << "@ " << (unsigned)ind << " " << dat[i].first << endl; 
       //cout << "@ " << (unsigned)ind << " " << dat[i].second << endl; 
