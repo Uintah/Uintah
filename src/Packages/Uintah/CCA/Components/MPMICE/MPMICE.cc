@@ -2220,3 +2220,4 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
       }  //if(mpm_matl)
     }  //ALLmatls  
   }  //patches
+}
