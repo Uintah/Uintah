@@ -11,7 +11,9 @@
  #
  ##
 
-itcl_class SiReOutput {
+catch {rename DaveW_SiRe_SiReOutput ""}
+
+itcl_class DaveW_SiRe_SiReOutput {
     inherit Module
     constructor {config} {
         set name SiReOutput

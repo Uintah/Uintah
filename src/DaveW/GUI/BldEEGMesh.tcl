@@ -11,7 +11,9 @@
  #
  ##
 
-itcl_class BldEEGMesh {
+catch {rename DaveW_EEG_BldEEGMesh ""}
+
+itcl_class DaveW_EEG_BldEEGMesh {
     inherit Module
     method modname {} {
 	set n $this

@@ -12,6 +12,9 @@
  #  Log Information:
  #
  #  $Log$
+ #  Revision 1.2  1999/08/29 01:02:19  dmw
+ #  updated module names to be consistent with new loading mechanism
+ #
  #  Revision 1.1  1999/08/24 06:22:55  dmw
  #  Added in everything for the DaveW branch
  #
@@ -44,7 +47,9 @@
  #
  ##
 
-itcl_class Coregister {
+catch {rename DaveW_EEG_Coregister ""}
+
+itcl_class DaveW_EEG_Coregister {
     inherit Module
     constructor {config} {
         set name Coregister
