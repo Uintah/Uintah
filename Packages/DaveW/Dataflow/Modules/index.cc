@@ -39,6 +39,7 @@ MP(BuildFDField)
 MP(DipoleMatToGeom)
 MP(DipoleSourceRHS)
 MP(ErrorMetric)
+MP(RecipBasis)
 MP(RemapVector)
 MP(VecSplit)
 
@@ -116,6 +117,7 @@ void initPackage(const clString& tcl) {
   RM("FEM",	      "DipoleMatToGeom",	 make_DipoleMatToGeom,	    tcl+"/DipoleMatToGeom.tcl");
   RM("FEM",	      "DipoleSourceRHS",	 make_DipoleSourceRHS,	    "");
   RM("FEM",	      "ErrorMetric",		 make_ErrorMetric,	    tcl+"/ErrorMetric.tcl");
+  RM("FEM",	      "RecipBasis",		 make_RecipBasis,	    "");
   RM("FEM",	      "RemapVector",		 make_RemapVector,	    "");
   RM("FEM",	      "VecSplit",		 make_VecSplit,	            "");
   
