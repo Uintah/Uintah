@@ -328,7 +328,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP MATLAB_ENG build build_cpu build_vendor build_os host host_cpu host_vendor host_os IS_OSX ac_ct_CC EXEEXT OBJEXT ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION ASSERTION_LEVEL NOPRINTDIR DEF_MALLOC PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT GMAKE MAKE AWK YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX EGREP NBITS INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H DEF_COLLAB_VIS HAVE_COLLAB_VIS PLPLOT_LIB_FLAG PLPLOT_LIB_DIR_FLAG INC_PLPLOT_H DEF_PLPLOT TCLMATRIX_LIB_FLAG TCLMATRIX_LIB_DIR_FLAG INC_TCLMATRIX_H DEF_TCLMATRIX TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z F_LIB_FLAG BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG MPI_LIB_FLAG MPI_LIB_DIR_FLAG INC_MPI_H DEF_MPI HAVE_MPI MPIUNI_LIB_FLAG MPIUNI_LIB_DIR_FLAG INC_MPIUNI_H DEF_MPIUNI HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG INC_INSIGHT_H DEF_INSIGHT XALAN_PATH TAU_MAKEFILE BABEL_BIN SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG INC_SIDL_H HAVE_BABEL DEF_BABEL JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG INC_OOGL_H DEF_OOGL OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG INC_TEEM_H DEF_TEEM HAVE_TEEM MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG INC_MDSPLUS_H DEF_MDSPLUS HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG INC_HDF5_H DEF_HDF5 PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_PERFEX CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_CRYPTO SSL_LIB_FLAG SSL_LIB_DIR_FLAG DEF_SSL GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG INC_GLOBUS_H DEF_GLOBUS HAVE_GLOBUS QT_MOC_BIN HAVE_QT QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG INC_QT_MT_H DEF_QT DEF_VDT VDT_LIB_FLAG VDT_LIB_DIR_FLAG INC_VDT_H HAVE_HYPRE DEF_HYPRE HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG INC_HYPRE_H UUID_LIB_FLAG DEF_SCIRUN2 BUILD_SCIRUN2 abs_conftop_dir abs_srcdir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP MATLAB_ENG build build_cpu build_vendor build_os host host_cpu host_vendor host_os IS_OSX ac_ct_CC EXEEXT OBJEXT ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION ASSERTION_LEVEL NOPRINTDIR DEF_MALLOC PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT GMAKE MAKE AWK YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX EGREP NBITS INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H DEF_COLLAB_VIS HAVE_COLLAB_VIS PLPLOT_LIB_FLAG PLPLOT_LIB_DIR_FLAG INC_PLPLOT_H DEF_PLPLOT TCLMATRIX_LIB_FLAG TCLMATRIX_LIB_DIR_FLAG INC_TCLMATRIX_H DEF_TCLMATRIX TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z F_LIB_FLAG BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG MPI_LIB_FLAG MPI_LIB_DIR_FLAG INC_MPI_H DEF_MPI HAVE_MPI MPIUNI_LIB_FLAG MPIUNI_LIB_DIR_FLAG INC_MPIUNI_H DEF_MPIUNI HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG INC_INSIGHT_H DEF_INSIGHT XALAN_PATH TAU_MAKEFILE BABEL_BIN SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG INC_SIDL_H HAVE_BABEL DEF_BABEL JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG INC_OOGL_H DEF_OOGL OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG INC_TEEM_H DEF_TEEM HAVE_TEEM MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG INC_MDSPLUS_H DEF_MDSPLUS HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG INC_HDF5_H DEF_HDF5 PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_PERFEX CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_CRYPTO SSL_LIB_FLAG SSL_LIB_DIR_FLAG DEF_SSL GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG INC_GLOBUS_H DEF_GLOBUS HAVE_GLOBUS QT_MOC_BIN HAVE_QT QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG INC_QT_MT_H DEF_QT DEF_VDT VDT_LIB_FLAG VDT_LIB_DIR_FLAG INC_VDT_H HAVE_HYPRE DEF_HYPRE HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG INC_HYPRE_H UUID_LIB_FLAG DEF_SCIRUN2 BUILD_SCIRUN2 abs_conftop_dir abs_srcdir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -7673,7 +7673,7 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 
-#include <X11/Xlib.h>
+ #include <X11/Xlib.h>
 
 int
 main ()
@@ -7784,6 +7784,14 @@ _sci_includes=''
 
 
 
+
+if test "$GL_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+  { echo "$as_me:$LINENO: WARNING: \"$X_LIB_DIR_FLAG\"" >&5
+echo "$as_me: WARNING: \"$X_LIB_DIR_FLAG\"" >&2;}
+  { echo "$as_me:$LINENO: WARNING: \"flag for OpenGL has been removed.\"" >&5
+echo "$as_me: WARNING: \"flag for OpenGL has been removed.\"" >&2;}
+  X_LIB_DIR_FLAG=""
+fi
 
 
 
@@ -9315,6 +9323,174 @@ LIBS=$_sci_savelibs
 _sci_lib_path=''
 _sci_libs=''
 _sci_includes=''
+
+
+
+##  --  optional stat64 headers
+
+## arguments mean:
+## arg 1 : variable base name i.e. MATH
+## arg 2 : checking message
+## arg 3 : includes that arg 6 needs to compile
+## arg 4 : include paths -I
+## arg 5 : list of libs to link against -l
+## arg 6 : lib paths -L
+## arg 7 : extra link flags
+## arg 8 : body of code to compile. can be empty
+## arg 9 : optional or not-optional required argument
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      LIB_DIR_STAT64        => lib path
+##      STAT64_LIB_DIR_FLAG   => all the -L's
+##      STAT64_LIB_FLAG       => all the -l's
+##      HAVE_STAT64           => yes or no
+##      INC_STAT64_H          => all the -I's
+##      HAVE_STAT64_H         => yes or no
+
+
+
+echo "$as_me:$LINENO: checking for standard headers (optional)" >&5
+echo $ECHO_N "checking for standard headers (optional)... $ECHO_C" >&6
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+_sci_libs=
+_sci_lib_path=
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+LDFLAGS="$_sci_lib_path $LDFLAGS"
+LIBS="$_sci_libs  $LIBS"
+
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <sys/stat64.h>
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+eval LIB_DIR_STAT64='""'
+
+if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
+  eval STAT64_LIB_DIR_FLAG=''
+else
+  eval STAT64_LIB_DIR_FLAG='"$_sci_lib_path"'
+fi
+
+eval STAT64_LIB_FLAG='"$_sci_libs"'
+eval HAVE_STAT64="yes"
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_STAT64_H=''
+else
+  eval INC_STAT64_H='"$_sci_includes"'
+fi
+
+eval HAVE_STAT64_H="yes"
+echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+eval LIB_DIR_STAT64=''
+eval STAT64_LIB_DIR_FLAG=''
+eval STAT64_LIB_FLAG=''
+eval HAVE_STAT64="no"
+eval INC_STAT64_H=''
+eval HAVE_STAT64_H="no"
+echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+if test "optional" = "not-optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it, the true
+    error most likely will show up.
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it, the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: Test for required STAT64 failed.
+    To see the failed compile information, look in config.log,
+    search for STAT64. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&5
+echo "$as_me: error: Test for required STAT64 failed.
+    To see the failed compile information, look in config.log,
+    search for STAT64. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+
+
+if test "$HAVE_STAT64" = "yes"; then
+  DEF_STAT64="#define HAVE_STAT64 1"
+fi
+
 
 
 
@@ -23410,6 +23586,7 @@ s,@GL_LIB_DIR_FLAG@,$GL_LIB_DIR_FLAG,;t t
 s,@INC_GL_H@,$INC_GL_H,;t t
 s,@DL_LIB_FLAG@,$DL_LIB_FLAG,;t t
 s,@DL_LIB_DIR_FLAG@,$DL_LIB_DIR_FLAG,;t t
+s,@DEF_STAT64@,$DEF_STAT64,;t t
 s,@DEF_IEEEFP@,$DEF_IEEEFP,;t t
 s,@DEF_HASHMAP@,$DEF_HASHMAP,;t t
 s,@LIB_DIR_TCL@,$LIB_DIR_TCL,;t t
