@@ -3,6 +3,9 @@
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
@@ -21,10 +24,12 @@ static DebugStream cout_doing("LODI_DOING_COUT", false);
 static DebugStream cout_dbg("LODI_DBG_COUT", false);
 
 /* ---------------------------------------------------------------------
- Function~  using_LODI_BC--   
- Purpose~   returns if we are using LODI BC on any face, 
+ Function~  read_LODI_BC_inputs--   
+ Purpose~   returns if we are using LODI BC on any face and reads in
+            any lodi parameters 
  ---------------------------------------------------------------------  */
-bool using_LODI_BC(const ProblemSpecP& prob_spec)
+bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
+                         Lodi_user_inputs* userInputs)
 {
   //__________________________________
   // search the BoundaryConditions problem spec
@@ -45,6 +50,18 @@ bool using_LODI_BC(const ProblemSpecP& prob_spec)
        usingLODI = true;
       }
     }
+  }
+  //__________________________________
+  //  read in variables
+  if(usingLODI ){
+    ProblemSpecP lodi = bc_ps->findBlock("LODI");
+    if (!lodi) {
+      string warn="ERROR:\n Inputs:Boundary Conditions: Cannot find LODI block";
+      throw ProblemSetupException(warn);
+    }
+
+    lodi->require("press_infinity",userInputs->press_infinity);
+    lodi->getWithDefault("sigma",  userInputs->sigma, 0.27);
   }
   
   if (usingLODI) {
@@ -125,7 +142,12 @@ void lodi_getVars_pressBC( const Patch* patch,
 ____________________________________________________________________*/
 inline void Di(StaticArray<CCVariable<Vector> >& d,
                const int dir,
-               const IntVector& c, 
+               const IntVector& c,
+               const Patch::FaceType face,
+               const Vector domainLength,
+               const Lodi_user_inputs* user_inputs,
+               const double maxMach,
+               const double press,
                const double speedSound,
                const double rho,
                const double normalVel,
@@ -134,6 +156,10 @@ inline void Di(StaticArray<CCVariable<Vector> >& d,
                const Vector dVel_dx)
 {
   IntVector dd;  // directions debugging 
+
+  //__________________________________
+  // compute Li terms
+  //  see table 7 of Sutherland and Kennedy 
   double L3 = -9e1000, L4 = -9e1000;
   double speedSoundsqr = speedSound * speedSound;
   
@@ -142,35 +168,89 @@ inline void Di(StaticArray<CCVariable<Vector> >& d,
   double L2 = normalVel * (speedSoundsqr * drho_dx - dp_dx);
   double L5 = (normalVel + speedSound) * (dp_dx + A);
   
-  d[1][c][dir] = (L2 + 0.5 * (L1 + L5))/speedSoundsqr;
-  d[2][c][dir] = 0.5 * (L5 + L1);
-        
-  //__________________________________
-  //  see table 7 of Sutherland and Kennedy  
   if (dir == 0) {   // X-normal direction
     L3 = normalVel * dVel_dx[1];  // u dv/dx
     L4 = normalVel * dVel_dx[2];  // u dw/dx
+    dd=IntVector(0,1,2);
+  }
+  if (dir == 1) {   // Y-normal direction
+    L3 = normalVel * dVel_dx[0];   // v du/dy
+    L4 = normalVel * dVel_dx[2];   // v dw/dy
+    dd=IntVector(1,0,2);
+  }
+  if (dir == 2) {   // Z-normal direction
+    L3 = normalVel * dVel_dx[0];   // w du/dz
+    L4 = normalVel * dVel_dx[1];   // w dv/dz
+    dd=IntVector(2,0,1);
+  }
+   
+  //__________________________________
+  //  user_inputs
+  double p_infinity = user_inputs->press_infinity;
+  double sigma      = user_inputs->sigma;
+  double sp         = 0;
+  
+  //__________________________________
+  //  Modify the Li terms
+  //  equation 8 & 9 of Sutherland
+  double K =  sigma * (1.0 - maxMach*maxMach)/domainLength[dir];
+  
+  if (face == Patch::xminus ||     // LEFT  BOTTOM  BACK FACES
+      face == Patch::yminus ||
+      face == Patch::zminus) {
+    if(normalVel < 0 ){   // flowing out of the domain
+      L5 = K * speedSound * (press - p_infinity) + 0.5 * sp;
+    }
+    if(normalVel >=0) {   // flowing into the domain
+      L1 = L1;            // unchanged
+      L2 = -sp/speedSoundsqr;
+      L3 = 0.0;
+      L4 = 0.0;
+      L5 = 0.5 * sp;
+    }
+  }
+  
+  if (face == Patch::xplus ||     //  RIGHT  TOP  FRONT FACES
+      face == Patch::yplus ||
+      face == Patch::zplus) {
+    double K = 0.0;
+    if(normalVel > 0 ){   // flowing out of the domain
+      L1 = K * speedSound * (press - p_infinity) + 0.5 * sp;
+    }
+    if(normalVel <=0) {   // flowing into the domain
+      L1 = 0.5 * sp;
+      L2 = -sp/speedSoundsqr;
+      L3 = 0.0;
+      L4 = 0.0;
+      L5 = L5;            //unchanged
+    }
+  }  
+  
+  //__________________________________
+  //  compute Di terms based on the 
+  // modified Ls
+  d[1][c][dir] = (L2 + 0.5 * (L1 + L5))/speedSoundsqr;
+  d[2][c][dir] = 0.5 * (L5 + L1);
+ 
+  if (dir == 0) {   // X-normal direction
     d[3][c][dir] = 0.5 * (L5 - L1)/(rho * speedSound);
     d[4][c][dir] = L3;
     d[5][c][dir] = L4;
     dd=IntVector(0,1,2);
   }
   if (dir == 1) {   // Y-normal direction
-    L3 = normalVel * dVel_dx[0];   // v du/dy
-    L4 = normalVel * dVel_dx[2];   // v dw/dy
     d[3][c][dir] = L3;
     d[4][c][dir] = 0.5 * (L5 - L1)/(rho * speedSound);
     d[5][c][dir] = L4;
     dd=IntVector(1,0,2);
   }
   if (dir == 2) {   // Z-normal direction
-    L3 = normalVel * dVel_dx[0];  // w du/dz
-    L4 = normalVel * dVel_dx[1];  // w dv/dz
     d[3][c][dir] = L3;
     d[4][c][dir] = L4;
     d[5][c][dir] = 0.5 * (L5 - L1)/(rho * speedSound);
     dd=IntVector(2,0,1);
   }
+  
 #if 0
    //__________________________________
    //  debugging
@@ -215,9 +295,10 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
                constCCVariable<double>& rho,              
                const CCVariable<double>& press,                   
                constCCVariable<Vector>& vel,                  
-               constCCVariable<double>& speedSound_,                    
+               constCCVariable<double>& speedSound,                    
                const Patch* patch,
-               SimulationStateP& sharedState)                              
+               SimulationStateP& sharedState,
+               const Lodi_user_inputs* user_inputs)                              
 {
   cout_doing << "LODI computeLODIFirstOrder "<< endl;
   Vector dx = patch->dCell();
@@ -237,9 +318,17 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
   L_Offset[Patch::zminus] = IntVector(0, 0, 0);
   L_Offset[Patch::zplus]  = IntVector(0, 0, -1);
   
+  // Characteristic Length of the overall domain
+  Vector domainLength;
+  const Level* level = patch->getLevel();
+  GridP grid = level->getGrid();
+  grid->getLength(domainLength, "minusExtraCells");
+
   for (int i = 1; i<= 5; i++ ) {           // don't initialize inside main loop
     d[i].initialize(Vector(0.0,0.0,0.0));  // you'll overwrite previously compute di
   }
+  
+  //__________________________________
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType>::const_iterator iter;
   
@@ -254,6 +343,16 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
     IntVector axes = patch->faceAxes(face);
     int P_dir = axes[0]; // find the principal dir
     double delta = dx[P_dir];
+    
+/*`==========TESTING==========*/
+    // find max Mach Number
+    double maxMach = 0.0;
+    for(CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells"); 
+        !iter.done();iter++) {
+      IntVector c = *iter;
+      maxMach = Max(maxMach, fabs(vel[c][P_dir]/speedSound[c]));
+    } 
+/*===========TESTING==========`*/
 
     for(CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells"); 
         !iter.done();iter++) {
@@ -265,8 +364,8 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
       double dp_dx   = (press[r] - press[l])/delta;
       Vector dVel_dx = (vel[r]   - vel[l])/delta;
 
-      Di(d, P_dir, c,
-         speedSound_[c], rho[c], vel[c][P_dir], drho_dx, dp_dx, dVel_dx); 
+      Di(d, P_dir, c, face, domainLength, user_inputs, maxMach, press[c],
+         speedSound[c], rho[c], vel[c][P_dir], drho_dx, dp_dx, dVel_dx); 
 
     }  // faceCelliterator 
   }  // loop over faces
@@ -491,7 +590,7 @@ void  lodi_bc_preprocess( const Patch* patch,
 
   //compute Di at boundary cells
   computeDi(di, rho_old,  press_tmp, vel_old, 
-            speedSound, patch, sharedState);
+            speedSound, patch, sharedState, lv->user_inputs);
 }  
  
 /*________________________________________________________
