@@ -613,12 +613,18 @@ BoundaryCondition::sched_recomputePressureBC(const LevelP& level,
 		    Ghost::None, numGhostCells);
       tsk->requires(new_dw, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
+      for (int ii = 0; ii < d_nofScalars; ii++)
+	tsk->requires(new_dw, d_lab->d_scalarINLabel, ii, patch,
+		      Ghost::None, numGhostCells);
+      
 
       // This task computes new uVelocity, vVelocity and wVelocity
       tsk->computes(new_dw, d_lab->d_uVelocityCPBCLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_vVelocityCPBCLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_wVelocityCPBCLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_pressureSPBCLabel, matlIndex, patch);
+      for (int ii = 0; ii < d_nofScalars; ii++)
+	tsk->computes(new_dw, d_lab->d_scalarCPBCLabel, ii, patch);
 
       sched->addTask(tsk);
     }
@@ -1653,6 +1659,7 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
   CCVariable<int> cellType;
   CCVariable<double> density;
   CCVariable<double> pressure;
+  vector<CCVariable<double> > scalar(d_nofScalars);
   SFCXVariable<double> uVelocity;
   SFCYVariable<double> vVelocity;
   SFCZVariable<double> wVelocity;
@@ -1672,6 +1679,9 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
 	      nofGhostCells);
   new_dw->get(wVelocity, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
+  for (int ii = 0; ii < d_nofScalars; ii++)
+    new_dw->get(scalar[ii], d_lab->d_scalarINLabel, ii, patch, Ghost::None,
+		nofGhostCells);
 
   // Get the low and high index for the patch and the variables
   IntVector domLoScalar = density.getFortLowIndex();
@@ -1698,12 +1708,23 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
 	      cellType.getPointer(),
 	      &(d_pressureBdry->d_cellTypeID),
 	      &(d_pressureBdry->refPressure));
+  // set values of the scalars on the scalar boundary
+  for (int ii = 0; ii < d_nofScalars; ii++) {
+    FORT_PROFSCALAR(domLoScalar.get_pointer(), domHiScalar.get_pointer(),
+		    idxLo.get_pointer(), idxHi.get_pointer(),
+		    scalar[ii].getPointer(), cellType.getPointer(),
+		    &(d_pressureBdry->streamMixturefraction[ii]),
+		    &(d_pressureBdry->d_cellTypeID));
+  }
+      
 
   // Put the calculated data into the new DW
   new_dw->put(uVelocity, d_lab->d_uVelocityCPBCLabel, matlIndex, patch);
   new_dw->put(vVelocity, d_lab->d_vVelocityCPBCLabel, matlIndex, patch);
   new_dw->put(wVelocity, d_lab->d_wVelocityCPBCLabel, matlIndex, patch);
   new_dw->put(pressure, d_lab->d_pressureSPBCLabel, matlIndex, patch);
+  for (int ii = 0; ii < d_nofScalars; ii++) 
+    new_dw->put(scalar[ii], d_lab->d_scalarCPBCLabel, ii, patch);
 } 
 
 //****************************************************************************
@@ -2087,6 +2108,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.52  2000/08/10 00:56:33  rawat
+// added pressure bc for scalar and changed discretization option for velocity
+//
 // Revision 1.51  2000/08/09 03:17:56  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //

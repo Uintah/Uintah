@@ -166,6 +166,9 @@ ArchesLabel::ArchesLabel()
 				    CCVariable<double>::getTypeDescription() );
   d_scalarSPLabel = scinew VarLabel("scalarSP",
 				   CCVariable<double>::getTypeDescription() );
+
+  d_scalarCPBCLabel = scinew VarLabel("scalarCPBC",
+				      CCVariable<double>::getTypeDescription() );
   // Scalar Coef
   d_scalCoefSBLMLabel = scinew VarLabel("scalCoefSBLM",
 				   CCVariable<double>::getTypeDescription() );
@@ -239,6 +242,9 @@ ArchesLabel::~ArchesLabel()
 
 //
 // $Log$
+// Revision 1.6  2000/08/10 00:56:33  rawat
+// added pressure bc for scalar and changed discretization option for velocity
+//
 // Revision 1.5  2000/08/01 23:28:43  skumar
 // Added residual calculation procedure and modified templates in linear
 // solver.  Added template for order-of-magnitude term calculation.

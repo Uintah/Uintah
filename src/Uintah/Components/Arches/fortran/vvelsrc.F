@@ -111,36 +111,36 @@ c     viscous sources
          do 110 j = JSTV,JENDV
             do 100 i = ISTV,IENDV
                VOL = SEW(I)*SNSV(J)*STB(K)
-c               VISE = PT25*(VIS(I,J,K)+VIS(I+1,J,K)+
-c     &              VIS(I,J-1,K)+VIS(I+1,J-1,K))
-c               VISW = PT25*(VIS(I,J,K)+VIS(I-1,J,K)+
-c     &              VIS(I,J-1,K)+VIS(I-1,J-1,K))
-c               VISN = FAC1V(J)*VIS(I,J,K)+FAC2V(J)*
-c     $              VIS(I,J+JNSDV(J),K)
-c               VISS = FAC3V(J)*VIS(I,J-1,K)+FAC4V(J)*
-c     $              VIS(I,J+JSSDV(J),K)  
-c               VIST = PT25*(VIS(I,J,K)+VIS(I,J,K+1)+
-c     &              VIS(I,J-1,K)+VIS(I,J-1,K+1))
-c               VISB = PT25*(VIS(I,J,K)+VIS(I,J,K-1)+
-c     &              VIS(I,J-1,K)+VIS(I,J-1,K-1))
-c               DUDYE = (UU(I+1,J,K)-UU(I+1,J-1,K))/DYPS(J)
-c               DUDYW = (UU(I,J,K)-UU(I,J-1,K))/DYPS(J)
-c               VISEI = CEE(I)*VISE + CWE(I)*VISW
-c               VISWI = CWW(I)*VISW - CWE(I)*VISE
-c               DVDYN  = (VV(I,J+1,K)-VV(I,J,K))/SNS(J)
-c               DVDYS  = (VV(I,J,K)-VV(I,J-1,K))/SNS(J-1)
-c               VISNI = CNNV(J)*VISN + CSNV(J)*VISS
-c               VISSI = CSSV(J)*VISS - CSNV(J)*VISN
-c               DWDYT = (WW(I,J,K+1)-WW(I,J-1,K+1))/DYPS(J)
-c               DWDYB = (WW(I,J,K)-WW(I,J-1,K))/DYPS(J)
-c               VISTI = CTT(K)*VIST + CBT(K)*VISB
-c               VISBI = CBB(K)*VISB - CBT(K)*VIST
+               VISE = PT25*(VIS(I,J,K)+VIS(I+1,J,K)+
+     &              VIS(I,J-1,K)+VIS(I+1,J-1,K))
+               VISW = PT25*(VIS(I,J,K)+VIS(I-1,J,K)+
+     &              VIS(I,J-1,K)+VIS(I-1,J-1,K))
+               VISN = FAC1V(J)*VIS(I,J,K)+FAC2V(J)*
+     $              VIS(I,J+JNSDV(J),K)
+               VISS = FAC3V(J)*VIS(I,J-1,K)+FAC4V(J)*
+     $              VIS(I,J+JSSDV(J),K)  
+               VIST = PT25*(VIS(I,J,K)+VIS(I,J,K+1)+
+     &              VIS(I,J-1,K)+VIS(I,J-1,K+1))
+               VISB = PT25*(VIS(I,J,K)+VIS(I,J,K-1)+
+     &              VIS(I,J-1,K)+VIS(I,J-1,K-1))
+               DUDYE = (UU(I+1,J,K)-UU(I+1,J-1,K))/DYPS(J)
+               DUDYW = (UU(I,J,K)-UU(I,J-1,K))/DYPS(J)
+               VISEI = CEE(I)*VISE + CWE(I)*VISW
+               VISWI = CWW(I)*VISW - CWE(I)*VISE
+               DVDYN  = (VV(I,J+1,K)-VV(I,J,K))/SNS(J)
+               DVDYS  = (VV(I,J,K)-VV(I,J-1,K))/SNS(J-1)
+               VISNI = CNNV(J)*VISN + CSNV(J)*VISS
+               VISSI = CSSV(J)*VISS - CSNV(J)*VISN
+               DWDYT = (WW(I,J,K+1)-WW(I,J-1,K+1))/DYPS(J)
+               DWDYB = (WW(I,J,K)-WW(I,J-1,K))/DYPS(J)
+               VISTI = CTT(K)*VIST + CBT(K)*VISB
+               VISBI = CBB(K)*VISB - CBT(K)*VIST
                SU(I,J,K) = SU(I,J,K)+
-c     &              ((VISEI*DUDYE-VISWI*DUDYW)/SEW(I) +
-c     &               (VISNI*DVDYN-VISSI*DVDYS)/SNSV(J) +
-c     &               (VISTI*DWDYT-VISBI*DWDYB)/STB(K) +
+     &              ((VISEI*DUDYE-VISWI*DUDYW)/SEW(I) +
+     &               (VISNI*DVDYN-VISSI*DVDYS)/SNSV(J) +
+     &               (VISTI*DWDYT-VISBI*DWDYB)/STB(K) +
      &               (old_DEN(I,J,K)*(old_VV(I,J,K)-VV(I,J,K))/DELTAT +
-     &               (PT5*(DEN(I,J-1,K)+DEN(I,J,K))-DEN_REF)*GRAV)*VOL
+     &               (PT5*(DEN(I,J-1,K)+DEN(I,J,K))-DEN_REF)*GRAV))*VOL
  100        continue
  110     continue
  120  continue
@@ -150,6 +150,9 @@ c     &               (VISTI*DWDYT-VISBI*DWDYB)/STB(K) +
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/08/10 00:56:38  rawat
+c added pressure bc for scalar and changed discretization option for velocity
+c
 c Revision 1.2  2000/07/28 02:31:04  rawat
 c moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 c coeffecients

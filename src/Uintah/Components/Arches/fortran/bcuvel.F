@@ -76,9 +76,9 @@ c*********************************************************************
       ISTU = idxLoU(1)+1
       JSTU = idxLoU(2)+1
       KSTU = idxLoU(3)+1
-      IENDU = idxHiU(1)-1
-      JENDU = idxHiU(2)-1
-      KENDU = idxHiU(3)-1
+      IENDU = idxHiU(1)
+      JENDU = idxHiU(2)
+      KENDU = idxHiU(3)
       
 c------------------------------------------------------------------ 
 c     interior intrusions
@@ -262,6 +262,9 @@ c                  SU(I+1,J,K+1) = SUL(I+1,J,K+1)
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/08/10 00:56:38  rawat
+c added pressure bc for scalar and changed discretization option for velocity
+c
 c Revision 1.2  2000/07/14 03:45:48  rawat
 c completed velocity bc and fixed some bugs
 c
