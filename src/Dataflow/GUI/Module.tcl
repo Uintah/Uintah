@@ -82,6 +82,7 @@ itcl_class Module {
 	foreach i "[info vars $this-*]" {
 	    unset $i
 	}
+
 	destroy $this
     }
     
@@ -111,7 +112,7 @@ itcl_class Module {
     public show_status 1
 
     method name {} {
-	return name
+	return $name
     }
     
     method get_group {} {
@@ -2667,7 +2668,31 @@ proc configureOPorts {modid} {
 }
 
 proc moduleHelp {modid} {
-    $modid-c help
+    set w .mHelpWindow[$modid name]
+	
+    # does the window exist?
+    if [winfo exists $w] {
+	raise $w
+	return;
+    }
+	
+    # create the window
+    toplevel $w
+    append t "Help for " [$modid name]
+    wm title $w $t
+	
+    frame $w.help
+    text $w.help.txt -relief sunken -bd 2 -yscrollcommand "$w.help.sb set"
+    scrollbar $w.help.sb -relief sunken -command "$w.help.txt yview"
+    pack $w.help.txt $w.help.sb -side left -padx 5 -pady 5 -fill y
+
+    frame $w.fbuttons 
+    button $w.fbuttons.ok -text "Close" -command "destroy $w"
+    
+    pack $w.help $w.fbuttons -side top -padx 5 -pady 5
+    pack $w.fbuttons.ok -side right -padx 5 -pady 5 -ipadx 3 -ipady 3
+
+    $w.help.txt insert end [$modid-c help]
 }
 
 # By Mohamed Dekhil
