@@ -156,7 +156,7 @@ Material *image = new
 ImageMaterial("/usr/sci/data/Geometry/textures/granite-tile.ppm",
 ImageMaterial::Tile,
 ImageMaterial::Tile,
-Color(0,0,0),1,Color(1,1,1),4000);
+1,Color(1,1,1),4000);
 
 
 // matl2 = new Checker(image,image, Vector(1,1,1,0), Vector(-1,1,1,0));
