@@ -58,6 +58,9 @@ void VectorFieldOperator::performOperation(VectorField* vectorField,
   case 3: // Vector length
     computeScalars(vectorField, scalarField, LengthOp());
     break;
+  case 4: // Vector curvature
+    computeScalars(vectorField, scalarField, VorticityOp());
+    break;
   default:
     std::cerr << "VectorFieldOperator::performOperation: "
 	      << "Unexpected Operation Type #: " << guiOperation.get() << "\n";

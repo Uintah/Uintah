@@ -46,6 +46,9 @@ void VectorParticlesOperator::execute(void)
   case 3: // extract the length 
     computeScalars(pTP, pSP, LengthOp());
     break;
+  case 4: // extract the curvature
+    computeScalars(pTP, pSP, VorticityOp());
+    break;
   default:
     std::cerr << "VectorFieldOperator::performOperation: "
 	      << "Unexpected Operation Type #: " << guiOperation.get() << "\n";
