@@ -1,9 +1,7 @@
 #!/bin/sh
 
-TEST=$1
-TEST_UDADIR=$2
-COMPARE_UDADIR=$3
-TMPDIR=$4
+TEST_UDADIR=$1
+COMPARE_UDADIR=$2
 
 if [ ! -d "$TEST_UDADIR" ]; then
   echo "$TEST_UDADIR doesn't exist"
