@@ -271,9 +271,11 @@ tkMain(argc, argv)
 	    Tcl_DStringFree(&buffer);
 	}
 	Tk_CreateFileHandler(0, TK_READABLE, StdinProc, (ClientData) 0);
-	if (tty) {
+/*
+        if (tty) {
 	    Prompt(the_interp, 0);
 	}
+ */
     }
     fflush(stdout);
     Tcl_DStringInit(&command);
@@ -328,7 +330,6 @@ StdinProc(clientData, mask)
     char *cmd;
     int code, count;
 
-    fprintf(stderr, "Reading from stdin\n");
     count = read(fileno(stdin), input, BUFFER_SIZE);
     if (count <= 0) {
 	if (!gotPartial) {
@@ -383,6 +384,15 @@ StdinProc(clientData, mask)
 	Prompt(the_interp, gotPartial);
     }
 }
+
+
+void Tk_FirstPrompt()
+{
+    if (tty) {
+	Prompt(the_interp, 0);
+    }
+}
+
 
 /*
  *----------------------------------------------------------------------
