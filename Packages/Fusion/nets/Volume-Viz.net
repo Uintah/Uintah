@@ -1,151 +1,153 @@
-# SCI Network 1.0
+# SCI Network 1.20
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 17 17]
-set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 231 129]
-set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 231 20]
-set m3 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 17 129]
-set m4 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 53 215]
-set m5 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 17 394]
-set m6 [addModuleAtPosition "SCIRun" "Visualization" "TextureVolVis" 17 486]
-set m7 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 17 304]
-set m8 [addModuleAtPosition "SCIRun" "Render" "Viewer" 17 575]
+global userName
+set userName ""
 
-addConnection $m2 0 $m1 0
-addConnection $m5 0 $m6 0
-addConnection $m1 0 $m6 1
-addConnection $m7 0 $m5 0
-addConnection $m4 0 $m7 1
-addConnection $m0 0 $m3 0
-addConnection $m3 0 $m4 0
-addConnection $m3 0 $m7 0
-addConnection $m0 0 $m1 1
-addConnection $m6 0 $m8 0
+global runDate
+set runDate ""
 
+global runTime
+set runTime ""
+
+global notes
+set notes ""
+
+set bbox {17 17 426 712}
+
+# Set the name of our network
+# NOTE: $Subnet(Loading) is the Sub-Network slot # we are loading into
+set Subnet(Subnet$Subnet(Loading)_Name) {Main}
+
+# Create the Modules
+set m0 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 17 17]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 231 308]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 231 199]
+set m3 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleLattice" 53 308]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 17 487]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "TextureVolVis" 17 579]
+set m6 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 17 397]
+set m7 [addModuleAtPosition "SCIRun" "Render" "Viewer" 17 668]
+set m8 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 17 102]
+set m9 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 216 105]
+set m10 [addModuleAtPosition "Fusion" "Fields" "NrrdFieldConverter" 17 192]
+
+# Set the Module Notes Dispaly Options
+
+# Create the Connections between Modules
+set c0 [addConnection $m0 0 $m8 0]
+set c1 [addConnection $m0 2 $m9 0]
+set c2 [addConnection $m8 0 $m10 0]
+set c3 [addConnection $m10 0 $m3 0]
+set c4 [addConnection $m10 0 $m6 0]
+set c5 [addConnection $m6 0 $m4 0]
+set c6 [addConnection $m4 0 $m5 0]
+set c7 [addConnection $m2 0 $m1 0]
+set c8 [addConnection $m5 0 $m7 0]
+set c9 [addConnection $m0 1 $m8 1]
+set c10 [addConnection $m9 0 $m10 1]
+set c11 [addConnection $m10 0 $m1 1]
+set c12 [addConnection $m3 0 $m6 1]
+set c13 [addConnection $m1 0 $m5 1]
+
+# Mark which Connections are Disabled
+
+# Set the Connection Notes and Dislpay Options
+
+# Set the GUI variables for each Module
 set $m0-notes {}
-set $m0-show_status {1}
-set $m0-filename {/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10089_00.mds}
+set $m0-selectable_min {0}
+set $m0-selectable_max {100}
+set $m0-selectable_inc {1}
+set $m0-range_min {0}
+set $m0-range_max {0}
+set $m0-playmode {once}
+set $m0-current {0}
+set $m0-execmode {init}
+set $m0-delay {0}
+set $m0-inc-amount {1}
+set $m0-filename {/z/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10107.h5}
+set $m0-datasets {{/ NIMROD OUTPUTS CODE GRID PHI} {/ NIMROD OUTPUTS CODE GRID R} {/ NIMROD OUTPUTS CODE GRID Z} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE PRESSURE Values}}
+set $m0-dumpname {/tmp/NIMROD_10107.h5.dump}
+set $m0-ports {   0   1   1   2}
+set $m0-ndims {0}
+set $m0-mergeData {1}
+set $m0-assumeSVT {1}
+set $m0-animate {0}
+set $m0-0-dim {41}
+set $m0-0-start {0}
+set $m0-0-count {41}
+set $m0-0-stride {1}
+set $m0-1-dim {2}
+set $m0-1-start {0}
+set $m0-1-count {1}
+set $m0-1-stride {1}
+set $m0-2-dim {2}
+set $m0-2-start {0}
+set $m0-2-count {1}
+set $m0-2-stride {1}
+set $m0-3-dim {2}
+set $m0-3-start {0}
+set $m0-3-count {1}
+set $m0-3-stride {1}
+set $m0-4-dim {2}
+set $m0-4-start {0}
+set $m0-4-count {1}
+set $m0-4-stride {1}
+set $m0-5-dim {2}
+set $m0-5-start {0}
+set $m0-5-count {1}
+set $m0-5-stride {1}
 set $m1-notes {}
-set $m1-show_status {1}
 set $m1-isFixed {0}
-set $m1-min {      1.04083e-17}
-set $m1-max {           476463}
+set $m1-min {-0.0058362519159978693}
+set $m1-max {0.72543642484822879}
 set $m1-makeSymmetric {0}
 set $m2-notes {}
-set $m2-show_status {1}
 set $m2-tcl_status {Calling GenStandardColorMaps!}
 set $m2-positionList {{0 35} {6 17} {389 0}}
 set $m2-nodeList {256 257 258}
-set $m2-width {389}
-set $m2-height {40}
+set $m2-width {1}
+set $m2-height {1}
 set $m2-mapType {3}
 set $m2-minRes {12}
 set $m2-resolution {255}
 set $m2-realres {255}
 set $m2-gamma {0.01}
 set $m3-notes {}
-set $m3-show_status {1}
-set $m3-wrap {1}
-set $m3-dims {3}
-set $m3-i-dim {385}
-set $m3-j-dim {192}
-set $m3-k-dim {10}
-set $m3-i-start {0}
-set $m3-j-start {0}
-set $m3-k-start {0}
-set $m3-i-stop {384}
-set $m3-j-stop {0}
-set $m3-k-stop {0}
-set $m3-i-stride {10}
-set $m3-j-stride {5}
-set $m3-k-stride {1}
-set $m3-i-wrap {0}
-set $m3-j-wrap {1}
-set $m3-k-wrap {1}
+set $m3-sizex {64}
+set $m3-sizey {64}
+set $m3-sizez {64}
+set $m3-padpercent {0}
+set $m3-data-at {Nodes}
 set $m4-notes {}
-set $m4-show_status {1}
-set $m4-sizex {32}
-set $m4-sizey {32}
-set $m4-sizez {32}
-set $m4-padpercent {0}
-set $m4-data-at {Nodes}
+set $m4-is_fixed {0}
+set $m4-max_brick_dim {128}
+set $m4-sel_brick_dim {64}
+set $m4-min {-0.0046853024632029297}
+set $m4-max {0.724180492211011}
 set $m5-notes {}
-set $m5-show_status {1}
-set $m5-is_fixed {0}
-set $m5-max_brick_dim {128}
-set $m5-sel_brick_dim {64}
-set $m5-min {                0}
-set $m5-max {      1.90382e+06}
+set $m5-num_slices {128}
+set $m5-draw_mode {0}
+set $m5-render_style {0}
+set $m5-alpha_scale {-0.764}
+set $m5-interp_mode {1}
 set $m6-notes {}
-set $m6-show_status {1}
-set $m6-num_slices {128}
-set $m6-draw_mode {0}
-set $m6-render_style {0}
-set $m6-alpha_scale {-0.764}
-set $m6-interp_mode {1}
+set $m6-interpolation_basis {linear}
+set $m6-map_source_to_single_dest {0}
+set $m6-exhaustive_search {0}
+set $m6-exhaustive_search_max_dist {-1}
+set $m6-np {1}
 set $m7-notes {}
-set $m7-show_status {1}
-set $m7-interpolation_basis {linear}
-set $m7-map_source_to_single_dest {0}
-set $m7-exhaustive_search {0}
-set $m7-exhaustive_search_max_dist {-1}
-set $m7-np {1}
 set $m8-notes {}
-set $m8-show_status {1}
-$m8 ui
-set $m8-ViewWindow_0-pos {}
-set $m8-ViewWindow_0-caxes {0}
-set $m8-ViewWindow_0-raxes {1}
-set $m8-ViewWindow_0-iaxes {}
-set $m8-ViewWindow_0-have_collab_vis {0}
-set $m8-ViewWindow_0-view-eyep-x {          2.56322}
-set $m8-ViewWindow_0-view-eyep-y {         -18.4985}
-set $m8-ViewWindow_0-view-eyep-z {          7.49057}
-set $m8-ViewWindow_0-view-lookat-x {        0.0758065}
-set $m8-ViewWindow_0-view-lookat-y {        0.0720953}
-set $m8-ViewWindow_0-view-lookat-z {         0.047599}
-set $m8-ViewWindow_0-view-up-x {        -0.396375}
-set $m8-ViewWindow_0-view-up-y {         0.295316}
-set $m8-ViewWindow_0-view-up-z {         0.869296}
-set $m8-ViewWindow_0-view-fov {               20}
-set $m8-ViewWindow_0-view-eyep_offset-x {}
-set $m8-ViewWindow_0-view-eyep_offset-y {}
-set $m8-ViewWindow_0-view-eyep_offset-z {}
-set $m8-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
-set $m8-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
-set $m8-ViewWindow_0-bgcolor-r {                0}
-set $m8-ViewWindow_0-bgcolor-g {                0}
-set $m8-ViewWindow_0-bgcolor-b {                0}
-set $m8-ViewWindow_0-shading {}
-set $m8-ViewWindow_0-do_stereo {0}
-set $m8-ViewWindow_0-ambient-scale {1.0}
-set $m8-ViewWindow_0-diffuse-scale {1.0}
-set $m8-ViewWindow_0-specular-scale {0.4}
-set $m8-ViewWindow_0-emission-scale {1.0}
-set $m8-ViewWindow_0-shininess-scale {1.0}
-set $m8-ViewWindow_0-polygon-offset-factor {1.0}
-set $m8-ViewWindow_0-polygon-offset-units {0.0}
-set $m8-ViewWindow_0-point-size {1.0}
-set $m8-ViewWindow_0-line-width {1.0}
-set $m8-ViewWindow_0-sbase {0.40}
-set $m8-ViewWindow_0-sr {1}
-set $m8-ViewWindow_0-do_bawgl {0}
-set $m8-ViewWindow_0-drawimg {}
-set $m8-ViewWindow_0-saveprefix {}
-set $m8-ViewWindow_0-resx {}
-set $m8-ViewWindow_0-resy {}
-set $m8-ViewWindow_0-aspect {}
-set $m8-ViewWindow_0-aspect_ratio {}
-set $m8-ViewWindow_0-global-light {1}
-set $m8-ViewWindow_0-global-fog {0}
-set $m8-ViewWindow_0-global-debug {0}
-set $m8-ViewWindow_0-global-clip {0}
-set $m8-ViewWindow_0-global-cull {0}
-set $m8-ViewWindow_0-global-dl {0}
-set $m8-ViewWindow_0-global-type {Gouraud}
-set $m8-ViewWindow_0-ortho-view {0}
-set $m8-ViewWindow_0-unused {1}
-$m3 initialize_ui
+set $m8-datasets {{-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-R:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-Z:Scalar} }
+set $m8-nmodes {0}
+set $m9-notes {}
+set $m9-datasets {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar}
+set $m9-nmodes {0}
+set $m10-notes {}
+set $m10-nomesh {0}
+set $m10-datasets {{-NIMROD-OUTPUTS-CODE-GRID-XYZ:Vector} {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar} }
 
 ::netedit scheduleok

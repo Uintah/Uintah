@@ -576,14 +576,8 @@ NIMRODConverter::execute(){
 	return;
       }
 
-      ostringstream str;
-
-      str << idim << " " << jdim << " " << kdim << "  " << convertStr << endl;
-      remark( str.str() );
-
       nHandle_ = algo_mesh->execute( nHandles, mesh_, data_, modes_,
 				     idim, jdim, kdim );
-      remark( "Finished" );
     } else {
       error( "Nothing to convert." );
       error_ = true;
@@ -603,8 +597,6 @@ NIMRODConverter::execute(){
     // Send the data downstream
     ofield_port->send( nHandle_ );
   }
-
-  remark( "Finished sending" );
 }
 
 void
