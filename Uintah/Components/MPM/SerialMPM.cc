@@ -698,6 +698,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	 sched->addTask(t);
       }
 
+#if 0
       if(t + dt >= d_nextOutputTime)
       {
 	 Task *t = scinew Task("SerialMPM::interpolateParticlesForSaving",
@@ -725,6 +726,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
          sched->addTask(t);
 
       }
+#endif
     }
     
     if(t + dt >= d_nextOutputTime)
@@ -760,7 +762,9 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 
    // Add pleaseSaves here for each of the grid variables
    // created by interpolateParticlesForSaving
+#if 0
    new_dw->pleaseSave(lb->gStressForSavingLabel, numMatls);
+#endif
 
    if(d_fracture) {
      new_dw->pleaseSave(lb->pCrackSurfaceNormalLabel, numMatls);
@@ -1844,6 +1848,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.144  2000/09/11 17:55:08  guilkey
+// Commented out some code that is apparently breaking the 1000grains
+// runs.
+//
 // Revision 1.143  2000/09/11 01:08:37  tan
 // Modified time step calculation (in constitutive model computeStressTensor(...))
 // when fracture cracking speed involved.
