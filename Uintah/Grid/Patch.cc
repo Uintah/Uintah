@@ -272,14 +272,12 @@ Patch::getCellIterator() const
    return CellIterator(getCellLowIndex(), getCellHighIndex());
 }
 
-#if 0
 Box Patch::getGhostBox(const IntVector& lowOffset,
 		       const IntVector& highOffset) const
 {
    return Box(d_level->getNodePosition(d_lowIndex+lowOffset),
 	      d_level->getNodePosition(d_highIndex+highOffset));
 }
-#endif
 
 NodeIterator Patch::getNodeIterator() const
 {
@@ -612,7 +610,6 @@ void Patch::computeVariableExtents(TypeDescription::Type basis,
 			   neighbors, low, high);
 }
 
-#if 0
 // numGC = number of ghost cells
 IntVector Patch::getGhostCellLowIndex(const int numGC) const
 {  IntVector h(d_lowIndex-
@@ -680,10 +677,12 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 			 getBCType(zplus) == Neighbor?numGC:1));
    return h;
 }
-#endif
 
 //
 // $Log$
+// Revision 1.22  2000/09/25 20:58:14  sparker
+// Removed a few "if 0" statements.
+//
 // Revision 1.21  2000/09/25 20:37:43  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
