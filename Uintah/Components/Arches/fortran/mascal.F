@@ -148,7 +148,7 @@ c     double precision sign
 
       tcons = 1.0
       ltest = .false.
-      l2up = .true.
+      l2up = .false.
 
 C--------------------------------------------------------------------
       if (.not.ltest) then
