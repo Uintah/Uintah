@@ -215,6 +215,11 @@ private:
   vector<Node::index_type>	faces_;
   vector<int>			edge_neighbors_;
   vector<Vector>		normals_; //! normalized per node
+  Mutex				point_lock_;
+  Mutex				edge_lock_;
+  Mutex				face_lock_;
+  Mutex				edge_neighbor_lock_;
+  Mutex				normal_lock_;
   unsigned int			synchronized_;
 };
 
