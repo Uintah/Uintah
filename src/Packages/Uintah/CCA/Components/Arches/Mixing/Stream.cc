@@ -198,9 +198,9 @@ Stream::operator==(const Stream &rhs)
     if (d_sootData != rhs.d_sootData)
       return(false);
   }
-  else if (d_CO2index = rhs.d_CO2index)
+  else if (d_CO2index != rhs.d_CO2index)
     return(false);
-  else if (d_H2Oindex = rhs.d_H2Oindex)
+  else if (d_H2Oindex != rhs.d_H2Oindex)
     return(false);
   else
     return(true);
@@ -553,7 +553,11 @@ Stream::print_oneline(std::ofstream& out) {
 
 //
 // $Log$
+// Revision 1.26  2003/10/23 19:01:25  borodai
+// Bug fixes
+//
 // Revision 1.25  2003/09/09 01:43:23  desam
+//
 //      Modified to be used with static mixing tables and the previous intended
 //      mixing models
 //
