@@ -74,7 +74,7 @@ void GeomCone::adjust()
     zrotaxis=Cross(axis, z);
     zrotaxis.normalize();
     double cangle=Dot(z, axis)/height;
-    zrotangle=Acos(cangle);
+    zrotangle=-Acos(cangle);
 }
 
 void GeomCone::get_bounds(BBox& bb)
