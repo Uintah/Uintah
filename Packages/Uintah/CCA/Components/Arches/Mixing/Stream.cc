@@ -36,6 +36,8 @@ Stream::Stream(int numSpecies,  int numElements)
   // cp, molwt; total number of dependent state space variables also 
   // includes mass fraction of each species
   d_depStateSpaceVars = NUM_DEP_VARS + numSpecies;
+  d_CO2index = 0;
+  d_H2Oindex = 0;
 }
 
 
@@ -73,6 +75,9 @@ Stream::Stream(int numSpecies, int numElements, int numMixVars,
   // values of each rxn variable for normalization
   d_depStateSpaceVars = NUM_DEP_VARS + numSpecies + 2*sootTrue
     + 3*d_numRxnVars;
+  d_CO2index = 0;
+  d_H2Oindex = 0;
+  
 }
 
 
@@ -464,6 +469,9 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
 
 //
 // $Log$
+// Revision 1.19  2002/08/01 14:57:27  spinti
+// Modified files to return both CO2 and H2O mass fractions using getCO2 and getH2O functions in Stream class
+//
 // Revision 1.18  2002/07/16 23:03:15  rawat
 // Implemented Dynamic Procedure and filter operation using PETSc.
 //
