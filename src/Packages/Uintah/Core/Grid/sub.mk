@@ -28,18 +28,6 @@ SRCS     += \
 	$(SRCDIR)/VarLabelMatlPatchDW.cc \
 	$(SRCDIR)/Variable.cc \
 	$(SRCDIR)/PerPatchBase.cc \
-	$(SRCDIR)/GeometryPiece.cc \
-	$(SRCDIR)/SphereGeometryPiece.cc \
-	$(SRCDIR)/SphereMembraneGeometryPiece.cc \
-	$(SRCDIR)/BoxGeometryPiece.cc \
-	$(SRCDIR)/CylinderGeometryPiece.cc \
-	$(SRCDIR)/ConeGeometryPiece.cc \
-	$(SRCDIR)/TriGeometryPiece.cc \
-	$(SRCDIR)/UnionGeometryPiece.cc \
-	$(SRCDIR)/DifferenceGeometryPiece.cc \
-	$(SRCDIR)/IntersectionGeometryPiece.cc \
-	$(SRCDIR)/FileGeometryPiece.cc \
-	$(SRCDIR)/GeometryPieceFactory.cc \
 	$(SRCDIR)/VelocityBoundCond.cc \
 	$(SRCDIR)/TemperatureBoundCond.cc \
 	$(SRCDIR)/PressureBoundCond.cc \
@@ -58,9 +46,11 @@ SRCS     += \
 	$(SRCDIR)/ParticleVariable_special.cc \
 	$(SRCDIR)/fillFace_special.cc \
 	$(SRCDIR)/ComputeSet_special.cc \
-	$(SRCDIR)/ucg_templates.cc
+	$(SRCDIR)/ucg_templates.cc 
 
+SUBDIRS := $(SRCDIR)/GeomPiece
 
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
 	Packages/Uintah/Core/Math        \
