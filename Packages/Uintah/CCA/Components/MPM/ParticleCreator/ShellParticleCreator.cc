@@ -157,9 +157,15 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
           if (fabs(x) < 1.0e-15) x = 0.0;
           if (fabs(y) < 1.0e-15) y = 0.0;
           if (fabs(z) < 1.0e-15) z = 0.0;
-          if (x == patch->getBox().upper().x()) x -= 1.0e-10;
-          if (y == patch->getBox().upper().y()) y -= 1.0e-10;
-          if (z == patch->getBox().upper().z()) z -= 1.0e-10;
+	  double px = patch->getBox().upper().x();
+	  double py = patch->getBox().upper().y();
+	  double pz = patch->getBox().upper().z();
+          if (fabs(px) < 1.0e-15) px = 0.0;
+          if (fabs(py) < 1.0e-15) py = 0.0;
+          if (fabs(pz) < 1.0e-15) pz = 0.0;
+          if (x == px) x -= 1.0e-10;
+          if (y == py) y -= 1.0e-10;
+          if (z == pz) z -= 1.0e-10;
           position[pidx] = Point(x,y,z);
 	  if (!patch->findCell(position[pidx],cell_idx)) {
 	    cerr << "Pidx = " << pidx << " Pos = " << position[pidx]
