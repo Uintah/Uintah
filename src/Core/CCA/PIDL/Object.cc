@@ -43,6 +43,7 @@
 #include <sstream>
 #include <iostream>
 #include <stdlib.h>
+#include <Core/CCA/PIDL/ProxyBase.h>
 
 static bool showRef(){
   return getenv("SHOWREF")!=NULL;
@@ -239,7 +240,7 @@ void Object::setCalleeDistribution(std::string distname,
 				   MxNArrayRep* arrrep) 
 {
   //Clear existing distribution
-  d_serverContext->d_sched->clear(distname, "dummy uuid", callee);
+  d_serverContext->d_sched->clear(distname, ProxyID(), callee);
   //Reset distribution
   d_serverContext->d_sched->setCalleeRepresentation(distname,arrrep);
 }

@@ -43,36 +43,40 @@
 #include <Core/CCA/PIDL/ProxyBase.h>
 #include <Core/CCA/PIDL/TypeInfo.h>
 #include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/Comm/DT/DataTransmitter.h>
 #include <iostream>
-#include <Core/CCA/tools/sidl/uuid_wrapper.h>
+//#include <Core/CCA/tools/sidl/uuid_wrapper.h>
 #include <assert.h>
 
 using namespace SCIRun;
 
 ProxyBase::ProxyBase() 
-: proxy_uuid("NONENONENONENONENONENONENONENONENONE") 
+  : proxy_uuid()
+  //: proxy_uuid("NONENONENONENONENONENONENONENONENONE") 
 {
   xr = new XceptionRelay(this);
 }
 
 //remove it later
 ProxyBase::ProxyBase(const Reference& ref)
-: proxy_uuid("NONENONENONENONENONENONENONENONENONE")
+  : proxy_uuid()
+  //: proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
   xr = new XceptionRelay(this);
   rm.insertReference( ((Reference*)&ref)->clone());
 }
 
 ProxyBase::ProxyBase(Reference *ref)
-: proxy_uuid("NONENONENONENONENONENONENONENONENONE")
+  : proxy_uuid()
+  //: proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
   xr = new XceptionRelay(this);
   rm.insertReference(ref);
 }
 
 ProxyBase::ProxyBase(const ReferenceMgr& refM)
-: rm(refM),
-  proxy_uuid("NONENONENONENONENONENONENONENONENONE")
+: rm(refM), proxy_uuid()
+  //  proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
   xr = new XceptionRelay(this);
 }
@@ -110,9 +114,11 @@ ReferenceMgr* ProxyBase::_proxyGetReferenceMgr() const
   return (ReferenceMgr*)(&rm);
 }
 
-::std::string ProxyBase::getProxyUUID()
+//::std::string 
+ProxyID
+ProxyBase::getProxyUUID()
 {
-  if(proxy_uuid == "NONENONENONENONENONENONENONENONENONE") {
+  /*  if(proxy_uuid == "NONENONENONENONENONENONENONENONENONE") {
     if(rm.getRank() == 0) {
       proxy_uuid = getUUID(); 
     }
@@ -122,12 +128,17 @@ ReferenceMgr* ProxyBase::_proxyGetReferenceMgr() const
       (rm.intracomm)->broadcast(0,const_cast<char*>(proxy_uuid.c_str()),36);
     }
   }
+  */
+  if(proxy_uuid.isNull()){
+    proxy_uuid= DataTransmitter::nextProxyID();
+  }
+
   return proxy_uuid;
 }
 
 void ProxyBase::_proxycreateSubset(int localsize, int remotesize)
 {
-  if(proxy_uuid == "NONENONENONENONENONENONENONENONENONE") {
+  if(proxy_uuid.isNull()){
     getProxyUUID();
   }
   rm.createSubset(localsize,remotesize);
