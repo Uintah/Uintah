@@ -145,6 +145,9 @@ SCI_ARG_VAR(FFLAGS,Fortran 77 compiler flags)
 SCI_ARG_VAR(CPP,C preprocessor)
 SCI_ARG_VAR(CXXCPP,C++ preprocessor)
 
+#Get the host now since it is needed for the Package Checks.
+AC_CANONICAL_HOST
+
 # Initialize variables that control what optional checks to make
 ## all the optional tests we have... These get set in the macro 
 # SCI_SET_PACKAGE_CHECKS found in aclocal.m4.  Each package sets the 
@@ -467,7 +470,7 @@ SCI_ARG_ENABLE(scirun2,
   AC_HELP_STRING(--enable-scirun2,
                  Build experimental SCIRun 2),
   [enable_scirun2="$enableval"
-   [SCI_SET_PACKAGE_CHECKS(SCIRun2)]
+   [SCI_SET_PACKAGE_CHECKS(SCIRun2, $host)]
   ],
   [enable_scirun2=${enable_scirun2='no'}])
 SCI_ARG_ENABLE(rath,
@@ -539,7 +542,7 @@ for i in $package; do
    fi
    PACKAGE_DIRS=$PACKAGE_DIRS" Packages/$i"
    # set the package dependent checks
-   SCI_SET_PACKAGE_CHECKS($i)
+   SCI_SET_PACKAGE_CHECKS($i, $host)
 done
 
 if test "$pkg_BioPSE" = "yes" || test "$pkg_Insight" = "yes" ||
@@ -550,7 +553,7 @@ if test "$pkg_BioPSE" = "yes" || test "$pkg_Insight" = "yes" ||
       AC_MSG_WARN(an enabled package(s)... adding it to the list of requested packages.)
       PACKAGE_DIRS=$PACKAGE_DIRS" Packages/Teem"
       # set the package dependent checks
-      SCI_SET_PACKAGE_CHECKS(Teem)
+      SCI_SET_PACKAGE_CHECKS(Teem, $host)
       package="$package Teem"
    fi
 fi
@@ -561,7 +564,7 @@ if test "$pkg_Fusion" = "yes"; then
       AC_MSG_WARN(the Fusion package... adding it to the list of requested packages.)
       PACKAGE_DIRS=$PACKAGE_DIRS" Packages/DataIO"
       # set the package dependent checks
-      SCI_SET_PACKAGE_CHECKS(DataIO)
+      SCI_SET_PACKAGE_CHECKS(DataIO, $host)
       package="$package DataIO"
   fi
 fi
@@ -609,7 +612,6 @@ fi
 ##  --------------------------------------------------------------------
 
 echo 
-AC_CANONICAL_HOST
 IS_OSX="no"
 unset NUM_CPUS
 case $host in

@@ -805,6 +805,7 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_required_exc=no 
   sci_required_fortran=no
   sci_required_hdf5=no
+  sci_required_glew=no
   sci_required_globus=no
   sci_required_glui=no
   sci_required_glut=no
@@ -894,7 +895,7 @@ case $1 in
     sci_required_xalan=yes
   ;;
   Volume)
-    case "$host" in 
+    case $2 in 
      *-darwin*)
 	sci_required_glew=yes
 	;;
