@@ -50,7 +50,6 @@ void GLBar::resize( float dx, float dy ) {
   width += 2.0*dx;
   top += dy;
   bottom -= dy;
-  height += 2.0*dy;
 }
 
 void GLBar::draw( void ) {
