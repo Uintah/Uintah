@@ -117,13 +117,17 @@ LatVolMesh::get_center(Point &result, cell_index idx) const
 bool
 LatVolMesh::locate(cell_index &cell, const Point &p) const
 {
-  cell.i_ = (p.x() - min_.x()) / (max_.x() - min_.x()) * (nx_ - 1) + 0.5;
-  cell.j_ = (p.y() - min_.y()) / (max_.y() - min_.y()) * (ny_ - 1) + 0.5;
-  cell.k_ = (p.z() - min_.z()) / (max_.z() - min_.z()) * (nz_ - 1) + 0.5;
+  double i = (p.x() - min_.x()) / (max_.x() - min_.x()) * (nx_ - 1) + 0.5;
+  double j = (p.y() - min_.y()) / (max_.y() - min_.y()) * (ny_ - 1) + 0.5;
+  double k = (p.z() - min_.z()) / (max_.z() - min_.z()) * (nz_ - 1) + 0.5;
 
-  if (cell.i_ < 0 || cell.i_ >= (nx_-1) ||
-      cell.j_ < 0 || cell.j_ >= (ny_-1) ||
-      cell.k_ < 0 || cell.k_ >= (nz_-1))
+  cell.i_ = (unsigned int)i;
+  cell.j_ = (unsigned int)j;
+  cell.k_ = (unsigned int)k;
+
+  if (cell.i_ >= (nx_-1) ||
+      cell.j_ >= (ny_-1) ||
+      cell.k_ >= (nz_-1))
   {
     return false;
   }
