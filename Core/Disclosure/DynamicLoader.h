@@ -26,6 +26,7 @@
 #include <Core/Thread/ConditionVariable.h>
 
 #include <map>
+#include <list>
 #include <string>
 
 namespace SCIRun {
@@ -40,11 +41,11 @@ public:
 	      const string &tcn, const string &tcdec);
   
   //! add to the list of files to include.
-  void add_include(const string &inc) { includes_[inc] = 1; }
+  void add_include(const string &inc);
   void add_namespace(const string &inc) { namespaces_[inc] = 1; }
   
   string             filename_;
-  ci_map_type        includes_;
+  list<string>       includes_;
   ci_map_type        namespaces_;
   string             base_class_name_;
   string             template_class_name_;
