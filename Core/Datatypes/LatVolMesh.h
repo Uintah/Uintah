@@ -35,6 +35,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/MeshBase.h>
 #include <Core/share/share.h>
+#include <Core/Math/MusilRNG.h>
 #include <string>
 #include <iostream>
 
@@ -394,6 +395,24 @@ public:
   void get_normal(Vector &/* result */, Node::index_type /* index */) const
   { ASSERTFAIL("not implemented") }
 
+  void get_random_point(Point &p, const elem_index &ei) const {
+    static MusilRNG rng(1249);
+    node_array ra;
+    get_nodes(ra,ei);
+    Point p0,p1,p2;
+    get_point(p0,ra[0]);
+    get_point(p1,ra[1]);
+    get_point(p2,ra[2]);
+    Vector v0 = p1-p0;
+    Vector v1 = p2-p0;
+    double t = rng()*v0.length2();
+    double u = rng()*v1.length2();
+    if ( (t+u)>1 ) {
+      t = 1.-t;
+      u = 1.-u;
+    }
+    p = p0+(v0*t)+(v1*u);
+  }
   
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

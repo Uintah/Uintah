@@ -146,6 +146,29 @@ public:
   double get_area(Face::index_type &) { return 0; }
   double get_element_size(Cell::index_type &ci) { return get_volume(ci); }
   
+  void get_random_point(Point &p, const elem_index &ei) const {
+    static MusilRNG rng(1249);
+    node_array ra;
+    get_nodes(ra,ei);
+    Point p0,p1,p2,p3;
+    get_point(p0,ra[0]);
+    get_point(p1,ra[1]);
+    get_point(p2,ra[2]);
+    get_point(p3,ra[3]);
+    Vector v0 = ra[1]-ra[0];
+    Vector v1 = ra[2]-ra[0];
+    Vector v2 = ra[3]-ra[0];
+    double t = rng()*v0.length2();
+    double u = rng()*v1.length2();
+    double v = rng()*v2.length2();
+    if ( (t+u+v)>1 ) {
+      t = 1.-t;
+      u = 1.-u;
+      v = 1.-v;
+    }
+    p = p0+(v0*t)+(v1*u)+(v2*v);
+  }
+
   //! the double return val is the volume of the tet.
   double get_gradient_basis(Cell::index_type ci, Vector& g0, Vector& g1, 
 			    Vector& g2, Vector& g3);
