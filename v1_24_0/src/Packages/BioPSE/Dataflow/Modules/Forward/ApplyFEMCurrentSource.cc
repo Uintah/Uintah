@@ -68,33 +68,13 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class ApplyFEMCurrentSource : public Module {
-
-  //! Input ports
-  FieldIPort*   iportField_;
-  FieldIPort*   iportSource_;
-  FieldIPort*   iportInterp_;
-  MatrixIPort*  iportRhs_;
-  MatrixIPort*  iportCurrentPattern_;
-  MatrixIPort*  iportCurrentPatternIndex_;
-  MatrixIPort*  iportElectrodeParams_;
-  FieldIPort*   iportFieldBoundary_;
-  MatrixIPort*  iportBoundaryToMesh_;
-
-  int gen_;
-  TetVolMesh::Cell::index_type loc;
-  TetVolMesh::Face::index_type locTri;
-
-  bool tet;
-  bool hex;
-  bool tri;
-
+private:
   enum ElectrodeModelType
     {
       CONTINUUM_MODEL = 0,
       GAP_MODEL
     };
 
-private:
   void execute_dipole();
 
   void execute_sources_and_sinks();
@@ -104,11 +84,11 @@ private:
   double CalcContinuumTrigCurrent(Point p, int index, int numBoundaryNodes);
   double ComputeTheta(Point);
 
-public:
   GuiInt sourceNodeTCL_;
   GuiInt sinkNodeTCL_;
   GuiString modeTCL_;
 
+public:
   //! Constructor/Destructor
   ApplyFEMCurrentSource(GuiContext *context);
   virtual ~ApplyFEMCurrentSource();
@@ -159,21 +139,34 @@ ApplyFEMCurrentSource::execute()
 void
 ApplyFEMCurrentSource::execute_dipole()
 {
-  iportField_ = (FieldIPort *)get_iport("Mesh");
-  iportSource_ = (FieldIPort *)get_iport("Dipole Sources");
-  iportInterp_ = (FieldIPort *)get_iport("Interpolant");
-  iportRhs_ = (MatrixIPort *)get_iport("Input RHS");
+  FieldIPort *iportField = (FieldIPort *)get_iport("Mesh");
+  FieldIPort *iportSource = (FieldIPort *)get_iport("Dipole Sources");
+  MatrixIPort *iportRhs = (MatrixIPort *)get_iport("Input RHS");
 
   MatrixOPort *oportRhs = (MatrixOPort *)get_oport("Output RHS");
   MatrixOPort *oportWeights = (MatrixOPort *)get_oport("Output Weights");
 
-  //! Obtaining handles to computation objects
+  // Get the input mesh.
   FieldHandle hField;
-  if (!iportField_->get(hField) || !hField.get_rep()) {
+  if (!iportField->get(hField) || !hField.get_rep()) {
     error("Can't get handle to input mesh.");
     return;
   }
 
+  // Get the input dipoles.
+  FieldHandle hSource;
+  if (!iportSource->get(hSource) || !hSource.get_rep()) {
+    error("Can't get handle to source field.");
+    return;
+  }
+  PointCloudField<Vector> *hDipField = 
+    dynamic_cast<PointCloudField<Vector>*> (hSource.get_rep());
+  if (!hDipField)
+  {
+    error("Dipole Sources field is not of type PointCloudField<Vector>.");
+    return;
+  }
+	
   TetVolMesh *hTetMesh = 0;
   HexVolMesh *hHexMesh = 0;
   TriSurfMesh *hTriMesh = 0;
@@ -221,7 +214,7 @@ ApplyFEMCurrentSource::execute_dipole()
   // If the user passed in a vector the right size, copy it into ours.
   ColumnMatrix* rhs = 0;
   MatrixHandle  hRhsIn;
-  if (iportRhs_->get(hRhsIn) && hRhsIn.get_rep())
+  if (iportRhs->get(hRhsIn) && hRhsIn.get_rep())
   {
     if (hRhsIn->nrows() == nsize && hRhsIn->ncols() == 1)
     {
@@ -250,151 +243,119 @@ ApplyFEMCurrentSource::execute_dipole()
   // Process mesh.
   if (hTetMesh)
   {
-    FieldHandle hSource;
-    if (!iportSource_->get(hSource) || !hSource.get_rep()) {
-      error("Can't get handle to source field.");
-      return;
-    }
-	
-    LockingHandle<PointCloudField<Vector> > hDipField;
-	
-    if (hSource->get_type_name(0)!="PointCloudField" ||
-        hSource->get_type_name(1)!="Vector")
-    {
-      error("Supplied field is not of type PointCloudField<Vector>.");
-      return;
-    }
-    else
-    {
-      hDipField = dynamic_cast<PointCloudField<Vector>*> (hSource.get_rep());
-    }
-	
     hTetMesh->synchronize(Mesh::LOCATE_E);
 	
     //! Computing contributions of dipoles to RHS
     PointCloudMesh::Node::iterator ii;
     PointCloudMesh::Node::iterator ii_end;
-    Array1<double> weights;
     hDipField->get_typed_mesh()->begin(ii);
     hDipField->get_typed_mesh()->end(ii_end);
+    vector<double> weights;
     for (; ii != ii_end; ++ii)
     {
-      Vector dir = hDipField->value(*ii); // correct unit ???
-      Point p;
-      hDipField->get_typed_mesh()->get_point(p, *ii);
-		
-      if (hTetMesh->locate(loc, p))
+      // Position of the dipole.
+      Point pos;
+      hDipField->get_typed_mesh()->get_point(pos, *ii);
+      // Correct unit of dipole moment -> should be checked.
+      const Vector &dir = hDipField->value(*ii);
+
+      TetVolMesh::Cell::index_type loc;
+      if (hTetMesh->locate(loc, pos))
       {
-        msgStream_ << "Source p="<<p<<" dir="<<dir<<" found in elem "<<loc<<endl;
+        msgStream_ << "Source pos="<<pos<<" dir="<<dir<<
+          " found in elem "<<loc<<endl;
+
         if (fabs(dir.x()) > 0.000001)
         {
-          weights.add(loc*3);
-          weights.add(dir.x());
+          weights.push_back(loc*3);
+          weights.push_back(dir.x());
         }
         if (fabs(dir.y()) > 0.000001)
         {
-          weights.add(loc*3+1);
-          weights.add(dir.y());
+          weights.push_back(loc*3+1);
+          weights.push_back(dir.y());
         }
         if (fabs(dir.z()) > 0.000001)
         {
-          weights.add(loc*3+2);
-          weights.add(dir.z());
+          weights.push_back(loc*3+2);
+          weights.push_back(dir.z());
         }
 		
-        double s1, s2, s3, s4;
         Vector g1, g2, g3, g4;
         hTetMesh->get_gradient_basis(loc, g1, g2, g3, g4);
 		
-        s1=Dot(g1,dir);
-        s2=Dot(g2,dir);
-        s3=Dot(g3,dir);
-        s4=Dot(g4,dir);
+        const double s1 = Dot(g1, dir);
+        const double s2 = Dot(g2, dir);
+        const double s3 = Dot(g3, dir);
+        const double s4 = Dot(g4, dir);
 		
         TetVolMesh::Node::array_type cell_nodes;
         hTetMesh->get_nodes(cell_nodes, loc);
-        (*rhs)[cell_nodes[0]]+=s1;
-        (*rhs)[cell_nodes[1]]+=s2;
-        (*rhs)[cell_nodes[2]]+=s3;
-        (*rhs)[cell_nodes[3]]+=s4;
+        (*rhs)[cell_nodes[0]] += s1;
+        (*rhs)[cell_nodes[1]] += s2;
+        (*rhs)[cell_nodes[2]] += s3;
+        (*rhs)[cell_nodes[3]] += s4;
       }
       else
       {
-        msgStream_ << "Dipole: "<< p <<" not located within mesh!"<<endl;
+        msgStream_ << "Dipole: "<< pos <<" not located within mesh!"<<endl;
       }
     }
-    gen_=hSource->generation;
+
     ColumnMatrix* w = scinew ColumnMatrix(weights.size());
-    for (int i=0; i<weights.size(); i++) (*w)[i]=weights[i];
+    for (int i=0; i< (int)weights.size(); i++) { w->put(i, weights[i]); }
 
     oportWeights->send(MatrixHandle(w));
     oportRhs->send(MatrixHandle(rhs));
   }
   else if (hHexMesh)
-  { // process hex mesh
-    FieldHandle hSource;
-    if (!iportSource_->get(hSource) || !hSource.get_rep()) {
-      error("Can't get handle to source field.");
-      return;
-    }
-    LockingHandle<PointCloudField<Vector> > hDipField;
-    if (hSource->get_type_name(0)!="PointCloudField" ||
-        hSource->get_type_name(1)!="Vector")
-    {
-      error("Supplied field is not of type PointCloudField<Vector>.");
-      return;
-    }
-    else {
-      hDipField = dynamic_cast<PointCloudField<Vector>*> (hSource.get_rep());
-    }
-
+  {
     hHexMesh->synchronize(Mesh::LOCATE_E);
 	
     //! Computing contributions of dipoles to RHS
     PointCloudMesh::Node::iterator ii;
     PointCloudMesh::Node::iterator ii_end;
-    Array1<double> weights;
     hDipField->get_typed_mesh()->begin(ii);
     hDipField->get_typed_mesh()->end(ii_end);
-    HexVolMesh::Cell::index_type ci;
-    ReferenceElement *rE_ = scinew ReferenceElement();
+    //vector<double> weights;
+    ReferenceElement rE;
     for (; ii != ii_end; ++ii)
-    { // loop over dipoles
-      // Correct unit of dipole moment -> should be checked.
-      Vector moment = hDipField->value(*ii);
-      Point dipole;
+    {
       // Position of the dipole.
-      hDipField->get_typed_mesh()->get_point(dipole, *ii);
-      if (hHexMesh->locate(ci, dipole))
+      Point pos;
+      hDipField->get_typed_mesh()->get_point(pos, *ii);
+      // Correct unit of dipole moment -> should be checked.
+      const Vector &dir = hDipField->value(*ii);
+
+      HexVolMesh::Cell::index_type loc;
+      if (hHexMesh->locate(loc, pos))
       {
-        msgStream_ << "Source p="<<dipole<<" dir="<< moment <<
+        msgStream_ << "Source p="<<pos<<" dir="<< dir <<
           " found in elem "<< loc <<endl;
       }
       else
       {
-        msgStream_ << "Dipole: "<< dipole <<
+        msgStream_ << "Dipole: "<< pos <<
           " not located within mesh!"<<endl;
       }
 
       // Get dipole in reference element.
-      double xa, xb, ya, yb, za, zb;
-      Point p;
       HexVolMesh::Node::array_type n_array;
-      hHexMesh->get_nodes(n_array, ci);
-      hHexMesh->get_point(p, n_array[0]);
-      xa = p.x(); ya = p.y(); za = p.z();
-      hHexMesh->get_point(p, n_array[6]);
-      xb = p.x(); yb = p.y(); zb = p.z();
-      Point diRef(rE_->isp1(dipole.x(), xa, xb),
-                  rE_->isp2(dipole.y(), ya, yb),
-                  rE_->isp3(dipole.z(), za, zb));
+      hHexMesh->get_nodes(n_array, loc);
+      Point a, b;
+      hHexMesh->get_point(a, n_array[0]);
+      hHexMesh->get_point(b, n_array[6]);
+      const double drx = rE.isp1(pos.x(), a.x(), b.x());
+      const double dry = rE.isp2(pos.y(), a.y(), b.y());
+      const double drz = rE.isp3(pos.z(), a.z(), b.z());
 
       // Update rhs
       for (int i=0; i <8; i++)
       {
-        double val = moment[0] * rE_->dphidx(i, diRef.x(), diRef.y(), diRef.z()) / rE_->dpsi1dx(xa, xb)
-          + moment[1] * rE_->dphidy(i, diRef.x(), diRef.y(), diRef.z()) / rE_->dpsi2dy(ya, yb)
-          + moment[2] * rE_->dphidz(i, diRef.x(), diRef.y(), diRef.z()) / rE_->dpsi3dz(za,zb);
+        const double val =
+          dir[0] * rE.dphidx(i, drx, dry, drz) / rE.dpsi1dx(a.x(), b.x()) +
+          dir[1] * rE.dphidy(i, drx, dry, drz) / rE.dpsi2dy(a.y(), b.y()) +
+          dir[2] * rE.dphidz(i, drx, dry, drz) / rE.dpsi3dz(a.z(), b.z());
         rhs->put((int)n_array[i], val);
       }
     }
@@ -402,81 +363,65 @@ ApplyFEMCurrentSource::execute_dipole()
   }
   else if (hTriMesh)
   {
-    FieldHandle hSource;
-    if (!iportSource_->get(hSource) || !hSource.get_rep()) {
-      error("Can't get handle to source field.");
-      return;
-    }
+    hTriMesh->synchronize(Mesh::LOCATE_E);
 
-    LockingHandle<PointCloudField<Vector> > hDipField;
-
-    if (hSource->get_type_name(0)!="PointCloudField" ||
-        hSource->get_type_name(1)!="Vector")
-    {
-      error("Supplied field is not of type PointCloudField<Vector>.");
-      return;
-    }
-    else
-    {
-      hDipField = dynamic_cast<PointCloudField<Vector>*> (hSource.get_rep());
-    }
-
-    //! Computing contributions of dipoles to RHS
+    //! Computing contributions of dipoles to RHS.
     PointCloudMesh::Node::iterator ii;
     PointCloudMesh::Node::iterator ii_end;
-    Array1<double> weights;
     hDipField->get_typed_mesh()->begin(ii);
     hDipField->get_typed_mesh()->end(ii_end);
+    vector<double> weights;
     for (; ii != ii_end; ++ii)
     {
+      // Position of the dipole.
+      Point pos;
+      hDipField->get_typed_mesh()->get_point(pos, *ii);
+      // Correct unit of dipole moment -> should be checked.
+      const Vector &dir = hDipField->value(*ii);
 
-      Vector dir = hDipField->value(*ii);
-      Point p;
-      hDipField->get_typed_mesh()->get_point(p, *ii);
-
-      if (hTriMesh->locate(locTri, p))
+      TriSurfMesh::Face::index_type loc;
+      if (hTriMesh->locate(loc, pos))
       {
-        msgStream_ << "Source p="<<p<<" dir="<<dir<<
-          " found in elem "<< locTri <<endl;
+        msgStream_ << "Source pos="<<pos<<" dir="<<dir<<
+          " found in elem "<< loc <<endl;
 
         if (fabs(dir.x()) > 0.000001)
         {
-          weights.add(locTri*3);
-          weights.add(dir.x());
+          weights.push_back(loc*3);
+          weights.push_back(dir.x());
         }
         if (fabs(dir.y()) > 0.000001)
         {
-          weights.add(locTri*3+1);
-          weights.add(dir.y());
+          weights.push_back(loc*3+1);
+          weights.push_back(dir.y());
         }
         if (fabs(dir.z()) > 0.000001)
         {
-          weights.add(locTri*3+2);
-          weights.add(dir.z());
+          weights.push_back(loc*3+2);
+          weights.push_back(dir.z());
         }
 	
-        double s1, s2, s3;
         Vector g1, g2, g3;
-        hTriMesh->get_gradient_basis(locTri, g1, g2, g3);
+        hTriMesh->get_gradient_basis(loc, g1, g2, g3);
 
-        s1=Dot(g1,dir);
-        s2=Dot(g2,dir);
-        s3=Dot(g3,dir);
+        const double s1 = Dot(g1, dir);
+        const double s2 = Dot(g2, dir);
+        const double s3 = Dot(g3, dir);
 		
         TriSurfMesh::Node::array_type face_nodes;
-        hTriMesh->get_nodes(face_nodes, locTri);
-        (*rhs)[face_nodes[0]]+=s1;
-        (*rhs)[face_nodes[1]]+=s2;
-        (*rhs)[face_nodes[2]]+=s3;
+        hTriMesh->get_nodes(face_nodes, loc);
+        (*rhs)[face_nodes[0]] += s1;
+        (*rhs)[face_nodes[1]] += s2;
+        (*rhs)[face_nodes[2]] += s3;
       }
       else
       {
-        msgStream_ << "Dipole: "<< p <<" not located within mesh!"<<endl;
+        msgStream_ << "Dipole: "<< pos <<" not located within mesh!"<<endl;
       }
     } // end for loop
-    gen_=hSource->generation;
+
     ColumnMatrix* w = scinew ColumnMatrix(weights.size());
-    for (int i=0; i<weights.size(); i++) (*w)[i]=weights[i];
+    for (int i=0; i < (int)weights.size(); i++) { w->put(i, weights[i]); }
 
     oportWeights->send(MatrixHandle(w));
     oportRhs->send(MatrixHandle(rhs));
@@ -487,16 +432,16 @@ ApplyFEMCurrentSource::execute_dipole()
 void
 ApplyFEMCurrentSource::execute_sources_and_sinks()
 {
-  iportField_ = (FieldIPort *)get_iport("Mesh");
-  iportSource_ = (FieldIPort *)get_iport("Dipole Sources");
-  iportInterp_ = (FieldIPort *)get_iport("Interpolant");
-  iportRhs_ = (MatrixIPort *)get_iport("Input RHS");
+  FieldIPort *iportField = (FieldIPort *)get_iport("Mesh");
+  FieldIPort *iportSource = (FieldIPort *)get_iport("Dipole Sources");
+  FieldIPort *iportInterp = (FieldIPort *)get_iport("Interpolant");
+  MatrixIPort *iportRhs = (MatrixIPort *)get_iport("Input RHS");
 
   MatrixOPort *oportRhs = (MatrixOPort *)get_oport("Output RHS");
 
   //! Obtaining handles to computation objects
   FieldHandle hField;
-  if (!iportField_->get(hField) || !hField.get_rep()) {
+  if (!iportField->get(hField) || !hField.get_rep()) {
     error("Can't get handle to input mesh.");
     return;
   }
@@ -538,7 +483,7 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
   // If the user passed in a vector the right size, copy it into ours.
   ColumnMatrix* rhs = 0;
   MatrixHandle  hRhsIn;
-  if (iportRhs_->get(hRhsIn) && hRhsIn.get_rep())
+  if (iportRhs->get(hRhsIn) && hRhsIn.get_rep())
   {
     if (hRhsIn->ncols() == 1 && hRhsIn->nrows() == nsize)
     {
@@ -568,9 +513,9 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
   if (hTetMesh)
   {
     FieldHandle hInterp;
-    iportInterp_->get(hInterp);
+    iportInterp->get(hInterp);
     FieldHandle hSource;
-    iportSource_->get(hSource);
+    iportSource->get(hSource);
 	
     unsigned int sourceNode = Max(sourceNodeTCL_.get(), 0);
     unsigned int sinkNode = Max(sinkNodeTCL_.get(), 0);
@@ -661,7 +606,6 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
 	
     PointCloudMesh::Node::iterator ii;
     PointCloudMesh::Node::iterator ii_end;
-    Array1<double> weights;
     hInterpTetToPC->get_typed_mesh()->begin(ii);
     hInterpTetToPC->get_typed_mesh()->end(ii_end);
     for (; ii != ii_end; ++ii)
@@ -682,7 +626,7 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
   else if (hTriMesh)
   {
     FieldHandle hInterp;
-    iportInterp_->get(hInterp);
+    iportInterp->get(hInterp);
     unsigned int sourceNode = Max(sourceNodeTCL_.get(), 0);
     unsigned int sinkNode = Max(sinkNodeTCL_.get(), 0);
 
@@ -726,21 +670,14 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
 void
 ApplyFEMCurrentSource::execute_electrode_set()
 {
-  iportField_ = (FieldIPort *)get_iport("Mesh");
-  iportSource_ = (FieldIPort *)get_iport("Dipole Sources");
-  iportInterp_ = (FieldIPort *)get_iport("Interpolant");
-  iportRhs_ = (MatrixIPort *)get_iport("Input RHS");
-  iportCurrentPattern_ = (MatrixIPort *)get_iport("Current Pattern");
-  iportCurrentPatternIndex_ = (MatrixIPort *)get_iport("CurrentPatternIndex");
-  iportElectrodeParams_ = (MatrixIPort *)get_iport("Electrode Parameters");
-  iportFieldBoundary_ = (FieldIPort *)get_iport("Boundary");
-  iportBoundaryToMesh_ = (MatrixIPort *)get_iport("Boundary Transfer Matrix");
+  FieldIPort *iportField = (FieldIPort *)get_iport("Mesh");
+  MatrixIPort *iportRhs = (MatrixIPort *)get_iport("Input RHS");
 
   MatrixOPort *oportRhs = (MatrixOPort *)get_oport("Output RHS");
 
   //! Obtaining handles to computation objects
   FieldHandle hField;
-  if (!iportField_->get(hField) || !hField.get_rep()) {
+  if (!iportField->get(hField) || !hField.get_rep()) {
     error("Can't get handle to input mesh.");
     return;
   }
@@ -767,7 +704,7 @@ ApplyFEMCurrentSource::execute_electrode_set()
   // If the user passed in a vector the right size, copy it into ours.
   ColumnMatrix* rhs = 0;
   MatrixHandle  hRhsIn;
-  if (iportRhs_->get(hRhsIn) && hRhsIn.get_rep())
+  if (iportRhs->get(hRhsIn) && hRhsIn.get_rep())
   {
     if (hRhsIn->ncols() == 1 && hRhsIn->nrows() == nsize)
     {
@@ -817,13 +754,24 @@ void
 ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
                                                TriSurfMeshHandle hTriMesh )
 {
+  FieldIPort *iportInterp = (FieldIPort *)get_iport("Interpolant");
+  MatrixIPort *iportCurrentPattern =
+    (MatrixIPort *)get_iport("Current Pattern");
+  MatrixIPort *iportCurrentPatternIndex =
+    (MatrixIPort *)get_iport("CurrentPatternIndex");
+  MatrixIPort *iportElectrodeParams =
+    (MatrixIPort *)get_iport("Electrode Parameters");
+  FieldIPort *iportFieldBoundary = (FieldIPort *)get_iport("Boundary");
+  MatrixIPort *iportBoundaryToMesh =
+    (MatrixIPort *)get_iport("Boundary Transfer Matrix");
+
   int numParams=4;
 
   // Get the electrode parameters input vector
   // -----------------------------------------
   MatrixHandle  hElectrodeParams;
 
-  if (!iportElectrodeParams_->get(hElectrodeParams) ||
+  if (!iportElectrodeParams->get(hElectrodeParams) ||
       !hElectrodeParams.get_rep())
   {
     error("Can't get handle to electrode parameters matrix.");
@@ -848,7 +796,7 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
   // for models other than the continuum model
 
   MatrixHandle  hCurrentPattern;
-  if ((!iportCurrentPattern_->get(hCurrentPattern) ||
+  if ((!iportCurrentPattern->get(hCurrentPattern) ||
        !hCurrentPattern.get_rep()) && (electrodeModel != CONTINUUM_MODEL))
   {
     error("Can't get handle to current pattern matrix.");
@@ -865,7 +813,7 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
 
   // Copy the input current index into local variable, k
   // ---------------------------------------------------
-  if (iportCurrentPatternIndex_->get(hCurrentPatternIndex) &&
+  if (iportCurrentPatternIndex->get(hCurrentPatternIndex) &&
       (currPatIdx=dynamic_cast<ColumnMatrix*>(hCurrentPatternIndex.get_rep())) &&
       (currPatIdx->nrows() == 1))
   {
@@ -882,7 +830,7 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
   CurveMeshHandle  hBoundaryMesh;
   LockingHandle<CurveField<double> > hCurveBoundary;
   bool boundary = false;
-  if ( iportFieldBoundary_->get(hFieldBoundary) )
+  if ( iportFieldBoundary->get(hFieldBoundary) )
   {
     if (hFieldBoundary.get_rep())
     {
@@ -914,7 +862,7 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
 
   if (boundary)
   {
-    if ( !(iportBoundaryToMesh_->get(hBoundaryToMesh) &&
+    if ( !(iportBoundaryToMesh->get(hBoundaryToMesh) &&
            hBoundaryToMesh.get_rep()) )
     {
       // disable susequent boundary-related code if we had a problem here
@@ -930,7 +878,7 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
   // placement scheme selected through the electrode manager.
   FieldHandle hInterp;
 
-  if ( iportInterp_->get(hInterp) && hInterp.get_rep())
+  if ( iportInterp->get(hInterp) && hInterp.get_rep())
   {
     // Determine the dimension (number of electrodes) in the interp'd
     // field of electrodes.
