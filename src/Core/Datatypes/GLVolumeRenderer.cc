@@ -186,21 +186,20 @@ GLVolumeRenderer::setup()
 {
 
 
-#ifdef __sgi
   glEnable(GL_TEXTURE_3D_EXT);
-#endif
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE); 
 
   if( cmap.get_rep() ) {
-#ifdef __sgi
+#ifdef GL_TEXTURE_COLOR_TABLE_SGI
     //cerr << "Using Lookup!\n";
     glEnable(GL_TEXTURE_COLOR_TABLE_SGI);
-    
+#elif defined(GL_SHARED_TEXTURE_PALETTE_EXT)
+    glEnable(GL_SHARED_TEXTURE_PALETTE_EXT);
+#endif
     if( cmapHasChanged || rCount != 1) {
       BuildTransferFunctions();
       cmapHasChanged = false;
     }
-#endif
   }
   glColor4f(1,1,1,1); // set to all white for modulation
 }
@@ -210,12 +209,13 @@ void
 GLVolumeRenderer::cleanup()
 {
 
-
-#ifdef __sgi
   if( cmap.get_rep() )
+#ifdef GL_TEXTURE_COLOR_TABLE_SGI
     glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
-  glDisable(GL_TEXTURE_3D_EXT);
+#elif defined(GL_SHARED_TEXTURE_PALETTE_EXT)
+  glDisable(GL_SHARED_TEXTURE_PALETTE_EXT);
 #endif
+  glDisable(GL_TEXTURE_3D_EXT);
   // glEnable(GL_DEPTH_TEST);  
 }  
 
