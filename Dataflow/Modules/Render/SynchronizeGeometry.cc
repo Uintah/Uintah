@@ -264,6 +264,11 @@ SynchronizeGeometry::forward_saved_msg()
       }
 #endif
     }
+    update_state(Completed);
+  }
+  else
+  {
+    update_progress(num_flush / (numIPorts() - 1.0));
   }
 }
 
@@ -328,6 +333,7 @@ SynchronizeGeometry::flush_all_msgs()
 
     msg_heads_[i] = msg_tails_[i] = NULL;
   }
+  update_state(Completed);
 }
 
 
