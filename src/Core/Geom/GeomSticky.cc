@@ -63,6 +63,10 @@ GeomSticky::GeomSticky( const GeomSticky &copy )
 {
 }
 
+GeomSticky::~GeomSticky()
+{
+}
+
 GeomObj* GeomSticky::clone() {
   return scinew GeomSticky( *this );
 }
