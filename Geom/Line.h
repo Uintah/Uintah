@@ -17,6 +17,8 @@
 #include <Geom/Geom.h>
 #include <Geometry/Point.h>
 
+#include <stdlib.h>	// For size_t
+
 class GeomLine : public GeomObj {
 public:
     Point p1, p2;
@@ -24,8 +26,11 @@ public:
     GeomLine(const Point& p1, const Point& p2);
     GeomLine(const GeomLine&);
     virtual ~GeomLine();
-
     virtual GeomObj* clone();
+
+    void* operator new(size_t);
+    void operator delete(void*, size_t);
+
     virtual void get_bounds(BBox&);
     virtual void get_bounds(BSphere&);
 

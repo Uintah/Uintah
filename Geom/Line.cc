@@ -13,8 +13,21 @@
 
 #include <Geom/Line.h>
 #include <Classlib/NotFinished.h>
+#include <Classlib/TrivialAllocator.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
+
+static TrivialAllocator Line_alloc(sizeof(GeomLine));
+
+void* GeomLine::operator new(size_t)
+{
+    return Line_alloc.alloc();
+}
+
+void GeomLine::operator delete(void* rp, size_t)
+{	
+    Line_alloc.free(rp);
+}
 
 GeomLine::GeomLine(const Point& p1, const Point& p2)
 : GeomObj(), p1(p1), p2(p2)
