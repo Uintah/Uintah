@@ -44,6 +44,7 @@ public:
   virtual void execute();
 
 private:
+  GuiInt Wrap_;
   GuiInt Dims_;
 
   GuiInt iDim_;
@@ -99,27 +100,28 @@ DECLARE_MAKER(FieldSubSample)
 FieldSubSample::FieldSubSample(GuiContext *context)
   : Module("FieldSubSample", context, Source, "Fields", "SCIRun"),
 
+    Wrap_(context->subVar("wrap")),
     Dims_(context->subVar("dims")),
 
-    iDim_(context->subVar("idim")),
-    jDim_(context->subVar("jdim")),
-    kDim_(context->subVar("kdim")),
+    iDim_(context->subVar("i-dim")),
+    jDim_(context->subVar("j-dim")),
+    kDim_(context->subVar("k-dim")),
 
-    iStart_(context->subVar("istart")),
-    jStart_(context->subVar("jstart")),
-    kStart_(context->subVar("kstart")),
+    iStart_(context->subVar("i-start")),
+    jStart_(context->subVar("j-start")),
+    kStart_(context->subVar("k-start")),
 
-    iDelta_(context->subVar("idelta")),
-    jDelta_(context->subVar("jdelta")),
-    kDelta_(context->subVar("kdelta")),
+    iDelta_(context->subVar("i-delta")),
+    jDelta_(context->subVar("j-delta")),
+    kDelta_(context->subVar("k-delta")),
 
-    iSkip_(context->subVar("iskip")),
-    jSkip_(context->subVar("jskip")),
-    kSkip_(context->subVar("kskip")),
+    iSkip_(context->subVar("i-skip")),
+    jSkip_(context->subVar("j-skip")),
+    kSkip_(context->subVar("k-skip")),
  
-    iWrap_(context->subVar("iwrap")),
-    jWrap_(context->subVar("jwrap")),
-    kWrap_(context->subVar("kwrap")),
+    iWrap_(context->subVar("i-wrap")),
+    jWrap_(context->subVar("j-wrap")),
+    kWrap_(context->subVar("k-wrap")),
 
     idim_(0),
     jdim_(0),
@@ -156,12 +158,9 @@ void FieldSubSample::execute(){
 
   FieldHandle fHandle;
 
-  StructHexVolMesh *hvmInput;
-  StructHexVolField<double> *hvfInput;
-
   // Get a handle to the input field port.
   FieldIPort* ifield_port =
-    (FieldIPort *)	get_iport("Input Field");
+    (FieldIPort *) get_iport("Input Field");
 
   if (!ifield_port) {
     error( "Unable to initialize "+name+"'s iport" );
@@ -170,11 +169,10 @@ void FieldSubSample::execute(){
 
   // The field input is required.
   if (!ifield_port->get(fHandle) || !(fHandle.get_rep()) ||
-      !(hvmInput = (StructHexVolMesh*) fHandle->mesh().get_rep())) {
+      !(fHandle->mesh().get_rep())) {
     error( "No handle or representation" );
     return;
   }
-  hvfInput = (StructHexVolField<double> *)(fHandle.get_rep());
 
   // Check to see if the input field has changed.
   if( fGeneration_ != fHandle->generation ) {
@@ -222,29 +220,39 @@ void FieldSubSample::execute(){
     return;
   }
 
+  int wrap;
+
+  if( fHandle->get_type_description(0)->get_name() == "StructHexVolField" ||
+      fHandle->get_type_description(0)->get_name() == "StructQuadSurfField" ||
+      fHandle->get_type_description(0)->get_name() == "StructCurveField" )
+    wrap = 1;
+  else
+    wrap = 0;
+
   // Check to see if the dimensions have changed.
-  if( idim_ != iDim_.get() ||
+  if( dims  != Dims_.get() ||
+      wrap  != Wrap_.get() ||
+      idim_ != iDim_.get() ||
       jdim_ != jDim_.get() ||
       kdim_ != kDim_.get() ) {
 
     // Update the dims in the GUI.
     ostringstream str;
-    str << id << " set_size " << dims << " " << idim_ << " " << jdim_ << " " << kdim_;
+    str << id << " set_size " << dims << " " << idim_ << " " << jdim_ << " " << kdim_ << " " << wrap;
 
     gui->execute(str.str().c_str());
 
     updateAll = true;
   }
 
-
   // Check to see if the user setable values have changed.
   if( istart_ != iStart_.get() ||
       jstart_ != jStart_.get() ||
       kstart_ != kStart_.get() ||
 
-      iend_  != (iStart_.get() + iDelta_.get()) ||
-      jend_  != (jStart_.get() + jDelta_.get()) ||
-      kend_  != (kStart_.get() + kDelta_.get()) ||
+      iend_ != (iStart_.get() + iDelta_.get()) ||
+      jend_ != (jStart_.get() + jDelta_.get()) ||
+      kend_ != (kStart_.get() + kDelta_.get()) ||
 
       iskip_ != iSkip_.get() ||
       jskip_ != jSkip_.get() ||
@@ -269,7 +277,14 @@ void FieldSubSample::execute(){
     iwrap_ = iWrap_.get();
     jwrap_ = jWrap_.get();
     kwrap_ = kWrap_.get();
-
+    
+    if( !iwrap_ && iend_ >= idim_ )
+      iend_ = idim_ - 1;
+    if( !jwrap_ && jend_ >= jdim_ )
+      jend_ = jdim_ - 1;
+    if( !kwrap_ && kend_ >= kdim_ )
+      kend_ = kdim_ - 1;
+    
     updateAll = true;
   }
 
@@ -284,7 +299,8 @@ void FieldSubSample::execute(){
     fHandle_ = algo->execute(fHandle,
 			     istart_, jstart_, kstart_,
 			     iend_, jend_, kend_,
-			     iskip_, jskip_, kskip_);
+			     iskip_, jskip_, kskip_,
+			     iwrap_, jwrap_, kwrap_);
   }
 
   // Get a handle to the output field port.

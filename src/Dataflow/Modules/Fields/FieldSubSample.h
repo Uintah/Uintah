@@ -50,7 +50,10 @@ public:
 			      unsigned int kend,
 			      unsigned int iskip,
 			      unsigned int jskip,
-			      unsigned int kskip) = 0;
+			      unsigned int kskip,
+			      unsigned int iwrap,
+			      unsigned int jwrap,
+			      unsigned int kwrap) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftd);
@@ -71,22 +74,28 @@ public:
 			      unsigned int kend,
 			      unsigned int iskip,
 			      unsigned int jskip,
-			      unsigned int kskip);
+			      unsigned int kskip,
+			      unsigned int iwrap,
+			      unsigned int jwrap,
+			      unsigned int kwrap);
 };
 
 
 template <class FIELD>
 FieldHandle
 FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
-				     unsigned int istart,
-				     unsigned int jstart,
-				     unsigned int kstart,
-				     unsigned int iend,
-				     unsigned int jend,
-				     unsigned int kend,
-				     unsigned int iskip,
-				     unsigned int jskip,
-				     unsigned int kskip)
+				    unsigned int istart,
+				    unsigned int jstart,
+				    unsigned int kstart,
+				    unsigned int iend,
+				    unsigned int jend,
+				    unsigned int kend,
+				    unsigned int iskip,
+				    unsigned int jskip,
+				    unsigned int kskip,
+				    unsigned int iwrap,
+				    unsigned int jwrap,
+				    unsigned int kwrap)
 {
   FIELD *ifield = dynamic_cast<FIELD *>(field_h.get_rep());
   typename FIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
@@ -116,11 +125,30 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
   unsigned int jdim_out = (jend - jstart) / jskip + 1;
   unsigned int kdim_out = (kend - kstart) / kskip + 1;
 
-  // Account for the modulo of skipping nodes so that the last node will be
-  // included even if it "partial" cell when compared to the others.
-  if( (iend - istart) % iskip ) idim_out += 1;
-  if( (jend - jstart) % jskip ) jdim_out += 1;
-  if( (kend - kstart) % kskip ) kdim_out += 1;
+  unsigned int i, j, k, inode, jnode, knode;
+
+  unsigned int iend_skip;
+  unsigned int jend_skip;
+  unsigned int kend_skip; 
+
+  if( field_h->get_type_description(0)->get_name() == "StructHexVolField" ||
+      field_h->get_type_description(0)->get_name() == "StructQuadSurfField" ||
+      field_h->get_type_description(0)->get_name() == "StructCurveField" ) {
+
+    // Account for the modulo of skipping nodes so that the last node will be
+    // included even if it "partial" cell when compared to the others.
+    if( (iend - istart) % iskip ) idim_out += 1;
+    if( (jend - jstart) % jskip ) jdim_out += 1;
+    if( (kend - kstart) % kskip ) kdim_out += 1;
+
+    iend_skip = iend + iskip;
+    jend_skip = jend + jskip;
+    kend_skip = kend + kskip; 
+  } else {
+    iend_skip = iend + 1;
+    jend_skip = jend + 1;
+    kend_skip = kend + 1; 
+  }
 
   typename FIELD::mesh_handle_type omesh =
     scinew typename FIELD::mesh_type();
@@ -141,10 +169,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
   // Now after the mesh has been created, create the field.
   FIELD *ofield = scinew FIELD(omesh, Field::NODE);
 
-  unsigned int i, j, k, inode, jnode, knode;
-  unsigned int iend_skip = iend+iskip;
-  unsigned int jend_skip = jend+jskip;
-  unsigned int kend_skip = kend+kskip; 
+
   Point p, o, pt;
   typename FIELD::value_type value;
 
@@ -159,6 +184,8 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
       ifield->get_type_description(0)->get_name() == "ImageField" ||
       ifield->get_type_description(0)->get_name() == "ScanlineField" ) {
 
+    omesh->set_min( imesh->get_min() );
+
     // Set the orginal transform.
     omesh->set_transform( imesh->get_transform() );
 
@@ -168,16 +195,28 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
     imesh->get_center(o, *inodeItr);    
 
     // Set the iterator to the first point.
-    for (k=0; k<kstart; k++)
-      for (j=0; j<jstart; j++)
-	for (i=0; i<istart; i++)
-	    ++inodeItr;
-  
+    for (k=0; k<kstart; k++) {
+      for( ic=0; ic<jdim_in*idim_in; ic++ )
+	++inodeItr;
+    }
+     
+    for (j=0; j<jstart; j++) {
+      for( ic=0; ic<idim_in; ic++ )
+	++inodeItr;
+    }
+	
+    for (i=0; i<istart; i++)
+      ++inodeItr;
+
     // Get the point.
     imesh->get_center(p, *inodeItr);
 
     // Put the new field into the correct location.
     Transform trans;
+
+    trans.pre_translate( (Vector) (-o) );
+
+    trans.pre_scale( Vector( iskip, jskip, kskip ) );
 
     trans.pre_translate( (Vector) (p-o) );
       
@@ -198,7 +237,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
     else
       knode = k % kdim_in;
 
-    // A hack here so that an interator can be used.
+    // A hack here so that an iterator can be used.
     // Set this iterator to be at the correct kth index.
     imesh->begin( knodeItr );
 
@@ -217,7 +256,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
       else
 	jnode = j % jdim_in;
 
-      // A hack here so that an interator can be used.
+      // A hack here so that an iterator can be used.
       // Set this iterator to be at the correct jth index.
       jnodeItr = knodeItr;
 
@@ -236,7 +275,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
 	else
 	  inode = i % idim_in;
 
-	// A hack here so that an interator can be used.
+	// A hack here so that an iterator can be used.
 	// Set this iterator to be at the correct ith index.
 	inodeItr = jnodeItr;
 
