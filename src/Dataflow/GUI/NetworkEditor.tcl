@@ -674,7 +674,7 @@ proc ClearCanvas { {confirm 1} {subnet 0} } {
     # destroy all modules
     global NetworkChanged
     set result "ok"
-    if { $confirm && $NetworkChanged } {
+    if { $confirm } {
 	set result \
 	    [tk_messageBox -title "Warning" -type yesno -parent . -icon warning -message \
 		 "Your network has not been saved.\n\nAll modules and connections will be deleted.\n\nReally clear?"]	
