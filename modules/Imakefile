@@ -1,6 +1,6 @@
 
 #include <config/sci.cf>
 
-SUBDIRS = SoundInput SoundFilter SoundMixer SoundOutput WidgetReal
+SUBDIRS = SoundInput SoundFilter SoundMixer SoundOutput SoundReader
 
 SCISubdirs($(SUBDIRS))
