@@ -55,13 +55,13 @@ WARNING
 #define FORT_BCVVEL bcvvel_
 #define FORT_BCWVEL bcwvel_
 #define FORT_MASCAL mascal_
+#define FORT_APCAL apcal_
 #define FORT_PRESSBC pressbc_
 #define FORT_VELCOEF velcoef_
 #define FORT_SCALARCOEF scalcof_
 #define FORT_PRESSSOURCE psource_
 #define FORT_VELSOURCE vsource_
 #define FORT_SCALARSOURCE ssource_
-#define FORT_APCAL apcal_
 #define FORT_COLDPROPS cprops_
 #define FORT_UNDERRELAX urelax_
 #define FORT_RBGLISOLV lisolv_
@@ -474,12 +474,31 @@ extern "C"
 		double* velConvectCoefAT,
 		double* velConvectCoefAB);
 
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the velocity diagonal
+    //
+    void
+    FORT_APCAL(const int* domLo, const int* domHi,
+	       const int* idxLo, const int* idxHi,
+	       double* velCoefAP,
+	       const double* velCoefAE,
+	       const double* velCoefAW,
+	       const double* velCoefAN,
+	       const double* velCoefAS,
+	       const double* velCoefAT,
+	       const double* velCoefAB,
+	       const double* velLinSrc); 
+
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.16  2000/07/12 19:55:43  bbanerje
+// Added apcal stuff in calcVelDiagonal
+//
 // Revision 1.15  2000/07/12 07:35:46  bbanerje
 // Added stuff for mascal : Rawat: Labels and dataWarehouse in velsrc need to be corrected.
 //

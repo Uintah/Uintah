@@ -1,10 +1,11 @@
-c*********************************************************************
 c
-c $Id$
+c $Log$
+c Revision 1.2  2000/07/12 19:55:45  bbanerje
+c Added apcal stuff in calcVelDiagonal
 c
-c*********************************************************************
+c
 
-      SUBROUTINE apcal(indexLow, indexHigh,
+      SUBROUTINE apcal(dim_lo, dim_hi, valid_lo, valid_hi,
      &     AP,AE,AW,AN,AS,AT,AB,SP)
 C-----------------------------------------------------------------------
 C     WRITTEN BY SESHADRI KUMAR, OCTOBER 14, 1996
@@ -18,66 +19,80 @@ C     (IEND,JEND,KEND).
 *-----------------------------------------------------------------------
       implicit none
 
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer indexLow(3)
-      integer indexHigh(3)
-      double precision AP(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AE(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AW(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AN(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AS(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AT(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AB(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision SP(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
+      integer dim_lo(3)
+      integer dim_hi(3)
+      integer valid_lo(3)
+      integer valid_hi(3)
+*
+*     passed variables
+*
+      double precision ap(
+     $     dim_lo(1):dim_hi(1),
+     $     dim_lo(2):dim_hi(2),
+     $     dim_lo(3):dim_hi(3))
 
-c*********************************************************************
-c     Local Variables :
-c*********************************************************************
-      integer IST,JST,KST,IEND,JEND,KEND
+      double precision ae(
+     $     dim_lo(1):dim_hi(1),
+     $     dim_lo(2):dim_hi(2),
+     $     dim_lo(3):dim_hi(3))
 
-      integer i,j,k
+      double precision aw(
+     $     dim_lo(1):dim_hi(1),
+     $     dim_lo(2):dim_hi(2),
+     $     dim_lo(3):dim_hi(3))
 
-c*********************************************************************
-c     Start :
-c*********************************************************************
-      IST = indexLow(1)+1
-      JST = indexLow(2)+1
-      KST = indexLow(3)+1
-      IEND = indexHigh(1)-1
-      JEND = indexHigh(2)-1
-      KEND = indexHigh(3)-1
+      double precision an(
+     $     dim_lo(1):dim_hi(1),
+     $     dim_lo(2):dim_hi(2),
+     $     dim_lo(3):dim_hi(3))
 
-C-----------------------------------------------------------------------
-C     EXECUTABLE STATEMENTS
-C-----------------------------------------------------------------------
-      DO 300 K = KST,KEND
-         DO 200 J = JST,JEND
-            DO 100 I = IST,IEND
-               AP(I,J,K) = AE(I,J,K)+AW(I,J,K)
-     $              +AN(I,J,K)+AS(I,J,K)
-     $              +AT(I,J,K)+AB(I,J,K)
-     $              -SP(I,J,K)
- 100        CONTINUE
- 200     CONTINUE
- 300  CONTINUE
-      RETURN
-      END
+      double precision as(
+     $     dim_lo(1):dim_hi(1),
+     $     dim_lo(2):dim_hi(2),
+     $     dim_lo(3):dim_hi(3))
 
-c*********************************************************************
+      double precision at(
+     $     dim_lo(1):dim_hi(1),
+     $     dim_lo(2):dim_hi(2),
+     $     dim_lo(3):dim_hi(3))
+
+      double precision ab(
+     $     dim_lo(1):dim_hi(1),
+     $     dim_lo(2):dim_hi(2),
+     $     dim_lo(3):dim_hi(3))
+
+      double precision sp(
+     $     dim_lo(1):dim_hi(1),
+     $     dim_lo(2):dim_hi(2),
+     $     dim_lo(3):dim_hi(3))
+
+*
+*     local variables
+*
+      integer i
+      integer j
+      integer k
+c-----------------------------------------------------------------------
+c     executable statements
+c-----------------------------------------------------------------------
+
+      do 300 k = valid_lo(3), valid_hi(3)
+         do 200 j = valid_lo(2), valid_hi(2)
+            do 100 i = valid_lo(1), valid_hi(1)
+
+               ap(i,j,k) = ae(i,j,k)+aw(i,j,k)
+     $              +an(i,j,k)+as(i,j,k)
+     $              +at(i,j,k)+ab(i,j,k)
+     $              -sp(i,j,k)
+
+ 100        continue
+ 200     continue
+ 300  continue
+
+      return
+
+      end
+
 c
-c $Log$
-c Revision 1.1  2000/04/12 20:31:41  rawat
-c modified PressureSolver and added fortran subroutines
+c $Id$
 c
-c
-c*********************************************************************

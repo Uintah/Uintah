@@ -761,107 +761,155 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 
   switch(eqnType) {
   case Arches::PRESSURE:
-    for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(uVelCoeff[ii], d_uVelCoefPBLMLabel, ii, patch, Ghost::None,
-		  numGhostCells);
-      new_dw->get(vVelCoeff[ii], d_vVelCoefPBLMLabel, ii, patch, Ghost::None,
-		  numGhostCells);
+    switch(index) {
+    case Arches::XDIR:
+      for (int ii = 0; ii < nofStencils; ii++) 
+	new_dw->get(uVelCoeff[ii], d_uVelCoefPBLMLabel, ii, patch, 
+		    Ghost::None, numGhostCells);
+      new_dw->get(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+      break;
+    case Arches::YDIR:
+      for (int ii = 0; ii < nofStencils; ii++) 
+	new_dw->get(vVelCoeff[ii], d_vVelCoefPBLMLabel, ii, patch, 
+		    Ghost::None, numGhostCells);
+      new_dw->get(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+      break;
+    case Arches::ZDIR:
+      for (int ii = 0; ii < nofStencils; ii++) 
       new_dw->get(wVelCoeff[ii], d_wVelCoefPBLMLabel, ii, patch, Ghost::None,
 		  numGhostCells);
+      new_dw->get(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+      break;
+    default:
+      throw InvalidValue("Invalid index in Pressure::calcVelDiagonal");
     }
-    new_dw->get(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
-    new_dw->get(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
-    new_dw->get(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
     break;
   case Arches::MOMENTUM:
-    for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(uVelCoeff[ii], d_uVelCoefMBLMLabel, ii, patch, Ghost::None,
-		  numGhostCells);
-      new_dw->get(vVelCoeff[ii], d_vVelCoefMBLMLabel, ii, patch, Ghost::None,
-		  numGhostCells);
-      new_dw->get(wVelCoeff[ii], d_wVelCoefMBLMLabel, ii, patch, Ghost::None,
-		  numGhostCells);
+    switch(index) {
+    case Arches::XDIR:
+      for (int ii = 0; ii < nofStencils; ii++) 
+	new_dw->get(uVelCoeff[ii], d_uVelCoefMBLMLabel, ii, patch, 
+		    Ghost::None, numGhostCells);
+      new_dw->get(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+      break;
+    case Arches::YDIR:
+      for (int ii = 0; ii < nofStencils; ii++) 
+	new_dw->get(vVelCoeff[ii], d_vVelCoefMBLMLabel, ii, patch, 
+		    Ghost::None, numGhostCells);
+      new_dw->get(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+      break;
+    case Arches::ZDIR:
+      for (int ii = 0; ii < nofStencils; ii++) 
+	new_dw->get(wVelCoeff[ii], d_wVelCoefMBLMLabel, ii, patch, 
+		    Ghost::None, numGhostCells);
+      new_dw->get(wVelLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+      break;
+    default:
+      throw InvalidValue("Invalid index in Momentum::calcVelDiagonal");
     }
-    new_dw->get(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
-    new_dw->get(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
-    new_dw->get(wVelLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
     break;
   default:
-    break;
+    throw InvalidValue("Invalid eqnType in Discretization::calcVelDiagonal");
   }
 
-  // Get the domain size and the patch indices
-  IntVector domLoU = uVelLinearSrc.getFortLowIndex();
-  IntVector domHiU = uVelLinearSrc.getFortHighIndex();
-  IntVector idxLoU = patch->getSFCXFORTLowIndex();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex();
-  IntVector domLoV = vVelLinearSrc.getFortLowIndex();
-  IntVector domHiV = vVelLinearSrc.getFortHighIndex();
-  IntVector idxLoV = patch->getSFCYFORTLowIndex();
-  IntVector idxHiV = patch->getSFCYFORTHighIndex();
-  IntVector domLoW = wVelLinearSrc.getFortLowIndex();
-  IntVector domHiW = wVelLinearSrc.getFortHighIndex();
-  IntVector idxLoW = patch->getSFCZFORTLowIndex();
-  IntVector idxHiW = patch->getSFCZFORTHighIndex();
-
-#ifdef WONT_COMPILE_YET
-  FORT_APCAL(domLoU.get_pointer(), domHiU.get_pointer(),
-	     idxLoU.get_pointer(), idxHiU.get_pointer(),
-	     uVelLinearSrc.getPointer(),
-	     uVelCoeff[Arches::AP].getPointer(), 
-	     uVelCoeff[Arches::AE].getPointer(), 
-	     uVelCoeff[Arches::AW].getPointer(), 
-	     uVelCoeff[Arches::AN].getPointer(), 
-	     uVelCoeff[Arches::AS].getPointer(), 
-	     uVelCoeff[Arches::AT].getPointer(), 
-	     uVelCoeff[Arches::AB].getPointer());
-  FORT_APCAL(domLoV.get_pointer(), domHiV.get_pointer(),
-	     idxLoV.get_pointer(), idxHiV.get_pointer(),
-	     vVelLinearSrc.getPointer(),
-	     vVelCoeff[Arches::AP].getPointer(), 
-	     vVelCoeff[Arches::AE].getPointer(), 
-	     vVelCoeff[Arches::AW].getPointer(), 
-	     vVelCoeff[Arches::AN].getPointer(), 
-	     vVelCoeff[Arches::AS].getPointer(), 
-	     vVelCoeff[Arches::AT].getPointer(), 
-	     vVelCoeff[Arches::AB].getPointer());
-  FORT_APCAL(domLoW.get_pointer(), domHiW.get_pointer(),
-	     idxLoW.get_pointer(), idxHiW.get_pointer(),
-	     wVelLinearSrc.getPointer(),
-	     wVelCoeff[Arches::AP].getPointer(), 
-	     wVelCoeff[Arches::AE].getPointer(), 
-	     wVelCoeff[Arches::AW].getPointer(), 
-	     wVelCoeff[Arches::AN].getPointer(), 
-	     wVelCoeff[Arches::AS].getPointer(), 
-	     wVelCoeff[Arches::AT].getPointer(), 
-	     wVelCoeff[Arches::AB].getPointer());
-#endif
+  // Get the patch and variable indices
+  IntVector domLo;
+  IntVector domHi;
+  IntVector idxLo;
+  IntVector idxHi;
+  switch(index) {
+  case Arches::XDIR:
+    domLo = uVelLinearSrc.getFortLowIndex();
+    domHi = uVelLinearSrc.getFortHighIndex();
+    idxLo = patch->getSFCXFORTLowIndex();
+    idxHi = patch->getSFCXFORTHighIndex();
+    FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
+	       idxLo.get_pointer(), idxHi.get_pointer(),
+	       uVelCoeff[Arches::AP].getPointer(), 
+	       uVelCoeff[Arches::AE].getPointer(), 
+	       uVelCoeff[Arches::AW].getPointer(), 
+	       uVelCoeff[Arches::AN].getPointer(), 
+	       uVelCoeff[Arches::AS].getPointer(), 
+	       uVelCoeff[Arches::AT].getPointer(), 
+	       uVelCoeff[Arches::AB].getPointer(),
+	       uVelLinearSrc.getPointer());
+    break;
+  case Arches::YDIR:
+    domLo = vVelLinearSrc.getFortLowIndex();
+    domHi = vVelLinearSrc.getFortHighIndex();
+    idxLo = patch->getSFCYFORTLowIndex();
+    idxHi = patch->getSFCYFORTHighIndex();
+    FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
+	       idxLo.get_pointer(), idxHi.get_pointer(),
+	       vVelCoeff[Arches::AP].getPointer(), 
+	       vVelCoeff[Arches::AE].getPointer(), 
+	       vVelCoeff[Arches::AW].getPointer(), 
+	       vVelCoeff[Arches::AN].getPointer(), 
+	       vVelCoeff[Arches::AS].getPointer(), 
+	       vVelCoeff[Arches::AT].getPointer(), 
+	       vVelCoeff[Arches::AB].getPointer(),
+	       vVelLinearSrc.getPointer());
+    break;
+  case Arches::ZDIR:
+    domLo = wVelLinearSrc.getFortLowIndex();
+    domHi = wVelLinearSrc.getFortHighIndex();
+    idxLo = patch->getSFCZFORTLowIndex();
+    idxHi = patch->getSFCZFORTHighIndex();
+    FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
+	       idxLo.get_pointer(), idxHi.get_pointer(),
+	       wVelCoeff[Arches::AP].getPointer(), 
+	       wVelCoeff[Arches::AE].getPointer(), 
+	       wVelCoeff[Arches::AW].getPointer(), 
+	       wVelCoeff[Arches::AN].getPointer(), 
+	       wVelCoeff[Arches::AS].getPointer(), 
+	       wVelCoeff[Arches::AT].getPointer(), 
+	       wVelCoeff[Arches::AB].getPointer(),
+	       wVelLinearSrc.getPointer());
+    break;
+  default:
+    throw InvalidValue("Invalid index in Discretization::calcVelDiagonal");
+  }
 
   switch(eqnType) {
   case Arches::PRESSURE:
-    for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->put(uVelCoeff[ii], d_uVelCoefPBLMLabel, ii, patch);
-      new_dw->put(vVelCoeff[ii], d_vVelCoefPBLMLabel, ii, patch);
-      new_dw->put(wVelCoeff[ii], d_wVelCoefPBLMLabel, ii, patch);
+    switch(index) {
+    case Arches::XDIR:
+      new_dw->put(uVelCoeff[Arches::AP], d_uVelCoefPBLMLabel, Arches::AP, patch);
+      break;
+    case Arches::YDIR:
+      new_dw->put(vVelCoeff[Arches::AP], d_vVelCoefPBLMLabel, Arches::AP, patch);
+      break;
+    case Arches::ZDIR:
+      new_dw->put(wVelCoeff[Arches::AP], d_wVelCoefPBLMLabel, Arches::AP, patch);
+      break;
+    default:
+      throw InvalidValue("Invalid index in Pressure::calcVelDiagonal");
     }
     break;
   case Arches::MOMENTUM:
-    for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->put(uVelCoeff[ii], d_uVelCoefMBLMLabel, ii, patch);
-      new_dw->put(vVelCoeff[ii], d_vVelCoefMBLMLabel, ii, patch);
-      new_dw->put(wVelCoeff[ii], d_wVelCoefMBLMLabel, ii, patch);
+    switch(index) {
+    case Arches::XDIR:
+      new_dw->put(uVelCoeff[Arches::AP], d_uVelCoefMBLMLabel, Arches::AP, patch);
+      break;
+    case Arches::YDIR:
+      new_dw->put(vVelCoeff[Arches::AP], d_vVelCoefMBLMLabel, Arches::AP, patch);
+      break;
+    case Arches::ZDIR:
+      new_dw->put(wVelCoeff[Arches::AP], d_wVelCoefMBLMLabel, Arches::AP, patch);
+      break;
+    default:
+      throw InvalidValue("Invalid index in Pressure::calcVelDiagonal");
     }
     break;
   default:
-    break;
+    throw InvalidValue("Invalid eqnType in Discretization::calcVelDiagonal");
   }
-
 }
 
 //****************************************************************************
@@ -969,6 +1017,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.28  2000/07/12 19:55:43  bbanerje
+// Added apcal stuff in calcVelDiagonal
+//
 // Revision 1.27  2000/07/11 15:46:27  rawat
 // added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
 //
