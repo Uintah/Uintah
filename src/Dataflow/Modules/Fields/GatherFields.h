@@ -80,7 +80,8 @@ GatherPointsAlgoT<MESH>::execute(MeshHandle mesh_h, PointCloudMeshHandle pcmH)
 class GatherFieldsAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(vector<FieldHandle> &fields, bool cdata) = 0;
+  virtual FieldHandle execute(vector<FieldHandle> &fields,
+                              int out_basis, bool cdata) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftype);
@@ -91,17 +92,20 @@ template <class FIELD>
 class GatherFieldsAlgoT : public GatherFieldsAlgo
 {
 protected:
-  FieldHandle append_fields(vector<FIELD *> fields, bool cdata);
+  FieldHandle append_fields(vector<FIELD *> fields,
+                            int out_basis, bool cdata);
 
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(vector<FieldHandle> &fields, bool cdata);
+  virtual FieldHandle execute(vector<FieldHandle> &fields,
+                              int out_basis, bool cdata);
 };
 
 
 template <class FIELD>
 FieldHandle
-GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields, bool cdata)
+GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields,
+                                        int out_basis, bool cdata)
 {
   typename FIELD::mesh_type *omesh = scinew typename FIELD::mesh_type();
 
@@ -142,30 +146,58 @@ GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields, bool cdata)
     offset += (unsigned int)size;
   }
 
-  FIELD *ofield = scinew FIELD(omesh, 1);
+  FIELD *ofield = scinew FIELD(omesh, out_basis);
   if (cdata)
   {
-    offset = 0;
-    for (i=0; i < fields.size(); i++)
+    if (out_basis == 0)
     {
-      typename FIELD::mesh_handle_type imesh = fields[i]->get_typed_mesh();
-      typename FIELD::mesh_type::Node::iterator nitr, nitr_end;
-      imesh->begin(nitr);
-      imesh->end(nitr_end);
-      while (nitr != nitr_end)
+      offset = 0;
+      for (i=0; i < fields.size(); i++)
       {
-	typename FIELD::value_type val;
-	fields[i]->value(val, *nitr);
-	typename FIELD::mesh_type::Node::index_type
-	  new_index(((unsigned int)(*nitr)) + offset);
-	ofield->set_value(val, new_index);
-	++nitr;
-      }
+        typename FIELD::mesh_handle_type imesh = fields[i]->get_typed_mesh();
+        typename FIELD::mesh_type::Elem::iterator itr, itr_end;
+        imesh->begin(itr);
+        imesh->end(itr_end);
+        while (itr != itr_end)
+        {
+          typename FIELD::value_type val;
+          fields[i]->value(val, *itr);
+          typename FIELD::mesh_type::Elem::index_type
+            new_index(((unsigned int)(*itr)) + offset);
+          ofield->set_value(val, new_index);
+          ++itr;
+        }
 
-      typename FIELD::mesh_type::Node::size_type size;
-      imesh->size(size);
-      offset += (unsigned int)size;
+        typename FIELD::mesh_type::Elem::size_type size;
+        imesh->size(size);
+        offset += (unsigned int)size;
+      }
     }
+    if (out_basis == 1)
+    {
+      offset = 0;
+      for (i=0; i < fields.size(); i++)
+      {
+        typename FIELD::mesh_handle_type imesh = fields[i]->get_typed_mesh();
+        typename FIELD::mesh_type::Node::iterator nitr, nitr_end;
+        imesh->begin(nitr);
+        imesh->end(nitr_end);
+        while (nitr != nitr_end)
+        {
+          typename FIELD::value_type val;
+          fields[i]->value(val, *nitr);
+          typename FIELD::mesh_type::Node::index_type
+            new_index(((unsigned int)(*nitr)) + offset);
+          ofield->set_value(val, new_index);
+          ++nitr;
+        }
+
+        typename FIELD::mesh_type::Node::size_type size;
+        imesh->size(size);
+        offset += (unsigned int)size;
+      }
+    }
+    // basis == -1, no data to copy.
   }
   return ofield;
 }
@@ -173,7 +205,8 @@ GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields, bool cdata)
 
 template <class FIELD>
 FieldHandle
-GatherFieldsAlgoT<FIELD>::execute(vector<FieldHandle> &fields_h, bool cdata)
+GatherFieldsAlgoT<FIELD>::execute(vector<FieldHandle> &fields_h,
+                                  int out_basis, bool cdata)
 {
   vector<FIELD *> fields;
   for (unsigned int i = 0; i < fields_h.size(); i++)
@@ -181,7 +214,7 @@ GatherFieldsAlgoT<FIELD>::execute(vector<FieldHandle> &fields_h, bool cdata)
     fields.push_back((FIELD*)(fields_h[i].get_rep()));
   }
   
-  return append_fields(fields, cdata);
+  return append_fields(fields, out_basis, cdata);
 }
 
 } // End namespace SCIRun
