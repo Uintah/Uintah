@@ -22,6 +22,7 @@ Stream::Stream(int numSpecies,  int numElements)
   d_density = 0.0;
   d_temperature = 0.0;
   d_enthalpy = 0.0;
+  d_sootFV = 0.0;
   d_sensibleEnthalpy = 0.0;
   d_moleWeight = 0.0;
   d_cp = 0.0;
@@ -469,6 +470,12 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
 
 //
 // $Log$
+// Revision 1.20  2002/10/02 21:25:36  rawat
+// Added:
+// a) Wing's HypreSolver. Added ifdef's so that hypre is not reqd if not using it
+// b) DO Radiation Solver
+// c) Unsteady Flamelet Model
+//
 // Revision 1.19  2002/08/01 14:57:27  spinti
 // Modified files to return both CO2 and H2O mass fractions using getCO2 and getH2O functions in Stream class
 //

@@ -358,6 +358,8 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 			    ArchesVariables* vars,
 			    const ArchesLabel*)
 {
+  double solve_start = Time::currentSeconds();
+
 #ifdef ARCHES_PETSC_DEBUG
    cerr << "in setPressMatrix on patch: " << patch->getID() << '\n';
 #endif
@@ -455,6 +457,10 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	    throw PetscError(ierr, "VecSetValue");
 	}
       }
+    }
+    int me = d_myworld->myrank();
+    if(me == 0) {
+     cerr << "Time in PETSC pressure matrix solve: " << Time::currentSeconds()-solve_start << " seconds\n";
     }
 #ifdef ARCHES_PETSC_DEBUG
     cerr << " all done\n";

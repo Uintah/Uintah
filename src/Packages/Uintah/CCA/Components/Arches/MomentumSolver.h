@@ -223,7 +223,7 @@ private:
       // const VarLabel* (required)
       const ArchesLabel* d_lab;
       const MPMArchesLabel* d_MAlab;
-
+      bool d_central;
       // computes coefficients
       Discretization* d_discretize;
       // computes sources

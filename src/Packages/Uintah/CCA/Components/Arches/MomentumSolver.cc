@@ -77,7 +77,10 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("Finite Differencing scheme "
 		       "not supported: " + finite_diff);
   }
-
+  if (db->findBlock("central"))
+    db->require("central",d_central);
+  else
+    d_central = false;
   // make source and boundary_condition objects
 
   d_source = scinew Source(d_turbModel, d_physicalConsts);
@@ -596,7 +599,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // outputs: [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM
 
     d_discretize->calculateVelocityCoeff(pc, patch, 
-					 delta_t, index,
+					 delta_t, index, d_central,
 					 cellinfo, &velocityVars);
     
     // Calculate velocity source
@@ -2521,7 +2524,8 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(pressureVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
+    new_dw->getCopy(pressureVars.cellType, d_lab->d_cellTypeLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     if (d_MAlab) {
       new_dw->getCopy(pressureVars.cellType, d_lab->d_cellTypeLabel, 
 		      matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
@@ -2530,7 +2534,6 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
       new_dw->getCopy(pressureVars.cellType, d_lab->d_cellTypeLabel, 
 		      matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     }
-    
     for(int index = 1; index <= Arches::NDIM; ++index) {
 
       // get multimaterial momentum source terms
@@ -2597,7 +2600,7 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
       //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM 
 
       d_discretize->calculateVelocityCoeff(pc, patch, 
-					   delta_t, index, 
+					   delta_t, index, d_central, 
 					   cellinfo, &pressureVars);
 
       // Calculate Velocity source
@@ -3429,7 +3432,7 @@ MomentumSolver::buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
       //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM 
 
       d_discretize->calculateVelocityCoeff(pc, patch, 
-					   delta_t, index, 
+					   delta_t, index, d_central, 
 					   cellinfo, &pressureVars);
 
       // Calculate Velocity source

@@ -633,8 +633,12 @@ namespace Uintah {
 
       const VarLabel* d_enthNonLinSrcCorrLabel;
       // for radiation
+      const VarLabel* d_fvtfiveINLabel;
       const VarLabel* d_absorpINLabel;
       const VarLabel* d_sootFVINLabel;
+      const VarLabel* d_abskgINLabel;
+      const VarLabel* d_radiationSRCINLabel;
+      const VarLabel* d_radiationFluxWINLabel;
       // reactive scalar source term from properties
       const VarLabel* d_reactscalarSRCINLabel;
       const VarLabel* d_absorpINPredLabel;

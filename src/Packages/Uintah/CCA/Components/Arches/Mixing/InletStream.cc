@@ -6,6 +6,7 @@ using namespace std;
 
 InletStream::InletStream()
 {
+  d_axialLoc = 0;
 }
 
 InletStream::InletStream(int numMixVars, int numMixStatVars, int numRxnVars)
@@ -13,6 +14,7 @@ InletStream::InletStream(int numMixVars, int numMixStatVars, int numRxnVars)
   d_mixVars = vector<double>(numMixVars);
   d_mixVarVariance = vector<double>(numMixStatVars);
   d_rxnVars = vector<double>(numRxnVars);
+  d_axialLoc = 0;
   //???What about enthalpy???
 }
 

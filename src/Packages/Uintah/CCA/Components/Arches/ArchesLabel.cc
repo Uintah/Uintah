@@ -659,10 +659,21 @@ ArchesLabel::ArchesLabel()
   d_enthalpyPredLabel = VarLabel::create("enthalpyPred",
 				   CCVariable<double>::getTypeDescription() );
   // for radiation
+  d_fvtfiveINLabel = VarLabel::create("fvtfiveIN",
+				    CCVariable<double>::getTypeDescription() );
+
   d_absorpINLabel = VarLabel::create("absorpIN",
 				    CCVariable<double>::getTypeDescription() );
   d_sootFVINLabel = VarLabel::create("sootFVIN",
 				    CCVariable<double>::getTypeDescription() );
+
+  d_abskgINLabel = VarLabel::create("abskgIN",
+				    CCVariable<double>::getTypeDescription() );
+  d_radiationSRCINLabel = VarLabel::create("radiationSRCIN",
+				    CCVariable<double>::getTypeDescription() );
+  d_radiationFluxWINLabel = VarLabel::create("radiationFluxWIN",
+					     CCVariable<double>::getTypeDescription() );
+
 
   d_reactscalarSRCINLabel = VarLabel::create("reactscalarSRCIN",
 				    CCVariable<double>::getTypeDescription() );
@@ -1117,7 +1128,11 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_enthLinSrcCorrLabel);
   VarLabel::destroy(d_enthNonLinSrcCorrLabel);
   VarLabel::destroy(d_absorpINLabel);
+  VarLabel::destroy(d_fvtfiveINLabel);
+  VarLabel::destroy(d_abskgINLabel);
   VarLabel::destroy(d_sootFVINLabel);
+  VarLabel::destroy(d_radiationSRCINLabel);
+  VarLabel::destroy(d_radiationFluxWINLabel);
   VarLabel::destroy(d_reactscalarSRCINLabel);
   VarLabel::destroy(d_absorpINPredLabel);
   VarLabel::destroy(d_co2INPredLabel);
