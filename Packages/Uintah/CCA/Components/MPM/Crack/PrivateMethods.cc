@@ -6,6 +6,7 @@
 ********************************************************************************/
 
 #include "Crack.h"
+#include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/Short27.h> // for Fracture
@@ -20,6 +21,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
@@ -28,6 +30,8 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <sys/stat.h>
+#include <dirent.h>
 
 // The AIX header files have hz defined for some reason
 // and programmers like to use this as a variable name so...
@@ -636,10 +640,10 @@ void Crack::DetectIfDoingFractureAnalysisAtThisTimeStep(double time)
     }
   }
   else if(d_doCrackPropagation=="false") {
-    doCrackPropagation=0;
+    doCrackPropagation=NO;
   }
   else if(d_doCrackPropagation=="every_time_step"){
-    doCrackPropagation=1;
+    doCrackPropagation=YES;
   }
 }
 
@@ -1083,3 +1087,93 @@ short Crack::CubicSpline(const int& n, const int& m, const int& n1,
   return flag;
 }
 
+// Output crack elems, points, and crack-front nodes
+// for visualization during crack propagagtion
+void Crack::OutputCrackGeometry(const int& matIdx, const int& timestepIdx)
+{
+  static double timeOutputCrackGeometry=0.;
+  double time=d_sharedState->getElapsedTime();
+
+  if(time>=timeOutputCrackGeometry) {
+    // Create output files in format:
+    // ce.matXX.timestepYYYY (crack elems)
+    // cx.matXX.timestepYYYY (crack points)
+    // cf.matXX.timestepYYYY (crack front nodes)
+    char matbuf[10], timebuf[10];
+    sprintf(matbuf,"%d",matIdx);
+    sprintf(timebuf,"%d",timestepIdx);
+
+    // Task 1: Create output directories
+    string cdDir=udaDir+"/crackGeometryData/";
+    mkdir( cdDir.c_str(), 0777 );
+
+    // Task 2: Specify output file names 
+    char ceFileName[200]="";
+    strcat(ceFileName,cdDir.c_str()); 
+    strcat(ceFileName,"ce.mat");
+    if(matIdx<10) strcat(ceFileName,"00");
+    else if(matIdx<100) strcat(ceFileName,"0");
+    strcat(ceFileName,matbuf);
+    strcat(ceFileName,".t");
+    if(timestepIdx<10) strcat(ceFileName,"0000");
+    else if(timestepIdx<100) strcat(ceFileName,"000");
+    else if(timestepIdx<1000) strcat(ceFileName,"00");
+    else if(timestepIdx<10000) strcat(ceFileName,"0");
+    strcat(ceFileName,timebuf);
+
+    char cxFileName[200]="";
+    strcat(cxFileName,cdDir.c_str());
+    strcat(cxFileName,"cx.mat");
+    if(matIdx<10) strcat(cxFileName,"00");
+    else if(matIdx<100) strcat(cxFileName,"0");
+    strcat(cxFileName,matbuf);
+    strcat(cxFileName,".t");
+    if(timestepIdx<10) strcat(cxFileName,"0000");
+    else if(timestepIdx<100) strcat(cxFileName,"000");
+    else if(timestepIdx<1000) strcat(cxFileName,"00");
+    else if(timestepIdx<10000) strcat(cxFileName,"0");
+    strcat(cxFileName,timebuf);
+
+    char cfFileName[200]="";
+    strcat(cfFileName,cdDir.c_str());
+    strcat(cfFileName,"cf.mat");
+    if(matIdx<10) strcat(cfFileName,"00");
+    else if(matIdx<100) strcat(cfFileName,"0");
+    strcat(cfFileName,matbuf);
+    strcat(cfFileName,".t");
+    if(timestepIdx<10) strcat(cfFileName,"0000");
+    else if(timestepIdx<100) strcat(cfFileName,"000");
+    else if(timestepIdx<1000) strcat(cfFileName,"00");
+    else if(timestepIdx<10000) strcat(cfFileName,"0");
+    strcat(cfFileName,timebuf);
+
+    ofstream outputCE(ceFileName, ios::out);
+    ofstream outputCX(cxFileName, ios::out);
+    ofstream outputCF(cfFileName, ios::out);
+
+    if(!outputCE || !outputCX || !outputCF) {
+      cout << "Files for storing crack data are not opened" << endl;
+      exit(1);
+    }
+
+    // Output crack elems 
+    for(int i=0; i<(int)ce[matIdx].size(); i++) {
+      outputCE << ce[matIdx][i].x() << " " << ce[matIdx][i].y() << " "
+               << ce[matIdx][i].z() << endl;
+    }
+
+    // Output crack points
+    for(int i=0; i<(int)cx[matIdx].size(); i++) {
+      outputCX << cx[matIdx][i].x() << " " << cx[matIdx][i].y() << " "
+               << cx[matIdx][i].z() << endl;
+    }
+
+    // Output crack-front nodes
+    for(int i=0; i<(int)cfSegNodes[matIdx].size()/2; i++) {
+      outputCF << cfSegNodes[matIdx][2*i] << " "
+               << cfSegNodes[matIdx][2*i+1] << endl;
+    }
+
+    timeOutputCrackGeometry+=d_outputCrackInterval;
+  }
+}
