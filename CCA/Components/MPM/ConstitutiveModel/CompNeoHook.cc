@@ -277,23 +277,25 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 					      const bool recursion)
 
 {
-  int nn = 0;
+#if 1
   IntVector nodes(0,0,0);
+  int num_nodes(0);
+  
   cout << "nodes = " << nodes << endl;
   cout << "number of patches = " << patches->size() << endl;
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
-    IntVector num_nodes = patch->getNNodes();
-    nn += (num_nodes.x())*(num_nodes.y())*(num_nodes.z())*3;
-    nodes = IntVector(Max(num_nodes.x(),nodes.x()),
-		      Max(num_nodes.y(),nodes.y()),
-		      Max(num_nodes.z(),nodes.z()));
-    cout << "nodes = " << nodes << endl;
+    nodes = patch->getNNodes();
+    num_nodes += (nodes.x())*(nodes.y())*(nodes.z())*3;
+    cout << "num_nodes = " << num_nodes << "\n";
   }
-  KK.setSize(nn,nn);
+  KK.setSize(num_nodes,num_nodes);
+
 #ifdef HAVE_PETSC
-  MatCreateMPIAIJ(PETSC_COMM_WORLD,PETSC_DETERMINE,PETSC_DETERMINE,nn,nn,
-		  PETSC_DEFAULT,PETSC_NULL,PETSC_DEFAULT,PETSC_NULL,&A);
+  MatCreateMPIAIJ(PETSC_COMM_WORLD,PETSC_DETERMINE,PETSC_DETERMINE,num_nodes,
+		  num_nodes, PETSC_DEFAULT,PETSC_NULL,PETSC_DEFAULT,
+		  PETSC_NULL,&A);
+#endif
 #endif
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
@@ -629,7 +631,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	for (int J = 0; J < 24; J++) {
 	  int dofj = dof[J];
 #if 1
-#if 0
+#if 1
 	  cout << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
 	       << endl;
 #endif
