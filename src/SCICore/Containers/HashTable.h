@@ -22,6 +22,8 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Persistent/Persistent.h>
 
+#include <string>
+
 namespace SCICore {
 
 namespace Tester {
@@ -57,6 +59,19 @@ template<class Key> inline int Hash(const Key& k, int hash_size)
     int h = k.hash(hash_size);
     ASSERTRANGE(h, 0, hash_size);
     return h;
+}
+
+// Dd: Adding hash function for type "string".  Feel free to change
+// this to make it a good one...
+using std::string;
+inline int Hash(const string& s, int hash_size)
+{
+  int val = 0;
+  for( int pos = 0; pos < s.length(); pos++ )
+    {
+      val += s[ pos ];
+    }
+  return val % hash_size;
 }
 
 inline SCICORESHARE int Hash(const int& k, int hash_size)
@@ -530,6 +545,9 @@ void Pio(Piostream& stream, HashTable<Key, Data>& t)
 
 //
 // $Log$
+// Revision 1.11  2000/05/15 19:07:06  dav
+// added simple string hash function so I could make string hash tables.  feel free to modify.  but since we are using the stl map now, this might not make any difference.
+//
 // Revision 1.10  1999/09/08 02:26:46  sparker
 // Various #include cleanups
 //
