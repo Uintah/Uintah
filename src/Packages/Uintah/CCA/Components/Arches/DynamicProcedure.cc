@@ -241,7 +241,9 @@ DynamicProcedure::initFilter(const ProcessorGroup* pg,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
+#ifdef PetscFilter
     d_filter->setFilterMatrix(pg, patch, cellinfo, cellType);
+#endif
   }
 }
 
