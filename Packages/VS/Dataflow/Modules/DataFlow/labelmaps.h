@@ -102,4 +102,14 @@ VH_Anatomy_readBoundingBox_File(char *infilename);
 VH_AnatomyBoundingBox *
 VH_Anatomy_findBoundingBox(VH_AnatomyBoundingBox *list, char *anatomyname);
 
+/******************************************************************************
+ * class VH_injuryList
+ *
+ * description: Contains the name of an injured tissue and
+ *		iconic geometry to display to indicate the injury extent
+ ******************************************************************************/
+
+bool
+is_injured(char *targetName, char **injured_tissue_list, int size_injList);
+
 #endif

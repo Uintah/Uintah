@@ -87,6 +87,16 @@ private:
   GuiString gui_label7_;
   GuiString gui_label8_;
   GuiString gui_label9_;
+  // tags
+  GuiInt gui_is_injured1_;
+  GuiInt gui_is_injured2_;
+  GuiInt gui_is_injured3_;
+  GuiInt gui_is_injured4_;
+  GuiInt gui_is_injured5_;
+  GuiInt gui_is_injured6_;
+  GuiInt gui_is_injured7_;
+  GuiInt gui_is_injured8_;
+  GuiInt gui_is_injured9_;
 
   // toggle on/off drawing GeomSticky output
   GuiString enableDraw_;
@@ -141,6 +151,15 @@ HotBox::HotBox(GuiContext* ctx)
   gui_label7_(ctx->subVar("gui_label7")),
   gui_label8_(ctx->subVar("gui_label8")),
   gui_label9_(ctx->subVar("gui_label9")),
+  gui_is_injured1_(ctx->subVar("gui_is_injured1")),
+  gui_is_injured2_(ctx->subVar("gui_is_injured2")),
+  gui_is_injured3_(ctx->subVar("gui_is_injured3")),
+  gui_is_injured4_(ctx->subVar("gui_is_injured4")),
+  gui_is_injured5_(ctx->subVar("gui_is_injured5")),
+  gui_is_injured6_(ctx->subVar("gui_is_injured6")),
+  gui_is_injured7_(ctx->subVar("gui_is_injured7")),
+  gui_is_injured8_(ctx->subVar("gui_is_injured8")),
+  gui_is_injured9_(ctx->subVar("gui_is_injured9")),
   enableDraw_(ctx->subVar("enableDraw")),
   datasource_(ctx->subVar("datasource")),
   querytype_(ctx->subVar("querytype")),
@@ -332,20 +351,32 @@ void
       xmlto_string(toCatch.getMessage());
       return;
   }
-                                                                               
+  // we are interested in injured tissues -- look for "region"
+  // <wound entity="..." timestamp="...1">
+  //        <primaryInjury>
+  //            <ablate/stunRegion probability="...">
+  //                <region entity="...tissue name..."/> 
+  //            </ablateRegion>
+  //        </primaryInjury>
+  // </wound>
+
+
   DOMDocument *injListDoc = injListParser.getDocument();
   DOMNodeList *
-  injList = injListDoc->getElementsByTagName(to_xml_ch_ptr("wound"));
-  unsigned long i, num_struQLret, nlist = injList->getLength();
+  injList = injListDoc->getElementsByTagName(to_xml_ch_ptr("region"));
+  unsigned long i, num_struQLret, num_injList = injList->getLength();
+  char *injured_tissue[VH_LM_NUM_NAMES];
 
-  if (nlist == 0) {
+  if (num_injList == 0) {
     cout << "HotBox.cc: no entities in Injury List" << endl;
   }
   else
   {
     cout << "HotBox.cc: xml file: " << injuryListDataSrc << ": "
-         << nlist << " wound entities" << endl;
-    for (i = 0;i < nlist; i++)
+         << num_injList << " wounded region entities" << endl;
+    if(num_injList >= VH_LM_NUM_NAMES)
+           num_injList = VH_LM_NUM_NAMES;
+    for (i = 0;i < num_injList; i++)
     {
       if (!(injList->item(i)))
       {
@@ -364,10 +395,13 @@ void
           if(elem == 0)
               cout << " Cannot get element from node" << endl;
           else
+          {
               cout << " value: " << to_char_ptr(elem->getNodeValue()) << endl;
-      }
-    } // end for (i = 0;i < nlist; i++)
-  } // end else (nlist != 0)
+              injured_tissue[i] = strdup(to_char_ptr(elem->getNodeValue()));
+          }
+      } // end if(node.hasAttributes())
+    } // end for (i = 0;i < num_injList; i++)
+  } // end else (num_injList != 0)
   // we now have the anatomy name corresponding to the label value at the voxel
   char *oqafma_relation[VH_LM_NUM_NAMES];
   if(dataSource == VS_DATASOURCE_OQAFMA)
@@ -552,6 +586,10 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[1] << "]: ";
     cerr << adjacentName << endl;
     gui_label1_.set(adjacentName);
+    if(is_injured(adjacentName, injured_tissue, num_injList))
+    { gui_is_injured1_.set(1); }
+    else
+    { gui_is_injured1_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
     VS_HotBoxUI->set_text(0, string(adjacentName, 0, 18));
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 1)
@@ -569,6 +607,10 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[2] << "]: ";
     cerr << adjacentName << endl;
     gui_label2_.set(adjacentName);
+    if(is_injured(adjacentName, injured_tissue, num_injList))
+    { gui_is_injured2_.set(1); }
+    else
+    { gui_is_injured2_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
     VS_HotBoxUI->set_text(3, string(adjacentName, 0, 18));
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 2)
@@ -586,6 +628,10 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[3] << "]: ";
     cerr << adjacentName << endl;
     gui_label3_.set(adjacentName);
+    if(is_injured(adjacentName, injured_tissue, num_injList))
+    { gui_is_injured3_.set(1); }
+    else
+    { gui_is_injured3_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
     VS_HotBoxUI->set_text(5, string(adjacentName, 0, 18));
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 3)
@@ -603,6 +649,10 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[4] << "]: ";
     cerr << adjacentName << endl;
     gui_label4_.set(adjacentName);
+    if(is_injured(adjacentName, injured_tissue, num_injList))
+    { gui_is_injured4_.set(1); }
+    else
+    { gui_is_injured4_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
     VS_HotBoxUI->set_text(1, string(adjacentName, 0, 18));
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 4)
@@ -625,6 +675,10 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[6] << "]: ";
     cerr << adjacentName << endl;
     gui_label6_.set(adjacentName);
+    if(is_injured(adjacentName, injured_tissue, num_injList))
+    { gui_is_injured6_.set(1); }
+    else
+    { gui_is_injured6_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
     VS_HotBoxUI->set_text(6, string(adjacentName, 0, 18));
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 6)
@@ -642,6 +696,10 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[7] << "]: ";
     cerr << adjacentName << endl;
     gui_label7_.set(adjacentName);
+    if(is_injured(adjacentName, injured_tissue, num_injList))
+    { gui_is_injured7_.set(1); }
+    else
+    { gui_is_injured7_.set(0); }
     // OpenGL UI is 0-indexed, column-major
     VS_HotBoxUI->set_text(2, string(adjacentName, 0, 18));
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 7)
@@ -659,6 +717,10 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[8] << "]: ";
     cerr << adjacentName << endl;
     gui_label8_.set(adjacentName);
+    if(is_injured(adjacentName, injured_tissue, num_injList))
+    { gui_is_injured8_.set(1); }
+    else
+    { gui_is_injured8_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
     VS_HotBoxUI->set_text(4, string(adjacentName, 0, 18));
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 8)
@@ -676,9 +738,37 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[9] << "]: ";
     cerr << adjacentName << endl;
     gui_label9_.set(adjacentName);
+    if(is_injured(adjacentName, injured_tissue, num_injList))
+    { gui_is_injured9_.set(1); }
+    else
+    { gui_is_injured9_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
     VS_HotBoxUI->set_text(7, string(adjacentName, 0, 18));
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 9)
+
+  // clean up
+  if(dataSource == VS_DATASOURCE_OQAFMA)
+  {
+     for (i = 0;i < num_struQLret; i++)
+     {
+       if(oqafma_relation[i] != 0)
+       {
+         free(oqafma_relation[i]);
+         oqafma_relation[i] = 0;
+       }
+     }
+     num_struQLret = 0;
+  } // end if(dataSource == VS_DATASOURCE_OQAFMA)
+
+  for(i = 0;i < num_injList; i++)
+  {
+    if(injured_tissue[i] != 0)
+    {
+       free(injured_tissue[i]);
+       injured_tissue[i] = 0;
+    }
+  }
+  num_injList = 0;
 
   if(enableDraw == "yes")
   {
