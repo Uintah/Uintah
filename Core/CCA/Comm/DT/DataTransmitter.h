@@ -64,38 +64,6 @@ namespace SCIRun {
   };
 
 
-  class ProxyID{
-  public:
-    int iid;  //first level ID
-    int pid;  //second level ID
-    ProxyID(){
-      iid=pid=0;
-    }
-
-    ProxyID(int iid, int pid){
-      this->iid=iid;
-      this->pid=pid;
-    }
-
-    bool isNull(){
-      return iid==0 && pid==0;
-    }
-
-    bool operator=(const ProxyID &o){
-      return iid==o.iid && pid==o.pid;
-    }
-
-    std::string str(){
-      ::std::ostringstream s;
-      s<<'|'<<iid<<'|'<<pid;
-      return s.str();
-    }
-
-    ProxyID next(){
-      return ProxyID(iid, pid+1);
-    }
-  };
-
   class DataTransmitter{
   public:
     //send buf to address paddr, if no connection made for paddr,
@@ -139,15 +107,6 @@ namespace SCIRun {
 
 
 
-    /////////////////////////////////////////////
-    // These method handles the PRMI IDs
-    // They are static methods, so everybody can access
-    // them without an DT object.
-    static void addPRMI_ID(ProxyID);
-    static ProxyID getPRMI_ID();
-    static void delPRMI_ID();
-
-    static ProxyID nextProxyID();
 
     std::string getUrl();
 
@@ -212,10 +171,6 @@ namespace SCIRun {
 
     bool quit;
     
-    static Mutex *iid_mutex;
-    static std::map<Thread* ,ProxyID> iid_map; //invocation id
-    static std::map<Thread* ,ProxyID> nid_map; //next proxy id
-
   };
 
 }//namespace SCIRun

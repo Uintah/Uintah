@@ -256,6 +256,7 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   out << "#include <Core/CCA/PIDL/TypeInfo_internal.h>\n";
   out << "#include <Core/CCA/PIDL/PIDL.h>\n";
   out << "#include <Core/CCA/Comm/Message.h>\n";
+  out << "#include <Core/CCA/Comm/PRMI.h>\n";
   out << "#include <Core/CCA/PIDL/MxNScheduler.h>\n";
   out << "#include <Core/CCA/PIDL/MxNArrSynch.h>\n";
   out << "#include <Core/CCA/PIDL/MxNMetaSynch.h>\n";
@@ -824,10 +825,16 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out << leader2 << "//Unmarshal sessionID and number of calls\n";
     //    e.out << leader2 << "::std::string _sessionID(36, ' ');\n";
     //    e.out << leader2 << "message->unmarshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
+    // unmarshal UUIDs
     e.out << leader2 << "int iid, pid;\n";
     e.out << leader2 << "message->unmarshalInt(&iid);\n";
     e.out << leader2 << "message->unmarshalInt(&pid);\n";
     e.out << leader2 << "SCIRun::ProxyID _sessionID(iid,pid);\n";
+    e.out << leader2 << "message->unmarshalInt(&iid);\n";
+    e.out << leader2 << "message->unmarshalInt(&pid);\n";
+    e.out << leader2 << "SCIRun::ProxyID _currentPrxoyID(iid,pid);\n";
+    e.out << leader2 << "SCIRun::PRMI::setProxyID(_currentPrxoyID);\n";
+
     e.out << leader2 << "int _numCalls;\n";
     e.out << leader2 << "message->unmarshalInt(&_numCalls);\n\n";
     e.out << leader2 << "//Unmarshal callID\n";
@@ -843,6 +850,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   string a_leader;
   if (isCollective) {
     e.out << leader2 << "if ((_flag == ::SCIRun::CALLONLY)||(_flag == ::SCIRun::CALLNORET)) {  /*CALLONLY || CALLNORET*/ \n";
+    e.out << leader2 << "  SCIRun::PRMI::setInvID(SCIRun::PRMI::getProxyID());\n";
     f_leader=e.out.push_leader();
   }
 
@@ -954,7 +962,6 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
       //calls found in emit_marshal (OUT args)
       e.out << leader2 << "if (_flag == ::SCIRun::CALLNORET) {\n";
       if(throws_clause) {
-	e.out << leader2 << "// Send the reply...\n";
 	int reply_handler_id=0; // Always 0
 	e.out << leader2 << "  message->sendMessage(" << reply_handler_id << ");\n";
 	e.out << leader2 << "  message->destroyMessage();\n";
@@ -968,8 +975,13 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
       a_leader = e.out.push_leader(); 
     }
 
-
-    e.out << leader2 << "// Send the reply...\n";
+    if(isCollective){
+      e.out << leader2 << "// Send the reply...\n";
+      e.out << leader2 << "  SCIRun::ProxyID nextProxyID=SCIRun::PRMI::peekProxyID();\n";
+      e.out << leader2 << "// marshal the current proxy id\n";
+      e.out << leader2 << "  message->marshalInt(&nextProxyID.iid);\n";
+      e.out << leader2 << "  message->marshalInt(&nextProxyID.pid);\n";
+    }
     int reply_handler_id=0; // Always 0
     e.out << leader2 << "message->sendMessage(" << reply_handler_id << ");\n";
   }
@@ -1025,6 +1037,11 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
       
 
       e.out << leader2 << "// Send the reply...\n";
+      e.out << leader2 << "  SCIRun::ProxyID nextProxyID=SCIRun::PRMI::peekProxyID();\n";
+      e.out << leader2 << "// marshal the current proxy id\n";
+      e.out << leader2 << "  message->marshalInt(&nextProxyID.iid);\n";
+      e.out << leader2 << "  message->marshalInt(&nextProxyID.pid);\n";
+
       int reply_handler_id=0; // Always 0
       e.out << leader2 << "message->sendMessage(" << reply_handler_id << ");\n";    
     }
@@ -1645,7 +1662,13 @@ void Method::emit_proxy(EmitState& e, const string& fn,
 	  arg->emit_unmarshal(e, argname.str(), "1", handlerOff, ArgOut, false, false);
 	}
       }
-      
+      //unmarshal returned UUID
+      e.out << leader2 << "//unmarshal the next proxy ID and reset it for the current thread\n";
+      e.out << leader2 << "SCIRun::ProxyID nextProxyID;\n";
+      e.out << leader2 << "message->unmarshalInt(&nextProxyID.iid);\n";
+      e.out << leader2 << "message->unmarshalInt(&nextProxyID.pid);\n";
+      e.out << leader2 << "SCIRun::PRMI::setProxyID(nextProxyID);\n\n";
+
       e.out << leader2 << "message->destroyMessage();\n";
     }
     
@@ -1843,6 +1866,15 @@ void Method::emit_proxy(EmitState& e, const string& fn,
 	argname << "_arg" << argNum;
 	arg->emit_unmarshal(e, argname.str(), "1", handlerOff, ArgOut, false, false);
       }
+    }
+
+    if (isCollective) {
+      //unmarshal returned UUID
+      e.out << leader2 << "//unmarshal the next proxy ID and reset it for the current thread\n";
+      e.out << leader2 << "SCIRun::ProxyID nextProxyID;\n";
+      e.out << leader2 << "message->unmarshalInt(&nextProxyID.iid);\n";
+      e.out << leader2 << "message->unmarshalInt(&nextProxyID.pid);\n";
+      e.out << leader2 << "SCIRun::PRMI::setProxyID(nextProxyID);\n\n";
     }
     e.out << leader2 << "message->destroyMessage();\n";
 

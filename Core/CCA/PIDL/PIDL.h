@@ -125,11 +125,15 @@ DESCRIPTION
 
     static bool isNexus();
 
+    //test if a thread is in the same address space as the master framework
+    static bool isFramework();
+
     //////////
     // Rank and size for parallel proxies are statically set 
     // into these variables. Set by PIDL::initialize().
     static int rank;
     static int size;
+    static bool isfrwk;
 
     //////////
     // Used to save one proxy in order to call get exception

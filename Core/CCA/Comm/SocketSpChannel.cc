@@ -77,6 +77,12 @@ SocketSpChannel::SocketSpChannel(SocketSpChannel &spchan) {
   ep_addr=spchan.ep_addr;
 }
 
+SocketSpChannel::SocketSpChannel(DTPoint *ep, DTAddress ep_addr) { 
+  sp=new DTPoint(PIDL::getDT());
+  this->ep=ep;
+  this->ep_addr=ep_addr;
+}
+
 SocketSpChannel::~SocketSpChannel(){
   delete sp;
 }

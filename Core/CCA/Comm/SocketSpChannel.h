@@ -54,6 +54,7 @@ namespace SCIRun {
   public:
 
     SocketSpChannel();
+    SocketSpChannel(DTPoint *ep, DTAddress ep_addr);
     SocketSpChannel(SocketSpChannel &spchan);
     ~SocketSpChannel();
     void openConnection(const URL& url);

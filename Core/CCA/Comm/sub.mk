@@ -60,6 +60,7 @@ SRCS     += \
 	$(SRCDIR)/CommError.cc \
 	$(SRCDIR)/SocketMessage.cc \
 	$(SRCDIR)/SocketThread.cc \
+	$(SRCDIR)/PRMI.cc
 LIBS :=
 endif
 

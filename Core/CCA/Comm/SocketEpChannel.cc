@@ -68,6 +68,7 @@
 #include <Core/CCA/PIDL/ServerContext.h>
 
 #include <Core/Thread/Thread.h>
+#include <Core/CCA/Comm/PRMI.h>
 
 using namespace std;
 using namespace SCIRun;
@@ -85,6 +86,12 @@ static void service(DTMessage *dtmsg){
     else if(id==SocketEpChannel::DEL_REFERENCE){
       sc->d_objptr->deleteReference();
       delete dtmsg;
+    }
+    else if(id==SocketEpChannel::MPI_LOCKSERVICE){
+      PRMI::lock_service(dtmsg);
+    }
+    else if(id==SocketEpChannel::MPI_ORDERSERVICE){
+      PRMI::order_service(dtmsg);
     }
     else{
       if (id >= chan->getTableSize())
@@ -154,3 +161,7 @@ SocketEpChannel::getTableSize(){
   return table_size;
 }
 
+DTPoint*
+SocketEpChannel::getEP(){
+  return ep;
+}

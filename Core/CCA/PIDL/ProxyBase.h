@@ -47,12 +47,13 @@
 #include <Core/CCA/PIDL/ReferenceMgr.h>
 #include <Core/CCA/PIDL/MxNScheduler.h>
 #include <Core/CCA/PIDL/XceptionRelay.h>
-#include <Core/CCA/Comm/DT/DataTransmitter.h>
+#include <Core/CCA/Comm/PRMI.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector> 
 #include <string>
 #include <sgi_stl_warnings_on.h>
 #include <sstream>
+
 namespace SCIRun {
 
   class XceptionRelay;

@@ -55,6 +55,7 @@ namespace SCIRun {
   class SocketEpChannel : public EpChannel {
     friend class SocketMessage;
     friend class SocketThread;
+    friend class PRMI;
   public:
 
     SocketEpChannel();
@@ -68,9 +69,12 @@ namespace SCIRun {
     void registerHandler(int num, void* handle);
     void bind(SpChannel* spchan);
     int getTableSize();
+    DTPoint *getEP();
 
     const static int ADD_REFERENCE=-101;
     const static int DEL_REFERENCE=-102;
+    const static int MPI_LOCKSERVICE=-103;
+    const static int MPI_ORDERSERVICE=-104;
   private:
     DTPoint *ep;
 
