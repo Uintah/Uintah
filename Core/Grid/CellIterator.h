@@ -117,9 +117,16 @@ WARNING
       : d_s(copy.d_s), d_e(copy.d_e), d_cur(copy.d_cur), d_done(copy.d_done) {
     }
     
+    inline CellIterator& operator=( const CellIterator& copy ) {
+      d_s    = copy.d_s;
+      d_e    = copy.d_e;
+      d_cur  = copy.d_cur;
+      d_done = copy.d_done;
+      return *this;
+    }
+
   private:
     CellIterator();
-    CellIterator& operator=(const CellIterator& copy);
     
     //////////
     // Insert Documentation Here:
