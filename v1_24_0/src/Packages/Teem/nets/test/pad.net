@@ -31,10 +31,10 @@
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "Teem" "Unu" "UnuPad" 45 195]
+set m0 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPad" 45 195]
 set m1 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 61 281]
 set m2 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 269 203]
-set m3 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 30 10]
+set m3 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleLattice" 30 10]
 set m4 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 31 88]
 
 addConnection $m0 0 $m1 0
