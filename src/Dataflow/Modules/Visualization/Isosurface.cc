@@ -172,7 +172,8 @@ void Isosurface::execute()
 	noise->set_field(field.get_rep());
       }
       NoiseAlg *noise = dynamic_cast<NoiseAlg*>(noise_alg_.get_rep());
-      surface = noise->search(iso_value);
+      surface = noise->search(iso_value, build_trisurf);
+      trisurf_mesh_ = noise->get_trisurf();
     }
     break;
   case 2:  // View Dependent

@@ -41,6 +41,13 @@ NoiseAlg::get_h_file_path() {
   return path;
 }
 
+TriSurfMeshHandle
+NoiseAlg::get_trisurf()
+{
+  return trisurf_;
+}
+
+
 CompileInfo *
 NoiseAlg::get_compile_info(const TypeDescription *td) {
   string subname;

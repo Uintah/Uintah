@@ -33,6 +33,7 @@
 #include <Core/Algorithms/Visualization/SpanSpace.h>
 #include <Core/Disclosure/DynamicLoader.h>
 #include <Core/Geom/GeomObj.h>
+#include <Core/Datatypes/TriSurfField.h>
 
 namespace SCIRun {
 
@@ -45,11 +46,14 @@ public:
   
   virtual void release() = 0;
   virtual void set_field( Field * ) = 0;
-  virtual GeomObj* search( double ) = 0;
+  virtual GeomObj* search( double, bool ) = 0;
 
   //! support the dynamically compiled algorithm concept
   static const string& get_h_file_path();
   static CompileInfo *get_compile_info(const TypeDescription *td);
+
+  TriSurfMeshHandle trisurf_;
+  TriSurfMeshHandle get_trisurf();
 };
 
 // Noise<T>
@@ -71,7 +75,7 @@ public:
   
   virtual void release();
   virtual void set_field( Field *);
-  GeomObj *search( double );
+  GeomObj *search( double, bool );
   
   int count();
   
@@ -123,15 +127,17 @@ int Noise<Tesselator>::count( )
 
 
 template <class Tesselator>
-GeomObj *Noise<Tesselator>::search( double iso )
+GeomObj *Noise<Tesselator>::search( double iso, bool buildtrisurf )
 {
   v = iso;
   
   int n = count();
-  tess_->reset(n);
+  tess_->reset(n, buildtrisurf);
   
   search_min_max( &space_->span[0], space_->span.size() );
-  
+
+
+  trisurf_ = tess_->get_trisurf();
   return tess_->get_geom();
 }
 
