@@ -60,7 +60,7 @@ public:
 		   std::string &portname);
 
   std::string moduleName;
-
+  std::string displayName;
 public slots:
   void go();
   void stop();

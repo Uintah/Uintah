@@ -33,6 +33,7 @@
 #include <qpainter.h>
 #include <qmessagebox.h>
 #include <iostream>
+#include <sstream>
 #include "NetworkCanvasView.h"
 using namespace std;
 
@@ -47,13 +48,31 @@ Module::Module(NetworkCanvasView *parent, const string& moduleName,
   ph=4; //prot height
 		
   int dx=5;
-  // int dy=10;
-  //  int d=5;
 
   int w=120;
   int h=60;
 
-  nameRect=QRect(QPoint(0,0), (new QLabel(moduleName.c_str(),0))->sizeHint() );
+  sci::cca::ports::BuilderService::pointer bs = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+  sci::cca::TypeMap::pointer properties=bs->getPortProperties(cid, "");
+  services->releasePort("cca.BuilderService");
+
+  string loaderName="";
+  int nNodes=1;
+  
+  
+  if(!properties.isNull()){
+    loaderName=properties->getString("LOADER NAME",loaderName);
+    nNodes=properties->getInt("np",nNodes);
+  }
+
+  ostringstream nameWithNodes;
+  nameWithNodes<<moduleName;
+  if(nNodes>1){
+    nameWithNodes<<"("<<nNodes<<")";
+  }
+  displayName=nameWithNodes.str();
+  nameRect=QRect(QPoint(dx,dx), (new QLabel(displayName.c_str(),0))->sizeHint() );
+  nameRect.addCoords(0,-2,2,2);
   if(nameRect.width()+dx*2>w) w=nameRect.width()+dx*2;
 //	QRect uiRect(dx,nameRect.bottom()+d,20,20);
 
@@ -98,12 +117,15 @@ Module::Module(NetworkCanvasView *parent, const string& moduleName,
   }
 
   menu=new QPopupMenu(this);
+  string displayloader="Loader: ";
+  displayloader+=loaderName;
+  menu->insertItem(displayloader.c_str());
+  menu->insertSeparator();	
+
 
   if(hasGoPort){
       menu->insertItem("Go",this, SLOT(go()) );
       //menu->insertItem("Stop",this,  SLOT(stop()) );
-      menu->insertSeparator();	
-
       string instanceName = cid->getInstanceName();
       string goPortName = instanceName+" goPort";
       services->registerUsesPort(goPortName, "sci.cca.ports.GoPort",
@@ -143,7 +165,7 @@ void Module::paintEvent(QPaintEvent *e)
   QPainter p( this );
   p.setPen( black );
   p.setFont( QFont( "Times", 10, QFont::Bold ) );
-  p.drawText(nameRect, AlignCenter, moduleName.c_str() );
+  p.drawText(nameRect, AlignCenter, displayName.c_str() );
    
   p.setPen(green);
   p.setBrush(green);    
