@@ -172,6 +172,9 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    d_lastTimestepLocation = "invalid";
    d_wasOutputTimestep = false;
 
+}
+
+void DataArchiver::initializeOutput(const ProblemSpecP& params) {
    if (d_outputInterval == 0.0 && d_outputTimestepInterval == 0 && d_checkpointInterval == 0.0 && d_checkpointTimestepInterval == 0 && d_checkpointWalltimeInterval == 0) 
 	return;
 
@@ -326,7 +329,9 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    }
    else
       d_checkpointsDir = d_dir.getSubdir("checkpoints");
+
 }
+
 
 // to be called after problemSetup gets called
 void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
