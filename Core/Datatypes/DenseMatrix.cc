@@ -576,19 +576,6 @@ DenseMatrix::print(ostream& ostr) const
 }
 
 
-void
-DenseMatrix::scalar_multiply(double s)
-{
-  for (int i=0; i<nrows_; i++)
-  {
-    for (int j=0; j<ncols_; j++)
-    {
-      (*this)[i][j] *= s;
-    }
-  }
-}
-
-
 MatrixHandle
 DenseMatrix::submatrix(int r1, int c1, int r2, int c2)
 {
