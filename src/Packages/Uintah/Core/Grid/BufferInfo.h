@@ -13,6 +13,7 @@ namespace Uintah {
 
   class AfterCommunicationHandler {
   public:
+    virtual ~AfterCommunicationHandler() {}
     virtual void finishedCommunication(const ProcessorGroup*) = 0;
   };
 
@@ -21,7 +22,7 @@ namespace Uintah {
     Sendlist(Sendlist* next, RefCounted* obj)
       : next(next), obj(obj)
     {}
-    ~Sendlist();
+    virtual ~Sendlist();
     Sendlist* next;
     RefCounted* obj;
 
@@ -65,3 +66,4 @@ namespace Uintah {
 }
 
 #endif
+
