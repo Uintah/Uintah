@@ -52,6 +52,7 @@ itcl_class VS_Render_ICUMonitor {
 	global  $this-font_scale
 	global  $this-show_name
 	global  $this-show_date
+	global  $this-show_time
 	global  $this-dump_frames
 
 	set $this-edit          0
@@ -71,6 +72,7 @@ itcl_class VS_Render_ICUMonitor {
 	set $this-font_scale 1.0
 	set $this-show_name 0
 	set $this-show_date 0
+	set $this-show_time 0
 	set $this-dump_frames   0
     }
 
@@ -226,6 +228,11 @@ itcl_class VS_Render_ICUMonitor {
 		-justify left -relief flat -variable $this-show_date \
 		-onvalue 1 -offvalue 0 -anchor w 
             pack $gen.showdate -side top -fill x -pady 2
+
+	    checkbutton $gen.showtime -text "Show Time" -padx 6 \
+		-justify left -relief flat -variable $this-show_time \
+		-onvalue 1 -offvalue 0 -anchor w 
+            pack $gen.showtime -side top -fill x -pady 2
 
 	    frame $gen.fs -borderwidth 4
             pack $gen.fs -side top -fill x -pady 2
@@ -598,7 +605,7 @@ itcl_class VS_Render_ICUMonitor {
 	    SciRaise $w
 
 	    wm title $w "ICU Monitor"
-	    wm minsize $w 640 128
+	    #wm minsize $w 640 128
 	    wm geometry $w "640x640"
 	}
     }
