@@ -33,8 +33,10 @@
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/Array1.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/Containers/LockingHandle.h>
 #include <iostream>
+
 using namespace std;
 
 namespace SCIRun {
@@ -62,6 +64,8 @@ public:
   virtual int* get_row() { return 0; }
   virtual int* get_col() { return 0; }
 
+  Transform toTransform();
+  
   virtual double& get(int, int) const=0;
   inline MatrixRow operator[](int r);
 

@@ -94,6 +94,23 @@ DenseMatrix::DenseMatrix(const DenseMatrix& m)
   }
 }
 
+DenseMatrix::DenseMatrix(const Transform& t)
+{
+  nc=nr=4;
+  double dummy[16];
+  t.get(dummy);
+  data=scinew double*[nr];
+  double* tmp=scinew double[nr*nc];
+  dataptr=tmp;
+  double* p=&(dummy[0]);
+  for(int i=0;i<nr;i++){
+    data[i]=tmp;
+    for(int j=0;j<nc;j++){
+      *tmp++=*p++;
+    }
+  }
+}
+
 DenseMatrix *DenseMatrix::dense() {
   return this;
 }

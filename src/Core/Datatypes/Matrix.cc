@@ -73,6 +73,22 @@ SCICORESHARE Matrix *Mult(Matrix *A, Matrix *B) {
   return A;
 }
 
+Transform Matrix::toTransform() {
+  Transform t;
+  if (nrows() != 4 || ncols() != 4) {
+    cerr << "Error - can't make a transform from this matrix.\n";
+    return t;
+  }
+  double dummy[16];
+  int cnt=0;
+  for (int i=0; i<4; i++) 
+    for (int j=0; j<4; j++, cnt++)
+      dummy[cnt] = get(i,j);
+  t.set(dummy);
+  return t;
+}
+  
+
 void
 Mult(ColumnMatrix& result, const Matrix& mat, const ColumnMatrix& v)
 {
