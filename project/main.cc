@@ -37,11 +37,13 @@ int main(int argc, char** argv)
     // to that directory
     char* datadir=getenv("SCI_DATA");
     if(datadir){
+#if REALLY_CHDIR
 	cerr << "Changing to directory: " << datadir << endl;
 	if(chdir(datadir) == -1){
 	    perror("chdir");
 	    cerr << "Cannot change to directory: " << datadir << endl;
 	}
+#endif
 	static char dirbuf[1000];
 	sprintf(dirbuf, "PWD=%s", datadir);
 	putenv(dirbuf);

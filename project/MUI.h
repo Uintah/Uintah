@@ -17,6 +17,7 @@
 #include <Classlib/Array1.h>
 #include <Classlib/String.h>
 #include <MessageBase.h>
+#include <Geometry/Point.h>
 
 class clString;
 class CallbackData;
@@ -59,6 +60,7 @@ protected:
     void dispatch(const clString&, clString*, int);
     void dispatch(double, double*, int);
     void dispatch(int, int*, int);
+    void dispatch(Point, Point*, int);
 public:
     enum DispatchPolicy {
 	Immediate,
@@ -140,12 +142,21 @@ public:
 class MUI_point : public MUI_widget {
     Point* data;
     int dispatch_drag;
+    double base;
+    ScaleC* scalex;
+    ScaleC* scaley;
+    ScaleC* scalez;
+    void drag_callback(CallbackData*, void*);
+    void value_callback(CallbackData*, void*);
 public:
     MUI_point(const clString& name, Point* data,
 	      DispatchPolicy, int dispatch_drag,
 	      void* cbdata=0);
     virtual ~MUI_point();
     virtual void attach(MUI_window*, EncapsulatorC*);
+    enum Event {
+	Drag, Value,
+    };
 };
 
 class MUI_onoff_switch : public MUI_widget {
@@ -195,10 +206,13 @@ class MUI_Module_Message : public MessageBase {
     double* ddata;
     int newidata;
     int* idata;
+    Point newpdata;
+    Point* pdata;
     enum Type {
 	DoubleData,
 	StringData,
 	IntData,
+	PointData,
     };
     Type type;
 public:
@@ -208,6 +222,8 @@ public:
 		       double, double*, void*, int);
     MUI_Module_Message(UserModule* module,
 		       int, int*, void*, int);
+    MUI_Module_Message(UserModule* module,
+		       Point, Point*, void*, int);
     virtual ~MUI_Module_Message();
 
     void do_it();

@@ -69,6 +69,7 @@ public:
     Vector*** get_dataptr();
     double get(int, int, int);
     Point get_point(int, int, int);
+    void locate(const Point&, int&, int&, int&);
 
     // Only for tetrahedra
     int get_ntetra();

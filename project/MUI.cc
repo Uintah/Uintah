@@ -27,6 +27,7 @@
 #include <NotFinished.h>
 #include <UserModule.h>
 #include <XQColor.h>
+#include <Geometry/Point.h>
 #include <Mt/DialogShell.h>
 #include <Mt/DrawingArea.h>
 #include <Mt/FileSelectionBox.h>
@@ -159,6 +160,21 @@ void MUI_widget::dispatch(double newdata, double* data,
 }
 
 void MUI_widget::dispatch(int newdata, int* data,
+			  int info)
+{
+    if(dispatch_policy==Immediate){
+	*data=newdata;
+	window->get_module()->mui_callback(cbdata, info);
+    } else {
+	// Send it to the module...
+	MUI_Module_Message* msg=new MUI_Module_Message(window->get_module(),
+						       newdata, data,
+						       cbdata, info);
+	window->get_module()->mailbox.send(msg);
+    }
+}
+
+void MUI_widget::dispatch(Point newdata, Point* data,
 			  int info)
 {
     if(dispatch_policy==Immediate){
@@ -535,6 +551,14 @@ MUI_Module_Message::MUI_Module_Message(UserModule* module, int newidata,
 {
 }
 
+MUI_Module_Message::MUI_Module_Message(UserModule* module, Point newpdata,
+				       Point* pdata, void* cbdata, int flags)
+: MessageBase(MessageTypes::MUIDispatch), type(PointData),
+  module(module), newpdata(newpdata), pdata(pdata), cbdata(cbdata),
+  flags(flags)
+{
+}
+
 MUI_Module_Message::~MUI_Module_Message()
 {
 }
@@ -551,6 +575,9 @@ void MUI_Module_Message::do_it()
     case IntData:
 	*idata=newidata;
 	break;
+    case PointData:
+	*pdata=newpdata;
+	break;
     }
 }
 
@@ -559,7 +586,37 @@ MUI_point::MUI_point(const clString& name, Point* data,
 		     void* cbdata)
 : MUI_widget(name, cbdata, dp), data(data), dispatch_drag(dispatch_drag)
 {
-    NOT_FINISHED("MUI_point::MUI_point");
+    scalex=new ScaleC;
+    scaley=new ScaleC;
+    scalez=new ScaleC;
+    scalex->SetOrientation(XmHORIZONTAL);
+    scaley->SetOrientation(XmHORIZONTAL);
+    scalez->SetOrientation(XmHORIZONTAL);
+    scalex->SetShowValue(True);
+    scaley->SetShowValue(True);
+    scalez->SetShowValue(True);
+    clString namex(name+" (X)");
+    clString namey(name+" (Y)");
+    clString namez(name+" (Z)");
+    XmString strx=XmStringCreateSimple(namex());
+    XmString stry=XmStringCreateSimple(namey());
+    XmString strz=XmStringCreateSimple(namez());
+    scalex->SetTitleString(strx);
+    scaley->SetTitleString(stry);
+    scalez->SetTitleString(strz);
+    scalex->SetHighlightThickness(0);
+    scaley->SetHighlightThickness(0);
+    scalez->SetHighlightThickness(0);
+    scalex->SetDecimalPoints(2);
+    scaley->SetDecimalPoints(2);
+    scalez->SetDecimalPoints(2);
+    int valx=(int)(data->x()*100);
+    int valy=(int)(data->y()*100);
+    int valz=(int)(data->z()*100);
+    scalex->SetValue(valx);
+    scaley->SetValue(valy);
+    scalez->SetValue(valz);
+    base=0.01;
 }
 
 MUI_point::~MUI_point()
@@ -568,6 +625,76 @@ MUI_point::~MUI_point()
 
 void MUI_point::attach(MUI_window* _window, EncapsulatorC* parent)
 {
-    NOT_FINISHED("MUI_point::attach");
+    window=_window;
+    NetworkEditor* netedit=window->get_module()->netedit;
+    new MotifCallback<MUI_point>FIXCB(scalex, XmNdragCallback,
+				      &netedit->mailbox, this,
+				      &MUI_point::drag_callback,
+				      (void*)0,
+				      &CallbackCloners::scale_clone);
+    new MotifCallback<MUI_point>FIXCB(scalex, XmNvalueChangedCallback,
+				      &netedit->mailbox, this,
+				      &MUI_point::value_callback,
+				      (void*)0,
+				      &CallbackCloners::scale_clone);
+    new MotifCallback<MUI_point>FIXCB(scaley, XmNdragCallback,
+				      &netedit->mailbox, this,
+				      &MUI_point::drag_callback,
+				      (void*)1,
+				      &CallbackCloners::scale_clone);
+    new MotifCallback<MUI_point>FIXCB(scaley, XmNvalueChangedCallback,
+				      &netedit->mailbox, this,
+				      &MUI_point::value_callback,
+				      (void*)1,
+				      &CallbackCloners::scale_clone);
+    new MotifCallback<MUI_point>FIXCB(scalez, XmNdragCallback,
+				      &netedit->mailbox, this,
+				      &MUI_point::drag_callback,
+				      (void*)2,
+				      &CallbackCloners::scale_clone);
+    new MotifCallback<MUI_point>FIXCB(scalez, XmNvalueChangedCallback,
+				      &netedit->mailbox, this,
+				      &MUI_point::value_callback,
+				      (void*)2,
+				      &CallbackCloners::scale_clone);
+    scalex->Create(*parent, "scalex");
+    scaley->Create(*parent, "scaley");
+    scalez->Create(*parent, "scalez");
 }
 
+void MUI_point::drag_callback(CallbackData* cbdata, void* which)
+{
+    double n=cbdata->get_int()*base;
+    Point newdata(*data);
+    switch((int)which){
+    case 0:
+	newdata.x(n);
+	break;
+    case 1:
+	newdata.y(n);
+	break;
+    case 2:
+	newdata.z(n);
+	break;
+    }
+    if(dispatch_drag)
+	dispatch(newdata, data, Drag);
+}
+
+void MUI_point::value_callback(CallbackData* cbdata, void* which)
+{
+    double n=cbdata->get_int()*base;
+    Point newdata(*data);
+    switch((int)which){
+    case 0:
+	newdata.x(n);
+	break;
+    case 1:
+	newdata.y(n);
+	break;
+    case 2:
+	newdata.z(n);
+	break;
+    }
+    dispatch(newdata, data, Value);
+}

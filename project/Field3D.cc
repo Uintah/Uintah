@@ -239,3 +239,18 @@ void Field3D::get_minmax(double& min, double& max)
 	}
     }
 }
+
+void Field3D::locate(const Point& p, int& ix, int& iy, int& iz)
+{
+    if(rep != RegularGrid){
+	NOT_FINISHED("interpolate for non-regular grids");
+	return;
+    }
+    Vector pn=p-min;
+    double x=pn.x()*nx/diagonal.x();
+    double y=pn.y()*ny/diagonal.y();
+    double z=pn.z()*nz/diagonal.z();
+    ix=(int)x;
+    iy=(int)y;
+    iz=(int)z;
+}
