@@ -4,7 +4,12 @@
 #include "RefCounted.h"
 
 namespace Uintah {
-namespace Grid {
+  namespace Grid {
+    class RefCounted;
+  }
+}
+
+using Uintah::Grid::RefCounted;
 
 /**************************************
 
@@ -40,13 +45,13 @@ public:
     virtual ~Array3Data();
 
     inline int dim1() {
-	return size1;
+	return d_size1;
     }
     inline int dim2() {
-	return size2;
+	return d_size2;
     }
     inline int dim3() {
-	return size3;
+	return d_size3;
     }
     void initialize(const T& val, int o1, int o2, int o3,
 		    int s1, int s2, int s3);
@@ -101,13 +106,13 @@ Array3Data<T>::Array3Data(int size1, int size2, int size3)
     : d_size1(size1), d_size2(size2), d_size3(size3)
 {
     if(d_size1 && d_size2 && d_size3)
-	data=new T[d_size1*d_size2*d_size3];
+	d_data=new T[d_size1*d_size2*d_size3];
     else
-	data=0;
-    totalsize = d_size1*d_size2*d_size3;
-    data3=new T**[d_size1];
-    data3[0]=new T*[d_size1*d_size2];
-    data3[0][0]=d_data;
+	d_data=0;
+    d_totalsize = d_size1*d_size2*d_size3;
+    d_data3=new T**[d_size1];
+    d_data3[0]=new T*[d_size1*d_size2];
+    d_data3[0][0]=d_data;
     for(int i=1;i<d_size1;i++){
 	d_data3[i]=d_data3[i-1]+d_size2;
     }
@@ -119,17 +124,17 @@ Array3Data<T>::Array3Data(int size1, int size2, int size3)
 template<class T>
 Array3Data<T>::~Array3Data()
 {
-    if(data){
+    if(d_data){
 	delete[] d_data;
 	delete[] d_data3;
     }
 }
 
-} // end namespace Grid
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.4  2000/03/21 02:22:57  dav
+// few more updates to make it compile including moving Array3 stuff out of namespace as I do not know where it should be
+//
 // Revision 1.3  2000/03/21 01:29:42  dav
 // working to make MPM stuff compile successfully
 //
