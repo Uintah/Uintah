@@ -1,5 +1,5 @@
 //----- Properties.cc --------------------------------------------------
-
+#include <TauProfilerForSCIRun.h>
 #include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
@@ -477,6 +477,11 @@ Properties::computeProps(const ProcessorGroup*,
     IntVector indexLow = patch->getCellLowIndex();
     IntVector indexHigh = patch->getCellHighIndex();
 
+    // construct an InletStream for input to the computeProps of mixingModel
+    InletStream inStream(d_numMixingVars, d_mixingModel->getNumMixStatVars(),
+		         d_mixingModel->getNumRxnVars());
+    Stream outStream;
+
     // set density for the whole domain
 
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
@@ -488,10 +493,6 @@ Properties::computeProps(const ProcessorGroup*,
 
 	  // for combustion calculations mixingmodel will be called
 	  // this is similar to prcf.f
-	  // construct an InletStream for input to the computeProps of mixingModel
-
-	  InletStream inStream(d_numMixingVars, d_mixingModel->getNumMixStatVars(),
-			       d_mixingModel->getNumRxnVars());
 
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
 
@@ -522,7 +523,6 @@ Properties::computeProps(const ProcessorGroup*,
 
 	  if (!d_mixingModel->isAdiabatic())
 	    inStream.d_enthalpy = 0.0;
-	  Stream outStream;
 	  d_mixingModel->computeProps(inStream, outStream);
 	  double local_den = outStream.getDensity();
 	  if (d_enthalpySolve)
@@ -787,7 +787,11 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 			   DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
+  TAU_PROFILE_TIMER(input, "Input", "[Properties::reCompute::input]" , TAU_USER);
+  TAU_PROFILE_TIMER(compute, "Compute", "[Properties::reCompute::compute]" , TAU_USER);
+  TAU_PROFILE_TIMER(mixing, "Mixing", "[Properties::reCompute::mixing]" , TAU_USER);
 
+  TAU_PROFILE_START(input);
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->
@@ -889,6 +893,12 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     IntVector test(6,9,9);
     cout << "printing test "<<test<<endl;
 #endif
+    TAU_PROFILE_STOP(input);
+    TAU_PROFILE_START(compute);
+    InletStream inStream(d_numMixingVars,
+		         d_mixingModel->getNumMixStatVars(),
+		         d_mixingModel->getNumRxnVars());
+    Stream outStream;
 
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
@@ -899,9 +909,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  // construct an InletStream for input to the computeProps of mixingModel
 
 	  IntVector currCell(colX, colY, colZ);
-	  InletStream inStream(d_numMixingVars,
-			       d_mixingModel->getNumMixStatVars(),
-			       d_mixingModel->getNumRxnVars());
 
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
 
@@ -943,8 +950,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	      inStream.d_axialLoc = 0;
 	  }
 
-	  Stream outStream;
+  TAU_PROFILE_START(mixing);
 	  d_mixingModel->computeProps(inStream, outStream);
+  TAU_PROFILE_STOP(mixing);
 	  double local_den = outStream.getDensity();
 	  drhodf[currCell] = outStream.getdrhodf();
 	  if (d_flamelet) {
@@ -1049,6 +1057,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     if (pc->myrank() == 0)
       cerr << "Time in the Mixing Model: " << Time::currentSeconds()-start_mixTime << " seconds\n";
 
+  TAU_PROFILE_STOP(compute);
   }
 }
 
@@ -1266,6 +1275,10 @@ Properties::computePropsPred(const ProcessorGroup*,
 
     //    voidFraction.print(cerr);
     // set density for the whole domain
+    InletStream inStream(d_numMixingVars, 
+		         d_mixingModel->getNumMixStatVars(),
+		         d_mixingModel->getNumRxnVars());
+    Stream outStream;
 
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
@@ -1276,9 +1289,6 @@ Properties::computePropsPred(const ProcessorGroup*,
 	  // construct an InletStream for input to the computeProps of mixingModel
 
 	  IntVector currCell(colX, colY, colZ);
-	  InletStream inStream(d_numMixingVars, 
-			       d_mixingModel->getNumMixStatVars(),
-			       d_mixingModel->getNumRxnVars());
 
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
 
@@ -1308,7 +1318,6 @@ Properties::computePropsPred(const ProcessorGroup*,
 
 	  if (!d_mixingModel->isAdiabatic())
 	    inStream.d_enthalpy = enthalpy_comp[currCell];
-	  Stream outStream;
 	  d_mixingModel->computeProps(inStream, outStream);
 	  double local_den = outStream.getDensity();
 	  drhodf[currCell] = outStream.getdrhodf();
@@ -1559,6 +1568,10 @@ Properties::computePropsInterm(const ProcessorGroup*,
 
     //    voidFraction.print(cerr);
     // set density for the whole domain
+    InletStream inStream(d_numMixingVars, 
+		         d_mixingModel->getNumMixStatVars(),
+		         d_mixingModel->getNumRxnVars());
+    Stream outStream;
 
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
@@ -1569,9 +1582,6 @@ Properties::computePropsInterm(const ProcessorGroup*,
 	  // construct an InletStream for input to the computeProps of mixingModel
 
 	  IntVector currCell(colX, colY, colZ);
-	  InletStream inStream(d_numMixingVars, 
-			       d_mixingModel->getNumMixStatVars(),
-			       d_mixingModel->getNumRxnVars());
 
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
 
@@ -1601,7 +1611,6 @@ Properties::computePropsInterm(const ProcessorGroup*,
 
 	  if (!d_mixingModel->isAdiabatic())
 	    inStream.d_enthalpy = enthalpy_comp[currCell];
-	  Stream outStream;
 	  d_mixingModel->computeProps(inStream, outStream);
 	  double local_den = outStream.getDensity();
 	  drhodf[currCell] = outStream.getdrhodf();
@@ -2377,6 +2386,10 @@ Properties::reComputeRKProps(const ProcessorGroup*,
     IntVector test(6,9,9);
     cout << "printing test "<<test<<endl;
 #endif
+    InletStream inStream(d_numMixingVars,
+		         d_mixingModel->getNumMixStatVars(),
+		         d_mixingModel->getNumRxnVars());
+    Stream outStream;
 
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
@@ -2387,9 +2400,6 @@ Properties::reComputeRKProps(const ProcessorGroup*,
 	  // construct an InletStream for input to the computeProps of mixingModel
 
 	  IntVector currCell(colX, colY, colZ);
-	  InletStream inStream(d_numMixingVars,
-			       d_mixingModel->getNumMixStatVars(),
-			       d_mixingModel->getNumRxnVars());
 
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
 
@@ -2424,7 +2434,6 @@ Properties::reComputeRKProps(const ProcessorGroup*,
 
 	  if (!d_mixingModel->isAdiabatic())
 	    inStream.d_enthalpy = enthalpy_comp[currCell];
-	  Stream outStream;
 	  d_mixingModel->computeProps(inStream, outStream);
 	  double local_den = outStream.getDensity();
 	  drhodf[currCell] = outStream.getdrhodf();
