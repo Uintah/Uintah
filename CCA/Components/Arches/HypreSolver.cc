@@ -621,7 +621,10 @@ HypreSolver::pressLinearSolve()
   if(me == 0) {
     cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", solver time: " << Time::currentSeconds()-start_time << " seconds\n";
   }
-  return true;
+  if (final_res_norm < 2.0)
+    return true;
+  else
+    return false;
 }
 
 
