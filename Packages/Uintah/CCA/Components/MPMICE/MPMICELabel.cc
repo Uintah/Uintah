@@ -35,6 +35,8 @@ MPMICELabel::MPMICELabel()
                      CCVariable<double>::getTypeDescription());
   dvdt_CCLabel     = scinew VarLabel( "dvdt_CC",
 			CCVariable<Vector>::getTypeDescription() );
+  dTdt_CCLabel     = scinew VarLabel( "dTdt_CC",
+			CCVariable<double>::getTypeDescription() );
   temp_CCLabel     = scinew VarLabel("temp_CC",
 			CCVariable<double>::getTypeDescription() );
   temp_CC_scratchLabel = scinew VarLabel("temp_CC_scratch",
@@ -85,6 +87,7 @@ MPMICELabel::~MPMICELabel()
   delete int_eng_L_CCLabel;
   delete int_eng_L_ME_CCLabel;
   delete dvdt_CCLabel;
+  delete dTdt_CCLabel;
   delete temp_CCLabel;
   delete temp_CC_scratchLabel;
   delete speedSound_CCLabel;
