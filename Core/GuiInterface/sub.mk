@@ -27,6 +27,7 @@ SRCS     += $(SRCDIR)/DebugSettings.cc $(SRCDIR)/GuiManager.cc \
 	$(SRCDIR)/TCLInit.cc $(SRCDIR)/TCLTask.cc $(SRCDIR)/GuiVar.cc \
 	$(SRCDIR)/ThreadStats.cc \
 	$(SRCDIR)/TCLstrbuff.cc \
+	$(SRCDIR)/TclObj.cc \
 
 PSELIBS := Core/Exceptions Core/Util Core/Thread \
 		Core/Containers Core/TkExtensions
