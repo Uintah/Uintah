@@ -79,6 +79,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/UVMapping.cc \
 	$(SRCDIR)/UVPlane.cc \
 	$(SRCDIR)/ImageMaterial.cc \
+	$(SRCDIR)/TileImageMaterial.cc \
 	$(SRCDIR)/RationalBezier.cc \
 	$(SRCDIR)/RationalMesh.cc \
 	$(SRCDIR)/Bezier.cc \
@@ -125,7 +126,6 @@ SRCS += $(SRCDIR)/Worker.cc \
 
 #	$(SRCDIR)/LumiDpy.cc \
 #	$(SRCDIR)/LumiCamera.cc \
-
 
 SUBDIRS := $(SRCDIR)/Shadows \
 #	   $(SRCDIR)/LightField \
