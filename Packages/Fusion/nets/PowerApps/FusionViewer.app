@@ -250,39 +250,34 @@ set c12 [addConnection $m9  0 $m13 1]
 set c13 [addConnection $m11 0 $m13 2]
 
 
-set c11 [addConnection $m12 0 $m20 0]
-set c12 [addConnection $m12 0 $m50 0]
+set c14 [addConnection $m12 0 $m20 0]
+set c15 [addConnection $m12 0 $m50 0]
 
-set c13 [addConnection $m13 0 $m40 0]
-set c14 [addConnection $m13 0 $m41 0]
-set c15 [addConnection $m13 0 $m49 0]
+set c16 [addConnection $m13 0 $m40 0]
+set c17 [addConnection $m13 0 $m41 0]
+set c18 [addConnection $m13 0 $m49 0]
 
-set c16 [addConnection $m12 0 $m14 0]
-set c17 [addConnection $m13 0 $m15 0]
+set c19 [addConnection $m12 0 $m14 0]
+set c20 [addConnection $m13 0 $m15 0]
 
-set c18 [addConnection $m12 0 $m16 0]
-set c19 [addConnection $m13 0 $m17 0]
-
-
-set c20 [addConnection $m20 0 $m18 0]
-set c21 [addConnection $m12 0 $m18 1]
+set c21 [addConnection $m12 0 $m16 0]
+set c22 [addConnection $m13 0 $m17 0]
 
 
-
-
+set c23 [addConnection $m20 0 $m18 0]
+set c24 [addConnection $m12 0 $m18 1]
 set c25 [addConnection $m12 0 $m31 0]
 set c26 [addConnection $m12 0 $m33 0]
-set c27 [addConnection $m33 0 $m34 0]
-set c28 [addConnection $m34 0 $m36 0]
-set c29 [addConnection $m31 0 $m32 0]
+set c27 [addConnection $m31 0 $m32 0]
+set c28 [addConnection $m32 0 $m33 1]
+set c29 [addConnection $m32 2 $m33 2]
 set c30 [addConnection $m32 0 $m35 0]
-set c31 [addConnection $m35 0 $m34 1]
-set c32 [addConnection $m32 0 $m33 1]
-set c33 [addConnection $m35 1 $m34 2]
-set c34 [addConnection $m32 2 $m33 2]
+set c31 [addConnection $m33 0 $m34 0]
+set c32 [addConnection $m34 0 $m36 0]
+set c33 [addConnection $m35 0 $m34 1]
+set c34 [addConnection $m35 1 $m34 2]
 set c35 [addConnection $m39 0 $m36 1]
 set c36 [addConnection $m36 0 $m100 0]
-
 
 set c40 [addConnection $m20 0 $m21 0]
 set c41 [addConnection $m20 0 $m22 0]
@@ -315,12 +310,10 @@ set c72 [addConnection $m49 0 $m50 1]
 set c73 [addConnection $m50 0 $m42 0]
 set c74 [addConnection $m50 0 $m47 1]
 
-
 set c100 [addConnection $m100 0 $m101 0]
 set c101 [addConnection $m14 0 $m101 1]
 set c102 [addConnection $m15 0 $m101 2]
 set c103 [addConnection $m40 1 $m101 3]
-
 
 # Set GUI variables for the DataIO->Readers->HDF5DataReader Module
 set $m0-filename "$DATADIR/$DATASET/phi.h5"
@@ -769,10 +762,88 @@ set "$m101-ViewWindow_0-Nodes (4) (1)" {1}
 global connections
 
 set connections(hdf5_to_cp) $c0
-set connections(mds_to_cp) $c1
+set connections(hdf5_to_cc) $c1
+set connections(hdf5_to_cs) $c2
+set connections(hdf5_to_cv) $c3
+
+set connections(mds_to_cp) $c4
+set connections(mds_to_cc) $c5
+set connections(mds_to_cs) $c6
+set connections(mds_to_cv) $c7
 
 set connections(cp_to_scalar) $c8
 set connections(cp_to_vector) $c11
+
+set connections(cc_to_scalar) $c9
+set connections(cc_to_vector) $c12
+
+set connections(cs_to_scalar) $c10
+set connections(cv_to_vector) $c13
+
+set connections(scalar_to_subsample)    $c14
+set connections(scalar_to_choose)       $c15
+set connections(scalar_to_probe)        $c19
+set connections(scalar_to_info)         $c21
+set connections(scalar_to_choose_iso)   $c24
+set connections(scalar_to_transform)    $c25
+set connections(scalar_to_matrix)       $c26
+set connections(scalar_to_color)        $c43
+
+set connections(subsample_to_choose)      $c23
+set connections(subsample_to_slicer_low)  $c40
+set connections(subsample_to_slicer_high) $c41
+
+
+set connections(transform_to_isosurface)   $c27
+set connections(isosurface_fld_to_matrix)  $c28
+set connections(isosurface_mtx_to_matrix)  $c29
+set connections(isosurface_to_clipfuction) $c30
+set connections(matrix_to_matrix)          $c31
+set connections(matrix_to_showfield)       $c32
+set connections(clipfuction_fld_to_matrix) $c33
+set connections(clipfuction_mtx_to_matrix) $c34
+
+
+set connections(choose_to_iso)       $c42
+set connections(iso_to_showfield)    $c46
+set connections(slicer_low_to_iso)   $c44
+set connections(slicer_high_to_iso)  $c45
+set connections(iso_low_to_gather)   $c47
+set connections(iso_high_to_gather)  $c48
+set connections(gather_to_showfield) $c49
+
+
+
+set connections(vector_to_sample)      $c16
+set connections(vector_to_streamlines) $c17
+set connections(vector_to_magnitude)   $c18
+set connections(vector_to_probe)       $c20
+set connections(vector_to_info)        $c22
+
+
+set connections(sample_to_streamlines)       $c61
+set connections(streamlines_to_interpolate)  $c62
+set connections(streamlines_to_showfield)    $c63
+set connections(streamlines_to_rescalecolor) $c64
+set connections(interpolate_to_showfield)    $c65
+
+set connections(magnitude_to_choose)    $c72
+set connections(choose_to_interpolate)  $c73
+set connections(choose_to_rescalecolor) $c74
+
+
+
+set connections(showfield_scalarslice_to_sync) $c36
+set connections(showfield_isosurfaces_to_sync) $c50
+set connections(showfield_isocontours_to_sync) $c51
+set connections(showfield_streamline_edges_to_sync) $c66
+set connections(showfield_streamline_nodes_to_sync) $c67
+
+set connections(probe_scalar_to_viewer) $c101
+set connections(probe_vector_to_viewer) $c102
+set connections(sample_to_viewer)       $c103
+
+
 
 # global array indexed by module name to keep track of modules
 global mods
@@ -787,8 +858,10 @@ set mods(MDSPlus-Connections) $m5
 set mods(MDSPlus-Scalar) $m6
 set mods(MDSPlus-Vector) $m7
 
-set mods(ChooseNrrd-Points) $m8
+set mods(ChooseNrrd-Points)      $m8
 set mods(ChooseNrrd-Connections) $m9
+set mods(ChooseNrrd-Scalar)      $m10
+set mods(ChooseNrrd-Vector)      $m11
 
 set mods(NrrdToField-Scalar) $m12
 set mods(NrrdToField-Vector) $m13
@@ -801,20 +874,20 @@ set mods(FieldInfo-Vector) $m17
 set mods(ChooseField-Isosurface-Surface) $m18
 
 
-set mods(SubSample) $m20
-set mods(Slicer-Low) $m21
+set mods(SubSample)   $m20
+set mods(Slicer-Low)  $m21
 set mods(Slicer-High) $m22
 
-set mods(Isosurface-Surface) $m23
-set mods(Isosurface-Contour-Low) $m24
+set mods(Isosurface-Surface)      $m23
+set mods(Isosurface-Contour-Low)  $m24
 set mods(Isosurface-Contour-High) $m25
 
 set mods(ShowField-Isosurface-Surface) $m27
 set mods(ShowField-Isosurface-Contour) $m28
 
-set mods(TransformData-Scalar-Slice) $m31
-set mods(Isosurface-Scalar-Slice) $m32
-set mods(ApplyInterpMatrix-Scalar-Slice-Iso) $m33
+set mods(TransformData-Scalar-Slice)          $m31
+set mods(Isosurface-Scalar-Slice)             $m32
+set mods(ApplyInterpMatrix-Scalar-Slice-Iso)  $m33
 set mods(ApplyInterpMatrix-Scalar-Slice-Clip) $m34
 set mods(ClipField-Scalar-Slice) $m35
 set mods(ShowField-Scalar-Slice) $m36
@@ -837,6 +910,7 @@ set mods(RescaleColorMap-Isosurfaces) $m39
 set mods(RescaleColorMap-Streamlines) $m47
 set mods(RescaleColorMap-Other) $m48
 
+set mods(Synchronize) $m100
 set mods(Viewer) $m101
 
 #######################################################
@@ -925,10 +999,10 @@ class FusionViewerApp {
 	set shot_scalar      "No Data Selected"
 	set shot_vector      "No Data Selected"
 
-	set valid_points 1
-	set valid_connections 1
-	set valid_scalar 1
-	set valid_vector 1
+	set valid_points -1
+	set valid_connections -1
+	set valid_scalar -1
+	set valid_vector -1
 
 	set have_scalarslice 0
 	set have_isosurfaces 0
@@ -1100,6 +1174,7 @@ class FusionViewerApp {
 
 	set initialized 1
 
+	
 	global PowerAppSession
 	if {[info exists PowerAppSession] && [set PowerAppSession] != ""} { 
 	    set saveFile $PowerAppSession
@@ -1267,6 +1342,19 @@ class FusionViewerApp {
 	    set streamlines_frame$case $sl
 
 
+################## Synchronize
+	    iwidgets::labeledframe $fields.sync -labelpos nw \
+		-labeltext "Synchronize"
+
+	    set sync [$fields.sync childsite]
+
+	    global $mods(Synchronize)-enforce
+	    checkbutton $sync.enforce -text "Enforce" \
+		-variable $mods(Synchronize)-enforce
+	    pack $sync.enforce -side top -anchor nw -padx 3 -pady 3
+
+            pack $fields.sync -padx 4 -pady 4 -fill x
+
 ################## Probe Tab
 	    set probes [$page.tnb add -label "Probes" \
 			    -command "$this change_option_tab 1"]
@@ -1282,32 +1370,32 @@ class FusionViewerApp {
 	    iwidgets::labeledframe $probes.sframe -labelpos nw \
 		-labeltext "Scalar Probe"
 
-	    set probe [$probes.sframe childsite]
+	    set sprobe [$probes.sframe childsite]
 	    
-	    build_probe_frame $probe $mods(Probe-Scalar) probe_scalar
+	    build_probe_frame $sprobe $mods(Probe-Scalar) probe_scalar
 	     
             pack $probes.sframe -padx 4 -pady 4 -fill x
 
             if {$case == 0} {
-		set probe_scalar_frame$case $probe
+		set probe_scalar_frame$case $sprobe
             } else {
-		set probe_scalar_frame1 $probe
+		set probe_scalar_frame1 $sprobe
             }
 
 ################## Vector Probe
 	    iwidgets::labeledframe $probes.vframe -labelpos nw \
 		-labeltext "Vector Probe"
 
-	    set probe [$probes.vframe childsite]
+	    set vprobe [$probes.vframe childsite]
 	    
-	    build_probe_frame $probe $mods(Probe-Vector) probe_vector
+	    build_probe_frame $vprobe $mods(Probe-Vector) probe_vector
 	     
             pack $probes.vframe -padx 4 -pady 4 -fill x
 
             if {$case == 0} {
-		set probe_vector_frame$case $probe
+		set probe_vector_frame$case $vprobe
             } else {
-		set probe_vector_frame1 $probe
+		set probe_vector_frame1 $vprobe
             }
 
 ################## Misc Probe
@@ -1420,11 +1508,17 @@ class FusionViewerApp {
 	### Data HDF5
 	set hdf5 [$f.tnb add -label "HDF5" -command "$this change_data_tab 0"]
 	set data_hdf5_tab$case $hdf5
-	
-	$mods(HDF5-Points) set_power_app "$this update_hdf5_callback 0 0 0"
-	$mods(HDF5-Connections) set_power_app "$this update_hdf5_callback 0 0 0"
-	$mods(HDF5-Scalar) set_power_app "$this update_hdf5_callback 0 0 0"
-	$mods(HDF5-Vector) set_power_app "$this update_hdf5_callback 0 0 0"
+
+	global $mods(HDF5-Points)-file
+
+	$mods(HDF5-Points) \
+	    set_power_app "$this update_hdf5_callback $mods(HDF5-Points)-filename 0 0"
+	$mods(HDF5-Connections) \
+	    set_power_app "$this update_hdf5_callback $mods(HDF5-Connections)-filename 0 0"
+	$mods(HDF5-Scalar) \
+	    set_power_app "$this update_hdf5_callback $mods(HDF5-Scalar)-filename 0 0"
+	$mods(HDF5-Vector) \
+	    set_power_app "$this update_hdf5_callback $mods(HDF5-Vector)-filename 0 0"
 
 	frame $hdf5.points
 	button $hdf5.points.button -text " Points " \
@@ -1472,13 +1566,13 @@ class FusionViewerApp {
 	
 
 	$mods(MDSPlus-Points)   set_power_app \
-	    "$this update_mdsplus_callback 0 0 0"
+	    "$this update_mdsplus_callback $mods(MDSPlus-Points)-shot 0 0"
 	$mods(MDSPlus-Connections)   set_power_app \
-	    "$this update_mdsplus_callback 0 0 0"
+	    "$this update_mdsplus_callback $mods(MDSPlus-Connections)-shot 0 0"
 	$mods(MDSPlus-Scalar) set_power_app \
-	    "$this update_mdsplus_callback 0 0 0"
+	    "$this update_mdsplus_callback $mods(MDSPlus-Scalar)-shot 0 0"
 	$mods(MDSPlus-Vector) set_power_app \
-	    "$this update_mdsplus_callback 0 0 0"
+	    "$this update_mdsplus_callback $mods(MDSPlus-Vector)-shot 0 0"
 
 
 	frame $mdsplus.connections
@@ -1643,7 +1737,7 @@ class FusionViewerApp {
 
 	checkbutton $f.isocontours -text "Show Isocontours" \
 	    -variable $mods(ShowField-Isosurface-Contour)-edges-on \
-	    -command "$this toggle_isocontours"
+	    -command "$this toggle_isocontours 0"
 	pack $f.isocontours -side top -anchor w -padx 20
     }	 
 
@@ -1861,7 +1955,7 @@ class FusionViewerApp {
 
 	checkbutton $f.integration -text "Show Scalar Integration Points" \
 	    -variable $mods(ShowField-StreamLines-Scalar)-nodes-on \
-	    -command "$this toggle_integration"
+	    -command "$this toggle_integration 0"
 	pack $f.integration -side top -anchor w -padx 20 -pady 3
     }
 
@@ -1918,7 +2012,7 @@ class FusionViewerApp {
 	    -labeltext "Color Map Rescalings"
 
 	set cmrs [$f.rescaling childsite]
-	
+
 	$rscapmod build_ui $cmrs
 
 	pack $f.colormaps $f.rescaling -padx 4 -pady 4 -fill x
@@ -1936,7 +2030,7 @@ class FusionViewerApp {
 	    -variable $cmapmod-mapName \
 	    -value "$cmapname" \
 	    -command "$cmapmod change" 
-#	    -command "$cmapmod SetColorMap" # for no execute
+#	    -command "$cmapmod SetColorMap" # for no execute, the above executes
 
 	pack $maps.cm-$cmapname.b -side left -anchor nw -padx 3 -pady 0
 	
@@ -2053,10 +2147,10 @@ class FusionViewerApp {
 
 
     method toggle_scalarslice {} {
-	global mods
+	global mods connections
 	global $mods(ShowField-Scalar-Slice)-faces-on
 
-	puts stderr "toggle_scalarslice [set $mods(ShowField-Scalar-Slice)-faces-on]"
+	puts stderr "toggle_scalarslice [set $mods(ShowField-Scalar-Slice)-faces-on] have_scalarslice $have_scalarslice"
 
 	if {[set $mods(ShowField-Scalar-Slice)-faces-on] == 1} {
 	    set on 1
@@ -2084,17 +2178,23 @@ class FusionViewerApp {
 
 	}
 	
-#	disableModule $mods(TransformData-Scalar-Slice)          $disable
-#	disableModule $mods(Isosurface-Scalar-Slice)             $disable
-#	disableModule $mods(ApplyInterpMatrix-Scalar-Slice-Iso)  $disable
-#	disableModule $mods(ApplyInterpMatrix-Scalar-Slice-Clip) $disable
-#	disableModule $mods(ClipField-Scalar-Slice)              $disable
-#	disableModule $mods(ShowField-Scalar-Slice)              $disable
+	disableConnectionID $connections(scalar_to_matrix)          $disable
+	disableConnectionID $connections(scalar_to_transform)       $disable
+	disableConnectionID $connections(transform_to_isosurface)   $disable
+	disableConnectionID $connections(isosurface_fld_to_matrix)  $disable
+	disableConnectionID $connections(isosurface_mtx_to_matrix)  $disable
+	disableConnectionID $connections(isosurface_to_clipfuction) $disable
+	disableConnectionID $connections(matrix_to_matrix)          $disable
+	disableConnectionID $connections(matrix_to_showfield)       $disable
+	disableConnectionID $connections(clipfuction_fld_to_matrix) $disable
+	disableConnectionID $connections(clipfuction_mtx_to_matrix) $disable
+#       Disconnecting a dynamic port causes a hang
+#	disableConnectionID $connections(showfield_scalarslice_to_sync) $disable
 
-	bind $slice_slider_tab0.isoval.s <ButtonRelease> $cmd
-	bind $slice_slider_tab1.isoval.s <ButtonRelease> $cmd
-	bind $slice_slider_tab0.isoval.val <Return> $cmd
-	bind $slice_slider_tab1.isoval.val <Return> $cmd
+#	bind $slice_slider_tab0.isoval.s <ButtonRelease> $cmd
+#	bind $slice_slider_tab1.isoval.s <ButtonRelease> $cmd
+#	bind $slice_slider_tab0.isoval.val <Return> $cmd
+#	bind $slice_slider_tab1.isoval.val <Return> $cmd
 
 	enable_widget $scalarslice_frame0.show
 	enable_widget $scalarslice_frame1.show
@@ -2104,15 +2204,16 @@ class FusionViewerApp {
 	}
     }
 
-    method toggle_isosurfaces {} {
-	global mods
+    method toggle_isosurfaces { } {
+	toggle_isocontours 1
+
+	global mods connections
 	global $mods(ShowField-Isosurface-Surface)-faces-on
 	global $mods(ShowField-Isosurface-Contour)-edges-on
 
 	puts stderr "toggle_isosurfaces [set $mods(ShowField-Isosurface-Surface)-faces-on] $valid_connections"
 
 	if {[set $mods(ShowField-Isosurface-Surface)-faces-on] == 1} {
-	    set on 1
 	    set disable 0
 	    set cmd "$this update_isovals"
 
@@ -2130,8 +2231,6 @@ class FusionViewerApp {
 		foreach w [winfo children $subsample_frame1] {
 		    enable_widget $w
 		}
-
-#		disableModule $mods(SubSample) 0
 	    } else {
 		foreach w [winfo children $subsample_frame0] {
 		    disable_widget $w
@@ -2139,14 +2238,12 @@ class FusionViewerApp {
 		foreach w [winfo children $subsample_frame1] {
 		    disable_widget $w
 		}
-
-#		disableModule $mods(SubSample) 1
 	    }
 
-	    set $mods(ShowField-Isosurface-Contour)-edges-on $show_contours
+	    disableConnectionID $connections(scalar_to_subsample) $valid_connections
+	    disableConnectionID $connections(subsample_to_choose) $valid_connections
 
 	} else {
-	    set on 0
 	    set disable 1
 	    set cmd "$this update_isovals"
 
@@ -2164,20 +2261,21 @@ class FusionViewerApp {
 		disable_widget $w
 	    }
 
-#	    disableModule $mods(SubSample) 1
-
-	    set show_contours [set $mods(ShowField-Isosurface-Contour)-edges-on]
-	    set $mods(ShowField-Isosurface-Contour)-edges-on 0
+	    disableConnectionID $connections(scalar_to_subsample) 1
+	    disableConnectionID $connections(subsample_to_choose) 1
 	}
 
-#	disableModule $mods(Isosurface-Surface)             $disable
-#	disableModule $mods(ChooseField-Isosurface-Surface) $disable
-#	disableModule $mods(ShowField-Isosurface-Surface)   $disable
 
-	bind $iso_slider_tab0.isoval.s <ButtonRelease> $cmd
-	bind $iso_slider_tab1.isoval.s <ButtonRelease> $cmd
-	bind $iso_slider_tab0.isoval.val <Return> $cmd
-	bind $iso_slider_tab1.isoval.val <Return> $cmd
+	disableConnectionID $connections(scalar_to_choose_iso) $disable
+	disableConnectionID $connections(choose_to_iso)        $disable
+	disableConnectionID $connections(iso_to_showfield)     $disable
+#       Disconnecting a dynamic port causes a hang
+#	disableConnectionID $connections(showfield_isosurfaces_to_sync)  $disable
+
+#	bind $iso_slider_tab0.isoval.s <ButtonRelease> $cmd
+#	bind $iso_slider_tab1.isoval.s <ButtonRelease> $cmd
+#	bind $iso_slider_tab0.isoval.val <Return> $cmd
+#	bind $iso_slider_tab1.isoval.val <Return> $cmd
 
 	enable_widget $isosurfaces_frame0.show
 	enable_widget $isosurfaces_frame1.show
@@ -2185,37 +2283,49 @@ class FusionViewerApp {
 	if { $have_isosurfaces == 1 } {
 	    $mods(ShowField-Isosurface-Surface)-c toggle_display_faces
 	}
-
-	toggle_isocontours
     }
 
-    method toggle_isocontours {} {
-	global mods
+    method toggle_isocontours { update } {
+	global mods connections
 	global $mods(ShowField-Isosurface-Surface)-faces-on
 	global $mods(ShowField-Isosurface-Contour)-edges-on
 
 	puts stderr "toggle_isocontours [set $mods(ShowField-Isosurface-Surface)-faces-on] [set $mods(ShowField-Isosurface-Contour)-edges-on] $valid_connections"
 
-	if {[set $mods(ShowField-Isosurface-Surface)-faces-on] &&
-	    $valid_connections == 0 } {
-	    set on 1
-	    set disable 0
-	    
-	    enable_widget $isosurfaces_frame0.isocontours
-	    enable_widget $isosurfaces_frame1.isocontours
-	} else {
-	    set on 0
-	    set disable 1
-	    
-	    disable_widget $isosurfaces_frame0.isocontours
-	    disable_widget $isosurfaces_frame1.isocontours
+	if { $update == 1 } {
+	    if {[set $mods(ShowField-Isosurface-Surface)-faces-on] &&
+		$valid_connections == 0 } {
+
+		set $mods(ShowField-Isosurface-Contour)-edges-on \
+		    $show_contours
+
+		enable_widget $isosurfaces_frame0.isocontours
+		enable_widget $isosurfaces_frame1.isocontours
+	    } else {
+		set $show_contours \
+		    $mods(ShowField-Isosurface-Contour)-edges-on
+		set $mods(ShowField-Isosurface-Contour)-edges-on 0
+
+		disable_widget $isosurfaces_frame0.isocontours
+		disable_widget $isosurfaces_frame1.isocontours
+	    }
 	}
 
-#	disableModule $mods(Slicer-Low)  $disable
-#	disableModule $mods(Slicer-High) $disable
-#	disableModule $mods(Isosurface-Contour-Low)  $disable
-#	disableModule $mods(Isosurface-Contour-High) $disable
-#	disableModule $mods(ShowField-Isosurface-Contour) $disable
+	if {[set $mods(ShowField-Isosurface-Contour)-edges-on] } {
+	    set disable 0
+	} else {
+	    set disable 1
+	}
+
+	disableConnectionID $connections(subsample_to_slicer_low)  $disable
+	disableConnectionID $connections(subsample_to_slicer_high) $disable
+	disableConnectionID $connections(slicer_low_to_iso)   $disable
+	disableConnectionID $connections(slicer_high_to_iso)  $disable
+	disableConnectionID $connections(iso_low_to_gather)   $disable
+	disableConnectionID $connections(iso_high_to_gather)  $disable
+	disableConnectionID $connections(gather_to_showfield) $disable
+#       Disconnecting a dynamic port causes a hang
+#	disableConnectionID $connections(showfield_isocontours_to_sync) $disable
 	
 	if { $have_isosurfaces == 1 } {
 	    $mods(ShowField-Isosurface-Contour)-c toggle_display_edges
@@ -2224,10 +2334,13 @@ class FusionViewerApp {
 
 
     method toggle_streamlines {} {
-	puts stderr "toggle_streamlines"
-	global mods
+	toggle_integration 1
+
+	global mods connections
 	global $mods(ShowField-StreamLines-Vector)-edges-on
 	global $mods(ShowField-StreamLines-Scalar)-nodes-on
+
+	puts stderr "toggle_streamlines [set $mods(ShowField-StreamLines-Vector)-edges-on] have_streamlines $have_streamlines"
 
 	if { [set $mods(ShowField-StreamLines-Vector)-edges-on] } {
 
@@ -2242,8 +2355,6 @@ class FusionViewerApp {
 	    foreach w [winfo children $streamlines_frame1] {
 		enable_widget $w
 	    }
-
-	    set $mods(ShowField-StreamLines-Scalar)-nodes-on $show_integration
 
 	    if { $valid_scalar  == 1 } {
 		enable_widget $streamlines_frame0.cm.l
@@ -2275,37 +2386,40 @@ class FusionViewerApp {
 	    foreach w [winfo children $streamlines_frame1] {
 		disable_widget $w
 	    }
-
-	    set show_integration [set $mods(ShowField-StreamLines-Scalar)-nodes-on]
-	    set $mods(ShowField-StreamLines-Scalar)-nodes-on 0
 	}
 
-#	disableModule $mods(ChooseField-Interpolate)      $disable
-#	disableModule $mods(StreamLines-rake)             $disable
-#	disableModule $mods(StreamLines)                  $disable
-#	disableModule $mods(ChooseField-Interpolate) $disable
-#	disableModule $mods(DirectInterpolate-StreamLines-Vector) $disable
-#	disableModule $mods(ShowField-StreamLines-Vector) $disable
+	
+	disableConnectionID $connections(vector_to_streamlines)       $disable
+	disableConnectionID $connections(vector_to_sample)            $disable
+	disableConnectionID $connections(sample_to_streamlines)       $disable
+	disableConnectionID $connections(streamlines_to_interpolate)  $disable
+
+	disableConnectionID $connections(vector_to_magnitude)    $disable
+	disableConnectionID $connections(magnitude_to_choose)    $disable
+	disableConnectionID $connections(choose_to_interpolate)  $disable
+	disableConnectionID $connections(choose_to_rescalecolor) $disable
+	disableConnectionID $connections(interpolate_to_showfield)    $disable
+#       Disconnecting a dynamic port causes a hang
+#	disableConnectionID $connections(showfield_streamline_edges_to_sync) $disable
+#	disableConnectionID $connections(sample_to_viewer) $disable
 
 	set "$eviewer-StreamLines rake (4)" $on
 	$eviewer-c redraw
 
-	if { 0 } {
-	    bind $streamlines_frame0.seeds.s <ButtonRelease> $cmd
-	    bind $streamlines_frame1.seeds.s <ButtonRelease> $cmd
-	    bind $streamlines_frame0.seeds.val <Return> $cmd
-	    bind $streamlines_frame1.seeds.val <Return> $cmd
+#	    bind $streamlines_frame0.seeds.s <ButtonRelease> $cmd
+#	    bind $streamlines_frame1.seeds.s <ButtonRelease> $cmd
+#	    bind $streamlines_frame0.seeds.val <Return> $cmd
+#	    bind $streamlines_frame1.seeds.val <Return> $cmd
+
+#	    bind $streamlines_frame0.stepsize.s <ButtonRelease> $cmd
+#	    bind $streamlines_frame1.stepsize.s <ButtonRelease> $cmd
+#	    bind $streamlines_frame0.stepsize.val <Return> $cmd
+#	    bind $streamlines_frame1.stepsize.val <Return> $cmd
 	    
-	    bind $streamlines_frame0.stepsize.s <ButtonRelease> $cmd
-	    bind $streamlines_frame1.stepsize.s <ButtonRelease> $cmd
-	    bind $streamlines_frame0.stepsize.val <Return> $cmd
-	    bind $streamlines_frame1.stepsize.val <Return> $cmd
-	    
-	    bind $streamlines_frame0.steps.s <ButtonRelease> $cmd
-	    bind $streamlines_frame1.steps.s <ButtonRelease> $cmd
-	    bind $streamlines_frame0.steps.val <Return> $cmd
-	    bind $streamlines_frame1.steps.val <Return> $cmd
-	}
+#	    bind $streamlines_frame0.steps.s <ButtonRelease> $cmd
+#	    bind $streamlines_frame1.steps.s <ButtonRelease> $cmd
+#	    bind $streamlines_frame0.steps.val <Return> $cmd
+#	    bind $streamlines_frame1.steps.val <Return> $cmd
 
 	enable_widget $streamlines_frame0.show
 	enable_widget $streamlines_frame1.show
@@ -2313,32 +2427,42 @@ class FusionViewerApp {
 	if { $have_streamlines == 1 } {
 	    $mods(ShowField-StreamLines-Vector)-c toggle_display_edges
 	}
-
-	toggle_integration
     }
 
-    method toggle_integration {} {
-	global mods
+    method toggle_integration { update } {
+	global mods connections
 	global $mods(ShowField-StreamLines-Vector)-edges-on
 	global $mods(ShowField-StreamLines-Scalar)-nodes-on
 
-	puts stderr "toggle_integration [set $mods(ShowField-StreamLines-Vector)-edges-on] [set $mods(ShowField-StreamLines-Scalar)-nodes-on]"
+	puts stderr "toggle_integration [set $mods(ShowField-StreamLines-Vector)-edges-on] [set $mods(ShowField-StreamLines-Scalar)-nodes-on] have_streamlines $have_streamlines"
 
-	if { [set $mods(ShowField-StreamLines-Vector)-edges-on] } {
-	    set on 1
-	    set disable 0
-	    
-	    enable_widget $streamlines_frame0.integration
-	    enable_widget $streamlines_frame1.integration
-	} else {
-	    set on 0
-	    set disable 1
-	    
-	    disable_widget $streamlines_frame0.integration
-	    disable_widget $streamlines_frame1.integration
+	if { $update == 1 } {
+	    if { [set $mods(ShowField-StreamLines-Vector)-edges-on] } {
+		set $mods(ShowField-StreamLines-Scalar)-nodes-on \
+		    $show_integration
+
+		enable_widget $streamlines_frame0.integration
+		enable_widget $streamlines_frame1.integration
+	    } else {
+		set $show_integration \
+		    $mods(ShowField-StreamLines-Scalar)-nodes-on
+		set $mods(ShowField-StreamLines-Scalar)-nodes-on 0
+
+		disable_widget $streamlines_frame0.integration
+		disable_widget $streamlines_frame1.integration
+	    }
 	}
 
-#	disableModule $mods(ShowField-StreamLines-Scalar) $disable
+	if {[set $mods(ShowField-StreamLines-Scalar)-nodes-on] } {
+	    set disable 0
+	} else {
+	    set disable 1
+	}
+
+	disableConnectionID $connections(streamlines_to_showfield)    $disable
+	disableConnectionID $connections(streamlines_to_rescalecolor) $disable
+#       Disconnecting a dynamic port causes a hang
+#	disableConnectionID $connections(showfield_streamline_nodes_to_sync) $disable
 	
 	if { $have_streamlines == 1 } {
 	    $mods(ShowField-StreamLines-Scalar)-c toggle_display_nodes
@@ -2348,16 +2472,13 @@ class FusionViewerApp {
 
     method toggle_probes { probemod } {
 	puts stderr "toggle_probes $probemod"
-	global mods
-	global probe_scalar
-	global probe_vector
+	global mods connections
 
 	if { $probemod == $mods(Probe-Scalar) } {
+	    global probe_scalar
 	    puts stderr "Probe-Scalar $probe_scalar"
 	    if { $probe_scalar == 1 } {
-#		disableModule $probemod 0
-		set "$eviewer-Probe Selection Widget (2)" 1
-		$eviewer-c redraw
+		set disable 0
 
 		foreach w [winfo children $probe_scalar_frame0] {
 		    enable_widget $w
@@ -2365,11 +2486,8 @@ class FusionViewerApp {
 		foreach w [winfo children $probe_scalar_frame1] {
 		    enable_widget $w
 		}
-
 	    } else {
-#		disableModule $probemod 1
-		set "$eviewer-Probe Selection Widget (2)" 0
-		$eviewer-c redraw
+		set disable 1
 
 		foreach w [winfo children $probe_scalar_frame0] {
 		    disable_widget $w
@@ -2379,15 +2497,22 @@ class FusionViewerApp {
 		}
 	    }
 
-	    enable_widget $probe_scalar_frame0.show
-	    enable_widget $probe_scalar_frame1.show
+	    disableConnectionID $connections(scalar_to_probe)        $disable
+#       Disconnecting a dynamic port causes a hang
+#	    disableConnectionID $connections(probe_scalar_to_viewer) $disable
+	    set "$eviewer-Probe Selection Widget (2)" $probe_scalar
+	    $eviewer-c redraw
+
+	    if { $valid_scalar == 1 } {
+		enable_widget $probe_scalar_frame0.show
+		enable_widget $probe_scalar_frame1.show
+	    }
 
 	} elseif { $probemod == $mods(Probe-Vector) } {
+	    global probe_vector
 	    puts stderr "Probe-Vector $probe_vector"
 	    if { $probe_vector == 1 } {
-#		disableModule $probemod 0
-		set "$eviewer-Probe Selection Widget (3)" 1
-		$eviewer-c redraw
+		set disable 0
 
 		foreach w [winfo children $probe_vector_frame0] {
 		    enable_widget $w
@@ -2395,11 +2520,8 @@ class FusionViewerApp {
 		foreach w [winfo children $probe_vector_frame1] {
 		    enable_widget $w
 		}
-
 	    } else {
-#		disableModule $probemod 1
-		set "$eviewer-Probe Selection Widget (3)" 0
-		$eviewer-c redraw
+		set disable 1
 
 		foreach w [winfo children $probe_vector_frame0] {
 		    disable_widget $w
@@ -2409,8 +2531,16 @@ class FusionViewerApp {
 		}
 	    }
 
-	    enable_widget $probe_vector_frame0.show
-	    enable_widget $probe_vector_frame1.show
+	    disableConnectionID $connections(vector_to_probe)        $disable
+#       Disconnecting a dynamic port causes a hang
+#	    disableConnectionID $connections(probe_vector_to_viewer) $disable
+	    set "$eviewer-Probe Selection Widget (3)" $probe_vector
+	    $eviewer-c redraw
+
+	    if { $valid_vector == 1 } {
+		enable_widget $probe_vector_frame0.show
+		enable_widget $probe_vector_frame1.show
+	    }
 	}
     }
 
@@ -2614,13 +2744,13 @@ class FusionViewerApp {
 
 	update_animate_callback 0 0 0
 
-	if { [string first "$mods(HDF5-Points)-file" "$varname"] != -1 } {
+	if { [string first "$mods(HDF5-Points)-filename" "$varname"] != -1 } {
 	    update_point_modules
-	} elseif { [string first "$mods(HDF5-Connections)-file" "$varname"] != -1 } {
+	} elseif { [string first "$mods(HDF5-Connections)-filename" "$varname"] != -1 } {
 	    update_connection_modules
-	} elseif { [string first "$mods(HDF5-Scalar)-file" "$varname"] != -1 } {
+	} elseif { [string first "$mods(HDF5-Scalar)-filename" "$varname"] != -1 } {
 	    update_scalar_modules
-	} elseif { [string first "$mods(HDF5-Vector)-file" "$varname"] != -1 } {
+	} elseif { [string first "$mods(HDF5-Vector)-filename" "$varname"] != -1 } {
 	    update_vector_modules
 	}
     }
@@ -2638,6 +2768,11 @@ class FusionViewerApp {
 	global $mods(MDSPlus-Scalar)-shot
 	global $mods(MDSPlus-Vector)-shot
 
+	global $mods(MDSPlus-Connections)-num-entries
+	global $mods(MDSPlus-Points)-num-entries
+	global $mods(MDSPlus-Scalar)-num-entries
+	global $mods(MDSPlus-Vector)-num-entries
+
 	global shot_points
 	global shot_scalar
 	global shot_vector
@@ -2650,7 +2785,8 @@ class FusionViewerApp {
 	    set shot_points $tmp
 	}
 
-	if { [string length $shot_points] == 0 } {
+	if { [set $mods(MDSPlus-Points)-num-entries] == 0 ||
+	     [string length $shot_points] == 0 } {
 	    set shot_points "No Data Selected"
 	}
 
@@ -2662,7 +2798,8 @@ class FusionViewerApp {
 	    set shot_connections $tmp
 	}
 
-	if { [string length $shot_connections] == 0 } {
+	if { [set $mods(MDSPlus-Connections)-num-entries] == 0 ||
+	     [string length $shot_connections] == 0 } {
 	    set shot_connections "No Data Selected"
 	}
 
@@ -2674,7 +2811,8 @@ class FusionViewerApp {
 	    set shot_scalar $tmp
 	}
 
-	if { [string length $shot_scalar] == 0 } {
+	if { [set $mods(MDSPlus-Scalar)-num-entries] == 0 ||
+	     [string length $shot_scalar] == 0 } {
 	    set shot_scalar "No Data Selected"
 	}
 
@@ -2686,7 +2824,8 @@ class FusionViewerApp {
 	    set shot_vector $tmp
 	}
 
-	if { [string length $shot_vector] == 0 } {
+	if { [set $mods(MDSPlus-Vector)-num-entries] == 0 ||
+	     [string length $shot_vector] == 0 } {
 	    set shot_vector "No Data Selected"
 	}
 
@@ -2894,7 +3033,6 @@ class FusionViewerApp {
 	    return
 	}
 
-
 	global mods
 	global $mods(Probe-Scalar)-locx
 	global $mods(Probe-Scalar)-locy
@@ -2951,67 +3089,98 @@ class FusionViewerApp {
 
 ############ Vector
     method update_vector_modules { } {
-	puts stderr "update_vector_modules"
-	global mods
+	global mods connections
 	global $mods(HDF5-Vector)-filename
 	global $mods(MDSPlus-Vector)-num-entries
 
+	puts stderr "update_vector_modules $valid_vector [set $mods(HDF5-Vector)-filename] [set $mods(MDSPlus-Vector)-num-entries]"
+
 	global probe_vector
+
+	global $mods(ShowField-StreamLines-Vector)-edges-on
+
+	set disable -1
 
 	if { [string length [set $mods(HDF5-Vector)-filename]] == 0 &&
 	     [set $mods(MDSPlus-Vector)-num-entries] == 0 } {
 
 	    if {$valid_vector != 0} {
+		set disable 1
 		set valid_vector 0
 		set probe_vector 0
 		
-		global $mods(ShowField-StreamLines-Vector)-edges-on
 		set $mods(ShowField-StreamLines-Vector)-edges-on 0
 		
-#		disableModule $mods(NrrdToField-Vector) 1
-#		disableModule $mods(Probe-Vector) 1
-		
 		toggle_streamlines
-		
+		toggle_probes $mods(Probe-Vector)
+
 		disable_widget $streamlines_frame0.show
 		disable_widget $streamlines_frame1.show
+
+		disableConnectionID $connections(cv_to_vector) 1
+		disableConnectionID $connections(cc_to_vector) 1
+		disableConnectionID $connections(cp_to_vector) 1
 	    }
 	} else {
 
 	    if {$valid_vector != 1} {
-
+		set disable 0
 		set valid_vector 1
 		set probe_vector 1
 
-		global $mods(ShowField-StreamLines-Vector)-edges-on
 		set $mods(ShowField-StreamLines-Vector)-edges-on 1
 
-#		disableModule $mods(NrrdToField-Vector) 0
-#		disableModule $mods(Probe-Vector) 0
-		
 		toggle_streamlines
+		toggle_probes $mods(Probe-Vector)
+
+		global $mods(ChooseField-Interpolate)-port-index
+		set $mods(ChooseField-Interpolate)-port-index 1
+
+		if { $valid_scalar } {
+		    enable_widget $streamlines_frame0.cm.l
+		    enable_widget $streamlines_frame0.cm.scalar
+		    enable_widget $streamlines_frame0.cm.vector
+		    
+		    enable_widget $streamlines_frame1.cm.l
+		    enable_widget $streamlines_frame1.cm.scalar
+		    enable_widget $streamlines_frame1.cm.vector
+		}
+
+		disableConnectionID $connections(cv_to_vector) 0
+
+		if {$valid_connections == 1} {
+		    disableConnectionID $connections(cc_to_vector) 0
+		}
+		if {$valid_points == 1} {
+		    disableConnectionID $connections(cp_to_vector) 0
+		}
+		if {$valid_scalar == 1} {
+		    disableConnectionID $connections(scalar_to_choose) 0
+		}
 	    }
 	}
 
+	if { $disable != -1 } {
+	    disableConnectionID $connections(vector_to_info)         $disable
+	}
+
 	if { [string length [set $mods(HDF5-Vector)-filename]] == 0 } {
-#	    disableModule $mods(HDF5-Vector) 1
+	    disableConnectionID $connections(hdf5_to_cv) 1
 	} else {
-#	    disableModule $mods(HDF5-Vector) 0
+	    disableConnectionID $connections(hdf5_to_cv) 0
 	}
 
 	if { [set $mods(MDSPlus-Vector)-num-entries] == 0 } {
-#	    disableModule $mods(MDSPlus-Vector) 1
+	    disableConnectionID $connections(mds_to_cv) 1
 	} else {
-#	    disableModule $mods(MDSPlus-Vector) 0
+	    disableConnectionID $connections(mds_to_cv) 0
 	}
-
-	toggle_probes $mods(Probe-Vector)
     }
     
 
 ############ Scalar
     method update_scalar_modules { } {
-	global mods
+	global mods connections
 	global $mods(HDF5-Scalar)-filename
 	global $mods(MDSPlus-Scalar)-num-entries
 
@@ -3019,30 +3188,32 @@ class FusionViewerApp {
 
 	puts stderr "update_scalar_modules $valid_scalar [set $mods(HDF5-Scalar)-filename] [set $mods(MDSPlus-Scalar)-num-entries]"
 
+	global $mods(ShowField-Isosurface-Surface)-faces-on
+	global $mods(ShowField-Scalar-Slice)-faces-on
+
+	set disable -1
+
 	if { [string length [set $mods(HDF5-Scalar)-filename]] == 0 &&
 	     [set $mods(MDSPlus-Scalar)-num-entries] == 0 } {
 
 	    if {$valid_scalar != 0} {
+		set disable 1
 		set valid_scalar 0
 		set probe_scalar 0
 		
-		global $mods(ShowField-Isosurface-Surface)-faces-on
-		global $mods(ShowField-Scalar-Slice)-faces-on
 		set $mods(ShowField-Isosurface-Surface)-faces-on 0
 		set $mods(ShowField-Scalar-Slice)-faces-on 0
 		
 		toggle_scalarslice
 		toggle_isosurfaces
+		toggle_probes $mods(Probe-Scalar)
 		
 		disable_widget $isosurfaces_frame0.show
 		disable_widget $isosurfaces_frame1.show
 		disable_widget $scalarslice_frame0.show
 		disable_widget $scalarslice_frame1.show
 		
-#		disableModule $mods(NrrdToField-Scalar) 1
-#		disableModule $mods(SubSample) 1
-#		disableModule $mods(Probe-Scalar) 1
-		
+
 		global $mods(ChooseField-Interpolate)-port-index
 		set $mods(ChooseField-Interpolate)-port-index 1
 
@@ -3053,29 +3224,28 @@ class FusionViewerApp {
 		disable_widget $streamlines_frame1.cm.l
 		disable_widget $streamlines_frame1.cm.scalar
 		disable_widget $streamlines_frame1.cm.vector
+
+		disableConnectionID $connections(cs_to_scalar) 1
+		disableConnectionID $connections(cc_to_scalar) 1
+		disableConnectionID $connections(cp_to_scalar) 1
+
+		disableConnectionID $connections(scalar_to_choose) 1
 	    }
 	} else {
 
 	    if {$valid_scalar != 1} {
-
+		set disable 0
 		set valid_scalar 1
 		set probe_scalar 1
 		
-		global $mods(ShowField-Isosurface-Surface)-faces-on
-		global $mods(ShowField-Scalar-Slice)-faces-on
 		set $mods(ShowField-Isosurface-Surface)-faces-on 1
 		set $mods(ShowField-Scalar-Slice)-faces-on 1
 
 		toggle_scalarslice
 		toggle_isosurfaces
+		toggle_probes $mods(Probe-Scalar)
 
-#		disableModule $mods(NrrdToField-Scalar) 0
-#		disableModule $mods(SubSample) 0
-#		disableModule $mods(Probe-Scalar) 0
-
-		global $mods(ShowField-StreamLines-Vector)-edges-on
-
-		if { [set $mods(ShowField-StreamLines-Vector)-edges-on] } {
+		if { $valid_vector } {
 		    enable_widget $streamlines_frame0.cm.l
 		    enable_widget $streamlines_frame0.cm.scalar
 		    enable_widget $streamlines_frame0.cm.vector
@@ -3084,30 +3254,45 @@ class FusionViewerApp {
 		    enable_widget $streamlines_frame1.cm.scalar
 		    enable_widget $streamlines_frame1.cm.vector
 		}
+
+		disableConnectionID $connections(cs_to_scalar) 0
+
+		if {$valid_connections == 1} {
+		    disableConnectionID $connections(cc_to_scalar) 0
+		}
+		if {$valid_points == 1} {
+		    disableConnectionID $connections(cp_to_scalar) 0
+		}
+
+		if {$valid_vector == 1} {
+		    disableConnectionID $connections(scalar_to_choose) 0
+		}
 	    }
 	}
 
+
+	if { $disable != -1 } {
+	    disableConnectionID $connections(scalar_to_color) $disable	    	    
+	    disableConnectionID $connections(scalar_to_info)  $disable
+	}
+	
 	if { [string length [set $mods(HDF5-Scalar)-filename]] == 0 } {
-#	    disableModule $mods(HDF5-Scalar) 1
+	    disableConnectionID $connections(hdf5_to_cs) 1
 	} else {
-#	    disableModule $mods(HDF5-Scalar) 0
+	    disableConnectionID $connections(hdf5_to_cs) 0
 	}
 
 	if { [set $mods(MDSPlus-Scalar)-num-entries] == 0 } {
-#	    disableModule $mods(MDSPlus-Scalar) 1
+	    disableConnectionID $connections(mds_to_cs) 1
 	} else {
-#	    disableModule $mods(MDSPlus-Scalar) 0
+	    disableConnectionID $connections(mds_to_cs) 0
 	}
-
-	toggle_probes $mods(Probe-Scalar)
-
-	puts stderr "out valid_scalar $valid_scalar [set $mods(HDF5-Scalar)-filename] [set $mods(MDSPlus-Scalar)-num-entries]"
-   }
+    }
     
 ############ Connections
     method update_connection_modules { } {
 	puts stderr "update_connection_modules"
-	global mods
+	global mods connections
 	global $mods(HDF5-Connections)-filename
 	global $mods(MDSPlus-Connections)-num-entries
 
@@ -3115,31 +3300,40 @@ class FusionViewerApp {
 
 	if { [string length [set $mods(HDF5-Connections)-filename]] == 0 &&
 	     [set $mods(MDSPlus-Connections)-num-entries] == 0 } {
-#	    disableModule $mods(ChooseNrrd-Connections) 1
 
 	    if {$valid_connections != 0} {
 		set valid_connections 0
-		toggle_isocontours
+		toggle_isocontours 1
 	    }
-	} else {
-#	    disableModule $mods(ChooseNrrd-Connections) 0
 
+	    disableConnectionID $connections(cc_to_scalar) 1
+	    disableConnectionID $connections(cc_to_vector) 1
+
+	} else {
 	    if {$valid_connections != 1} {
 		set valid_connections 1
-		toggle_isocontours
+		toggle_isocontours 1
+	    }
+
+	    if {$valid_scalar == 1} {
+		disableConnectionID $connections(cc_to_scalar) 0
+	    }
+
+	    if {$valid_vector == 1} {
+		disableConnectionID $connections(cc_to_vector) 0
 	    }
 	}
 
 	if { [string length [set $mods(HDF5-Connections)-filename]] == 0 } {
-#	    disableModule $mods(HDF5-Connections) 1
+	    disableConnectionID $connections(hdf5_to_cc) 1
 	} else {
-#	    disableModule $mods(HDF5-Connections) 0
+	    disableConnectionID $connections(hdf5_to_cc) 0
 	}
 
 	if { [set $mods(MDSPlus-Connections)-num-entries] == 0 } {
-#	    disableModule $mods(MDSPlus-Connections) 1
+	    disableConnectionID $connections(mds_to_cc) 1
 	} else {
-#	    disableModule $mods(MDSPlus-Connections) 0
+	    disableConnectionID $connections(mds_to_cc) 0
 	}
    }
 
@@ -3151,29 +3345,36 @@ class FusionViewerApp {
 	global $mods(HDF5-Points)-filename
 	global $mods(MDSPlus-Points)-num-entries
 
+#	upvar \#0 $mods(MDSPlus-Points)-num-entries ne
+
 	if { [string length [set $mods(HDF5-Points)-filename]] == 0 &&
 	     [set $mods(MDSPlus-Points)-num-entries] == 0 } {
-#	    disableConn $connections(cp_to_scalar) 1
-#	    disableConn $cconnections(cp_to_vector) 1
-#	    disableModule $mods(ChooseNrrd-Points) 1
 	    set valid_points 0
+
+	    disableConnectionID $connections(cp_to_scalar) 1
+	    disableConnectionID $connections(cp_to_vector) 1
+
 	} else {
-#	    disableConn $connections(cp_to_scalar) 0
-#	    disableConn $connections(cp_to_vector)1 1
-#	    disableModule $mods(ChooseNrrd-Points) 0
 	    set valid_points 1
+
+	    if {$valid_scalar == 1} {
+		disableConnectionID $connections(cp_to_scalar) 0
+	    }
+	    if {$valid_vector == 1} {
+		disableConnectionID $connections(cp_to_vector) 0
+	    }
 	}
 
 	if { [string length [set $mods(HDF5-Points)-filename]] == 0 } {
-#	    disableModule $mods(HDF5-Points) 1
+	    disableConnectionID $connections(hdf5_to_cp) 1
 	} else {
-#	    disableModule $mods(HDF5-Points) 0
+	    disableConnectionID $connections(hdf5_to_cp) 0
 	}
 
 	if { [set $mods(MDSPlus-Points)-num-entries] == 0 } {
-#	    disableModule $mods(MDSPlus-Points) 1
+	    disableConnectionID $connections(mds_to_cp) 1
 	} else {
-#	    disableModule $mods(MDSPlus-Points) 0
+	    disableConnectionID $connections(mds_to_cp) 0
 	}
     }
 
@@ -3225,21 +3426,10 @@ class FusionViewerApp {
 
 
     method load_session_data {} {
-
 	wm title .standalone "FusionViewer - [getFileName $saveFile]"
 
-	global mods 
-
-	global $mods(HDF5-Points)-filename
-	global $mods(HDF5-Connections)-filename
-	global $mods(HDF5-Scalar)-filename
-	global $mods(HDF5-Vector)-filename
-
-	global $mods(MDSPlus-Points)-num-entries
-	global $mods(MDSPlus-Connections)-num-entries
-	global $mods(MDSPlus-Scalar)-num-entries
-	global $mods(MDSPlus-Vector)-num-entries
-
+	# Because the HDF5/MDSPlus is dynamic the entries must be deleted before reseting.
+	global mods
 	set ignore_callbacks 1
 	$mods(HDF5-Points) clear
 	$mods(HDF5-Connections) clear
@@ -3250,27 +3440,56 @@ class FusionViewerApp {
 	$mods(MDSPlus-Scalar) deleteEntry 1
 	$mods(MDSPlus-Vector) deleteEntry 1
 	set ignore_callbacks 0
-	
+
 	update_state
 
+	set ignore_callbacks 1
+
+	# reset defaults 
+	reset_defaults
+	
 	foreach g [info globals] {
 	    global $g
 	}
-
-	set ignore_callbacks 1
 
 	puts stderr "sourcing"
 	source $saveFile
 	puts stderr "done sourcing"
 
-	set valid_points 0
-	set valid_connections 0
-	set valid_scalar 0
-	set valid_vector 0
+        # local state vars that must be reset
+	set valid_points -1
+	set valid_connections -1
+	set valid_scalar -1
+	set valid_vector -1
 
 	set have_scalarslice 0
 	set have_isosurfaces 0
 	set have_streamlines 0
+
+	global probe_scalar
+	global probe_vector
+
+	set probe_scalar 0
+	set probe_vector 0
+
+	global $mods(ShowField-Isosurface-Contour)-edges-on
+	global $mods(ShowField-StreamLines-Scalar)-nodes-on
+
+	set show_contours    [set $mods(ShowField-Isosurface-Contour)-edges-on]
+	set show_integration [set $mods(ShowField-StreamLines-Scalar)-nodes-on]
+
+	global $mods(ChooseNrrd-Points)-usefirstvalid 1
+	global $mods(ChooseNrrd-Connections)-usefirstvalid 1
+	global $mods(ChooseNrrd-Scalar)-usefirstvalid 1
+	global $mods(ChooseNrrd-Vector)-usefirstvalid 1
+
+	set $mods(ChooseNrrd-Points)-usefirstvalid 1
+	set $mods(ChooseNrrd-Connections)-usefirstvalid 1
+	set $mods(ChooseNrrd-Scalar)-usefirstvalid 1
+	set $mods(ChooseNrrd-Vector)-usefirstvalid 1
+
+	global $mods(ChooseField-Isosurface-Surface)-usefirstvalid
+	set $mods(ChooseField-Isosurface-Surface)-usefirstvalid 1
 
 	# set a few variables that need to be reset
 	set indicate 0
@@ -3421,7 +3640,6 @@ class FusionViewerApp {
     method indicate_error { which msg_state } {
 	if {$msg_state == "Error"} {
 	    if {$error_module == ""} {
-		return
 		set error_module $which
 
 		set pos [string last "RescaleColorMap" $which]
