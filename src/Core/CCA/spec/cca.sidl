@@ -1341,12 +1341,17 @@ interface GoPort  extends gov.cca.Port
 
 }  // end interface GoPort
 
-//abstract inferface 
+//abstract interface 
 interface UIPort extends gov.cca.Port
 {
 	void ui();
 }
 
+//abstract interface
+interface ZListPort extends gov.cca.Port
+{
+	array<double> getList();
+}
 /* $Source$ */
 
 
