@@ -1800,7 +1800,8 @@ for i in $petsc $thirdparty $SCI_LAB_TP_DEFAULT; do
     PETSC_DIR=$i
     PETSC_EXTRA_LIBS="-lpetsccontrib -lpetscdm -lpetscmat \
       -lpetscsles -lpetscsnes -lpetscts -lpetscvec $LAPACK_LIBRARY $LAPACK \
-      $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 $MPI_LIBRARY $MPI $FLIBS -lm"
+      $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 $MPI_LIBRARY $MPI \
+	$FLIBS -lfortran -lm"
     break
   fi 
 done
