@@ -23,18 +23,10 @@ MPMICELabel::MPMICELabel()
                      CCVariable<double>::getTypeDescription() );
   vel_CCLabel   = VarLabel::create( "vel_CC",
                      CCVariable<Vector>::getTypeDescription() );
-  vel_CC_scratchLabel  = VarLabel::create( "vel_CC_scratch",
-                     CCVariable<Vector>::getTypeDescription() );
   temp_CCLabel     = VarLabel::create("temp_CC",
-                     CCVariable<double>::getTypeDescription() );
-  temp_CC_scratchLabel = VarLabel::create("temp_CC_scratch",
                      CCVariable<double>::getTypeDescription() );
   press_NCLabel      = VarLabel::create("pressureNC",
                      NCVariable<double>::getTypeDescription());
-  velInc_CCLabel     = VarLabel::create("velIncCC",
-                     CCVariable<Vector>::getTypeDescription());
-  velInc_NCLabel     = VarLabel::create("velIncNC",
-                     NCVariable<Vector>::getTypeDescription());
   burnedMassCCLabel   = VarLabel::create("burnedMass",
                      CCVariable<double>::getTypeDescription());  
   scratchLabel        = VarLabel::create("scratch",
@@ -49,8 +41,6 @@ MPMICELabel::MPMICELabel()
                      CCVariable<Vector>::getTypeDescription());
   NC_CCweightLabel     = VarLabel::create("NC_CCweight",
                      NCVariable<double>::getTypeDescription());
-  rho_CCScratchLabel   = VarLabel::create("rho_CCScratch",
-                     CCVariable<double>::getTypeDescription());
 
 } 
 
@@ -60,12 +50,8 @@ MPMICELabel::~MPMICELabel()
   VarLabel::destroy(cMassLabel);
   VarLabel::destroy(cVolumeLabel);
   VarLabel::destroy(vel_CCLabel);
-  VarLabel::destroy(vel_CC_scratchLabel);
   VarLabel::destroy(temp_CCLabel);
-  VarLabel::destroy(temp_CC_scratchLabel);
   VarLabel::destroy(press_NCLabel);
-  VarLabel::destroy(velInc_CCLabel);
-  VarLabel::destroy(velInc_NCLabel);
   VarLabel::destroy(burnedMassCCLabel);
   VarLabel::destroy(scratchLabel);
   VarLabel::destroy(scratch1Label);
@@ -73,5 +59,4 @@ MPMICELabel::~MPMICELabel()
   VarLabel::destroy(scratch3Label);
   VarLabel::destroy(scratchVecLabel); 
   VarLabel::destroy(NC_CCweightLabel);
-  VarLabel::destroy(rho_CCScratchLabel);
 }
