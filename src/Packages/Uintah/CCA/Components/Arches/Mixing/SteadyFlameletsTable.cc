@@ -182,14 +182,14 @@ void SteadyFlameletsTable::tableLookUp(double mixfrac, double mixfracVars, doubl
   double max_curr_Zvar = mixfrac*(1.0-mixfrac);
   double max_Zvar = min(mixfracVars,max_curr_Zvar);
   double g, gi1, gp, gi2;
-  if(meanMix[nx_lo]<=small || abs(meanMix[nx_lo]-1.0)<=small)
+  if(meanMix[nx_lo]<=small || fabs(meanMix[nx_lo]-1.0)<=small)
 	g=0.0;
   else{
 	gi1=max_Zvar*meanMix[nx_lo]*(1.0-meanMix[nx_lo])/(max_curr_Zvar+small);
         g=gi1*double(d_mixvarcount-1)/(meanMix[nx_lo]*(1.0-meanMix[nx_lo]));
   }
 
-  if(meanMix[nx_hi]<=small || abs(meanMix[nx_hi]-1.0)<=small){
+  if(meanMix[nx_hi]<=small || fabs(meanMix[nx_hi]-1.0)<=small){
 	gp=0.0;
   }
   else{
