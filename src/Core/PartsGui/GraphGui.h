@@ -31,18 +31,34 @@
 #ifndef SCI_Gui_h
 #define SCI_Gui_h 
 
+#include <vector>
+
 #include <Core/PartsGui/PartGui.h>
 #include <Core/Util/Signals.h>
 
 namespace SCIRun {
+
+class Diagram;
+class Graph;
+class CrowdMonitor;
+class LockedPolyline;
 
 class GraphGui : public PartGui {
 public:
   GraphGui( const string &name, const string &script = "GraphGui"); 
   virtual ~GraphGui();
 
+  void reset( int =0 );
   void add_values( vector<double> & );
   void attach( PartInterface * );
+
+  virtual void set_window( const string & );
+
+private:
+  vector<LockedPolyline *> poly_;
+  Diagram *diagram_;
+  Graph *graph_;
+  CrowdMonitor *monitor_;
 };
 
 } // namespace SCIRun

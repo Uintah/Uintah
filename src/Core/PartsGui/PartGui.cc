@@ -35,10 +35,7 @@
 
 #include <Core/PartsGui/GraphGui.h>
 
-#include <typeinfo>
-
 namespace SCIRun {
-  
 
 void
 PartGui::add_child( PartInterface *child )
@@ -46,16 +43,12 @@ PartGui::add_child( PartInterface *child )
   static int n = 0;
 
   string type = child->type();
-  cerr << "PartGui::add_child " << type << endl;
-
-  const type_info &it = typeid(child);
-  cerr << "PartGui::add_child typeid = " << it.name() << endl;
 
   if ( type == "GraphGui" ) {
     GraphGui *gui = new GraphGui( name_+"-c"+to_string(n++) );
     string child_window;
     tcl_eval( "new-child-window", child_window );
-    gui->set_window( child_window );
+    gui->set_window( child_window ); 
 
     gui->attach( child );
   }
