@@ -55,7 +55,7 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -m,--material <material number> [defaults to 0]\n";
     //    cerr << "  -binary (prints out the data in binary)\n";
     cerr << "  -tlow,--timesteplow [int] (only outputs timestep from int) [defaults to 0]\n";
-    cerr << "  -thigh,--timestephigh [int] (only outputs timesteps upto int) [defaults to last timestep]\n";
+    cerr << "  -thigh,--timestephigh [int] (only outputs timesteps up to int) [defaults to last timestep]\n";
     cerr << "  -i,--index <x> <y> <z> (cell coordinates) [defaults to 0,0,0]\n";
     cerr << "  -o,--out <outputfilename> [defaults to stdout]\n";
     cerr << "  -vv,--verbose (prints status of output)\n";
@@ -68,7 +68,8 @@ void usage(const std::string& badarg, const std::string& progname)
 // dexcription of the variable being queried, and last is an output stream.
 
 template<class T>
-void printData(DataArchive* archive, string& variable_name, int material, IntVector& var_id,
+void printData(DataArchive* archive, string& variable_name,
+	       int material, IntVector& var_id,
                unsigned long time_step_lower, unsigned long time_step_upper,
 	       ostream& out) 
 
@@ -225,14 +226,15 @@ int main(int argc, char** argv)
     // if no output file, call with cout
     ostream *output_stream = &cout;
     if (output_file_name != "-") {
-      ofstream output;
-      output.open(output_file_name.c_str());
-      if (!output) {
+      if (verbose) cout << "Opening \""<<output_file_name<<"\" for writing.\n";
+      ofstream *output = new ofstream();
+      output->open(output_file_name.c_str());
+      if (!(*output)) {
 	// Error!!
 	cerr << "Could not open "<<output_file_name<<" for writing.\n";
 	exit(1);
       }
-      output_stream = &output;
+      output_stream = output;
     } else {
       //output_stream = cout;
     }
@@ -245,13 +247,24 @@ int main(int argc, char** argv)
     printData<int>(archive, variable_name, material, var_id,
 		   time_step_lower, time_step_upper, *output_stream);
     break;
+  case Uintah::TypeDescription::Vector:
+  case Uintah::TypeDescription::Matrix3:
+  case Uintah::TypeDescription::bool_type:
+  case Uintah::TypeDescription::short_int_type:
+  case Uintah::TypeDescription::long_type:
+  case Uintah::TypeDescription::long64_type:
+    cerr << "Subtype is not implemented\n";
+    exit(1);
+    break;
   default:
-    {
-      cerr << "Unknown subtype\n";
-      exit(1);
-    }
+    cerr << "Unknown subtype\n";
+    exit(1);
   }
-    
+
+  // Delete the output file if it was created.
+  if (output_file_name != "-") {
+    delete((ofstream*)output_stream);
+  }
 
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << endl;
