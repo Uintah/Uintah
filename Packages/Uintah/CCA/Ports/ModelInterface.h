@@ -119,10 +119,7 @@ WARNING
 						const LevelP& level,
 						const ModelInfo*) = 0;
       
-     virtual void scheduleMassExchange(SchedulerP&,
-				       const LevelP& level,
-				       const ModelInfo*) = 0;
-     virtual void scheduleMomentumAndEnergyExchange(SchedulerP&,
+     virtual void scheduleComputeModelSources(SchedulerP&,
 						    const LevelP& level,
 						    const ModelInfo*) = 0;
                                               
