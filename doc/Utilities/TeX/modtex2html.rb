@@ -66,6 +66,12 @@ def texFragToTexDoc(texFile)
 \\newcommand{\\ModuleRefCredits}{\\subsection*{Credits}}
 \\newcommand{\\ModuleRefSubSection}[1]{\\subsubsection*{#1}}
 \\newcommand{\\ModuleRefSubSubSection}[1]{\\paragraph*{#1}}
+%begin{latexonly}
+\\newcommand{\\ModuleRefFigName}[1]{#1}
+%end{latexonly}
+\\begin{htmlonly}
+\\newcommand{\\ModuleRefFigName}[1]{../#1}
+\\end{htmlonly}
 \\begin{document}\n")
     f.write(File.open(origTexFile, "r").readlines)
     f.write("\\end{document}\n")
