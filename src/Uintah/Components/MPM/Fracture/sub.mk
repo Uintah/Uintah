@@ -8,10 +8,14 @@ SRCDIR   := Uintah/Components/MPM/Fracture
 SRCS     += $(SRCDIR)/Fracture.cc \
 	$(SRCDIR)/FractureFactory.cc \
 	$(SRCDIR)/Lattice.cc \
-	$(SRCDIR)/Cell.cc
+	$(SRCDIR)/Cell.cc \
+	$(SRCDIR)/ParticlesNeighbor.cc
 
 #
 # $Log$
+# Revision 1.7  2000/06/05 21:20:03  tan
+# Added class ParticlesNeighbor to handle neighbor particles searching.
+#
 # Revision 1.6  2000/06/05 20:50:56  tan
 # A small modification.
 #
