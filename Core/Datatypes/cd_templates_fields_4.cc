@@ -1,4 +1,3 @@
-#ifdef __sgi
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
@@ -112,5 +111,4 @@ const TypeDescription* get_type_description(MaskedTriSurfField<unsigned char> *)
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468
-#endif
 #endif
