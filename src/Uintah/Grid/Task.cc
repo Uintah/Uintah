@@ -189,6 +189,16 @@ operator << (ostream &out, const Task & task)
   return out;
 }
 
+ostream&
+operator << (ostream& out, const Task::Dependency& dep)
+{
+   out << "[dep: var=" << dep.d_var->getName();
+   if(dep.d_patch)
+      out << ", patch=" << dep.d_patch->getID();
+   out << ", matl=" << dep.d_matlIndex << ", dw=" << dep.d_dw->getID() << " ]";
+   return out;
+}
+
 ostream &
 operator << (ostream &out, const Task::TaskType & tt)
 {
@@ -211,6 +221,9 @@ operator << (ostream &out, const Task::TaskType & tt)
 
 //
 // $Log$
+// Revision 1.19  2000/09/13 20:57:25  sparker
+// Added ostream operator for dependencies
+//
 // Revision 1.18  2000/09/12 15:11:35  sparker
 // Added assertions to ensure we have a valid data warehouse for computes/requires
 //

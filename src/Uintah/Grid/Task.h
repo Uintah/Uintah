@@ -487,7 +487,6 @@ WARNING
 			  int matlIndex,
 			  const Patch*,
 			  Task* task);
-	 
       }; // end struct Dependency
       
       //////////
@@ -554,9 +553,13 @@ WARNING
 
 ostream & operator << ( ostream & out, const Uintah::Task & task );
 ostream & operator << ( ostream & out, const Uintah::Task::TaskType & tt );
+ostream & operator << ( ostream & out, const Uintah::Task::Dependency & dep );
 
 //
 // $Log$
+// Revision 1.21  2000/09/13 20:57:25  sparker
+// Added ostream operator for dependencies
+//
 // Revision 1.20  2000/08/23 22:33:40  dav
 // added an output operator for task
 //
