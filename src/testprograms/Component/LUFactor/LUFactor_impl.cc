@@ -37,7 +37,7 @@
 #include <iostream>
 
 #define DEBUGRANK 0
-#define DEBUG
+//#define DEBUG
 
 using namespace LUFactor_ns;
 using namespace std;

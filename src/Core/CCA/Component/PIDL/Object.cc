@@ -61,7 +61,6 @@ Object::initializeServer(const TypeInfo* typeinfo, void* ptr, EpChannel* epc)
   d_serverContext->d_typeinfo=typeinfo;
   d_serverContext->d_ptr=ptr;
   d_serverContext->storage = new HandlerStorage();
-  d_serverContext->gatekeeper = new HandlerGateKeeper();
 }
 
 Object::~Object()
@@ -116,32 +115,18 @@ Object::_getReference(Reference& ref, bool copy) const
 void
 Object::addReference()
 {
-  _addReference();
+  Mutex* m=getMutexPool()->getMutex(mutex_index);
+  m->lock();
+  ref_cnt++;
+  m->unlock();
 }
 
 void
 Object::deleteReference()
 {
-  _deleteReference();
-}
-
-void
-Object::_addReference()
-{
-  Mutex* m=getMutexPool()->getMutex(mutex_index);
-  m->lock();
-  ref_cnt++;
-  //::std::cout << "Reference count is now " << ref_cnt << "\n";
-  m->unlock();
-}
-
-void
-Object::_deleteReference()
-{
   Mutex* m=getMutexPool()->getMutex(mutex_index);
   m->lock();
   ref_cnt--;
-  //::std::cout << "Reference count is now " << ref_cnt << "\n";
   bool del;
   if(ref_cnt == 0)
     del=true;

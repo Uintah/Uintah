@@ -155,11 +155,11 @@ public:
   Argument(bool copy, Mode mode, Type*, const std::string& id);
   ~Argument();
 
-  void staticCheck(SymbolTable* names, Method* method) const;
+  void staticCheck(SymbolTable* names) const;
   bool matches(const Argument* arg, bool checkmode) const;
   std::string fullsignature() const;
 
-  int detectRedistribution();
+  bool detectRedistribution();
   void emit_unmarshal(EmitState& e, const std::string& var,
 		      const std::string& qty, const int handler,
 		      ArgContext ctx, const bool specialRedis, bool declare) const;
@@ -192,8 +192,8 @@ public:
   void add(Argument*);
 
   bool matches(const ArgumentList*, bool checkmode) const;
-  int detectRedistribution();
-  void staticCheck(SymbolTable*, Method*) const;
+  bool detectRedistribution();
+  void staticCheck(SymbolTable*) const;
 
   std::string fullsignature() const;
 
@@ -303,7 +303,6 @@ public:
   bool reply_required() const;
   std::string get_classname() const;
   bool isCollective;
-  int numRedisMessages;
 protected:
   friend class CI;
   int handlerNum;
@@ -484,8 +483,8 @@ protected:
 public:
   virtual ~Type();
 
-  virtual int  detectRedistribution() = 0;
-  virtual void staticCheck(SymbolTable* names, Method* method) = 0;
+  virtual bool detectRedistribution() = 0;
+  virtual void staticCheck(SymbolTable* names) const=0;
   virtual void emit_unmarshal(EmitState& e, const std::string& arg,
 			      const std::string& qty, const int handler, ArgContext ctx,
 			      const bool specialRedis, bool declare) const=0;
@@ -528,8 +527,8 @@ public:
 
 class BuiltinType : public Type {
 public:
-  virtual void staticCheck(SymbolTable* names, Method* method);
-  int detectRedistribution();
+  virtual void staticCheck(SymbolTable* names) const;
+  bool detectRedistribution();
   virtual void emit_unmarshal(EmitState& e, const std::string& arg,
 			      const std::string& qty, const int handler, ArgContext ctx,
 			      const bool specialRedis, bool declare) const;
@@ -554,7 +553,6 @@ protected:
   BuiltinType(const std::string& cname, const std::string& nexusname);
   virtual ~BuiltinType();
 private:
-  Method* thisMethod;
   std::string cname;
   std::string nexusname;
 };
@@ -563,8 +561,8 @@ class NamedType : public Type {
 public:
   NamedType(const std::string& curfile, int lineno, ScopedName*);
   virtual ~NamedType();
-  virtual void staticCheck(SymbolTable* names, Method* method);
-  int detectRedistribution();
+  virtual void staticCheck(SymbolTable* names) const;
+  bool detectRedistribution();
   virtual void emit_unmarshal(EmitState& e, const std::string& arg,
 			      const std::string& qty, const int handler, ArgContext ctx,
 			      const bool specialRedis, bool declare) const;
@@ -587,7 +585,6 @@ public:
 protected:
   friend class Type;
 private:
-  Method* thisMethod;
   std::string curfile;
   int lineno;
   ScopedName* name;
@@ -595,8 +592,8 @@ private:
 
 class ArrayType : public Type {
 public:
-  virtual void staticCheck(SymbolTable* names, Method* method);
-  int detectRedistribution();
+  virtual void staticCheck(SymbolTable* names) const;
+  bool detectRedistribution();
   virtual void emit_unmarshal(EmitState& e, const std::string& arg,
 			      const std::string& qty, const int handler, ArgContext ctx,
 			      const bool specialRedis, bool declare) const;
@@ -622,8 +619,6 @@ public:
   Type* subtype;
 protected:
   friend class Type;
-private:
-  Method* thisMethod;
 };
 
 #endif

@@ -5,10 +5,3 @@ class Matrix
 	int numOfRows();
 	int numOfCols();
 }
-
-
-class Loader
-{
-	int loadComponent(in string componentType);
-	int getComonents(out array<string> componentList);
-}

@@ -53,22 +53,4 @@ PROGRAM := sr
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
-
-#build the SCIRun CCA Component Loader here
-SRCS      := $(SRCDIR)/ploader.cc
-
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Core/CCA/Component
-else
-  PSELIBS := Core/Exceptions Core/CCA/Component/Comm\
-        Core/CCA/Component/PIDL Core/globus_threads Core/CCA/spec \
-	SCIRun Core/CCA/Component/SSIDL Core/Thread
 endif
-
-LIBS :=
-PROGRAM := ploader 
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-endif
-

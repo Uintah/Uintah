@@ -48,8 +48,8 @@ styfile := srugmacros.sty
 
 # User created/edited sources (generated sources come into play further
 # down). 
-srcs:=${styfile} usersguide.tex title.tex intro.tex concepts.tex \
-running.tex network.tex viewer.tex packages.tex converters.tex \
+srcs:=${styfile} title.tex intro.tex concepts.tex \
+running.tex network.tex viewer.tex converters.tex \
 modules.tex ../../Utilities/TeX/scirun-doc.tex
 
 # Latex2html options.  Change as needed.
@@ -61,9 +61,7 @@ latex2htmloptions = -split 4 -no_white -link 1 -bottom_navigation \
 mainfile := ${bn}.tex
 dvifile := ${bn}.dvi
 psfile = ${bn}.ps
-pdffile = ${bn}.pdf
 gzpsfile := ${psfile}.gz
-gzpdffile := ${pdffile}.gz
 htmldir := ${bn}
 treetop:=../../..
 stylesheet:=${treetop}/doc/Utilities/XML/comp2latex.xsl
@@ -162,17 +160,15 @@ endef
 
 # ########## Targets for making various forms of the users guide.
 
-.PHONY: all latex html ps pdf bib
+.PHONY: all latex html ps bib
 
-all: dvi ps pdf html  bib
+all: dvi ps html  bib
 
 dvi: ${dvifile}
 
 html: ${htmldir}
 
 ps: ${psfile}
-
-pdf: ${pdffile}
 
 bib: ${bn}.bbl
 
@@ -198,10 +194,6 @@ ${htmldir}: ${dvifile}
 ${psfile}: ${dvifile}
 	dvips -t letter -o ${psfile} ${dvifile}
 	gzip -c <${psfile} >${gzpsfile}
-
-${pdffile}: ${dvifile}
-	dvipdfm -o ${pdffile} -p letter ${dvifile}
-	gzip -c <${pdffile} >${gzpdffile}
 
 # ########## Targets for making tex version module docs.
 
@@ -421,4 +413,4 @@ veryclean_eps_files: ${addsuffix _veryclean_eps_files,${packages}}
 
 veryclean: ${addsuffix _veryclean,${packages}}
 	${call rmdirs,${htmldir}}
-	${call rmfiles,${psfile} ${pdffile} *.gz *.bbl ${macrosfile} ${styfile}}
+	${call rmfiles,${psfile} ${psfile2} *.gz *.bbl ${macrosfile} ${styfile}}

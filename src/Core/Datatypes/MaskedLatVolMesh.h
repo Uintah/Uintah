@@ -872,6 +872,7 @@ public:
   unsigned num_masked_edges() const;
   unsigned num_masked_faces() const;
   unsigned num_masked_cells() const;
+		   
 
   void begin(Node::iterator &) const;
   void begin(Edge::iterator &) const;

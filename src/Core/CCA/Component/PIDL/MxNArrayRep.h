@@ -119,23 +119,16 @@ namespace SCIRun {
     /////////////
     // Retrieves the number specified as stride in the index representing
     // the dimension dimno. Note that dimensions are expected to begin with
-    // 1 and not 0 in this implementation. 
+    // 1 and not 0 in this implementation.
     unsigned int getStride(int dimno);
-
-    /////////////
-    // Retrieves the number specified as local stride in the index representing
-    // the dimension dimno. Note that dimensions are expected to begin with
-    // 1 and not 0 in this implementation. 
-    unsigned int getLocalStride(int dimno);
 
     ////////////
     // Calculates the number of elements according to the first, last and
-    // stride for a given dimension (first & last inclusive).
-    // Note that dimensions are expected to begin with 1 and not 0 in
+    // stride for a given dimension (first & last inclusive). 
+    // Note that dimensions are expected to begin with 1 and not 0 in 
     // this implementation.
     unsigned int getSize(int dimno);
-    
-    
+
     ///////////
     // Determines wether two array descriptions have an intersection. 
     // It calls Intersect() in order to make that determination.
@@ -198,10 +191,7 @@ namespace SCIRun {
     //////////////
     //Index constructor. It requires that first <= last. If this is not
     //the case it transposes first and last.
-    //@param localStride -- this stride represents data packing in the local array.
-    //		            If the data is not packed we want to make special 
-    //		            considerations (see getLocalStride()).	
-    Index(unsigned int first, unsigned int last, unsigned int stride, int localStride = 1);
+    Index(unsigned int first, unsigned int last, unsigned int stride);
 
     ///////////
     // Prints this class to stdout.
@@ -212,7 +202,6 @@ namespace SCIRun {
     unsigned int myfirst;
     unsigned int mylast;
     unsigned int mystride;
-    int localStride;
   };      
   
   

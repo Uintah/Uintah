@@ -31,54 +31,50 @@
 #include <Core/CCA/Component/PIDL/ProxyBase.h>
 #include <Core/CCA/Component/PIDL/TypeInfo.h>
 #include <iostream>
-#include <Core/CCA/tools/sidl/uuid_wrapper.h>
-
-#if HAVE_MPI || HAVE_MPICH
-#define TRANSFER_UUID 1
-#include <mpi.h>
-#endif
-
 using namespace SCIRun;
 
-ProxyBase::ProxyBase() 
-: proxy_uuid("NONE") { }
+ProxyBase::ProxyBase() { }
 
 ProxyBase::ProxyBase(const Reference& ref)
-: proxy_uuid("NONE")
 { 
-  rm.insertReference(ref);
+  d_ref.insert(d_ref.begin(),ref);
 }
 
-ProxyBase::ProxyBase(const ReferenceMgr& refM)
-: proxy_uuid("NONE")
+ProxyBase::ProxyBase(const refList& refL)
 { 
-  rm = refM;
+  d_ref = refL;
 }
 
 ProxyBase::~ProxyBase()
 {
+  refList::iterator iter = d_ref.begin();
+  for(unsigned int i=0; i < d_ref.size(); i++, iter++) {
+    (*iter).chan->closeConnection();
+  }
 }
 
 void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
 {
   if (copy) {
-    /*Clean up the passed reference just in case*/
     if (ref.chan != NULL) {
       delete (ref.chan);
       ref.chan = NULL;
     }
-
-    ref.chan = (rm.d_ref[0].chan)->SPFactory(true);
+    ref.chan = (d_ref[0].chan)->SPFactory(true);
   }
   else {
-    ref = (rm.d_ref[0]);
+    ref = d_ref[0];
   }
+}
+
+void ProxyBase::addParReference(Reference& ref)
+{
+  d_ref.insert(d_ref.begin(),ref);
 }
 
 void ProxyBase::_proxyGetReferenceList(refList& ref, bool copy) const
 {
   if (copy) {
-    /*Clean up the passed reference just in case*/
     refList::iterator iter = ref.begin();
     for(unsigned int i=0; i < ref.size(); i++, iter++) {      
       if ((*iter).chan != NULL) {
@@ -87,32 +83,17 @@ void ProxyBase::_proxyGetReferenceList(refList& ref, bool copy) const
       }
     }
 
-    ref = (rm.d_ref);
+    ref = d_ref;
     for(unsigned int i=0; i < ref.size(); i++) {      
-      ref[i].chan = (rm.d_ref[i].chan)->SPFactory(true);
+      ref[i].chan = (d_ref[i].chan)->SPFactory(true);
     }
   }
   else {
-    ref = (rm.d_ref); 
+    ref = d_ref; 
   }
 }
 
-ReferenceMgr* ProxyBase::_proxyGetReferenceMgr()  
-{
-  return (&rm);
-}
 
-::std::string ProxyBase::getProxyUUID()
-{
-  if(proxy_uuid == "NONE") {
-    if(rm.localRank == 0) {
-//    proxy_uuid = getUUID(); 
-    }
-#ifdef TRANSFER_UUID
-//    MPI_Bcast(const_cast<char*>(proxy_uuid.c_str()),64,MPI_CHAR,0,MPI_COMM_WORLD);
-#endif
-  }
-  return proxy_uuid;
-}
+
 
 

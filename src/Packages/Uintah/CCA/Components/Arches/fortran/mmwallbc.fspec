@@ -1,6 +1,0 @@
-void mmwallbc(IntVector idxLo, IntVector idxHi, CCVariable<double> ae,
-     CCVariable<double> aw, CCVariable<double> an,
-     CCVariable<double> as, CCVariable<double> at,
-     CCVariable<double> ab, CCVariable<double> su,
-     CCVariable<double> sp, constCCVariable<int> pcell,
-     int mmwallid);

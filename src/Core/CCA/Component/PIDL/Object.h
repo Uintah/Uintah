@@ -36,7 +36,6 @@
 #include <Core/CCA/Component/PIDL/MxNArrayRep.h>
 #include <Core/CCA/Component/PIDL/MxNScheduler.h>
 #include <Core/CCA/Component/PIDL/HandlerStorage.h>
-#include <Core/CCA/Component/PIDL/HandlerGateKeeper.h>
 #include <Core/CCA/Component/Comm/EpChannel.h>
 #include <Core/CCA/SmartPointer.h>
 
@@ -89,20 +88,10 @@ public:
   //////////
   // Internal method to increment the reference count for
   // this object.
-  void _addReference();
+  void addReference();
 
   //////////
   // Internal method to decrement the reference count for
-  // this object.
-  void _deleteReference();
-
-  //////////
-  // External method to increment the reference count for
-  // this object.
-  void addReference();
-  
-  //////////
-  // External method to decrement the reference count for
   // this object.
   void deleteReference();
 

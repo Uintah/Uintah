@@ -220,13 +220,6 @@ void FieldSubSample::execute(){
     return;
   }
 
-  if( fHandle->data_at() != Field::CELL &&
-      fHandle->data_at() != Field::NODE ) {
-    error( fHandle->get_type_description(0)->get_name() );
-    error( "Currently only availible for cell or node data." );
-    return;
-  }
-
   int wrap;
 
   if( fHandle->get_type_description(0)->get_name() == "StructHexVolField" ||

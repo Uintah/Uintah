@@ -146,8 +146,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
     omesh->set_ni( new_i );
     omesh->set_nj( new_j );
 
-    ImageField<TYPE> *ofield =
-      scinew ImageField<TYPE>(omesh, ifield->data_at());
+    ImageField<TYPE> *ofield = scinew ImageField<TYPE>(omesh, Field::NODE);
 
     ofield_h = ofield;
 
@@ -156,8 +155,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
     typename StructQuadSurfField<TYPE>::mesh_type *omesh =
       scinew typename StructQuadSurfField<TYPE>::mesh_type(new_i,new_j);
 
-    StructQuadSurfField<TYPE> *ofield =
-      scinew StructQuadSurfField<TYPE>(omesh, ifield->data_at());
+    StructQuadSurfField<TYPE> *ofield = scinew StructQuadSurfField<TYPE>(omesh, Field::NODE);
 
     ofield_h = ofield;
 
@@ -169,8 +167,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
     omesh->set_min_i( new_min_i );
     omesh->set_ni( new_i );
 
-    ScanlineField<TYPE> *ofield = 
-      scinew ScanlineField<TYPE>(omesh, ifield->data_at());
+    ScanlineField<TYPE> *ofield = scinew ScanlineField<TYPE>(omesh, Field::NODE);
 
     ofield_h = ofield;
 
@@ -179,8 +176,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
     typename StructCurveField<TYPE>::mesh_type *omesh =
       scinew typename StructCurveField<TYPE>::mesh_type(new_i);
 
-    StructCurveField<TYPE> *ofield =
-      scinew StructCurveField<TYPE>(omesh, ifield->data_at());
+    StructCurveField<TYPE> *ofield = scinew StructCurveField<TYPE>(omesh, Field::NODE);
 
     ofield_h = ofield;
 
@@ -192,8 +188,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
     omesh->set_min_i( new_min_i );
     omesh->set_ni( new_i );
 
-    ScanlineField<TYPE> *ofield =
-      scinew ScanlineField<TYPE>(omesh, ifield->data_at());
+    ScanlineField<TYPE> *ofield = scinew ScanlineField<TYPE>(omesh, Field::NODE);
 
     ofield_h = ofield;
 
@@ -202,8 +197,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
     typename StructCurveField<TYPE>::mesh_type *omesh =
       scinew typename StructCurveField<TYPE>::mesh_type(new_i);
 
-    StructCurveField<TYPE> *ofield =
-      scinew StructCurveField<TYPE>(omesh, ifield->data_at());
+    StructCurveField<TYPE> *ofield = scinew StructCurveField<TYPE>(omesh, Field::NODE);
 
     ofield_h = ofield;
   }

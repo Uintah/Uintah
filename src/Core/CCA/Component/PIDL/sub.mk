@@ -38,12 +38,10 @@ SRCS     += \
 	$(SRCDIR)/MxNArrayRep.cc \
 	$(SRCDIR)/MxNScheduler.cc \
 	$(SRCDIR)/MxNScheduleEntry.cc \
-	$(SRCDIR)/HandlerStorage.cc \
-	$(SRCDIR)/HandlerGateKeeper.cc \
-	$(SRCDIR)/ReferenceMgr.cc
+	$(SRCDIR)/HandlerStorage.cc
 
 PSELIBS := Core/Exceptions Core/Thread Core/globus_threads
-LIBS := $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARYK) $(MPI_LIBRARY) $(UUID_LIB)
+LIBS := $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARYK)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

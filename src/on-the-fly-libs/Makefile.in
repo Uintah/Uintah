@@ -66,13 +66,14 @@ all: $(OTF_LIBS)
           [ -s $@ ] || rm -f $@
 
 %.o : %.cc %.d
-	rm -f $@ $(*).so $(*).dylib
 	$(CXX) -c $(CFLAGS) $(INCLUDES) $< -o $@ 
 
 %.so : %.o 
+	rm -f $@
 	$(CXX) $(CFLAGS) $(INCLUDES) $(SOFLAGS) $< -o $@ 
 
 %.dylib : %.o 
+	rm -f $@
 	$(CXX) $(CFLAGS) $(INCLUDES) $(SOFLAGS) $< -o $@ -L$(LIB_DIR) $(LIBS)
 
 

@@ -162,16 +162,7 @@ unsigned int MxNArrayRep::getStride(int dimno)
   if (dimno <= mydimno)
     return mydimarr[dimno-1]->mystride;
   else
-    return 1;
-}
-
-unsigned int MxNArrayRep::getLocalStride(int dimno)
-{
-  if (dimno <= mydimno) {
-    return mydimarr[dimno-1]->localStride;
-  }
-  else
-    return 1;
+    return 0;
 }
 
 unsigned int MxNArrayRep::getSize(int dimno)
@@ -180,8 +171,7 @@ unsigned int MxNArrayRep::getSize(int dimno)
     int fst = mydimarr[dimno-1]->myfirst;
     int lst = mydimarr[dimno-1]->mylast;
     int str = mydimarr[dimno-1]->mystride;
-    int localStride = mydimarr[dimno-1]->localStride;
-    return ( ((int) ceil((float)(lst - fst) / (float)str) ) * localStride );
+    return ( (int) ceil((float)(lst - fst) / (float)str) );
   }
   else
     return 0;
@@ -299,8 +289,8 @@ void MxNArrayRep::print(std::ostream& dbg)
 
 //******************  Index ********************************************
 
-Index::Index(unsigned int first, unsigned int last, unsigned int stride, int localStride)
-  : mystride(stride), localStride(localStride)
+Index::Index(unsigned int first, unsigned int last, unsigned int stride)
+  : mystride(stride)
 {
   if (first > last) {
     myfirst = last;

@@ -1,6 +1,0 @@
-void wallbc(IntVector idxLo, IntVector idxHi, CCVariable<double> ae,
-	CCVariable<double> aw, CCVariable<double> an,
-	CCVariable<double> as, CCVariable<double> at,
-	CCVariable<double> ab, CCVariable<int> pcell,int wall,
-	bool xminus, bool xplus, bool yminus, bool yplus, bool zminus,
-	bool zplus);

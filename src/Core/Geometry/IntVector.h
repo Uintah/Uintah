@@ -79,9 +79,6 @@ public:
     return IntVector(value_[0]+v.value_[0], value_[1]+v.value_[1], 
 		     value_[2]+v.value_[2]);
   }
-  inline IntVector operator-() const {
-    return IntVector(-value_[0], -value_[1], -value_[2]);
-  }
   inline IntVector operator-(const IntVector& v) const {
     return IntVector(value_[0]-v.value_[0], value_[1]-v.value_[1], 
 		     value_[2]-v.value_[2]);

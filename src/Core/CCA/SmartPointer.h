@@ -17,8 +17,8 @@
  */
 
 // Requires methods:
-//  void _addReference();
-//  bool _deleteReference();
+//  void addReference();
+//  bool removeReference();
 //  int getReferenceCount() const;
 
 #ifndef CCALib_SmartPointer_h
@@ -54,7 +54,7 @@ namespace CCALib {
 
     SmartPointer<T>& operator=(T* inptr) {
       if(inptr)
-	inptr->_addReference();
+	inptr->addReference();
       dereference();
       ptr=inptr;
       return *this;
@@ -99,11 +99,11 @@ namespace CCALib {
     }
     void reference() const {
       if(ptr)
-	ptr->_addReference();
+	ptr->addReference();
     }
     void dereference() {
       if(ptr)
-	ptr->_deleteReference();
+	ptr->deleteReference();
     }
   private:
     // mutable allows reference() to be used on a const pointer

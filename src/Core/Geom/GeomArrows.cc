@@ -90,21 +90,21 @@ void GeomArrows::add(const Point& pos, const Vector& dir,
 
 void GeomArrows::add(const Point& pos, const Vector& dir)
 {
-  Vector vv1, vv2;
-  if(!dir.check_find_orthogonal(vv1, vv2))
-    return;
-
-  positions.add(pos);
-  directions.add(dir);
-  if (!normalize_headsize) {
-    // use the length to scale the head
-    double len = dir.length();
-    v1.add(vv1*headwidth*len);
-    v2.add(vv2*headwidth*len);
-  } else {
-    // don't scale the head by the length
-    v1.add(vv1*headwidth);
-    v2.add(vv2*headwidth);
+  if(dir.length2() > 0) {
+    positions.add(pos);
+    directions.add(dir);
+    Vector vv1, vv2;
+    dir.find_orthogonal(vv1, vv2);
+    if (!normalize_headsize) {
+      // use the length to scale the head
+      double len = dir.length();
+      v1.add(vv1*headwidth*len);
+      v2.add(vv2*headwidth*len);
+    } else {
+      // don't scale the head by the length
+      v1.add(vv1*headwidth);
+      v2.add(vv2*headwidth);
+    }
   }
 }
 

@@ -66,11 +66,13 @@ SpChannel* NexusSpChannel::SPFactory(bool deep) {
 }
 
 void NexusSpChannel::openConnection(const URL& url) {
-  if(kDEBUG) {
-    string s1("NexusSpChannel::openConnection() ");
-    s1 += url.getString();
-    printDebug(s1);
-  }
+  string s1("NexusSpChannel::openConnection() ");
+  s1 += url.getString();
+  if (kDEBUG) printDebug(s1);
+
+  if(int gerr=globus_module_activate(GLOBUS_NEXUS_MODULE))
+    throw CommError("Unable to initialize nexus", gerr);
+  globus_nexus_enable_fault_tolerance(NULL, 0);
 
   std::string s(url.getString());
   char* str=const_cast<char*>(s.c_str());

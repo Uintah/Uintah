@@ -33,8 +33,7 @@ SRCS     += \
 	$(SRCDIR)/NexusEpMessage.cc \
 	$(SRCDIR)/SocketMessage.cc \
 	$(SRCDIR)/ReplyEP.cc \
-	$(SRCDIR)/NexusHandlerThread.cc \
-	$(SRCDIR)/CommNexus.cc
+	$(SRCDIR)/NexusHandlerThread.cc
 
 PSELIBS := Core/Exceptions Core/Thread Core/globus_threads
 LIBS := $(GLOBUS_COMMON_LIBRARY) $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARY)
