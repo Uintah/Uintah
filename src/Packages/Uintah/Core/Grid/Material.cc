@@ -59,8 +59,8 @@ void Material::setDWIndex(int idx)
 {
    d_dwindex = idx;
    ASSERT(!thismatl);
-   thismatl = new MaterialSubset(); // scinew not used here because it
-                                    // triggers some problem in g++ 2.95
+   thismatl = scinew MaterialSubset(); // scinew not used here because it
+                                       // triggers some problem in g++ 2.95
    thismatl->addReference();
    thismatl->add(idx);
 }
