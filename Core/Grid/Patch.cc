@@ -364,7 +364,14 @@ Box Patch::getGhostBox(const IntVector& lowOffset,
 
 NodeIterator Patch::getNodeIterator() const
 {
-   return NodeIterator(getNodeLowIndex(), getNodeHighIndex());
+  IntVector low = d_inLowIndex;
+  IntVector hi = d_inHighIndex +
+    IntVector(getBCType(xplus) == Neighbor?0:1,
+              getBCType(yplus) == Neighbor?0:1,
+              getBCType(zplus) == Neighbor?0:1);
+  //   return NodeIterator(getNodeLowIndex(), getNodeHighIndex());
+
+  return NodeIterator(low, hi);
 }
 
 NodeIterator
