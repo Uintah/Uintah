@@ -219,6 +219,7 @@ proc itemDrag {c x y} {
 
 source $sci_root/TCL/Filebox.tcl
 source $sci_root/TCL/PointVector.tcl
+source $sci_root/TCL/ColorPicker.tcl
 source $sci_root/Dataflow/MemStats.tcl
 source $sci_root/Dataflow/DebugSettings.tcl
 source $sci_root/Dataflow/ThreadStats.tcl
