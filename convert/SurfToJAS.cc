@@ -1,0 +1,64 @@
+
+/*
+ *  SurfToJAS: Read in a surface, and output a .tri and .pts file
+ *
+ *  Written by:
+ *   David Weinstein
+ *   Department of Computer Science
+ *   University of Utah
+ *   October 1994
+ *
+ *  Copyright (C) 1994 SCI Group
+ */
+
+#include <iostream.h>
+#include <fstream.h>
+#include <stdlib.h>
+#include <Classlib/String.h>
+#include <Classlib/Pstreams.h>
+#include <Datatypes/TriSurface.h>
+#include <Datatypes/Surface.h>
+#include <Geometry/Point.h>
+#include <Classlib/Array1.h>
+#include <stdio.h>
+
+main(int argc, char **argv) {
+
+    SurfaceHandle handle;
+    char name[100];
+
+    if (argc !=2) {
+	printf("Need the file name!\n");
+	exit(0);
+    }
+    sprintf(name, "%s.surf", argv[1]);
+    Piostream* stream=auto_istream(name);
+    if (!stream) {
+	printf("Couldn't open file %s.  Exiting...\n", name);
+	exit(0);
+    }
+    Pio(*stream, handle);
+    if (!handle.get_rep()) {
+	printf("Error reading surface from file %s.  Exiting...\n", name);
+	exit(0);
+    }
+    Surface *su=handle.get_rep();
+    TriSurface *ts=su->getTriSurface();
+
+    sprintf(name, "%s.pts", argv[1]);
+    FILE *fout=fopen(name, "wt");
+    fprintf(fout, "%d\n", ts->points.size());
+    for (int i=0; i<ts->points.size(); i++) {
+	fprintf(fout, "%lf %lf %lf\n", ts->points[i].x(), ts->points[i].y(),
+		ts->points[i].z());
+    }
+    fclose(fout);
+
+    sprintf(name, "%s.tri", argv[1]);
+    fout=fopen(name, "wt");
+    for (i=0; i<ts->elements.size(); i++) {
+	fprintf(fout, "%d %d %d\n", ts->elements[i]->i1+1,
+		ts->elements[i]->i2+1, ts->elements[i]->i3+1);
+    }
+    fclose(fout);
+}    
