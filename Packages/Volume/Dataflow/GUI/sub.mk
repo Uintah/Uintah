@@ -6,8 +6,8 @@ SRCS := \
 	$(SRCDIR)/EditTransferFunc2.tcl \
         $(SRCDIR)/NrrdTextureBuilder.tcl \
         $(SRCDIR)/TextureBuilder.tcl \
-        $(SRCDIR)/VolumeSlicer.tcl \
         $(SRCDIR)/VolumeVisualizer.tcl \
+        $(SRCDIR)/VolumeSlicer.tcl \
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

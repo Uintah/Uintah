@@ -35,11 +35,11 @@
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Thread/Mutex.h>
-#include <Packages/Volume/Core/Datatypes/CM2Widget.h>
-#include <Packages/Volume/Core/Util/Pbuffer.h>
 #include <vector>
 
 namespace Volume {
+
+class CM2Widget;
 
 using std::vector;
 
@@ -49,9 +49,10 @@ public:
   Colormap2();
   virtual ~Colormap2();
 
-  inline vector<CM2Widget *> &widgets() { return widget_; }
   inline void lock_widgets() { widget_lock_.lock(); }
   inline void unlock_widgets() { widget_lock_.unlock(); }
+  void set_widgets(vector<CM2Widget*>& widgets);
+  inline vector<CM2Widget*>& get_widgets() { return widget_; }
   
   inline bool is_dirty() { return dirty_; }
   inline bool is_updating() { return updating_; }

@@ -159,6 +159,19 @@ CM2Widget::CM2Widget()
 CM2Widget::~CM2Widget()
 {}
 
+CM2Widget::CM2Widget(CM2Widget& copy)
+  : line_color_(copy.line_color_),
+    line_alpha_(copy.line_alpha_),
+    selected_color_(copy.selected_color_),
+    selected_alpha_(copy.selected_alpha_),
+    thin_line_width_(copy.thin_line_width_),
+    thick_line_width_(copy.thick_line_width_),
+    point_size_(copy.point_size_),
+    color_(copy.color_),
+    alpha_(copy.alpha_),
+    selected_(copy.selected_)
+{}
+
 TriangleCM2Widget::TriangleCM2Widget()
   : base_(0.5), top_x_(0.15), top_y_(0.5), width_(0.25), bottom_(0.5)
 {}
@@ -170,6 +183,26 @@ TriangleCM2Widget::TriangleCM2Widget(float base, float top_x, float top_y,
 
 TriangleCM2Widget::~TriangleCM2Widget()
 {}
+
+TriangleCM2Widget::TriangleCM2Widget(TriangleCM2Widget& copy)
+  : CM2Widget(copy),
+    base_(copy.base_),
+    top_x_(copy.top_x_),
+    top_y_(copy.top_y_),
+    width_(copy.width_),
+    bottom_(copy.bottom_),
+    last_x_(copy.last_x_),
+    last_y_(copy.last_y_),
+    last_width_(copy.last_width_),
+    pick_ix_(copy.pick_ix_),
+    pick_iy_(copy.pick_iy_)
+{}
+
+CM2Widget*
+TriangleCM2Widget::clone()
+{
+  return new TriangleCM2Widget(*this);
+}
 
 void
 TriangleCM2Widget::rasterize(CM2ShaderFactory& factory)
@@ -409,6 +442,26 @@ RectangleCM2Widget::RectangleCM2Widget(int type, float left_x, float left_y,
 
 RectangleCM2Widget::~RectangleCM2Widget()
 {}
+
+RectangleCM2Widget::RectangleCM2Widget(RectangleCM2Widget& copy)
+  : CM2Widget(copy),
+    type_(copy.type_),
+    left_x_(copy.left_x_),
+    left_y_(copy.left_y_),
+    width_(copy.width_),
+    height_(copy.height_),
+    offset_(copy.offset_),
+    last_x_(copy.last_x_),
+    last_y_(copy.last_y_),
+    pick_ix_(copy.pick_ix_),
+    pick_iy_(copy.pick_iy_)
+{}
+
+CM2Widget*
+RectangleCM2Widget::clone()
+{
+  return new RectangleCM2Widget(*this);
+}
 
 void
 RectangleCM2Widget::rasterize(CM2ShaderFactory& factory)

@@ -51,31 +51,31 @@ namespace Volume {
 using SCIRun::GeomObj;
 using SCIRun::DrawInfoOpenGL;
 class FragmentProgramARB;
+class VertexProgramARB;
 
 class SliceRenderer : public TextureRenderer
 {
 public:
-  SliceRenderer();
-  SliceRenderer(TextureHandle tex, ColorMapHandle map, Colormap2Handle cmap2);
+  SliceRenderer(TextureHandle tex, ColorMapHandle cmap1, Colormap2Handle cmap2);
   SliceRenderer(const SliceRenderer&);
   ~SliceRenderer();
 
-  virtual void BuildTransferFunction();
-  virtual void BuildTransferFunction2();
+  inline void set_control_point(const Point& point) { control_point_ = point; }
 
-  void SetControlPoint( const Point& point){ control_point_ = point; }
+  inline void set_x(bool b) { if(b) draw_view_ = false; draw_x_ = b; }
+  inline void set_y(bool b) { if(b) draw_view_ = false; draw_y_ = b; }
+  inline void set_z(bool b) { if(b) draw_view_ = false; draw_z_ = b; }
+  inline void set_view(bool b) {
+    if(b) {
+      draw_x_=false; draw_y_=false; draw_z_=false;
+    }
+    draw_view_ = b;
+  }
 
-  void SetX(bool b){ if(b){draw_view_ = false;} drawX_ = b; }
-  void SetY(bool b){ if(b){draw_view_ = false;} drawY_ = b; }
-  void SetZ(bool b){ if(b){draw_view_ = false;} drawZ_ = b; }
-  void SetView(bool b){ if(b){drawX_=false; drawY_=false; drawZ_=false;}
-                        draw_view_ = b; }
-
-  bool drawX() const { return drawX_; }
-  bool drawY() const { return drawY_; }
-  bool drawZ() const { return drawZ_; }
-  bool drawView() const { return draw_view_; }
-
+  bool draw_x() const { return draw_x_; }
+  bool draw_y() const { return draw_y_; }
+  bool draw_z() const { return draw_z_; }
+  bool draw_view() const { return draw_view_; }
   bool draw_phi_0() const { return draw_phi0_; }
   bool draw_phi_1() const { return draw_phi1_; }
   double phi0() const { return phi0_; }
@@ -83,8 +83,7 @@ public:
   bool draw_cyl() const { return draw_cyl_; }
 
   void set_cylindrical(bool cyl_active, bool draw_phi0, double phi0, 
-		       bool draw_phi1, double phi1) 
-  {
+		       bool draw_phi1, double phi1) {
     draw_cyl_ = cyl_active;
     draw_phi0_ = draw_phi0;
     phi0_ = phi0;
@@ -95,36 +94,36 @@ public:
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
   virtual void draw();
-  virtual void drawWireFrame();
-  virtual void load_colormap();
-protected:
-  void draw(Brick& b, Polygon* poly);
+  virtual void draw_wireframe();
 #endif
-  
-public:
+
   virtual GeomObj* clone();
-  
+
 protected:
-  Point                 control_point_;
+#ifdef SCI_OPENGL
+  void draw(Brick& b, Polygon* poly, bool use_fog);
+#endif
 
-  bool                  drawX_;
-  bool                  drawY_;
-  bool                  drawZ_;
-  bool                  draw_view_;
-  bool                  draw_phi0_;
-  double                phi0_;
-  bool                  draw_phi1_;
-  double                phi1_;
-  bool                  draw_cyl_;
-  unsigned char     transfer_function_[1024];
-
-  FragmentProgramARB* VolShader1;
-  FragmentProgramARB* VolShader4;
-  FragmentProgramARB* FogVolShader1;
-  FragmentProgramARB* FogVolShader4;
+  Point control_point_;
+  bool draw_x_;
+  bool draw_y_;
+  bool draw_z_;
+  bool draw_view_;
+  bool draw_phi0_;
+  double phi0_;
+  bool draw_phi1_;
+  double phi1_;
+  bool draw_cyl_;
+  FragmentProgramARB* vol_shader1_;
+  FragmentProgramARB* vol_shader4_;
+  FragmentProgramARB* fog_vol_shader1_;
+  FragmentProgramARB* fog_vol_shader4_;
+  FragmentProgramARB* vol_shader1_2_;
+  FragmentProgramARB* vol_shader4_2_;
+  FragmentProgramARB* fog_vol_shader1_2_;
+  FragmentProgramARB* fog_vol_shader4_2_;
 };
 
 } // end namespace SCIRun
 
 #endif // SliceRenderer_h
-

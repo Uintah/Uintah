@@ -1,11 +1,34 @@
-/*
- *  VolumeVisualizer.cc:
- *
- *  Written by:
- *   kuzimmer
- *   TODAY'S DATE HERE
- *
- */
+//  
+//  For more information, please see: http://software.sci.utah.edu
+//  
+//  The MIT License
+//  
+//  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+//  University of Utah.
+//  
+//  License for the specific language governing rights and limitations under
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//  
+//  The above copyright notice and this permission notice shall be included
+//  in all copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//  
+//    File   : VolumeSlicer.cc
+//    Author : Milan Ikits
+//    Author : Kurt Zimmerman
+//    Date   : Sat Jul 10 21:55:08 2004
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
@@ -31,7 +54,6 @@
 #include <algorithm>
 #include <Packages/Volume/Core/Util/Utils.h>
 
-
 namespace Volume {
 
 using namespace SCIRun;
@@ -39,52 +61,51 @@ using namespace SCIRun;
 class PSECORESHARE VolumeSlicer : public Module {
 public:
   VolumeSlicer(GuiContext*);
-
   virtual ~VolumeSlicer();
-
   virtual void execute();
-  virtual void widget_moved(bool last);    
+  virtual void widget_moved(bool last);
   virtual void tcl_command(GuiArgs&, void*);
+
 private:
-  
   TextureHandle tex_;
 
-  ColorMapIPort* icmap_;
+  ColorMapIPort* icmap1_;
   Colormap2IPort* icmap2_;
   TextureIPort* intexture_;
   GeometryOPort* ogeom_;
   ColorMapOPort* ocmap_;
-   
+  int cmap1_prevgen_;
+  int cmap2_prevgen_;
+  
   CrowdMonitor control_lock_; 
   PointWidget *control_widget_;
   GeomID control_id_;
 
+  GuiInt control_pos_saved_;
+  GuiDouble control_x_;
+  GuiDouble control_y_;
+  GuiDouble control_z_;
+  GuiInt draw_x_;
+  GuiInt draw_y_;
+  GuiInt draw_z_;
+  GuiInt draw_view_;
+  GuiInt interp_mode_;
+  GuiInt draw_phi0_;
+  GuiInt draw_phi1_;
+  GuiDouble phi0_;
+  GuiDouble phi1_;
+  GuiInt cyl_active_;
 
-  GuiInt                  control_pos_saved_;
-  GuiDouble               control_x_;
-  GuiDouble               control_y_;
-  GuiDouble               control_z_;
-  GuiInt                  drawX_;
-  GuiInt                  drawY_;
-  GuiInt                  drawZ_;
-  GuiInt                  drawView_;
-  GuiInt                  interp_mode_;
-  GuiInt                  draw_phi0_;
-  GuiInt                  draw_phi1_;
-  GuiDouble		  phi0_;
-  GuiDouble		  phi1_;
-  GuiInt                  cyl_active_;
-
-  TextureHandle          old_tex_;
-  ColorMapHandle         old_cmap_;
-  Point                  old_min_, old_max_;
-  GeomID                 geom_id_;
-  SliceRenderer          *slice_ren_;
-  Point                   dmin_;
-  Vector                  ddx_;
-  Vector                  ddy_;
-  Vector                  ddz_;
-  double                  ddview_;
+  TextureHandle old_tex_;
+  ColorMapHandle old_cmap_;
+  Point old_min_, old_max_;
+  GeomID geom_id_;
+  SliceRenderer* slice_ren_;
+  Point dmin_;
+  Vector ddx_;
+  Vector ddy_;
+  Vector ddz_;
+  double ddview_;
 };
 
 
@@ -101,10 +122,10 @@ VolumeSlicer::VolumeSlicer(GuiContext* ctx)
     control_x_(ctx->subVar("control_x")),
     control_y_(ctx->subVar("control_y")),
     control_z_(ctx->subVar("control_z")),
-    drawX_(ctx->subVar("drawX")),
-    drawY_(ctx->subVar("drawY")),
-    drawZ_(ctx->subVar("drawZ")),
-    drawView_(ctx->subVar("drawView")),
+    draw_x_(ctx->subVar("drawX")),
+    draw_y_(ctx->subVar("drawY")),
+    draw_z_(ctx->subVar("drawZ")),
+    draw_view_(ctx->subVar("drawView")),
     interp_mode_(ctx->subVar("interp_mode")),
     draw_phi0_(ctx->subVar("draw_phi_0")),
     draw_phi1_(ctx->subVar("draw_phi_1")),
@@ -124,16 +145,16 @@ VolumeSlicer::~VolumeSlicer(){
 
 void
  VolumeSlicer::execute(){
-  intexture_ = (TextureIPort *)get_iport("Texture");
-  icmap_ = (ColorMapIPort *)get_iport("ColorMap");
-  icmap2_ = (Colormap2IPort *)get_iport("ColorMap2");
-  ogeom_ = (GeometryOPort *)get_oport("Geometry");
-  ocmap_ = (ColorMapOPort *)get_oport("ColorMap");
+  intexture_ = (TextureIPort*)get_iport("Texture");
+  icmap1_ = (ColorMapIPort*)get_iport("ColorMap");
+  icmap2_ = (Colormap2IPort*)get_iport("ColorMap2");
+  ogeom_ = (GeometryOPort*)get_oport("Geometry");
+  ocmap_ = (ColorMapOPort*)get_oport("ColorMap");
   if (!intexture_) {
     error("Unable to initialize iport 'GL Texture'.");
     return;
   }
-  if (!icmap_ && !icmap2_) {
+  if (!icmap1_ && !icmap2_) {
     error("Unable to initialize iport 'ColorMap'.");
     return;
   }
@@ -141,7 +162,6 @@ void
     error("Unable to initialize oport 'Geometry'.");
     return;
   }
-
   
   if (!intexture_->get(tex_)) {
     return;
@@ -149,9 +169,9 @@ void
     return;
   }
   
-  ColorMapHandle cmap;
+  ColorMapHandle cmap1;
   Colormap2Handle cmap2;
-  if( !icmap_->get(cmap) && !icmap2_->get(cmap2)){
+  if(!icmap1_->get(cmap1) && !icmap2_->get(cmap2)) {
     return;
   }
 
@@ -162,7 +182,7 @@ void
     BBox b;
     tex_->get_bounds(b);
     Vector dv(b.diagonal());
-    if( control_pos_saved_.get() ) {
+    if(control_pos_saved_.get()) {
       control_widget_->SetPosition(Point(control_x_.get(),
 					 control_y_.get(),
 					 control_z_.get()));
@@ -182,20 +202,20 @@ void
   }
 
   //AuditAllocator(default_allocator);
-  if( !slice_ren_ ){
-    slice_ren_ = new SliceRenderer(tex_, cmap, cmap2);
-    slice_ren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
+  if(!slice_ren_) {
+    slice_ren_ = new SliceRenderer(tex_, cmap1, cmap2);
+    slice_ren_->set_control_point(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
     //    ogeom->delAll();
-    geom_id_ = ogeom_->addObj( slice_ren_, "Volume Slicer");
+    geom_id_ = ogeom_->addObj(slice_ren_, "Volume Slicer");
     cyl_active_.reset();
     draw_phi0_.reset();
     phi0_.reset();
     draw_phi1_.reset();
     phi1_.reset();
     slice_ren_->set_cylindrical(cyl_active_.get(), draw_phi0_.get(), phi0_.get(), 
-			     draw_phi1_.get(), phi1_.get());
+                                draw_phi1_.get(), phi1_.get());
     old_tex_ = tex_;
-    old_cmap_ = cmap;
+    old_cmap_ = cmap1;
     BBox b;
     tex_->get_bounds(b);
     old_min_ = b.min();
@@ -203,14 +223,14 @@ void
   } else {
     BBox b;
     tex_->get_bounds(b);
-    if( tex_.get_rep() != old_tex_.get_rep() ||
-	b.min() != old_min_ || b.max() != old_max_ ){
+    if(tex_.get_rep() != old_tex_.get_rep() ||
+	b.min() != old_min_ || b.max() != old_max_) {
       old_tex_ = tex_;
       old_min_ = b.min();
       old_max_ = b.max();
-      if( geom_id_ != -1 ){
-	ogeom_->delObj( geom_id_ );
-	geom_id_ = ogeom_->addObj( slice_ren_, "Volume Slicer");
+      if(geom_id_ != -1) {
+	ogeom_->delObj(geom_id_);
+	geom_id_ = ogeom_->addObj(slice_ren_, "Volume Slicer");
       }
       Vector dv(b.diagonal());
       int nx, ny, nz;
@@ -221,119 +241,109 @@ void
       ddy_= (t.project(Point(0,1,0))-dmin_) * (dv.y()/ny);
       ddz_= (t.project(Point(0,0,1))-dmin_) * (dv.z()/nz);
       ddview_ = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
-      if (!b.inside(control_widget_->GetPosition())) {
+      if(!b.inside(control_widget_->GetPosition())) {
 	control_widget_->SetPosition(Interpolate(b.min(), b.max(), 0.5));
       }
       control_widget_->SetScale(dv.length()/80.0);
-      slice_ren_->SetTexture( tex_ );
-      slice_ren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
-
+      slice_ren_->set_texture(tex_);
+      slice_ren_->set_control_point(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
     }
 
-    if( cmap != old_cmap_ ){
-      slice_ren_->SetColorMap( cmap );
-      old_cmap_ = cmap;
+    if(cmap1 != old_cmap_) {
+      slice_ren_->set_colormap1(cmap1);
+      old_cmap_ = cmap1;
     }
   }
  
   //AuditAllocator(default_allocator);
-  slice_ren_->SetInterp( bool(interp_mode_.get()));
+  slice_ren_->set_interp(bool(interp_mode_.get()));
   //AuditAllocator(default_allocator);
-  if(drawX_.get() || drawY_.get() || drawZ_.get()){
-    if( control_id_ == -1 ){
+  if(draw_x_.get() || draw_y_.get() || draw_z_.get()){
+    if(control_id_ == -1) {
       GeomHandle w = control_widget_->GetWidget();
       control_id_ = ogeom_->addObj( w, control_name, &control_lock_);
     }
   } else {
-    if( control_id_ != -1){
-      ogeom_->delObj( control_id_, 0);
+    if(control_id_ != -1) {
+      ogeom_->delObj(control_id_, 0);
       control_id_ = -1;
     }
   }  
-  slice_ren_->SetX(drawX_.get());
-  slice_ren_->SetY(drawY_.get());
-  slice_ren_->SetZ(drawZ_.get());
-  slice_ren_->SetView(drawView_.get());
+  slice_ren_->set_x(draw_x_.get());
+  slice_ren_->set_y(draw_y_.get());
+  slice_ren_->set_z(draw_z_.get());
+  slice_ren_->set_view(draw_view_.get());
   cyl_active_.reset();
   draw_phi0_.reset();
   phi0_.reset();
   draw_phi1_.reset();
   phi1_.reset();
   slice_ren_->set_cylindrical(cyl_active_.get(), draw_phi0_.get(), phi0_.get(), 
-			   draw_phi1_.get(), phi1_.get());
+                              draw_phi1_.get(), phi1_.get());
   
-  ogeom_->flushViews();				  
+  ogeom_->flushViews();		  
   //AuditAllocator(default_allocator);
   
-  if (!ocmap_) {
+  if(!ocmap_) {
     error("Unable to initialize oport 'Color Map'.");
     return;
   } else {
     ColorMapHandle outcmap;
-    outcmap = new ColorMap(*cmap.get_rep()); 
+    outcmap = new ColorMap(*cmap1.get_rep()); 
     double vmin, vmax, gmin, gmax;
     tex_->get_min_max(vmin, vmax, gmin, gmax);
     outcmap->Scale(vmin, vmax);
     ocmap_->send(outcmap);
-  }    
-  
+  }
 }
 
 void
- VolumeSlicer::tcl_command(GuiArgs& args, void* userdata)
+VolumeSlicer::tcl_command(GuiArgs& args, void* userdata)
 {
   if (args[1] == "MoveWidget") {
-      if (!control_widget_) return;
-      Point w(control_widget_->ReferencePoint());
-      if (args[2] == "xplus") {
-	w+=ddx_*atof(args[3].c_str());
-      } else if (args[2] == "xat") {
-	w=dmin_+ddx_*atof(args[3].c_str());
-      } else if (args[2] == "yplus") {
-	w+=ddy_*atof(args[3].c_str());
-      } else if (args[2] == "yat") {
-	w=dmin_+ddy_*atof(args[3].c_str());
-      } else if (args[2] == "zplus") {
-	w+=ddz_*atof(args[3].c_str());
-      } else if (args[2] == "zat") {
-	w=dmin_+ddz_*atof(args[3].c_str());
-      } else if (args[2] == "vplus"){
-	GeometryData* data = ogeom_->getData(0, 0, 1);
-	Vector view = data->view->lookat() - data->view->eyep();
-	view.normalize();
-	w += view*ddview_*atof(args[3].c_str());
-      }
-      control_widget_->SetPosition(w);
-      widget_moved(true);
-      control_x_.set( w.x() );
-      control_y_.set( w.y() );
-      control_z_.set( w.z() );
-      control_pos_saved_.set( 1 );
-      ogeom_->flushViews();				  
+    if (!control_widget_) return;
+    Point w(control_widget_->ReferencePoint());
+    if (args[2] == "xplus") {
+      w+=ddx_*atof(args[3].c_str());
+    } else if (args[2] == "xat") {
+      w=dmin_+ddx_*atof(args[3].c_str());
+    } else if (args[2] == "yplus") {
+      w+=ddy_*atof(args[3].c_str());
+    } else if (args[2] == "yat") {
+      w=dmin_+ddy_*atof(args[3].c_str());
+    } else if (args[2] == "zplus") {
+      w+=ddz_*atof(args[3].c_str());
+    } else if (args[2] == "zat") {
+      w=dmin_+ddz_*atof(args[3].c_str());
+    } else if (args[2] == "vplus"){
+      GeometryData* data = ogeom_->getData(0, 0, 1);
+      Vector view = data->view->lookat() - data->view->eyep();
+      view.normalize();
+      w += view*ddview_*atof(args[3].c_str());
+    }
+    control_widget_->SetPosition(w);
+    widget_moved(true);
+    control_x_.set(w.x());
+    control_y_.set(w.y());
+    control_z_.set(w.z());
+    control_pos_saved_.set( 1 );
+    ogeom_->flushViews();				  
   } else {
     Module::tcl_command(args, userdata);
   }
 }
 
-
-
-
 void
 VolumeSlicer::widget_moved(bool)
 {
-  if( slice_ren_ ){
-      slice_ren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
+  if(slice_ren_) {
+    slice_ren_->set_control_point(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
     }
   Point w(control_widget_->ReferencePoint());
-  control_x_.set( w.x() );
-  control_y_.set( w.y() );
-  control_z_.set( w.z() );
-  control_pos_saved_.set( 1 );
+  control_x_.set(w.x());
+  control_y_.set(w.y());
+  control_z_.set(w.z());
+  control_pos_saved_.set(1);
 }
 
-
 } // End namespace Volume
-
-
-
-
