@@ -1140,7 +1140,7 @@ SCIRun::WriteComponentNodeToFile(component_node* n, const char* filename)
   std::ofstream o(filename);
 
   o << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" << endl;
-  o << "<!DOCTYPE component SYSTEM \"component.dtd\">" << endl;
+  o << "<!DOCTYPE component SYSTEM \"../../../../Dataflow/XML/component.dtd\">" << endl;
   o << "<component name=\"";
   if (n->name && n->name!=NOT_SET)
     o << n->name << "\" category=\"";
