@@ -156,13 +156,28 @@ using std::vector;
       // for Fracture ----------
       const VarLabel* pDispLabel;
       const VarLabel* pDispLabel_preReloc;
+      const VarLabel* pDispGradsLabel;
+      const VarLabel* pDispGradsLabel_preReloc;
+      const VarLabel* pStrainEnergyDensityLabel;
+      const VarLabel* pStrainEnergyDensityLabel_preReloc;
 
+      const VarLabel* pKineticEnergyDensityLabel;
       const VarLabel* pgCodeLabel;
 
       const VarLabel* gNumPatlsLabel;
       const VarLabel* GNumPatlsLabel;
-      const VarLabel* GCrackNormLabel;
+      const VarLabel* gDisplacementLabel;
+      const VarLabel* GDisplacementLabel;
+      const VarLabel* gGridStressLabel;
+      const VarLabel* GGridStressLabel;
+      const VarLabel* gDispGradsLabel;
+      const VarLabel* GDispGradsLabel;
+      const VarLabel* gStrainEnergyDensityLabel;
+      const VarLabel* GStrainEnergyDensityLabel;
+      const VarLabel* gKineticEnergyDensityLabel;
+      const VarLabel* GKineticEnergyDensityLabel;
 
+      const VarLabel* GCrackNormLabel;
       const VarLabel* GMassLabel;
       const VarLabel* GVolumeLabel;
       const VarLabel* GVelocityLabel;
@@ -175,15 +190,11 @@ using std::vector;
       const VarLabel* GInternalHeatRateLabel;
       const VarLabel* GTemperatureRateLabel;
       const VarLabel* GTemperatureStarLabel;
-
       const VarLabel* GVelocityStarLabel;
       const VarLabel* GAccelerationLabel;
-      const VarLabel* gDisplacementLabel;
-      const VarLabel* GDisplacementLabel;
       const VarLabel* GSp_volLabel;      
       const VarLabel* GSp_vol_srcLabel; 
       // ------------------------------
-
     };
 } // End namespace Uintah
 
