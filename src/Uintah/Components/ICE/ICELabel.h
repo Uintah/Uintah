@@ -19,47 +19,15 @@ namespace Uintah {
 
     // Cell centered variables
     const VarLabel* press_CCLabel;
-    const VarLabel* press_CCLabel_0;
-    const VarLabel* press_CCLabel_1;
-    const VarLabel* press_CCLabel_2;
-    const VarLabel* press_CCLabel_3;
-    const VarLabel* press_CCLabel_4;
-    const VarLabel* press_CCLabel_5;
-    const VarLabel* press_CCLabel_6_7;
-
     const VarLabel* rho_micro_CCLabel;
-
     const VarLabel* rho_CCLabel;
-    const VarLabel* rho_CCLabel_0;
-    const VarLabel* rho_CCLabel_1;
-    const VarLabel* rho_CCLabel_2;
-    const VarLabel* rho_CCLabel_3;
-    const VarLabel* rho_CCLabel_4;
-    const VarLabel* rho_CCLabel_5;
-    const VarLabel* rho_CCLabel_6_7;
-
     const VarLabel* temp_CCLabel;
-    const VarLabel* temp_CCLabel_0;
-    const VarLabel* temp_CCLabel_1;
-    const VarLabel* temp_CCLabel_2;
-    const VarLabel* temp_CCLabel_3;
-    const VarLabel* temp_CCLabel_4;
-    const VarLabel* temp_CCLabel_5;
-    const VarLabel* temp_CCLabel_6_7;
-
     const VarLabel* vel_CCLabel;
-    const VarLabel* vel_CCLabel_0;
-    const VarLabel* vel_CCLabel_1;
-    const VarLabel* vel_CCLabel_2;
-    const VarLabel* vel_CCLabel_3;
-    const VarLabel* vel_CCLabel_4;
-    const VarLabel* vel_CCLabel_5;
-    const VarLabel* vel_CCLabel_6_7;
-
     const VarLabel* speedSound_CCLabel;
-
     const VarLabel* cv_CCLabel;
     const VarLabel* div_velfc_CCLabel;
+    const VarLabel* vol_frac_CCLabel;
+   
 
     // Face centered variables
     const VarLabel* vel_FCLabel;
@@ -72,6 +40,9 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.4  2000/10/09 22:37:01  jas
+// Cleaned up labels and added more computes and requires for EOS.
+//
 // Revision 1.3  2000/10/05 04:26:48  guilkey
 // Added code for part of the EOS evaluation.
 //

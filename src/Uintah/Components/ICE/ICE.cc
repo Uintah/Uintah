@@ -126,10 +126,10 @@ void ICE::scheduleTimeAdvance(double t, double dt,
             ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
             if(ice_matl){
                EquationOfState* eos = ice_matl->getEOS();
-#if 1
-               eos->addComputesAndRequiresSS( t,ice_matl,patch, old_dw, new_dw);
-               eos->addComputesAndRequiresCEB(t,ice_matl,patch, old_dw, new_dw);
-#endif
+	       // Compute the speed of sound
+               eos->addComputesAndRequiresSS(t,ice_matl,patch,old_dw,new_dw);
+	       // Compute the equilibration pressure
+               eos->addComputesAndRequiresCEB(t,ice_matl,patch,old_dw,new_dw);
             }
 	}
 	sched->addTask(t);
@@ -330,10 +330,8 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
-// Revision 1.26  2000/10/06 03:47:26  jas
-// Added computes for the initialization so that step 1 works.  Added a couple
-// of CC labels for step 1. Can now go thru multiple timesteps doing work
-// only in step 1.
+// Revision 1.27  2000/10/09 22:37:01  jas
+// Cleaned up labels and added more computes and requires for EOS.
 //
 // Revision 1.25  2000/10/05 04:26:48  guilkey
 // Added code for part of the EOS evaluation.
