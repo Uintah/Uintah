@@ -284,25 +284,17 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     sus_log_msg = '\t<A href=\"%s/sus.log.txt\">See sus.log</a> for details' % (logpath)
     compare_msg = '\t<A href=\"%s/compare_sus_runs.log.txt\">See compare_sus_runs.log</A> for more comparison information.' % (logpath)
     memory_msg  = '\t<A href=\"%s/mem_leak_check.log.txt\">See mem_leak_check.log</a> for more comparison information.' % (logpath)
+    perf_msg = '\t<A href=\"%s/performance_check.log.txt\">See performance_check.log</a> for more comparison information.' % (logpath)
   else:
     sus_log_msg = '\tSee %s/sus.log.txt for details' % (logpath)
     compare_msg = '\tSee %s/compare_sus_runs.log.txt for more comparison information.' % (logpath)
     memory_msg  = '\tSee %s/mem_leak_check.log.txt for more comparison information.' % (logpath)
+    perf_msg  = '\tSee %s/performance_check.log.txt for more performance information.' % (logpath)
       
 
   # actually run the test!
   rc = system("%s %s > sus.log.txt 2>&1" % (command, susinput))
   print "Command Line: %s %s" % (command, susinput)
-
-  # get the time from sus.log
-  # /usr/bin/time outputs 3 lines, the one called 'real' is what we want
-  # it is the third line from the bottom
-
-  system("tail -n3 sus.log.txt | grep real | awk '{print $2}' > timestamp")
-  system("echo \"Test lasted `cat timestamp` seconds\"")
-
-  if mode == "dbg":
-    environ['MALLOC_STATS'] = "compare_uda_malloc_stats"
 
   if rc != 0:
     print "\t*** Test %s failed with code %d" % (testname, rc)
@@ -322,7 +314,45 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
       chdir("restart")
     else:
       replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
+
+    # get the time from sus.log
+    # /usr/bin/time outputs 3 lines, the one called 'real' is what we want
+    # it is the third line from the bottom
+
+    if do_restart == "yes":
+      ts_file = "restart_timestamp"
+    else:
+      ts_file = "timestamp"
+      
+    print "\tPerforming performance test on %s" % (date())
+    system("tail -n3 sus.log.txt > %s" % ts_file)
+    rc = system("performance_check %s %s %s/%s/%s > performance_check.log.txt 2>&1" % (testname, ts_file, compare_root, testname, ts_file))
+    try:
+      short_message_file = open("performance_shortmessage.txt", 'r+', 500)
+      short_message = rstrip(short_message_file.readline(500))
+    except Exception:
+      short_message = ""
+    if rc == 0:
+      print "\tPerformance tests passed."
+      if short_message != "":
+	print "\t%s" % (short_message)    
+    elif rc == 5 * 256:
+      print "\t* Warning, no timestamp file created.  No performance test performed."
+    elif rc == 2*256:
+      print "\t*** Warning, test %s failed performance test." % (testname)
+      if short_message != "":
+	print "\t%s" % (short_message)
+      print perf_msg
+      print "%s" % replace_msg
+      return 2
+    else:
+	print "\tPerformance tests passed. (Note: no previous memory usage stats)."
+
+
     print "\tComparing udas on %s" % (date())
+
+    if mode == "dbg":
+      environ['MALLOC_STATS'] = "compare_uda_malloc_stats"
 
     cu_rc = system("compare_sus_runs %s %s %s %s > compare_sus_runs.log.txt 2>&1" % (testname, getcwd(), compare_root, susdir))
     if cu_rc != 0:
