@@ -166,8 +166,7 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
 			  &Properties::reComputeProps,
 			  timelabels, modify_ref_density, initialize);
 
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->modifies(d_lab->d_scalarSPLabel);
 
 
   if (d_numMixStatVars > 0)
@@ -188,11 +187,8 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
     tsk->requires(Task::NewDW, d_lab->d_thermalnoxSPLabel,
               Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  if (!(d_mixingModel->isAdiabatic()) && initialize)
+  if (!(d_mixingModel->isAdiabatic()))
     tsk->modifies(d_lab->d_enthalpySPLabel);
-  else if (!(d_mixingModel->isAdiabatic()))
-    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
   if (d_MAlab && initialize) {
 #ifdef ExactMPMArchesInitialize
@@ -328,7 +324,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 		     getArchesMaterial(archIndex)->getDWIndex(); 
 
     constCCVariable<int> cellType;
-    StaticArray<constCCVariable<double> > scalar(d_numMixingVars);
+    StaticArray<CCVariable<double> > scalar(d_numMixingVars);
     StaticArray<constCCVariable<double> > scalarVar(d_numMixStatVars);
     StaticArray<constCCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
     constCCVariable<double> scalarDisp;
@@ -352,8 +348,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> qrs;
     CCVariable<double> denMicro;
     constCCVariable<double> solidTemp;
-    CCVariable<double> mod_enthalpy;
-    constCCVariable<double> const_enthalpy;
+    CCVariable<double> enthalpy;
 
     CCVariable<double> thermalnoxSRC;
     constCCVariable<double> thermalnox;
@@ -375,8 +370,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
     for (int ii = 0; ii < d_numMixingVars; ii++)
-      new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->getModifiable(scalar[ii], d_lab->d_scalarSPLabel, 
+		  matlIndex, patch);
 
     if (d_numMixStatVars > 0) {
       for (int ii = 0; ii < d_numMixStatVars; ii++)
@@ -395,14 +390,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
-    if (!(d_mixingModel->isAdiabatic()) && initialize) {
-      new_dw->getModifiable(mod_enthalpy, d_lab->d_enthalpySPLabel, 
+    if (!(d_mixingModel->isAdiabatic()))
+      new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel, 
 		            matlIndex, patch);
-    }
-    else if (!(d_mixingModel->isAdiabatic())) {
-      new_dw->get(const_enthalpy, d_lab->d_enthalpySPLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
 
     new_dw->getModifiable(new_density, d_lab->d_densityCPLabel,
 			  matlIndex, patch);
@@ -559,6 +549,13 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
 	    inStream.d_mixVars[ii] = (scalar[ii])[currCell];
 	  }
+	  bool local_enthalpy_init;
+	  if (d_enthalpySolve && ((scalar[0])[currCell] == -1.0)) {
+	    (scalar[0])[currCell] = 0.0;
+	    local_enthalpy_init = true;
+          }
+	  else
+	    local_enthalpy_init = false;
 
 	  if (d_numMixStatVars > 0) {
 	    for (int ii = 0; ii < d_numMixStatVars; ii++ ) {
@@ -589,17 +586,17 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	      inStream.d_axialLoc = 0;
 	  }
 
-	  if ((!d_mixingModel->isAdiabatic()))
+	  if (!(d_mixingModel->isAdiabatic()))
 	      //	      &&(cellType[currCell] != d_bc->getIntrusionID()))
-            if (initialize)
+            if (initialize || local_enthalpy_init)
 	      inStream.d_enthalpy = 0.0;
 	    else
-	      inStream.d_enthalpy = const_enthalpy[currCell];
+	      inStream.d_enthalpy = enthalpy[currCell];
 	  else
 	    inStream.d_enthalpy = 0.0;
            // This flag ensures properties for heatloss=0.0
 	   // during the initialization
-           inStream.d_initEnthalpy = initialize;
+           inStream.d_initEnthalpy = (initialize || local_enthalpy_init);
 
   TAU_PROFILE_START(mixing);
 	  d_mixingModel->computeProps(inStream, outStream);
@@ -621,8 +618,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    qrs[currCell] = outStream.getqrs();
 	  }
 
-	  if (d_enthalpySolve && initialize)
-	    mod_enthalpy[currCell] = outStream.getEnthalpy();
+	  if (d_enthalpySolve && (initialize || local_enthalpy_init))
+	    enthalpy[currCell] = outStream.getEnthalpy();
 	  if (d_reactingFlow) {
 	    temperature[currCell] = outStream.getTemperature();
 	    cp[currCell] = outStream.getCP();
