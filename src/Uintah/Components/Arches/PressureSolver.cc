@@ -372,7 +372,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // Get the reference density
   // Get the required data
   new_dw->get(pressureVars.density, d_lab->d_densityINLabel, 
-	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
   new_dw->get(pressureVars.viscosity, d_lab->d_viscosityINLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
   new_dw->get(pressureVars.pressure, d_lab->d_pressureINLabel, 
@@ -465,6 +465,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
     // get data
     // allocate
+
     switch(index) {
     case Arches::XDIR:
       new_dw->allocate(pressureVars.uVelLinearSrc, 
@@ -517,8 +518,56 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				       index,
 				       Arches::PRESSURE, &pressureVars);
     std::cerr << "Done building matrix for press coeff" << endl;
-  }
 
+    if (index == 2) {
+    cerr << "After vel voef for v" << endl;
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uAE"<<*iter << ": " << pressureVars.vVelocityCoeff[Arches::AE][*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uAW"<<*iter << ": " << pressureVars.vVelocityCoeff[Arches::AW][*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uAN"<<*iter << ": " << pressureVars.vVelocityCoeff[Arches::AN][*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uAS"<<*iter << ": " << pressureVars.vVelocityCoeff[Arches::AS][*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uAT"<<*iter << ": " << pressureVars.vVelocityCoeff[Arches::AT][*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uAB"<<*iter << ": " << pressureVars.vVelocityCoeff[Arches::AB][*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "vAP"<<*iter << ": " << pressureVars.vVelocityCoeff[Arches::AP][*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uSU"<<*iter << ": " << pressureVars.vVelNonlinearSrc[*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uSP"<<*iter << ": " << pressureVars.vVelLinearSrc[*iter] << "\n" ; 
+    }
+  }
+  }
   // put required vars
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->put(pressureVars.uVelocityCoeff[ii], d_lab->d_uVelCoefPBLMLabel, 
@@ -895,6 +944,9 @@ PressureSolver::normPressure(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.59  2000/10/08 18:56:35  rawat
+// fixed the solver for multi
+//
 // Revision 1.58  2000/10/07 21:40:49  rawat
 // fixed pressure norm
 //

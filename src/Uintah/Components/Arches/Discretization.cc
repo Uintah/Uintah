@@ -64,8 +64,10 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   IntVector domHiV = coeff_vars->vVelocity.getFortHighIndex();
   IntVector domLoW = coeff_vars->wVelocity.getFortLowIndex();
   IntVector domHiW = coeff_vars->wVelocity.getFortHighIndex();
-  IntVector domLo = coeff_vars->density.getFortLowIndex();
-  IntVector domHi = coeff_vars->density.getFortHighIndex();
+  IntVector domLo = coeff_vars->viscosity.getFortLowIndex();
+  IntVector domHi = coeff_vars->viscosity.getFortHighIndex();
+  IntVector domLoeg = coeff_vars->density.getFortLowIndex();
+  IntVector domHieg = coeff_vars->density.getFortHighIndex();
   // get domain size without ghost cells
   // using ng for no ghost cell
 
@@ -138,7 +140,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
     // Get the patch indices
     IntVector idxLoU = patch->getSFCXFORTLowIndex();
     IntVector idxHiU = patch->getSFCXFORTHighIndex();
-
+    cerr << "idxLou, idxHiU" << idxLoU << " " << idxHiU << endl;
     // Calculate the coeffs
     FORT_UVELCOEF(domLoU.get_pointer(), domHiU.get_pointer(),
 		  domLoUng.get_pointer(), domHiUng.get_pointer(),
@@ -162,6 +164,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  coeff_vars->vVelocity.getPointer(),
 		  domLoW.get_pointer(), domHiW.get_pointer(),
 		  coeff_vars->wVelocity.getPointer(),
+		  domLoeg.get_pointer(), domHieg.get_pointer(),
 		  domLo.get_pointer(), domHi.get_pointer(),
 		  coeff_vars->density.getPointer(),
 		  coeff_vars->viscosity.getPointer(),
@@ -363,6 +366,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  coeff_vars->uVelocity.getPointer(),
 		  domLoW.get_pointer(), domHiW.get_pointer(),
 		  coeff_vars->wVelocity.getPointer(),
+		  domLoeg.get_pointer(), domHieg.get_pointer(),
 		  domLo.get_pointer(), domHi.get_pointer(),
 		  coeff_vars->density.getPointer(),
 		  coeff_vars->viscosity.getPointer(),
@@ -564,6 +568,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  coeff_vars->uVelocity.getPointer(),
 		  domLoV.get_pointer(), domHiV.get_pointer(),
 		  coeff_vars->vVelocity.getPointer(),
+		  domLoeg.get_pointer(), domHieg.get_pointer(),
 		  domLo.get_pointer(), domHi.get_pointer(),
 		  coeff_vars->density.getPointer(),
 		  coeff_vars->viscosity.getPointer(),
@@ -1525,6 +1530,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.48  2000/10/08 18:56:35  rawat
+// fixed the solver for multi
+//
 // Revision 1.47  2000/10/05 16:39:46  rawat
 // modified bcs for multi-patch
 //

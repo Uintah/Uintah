@@ -9,7 +9,7 @@ c*********************************************************************
      &     SU, SP,
      &     domLoU, domHiU, UU,
      &     domLoV, domHiV, VV,
-     &     domLo, domHi, den, vis,
+     &     domLoeg, domHieg, domLo, domHi, den, vis,
      $     domLong, domHing, old_den,
      &     grav, deltat, den_ref,
      &     CEE, CWE, CWW, 
@@ -51,9 +51,10 @@ c*********************************************************************
       integer domLoV(3), domHiV(3)
       double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
      &     domLoV(3):domHiV(3))
+      integer domLoeg(3), domHieg(3)
       integer domLo(3), domHi(3)
-      double precision DEN(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
+      double precision DEN(domLoeg(1):domHieg(1), domLoeg(2):domHieg(2), 
+     &     domLoeg(3):domHieg(3))
       double precision VIS(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
       integer domLong(3), domHing(3)
@@ -158,6 +159,9 @@ c     viscous sources
 c*********************************************************************
 c
 c $Log$
+c Revision 1.7  2000/10/08 18:56:41  rawat
+c fixed the solver for multi
+c
 c Revision 1.6  2000/10/06 23:07:53  rawat
 c fixed some more bc routines for mulit-patch
 c
