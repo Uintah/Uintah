@@ -9,6 +9,7 @@
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/QuadraticTetVolField.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
@@ -41,7 +42,7 @@ public:
   virtual void tcl_command(TCLArgs&, void*);
 private:
   FieldIPort               *ifld_;
-  MatrixIPort              *imat_;
+  FieldIPort              *ifld2_;
   MatrixIPort              *irhs;
   MatrixOPort              *orhs;
   TetVolMesh::Cell::index_type loc;
@@ -65,12 +66,12 @@ void DipoleMatrixSourceRHSQuadratic::execute(){
 
     ifld_ = (FieldIPort *)get_iport("QuadTetVolField");
     FieldHandle mesh;
-    imat_ = (MatrixIPort *)get_iport("DipoleSource");
-    MatrixHandle mp; //dipoleSource
+    ifld2_ = (FieldIPort *)get_iport("DipoleSource");
+    FieldHandle mp; //dipoleSource
     MatrixHandle mat_handle2; //inputRHS
     
     ifld_->get(mesh);
-    imat_->get(mp);
+    ifld2_->get(mp);
     irhs->get(mat_handle2);
     
     if(!mesh.get_rep()){
@@ -112,22 +113,33 @@ void DipoleMatrixSourceRHSQuadratic::execute(){
      else
 	 rhs->zero();
 
+     LockingHandle<PointCloudField<Vector> > hDipField;
+     
+     if (mp->get_type_name(0)!="PointCloudField" || mp->get_type_name(1)!="Vector"){
+       msgStream_ << "Supplied field is not of type PointCloudField<Vector>. Returning..." << endl;
+       return;
+     }
+     else {
+       hDipField = dynamic_cast<PointCloudField<Vector>*> (mp.get_rep());
+     }
+
 
      //go over all dipoles
-     for (int i=0; i<mp->nrows(); i++) {
-       ColumnMatrix col = ColumnMatrix(6);
-       col[0] = mp->get(i,0);
-       col[1] = mp->get(i,1);
-       col[2] = mp->get(i,2);
-       col[3] = mp->get(i,3);
-       col[4] = mp->get(i,4);
-       col[5] = mp->get(i,5);
 
-       Vector dir(col[3], col[4], col[5]);
-       Point p(col[0], col[1], col[2]);
+     PointCloudMesh::Node::iterator ii;
+     PointCloudMesh::Node::iterator ii_end;
+     hDipField->get_typed_mesh()->begin(ii);
+     hDipField->get_typed_mesh()->end(ii_end);
+     for (; ii != ii_end; ++ii) {
+
+       Vector dir = hDipField->value(*ii);
+       Point p;
+       hDipField->get_typed_mesh()->get_point(p, *ii);
 
        if (qtvm_->locate(loc,p)) {
 
+	 msgStream_ << "Source p="<<p<<" dir="<<dir<<" found in elem "<<loc<<endl;
+	 
 	 cerr << "DipoleMatrixSourceRHS: Found Dipole in element "<<loc<<"\n";
 
 	 double s1, s2, s3, s4,s5,s6,s7,s8,s9,s10;
@@ -204,6 +216,7 @@ void DipoleMatrixSourceRHSQuadratic::execute(){
        gen=rhsh->generation;
      }
      //     cerr << "DipoleMatrixSourceRHS: about to send result...\n";
+     orhs = (MatrixOPort *)get_oport("OutPut RHS");
      orhs->send(rhsh);
      //     cerr << "DipoleMatrixSourceRHS: sent result!\n";
 
