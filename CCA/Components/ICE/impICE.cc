@@ -801,6 +801,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   int counter = 0;
   max_vartype max_RHS = 1/d_SMALL_NUM;
   double max_RHS_old = max_RHS;
+  bool restart = false;
+  
   while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance) {
     subsched->advanceDataWarehouse(grid);   // move subscheduler forward
     
@@ -813,7 +815,20 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     counter ++;
     
     // restart timestep if working too hard
-    if (counter > d_iters_before_timestep_restart) {
+    if (counter > d_iters_before_timestep_restart ){
+      restart = true;
+      cout << "\nWARNING: max iterations befor timestep restart reached\n"<<endl;
+    }
+    if (subsched->get_dw(3)->timestepRestarted() ) {
+      cout << "\nWARNING: Solver had requested a restart\n" <<endl;
+      restart = true;
+    }
+    if (((max_RHS - max_RHS_old) > 1000.0 * max_RHS_old) ){
+      cout << "\nWARNING: outer interation is diverging now "
+           << "restarting the timestep\n"<< endl;
+      restart = true;
+    }
+    if(restart){
       ParentNewDW->abortTimestep();
       ParentNewDW->restartTimestep();
       return;
@@ -821,14 +836,6 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     
     if(pg->myrank() == 0) {
       cout << "Outer iteration " << counter<< " max_rhs "<< max_RHS<< endl;
-      // bulletproofing
-      if ( ((max_RHS - max_RHS_old) > 1000.0 * max_RHS_old) && counter > 1){  
-        ostringstream warn;
-         warn <<"ERROR ICE::implicitPressureSolve, solution is diverging"
-              <<" try decreasing the cfl or increase the speed of sound knob \n";
-        throw ConvergenceFailure(warn.str(),counter,max_RHS,
-                                 d_outer_iter_tolerance);
-      }
       max_RHS_old = max_RHS;
     }
   }
