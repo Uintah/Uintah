@@ -48,14 +48,6 @@
     </p>
   </fit>
   <use>
-    <why>
-    <!-- Discuss why a developer would need or want to use the
-         functions and/or classes in this directory. -->
-      <p>
-         The main use of code in this directory is to compile and load 
-         templated algorithms for use in modules.
-      </p>
-    </why>
     <when>
     <!-- Discuss when or where to use the functions and classes in
          this directory: From within modules?, when a certain event
@@ -67,8 +59,15 @@
         to manage compilation and loading of the algorithm without the 
         module code ever needing to know the exact type of the field.
       </p>
-
     </when>
+    <why>
+    <!-- Discuss why a developer would need or want to use the
+         functions and/or classes in this directory. -->
+      <p>
+         The main use of code in this directory is to compile and load 
+         templated algorithms for use in modules.
+      </p>
+    </why>
   </use>
   <definition>
     <term>get_type_description</term>
@@ -77,7 +76,9 @@
        the returned TypeDescription supports. There must be one of these if
        your type is to be supported in dynamic compilation.
     </p>
-    <p>An example of a simple get_type_description for int.</p>
+    <p>
+       An example of a simple get_type_description for int.
+    </p>
     <code>
        const TypeDescription* get_type_description(int*)
        {
@@ -90,10 +91,12 @@
        	 return td;
        }
     </code>
-    <p>An example of a templated get_type_description function.</p>
+    <p>
+       An example of a templated get_type_description function.
+    </p>
     <code>
-       template <class T>
-       const TypeDescription* get_type_description(vector<T>*)
+       template &ltclass T&gt
+       const TypeDescription* get_type_description(vector&ltT&gt*)
        {
          static TypeDescription* td = 0;
          static string v("vector");
