@@ -213,6 +213,15 @@ void Region::performConsistencyCheck() const
     throw InvalidGrid("Degenerate region");
 }
 
+int Region::getBCType(int face) const
+{
+  // Put in code to return whether the face is a symmetry plane,
+  // a fixed boundary, borders a neighboring region or none
+  // The value of face ranges from 0-5.
+
+  return 0;
+
+}
 CellIterator Region::getCellIterator(const Box& b) const
 {
    Vector diag = d_box.upper()-d_box.lower();
@@ -231,6 +240,10 @@ NodeIterator Region::getNodeIterator() const
 
 //
 // $Log$
+// Revision 1.13  2000/05/04 19:06:48  guilkey
+// Added the beginnings of grid boundary conditions.  Functions still
+// need to be filled in.
+//
 // Revision 1.12  2000/05/02 20:30:59  jas
 // Fixed the findCellAndShapeDerivatives.
 //

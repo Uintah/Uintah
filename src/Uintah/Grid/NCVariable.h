@@ -4,9 +4,11 @@
 #include <Uintah/Grid/Array3.h>
 #include <Uintah/Grid/NCVariableBase.h>
 #include <SCICore/Exceptions/InternalError.h>
+#include <SCICore/Geometry/Vector.h>
 
 namespace Uintah {
    using SCICore::Exceptions::InternalError;
+   using SCICore::Geometry::Vector;
 
    class TypeDescription;
 
@@ -58,6 +60,14 @@ WARNING
       virtual void allocate(const Region*);
       
       NCVariable<T>& operator=(const NCVariable<T>&);
+
+      // Replace the values on the indicated face with value
+      void fillFace(int face, Vector value);
+
+      // Use to apply symmetry boundary conditions.  On the
+      // indicated face, replace the component of the vector
+      // normal to the face with 0.0
+      void fillFaceNormal(int face);
       
    private:
    };
@@ -127,6 +137,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.10  2000/05/04 19:06:47  guilkey
+// Added the beginnings of grid boundary conditions.  Functions still
+// need to be filled in.
+//
 // Revision 1.9  2000/05/02 06:07:21  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //

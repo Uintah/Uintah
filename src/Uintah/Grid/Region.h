@@ -71,9 +71,10 @@ WARNING
 
       //////////
       // Insert Documentation Here:
-      bool findCellAndShapeDerivatives(const SCICore::Geometry::Point&/* pos*/,
-				       IntVector /*ni*/[8],
-				       SCICore::Geometry::Vector /*S*/[8]) const;
+      bool findCellAndShapeDerivatives
+			(const SCICore::Geometry::Point&/* pos*/,
+		         IntVector /*ni*/[8],
+			 SCICore::Geometry::Vector /*S*/[8]) const;
 
       //////////
       // Insert Documentation Here:
@@ -109,12 +110,14 @@ WARNING
       long totalCells() const;
       
       void performConsistencyCheck() const;
+
+      int getBCType(int face) const;
       
       //////////
       // Insert Documentation Here:
       inline bool contains(const IntVector& idx) const {
 	 return idx.x() >= 0 && idx.y() >= 0 && idx.z() >= 0
-	    && idx.x() <= d_res.x() && idx.y() <= d_res.y() && idx.z() <= d_res.z();
+     && idx.x() <= d_res.x() && idx.y() <= d_res.y() && idx.z() <= d_res.z();
       }
       Point nodePosition(const IntVector& idx) const {
 	 return d_box.lower() + dCell()*idx;
@@ -150,6 +153,10 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Region* r);
 
 //
 // $Log$
+// Revision 1.15  2000/05/04 19:06:48  guilkey
+// Added the beginnings of grid boundary conditions.  Functions still
+// need to be filled in.
+//
 // Revision 1.14  2000/05/02 20:30:59  jas
 // Fixed the findCellAndShapeDerivatives.
 //
