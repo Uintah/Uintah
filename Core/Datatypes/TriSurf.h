@@ -1,5 +1,5 @@
 /*
- *  SurfDEG.h: Templated Meshs defined on a 3D Regular Grid
+ *  TriSurf.h: Templated Meshs defined on a 3D Regular Grid
  *
  *  Written by:
  *   Michael Callahan
@@ -11,19 +11,19 @@
  *
  */
 
-#ifndef SCI_project_SurfDEG_h
-#define SCI_project_SurfDEG_h 1
+#ifndef SCI_project_TriSurf_h
+#define SCI_project_TriSurf_h 1
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Containers/Array1.h>
 
+#include <vector>
 
 namespace SCIRun {
 
+using std::vector;
 
-
-class SCICORESHARE SurfDEG : public Datatype
+class SCICORESHARE TriSurf : public Datatype
 {
 private:
 
@@ -57,9 +57,9 @@ public:
   typedef vector<edge_index> edge_array;
   //typedef vector<face_index> face_array;
 
-  SurfDEG();
-  SurfDEG(const SurfDEG &copy);
-  virtual ~SurfDEG();
+  TriSurf();
+  TriSurf(const TriSurf &copy);
+  virtual ~TriSurf();
 
   virtual BBox get_bounding_box() const;
 
@@ -94,18 +94,26 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
+
+  // Extra functionality needed by this specific geometry.
+  node_index add_find_point(const Point &p, double err = 1.0e-3);
+  void add_triangle(node_index a, node_index b, node_index c,
+		    bool cw_p = true);
+  void add_triangle(const Point &p0, const Point &p1, const Point &p2,
+		    bool cw_p = true);
+
 private:
 
   bool inside4_p(int, const Point &p);
 
 
-  Array1<Point> points_;
-  Array1<int>   tris_;
-  Array1<int>   neighbors_;
+  vector<Point> points_;
+  vector<int>   faces_;
+  vector<int>   neighbors_;
 
 };
 
 } // namespace SCIRun
 
 
-#endif // SCI_project_SurfDEG_h
+#endif // SCI_project_TriSurf_h

@@ -31,9 +31,9 @@ SRCS += $(SRCDIR)/BasicSurfaces.cc	    \
         $(SRCDIR)/SparseRowMatrix.cc	    \
         $(SRCDIR)/SurfTree.cc		    \
         $(SRCDIR)/Surface.cc		    \
-        $(SRCDIR)/SurfDEG.cc     	    \
         $(SRCDIR)/SymSparseRowMatrix.cc	    \
         $(SRCDIR)/TriDiagonalMatrix.cc	    \
+        $(SRCDIR)/TriSurf.cc		    \
         $(SRCDIR)/TriSurface.cc		    \
 	$(SRCDIR)/TypeName.cc		    \
         $(SRCDIR)/VectorField.cc	    \
