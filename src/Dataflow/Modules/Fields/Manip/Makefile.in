@@ -5,7 +5,7 @@ default: all
 
 SCIRUN_SRCTOP = ../../../../
 
-include $(SCIRUN_SRCTOP)configVars.mk
+include $(SCIRUN_SRCTOP)/configVars.mk
 
 SRCTOP := $(SCIRUN_SRCTOP)$(SRCTOP)
 
@@ -13,7 +13,7 @@ INCLUDES = -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I@TCL_INCLUDE_DIR@ -I@TK
 
 LIBDIR := -L../../../../lib/
 
-include sub.mk
+include $(SCIRUN_SRCTOP)$(FIELD_MANIP_SRC_DIR)/sub.mk
 
 # The libraries are specified like Core/Thread but get
 # name-mangled to Core_Thread
@@ -27,11 +27,9 @@ else
 SONAMEFLAG = 
 endif
 
-#$(patsubst %,$(LIBDIR)lib%.so,$(SRLIBS)
-
 .SUFFIXES: .cc .so
 
-Makefile: Makefile.in ${SCIRUN_SRCTOP}/config.status
+Makefile: ${SCIRUN_SRCTOP}${FIELD_MANIP_SRC_DIR}/Makefile.in ${SCIRUN_SRCTOP}/config.status
 	@( Here="`pwd`" ; cd ${SCIRUN_SRCTOP} ; Top="`pwd`" ; CONFIG_FILES="`echo $${Here} | sed -e "s!^$${Top}/!!" -e "s!^$${Top}!.!"`/Makefile" CONFIG_HEADERS="" ./config.status ) 1>&2
 
 .cc.so: $< Makefile sub.mk

@@ -30,7 +30,8 @@ OBJTOP_ABS    := $(shell cd $(OBJTOP) ; pwd)
 SRCTOP_ABS    := $(shell cd $(SRCTOP) ; pwd)
 
 #variable for dynamic compilation and loading of code for field manipulation
-MANIPFIELDSPATH := $(SRCDIR)/Dataflow/Modules/Fields/Manip
+FIELD_MANIP_SRC_DIR := $(SRCDIR)/Dataflow/Modules/Fields/Manip
+FIELD_MANIP_OBJ_DIR := $(OBJTOP)/Dataflow/Modules/Fields/Manip
 
 ifeq ($(OBJTOP),.)
 LIBDIR := lib/
