@@ -123,9 +123,15 @@ SCIRUN_TMP_DIR = /tmp
 # SCI_SIGNALMODE = ask
 
 
-### SCI_INSERT_NET_COPYRIGHT = [boolean]
+### SCIRUN_INSERT_NET_COPYRIGHT = [boolean]
 #   If true, adds SCI copyright to any SCI .net files that are created.
-# SCI_INSERT_NET_COPYRIGHT = false
+# SCIRUN_INSERT_NET_COPYRIGHT = false
+
+
+### SCIRUN_NET_SUBSTITUTE_DATADIR = [boolean]
+#   If true, module filename variables will be automatically substitute
+#   SCIRUN_DATADIR and SCIRUN_DATASET in saved .net files.
+# SCIRUN_NET_SUBSTITUE_DATADIR = false
 
 
 ### SCI_NOSPLASH = [boolean]

@@ -118,7 +118,7 @@ typedef GuiTriple<Vector> GuiVector;
 
 
 // This class is equivalent to a GuiString, except that when
-// SCI_INSERT_NET_COPYRIGHT is set it does $SCIRUN_DATA and
+// SCIRUN_NET_SUBSTITUTE_DATADIR is set it does $SCIRUN_DATA and
 // $SCIRUN_DATASET variable substitution when writing to networks.
 //
 class SCICORESHARE GuiFilename : public GuiString

@@ -227,7 +227,7 @@ void GuiContext::emit(std::ostream& out,
   if(save){
     string result;
     gui->get(name, result);
-    if (usedatadir && getenv("SCI_INSERT_NET_COPYRIGHT"))
+    if (usedatadir && getenv("SCIRUN_NET_SUBSTITUTE_DATADIR"))
     {
       char *tmp;
       // Replace DATADIR
