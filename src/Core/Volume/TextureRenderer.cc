@@ -259,7 +259,7 @@ void
 TextureRenderer::load_brick(TextureBrickHandle brick)
 {
   int nc = brick->nc();
-#if !defined(GL_ARB_fragment_program) || !defined(GL_ATI_fragment_shader)
+#if !defined(GL_ARB_fragment_program) && !defined(GL_ATI_fragment_shader)
   nc = 1;
 #endif
   int idx[2];
