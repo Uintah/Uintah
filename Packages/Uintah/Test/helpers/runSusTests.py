@@ -52,6 +52,21 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   
   startpath = getcwd()
 
+
+# If run from startTester, tell it to output logs in web dir
+# otherwise, save it in the build
+  try:
+    outputpath = "%s-%s" % (environ['HTMLLOG'], mode)
+    weboutputpath = "%s-%s" % (environ['WEBLOG'], mode)
+    try:
+      # make outputpath/bdg or opt dirs
+      mkdir(outputpath)
+    except Exception:
+      pass
+  except Exception:
+    outputpath = startpath
+    weboutputpath = startpath
+  
   helperspath = "%s/%s" % (path.normpath(path.join(getcwd(), path.dirname(argv[0]))), "helpers")
 
   try:
@@ -88,7 +103,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   environ['SCI_SIGNALMODE'] = 'exit'
   environ['SCI_EXCEPTIONMODE'] = 'abort'
 
-  resultsdir = "%s-results" % ALGO
+  resultsdir = "%s/%s-results" % (outputpath, ALGO)
 
   chdir(startpath)
   try:
@@ -144,6 +159,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     system("cp %s/%s %s" % (inputsdir, input(test), inputxml))
 
     # Run normal test
+    environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, ALGO, testname)
     rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, "no", newalgo)
     if rc == 0:
       # Prepare for restart test
@@ -154,6 +170,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism);
 
       # Run restart test
+      environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, ALGO, testname)
       rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, DO_RESTART, newalgo)
       if rc == 1:
         failcode = 1
@@ -201,6 +218,8 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
 
   extra_flags = extra_sus_flags(test)
 
+  # set where to view the log files
+  logpath = environ['WEBLOG']
 # set the command for sus, based on # of processors
   if np == 1:
     command = "%s/sus -%s %s" % (susdir, algo, extra_flags)
@@ -236,7 +255,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     print "\t*** Test %s failed with code %d" % (testname, rc)
     if do_restart == "yes":
 	print "\t\tMake sure the problem makes checkpoints before finishing"
-    print "\tSee %s/sus.log for details" % (getcwd())
+    print "\tSee %s/sus.log for details" % (logpath)
     return 1
   else:
     if do_restart == "yes":
@@ -250,7 +269,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     if rc != 0:
 	if rc == 5 * 256:
      	    print "\t*** Warning, %s has changed.  You must update the gold standard." % (input(test))
-    	    print "\tSee %s/compare_sus_runs.log for more comparison information." % (getcwd())
+    	    print "\tSee %s/compare_sus_runs.log for more comparison information." % (logpath)
  	    print "%s" % replace_msg
 	    return 1
 	elif rc == 10 * 256:
@@ -260,7 +279,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
 	    return 1
 	elif rc == 1 * 256:
     	    print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, rc)
-    	    print "\tSee %s/compare_sus_runs.log for details" % (getcwd())
+    	    print "\tSee %s/compare_sus_runs.log for details" % (logpath)
 	    if do_restart != "yes":
  	    	print "%s" % replace_msg
 	    return 1
@@ -287,13 +306,13 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
 	    print "\t* Warning, no malloc_stats file created.  No memory leak test performed."
 	elif rc == 256:
 	    print "\t*** Warning, test %s failed memory leak test." % (testname)
-	    print "\tSee %s/mem_leak_check.log" % (getcwd())
+	    print "\tSee %s/mem_leak_check.log" % (logpath)
 	    return 1
 	elif rc == 2*256:
 	    print "\t*** Warning, test %s failed memory highwater test." % (testname)
 	    if short_message != "":
 		print "\t%s" % (short_message)
-	    print "\tSee %s/mem_leak_check.log" % (getcwd())
+	    print "\tSee %s/mem_leak_check.log" % (logpath)
  	    print "%s" % replace_msg
 	    return 1
 	else:
