@@ -55,6 +55,7 @@ static void usage(char* progname)
     cerr << " -bench           - Disable frame display, and just render the\n";
     cerr << "                    image 100 times for timing purposes.\n";
     cerr << " -no_shadows      - Turn off shadows\n";
+    cerr << " -shadows mode    - Select mode for shadows\n";
     cerr << " -no_aa           - Turn off accumulation buffer anti-aliasing\n";
     cerr << " -bvscale         - Controls bounding volume scale factor for\n";
     cerr << "                    the soft shadow method.\n";
@@ -114,7 +115,7 @@ int main(int argc, char* argv[])
   int c1;
   int ncounters=0;
   bool bench=false;
-  int shadow_mode=-1;
+  char* shadow_mode=0;
   bool no_aa=false;
   double bvscale=.3;
   char* criteria1="db, stereo, max rgb, max accumrgb";
@@ -187,7 +188,10 @@ int main(int argc, char* argv[])
     } else if(strcmp(argv[i], "-bench")==0){
       bench=true;
     } else if(strcmp(argv[i], "-no_shadows")==0){
-      shadow_mode=0;
+      shadow_mode="none";
+    } else if(strcmp(argv[i], "-shadows")==0){
+      i++;
+      shadow_mode=argv[i];
     } else if(strcmp(argv[i], "-no_aa")==0){
       no_aa=true;
     } else if(strcmp(argv[i], "-bvscale")==0){
@@ -308,8 +312,12 @@ int main(int argc, char* argv[])
     // set the scenes rtrt_engine pointer
     scene->set_rtrt_engine(rtrt_engine);
   
-    if(shadow_mode != -1)
-      scene->shadow_mode=shadow_mode;
+    if(shadow_mode){
+      if(!scene->select_shadow_mode(shadow_mode)){
+	cerr << "Unknown shadow mode: " << shadow_mode << '\n';
+	exit(1);
+      }
+    }
     scene->no_aa=no_aa;
   
     if(use_bv){

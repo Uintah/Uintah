@@ -263,7 +263,7 @@ Scene* Scene0::make_scene()
 						  Vector(0,0,1)) );
   
   
-  scene->shadow_mode=1;
+  scene->select_shadow_mode("soft");
   return scene;
 }
 
