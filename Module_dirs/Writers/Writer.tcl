@@ -19,6 +19,7 @@ itcl_class TYPEWriter {
 
 	make_labeled_radio $w.filetype "Format:" "" left $this-filetype \
 		{Binary ASCII}
+	peck $w.filetype
 	entry $w.f -textvariable $this-filename -width 40 \
 		-borderwidth 2 -relief sunken
 	pack $w.f -side bottom
