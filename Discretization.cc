@@ -31,6 +31,7 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_vel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_modify_prescoef_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/prescoef_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/prescoef_var_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/scalcoef_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/uvelcoef_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/vvelcoef_fort.h>
@@ -438,6 +439,40 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup*,
 
 }
 
+void 
+Discretization::computeDivergence(const ProcessorGroup*,
+				  const Patch* patch,
+				  ArchesVariables* vars) 
+{
+
+  // Get the patch and variable indices
+  IntVector indexLow = patch->getCellFORTLowIndex();
+  IntVector indexHigh = patch->getCellFORTHighIndex();
+  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	IntVector currCell(colX, colY, colZ);
+	vars->divergence[currCell] = -vars->drhodf[currCell]*
+	  ((vars->scalarDiffusionCoeff[Arches::AE])[currCell]*
+	   vars->scalar[IntVector(colX+1,colY,colZ)]+
+	   (vars->scalarDiffusionCoeff[Arches::AW])[currCell]*
+	   vars->scalar[IntVector(colX-1,colY,colZ)]+
+	   (vars->scalarDiffusionCoeff[Arches::AS])[currCell]*
+	   vars->scalar[IntVector(colX,colY-1,colZ)]+
+	   (vars->scalarDiffusionCoeff[Arches::AN])[currCell]*
+	   vars->scalar[IntVector(colX,colY+1,colZ)]+
+	   (vars->scalarDiffusionCoeff[Arches::AB])[currCell]*
+	   vars->scalar[IntVector(colX,colY,colZ-1)]+
+	   (vars->scalarDiffusionCoeff[Arches::AT])[currCell]*
+	   vars->scalar[IntVector(colX,colY,colZ+1)]-
+	   (vars->scalarDiffusionCoeff[Arches::AP])[currCell]*
+	   vars->scalar[currCell])/(vars->new_density[currCell]*
+				    vars->new_density[currCell]);
+      }
+    }
+  }
+}
+
 
 //****************************************************************************
 // Pressure stencil weights
@@ -472,7 +507,19 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
   cerr << "Print wVelocity: " << endl;
   coeff_vars->wVelocity.print(cerr);
 #endif
-
+#ifdef divergenceconstraint
+  fort_prescoef_var(idxLo, idxHi, coeff_vars->density,
+		    coeff_vars->pressCoeff[Arches::AE],
+		    coeff_vars->pressCoeff[Arches::AW],
+		    coeff_vars->pressCoeff[Arches::AN],
+		    coeff_vars->pressCoeff[Arches::AS],
+		    coeff_vars->pressCoeff[Arches::AT],
+		    coeff_vars->pressCoeff[Arches::AB],
+		    cellinfo->sew, cellinfo->sns, cellinfo->stb,
+		    cellinfo->sewu, cellinfo->dxep, cellinfo->dxpw, 
+		    cellinfo->snsv, cellinfo->dynp, cellinfo->dyps, 
+		    cellinfo->stbw, cellinfo->dztp, cellinfo->dzpb);
+#else
   fort_prescoef(idxLo, idxHi, coeff_vars->density,
 		coeff_vars->pressCoeff[Arches::AE],
 		coeff_vars->pressCoeff[Arches::AW],
@@ -484,7 +531,7 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
 		cellinfo->sewu, cellinfo->dxep, cellinfo->dxpw, 
 		cellinfo->snsv, cellinfo->dynp, cellinfo->dyps, 
 		cellinfo->stbw, cellinfo->dztp, cellinfo->dzpb);
-
+#endif
 #ifdef ARCHES_COEF_DEBUG
   cerr << "After PRESSCOEFF" << endl;
   cerr << "Print PAW" << endl;
@@ -569,6 +616,12 @@ Discretization::calculateScalarCoeff(const ProcessorGroup*,
 		coeff_vars->scalarConvectCoeff[Arches::AS],
 		coeff_vars->scalarConvectCoeff[Arches::AT],
 		coeff_vars->scalarConvectCoeff[Arches::AB],
+		coeff_vars->scalarDiffusionCoeff[Arches::AE],
+		coeff_vars->scalarDiffusionCoeff[Arches::AW],
+		coeff_vars->scalarDiffusionCoeff[Arches::AN],
+		coeff_vars->scalarDiffusionCoeff[Arches::AS],
+		coeff_vars->scalarDiffusionCoeff[Arches::AT],
+		coeff_vars->scalarDiffusionCoeff[Arches::AB],
 		coeff_vars->uVelocity, coeff_vars->vVelocity,
 		coeff_vars->wVelocity, cellinfo->sew, cellinfo->sns,
 		cellinfo->stb, cellinfo->cee, cellinfo->cwe, cellinfo->cww,
@@ -838,6 +891,16 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 	     coeff_vars->scalarCoeff[Arches::AS],
 	     coeff_vars->scalarCoeff[Arches::AT],
 	     coeff_vars->scalarCoeff[Arches::AB],
+	     coeff_vars->scalarLinearSrc);
+  coeff_vars->scalarLinearSrc.initialize(0.0);
+  // for computing divergence constraint
+  fort_apcal(idxLo, idxHi, coeff_vars->scalarDiffusionCoeff[Arches::AP],
+	     coeff_vars->scalarDiffusionCoeff[Arches::AE],
+	     coeff_vars->scalarDiffusionCoeff[Arches::AW],
+	     coeff_vars->scalarDiffusionCoeff[Arches::AN],
+	     coeff_vars->scalarDiffusionCoeff[Arches::AS],
+	     coeff_vars->scalarDiffusionCoeff[Arches::AT],
+	     coeff_vars->scalarDiffusionCoeff[Arches::AB],
 	     coeff_vars->scalarLinearSrc);
 
 #ifdef ARCHES_COEF_DEBUG

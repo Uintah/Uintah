@@ -1,4 +1,4 @@
-void calpbc(SFCXVariable<double> uu, SFCYVariable<double> vv,
+void hatvelcalpbc(SFCXVariable<double> uu, SFCYVariable<double> vv,
      SFCZVariable<double> ww, IntVector idxLo, IntVector idxHi,
      CCVariable<double> pp, constCCVariable<double> den,
      constCCVariable<double> vis,

@@ -40,7 +40,6 @@ WARNING
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 
 #include <Core/Containers/Array1.h>
-
 namespace Uintah {
   class ProcessorGroup;
 class PhysicalConstants;

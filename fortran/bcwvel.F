@@ -104,6 +104,7 @@ C--------------------------------------------------------------------
                      TMULT = VISCOS/XP
                      SP(I+1,J,K) =SP(I+1,J,K)-TMULT*SNS(J)*STBW(K)
                      AW(I+1,J,K) = 0.0
+                     cwsav(i+1,j,k) = 0.0
                   END IF
 
                   IF (K.NE.kend) THEN
@@ -119,6 +120,7 @@ C--------------------------------------------------------------------
                            SP(I+1,J,K+1) = SP(I+1,J,K+1)-TMULT*SNS(J)*
      &                          STBW(K+1)
                            AW(I+1,J,K+1) = 0.0
+                           cwsav(i+1,j,k+1) = 0.0
                         END IF
                      END IF
                   END IF
@@ -134,6 +136,7 @@ C--------------------------------------------------------------------
                            SP(I+1,J,K-1) = SP(I+1,J,K-1)-TMULT*
      $                          SNS(J)*STBW(K-1)
                            AW(I+1,J,K-1) = 0.0
+                           cwsav(I+1,j,k-1) = 0.0
                         END IF
                      END IF
                   endif

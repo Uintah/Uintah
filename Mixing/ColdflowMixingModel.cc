@@ -60,6 +60,7 @@ ColdflowMixingModel::computeProps(const InletStream& inStream,
   double local_den = 0.0;
   double mixFracSum = 0.0;
   double localTemp = 0.0;
+  double drhodf = 0.0;
   for (int ii = 0; ii < d_numMixingVars; ii++ ) {
     local_den += inStream.d_mixVars[ii]/d_streams[ii].d_density; 
     localTemp += inStream.d_mixVars[ii]*d_streams[ii].d_temperature; 
@@ -67,7 +68,11 @@ ColdflowMixingModel::computeProps(const InletStream& inStream,
   }
   local_den += (1.0 - mixFracSum)/d_streams[d_numMixingVars].d_density;
   localTemp += (1.0 - mixFracSum)*d_streams[d_numMixingVars].d_temperature;
+  drhodf = (1.0-mixFracSum)*d_streams[0].d_density +
+            inStream.d_mixVars[0]*d_streams[1].d_density;
   outStream.d_temperature = localTemp;
+  outStream.d_drhodf = d_streams[0].d_density*d_streams[1].d_density*
+    (d_streams[0].d_density - d_streams[1].d_density)/(drhodf*drhodf);
   if (local_den <= 0.0)
     throw InvalidValue("Computed zero density in ColdflowMixingModel" );
   else
@@ -76,6 +81,9 @@ ColdflowMixingModel::computeProps(const InletStream& inStream,
 
 //
 // $Log$
+// Revision 1.4  2002/02/28 03:05:46  rawat
+// Added divergence constraint and modified pressure/outlet boundary condition.
+//
 // Revision 1.3  2001/07/27 20:51:40  sparker
 // Include file cleanup
 // Fix uninitialized array element

@@ -97,6 +97,15 @@ namespace Uintah {
 	return d_rxnVarRates[0];
       }
 
+      inline double getdrhodf() const {
+	return d_drhodf;
+      }
+
+      inline double getdrhodh() const {
+	return d_drhodh;
+      }
+
+
     public:
       double d_pressure; // Pa
       double d_density; // kg/m^3
@@ -105,6 +114,8 @@ namespace Uintah {
       double d_sensibleEnthalpy; //J/Kg
       double d_moleWeight;
       double d_cp; // J/Kg
+      double d_drhodf;
+      double d_drhodh;
       bool d_mole;
       int d_depStateSpaceVars;
       std::vector<double> d_speciesConcn; // Mass or mole fraction in
@@ -121,7 +132,7 @@ namespace Uintah {
       // includes all the vars except vectors...
       // increase the value if want to increase number of variables
       //
-      static const int NUM_DEP_VARS = 7;
+      static const int NUM_DEP_VARS = 9;
 
     }; // End class Stream
 

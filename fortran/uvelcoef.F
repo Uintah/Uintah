@@ -15,13 +15,14 @@ c*********************************************************************
       integer ISTU, JSTU, KSTU, IENDU, JENDU, KENDU
       integer i, j, k
 
-      logical*1 L2UP, LSMPT, LCEND
+      logical*1 L2UP, LSMPT, LCEND, LCENTRAL
 
       double precision AREAN, AREAS, AREAEW, AREATB, VOL
       double precision GE, GP, GW, GN, GNW, GS, GSW, GT, GTW, GTP, GBW
       double precision CEO, CWO, CNO, CSO, CTO, CBO
       double precision CE, CW, CN, CS, CT, CB
       double precision CPE, CPW, GVP, CPN, CPS, GWP, CPT, CPB
+      double precision CP, GEP, GWP 
       double precision VISE, VISW, VISN, VISS, VIST, VISB
       double precision DEO, DWO, DNO, DSO, DTO, DBO
       double precision DE, DW, DN, DS, DT, DB
@@ -45,6 +46,8 @@ c*********************************************************************
       L2UP = .FALSE.
       LSMPT = .FALSE.
       LCEND = .FALSE.
+c      LCEND = .TRUE.
+      LCENTRAL = .FALSE.
 
 c*********************************************************************
 c     Go thru all the cells
@@ -100,6 +103,45 @@ C-----------------------------------------------------------------------
                CSSAV(I,J,K) = CS
                CTSAV(I,J,K) = CT
                CBSAV(I,J,K) = CB
+c recompute central differencing for explicit solvers
+               if (LCENTRAL) then
+                  GE = DEN(I,J,K)*UU(I+1,J,K)
+                  GEP = DEN(I,J,K)*UU(I,J,K)
+c     GP = 0.5*(DEN(I,J,K)+DEN(I-1,J,K))*UU(I,J,K)
+                  GW = DEN(I-1,J,K)*UU(I-1,J,K)
+                  GWP = DEN(I-1,J,K)*UU(I,J,K)
+                  GN = 0.5*(DEN(I,J+1,K)+DEN(I,J,K))*VV(I,J+1,K)
+                  GNW = 0.5*(DEN(I-1,J,K)+DEN(I-1,J+1,K))*VV(I-1,J+1,K)
+                  GS = 0.5*(DEN(I,J-1,K)+DEN(I,J,K))*VV(I,J,K)
+                  GSW = 0.5*(DEN(I-1,J,K)+DEN(I-1,J-1,K))*VV(I-1,J,K)
+                  GT = 0.5*(DEN(I,J,K)+DEN(I,J,K+1))*WW(I,J,K+1)
+                  GTW = 0.5*(DEN(I-1,J,K)+DEN(I-1,J,K+1))*WW(I-1,J,K+1)
+                  GTP = 0.5*(DEN(I,J,K)+DEN(I,J,K-1))*WW(I,J,K)
+                  GBW = 0.5*(DEN(I-1,J,K)+DEN(I-1,J,K-1))*WW(I-1,J,K)
+                  CEO = 0.5*(GE+GEP)*AREAEW
+                  CWO = 0.5*(GWP+GW)*AREAEW
+                  CNO = (0.5*GN+0.5*GNW)*AREAN
+                  CSO = (0.5*GS+0.5*GSW)*AREAS
+                  CTO = (0.5*GT+0.5*GTW)*AREATB
+                  CBO = (0.5*GTP+0.5*GBW)*AREATB
+C-----------------------------------------------------------------------
+C     NEW DIFFERENCING STUFF
+C-----------------------------------------------------------------------
+                  CE = CEO 
+                  CW = CWO 
+                  CN = CNO
+                  CS = CSO
+                  CT = CTO
+                  CB = CBO
+                  CP = CEO-CWO+CNO-CSO+CTO-CBO
+                  CESAV(I,J,K) = CE
+                  CWSAV(I,J,K) = CW
+                  CNSAV(I,J,K) = CN
+                  CSSAV(I,J,K) = CS
+                  CTSAV(I,J,K) = CT
+                  CBSAV(I,J,K) = CB
+               endif
+
 C-----------------------------------------------------------------------
 C      UPWIND DIFFERENCING STUFF
 C-----------------------------------------------------------------------
@@ -165,16 +207,6 @@ c ** this is a version that uses double precision
                ASC = 0.5*CS*TNS + dMAX1(0.0D0,CPS)*(1.0D0-TNS)
                ATC = -0.5*CT*TTB + dMAX1(0.0D0,-CPT)*(1.0D0-TTB)
                ABC = 0.5*CB*TTB + dMAX1(0.0D0,CPB)*(1.0D0-TTB)
-c               DU(I,J,K) = VOL/DXPW(I)
-c=======
-c               AEC = -0.5*CE*TEW + MAX(0.0,-CPE)*(1.0-TEW)
-c               AWC = 0.5*CW*TEW + MAX(0.0,CPW)*(1.0-TEW)
-c               ANC = -0.5*CN*TNS + MAX(0.0,-CPN)*(1.0-TNS)
-c               ASC = 0.5*CS*TNS + MAX(0.0,CPS)*(1.0-TNS)
-c               ATC = -0.5*CT*TTB + MAX(0.0,-CPT)*(1.0-TTB)
-c               ABC = 0.5*CB*TTB + MAX(0.0,CPB)*(1.0-TTB)
-c               DU(I,J,K) = VOL/DXPW(I)
-c>>>>>>> 1.6
 c              TSUM = TSUM + TEW+TNS+TTB
 C----------------------------------------------------------------------
 C      PROVISIONS FOR VARIOUS UPWIND DIFFERENCING SCHEMES
@@ -197,6 +229,15 @@ c    &                 ATC*U(I,J,K+1)+ABC*U(I,J,K-1)
                   AS(I,J,K) = DS+CS*0.5
                   AT(I,J,K) = DT-CT*0.5
                   AB(I,J,K) = DB+CB*0.5
+c                 AC(I,J,K) = 0.0
+c                 SU(I,J,K) = 0.0
+               ELSE IF (LCENTRAL) THEN
+                  AE(I,J,K) = DE
+                  AW(I,J,K) = DW
+                  AN(I,J,K) = DN
+                  AS(I,J,K) = DS
+                  AT(I,J,K) = DT
+                  AB(I,J,K) = DB
 c                 AC(I,J,K) = 0.0
 c                 SU(I,J,K) = 0.0
                ELSE IF (L2UP) THEN

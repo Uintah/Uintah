@@ -3,7 +3,7 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/calpbc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/hatvelcalpbc_fort.h>
 C-----------------------------------------------------------------------
 C
 C     Routine to calculate velocity at specified pressure b.c.'s
@@ -348,26 +348,3 @@ C
       RETURN
       END
 
-c*********************************************************************
-c
-c Revision 1.6  2000/10/12 20:07:41  sparker
-c Commented out debug print statements
-c Fixed bug in profscalar
-c
-c Revision 1.5  2000/10/11 16:37:31  rawat
-c modified calpbc for ghost cells
-c
-c Revision 1.4  2000/10/10 19:31:03  rawat
-c added scalarsolver
-c
-c Revision 1.3  2000/08/10 00:56:38  rawat
-c added pressure bc for scalar and changed discretization option for velocity
-c
-c Revision 1.2  2000/07/07 23:07:47  rawat
-c added inlet bc's
-c
-c Revision 1.1  2000/04/12 20:31:44  rawat
-c modified PressureSolver and added fortran subroutines
-c
-c
-c*********************************************************************

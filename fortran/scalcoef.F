@@ -78,7 +78,7 @@ C-----------------------------------------------------------------------
 *
       double precision prinv
       double precision crn
-      logical*1 l2up, lsmpt, lcend
+      logical*1 l2up, lsmpt, lcend, lcentral
       double precision vol
       double precision arean, areas, areaew, areatb
       double precision dene, denw, denn, dens, dent, denb
@@ -101,9 +101,12 @@ C-----------------------------------------------------------------------
 
       prinv = 0.01
       crn = zero
+c      l2up = .false.
       l2up = .true.
+c      lcend = .true.
       lcend = .false.
       lsmpt = .false.
+      lcentral = .false.
       vol = zero
       prandtlno = 0.9
 
@@ -155,6 +158,21 @@ C-----------------------------------------------------------------------
                CSSAV(I,J,K) = CS
                CTSAV(I,J,K) = CT
                CBSAV(I,J,K) = CB
+               if (lcentral) then
+                  CE = 0.5*(CEO + CWO)
+                  CW = 0.5*(CWO + CEO)
+                  CN = 0.5*(CNO + CSO)
+                  CS = 0.5*(CNO + CSO)
+                  CT = 0.5*(CTO + CBO)
+                  CB = 0.5*(CTO + CBO)
+                  CESAV(I,J,K) = CE
+                  CWSAV(I,J,K) = CW
+                  CNSAV(I,J,K) = CN
+                  CSSAV(I,J,K) = CS
+                  CTSAV(I,J,K) = CT
+                  CBSAV(I,J,K) = CB
+               endif
+
 C-----------------------------------------------------------------------
 C      UPWIND DIFFERENCING STUFF
 C-----------------------------------------------------------------------
@@ -191,6 +209,12 @@ C-----------------------------------------------------------------------
                DS = CSS(J)*DSO - CSN(J)*DNO*DYNP(J)/DYPS(J)
                DT = CTT(K)*DTO + CBT(K)*DBO*DZPB(K)/DZTP(K)
                DB = CBB(K)*DBO - CBT(K)*DTO*DZTP(K)/DZPB(K)
+               DECOEF(I,J,K) = DE
+               DWCOEF(I,J,K) = DW
+               DNCOEF(I,J,K) = DN
+               DSCOEF(I,J,K) = DS
+               DTCOEF(I,J,K) = DT
+               DBCOEF(I,J,K) = DB
 C-----------------------------------------------------------------------
 C     CONVECTION DIFFERENCING SCHEME SELECTION
 C-----------------------------------------------------------------------
@@ -232,6 +256,14 @@ C----------------------------------------------------------------------
                   AB(I,J,K) = DB
 c                  AC(I,J,K) = AEC+AWC+ANC+ASC+ATC+ABC
                ELSE IF (LCEND) THEN
+                  AE(I,J,K) = DE-CE*0.5
+                  AW(I,J,K) = DW+CW*0.5
+                  AN(I,J,K) = DN-CN*0.5
+                  AS(I,J,K) = DS+CS*0.5
+                  AT(I,J,K) = DT-CT*0.5
+                  AB(I,J,K) = DB+CB*0.5
+c                  AC(I,J,K) = 0.0
+               ELSE IF (LCENTRAL) THEN
                   AE(I,J,K) = DE-CE*0.5
                   AW(I,J,K) = DW+CW*0.5
                   AN(I,J,K) = DN-CN*0.5

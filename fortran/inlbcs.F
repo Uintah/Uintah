@@ -29,7 +29,9 @@ c*********************************************************************
       factor = 1.0
       if (time .lt. 0.499) then
          factor = (time+0.01)/0.5
-         if (time.lt.0.1) then
+         if (time.lt.0.02) then
+            factor = 0.000001*factor
+         elseif (time.lt.0.1) then
             factor = 0.001*factor
          elseif (time.lt.0.2) then
             factor = 0.01*factor
