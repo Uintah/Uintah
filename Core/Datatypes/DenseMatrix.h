@@ -59,7 +59,7 @@ class SparseRowMatrix;
 
 class DenseMatrix : public Matrix {
   double** data;
-  double*  dataptr;
+  double*  dataptr_;
 
 public:
   //! Constructors
@@ -120,7 +120,7 @@ public:
   };
   
   inline double* getData() {
-    return dataptr;
+    return dataptr_;
   }
 
   //! return false if not invertable.
