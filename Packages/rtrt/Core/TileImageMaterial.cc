@@ -29,7 +29,7 @@ TileImageMaterial::TileImageMaterial( const string &texfile,
 				      const Color& specular, double specpow,
 				      double refl, bool flipped /*= false*/ ) :
   ImageMaterial(texfile,ImageMaterial::Tile,ImageMaterial::Tile,
-		Kd,specular,specpow,refl,flipped)
+		specular,Kd,specpow,refl,flipped)
 {
 }
 
@@ -39,7 +39,7 @@ TileImageMaterial::TileImageMaterial(const string &texfile,
                                      double refl,  double transp, 
                                      bool flipped /*=false*/) :
   ImageMaterial(texfile,ImageMaterial::Tile,ImageMaterial::Tile,
-		Kd,specular,specpow,refl,transp,flipped)
+		specular,Kd,specpow,refl,transp,flipped)
 {
 }
 

@@ -47,11 +47,11 @@ public:
 		double specpow, double refl=0, bool flipped=false);
   ImageMaterial(const string &filename, Mode umode, Mode vmode,
 		double Kd, const Color& specular,
+		double specpow, double refl=0, bool flipped=false);
+  ImageMaterial(const string &filename, Mode umode, Mode vmode,
+		const Color& specular, double Kd,
 		double specpow, double refl, 
 		double transp=0, bool flipped=false);
-  ImageMaterial(const string &filename, Mode umode, Mode vmode,
-		double Kd, const Color& specular,
-		double specpow, double refl=0, bool flipped=false);
   virtual ~ImageMaterial();
     
 
