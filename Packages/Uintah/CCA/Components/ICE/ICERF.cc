@@ -915,9 +915,9 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > speedSound(numALLMatls);
     StaticArray<constCCVariable<double> > int_eng_source(numALLMatls);
     
-    vector<double> b(numALLMatls);
+    double b[MAX_MATLS];
+    Vector bb[MAX_MATLS];
     vector<double> sp_vol(numALLMatls);
-    vector<double> X(numALLMatls);
     vector<double> e_prime_v(numALLMatls);
     vector<double> if_mpm_matl_ignore(numALLMatls);
     
@@ -928,7 +928,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
 /*==========TESTING==========`*/
     FastMatrix beta(numALLMatls, numALLMatls),acopy(numALLMatls, numALLMatls);
     FastMatrix K(numALLMatls, numALLMatls),H(numALLMatls, numALLMatls);
-    FastMatrix a(numALLMatls, numALLMatls), a_inverse(numALLMatls, numALLMatls);
+    FastMatrix a(numALLMatls, numALLMatls);
     FastMatrix phi(numALLMatls, numALLMatls);
     beta.zero();
     acopy.zero();
@@ -1028,21 +1028,19 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
           a(m,m) +=  beta(m,n);
         }
       }
-      a_inverse.destructiveInvert(a);
       
-      for (int dir = 0; dir <3; dir++) {  //loop over all three directons
-        for(int m = 0; m < numALLMatls; m++) {
-          b[m] = 0.0;
-          for(int n = 0; n < numALLMatls; n++) {
-           b[m] += beta(m,n) * (vel_CC[n][c][dir] - vel_CC[m][c][dir]);
-          }
+      for(int m = 0; m < numALLMatls; m++) {
+        Vector sum(0,0,0);
+        for(int n = 0; n < numALLMatls; n++) {
+          sum += beta(m,n) * (vel_CC[n][c] - vel_CC[m][c]);
         }
+        bb[m] = sum;
+      }
         
-        a_inverse.multiply(b,X);
+      a.destructiveSolve(bb);
         
-        for(int m = 0; m < numALLMatls; m++) {
-          vel_CC[m][c][dir] =  vel_CC[m][c][dir] + X[m];
-        }
+      for(int m = 0; m < numALLMatls; m++) {
+        vel_CC[m][c] +=  bb[m];
       }
     }   // cell iterator
 
@@ -1051,11 +1049,11 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     //  compute phi and alpha
     // Convert total energy to Temp.  Use the vel after exchange
     for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
-      IntVector c = *iter;                                                        
-      for (int m = 0; m < numALLMatls; m++) {                                     
+      IntVector c = *iter;
+      for (int m = 0; m < numALLMatls; m++) {
         KE = 0.5 * mass_L[m][c] * vel_CC[m][c].length() * vel_CC[m][c].length();         
-        Temp_CC[m][c] = (tot_eng_L_ME[m][c] - KE) /(mass_L[m][c]*cv[m][c]);          
-      }                                                                           
+        Temp_CC[m][c] = (tot_eng_L_ME[m][c] - KE) /(mass_L[m][c]*cv[m][c]);
+      }
   
       for(int m = 0; m < numALLMatls; m++) {
         for(int n = 0; n < numALLMatls; n++)  {
@@ -1090,10 +1088,10 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
         }
       }
       //     S O L V E  and backout Temp_CC 
-      a.destructiveSolve(b,X);
+      a.destructiveSolve(b);
 
       for(int m = 0; m < numALLMatls; m++) {
-        Temp_CC[m][c] = X[m];
+        Temp_CC[m][c] = b[m];
       }
     }  //CellIterator loop 
 
