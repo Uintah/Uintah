@@ -195,7 +195,7 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
       throw InternalError("matlIndex must be >= 0");
 
    if(matlIndex >= (int)rr->vars.size()){
-      unsigned long oldSize = rr->vars.size();
+      int oldSize = (int)rr->vars.size();
       rr->vars.resize(matlIndex+1);
       for(int i=oldSize;i<matlIndex;i++)
 	 rr->vars[i]=0;
@@ -302,6 +302,9 @@ void DWDatabase<VarType>::print(std::ostream& out)
 
 //
 // $Log$
+// Revision 1.16.2.2  2000/10/10 05:28:03  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.16.2.1  2000/09/29 06:09:54  sparker
 // g++ warnings
 // Support for sending only patch edges

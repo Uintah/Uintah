@@ -39,6 +39,10 @@ Patch::Patch(const Level* level,
      vector<BoundCond* > a;
      d_bcs[i] = a;
    }
+   d_nodeHighIndex = d_highIndex+
+	       IntVector(getBCType(xplus) == Neighbor?0:1,
+			 getBCType(yplus) == Neighbor?0:1,
+			 getBCType(zplus) == Neighbor?0:1);
 }
 
 Patch::~Patch()
@@ -185,12 +189,20 @@ void
 Patch::setBCType(Patch::FaceType face, BCType newbc)
 {
    d_bctypes[face]=newbc;
+   d_nodeHighIndex = d_highIndex+
+	       IntVector(getBCType(xplus) == Neighbor?0:1,
+			 getBCType(yplus) == Neighbor?0:1,
+			 getBCType(zplus) == Neighbor?0:1);
 }
 
 void 
 Patch::setBCValues(Patch::FaceType face, vector<BoundCond*>& bc)
 {
   d_bcs[face] = bc;
+   d_nodeHighIndex = d_highIndex+
+	       IntVector(getBCType(xplus) == Neighbor?0:1,
+			 getBCType(yplus) == Neighbor?0:1,
+			 getBCType(zplus) == Neighbor?0:1);
 }
 
 vector<BoundCond* >
@@ -296,15 +308,6 @@ Patch::getNodeIterator(const Box& b) const
    return NodeIterator(low, high);
 }
 
-IntVector Patch::getNodeHighIndex() const
-{
-   IntVector h(d_highIndex+
-	       IntVector(getBCType(xplus) == Neighbor?0:1,
-			 getBCType(yplus) == Neighbor?0:1,
-			 getBCType(zplus) == Neighbor?0:1));
-   return h;
-}
-
 IntVector Patch::getSFCXHighIndex() const
 {
    IntVector h(d_highIndex+
@@ -403,7 +406,7 @@ IntVector Patch::getCellFORTHighIndex() const
 
 void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 				   int numGhostCells,
-				   vector<const Patch*>& neighbors,
+				   Level::selectType& neighbors,
 				   IntVector& low, IntVector& high) const
 {
     IntVector l(d_lowIndex);
@@ -496,7 +499,6 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 	    throw InternalError("X faces around z faces not implemented");
 	case Ghost::AroundAllFaces: // X faces around all faces
 	    throw InternalError("X faces around all faces not implemented");
-	    break;
 	}
 	break;
     case YFaceBased:
@@ -521,7 +523,6 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 	    throw InternalError("Y faces around z faces not implemented");
 	case Ghost::AroundAllFaces: // Y faces around all faces
 	    throw InternalError("Y faces around all faces not implemented");
-	    break;
 	}
 	break;
     case ZFaceBased:
@@ -546,7 +547,6 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 	    break;
 	case Ghost::AroundAllFaces: // Z faces around all faces
 	    throw InternalError("Z faces around all faces not implemented");
-	    break;
 	}
 	break;
     case AllFaceBased:
@@ -567,7 +567,6 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 	    throw InternalError("All faces around z faces not implemented");
 	case Ghost::AroundAllFaces: // All faces around all faces
 	    throw InternalError("All faces around all faces not implemented");
-	    break;
 	}
 	break;
     }
@@ -579,7 +578,7 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 void Patch::computeVariableExtents(TypeDescription::Type basis,
 				   Ghost::GhostType gtype,
 				   int numGhostCells,
-				   vector<const Patch*>& neighbors,
+				   Level::selectType& neighbors,
 				   IntVector& low, IntVector& high) const
 {
     VariableBasis translation;
@@ -685,6 +684,9 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 
 //
 // $Log$
+// Revision 1.22.4.2  2000/10/10 05:28:08  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.22.4.1  2000/09/29 06:12:29  sparker
 // Added support for sending data along patch edges
 //

@@ -217,7 +217,7 @@ void SimulationController::run()
       // Begin next time step...
       scheduleComputeStableTimestep(level, scheduler, new_dw, cfd, mpm, md);
       scheduler->execute(d_myworld, old_dw, new_dw);
-      
+
       old_dw = new_dw;
    }
 }
@@ -283,7 +283,7 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	 box_ps->require("upper", upper);
 
 	 IntVector lowCell = level->getCellIndex(lower);
-	 IntVector highCell = level->getCellIndex(upper+Vector(.001,.001,.001));
+	 IntVector highCell = level->getCellIndex(upper+Vector(1.e-6,1.e-6,1.e-6));
 	 Point lower2 = level->getNodePosition(lowCell);
 	 Point upper2 = level->getNodePosition(highCell);
 	 double diff_lower = (lower2-lower).length();
@@ -481,6 +481,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.47.4.2  2000/10/10 05:28:06  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.47.4.1  2000/10/07 06:12:14  sparker
 // Try to fix rounding errors for cell upper index
 // set a hint for the level's number of patches in each direction

@@ -129,7 +129,7 @@ void OnDemandDataWarehouse::sendParticleSubset(SendState& ss,
 					       ParticleSubset* pset,
 					       const VarLabel* pos_var,
 					       const Task::Dependency* dep,
-					       const Patch* toPatch,
+					       const Patch* /*toPatch*/,
 					       const ProcessorGroup* world,
 					       int* size)
 
@@ -137,7 +137,7 @@ void OnDemandDataWarehouse::sendParticleSubset(SendState& ss,
    ParticleSubset* sendset = scinew ParticleSubset(pset->getParticleSet(),
 						   false, -1, 0);
    ParticleVariable<Point> pos;
-   DataWarehouse* dw = dep->d_dw.get_rep();
+   DataWarehouse* dw = dep->d_dw;
    dw->get(pos, pos_var, pset);
    Box box=pset->getPatch()->getLevel()->getBox(dep->d_lowIndex,
 						dep->d_highIndex);
@@ -222,7 +222,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss,
 	 //cerr << "ISend Particle: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
 	 // This is just FYI for the caller
 	 MPI_Pack_size(count, datatype, world->getComm(), size);
-	 if(free_datatype)
+	 if(free_datatype) 
 	    MPI_Type_free(&datatype);
       }
   d_lock.readUnlock();
@@ -337,7 +337,7 @@ OnDemandDataWarehouse::recvMPI(SendState& ss, DataWarehouseP& old_dw,
 	    MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
 	    // This is just FYI for the caller
 	    MPI_Pack_size(count, datatype, world->getComm(), size);
-	    if(free_datatype)
+	    if(free_datatype) 
 	       MPI_Type_free(&datatype);
 	 }
 	 d_particleDB.put(label, matlIndex, patch, var, false);
@@ -364,12 +364,14 @@ OnDemandDataWarehouse::recvMPI(SendState& ss, DataWarehouseP& old_dw,
 #if 0
 	 cerr << "IRecv NC: buf=" << buf << ", count=" << count << ", src=" 
 	      << src << ", tag=" << tag << ", comm=" << world->getComm() 
-	      << ", req=" << requestid << ", low=" << dep->d_lowIndex << ", high=" << dep->d_highIndex << '\n';
+	      << ", req=" << requestid << ", low=" << dep->d_lowIndex 
+              << ", high=" << dep->d_highIndex << ", var=" << label->getName()
+              << '\n';
 #endif
 	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(),requestid);
 	 // This is just FYI for the caller
 	 MPI_Pack_size(count, datatype, world->getComm(), size);
-	 if(free_datatype)
+	 if(free_datatype) 
 	    MPI_Type_free(&datatype);
 	 d_ncDB.put(label, matlIndex, patch, var, false);
       }
@@ -463,7 +465,6 @@ OnDemandDataWarehouse::recvMPI(SendState& ss, DataWarehouseP& old_dw,
 	 cerr << "RECV SGVAR NOTDONE\n";
 	 throw InternalError( "RECV SGVAR NOTDONE" );
       }
-   break;
    default:
       throw InternalError("recvMPI not implemented for "+label->getFullName(matlIndex, patch));
    } // end switch( label->getType() );
@@ -606,7 +607,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
 	 throw InternalError("Ghost cells specified with task type none!\n");
       return getParticleSubset(matlIndex, patch);
    }
-   vector<const Patch*> neighbors;
+   Level::selectType neighbors;
    IntVector lowIndex, highIndex;
    patch->computeVariableExtents(Patch::CellBased, gtype, numGhostCells,
 				 neighbors, lowIndex, highIndex);
@@ -636,10 +637,13 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
       }
    }
    ParticleSet* newset = scinew ParticleSet(totalParticles);
+   vector<const Patch*> vneighbors(neighbors.size());
+   for(int i=0;i<neighbors.size();i++)
+      vneighbors[i]=neighbors[i];
    ParticleSubset* newsubset = scinew ParticleSubset(newset, true,
 						     matlIndex, patch,
 						     gtype, numGhostCells,
-						     neighbors, subsets);
+						     vneighbors, subsets);
    return newsubset;
 }
 
@@ -750,7 +754,7 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
 			       patch->toString(), matlIndex);
       d_ncDB.get(label, matlIndex, patch, var);
    } else {
-      vector<const Patch*> neighbors;
+      Level::selectType neighbors;
       IntVector lowIndex, highIndex;
       patch->computeVariableExtents(Patch::NodeBased, gtype, numGhostCells,
 				    neighbors, lowIndex, highIndex);
@@ -895,7 +899,7 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
 			       patch->toString(), matlIndex);
       d_ccDB.get(label, matlIndex, patch, var);
    } else {
-      vector<const Patch*> neighbors;
+      Level::selectType neighbors;
       IntVector lowIndex, highIndex;
       patch->computeVariableExtents(Patch::CellBased, gtype, numGhostCells,
 				    neighbors, lowIndex, highIndex);
@@ -1056,7 +1060,7 @@ OnDemandDataWarehouse::get(SFCXVariableBase& var, const VarLabel* label,
 			       patch->toString(), matlIndex);
       d_sfcxDB.get(label, matlIndex, patch, var);
    } else {
-      vector<const Patch*> neighbors;
+      Level::selectType neighbors;
       IntVector lowIndex, highIndex;
       patch->computeVariableExtents(Patch::XFaceBased, gtype, numGhostCells,
 				    neighbors, lowIndex, highIndex);
@@ -1141,7 +1145,7 @@ OnDemandDataWarehouse::get(SFCYVariableBase& var, const VarLabel* label,
 			       patch->toString(), matlIndex);
       d_sfcyDB.get(label, matlIndex, patch, var);
    } else {
-      vector<const Patch*> neighbors;
+      Level::selectType neighbors;
       IntVector lowIndex, highIndex;
       patch->computeVariableExtents(Patch::YFaceBased, gtype, numGhostCells,
 				    neighbors, lowIndex, highIndex);
@@ -1225,7 +1229,7 @@ OnDemandDataWarehouse::get(SFCZVariableBase& var, const VarLabel* label,
 			       patch->toString(), matlIndex);
       d_sfczDB.get(label, matlIndex, patch, var);
    } else {
-      vector<const Patch*> neighbors;
+      Level::selectType neighbors;
       IntVector lowIndex, highIndex;
       patch->computeVariableExtents(Patch::ZFaceBased, gtype, numGhostCells,
 				    neighbors, lowIndex, highIndex);
@@ -1457,13 +1461,16 @@ OnDemandDataWarehouse::gather(const Patch* from, const Patch* to)
 }
 
 void
-OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
+OnDemandDataWarehouse::deleteParticles(ParticleSubset* /*delset*/)
 {
-
+   // Not implemented
 }
 
 //
 // $Log$
+// Revision 1.52.4.4  2000/10/10 05:28:03  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.52.4.3  2000/10/02 17:33:39  sparker
 // Fixed boundary particles code for multiple materials
 // Free ParticleSubsets used for boundary particle sends

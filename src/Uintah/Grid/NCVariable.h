@@ -375,13 +375,17 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 	 low=getLowIndex();
 	 high=getHighIndex();
 	 siz=size();
-	 strides = IntVector(sizeof(T), sizeof(T)*siz.x(), sizeof(T)*siz.y()*siz.x());
+	 strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
+			     (int)(sizeof(T)*siz.y()*siz.x()));
       }
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.31.2.2  2000/10/10 05:28:08  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.31.2.1  2000/09/29 06:12:29  sparker
 // Added support for sending data along patch edges
 //

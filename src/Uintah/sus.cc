@@ -23,6 +23,7 @@
 #include <Uintah/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Uintah/Components/Schedulers/MPIScheduler.h>
 #include <Uintah/Components/Schedulers/MixedScheduler.h>
+#include <Uintah/Components/Schedulers/NullScheduler.h>
 #include <Uintah/Components/Schedulers/SingleProcessorLoadBalancer.h>
 #include <Uintah/Components/Schedulers/RoundRobinLoadBalancer.h>
 #include <Uintah/Components/Schedulers/SimpleLoadBalancer.h>
@@ -256,8 +257,13 @@ int main(int argc, char** argv)
 	      scinew MixedScheduler(world, output);
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
+	} else if(scheduler == "NullScheduler"){
+	   NullScheduler* sched =
+	      scinew NullScheduler(world, output);
+	   sim->attachPort("scheduler", sched);
+	   sched->attachPort("load balancer", bal);
 	} else {
-	   quit( "Unknown schduler: " + scheduler );
+	   quit( "Unknown scheduler: " + scheduler );
 	}
 
 	/*
@@ -311,6 +317,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.25.2.2  2000/10/10 05:28:01  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.25.2.1  2000/10/06 23:59:41  witzel
 // Added VTsetup call for vampir trace initialization.
 //

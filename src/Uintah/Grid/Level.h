@@ -12,6 +12,7 @@
 #include <SCICore/Geometry/IntVector.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Grid/fixedvector.h>
 #include <string>
 #include <vector>
 
@@ -109,8 +110,11 @@ WARNING
 
       Box getBox(const IntVector&, const IntVector&) const;
 
+      static const int MAX_PATCH_SELECT = 32;
+      typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
+
       void selectPatches(const IntVector&, const IntVector&,
-			 std::vector<const Patch*>&) const;
+			 selectType&) const;
 
       bool containsPoint(const Point&) const;
    private:
@@ -138,6 +142,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.21.4.2  2000/10/10 05:28:08  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.21.4.1  2000/10/07 06:10:36  sparker
 // Optimized implementation of Level::selectPatches
 // Cured g++ warnings

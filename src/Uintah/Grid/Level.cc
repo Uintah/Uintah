@@ -195,7 +195,7 @@ Point Level::positionToIndex(const Point& p) const
 }
 
 void Level::selectPatches(const IntVector& low, const IntVector& high,
-			  std::vector<const Patch*>& neighbors) const
+			  selectType& neighbors) const
 {
 #ifdef SELECT_LINEAR
    // This sucks - it should be made faster.  -Steve
@@ -211,13 +211,12 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
 #ifdef SELECT_GRID
    IntVector start = (low-d_idxLow)*d_gridSize/d_idxSize;
    IntVector end = (high-d_idxLow)*d_gridSize/d_idxSize;
-   start=Max(IntVector(0,0,0), start);
-   end=Min(d_gridSize-IntVector(1,1,1), end);
+   start=SCICore::Geometry::Max(IntVector(0,0,0), start);
+   end=SCICore::Geometry::Min(d_gridSize-IntVector(1,1,1), end);
    for(int iz=start.z();iz<=end.z();iz++){
       for(int iy=start.y();iy<=end.y();iy++){
 	 for(int ix=start.x();ix<=end.x();ix++){
-	    int gridIdx = iz*(d_gridSize.y()*d_gridSize.x())
-	       +iy*d_gridSize.y()+ix;
+	    int gridIdx = (iz*d_gridSize.y()+iy)*d_gridSize.x()+ix;
 	    int s = d_gridStarts[gridIdx];
 	    int e = d_gridStarts[gridIdx+1];
 	    for(int i=s;i<e;i++){
@@ -230,7 +229,7 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
 	 }
       }
    }
-   sort(neighbors.begin(), neighbors.end());
+   sort(neighbors.begin(), neighbors.end(), Patch::Compare());
    int i=0;
    int j=0;
    while(j<(int)neighbors.size()) {
@@ -241,7 +240,14 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
       i++;
    }
    neighbors.resize(i);
+#else
+#error "No selectPatches algorithm defined"
+#endif
+#endif
 
+#ifdef CHECK_SELECT
+   // Double-check the more advanced selection algorithms against the
+   // slow (exhaustive) one.
    vector<const Patch*> tneighbors;
    for(const_patchIterator iter=d_patches.begin();
        iter != d_patches.end(); iter++){
@@ -252,13 +258,9 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
 	 tneighbors.push_back(*iter);
    }
    ASSERTEQ(neighbors.size(), tneighbors.size());
-   sort(tneighbors.begin(), tneighbors.end());
+   sort(tneighbors.begin(), tneighbors.end(), Patch::Compare());
    for(int i=0;i<(int)neighbors.size();i++)
       ASSERT(neighbors[i] == tneighbors[i]);
-
-#else
-#error "No selectPatches algorithm defined"
-#endif
 #endif
 }
 
@@ -286,18 +288,18 @@ void Level::finalizeLevel()
       d_gridSize = IntVector(neach, neach, neach);
    }
    getIndexRange(d_idxLow, d_idxHigh);
+   d_idxHigh-=IntVector(1,1,1);
    d_idxSize = d_idxHigh-d_idxLow;
    int numCells = d_gridSize.x()*d_gridSize.y()*d_gridSize.z();
    vector<int> counts(numCells+1, 0);
    for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++){
       Patch* patch = *iter;
       IntVector start = (patch->getCellLowIndex()-d_idxLow)*d_gridSize/d_idxSize;
-      IntVector end = (patch->getCellHighIndex()-d_idxLow)*d_gridSize/d_idxSize;
-      for(int iz=start.z();iz<=end.z();iz++){
-	 for(int iy=start.y();iy<=end.y();iy++){
-	    for(int ix=start.x();ix<=end.x();ix++){
-	       int gridIdx = iz*(d_gridSize.y()*d_gridSize.x())
-		  +iy*d_gridSize.y()+ix;
+      IntVector end = ((patch->getCellHighIndex()-d_idxLow)*d_gridSize+d_gridSize-IntVector(1,1,1))/d_idxSize;
+      for(int iz=start.z();iz<end.z();iz++){
+	 for(int iy=start.y();iy<end.y();iy++){
+	    for(int ix=start.x();ix<end.x();ix++){
+	       int gridIdx = (iz*d_gridSize.y()+iy)*d_gridSize.x()+ix;
 	       counts[gridIdx]++;
 	    }
 	 }
@@ -308,20 +310,18 @@ void Level::finalizeLevel()
    for(int i=0;i<numCells;i++){
       d_gridStarts[i]=count;
       count+=counts[i];
+      counts[i]=0;
    }
    d_gridStarts[numCells]=count;
    d_gridPatches.resize(count);
-   for(int i=0;i<numCells;i++)
-      counts[i]=0;
    for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++){
       Patch* patch = *iter;
       IntVector start = (patch->getCellLowIndex()-d_idxLow)*d_gridSize/d_idxSize;
-      IntVector end = (patch->getCellHighIndex()-d_idxLow)*d_gridSize/d_idxSize;
-      for(int iz=start.z();iz<=end.z();iz++){
-	 for(int iy=start.y();iy<=end.y();iy++){
-	    for(int ix=start.x();ix<=end.x();ix++){
-	       int gridIdx = iz*(d_gridSize.y()*d_gridSize.x())
-		  +iy*d_gridSize.y()+ix;
+      IntVector end = ((patch->getCellHighIndex()-d_idxLow)*d_gridSize+d_gridSize-IntVector(1,1,1))/d_idxSize;
+      for(int iz=start.z();iz<end.z();iz++){
+	 for(int iy=start.y();iy<end.y();iy++){
+	    for(int ix=start.x();ix<end.x();ix++){
+	       int gridIdx = (iz*d_gridSize.y()+iy)*d_gridSize.x()+ix;
 	       int pidx = d_gridStarts[gridIdx]+counts[gridIdx];
 	       d_gridPatches[pidx]=patch;
 	       counts[gridIdx]++;
@@ -337,7 +337,7 @@ void Level::finalizeLevel()
 	face <= Patch::endFace; face=Patch::nextFace(face)){
       IntVector l,h;
       patch->getFace(face, 1, l, h);
-      std::vector<const Patch*> neighbors;
+      Level::selectType neighbors;
       selectPatches(l, h, neighbors);
       if(neighbors.size() == 0){
 	patch->setBCType(face, Patch::None);
@@ -403,6 +403,9 @@ Box Level::getBox(const IntVector& l, const IntVector& h) const
 }
 //
 // $Log$
+// Revision 1.22.4.3  2000/10/10 05:28:08  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.22.4.2  2000/10/07 06:10:36  sparker
 // Optimized implementation of Level::selectPatches
 // Cured g++ warnings
