@@ -70,7 +70,7 @@ template<class T> Array<T>::Array(unsigned int numberElements)
 	 
    }
 
-   data = scinew T[universe_size];
+   data = new T[universe_size];
 
    // check that allocation was successful
 
@@ -95,7 +95,7 @@ template<class T> Array<T>::Array(unsigned int numberElements,
   }
 				    
 
-  data = scinew T[universe_size];
+  data = new T[universe_size];
 
   // check that allocation was successful
 
@@ -117,7 +117,7 @@ template<class T> Array<T>::Array(const Array<T> &source)
   // create and initialize a new Array
   // allocate the space for the lements
 
-  data = scinew T[size];
+  data = new T[size];
   assert(data != 0);
 
   // copy values from old Array
@@ -153,7 +153,7 @@ template<class T> Array<T>  & Array<T>:: operator = (const Array<T> &source)
   size = source.size;
   universe_size = source.universe_size;
 
-  data = scinew T[universe_size];
+  data = new T[universe_size];
   assert(data != 0);
   
   // copy the values
@@ -231,7 +231,7 @@ unsigned int Array<T>::setSize(unsigned int numberOfElements,
       if (numberOfElements > universe_size) {
 
       // Allocate space 
-         T * newData = scinew T[numberOfElements];
+         T * newData = new T[numberOfElements];
          assert(newData != 0);
 
       //  copy old values
@@ -280,7 +280,7 @@ unsigned int Array<T>::setSize(unsigned int numberOfElements)
     if (numberOfElements > universe_size) {
 
       // Allocate space 
-      T * newData = scinew T[numberOfElements];
+      T * newData = new T[numberOfElements];
       assert(newData != 0);
 
       //  copy old values
@@ -319,7 +319,7 @@ void Array<T>::append(const T &initialValue)
        size++;
     }
     else {
-      T *newData = scinew T[universe_size + MINIMUM_INCREMENT];
+      T *newData = new T[universe_size + MINIMUM_INCREMENT];
       assert(newData != 0);
       // copy the old values to the new data space
       for (unsigned int i = 0; i < size; i++) {
@@ -487,6 +487,9 @@ template <class T> void Array<T>::set(const T &value)
 #endif
 
 // $Log$
+// Revision 1.4  2000/09/25 18:09:43  sparker
+// Do not use scinew for templated arrays, due to compiler bugs
+//
 // Revision 1.3  2000/05/30 20:19:17  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
