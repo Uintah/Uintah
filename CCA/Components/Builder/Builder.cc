@@ -30,12 +30,14 @@
 #include <CCA/Components/Builder/BuilderWindow.h>
 #include <CCA/Components/Builder/QtUtils.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include <iostream>
-using namespace std;
-using namespace SCIRun;
 
 #include <qapplication.h>
 #include <qpushbutton.h>
+
+#include <iostream>
+
+using namespace std;
+using namespace SCIRun;
 
 extern "C" sci::cca::Component::pointer make_SCIRun_Builder()
 {
