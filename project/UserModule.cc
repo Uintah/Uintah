@@ -488,7 +488,6 @@ int UserModule::should_execute()
 
     // See if there is new data upstream...
     if(sched_class != Source){
-	int newdata=0;
 	for(int i=0;i<iports.size();i++){
 	    IPort* port=iports[i];
 	    for(int c=0;c<port->nconnections();c++){

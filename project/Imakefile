@@ -26,7 +26,8 @@ SCI_LIBS = \
 	SCI_ClassLib \
 	../../wrapper/libMInT/libMInT.a
 
-SCI_LDFLAGS = -L../../audio -laudio SCI_LM SCI_LTHREAD SCI_LMOTIF SCI_LX11 -lgen
+SCI_LDFLAGS = -L../../audio -laudio SCI_LM SCI_LTHREAD SCI_LMOTIF \
+	SCI_LX11 -lgen -lGLw -lGL
 
 depend:: XQColorDB.h
 
