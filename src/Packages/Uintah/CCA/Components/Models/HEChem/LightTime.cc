@@ -13,6 +13,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <iostream>
 #include <Core/Util/DebugStream.h>
+#include <Core/Math/MiscMath.h>
 
 using namespace Uintah;
 using namespace std;
@@ -246,7 +247,7 @@ void LightTime::computeModelSources(const ProcessorGroup*,
       IntVector c = *iter;
 
       Point pos = lvl->getCellPosition(c);
-      double dist_plane = abs(A*pos.x() + B*pos.y() + C*pos.z() + D)/denom;
+      double dist_plane = Abs(A*pos.x() + B*pos.y() + C*pos.z() + D)/denom;
       double dist_straight = (pos - d_start_place).length();
       double dist = dist_plane*plane + dist_straight*(1.-plane);
       double t_b = dist/d_D; 
