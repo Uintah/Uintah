@@ -86,6 +86,8 @@ WARNING
 			    IntVector& strides) const = 0;
       virtual void getSizeInfo(string& elems, unsigned long& totsize,
 			  void*& ptr) const = 0;
+      virtual IntVector getLow() = 0;
+      virtual IntVector getHigh() = 0;
      virtual RefCounted* getRefCounted() = 0;
    protected:
       NCVariableBase(const NCVariableBase&);
