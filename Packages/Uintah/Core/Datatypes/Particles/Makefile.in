@@ -19,6 +19,7 @@ SIDL_EXE = $(OBJTOP)/tools/sidl/sidl
 
 include $(SRCTOP)/scripts/objs.mk
 
+ifeq (@BUILD_PARALLEL@,yes)
 Particles_sidl.o: Particles_sidl.cc Particles_sidl.h
 $(OBJS): Particles_sidl.h
 
@@ -28,3 +29,4 @@ Particles_sidl.cc: Particles.sidl $(SIDL_EXE)
 Particles_sidl.h: Particles.sidl $(SIDL_EXE)
 	$(SIDL_EXE) -h -o $@ $<
 
+endif
