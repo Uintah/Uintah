@@ -35,6 +35,7 @@ using SCIRun::PersistentTypeID;
 struct streamerNode {
 				// to keep track of length
   int counter;
+  double length;
   Point position;
   Vector normal;
   Material color;
@@ -68,6 +69,7 @@ public:
   void SetLineWidth( int w){ _linewidth = w; }
   void SetStepSize( double step){ _stepsize = step; }
   void SetWidgetLocation(Point p){ widgetLocation = p; }
+  void IncrementFlow();
   //void UseWidget(bool b){ _usesWidget = b; }
   GLAnimatedStreams(const GLAnimatedStreams&);
   ~GLAnimatedStreams();
@@ -112,7 +114,8 @@ private:
   bool _normalsOn;
   double _stepsize;
   int _linewidth;
-
+  int flow;
+  
   streamerNode** head;		// array of pointers to head node in
 				// each solution
   streamerNode** tail;		// array of pointers to tail node in
@@ -122,6 +125,7 @@ private:
   void RungeKutta(Point& x, double h);
   void init();
   void initColorMap();
+  void DecrementFlow();
   static const double FADE;
   static const int MAXN;
 
