@@ -35,6 +35,7 @@
 #include <Core/Math/Trig.h>
 #include <iostream>
 using std::cerr;
+using std::endl;
 #include <stdio.h>
 
 namespace SCIRun {
