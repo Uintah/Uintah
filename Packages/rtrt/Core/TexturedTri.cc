@@ -6,6 +6,7 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/MiscMath.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Thread/Thread.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <iostream>
 
@@ -61,16 +62,16 @@ TexturedTri::~TexturedTri()
 }
 
 void
-TexturedTri::set_texcoords(const Point& _p1,
-                           const Point& _p2,
-                           const Point& _p3)
+TexturedTri::set_texcoords(const Point& tx1,
+                           const Point& tx2,
+                           const Point& tx3)
 {
-  tv1 = _p1;
-  tv2 = _p2;
-  tv3 = _p3;
+  tv1 = tx1;
+  tv2 = tx2;
+  tv3 = tx3;
 
-  t0 = p2-p1;
-  t1 = p3-p1;
+  t0 = tx2-tx1;
+  t1 = tx3-tx1;
   dt0 = t0.length();
   dt1 = t1.length();
 }
@@ -79,10 +80,14 @@ void
 TexturedTri::uv(UV& uv, const Point& p, const HitInfo& hit)
 {
   Vector v(p-p1);
-  double uu=(Dot(v0, p)/(dv0));
-  double vv=(Dot(v1, p)/(dv1));
+  Vector nv0 = v0;
+  Vector nv1 = v1;
+  nv0.normalize();
+  nv1.normalize();
+  double uu=(Dot(nv0, v)/(dv0));
+  double vv=(Dot(nv1, v)/(dv1));
 
-  Point tp = p1+(t0*uu+t1*vv);
+  Point tp = tv1+((t0*uu)+(t1*vv));
 
   uv.set(tp.x(),tp.y());
 }
