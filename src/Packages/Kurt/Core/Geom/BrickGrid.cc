@@ -10,7 +10,6 @@
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
-#include <Packages/Kurt/Core/Geom/BrickGridThread.h>
 #include <iostream>
 #include <vector>
 #include <functional>
