@@ -43,15 +43,25 @@ proc add_axis {w tag info} {
     set f [$w childsite]
     $f.rb add $tag -text $info
     incr teem_num_axes
-    puts $teem_num_axes
+}
+
+proc select_axis {w tag} {
+    global teem_num_axes
+    set f [$w childsite]
+    $f.rb select $tag
 }
 
 proc delete_all_axes {w} {
     global teem_num_axes
     set f [$w childsite]
-
-    while {$teem_num_axes > 0} {
-	set teem_num_axes [expr $teem_num_axes - 1]
-	$f.rb delete $teem_num_axes
+    # if catch catches an error its already empty
+    if { [catch { set last [$f.rb index end] } ] } {
+	set last 0
+    } else {
+	set i 0
+	while {$i <= $last} {
+	    $f.rb delete 0
+	    incr i
+	} 
     }
 }

@@ -34,12 +34,14 @@ itcl_class Teem_DataIO_NrrdReader {
 	global $this-type
 	global $this-add
 	global $this-axis
+	global $this-sel
 
 	set $this-filename ""
 	set $this-label unknown
 	set $this-type Scalar
 	set $this-add 0
 	set $this-axis ""
+	set $this-sel ""
     }
 
     method make_file_open_box {} {
@@ -89,7 +91,7 @@ itcl_class Teem_DataIO_NrrdReader {
 	makeOpenFilebox \
 	    -parent $w \
 	    -filevar $this-filename \
-	    -command "$this-c read_nrrd; destroy $w" \
+	    -command "set $this-axis \"\";$this-c read_nrrd;destroy $w" \
 	    -cancel "destroy $w" \
 	    -title $title \
 	    -filetypes $types \
@@ -102,11 +104,12 @@ itcl_class Teem_DataIO_NrrdReader {
 	set $this-type [$om get]
     }
 
-    # set the saved axis... set $this-axis [get_selection $w]
+
     # set the axis variable
     method set_axis {w} {
-	set $this-axis [get_selection $w]
-	#puts [set $this-axis]
+	if {[get_selection $w] != ""} {
+	    set $this-axis [get_selection $w]
+	}
     }
 
     method clear_axis_info {} {
@@ -118,10 +121,15 @@ itcl_class Teem_DataIO_NrrdReader {
 
     method add_axis_info {id label center size spacing min max} {
 	set w .ui[modname]
+
 	if {[winfo exists $w]} {
 	    add_axis $w.rb "axis$id" "Axis $id\nLabel: $label\nCenter: $center\nSize $size\nSpacing: $spacing\nMin: $min\nMax: $max"
 	}
-	#puts "called with id: $id"
+	# set the saved axis...
+	if {[set $this-axis] == "axis$id"} {
+	    select_axis $w.rb "axis$id"
+	    set $this-axis "axis$id"
+	}
     }
 
     method ui {} {
