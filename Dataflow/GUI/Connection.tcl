@@ -167,6 +167,10 @@ proc addConnection { omodid owhich imodid iwhich } {
 proc createConnection { conn { record_undo 0 } { tell_SCIRun 1 } } {
     global Subnet Notes Disabled Color undoList redoList
 
+    # if the module name is blank discard this call and return with no error
+    # this is mainly for loading networks that have unfound modules
+    if {![string length [iMod conn]] || ![string length [oMod conn]]} {return}
+
     # If the in or out module of the connection is exactly "Subnet"
     # append the subnet number of the opposite ends module to the name
     if {[string equal [oMod conn] Subnet]&&[info exists Subnet([iMod conn])]} {
@@ -185,10 +189,6 @@ proc createConnection { conn { record_undo 0 } { tell_SCIRun 1 } } {
 	return
     }
     
-    # if the module name is blank discard this call and return with no error
-    # this is mainly for loading networks that have unfound modules
-    if {![string length [iMod conn]] || ![string length [oMod conn]]} {return}
-
     # make sure the connection lives entirely on the same subnet
     if { ![info exists Subnet([oMod conn])] ||
 	 ![info exists Subnet([iMod conn])] ||
