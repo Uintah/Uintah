@@ -5104,6 +5104,8 @@ void BoundaryCondition::sched_getScalarEfficiency(SchedulerP& sched,
   }
   if (d_enthalpySolve) {
     tsk->requires(Task::NewDW, d_lab->d_enthalpyFlowRateLabel);
+    tsk->requires(Task::NewDW, d_lab->d_totalRadSrcLabel);
+    tsk->computes(d_lab->d_normTotalRadSrcLabel);
     tsk->computes(d_lab->d_enthalpyEfficiencyLabel);
   }
 
@@ -5121,6 +5123,7 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
 			      DataWarehouse* new_dw)
 {
     sum_vartype sum_scalarFlowRate, sum_CO2FlowRate, sum_enthalpyFlowRate;
+    sum_vartype sum_totalRadSrc;
     delt_vartype flowRate;
     double scalarFlowRate = 0.0;
     double CO2FlowRate = 0.0;
@@ -5131,6 +5134,8 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
     double scalarEfficiency = 0.0;
     double carbonEfficiency = 0.0;
     double enthalpyEfficiency = 0.0;
+    double totalRadSrc = 0.0;
+    double normTotalRadSrc = 0.0;
 
     new_dw->get(sum_scalarFlowRate, d_lab->d_scalarFlowRateLabel);
     scalarFlowRate = sum_scalarFlowRate;
@@ -5141,6 +5146,8 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
     if (d_enthalpySolve) {
       new_dw->get(sum_enthalpyFlowRate, d_lab->d_enthalpyFlowRateLabel);
       enthalpyFlowRate = sum_enthalpyFlowRate;
+      new_dw->get(sum_totalRadSrc, d_lab->d_totalRadSrcLabel);
+      totalRadSrc = sum_totalRadSrc;
     }
     for (int indx = 0; indx < d_numInlets; indx++) {
       FlowInlet fi = d_flowInlets[indx];
@@ -5170,11 +5177,15 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
       new_dw->put(delt_vartype(carbonEfficiency), d_lab->d_carbonEfficiencyLabel);
     }
     if (d_enthalpySolve) {
-      if (totalEnthalpyFlowRate < 0.0)
+      if (totalEnthalpyFlowRate < 0.0) {
 	enthalpyEfficiency = enthalpyFlowRate/totalEnthalpyFlowRate;
+	normTotalRadSrc = totalRadSrc/totalEnthalpyFlowRate;
+	enthalpyEfficiency -= normTotalRadSrc;
+      }
       else 
 	throw InvalidValue("No enthalpy in the domain");
       new_dw->put(delt_vartype(enthalpyEfficiency), d_lab->d_enthalpyEfficiencyLabel);
+      new_dw->put(delt_vartype(normTotalRadSrc), d_lab->d_normTotalRadSrcLabel);
     }
  
 }
