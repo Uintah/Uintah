@@ -21,9 +21,6 @@ INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk
 
-$(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
-	sed 's/<TYPE>/<double>/g' < $(SRCDIR)/ScalarFieldRGTYPE.h | sed 's/TYPE//g' > $(SRCDIR)/ScalarFieldRG.h
-
 $(SRCDIR)/ScalarFieldRGchar.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 	sed 's/TYPE/char/g' < $(SRCDIR)/ScalarFieldRGTYPE.h > $(SRCDIR)/ScalarFieldRGchar.h
 
@@ -42,6 +39,9 @@ $(SRCDIR)/ScalarFieldRGfloat.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 
 $(SRCDIR)/ScalarFieldRGdouble.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 	sed 's/TYPE/double/g' < $(SRCDIR)/ScalarFieldRGTYPE.h > $(SRCDIR)/ScalarFieldRGdouble.h
+
+$(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGdouble.h $(SRCDIR)/ScalarFieldRGTYPE.h
+	sed 's/RGdouble/RG/g' < $(SRCDIR)/ScalarFieldRGdouble.h > $(SRCDIR)/ScalarFieldRG.h
 
 
 # .CC
@@ -67,5 +67,5 @@ $(SRCDIR)/ScalarFieldRGfloat.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/Scalar
 $(SRCDIR)/ScalarFieldRGdouble.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGdouble.h
 	sed 's/TYPE/double/g' < $(SRCDIR)/ScalarFieldRGTYPE.cc > $(SRCDIR)/ScalarFieldRGdouble.cc 
 
-$(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGdouble.h
-
+$(SRCDIR)/ScalarFieldRG.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGdouble.cc $(SRCDIR)/ScalarFieldRG.h
+	sed 's/RGdouble/RG/g' < $(SRCDIR)/ScalarFieldRGdouble.cc > $(SRCDIR)/ScalarFieldRG.cc
