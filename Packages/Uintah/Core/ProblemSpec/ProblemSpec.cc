@@ -579,6 +579,38 @@ bool ProblemSpec::get(long &value)
    return false;
 }
 
+bool ProblemSpec::get(Vector &value)
+{
+  std::string string_value;
+  for (DOMNode* child = d_node->getFirstChild(); child != 0;
+      child = child->getNextSibling()) {
+    if (child->getNodeType() == DOMNode::TEXT_NODE) {
+     const char *s = XMLString::transcode(child->getNodeValue());
+     string_value = std::string(s);
+     delete [] s;
+     // Parse out the [num,num,num]
+     // Now pull apart the string_value
+     std::string::size_type i1 = string_value.find("[");
+     std::string::size_type i2 = string_value.find_first_of(",");
+     std::string::size_type i3 = string_value.find_last_of(",");
+     std::string::size_type i4 = string_value.find("]");
+
+     std::string x_val(string_value,i1+1,i2-i1-1);
+     std::string y_val(string_value,i2+1,i3-i2-1);
+     std::string z_val(string_value,i3+1,i4-i3-1);
+
+     checkForInputError(x_val, "double"); 
+     checkForInputError(y_val, "double");
+     checkForInputError(z_val, "double");
+
+     value.x(atof(x_val.c_str()));
+     value.y(atof(y_val.c_str()));
+     value.z(atof(z_val.c_str()));	
+    }
+  }        
+  return false;
+}
+
 
 ProblemSpecP ProblemSpec::getWithDefault(const std::string& name, 
 					 double& value, double defaultVal) 
