@@ -197,29 +197,6 @@ void AnalyzeToNrrd::execute(){
 
 /*===========================================================================*/
 // 
-// split_string
-//
-// Description : Splits a string into vector of strings based on a separator.
-//
-// Arguments   :
-//
-// const T &src - String to be split.
-// C &container - Vector of strings to contain result.
-// typename T::value_type splitter - Separator string.
-// 
-template < class T, class C >
-void split_string(const T &src, C &container, typename T::value_type splitter)
-{
-  std::basic_istringstream<typename T::value_type> str_data(src);
-  T line;
-  while( std::getline(str_data, line, str_data.widen(splitter)) ) 
-  {
-    container.push_back(line);
-  }
-}
-
-/*===========================================================================*/
-// 
 // tcl_command
 //
 // Description : The tcl_command function for this module.
