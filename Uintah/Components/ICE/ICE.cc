@@ -237,10 +237,10 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	sched->addTask(t);
       }
 
-      // Step 1e computes momentum exchange on FC velocities
+      // Step 2 computes delPress and the new pressure
       {
-	Task* t = scinew Task("ICE::step1e",patch, old_dw, new_dw,this,
-			       &ICE::actuallyStep1e);
+	Task* t = scinew Task("ICE::step2",patch, old_dw, new_dw,this,
+			       &ICE::actuallyStep2);
 
 	for (int m = 0; m < numMatls; m++) {
 	  Material* matl = d_sharedState->getMaterial(m);
@@ -254,18 +254,15 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(new_dw,lb->wvel_FCMELabel,
 			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(new_dw,lb->speedSound_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(new_dw,lb->rho_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
 
 	    t->computes(new_dw,lb->div_velfc_CCLabel,matl->getDWIndex(),patch);
+	    t->computes(new_dw,lb->pressdP_CCLabel,  matl->getDWIndex(),patch);
+	    t->computes(new_dw,lb->delPress_CCLabel, matl->getDWIndex(),patch);
           }
-	}
-	sched->addTask(t);
-      }
-
-      // Step 2
-      {
-	Task* t = scinew Task("ICE::step2",patch, old_dw, new_dw,this,
-			       &ICE::actuallyStep2);
-	for (int m = 0; m < numMatls; m++) {
 	}
 	sched->addTask(t);
       }
@@ -813,16 +810,18 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
   }
 }
 
-void ICE::actuallyStep1e(const ProcessorGroup*,
+void ICE::actuallyStep2(const ProcessorGroup*,
 		   const Patch* patch,
 		   DataWarehouseP& old_dw,
 		   DataWarehouseP& new_dw)
 {
-  cout << "Doing actually step1e" << endl;
+  cout << "Doing actually step2" << endl;
 
   int numMatls = d_sharedState->getNumMatls();
+  delt_vartype delT;
+  old_dw->get(delT, d_sharedState->get_delt_label());
   Vector dx = patch->dCell();
-  double  top, bottom, right, left, front, back;
+  double  top, bottom, right, left, front, back,vol,coeff;
 
   // Compute the divergence of the face centered velocities
   for(int m = 0; m < numMatls; m++){
@@ -835,17 +834,30 @@ void ICE::actuallyStep1e(const ProcessorGroup*,
       FCVariable<double> vvel_FC;
       FCVariable<double> wvel_FC;
       CCVariable<double> vol_frac;
+      CCVariable<double> rho_CC;
+      CCVariable<double> speedSound;
+      CCVariable<double> pressure;
       new_dw->get(uvel_FC, lb->uvel_FCMELabel, vfindex, patch, Ghost::None, 0);
       new_dw->get(vvel_FC, lb->vvel_FCMELabel, vfindex, patch, Ghost::None, 0);
       new_dw->get(wvel_FC, lb->wvel_FCMELabel, vfindex, patch, Ghost::None, 0);
       new_dw->get(vol_frac,lb->vol_frac_CCLabel, vfindex,patch,Ghost::None, 0);
+      new_dw->get(rho_CC,lb->rho_CCLabel,      vfindex,patch,Ghost::None, 0);
+      new_dw->get(speedSound,lb->speedSound_CCLabel,
+					       vfindex,patch,Ghost::None, 0);
+      new_dw->get(pressure,lb->press_CCLabel,  vfindex,patch,Ghost::None, 0);
 
       // Create variables for the results
       CCVariable<double> div_velfc_CC;
+      CCVariable<double> delPress;
+      CCVariable<double> pressdP;
       new_dw->allocate(div_velfc_CC, lb->div_velfc_CCLabel, vfindex, patch);
+      new_dw->allocate(delPress, lb->delPress_CCLabel, vfindex, patch);
+      new_dw->allocate(pressdP, lb->pressdP_CCLabel, vfindex, patch);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
 	IntVector curcell = *iter;
+	vol   = dx.x()*dx.y()*dx.z();
+	coeff = delT * rho_CC[*iter] * speedSound[*iter]*speedSound[*iter]/vol;
 //	top      =  dx.x()*dx.z()* vvel_FC[*iter][TOP];
 //	bottom   = -dx.x()*dx.z()* vvel_FC[*iter][BOTTOM];
 //	left     = -dx.y()*dx.z()* uvel_FC[*iter][LEFT];
@@ -854,22 +866,17 @@ void ICE::actuallyStep1e(const ProcessorGroup*,
 //	back     = -dx.x()*dx.y()* wvel_FC[*iter][BACK];
 	div_velfc_CC[*iter] = vol_frac[*iter]*
 			     (top + bottom + left + right + front  + back );
+	delPress[*iter]     = -coeff * div_velfc_CC[*iter];
+	pressdP[*iter]     += delPress[*iter];
       }
 
       new_dw->put(div_velfc_CC, lb->div_velfc_CCLabel, vfindex, patch);
+      new_dw->put(pressdP,  lb->pressdP_CCLabel, vfindex, patch);
+      new_dw->put(delPress, lb->delPress_CCLabel, vfindex, patch);
     }
   }
 
 }
-void ICE::actuallyStep2(const ProcessorGroup*,
-		   const Patch* patch,
-		   DataWarehouseP& old_dw,
-		   DataWarehouseP& new_dw)
-{
-  cout << "Doing actually step2" << endl;
-}
-
-
 
 void ICE::actuallyStep3(const ProcessorGroup*,
 		   const Patch* patch,
@@ -941,6 +948,9 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.34  2000/10/16 19:10:34  guilkey
+// Combined step1e with step2 and eliminated step1e.
+//
 // Revision 1.33  2000/10/16 18:32:40  guilkey
 // Implemented "step1e" of the ICE algorithm.
 //

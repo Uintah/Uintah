@@ -19,6 +19,8 @@ namespace Uintah {
 
     // Cell centered variables
     const VarLabel* press_CCLabel;
+    const VarLabel* pressdP_CCLabel;
+    const VarLabel* delPress_CCLabel;
     const VarLabel* rho_micro_CCLabel;
     const VarLabel* rho_CCLabel;
     const VarLabel* temp_CCLabel;
@@ -46,6 +48,9 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.6  2000/10/16 19:10:35  guilkey
+// Combined step1e with step2 and eliminated step1e.
+//
 // Revision 1.5  2000/10/13 00:01:11  guilkey
 // More work on ICE
 //
