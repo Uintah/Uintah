@@ -1,9 +1,9 @@
 %define defname SCIRun
 %define defver	1.20
 %define dotver  0
-%define gccver  3.2
-%define plat	rh8.0
-%define distro  Red Hat 8.0
+%define gccver  3.2.2
+%define plat	rh9.0
+%define distro  Red Hat 9.0
 %define debug   opt
 
 
