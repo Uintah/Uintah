@@ -37,14 +37,14 @@ CutPlaneDpy::CutPlaneDpy(const Vector& n, const Point& cen)
   : PlaneDpy(n, cen), cen(cen)
 {
   on = true;
-  dscale = 1.0;
+  dscale = 0.5;
 }
 CutPlaneDpy::CutPlaneDpy(const Vector& n, const double d)
   : PlaneDpy(n, d)
 {
   cen = Point(0,0,0)+n*d;
   on = true;
-  dscale = 1.0;
+  dscale = 0.5;
 }
 
 CutPlaneDpy::~CutPlaneDpy()
