@@ -688,8 +688,9 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   else
     d_recompile = false;
 
+  d_mpm->scheduleApplyExternalLoads(sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
-  d_mpm->scheduleComputeHeatExchange(             sched, patches, mpm_matls);
+  d_mpm->scheduleComputeHeatExchange(       sched, patches, mpm_matls);
 
   // interpolate mpm properties from node center to cell center
   // and subsequently to face center
@@ -739,7 +740,7 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   d_mpm->scheduleIntegrateAcceleration(sched, patches, mpm_matls);
   d_mpm->scheduleIntegrateTemperatureRate(sched, patches, mpm_matls);
   d_mpm->scheduleExMomIntegrated(sched, patches, mpm_matls);
-  d_mpm->scheduleApplyExternalLoads(sched, patches, mpm_matls);
+  //  d_mpm->scheduleApplyExternalLoads(sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, patches, mpm_matls);
 
   sched->scheduleParticleRelocation(level, 
