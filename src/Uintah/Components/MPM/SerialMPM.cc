@@ -49,6 +49,9 @@ using namespace std;
 SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
 {
+
+   d_gravity=Vector(0.0,0.0,0.);
+
    pDeformationMeasureLabel = new VarLabel("p.deformationMeasure",
 			    ParticleVariable<Matrix3>::getTypeDescription());
 
@@ -635,7 +638,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       NCVariable<Vector> gvelocity;
       NCVariable<Vector> externalforce;
 
-      std::cerr << "allocating grid variables" << std::endl;
+//      std::cerr << "allocating grid variables" << std::endl;
       new_dw->allocate(gmass,         gMassLabel, vfindex, region);
       new_dw->allocate(gvelocity,     gVelocityLabel, vfindex, region);
       new_dw->allocate(externalforce, gExternalForceLabel, vfindex, region);
@@ -683,31 +686,14 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 	    gvelocity[*iter] *= 1./gmass[*iter];
 	 }
       }
+#if 0
 
       // Apply grid boundary conditions to the velocity
       // before storing the data
       for(int face = 0; face<6; face++){
-	Region::FaceType f;
-	switch (face) {
-	case 0:
-	    f = Region::xplus;
-	    break;
-	case 1:
-	  f = Region::xminus;
-	  break;
-	case 2:
-	  f = Region::yplus;
-	  break;
-	case 3:
-	  f = Region::yminus;
-	  break;
-	case 4:
-	  f = Region::zplus;
-	  break;
-	case 5:
-	  f = Region::zminus;
-	  break;
-	}
+	Region::FaceType f=(Region::FaceType)face;
+
+#if 0
 	switch(region->getBCType(f)){
 	case Region::None:
 	     // Do nothing
@@ -722,7 +708,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 	     // Do nothing
 	     break;
 	}
+#endif
+	gvelocity.fillFace(f,Vector(0.0,0.0,0.0));
       }
+#endif
 
       new_dw->put(gmass,         gMassLabel, vfindex, region);
       new_dw->put(gvelocity,     gVelocityLabel, vfindex, region);
@@ -836,7 +825,6 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 				     DataWarehouseP& new_dw)
 {
   Vector zero(0.,0.,0.);
-  Vector gravity;
 
   // This needs the datawarehouse to allow indexing by velocity
   // field for the grid data
@@ -855,10 +843,10 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 
 #if 0
       if(vfindex==0){
-	gravity=Vector(0.0,0.0,0.0);
+	d_gravity=Vector(0.0,0.0,0.0);
       }
       else{
-	gravity=Vector(0.0,0.0,-980.0);
+	d_gravity=Vector(0.0,0.0,-980.0);
       }
 #endif
 
@@ -877,7 +865,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 	if(mass[*iter]>0.0){
 	  acceleration[*iter] =
 		 (internalforce[*iter] + externalforce[*iter])/ mass[*iter]
-		 + gravity;
+		 + d_gravity;
 	}
 	else{
 	  acceleration[*iter] = zero;
@@ -946,6 +934,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
   Vector acc(0.0,0.0,0.0);
   double ke=0;
 
+  Vector numerator(0.0,0.0,0.0);
+  double denominator=0.0;
+  Vector xcm;
+
   // This needs the datawarehouse to allow indexing by material
 
   int numMatls = d_sharedState->getNumMatls();
@@ -975,9 +967,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       new_dw->get(gacceleration, gMomExedAccelerationLabel, vfindex, region,
 		  Ghost::AroundCells, 1);
 
+#if 0
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
       for(int face = 0; face<6; face++){
+	Region::FaceType f=(Region::FaceType)face;
+#if 0
 	// Dummy holder until this is resolved
 	Region::FaceType f = Region::xplus;
 	Region::BCType bctype = region->getBCType(f);
@@ -997,7 +992,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 	     // Do nothing
 	     break;
 	}
+#endif
+	gvelocity_star.fillFace(f,Vector(0.0,0.0,0.0));
+	gacceleration.fillFace(f,Vector(0.0,0.0,0.0));
       }
+#endif
 
       old_dw->get(delt, deltLabel);
 
@@ -1032,12 +1031,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
        // is where we would update the lists so that each particle
        // is in the correct cells list
 
-      }
+        if(matlindex==0){
+	  numerator = Vector(numerator.x() + px[idx].x()*pmass[idx],
+			     numerator.y() + px[idx].y()*pmass[idx],
+			     numerator.z() + px[idx].z()*pmass[idx]);
+	  denominator+=pmass[idx];
+	}
 
-#if 0
-      static ofstream tmpout2("tmp2.out");
-      tmpout2 << ts << " " << px[0] << std::endl;
-#endif
+      }
 
       // Store the new result
       new_dw->put(px,        pXLabel, matlindex, region);
@@ -1056,10 +1057,61 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
     }
   }
 
-  static ofstream tmpout("tmp.out");
+#if 0
+  // Code to dump out tecplot files
   static int ts=0;
-  tmpout << ts << " " << ke << std::endl;
+  int freq = 10;
+
+  if (( ts % freq) == 0) {
+   char fnum[5];
+   string filename;
+   int stepnum=ts/freq;
+   sprintf(fnum,"%04d",stepnum);
+   string partroot("partout");
+
+   filename = partroot+fnum;
+   ofstream partfile(filename.c_str());
+
+   partfile << "TITLE = \"Time Step # " << ts <<"\"," << endl;
+   partfile << "VARIABLES = X,Y,Z" << endl;
+//   partfile << "ZONE T=\"PARTICLES\", I=" << numberParticles();
+   partfile << "ZONE T=\"PARTICLES\", I= 25216";
+   partfile <<", F=POINT" << endl;
+
+   for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int matlindex = matl->getDWIndex();
+      int vfindex = matl->getVFIndex();
+      // Get the arrays of particle values to be changed
+      ParticleVariable<Point> px;
+      old_dw->get(px, pXLabel, matlindex, region, Ghost::None, 0);
+      ParticleVariable<double> pmass;
+      old_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None, 0);
+
+      ParticleSubset* pset = px.getParticleSubset();
+
+      cout << "Time step # " << ts << endl;
+
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+	 particleIndex idx = *iter;
+
+        partfile << px[idx].x() << " " << px[idx].y() << " " << px[idx].z()  << endl;
+
+      }
+    }
+   }
+  }
+
+  xcm = numerator/denominator;
+
+  static ofstream tmpout("tmp.out");
+  tmpout << ts << " " << xcm.x() << " " << xcm.y() << " "
+				 << xcm.z() << " " << std::endl;
   ts++;
+#endif
 }
 
 void SerialMPM::crackGrow(const ProcessorContext*,
@@ -1070,6 +1122,10 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.58  2000/05/16 00:40:51  guilkey
+// Added code to do boundary conditions, print out tecplot files, and a
+// few other things.  Most of this is now commented out.
+//
 // Revision 1.57  2000/05/15 20:03:22  dav
 // couple of cleanups
 //
