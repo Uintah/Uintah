@@ -108,7 +108,9 @@ Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
 void Scene::init(const Camera& cam, const Color& bgcolor)
 {
   lightsGroup_ = new Group;
-  mainGroupWithLights_ = lightsGroup_;
+  mainGroupWithLights_ = new Group;
+  mainGroupWithLights_->add( mainGroup_ );
+  mainGroupWithLights_->add( lightsGroup_ );
 
   work.refill(0,0,8);
   shadow_mode = Hard_Shadows;
@@ -385,9 +387,11 @@ Scene::renderLights( bool on )
   if( on ){ 
     // Draw spheres for all the lights
     obj = mainGroupWithLights_;
+    cout << "numObjects: " << ((Group*)obj)->numObjects() << endl;
   } else {
     // Remove the spheres for all the lights
     obj = mainGroup_;
+    cout << "numObjects: " << ((Group*)obj)->numObjects() << endl;
   }
 }
 
