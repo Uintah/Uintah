@@ -15,7 +15,14 @@
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/SurfacePort.h>
 #include <Datatypes/ScalarFieldUG.h>
+#include <Datatypes/ScalarFieldRGdouble.h>
+#include <Datatypes/ScalarFieldRGfloat.h>
+#include <Datatypes/ScalarFieldRGint.h>
+#include <Datatypes/ScalarFieldRGshort.h>
+#include <Datatypes/ScalarFieldRGchar.h>
+#include <Datatypes/ScalarFieldRGuchar.h>
 #include <Datatypes/VectorFieldPort.h>
+#include <Datatypes/VectorFieldRG.h>
 #include <Datatypes/VectorFieldUG.h>
 #include <Geometry/Point.h>
 #include <TCL/TCLvar.h>
@@ -65,68 +72,108 @@ Module* Gradient::clone(int deep)
 
 void Gradient::execute()
 {
-    ScalarFieldHandle iff;
-    if(!infield->get(iff))
+    ScalarFieldHandle sf;
+    VectorFieldHandle vf;
+    if(!infield->get(sf))
 	return;
-    ScalarFieldUG* sfield=iff->getUG();
-    if(!sfield){
-	error("Gradient can't deal with this field");
-	return;
-    }
-    VectorFieldUG* vfield;
-    if(interpolate.get()){
-	vfield=new VectorFieldUG(VectorFieldUG::NodalValues);
-	vfield->mesh=sfield->mesh;
-	vfield->data.resize(sfield->data.size());
-	Mesh* mesh=sfield->mesh.get_rep();
-	int nnodes=mesh->nodes.size();
-	Array1<Vector>& gradients=vfield->data;
-	int i;
-	for(i=0;i<nnodes;i++)
-	    gradients[i]=Vector(0,0,0);
-	int nelems=mesh->elems.size();
-	for(i=0;i<nelems;i++){
-	    if(i%1000 == 0)
-		update_progress(i, nelems);
-	    Element* e=mesh->elems[i];
-	    Point pt;
-	    Vector grad1, grad2, grad3, grad4;
-	    /*double vol=*/mesh->get_grad(e, pt, grad1, grad2, grad3, grad4);
-	    double v1=sfield->data[e->n[0]];
-	    double v2=sfield->data[e->n[1]];
-	    double v3=sfield->data[e->n[2]];
-	    double v4=sfield->data[e->n[3]];
-	    Vector gradient(grad1*v1+grad2*v2+grad3*v3+grad4*v4);
-	    for(int j=0;j<4;j++){
-		gradients[e->n[j]]+=gradient;
+    ScalarFieldUG* sfug=sf->getUG();
+    ScalarFieldRGBase* sfb=sf->getRGBase();
+    if (sfug) {
+	VectorFieldUG* vfug;
+	if(interpolate.get()){
+	    vfug=new VectorFieldUG(VectorFieldUG::NodalValues);
+	    vfug->mesh=sfug->mesh;
+	    vfug->data.resize(sfug->data.size());
+	    Mesh* mesh=sfug->mesh.get_rep();
+	    int nnodes=mesh->nodes.size();
+	    Array1<Vector>& gradients=vfug->data;
+	    int i;
+	    for(i=0;i<nnodes;i++)
+		gradients[i]=Vector(0,0,0);
+	    int nelems=mesh->elems.size();
+	    for(i=0;i<nelems;i++){
+		if(i%1000 == 0)
+		    update_progress(i, nelems);
+		Element* e=mesh->elems[i];
+		Point pt;
+		Vector grad1, grad2, grad3, grad4;
+		/*double vol=*/mesh->get_grad(e, pt, grad1, grad2, grad3, grad4);
+		double v1=sfug->data[e->n[0]];
+		double v2=sfug->data[e->n[1]];
+		double v3=sfug->data[e->n[2]];
+		double v4=sfug->data[e->n[3]];
+		Vector gradient(grad1*v1+grad2*v2+grad3*v3+grad4*v4);
+		for(int j=0;j<4;j++){
+		    gradients[e->n[j]]+=gradient;
+		}
+	    }
+	    for(i=0;i<nnodes;i++){
+		if(i%1000 == 0)
+		    update_progress(i, nnodes);
+		NodeHandle& n=mesh->nodes[i];
+		gradients[i]*=1./(n->elems.size());
+	    }
+	} else {
+	    vfug=new VectorFieldUG(VectorFieldUG::ElementValues);
+	    vfug->mesh=sfug->mesh;
+	    Mesh* mesh=sfug->mesh.get_rep();
+	    int nelems=mesh->elems.size();
+	    vfug->data.resize(nelems);
+	    for(int i=0;i<nelems;i++){
+		//	    if(i%10000 == 0)
+		//		update_progress(i, nelems);
+		Element* e=mesh->elems[i];
+		Point pt;
+		Vector grad1, grad2, grad3, grad4;
+		/*double vol=*/mesh->get_grad(e, pt, grad1, grad2, grad3, grad4);
+		double v1=sfug->data[e->n[0]];
+		double v2=sfug->data[e->n[1]];
+		double v3=sfug->data[e->n[2]];
+		double v4=sfug->data[e->n[3]];
+		Vector gradient(grad1*v1+grad2*v2+grad3*v3+grad4*v4);
+		vfug->data[i]=gradient;
 	    }
 	}
-	for(i=0;i<nnodes;i++){
-	    if(i%1000 == 0)
-		update_progress(i, nnodes);
-	    NodeHandle& n=mesh->nodes[i];
-	    gradients[i]*=1./(n->elems.size());
-	}
+	vf=vfug;
     } else {
-	vfield=new VectorFieldUG(VectorFieldUG::ElementValues);
-	vfield->mesh=sfield->mesh;
-	Mesh* mesh=sfield->mesh.get_rep();
-	int nelems=mesh->elems.size();
-	vfield->data.resize(nelems);
-	for(int i=0;i<nelems;i++){
-//	    if(i%10000 == 0)
-//		update_progress(i, nelems);
-	    Element* e=mesh->elems[i];
-	    Point pt;
-	    Vector grad1, grad2, grad3, grad4;
-	    /*double vol=*/mesh->get_grad(e, pt, grad1, grad2, grad3, grad4);
-	    double v1=sfield->data[e->n[0]];
-	    double v2=sfield->data[e->n[1]];
-	    double v3=sfield->data[e->n[2]];
-	    double v4=sfield->data[e->n[3]];
-	    Vector gradient(grad1*v1+grad2*v2+grad3*v3+grad4*v4);
-	    vfield->data[i]=gradient;
+	int nx=sfb->nx;
+	int ny=sfb->ny;
+	int nz=sfb->nz;
+	VectorFieldRG *vfrg=new VectorFieldRG();
+	vfrg->resize(nx, ny, nz);
+	Point min, max;
+	sfb->get_bounds(min, max);
+	vfrg->set_bounds(min, max);
+	ScalarFieldRGdouble *sfrd=sfb->getRGDouble();
+	ScalarFieldRGfloat *sfrf=sfb->getRGFloat();
+	ScalarFieldRGint *sfri=sfb->getRGInt();
+	ScalarFieldRGshort *sfrs=sfb->getRGShort();
+	ScalarFieldRGchar *sfrc=sfb->getRGChar();
+	ScalarFieldRGuchar *sfru=sfb->getRGUchar();
+	for(int k=0;k<nz;k++){
+	    update_progress(k, nz);
+	    for(int j=0;j<ny;j++){
+		for(int i=0;i<nx;i++){
+		    if (sfrd)
+			vfrg->grid(i,j,k)=sfrd->gradient(i,j,k);
+		    else if (sfrf)
+			vfrg->grid(i,j,k)=sfrf->gradient(i,j,k);
+		    else if (sfri)
+			vfrg->grid(i,j,k)=sfri->gradient(i,j,k);
+		    else if (sfrs)
+			vfrg->grid(i,j,k)=sfrs->gradient(i,j,k);
+		    else if (sfrc)
+			vfrg->grid(i,j,k)=sfrc->gradient(i,j,k);
+		    else if (sfru)
+			vfrg->grid(i,j,k)=sfru->gradient(i,j,k);
+		    else {
+			cerr << "Unknown ScalarFieldBase in Gradient.\n";
+			return;
+		    }
+		}
+	    }
 	}
-	outfield->send(VectorFieldHandle(vfield));
+	vf=vfrg;
     }
+    outfield->send(vf);
 }
