@@ -341,7 +341,7 @@ NrrdToMatrix::create_matrix_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle rows
 template<class PTYPE> 
 MatrixHandle 
 NrrdToMatrix::create_column_matrix(NrrdDataHandle dataH) {
-
+  remark("Creating column matrix");
   int rows = dataH->nrrd->axis[0].size;
 
   ColumnMatrix* matrix = scinew ColumnMatrix(rows);
@@ -362,7 +362,7 @@ NrrdToMatrix::create_column_matrix(NrrdDataHandle dataH) {
 template<class PTYPE>
 MatrixHandle 
 NrrdToMatrix::create_dense_matrix(NrrdDataHandle dataH) {
-
+  remark("Creating dense matrix");
   int rows = dataH->nrrd->axis[1].size;
   int cols = dataH->nrrd->axis[0].size;
 
@@ -388,6 +388,7 @@ MatrixHandle
 NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
 				   NrrdDataHandle colsH, int cols) {
 
+  remark("Creating sparse row matrix");
   Nrrd *data_n = dataH->nrrd;
   Nrrd *rows_n = rowsH->nrrd;
   Nrrd *cols_n = colsH->nrrd;
