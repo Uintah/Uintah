@@ -22,7 +22,7 @@ TARFILE := ${notdir ${shell cd ..; pwd}}_Docs.tar
 TARBALL := ${TARFILE}.gz
 TARCMD := gnutar --exclude='*CVS*' --exclude='auto' \
 --create --verbose --file=${root}/doc/${TARFILE} 
-PRODUCTS := FAQBook Installation User Developer Documentum
+PRODUCTS := Installation User Developer Documentum
 
 # Build all docs except code view docs (in Developer/CodeViews).  To
 # additionally build code views invoke make this way: make WITH_CV=true
