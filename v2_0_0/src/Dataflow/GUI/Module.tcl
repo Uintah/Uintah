@@ -642,13 +642,15 @@ proc notesWindow { subnet id {done ""} } {
 }
 
 proc colorNotes { id } {
-    global Color    
+    global Color
+    networkHasChanged
     .notes.b.color configure -bg [set Color(Notes-$id) \
        [tk_chooseColor -initialcolor [.notes.b.color cget -bg]]]
 }
 
 proc okNotesWindow {subnet id {done  ""}} {
     global Notes
+    networkHasChanged
     set Notes($id) [.notes.input get 1.0 "end - 1 chars"]
     destroy .notes
     if { $done != ""} { eval $done $id }
@@ -815,6 +817,7 @@ proc canvasExists { canvas arg } {
 }
 
 proc disableConnection { conn } {
+    networkHasChanged
     global Subnet Disabled Color
     set connid [makeConnID $conn]
     set realConn [findRealConnection $conn]
@@ -875,6 +878,8 @@ proc createConnection { conn { undo 0 } { tell_SCIRun 1 } } {
 	($Subnet([iMod conn]) == 0 && [isaSubnetEditor [iMod conn]]) } {
 	return
     }
+    
+    networkHasChanged
 
     if { $tell_SCIRun} {
 	# Traverse the subnet levels to find the real connecting ports
@@ -921,6 +926,7 @@ proc createConnection { conn { undo 0 } { tell_SCIRun 1 } } {
 
 proc destroyConnection { conn { undo 0 } { tell_SCIRun 1 } } { 
     global Subnet Disabled Color
+    networkHasChanged
     deleteTraces
     listFindAndRemove Subnet([oMod conn]_connections) $conn
     listFindAndRemove Subnet([iMod conn]_connections) $conn
@@ -1283,6 +1289,7 @@ proc moduleDrag {modid x y} {
 }    
 
 proc do_moduleDrag {modid x y} {
+    networkHasChanged
     global Subnet lastX lastY grouplastX grouplastY SCALEX SCALEY
     set canvas $Subnet(Subnet$Subnet($modid)_canvas)
     set minicanvas $Subnet(Subnet$Subnet($modid)_minicanvas)
@@ -1524,6 +1531,7 @@ proc moduleHelp {modid} {
 
 proc moduleDestroy {modid} {
     global Subnet CurrentlySelectedModules
+    networkHasChanged
     if [isaSubnetIcon $modid] {
 	foreach submod $Subnet(Subnet$Subnet(${modid}_num)_Modules) {
 	    moduleDestroy $submod
