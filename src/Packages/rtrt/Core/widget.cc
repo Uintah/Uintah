@@ -26,6 +26,7 @@ using namespace rtrt;
 // creation of new triangle widget
 TriWidget::TriWidget( float x, float w, float h, float c[3], float a )
 {
+  switchFlag = 0;
   type = 0;
   drawFlag = 0;
   width = w;
@@ -56,8 +57,9 @@ TriWidget::TriWidget( float x, float w, float h, float c[3], float a )
 // replacement of another widget with a triangle widget, 
 //  retaining some values such as position, opacity, and color
 TriWidget::TriWidget( float x, float w, float h, float l, float c[3], float a, 
-		      float o_x, float o_y, Texture<GLfloat> *t )
+		      float o_x, float o_y, Texture<GLfloat> *t, int sF )
 {
+  switchFlag = sF;
   drawFlag = 0;
   type = 0;
   width = w;
@@ -89,8 +91,9 @@ TriWidget::TriWidget( float x, float w, float h, float l, float c[3], float a,
 TriWidget::TriWidget( float lV0, float mLV0, float mLV1, float mRV0, float mRV1,
 		      float uLV0, float uLV1, float uRV0, float uRV1, float r, float g, float b,
 		      float a, float o_x, float o_y, float t_r, float t_g, float t_b,
-		      int t_x, int t_y )
+		      int t_x, int t_y, int sF )
 {
+  switchFlag = sF;
   lowerVertex[0] = lV0;        lowerVertex[1] = 0;
   midLeftVertex[0] = mLV0;     midLeftVertex[1] = mLV1;
   midRightVertex[0] = mRV0;    midRightVertex[1] = mRV1;
@@ -403,6 +406,7 @@ TriWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4],
   float intensity;
   float opacity_offset = 2*(opac_x-upperLeftVertex[0])/(upperRightVertex[0]-upperLeftVertex[0])-1.0;
   float halfWidth;
+  float halfHeight = (endy-starty)*0.5f;
   for( y = starty; y < endy; y++ )
     {
       // higher precision values for intensity computation
@@ -415,15 +419,26 @@ TriWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4],
       endx = (int)endxf;
       halfWidth = (endxf-startxf)*0.5;
       // paint one row of this widget's texture onto background texture
-      for( x = startx; x < endx; x++ )
-	{
-	  intensity = (halfWidth-fabs(x-startxf-halfWidth))/halfWidth;
+      if( !switchFlag )
+        for( x = startx; x < endx; x++ )
+  	{
+  	  intensity = (halfWidth-fabs(x-startxf-halfWidth))/halfWidth;
 	  blend( texture_dest[y][x], 
 		 transText->current_color[0], 
 		 transText->current_color[1], 
 		 transText->current_color[2],
 		 (intensity+opacity_offset)*master_alpha );
 	} // for
+      else
+	{
+	  intensity = (halfHeight-fabs(y-starty-halfHeight))/halfHeight;
+	  for( x = startx; x < endx; x++ )
+	    blend( texture_dest[y][x],
+		   transText->current_color[0],
+		   transText->current_color[1],
+		   transText->current_color[2],
+		   (intensity+opacity_offset)*master_alpha );
+        }
       fractionalHeight += fhInterval;
     } // for
 } // paintTransFunc()
@@ -485,18 +500,7 @@ TriWidget::changeColor( float r, float g, float b )
 void
 TriWidget::reflectTrans( void )
 {
-  GLfloat elem[4];
-  for( int i = 0; i < textureHeight; i++ )
-    for( int j = textureWidth/textureHeight*i; j < textureWidth; j++ )
-	//	*elem = *transText->textArray[i][j];
-	//	*transText->textArray[i][j] = *transText->textArray[j][i];
-	//	*transText->textArray[j][i] = *elem;
-      for( int k = 0; k < 4; k++ )
-	{
-	  elem[k] = transText->textArray[i][j][k];
-	  transText->textArray[i][j][k] = transText->textArray[j][i][k];
-	  transText->textArray[j][i][k] = elem[k];
-	}
+  switchFlag = !switchFlag;
 }
 
 
@@ -515,8 +519,9 @@ TriWidget::invertColor( float color[3] )
 
 // replaces another widget with a rectangular widget
 RectWidget::RectWidget( float x, float y, float w, float h, float c[3], float a, 
-			int t, float o_x, float o_y, Texture<GLfloat> *text )
+			int t, float o_x, float o_y, Texture<GLfloat> *text, int sF )
 {
+  switchFlag = sF;
   drawFlag = 0;
   width = w;
   height = h;
@@ -560,8 +565,9 @@ RectWidget::RectWidget( float x, float y, float w, float h, float c[3], float a,
 // RectWidget construction primarily used for restoring widget information from saved UI state
 RectWidget::RectWidget( int t, float x, float y, float w, float h, float r, float g, float b,
 			float a, float f_x, float f_y, float o_x, float o_y,
-			float t_r, float t_g, float t_b, int t_x, int t_y )
+			float t_r, float t_g, float t_b, int t_x, int t_y, int sF )
 {
+  switchFlag = sF;
   drawFlag = 0;
   type = t;
   width = w;
@@ -826,14 +832,7 @@ RectWidget::invertColor( float color[3] )
 void
 RectWidget::reflectTrans( void )
 {
-  for( int i = 0; i < textureHeight; i++ )
-    for( int j = textureWidth/textureHeight*i; j < textureWidth; j++ )
-      {
-	GLfloat elem[4];
-	*elem = *transText->textArray[i][j];
-	*transText->textArray[i][j] = *transText->textArray[j][i];
-	*transText->textArray[j][i] = *elem;
-      }
+  switchFlag = !switchFlag;
 }
 
 
@@ -864,6 +863,7 @@ RectWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4]
   float height = endy-starty;
   float width = endx-startx;
   float halfWidth = width*0.5;
+  float halfHeight = height*0.5f;
   float half_x = (focus_x-upperLeftVertex[0])/this->width*width+startx;
   float half_y = (focus_y-(upperLeftVertex[1]-this->height))/this->height*(endy-starty)+starty;
   switch( type )
@@ -886,28 +886,50 @@ RectWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4]
       break;
     case 2:
       for( y = starty; y < endy; y++ )
-	for( x = startx; x < endx; x++ )
-	  {
-	    intensity = (halfWidth-fabs(x-startx-halfWidth))/halfWidth;
-	    blend( texture_dest[y][x],
-		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][0],
-		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][1],
-		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][2],
-		   intensity+opacStar_alpha_off+alpha_x_off*(float)(x-midx)/(float)width );
+	if( !switchFlag )
+	  for( x = startx; x < endx; x++ )
+	    {
+	      intensity = (halfWidth-fabs(x-startx-halfWidth))/halfWidth;
+	      blend( texture_dest[y][x],
+		     transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][0],
+		     transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][1],
+		     transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][2],
+		     intensity+opacStar_alpha_off+alpha_x_off*(float)(x-midx)/(float)width );
 	  } // for()
+	else
+	  {
+	    intensity = (halfHeight-fabs(y-starty-halfHeight))/halfHeight;
+	    for( x = startx; x < endx; x++ )
+	      blend( texture_dest[y][x],
+		     transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][0],
+		     transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][1],
+		     transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][2],
+		     intensity+opacStar_alpha_off+alpha_y_off*(float)(y-midy)/(float)height );
+	  }
       break;
       // rainbow texture
     case 3:
       for( y = starty; y < endy; y++ )
-	for( x = startx; x < endx; x++ )
-	  {
-	    intensity = 0.5f;
+	if( !switchFlag )
+	  for( x = startx; x < endx; x++ )
+	    {
+	      intensity = 0.5f;
+	      blend( texture_dest[y][x],
+		     transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][0],
+		     transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][1],
+		     transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][2],
+		     (intensity+opacStar_alpha_off+alpha_x_off*(float)(x-midx)/(float)(width)+alpha_y_off*(float)(y-midy)/(float)(height))*master_alpha );
+	    } // for()
+      else
+	{
+	  intensity = 0.5f;
+	  for( x = startx; x < endx; x++ )
 	    blend( texture_dest[y][x],
-		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][0],
-		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][1],
-		   transText->textArray[(int)((y-starty)/height*textureHeight)][(int)((x-startx)/width*textureWidth)][2],
+		   transText->textArray[(int)((x-startx)/width*textureWidth)][(int)((y-starty)/height*textureHeight)][0],
+		   transText->textArray[(int)((x-startx)/width*textureWidth)][(int)((y-starty)/height*textureHeight)][1],
+		   transText->textArray[(int)((x-startx)/width*textureWidth)][(int)((y-starty)/height*textureHeight)][2],
 		   (intensity+opacStar_alpha_off+alpha_x_off*(float)(x-midx)/(float)(width)+alpha_y_off*(float)(y-midy)/(float)(height))*master_alpha );
-	  } // for()
+	}
       break;
     } // switch()
 } // paintTransFunc()
