@@ -90,7 +90,7 @@ void CompNeoHookImplicit::computeStableTimestep(const Patch* patch,
                                            DataWarehouse* new_dw)
 {
   // This is only called for the initial timestep - all other timesteps
-  // are computed as a side-effect of computeStressTensor
+  // are computed as a side-effect of cSTensor
   Vector dx = patch->dCell();
   int dwi = matl->getDWIndex();
   // Retrieve the array of constitutive parameters
@@ -157,7 +157,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> deformationGradient_new,bElBar_new;
     constParticleVariable<Matrix3> deformationGradient,bElBar_old;
     ParticleVariable<Matrix3> pstress;
-    constParticleVariable<double> pvolume,pvolumeold;
+    constParticleVariable<double> pvolumeold;
     constParticleVariable<double> ptemperature;
     ParticleVariable<double> pvolume_deformed;
     constNCVariable<Vector> dispNew;
@@ -168,7 +168,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 	new_dw->getOtherDataWarehouse(Task::ParentOldDW);
       pset = parent_old_dw->getParticleSubset(dwi, patch);
       parent_old_dw->get(px,             lb->pXLabel,                  pset);
-      parent_old_dw->get(pvolume,        lb->pVolumeLabel,             pset);
       parent_old_dw->get(pvolumeold,     lb->pVolumeOldLabel,          pset);
       parent_old_dw->get(ptemperature,   lb->pTemperatureLabel,        pset);
       parent_old_dw->get(deformationGradient,
@@ -180,21 +179,20 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
       old_dw->get(px,                  lb->pXLabel,                  pset);
       old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
       old_dw->get(bElBar_old,          lb->bElBarLabel,              pset);
-      old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
       old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);
       old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     }
     
     if (recursion)
-      old_dw->get(dispNew,lb->dispNewLabel,dwi,patch,Ghost::AroundCells,1);
+      old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
     else
       new_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
     
-    new_dw->allocateAndPut(pstress,        lb->pStressLabel_preReloc, pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
+    new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc, pset);
+    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,  pset);
 
     new_dw->allocateTemporary(deformationGradient_new,pset);
-    new_dw->allocateTemporary(bElBar_new,pset);
+    new_dw->allocateTemporary(bElBar_new,             pset);
 
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
@@ -204,20 +202,28 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     FastMatrix Bnl(3,24);
     FastMatrix Bnltrans(24,3);
 
+    if(matl->getIsRigid()){
+      for(ParticleSubset::iterator iter = pset->begin();
+                                   iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+        pstress[idx] = Matrix3(0.0);
+        bElBar_new[idx] = Identity;
+        pvolume_deformed[idx] = pvolumeold[idx];
+      }
+    }
+    else{
+      for(ParticleSubset::iterator iter = pset->begin();
+                                   iter != pset->end(); iter++){
+        particleIndex idx = *iter;
 
-    for(ParticleSubset::iterator iter = pset->begin();
-	iter != pset->end(); iter++){
-      particleIndex idx = *iter;
-
-      velGrad.set(0.0);
-      dispGrad.set(0.0);
-      // Get the node indices that surround the cell
-      IntVector ni[8];
-      Vector d_S[8];
+        velGrad.set(0.0);
+        dispGrad.set(0.0);
+        // Get the node indices that surround the cell
+        IntVector ni[8];
+        Vector d_S[8];
 
 #if 0
       if(ptemperature[idx] < 300.0){
-//      if(px[idx].x() < 4.0 && dwi == 0){
          shear = d_initialData.Shear*2.0;
          bulk  = d_initialData.Bulk *2.0;
       }
@@ -226,142 +232,141 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
          bulk  = d_initialData.Bulk ;
       }
 #endif
-      
-      patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-      vector<int> dof(0);
-      int l2g_node_num;
-      for(int k = 0; k < 8; k++) {
-	// Need to loop over the neighboring patches l2g to get the right
-	// dof number.
-	l2g_node_num = l2g[ni[k]];
-	dof.push_back(l2g_node_num);
-	dof.push_back(l2g_node_num+1);
-	dof.push_back(l2g_node_num+2);
 
-	const Vector& disp = dispNew[ni[k]];
+        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+        vector<int> dof(0);
+        int l2g_node_num;
+        for(int k = 0; k < 8; k++) {
+          // Need to loop over the neighboring patches l2g to get the right
+          // dof number.
+          l2g_node_num = l2g[ni[k]];
+          dof.push_back(l2g_node_num);
+          dof.push_back(l2g_node_num+1);
+          dof.push_back(l2g_node_num+2);
+
+          const Vector& disp = dispNew[ni[k]];
 	
-	for (int j = 0; j<3; j++){
-	  for (int i = 0; i<3; i++) {
-	    dispGrad(i+1,j+1) += disp[i] * d_S[k][j]* oodx[j];
-	  }
-	}
-	
-	B(0,3*k) = d_S[k][0]*oodx[0];
-	B(3,3*k) = d_S[k][1]*oodx[1];
-	B(5,3*k) = d_S[k][2]*oodx[2];
-	B(1,3*k) = 0.;
-	B(2,3*k) = 0.;
-	B(4,3*k) = 0.;
-	
-	B(1,3*k+1) = d_S[k][1]*oodx[1];
-	B(3,3*k+1) = d_S[k][0]*oodx[0];
-	B(4,3*k+1) = d_S[k][2]*oodx[2];
-	B(0,3*k+1) = 0.;
-	B(2,3*k+1) = 0.;
-	B(5,3*k+1) = 0.;
-	
-	B(2,3*k+2) = d_S[k][2]*oodx[2];
-	B(4,3*k+2) = d_S[k][1]*oodx[1];
-	B(5,3*k+2) = d_S[k][0]*oodx[0];
-	B(0,3*k+2) = 0.;
-	B(1,3*k+2) = 0.;
-	B(3,3*k+2) = 0.;
-	
-	Bnl(0,3*k) = d_S[k][0]*oodx[0];
-	Bnl(1,3*k) = 0.;
-	Bnl(2,3*k) = 0.;
-	Bnl(0,3*k+1) = 0.;
-	Bnl(1,3*k+1) = d_S[k][1]*oodx[1];
-	Bnl(2,3*k+1) = 0.;
-	Bnl(0,3*k+2) = 0.;
-	Bnl(1,3*k+2) = 0.;
-	Bnl(2,3*k+2) = d_S[k][2]*oodx[2];
-      }
+       	  for (int j = 0; j<3; j++){
+            for (int i = 0; i<3; i++) {
+              dispGrad(i+1,j+1) += disp[i] * d_S[k][j]* oodx[j];
+            }
+          }
+
+          B(0,3*k) = d_S[k][0]*oodx[0];
+          B(3,3*k) = d_S[k][1]*oodx[1];
+          B(5,3*k) = d_S[k][2]*oodx[2];
+          B(1,3*k) = 0.;
+          B(2,3*k) = 0.;
+          B(4,3*k) = 0.;
+
+          B(1,3*k+1) = d_S[k][1]*oodx[1];
+          B(3,3*k+1) = d_S[k][0]*oodx[0];
+          B(4,3*k+1) = d_S[k][2]*oodx[2];
+          B(0,3*k+1) = 0.;
+          B(2,3*k+1) = 0.;
+          B(5,3*k+1) = 0.;
+
+          B(2,3*k+2) = d_S[k][2]*oodx[2];
+          B(4,3*k+2) = d_S[k][1]*oodx[1];
+          B(5,3*k+2) = d_S[k][0]*oodx[0];
+          B(0,3*k+2) = 0.;
+          B(1,3*k+2) = 0.;
+          B(3,3*k+2) = 0.;
+
+          Bnl(0,3*k) = d_S[k][0]*oodx[0];
+          Bnl(1,3*k) = 0.;
+          Bnl(2,3*k) = 0.;
+          Bnl(0,3*k+1) = 0.;
+          Bnl(1,3*k+1) = d_S[k][1]*oodx[1];
+          Bnl(2,3*k+1) = 0.;
+          Bnl(0,3*k+2) = 0.;
+          Bnl(1,3*k+2) = 0.;
+          Bnl(2,3*k+2) = d_S[k][2]*oodx[2];
+        }
       
-      // Find the stressTensor using the displacement gradient
+        // Find the stressTensor using the displacement gradient
       
-      // Compute the deformation gradient increment using the dispGrad
+        // Compute the deformation gradient increment using the dispGrad
       
-      deformationGradientInc = dispGrad + Identity;
+        deformationGradientInc = dispGrad + Identity;
 
-      // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient_new[idx] = deformationGradientInc *
-                                     deformationGradient[idx];
+        // Update the deformation gradient tensor to its time n+1 value.
+        deformationGradient_new[idx] = deformationGradientInc *
+                                       deformationGradient[idx];
       
-      // get the volumetric part of the deformation
-      double J = deformationGradient_new[idx].Determinant();
+        // get the volumetric part of the deformation
+        double J = deformationGradient_new[idx].Determinant();
 
-      fbar = deformationGradientInc * 
-	pow(deformationGradientInc.Determinant(),-1./3.);
+        fbar = deformationGradientInc * 
+           pow(deformationGradientInc.Determinant(),-1./3.);
 
-      bElBar_new[idx] = fbar*bElBar_old[idx]*fbar.Transpose();
+        bElBar_new[idx] = fbar*bElBar_old[idx]*fbar.Transpose();
 
-      // Shear is equal to the shear modulus times dev(bElBar)
-      double mubar = 1./3. * bElBar_new[idx].Trace()*shear;
-      Matrix3 shrTrl = (bElBar_new[idx]*shear - Identity*mubar);
+        // Shear is equal to the shear modulus times dev(bElBar)
+        double mubar = 1./3. * bElBar_new[idx].Trace()*shear;
+        Matrix3 shrTrl = (bElBar_new[idx]*shear - Identity*mubar);
 
-      // get the hydrostatic part of the stress
-      double p = bulk*log(J)/J;
+        // get the hydrostatic part of the stress
+        double p = bulk*log(J)/J;
+
+        // compute the total stress (volumetric + deviatoric)
+        pstress[idx] = Identity*p + shrTrl/J;
+
+        double coef1 = bulk;
+        double coef2 = 2.*bulk*log(J);
+
+        FastMatrix D(6,6);
       
-      // compute the total stress (volumetric + deviatoric)
-      pstress[idx] = Identity*p + shrTrl/J;
-
-      double coef1 = bulk;
-      double coef2 = 2.*bulk*log(J);
-
-      FastMatrix D(6,6);
+        D(0,0) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(1,1));
+        D(0,1) = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(1,1) + shrTrl(2,2));
+        D(0,2) = coef1 -2.*mubar*1./3. - 2./3.*(shrTrl(1,1) + shrTrl(3,3));
+        D(0,3) =  - 2./3.*(shrTrl(1,2));
+        D(0,4) =  - 2./3.*(shrTrl(1,3));
+        D(0,5) =  - 2./3.*(shrTrl(2,3));
+        D(1,1) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(2,2));
+        D(1,2) = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(2,2) + shrTrl(3,3));
+        D(1,3) =  - 2./3.*(shrTrl(1,2));
+        D(1,4) =  - 2./3.*(shrTrl(1,3));
+        D(1,5) =  - 2./3.*(shrTrl(2,3));
+        D(2,2) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(3,3));
+        D(2,3) =  - 2./3.*(shrTrl(1,2));
+        D(2,4) =  - 2./3.*(shrTrl(1,3));
+        D(2,5) =  - 2./3.*(shrTrl(2,3));
+        D(3,3) =  -.5*coef2 + mubar;
+        D(3,4) = 0.;
+        D(3,5) = 0.;
+        D(4,4) =  -.5*coef2 + mubar;
+        D(4,5) = 0.;
+        D(5,5) =  -.5*coef2 + mubar;
       
-      D(0,0) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(1,1));
-      D(0,1) = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(1,1) + shrTrl(2,2));
-      D(0,2) = coef1 -2.*mubar*1./3. - 2./3.*(shrTrl(1,1) + shrTrl(3,3));
-      D(0,3) =  - 2./3.*(shrTrl(1,2));
-      D(0,4) =  - 2./3.*(shrTrl(1,3));
-      D(0,5) =  - 2./3.*(shrTrl(2,3));
-      D(1,1) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(2,2));
-      D(1,2) = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(2,2) + shrTrl(3,3));
-      D(1,3) =  - 2./3.*(shrTrl(1,2));
-      D(1,4) =  - 2./3.*(shrTrl(1,3));
-      D(1,5) =  - 2./3.*(shrTrl(2,3));
-      D(2,2) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(3,3));
-      D(2,3) =  - 2./3.*(shrTrl(1,2));
-      D(2,4) =  - 2./3.*(shrTrl(1,3));
-      D(2,5) =  - 2./3.*(shrTrl(2,3));
-      D(3,3) =  -.5*coef2 + mubar;
-      D(3,4) = 0.;
-      D(3,5) = 0.;
-      D(4,4) =  -.5*coef2 + mubar;
-      D(4,5) = 0.;
-      D(5,5) =  -.5*coef2 + mubar;
+        D(1,0)=D(0,1);
+        D(2,0)=D(0,2);
+        D(2,1)=D(1,2);
+        D(3,0)=D(0,3);
+        D(3,1)=D(1,3);
+        D(3,2)=D(2,3);
+        D(4,0)=D(0,4);
+        D(4,1)=D(1,4);
+        D(4,2)=D(2,4);
+        D(4,3)=D(3,4);
+        D(5,0)=D(0,5);
+        D(5,1)=D(1,5);
+        D(5,2)=D(2,5);
+        D(5,3)=D(3,5);
+        D(5,4)=D(4,5);
       
-      D(1,0)=D(0,1);
-      D(2,0)=D(0,2);
-      D(2,1)=D(1,2);
-      D(3,0)=D(0,3);
-      D(3,1)=D(1,3);
-      D(3,2)=D(2,3);
-      D(4,0)=D(0,4);
-      D(4,1)=D(1,4);
-      D(4,2)=D(2,4);
-      D(4,3)=D(3,4);
-      D(5,0)=D(0,5);
-      D(5,1)=D(1,5);
-      D(5,2)=D(2,5);
-      D(5,3)=D(3,5);
-      D(5,4)=D(4,5);
-      
-      FastMatrix sig(3,3);
-      for (int i = 0; i < 3; i++) {
-	for (int j = 0; j < 3; j++) {
-	  sig(i,j)=pstress[idx](i+1,j+1);
-	}
-      }
+        FastMatrix sig(3,3);
+        for (int i = 0; i < 3; i++) {
+          for (int j = 0; j < 3; j++) {
+            sig(i,j)=pstress[idx](i+1,j+1);
+          }
+        }
 
-      double volold = pvolumeold[idx];
-      double volnew = pvolumeold[idx]*J;
+        double volold = pvolumeold[idx];
+        double volnew = pvolumeold[idx]*J;
 
-      pvolume_deformed[idx] = volnew;
+        pvolume_deformed[idx] = volnew;
 
-      if(dwi==0){
         // Perform kmat = B.transpose()*D*B*volold
         FastMatrix out(24,6);
         Btrans.transpose(B);
@@ -384,12 +389,10 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 	    solver->fillMatrix(dofi,dofj,v);
 	  }
 	}
-      }  // Don't do it for the rigid body
-      
+     }
     }
   }
   solver->flushMatrix();
-  
 }
 
 
@@ -418,7 +421,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
      ParticleVariable<Matrix3> deformationGradient_new,bElBar_new;
      constParticleVariable<Matrix3> deformationGradient,bElBar_old;
      ParticleVariable<Matrix3> pstress;
-     constParticleVariable<double> pvolume,pvolumeold;
+     constParticleVariable<double> pvolumeold;
      constParticleVariable<double> ptemperature;
      ParticleVariable<double> pvolume_deformed;
      constNCVariable<Vector> dispNew;
@@ -426,7 +429,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
      old_dw->get(delT,lb->delTLabel);
      old_dw->get(px,                  lb->pXLabel,                  pset);
-     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
      old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);
      old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
 
@@ -442,8 +444,19 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
      double shear = d_initialData.Shear;
      double bulk  = d_initialData.Bulk;
 
+    if(matl->getIsRigid()){
+      for(ParticleSubset::iterator iter = pset->begin();
+                                   iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+        pstress[idx] = Matrix3(0.0);
+        bElBar_new[idx] = Identity;
+        deformationGradient_new[idx] = Identity;
+        pvolume_deformed[idx] = pvolumeold[idx];
+      }
+    }
+    else{
      for(ParticleSubset::iterator iter = pset->begin();
-	 iter != pset->end(); iter++){
+                                  iter != pset->end(); iter++){
 	particleIndex idx = *iter;
 
 	velGrad.set(0.0);
@@ -454,7 +467,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
 #if 0
         if(ptemperature[idx] < 300.0){
-//       if(px[idx].x() < 4.0 && dwi == 0){
           shear = d_initialData.Shear*2.0;
           bulk  = d_initialData.Bulk *2.0;
         }
@@ -476,36 +488,37 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
 	// Find the stressTensor using the displacement gradient
 
-       // Compute the deformation gradient increment using the dispGrad
+        // Compute the deformation gradient increment using the dispGrad
 
-       deformationGradientInc = dispGrad + Identity;
+        deformationGradientInc = dispGrad + Identity;
 
-       // Update the deformation gradient tensor to its time n+1 value.
+        // Update the deformation gradient tensor to its time n+1 value.
        
-       deformationGradient_new[idx] = deformationGradientInc *
-				      deformationGradient[idx];
+        deformationGradient_new[idx] = deformationGradientInc *
+                                       deformationGradient[idx];
 
-       // get the volumetric part of the deformation
-       double J = deformationGradient_new[idx].Determinant();
+        // get the volumetric part of the deformation
+        double J = deformationGradient_new[idx].Determinant();
 
-       fbar = deformationGradientInc * 
+        fbar = deformationGradientInc * 
 	 pow(deformationGradientInc.Determinant(),-1./3.);
 
-       bElBar_new[idx] = fbar*bElBar_old[idx]*fbar.Transpose();
+        bElBar_new[idx] = fbar*bElBar_old[idx]*fbar.Transpose();
 
-       // Shear is equal to the shear modulus times dev(bElBar)
-       double mubar = 1./3. * bElBar_new[idx].Trace()*shear;
-       Matrix3 shrTrl = (bElBar_new[idx]*shear - Identity*mubar);
+        // Shear is equal to the shear modulus times dev(bElBar)
+        double mubar = 1./3. * bElBar_new[idx].Trace()*shear;
+        Matrix3 shrTrl = (bElBar_new[idx]*shear - Identity*mubar);
 
-       // get the hydrostatic part of the stress
-       double p = bulk*log(J)/J;
+        // get the hydrostatic part of the stress
+        double p = bulk*log(J)/J;
 
-       // compute the total stress (volumetric + deviatoric)
-       pstress[idx] = Identity*p + shrTrl/J;
+        // compute the total stress (volumetric + deviatoric)
+        pstress[idx] = Identity*p + shrTrl/J;
 
-       pvolume_deformed[idx] = pvolumeold[idx]*J;
+        pvolume_deformed[idx] = pvolumeold[idx]*J;
+      }
      }
-     new_dw->put(delt_vartype(delT),lb->delTLabel);
+    new_dw->put(delt_vartype(delT),lb->delTLabel);
    }
 }
 

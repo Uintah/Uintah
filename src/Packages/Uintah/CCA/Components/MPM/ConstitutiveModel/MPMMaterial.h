@@ -91,6 +91,8 @@ WARNING
          double getRoomTemperature() const;
          double getMeltTemperature() const;
 
+         bool getIsRigid() const;
+
          // For MPMICE
          double getGamma() const;
          void initializeCCVariables(CCVariable<double>& rhom,
@@ -125,6 +127,9 @@ WARNING
          // for temperature dependent plasticity models
          double d_troom;
          double d_tmelt;
+
+         // for implicit rigid body contact
+         bool d_is_rigid;
 
          //for ThermalContactModel
          double d_heatTransferCoefficient;

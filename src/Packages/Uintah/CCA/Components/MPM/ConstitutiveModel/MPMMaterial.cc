@@ -83,14 +83,16 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
    ps->require("density",d_density);
    ps->require("thermal_conductivity",d_thermalConductivity);
    ps->require("specific_heat",d_specificHeat);
-   //ps->require("specific_heat",d_specificHeat);
    ps->get("gamma",d_gamma);
 
    d_troom = 294.0; d_tmelt = 295.0;
    ps->get("room_temp", d_troom);
    ps->get("melt_temp", d_tmelt);
-   //cerr << "Room temp = " << d_troom << "Melt Temp = " << d_tmelt;
-   //cerr << "Setting room temperature to 294 K and melt temperature to 295 K\n";
+
+   // This is currently only used in the implicit code, but should
+   // be put to use in the explicit code as well.
+   d_is_rigid=false;
+   ps->get("is_rigid", d_is_rigid);
    
    // Step 3 -- Loop through all of the pieces in this geometry object
    int piece_num = 0;
@@ -201,6 +203,11 @@ double MPMMaterial::getRoomTemperature() const
 double MPMMaterial::getMeltTemperature() const
 {
   return d_tmelt;
+}
+
+bool MPMMaterial::getIsRigid() const
+{
+  return d_is_rigid;
 }
 /* --------------------------------------------------------------------- 
  Function~  MPMMaterial::initializeCells--
