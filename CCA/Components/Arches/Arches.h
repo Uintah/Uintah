@@ -68,10 +68,7 @@ WARNING
   #define PetscFilter
 #endif
 
-// Filtering of drhodt
-#ifdef PetscFilter
-// #define FILTER_DRHODT
-#endif
+// Filtering of drhodt is now an input parameter for Properties
 
 namespace Uintah {
 

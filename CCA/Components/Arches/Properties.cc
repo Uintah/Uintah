@@ -70,6 +70,7 @@ Properties::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Properties");
   db->require("denUnderrelax", d_denUnderrelax);
+  db->getWithDefault("filter_drhodt",d_filter_drhodt,false);
   db->require("ref_point", d_denRef);
   db->require("radiation",d_radiationCalc);
   if (d_radiationCalc) {
@@ -1702,16 +1703,18 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
       }
     }
 
-#ifdef FILTER_DRHODT
+    if (d_filter_drhodt) {
 #ifdef PetscFilter
     d_filter->applyFilter(pc, patch, drhodt, filterdrhodt);
 #else
+    // filtering without petsc is not implemented
+    // if it needs to be then drhodt will have to be computed with ghostcells
     filterdrhodt.copy(drhodt, drhodt.getLowIndex(),
 		      drhodt.getHighIndex());
 #endif
-#else
+    }
+    else
     filterdrhodt.copy(drhodt, drhodt.getLowIndex(),
 		      drhodt.getHighIndex());
-#endif
   }
 }
