@@ -2,6 +2,7 @@
 #include <Datatypes/TriDiagonalMatrix.h>
 #include <Classlib/NotFinished.h>
 #include <Datatypes/ColumnMatrix.h>
+#include <Math/LinAlg.h>
 #include <Math/MinMax.h>
 #include <Math/MiscMath.h>
 
@@ -106,7 +107,7 @@ void TriDiagonalMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 }
 
 
-void TriDiagonalMatrix::solve(ColumnMatrix& c)
+void TriDiagonalMatrix::solve(ColumnMatrix& cc)
 {
 #if 0
     {
@@ -118,18 +119,22 @@ void TriDiagonalMatrix::solve(ColumnMatrix& c)
 	    cerr << c[i] << endl;
     }
 #endif
+    double* c=&cc[0];
+    linalg_tridiag(rows, data, c);
+#if 0
     for(int i=1;i<rows;i++){
-	ASSERT(Abs(data[i-1][1]) > 1.e-10);
+	//ASSERT(Abs(data[i-1][1]) > 1.e-10);
 	double factor=data[i][0]/data[i-1][1];
 
 	data[i][1] -= factor*data[i-1][2];
 	c[i] -= factor*c[i-1];
     }
-    ASSERT(Abs(data[rows-1][1]) > 1.e-10);
+    //ASSERT(Abs(data[rows-1][1]) > 1.e-10);
     c[rows-1] = c[rows-1]/data[rows-1][1];
     for(i=rows-2;i>=0;i--){
 	c[i] = (c[i]-data[i][2]*c[i+1])/data[i][1];
     }
+#endif
 #if 0
     {
 	cerr << "c:\n";
