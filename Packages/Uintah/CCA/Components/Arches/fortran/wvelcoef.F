@@ -15,10 +15,11 @@ c*********************************************************************
       integer ISTW, JSTW, KSTW, IENDW, JENDW, KENDW
       integer i, j, k
 
-      logical*1 L2UP, LSMPT, LCEND
+      logical*1 L2UP, LSMPT, LCEND, LCENTRAL
 
       double precision AREAN, AREAS, AREAEW, AREATB, VOL
       double precision GE, GEB, GW, GWB, GN, GNB, GS, GSB, GT, GPB, GB
+      double precision GTP, GBP
       double precision CEO, CWO, CNO, CSO, CTO, CBO
       double precision CE, CW, CN, CS, CT, CB
       double precision GUP, CPE, CPW, GVP, CPN, CPS, CPT, CPB
@@ -44,7 +45,9 @@ c     Set all flags except one to false (** WARNING ** need to change)
 c*********************************************************************
       L2UP = .FALSE.
       LSMPT = .FALSE.
+c      LCEND = .TRUE.
       LCEND = .FALSE.
+      LCENTRAL = .FALSE.
 
 c*********************************************************************
 c     Go thru all the cells
@@ -105,6 +108,43 @@ C-----------------------------------------------------------------------
                CSSAV(I,J,K) = CS
                CTSAV(I,J,K) = CT
                CBSAV(I,J,K) = CB
+
+               if (LCENTRAL) then
+                  GE = 0.5*(DEN(I+1,J,K)+DEN(I,J,K))*UU(I+1,J,K)
+                  GEB = 0.5*(DEN(I+1,J,K-1)+DEN(I,J,K-1))*UU(I+1,J,K-1)
+                  GW = 0.5*(DEN(I-1,J,K)+DEN(I,J,K))*UU(I,J,K)
+                  GWB = 0.5*(DEN(I,J,K-1)+DEN(I-1,J,K-1))*UU(I,J,K-1)
+                  GN = 0.5*(DEN(I,J+1,K)+DEN(I,J,K))*VV(I,J+1,K)
+                  GNB = 0.5*(DEN(I,J,K-1)+DEN(I,J+1,K-1))*VV(I,J+1,K-1)
+                  GS = 0.5*(DEN(I,J-1,K)+DEN(I,J,K))*VV(I,J,K)
+                  GSB = 0.5*(DEN(I,J,K-1)+DEN(I,J-1,K-1))*VV(I,J,K-1)
+                  GT = DEN(I,J,K)*WW(I,J,K+1)
+                  GTP =  DEN(I,J,K)*WW(I,J,K)
+                  GB = DEN(I,J,K-1)*WW(I,J,K-1)
+                  GBP = DEN(I,J,K-1)*WW(I,J,K)
+                  CEO = (0.5*GE+0.5*GEB)*AREAEW
+                  CWO = (0.5*GW+0.5*GWB)*AREAEW
+                  CNO = (0.5*GN+0.5*GNB)*AREAN
+                  CSO = (0.5*GS+0.5*GSB)*AREAS
+                  CTO = 0.5*(GT+GTP)*AREATB
+                  CBO = 0.5*(GBP+GB)*AREATB
+C-----------------------------------------------------------------------
+C      NEW DIFFERENCING STUFF
+C-----------------------------------------------------------------------
+                  CE = CEO
+                  CW = CWO 
+                  CN = CNO 
+                  CS = CSO
+                  CT = CTO
+                  CB = CBO
+                  CESAV(I,J,K) = CE
+                  CWSAV(I,J,K) = CW
+                  CNSAV(I,J,K) = CN
+                  CSSAV(I,J,K) = CS
+                  CTSAV(I,J,K) = CT
+                  CBSAV(I,J,K) = CB
+               endif
+
 C-----------------------------------------------------------------------
 C      UPWIND DIFFERENCING STUFF
 C-----------------------------------------------------------------------
@@ -187,14 +227,6 @@ c Explicit double precision stuff for the aix
                ATC = -0.5*CT*TTB + dMAX1(0.0D0,-CPT)*(1.0D0-TTB)
                ABC = 0.5*CB*TTB + dMAX1(0.0D0,CPB)*(1.0D0-TTB)
 c               DDW(I,J,K) = VOL/DZPB(K)
-c=======
-c               AEC = -0.5*CE*TEW + MAX(0.0,-CPE)*(1.0-TEW)
-c               AWC = 0.5*CW*TEW + MAX(0.0,CPW)*(1.0-TEW)
-c               ANC = -0.5*CN*TNS + MAX(0.0,-CPN)*(1.0-TNS)
-c               ASC = 0.5*CS*TNS + MAX(0.0,CPS)*(1.0-TNS)
-c               ATC = -0.5*CT*TTB + MAX(0.0,-CPT)*(1.0-TTB)
-c               ABC = 0.5*CB*TTB + MAX(0.0,CPB)*(1.0-TTB)
-c               DDW(I,J,K) = VOL/DZPB(K)
 
 C----------------------------------------------------------------------
 C      PROVISIONS FOR VARIOUS CONVECTION DIFFERENCING SCHEMES
@@ -219,6 +251,13 @@ c    &                 ATC*W(I,J,K+1)+ABC*W(I,J,K-1)
                   AB(I,J,K) = DB+CB*0.5
 c                 AC(I,J,K) = 0.0
 c                 SU(I,J,K) = 0.0
+               ELSE IF (LCENTRAL) THEN
+                  AE(I,J,K) = DE
+                  AW(I,J,K) = DW
+                  AN(I,J,K) = DN
+                  AS(I,J,K) = DS
+                  AT(I,J,K) = DT
+                  AB(I,J,K) = DB
                ELSE IF (L2UP) THEN
                   AE(I,J,K) = DE*(1.0-dMAX1(0.0D0,dSIGN(1.0D0,COEFE)))
      &                 + dMAX1(0.0D0,COEFE) + dMAX1(0.0D0,-CE)

@@ -66,14 +66,27 @@ C$DIR SCALAR
             DO 600 J = JST,JEND
                IF ((PCELL(IEND+1,J,K).NE.WALL .AND.
      &              PCELL(IEND,J,K).NE.WALL).AND.xplus) then
-                  AP(IEND,J,K) = AP(IEND,J,K)-AE(IEND,J,K)
+                  AP(IEND,J,K) = AP(IEND,J,K)+AE(IEND,J,K)
                   AE(IEND,J,K) = ZERO
+#ifdef ARCHES_BC_DEBUG
+                  i = iend
+                  call fixval(
+     $                 zero, ae(i,j,k), aw(i,j,k), an(i,j,k), as(i,j,k),
+     $                 at(i,j,k), ab(i,j,k),
+     $                 su(i,j,k), sp(i,j,k), one)
+#endif
+
                END IF
                IF ((PCELL(IST-1,J,K).NE.WALL .AND.
      &              PCELL(IST,J,K).NE.WALL).AND.
      $              xminus) THEN
                   AP(IST,J,K) = AP(IST,J,K)-AW(IST,J,K)
                   AW(IST,J,K) = ZERO
+               END IF
+               IF ((PCELL(IST-1,J,K).EQ.WALL .AND.
+     &              PCELL(IST,J,K).NE.WALL).AND.
+     $              xminus) THEN
+                  AP(IST,J,K) = AP(IST,J,K)-AW(IST,J,K)
                END IF
  600        CONTINUE
  610     CONTINUE
@@ -89,12 +102,28 @@ C$DIR SCALAR
                IF ((PCELL(I,JEND+1,K).NE.WALL.AND.
      &              PCELL(I,JEND,K).NE.WALL).AND.
      $              yplus) THEN
+                  AP(I,JEND,K) = AP(I,JEND,K)+AN(I,JEND,K)
                   AN(I,JEND,K) = ZERO
+#ifdef ARCHES_BC_DEBUG
+                  j = jend
+                  call fixval(
+     $                 zero, ae(i,j,k), aw(i,j,k), an(i,j,k), as(i,j,k),
+     $                 at(i,j,k), ab(i,j,k),
+     $                 su(i,j,k), sp(i,j,k), one)
+#endif                  
                END IF
                IF ((PCELL(I,JST-1,K).NE.WALL.AND.
      &              PCELL(I,JST,K).NE.WALL).AND.
      $              yminus) THEN
+                  AP(I,JST,K) = AP(I,JST,K)+AS(I,JST,K)
                   AS(I,JST,K) = ZERO
+#ifdef ARCHES_BC_DEBUG
+                  j = jst
+                  call fixval(
+     $                 zero, ae(i,j,k), aw(i,j,k), an(i,j,k), as(i,j,k),
+     $                 at(i,j,k), ab(i,j,k),
+     $                 su(i,j,k), sp(i,j,k), one)
+#endif
                END IF
  700        CONTINUE
  710     CONTINUE
@@ -110,12 +139,28 @@ C$DIR SCALAR
                IF ((PCELL(I,J,KEND+1).NE.WALL .AND. 
      &              PCELL(I,J,KEND).NE.WALL).AND.
      $              zplus)THEN
+                  AP(I,J,KEND) = AP(I,J,KEND)+AT(I,J,KEND)
                   AT(I,J,KEND) = ZERO
+#ifdef ARCHES_BC_DEBUG
+                  k = kend
+                  call fixval(
+     $                 zero, ae(i,j,k), aw(i,j,k), an(i,j,k), as(i,j,k),
+     $                 at(i,j,k), ab(i,j,k),
+     $                 su(i,j,k), sp(i,j,k), one)
+#endif
                END IF
                IF ((PCELL(I,J,KST-1).NE.WALL .AND. 
      &              PCELL(I,J,KST).NE.WALL).AND.
      $              zminus) THEN
+                  AP(I,J,KST) = AP(I,J,KST)+AB(I,J,KST)
                   AB(I,J,KST) = ZERO
+#ifdef ARCHES_BC_DEBUG
+                  k = kst
+                  call fixval(
+     $                 zero, ae(i,j,k), aw(i,j,k), an(i,j,k), as(i,j,k),
+     $                 at(i,j,k), ab(i,j,k),
+     $                 su(i,j,k), sp(i,j,k), one)
+#endif
                END IF
  800        CONTINUE
  810     CONTINUE

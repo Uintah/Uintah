@@ -73,6 +73,7 @@ $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/calpbc_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/celltypeInit_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/denaccum_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/enthalpyradwallbc_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/hatvelcalpbc_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/inlbcs_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mm_computevel_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmbcvelocity_fort.h
@@ -89,6 +90,7 @@ $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/apcal_vel_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/explicit_vel_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/mm_modify_prescoef_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/prescoef_fort.h
+$(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/prescoef_var_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/scalcoef_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/uvelcoef_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/vvelcoef_fort.h
@@ -117,8 +119,10 @@ $(SRCDIR)/Source.o: $(SRCDIR)/fortran/mascal_scalar_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/mmmomsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/pressrccorr_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/pressrcpred_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/pressrcpred_var_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/pressrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/scalsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/uvelsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/vvelsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/wvelsrc_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/uvelcoeffupdate_fort.h

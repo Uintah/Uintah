@@ -30,20 +30,21 @@ c*********************************************************************
                   flowin = flowin + den(I,J,K)*sns(j)*stb(k)*
      $                 max(0.0,uu(i,j,k))
                   flowout = flowout - pt5*(den(I,J,K)+den(i+1,j,k))*
-     $                 sns(j)*stb(k)*min(0.0,uu(i-1,j,k))
+     $                 sns(j)*stb(k)*min(0.0,uu(i+1,j,k))
                endif
  130        CONTINUE
  140     CONTINUE
       endif
       if (xplus) then
-         I = iend+1
+         I = iend
          DO 190 K=KST,KEND
 	    DO 180 J=JST,JEND
-               IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                  flowin = flowin - den(I,J,K)*sns(j)*stb(k)*
-     $                 min(0.0,uu(i+1,j,k))
-                  flowout = flowout + pt5*(den(I,J,K)+den(i-1,j,k))
-     $                 *sns(j)*stb(k)*max(0.0,uu(i,j,k))
+               IF (PCELL(iend+1,J,K) .EQ. PFIELD) THEN
+c                  flowin = flowin - den(I,J,K)*sns(j)*stb(k)*
+c     $                 min(0.0,uu(i+1,j,k))
+                  flowout = flowout + pt5*(den(I-1,J,K)+den(i,j,k))
+c     $                 *sns(j)*stb(k)*max(0.0,uu(i+1,j,k))
+     $                 *sns(j)*stb(k)*uu(i,j,k)
                END IF
  180        CONTINUE
  190     CONTINUE

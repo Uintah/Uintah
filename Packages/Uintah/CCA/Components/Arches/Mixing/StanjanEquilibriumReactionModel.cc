@@ -82,6 +82,23 @@ StanjanEquilibriumReactionModel::tableLookUp(int* tableKeyIndex)
       }
       Stream unreactedStream = d_mixModel->speciesStateSpace(mixVars);
       computeRxnStateSpace(unreactedStream, d_indepVars, equilStateSpace);
+      // This next section is for computing the derivative of density with
+      // respect to mixture fraction and only works for systems with ONE
+      // mixture fraction
+      // Change the value of f by eps
+      double eps = 0.0001;
+      vector <double> dfMixVars(1);
+      if (mixVars[0] > 0.9999) 
+        dfMixVars[0] = mixVars[0] - eps;
+      else
+        dfMixVars[0] = mixVars[0] + eps;
+      Stream dfStream =  d_mixModel->speciesStateSpace(dfMixVars);
+      Stream dfStateSpace;
+      computeRxnStateSpace(dfStream, d_indepVars, dfStateSpace);
+      if (mixVars[0] > 0.9999) 
+        equilStateSpace.d_drhodf = (equilStateSpace.d_density - dfStateSpace.d_density)/eps;
+      else    
+        equilStateSpace.d_drhodf = (dfStateSpace.d_density - equilStateSpace.d_density)/eps;
       vec_stateSpaceVars = equilStateSpace.convertStreamToVec();
       // defined in K-D tree implementation
       d_rxnTable->Insert(tableKeyIndex, vec_stateSpaceVars);
@@ -154,9 +171,27 @@ StanjanEquilibriumReactionModel::computeRxnStateSpace(Stream& unreactedMixture,
     computeEquilibrium(heatLossTemp, initPress, initMassFract, equilStateSpace);
     //DEBUGGING COUT (enthalpies should be equal)
     //	cout<<"Absolute enthalpy = "<<absoluteEnthalpy<<endl
-    //	    <<"Equilibrium enthalpy = "<<equilStateSpace.d_adiabaticEnthalpy
-    //          <<endl;
-      
+    //	    <<"Equilibrium enthalpy = "<<equilStateSpace.d_adiabaticEnthalpy<<endl;
+
+    // This next section is for computing the derivative of density with
+    // respect to enthalpy
+    // Change the value of h by eps
+    double eps = 0.0001;
+    double dhEnthalpy;
+    if (mixRxnVar[0] > 0.9999)
+      dhEnthalpy = adiabaticEnthalpy + (mixRxnVar[0]-eps)*sensibleEnthalpy;
+    else
+      dhEnthalpy = adiabaticEnthalpy + (mixRxnVar[0]+eps)*sensibleEnthalpy;
+    // Find temperature associated with dhEnthalpy
+    double dhTemp = computeTemperature(dhEnthalpy, initMassFract, 
+					     initTemp);
+    Stream dhStateSpace;
+    computeEquilibrium(dhTemp, initPress, initMassFract, dhStateSpace);
+    if (mixRxnVar[0] > 0.9999)
+      equilStateSpace.d_drhodh = (equilStateSpace.d_density - dhStateSpace.d_density)/eps;
+    else  
+      equilStateSpace.d_drhodh = (dhStateSpace.d_density - equilStateSpace.d_density)/eps;
+    
     // Calculate radiation gas absorption coefficient and black body
     // emissivity for given mixture
     //computeRadiationProperties();

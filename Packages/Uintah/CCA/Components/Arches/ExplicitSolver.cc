@@ -159,6 +159,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   d_boundaryCondition->sched_computeFlowINOUT(sched, patches, matls);
   d_boundaryCondition->sched_computeOMB(sched, patches, matls);
   d_boundaryCondition->sched_transOutletBC(sched, patches, matls);
+  d_boundaryCondition->sched_correctOutletBC(sched, patches, matls);
   // compute apo and drhodt, used in transport equations
   // put a logical to call computetranscoeff 
   // using a predictor corrector approach from Najm [1998]

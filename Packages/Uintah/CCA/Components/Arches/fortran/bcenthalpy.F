@@ -177,7 +177,8 @@ c----------------------------------------------------------------------
      $                 ((pcell(idxHi(1)+1,j,k).eq.presstype).and.
      $                 (uu(idxHi(1)+2,j,k).gt.0.0))) then
                      if ((loutsf).or.
-     $                    (pcell(idxHi(1)+1,j,k).eq.presstype)) then
+     $                    (pcell(idxHi(1)+1,j,k).eq.presstype).or.
+     $                    (pcell(idxHi(1)+1,j,k).eq.outletfield)) then
                         H(idxHi(1)+1,j,k) = H(idxHi(1),j,k)
                         ae(idxHi(1),j,k) = two*tiny
                      end if

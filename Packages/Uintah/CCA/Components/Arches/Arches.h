@@ -41,7 +41,8 @@ WARNING
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 
-// #define correctorstep 1
+// #define correctorstep 
+// #define divergenceconstraint
 namespace Uintah {
 
   class VarLabel;

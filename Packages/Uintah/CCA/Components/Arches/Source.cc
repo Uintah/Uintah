@@ -22,6 +22,21 @@
 using namespace Uintah;
 using namespace SCIRun;
 
+#include <Packages/Uintah/CCA/Components/Arches/fortran/scalsrc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_scalar_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/uvelsrc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/vvelsrc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/wvelsrc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/uvelcoeffupdate_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_var_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrccorr_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/computeVel_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradflux_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradsrc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradthinsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/add_mm_enth_src_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/addpressgrad_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/addtranssrc_fort.h>
@@ -308,11 +323,17 @@ Source::calculatePressureSourcePred(const ProcessorGroup*,
   // Get the patch and variable indices
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-
+#ifdef divergenceconstraint
+  fort_pressrcpred_var(idxLo, idxHi, vars->pressNonlinearSrc, vars->divergence,
+		       vars->uVelRhoHat,
+		       vars->vVelRhoHat, vars->wVelRhoHat, delta_t,
+		       cellinfo->sew, cellinfo->sns, cellinfo->stb);
+#else
   fort_pressrcpred(idxLo, idxHi, vars->pressNonlinearSrc, vars->density,
 		   vars->old_density, vars->old_old_density, vars->uVelRhoHat,
                    vars->vVelRhoHat, vars->wVelRhoHat, delta_t,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb);
+#endif
 }
 
 
@@ -645,6 +666,23 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
     // no ghost cell
     domLong = vars->uVelLinearSrc.getFortLowIndex();
     domHing = vars->uVelLinearSrc.getFortHighIndex();
+#if 0
+    fort_uvelcoeffupdate(idxLo, idxHi, vars->uVelocity,
+			 vars->uVelocityCoeff[Arches::AP],
+			 vars->uVelocityCoeff[Arches::AE],
+			 vars->uVelocityCoeff[Arches::AW],
+			 vars->uVelocityCoeff[Arches::AN],
+			 vars->uVelocityCoeff[Arches::AS],
+			 vars->uVelocityCoeff[Arches::AT],
+			 vars->uVelocityCoeff[Arches::AB],
+			 vars->uVelNonlinearSrc, vars->uVelLinearSrc,
+			 vars->uVelocityConvectCoeff[Arches::AE],
+			 vars->uVelocityConvectCoeff[Arches::AW],
+			 vars->uVelocityConvectCoeff[Arches::AN],
+			 vars->uVelocityConvectCoeff[Arches::AS],
+			 vars->uVelocityConvectCoeff[Arches::AT],
+			 vars->uVelocityConvectCoeff[Arches::AB]);
+#endif
     fort_mascal(idxLo, idxHi, vars->uVelocity,
 		vars->uVelocityCoeff[Arches::AE],
 		vars->uVelocityCoeff[Arches::AW],
@@ -693,6 +731,23 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
     // no ghost cell
     domLong = vars->vVelLinearSrc.getFortLowIndex();
     domHing = vars->vVelLinearSrc.getFortHighIndex();
+#if 0
+    fort_uvelcoeffupdate(idxLo, idxHi, vars->vVelocity,
+			 vars->vVelocityCoeff[Arches::AP],
+		vars->vVelocityCoeff[Arches::AE],
+		vars->vVelocityCoeff[Arches::AW],
+		vars->vVelocityCoeff[Arches::AN],
+		vars->vVelocityCoeff[Arches::AS],
+		vars->vVelocityCoeff[Arches::AT],
+		vars->vVelocityCoeff[Arches::AB],
+		vars->vVelNonlinearSrc, vars->vVelLinearSrc,
+		vars->vVelocityConvectCoeff[Arches::AE],
+		vars->vVelocityConvectCoeff[Arches::AW],
+		vars->vVelocityConvectCoeff[Arches::AN],
+		vars->vVelocityConvectCoeff[Arches::AS],
+		vars->vVelocityConvectCoeff[Arches::AT],
+		vars->vVelocityConvectCoeff[Arches::AB]);
+#endif
     fort_mascal(idxLo, idxHi, vars->vVelocity,
 		vars->vVelocityCoeff[Arches::AE],
 		vars->vVelocityCoeff[Arches::AW],
@@ -741,6 +796,23 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
     // no ghost cell
     domLong = vars->wVelLinearSrc.getFortLowIndex();
     domHing = vars->wVelLinearSrc.getFortHighIndex();
+#if 0
+    fort_uvelcoeffupdate(idxLo, idxHi, vars->wVelocity,
+			 vars->wVelocityCoeff[Arches::AP],
+		vars->wVelocityCoeff[Arches::AE],
+		vars->wVelocityCoeff[Arches::AW],
+		vars->wVelocityCoeff[Arches::AN],
+		vars->wVelocityCoeff[Arches::AS],
+		vars->wVelocityCoeff[Arches::AT],
+		vars->wVelocityCoeff[Arches::AB],
+		vars->wVelNonlinearSrc, vars->wVelLinearSrc,
+		vars->wVelocityConvectCoeff[Arches::AE],
+		vars->wVelocityConvectCoeff[Arches::AW],
+		vars->wVelocityConvectCoeff[Arches::AN],
+		vars->wVelocityConvectCoeff[Arches::AS],
+		vars->wVelocityConvectCoeff[Arches::AT],
+		vars->wVelocityConvectCoeff[Arches::AB]);
+#endif
     fort_mascal(idxLo, idxHi, vars->wVelocity,
 		vars->wVelocityCoeff[Arches::AE],
 		vars->wVelocityCoeff[Arches::AW],
