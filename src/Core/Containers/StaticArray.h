@@ -79,7 +79,7 @@ public:
 
   const T& operator[](int index) const
   {
-    CHECKARRAYBOUNDS(index, 0, size_);
+    CHECKARRAYBOUNDS(index, 0, (int)size_);
     return data_[index];
   }
 
