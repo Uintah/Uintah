@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Ports/DataArchive.h>
+ #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/CCA/Ports/InputContext.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -68,6 +68,8 @@ DataArchive::DataArchive(const std::string& filebase,
     throw InternalError("Error reading file: "+toString(d_base.getURLText()));
   
   d_indexDoc = parser.getDocument();
+  d_swapBytes = queryEndianness() != SCIRun::endianness();
+  d_nBytes = queryNBits() / 8;
 }
 
 
@@ -99,6 +101,32 @@ string DataArchive::queryEndianness()
   DOM_Node child = endian_node.getFirstChild();
   DOMString endian = child.getNodeValue();
   ret = string(toString(endian));
+  d_lock.unlock();
+  return ret;
+}
+
+int DataArchive::queryNBits()
+{
+  int ret;
+  d_lock.lock();
+  DOM_Node meta = findNode("Meta", d_indexDoc.getDocumentElement());
+  if( meta == 0 )
+    throw InternalError("Meta node not found in index.xml");
+  DOM_Node nBits_node = findNode("nBits", meta);
+  if( nBits_node == 0 ){
+    cout<<"\nXML Warning: nBits node not found.\n"<<
+      "Assuming data was created using " << sizeof(unsigned long) * 8 << " bits.\n"
+      "To eliminate this message and express the correct\n"<<
+      "number of bits, please add either\n"<<
+      "\t<nBits>32</nBits>\n"<<
+      "or\n\t<nBits>64</nBits>\n"<<
+      "to the <Meta> section of the index.xml file.\n\n";
+    d_lock.unlock();
+    return sizeof(unsigned long) * 8;
+  }
+  DOM_Node child = nBits_node.getFirstChild();
+  DOMString nBits = child.getNodeValue();
+  ret = atoi(string(toString(nBits)).c_str());
   d_lock.unlock();
   return ret;
 }
@@ -432,7 +460,7 @@ DataArchive::query( Variable& var, DOM_Node vnode, XMLURL url,
     throw ErrnoException("DataArchive::query (lseek64 call)", errno);
   
   InputContext ic(fd, start);
-  var.read(ic, end, compressionMode);
+  var.read(ic, end, d_swapBytes, d_nBytes, compressionMode);
   ASSERTEQ(end, ic.cur);
   int s = close(fd);
   if(s == -1)
