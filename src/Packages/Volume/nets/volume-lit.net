@@ -1,10 +1,13 @@
 # SCIRun Network v1.22.0
 
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
 
 set name {Main}
 set bbox {10 10 406 467}
-set creationDate {Sun Jun 27 2004}
-set creationTime {18:33:20}
+set creationDate {Mon Jun 28 2004}
+set creationTime {19:41:48}
 set runDate {}
 set runTime {}
 set notes {}
@@ -36,7 +39,7 @@ set c5 [addConnection $m6 0 $m2 1]
 set c6 [addConnection $m4 0 $m3 1]
 
 # Set GUI variables for the SCIRun->DataIO->FieldReader Module
-set $m1-filename "/home/ikits/SCIRunData/1.20.2/aneurysm/aneurysm-mra.lvs.fld"
+set $m1-filename "$DATADIR/aneurysm/aneurysm-mra.lvs.fld"
 set $m1-types {{{{SCIRun Field File} {.fld} } {{SCIRun Field Any} {.*} } {{TextCurveField} {{.pts} {.edge}} } {{TextHexVolField} {{.pts} {.hex}} } {{TextPointCloudField} {.pts} } {{TextPointCloudString} {.pcs.txt} } {{TextQuadSurfField} {{.pts} {.quad}} } {{TextStructCurveField} {.pts} } {{TextStructHexVolField} {.pts} } {{TextStructQuadSurfField} {.pts} } {{TextTetVolField} {{.pts} {.tet}} } {{TextTriSurfField} {{.pts} {.fac} {.tri}} } {{VTKtoTriSurfField} {.vtk} } {{VTKtoTriSurfField-swap} {.vtk} } }}
 
 # Set GUI variables for the Volume->Visualization->TextureBuilder Module
@@ -158,7 +161,6 @@ set $m5-ViewWindow_0-clip-normal-x-6 {}
 set $m5-ViewWindow_0-clip-normal-y-6 {}
 set $m5-ViewWindow_0-clip-normal-z-6 {}
 set $m5-ViewWindow_0-clip-normal-d-6 {}
-set "$m5-ViewWindow_0-VolumeRenderer TransParent (1)" {1}
 
 
 ::netedit scheduleok

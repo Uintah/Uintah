@@ -1,10 +1,13 @@
 # SCIRun Network v1.22.0
 
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
 
 set name {Main}
 set bbox {28 20 364 404}
-set creationDate {Sun Jun 27 2004}
-set creationTime {14:53:41}
+set creationDate {Mon Jun 28 2004}
+set creationTime {19:38:12}
 set runDate {}
 set runTime {}
 set notes {}
@@ -31,19 +34,19 @@ set c3 [addConnection $m4 0 $m1 0]
 set c4 [addConnection $m3 0 $m4 2]
 
 # Set GUI variables for the SCIRun->DataIO->FieldWriter Module
-set $m2-filename "/home/ikits/SCIRunData/1.20.2/volume/tooth-gradient.fld"
+set $m2-filename "$DATADIR/volume/tooth-gradient.fld"
 set $m2-types {{{{SCIRun Field File} {.fld} } {{SCIRun Field Any} {.*} } {{TextCurveField} {{.pts} {.edge}} } {{TextHexVolField} {{.pts} {.hex}} } {{TextPointCloudField} {.pts} } {{TextPointCloudString} {.pcs.txt} } {{TextQuadSurfField} {{.pts} {.quad}} } {{TextStructCurveField} {.pts} } {{TextStructHexVolField} {.pts} } {{TextStructQuadSurfField} {.pts} } {{TextTetVolField} {{.pts} {.tet}} } {{TextTriSurfField} {{.pts} {.fac} {.tri}} } }}
 set $m2-exporttype {SCIRun Field File (*.fld)}
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
-set $m3-filename {/home/ikits/SCIRunData/1.20.2/volume/tooth-crop-fix.nhdr}
+set $m3-filename {$DATADIR/volume/tooth-crop-fix.nhdr}
 
 # Set GUI variables for the Teem->DataIO->NrrdToField Module
 set $m4-struct-unstruct {PointCloud}
 set $m4-datasets {{Points : (none)} {Connections : (none)} {Data : Unknown} {Original Field : (none)} }
 
 # Set GUI variables for the SCIRun->DataIO->FieldWriter Module
-set $m5-filename "/home/ikits/SCIRunData/1.20.2/volume/tooth-value.fld"
+set $m5-filename "$DATADIR/volume/tooth-value.fld"
 set $m5-types {{{{SCIRun Field File} {.fld} } {{SCIRun Field Any} {.*} } {{TextCurveField} {{.pts} {.edge}} } {{TextHexVolField} {{.pts} {.hex}} } {{TextPointCloudField} {.pts} } {{TextPointCloudString} {.pcs.txt} } {{TextQuadSurfField} {{.pts} {.quad}} } {{TextStructCurveField} {.pts} } {{TextStructHexVolField} {.pts} } {{TextStructQuadSurfField} {.pts} } {{TextTetVolField} {{.pts} {.tet}} } {{TextTriSurfField} {{.pts} {.fac} {.tri}} } }}
 set $m5-exporttype {SCIRun Field File (*.fld)}
 
