@@ -100,14 +100,14 @@ public:
   //////////
   // Insert Documentation Here:
   inline T& operator[](particleIndex idx) {
-    ASSERTRANGE(idx, 0, (particleIndex)d_pdata->data.size());
+    ASSERTRANGE(idx, 0, (particleIndex)d_pdata->size);
     return d_pdata->data[idx];
   }
       
   //////////
   // Insert Documentation Here:
   inline const T& operator[](particleIndex idx) const {
-    ASSERTRANGE(idx, 0, (particleIndex)d_pdata->data.size());
+    ASSERTRANGE(idx, 0, (particleIndex)d_pdata->size);
     return d_pdata->data[idx];
   }
 
