@@ -36,17 +36,17 @@
 namespace SCIRun {
 
 extern "C" {
-PSECORESHARE IPort* make_MatrixIPort(Module* module, const clString& name) {
+PSECORESHARE IPort* make_MatrixIPort(Module* module, const string& name) {
   return scinew SimpleIPort<MatrixHandle>(module,name);
 }
-PSECORESHARE OPort* make_MatrixOPort(Module* module, const clString& name) {
+PSECORESHARE OPort* make_MatrixOPort(Module* module, const string& name) {
   return scinew SimpleOPort<MatrixHandle>(module,name);
 }
 }
 
 
-template<> clString SimpleIPort<MatrixHandle>::port_type("Matrix");
-template<> clString SimpleIPort<MatrixHandle>::port_color("dodgerblue");
+template<> string SimpleIPort<MatrixHandle>::port_type("Matrix");
+template<> string SimpleIPort<MatrixHandle>::port_color("dodgerblue");
 
 } // End namespace SCIRun
 

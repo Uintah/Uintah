@@ -36,16 +36,16 @@ namespace SCIRun {
 
 
 extern "C" {
-PSECORESHARE IPort* make_HexMeshIPort(Module* module, const clString& name) {
+PSECORESHARE IPort* make_HexMeshIPort(Module* module, const string& name) {
   return scinew SimpleIPort<HexMeshHandle>(module,name);
 }
-PSECORESHARE OPort* make_HexMeshOPort(Module* module, const clString& name) {
+PSECORESHARE OPort* make_HexMeshOPort(Module* module, const string& name) {
   return scinew SimpleOPort<HexMeshHandle>(module,name);
 }
 }
 
-template<> clString SimpleIPort<HexMeshHandle>::port_type("HexMesh");
-template<> clString SimpleIPort<HexMeshHandle>::port_color("yellow green");
+template<> string SimpleIPort<HexMeshHandle>::port_type("HexMesh");
+template<> string SimpleIPort<HexMeshHandle>::port_color("yellow green");
 
 } // End namespace SCIRun
 

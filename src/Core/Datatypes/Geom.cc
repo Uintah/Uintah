@@ -35,9 +35,7 @@ string Geom::typeName(int){
   return className;
 }
 
-PersistentTypeID Geom::type_id(Geom::typeName(0), 
-			       "Datatype", 
-			       0);
+PersistentTypeID Geom::type_id(Geom::typeName(0), "Datatype", 0);
 
 using std::cout;
 using std::endl;
@@ -45,7 +43,7 @@ using std::endl;
 #define GEOM_VERSION 1
 void Geom::io(Piostream& stream){
   
-  stream.begin_class(typeName(0).c_str(), GEOM_VERSION);
+  stream.begin_class(typeName(-1), GEOM_VERSION);
   
   Pio(stream, name_);
   Pio(stream, bbox_);

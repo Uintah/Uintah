@@ -69,7 +69,7 @@ class SetupFEMatrix : public Module {
   int                lastUseCond_;
   
   GuiString          uiBCFlag_;
-  clString           lastBCFlag_;
+  string           lastBCFlag_;
   MatrixHandle       hGblMtrx_;
   MatrixHandle       hRhs_;
   int                gen_;
@@ -78,18 +78,18 @@ class SetupFEMatrix : public Module {
 public:
   
   //! Constructor/Destructor
-  SetupFEMatrix(const clString& id);
+  SetupFEMatrix(const string& id);
   virtual ~SetupFEMatrix();
 
   //! Public methods
   virtual void execute();
 };
 
-extern "C" Module* make_SetupFEMatrix(const clString& id) {
+extern "C" Module* make_SetupFEMatrix(const string& id) {
   return new SetupFEMatrix(id);
 }
 
-SetupFEMatrix::SetupFEMatrix(const clString& id): 
+SetupFEMatrix::SetupFEMatrix(const string& id): 
   Module("SetupFEMatrix", id, Filter), 
   uiUseCond_("UseCondTCL", id, this),
   lastUseCond_(1),
@@ -151,7 +151,7 @@ void SetupFEMatrix::execute(){
   //-- polling Field for Dirichlet BC
   vector<pair<int, double> > dirBC;
 
-  clString bcFlag = uiBCFlag_.get();
+  string bcFlag = uiBCFlag_.get();
   if (bcFlag != "none") {
     if (bcFlag=="GroundZero"){
       msgStream_ << "Grounding node 0" << endl;

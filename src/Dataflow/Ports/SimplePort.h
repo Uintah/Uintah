@@ -70,10 +70,10 @@ public:
     friend class SimpleOPort<T>;
     Mailbox<SimplePortComm<T>*> mailbox;
 
-    static clString port_type;
-    static clString port_color;
+    static string port_type;
+    static string port_color;
 public:
-    SimpleIPort(Module*, const clString& name, int protocol=Atomic);
+    SimpleIPort(Module*, const string& name, int protocol=Atomic);
     virtual ~SimpleIPort();
     virtual void reset();
     virtual void finish();
@@ -90,7 +90,7 @@ class SimpleOPort : public OPort {
     WallClockTimer timer1;
 #endif
 public:
-    SimpleOPort(Module*, const clString& name, int protocol=SimpleIPort<T>::Atomic);
+    SimpleOPort(Module*, const string& name, int protocol=SimpleIPort<T>::Atomic);
     virtual ~SimpleOPort();
 
     virtual void reset();
@@ -111,7 +111,7 @@ namespace SCIRun {
 
 
 template<class T>
-SimpleIPort<T>::SimpleIPort(Module* module, const clString& portname,
+SimpleIPort<T>::SimpleIPort(Module* module, const string& portname,
 			    int protocol)
 : IPort(module, port_type, portname, port_color, protocol),
   mailbox("Port mailbox (SimpleIPort)", 2)
@@ -124,7 +124,7 @@ SimpleIPort<T>::~SimpleIPort()
 }
 
 template<class T>
-SimpleOPort<T>::SimpleOPort(Module* module, const clString& portname,
+SimpleOPort<T>::SimpleOPort(Module* module, const string& portname,
 			    int protocol)
 : OPort(module, SimpleIPort<T>::port_type, portname,
 	SimpleIPort<T>::port_color, protocol)

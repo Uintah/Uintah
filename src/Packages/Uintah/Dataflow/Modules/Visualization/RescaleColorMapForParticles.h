@@ -38,7 +38,7 @@ class RescaleColorMapForParticles : public Module {
   ScalarParticlesIPort* iPort;
   ColorMapIPort* imap;
 public:
-  RescaleColorMapForParticles(const clString& id);
+  RescaleColorMapForParticles(const string& id);
   virtual ~RescaleColorMapForParticles();
   virtual void execute();
 protected:

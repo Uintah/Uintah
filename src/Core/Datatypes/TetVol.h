@@ -129,7 +129,7 @@ template <class T>
 void 
 TetVol<T>::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1).c_str(), TET_VOL_VERSION);
+  stream.begin_class(type_name(-1), TET_VOL_VERSION);
   GenericField<TetVolMesh, vector<T> >::io(stream);
   stream.end_class();
 }

@@ -51,13 +51,13 @@ namespace SCIRun {
 
 
 
-extern "C" Module* make_CastField(const clString& id)
+extern "C" Module* make_CastField(const string& id)
 {
     return new CastField(id);
 }
 
-static clString module_name("CastField");
-CastField::CastField(const clString& id)
+static string module_name("CastField");
+CastField::CastField(const string& id)
   : Module("CastField", id, Filter, "Fields", "SCIRun"),
     haveMinMaxTCL("haveMinMaxTCL", id, this),
     haveOutVoxelTCL("haveOutVoxelTCL", id, this), 

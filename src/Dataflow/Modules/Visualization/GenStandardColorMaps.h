@@ -77,7 +77,7 @@ public:
   ////////// 
   // Contructor taking 
   // [in] string as an identifier
-  GenStandardColorMaps(const clString& id); 
+  GenStandardColorMaps(const string& id); 
 
   // GROUP: Destructors: 
   ////////// 
@@ -102,7 +102,7 @@ private:
   ColorMapOPort  *outport;
   ColorMapHandle cmap;
   Array1< Color > colors;
-  bool genMap(const clString& s);
+  bool genMap(const string& s);
 
 }; //class GenStandardColorMaps
 

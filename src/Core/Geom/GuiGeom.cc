@@ -38,7 +38,7 @@ using std::ostream;
 
 namespace SCIRun {
 
-GuiColor::GuiColor(const clString& name, const clString& id, TCL* tcl)
+GuiColor::GuiColor(const string& name, const string& id, TCL* tcl)
 : GuiVar(name, id, tcl), r("r", str(), tcl), g("g", str(), tcl),
   b("b", str(), tcl)
 {
@@ -66,14 +66,14 @@ void GuiColor::set(const Color& p)
     b.set(p.b());
 }
 
-void GuiColor::emit(ostream& out, clString& midx)
+void GuiColor::emit(ostream& out, string& midx)
 {
     r.emit(out, midx);
     g.emit(out, midx);
     b.emit(out, midx);
 }
 
-GuiMaterial::GuiMaterial(const clString& name, const clString& id, TCL* tcl)
+GuiMaterial::GuiMaterial(const string& name, const string& id, TCL* tcl)
 : GuiVar(name, id, tcl), ambient("ambient", str(), tcl),
   diffuse("diffuse", str(), tcl), specular("specular", str(), tcl),
   shininess("shininess", str(), tcl), emission("emission", str(), tcl),
@@ -120,7 +120,7 @@ void GuiMaterial::set(const Material& m)
     refraction_index.set(m.refraction_index);
 }
 
-void GuiMaterial::emit(ostream& out, clString& midx)
+void GuiMaterial::emit(ostream& out, string& midx)
 {
     ambient.emit(out, midx);
     diffuse.emit(out, midx);

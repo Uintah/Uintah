@@ -47,7 +47,7 @@ namespace SCIRun {
 #define DO_IMAGE 6
 #define IMAGE_DONE 7
 
-static map<clString, ObjTag*>::iterator viter;
+static map<string, ObjTag*>::iterator viter;
 
 int CAPTURE_Z_DATA_HACK = 0;
 
@@ -134,14 +134,14 @@ OpenGL::~OpenGL()
   if(encoding_mpeg) encoding_mpeg = false;
 }
 
-clString OpenGL::create_window(ViewWindow*,
-			       const clString& name,
-			       const clString& width,
-			       const clString& height)
+string OpenGL::create_window(ViewWindow*,
+			       const string& name,
+			       const string& width,
+			       const string& height)
 {
   myname=name;
-  width.get_int(xres);
-  height.get_int(yres);
+  string_to_int(width, xres);
+  string_to_int(height, yres);
   static int direct=1;
   int d=direct;
   direct=0;
@@ -189,9 +189,9 @@ void OpenGL::redraw(Viewer* s, ViewWindow* r, double _tbeg, double _tend,
   // This is the first redraw - if there is not an OpenGL thread,
   // start one...
   if(!helper){
-    my_openglname=clString("OpenGL: ")+myname;
+    my_openglname= "OpenGL: " + myname;
     helper=new OpenGLHelper(this);
-    helper_thread=new Thread(helper, my_openglname());
+    helper_thread=new Thread(helper, my_openglname.c_str());
     helper_thread->detach();
   }
   
@@ -346,7 +346,7 @@ void OpenGL::redraw_frame()
   // Get window information
   TCLTask::lock();
   Tk_Window new_tkwin=Tk_NameToWindow(the_interp,
-				      const_cast<char *>(myname()),
+				      const_cast<char *>(myname.c_str()),
 				      Tk_MainWindow(the_interp));
   if(!new_tkwin){
     cerr << "Unable to locate window!\n";
@@ -357,7 +357,7 @@ void OpenGL::redraw_frame()
     tkwin=new_tkwin;
     dpy=Tk_Display(tkwin);
     win=Tk_WindowId(tkwin);
-    cx=OpenGLGetContext(the_interp, const_cast<char *>(myname()));
+    cx=OpenGLGetContext(the_interp, const_cast<char *>(myname.c_str()));
     if(!cx){
       cerr << "Unable to create OpenGL Context!\n";
       TCLTask::unlock();
@@ -411,7 +411,7 @@ void OpenGL::redraw_frame()
   Color bg(viewwindow->bgcolor.get());
   glClearColor(bg.r(), bg.g(), bg.b(), 1);
   
-  clString saveprefix(viewwindow->saveprefix.get());
+  string saveprefix(viewwindow->saveprefix.get());
   
   // Setup the view...
   View view(viewwindow->view.get());
@@ -443,7 +443,7 @@ void OpenGL::redraw_frame()
     glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
     glEnable(GL_COLOR_MATERIAL);
     
-    clString globals("global");
+    string globals("global");
     viewwindow->setState(drawinfo,globals);
     drawinfo->pickmode=0;
     
@@ -865,15 +865,15 @@ void OpenGL::redraw_frame()
       /***********************************/
       if (viewwindow->doingMovie) {
 	
-	clString segname(viewwindow->curName);
+	string segname(viewwindow->curName);
 	int lasthash=-1;
-	for (int ii=0; ii<segname.len(); ii++) {
-	  if (segname()[ii] == '/') lasthash=ii;
+	for (unsigned int ii=0; ii<segname.size(); ii++) {
+	  if (segname[ii] == '/') lasthash=ii;
 	}
-	clString pathname;
+	string pathname;
 	if (lasthash == -1) pathname = "./";
 	else pathname = segname.substr(0, lasthash+1);
-	clString fname = segname.substr(lasthash+1, -1);
+	string fname = segname.substr(lasthash+1, -1);
 	
 	//      cerr << "Saving a movie!\n";
 	if( viewwindow->makeMPEG ){
@@ -901,9 +901,9 @@ void OpenGL::redraw_frame()
 	  }
 	  movie[idx] = 0;
 	  fname = fname + ".raw";
-	  clString framenum((char *)movie);
+	  string framenum((char *)movie);
 	  framenum = framenum + ".";
-	  clString fullpath(pathname + framenum + fname);
+	  string fullpath(pathname + framenum + fname);
 	  cerr << "Dumping "<<fullpath<<"....  ";
 	  dump_image(fullpath);
 	  cerr << " done!\n";
@@ -1104,8 +1104,8 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
   viewer->geomlock.readUnlock();
 }
 
-void OpenGL::dump_image(const clString& name, const clString& type) {
-  ofstream dumpfile(name());
+void OpenGL::dump_image(const string& name, const string& type) {
+  ofstream dumpfile(name.c_str());
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT,vp);
   int n=3*vp[2]*vp[3];
@@ -1177,21 +1177,21 @@ void OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj)
   obj->draw(drawinfo, viewer->default_matl.get_rep(), current_time);
 }
 
-void ViewWindow::setState(DrawInfoOpenGL* drawinfo,clString tclID)
+void ViewWindow::setState(DrawInfoOpenGL* drawinfo,string tclID)
 {
-  clString val;
+  string val;
   double dval;
-  clString type(tclID+"-"+"type");
-  clString lighting(tclID+"-"+"light");
-  clString fog(tclID+"-"+"fog");
-  clString cull(tclID+"-"+"cull");
-  clString dl(tclID+"-"+"dl");
-  clString debug(tclID+"-"+"debug");
-  clString psize(tclID+"-"+"psize");
-  clString movie(tclID+"-"+"movie");
-  clString movieName(tclID+"-"+"movieName");
-  clString movieFrame(tclID+"-"+"movieFrame");
-  clString use_clip(tclID+"-"+"clip");
+  string type(tclID+"-"+"type");
+  string lighting(tclID+"-"+"light");
+  string fog(tclID+"-"+"fog");
+  string cull(tclID+"-"+"cull");
+  string dl(tclID+"-"+"dl");
+  string debug(tclID+"-"+"debug");
+  string psize(tclID+"-"+"psize");
+  string movie(tclID+"-"+"movie");
+  string movieName(tclID+"-"+"movieName");
+  string movieFrame(tclID+"-"+"movieFrame");
+  string use_clip(tclID+"-"+"clip");
   
   if (!get_gui_stringvar(id,type,val)) {
     cerr << "Error illegal name!\n";
@@ -1211,7 +1211,7 @@ void ViewWindow::setState(DrawInfoOpenGL* drawinfo,clString tclID)
     else if (val == "Default") {
       //	    drawinfo->currently_lit=drawinfo->lighting;
       //	    drawinfo->init_lighting(drawinfo->lighting);
-      clString globals("global");
+      string globals("global");
       setState(drawinfo,globals);	    
       return; // if they are using the default, con't change
     } else {
@@ -1250,7 +1250,7 @@ void ViewWindow::setState(DrawInfoOpenGL* drawinfo,clString tclID)
     // only set with globals...
     if (get_gui_stringvar(id,movie,val)) {
       get_gui_stringvar(id,movieName,curName);
-      clString curFrameStr;
+      string curFrameStr;
       get_gui_stringvar(id,movieFrame,curFrameStr);
       //	    curFrameStr.get_int(curFrame);
       //	    cerr << "curFrameStr="<<curFrameStr<<"  curFrame="<<curFrame<<"\n";
@@ -1325,7 +1325,7 @@ void ViewWindow::setState(DrawInfoOpenGL* drawinfo,clString tclID)
   
 }
 
-void ViewWindow::setDI(DrawInfoOpenGL* drawinfo,clString name)
+void ViewWindow::setDI(DrawInfoOpenGL* drawinfo,string name)
 {
   ObjTag* vis;
   
@@ -1340,11 +1340,11 @@ void ViewWindow::setDI(DrawInfoOpenGL* drawinfo,clString name)
 
 void ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
 {
-  clString val;
+  string val;
   int i;
   
   drawinfo->clip_planes = 0; // set them all of for default
-  clString num_clip("clip-num");
+  string num_clip("clip-num");
   
   if (get_gui_stringvar(id,"clip-visible",val) && 
       get_gui_intvar(id,num_clip,i)) {
@@ -1353,16 +1353,16 @@ void ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
     if ( (i>0 && i<7) ) {
       while(i--) {
 	
-	clString vis("clip-visible-"+to_string(i+1));
+	string vis("clip-visible-"+to_string(i+1));
 	
 	
 	if (get_gui_stringvar(id,vis,val)) {
 	  if (val == "1") {
 	    double plane[4];
-	    clString nx("clip-normal-x-"+to_string(i+1));
-	    clString ny("clip-normal-y-"+to_string(i+1));
-	    clString nz("clip-normal-z-"+to_string(i+1));
-	    clString nd("clip-normal-d-"+to_string(i+1));
+	    string nx("clip-normal-x-"+to_string(i+1));
+	    string ny("clip-normal-y-"+to_string(i+1));
+	    string nz("clip-normal-z-"+to_string(i+1));
+	    string nd("clip-normal-d-"+to_string(i+1));
 	    
 	    int rval=0;
 	    
@@ -1512,7 +1512,7 @@ void OpenGL::listvisuals(TCLArgs& args)
   cerr << "Calling allow..." << getpid() << "\n";
   Thread::allow_sgi_OpenGL_page0_sillyness();
   Tk_Window topwin=Tk_NameToWindow(the_interp,
-				   const_cast<char *>(args[2]()),
+				   const_cast<char *>(args[2].c_str()),
 				   Tk_MainWindow(the_interp));
   if(!topwin){
     cerr << "Unable to locate window!\n";
@@ -1521,7 +1521,7 @@ void OpenGL::listvisuals(TCLArgs& args)
   }
   dpy=Tk_Display(topwin);
   int screen=Tk_ScreenNumber(topwin);
-  Array1<clString> visualtags;
+  Array1<string> visualtags;
   Array1<int> scores;
   visuals.remove_all();
   int nvis;
@@ -1547,20 +1547,20 @@ void OpenGL::listvisuals(TCLArgs& args)
       continue;
     char buf[20];
     sprintf(buf, "id=%02x, ", (unsigned int)(vinfo[i].visualid));
-    clString tag(buf);
+    string tag(buf);
     GETCONFIG(GLX_DOUBLEBUFFER);
     if(value){
       score+=200;
-      tag+=clString("double, ");
+      tag += "double, ";
     } else {
-      tag+=clString("single, ");
+      tag += "single, ";
     }
     GETCONFIG(GLX_STEREO);
     if(value){
       score+=1;
-      tag+=clString("stereo, ");
+      tag += "stereo, ";
     }
-    tag+=clString("rgba=");
+    tag += "rgba=";
     GETCONFIG(GLX_RED_SIZE);
     tag+=to_string(value)+":";
     score+=value;
@@ -1574,28 +1574,28 @@ void OpenGL::listvisuals(TCLArgs& args)
     tag+=to_string(value);
     score+=value;
     GETCONFIG(GLX_DEPTH_SIZE);
-    tag+=clString(", depth=")+to_string(value);
+    tag += ", depth=" + to_string(value);
     score+=value*5;
     GETCONFIG(GLX_STENCIL_SIZE);
-    tag+=clString(", stencil=")+to_string(value);
-    tag+=clString(", accum=");
+    tag += ", stencil="+to_string(value);
+    tag += ", accum=";
     GETCONFIG(GLX_ACCUM_RED_SIZE);
-    tag+=to_string(value)+":";
+    tag += to_string(value) + ":";
     GETCONFIG(GLX_ACCUM_GREEN_SIZE);
-    tag+=to_string(value)+":";
+    tag += to_string(value) + ":";
     GETCONFIG(GLX_ACCUM_BLUE_SIZE);
-    tag+=to_string(value)+":";
+    tag += to_string(value) + ":";
     GETCONFIG(GLX_ACCUM_ALPHA_SIZE);
-    tag+=to_string(value);
+    tag += to_string(value);
 #ifdef __sgi
-    tag+=clString(", samples=");
+    tag += ", samples=";
     GETCONFIG(GLX_SAMPLES_SGIS);
     if(value)
       score+=50;
 #endif
-    tag+=to_string(value);
+    tag += to_string(value);
     
-    tag+=clString(", score=")+to_string(score);
+    tag += ", score=" + to_string(score);
     //cerr << score << ": " << tag << '\n';
     
     visualtags.add(tag);
@@ -1609,7 +1609,7 @@ void OpenGL::listvisuals(TCLArgs& args)
 	int tmp1=scores[i];
 	scores[i]=scores[j];
 	scores[j]=tmp1;
-	clString tmp2=visualtags[i];
+	string tmp2=visualtags[i];
 	visualtags[i]=visualtags[j];
 	visualtags[j]=tmp2;
 	XVisualInfo* tmp3=visuals[i];
@@ -1622,27 +1622,30 @@ void OpenGL::listvisuals(TCLArgs& args)
   TCLTask::unlock();
 }
 
-void OpenGL::setvisual(const clString& wname, int which, int width, int height)
+void OpenGL::setvisual(const string& wname, int which, int width, int height)
 {
   tkwin=0;
   current_drawer=0;
   //cerr << "choosing visual " << which << '\n';
-  TCL::execute(clString("opengl ")+wname+" -visual "+to_string((int)visuals[which]->visualid)+" -direct true -geometry "+to_string(width)+"x"+to_string(height));
-  //cerr << clString("opengl ")+wname+" -visual "+to_string((int)visuals[which]->visualid)+" -direct true -geometry "+to_string(width)+"x"+to_string(height) << endl;
+  TCL::execute("opengl " + wname +
+	       " -visual " + to_string((int)visuals[which]->visualid) +
+	       " -direct true" +
+	       " -geometry " + to_string(width) + "x" + to_string(height));
+  //cerr << string("opengl ")+wname+" -visual "+to_string((int)visuals[which]->visualid)+" -direct true -geometry "+to_string(width)+"x"+to_string(height) << endl;
   //cerr << "done choosing visual\n";
   
   myname = wname;
 }
 
-void OpenGL::saveImage(const clString& fname,
-		       const clString& type) //= "raw")
+void OpenGL::saveImage(const string& fname,
+		       const string& type) //= "raw")
 {
   send_mb.send(DO_IMAGE);
   img_mb.send(ImgReq(fname,type));
 }
 
-void OpenGL::real_saveImage(const clString& name,
-			    const clString& type) //= "raw")
+void OpenGL::real_saveImage(const string& name,
+			    const string& type) //= "raw")
 {
   GLint vp[4];
   
@@ -1662,7 +1665,7 @@ void OpenGL::real_saveImage(const clString& name,
   
   if(type == "raw"){
     cerr << "Saving raw file "<<name<<":  size = " << vp[2] << "x" << vp[3] << endl;
-    ofstream dumpfile(name());
+    ofstream dumpfile(name.c_str());
     dumpfile.write((const char *)pxl,n);
     dumpfile.close();
   }
@@ -1672,7 +1675,7 @@ void OpenGL::real_saveImage(const clString& name,
     iflSize dims(vp[2], vp[3], 3);
     iflFileConfig fc(&dims, iflUChar);
     iflStatus sts;
-    iflFile* file = iflFile::create(name(), NULL, &fc, NULL, &sts);
+    iflFile* file = iflFile::create(name.c_str(), NULL, &fc, NULL, &sts);
     sts = file->setTile(0, 0, 0, vp[2], vp[3], 1, pxl);
     file->close();
   } 
@@ -1748,7 +1751,7 @@ void OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
   result->send(res);
 }
 
-void OpenGL::StartMpeg(const clString& fname)
+void OpenGL::StartMpeg(const string& fname)
 {
   // let's get a file pointer pointing to the output file
 #ifdef MPEG
@@ -1871,7 +1874,7 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 ImgReq::ImgReq()
 {
 }
-ImgReq::ImgReq(const clString& n, const clString& t)
+ImgReq::ImgReq(const string& n, const string& t)
   : name(n), type(t)
 {
 }

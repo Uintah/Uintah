@@ -75,7 +75,7 @@ public:
    enum { PointMatl, RingMatl, SliderMatl, ResizeMatl, HalfResizeMatl };
    
 protected:
-   virtual clString GetMaterialName( const Index mindex ) const;   
+   virtual string GetMaterialName( const Index mindex ) const;   
    
 private:
    Vector oldrightaxis, olddownaxis;

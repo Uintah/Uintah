@@ -474,7 +474,7 @@ TriSurfMesh::add_triangle_unconnected(const Point &p0,
 void
 TriSurfMesh::io(Piostream &stream)
 {
-  stream.begin_class(type_id.type.c_str(), TRISURFMESH_VERSION);
+  stream.begin_class(type_name(-1), TRISURFMESH_VERSION);
 
   MeshBase::io(stream);
 

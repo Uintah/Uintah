@@ -55,7 +55,6 @@ POSSIBLE REVISIONS
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Handle.h>
 
-#include <Core/Containers/String.h>
 #include <Core/Math/LinearPWI.h>
 #include <Core/Math/CubicPWI.h>
 

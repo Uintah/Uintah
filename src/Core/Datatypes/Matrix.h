@@ -34,7 +34,6 @@
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Containers/String.h>
 #include <iostream>
 using namespace std;
 

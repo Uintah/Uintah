@@ -29,7 +29,6 @@
  */
 
 #include <Core/Geom/GeomTube.h>
-#include <Core/Containers/String.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Util/NotFinished.h>

@@ -115,7 +115,7 @@ template <class T>
 void 
 MaskedLatticeVol<T>::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1).c_str(), MASKED_LATTICE_VOL_VERSION);
+  stream.begin_class(type_name(-1), MASKED_LATTICE_VOL_VERSION);
   LatticeVol<T>::io(stream);
   Pio(stream, mask_);
   stream.end_class();

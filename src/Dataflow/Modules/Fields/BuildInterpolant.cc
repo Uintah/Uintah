@@ -56,7 +56,7 @@ class BuildInterpolant : public Module
   GuiString   interp_op_gui_;
 
 public:
-  BuildInterpolant(const clString& id);
+  BuildInterpolant(const string& id);
   virtual ~BuildInterpolant();
   virtual void execute();
 
@@ -98,12 +98,12 @@ public:
 
 };
 
-extern "C" Module* make_BuildInterpolant(const clString& id)
+extern "C" Module* make_BuildInterpolant(const string& id)
 {
   return new BuildInterpolant(id);
 }
 
-BuildInterpolant::BuildInterpolant(const clString& id) : 
+BuildInterpolant::BuildInterpolant(const string& id) : 
   Module("BuildInterpolant", id, Filter, "Fields", "SCIRun"),
   interp_op_gui_("interp_op_gui", id, this)
 {

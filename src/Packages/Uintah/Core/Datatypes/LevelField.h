@@ -246,7 +246,7 @@ template <class Data>
 void
 LevelField<Data>::io(Piostream &stream)
 {
-  stream.begin_class(type_name().c_str(), LEVELFIELD_VERSION);
+  stream.begin_class(type_name(), LEVELFIELD_VERSION);
   GenericField<LevelMesh, LevelData<Data> >::io(stream);
   stream.end_class();                                                         
 }

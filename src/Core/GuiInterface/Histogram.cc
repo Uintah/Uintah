@@ -41,14 +41,14 @@
 namespace SCIRun {
 
 
-static clString widget_name("Histogram");
+static string widget_name("Histogram");
 
-static clString make_id(const clString& name)
+static string make_id(const string& name)
 {
    static int next_widget_number=0;
    static Mutex idlock("Histogram id name lock");
    idlock.lock();
-   clString id ( name+"_"+to_string(next_widget_number++) );
+   string id ( name + "_" + to_string(next_widget_number++) );
    idlock.unlock();
    return id;
 }
@@ -68,7 +68,7 @@ Histogram::~Histogram()
 void
 Histogram::init_tcl()
 {
-   TCL::add_command(id+"-c", this, 0);
+   TCL::add_command(id + "-c", this, 0);
    TCL::execute(widget_name+" "+id);
 }
 
@@ -85,11 +85,11 @@ Histogram::tcl_command(TCLArgs& args, void*)
       }
       int maxbuckets;
       double ratio;
-      if (!args[2].get_int(maxbuckets)) {
+      if (!string_to_int(args[2], maxbuckets)) {
 	 args.error("Histogram can't parse maxbuckets `"+args[2]+"'");
 	 return;
       }
-      if (!args[3].get_double(ratio)) {
+      if (!string_to_double(args[3], ratio)) {
 	 args.error("Histogram can't parse ratio `"+args[3]+"'");
 	 return;
       }
@@ -164,17 +164,17 @@ Histogram::FillBuckets()
       }
    }
 
-   Array1<clString> freqlist(numbuckets);
+   Array1<string> freqlist(numbuckets);
 
    for (i=0; i<numbuckets; i++) {
       freqlist[i] = to_string(freqs[i]);
    }
 
-   TCL::execute(id+" config -minval "+to_string(minval)
-		+" -maxval "+to_string(maxval)
-		+" -freqs \""+TCLArgs::make_list(freqlist)+"\""
-		+" -minfreq "+to_string(minfreq)
-		+" -maxfreq "+to_string(maxfreq));
+   TCL::execute(id + " config -minval " + to_string(minval)
+		+ " -maxval " + to_string(maxval)
+		+ " -freqs \"" + TCLArgs::make_list(freqlist) + '"'
+		+ " -minfreq " + to_string(minfreq)
+		+ " -maxfreq " + to_string(maxfreq));
 }
 
 
@@ -202,21 +202,21 @@ Histogram::update() const
 
 
 void
-Histogram::SetTitle( const clString& t ) const
+Histogram::SetTitle( const string& t ) const
 {
    TCL::execute(id+" config -title \""+t+"\"");
 }
 
 
 void
-Histogram::SetValueTitle( const clString& t ) const
+Histogram::SetValueTitle( const string& t ) const
 {
    TCL::execute(id+" config -valtitle \""+t+"\"");
 }
 
 
 void
-Histogram::SetFrequencyTitle( const clString& t ) const
+Histogram::SetFrequencyTitle( const string& t ) const
 {
    TCL::execute(id+" config -freqtitle \""+t+"\"");
 }

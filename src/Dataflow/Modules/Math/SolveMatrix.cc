@@ -140,7 +140,7 @@ class SolveMatrix : public Module {
 public:
     void parallel_conjugate_gradient(int proc);
     void parallel_bi_conjugate_gradient(int proc);
-    SolveMatrix(const clString& id);
+    SolveMatrix(const string& id);
     virtual ~SolveMatrix();
     virtual void execute();
 //     virtual void do_execute();
@@ -164,12 +164,12 @@ public:
     CGData data;
 };
 
-extern "C" Module* make_SolveMatrix(const clString& id) {
+extern "C" Module* make_SolveMatrix(const string& id) {
   return new SolveMatrix(id);
 }
 
 
-SolveMatrix::SolveMatrix(const clString& id)
+SolveMatrix::SolveMatrix(const string& id)
   : Module("SolveMatrix", id, Filter, "Math", "SCIRun"),
     target_error("target_error", id, this),
     flops("flops", id, this),
@@ -230,17 +230,17 @@ void SolveMatrix::execute()
 
   int size=matrix->nrows();
   if(matrix->ncols() != size){
-    error(clString("Matrix should be square, but is ")
-	  +to_string(size)+" x "+to_string(matrix->ncols()));
+    error("Matrix should be square, but is " +
+	  to_string(size) + " x " + to_string(matrix->ncols()));
     return;
   }
   if(rhs->nrows() != size){
-    error(clString("Matrix size mismatch"));
+    error("Matrix size mismatch");
     return;
   }
   
 #ifdef SCI_SPARSELIB
-  clString pre=precond.get();
+  string pre=precond.get();
   if(pre == "Diag_P") flag = 1;
   else if(pre == "IC_P") flag = 2;
   else if(pre == "ILU_P") flag = 3;
@@ -256,7 +256,7 @@ void SolveMatrix::execute()
 
   ep=emit_partial.get();
 //  cerr << "emit_partial="<<ep<<"\n";
-  clString meth=method.get();
+  string meth=method.get();
 #ifdef SCI_SPARSELIB
     if(meth == "conjugate_gradient"){
       rhs.detach();
@@ -312,7 +312,7 @@ void SolveMatrix::execute()
      
      
    }else {
-     error(clString("Unknown solution method: ")+meth);
+     error("Unknown solution method: " + meth);
    }
 }
 
@@ -371,7 +371,7 @@ double x_init = 0.0;
 status.set("Running"); 
   TCL::execute("update idletasks");
 iteration.set(0); 
-current_error.set(clString("0"));
+current_error.set("0");
   TCL::execute("update idletasks");
 
 

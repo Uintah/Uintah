@@ -41,7 +41,6 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Core/Containers/String.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -75,17 +74,17 @@ class DipoleInSphere : public Module {
 
 public:
   
-  DipoleInSphere(const clString& id);  
+  DipoleInSphere(const string& id);  
   virtual ~DipoleInSphere();
   virtual void execute();
 };
 
-extern "C" Module* make_DipoleInSphere(const clString& id)
+extern "C" Module* make_DipoleInSphere(const string& id)
 {
   return new DipoleInSphere(id);
 }
 
-DipoleInSphere::DipoleInSphere(const clString& id)
+DipoleInSphere::DipoleInSphere(const string& id)
 : Module("DipoleInSphere", id, Filter)
 {
   // Create the input ports

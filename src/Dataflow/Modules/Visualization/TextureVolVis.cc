@@ -52,15 +52,15 @@ using std::dec;
 namespace SCIRun {
 
 
-static clString control_name("Control Widget");
+static string control_name("Control Widget");
 			 
-extern "C" Module* make_TextureVolVis( const clString& id)
+extern "C" Module* make_TextureVolVis( const string& id)
 {
   return new TextureVolVis(id);
 }
 
 
-TextureVolVis::TextureVolVis(const clString& id)
+TextureVolVis::TextureVolVis(const string& id)
   : Module("TextureVolVis", id, Filter, "Visualization", "SCIRun"),
     tex(0),
     control_lock("TextureVolVis resolution lock"),

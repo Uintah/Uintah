@@ -69,7 +69,7 @@ public:
    enum { PointMatl, AxesMatl };
    
 protected:
-   virtual clString GetMaterialName( const Index mindex ) const;   
+   virtual string GetMaterialName( const Index mindex ) const;   
    
 private:
    Vector axis1, axis2, axis3;

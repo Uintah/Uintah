@@ -37,7 +37,6 @@
 
 #include <Core/Geom/View.h>
 #include <Core/Geom/GuiGeom.h>
-#include <Core/Containers/String.h>
 #include <Core/GuiInterface/GuiVar.h>
 
 namespace SCIRun {
@@ -50,14 +49,14 @@ class SCICORESHARE GuiView : public GuiVar {
     GuiDouble fov;
     GuiVector eyep_offset;
 public:
-    GuiView(const clString& name, const clString& id, TCL* tcl);
+    GuiView(const string& name, const string& id, TCL* tcl);
     ~GuiView();
     GuiView(const GuiView&);
 
     virtual void reset();
     View get();
     void set(const View&);
-    virtual void emit(std::ostream& out, clString& midx);
+    virtual void emit(std::ostream& out, string& midx);
 };
 
 class SCICORESHARE GuiExtendedView : public GuiVar {
@@ -72,14 +71,14 @@ class SCICORESHARE GuiExtendedView : public GuiVar {
 
 public:
     GuiColor bg;
-    GuiExtendedView(const clString& name, const clString& id, TCL* tcl);
+    GuiExtendedView(const string& name, const string& id, TCL* tcl);
     ~GuiExtendedView();
     GuiExtendedView(const GuiExtendedView&);
 
     virtual void reset();
     ExtendedView get();
     void set(const ExtendedView&);
-    virtual void emit(std::ostream& out, clString& midx);
+    virtual void emit(std::ostream& out, string& midx);
   };
 
 } // End namespace SCIRun

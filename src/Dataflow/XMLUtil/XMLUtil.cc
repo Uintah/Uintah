@@ -32,7 +32,7 @@ namespace SCIRun {
 
 const char _NOTSET_[] = "(null string)";
 
-static void postMessage(const clString& errmsg)
+static void postMessage(const string& errmsg)
 {
     cerr << errmsg << '\n';
 }
@@ -636,23 +636,23 @@ char* removeWhiteSpace(char* string)
   return string;
 }
 
-clString xmlto_string(const DOMString& str)
+string xmlto_string(const DOMString& str)
 {
   char* s = str.transcode();
-  clString ret = clString(s);
+  string ret = string(s);
   delete[] s;
   return ret;
 }
 
-clString xmlto_string(const XMLCh* const str)
+string xmlto_string(const XMLCh* const str)
 {
   char* s = XMLString::transcode(str);
-  clString ret = clString(s);
+  string ret = string(s);
   delete[] s;
   return ret;
 }
 
-void invalidNode(const DOM_Node& n, const clString& filename)
+void invalidNode(const DOM_Node& n, const string& filename)
 {
   if(n.getNodeType() == DOM_Node::COMMENT_NODE)
       return;
@@ -665,12 +665,12 @@ void invalidNode(const DOM_Node& n, const clString& filename)
 	allwhite=false;
       }
     if(!allwhite){
-      postMessage(clString("Extraneous text: ")+str+"after node: "+xmlto_string(n.getNodeName())+"(in file "+filename+")");
+      postMessage(string("Extraneous text: ")+str+"after node: "+xmlto_string(n.getNodeName())+"(in file "+filename+")");
     }
     delete[] str;
     return;
   }
-  postMessage(clString("Do not understand node: ")+xmlto_string(n.getNodeName())+"(in file "+filename+")");
+  postMessage(string("Do not understand node: ")+xmlto_string(n.getNodeName())+"(in file "+filename+")");
 }
 
 DOMString findText(DOM_Node& node)

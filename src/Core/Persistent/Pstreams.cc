@@ -32,7 +32,6 @@
  */
 
 #include <Core/Persistent/Pstreams.h>
-#include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 #include <fstream>
 using std::ifstream;

@@ -33,7 +33,6 @@
 #endif
 
 #include <Core/Geom/GeomVertexPrim.h>
-#include <Core/Containers/String.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Containers/TrivialAllocator.h>
 

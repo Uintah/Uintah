@@ -49,7 +49,7 @@ class ChangeCellType : public Module {
   FieldIPort* input_;
   FieldOPort* output_;
 public:
-  ChangeCellType(const clString& id);
+  ChangeCellType(const string& id);
   virtual ~ChangeCellType();
   virtual void execute();
   
@@ -61,12 +61,12 @@ public:
 		Iter begin, Iter end);
 };
 
-extern "C" Module* make_ChangeCellType(const clString& id)
+extern "C" Module* make_ChangeCellType(const string& id)
 {
     return new ChangeCellType(id);
 }
 
-ChangeCellType::ChangeCellType(const clString& id)
+ChangeCellType::ChangeCellType(const string& id)
   : Module("ChangeCellType", id, Filter)
 {
   input_ = new FieldIPort(this, "LatticeVol-in", FieldIPort::Atomic);

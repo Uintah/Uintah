@@ -74,7 +74,7 @@ class SeedField : public Module
 public:
   CrowdMonitor widget_lock_;
   GaugeWidget rake_;
-  SeedField(const clString& id);
+  SeedField(const string& id);
   virtual ~SeedField();
   virtual void execute();
   virtual void tcl_command(TCLArgs&, void*);
@@ -82,12 +82,12 @@ public:
 };
 
 
-extern "C" Module* make_SeedField(const clString& id) {
+extern "C" Module* make_SeedField(const string& id) {
   return new SeedField(id);
 }
 
 
-SeedField::SeedField(const clString& id)
+SeedField::SeedField(const string& id)
   : Module("SeedField", id, Filter, "Fields", "SCIRun"),
     random_seed_GUI_("random_seed", id, this),
     number_dipoles_GUI_("number_dipoles", id, this),

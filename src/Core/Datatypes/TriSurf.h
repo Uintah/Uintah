@@ -82,7 +82,7 @@ template <class T>
 void 
 TriSurf<T>::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1).c_str(), TRI_SURF_VERSION);
+  stream.begin_class(type_name(-1), TRI_SURF_VERSION);
   GenericField<TriSurfMesh, vector<T> >::io(stream);
   stream.end_class();
 }

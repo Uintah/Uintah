@@ -53,7 +53,7 @@ struct GeomReply {
 class PSECORESHARE GeometryComm : public MessageBase {
 public:
     GeometryComm(Mailbox<GeomReply>*);
-    GeometryComm(int, GeomID, GeomObj*, const clString&, CrowdMonitor* lock);
+    GeometryComm(int, GeomID, GeomObj*, const string&, CrowdMonitor* lock);
     GeometryComm(int, GeomID, int del);
     GeometryComm(MessageTypes::MessageType, int);
     GeometryComm(MessageTypes::MessageType, int, Semaphore* wait);
@@ -69,7 +69,7 @@ public:
     int portno;
     GeomID serial;
     GeomObj* obj;
-    clString name;
+    string name;
     CrowdMonitor* lock;
     Semaphore* wait;
     int del;

@@ -43,7 +43,7 @@ using namespace std;
 
 //////////
 // Constructor/Destructor
-TCLstrbuff::TCLstrbuff(const clString& name, const clString& id, TCL* tcl):
+TCLstrbuff::TCLstrbuff(const string& name, const string& id, TCL* tcl):
   GuiVar(name, id, tcl),
   ostringstream()
 {
@@ -52,7 +52,7 @@ TCLstrbuff::TCLstrbuff(const clString& name, const clString& id, TCL* tcl):
   buff_ = Tcl_Alloc(bSize_=256);
   *buff_='\0';
   
-  if ( Tcl_LinkVar(the_interp, const_cast<char *>(varname()), (char*)&buff_, TCL_LINK_STRING | TCL_LINK_READ_ONLY)!=TCL_OK){
+  if ( Tcl_LinkVar(the_interp, const_cast<char *>(varname.c_str()), (char*)&buff_, TCL_LINK_STRING | TCL_LINK_READ_ONLY)!=TCL_OK){
     cout << "Not possible to link tcl var" << std::endl;
   }
   
@@ -60,14 +60,14 @@ TCLstrbuff::TCLstrbuff(const clString& name, const clString& id, TCL* tcl):
 }
 
 TCLstrbuff::~TCLstrbuff(){
-  Tcl_UnlinkVar(the_interp, const_cast<char *>(varname()));
-  Tcl_UnsetVar(the_interp, const_cast<char*>(varname()), TCL_GLOBAL_ONLY);
+  Tcl_UnlinkVar(the_interp, const_cast<char *>(varname.c_str()));
+  Tcl_UnsetVar(the_interp, const_cast<char*>(varname.c_str()), TCL_GLOBAL_ONLY);
   Tcl_Free(buff_);
 }
 
 //////////
 //   
-void TCLstrbuff::emit(std::ostream&, clString&){
+void TCLstrbuff::emit(std::ostream&, string&){
   
 }
 
@@ -82,7 +82,7 @@ TCLstrbuff& TCLstrbuff::flush(){
     buff_ = Tcl_Realloc(buff_, bSize_ = n);
   
   strcpy(buff_, ostringstream::str().c_str()); 
-  Tcl_UpdateLinkedVar(the_interp, const_cast<char*>(varname())); 
+  Tcl_UpdateLinkedVar(the_interp, const_cast<char*>(varname.c_str())); 
   TCLTask::unlock();
   
   // reinitializing the stream

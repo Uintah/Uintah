@@ -72,18 +72,18 @@ class BuildLeadField : public Module {
   int last_mesh_generation_;
   int last_interp_generation_;
 public:
-  BuildLeadField(const clString& id);
+  BuildLeadField(const string& id);
   virtual ~BuildLeadField();
   virtual void execute();
 };
 
 
-extern "C" Module* make_BuildLeadField(const clString& id) {
+extern "C" Module* make_BuildLeadField(const string& id) {
   return new BuildLeadField(id);
 }
 
 //---------------------------------------------------------------
-BuildLeadField::BuildLeadField(const clString& id)
+BuildLeadField::BuildLeadField(const string& id)
   : Module("BuildLeadField", id, Filter), leadfield_(0),
     last_mesh_generation_(-1), last_interp_generation_(-1)
 {

@@ -31,16 +31,16 @@
 namespace SCIRun {
 
 extern "C" {
-PSECORESHARE IPort* make_FieldSetIPort(Module* module, const clString& name) {
+PSECORESHARE IPort* make_FieldSetIPort(Module* module, const string& name) {
   return scinew SimpleIPort<FieldSetHandle>(module,name);
 }
-PSECORESHARE OPort* make_FieldSetOPort(Module* module, const clString& name) {
+PSECORESHARE OPort* make_FieldSetOPort(Module* module, const string& name) {
   return scinew SimpleOPort<FieldSetHandle>(module,name);
 }
 }
 
-template<> clString SimpleIPort<FieldSetHandle>::port_type("FieldSet");
-template<> clString SimpleIPort<FieldSetHandle>::port_color("orange");
+template<> string SimpleIPort<FieldSetHandle>::port_type("FieldSet");
+template<> string SimpleIPort<FieldSetHandle>::port_color("orange");
 
 } // End namespace SCIRun
 

@@ -67,12 +67,12 @@ namespace SCIRun {
 
 // ---------------------------------------------------------------------- // 
 bool
-GenStandardColorMaps::genMap(const clString& s)
+GenStandardColorMaps::genMap(const string& s)
 {
   int m = resolution.get();
   int r,g,b;
   double a;
-  istringstream is( s() );
+  istringstream is(s.c_str());
   // got to check that library function...
   if( is.good() ){
     Array1< Color > rgbs;
@@ -104,12 +104,12 @@ GenStandardColorMaps::genMap(const clString& s)
 // ---------------------------------------------------------------------- // 
   
 
-extern "C" Module* make_GenStandardColorMaps(const clString& id) { 
+extern "C" Module* make_GenStandardColorMaps(const string& id) { 
   return new GenStandardColorMaps(id); 
 }
 
 //--------------------------------------------------------------- 
-GenStandardColorMaps::GenStandardColorMaps(const clString& id) 
+GenStandardColorMaps::GenStandardColorMaps(const string& id) 
   : Module("GenStandardColorMaps", id, Filter, "Visualization", "SCIRun"),
     tcl_status("tcl_status",id,this),
     positionList("positionList", id, this),
@@ -140,7 +140,7 @@ void GenStandardColorMaps::execute()
      res = resolution.get();
    }
    
-   clString tclRes;
+   string tclRes;
    TCL::eval(id+" getColorMapString", tclRes);
    if ( genMap(tclRes) ) 
      outport->send(cmap);

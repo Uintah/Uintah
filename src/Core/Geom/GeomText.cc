@@ -28,7 +28,6 @@
  *  Copyright (C) 1998 SCI Text
  */
 
-#include <Core/Containers/String.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geom/Color.h>

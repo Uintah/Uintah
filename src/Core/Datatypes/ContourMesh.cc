@@ -126,7 +126,7 @@ ContourMesh::locate(edge_index &idx, const Point &p) const
 void
 ContourMesh::io(Piostream& stream)
 {
-  stream.begin_class(type_name().c_str(), CONTOURMESH_VERSION);
+  stream.begin_class(type_name(), CONTOURMESH_VERSION);
 
   MeshBase::io(stream);
 

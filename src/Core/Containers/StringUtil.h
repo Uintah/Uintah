@@ -16,28 +16,41 @@
 */
 
 
-#include <Dataflow/Ports/GLTexture3DPort.h>
-#include <Dataflow/share/share.h>
-#include <Core/Malloc/Allocator.h>
+/*
+ *  StringUtil.h: some useful string functions
+ *
+ *  Written by:
+ *   Michael Callahan
+ *   Department of Computer Science
+ *   University of Utah
+ *   April 2001
+ *
+ *  Copyright (C) 2001 SCI Group
+ */
+
+#ifndef SCI_Core_StringUtil_h
+#define SCI_Core_StringUtil_h 1
+
+#include <string>
+
+using std::string;
 
 namespace SCIRun {
 
+bool string_to_int(const string &str, int &result);
+bool string_to_double(const string &str, double &result);
 
+string to_string(int val);
+string to_string(double val);
 
-extern "C" {
-PSECORESHARE IPort* make_GLTexture3DIPort(Module* module,
-					 const string& name) {
-  return scinew SimpleIPort<GLTexture3DHandle>(module,name);
-}
-PSECORESHARE OPort* make_GLTexture3DOPort(Module* module,
-					 const string& name) {
-  return scinew SimpleOPort<GLTexture3DHandle>(module,name);
-}
-}
+//////////
+// Remove directory name
+string basename(const string &path);
 
-template<> string SimpleIPort<GLTexture3DHandle>::port_type("GLTexture3D");
-template<> string SimpleIPort<GLTexture3DHandle>::port_color("gray40");
-
+//////////
+// Return directory name
+string pathname(const string &path);
 
 } // End namespace SCIRun
 
+#endif

@@ -78,7 +78,7 @@ public:
    enum { PointMatl, ShaftMatl, HeadMatl, ResizeMatl };
 
 protected:
-   virtual clString GetMaterialName( const Index mindex ) const;   
+   virtual string GetMaterialName( const Index mindex ) const;   
    
 private:
    Vector direction;

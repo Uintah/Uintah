@@ -105,7 +105,7 @@ protected:
   virtual void revoxelize();
   void setOutputFieldHandle();
 public:
-  CastField(const clString& id);
+  CastField(const string& id);
   virtual ~CastField();
   virtual void execute();
 };

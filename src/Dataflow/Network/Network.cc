@@ -64,7 +64,7 @@ Network::~Network()
 	close (slave_socket);
 }
 
-int Network::read_file(const clString&)
+int Network::read_file(const string&)
 {
     NOT_FINISHED("Network::read_file");
     return 1;
@@ -111,11 +111,11 @@ Connection* Network::connection(int i)
     return connections[i];
 }
 
-clString Network::connect(Module* m1, int p1, Module* m2, int p2)
+string Network::connect(Module* m1, int p1, Module* m2, int p2)
 {
 
     Connection* conn=scinew Connection(m1, p1, m2, p2);
-    clString id(m1->id+"_p"+to_string(p1)+"_to_"+m2->id+"_p"+to_string(p2));
+    string id(m1->id+"_p"+to_string(p1)+"_to_"+m2->id+"_p"+to_string(p2));
     conn->id=id;
     conn->connect();
     connections.add(conn);
@@ -134,7 +134,7 @@ clString Network::connect(Module* m1, int p1, Module* m2, int p2)
 	msg.u.clc.oport = p1;
 	msg.u.clc.inModHandle = m2->handle;
 	msg.u.clc.iport = p2;
-        strcpy (msg.u.clc.connID, id());
+        strcpy (msg.u.clc.connID, id.c_str());
         msg.u.clc.connHandle = conn->handle = getNextHandle();
         conn_handles[conn->handle] = conn;
 	
@@ -163,7 +163,7 @@ clString Network::connect(Module* m1, int p1, Module* m2, int p2)
         msg.u.crc.oport = p1;
         msg.u.crc.inModHandle = m2->handle;
         msg.u.crc.iport = p2;
-        strcpy (msg.u.crc.connID, id());
+        strcpy (msg.u.crc.connID, id.c_str());
         msg.u.crc.connHandle = conn->handle = getNextHandle();
         conn_handles[conn->handle] = conn;
 	msg.u.crc.socketPort = conn->socketPort = BASE_PORT + conn->handle;
@@ -184,7 +184,7 @@ clString Network::connect(Module* m1, int p1, Module* m2, int p2)
     return id;
 }
 
-int Network::disconnect(const clString& connId)
+int Network::disconnect(const string& connId)
 {
     Message msg;
 
@@ -237,27 +237,27 @@ void Network::initialize(NetworkEditor* _netedit)
     //NOT_FINISHED("Network::initialize"); // Should read a file???
 }
 
-static clString removeSpaces(const clString& str) {
-  clString result=str;
+static string removeSpaces(const string& str) {
+  string result=str;
   int i;
-  while((i=result.index(' ')) != -1) {
+  while((i=result.find(' ')) != -1) {
     if(i==0) result=result.substr(1,-1); else
       result=result.substr(0,i)+result.substr(i+1,-1);
   }
   return result;
 }
 
-Module* Network::add_module(const clString& packageName,
-                            const clString& categoryName,
-                            const clString& moduleName)
+Module* Network::add_module(const string& packageName,
+                            const string& categoryName,
+                            const string& moduleName)
 { 
 
   // Find a unique id in the Network for the new instance of this module and
   // form an instance name from it
 
-  clString instanceName;
+  string instanceName;
   {
-    clString name=removeSpaces(packageName)+"_"+removeSpaces(categoryName)+
+    string name=removeSpaces(packageName)+"_"+removeSpaces(categoryName)+
                   "_"+removeSpaces(moduleName)+"_";
     int i;
     for(i=0;get_module_by_id(instanceName=name+to_string(i));i++);
@@ -342,9 +342,9 @@ Module* Network::add_module(const clString& packageName,
     return mod;
 }
 
-Module* Network::get_module_by_id(const clString& id)
+Module* Network::get_module_by_id(const string& id)
 {
-    MapClStringModule::iterator mod;
+    MapStringModule::iterator mod;
     mod = module_ids.find(id);
     if (mod != module_ids.end()) {
 	return (*mod).second;
@@ -375,7 +375,7 @@ Connection* Network::get_connect_by_handle (int handle)
     }
 }
 
-int Network::delete_module(const clString& id)
+int Network::delete_module(const string& id)
 {
     Module* mod = get_module_by_id(id);
     if (!mod)

@@ -56,10 +56,10 @@ class ViewWindow;
 #if 0
 struct SceneItem {
   GeomObj* obj;
-  clString name;
+  string name;
   CrowdMonitor* lock;
 
-  SceneItem(GeomObj*, const clString&, CrowdMonitor* lock);
+  SceneItem(GeomObj*, const string&, CrowdMonitor* lock);
   ~SceneItem();
 };
 
@@ -76,7 +76,7 @@ struct PortInfo {
 class Viewer : public Module {
     
 public:
-  typedef map<clString, void*>	MapClStringVoid;
+  typedef map<string, void*>	        MapStringVoid;
 #if 0    
   typedef map<int, PortInfo*>		MapIntPortInfo;
 #endif
@@ -90,19 +90,19 @@ private:
   int max_portno;
   //virtual void connection(Module::ConnectionMode, int, int);
 
-  MapClStringVoid specific;
+  MapStringVoid specific;
     
 public:
   MaterialHandle default_matl;
   friend class ViewWindow;
-  Viewer(const clString& id);
-  Viewer(const clString& id, const clString& moduleName);
+  Viewer(const string& id);
+  Viewer(const string& id, const string& moduleName);
   virtual ~Viewer();
   virtual void execute();
   void initPort(Mailbox<GeomReply>*);
   void append_port_msg(GeometryComm*);
   void addObj(GeomViewerPort* port, GeomID serial, GeomObj *obj,
-	      const clString&, CrowdMonitor* lock);
+	      const string&, CrowdMonitor* lock);
   void delObj(GeomViewerPort* port, GeomID serial, int del);
   void delAll(GeomViewerPort* port);
   void flushPort(int portid);
@@ -115,7 +115,7 @@ public:
   void tcl_command(TCLArgs&, void*);
 
   virtual void emit_vars(std::ostream& out, 
-			 clString& midx); // Override from class TCL
+			 string& midx); // Override from class TCL
 
 				// The scene...
   GeomIndexedGroup ports;	// this contains all of the ports...
@@ -129,28 +129,28 @@ public:
 
   int process_event(int block);
 
-  int lookup_specific(const clString& key, void*&);
-  void insert_specific(const clString& key, void* data);
+  int lookup_specific(const string& key, void*&);
+  void insert_specific(const string& key, void* data);
 
   CrowdMonitor geomlock;
 };
 
 class ViewerMessage : public MessageBase {
 public:
-  clString rid;
-  clString filename;
-  clString format;
+  string rid;
+  string filename;
+  string format;
   double tbeg, tend;
   int nframes;
   double framerate;
-  ViewerMessage(const clString& rid);
-  ViewerMessage(const clString& rid, double tbeg, double tend,
+  ViewerMessage(const string& rid);
+  ViewerMessage(const string& rid, double tbeg, double tend,
 		int nframes, double framerate);
   ViewerMessage(MessageTypes::MessageType,
-		const clString& rid, const clString& filename);
+		const string& rid, const string& filename);
   ViewerMessage(MessageTypes::MessageType,
-		const clString& rid, const clString& filename,
-		const clString& format);
+		const string& rid, const string& filename,
+		const string& format);
   virtual ~ViewerMessage();
 };
 

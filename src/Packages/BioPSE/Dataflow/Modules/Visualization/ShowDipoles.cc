@@ -42,10 +42,10 @@ class BioPSESHARE ShowDipoles : public Module {
   GuiInt showLastVecGui_;
   GuiInt showLinesGui_;
   double lastSize_;
-  clString execMsg_;
+  string execMsg_;
   Array1<GeomSwitch *> widget_switch_;
 public:
-  ShowDipoles(const clString& id);
+  ShowDipoles(const string& id);
   virtual ~ShowDipoles();
   virtual void execute();
   CrowdMonitor widget_lock_;
@@ -57,14 +57,14 @@ public:
   MaterialHandle deflMatl_;
 
   virtual void widget_moved(int last);
-  int nDips_;
+  unsigned int nDips_;
 };
 
-extern "C" BioPSESHARE Module* make_ShowDipoles(const clString& id) {
+extern "C" BioPSESHARE Module* make_ShowDipoles(const string& id) {
   return scinew ShowDipoles(id);
 }
 
-ShowDipoles::ShowDipoles(const clString& id) :
+ShowDipoles::ShowDipoles(const string& id) :
   Module("ShowDipoles", id, Filter, "Visualization", "BioPSE"),
   widgetSizeGui_("widgetSizeGui_", id, this),
   scaleModeGui_("scaleModeGui_", id, this),
@@ -102,7 +102,7 @@ void ShowDipoles::execute(){
   PointCloudMeshHandle field_mesh = field_pcv->get_typed_mesh();
   
   double widgetSize;
-  if (!widgetSizeGui_.get().get_double(widgetSize)) {
+  if (!string_to_double(widgetSizeGui_.get(), widgetSize)) {
     widgetSize=1;
     widgetSizeGui_.set("1.0");
   }
@@ -110,7 +110,8 @@ void ShowDipoles::execute(){
   if (fieldH->generation != gen_ || lastSize_ != widgetSize) {// load this data in
     if (field_pcv->fdata().size() != nDips_) {
 	     
-      cerr << "NEW SIZE FOR DIPOLEMATTOGEOM_  field_pcv->data().size()="<<field_pcv->fdata().size()<<" nDips_="<<nDips_<<"\n";
+      cerr << "NEW SIZE FOR DIPOLEMATTOGEOM_  field_pcv->data().size()=" << 
+	field_pcv->fdata().size() << " nDips_=" << nDips_ << "\n";
 	     
       // nDips_ always just says how many switches we have set to true
       // need to fix switch setting first and then do allocations if
@@ -121,11 +122,11 @@ void ShowDipoles::execute(){
 	widget_[nDips_-1]->SetMaterial(0, deflMatl_);
       }
       if (field_pcv->fdata().size()<nDips_) {
-	for (int i=field_pcv->fdata().size(); i<nDips_; i++)
+	for (unsigned int i=field_pcv->fdata().size(); i<nDips_; i++)
 	  widget_switch_[i]->set_state(0);
 	nDips_=field_pcv->fdata().size();
       } else {
-	int i;
+	unsigned int i;
 	for (i=nDips_; i<widget_switch_.size(); i++)
 	  widget_switch_[i]->set_state(1);
 	for (; i<field_pcv->fdata().size(); i++) {
@@ -133,7 +134,9 @@ void ShowDipoles::execute(){
 	  deflMatl_=widget_[0]->GetMaterial(0);
 	  widget_switch_.add(widget_[i]->GetWidget());
 	  widget_switch_[i]->set_state(1);
-	  widget_id_.add(ogeom_->addObj(widget_switch_[i], clString(clString("Dipole")+to_string(i)), &widget_lock_));
+	  widget_id_.add(ogeom_->addObj(widget_switch_[i],
+					"Dipole" + to_string((int)i),
+					&widget_lock_));
 	}
 	nDips_=field_pcv->fdata().size();
       }
@@ -146,8 +149,8 @@ void ShowDipoles::execute(){
       }
     }
     Array1<Point> pts;
-    int i;
-    clString scaleMode=scaleModeGui_.get();
+    unsigned int i;
+    string scaleMode=scaleModeGui_.get();
     double max;
     for (i=0; i<field_pcv->fdata().size(); i++) {
       double dv=field_pcv->fdata()[i].length();
@@ -178,11 +181,11 @@ void ShowDipoles::execute(){
     if (gidx_) ogeom_->delObj(gidx_);
     if (showLinesGui_.get()) {
       GeomLines *g=new GeomLines;
-      for (i=0; i<pts.size()-2; i++) 
+      for (int i=0; i<pts.size()-2; i++) 
 	for (int j=i+1; j<pts.size()-1; j++) 
 	  g->add(pts[i], pts[j]);
       GeomMaterial *gm=new GeomMaterial(g, new Material(Color(.8,.8,.2)));
-      gidx_=ogeom_->addObj(gm, clString("Dipole Lines"));
+      gidx_=ogeom_->addObj(gm, string("Dipole Lines"));
     }
 
     gen_=fieldH->generation;
@@ -196,7 +199,7 @@ void ShowDipoles::execute(){
   } else if (execMsg_ == "widget_moved") {
     execMsg_="";
     Array1<Point> pts;
-    int i;
+    unsigned int i;
     for (i=0; i<nDips_; i++) {
       Point p=widget_[i]->GetPosition();
       pts.add(p);
@@ -210,11 +213,11 @@ void ShowDipoles::execute(){
     ogeom_->delObj(gidx_);
     if (showLinesGui_.get()) {
       GeomLines *g=new GeomLines;
-      for (i=0; i<pts.size()-2; i++) 
+      for (int i=0; i<pts.size()-2; i++) 
 	for (int j=i+1; j<pts.size()-1; j++) 
 	  g->add(pts[i], pts[j]);
       GeomMaterial *gm=new GeomMaterial(g, new Material(Color(.8,.8,.2)));
-      gidx_=ogeom_->addObj(gm, clString("Dipole Lines"));
+      gidx_=ogeom_->addObj(gm, string("Dipole Lines"));
     }
     ogeom_->flushViews();
     dipoleFldH_=fieldH;

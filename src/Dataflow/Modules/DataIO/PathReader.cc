@@ -39,19 +39,19 @@ class PathReader : public Module {
   PathOPort* outport_;
   GuiString filename_;
   PathHandle handle_;
-  clString old_filename_;
+  string old_filename_;
   time_t old_filemodification_;
 public:
-  PathReader(const clString& id);
+  PathReader(const string& id);
   virtual ~PathReader();
   virtual void execute();
 };
 
-extern "C" Module* make_PathReader(const clString& id) {
+extern "C" Module* make_PathReader(const string& id) {
   return new PathReader(id);
 }
 
-PathReader::PathReader(const clString& id)
+PathReader::PathReader(const string& id)
   : Module("PathReader", id, Source, "DataIO", "SCIRun"),
     filename_("filename", id, this),
     old_filemodification_(0)
@@ -67,12 +67,12 @@ PathReader::~PathReader()
 
 void PathReader::execute()
 {
-  clString fn(filename_.get());
+  string fn(filename_.get());
 
   // Read the status of this file so we can compare modification timestamps
   struct stat buf;
-  if (stat(fn(), &buf)) {
-    error(clString("PathReader error - file not found ")+fn);
+  if (stat(fn.c_str(), &buf)) {
+    error("PathReader error - file not found " + fn);
     return;
   }
 
@@ -89,17 +89,16 @@ void PathReader::execute()
   {
     old_filemodification_ = new_filemodification;
     old_filename_=fn;
-    Piostream* stream=auto_istream(fn());
+    Piostream* stream=auto_istream(fn);
     if(!stream){
-      error(clString("Error reading file: ")+filename_.get());
+      error("Error reading file: " + fn);
       return;
     }
     
     // Read the file
     Pio(*stream, handle_);
     if(!handle_.get_rep() || stream->error()){
-      error(clString("Error reading Path from file: ")+
-	    filename_.get());
+      error("Error reading Path from file: " + fn);
       delete stream;
       return;
     }

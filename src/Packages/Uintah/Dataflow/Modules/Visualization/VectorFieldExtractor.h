@@ -48,7 +48,7 @@ public:
 
   // GROUP: Constructors
   //////////
-  VectorFieldExtractor(const clString& id); 
+  VectorFieldExtractor(const string& id); 
 
   // GROUP: Destructors
   //////////

@@ -33,7 +33,6 @@
 
 #include <Core/Thread/FutureValue.h>
 #include <Core/Containers/AVLTree.h>
-#include <Core/Containers/String.h>
 #include <Core/Geometry/Point.h>
 
 namespace SCIRun {
@@ -54,24 +53,24 @@ class RegisterRenderer;
 
 class Renderer {
 public:
-  static Renderer* create(const clString& type);
-  static AVLTree<clString, RegisterRenderer*>* get_db();
+  static Renderer* create(const string& type);
+  static AVLTree<string, RegisterRenderer*>* get_db();
 
-  virtual clString create_window(ViewWindow* viewwindow,
-				 const clString& name,
-				 const clString& width,
-				 const clString& height)=0;
+  virtual string create_window(ViewWindow* viewwindow,
+				 const string& name,
+				 const string& width,
+				 const string& height)=0;
   virtual void old_redraw(Viewer*, ViewWindow*);
   virtual void redraw(Viewer*, ViewWindow*, double tbeg, double tend,
 		      int nframes, double framerate);
   virtual void get_pick(Viewer*, ViewWindow*, int x, int y,
 			GeomObj*&, GeomPick*&, int&)=0;
   virtual void hide()=0;
-  virtual void saveImage(const clString&, const clString&) = 0;
-  virtual void dump_image(const clString&, const clString&);
+  virtual void saveImage(const string&, const string&) = 0;
+  virtual void dump_image(const string&, const string&);
   virtual void put_scanline(int y, int width, Color* scanline, int repeat=1)=0;
   virtual void listvisuals(TCLArgs&);
-  virtual void setvisual(const clString& wname, int i, int width, int height);
+  virtual void setvisual(const string& wname, int i, int width, int height);
 
   int compute_depth(ViewWindow* viewwindow, const View& view, double& near, double& far);
 
@@ -87,10 +86,10 @@ public:
 
 class RegisterRenderer {
 public:
-  clString name;
+  string name;
   query_Renderer query;
   make_Renderer maker;
-  RegisterRenderer(const clString& name, query_Renderer tester,
+  RegisterRenderer(const string& name, query_Renderer tester,
 		   make_Renderer maker);
   ~RegisterRenderer();
 };

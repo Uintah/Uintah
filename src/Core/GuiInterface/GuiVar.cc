@@ -80,7 +80,7 @@ namespace SCIRun {
 
 extern GuiManager* gm;
 
-GuiVar::GuiVar(const clString& name, const clString& id,
+GuiVar::GuiVar(const string& name, const string& id,
 	       TCL* tcl)
 : varname(id+"-"+name), is_reset(1), tcl(tcl)
 {
@@ -99,13 +99,13 @@ void GuiVar::reset()
     is_reset=1;
 }
 
-clString GuiVar::str()
+string GuiVar::str()
 {
     return varname;
 }
 
 #if 0
-clString GuiVar::format_varname()
+string GuiVar::format_varname()
 {
   bool fixit=false;
   bool global=false;
@@ -121,11 +121,11 @@ clString GuiVar::format_varname()
     }
   }
   if(fixit && global)
-    return clString("{")+varname+"}";
+    return "{" + varname + "}";
   else if(fixit && !global)
-    return clString("{::")+varname+"}";
+    return "{::" + varname + "}";
   else if(!global) 
-    return clString("::")+varname;
+    return "::" + varname;
   else
     return varname;
 }
@@ -138,16 +138,16 @@ clString GuiVar::format_varname()
 //    width
 // i.e. take off everything upto and including the last occurence of _#-
 //    
-clString GuiVar::format_varname() {
+string GuiVar::format_varname() {
   int state=0;
   int end_of_modulename = -1;
   //int space = 0;
-  for (int i=0; i<varname.len(); i++) {
-    if (varname(i) == ' ') return clString("unused");
-    if (state == 0 && varname(i) == '_') state=1;
-    else if (state == 1 && varname.is_digit(i)) state = 2;
-    else if (state == 2 && varname.is_digit(i)) state = 2;
-    else if (state == 2 && varname(i) == '-') {
+  for (unsigned int i=0; i<varname.size(); i++) {
+    if (varname[i] == ' ') return "unused";
+    if (state == 0 && varname[i] == '_') state=1;
+    else if (state == 1 && isdigit(varname[i])) state = 2;
+    else if (state == 2 && isdigit(varname[i])) state = 2;
+    else if (state == 2 && varname[i] == '-') {
       end_of_modulename = i;
       state = 0;
     } else state = 0;
@@ -157,7 +157,7 @@ clString GuiVar::format_varname() {
   return varname.substr(end_of_modulename+1);
 }
 
-GuiDouble::GuiDouble(const clString& name, const clString& id, TCL* tcl)
+GuiDouble::GuiDouble(const string& name, const string& id, TCL* tcl)
 : GuiVar(name, id, tcl)
 {
   value=-MAXDOUBLE;
@@ -182,7 +182,7 @@ double GuiDouble::get()
             // format request 
             TCLMessage msg;
 	    msg.f = getDouble;
-            strcpy (msg.tclName, varname());
+            strcpy (msg.tclName, varname.c_str());
             msg.un.tdouble = 0.0;
 
             // send request to server - no need for reply, error goes to Tk
@@ -201,7 +201,9 @@ double GuiDouble::get()
         } else {
 #endif
 	    TCLTask::lock();
-	    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname()), TCL_GLOBAL_ONLY);
+	    char* l=Tcl_GetVar(the_interp,
+			       const_cast<char *>(varname.c_str()),
+			       TCL_GLOBAL_ONLY);
 	    if(l){
 	        Tcl_GetDouble(the_interp, l, &value);
 	       	is_reset=0;
@@ -223,17 +225,19 @@ void GuiDouble::set(double val)
 	char buf[50];
 	sprintf(buf, "%g", val);
 	
-	Tcl_SetVar(the_interp, const_cast<char *>(varname()), buf, TCL_GLOBAL_ONLY);
+	Tcl_SetVar(the_interp,
+		   const_cast<char *>(varname.c_str()),
+		   buf, TCL_GLOBAL_ONLY);
 	TCLTask::unlock();
     }
 }
 
-void GuiDouble::emit(ostream& out, clString& midx)
+void GuiDouble::emit(ostream& out, string& midx)
 {
   out << "set " << midx << "-" << format_varname() << " " << get() << endl;
 }
 
-GuiInt::GuiInt(const clString& name, const clString& id, TCL* tcl)
+GuiInt::GuiInt(const string& name, const string& id, TCL* tcl)
 : GuiVar(name, id, tcl)
 {
   value=-MAXINT;
@@ -256,7 +260,7 @@ int GuiInt::get()
             // format request
             TCLMessage msg;
             msg.f = getInt;
-            strcpy (msg.tclName, varname());
+            strcpy (msg.tclName, varname.c_str());
             msg.un.tint = 0;
 
             // send request to server - no need for reply, error goes to Tk
@@ -276,7 +280,7 @@ int GuiInt::get()
 #endif
 
 	    TCLTask::lock();
-	    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname()), TCL_GLOBAL_ONLY);
+	    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname.c_str()), TCL_GLOBAL_ONLY);
 	    if(l){
 	        Tcl_GetInt(the_interp, l, &value);
 	        is_reset=0;
@@ -297,18 +301,18 @@ void GuiInt::set(int val)
 	value=val;
 	char buf[20];
 	sprintf(buf, "%d", val);
-	Tcl_SetVar(the_interp, const_cast<char *>(varname()), buf, TCL_GLOBAL_ONLY);
+	Tcl_SetVar(the_interp, const_cast<char *>(varname.c_str()), buf, TCL_GLOBAL_ONLY);
 	TCLTask::unlock();
     }
 }
 
-void GuiInt::emit(ostream& out, clString& midx)
+void GuiInt::emit(ostream& out, string& midx)
 {
   if (format_varname() == "pid") return;
   out << "set " << midx << "-" << format_varname() << " " << get() << endl;
 }
 
-GuiString::GuiString(const clString& name, const clString& id, TCL* tcl)
+GuiString::GuiString(const string& name, const string& id, TCL* tcl)
 : GuiVar(name, id, tcl)
 {
 }
@@ -317,7 +321,7 @@ GuiString::~GuiString()
 {
 }
 
-clString GuiString::get()
+string GuiString::get()
 {
     if(is_reset){
 #ifndef _WIN32
@@ -331,7 +335,7 @@ clString GuiString::get()
             // format request
             TCLMessage msg;
             msg.f = getString;
-            strcpy (msg.tclName, varname());
+            strcpy (msg.tclName, varname.c_str());
             strcpy (msg.un.tstring, "");
 
             // send request to server - no need for reply, error goes to Tk
@@ -342,7 +346,7 @@ clString GuiString::get()
                 // error case ???
             }
             gm->putConnection (skt);
-	    value = clString(msg.un.tstring);
+	    value = string(msg.un.tstring);
 #ifdef DEBUG
 	    cerr << "GuiString::get(): value from server = " << value << endl;
 #endif
@@ -350,11 +354,11 @@ clString GuiString::get()
         } else {
 #endif
 	    TCLTask::lock();
-	    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname()), TCL_GLOBAL_ONLY);
+	    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname.c_str()), TCL_GLOBAL_ONLY);
 	    if(!l){
 	        l="";
 	    }
-	    value=clString(l);
+	    value=string(l);
 	    is_reset=0;
 	    TCLTask::unlock();
 #ifndef _WIN32
@@ -364,34 +368,34 @@ clString GuiString::get()
     return value;
 }
 
-void GuiString::set(const clString& val)
+void GuiString::set(const string& val)
 {
     is_reset=0;
     if(val != value){
 	TCLTask::lock();
 	value=val;
-	Tcl_SetVar(the_interp, const_cast<char *>(varname()), const_cast<char *>(value()), TCL_GLOBAL_ONLY);
+	Tcl_SetVar(the_interp, const_cast<char *>(varname.c_str()), const_cast<char *>(value.c_str()), TCL_GLOBAL_ONLY);
 	TCLTask::unlock();
     }
 }
 
-void GuiString::emit(ostream& out, clString& midx)
+void GuiString::emit(ostream& out, string& midx)
 {
   out << "set " << midx << "-" << format_varname() << " {" << get() << "}" << endl;
 }
 
-GuiVardouble::GuiVardouble(const clString& name, const clString& id, TCL* tcl)
+GuiVardouble::GuiVardouble(const string& name, const string& id, TCL* tcl)
 : GuiVar(name, id, tcl)
 {
     TCLTask::lock();
-    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname()), TCL_GLOBAL_ONLY);
+    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname.c_str()), TCL_GLOBAL_ONLY);
     if(l){
 	if(Tcl_GetDouble(the_interp, l, &value) != TCL_OK)
 	    value=0;
     } else {
 	value=0;
     }
-    if(Tcl_LinkVar(the_interp, const_cast<char *>(varname()), (char*)&value, TCL_LINK_DOUBLE) != TCL_OK){
+    if(Tcl_LinkVar(the_interp, const_cast<char *>(varname.c_str()), (char*)&value, TCL_LINK_DOUBLE) != TCL_OK){
 	cerr << "Error linking variable: " << varname << endl;
     }
     TCLTask::unlock();
@@ -399,7 +403,7 @@ GuiVardouble::GuiVardouble(const clString& name, const clString& id, TCL* tcl)
 
 GuiVardouble::~GuiVardouble()
 {
-    Tcl_UnlinkVar(the_interp, const_cast<char *>(varname()));
+    Tcl_UnlinkVar(the_interp, const_cast<char *>(varname.c_str()));
 }
 
 double GuiVardouble::get()
@@ -415,23 +419,23 @@ double GuiVardouble::get()
     //}
 }
 
-void GuiVardouble::emit(ostream& out, clString& midx)
+void GuiVardouble::emit(ostream& out, string& midx)
 {
   out << "set " << midx << "-" << format_varname() << " " << get() << endl;
 }
 
-GuiVarint::GuiVarint(const clString& name, const clString& id, TCL* tcl)
+GuiVarint::GuiVarint(const string& name, const string& id, TCL* tcl)
 : GuiVar(name, id, tcl)
 {
     TCLTask::lock();
-    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname()), TCL_GLOBAL_ONLY);
+    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname.c_str()), TCL_GLOBAL_ONLY);
     if(l){
 	if(Tcl_GetInt(the_interp, l, &value) != TCL_OK)
 	    value=0;
     } else {
 	value=0;
     }
-    if(Tcl_LinkVar(the_interp, const_cast<char *>(varname()), (char*)&value, TCL_LINK_INT) != TCL_OK){
+    if(Tcl_LinkVar(the_interp, const_cast<char *>(varname.c_str()), (char*)&value, TCL_LINK_INT) != TCL_OK){
 	cerr << "Error linking variable: " << varname << endl;
     }
     TCLTask::unlock();
@@ -439,7 +443,7 @@ GuiVarint::GuiVarint(const clString& name, const clString& id, TCL* tcl)
 
 GuiVarint::~GuiVarint()
 {
-    Tcl_UnlinkVar(the_interp, const_cast<char *>(varname()));
+    Tcl_UnlinkVar(the_interp, const_cast<char *>(varname.c_str()));
 }
 
 int GuiVarint::get()
@@ -465,20 +469,20 @@ void GuiVardouble::set(double dv)
     value=dv;
 }
 
-void GuiVarint::emit(ostream& out, clString& midx)
+void GuiVarint::emit(ostream& out, string& midx)
 {
   out << "set " << midx << "-" << format_varname() << " " << get() << endl;
 }
 
 GuiVarintp::GuiVarintp(int* value,
-		       const clString& name, const clString& id, TCL* tcl)
+		       const string& name, const string& id, TCL* tcl)
 : GuiVar(name, id, tcl), value(value)
 {
     TCLTask::lock();
-    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname()), TCL_GLOBAL_ONLY);
+    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname.c_str()), TCL_GLOBAL_ONLY);
     if(l)
 	Tcl_GetInt(the_interp, l, value);
-    if(Tcl_LinkVar(the_interp, const_cast<char *>(varname()), (char*)value, TCL_LINK_INT) != TCL_OK){
+    if(Tcl_LinkVar(the_interp, const_cast<char *>(varname.c_str()), (char*)value, TCL_LINK_INT) != TCL_OK){
 	cerr << "Error linking variable: " << varname << endl;
     }
     TCLTask::unlock();
@@ -486,7 +490,7 @@ GuiVarintp::GuiVarintp(int* value,
 
 GuiVarintp::~GuiVarintp()
 {
-    Tcl_UnlinkVar(the_interp, const_cast<char *>(varname()));
+    Tcl_UnlinkVar(the_interp, const_cast<char *>(varname.c_str()));
 }
 
 // mm - must use Pio to get ptr
@@ -500,12 +504,12 @@ void GuiVarintp::set(int nv)
     *value=nv;
 }
 
-void GuiVarintp::emit(ostream& out, clString& midx)
+void GuiVarintp::emit(ostream& out, string& midx)
 {
   out << "set " << midx << "-" << format_varname() << " " << get() << endl;
 }
 
-GuiPoint::GuiPoint(const clString& name, const clString& id, TCL* tcl)
+GuiPoint::GuiPoint(const string& name, const string& id, TCL* tcl)
 : GuiVar(name, id, tcl), x("x", str(), tcl), y("y", str(), tcl),
   z("z", str(), tcl)
 {
@@ -527,14 +531,14 @@ void GuiPoint::set(const Point& p)
     z.set(p.z());
 }
 
-void GuiPoint::emit(ostream& out, clString& midx)
+void GuiPoint::emit(ostream& out, string& midx)
 {
     x.emit(out, midx);
     y.emit(out, midx);
     z.emit(out, midx);
 }
 
-GuiVector::GuiVector(const clString& name, const clString& id, TCL* tcl)
+GuiVector::GuiVector(const string& name, const string& id, TCL* tcl)
 : GuiVar(name, id, tcl), x("x", str(), tcl), y("y", str(), tcl),
   z("z", str(), tcl)
 {
@@ -556,7 +560,7 @@ void GuiVector::set(const Vector& p)
     z.set(p.z());
 }
 
-void GuiVector::emit(ostream& out, clString& midx)
+void GuiVector::emit(ostream& out, string& midx)
 {
     x.emit(out, midx);
     y.emit(out, midx);

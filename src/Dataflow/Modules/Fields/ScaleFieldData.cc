@@ -28,7 +28,6 @@
  *  Copyright (C) 2001 SCI Institute
  */
 
-#include <Core/Containers/String.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
@@ -46,18 +45,18 @@ namespace SCIRun {
 class ScaleFieldData : public Module
 {
 public:
-  ScaleFieldData(const clString& id);
+  ScaleFieldData(const string& id);
   virtual ~ScaleFieldData();
   virtual void execute();
 };
 
 
-extern "C" Module* make_ScaleFieldData(const clString& id)
+extern "C" Module* make_ScaleFieldData(const string& id)
 {
   return new ScaleFieldData(id);
 }
 
-ScaleFieldData::ScaleFieldData(const clString& id)
+ScaleFieldData::ScaleFieldData(const string& id)
   : Module("ScaleFieldData", id, Filter, "Fields", "SCIRun")
 {
 }

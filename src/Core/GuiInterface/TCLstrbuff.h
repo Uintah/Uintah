@@ -54,7 +54,7 @@ public:
   // GROUP: Constructor/Destructor
   //////////
   // 
-  TCLstrbuff(const clString& name, const clString& id, TCL* tcl);
+  TCLstrbuff(const string& name, const string& id, TCL* tcl);
   virtual ~TCLstrbuff();
   
   // GROUP: public member functions
@@ -67,7 +67,7 @@ public:
     return *this;
   }
 
-  virtual void emit(std::ostream&, clString& midx);
+  virtual void emit(std::ostream&, string& midx);
 };
 
 TCLstrbuff& operator<<(TCLstrbuff& stream, TCLstrbuff& (*mp)(TCLstrbuff&));

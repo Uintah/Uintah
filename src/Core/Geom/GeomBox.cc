@@ -30,7 +30,6 @@
 
 #include <Core/Geom/GeomBox.h>
 #include <Core/Util/NotFinished.h>
-#include <Core/Containers/String.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>

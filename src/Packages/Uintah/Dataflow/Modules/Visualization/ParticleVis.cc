@@ -56,7 +56,7 @@ using namespace SCIRun;
 #pragma set woff 1682
 #endif
 
-ParticleVis::ParticleVis(const clString& id)
+ParticleVis::ParticleVis(const string& id)
   : Module("ParticleVis", id, Filter), current_time("current_time", id, this),
     radius("radius", id, this), drawspheres("drawspheres", id, this),
     drawVectors("drawVectors",id,this), length_scale("length_scale", id, this),
@@ -378,7 +378,7 @@ void ParticleVis::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked_obj)
   // Now modify so that points and spheres store index.
 }
   
-extern "C" Module* make_ParticleVis( const clString& id ) {
+extern "C" Module* make_ParticleVis( const string& id ) {
   return scinew ParticleVis( id );
 }
 } // End namespace Uintah

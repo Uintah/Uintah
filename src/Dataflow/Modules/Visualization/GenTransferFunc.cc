@@ -103,7 +103,7 @@ class GenTransferFunc : public Module {
   int cmap_generation;
 
 public:
-  GenTransferFunc( const clString& id);
+  GenTransferFunc( const string& id);
 
   void DrawGraphs(int flush=1); // this function just blasts away...
 
@@ -141,11 +141,11 @@ public:
 
 };
 
-extern "C" Module* make_GenTransferFunc( const clString& id) {
+extern "C" Module* make_GenTransferFunc( const string& id) {
   return scinew GenTransferFunc(id);
 }
 
-GenTransferFunc::GenTransferFunc( const clString& id)
+GenTransferFunc::GenTransferFunc( const string& id)
   : Module("GenTransferFunc",id,Source, "Visualization", "SCIRun"),
     RGBorHSV("rgbhsv",id,this),lineVSspline("linespline",id,this),
     activeLine(-1),selNode(-1),graphStat(-1),bdown(-1),whichWin(-1),
@@ -438,17 +438,17 @@ void GenTransferFunc::tcl_command( TCLArgs& args, void* userdata)
   if (args[1] == "mouse") {
     int x,y,whichw,whichb;
     
-    args[4].get_int(x);
-    args[5].get_int(y);
+    string_to_int(args[4], x);
+    string_to_int(args[5], y);
 
-    args[2].get_int(whichw); // which window it was in
+    string_to_int(args[2], whichw); // which window it was in
 
     if (args[3] == "motion") {
       if (bdown == -1) // not buttons down!
 	return; 
       DoMotion(whichw,x,y);
     } else {
-      args[6].get_int(whichb); // which button it was
+      string_to_int(args[6], whichb); // which button it was
       if (args[3] == "down") {
 	DoDown(whichw,x,y,whichb);
       } else { // must be release
@@ -457,13 +457,13 @@ void GenTransferFunc::tcl_command( TCLArgs& args, void* userdata)
     }
   } else  if (args[1] == "resize") { // resize event!
     int whichwin;
-    args[4].get_int(whichwin);
-    args[2].get_int(winX[whichwin]);
-    args[3].get_int(winY[whichwin]);
+    string_to_int(args[4], whichwin);
+    string_to_int(args[2], winX[whichwin]);
+    string_to_int(args[3], winY[whichwin]);
     Resize(whichwin);  // kick of the resize function...
   } else if (args[1] == "expose") {
     int whichwin;
-    args[2].get_int(whichwin);
+    string_to_int(args[2], whichwin);
     Resize(whichwin); // just sets up OGL stuff...
     DrawGraphs();
   }else {
@@ -813,9 +813,9 @@ int GenTransferFunc::makeCurrent(void)
   TCLTask::lock();
 
   if (!ctxs[0]) {
-    clString myname(clString(".ui")+id+".f.gl1.gl");
+    string myname(".ui" + id + ".f.gl1.gl");
     tkwin = Tk_NameToWindow(the_interp,
-			    const_cast<char *>(myname()),
+			    const_cast<char *>(myname.c_str()),
 			    Tk_MainWindow(the_interp));
 
     if (!tkwin) {
@@ -831,7 +831,7 @@ int GenTransferFunc::makeCurrent(void)
     dpy[0] = Tk_Display(tkwin);
     win0 = Tk_WindowId(tkwin);
 
-    ctxs[0] = OpenGLGetContext(the_interp,const_cast<char *>(myname()));
+    ctxs[0] = OpenGLGetContext(the_interp,const_cast<char *>(myname.c_str()));
 
     // check if it was created
     if(!ctxs[0])
@@ -843,9 +843,9 @@ int GenTransferFunc::makeCurrent(void)
   }	
 
   if (!ctxs[1]) {
-    clString myname(clString(".ui")+id+".f.gl2.gl");
+    string myname(".ui" + id + ".f.gl2.gl");
     tkwin = Tk_NameToWindow(the_interp,
-			    const_cast<char *>(myname()),
+			    const_cast<char *>(myname.c_str()),
 			    Tk_MainWindow(the_interp));
 
     if (!tkwin) {
@@ -862,7 +862,7 @@ int GenTransferFunc::makeCurrent(void)
     dpy[1] = Tk_Display(tkwin);
     win1 = Tk_WindowId(tkwin);
 
-    ctxs[1] = OpenGLGetContext(the_interp,const_cast<char *>(myname()));
+    ctxs[1] = OpenGLGetContext(the_interp,const_cast<char *>(myname.c_str()));
 
     // check if it was created
     if(!ctxs[1])
@@ -874,9 +874,9 @@ int GenTransferFunc::makeCurrent(void)
   }	
 
   if (!ctxs[2]) {
-    clString myname(clString(".ui")+id+".f.gl3.gl");
+    string myname(".ui" + id + ".f.gl3.gl");
     tkwin = Tk_NameToWindow(the_interp,
-			    const_cast<char *>(myname()),
+			    const_cast<char *>(myname.c_str()),
 			    Tk_MainWindow(the_interp));
 
     if (!tkwin) {
@@ -892,7 +892,7 @@ int GenTransferFunc::makeCurrent(void)
     dpy[2] = Tk_Display(tkwin);
     win2 = Tk_WindowId(tkwin);
 
-    ctxs[2] = OpenGLGetContext(the_interp,const_cast<char *>(myname()));
+    ctxs[2] = OpenGLGetContext(the_interp,const_cast<char *>(myname.c_str()));
 
     // check if it was created
     if(!ctxs[2])

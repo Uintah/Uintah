@@ -45,7 +45,7 @@ namespace SCIRun {
 class GLTextureBuilder : public Module {
 
 public:
-  GLTextureBuilder( const clString& id);
+  GLTextureBuilder( const string& id);
 
   virtual ~GLTextureBuilder();
 

@@ -30,7 +30,6 @@
 
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Util/Assert.h>
-#include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Expon.h>
 #include <Core/Math/LinAlg.h>

@@ -33,7 +33,7 @@ const int MESHBASE_VERSION = 1;
 void 
 MeshBase::io(Piostream& stream) {
 
-  stream.begin_class(type_name().c_str(), MESHBASE_VERSION);
+  stream.begin_class(type_name(-1), MESHBASE_VERSION);
   PropertyManager::io(stream);
   stream.end_class();
 }

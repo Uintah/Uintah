@@ -28,7 +28,6 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Containers/String.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
@@ -54,7 +53,7 @@ namespace SCIRun {
 class TransformField : public Module
 {
 public:
-  TransformField(const clString& id);
+  TransformField(const string& id);
   virtual ~TransformField();
 
   virtual void execute();
@@ -67,12 +66,12 @@ private:
 };
 
 
-extern "C" Module* make_TransformField(const clString& id) {
+extern "C" Module* make_TransformField(const string& id) {
   return new TransformField(id);
 }
 
 
-TransformField::TransformField(const clString& id)
+TransformField::TransformField(const string& id)
   : Module("TransformField", id, Source, "Fields", "SCIRun")
 {
 }

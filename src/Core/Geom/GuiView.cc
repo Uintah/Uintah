@@ -42,7 +42,7 @@ using std::ostream;
 
 namespace SCIRun {
 
-GuiView::GuiView(const clString& name, const clString& id, TCL* tcl)
+GuiView::GuiView(const string& name, const string& id, TCL* tcl)
 : GuiVar(name, id, tcl), eyep("eyep", str(), tcl),
   lookat("lookat", str(), tcl), up("up", str(), tcl),
   fov("fov", str(), tcl), eyep_offset("eyep_offset", str(), tcl)
@@ -83,7 +83,7 @@ GuiView::set(const View& view)
 
 
 void
-GuiView::emit(ostream& out, clString& midx)
+GuiView::emit(ostream& out, string& midx)
 {
     eyep.emit(out, midx);
     lookat.emit(out, midx);
@@ -93,7 +93,7 @@ GuiView::emit(ostream& out, clString& midx)
 
 
 
-GuiExtendedView::GuiExtendedView( const clString& name, const clString& id,
+GuiExtendedView::GuiExtendedView( const string& name, const string& id,
 				 TCL* tcl )
 : GuiVar(name, id, tcl), eyep("eyep", str(), tcl),
   lookat("lookat", str(), tcl), up("up", str(), tcl),
@@ -144,7 +144,7 @@ GuiExtendedView::set(const ExtendedView& view)
 
 
 void
-GuiExtendedView::emit(ostream& out, clString& midx)
+GuiExtendedView::emit(ostream& out, string& midx)
 {
     eyep.emit(out, midx);
     lookat.emit(out, midx);

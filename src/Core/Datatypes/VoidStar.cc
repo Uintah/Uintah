@@ -32,7 +32,6 @@
 
 #include <Core/Datatypes/VoidStar.h>
 #include <Core/Util/NotFinished.h>
-#include <Core/Containers/String.h>
 
 namespace SCIRun {
 

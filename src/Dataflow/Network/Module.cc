@@ -64,8 +64,8 @@ extern PackageDB packageDB;
 typedef std::map<int,IPortInfo*>::iterator iport_iter;
 typedef std::map<int,OPortInfo*>::iterator oport_iter;
 
-ModuleInfo* GetModuleInfo(const clString& name, const clString& catname,
-			  const clString& packname)
+ModuleInfo* GetModuleInfo(const string& name, const string& catname,
+			  const string& packname)
 {
   Packages* db=(Packages*)packageDB.db_;
  
@@ -89,32 +89,32 @@ void *FindLibrarySymbol(const char* package, const char* type,
   void* SymbolAddress = 0;
   LIBRARY_HANDLE so = 0;
 
-  clString pname(package);
-  clString pak_bname,cat_bname;
+  string pname(package);
+  string pak_bname,cat_bname;
   if (pname=="SCIRun") {
     pak_bname = "libDataflow.so";
     cat_bname = "libDataflow_Ports.so";
   } else {
-    pak_bname = clString("libPackages_")+pname+"_Dataflow.so";
-    cat_bname = clString("libPackages_")+pname+"_Dataflow_Ports.so";
+    pak_bname = "libPackages_" + pname + "_Dataflow.so";
+    cat_bname = "libPackages_" + pname + "_Dataflow_Ports.so";
   }
 
   // maybe it's in the small version of the .so
-  so = GetLibraryHandle(cat_bname());
+  so = GetLibraryHandle(cat_bname.c_str());
   if (so) {
     SymbolAddress = GetHandleSymbolAddress(so,symbol);
     if (SymbolAddress) goto found;
   }
 
   // maybe it's in the large version of the .so
-  so = GetLibraryHandle(pak_bname());
+  so = GetLibraryHandle(pak_bname.c_str());
   if (so) {
     SymbolAddress = GetHandleSymbolAddress(so,symbol);
     if (SymbolAddress) goto found;
   }
 
   // maybe it's in a .so that doesn't conform to the naming convention
-  so = GetLibraryHandle(pname());
+  so = GetLibraryHandle(pname.c_str());
   if (so) {
     SymbolAddress = GetHandleSymbolAddress(so,symbol);
     if (SymbolAddress) goto found;
@@ -152,9 +152,9 @@ oport_maker FindOPort(const char* package, const char* datatype)
   return maker;
 }  
 
-Module::Module(const clString& name, const clString& id, 
-	       SchedClass sched_class, const clString& cat,
-	       const clString& pack)
+Module::Module(const string& name, const string& id, 
+	       SchedClass sched_class, const string& cat,
+	       const string& pack)
   : notes("notes", id, this),
     show_status("show_status", id, this),
     msgStream_("msgStream", id, this),
@@ -194,10 +194,10 @@ Module::Module(const clString& name, const clString& id,
     for (oport_iter i2=info->oports->begin();
 	 i2!=info->oports->end();
 	 i2++) {
-      int strlength = strlen(((*i2).second)->datatype());
+      int strlength = strlen(((*i2).second)->datatype.c_str());
       char* package = new char[strlength+1];
       char* datatype = new char[strlength+1];
-      sscanf(((*i2).second)->datatype(),"%[^:]::%s",package,datatype);
+      sscanf(((*i2).second)->datatype.c_str(),"%[^:]::%s",package,datatype);
       if (package[0]=='*')
 	maker = FindOPort(&package[1],datatype);
       else
@@ -213,10 +213,10 @@ Module::Module(const clString& name, const clString& id,
     for (iport_iter i1=info->iports->begin();
 	 i1!=info->iports->end();
 	 i1++) {
-      int strlength = strlen(((*i1).second)->datatype());
+      int strlength = strlen(((*i1).second)->datatype.c_str());
       char* package = new char[strlength+1];
       char* datatype = new char[strlength+1];
-      sscanf(((*i1).second)->datatype(),"%[^:]::%s",package,datatype);
+      sscanf(((*i1).second)->datatype.c_str(),"%[^:]::%s",package,datatype);
       if (package[0]=='*')
 	dynamic_port_maker = FindIPort(&package[1],datatype);
       else
@@ -224,7 +224,7 @@ Module::Module(const clString& name, const clString& id,
       if (dynamic_port_maker && package[0]!='*') {
 	iport = dynamic_port_maker(this,((*i1).second)->name);
 	if (iport) {
-	  lastportname = clString(((*i1).second)->name);
+	  lastportname = string(((*i1).second)->name);
 	  add_iport(iport);
 	}
       } else
@@ -344,8 +344,8 @@ void Module::remove_iport(int which)
   // remove the indicated port, then
   // collapse the remaining ports together
   int loop1,loop2;
-  clString omod,imod,ip,op;
-  clString command;
+  string omod,imod,ip,op;
+  string command;
   Connection *conn = 0;
 
   // remove (and collapse)
@@ -368,19 +368,16 @@ void Module::remove_iport(int which)
       iports[loop1]->connection(loop2)->id = 
 	omod+"_p"+op+"_to_"+imod+"_p"+ip;
 
-      command = clString("global netedit_canvas;"
-			 "$netedit_canvas itemconfigure "+
-			 omod+"_p"+op+"_to_"+imod+"_p"+to_string(loop1+1)+
-			 " -tags "+iports[loop1]->connection(loop2)->id);
+      command = "global netedit_canvas;$netedit_canvas itemconfigure " +
+	omod + "_p" + op + "_to_" + imod + "_p" + to_string(loop1+1) +
+	" -tags " + iports[loop1]->connection(loop2)->id;
       TCL::execute(command);
 
-      command = clString("global netedit_canvas;"
-		     "$netedit_canvas bind "+
-		     iports[loop1]->connection(loop2)->id+
-		     " <ButtonPress-3> "
-		     "\"destroyConnection "+
-		     iports[loop1]->connection(loop2)->id+
-		     " "+omod+" "+imod+"\"");
+      command = "global netedit_canvas;$netedit_canvas bind " +
+	iports[loop1]->connection(loop2)->id +
+	" <ButtonPress-3> \"destroyConnection " +
+	iports[loop1]->connection(loop2)->id +
+	" " + omod + " " + imod + "\"";
       TCL::execute(command);
     }
   }
@@ -393,7 +390,7 @@ void Module::remove_oport(int)
     NOT_FINISHED("Module::remove_oport");
 }
 
-void Module::rename_iport(int, const clString&)
+void Module::rename_iport(int, const string&)
 {
     NOT_FINISHED("Module::rename_iport");
 }
@@ -429,7 +426,7 @@ void Module::set_context(NetworkEditor* _netedit, Network* _network)
     
     // Start up the event loop
     helper=scinew ModuleHelper(this);
-    Thread* t=new Thread(helper, name(), 0, Thread::NotActivated);
+    Thread* t=new Thread(helper, name.c_str(), 0, Thread::NotActivated);
     if(stacksize)
        t->setStackSize(stacksize);
     t->activate(false);
@@ -537,12 +534,12 @@ void Module::widget_moved(int)
 
 void Module::get_position(int& x, int& y)
 {
-    clString result;
+    string result;
     if(!TCL::eval(id+" get_x", result)){
         error("Error getting x coordinate");
 	return;
     }
-    if(!result.get_int(x)){
+    if(!string_to_int(result, x)) {
         error("Error parsing x coordinate");
 	return;
     }
@@ -550,7 +547,7 @@ void Module::get_position(int& x, int& y)
         error("Error getting y coordinate");
 	return;
     }
-    if(!result.get_int(y)){
+    if(!string_to_int(result, y)) {
         error("Error parsing y coordinate");
 	return;
     }
@@ -563,10 +560,10 @@ void Module::tcl_command(TCLArgs& args, void*)
 	return;
     }
     if(args[1] == "iportinfo"){
-	Array1<clString> info(iports.size());
+	Array1<string> info(iports.size());
 	for(int i=0;i<iports.size();i++){
 	    IPort* port=iports[i];
-	    Array1<clString> pi;
+	    Array1<string> pi;
 	    pi.add(port->get_colorname());
 	    pi.add(to_string(port->nconnections()>0));
 	    pi.add(port->get_typename());
@@ -575,10 +572,10 @@ void Module::tcl_command(TCLArgs& args, void*)
 	}
 	args.result(args.make_list(info));
     } else if(args[1] == "oportinfo"){
-	Array1<clString> info(oports.size());
+	Array1<string> info(oports.size());
 	for(int i=0;i<oports.size();i++){
 	    OPort* port=oports[i];
-	    Array1<clString> pi;
+	    Array1<string> pi;
 	    pi.add(port->get_colorname());
 	    pi.add(to_string(port->nconnections()>0));
 	    pi.add(port->get_typename());
@@ -598,9 +595,9 @@ void Module::tcl_command(TCLArgs& args, void*)
 
 // Error conditions
 // ZZZ- what should I do with this on remote side?
-void Module::error(const clString& string)
+void Module::error(const string& str)
 {
-    netedit->add_text(name+": "+string);
+    netedit->add_text(name + ": " + str);
 }
 
 
@@ -662,7 +659,7 @@ void Module::do_execute()
     // Reset all of the ports...
     int i;
 
-//    clString result;
+//    string result;
     show_stat=show_status.get();
 //    if (!TCL::eval(id+" get_show_status", result)) {
 //	error("Error getting show_status");
@@ -711,7 +708,7 @@ void Module::reconfigure_iports()
 {
     if (global_remote)
 	return;
-    if(id.len()==0)
+    if(id.size()==0)
 	return;
     TCL::execute("configureIPorts "+id);
 }
@@ -720,7 +717,7 @@ void Module::reconfigure_oports()
 {
     if (global_remote)
 	return;
-    else if (id.len()==0)
+    else if (id.size()==0)
 	return;
     TCL::execute("configureOPorts "+id);
 }

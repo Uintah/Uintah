@@ -110,7 +110,7 @@ namespace SCIRun {
     bool         is_changed, is_new, is_init;
     ExecMsg      exec_msg;
     View         c_view;
-    clString     message;
+    string     message;
     
     CrosshairWidget* cross_widget;
     CrowdMonitor     widget_lock;
@@ -125,7 +125,7 @@ namespace SCIRun {
     PathHandle   ext_path_h, new_path_h, curr_path_h;
     
 public:
-    EditPath(const clString& id);
+    EditPath(const string& id);
     virtual ~EditPath();
     virtual void execute();
     virtual void tcl_command(TCLArgs&, void*);
@@ -133,16 +133,16 @@ public:
     bool init_exist_path(PathHandle);
     void update_tcl_var();
     void init_tcl_update();
-    bool Msg_Box(const clString&, const clString&);
+    bool Msg_Box(const string&, const string&);
     void send_view();
 };
 
-extern "C" Module* make_EditPath(const clString& id)
+extern "C" Module* make_EditPath(const string& id)
 {
     return scinew EditPath(id);
 }
 
-EditPath::EditPath(const clString& id)
+EditPath::EditPath(const string& id)
 : Module("EditPath", id, Filter, "Render", "SCIRun"),
   tcl_num_views("tcl_num_views", id, this),
   tcl_is_looped("tcl_is_looped", id, this),
@@ -218,7 +218,7 @@ void EditPath::execute()
     // first - time initialization
     if (!is_init){
       is_init=true;
-      cross_id=ogeom->addObj(cross_widget->GetWidget(), clString("Crosshair"), &widget_lock);
+      cross_id=ogeom->addObj(cross_widget->GetWidget(), string("Crosshair"), &widget_lock);
       if (ipath->get(p))
 	init_exist_path(p);
       else 
@@ -746,7 +746,7 @@ void EditPath::update_tcl_var(){
   }
 }
 
-bool EditPath::Msg_Box(const clString& title, const clString& message){
+bool EditPath::Msg_Box(const string& title, const string& message){
   tcl_msg_box.set(0);
   if (UI_Init.get()){
      TCLTask::lock();

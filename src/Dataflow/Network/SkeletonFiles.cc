@@ -41,7 +41,7 @@ char component_skeleton[] = \
 "class %sSHARE %s : public Module {\n" /* package name, component name */
 "" 
 "public:\n"
-"  %s(const clString& id);\n" /* component name */
+"  %s(const string& id);\n" /* component name */
 "\n"
 "  virtual ~%s();\n" /* component name */
 "\n"
@@ -50,11 +50,11 @@ char component_skeleton[] = \
 "  virtual void tcl_command(TCLArgs&, void*);\n"
 "};\n"
 "\n"
-"extern \"C\" %sSHARE Module* make_%s(const clString& id) {\n" /* package name, component name */
+"extern \"C\" %sSHARE Module* make_%s(const string& id) {\n" /* package name, component name */
 "  return scinew %s(id);\n" /* component name */
 "}\n"
 "\n"
-"%s::%s(const clString& id)\n" /* component name, component name */
+"%s::%s(const string& id)\n" /* component name, component name */
 "  : Module(\"%s\", id, Source, \"%s\", \"%s\")\n" /* comp, cat, pack */
 "{\n"
 "}\n"

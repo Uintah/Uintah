@@ -29,7 +29,6 @@
 
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Util/NotFinished.h>
-#include <Core/Containers/String.h>
 #include <Core/Geom/GeomSave.h>
 #include <Core/Geom/GeomTri.h>
 #include <Core/Geometry/BBox.h>

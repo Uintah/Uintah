@@ -87,17 +87,17 @@ class MinNormLeastSq : public Module {
   MatrixOPort* w_omat_;
   MatrixOPort* x_omat_;
 public:
-  MinNormLeastSq(const clString& id);
+  MinNormLeastSq(const string& id);
   virtual ~MinNormLeastSq();
   virtual void execute();
 };
 
-extern "C" Module* make_MinNormLeastSq(const clString& id)
+extern "C" Module* make_MinNormLeastSq(const string& id)
 {
     return new MinNormLeastSq(id);
 }
 
-MinNormLeastSq::MinNormLeastSq(const clString& id)
+MinNormLeastSq::MinNormLeastSq(const string& id)
 : Module("MinNormLeastSq", id, Filter)
 {
   // Create the input port

@@ -24,8 +24,6 @@ namespace SCIRun {
   class IntVector;
 }
 
-#include <Core/Containers/String.h>
-
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1375
@@ -48,6 +46,9 @@ namespace SCIRun {
    represent XML element trees */
 
 #define NOT_SET ((char*)_NOTSET_)
+
+using std::string;
+
 
 namespace SCIRun {
      
@@ -121,9 +122,9 @@ namespace SCIRun {
       char* removeWhiteSpace(char* string);
 
       
-      clString xmlto_string(const DOMString& str);
-      clString xmlto_string(const XMLCh* const str);
-      void invalidNode(const DOM_Node& n, const clString& filename);
+      string xmlto_string(const DOMString& str);
+      string xmlto_string(const XMLCh* const str);
+      void invalidNode(const DOM_Node& n, const string& filename);
       DOMString findText(DOM_Node& node);
 	
 

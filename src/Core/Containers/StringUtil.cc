@@ -17,42 +17,63 @@
 
 
 /*
- *  Lighting.cc:  The light sources in a scene
+ *  StringUtil.c: Some useful string functions
  *
  *  Written by:
- *   Steven G. Parker
+ *   Michael Callahan
  *   Department of Computer Science
  *   University of Utah
- *   September 1994
+ *   April 2001
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Geom/Lighting.h>
-#include <Core/Geom/Light.h>
-#include <Core/Persistent/Persistent.h>
+#include <Core/Containers/StringUtil.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 namespace SCIRun {
 
-Lighting::Lighting()
-: amblight(Color(0,0,0))
+bool
+string_to_int(const string &str, int &result)
 {
+  return sscanf(str.c_str(), "%d", &result) == 1;
 }
 
-Lighting::~Lighting()
+bool
+string_to_double(const string &str, double &result)
 {
+  return sscanf(str.c_str(), "%lf", &result) == 1;
 }
 
-#define LIGHTING_VERSION 1
-
-void Pio( Piostream& stream, Lighting & l )
+string
+to_string(int val)
 {
-
-    stream.begin_class("Lighting", LIGHTING_VERSION);
-    Pio(stream, l.lights);
-    Pio(stream, l.amblight);
-    stream.end_class();
+  char s[50];
+  sprintf(s, "%d", val);
+  return string(s);
 }
+
+string
+to_string(double val)
+{
+  char s[50];
+  sprintf(s, "%g", val);
+  return string(s);
+}
+
+string
+basename(const string &path)
+{
+  return path.substr(path.rfind('/')+1, path.size());
+}
+
+string
+pathname(const string &path)
+{
+  return path.substr(0, path.rfind('/')+1);
+}
+
 
 } // End namespace SCIRun
 

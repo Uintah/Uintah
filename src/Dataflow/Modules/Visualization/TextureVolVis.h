@@ -46,7 +46,7 @@ class GeomObj;
 class TextureVolVis : public Module {
 
 public:
-  TextureVolVis( const clString& id);
+  TextureVolVis( const string& id);
 
   virtual ~TextureVolVis();
   virtual void widget_moved(int last);    

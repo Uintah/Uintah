@@ -21,9 +21,13 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Core/Containers
 
-SRCS     += $(SRCDIR)/Sort.cc $(SRCDIR)/String.cc $(SRCDIR)/PQueue.cc \
-	$(SRCDIR)/TrivialAllocator.cc $(SRCDIR)/BitArray1.cc \
-	$(SRCDIR)/templates.cc $(SRCDIR)/ConsecutiveRangeSet.cc
+SRCS     += $(SRCDIR)/Sort.cc \
+	    $(SRCDIR)/StringUtil.cc \
+	    $(SRCDIR)/PQueue.cc \
+	    $(SRCDIR)/TrivialAllocator.cc \
+            $(SRCDIR)/BitArray1.cc \
+	    $(SRCDIR)/templates.cc \
+            $(SRCDIR)/ConsecutiveRangeSet.cc
 
 PSELIBS := Core/Exceptions Core/Tester Core/Thread
 

@@ -4185,7 +4185,7 @@ void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
   /*glBitmap(0, 0, x, y, 1, 1, 0);*/
   glPushAttrib (GL_LIST_BIT);
   glListBase(fontbase);
-  glCallLists(strlen(text.c_str()), GL_UNSIGNED_BYTE, (GLubyte *)text.c_str());
+  glCallLists(text.size(), GL_UNSIGNED_BYTE, (GLubyte *)text.c_str());
   glPopAttrib ();
   post_draw(di);
 #endif

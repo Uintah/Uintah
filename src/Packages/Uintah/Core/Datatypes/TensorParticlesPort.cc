@@ -8,21 +8,21 @@ using namespace Uintah;
 
 extern "C" {
 UINTAHSHARE IPort* make_TensorParticlesIPort(Module* module,
-					     const clString& name) {
+					     const string& name) {
   return scinew SimpleIPort<TensorParticlesHandle>(module,name);
 }
 UINTAHSHARE OPort* make_TensorParticlesOPort(Module* module,
-					     const clString& name) {
+					     const string& name) {
   return scinew SimpleOPort<TensorParticlesHandle>(module,name);
 }
 }
 
 template<>
-clString
+string
 SimpleIPort<TensorParticlesHandle>::port_type("TensorParticles");
 
 template<>
-clString
+string
 SimpleIPort<TensorParticlesHandle>::port_color("chartreuse4");
 
 

@@ -33,7 +33,7 @@
 #include <fstream>
 #include <strstream>
 #include <stdlib.h>
-#include <Core/Containers/String.h>
+
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1375
@@ -1107,9 +1107,9 @@ int ReadComponentNodeFromFile(component_node* n, const char* filename)
   try {
     parser.parse(filename);
   }  catch (const XMLException& toCatch) {
-    std::cerr << clString("Error during parsing: '")+
-		filename+"'\nException message is:  "+
-		xmlto_string(toCatch.getMessage());
+    std::cerr << "Error during parsing: '" <<
+      filename << "'\nException message is:  " <<
+      xmlto_string(toCatch.getMessage());
     handler.foundError=true;
     return 0;
   }

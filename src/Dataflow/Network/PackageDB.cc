@@ -21,7 +21,6 @@
 #ifdef ASSERT
 #undef ASSERT
 #endif
-#include <Core/Containers/String.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/FileUtils.h>
 #include <Dataflow/Network/ComponentNode.h>
@@ -56,21 +55,21 @@ using std::vector;
 namespace SCIRun {
 
 typedef struct {
-  clString name;
-  std::map<clString,ModuleInfo*> modules;
+  string name;
+  std::map<string,ModuleInfo*> modules;
 } category;
   
 typedef struct {
-  clString name;
-  std::map<clString,category*> categories;
+  string name;
+  std::map<string,category*> categories;
 } package;
 
 typedef std::map<int,char*>::iterator char_iter;
 typedef std::map<int,inport_node*>::iterator inport_iter;
 typedef std::map<int,outport_node*>::iterator outport_iter;
-typedef std::map<clString,int>::iterator string_iter;
-typedef std::map<clString,category*>::iterator category_iter;
-typedef std::map<clString,ModuleInfo*>::iterator module_iter;
+typedef std::map<string,int>::iterator string_iter;
+typedef std::map<string,category*>::iterator category_iter;
+typedef std::map<string,ModuleInfo*>::iterator module_iter;
 typedef std::map<int,package*>::iterator package_iter;
 
 
@@ -86,12 +85,12 @@ PackageDB::~PackageDB(void)
   delete (Packages*)db_; 
 }
 
-typedef void (*pkgInitter)(const clString& tclPath);
+typedef void (*pkgInitter)(const string& tclPath);
 
-void PackageDB::loadPackage(const clString& packPath)
+void PackageDB::loadPackage(const string& packPath)
 {
-  clString packagePath = packPath;
-  clString result;
+  string packagePath = packPath;
+  string result;
   std::map<int,package*> packages;
   package* new_package = 0;
   category* new_category = 0;
@@ -99,10 +98,10 @@ void PackageDB::loadPackage(const clString& packPath)
   module_iter mi;
   category_iter ci;
   package_iter pi;
-  clString packageElt;
+  string packageElt;
   component_node* node = 0;
   int mod_count = 0;
-  clString notset(NOT_SET);
+  string notset(NOT_SET);
 
   postMessage("Loading packages, please wait...\n", false);
 
@@ -114,8 +113,8 @@ void PackageDB::loadPackage(const clString& packPath)
   while(packagePath!="") {
     // Strip off the first element, leave the rest in the path for the next
     // iteration.
-    int firstComma=packagePath.index(',');
-    if(firstComma!=-1) {
+    const unsigned int firstComma = packagePath.find(',');
+    if(firstComma < packagePath.size()) {
       packageElt=packagePath.substr(0,firstComma);
       packagePath=packagePath.substr(firstComma+1,-1);
     } else {
@@ -123,25 +122,25 @@ void PackageDB::loadPackage(const clString& packPath)
       packagePath="";
     }
 
-    TCL::execute(clString("lappend auto_path ")+packageElt+"/Dataflow/GUI");
+    TCL::execute(string("lappend auto_path ")+packageElt+"/Dataflow/GUI");
     
-    clString bname = basename(packageElt);
-    clString pname = basename(packageElt);
+    string bname = basename(packageElt);
+    string pname = basename(packageElt);
     
     if(bname == "src") {
       bname = "";
       pname = "SCIRun";
     } else {
-      bname = clString("Packages_")+bname+"_";
+      bname = "Packages_" + bname + "_";
     }
 
-    clString xmldir = packageElt+"/Dataflow/XML";
+    string xmldir = packageElt+"/Dataflow/XML";
     std::map<int,char*>* files;
-    files = GetFilenamesEndingWith((char*)xmldir(),".xml");
+    files = GetFilenamesEndingWith((char*)xmldir.c_str(),".xml");
 
     if (!files) {
-      postMessage(clString("Unable to load package ")+pname+
-		  ":\n - Couldn't find "+xmldir+" directory");
+      postMessage("Unable to load package " + pname +
+		  ":\n - Couldn't find " + xmldir + " directory");
       continue;
     }
 
@@ -157,20 +156,20 @@ void PackageDB::loadPackage(const clString& packPath)
 	 i++) {
       if (node) DestroyComponentNode(node);
       node = CreateComponentNode(3);
-      ReadComponentNodeFromFile(node,(xmldir+"/"+(*i).second)());
+      ReadComponentNodeFromFile(node,(xmldir+"/"+(*i).second).c_str());
 
       if (notset==node->name||notset==node->category) continue;
 
-      ci = new_package->categories.find(clString(node->category));
+      ci = new_package->categories.find(string(node->category));
       if (ci==new_package->categories.end()) {
 	new_category = new category;
-	new_category->name = clString(node->category);
-	new_package->categories.insert(std::pair<clString,
+	new_category->name = string(node->category);
+	new_package->categories.insert(std::pair<string,
 	  category*>(new_category->name,new_category));
-	ci = new_package->categories.find(clString(new_category->name));
+	ci = new_package->categories.find(string(new_category->name));
       }
       
-      mi = (*ci).second->modules.find(clString(node->name));
+      mi = (*ci).second->modules.find(string(node->name));
       if (mi==(*ci).second->modules.end()) {
 	IPortInfo* ipinfo;
 	OPortInfo* opinfo;
@@ -187,8 +186,8 @@ void PackageDB::loadPackage(const clString& packPath)
 	     i1!=node->io->inports->end();
 	     i1++) {
 	  ipinfo = scinew IPortInfo;
-	  ipinfo->name = clString(((*i1).second)->name);
-	  ipinfo->datatype = clString(((*i1).second)->datatype);
+	  ipinfo->name = string(((*i1).second)->name);
+	  ipinfo->datatype = string(((*i1).second)->datatype);
 	  ipinfo->maker = (iport_maker)0;
 	  new_module->iports->insert(
 	    std::pair<int,IPortInfo*>(new_module->iports->size(),
@@ -198,37 +197,37 @@ void PackageDB::loadPackage(const clString& packPath)
 	     i2!=node->io->outports->end();
 	     i2++) {
 	  opinfo = scinew OPortInfo;
-	  opinfo->name = clString(((*i2).second)->name);
-	  opinfo->datatype = clString(((*i2).second)->datatype);
+	  opinfo->name = string(((*i2).second)->name);
+	  opinfo->datatype = string(((*i2).second)->datatype);
 	  opinfo->maker = (oport_maker)0;
 	  new_module->oports->insert(
 	    std::pair<int,OPortInfo*>(new_module->oports->size(),
 					    opinfo));
 	}
-	(*ci).second->modules.insert(std::pair<clString,
-	   ModuleInfo*>(clString(new_module->moduleName),new_module));
+	(*ci).second->modules.insert(std::pair<string,
+	   ModuleInfo*>(string(new_module->moduleName),new_module));
       }
     }
   }
 
-  TCL::execute(clString("toplevel .loading; "
-			"wm geometry .loading 250x75+275+200; "
-			"wm title .loading {Loading packages}; "
-			"update idletasks"));
-  TCL::execute(clString("iwidgets::feedback .loading.fb -labeltext "
-			"{Loading package:                 }"
-			" -steps " + to_string(mod_count) + ";"
-			"pack .loading.fb -padx 5 -fill x; update idletasks"));
+  TCL::execute("toplevel .loading; "
+	       "wm geometry .loading 250x75+275+200; "
+	       "wm title .loading {Loading packages}; "
+	       "update idletasks");
+  TCL::execute("iwidgets::feedback .loading.fb -labeltext "
+	       "{Loading package:                 }"
+	       " -steps " + to_string(mod_count) + ";"
+	       "pack .loading.fb -padx 5 -fill x; update idletasks");
 
   LIBRARY_HANDLE package_so;
   LIBRARY_HANDLE category_so;
-  clString libname;
-  clString cat_bname,pak_bname;
-  clString pname,cname,mname;
-  clString category_error;
-  clString package_error;
-  clString makename;
-  clString command;
+  string libname;
+  string cat_bname,pak_bname;
+  string pname,cname,mname;
+  string category_error;
+  string package_error;
+  string makename;
+  string command;
   int index = 0;
   int numreg;
   
@@ -246,19 +245,18 @@ void PackageDB::loadPackage(const clString& packPath)
       cat_bname = "Dataflow_Modules_";
       pak_bname = "Dataflow";
     } else {
-      cat_bname = clString("Packages_")+pname+"_Dataflow_Modules_";
-      pak_bname = clString("Packages_")+pname+"_Dataflow";
+      cat_bname = "Packages_" + pname + "_Dataflow_Modules_";
+      pak_bname = "Packages_" + pname + "_Dataflow";
     }
 
-    postMessage(clString("Loading package '")+pname+"'", false);
-    TCL::execute(clString(".loading.fb configure "
-			  "-labeltext {Loading package: ") +
+    postMessage("Loading package '" + pname + "'", false);
+    TCL::execute(".loading.fb configure -labeltext {Loading package: " +
 		 pname + " }");
     TCL::eval("update idletasks",result);
 
     // try the large version of the .so
-    libname = clString("lib")+pak_bname+".so";
-    package_so = GetLibraryHandle(libname());
+    libname = "lib" + pak_bname + ".so";
+    package_so = GetLibraryHandle(libname.c_str());
     if (!package_so)
       package_error = SOError();
 
@@ -269,15 +267,15 @@ void PackageDB::loadPackage(const clString& packPath)
       cname = (*ci).second->name;
 
       // try the small version of the .so 
-      libname = clString("lib")+cat_bname+cname+".so";
-      category_so = GetLibraryHandle(libname());
+      libname = "lib" + cat_bname + cname + ".so";
+      category_so = GetLibraryHandle(libname.c_str());
       if (!category_so)
 	category_error = SOError();
 
       if (!category_so && !package_so) {
-	postMessage(clString("Unable to load all of package '")+pname+
-			     "' (category '"+cname+"' failed) :\n - "+
-		    package_error+"\n - "+category_error+"\n");
+	postMessage("Unable to load all of package '" + pname +
+		    "' (category '" + cname + "' failed) :\n - " +
+		    package_error + "\n - " + category_error + "\n");
 	TCL::execute("update idletasks");
 	continue;
       }
@@ -286,17 +284,17 @@ void PackageDB::loadPackage(const clString& packPath)
 	   mi!=(*ci).second->modules.end();
 	   mi++) {
 	mname = (*mi).second->moduleName;
-	makename = clString("make_"+mname);
+	makename = "make_" + mname;
 	(*mi).second->maker = 0;
 	if (category_so)
 	  (*mi).second->maker = 
-	    (ModuleMaker)GetHandleSymbolAddress(category_so,makename());
+	    (ModuleMaker)GetHandleSymbolAddress(category_so,makename.c_str());
 	if (!(*mi).second->maker && package_so)
 	  (*mi).second->maker = 
-	    (ModuleMaker)GetHandleSymbolAddress(package_so,makename());
+	    (ModuleMaker)GetHandleSymbolAddress(package_so,makename.c_str());
 	if (!(*mi).second->maker) {
-	  postMessage(clString("Unable to load module '")+mname+
-		      "' :\n - can't find symbol 'make_"+mname+"'\n");
+	  postMessage("Unable to load module '" + mname +
+		      "' :\n - can't find symbol 'make_" + mname + "'\n");
 	  TCL::execute("update idletasks");
 	  //destroy new_module here
 	  continue;
@@ -305,22 +303,22 @@ void PackageDB::loadPackage(const clString& packPath)
 	  registerModule((*mi).second);
 	}
 
-	TCL::execute(clString("if [winfo exists .loading.fb] "
-			      "{.loading.fb step; update idletasks}"));
+	TCL::execute("if [winfo exists .loading.fb] "
+		     "{.loading.fb step; update idletasks}");
       }
     }
     
     if (numreg) {
-      command = clString("createPackageMenu "+to_string(index++));
-      TCL::execute(command());
+      command = "createPackageMenu " + to_string(index++);
+      TCL::execute(command);
       TCL::execute("update idletasks");
     } else 
-      postMessage(clString("Unable to load package ")+pname+":\n"
+      postMessage("Unable to load package " + pname + ":\n"
                   " - could not find any valid modules.\n");
   }
 
   postMessage("\nFinished loading packages.\n",false);
-  TCL::execute(clString("if [winfo exists .loading] {destroy .loading}"));
+  TCL::execute("if [winfo exists .loading] {destroy .loading}");
   TCL::eval("update idletasks",result);
 }
   
@@ -347,12 +345,12 @@ void PackageDB::registerModule(ModuleInfo* info) {
 	      << info->moduleName << "\n";  
 }
  
-void PackageDB::createAlias(const clString& fromPackageName,
-			    const clString& fromCategoryName,
-			    const clString& fromModuleName,
-			    const clString&,// toPackageName,
-			    const clString&,// toCategoryName,
-			    const clString&)// toModuleName)
+void PackageDB::createAlias(const string& fromPackageName,
+			    const string& fromCategoryName,
+			    const string& fromModuleName,
+			    const string&,// toPackageName,
+			    const string&,// toCategoryName,
+			    const string&)// toModuleName)
 {
   Packages* db=(Packages*)db_;
   
@@ -376,10 +374,10 @@ void PackageDB::createAlias(const clString& fromPackageName,
   registerModule(moduleInfo);
 }
  
-Module* PackageDB::instantiateModule(const clString& packageName,
-				     const clString& categoryName,
-				     const clString& moduleName,
-				     const clString& instanceName) const {
+Module* PackageDB::instantiateModule(const string& packageName,
+				     const string& categoryName,
+				     const string& moduleName,
+				     const string& instanceName) const {
   Packages* db=(Packages*)db_;
 
   Package* package;
@@ -426,8 +424,8 @@ Module* PackageDB::instantiateModule(const clString& packageName,
   //                                                      -mcq 99/10/6
   
   if(moduleInfo->uiFile!="") {
-    clString result;
-    if(!TCL::eval(clString("source ")+moduleInfo->uiFile,result)) {
+    string result;
+    if(!TCL::eval("source " + moduleInfo->uiFile , result)) {
       cerr << "Can't source UI file " << moduleInfo->uiFile << "...\n";
       cerr << "  TCL Error: " << result << "\n";
     }
@@ -439,7 +437,7 @@ Module* PackageDB::instantiateModule(const clString& packageName,
   
   // Some modules may already know their package and category.
   // If this module doesn't, then set it's package and category here.
-  clString unknown("unknown");
+  string unknown("unknown");
   if (unknown == module->packageName)
     module->packageName=packageName;
   if (unknown == module->categoryName)
@@ -451,7 +449,7 @@ Module* PackageDB::instantiateModule(const clString& packageName,
   return module;
 }
  
-Array1<clString> PackageDB::packageNames(void) const {
+Array1<string> PackageDB::packageNames(void) const {
    
   // packageList_ is used to keep a list of the packages 
   // that are in this PSE IN THE ORDER THAT THEY ARE SPECIFIED
@@ -461,14 +459,14 @@ Array1<clString> PackageDB::packageNames(void) const {
   return packageList_;
 }
 
-Array1<clString>
-PackageDB::categoryNames(const clString& packageName) const {
+Array1<string>
+PackageDB::categoryNames(const string& packageName) const {
   Packages* db=(Packages*)db_;
   {
     PackagesIter iter(db);
     for(iter.first();iter.ok();++iter) if(iter.get_key()==packageName) {
       Package* package=iter.get_data();
-      Array1<clString> result(package->size());
+      Array1<string> result(package->size());
       {
 	PackageIter iter(package);
 	int i=0;
@@ -479,13 +477,13 @@ PackageDB::categoryNames(const clString& packageName) const {
   }
   cerr << "WARNING: Unknown package " << packageName << "\n";
   
-  Array1<clString> result(0);
+  Array1<string> result(0);
   return result;
 }
  
-Array1<clString>
-PackageDB::moduleNames(const clString& packageName,
-		       const clString& categoryName) const {
+Array1<string>
+PackageDB::moduleNames(const string& packageName,
+		       const string& categoryName) const {
   Packages* db=(Packages*)db_;
   {
     PackagesIter iter(db);
@@ -497,7 +495,7 @@ PackageDB::moduleNames(const clString& packageName,
 	  for(iter.first();iter.ok();++iter) 
 	    if(iter.get_key()==categoryName) {
 	      Category* category=iter.get_data();
-	      Array1<clString> result(category->size());
+	      Array1<string> result(category->size());
 	      {
 		CategoryIter iter(category);
 		int i=0;
@@ -513,7 +511,7 @@ PackageDB::moduleNames(const clString& packageName,
   }
  cerr << "WARNING: Unknown package " << packageName << "\n";
  
- Array1<clString> result(0);
+ Array1<string> result(0);
  return result;
 }
 

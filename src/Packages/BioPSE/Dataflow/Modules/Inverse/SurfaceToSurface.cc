@@ -167,7 +167,7 @@ class SurfaceToSurface : public Module {
     Mutex mutex;
 public:
     void parallel(int);
-    SurfaceToSurface(const clString& id);
+    SurfaceToSurface(const string& id);
     virtual ~SurfaceToSurface();
     virtual void execute();
     void getBW(double **a, int n, int *m1, int *m2);
@@ -185,12 +185,12 @@ public:
     void jacobi_sci(Matrix*,ColumnMatrix& , ColumnMatrix&);
 };
 
-extern "C" Module* make_SurfaceToSurface(const clString& id)
+extern "C" Module* make_SurfaceToSurface(const string& id)
 {
     return new SurfaceToSurface(id);
 }
 
-SurfaceToSurface::SurfaceToSurface(const clString& id)
+SurfaceToSurface::SurfaceToSurface(const string& id)
 : Module("SurfaceToSurface", id, Filter), status("status", id, this),
   maxiter("maxiter", id, this), target_error("target_error", id, this),
   iteration("iteration", id, this), current_error("current_error", id, this),

@@ -71,7 +71,7 @@ public:
    enum { SourceMatl, ArrowMatl, PointMatl, ConeMatl };
 
 protected:
-   virtual clString GetMaterialName( const Index mindex ) const;   
+   virtual string GetMaterialName( const Index mindex ) const;   
    
 private:
    LightType ltype;

@@ -48,7 +48,7 @@ public:
 
   // GROUP: Constructors
   //////////
-  TensorFieldExtractor(const clString& id); 
+  TensorFieldExtractor(const string& id); 
 
   // GROUP: Destructors
   //////////

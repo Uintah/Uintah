@@ -49,14 +49,14 @@ namespace SCIRun {
 using std::cerr;
 
 
-static clString control_name("Control Widget");
+static string control_name("Control Widget");
 			 
-extern "C" Module* make_TexCuttingPlanes( const clString& id) {
+extern "C" Module* make_TexCuttingPlanes( const string& id) {
   return scinew TexCuttingPlanes(id);
 }
 
 
-TexCuttingPlanes::TexCuttingPlanes(const clString& id)
+TexCuttingPlanes::TexCuttingPlanes(const string& id)
   : Module("TexCuttingPlanes", id, Filter, "Visualization", "SCIRun"), 
   tex(0),
   control_lock("TexCuttingPlanes resolution lock"),

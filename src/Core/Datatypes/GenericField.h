@@ -246,7 +246,7 @@ const string GenericField<Mesh, FData>::type_name(int n)
 template <class Mesh, class FData>
 void GenericField<Mesh, FData>::io(Piostream& stream)
 {
-  stream.begin_class(type_name().c_str(), GENERICFIELD_VERSION);
+  stream.begin_class(type_name(), GENERICFIELD_VERSION);
   Field::io(stream);
   mesh_->io(stream);
   Pio(stream, fdata_);

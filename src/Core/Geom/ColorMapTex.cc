@@ -30,7 +30,6 @@
 
 #include "ColorMapTex.h"
 #include <Core/Util/NotFinished.h>
-#include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
 using std::ostream;

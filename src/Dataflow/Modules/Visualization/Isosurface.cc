@@ -63,15 +63,15 @@ namespace SCIRun {
 
 
 
-extern "C" Module* make_Isosurface(const clString& id) {
+extern "C" Module* make_Isosurface(const string& id) {
   return new Isosurface(id);
 }
 
-//static clString module_name("Isosurface");
-static clString surface_name("Isosurface");
-static clString widget_name("Isosurface");
+//static string module_name("Isosurface");
+static string surface_name("Isosurface");
+static string widget_name("Isosurface");
 
-Isosurface::Isosurface(const clString& id)
+Isosurface::Isosurface(const string& id)
   : Module("Isosurface", id, Filter, "Visualization", "SCIRun"), 
     gui_iso_value("isoval", id, this),
     extract_from_new_field("extract-from-new-field", id, this ),
@@ -148,7 +148,7 @@ void Isosurface::execute()
   switch ( use_algorithm.get() ) {
   case 0:  // Marching Cubes
     if ( !mc_alg ) {
-      string type = string("MC::") + field->get_type_name();
+      string type = "MC::" + field->get_type_name();
       if ( !loader.get( type, mc_alg ) ) {
 	error( "Marching Cubes can not work with this field\n");
 	return;
@@ -167,7 +167,7 @@ void Isosurface::execute()
   case 1:  // Noise
     //error("Noise not implemented\n");
     if ( !noise_alg ) {
-      string type = string("Noise::") + field->get_type_name();
+      string type = "Noise::" + field->get_type_name();
       cerr <<"look for alg = " << type << endl;
       if ( !loader.get( type, noise_alg ) ) {
 	error( "NOISE can not work with this field\n");
@@ -179,7 +179,7 @@ void Isosurface::execute()
     break;
   case 2:  // View Dependent
     if ( !sage_alg ) {
-      string type = string("Sage::") + field->get_type_name();
+      string type = "Sage::" + field->get_type_name();
       if ( !loader.get( type, sage_alg ) ) {
 	error( "SAGE can not work with this field\n");
 	return;

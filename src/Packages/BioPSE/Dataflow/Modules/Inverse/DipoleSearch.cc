@@ -32,7 +32,6 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Array2.h>
-#include <Core/Containers/String.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/PointCloud.h>
@@ -66,7 +65,7 @@ class DipoleSearch : public Module {
   FieldHandle simplexH_;
 
   int seed_counter_;
-  clString state_;
+  string state_;
   Array1<double> misfit_;
   Array2<double> dipoles_;
   Array1<int> cell_visited_;
@@ -93,13 +92,13 @@ class DipoleSearch : public Module {
   void read_field_ports(int &valid_data, int &new_data);
 public:
   GuiInt use_cache_gui_;
-  DipoleSearch(const clString& id);
+  DipoleSearch(const string& id);
   virtual ~DipoleSearch();
   virtual void execute();
   void tcl_command( TCLArgs&, void * );
 };
 
-extern "C" Module* make_DipoleSearch(const clString& id) {
+extern "C" Module* make_DipoleSearch(const string& id) {
   return new DipoleSearch(id);
 }
 
@@ -110,7 +109,7 @@ int DipoleSearch::MAX_EVALS_ = 100;
 double DipoleSearch::CONVERGENCE_ = 0.001;
 double DipoleSearch::OUT_OF_BOUNDS_MISFIT_ = 1000000;
 
-DipoleSearch::DipoleSearch(const clString& id)
+DipoleSearch::DipoleSearch(const string& id)
   : Module("DipoleSearch", id, Filter), 
   mylock_("pause lock for DipoleSearch"), 
   use_cache_gui_("use_cache_gui_",id,this)

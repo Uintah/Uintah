@@ -61,7 +61,7 @@ public:
    Index GetNumPoints() const;
    
 protected:
-   virtual clString GetMaterialName( const Index mindex ) const;   
+   virtual string GetMaterialName( const Index mindex ) const;   
    
 private:
    RealVariable* dist;

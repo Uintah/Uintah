@@ -68,7 +68,7 @@ double d[][5]={{0, 0, 0, 0, 0},
 
 class PSECORESHARE StreamLines : public Module {
 public:
-  StreamLines(const clString& id);
+  StreamLines(const string& id);
 
   virtual ~StreamLines();
 
@@ -123,11 +123,11 @@ private:
 		      const Point&, float, VectorField *);
 };
 
-extern "C" PSECORESHARE Module* make_StreamLines(const clString& id) {
+extern "C" PSECORESHARE Module* make_StreamLines(const string& id) {
   return scinew StreamLines(id);
 }
 
-StreamLines::StreamLines(const clString& id)
+StreamLines::StreamLines(const string& id)
   : Module("StreamLines", id, Source, "Visualization", "SCIRun"),
     stepsize_("stepsize",id,this),tolerance_("tolerance",id,this),
     maxsteps_("maxsteps",id,this)

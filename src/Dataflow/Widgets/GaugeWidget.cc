@@ -326,7 +326,7 @@ GaugeWidget::GetAxis()
  *      a widget's material property.  The string is used in the 
  *      BaseWidget UI.
  */
-clString
+string
 GaugeWidget::GetMaterialName( const Index mindex ) const
 {
    ASSERT(mindex<NumMaterials);

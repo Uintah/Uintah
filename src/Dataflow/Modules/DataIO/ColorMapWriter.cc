@@ -39,16 +39,16 @@ class ColorMapWriter : public Module {
   GuiString filename_;
   GuiString filetype_;
 public:
-  ColorMapWriter(const clString& id);
+  ColorMapWriter(const string& id);
   virtual ~ColorMapWriter();
   virtual void execute();
 };
 
-extern "C" Module* make_ColorMapWriter(const clString& id) {
+extern "C" Module* make_ColorMapWriter(const string& id) {
   return new ColorMapWriter(id);
 }
 
-ColorMapWriter::ColorMapWriter(const clString& id)
+ColorMapWriter::ColorMapWriter(const string& id)
   : Module("ColorMapWriter", id, Source, "DataIO", "SCIRun"),
     filename_("filename", id, this),
     filetype_("filetype", id, this)
@@ -70,7 +70,7 @@ void ColorMapWriter::execute()
     return;
 
   // If no name is provided, return
-  clString fn(filename_.get());
+  string fn(filename_.get());
   if(fn == "") {
     error("Warning: no filename in ColorMapWriter");
     return;
@@ -78,11 +78,11 @@ void ColorMapWriter::execute()
    
   // Open up the output stream
   Piostream* stream;
-  clString ft(filetype_.get());
+  string ft(filetype_.get());
   if(ft=="Binary"){
-    stream=scinew BinaryPiostream(fn(), Piostream::Write);
+    stream=scinew BinaryPiostream(fn, Piostream::Write);
   } else { // "ASCII"
-    stream=scinew TextPiostream(fn(), Piostream::Write);
+    stream=scinew TextPiostream(fn, Piostream::Write);
   }
 
   // Write the file

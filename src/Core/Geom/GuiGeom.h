@@ -32,7 +32,6 @@
 #define SCI_Geom_GuiGeom_h 1
 
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/Containers/String.h>
 
 namespace SCIRun {
 
@@ -44,13 +43,13 @@ class SCICORESHARE GuiColor : public GuiVar {
     GuiDouble g;
     GuiDouble b;
 public:
-    GuiColor(const clString& name, const clString& id, TCL* tcl);
+    GuiColor(const string& name, const string& id, TCL* tcl);
     ~GuiColor();
 
     virtual void reset();
     Color get();
     void set(const Color&);
-    virtual void emit(std::ostream& out, clString& midx);
+    virtual void emit(std::ostream& out, string& midx);
 };
 
 class Material;
@@ -64,13 +63,13 @@ class SCICORESHARE GuiMaterial : public GuiVar {
     GuiDouble transparency;
     GuiDouble refraction_index;
  public:
-    GuiMaterial(const clString& name, const clString& id, TCL* tcl);
+    GuiMaterial(const string& name, const string& id, TCL* tcl);
     ~GuiMaterial();
    
     virtual void reset();
     Material get();
     void set(const Material&);
-    virtual void emit(std::ostream& out, clString& midx);
+    virtual void emit(std::ostream& out, string& midx);
 };
 
 } // End namespace SCIRun

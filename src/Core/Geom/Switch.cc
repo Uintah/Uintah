@@ -29,7 +29,6 @@
  */
 #include <Core/Geom/Switch.h>
 #include <Core/Util/NotFinished.h>
-#include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;

@@ -94,7 +94,7 @@ class SetupBEMatrix : public Module {
 public:
   
   //! Constructor
-  SetupBEMatrix(const clString& id);
+  SetupBEMatrix(const string& id);
   
   //! Destructor  
   virtual ~SetupBEMatrix();
@@ -104,7 +104,7 @@ public:
 
 //////////
 // Module maker
-extern "C" Module* make_SetupBEMatrix(const clString& id) {
+extern "C" Module* make_SetupBEMatrix(const string& id) {
   return new SetupBEMatrix(id);
 }
 
@@ -112,7 +112,7 @@ extern "C" Module* make_SetupBEMatrix(const clString& id) {
 //////////
 // Constructor/Destructor
 
-SetupBEMatrix::SetupBEMatrix(const clString& id): 
+SetupBEMatrix::SetupBEMatrix(const string& id): 
   Module("SetupBEMatrix", id, Source)
 {
   // Create the input ports

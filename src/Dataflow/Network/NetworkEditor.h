@@ -54,14 +54,14 @@ class PSECORESHARE NetworkEditor : public Runnable, public TCL {
     void do_scheduling(Module*);
     int first_schedule;
     int schedule;
-    void save_network(const clString&);
+    void save_network(const string&);
 public:
     Mailbox<MessageBase*> mailbox;
 
     NetworkEditor(Network*);
     ~NetworkEditor();
 
-    void add_text(const clString&);
+    void add_text(const string&);
 private:
     virtual void run();
     void main_loop();
@@ -86,8 +86,8 @@ public:
     virtual ~Module_Scheduler_Message();
 };
 
-void postMessage(const clString& errmsg, bool err=true);
-void postMessageNoCRLF(const clString& errmsg, bool err=true);
+void postMessage(const string& errmsg, bool err=true);
+void postMessageNoCRLF(const string& errmsg, bool err=true);
 
 } // End namespace SCIRun
 

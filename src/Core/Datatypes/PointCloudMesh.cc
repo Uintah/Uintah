@@ -90,7 +90,7 @@ PointCloudMesh::add_point(const Point &p)
 void
 PointCloudMesh::io(Piostream& stream)
 {
-  stream.begin_class(type_name().c_str(), PointCloudMESH_VERSION);
+  stream.begin_class(type_name(-1), PointCloudMESH_VERSION);
 
   MeshBase::io(stream);
 

@@ -32,32 +32,35 @@
 #define sci_project_TCL_h 1
 
 #include <Core/Containers/Array1.h>
-#include <Core/Containers/String.h>
+#include <Core/Containers/StringUtil.h>
+#include <string>
+
+using std::string;
 
 namespace SCIRun {
 
 class GuiVar;
 
 class SCICORESHARE TCLArgs {
-    Array1<clString> args_;
+    Array1<string> args_;
 public:
     bool have_error_;
     bool have_result_;
-    clString string_;
+    string string_;
 
     TCLArgs(int argc, char* argv[]);
     ~TCLArgs();
     int count();
-    clString operator[](int i);
+    string operator[](int i);
 
-    void error(const clString&);
-    void result(const clString&);
-    void append_result(const clString&);
-    void append_element(const clString&);
+    void error(const string&);
+    void result(const string&);
+    void append_result(const string&);
+    void append_element(const string&);
 
-    static clString make_list(const clString&, const clString&);
-    static clString make_list(const clString&, const clString&, const clString&);
-    static clString make_list(const Array1<clString>&);
+    static string make_list(const string&, const string&);
+    static string make_list(const string&, const string&, const string&);
+    static string make_list(const Array1<string>&);
 };
 
 class SCICORESHARE TCL {
@@ -66,15 +69,15 @@ class SCICORESHARE TCL {
     void register_var(GuiVar*);
     void unregister_var(GuiVar*);
 public:
-    virtual void emit_vars(std::ostream& out, clString& midx);
+    virtual void emit_vars(std::ostream& out, string& midx);
     static void initialize();
-    static void execute(const clString&);
+    static void execute(const string&);
     static void execute(char*);
-    static int eval(const clString&, clString& result);
-    static int eval(char*, clString& result);
-    static void source_once(const clString&);
-    static void add_command(const clString&, TCL*, void*);
-    static void delete_command( const clString& command );
+    static int eval(const string&, string& result);
+    static int eval(char*, string& result);
+    static void source_once(const string&);
+    static void add_command(const string&, TCL*, void*);
+    static void delete_command( const string& command );
 
     TCL();
     virtual ~TCL();
@@ -83,17 +86,17 @@ public:
     void reset_vars();
 
     // To get at tcl variables
-    int get_gui_stringvar(const clString& base, const clString& name,
-			  clString& value);
-    int get_gui_boolvar(const clString& base, const clString& name,
+    int get_gui_stringvar(const string& base, const string& name,
+			  string& value);
+    int get_gui_boolvar(const string& base, const string& name,
 			int& value);
-    int get_gui_doublevar(const clString& base, const clString& name,
+    int get_gui_doublevar(const string& base, const string& name,
 			  double& value);
-    int get_gui_intvar(const clString& base, const clString& name,
+    int get_gui_intvar(const string& base, const string& name,
 		       int& value);
 
-    void set_guivar(const clString& base, const clString& name,
-		    const clString& value);
+    void set_guivar(const string& base, const string& name,
+		    const string& value);
 
 };
 

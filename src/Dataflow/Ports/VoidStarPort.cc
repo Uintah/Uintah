@@ -35,16 +35,16 @@ namespace SCIRun {
 
 
 extern "C" {
-PSECORESHARE IPort* make_VoidStarIPort(Module* module, const clString& name) {
+PSECORESHARE IPort* make_VoidStarIPort(Module* module, const string& name) {
   return scinew SimpleIPort<VoidStarHandle>(module,name);
 }
-PSECORESHARE OPort* make_VoidStarOPort(Module* module, const clString& name) {
+PSECORESHARE OPort* make_VoidStarOPort(Module* module, const string& name) {
   return scinew SimpleOPort<VoidStarHandle>(module,name);
 }
 }
 
-template<> clString SimpleIPort<VoidStarHandle>::port_type("VoidStar");
-template<> clString SimpleIPort<VoidStarHandle>::port_color("gold1");
+template<> string SimpleIPort<VoidStarHandle>::port_type("VoidStar");
+template<> string SimpleIPort<VoidStarHandle>::port_color("gold1");
 
 } // End namespace SCIRun
 

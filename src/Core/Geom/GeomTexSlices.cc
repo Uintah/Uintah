@@ -29,7 +29,6 @@
  */
 
 #include <Core/Geom/GeomTexSlices.h>
-#include <Core/Containers/String.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
 #ifdef _WIN32

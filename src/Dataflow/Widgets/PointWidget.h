@@ -66,7 +66,7 @@ public:
    enum { PointMatl };
    
 protected:
-   virtual clString GetMaterialName( const Index mindex ) const;   
+   virtual string GetMaterialName( const Index mindex ) const;   
 };
 
 } // End namespace SCIRun

@@ -127,7 +127,7 @@ class ShowField : public Module
 
   inline  MaterialHandle choose_mat(bool def, double val);
 public:
-  ShowField(const clString& id);
+  ShowField(const string& id);
   virtual ~ShowField();
   virtual void execute();
 
@@ -156,7 +156,7 @@ template <>
 void 
 ShowField::finish_mesh(TetVolMesh* tvm) { tvm->finish_mesh(); }
 
-ShowField::ShowField(const clString& id) : 
+ShowField::ShowField(const string& id) : 
   Module("ShowField", id, Filter, "Visualization", "SCIRun"), 
   dbg_("ShowField", true),
   fld_(0),
@@ -616,7 +616,7 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
   }
 }
 
-extern "C" Module* make_ShowField(const clString& id) {
+extern "C" Module* make_ShowField(const string& id) {
   return new ShowField(id);
 }
 

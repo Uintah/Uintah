@@ -68,7 +68,7 @@ namespace SCIRun {
 class BaseWidget : public TCL, public Pickable {
 public:
    BaseWidget( Module* module, CrowdMonitor* lock,
-	       const clString& name,
+	       const string& name,
 	       const Index NumVariables,
 	       const Index NumConstraints,
 	       const Index NumGeometries,
@@ -109,8 +109,8 @@ public:
    void SetDefaultMaterial( const Index mindex, const MaterialHandle& matl );
    MaterialHandle GetDefaultMaterial( const Index mindex ) const;
 
-   virtual clString GetMaterialName( const Index mindex ) const=0;
-   virtual clString GetDefaultMaterialName( const Index mindex ) const;
+   virtual string GetMaterialName( const Index mindex ) const=0;
+   virtual string GetDefaultMaterialName( const Index mindex ) const;
 
    inline Point GetPointVar( const Index vindex ) const;
    inline Real GetRealVar( const Index vindex ) const;
@@ -144,8 +144,8 @@ public:
 protected:
    Module* module;
    CrowdMonitor* lock;
-   clString name;
-   clString id;
+   string name;
+   string id;
 
    ConstraintSolver* solve;
    

@@ -14,7 +14,7 @@ using namespace SCIRun;
 
   class TensorFieldOperator: public Module {
   public:
-    TensorFieldOperator(const clString& id);
+    TensorFieldOperator(const string& id);
     virtual ~TensorFieldOperator() {}
     
     virtual void execute(void);

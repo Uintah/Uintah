@@ -28,7 +28,6 @@
  */
 
 #include <Core/Geom/GeomContainer.h>
-#include <Core/Containers/String.h>
 
 #include <iostream>
 using std::cerr;

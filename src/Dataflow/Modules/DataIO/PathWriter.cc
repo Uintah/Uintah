@@ -39,16 +39,16 @@ class PathWriter : public Module {
   GuiString filename_;
   GuiString filetype_;
 public:
-  PathWriter(const clString& id);
+  PathWriter(const string& id);
   virtual ~PathWriter();
   virtual void execute();
 };
 
-extern "C" Module* make_PathWriter(const clString& id) {
+extern "C" Module* make_PathWriter(const string& id) {
   return new PathWriter(id);
 }
 
-PathWriter::PathWriter(const clString& id)
+PathWriter::PathWriter(const string& id)
   : Module("PathWriter", id, Source, "DataIO", "SCIRun"),
     filename_("filename", id, this),
     filetype_("filetype", id, this)
@@ -70,7 +70,7 @@ void PathWriter::execute()
     return;
 
   // If no name is provided, return
-  clString fn(filename_.get());
+  string fn(filename_.get());
   if(fn == "") {
     error("Warning: no filename in PathWriter");
     return;
@@ -78,11 +78,11 @@ void PathWriter::execute()
    
   // Open up the output stream
   Piostream* stream;
-  clString ft(filetype_.get());
+  string ft(filetype_.get());
   if(ft=="Binary"){
-    stream=scinew BinaryPiostream(fn(), Piostream::Write);
+    stream=scinew BinaryPiostream(fn, Piostream::Write);
   } else { // "ASCII"
-    stream=scinew TextPiostream(fn(), Piostream::Write);
+    stream=scinew TextPiostream(fn, Piostream::Write);
   }
 
   // Write the file
