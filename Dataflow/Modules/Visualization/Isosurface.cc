@@ -284,17 +284,17 @@ Isosurface::execute()
 	error( "Marching Cubes can not work with this field.");
 	return;
       }
-      mc_alg->set_np( gui_np_.get() ); 
-      if ( gui_np_.get() > 1 )
-      {
-	build_field = false;
-      }
+      const int np = gui_np_.get();
+      mc_alg->set_np(np);
       mc_alg->set_field( field.get_rep() );
       for (unsigned int iv=0; iv<isovals.size(); iv++)
       {
 	mc_alg->search( isovals[iv], build_field);
 	geometries.push_back( mc_alg->get_geom() );
-	fields.push_back( mc_alg->get_field() );
+	for (int i = 0 ; i < np; i++)
+	{
+	  fields.push_back( mc_alg->get_field(i) );
+	}
       }
     }
     break;
