@@ -159,6 +159,8 @@ class NodeHedgehog : public Module {
 #ifdef USE_HOG_THREADS
   friend class NodeHedgehogWorker;
 #endif
+
+  bool node_debug;
 public:
  
   // GROUP:  Constructors:
@@ -205,7 +207,7 @@ public:
     cmap(cmap), have_cmap(have_cmap), boundaryRegion(boundaryRegion), hog(hog),
     arrow_group(arrow_group),
     max_length(max_length), max_vector(max_vector), amutex(amutex), sema(sema),
-    my_max_length(0), my_max_vector(0,0,0)
+    my_max_length(0), my_max_vector(0,0,0), node_debug(false)
   {
     arrows = scinew GeomArrows(hog->width_scale.get(),
 			       1.0 - hog->head_length.get(),
@@ -407,7 +409,7 @@ void NodeHedgehog::add_arrow(Point &v_origin, Vector &vf_value,
 
 void NodeHedgehog::execute()
 {
-  cerr << "NodeHedgehog::execute: start\n";
+  if (node_debug) cout << "NodeHedgehog::execute: start\n";
   int old_geom_id = geom_id;
 
   // Create the input port
@@ -419,18 +421,19 @@ void NodeHedgehog::execute()
   ogeom = (GeometryOPort *) get_oport("Geometry"); 
 
   // Must have a vector field, otherwise exit
-  cerr << "NodeHedgehog::execute:attempting to extract vector field from port.\n";
+  if (node_debug) cout << "NodeHedgehog::execute:attempting to extract vector field from port.\n";
+  
   FieldHandle vfield;
   if (!invectorfield->get( vfield ))
     return;
 
   if( vfield->get_type_name(1) != "Vector" ){
-    cerr<<"First field must be a Vector field.\n";
+    error ("First field must be a Vector field.");
     return;
   }
   
   if(vfield->get_type_name(0) != "LatVolField") {
-    cerr<<"Not a LatVolField\n";
+    error("First field is not a LatVolField.");
     return;
   }
 
@@ -438,7 +441,7 @@ void NodeHedgehog::execute()
     dynamic_cast<LatVolField<Vector>*>(vfield.get_rep());
   // if fld == NULL then the cast didn't work, so bail
   if (!fld) {
-    cerr << "Cannot cast field into a LatVolField\n";
+    error("Cannot cast field into a LatVolField.");
     return;
   }
   
@@ -448,7 +451,7 @@ void NodeHedgehog::execute()
   ScalarFieldInterfaceHandle sf_interface;
   if( have_sfield ){
     if( !ssfield->is_scalar() ){
-      cerr<<"Second field is not a scalar field.  No Colormapping.\n";
+      warning("Second field is not a scalar field.  No Colormapping.");
       have_sfield = 0;
     } else {
       sf_interface = ssfield->query_scalar_interface();
@@ -459,14 +462,16 @@ void NodeHedgehog::execute()
   ColorMapHandle cmap;
   int have_cmap=inColorMap->get( cmap );
   if (have_cmap) {
-    if (cmap->IsScaled())
-      cout << "cmap is scaled.\n";
-    else 
-      cout << "cmap is not scaled.\n";
-    cout << "cmap.getMin() = "<<cmap->getMin()<<", getMax() = "<<cmap->getMax()<<endl;
+    if (cmap->IsScaled()) {
+      if (node_debug) { cout << "cmap is scaled.\n"; }
+    } else {
+      if (node_debug) { cout << "cmap is not scaled.\n"; }
+    }
+    if (node_debug) cout << "cmap.getMin() = "<<cmap->getMin()<<", getMax() = "<<cmap->getMax()<<"\n";
   }
   
-  cout << "NodeHedgehog::execute:initializing phase\n";
+  if (node_debug) cout << "NodeHedgehog::execute:initializing phase\n";
+
   if (init == 1) {
     init = 0;
     GeomHandle w2d = widget2d->GetWidget() ;
@@ -525,7 +530,7 @@ void NodeHedgehog::execute()
     if(need_find3d != 0){
       Point min, max;
       min = mesh_boundary.min(); max = mesh_boundary.max();
-      cout << "mesh::min = "<<min<<", max = "<<max<<endl;
+      if (node_debug) cout << "mesh::min = "<<min<<", max = "<<max<<endl;
       Point center = min + (max-min)/2.0;
       Point right( max.x(), center.y(), center.z());
       Point down( center.x(), min.y(), center.z());
@@ -540,7 +545,7 @@ void NodeHedgehog::execute()
     if (need_find2d != 0){
       Point min, max;
       min = mesh_boundary.min(); max = mesh_boundary.max();
-      cout << "mesh::min = "<<min<<", max = "<<max<<endl;
+      if (node_debug) cout << "mesh::min = "<<min<<", max = "<<max<<endl;
       
       Point center = min + (max-min)/2.0;
       double max_scale;
@@ -578,7 +583,7 @@ void NodeHedgehog::execute()
   if (skip < 1)
     skip = 1;
 
-  cout << "NodeHedgehog::execute:calculating frame widget boundaries\n";
+  if (node_debug) cout << "NodeHedgehog::execute:calculating frame widget boundaries\n";
   // get the position of the frame widget and determine
   // the boundaries
   Point center, R, D, I;
@@ -600,12 +605,22 @@ void NodeHedgehog::execute()
   Point temp1 = upper;
   upper = Max(temp1,lower);
   lower = Min(temp1,lower);
-  cout << "lower = "<<lower<<", upper = "<<upper<<endl;
+  if (node_debug) cout << "lower = "<<lower<<", upper = "<<upper<<endl;
+  // Pad out the boundary a smidgen
+  Vector offset(1e-12, 1e-12, 1e-12);
+  if (upper.x() == lower.x())
+    offset.x(0);
+  if (upper.y() == lower.y())
+    offset.y(0);
+  if (upper.z() == lower.z())
+    offset.z(0);
+  upper = upper + offset;
+  lower = lower - offset;
 //   upper = Min(upper, mesh_boundary.max());
 //   lower = Max(lower, mesh_boundary.min());
-//   cout << "lower = "<<lower<<", upper = "<<upper<<endl;
+  if (node_debug) cout << "after padding: lower = "<<lower<<", upper = "<<upper<<endl;
   
-  cout << "NodeHedgehog::execute:add arrows\n";
+  if (node_debug) cout << "NodeHedgehog::execute:add arrows\n";
   // create the group for the arrows to be added to
 #ifdef USE_HOG_THREADS
   GeomGroup *arrows = scinew GeomGroup;
@@ -645,92 +660,29 @@ void NodeHedgehog::execute()
   // Make a switch based on the data location
   if( fld->data_at() == Field::CELL) {
     // Create the sub-mesh that represents where the widget is
-#if 0
     LatVolMesh::Cell::index_type min_index, max_index;
-    bool min_valid = mesh->locate(min_index, lower);
-    bool max_valid = mesh->locate(max_index, upper);
-    cout << "min_index = ["<<min_index.i_<<", "<<min_index.j_<<", "<<min_index.k_<<"]";
-    if (min_valid) cout << " valid!\n"; else cout << " not valid\n";
-    cout << "max_index = ["<<max_index.i_<<", "<<max_index.j_<<", "<<max_index.k_<<"]";
-    if (max_valid) cout << " valid!\n"; else cout << " not valid\n";
-#endif
-    LatVolMesh::Cell::range_iter iter;
-    LatVolMesh::Cell::iterator end;
-    mesh->get_cell_range(iter, end, BBox(lower, upper));
-#if 0
-    cout << "begin["<<(*iter).i_<<", "<<(*iter).j_<<", "<<(*iter).k_<<"]\n";
-    cout << "end["<<(*end).i_<<", "<<(*end).j_<<", "<<(*end).k_<<"]\n";
-    LatVolMesh::Cell::iterator mesh_begin; mesh->begin(mesh_begin);
-    LatVolMesh::Cell::iterator mesh_end;   mesh->end(mesh_end);
-    cout << "mesh_begin["<<(*mesh_begin).i_<<", "<<(*mesh_begin).j_<<", "<<(*mesh_begin).k_<<"]\n";
-    cout << "mesh_end["<<(*mesh_end).i_<<", "<<(*mesh_end).j_<<", "<<(*mesh_end).k_<<"]\n";
-    // Cropping upper and lower to the boundaries
-    cout << "mesh_boundary.min = "<<mesh_boundary.min()<<", max = "<<mesh_boundary.max()<<endl;
-    // crop by min boundary
-    upper = Max(upper, mesh_boundary.min()); 
-    lower = Max(lower, mesh_boundary.min());
-    // crop by max boundary
-    upper = Min(upper, mesh_boundary.max()); 
-    lower = Min(lower, mesh_boundary.max());
-    cout << "Cropping upper and lower to the boundaries\n";
-    cout << "lower = "<<lower<<", upper = "<<upper<<endl;
-    min_valid = mesh->locate(min_index, lower);
-    max_valid = mesh->locate(max_index, upper);
-    cout << "min_index = ["<<min_index.i_<<", "<<min_index.j_<<", "<<min_index.k_<<"]";
-    if (min_valid) cout << " valid!\n"; else cout << " not valid\n";
-    cout << "max_index = ["<<max_index.i_<<", "<<max_index.j_<<", "<<max_index.k_<<"]";
-    if (max_valid) cout << " valid!\n"; else cout << " not valid\n";
-#endif
+    mesh->get_cells(min_index, max_index, BBox(lower, upper));
+    if (node_debug) cout << "NodeHedgehog::min_index = "<<min_index<<", max_index = "<<max_index<<endl;
 
-
-#if 0
-    for(; iter != end; ++iter) {     //  O L D   S T Y L E 
-          Point v_origin;
-          mesh->get_center(v_origin, *iter);
-          //cout << "iter["<<(*iter).i_<<", "<<(*iter).j_<<", "<<(*iter).k_<<"], ";
-          //cout << ", v_origin = "<<v_origin<<endl;
-          Vector vf_value = fld->value(*iter);
-          add_arrow(v_origin, vf_value, arrows, info); 
-    }
-#endif
-
-    //__________________________________
-    //  Find the upper and lower limits of the bounding
-    // box.  There has to be a cleaner way -- Todd
-    int max_i = (*iter).i_, max_j = (*iter).j_, max_k = (*iter).k_;
-    int min_i = (*iter).i_, min_j = (*iter).j_, min_k = (*iter).k_;
-    for(; iter != end; ++iter) {
-      max_i = std::max( max_i, (int)(*iter).i_ );
-      max_j = std::max( max_j, (int)(*iter).j_ );
-      max_k = std::max( max_k, (int)(*iter).k_ );
-
-      min_i = std::min( min_i, (int)(*iter).i_ );
-      min_j = std::min( min_j, (int)(*iter).j_ );
-      min_k = std::min( min_k, (int)(*iter).k_ );
-    }
-    IntVector lo(min_i, min_j, min_k);
-    IntVector hi(max_i, max_j, max_k);
-//    cout << "low " << lo << " Hi " << hi << endl;
-    
     //__________________________________
     //  setup the number of skips in each dir
     int skip_x = skip;
     int skip_y = skip;
     int skip_z = skip;
    
-    if ( hi.x() - lo.x() < 4) {  // If we're looking at a 2D slice
+    if ( max_index.i_ - min_index.i_ < 4) {  // If we're looking at a 2D slice
       skip_x = 1;                // don't skip the data in the slice
     } 
-    if ( hi.y() - lo.y() < 4) {
+    if ( max_index.j_ - min_index.j_ < 4) {
       skip_y = 1;
     }
-    if ( hi.z() - lo.z() < 4) {
+    if ( max_index.k_ - min_index.k_ < 4) {
       skip_z = 1;
     }  
  
-    for (int i = lo.x(); i <= hi.x(); i += skip_x) {
-      for (int j = lo.y(); j <= hi.y(); j += skip_y) {
-        for (int k = lo.z(); k <= hi.z(); k += skip_z) {         
+    for (unsigned int i = min_index.i_; i <= max_index.i_; i += skip_x) {
+      for (unsigned int j = min_index.j_; j <= max_index.j_; j += skip_y) {
+        for (unsigned int k = min_index.k_; k <= max_index.k_; k += skip_z) {
           LatVolMesh::Cell::index_type  idx(mesh, i, j, k); 
                            
           Point v_origin;
@@ -742,59 +694,42 @@ void NodeHedgehog::execute()
        }
      }
   } else if( fld->data_at() == Field::NODE) {
-#if 0
     LatVolMesh::Node::index_type min_index, max_index;
-    bool min_valid = mesh->locate(min_index, lower);
-    bool max_valid = mesh->locate(max_index, upper);
-    cout << "min_index = ["<<min_index.i_<<", "<<min_index.j_<<", "<<min_index.k_<<"]";
-    if (min_valid) cout << " valid!\n"; else cout << " not valid\n";
-    cout << "max_index = ["<<max_index.i_<<", "<<max_index.j_<<", "<<max_index.k_<<"]";
-    if (max_valid) cout << " valid!\n"; else cout << " not valid\n";
-#endif
-    LatVolMesh::Node::range_iter iter;
-    LatVolMesh::Node::iterator end;
-    mesh->get_node_range(iter, end, BBox(lower, upper));
+    mesh->get_nodes(min_index, max_index, BBox(lower, upper));
     
 
-#if 0
-    cout << "begin["<<(*iter).i_<<", "<<(*iter).j_<<", "<<(*iter).k_<<"]\n";
-    cout << "end["<<(*end).i_<<", "<<(*end).j_<<", "<<(*end).k_<<"]\n";
-    LatVolMesh::Node::iterator mesh_begin; mesh->begin(mesh_begin);
-    LatVolMesh::Node::iterator mesh_end;   mesh->end(mesh_end);
-    cout << "mesh_begin["<<(*mesh_begin).i_<<", "<<(*mesh_begin).j_<<", "<<(*mesh_begin).k_<<"]\n";
-    cout << "mesh_end["<<(*mesh_end).i_<<", "<<(*mesh_end).j_<<", "<<(*mesh_end).k_<<"]\n";
-    // Cropping upper and lower to the boundaries
-    cout << "mesh_boundary.min = "<<mesh_boundary.min()<<", max = "<<mesh_boundary.max()<<endl;
-    // crop by min boundary
-    upper = Max(upper, mesh_boundary.min()); 
-    lower = Max(lower, mesh_boundary.min());
-    // crop by max boundary
-    upper = Min(upper, mesh_boundary.max()); 
-    lower = Min(lower, mesh_boundary.max());
-    cout << "Cropping upper and lower to the boundaries\n";
-    cout << "lower = "<<lower<<", upper = "<<upper<<endl;
-    min_valid = mesh->locate(min_index, lower);
-    max_valid = mesh->locate(max_index, upper);
-    cout << "min_index = ["<<min_index.i_<<", "<<min_index.j_<<", "<<min_index.k_<<"]";
-    if (min_valid) cout << " valid!\n"; else cout << " not valid\n";
-    cout << "max_index = ["<<max_index.i_<<", "<<max_index.j_<<", "<<max_index.k_<<"]";
-    if (max_valid) cout << " valid!\n"; else cout << " not valid\n";
-#endif
-    
-    for(; iter != end; ++iter) {
-      //cout << "iter["<<(*iter).i_<<", "<<(*iter).j_<<", "<<(*iter).k_<<"], ";
-      //cout << "+";
-     
-      
-      Point v_origin;
-      mesh->get_center(v_origin, *iter);
-      //cout << ", v_origin = "<<v_origin<<endl;
-      Vector vf_value = fld->value(*iter);
-      add_arrow(v_origin, vf_value, arrows, info);
+    //__________________________________
+    //  setup the number of skips in each dir
+    int skip_x = skip;
+    int skip_y = skip;
+    int skip_z = skip;
+   
+    if ( max_index.i_ - min_index.i_ < 4) {  // If we're looking at a 2D slice
+      skip_x = 1;                // don't skip the data in the slice
+    } 
+    if ( max_index.j_ - min_index.j_ < 4) {
+      skip_y = 1;
     }
+    if ( max_index.k_ - min_index.k_ < 4) {
+      skip_z = 1;
+    }  
+ 
+    for (unsigned int i = min_index.i_; i <= max_index.i_; i += skip_x) {
+      for (unsigned int j = min_index.j_; j <= max_index.j_; j += skip_y) {
+        for (unsigned int k = min_index.k_; k <= max_index.k_; k += skip_z) {
+          LatVolMesh::Node::index_type  idx(mesh, i, j, k); 
+                           
+          Point v_origin;
+          mesh->get_center(v_origin, idx);
+          
+          Vector vf_value = fld->fdata()[ idx ];
+          add_arrow(v_origin, vf_value, arrows, info);
+         }
+       }
+     }
   }
 #endif // ifdef USE_HOG_THREADS
-  cout << "\nNodeHedgehog::execute:finished adding arrows\n";
+  if (node_debug) cout << "\nNodeHedgehog::execute:finished adding arrows\n";
   
   // This needs to happen so that we don't destroy the widget.
   // Delete the old geometry.
@@ -809,7 +744,7 @@ void NodeHedgehog::execute()
   max_vector_y.set(max_vector.y());
   max_vector_z.set(max_vector.z());
 
-  cerr << "NodeHedgehog::execute: end"<<endl;
+  if (node_debug) cerr << "NodeHedgehog::execute: end"<<endl;
 }
 
 void NodeHedgehog::widget_moved(bool last)
@@ -823,7 +758,6 @@ void NodeHedgehog::widget_moved(bool last)
 
 void NodeHedgehog::tcl_command(GuiArgs& args, void* userdata)
 {
-#if 1
   if(args.count() < 2) {
     args.error("NodeHedgehog needs a minor command");
     return;
@@ -852,11 +786,12 @@ void NodeHedgehog::tcl_command(GuiArgs& args, void* userdata)
   else {
     Module::tcl_command(args, userdata);
   }
-#endif
-  cerr <<"NodeHedgehog::tcl_command: args\n";
-  for(int i = 0; i < args.count(); i++)
-    cerr << "args["<<i<<"] = "<<args[i]<<endl;
-  cerr << "NodeHedgehog::tcl_command: was called."<<endl;
+  if (node_debug) {
+    cerr <<"NodeHedgehog::tcl_command: args\n";
+    for(int i = 0; i < args.count(); i++)
+      cerr << "args["<<i<<"] = "<<args[i]<<endl;
+    cerr << "NodeHedgehog::tcl_command: was called."<<endl;
+  }
 }
 
 } // End namespace Uintah
