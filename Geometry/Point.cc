@@ -137,9 +137,6 @@ Point::InInterval( Point a, double epsilon )
     return 0;
 }
 
-
-#include <Geometry/Vector.h>
-
 void Point::test_rigorous(RigorousTest* __test)
 {	
 
@@ -479,7 +476,7 @@ void Point::test_rigorous(RigorousTest* __test)
 		TEST((p+p.vector())==(p*2));	//Make sure p.vector() is a vector
 		
 		
-		//Min/Max Tests
+		//Max Tests
 		Point pa(x,y,z); //These Points are also used for the AffineCombination() Tests
 		Point pb(z,x,y);
 		Point pc(y,z,x);
@@ -502,7 +499,27 @@ void Point::test_rigorous(RigorousTest* __test)
 		if(pa.z()<pb.z())
 		  TEST(max.z()==pb.z());
 
+		//Min Tests
+		Point min=Min(pa,pb);
+
+		if(pa.x()<=pb.x())
+		  TEST(min.x()==pa.x());
+		if(pa.x()>pb.x())
+		  TEST(min.x()==pb.x());
+
+		if(pa.y()<=pb.y())
+		  TEST(min.y()==pa.y());
+		if(pa.y()>pb.y())
+		  TEST(min.y()==pb.y());
+
+		if(pa.z()<=pb.z())
+		  TEST(min.z()==pa.z());
+		if(pa.z()>pb.z())
+		  TEST(min.z()==pb.z());
+				  
 		
+
+
 		//AffineCombination Tests
 
 		double c=0;
@@ -556,10 +573,42 @@ void Point::test_rigorous(RigorousTest* __test)
 		  }
 		}
 		    
-	    }
+		//Interpolate() Tests
+		
+		for(i=1;i<=10;++i){
+		  c=.1*double(i);
+		  a=Interpolate(pa,pb,c);
+		  TEST((a.x())==(pb.x()*c+pa.x()*(1.0-c)));
+		  TEST((a.y())==(pb.y()*c+pa.y()*(1.0-c)));
+		  TEST((a.z())==(pb.z()*c+pa.z()*(1.0-c)));
+		}
+		
+		//InInterval Tests
+		
+
+		double epsilon,dist;
+
+		for(i=1;i<=100;++i){
+		  epsilon=i;
+		  X=(pa.x()-pb.x());
+		  Y=(pa.y()-pb.y());
+		  Z=(pa.z()-pb.z());
+		  dist=Max(Abs(pa.x()-pb.x()),Abs(pa.y()-pb.y()),Abs(pa.z()-pb.z()));
+		  dist/=2;	
+		  if(dist<epsilon){
+		    TEST(pa.InInterval(pb,epsilon));
+		   
+
+		  }
+		  if(dist>=epsilon+1.e-6)
+		    TEST(!(pa.InInterval(pb,epsilon)));
+		}
+	    }    
 	}
     }
 }
+
+
 
 #endif
 
