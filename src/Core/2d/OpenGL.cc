@@ -54,7 +54,6 @@
 #include <Core/2d/Zoom.h>
 #include <Core/2d/Axes.h>
 
-#include <sci_gl.h>
 #if HAVE_GL_GLS_H
 #include <GL/gls.h>
 #endif

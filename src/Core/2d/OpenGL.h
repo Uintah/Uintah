@@ -51,6 +51,7 @@
 
 #include <stddef.h>
 #include <stdlib.h>
+#include <sci_gl.h>
 #include <sci_glu.h>
 #include <sci_glx.h>
 
