@@ -30,7 +30,8 @@ static clString make_id(const clString& name)
 }
 
 Histogram::Histogram()
-: id(make_id(widget_name)), freqs(640), min(0), max(0),
+: id(make_id(widget_name)), freqs(640), freqlist(640),
+  minfreq(0), maxfreq(0), minval(0), maxval(0),
   l("rangeleft", id, this), r("rangeright", id, this)
 {
    init_tcl();
@@ -50,25 +51,9 @@ Histogram::init_tcl()
 void
 Histogram::tcl_command(TCLArgs& args, void*)
 {
-   if (args.count() < 2) {
-      args.error("Histogram needs a minor command");
+   if (args.count() > 1) {
+      args.error("Histogram needs no minor command");
       return;
-   }
-   
-   if (args[1] == "getdata") {
-      if (args.count() != 2) {
-	 args.error("Histogram doesn't need a minor command");
-	 return;
-      }
-
-      Array1<clString> freqlist(freqs.size());
-
-      for (int i=0; i<freqs.size(); i++) {
-	 freqlist[i] = to_string(freqs[i]);
-      }
-
-      args.result(args.make_list(to_string(min), to_string(max),
-				 args.make_list(freqlist)));
    }
 }
 
@@ -78,22 +63,42 @@ Histogram::SetData( const Array1<double> values )
 {
    ASSERT(values.size() > 1);
    
-   // Find min/max.
-   min = max = values[0];
+   // Find minval/maxval.
+   minval = maxval = values[0];
    for (int i=1; i<values.size(); i++) {
-      if (values[i] < min) {
-	 min = values[i];
-      } else if (values[i] > max) {
-	 max = values[i];
+      if (values[i] < minval) {
+	 minval = values[i];
+      } else if (values[i] > maxval) {
+	 maxval = values[i];
       }
    }
 
-   double range(max-min);
+   double range(639.0/(maxval-minval));
    
    initfreqs();
    for (i=0; i<values.size(); i++) {
-      freqs[int(639*(values[i]-min)/range)]++;
+      freqs[int((values[i]-minval)*range)]++;
    }
+
+   minfreq = maxfreq = freqs[0];
+   // C++ can calcminmax faster than tcl...
+   for (i=1; i<freqs.size(); i++) {
+      if (freqs[i] < minfreq) {
+	 minfreq = freqs[i];
+      } else if (freqs[i] > maxfreq) {
+	 maxfreq = freqs[i];
+      }
+   }
+
+   for (i=0; i<freqs.size(); i++) {
+      freqlist[i] = to_string(freqs[i]);
+   }
+
+   TCL::execute(id+" config -minval "+to_string(minval)
+		+" -maxval "+to_string(maxval)
+		+" -freqs \""+TCLArgs::make_list(freqlist)+"\""
+		+" -minfreq "+to_string(minfreq)
+		+" -maxfreq "+to_string(maxfreq));
 }
 
 

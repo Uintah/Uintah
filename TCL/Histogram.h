@@ -20,8 +20,10 @@
 
 class Histogram : public TCL {
    Array1<int> freqs;
-   double min;
-   double max;
+   Array1<clString> freqlist;
+   
+   double minfreq, maxfreq;
+   double minval, maxval;
    clString id;
 
    void initfreqs();

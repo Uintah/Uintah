@@ -21,6 +21,11 @@ itcl_class Histogram {
     public grid no
     public range no
 
+    # If min/maxfreq are NOT provided, set calcminmax to yes.
+    public calcminmax no
+    public minfreq 0
+    public maxfreq 0
+
     constructor {config} {
 	set canvasx 745
 	set canvasy 410
@@ -70,11 +75,6 @@ itcl_class Histogram {
     }
 
     method update {} {
-	set dat [$this-c getdata]
-	set minval [lindex $dat 0]
-	set maxval [lindex $dat 1]
-	set freqs [lindex $dat 2]
-
 	$this MinMax
 	set xdelt [expr $xrange/double($datasize-1)]
 	set xnum 30
@@ -245,8 +245,6 @@ itcl_class Histogram {
 
     protected datasize 0
     protected valrange 0
-    protected minfreq 0
-    protected maxfreq 0
     protected freqrange 0
 
     method MinMax {} {
@@ -254,16 +252,21 @@ itcl_class Histogram {
 	if [expr $datasize == 0] {
 	    return
 	}
-	set minfreq [lindex $freqs 0]
-	set maxfreq $minfreq
 
-	foreach freq $freqs {
-	    if [expr $freq < $minfreq] {
-		set minfreq $freq
-	    } elseif [expr $freq > $maxfreq] {
-		set maxfreq $freq
+	if [expr (([string compare $calcminmax "y"]==0) \
+		|| ([string compare $calcminmax "yes"]==0))] {
+	    set minfreq [lindex $freqs 0]
+	    set maxfreq $minfreq
+	    
+	    foreach freq $freqs {
+		if [expr $freq < $minfreq] {
+		    set minfreq $freq
+		} elseif [expr $freq > $maxfreq] {
+		    set maxfreq $freq
+		}
 	    }
 	}
+
 	set valrange [expr $maxval-$minval]
 	set freqrange [expr $maxfreq-$minfreq]
     }

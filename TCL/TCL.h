@@ -36,9 +36,9 @@ public:
     void append_result(const clString&);
     void append_element(const clString&);
 
-    clString make_list(const clString&, const clString&);
-    clString make_list(const clString&, const clString&, const clString&);
-    clString make_list(const Array1<clString>&);
+    static clString make_list(const clString&, const clString&);
+    static clString make_list(const clString&, const clString&, const clString&);
+    static clString make_list(const Array1<clString>&);
 };
 
 class TCL {
