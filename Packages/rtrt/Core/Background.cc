@@ -138,6 +138,7 @@ EnvironmentMapBackground::color_in_direction( const Vector& DIR , Color& result)
     // Convert to local basis
     //
   Vector dir = DIR /*ChangeToBasis( DIR )*/;
+  dir=Vector(-Dot(DIR,_u), -Dot(DIR,_v), -Dot(DIR,_up));
 
     // cerr << "direction  = " << dir << endl;
     // Map direction vector dir to (u,v) coordinates
