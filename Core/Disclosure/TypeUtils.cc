@@ -13,6 +13,28 @@ using namespace SCIRun;
 #pragma set woff 1209
 #endif
 
+namespace SCIRun {
+
+using std::string;
+
+template<> const string find_type_name(long64*)
+{
+  static const string name = "long64";
+  return name;
+}
+
+const TypeDescription* get_type_description(long64*)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("long64", "builtin", "builtin");
+  }
+  return td;
+}
+
+} // namespace SCIRun
+
+
 namespace Uintah {
 
 const TypeDescription* fun_getTypeDescription(double*)
@@ -45,21 +67,21 @@ const TypeDescription* fun_getTypeDescription(short int*)
    return td;
 }
 
-const TypeDescription* fun_getTypeDescription(long*)
-{
-   static TypeDescription* td;
-   if(!td){
-      td = scinew TypeDescription(TypeDescription::long_type,
-				  "long", true,
-#ifdef SCI_64BITS
-      MPI_LONG_LONG_INT
-#else
-      MPI_LONG
-#endif
-      );
-   }
-   return td;
-}
+//  const TypeDescription* fun_getTypeDescription(long*)
+//  {
+//     static TypeDescription* td;
+//     if(!td){
+//        td = scinew TypeDescription(TypeDescription::long_type,
+//  				  "long", true,
+//  #ifdef SCI_64BITS
+//        MPI_LONG_LONG_INT
+//  #else
+//        MPI_LONG
+//  #endif
+//        );
+//     }
+//     return td;
+//  }
 
 const TypeDescription* fun_getTypeDescription(long64*)
 {
@@ -118,5 +140,6 @@ const TypeDescription* fun_getTypeDescription(Vector*)
    }
    return td;
 }
+
 
 } // End namespace Uintah
