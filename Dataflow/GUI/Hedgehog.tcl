@@ -30,7 +30,7 @@ itcl_class Uintah_Visualization_Hedgehog {
 	set $this-exhaustive_flag 0
 	global $this-vector_default_color
 	set $this-vector_default_color 0
-	$this-c needexecute
+#	$this-c needexecute
     }
     method ui {} {
 	set w .ui[modname]
