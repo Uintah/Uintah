@@ -16,7 +16,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MinMax.h>
-#include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/NotFinished.h>
 #include <sgi_stl_warnings_off.h>
