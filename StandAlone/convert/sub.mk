@@ -35,6 +35,10 @@ PROGRAM := $(SRCDIR)/CVRTItoTetVolPot
 SRCS := $(SRCDIR)/CVRTItoTetVolPot.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/TetVolToCVRTI
+SRCS := $(SRCDIR)/TetVolToCVRTI.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/CVRTItoTriSurfGrad
 SRCS := $(SRCDIR)/CVRTItoTriSurfGrad.cc
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -43,12 +47,8 @@ PROGRAM := $(SRCDIR)/CVRTItoTriSurfPot
 SRCS := $(SRCDIR)/CVRTItoTriSurfPot.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/JAStoQuadTetVolPot
-SRCS := $(SRCDIR)/JAStoQuadTetVolPot.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/JAStoTetVolPot
-SRCS := $(SRCDIR)/JAStoTetVolPot.cc
+PROGRAM := $(SRCDIR)/TriSurfToCVRTI
+SRCS := $(SRCDIR)/TriSurfToCVRTI.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/RawToContourField
@@ -65,20 +65,4 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/RawToTriSurf
 SRCS := $(SRCDIR)/RawToTriSurf.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/ContourFieldToRaw
-SRCS := $(SRCDIR)/ContourFieldToRaw.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/LatticeVolToRaw
-SRCS := $(SRCDIR)/LatticeVolToRaw.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/TetVolToRaw
-SRCS := $(SRCDIR)/TetVolToRaw.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/TriSurfToRaw
-SRCS := $(SRCDIR)/TriSurfToRaw.cc
 include $(SCIRUN_SCRIPTS)/program.mk
