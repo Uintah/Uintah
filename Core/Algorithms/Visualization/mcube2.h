@@ -21,7 +21,7 @@ static int edge_tab[12][2] = {{0,1}, {1,2}, {3,2}, {0,3},
 // Edges to intersect. Three at a time form a triangle. Comments at end of line
 // indicate case number (0->255) and base case number (0->15).
 //
-#if 0
+
 static TRIANGLE_CASES triCases[] = {
 {{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},  0},
 {{ 0,  3,  8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 25},
@@ -279,6 +279,6 @@ static TRIANGLE_CASES triCases[] = {
 {{ 0,  1,  9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 26},
 {{ 0,  8,  3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 25},
 {{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 0}};
-#endif
+
 
 #endif // MCUBE2_H
