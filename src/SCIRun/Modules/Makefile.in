@@ -2,7 +2,7 @@ SRCTOP  = @top_srcdir@
 SRCDIR  = @srcdir@
 OBJTOP  = ../..
 
-SUBDIRS = Image
+SUBDIRS = Image Mesh
 
 include $(SRCTOP)/scripts/recurse.mk
 
