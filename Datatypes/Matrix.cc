@@ -15,7 +15,8 @@
 
 PersistentTypeID Matrix::type_id("Matrix", "Datatype", 0);
 
-Matrix::Matrix()
+Matrix::Matrix(Sym sym)
+: sym(sym)
 {
 }
 
@@ -30,4 +31,18 @@ void Matrix::io(Piostream&)
 Matrix* Matrix::clone()
 {
     return 0;
+}
+
+MatrixRow::MatrixRow(Matrix* matrix, int row)
+: matrix(matrix), row(row)
+{
+}
+
+MatrixRow::~MatrixRow()
+{
+}
+
+double& MatrixRow::operator[](int col)
+{
+    return matrix->get(row, col);
 }
