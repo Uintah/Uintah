@@ -20,7 +20,7 @@
 
 <filter name="watershed::Relabeler">
   <include href="ITK/itk_WatershedRelabeler.xml"/>
-  <include href="Dataflow/Modules/Filters/XML/gui_WatershedRelabeler_Darby.xml"/>
+  <include href="Dataflow/Modules/Filters/XML/gui_WatershedRelabeler.xml"/>
 
 <filter-sci name="WatershedRelabeler">
   <package>Insight</package>

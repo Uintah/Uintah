@@ -20,7 +20,7 @@
 
 <filter name="watershed::SegmentTreeGenerator">
   <include href="ITK/itk_WatershedSegmentTreeGenerator.xml"/>
-  <include href="Dataflow/Modules/Filters/XML/gui_WatershedSegmentTreeGenerator_Darby.xml"/>
+  <include href="Dataflow/Modules/Filters/XML/gui_WatershedSegmentTreeGenerator.xml"/>
 
 <filter-sci name="WatershedSegmentTreeGenerator">
   <package>Insight</package>

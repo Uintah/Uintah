@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!DOCTYPE filter SYSTEM "sci_filter.dtd">
+<?xml version="1.0"  encoding="iso-8859-1"?>
+<!DOCTYPE filter-gui SYSTEM "gui_filter.dtd">
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -18,15 +18,16 @@
   University of Utah. All Rights Reserved.
 -->
 
-<filter name="GradientAnisotropicDiffusionImageFilter">
-   <include href="ITK/itk_GradientAnisotropicDiffusionImageFilter.xml"/>
-   <include href="Dataflow/Modules/Filters/XML/gui_GradientAnisotropicDiffusionImageFilter.xml"/>
-   <filter-sci name="GradientAnisotropicDiffusionImageFilter">
-      <package>Insight</package>
-      <category>Filters</category>
-      <instantiations use-defaults="yes"/>
-     <includes>
-        <file>Packages/Insight/Dataflow/Ports/ITKDatatypePort.h</file>
-     </includes>
-  </filter-sci>
-</filter>
+<filter-gui name="WatershedSegmenterTreeGeneratorGui_Darby">
+  <parameters>
+    <param name="flood_level">
+      <gui>text-entry</gui>
+      <default>0.25</default>
+    </param>
+    <param name="merge">
+      <gui>checkbutton</gui>
+      <default>0</default>
+    </param>
+  </parameters>
+
+</filter-gui>

@@ -20,7 +20,7 @@
 
 <filter name="CannySegmentationLevelSetImageFilter">
   <include href="ITK/itk_CannySegmentationLevelSetImageFilter.xml"/>
-  <include href="Dataflow/Modules/Filters/XML/gui_CannySegmentationLevelSetImageFilter_Darby.xml"/>
+  <include href="Dataflow/Modules/Filters/XML/gui_CannySegmentationLevelSetImageFilter.xml"/>
 
 <filter-sci name="CannySegmentationLevelSetImageFilter">
   <package>Insight</package>
