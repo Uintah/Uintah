@@ -58,10 +58,12 @@ printTask( ostream& out, DetailedTask* task )
 }
 
 MPIScheduler::MPIScheduler(const ProcessorGroup* myworld, Output* oport)
-   : SchedulerCommon(myworld, oport), log(myworld, oport)
+  : SchedulerCommon(myworld, oport), log(myworld, oport)
 {
   d_generation = 0;
   d_lasttime=Time::currentSeconds();
+  ss_ = 0;
+  pg_ = 0;
 }
 
 
@@ -157,25 +159,68 @@ MPIScheduler::wait_till_all_done()
 }
 
 void
-MPIScheduler::initiateTask( const ProcessorGroup  * pg, 
-			    DetailedTask          * task,
-			    mpi_timing_info_s     & mpi_info,
-			    SendRecord            & sends,
-			    SendState             & ss,
-			    OnDemandDataWarehouseP  dws[2],
-			    const VarLabel        * reloc_label )
+MPIScheduler::initiateTask( DetailedTask          * task )
 {
-  long long communication_flops = 0;
-  long long execution_flops = 0;
+  double start_total_comm_flops = mpi_info_.totalcommflops;
+  double start_total_exec_flops = mpi_info_.totalexecflops;
+
+  double recvstart = Time::currentSeconds();
 #ifdef USE_PERFEX_COUNTERS
-  long long dummy;
+  long long dummy, recv_flops;
   start_counters(0, 19);
+#endif  
+  RecvRecord recvs;
+  list<DependencyBatch*> externalRecvs;
+  postMPIRecvs( task, recvs, externalRecvs );
+  processMPIRecvs( task, recvs, externalRecvs );
+#ifdef USE_PERFEX_COUNTERS
+  read_counters(0, &dummy, 19, &recv_flops);
+  mpi_info_.totalcommflops += recv_flops;
 #endif
   
-  double recvstart = Time::currentSeconds();
-  
-  recvMPIData( pg, task, mpi_info, dws );
+  double drecv = Time::currentSeconds() - recvstart;
+  mpi_info_.totalrecv += drecv;
 
+  double start_total_send = mpi_info_.totalsend;
+  double start_total_task = mpi_info_.totaltask;
+  runTask(task);
+
+  double dsend = mpi_info_.totalsend - start_total_send;
+  double dtask = mpi_info_.totaltask - start_total_task;
+  emitNode(task, Time::currentSeconds(), dsend+dtask+drecv, dtask,
+	   mpi_info_.totalexecflops - start_total_exec_flops,
+	   mpi_info_.totalcommflops - start_total_comm_flops);
+} // end initiateTask()
+
+void
+MPIScheduler::initiateReduction( DetailedTask          * task )
+{
+  {
+#ifdef USE_PERFEX_COUNTERS
+    start_counters(0, 19);
+#endif
+    double reducestart = Time::currentSeconds();
+
+    runReductionTask(task);
+
+    double reduceend = Time::currentSeconds();
+    long long flop_count=0;
+#ifdef USE_PERFEX_COUNTERS
+    long long dummy;
+    read_counters(0, &dummy, 19, &flop_count);
+#endif
+    emitNode(task, reducestart, reduceend - reducestart, 0, 0, flop_count);
+    mpi_info_.totalreduce += reduceend-reducestart;
+    mpi_info_.totalreducempi += reduceend-reducestart;
+  }
+}
+
+void
+MPIScheduler::runTask( DetailedTask         * task )
+{
+#ifdef USE_PERFEX_COUNTERS
+  long long dummy, exec_flops, send_flops;
+#endif
 #ifdef USE_TAU_PROFILING
   int id;
   const PatchSubset* patches = task->getPatches();
@@ -191,17 +236,15 @@ MPIScheduler::initiateTask( const ProcessorGroup  * pg,
   TAU_PROFILE_START(doittimer);
   TAU_MAPPING_PROFILE_START(doitprofiler,0);
 
-  
   double taskstart = Time::currentSeconds();
-
   
 #ifdef USE_PERFEX_COUNTERS
-  read_counters(0, &dummy, 19, &communication_flops);
   start_counters(0, 19);
 #endif  
-  task->doit(pg, dws[Task::OldDW].get_rep(), dws[Task::NewDW].get_rep());
+  task->doit(pg_, dws_[Task::OldDW].get_rep(), dws_[Task::NewDW].get_rep());
 #ifdef USE_PERFEX_COUNTERS
-  read_counters(0, &dummy, 19, &execution_flops);
+  read_counters(0, &dummy, 19, &exec_flops);
+  mpi_info_.totalexecflops += exec_flops;
   start_counters(0, 19);
 #endif
   
@@ -209,51 +252,50 @@ MPIScheduler::initiateTask( const ProcessorGroup  * pg,
   TAU_PROFILE_STOP(doittimer);
 
   double sendstart = Time::currentSeconds();
-  sendMPIData( pg, task, mpi_info, sends, ss, dws, reloc_label );
-  task->done(dws[Task::OldDW].get_rep(), dws[Task::NewDW].get_rep());  
-
-  double start = Time::currentSeconds();
+  postMPISends( task );
+  task->done(dws_[Task::OldDW].get_rep(), dws_[Task::NewDW].get_rep());
+  double stop = Time::currentSeconds();
 
   sendsLock.lock(); // Dd... could do better?
-  sends.testsome( pg->getComm(), pg->myrank() );
+  sends_.testsome( pg_ );
   sendsLock.unlock(); // Dd... could do better?
 
 
-  mpi_info.totaltestmpi += Time::currentSeconds() - start;
+  mpi_info_.totaltestmpi += Time::currentSeconds() - stop;
 
   double dsend = Time::currentSeconds()-sendstart;
   double dtask = sendstart-taskstart;
-  double drecv = taskstart-recvstart;
 
 #ifdef USE_PERFEX_COUNTERS
-  long long end_communication_flops;
-  read_counters(0, &dummy, 19, &end_communication_flops);
-  communication_flops += end_communication_flops;
+  long long send_flops;
+  read_counters(0, &dummy, 19, &send_flops);
+  mpi_info_.totalcommflops += send_flops;
 #endif
   
-  dbg << pg->myrank() << " Completed task: ";
+  dbg << pg_->myrank() << " Completed task: ";
   printTask(dbg, task); dbg << '\n';
 
-  emitNode(task, Time::currentSeconds(), dsend+dtask+drecv, dtask, execution_flops,
-	   communication_flops);
-
-  mpi_info.totalsend += dsend;
-  mpi_info.totaltask += dtask;
-  mpi_info.totalrecv += drecv;
-} // end initiateTask()
-
+  mpi_info_.totalsend += dsend;
+  mpi_info_.totaltask += dtask;
+}
 
 void
-MPIScheduler::sendMPIData( const ProcessorGroup * pg,
-			   DetailedTask         * task,
-			   mpi_timing_info_s    & mpi_info,
-			   SendRecord & sends,
-			   SendState  & ss,
-			   OnDemandDataWarehouseP  dws[2],
-			   const VarLabel        * reloc_label )
+MPIScheduler::runReductionTask( DetailedTask         * task )
+{
+  const Task::Dependency* comp = task->getTask()->getComputes();
+  ASSERT(!comp->next);
+  
+  OnDemandDataWarehouse* dw = dws_[Task::NewDW].get_rep();
+  dw->reduceMPI(comp->var, comp->matls /*task->getMaterials() */,
+		d_myworld);
+  task->done(dws_[Task::OldDW].get_rep(), dws_[Task::NewDW].get_rep());
+}
+
+void
+MPIScheduler::postMPISends( DetailedTask         * task )
 {
   if( mixedDebug.active() ) {
-    cerrLock.lock();mixedDebug << "sendMPIData - task " << *task << '\n';
+    cerrLock.lock();mixedDebug << "postMPISends - task " << *task << '\n';
     cerrLock.unlock();
   }
 
@@ -275,16 +317,16 @@ MPIScheduler::sendMPIData( const ProcessorGroup * pg,
     // Create the MPI type
     int to = batch->toTasks.front()->getAssignedResourceIndex();
     for(DetailedDep* req = batch->head; req != 0; req = req->next){
-      OnDemandDataWarehouse* dw = dws[req->req->dw].get_rep();
+      OnDemandDataWarehouse* dw = dws_[req->req->dw].get_rep();
       if( mixedDebug.active() ) {
 	cerrLock.lock();
 	mixedDebug << " --> sending " << *req << '\n';
 	cerrLock.unlock();
       }
 
-      dbg << pg->myrank() << " --> sending " << *req << '\n';
-      dw->sendMPI(ss, batch, pg, reloc_label,
-		  mpibuff, dws[Task::OldDW].get_rep(), req);
+      dbg << pg_->myrank() << " --> sending " << *req << '\n';
+      dw->sendMPI(*ss_, batch, pg_, reloc_new_posLabel_,
+		  mpibuff, dws_[Task::OldDW].get_rep(), req);
     }
     // Post the send
     if(mpibuff.count()>0){
@@ -295,8 +337,8 @@ MPIScheduler::sendMPIData( const ProcessorGroup * pg,
       MPI_Datatype datatype;
      
 #ifdef USE_PACKING
-      mpibuff.get_type(buf, count, datatype, pg->getComm());
-      mpibuff.pack(pg->getComm(), count);
+      mpibuff.get_type(buf, count, datatype, pg_->getComm());
+      mpibuff.pack(pg_->getComm(), count);
 #else
       mpibuff.get_type(buf, count, datatype);
 #endif
@@ -311,34 +353,31 @@ MPIScheduler::sendMPIData( const ProcessorGroup * pg,
 
       MPI_Request requestid;
       MPI_Isend(buf, count, datatype, to, batch->messageTag,
-		pg->getComm(), &requestid);
+		pg_->getComm(), &requestid);
+      int bytes = 0;
+      MPI_Pack_size(count, datatype, pg_->getComm(), &bytes);
       sendsLock.lock(); // Dd: ??
-      sends.add(requestid, mpibuff.takeSendlist());
+      sends_.add(requestid, bytes, mpibuff.takeSendlist());
       sendsLock.unlock(); // Dd: ??
-      mpi_info.totalsendmpi += Time::currentSeconds() - start;
+      mpi_info_.totalsendmpi += Time::currentSeconds() - start;
     }
   } // end for (DependencyBatch * batch = task->getComputes() )
 
-} // end sendMPIData();
+} // end postMPISends();
 
 void
-MPIScheduler::recvMPIData( const ProcessorGroup * pg,
-			   DetailedTask * task, 
-			   mpi_timing_info_s & mpi_info,
-			   OnDemandDataWarehouseP dws[2] )
+MPIScheduler::postMPIRecvs( DetailedTask * task, RecvRecord& recvs,
+			    list<DependencyBatch*>& externalRecvs )
 {
-  TAU_PROFILE("MPIScheduler::recvMPIData()", " ", TAU_USER); 
+  TAU_PROFILE("MPIScheduler::postMPIRecvs()", " ", TAU_USER); 
 
-  RecvRecord recvs;
   // Receive any of the foreign requires
 
   if( mixedDebug.active() ) {
-    cerrLock.lock();mixedDebug << "recvMPIData - task " << *task << '\n';
+    cerrLock.lock();mixedDebug << "postMPIRecvs - task " << *task << '\n';
     cerrLock.unlock();
   }
 
-
-  list<DependencyBatch*> outstanding_mpi_requests;
 
   map<DependencyBatch*, DependencyBatch*>::const_iterator iter = 
     task->getRequires().begin();
@@ -357,7 +396,7 @@ MPIScheduler::recvMPIData( const ProcessorGroup * pg,
     // that first thread to receive the data.
 
     if( !batch->makeMPIRequest() ) {
-      outstanding_mpi_requests.push_back( batch );
+      externalRecvs.push_back( batch );
 
       if( mixedDebug.active() ) {
 	cerrLock.lock();mixedDebug << "Someone else already receiving it\n";
@@ -368,7 +407,7 @@ MPIScheduler::recvMPIData( const ProcessorGroup * pg,
     }
 
     if( mixedDebug.active() ) {
-      cerrLock.lock();mixedDebug << "recvMPIData: requesting batch message " 
+      cerrLock.lock();mixedDebug << "postMPIRecvs: requesting batch message " 
 				 << batch->messageTag << "\n";
       cerrLock.unlock();
     }
@@ -387,8 +426,8 @@ MPIScheduler::recvMPIData( const ProcessorGroup * pg,
 
     // Create the MPI type
     for(DetailedDep* req = batch->head; req != 0; req = req->next){
-      OnDemandDataWarehouse* dw = dws[req->req->dw].get_rep();
-      dbg << pg->myrank() << " <-- receiving " << *req << '\n';
+      OnDemandDataWarehouse* dw = dws_[req->req->dw].get_rep();
+      dbg << pg_->myrank() << " <-- receiving " << *req << '\n';
 
       if( mixedDebug.active() ) {
 	cerrLock.lock();
@@ -397,7 +436,7 @@ MPIScheduler::recvMPIData( const ProcessorGroup * pg,
 	cerrLock.unlock();
       }
 
-      dw->recvMPI(mpibuff, batch, pg, dws[Task::OldDW].get_rep(), req);
+      dw->recvMPI(mpibuff, batch, pg_, dws_[Task::OldDW].get_rep(), req);
 
       if( mixedDebug.active() ) {
 	cerrLock.lock();
@@ -425,7 +464,7 @@ MPIScheduler::recvMPIData( const ProcessorGroup * pg,
       int count;
       MPI_Datatype datatype;
 #ifdef USE_PACKING
-      mpibuff.get_type(buf, count, datatype, pg->getComm());
+      mpibuff.get_type(buf, count, datatype, pg_->getComm());
 #else
       mpibuff.get_type(buf, count, datatype);
 #endif
@@ -433,10 +472,12 @@ MPIScheduler::recvMPIData( const ProcessorGroup * pg,
       MPI_Request requestid;
       dbg << "Posting receive for message number " << batch->messageTag << " from " << from << "\n";      
       MPI_Irecv(buf, count, datatype, from, batch->messageTag,
-		pg->getComm(), &requestid);
-      recvs.add(requestid, 
+		pg_->getComm(), &requestid);
+      int bytes = 0;
+      MPI_Pack_size(count, datatype, pg_->getComm(), &bytes);
+      recvs.add(requestid, bytes,
 		scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler));
-      mpi_info.totalrecvmpi += Time::currentSeconds() - start;
+      mpi_info_.totalrecvmpi += Time::currentSeconds() - start;
 
       if( mixedDebug.active() ) {
 	cerrLock.lock();mixedDebug << "MPIScheduler: HERE\n";cerrLock.unlock();
@@ -446,7 +487,7 @@ MPIScheduler::recvMPIData( const ProcessorGroup * pg,
     else {
       // Nothing really need to be received, but let everyone else know
       // that it has what is needed (nothing).
-      batch->received();
+      batch->received(pg_);
 #ifdef USE_PACKING
       // otherwise, these will be deleted after it receives and unpacks
       // the data.
@@ -456,49 +497,36 @@ MPIScheduler::recvMPIData( const ProcessorGroup * pg,
     }
   } // end for
 
+  if( mixedDebug.active() ) {
+    cerrLock.lock();
+    mixedDebug << "Requested " << recvs.numRequests() << " receives\n";
+    cerrLock.unlock();  
+  }
+} // end postMPIRecvs()
+
+void
+MPIScheduler::processMPIRecvs( DetailedTask *, RecvRecord& recvs,
+			       list<DependencyBatch*>& outstandingExtRecvs )
+{
+  TAU_PROFILE("MPIScheduler::processMPIRecvs()", " ", TAU_USER);
+
+  // Should only have external receives in the MixedScheduler version which
+  // shouldn't use this function.
+  ASSERT(outstandingExtRecvs.empty());
   double start = Time::currentSeconds();
 
   // This will allow some receives to be "handled" by their
-  // AfterCommincationHandler while waiting for others.
-  
-  if( mixedDebug.active() ) {
-    cerrLock.lock();
-    mixedDebug << "Requested " << recvs.ids.size() << " receives\n";
-    cerrLock.unlock();  
-  }
-
-  while( (recvs.ids.size() > 0) && 
-	 recvs.waitsome(pg->getComm(), pg->myrank()) )
-    {
-      if( mixedDebug.active() ) {
-	cerrLock.lock();mixedDebug << "waitsome called\n";
-	cerrLock.unlock();  
-      }
-    }
-
-  mpi_info.totalwaitmpi+=Time::currentSeconds()-start;
-
-  if( mixedDebug.active() ) {
-    cerrLock.lock();
-    mixedDebug << "recvMPIData task " <<*task<< " waiting for all receives\n";
-    cerrLock.unlock();
-  }
-
-  for(list<DependencyBatch*>::iterator iter = outstanding_mpi_requests.begin();
-      iter != outstanding_mpi_requests.end(); iter++ ) {
+  // AfterCommincationHandler while waiting for others.  
+  while( (recvs.numRequests() > 0) && recvs.waitsome(pg_) ) {
     if( mixedDebug.active() ) {
-      cerrLock.lock();
-      mixedDebug << "Waiting for other's request for batch message " 
-		 << (*iter)->messageTag << " from task " 
-		 << *(*iter)->fromTask << endl;
-      cerrLock.unlock();
+      cerrLock.lock();mixedDebug << "waitsome called\n";
+      cerrLock.unlock();  
     }
-
-    bool requestNotMade = (*iter)->waitForMPIRequest();
-    ASSERT(!requestNotMade);
   }
 
-} // end recvMPIData()
+  mpi_info_.totalwaitmpi+=Time::currentSeconds()-start;
+
+} // end processMPIRecvs()
 
 void
 MPIScheduler::execute(const ProcessorGroup * pg )
@@ -519,6 +547,10 @@ MPIScheduler::execute(const ProcessorGroup * pg )
    TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[MPIScheduler::execute()] ", 
 	TAU_USER); 
 
+
+  ASSERT(pg_ == 0);
+  pg_ = pg;
+  
   if(dts_ == 0){
     cerr << "MPIScheduler skipping execute, no tasks\n";
     return;
@@ -529,7 +561,8 @@ MPIScheduler::execute(const ProcessorGroup * pg )
   d_labels.clear();
   d_times.clear();
   emitTime("time since last execute");
-  SendState ss;
+  delete ss_;
+  ss_ = scinew SendState;
   // We do not use many Bsends, so this doesn't need to be
   // big.  We make it moderately large anyway - memory is cheap.
   void* old_mpibuffer;
@@ -539,30 +572,31 @@ MPIScheduler::execute(const ProcessorGroup * pg )
   char* mpibuffer = scinew char[MPI_BUFSIZE];
   MPI_Buffer_attach(mpibuffer, MPI_BUFSIZE);
 
-  SendRecord sends;
-
-  int me = pg->myrank();
+  int me = pg_->myrank();
   makeTaskGraphDoc(dts_, me);
 
   emitTime("taskGraph output");
 
-  mpi_timing_info_s mpi_info;
-
-  mpi_info.totalreduce = 0;
-  mpi_info.totalsend = 0;
-  mpi_info.totalrecv = 0;
-  mpi_info.totaltask = 0;
-  mpi_info.totalreducempi = 0;
-  mpi_info.totalsendmpi = 0;
-  mpi_info.totalrecvmpi = 0;
-  mpi_info.totaltestmpi = 0;
-  mpi_info.totalwaitmpi = 0;
+  mpi_info_.totalreduce = 0;
+  mpi_info_.totalsend = 0;
+  mpi_info_.totalrecv = 0;
+  mpi_info_.totaltask = 0;
+  mpi_info_.totalreducempi = 0;
+  mpi_info_.totalsendmpi = 0;
+  mpi_info_.totalrecvmpi = 0;
+  mpi_info_.totaltestmpi = 0;
+  mpi_info_.totalwaitmpi = 0;
 
   int ntasks = dts_->numLocalTasks();
   int numTasksDone = 0;
 
   dbg << "Executing " << dts_->numTasks() << " tasks (" << ntasks << " local)\n";
 
+  // TEMPORARY
+  cerrLock.lock();
+  cerr << "Executing " << dts_->numTasks() << " tasks (" << ntasks << " local)\n";  
+  cerrLock.unlock();
+  
   if( mixedDebug.active() ) {
     cerrLock.lock();
     mixedDebug << "Executing " << dts_->numTasks() << " tasks (" 
@@ -580,7 +614,7 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 
     DetailedTask * task = dts_->getNextInternalReadyTask();
 
-    dbg << "Got task: " << task->getTask()->getName() << "\n";
+    //cerr << "Got task: " << task->getTask()->getName() << "\n";
 
     if( mixedDebug.active() ) {
       cerrLock.lock();  
@@ -592,39 +626,18 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 
     switch(task->getTask()->getType()){
     case Task::Reduction:
-      {
-	dbg << me << ": Performing reduction: ";
-	printTask(dbg, task);
-	dbg << '\n';
-
-	if( mixedDebug.active() ) {
-	  cerrLock.lock();
-	  mixedDebug << "Performing reduction: ";
-	  printTask( mixedDebug, task );
-	  mixedDebug << "\n";
-	  cerrLock.unlock();
-	}
-
-#ifdef USE_PERFEX_COUNTERS
-	start_counters(0, 19);
-#endif
-	double reducestart = Time::currentSeconds();
-	const Task::Dependency* comp = task->getTask()->getComputes();
-	ASSERT(!comp->next);
-	OnDemandDataWarehouse* dw = dws_[Task::NewDW].get_rep();
-	dw->reduceMPI(comp->var, comp->matls /*task->getMaterials() */,
-		      d_myworld);
-	double reduceend = Time::currentSeconds();
-	long long flop_count=0;
-#ifdef USE_PERFEX_COUNTERS
-	long long dummy;
-	read_counters(0, &dummy, 19, &flop_count);
-#endif
-	emitNode(task, reducestart, reduceend - reducestart, 0, 0, flop_count);
-	mpi_info.totalreduce += reduceend-reducestart;
-	mpi_info.totalreducempi += reduceend-reducestart;
+      dbg << me << ": Performing reduction: ";
+      printTask(dbg, task);
+      dbg << '\n';
+      
+      if( mixedDebug.active() ) {
+	cerrLock.lock();
+	mixedDebug << "Initiating reduction: ";
+	printTask( mixedDebug, task );
+	mixedDebug << "\n";
+	cerrLock.unlock();
       }
-      task->done(dws_[Task::OldDW].get_rep(), dws_[Task::NewDW].get_rep());
+      initiateReduction(task);
       break;
     case Task::Normal:
     case Task::InitialSend:
@@ -637,8 +650,7 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 	  cerrLock.unlock();  
 	}
 
-	initiateTask( pg, task, mpi_info, sends, ss, 
-		      dws_, reloc_new_posLabel_ );
+	initiateTask( task );
 
 	if( mixedDebug.active() ) {
 	  cerrLock.lock();
@@ -664,26 +676,26 @@ MPIScheduler::execute(const ProcessorGroup * pg )
     cerrLock.unlock();
   }
 
-  emitTime("MPI send time", mpi_info.totalsendmpi);
-  emitTime("MPI Testsome time", mpi_info.totaltestmpi);
+  emitTime("MPI send time", mpi_info_.totalsendmpi);
+  emitTime("MPI Testsome time", mpi_info_.totaltestmpi);
   emitTime("Total send time", 
-	   mpi_info.totalsend - mpi_info.totalsendmpi - mpi_info.totaltestmpi);
-  emitTime("MPI recv time", mpi_info.totalrecvmpi);
-  emitTime("MPI wait time", mpi_info.totalwaitmpi);
+	   mpi_info_.totalsend - mpi_info_.totalsendmpi - mpi_info_.totaltestmpi);
+  emitTime("MPI recv time", mpi_info_.totalrecvmpi);
+  emitTime("MPI wait time", mpi_info_.totalwaitmpi);
   emitTime("Total recv time", 
-	   mpi_info.totalrecv - mpi_info.totalrecvmpi - mpi_info.totalwaitmpi);
-  emitTime("Total task time", mpi_info.totaltask);
-  emitTime("Total MPI reduce time", mpi_info.totalreducempi);
+	   mpi_info_.totalrecv - mpi_info_.totalrecvmpi - mpi_info_.totalwaitmpi);
+  emitTime("Total task time", mpi_info_.totaltask);
+  emitTime("Total MPI reduce time", mpi_info_.totalreducempi);
   emitTime("Total reduction time", 
-	   mpi_info.totalreduce - mpi_info.totalreducempi);
+	   mpi_info_.totalreduce - mpi_info_.totalreducempi);
 
   double time      = Time::currentSeconds();
   double totalexec = time - d_lasttime;
 
   d_lasttime = time;
 
-  emitTime("Other excution time", totalexec - mpi_info.totalsend -
-	   mpi_info.totalrecv - mpi_info.totaltask - mpi_info.totalreduce);
+  emitTime("Other excution time", totalexec - mpi_info_.totalsend -
+	   mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
 
 
   if( mixedDebug.active() ) {
@@ -693,7 +705,7 @@ MPIScheduler::execute(const ProcessorGroup * pg )
   }
 
   // Don't need to lock sends 'cause all threads are done at this point.
-  sends.waitall(pg->getComm(), me);
+  sends_.waitall(pg_);
   emitTime("final wait");
 
   dws_[Task::NewDW]->finalize(); // Dd: I think this is NewDW
@@ -731,6 +743,7 @@ MPIScheduler::execute(const ProcessorGroup * pg )
   }
 
   dbg << "MPIScheduler finished\n";
+  pg_ = 0;
 }
 
 void

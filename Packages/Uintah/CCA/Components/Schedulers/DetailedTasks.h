@@ -64,7 +64,7 @@ namespace Uintah {
       : comp_next(0), fromTask(fromTask),
 	head(0), messageTag(-1), to(to), 
 	received_(false), madeMPIRequest_(false),
-	lock_(0), cv_(0)
+	lock_(0)//, cv_(0)
     {
       toTasks.push_back(toTask);
     }
@@ -74,18 +74,24 @@ namespace Uintah {
     // will return false.
     bool makeMPIRequest();
 
+#if 0            
     // The first thread calling this will return true, all others
     // will block until received() is called and return false.
     bool waitForMPIRequest();
+#endif
 
     // Tells this batch that it has actually been received and
     // awakens anybody blocked in makeMPIRequest().
-    void received();
+    void received(const ProcessorGroup * pg);
+    bool wasReceived()
+    { return received_; }
 
     // Initialize receiving information for makeMPIRequest() and received()
     // so that it can receive again.
     void reset();
 
+    void addReceiveListener(int mpiSignal);
+    
     //DependencyBatch* req_next;
     DependencyBatch* comp_next;
     DetailedTask* fromTask;
@@ -95,10 +101,11 @@ namespace Uintah {
     int to;
 
   private:
-    bool received_;
-    bool madeMPIRequest_;
+    volatile bool received_;
+    volatile bool madeMPIRequest_;
     Mutex* lock_;
-    ConditionVariable* cv_;
+    //ConditionVariable* cv_;
+    set<int> receiveListeners_;
 
     DependencyBatch(const DependencyBatch&);
     DependencyBatch& operator=(const DependencyBatch&);
@@ -119,6 +126,15 @@ namespace Uintah {
     DetailedTask* dependentTask;
     set<const VarLabel*, VarLabel::Compare> vars;
     unsigned long satisfiedGeneration;
+  };
+
+  struct ScrubItem {
+    ScrubItem* next;
+    const VarLabel* var;
+    Task::WhichDW dw;
+    ScrubItem(ScrubItem* next, const VarLabel* var, Task::WhichDW dw)
+      : next(next), var(var), dw(dw)
+    {}
   };
 
   typedef map<VarLabelMatlPatch, unsigned int> ScrubCountMap;

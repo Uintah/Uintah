@@ -63,13 +63,8 @@ private:
 
   MessageLog log;
 
-  virtual void initiateTask( const ProcessorGroup  * pg,
-			     DetailedTask          * task,
-			     mpi_timing_info_s     & mpi_info,
-			     SendRecord            & sends,
-			     SendState             & ss,
-			     OnDemandDataWarehouseP  dws[2],
-			     const VarLabel        * reloc_label );
+  virtual void initiateTask( DetailedTask* task );
+  virtual void initiateReduction( DetailedTask* task );  
 
   // Waits until all tasks have finished. (Ie: talks to the ThreadPool
   // and waits until the threadpool in empty (ie: all tasks done.))

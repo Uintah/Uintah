@@ -11,8 +11,8 @@ public:
   BatchReceiveHandler(const BatchReceiveHandler& copy)
     : batch_(copy.batch_) {}
   
-  void finishedCommunication(MPI_Comm)
-  { batch_->received(); }
+  void finishedCommunication(const ProcessorGroup * pg)
+  { batch_->received(pg); }
 private:
   DependencyBatch* batch_;
   
