@@ -144,6 +144,16 @@ GeomID GeometryOPort::addObj(GeomHandle obj, const string& name,
     return id;
 }
 
+bool GeometryOPort::direct_forward(GeometryComm* msg)
+{
+    if(outbox){
+	outbox->send(msg);
+	return true;
+    } else {
+        return false;
+    }
+}
+
 void GeometryOPort::forward(GeometryComm* msg)
 {
     /*turn_on();*/

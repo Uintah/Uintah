@@ -38,6 +38,7 @@ SRCS     += \
 	$(SRCDIR)/Parser.cc\
 	$(SRCDIR)/SCIBaWGL.cc\
 	$(SRCDIR)/SharedMemory.cc\
+	$(SRCDIR)/SynchronizeGeometry.cc\
 	$(SRCDIR)/Tex.cc\
 	$(SRCDIR)/ViewGeom.cc\
 	$(SRCDIR)/ViewWindow.cc\
