@@ -226,7 +226,9 @@ SCI_ARG_WITH(globus,
   AC_HELP_STRING(--with-globus=DIR,
                  Use the globus installation in DIR),
   [with_globus="$withval"
-   sci_check_globus=yes],
+   sci_check_globus=yes
+   sci_check_ssl=yes
+   sci_check_crypto=yes],
   [with_globus=""])
 SCI_ARG_WITH(crypto,
   AC_HELP_STRING(--with-crypto=DIR,
@@ -2647,7 +2649,7 @@ if test "$sci_check_crypto" = "yes"; then
   if test "$with_crypto"; then
     _sci_lib="$with_crypto/lib"
   else
-    _sci_lib="$sci_thirdparty_libs"
+    _sci_lib="$with_globus/lib"
   fi
   
   SCI_TRY_LINK(CRYPTO,crypto library,,,crypto,$_sci_lib,,,optional) 
@@ -2705,10 +2707,10 @@ if test "$sci_check_globus" = "yes"; then
   fi
   
   if test ! "$DEF_SSL"; then
-    AC_MSG_WARN(SSL library not found.  This could cause globus check to fail.)
+    AC_MSG_ERROR(SSL library not found.  This will cause globus check to fail.  Use --with-ssl=path_to_ssl.)
   fi
   if test ! "$DEF_CRYPTO"; then
-    AC_MSG_WARN(CRYPTO library not found.  This could cause globus check to fail.)
+    AC_MSG_ERROR(CRYPTO library not found.  This will cause globus check to fail.  Use --with-crypto=path_to_crypto)
   fi
 
   MISC_LIB_FLAG="$SSL_LIB_DIR_FLAG $SSL_LIB_FLAG $CRYPTO_LIB_DIR_FLAG $CRYPTO_LIB_FLAG"

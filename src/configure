@@ -1695,6 +1695,8 @@ if test "${with_globus+set}" = set; then
   withval="$with_globus"
   with_globus="$withval"
    sci_check_globus=yes
+   sci_check_ssl=yes
+   sci_check_crypto=yes
 else
   with_globus=""
 fi;
@@ -3509,7 +3511,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3512:" \
+echo "$as_me:3514:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -18968,7 +18970,7 @@ if test "$sci_check_crypto" = "yes"; then
   if test "$with_crypto"; then
     _sci_lib="$with_crypto/lib"
   else
-    _sci_lib="$sci_thirdparty_libs"
+    _sci_lib="$with_globus/lib"
   fi
 
 
@@ -19358,12 +19360,14 @@ if test "$sci_check_globus" = "yes"; then
   fi
 
   if test ! "$DEF_SSL"; then
-    { echo "$as_me:$LINENO: WARNING: SSL library not found.  This could cause globus check to fail." >&5
-echo "$as_me: WARNING: SSL library not found.  This could cause globus check to fail." >&2;}
+    { { echo "$as_me:$LINENO: error: SSL library not found.  This will cause globus check to fail.  Use --with-ssl=path_to_ssl." >&5
+echo "$as_me: error: SSL library not found.  This will cause globus check to fail.  Use --with-ssl=path_to_ssl." >&2;}
+   { (exit 1); exit 1; }; }
   fi
   if test ! "$DEF_CRYPTO"; then
-    { echo "$as_me:$LINENO: WARNING: CRYPTO library not found.  This could cause globus check to fail." >&5
-echo "$as_me: WARNING: CRYPTO library not found.  This could cause globus check to fail." >&2;}
+    { { echo "$as_me:$LINENO: error: CRYPTO library not found.  This will cause globus check to fail.  Use --with-crypto=path_to_crypto" >&5
+echo "$as_me: error: CRYPTO library not found.  This will cause globus check to fail.  Use --with-crypto=path_to_crypto" >&2;}
+   { (exit 1); exit 1; }; }
   fi
 
   MISC_LIB_FLAG="$SSL_LIB_DIR_FLAG $SSL_LIB_FLAG $CRYPTO_LIB_DIR_FLAG $CRYPTO_LIB_FLAG"
