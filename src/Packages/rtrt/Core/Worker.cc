@@ -149,9 +149,7 @@ void Worker::run()
 	//cout << "stop is " << stop_ << "\n";
 
 	if( stop_ ) {// I don't think this one ever is called
-	  //cout << "Thread: " << num << " stopping\n";
-	  my_thread_->exit();
-	  cout << "Worker.cc: should never get here!\n";
+	  cout << "Thread: " << num << " stopping\n";
 	  return;
 	}
       }
@@ -161,12 +159,6 @@ void Worker::run()
       // Sync.
       //cout << "b" << num << ": " << dpy->get_num_procs()+1 << "\n";
       barrier->wait(dpy->get_num_procs()+1);
-
-      // exit if you are supposed to
-      if (scene->get_rtrt_engine()->stop_execution()) {
-        //        cerr << "I should be closing soon.\n";
-        //	return;
-      }	
 
       counters->end_frame();
 
