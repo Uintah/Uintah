@@ -1,3 +1,8 @@
+//----- PressureSolver.h -----------------------------------------------
+
+#ifndef Uintah_Components_Arches_PressureSolver_h
+#define Uintah_Components_Arches_PressureSolver_h
+
 /**************************************
 CLASS
    PressureSolver
@@ -29,18 +34,17 @@ WARNING
    none
 
 ************************************************************************/
-#ifndef included_PressureSolver
-#define included_PressureSolver
 
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Interface/SchedulerP.h>
+#include <Uintah/Parallel/ProcessorContext.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/VarLabel.h>
 
 namespace Uintah {
-    namespace ArchesSpace {
-
+namespace ArchesSpace {
 
 class TurbulenceModel;
 class PhysicalConstants;
@@ -49,95 +53,157 @@ class Source;
 class BoundaryCondition;
 class LinearSolver;
 
-class PressureSolver
-{
+class PressureSolver {
 
- public:
+public:
 
-  // GROUP: Constructors:
-  ////////////////////////////////////////////////////////////////////////
-  //
-  // Construct an instance of the Pressure solver.
-  //
-  // PRECONDITIONS
-  //
-  // POSTCONDITIONS
-  //   A linear level solver is partially constructed.  
-  //
-  // Default constructor.
-   PressureSolver();
-   PressureSolver(TurbulenceModel* turb_model, BoundaryCondition* bndry_cond,
-		  PhysicalConstants* physConst);
+      // GROUP: Constructors:
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Construct an instance of the Pressure solver.
+      //
+      // PRECONDITIONS
+      //
+      // POSTCONDITIONS
+      //   A linear level solver is partially constructed.  
+      //
+      PressureSolver(int nDim,
+		     TurbulenceModel* turb_model, 
+		     BoundaryCondition* bndry_cond,
+		     PhysicalConstants* physConst);
 
-  // GROUP: Destructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Destructor
-   ~PressureSolver();
+      // GROUP: Destructors:
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Destructor
+      //
+      ~PressureSolver();
 
-   // sets parameters at start time
-   void problemSetup(const ProblemSpecP& params);
+      // GROUP: Problem Setup :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Set up the problem specification database
+      //
+      void problemSetup(const ProblemSpecP& params);
 
-   // linearize eqn
-   void sched_buildLinearMatrix(double delta_t,
-				const LevelP& level,
-				SchedulerP& sched,
-				const DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw);
- 
-   ////////////////////////////////////////////////////////////////////////
-   // solve linearized pressure equation
-   void solve(double time, double delta_t, 
-	      const LevelP& level,
-	      SchedulerP& sched,
-	      const DataWarehouseP& old_dw,
-	      DataWarehouseP& new_dw);
+      // GROUP: Schedule Action :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Schedule Solve of linearized pressure equation
+      //
+      void solve(double time, double delta_t, 
+		 const LevelP& level,
+		 SchedulerP& sched,
+		 DataWarehouseP& old_dw,
+		 DataWarehouseP& new_dw);
    
-   void sched_normPressure(const LevelP& level,
-			   SchedulerP& sched,
-			   const DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw);  
- private:
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Schedule the build of the linearized eqn
+      //
+      void sched_buildLinearMatrix(const LevelP& level,
+				   SchedulerP& sched,
+				   DataWarehouseP& old_dw,
+				   DataWarehouseP& new_dw,
+				   double delta_t);
+ 
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Schedule the creation of the .. more documentation here
+      //
+      void sched_normPressure(const LevelP& level,
+			      SchedulerP& sched,
+			      DataWarehouseP& old_dw,
+			      DataWarehouseP& new_dw);  
 
-   void buildLinearMatrix(const ProcessorContext* pc,
-			  const Patch* patch,
-			  const DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw,
-			  double delta_t);
-   void normPressure(const Patch* patch,
-		     SchedulerP& sched,
-		     const DataWarehouseP& old_dw,
-		     DataWarehouseP& new_dw);
-   // computes coefficients
-   Discretization* d_discretize;
+protected:
 
-   // computes sources
-   Source* d_source;
+private:
 
-   // linear solver
-   LinearSolver* d_linearSolver;
+      // GROUP: Constructors (Private):
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Default : Construct an empty instance of the Pressure solver.
+      //
+      PressureSolver();
 
-   // turbulence model
-   TurbulenceModel* d_turbModel;
-   // boundary condition
-   BoundaryCondition* d_boundaryCondition;
-   // physical constants
-   PhysicalConstants* d_physicalConsts;
-// GROUP: Data members.
+      // GROUP: Action Methods (private) :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Actually Build the linear matrix
+      //    [in] 
+      //        add documentation here
+      //
+      void buildLinearMatrix(const ProcessorContext* pc,
+			     const Patch* patch,
+			     DataWarehouseP& old_dw,
+			     DataWarehouseP& new_dw,
+			     double delta_t);
 
-   ////////////////////////////////////////////////////////////////////////
-   // Maximum number of iterations to take before stopping/giving up.
-   int d_maxIterations;
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Actually do normPressure
+      //    [in] 
+      //        add documentation here
+      //
+      void normPressure(const Patch* patch,
+			SchedulerP& sched,
+			const DataWarehouseP& old_dw,
+			DataWarehouseP& new_dw);
 
-   // underrealaxation parameter, read from an input database
-   double d_underrelax;
-   //reference points for the solvers
-#if 0
-   Array1 d_pressRef;
+private:
+
+      // computes coefficients
+      Discretization* d_discretize;
+      // computes sources
+      Source* d_source;
+      // linear solver
+      LinearSolver* d_linearSolver;
+      // turbulence model
+      TurbulenceModel* d_turbModel;
+      // boundary condition
+      BoundaryCondition* d_boundaryCondition;
+      // physical constants
+      PhysicalConstants* d_physicalConsts;
+
+      // Whether the analysis is 2d or 3d
+      int d_NDIM;
+      // Maximum number of iterations to take before stopping/giving up.
+      int d_maxIterations;
+      // underrealaxation parameter, read from an input database
+      double d_underrelax;
+      //reference points for the solvers
+      Vector d_pressRef;
+
+      // const VarLabel* (required)
+      const VarLabel* d_pressureLabel;
+      const VarLabel* d_velocityLabel;
+      const VarLabel* d_densityLabel;
+      const VarLabel* d_viscosityLabel;
+
+      // const VarLabel* (computed)
+      const VarLabel* d_velConvCoefLabel;
+      const VarLabel* d_velCoefLabel;
+      const VarLabel* d_velLinSrcLabel;
+      const VarLabel* d_velNonLinSrcLabel;
+      const VarLabel* d_presCoefLabel;
+      const VarLabel* d_presLinSrcLabel;
+      const VarLabel* d_presNonLinSrcLabel;
+
+      // DataWarehouse generation
+      int d_generation;
+
+}; // End class PressureSolver
+
+}  // End namespace ArchesSpace
+}  // End namespace Uintah
+
 #endif
 
-};
-
-    }
-}
-
-#endif
+//
+// $Log$
+// Revision 1.14  2000/06/04 22:40:14  bbanerje
+// Added Cocoon stuff, changed task, require, compute, get, put arguments
+// to reflect new declarations. Changed sub.mk to include all the new files.
+//
+//

@@ -44,9 +44,9 @@ SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):
   d_velocityLabel = scinew VarLabel("velocity",
 				    CCVariable<Vector>::getTypeDescription() );
   d_densityLabel = scinew VarLabel("density",
-				   CCVariable<Vector>::getTypeDescription() );
+				   CCVariable<double>::getTypeDescription() );
   d_viscosityLabel = scinew VarLabel("viscosity",
-				   CCVariable<Vector>::getTypeDescription() );
+				   CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -271,6 +271,10 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorContext* pc,
 
 //
 // $Log$
+// Revision 1.9  2000/06/04 22:40:15  bbanerje
+// Added Cocoon stuff, changed task, require, compute, get, put arguments
+// to reflect new declarations. Changed sub.mk to include all the new files.
+//
 // Revision 1.8  2000/05/31 20:11:30  bbanerje
 // Cocoon stuff, tasks added to SmagorinskyModel, TurbulenceModel.
 // Added schedule compute of properties and TurbModel to Arches.

@@ -1,3 +1,8 @@
+//----- MomentumSolver.h -----------------------------------------------
+
+#ifndef Uintah_Components_Arches_MomentumSolver_h
+#define Uintah_Components_Arches_MomentumSolver_h
+
 /**************************************
 CLASS
    MomentumSolver
@@ -29,18 +34,17 @@ WARNING
    none
 
 ************************************************************************/
-#ifndef included_MomentumSolver
-#define included_MomentumSolver
-
-#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Parallel/ProcessorContext.h>
 #include <Uintah/Interface/SchedulerP.h>
-#include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Grid/Patch.h>
+#include <Uintah/Grid/VarLabel.h>
+#include <Uintah/Grid/CCVariable.h>
 
 namespace Uintah {
-    namespace ArchesSpace {
-
+namespace ArchesSpace {
 
 class TurbulenceModel;
 class PhysicalConstants;
@@ -49,77 +53,121 @@ class Source;
 class BoundaryCondition;
 class LinearSolver;
 
-class MomentumSolver
-{
+class MomentumSolver {
 
- public:
+public:
 
-  // GROUP: Constructors:
-  ////////////////////////////////////////////////////////////////////////
-  //
-  // Construct an instance of the Momentum solver.
-  //
-  // PRECONDITIONS
-  //
-  // POSTCONDITIONS
-  //   A linear level solver is partially constructed.  
-  //
-  // Default constructor.
-   MomentumSolver();
-   MomentumSolver(TurbulenceModel* turb_model, BoundaryCondition* bndry_cond,
-		  PhysicalConstants* physConst);
+      // GROUP: Constructors:
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Construct an instance of the Momentum solver.
+      //
+      // PRECONDITIONS
+      //
+      // POSTCONDITIONS
+      //   A linear level solver is partially constructed.  
+      //
+      MomentumSolver(TurbulenceModel* turb_model, 
+		     BoundaryCondition* bndry_cond,
+		     PhysicalConstants* physConst);
 
-  // GROUP: Destructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Destructor
-   ~MomentumSolver();
+      // GROUP: Destructors:
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Destructor
+      //
+      ~MomentumSolver();
 
-   // sets parameters at start time
-   void problemSetup(const ProblemSpecP& params);
+      // GROUP: Problem Setup :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Set up the problem specification database
+      //
+      void problemSetup(const ProblemSpecP& params);
 
-   // linearize eqn
-   void sched_buildLinearMatrix(double delta_t, int index,
-				const LevelP& level,
-				SchedulerP& sched,
-				const DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw);
- 
-   ////////////////////////////////////////////////////////////////////////
-   // solve linearized momentum equation
-   void solve(double time, double delta_t, int index, 
-	      const LevelP& level,
-	      SchedulerP& sched,
-	      const DataWarehouseP& old_dw,
-	      DataWarehouseP& new_dw);
+      // GROUP: Schedule Action :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Schedule Solve of the linearized momentum equation. 
+      //
+      void solve(const LevelP& level,
+		 SchedulerP& sched,
+		 DataWarehouseP& old_dw,
+		 DataWarehouseP& new_dw, 
+		 double time, double delta_t, int index);
    
- private:
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Schedule the build of the linearized momentum matrix
+      //
+      void sched_buildLinearMatrix(const LevelP& level,
+				   SchedulerP& sched,
+				   DataWarehouseP& old_dw,
+				   DataWarehouseP& new_dw,
+				   double delta_t, int index);
 
-   void buildLinearMatrix(const ProcessorContext* pc,
-			  const Patch* patch,
-			  const DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw,
-			  double delta_t, const int index);
-   // computes coefficients
-   Discretization* d_discretize;
+protected: 
 
-   // computes sources
-   Source* d_source;
+private:
 
-   // linear solver
-   LinearSolver* d_linearSolver;
+      // GROUP: Constructors (private):
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Default constructor.
+      MomentumSolver();
 
-   // turbulence model
-   TurbulenceModel* d_turbModel;
-   // boundary condition
-   BoundaryCondition* d_boundaryCondition;
-   // physical constants
-   PhysicalConstants* d_physicalConsts;
-// GROUP: Data members.
+      // GROUP: Action Methods (private):
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Actually build the linearized momentum matrix
+      //
+      void buildLinearMatrix(const ProcessorContext* pc,
+			     const Patch* patch,
+			     DataWarehouseP& old_dw,
+			     DataWarehouseP& new_dw,
+			     double delta_t, int index);
 
+private:
 
-};
+      // computes coefficients
+      Discretization* d_discretize;
+      // computes sources
+      Source* d_source;
+      // linear solver
+      LinearSolver* d_linearSolver;
+      // turbulence model
+      TurbulenceModel* d_turbModel;
+      // boundary condition
+      BoundaryCondition* d_boundaryCondition;
+      // physical constants
+      PhysicalConstants* d_physicalConsts;
 
-    }
-}
+      // const VarLabel* (required)
+      const VarLabel* d_pressureLabel;
+      const VarLabel* d_velocityLabel;
+      const VarLabel* d_densityLabel;
+      const VarLabel* d_viscosityLabel;
+
+      // const VarLabel* (computed)
+      const VarLabel* d_velConvCoefLabel;
+      const VarLabel* d_velCoefLabel;
+      const VarLabel* d_velLinSrcLabel;
+      const VarLabel* d_velNonLinSrcLabel;
+
+      // DataWarehouse generation
+      int d_generation;
+
+}; // End class MomentumSolver
+
+}  // End namespace ArchesSpace
+}  // End namespace Uintah
 
 #endif
+
+//
+// $Log$
+// Revision 1.5  2000/06/04 22:40:13  bbanerje
+// Added Cocoon stuff, changed task, require, compute, get, put arguments
+// to reflect new declarations. Changed sub.mk to include all the new files.
+//
+//

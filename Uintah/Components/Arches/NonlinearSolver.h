@@ -1,3 +1,8 @@
+//----- PicardNonlinearSolver.h -----------------------------------------------
+
+#ifndef Uintah_Component_Arches_NonlinearSolver_h
+#define Uintah_Component_Arches_NonlinearSolver_h
+
 /**************************************
 CLASS
    NonlinearSolver
@@ -29,45 +34,65 @@ WARNING
    none
 ****************************************/
 
-#ifndef Uintah_Component_Arches_NonlinearSolver_h
-#define Uintah_Component_Arches_NonlinearSolver_h
-
 #include <Uintah/Components/Arches/Arches.h>
 
 namespace Uintah {
-    namespace ArchesSpace {
+namespace ArchesSpace {
 
-class NonlinearSolver
-{
+class NonlinearSolver {
+
 public:
 
-  // GROUP: Constructors:
-  ////////////////////////////////////////////////////////////////////////
-  //
-  // Blank constructor for NonlinearSolver.
-  NonlinearSolver();
+      // GROUP: Constructors:
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Blank constructor for NonlinearSolver.
+      //
+      NonlinearSolver();
 
-  // GROUP: Destructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Virtual destructor for NonlinearSolver.
-  virtual ~NonlinearSolver();
+      // GROUP: Destructors:
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Virtual destructor for NonlinearSolver.
+      //
+      virtual ~NonlinearSolver();
 
 
-  ////////////////////////////////////////////////////////////////////////
-  // Solve the nonlinear system, return some error code.
-  //    [in] data User data needed for solve 
-  virtual int nonlinearSolve(double time, double deltat, 
-			     const LevelP&, SchedulerP& sched,
-			     const DataWarehouseP& old_dw,
-			     DataWarehouseP& new_dw) = 0;
+      // GROUP: Problem Setup :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Interface for Set up of the problem specification database
+      //
+      virtual void problemSetup(const ProblemSpecP& db) = 0;
+
+      // GROUP: Schedule Action Computations :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Interface for Solve the nonlinear system, return some error code.
+      //    [in] 
+      //        documentation here
+      //    [out] 
+      //        documentation here
+      //
+      virtual int nonlinearSolve(double time, double deltat, 
+				 const LevelP&, 
+				 SchedulerP& sched,
+				 DataWarehouseP& old_dw,
+				 DataWarehouseP& new_dw) = 0;
   
-  virtual void problemSetup(const ProblemSpecP& db) = 0;
-
 private:
 
-};
-    }
-}
+}; // End class NonlinearSolver
+}  // End namespace ArchesSpace
+}  // End namespace Uintah
 
 #endif
+
+//
+// $Log$
+// Revision 1.8  2000/06/04 22:40:14  bbanerje
+// Added Cocoon stuff, changed task, require, compute, get, put arguments
+// to reflect new declarations. Changed sub.mk to include all the new files.
+//
+//
 

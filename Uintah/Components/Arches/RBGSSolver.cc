@@ -1,3 +1,9 @@
+//----- RBGSSolver.cc ----------------------------------------------
+
+/* REFERENCED */
+static char *id="@(#) $Id$";
+
+#include <Uintah/Components/Arches/RBGSSolver.h>
 #include <Uintah/Components/Arches/PressureSolver.h>
 #include <Uintah/Components/Arches/Discretization.h>
 #include <Uintah/Components/Arches/Source.h>
@@ -6,33 +12,68 @@
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Grid/Level.h>
+#include <Uintah/Grid/Task.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Components/Arches/Arches.h>
 
-using namespace Uintah::Arches;
+using namespace Uintah::ArchesSpace;
 using namespace std;
 
+//****************************************************************************
+// Default constructor for RBGSSolver
+//****************************************************************************
 RBGSSolver::RBGSSolver()
 {
+  d_pressureLabel = scinew VarLabel("pressure",
+				    CCVariable<double>::getTypeDescription() );
+  d_presCoefLabel = scinew VarLabel("pressureCoeff",
+				    CCVariable<Vector>::getTypeDescription() );
+  d_presNonLinSrcLabel = scinew VarLabel("pressureNonlinearSource",
+				    CCVariable<Vector>::getTypeDescription() );
+  d_presResidualLabel = scinew VarLabel("pressureResidual",
+				    CCVariable<double>::getTypeDescription() );
 }
 
+//****************************************************************************
+// Destructor
+//****************************************************************************
 RBGSSolver::~RBGSSolver()
 {
 }
 
-void RBGSSolver::problemSetup(const ProblemSpecP& params,
-				  DataWarehouseP& dw)
+//****************************************************************************
+// Problem setup
+//****************************************************************************
+void 
+RBGSSolver::problemSetup(const ProblemSpecP& params)
 {
-  ProblemSpecP db = params->findBlock("Linear Solver");
+  ProblemSpecP db = params->findBlock("LinearSolver");
   db->require("max_iter", d_maxSweeps);
   db->require("res_tol", d_residual);
   db->require("underrelax", d_underrelax);
 }
 
-void RBGSSolver::sched_pressureSolve(const LevelP& level,
+//****************************************************************************
+// Underrelaxation
+//****************************************************************************
+void 
+RBGSSolver::sched_underrelax(const LevelP& level,
 			     SchedulerP& sched,
-			     const DataWarehouseP& old_dw,
+			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw)
+{
+}
+
+//****************************************************************************
+// Schedule pressure solve
+//****************************************************************************
+void 
+RBGSSolver::sched_pressureSolve(const LevelP& level,
+				SchedulerP& sched,
+				DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw)
 {
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
@@ -40,95 +81,270 @@ void RBGSSolver::sched_pressureSolve(const LevelP& level,
     {
       Task* tsk = scinew Task("RBGSSolver::press_residual",
 			      patch, old_dw, new_dw, this,
-			      RBGSSolver::press_residual);
+			      &RBGSSolver::press_residCalculation);
+
+      int numGhostCells = 0;
+      int matlIndex = 0;
+
       // coefficient for the variable for which solve is invoked
       // not sure if the var is of type CCVariable or FCVariable
-      tsk->requires(new_dw, "pressureCoeff", patch, 0,
-		    CCVariable<Vector>::getTypeDescription());
-      tsk->requires(old_dw, "pressure", patch, 0,
-		    CCVariable<double>::getTypeDescription());
+      tsk->requires(old_dw, d_pressureLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(new_dw, d_presCoefLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+
       // computes global residual
-      tsk->computes(new_dw, "pressureResidual", patch, 0,
-		    CCVariable<double>::getTypeDescription());
+      tsk->computes(new_dw, d_presResidualLabel, matlIndex, patch);
+
       sched->addTask(tsk);
     }
     {
       Task* tsk = scinew Task("RBGSSolver::press_underrelax",
 			      patch, old_dw, new_dw, this,
-			      RBGSSolver::press_underrelax);
+			      &RBGSSolver::press_underrelax);
+
+      int numGhostCells = 0;
+      int matlIndex = 0;
+
       // coefficient for the variable for which solve is invoked
       // not sure if the var is of type CCVariable or FCVariable
-      tsk->requires(old_dw, "pressure", patch, 0,
-		    CCVariable<double>::getTypeDescription());
-      tsk->requires(new_dw, "pressureCoeff", patch, 0,
-		    CCVariable<Vector>::getTypeDescription());
-      tsk->requires(new_dw, "pressureNonlinearSource", patch, 0,
-		    CCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "pressureCoeff", patch, 0,
-		    CCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "pressureNonlinearSource", patch, 0,
-		    CCVariable<Vector>::getTypeDescription());
+      tsk->requires(old_dw, d_pressureLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(new_dw, d_presCoefLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(new_dw, d_presNonLinSrcLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+
+      // computes 
+      tsk->computes(new_dw, d_presCoefLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_presNonLinSrcLabel, matlIndex, patch);
+
       sched->addTask(tsk);
     }
     {
       // use a recursive task based on number of sweeps reqd
       Task* tsk = scinew Task("RBGSSolver::press_lisolve",
 			      patch, old_dw, new_dw, this,
-			      RBGSSolver::press_lisolve);
+			      &RBGSSolver::press_lisolve);
+
+      int numGhostCells = 0;
+      int matlIndex = 0;
+
       // coefficient for the variable for which solve is invoked
       // not sure if the var is of type CCVariable or FCVariable
-      tsk->requires(new_dw, "pressureCoeff", patch, 0,
-		    CCVariable<Vector>::getTypeDescription());
-      tsk->requires(new_dw, "pressureNonlinearSource", patch, 0,
-		    CCVariable<Vector>::getTypeDescription());
-      tsk->requires(old_dw, "pressure", patch, 0,
-		    CCVariable<double>::getTypeDescription());
-      tsk->computes(new_dw, "pressure", patch, 0,
-		    CCVariable<double>::getTypeDescription());
+      tsk->requires(old_dw, d_pressureLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(new_dw, d_presCoefLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(new_dw, d_presNonLinSrcLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+
+      // Computes
+      tsk->computes(new_dw, d_pressureLabel, matlIndex, patch);
+
       sched->addTask(tsk);
     }
-    // add another task taht computes the liner residual
-    
+    // add another task that computes the linear residual
+  }    
 }
 
-void RBGSSolver::press_underrelax(const ProcessorContext*,
-				  const Patch* patch,
-				  const DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw)
+//****************************************************************************
+// Velocity Solve
+//****************************************************************************
+void 
+RBGSSolver::sched_velSolve(const LevelP& level,
+			   SchedulerP& sched,
+			   DataWarehouseP& old_dw,
+			   DataWarehouseP& new_dw,
+			   int index)
 {
+}
+
+//****************************************************************************
+// Scalar Solve
+//****************************************************************************
+void 
+RBGSSolver::sched_scalarSolve(const LevelP& level,
+			      SchedulerP& sched,
+			      DataWarehouseP& old_dw,
+			      DataWarehouseP& new_dw,
+			      int index)
+{
+}
+
+//****************************************************************************
+// Actual compute of pressure underrelaxation
+//****************************************************************************
+void 
+RBGSSolver::press_underrelax(const ProcessorContext*,
+			     const Patch* patch,
+			     DataWarehouseP& old_dw,
+			     DataWarehouseP& new_dw)
+{
+  int numGhostCells = 0;
+  int matlIndex = 0;
+
+  // Get the pressure from the old DW and pressure coefficients and non-linear
+  // source terms from the new DW
   CCVariable<double> pressure;
-  old_dw->get(pressure, "pressure", patch, 0);
+  old_dw->get(pressure, d_pressureLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+
   CCVariable<Vector> pressCoeff;
-  new_dw->get(pressCoeff,"pressureCoeff",patch, 0);
+  new_dw->get(pressCoeff, d_presCoefLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+
   CCVariable<double> pressNlSrc;
-  new_dw->get(pressNlSrc,"pressNonlinearSrc",patch, 0);
-  Array3Index lowIndex = patch->getLowIndex();
-  Array3Index highIndex = patch->getHighIndex();
+  new_dw->get(pressNlSrc, d_presNonLinSrcLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+ 
+  // Get the patch bounds
+  IntVector lowIndex = patch->getCellLowIndex();
+  IntVector highIndex = patch->getCellHighIndex();
 
   //fortran call
+#ifdef WONT_COMPILE_YET
   FORT_UNDERELAX(pressCoeff, pressNonlinearSrc, pressure,
 		 lowIndex, highIndex, d_underrelax);
-  new_dw->put(pressCoeff, "pressureCoeff", patch, 0);
-  new_dw->put(pressNlSrc, "pressureNonlinearSource", patch, 0);
+#endif
+
+  // Write the pressure Coefficients and nonlinear source terms into new DW
+  new_dw->put(pressCoeff, d_presCoefLabel, matlIndex, patch);
+  new_dw->put(pressNlSrc, d_presNonLinSrcLabel, matlIndex, patch);
 }
 
-void RBGSSolver::press_lisolve(const ProcessorContext*,
-			       const Patch* patch,
-			       const DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw)
+//****************************************************************************
+// Actual linear solve
+//****************************************************************************
+void 
+RBGSSolver::press_lisolve(const ProcessorContext*,
+			  const Patch* patch,
+			  DataWarehouseP& old_dw,
+			  DataWarehouseP& new_dw)
 {
-  CCVariable<double> pressure;
-  old_dw->get(pressure, "pressure", patch, 0);
-  CCVariable<Vector> pressCoeff;
-  new_dw->get(pressCoeff,"pressureCoeff",patch, 0);
-  CCVariable<double> pressNlSrc;
-  new_dw->get(pressNlSrc,"pressNonlinearSrc",patch, 0);
-  Array3Index lowIndex = patch->getLowIndex();
-  Array3Index highIndex = patch->getHighIndex();
+  int numGhostCells = 0;
+  int matlIndex = 0;
 
+  // Get the pressure from the old DW and pressure coefficients and non-linear
+  // source terms from the new DW
+  CCVariable<double> pressure;
+  old_dw->get(pressure, d_pressureLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+
+  CCVariable<Vector> pressCoeff;
+  new_dw->get(pressCoeff, d_presCoefLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+
+  CCVariable<double> pressNlSrc;
+  new_dw->get(pressNlSrc, d_presNonLinSrcLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+ 
+  IntVector lowIndex = patch->getCellLowIndex();
+  IntVector highIndex = patch->getCellHighIndex();
+
+#ifdef WONT_COMPILE_YET
   //fortran call for red-black GS solver
   FORT_RBGSLISOLV(pressCoeff, pressNonlinearSrc, pressure,
 	      lowIndex, highIndex);
-  new_dw->put(pressure, "pressure", patch, 0);
+#endif
+
+  new_dw->put(pressure, d_pressureLabel, matlIndex, patch);
 }
+
+//****************************************************************************
+// Calculate pressure residuals
+//****************************************************************************
+void 
+RBGSSolver::press_residCalculation(const ProcessorContext* ,
+				   const Patch* ,
+				   DataWarehouseP& ,
+				   DataWarehouseP& )
+{
+}
+
+//****************************************************************************
+// Velocity Underrelaxation
+//****************************************************************************
+void 
+RBGSSolver::vel_underrelax(const ProcessorContext* ,
+			   const Patch* ,
+			   DataWarehouseP& ,
+			   DataWarehouseP& , 
+			   int index)
+{
+  index = 0;
+}
+
+//****************************************************************************
+// Velocity Solve
+//****************************************************************************
+void 
+RBGSSolver::vel_lisolve(const ProcessorContext* ,
+			const Patch* ,
+			DataWarehouseP& ,
+			DataWarehouseP& , 
+			int index)
+{
+  index = 0;
+}
+
+//****************************************************************************
+// Calculate Velocity residuals
+//****************************************************************************
+void 
+RBGSSolver::vel_residCalculation(const ProcessorContext* ,
+				 const Patch* ,
+				 DataWarehouseP& ,
+				 DataWarehouseP& , 
+				 int index)
+{
+  index = 0;
+}
+
+//****************************************************************************
+// Scalar Underrelaxation
+//****************************************************************************
+void 
+RBGSSolver::scalar_underrelax(const ProcessorContext* ,
+			      const Patch* ,
+			      DataWarehouseP& ,
+			      DataWarehouseP& , 
+			      int index)
+{
+  index= 0;
+}
+
+//****************************************************************************
+// Scalar Solve
+//****************************************************************************
+void 
+RBGSSolver::scalar_lisolve(const ProcessorContext* ,
+			   const Patch* ,
+			   DataWarehouseP& ,
+			   DataWarehouseP& , 
+			   int index)
+{
+  index = 0;
+}
+
+//****************************************************************************
+// Calculate Scalar residuals
+//****************************************************************************
+void 
+RBGSSolver::scalar_residCalculation(const ProcessorContext* ,
+				    const Patch* ,
+				    DataWarehouseP& ,
+				    DataWarehouseP& , 
+				    int index)
+{
+  index = 0;
+}
+
+//
+// $Log$
+// Revision 1.4  2000/06/04 22:40:15  bbanerje
+// Added Cocoon stuff, changed task, require, compute, get, put arguments
+// to reflect new declarations. Changed sub.mk to include all the new files.
+//
+//
 

@@ -1,3 +1,7 @@
+//----- Discretization.cc ----------------------------------------------
+
+/* REFERENCED */
+static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/Discretization.h>
 #include <Uintah/Grid/Stencil.h>
@@ -16,31 +20,62 @@
 #include <iostream>
 using namespace std;
 
-using namespace Uintah::Arches;
+using namespace Uintah::ArchesSpace;
 using SCICore::Geometry::Vector;
 
+//****************************************************************************
+// Default constructor for Discretization
+//****************************************************************************
 Discretization::Discretization()
 {
+  // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
+  d_velocityLabel = scinew VarLabel("velocity",
+				    CCVariable<Vector>::getTypeDescription() );
+  d_densityLabel = scinew VarLabel("density",
+				   CCVariable<double>::getTypeDescription() );
+  d_viscosityLabel = scinew VarLabel("viscosity",
+				   CCVariable<double>::getTypeDescription() );
+  d_scalarLabel = scinew VarLabel("scalar",
+				   CCVariable<double>::getTypeDescription() );
+  d_pressureLabel = scinew VarLabel("pressure",
+				   CCVariable<double>::getTypeDescription() );
 }
 
+//****************************************************************************
+// Destructor
+//****************************************************************************
 Discretization::~Discretization()
 {
 }
 
-
-void Discretization::calculateVelocityCoeff(const ProcessorContext* pc,
-					    const Patch* patch,
-					    const DataWarehouseP& old_dw,
-					    DataWarehouseP& new_dw,
-					    double delta_t,
-					    const int index)
+//****************************************************************************
+// Velocity stencil weights
+//****************************************************************************
+void 
+Discretization::calculateVelocityCoeff(const ProcessorContext* pc,
+				       const Patch* patch,
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw,
+				       double delta_t,
+				       int index)
 {
-  FCVariable<Vector> velocity;
-  old_dw->get(velocity, "velocity", patch, 1);
+  int matlIndex = 0;
+  int numGhostCells = 0;
+
+  // (** WARNING **) velocity is a FC variable
+  CCVariable<Vector> velocity;
+  old_dw->get(velocity, d_velocityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+
   CCVariable<double> density;
-  old_dw->get(density, "density", patch, 1);
+  old_dw->get(density, d_densityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+
   CCVariable<double> viscosity;
-  old_dw->get(viscosity, "viscosity", patch, 1);
+  old_dw->get(viscosity, d_viscosityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+
+#ifdef WONT_COMPILE_YET
   // using chain of responsibility pattern for getting cell information
   DataWarehouseP top_dw = new_dw->getTop();
   PerPatch<CellInformation*> cellinfop;
@@ -51,9 +86,12 @@ void Discretization::calculateVelocityCoeff(const ProcessorContext* pc,
     top_dw->put(cellinfop, "cellinfo", patch);
   } 
   CellInformation* cellinfo = cellinfop;
-  Array3Index lowIndex = patch->getLowIndex();
-  Array3Index highIndex = patch->getHighIndex();
+#endif
 
+  IntVector lowIndex = patch->getCellLowIndex();
+  IntVector highIndex = patch->getCellHighIndex();
+
+#ifdef WONT_COMPILE_YET
   //7pt stencil declaration
   Stencil<double> uVelocityCoeff(patch);
   // convection coeffs
@@ -61,6 +99,7 @@ void Discretization::calculateVelocityCoeff(const ProcessorContext* pc,
   int ioff = 1;
   int joff = 0;
   int koff = 0;
+
   // 3-d array for volume - fortran uses it for temporary storage
   Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
   FORT_VELCOEF(velocity, viscosity, density,
@@ -75,25 +114,41 @@ void Discretization::calculateVelocityCoeff(const ProcessorContext* pc,
 	       cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
 	       cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
 	       cellinfo->tfac, cellinfo->bfac, volume);
+
   new_dw->put(uVelocityCoeff, "VelocityCoeff", patch, index);
   new_dw->put(uVelocityConvectCoeff, "VelocityConvectCoeff", patch, index);
+#endif
+
 }
 
 
-
-
-void Discretization::calculatePressureCoeff(const ProcessorContext*,
-					    const Patch* patch,
-					    const DataWarehouseP& old_dw,
-					    DataWarehouseP& new_dw,
-					    double delta_t)
+//****************************************************************************
+// Pressure stencil weights
+//****************************************************************************
+void 
+Discretization::calculatePressureCoeff(const ProcessorContext*,
+				       const Patch* patch,
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw,
+				       double delta_t)
 {
+  int matlIndex = 0;
+  int numGhostCells = 0;
+
   CCVariable<double> pressure;
-  old_dw->get(pressure, "pressure", patch, 1);
-  FCVariable<Vector> velocity;
-  old_dw->get(velocity, "velocity", patch, 1);
-  CCVariable<double> density;
-  old_dw->get(density, "density", patch, 1);
+  old_dw->get(pressure, d_pressureLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+
+  // (** WARNING **) velocity is a FC variable
+  CCVariable<Vector> velocity;
+  old_dw->get(velocity, d_velocityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+
+  CCVariable<double> viscosity;
+  old_dw->get(viscosity, d_viscosityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+
+#ifdef WONT_COMPILE_YET
   // need to be consistent, use Stencil
   FCVariable<Vector> uVelCoeff;
   int index = 1;
@@ -129,24 +184,42 @@ void Discretization::calculatePressureCoeff(const ProcessorContext*,
 		   cellinfo->dxep, cellinfo->dxpw, cellinfo->dynp,
 		   cellinfo->dyps, cellinfo->dztp, cellinfo->dzpb);
   new_dw->put(pressCoeff, "pressureCoeff", patch, 0);
+#endif
 }
   
-void Discretization::calculateScalarCoeff(const ProcessorContext* pc,
-					  const Patch* patch,
-					  const DataWarehouseP& old_dw,
-					  DataWarehouseP& new_dw,
-					  double delta_t,
-					  const int index)
+//****************************************************************************
+// Scalar stencil weights
+//****************************************************************************
+void 
+Discretization::calculateScalarCoeff(const ProcessorContext* pc,
+				     const Patch* patch,
+				     DataWarehouseP& old_dw,
+				     DataWarehouseP& new_dw,
+				     double delta_t,
+				     int index)
 {
-  FCVariable<Vector> velocity;
-  old_dw->get(velocity, "velocity", patch, 1);
+  int matlIndex = 0;
+  int numGhostCells = 0;
+
+  // (** WARNING **) velocity is a FC variable
+  CCVariable<Vector> velocity;
+  old_dw->get(velocity, d_velocityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+
   CCVariable<double> density;
-  old_dw->get(density, "density", patch, 1);
+  old_dw->get(density, d_densityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+
   CCVariable<double> viscosity;
-  old_dw->get(viscosity, "viscosity", patch, 1);
+  old_dw->get(viscosity, d_viscosityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+
   // ithe componenet of scalar vector
   CCVariable<double> scalar;
-  old_dw->get(scalar, "scalar", patch, 1, index);
+  old_dw->get(scalar, d_scalarLabel, index, patch, Ghost::None,
+	      numGhostCells);
+
+#ifdef WONT_COMPILE_YET
   // using chain of responsibility pattern for getting cell information
   DataWarehouseP top_dw = new_dw->getTop();
   PerPatch<CellInformation*> cellinfop;
@@ -176,57 +249,85 @@ void Discretization::calculateScalarCoeff(const ProcessorContext* pc,
 		  cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
 		  cellinfo->tfac, cellinfo->bfac, volume);
   new_dw->put(scalarCoeff, "ScalarCoeff", patch, index);
+#endif
 }
 
-void Discretization::calculateVelDiagonal(const ProcessorContext*,
-					  const Patch* patch,
-					  const DataWarehouseP& old_dw,
-					  DataWarehouseP& new_dw,
-					  const int index){
+//****************************************************************************
+// Calculate the diagonal terms (velocity)
+//****************************************************************************
+void 
+Discretization::calculateVelDiagonal(const ProcessorContext*,
+				     const Patch* patch,
+				     DataWarehouseP& old_dw,
+				     DataWarehouseP& new_dw,
+				     int index)
+{
   
-  Array3Index lowIndex = patch->getLowIndex();
-  Array3Index highIndex = patch->getHighIndex();
+  IntVector lowIndex = patch->getCellLowIndex();
+  IntVector highIndex = patch->getCellHighIndex();
 
+#ifdef WONT_COMPILE_YET
   Stencil<double> uVelCoeff;
   new_dw->get(uVelCoeff, "VelocityCoeff", patch, index, 0);
   FCVariable<double> uVelLinearSrc;
   new_dw->get(uVelLinearSrc, "VelLinearSrc", patch, index, 0);
   FORT_APCAL(uVelCoeffvelocity, uVelLinearSrc, lowIndex, highIndex);
   new_dw->put(uVelCoeff, "VelocityCoeff", patch, index, 0);
+#endif
+
 }
 
-void Discretization::calculatePressDiagonal(const ProcessorContext*,
-					    const Patch* patch,
-					    const DataWarehouseP& old_dw,
-					    DataWarehouseP& new_dw) {
+//****************************************************************************
+// Pressure diagonal
+//****************************************************************************
+void 
+Discretization::calculatePressDiagonal(const ProcessorContext*,
+				       const Patch* patch,
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw) 
+{
   
-  Array3Index lowIndex = patch->getLowIndex();
-  Array3Index highIndex = patch->getHighIndex();
+  IntVector lowIndex = patch->getCellLowIndex();
+  IntVector highIndex = patch->getCellHighIndex();
 
+#ifdef WONT_COMPILE_YET
   Stencil<double> pressCoeff;
   new_dw->get(pressCoeff, "PressureCoCoeff", patch, 0);
   FCVariable<double> pressLinearSrc;
   new_dw->get(pressLinearSrc, "pressureLinearSource", patch, 0);
   FORT_APCAL(pressCoeff, pressLinearSrc, lowIndex, highIndex);
   new_dw->put(pressCoeff, "pressureLinearSource", patch, 0);
+#endif
 }
 
-void Discretization::calculateScalarDiagonal(const ProcessorContext*,
-					  const Patch* patch,
-					  const DataWarehouseP& old_dw,
-					  DataWarehouseP& new_dw,
-					  const int index){
+//****************************************************************************
+// Scalar diagonal
+//****************************************************************************
+void 
+Discretization::calculateScalarDiagonal(const ProcessorContext*,
+					const Patch* patch,
+					DataWarehouseP& old_dw,
+					DataWarehouseP& new_dw,
+					int index)
+{
   
-  Array3Index lowIndex = patch->getLowIndex();
-  Array3Index highIndex = patch->getHighIndex();
+  IntVector lowIndex = patch->getCellLowIndex();
+  IntVector highIndex = patch->getCellHighIndex();
 
+#ifdef WONT_COMPILE_YET
   Stencil<double> scalarCoeff;
   new_dw->get(scalarCoeff, "ScalarCoeff", patch, index, 0);
   FCVariable<double> scalarLinearSrc;
   new_dw->get(scalarLinearSrc, "ScalarLinearSource", patch, index, 0);
   FORT_APCAL(scalarCoeff, scalarLinearSrc, lowIndex, highIndex);
   new_dw->put(scalarCoeff, "ScalarCoeff", patch, index, 0);
+#endif
 }
 
-
-
+//
+// $Log$
+// Revision 1.11  2000/06/04 22:40:13  bbanerje
+// Added Cocoon stuff, changed task, require, compute, get, put arguments
+// to reflect new declarations. Changed sub.mk to include all the new files.
+//
+//
