@@ -42,6 +42,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/ImageField.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
@@ -62,6 +63,7 @@ private:
 
   GuiInt size_x_;
   GuiInt size_y_;
+  GuiInt auto_size_;
   GuiInt axis_;
   GuiDouble padpercent_;
   GuiDouble position_;
@@ -80,6 +82,7 @@ SamplePlane::SamplePlane(GuiContext* ctx) :
   Module("SamplePlane", ctx, Filter, "FieldsCreate", "SCIRun"),
   size_x_(ctx->subVar("sizex")),
   size_y_(ctx->subVar("sizey")),
+  auto_size_(ctx->subVar("auto_size")),
   axis_(ctx->subVar("axis")),
   padpercent_(ctx->subVar("padpercent")),
   position_(ctx->subVar("pos")),
@@ -101,6 +104,7 @@ SamplePlane::execute()
 {
   update_state(NeedData);
   const int axis = Min(2, Max(0, axis_.get()));
+
   Transform trans;
   trans.load_identity();
 
@@ -199,9 +203,46 @@ SamplePlane::execute()
     }
   }
   
-  // Create blank mesh.
-  unsigned int sizex = Max(2, size_x_.get());
-  unsigned int sizey = Max(2, size_y_.get());
+  unsigned int sizex, sizey;
+  if( auto_size_.get() ){   // Guess at the size of the sample plane.
+    // Currently we have only a simple algorithm for LatVolFields.
+    if( LatVolMesh *lvm = dynamic_cast<LatVolMesh *> ((ifieldhandle->mesh()).get_rep()) ) {
+      switch( axis ) {
+      case 0:
+        sizex = Max(2, (int)lvm->get_nj());
+        size_x_.set( sizex );
+        sizey = Max(2, (int)lvm->get_nk());
+        size_y_.set( sizey );
+        break;
+      case 1: 
+        sizex =  Max(2, (int)lvm->get_ni());
+        size_x_.set( sizex );
+        sizey =  Max(2, (int)lvm->get_nk());
+        size_y_.set( sizey );
+        break;
+      case 2:
+        sizex =  Max(2, (int)lvm->get_ni());
+        size_x_.set( sizex );
+        sizey =  Max(2, (int)lvm->get_nj());
+        size_y_.set( sizey );
+        break;
+      default:
+        warning("Custom axis, resize manually.");
+        sizex = Max(2, size_x_.get());
+        sizey = Max(2, size_y_.get());
+        break;
+      }
+    } else {
+      warning("No autosize algorithm for this field type, resize manually.");
+      sizex = Max(2, size_x_.get());
+      sizey = Max(2, size_y_.get());
+    }
+  } else {
+    // Create blank mesh.
+    sizex = Max(2, size_x_.get());
+    sizey = Max(2, size_y_.get());
+  }
+
   Point minb(0.0, 0.0, 0.0);
   Point maxb(1.0, 1.0, 0.0);
   Vector diag((maxb.asVector() - minb.asVector()) * (padpercent_.get()/100.0));
