@@ -145,7 +145,11 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 			  timelabels, index);
 
 
-  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  Task::WhichDW parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
+  else parent_old_dw = Task::OldDW;
+
+  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
   
   // This task requires scalar and density from old time step for transient
   // calculation
@@ -159,7 +163,7 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
   Task::WhichDW old_values_dw;
-  if (timelabels->use_old_values) old_values_dw = Task::OldDW;
+  if (timelabels->use_old_values) old_values_dw = parent_old_dw;
   else old_values_dw = Task::NewDW;
 
    tsk->requires(old_values_dw, d_lab->d_scalarSPLabel,
@@ -238,8 +242,12 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				     int index)
 {
 
+  DataWarehouse* parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+  else parent_old_dw = old_dw;
+
   delt_vartype delT;
-  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
@@ -288,7 +296,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     DataWarehouse* old_values_dw;
-    if (timelabels->use_old_values) old_values_dw = old_dw;
+    if (timelabels->use_old_values) old_values_dw = parent_old_dw;
     else old_values_dw = new_dw;
     
     old_values_dw->get(constScalarVars.old_scalar, d_lab->d_scalarSPLabel, 
@@ -380,8 +388,8 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
         d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
 					       maxAbsU, maxAbsV, maxAbsW, 
 				  	       &scalarVars, &constScalarVars,
-					       wallID);
-    }
+					       wallID); 
+    } 
 
     // for scalesimilarity model add scalarflux to the source of scalar eqn.
     if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
@@ -490,7 +498,11 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
 			  &ScalarSolver::scalarLinearSolve,
 			  timelabels, index);
   
-  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  Task::WhichDW parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
+  else parent_old_dw = Task::OldDW;
+
+  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -505,7 +517,7 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   Task::WhichDW old_values_dw;
-  if (timelabels->use_old_values) old_values_dw = Task::OldDW;
+  if (timelabels->use_old_values) old_values_dw = parent_old_dw;
   else old_values_dw = Task::NewDW;
 
    tsk->requires(old_values_dw, d_lab->d_scalarSPLabel,
@@ -558,8 +570,12 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 				const TimeIntegratorLabel* timelabels,
 				int index)
 {
+  DataWarehouse* parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+  else parent_old_dw = old_dw;
+
   delt_vartype delT;
-  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
@@ -611,7 +627,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     DataWarehouse* old_values_dw;
-    if (timelabels->use_old_values) old_values_dw = old_dw;
+    if (timelabels->use_old_values) old_values_dw = parent_old_dw;
     else old_values_dw = new_dw;
     
     old_values_dw->get(constScalarVars.old_old_scalar, d_lab->d_scalarSPLabel, 

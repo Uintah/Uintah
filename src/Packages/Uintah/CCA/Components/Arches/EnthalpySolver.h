@@ -90,6 +90,9 @@ public:
       inline bool checkDORadiation() const{
 	return d_DORadiationCalc;
       }
+      inline bool checkRadiation() const{
+	return d_radiationCalc;
+      }
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////

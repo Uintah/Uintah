@@ -65,7 +65,6 @@ namespace Uintah {
       const VarLabel* d_totalflowINLabel;
       const VarLabel* d_totalflowOUTLabel;
       const VarLabel* d_netflowOUTBCLabel;
-      const VarLabel* d_totalflowOUToutbcLabel;
       // net outlet area, mass balance, and overall outlet velocity
       const VarLabel* d_totalAreaOUTLabel;
       const VarLabel* d_denAccumLabel;

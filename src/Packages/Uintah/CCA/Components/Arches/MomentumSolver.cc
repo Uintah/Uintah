@@ -143,7 +143,11 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
 			  this, &MomentumSolver::buildLinearMatrix,
 			  timelabels, index);
 
-  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  Task::WhichDW parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
+  else parent_old_dw = Task::OldDW;
+
+  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -217,8 +221,12 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		    		  const TimeIntegratorLabel* timelabels,
 				  int index)
 {
+  DataWarehouse* parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+  else parent_old_dw = old_dw;
+
   delt_vartype delT;
-  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
@@ -436,8 +444,12 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 			  this, &MomentumSolver::buildLinearMatrixVelHat,
 			  timelabels);
 
+  
+  Task::WhichDW parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
+  else parent_old_dw = Task::OldDW;
 
-  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
     
   // Requires
   // from old_dw for time integration
@@ -455,8 +467,8 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 
   Task::WhichDW old_values_dw;
   if (timelabels->use_old_values) {
-    old_values_dw = Task::OldDW;
-    tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
+    old_values_dw = parent_old_dw;
+    tsk->requires(old_values_dw, d_lab->d_densityCPLabel,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
   }
   else {
@@ -588,8 +600,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
   TAU_PROFILE_TIMER(input, "Input", "[MomSolver::buildMVelHatPred::input]" , TAU_USER);
   TAU_PROFILE_TIMER(inputcell, "Inputcell", "[MomSolver::buildMVelHatPred::inputcell]" , TAU_USER);
   TAU_PROFILE_TIMER(compute, "Compute", "[MomSolver::buildMVelHatPred::compute]" , TAU_USER);
+  DataWarehouse* parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+  else parent_old_dw = old_dw;
+
   delt_vartype delT;
-  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
@@ -634,8 +650,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
     DataWarehouse* old_values_dw;
     if (timelabels->use_old_values) {
-      old_values_dw = old_dw;
-      old_dw->get(constVelocityVars.old_density, d_lab->d_densityCPLabel, 
+      old_values_dw = parent_old_dw;
+      old_values_dw->get(constVelocityVars.old_density, d_lab->d_densityCPLabel,
 		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     }
     else {
