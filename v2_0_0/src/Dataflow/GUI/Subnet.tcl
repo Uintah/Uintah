@@ -24,24 +24,19 @@
 #  Copyright (C) 2003 SCI Group
 #
 
-global Subnet
-set Subnet(num) 0
-
-
 
 itcl_class SubnetModule {
     inherit Module
     constructor { config } {
 	set make_progress_graph 0
 	set make_time 0
-	set isSubnetModule 1
+	set isSubnetModule 1 
     }
 
     destructor {
 	destroy .subnet$subnetNumber
     }
 	
-
     method ui {} {
 	global Subnet
 	foreach modid $Subnet(Subnet${subnetNumber}_Modules) {
@@ -60,40 +55,11 @@ itcl_class SubnetModule {
 
 	
 }
-
-	
-proc setupMainSubnet {} {
-    global maincanvas Subnet
-    set Subnet(num) 0
-    set Subnet(Subnet0_canvas) $maincanvas
-    set Subnet(Subnet0_Name) "Main"
-    set Subnet(Subnet0_Modules) ""
-    foreach modid [getCanvasModules $maincanvas] {
-	set Subnet($modid) 0
-	lappend Subnet(Subnet0_Modules) $modid
-    }
-    set Subnet(Subnet0_oportinfo) ""
-    set Subnet(Subnet0_iportinfo) ""
-    set Subnet(Subnet0_connections) ""
-    set Subnet(Subnet0) 0
-
-}
-
-proc numPorts { subnet porttype} {
-    set num 0
-    global Subnet
-    foreach conn $Subnet(Subnet${subnet}_connections) {
-	if [string equal [${porttype}Mod conn] Subnet${subnet}] {
-	    incr num
-	}
-    }
-    return $num
-}
-
-proc updateSubnetName { name1 name2 op } {
+       
+proc updateSubnetName { subnet name1 name2 op } {
     global Subnet
     # extract the Subnet Number from the array index
-    set subnet [string range $name2 6 [expr [string first _Name $name2]-1]]
+    # set subnet [string range $name2 6 [expr [string first _Name $name2]-1]]
     set w .subnet${subnet}
     if [winfo exists $w] {
 	wm title $w "$Subnet($name2) Sub-Network Editor"
@@ -115,11 +81,10 @@ proc makeSubnet { from_subnet x y { bbox "0 0 0 0" }} {
     set Subnet(Subnet$Subnet(num))		$Subnet(num)
     set Subnet(Subnet$Subnet(num)_Name)		"Sub-Network \#$Subnet(num)"
     set Subnet(Subnet$Subnet(num)_Modules)	""
-    set Subnet(Subnet$Subnet(num)_oportinfo)	""
-    set Subnet(Subnet$Subnet(num)_iportinfo)	""
     set Subnet(Subnet$Subnet(num)_connections)	""
 
-    trace variable Subnet(Subnet$Subnet(num)_Name) w updateSubnetName
+    trace variable Subnet(Subnet$Subnet(num)_Name) w \
+	"updateSubnetName $Subnet(num)"
 
     set w .subnet$Subnet(num)
     if {[winfo exists $w]} { destroy $w }
@@ -221,15 +186,16 @@ proc createSubnet { from_subnet { modules "" } } {
     }
 
     # First, delete the connections and module icons from the old canvas
-    set connectionList ""
+    set connections ""
     foreach modid $modules {
 	listFindAndRemove Subnet(Subnet${from_subnet}_Modules) $modid
-	eval lappend connectionList [getModuleConnections $modid]
+	eval lappend connections $Subnet(${modid}_connections)
     }
+
     # remove all duplicate connections from the list
-    set connectionList [lsort -unique $connectionList]
+    set connections [lsort -unique $connections]
     # delete connections in decreasing input port number for dynamic ports
-    foreach conn [lsort -decreasing -integer -index 3 $connectionList] {
+    foreach conn [lsort -decreasing -integer -index 3 $connections] {
 	destroyConnection $conn 0 0
     }    
     
@@ -239,6 +205,7 @@ proc createSubnet { from_subnet { modules "" } } {
 	set canvas $Subnet(Subnet${from_subnet}_canvas)
 	set bbox [compute_bbox $canvas $modules]
     }
+
     set subnet [makeSubnet $from_subnet [lindex $bbox 0] [lindex $bbox 1] $bbox]
     set Subnet(Subnet${subnet}_Modules) $modules
     # Then move the modules to the new canvas
@@ -257,24 +224,35 @@ proc createSubnet { from_subnet { modules "" } } {
     # Note the 0 0 parameters to createConnection:  SCIRun wont be
     # notified of any creation or deletion of connections between modules
     # since no actual connections are being changed
-    foreach conn [sortPorts $subnet $connectionList] {
-	if {$Subnet([oMod conn]) == $Subnet([iMod conn])} {
+    set connections [sortPorts $subnet $connections]
+    while { [llength $connections] } {
+	set conn [lindex $connections 0]
+	set connections [lrange $connections 1 end]
+	if { $Subnet([oMod conn]) == $Subnet([iMod conn]) } {
 	    createConnection $conn 0 0
 	} elseif { $Subnet([oMod conn]) == ${subnet} } {
-	    set which [numPorts ${subnet} i]
+	    set which [portCount "Subnet${subnet} 0 i"]
 	    createConnection \
 		"[oMod conn] [oNum conn] Subnet${subnet} $which" 0 0
 	    createConnection \
 		"SubnetIcon${subnet} $which [iMod conn] [iNum conn]" 0 0
+	    foreach xconn $connections {
+		if { [oNum conn] == [oNum xconn] &&
+		     [string equal [oMod conn] [oMod xconn]] } {
+		    listFindAndRemove connections $xconn
+		    createConnection \
+			"SubnetIcon${subnet} $which [iMod xconn] [iNum xconn]" 0 0
+		}
+	    }
 	} elseif { $Subnet([iMod conn]) == ${subnet} } {
-	    set which [numPorts ${subnet} o]
+	    set which [portCount "Subnet${subnet} 0 o"]
 	    createConnection \
 		"Subnet${subnet} $which [iMod conn] [iNum conn]" 0 0
 	    createConnection \
 		"[oMod conn] [oNum conn] SubnetIcon${subnet} $which" 0 0
 	}
     }
-    showSubnetWindow $subnet $bbox
+    showSubnetWindow $subnet [subnet_bbox $subnet]
     unselectAll
 }
 
@@ -349,22 +327,22 @@ proc expandSubnet { modid } {
 
 
 # Sorts a list of connections by input port position left to right
-proc sortPorts { subnet ports } {
+proc sortPorts { subnet connections } {
     global Subnet
     set xposlist ""
-    for {set pnum 0} {$pnum < [llength $ports]} {incr pnum} {
-	set port [lindex $ports $pnum]
-	if {$Subnet([lindex $port 0]) == $subnet} {
-	    set pos [computePortCoords "[lindex $port 0] [lindex $port 1] o"]
+    for {set i 0} { $i < [llength $connections] } { incr i } {
+	set conn [lindex $connections $i]
+	if {$Subnet([oMod conn]) == $subnet} {
+	    set pos [portCoords [oPort conn]]
 	} else {
-	    set pos [computePortCoords "[lindex $port 2] [lindex $port 3] i"]
+	    set pos [portCoords [iPort conn]]
 	}
-	lappend xposlist [list [lindex $pos 0] $pnum]
+	lappend xposlist [list [lindex $pos 0] $i]
     }
     set xposlist [lsort -real -index 0 $xposlist]
     set retval ""
     foreach index $xposlist {
-	lappend retval [lindex $ports [lindex $index 1]]
+	lappend retval [lindex $connections [lindex $index 1]]
     }
     return $retval
 }
@@ -442,6 +420,7 @@ proc loadSubnet { subnet filename { x 0 } { y 0 } } {
 
 proc saveSubnet { subnet } {
     global Subnet SCIRUN_SRCDIR
+    puts "Saving subnet $subnet $Subnet(Subnet${subnet}_Name)"
     set name [join [split $Subnet(Subnet${subnet}_Name) "/"] ""].net
     set home  ~
     if [file writable $SCIRUN_SRCDIR/Subnets] {
@@ -489,7 +468,9 @@ proc writeSubnetModulesAndConnections { filename {subnet 0}} {
 	if { [isaSubnetIcon $module] } {
 	    set iconsubnet $Subnet(${module}_num)
 	    # this will always save subnets and set $Subnet(Subnet${iconsubnet}_filename)
-	    if ![string length $Subnet(Subnet${iconsubnet}_filename)] {
+	    #[string length $Subnet(Subnet${iconsubnet}_filename)
+	    
+	    if ![string length [saveSubnet $iconsubnet]] {
 		#dont save this module if we cant save the subnet
 		continue
 	    }
@@ -592,5 +573,10 @@ proc showSubnetWindow { subnet { bbox "" } } {
 	set bbox [subnet_bbox $subnet]
     }
     wm geometry .subnet${subnet} [getAdjWidth $bbox]x[getAdjHeight $bbox]
+    set scroll [$Subnet(Subnet${subnet}_canvas) cget -scrollregion]
+    $Subnet(Subnet${subnet}_canvas) xview moveto \
+	[expr ([lindex $bbox 0]-20)/([lindex $scroll 2]-[lindex $scroll 0])]
+    $Subnet(Subnet${subnet}_canvas) yview moveto \
+	[expr ([lindex $bbox 1]-20)/([lindex $scroll 3]-[lindex $scroll 1])]
     update idletasks
 }
