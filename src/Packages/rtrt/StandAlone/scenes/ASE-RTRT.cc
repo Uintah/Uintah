@@ -14,6 +14,7 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/ASETokens.h>
 #include <Packages/rtrt/Core/ImageMaterial.h>
+#include <Packages/rtrt/Core/Rect.h>
 #include <fstream>
 #include <iostream>
 #include <stdlib.h>
@@ -197,10 +198,15 @@ extern "C" Scene *make_scene(int argc, char** argv, int)
   Color bgcolor(.2,.2,.4);
   
   Plane groundplane ( Point(0, 0, 0), Vector(1, 0, 0) );
+  Rect *ground = new Rect(ase_matls[4],Point(0,0,0),
+                          Vector(10000,0,0),Vector(0,10000,0));
+  all->add(ground);
   Scene* scene=new Scene(all, cam,
                          bgcolor, groundcolor*bgcolor, bgcolor, groundplane,
                          ambient_scale);
-  scene->add_light(new Light(Point(500,-300,300), Color(.8,.8,.8), 0));
-  scene->shadow_mode=1;
+  scene->add_light(new Light(Point(5000,-5000,5000), Color(.8,.8,.8), 0));
+  scene->set_background_ptr(new EnvironmentMapBackground("/home/sci/dmw/stadium/SKY.ppm"));
+  scene->shadow_mode=0;
+  scene->set_materials(ase_matls);
   return scene;
 }
