@@ -1,0 +1,167 @@
+# SCIRun Network v1.23.0
+
+
+set name {Main}
+set bbox {10 8 570 425}
+set creationDate {Tue Jan 04 2005}
+set creationTime {12:43:22}
+set runDate {Tue Jan 04 2005}
+set runTime {12:44:28}
+set notes {}
+
+# Create a SCIRun->DataIO->FieldReader Module
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 10 10]
+
+# Create a VS->DataFlow->HotBox Module
+set m2 [addModuleAtPosition "VS" "DataFlow" "HotBox" 10 198]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 375 8]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 376 198]
+
+# Create a SCIRun->Visualization->GLTextureBuilder Module
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 192 198]
+
+# Create a SCIRun->Visualization->TextureVolVis Module
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "TextureVolVis" 147 290]
+
+# Create a SCIRun->Visualization->TexCuttingPlanes Module
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "TexCuttingPlanes" 358 289]
+
+# Create a SCIRun->Render->Viewer Module
+set m8 [addModuleAtPosition "SCIRun" "Render" "Viewer" 111 381]
+
+# Create a SCIRun->FieldsData->ChangeFieldDataType Module
+set m9 [addModuleAtPosition "SCIRun" "FieldsData" "ChangeFieldDataType" 10 88]
+
+# Create the Connections between Modules
+set c1 [addConnection $m1 0 $m9 0]
+set c2 [addConnection $m9 0 $m5 0]
+set c3 [addConnection $m9 0 $m2 0]
+set c4 [addConnection $m5 0 $m7 0]
+set c5 [addConnection $m5 0 $m6 0]
+set c6 [addConnection $m3 0 $m4 0]
+set c7 [addConnection $m2 0 $m8 0]
+set c8 [addConnection $m9 0 $m4 1]
+set c9 [addConnection $m4 0 $m7 1]
+set c10 [addConnection $m4 0 $m6 1]
+set c11 [addConnection $m2 1 $m8 1]
+set c12 [addConnection $m7 0 $m8 2]
+set c13 [addConnection $m6 0 $m8 3]
+
+# Set GUI variables for the SCIRun->DataIO->FieldReader Module
+set $m1-filename "/home/dickson/Digital_Human_Work/VS_atlas/SCIRun-converted/vs-data.lvs.fld"
+set $m1-filetype {SCIRun Field File (*.fld)}
+
+# Set GUI variables for the VS->DataFlow->HotBox Module
+set $m2-gui_label1 {accessory hemiazygous vein}
+set $m2-gui_label2 {all ribs}
+set $m2-gui_label3 {anterior ascending br left pulmonary}
+set $m2-gui_label4 {anterior ascending br right pulmonary}
+set $m2-gui_label5 {unknown}
+set $m2-gui_label6 {anterior basal br inferior rt pul vein}
+set $m2-gui_label7 {anterior basal br of left pulmonary}
+set $m2-gui_label8 {anterior basal br right pulmonary}
+set $m2-gui_label9 {anterior br superior lt pul vein}
+set $m2-anatomydatasource {/home/dickson/Digital_Human_Work/VS_atlas/csv/MasterAnatomy.csv}
+set $m2-adjacencydatasource {/home/dickson/Digital_Human_Work/VS_atlas/csv/AdjacencyMapping.csv}
+set $m2-boundingboxdatasource {/home/dickson/Digital_Human_Work/VS_atlas/csv/AnatomyBoundingBoxes.csv}
+set $m2-injurylistdatasource {/home/dickson/Digital_Human_Work/oqafma_c_stub/LabelMapInjList.xml}
+set $m2-currentselection {unknown}
+
+# Open the VS->DataFlow->HotBox UI
+$m2 initialize_ui
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m4-min {0.0}
+set $m4-max {436.0}
+
+# Set GUI variables for the SCIRun->Visualization->GLTextureBuilder Module
+set $m5-max_brick_dim {128}
+set $m5-sel_brick_dim {128}
+set $m5-min {0.0}
+set $m5-max {436.0}
+
+# Set GUI variables for the SCIRun->Visualization->TextureVolVis Module
+set $m6-draw_mode {1}
+set $m6-alpha_scale {-0.828}
+
+# Set GUI variables for the SCIRun->Visualization->TexCuttingPlanes Module
+set $m7-control_pos_saved {1}
+set $m7-control_x {84.6515502494}
+set $m7-control_y {39.4048148587}
+set $m7-control_z {51.9415368998}
+set $m7-drawX {1}
+set $m7-drawY {1}
+set $m7-drawZ {1}
+set $m7-interp_mode {0}
+set $m7-cyl_active {0}
+
+$m8 addViewer
+set $m8-ViewWindow_0-geometry 654x638+504+294
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m8-ViewWindow_0-view-eyep-x {49.2648387398}
+set $m8-ViewWindow_0-view-eyep-y {-576.981601609}
+set $m8-ViewWindow_0-view-eyep-z {109.114714615}
+set $m8-ViewWindow_0-view-lookat-x {74.4947605799}
+set $m8-ViewWindow_0-view-lookat-y {41.3516582175}
+set $m8-ViewWindow_0-view-lookat-z {63.6553220715}
+set $m8-ViewWindow_0-view-up-x {-0.0347018616431}
+set $m8-ViewWindow_0-view-up-y {-0.0718687893699}
+set $m8-ViewWindow_0-view-up-z {-0.996810241677}
+set $m8-ViewWindow_0-view-fov {20.0}
+set $m8-ViewWindow_0-sr {1}
+set $m8-ViewWindow_0-do_stereo {0}
+set $m8-ViewWindow_0-ortho-view {0}
+set $m8-ViewWindow_0-trackViewWindow0 {1}
+set $m8-ViewWindow_0-raxes {1}
+set $m8-ViewWindow_0-ambient-scale {1.0}
+set $m8-ViewWindow_0-diffuse-scale {1.0}
+set $m8-ViewWindow_0-specular-scale {0.4}
+set $m8-ViewWindow_0-emission-scale {1.0}
+set $m8-ViewWindow_0-shininess-scale {1.0}
+set $m8-ViewWindow_0-polygon-offset-factor {1.0}
+set $m8-ViewWindow_0-polygon-offset-units {0.0}
+set $m8-ViewWindow_0-point-size {1.0}
+set $m8-ViewWindow_0-line-width {1.0}
+set $m8-ViewWindow_0-sbase {0.4}
+set $m8-ViewWindow_0-bgcolor-r {0.0}
+set $m8-ViewWindow_0-bgcolor-g {0.0}
+set $m8-ViewWindow_0-bgcolor-b {0.0}
+set $m8-ViewWindow_0-fogusebg {1}
+set $m8-ViewWindow_0-fogcolor-r {0.0}
+set $m8-ViewWindow_0-fogcolor-g {0.0}
+set $m8-ViewWindow_0-fogcolor-b {1.0}
+set $m8-ViewWindow_0-fog-start {0.0}
+set $m8-ViewWindow_0-fog-end {0.714265}
+set $m8-ViewWindow_0-fog-visibleonly {1}
+set $m8-ViewWindow_0-currentvisual {0}
+set $m8-ViewWindow_0-caxes {0}
+set $m8-ViewWindow_0-global-light0 {1}
+set $m8-ViewWindow_0-global-light1 {0}
+set $m8-ViewWindow_0-global-light2 {0}
+set $m8-ViewWindow_0-global-light3 {0}
+set $m8-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m8-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m8-ViewWindow_0-global-light {1}
+set $m8-ViewWindow_0-global-fog {0}
+set $m8-ViewWindow_0-global-debug {0}
+set $m8-ViewWindow_0-global-clip {1}
+set $m8-ViewWindow_0-global-cull {0}
+set $m8-ViewWindow_0-global-dl {0}
+set $m8-ViewWindow_0-global-type {Gouraud}
+set "$m8-ViewWindow_0-HotBox Sticky (1)" {1}
+set "$m8-ViewWindow_0-Probe Selection Widget (2)" {1}
+set "$m8-ViewWindow_0-Volume Slicer (3)" {1}
+set "$m8-ViewWindow_0-Control Widget (3)" {1}
+set "$m8-ViewWindow_0-VolumeRenderer Transparent (4)" {1}
+set "$m8-ViewWindow_0-Control Widget (4)" {1}
+
+# Set GUI variables for the SCIRun->FieldsData->ChangeFieldDataType Module
+set $m9-outputdatatype {unsigned int}
+
+
+::netedit scheduleok
