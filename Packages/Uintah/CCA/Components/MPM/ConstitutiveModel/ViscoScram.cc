@@ -193,14 +193,13 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
-    old_dw->get(pCrackRadius,        lb->pCrackRadiusLabel,        pset);
     old_dw->get(statedata,           p_statedata_label,            pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
+    new_dw->allocate(pCrackRadius,   lb->pCrackRadiusLabel,        pset);
     ASSERTEQ(pset, statedata.getParticleSubset());
-    ASSERTEQ(pset, pCrackRadius.getParticleSubset());
 
     NCVariable<Vector> gvelocity;
 
