@@ -13,5 +13,6 @@ SRCS     += \
 	$(SRCDIR)/HypoElastic.cc 
 
 PSELIBS := Packages/Uintah/Core/Grid \
-	Packages/Uintah/CCA/Components/ICE
+	Packages/Uintah/CCA/Components/ICE \
+	Packages/Uintah/CCA/Components/HETransformation
 

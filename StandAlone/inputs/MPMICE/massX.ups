@@ -193,8 +193,7 @@
     <MaterialProperties>
         <MPM>
             <material>
-                <burn>
-                  <type>simple</type>
+                <burn type = "simple" >
 		  <ThresholdTemp> 600 </ThresholdTemp>
 		  <ThresholdPressure> 500 </ThresholdPressure>
 	          <Enthalpy> 1.0 </Enthalpy>
@@ -234,6 +233,7 @@
 
 	<ICE>
 	  <material>
+	    <burn type = "null" />
 	    <ideal_gas>
 		<gas_constant>            287             </gas_constant>
 	    </ideal_gas>
