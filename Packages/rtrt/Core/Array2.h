@@ -14,7 +14,7 @@
 #ifndef Package_rtrt_Core_Array2_h
 #define Package_rtrt_Core_Array2_h 1
 
-#include <sci_config.h>
+#include <sci_defs/template_defs.h>
 
 namespace rtrt {
 template<class T> class Array2;
