@@ -134,8 +134,11 @@ void IsoSurface::execute()
 	need_seed=0;
     }
     if(do_3dwidget){
-	widget_scale=0.05*field->longest_dimension();
+	widget_scale=0.01*field->longest_dimension();
 	if(!widget){
+	    Point min, max;
+	    field->get_bounds(min, max);
+	    seed_point=Interpolate(min, max, 0.5);
 	    widget_sphere=new GeomSphere(seed_point, 1*widget_scale);
 	    Vector grad(field->gradient(seed_point));
 	    if(grad.length2() < 1.e-6){
@@ -198,6 +201,8 @@ void IsoSurface::execute()
 	widget_disc->adjust();
     }
     ObjGroup* group=new ObjGroup;
+    group->set_matl(new MaterialProp(Color(0,0,0), Color(0,.6,0),
+				     Color(0,0.5,0), 20));
     ScalarFieldRG* regular_grid=field->getRG();
     ScalarFieldUG* unstructured_grid=field->getUG();
     if(regular_grid){

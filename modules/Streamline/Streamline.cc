@@ -153,6 +153,8 @@ void Streamline::execute()
     if(need_p1){
 	Point min, max;
 	field->get_bounds(min, max);
+	cerr << "min=" << min.string() << endl;
+	cerr << "max=" << max.string() << endl;
 	p1=Interpolate(min, max, 0.5);
 	double s=field->longest_dimension();
 	p2=p1+Vector(1,0,0)*(s/10);
@@ -163,6 +165,7 @@ void Streamline::execute()
 	need_p1=0;
     }
     widget_scale=0.01*field->longest_dimension();
+    cerr << "longest_dimension=" << field->longest_dimension() << endl;
     if(widgettype_changed){
 	widgettype_changed=0;
 	cerr << "REbuilding widget" << endl;
@@ -254,6 +257,8 @@ void Streamline::execute()
 	break;
     }
     ObjGroup* group=new ObjGroup;
+    group->set_matl(new MaterialProp(Color(0,0,0), Color(0,0,.6),
+				     Color(0,0,0.5), 20));
 
     // Temporary algorithm...
     Array1<SLine*> slines;

@@ -12,13 +12,14 @@
  */
 
 #include <SurfToGeom/SurfToGeom.h>
-#include <Surface.h>
-#include <SurfacePort.h>
 #include <Geom.h>
 #include <GeometryPort.h>
 #include <ModuleList.h>
 #include <MUI.h>
 #include <NotFinished.h>
+#include <ScalarFieldPort.h>
+#include <Surface.h>
+#include <SurfacePort.h>
 #include <iostream.h>
 #include <fstream.h>
 
@@ -37,6 +38,7 @@ SurfToGeom::SurfToGeom()
     // Create the input port
     isurface=new SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);
     add_iport(isurface);
+    add_iport(new ScalarFieldIPort(this, "ScalarField", ScalarFieldIPort::Atomic));
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 }
