@@ -50,10 +50,7 @@ endif
    SCI_WORK variable in the lines which you added to your .cshrc to
    reflect these changes.
 
-7) Build the lib directory, by typing:
-   tar xvf etc/lib.tar
-
-8) Configure SCIRun.  First, type:
+7) Configure SCIRun.  First, type:
    chmod +x sci_config
    then,
    sci_config
