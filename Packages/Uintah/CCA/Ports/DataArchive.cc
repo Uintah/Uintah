@@ -438,7 +438,7 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid,
   if (i == indices.size()) {
     // timestep not found
     ostringstream message;
-    message << "Timestep " << i << " not found";
+    message << "Timestep " << timestep << " not found";
     throw InternalError(message.str());
   }
 
