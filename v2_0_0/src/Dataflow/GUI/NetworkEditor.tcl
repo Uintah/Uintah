@@ -387,6 +387,14 @@ proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } } {
     # be read in if the modules change categories.
     set category [netedit getCategoryName $package $category $module]
     set modid [netedit addmodule "$package" "$category" "$module"]
+
+
+    global inserting insertPosition Subnet
+    set canvas $Subnet(Subnet$Subnet(Loading)_canvas)
+    set Subnet($modid) $Subnet(Loading)
+    set Subnet(${modid}_connections) ""
+    lappend Subnet(Subnet$Subnet(Loading)_Modules) $modid
+
     set className [join "${package}_${category}_${module}" ""]
     # Create the itcl object
     if {[catch "$className $modid" exception]} {
@@ -396,13 +404,8 @@ proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } } {
 	}
 	Module $modid -name "$module"
     }
-    # compute position if we're inserting the net to the right    
-    global inserting insertPosition Subnet
-    set canvas $Subnet(Subnet$Subnet(Loading)_canvas)
-    set Subnet($modid) $Subnet(Loading)
-    set Subnet(${modid}_connections) ""
-    lappend Subnet(Subnet$Subnet(Loading)_Modules) $modid
 
+    # compute position if we're inserting the net to the right    
     if { $inserting && !$insertPosition } {
 	global modulesBbox
 	set xpos [expr int([expr $xpos+[lindex $modulesBbox 2]])]
