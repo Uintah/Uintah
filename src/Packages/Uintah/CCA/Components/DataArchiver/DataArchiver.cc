@@ -256,7 +256,7 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
        char* p = base+strlen(base);
        for(;p>=base;p--){
 	 if(*p == '/'){
-	   *p=0;
+	   *++p=0; // keep trailing slash
 	   break;
 	 }
        }
@@ -711,7 +711,10 @@ void DataArchiver::createIndexXML(Dir& dir)
    rootElem->appendElement("numberOfProcessors", d_myworld->size());
 
    ProblemSpecP metaElem = rootElem->appendChild("Meta");
-   metaElem->appendElement("username", getenv("LOGNAME"));
+
+   // Some systems dont supply a logname
+   const char * logname = getenv("LOGNAME");
+   if(logname) metaElem->appendElement("username", logname);
 
    time_t t = time(NULL) ;
    
@@ -966,6 +969,7 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 	  patchElem->appendElement("id", patch->getID());
 	  patchElem->appendElement("lowIndex", patch->getCellLowIndex());
 	  patchElem->appendElement("highIndex", patch->getCellHighIndex());
+          patchElem->appendElement("nnodes", patch->getNNodes());
 	  patchElem->appendElement("lower", box.lower());
 	  patchElem->appendElement("upper", box.upper());
 	  patchElem->appendElement("totalCells", patch->totalCells());
