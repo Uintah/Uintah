@@ -33,6 +33,7 @@ extern "C" {
 #include <Packages/MIT/Dataflow/Modules/Metropolis/IUniformPDSimPart.h>
 #include <Packages/MIT/Dataflow/Modules/Metropolis/ItPDSimPart.h>
 #include <Packages/MIT/Dataflow/Modules/Metropolis/RtPDSimPart.h>
+#include <Packages/MIT/Dataflow/Modules/Metropolis/RUPDSimPart.h>
 #include <Packages/MIT/Dataflow/Modules/Metropolis/MultivariateNormalDSimPart.h>
 #include <Packages/MIT/Dataflow/Modules/Metropolis/Sampler.h>
 
@@ -78,6 +79,7 @@ Sampler::Sampler(const string& id)
   pdsim_.add_part( new         IGaussianPDSimPart( this, 0, "IG" ) );
   pdsim_.add_part( new                ItPDSimPart( this, 0, "It" ) );
   pdsim_.add_part( new                RtPDSimPart( this, 0, "Rt" ) );
+  pdsim_.add_part( new                RUPDSimPart( this, 0, "RU" ) );
 
   graph_ = 0;
 
