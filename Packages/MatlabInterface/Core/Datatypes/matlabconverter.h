@@ -405,7 +405,7 @@ public:
 	template<class MESH>    void mladdedgesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num);
 	template<class MESH>    void mladdfacesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num);
 	template<class MESH>    void mladdcellsfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num);
-	template<class MESH>	void matlabconverter::mladdtransform(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
+	template<class MESH>	void mladdtransform(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
 	
 	void mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructCurveMesh> meshH,matlabarray mlarray);
 	void mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructQuadSurfMesh> meshH,matlabarray mlarray);
