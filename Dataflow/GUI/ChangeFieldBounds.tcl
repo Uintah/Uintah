@@ -27,6 +27,12 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
 	global $this-firstwidth
 	set $this-firstwidth 12
 
+	global $this-box-scale
+	set $this-box-scale -1.0
+
+	global $this-resetting
+	set $this-resetting 0
+
 	# these won't be saved 
         global $this-inputcenterx
         global $this-inputcentery
@@ -80,11 +86,6 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
 	    $this-inputsizex $this-inputsizey $this-inputsizez
 	pack $att.l1 $att.l2 -side top -fill x
 
-	frame $w.copy
-	pack $w.copy -side top -padx 5 -pady 5
-	button $w.copy.copy -text "Copy Input To Output" -command "$this copy_attributes"
-	pack $w.copy.copy -side top
-
 	iwidgets::Labeledframe $w.edit -labelpos nw \
 		               -labeltext "Output Field Attributes" 
 	pack $w.edit -side top
@@ -104,7 +105,17 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
 	frame $w.exec
 	pack $w.exec -side bottom -padx 5 -pady 5
 	button $w.exec.execute -text "Execute" -command "$this-c needexecute"
-	pack $w.exec.execute -side top
+	button $w.exec.reset -text "Reset Widget" -command "$this reset"
+	button $w.exec.copy -text "Copy Input To Output" \
+	    -command "$this copy_attributes"
+	pack $w.exec.execute $w.exec.reset $w.exec.copy \
+	    -side left -padx 15 -pady 5
+    }
+
+    method reset {} {
+	global $this-resetting
+	set $this-resetting 1
+	$this-c needexecute
     }
 
     method labelpair3 { win text1 text2x text2y text2z } {
@@ -162,7 +173,7 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
 	label $win.l5 -width 40
 	pack $win.b $win.l1 $win.colon -side left
 	pack $win.l2 $win.l3 $win.l4 $win.l5 -padx 5 -side left
-	
+
 	bind $win.l2 <Return> $func
 	bind $win.l3 <Return> $func
 	bind $win.l4 <Return> $func
