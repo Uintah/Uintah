@@ -1,6 +1,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -597,6 +598,49 @@ void setBC(CCVariable<Vector>& var_CC,
   }  // faces loop
 }
 #endif
+
+/* --------------------------------------------------------------------- 
+ Function~  is_BC_specified--
+ Purpose~   examines the each face in the boundary condition section
+            of the input file and tests to make sure that each (variable)
+            has a boundary conditions specified.
+ ---------------------------------------------------------------------  */
+void is_BC_specified(const ProblemSpecP& prob_spec, string variable)
+{
+  // search the BoundaryConditions problem spec
+  // determine if variable bcs have been specified
+  
+  ProblemSpecP grid_ps= prob_spec->findBlock("Grid");
+  ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions");
+ 
+  // loop over all faces
+  for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
+                    face_ps=face_ps->findNextBlock("Face")) {
+   
+    bool bc_specified = false;
+    map<string,string> face;
+    face_ps->getAttributes(face);
+    
+    // loop over all BCTypes  
+    for(ProblemSpecP bc_iter = face_ps->findBlock("BCType"); bc_iter != 0;
+                     bc_iter = bc_iter->findNextBlock("BCType")){
+      map<string,string> bc_type;
+      bc_iter->getAttributes(bc_type);
+      
+      if (bc_type["label"] == variable || bc_type["label"] == "Symmetric") {
+         bc_specified = true;
+      }
+    }
+    //  I haven't found them so get mad.
+    if (!bc_specified){
+      ostringstream warn;
+      warn <<"\n__________________________________\n"  
+           << "ERROR: The boundary condition for ( " << variable
+           << " ) was not specified on face " << face["side"] << endl;
+      throw ProblemSetupException(warn.str());
+    }
+  }
+}
 
 //______________________________________________________________________
 //______________________________________________________________________
