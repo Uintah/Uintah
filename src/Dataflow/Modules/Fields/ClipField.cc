@@ -49,14 +49,17 @@ private:
   ScalarFieldInterface *sfi_;
   string function_;
   GuiInterface *gui_;
-  
+  string id_;
+
 public:
   ScalarClipper(ScalarFieldInterface *sfi,
 		string function,
-		GuiInterface *gui) :
+		GuiInterface *gui,
+		string id) :
     sfi_(sfi),
     function_(function),
-    gui_(gui)
+    gui_(gui),
+    id_(id)
   { 
   }
 
@@ -66,7 +69,9 @@ public:
     if (sfi_->interpolate(val, p))
     {
       string result;
-      gui_->eval("set x " + to_string(val) + " ; expr " + function_, result);
+      gui_->eval(id_ + " functioneval " +
+		 to_string(val) + " {" + function_ + "}",
+		 result);
       if (result == "1")
       {
 	return true;
@@ -74,6 +79,8 @@ public:
     }
     return false;
   }
+
+  virtual bool mesh_p() { return true; }
 };
 
 
@@ -231,7 +238,7 @@ ClipField::execute()
     ScalarFieldInterface *sfi = ifieldhandle->query_scalar_interface();
     if (sfi)
     {
-      clipper_ = scinew ScalarClipper(sfi, clipfunction_.get(), gui);
+      clipper_ = scinew ScalarClipper(sfi, clipfunction_.get(), gui, id);
       do_clip_p = true;
     }
     else
@@ -298,7 +305,7 @@ ClipField::execute()
     clipper_ = box_->get_clipper();
     do_clip_p = true;
   }
-  else if (exec_mode_.get() == "execute")
+  else if (exec_mode_.get() == "execute" && !usefunction_.get())
   {
     undo_stack_.push(clipper_);
     ClipperHandle ctmp = box_->get_clipper();
