@@ -25,8 +25,8 @@ namespace Datatypes {
 
 using SCICore::Containers::Array2;
 using SCICore::Containers::clString;
-using SCICore::CoreDatatypes::DenseMatrix;
-using SCICore::CoreDatatypes::VoidStar;
+using SCICore::Datatypes::DenseMatrix;
+using SCICore::Datatypes::VoidStar;
 using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
 
@@ -83,6 +83,9 @@ public:
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.2  1999/08/25 03:35:47  sparker
+// *** empty log message ***
+//
 // Revision 1.1  1999/08/23 02:52:56  dmw
 // Dave's Datatypes
 //

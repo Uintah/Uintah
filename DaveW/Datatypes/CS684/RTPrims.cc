@@ -32,7 +32,7 @@ namespace DaveW {
 namespace Datatypes {
 
 using SCICore::Math::Abs;
-using SCICore::CoreDatatypes::TSElement;
+using SCICore::Datatypes::TSElement;
 
 using namespace SCICore::PersistentSpace;
 using namespace SCICore::GeomSpace;
@@ -976,7 +976,7 @@ static Persistent* make_RTTrin()
 
 #define RTTrin_VERSION 1
 void RTTrin::io(Piostream& stream) {
-    using SCICore::CoreDatatypes::Pio;
+    using SCICore::Datatypes::Pio;
     using SCICore::Geometry::Pio;
     using SCICore::Containers::Pio;
 
@@ -1191,6 +1191,9 @@ void Pio(Piostream& stream, RTLight& l)
 
 //
 // $Log$
+// Revision 1.2  1999/08/25 03:35:47  sparker
+// *** empty log message ***
+//
 // Revision 1.1  1999/08/23 02:52:57  dmw
 // Dave's Datatypes
 //
