@@ -117,23 +117,23 @@ void InsertVoltageSource::execute() {
   tvm->size(tvm_ncells);
 
   TriSurfMesh::Node::iterator tsm_ni, tsm_ne;
-  TriSurfMesh::Cell::iterator tsm_ci, tsm_ce;
+  TriSurfMesh::Face::iterator tsm_fi, tsm_fe;
 
   TetVolMesh::Node::array_type nbrs(4);
 
-  Array1<Array1<pair<double, double> > > contrib;
+  Array1<Array1<pair<double, double> > > contrib(tvm_nnodes);
   Array1<TetVolMesh::Node::index_type> have_some;
   tsm->begin(tsm_ni); tsm->end(tsm_ne);
-  tsm->begin(tsm_ci); tsm->end(tsm_ce);
+  tsm->begin(tsm_fi); tsm->end(tsm_fe);
 
   // for each surface data_at position/value...
-  while (tsm_ci != tsm_ce && tsm_ni != tsm_ne) {
+  while (tsm_fi != tsm_fe && tsm_ni != tsm_ne) {
     Point pt;
     double val;
-    if (triSurf->data_at() == Field::CELL) {
-      tsm->get_center(pt, *tsm_ci);
-      val = triSurf->fdata()[*tsm_ci];
-      ++tsm_ci;
+    if (triSurf->data_at() == Field::FACE) {
+      tsm->get_center(pt, *tsm_fi);
+      val = triSurf->fdata()[*tsm_fi];
+      ++tsm_fi;
     } else {
       tsm->get_center(pt, *tsm_ni);
       val = triSurf->fdata()[*tsm_ni];
