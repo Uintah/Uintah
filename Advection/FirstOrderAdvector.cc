@@ -26,7 +26,7 @@ FirstOrderAdvector::FirstOrderAdvector(DataWarehouse* new_dw,
   OFS_CCLabel = VarLabel::create("OFS_CC",
                              CCVariable<fflux>::getTypeDescription());
 
-  new_dw->allocate(d_OFS, OFS_CCLabel,0, patch, Ghost::AroundCells,1);
+  new_dw->allocateTemporary(d_OFS,  patch, Ghost::AroundCells,1);
 }
 
 
