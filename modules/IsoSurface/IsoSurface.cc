@@ -58,9 +58,9 @@ IsoSurface::IsoSurface()
     value_slider=new MUI_slider_real("IsoContour value", &isoval,
 			       MUI_widget::Immediate, 1);
     add_ui(value_slider);
-//    have_seedpoint=0;
+    have_seedpoint=0;
 //    seed_point=Point(0,0,0);
-    have_seedpoint=1;
+//    have_seedpoint=1;
     seed_point=Point(8,8,8);
     add_ui(new MUI_point("Seed Point", &seed_point,
 			 MUI_widget::Immediate, 1));
