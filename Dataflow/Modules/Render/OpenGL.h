@@ -201,7 +201,6 @@ protected:
 
   void getData(int datamask, FutureValue<GeometryData*>* result);
 
-
 private:
 
   GuiInterface* gui;
@@ -210,8 +209,8 @@ private:
   Window win;
   Display* dpy;
   GLXContext cx;
-#if defined(HAVE_PBUFFER)
   bool have_pbuffer_;
+#if defined(HAVE_PBUFFER)
   PBuffer pbuffer;
 #endif
   int maxlights;
