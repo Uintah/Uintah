@@ -30,6 +30,8 @@ double IdealGas::getGasConstant() const
   return d_gas_constant;
 }
 
+#if 1
+// EXTRA?
 void IdealGas::initializeEOSData(const Patch* patch, const ICEMaterial* matl,
 			    DataWarehouseP& new_dw)
 {
@@ -75,7 +77,6 @@ void IdealGas::addComputesAndRequiresPEOS(Task* task,
 }
 
 
-
 void IdealGas::computeSpeedSound(const Patch* patch,
                                  const ICEMaterial* matl,
                                  DataWarehouseP& old_dw,
@@ -100,14 +101,15 @@ void IdealGas::computeSpeedSound(const Patch* patch,
     double press    = (gamma - 1.0)   * rho_micro[*iter]*cv[*iter]*temp[*iter];
     double denom    = rho_micro[*iter]*rho_micro[*iter];
     speedSound[*iter] =  sqrt(dp_drho + dp_de* (press/(denom)));
-#if 0
-    cout << "speedSound"<<*iter<<"="<<speedSound[*iter]<<endl;
-#endif
   }
 
   new_dw->put(speedSound,lb->speedSound_CCLabel,dwindex,patch);
 }
+#endif
 
+
+//__________________________________
+//
 double IdealGas::computeRhoMicro(double& press, double& gamma,
 				 double& cv, double& Temp)
 {
@@ -115,6 +117,23 @@ double IdealGas::computeRhoMicro(double& press, double& gamma,
   return  press/((gamma - 1.0)*cv*Temp);
 }
 
+//__________________________________
+//
+void IdealGas::computeTemp_CC(const Patch* patch,
+                                const CCVariable<double>& press, 
+                                const double& gamma,
+				    const CCVariable<double>& cv,
+                                const CCVariable<double>& rho_micro, 
+                                CCVariable<double>& Temp)
+{
+  for (CellIterator iter = patch->getCellIterator();!iter.done();iter++) {   
+                    
+    Temp[*iter]= press[*iter]/ ( (gamma - 1.0) * cv[*iter] * rho_micro[*iter] );
+  }
+}
+
+//__________________________________
+//
 void IdealGas::computePressEOS(double& rhoM, double& gamma,
 			       double& cv, double& Temp,
 			       double& press, double& dp_drho, double& dp_de)
@@ -126,6 +145,9 @@ void IdealGas::computePressEOS(double& rhoM, double& gamma,
 }
 
 
+
+#if 1
+// EXTRA??
 void IdealGas::computeRhoMicro(const Patch* patch,
 			       const ICEMaterial* matl,
                                DataWarehouseP& old_dw,
@@ -178,3 +200,4 @@ void IdealGas::computePressEOS(const Patch* patch,
 
   new_dw->put(press,lb->press_CCLabel,dwindex,patch);
 }
+#endif
