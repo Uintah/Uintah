@@ -2,6 +2,7 @@
 // $Id$
 
 #include <Uintah/Components/Schedulers/RoundRobinLoadBalancer.h>
+#include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Components/Schedulers/TaskGraph.h>
 #include <Uintah/Parallel/ProcessorGroup.h>
 #include <Uintah/Parallel/Parallel.h>
@@ -61,6 +62,10 @@ int RoundRobinLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
 
 //
 // $Log$
+// Revision 1.5.2.1  2000/09/29 06:09:55  sparker
+// g++ warnings
+// Support for sending only patch edges
+//
 // Revision 1.5  2000/09/28 22:18:35  dav
 // assignResource updates
 //

@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 #include <Uintah/Components/Schedulers/ThreadPool.h>
 
@@ -8,6 +9,7 @@ static char *id="@(#) $Id$";
 
 #include <iostream>
 #include <stdio.h>
+
 using std::cerr;
 using namespace Uintah;
 using SCICore::Exceptions::InternalError;
@@ -183,6 +185,10 @@ ThreadPool::getFinishedTasks( vector<Task *> & finishedTasks )
 
 //
 // $Log$
+// Revision 1.3.2.1  2000/09/29 06:09:55  sparker
+// g++ warnings
+// Support for sending only patch edges
+//
 // Revision 1.3  2000/09/28 23:16:45  jas
 // Added (int) for anything returning the size of a STL component.  Added
 // <algorithm> and using std::find.  Other minor modifications to get

@@ -5,6 +5,7 @@
 
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/Grid.h>
+#include <Uintah/Grid/Task.h>
 #include <Uintah/Components/Schedulers/DWDatabase.h>
 
 #include <map>
@@ -170,11 +171,13 @@ public:
 
    void sendMPI(const VarLabel* label, int matlIndex,
 		const Patch* patch, const ProcessorGroup* world,
-		int dest, int tag, int* size, MPI_Request* requestid);
+		const Task::Dependency*, int dest,
+		int tag, int* size, MPI_Request* requestid);
    void recvMPI(DataWarehouseP& old_dw, 
 		const VarLabel* label, int matlIndex,
 		const Patch* patch, const ProcessorGroup* world,
-		int dest, int tag, int* size, MPI_Request* requestid);
+		const Task::Dependency*, int src,
+		int tag, int* size, MPI_Request* requestid);
    void reduceMPI(const VarLabel* label, const ProcessorGroup* world);
 private:
 
@@ -230,6 +233,10 @@ private:
 
 //
 // $Log$
+// Revision 1.39.4.1  2000/09/29 06:09:54  sparker
+// g++ warnings
+// Support for sending only patch edges
+//
 // Revision 1.39  2000/09/28 02:15:51  dav
 // updates due to not sending 0 particles
 //
