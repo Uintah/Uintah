@@ -914,7 +914,6 @@ extern "C"
 		double* sew, double* sns, double* stb,
 		double* delta_t);
 
-}
 
 
 // multimaterial functions
@@ -926,6 +925,8 @@ FORT_MMCELLTYPEINIT(const int* domainLow, const int* domainHigh,
 		    double* voidFrac, int* celltype, 
 		    const int* mmwallid, const int* mmflowid, 
 		    const double* cutoff);
+
+}
 
 #endif
 
