@@ -738,6 +738,21 @@ HexVolMesh::locate(Face::index_type &face, const Point &p)
 bool
 HexVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
+#if 1
+  Cell::iterator bi, ei;
+  begin(bi);
+  end(ei);
+  while (bi != ei)
+  {
+    if (inside8_p(*bi, p))
+    {
+      cell = *bi;
+      return true;
+    }
+    ++bi;
+  }
+  return false;
+#else
   ASSERTMSG(synchronized_ & LOCATE_E,
 	    "Must call synchronize LOCATE_E on HexVolMesh first");
   if (grid_.get_rep() == 0)
@@ -758,6 +773,7 @@ HexVolMesh::locate(Cell::index_type &cell, const Point &p)
     ++iter;
   }
   return false;
+#endif
 }
 
 
@@ -903,6 +919,8 @@ HexVolMesh::compute_grid()
   Cell::size_type csize;  size(csize);
   const int s = ((int)ceil(pow((double)csize , one_third))) / 2 + 2;
   const Vector cell_epsilon = bb.diagonal() * (0.01 / s);
+  bb.extend(bb.min() - cell_epsilon);
+  bb.extend(bb.max() + cell_epsilon);
 
   LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
   grid_ = scinew LatVolField<vector<Cell::index_type> >(mesh, Field::CELL);
@@ -968,7 +986,7 @@ HexVolMesh::inside8_p(Cell::index_type i, const Point &p) const
     const Vector normal = Cross(v0, v1);
     const Vector off0(p - p0);
     const Vector off1(center - p0);
-    if (Dot(off0, normal) * Dot(off1, normal) < -1.0e-6)
+    if (Dot(off0, normal) * Dot(off1, normal) < -1.0e-12)
     {
       return false;
     }
