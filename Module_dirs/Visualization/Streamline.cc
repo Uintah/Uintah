@@ -585,9 +585,8 @@ SLPointSource::~SLPointSource()
 
 void SLPointSource::find(const Point& start, const Vector&, double scale)
 {
-    pw->Configure(start);
+    pw->SetPosition(start);
     pw->SetScale(scale/5);
-    pw->execute();
 }
 
 Point SLPointSource::trace_start(double s, double t)
