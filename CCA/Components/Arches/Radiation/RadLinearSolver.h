@@ -4,7 +4,7 @@
 
 #include <sci_defs/petsc_defs.h>
 
-#include <Packages/Uintah/CCA/Components/Arches/LinearSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/Radiation/RadiationSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
@@ -55,7 +55,7 @@ WARNING
 
 ****************************************/
 
-class RadLinearSolver {
+class RadLinearSolver: public RadiationSolver {
 
 public:
 
@@ -83,10 +83,13 @@ public:
 		     ArchesVariables* vars,
 		     bool xplus, bool yplus, bool zplus,
 		     CCVariable<double>& SU,
-			   CCVariable<double>& AB,
-			   CCVariable<double>& AS,
-			   CCVariable<double>& AW,
-		     CCVariable<double>& AP);
+		     CCVariable<double>& AB,
+		     CCVariable<double>& AS,
+		     CCVariable<double>& AW,
+		     CCVariable<double>& AP,
+		     CCVariable<double>& AE,
+		     CCVariable<double>& AN,
+		     CCVariable<double>& AT);
 
       bool radLinearSolve();
 

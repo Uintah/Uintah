@@ -267,7 +267,11 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
 			   CCVariable<double>& AB,
 			   CCVariable<double>& AS,
 			   CCVariable<double>& AW,
-			   CCVariable<double>& AP)
+			   CCVariable<double>& AP,
+			   CCVariable<double>& AE,
+			   CCVariable<double>& AN,
+			   CCVariable<double>& AT)
+
 {
   int ierr;
   ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,

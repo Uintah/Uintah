@@ -8,12 +8,17 @@ SRCDIR   := Packages/Uintah/CCA/Components/Arches/Radiation
 
 SRCS += \
 	$(SRCDIR)/RadiationModel.cc \
+        $(SRCDIR)/RadiationSolver.cc \
 	$(SRCDIR)/DORadiationModel.cc
 
 ifeq ($(HAVE_PETSC),yes)
   SRCS += $(SRCDIR)/RadLinearSolver.cc
 else
   SRCS += $(SRCDIR)/FakeRadLinearSolver.cc
+endif
+
+ifeq ($(HAVE_HYPRE),yes)
+  SRCS += $(SRCDIR)/RadHypreSolver.cc
 endif
 
 PSELIBS := \
@@ -33,6 +38,10 @@ ifneq ($(HAVE_PETSC),)
 LIBS := $(LIBS) $(PETSC_LIBRARY) 
 endif
 
+ifneq ($(HAVE_HYPRE),)
+LIBS := $(LIBS) $(HYPRE_LIBRARY) 
+endif
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rordr_fort.h
@@ -41,14 +50,15 @@ $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rordrtn_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/radarray_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/radcal_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/radcoef_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/radcoefthin_fort.h
+$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/radwsgg_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdombc_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdomsolve_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdomsrc_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdomflux_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdombmcalc_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdomvolq_fort.h
-
+$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rshsolve_fort.h
+$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rshresults_fort.h
 
 
 

@@ -146,6 +146,7 @@ namespace Uintah {
       CCVariable<double> ESRCG;
       CCVariable<double> src;
       CCVariable<double> cenint;
+      CCVariable<double> shgamma;
 
       // multimaterial variables
       CCVariable<double> voidFraction;
