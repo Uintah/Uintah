@@ -65,11 +65,13 @@ TypeInfo::~TypeInfo()
 int TypeInfo::computeVtableOffset(const TypeInfo* ti) const
 {
   TypeInfo_internal::MapType::iterator iter=d_priv->classname_map.find(ti->d_priv->fullclassname);
-  if(iter == d_priv->classname_map.end()){
-    throw SCIRun::InternalError("computeVtableOffset: "+ti->d_priv->fullclassname+" should be an ancestor of "+d_priv->fullclassname+", but is not!");
+  if (iter == d_priv->classname_map.end()) {
+    throw SCIRun::InternalError("computeVtableOffset: " +
+	ti->d_priv->fullclassname +
+	" should be an ancestor of " +
+	d_priv->fullclassname +
+	", but is not!");
   }
-  if(iter->second.first->uuid != ti->d_priv->uuid)
-    throw SCIRun::InternalError("UUID mismatch in computeVtableOffset");
   return iter->second.second-vtable_methods_start;
 }
 
@@ -90,13 +92,10 @@ Object* TypeInfo::pidl_cast(Object* obj) const
 
   // Size the message
   int classname_size=d_priv->fullclassname.length();
-  int uuid_size=d_priv->uuid.length();
 
   // Pack the message
   message->marshalInt(&classname_size);
   message->marshalChar(const_cast<char*>(d_priv->fullclassname.c_str()),classname_size);
-  message->marshalInt(&uuid_size); 
-  message->marshalChar(const_cast<char*>(d_priv->uuid.c_str()),uuid_size);
 
   int addRef=1; //Tell the isa handler to increment the ref count on the object
   message->marshalInt(&addRef);
@@ -155,18 +154,14 @@ Object* TypeInfo::pidl_cast(Object* obj) const
 }
 
 
-int TypeInfo::isa(const std::string& classname, const std::string& uuid) const
+int TypeInfo::isa(const std::string& classname /*, const std::string& uuid*/) const
 {
-  TypeInfo_internal::MapType::iterator classname_iter=d_priv->classname_map.find(classname);
-  if(classname_iter == d_priv->classname_map.end())
+  TypeInfo_internal::MapType::iterator classname_iter =
+    d_priv->classname_map.find(classname);
+  if (classname_iter == d_priv->classname_map.end()) {
     return vtable_invalid;
-  const TypeInfo_internal* tip=classname_iter->second.first;
-  if(tip->uuid != uuid){
-    cerr << "Warning classname is the same, but uuid is different!\n";
-    cerr << "class = " << classname << "\n";
-    cerr << "remote uuid=" << uuid << "\n";
-    cerr << "local uuid=" << tip->uuid << "\n";
   }
+  const TypeInfo_internal* tip=classname_iter->second.first;
   return classname_iter->second.second;
 }
 
