@@ -596,7 +596,6 @@ int main(int argc, char** argv)
       }
     }
     
-    
     if (do_asci){
       vector<string> vars;
       vector<const TypeDescription*> types;
@@ -636,7 +635,7 @@ int main(int argc, char** argv)
   	if (( ts % freq) == 0) {
    		
 		// dumps header and variable info to file
-		int variable_count =0;
+		//int variable_count =0;
 		char fnum[5];
    		string filename;
    		int stepnum=ts/freq;
@@ -658,254 +657,255 @@ int main(int argc, char** argv)
 		
 		
               // for loop over variables for name printing
-              for(int v=0;v<vars.size();v++){
+              for(unsigned int v=0;v<vars.size();v++){
 	       std::string var = vars[v];
 	       
 	       ConsecutiveRangeSet matls= da->queryMaterials(var, patch, time);
 	       // loop over materials
 	       for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
 		   matlIter != matls.end(); matlIter++){
-		int matl = *matlIter;
-	        const TypeDescription* td = types[v];
-	        const TypeDescription* subtype = td->getSubType();
-	        switch(td->getType()){
+		 int matl = *matlIter;
+		 const TypeDescription* td = types[v];
+		 const TypeDescription* subtype = td->getSubType();
+		 switch(td->getType()){
 	        
-		// The following only accesses particle data
-		case TypeDescription::ParticleVariable:
-      	          switch(subtype->getType()){
-		    case TypeDescription::double_type:
-		    {
-		      ParticleVariable<double> value;
-		      da->query(value, var, matl, patch, time);
-		      ParticleSubset* pset = value.getParticleSubset();
+		   // The following only accesses particle data
+		 case TypeDescription::ParticleVariable:
+		   switch(subtype->getType()){
+		   case TypeDescription::double_type:
+		     {
+		       ParticleVariable<double> value;
+		       da->query(value, var, matl, patch, time);
+		       ParticleSubset* pset = value.getParticleSubset();
 		      
-		      if(pset->numParticles() > 0){
-			ParticleSubset::iterator iter = pset->begin();
+		       if(pset->numParticles() > 0){
+			 ParticleSubset::iterator iter = pset->begin();
 			
-			if(matl == 0){
-			  partfile << ", \"" << var << "\"";}
-			for(;iter != pset->end(); iter++){
- 			  num_of_particles++;
-			}
-		      }
-		      partnum=num_of_particles;
-		    }
-		  break;
-		  case TypeDescription::Point:
-		    {
-		      ParticleVariable<Point> value;
-		      da->query(value, var, matl, patch, time);
-		      ParticleSubset* pset = value.getParticleSubset();
+			 if(matl == 0){
+			   partfile << ", \"" << var << "\"";}
+			 for(;iter != pset->end(); iter++){
+			   num_of_particles++;
+			 }
+		       }
+		       partnum=num_of_particles;
+		     }
+		     break;
+		   case TypeDescription::Point:
+		     {
+		       ParticleVariable<Point> value;
+		       da->query(value, var, matl, patch, time);
+		       ParticleSubset* pset = value.getParticleSubset();
 		      
-		      if(pset->numParticles() > 0 && (matl == 0)){
-			partfile << ", \"" << var << ".x\"" << ", \"" << var <<
-			".y\"" << ", \"" <<var << ".z\"";
-		      }
-		    }
-		  break;
-		  case TypeDescription::Vector:
-		    {
-		      ParticleVariable<Vector> value;
-		      da->query(value, var, matl, patch, time);
-		      ParticleSubset* pset = value.getParticleSubset();
-		      //cout << td->getName() << " over " << pset->numParticles() << " particles\n";
-		      if(pset->numParticles() > 0 && (matl == 0)){
-			partfile << ", \"" << var << ".x\"" << ", \"" << var <<
-			".y\"" << ", \"" << var << ".z\"";
-		      }
-		    }
-		  break;
-		  case TypeDescription::Matrix3:
-		    {
-		      ParticleVariable<Matrix3> value;
-		      da->query(value, var, matl, patch, time);
-		      ParticleSubset* pset = value.getParticleSubset();
-		      //cout << td->getName() << " over " << pset->numParticles() << " particles\n";
-		      if(pset->numParticles() > 0 && (matl == 0)){
-			partfile << ", \"" << var << ".1.1\"" << ", \"" << var << ".1.2\"" << ", \"" << var << ".1.3\""
-			         << ", \"" << var << ".2.1\"" << ", \"" << var << ".2.2\"" << ", \"" << var << ".2.3\""
-				 << ", \"" << var << ".3.1\"" << ", \"" << var << ".3.2\"" << ", \"" << var << ".3.3\"";
-		      }
-		    }
-		  break;
-		  default:
-		    cerr << "Particle Variable of unknown type: " << subtype->getType() << '\n';
-		    break;
-		  }
-		  break;
-		 }
-		// end of for loop over materials
-		}
-		// resets counter of number of particles, so it doesn't count for multiple
-		// variables of the same type
-		num_of_particles = 0;
-		// end of for loop over variables
-   		}
+		       if(pset->numParticles() > 0 && (matl == 0)){
+			 partfile << ", \"" << var << ".x\"" << ", \"" << var <<
+			   ".y\"" << ", \"" <<var << ".z\"";
+		       }
+		     }
+		     break;
+		   case TypeDescription::Vector:
+		     {
+		       ParticleVariable<Vector> value;
+		       da->query(value, var, matl, patch, time);
+		       ParticleSubset* pset = value.getParticleSubset();
+		       //cout << td->getName() << " over " << pset->numParticles() << " particles\n";
+		       if(pset->numParticles() > 0 && (matl == 0)){
+			 partfile << ", \"" << var << ".x\"" << ", \"" << var <<
+			   ".y\"" << ", \"" << var << ".z\"";
+		       }
+		     }
+		     break;
+		   case TypeDescription::Matrix3:
+		     {
+		       ParticleVariable<Matrix3> value;
+		       da->query(value, var, matl, patch, time);
+		       ParticleSubset* pset = value.getParticleSubset();
+		       //cout << td->getName() << " over " << pset->numParticles() << " particles\n";
+		       if(pset->numParticles() > 0 && (matl == 0)){
+			 partfile << ", \"" << var << ".1.1\"" << ", \"" << var << ".1.2\"" << ", \"" << var << ".1.3\""
+				  << ", \"" << var << ".2.1\"" << ", \"" << var << ".2.2\"" << ", \"" << var << ".2.3\""
+				  << ", \"" << var << ".3.1\"" << ", \"" << var << ".3.2\"" << ", \"" << var << ".3.3\"";
+		       }
+		     }
+		     break;
+		   default:
+		     cerr << "Particle Variable of unknown type: " << subtype->getType() << '\n';
+		     break;
+		   }
+		   break;
+		 default:
+		   // Dd: Is this an error!?
+		   break;
+		 } // end switch( td->getType() )
+		 
+	       } // end of for loop over materials
+
+	       // resets counter of number of particles, so it doesn't count for multiple
+	       // variables of the same type
+	       num_of_particles = 0;
+	       
+	      } // end of for loop over variables
 		
+	      partfile << endl << "ZONE I=" << partnum << ", F=BLOCK" << endl;	
 		
-                partfile << endl << "ZONE I=" << partnum << ", F=BLOCK" << endl;	
+	      // Loop to print values for specific timestep
+	      // Because header has already been printed
 		
-		
-                // Loop to print values for specific timestep
-      		// Because header has already been printed
-		
-	        //variable initialization
-		grid = da->queryGrid(time);
-		level = grid->getLevel(l);
-		iter = level->patchesBegin();
-		patch = *iter;
+	      //variable initialization
+	      grid = da->queryGrid(time);
+	      level = grid->getLevel(l);
+	      iter = level->patchesBegin();
+	      patch = *iter;
 	
 	      // loop over variables for printing values
-	      for(int v=0;v<vars.size();v++){
+	      for(unsigned int v=0;v<vars.size();v++){
 	        std::string var = vars[v];
 		
 		ConsecutiveRangeSet matls=da->queryMaterials(var, patch, time);
 		// loop over materials
 		for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
 		    matlIter != matls.end(); matlIter++){
-		int matl = *matlIter;
-	        const TypeDescription* td = types[v];
-	        const TypeDescription* subtype = td->getSubType();
+		  int matl = *matlIter;
+		  const TypeDescription* td = types[v];
+		  const TypeDescription* subtype = td->getSubType();
 	        
-		// the following only accesses particle data
-		switch(td->getType()){
-		case TypeDescription::ParticleVariable:
-      	          switch(subtype->getType()){
+		  // the following only accesses particle data
+		  switch(td->getType()){
+		  case TypeDescription::ParticleVariable:
+		    switch(subtype->getType()){
 		    case TypeDescription::double_type:
-		    {
-		      ParticleVariable<double> value;
-		      da->query(value, var, matl, patch, time);
-		      ParticleSubset* pset = value.getParticleSubset();
-		      if(pset->numParticles() > 0){
-			ParticleSubset::iterator iter = pset->begin();
-			for(;iter != pset->end(); iter++){
-			  partfile << value[*iter] << " " << endl;
+		      {
+			ParticleVariable<double> value;
+			da->query(value, var, matl, patch, time);
+			ParticleSubset* pset = value.getParticleSubset();
+			if(pset->numParticles() > 0){
+			  ParticleSubset::iterator iter = pset->begin();
+			  for(;iter != pset->end(); iter++){
+			    partfile << value[*iter] << " " << endl;
+			  }
+			  partfile << endl;
 			}
-			partfile << endl;
 		      }
-		    }
-		  break;
-		  case TypeDescription::Point:
-		    {
-		      ParticleVariable<Point> value;
-		      da->query(value, var, matl, patch, time);
-		      ParticleSubset* pset = value.getParticleSubset();
-		      if(pset->numParticles() > 0){
-			ParticleSubset::iterator iter = pset->begin();
-			for(;iter != pset->end(); iter++){
-			  partfile << value[*iter].x() << " " << endl;
+		      break;
+		    case TypeDescription::Point:
+		      {
+			ParticleVariable<Point> value;
+			da->query(value, var, matl, patch, time);
+			ParticleSubset* pset = value.getParticleSubset();
+			if(pset->numParticles() > 0){
+			  ParticleSubset::iterator iter = pset->begin();
+			  for(;iter != pset->end(); iter++){
+			    partfile << value[*iter].x() << " " << endl;
+			  }
+			  partfile << endl;
+			  iter = pset->begin();
+			  for(;iter != pset->end(); iter++){
+			    partfile << value[*iter].y() << " " << endl;
+			  }
+			  partfile << endl;
+			  iter = pset->begin();
+			  for(;iter != pset->end(); iter++){
+			    partfile << value[*iter].z() << " " << endl;
+			  }  
+			  partfile << endl;  
 			}
-			partfile << endl;
-			iter = pset->begin();
-			for(;iter != pset->end(); iter++){
-			  partfile << value[*iter].y() << " " << endl;
-			}
-			partfile << endl;
-			iter = pset->begin();
-			for(;iter != pset->end(); iter++){
-			  partfile << value[*iter].z() << " " << endl;
-			}  
-			partfile << endl;  
 		      }
-		    }
-		  break;
-		  case TypeDescription::Vector:
-		    {
-		      ParticleVariable<Vector> value;
-		      da->query(value, var, matl, patch, time);
-		      ParticleSubset* pset = value.getParticleSubset();
-		      if(pset->numParticles() > 0){
-			ParticleSubset::iterator iter = pset->begin();
-			for(;iter != pset->end(); iter++){
-			  partfile << value[*iter].x() << " " << endl;
+		      break;
+		    case TypeDescription::Vector:
+		      {
+			ParticleVariable<Vector> value;
+			da->query(value, var, matl, patch, time);
+			ParticleSubset* pset = value.getParticleSubset();
+			if(pset->numParticles() > 0){
+			  ParticleSubset::iterator iter = pset->begin();
+			  for(;iter != pset->end(); iter++){
+			    partfile << value[*iter].x() << " " << endl;
+			  }
+			  partfile << endl;
+			  iter = pset->begin();
+			  for(;iter != pset->end(); iter++){
+			    partfile << value[*iter].y() << " " << endl;
+			  }
+			  partfile << endl;
+			  iter = pset->begin();
+			  for(;iter != pset->end(); iter++){
+			    partfile << value[*iter].z() << " " << endl;
+			  }  
+			  partfile << endl; 
 			}
-			partfile << endl;
-			iter = pset->begin();
-			for(;iter != pset->end(); iter++){
-			  partfile << value[*iter].y() << " " << endl;
-			}
-			partfile << endl;
-			iter = pset->begin();
-			for(;iter != pset->end(); iter++){
-			  partfile << value[*iter].z() << " " << endl;
-			}  
-			partfile << endl; 
 		      }
-		    }
-		  break;
-		  case TypeDescription::Matrix3:
-		    {
-		      ParticleVariable<Matrix3> value;
-		      da->query(value, var, matl, patch, time);
-		      ParticleSubset* pset = value.getParticleSubset();
-		      if(pset->numParticles() > 0){
-		        ParticleSubset::iterator iter = pset->begin();
-			for(;iter != pset->end(); iter++){
-		          partfile << (value[*iter])(1,1) << " " << endl;
+		      break;
+		    case TypeDescription::Matrix3:
+		      {
+			ParticleVariable<Matrix3> value;
+			da->query(value, var, matl, patch, time);
+			ParticleSubset* pset = value.getParticleSubset();
+			if(pset->numParticles() > 0){
+			  ParticleSubset::iterator iter = pset->begin();
+			  for(;iter != pset->end(); iter++){
+			    partfile << (value[*iter])(1,1) << " " << endl;
+			  }
+			  partfile << endl;
+			  iter = pset->begin();
+			  for(;iter !=pset->end(); iter++){
+			    partfile << (value[*iter])(1,2) << " " << endl;
+			  }
+			  partfile << endl;
+			  iter = pset->begin();
+			  for(;iter !=pset->end(); iter++){
+			    partfile << (value[*iter])(1,3) << " " << endl;
+			  }
+			  partfile << endl;
+			  iter = pset->begin();
+			  for(;iter !=pset->end(); iter++){
+			    partfile << (value[*iter])(2,1) << " " << endl;
+			  }
+			  partfile << endl;
+			  iter = pset->begin();
+			  for(;iter !=pset->end(); iter++){
+			    partfile << (value[*iter])(2,2) << " " << endl;
+			  }
+			  partfile << endl;
+			  iter = pset->begin();
+			  for(;iter !=pset->end(); iter++){
+			    partfile << (value[*iter])(2,3) << " " << endl;
+			  }
+			  partfile << endl;
+			  iter = pset->begin();
+			  for(;iter !=pset->end(); iter++){
+			    partfile << (value[*iter])(3,1) << " " << endl;
+			  }
+			  partfile << endl;
+			  iter = pset->begin();
+			  for(;iter !=pset->end(); iter++){
+			    partfile << (value[*iter])(3,2) << " " << endl;
+			  }
+			  partfile << endl;
+			  iter = pset->begin();
+			  for(;iter !=pset->end(); iter++){
+			    partfile << (value[*iter])(3,3) << " " << endl;
+			  }
+			  partfile << endl;
 			}
-			partfile << endl;
-			iter = pset->begin();
-			for(;iter !=pset->end(); iter++){
-			  partfile << (value[*iter])(1,2) << " " << endl;
-			}
-			partfile << endl;
-			iter = pset->begin();
-			for(;iter !=pset->end(); iter++){
-         		  partfile << (value[*iter])(1,3) << " " << endl;
-			}
-		        partfile << endl;
-			iter = pset->begin();
-			for(;iter !=pset->end(); iter++){
-			  partfile << (value[*iter])(2,1) << " " << endl;
-			}
-			partfile << endl;
-			iter = pset->begin();
-			for(;iter !=pset->end(); iter++){
-			  partfile << (value[*iter])(2,2) << " " << endl;
-			}
-			partfile << endl;
-			iter = pset->begin();
-			for(;iter !=pset->end(); iter++){
-			  partfile << (value[*iter])(2,3) << " " << endl;
-			}
-			partfile << endl;
-			iter = pset->begin();
-			for(;iter !=pset->end(); iter++){
-			  partfile << (value[*iter])(3,1) << " " << endl;
-			}
-			partfile << endl;
-			iter = pset->begin();
-			for(;iter !=pset->end(); iter++){
-			  partfile << (value[*iter])(3,2) << " " << endl;
-			}
-			partfile << endl;
-			iter = pset->begin();
-			for(;iter !=pset->end(); iter++){
-			  partfile << (value[*iter])(3,3) << " " << endl;
-			}
-			partfile << endl;
 		      }
+		      break;
+		    default:
+		      cerr << "Particle Variable of unknown type: " << subtype->getType() << '\n';
+		      break;
 		    }
-		  break;
-		  default:
-		    cerr << "Particle Variable of unknown type: " << subtype->getType() << '\n';
 		    break;
-		  }
-		  break;
-		 }
-		// end of loop over materials 
-		}
-		// end of loop over variables for printing values
-   		}
-	      // end of if ts % freq
-	      }	
-	   //increments to next timestep
-	   ts++;
-	   cout << " completed." << endl;
-      // end of loop over time
-      }
-    //end of do_asci		
-    }
+		  default:
+		    // Dd: Is this an error?
+		    break;
+		  } // end switch( td->getType() )
+		} // end of loop over materials 
+	      } // end of loop over variables for printing values
+	} // end of if ts % freq	
+
+	//increments to next timestep
+	ts++;
+	cout << " completed." << endl;
+      } // end of loop over time
+    } //end of do_asci		
 		
     if (do_cell_stresses){
       vector<string> vars;
@@ -935,7 +935,8 @@ int main(int argc, char** argv)
       }
       
       // obtain the desired timesteps
-      int start_time, stop_time, t = 0;
+      unsigned int t = 0, start_time, stop_time;
+
       cout << "Time Step       Value\n";
       
       for(t = time_step_lower; t <= time_step_upper; t++){
