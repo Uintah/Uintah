@@ -849,10 +849,14 @@ Mutex::Mutex(const char* name)
     fprintf(stderr, "WARNING: creation of null mutex\n");
   }
   
-  priv_=new Mutex_private;
-  if(pthread_mutex_init(&priv_->mutex, NULL) != 0)
-    throw ThreadError(std::string("pthread_mutex_init: ")
-		      +strerror(errno));		
+  // On OSX the Mutex is sometimes locked before it is initialized.
+  // In such a case the priv_ will be allocated during the lock() and we should create a new one. 
+  //  if ( !priv_ ) {
+    priv_=new Mutex_private;
+    if(pthread_mutex_init(&priv_->mutex, NULL) != 0)
+      throw ThreadError(std::string("pthread_mutex_init: ")
+			+strerror(errno));		
+    //  }
 }
 
 Mutex::~Mutex()
@@ -887,6 +891,17 @@ Mutex::lock()
   if(t){
     p=t->priv_;
     oldstate=Thread::push_bstack(p, Thread::BLOCK_MUTEX, name_);
+  }
+
+  // Temporary hack:
+  // On OSX this call may come before the constructor (for static vars) for some reason.
+  // To solve this problem we allocate priv_ and init it if the constructor was not called yet.
+  if ( !priv_ ) {
+    //fprintf(stderr, "Mutex:lock() - priv_ does not exits. reallocating\n");
+    priv_=new Mutex_private;
+    if(pthread_mutex_init(&priv_->mutex, NULL) != 0)
+      throw ThreadError(std::string("pthread_mutex_init: ")
+			+strerror(errno));		
   }
   int status = pthread_mutex_lock(&priv_->mutex);
   if(status != 0){
