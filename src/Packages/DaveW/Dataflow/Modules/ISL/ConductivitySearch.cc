@@ -603,6 +603,9 @@ void ConductivitySearch::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.2.2.1  2000/10/31 02:14:48  dmw
+// merging DaveW HEAD changes into FIELD_BRANCH
+//
 // Revision 1.2  2000/10/29 05:03:20  dmw
 // fixed argument mismatch
 //
