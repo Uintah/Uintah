@@ -35,6 +35,7 @@
 #include <Core/Datatypes/MeshBase.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/FieldIterator.h>
+#include <Core/Datatypes/LatticeVol.h>
 #include <vector>
 #include <Core/Persistent/PersistentSTL.h>
 #include <hash_map>
@@ -131,7 +132,8 @@ public:
   void compute_edges();
   void compute_faces();
   void compute_node_neighbors();
-  
+  void compute_grid();
+
   //! Persistent IO
   virtual void io(Piostream&);
   static PersistentTypeID type_id; 
@@ -331,6 +333,10 @@ private:
 
   vector<vector<node_index> > node_neighbors_;  
   Mutex                       node_nbor_lock_;
+  
+  typedef LockingHandle<LatticeVol<vector<cell_index> > > grid_handle;
+  grid_handle                 grid_;
+  Mutex                       grid_lock_; // Bad traffic!
 };
 
 // Handle type for TetVolMesh mesh.

@@ -32,6 +32,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <Core/Datatypes/FieldIndex.h>
 
 #ifndef TYPENAME_H
 #define TYPENAME_H
@@ -91,6 +92,12 @@ template <class T> const string find_type_name(Array1<T>*)
 template <class T> const string find_type_name(Array2<T>*)
 {
   static const string name = string("Array2") + FTNS + find_type_name((T*)0) + FTNE;
+  return name;
+}
+
+template <class T> const string find_type_name(CellIndex<T>*)
+{
+  static const string name = string("CellIndex") + FTNS + find_type_name((T*)0) + FTNE;
   return name;
 }
 
