@@ -104,9 +104,9 @@ void FieldToNrrd::execute()
     field_minmax(*f, minmax);
     double *data=new double[nx*ny*nz];
     double *p=&(data[0]);
-    for (int i=0; i<nx; i++)
+    for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
-	for (int k=0; k<nz; k++)
+	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(i,j,k);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeDouble, 3);
   } else if (data == "float") { 
@@ -119,12 +119,12 @@ void FieldToNrrd::execute()
     field_minmax(*f, minmax);
     float *data=new float[nx*ny*nz];
     float *p=&(data[0]);
-    for (int i=0; i<nx; i++)
+    for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
-	for (int k=0; k<nz; k++)
+	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(i,j,k);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeFloat, 3);
-  } else if (data == "unsigned int") {
+  } else if (data == "unsigned_int") {
     LatticeVol<unsigned int> *f = 
       dynamic_cast<LatticeVol<unsigned int>*>(field);
     lvm = f->get_typed_mesh();
@@ -134,9 +134,9 @@ void FieldToNrrd::execute()
     field_minmax(*f, minmax);
     unsigned int *data=new unsigned int[nx*ny*nz];
     unsigned int *p=&(data[0]);
-    for (int i=0; i<nx; i++)
+    for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
-	for (int k=0; k<nz; k++)
+	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(i,j,k);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeUInt, 3);
   } else if (data == "int") {
@@ -149,12 +149,12 @@ void FieldToNrrd::execute()
     field_minmax(*f, minmax);
     int *data=new int[nx*ny*nz];
     int *p=&(data[0]);
-    for (int i=0; i<nx; i++)
+    for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
-	for (int k=0; k<nz; k++)
+	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(i,j,k);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeInt, 3);
-  } else if (data == "unsigned short") {
+  } else if (data == "unsigned_short") {
     LatticeVol<unsigned short> *f = 
       dynamic_cast<LatticeVol<unsigned short>*>(field);
     lvm = f->get_typed_mesh();
@@ -164,9 +164,9 @@ void FieldToNrrd::execute()
     field_minmax(*f, minmax);
     unsigned short *data=new unsigned short[nx*ny*nz];
     unsigned short *p=&(data[0]);
-    for (int i=0; i<nx; i++)
+    for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
-	for (int k=0; k<nz; k++)
+	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(i,j,k);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeUShort, 3);
   } else if (data == "short") {
@@ -179,12 +179,12 @@ void FieldToNrrd::execute()
     field_minmax(*f, minmax);
     short *data=new short[nx*ny*nz];
     short *p=&(data[0]);
-    for (int i=0; i<nx; i++)
+    for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
-	for (int k=0; k<nz; k++)
+	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(i,j,k);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeShort, 3);
-  } else if (data == "unsigned char") {
+  } else if (data == "unsigned_char") {
     LatticeVol<unsigned char> *f = 
       dynamic_cast<LatticeVol<unsigned char>*>(field);
     lvm = f->get_typed_mesh();
@@ -194,9 +194,9 @@ void FieldToNrrd::execute()
     field_minmax(*f, minmax);
     unsigned char *data=new unsigned char[nx*ny*nz];
     unsigned char *p=&(data[0]);
-    for (int i=0; i<nx; i++)
+    for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
-	for (int k=0; k<nz; k++)
+	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(i,j,k);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeUChar, 3);
   } else if (data == "char") {
@@ -209,9 +209,9 @@ void FieldToNrrd::execute()
     field_minmax(*f, minmax);
     char *data=new char[nx*ny*nz];
     char *p=&(data[0]);
-    for (int i=0; i<nx; i++)
+    for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
-	for (int k=0; k<nz; k++)
+	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(i,j,k);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeChar, 3);
   } else if (data == "Vector") {
@@ -223,9 +223,9 @@ void FieldToNrrd::execute()
     nz = lvm->get_nz();
     double *data=new double[nx*ny*nz*3];
     double *p=&(data[0]);
-    for (int i=0; i<nx; i++)
+    for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
-	for (int k=0; k<nz; k++) {
+	for (int i=0; i<nx; i++) {
 	  *p++=f->fdata()(i,j,k).x();
 	  *p++=f->fdata()(i,j,k).y();
 	  *p++=f->fdata()(i,j,k).z();
@@ -240,9 +240,9 @@ void FieldToNrrd::execute()
     nz = lvm->get_nz();
     double *data=new double[nx*ny*nz*7];
     double *p=&(data[0]);
-    for (int i=0; i<nx; i++)
+    for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
-	for (int k=0; k<nz; k++) {
+	for (int i=0; i<nx; i++) {
 	  *p++=1;  // should use mask if present
 	  *p++=f->fdata()(i,j,k).mat_[0][0];
 	  *p++=f->fdata()(i,j,k).mat_[0][1];
@@ -264,16 +264,23 @@ void FieldToNrrd::execute()
     nout->nrrd->min=minmax.first;
     nout->nrrd->max=minmax.second;
   }
+  Vector v(maxP-minP);
   nout->nrrd->encoding=nrrdEncodingRaw;
   nout->nrrd->size[0]=nx;
   nout->nrrd->size[1]=ny;
   nout->nrrd->size[2]=nz;
+  v.x(v.x()/(nx-1));
+  v.y(v.y()/(ny-1));
+  v.z(v.z()/(nz-1));
   nout->nrrd->axisMin[0]=minP.x();
   nout->nrrd->axisMin[1]=minP.y();
   nout->nrrd->axisMin[2]=minP.z();
   nout->nrrd->axisMax[0]=maxP.x();
   nout->nrrd->axisMax[1]=maxP.y();
   nout->nrrd->axisMax[2]=maxP.z();
+  nout->nrrd->spacing[0]=v.x();
+  nout->nrrd->spacing[1]=v.y();
+  nout->nrrd->spacing[2]=v.z();
   nout->nrrd->label[0][0]='x';
   nout->nrrd->label[0][1]='\0';
   nout->nrrd->label[1][0]='y';

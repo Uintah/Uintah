@@ -26,6 +26,7 @@ SRCDIR := Packages/Teem/Dataflow/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/DataIO\
+	$(SRCDIR)/Filters\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SRCTOP_ABS)/scripts/recurse.mk
