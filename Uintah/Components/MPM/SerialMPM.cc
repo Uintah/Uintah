@@ -1067,7 +1067,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
   // velocity and position respectively
   Vector vel(0.0,0.0,0.0);
   Vector acc(0.0,0.0,0.0);
-  double temp = 0; //for heat conduction
+  double tempRate = 0; //for heat conduction
   double ke=0,se=0;
   int numPTotal = 0;
 
@@ -1174,21 +1174,21 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
         vel = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
 
-        if(d_heatConductionInvolved) temp = 0;
+        if(d_heatConductionInvolved) tempRate = 0;
 
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < 8; k++) {
 	   vel += gvelocity_star[ni[k]]  * S[k];
 	   acc += gacceleration[ni[k]]   * S[k];
-           if(d_heatConductionInvolved) temp = gTemperatureRate[ni[k]] * S[k];
+           if(d_heatConductionInvolved) tempRate = gTemperatureRate[ni[k]] * S[k];
         }
 
         // Update the particle's position and velocity
         px[idx]        += vel * delT;
         pvelocity[idx] += acc * delT;
         if(d_heatConductionInvolved) {
-          pTemperatureRate[idx] = temp;
-          pTemperature[idx] += temp * delT;
+          pTemperatureRate[idx] = tempRate;
+          pTemperature[idx] += tempRate * delT;
         }
         
         ke += .5*pmass[idx]*pvelocity[idx].length2();
@@ -1296,6 +1296,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.73  2000/05/31 00:34:43  tan
+// temp to tempRate
+//
 // Revision 1.72  2000/05/30 21:03:22  dav
 // delt to delT
 //
