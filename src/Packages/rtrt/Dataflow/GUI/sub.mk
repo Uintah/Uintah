@@ -5,7 +5,9 @@ SRCDIR := Packages/rtrt/Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
+	$(SRCDIR)/GeoProbeScene.tcl \
 	$(SRCDIR)/RTRTViewer.tcl \
+	$(SRCDIR)/SimpleScene.tcl \
 	$(SRCDIR)/VolumeVisScene.tcl \
 #[INSERT NEW TCL FILE HERE]
 

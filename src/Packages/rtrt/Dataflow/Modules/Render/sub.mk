@@ -19,7 +19,7 @@ PSELIBS := \
 	Packages/rtrt/Core \
 	Packages/rtrt/Dataflow/Ports
 
-LIBS := $(M_LIBRARY)
+LIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(X_LIBRARY) $(XI_LIBRARY) $(XMU_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY) $(SOUND_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
