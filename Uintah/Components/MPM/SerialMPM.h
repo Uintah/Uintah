@@ -153,6 +153,7 @@ WARNING
 	 SimulationStateP d_sharedState;
 	 Contact*         d_contactModel;
 	 Fracture*        d_fractureModel;
+	 bool             d_heatConductionInvolved;
 
 	 const VarLabel* deltLabel;
 	 
@@ -165,6 +166,8 @@ WARNING
 	 const VarLabel* pXLabel;
 	 const VarLabel* pSurfLabel;
 	 const VarLabel* pSurfaceNormalLabel; //for fracture
+	 const VarLabel* pTemperatureLabel; //for heat conduction
+	 const VarLabel* pTemperatureGradientLabel; //for heat conduction
 	 
 	 const VarLabel* gMassLabel;
 	 const VarLabel* gAccelerationLabel;
@@ -176,6 +179,7 @@ WARNING
 	 const VarLabel* gExternalForceLabel;
 	 const VarLabel* gInternalForceLabel;
 	 const VarLabel* gSelfContactLabel; //for fracture
+	 const VarLabel* gTemperatureLabel; //for heat conduction
 	 
 	 const VarLabel* cSelfContactLabel; //for fracture, CCVariable
 	 const VarLabel* cSurfaceNormalLabel; //for fracture, CCVariable
@@ -187,6 +191,10 @@ WARNING
    
 //
 // $Log$
+// Revision 1.30  2000/05/25 22:06:21  tan
+// A boolean variable d_heatConductionInvolved is set to true when
+// heat conduction considered in the simulation.
+//
 // Revision 1.29  2000/05/23 02:26:53  tan
 // Added gSelfContactLabel NCVariable for farcture usage.
 //
