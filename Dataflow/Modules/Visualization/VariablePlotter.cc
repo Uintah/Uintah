@@ -109,10 +109,10 @@ VariablePlotter::VariablePlotter(const string& id)
 : Module("VariablePlotter", id, Filter),
   var_orientation("var_orientation",id,this),
   nl("nl",id,this),
-  index_l("index_l",id,this),
   index_x("index_x",id,this),
   index_y("index_y",id,this),
   index_z("index_z",id,this),
+  index_l("index_l",id,this),
   curr_var("curr_var",id,this)
 {
 
@@ -197,6 +197,9 @@ void VariablePlotter::setVars(GridP grid) {
 	TCL::execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
 	add_type(type_list,types[i]->getSubType());
       }
+      break;
+    default:
+      cerr << "VariablePlotter::setVars: Warning!  Ignoring unknown type.\n";
       break;
     }
 

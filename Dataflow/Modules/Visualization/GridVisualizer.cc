@@ -181,11 +181,11 @@ GridVisualizer::GridVisualizer(const string& id)
   radius("radius",id,this),
   polygons("polygons",id,this),
   nl("nl",id,this),
-  curr_var("curr_var",id,this),
-  index_l("index_l",id,this),
   index_x("index_x",id,this),
   index_y("index_y",id,this),
   index_z("index_z",id,this),
+  index_l("index_l",id,this),
+  curr_var("curr_var",id,this),
   widget_lock("GridVusualizer widget lock"),
   init(1), need_2d(1), node_selected(false)
 {
@@ -352,6 +352,9 @@ void GridVisualizer::setVars(GridP grid) {
 	TCL::execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
 	add_type(type_list,types[i]->getSubType());
       }
+      break;
+    default:
+      cerr << "GridVisualizer::setVars: Warning!  Ignoring unknown type.\n";
       break;
     }
 
