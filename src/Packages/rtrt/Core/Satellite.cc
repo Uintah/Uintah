@@ -33,15 +33,13 @@ void Satellite::animate(double t, bool& changed)
   if (rev_speed_) {
     xform.load_identity();
     xform.pre_translate(-cen.asVector());
-    xform.rotate(right, Vector(1,0,0));
-    xform.rotate(up, Vector(0,0,1));
+    xform.rotate(Vector(0,0,1),up);
     xform.pre_rotate(-rev_speed_*t*ROTATE_SPEED,Vector(0,0,1));
     xform.pre_scale(Vector(1./radius, 1./radius, 1./radius));
     ixform.load_identity();
     ixform.pre_scale(Vector(radius, radius, radius));
     ixform.pre_rotate(rev_speed_*t*ROTATE_SPEED,Vector(0,0,1));
-    ixform.rotate(Vector(0,0,1), up);
-    ixform.rotate(Vector(1,0,0), right);
+    ixform.rotate(up, Vector(0,0,1));
     ixform.pre_translate(cen.asVector());
     changed = true;      
   }
