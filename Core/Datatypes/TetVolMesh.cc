@@ -282,22 +282,29 @@ void
 TetVolMesh::recompute_connectivity() {
   edge_table_lock_.lock();
   edges_.clear();
+  edge_table_.clear();
   edge_table_lock_.unlock();
-  compute_edges();
 
   face_table_lock_.lock();
   faces_.clear();
+  face_table_.clear();
   face_table_lock_.unlock();
-  compute_faces();
   
   nbors_lock_.lock();
   neighbors_.clear();
   nbors_lock_.unlock();
-  compute_node_neighbors();
+
+  node_nbor_lock_.lock();
+  node_neighbors_.clear();
+  node_nbor_lock_.unlock();
 
   grid_lock_.lock();
   grid_=0;
   grid_lock_.unlock();
+
+  compute_edges();
+  compute_faces();
+  compute_node_neighbors();
   compute_grid();
 }
 
