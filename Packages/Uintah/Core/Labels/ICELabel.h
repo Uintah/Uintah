@@ -27,7 +27,9 @@ namespace Uintah {
     const VarLabel* sum_rho_CCLabel;
     const VarLabel* rho_CCLabel;
     const VarLabel* temp_CCLabel;
+    const VarLabel* temp_CC_XchangeLabel;
     const VarLabel* vel_CCLabel;
+    const VarLabel* vel_CC_XchangeLabel;
     const VarLabel* speedSound_CCLabel;
     const VarLabel* vol_frac_CCLabel;
     const VarLabel* press_force_CCLabel;
