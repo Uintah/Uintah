@@ -98,7 +98,7 @@ SoundThread::run()
 
   for( int cnt = 0; cnt < soundQueue_.size(); cnt++ )
     {
-      soundQueue_[cnt]->activate();
+      soundQueue_[cnt]->load();
     }
 
   gui_->soundThreadNowActive();
@@ -133,6 +133,8 @@ SoundThread::run()
 	      int     frames;
 	      short * buffer;
 
+	      if( !sound->isOn() ) continue;
+
 	      double leftVolume = sound->volume( left );
 	      double rightVolume = sound->volume( right );
 
@@ -144,10 +146,6 @@ SoundThread::run()
 
 		  maxFrames = Max( frames, maxFrames );
 
-		  //if( frames < samplingRate_ && !sound->repeat() ) 
-		  //  {
-		  //    cout << "removing sound\n";
-		  //  }
 		  for( int cnt = 0; cnt < frames; cnt++ )
 		    {
 		      mix[cnt*2]   += buffer[cnt] * leftVolume  * 
