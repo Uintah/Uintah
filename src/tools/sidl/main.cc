@@ -10,6 +10,10 @@ extern FILE* yyin;
 extern Specification specs;
 using std::cerr;
 using std::endl;
+using std::string;
+
+bool doing_cia=false;
+bool foremit;
 
 char* find_cpp()
 {
@@ -33,24 +37,8 @@ int main(int argc, char* argv[])
     int nfiles=0;
 
     char* cpp=find_cpp();
+    bool done_builtin=false;
 
-    char* builtin=find_builtin();
-    char* buf=new char[strlen(cpp)+strlen(builtin)+10];
-    sprintf(buf, "%s %s", cpp, builtin);
-    yyin=popen(buf, "r");
-    delete[] buf;
-    if(!yyin){
-	cerr << "Error opening file: " << builtin << '\n';
-	failed=true;
-    }
-    if(yyparse()){
-	cerr << "Error parsing file: " << builtin << '\n';
-	failed=true;
-    }
-    if(pclose(yyin) == -1){
-	perror("pclose");
-	failed=true;
-    }
     std::string outfile;
     bool emit_header=false;
 
@@ -68,11 +56,36 @@ int main(int argc, char* argv[])
 		outfile=argv[i];
 	    } else if(arg == "-h") {
 		emit_header=true;
+	    } else if(arg == "-cia") {
+		doing_cia=true;
 	    } else {
 		cerr << "Unknown option: " << argv[i] << endl;
 		exit(1);
 	    }
 	} else {
+	    if(!done_builtin && !doing_cia){
+		foremit=false;
+		char* builtin=find_builtin();
+		char* buf=new char[strlen(cpp)+strlen(builtin)+10];
+		sprintf(buf, "%s %s", cpp, builtin);
+		yyin=popen(buf, "r");
+		delete[] buf;
+		if(!yyin){
+		    cerr << "Error opening file: " << builtin << '\n';
+		    failed=true;
+		}
+		if(yyparse()){
+		    cerr << "Error parsing file: " << builtin << '\n';
+		    failed=true;
+		}
+		if(pclose(yyin) == -1){
+		    perror("pclose");
+		    failed=true;
+		}
+		done_builtin=true;
+	    }
+
+	    foremit=true;
 	    nfiles++;
 	    char* buf=new char[strlen(cpp)+strlen(argv[i])+10];
 	    sprintf(buf, "%s %s", cpp, argv[i]);
@@ -114,20 +127,42 @@ int main(int argc, char* argv[])
 	    cerr << "Error opening output file: " << outfile << '\n';
 	    exit(1);
 	}
+	string hname=outfile;
+	int l=hname.length()-1;
+	while(l>0 && hname[l] != '.')
+	    l--;
+	if(l>0)
+	    hname=hname.substr(0, l);
+	hname+= ".h";
 	if(emit_header)
-	    specs.emit(devnull, out);
+	    specs.emit(devnull, out, hname);
 	else
-	    specs.emit(out, devnull);
+	    specs.emit(out, devnull, hname);
     } else {
+	string hname="stdout";
 	if(emit_header)
-	    specs.emit(devnull, std::cout);
+	    specs.emit(devnull, std::cout, hname);
 	else
-	    specs.emit(std::cout, devnull);
+	    specs.emit(std::cout, devnull, hname);
     }
     return 0;
 }
+
 //
 // $Log$
+// Revision 1.6  1999/09/24 06:26:30  sparker
+// Further implementation of new Component model and IDL parser, including:
+//  - fixed bugs in multiple inheritance
+//  - added test for multiple inheritance
+//  - fixed bugs in object reference send/receive
+//  - added test for sending objects
+//  - beginnings of support for separate compilation of sidl files
+//  - beginnings of CIA spec implementation
+//  - beginnings of cocoon docs in PIDL
+//  - cleaned up initalization sequence of server objects
+//  - use globus_nexus_startpoint_eventually_destroy (contained in
+// 	the globus-1.1-utah.patch)
+//
 // Revision 1.5  1999/09/17 05:07:27  sparker
 // Added nexus code generation capability
 //

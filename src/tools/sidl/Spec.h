@@ -36,6 +36,7 @@ protected:
     SymbolTable* symbols;
     mutable bool emitted_declaration;
     friend class Symbol;
+    bool do_emit;
 
     void checkMethods(const std::vector<Method*>&);
 };
@@ -306,7 +307,8 @@ public:
 
     void add(DefinitionList*);
     void staticCheck();
-    void emit(std::ostream& out, std::ostream& headerout) const;
+    void emit(std::ostream& out, std::ostream& headerout,
+	      const std::string& hname) const;
 private:
     std::vector<DefinitionList*> list;
     SymbolTable* globals;
@@ -433,6 +435,19 @@ private:
 
 //
 // $Log$
+// Revision 1.5  1999/09/24 06:26:30  sparker
+// Further implementation of new Component model and IDL parser, including:
+//  - fixed bugs in multiple inheritance
+//  - added test for multiple inheritance
+//  - fixed bugs in object reference send/receive
+//  - added test for sending objects
+//  - beginnings of support for separate compilation of sidl files
+//  - beginnings of CIA spec implementation
+//  - beginnings of cocoon docs in PIDL
+//  - cleaned up initalization sequence of server objects
+//  - use globus_nexus_startpoint_eventually_destroy (contained in
+// 	the globus-1.1-utah.patch)
+//
 // Revision 1.4  1999/09/21 06:13:01  sparker
 // Fixed bugs in multiple inheritance
 // Added round-trip optimization
