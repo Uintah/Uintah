@@ -162,6 +162,8 @@ EOF
       eval $_SCI_VAR_HAVE_=''
       eval $_SCI_VAR_LIBRARY_=''
       AC_MSG_RESULT(no)
+      # Show the reason for the error:
+      cat conftest.out
       eval $_SCI_NOTFOUND_
     fi
 #    rm -f conftest* a.out
@@ -1532,7 +1534,7 @@ for i in $mpi $thirdparty $SCI_LAB_TP_DEFAULT; do
 
   SCI_CHECK_HEADER($i/include,mpi.h,,continue,)
 
-  if (test "$LIBMPI" || test "$LIBMPICH") && test "$INCBLT_H"; then
+  if (test "$LIBMPI" || test "$LIBMPICH") && test "$INCMPI_H"; then
 
     if test $LIBMPICH; then
        DEF_MPICH="#define HAVE_MPICH 1"
