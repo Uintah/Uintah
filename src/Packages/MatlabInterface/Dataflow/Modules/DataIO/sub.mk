@@ -43,7 +43,7 @@ SRCDIR   := Packages/MatlabInterface/Dataflow/Modules/DataIO
 
 SRCS     += \
 	$(SRCDIR)/Matlab.cc\
-	$(SRCDIR)/Matlab2.cc\
+	$(SRCDIR)/MatlabBundle.cc\
 	$(SRCDIR)/MatlabDataReader.cc\
 	$(SRCDIR)/MatlabDataWriter.cc\
 	$(SRCDIR)/MatlabFieldsReader.cc \
@@ -52,6 +52,8 @@ SRCS     += \
 	$(SRCDIR)/MatlabMatricesWriter.cc \
 	$(SRCDIR)/MatlabNrrdsReader.cc \
 	$(SRCDIR)/MatlabNrrdsWriter.cc \
+	$(SRCDIR)/MatlabBundlesReader.cc \
+	$(SRCDIR)/MatlabBundlesWriter.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Persistent Core/Containers Core/Util \
@@ -60,7 +62,6 @@ PSELIBS := Core/Persistent Core/Containers Core/Util \
         Core/TkExtensions Dataflow/Network Dataflow/Ports \
 	Dataflow/XMLUtil \
 	Packages/MatlabInterface/Core/Datatypes \
-        Packages/MatlabInterface/Core/Util \
 	Core/Services Core/ICom Core/SystemCall
 
 LIBS := $(TEEM_LIBRARY) $(Z_LIBRARY) $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY) $(XML_LIBRARY)

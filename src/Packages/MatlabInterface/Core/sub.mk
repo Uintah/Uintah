@@ -33,7 +33,6 @@ SRCDIR := Packages/MatlabInterface/Core
 
 SUBDIRS := \
         $(SRCDIR)/Datatypes \
-        $(SRCDIR)/Util \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

@@ -56,6 +56,8 @@
  * a large number of class definitions......
  */
  
+#define HAVE_BUNDLE 1
+ 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
@@ -95,7 +97,7 @@
 #include <Dataflow/Ports/NrrdPort.h>
 
 #ifdef HAVE_BUNDLE
-#include <Packages/CardioWave/Core/Bundle.h>
+#include <Core/Bundle/Bundle.h>
 #endif
  
 
@@ -191,6 +193,25 @@
    void setdisabletranspose(bool dt);
    void converttonumericmatrix();
    void converttostructmatrix();
+   
+   // The following options are for controlling the conversion to bundles
+   // In case prefernrrds is set, numerical data is converted into nrrds
+   // only sparse matrices become matrices. If prefermatrices is set, the
+   // behavior is opposite and only ND (N>2) matrices become nrrds.
+   
+   void prefernrrds();
+   void prefermatrices();
+   
+   // Since Bundles can be bundled, a choice needs to be made whether structured
+   // matlab matrices should become bundles or if possible should be converted into
+   // matrices/nrrds or fields. In case prefer bundles is set, a matlab structure will
+   // be decomposed into bundles of sub bundles and of nrrds and matrices. In case
+   // prefersciobjects is set each structure is read and if it can be translated into
+   // a sciobject it will be come a field, nrrd or matrix and only at the last
+   // resort it will be a bundle. Note that the comparison is done to see whether the
+   // required number of fields is there if so other fields are ignored.
+   void preferbundles();
+   void prefersciobjects();
 
    // SCIRun MATRICES
    long sciMatrixCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::Module *module);
@@ -205,8 +226,8 @@
 #ifdef HAVE_BUNDLE
    // SCIRun Bundles (Currently contained in the CardioWave Package)
    long sciBundleCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::Module *module);
-   void mlArrayTOsciBundle(matlabarray &mlmat,CardioWave::BundleHandle &scibundle, SCIRun::Module *module);
-   void sciBundleTOmlArray(CardioWave::BundleHandle &scibundle, matlabarray &mlmat,SCIRun::Module *module);
+   void mlArrayTOsciBundle(matlabarray &mlmat, SCIRun::BundleHandle &scibundle, SCIRun::Module *module);
+   void sciBundleTOmlArray(SCIRun::BundleHandle &scibundle, matlabarray &mlmat,SCIRun::Module *module);
 #endif
 
    // The reference status of the reader/compatible modules has been changed.
@@ -314,6 +335,10 @@
    // Disable transposing matrices from Fortran format to C++ format
    bool disable_transpose_;
 	
+   // Options for translation of structures into bundled objects
+   bool prefer_nrrds;
+   bool prefer_bundles;
+     
    // FUNCTIONS FOR CONVERTING FIELDS:
 	
    // analyse a matlab matrix and sort out all the different fieldname
@@ -721,7 +746,7 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
 	// but whose format can be anything. The next piece of code
 	// copies and casts the data
 	
-	std::vector<typename MESH::under_type> mldata;
+	std::vector<unsigned int> mldata;
 	mlarray.getnumericarray(mldata);		
 	
 	// check whether it is zero based indexing 
@@ -756,7 +781,7 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
    // but whose format can be anything. The next piece of code
    // copies and casts the data
 	
-   std::vector<typename MESH::under_type> mldata;
+   std::vector<unsigned int> mldata;
    mlarray.getnumericarray(mldata);		
 	
    // check whether it is zero based indexing 
@@ -801,7 +826,7 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
    // but whose format can be anything. The next piece of code
    // copies and casts the data
 	
-   std::vector<typename MESH::under_type> mldata;
+   std::vector<unsigned int> mldata;
    mlarray.getnumericarray(mldata);		
 	
    // check whether it is zero based indexing 
@@ -998,13 +1023,16 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
 
    // Dynamically do the field contents. Luckily this is better templated and hence a couple
    // of templated functions do the trick
-   typename FIELD::fdata_type fdata = field->fdata();
-   if (translate.mladdfield(fdata,mlarray) == false)
-   {
-     // Could not translate field but continuing anyway
-     return(false);
-   }
 
+   if (field->basis_order() > -1)
+   {
+     typename FIELD::fdata_type fdata = field->fdata();
+     if (translate.mladdfield(fdata,mlarray) == false)
+     {
+       // Could not translate field but continuing anyway
+       return(false);
+     }
+   }
    // everything went ok, so report this to the function doing the actual implementation
    return(true);
  } 
