@@ -213,7 +213,7 @@ for test in *; do
 	else
 	    echo "*** Test failed with code $retval"
 	    if [ ! -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
-	        ln -s "$BUILDROOT" "${BUILD_DIR}/${test}-${mode}.lock"
+	        ln -s "$BUILDROOT" "${BUILD_DIR}/${test}-${mode}.lock" > /dev/null 2>&1
 	    fi
 	    failed=1
 	fi
