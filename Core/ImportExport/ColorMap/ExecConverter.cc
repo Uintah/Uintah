@@ -213,7 +213,11 @@ Exec_writer(ProgressReporter *pr,
 
 // CurveColorMap
 
-static ColorMapHandle
+///// NOTE: The following 2 procedures are not static because I need to
+/////       reference them in FieldIEPlugin.cc to force the Mac OSX to 
+/////       instantiate static libraries.
+
+ColorMapHandle
 TextColorMap_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
@@ -222,7 +226,7 @@ TextColorMap_reader(ProgressReporter *pr, const char *filename)
   return Exec_reader(pr, filename, command);
 }
 
-static bool
+bool
 TextColorMap_writer(ProgressReporter *pr,
 		    ColorMapHandle colormap, const char *filename)
 {
