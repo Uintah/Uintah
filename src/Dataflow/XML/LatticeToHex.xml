@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/component.dtd">
+<?xml-stylesheet href="../../../doc/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="LatticeToHex" category="Fields">
+  <overview>
+    <authors>
+      <author>Chris Moulding</author>
+    </authors>
+    <summary>
+      <p>
+      Convert a LatticeVol to a HexVol
+      </p>
+    </summary>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>LatticeVol</name>
+        <description>
+          <p>
+            The volume to be converted
+          </p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+        <componentname>GenField</componentname>
+        <componentname>ReadField</componentname>
+        <componentname>Kindlmann</componentname>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>HexVol</name>
+        <description>
+          <p>
+            The converted volume
+          </p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+
