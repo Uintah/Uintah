@@ -17,6 +17,12 @@
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Persistent/Persistent.h>
 
+namespace DaveW {
+  namespace Datatypes {
+    void Pio();  // This is a dummy declaration to get things to compile.
+  }
+}
+
 namespace SCICore {
 
 namespace Tester {
@@ -224,6 +230,7 @@ void Pio(Piostream& stream, Containers::Array2<T>& data)
     using SCICore::Containers::Pio;
     using namespace SCICore::GeomSpace;
     using SCICore::Geometry::Pio;
+    using DaveW::Datatypes::Pio;
 
     stream.begin_class("Array2", Array2_VERSION);
     if(stream.reading()){
@@ -257,6 +264,9 @@ void Pio(Piostream& stream, Containers::Array2<T>*& data) {
 
 //
 // $Log$
+// Revision 1.4  1999/08/24 06:24:00  dmw
+// Added in everything for the DaveW branch
+//
 // Revision 1.3  1999/08/19 23:18:04  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

@@ -19,6 +19,12 @@
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Tester/RigorousTest.h>
 
+namespace DaveW {
+  namespace Datatypes {
+    void Pio();  // This is a dummy declaration to get things to compile.
+  }
+}
+
 namespace SCICore {
 
 namespace PersistentSpace {
@@ -37,6 +43,7 @@ namespace Containers {
  namespace Geometry {
   void Pio();  // This is a dummy declaration to get things to compile.
  }
+
 
 namespace Containers {
 
@@ -340,12 +347,14 @@ void Pio(Piostream& stream, Array1<T>& array)
   using namespace SCICore::Geometry;
   using namespace SCICore::Containers;
   using namespace SCICore::CoreDatatypes;
+  using namespace DaveW::Datatypes;
 #else
   using SCICore::GeomSpace::Pio;
   using SCICore::PersistentSpace::Pio;
   using SCICore::Geometry::Pio;
   using SCICore::Containers::Pio;
   using SCICore::CoreDatatypes::Pio;
+  using DaveW::Datatypes::Pio;
 #endif
 
   /* int version= */stream.begin_class("Array1", ARRAY1_VERSION);
@@ -372,6 +381,9 @@ void Pio(Piostream& stream, Containers::Array1<T>*& array) {
 
 //
 // $Log$
+// Revision 1.7  1999/08/24 06:23:59  dmw
+// Added in everything for the DaveW branch
+//
 // Revision 1.6  1999/08/23 07:06:32  sparker
 // Fix IRIX build
 //

@@ -1,0 +1,12 @@
+SRCTOP  = @top_srcdir@
+SRCDIR  = @srcdir@
+OBJTOP  = ../..
+
+SUBDIRS = CS684 EEG EGI FDM SiRe
+
+include $(SRCTOP)/scripts/recurse.mk
+
+SRCS     = index.cc
+INCLUDES = -I$(OBJTOP)
+
+include $(SRCTOP)/scripts/objs.mk

@@ -22,7 +22,6 @@ namespace Datatypes {
 
 using SCICore::Math::Min;
 using SCICore::Math::Max;
-using SCICore::PersistentSpace::Pio;
 
 int global_numbounces;
 SCICore::Multitask::Mutex global_bounces_mutex;
@@ -332,6 +331,9 @@ void DRaytracer::lensPixelSamples(Sample2D &s, Array1<double>& pixX,
 
 #define DRaytracer_VERSION 2
 void DRaytracer::io(Piostream& stream) {
+    using SCICore::PersistentSpace::Pio;
+    using DaveW::Datatypes::Pio;
+
     int version=stream.begin_class("DRaytracer", DRaytracer_VERSION);
     VoidStar::io(stream);
     Pio(stream, scene);
@@ -359,6 +361,9 @@ void DRaytracer::io(Piostream& stream) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/24 06:22:54  dmw
+// Added in everything for the DaveW branch
+//
 // Revision 1.1  1999/08/23 02:52:55  dmw
 // Dave's Datatypes
 //
