@@ -39,7 +39,6 @@
 #include <Core/Geom/GeomCylinder.h>
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/BoxClipper.h>
 #include <Dataflow/Network/Module.h>
 
 namespace SCIRun {
