@@ -90,15 +90,6 @@ class Crack
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw);
 
-    void addComputesAndRequiresCrackFrontSegSubset(Task* task,
-                                const PatchSet* patches,
-                                const MaterialSet* matls) const;
-    void CrackFrontSegSubset(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw);
-
     void addComputesAndRequiresCalculateFractureParameters(Task* task,
                                 const PatchSet* patches,
                                 const MaterialSet* matls) const;
@@ -108,19 +99,10 @@ class Crack
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw);
 
-    void addComputesAndRequiresRecollectCrackFrontNodes(Task* task,
+    void addComputesAndRequiresPropagateCrackFrontPoints(Task* task,
                                 const PatchSet* patches,
                                 const MaterialSet* matls) const;
-    void RecollectCrackFrontNodes(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw);
-
-    void addComputesAndRequiresPropagateCrackFrontNodes(Task* task,
-                                const PatchSet* patches,
-                                const MaterialSet* matls) const;
-    void PropagateCrackFrontNodes(const ProcessorGroup*,
+    void PropagateCrackFrontPoints(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
@@ -148,6 +130,24 @@ class Crack
                                 const PatchSet* patches,
                                 const MaterialSet* matls) const;
     void MoveCracks(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
+
+    void addComputesAndRequiresCrackFrontNodeSubset(Task* task,
+                                const PatchSet* patches,
+                                const MaterialSet* matls) const;
+    void CrackFrontNodeSubset(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
+
+    void addComputesAndRequiresRecollectCrackFrontSegments(Task* task,
+                                const PatchSet* patches,
+                                const MaterialSet* matls) const;
+    void RecollectCrackFrontSegments(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
@@ -235,6 +235,8 @@ class Crack
     vector<vector<IntVector> >    ce;     // Crack elems
     vector<vector<int> >  cfSegNodes;     // Crack-front-seg nodes
     vector<vector<int> > cfSegPreIdx;     // node[i]=node[preIdx]
+    vector<vector<int> > cfSegMinIdx;     // Minimum index of the sub-crack
+    vector<vector<int> > cfSegMaxIdx;     // Maximum index of the sub-crack
     vector<vector<Point> > cfSegPtsT;     // Crack-front points after propagation
     vector<vector<Vector> >  cfSegV1;     // Bi-normals at crack-front nodes
     vector<vector<Vector> >  cfSegV2;     // Normals at crack-front nodes
@@ -247,8 +249,8 @@ class Crack
 
 
     /*************************** PRIVATE METHODS ***************************/
-    // Detect if doing fracture analysis
-    void FindTimeStepForFractureAnalysis(double);
+    // Detect if doing fracture analysis at this time step
+    void DetectIfDoingFractureAnalysisAtThisTimeStep(double);
     // Calculate normal of a triangle
     Vector TriangleNormal(const Point&,const Point&,const Point&);
     // Detect position relation between particle, node and crack plane
@@ -275,6 +277,8 @@ class Crack
                                               const double [],Point&); 
     // Find the segment(s) connected by the node
     void FindSegsFromNode(const int&,const int&, int []);
+    // Find the minimum and maximum indexes of the sub-crack
+    void FindCrackFrontNodeIndexes(const int&);
     // Detect if a point is within or around the real global grid
     short PhysicalGlobalGridContainsPoint(const double&,const Point&);
     // Find the intersection between a line-segment and global grid boundary
@@ -299,7 +303,6 @@ class Crack
     void DiscretizeEllipticCracks(const int&,int&);
     void DiscretizePartialEllipticCracks(const int&,int&);
     void OutputCrackPlaneMesh(const int&);
-    void FindCrackFrontNodePreIdx(const int&); 
 
     // Calculate crack-front normals, tangential normals and bi-normals
     short CalculateCrackFrontNormals(const int& m);
