@@ -441,7 +441,7 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 
 void
 Relocate::scheduleParticleRelocation(Scheduler* sched,
-				     const ProcessorGroup* pg,
+				     const ProcessorGroup* /*pg*/,
 				     LoadBalancer* lb,
 				     const LevelP& level,
 				     const VarLabel* old_posLabel,

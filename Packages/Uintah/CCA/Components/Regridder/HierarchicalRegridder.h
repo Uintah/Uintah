@@ -60,10 +60,10 @@ class VarLabel;
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw);
     inline void dummyTask(const ProcessorGroup*,
-                          const PatchSubset* patches,
+                          const PatchSubset* /*patches*/,
                           const MaterialSubset* ,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw) {}
+                          DataWarehouse* /*old_dw*/,
+                          DataWarehouse* /*new_dw*/) {}
 
     inline IntVector StartCellToLattice ( SCIRun::IntVector startCell, int levelIdx );
     
