@@ -206,6 +206,7 @@ DrawInfoOpenGL::DrawInfoOpenGL() :
   fog(0),
   cull(0),
   current_matl(0),
+  using_cmtexture_(false),
   cmtexture_(0)
 {
   for (int i=0; i < GEOM_FONT_COUNT; i++) {
@@ -917,6 +918,7 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
 
   if (!cmap_.get_rep())
   {
+    di->using_cmtexture_ = false;
     child_->draw(di, m, time);
   }
   else
@@ -949,8 +951,10 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
     glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
 
     // Draw child
+    di->using_cmtexture_ = true;
     child_->draw(di,m,time);
-
+    di->using_cmtexture_ = false;
+    
     glMatrixMode(GL_TEXTURE);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
@@ -2091,7 +2095,7 @@ GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
-  if (indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -2175,7 +2179,7 @@ GeomTranspLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
-  if (indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -2685,7 +2689,7 @@ void GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
       glDisableClientState(GL_COLOR_ARRAY);
     }
 
-    if (indices_.size() == points_.size() / 3)
+    if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
     {
       glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
       glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -2763,7 +2767,7 @@ GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
-  if (indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -3549,7 +3553,7 @@ GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
-  if (indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -3657,7 +3661,7 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
-  if (indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -3742,7 +3746,7 @@ GeomFastQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
-  if (indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -3854,7 +3858,7 @@ GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
-  if (indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
