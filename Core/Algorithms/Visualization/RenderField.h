@@ -142,14 +142,14 @@ private:
 			  double node_scale,
 			  int node_resolution,
 			  bool use_transparency);
-  GeomHandle render_edges(const Fld *fld,
+  GeomHandle render_edges(Fld *fld,
 			  const string &edge_display_mode,
 			  ColorMapHandle color_handle,
 			  MaterialHandle def_mat,
 			  double edge_scale,
 			  int cylinder_resolution,
 			  bool transparent_p);
-  GeomHandle render_faces(const Fld *fld, 
+  GeomHandle render_faces(Fld *fld, 
 			  ColorMapHandle color_handle,
 			  MaterialHandle def_mat,
 			  bool use_normals,
@@ -360,14 +360,14 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
   // Use a default color?
   bool def_color = !(color_handle.get_rep());
   bool vec_color = false;
+  MaterialHandle vcol(0);
   if (def_color && sfld->query_vector_interface() != NULL)
   {
     def_color = false;
     vec_color = true;
+    vcol = scinew Material();
+    vcol->transparency = 1.0;
   }
-   
-  MaterialHandle vcol = scinew Material();
-  vcol->transparency = 1.0;
 
   // First pass: over the nodes
   mesh->synchronize(Mesh::NODES_E);
@@ -493,7 +493,7 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
 
 template <class Fld, class Loc>
 GeomHandle
-RenderField<Fld, Loc>::render_edges(const Fld *sfld,
+RenderField<Fld, Loc>::render_edges(Fld *sfld,
 				    const string &edge_display_mode,
 				    ColorMapHandle color_handle,
 				    MaterialHandle def_mat,
@@ -528,6 +528,20 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
     lines->setLineWidth(edge_scale);
   }
 
+  // Use a default color?
+  bool def_color = !(color_handle.get_rep());
+  bool vec_color = false;
+  MaterialHandle vcol0(0), vcol1(0);
+  if (def_color && sfld->query_vector_interface() != NULL)
+  {
+    def_color = false;
+    vec_color = true;
+    vcol0 = scinew Material();
+    vcol0->transparency = 1.0;
+    vcol1 = scinew Material();
+    vcol1->transparency = 1.0;
+  }
+
   // Second pass: over the edges
   mesh->synchronize(Mesh::EDGES_E);
   typename Fld::mesh_type::Edge::iterator eiter; mesh->begin(eiter);  
@@ -545,16 +559,46 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 	typename Fld::value_type val0, val1;
 	sfld->value(val0, nodes[0]);
 	sfld->value(val1, nodes[1]);
-	double dval0, dval1;
-	to_double(val0, dval0);
-	to_double(val1, dval1);
-	if (cyl)
+	if (def_color)
 	{
-	  cylinders->add(p1, dval0, p2, dval1);
+	  if (cyl)
+	  {
+	    cylinders->add(p1, p2);
+	  }
+	  else
+	  {
+	    lines->add(p1, p2);
+	  }
+	}
+	else if (vec_color)
+	{
+	  Vector v0(0, 0, 0), v1(0, 0, 0);
+	  to_vector(val0, v0);
+	  to_vector(val1, v1);
+	  vcol0->diffuse = Color(v0.x(), v0.y(), v0.z());
+	  vcol1->diffuse = Color(v1.x(), v1.y(), v1.z());
+	  if (cyl)
+	  {
+	    cylinders->add(p1, vcol0, p2, vcol1);
+	  }
+	  else
+	  {
+	    lines->add(p1, vcol0, p2, vcol1);
+	  }
 	}
 	else
 	{
-	  lines->add(p1, dval0, p2, dval1);
+	  double dval0, dval1;
+	  to_double(val0, dval0);
+	  to_double(val1, dval1);
+	  if (cyl)
+	  {
+	    cylinders->add(p1, dval0, p2, dval1);
+	  }
+	  else
+	  {
+	    lines->add(p1, dval0, p2, dval1);
+	  }
 	}
       }
       break;
@@ -562,15 +606,43 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
       {
 	typename Fld::value_type val;
 	sfld->value(val, *eiter);
-	double dval;
-	to_double(val, dval);
-	if (cyl)
+	if (def_color)
 	{
-	  cylinders->add(p1, dval, p2, dval);
+	  if (cyl)
+	  {
+	    cylinders->add(p1, p2);
+	  }
+	  else
+	  {
+	    lines->add(p1, p2);
+	  }
+	}
+	else if (vec_color)
+	{
+	  Vector v(0, 0, 0);
+	  to_vector(val, v);
+	  vcol0->diffuse = Color(v.x(), v.y(), v.z());
+	  if (cyl)
+	  {
+	    cylinders->add(p1, vcol0, p2, vcol0);
+	  }
+	  else
+	  {
+	    lines->add(p1, vcol0, p2, vcol0);
+	  }
 	}
 	else
 	{
-	  lines->add(p1, dval, p2, dval);
+	  double dval;
+	  to_double(val, dval);
+	  if (cyl)
+	  {
+	    cylinders->add(p1, dval, p2, dval);
+	  }
+	  else
+	  {
+	    lines->add(p1, dval, p2, dval);
+	  }
 	}
       }
       break;
@@ -600,13 +672,14 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 
 template <class Fld, class Loc>
 GeomHandle 
-RenderField<Fld, Loc>::render_faces(const Fld *sfld,
+RenderField<Fld, Loc>::render_faces(Fld *sfld,
 				    ColorMapHandle color_handle,
 				    MaterialHandle def_mat,
 				    bool use_normals,
 				    bool use_transparency)
 {
-  //cerr << "rendering faces" << endl;
+  unsigned int i;
+
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
   const bool with_normals = (use_normals && mesh->has_normals());
 
@@ -633,6 +706,23 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
     face_switch = dl;
   }
 
+  // Use a default color?
+  bool def_color = !(color_handle.get_rep());
+  bool vec_color = false;
+  vector<MaterialHandle> vcol(20, (Material *)NULL);
+  vector<Vector> vvals(20);
+  vector<typename Fld::value_type> vals(20);
+  vector<double> dvals(20);
+  if (def_color && sfld->query_vector_interface() != NULL)
+  {
+    def_color = false;
+    vec_color = true;
+    for (i = 0; i < 20; i++)
+    {
+      vcol[i] = scinew Material();
+      vcol[i]->transparency = 1.0;
+    }
+  }
   // Third pass: over the faces
   if (with_normals) mesh->synchronize(Mesh::NORMALS_E);
   mesh->synchronize(Mesh::FACES_E);
@@ -643,7 +733,6 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
   while (fiter != fiter_end) {
     mesh->get_nodes(nodes, *fiter); 
  
-    unsigned int i;
     vector<Point> points(nodes.size());
     vector<Vector> normals(nodes.size());
     for (i = 0; i < nodes.size(); i++)
@@ -657,14 +746,59 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
       }
     }
 
-    switch (sfld->data_at()) {
-    case Field::NODE:
+    if (sfld->data_at() == Field::NODE && !def_color)
+    {
+      for (i = 0; i < nodes.size(); i++)
       {
-	vector<typename Fld::value_type> vals(nodes.size());
-	vector<double> dvals(nodes.size());
+	sfld->value(vals[i], nodes[i]);
+      }
+      if (vec_color)
+      {
 	for (i = 0; i < nodes.size(); i++)
 	{
-	  sfld->value(vals[i], nodes[i]);
+	  to_vector(vals[i], vvals[i]);
+	  vcol[i]->diffuse = Color(vvals[i].x(), vvals[i].y(), vvals[i].z());
+	}
+	if (nodes.size() == 4)
+	{
+	  if (with_normals)
+	  {
+	    qfaces->add(points[0], normals[0], vcol[0],
+			points[1], normals[1], vcol[1],
+			points[2], normals[2], vcol[2],
+			points[3], normals[3], vcol[3]);
+	  }
+	  else
+	  {
+	    qfaces->add(points[0], vcol[0],
+			points[1], vcol[1],
+			points[2], vcol[2],
+			points[3], vcol[3]);
+	  }
+	}
+	else
+	{
+	  for (i=2; i<nodes.size(); i++)
+	  {
+	    if (with_normals)
+	    {
+	      faces->add(points[0], normals[0], vcol[0],
+			 points[i-1], normals[i-1], vcol[i-1],
+			 points[i], normals[i], vcol[i]);
+	    }
+	    else
+	    {
+	      faces->add(points[0], vcol[0],
+			 points[i-1], vcol[i-1],
+			 points[i], vcol[i]);
+	    }
+	  }
+	}
+      }
+      else
+      {
+	for (i = 0; i < nodes.size(); i++)
+	{
 	  to_double(vals[i], dvals[i]);
 	}
 	if (nodes.size() == 4)
@@ -703,13 +837,55 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
 	  }
 	}
       }
-      break;
-      
-    case Field::FACE: 
+    }
+    else if (sfld->data_at() == Field::FACE && !def_color)
+    {
+      typename Fld::value_type val;
+      sfld->value(val, *fiter);
+      if (vec_color)
       {
-	typename Fld::value_type val;
+	Vector vval;
+	to_vector(val, vval);
+	vcol[0]->diffuse = Color(vval.x(), vval.y(), vval.z());
+	if (nodes.size() == 4)
+	{
+	  if (with_normals)
+	  {
+	    qfaces->add(points[0], normals[0], vcol[0],
+			points[1], normals[1], vcol[0],
+			points[2], normals[2], vcol[0],
+			points[3], normals[3], vcol[0]);
+	  }
+	  else
+	  {
+	    qfaces->add(points[0], vcol[0],
+			points[1], vcol[0],
+			points[2], vcol[0],
+			points[3], vcol[0]);
+	  }
+	}
+	else
+	{
+	  for (i=2; i<nodes.size(); i++)
+	  {
+	    if (with_normals)
+	    {
+	      faces->add(points[0], normals[0], vcol[0],
+			 points[i-1], normals[i-1], vcol[0],
+			 points[i], normals[i], vcol[0]);
+	    }
+	    else
+	    {
+	      faces->add(points[0], vcol[0],
+			 points[i-1], vcol[0],
+			 points[i], vcol[0]);
+	    }
+	  }
+	}
+      }
+      else
+      {
 	double dval;
-	sfld->value(val, *fiter);
 	to_double(val, dval);
 
 	if (nodes.size() == 4)
@@ -748,12 +924,9 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
 	  }
 	}
       }
-      break;
-      
-    case Field::EDGE:
-    case Field::CELL:
-    case Field::NONE:
-    default:
+    }
+    else
+    {
       if (nodes.size() == 4)
       {
 	if (with_normals)
