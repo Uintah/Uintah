@@ -160,6 +160,55 @@ ImageMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
   }
 }
 
+
+void
+ImageMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
+{
+  array.resize(4);  
+
+  const int j_idx = (ni_-1) * nj_;
+
+  array[0] = idx.i_             + idx.j_    *(ni_-1); 
+  array[1] = idx.i_             + (idx.j_+1)*(ni_-1);
+  array[2] = idx.i_    *(nj_-1) + idx.j_+ j_idx;
+  array[3] = (idx.i_+1)*(nj_-1) + idx.j_+ j_idx;
+}
+  
+
+
+bool
+ImageMesh::get_neighbor(Face::index_type &neighbor,
+			Face::index_type from,
+			Edge::index_type edge) const
+{
+  const int j_idx = edge - (ni_-1) * nj_;
+  if (j_idx >= 0)
+  {
+    const int i = j_idx / (nj_ - 1);
+    if (i == 0 || i == ni_-1) 
+      return false;
+    neighbor.j_ = from.j_;
+    if (i == from.i_)
+      neighbor.i_ = from.i_ - 1;
+    else
+      neighbor.i_ = from.i_ + 1;
+  }
+  else
+  {
+    const int j = edge / (ni_ - 1);;
+    if (j == 0 || j == nj_-1) 
+      return false;
+    neighbor.i_ = from.i_;
+    if (j == from.j_)
+      neighbor.j_ = from.j_ - 1;
+    else
+      neighbor.j_ = from.j_ + 1; 
+  }
+  return true;
+}
+
+
+
 int
 ImageMesh::get_valence(Edge::index_type idx) const
 {
