@@ -8,7 +8,8 @@
 SRCDIR   := Uintah/Components/Arches/fortran
 
 SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
-	$(SRCDIR)/cellg.F $(SRCDIR)/areain.F
+	$(SRCDIR)/cellg.F $(SRCDIR)/areain.F $(SRCDIR)/profv.F \
+	$(SRCDIR)/profscalar.F
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
 #	$(SRCDIR)/arrmax.F $(SRCDIR)/assign.F $(SRCDIR)/bcp.F \
@@ -27,7 +28,7 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 #	$(SRCDIR)/loglaw.F $(SRCDIR)/matvec.F $(SRCDIR)/mixltm.F \
 #	$(SRCDIR)/omgcal.F $(SRCDIR)/pdep.F $(SRCDIR)/pprops.F \
 #	$(SRCDIR)/prcf.F $(SRCDIR)/prdbc1.F $(SRCDIR)/prdbc2.F \
-#	$(SRCDIR)/prec.F $(SRCDIR)/profv.F $(SRCDIR)/props.F \
+#	$(SRCDIR)/prec.F  $(SRCDIR)/props.F \
 #	$(SRCDIR)/reade.F $(SRCDIR)/rescal.F $(SRCDIR)/resid1.F \
 #	$(SRCDIR)/rite0.F $(SRCDIR)/root.F $(SRCDIR)/scale_factors.F \
 #	$(SRCDIR)/solve.F $(SRCDIR)/symbcs.F $(SRCDIR)/wallbc.F \
@@ -41,6 +42,10 @@ PSELIBS :=
 
 #
 # $Log$
+# Revision 1.11  2000/06/20 20:42:38  rawat
+# added some more boundary stuff and modified interface to IntVector. Before
+# compiling the code you need to update /SCICore/Geometry/IntVector.h
+#
 # Revision 1.10  2000/06/15 22:13:24  rawat
 # modified boundary stuff
 #

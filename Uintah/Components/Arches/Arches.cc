@@ -288,35 +288,24 @@ Arches::paramInit(const ProcessorGroup* ,
   cerr << "Actual initialization - after allocation\n";
 
   // ** WARNING **  this needs to be changed soon (6/9/2000)
-  // IntVector domainLow = patch->getCellLowIndex();
-  // IntVector domainHigh = patch->getCellHighIndex();
-  // IntVector indexLow = patch->getCellLowIndex();
-  // IntVector indexHigh = patch->getCellHighIndex();
-  int domainLow[3], domainHigh[3];
-  int indexLow[3], indexHigh[3];
-  domainLow[0] = (patch->getCellLowIndex()).x()+1;
-  domainLow[1] = (patch->getCellLowIndex()).y()+1;
-  domainLow[2] = (patch->getCellLowIndex()).z()+1;
-  domainHigh[0] = (patch->getCellHighIndex()).x();
-  domainHigh[1] = (patch->getCellHighIndex()).y();
-  domainHigh[2] = (patch->getCellHighIndex()).z();
-  for (int ii = 0; ii < 3; ii++) {
-    indexLow[ii] = domainLow[ii]+1;
-    indexHigh[ii] = domainHigh[ii]-1;
-  }
+  IntVector domainLow = patch->getCellLowIndex();
+  IntVector domainHigh = patch->getCellHighIndex() - IntVector(1,1,1);
+  IntVector indexLow = domainLow;
+  IntVector indexHigh = domainHigh;
   //can read these values from input file 
   double uVal = 0.0, vVal = 0.0, wVal = 0.0;
   double pVal = 0.0, denVal = 0.0;
   double visVal = d_physicalConsts->getMolecularViscosity();
-  FORT_INIT(domainLow, domainHigh, indexLow, indexHigh,
+  FORT_INIT(domainLow.get_pointer(), domainHigh.get_pointer(), 
+	    indexLow.get_pointer(),  indexHigh.get_pointer(),
 	    uVelocity.getPointer(), &uVal, vVelocity.getPointer(), &vVal, 
 	    wVelocity.getPointer(), &wVal,
 	    pressure.getPointer(), &pVal, density.getPointer(), &denVal, 
 	    viscosity.getPointer(), &visVal);
   for (int ii = 0; ii < d_nofScalars; ii++) {
     double scalVal = 0.0;
-    FORT_INIT_SCALAR(domainLow, domainHigh,
-		     indexLow, indexHigh, 
+    FORT_INIT_SCALAR(domainLow.get_pointer(), domainHigh.get_pointer(),
+		     indexLow.get_pointer(), indexHigh.get_pointer(), 
 		     scalar[ii].getPointer(), &scalVal);
   }
 
@@ -358,6 +347,10 @@ Arches::paramInit(const ProcessorGroup* ,
 
 //
 // $Log$
+// Revision 1.44  2000/06/20 20:42:35  rawat
+// added some more boundary stuff and modified interface to IntVector. Before
+// compiling the code you need to update /SCICore/Geometry/IntVector.h
+//
 // Revision 1.43  2000/06/19 18:00:28  rawat
 // added function to compute velocity and density profiles and inlet bc.
 // Fixed bugs in CellInformation.cc
