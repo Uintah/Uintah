@@ -61,10 +61,10 @@ itcl_class PSECommon_Salmon_EditPath {
 	
 	scale $ef.fsb.fr -variable $this-tcl_curr_view -from 0 -to [set $this-tcl_num_views] \
 		-orient horizontal -width 15 -command "$this-c get_to_view" -label "Current View:"
-	scale $ef.fsb.fsm -variable $this-tcl_step_size -digits 6 -from 0.01 -to 1 \
-		-resolution 0.01 -orient horizontal -width 7 -label "Path Step:"
+	scale $ef.fsb.fsm -variable $this-tcl_step_size -digits 6 -from 0.0001 -to 0.1 \
+		-resolution 0.0001 -orient horizontal -width 7 -label "Path Step:"
 	scale $ef.fsb.sp -variable $this-tcl_speed_val -digits 4 -from 0.1 -to 10 \
-		-resolution 0.1 -orient horizontal -width 7 -label "Speed:"
+		-resolution 0.01 -orient horizontal -width 7 -label "Speed:"
 	pack $ef.fsb.fr $ef.fsb.fsm $ef.fsb.sp -side top -fill x -padx 2
 
 	button $ef.btn.add -text "Add View" -command "$this-c add_vp" -anchor w
@@ -113,8 +113,8 @@ itcl_class PSECommon_Salmon_EditPath {
 	button $df.ftest.stop -text "Stop" -command "set $this-tcl_stop 1"  -anchor w
 	button $df.ftest.save -text "Save" -command "$this-c save_path" -anchor w
 	
-	scale  $df.ftest.sbrate -variable $this-tcl_rate -digits 4 -from 0.05 -to 5 \
-		-resolution 0.05 -orient horizontal -width 7 -length 150
+	scale  $df.ftest.sbrate -variable $this-tcl_rate -digits 4 -from 0.05 -to 25 \
+		-resolution 0.05 -orient horizontal -width 7 -length 300
 	
 	label  $df.ftest.sblabel -text "Rate: " -anchor s
 	pack   $df.ftest.run $df.ftest.stop $df.ftest.save \
