@@ -64,13 +64,13 @@ inline Voxel2D<T> operator-(T& lhs, const Voxel2D<T>& rhs)
   
 class VolumeVis2D : public Object, public Material {
 protected:
-  friend class VolumeVis2DDpy;
-  VolumeVis2DDpy *dpy;
+  friend class Volvis2DDpy;
+  Volvis2DDpy *dpy;
   
   Vector diag;
   Vector inv_diag;
-  BrickArray3<Voxel2D<float>> data;
-  float data_min, data_max;
+  BrickArray3<Voxel2D<float> > data;
+  Voxel2D<float> data_min, data_max;
   int nx, ny, nz;
   Point min, max;
   double spec_coeff, ambient, diffuse, specular;
@@ -86,7 +86,7 @@ public:
 	      Voxel2D<float> data_min, Voxel2D<float> data_max,
 	    int nx, int ny, int nz, Point min, Point max,
 	    double spec_coeff, double ambient,
-	    double diffuse, double specular, VolumeVis2DDpy *dpy);
+	    double diffuse, double specular, Volvis2DDpy *dpy);
   virtual ~VolumeVis2D();
   //! Persistent I/O.
   //static  SCIRun::PersistentTypeID type_id;
