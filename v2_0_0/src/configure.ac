@@ -52,8 +52,9 @@
 ##  initialize configure 
 AC_INIT([SCIRun],[1.20],[scirun-users@sci.utah.edu])
 
-##  require autoconf version 2.53
-AC_PREREQ(2.53)
+##  require autoconf version 2.57 (I think this is the RH9 default.)
+##  type "autoconf --version" to find out what version you have.
+AC_PREREQ(2.57)
 
 AC_COPYRIGHT(
 ##
@@ -506,6 +507,7 @@ case $host in
     NUM_CPUS=4
     ;;
   *-darwin*)
+    SCI_CHECK_OS_VERSION(7.0,NEED_OSX_HACK=no,NEED_OSX_HACK=yes)
     NUM_CPUS=2
     IS_OSX="yes"
     ;;
@@ -866,14 +868,11 @@ case $host in
     LDRUN_PREFIX="-L"
     CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -fcoalesce-templates -Wno-long-double "
     CXXFLAGS="$CXXFLAGS $CFLAGS"
-    SCI_CHECK_VERSION($CC,--version,3.3,ver33=yes,ver33=no)
-    if test $ver33 == no; then
+
+    if test $NEED_OSX_HACK == yes; then
 	SOFLAGS="-dynamiclib -init __ZNSt8ios_base4InitC4Ev \${LIBDIR}/../osx/osx_init.o  ${SOFLAGS}"
-	NEED_OSX_HACK="yes"
     else
 	SOFLAGS="-dynamiclib"
-	NEED_OSX_HACK="no"
-
     fi
     AC_SUBST(NEED_OSX_HACK)
     ;;
