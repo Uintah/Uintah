@@ -59,6 +59,7 @@ PIDL::initialize(int, char*[])
 {
   //Default for communication purposes 
   setCommunication(COMM_NEXUS);
+  //setCommunication(COMM_SOCKET);
 
   switch (comm_type) {
   case COMM_SOCKET:
@@ -154,6 +155,10 @@ PIDL::getIntraComm()
   default:
     return (new IntraCommMPI());
   }
+}
+void
+PIDL::isNexus(){
+  return comm_type==COMM_NEXUS;
 }
  
 //PRIVATE:
