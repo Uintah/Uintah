@@ -124,6 +124,8 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
   DO_RESTART = "yes"
 
+  environ['MPI_TYPE_MAX'] = '10000'
+
   print ""
   if solotest == "":
     print "Performing %s-%s tests." % (ALGO, mode)
