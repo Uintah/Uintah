@@ -22,7 +22,6 @@
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/CutMaterial.h>
-#include <Packages/rtrt/Core/ColorMap.h>
 #include <Packages/rtrt/Core/GeoProbeReader.h>
 #include <Packages/rtrt/Core/VolumeDpy.h>
 #include <Packages/rtrt/Core/HVolume.h>
@@ -244,11 +243,7 @@ void GeoProbeScene::execute()
     Material *surfmat = new LambertianMaterial(rtrt::Color(gui_color_r_.get(),
 						     gui_color_g_.get(),
 						     gui_color_b_.get()));
-    //    ColorMap *cmap =new ColorMap("/opt/SCIRun/data/Geometry/volumes/vol_cmap");
-    //    CutPlaneDpy *cpdpy = new CutPlaneDpy(Vector(1,0,0), Point(xa,0,0));
-    //    Material *cutmat = new CutMaterial(surfmat, cmap, cpdpy);
     iso_val_.set(82.5);
-    //    CutVolumeDpy *cvdpy = new CutVolumeDpy(iso_val_.get(), cmap);
     vdpy = new VolumeDpy(iso_val_.get());
     vdpy->set_minmax(datamin, datamax);
     hvol = new HVolume<unsigned char, BrickArray3<unsigned char>, 
