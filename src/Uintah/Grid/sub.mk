@@ -8,6 +8,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Uintah/Grid
 
 SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
+	$(SRCDIR)/CellIterator.cc \
 	$(SRCDIR)/DataItem.cc $(SRCDIR)/Grid.cc \
 	$(SRCDIR)/Level.cc $(SRCDIR)/Material.cc \
 	$(SRCDIR)/NCVariableBase.cc $(SRCDIR)/ParticleSet.cc \
@@ -26,6 +27,13 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.10  2000/04/28 03:58:20  sparker
+# Fixed countParticles
+# Implemented createParticles, which doesn't quite work yet because the
+#   data warehouse isn't there yet.
+# Reduced the number of particles in the bar problem so that it will run
+#   quickly during development cycles
+#
 # Revision 1.9  2000/04/20 22:58:20  sparker
 # Resolved undefined symbols
 # Trying to make stuff work

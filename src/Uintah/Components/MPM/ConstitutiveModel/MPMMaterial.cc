@@ -110,7 +110,7 @@ long MPMMaterial::countParticles(GeometryObject* obj,
    Vector dxpp = region->dCell()*obj->getNumParticlesPerCell();
    Vector dcorner = dxpp*0.5;
 
-   int count = 0;
+   long count = 0;
    for(CellIterator iter = region->getCellIterator(b); !iter.done(); iter++){
       Point lower = region->nodePosition(*iter) + dcorner;
       for(int ix=0;ix < ppc.x(); ix++){
@@ -124,7 +124,41 @@ long MPMMaterial::countParticles(GeometryObject* obj,
 	 }
       }
    }
-   cerr << "Count for obj: " << count << '\n';
+   cerr << "Count1 for obj: " << count << '\n';
+   return count;
+}
+
+
+long MPMMaterial::createParticles(GeometryObject* obj, long start,
+				  ParticleVariable<Point>& position,
+				  const Region* region)
+{
+   GeometryPiece* piece = obj->getPiece();
+   Box b1 = piece->getBoundingBox();
+   Box b2 = region->getBox();
+   Box b = b1.intersect(b2);
+   if(b.degenerate())
+      return 0;
+
+   IntVector ppc = obj->getNumParticlesPerCell();
+   Vector dxpp = region->dCell()*obj->getNumParticlesPerCell();
+   Vector dcorner = dxpp*0.5;
+
+   long count = 0;
+   for(CellIterator iter = region->getCellIterator(b); !iter.done(); iter++){
+      Point lower = region->nodePosition(*iter) + dcorner;
+      for(int ix=0;ix < ppc.x(); ix++){
+	 for(int iy=0;iy < ppc.y(); iy++){
+	    for(int iz=0;iz < ppc.z(); iz++){
+	       IntVector idx(ix, iy, iz);
+	       Point p = lower + dxpp*idx;
+	       if(piece->inside(p))
+		  position[start+count++]=p;
+	    }
+	 }
+      }
+   }
+   cerr << "Count2 for obj: " << count << '\n';
    return count;
 }
 
