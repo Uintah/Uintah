@@ -53,32 +53,19 @@ using namespace std;
 namespace SCIRun {
 
 
-#ifdef __APPLE__
-  // On the Mac, this comes from Core/Util/DynamicLoader.cc because
-  // the constructor will actually fire from there.  When it is declared
-  // in this file, it does not "construct" and thus causes seg faults.
-  // (Yes, this is a hack.  Perhaps this problem will go away in later
-  // OSX releases, but probably not as it has something to do with the
-  // Mac philosophy on when to load dynamic libraries.)
-  extern map<string, MatrixIEPlugin *> *matrix_plugin_table;
-  extern Mutex matrixIEPluginMutex;
-#else
-  // Same problem on Linux really.  We need control of the static
-  // initializer order.
-  static map<string, MatrixIEPlugin *> *matrix_plugin_table = 0;
-  extern Mutex matrixIEPluginMutex;
-#endif
-
+static map<string, MatrixIEPlugin *> *matrix_plugin_table = 0;
+extern Mutex matrixIEPluginMutex; // From Core/Util/DynamicLoader.cc
 
 //----------------------------------------------------------------------
+
 MatrixIEPlugin::MatrixIEPlugin(const string& pname,
-			     const string& fextension,
-			     const string& fmagic,
-			     MatrixHandle (*freader)(ProgressReporter *pr,
-						    const char *filename),
-			     bool (*fwriter)(ProgressReporter *pr,
-					     MatrixHandle f,
-					     const char *filename))
+                               const string& fextension,
+                               const string& fmagic,
+                               MatrixHandle (*freader)(ProgressReporter *pr,
+                                                       const char *filename),
+                               bool (*fwriter)(ProgressReporter *pr,
+                                               MatrixHandle f,
+                                               const char *filename))
   : pluginname(pname),
     fileextension(fextension),
     filemagic(fmagic),
