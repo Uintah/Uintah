@@ -62,6 +62,7 @@ public:
 
 private:
   Scene *current_scene, *next_scene;
+  RTRT *rtrt_engine;
   
   GuiInt nworkers;
 
@@ -80,7 +81,7 @@ extern "C" Module* make_RTRTViewer(const string& id) {
 
 RTRTViewer::RTRTViewer(const string& id)
 : Module("RTRTViewer", id, Filter, "Render", "rtrt"),
-  current_scene(0), next_scene(0),
+  current_scene(0), next_scene(0), rtrt_engine(0),
   nworkers("nworkers",id,this)
 {
   //  inColorMap = scinew ColorMapIPort( this, "ColorMap",
@@ -129,7 +130,7 @@ void RTRTViewer::start_rtrt() {
     return;
   }
 
-  RTRT* rtrt_engine = new RTRT();
+  rtrt_engine = new RTRT();
   int displayproc=0;
 
   int xres=128;//360;
@@ -386,7 +387,11 @@ void RTRTViewer::start_rtrt() {
 
 void RTRTViewer::stop_rtrt() {
   cout << "Stoping the rtrt\n";
-  cout << "But not really....\n";
+  if (rtrt_engine) {
+    rtrt_engine->exit_clean(1);
+    delete(rtrt_engine);
+  }
+  current_scene = 0;
 }
 
 // This is called when the tcl code explicity calls a function besides
