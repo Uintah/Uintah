@@ -6,7 +6,7 @@
   <BODY>
 
     <CENTER>
-      <H1>PSE Installation and Build Instructions for the PSE</H1>
+      <H1>Installation and Build Instructions for the SCIRun PSE</H1>
       (Unix/non-CVS version)<BR><BR>
       by<BR>
       Chris Moulding
@@ -39,7 +39,7 @@
     <A NAME="System Requirements"></A><H2><A HREF="#TOC">System Requirements</A></H2>
 
     <P>
-      The following table describes system softwarerequirements.  Unless otherwise noted
+      The following table describes system software requirements.  Unless otherwise noted
       <EM>exact</EM> versions of software are required.
     </P>
 
@@ -70,6 +70,31 @@
 
 
     </TABLE>
+
+    <P>You can get this third party software directly from the vendors
+       by clicking on the links in the table, or you can get them from
+       our archives:
+      <OL>
+        <LI>Binaries:
+	  <UL>
+	    <LI><a
+	    href="http://www.cs.utah.edu/~moulding/ThirdParty.linux-i386.bin.tar.gz">Linux, i386 (~5.0MB)</a></LI>
+	    <LI><a href="http://www.cs.utah.edu/~moulding/ThirdParty.irix-n32.bin.tar.gz">SGI, n32 (~5.5MB)</a></LI>
+	    <LI><a href="http://www.cs.utah.edu/~moulding/ThirdParty.irix-64.bin.tar.gz">SGI, 64 (~5.5MB)</a></LI>
+	  </UL>
+	</LI>
+	<LI><a
+	href="http://www.cs.utah.edu/~moulding/ThirdParty.src.tar.gz">Sources
+	(~27.0MB)</a></LI>
+      </OL>
+    </P>
+
+    <P> Note that the compilers are not
+        included in the binary distributions since their 
+        installation is quite involved - please ask for a system
+        administrator's assistance if you need to install/upgrade
+        a compiler</P> 
+	
 
 
     <A NAME="Installing"></A><H2><A HREF="#TOC">Installing the PSE</A></H2>
@@ -417,7 +442,7 @@
 	    </P>            
 
 	    <P>
-	      <TT>SHLIB_LD = ld -32 -shared -rdata_shared -rpath /usr/local/lib</TT>
+	      <TT>SHLIB_LD = <font color=red>ld -32</font> -shared -rdata_shared <font color=red>-rpath /usr/local/lib</font></TT>
 	    </P>
 
             <P>
@@ -426,7 +451,7 @@
 
 	    <P>
 	      <TT>
-		SHLIB_LD = ld -YOUR_ABI -shared -rdata_shared -rpath INST_DIR
+		SHLIB_LD = <font color=red>ld -YOUR_ABI</font> -shared -rdata_shared <font color=red>-rpath INST_DIR</font>
 	      </TT>
 	    </P>
   
