@@ -67,7 +67,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb)
 	
    d_fracture = FractureFactory::create(ps);
 
-   d_eos = EquationOfStateFactory::create(ps);
+//   d_eos = EquationOfStateFactory::create(ps);
 
    // Step 2 -- get the general material properties
 
