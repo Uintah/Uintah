@@ -42,7 +42,7 @@ using namespace SCIRun;
       virtual void scheduleTimeAdvance(
                                       const LevelP&,
                                       SchedulerP&);
-                                                     
+                                                                                        
       void scheduleComputePressure(SchedulerP&, 
                                    const PatchSet*,
                                    const MaterialSubset*,
@@ -105,7 +105,9 @@ using namespace SCIRun;
       
       void scheduleAdvectAndAdvanceInTime(SchedulerP&, 
                                           const PatchSet*,
-                                          const MaterialSet*);
+                                          const MaterialSubset*,
+                                          const MaterialSubset*,
+                                          const MaterialSet*); 
 
       void scheduleMassExchange(SchedulerP&, 
                                 const PatchSet*,
