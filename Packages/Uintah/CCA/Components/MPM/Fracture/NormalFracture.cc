@@ -144,7 +144,7 @@ void NormalFracture::computeBoundaryContact(
 
       if(touchFacetsNum>0) {
         pTouchNormal_p_new[pIdx_p].normalize();
-        cout<<"HAVE crack contact!"<<endl;
+        //cout<<"HAVE crack contact!"<<endl;
       }
     }
 
@@ -255,8 +255,8 @@ void NormalFracture::computeConnectivity(
 	  }
 	
 	  else {
-            double r = pow(pVolume_pg[pidx_pg] *0.75/M_PI,0.3333333333);
-            double r2 = r*r;
+            double r = pow(pVolume_pg[pidx_pg],0.3333333333)/2;
+            double r2 = 2*r*r;
 	
             if( pTouchNormal_pg[pidx_pg].length2() > 0.5 ) {
               Point O = pX_pg[pidx_pg] + pTouchNormal_pg[pidx_pg] * r;
@@ -319,7 +319,6 @@ void NormalFracture::computeFracture(
   ParticleVariable<int>    pIsBroken_pg;
   ParticleVariable<Vector> pCrackNormal_pg[3];
   ParticleVariable<double> pVolume_pg;
-  ParticleVariable<Matrix3> pStress_pg;
 
   old_dw->get(pX_pg, lb->pXLabel, pset_pg);
   old_dw->get(pIsBroken_pg, lb->pIsBrokenLabel, pset_pg);
@@ -327,23 +326,24 @@ void NormalFracture::computeFracture(
   old_dw->get(pCrackNormal_pg[1], lb->pCrackNormal2Label, pset_pg);
   old_dw->get(pCrackNormal_pg[2], lb->pCrackNormal3Label, pset_pg);
   old_dw->get(pVolume_pg, lb->pVolumeLabel, pset_pg);
-  new_dw->get(pStress_pg, lb->pStressAfterStrainRateLabel, pset_pg);
 
   //patchOnly data
   ParticleSubset* pset_p = old_dw->getParticleSubset(matlindex, patch);
   //cout<<"computeFracture:numParticles: "<< pset_p->numParticles()<<endl;
   
   ParticleVariable<Point>  pX_p;
-  ParticleVariable<double> pStrainEnergy_p;
+  //ParticleVariable<double> pStrainEnergy_p;
   ParticleVariable<double> pToughness_p;
   ParticleVariable<Vector> pRotationRate_p;
   ParticleVariable<int> pConnectivity_p;
+  ParticleVariable<Matrix3> pStress_p;
 
   new_dw->get(pX_p, lb->pXXLabel, pset_p);
-  new_dw->get(pStrainEnergy_p, lb->pStrainEnergyLabel, pset_p);
+  //new_dw->get(pStrainEnergy_p, lb->pStrainEnergyLabel, pset_p);
   old_dw->get(pToughness_p, lb->pToughnessLabel, pset_p);
   new_dw->get(pRotationRate_p, lb->pRotationRateLabel, pset_p);
   new_dw->get(pConnectivity_p, lb->pConnectivityLabel, pset_p);
+  new_dw->get(pStress_p, lb->pStressAfterStrainRateLabel, pset_p);
 
   //particle index exchange from patch to patch+ghost
   vector<int> pIdxEx( pset_p->numParticles() );
@@ -368,6 +368,7 @@ void NormalFracture::computeFracture(
   old_dw->get(delT, lb->delTLabel);
 
   const Vector dx = patch->dCell();
+  double cellLength = dx.x();
   
   for(ParticleSubset::iterator iter = pset_p->begin();
           iter != pset_p->end(); iter++)
@@ -388,31 +389,24 @@ void NormalFracture::computeFracture(
       }
     }
     
-    pStress_p_new[pIdx_p] = pStress_pg[pIdx_pg];
+    pStress_p_new[pIdx_p] = pStress_p[pIdx_p];
 
     if(pIsBroken_pg[pIdx_pg] >= 3) continue;
     
     //check toughness
-    double area = pow(pVolume_pg[pIdx_pg],2./3.);
-    double resistEnergy = pToughness_p[pIdx_p] * area;
-    if( resistEnergy > pStrainEnergy_p[pIdx_p] ) continue;
-
-    Vector nx,ny;
-    double sigmay,sigmax;
-    getFirstAndSecondEigenvalue(pStress_pg[pIdx_pg], ny, sigmay, nx, sigmax);
-    if(sigmay<0) continue;
-
-    double G;
-    ParticlesNeighbor particles;
-    lattice.getParticlesNeighbor(pX_p[pIdx_p], particles);
-    if( !particles.computeEnergyReleaseRate(
-         pIdx_p,nx,ny,pX_pg,pStress_pg,pVolume_pg,G) ) continue;
-
-    //cout<<"energy release rate: "<<G<<endl;
-    if( G < pToughness_p[pIdx_p] ) continue;
-    cout<<"crack!"<<endl;
+    const Matrix3& stress = pStress_p[pIdx_p];
+    double stre = sqrt( stress(1,1) * stress(1,1) +
+                        stress(2,2) * stress(2,2) +
+			stress(3,3) * stress(3,3) );
+    if(stre * cellLength*2 < pToughness_p[pIdx_p]) continue;
 
     //crack direction
+    Vector nx,ny;
+    double sigmay,sigmax;
+    getFirstAndSecondEigenvalue(stress, ny, sigmay, nx, sigmax);
+    if(sigmay<=0) continue;
+
+/*
     IntVector ni[8];
     Vector d_S[8];
     patch->findCellAndShapeDerivatives(pX_p[pIdx_p], ni, d_S);
@@ -432,6 +426,66 @@ void NormalFracture::computeFracture(
       }
     }
     if( Dot(dSn,ny)<0 ) ny=-ny;
+*/
+
+    //energy release rate
+    static double Gmax=0;
+    double G;
+    ParticlesNeighbor particles;
+    
+    lattice.getParticlesNeighbor(pX_p[pIdx_p], particles);
+    if( !particles.computeEnergyReleaseRate(
+         pIdx_p,nx,ny,sigmay,pX_pg,pVolume_pg,G) ) continue;
+
+    if(G>Gmax) {
+      Gmax=G;
+      cout<<"Max energy release rate: "<<Gmax<<endl;
+    }
+    
+    if( G < pToughness_p[pIdx_p] ) continue;
+
+    //geometry acceptance
+    int particlesNumber = particles.size();
+    double psize = pow( pVolume_pg[pIdx_pg], 1./3. );
+
+    bool accept = false;
+    for(int p=0; p<particlesNumber; p++) {
+      int idx_pg = particles[p];
+
+      Vector dis = pX_pg[idx_pg] - pX_pg[pIdx_pg];
+      double vdis = Dot(ny,dis);
+      if( fabs(vdis) > psize/2 ) continue;
+      Vector Vdis = ny * vdis;
+      if( (dis-Vdis).length() > psize*1.5 ) continue;
+      
+      if( pIsBroken_pg[idx_pg]>0) {
+        if( Dot(pCrackNormal_pg[0][idx_pg],ny) > 0.9 ) {
+          if( fabs(Dot(dis,pCrackNormal_pg[0][idx_pg])) < psize/2 ) {
+            accept = true;
+            break;
+          }
+        }
+      }
+      if(pIsBroken_pg[idx_pg]>1) {
+        if( Dot(pCrackNormal_pg[1][idx_pg],ny) > 0.9 ) {
+          if( fabs(Dot(dis,pCrackNormal_pg[1][idx_pg])) < psize/2 ) {
+            accept = true;
+            break;
+          }
+        }
+      }
+      if(pIsBroken_pg[idx_pg]>2) {
+        if( Dot(pCrackNormal_pg[2][idx_pg],ny) > 0.9 ) {
+          if( fabs(Dot(dis,pCrackNormal_pg[2][idx_pg])) < psize/2 ) {
+            accept = true;
+            break;
+          }
+        }
+      }
+    }
+    if(!accept) continue;
+
+    cout<<"crack! "<<"nx="<<nx<<" ny="<<ny<<endl;
 
     //stress release
     for(int i=1;i<=3;++i)
