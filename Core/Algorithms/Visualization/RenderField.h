@@ -102,15 +102,16 @@ public:
 		      bool bidirectional, bool arrow_heads);
 
 private:
-  void render_nodes(const Fld *fld, 
-		    const string &node_display_type,
-		    double node_scale);
-  void render_edges(const Fld *fld,
-		    const string &edge_display_type,
-		    double edge_scale);
-  void render_faces(const Fld *fld, 
-		    bool use_normals,
-		    bool use_transparency);
+
+  GeomSwitch *render_nodes(const Fld *fld, 
+			   const string &node_display_type,
+			   double node_scale);
+  GeomSwitch *render_edges(const Fld *fld,
+			   const string &edge_display_type,
+			   double edge_scale);
+  GeomSwitch *render_faces(const Fld *fld, 
+			   bool use_normals,
+			   bool use_transparency);
 
   void render_data(const Fld *fld, 
 		   const string &data_display_type,
@@ -124,8 +125,6 @@ private:
 		       GeomGroup *g, MaterialHandle m0);
   inline void add_axis(const Point &p, double scale, GeomGroup *g, 
 		       MaterialHandle m0);
-  inline void add_point(const Point &p, GeomPts *g, 
-			MaterialHandle m0);
 
   inline  MaterialHandle choose_mat(bool def, int idx) {  
     if (def) return def_mat_handle_;
@@ -204,6 +203,7 @@ RenderField<Fld, Loc>::add_sphere(const Point &p0, double scale,
 }
 
 
+
 template <class Fld, class Loc>
 void 
 RenderField<Fld, Loc>::add_disk(const Point &p, const Vector &vin,
@@ -225,6 +225,7 @@ RenderField<Fld, Loc>::add_disk(const Point &p, const Vector &vin,
     g->add(scinew GeomMaterial(s, mh));
   }
 }
+
 
 
 template <class Fld, class Loc>
@@ -253,11 +254,6 @@ RenderField<Fld, Loc>::add_axis(const Point &p0, double scale,
   g->add(scinew GeomMaterial(l, mh));
 }
 
-template <class Fld, class Loc>
-void 
-RenderField<Fld, Loc>::add_point(const Point &p, GeomPts *pts, MaterialHandle mh) {
-  pts->add(p, mh);
-}
 
 
 template <class Fld, class Loc>
@@ -278,9 +274,10 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
   res_ = res;
 
   if (def_col) { render_materials(fld, ndt); }
-  if (nodes)   { render_nodes(fld, ndt, ns); }
-  if (edges)   { render_edges(fld, edt, es); }
-  if (faces)   { render_faces(fld, use_normals, use_transparency); }
+  if (nodes)   { node_switch_ = render_nodes(fld, ndt, ns); }
+  if (edges)   { edge_switch_ = render_edges(fld, edt, es); }
+  if (faces)   { face_switch_ = render_faces(fld, use_normals,
+					     use_transparency); }
   
   if (data)
   {
@@ -290,6 +287,7 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
     render_data(fld, ndt, vs, normalize, bidirectional);
   }
 }
+
 
 
 template <class Fld, class Loc>
@@ -320,6 +318,7 @@ RenderField<Fld, Loc>::render_data(const Fld *fld,
     ++iter;
   }
 }
+
 
 
 // if a colormap exists, and we have data at a location, map the index to 
@@ -507,8 +506,9 @@ RenderField<Fld, Loc>::render_materials(const Fld *sfld,
 }
 
 
+
 template <class Fld, class Loc>
-void 
+GeomSwitch *
 RenderField<Fld, Loc>::render_nodes(const Fld *sfld, 
 				    const string &node_display_type,
 				    double node_scale) 
@@ -517,7 +517,7 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
   GeomGroup* nodes = scinew GeomGroup;
   GeomDL *display_list = scinew GeomDL(nodes);
-  node_switch_ = scinew GeomSwitch(display_list);
+  GeomSwitch *node_switch = scinew GeomSwitch(display_list);
   GeomPts *pts = 0;
 
   // 0 Points 1 Spheres 2 Axes 3 Disks
@@ -567,7 +567,7 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
     switch (mode)
     {
     case 0: // Points
-      add_point(p, pts, choose_mat(def_color, *niter));
+      pts->add(p, choose_mat(def_color, *niter));
       break;
 
     case 1: // Spheres
@@ -588,11 +588,14 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
   if (mode == 0) { // Points
     nodes->add(pts);
   }
+
+  return node_switch;
 }
 
 
+
 template <class Fld, class Loc>
-void 
+GeomSwitch *
 RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 				    const string &edge_display_type,
 				    double edge_scale) 
@@ -604,20 +607,21 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 
   GeomCLines* lines = NULL;
   GeomColoredCylinders* cylinders = NULL;
+  GeomSwitch *edge_switch;
   if (cyl)
   {
     cylinders = scinew GeomColoredCylinders;
     cylinders->set_radius(edge_scale);
     cylinders->set_nu_nv(2*res_, 1);
     GeomDL *display_list = scinew GeomDL(cylinders);
-    edge_switch_ = scinew GeomSwitch(display_list);
+    edge_switch = scinew GeomSwitch(display_list);
   }
   else
   {
     lines= scinew GeomCLines;
     lines->setLineWidth(edge_scale);
     GeomDL *display_list = scinew GeomDL(lines);
-    edge_switch_ = scinew GeomSwitch(display_list);
+    edge_switch = scinew GeomSwitch(display_list);
   }
 
   // Second pass: over the edges
@@ -678,10 +682,14 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
     
     ++eiter;
   }
+
+  return edge_switch;
 }
 
+
+
 template <class Fld, class Loc>
-void 
+GeomSwitch *
 RenderField<Fld, Loc>::render_faces(const Fld *sfld,
 				    bool use_normals,
 				    bool use_transparency)
@@ -690,17 +698,18 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
   const bool with_normals = (use_normals && mesh->has_normals());
 
+  GeomSwitch *face_switch;
   GeomTriangles* faces;
   if (use_transparency)
   {
     faces = scinew GeomTranspTriangles;
-    face_switch_ = scinew GeomSwitch(faces);
+    face_switch = scinew GeomSwitch(faces);
   }
   else
   {
     faces = scinew GeomTriangles;
     GeomDL *display_list = scinew GeomDL(faces);
-    face_switch_ = scinew GeomSwitch(display_list);
+    face_switch = scinew GeomSwitch(display_list);
   }
 
   // Third pass: over the faces
@@ -770,6 +779,8 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
     }
     ++fiter;     
   }
+
+  return face_switch;
 }
 
 
