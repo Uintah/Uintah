@@ -74,9 +74,7 @@ namespace Uintah {
 		  DataWarehouseP& old_dw,
 		  DataWarehouseP& new_dw,
 		  Dir* p_dir, int timestep,
-		  std::pair<const VarLabel*, int>
-		  /* combined as a pair because Tasks take up to 3 extra
-		     args and I'm too lazy to overload for a 4 arg Task */);
+		  const VarLabel*, int material);
 
       // Method to output reduction variables to a single file
       void outputReduction(const ProcessorGroup*,
@@ -178,6 +176,14 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.15  2001/01/23 23:30:07  witzel
+// Changed the arguments to the output method in order to resolve a strange
+// error that occurs only for optimized compiles.
+// And,
+// Made it output timestep 1 instead of an empty timestep 0.
+//
+// Note: these changes have already been committed to the new SCIRun tree.
+//
 // Revision 1.14  2001/01/09 00:57:52  witzel
 // Automated checkpointing so you don't have to specify what variables you
 // want to save.

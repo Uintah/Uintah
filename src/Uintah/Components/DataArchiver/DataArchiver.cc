@@ -400,7 +400,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 	 initCheckpoints(sched);
    }
   
-   if (d_outputInterval != 0.0) {
+   if (d_outputInterval != 0.0 && delt != 0) {
       // Schedule task to dump out reduction variables at every timestep
       Task* t = scinew Task("DataArchiver::outputReduction", new_dw, new_dw,
 			    this, &DataArchiver::outputReduction, time);
@@ -662,10 +662,10 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 	  saveIter++) {
 	 ConsecutiveRangeSet::iterator matlIter = (*saveIter).matls.begin();
 	 for ( ; matlIter != (*saveIter).matls.end(); matlIter++) {
-	    pair<const VarLabel*, int> labelMatl((*saveIter).label, *matlIter);
 	    Task* t = scinew Task("DataArchiver::output", patch, new_dw,
 				  new_dw, this, &DataArchiver::output,
-				  &baseDir, timestep, labelMatl);
+				  &baseDir, timestep, (*saveIter).label,
+				  *matlIter);
 	    t->requires(new_dw, (*saveIter).label, *matlIter, patch,
 			Ghost::None);
 	    sched->addTask(t);
@@ -787,7 +787,7 @@ void DataArchiver::outputCheckpointReduction(const ProcessorGroup* world,
 	   matIt != saveItem.matls.end(); matIt++) {
          int matlIndex = *matIt;
 	 output(world, NULL, old_dw, new_dw, &d_checkpointsDir, timestep,
-		std::pair<const VarLabel*, int>(var, matlIndex));
+		var, matlIndex);
       }
    }
 }
@@ -797,10 +797,8 @@ void DataArchiver::output(const ProcessorGroup*,
 			  DataWarehouseP& /*old_dw*/,
 			  DataWarehouseP& new_dw,
 			  Dir* p_dir, int timestep,
-			  std::pair<const VarLabel*, int> labelMatl)
+			  const VarLabel* var, int matlIndex)
 {
-   const VarLabel* var = labelMatl.first;
-   int matlIndex = labelMatl.second;
    int patchID = (patch ? patch->getID() : -1);
    bool isReduction = var->typeDescription()->isReductionVariable();
 
@@ -1116,6 +1114,14 @@ void  DataArchiver::initCheckpoints(SchedulerP& sched)
 
 //
 // $Log$
+// Revision 1.31  2001/01/23 23:30:07  witzel
+// Changed the arguments to the output method in order to resolve a strange
+// error that occurs only for optimized compiles.
+// And,
+// Made it output timestep 1 instead of an empty timestep 0.
+//
+// Note: these changes have already been committed to the new SCIRun tree.
+//
 // Revision 1.30  2001/01/09 00:57:52  witzel
 // Automated checkpointing so you don't have to specify what variables you
 // want to save.
