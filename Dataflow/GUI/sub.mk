@@ -122,8 +122,6 @@ SRCS := \
 	$(SRCDIR)/TransformData.tcl \
 	$(SRCDIR)/TransformData2.tcl \
 	$(SRCDIR)/TransformData3.tcl \
-	$(SRCDIR)/TransformScalarData.tcl \
-	$(SRCDIR)/TransformVectorData.tcl \
 	$(SRCDIR)/Viewer.tcl \
 	$(SRCDIR)/ViewWidget.tcl \
 #[INSERT NEW TCL FILE HERE]
