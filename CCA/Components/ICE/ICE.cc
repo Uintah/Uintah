@@ -27,10 +27,11 @@
 #include <vector>
 #include <Core/Geometry/Vector.h>
 #include <Core/Containers/StaticArray.h>
+#include <Core/Util/DebugStream.h>
 #include <sstream>
 #include <float.h>
 #include <iostream>
-#include <Core/Util/DebugStream.h>
+
 
 
 using std::vector;
@@ -99,12 +100,12 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_modelSetup = 0;
   
   d_usingLODI = false;
-  d_Lodi_user_inputs = scinew Lodi_user_inputs();
+  d_Lodi_variable_basket = scinew Lodi_variable_basket();
 }
 
 ICE::~ICE()
 {
-  delete d_Lodi_user_inputs;
+  delete d_Lodi_variable_basket;
   delete lb;
   delete MIlb;
   delete d_advector;
@@ -157,7 +158,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
       
   //__________________________________
   //  Read LODI user inputs
-  d_usingLODI = read_LODI_BC_inputs(prob_spec,d_Lodi_user_inputs);
+  d_usingLODI = read_LODI_BC_inputs(prob_spec,d_Lodi_variable_basket);
 
   //__________________________________
   // read in all the printData switches
@@ -586,8 +587,13 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                           mpm_matls_sub, 
                                                           press_matl,
                                                           all_matls);
-
-  scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
+                                                          
+  vector<PatchSubset*> maxMach_PSS(Patch::numFaces);                                                       
+  scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls, 
+                                                          maxMach_PSS);
+                                   
+  scheduleAdvectAndAdvanceInTime(         sched, patches, maxMach_PSS,
+                                                          ice_matls_sub,
                                                           mpm_matls_sub,
                                                           press_matl,
                                                           all_matls);
@@ -596,9 +602,19 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                           all_matls); 
   }
 
-  // whatever tasks use press_matl will have their own reference to it.
-  if (press_matl->removeReference())
+  //__________________________________
+  //  clean up memory
+  if (press_matl->removeReference()){
     delete press_matl;
+  }
+  
+  if(d_usingLODI){
+    for(int f=0;f<Patch::numFaces;f++){
+      if(maxMach_PSS[f]->removeReference()){
+        delete maxMach_PSS[f];
+      }
+    }
+  }
 }
 
 /* ---------------------------------------------------------------------
@@ -1164,13 +1180,46 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
     t->modifies(lb->vel_CCLabel,  mpm_matls);
   }
   sched->addTask(t, patches, all_matls);
-} 
+}
+/* --------------------------------------------------------------------- 
+ Function~  ICE::scheduleMaxMach_on_Lodi_BC_Faces--
+ Purpose    compute the reducton variable max_mach_<face>
+            on Lodi boundary faces
+_____________________________________________________________________*/
+void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched, 
+                                     const LevelP& level,
+                                     const MaterialSet* matls,
+                                     vector<PatchSubset*> & maxMach_PSS)
+{
+  if(d_usingLODI) {
+    cout_doing << "ICE::scheduleMaxMach_on_Lodi_BC_Faces" << endl;
+    Task* task = scinew Task("ICE::maxMach_on_Lodi_BC_Faces",
+                       this, &ICE::maxMach_on_Lodi_BC_Faces);
+    Ghost::GhostType  gn = Ghost::None;  
+    task->requires( Task::OldDW, lb->vel_CCLabel,        gn);   
+    task->requires( Task::OldDW, lb->speedSound_CCLabel, gn);
+    
+    Lodi_maxMach_patchSubset(level, d_sharedState, maxMach_PSS);
+                             
+    //__________________________________
+    // loop over all faces and add computes(maxMach_<face>)
+    // for the patchSubset maxMach_PSS[f]
+    for(Patch::FaceType f = Patch::startFace;
+                        f <= Patch::endFace; f=Patch::nextFace(f)){
+      VarLabel* V_Label = getMaxMach_face_VarLabel(f);
+ 
+      task->computes(V_Label, maxMach_PSS[f]);
+    }
+    sched->addTask(task, level->eachPatch(), matls);
+  }
+}
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleAdvectAndAdvanceInTime--
 _____________________________________________________________________*/
 void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
-                                    const PatchSet* patches,
+                                    const PatchSet* patch_set,
+                                    const vector<PatchSubset*> & maxMach_PSS,
                                     const MaterialSubset* /*ice_matls*/,
                                     const MaterialSubset* /*mpm_matls*/,
                                     const MaterialSubset* press_matl,
@@ -1202,7 +1251,15 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
     task->requires(Task::OldDW, lb->vel_CCLabel,       gac, 1);   
     task->requires(Task::OldDW, lb->vol_frac_CCLabel,  gac, 2);
     task->requires(Task::OldDW, lb->press_CCLabel,    press_matl,oims,gac, 2);
-  }
+
+    // For Lodi faces require(maxMach_<face>)
+    for(Patch::FaceType f = Patch::startFace;
+                        f <= Patch::endFace; f=Patch::nextFace(f)){
+      VarLabel* V_Label = getMaxMach_face_VarLabel(f);
+      task->requires(Task::NewDW,V_Label, maxMach_PSS[f]);
+    }
+  } // Lodi
+  
   task->modifies(lb->rho_CCLabel);
   task->modifies(lb->sp_vol_CCLabel);
   task->computes(lb->temp_CCLabel);
@@ -1224,7 +1281,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
     }
   } 
   
-  sched->addTask(task, patches, ice_matls);
+  sched->addTask(task, patch_set, ice_matls);
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::schedulePrintConservedQuantities--
@@ -1827,7 +1884,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        desc << "TOP_equilibration_Mat_" << indx << "_patch_"<<patch->getID();
        printData(indx, patch, 1, desc.str(), "rho_CC",       rho_CC[m]);    
        printData(indx, patch, 1, desc.str(), "rho_micro_CC", rho_micro[m]);  
-       printData(indx, patch, 0, desc.str(), "speedSound",   speedSound_new[m]);
+       printData(indx, patch, 1, desc.str(), "speedSound",   speedSound_new[m]);
        printData(indx, patch, 1, desc.str(), "Temp_CC",      Temp[m]);       
        printData(indx, patch, 1, desc.str(), "vol_frac_CC",  vol_frac[m]);   
       }
@@ -3938,6 +3995,58 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     }
   } //patches
 }
+
+/* ---------------------------------------------------------------------
+ Function~  ICE::maxMach_on_Lodi_BC_Faces
+ Purpose~   Find the max mach Number on all lodi faces
+ ---------------------------------------------------------------------  */
+void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << "Doing maxMach_on_Lodi_BC_Faces " <<
+      patch->getID() << "\t\t\t ICE" << endl;
+      
+    Ghost::GhostType  gn = Ghost::None;
+    int numALLMatls = d_sharedState->getNumICEMatls();
+    StaticArray<constCCVariable<Vector> > vel_CC(numALLMatls);
+    StaticArray<constCCVariable<double> > speedSound(numALLMatls);
+    for(int m=0;m<matls->size();m++){
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      old_dw->get(vel_CC[m],      lb->vel_CCLabel,        indx,patch,gn,0);
+      old_dw->get(speedSound[m],  lb->speedSound_CCLabel, indx,patch,gn,0);
+    }
+    //__________________________________
+    // Work on those faces that have lodi bcs
+    vector<Patch::FaceType>::const_iterator iter;
+    for (iter  = patch->getBoundaryFaces()->begin(); 
+         iter != patch->getBoundaryFaces()->end(); ++iter){
+      Patch::FaceType face = *iter;
+      double maxMach = 0.0;
+      if (is_LODI_face(patch,face, d_sharedState) ) {
+        
+        //__________________________________
+        //compute maxMach number on this lodi face
+        // for all matls
+        for(int m=0;m<matls->size();m++){
+          for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+                                                        !iter.done();iter++) {
+            IntVector c = *iter;
+            maxMach = Max(maxMach,vel_CC[m][c].length()/speedSound[m][c]);
+          }  
+        }
+        VarLabel* V_Label = getMaxMach_face_VarLabel(face);
+        new_dw->put(max_vartype(maxMach), V_Label);
+      }  // is lodi Face
+    }  // boundaryFaces  
+  } // patches
+}
+
  
 /* --------------------------------------------------------------------- 
 Function~  ICE::update_q_CC--
@@ -4101,7 +4210,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
         lodi_vars->cv   = cv;
         lodi_vars->delT = delT;
         lodi_vars->speedSound = speedSound;
-        lodi_vars->user_inputs = d_Lodi_user_inputs;
+        lodi_vars->var_basket = d_Lodi_variable_basket;
         lodi_bc_preprocess( patch, lodi_vars, lb, indx, old_dw, new_dw,
                             d_sharedState);
       }
