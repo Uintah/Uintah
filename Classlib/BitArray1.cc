@@ -14,6 +14,8 @@
 
 #include <Classlib/BitArray1.h>
 #include <Malloc/Allocator.h>
+#include <Tester/RigorousTest.h>
+
 
 BitArray1::BitArray1(int size, int initial)
 : size(size), nbits(size/8 + ((size&7)?1:0)), bits(scinew unsigned char[nbits])
@@ -64,4 +66,67 @@ void BitArray1::set_all()
     for(int i=0;i<nbits;i++)
 	bits[i]=0xff;
 }
+
+#include <iostream.h>
+
+void BitArray1::test_rigorous(RigorousTest* __test)
+{
+    BitArray1 b(10000,0);
+    for(int i=0;i<10000;i++){
+	TEST(b.is_set(i)==0);
+    }
+    
+    for(i=0;i<10000;i+=2)
+	b.set(i);
+
+    for(i=0;i<10000;i+=2)
+	TEST(b.is_set(i));
+
+    b.clear_all();
+    for(i=0;i<10000;i++)
+	TEST(!b.is_set(i));
+
+    for(i=0;i<10000;i++)
+	TEST(!b.is_set(i));
+
+    for(i=0;i<10000;i+=5)
+	b.set(i);
+
+    for(i=0;i<10000;i+=2)
+	b.set(i);
+
+    for(i=0;i<10000;i+=5)
+	TEST(b.is_set(i));
+
+    for(i=0;i<10000;i+=2)
+	TEST(b.is_set(i));
+
+    b.set_all();
+
+    for(i=0;i<10000;i++)
+	TEST(b.is_set(i));
+
+    for(i=0;i<10000;i+=2)
+	b.clear(i);
+    for(i=0;i<10000;i+=5)
+	b.clear(i);
+
+    for(i=0;i<10000;i+=2)
+	TEST(!b.is_set(i));
+    for(i=0;i<10000;i+=5)
+	TEST(!b.is_set(i));
+
+    b.clear_all();
+    for(i=0;i<10000;i++)
+	TEST(!b.is_set(i));
+
+
+
+}
+
+
+
+
+
+
 

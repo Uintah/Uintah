@@ -13,6 +13,8 @@
 
 #ifndef SCI_Classlib_BitArray1_h
 #define SCI_Classlib_BitArray1_h 1
+#include <Tester/RigorousTest.h>
+
 
 class BitArray1 {
     int size;
@@ -27,7 +29,14 @@ public:
 
     void clear_all();
     void set_all();
+
+    //Rigorous Tests
+    static void test_rigorous(RigorousTest* __test);
+    
+
 };
 
 #endif
+
+
 
