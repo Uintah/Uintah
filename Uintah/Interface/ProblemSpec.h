@@ -6,10 +6,17 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <string>
 
+#ifdef __sgi
+#define IRIX
+#pragma set woff 1375
+#endif
 #include <util/PlatformUtils.hpp>
 #include <parsers/DOMParser.hpp>
 #include <dom/DOM_Node.hpp>
 #include <dom/DOM_NamedNodeMap.hpp>
+#ifdef __sgi
+#pragma reset woff 1375
+#endif
 
 namespace Uintah {
     namespace Grid {
@@ -19,7 +26,6 @@ namespace Interface {
 
 using Uintah::Grid::RefCounted;
 using Uintah::Grid::TypeDescription;
-using Uintah::Interface::ProblemSpecP;
 
 
 // This is the "base" problem spec.  There should be ways of breaking
@@ -91,6 +97,9 @@ private:
 
 //
 // $Log$
+// Revision 1.6  2000/03/30 20:23:43  sparker
+// Fixed compile on SGI
+//
 // Revision 1.5  2000/03/29 23:48:00  jas
 // Filled in methods for extracting data from the xml tree (requires and get)
 // and storing the result in a variable.

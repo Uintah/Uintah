@@ -14,20 +14,22 @@ LIBS 	:= $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
-PROGRAM	:= $(SRCDIR)/testing
-SRCS	:= $(SRCDIR)/testing.cc
-include $(SRCTOP)/scripts/program.mk
-
-PROGRAM	:= $(SRCDIR)/test2
-SRCS	:= $(SRCDIR)/test2.cc 
-PSELIBS := Uintah/Interface Uintah/Components/ProblemSpecification
-LIBS 	:= $(XML_LIBRARY)
-include $(SRCTOP)/scripts/program.mk
-
+#PROGRAM	:= $(SRCDIR)/testing
+#SRCS	:= $(SRCDIR)/testing.cc
+#include $(SRCTOP)/scripts/program.mk
+#
+#PROGRAM	:= $(SRCDIR)/test2
+#SRCS	:= $(SRCDIR)/test2.cc 
+#PSELIBS := Uintah/Interface Uintah/Components/ProblemSpecification
+#LIBS 	:= $(XML_LIBRARY)
+#include $(SRCTOP)/scripts/program.mk
 
 
 #
 # $Log$
+# Revision 1.5  2000/03/30 20:23:39  sparker
+# Fixed compile on SGI
+#
 # Revision 1.4  2000/03/29 23:45:22  jas
 # Sample input file format using xml.
 #

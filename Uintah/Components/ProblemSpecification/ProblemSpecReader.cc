@@ -1,19 +1,14 @@
 
 #include "ProblemSpecReader.h"
 #include <iostream>
+using namespace std;
 
 using Uintah::Interface::ProblemSpec;
-using std::cout;
-using std::cerr;
 
 void outputContent(ostream& target, const DOMString &s);
 ostream& operator<<(ostream& target, const DOMString& toWrite);
 ostream& operator<<(ostream& target, DOM_Node& toWrite);
 static bool     doEscapes       = true;
-
-
-namespace Uintah {
-namespace Component {
 
 ProblemSpecReader::ProblemSpecReader()
 {
@@ -63,9 +58,6 @@ ProblemSpecP ProblemSpecReader::readInputFile(const std::string name)
 
   return prob_spec;
 }
-
-}  // end namespace Component
-}  // end namespace Uintah
 
 // ---------------------------------------------------------------------------
 //
@@ -260,6 +252,3 @@ ostream& operator<<(ostream& target, const DOMString& s)
     delete [] p;
     return target;
 }
-
-
-
