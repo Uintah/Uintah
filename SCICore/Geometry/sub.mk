@@ -7,7 +7,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := SCICore/Geometry
 
-SRCS     += $(SRCDIR)/BBox.cc $(SRCDIR)/Grid.cc $(SRCDIR)/Point.cc \
+SRCS     += $(SRCDIR)/BBox.cc $(SRCDIR)/Grid.cc $(SRCDIR)/IntVector.cc \
+	$(SRCDIR)/Point.cc \
 	$(SRCDIR)/Transform.cc $(SRCDIR)/Plane.cc $(SRCDIR)/Vector.cc \
 	$(SRCDIR)/Ray.cc
 
@@ -18,6 +19,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/04/13 06:48:39  sparker
+# Implemented more of IntVector class
+#
 # Revision 1.2  2000/03/20 19:37:41  sparker
 # Added VPATH support
 #
