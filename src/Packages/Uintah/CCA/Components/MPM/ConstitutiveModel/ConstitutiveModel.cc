@@ -21,39 +21,41 @@ ConstitutiveModel::~ConstitutiveModel()
 {
 }
 
+void ConstitutiveModel::computeStressTensor(const PatchSubset*,
+					    const MPMMaterial*,
+					    DataWarehouse*,
+					    DataWarehouse*)
 
-void ConstitutiveModel::computeStressTensorImplicit(const PatchSubset*,
-						    const MPMMaterial*,
-						    DataWarehouse*,
-						    DataWarehouse*,
-						    Solver*,
-						    const bool)
 {
 }
 
 
-void ConstitutiveModel::computeStressTensorImplicitOnly(const PatchSubset*,
-							const MPMMaterial*,
-							DataWarehouse*,
-							DataWarehouse*)
+void ConstitutiveModel::computeStressTensor(const PatchSubset*,
+					    const MPMMaterial*,
+					    DataWarehouse*,
+					    DataWarehouse*,
+					    Solver*,
+					    const bool)
 {
 }
 
-void ConstitutiveModel::addComputesAndRequiresImplicit(Task*, 
-						       const MPMMaterial*,
-						       const PatchSet*,
-						       const bool)
+void ConstitutiveModel::addComputesAndRequires(Task*, 
+					       const MPMMaterial*,
+					       const PatchSet*)
 {
 
 }
 
 
-void ConstitutiveModel::addComputesAndRequiresImplicitOnly(Task*,
-							   const MPMMaterial*,
-							   const PatchSet*,
-							   const bool) 
+void ConstitutiveModel::addComputesAndRequires(Task*, 
+					       const MPMMaterial*,
+					       const PatchSet*,
+					       const bool)
 {
+
 }
+
+
 
 //______________________________________________________________________
 //          HARDWIRE FOR AN IDEAL GAS -Todd 

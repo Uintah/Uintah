@@ -65,21 +65,15 @@ WARNING
 	 virtual void computeStressTensor(const PatchSubset* patches,
 					  const MPMMaterial* matl,
 					  DataWarehouse* old_dw,
-					  DataWarehouse* new_dw) = 0;
+					  DataWarehouse* new_dw);
 
-	 virtual void computeStressTensorImplicit(const PatchSubset* patches,
-						  const MPMMaterial* matl,
-						  DataWarehouse* old_dw,
-						  DataWarehouse* new_dw,
-						  Solver* solver,
-						  const bool recursion);
+	 virtual void computeStressTensor(const PatchSubset* patches,
+					  const MPMMaterial* matl,
+					  DataWarehouse* old_dw,
+					  DataWarehouse* new_dw,
+					  Solver* solver,
+					  const bool recursion);
 	 
-	 virtual void computeStressTensorImplicitOnly(const PatchSubset* patches,
-						  const MPMMaterial* matl,
-						  DataWarehouse* old_dw,
-						      DataWarehouse* new_dw);
-	 
-
 	 //////////
 	 // Create space in data warehouse for CM data
 	 virtual void initializeCMData(const Patch* patch,
@@ -92,17 +86,12 @@ WARNING
 
 	 virtual void addComputesAndRequires(Task* task,
 					   const MPMMaterial* matl,
-					   const PatchSet* patches) const = 0;
+					   const PatchSet* patches);
 
-	 virtual void addComputesAndRequiresImplicit(Task* task,
-					    const MPMMaterial* matl,
-					    const PatchSet* patches,
-					    const bool recursion);
-
-	 virtual void addComputesAndRequiresImplicitOnly(Task* task,
-					    const MPMMaterial* matl,
-					    const PatchSet* patches,
-					    const bool recursion);
+	 virtual void addComputesAndRequires(Task* task,
+					     const MPMMaterial* matl,
+					     const PatchSet* patches,
+					     const bool recursion);
 
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to) = 0;

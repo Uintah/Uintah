@@ -49,23 +49,17 @@ namespace Uintah {
                                             const MPMMaterial* matl,
                                             DataWarehouse* new_dw);
 
-         // compute stress at each particle in the patch
          virtual void computeStressTensor(const PatchSubset* patches,
-                                          const MPMMaterial* matl,
-                                          DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw);
+					  const MPMMaterial* matl,
+					  DataWarehouse* old_dw,
+					  DataWarehouse* new_dw,
+					  Solver* solver,
+					  const bool recursion);
 
-         virtual void computeStressTensorImplicit(const PatchSubset* patches,
-						  const MPMMaterial* matl,
-						  DataWarehouse* old_dw,
-						  DataWarehouse* new_dw,
-						  Solver* solver,
-						  const bool recursion);
-
-         virtual void computeStressTensorImplicitOnly(const PatchSubset* patches,
-						      const MPMMaterial* matl,
-						      DataWarehouse* old_dw,
-						      DataWarehouse* new_dw);
+         virtual void computeStressTensor(const PatchSubset* patches,
+					  const MPMMaterial* matl,
+					  DataWarehouse* old_dw,
+					  DataWarehouse* new_dw);
 
          // initialize  each particle's constitutive model data
          virtual void initializeCMData(const Patch* patch,
@@ -78,17 +72,13 @@ namespace Uintah {
 
          virtual void addComputesAndRequires(Task* task,
                                              const MPMMaterial* matl,
-                                             const PatchSet* patches) const;
-
-         virtual void addComputesAndRequiresImplicit(Task* task,
-                                             const MPMMaterial* matl,
                                              const PatchSet* patches,
 					     const bool recursion);
 
-         virtual void addComputesAndRequiresImplicitOnly(Task* task,
+         virtual void addComputesAndRequires(Task* task,
                                              const MPMMaterial* matl,
-                                             const PatchSet* patches,
-					     const bool recursion);
+					     const PatchSet* patches);
+
 
          virtual double computeRhoMicroCM(double pressure,
                                           const double p_ref,
