@@ -360,7 +360,7 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
   if (d_myworld->myrank() == 0) {
         cout << "  DOING ANOTHER INITIALIZATION REGRID!!!!\n";
         //cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
-        cout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
+        amrout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
   }
   double regridTime = Time::currentSeconds() - start;
   if (currentGrid == oldGrid)
@@ -406,7 +406,7 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
   if (currentGrid != oldGrid) {
     if (d_myworld->myrank() == 0) {
       cout << "  REGRIDDING!!!!!\n";
-      amrout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
+      //amrout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
       amrout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
     }
          
