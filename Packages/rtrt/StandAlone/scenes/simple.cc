@@ -22,8 +22,9 @@
 #include <Packages/rtrt/Core/Box.h>
 #include <Packages/rtrt/Core/SpinningInstance.h>
 #include <Packages/rtrt/Core/DynamicInstance.h>
-#include <Packages/rtrt/Sound/Sound.h>
-
+#if !defined(linux) && !defined(SCI_64BITS)
+#  include <Packages/rtrt/Sound/Sound.h>
+#endif
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Transform.h>
