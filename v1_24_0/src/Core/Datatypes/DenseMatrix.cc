@@ -602,7 +602,7 @@ DenseMatrix::io(Piostream& stream)
 	  const string errmsg = "Error reading separated file '" +
 	    raw_filename_ + "'";
 	  cerr << errmsg << "\n";
-	  throw scinew FileNotFound(errmsg);
+	  throw FileNotFound(errmsg);
 	}
       }
     } else {
