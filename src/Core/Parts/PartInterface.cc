@@ -51,6 +51,12 @@ PartInterface::~PartInterface()
     delete children_[i];
 }
 
+string
+PartInterface::name()
+{ 
+  return part_->name(); 
+}
+
 void
 PartInterface::init()
 {
@@ -59,11 +65,18 @@ PartInterface::init()
 }
 
 void
+PartInterface::set_parent( PartInterface *parent )
+{
+  parent_ = parent;
+  parent_->add_child( this );
+}
+
+
+void
 PartInterface::add_child( PartInterface *child )
 {
   children_.push_back(child);
 
-  cerr << "PartInterface emit has_child\n";
   // signal you have a new child
   has_child( child  );
 }
@@ -79,6 +92,14 @@ PartInterface::rem_child( PartInterface *child )
       return;
     }
 }
+
+void
+PartInterface::report_children( SlotBase1<PartInterface*> &slot )
+{
+  for (unsigned i=0; i<children_.size(); i++)
+    slot.send(children_[i]);
+}
+
 
 } // namespace SCIRun
 

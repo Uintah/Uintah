@@ -24,6 +24,7 @@ SRCDIR := Core/Parts
 SRCS     += $(SRCDIR)/EventManager.cc \
 	$(SRCDIR)/PartInterface.cc \
 	$(SRCDIR)/GraphPart.cc \
+	$(SRCDIR)/PartManager.cc \
 
 PSELIBS := Core/Exceptions \
 	Core/Util \
