@@ -26,6 +26,9 @@ itcl_class Teem_Tend_TendEstim {
         set_defaults
     }
     method set_defaults {} {
+	global $this-use-default-threshold
+	set $this-use-default-threshold 1
+
         global $this-threshold
         set $this-threshold 0.0
 
@@ -56,6 +59,9 @@ itcl_class Teem_Tend_TendEstim {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
+	checkbutton $w.f.options.usedefaultthreshold -text \
+	    "Use Default Threshold" -variable $this-use-default-threshold
+	pack $w.f.options.usedefaultthreshold -side top -expand yes -fill x
         iwidgets::entryfield $w.f.options.threshold -labeltext "threshold:" \
 	    -textvariable $this-threshold
         pack $w.f.options.threshold -side top -expand yes -fill x

@@ -44,6 +44,7 @@ private:
   NrrdOPort*      otens_;
   //NrrdOPort*      oerr_;
 
+  GuiInt       use_default_threshold_;
   GuiDouble    threshold_;
   GuiDouble    soft_;
   GuiDouble    scale_;
@@ -53,6 +54,7 @@ DECLARE_MAKER(TendEstim)
 
 TendEstim::TendEstim(SCIRun::GuiContext *ctx) : 
   Module("TendEstim", ctx, Filter, "Tend", "Teem"), 
+  use_default_threshold_(ctx->subVar("use-default-threshold")),
   threshold_(ctx->subVar("threshold")),
   soft_(ctx->subVar("soft")),
   scale_(ctx->subVar("scale"))
@@ -122,6 +124,9 @@ TendEstim::execute()
 
  
   Nrrd *nout = nrrdNew();
+  float threshold;
+  if (use_default_threshold_.get()) threshold = AIR_NAN;
+  else threshold = threshold_.get();
 
   if (tenEstimate4D(nout, NULL, dwi_handle->nrrd, sliced_bmat, 
 		    threshold_.get(), soft_.get(), scale_.get()))
