@@ -79,6 +79,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
 #ifdef multimaterialform
   d_mmInterface = 0;
 #endif
+  nofTimeSteps = 0;
 }
 
 // ****************************************************************************
