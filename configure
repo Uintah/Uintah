@@ -14519,11 +14519,10 @@ EOF
     dirs="$dirs $i/OOGL/lib"
   done
 
-  if test "$with_oogl"; then
+  # Only check for OOGL if the user did not say without-oogl.
+  if test "$with_oogl" != "no"; then
     dirs="$with_oogl/lib $dirs"
-  fi
-
-  
+    
     #######################################################
     ##  Begin: SCI_CHECK_LIB macro...
 
@@ -14591,7 +14590,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both liboogl.so and liboogl.a""... $ac_c" 1>&6
-echo "configure:14595: checking for both liboogl.so and liboogl.a" >&5
+echo "configure:14594: checking for both liboogl.so and liboogl.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -14599,13 +14598,13 @@ echo "configure:14595: checking for both liboogl.so and liboogl.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -loogl""... $ac_c" 1>&6
-echo "configure:14603: checking for -loogl" >&5
+echo "configure:14602: checking for -loogl" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -loogl""... $ac_c" 1>&6
-echo "configure:14609: checking for main in -loogl" >&5
+echo "configure:14608: checking for main in -loogl" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -14880,7 +14879,7 @@ EOF
     fi
 
   
-  
+    
     #######################################################
     ##  Begin: SCI_CHECK_HEADERS macro...
 
@@ -14951,7 +14950,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:14955: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:14954: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -15071,7 +15070,7 @@ echo "configure:14955: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:15075: checking for $_HEADER_" >&5
+echo "configure:15074: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -15183,8 +15182,9 @@ EOF
 
   
 
-  if test "$HAVE_OOGL_BASICTEXTURE_H"; then
-    INC_OOGL_H="$INC_OOGL_BASICTEXTURE_H"
+    if test "$HAVE_OOGL_BASICTEXTURE_H"; then
+      INC_OOGL_H="$INC_OOGL_BASICTEXTURE_H"
+    fi
   fi
 
   dirs="$with_audio"
