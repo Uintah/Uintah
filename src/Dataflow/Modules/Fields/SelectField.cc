@@ -98,14 +98,14 @@ SelectField::execute()
     DynamicAlgoHandle algo_handle;
     if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
     {
-      cout << "Could not compile algorithm." << std::endl;
+      error("Could not compile algorithm.");
       return;
     }
     SelectFieldCreateAlgo *algo =
       dynamic_cast<SelectFieldCreateAlgo *>(algo_handle.get_rep());
     if (algo == 0)
     {
-      cout << "Could not get algorithm." << std::endl;
+      error("Could not get algorithm.");
       return;
     }
     output_field_ =
@@ -165,14 +165,14 @@ SelectField::execute()
     DynamicAlgoHandle algo_handle;
     if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
     {
-      cout << "Could not compile algorithm." << std::endl;
+      error("Could not compile algorithm.");
       return;
     }
     SelectFieldFillAlgo *algo =
       dynamic_cast<SelectFieldFillAlgo *>(algo_handle.get_rep());
     if (algo == 0)
     {
-      cout << "Could not get algorithm." << std::endl;
+      error("Could not get algorithm.");
       return;
     }
     bool replace_p = false;

@@ -152,9 +152,7 @@ void BuildElemLeadField::execute() {
     (PointCloudField<vector<pair<TetVolMesh::Node::index_type, double> > > *)(interp_in.get_rep());
 
   if (!interp) {
-    cerr << "Error - Interp Field wasn't a PointCloudField<vector<pair<TetVolMesh::Node::index_type,double>>>\n";
-
-    cout << "It's a '" + interp_in->get_type_description()->get_name() + "'\n";
+    error("Interp Field wasn't a PointCloudField<vector<pair<TetVolMesh::Node::index_type,double>>>. It's a '" + interp_in->get_type_description()->get_name() + "'.");
     return;
   }
 

@@ -303,14 +303,14 @@ void StreamLines::execute()
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
   {
-    cout << "Could not compile algorithm." << std::endl;
+    error("Could not compile algorithm.");
     return;
   }
   StreamLinesAlgo *algo =
     dynamic_cast<StreamLinesAlgo *>(algo_handle.get_rep());
   if (algo == 0)
   {
-    cout << "Could not get algorithm." << std::endl;
+    error("Could not get algorithm.");
     return;
   }
 
