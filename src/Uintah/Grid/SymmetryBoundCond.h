@@ -39,7 +39,7 @@ WARNING
    class SymmetryBoundCond : public BoundCondBase  {
    public:
       SymmetryBoundCond():BoundCondBase("Symmetry") {};
-      SymmetryBoundCond(ProblemSpecP&) {};
+      SymmetryBoundCond(ProblemSpecP&) {d_type = "Symmetric";};
       virtual ~SymmetryBoundCond() {};
          
    private:
@@ -53,6 +53,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/12/07 23:47:55  guilkey
+// Inlined [] operator in Array3.  Fixed (I think) SymmetryBoundCond so
+// it actually does something now.
+//
 // Revision 1.3  2000/11/02 21:25:55  jas
 // Rearranged the boundary conditions so there is consistency between ICE
 // and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
