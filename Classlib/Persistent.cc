@@ -133,8 +133,10 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 		if(found_pid)
 		    maker=found_pid->maker;
 	    }
-	    if(!maker)
+	    if(!maker){
+		cerr << "Maker not found?\n";
 		return;
+	    }
 
 	    // Make it..
 	    data=(*maker)();

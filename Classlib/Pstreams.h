@@ -60,6 +60,8 @@ class TextPiostream : public Piostream {
     ifstream* istr;
     ofstream* ostr;
     int len;
+    int have_peekname;
+    clString peekname;
     void expect(char);
     virtual void emit_pointer(int&, int&);
     virtual double get_percent_done();
@@ -85,6 +87,7 @@ public:
     virtual void io(double&);
     virtual void io(float&);
     virtual void io(clString& string);
+    void io(int, clString& string);
 };
 
 #endif

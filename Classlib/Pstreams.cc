@@ -62,26 +62,58 @@ TextPiostream::~TextPiostream()
 	delete ostr;
 }
 
+void TextPiostream::io(int do_quotes, clString& string)
+{
+    if(do_quotes){
+	io(string);
+    } else {
+	if(dir==Read){
+	    char buf[1000];
+	    char* p=buf;
+	    int n=0;
+	    ifstream& in=*istr;
+	    while(1){
+		char c;
+		in.get(c);
+		if(!in){
+		    cerr << "String input failed\n";
+		    char buf[100];
+		    in.clear();
+		    in.getline(buf, 100);
+		    cerr << "Rest of line is: " << buf << endl;
+		    err=1;
+		    break;
+		}
+		if(c == ' ')
+		    break;
+		else
+		    *p++=c;
+		if(n++ > 998){
+		    cerr << "String too long\n";
+		    char buf[100];
+		    in.clear();
+		    in.getline(buf, 100);
+		    cerr << "Rest of line is: " << buf << endl;
+		    err=1;
+		    break;
+		}
+	    }
+	    *p=0;
+	    string=clString(buf);
+	} else {
+	    ofstream& out=*ostr;
+	    out << string << " ";
+	}
+    }
+}
+
 clString TextPiostream::peek_class()
 {
     clString name;
     expect('{');
-    ifstream& in=*istr;
-    char c;
-    while(1){
-	in.get(c);
-	if(!in){
-	    err=1;
-	    return clString("");
-	}
-	if(c==' ')break;
-	name+=c;
-    }
-    in.putback(' ');
-    for(int i=name.len()-1;i>=0;i--)
-	in.putback(name(i));
-    in.putback('{');
-    return name;
+    io(0, peekname);
+    have_peekname=1;
+    return peekname;
 }
 
 int TextPiostream::begin_class(const clString& classname,
@@ -89,19 +121,28 @@ int TextPiostream::begin_class(const clString& classname,
 {
     if(err)return -1;
     int version=current_version;
-    if(dir==Read){
-	expect('{');
-	for(int i=0;i<classname.len();i++){
-	    expect(classname(i));
-	}
-	expect(' ');
-	ifstream& in=*istr;
-	in >> version;
-	expect(' ');
+    clString gname;
+    if(dir==Write){
+	gname=classname;
+	ostream& out=*ostr;
+	out << '{';
+	io(0, gname);
+    } else if(dir==Read && have_peekname){
+	gname=peekname;
     } else {
-	ofstream& out=*ostr;
-	out << "{" << classname << " " << current_version << " ";
+	expect('{');
+	io(0, gname);
     }
+    have_peekname=0;
+
+    if(dir==Read){
+	if(classname != gname){
+	    err=1;
+	    cerr << "Expecting class: " << classname << ", got class: " << gname << endl;
+	    return 0;
+	}
+    }
+    io(version);
     return version;
 }
 
@@ -146,6 +187,15 @@ void TextPiostream::io(char& data)
     if(dir==Read){
 	ifstream& in=*istr;
 	in >> data;
+	if(!in){
+	    cerr << "Error reading char\n";
+	    char buf[100];
+	    in.clear();
+	    in.getline(buf, 100);
+	    cerr << "Rest of line is: " << buf << endl;
+	    err=1;
+	    return;
+	}
 	expect(' ');
     } else {
 	ofstream& out=*ostr;
@@ -159,6 +209,15 @@ void TextPiostream::io(unsigned char& data)
     if(dir==Read){
 	ifstream& in=*istr;
 	in >> data;
+	if(!in){
+	    cerr << "Error reading unsigned char\n";
+	    char buf[100];
+	    in.clear();
+	    in.getline(buf, 100);
+	    cerr << "Rest of line is: " << buf << endl;
+	    err=1;
+	    return;
+	}
 	expect(' ');
     } else {
 	ofstream& out=*ostr;
@@ -172,6 +231,15 @@ void TextPiostream::io(short& data)
     if(dir==Read){
 	ifstream& in=*istr;
 	in >> data;
+	if(!in){
+	    cerr << "Error reading short\n";
+	    char buf[100];
+	    in.clear();
+	    in.getline(buf, 100);
+	    cerr << "Rest of line is: " << buf << endl;
+	    err=1;
+	    return;
+	}
 	expect(' ');
     } else {
 	ofstream& out=*ostr;
@@ -185,6 +253,15 @@ void TextPiostream::io(unsigned short& data)
     if(dir==Read){
 	ifstream& in=*istr;
 	in >> data;
+	if(!in){
+	    cerr << "Error reading unsigned short\n";
+	    char buf[100];
+	    in.clear();
+	    in.getline(buf, 100);
+	    cerr << "Rest of line is: " << buf << endl;
+	    err=1;
+	    return;
+	}
 	expect(' ');
     } else {
 	ofstream& out=*ostr;
@@ -198,6 +275,15 @@ void TextPiostream::io(int& data)
     if(dir==Read){
 	ifstream& in=*istr;
 	in >> data;
+	if(!in){
+	    cerr << "Error reading int\n";
+	    char buf[100];
+	    in.clear();
+	    in.getline(buf, 100);
+	    cerr << "Rest of line is: " << buf << endl;
+	    err=1;
+	    return;
+	}
 	expect(' ');
     } else {
 	ofstream& out=*ostr;
@@ -211,6 +297,15 @@ void TextPiostream::io(unsigned int& data)
     if(dir==Read){
 	ifstream& in=*istr;
 	in >> data;
+	if(!in){
+	    cerr << "Error reading unsigned int\n";
+	    char buf[100];
+	    in.clear();
+	    in.getline(buf, 100);
+	    cerr << "Rest of line is: " << buf << endl;
+	    err=1;
+	    return;
+	}
 	expect(' ');
     } else {
 	ofstream& out=*ostr;
@@ -224,6 +319,15 @@ void TextPiostream::io(long& data)
     if(dir==Read){
 	ifstream& in=*istr;
 	in >> data;
+	if(!in){
+	    cerr << "Error reading long\n";
+	    char buf[100];
+	    in.clear();
+	    in.getline(buf, 100);
+	    cerr << "Rest of line is: " << buf << endl;
+	    err=1;
+	    return;
+	}
 	expect(' ');
     } else {
 	ofstream& out=*ostr;
@@ -237,6 +341,15 @@ void TextPiostream::io(unsigned long& data)
     if(dir==Read){
 	ifstream& in=*istr;
 	in >> data;
+	if(!in){
+	    cerr << "Error reading unsigned long\n";
+	    char buf[100];
+	    in.clear();
+	    in.getline(buf, 100);
+	    cerr << "Rest of line is: " << buf << endl;
+	    err=1;
+	    return;
+	}
 	expect(' ');
     } else {
 	ofstream& out=*ostr;
@@ -250,6 +363,15 @@ void TextPiostream::io(double& data)
     if(dir==Read){
 	ifstream& in=*istr;
 	in >> data;
+	if(!in){
+	    cerr << "Error reading double\n";
+	    char buf[100];
+	    in.clear();
+	    in.getline(buf, 100);
+	    cerr << "Rest of line is: " << buf << endl;
+	    err=1;
+	    return;
+	}
 	expect(' ');
     } else {
 	ofstream& out=*ostr;
@@ -263,6 +385,15 @@ void TextPiostream::io(float& data)
     if(dir==Read){
 	ifstream& in=*istr;
 	in >> data;
+	if(!in){
+	    cerr << "Error reading float\n";
+	    char buf[100];
+	    in.clear();
+	    in.getline(buf, 100);
+	    cerr << "Rest of line is: " << buf << endl;
+	    err=1;
+	    return;
+	}
 	expect(' ');
     } else {
 	ofstream& out=*ostr;
@@ -283,6 +414,11 @@ void TextPiostream::io(clString& data)
 	    char c;
 	    in.get(c);
 	    if(!in){
+		cerr << "String input failed\n";
+		char buf[100];
+		in.clear();
+		in.getline(buf, 100);
+		cerr << "Rest of line is: " << buf << endl;
 		err=1;
 		return;
 	    }
@@ -290,7 +426,12 @@ void TextPiostream::io(clString& data)
 		break;
 	    else
 		*p++=c;
-	    if(n++ > 999){
+	    if(n++ > 998){
+		cerr << "String too long\n";
+		char buf[100];
+		in.clear();
+		in.getline(buf, 100);
+		cerr << "Rest of line is: " << buf << endl;
 		err=1;
 		break;
 	    }
@@ -309,12 +450,28 @@ void TextPiostream::expect(char expected)
     if(err)return;
     ifstream& in=*istr;
     if(!in){
+	cerr << "read in expect failed (before read)\n";
+	char buf[100];
+	in.clear();
+	in.getline(buf, 100);
+	cerr << "Rest of line is: " << buf << endl;
+	in.clear();
+	in.getline(buf, 100);
+	cerr << "Next line is: " << buf << endl;
 	err=1;
 	return;
     }
     char c;
     in.get(c);
     if(!in){
+	cerr << "read in expect failed (after read)\n";
+	char buf[100];
+	in.clear();
+	in.getline(buf, 100);
+	cerr << "Rest of line is: " << buf << endl;
+	in.clear();
+	in.getline(buf, 100);
+	cerr << "Next line is: " << buf << endl;
 	err=1;
 	return;
     }
@@ -322,6 +479,7 @@ void TextPiostream::expect(char expected)
 	err=1;
 	cerr << "Persistent Object Stream: Expected '" << expected << "', got '" << c << "'." << endl;
 	char buf[100];
+	in.clear();
 	in.getline(buf, 100);
 	cerr << "Rest of line is: " << buf << endl;
 	cerr << "Object is not intact" << endl;
@@ -344,6 +502,11 @@ void TextPiostream::emit_pointer(int& have_data, int& pointer_id)
 	    err=1;
 	}
 	in >> pointer_id;
+	if(!in){
+	    cerr << "Error reading pointer id\n";
+	    err=1;
+	    return;
+	}
 	expect(' ');
     } else {
 	ofstream& out=*ostr;
@@ -366,7 +529,7 @@ double TextPiostream::get_percent_done()
 }
 
 BinaryPiostream::BinaryPiostream(ifstream* istr, int version)
-: Piostream(Read, version)
+: Piostream(Read, version), have_peekname(0)
 {
     int fd=istr->rdbuf()->fd();
     xdr=new XDR;
@@ -398,31 +561,24 @@ BinaryPiostream::BinaryPiostream(ifstream* istr, int version)
 
 BinaryPiostream::~BinaryPiostream()
 {
-    cerr << "In BinaryPiostream DTOR\n";
     cancel_timers();
     if(xdr){
-	cerr << "Destroying xdr\n";
 	xdr_destroy(xdr);
 	delete xdr;
 	if(dir==Read){
 #ifdef SCI_NOMMAP_IO
 #else
-	    cerr << "unmapping!\n";
-	    cerr << "addr=" << addr << endl;
-	    cerr << "len=" << len << endl;
 	    if(munmap((caddr_t)addr, len) != 0){
 		perror("munmap");
 		exit(-1);
 	    }
-	    cerr << "munmap done" << endl;
 	}
 #endif
     }
-    cerr << "BinaryPiostream::~BinaryPiostream done" << endl;
 }
 
 BinaryPiostream::BinaryPiostream(const clString& filename, Direction dir)
-: Piostream(dir, -1)
+: Piostream(dir, -1), have_peekname(0)
 {
     if(dir==Read){
 	fp=0;
