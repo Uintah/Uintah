@@ -49,6 +49,7 @@ class TetMC : public TetMCBase
 public:
   typedef Field                                  field_type;
   typedef typename Field::mesh_type::Cell::index_type  cell_index_type;
+  typedef typename Field::mesh_type::Node::index_type  node_index_type;
   typedef typename Field::value_type             value_type;
   typedef typename Field::mesh_type              mesh_type;
   typedef typename Field::mesh_handle_type       mesh_handle_type;
@@ -60,8 +61,10 @@ private:
   bool build_trisurf_;
   TriSurfMeshHandle trisurf_;
   map<long int, TriSurfMesh::Node::index_type> vertex_map_;
+  vector<long int> node_vector_;
   int nnodes_;
   TriSurfMesh::Node::index_type find_or_add_edgepoint(int, int, const Point &);
+  TriSurfMesh::Node::index_type find_or_add_nodepoint(node_index_type &);
 
   int n_;
 
@@ -70,6 +73,8 @@ public:
   virtual ~TetMC();
 	
   void extract( cell_index_type, double );
+  void extract_n( cell_index_type, double );
+  void extract_c( cell_index_type, double );
   void reset( int, bool build_trisurf=false);
   GeomObj *get_geom() { return triangles_->size() ? triangles_ : 0; };
   FieldHandle get_field(double val);
@@ -96,6 +101,8 @@ void TetMC<Field>::reset( int n, bool build_trisurf )
   typename Field::mesh_type::Node::size_type nsize;
   mesh_->size(nsize);
   nnodes_ = nsize;
+  node_vector_ = vector<long int>(nsize, -1);
+
   if (build_trisurf_)
     trisurf_ = new TriSurfMesh; 
   else 
@@ -121,7 +128,64 @@ TetMC<Field>::find_or_add_edgepoint(int n0, int n1, const Point &p)
 }
 
 template<class Field>
+TriSurfMesh::Node::index_type
+TetMC<Field>::find_or_add_nodepoint(node_index_type &tet_node_idx) {
+  TriSurfMesh::Node::index_type surf_node_idx;
+  long int i = node_vector_[(long int)(tet_node_idx)];
+  if (i != -1) surf_node_idx = (TriSurfMesh::Node::index_type) i;
+  else {
+    Point p;
+    mesh_->get_point(p, tet_node_idx);
+    surf_node_idx = trisurf_->add_point(p);
+    node_vector_[(long int)tet_node_idx] = (long int)surf_node_idx;
+  }
+  return surf_node_idx;
+}
+
+template<class Field>
 void TetMC<Field>::extract( cell_index_type cell, double v )
+{
+  if (field_->data_at() == Field::NODE)
+    extract_n(cell, v);
+  else
+    extract_c(cell, v);
+}
+
+template<class Field>
+void TetMC<Field>::extract_c( cell_index_type cell, double v )
+{
+  value_type selfvalue;
+  if (!field_->value( selfvalue, cell )) return;
+  typename mesh_type::Node::array_type node;
+  mesh_->get_nodes( node, cell );
+  int i;
+  Point p[4];
+  for (i=0; i<4; i++)
+    mesh_->get_point( p[i], node[i] );
+  typename mesh_type::Cell::array_type nbr_indices;
+  mesh_->synchronize(Mesh::FACE_NEIGHBORS_E);
+  mesh_->get_neighbors(nbr_indices, cell);
+  value_type value[4];
+  for (i=0; i<4; i++)
+    if (field_->value( value[i], nbr_indices[i] ) &&
+	selfvalue > value[i] &&
+	(value[i]-v)*(selfvalue-v) < 0) {
+      int counter=0;
+      int indices[3];
+      int j;
+      for (j=0; j<4; j++) if (i!=j) indices[counter++] = j;
+      triangles_->add(p[indices[0]], p[indices[1]], p[indices[2]]);
+      if (build_trisurf_) {
+	TriSurfMesh::Node::index_type vertices[3];
+	for (j=0; j<3; j++) 
+	  vertices[j]=find_or_add_nodepoint(node[vertices[j]]);
+	trisurf_->add_triangle(vertices[0], vertices[1], vertices[2]);
+      }
+    }
+}
+
+template<class Field>
+void TetMC<Field>::extract_n( cell_index_type cell, double v )
 {
   static int num[16] = { 0, 1, 1, 2, 1, 2, 2, 1, 1, 2, 2, 1, 2, 1, 1, 0 };
   static int order[16][4] = {
