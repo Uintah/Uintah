@@ -49,7 +49,8 @@ WARNING
        
        //////////
        // Insert Documentation Here:
-       virtual void execute(const ProcessorContext*) = 0;
+       virtual void execute(const ProcessorContext * pc, 
+			          DataWarehouseP   & dwp ) = 0;
        
        //////////
        // Insert Documentation Here:
@@ -72,6 +73,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.8  2000/05/05 06:42:46  dav
+// Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
+//
 // Revision 1.7  2000/04/26 06:49:12  sparker
 // Streamlined namespaces
 //

@@ -213,7 +213,8 @@ void Region::performConsistencyCheck() const
     throw InvalidGrid("Degenerate region");
 }
 
-int Region::getBCType(int face) const
+int
+Region::getBCType(int face) const
 {
   // Put in code to return whether the face is a symmetry plane,
   // a fixed boundary, borders a neighboring region or none
@@ -222,7 +223,21 @@ int Region::getBCType(int face) const
   return 0;
 
 }
-CellIterator Region::getCellIterator(const Box& b) const
+
+string
+Region::toString() const
+{
+  char str[ 1024 ];
+
+  sprintf( str, "[ [%2.2lf, %2.2lf, %2.2lf] [%2.2lf, %2.2lf, %2.2lf] ]",
+	   d_box.lower().x(), d_box.lower().y(), d_box.lower().z(),
+	   d_box.upper().x(), d_box.upper().y(), d_box.upper().z() );
+
+  return string( str );
+}
+
+CellIterator
+Region::getCellIterator(const Box& b) const
 {
    Vector diag = d_box.upper()-d_box.lower();
    Vector l = (b.lower() - d_box.lower())*d_res/diag;
@@ -240,6 +255,9 @@ NodeIterator Region::getNodeIterator() const
 
 //
 // $Log$
+// Revision 1.14  2000/05/05 06:42:45  dav
+// Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
+//
 // Revision 1.13  2000/05/04 19:06:48  guilkey
 // Added the beginnings of grid boundary conditions.  Functions still
 // need to be filled in.

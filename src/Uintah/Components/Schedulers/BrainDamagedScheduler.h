@@ -3,6 +3,7 @@
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Interface/DataWarehouseP.h>
 #include <vector>
 
 namespace SCICore {
@@ -55,7 +56,8 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      virtual void execute(const ProcessorContext*);
+      virtual void execute( const ProcessorContext * pc,
+			          DataWarehouseP   & dwp );
       
       //////////
       // Insert Documentation Here:
@@ -112,6 +114,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.8  2000/05/05 06:42:43  dav
+// Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
+//
 // Revision 1.7  2000/04/26 06:48:32  sparker
 // Streamlined namespaces
 //

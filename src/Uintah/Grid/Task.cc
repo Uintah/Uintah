@@ -24,45 +24,53 @@ Task::~Task()
   delete d_action;
 }
 
-void Task::usesMPI(bool state)
+void
+Task::usesMPI(bool state)
 {
   d_usesMPI = state;
 }
 
-void Task::usesThreads(bool state)
+void
+Task::usesThreads(bool state)
 {
   d_usesThreads = state;
 }
 
-void Task::subregionCapable(bool state)
+void
+Task::subregionCapable(bool state)
 {
   d_subregionCapable = state;
 }
 
-void Task::requires(const DataWarehouseP& ds, const VarLabel* var)
+void
+Task::requires(const DataWarehouseP& ds, const VarLabel* var)
 {
   d_reqs.push_back(new Dependency(this, ds, var, 0, 0));
 }
 
-void Task::requires(const DataWarehouseP& ds, const VarLabel* var,
-		    const Region* region, int numGhostCells)
+void
+Task::requires(const DataWarehouseP& ds, const VarLabel* var,
+	       const Region* region, int numGhostCells)
 {
   d_reqs.push_back(new Dependency(this, ds, var, region, numGhostCells));
 }
 
-void Task::computes(const DataWarehouseP& ds, const VarLabel* var)
+void
+Task::computes(const DataWarehouseP& ds, const VarLabel* var)
 {
   d_comps.push_back(new Dependency(this, ds, var, 0, 0));
 }
 
-void Task::computes(const DataWarehouseP& ds, const VarLabel* var,
-		    const Region*)
+void
+Task::computes(const DataWarehouseP& ds, const VarLabel* var,
+	       const Region*)
 {
   d_comps.push_back(new Dependency(this, ds, var,
 				   d_region, 0));
 }
 
-void Task::doit(const ProcessorContext* pc)
+void
+Task::doit(const ProcessorContext* pc)
 {
   if( d_completed )
       throw InternalError("Task performed, but already completed");
@@ -81,7 +89,8 @@ Task::Dependency::Dependency(Task* task, const DataWarehouseP& dw,
 {
 }
 
-void Task::addReqs(std::vector<Dependency*>& to) const
+void
+Task::addReqs(vector<Dependency*>& to) const
 {
   vector<Dependency*>::const_iterator iter;
 
@@ -91,7 +100,8 @@ void Task::addReqs(std::vector<Dependency*>& to) const
     }
 }
 
-void Task::addComps(std::vector<Dependency*>& to) const
+void
+Task::addComps(std::vector<Dependency*>& to) const
 {
   vector<Dependency*>::const_iterator iter;
 
@@ -101,8 +111,17 @@ void Task::addComps(std::vector<Dependency*>& to) const
     }
 }
 
+const vector<Task::Dependency*>&
+Task::getComputes() const
+{
+  return d_comps;
+}
+
 //
 // $Log$
+// Revision 1.8  2000/05/05 06:42:45  dav
+// Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
+//
 // Revision 1.7  2000/04/26 06:49:00  sparker
 // Streamlined namespaces
 //

@@ -1,95 +1,121 @@
 /* REFERENCED */
 static char *id="@(#) $Id$";
 
-#include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <SCICore/Exceptions/InternalError.h>
+#include <SCICore/Thread/Runnable.h>
+#include <SCICore/Thread/Guard.h>
+#include <SCICore/Geometry/Point.h>
+
+#include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <Uintah/Exceptions/UnknownVariable.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/Level.h>
-#include <SCICore/Thread/Guard.h>
-#include <SCICore/Geometry/Point.h>
-#include <iostream>
+#include <Uintah/Grid/Region.h>
 
-using namespace Uintah;
+#include <iostream>
+#include <string>
+#include <mpi.h>
 
 using SCICore::Exceptions::InternalError;
 using SCICore::Thread::Guard;
 using SCICore::Geometry::Point;
 using std::cerr;
+using std::string;
+
+namespace Uintah {
 
 OnDemandDataWarehouse::OnDemandDataWarehouse( int MpiRank, int MpiProcesses )
   : d_lock("DataWarehouse lock"), DataWarehouse( MpiRank, MpiProcesses )
 {
   d_allowCreation = true;
-  position_label = new VarLabel("__internal datawarehouse position variable",
+  d_positionLabel = new VarLabel("__internal datawarehouse position variable",
 				ParticleVariable<Point>::getTypeDescription(),
 				VarLabel::Internal);
+
+  if( MpiProcesses != 1 ) {
+    d_worker = new DataWarehouseMpiHandler( this );
+    d_thread = new Thread( d_worker, "DataWarehouseMpiHandler" );
+  } else {
+    // If there is only one MPI process, then their is only one
+    // DataWarehouse, so we don't need to use MPI to transfer any
+    // data.
+    d_worker = 0;
+    d_thread = 0;
+  }
 }
 
-void OnDemandDataWarehouse::setGrid(const GridP& grid)
+void
+OnDemandDataWarehouse::setGrid(const GridP& grid)
 {
-  this->grid=grid;
+  d_grid = grid;
 }
 
 OnDemandDataWarehouse::~OnDemandDataWarehouse()
 {
 }
 
-void OnDemandDataWarehouse::get(ReductionVariableBase& var,
-				const VarLabel* label) const
+void
+OnDemandDataWarehouse::get(ReductionVariableBase& var,
+			   const VarLabel* label) const
 {
-   reductionDBtype::const_iterator iter = reductiondb.find(label);
-   if(iter == reductiondb.end())
+   reductionDBtype::const_iterator iter = d_reductionDB.find(label);
+   if(iter == d_reductionDB.end())
       throw UnknownVariable(label->getName());
 
    var.copyPointer(*iter->second->var);
 }
 
-void OnDemandDataWarehouse::allocate(ReductionVariableBase&,
-				     const VarLabel*)
+void
+OnDemandDataWarehouse::allocate(ReductionVariableBase&,
+				const VarLabel*)
 {
-   cerr << "OnDemend DataWarehouse::allocate(ReductionVariable) not finished\n";
+   cerr << "OnDemend DataWarehouse::allocate(ReductionVariable) "
+	<< "not finished\n";
 }
 
-void OnDemandDataWarehouse::put(const ReductionVariableBase& var,
-				const VarLabel* label)
+void
+OnDemandDataWarehouse::put(const ReductionVariableBase& var,
+			   const VarLabel* label)
 {
-   reductionDBtype::const_iterator iter = reductiondb.find(label);
-   if(iter == reductiondb.end()){
-      reductiondb[label]=new ReductionRecord(var.clone());
-      iter = reductiondb.find(label);
+   reductionDBtype::const_iterator iter = d_reductionDB.find(label);
+   if(iter == d_reductionDB.end()){
+      d_reductionDB[label]=new ReductionRecord(var.clone());
+      iter = d_reductionDB.find(label);
    } else {
       iter->second->var->reduce(var);
    }
 }
 
-void OnDemandDataWarehouse::get(ParticleVariableBase& var,
-				const VarLabel* label,
-				int matlIndex,
-				const Region* region,
-				int numGhostCells) const
+void
+OnDemandDataWarehouse::get(ParticleVariableBase& var,
+			   const VarLabel* label,
+			   int matlIndex,
+			   const Region* region,
+			   int numGhostCells) const
 {
    if(numGhostCells != 0)
       throw InternalError("Ghost cells don't work, go away");
-   if(!particledb.exists(label, matlIndex, region))
+   if(!d_particleDB.exists(label, matlIndex, region))
       throw UnknownVariable(label->getName());
-   particledb.get(label, matlIndex, region, var);
+   d_particleDB.get(label, matlIndex, region, var);
 }
 
-void OnDemandDataWarehouse::allocate(int numParticles,
-				     ParticleVariableBase& var,
-				     const VarLabel* label,
-				     int matlIndex,
-				     const Region* region)
+void
+OnDemandDataWarehouse::allocate(int numParticles,
+				ParticleVariableBase& var,
+				const VarLabel* label,
+				int matlIndex,
+				const Region* region)
 {
    // Error checking
-   if(particledb.exists(label, matlIndex, region))
+   if(d_particleDB.exists(label, matlIndex, region))
       throw InternalError("Particle variable already exists: "+label->getName());
    if(!label->isPositionVariable())
-      throw InternalError("Particle allocate via numParticles should only be used for position variables");
-   if(particledb.exists(position_label, matlIndex, region))
+      throw InternalError("Particle allocate via numParticles should "
+			  "only be used for position variables");
+   if(d_particleDB.exists(d_positionLabel, matlIndex, region))
       throw InternalError("Particle position already exists in datawarehouse");
 
    // Create the particle set and variable
@@ -98,91 +124,155 @@ void OnDemandDataWarehouse::allocate(int numParticles,
    var.allocate(psubset);
 
    // Put it in the database
-   particledb.put(position_label, matlIndex, region, var, false);
+   d_particleDB.put(d_positionLabel, matlIndex, region, var, false);
 }
 
-void OnDemandDataWarehouse::allocate(ParticleVariableBase& var,
-				     const VarLabel* label,
-				     int matlIndex,
-				     const Region* region)
-{
-   // Error checking
-   if(particledb.exists(label, matlIndex, region))
-      throw InternalError("Particle variable already exists: "+label->getName());
-
-   if(!particledb.exists(position_label, matlIndex, region))
-      throw InternalError("Position variable does not exist: "+position_label->getName());
-
-   ParticleVariable<Point> pos;
-   particledb.get(position_label, matlIndex, region, pos);
-
-   // Allocate the variable
-   var.allocate(pos.getParticleSubset());
-}
-
-void OnDemandDataWarehouse::put(const ParticleVariableBase& var,
+void
+OnDemandDataWarehouse::allocate(ParticleVariableBase& var,
 				const VarLabel* label,
 				int matlIndex,
 				const Region* region)
 {
    // Error checking
-   if(particledb.exists(label, matlIndex, region))
+   if(d_particleDB.exists(label, matlIndex, region))
+      throw InternalError("Particle variable already exists: " +
+			  label->getName());
+   if(!d_particleDB.exists(d_positionLabel, matlIndex, region))
+      throw InternalError("Position variable does not exist: " + 
+			  d_positionLabel->getName());
+   ParticleVariable<Point> pos;
+   d_particleDB.get(d_positionLabel, matlIndex, region, pos);
+
+   // Allocate the variable
+   var.allocate(pos.getParticleSubset());
+}
+
+void
+OnDemandDataWarehouse::put(const ParticleVariableBase& var,
+			   const VarLabel* label,
+			   int matlIndex,
+			   const Region* region)
+{
+   // Error checking
+   if(d_particleDB.exists(label, matlIndex, region))
       throw InternalError("Variable already exists: "+label->getName());
 
    // Put it in the database
-   particledb.put(label, matlIndex, region, var, true);
+   d_particleDB.put(label, matlIndex, region, var, true);
 }
 
-void OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
-				int matlIndex, const Region* region,
-				int numGhostCells) const
+void
+OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
+			   int matlIndex, const Region* region,
+			   int numGhostCells) const
 {
    if(numGhostCells != 0)
       throw InternalError("Ghost cells don't work, go away");
-   if(!ncdb.exists(label, matlIndex, region))
+   if(!d_ncDB.exists(label, matlIndex, region))
       throw UnknownVariable(label->getName());
-   ncdb.get(label, matlIndex, region, var);
+   d_ncDB.get(label, matlIndex, region, var);
 }
 
-void OnDemandDataWarehouse::allocate(NCVariableBase& var,
-				     const VarLabel* label,
-				     int matlIndex,
-				     const Region* region)
+void
+OnDemandDataWarehouse::allocate(NCVariableBase& var,
+				const VarLabel* label,
+				int matlIndex,
+				const Region* region)
 {
    // Error checking
-   if(ncdb.exists(label, matlIndex, region))
+   if(d_ncDB.exists(label, matlIndex, region))
       throw InternalError("NC variable already exists: "+label->getName());
 
    // Allocate the variable
    var.allocate(region);
 }
 
-void OnDemandDataWarehouse::put(const NCVariableBase& var,
-				const VarLabel* label,
-				int matlIndex, const Region* region)
+void
+OnDemandDataWarehouse::put(const NCVariableBase& var,
+			   const VarLabel* label,
+			   int matlIndex, const Region* region)
 {
    // Error checking
-   if(ncdb.exists(label, matlIndex, region))
+   if(d_ncDB.exists(label, matlIndex, region))
       throw InternalError("NC variable already exists: "+label->getName());
 
    // Put it in the database
-   ncdb.put(label, matlIndex, region, var, true);
+   d_ncDB.put(label, matlIndex, region, var, true);
 }
 
-void OnDemandDataWarehouse::carryForward(const DataWarehouseP& fromp)
+int
+OnDemandDataWarehouse::findMpiNode( const VarLabel * label,
+				    const Region   * region )
+{
+  variableListType * varList = d_dataLocation[ label ];
+
+  char msg[ 1024 ];
+
+  if( varList == 0 ) {
+    sprintf( msg, "findMpiNode: Requested variable: %s for\n"
+	     "region %s is not in d_dataLocation",
+	     label->getName().c_str(), region->toString().c_str() );
+    throw InternalError( string( msg ) );
+  }
+  // Run through all the different regions associated with "label" to
+  // find which one contains the "region" that has been requested.
+
+  variableListType::iterator iter = varList->begin();
+
+  while( iter != varList->end() ) {
+    if( (*iter)->region->contains( *region ) ) {
+      return (*iter)->mpiNode;
+    }
+    iter++;
+  }
+
+  sprintf( msg, "findMpiNode: Requested region: %s for\n"
+	   "region %s is not in d_dataLocation",
+	   label->getName().c_str(), region->toString().c_str() );
+  throw InternalError( string( msg ) );
+}
+
+void
+OnDemandDataWarehouse::registerOwnership( const VarLabel * label,
+					  const Region   * region,
+					        int        mpiNode )
+{
+  variableListType * varList = d_dataLocation[ label ];
+
+  if( varList == 0 ) {
+    varList = new variableListType();
+    d_dataLocation[ label ] = varList;
+  }
+
+  // Possibly should make sure that varList does not already have
+  // this "label" with this "region" in it...  for now assuming that 
+  // this doesn't happen...
+
+  dataLocation * location = new dataLocation();
+
+  location->region = region;
+  location->mpiNode = mpiNode;
+
+  varList->push_back( location );
+}
+
+
+void
+OnDemandDataWarehouse::carryForward(const DataWarehouseP& fromp)
 {
    OnDemandDataWarehouse* from = dynamic_cast<OnDemandDataWarehouse*>(fromp.get_rep());
-   grid=from->grid;
 
-   for(int l=0;l<grid->numLevels();l++){
-      const LevelP& level = grid->getLevel(l);
+   d_grid = from->d_grid;
+
+   for(int l = 0; l < d_grid->numLevels(); l++){
+      const LevelP& level = d_grid->getLevel(l);
       for(Level::const_regionIterator iter = level->regionsBegin();
 	  iter != level->regionsEnd(); iter++){
 	 const Region* region = *iter;
 	 ParticleVariable<Point> pos;
-	 from->particledb.get(position_label, 0, region, pos);
+	 from->d_particleDB.get(d_positionLabel, 0, region, pos);
 
-	 particledb.put(position_label, 0, region, pos, false);
+	 d_particleDB.put(d_positionLabel, 0, region, pos, false);
       }
    }
 }
@@ -192,9 +282,78 @@ OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* v
 {
 }
 
+///////////////////////////////////////////////////////////////
+// DataWarehouseMpiHandler Routines:
+
+const int DataWarehouseMpiHandler::MAX_BUFFER_SIZE = 1024;
+const int DataWarehouseMpiHandler::MPI_DATA_REQUEST_TAG = 123321;
+
+DataWarehouseMpiHandler::DataWarehouseMpiHandler( DataWarehouse * dw ) :
+  d_dw( dw )
+{
+}
+
+void
+DataWarehouseMpiHandler::run()
+{
+  if( d_dw->d_MpiProcesses == 1 ) {
+    throw InternalError( "DataWarehouseMpiHandler should not be running "
+			 "if there is only one MPI process." );
+  }
+
+  MPI_Status status;
+  char       buffer[ MAX_BUFFER_SIZE ];
+  bool       done = false;
+
+  while( !done ) {
+
+    MPI_Recv( buffer, sizeof( MpiDataRequest ), MPI_BYTE, MPI_ANY_SOURCE,
+	      MPI_DATA_REQUEST_TAG, MPI_COMM_WORLD, &status );
+
+    MpiDataRequest * request = (MpiDataRequest *) buffer;
+
+    cerr << "OnDemandDataWarehouse " << d_dw->d_MpiRank << " received a " 
+	 << "request that " << status.MPI_SOURCE << " wants me to "
+	 << "send it information of type: " << request->type << "\n";
+    cerr << "   It wants data for variable: " << request->varName 
+	 << " in retion of " << request->region << "\n";
+
+    if( d_dw->d_MpiRank != request->toMpiRank || 
+	status.MPI_SOURCE != request->fromMpiRank ) {
+      throw InternalError( "Data Notification Message was corrupt" );
+    }
+
+    if( request->type == ReductionVar ) {
+      cerr << "Received a reduction var... need to get it from my "
+	   << "database\n";
+    } else if( request->type == GridVar ) {
+      cerr << "Received a grid var... need to get it from my "
+	   << "database\n";
+    } else {
+      throw InternalError( "Do not know how to handle this type of data" );
+    }
+
+    // Look up the varName in the DW.  ??What to do if it is not there??
+
+    // Pull data out of DataWarehouse and pack in into "buffer"
+
+    // figure out how big the data is...
+    int size = 1;
+
+    MPI_Send( buffer, size, MPI_BYTE, status.MPI_SOURCE, request->tag,
+	      MPI_COMM_WORLD );
+
+  } // end while
+}
+
+
+} // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.17  2000/05/05 06:42:43  dav
+// Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
+//
 // Revision 1.16  2000/05/02 17:54:29  sparker
 // Implemented more of SerialMPM
 //

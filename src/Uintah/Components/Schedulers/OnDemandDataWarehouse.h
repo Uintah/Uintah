@@ -1,16 +1,51 @@
 #ifndef UINTAH_COMPONENTS_SCHEDULERS_ONDEMANDDATAWAREHOUSE_H
 #define UINTAH_COMPONENTS_SCHEDULERS_ONDEMANDDATAWAREHOUSE_H
 
-#include <Uintah/Interface/DataWarehouse.h>
+#include <SCICore/Thread/Runnable.h>
 #include <SCICore/Thread/CrowdMonitor.h>
+
+#include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Components/Schedulers/DWDatabase.h>
+
 #include <map>
 
 namespace Uintah {
-   class DataItem;
-   class TypeDescription;
-   class Region;
+
+class DataItem;
+class TypeDescription;
+class Region;
+
+using SCICore::Thread::Thread;
+using SCICore::Thread::Runnable;
+
+class DataWarehouseMpiHandler : public Runnable {
+
+public:
+  DataWarehouseMpiHandler( DataWarehouse * dw );
+
+  void run();
+
+private:
+
+  enum DataType { ReductionVar, GridVar, Quit };
+
+  struct MpiDataRequest {
+    int fromMpiRank; // Rank of process that wants to send info to this DW.
+    int toMpiRank;   // Rank of the process being sent the data.
+    int tag;         // Tag to use in the actual send.
+    DataType type;// Type of data that will be sent
+    char     varName[ 50 ];
+    int      region;
+  };
+
+  static const int  MAX_BUFFER_SIZE;
+  static const int  MPI_DATA_REQUEST_TAG;
+
+  DataWarehouse * d_dw; // The DataWarehouse that this MpiHandler 
+                        // is associated with.
+};
+
 /**************************************
 
   CLASS
@@ -68,29 +103,62 @@ public:
    //////////
    // Insert Documentation Here:
    virtual void carryForward(const DataWarehouseP& from);
-       
+
+   //////////
+   // When the Scheduler determines that another MPI node will be
+   // creating a piece of data (ie: a sibling DataWarehouse will have
+   // this data), it uses this procedure to let this DataWarehouse
+   // know which mpiNode has the data so that if this DataWarehouse
+   // needs the data, it will know who to ask for it.
+   virtual void registerOwnership( const VarLabel * label,
+				   const Region   * region,
+				         int        mpiNode );
+   //////////
+   // Searches through the list containing which DataWarehouse's
+   // have which data to find the mpiNode that the requested
+   // variable (with materialIndex, and in the given region) is on.
+   virtual int findMpiNode( const VarLabel * label,
+			    const Region   * region );
 private:
-   DWDatabase<NCVariableBase> ncdb;
-   DWDatabase<ParticleVariableBase> particledb;
+
+   struct dataLocation {
+      const Region   * region;
+            int        mpiNode;
+   };
+
    struct ReductionRecord {
       ReductionVariableBase* var;
       ReductionRecord(ReductionVariableBase*);
    };
+
+   typedef std::vector<dataLocation*> variableListType;
    typedef std::map<const VarLabel*, ReductionRecord*, VarLabel::Compare> reductionDBtype;
-   reductionDBtype reductiondb;
+   typedef std::map<const VarLabel*, variableListType*, VarLabel::Compare> dataLocationDBtype;
+
+   DWDatabase<NCVariableBase>       d_ncDB;
+   DWDatabase<ParticleVariableBase> d_particleDB;
+   reductionDBtype                  d_reductionDB;
+   dataLocationDBtype               d_dataLocation;
+
    //////////
    // Insert Documentation Here:
    mutable SCICore::Thread::CrowdMonitor  d_lock;
    bool                                   d_allowCreation;
-   GridP grid;
+   GridP                                  d_grid;
    
-   const VarLabel* position_label;
+   const VarLabel           * d_positionLabel;
+
+   Thread                   * d_thread;
+   DataWarehouseMpiHandler  * d_worker;
 };
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.15  2000/05/05 06:42:43  dav
+// Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
+//
 // Revision 1.14  2000/05/02 17:54:29  sparker
 // Implemented more of SerialMPM
 //
