@@ -111,6 +111,37 @@ Color::Color(const HSVColor& hsv)
    }
 }
 
+
+
+int
+Color::Overlap( double a, double b, double e )
+{
+  double hi, lo, h, l;
+  
+  hi = a + e;
+  lo = a - e;
+  h  = b + e;
+  l  = b - e;
+
+  if ( ( hi > l ) && ( lo < h ) )
+    return 1;
+  else
+    return 0;
+}
+  
+int
+Color::InInterval( Color& a, double epsilon )
+{
+  if ( Overlap( _r, a.r(), epsilon ) &&
+      Overlap( _g, a.g(), epsilon )  &&
+      Overlap( _b, a.b(), epsilon ) )
+    return 1;
+  else
+    return 0;
+}
+
+
+
 HSVColor::HSVColor()
 {
 }
@@ -170,6 +201,7 @@ HSVColor HSVColor::operator+(const HSVColor& c)
    return HSVColor(_hue+c._hue, _sat+c._sat, _val+c._val);
 }
 
+
 /***************************************************
 ***************************************************/
 
@@ -193,7 +225,7 @@ CharColor::CharColor ( Color& c )
 }
 
 
-CharColor
+CharColor&
 CharColor::operator= ( const Color& c ) const
 {
   CharColor f;
@@ -205,3 +237,13 @@ CharColor::operator= ( const Color& c ) const
   return f;
 }
 
+
+int
+CharColor::operator!= ( const CharColor& c ) const
+{
+  if ( ( red == c.r() ) && ( green == c.g() ) &&
+      ( blue == c.b() ) )
+    return 1;
+  else
+    return 0;
+}

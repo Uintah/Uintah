@@ -40,6 +40,8 @@ public:
       return ((_r != c._r)||(_g!=c._g)||(_b!=c._b));
     }
 
+    int InInterval( Color&, double );
+
     void get_color(float color[4]);
     inline float r() const {return _r;}
     inline float g() const {return _g;}
@@ -47,6 +49,10 @@ public:
 
     friend void Pio(Piostream&, Color&);
     friend class HSVColor;
+
+  private:
+    int Overlap( double, double, double );
+
 };
 
 class HSVColor {
@@ -87,7 +93,13 @@ public:
   CharColor ( char a, char b, char c );
   CharColor ( Color& c );
   
-  CharColor operator= ( const Color& ) const;
+    inline double r() const {return red;}
+    inline double g() const {return green;}
+    inline double b() const {return blue;}
+  
+  CharColor& operator= ( const Color& ) const;
+
+  int operator!= ( const CharColor& ) const;
 };
 
 
