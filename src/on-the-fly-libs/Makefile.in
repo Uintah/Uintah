@@ -64,7 +64,7 @@ SONAMEFLAG =
 endif
 
 
-.SUFFIXES: .cc .so
+.SUFFIXES: .so .cc
 
 Makefile: $(OTF_SRC)/Makefile.in $(SCIRUN_OBJTOP)/config.status
 	@( Here="`pwd`" ; cd $(OTF_SRCTOP_ABS) ; Top="`pwd`" ; CONFIG_FILES="`echo $${Here} | sed -e "s!^$${Top}/!!" -e "s!^$${Top}!.!"`/Makefile" CONFIG_HEADERS="" ./config.status ) 1>&2
@@ -73,6 +73,6 @@ Makefile: $(OTF_SRC)/Makefile.in $(SCIRUN_OBJTOP)/config.status
 	rm -f $@
 	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(SOFLAGS) $< -o $@ $(CURRENT_LIBS)
 
-$(OTF_LIBS) : $(SRCS) $(CURRENT_LIBS)
+$(OTF_LIBS) : $(patsub %.cc,%.so, $@) $(CURRENT_LIBS)
 
 all: $(OTF_LIBS)
