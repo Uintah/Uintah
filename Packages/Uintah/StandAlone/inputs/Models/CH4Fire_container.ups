@@ -233,11 +233,11 @@
        <Level>
  <!-- -->
            <Box label="2D">
-              <lower>        [0.0,-0.1,0.0]     </lower>
-              <upper>        [0.1, 0.3,0.00125] </upper>
+              <lower>        [-0.1,-0.1,0.0]     </lower>
+              <upper>        [ 0.1, 0.3,0.00125] </upper>
               <extraCells>   [1,1,1]            </extraCells>
               <patches>      [4,8,1]            </patches>
-              <resolution>   [80,320,1]         </resolution>
+              <resolution>   [160,320,1]         </resolution>
            </Box>
 
 <!--      UNCOMMENT THIS FOR 3D AND COMMENT OUT THE ABOVE
