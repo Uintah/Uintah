@@ -204,6 +204,8 @@ int main(int argc, char** argv)
 	usage( "You need to specify -arches, -ice, or -mpm", "", argv[0]);
     }
 
+    bool thrownException = false;
+    
     /*
      * Create the components
      */
@@ -330,19 +332,26 @@ int main(int argc, char** argv)
 	// to be lost when the program dies...
 	//Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
 	//abort();
+	thrownException = true;
     } catch (std::exception e){
         cerr << "Caught std exception: " << e.what() << '\n';
 	//Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
-	//abort();       
+	//abort();
+	thrownException = true;
     } catch(...){
 	cerr << "Caught unknown exception\n";
 	//Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
 	//abort();
+	thrownException = true;
     }
 
     /*
      * Finalize MPI
      */
     Uintah::Parallel::finalizeManager();
+
+    if (thrownException) {
+      Thread::exitAll(1);
+    }
 }
 
