@@ -20,7 +20,7 @@ def inputs_root ():
     return argv[2]
 def date ():
     return asctime(localtime(time()))
-def perf_algo (test):
+def get_algo (test):
     return test[-1]
 def nullCallback (test, susdir, inputsdir, compare_root, algo, mode, max_parallelism):
     pass
@@ -189,7 +189,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       mkdir(testname)
     
     
-    # in certain cases (like when algo was performance), we need to make it
+    # in certain cases (like when algo was performance or ucf), need to make it
     # something usable by sus (MPM, ARCHES, etc.), but we will also need to
     # have the original ALGO name, i.e., to save in PERFORMANCE-results
 
@@ -198,8 +198,8 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     if ALGO == "Examples":
       newalgo = testname
       NEWALGO = ALGO
-    elif do_performance == 1:
-      newalgo = perf_algo(test)
+    elif algo == "performance" or "ucf":
+      newalgo = get_algo(test)
       NEWALGO = upper(newalgo)
     else:
       newalgo = ""
