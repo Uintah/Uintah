@@ -65,15 +65,13 @@ void NullContact::exMomInterpolated(const ProcessorGroup*,
   int numMatls = d_sharedState->getNumMPMMatls();
 
   // Retrieve necessary data from DataWarehouse
-  vector<NCVariable<double> > gmass(numMatls);
   vector<NCVariable<Vector> > gvelocity(numMatls);
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-    int vfindex = mpm_matl->getVFIndex();
-    new_dw->get(gvelocity[vfindex], lb->gVelocityLabel, vfindex, patch,
-                  Ghost::None, 0);
+    int dwi = mpm_matl->getDWIndex();
+    new_dw->get(gvelocity[m], lb->gVelocityLabel, dwi, patch, Ghost::None, 0);
 
-    new_dw->put(gvelocity[vfindex], lb->gMomExedVelocityLabel, vfindex, patch);
+    new_dw->put(gvelocity[m], lb->gMomExedVelocityLabel, dwi, patch);
   }
 
 }
@@ -90,21 +88,16 @@ void NullContact::exMomIntegrated(const ProcessorGroup*,
 
   int numMatls = d_sharedState->getNumMPMMatls();
 
-  vector<NCVariable<double> > gmass(numMatls);
-  vector<NCVariable<Vector> > gvelocity_star(numMatls);
-  vector<NCVariable<Vector> > gacceleration(numMatls);
+  vector<NCVariable<Vector> > gv_star(numMatls);
+  vector<NCVariable<Vector> > gacc(numMatls);
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-   int vfindex = mpm_matl->getVFIndex();
-   new_dw->get(gvelocity_star[vfindex], lb->gVelocityStarLabel, vfindex,
-                  patch, Ghost::None, 0);
-   new_dw->get(gacceleration[vfindex], lb->gAccelerationLabel, vfindex,
-                  patch, Ghost::None, 0);
+   int dwi = mpm_matl->getDWIndex();
+   new_dw->get(gv_star[m], lb->gVelocityStarLabel, dwi, patch, Ghost::None, 0);
+   new_dw->get(gacc[m],    lb->gAccelerationLabel, dwi, patch, Ghost::None, 0);
 
-    new_dw->put(gvelocity_star[vfindex], lb->gMomExedVelocityStarLabel,
-							 vfindex, patch);
-    new_dw->put(gacceleration[vfindex], lb->gMomExedAccelerationLabel,
-							 vfindex, patch);
+    new_dw->put(gv_star[m], lb->gMomExedVelocityStarLabel, dwi, patch);
+    new_dw->put(gacc[m],    lb->gMomExedAccelerationLabel, dwi, patch);
   }
 
 }
@@ -139,6 +132,9 @@ void NullContact::addComputesAndRequiresIntegrated( Task* t,
 
 
 // $Log$
+// Revision 1.18  2001/01/11 21:01:02  guilkey
+// Changed getVFIndex to getDWIndex
+//
 // Revision 1.17  2000/11/07 22:52:22  guilkey
 // Changed the way that materials are looped over.  Instead of each
 // function iterating over all materials, and then figuring out which ones
