@@ -56,11 +56,11 @@ using std::vector;
 #include <sys/stat.h>
 
 namespace SCIRun {
-
-extern env_map scirunrc;
-extern string SCIRUN_SRCTOP;
-extern string DEFAULT_LOAD_PACKAGE;
-
+env_map scirunrc;                        // contents of .scirunrc
+// these are set in main.cc
+string SCIRUN_SRCTOP("not set");         // = INSTALL_DIR/SCIRun/src
+string SCIRUN_OBJTOP("not set");         // = BUILD_DIR
+string DEFAULT_LOAD_PACKAGE("not set");  // configured packages
 
 typedef struct {
   string name;

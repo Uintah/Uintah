@@ -65,10 +65,11 @@ int global_argc;
 char** global_argv;
 
 namespace SCIRun {
-env_map scirunrc;                            // contents of .scirunrc
-string SCIRUN_SRCTOP(SRCTOP);                // = INSTALL_DIR/SCIRun/src
-string SCIRUN_OBJTOP(OBJTOP);                // = BUILD_DIR
-string DEFAULT_LOAD_PACKAGE(DEF_LOAD_PACK);  // configured packages
+extern env_map scirunrc;             // contents of .scirunrc
+// these symbols live in Dataflow/Network/PackageDB.cc
+extern string SCIRUN_SRCTOP;         // = INSTALL_DIR/SCIRun/src
+extern string SCIRUN_OBJTOP;         // = BUILD_DIR
+extern string DEFAULT_LOAD_PACKAGE;  // configured packages
 }
 
 #ifndef PSECORETCL
@@ -91,6 +92,11 @@ int main(int argc, char** argv)
 {
   global_argc=argc;
   global_argv=argv;
+
+  // these symbols live in Dataflow/Network/PackageDB.cc but are reset here
+  SCIRUN_SRCTOP = SRCTOP;
+  SCIRUN_OBJTOP = OBJTOP;
+  DEFAULT_LOAD_PACKAGE = DEF_LOAD_PACK;
 
 #ifdef SCI_PARALLEL
   try {
