@@ -64,7 +64,7 @@ protected:
 
 DECLARE_MAKER(BundleReader)
   BundleReader::BundleReader(GuiContext* ctx)
-    : GenericReader<BundleHandle>("BundleReader", ctx, "Bundle", "SCIRun"),
+    : GenericReader<BundleHandle>("BundleReader", ctx, "DataIO", "SCIRun"),
   guiTypes_(ctx->subVar("types")),
   guiFileType_(ctx->subVar("filetype"))
 {

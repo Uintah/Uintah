@@ -29,7 +29,7 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<component name="BundleReader" category="Bundle">
+<component name="BundleReader" category="DataIO">
   <overview>
     <authors>
     Jeroen Stinstra

@@ -29,7 +29,7 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<component name="BundleWriter" category="Bundle">
+<component name="BundleWriter" category="DataIO">
   <overview>
     <authors>
     Jeroen Stinstra

@@ -32,7 +32,7 @@
 # October 2000
 
 
-itcl_class SCIRun_Bundle_BundleReader {
+itcl_class SCIRun_DataIO_BundleReader {
     inherit Module
     constructor {config} {
         set name BundleReader
