@@ -71,9 +71,11 @@ public:
 
   virtual void init();
 
+  // tree hierarchy of parts 
   void add_child( Part *child );
   void rem_child( Part *child );
 
+  // Gui Vars
   const VarList &get_gui_vars() { return vars_; }
 
   void add_gui_var( GuiVar * );
