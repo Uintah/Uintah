@@ -23,7 +23,7 @@ NCVectorField::NCVectorField(const NCVectorField& copy)
   :VectorFieldRG( copy ), grid(copy.grid), _level(copy._level),
     _varname(copy._varname), _matIndex(copy._matIndex)
 {
-  for(int i = 0; i < copy._vars.size(); i++){
+  for(int i = 0; i < (int)copy._vars.size(); i++){
     _vars.push_back( copy._vars[i] );
   }
 }
@@ -36,7 +36,7 @@ NCVectorField::NCVectorField(GridP grid, LevelP level,
   : VectorFieldRG( ), grid(grid), _level(level),
     _varname(var), _matIndex(mat)
 {
-  for(int i = 0; i < vars.size(); i++){
+  for(int i = 0; i < (int)vars.size(); i++){
     _vars.push_back( vars[i]);
   }
 }
@@ -115,7 +115,7 @@ int NCVectorField::interpolate(const Point& p, Vector& value)
   for(i = 0, r = _level->patchesBegin();
       r != _level->patchesEnd(); r++, i++){
     
-    if (i >= _vars.size())
+    if (i >= (int)_vars.size())
       return 0;
 
     IntVector ni[8];

@@ -111,7 +111,7 @@ MPRead::getScalarVars(Array1< clString >& sv)
 {
   int i;
   sv.remove_all();
-  for( i = 0 ; i < sVars.size(); i++)
+  for( i = 0 ; i < (int)sVars.size(); i++)
     sv.add( sVars[i] );
   return 1;
 }
@@ -121,7 +121,7 @@ MPRead::getVectorVars(Array1< clString >& vv)
 {
   int i;
   vv.remove_all();
-  for( i = 0 ; i < vVars.size(); i++)
+  for( i = 0 ; i < (int)vVars.size(); i++)
     vv.add( vVars[i] );
   return 1;
 }
@@ -300,7 +300,7 @@ MPRead::GetScalarField( ScalarFieldHandle& sf )
   if(state != Grid){
     cerr<<"Error: not reading a grid.\n";
     return 0;
-  } else if( svCount >= sVars.size() ){
+  } else if( svCount >= (int)sVars.size() ){
     cerr<<"Error: no more scalar values can be read.\n";
     return 0;
   } else if( gridState != Scalars ){
@@ -334,7 +334,7 @@ MPRead::GetScalarField( ScalarFieldHandle& sf )
     NOT_FINISHED("MPRead::GetScalarField( ScalarFieldHandle& sf )");
     return 0;
   }
-  if (svCount == sVars.size())
+  if (svCount == (int)sVars.size())
     gridState = Vectors;
 
   return 1;
@@ -347,7 +347,7 @@ MPRead::GetScalarField( double *sf, int& length )
   if(state != Grid){
     cerr<<"Error: not reading a grid.\n";
     return 0;
-  } else if( svCount >= sVars.size() ){
+  } else if( svCount >= (int)sVars.size() ){
     cerr<<"Error: no more scalar values can be read.\n";
     return 0;
   } else if( gridState != Scalars ){
@@ -369,7 +369,7 @@ MPRead::GetScalarField( double *sf, int& length )
     NOT_FINISHED("MPRead::GetScalarField( double *sf, int& length )");
     return 0;
   }    
-  if (svCount == sVars.size())
+  if (svCount == (int)sVars.size())
     gridState = Vectors;
 
   return 1;
@@ -381,7 +381,7 @@ MPRead::GetVectorField( VectorFieldHandle& vf )
   if(state != Grid){
     cerr<<"Error: not reading a grid.\n";
     return 0;
-  } else if ( vvCount >= vVars.size() ) {
+  } else if ( vvCount >= (int)vVars.size() ) {
     cerr<<"Error: no more vector fields.\n";
     return 0;
   } else if(gridState != Vectors){
@@ -412,7 +412,7 @@ MPRead::GetVectorField( VectorFieldHandle& vf )
     return 0;
   }
 
-  if( vvCount == vVars.size()){
+  if( vvCount == (int)vVars.size()){
     vvCount = 0;
     svCount = 0;
     state = Open;
@@ -427,7 +427,7 @@ MPRead::GetVectorField( Vector *vf, int& length)
   if(state != Grid){
     cerr<<"Error: not reading a grid.\n";
     return 0;
-  } else if ( vvCount >= vVars.size() ) {
+  } else if ( vvCount >= (int)vVars.size() ) {
     cerr<<"Error: no more vector fields.\n";
     return 0;
   } else if(gridState != Vectors){
@@ -446,7 +446,7 @@ MPRead::GetVectorField( Vector *vf, int& length)
     return 0;
   }
 
-  if( vvCount == vVars.size()){
+  if( vvCount == (int)vVars.size()){
     vvCount = 0;
     svCount = 0;
     state = Open;
@@ -525,18 +525,18 @@ MPRead::GetParticle( Point& p,
       vectors.setsize( pvVars.size() );
       is.read((char *) &p, sizeof(double)*3);
       is.read((char *) &(scalars[0]), sizeof(double)*psVars.size());
-      for(i = 0; i < pvVars.size(); i++){
+      for(i = 0; i < (int)pvVars.size(); i++){
 	is.read((char *)&(vectors[i]), sizeof(double)*3);
       }
     } else {
       double x,y,z;
       is >> x >> y >> z;
       p = Point(x,y,z);
-      for( i = 0; i < psVars.size(); i++){
+      for( i = 0; i < (int)psVars.size(); i++){
 	is >> x;
 	scalars.add(x);
       }
-      for( i = 0; i < pvVars.size(); i++) {
+      for( i = 0; i < (int)pvVars.size(); i++) {
 	is >> x >> y >> z;
 	vectors.add(Vector(x,y,z));
       }
@@ -584,7 +584,7 @@ MPRead::GetParticleVariableValue( int pid,
 	GetGridPoints( X, Y, Z );
 	is.seekg(sizeof(double)*x_size*y_size*z_size, ios::cur);
 	if( currentType != FC_i ){
-	  for(i = 0; i < vVars.size(); i++)
+	  for(i = 0; i < (int)vVars.size(); i++)
 	  NOT_FINISHED("MPRead::GetParticleVariableValue for staggered grids");
 	    is.seekg(sizeof(double)*3*x_size*y_size*z_size, ios::cur);
 	} else {
@@ -597,7 +597,7 @@ MPRead::GetParticleVariableValue( int pid,
     } else if (type == "PARTICLES"){
       GetParticleInfo( name, N, s, v);
       if( name == pSetName ){
-	for( i = 0; i < s.size(); i++){
+	for( i = 0; i < (int)s.size(); i++){
 	  cerr<< "Reading varname "<< s[i] << "looking for varname "<< varname <<endl;
 	  if( s[i] == varname ){
 	    varfound = true;

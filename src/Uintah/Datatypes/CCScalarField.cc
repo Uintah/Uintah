@@ -34,7 +34,7 @@ CCScalarField<T>::CCScalarField(const CCScalarField<T>& copy)
    high(-MAXINT,-MAXINT,-MAXINT),
    low(MAXINT,MAXINT,MAXINT)
 {
-  for(int i = 0; i < copy._vars.size(); i++){
+  for(int i = 0; i < (int)copy._vars.size(); i++){
     _vars.push_back( copy._vars[i] );
   }
   computeHighLowIndices();
@@ -53,7 +53,7 @@ CCScalarField<T>::CCScalarField(GridP grid, LevelP level,
    high(-MAXINT,-MAXINT,-MAXINT),
    low(MAXINT,MAXINT,MAXINT)
 {
-  for(int i = 0; i < vars.size(); i++){
+  for(int i = 0; i < (int)vars.size(); i++){
     _vars.push_back( vars[i]);
   }
   computeHighLowIndices();
@@ -213,7 +213,7 @@ int CCScalarField<T>::interpolate(const Point& p, double& value, double eps,
     }
   }
 
-  if (i >= _vars.size() || r == _level->patchesEnd() )
+  if (i >= (int)_vars.size() || r == _level->patchesEnd() )
     return 0;
   
   value = _vars[i][index];
@@ -236,7 +236,7 @@ Vector CCScalarField<T>::gradient(const Point& p)
     }
   }
   
-  if (i >= _vars.size())
+  if (i >= (int)_vars.size())
     return Vector(0,0,0);
   
   IntVector index;
