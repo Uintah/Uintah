@@ -42,12 +42,16 @@ struct SequentialIndex {
   {}
 
   //! Required interface for an Index.
-  operator unsigned int const &() const
+  operator unsigned int() const
   {
     if (which_ == 0) 
-      return (unsigned int)node_index_;
+    {
+      return ((unsigned int)node_index_);
+    }
     else
-      return ((unsigned int)node_index_) + (unsigned int)edge_index_;
+    {
+      return ((unsigned int)node_index_) + ((unsigned int)edge_index_);
+    }
   }
 
   unsigned char which_;
@@ -96,6 +100,7 @@ const string find_type_name(SequentialIndex<N, E> *)
 template <class N, class E>
 struct SequentialSize
 {
+  SequentialSize() {}
   SequentialSize(N nsize, E esize) : nsize_(nsize), esize_(esize) {}
   operator unsigned() const { return ((unsigned)nsize_) + ((unsigned)esize_); }
 
@@ -255,6 +260,7 @@ private:
 // Handle type for LatVolMesh mesh.
 typedef LockingHandle<QuadraticLatVolMesh> QuadraticLatVolMeshHandle;
 const TypeDescription* get_type_description(QuadraticLatVolMesh *);
+const TypeDescription* get_type_description(QuadraticLatVolMesh::Node *);
 
 } // namespace SCIRun
 

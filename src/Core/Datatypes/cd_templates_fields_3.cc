@@ -5,6 +5,7 @@
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/MaskedTetVolField.h>
 #include <Core/Datatypes/QuadraticTetVolField.h>
+#include <Core/Datatypes/QuadraticLatVolField.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 /*
@@ -83,6 +84,7 @@ template class QuadraticTetVolField<unsigned int>;
 template class QuadraticTetVolField<unsigned short>;
 template class QuadraticTetVolField<unsigned char>;
 
+
 const TypeDescription* get_type_description(QuadraticTetVolField<Tensor> *);
 const TypeDescription* get_type_description(QuadraticTetVolField<Vector> *);
 const TypeDescription* get_type_description(QuadraticTetVolField<double> *);
@@ -93,6 +95,30 @@ const TypeDescription* get_type_description(QuadraticTetVolField<char> *);
 const TypeDescription* get_type_description(QuadraticTetVolField<unsigned int> *);
 const TypeDescription* get_type_description(QuadraticTetVolField<unsigned short> *);
 const TypeDescription* get_type_description(QuadraticTetVolField<unsigned char> *);
+
+template class QuadraticLatVolField<Tensor>;
+template class QuadraticLatVolField<Vector>;
+template class QuadraticLatVolField<double>;
+template class QuadraticLatVolField<float>;
+template class QuadraticLatVolField<int>;
+template class QuadraticLatVolField<short>;
+template class QuadraticLatVolField<char>;
+template class QuadraticLatVolField<unsigned int>;
+template class QuadraticLatVolField<unsigned short>;
+template class QuadraticLatVolField<unsigned char>;
+
+const TypeDescription* get_type_description(QuadraticLatVolField<Tensor> *);
+const TypeDescription* get_type_description(QuadraticLatVolField<Vector> *);
+const TypeDescription* get_type_description(QuadraticLatVolField<double> *);
+const TypeDescription* get_type_description(QuadraticLatVolField<float> *);
+const TypeDescription* get_type_description(QuadraticLatVolField<int> *);
+const TypeDescription* get_type_description(QuadraticLatVolField<short> *);
+const TypeDescription* get_type_description(QuadraticLatVolField<char> *);
+const TypeDescription* get_type_description(QuadraticLatVolField<unsigned int> *);
+const TypeDescription* get_type_description(QuadraticLatVolField<unsigned short> *);
+const TypeDescription* get_type_description(QuadraticLatVolField<unsigned char> *);
+
+const TypeDescription* get_type_description(QuadraticLatVolMesh::Node::index_type *);
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468
