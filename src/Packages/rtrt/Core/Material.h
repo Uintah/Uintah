@@ -53,6 +53,10 @@ protected:
 		  int depth, 
 		  double atten, const Color& accumcolor,
 		  Context* cx);
+  // This is like phongshade, but for lambertian surfaces
+  void lambertianshade(Color& result,  const Color& diffuse,
+                       const Ray& ray, const HitInfo& hit,
+                       int depth, Context* cx);
 public:
   Material();
   virtual ~Material();
@@ -65,51 +69,17 @@ public:
   friend void SCIRun::Pio(SCIRun::Piostream&, rtrt::Material*&);
   
   //ambient color (irradiance/pi) at position with surface normal
-  inline Color ambient(Scene* scene, const SCIRun::Vector& normal) const {
-    int a_mode = (local_ambient_mode==Global_Ambient) ? scene->ambient_mode : 
-      local_ambient_mode;
-    // in this next line, a_mode should never be Global_Ambient
-    // .. but just in case someone sets someone sets it wrong
-    // we'll just return the constant ambient color
-    if (a_mode == Constant_Ambient || a_mode == Global_Ambient)
-      return scene->getAmbientColor();
-
-    if (a_mode == Arc_Ambient) {
-      float cosine = scene->get_groundplane().cos_angle( normal );
-#ifdef __sgi
-      float sine = fsqrt ( 1.F - cosine*cosine );
-#else
-      float sine = sqrt(1.-cosine*cosine);
-#endif
-      //double w = (cosine > 0)? sine/2 : (1 -  sine/2);
-      float w0, w1;
-      if(cosine > 0){
-	w0= sine/2.F;
-	w1= (1.F -  sine/2.F);
-      } else {
-	w1= sine/2.F;
-	w0= (1.F -  sine/2.F);
-      }
-      return scene->get_cup()*w1 + scene->get_cdown()*w0;
-    } 
-
-    // must be Sphere_Ambient
-    Color c;
-    scene->get_ambient_environment_map_color(normal, c);
-    return c;
-  }
+  Color ambient(Scene* scene, const SCIRun::Vector& normal) const;
 
   void SetScale(double u, double v) { uscale = u; vscale = v; }
 
   // reflection of v with respect to n
-  SCIRun::Vector reflection(const SCIRun::Vector& v, const SCIRun::Vector n) const;
+  SCIRun::Vector reflection(const SCIRun::Vector& v,
+                            const SCIRun::Vector n) const;
 
   // gives the phong term without color of light or kh
-  double phong_term( const SCIRun::Vector& e, const SCIRun::Vector& l, const SCIRun::Vector& n, int exponent) const;
-
-  //    virtual int get_scratchsize() {
-  //      return 0;
-  //    }
+  double phong_term( const SCIRun::Vector& e, const SCIRun::Vector& l,
+                     const SCIRun::Vector& n, int exponent) const;
 
   // This allows a material to be animated at the frame change
   virtual void animate(double t, bool& changed);
