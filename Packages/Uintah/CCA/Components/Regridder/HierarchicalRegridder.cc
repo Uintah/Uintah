@@ -50,6 +50,9 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
 {
   rdbg << "HierarchicalRegridder::regrid() BGN" << endl;
 
+  if (d_maxLevels <= 1)
+    return oldGrid;
+
   ProblemSpecP grid_ps = ups->findBlock("Grid");
   if (!grid_ps) {
     throw InternalError("HierarchicalRegridder::regrid() Grid section of UPS file not found!");
@@ -79,6 +82,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
   tempsched->advanceDataWarehouse(oldGrid);
   tempsched->advanceDataWarehouse(oldGrid);
 
+  tempsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubNone);
   tempsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
   
 
@@ -101,7 +105,8 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
     ngc = Max(d_cellCreationDilation.x(), d_cellCreationDilation.y());
     ngc = Max(ngc, d_cellCreationDilation.z());
     
-    dilate_task->requires(Task::OldDW, d_sharedState->get_refineFlag_label(), Ghost::AroundCells, ngc);
+    dilate_task->requires(Task::OldDW, d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials(),
+                          Ghost::AroundCells, ngc);
     dilate_task->computes(d_dilatedCellsCreationLabel);
     tempsched->addTask(dilate_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
     if (d_cellCreationDilation != d_cellDeletionDilation) {
@@ -114,9 +119,11 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
       ngc = Max(d_cellDeletionDilation.x(), d_cellDeletionDilation.y());
       ngc = Max(ngc, d_cellDeletionDilation.z());
 
-      dilate_delete_task->requires(Task::OldDW, d_sharedState->get_refineFlag_label(), Ghost::AroundCells, ngc);
+      dilate_delete_task->requires(Task::OldDW, d_sharedState->get_refineFlag_label(), 
+                                   d_sharedState->refineFlagMaterials(), Ghost::AroundCells, ngc);
       dilate_delete_task->computes(d_dilatedCellsDeletionLabel);
-      tempsched->addTask(dilate_delete_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
+      tempsched->addTask(dilate_delete_task, oldGrid->getLevel(levelIndex)->eachPatch(), 
+                         d_sharedState->allMaterials());
     }
     // mark subpatches on this level (subpatches represent where patches on the next
     // level will be created).
@@ -126,7 +133,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
     if (d_cellCreationDilation != d_cellDeletionDilation)
       mark_task->requires(Task::NewDW, d_dilatedCellsDeletionLabel, Ghost::None);
     
-    mark_task->computes(d_activePatchesLabel);
+    mark_task->computes(d_activePatchesLabel, d_sharedState->refineFlagMaterials());
     tempsched->addTask(mark_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
   }
   
@@ -617,12 +624,12 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
           
           if (i > 0) { // don't dilate onto level 0
             IntVector range = Ceil(d_minBoundaryCells.asVector()/d_patchSize[i].asVector());
-            for (CellIterator inner(IntVector(-1,-1,-1)*range, range); !inner.done(); inner++) {
+            for (CellIterator inner(IntVector(-1,-1,-1)*range, range+IntVector(1,1,1)); !inner.done(); inner++) {
               // "dilate" each subpatch, adding it to the patches on the coarser level
               IntVector dilate_idx = (idx + *inner) / d_latticeRefinementRatio[i];
-              if ((dilate_idx.x() < 0 || dilate_idx.x() > d_patchNum[i].x()) ||
-                  (dilate_idx.y() < 0 || dilate_idx.y() > d_patchNum[i].y()) ||
-                  (dilate_idx.z() < 0 || dilate_idx.z() > d_patchNum[i].z()))
+              if ((dilate_idx.x() < 0 || dilate_idx.x() >= d_patchNum[i].x()) ||
+                  (dilate_idx.y() < 0 || dilate_idx.y() >= d_patchNum[i].y()) ||
+                  (dilate_idx.z() < 0 || dilate_idx.z() >= d_patchNum[i].z()))
                 continue;
               rdbg << "  Adding dilated subpatch " << dilate_idx << endl;
               d_patches[i].insert(dilate_idx);
