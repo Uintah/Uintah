@@ -67,9 +67,9 @@ UnuHistax::UnuHistax(SCIRun::GuiContext *ctx) :
   axis_(ctx->subVar("axis")),
   bins_(ctx->subVar("bins")),
   min_(ctx->subVar("min")),
-  useinputmin_(ctx->subVar("min")),
+  useinputmin_(ctx->subVar("useinputmin")),
   max_(ctx->subVar("max")),
-  useinputmax_(ctx->subVar("max")),
+  useinputmax_(ctx->subVar("useinputmax")),
   type_(ctx->subVar("type"))
 {
 }
