@@ -14,6 +14,28 @@
 #include <string>
 #include <iostream>
 
+
+/*************************************************************
+ *  How to add a new function:
+ *
+ * 1. Add a new struct in TensorOperatorFunctors.h which has the desired
+ *    operation in it.  Follow the template in the file.
+ * 2. Add a new case statement in TensorFieldOperator::performOperation
+ *    using the new functor that you created in #1.
+ * 3. Add a corresponding case statement to TensorParticlesOperator.cc
+ * 4. Edit ../../GUI/TensorOperator.tcl to include a new radiobutton for
+ *    your new operator.  Make sure the value is the same as the one
+ *    you selected for the case statement in #2.
+ *    Be sure to change the name of the radiobutton to $w.calc.myoperation .
+ *    and create a new method for your operation.  Add $w.calc.myoperation
+ *    to the list of radiobuttons that are packed at the end.
+ * 5. Add your new tcl method to the nested if statements following the
+ *    radio buttons in the code.
+ * 6. Add the body of the new method following the pattern of the others.
+ * 7. Add a new ui method corresponding to your new function.  This is
+ *    referenced in the method created in 6.  This will allow you to show
+ *    in the user interface what operation you are calculating.
+ */
 namespace Uintah {
   using std::string;
   using std::cerr;
@@ -91,6 +113,9 @@ void TensorFieldOperator::performOperation(TensorField* tensorField,
     break;
   case 3: // equivalent stress 
     computeScalars(tensorField, scalarField, EquivalentStressOp());
+    break;
+  case 4: // Octahedral shear stress
+    computeScalars(tensorField, scalarField, OctShearStressOp());
     break;
   default:
     std::cerr << "TensorFieldOperator::performOperation: "
