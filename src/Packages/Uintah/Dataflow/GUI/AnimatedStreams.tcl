@@ -47,14 +47,22 @@ itcl_class Uintah_Visualization_AnimatedStreams {
 		-side top -fill x
 
 	
-	scale $w.steps -variable $this-stepsize \
-		-from 0 -to 1 -label "Step Size" \
-		-showvalue true \
-	        -resolution 0.01 \
-		-orient horizontal
+	set r [expscale $w.stepsize \
+		-label "Step Size:" \
+		-orient horizontal \
+		-variable $this-stepsize]
+	pack $w.stepsize -side top -fill x
 
-	pack $w.steps  -side top -fill x
+#	scale $w.steps -variable $this-stepsize \
+#		-from 0 -to 1 -label "Step Size" \
+#		-showvalue true \
+#	        -resolution 0.01 \
+#		-orient horizontal
 
+#	pack $w.steps  -side top -fill x
+
+	bind $w.stepsize <ButtonRelease> $n
+	
 	global $this-linewidth
 	scale $w.linewidth -variable $this-linewidth \
 	    -from 1 -to 4 -label "Stream width" \
@@ -64,8 +72,9 @@ itcl_class Uintah_Visualization_AnimatedStreams {
 
 	pack $w.linewidth -side top -fill x
 
-	bind $w.steps <ButtonRelease> $n
-	
+	button $w.reset -text "Reset Streams" -command "$this-c reset_streams"
+	pack $w.reset -side top -fill x
+
 	button $w.close -text "Close" -command "wm withdraw $w"
 	pack $w.close -side top -fill x
     }
