@@ -147,6 +147,21 @@ WARNING
   
   protected:
 
+    /*
+    // Calculate velocity gradient for 27 noded interpolation
+    Matrix3 computeVelocityGradient(const Patch* patch,
+				    const double* oodx, 
+				    const Point& px, 
+				    const Vector& psize, 
+				    constNCVariable<Vector>& gVelocity);
+
+    // Calculate velocity gradient for 8 noded interpolation
+    Matrix3 computeVelocityGradient(const Patch* patch,
+				    const double* oodx, 
+				    const Point& px, 
+				    constNCVariable<Vector>& gVelocity);
+    */
+
     // Compute the updated left stretch and rotation tensors
     void computeUpdatedVR(const double& delT,
 			  const Matrix3& DD, 

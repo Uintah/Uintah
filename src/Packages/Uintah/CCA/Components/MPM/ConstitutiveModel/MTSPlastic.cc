@@ -6,8 +6,6 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-static constParticleVariable<double> pMTS;
-static ParticleVariable<double> pMTS_new;
 
 MTSPlastic::MTSPlastic(ProblemSpecP& ps)
 {
@@ -73,10 +71,9 @@ void
 MTSPlastic::initializeInternalVars(ParticleSubset* pset,
 				           DataWarehouse* new_dw)
 {
-  ParticleVariable<double> pMTS_init;
-  new_dw->allocateAndPut(pMTS_init, pMTSLabel, pset);
+  new_dw->allocateAndPut(pMTS_new, pMTSLabel, pset);
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
-    pMTS_init[*iter] = 0.0;
+    pMTS_new[*iter] = 0.0;
   }
 }
 

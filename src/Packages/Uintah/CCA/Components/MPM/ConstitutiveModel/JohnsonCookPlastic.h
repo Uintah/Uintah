@@ -63,6 +63,10 @@ WARNING
             double TRoom;
             double TMelt;
 	 };	 
+
+         constParticleVariable<double> pPlasticStrain;
+         ParticleVariable<double> pPlasticStrain_new;
+
          const VarLabel* pPlasticStrainLabel;  // For Johnson-Cook Plasticity
          const VarLabel* pPlasticStrainLabel_preReloc;  // For Johnson-Cook Plasticity
 

@@ -101,6 +101,10 @@ WARNING
             double b3;
             double mu_0;
 	 };	 
+
+         constParticleVariable<double> pMTS;
+         ParticleVariable<double> pMTS_new;
+
          const VarLabel* pMTSLabel; // For MTS model
          const VarLabel* pMTSLabel_preReloc; // For MTS model
 

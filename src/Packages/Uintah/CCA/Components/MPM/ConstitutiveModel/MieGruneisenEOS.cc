@@ -20,7 +20,7 @@ MieGruneisenEOS::~MieGruneisenEOS()
 
 //////////
 // Calculate the pressure using the Mie-Gruneisen equation of state
-double 
+Matrix3 
 MieGruneisenEOS::computePressure(const MPMMaterial* matl,
                                  const double& ,
                                  const double& ,
@@ -45,5 +45,6 @@ MieGruneisenEOS::computePressure(const MPMMaterial* matl,
    double numer = rho_0*(d_const.C_0*d_const.C_0)*(1.0/zeta+(1.0-0.5*d_const.Gamma_0));
    double denom = 1.0/zeta - (d_const.S_alpha-1.0);
    double p = numer/(denom*denom) + d_const.Gamma_0*E;
-   return -p;
+   Matrix3 one; one.Identity();
+   return (one*(-p));
 }

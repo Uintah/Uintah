@@ -17,7 +17,7 @@ DefaultHyperElasticEOS::~DefaultHyperElasticEOS()
 
 //////////
 // Calculate the pressure using the elastic constitutive equation
-double 
+Matrix3 
 DefaultHyperElasticEOS::computePressure(const MPMMaterial* ,
 					const double& bulk,
 					const double& ,
@@ -34,5 +34,8 @@ DefaultHyperElasticEOS::computePressure(const MPMMaterial* ,
 
   // Calculate pressure
   double p = 0.5*bulk*(J - 1.0/J);
-  return p;
+
+  // Calculate the hydrostatic part of stress tensor
+  Matrix3 one; one.Identity();
+  return (one*p);
 }
