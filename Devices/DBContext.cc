@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <DBContext.h>
+#include <Devices/DBContext.h>
 
 DBContext::DBContext(const clString& name)
 : name(name), dialbox(0)

@@ -1,8 +1,8 @@
 
 #include <config/sci.cf>
 
-OBJS = Dialbox.o
-SRCS = Dialbox.cc
+OBJS = Dialbox.o  DBContext.o
+SRCS = Dialbox.cc DBContext.cc
 
 LIBNAME = Devices
 
