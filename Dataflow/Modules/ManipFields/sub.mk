@@ -6,7 +6,6 @@ include $(SRCTOP)/scripts/largeso_epilogue.mk
 
 SRCS := \
 	$(SRCDIR)/Rescale.cc\
-	$(SRCDIR)/Relocate.cc\
 #[INSERT NEW CODE FILE HERE]
 
 VOLATILE_LIB := ManipFields
