@@ -16,6 +16,8 @@
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Packages/Uintah/CCA/Components/SimulationController/SimulationController.h>
+#include <Packages/Uintah/CCA/Components/SimulationController/SimpleSimulationController.h>
+#include <Packages/Uintah/CCA/Components/SimulationController/AMRSimulationController.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
@@ -24,6 +26,7 @@
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
 #include <Packages/Uintah/CCA/Components/Examples/Poisson1.h>
 #include <Packages/Uintah/CCA/Components/Examples/Poisson2.h>
+#include <Packages/Uintah/CCA/Components/Examples/Poisson3.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SimpleScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
@@ -165,6 +168,8 @@ main( int argc, char** argv )
     bool   do_ice=false;
     bool   do_poisson1=false;
     bool   do_poisson2=false;
+    bool   do_poisson3=false;
+    bool   do_AMR=false;
     bool   emit_graphs=false;
     bool   restart=false;
     int    restartTimestep = -1;
@@ -221,9 +226,13 @@ main( int argc, char** argv )
 	    do_poisson1=true;
 	} else if(s == "-poisson2"){
 	    do_poisson2=true;
+	} else if(s == "-poisson3"){
+	    do_poisson3=true;
 	} else if(s == "-mpmarches"){
 	    do_arches=true;
 	    do_mpm=true;
+	} else if(s == "-AMR"){
+	    do_AMR=true;
 	} else if(s == "-nthreads"){
 	  cerr << "reading number of threads\n";
 	    if(++i == argc){
@@ -306,7 +315,8 @@ main( int argc, char** argv )
 	usage( "ICE and Arches do not work together", "", argv[0]);
     }
 
-    if(!(do_ice || do_arches || do_mpm || do_impmpm || do_poisson1 || do_poisson2)){
+    if( !(do_ice || do_arches || do_mpm || do_impmpm || 
+	  do_poisson1 || do_poisson2 || do_poisson3) ) {
 	usage( "You need to specify -arches, -ice, or -mpm", "", argv[0]);
     }
 
@@ -338,7 +348,11 @@ main( int argc, char** argv )
      */
     try {
 	const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
-	SimulationController* ctl = scinew SimulationController(world);
+	SimulationController* ctl;
+	if(do_AMR)
+	   ctl = scinew AMRSimulationController(world);
+        else
+	   ctl = scinew SimpleSimulationController(world);
 
 	// Reader
 	ProblemSpecInterface* reader = scinew ProblemSpecReader(filename);
@@ -370,9 +384,11 @@ main( int argc, char** argv )
 	  sim = scinew Poisson1(world);
 	} else if(do_poisson2){
 	  sim = scinew Poisson2(world);
+	} else if(do_poisson3){
+	  sim = scinew Poisson3(world);
 	} else {
 	  usage("You need to specify a simulation: -arches, -ice, -mpm, "
-		"-impm -mpmice, -mpmarches, -poisson1, or -poisson2",
+		"-impm -mpmice, -mpmarches, -poisson1, -poisson2 or -poisson3",
 		"", argv[0]);
 	}
 
