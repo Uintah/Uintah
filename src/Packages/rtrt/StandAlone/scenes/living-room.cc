@@ -258,7 +258,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
     PPMImage * ppm = new PPMImage(ifpath+"livingroom/main_text.ppm", true);
     vector<Point> loc; loc.push_back(room_trans.project(Point(0,0,2)));
-    Trigger * trig = new Trigger( "Living Room", loc, 10, 200, ppm );
+    Trigger * trig = new Trigger( "Living Room", loc, 5, 200, ppm );
     scene->addTrigger( trig );
 
     ppm = new PPMImage(ifpath+"livingroom/livingroom_credits1.ppm", true);
@@ -441,7 +441,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     loc.push_back(Point(  1, 10, 2)); // north
     loc.push_back(Point( -9,  2, 2)); // west
     loc.push_back(Point( 10,  1, 2)); // east
-    trig = new Trigger( "Atlantis Intro", loc, 3,100,ppm,true );
+    trig = new Trigger( "Atlantis Intro", loc, 2,100,ppm,true );
     scene->addTrigger( trig );
   }
 
