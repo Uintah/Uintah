@@ -91,6 +91,11 @@ public:
 
   void get_point(Point &result, node_index index) const;
   
+  //! the double return val is the volume of the tet.
+  double 
+  get_gradient_basis(cell_index ci, Vector& g0, Vector& g1, 
+		     Vector& g2, Vector& g3);
+
   template <class Iter, class Functor>
   void fill_points(Iter begin, Iter end, Functor fill_ftor);
   template <class Iter, class Functor>
@@ -104,7 +109,7 @@ public:
   void finish();
   void compute_edges();
   void compute_faces();
- 
+  
   //! Persistent IO
   virtual void io(Piostream&);
   static PersistentTypeID type_id; 
