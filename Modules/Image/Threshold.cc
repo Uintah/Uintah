@@ -31,6 +31,7 @@ class Threshold : public Module {
    ScalarFieldRG* rg;
    ScalarField* sfield;
    double thresh(double val, double orig);
+   double min,max;
 
    int np;
 
@@ -96,24 +97,20 @@ Module* Threshold::clone(int deep)
 
 void Threshold::do_parallel(int proc)
 {
-  int start = (newgrid->grid.dim1()-1)*proc/np;
-  int end   = (proc+1)*(newgrid->grid.dim1()-1)/np;
+  int start = (newgrid->grid.dim1())*proc/np;
+  int end   = (proc+1)*(newgrid->grid.dim1())/np;
 
-  if (!start) start++;
-  if (end == newgrid->grid.dim1()-1) end--;
-
-  int z=0;
-  
-  for(int x=start; x<end; x++)                 
-    for(int y=1; y<newgrid->grid.dim2()-1; y++) {
-      if (rg->grid(x,y,z) < l) 
-	newgrid->grid(x,y,z)=thresh(lv,rg->grid(x,y,z));
-      if ((rg->grid(x,y,z) < h) \
-	  && (rg->grid(x,y,z) > l))
-	    newgrid->grid(x,y,z)=thresh(mv,rg->grid(x,y,z));
-      if (rg->grid(x,y,z) > h)
-	    newgrid->grid(x,y,z)=thresh(hv,rg->grid(x,y,z));
-    }
+  for (int z=0; z<newgrid->grid.dim3(); z++)
+    for(int x=start; x<end; x++)                 
+      for(int y=0; y<newgrid->grid.dim2(); y++) {
+	if (rg->grid(x,y,z) < l) 
+	  newgrid->grid(x,y,z)=thresh(lv,rg->grid(x,y,z));
+	if ((rg->grid(x,y,z) <= h) \
+	    && (rg->grid(x,y,z) >= l))
+	  newgrid->grid(x,y,z)=thresh(mv,rg->grid(x,y,z));
+	if (rg->grid(x,y,z) > h)
+	  newgrid->grid(x,y,z)=thresh(hv,rg->grid(x,y,z));
+      }
 }
 
 static void do_parallel_stuff(void* obj,int proc)
@@ -163,6 +160,11 @@ void Threshold::execute()
     lv=lowval.get();
     mv=medval.get();
     hv=higval.get();
+
+    rg->compute_minmax();
+    rg->get_minmax(min,max);
+
+    cerr << "Threshold min/max : " << min << " " << max << "\n";
     
     cerr << "--Theshold--\n";
     cerr << "Thresholding with : \n";
