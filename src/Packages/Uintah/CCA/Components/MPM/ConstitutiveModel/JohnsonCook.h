@@ -178,6 +178,9 @@ WARNING
 					 const Point& px, 
 					 const Vector& psize, 
 					 constNCVariable<Vector>& gVelocity);
+         bool outsideGrid(const IntVector& index, 
+                          const IntVector& lowIndex, 
+                          const IntVector& highIndex);
 
          Matrix3 computeVelocityGradient(const Patch* patch,
                                          const double* oodx, 
