@@ -143,7 +143,7 @@ fi
 
 
 mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere const_test_hypo const_test_nh const_test_cmr const_test_nhp const_test_vs test_corrug_plate test_cyl_pene_no_ero test_cyl_pene_hypo_jc_ero test_gurson_beckerdrucker_mts"
-ice_test_cases="advect rieman_sm hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch"
+ice_test_cases="advect rieman_sm hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch impHotBlob"
 mpmice_test_cases="advect massX thermx thermx8patch guni2dRT TRWnoz"
 smpm_test_cases="test_plane_shell_punch test_sphere_shell_compress"
 impm_test_cases="4disks_2d.1mat billet.static"
