@@ -84,10 +84,12 @@ WARNING
 	 return d_pset->getParticleSet();
       }
       
-      virtual void* getBasePointer() = 0;
+      virtual void* getBasePointer() const = 0;
       void getMPIBuffer(BufferInfo& buffer, ParticleSubset* sendset);
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
      virtual RefCounted* getRefCounted() = 0;
+     virtual void getSizeInfo(string& elems, unsigned long& totsize,
+			      void*& ptr) const = 0;
    protected:
       ParticleVariableBase(const ParticleVariableBase&);
       ParticleVariableBase(ParticleSubset* pset);

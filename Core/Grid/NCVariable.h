@@ -85,12 +85,21 @@ WARNING
     void copyPatch(const NCVariable<T>& src)
     { copyPatch(&src, src.getLowIndex(), src.getHighIndex()); }
      
-    virtual void* getBasePointer();
+    virtual void* getBasePointer() const;
     virtual const TypeDescription* virtualGetTypeDescription() const;
 
     virtual void getSizes(IntVector& low, IntVector& high,
 			  IntVector& dataLow, IntVector& siz,
 			  IntVector& strides) const;
+    virtual void getSizeInfo(string& elems, unsigned long& totsize,
+			     void*& ptr) const {
+      IntVector siz = size();
+      ostringstream str;
+      str << siz.x() << "x" << siz.y() << "x" << siz.z();
+      elems=str.str();
+      totsize=siz.x()*siz.y()*siz.z()*sizeof(T);
+      ptr = (void*)getPointer();
+    }
     // Replace the values on the indicated face with value
     void fillFace(Patch::FaceType face, const T& value, 
 		  IntVector offset = IntVector(0,0,0))
@@ -352,9 +361,9 @@ WARNING
    
   template<class T>
   void*
-  NCVariable<T>::getBasePointer()
+  NCVariable<T>::getBasePointer() const
   {
-    return getPointer();
+    return (void*)getPointer();
   }
 
   template<class T>

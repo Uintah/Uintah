@@ -116,10 +116,18 @@ public:
   virtual void readNormal(istream& in);
   virtual void readRLE(istream& in);
   
-  virtual void* getBasePointer();
+  virtual void* getBasePointer() const;
   virtual const TypeDescription* virtualGetTypeDescription() const;
   virtual RefCounted* getRefCounted() {
     return d_pdata;
+  }
+  virtual void getSizeInfo(string& elems, unsigned long& totsize,
+			   void*& ptr) const {
+    ostringstream str;
+    str << getParticleSet()->numParticles();
+    elems=str.str();
+    totsize = getParticleSet()->numParticles()*sizeof(T);
+    ptr = getBasePointer();
   }
 protected:
   ParticleVariable<T>& operator=(const ParticleVariable<T>&);
@@ -280,7 +288,7 @@ private:
   
   template<class T>
   void*
-  ParticleVariable<T>::getBasePointer()
+  ParticleVariable<T>::getBasePointer() const
   {
     return &d_pdata->data[0];
   }

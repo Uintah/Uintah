@@ -80,6 +80,12 @@ WARNING
     virtual const TypeDescription* virtualGetTypeDescription() const;
     virtual void getMPIBuffer(void*& buf, int& count,
 			      MPI_Datatype& datatype, MPI_Op& op);
+    virtual void getSizeInfo(string& elems, unsigned long& totsize,
+			     void*& ptr) const {
+      elems="1";
+      totsize = sizeof(T);
+      ptr = 0;
+    }
   private:
     ReductionVariable<T, Op>& operator=(const ReductionVariable<T, Op>&copy);
     static Variable* maker();

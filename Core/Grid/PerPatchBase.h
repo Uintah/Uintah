@@ -2,8 +2,10 @@
 #ifndef UINTAH_HOMEBREW_PerPatchBase_H
 #define UINTAH_HOMEBREW_PerPatchBase_H
 
+#include <string>
+
 namespace Uintah {
-  
+  using namespace std;
   class Patch;
   class RefCounted;
 
@@ -44,6 +46,8 @@ WARNING
       virtual void copyPointer(const PerPatchBase&) = 0;
       virtual PerPatchBase* clone() const = 0;
       virtual RefCounted* getRefCounted();
+      virtual void getSizeInfo(string& elems, unsigned long& totsize,
+			       void*& ptr) const = 0;
    protected:
       PerPatchBase(const PerPatchBase&);
       PerPatchBase();
