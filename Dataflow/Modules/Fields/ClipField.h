@@ -104,9 +104,15 @@ ClipFieldAlgoT<FIELD>::execute_cell(ProgressReporter *mod,
 	{
 	  Point np;
 	  mesh->get_center(np, onodes[i]);
-	  nodemap[(unsigned int)onodes[i]] = clipped->add_point(np);
+	  const typename FIELD::mesh_type::Node::index_type nodeindex =
+	    clipped->add_point(np);
+	  nodemap[(unsigned int)onodes[i]] = nodeindex;
+	  nnodes[i] = nodeindex;
 	}
-	nnodes[i] = nodemap[(unsigned int)onodes[i]];
+	else
+	{
+	  nnodes[i] = nodemap[(unsigned int)onodes[i]];
+	}
       }
 
       clipped->add_elem(nnodes);
@@ -222,9 +228,15 @@ ClipFieldAlgoT<FIELD>::execute_node(ProgressReporter *mod,
 	{
 	  Point np;
 	  mesh->get_center(np, onodes[i]);
-	  nodemap[(unsigned int)onodes[i]] = clipped->add_point(np);
+	  const typename FIELD::mesh_type::Node::index_type nodeindex =
+	    clipped->add_point(np);
+	  nodemap[(unsigned int)onodes[i]] = nodeindex;
+	  nnodes[i] = nodeindex;
 	}
-	nnodes[i] = nodemap[(unsigned int)onodes[i]];
+	else
+	{
+	  nnodes[i] = nodemap[(unsigned int)onodes[i]];
+	}
       }
 
       clipped->add_elem(nnodes);
