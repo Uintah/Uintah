@@ -66,7 +66,6 @@ void CompNeoHook::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
-
 void CompNeoHook::allocateCMDataAddRequires(Task* task,
                                             const MPMMaterial* matl,
                                             const PatchSet* patches,
