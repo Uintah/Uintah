@@ -174,8 +174,8 @@ class Streamline : public Module {
 
     HashTable<int, SLSourceInfo*> source_info;
 
-    virtual void geom_moved(int, double, const Vector&, void*);
-    virtual void geom_release(void*);
+    virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
+    virtual void geom_release(GeomPick*, void*);
 
     enum ALGS {
 	Euler, RK4,
@@ -877,12 +877,12 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
     }
 }
 
-void Streamline::geom_moved(int, double, const Vector&,
+void Streamline::geom_moved(GeomPick*, int, double, const Vector&,
 			    void*)
 {
 }
 
-void Streamline::geom_release(void*)
+void Streamline::geom_release(GeomPick*, void*)
 {
     if(!abort_flag){
 	abort_flag=1;
@@ -975,7 +975,6 @@ void SLLineSource::find(const Point& start, const Vector& downstream,
     Point p2(start+v1*dist);
     gw->SetEndpoints(p1, p2);
     gw->SetScale(scale/50);
-    gw->execute();
 }
 
 Point SLLineSource::trace_start(double s, double)
@@ -1023,7 +1022,6 @@ void SLRingSource::find(const Point& start, const Vector& downstream,
 {
     rw->SetPosition(start, downstream, scale/10);
     rw->SetScale(scale/50);
-    rw->execute();
 }
 
 Point SLRingSource::trace_start(double s, double)

@@ -185,6 +185,8 @@ GenColormap::GenColormap( const clString& id )
    // Create the output port
    outport=new ColormapOPort(this, "Colormap", ColormapIPort::Atomic);
    add_oport(outport);
+
+   gen_map("Rainbow");
 }
 
 GenColormap::GenColormap( const GenColormap& copy, int deep )

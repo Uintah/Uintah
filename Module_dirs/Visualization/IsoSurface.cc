@@ -95,7 +95,7 @@ class IsoSurface : public Module {
     void order_and_add_points(const Point &p1, const Point &p2, 
 			      const Point &p3, const Point &v1, double val);
 
-    virtual void geom_moved(int, double, const Vector&, void*);
+    virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
     Point ov[9];
     Point v[9];
 public:
@@ -1046,7 +1046,7 @@ void IsoSurface::find_seed_from_value(const ScalarFieldHandle& /*field*/)
 #endif
 }
 
-void IsoSurface::geom_moved(int, double, const Vector& delta, void*)
+void IsoSurface::geom_moved(GeomPick*, int, double, const Vector& delta, void*)
 {
     seed_point.set(seed_point.get()+delta);
     if(!abort_flag){

@@ -41,7 +41,7 @@ class Hedgehog : public Module {
 
     MaterialHandle front_matl;
     MaterialHandle back_matl;
-    virtual void geom_moved(int, double, const Vector&, void*);
+    virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
 public:
     Hedgehog(const clString& id);
     Hedgehog(const Hedgehog&, int deep);
@@ -171,6 +171,6 @@ void Hedgehog::execute()
     }
 }
 
-void Hedgehog::geom_moved(int, double, const Vector&, void*)
+void Hedgehog::geom_moved(GeomPick*, int, double, const Vector&, void*)
 {
 }

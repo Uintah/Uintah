@@ -31,8 +31,6 @@
 #include <Widgets/LightWidget.h>
 #include <Widgets/PathWidget.h>
 
-#include <TCL/Histogram.h>
-
 #include <iostream.h>
 
 enum WidgetTypes { WT_Point, WT_Arrow, WT_Crit, WT_Cross, WT_Gauge, WT_Ring,
@@ -51,10 +49,8 @@ private:
 
    BaseWidget* widgets[NumWidgetTypes];
 
-   virtual void geom_moved(int, double, const Vector&, void*);
-   virtual void geom_release(void*);
+   virtual void widget_moved();
 
-   Histogram histo;
 public:
    WidgetTest(const clString& id);
    WidgetTest(const WidgetTest&, int deep);
@@ -99,19 +95,6 @@ WidgetTest::WidgetTest(const clString& id)
    widgets[WT_View] = new ViewWidget(this, &widget_lock, INIT);
    widgets[WT_Light] = new LightWidget(this, &widget_lock, INIT);
    widgets[WT_Path] = new PathWidget(this, &widget_lock, INIT);
-
-   srand(666);
-   Array1<double> data(5000);
-   for (int i=0; i<5000; i++) {
-      int t(random());
-      data[i] = t%5000;
-   }
-   histo.SetData(data);
-   histo.SetTitle(id+" Histogram");
-   histo.SetValueTitle("Volume");
-   histo.SetFrequencyTitle("Number");
-   histo.ShowGrid();
-   histo.ShowRange();
 }
 
 WidgetTest::WidgetTest(const WidgetTest& copy, int deep)
@@ -139,33 +122,32 @@ void WidgetTest::execute()
       for(int i = 0; i < NumWidgetTypes; i++)
 	 w->add(widgets[i]->GetWidget());
       widget_id = ogeom->addObj(w, module_name, &widget_lock);
+      for(i = 0; i < NumWidgetTypes; i++)
+	 widgets[i]->Connect(ogeom);
    }
-   widgets[widget_type.get()]->execute();
-   ogeom->flushViews();
 }
 
-void WidgetTest::geom_moved(int, double, const Vector&, void*)
+void WidgetTest::widget_moved()
 {
-    // Update Arrow/Critical point widget
-    if ((widgets[WT_Arrow]->ReferencePoint()-Point(0,0,0)).length2() >= 1e-6)
-	((ArrowWidget*)widgets[WT_Arrow])->SetDirection((Point(0,0,0)-widgets[WT_Arrow]->ReferencePoint()).normal());
-    if ((widgets[WT_Crit]->ReferencePoint()-Point(0,0,0)).length2() >= 1e-6)
-	((CriticalPointWidget*)widgets[WT_Crit])->SetDirection((Point(0,0,0)-widgets[WT_Crit]->ReferencePoint()).normal());
-    widgets[widget_type.get()]->execute();
+   cerr << "WidgetTest: begin widget_moved" << endl;
+   // Update Arrow/Critical point widget
+   if ((widgets[WT_Arrow]->ReferencePoint()-Point(0,0,0)).length2() >= 1e-6)
+      ((ArrowWidget*)widgets[WT_Arrow])->SetDirection((Point(0,0,0)-widgets[WT_Arrow]->ReferencePoint()).normal());
+   if ((widgets[WT_Crit]->ReferencePoint()-Point(0,0,0)).length2() >= 1e-6)
+      ((CriticalPointWidget*)widgets[WT_Crit])->SetDirection((Point(0,0,0)-widgets[WT_Crit]->ReferencePoint()).normal());
+   
+   widget_lock.read_lock();
+   cout << "Gauge ratio " << ((GaugeWidget*)widgets[WT_Gauge])->GetRatio() << endl;
+   cout << "Ring angle " << ((RingWidget*)widgets[WT_Ring])->GetRatio() << endl;
+   cout << "FOV " << ((ViewWidget*)widgets[WT_View])->GetFOV() << endl;
+   widget_lock.read_unlock();
 
-    widget_lock.read_lock();
-    cout << "Gauge ratio " << ((GaugeWidget*)widgets[WT_Gauge])->GetRatio() << endl;
-    cout << "Ring angle " << ((RingWidget*)widgets[WT_Ring])->GetRatio() << endl;
-    cout << "FOV " << ((ViewWidget*)widgets[WT_View])->GetFOV() << endl;
-    widget_lock.read_unlock();
-}
-
-void WidgetTest::geom_release(void*)
-{
-    if(!abort_flag){
-	abort_flag=1;
-	want_to_execute();
-    }
+   // If your module needs to execute when the widget moves, add these lines:
+   //if(!abort_flag){
+   //    abort_flag=1;
+   //    want_to_execute();
+   //}
+   cerr << "WidgetTest: end widget_moved" << endl;
 }
 
 
@@ -177,13 +159,6 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
    }
    if (args[1] == "nextmode") {
       widgets[widget_type.get()]->NextMode();
-      if(!abort_flag){
-	 abort_flag=1;
-	 want_to_execute();
-	 double l,r;
-	 histo.GetRange(l,r);
-	 cout << "(" << l << "," << r << ")" << endl;
-      }
    } else if(args[1] == "select"){
        // Select the appropriate widget
        reset_vars();
@@ -191,21 +166,13 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
        for(int i = 0; i < NumWidgetTypes; i++)
 	   widgets[i]->SetState(0);
        widgets[widget_type.get()]->SetState(1);
-   
-       widgets[widget_type.get()]->SetScale(widget_scale.get());
-       widgets[widget_type.get()]->execute();
        widget_lock.write_unlock();
+       widgets[widget_type.get()]->SetScale(widget_scale.get());
    } else if(args[1] == "scale"){
       reset_vars();
-      widget_lock.write_lock();
       widgets[widget_type.get()]->SetScale(widget_scale.get());
-      widgets[widget_type.get()]->execute();
-      widget_lock.write_unlock();
-      ogeom->flushViews();
    } else if(args[1] == "ui"){
       widgets[widget_type.get()]->ui();
-   } else if(args[1] == "histo"){
-      histo.ui();
    } else {
       Module::tcl_command(args, userdata);
    }
