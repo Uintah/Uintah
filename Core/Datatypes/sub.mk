@@ -18,7 +18,6 @@ SRCS += $(SRCDIR)/BasicSurfaces.cc	    \
         $(SRCDIR)/Matrix.cc		    \
         $(SRCDIR)/Mesh.cc		    \
         $(SRCDIR)/MeshBase.cc		    \
-        $(SRCDIR)/MeshRG.cc		    \
         $(SRCDIR)/MeshTet.cc		    \
         $(SRCDIR)/Path.cc		    \
         $(SRCDIR)/PropertyManager.cc	    \
@@ -64,6 +63,8 @@ SRCS += $(SRCDIR)/BasicSurfaces.cc	    \
 	$(SRCDIR)/Polygon.cc \
 	$(SRCDIR)/SliceTable.cc \
 	$(SRCDIR)/VolumeUtils.cc \
+
+#        $(SRCDIR)/MeshRG.cc		    \
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
