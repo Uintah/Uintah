@@ -169,14 +169,17 @@ StanjanEquilibriumReactionModel::computeRxnStateSpace(const Stream& unreactedMix
 						      const vector<double>& mixRxnVar,
 						      Stream& equilStateSpace)
 {
-  equilStateSpace.d_depStateSpaceVars = unreactedMixture.d_depStateSpaceVars;
-  equilStateSpace.d_numMixVars =  unreactedMixture.d_numMixVars;
-  equilStateSpace.d_numRxnVars =  unreactedMixture.d_numRxnVars;
-  equilStateSpace.d_drhodf =  unreactedMixture.d_drhodf;
-  equilStateSpace.d_drhodh =  unreactedMixture.d_drhodh;
+  equilStateSpace = unreactedMixture;
   equilStateSpace.d_CO2index = 0;
   equilStateSpace.d_H2Oindex = 1;
-  //equilStateSpace = unreactedMixture;
+  //Cut speciesConcn vector from numSpecies to 4 (CO2,H2O,O2,CO)
+  vector<double>::iterator junk;
+  junk = equilStateSpace.d_speciesConcn.begin();
+  junk += 4;
+  equilStateSpace.d_speciesConcn.erase(junk,equilStateSpace.d_speciesConcn.end());
+  //ostream_iterator<double> ofile(cout, " ");
+  //copy(equilStateSpace.d_speciesConcn.begin(), equilStateSpace.d_speciesConcn.end(),
+  // ofile); cout << endl;
   double adiabaticEnthalpy = unreactedMixture.getEnthalpy();
   double initTemp = unreactedMixture.getTemperature();
   double initPress = unreactedMixture.getPressure();
@@ -225,7 +228,7 @@ StanjanEquilibriumReactionModel::computeRxnStateSpace(const Stream& unreactedMix
     // Find temperature associated with dhEnthalpy
     double dhTemp = computeTemperature(dhEnthalpy, initMassFract, 
 					     initTemp);
-    Stream dhStateSpace;
+    Stream dhStateSpace = equilStateSpace;
     computeEquilibrium(dhTemp, initPress, initMassFract, dhStateSpace);
     if (mixRxnVar[0] > 0.9999)
       equilStateSpace.d_drhodh = (equilStateSpace.getDensity() - dhStateSpace.getDensity())/eps;
@@ -293,7 +296,6 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp,
 	&nofElements, &nofSpecies, d_reactionData->d_elementNames[0], 
 	d_reactionData->d_speciesNames[0], &nop, &kmon, &Xequil[0], &initTemp, 
 	&test, &patm, &pest, &ncon, kcon, xcon, &ierr); 
- equilSoln.d_speciesConcn = vector<double> (4); // Return only four species 
  if (ierr == 0) {
     // If no error detected in equilibrium solution, call eqsol, which
     // returns equilibrium solution in cgs units
@@ -310,16 +312,16 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp,
     //?? put zeros in vector if mass fractions 
     // within ATOL of zero??
     //Kluge to print out only 4 species to table: CO2, H2O, O2, CO
+    
     int index;
     index = d_reactionData->getSpeciesIndex("CO2");
-    equilSoln.d_speciesConcn[0] = xeq[index]; // CO2 concentration
+    equilSoln.d_speciesConcn[0] = yeq[index]; // CO2 concentration
     index = d_reactionData->getSpeciesIndex("H2O");
-    equilSoln.d_speciesConcn[1] = xeq[index]; // H2O concentration
+    equilSoln.d_speciesConcn[1] = yeq[index]; // H2O concentration
     index = d_reactionData->getSpeciesIndex("O2");
-    equilSoln.d_speciesConcn[2] = xeq[index];
+    equilSoln.d_speciesConcn[2] = yeq[index];
     index = d_reactionData->getSpeciesIndex("CO");
-    equilSoln.d_speciesConcn[3] = xeq[index];
-
+    equilSoln.d_speciesConcn[3] = yeq[index];
     //equilSoln.d_speciesConcn = yeq;
     equilSoln.d_pressure *= 1.01325e+05; // atm -> Pa
     equilSoln.d_enthalpy *= 1.e-4; // Units of J/kg
