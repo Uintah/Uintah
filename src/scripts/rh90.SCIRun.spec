@@ -74,8 +74,8 @@ source0:	Thirdparty_install.%{thirdpartyversion}.tar.gz
 source1:	%{name}.%{version}.tar.gz
 source2:	cmake-1.8.1-x86-linux-files.tar
 source3:	InsightToolkit-%{insightver}.tar.gz
-source4:	SCIRun-otf-files.tar.gz
-source5:	BioTensor-otf-files.tar.gz
+source4:	SCIRun-release-otf-files.tar.gz
+#source5:	BioTensor-otf-files.tar.gz
 source6:	BioPSE.PKG.%{version}.tar.gz
 source7:	MatlabInterface.PKG.%{version}.tar.gz
 source8:	Teem.PKG.%{version}.tar.gz
@@ -131,7 +131,7 @@ export PATH=${JAVA_HOME}/bin:${PATH}
 /usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" -with-insight="/usr/local/lib/InsightToolkit" --enable-package="BioPSE Teem Insight MatlabInterface"
 cd /usr/local/SCIRun/bin/on-the-fly-libs
 tar -xvzf %{SOURCE4}
-tar -xvzf %{SOURCE5}
+#tar -xvzf %{SOURCE5}
 cd /usr/local/SCIRun/bin/
 gmake
 
