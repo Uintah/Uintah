@@ -49,6 +49,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/Environment.h>
+#include <Core/Exceptions/GuiException.h>
 #include <tcl.h>
 #include <tk.h>
 #include <iostream>
@@ -137,7 +138,14 @@ static int do_command(ClientData cd, Tcl_Interp*, int argc, char* argv[])
 {
   TCLCommandData* td=(TCLCommandData*)cd;
   GuiArgs args(argc, argv);
-  td->object->tcl_command(args, td->userdata);
+  try {
+    td->object->tcl_command(args, td->userdata);
+  } catch (const GuiException &exception) {
+    args.string_ = exception.message();
+    args.have_error_ = true;
+    args.have_result_ = true;
+  }
+
   if(args.have_result_) {
     Tcl_SetResult(the_interp,
 		  strdup(args.string_.c_str()),
