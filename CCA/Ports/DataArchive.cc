@@ -79,6 +79,7 @@ DataArchive::~DataArchive()
 string DataArchive::queryEndianness()
 {
   string ret;
+  d_lock.lock();
   DOM_Node meta = findNode("Meta", d_indexDoc.getDocumentElement());
   if( meta == 0 )
     throw InternalError("Meta node not found in index.xml");
@@ -92,11 +93,13 @@ string DataArchive::queryEndianness()
       "or\n\t<endianness>big_endian</endianness>\n"<<
       "to the <Meta> section of the index.xml file.\n\n";
     ret = string("big_endian");
+    d_lock.unlock();
     return ret;
   }
   DOM_Node child = endian_node.getFirstChild();
   DOMString endian = child.getNodeValue();
   ret = string(toString(endian));
+  d_lock.unlock();
   return ret;
 }
 
