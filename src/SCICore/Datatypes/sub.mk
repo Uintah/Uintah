@@ -5,7 +5,6 @@
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
-
 SRCDIR   := SCICore/Datatypes
 
 GENSRCS := $(SRCDIR)/ScalarFieldRG.cc $(SRCDIR)/ScalarFieldRGchar.cc \
@@ -32,19 +31,9 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
 	$(SRCDIR)/VoidStar.cc $(SRCDIR)/cDMatrix.cc \
 	$(SRCDIR)/cMatrix.cc $(SRCDIR)/cSMatrix.cc $(SRCDIR)/cVector.cc \
 	$(SRCDIR)/SurfTree.cc $(SRCDIR)/ScalarFieldRGCC.cc \
-	$(SRCDIR)/VectorFieldRGCC.cc $(SRCDIR)/templates.cc \
-	$(SRCDIR)/Geom.cc $(SRCDIR)/Attrib.cc \
-	$(SRCDIR)/Field.cc \
-	$(SRCDIR)/FieldWrapper.cc $(SRCDIR)/Domain.cc \
-	$(SRCDIR)/SField.cc $(SRCDIR)/VField.cc \
-	$(SRCDIR)/TField.cc $(SRCDIR)/Lattice3Geom.cc \
-	$(SRCDIR)/StructuredGeom.cc $(SRCDIR)/UnstructuredGeom.cc \
-	$(SRCDIR)/MeshGeom.cc $(SRCDIR)/PointCloudGeom.cc \
-	$(SRCDIR)/ContourGeom.cc $(SRCDIR)/TetMeshGeom.cc \
-	$(SRCDIR)/SurfaceGeom.cc $(SRCDIR)/TriSurfaceGeom.cc \
-	$(SRCDIR)/Path.cc $(SRCDIR)/CameraView.cc $(SRCDIR)/GenFunction.cc\
 	$(SRCDIR)/VectorFieldRGCC.cc  \
-	$(SRCDIR)/Path.cc $(SRCDIR)/CameraView.cc $(SRCDIR)/templates.cc
+     	$(SRCDIR)/Path.cc $(SRCDIR)/CameraView.cc $(SRCDIR)/templates.cc
+
 
 $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 	sed -e 's/RGTYPE/RG/g' -e 's/TYPE/double/g' < $< > $@
@@ -110,8 +99,8 @@ clean::
 
 #
 # $Log$
-# Revision 1.3.2.14  2000/10/26 17:30:48  moulding
-# merge HEAD into FIELD_REDESIGN
+# Revision 1.3.2.15  2000/10/31 02:36:26  dmw
+# Merging SCICore changes in HEAD into FIELD_REDESIGN branch
 #
 # Revision 1.9  2000/08/20 04:19:50  samsonov
 # path to CameraView.cc

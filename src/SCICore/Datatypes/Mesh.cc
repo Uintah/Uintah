@@ -2041,8 +2041,8 @@ void Pio(Piostream& stream, SCICore::Datatypes::ElementVersion1& elem)
 
 //
 // $Log$
-// Revision 1.15.2.3  2000/10/26 17:30:46  moulding
-// merge HEAD into FIELD_REDESIGN
+// Revision 1.15.2.4  2000/10/31 02:36:22  dmw
+// Merging SCICore changes in HEAD into FIELD_REDESIGN branch
 //
 // Revision 1.16  2000/07/12 15:45:09  dmw
 // Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
