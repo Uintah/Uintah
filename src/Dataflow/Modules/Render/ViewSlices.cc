@@ -1308,6 +1308,7 @@ ViewSlices::update_crop_bbox_from_gui()
 	 Point(double(crop_max_x_()+1),
 	       double(crop_max_y_()+1),
 	       double(crop_max_z_()+1)));
+  crop_bbox_ = crop_draw_bbox_;
 }
 
 void
@@ -2901,6 +2902,9 @@ ViewSlices::tcl_command(GuiArgs& args, void* userdata) {
 	 Point(max_slice_[0]+1, max_slice_[1]+1, max_slice_[2]+1));
       crop_draw_bbox_ = crop_bbox_;
       update_crop_bbox_to_gui();
+    } else {
+      update_crop_bbox_from_gui();
+      crop_bbox_ = crop_draw_bbox_;
     }
     redraw_all();
   } else if(args[1] == "stopcrop") {
