@@ -433,5 +433,5 @@ main(int argc, char** argv)
       Thread::exitAll(1);
     }
 
-    Thread::exitAll(0);
+    //Thread::exitAll(0);
 }
