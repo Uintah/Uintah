@@ -44,8 +44,6 @@ extern int main();
 int *tclDummyMainPtr = (int *) main;
 #endif
 
-extern int Tk_FScaleCmd _ANSI_ARGS_((ClientData clientData,
-	Tcl_Interp *interp, int argc, char **argv));
 extern int OpenGLCmd _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, int argc, char **argv));
 extern int BevelCmd _ANSI_ARGS_((ClientData clientData,
@@ -100,8 +98,6 @@ Tcl_AppInit(interp)
      * Call Tcl_CreateCommand for application-specific commands, if
      * they weren't already created by the init procedures called above.
      */
-    Tcl_CreateCommand(interp, "fscale", Tk_FScaleCmd, (ClientData) main,
-		      (void (*)()) NULL);
 #ifdef SCI_OPENGL
     Tcl_CreateCommand(interp, "opengl", OpenGLCmd, (ClientData) main,
 		      (void (*)()) NULL);

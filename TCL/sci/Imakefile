@@ -1,6 +1,8 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_DIR_tcl_sci
+
 #ifdef SCI_OPENGL
 OPENGL_OBJS = tkOpenGL.o
 OPENGL_SRCS = tkOpenGL.c
@@ -17,3 +19,8 @@ LIBNAME = scitk
 
 SCIDependTarget($(SRCS))
 NormalLibraryTarget($(LIBNAME),$(OBJS))
+
+#else
+all:
+depend:
+#endif
