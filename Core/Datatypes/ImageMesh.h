@@ -228,6 +228,7 @@ public:
 
   friend class INodeIter;
   friend class IFaceIter;
+  friend class IFaceIndex;
 
   ImageMesh()
     : min_i_(0), min_j_(0),
