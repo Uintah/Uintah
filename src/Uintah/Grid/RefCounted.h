@@ -46,7 +46,10 @@ WARNING
       //////////
       // Insert Documentation Here:
       bool removeReference();
-      
+
+      int getReferenceCount() const {
+	 return d_refCount;
+      }
    private:
       //////////
       // Insert Documentation Here:
@@ -58,6 +61,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/08/21 23:27:07  sparker
+// Added getReferenceCount() method to RefCounted
+// Correctly maintain ref counts on neighboring particle subsets in ParticleSubset
+//
 // Revision 1.3  2000/04/26 06:48:53  sparker
 // Streamlined namespaces
 //
