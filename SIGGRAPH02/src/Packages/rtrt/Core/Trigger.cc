@@ -3,7 +3,6 @@
 #include <Packages/rtrt/Core/Trigger.h>
 
 #include <Packages/rtrt/Core/PPMImage.h>
-#include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Sound/Sound.h>
 #include <Packages/rtrt/Sound/SoundThread.h>
 
@@ -15,13 +14,7 @@ using namespace SCIRun;
 using namespace rtrt;
 using namespace std;
 
-////////////////////////////////////////////
-// OOGL stuff
-extern BasicTexture * blendTex;
-extern ShadedPrim   * blendTexQuad;
-extern Blend        * blend;
 PPMImage * blank = NULL;
-////////////////////////////////////////////
 
 Trigger::Trigger( const string  & name, 
 		  vector<Point> & locations,
@@ -29,10 +22,13 @@ Trigger::Trigger( const string  & name,
 		  double          delay,
 		  PPMImage      * image,
 		  bool            showOnGui, /* = false */
-		  Sound         * sound /* = NULL */ ) :
+		  Sound         * sound,     /* = NULL */
+		  bool            fading,    /* = true */
+		  Trigger       * next       /* = NULL */ ) :
   name_(name), locations_(locations), distance2_(distance*distance),
   delay_(delay), image_(image), showOnGui_(showOnGui),
-  sound_(sound), timeLeft_(0.0)
+  sound_(sound), timeLeft_(0.0), next_(next), fades_(fading),
+  blend_(NULL), tex_(NULL), texQuad_(NULL)
 {
   if( blank == NULL )
     {
@@ -68,18 +64,20 @@ Trigger::check( const Point & eye )
 	  double dist2 = (eye - locations_[cnt]).length2();
 	  if( dist2 < distance2_ )
 	    {
-	      return activate();
+	      return true;
 	    }
 	}
     }
   else if( timeLeft_ > 0 )
     {
-      double elapsedTime = Time::currentSeconds() - timeStarted_;
-      timeLeft_ = delay_ - elapsedTime;
+      double curTime = Time::currentSeconds();
+      double elapsedTime = curTime - lastTime_;
+      lastTime_ = curTime;
+      timeLeft_ -= elapsedTime;
+
       if( timeLeft_ < 0 )
 	{
 	  timeLeft_ = 0;
-	  cout << "Trigger " << name_ << " is ready again\n";
 	}
     }
   return false;
@@ -91,49 +89,87 @@ Trigger::activate()
 {
   if( timeLeft_ == 0 ) 
     {
-      timeStarted_ = Time::currentSeconds();
+      Trigger * dummy;
+      lastTime_ = Time::currentSeconds();
       timeLeft_ = delay_;
-      return advance();
+      return advance( dummy );
     }
-  cout << "trigger: " << name_ << " is not ready yet ()" << timeLeft_ <<  "\n";
   return false;
 }
 
 bool
-Trigger::advance()
+Trigger::advance( Trigger *& next )
 {
   // The check() routine decreases "timeLeft_".
 
   if( sound_ )
     {
-      cout << "turning on sound: " << name_ << "\n";
       sound_->playNow();
       return false;
     }
   else // image to display
     {
-      if( !blend ) return false;  // If we are not in full screen mode.
+      // If a tex has not been specified, just return.
+      if( !texQuad_ || !tex_ ) return false;
 
-      double alpha = timeLeft_ / delay_;
+      const float timeForFade = 2.0;
 
-      // Don't start fading until only 20% of time is left.
-      if( alpha < 0.2 )
+      if( fades_ && blend_ )
 	{
-	  alpha = 5 * timeLeft_ / delay_; // reset to run from 1.0 to 0.0
-	  blend->alpha( 1.0 );
-	  blendTex->reset( GL_FLOAT, &((*blank)(0,0)) );
-	  blendTexQuad->draw(); // Draw blank background
+	  double alpha = 1.0;
+	  if( (delay_ - timeLeft_) < timeForFade )
+	    { // Image is just starting, fade it in.
+	      alpha = (delay_ - timeLeft_) / timeForFade;
+	    }
+
+	  if( timeLeft_ < timeForFade )
+	    { // Start fading out at timeForFade seconds.
+	      alpha = timeLeft_ / timeForFade;
+	      blend_->alpha( 1.0 );
+	      tex_->reset( GL_FLOAT, &((*blank)(0,0)) );
+	      texQuad_->draw(); // Draw blank background
+	    }
+	  blend_->alpha( alpha );
+	  tex_->reset( GL_FLOAT, &((*image_)(0,0)) );
+	  texQuad_->draw(); // blend the image over it
 	}
       else
 	{
-	  alpha = 1.0;
+	  // This is only for the bottom graphic.
+	  tex_->reset( GL_FLOAT, &((*image_)(0,0)) );
+	  texQuad_->draw();
 	}
-      blend->alpha( alpha );
-      blendTex->reset( GL_FLOAT, &((*image_)(0,0)) );
-      blendTexQuad->draw(); // blend the image over it
 
-      return (timeLeft_ != 0);
+      if( timeLeft_ == 0 )
+	{
+	  next = next_;
+	  return false;
+	}
+      else
+	{
+	  next = NULL;
+	  return true;
+	}
     }
 }
 
+bool
+Trigger::deactivate()
+{
+  timeLeft_ = Min( timeLeft_, 2.0 );
+  if( image_ )
+    return true;
+  else
+    return false;
+}
+
+void
+Trigger::setDrawableInfo( BasicTexture * tex,
+			  ShadedPrim   * texQuad,
+			  Blend        * blend /* = NULL */ )
+{
+  tex_     = tex;
+  texQuad_ = texQuad;
+  blend_   = blend;
+}
 
