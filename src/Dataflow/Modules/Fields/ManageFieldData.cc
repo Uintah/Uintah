@@ -126,17 +126,17 @@ ManageFieldData::execute()
   else
   {
     int matrix_svt_flag = svt_flag;
-    if (imatrixhandle->nrows() == 1 || imatrixhandle->ncols() == 1)
+    if (imatrixhandle->nrows() == 9 || imatrixhandle->ncols() == 9)
     {
-      matrix_svt_flag = 0;
+      matrix_svt_flag = 2;
     }
     else if (imatrixhandle->nrows() == 3 || imatrixhandle->ncols() == 3)
     {
       matrix_svt_flag = 1;
     }
-    else if (imatrixhandle->nrows() == 9 || imatrixhandle->ncols() == 9)
+    else if (imatrixhandle->nrows() == 1 || imatrixhandle->ncols() == 1)
     {
-      matrix_svt_flag = 2;
+      matrix_svt_flag = 0;
     }
     else
     {
