@@ -18,6 +18,7 @@
 #    Date   : Tue Sep 10 11:09:58 2002
 
 import os
+import sys
 import random
 from time import time
 
@@ -149,6 +150,36 @@ def add_commit(f) :
             done = 1
 
     return 1
+
+
+def map_and_msg_files(flist) :
+    print "Add commit message."
+    add_text(all_messages, 'msg', file_msg_map, flist[0])
+    for f in flist[1:] :
+        if not file_msg_map.has_key(0) : file_msg_map[0] = []
+        file_msg_map[0].append(f)
+
+    s = '-1'
+    while s != 'y' and s != 'n' :
+        s = raw_input("Add documentation message? ")
+
+    if s == 'y' :
+        add_text(all_docs, 'doc', file_doc_map, flist[0])
+        for f in flist[1:] :
+            if not file_doc_map.has_key(0) : file_doc_map[0] = []
+            file_doc_map[0].append(f)
+
+    s = '-1'
+    while s != 'y' and s != 'n' :
+        s = raw_input("Add progress message? ")
+
+    if s == 'y' :        
+        add_text(all_progress, 'prog', file_progress_map, flist[0])
+        for f in flist[1:] :
+            if not file_progress_map.has_key(0) :
+                file_progress_map[0] = []
+            file_progress_map[0].append(f)
+
     
 def visit_files(files) :
     
@@ -243,9 +274,16 @@ def analyze_files(files) :
 
     
 if __name__ == '__main__' :
-    files = get_changed_files()
-    if analyze_files(files) :
-        visit_files(files)
+
+    if len(sys.argv) > 1 :
+        # expert mode.
+        print "expert mode"
+        map_and_msg_files(sys.argv[1:])
         do_commit()
+    else :
+        files = get_changed_files()
+        if analyze_files(files) :
+            visit_files(files)
+            do_commit()
     
     
