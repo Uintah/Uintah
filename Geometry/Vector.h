@@ -68,6 +68,8 @@ public:
     void find_orthogonal(Vector&, Vector&) const;
     
     friend void Pio(Piostream&, Vector&);
+
+    inline Point asPoint() const;
 };
 
 ostream& operator<<(ostream& os, const Vector& p);
@@ -78,5 +80,9 @@ istream& operator>>(istream& os, Vector& p);
 #include <Geometry/Point.h>
 
 #include "Vector.icc"
+
+inline Point Vector::asPoint() const {
+    return Point(_x,_y,_z);
+}
 
 #endif
