@@ -176,8 +176,7 @@ TendEpireg::execute()
     return;
   }
       
-
-  nrrdNuke(ngrad);
+  nrrdNix(ngrad);
   delete mat;
 
   NrrdData *output = scinew NrrdData;
