@@ -265,12 +265,12 @@ void CuttingPlane::execute()
   int nx, ny, nz;
   get_dimensions(field, nx,ny,nz);
 
-  if(field->data_at() == Field::CELL){ nx--; ny--; nz--;}
+  if(field->basis_order() == 0){ nx--; ny--; nz--;}
   
   c_min = min;  c_max = max;
   Vector diag;
   diag=max-min;
-  if(field->data_at() == Field::CELL){
+  if(field->basis_order() == 0){
     diag.x(diag.x()/(nx));
     diag.y(diag.y()/(ny));
     diag.z(diag.z()/(nz));
@@ -438,7 +438,7 @@ void CuttingPlane::execute()
     }
     int nx, ny, nz;
     get_dimensions(field, nx,ny,nz);
-    if(field->data_at() == Field::CELL){ nx--; ny--; nz--; }
+    if(field->basis_order() == 0){ nx--; ny--; nz--; }
     int most=Max(Max(nx, ny), nz);
     u_num=v_num=most;
   }

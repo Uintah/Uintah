@@ -274,7 +274,7 @@ FieldExtractor::execute()
 	{
 	  NCVariable<double> gridVar;
 	  LatVolField<double> *sfd =
-	    scinew LatVolField<double>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<double>( mesh_handle_, 1 );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  // 	  sfd->set_property( "offset", IntVector(low), true);
@@ -287,7 +287,7 @@ FieldExtractor::execute()
 	{
 	  NCVariable<float> gridVar;
 	  LatVolField<float> *sfd =
-	    scinew LatVolField<float>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<float>( mesh_handle_, 1 );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  sfd->set_property( "offset", IntVector(low), true);
@@ -300,7 +300,7 @@ FieldExtractor::execute()
 	{
 	  NCVariable<int> gridVar;
 	  LatVolField<int> *sfd =
-	    scinew LatVolField<int>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<int>( mesh_handle_, 1 );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  sfd->set_property( "offset", IntVector(low), true);
@@ -313,7 +313,7 @@ FieldExtractor::execute()
 	{
 	  NCVariable<long64> gridVar;
 	  LatVolField<long64> *sfd =
-	    scinew LatVolField<long64>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<long64>( mesh_handle_, 1 );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  sfd->set_property( "offset", IntVector(low), true);
@@ -326,7 +326,7 @@ FieldExtractor::execute()
 	{	
 	  NCVariable<Vector> gridVar;
 	  LatVolField<Vector> *vfd =
-	    scinew LatVolField<Vector>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<Vector>( mesh_handle_, 1 );
 	  // set the generation and timestep in the field
 	  vfd->set_property("varname",string(var), true);
 	  vfd->set_property("generation",generation, true);
@@ -344,7 +344,7 @@ FieldExtractor::execute()
 	{	
 	  NCVariable<Matrix3> gridVar;
 	  LatVolField<Matrix3> *tfd =
-	    scinew LatVolField<Matrix3>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<Matrix3>( mesh_handle_, 1 );
 	  // set the generation and timestep in the field
 	  tfd->set_property( "vartype",
 			     int(TypeDescription::NCVariable),true);
@@ -392,7 +392,7 @@ FieldExtractor::execute()
 	{
 	  CCVariable<double> gridVar;
 	  LatVolField<double> *sfd =
-	    scinew LatVolField<double>( mesh_handle_, Field::CELL );
+	    scinew LatVolField<double>( mesh_handle_, 0 );
 	  
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
@@ -406,7 +406,7 @@ FieldExtractor::execute()
 	{
 	  CCVariable<float> gridVar;
 	  LatVolField<float> *sfd =
-	    scinew LatVolField<float>( mesh_handle_, Field::CELL );
+	    scinew LatVolField<float>( mesh_handle_, 0 );
 	  
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
@@ -420,7 +420,7 @@ FieldExtractor::execute()
 	{
 	  CCVariable<int> gridVar;
 	  LatVolField<int> *sfd =
-	    scinew LatVolField<int>( mesh_handle_, Field::CELL );
+	    scinew LatVolField<int>( mesh_handle_, 0 );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  sfd->set_property( "offset", IntVector(low), true);
@@ -433,7 +433,7 @@ FieldExtractor::execute()
 	{
 	  CCVariable<unsigned char> gridVar;
 	  LatVolField<unsigned char> *sfd =
-	    scinew LatVolField<unsigned char>( mesh_handle_, Field::CELL );
+	    scinew LatVolField<unsigned char>( mesh_handle_, 0 );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  sfd->set_property( "offset", IntVector(low), true);
@@ -447,7 +447,7 @@ FieldExtractor::execute()
 	{
 	  CCVariable<long64> gridVar;
 	  LatVolField<long64> *sfd =
-	    scinew LatVolField<long64>( mesh_handle_, Field::CELL );
+	    scinew LatVolField<long64>( mesh_handle_, 0 );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  sfd->set_property( "offset", IntVector(low), true);
@@ -460,7 +460,7 @@ FieldExtractor::execute()
 	{	
 	  CCVariable<Vector> gridVar;
 	  LatVolField<Vector> *vfd =
-	    scinew LatVolField<Vector>( mesh_handle_, Field::CELL );
+	    scinew LatVolField<Vector>( mesh_handle_, 0 );
 	  // set the generation and timestep in the field
 	  vfd->set_property("varname",string(var), true);
 	  vfd->set_property("generation",generation, true);
@@ -478,7 +478,7 @@ FieldExtractor::execute()
 	{
 	  CCVariable<Matrix3> gridVar;
 	  LatVolField<Matrix3> *tfd =
-	    scinew LatVolField<Matrix3>( mesh_handle_, Field::CELL );
+	    scinew LatVolField<Matrix3>( mesh_handle_, 0 );
 	  // set the generation and timestep in the field
 	  tfd->set_property( "vartype",
 			     int(TypeDescription::CCVariable),true);
@@ -510,7 +510,7 @@ FieldExtractor::execute()
 	{
 	  SFCXVariable<double> gridVar;
 	  LatVolField<double> *sfd =
-	    scinew LatVolField<double>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<double>( mesh_handle_, 1 );
 	  
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
@@ -525,7 +525,7 @@ FieldExtractor::execute()
 	{
 	  SFCXVariable<float> gridVar;
 	  LatVolField<float> *sfd =
-	    scinew LatVolField<float>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<float>( mesh_handle_, 1 );
 	  
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
@@ -540,7 +540,7 @@ FieldExtractor::execute()
 	{
 	  SFCXVariable<int> gridVar;
 	  LatVolField<int> *sfd =
-	    scinew LatVolField<int>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<int>( mesh_handle_, 1 );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  sfd->set_property( "offset", IntVector(low), true);
@@ -555,7 +555,7 @@ FieldExtractor::execute()
 	{
 	  SFCXVariable<long64> gridVar;
 	  LatVolField<long64> *sfd =
-	    scinew LatVolField<long64>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<long64>( mesh_handle_, 1 );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "offset", IntVector(low), true);
 	  sfd->set_property( "time", double( time ), true);
@@ -569,7 +569,7 @@ FieldExtractor::execute()
 	{	
 	  SFCXVariable<Vector> gridVar;
 	  LatVolField<Vector> *vfd =
-	    scinew LatVolField<Vector>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<Vector>( mesh_handle_, 1 );
 	  // set the generation and timestep in the field
 	  vfd->set_property("varname",string(var), true);
 	  vfd->set_property("generation",generation, true);
@@ -587,7 +587,7 @@ FieldExtractor::execute()
 	{
 	  SFCXVariable<Matrix3> gridVar;
 	  LatVolField<Matrix3> *tfd =
-	    scinew LatVolField<Matrix3>( mesh_handle_, Field::FACE );
+	    scinew LatVolField<Matrix3>( mesh_handle_, 0 );
 	  // set the generation and timestep in the field
 	  tfd->set_property( "vartype",
 			     int(TypeDescription::SFCXVariable),true);
@@ -619,7 +619,7 @@ FieldExtractor::execute()
 	{
 	  SFCYVariable<double> gridVar;
 	  LatVolField<double> *sfd =
-	    scinew LatVolField<double>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<double>( mesh_handle_, 1 );
 	  
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
@@ -634,7 +634,7 @@ FieldExtractor::execute()
 	{
 	  SFCYVariable<float> gridVar;
 	  LatVolField<float> *sfd =
-	    scinew LatVolField<float>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<float>( mesh_handle_, 1 );
 	  
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
@@ -649,7 +649,7 @@ FieldExtractor::execute()
 	{
 	  SFCYVariable<int> gridVar;
 	  LatVolField<int> *sfd =
-	    scinew LatVolField<int>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<int>( mesh_handle_, 1 );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  sfd->set_property( "offset", IntVector(low), true);
@@ -664,7 +664,7 @@ FieldExtractor::execute()
 	{
 	  SFCYVariable<long64> gridVar;
 	  LatVolField<long64> *sfd =
-	    scinew LatVolField<long64>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<long64>( mesh_handle_, 1 );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  sfd->set_property( "offset", IntVector(low), true);
@@ -678,7 +678,7 @@ FieldExtractor::execute()
 	{	
 	  SFCYVariable<Vector> gridVar;
 	  LatVolField<Vector> *vfd =
-	    scinew LatVolField<Vector>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<Vector>( mesh_handle_, 1 );
 	  // set the generation and timestep in the field
 	  vfd->set_property("varname",string(var), true);
 	  vfd->set_property("generation",generation, true);
@@ -696,7 +696,7 @@ FieldExtractor::execute()
 	{
 	  SFCYVariable<Matrix3> gridVar;
 	  LatVolField<Matrix3> *tfd =
-	    scinew LatVolField<Matrix3>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<Matrix3>( mesh_handle_, 1 );
 	  // set the generation and timestep in the field
 	  tfd->set_property( "vartype",
 			     int(TypeDescription::SFCYVariable),true);
@@ -728,7 +728,7 @@ FieldExtractor::execute()
 	{
 	  SFCZVariable<double> gridVar;
 	  LatVolField<double> *sfd =
-	    scinew LatVolField<double>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<double>( mesh_handle_, 1 );
 	  
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
@@ -743,7 +743,7 @@ FieldExtractor::execute()
 	{
 	  SFCZVariable<float> gridVar;
 	  LatVolField<float> *sfd =
-	    scinew LatVolField<float>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<float>( mesh_handle_, 1 );
 	  
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
@@ -758,7 +758,7 @@ FieldExtractor::execute()
 	{
 	  SFCZVariable<int> gridVar;
 	  LatVolField<int> *sfd =
-	    scinew LatVolField<int>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<int>( mesh_handle_, 1 );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  sfd->set_property( "offset", IntVector(low), true);
@@ -773,7 +773,7 @@ FieldExtractor::execute()
 	{
 	  SFCZVariable<long64> gridVar;
 	  LatVolField<long64> *sfd =
-	    scinew LatVolField<long64>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<long64>( mesh_handle_, 1 );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  sfd->set_property( "offset", IntVector(low), true);
@@ -787,7 +787,7 @@ FieldExtractor::execute()
 	{	
 	  SFCZVariable<Vector> gridVar;
 	  LatVolField<Vector> *vfd =
-	    scinew LatVolField<Vector>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<Vector>( mesh_handle_, 1 );
 	  // set the generation and timestep in the field
 	  vfd->set_property("varname",string(var), true);
 	  vfd->set_property("generation",generation, true);
@@ -805,7 +805,7 @@ FieldExtractor::execute()
 	{
 	  SFCZVariable<Matrix3> gridVar;
 	  LatVolField<Matrix3> *tfd =
-	    scinew LatVolField<Matrix3>( mesh_handle_, Field::NODE );
+	    scinew LatVolField<Matrix3>( mesh_handle_, 1 );
 	  // set the generation and timestep in the field
 	  tfd->set_property( "vartype",
 			     int(TypeDescription::SFCZVariable),true);

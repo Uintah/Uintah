@@ -57,8 +57,8 @@ template<class ScalarField1, class ScalarField2>
 void ScalarFieldAverage::initField(ScalarField1* scalarField1,
 				    ScalarField2* scalarField2)
 {
-  ASSERT( scalarField1->data_at() == Field::CELL ||
-	  scalarField1->data_at() == Field::NODE );
+  ASSERT( scalarField1->basis_order() == 0 ||
+	  scalarField1->basis_order() == 1 );
 
   typename ScalarField1::mesh_handle_type smh = scalarField1->get_typed_mesh();
   typename ScalarField2::mesh_handle_type fmh = scalarField2->get_typed_mesh();
@@ -81,8 +81,8 @@ void ScalarFieldAverage::computeScalars(ScalarField1* scalarField1,
 					 ScalarOp op)
 {
   // so far only node and cell centered data
-  ASSERT( scalarField1->data_at() == Field::CELL ||
-	  scalarField1->data_at() == Field::NODE );
+  ASSERT( scalarField1->basis_order() == 0 ||
+	  scalarField1->basis_order() == 1 );
 
 
   typename ScalarField1::mesh_handle_type s1mh =
@@ -90,7 +90,7 @@ void ScalarFieldAverage::computeScalars(ScalarField1* scalarField1,
   typename ScalarField2::mesh_handle_type s2mh =
     scalarField2->get_typed_mesh();
  
-  if( scalarField1->data_at() == Field::CELL){
+  if( scalarField1->basis_order() == 0){
     typename ScalarField1::mesh_type::Cell::iterator v_it; s1mh->begin(v_it);
     typename ScalarField1::mesh_type::Cell::iterator v_end; s1mh->end(v_end);
     typename ScalarField2::mesh_type::Cell::iterator s_it; s2mh->begin(s_it);
@@ -113,8 +113,8 @@ void ScalarFieldAverage::computeAverages(ScalarField1* scalarField1,
 					  ScalarField2* scalarField2)
 {
   // so far only node and cell centered data
-  ASSERT( scalarField1->data_at() == Field::CELL ||
-	  scalarField1->data_at() == Field::NODE );
+  ASSERT( scalarField1->basis_order() == 0 ||
+	  scalarField1->basis_order() == 1 );
 
 
   typename ScalarField1::mesh_handle_type s1mh =
@@ -123,7 +123,7 @@ void ScalarFieldAverage::computeAverages(ScalarField1* scalarField1,
     scalarField2->get_typed_mesh();
   //double ave = 0;
   int counter = 0;
-  if( scalarField1->data_at() == Field::CELL){
+  if( scalarField1->basis_order() == 0){
     typename ScalarField1::mesh_type::Cell::iterator v_it; s1mh->begin(v_it);
     typename ScalarField1::mesh_type::Cell::iterator v_end; s1mh->end(v_end);
     typename ScalarField2::mesh_type::Cell::iterator s_it; s2mh->begin(s_it);
