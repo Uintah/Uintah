@@ -111,6 +111,8 @@ HexIntMask::execute()
 
   hash_type nodemap;
 
+  vector<HexVolMesh::Elem::index_type> elemmap;
+
   // Test values, to be taken from GUI later.
   vector<int> exclude(3);
   exclude[0] = 0;
@@ -120,7 +122,6 @@ HexIntMask::execute()
   HexVolMesh::Elem::iterator bi, ei;
   hvmesh->begin(bi);
   hvmesh->end(ei);
-  int counter = 0;
   while (bi != ei)
   {
     int val;
@@ -143,7 +144,7 @@ HexIntMask::execute()
       }
 
       clipped->add_elem(nnodes);
-      counter++;
+      elemmap.push_back(*bi);
     }
 
     ++bi;
@@ -151,10 +152,17 @@ HexIntMask::execute()
   clipped->flush_changes();
 
   HexVolField<int> *ofield = 0;
-  if (counter > 0)
+  if (elemmap.size() > 0)
   {
     ofield = scinew HexVolField<int>(clipped, Field::CELL);
     *(PropertyManager *)ofield = *(PropertyManager *)hvfield;
+
+    int val;
+    for (unsigned int i = 0; i < elemmap.size(); i++)
+    {
+      hvfield->value(val, elemmap[i]);
+      ofield->set_value(val, (HexVolMesh::Elem::index_type)i);
+    }
   }
 
   // Forward the results.
