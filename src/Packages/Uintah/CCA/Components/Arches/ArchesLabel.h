@@ -68,6 +68,7 @@ namespace Uintah {
       const VarLabel* d_totalAreaOUTLabel;
       const VarLabel* d_denAccumLabel;
       // Density Labels
+      const VarLabel* d_enthalpyRes;
 
       //computed for old_dw in paramInit
       // computed for new_dw in setInitialGuess
@@ -394,7 +395,68 @@ namespace Uintah {
       const VarLabel* d_uVelocityPredLabel;
       const VarLabel* d_vVelocityPredLabel;
       const VarLabel* d_wVelocityPredLabel;
+      // for enthalpy equation
+      const VarLabel* d_enthalpyINLabel;  
 
+      // computed for old_dw in setProfile
+      const VarLabel* d_enthalpySPBCLabel;
+      const VarLabel* d_enthalpySPLabel;
+      // for validation
+      const VarLabel* d_enthalpyRXNLabel;
+      // computed as a part of pressure boundary calculations
+
+      const VarLabel* d_enthalpyCPBCLabel;
+      const VarLabel* d_enthalpyOUTBCLabel;
+
+      // Enthalpy Coef
+
+      const VarLabel* d_enthCoefSBLMLabel;
+
+      // Enthalpy Conv Coef
+
+      const VarLabel* d_enthConvCoefSBLMLabel;
+
+      // Enthalpy Linear Src
+
+      const VarLabel* d_enthLinSrcSBLMLabel;
+
+      // Enthalpy NonLinear Src
+
+      const VarLabel* d_enthNonLinSrcSBLMLabel;
+
+      // pred-corr labels for enthalpy
+      const VarLabel* d_enthCoefPredLabel;
+
+      // Scalar Conv Coef
+
+      const VarLabel* d_enthConvCoefPredLabel;
+
+      // Scalar Linear Src
+
+      const VarLabel* d_enthLinSrcPredLabel;
+
+      // Scalar NonLinear Src
+
+      const VarLabel* d_enthNonLinSrcPredLabel;
+      // scalar pred
+      const VarLabel* d_enthalpyPredLabel;
+
+      const VarLabel* d_enthCoefCorrLabel;
+
+      // Scalar Conv Coef
+
+      const VarLabel* d_enthConvCoefCorrLabel;
+
+      // Scalar Linear Src
+
+      const VarLabel* d_enthLinSrcCorrLabel;
+
+      // Scalar NonLinear Src
+
+      const VarLabel* d_enthNonLinSrcCorrLabel;
+      // for radiation
+      const VarLabel* d_absorpINLabel;
+      const VarLabel* d_sootFVINLabel;
     }; // End class ArchesLabel
 } // End namespace Uintah
 

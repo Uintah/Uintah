@@ -8,7 +8,7 @@
 SRCDIR   := Packages/Uintah/CCA/Components/Arches/Mixing/fortran
 
 SRCS     += $(SRCDIR)/dqagpe.F $(SRCDIR)/dqelg.F $(SRCDIR)/dqk21.F \
-	$(SRCDIR)/dqpsrt.F $(SRCDIR)/d1mach.F $(SRCDIR)/gammaln.F \
+	$(SRCDIR)/dqpsrt.F $(SRCDIR)/d1mach.F $(SRCDIR)/dgammaln.F \
 	$(SRCDIR)/eqlib.F $(SRCDIR)/stanlib.F $(SRCDIR)/cklib.F \
 	$(SRCDIR)/ChemkinHacks.F
 
@@ -24,6 +24,9 @@ FFLAGS +=
 
 #
 # $Log$
+# Revision 1.3  2001/07/16 21:15:40  rawat
+# added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
+#
 # Revision 1.2  2001/04/24 19:46:10  mcole
 # prelim checking for package only compilation, scripts refferred to by SCIRUN_SCRIPTS variable
 #

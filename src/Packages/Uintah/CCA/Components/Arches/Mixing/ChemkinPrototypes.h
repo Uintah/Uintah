@@ -115,8 +115,8 @@ extern "C"
 	     int *lenreq, double *reqwrk, int *nel, int *nsp, 
 	     char *ename, char *sp_name, int *nop, int *kmon, double *xeq, 
 	     double *tin, double *test_t, double *pin, double *Press, 
-	     int *ncon, int *kcon, double *xcon, int *iadiabatic,
-	     double *hin, int *ierr);
+	     int *ncon, int *kcon, double *xcon, int *ierr);
+	     //*iadiabatic, double *hin, int *ierr);
 
   void eqsol(int *nsp, double* reqwrk, double *xeq, double *yeq, 
 	     double *tin, double *pin, double *hout, double *vout,
@@ -143,6 +143,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.2  2001/07/16 21:15:38  rawat
+// added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
+//
 // Revision 1.1  2001/01/31 16:35:30  rawat
 // Implemented mixing and reaction models for fire.
 //

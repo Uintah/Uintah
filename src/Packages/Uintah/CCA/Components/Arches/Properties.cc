@@ -20,6 +20,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Core/Containers/StaticArray.h>
+#include <Core/Math/MinMax.h>
 #include <Core/Util/NotFinished.h>
 #include <iostream>
 using namespace std;
@@ -28,8 +29,10 @@ using namespace Uintah;
 //****************************************************************************
 // Default constructor for Properties
 //****************************************************************************
-Properties::Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb):
-  d_lab(label), d_MAlab(MAlb)
+Properties::Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
+		       bool reactingFlow, bool enthalpySolver):
+  d_lab(label), d_MAlab(MAlb), d_reactingFlow(reactingFlow),
+  d_enthalpySolve(enthalpySolver)
 {
   d_bc = 0;
 }
@@ -50,7 +53,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("Properties");
   db->require("denUnderrelax", d_denUnderrelax);
   db->require("ref_point", d_denRef);
-
+  db->require("radiation",d_radiationCalc);
   // read type of mixing model
   string mixModel;
   db->require("mixing_model",mixModel);
@@ -96,6 +99,17 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
 		numGhostCells);
   tsk->computes(d_lab->d_refDensity_label);
   tsk->computes(d_lab->d_densityCPLabel);
+  if (d_enthalpySolve)
+    tsk->computes(d_lab->d_enthalpySPLabel);
+  if (d_reactingFlow) {
+    tsk->computes(d_lab->d_tempINLabel);
+    tsk->computes(d_lab->d_co2INLabel);
+    tsk->computes(d_lab->d_enthalpyRXNLabel);
+  }
+  if (d_radiationCalc) {
+    tsk->computes(d_lab->d_absorpINLabel);
+    tsk->computes(d_lab->d_sootFVINLabel);
+  }
   if (d_MAlab) 
     tsk->computes(d_lab->d_densityMicroLabel);
 
@@ -126,11 +140,21 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
   }
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::None,
 		numGhostCells);
+  if (!(d_mixingModel->isAdiabatic()))
+    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, Ghost::None,
+		  numGhostCells);
 
   tsk->computes(d_lab->d_refDensity_label);
   tsk->computes(d_lab->d_densityCPLabel);
-  tsk->computes(d_lab->d_tempINLabel);
-  //  tsk->computes(d_lab->d_co2INLabel);
+  if (d_reactingFlow) {
+    tsk->computes(d_lab->d_tempINLabel);
+    tsk->computes(d_lab->d_co2INLabel);
+    tsk->computes(d_lab->d_enthalpyRXNLabel);
+  }
+  if (d_radiationCalc) {
+    tsk->computes(d_lab->d_absorpINLabel);
+    tsk->computes(d_lab->d_sootFVINLabel);
+  }
   if (d_MAlab) 
     tsk->computes(d_lab->d_densityMicroLabel);
   sched->addTask(tsk, patches, matls);
@@ -185,13 +209,31 @@ Properties::computeProps(const ProcessorGroup*,
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
     CCVariable<double> density;
-    StaticArray< CCVariable<double> > scalar(d_numMixingVars);
+    StaticArray<CCVariable<double> > scalar(d_numMixingVars);
+    CCVariable<double> enthalpy;
 
     new_dw->get(density, d_lab->d_densitySPLabel, 
 		matlIndex, patch, Ghost::None, nofGhostCells);
+    if (d_enthalpySolve)
+      new_dw->get(enthalpy, d_lab->d_enthalpySPBCLabel, 
+		  matlIndex, patch, Ghost::None, nofGhostCells);
 
-    //cerr << "number of mixing vars" << d_numMixingVars << endl;
-
+    CCVariable<double> temperature;
+    CCVariable<double> co2;
+    CCVariable<double> enthalpyRXN;
+    if (d_reactingFlow) {
+      new_dw->allocate(temperature, d_lab->d_tempINLabel, matlIndex, patch);
+      new_dw->allocate(co2, d_lab->d_co2INLabel, matlIndex, patch);
+      new_dw->allocate(enthalpyRXN, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
+    }
+    CCVariable<double> absorption;
+    CCVariable<double> sootFV;
+    if (d_radiationCalc) {
+      new_dw->allocate(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
+      new_dw->allocate(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
+      absorption.initialize(0.0);
+      sootFV.initialize(0.0);
+    }
     for (int ii = 0; ii < d_numMixingVars; ii++)
       new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, 
 		  matlIndex, patch, Ghost::None, nofGhostCells);
@@ -235,11 +277,17 @@ Properties::computeProps(const ProcessorGroup*,
 	  // currently not using any reaction progress variables
 
 	  if (!d_mixingModel->isAdiabatic())
-	    // get absolute enthalpy from enthalpy eqn
-	    cerr << "No eqn for enthalpy yet" << '/n';
+	    inStream.d_enthalpy = 0.0;
 	  Stream outStream;
 	  d_mixingModel->computeProps(inStream, outStream);
 	  double local_den = outStream.getDensity();
+	  if (d_enthalpySolve)
+	    enthalpy[currCell] = outStream.getEnthalpy();
+	  if (d_reactingFlow) {
+	    temperature[currCell] = outStream.getTemperature();
+	    co2[currCell] = outStream.getCO2();
+	    enthalpyRXN[currCell] = outStream.getEnthalpy();
+	  }
 	  if (d_bc == 0)
 	    throw InvalidValue("BoundaryCondition pointer not assigned");
 	  if (d_MAlab)
@@ -286,6 +334,17 @@ Properties::computeProps(const ProcessorGroup*,
     // Write the computed density to the new data warehouse
 
     new_dw->put(density,d_lab->d_densityCPLabel, matlIndex, patch);
+    if (d_enthalpySolve)
+      new_dw->put(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
+    if (d_reactingFlow) {
+      new_dw->put(temperature, d_lab->d_tempINLabel, matlIndex, patch);
+      new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch);
+      new_dw->put(enthalpyRXN, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
+    }
+    if (d_radiationCalc){
+      new_dw->put(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
+      new_dw->put(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
+    }
     if (d_MAlab)
       new_dw->put(denMicro,d_lab->d_densityMicroLabel, matlIndex, patch);
 
@@ -315,11 +374,25 @@ Properties::reComputeProps(const ProcessorGroup*,
     CCVariable<double> voidFraction;
     CCVariable<double> temperature;
     CCVariable<double> new_density;
-    //    CCVariable<double> co2;
-    new_dw->allocate(temperature, d_lab->d_tempINLabel, matlIndex, patch);
-    //    new_dw->allocate(co2, d_lab->d_co2INLabel, matlIndex, patch);
+    CCVariable<double> co2;
+    CCVariable<double> enthalpy;
+    if (d_reactingFlow) {
+      new_dw->allocate(temperature, d_lab->d_tempINLabel, matlIndex, patch);
+      new_dw->allocate(co2, d_lab->d_co2INLabel, matlIndex, patch);
+      new_dw->allocate(enthalpy, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
+    }
+    CCVariable<double> absorption;
+    CCVariable<double> sootFV;
+    if (d_radiationCalc) {
+      new_dw->allocate(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
+      new_dw->allocate(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
+      absorption.initialize(0.0);
+      sootFV.initialize(0.0);
+    }
     new_dw->allocate(new_density, d_lab->d_densityCPLabel, matlIndex, patch);
-    StaticArray< CCVariable<double> > scalar(d_numMixingVars);
+ 
+    StaticArray<CCVariable<double> > scalar(d_numMixingVars);
+    CCVariable<double> enthalpy_comp;
     CCVariable<double> denMicro;
 
     int nofGhostCells = 0;
@@ -338,22 +411,13 @@ Properties::reComputeProps(const ProcessorGroup*,
     for (int ii = 0; ii < d_numMixingVars; ii++)
       new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, 
 		  matlIndex, patch, Ghost::None, nofGhostCells);
-
-
-#ifdef multimaterialform
-    MultiMaterialVars* mmVars = 0;
-    if (d_mmInterface) 
-      mmVars = d_mmInterface->getMMVars();
-#endif
-
-    //CCVariable<double> new_density;
-    //new_dw->allocate(new_density, d_densityCPLabel, matlIndex, patch);
+    if (!(d_mixingModel->isAdiabatic()))
+      new_dw->get(enthalpy_comp, d_lab->d_enthalpySPLabel, 
+		  matlIndex, patch, Ghost::None, nofGhostCells);
 
     IntVector indexLow = patch->getCellLowIndex();
     IntVector indexHigh = patch->getCellHighIndex();
 
-    //    voidFraction.print(cerr);
-    // set density for the whole domain
 
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
@@ -379,15 +443,35 @@ Properties::reComputeProps(const ProcessorGroup*,
 	  // currently not using any reaction progress variables
 
 	  if (!d_mixingModel->isAdiabatic())
-	    // get absolute enthalpy from enthalpy eqn
-	    cerr << "No eqn for enthalpy yet" << '/n';
+	    inStream.d_enthalpy = enthalpy_comp[currCell];
 	  Stream outStream;
 	  d_mixingModel->computeProps(inStream, outStream);
 	  double local_den = outStream.getDensity();
-	  temperature[currCell] = outStream.getTemperature();
-	  //	  co2[currCell] = outStream.getCO2();
-
-
+	  if (d_reactingFlow) {
+	    temperature[currCell] = outStream.getTemperature();
+	    co2[currCell] = outStream.getCO2();
+	    enthalpy[currCell] = outStream.getEnthalpy();
+	  }
+	  if (d_radiationCalc) {
+	    // bc is the mass-atoms 0f carbon per mas of reactnat mixture
+	    // taken from radcoef.f
+	    //	double bc = d_mixingModel->getCarbonAtomNumber(inStream)*local_den;
+	    if (temperature[currCell] > 1000) {
+	      double bc = inStream.d_mixVars[0]*(12.0/16.0)*local_den;
+	      double c3 = 0.1;
+	      double rhosoot = 1950.0;
+	      double cmw = 12.0;
+	      double opl = 3.0;
+	      double factor = 0.01;
+	      sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
+	      absorption[currCell] = Min(25.0,(4.0/opl)*log(1.0+350.0*
+		     sootFV[currCell]*temperature[currCell]*opl));
+	      //	      absorption[currCell] = 0.01;
+	    }
+	    else {
+	      absorption[currCell] = 0.001;
+	    }
+	  }
 	  if (d_MAlab) {
 	    denMicro[IntVector(colX, colY, colZ)] = local_den;
 	    if (voidFraction[currCell] > 0.01)
@@ -417,8 +501,15 @@ Properties::reComputeProps(const ProcessorGroup*,
       new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
     
     new_dw->put(new_density, d_lab->d_densityCPLabel, matlIndex, patch);
-    new_dw->put(temperature, d_lab->d_tempINLabel, matlIndex, patch);
-    //    new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch);
+    if (d_reactingFlow) {
+      new_dw->put(temperature, d_lab->d_tempINLabel, matlIndex, patch);
+      new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch);
+      new_dw->put(enthalpy, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
+    }
+    if (d_radiationCalc) {
+      new_dw->put(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
+      new_dw->put(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
+    }
     if (d_MAlab)
       new_dw->put(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
   }
@@ -542,7 +633,8 @@ Properties::computePropsPred(const ProcessorGroup*,
     CCVariable<double> density;
     CCVariable<double> new_density;
     CCVariable<double> voidFraction;
-    StaticArray< CCVariable<double> > scalar(d_numMixingVars);
+ 
+    StaticArray<CCVariable<double> > scalar(d_numMixingVars);
     CCVariable<double> denMicro;
 
     int nofGhostCells = 0;

@@ -166,7 +166,19 @@ public:
 			 ArchesVariables* vars,
 			 CellInformation* cellinfo,
 			 const ArchesLabel* lab);
-      // to close petsc 
+      void computeEnthalpyUnderrelax(const ProcessorGroup* pc,
+				     const Patch* patch,
+				     ArchesVariables* vars);
+
+      ////////////////////////////////////////////////////////////////////////
+      // Scalar Solve
+      void enthalpyLisolve(const ProcessorGroup* pc,
+			   const Patch* patch,
+			   double delta_t,
+			   ArchesVariables* vars,
+			   CellInformation* cellinfo,
+			   const ArchesLabel* lab);
+       // to close petsc 
       void finalizeSolver();
 
    virtual void matrixCreate(const PatchSet* allpatches,

@@ -62,7 +62,11 @@ namespace Uintah {
   class Stream;
   // Reference temperature defined to be the lower limit of integration in the
   // determination of the system sensible enthalpy
-  const double TREF = 298.0;
+  const double TREF = 200.0;
+  const double TLOW = 100.00;
+  const double THIGH = 4000.0;
+  const int MAXITER = 1000;
+
 
   class StanjanEquilibriumReactionModel: public ReactionModel {
   public:
@@ -108,8 +112,8 @@ namespace Uintah {
       return d_reactionData;
     }
 
-
-    // GROUP: Manipulators
+  
+    // GROUP: Actual Action Methods :
     /////////////////////////////////////////////////////////////////////////
     //
     //computeEnthalpy returns the enthalpies (J/kg) used in the linearization 
@@ -127,16 +131,25 @@ namespace Uintah {
     // temperature (AFT)using stanjan.  It calculates the sensible enthalpy
     // based on the AFT using the Chemkin routine ckhbms.
     //
-    virtual Stream computeRxnStateSpace(Stream& mixRxnVar);
-#if 0
-    virtual Stream computeEnthalpy(Stream& mixRxnVar);
-#endif
+    virtual Stream computeEnthalpy(Stream& unreactedMixture,
+				   const vector<double>& mixRxnVar);
+
+    ///////////////////////////////////////////////////////////////////////
+    //
+    // Computes the state space (dependent) variables given the unreacted
+    // stream information and values for the reaction variables
+    //
+    virtual Stream computeRxnStateSpace(Stream& unreactedMixture, 
+					const vector<double>& mixRxnVar,
+					bool adiabatic);
+
 
   private:
-    void computeEquilibrium(double tin, double initPress, int heatLoss,
-			    double enthalpy, const vector<double>& initMassFract,
+    void computeEquilibrium(double initTemp, double initPress,
+			    const vector<double>& initMassFract, 
 			    Stream& equilSoln);
-    
+    double computeTemperature(const double absEnthalpy, 
+			      const vector<double>& massFract, double initTemp);   
     void computeRadiationProperties();
     // Class object that stores all the information about the reaction
     // mechanism read in through Chemkin including species, elements, reaction
@@ -144,11 +157,10 @@ namespace Uintah {
     ChemkinInterface* d_reactionData; 
 
     bool d_adiabatic;
-    // Determines how mixing variables are defined. If = 1, mixing variables are
-    // treated independently
-    // int d_lMixInd;  
-    // Optical path length (m?)- a characteristic length used to 
-    // estimate radiation
+    // If true, enthalpies needed to linearize the absolute enthalpy will be computed
+    bool d_normalizeEnthalpy;
+
+    // Optical path length (m?)- a characteristic length used to estimate radiation
     // gas absorption coefficients
     // double d_opl;
  

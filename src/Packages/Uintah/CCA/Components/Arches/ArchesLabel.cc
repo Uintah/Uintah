@@ -242,6 +242,8 @@ ArchesLabel::ArchesLabel()
 				   SFCZVariable<double>::getTypeDescription() );
   d_scalarRes = scinew VarLabel("scalarRes",
 				   CCVariable<double>::getTypeDescription() );
+  d_enthalpyRes = scinew VarLabel("enthalpyRes",
+				   CCVariable<double>::getTypeDescription() );
 
   d_old_uVelocityGuess = scinew VarLabel("olduVelocityguess",
 				       SFCXVariable<double>::getTypeDescription());
@@ -398,6 +400,70 @@ ArchesLabel::ArchesLabel()
 				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocityPredLabel = scinew VarLabel("wVelocityPred", 
 				    SFCZVariable<double>::getTypeDescription() );
+
+  // enthalpy labels
+  // Enthalpy 
+  d_enthalpyINLabel = scinew VarLabel("enthalpyIN",
+				    CCVariable<double>::getTypeDescription() );
+  d_enthalpySPLabel = scinew VarLabel("enthalpySP",
+				   CCVariable<double>::getTypeDescription() );
+  d_enthalpySPBCLabel = scinew VarLabel("enthalpySPBC",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_enthalpyRXNLabel = scinew VarLabel("enthalpyRXN",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_enthalpyCPBCLabel = scinew VarLabel("enthalpyCPBC",
+				      CCVariable<double>::getTypeDescription() );
+  d_enthalpyOUTBCLabel = scinew VarLabel("enthalpyOUTBC",
+				      CCVariable<double>::getTypeDescription() );
+
+  // Enthalpy Coef
+  d_enthCoefSBLMLabel = scinew VarLabel("enthCoefSBLM",
+				   CCVariable<double>::getTypeDescription() );
+  // Enthalpy Conv Coef
+  d_enthConvCoefSBLMLabel = scinew VarLabel("enthConvCoefSBLM",
+				   CCVariable<double>::getTypeDescription() );
+  // Enthalpy Linear Src
+  d_enthLinSrcSBLMLabel = scinew VarLabel("enthLinSrcSBLM",
+				   CCVariable<double>::getTypeDescription() );
+  // Enthalpy Non Linear Src
+  d_enthNonLinSrcSBLMLabel = scinew VarLabel("enthNonLinSrcSBLM",
+				   CCVariable<double>::getTypeDescription() );
+
+  // predictor-corrector labels
+  // Enthalpy Coef
+  d_enthCoefPredLabel = scinew VarLabel("enthCoefPred",
+				   CCVariable<double>::getTypeDescription() );
+  // Enthalpy Conv Coef
+  d_enthConvCoefPredLabel = scinew VarLabel("enthConvCoefPred",
+				   CCVariable<double>::getTypeDescription() );
+  // Enthalpy Linear Src
+  d_enthLinSrcPredLabel = scinew VarLabel("enthLinSrcPred",
+				   CCVariable<double>::getTypeDescription() );
+  // Enthalpy Non Linear Src
+  d_enthNonLinSrcPredLabel = scinew VarLabel("enthNonLinSrcPred",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_enthCoefCorrLabel = scinew VarLabel("enthCoefCorr",
+				   CCVariable<double>::getTypeDescription() );
+  // Enthalpy Conv Coef
+  d_enthConvCoefCorrLabel = scinew VarLabel("enthConvCoefCorr",
+				   CCVariable<double>::getTypeDescription() );
+  // Enthalpy Linear Src
+  d_enthLinSrcCorrLabel = scinew VarLabel("enthLinSrcCorr",
+				   CCVariable<double>::getTypeDescription() );
+  // Enthalpy Non Linear Src
+  d_enthNonLinSrcCorrLabel = scinew VarLabel("enthNonLinSrcCorr",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_enthalpyPredLabel = scinew VarLabel("enthalpyPred",
+				   CCVariable<double>::getTypeDescription() );
+  // for radiation
+  d_absorpINLabel = scinew VarLabel("absorpIN",
+				    CCVariable<double>::getTypeDescription() );
+  d_sootFVINLabel = scinew VarLabel("sootFVIN",
+				    CCVariable<double>::getTypeDescription() );
 
 
 }

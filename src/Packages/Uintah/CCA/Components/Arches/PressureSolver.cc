@@ -1035,8 +1035,8 @@ PressureSolver::normPressure(const ProcessorGroup*,
   IntVector domHi = vars->pressure.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  double pressref = vars->press_ref;
-  //  double pressref = 0.0;
+  //  double pressref = vars->press_ref;
+  double pressref = 0.0;
   FORT_NORMPRESS(domLo.get_pointer(),domHi.get_pointer(),
 		idxLo.get_pointer(), idxHi.get_pointer(),
 		vars->pressure.getPointer(), 

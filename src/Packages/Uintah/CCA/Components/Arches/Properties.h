@@ -55,7 +55,8 @@ public:
       // Constructor taking
       //   [in] 
 
-      Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb);
+      Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
+		 bool reactingFlow, bool enthalpySolver);
 
       // GROUP: Destructors :
       ///////////////////////////////////////////////////////////////////////
@@ -171,7 +172,9 @@ private:
       Properties& operator=(const Properties&);
 
 private:
-
+      bool d_reactingFlow;
+      bool d_enthalpySolve;
+      bool d_radiationCalc;
       int d_numMixingVars;
       double d_denUnderrelax;
       IntVector d_denRef;

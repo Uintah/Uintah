@@ -52,8 +52,8 @@ class MixRxnTableInfo {
   //
   // Constructs an instance of MixRxnTableInfo.
   // Parameters:
-  // [in] numTableDim is the number of independent variables including there
-  // statistics.
+  // [in] numTableDim is the number of independent variables including
+  // their statistics.
   //
   MixRxnTableInfo(int numTableDim);
   // GROUP: Destructor:
@@ -68,7 +68,9 @@ class MixRxnTableInfo {
   //
   // Set up the problem specification database
   //
-  void problemSetup(const ProblemSpecP& params, const PDFMixingModel* mixModel);
+  void problemSetup(const ProblemSpecP& params, bool mixTableFlag,
+		    const PDFMixingModel* mixModel);
+
   // GROUP: Access functions
   //////////////////////////////////////////////////////////////////////
   // getMaxValue returns the max value of the variable for any given index
@@ -79,11 +81,6 @@ class MixRxnTableInfo {
     return d_maxValue[index];
   }
 
-  //////////////////////////////////////////////////////////////////////
-  // getMinValue returns the min value of the variable for any given index
-  // Parameters:
-  // [in] index is the index of the variable for which min value is required
-  // 
   //////////////////////////////////////////////////////////////////////
   // getMinValue returns the min value of the variable for any given index
   // Parameters:
@@ -107,6 +104,10 @@ class MixRxnTableInfo {
   // Parameters:
   // [in] index is the index of the variable for which numDivisions is required
   // 
+  int inline getNumDivisions(int index) const {
+    return d_numDivisions[index];
+  }
+  
   //////////////////////////////////////////////////////////////////////
   // getStoicValue returns the stoichiometric of teh variable
   // Parameters:
@@ -116,10 +117,7 @@ class MixRxnTableInfo {
     return d_stoicValue[index];
   }
   
-  int inline getNumDivisions(int index) const {
-    return d_numDivisions[index];
-  }
-  
+ 
 
  private:
   int d_numTableDim;
@@ -137,6 +135,9 @@ class MixRxnTableInfo {
 
 //
 // $Log$
+// Revision 1.2  2001/07/16 21:15:38  rawat
+// added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
+//
 // Revision 1.1  2001/01/31 16:35:30  rawat
 // Implemented mixing and reaction models for fire.
 //

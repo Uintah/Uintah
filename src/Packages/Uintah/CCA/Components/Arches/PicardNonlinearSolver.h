@@ -47,6 +47,7 @@ class TurbulenceModel;
 class Properties;
 class BoundaryCondition;
 class PhysicalConstants;
+class EnthalpySolver; 
 const double MACHINEPRECISSION = 14.0; //used to compute residual
 
 class PicardNonlinearSolver: public NonlinearSolver {
@@ -62,6 +63,7 @@ public:
 			    BoundaryCondition* bc,
 			    TurbulenceModel* turbModel, 
 			    PhysicalConstants* physConst,
+			    const bool calcEnthalpy,
 			    const ProcessorGroup* myworld);
 
       // GROUP: Destructors:
@@ -160,12 +162,15 @@ private:
       vector<IntVector> d_probePoints;
       // nonlinear residual tolerance
       double d_resTol;
+      bool d_enthalpySolve;
       // Pressure Eqn Solver
       PressureSolver* d_pressSolver;
       // Momentum Eqn Solver 
       MomentumSolver* d_momSolver;
       // Scalar solver
       ScalarSolver* d_scalarSolver;
+      EnthalpySolver* d_enthalpySolver;
+
       // physcial constatns
       PhysicalConstants* d_physicalConsts;
       // properties...solves density, temperature and specie concentrations

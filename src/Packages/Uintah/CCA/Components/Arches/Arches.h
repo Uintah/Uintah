@@ -173,7 +173,8 @@ private:
 
       double d_deltaT;
       int d_nofScalars;
-
+      bool d_reactingFlow;
+      bool d_calcEnthalpy;
       PhysicalConstants* d_physicalConsts;
       NonlinearSolver* d_nlSolver;
       // properties...solves density, temperature and species concentrations
