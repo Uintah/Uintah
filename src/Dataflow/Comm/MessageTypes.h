@@ -89,8 +89,6 @@ public:
 	AttachDialbox,
 	DialMoved,
 
-	TrackerMoved,
-
 	ModuleGeneric1,
 	ModuleGeneric2,
 	ModuleGeneric3,
