@@ -226,6 +226,7 @@ void doUnionTests(Suite* suite)
   ConsecutiveRangeSet joined_extended("1-15");
   ConsecutiveRangeSet nonjoin("5, 8, 13, 15-20");
   ConsecutiveRangeSet nonjoined("1-5, 8, 10-13, 15-20");
+  ConsecutiveRangeSet singlet("-1");
 
   suite->addTest("with empty", testset.unioned(empty) == testset &&
 		 empty.unioned(testset) == testset);
@@ -242,6 +243,8 @@ void doUnionTests(Suite* suite)
 		 && overlap2.unioned(testset) == joined_extended);  
   suite->addTest("nonjoined", testset.unioned(nonjoin) == nonjoined
 		 && nonjoin.unioned(testset) == nonjoined);
+  suite->addTest("same singlet", singlet.unioned(singlet) == singlet);
+  cerr <<"TEST" << singlet.unioned(singlet) << endl;
 }
 
 bool equalSets(ConsecutiveRangeSet& set, const int* array, int arraySize,
