@@ -607,7 +607,7 @@ proc infoCancel {w} {
 source $SCICoreTCL/MemStats.tcl
 source $SCICoreTCL/DebugSettings.tcl
 source $SCICoreTCL/ThreadStats.tcl
-
+source $SCICoreTCL/ColorPicker.tcl
 source $SCICoreTCL/Dialbox.tcl
 source $SCICoreTCL/Util.tcl
 source $SCICoreTCL/Filebox.tcl
