@@ -484,6 +484,7 @@ bool Path::set_path_t(int t){
 	lookatP=scinew Linear3DPWI<Point>();
 	return true;
       default:
+	break;
       }
     }
   }
@@ -615,6 +616,11 @@ bool Path::get_nextPP(View& v, int& curr_view, double& curr_speed, double& curr_
 
 //
 // $Log$
+// Revision 1.3  2000/08/22 07:18:33  moulding
+// changed   default:   to  default:   to appease the GCC on linux
+//           }                break;
+//                          }
+//
 // Revision 1.2  2000/08/09 07:15:55  samsonov
 // final version and Cocoon comments
 //
