@@ -26,6 +26,7 @@
 <!ENTITY requirements  SYSTEM "requirements.xml">
 <!ENTITY recommendations SYSTEM "recommendations.xml">
 <!ENTITY appendix SYSTEM "appendix.xml">
+<!ENTITY sr  "SCIRun">
 ]>
 
 <book id="main">
