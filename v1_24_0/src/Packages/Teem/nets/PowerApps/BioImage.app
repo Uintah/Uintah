@@ -81,6 +81,15 @@ setGlobal link_winlevel 1
 setGlobal vol_width 0
 setGlobal vol_level 0
 
+#global images
+set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
+set expandimg [image create photo -file ${image_dir}/expand-icon-small.ppm]
+set play_img [image create photo -file ${image_dir}/play-icon-small.ppm]
+set close_img [image create photo -file ${image_dir}/powerapp-close.ppm]
+set insertimg [image create photo -file ${image_dir}/powerapp-insertbar.ppm]
+set orientimg [image create photo -file ${image_dir}/OrientationsCube.ppm]
+
+
 setProgressText "Loading BioImage Application, Please Wait..."
 
 #######################################################
@@ -181,6 +190,8 @@ class BioImageApp {
 	set c_vis_tab "Planes"
 
 	set execute_choose 0
+
+	set last_filter_changed 0
 
 	### Define Tooltips
 	##########################
@@ -1564,8 +1575,6 @@ class BioImageApp {
 	
 	set f [add_Load_UI $history 0 0]
 
-        # Add insert bar
-        $this add_insert_bar $f 0
     }
     
     method add_Load_UI {history row which} {
@@ -1576,14 +1585,6 @@ class BioImageApp {
 
 	### Load Data UI
 	set ChooseNrrd [lindex [lindex $filters($which) $modules] $load_choose_vis] 
-	global eye
- 	radiobutton $history.$which.eye$which -text "" \
- 	    -variable eye -value $which \
-	    -command "$this change_eye $which"
-	Tooltip $history.$which.eye$which "Select to change current view\nof 3D and 2D windows"
-	
- 	grid config $history.$which.eye$which -column 0 -row 0 -sticky "nw"
-	
  	iwidgets::labeledframe $history.$which.f$which \
  	    -labeltext "Load Data" \
  	    -labelpos nw 
@@ -1594,16 +1595,15 @@ class BioImageApp {
 	
  	frame $data.expand 
  	pack $data.expand -side top -anchor nw
-	
- 	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
- 	set show [image create photo -file ${image_dir}/expand-icon-small.ppm]
- 	button $data.expand.b -image $show \
- 	    -anchor nw \
- 	    -command "$this change_visibility $which" \
- 	    -relief flat
+
+	global expandimg
+ 	button $data.expand.b -image $expandimg -anchor nw -relief flat \
+ 	    -command "$this change_visibility $which"
+ 	    
 	Tooltip $data.expand.b "Click to minimize/show\nthe Load UI"
- 	label $data.expand.l -text "Data - Unknown" -width [expr $label_width+2] \
- 	    -anchor nw
+ 	label $data.expand.l -text "Data - Unknown" -anchor nw \
+	    -width [expr $label_width+2]
+ 	    
 	Tooltip $data.expand.l "Right click to edit label."
 
  	pack $data.expand.b $data.expand.l -side left -anchor nw 
@@ -1647,7 +1647,7 @@ class BioImageApp {
 	bind $page.file.e <Return> "$this update_changes"
 	bind $page.file.e <ButtonPress-1> "$this check_crop"
 
-	trace variable [set NrrdReader]-filename w "$this enable_update"
+	trace variable [set NrrdReader]-filename w "$this enable_update $which"
 	
 	button $page.load -text "Browse" \
 	    -command "$this check_crop; $this open_nrrd_reader_ui $which" \
@@ -1661,7 +1661,9 @@ class BioImageApp {
 		      -command "$this set_cur_data_tab Dicom; $this configure_readers Dicom"]
 	
 	button $page.load -text "Dicom Loader" \
-	    -command "$this check_crop; $this enable_update 1 2 3; $this dicom_ui"
+	    -command "$this check_crop
+                      $this enable_update $which
+                      $this dicom_ui"
 	Tooltip $page.load "Open Dicom Load user interface"
 	
 	pack $page.load -side top -anchor n \
@@ -1672,7 +1674,9 @@ class BioImageApp {
 		      -command "$this set_cur_data_tab Analyze; $this configure_readers Analyze"]
 	
 	button $page.load -text "Analyze Loader" \
-	    -command "$this check_crop; $this enable_update 1 2 3; $this analyze_ui"
+	    -command "$this check_crop
+                      $this enable_update $which
+                      $this analyze_ui"
 	Tooltip $page.load "Open Dicom Load user interface"
 	
 	pack $page.load -side top -anchor n \
@@ -1699,7 +1703,7 @@ class BioImageApp {
 	    -width 12
 	Tooltip $page.load "Use a file browser to\nselect a Nrrd data set"
 
-        trace variable [set FieldReader]-filename w "$this enable_update"
+        trace variable $FieldReader-filename w "$this enable_update $which"
 	pack $page.load -side top -anchor n -padx 3 -pady 1
 	
 	# Set default view to be Nrrd
@@ -1711,10 +1715,8 @@ class BioImageApp {
 	set w $data.ui.f
 	
 	# Orientations button
-	set image_dir  [netedit getenv SCIRUN_SRCDIR]/pixmaps
-	set show [image create photo -file ${image_dir}/OrientationsCube.ppm]
-	button $w.orient -image $show \
-	    -anchor nw \
+	global orientimg
+	button $w.orient -image $orientimg -anchor nw \
 	    -command "$this check_crop; $this update_orientations"
 	Tooltip $w.orient "Edit the entries to indicate the various orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
 	grid config $w.orient -row 0 -column 1 -columnspan 3 -rowspan 4 -sticky "n"
@@ -1745,9 +1747,9 @@ class BioImageApp {
 
         bind $w.sentry <ButtonPress-1> "$this check_crop"
 
-        trace variable top w "$this enable_update"
-        trace variable front w "$this enable_update"
-        trace variable side w "$this enable_update"
+        trace variable top w "$this enable_update $which"
+        trace variable front w "$this enable_update $which"
+        trace variable side w "$this enable_update $which"
 
         # reset button
 	button $data.ui.reset -text "Reset" -command "$this check_crop; $this reset_orientations"
@@ -1791,8 +1793,8 @@ class BioImageApp {
 	}
 
 	global $m-dir $m-num-files
-	trace variable $m-dir w "$this enable_update"
-	trace variable $m-num-files w "$this enable_update"
+	trace variable $m-dir w "$this enable_update 0"
+	trace variable $m-num-files w "$this enable_update 0"
     }
 
     method analyze_ui { } {
@@ -1803,8 +1805,8 @@ class BioImageApp {
 	    .ui$m.buttonPanel.btnBox.execute configure -state disabled
 	}
 	global $m-file $m-num-files
-	trace variable $m-file w "$this enable_update"
-	trace variable $m-num-files w "$this enable_update"
+	trace variable $m-file w "$this enable_update 0"
+	trace variable $m-num-files w "$this enable_update 0"
     }
 
 
@@ -2802,22 +2804,25 @@ class BioImageApp {
     }
 
     method add_insert_bar {f which} {
+	set rb $f.eye_$which
+ 	radiobutton $rb -variable eye -value $which \
+	    -command "$this change_eye"
+	Tooltip $rb "Select to change current view\nof 3D and 2D windows"
+ 	grid config $rb -column 0 -row 1
+
 	# Add a bar that when a user clicks, will bring
 	# up the menu of filters to insert
+	global insertimg
+  	button $f.insert -image $insertimg -anchor n -relief sunken -borderwidth 0 
+	grid config $f.insert -row 1 -column 1 -pady 0	
+	bind $f.insertbar <ButtonPress-1> "app popup_insert_menu %X %Y $which"
+  	bind $f.insertbar <ButtonPress-2> "app popup_insert_menu %X %Y $which"
+  	bind $f.insertbar <ButtonPress-3> "app popup_insert_menu %X %Y $which"
 
-  	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
-  	set insert [image create photo -file ${image_dir}/powerapp-insertbar.ppm]
-
-  	button $f.insertbar -image $insert \
-  	    -anchor n \
-  	    -relief sunken -borderwidth 0 
-         grid config $f.insertbar -row 1 -column 1 -sticky "n" -pady 0
-	
- 	bind $f.insertbar <ButtonPress-1> "app popup_insert_menu %X %Y $which"
- 	bind $f.insertbar <ButtonPress-2> "app popup_insert_menu %X %Y $which"
- 	bind $f.insertbar <ButtonPress-3> "app popup_insert_menu %X %Y $which"
-        Tooltip $f.insertbar "Click on this bar to insert any of the\npre-processing filters at this location"
+        TooltipMultiline $f.insert "Click on this bar to insert any of the\n" \
+	    "pre-processing filters at this location"
     }
+
 
     method popup_insert_menu {x y which} {
 	set mouseX $x
@@ -2836,10 +2841,14 @@ class BioImageApp {
 	    $menu_id delete 0
 	}
 	
-	$menu_id add command -label "Insert Resample" -command "$this add_Resample $which"
-	$menu_id add command -label "Insert Crop" -command "$this add_Crop $which"
-	$menu_id add command -label "Insert Histogram" -command "$this add_Histo $which"
-	$menu_id add command -label "Insert Median Filtering" -command "$this add_Cmedian $which"
+	$menu_id add command -label "Insert Resample" \
+	    -command "$this add_Resample $which"
+	$menu_id add command -label "Insert Crop" \
+	    -command "$this add_Crop $which"
+	$menu_id add command -label "Insert Histogram" \
+	    -command "$this add_Histo $which"
+	$menu_id add command -label "Insert Median Filtering" \
+	    -command "$this add_Cmedian $which"
     }
 
     method execute_Data {} {
@@ -2912,6 +2921,9 @@ class BioImageApp {
             set execute_choose 1
 
 	    $mod-c needexecute
+	    # Add insert bar
+	    $this add_insert_bar $history0.0 0
+	    $this add_insert_bar $history1.0 0
 
 	    set has_executed 1
 	} else {
@@ -2996,11 +3008,6 @@ class BioImageApp {
 	    $detachedPFr.f.p.sf justify bottom
 	}
 
-	# Update choose port if
-        global eye
-        set eye $num_filters
-        $this change_eye $num_filters
-
 	# update vars
 	set filters($which) [lreplace $filters($which) $next_index $next_index $num_filters]
 
@@ -3010,8 +3017,7 @@ class BioImageApp {
 	set grid_rows [expr $grid_rows + 1]
 
         change_indicator_labels "Press Update to Resample Volume..."
-
-        $this enable_update 1 2 3
+        $this disable_update
     }
 
 
@@ -3104,11 +3110,6 @@ class BioImageApp {
 	    $detachedPFr.f.p.sf justify bottom
 	}
 
-	# Update choose port if
-        global eye
-        set eye $num_filters
-        $this change_eye $num_filters
-
 	# update vars
 	set filters($which) [lreplace $filters($which) $next_index $next_index $num_filters]
 
@@ -3117,7 +3118,7 @@ class BioImageApp {
 
         change_indicator_labels "Press Update to Crop Volume..."
 
-        $this enable_update 1 2 3
+        $this disable_update
 
         if {!$loading} {
 	    set current_crop [expr $num_filters-1]
@@ -3201,11 +3202,6 @@ class BioImageApp {
 	    $detachedPFr.f.p.sf justify bottom
 	}
 
-	# Update choose port if
-        global eye
-        set eye $num_filters
-        $this change_eye $num_filters
-
 	# update vars
 	set filters($which) [lreplace $filters($which) $next_index $next_index $num_filters]
 
@@ -3214,7 +3210,7 @@ class BioImageApp {
 
         change_indicator_labels "Press Update to Perform Median Filtering..."
 
-        $this enable_update 1 2 3
+	$this disable_update
 
     }
 
@@ -3327,11 +3323,6 @@ class BioImageApp {
 	    $detachedPFr.f.p.sf justify bottom
 	}
 
-	# Update choose port if
-        global eye
-        set eye $num_filters
-        $this change_eye $num_filters
-
 	# update vars
 	set filters($which) [lreplace $filters($which) $next_index $next_index $num_filters]
 
@@ -3345,7 +3336,7 @@ class BioImageApp {
 
         change_indicator_labels "Press Update to Perform Histogram Equalization..."
 
-        $this enable_update 1 2 3
+	$this disable_update
     }
 
 
@@ -3669,15 +3660,6 @@ class BioImageApp {
 	frame $history.$which
 	grid config $history.$which -column 0 -row $row -sticky "nw" -pady 0
 
-	# Add eye radiobutton
-        global eye
-	radiobutton $history.$which.eye$which -text "" \
-	    -variable eye -value $which \
-	    -command "$this change_eye $which"
-	Tooltip $history.$which.eye$which "Select to change current view\nof 3D and 2D windows"
-
-	grid config $history.$which.eye$which -column 0 -row 0 -sticky "nw"
-
 	iwidgets::labeledframe $history.$which.f$which \
 	    -labeltext "Resample" \
 	    -labelpos nw \
@@ -3689,10 +3671,8 @@ class BioImageApp {
 	frame $w.expand
 	pack $w.expand -side top -anchor nw 
 
-	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
-	set show [image create photo -file ${image_dir}/expand-icon-small.ppm]
-	set close [image create photo -file ${image_dir}/powerapp-close.ppm]
-	button $w.expand.b -image $show \
+	global expandimg close_img
+	button $w.expand.b -image $expandimg \
 	    -anchor nw \
 	    -command "$this change_visibility $which" \
 	    -relief flat
@@ -3701,7 +3681,7 @@ class BioImageApp {
             -anchor nw
 	Tooltip $w.expand.l "Right click to edit label"
 
- 	button $w.expand.c -image $close \
+ 	button $w.expand.c -image $close_img \
  	    -anchor nw \
  	    -command "$this filter_Delete $which" \
  	    -relief flat
@@ -3721,7 +3701,7 @@ class BioImageApp {
 	    if {!$loading_ui} {
                set [set UnuResample]-resampAxis$i "x1"
             }
-            trace variable [set UnuResample]-resampAxis$i w "$this enable_update"
+            trace variable [set UnuResample]-resampAxis$i w "$this enable_update $which"
 	    make_entry $w.ui.$i "Axis $i:" $UnuResample-resampAxis$i $which
 	    pack $w.ui.$i -side top -anchor nw -expand yes -fill x
 
@@ -3760,14 +3740,6 @@ class BioImageApp {
 	frame $history.$which
 	grid config $history.$which -column 0 -row $row -sticky "nw" -pady 0
 
-	# Add eye radiobutton
-        global eye
-	radiobutton $history.$which.eye$which -text "" \
-	    -variable eye -value $which \
-	    -command "$this change_eye $which"
-	Tooltip $history.$which.eye$which "Select to change current view\nof 3D and 2D windows"
-
-	grid config $history.$which.eye$which -column 0 -row 0 -sticky "nw"
 
 	iwidgets::labeledframe $history.$which.f$which \
 	    -labeltext "Crop" \
@@ -3780,10 +3752,8 @@ class BioImageApp {
 	frame $w.expand
 	pack $w.expand -side top -anchor nw
 
-	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
-	set show [image create photo -file ${image_dir}/expand-icon-small.ppm]
-	set close [image create photo -file ${image_dir}/powerapp-close.ppm]
-	button $w.expand.b -image $show \
+	global expandimg close_img
+	button $w.expand.b -image $expandimg \
 	    -anchor nw \
 	    -command "$this change_visibility $which" \
 	    -relief flat
@@ -3793,7 +3763,7 @@ class BioImageApp {
 	Tooltip $w.expand.l "Right click to edit label"
 
 
- 	button $w.expand.c -image $close \
+ 	button $w.expand.c -image $close_img \
  	    -anchor nw \
  	    -command "$this filter_Delete $which" \
  	    -relief flat
@@ -3808,32 +3778,32 @@ class BioImageApp {
 	pack $w.ui -side top -anchor nw -expand yes -fill x
 	
 	set UnuCrop [lindex [lindex $filters($which) $modules] 0]
-	global [set UnuCrop]-num-axes
-	set [set UnuCrop]-num-axes $dimension        
+	global $UnuCrop-num-axes
+	set $UnuCrop-num-axes $dimension        
 
-        global [set UnuCrop]-reset_data
-        set [set UnuCrop]-reset_data 0
-        global [set UnuCrop]-digits_only
-        set [set UnuCrop]-digits_only 1
+        global $UnuCrop-reset_data
+        set $UnuCrop-reset_data 0
+        global $UnuCrop-digits_only
+        set $UnuCrop-digits_only 1
 
 	for {set i 0} {$i < $dimension} {incr i} {
-	    global [set UnuCrop]-minAxis$i
-	    global [set UnuCrop]-maxAxis$i
+	    global $UnuCrop-minAxis$i
+	    global $UnuCrop-maxAxis$i
             if {!$loading_ui} {
-	        set [set UnuCrop]-minAxis$i 0
+	        set $UnuCrop-minAxis$i 0
 	    }
-  
-            trace variable [set UnuCrop]-minAxis$i w "$this enable_update"
-            trace variable [set UnuCrop]-maxAxis$i w "$this enable_update"
+	    
+            trace variable $UnuCrop-minAxis$i w "$this enable_update $which"
+            trace variable $UnuCrop-maxAxis$i w "$this enable_update $which"
 
 	    frame $w.ui.$i
 	    pack $w.ui.$i -side top -anchor nw -expand yes -fill x
 
 	    label $w.ui.$i.minl -text "Min Axis $i:"
-	    entry $w.ui.$i.minv -textvariable [set UnuCrop]-minAxis$i \
+	    entry $w.ui.$i.minv -textvariable $UnuCrop-minAxis$i \
 		-width 4
 	    label $w.ui.$i.maxl -text "Max Axis $i:"
-	    entry $w.ui.$i.maxv -textvariable [set UnuCrop]-maxAxis$i \
+	    entry $w.ui.$i.maxv -textvariable $UnuCrop-maxAxis$i \
 		-width 4
 
             bind $w.ui.$i.minv <ButtonPress-1> "$this start_crop $which"
@@ -3858,10 +3828,6 @@ class BioImageApp {
         $w.ui.2.maxl configure -text "Superior:" -width 10
 
 	return $history.$which
-    }
-
-    method set_pads { which n0 x0 n1 x1 n2 x2 } {
-	set filters($which) [lreplace $filters($which) 10 10 [list $n0 $x0 $n1 $x1 $n2 $x2]
     }
 
 
@@ -3913,15 +3879,6 @@ class BioImageApp {
 	frame $history.$which
 	grid config $history.$which -column 0 -row $row -sticky "nw" -pady 0
 
-	# Add eye radiobutton
-	global eye
-	radiobutton $history.$which.eye$which -text "" \
-	    -variable eye -value $which \
-	    -command "$this change_eye $which"
-	Tooltip $history.$which.eye$which "Select to change current view\nof 3D and 2D windows"
-
-	grid config $history.$which.eye$which -column 0 -row 0 -sticky "nw"
-
 	iwidgets::labeledframe $history.$which.f$which \
 	    -labeltext "Median Filtering" \
 	    -labelpos nw \
@@ -3933,10 +3890,8 @@ class BioImageApp {
 	frame $w.expand
 	pack $w.expand -side top -anchor nw
 
-	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
-	set show [image create photo -file ${image_dir}/expand-icon-small.ppm]
-	set close [image create photo -file ${image_dir}/powerapp-close.ppm]
-	button $w.expand.b -image $show \
+	global expandimg close_img
+	button $w.expand.b -image $expand_img \
 	    -anchor nw \
 	    -command "$this change_visibility $which" \
 	    -relief flat
@@ -3945,7 +3900,7 @@ class BioImageApp {
 	    -anchor nw
 	Tooltip $w.expand.l "Right click to edit label"
 
- 	button $w.expand.c -image $close \
+ 	button $w.expand.c -image $close_img \
  	    -anchor nw \
  	    -command "$this filter_Delete $which" \
  	    -relief flat
@@ -3961,7 +3916,7 @@ class BioImageApp {
 	
         set UnuCmedian [lindex [lindex $filters($which) $modules] 0]
 	global [set UnuCmedian]-radius
-        trace variable [set UnuCmedian]-radius w "$this enable_update"
+        trace variable [set UnuCmedian]-radius w "$this enable_update $which"
 
 	frame $w.ui.radius
 	pack $w.ui.radius -side top -anchor nw -expand yes -fill x
@@ -3980,14 +3935,7 @@ class BioImageApp {
     method add_Histo_UI {history row which} {
 	frame $history.$which
        	grid config $history.$which -column 0 -row $row -sticky "nw" -pady 0
-	
-	# Add eye radiobutton
-	global eye
-	radiobutton $history.$which.eye$which -text "" \
-	    -variable eye -value $which \
-	    -command "$this change_eye $which"
-
-	grid config $history.$which.eye$which -column 0 -row 0 -sticky "nw"
+	set updatecmd "$this enable_update $which"
 
 	iwidgets::labeledframe $history.$which.f$which \
 	    -labeltext "Histogram" \
@@ -4000,17 +3948,16 @@ class BioImageApp {
 	frame $w.expand
 	pack $w.expand -side top -anchor nw
 
-	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
-	set show [image create photo -file ${image_dir}/expand-icon-small.ppm]
-	set close [image create photo -file ${image_dir}/powerapp-close.ppm]
-	button $w.expand.b -image $show \
+
+	global expandimg close_img
+	button $w.expand.b -image $expandimg \
 	    -anchor nw \
 	    -command "$this change_visibility $which" \
 	    -relief flat
 	label $w.expand.l -text "Histogram - Unknown" -width $label_width \
 	    -anchor nw
 
- 	button $w.expand.c -image $close \
+ 	button $w.expand.c -image $close_img \
  	    -anchor nw \
  	    -command "$this filter_Delete $which" \
  	    -relief flat
@@ -4049,7 +3996,7 @@ class BioImageApp {
         pack $histo.graph
 
 	global [set UnuHeq]-amount
-        trace variable [set UnuHeq]-amount w "$this enable_update"
+        trace variable [set UnuHeq]-amount w $updatecmd
       
         if {!$loading_ui} {
    	    set [set UnuHeq]-amount 1.0
@@ -4065,24 +4012,24 @@ class BioImageApp {
 
         bind $w.ui.amount <ButtonPress-1> "$this check_crop"
 
-        global [set UnuQuantize]-minf [set UnuQuantize]-maxf
-        global [set UnuQuantize]-useinputmin [set UnuQuantize]-useinputmax
-        trace variable [set UnuQuantize]-minf w "$this enable_update"
-        trace variable [set UnuQuantize]-maxf w "$this enable_update"
-        trace variable [set UnuQuantize]-useinputmin w "$this enable_update"
-        trace variable [set UnuQuantize]-useinputmax w "$this enable_update"
+        global $UnuQuantize-minf $UnuQuantize-maxf
+        global $UnuQuantize-useinputmin $UnuQuantize-useinputmax
+        trace variable $UnuQuantize-minf w $updatecmd
+        trace variable $UnuQuantize-maxf w $updatecmd
+        trace variable $UnuQuantize-useinputmin w $updatecmd
+        trace variable $UnuQuantize-useinputmax w $updatecmd
 
         frame $w.ui.min -relief groove -borderwidth 2
 	pack $w.ui.min -side top -expand yes -fill x
 
         iwidgets::entryfield $w.ui.min.v -labeltext "Min:" \
-	    -textvariable [set UnuQuantize]-minf
+	    -textvariable $UnuQuantize-minf
         pack $w.ui.min.v -side top -expand yes -fill x
         bind $w.ui.min.v <ButtonPress-1> "$this check_crop"
 
         checkbutton $w.ui.min.useinputmin \
 	    -text "Use lowest value of input nrrd as min" \
-	    -variable [set UnuQuantize]-useinputmin
+	    -variable $UnuQuantize-useinputmin
         pack $w.ui.min.useinputmin -side top -expand yes -fill x
         bind $w.ui.min.useinputmin <ButtonPress-1> "$this check_crop"
 
@@ -4091,13 +4038,13 @@ class BioImageApp {
 	pack $w.ui.max -side top -expand yes -fill x
 
         iwidgets::entryfield $w.ui.max.v -labeltext "Max:" \
-	    -textvariable [set UnuQuantize]-maxf
+	    -textvariable $UnuQuantize-maxf
         pack $w.ui.max.v -side top -expand yes -fill x
         bind $w.ui.max.v <ButtonPress-1> "$this check_crop"
 
         checkbutton $w.ui.max.useinputmax \
 	    -text "Use highest value of input nrrd as max" \
-	    -variable [set UnuQuantize]-useinputmax
+	    -variable $UnuQuantize-useinputmax
         pack $w.ui.max.useinputmax -side top -expand yes -fill x
         bind $w.ui.max.useinputmax <ButtonPress-1> "$this check_crop"
 	
@@ -4203,89 +4150,54 @@ class BioImageApp {
 
 	set $ChooseNrrd--port-index $next_choose
 
-        global eye
-        set eye $next_filter
-	$this change_eye $next_filter
-
 	set grid_rows [expr $grid_rows - 1]
     }
 
     method update_changes {} {
 	set mod ""
 
-	$this check_crop
 
-        # for any crops in the pipeline that are still active, 
-	# save out crop pads for widgets
-  	for {set i 1} {$i < $num_filters} {incr i} {
-             if {[lindex $filters($i) $filter_type] == "crop" && 
-		 [lindex $filters($i) $which_row] != -1} {
-                 set UnuCrop [lindex [lindex $filters($i) $modules] 0]
-
-		 set bounds_set [lindex $filters($i) 11]
-		 set pad_vals ""
-		 if {$bounds_set == 1} {
-		     global [set UnuCrop]-minAxis0 [set UnuCrop]-maxAxis0
-		     global [set UnuCrop]-minAxis1 [set UnuCrop]-maxAxis1
-		     global [set UnuCrop]-minAxis2 [set UnuCrop]-maxAxis2
-		     set bounds [lindex $filters($i) 10]
-		     set bounds0 [lindex $bounds 0]
-		     set bounds1 [lindex $bounds 1]
-		     set bounds2 [lindex $bounds 2]
-
-		     set pad_vals [list [set [set UnuCrop]-minAxis0] \
-				       [expr $bounds0-[set [set UnuCrop]-maxAxis0]] \
-				       [set [set UnuCrop]-minAxis1] \
-				       [expr $bounds1-[set [set UnuCrop]-maxAxis1]] \
-				       [set [set UnuCrop]-minAxis2] \
-				       [expr $bounds2-[set [set UnuCrop]-maxAxis2]]]
-		     #$this update_crop $i
-		     if {$turn_off_crop == 1} {
-			 $this update_crop $i
-		     }
-		 } else {
-		     set pad_vals [list 0 0 0 0 0 0]
-		 }
-		 set filters($i) [lreplace $filters($i) 12 12 $pad_vals]
-  	    }
-  	}
-
-	if {$has_executed == 1} {
-            if {$grid_rows == 1} {
-		$this execute_Data
-	    } else {
-	        # find first valid filter and execute that
- 	        for {set i 1} {$i < $num_filters} {incr i} {
-                    if {[info exists filters($i)]} {
-		        set tmp_row [lindex $filters($i) $which_row]
-		        if {$tmp_row != -1} {
-			    set mod [lindex [lindex $filters($i) $input] 0]
- 	  	   	    break
-	 	        }
-		    }
-                }
-		$mod-c needexecute
-            }
-           set has_executed 1
-	} else {
-            $this set_viewer_position
-            $this execute_Data
+	if { !$has_executed } {
+	    $this execute_Data
+	    $this disable_update
+	    return
 	}
 
-        if {$has_executed == 1} {
-            $this disable_update
-        }
+	global eye
+	if { $last_filter_changed == [expr $eye+1] } {
+	    set eye $last_filter_changed
+	    change_eye 0
+	}
+
+	if {$grid_rows == 1} {
+	    $this execute_Data
+	} else {
+	    # find first valid filter and execute that
+	    for {set i 1} {$i < $num_filters} {incr i} {
+		if {[info exists filters($i)]} {
+		    set tmp_row [lindex $filters($i) $which_row]
+		    if {$tmp_row != -1} {
+			set mod [lindex [lindex $filters($i) $input] 0]
+			break
+		    }
+		}
+	    }
+	    $mod-c needexecute
+	}
+	
+	$this disable_update
     }
 
-    method disable_update {} {
+    method disable_update { args } {
 	set needs_update 0
         # grey out update button
         $attachedPFr.f.p.update configure -background "grey75" -state disabled
         $detachedPFr.f.p.update configure -background "grey75" -state disabled
     }
 
-    method enable_update {a b c} {
+    method enable_update { which args } {
 	set needs_update 1
+	set last_filter_changed $which
         # fix  update button
         $attachedPFr.f.p.update configure -background "#008b45" -state normal
         $detachedPFr.f.p.update configure -background "#008b45" -state normal
@@ -4351,16 +4263,13 @@ class BioImageApp {
 	}
     }
 
-    method change_eye {which} {
-
-	$this check_crop
-
+    method change_eye { {execute 1 } } {
+	global eye
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis] 
-        set port [lindex $filters($which) $choose_port]
-        global [set ChooseNrrd]-port-index
-        set [set ChooseNrrd]-port-index $port
-
-        $this enable_update 1 2 3
+	setGlobal $ChooseNrrd-port-index [lindex $filters($eye) $choose_port]
+	if { $execute } {
+	    $ChooseNrrd-c needexecute
+	}
     }
 
     method change_label {x y which} {
@@ -4419,14 +4328,12 @@ class BioImageApp {
         $this check_crop
 
 	set visible [lindex $filters($num) $visibility]
-	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
-	set hide [image create photo -file ${image_dir}/expand-icon-small.ppm]
-	set show [image create photo -file ${image_dir}/play-icon-small.ppm]
+	global expandimg play_img
 	if {$visible == 1} {
 	    # hide
 
-	    $history0.$num.f$num.childsite.expand.b configure -image $show
-	    $history1.$num.f$num.childsite.expand.b configure -image $show
+	    $history0.$num.f$num.childsite.expand.b configure -image $play_img
+	    $history1.$num.f$num.childsite.expand.b configure -image $play_img
 	    
 	    pack forget $history0.$num.f$num.childsite.ui 
 	    pack forget $history1.$num.f$num.childsite.ui 
@@ -4435,8 +4342,8 @@ class BioImageApp {
 	} else {
 	    # show
 
-	    $history0.$num.f$num.childsite.expand.b configure -image $hide
-	    $history1.$num.f$num.childsite.expand.b configure -image $hide
+	    $history0.$num.f$num.childsite.expand.b configure -image $expandimg
+	    $history1.$num.f$num.childsite.expand.b configure -image $expandimg
 
 	    pack $history0.$num.f$num.childsite.ui -side top -expand yes -fill both
 	    pack $history1.$num.f$num.childsite.ui -side top -expand yes -fill both
@@ -4452,44 +4359,36 @@ class BioImageApp {
     ##################################
     # Update the resampling kernel variable and
     # update the other attached/detached optionmenu
-    method change_kernel { w num} {
+    method change_kernel { w which } {
+#        $this check_crop
+	set UnuResample [lindex [lindex $filters($which) $modules] 0]
+	set num [$w get]
 
-        $this check_crop
-
-	set UnuResample [lindex [lindex $filters($num) $modules] 0]
-
-        global [set UnuResample]-filtertype
-	
-	set which [$w get]
-
-	if {$which == "Box"} {
-	    set [set UnuResample]-filtertype box
-	} elseif {$which == "Tent"} {
-	    set [set UnuResample]-filtertype tent
-	} elseif {$which == "Cubic (Catmull-Rom)"} {
-	    set [set UnuResample]-filtertype cubicCR
-	} elseif {$which == "Cubic (B-spline)"} {
-	    set [set UnuResample]-filtertype cubicBS
-	} elseif {$which == "Quartic"} {
-	    set [set UnuResample]-filtertype quartic
-	} elseif {$which == "Gaussian"} {
-	    set [set UnuResample]-filtertype gaussian
+	if {$num == "Box"} {
+	    setGlobal $UnuResample-filtertype box
+	} elseif {$num == "Tent"} {
+	    setGlobal $UnuResample-filtertype tent
+	} elseif {$num == "Cubic (Catmull-Rom)"} {
+	    setGlobal $UnuResample-filtertype cubicCR
+	} elseif {$num == "Cubic (B-spline)"} {
+	    setGlobal $UnuResample-filtertype cubicBS
+	} elseif {$num == "Quartic"} {
+	    setGlobal $UnuResample-filtertype quartic
+	} elseif {$num == "Gaussian"} {
+	    setGlobal $UnuResample-filtertype gaussian
 	}
 
-        $this enable_update 1 2 3
+        $this enable_update $which
 
 	# update attach/detach one
-        $history0.$num.f$num.childsite.ui.kernel select $which
-	$history1.$num.f$num.childsite.ui.kernel select $which
+        $history0.$which.f$which.childsite.ui.kernel select $which
+	$history1.$which.f$which.childsite.ui.kernel select $which
 
     }
 
     method update_kernel { num } {
 	set UnuResample [lindex [lindex $filters($num) $modules] 0]
-
-        global [set UnuResample]-filtertype
-
-        set f [set [set UnuResample]-filtertype]
+        upvar \#0 $UnuResample-filtertype f
         set t "Box"
   
         if {$f == "box"} {
@@ -4859,9 +4758,6 @@ class BioImageApp {
 
         set loading_ui 0
 
-        global eye
-        $this change_eye $eye
-
  	# set a few variables that need to be reset
  	set indicate 0
  	set cycle 0
@@ -4952,7 +4848,7 @@ class BioImageApp {
         global planes_mapType
         set GenStandard [lindex [lindex $filters(0) $modules] 26]
 	setGlobal $GenStandard-mapType $planes_mapType
-        if {!$loading && $has_executed == 1} {
+        if {!$loading && $has_executed} {
 	    $GenStandard-c needexecute
 	}
     }
@@ -5015,21 +4911,6 @@ class BioImageApp {
 
     method set_saved_class_var {var val} {
 	set $var $val
-    }
-
-    method set_viewer_position {} {
-	global mods
-	set vw $mods(Viewer)-ViewWindow_0
-   	setGlobal $vw-view-eyep-x {560.899236544}
-        setGlobal $vw-view-eyep-y {356.239586973}
-        setGlobal $vw-view-eyep-z {178.810334192}
-        setGlobal $vw-view-lookat-x {51.5}
-        setGlobal $vw-view-lookat-y {47.0}
-        setGlobal $vw-view-lookat-z {80.5}
-        setGlobal $vw-view-up-x {-0.181561715965}
-        setGlobal $vw-view-up-y {0.0242295849764}
-        setGlobal $vw-view-up-z {0.983081009128}
-        setGlobal $vw-view-fov {20.0}
     }
 
     method scroll_history {p which} {
@@ -5141,6 +5022,7 @@ class BioImageApp {
     variable data_dir
     variable 2D_fixed
     variable ViewSlices_executed_on_error
+    variable last_filter_changed
     variable current_crop
     variable turn_off_crop
     variable updating_crop_ui
