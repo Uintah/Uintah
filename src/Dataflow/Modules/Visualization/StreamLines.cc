@@ -41,17 +41,6 @@
 
 namespace SCIRun {
 
-// LUTs for the RK-fehlberg algorithm 
-const double a[]  ={16.0/135, 0, 6656.0/12825, 28561.0/56430, -9.0/50, 2.0/55};
-const double ab[]  ={1.0/360, 0, -128.0/4275, -2197.0/75240, 1.0/50, 2.0/55};
-  //const double c[]   ={0, 1.0/4, 3.0/8, 12.0/13, 1.0, 1.0/2}; /* not used */
-const double d[][5]={{0, 0, 0, 0, 0},
-		     {1.0/4, 0, 0, 0, 0},
-		     {3.0/32, 9.0/32, 0, 0, 0},
-		     {1932.0/2197, -7200.0/2197, 7296.0/2197, 0, 0},
-		     {439.0/216, -8.0, 3680.0/513, -845.0/4104, 0},
-		     {-8.0/27, 2.0, -3544.0/2565, 1859.0/4104, -11.0/40}};
-
 class PSECORESHARE StreamLines : public Module {
 public:
   StreamLines(GuiContext* ctx);
@@ -80,9 +69,10 @@ private:
   GuiInt                        direction_;
   GuiInt                        color_;
   GuiInt                        remove_colinear_;
+  GuiInt                        method_;
 };
 
-  DECLARE_MAKER(StreamLines)
+DECLARE_MAKER(StreamLines)
 
 StreamLines::StreamLines(GuiContext* ctx) : 
   Module("StreamLines", ctx, Source, "Visualization", "SCIRun"),
@@ -93,7 +83,8 @@ StreamLines::StreamLines(GuiContext* ctx) :
   maxsteps_(ctx->subVar("maxsteps")),
   direction_(ctx->subVar("direction")),
   color_(ctx->subVar("color")),
-  remove_colinear_(ctx->subVar("remove-colinear"))
+  remove_colinear_(ctx->subVar("remove-colinear")),
+  method_(ctx->subVar("method"))
 {
 }
 
@@ -104,19 +95,26 @@ StreamLines::~StreamLines()
 
 //! interpolate using the generic linear interpolator
 static bool
-interpolate(VectorFieldInterface *vfi,
-	    const Point &p, Vector &v)
+interpolate(VectorFieldInterface *vfi, const Point &p, Vector &v)
 {
-  if (vfi->interpolate(v,p))
-  {
-    if (v.safe_normalize() > 0.0)
-    {
-      return true;
-    }
-  }
-  return false;
+  return vfi->interpolate(v, p) && (v.safe_normalize() > 0.0);
 }
 
+
+// LUTs for the RK-fehlberg algorithm 
+static const double rkf_a[] =
+  {16.0/135, 0, 6656.0/12825, 28561.0/56430, -9.0/50, 2.0/55};
+static const double rkf_ab[] =
+  {1.0/360, 0, -128.0/4275, -2197.0/75240, 1.0/50, 2.0/55};
+static const double rkf_c[] =
+  {0, 1.0/4, 3.0/8, 12.0/13, 1.0, 1.0/2}; /* not used */
+static const double rkf_d[][5]=
+  {{0, 0, 0, 0, 0},
+   {1.0/4, 0, 0, 0, 0},
+   {3.0/32, 9.0/32, 0, 0, 0},
+   {1932.0/2197, -7200.0/2197, 7296.0/2197, 0, 0},
+   {439.0/216, -8.0, 3680.0/513, -845.0/4104, 0},
+   {-8.0/27, 2.0, -3544.0/2565, 1859.0/4104, -11.0/40}};
 
 static int
 ComputeRKFTerms(vector<Vector> &v, // storage for terms
@@ -124,39 +122,42 @@ ComputeRKFTerms(vector<Vector> &v, // storage for terms
 		double s,          // current step size
 		VectorFieldInterface *vfi)
 {
-  if (!interpolate(vfi, p, v[0]))
-  {
-    return -1;
-  }
+  // Already computed this one when we did the inside test.
+  //  if (!interpolate(vfi, p, v[0]))
+  //  {
+  //    return -1;
+  //  }
   v[0] *= s;
   
-  if (!interpolate(vfi, p + v[0]*d[1][0], v[1]))
+  if (!interpolate(vfi, p + v[0]*rkf_d[1][0], v[1]))
   {
     return 0;
   }
   v[1] *= s;
   
-  if (!interpolate(vfi, p + v[0]*d[2][0] + v[1]*d[2][1], v[2]))
+  if (!interpolate(vfi, p + v[0]*rkf_d[2][0] + v[1]*rkf_d[2][1], v[2]))
   {
     return 1;
   }
   v[2] *= s;
   
-  if (!interpolate(vfi, p + v[0]*d[3][0] + v[1]*d[3][1] + v[2]*d[3][2], v[3]))
+  if (!interpolate(vfi, p + v[0]*rkf_d[3][0] + v[1]*rkf_d[3][1] +
+		   v[2]*rkf_d[3][2], v[3]))
   {
     return 2;
   }
   v[3] *= s;
   
-  if (!interpolate(vfi, p + v[0]*d[4][0] + v[1]*d[4][1] + v[2]*d[4][2] + 
-		   v[3]*d[4][3], v[4]))
+  if (!interpolate(vfi, p + v[0]*rkf_d[4][0] + v[1]*rkf_d[4][1] +
+		   v[2]*rkf_d[4][2] + v[3]*rkf_d[4][3], v[4]))
   {
     return 3;
   }
   v[4] *= s;
   
-  if (!interpolate(vfi, p + v[0]*d[5][0] + v[1]*d[5][1] + v[2]*d[5][2] + 
-		   v[3]*d[5][3] + v[4]*d[5][4], v[5]))
+  if (!interpolate(vfi, p + v[0]*rkf_d[5][0] + v[1]*rkf_d[5][1] +
+		   v[2]*rkf_d[5][2] + v[3]*rkf_d[5][3] +
+		   v[4]*rkf_d[5][4], v[5]))
   {
     return 4;
   }
@@ -166,21 +167,19 @@ ComputeRKFTerms(vector<Vector> &v, // storage for terms
 }
 
 
-
-void
-StreamLinesAlgo::FindStreamLineNodes(vector<Point> &v, // storage for points
-				     Point x,          // initial point
-				     double t2,       // square error tolerance
-				     double s,         // initial step size
-				     int n,            // max number of steps
-				     VectorFieldInterface *vfi, // the field
-				     bool remove_colinear_p)
+static void
+FindRKF(vector<Point> &v, // storage for points
+	Point x,          // initial point
+	double t2,       // square error tolerance
+	double s,         // initial step size
+	int n,            // max number of steps
+	VectorFieldInterface *vfi) // the field
 {
   vector <Vector> terms(6, Vector(0.0, 0.0, 0.0));
 
+  if (!interpolate(vfi, x, terms[0])) { return; }
   for (int i=0; i<n; i++)
   {
-
     // Compute the next set of terms.
     int tmp = ComputeRKFTerms(terms, x, s, vfi);
     if (tmp == -1)
@@ -194,59 +193,189 @@ StreamLinesAlgo::FindStreamLineNodes(vector<Point> &v, // storage for points
     }
 
     // Compute the approximate local truncation error.
-    const Vector err = terms[0]*ab[0] + terms[1]*ab[1] + terms[2]*ab[2]
-      + terms[3]*ab[3] + terms[4]*ab[4] + terms[5]*ab[5];
+    const Vector err = terms[0]*rkf_ab[0] + terms[1]*rkf_ab[1]
+      + terms[2]*rkf_ab[2] + terms[3]*rkf_ab[3] + terms[4]*rkf_ab[4]
+      + terms[5]*rkf_ab[5];
     const double err2 = err.x()*err.x() + err.y()*err.y() + err.z()*err.z();
     
     // Is the error tolerable?  Adjust the step size accordingly.
-    if (err2 * 16384.0 < t2) // err < t/128.0
+    if (err2 * 16384.0 < t2)
     {
-      s *= 2;
+      s *= 2.0;
     }
     else if (err2 > t2)
     {
-      s /= 2;
+      s /= 2.0;
       continue;
     }
 
     // Compute and add the point to the list of points found.
-    x = x  +  terms[0]*a[0] + terms[1]*a[1] + terms[2]*a[2] + 
-      terms[3]*a[3] + terms[4]*a[4] + terms[5]*a[5];
+    x = x  +  terms[0]*rkf_a[0] + terms[1]*rkf_a[1] + terms[2]*rkf_a[2] + 
+      terms[3]*rkf_a[3] + terms[4]*rkf_a[4] + terms[5]*rkf_a[5];
 
     // If the new point is inside the field, add it.  Otherwise stop.
-    Vector xv;
-    if (vfi->interpolate(xv, x))
+    if (!interpolate(vfi, x, terms[0])) { break; }
+    v.push_back(x);
+  }
+}
+
+
+static void
+FindHeun(vector<Point> &v, // storage for points
+	 Point x,          // initial point
+	 double t2,       // square error tolerance
+	 double s,         // initial step size
+	 int n,            // max number of steps
+	 VectorFieldInterface *vfi) // the field
+{
+  int i;
+  Vector v0, v1;
+
+  if (!interpolate(vfi, x, v0)) { return; }
+  for (i=0; i < n; i ++)
+  {
+    v0 *= s;
+    if (!interpolate(vfi, x + v0, v1)) { break; }
+    v1 *= s;
+    x += 0.5 * (v0 + v1);
+
+    if (!interpolate(vfi, x, v0)) { break; }
+    v.push_back(x);
+  }
+}
+
+
+static void
+FindRK4(vector<Point> &v,
+	Point x,
+	double t2,
+	double s,
+	int n,
+	VectorFieldInterface *vfi)
+{
+  vector<Vector> terms(6, Vector(0.0, 0.0, 0.0));
+  Vector f[4];
+  int i;
+
+  if (!interpolate(vfi, x, f[0])) { return; }
+  for (i = 0; i < n; i++)
+  {
+    f[0] *= s;
+    if (!interpolate(vfi, x + f[0] * 0.5, f[1])) { break; }
+    f[1] *= s;
+    if (!interpolate(vfi, x + f[1] * 0.5, f[2])) { break; }
+    f[2] *= s;
+    if (!interpolate(vfi, x + f[2], f[3])) { break; }
+    f[3] *= s;
+
+    x += (f[0] + 2.0 * f[1] + 2.0 * f[2] + f[3]) * (1.0 / 6.0);
+
+    // If the new point is inside the field, add it.  Otherwise stop.
+    if (!interpolate(vfi, x, f[0])) { break; }
+    v.push_back(x);
+  }
+}
+
+
+static void
+FindAdamsBashforth(vector<Point> &v, // storage for points
+		   Point x,          // initial point
+		   double t2,       // square error tolerance
+		   double s,         // initial step size
+		   int n,            // max number of steps
+		   VectorFieldInterface *vfi) // the field
+{
+  FindRK4(v, x, t2, s, Min(n, 5), vfi);
+  if (v.size() < 5) { return; }
+  Vector f[5];
+  int i;
+
+  for (i = 0; i < 5; i++)
+  {
+    interpolate(vfi, v[v.size() - 1 - i], f[i]);
+  }
+  x = v[v.size() - 1];
+
+  for (i = 5; i < n; i++)
+  {
+    x += (s/720.) * (1901.0 * f[0] - 2774.0 * f[1] +
+		     2616.0 * f[2] - 1274.0 * f[3] +
+		     251.0 * f[4]);
+
+    f[4] = f[3];
+    f[3] = f[2];
+    f[2] = f[1];
+    f[1] = f[0];
+    if (!interpolate(vfi, x, f[0])) { break; }
+    v.push_back(x);
+  }
+}
+
+
+static void
+CleanupPoints(vector<Point> &v, const vector<Point> &input, double e2)
+{
+  unsigned int i, j;
+  v.push_back(input[0]);
+  j = 0;
+  for (i=1; i < input.size()-1; i++)
+  {
+    const Vector v0 = input[i] - v[j];
+    const Vector v1 = input[i] - input[i+1];
+    if (Cross(v0, v1).length2() > e2 && Dot(v0, v1) < 0.0)
     {
-      if (remove_colinear_p && v.size() > 1)
-      {
-	const Vector a = v[v.size()-2] - v[v.size()-1];
-	const Vector b = x - v[v.size()-1];
-	if (Cross(a, b).length2() > 1.0e-12 && Dot(a, b) < 0.0)
-	{
-	  // Not colinear, push.
-	  v.push_back(x);
-	}
-	else
-	{
-	  // Colinear, replace.
-	  v[v.size()-1] = x;
-	}
-      }
-      else
-      {
-	v.push_back(x);
-      }
+      v.push_back(input[i]);
+      j++;
     }
-    else
-    {
-      break;
-    }
+  }
+  if (input.size() > 1) v.push_back(input[input.size()-1]);
+}
+
+
+
+void
+StreamLinesAlgo::FindNodes(vector<Point> &v, // storage for points
+			   Point x,          // initial point
+			   double t2,       // square error tolerance
+			   double s,         // initial step size
+			   int n,            // max number of steps
+			   VectorFieldInterface *vfi, // the field
+			   bool remove_colinear_p,
+			   int method)
+{
+  if (method == 0)
+  {
+    FindAdamsBashforth(v, x, t2, s, n, vfi);
+  }
+  else if (method == 1)
+  {
+    // TODO: Implement AdamsMoulton
+  }
+  else if (method == 2)
+  {
+    FindHeun(v, x, t2, s, n, vfi);
+  }
+  else if (method == 3)
+  {
+    FindRK4(v, x, t2, s, n, vfi);
+  }
+  else if (method == 4)
+  {
+    FindRKF(v, x, t2, s, n, vfi);
+  }
+
+  if (remove_colinear_p)
+  {
+    vector<Point> tmp;
+    CleanupPoints(tmp, v, t2);
+    v = tmp;
   }
 }
 
 
 
-void StreamLines::execute()
+void
+StreamLines::execute()
 {
   vfport_ = (FieldIPort*)get_iport("Flow field");
   sfport_ = (FieldIPort*)get_iport("Seeds");
@@ -277,7 +406,7 @@ void StreamLines::execute()
   }
   
   // Check that the flow field input is a vector field.
-  VectorFieldInterface *vfi = vf_->query_vector_interface();
+  VectorFieldInterface *vfi = vf_->query_vector_interface(this);
   if (!vfi) {
     error("FlowField is not a Vector field.  Exiting.");
     return;
@@ -307,7 +436,8 @@ void StreamLines::execute()
 
   oport_->send(algo->execute(sf_->mesh(), vfi,
 			     tolerance, stepsize, maxsteps, direction, color,
-			     remove_colinear_.get()));
+			     remove_colinear_.get(),
+			     method_.get()));
 }
 
 

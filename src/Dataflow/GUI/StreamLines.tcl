@@ -33,7 +33,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 
     method set_defaults {} {
 	set $this-tolerance 0.0001
-	set $this-stepsize 0.0001
+	set $this-stepsize 0.01
 	set $this-maxsteps 2000
 	set $this-direction 1
 	set $this-color 1
