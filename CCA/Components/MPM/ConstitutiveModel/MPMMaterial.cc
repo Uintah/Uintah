@@ -359,7 +359,6 @@ particleIndex MPMMaterial::countParticles(GeometryObject* obj,
 	 }
       }
    }
-   cerr << "Creating " << count << " particles on patch: " << patch->getID() << '\n';
    return count;
 }
 
