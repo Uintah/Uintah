@@ -59,7 +59,9 @@ public:
   NrrdOPort*      onrrd_;
 
   GuiInt       min_;
+  GuiInt       useinputmin_;
   GuiInt       max_;
+  GuiInt       useinputmax_;
   GuiInt       double_;
 };
 
@@ -68,7 +70,9 @@ DECLARE_MAKER(UnuUnquantize)
 UnuUnquantize::UnuUnquantize(GuiContext* ctx)
   : Module("UnuUnquantize", ctx, Source, "UnuNtoZ", "Teem"),
     min_(ctx->subVar("min")),
+    useinputmin_(ctx->subVar("useinputmin")),
     max_(ctx->subVar("max")),
+    useinputmax_(ctx->subVar("useinputmax")),
     double_(ctx->subVar("double"))
 {
 }
@@ -107,12 +111,12 @@ void
   Nrrd* copy = nrrdNew();
   nrrdCopy(copy, nin);
 
-  if (min_.get() != -1)
+  if (!useinputmin_.get())
     copy->oldMin = min_.get();
   else
     copy->oldMin = nin->oldMin;
 
-  if (max_.get() != -1)
+  if (!useinputmax_.get())
     copy->oldMax = max_.get();
   else 
     copy->oldMax = nin->oldMax;
