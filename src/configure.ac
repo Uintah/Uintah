@@ -212,6 +212,12 @@ SCI_ARG_WITH(lapack,
   [with_lapack="$withval"
    sci_required_lapack=yes],
   [with_lapack=""])
+SCI_ARG_WITH(fortran,
+  AC_HELP_STRING(--with-fortran=DIR, 
+                 Use the fortran (eg: g2c) installation in DIR/lib),
+  [with_fortran="$withval"
+   sci_required_fortran=yes],
+  [with_fortran=""])
 SCI_ARG_WITH(mpi,
   AC_HELP_STRING(--with-mpi=DIR,
                  Use the mpi installation in DIR),
@@ -2206,36 +2212,47 @@ AC_SUBST(INC_UNP_H)
 
 F_LIB_FLAG=""
 
+_sci_lib=
+_sci_inc=
 _sci_optional=optional
-if test $sci_required_fortran = "yes"; then
+
+if test "$sci_required_fortran" = "yes"; then
   _sci_optional=required
+fi
+
+if test "$with_fortran" = "yes"; then
+  _sci_optional=required
+elif test "$with_fortran"; then
+  _sci_lib="$with_fortran/lib"
+  _sci_inc="$with_fortran/include"
+  _sci_optional=specific
 fi
 
 case $host in 
   *-irix*)
-    SCI_TRY_LINK(F,fortran libraries,,,ftn fortran,,,,$_sci_optional)
+    SCI_TRY_LINK(F,fortran libraries,,,ftn fortran,$_sci_lib,,,$_sci_optional)
     ;;
   *aix*)
     # AIX Fortran Library Check
-    SCI_TRY_LINK(F,fortran libraries,,,xlf90,,,,$_sci_optional)
+    SCI_TRY_LINK(F,fortran libraries,,,xlf90,$_sci_lib,,,$_sci_optional)
     ;;
   *linux*)
     # Linux Library Check
     if test "$F77" = "pgf77"; then
-      SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,,,,$_sci_optional)
+      SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,,,$_sci_optional)
     else
-      SCI_TRY_LINK(F,fortran libraries,,,g2c,,,,$_sci_optional)
+      SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
     fi
     ;;
   *dec*)
-    SCI_TRY_LINK(F,fortran libraries,,,for Ufor,,,,$_sci_optional)
+    SCI_TRY_LINK(F,fortran libraries,,,for Ufor,$_sci_lib,,,$_sci_optional)
     ;;
   *-darwin*)
     # OSX Library Check
-    SCI_TRY_LINK(F,fortran libraries,,,g2c,,,,$_sci_optional)
+    SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
     ;;
   *)
-    SCI_TRY_LINK(F,fortran libraries,,,F77,,,,$_sci_optional)
+    SCI_TRY_LINK(F,fortran libraries,,,F77,$_sci_lib,,,$_sci_optional)
     ;;
 esac
 
@@ -3220,45 +3237,47 @@ sci_defs_files="$sci_defs_files include/sci_defs/audio_testdefs.h"
 
 ##  --  search for teem  -------------------------------------------------
 
-if test "$sci_required_teem" = "yes"; then
+# Default values:
+_sci_optional=required
+_sci_lib="$sci_thirdparty_lib"
+_sci_inc="$sci_thirdparty_include"
 
-  if test "$with_teem"; then
-    _sci_lib="$with_teem/lib"
+if test "$with_teem"; then
+  if test "$with_teem" != "yes"; then
+    # If --with-teem has a parameter, then use it
+    _sci_lib="$with_teem"
     _sci_inc="$with_teem/include"
-  else
-    _sci_lib="$sci_thirdparty_lib"
-    _sci_inc="$sci_thirdparty_include"
-  fi
-  _sci_optional=required
-  
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
+    _sci_optional=specific
+  fi 
+else
   if test "$pkg_rtrt" = "yes" && test "$pkg_BioPSE" != "yes" && test "$pkg_teem" != "yes" && test "$pkg_MatlabInterface" != "yes" && test "$pkg_Uintah" != "yes"; then
      _sci_optional=optional
   fi
+fi
 
-  # Determine if teem is using png.  Assume teem is either in the 3rd Party
-  # or where the user has specified (as we are going to use nm to look at its
-  # symbols and are not trying to link against it (at this point.))
+# Determine if teem is using png.  Assume teem is either in the 3rd Party
+# or where the user has specified (as we are going to use nm to look at its
+# symbols and are not trying to link against it (at this point.))
 
-  result=`nm $_sci_lib/libteem.a | grep png_write_info`
-  if test _sci_optional != "optional" && test -n "$result" && test "$HAVE_PNG" != "yes"; then
-     AC_MSG_WARN(Teem was built with PNG support.  However the SCIRun configure)
-     AC_MSG_WARN(did not find PNG.  You need to determine where it is... as)
-     AC_MSG_WARN(Teem seems to have found it already.  You will most likely then need)
-     AC_MSG_WARN(to use --with-png=/dir/above/dir/having/libpng on your configure line.)
-     AC_MSG_ERROR(Please fix this problem and then configure again.)
-  fi
+result=`nm $_sci_lib/libteem.a | grep png_write_info`
+if test _sci_optional != "optional" && test -n "$result" && test "$HAVE_PNG" != "yes"; then
+   AC_MSG_WARN(Teem was built with PNG support.  However the SCIRun configure)
+   AC_MSG_WARN(did not find PNG.  You need to determine where it is... as)
+   AC_MSG_WARN(Teem seems to have found it already.  You will most likely then need)
+   AC_MSG_WARN(to use --with-png=/dir/above/dir/having/libpng on your configure line.)
+   AC_MSG_ERROR(Please fix this problem and then configure again.)
+fi
 
-  SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h,$_sci_inc,teem $PNG_LIB_FLAG $Z_LIB_FLAG -lm,$_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG,,,$_sci_optional)
+SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h,$_sci_inc,teem $PNG_LIB_FLAG $Z_LIB_FLAG -lm,$_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG,,,$_sci_optional)
 
-  if test "$HAVE_TEEM" = "yes"; then
-     DEF_TEEM="#define HAVE_TEEM 1"
-  fi
+if test "$HAVE_TEEM" = "yes"; then
+   DEF_TEEM="#define HAVE_TEEM 1"
+fi
 
-  if test "$with_teem" && test ! "$DEF_TEEM"; then
-    echo
-    AC_MSG_ERROR(One or more of the TEEM components is missing.)
-    echo
-  fi
+if test "$with_teem" && test ! "$DEF_TEEM"; then
+  echo
+  AC_MSG_ERROR(One or more of the TEEM components is missing.)
 fi
 
 AC_SUBST(HAVE_TEEM)
