@@ -22,12 +22,14 @@ using SCICore::Math::Min;
 using SCICore::Math::Max;
 using SCICore::Geometry::Vector;
 
+// Material Constants are C1, C2 and PR (poisson's ratio).  
+// The shear modulus = 2(C1 + C2).
+
 CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps)
 {
   ps->require("he_constant_1",d_initialData.C1);
   ps->require("he_constant_2",d_initialData.C2);
-  ps->require("he_constant_3",d_initialData.C3);
-  ps->require("he_constant_4",d_initialData.C4);
+  ps->require("he_PR",d_initialData.PR);
   p_cmdata_label = scinew VarLabel("p.cmdata",
 				ParticleVariable<CMData>::getTypeDescription());
   p_cmdata_label_preReloc = scinew VarLabel("p.cmdata+",
@@ -86,30 +88,32 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
   new_dw->get(pmass, lb->pMassLabel, pset);
   ParticleVariable<double> pvolume;
   new_dw->get(pvolume, lb->pVolumeLabel, pset);
+  ParticleVariable<Vector> pvelocity;
+  new_dw->get(pvelocity, lb->pVelocityLabel, pset);
 
-  double c_dil = 0.0,c_rot = 0.0;
+  double c_dil = 0.0;
+  Vector WaveSpeed(0.0,0.0,0.0);
+
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
      particleIndex idx = *iter;
 
      double C1 = cmdata[idx].C1;
      double C2 = cmdata[idx].C2;
-     double C4 = cmdata[idx].C4;
+     double PR = cmdata[idx].PR;
 
-     // Compute wave speed at each particle, store the maximum
+     // Compute wave speed + particle velocity at each particle, 
+     // store the maximum
      double mu = 2.*(C1 + C2);
-     double PR = (2.*C1 + 5.*C2 + 2.*C4) / (4.*C4 + 5.*C1 + 11.*C2);
-     double lambda = 2.*mu*(1.+PR)/(3.*(1.-2.*PR)) - (2./3.)*mu;
-     c_dil = Max(c_dil,(lambda + 2.*mu)*pvolume[idx]/pmass[idx]);
-     c_rot = Max(c_rot, mu*pvolume[idx]/pmass[idx]);
+     double C4 = .5*(C1*(5.*PR-2) + C2*(11.*PR-5)) / (1. - 2.*PR);
+     c_dil = sqrt(2.*mu*(1.- PR)*pvolume[idx]/((1.-2.*PR)*pmass[idx]));
+     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+		      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+		      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
     }
-    double WaveSpeed = sqrt(Max(c_rot,c_dil));
-    // Fudge factor added, just in case
-    double delT_new;
-    if(WaveSpeed < 1.e-12)
-       delT_new = MAXDOUBLE;
-    else
-       delT_new = Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
+    WaveSpeed = dx/WaveSpeed;
+    double delT_new = WaveSpeed.minComponent();
+    if(delT_new < 1.e-12) delT_new = MAXDOUBLE;
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
@@ -121,7 +125,8 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
   Matrix3 Identity,deformationGradientInc,B,velGrad;
   double invar1,invar2,invar3,J,w1,w2,w3,i3w3,w1pi1w2;
   Identity.Identity();
-  double c_dil = 0.0,c_rot = 0.0,se=0.0;
+  double c_dil = 0.0,se=0.0;
+  Vector WaveSpeed(0.0,0.0,0.0);
 
   Vector dx = patch->dCell();
   double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
@@ -148,6 +153,8 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
   old_dw->get(pmass, lb->pMassLabel, pset);
   ParticleVariable<double> pvolume;
   old_dw->get(pvolume, lb->pVolumeLabel, pset);
+  ParticleVariable<Vector> pvelocity;
+  old_dw->get(pvelocity, lb->pVelocityLabel, pset);
   ParticleVariable<double> pvolumedef;
   new_dw->allocate(pvolumedef, lb->pVolumeDeformedLabel, pset);
 
@@ -203,8 +210,9 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 
       double C1 = cmdata[idx].C1;
       double C2 = cmdata[idx].C2;
-      double C3 = cmdata[idx].C3;
-      double C4 = cmdata[idx].C4;
+      double C3 = .5*C1 + C2;
+      double PR = cmdata[idx].PR;
+      double C4 = .5*(C1*(5.*PR-2) + C2*(11.*PR-5)) / (1. - 2.*PR);
 
       w1 = C1;
       w2 = C2;
@@ -216,13 +224,16 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 
       pstress[idx]=(B*w1pi1w2 - (B*B)*w2 + Identity*i3w3)*2.0/J;
 
-      // Compute wave speed at each particle, store the maximum
-      double mu = 2.*(C1 + C2);
-      double PR = (2.*C1 + 5.*C2 + 2.*C4)/
-		(4.*C4 + 5.*C1 + 11.*C2);
-      double lambda = 2.*mu*(1.+PR)/(3.*(1.-2.*PR)) - (2./3.)*mu;
-      c_dil = Max(c_dil,(lambda + 2.*mu)*pvolume[idx]/pmass[idx]);
-      c_rot = Max(c_rot, mu*pvolume[idx]/pmass[idx]);
+      // Compute wave speed + particle velocity at each particle, 
+      // store the maximum
+      c_dil = sqrt((4.*(C1+C2*invar2)/J
+		    +8.*(2.*C3/(invar3*invar3*invar3)+C4*(2.*invar3-1.))
+		    -Min((pstress[idx])(1,1),(pstress[idx])(2,2)
+			 ,(pstress[idx])(3,3))/J)
+		   *pvolume[idx]/pmass[idx]);
+      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+		     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+		     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
 
       // Compute the strain energy for all the particles
       se += (C1*(invar1-3.0) + C2*(invar2-3.0) +
@@ -230,13 +241,9 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
             C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx];
       pvolumedef[idx]=pvolume[idx];
     }
-    double WaveSpeed = sqrt(Max(c_rot,c_dil));
-    // Fudge factor added, just in case
-    double delT_new;
-    if(WaveSpeed < 1.e-12)
-       delT_new = MAXDOUBLE;
-    else
-       delT_new = Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
+    WaveSpeed = dx/WaveSpeed;
+    double delT_new = WaveSpeed.minComponent();
+    if(delT_new < 1.e-12) delT_new = MAXDOUBLE;
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
     new_dw->put(pstress, lb->pStressLabel_preReloc);
     new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
@@ -342,7 +349,7 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 {
    static TypeDescription* td = 0;
    if(!td){
-      ASSERTEQ(sizeof(CompMooneyRivlin::CMData), sizeof(double)*4);
+      ASSERTEQ(sizeof(CompMooneyRivlin::CMData), sizeof(double)*3);
       td = scinew TypeDescription(TypeDescription::Other, "CompMooneyRivlin::CMData", true);
    }
    return td;   
@@ -351,6 +358,10 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.46  2000/06/21 00:35:16  bard
+// Added timestep control.  Changed constitutive constant number (only 3 are
+// independent) and format.
+//
 // Revision 1.45  2000/06/19 21:22:33  bard
 // Moved computes for reduction variables outside of loops over materials.
 //

@@ -45,8 +45,7 @@ WARNING
 	 struct CMData {
 	    double C1;
 	    double C2;
-	    double C3;
-	    double C4;
+	    double PR;
 	 };
       private:
 	 friend const TypeDescription* fun_getTypeDescription(CMData*);
@@ -103,6 +102,10 @@ WARNING
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.24  2000/06/21 00:35:17  bard
+// Added timestep control.  Changed constitutive constant number (only 3 are
+// independent) and format.
+//
 // Revision 1.23  2000/06/15 21:57:04  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data
