@@ -149,7 +149,7 @@ set $m4-show_status {1}
 set $m4-widgetSizeGui_ [expr 0.05 * ${global-scale}]
 set $m4-scaleModeGui_ {fixed}
 set $m4-showLastVecGui_ {1}
-set $m4-showLinesGui_ {-2147483647}
+set $m4-showLinesGui_ {0}
 set $m5-notes {}
 set $m5-show_status {1}
 set $m5-widgetSizeGui_ [expr 0.035 * ${global-scale}]
@@ -259,8 +259,9 @@ set $m16-active_tab {Nodes}
 set $m16-node_scale [expr 0.035 * ${global-scale}]
 set $m16-edge_scale [expr 0.03 * ${global-scale}]
 set $m16-vectors_scale {0.03}
-set $m16-show_progress {-2147483647}
-set $m16-resolution {10}
+set $m16-show_progress {1}
+set $m16-nodes-usedefcolor {1}
+set $m16-node-resolution {10}
 set $m17-notes {}
 set $m17-show_status {1}
 set $m17-row_or_col {col}
@@ -301,8 +302,8 @@ set $m20-active_tab {Vectors}
 set $m20-node_scale [expr 0.036 * ${global-scale}]
 set $m20-edge_scale [expr 0.03 * ${global-scale}]
 set $m20-vectors_scale {0.03}
-set $m20-show_progress {-2147483647}
-set $m20-resolution {10}
+set $m20-show_progress {1}
+set $m20-node-resolution {10}
 set $m21-notes {}
 set $m21-show_status {1}
 set $m22-notes {}
@@ -344,8 +345,8 @@ set $m25-active_tab {Nodes}
 set $m25-node_scale [expr 0.05 * ${global-scale}]
 set $m25-edge_scale [expr 0.03 * ${global-scale}]
 set $m25-vectors_scale [expr 0.03 * ${global-scale}]
-set $m25-show_progress {-2147483647}
-set $m25-resolution {20}
+set $m25-show_progress {1}
+set $m25-node-resolution {20}
 $m1 initialize_ui
 $m2 initialize_ui
 $m10 initialize_ui
