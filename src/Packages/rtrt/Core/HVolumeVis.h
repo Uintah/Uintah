@@ -393,6 +393,7 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct, double t,
   cerr << "startx = " << startx << "\tix = " << ix << endl;
   cerr << "starty = " << starty << "\tiy = " << iy << endl;
   cerr << "startz = " << startz << "\tiz = " << iz << endl<<endl<<endl;
+  cerr << "celldir = "<<celldir<<", cellcorner = "<<cellcorner<<endl;
   flush(cerr);
 #endif
   int cx=xsize[depth];
@@ -463,19 +464,13 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct, double t,
 	    {
 	    step = false;
 	
-	    // get the point to interpolate
-	    Point current_p = ray.origin() + ray.direction()*t_sample;
 	    ////////////////////////////////////////////////////////////
-	    // interpolate the point
+	    // get the weights
 	    
-	    //	    Point p0(this->min+sdiag*Vector(gx,gy,gz));
-	    //	    Vector weights((current_p-p0)*Vector(nx-1, ny-1, nz -1));
-	    Point p0(this->min+sdiag*Vector(gx,gy,gz));
-	    Vector weights((current_p-p0)/sdiag);
-	    double x_weight_high = weights.x();
-	    double y_weight_high = weights.y();
-	    double z_weight_high = weights.z();
-	    current_p -= this->min.vector();	    
+	    Vector weights = cellcorner+celldir*t_sample;
+	    double x_weight_high = weights.x()-ix;
+	    double y_weight_high = weights.y()-iy;
+	    double z_weight_high = weights.z()-iz;
 
 	    double lz1, lz2, lz3, lz4, ly1, ly2, value;
 	    lz1 = rhos[0] * (1 - z_weight_high) + rhos[1] * z_weight_high;
@@ -490,11 +485,13 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct, double t,
 
 	    float alpha_factor = dpy->lookup_alpha(value) * (1-alpha);
 #ifdef BIGLER_DEBUG
+	    cerr << "cellPos = "<<cellcorner+celldir*t_sample<<endl;
 	    cerr << "current_p = "<<current_p<<endl;
 	    cerr << "x/y/z_wh = ("<<x_weight_high<<", "<<y_weight_high<<", "<<z_weight_high<<")\n";
 	    cerr << "value = "<<value<<", alpha_factor = "<<alpha_factor<<endl;
 
 	    {
+	      Point current_p = ray.origin() + ray.direction()*t_sample - min.vector();
 	      // get the indices and weights for the indicies
 	      double norm = current_p.x() * inv_diag.x();
 	      double step = norm * (nx - 1);
@@ -548,6 +545,7 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct, double t,
 	      
 	      Light* light=ctx->scene->light(0);
 	      Vector light_dir;
+	      Point current_p = ray.origin() + ray.direction()*t_sample - min.vector();
 	      light_dir = light->get_pos()-current_p;
 	      
 	      Color temp = color(gradient, ray.direction(),
