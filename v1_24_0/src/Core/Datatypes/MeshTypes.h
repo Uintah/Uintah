@@ -61,14 +61,10 @@ class HexVolMeshCell;
 const TypeDescription *get_type_description(HexVolMeshNode *);
 const TypeDescription *get_type_description(HexVolMeshCell *);
 
-//class ImageMeshNode;
-//class ImageMeshEdge;
-//class ImageMeshFace;
-//class ImageMeshCell;
-//const TypeDescription *get_type_description(ImageMeshNode *);
-//const TypeDescription *get_type_description(ImageMeshEdge *);
-//const TypeDescription *get_type_description(ImageMeshFace *);
-//const TypeDescription *get_type_description(ImageMeshCell *);
+class ImageMeshNode;
+class ImageMeshFace;
+const TypeDescription *get_type_description(ImageMeshNode *);
+const TypeDescription *get_type_description(ImageMeshFace *);
 
 //class LatVolMeshNode;
 //class LatVolMeshEdge;
