@@ -538,7 +538,7 @@ void DpyGui::button_pressed(MouseButton button,
     {
       double xpos = 2.0*mouse_x/xres - 1.0;
       double ypos = 1.0 - 2.0*mouse_y/yres;
-      rotate_from = projectToSphere(-xpos, -ypos);
+      rotate_from = projectToSphere(xpos, ypos);
     }
     break;
   } // end switch
@@ -548,6 +548,7 @@ void DpyGui::button_released(MouseButton /*button*/,
                              const int /*x*/, const int /*y*/) {
 }
 
+
 void DpyGui::button_motion(MouseButton button,
                            const int mouse_x, const int mouse_y) {
   switch(button) {
@@ -555,15 +556,16 @@ void DpyGui::button_motion(MouseButton button,
     {
       double xpos = 2.0*mouse_x/xres - 1.0;
       double ypos = 1.0 - 2.0*mouse_y/yres;
-      Vector to(projectToSphere(-xpos, -ypos));
-      cerr << "Transforming from "<<rotate_from<<" to "<<to<<"\n";
+      Vector to(projectToSphere(xpos, ypos));
+      //cerr << "Transforming from "<<rotate_from<<" to "<<to<<"\n";
       Transform trans;
       trans.load_identity();
-      trans.rotate(rotate_from, to);
-      rotate_from = to;
-
-      // Perform the transform
-      rtrt_dpy->guiCam_->transform(trans, Camera::LookAt);
+      if (trans.rotate(to, rotate_from)) {
+        rotate_from = to;
+        
+        // Perform the transform
+        rtrt_dpy->guiCam_->transform(trans, Camera::LookAt);
+      }
     }
     break;
   } // end switch
@@ -571,14 +573,13 @@ void DpyGui::button_motion(MouseButton button,
 
 Vector DpyGui::projectToSphere(double x, double y, double radius) const
 {
-  cerr << "projectToSphere:: (x,y) = ("<<x<<", "<<y<<")\n";
   x /= radius;
   y /= radius;
   double rad2 = x*x+y*y;
   if(rad2 > 1){
     double rad = sqrt(rad2);
-    //    x /= rad;
-    //    y /= rad;
+    x /= rad;
+    y /= rad;
     return Vector(x,y,0);
   } else {
     double z = sqrt(1-rad2);
