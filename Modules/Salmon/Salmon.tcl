@@ -89,7 +89,7 @@ itcl_class Roe {
 	$w.menu.edit.menu add command -label "Light Sources..." -underline 0
 	$w.menu.edit.menu add command -label "Background..." -underline 0 \
 		-command "$this makeBackgroundPopup"
-	$w.menu.edit.menu add command -label "Clipping Planes..." -underline 0
+	$w.menu.edit.menu add command -label "Clipping Planes..." -underline 0 -command "$this makeClipPopup"
 	$w.menu.edit.menu add command -label "Animation..." -underline 0 \
 		-command "$this makeAnimationPopup"
 	menubutton $w.menu.spawn -text "Spawn" -underline 0 \
@@ -168,12 +168,30 @@ itcl_class Roe {
 	
 	set m $w.mframe.f
 	set r "$this-c redraw"
-	make_labeled_radio $m.shade "Shading:" $r top $this-shading \
-		{Wire Flat Gouraud Phong}
-	pack $m.shade -anchor w -padx 2 -side left
-	global $this-shading
-	set $this-shading Phong
+	
+	frame $m.eframe
+	checkbutton $m.eframe.light -text Lighting -variable $this-global-light \
+		-command "$this-c redraw"
+	checkbutton $m.eframe.fog -text Fog -variable $this-global-fog \
+		-command "$this-c redraw"
+	checkbutton $m.eframe.bbox -text BBox -variable $this-global-debug \
+		-command "$this-c redraw"
+	pack $m.eframe -anchor w -padx 2 -side left
+	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox -in $m.eframe \
+		-side top -anchor w
+	make_labeled_radio $m.shade "Shading:" $r top $this-global-type \
+		{Wire Flat Gouraud}
+	pack $m.shade -in $m.eframe -side top -anchor w
 
+	global "$this-global-light"
+	global "$this-global-fog"
+	global "$this-global-type"
+	global "$this-global-debug"
+
+	set "$this-global-light" 1
+	set "$this-global-fog" 0
+	set "$this-global-type" Gouraud
+	set "$this-global-debug" 0
 
 	frame $m.objlist -relief groove -borderwidth 2
 	pack $m.objlist -side left -padx 2 -pady 2 -fill y
@@ -319,21 +337,181 @@ itcl_class Roe {
     method addObject {objid name} {
 	set w .ui$this
 	set m $w.mframe.f
+	frame  $m.objlist.canvas.frame.objt$objid
 	checkbutton $m.objlist.canvas.frame.obj$objid -text $name \
 		-relief flat -variable "$this-$name" -command "$this-c redraw"
-	pack $m.objlist.canvas.frame.obj$objid -side top -anchor w
+	
+	set menun $m.objlist.canvas.frame.menu$objid.menu
+
+	menubutton $m.objlist.canvas.frame.menu$objid -text Shading \
+		-relief raised -menu $menun
+	menu $menun
+	$menun add checkbutton -label Lighting -variable $this-$objid-light \
+		-command "$this-c redraw"
+	$menun add checkbutton -label BBox -variable $this-$objid-debug \
+		-command "$this-c redraw"
+	$menun add checkbutton -label Fog -variable $this-$objid-fog \
+		-command "$this-c redraw"
+
+	global "$this-$objid-light"
+	global "$this-$objid-fog"
+	global "$this-$objid-type"
+	global "$this-$objid-debug"
+
+	set "$this-$objid-type" Gouraud
+	set "$this-$objid-light" 1
+	set "$this-$objid-fog" 0
+	set "$this-$objid-debug" 0
+	set menuvar  $m.objlist.canvas.frame.menu2$objid
+	set menup [tk_optionMenu $menuvar $this-$objid-type Wire Flat Gouraud Default]
+
+	$menup entryconfigure 0 -command "[$menup entrycget 0 -command] ; $this-c redraw"
+	$menup entryconfigure 1 -command "[$menup entrycget 1 -command] ; $this-c redraw"
+	$menup entryconfigure 2 -command "[$menup entrycget 2 -command] ; $this-c redraw"
+	$menup entryconfigure 3 -command "[$menup entrycget 3 -command] ; $this-c redraw"
+	pack $m.objlist.canvas.frame.objt$objid -side top -anchor w
+	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid $m.objlist.canvas.frame.menu2$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
     }
     
     method addObject2 {objid} {
 	set w .ui$this
 	set m $w.mframe.f
-	pack $m.objlist.canvas.frame.obj$objid -side top -anchor w
+	pack $m.objlist.canvas.frame.objt$objid -side top -anchor w
+	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid $m.objlist.canvas.frame.menu2$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
     }
     
     method removeObject {objid} {
 	set w .ui$this
 	set m $w.mframe.f
-	pack forget $m.objlist.canvas.frame.obj$objid
+	pack forget $m.objlist.canvas.frame.objt$objid
+    }
+
+    method makeClipPopup {} {
+	set w .clip$this
+	if {[winfo exists $w]} {
+	    raise $w
+	    return;
+	}
+	toplevel $w
+	wm title $w "Clipping Planes"
+	wm minsize $w 200 100 
+	set clip $this-clip
+
+	global $clip-num
+	set $clip-num 6
+
+	global $clip-normal-x
+	global $clip-normal-y
+	global $clip-normal-z
+	global $clip-normal-d
+	global $clip-visible
+	set $clip-visible 0
+	set $clip-normal-d 0.0
+	set $clip-normal-x 1.0
+	set $clip-normal-y 0.0
+	set $clip-normal-z 0.0
+
+	for {set i 1} {$i <= [set $clip-num]} {incr i 1} {
+	    set mod $i
+
+
+	    global $clip-normal-x-$mod
+	    global $clip-normal-y-$mod
+	    global $clip-normal-z-$mod
+	    global $clip-normal-d-$mod
+	    global $clip-visible-$mod
+	    set $clip-visible-$mod 0
+	    set $clip-normal-d-$mod 0.0
+	    set $clip-normal-x-$mod 1.0
+	    set $clip-normal-y-$mod 0.0
+	    set $clip-normal-z-$mod 0.0
+	}
+	set c "$this setClip ; $this-c redraw"
+	global $clip-selected
+	set $clip-selected 1
+	set menup [tk_optionMenu $w.which $clip-selected 1 2 3 4 5 6]
+
+	for {set i 0}  {$i < [set $clip-num]} {incr i 1} {
+	    $menup entryconfigure $i -command "[$menup entrycget $i -command] ; $this useClip"
+	}
+	
+	pack $w.which
+	checkbutton $w.visibile -text "Visible" -relief flat \
+		-variable "$clip-visible" -command "$this setClip ; $this-c redraw"
+	pack $w.visibile
+	button $w.invert -text "Invert" -command "$this invertClip ; $this-c redraw"
+	pack $w.invert
+	makePlane $w.normal "Plane Normal" $clip-normal $c
+	pack $w.normal -side left -expand yes -fill x
+	frame $w.f -relief groove -borderwidth 2
+	pack $w.f -expand yes -fill x
+    }
+
+    method useClip {} {
+	set clip $this-clip
+	global $clip-normal-x
+	global $clip-normal-y
+	global $clip-normal-z
+	global $clip-normal-d
+	global $clip-visible
+	global $clip-selected
+	set cs [set $clip-selected]
+
+	global $clip-normal-x-$cs
+	global $clip-normal-y-$cs
+	global $clip-normal-z-$cs
+	global $clip-normal-d-$cs
+	global $clip-visible-$cs
+
+	set $clip-normal-x [set $clip-normal-x-$cs]
+	set $clip-normal-y [set $clip-normal-y-$cs]
+	set $clip-normal-z [set $clip-normal-z-$cs]
+	set $clip-normal-d [set $clip-normal-d-$cs]
+	set $clip-visible [set $clip-visible-$cs]
+    }
+    method setClip {} {
+	set clip $this-clip
+	global $clip-normal-x
+	global $clip-normal-y
+	global $clip-normal-z
+	global $clip-normal-d
+	global $clip-visible
+	global $clip-selected
+	set cs [set $clip-selected]
+
+	global $clip-normal-x-$cs
+	global $clip-normal-y-$cs
+	global $clip-normal-z-$cs
+	global $clip-normal-d-$cs
+	global $clip-visible-$cs
+
+	set  $clip-normal-x-$cs [set $clip-normal-x]
+	set  $clip-normal-y-$cs [set $clip-normal-y]
+	set  $clip-normal-z-$cs [set $clip-normal-z]
+	set  $clip-normal-d-$cs [set $clip-normal-d]
+	set  $clip-visible-$cs [set $clip-visible]
+    }
+
+    method invertClip {} {
+	set clip $this-clip
+	global $clip-normal-x
+	global $clip-normal-y
+	global $clip-normal-z
+	global $clip-normal-d
+	global $clip-selected
+	set cs [set $clip-selected]
+
+	global $clip-normal-x-$cs
+	global $clip-normal-y-$cs
+	global $clip-normal-z-$cs
+	
+	set  $clip-normal-x-$cs [expr -1 * [set $clip-normal-x]]
+	set  $clip-normal-y-$cs [expr -1 * [set $clip-normal-y]]
+	set  $clip-normal-z-$cs [expr -1 * [set $clip-normal-z]]
+
+	set $clip-normal-x [set $clip-normal-x-$cs]
+	set $clip-normal-y [set $clip-normal-y-$cs]
+	set $clip-normal-z [set $clip-normal-z-$cs]
     }
 
     method makeAnimationPopup {} {
@@ -494,7 +672,7 @@ itcl_class Roe {
     method rotate {axis amt} {
 	puts "rotate $axis by $amt"
     }
-    method scale {amt} {
+    method rscale {amt} {
 	puts "scale by $amt"
     }
     method zoom {amt} {

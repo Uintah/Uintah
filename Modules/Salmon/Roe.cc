@@ -15,6 +15,8 @@
 #include <Modules/Salmon/Salmon.h>
 #include <Modules/Salmon/Roe.h>
 #include <Modules/Salmon/Renderer.h>
+#include <Modules/Salmon/Ball.h>
+#include <Modules/Salmon/BallMath.h>
 #include <Classlib/Debug.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/Timer.h>
@@ -25,6 +27,7 @@
 #include <Geometry/Transform.h>
 #include <Geometry/Vector.h>
 #include <Geom/Geom.h>
+#include <Geom/GeomOpenGL.h>
 #include <Geom/Pick.h>
 #include <Geom/PointLight.h>
 #include <Geom/Sphere.h>
@@ -46,7 +49,7 @@ static DebugSwitch autoview_sw("Roe", "autoview");
 Roe::Roe(Salmon* s, const clString& id)
 : manager(s),
   view("view", id, this),
-  homeview(Point(.55, .5, 0), Point(.55, .5, .5), Vector(0,1,0), 25),
+  homeview(Point(.55, .5, 0), Point(.0, .0, .0), Vector(0,1,0), 25),
   bgcolor("bgcolor", id, this), shading("shading", id, this),
   do_stereo("do_stereo", id, this), tracker_state("tracker_state", id, this),
   id(id)
@@ -60,9 +63,11 @@ Roe::Roe(Salmon* s, const clString& id)
     maxtag=0;
     tracker=0;
     mouse_obj=0;
+    ball = new BallData();
+    ball->Init();
 }
 
-void Roe::itemAdded(SceneItem* si)
+void Roe::itemAdded(GeomSalmonItem* si)
 {
     ObjTag* vis;
     if(!visible.lookup(si->name, vis)){
@@ -87,7 +92,7 @@ void Roe::itemAdded(SceneItem* si)
     need_redraw=1;
 }
 
-void Roe::itemDeleted(SceneItem *si)
+void Roe::itemDeleted(GeomSalmonItem *si)
 {
     ObjTag* vis;
     if(!visible.lookup(si->name, vis)){
@@ -134,25 +139,31 @@ Roe::~Roe()
 void Roe::get_bounds(BBox& bbox)
 {
     bbox.reset();
-    HashTableIter<int, PortInfo*> iter(&manager->portHash);
+//    HashTableIter<int, PortInfo*> iter(&manager->portHash);
+    HashTableIter<int,GeomObj*> iter = manager->ports.getIter();
     for (iter.first(); iter.ok(); ++iter) {
-	HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
-	HashTableIter<int, SceneItem*> serIter(serHash);
+//	HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
+//	HashTableIter<int, SceneItem*> serIter(serHash);
+//	HashTable<int,GeomObj*>* serHash = 
+//	    ((GeomSalmonPort*)iter.get_data())->getHashPtr();
+	HashTableIter<int,GeomObj*> serIter = 
+	    ((GeomSalmonPort*)iter.get_data())->getIter();
+	// items in the scen are all GeomSalmonItem's...
 	for (serIter.first(); serIter.ok(); ++serIter) {
-	    SceneItem *si=serIter.get_data();
+	    GeomSalmonItem *si=(GeomSalmonItem*)serIter.get_data();
 	    // Look up the name to see if it should be drawn...
 	    ObjTag* vis;
 	    if(visible.lookup(si->name, vis)){
 		if(vis->visible->get()){
 		    if(si->lock)
 			si->lock->read_lock();
-		    si->obj->get_bounds(bbox);
+		    si->get_bounds(bbox);
 		    if(si->lock)
 			si->lock->read_unlock();
 		}
 	    } else {
 		cerr << "Warning: object " << si->name << " not in visibility database...\n";
-		si->obj->get_bounds(bbox);
+		si->get_bounds(bbox);
 	    }
 	}
     }
@@ -329,72 +340,108 @@ void Roe::mouse_scale(int action, int x, int y, int, int)
 
 void Roe::mouse_rotate(int action, int x, int y, int, int)
 {
+#ifdef OLD_ROTATE_CODE_THAT_DIDNT_WORK_GOOD
+#else
     switch(action){
     case MouseStart:
-	{
-	    update_mode_string("rotate:");
-	    last_x=x;
-	    last_y=y;
+ 	update_mode_string("rotate:");
+	last_x=x;
+	last_y=y;
 
-	    // Find the center of rotation...
-	    View tmpview(view.get());
-	    int xres=current_renderer->xres;
-	    int yres=current_renderer->yres;
-	    double aspect=double(xres)/double(yres);
-	    double znear, zfar;
-	    rot_point_valid=0;
-	    if(!current_renderer->compute_depth(this, tmpview, znear, zfar))
-		return; // No objects...
-	    double zmid=(znear+zfar)/2.;
+	// Find the center of rotation...
+	View tmpview(view.get());
+	int xres=current_renderer->xres;
+	int yres=current_renderer->yres;
+	double aspect=double(xres)/double(yres);
+	double znear, zfar;
+	rot_point_valid=0;
+	if(!current_renderer->compute_depth(this, tmpview, znear, zfar))
+	    return; // No objects...
+	double zmid=(znear+zfar)/2.;
 
-	    Point ep(0, 0, zmid);
-	    rot_point=tmpview.eyespace_to_objspace(ep, aspect);
-	    rot_view=tmpview;
-	    rot_point_valid=1;
-	}
+	Point ep(0, 0, zmid);
+	rot_point=tmpview.eyespace_to_objspace(ep, aspect);
+
+	rot_point = tmpview.lookat();
+	rot_view=tmpview;
+	rot_point_valid=1;
+
+	double rad = 0.8;
+	HVect center(0,0,0,1.0);
+	
+	// we also want to keep the old transform information
+	// around (so stuff correlates correctly)
+	// OGL uses left handed coordinate system!
+	
+	Vector z_axis,y_axis,x_axis;
+
+	y_axis = tmpview.up();
+	z_axis = tmpview.eyep() - tmpview.lookat();
+	eye_dist = z_axis.normalize();
+	x_axis = Cross(y_axis,z_axis);
+	x_axis.normalize();
+	y_axis = Cross(z_axis,x_axis);
+	y_axis.normalize();
+	tmpview.up(y_axis); // having this correct could fix something?
+
+	prev_trans.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
+
+	ball->Init();
+	ball->Place(center,rad);
+	HVect mouse((2.0*x)/xres - 1.0,2.0*(yres-y*1.0)/yres - 1.0,0.0,1.0);
+	ball->Mouse(mouse);
+	ball->BeginDrag();
+
+	ball->Update();
 	break;
     case MouseMove:
 	{
 	    int xres=current_renderer->xres;
 	    int yres=current_renderer->yres;
-	    double xmtn=double(last_x-x)/double(xres);
-	    double ymtn=double(last_y-y)/double(yres);
-
-	    double xrot=xmtn*360.0;
-	    double yrot=ymtn*360.0;
+	    double aspect=double(xres)/double(yres);
 
 	    if(!rot_point_valid)
 		break;
-	    // Rotate the scene about the rot_point
-	    Transform transform;
-	    Vector transl(Point(0,0,0)-rot_point);
-	    transform.pre_translate(transl);
-	    View tmpview(rot_view);
-	    Vector u,v;
-	    double aspect=double(xres)/double(yres);
-	    tmpview.get_viewplane(aspect, 1, u, v);
-	    u.normalize();
-	    v.normalize();
-	    transform.pre_rotate(DtoR(yrot), u);
-	    transform.pre_rotate(DtoR(xrot), v);
-	    transform.pre_translate(-transl);
 
-	    Point top(tmpview.eyep()+tmpview.up());
-	    top=transform.project(top);
-	    tmpview.eyep(transform.project(tmpview.eyep()));
-	    tmpview.lookat(transform.project(tmpview.lookat()));
-	    tmpview.up(top-tmpview.eyep());
+	    HVect mouse((2.0*x)/xres - 1.0,2.0*(yres-y*1.0)/yres - 1.0,0.0,1.0);
+	    ball->Mouse(mouse);
+	    ball->Update();
+
+	    // now we should just sendthe view points through
+	    // the rotation (after centerd around the ball)
+	    // eyep lookat and up
+
+	    View tmpview(rot_view);
+
+	    Transform tmp_trans;
+	    HMatrix mNow;
+	    ball->Value(mNow);
+	    tmp_trans.set(&mNow[0][0]);
+
+	    Transform prv = prev_trans;
+	    prv.post_trans(tmp_trans);
+
+	    HMatrix vmat;
+	    prv.get(&vmat[0][0]);
+
+	    Point y_a(vmat[0][1],vmat[1][1],vmat[2][1]);
+	    Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
+
+	    tmpview.up(y_a.vector());
+	    tmpview.eyep((z_a*(eye_dist)) + tmpview.lookat().vector());
 
 	    view.set(tmpview);
-
 	    need_redraw=1;
 	    update_mode_string("rotate:");
 	}
 	break;
     case MouseEnd:
+	ball->EndDrag();
+	rot_point_valid = 0; // so we don't have to draw this...
 	update_mode_string("");
 	break;
     }
+#endif
 }
 
 void Roe::mouse_pick(int action, int x, int y, int state, int btn)
@@ -517,12 +564,15 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	}
     } else if(args[1] == "startup"){
 	// Fill in the visibility database...
-	HashTableIter<int, PortInfo*> iter(&manager->portHash);
+	//HashTableIter<int, PortInfo*> iter(&manager->portHash);
+	HashTableIter<int,GeomObj*> iter = manager->ports.getIter();
 	for (iter.first(); iter.ok(); ++iter) {
-	    HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
-	    HashTableIter<int, SceneItem*> serIter(serHash);
+//	    HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
+//	    HashTableIter<int, SceneItem*> serIter(serHash);
+	    HashTableIter<int,GeomObj*> serIter = 
+		((GeomSalmonPort*)iter.get_data())->getIter();	    
 	    for (serIter.first(); serIter.ok(); ++serIter) {
-		SceneItem *si=serIter.get_data();
+		GeomSalmonItem *si=(GeomSalmonItem*)serIter.get_data();
 		itemAdded(si);
 	    }
 	}
@@ -825,19 +875,23 @@ void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
 	(r->*pmf)(manager, this, roe_objs[i]);
     }
 
-    HashTableIter<int, PortInfo*> iter(&manager->portHash);
+//    HashTableIter<int, PortInfo*> iter(&manager->portHash);
+    HashTableIter<int,GeomObj*> iter = manager->ports.getIter();
     for (iter.first(); iter.ok(); ++iter) {
-	HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
-	HashTableIter<int, SceneItem*> serIter(serHash);
+//	HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
+//	HashTableIter<int, SceneItem*> serIter(serHash);
+	HashTableIter<int,GeomObj*> serIter = 
+	    ((GeomSalmonPort*)iter.get_data())->getIter();
+	
 	for (serIter.first(); serIter.ok(); ++serIter) {
-	    SceneItem *si=serIter.get_data();
+	    GeomSalmonItem *si=(GeomSalmonItem*)serIter.get_data();
 	    // Look up the name to see if it should be drawn...
 	    ObjTag* vis;
 	    if(visible.lookup(si->name, vis)){
 		if(vis->visible->get()){
 		    if(si->lock)
 			si->lock->read_lock();
-		    (r->*pmf)(manager, this, si->obj);
+		    (r->*pmf)(manager, this, si);
 		    if(si->lock)
 			si->lock->read_unlock();
 		}
@@ -927,19 +981,22 @@ void Roe::saveall(const clString& filename, const clString& format)
 	stream=new BinaryPiostream(filename, Piostream::Write);
     else
 	stream=new TextPiostream(filename, Piostream::Write);
-    HashTableIter<int, PortInfo*> iter(&manager->portHash);
+//    HashTableIter<int, PortInfo*> iter(&manager->portHash);
+    HashTableIter<int,GeomObj*> iter = manager->ports.getIter();    
     for (iter.first(); iter.ok(); ++iter) {
-	HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
-	HashTableIter<int, SceneItem*> serIter(serHash);
+//	HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
+//	HashTableIter<int, SceneItem*> serIter(serHash);
+	HashTableIter<int,GeomObj*> serIter = 
+	    ((GeomSalmonPort*)iter.get_data())->getIter();
 	for (serIter.first(); serIter.ok(); ++serIter) {
-	    SceneItem *si=serIter.get_data();
+	    GeomSalmonItem *si=(GeomSalmonItem*)serIter.get_data();
 	    // Look up the name to see if it should be drawn...
 	    ObjTag* vis;
 	    if(visible.lookup(si->name, vis)){
 		if(vis->visible->get()){
 		    if(si->lock)
 			si->lock->read_lock();
-		    Pio(*stream, si->obj);
+		    Pio(*stream, si);
 		    if(si->lock)
 			si->lock->read_unlock();
 		}

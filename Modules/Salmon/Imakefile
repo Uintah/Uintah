@@ -17,9 +17,11 @@ OPENGLOBJS =
 OPENGLSRCS = 
 #endif
 
-OBJS = Postscript.o  Raytracer.o  Salmon.o  Renderer.o  Roe.o  X11.o  \
+OBJS = Postscript.o  Raytracer.o  Salmon.o  Renderer.o  Roe.o  X11.o \
+	SalmonGeom.o Ball.o BallAux.o BallMath.o\
 	$(OPENGLOBJS)
 SRCS = Postscript.cc Raytracer.cc Salmon.cc Renderer.cc Roe.cc X11.cc \
+	SalmonGeom.cc Ball.cc BallAux.cc BallMath.cc\
 	$(OPENGLSRCS)
 
 LOCALINCLUDES = $(OPENGLINCS)

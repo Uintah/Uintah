@@ -22,12 +22,15 @@
 #include <Geom/Material.h>
 #include <Geom/Lighting.h>
 #include <Multitask/ITC.h>
+#include <Geom/IndexedGroup.h>
+#include <Modules/Salmon/SalmonGeom.h>
 
 class GeometryComm;
 class GeomReply;
 class Renderer;
 class Roe;
 
+#if 0
 struct SceneItem {
     GeomObj* obj;
     clString name;
@@ -43,6 +46,7 @@ struct PortInfo {
     int portno;
     HashTable<int, SceneItem*>* objs;
 };
+#endif
 
 class Salmon : public Module {
     Array1<Roe*> roe;
@@ -64,10 +68,10 @@ public:
     virtual void execute();
     void initPort(Mailbox<GeomReply>*);
     void append_port_msg(GeometryComm*);
-    void addObj(PortInfo* port, GeomID serial, GeomObj *obj,
+    void addObj(GeomSalmonPort* port, GeomID serial, GeomObj *obj,
 		const clString&, CrowdMonitor* lock);
-    void delObj(PortInfo* port, GeomID serial);
-    void delAll(PortInfo* port);
+    void delObj(GeomSalmonPort* port, GeomID serial);
+    void delAll(GeomSalmonPort* port);
     void flushPort(int portid);
     void flushViews();
     void addTopRoe(Roe *r);
@@ -76,7 +80,8 @@ public:
     void tcl_command(TCLArgs&, void*);
 
     // The scene...
-    HashTable<int, PortInfo*> portHash;
+    GeomIndexedGroup ports; // this contains all of the ports...
+//    HashTable<int, PortInfo*> portHash;
 
     // Lighting
     Lighting lighting;

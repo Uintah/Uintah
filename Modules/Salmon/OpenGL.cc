@@ -14,7 +14,9 @@
 
 #include <Modules/Salmon/Renderer.h>
 #include <Modules/Salmon/Roe.h>
+#include <Modules/Salmon/Ball.h>
 #include <Modules/Salmon/Salmon.h>
+#include <Modules/Salmon/SalmonGeom.h>
 #include <Classlib/HashTable.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/Timer.h>
@@ -68,6 +70,13 @@ public:
     virtual void hide();
     virtual void dump_image(const clString&);
     virtual void put_scanline(int y, int width, Color* scanline, int repeat=1);
+
+    // these functions were added to clean things up a bit...
+
+protected:
+    
+    void initState(void);
+
 };
 
 static OpenGL* current_drawer=0;
@@ -121,6 +130,11 @@ clString OpenGL::create_window(Roe*,
     return "opengl "+name+" -geometry "+width+"x"+height+" -doublebuffer true -direct "+(d?"true":"false")+" -rgba true -redsize 2 -greensize 2 -bluesize 2 -depthsize 2";
 }
 
+void OpenGL::initState(void)
+{
+    
+}
+
 void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 		    int nframes, double framerate)
 {
@@ -154,15 +168,17 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 	}
 	fprintf(stderr, "dpy=%p, win=%p, cx=%p\n", dpy, win, cx);
 	glXMakeCurrent(dpy, win, cx);
-cerr << "Trying out waitx...\n";
+	cerr << "Trying out waitx...\n";
 	glXWaitX();
-cerr << "done...\n";
+	cerr << "done...\n";
 	current_drawer=this;
 	GLint data[1];
 	glGetIntegerv(GL_MAX_LIGHTS, data);
 	maxlights=data[0];
 	TCLTask::unlock();
     }
+
+    initState();
 
     // Get the window size
     xres=Tk_Width(tkwin);
@@ -202,32 +218,9 @@ cerr << "done...\n";
 	glEnable(GL_NORMALIZE);
 	glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
 	glEnable(GL_COLOR_MATERIAL);
-
-	clString shading(roe->shading.get());
-//	GeomRenderMode::DrawType dt;
-	if(shading == "Wire"){
-	    drawinfo->set_drawtype(DrawInfoOpenGL::WireFrame);
-	    drawinfo->lighting=0;
-	} else if(shading == "Flat"){
-	    drawinfo->set_drawtype(DrawInfoOpenGL::Flat);
-	    drawinfo->lighting=0;
-	} else if(shading == "Gouraud"){
-	    drawinfo->set_drawtype(DrawInfoOpenGL::Gouraud);
-	    drawinfo->lighting=1;
-	} else if(shading == "Phong"){
-	    drawinfo->set_drawtype(DrawInfoOpenGL::Phong);
-	    drawinfo->lighting=1;
-	} else {
-	    cerr << "Unknown shading(" << shading << "), defaulting to phong" << endl;
-	    drawinfo->set_drawtype(DrawInfoOpenGL::Phong);
-	    drawinfo->lighting=1;
-	}
-	drawinfo->currently_lit=drawinfo->lighting;
-	if(drawinfo->lighting)
-	    glEnable(GL_LIGHTING);
-	else
-	    glDisable(GL_LIGHTING);
-	drawinfo->pickmode=0;
+	
+	clString globals("global");
+	roe->setState(drawinfo,globals);
 
 	int errcode;
 	while((errcode=glGetError()) != GL_NO_ERROR){
@@ -260,7 +253,7 @@ cerr << "done...\n";
 		do_stereo=0;
 	    }
 #endif
-//	    system("/usr/gfx/setmon STR_TOP");
+	    //	    system("/usr/gfx/setmon STR_TOP");
 	    XSync(dpy, 0);
 	    cerr << "3\n"; glXWaitX(); cerr << "3 done\n";
 	    cerr << "Xflush done\n";
@@ -290,7 +283,7 @@ cerr << "done...\n";
 #ifdef __sgi
 	    if(do_stereo){
 		XSGISetStereoBuffer(dpy, win, STEREO_BUFFER_LEFT);
-//		XClearWindow(dpy, win);
+		//		XClearWindow(dpy, win);
 		XSync(dpy, 0);
 		cerr << "Xflush done\n";
 		glXWaitX();
@@ -305,7 +298,7 @@ cerr << "done...\n";
 	    glMatrixMode(GL_PROJECTION);
 	    glLoadIdentity();
 	    gluPerspective(fovy, aspect, znear, zfar);
-	
+	    
 	    glMatrixMode(GL_MODELVIEW);
 	    glLoadIdentity();
 	    Point eyep(view.eyep());
@@ -321,20 +314,28 @@ cerr << "done...\n";
 		      lookat.x(), lookat.y(), lookat.z(),
 		      up.x(), up.y(), up.z());
 
-	// Set up Lighting
-	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-	Lighting& l=salmon->lighting;
-	int idx=0;
-	int i;
-	for(i=0;i<l.lights.size();i++){
-	    Light* light=l.lights[i];
-	    light->opengl_setup(view, drawinfo, idx);
-	}
-	for(i=0;i<idx && i<maxlights;i++)
-	    glEnable(GL_LIGHT0+i);
-	for(;i<maxlights;i++)
-	    glDisable(GL_LIGHT0+i);
+	    // Set up Lighting
+	    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+	    Lighting& l=salmon->lighting;
+	    int idx=0;
+	    int i;
+	    for(i=0;i<l.lights.size();i++){
+		Light* light=l.lights[i];
+		light->opengl_setup(view, drawinfo, idx);
+	    }
+	    for(i=0;i<idx && i<maxlights;i++)
+		glEnable(GL_LIGHT0+i);
+	    for(;i<maxlights;i++)
+		glDisable(GL_LIGHT0+i);
 
+	    // now set up the fog stuff
+
+	    glFogi(GL_FOG_MODE,GL_LINEAR);
+	    glFogf(GL_FOG_START,float(znear));
+	    glFogf(GL_FOG_END,float(zfar));
+	    // now make the Roe setup its clipping planes...
+	    roe->setClip();
+	    
 	    // Draw it all...
 	    current_time=modeltime;
 #ifdef REAL_STEREO
@@ -348,10 +349,10 @@ cerr << "done...\n";
 #ifdef __sgi
 	    if(do_stereo){
 		glXWaitGL();
-//		XClearWindow(dpy, win);
+		//		XClearWindow(dpy, win);
 		XSGISetStereoBuffer(dpy, win, STEREO_BUFFER_RIGHT);
 		glXWaitX();
-//		glDrawBuffer(GL_BACK_RIGHT);
+		//		glDrawBuffer(GL_BACK_RIGHT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Setup view...
@@ -359,7 +360,7 @@ cerr << "done...\n";
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		gluPerspective(fovy, aspect, znear, zfar);
-	
+		
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 		Point eyep(view.eyep());
@@ -384,7 +385,7 @@ cerr << "done...\n";
 
 	    // Show the pretty picture
 	    glXSwapBuffers(dpy, win);
-//	    glXWaitGL();
+	    //	    glXWaitGL();
 	}
 	throttle.stop();
 	double fps=nframes/throttle.time();
@@ -399,7 +400,7 @@ cerr << "done...\n";
 	roe->set_current_time(tend);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glXSwapBuffers(dpy, win);
-//	glXWaitGL();
+	//	glXWaitGL();
     }
 
     // Look for errors
@@ -421,8 +422,8 @@ cerr << "done...\n";
     str << roe->id << " updatePerf \"";
     str << drawinfo->polycount << " polygons in " << timer.time()
 	<< " seconds\" \"" << drawinfo->polycount/timer.time()
-	<< " polygons/second\"" << " \"" << fps_whole << "."
-	<< fps_tenths << " frames/sec\""	<< '\0';
+	    << " polygons/second\"" << " \"" << fps_whole << "."
+		<< fps_tenths << " frames/sec\""	<< '\0';
     TCL::execute(str.str());
     TCLTask::unlock();
 }
@@ -451,7 +452,7 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
     double aspect=double(xres)/double(yres);
     double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov()/2.))));
 
-//    drawinfo->reset();
+    //    drawinfo->reset();
 
     // Compute znear and zfar...
     double znear;
@@ -630,8 +631,249 @@ void OpenGL::pick_draw_obj(Salmon* salmon, Roe*, GeomObj* obj)
     obj->draw(drawinfo, salmon->default_matl.get_rep(), current_time);
 }
 
-void OpenGL::redraw_obj(Salmon* salmon, Roe*, GeomObj* obj)
+void OpenGL::redraw_obj(Salmon* salmon, Roe* roe, GeomObj* obj)
 {
+    drawinfo->roe = roe;
     obj->draw(drawinfo, salmon->default_matl.get_rep(), current_time);
+}
+
+void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
+{
+    clString val;
+    clString type(tclID+"-"+"type");
+    clString lighting(tclID+"-"+"light");
+    clString fog(tclID+"-"+"fog");
+    clString debug(tclID+"-"+"debug");
+
+    if (!get_tcl_stringvar(id,type,val)) {
+	cerr << "Error illegal name!\n";
+	return;
+    }
+    else {
+	if(val == "Wire"){
+	    drawinfo->set_drawtype(DrawInfoOpenGL::WireFrame);
+	    drawinfo->lighting=0;
+	} else if(val == "Flat"){
+	    drawinfo->set_drawtype(DrawInfoOpenGL::Flat);
+	    drawinfo->lighting=0;
+	} else if(val == "Gouraud"){
+	    drawinfo->set_drawtype(DrawInfoOpenGL::Gouraud);
+	    drawinfo->lighting=1;
+	}
+	else if (val == "Default") {
+	    drawinfo->currently_lit=drawinfo->lighting;
+	    drawinfo->init_lighting(drawinfo->lighting);
+	    return; // if they are using the default, con't change
+	} else {
+	    cerr << "Unknown shading(" << val << "), defaulting to phong" << endl;
+	    drawinfo->set_drawtype(DrawInfoOpenGL::Gouraud);
+	    drawinfo->lighting=1;
+	}
+
+	// now see if they want a bounding box...
+
+	if (get_tcl_stringvar(id,debug,val)) {
+	    if (val == "0")
+		drawinfo->debug = 0;
+	    else
+		drawinfo->debug = 1;
+	}	
+	else {
+	    cerr << "Error, no debug level set!\n";
+	    drawinfo->debug = 0;
+	}
+
+	if (!get_tcl_stringvar(id,lighting,val))
+	    cerr << "Error, no lighting!\n";
+	else {
+	    if (val == "0"){
+		drawinfo->lighting=0;
+	    }
+	    else if (val == "1") {
+		drawinfo->lighting=1;
+	    }
+	    else {
+		cerr << "Unknown lighting setting(" << val << "\n";
+	    }
+
+	    if (get_tcl_stringvar(id,fog,val)) {
+		if (val=="0"){
+		    drawinfo->fog=0;
+		}
+		else {
+		    drawinfo->fog=1;
+		}
+	    }
+	    else {
+		cerr << "Fog not defined properly!\n";
+		drawinfo->fog=0;
+	    }
+
+	    //		drawinfo->pickmode=0;            
+	}
+    }
+    drawinfo->pickmode=0;
+    drawinfo->currently_lit=drawinfo->lighting;
+    drawinfo->init_lighting(drawinfo->lighting);
+	
+    
+}
+
+void Roe::setDI(DrawInfoOpenGL* drawinfo,clString name)
+{
+    ObjTag* vis;
+
+    if (visible.lookup(name,vis)){
+	setState(drawinfo,to_string(vis->tagid));
+    }
+}
+
+void Roe::setClip(void)
+{
+    clString val;
+    int i;
+
+    clString num_clip("clip-num");
+
+    if (get_tcl_stringvar(id,"clip-visible",val) && 
+	get_tcl_intvar(id,num_clip,i)) {
+
+	if ( (i>0 && i<7) ) {
+	    while(i--) {
+		
+		clString vis("clip-visible-"+to_string(i+1));
+
+
+		if (get_tcl_stringvar(id,vis,val)) {
+		    if (val == "1") {
+			double plane[4];
+			clString nx("clip-normal-x-"+to_string(i+1));
+			clString ny("clip-normal-y-"+to_string(i+1));
+			clString nz("clip-normal-z-"+to_string(i+1));
+			clString nd("clip-normal-d-"+to_string(i+1));
+			
+			int rval=0;
+
+			rval = get_tcl_doublevar(id,nx,plane[0]);
+			rval = get_tcl_doublevar(id,ny,plane[1]);
+			rval = get_tcl_doublevar(id,nz,plane[2]);
+			rval = get_tcl_doublevar(id,nd,plane[3]);
+			
+			double mag = plane[0]*plane[0] +
+			    plane[1]*plane[1] +
+				plane[2]*plane[2];
+			plane[0] /= mag;
+			plane[1] /= mag;
+			plane[2] /= mag;
+			plane[3] = -plane[3]; // so moves in planes direction...
+			glClipPlane(GL_CLIP_PLANE0+i,plane);
+			glEnable(GL_CLIP_PLANE0+i);
+
+			if (!rval ) {
+			    cerr << "Error, variable is hosed!\n";
+			}
+		    }
+		    else {
+			glDisable(GL_CLIP_PLANE0+i);
+		    }
+
+		}
+	    }
+	}
+    }
+}
+
+
+void GeomSalmonItem::draw(DrawInfoOpenGL* di, Material *m, double time)
+{
+    // here we need to query the roe with our name and give it our
+    // di so it can change things if they need to be...
+    di->roe->setDI(di,name);
+
+    // lets get the childs bounding box, and draw it...
+
+    BBox bb;
+    //    child->reset_bbox();
+    child->get_bounds(bb);
+
+    // might as well try and draw the arcball also...
+
+    Point min,max;
+
+    min = bb.min();
+    max = bb.max();
+    if (!di->debug)
+	child->draw(di,m,time);
+
+    if (di->debug) {
+
+	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glDepthMask(GL_FALSE);
+
+	glColor4f(1.0,0.0,1.0,0.2);
+
+	glDisable(GL_LIGHTING);	
+
+	glBegin(GL_QUADS);
+	//front
+	glVertex3d(max.x(),min.y(),max.z());
+	//	glColor4f(0.0,1.0,0.0,0.8);
+	glVertex3d(max.x(),max.y(),max.z());
+	glColor4f(0.0,1.0,0.0,0.2);
+	glVertex3d(min.x(),max.y(),max.z());
+	glVertex3d(min.x(),min.y(),max.z());
+	//back
+	glVertex3d(max.x(),max.y(),min.z());
+	glVertex3d(max.x(),min.y(),min.z());
+	//	glColor4f(1.0,0.0,0.0,0.8);
+	glVertex3d(min.x(),min.y(),min.z());
+	glColor4f(0.0,1.0,0.0,0.2);
+	glVertex3d(min.x(),max.y(),min.z());
+
+	glColor4f(1.0,0.0,0.0,0.2);
+
+	//left
+	glVertex3d(min.x(),min.y(),max.z());
+	glVertex3d(min.x(),max.y(),max.z());
+	glVertex3d(min.x(),max.y(),min.z());
+	//	glColor4f(1.0,0.0,0.0,0.8);
+	glVertex3d(min.x(),min.y(),min.z());
+	glColor4f(1.0,0.0,0.0,0.2);
+
+	//right
+	glVertex3d(max.x(),min.y(),min.z());
+	glVertex3d(max.x(),max.y(),min.z());
+	//	glColor4f(0.0,1.0,0.0,0.8);
+	glVertex3d(max.x(),max.y(),max.z());
+	glColor4f(1.0,0.0,0.0,0.2);
+	glVertex3d(max.x(),min.y(),max.z());
+
+
+	glColor4f(0.0,0.0,1.0,0.2);
+
+	//top
+	glVertex3d(min.x(),max.y(),max.z());
+	//	glColor4f(0.0,1.0,0.0,0.8);
+	glVertex3d(max.x(),max.y(),max.z());
+	glColor4f(0.0,0.0,1.0,0.2);
+	glVertex3d(max.x(),max.y(),min.z());
+	glVertex3d(min.x(),max.y(),min.z());
+	//bottom
+	//	glColor4f(1.0,0.0,0.0,0.8);
+	glVertex3d(min.x(),min.y(),min.z());
+	glColor4f(0.0,0.0,1.0,0.2);
+	glVertex3d(max.x(),min.y(),min.z());
+	glVertex3d(max.x(),min.y(),max.z());
+	glVertex3d(min.x(),min.y(),max.z());
+
+	glEnd();
+	glDisable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_TRUE);
+	glDisable(GL_CULL_FACE);
+    }
 }
 

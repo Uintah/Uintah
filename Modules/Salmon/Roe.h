@@ -21,6 +21,7 @@
 #include <Geom/TCLGeom.h>
 #include <Geom/View.h>
 #include <Geometry/BBox.h>
+#include <Geometry/Transform.h>
 #include <TCL/TCL.h>
 #include <TCL/TCLvar.h>
 
@@ -31,8 +32,12 @@ class GeomSphere;
 class Light;
 class Renderer;
 class Salmon;
-class SceneItem;
+//class SceneItem;
+
+class GeomSalmonItem;
 class Vector;
+struct DrawInfoOpenGL;
+class BallData;
 
 struct ObjTag {
     TCLvarint* visible;
@@ -68,11 +73,13 @@ protected:
 
     BBox bb;
 
+    Transform prev_trans;
     int last_x, last_y;
     double total_x, total_y, total_z;
     Point rot_point;
     int rot_point_valid;
     View rot_view;
+    double eye_dist;
     double total_scale;
     GeomPick* pick_pick;
     GeomObj* pick_obj;
@@ -102,6 +109,8 @@ protected:
     void redraw();
     void redraw(double tbeg, double tend, int nframes, double framerate);
 public:
+    BallData *ball;  // this is the ball for arc ball stuff
+
     Renderer* current_renderer;
     Renderer* get_renderer(const clString&);
     clString id;
@@ -111,8 +120,8 @@ public:
     Roe(const Roe&);
     ~Roe();
 
-    void itemAdded(SceneItem*);
-    void itemDeleted(SceneItem*);
+    void itemAdded(GeomSalmonItem*);
+    void itemDeleted(GeomSalmonItem*);
     void rotate(double angle, Vector v, Point p);
     void rotate_obj(double angle, const Vector& v, const Point& p);
     void translate(Vector v);
@@ -133,6 +142,13 @@ public:
     void get_bounds(BBox&);
 
     void autoview(const BBox&);
+
+    // sets up the state (OGL) for a tool/roe
+    void setState(DrawInfoOpenGL*,clString);
+    // sets up DI for this drawinfo
+    void setDI(DrawInfoOpenGL*,clString);
+    // sets up OGL clipping planes...
+    void setClip(void); 
 
     // Which of the objects do we draw?
     HashTable<clString, ObjTag*> visible;
@@ -159,6 +175,7 @@ public:
     void set_current_time(double time);
 
     void saveall(const clString&, const clString& format);
+
 };
 
 class RoeMouseMessage : public MessageBase {

@@ -20,6 +20,7 @@
 #include <Dataflow/ModuleHelper.h>
 #include <Datatypes/GeometryComm.h>
 #include <Geom/Geom.h>
+#include <Modules/Salmon/SalmonGeom.h>
 #include <Geom/HeadLight.h>
 #include <Malloc/Allocator.h>
 #include <iostream.h>
@@ -47,11 +48,17 @@ Salmon::Salmon(const clString& id)
     // light source icons, etc.
     int portid=max_portno++;
     // Create the port
+    GeomSalmonPort *pi = new GeomSalmonPort(portid);
+
+#if 0
     PortInfo* pi=scinew PortInfo;
     portHash.insert(portid, pi);
     pi->msg_head=pi->msg_tail=0;
     pi->portno=portid;
     pi->objs=scinew HashTable<int, SceneItem*>;
+#endif
+
+    ports.addObj(pi,portid);
 
     // Fill it up with the defaults...
     for(int i=0;i<lighting.lights.size();i++){
@@ -203,11 +210,15 @@ void Salmon::initPort(Mailbox<GeomReply>* reply)
 {
     int portid=max_portno++;
     // Create the port
-    PortInfo* pi=scinew PortInfo;
+//    PortInfo* pi=scinew PortInfo;
+    GeomSalmonPort *pi = new GeomSalmonPort(portid);
+    ports.addObj(pi,portid);
+#if 0
     portHash.insert(portid, pi);
     pi->msg_head=pi->msg_tail=0;
     pi->portno=portid;
     pi->objs=scinew HashTable<int, SceneItem*>;
+#endif
     reply->send(GeomReply(portid, &busy_bit));
 }
 
@@ -217,41 +228,39 @@ void Salmon::flushViews()
 	roe[i]->force_redraw();
 }
 
-void Salmon::addObj(PortInfo* port, int serial, GeomObj *obj,
+void Salmon::addObj(GeomSalmonPort* port, int serial, GeomObj *obj,
 		    const clString& name, CrowdMonitor* lock)
 {
     clString pname(name+" ("+to_string(port->portno)+")");
-    SceneItem* si=scinew SceneItem(obj, pname, lock);
-    port->objs->insert(serial, si);
+//    SceneItem* si=scinew SceneItem(obj, pname, lock);
+    GeomSalmonItem* si = scinew GeomSalmonItem(obj, pname, lock);
+    port->addObj(si,serial);
+//    port->objs->insert(serial, si);
     for (int i=0; i<roe.size(); i++)
 	roe[i]->itemAdded(si);
 }
 
-void Salmon::delObj(PortInfo* port, int serial)
+void Salmon::delObj(GeomSalmonPort* port, int serial)
 {
-    SceneItem* si;
-    if(port->objs->lookup(serial, si)){
-	port->objs->remove(serial);
+    GeomSalmonItem* si;
+    if(si = ((GeomSalmonItem*)port->getObj(serial))){
 	for (int i=0; i<roe.size(); i++)
 	    roe[i]->itemDeleted(si);
-	delete si->obj;
-	delete si;
+	port->delObj(serial);
     } else {
 	cerr << "Error deleting object, object not in database...(serial=" << serial << ")" << endl;
     }
 }
 
-void Salmon::delAll(PortInfo* port)
+void Salmon::delAll(GeomSalmonPort* port)
 {
-    HashTableIter<int, SceneItem*> iter(port->objs);
+    HashTableIter<int, GeomObj*> iter = port->getIter();
     for (iter.first(); iter.ok();++iter) {
-	SceneItem* si=iter.get_data();
+	GeomSalmonItem* si=(GeomSalmonItem*)iter.get_data();
 	for (int i=0; i<roe.size(); i++)
 	    roe[i]->itemDeleted(si);
-	delete si->obj;
-	delete si;
     }
-    port->objs->remove_all();
+    port->delAll();
 }
 
 void Salmon::addTopRoe(Roe *r)
@@ -350,6 +359,7 @@ SalmonMessage::~SalmonMessage()
 {
 }
 
+#if 0
 SceneItem::SceneItem(GeomObj* obj, const clString& name, CrowdMonitor* lock)
 : obj(obj), name(name), lock(lock)
 {
@@ -358,12 +368,16 @@ SceneItem::SceneItem(GeomObj* obj, const clString& name, CrowdMonitor* lock)
 SceneItem::~SceneItem()
 {
 }
+#endif
 
 void Salmon::append_port_msg(GeometryComm* gmsg)
 {
     // Look up the right port number
-    PortInfo* pi;
-    if(!portHash.lookup(gmsg->portno, pi)){
+//    PortInfo* pi;
+    GeomSalmonPort *pi;
+
+    if (!(pi = ((GeomSalmonPort*)ports.getObj(gmsg->portno)))) {
+//    if(!portHash.lookup(gmsg->portno, pi)){
 	cerr << "Geometry message sent to bad port!!!: " << gmsg->portno << "\n";
 	return;
     }
@@ -381,8 +395,8 @@ void Salmon::append_port_msg(GeometryComm* gmsg)
 void Salmon::flushPort(int portid)
 {
     // Look up the right port number
-    PortInfo* pi;
-    if(!portHash.lookup(portid, pi)){
+    GeomSalmonPort* pi;
+    if(!(pi = ((GeomSalmonPort*)ports.getObj(portid)))){
 	cerr << "Geometry message sent to bad port!!!\n";
 	return;
     }
