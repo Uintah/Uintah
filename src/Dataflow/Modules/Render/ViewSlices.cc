@@ -2462,12 +2462,6 @@ ViewSlices::execute()
 {
   //  cerr << "execute\n";
   update_state(Module::JustStarted);
-  ASSERTMSG(cmap2_iport_,"Unable to initialize ColorMap2 input port.");
-  ASSERTMSG(n1_cmap_iport_,"Unable to initialize iport ColorMap.");
-  ASSERTMSG(n2_cmap_iport_,"Unable to initialize iport ColorMap.");
-  ASSERTMSG(grad_iport_,"Unable to initialize Gradient input port.");
-  ASSERTMSG(geom_oport_,"Unable to initialize oport Scene Graph.");
-  ASSERTMSG(cmap2_oport_,"Unable to initialize oport ColorMap2");
 
   unsigned int a, n = 1;
   vector<NrrdIPort *> nrrd_iports;

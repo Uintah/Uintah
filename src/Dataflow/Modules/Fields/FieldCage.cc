@@ -114,16 +114,7 @@ FieldCage::execute()
   // This is typically viewer, it owns the scene graph memory we create here.
   
   infield_ = (FieldIPort *)get_iport("Field");
-  if (!infield_) {
-    error("Unable to initialize iport 'Field'.");
-    return;
-  }
-  
   ogeom_ = (GeometryOPort *)get_oport("Scene Graph");
-  if (!ogeom_) {
-    error("Unable to initialize oport 'Scene Graph'.");
-    return;
-  }
   
   FieldHandle fld_handle;
   infield_->get(fld_handle);

@@ -159,18 +159,6 @@ void VolumeSlicer::execute()
   icmap2_ = (ColorMap2IPort*)get_iport("ColorMap2");
   ogeom_ = (GeometryOPort*)get_oport("Geometry");
   ocmap_ = (ColorMapOPort*)get_oport("ColorMap");
-  if (!intexture_) {
-    error("Unable to initialize iport 'GL Texture'.");
-    return;
-  }
-  if (!icmap1_ && !icmap2_) {
-    error("Unable to initialize iport 'ColorMap'.");
-    return;
-  }
-  if (!ogeom_) {
-    error("Unable to initialize oport 'Geometry'.");
-    return;
-  }
   
   if (!(intexture_->get(tex_) && tex_.get_rep()))
   {

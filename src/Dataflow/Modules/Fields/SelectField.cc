@@ -93,10 +93,6 @@ SelectField::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
     return;
@@ -156,10 +152,6 @@ SelectField::execute()
 
       GeometryOPort *ogport=0;
       ogport = (GeometryOPort*)get_oport("Selection Widget");
-      if (!ogport) {
-	error("Unable to initialize oport 'Selection Widget'.");
-	return;
-      }
       widgetid_ = ogport->addObj(widget_group, "SelectField Selection Widget",
 				 &widget_lock_);
       ogport->flushViews();
@@ -190,11 +182,6 @@ SelectField::execute()
   if (forward_p)
   {
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-    if (!ofield_port) {
-      error("Unable to initialize oport 'Output Field'.");
-      return;
-    }
-    
     ofield_port->send(output_field_);
   }
 }

@@ -154,11 +154,6 @@ Isosurface::execute()
   bool update = false;
 
   FieldIPort *ifield_port = (FieldIPort *)get_iport("Field");
-  if (!ifield_port) {
-    error("Unable to initialize iport 'Field'.");
-    return;
-  }
-
   FieldHandle fHandle;
   if (!(ifield_port->get(fHandle) && fHandle.get_rep())) {
     error( "No field handle or representation." );
@@ -197,12 +192,6 @@ Isosurface::execute()
 
   // Color the Geometry.
   ColorMapIPort *icmap_port = (ColorMapIPort *)get_iport("Optional Color Map");
-
-  if (!icmap_port) {
-    error("Unable to initialize iport 'Optional Color Map'.");
-    return;
-  }
-
   ColorMapHandle cmHandle;
   bool have_ColorMap = false;
   if (icmap_port->get(cmHandle)) {
@@ -222,11 +211,6 @@ Isosurface::execute()
   vector<double> isovals(0);
 
   MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Optional Isovalues");
-  if (!imatrix_port) {
-    error("Unable to initialize iport 'Optional Isovalues'.");
-    return;
-  }
-
   MatrixHandle mHandle;
   if (imatrix_port->get(mHandle)) {
     if(!mHandle.get_rep()) {
@@ -369,13 +353,7 @@ Isosurface::execute()
   }
 
   // Decide if an interpolant will be computed for the output field.
-  MatrixOPort *omatrix_port = 
-    (MatrixOPort *) get_oport("Mapping");
-
-  if (!omatrix_port) {
-    error("Unable to initialize "+name+"'s oport\n");
-    return;
-  }
+  MatrixOPort *omatrix_port = (MatrixOPort *) get_oport("Mapping");
 
   const bool build_interp = build_field && omatrix_port->nconnections();
 
@@ -519,10 +497,6 @@ Isosurface::execute()
 
     // Output geometry.
     GeometryOPort *ogeom_port = (GeometryOPort *)get_oport("Geometry");
-    if (!ogeom_port) {
-      error("Unable to initialize oport 'Geometry'.");
-      return;
-    }
 
     // Stop showing the previous geometry.
     bool geomflush = false;
@@ -570,31 +544,17 @@ Isosurface::execute()
     update_state(Completed);
   }
 
-  // Get a handle to the output field port.
-  if( build_field && fHandle_.get_rep() ) {
-    FieldOPort *ofield_port = 
-      (FieldOPort *) get_oport("Surface");
-
-    if (!ofield_port) {
-      error("Unable to initialize "+name+"'s oport\n");
-      return;
-    }
-
-    // Send the data downstream
+  // Send the isosurface field downstream
+  if( build_field && fHandle_.get_rep() )
+  {
+    FieldOPort *ofield_port = (FieldOPort *) get_oport("Surface");
     ofield_port->send( fHandle_ );
   }
 
-  // Get a handle to the output matrix port.
-  if( build_interp && mHandle_.get_rep() ) {
-    MatrixOPort *omatrix_port = 
-      (MatrixOPort *) get_oport("Interpolant");
-
-    if (!omatrix_port) {
-      error("Unable to initialize "+name+"'s oport\n");
-      return;
-    }
-
-    // Send the data downstream
+  // Send the mapping matrix downstream
+  if( build_interp && mHandle_.get_rep() )
+  {
+    MatrixOPort *omatrix_port = (MatrixOPort *) get_oport("Mapping");
     omatrix_port->send( mHandle_ );
   }
 }

@@ -148,14 +148,8 @@ MatrixInfo::update_input_attributes(MatrixHandle m)
 void
 MatrixInfo::execute()
 {
-  MatrixIPort *iport = (MatrixIPort*)get_iport("Input");
-  if (!iport)
-  {
-    error("Unable to initialize iport 'Input'.");
-    return;
-  }
-
   // The input port (with data) is required.
+  MatrixIPort *iport = (MatrixIPort*)get_iport("Input");
   MatrixHandle mh;
   if (!iport->get(mh) || !mh.get_rep())
   {

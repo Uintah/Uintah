@@ -552,19 +552,6 @@ ShowField::execute()
   ColorMapIPort *color_iport = (ColorMapIPort *)get_iport("ColorMap");
   ogeom_ = (GeometryOPort *)get_oport("Scene Graph");
 
-  if (!field_iport) {
-    error("Unable to initialize iport 'Field'.");
-    return;
-  }
-  if (!color_iport) {
-    error("Unable to initialize iport 'ColorMap'.");
-    return;
-  }
-  if (!ogeom_) {
-    error("Unable to initialize oport 'Scene Graph'.");
-    return;
-  }
-
   FieldHandle fld_handle;
   if (!(field_iport->get(fld_handle) && fld_handle.get_rep()))
   {

@@ -176,10 +176,7 @@ Probe::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!ifp) {
-    error("Unable to initialize " +name + "'s iport.");
-    return;
-  }
+
   bool input_field_p = true;
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
@@ -244,11 +241,6 @@ Probe::execute()
     widget_group->add(widget_->GetWidget());
 
     GeometryOPort *ogport = (GeometryOPort*)get_oport("Probe Widget");
-    if (!ogport)
-    {
-      error("Unable to initialize " + name + "'s oport.");
-      return;
-    }
     widgetid_ = ogport->addObj(widget_group, "Probe Selection Widget",
 			       &widget_lock_);
     ogport->flushViews();
@@ -340,11 +332,6 @@ Probe::execute()
   if (moved_p)
   {
     GeometryOPort *ogport = (GeometryOPort*)get_oport("Probe Widget");
-    if (!ogport)
-    {
-      error("Unable to initialize " + name + "'s oport.");
-      return;
-    }
     ogport->flushViews();
     gui_moveto_.set("");
   }
@@ -433,20 +420,11 @@ Probe::execute()
   if (gui_show_value_.get()) { gui_value_.set(valstr.str()); }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Probe Point");
-  if (!ofp) {
-    error("Unable to initialize oport 'Probe Point'.");
-    return;
-  }
   ofp->send(ofield);
 
   if (input_field_p)
   {
     MatrixOPort *mp = (MatrixOPort *)get_oport("Element Index");
-    if (!mp)
-    {
-      error("Unable to initialize oport 'Element Index'.");
-      return;
-    }
     unsigned int index = 0;
     switch (ifieldhandle->basis_order())
     {

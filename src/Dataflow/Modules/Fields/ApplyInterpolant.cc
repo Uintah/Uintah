@@ -87,11 +87,6 @@ ApplyInterpolant::execute()
 {
   src_port = (FieldIPort *)getIPort("Source");
   FieldHandle fsrc_h;
-
-  if(!src_port) {
-    error("Unable to initialize iport 'Source'.");
-    return;
-  }
   if (!(src_port->get(fsrc_h) && fsrc_h.get_rep()))
   {
     error("Could not get a handle or representation.");
@@ -100,11 +95,6 @@ ApplyInterpolant::execute()
 
   itp_port = (FieldIPort *)get_iport("Interpolant");
   FieldHandle fitp_h;
-
-  if (!itp_port) {
-    error("Unable to initialize iport 'Interpolant'.");
-    return;
-  }
   if (!(itp_port->get(fitp_h) && fitp_h.get_rep()))
   {
     error("Could not get a handle or representation.");
@@ -118,17 +108,12 @@ ApplyInterpolant::execute()
   Handle<ApplyInterpAlgo> algo;
   if (!DynamicCompilation::compile(ci, algo, this)) return;
 
-  ofp = (FieldOPort *)getOPort("Output");
-  if (!ofp) {
-    error("Unable to initialize oport 'Output'.");
-    return;
-  }
-    
   FieldHandle ofieldhandle(algo->execute(fsrc_h, fitp_h));
   string units;
   if (fsrc_h->get_property("units", units))
     ofieldhandle->set_property("units", units, false);
 
+  ofp = (FieldOPort *)getOPort("Output");
   ofp->send(ofieldhandle);
 }
 

@@ -131,15 +131,6 @@ void LinAlgUnary::execute() {
   MatrixIPort* imat_ = (MatrixIPort *)get_iport("Input");
   MatrixOPort* omat_ = (MatrixOPort *)get_oport("Output");
 
-  if (!imat_) {
-    error("Unable to initialize iport 'Input'.");
-    return;
-  }
-  if (!omat_) {
-    error("Unable to initialize oport 'Output'.");
-    return;
-  }
-  
   update_state(NeedData);
   MatrixHandle mh;
   if (!imat_->get(mh) || !mh.get_rep()) {

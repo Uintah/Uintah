@@ -102,21 +102,12 @@ FieldMeasures::execute()
 {
   ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle fieldhandle;
-  if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
-
   if (!(ifp->get(fieldhandle) && fieldhandle.get_rep()))
   {
     return;
   }
 
   omp = (MatrixOPort *)get_oport("Output Measures Matrix");
-  if (!omp) {
-    error("Unable to initialize oport 'Output Measures Matrix'.");
-    return;
-  }
 
   m_ = fieldhandle->mesh();
 

@@ -116,10 +116,6 @@ ClipByFunction::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input");
   FieldHandle fHandle;
-  if (!ifp) {
-    error("Unable to initialize iport 'Input'.");
-    return;
-  }
   if (!(ifp->get(fHandle) && fHandle.get_rep())) {
     error( "No source field handle or representation" );
     return;
@@ -206,23 +202,15 @@ ClipByFunction::execute()
   }
 
 
-  if( fHandle_.get_rep() ) {
+  if( fHandle_.get_rep() )
+  {
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Clipped");
-    if (!ofield_port) {
-      error("Unable to initialize oport 'Clipped'.");
-      return;
-    }
-
     ofield_port->send(fHandle_);
   }
 
-  if( mHandle_.get_rep() ) {
+  if( mHandle_.get_rep() )
+  {
     MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Mapping");
-    if (!omatrix_port) {
-      error("Unable to initialize oport 'Mapping'.");
-      return;
-    }
-
     omatrix_port->send(mHandle_);
   }
 }

@@ -238,11 +238,6 @@ void
 FieldInfo::execute()
 {
   FieldIPort *iport = (FieldIPort*)get_iport("Input Field");
-  if (!iport)
-  {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
 
   // The input port (with data) is required.
   FieldHandle fh;

@@ -75,15 +75,6 @@ void BuildNoise::execute() {
   MatrixIPort *isignal = (MatrixIPort *)get_iport("Signal");
   MatrixOPort *onoise = (MatrixOPort *)get_oport("Noise");
 
-  if (!isignal) {
-    error("Unable to initialize iport 'Signal'.");
-    return;
-  }
-  if (!onoise) {
-    error("Unable to initialize oport 'Noise'.");
-    return;
-  }
-  
   update_state(NeedData);
   MatrixHandle matH;
   if (!isignal->get(matH))

@@ -104,12 +104,6 @@ NrrdTextureBuilder::execute()
   NrrdIPort* igfield = (NrrdIPort*)get_iport("Gradmag Nrrd");
   TextureOPort* otexture = (TextureOPort *)get_oport("Texture");
 
-  if (!ivfield)
-  {
-    error("Unable to initialize input ports.");
-    return;
-  }
-
   // check rep
   NrrdDataHandle nvfield;
   ivfield->get(nvfield);

@@ -90,10 +90,6 @@ MapDataToMeshCoord::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifield;
-  if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
   if (!(ifp->get(ifield) && ifield.get_rep()))
   {
     error("Input field is empty.");
@@ -143,11 +139,6 @@ MapDataToMeshCoord::execute()
     FieldHandle ofield(algo->execute(ifield, coord));
     
     FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
-    if (!ofp) {
-      error("Unable to initialize oport 'Output Field'.");
-      return;
-    }
-
     ofp->send(ofield);
   }
 }

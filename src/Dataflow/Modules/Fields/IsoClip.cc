@@ -123,10 +123,6 @@ IsoClip::execute()
 {
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input");
-  if (!ifp) {
-    error("Unable to initialize iport 'Input'.");
-    return;
-  }
   FieldHandle ifieldhandle;
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
@@ -134,11 +130,6 @@ IsoClip::execute()
   }
 
   MatrixIPort *imp = (MatrixIPort *)get_iport("Optional Isovalue");
-  if (!imp)
-  {
-    error("Unable to initialize iport 'Optional Isovalue'.");
-    return;
-  }
   MatrixHandle isomat;
   if (imp->get(isomat) && isomat.get_rep() &&
       isomat->nrows() > 0 && isomat->ncols() > 0 &&
@@ -223,21 +214,9 @@ IsoClip::execute()
 				     interp);
   
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Clipped");
-  if (!ofield_port)
-  {
-    error("Unable to initialize oport 'Clipped'.");
-    return;
-  }
-
   ofield_port->send(ofield);
 
   MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Mapping");
-  if (!omatrix_port)
-  {
-    error("Unable to initialize oport 'Mapping'.");
-    return;
-  }
-
   omatrix_port->send(interp);
 }
 
