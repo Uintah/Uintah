@@ -393,11 +393,24 @@ double CompNeoHookPlas::computeRhoMicroCM(double pressure,
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;
-
+  
   double p_gauge = pressure - p_ref;
   double rho_cur;
 
+#if 1
+  if(p_gauge > 0){
+    rho_cur = rho_orig*(p_gauge/bulk + sqrt((p_gauge/bulk)*(p_gauge/bulk) +1));
+  }
+  else{
+    double A = p_ref;
+    double n = bulk/p_ref;
+    rho_cur = rho_orig*pow(pressure/A,1./n);
+  }
+#endif
+
+#if 0
   rho_cur = rho_orig*(p_gauge/bulk + sqrt((p_gauge/bulk)*(p_gauge/bulk) +1));
+#endif
 
   return rho_cur;
 }
@@ -408,13 +421,30 @@ void CompNeoHookPlas::computePressEOSCM(double rho_cur,double& pressure,
                                         const MPMMaterial* matl)
 {
   double bulk = d_initialData.Bulk;
-  //double shear = d_initialData.Shear;
   double rho_orig = matl->getInitialDensity();
 
-  double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
-  pressure = p_ref + p_g;
-  dp_drho  = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
-  tmp = bulk/rho_cur;  // speed of sound squared
+#if 1
+  if(rho_cur > rho_orig){
+    double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
+    pressure = p_ref + p_g;
+    dp_drho  = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
+    tmp = bulk/rho_cur;  // speed of sound squared
+  }
+  else{
+    double A = p_ref;
+    double n = bulk/p_ref;
+    pressure = A*pow(rho_cur/rho_orig,n);
+    dp_drho  = (bulk/rho_orig)*pow(rho_cur/rho_orig,n-1);
+    tmp = dp_drho;  // speed of sound squared
+  }
+#endif
+
+#if 0
+    double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
+    pressure = p_ref + p_g;
+    dp_drho  = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
+    tmp = bulk/rho_cur;  // speed of sound squared
+#endif
 }
 
 double CompNeoHookPlas::getCompressibility()
