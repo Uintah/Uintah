@@ -154,8 +154,10 @@ int main(int argc, char** argv)
   bool do_patch = false;
   bool do_material = false;
   bool do_verbose = false;
-  int time_step_lower = -1;
-  int time_step_upper = -1;
+  unsigned long time_step_lower;
+  unsigned long time_step_upper;
+  bool tslow_set = false;
+  bool tsup_set = false;
   string filebase;
   string raydatadir;
   /*
@@ -224,9 +226,11 @@ int main(int argc, char** argv)
     } else if (s == "-verbose") {
       do_verbose = true;
     } else if (s == "-timesteplow") {
-      time_step_lower = atoi(argv[++i]);
+      time_step_lower = strtoul(argv[++i],(char**)NULL,10);
+      tslow_set = true;
     } else if (s == "-timestephigh") {
-      time_step_upper = atoi(argv[++i]);
+      time_step_upper = strtoul(argv[++i],(char**)NULL,10);
+      tsup_set = true;
     } else if( (s == "-help") || (s == "-h") ) {
       usage( "", argv[0] );
     } else {
@@ -297,20 +301,20 @@ int main(int argc, char** argv)
       ASSERTEQ(index.size(), times.size());
       cout << "There are " << index.size() << " timesteps:\n";
       
-      if (time_step_lower <= -1)
+      if (!tslow_set)
 	time_step_lower =0;
       else if (time_step_lower >= times.size()) {
 	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
 	abort();
       }
-      if (time_step_upper <= -1)
+      if (!tsup_set)
 	time_step_upper = times.size()-1;
       else if (time_step_upper >= times.size()) {
-	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
+	cerr << "timestephigh must be between 0 and " << times.size()-1 << endl;
 	abort();
       }
       
-      for(int t=time_step_lower;t<=time_step_upper;t++){
+      for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
 	double time = times[t];
 	cout << "time = " << time << "\n";
 	GridP grid = da->queryGrid(time);
@@ -606,21 +610,21 @@ int main(int argc, char** argv)
 	else
            cout << "There are " << index.size() << " timesteps:\n";
       
-      if (time_step_lower <= -1)
+      if (!tslow_set)
 	time_step_lower =0;
       else if (time_step_lower >= times.size()) {
 	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
 	abort();
       }
-      if (time_step_upper <= -1)
+      if (!tsup_set)
 	time_step_upper = times.size()-1;
       else if (time_step_upper >= times.size()) {
-	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
+	cerr << "timestephigh must be between 0 and " << times.size()-1 << endl;
 	abort();
       }
       
       // Loop over time
-      for(int t=time_step_lower;t<=time_step_upper;t++){
+      for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
 	double time = times[t];
       	int partnum = 1;
 	int num_of_particles = 0;
@@ -940,21 +944,21 @@ int main(int argc, char** argv)
       std::string patchID_file;
       std::string materialType_file;
       
-      if (time_step_lower <= -1)
+      if (!tslow_set)
 	time_step_lower =0;
       else if (time_step_lower >= times.size()) {
 	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
 	abort();
       }
-      if (time_step_upper <= -1)
+      if (!tsup_set)
 	time_step_upper = times.size()-1;
       else if (time_step_upper >= times.size()) {
-	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
+	cerr << "timestephigh must be between 0 and " << times.size()-1 << endl;
 	abort();
       }
       
       // for all timesteps
-      for(int t=time_step_lower;t<=time_step_upper;t++){
+      for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
 	double time = times[t];
 	ostringstream tempstr_time;
 	tempstr_time << setprecision(17) << time;
@@ -1376,6 +1380,10 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.13  2000/08/16 15:49:54  bigler
+// Changed timesteplow/timestephigh variables to be of type unsigned long.
+// Did this for compatability issues with the data archive.
+//
 // Revision 1.12  2000/08/11 20:41:41  bigler
 // Fixed a bug that was failing to compute the min/max for Matrix3d properly.
 // This was for rtrt particle data output.
