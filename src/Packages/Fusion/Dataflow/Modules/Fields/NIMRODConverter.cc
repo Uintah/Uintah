@@ -92,7 +92,6 @@ NIMRODConverter::~NIMRODConverter(){
 void
 NIMRODConverter::execute(){
 
-
   vector< NrrdDataHandle > nHandles;
   NrrdDataHandle nHandle;
 
@@ -463,6 +462,7 @@ NIMRODConverter::execute(){
 
   if( nmodes_ > 0 ) {
     for( int ic=0; ic<=nmodes_; ic++ ) {
+      gModes_[ic]->reset();
       if( modes_[ic] != gModes_[ic]->get() ) {
 	modes_[ic] = gModes_[ic]->get();
 	updateMode = true;

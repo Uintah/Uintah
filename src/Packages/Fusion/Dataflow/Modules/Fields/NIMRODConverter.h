@@ -335,11 +335,12 @@ execute(vector< NrrdDataHandle >& nHandles,
   NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
   NTYPE *ptrMeshK   = (NTYPE *)(nHandles[mesh[K]]->nrrd->data);
 
-  unsigned int nmodes = nHandles[mesh[K]]->nrrd->axis[1].size;
+  int nmodes = nHandles[mesh[K]]->nrrd->axis[1].size;
 
   NTYPE* ndata = scinew NTYPE[idim*jdim*kdim*rank];
 
   for( i=0; i<idim; i++ ) {
+
     double phi = ptrMeshPhi[i];
 
     for( j=0; j<jdim; j++ ) {
