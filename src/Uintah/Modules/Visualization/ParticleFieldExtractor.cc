@@ -154,7 +154,7 @@ void ParticleFieldExtractor::setVars(ArchiveHandle ar)
   
   // get all of the NC and Particle Variables
   const TypeDescription *td;
-  for( int i = 0; i < names.size(); i++ ){
+  for( int i = 0; i < (int)names.size(); i++ ){
     td = types[i];
     if(td->getType() ==  TypeDescription::ParticleVariable){
       const TypeDescription* subtype = td->getSubType();
@@ -526,7 +526,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 
   // determine type
   const TypeDescription *td;
-  for(int i = 0; i < names.size() ; i++)
+  for(int i = 0; i < (int)names.size() ; i++)
     if (names[i] == varname)
       td = types[i];
   
@@ -543,7 +543,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
   case TypeDescription::double_type:
     cerr << "Graphing a variable of type double\n";
     // loop over all the materials in the mat_list
-    for(int i = 0; i < mat_list.size(); i++) {
+    for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
       // query the value
       if (!is_cached(particleID+" "+varname+" "+mat_list[i],data)) {
@@ -563,7 +563,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
   case TypeDescription::Vector:
     cerr << "Graphing a variable of type Vector\n";
     // loop over all the materials in the mat_list
-    for(int i = 0; i < mat_list.size(); i++) {
+    for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
       if (!is_cached(particleID+" "+varname+" "+mat_list[i]+" "+type_list[i],
 		     data)) {
@@ -584,7 +584,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
   case TypeDescription::Matrix3:
     cerr << "Graphing a variable of type Matrix3\n";
     // loop over all the materials in the mat_list
-    for(int i = 0; i < mat_list.size(); i++) {
+    for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
       if (!is_cached(particleID+" "+varname+" "+mat_list[i]+" "+type_list[i],
 		     data)) {
@@ -612,7 +612,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 
 string ParticleFieldExtractor::vector_to_string(vector< int > data) {
   ostringstream ostr;
-  for(int i = 0; i < data.size(); i++) {
+  for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i]  << " ";
     }
   return ostr.str();
@@ -620,7 +620,7 @@ string ParticleFieldExtractor::vector_to_string(vector< int > data) {
 
 string ParticleFieldExtractor::vector_to_string(vector< string > data) {
   string result;
-  for(int i = 0; i < data.size(); i++) {
+  for(int i = 0; i < (int)data.size(); i++) {
       result+= (data[i] + " ");
     }
   return result;
@@ -628,7 +628,7 @@ string ParticleFieldExtractor::vector_to_string(vector< string > data) {
 
 string ParticleFieldExtractor::vector_to_string(vector< double > data) {
   ostringstream ostr;
-  for(int i = 0; i < data.size(); i++) {
+  for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i]  << " ";
     }
   return ostr.str();
@@ -637,23 +637,23 @@ string ParticleFieldExtractor::vector_to_string(vector< double > data) {
 string ParticleFieldExtractor::vector_to_string(vector< Vector > data, string type) {
   ostringstream ostr;
   if (type == "length") {
-    for(int i = 0; i < data.size(); i++) {
+    for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].length() << " ";
     }
   } else if (type == "length2") {
-    for(int i = 0; i < data.size(); i++) {
+    for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].length2() << " ";
     }
   } else if (type == "x") {
-    for(int i = 0; i < data.size(); i++) {
+    for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].x() << " ";
     }
   } else if (type == "y") {
-    for(int i = 0; i < data.size(); i++) {
+    for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].y() << " ";
     }
   } else if (type == "z") {
-    for(int i = 0; i < data.size(); i++) {
+    for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].z() << " ";
     }
   }
@@ -664,15 +664,15 @@ string ParticleFieldExtractor::vector_to_string(vector< Vector > data, string ty
 string ParticleFieldExtractor::vector_to_string(vector< Matrix3 > data, string type) {
   ostringstream ostr;
   if (type == "Determinant") {
-    for(int i = 0; i < data.size(); i++) {
+    for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].Determinant() << " ";
     }
   } else if (type == "Trace") {
-    for(int i = 0; i < data.size(); i++) {
+    for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].Trace() << " ";
     }
   } else if (type == "Norm") {
-    for(int i = 0; i < data.size(); i++) {
+    for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].Norm() << " ";
     } 
  }

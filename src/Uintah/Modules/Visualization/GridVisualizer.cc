@@ -70,7 +70,9 @@ using namespace std;
   // should match the values in the tcl code
 #define NC_VAR 0
 #define CC_VAR 1
-#define FC_VAR 2
+#define XFC_VAR 2
+#define YFC_VAR 3
+#define ZFC_VAR 4
 
 struct ID {
   IntVector id;
@@ -333,7 +335,7 @@ void GridVisualizer::setVars(GridP grid) {
   string type_list("");
   const Patch* patch = *(grid->getLevel(0)->patchesBegin());
   
-  for(int i = 0; i< names.size(); i++) {
+  for(int i = 0; i< (int)names.size(); i++) {
     switch (types[i]->getType()) {
     case TypeDescription::NCVariable:
       if (var_orientation.get() == NC_VAR) {
@@ -355,8 +357,28 @@ void GridVisualizer::setVars(GridP grid) {
 	add_type(type_list,types[i]->getSubType());
       }
       break;
-    case TypeDescription::FCVariable:
-      if (var_orientation.get() == FC_VAR) {
+    case TypeDescription::XFCVariable:
+      if (var_orientation.get() == XFC_VAR) {
+	varNames += " ";
+	varNames += names[i];
+	ostringstream mat;
+	mat << " " << archive->queryNumMaterials(names[i], patch, time);
+	matls += mat.str();
+	add_type(type_list,types[i]->getSubType());
+      }
+      break;
+    case TypeDescription::YFCVariable:
+      if (var_orientation.get() == YFC_VAR) {
+	varNames += " ";
+	varNames += names[i];
+	ostringstream mat;
+	mat << " " << archive->queryNumMaterials(names[i], patch, time);
+	matls += mat.str();
+	add_type(type_list,types[i]->getSubType());
+      }
+      break;
+    case TypeDescription::ZFCVariable:
+      if (var_orientation.get() == ZFC_VAR) {
 	varNames += " ";
 	varNames += names[i];
 	ostringstream mat;
@@ -395,7 +417,7 @@ void GridVisualizer::execute()
   old_id_list = id_list;
   // clean out ogeom
   if (old_id_list.size() != 0)
-    for (int i = 0; i < old_id_list.size(); i++)
+    for (int i = 0; i < (int)old_id_list.size(); i++)
       ogeom->delObj(old_id_list[i]);
   id_list.clear();
 
@@ -569,7 +591,13 @@ void GridVisualizer::execute()
 	}
 	break;
 	
-      case FC_VAR:
+      case XFC_VAR:
+	// not implemented
+	break;
+      case YFC_VAR:
+	// not implemented
+	break;
+      case ZFC_VAR:
 	// not implemented
 	break;
       }
@@ -602,7 +630,13 @@ void GridVisualizer::execute()
     case CC_VAR:
       //p = patch->cellPosition(currentNode);
       break;
-    case FC_VAR:
+    case XFC_VAR:
+      // not implemented
+      break;
+    case YFC_VAR:
+      // not implemented
+      break;
+    case ZFC_VAR:
       // not implemented
       break;
     }
@@ -703,7 +737,7 @@ void GridVisualizer::cache_value(string where, vector<Matrix3>& values) {
 
 string GridVisualizer::vector_to_string(vector< int > data) {
   ostringstream ostr;
-  for(int i = 0; i < data.size(); i++) {
+  for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i]  << " ";
     }
   return ostr.str();
@@ -711,7 +745,7 @@ string GridVisualizer::vector_to_string(vector< int > data) {
 
 string GridVisualizer::vector_to_string(vector< string > data) {
   string result;
-  for(int i = 0; i < data.size(); i++) {
+  for(int i = 0; i < (int)data.size(); i++) {
       result+= (data[i] + " ");
     }
   return result;
@@ -719,7 +753,7 @@ string GridVisualizer::vector_to_string(vector< string > data) {
 
 string GridVisualizer::vector_to_string(vector< double > data) {
   ostringstream ostr;
-  for(int i = 0; i < data.size(); i++) {
+  for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i]  << " ";
     }
   return ostr.str();
@@ -728,23 +762,23 @@ string GridVisualizer::vector_to_string(vector< double > data) {
 string GridVisualizer::vector_to_string(vector< Vector > data, string type) {
   ostringstream ostr;
   if (type == "length") {
-    for(int i = 0; i < data.size(); i++) {
+    for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].length() << " ";
     }
   } else if (type == "length2") {
-    for(int i = 0; i < data.size(); i++) {
+    for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].length2() << " ";
     }
   } else if (type == "x") {
-    for(int i = 0; i < data.size(); i++) {
+    for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].x() << " ";
     }
   } else if (type == "y") {
-    for(int i = 0; i < data.size(); i++) {
+    for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].y() << " ";
     }
   } else if (type == "z") {
-    for(int i = 0; i < data.size(); i++) {
+    for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].z() << " ";
     }
   }
@@ -755,15 +789,15 @@ string GridVisualizer::vector_to_string(vector< Vector > data, string type) {
 string GridVisualizer::vector_to_string(vector< Matrix3 > data, string type) {
   ostringstream ostr;
   if (type == "Determinant") {
-    for(int i = 0; i < data.size(); i++) {
+    for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].Determinant() << " ";
     }
   } else if (type == "Trace") {
-    for(int i = 0; i < data.size(); i++) {
+    for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].Trace() << " ";
     }
   } else if (type == "Norm") {
-    for(int i = 0; i < data.size(); i++) {
+    for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i].Norm() << " ";
     } 
  }
@@ -794,7 +828,7 @@ void GridVisualizer::graph(string varname, vector <string> mat_list,
 
   // determine type
   const TypeDescription *td;
-  for(int i = 0; i < names.size() ; i++)
+  for(int i = 0; i < (int)names.size() ; i++)
     if (names[i] == varname)
       td = types[i];
   
@@ -804,7 +838,7 @@ void GridVisualizer::graph(string varname, vector <string> mat_list,
   case TypeDescription::double_type:
     cerr << "Graphing a variable of type double\n";
     // loop over all the materials in the mat_list
-    for(int i = 0; i < mat_list.size(); i++) {
+    for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
       if (!is_cached(currentNode_str()+" "+varname+" "+mat_list[i],data)) {
 	// query the value and then cache it
@@ -823,7 +857,7 @@ void GridVisualizer::graph(string varname, vector <string> mat_list,
   case TypeDescription::Vector:
     cerr << "Graphing a variable of type Vector\n";
     // loop over all the materials in the mat_list
-    for(int i = 0; i < mat_list.size(); i++) {
+    for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
       if (!is_cached(currentNode_str()+" "+varname+" "+mat_list[i]+" "
 		     +type_list[i],data)) {
@@ -845,7 +879,7 @@ void GridVisualizer::graph(string varname, vector <string> mat_list,
   case TypeDescription::Matrix3:
     cerr << "Graphing a variable of type Matrix3\n";
     // loop over all the materials in the mat_list
-    for(int i = 0; i < mat_list.size(); i++) {
+    for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
       if (!is_cached(currentNode_str()+" "+varname+" "+mat_list[i]+" "
 		     +type_list[i],data)) {
@@ -907,7 +941,13 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
     case CC_VAR:
       //p = patch->cellPosition(currentNode);
       break;
-    case FC_VAR:
+    case XFC_VAR:
+      // not implemented
+      break;
+    case YFC_VAR:
+      // not implemented
+      break;
+    case ZFC_VAR:
       // not implemented
       break;
     }
@@ -931,6 +971,9 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
 
 //
 // $Log$
+// Revision 1.8  2000/11/28 04:13:31  jas
+// Got rid of compiler warnings and added X,Y,Z FCVariables.
+//
 // Revision 1.7  2000/11/09 00:01:40  bigler
 // Fixed a bug with caching values
 //
