@@ -16,7 +16,6 @@ SRCS     += \
 	$(SRCDIR)/MPMICE.cc
 endif
 SRCS     += \
-	$(SRCDIR)/MPMICE.cc \
 	$(SRCDIR)/MPMICELabel.cc \
        $(SRCDIR)/MPMICEDebug.cc \
 
