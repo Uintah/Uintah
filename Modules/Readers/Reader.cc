@@ -62,6 +62,7 @@ Module* TYPEReader::clone(int deep)
     return new TYPEReader(*this, deep);
 }
 
+#ifdef BROKEN
 static void watcher(double pd, void* cbdata)
 {
     TYPEReader* reader=(TYPEReader*)cbdata;
@@ -77,6 +78,7 @@ static void watcher(double pd, void* cbdata)
 	TCLTask::unlock();
     }
 }
+#endif
 
 void TYPEReader::execute()
 {
