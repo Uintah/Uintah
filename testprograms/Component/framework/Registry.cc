@@ -1,0 +1,156 @@
+
+#include <Core/Exceptions/InternalError.h> 
+
+#include <testprograms/Component/framework/cca_sidl.h>
+#include <testprograms/Component/framework/Registry.h>
+
+
+namespace sci_cca {
+
+using namespace SCIRun;
+
+ComponentRecord::ComponentRecord( const ComponentID &id )
+{
+  id_ = id;
+}
+
+ComponentRecord::~ComponentRecord()
+{
+}
+
+Port
+ComponentRecord::getPort( const string &name )
+{
+  use_iterator ui = uses_.find(name);
+  if ( ui == uses_.end() ) {
+    // throw an error ? the port was not registered as a use port.
+    return 0;
+  }
+
+  UsePortRecord *use = ui->second;
+  
+  if ( !use->connection_ ) {
+    // a non blocking implementation
+    return 0;
+  }
+  
+  ProvidePortRecord *provide = use->connection_->provide_;
+  if ( !provide ) 
+    throw InternalError( "Provide port is missing..." );
+
+  return provide->port_;
+}
+    
+void 
+ComponentRecord::registerUsesPort( const PortInfo &info) 
+{
+  UsePortRecord *record = new UsePortRecord;
+  record->info_ = info;
+  record->connection_ = 0;
+
+  uses_[info->getName()] = record;
+}
+
+
+void 
+ComponentRecord::unregisterUsesPort( const string &name )
+{
+  use_iterator ui = uses_.find( name );
+  if ( ui != uses_.end() ) {
+    // check if the use port is connected. 
+    if ( ui->second->connection_ ) {
+      // if so than disconnect it
+      ui->second->connection_->disconnect();
+    }
+    delete ui->second;
+    uses_.erase(ui);
+  }
+  else {
+    // should it report an error if port was not found ?
+  }
+}
+
+void 
+ComponentRecord::addProvidesPort( const Port &port, const PortInfo& info) 
+{
+  ProvidePortRecord *record = new ProvidePortRecord;
+  record->info_ = info;
+  record->connection_ = 0;
+  record->port_ = port;
+  record->in_use_ = false;
+
+  provides_[info->getName()] = record;
+}
+
+void 
+ComponentRecord::removeProvidesPort( const string &name)
+{
+  provide_iterator pi = provides_.find(name);
+  if ( pi != provides_.end() ) {
+    if ( pi->second->connection_ ) {
+      pi->second->connection_->disconnect();
+    }
+    delete pi->second;
+    provides_.erase(pi);
+  }
+  else {
+    // should it report an error if port was not found ?
+  }
+}
+
+void 
+ComponentRecord::releasePort( const string &name)
+{
+  use_iterator ui = uses_.find(name);
+  if ( ui == uses_.end() ) {
+    throw InternalError( "Release port does not exist" );
+  }
+
+  UsePortRecord *record = ui->second;
+
+  if ( record->connection_ ) {
+    record->connection_->disconnect();
+    record->connection_ = 0;
+  } else {
+    // is this an error worthy of an exception ?
+  }
+}
+
+
+
+ProvidePortRecord *
+ComponentRecord::getProvideRecord( const string &name )
+{
+  provide_iterator pi = provides_.find(name);
+  if ( pi != provides_.end() ) 
+    return pi->second;
+  
+  return 0;
+  
+}
+UsePortRecord *
+ComponentRecord::getUseRecord( const string &name )
+{
+  use_iterator ui = uses_.find(name);
+  if ( ui != uses_.end() ) 
+    return ui->second;
+  
+  return 0;
+  
+}
+
+
+void
+ConnectionRecord::disconnect()
+{
+  // disconnect connection
+  
+  // clean up
+  use_->connection_ = 0;
+  provide_->connection_ = 0;
+  delete this;
+}
+
+
+} // namespace sci_cca
+

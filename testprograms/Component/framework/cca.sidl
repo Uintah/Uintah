@@ -40,8 +40,8 @@ package sci_cca  {
 //
 
 package sci_cca {
-
-  interface Framework {
+  
+  class Framework {
     Port getPort( in ComponentID, in string );
     void registerUsesPort( in ComponentID, in PortInfo);
     void unregisterUsesPort( in ComponentID, in string );
@@ -68,7 +68,7 @@ package sci_cca {
   // ConnectionServices
   //
 
-  interface ConnectionServices : extends Port {
+  interface ConnectionServices extends Port {
     bool connect( in ComponentID use, in string use_name,
 		  in ComponentID provide, in string provide_name );
     bool disconnect( in ComponentID use, in string use_name,
@@ -90,7 +90,7 @@ package sci_cca {
   // builer component
   // 
 
-  interface Builder : extends Component {
+  interface Builder extends Component {
   };
 
 }; // package sci_cca

@@ -17,6 +17,8 @@ using SCIRun::InternalError;
 using std::string;
 using CIA::array1;
 
+class Registry;
+
 class ConnectionServicesImpl : public ConnectionServices_interface {
 
 public:
@@ -37,6 +39,7 @@ public:
   
 protected:
   Framework framework_;
+  Registry *registry_;
 };
 
 } // end namespace sci_cca
