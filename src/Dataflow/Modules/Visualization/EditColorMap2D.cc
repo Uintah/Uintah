@@ -39,7 +39,7 @@
 #include <sci_gl.h>
 #include <Core/Volume/CM2Shader.h>
 #include <Core/Volume/CM2Widget.h>
-#include <Core/Volume/ShaderProgramARB.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Dataflow/Ports/Colormap2Port.h>
 #include <Dataflow/Ports/NrrdPort.h>
 
