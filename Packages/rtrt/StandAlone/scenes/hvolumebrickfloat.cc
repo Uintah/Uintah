@@ -282,7 +282,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 			   bgcolor, cdown, cup, groundplane,
 			   ambient_scale);
     //scene->add_light(new Light(Point(50,-30,30), Color(1.0,0.8,0.2), 0));
-    scene->add_light(new Light(Point(1100,-600,3000), Color(1.0,1.0,1.0), 0));
+    Light *light = new Light(Point(1100,-600,3000), Color(1.0,1.0,1.0), 0);
+    light->name_ = "light 0";
+    scene->add_light(light);
     scene->set_background_ptr( new LinearBackground(
                                Color(0.2, 0.4, 0.9),
                                Color(0.0,0.0,0.0),
