@@ -12,22 +12,16 @@ using namespace SCIRun;
 
 SphereMembraneGeometryPiece::SphereMembraneGeometryPiece(ProblemSpecP& ps)
 {
-
-  Point orig;
-  double rad,h;
-
-  ps->require("origin",orig);
-  ps->require("radius",rad);
-  ps->require("thickness",h);
+  ps->require("origin",d_origin);
+  ps->require("radius",d_radius);
+  ps->require("thickness",d_h);
+  ps->require("num_lat",d_numLat);
+  ps->require("num_long",d_numLong);
   
-  if ( rad <= 0.0)
+  if ( d_radius <= 0.0)
    throw ProblemSetupException("Input File Error: Sphere radius must be > 0.0");
-  if ( h <= 0.0)
+  if ( d_radius <= 0.0)
    throw ProblemSetupException("Input File Error: Sphere thcknss must be > 0.");
-  
-  d_origin = orig;
-  d_radius = rad;
-  d_h = h;
 }
 
 SphereMembraneGeometryPiece::~SphereMembraneGeometryPiece()
@@ -61,9 +55,6 @@ int SphereMembraneGeometryPiece::returnParticleCount(const Patch* patch)
 {
   Box b = patch->getBox();
 
-  int d_numLat  = 20;
-  int d_numLong = 40;
-
   double PI     = 3.14159265359;
   double dtheta =     PI/((double) d_numLat);
   double dphi   = 2.0*PI/((double) d_numLong);
@@ -96,12 +87,12 @@ int SphereMembraneGeometryPiece::returnParticleCount(const Patch* patch)
 int SphereMembraneGeometryPiece::createParticles(const Patch* patch,
                                                   ParticleVariable<Point>&  pos,
                                                   ParticleVariable<double>& vol,
+                                                  ParticleVariable<Vector>& pt1,
+                                                  ParticleVariable<Vector>& pt2,
+                                                  ParticleVariable<Vector>& pn,
                                                   particleIndex start)
 {
   Box b = patch->getBox();
-
-  int d_numLat  = 20;
-  int d_numLong = 40;
 
   double PI     = 3.14159265359;
   double dtheta =     PI/((double) d_numLat);
@@ -123,6 +114,11 @@ int SphereMembraneGeometryPiece::createParticles(const Patch* patch,
       if(b.contains(p)){
         pos[start+count] = p;
         vol[start+count] = d_radius*d_radius*sin(theta)*dtheta*dphi*d_h;
+        pt1[start+count] = Vector(cos(theta)*cos(phi),cos(theta)*sin(phi),
+                                                                -sin(theta));
+        pt2[start+count] = Vector(-sin(phi),cos(phi),0);
+        pn[start+count]  = Vector(sin(theta)*cos(phi),sin(theta)*sin(phi),
+                                                                 cos(theta));
         count++;
       }
       phi += dphi;
