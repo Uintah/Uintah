@@ -1,11 +1,13 @@
 #ifndef POINT4D_H
 #define POINT4D_H
 
-#include "Vector.h"
-#include "stdio.h"
+#include <Core/Geometry/Vector.h>
+#include <stdio.h>
 
 namespace rtrt {
 
+  using namespace SCIRun;
+  
 class Point4D
 {
 
@@ -105,7 +107,7 @@ public:
     {
 	Vector v1((*this)-c);
 
-	return Point4D(v1.dot(u),v1.dot(v),v1.dot(w));
+	return Point4D(Dot(v1, u), Dot(v1, v), Dot(v1, w));
     }
 
     inline Point4D ToCanonical(const Point4D &c, const Vector &u,
@@ -145,7 +147,7 @@ public:
     inline Vector operator*(const Vector &v2) const
     {
 	Vector v1 = Vector(coord[0],coord[1],coord[2]);
-	return v1.cross(v2);
+	return Cross(v1, v2);
     }
 
     inline Point4D operator*(const double c) const
@@ -283,9 +285,9 @@ inline Point4D &ToBasis(Point4D &pin, Point4D &c,
 
     Sub(pin,c,tempv);
 
-    pout.coord[0] = tempv.dot(u);
-    pout.coord[1] = tempv.dot(v);
-    pout.coord[2] = tempv.dot(w);
+    pout.coord[0] = Dot(tempv, u);
+    pout.coord[1] = Dot(tempv, v);
+    pout.coord[2] = Dot(tempv, w);
     
     return pout;
 }

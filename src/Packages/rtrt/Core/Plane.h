@@ -1,10 +1,13 @@
 #ifndef PLANE_H
 #define PLANE_H 1
 
-#include "Point.h"
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 
 namespace rtrt {
 
+  using namespace SCIRun;
+  
 class Plane {
 public:
     Point inplane;
@@ -24,20 +27,20 @@ inline Plane::Plane(const Point& p, const Vector& v) {
 }
 
 inline double Plane::distance( const Point& p ) {
-    return fabs( normal.dot( p-inplane ) ) / normal.length() ; 
+    return fabs( Dot(normal, p-inplane) ) / normal.length() ; 
 }
 
 inline double Plane::scaled_distance( const Point& p ) {
-    return fabs( normal.dot( p-inplane ) );
+    return fabs( Dot(normal, p-inplane ) );
 }
 
 #if 0
 inline double Plane::cos_angle( const Vector& v ) {
-    return normal.dot( v ) / (normal.length()*v.length())  ;
+    return Dot(normal, v ) / (normal.length()*v.length())  ;
 }
 #else
 inline double Plane::cos_angle( const Vector& v ) const {
-    return normal.dot( v );
+    return Dot(normal, v );
 }
 #endif
 

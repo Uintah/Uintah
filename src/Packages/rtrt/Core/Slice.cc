@@ -1,11 +1,11 @@
 
-#include "CatmullRomSpline.h"
-#include "Slice.h"
-#include "BBox.h"
-#include "HitInfo.h"
-#include "Ray.h"
-#include "Color.h"
-#include "VolumeDpy.h"
+#include <Packages/rtrt/Core/CatmullRomSpline.h>
+#include <Packages/rtrt/Core/Slice.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Color.h>
+#include <Packages/rtrt/Core/VolumeDpy.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
 #include <stdio.h>
@@ -92,10 +92,10 @@ void Slice<T,A,B>::intersect(const Ray& ray, HitInfo& hit,
 {
     Vector dir(ray.direction());
     Point orig(ray.origin());
-    double dt=dir.dot(n);
+    double dt=Dot(dir, n);
     if(dt < 1.e-6 && dt > -1.e-6)
 	return;
-    double t=(d-n.dot(orig))/dt;
+    double t=(d-Dot(n, orig))/dt;
     Point p(orig+dir*t);
     // Compute the data value at this point...
     Vector pn((p-min)*isdiag);

@@ -1,6 +1,6 @@
 
-#include "TimeObj.h"
-#include "Vector.h"
+#include <Packages/rtrt/Core/TimeObj.h>
+#include <Core/Geometry/Vector.h>
 #include <iostream>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Parallel.h>

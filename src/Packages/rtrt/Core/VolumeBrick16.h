@@ -2,8 +2,8 @@
 #ifndef VOLUMEBRICK16_H
 #define VOLUMEBRICK16_H 1
 
-#include "VolumeBase.h"
-#include "Point.h"
+#include <Packages/rtrt/Core/VolumeBase.h>
+#include <Core/Geometry/Point.h>
 #include <stdlib.h>
 
 namespace rtrt {

@@ -2,11 +2,13 @@
 #ifndef UVPLANE_H
 #define UVPLANE_H 1
 
-#include "UVMapping.h"
-#include "Point.h"
-#include "Vector.h"
+#include <Packages/rtrt/Core/UVMapping.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 
 namespace rtrt {
+  
+  using namespace SCIRun;
 
 class UVPlane : public UVMapping {
     Point cen;

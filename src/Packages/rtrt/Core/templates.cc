@@ -1,5 +1,5 @@
 
-#include "Array1.cc"
+#include <Packages/rtrt/Core/Array1.cc>
 
 class Light;
 template class Array1<Light*>;
@@ -16,10 +16,10 @@ template class Array1<VolumeBase*>;
 class Volume;
 template class Array1<Volume*>;
 
-#include "Point.h"
+#include <Core/Geometry/Point.h>
 template class Array1<Point>;
 
-#include "Vector.h"
+#include <Core/Geometry/Vector.h>
 template class Array1<Vector>;
 
 template class Array1<int>;
@@ -28,9 +28,9 @@ template class Array1<double>;
 class Material;
 template class Array1<Material*>;
 
-#include "Random.h"
-#include "HashTable.cc"
-#include "HashTableEntry.cc"
+#include <Packages/rtrt/Core/Random.h>
+#include <Packages/rtrt/Core/HashTable.cc>
+#include <Packages/rtrt/Core/HashTableEntry.cc>
 
 template class HashTable<RandomTable::TableInfo, double*>;
 template class HashTableEntry<RandomTable::TableInfo, double*>;

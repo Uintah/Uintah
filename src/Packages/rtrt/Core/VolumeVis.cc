@@ -1,3 +1,5 @@
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/VolumeVis.h>
 #include <Packages/rtrt/Core/VolumeVisDpy.h>
 #include <Packages/rtrt/Core/HitInfo.h>
@@ -15,8 +17,6 @@
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
-#include <Packages/rtrt/Core/Point.h>
-#include <Packages/rtrt/Core/Vector.h>
 #include <float.h>
 #include <iostream>
 
@@ -168,7 +168,7 @@ Color VolumeVis::color(const Vector &N, const Vector &V, const Vector &L,
 
   Color result; // the resulting color
 
-  double L_N_dot = L.dot(N);
+  double L_N_dot = Dot(L, N);
 
   // the dot product is negative then the objects face points
   // away from the light and should be shaded.
@@ -176,8 +176,8 @@ Color VolumeVis::color(const Vector &N, const Vector &V, const Vector &L,
     // do the ambient, diffuse, and specular calculations
     double attenuation = 1;
 
-    Vector R = 2.0 * N.dot(L) * N - L;
-    double spec = attenuation * specular * pow(Max(R.dot(V),0.0), spec_coeff);
+    Vector R = N * (2.0 * Dot(N, L)) - L;
+    double spec = attenuation * specular * pow(Max(Dot(R, V),0.0), spec_coeff);
 
     result = light_color * (object_color *(ambient+attenuation*diffuse*L_N_dot)
 			    + Color(spec, spec, spec));
@@ -220,13 +220,13 @@ void VolumeVis::shade(Color& result, const Ray& ray,
   //                                  0 - completly transparent
   float alpha = 0;
   Color total(0,0,0);
-  Vector p;
+  Point p;
 
   for(float t = t_min; t < t_max; t += dpy->t_inc) {
     // opaque values are 0, so terminate the ray at alpha values close to zero
     if (alpha < RAY_TERMINATION_THRESHOLD) {
       // get the point to interpolate
-      p = ray.origin() + ray.direction() * t - min;
+      p = ray.origin() + ray.direction() * t - min.vector();
 
       ////////////////////////////////////////////////////////////
       // interpolate the point

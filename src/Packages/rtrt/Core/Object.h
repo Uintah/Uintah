@@ -3,18 +3,23 @@
 #ifndef OBJECT_H
 #define OBJECT_H 1
 
-#include "Array1.h"
-#include "Color.h"
+#include <Packages/rtrt/Core/Array1.h>
+#include <Packages/rtrt/Core/Color.h>
 #include <iostream>
+
+namespace SCIRun {
+  class Point;
+  class Vector;
+}
 
 namespace rtrt {
 
+  using namespace SCIRun;
+  
 class HitInfo;
 class Material;
-class Point;
 class Ray;
 class Light;
-class Vector;
 class BBox;
 class DepthStats;
 class PerProcessorContext;

@@ -1,4 +1,4 @@
-#include "Mesh.h"
+#include <Packages/rtrt/Core/Mesh.h>
 
 using namespace rtrt;
 
@@ -102,7 +102,7 @@ Point **Mesh::getPts(Vector &u, Vector &v, Vector &w)
         for (int j=0; j<nsize; j++)
         {
             vec = Vector(mesh[i][j].x(),mesh[i][j].y(),mesh[i][j].z());
-            P[i][j] = Point(vec.dot(u),vec.dot(v),vec.dot(w));
+            P[i][j] = Point(Dot(vec, u), Dot(vec, v), Dot(vec, w));
         }
     }
     return P;

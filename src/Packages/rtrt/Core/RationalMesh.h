@@ -1,21 +1,24 @@
 #ifndef RATIONALMESH_H
 #define RATIONALMESH_H
 
-#include "Point4D.h"
-#include "Point.h"
-#include "Ray.h"
-#include "Vector.h"
-#include "Util.h"
-#include "BBox.h"
-#include "PerProcessorContext.h"
-#include "Util.h"
-#include "Assert.h"
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+
+#include <Packages/rtrt/Core/Point4D.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Util.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/PerProcessorContext.h>
+#include <Packages/rtrt/Core/Util.h>
+#include <Packages/rtrt/Core/Assert.h>
 
 #define MAXITER 7
 #define ROOT_TOL 1E-3
 
 namespace rtrt {
 
+  using namespace SCIRun;
+  
 class RationalMesh {
 public:
     RationalMesh (int, int);
@@ -163,7 +166,7 @@ public:
     EvalAll(u,v,S,Su,Sv,ppc);
     //Eval(u,v,S,Su,Sv,ppc);
 
-    Vector N(Su.cross(Sv));
+    Vector N(SCIRun::Cross(Su, Sv));
     
     N.normalize();
 
@@ -181,15 +184,15 @@ public:
   inline void Fu(const Vector &Su, const Vector &p1, const Vector &p2,
 		 double &d0, double &d1)
   {
-    d0 = Su.dot(p1);
-    d1 = Su.dot(p2);
+    d0 = Dot(Su, p1);
+    d1 = Dot(Su, p2);
   }
 
     inline void Fv(const Vector &Sv, const Vector &p1, const Vector &p2,
                    double &d0, double &d1)
     {
-      d0 = Sv.dot(p1);
-      d1 = Sv.dot(p2);
+      d0 = Dot(Sv, p1);
+      d1 = Dot(Sv, p2);
     }
 
     inline void ray_planes(const Ray &r, Vector &p1, double &p1d,
@@ -213,11 +216,11 @@ public:
         else
             p1 = Vector(0,rdz,-rdy);
 
-        p2 = p1.cross(rdir);
+        p2 = SCIRun::Cross(p1, rdir);
 
         // Each plane contains the ray origin
-        p1d = -p1.dot(ro);
-        p2d = -p2.dot(ro);
+        p1d = -Dot(p1, ro);
+        p2d = -Dot(p2, ro);
     }
 
     inline double calc_t(const Ray &r, Point4D &S)
@@ -227,7 +230,7 @@ public:
       Vector d(r.direction());
       Vector oS(P-r.origin());
 
-      return d.dot(oS)/d.dot(d);
+      return Dot(d, oS)/Dot(d, d);
     }
     
   inline void gentheta(double *theta, double t, int n) 

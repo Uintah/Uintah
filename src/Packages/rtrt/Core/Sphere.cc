@@ -1,11 +1,11 @@
 
-#include "Sphere.h"
-#include "HitInfo.h"
-#include "Ray.h"
-#include "Light.h"
-#include "BBox.h"
-#include "Stats.h"
-#include "TrivialAllocator.h"
+#include <Packages/rtrt/Core/Sphere.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/TrivialAllocator.h>
 #include <iostream>
 
 using namespace rtrt;
@@ -37,7 +37,7 @@ void Sphere::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 		       PerProcessorContext*)
 {
     Vector OC=cen-ray.origin();
-    double tca=OC.dot(ray.direction());
+    double tca=Dot(OC, ray.direction());
     double l2oc=OC.length2();
     double rad2=radius*radius;
     st->sphere_isect++;
@@ -81,7 +81,7 @@ void Sphere::light_intersect(Light* light, const Ray& ray, HitInfo&,
 			     PerProcessorContext*)
 {
     Vector OC=cen-ray.origin();
-    double tca=OC.dot(ray.direction());
+    double tca=Dot(OC, ray.direction());
     st->sphere_light_isect++;
     if(tca<1.e-4)
 	return;
@@ -125,7 +125,7 @@ void Sphere::multi_light_intersect(Light*, const Point& orig,
     double C=OC.length2()-rad2;
     for(int i=0;i<dirs.size();i++){
 	const Vector& dir=dirs[i];
-	double B=dir.dot(OC);
+	double B=Dot(dir, OC);
 	double B2=B*B;
 	if(B2 > C){
 	    double disc=sqrt(B2-C); // A=1

@@ -1,4 +1,4 @@
-#include "RationalMesh.h"
+#include <Packages/rtrt/Core/RationalMesh.h>
 
 using namespace rtrt;
 
@@ -128,7 +128,7 @@ Point4D **RationalMesh::getPts(Vector &u, Vector &v, Vector &w)
         for (int j=0; j<nsize; j++)
         {
             vec = (Vector)(mesh[i][j]);
-            P[i][j] = Point4D(vec.dot(u),vec.dot(v),vec.dot(w));
+            P[i][j] = Point4D(Dot(vec, u), Dot(vec, v), Dot(vec, w));
         }
     }
     return P;

@@ -1,12 +1,12 @@
 
-#include "Parallelogram.h"
-#include "Ray.h"
-#include "Light.h"
-#include "HitInfo.h"
-#include "BBox.h"
-#include "MiscMath.h"
-#include "Stats.h"
-#include "UV.h"
+#include <Packages/rtrt/Core/Parallelogram.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/MiscMath.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/UV.h>
 
 using namespace rtrt;
 
@@ -14,9 +14,9 @@ Parallelogram::Parallelogram(Material* matl, const Point& anchor, const Vector& 
 	   const Vector& v)
     : Object(matl, this), anchor(anchor), u(u), v(v)
 {
-    n=u.cross(v);
+    n=Cross(u, v);
     n.normalize();
-    d=n.dot(anchor);
+    d=Dot(n, anchor);
     //double l1=1./u.length2();
     //double l2=1./v.length2();
 
@@ -27,8 +27,8 @@ Parallelogram::Parallelogram(Material* matl, const Point& anchor, const Vector& 
 
     //this->u*=l1;
     //this->v*=l2;
-    d1=this->u.dot(anchor);
-    d2=this->v.dot(anchor);
+    d1=Dot(this->u, anchor);
+    d2=Dot(this->v, anchor);
 }
 
 Parallelogram::~Parallelogram()
@@ -41,26 +41,26 @@ void Parallelogram::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
     st->parallelogram_isect++;
     Vector dir(ray.direction());
     Point orig(ray.origin());
-    double dt=dir.dot(n);
+    double dt=Dot(dir, n);
     if(dt < 1.e-6 && dt > -1.e-6)
 	return;
-    double t=(d-n.dot(orig))/dt;
+    double t=(d-Dot(n, orig))/dt;
     if(hit.was_hit && t>hit.min_t)
 	return;
     Point p(orig+dir*t);
 #if 0
-    double a1=u.dot(p)-d1;
+    double a1=Dot(u, p)-d1;
     if(a1 > 1 || a1 < -1)
 	return;
-    double a2=v.dot(p)-d2;
+    double a2=Dot(v, p)-d2;
     if(a2 > 1 || a2 < -1)
 	return;
 #else
     Vector vi(p-anchor);
-    double a1 = un.dot(vi);
+    double a1 = Dot(un, vi);
     if (a1 < 0 || a1 > du)
       return;
-    double a2 = vn.dot(vi);
+    double a2 = Dot(vn, vi);
     if (a2 < 0 || a2 > dv)
       return;
     
@@ -81,10 +81,10 @@ void Parallelogram::light_intersect(Light*, const Ray& ray,
     st->rect_light_isect++;
     Vector dir(ray.direction());
     Point orig(ray.origin());
-    double dt=dir.dot(n);
+    double dt=Dot(dir, n);
     if(dt < 1.e-6 && dt > -1.e-6)
 	return;
-    double t=(d-n.dot(orig))/dt;
+    double t=(d-Dot(n, orig))/dt;
 
 
     if(t<=1.e-6 || t>dist)
@@ -96,19 +96,19 @@ void Parallelogram::light_intersect(Light*, const Ray& ray,
     //double delta=light->radius*t/dist;
 
     Vector vi(p-anchor);
-    double a1 = un.dot(vi);
+    double a1 = Dot(un, vi);
     if (a1 < 0 || a1 > du)
 	return; // miss
-    double a2 = vn.dot(vi);
+    double a2 = Dot(vn, vi);
     if (a2 < 0 || a2 > dv)
 	return; // miss
     atten=Color(0,0,0);
     return;
 #if 0
-    double a1=un.dot(pv);
+    double a1=Dot(un, pv);
     if(a1 > du+delta || a1 < -(du+delta))
 	return;
-    double a2=vn.dot(pv);
+    double a2=Dot(vn, pv);
     if(a2 > dv+delta || a2 < -(dv+delta))
 	return;
     if(a1<du && a1>-du && a2<dv && a2>-dv){
@@ -150,11 +150,11 @@ void Parallelogram::uv(UV& uv, const Point& hitpos, const HitInfo&)
 {
     Vector p(hitpos-anchor);
 #if 0
-    double uu=(un.dot(p)*dv+1)*0.5;
-    double vv=(vn.dot(p)*du+1)*0.5;
+    double uu=(Dot(un, p)*dv+1)*0.5;
+    double vv=(Dot(vn, p)*du+1)*0.5;
 #else
-    double uu=(un.dot(p)/(du));
-    double vv=(vn.dot(p)/(dv));
+    double uu=(Dot(un, p)/(du));
+    double vv=(Dot(vn, p)/(dv));
 #endif
     uv.set(uu,vv);
 }

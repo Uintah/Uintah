@@ -1,13 +1,14 @@
 
-#include "Object.h"
-#include "Array1.h"
-#include "Ray.h"
-#include "UVPlane.h"
+#include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/Array1.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/UVPlane.h>
 #include <iostream>
-#include "HitInfo.h"
-#include "Material.h"
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Material.h>
 
 using namespace rtrt;
+using namespace SCIRun;
 
 static UVPlane default_mapping(Point(0,0,0), Vector(1,0,0), Vector(0,1,0));
 

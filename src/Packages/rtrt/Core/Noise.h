@@ -2,11 +2,15 @@
 #ifndef Math_Noise_h
 #define Math_Noise_h 1
 
+namespace SCIRun {
+  class Point;
+  class Vector;
+}
+  
 namespace rtrt {
 
-class Point;
-class Vector;
-
+  using namespace SCIRun;
+  
 class Noise {
 protected:
     int tablesize;

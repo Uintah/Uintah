@@ -1,16 +1,16 @@
 
-#include "BSplineMaterial.h"
-#include "HitInfo.h"
-#include "UVMapping.h"
-#include "UV.h"
-#include "Point.h"
-#include "Ray.h"
-#include "Object.h"
+#include <Packages/rtrt/Core/BSplineMaterial.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/UVMapping.h>
+#include <Packages/rtrt/Core/UV.h>
+#include <Core/Geometry/Point.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Object.h>
 #include <iostream>
 #include <stdio.h>
 #include <fstream>
 #include <stdlib.h>
-#include "Context.h"
+#include <Packages/rtrt/Core/Context.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace rtrt;

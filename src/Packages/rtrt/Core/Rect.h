@@ -2,9 +2,9 @@
 #ifndef RECT_H
 #define RECT_H 1
 
-#include "Object.h"
-#include "UVMapping.h"
-#include "Point.h"
+#include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/UVMapping.h>
+#include <Core/Geometry/Point.h>
 
 namespace rtrt {
 

@@ -2,11 +2,15 @@
 #ifndef Math_Turbulence_h
 #define Math_Turbulence_h 1
 
-#include "Noise.h"
+#include <Packages/rtrt/Core/Noise.h>
+
+namespace SCIRun {
+  class Point;
+}
 
 namespace rtrt {
 
-class Point;
+  using namespace SCIRun;
 
 class Turbulence {
 	Noise noise;

@@ -1,7 +1,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#include "Vector.h"
+#include <Core/Geometry/Vector.h>
 
 #ifndef UTIL_H
 #define UTIL_H

@@ -2,11 +2,11 @@
 #ifndef VOLUME16_H
 #define VOLUME16_H 1
 
-#include "VolumeBase.h"
-#include "Point.h"
+#include <Packages/rtrt/Core/VolumeBase.h>
+#include <Core/Geometry/Point.h>
 #include <stdlib.h>
 
-#include "Array1.h"
+#include <Packages/rtrt/Core/Array1.h>
 
 namespace rtrt {
 

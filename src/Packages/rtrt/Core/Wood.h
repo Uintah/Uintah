@@ -2,10 +2,10 @@
 #ifndef WOOD_H
 #define WOOD_H 1
 
-#include "Material.h"
-#include "Color.h"
-#include "Vector.h"
-#include "FastTurbulence.h"
+#include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/Color.h>
+#include <Core/Geometry/Vector.h>
+#include <Packages/rtrt/Core/FastTurbulence.h>
 
 namespace rtrt {
 

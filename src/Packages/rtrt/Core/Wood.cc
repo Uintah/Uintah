@@ -1,15 +1,15 @@
-#include "Wood.h"
-#include "Point.h"
-#include "Vector.h"
-#include "Ray.h"
-#include "HitInfo.h"
-#include "Scene.h"
-#include "Stats.h"
-#include "Object.h"
-#include "Worker.h"
-#include "Context.h"
-#include "Light.h"
-#include "MiscMath.h"
+#include <Packages/rtrt/Core/Wood.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Scene.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/Worker.h>
+#include <Packages/rtrt/Core/Context.h>
+#include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/MiscMath.h>
 
 using namespace rtrt;
 
@@ -45,7 +45,7 @@ void Wood::shade(Color& result, const Ray& ray,
     Color Rd=Interpolate(lightwood, darkwood, r);
 
     Vector normal(obj->normal(hitpos, hit));
-    double cos_prime=-normal.dot(ray.direction());
+    double cos_prime=-Dot(normal, ray.direction());
     if(cos_prime<0){
 	cos_prime=-cos_prime;
 	normal=-normal;
@@ -60,7 +60,7 @@ void Wood::shade(Color& result, const Ray& ray,
 	double dist=light_dir.normalize();
 	Color shadowfactor(1,1,1);
 	if(cx->worker->lit(hitpos, light, light_dir, dist, shadowfactor, depth, cx) ){
-            double cos_theta=light_dir.dot(normal);
+            double cos_theta=Dot(light_dir, normal);
 	    if(cos_theta < 0){
 		cos_theta=-cos_theta;
 		light_dir=-light_dir;
