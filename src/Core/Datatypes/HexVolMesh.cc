@@ -147,10 +147,8 @@ HexVolMesh::transform(Transform &t)
     *itr = t.project(*itr);
     ++itr;
   }
-  
-  // Recompute grid.
-  grid_.detach();
-  compute_grid();
+  synchronized_ &= ~LOCATE_E;
+  grid_ = 0;
 }
 
 
