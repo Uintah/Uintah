@@ -78,22 +78,23 @@ void tolerance_failure()
 void displayProblemLocation(const string& var, int matl,
 			    const Patch* patch, double time)
 {
-  cerr << "Time: " << time << endl;
+  cerr << "Time: " << time << 
+  "Variable: " << var << 
+  "Material: " << matl << endl;
   if (patch != 0)
-    cerr << "Patch: " << patch->getID() << endl;  
-  cerr << "Variable: " << var << endl;
-  cerr << "Material: " << matl << endl << endl;
+    cerr << "Patch: " << patch->getID() <<endl;   
+
 }
 
 void displayProblemLocation(const string& var, int matl,
 			    const Patch* patch, const Patch* patch2,
 			    double time)
 {
-  cerr << "Time: " << time << endl;
-  cerr << "Patch1: " << patch->getID() << endl;  
-  cerr << "Patch2: " << patch2->getID() << endl;  
-  cerr << "Variable: " << var << endl;
-  cerr << "Material: " << matl << endl << endl;
+  cerr << "Time: " << time << " "<<
+          "Patch1: " << patch->getID() << " " <<
+          "Patch2: " << patch2->getID() << " " <<
+          "Material: " << matl << " " <<
+          "Variable: " << var << endl;
 }
 
 bool compare(double a, double b, double abs_tolerance, double rel_tolerance)
@@ -465,11 +466,12 @@ compare(MaterialParticleVarData& data2, ParticleVariable<T>* value1,
       if (name_ != "p.particleID") {
 	ASSERT(getParticleID(i) == data2.getParticleID(i));
       }
-      cerr << "\nValues differ too much on particle id=" << hex << setfill('0') << setw(16) << getParticleID(i) <<
+      cerr << "DIFFERENCE on particle id=" << hex << setfill('0') << setw(16) << getParticleID(i) <<
 	endl;
       const Patch* patch1 = getPatch(i);
       const Patch* patch2 = data2.getPatch(i);
-      displayProblemLocation(name_, matl, patch1, patch2, time1);    
+      displayProblemLocation(name_, matl, patch1, patch2, time1);  
+         
       cerr << filebase1 << ":\n" << (*value1)[i] << endl;
       cerr << filebase2 << ":\n" << (*value2)[i] << endl;
       tolerance_failure();
@@ -684,10 +686,12 @@ void compareFields(DataArchive* da1, DataArchive* da2, const string& var,
       }
       if (!compare(field[*iter], (*pField2)[*iter], abs_tolerance,
 		   rel_tolerance)) {
-	cerr << "\nValues differ too much at " << *iter << "\n";
-	displayProblemLocation(var, matl, patch, patch2, time);    
-	cerr << filebase1 << " (1):\n" << field[*iter] << endl;
-	cerr << filebase2 << " (2):\n" << (*pField2)[*iter] << endl;
+	cerr << "DIFFERENCE " << *iter << "  ";
+	displayProblemLocation(var, matl, patch, patch2, time);
+ 
+       cerr << filebase1 << " (1)\t\t" << filebase2 << " (2)"<<endl;
+	cerr << field[*iter] << "\t\t" << (*pField2)[*iter] << endl;
+
 	tolerance_failure();
       }
     }
