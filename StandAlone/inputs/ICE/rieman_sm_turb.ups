@@ -129,6 +129,7 @@
       <save label="press_CC"/>
       <save label="rho_CC"/>
       <save label = "turb_viscosity_CC"/>
+      <checkpoint interval="0.001" cycle="2"/>"
    </DataArchiver>
 
    <Debug>
