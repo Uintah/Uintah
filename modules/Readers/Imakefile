@@ -1,0 +1,23 @@
+
+#include <config/sci.cf>
+
+LOCALINCLUDES = -I.. -I../../project
+
+OBJS = ScalarFieldReader.o
+SRCS = ScalarFieldReader.cc
+
+.cc.o:
+	$(CCC) $(CCFLAGS) -c $<
+
+../modules.o: $(OBJS)
+	cd .. && make modules.o
+
+AllTarget(../modules.o)
+
+SCIDependTarget($(SRCS))
+
+ScalarFieldReader.h: Reader.h
+	sed 's/TYPE/ScalarField/g' < Reader.h > ScalarFieldReader.h
+
+ScalarFieldReader.cc: Reader.cc ScalarFieldReader.h
+	sed 's/TYPE/ScalarField/g' < Reader.cc > ScalarFieldReader.cc
