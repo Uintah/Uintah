@@ -2,9 +2,9 @@
 #include <math.h>
 #include "GeometryObject.h"
 #include "Material.h"
-#include "ParticleSet.h"
-#include "ParticleVariable.h"
-#include "DataWarehouse.h"
+#include <Uintah/Grid/ParticleSet.h>
+#include <Uintah/Grid/ParticleVariable.h>
+#include <Uintah/Interface/DataWarehouse.h>
 #include "CompMooneyRivlin.h"
 #include <SCICore/Geometry/Vector.h>
 using SCICore::Geometry::Vector;
@@ -896,6 +896,12 @@ void GeomObject::FillWParticles(vector<Material *> materials,
 }
   
 // $Log$
+// Revision 1.2  2000/02/27 07:48:41  sparker
+// Homebrew code all compiles now
+// First step toward PSE integration
+// Added a "Standalone Uintah Simulation" (sus) executable
+// MPM does NOT run yet
+//
 // Revision 1.1  2000/02/24 06:11:56  sparker
 // Imported homebrew code
 //

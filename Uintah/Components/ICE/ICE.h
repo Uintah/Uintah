@@ -2,7 +2,7 @@
 #ifndef UINTAH_HOMEBREW_ICE_H
 #define UINTAH_HOMEBREW_ICE_H
 
-#include "CFDInterface.h"
+#include <Uintah/Interface/CFDInterface.h>
 class ProcessorContext;
 class Region;
 

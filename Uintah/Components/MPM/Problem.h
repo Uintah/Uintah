@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 class Region;
-#include "DataWarehouseP.h"
+#include <Uintah/Interface/DataWarehouseP.h>
 
 class Problem {
 private:
@@ -48,6 +48,12 @@ public:
 #endif // __PROBLEM_H__
 
 // $Log$
+// Revision 1.2  2000/02/27 07:48:42  sparker
+// Homebrew code all compiles now
+// First step toward PSE integration
+// Added a "Standalone Uintah Simulation" (sus) executable
+// MPM does NOT run yet
+//
 // Revision 1.1  2000/02/24 06:12:00  sparker
 // Imported homebrew code
 //

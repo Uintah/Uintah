@@ -2,16 +2,16 @@
 #ifndef UINTAH_HOMEBREW_MPMInterface_H
 #define UINTAH_HOMEBREW_MPMInterface_H
 
-#include "MPMInterfaceP.h"
-#include "DataWarehouseP.h"
-#include "GridP.h"
-#include "Handle.h"
-#include "LevelP.h"
-#include "RefCounted.h"
-#include "ProblemSpecP.h"
-#include "SchedulerP.h"
+#include <Uintah/Parallel/UintahParallelPort.h>
+#include <Uintah/Interface/MPMInterfaceP.h>
+#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/Handle.h>
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Grid/ProblemSpecP.h>
+#include <Uintah/Interface/SchedulerP.h>
 
-class MPMInterface : public RefCounted {
+class MPMInterface : public UintahParallelPort {
 public:
     MPMInterface();
     virtual ~MPMInterface();

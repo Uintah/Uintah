@@ -2,8 +2,8 @@
 #ifndef UINTAH_HOMEBREW_ParticleData_H
 #define UINTAH_HOMEBREW_ParticleData_H
 
-#include "RefCounted.h"
-#include "ParticleException.h"
+#include <Uintah/Grid/RefCounted.h>
+#include <Uintah/Exceptions/ParticleException.h>
 template<class T>
 class ParticleVariable;
 #include <vector>

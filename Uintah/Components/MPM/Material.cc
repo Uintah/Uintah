@@ -28,6 +28,12 @@ void Material::getMatProps(double matprop[10]) const
 }
 
 // $Log$
+// Revision 1.1  2000/02/27 07:48:41  sparker
+// Homebrew code all compiles now
+// First step toward PSE integration
+// Added a "Standalone Uintah Simulation" (sus) executable
+// MPM does NOT run yet
+//
 // Revision 1.1  2000/02/24 06:12:17  sparker
 // Imported homebrew code
 //

@@ -3,19 +3,17 @@
 #ifndef UINTAH_HOMEBREW_SimulationController_H
 #define UINTAH_HOMEBREW_SimulationController_H
 
-#include "ChemistryInterface.h"
-#include "CFDInterface.h"
-#include "DataWarehouseP.h"
-#include "GridP.h"
-#include "Handle.h"
-#include "Scheduler.h"
-#include "MPMInterface.h"
-#include "ProblemSpecP.h"
+#include <Uintah/Parallel/UintahParallelComponent.h>
+#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Interface/SchedulerP.h>
+#include <Uintah/Grid/ProblemSpecP.h>
 
-class SimulationController {
+class SimulationController : public UintahParallelComponent {
 public:
-    SimulationController(int argc, char* argv[]);
-    ~SimulationController();
+    SimulationController();
+    virtual ~SimulationController();
 
     void run();
 private:
@@ -24,11 +22,6 @@ private:
     void timeAdvance(double t, double delt, LevelP&, SchedulerP&,
 		     const DataWarehouseP&, DataWarehouseP&);
 
-    ChemistryInterfaceP chem;
-    MPMInterfaceP mpm;
-    CFDInterfaceP cfd;
-    SchedulerP scheduler;
-    
     SimulationController(const SimulationController&);
     SimulationController& operator=(const SimulationController&);
 };

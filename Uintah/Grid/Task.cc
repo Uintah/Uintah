@@ -1,6 +1,6 @@
 
-#include "Task.h"
-#include "SchedulerException.h"
+#include <Uintah/Grid/Task.h>
+#include <Uintah/Exceptions/SchedulerException.h>
 #include <iostream>
 using std::cerr;
 using std::vector;

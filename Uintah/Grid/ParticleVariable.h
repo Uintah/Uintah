@@ -2,10 +2,10 @@
 #ifndef UINTAH_HOMEBREW_ParticleVariable_H
 #define UINTAH_HOMEBREW_ParticleVariable_H
 
-#include "DataItem.h"
-#include "TypeMismatchException.h"
-#include "ParticleData.h"
-#include "ParticleSubset.h"
+#include <Uintah/Grid/DataItem.h>
+#include <Uintah/Exceptions/TypeMismatchException.h>
+#include <Uintah/Grid/ParticleData.h>
+#include <Uintah/Grid/ParticleSubset.h>
 class TypeDescription;
 #include <iostream> //TEMPORARY
 

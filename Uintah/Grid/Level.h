@@ -2,9 +2,9 @@
 #ifndef UINTAH_HOMEBREW_Level_H
 #define UINTAH_HOMEBREW_Level_H
 
-#include "RefCounted.h"
-#include "DataWarehouseP.h"
-#include "LevelP.h"
+#include <Uintah/Grid/RefCounted.h>
+#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/LevelP.h>
 #include <SCICore/Geometry/Point.h>
 #include <string>
 #include <vector>

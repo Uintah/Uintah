@@ -2,15 +2,13 @@
 #ifndef UINTAH_HOMEBREW_Output_H
 #define UINTAH_HOMEBREW_Output_H
 
-#include "OutputP.h"
-#include "DataWarehouseP.h"
-#include "GridP.h"
-#include "Handle.h"
-#include "LevelP.h"
-#include "SchedulerP.h"
-#include "RefCounted.h"
+#include <Uintah/Parallel/UintahParallelPort.h>
+#include <Uintah/Interface/OutputP.h>
+#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Interface/SchedulerP.h>
 
-class Output : public RefCounted {
+class Output : public UintahParallelPort {
 public:
     Output();
     virtual ~Output();

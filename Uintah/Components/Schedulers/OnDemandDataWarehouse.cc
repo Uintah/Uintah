@@ -1,6 +1,6 @@
 
-#include "OnDemandDataWarehouse.h"
-#include "DataWarehouseException.h"
+#include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <Uintah/Exceptions/DataWarehouseException.h>
 #include <SCICore/Thread/Guard.h>
 using SCICore::Thread::Guard;
 #include <iostream>

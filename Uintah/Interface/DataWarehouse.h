@@ -2,13 +2,13 @@
 #ifndef UINTAH_HOMEBREW_DataWarehouse_H
 #define UINTAH_HOMEBREW_DataWarehouse_H
 
-#include "Handle.h"
-#include "GridP.h"
-#include "CCVariable.h"
-#include "DataItem.h"
-#include "RefCounted.h"
-#include "DataWarehouseP.h"
-#include "SchedulerException.h"
+#include <Uintah/Grid/Handle.h>
+#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/CCVariable.h>
+#include <Uintah/Grid/DataItem.h>
+#include <Uintah/Grid/RefCounted.h>
+#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Exceptions/SchedulerException.h>
 #include <iostream> // TEMPORARY
 #include <string>
 namespace SCICore {

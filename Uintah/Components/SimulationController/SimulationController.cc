@@ -1,47 +1,10 @@
 
-#include "SimulationController.h"
-#include "BrainDamagedScheduler.h"
-#include "CFDInterface.h"
-#include "DataWarehouse.h"
-#include "ICE.h"
-#include "ChemistryInterface.h"
-#include "MPMInterface.h"
-#include "Grid.h"
-#include "Level.h"
-#include "Output.h"
-#include "ProblemSetupException.h"
-#include "ProblemSpec.h"
-#include "ProcessorContext.h"
-#include "SoleVariable.h"
-#include "SerialMPM.h"
-#include "ThreadedMPM.h"
+#include <Uintah/Components/SimulationController/SimulationController.h>
 #include <SCICore/Thread/Time.h>
 using SCICore::Thread::Time;
-#include <iostream>
-using std::cerr;
-using std::cout;
 
-SimulationController::SimulationController(int argc, char* argv[])
+SimulationController::SimulationController()
 {
-    mpm = new SerialMPM(); // DEFAULT
-    for(int i=1;i<argc;i++){
-	std::string arg(argv[i]);
-
-	if(arg == "-ice")
-	    cfd = 0; //new ICE();
-	else if(arg == "-nompm")
-	    mpm = 0;
-	else if(arg == "-threaded")
-	    mpm = new ThreadedMPM();
-	else if(arg == "-nthreads") {
-	    i++;
-	    int numThreads = atoi(argv[i]);
-	    ProcessorContext::getRootContext()->setNumThreads(numThreads);
-	}
-	else
-	    cerr << "Unknown argument: " << arg << '\n';
-    }
-    scheduler = new BrainDamagedScheduler();
 }
 
 SimulationController::~SimulationController()
@@ -50,6 +13,7 @@ SimulationController::~SimulationController()
 
 void SimulationController::run()
 {
+#if 0
     // Get the problem specification.  Hard-coded for now - create a 
     // component later
     ProblemSpecP params = new ProblemSpec;
@@ -109,19 +73,23 @@ void SimulationController::run()
     } while(t < params->getMaximumTime());
 
     cerr << "nlevels: " << grid->numLevels() << '\n';
+#endif
 }
 
 void SimulationController::problemSetup(const ProblemSpecP& params,
 					GridP& grid)
 {
+#if 0
     LevelP mainLevel = new Level();
     grid->addLevel(mainLevel);
+#endif
 }
 
 void SimulationController::computeStableTimestep(LevelP& level,
 						 SchedulerP& sched,
 						 DataWarehouseP& new_ds)
 {
+#if 0
     if(cfd && mpm){
 	cfd->computeStableTimestep(level, sched, new_ds);
 	mpm->computeStableTimestep(level, sched, new_ds);
@@ -138,6 +106,7 @@ void SimulationController::computeStableTimestep(LevelP& level,
     } else {
 	throw ProblemSetupException("Neither MPM or CFD specified");
     }
+#endif
 }
 
 void SimulationController::timeAdvance(double t, double delt,
@@ -146,6 +115,7 @@ void SimulationController::timeAdvance(double t, double delt,
 				       const DataWarehouseP& old_ds,
 				       DataWarehouseP& new_ds)
 {
+#if 0
 
     /* If we aren't doing any chemistry, skip this step */
 #if 0
@@ -244,4 +214,5 @@ void SimulationController::timeAdvance(double t, double delt,
        mpm->updateParticleVelocityAndPosition(...);
 #endif
     }
+#endif
 }

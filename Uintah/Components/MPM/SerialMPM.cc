@@ -1,20 +1,20 @@
 
-#include "SerialMPM.h"
+#include <Uintah/Components/MPM/SerialMPM.h>
 
-#include "Array3Index.h"
-#include "DataWarehouse.h"
-#include "Grid.h"
-#include "Level.h"
-#include "Matrix3.h"
-#include "NCVariable.h"
-#include "ParticleSet.h"
-#include "ParticleVariable.h"
-#include "ProblemSpec.h"
-#include "Region.h"
-#include "Scheduler.h"
-#include "SoleVariable.h"
-#include "Task.h"
-#include "CompMooneyRivlin.h" // TEMPORARY
+#include <Uintah/Grid/Array3Index.h>
+#include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Grid/Grid.h>
+#include <Uintah/Grid/Level.h>
+#include <Uintah/Components/MPM/Matrix3.h>
+#include <Uintah/Grid/NCVariable.h>
+#include <Uintah/Grid/ParticleSet.h>
+#include <Uintah/Grid/ParticleVariable.h>
+#include <Uintah/Grid/ProblemSpec.h>
+#include <Uintah/Grid/Region.h>
+#include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Grid/SoleVariable.h>
+#include <Uintah/Grid/Task.h>
+#include <Uintah/Components/MPM/CompMooneyRivlin.h> // TEMPORARY
 #include <SCICore/Geometry/Vector.h>
 using SCICore::Geometry::Vector;
 #include <SCICore/Geometry/Point.h>

@@ -2,7 +2,7 @@
 #ifndef UINTAH_HOMEBREW_ThreadedMPM_H
 #define UINTAH_HOMEBREW_ThreadedMPM_H
 
-#include "MPMInterface.h"
+#include <Uintah/Interface/MPMInterface.h>
 class ProcessorContext;
 class Region;
 

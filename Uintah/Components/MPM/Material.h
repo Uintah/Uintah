@@ -19,6 +19,12 @@ public:
 };
 
 // $Log$
+// Revision 1.1  2000/02/27 07:48:42  sparker
+// Homebrew code all compiles now
+// First step toward PSE integration
+// Added a "Standalone Uintah Simulation" (sus) executable
+// MPM does NOT run yet
+//
 // Revision 1.1  2000/02/24 06:12:18  sparker
 // Imported homebrew code
 //

@@ -1,0 +1,11 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../..
+
+SRCS     = DataWarehouseException.cc ParticleException.cc \
+	   ProblemSetupException.cc SchedulerException.cc \
+	   TypeMismatchException.cc
+
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
+
+include $(SRCTOP)/scripts/objs.mk
