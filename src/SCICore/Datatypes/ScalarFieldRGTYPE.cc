@@ -17,14 +17,16 @@
  */
 
 #include <string.h>
+#include <SCICore/Containers/String.h>
 #include <SCICore/Datatypes/ScalarFieldRGTYPE.h>
-//#include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MiscMath.h>
 #include <iostream>
 
 namespace SCICore {
 namespace Datatypes {
+
+  using namespace SCICore::Containers;
 
 static Persistent* maker()
 {
@@ -91,8 +93,13 @@ void ScalarFieldRGTYPE::io(Piostream& stream)
 
       if ( separate_raw == 1) {
         Pio(stream,raw_filename);
-        Pio(stream, grid, raw_filename);
-	std::cerr << "reading... rawfile=" << raw_filename <<std::endl;
+	clString filename;
+	if ( raw_filename(0) == '/' )
+	  filename = raw_filename;
+	else
+	  filename = pathname( stream.file_name ) + "/" + raw_filename;
+	std::cerr << "reading... rawfile=" << filename <<std::endl;
+        Pio(stream, grid, filename);
       }
       else 
         Pio(stream,grid);
@@ -407,6 +414,10 @@ void ScalarFieldRGTYPE::fill_gradmags() // these guys ignor the vf
 
 //
 // $Log$
+// Revision 1.8  2000/12/12 20:31:21  yarden
+// use the new filename field. allow to use raw file relative to
+// the directory of the current file.
+//
 // Revision 1.7  2000/03/13 04:47:52  dmw
 // SurfTree and TriSurface - made get_surfnodes and set_surfnodes work
 // ScalarFieldRG - interpolate uses epsilon bounds, so interpolate on
