@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+<component name="Tikhonov" category="Inverse">
+  <overview>
+    <authors>
+      <author>Yesim Serinagaoglu</author>
+    </authors>
+     <summary>
+       This module applies Tikhonov regularization to an existing
+forward model, with flexible control of regularization type and
+parameters.  Currently, the module solves the inverse problem in a
+single time-instant.  This module requires a forward model matrix,
+geometries for the associated surfaces, and some remote boundary
+conditions, i.e., torso or
+head surface potentials.
+     </summary>
+     <description>
+      <p>The Tikhonov module has three inputs, two outputs, and a user
+interface (UI) for selecting the regularization parameter.</p>
+
+      <p> Forward problem matrix, A: This matrix
+could be created using the SetupBEMatrix module, or created elsewhere
+and saved as SCIRun matrix format, which loads via the
+MatrixReader module.</p>
+
+      <p>A Regularization matrix will contain the transform that
+constrains the regularized inverse solution. This is typically the
+output of the AttributeTrf module, but as in the Forward matrix, can
+be created externally and loaded via the MatrixReader module. If
+nothing is connected to this input, the identity matrix is used as default.</p>
+
+      <p>The Neumann Boundary conditions, y, are
+values of potential on the outer boundary of the geometry, typically
+the body surface or head surface potentials. This is the "attributes"
+part of a field data type.</p>
+
+      <p>The ManageFieldData module can be used to extract the vector
+of attributes (i.e., the potentials) from the original field data.</p>
+
+      <p>Output 1 from the left is a vector of potentials without any
+geometry information. This vector can be combined with the appropriate
+geometry file using the ManageFieldData module to create a field data
+format.
+</p>
+      <p>The UI of the Tikhonov module selects a method to
+choose lambda. Thus far, we have implemented three options: 1)enter a
+single value: the user can type any value in the UI and the solution
+is implemented for that lambda value only, 2) choose from a slider:
+the user can select a value by moving the slider (the range of the
+slider and the increments are pre-defined inside the code), and 3)
+determine the value using the L-curve method. The range of
+regularization parameters used for the slider and to obtain the
+L-curve is user defined. </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>ForwardMat</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>RegularizationMat</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>MeasuredPots</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>InverseSoln</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>RegParam</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>RegInverseMat</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

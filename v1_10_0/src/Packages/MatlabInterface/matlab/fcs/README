@@ -1,0 +1,38 @@
+--------------------------------------------------
+  INSTRUCTIONS ON HOW TO RUN THE FOCUSING TEST
+--------------------------------------------------
+
+1) Change scirun.bat such that the path in 
+   it points to location of scirun executable
+   on your machine. Matlab should be in the
+   path (check that by typing "which matlab")
+
+2) execute SCIRun with the command:
+
+   scirun.bat prepare.net
+
+   and run the net within the SCIRun.
+   This will produce files f.mat and dd.mat
+   (sensitivity and data matrices).
+
+3) Destroy Matlab module manually 
+   (to shut down the matlab)
+   and quit SCIRun environment
+
+4) execute SCIRun again, with the command:
+  
+   scirun.bat fcs.net
+
+   and run the net. This will produce file
+   res.mat (result of focusing inversion)
+
+5) Destroy Matlab module manually 
+   (to shut down the matlab)
+   and quit SCIRun environment
+
+All files are ascii. f is 100*900 random
+matrix, dd is vector (100 points) and res
+is vector of 900 points. Open res.mat
+and see for yourself that it is really
+sparse solution.
+

@@ -1,0 +1,446 @@
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<chapter id="ch.quick_start">
+<title>Quick Start SCIRun Installation</title>
+
+<section>
+<title>Introduction</title>
+<para>
+For complete installation instructions see <xref linkend="ch.inst"/>. 
+</para>
+
+<para>
+SCIRun is officially compatible with two platforms, SGI and Linux.
+</para>
+
+<para>&sr; may be <link linkend="sec.rpm_inst_qs">installed from
+RPMs</link> (for Mandrake 9 and Red Hat 8 systems only) or from <link
+linkend="sec.tarball_inst_qs">source code tarballs</link> (for Linux
+and SGI).</para>
+</section>
+
+<section id="sec.rpm_inst_qs">
+<title>RPM Installation (Linux only)</title>
+
+<section>
+<title>Introduction</title>
+
+<para>
+You must have root privileges to install &sr;.  Ask your system
+administrator to perform in installation if you don't have access to
+the superuser account.
+</para>
+
+<para>
+The following procedure installs &sr; in
+<filename>/usr/local/SCIRun/bin</filename>.
+</para>
+
+<para>
+RPM installation consists of the following steps:
+<orderedlist>
+<listitem>
+<para>Downloading the &sr; rpm distribution.</para>
+</listitem>
+<listitem>
+<para>Installing  &sr; using the <command>rpm</command> command.</para>
+</listitem>
+<listitem>
+<para>Installing &sr;'s sample data sets.</para>
+</listitem>
+</orderedlist>
+</para>
+<para>See <xref endterm="title.preparing_qs"
+linkend="sec.preparing_qs"/> after installing but before starting
+&sr;</para>
+
+</section>
+
+<section>
+<title>Downloading &sr;'s RPM</title>
+<para>
+Obtain the appropriate &sr; rpm, either
+<filename>SCIRun-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm</filename>
+for Mandrake 9 systems or or
+<filename>SCIRun-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm</filename>
+for Redhad 8 systems.  Be sure to get
+<filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+too.  These files can be downloaded from SCI's <ulink
+url="http://software.sci.utah.edu/archive_entry.html">software
+archive</ulink> page.
+</para>
+</section>
+
+<section>
+<title>Installing &sr;</title>
+
+<para>
+As superuser <command>cd</command> to the directory where &sr; was
+downloaded and type:
+<literallayout class="monospaced">
+rpm -ivh SCIRun-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm
+</literallayout>
+or
+<literallayout class="monospaced">
+rpm -ivh SCIRun-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm
+</literallayout>
+Type <command>exit</command> to leave the root account.
+</para>
+
+<para>See <xref endterm="title.preparing_qs"
+linkend="sec.preparing_qs"/> before starting &sr;</para>
+
+</section>
+
+<section>
+<title>Installing &sr;'s Sample Data Sets</title>
+<para>
+Unpack &sr;'s sample data sets in
+<filename>/usr/local/SCIRun</filename>.  Become root and type
+<literallayout class="monospaced">
+gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | \
+  (cd /usr/local/SCIRun &amp;&amp; tar xf -)
+</literallayout>
+This will create <filename>/usr/local/SCIRun/SCIRunData</filename>,
+the sample data sets directory.
+</para>
+</section>
+
+</section>
+
+<section id="sec.tarball_inst_qs">
+<title>Tarball Installation (Linux and SGI)</title>
+
+<section>
+<title>Introduction</title>
+
+<para><ulink url="http://www.python.org">Python</ulink> (version 1.5.2 or
+later) and <ulink url="http://www.gnu.org/directory/make.html">GNU
+make</ulink> (version 3.79 or later) must be present before proceeding
+with the tarball installation.</para>
+
+<para>
+Installation from tarballs consists of these steps:
+<orderedlist>
+<listitem>
+<para>Downloading (compressed) tarballs containing &sr; sources, packages,
+third party software, and sample data sets.</para>
+</listitem>
+<listitem>
+<para>Unpacking the tarballs.</para>
+</listitem>
+<listitem>
+<para>Building and installing third party software.</para>
+</listitem>
+<listitem>
+<para>Building &sr;</para>
+</listitem>
+</orderedlist>
+</para> 
+
+<para>See <xref endterm="title.preparing_qs"
+linkend="sec.preparing_qs"/> before starting &sr;</para>
+
+</section>
+
+<section>
+<title>Downloading</title>
+
+<para>
+Obtain the source code for SCIRun and any desired packages.  Be sure
+to get the
+<filename>Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+and
+<filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+files too.  The compressed tarballs for these sources can be
+downloaded from SCI's <ulink
+url="http://software.sci.utah.edu/archive_entry.html">software
+archive</ulink> page.
+</para>
+
+</section>
+
+<section>
+<title>Unpacking Tarballs</title>
+
+<para>
+
+<orderedlist>
+
+<listitem>
+<para>
+Unpack the SCIRun tarball:
+<literallayout class="monospaced">
+gunzip -c SCIRun.x.x.x.tar.gz | tar xf -
+</literallayout>
+This will create a directory called <filename>SCIRun</filename>.
+</para>
+</listitem>
+
+<listitem>
+<para>
+Unpack the compressed package tarballs into
+<filename>SCIRun/src/Packages</filename>, for example:
+<literallayout class="monospaced">
+gunzip -c BioPSE.PKG.x.x.x.tar.gz | (cd SCIRun/src/Packages &amp;&amp; tar xf -)
+</literallayout>
+to unpack the BioPSE package.
+</para>
+</listitem>
+
+<listitem>
+<para>
+Unpack the tarball containing sample datasets:
+<literallayout class="monospaced">
+gunzip -c DataSets.x.x.x.tar.gz | tar xf -
+</literallayout>
+This will create the directory <filename>SCIRunData</filename>.
+</para>
+</listitem>
+
+<listitem>
+<para>
+Unpack the third party tarball:
+<literallayout class="monospaced">
+gunzip -c Thirdparty_install.x.x.x.tar.gz | tar xf -
+</literallayout>
+This will create the directory
+<filename>Thirdparty_install.x.x.x</filename>. 
+</para>
+</listitem>
+
+</orderedlist>
+
+</para>          
+
+</section>
+
+<section>
+<title>Building Third Party Software</title>
+
+<para>
+
+<orderedlist>
+
+<listitem>
+<para>
+<command>cd</command> to the third party software directory:
+<literallayout class="monospaced">
+cd Thirdparty_install.x.x.x
+</literallayout>
+</para>
+</listitem>
+
+<listitem>
+<para>
+Run the third party installation script.
+</para>
+<para>
+The simplest invocation of the script looks like this:
+<literallayout class="monospaced">
+python install dir
+</literallayout>
+where <replaceable>dir</replaceable> is the directory under which the
+third-party software will be installed.  For example:
+<literallayout class="monospaced">
+python install /usr/local/&sr;/Third_Party
+</literallayout>
+</para>
+<para>
+The script may also be invoked as follows:
+<literallayout class="monospaced">
+python install <replaceable>dir</replaceable> <replaceable>bits</replaceable> <replaceable>jobs</replaceable>
+</literallayout>
+where <replaceable>dir</replaceable> is the directory under which the
+third-party software will be installed,
+<replaceable>bits</replaceable> is one of 32 or 64 and specifies
+either 32 bit or 64 bit binaries, and <replaceable>jobs</replaceable>
+is the number of process that make will use when building the
+software.  For example:
+<literallayout class="monospaced">
+python install /usr/local/&sr;/Third_Party 64 2
+</literallayout>
+or
+<literallayout class="monospaced">
+python install /usr/local/&sr;/Third_Party 32 1
+</literallayout>
+When finished, the installation script will display the complete path
+name of the third-party software installation directory&mdash;make
+note of this value.
+</para>
+</listitem>
+
+</orderedlist>
+
+</para>
+
+</section>
+
+<section>
+<title>Building SCIRun</title>
+
+<para>
+
+<orderedlist>
+
+<listitem>
+<para>
+Run SCIRun's configure script.  Do this from a sub-directory of
+<filename>&sr;</filename> (but <emphasis>not</emphasis>
+<filename>&sr;/src</filename>) as follows:
+
+<literallayout class="monospaced">
+mkdir SCIRun/<replaceable>dir</replaceable>
+cd SCIRun/<replaceable>dir</replaceable>
+../src/configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \ 
+--enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"
+</literallayout>
+&sr; will be built in the directory
+<filename>&sr;/<replaceable>dir</replaceable></filename>.  Above,
+<replaceable>third-party-dir</replaceable> is replaced by the name of
+the third party software installation directory and
+"<replaceable>package-name1 package-name2 &hellip;</replaceable>" is
+replaced by a list of (previously downloaded and unpacked) package
+names , e.g. "BioPSE MatlabInterface".  For example:
+<literallayout class="monospaced">
+../src/configure \
+  --with-thirdparty=/usr/local/SCIRun_Third_Party/1.4.2/Irix/CC-32bit \
+  --enable-package="BioPSE"
+</literallayout>
+</para>
+</listitem>
+
+<listitem>
+<para>
+Run (GNU) make (from the directory used previously when running configure):
+<literallayout class="monospaced">
+make
+</literallayout>
+or
+<literallayout class="monospaced">
+make -j <replaceable>N</replaceable>
+</literallayout>
+if your machine has <replaceable>N</replaceable> available
+processors.  This will produce a <command>scirun</command>
+executable. 
+</para>
+</listitem>
+
+</orderedlist>
+
+</para>
+
+<para>See <xref endterm="title.preparing_qs"
+linkend="sec.preparing_qs"/> before starting &sr;</para>
+
+</section>
+
+</section>
+
+<section id="sec.preparing_qs">
+<title id="title.preparing_qs">Preparing &sr;</title> 
+<para>Before starting &sr; you should
+initialize 2 environment variables:
+<variablelist>
+
+<varlistentry>
+<term><envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar></term>
+<listitem>
+<para>Each &sr; user should create an <quote>on the fly</quote>
+directory (see <xref endterm="title.dyncomp" linkend="sec.dyncomp"/>
+for details):
+<literallayout class="monospaced">
+mkdir ~/&sr;_otf
+</literallayout>
+Then, before executing &sr; each user must set the environment variable
+<envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar> to point to
+<filename>~/&sr;_otf</filename>:
+<literallayout class="monospaced">
+export SCIRUN_ON_THE_FLY_LIBS_DIR=~/&sr;_otf
+</literallayout>
+for <quote>Bourne</quote>-type shells, and
+<literallayout class="monospaced">
+setenv SCIRUN_ON_THE_FLY_LIBS_DIR ~/&sr;_otf
+</literallayout>
+for <quote>C shell</quote>-type shells.  Alternatively, users may create the
+file <filename>~/.scirunrc</filename> with the following content:
+<literallayout>
+SCIRUN_ON_THE_FLY_LIBS_DIR=<replaceable>/path/to/</replaceable>&sr;_otf
+</literallayout>
+</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term><envar>SCIRUN_DATA</envar></term>
+<listitem>
+<para>
+It specifies the default data directory of &sr; data sets. If you will
+be working through the &sr; <ulink
+url="../../User/Tutorial/index.html">tutorial</ulink> then you will
+want to set it to point to the sample data sets directory:
+<literallayout class="monospaced">
+export SCIRUN_DATA=<replaceable>/path/to/</replaceable>SCIRunData
+</literallayout>
+or
+<literallayout class="monospaced">
+setenv SCIRUN_DATA <replaceable>/path/to/</replaceable>SCIRunData
+</literallayout>
+</para>
+</listitem>
+</varlistentry>
+
+</variablelist>
+</para>
+</section>
+
+<section>
+<title>Starting &sr;</title>
+
+<para>Before starting &sr; read <xref endterm="title.preparing_qs"
+linkend="sec.preparing_qs"/></para>
+
+<para>
+If you installed &sr; from it's rpm you can test it's installation by
+typing <command>/usr/local/SCIRun/bin/scirun</command>.</para>
+
+<para>If you built &sr; from it's source code tarballs then you
+can test it's installation by <command>cd</command>ing to it's build
+directory and typing
+<command>./scirun</command>.
+</para>
+
+<para>
+After starting &sr; you should see it's network editor window and
+the &sr; shell prompt.  See <xref endterm="title.help"
+linkend="sec.help"/> if problems occur.
+</para>
+
+</section>
+
+</chapter>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

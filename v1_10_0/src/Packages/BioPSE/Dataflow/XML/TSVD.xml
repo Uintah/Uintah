@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="TSVD" category="Inverse">
+  <overview>
+    <authors>
+      <author>Alireza Ghodrtai</author>
+    </authors>
+    <summary>
+      Solve inverse problem using Truncated SVD.
+    </summary>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>U</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>S</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>V</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>MeasuredPots</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>InverseSoln</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>RegParam</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>RegInverseMat</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

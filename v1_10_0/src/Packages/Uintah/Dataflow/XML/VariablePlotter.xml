@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="VariablePlotter" category="Visualization">
+  <overview>
+    <authors>
+      <author>James Bigler</author>
+    </authors>
+    <summary>Summary not available yet.</summary>
+    <description>
+      <p>Version Date: Mon May 16 14:15:55 MDT 2001</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Data Archive</name>
+        <datatype>Uintah::Archive</datatype>
+      </port>
+    </inputs>
+  </io>
+  <testing>
+  </testing>
+</component>

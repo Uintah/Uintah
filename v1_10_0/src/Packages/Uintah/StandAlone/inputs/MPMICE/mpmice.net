@@ -1,0 +1,180 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "Uintah" "DataIO" "ArchiveReader" 1 7]
+set m1 [addModuleAtPosition "Uintah" "Visualization" "RescaleColorMapForParticles" 507 307]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 281 33]
+set m3 [addModuleAtPosition "Uintah" "Visualization" "CuttingPlane" 2 411]
+set m4 [addModuleAtPosition "Uintah" "Selectors" "ScalarFieldExtractor" 0 214]
+set m5 [addModuleAtPosition "Uintah" "Visualization" "GridVisualizer" 660 216]
+set m6 [addModuleAtPosition "Uintah" "Selectors" "ParticleFieldExtractor" 434 215]
+set m7 [addModuleAtPosition "Uintah" "Selectors" "TimestepSelector" 0 87]
+set m8 [addModuleAtPosition "SCIRun" "Render" "Viewer" 2 548]
+set m9 [addModuleAtPosition "Uintah" "Selectors" "VectorFieldExtractor" 227 215]
+set m10 [addModuleAtPosition "Uintah" "Visualization" "NodeHedgehog" 227 322]
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 31 319]
+set m12 [addModuleAtPosition "Uintah" "Visualization" "ParticleVis" 433 404]
+
+addConnection $m0 0 $m7 0
+addConnection $m7 0 $m4 0
+addConnection $m7 0 $m9 0
+addConnection $m7 0 $m6 0
+addConnection $m3 0 $m8 0
+addConnection $m4 0 $m11 1
+addConnection $m4 0 $m3 0
+addConnection $m2 0 $m11 0
+addConnection $m11 0 $m3 1
+addConnection $m9 0 $m10 0
+addConnection $m10 0 $m8 1
+addConnection $m2 0 $m10 2
+addConnection $m6 0 $m12 0
+addConnection $m6 0 $m1 0
+addConnection $m2 0 $m1 1
+addConnection $m1 0 $m12 4
+addConnection $m12 0 $m8 2
+addConnection $m7 0 $m5 0
+addConnection $m5 0 $m8 3
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-tcl_status {}
+set $m0-filebase {}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-minVal {}
+set $m1-maxVal {}
+set $m1-scaleMode {auto}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-tcl_status {}
+set $m2-positionList {}
+set $m2-nodeList {}
+set $m2-width {1}
+set $m2-height {1}
+set $m2-mapType {3}
+set $m2-minRes {12}
+set $m2-resolution {255}
+set $m2-realres {255}
+set $m2-gamma {0}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-cutting_plane_type {0}
+set $m3-num_contours {20}
+set $m3-offset {0}
+set $m3-scale {1.0}
+set $m3-where {0.5}
+set $m3-need_find {1}
+set $m3-localMinMaxGUI {0}
+set $m3-fullRezGUI {0}
+set $m3-exhaustiveGUI {0}
+set $m3-xt {0}
+set $m3-yt {0}
+set $m3-zt {0}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-level {0}
+set $m4-tcl_status {Idle}
+set $m4-sVar {}
+set $m4-sMatNum {0}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-var_orientation {0}
+set $m5-nl {0}
+set $m5-index_x {0}
+set $m5-index_y {0}
+set $m5-index_z {0}
+set $m5-index_l {0}
+set $m5-curr_var {}
+set $m5-level1_grid_color {red}
+set $m5-level2_grid_color {green}
+set $m5-level3_grid_color {yellow}
+set $m5-level4_grid_color {magenta}
+set $m5-level5_grid_color {cyan}
+set $m5-level6_grid_color {blue}
+set $m5-level1_node_color {red}
+set $m5-level2_node_color {green}
+set $m5-level3_node_color {yellow}
+set $m5-level4_node_color {magenta}
+set $m5-level5_node_color {cyan}
+set $m5-level6_node_color {blue}
+set $m5-plane_on {0}
+set $m5-node_select_on {0}
+set $m5-radius {0.01}
+set $m5-polygons {8}
+set $m5-show_selected_node {1}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m6-tcl_status {}
+set $m6-psVar {}
+set $m6-pvVar {}
+set $m6-ptVar {}
+set $m6-pNMaterials {}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-tcl_status {}
+set $m7-time {0}
+set $m7-max_time {100}
+set $m7-timeval {0}
+set $m7-animate {0}
+set $m7-anisleep {0}
+set $m7-def-color-r {1.0}
+set $m7-def-color-g {1.0}
+set $m7-def-color-b {1.0}
+set $m7-def-color-a {}
+set $m7-font_size {*}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m9-level {0}
+set $m9-tcl_status {Idle}
+set $m9-sVar {}
+set $m9-sMatNum {0}
+set $m10-notes {}
+set $m10-show_status {1}
+set $m10-length_scale {0.1}
+set $m10-min_crop_length {0}
+set $m10-max_crop_length {0}
+set $m10-width_scale {0.1}
+set $m10-head_length {0.3}
+set $m10-type {2D}
+set $m10-drawcylinders {0}
+set $m10-norm_head {0}
+set $m10-skip_node {1}
+set $m10-shaft_rad {}
+set $m10-max_vector_x {0}
+set $m10-max_vector_y {0}
+set $m10-max_vector_z {0}
+set $m10-max_vector_length {0}
+set $m11-notes {}
+set $m11-show_status {1}
+set $m11-isFixed {0}
+set $m11-min {0}
+set $m11-max {1}
+set $m11-makeSymmetric {0}
+set $m12-notes {}
+set $m12-show_status {1}
+set $m12-min_ {0}
+set $m12-max_ {1}
+set $m12-isFixed {0}
+set $m12-current_time {0}
+set $m12-radius {0.01}
+set $m12-auto_radius {1}
+set $m12-drawcylinders {0}
+set $m12-length_scale {0.1}
+set $m12-auto_length_scale {1}
+set $m12-min_crop_length {0}
+set $m12-max_crop_length {0}
+set $m12-head_length {0.3}
+set $m12-width_scale {0.1}
+set $m12-shaft_rad {0.1}
+set $m12-show_nth {2}
+set $m12-drawVectors {0}
+set $m12-drawspheres {0}
+set $m12-polygons {32}
+
+::netedit scheduleok

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="ColorMapWriter" category="DataIO">
+  <overview>
+    <authors>
+      <author>Steven G. Parker</author>
+    </authors>
+    <summary>Save persistent representation of a colormap to a file.
+    </summary>
+    <description><p>Upon opening, the ColorMapWriter GUI defaults to the directory that the user sets for their SCIRUN_DATA environment variable.   Otherwise, the GUI will default to the directory where the user's SCIRun executable resides. The user can enter the name of a file that the matrix saves to. The file should have a .cmap extension. The default file name is MyColorMap.  The user may choose to save the file in either Binary or ASCII file format.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Input Data</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </inputs>
+  </io>
+  <gui>
+    <img>../Modules/DataIO/doc/SaveFileUI.jpg</img>
+  </gui>
+  <testing>
+  </testing>
+</component>

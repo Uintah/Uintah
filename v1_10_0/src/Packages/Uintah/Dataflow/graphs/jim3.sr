@@ -1,0 +1,155 @@
+# SCI Network 1.0
+
+global userName
+set userName "dav"
+
+global runDate
+set runDate " Wed  Apr 7 1999"
+
+global runTime
+set runTime " 21:35:52"
+
+set m0 [addModuleAtPosition PartToGeom 488 438]
+set m1 [addModuleAtPosition TecplotFileSelector 285 21]
+set m2 [addModuleAtPosition ParticleGridVisControl 247 157]
+set m3 [addModuleAtPosition cfdGridLines 58 553]
+set m4 [addModuleAtPosition GenStandardColorMaps 30 20]
+set m5 [addModuleAtPosition GenColorMap 534 121]
+set m6 [addModuleAtPosition RescaleColorMap 77 259]
+set m7 [addModuleAtPosition RescaleParticleColorMap 497 296]
+set m8 [addModuleAtPosition Salmon 270 652]
+set m9 [addModuleAtPosition CuttingPlane 115 441]
+set m10 [addModuleAtPosition Hedgehog 301 327]
+
+addConnection $m5 0 $m7 2
+addConnection $m1 0 $m2 0
+addConnection $m2 2 $m7 0
+addConnection $m2 3 $m7 1
+addConnection $m2 0 $m6 1
+addConnection $m4 0 $m6 0
+addConnection $m2 1 $m10 0
+addConnection $m2 0 $m10 1
+addConnection $m10 0 $m8 0
+addConnection $m3 0 $m8 1
+addConnection $m2 0 $m9 0
+addConnection $m2 0 $m3 0
+addConnection $m9 0 $m8 2
+addConnection $m7 0 $m0 0
+addConnection $m7 1 $m0 1
+addConnection $m7 2 $m0 2
+addConnection $m0 0 $m8 3
+addConnection $m6 0 $m9 1
+
+set PartToGeom_0-notes {}
+set PartToGeom_0-current_time 0
+set PartToGeom_0-radius 0.05
+set PartToGeom_0-drawcylinders 0
+set PartToGeom_0-length_scale 0.1
+set PartToGeom_0-head_length 0.3
+set PartToGeom_0-width_scale 0.1
+set PartToGeom_0-shaft_rad 0.1
+set PartToGeom_0-drawVectors 0
+set PartToGeom_0-drawspheres 1
+set PartToGeom_0-polygons 100
+set TecplotFileSelector_0-notes {}
+set TecplotFileSelector_0-tcl_status {}
+set TecplotFileSelector_0-filebase {}
+set TecplotFileSelector_0-animate 0
+set TecplotFileSelector_0-startFrame 0
+set TecplotFileSelector_0-endFrame 0
+set TecplotFileSelector_0-increment 0
+set ParticleGridVisControl_0-notes {}
+set ParticleGridVisControl_0-tcl_status {}
+set ParticleGridVisControl_0-sVar {}
+set ParticleGridVisControl_0-vVar {}
+set ParticleGridVisControl_0-psVar {}
+set ParticleGridVisControl_0-pvVar {}
+set ParticleGridVisControl_0-sFluid 0
+set ParticleGridVisControl_0-vFluid 0
+set ParticleGridVisControl_0-pFluid 0
+set cfdGridLines_0-notes {}
+set cfdGridLines_0-rad 0
+set cfdGridLines_0-scalex 1
+set cfdGridLines_0-scaley 1
+set cfdGridLines_0-expy 0
+set cfdGridLines_0-expx 0
+set cfdGridLines_0-mode 0
+set GenStandardColorMaps_0-notes {}
+set GenStandardColorMaps_0-tcl_status {}
+set GenStandardColorMaps_0-mapType 0
+set GenStandardColorMaps_0-minRes 2
+set GenStandardColorMaps_0-resolution 2
+set GenColorMap_0-notes {}
+set GenColorMap_0-nlevels -2147483647
+set GenColorMap_0-interp_type {}
+set GenColorMap_0-cinterp_type {}
+set GenColorMap_0-material-ambient-r -1.79769e+308
+set GenColorMap_0-material-ambient-g -1.79769e+308
+set GenColorMap_0-material-ambient-b -1.79769e+308
+set GenColorMap_0-material-diffuse-r -1.79769e+308
+set GenColorMap_0-material-diffuse-g -1.79769e+308
+set GenColorMap_0-material-diffuse-b -1.79769e+308
+set GenColorMap_0-material-specular-r -1.79769e+308
+set GenColorMap_0-material-specular-g -1.79769e+308
+set GenColorMap_0-material-specular-b -1.79769e+308
+set GenColorMap_0-material-shininess -1.79769e+308
+set GenColorMap_0-material-emission-r -1.79769e+308
+set GenColorMap_0-material-emission-g -1.79769e+308
+set GenColorMap_0-material-emission-b -1.79769e+308
+set GenColorMap_0-material-reflectivity -1.79769e+308
+set GenColorMap_0-material-transparency -1.79769e+308
+set GenColorMap_0-material-refraction_index -1.79769e+308
+set GenColorMap_0-material-ambient-r -1.79769e+308
+set GenColorMap_0-material-ambient-g -1.79769e+308
+set GenColorMap_0-material-ambient-b -1.79769e+308
+set GenColorMap_0-material-ambient-r -1.79769e+308
+set GenColorMap_0-material-ambient-g -1.79769e+308
+set GenColorMap_0-material-ambient-b -1.79769e+308
+set GenColorMap_0-material-diffuse-r -1.79769e+308
+set GenColorMap_0-material-diffuse-g -1.79769e+308
+set GenColorMap_0-material-diffuse-b -1.79769e+308
+set GenColorMap_0-material-diffuse-r -1.79769e+308
+set GenColorMap_0-material-diffuse-g -1.79769e+308
+set GenColorMap_0-material-diffuse-b -1.79769e+308
+set GenColorMap_0-material-specular-r -1.79769e+308
+set GenColorMap_0-material-specular-g -1.79769e+308
+set GenColorMap_0-material-specular-b -1.79769e+308
+set GenColorMap_0-material-specular-r -1.79769e+308
+set GenColorMap_0-material-specular-g -1.79769e+308
+set GenColorMap_0-material-specular-b -1.79769e+308
+set GenColorMap_0-material-shininess -1.79769e+308
+set GenColorMap_0-material-emission-r -1.79769e+308
+set GenColorMap_0-material-emission-g -1.79769e+308
+set GenColorMap_0-material-emission-b -1.79769e+308
+set GenColorMap_0-material-emission-r -1.79769e+308
+set GenColorMap_0-material-emission-g -1.79769e+308
+set GenColorMap_0-material-emission-b -1.79769e+308
+set GenColorMap_0-material-reflectivity -1.79769e+308
+set GenColorMap_0-material-transparency -1.79769e+308
+set GenColorMap_0-material-refraction_index -1.79769e+308
+set GenColorMap_0-min -1.79769e+308
+set GenColorMap_0-max -1.79769e+308
+set GenColorMap_0-gen_rangemap -2147483647
+set RescaleColorMap_0-notes {}
+set RescaleParticleColorMap_0-notes {}
+set RescaleParticleColorMap_0-minVal -1.79769e+308
+set RescaleParticleColorMap_0-maxVal -1.79769e+308
+set RescaleParticleColorMap_0-scaleMode {auto}
+set Salmon_0-notes {}
+set CuttingPlane_0-notes {}
+set CuttingPlane_0-cutting_plane_type 0
+set CuttingPlane_0-num_contours 20
+set CuttingPlane_0-offset 0
+set CuttingPlane_0-scale 1
+set CuttingPlane_0-where -1.79769e+308
+set CuttingPlane_0-need_find 1
+set Hedgehog_0-notes {}
+set Hedgehog_0-length_scale 0.1
+set Hedgehog_0-width_scale 0.1
+set Hedgehog_0-head_length 0.3
+set Hedgehog_0-type {2D}
+set Hedgehog_0-exhaustive_flag -2147483647
+set Hedgehog_0-drawcylinders 0
+set Hedgehog_0-shaft_rad -1.79769e+308
+$m1 ui
+

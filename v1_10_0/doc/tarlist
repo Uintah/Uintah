@@ -1,0 +1,74 @@
+# -*- ruby -*-
+#
+#  The contents of this file are subject to the University of Utah Public
+#  License (the "License"); you may not use this file except in compliance
+#  with the License.
+#
+#  Software distributed under the License is distributed on an "AS IS"
+#  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+#  License for the specific language governing rights and limitations under
+#  the License.
+#
+#  The Original Source Code is SCIRun, released March 12, 2001.
+#
+#  The Original Source Code was developed by the University of Utah.
+#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+#  University of Utah. All Rights Reserved.
+#
+
+#
+# Print to stdout a list of files to be included in the tar archive.
+# This script is used as a filter by doc/Makefile.
+#
+
+Dir.chdir("..")
+root=File.basename(Dir.pwd())
+Dir.chdir("..")
+
+# First do non-wildcards
+$stdout.print("#{root}/doc/index.html
+#{root}/doc/.htaccess
+#{root}/doc/Documentum/index.html
+#{root}/doc/Documentum/documentum.html
+#{root}/doc/Documentum/module-latex.ps.gz
+#{root}/doc/Documentum/module-latex
+#{root}/doc/Documentum/module-desc-template.tex
+#{root}/doc/Documentum/latex-article-template.tex
+#{root}/doc/Documentum/module-xml.ps.gz
+#{root}/doc/Documentum/module-xml
+#{root}/doc/Installation/index.html
+#{root}/doc/Installation/FAQ/faq.html
+#{root}/doc/User/index.html
+#{root}/doc/User/FAQ/faq.html
+#{root}/doc/User/Guide/usersguide
+#{root}/doc/User/Guide/Figures
+#{root}/doc/User/Tutorial
+#{root}/doc/User/Guide/usersguide.ps.gz
+#{root}/doc/Developer/index.html
+#{root}/doc/Developer/FAQ/faq.html
+#{root}/doc/Developer/Guide/dev/Figures
+#{root}/doc/Developer/CodeViews/html
+#{root}/doc/Utilities/Figures
+#{root}/doc/Utilities/TeX/scirun-doc.sty
+#{root}/doc/Utilities/TeX/scirun-doc.tex
+")
+
+# Now do wildcards
+$stdout.print(Dir["
+#{root}/doc/User/FAQ/*.gif
+#{root}/doc/Documentum/docbook_*_template.xml
+#{root}/doc/Documentum/*_template.html
+#{root}/doc/Installation/Guide/*.html
+#{root}/doc/Installation/Guide/*.gif
+#{root}/doc/Developer/Guide/*.html
+#{root}/doc/Developer/Modules/*.html
+#{root}/doc/Utilities/HTML/*.css
+#{root}/doc/Utilities/HTML/*.js
+#{root}/src/Dataflow/XML/*.html
+#{root}/src/Dataflow/Modules/*/doc/*.jpg
+#{root}/src/Dataflow/Modules/*/doc/*.gif
+#{root}/src/Packages/*/Dataflow/XML/*.html
+#{root}/src/Packages/*/Dataflow/TeX/*/*.jpg
+#{root}/src/Packages/*/Dataflow/TeX/*/*.gif
+#{root}/src/Packages/*/Dataflow/TeX/*/*/*"
+].join(" "))

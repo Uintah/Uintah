@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="NrrdToField" category="DataIO">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>Given all the information stored about the input nrrd
+output a field of the appropriate type.</summary>
+    <description>
+      <p>
+          If a Field is stored in the NrrdData, and the nrrd data
+still maps to the Mesh in that Field, create a new Field sharing the
+original Mesh. Otherwise for three dimensional nrrd data create a
+LatVolField, for two dimensional nrrd data create an ImageField, and
+for one dimensional data create a ScanlineField. The created field is
+the output for this module. 
+      </p>
+      <p>
+         All NrrdData have Nrrd's created with a tuple axis, so that
+multiple sets of data can be joined and stored in the Nrrd.
+NrrdToField always will take te first data set along that tuple axis.
+If you have a Nrrd that has multiple sets in it, and you want to
+convert a particular element of the tuple, use NrrdSlice to select the
+tuple element prior to this module.
+      </p>
+    </description>
+    <examplesr>Teem/nets/test/to_and_from_lvd.fld.net</examplesr>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+    <plan>
+      <description>
+	<p></p>
+      </description>
+      <step>
+	<p>Run the test network (see examplesr tag), and verify that
+geometry and data values are identical.  This can be done with visual
+inspection. Just turn off and on display of nodes to compare
+colors.</p>
+      </step>
+    </plan>
+  </testing>
+</component>

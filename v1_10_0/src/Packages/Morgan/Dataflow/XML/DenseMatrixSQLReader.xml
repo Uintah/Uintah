@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="DenseMatrixSQLReader" category="Readers">
+  <overview>
+    <authors>
+      <author>Jason V. Morgan</author>
+    </authors>
+    <summary>
+      <p>
+        Allows the user to connect to an SQL database such as MySQL or
+        Postgres to obtain data.
+      </p>
+    </summary>
+    <description>
+      <p>
+      </p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Field</name>
+        <description>
+          <p>
+            The matrix obtained from the SQL database.
+          </p>
+        </description>
+        <datatype>SCIRun::Matrix</datatype>
+        <componentname>WriteMatrix</componentname>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>
+      </p>
+    </description>
+    <parameter>
+      <widget>Button</widget>
+      <label>Execute</label>
+      <description>
+        <p>
+          Sends a request to the scheduler to have this component
+          started.
+        </p>
+      </description>
+    </parameter>
+  </gui>
+  <testing>
+    <plan>
+      <description>
+        <p>
+          Splatting is the simplest of all the volume rendering 
+          algorithms.  It is inherently invariant to the size,
+          shape and structure of the volume to be rendered.  Test
+          by inputing fields with known structure and verify that
+          the output represents that structure.
+        </p>
+      </description>
+      <step>
+        <p>
+          nothing yet.
+        </p>
+      </step>
+    </plan>
+  </testing>
+</component>
+

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="Matlab" category="DataIO">
+  <overview>
+    <authors>
+      <author>Oleg Portniaguine</author>
+    </authors>
+    <summary>
+      Interactive Matlab Interface.  The Matlab module is part of the DataIO category in the MatlabInterface package.
+    </summary>
+    <description>
+      <p>The Matlab module is part of the MatlabInterface package that enables
+calls from SCIRun to Matlab, either to interactive commands or via Matlab
+scripts.  Sockets are the underlying coupling mechanism that connect SCIRun
+and Matlab because they run as separate processes.  The Matlab module facilitates both simple tasks such as converting files between SCIRun and Matlab, and more complex tasks such as creating interactive SCIRun programs that call Matlab scripts to perform real-time applications.</p>
+      <p>Version Date: Sep 2001</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="yes">
+      <port>
+        <name>i1</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>i2</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>i3</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>i4</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>i5</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>o1</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o2</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o3</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o4</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o5</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+
+
+
+
+
+
+
+
+
+
+
+

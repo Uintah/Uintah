@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- All Materials -->
+<Uintah_Include>
+  <equation_of_state type="default_hypo">
+  </equation_of_state>
+</Uintah_Include>

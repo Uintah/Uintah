@@ -1,0 +1,134 @@
+#!/bin/sh
+
+TEST=$1
+TEST_DIR=$2
+COMPARE_ROOT=$3
+SUS_DIR=$4
+
+cd $TEST_DIR
+UDADIR=`ls -d *.uda`
+
+TEST_UDADIR=$TEST_DIR/$UDADIR
+COMPARE_UDADIR=$COMPARE_ROOT/$TEST/$UDADIR
+TMPDIR=$TEST_DIR
+
+echo "Testing $TEST"
+
+if [ -d "$TEST_UDADIR" ]; then
+  if [ ! -d "$COMPARE_ROOT" ]; then
+    echo "Creating $COMPARE_ROOT directory"
+    COMPARE_PARENT_DIR=`echo "$COMPARE_ROOT" | sed 's|/[^/]*$||'`
+    cd $COMPARE_PARENT_DIR
+    COMPARE_DIR=`echo "$COMPARE_ROOT" | sed "s|.*/||"`
+    mkdir $COMPARE_DIR
+#    cvs add $COMPARE_DIR
+  fi
+  if [ ! -d "$COMPARE_ROOT/$TEST" ]; then
+    echo "Creating $COMPARE_ROOT/$TEST directory"
+    cd $COMPARE_ROOT
+    mkdir $TEST
+#    cvs add $TEST
+  fi
+  if [ ! -d "$COMPARE_UDADIR" ]; then
+    echo "Storing uda directory: $COMPARE_UDADIR"
+
+    # try to remove it in case it exists as a non-directory
+    rm $COMPARE_UDADIR 
+
+    # if cp has a --dereference option, then us it
+    cp -r --dereference $TEST_UDADIR $COMPARE_UDADIR
+    if [ $? != "0" ]; then
+	# try without --dereference -- not all cp's have this option
+	cp -r $TEST_UDADIR $COMPARE_UDADIR
+    fi
+
+    cd $COMPARE_ROOT/$TEST
+    exit -2
+#    find $UDADIR -type d | xargs cvs add
+#    find $UDADIR -name "*.dat" | xargs cvs add
+#    find $UDADIR -name "*.data" | xargs cvs add
+#    find $UDADIR -name "*.xml" | xargs cvs add
+#    cvs commit -R -m "Automated Tester storing dat files" $UDADIR
+  else
+    inputs_differ=0
+    echo
+    echo "Checking input files"
+    echo
+    diff -B $TEST_UDADIR/input.xml $COMPARE_UDADIR/input.xml
+    if [ $? != "0" ]; then
+	echo
+	echo "  Input files differ."
+	inputs_differ=1
+    else
+	echo "  Input files are the same."
+    fi
+
+    echo
+    echo "Comparing dat files"
+    echo "======================================"
+    echo
+
+    compare_dats $TEST $TEST_UDADIR $COMPARE_UDADIR $TMPDIR
+    compare_dats_retval=$?
+    if [ $compare_dats_retval = "1" ]; then
+	echo 
+	echo "*** dat comparison tests failed ***"
+	if [ $inputs_differ = "1" ]; then
+	    exit 5;
+	else
+	    exit 1
+        fi
+    fi
+
+
+    echo
+    echo "Comparing udas"
+    echo "======================================"
+    echo
+    compare_udas $SUS_DIR $TEST $TEST_UDADIR $COMPARE_UDADIR $TMPDIR ""
+    retval=$?
+    if [ $retval != "0" ]; then
+	echo 
+	echo "*** uda comparison tests failed ***"
+	if [ $inputs_differ = "1" ]; then
+	    exit 5;
+	else
+	    exit 1
+	fi
+    fi
+
+    echo
+    echo "Comparing checkpoints"
+    echo "======================================"
+    echo
+    compare_udas $SUS_DIR $TEST $TEST_UDADIR/checkpoints $COMPARE_UDADIR/checkpoints $TMPDIR "-skip_unknown_types"
+    retval=$?
+    if [ $retval != "0" ]; then
+	echo 
+	echo "*** checkpoint comparison tests failed ***"
+	
+	if [ $inputs_differ = "1" ]; then
+	    exit 5;
+	else
+	    exit 1
+	fi
+    fi
+
+    if [ $compare_dats_retval = "-1" ]; then
+	if [ $inputs_differ = "1" ]; then
+	    exit 5;
+	fi
+	exit -1
+    fi
+    
+    if [ $inputs_differ = "1" ]; then
+	exit 10;
+    fi
+  fi
+else
+  echo "$TEST_UDADIR was not created"
+  exit 1
+fi
+
+exit 0
+

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="ComputeCurrent" category="Forward">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>Compute the current density vector field</summary>
+    <description>
+      <p>Version Date: January 2003</p>
+      <p>Version: 1.0</p>
+      <p>ComputeCurrent calculate the current density vector
+field.  Required inputs are the electric field and mesh with
+conductivities.
+
+Technical note: The current density vector field J is the product of sigma and -del V.
+The minus sign is added in ComputeCurrent, so the electric field input should be
+positive (which is the unmodified output of the Gradient module).</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>TetMesh EField</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>TetMesh Sigmas</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Currents</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

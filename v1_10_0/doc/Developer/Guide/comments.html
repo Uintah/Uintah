@@ -1,0 +1,134 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<HTML>
+<HEAD>
+  <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+  <TITLE>Comment Standards Specification</TITLE>
+  <!-- Changed by: Ted Dustman, 21-Mar-2002 -->
+  <LINK REL="STYLESHEET" HREF="../doc_styles.css" TYPE="text/css">
+</HEAD>
+<BODY>
+<!-- ******************** DOCUMENTATION HEADER ********************* -->
+<div class="top-banner-margins">
+<table border="0" cellspacing="0" cellpadding="0" width="100%" height="91">
+<tr>
+	<td align="center" width="%100" background="../images/banner_top_fill.jpg"><img src="../images/banner_top.jpg" width="744" height="91" border="0" usemap="#banner" /></td>
+<map name="banner">
+	<area href="http://www.sci.utah.edu" alt="Home" coords="92,62,186,83" />
+	<area href="http://software.sci.utah.edu" alt="Software" coords="193,61,289,83" />
+	<area href=".." alt="Documentation" coords="296,62,437,83" />
+	<area href="../../User/Guide/usersguide" alt="User Guide" coords="449,62,544,83" />
+	<area href="../../Developer/Guide/TOC.html" alt="Developer Guide" coords="550,62,692,83" />
+</map>
+</tr>
+</table>
+</div>
+<!-- ****************** END DOCUMENTATION HEADER ******************* -->
+<p class="title">SCIRun Comment Standards</p>
+
+<p class="head">Table of contents</p>
+<p>
+The following list documents the SCIRun Comment Standards.  Any questions
+or requested modifications should be sent to scirun-exec@cs.utah.edu.
+</p>
+
+<ol class="toc">
+<li><a href="#required">Required</a></li>
+<li><a href="#optional">Optional</a></li>
+<li><a href="#avoid">Avoid</a></li>
+</ol>
+
+<p class="head"><a name="required">Required</a></p>
+<ul>
+  <li> <em>//!</em>  or <em>/*!</em>
+  <li> <em> \author </em> </li>
+  <li> <em> \date </em></li>
+  <li> <em> \par </em> License </li>
+  <li> <em>-</em> or <em>-#</em> for nested lists</li>
+</ul>
+<p class="head"><a name="optional">Optional</a></p>
+<ul>
+  <li> <em> \todo </em> </li>
+  <li> <em> \example </em> </li>
+  <li> <em> \warning </em> </li>
+  <li> <em> \bug </em> </li>
+  <li> <em> \param </em> describe a parameter for a function
+    </li>
+  <li> <em> \image </em> 
+    </li>
+  <li> Cross Reference
+      <ul>
+        <li> <em> \sa </em>    see also:</li>
+        <li> <em> \anchor </em>  places an invisble, named anchor into to 
+              documentation to which you can refer with the <em> \ref  </em> 
+              command
+           </li>
+        <li> <em>\ref</em> </li>
+        <li> <em>\link</em> and <em>\endlink </em></li>
+      </ul>
+    </li><em><em>
+  <li>Typesetting Commands
+       <ul>
+         <li><em>\em</em>   emphesize a word</li>
+         <li><em>\f$</em>  or <em>\f[</em> <em>\f]</em> pair: add a math formula in LaTex </li>
+       </ul>
+</em></em></ul><em><em>
+<p class="head"><a name="avoid">Avoid</a></p>
+<ul>
+  <li>Typesetting Commands
+       <ul>
+         <li><em>\a</em> </li>
+         <li><em>\b</em> <bold>Bold</bold></li>
+         <li><em>\p</em> </li>
+       </ul>
+    </li> 
+  <li> LaTex and HTML only commands
+      <ul>
+         <li><em>\latexonly</em></li>
+         <li><em>\htmlonly</em></li>
+         <li><em>\addindex</em></li>
+      </ul>
+  <li><em>\skip</em></li>
+  <li><em>\line</em></li>
+  <li><em>\skipline</em></li>
+  <li>Conditional Comments
+      <ul>
+         <li><em>\if</em></li>
+      </ul>
+    </li>
+  <li><em>\section</em></li>
+  <li><em>\subsection</em></li>
+</ul>
+</em></em>
+<!-- ******************** DOCUMENTATION FOOTER ********************* -->
+<div class="bottom-banner-margins">
+<table border="0" cellspacing="0" cellpadding="0" height="32" width="100%">
+<tr>
+	<td align="left" background="../images/banner_bottom_fill.jpg" width="%100"><img src="../images/banner_bottom.jpg" width="444" height="32" border="0"></td>
+</tr>
+</table>
+</div>
+<center><font size="-2" face="arial, helvetica, sans-serif">Scientific
+Computing and Imaging Institute &#149; 50 S. Central Campus Dr. Rm
+3490 &#149; Salt Lake City, UT 84112<br />
+
+(801) 585-1867 &#149; fax: (801) 585-6513 &#149; <a href="http://www.utah.edu/disclaimer/disclaimer_home.html">Disclaimer</a></font></center>
+<!-- ****************** END DOCUMENTATION FOOTER ******************* -->
+</BODY>
+</HTML>
+	  

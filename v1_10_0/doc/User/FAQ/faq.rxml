@@ -1,0 +1,663 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+
+<!--%= "PCEtLQogICoqKioqIERPTidUIEVESVQgTUUhICoqKioqCiAgSSdtIGdlbmVy\nYXRlZCBmcm9tIGZhcS5yeG1sLiAgRWRpdCBpdCBpbnN0ZWFkLgotLT4=\n".unpack("m") %-->
+
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+"../../Utilities/XML/Docbook_dtd/docbookx.dtd" [
+<!ENTITY sr "SCIRun">
+<!ENTITY sr_bibtex_cit "javascript:function NewWindow(PageName,wide,tall,scroll){
+window.open(PageName,'','toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=' + scroll + ',resizable=0,width=' + wide + ',height=' + tall + ',left=0,top=0');}NewWindow('http://software.sci.utah.edu/scirun_citation.bib',
+'600','400','1')">
+<!ENTITY biopse_bibtex_cit "javascript:function NewWindow(PageName,wide,tall,scroll){
+window.open(PageName,'','toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=' + scroll + ',resizable=0,width=' + wide + ',height=' + tall + ',left=0,top=0');}NewWindow('http://software.sci.utah.edu/biopse_citation.bib',
+'600','400','1')">
+]>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<article class="faq">
+<!--%
+version = File.open("../../edition.xml") do |f|
+  /<edition>(.*)<\/edition>/.match(f.read())[1]
+end
+%-->
+<title>User FAQ (for &sr; Version <!--%= version %-->)</title>
+
+
+
+<qandaset defaultlabel="number">
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>3/15/03</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+What citation should I use when referring to &sr; and BioPSE in a
+paper or grant application?
+</para>
+</question>
+
+<answer>
+<para>
+We have <quote>BibTeX</quote> and <quote>plain text</quote>
+citations. Here are the <ulink url="&sr_bibtex_cit;">&sr;
+citations</ulink> and here are the <ulink
+url="&biopse_bibtex_cit;">BioPSE citations</ulink>.
+</para>
+<para>
+Thank you for your citation(s).  Citations of the use of
+SCIRun/BioPSE in your projects and publications helps a lot with the
+continued funding of the SCIRun/BioPSE project.  Please <ulink
+url="mailto:macleod@cvrti.utah.edu">send us</ulink> your citations
+too.
+</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>2/20/03</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+When I remotely display it, SCIRun sometimes hangs and sometimes
+crashes my X server (depending on whether it is running on sgi/linux
+and being displayed on sgi/linux.)  What causes this?
+</para>
+</question>
+
+<answer>
+<para>Apparently there are problems with the 4191 Nvidia drivers that cause
+GL programs to behave badly.  We have had success using the 3123
+drivers (except for 3D texturing).  You can determine what drivers you
+are using (on your linux box) by typing "rpm -qa | grep NVIDIA".
+</para>
+<para>
+Since there doesn't seem to be drivers newer than 4191 on nvidia's
+<ulink
+url="http://www.nvidia.com/view.asp?IO=linux_display_archive">web
+site</ulink> I would suggest going back to the 3123 drivers, which is
+what I currently have on my system.  NVIDIA doesn't have prebuilt
+rpms for RedHat 8.0, but you can easily build from the source rpms:
+<literallayout class="monospaced">
+# Removes the old installation.  You may need to change the actual number
+rpm -e NVIDIA_GLX-1.0-4191 NVIDIA_kernel-1.0-4191
+
+# Build the rpm from the source
+rpmbuild --rebuild NVIDIA_kernel-1.0-3123.src.rpm
+
+# Install the rpm.  Note: the actual path may differ from system to system.
+rpm -ivh /usr/src/redhat/RPMS/i386/NVIDIA_kernel-1.0-3123.i386.rpm
+
+# You don't have build the GLX rpm from source (not kernel dependant),
+# but I did anyway.
+rpmbuild --rebuild NVIDIA_GLX-1.0-3123.src.rpm
+rpm -ivh /usr/src/redhat/RPMS/i386/NVIDIA_GLX-1.0-3123.i386.rpm
+</literallayout>
+</para>
+
+</answer>
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>1/31/03</date>
+</revision>
+</revhistory>
+
+<question>
+<para>My SCIRun dies with a memory allocation error.  Specifically
+this one:
+<literallayout class="monospaced">
+Error allocating memory (32833536 bytes requested) mmap: errno=12 Thread
+</literallayout>
+</para>
+</question>
+
+<answer>
+<para>If you did not configure with <option>--enable-64bit</option>, then
+your program will not be able to use more than approximately 2G of
+memory.</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>9/15/02</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+I have a question regarding the way inverse problems in
+electrocardiography are solved in SCIRUN/BIOPSE. In papers, I read
+that the so-called transfer matrix T is built and then a least-squares
+problem is solved. This transfer matrix is expressed using inverses of
+submatrices. Is this matrix T effectively computed? Are inverses
+really computed ?  What is the method really implemented? In which
+modules can I see the source code?
+</para>
+</question>
+
+<answer>
+<para>
+There are two general solutions to the bioelectric inverse
+problem, and they differ in terms of what one is seeking to recover.  In
+one formulation, you try to recover equivalent dipole sources.In the
+other, you try to recover the voltages on an interior surface that you
+assume encompasses any sources (i.e. there are no sources located between
+the measurement surface and the interior surface).
+</para>
+<para>
+For the first formulation (surface-to-source inversion), the inverse
+problem can be either over-constrained (searching for a single dipole
+that accounts for the outer surface measurements), or
+under-constrained (searching for a large number of dipoles that are
+distributed through the domain).  The over-constrained case is often
+refered to as parameterized inversion, whereas the under-constrained
+case is non-parameterized.  For the parameterized case, a search
+algorithm is used to locate the dipole that best reproduces the
+measured data.For the non-parameterized case, we find the minimum-norm
+solution that best fits some a-priori information we have about the
+data (e.g. the solution should be spatially focused).
+</para>
+<para>
+For the latter formulation (surface-to-surface inversion), because of
+the poorly-specified boundary conditions on the inner surface, the
+inverse problem is ill-conditioned.  This formulation does use the
+transfer matrix that is built from a combination of sub-matrices from
+the stiffness matrix.  To answer your more specific questions: we do
+solve the resulting linear systems, but not by computing an explicit
+inverse; rather, we use an iterative (conjugate-gradient)
+algorithm. And there is a preliminary version of this code that I
+implemented a while ago when I was investigating cortical mapping
+techniques.  Unfortuantely, we have not yet released this code in
+BioPSE.  For the moment, the best I can offer is a link to <ulink
+url="http://www.cs.utah.edu/~dmw/">my web-page</ulink>.  From there
+you can download a postscript version of our SPIE `95 paper that
+describes this technique in more detail.  This is one of the
+algorithms we intend to integrate into BioPSE in the early Spring,
+though, so stay tuned...
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+<question>
+<para>
+When I run &sr;, one or more messages appear in the message window
+indicating a problem with a package and/or module.
+The message(s) is/are similar to the following:
+<literallayout class="monospaced">
+Loading package '&sr;'
+Unable to load module 'CastField' :
+- can't find symbol 'make_CastField'
+</literallayout>
+or
+<literallayout class="monospaced">
+Unable to load all of package 'Teem' (category 'DataIO' failed) :
+- libPackages_Teem_Dataflow.so: cannot open shared object file: No
+such file or directory
+- libPackages_Teem_Dataflow_Modules_DataIO.so: cannot open shared
+object file: No such file or directory
+</literallayout>
+</para>
+</question>
+
+<answer>
+<para>
+ Each module for a given package has its own .xml file that describes
+it. When &sr; starts, it parses all the .xml files in the packages
+(under Dataflow/XML) and tries to find the matching code within the
+related .so files. If the .so files cannot be found the message
+<quote>No such file or directory</quote>" is given. If the .so can be
+found, but the code for a particular module does not exist within the
+library, then the message <quote>can't find symbol</quote> is given.
+</para>
+<para>
+The message(s) may or may not indicate a problem with &sr;. For some
+modules, the .xml file may be listed but the code has not yet been
+completed (this may be common for module developers). For others it
+may mean that the &sr; installation is some how corrupt (.so files
+have been deleted, moved, etc.)
+</para> 
+<para>
+The solution to this problem is to either a) build the libraries that
+the .xml files need, or b) remove the offending .xml files.
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+<question>
+<para>
+What systems are compatible with &sr;?
+</para>
+</question>
+
+<answer>
+<para>
+&sr; should be generally compatible with any SGI or Linux machine. 
+</para>
+<para>
+&sr; has been tested on the following Linux distributions:
+<itemizedlist>
+<listitem>Mandrake 7.2 &amp; 8.0</listitem>
+<listitem>Redhat 6.2, 7.0 &amp; 7.1</listitem>
+<listitem>SuSE 6.4, 7.0 &amp; 7.2</listitem>
+<listitem>Debian testing</listitem>
+</itemizedlist> 
+</para>
+<para>
+&sr; has been tested on the following PC processor configurations:
+<itemizedlist>
+<listitem>Dual Intel Pentium II</listitem>
+<listitem>Single Intel Pentium III</listitem>
+<listitem>Dual Intel Pentium III</listitem>
+<listitem>Single Intel Pentium 4</listitem>
+<listitem>Single AMD Athlon</listitem>
+</itemizedlist>
+</para>
+<para>
+&sr; has been tested with the following PC graphics cards:
+<itemizedlist>
+<listitem>NVIDIA GeForce, GeForce II &amp; GeForce3</listitem>
+</itemizedlist>
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+<question>
+<para>
+What is the relationship between &sr;, BioPSE, and the other SCI
+Institute software?
+</para>
+</question>
+
+<answer>
+<para>
+It is important to understand the place of the software included in
+this package within the hierarchy of computational problem solving
+environments developed at the SCI Institute.  From a historical
+perspective, &sr;, which we started developing in 1992, was the
+original implementation of the computational framework.  Since then,
+&sr; and its computational workbench infrastructure have been the
+origin of many significant application-specific projects. Two major
+examples are the DOE sponsored Uintah system and the NIH sponsored
+BioPSE system (from the <ulink url="http://www.ncrr.nih.gov/">National
+Center for Research Resources</ulink> (NCRR) Center at <ulink
+url="http://www.sci.utah.edu/ncrr/">Utah</ulink>). The target
+applications of the Uintah project are combustion, computational fluid
+dynamics, and mechanical modeling implemented on large-scale,
+distributed, shared memory architectures. The goal of the BioPSE
+project is to create software for geometric modeling, simulation, and
+visualization for solving bioelectric field problems.  An important
+secondary goal of the &sr; system is to make source code for these
+problem solving environments publicly available to the scientific
+community.
+</para>
+<para>
+To realize these two significant projects, the &sr; infrastructure
+itself has required significant reorganization, extension, and
+enhancement.  Even with these recent changes, &sr; remains both the
+core infrastructure for our problem solving environments and the name
+we use to refer to the entire ensemble of software.  Thus a user may
+install and operate the core &sr; software and also augment its
+functionality with one or more of the <quote>packages</quote> such as
+BioPSE.  We anticipate that the collection of packages will grow as
+the advantages of the &sr; infrastructure become available to
+scientists and engineers of all disciplines.
+</para>
+ 
+<para>
+<figure id="fig.biopsesr">
+<title>BioPSE Software System</title>
+<mediaobject>
+<imageobject>
+<imagedata fileref="EAB-BioPSE.gif" format="GIF" width="645"
+align="center"/>
+</imageobject>
+<caption>
+<para>
+The relationship amoung &sr; and the other packages that it uses.
+BioPSE consists of the basic &sr; software together with the BioPSE
+modules and support libraries.
+</para>
+</caption>
+</mediaobject>
+</figure>
+</para>
+
+<para>
+In addition to the major projects that have both leveraged and
+advanced &sr;, there exist a number of smaller packages that can
+extend &sr;'s utility. Examples include the Teem package for raster
+data processing, the NetSolve package for linear algebra subroutines
+(developed by researchers at the University of Tennessee and
+Knoxville), and a communications interface we have recently introduced
+to the Matlab program. We have developed various forms of software
+wrappers or interfaces that allow &sr; to leverage the strengths of
+these third party tools, links we refer to as "bridges."  </para>
+<para>
+There are also instances in which a tighter level of integration than
+a bridge between &sr; and third-party software is necessary. One
+example is the addition of mpeg support for capturing animations from
+the &sr; Viewer module, for which we use the Berkeley and Alex
+Knowles' mpeg encoding tools.  Another example is the set of image
+generation and manipulation tools from Paul Haeberli called
+libimage. To indicate whether or not such tools are available, the
+configure scripts for &sr; contain optional control flags.
+</para>
+<para>
+We believe that this combination of a robust infrastructure and
+modular extensibility through packages and third-party libraries will
+allow &sr; to grow and adapt to changing needs and opportunities.
+</para>
+
+</answer>
+</qandaentry>
+
+<qandaentry> 
+<question>
+<para> 
+How do I get my data into SCIRun? 
+</para> 
+</question> 
+
+<answer>
+<para>Like all program, SCIRun has its own data file formats so
+conversion is required.  At present, the pathway for converting data
+files is to use one of a set of stand-alone converter programs that
+are part of the regular SCIRun distribution. Here is the list of
+available converters:</para>
+
+<para>RawToTriSurf: converts simple ASCII files containing node
+locations, triangle connectivity, and optionally scalar data into
+SCIRun a field data file.</para>
+
+<para> 
+Usage: RawToTriSurf pts-file tris-file [vals-file] fieldout.fld
+</para>
+
+<para> 
+where: 
+</para> 
+
+<para>pts-file is a file containing point locations for the geometry,
+a single triplet of x, y, z in each line of the file.</para>
+
+<para>tris-file is a file containing connectivity for the triangles,
+with each row of the file pointing to three node numbers in the
+pts-file. The node numbering starts at 0 in these files.
+</para>
+
+ <para>vals-file is an optional file that contains scalar values to be
+associated with the nodes of the geometry. These files have the same
+number of values as the pts-file with one value per line of the
+file. </para>
+
+<para>fieldout.fld is the output fields file containing the geometry
+and associated scalar data.</para>
+
+<para>The Cardiovascular Research and Training Institute (CVRTI) has
+developed a number of scalar and vector data and geometry file formats
+which required converters for SCIRun. The result is a set of
+stand-alone programs that read in one more more existing CVRTI files
+and generate a particular form of SCIRun file, the details of which
+depend on the particular combination of nodes, connectivities, and
+associated attributes.</para>
+
+<para>The programs and their parameters as as follows (go to the end
+of the list to see the definitions of the different parameter and file
+types):</para>
+
+<para>CVRTItoTriSurfGrad: converts nodes, triangle connectivities,
+and vector (grad) files into a field with associated vector attribute:
+</para>
+
+<literallayout class="monospaced">
+CVRTItoTriSurfGrad pts fac grad [channels] fieldout
+</literallayout>
+
+<para>
+CVRTItoTriSurfPot: converts nodes, triangle connectivities, and scalar
+(pot) data files into a field with associated scalar attributes.
+</para>
+
+<literallayout class="monospaced">
+CVRTItoTriSurfPot pts fac pot [channels] fieldout
+</literallayout>
+
+<para>
+CVRTItoTetVolGrad: converts nodes, tetrahedral connectivities, and
+vector (grad) files into a field with associated vector attributes:
+</para>
+
+<literallayout class="monospaced">
+CVRTItoTetVolGrad pts tetras grad [channels] fieldout
+</literallayout> 
+
+<para>
+CVRTItoTetVolPot: converts nodes, tetrahedral connectivities, and
+scalar (pot) files into a field with associated scalar attributes:
+</para>
+
+<literallayout class="monospaced">
+CVRTItoTetVolPot pts tetras pot [channels] fieldout
+</literallayout>
+ 
+<para>
+<table>
+<title>Converter Program Arguments</title>
+<tgroup cols="2">
+<colspec colnum="1" colname="1"/>
+<colspec colnum="2" colname="2"/>
+<spanspec namest="1" nameend="2" spanname="span"/>
+<tbody>
+
+<row>
+<entry>Argument</entry>
+<entry>Purpose</entry>
+</row>
+
+<row>
+<entry spanname="span">Geometry</entry>
+</row>
+<row>
+<entry>pts</entry> 
+<entry>
+<para>CVRTI points file; ASCII file with one x,y,z
+triplet per line.</para>
+</entry>
+</row>
+<row>
+<entry>fac</entry>
+<entry>CVRTI triangle connectivity
+(facet) file; ASCII file with one triangle defined per line.  Each
+value points to a node number in the associated .pts file, with 1
+(not 0) as the first node number.
+</entry>
+</row>
+<row>
+<entry>tetras</entry>
+<entry>CVRTI tetrahedra file;
+ASCII file with the nodes from one tetrahedron on each line,
+pointing to the nodes in the associated .pts
+file.  Pointers begin with 1 (not 0).
+</entry>
+</row>
+<row>
+<entry spanname="span">Data</entry>
+</row>
+<row>
+<entry>grad</entry>
+<entry>CVRTI vector file; ASCII
+file with two x,y,z triplets per line; first triplet is origin of
+the vector and second is the endpoint.
+</entry>
+</row>
+<row>
+<entry>pot</entry> 
+<entry>CVRTI scalar (potentials) data file; ASCII
+file,each line contains one scalar value.  Without .channels file, all
+programs assume a one-to-one mapping of scalar value to the nodes in
+the associated .pts file.
+</entry>
+</row>
+<row>
+<entry spanname="span">Channel Mapping</entry>
+</row>
+<row>
+<entry>channels</entry>
+<entry>CVRTI data channel mapping
+file; ASCII file that begins with the line ``N channels'', where N
+is the number of channels in the file. Subsequent lines contain two
+values, the first refers to a node number in the geometry and the
+second points to the associated channel of any scalar or vector
+data files.  Thus a .channels file must have an entry for each node
+of the associated .pts file but the associated .pot file can have
+more (or even fewer) entries.</entry>
+</row>
+<row>
+<entry spanname="span">Field File</entry>
+</row>
+<row>
+<entry>field</entry>
+<entry>SCIRun fields file that
+contains both the geometry and associated scalar or vector data as
+attributes.</entry>
+</row>
+
+</tbody>
+</tgroup>
+</table>
+</para>
+ 
+<note>
+<para>To find the length of all CVRTI ASCII geometry, scalar, and
+vector files, count the number of lines in the file.</para>
+</note>
+
+<para>All converter programs are normally available in the
+subdirectory of the SCIRun distribution called
+src/StandAlone/convert.  If they are not easily available,
+ask the local person who installed SCIRun for assistance.
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+<question>
+<para>
+By default, what directions do the positive x,y,z axis point to in the
+viewer module?
+</para>
+</question>
+<answer>
+<para>
+By default you're looking down the negative-z axis, positive-x
+point to your right, and positive-y points up.If you have the
+Axes turned on, you'll see arrows pointing in +/-{x,y,z}.  The way
+to remember which is which is: (R,G,B) = (X,Y,Z).  And the arrows
+pointing in the positive directions are brighter than the ones
+pointing in the negative directions.  One last note, you can click
+on the "Views" button at the botton-right of the ViewWindow, and
+snap to a "canonical" view whenever you'd like (e.g. "Look down +Z
+axis, Up vector +Y").
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+<question>
+<para>
+Does anyone know of a way to scale up the size of the axes in the
+viewer window?  I'd like to make the size of the axes comparable to
+the size of other objects.
+</para>
+</question>
+<answer>
+<para>
+Currently you must scale everything else down to the size of unit-axes,
+by using the Math::BuildTransform and Field::TransformField modules.
+</para>
+</answer>
+</qandaentry>
+
+</qandaset>
+
+</article>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

@@ -1,0 +1,815 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<script type="text/javascript">
+var treetop="";
+var path = location.pathname;
+var iLimit = 20;
+var i = 0;
+while (i < iLimit && path.substr(path.lastIndexOf("/")+1) != "doc") {
+treetop += "../";
+i += 1;
+path = path.substr(0, path.lastIndexOf("/"));
+}
+var inDocTree = i < iLimit;
+if (inDocTree) {
+document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'/>")
+}
+</script>
+   <title>How to Create a New SCIRun Module</title>
+</head>
+<body>
+<script type="text/javascript">
+if (inDocTree) {
+document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
+}
+</script>
+
+<p class="title">How to Create A New Module<br>
+for SCIRun</p>
+<p class="subtitle">(UNIX version, updated June 6, 2000)</p>
+
+<p class="head">Table of contents</p>
+
+<ol class="toc">
+<li> <a href="#a">Prerequisites</a>
+<li> <a href="#b">Overview</a>
+<li> <a href="#c">The module hierarchy</a>
+<li> <a href="#d">Creating a hierarchy automatically</a>
+<li> <a href="#e">Creating a hierarchy by hand</a>
+<li> <a href="#f">Adding a user interface</a>
+<li> <a href="#g">Adding ports and functionality</a>
+<li> <a href="#h">Advanced topics</a>
+<li> <a href="#i">Trouble shooting</a>
+<li> <a href="#j">Appendix</a>
+</ol>
+	
+<p class="head"><a name="a">Prerequisites</a></p>
+
+<p class="firstpara">This document assumes that you have programming experience, understand what a SCIRun module is and know how to connect multiple modules together to solve a problem, and know how to manipulate a UNIX file system.</p>
+	
+<p class="head"><a name="b">Overview</a></p>
+
+<p class="firstpara">Before you can effectively create and use a new SCIRun module, you must first have a working knowledge of what a module is on both a high and a low level.</p>
+
+<p class="nextpara">From the most abstract level, a module is a single algorithm with inputs and outputs. On the nuts-and-bolts level it is bunch of files and directories somewhere in your file system. The key to effectively creating and using a module is knowing how those two levels relate to each other.</p>
+
+<p class="nextpara">The rest of this document will be organized in a high-level vs. low-level manner in an attempt to leverage your abstract knowledge of what a module is, so that you can then understand modules from the lowest level. Once you understand the nuts and bolts of a module, you will be able to easily create your own!</p>
+	
+<p class="head"><a name="c">The module hierarchy</a></p>
+
+<p class="firstpara">Having used SCIRun and connected modules together, you know that modules are organized in a hierarchy: At the lowest level is a single module; Modules that have some arbitrary relation to each other (e.g. they have the same input data type, or they read data from disk) can be grouped together into a category. Categories that are also some how related can be grouped into a package (Modules cannot exist outside of a category or outside of a package. So, if you want to create a module, you must also choose, or create, a category and package for the module.)</p> 
+
+<p class="nextpara">The module hierarchy is embodied in SCIRun as a series of pull down menus at the top of the SCIRun network canvas. Each menu item after "File" is a SCIRun package. If you click on the BioPSE package, a drop-down list of the categories that exist within that package is shown. If you then select one of the categories, another list is shown which represents the modules in that category.</p>
+
+<p class="nextpara"> So, on a high level, modules are organized in a tree structure. We can illustrate this using the BioPSE package as an example:</p>
+	
+<pre class="example">
+      BioPSE --- Example -- GeomPortTest
+                 |
+                 |- FEM ------ ApplyBC
+                 |          |- BuildFEMatrix
+                 |          |- ...
+                 |
+                 |- ...
+</pre>
+	
+<p class="nextpara">This hierarchy also exists beyond the menu structure in the PSE. The modules are organized in a similar way inside the file structure in your PSE source tree:</p>
+	
+<pre class="example">
+      SCIRun -- src -- BioPSE -- Modules -- Example -- GeomPortTest.cc
+                                          |
+                                          |- FEM ------ ApplyBC.cc
+                                          |          |- BuildFEMatrix.cc
+                                          |          |- ...
+                                          |
+                                          |- ...
+</pre>
+
+<p class="nextpara">So, if you created a new module and inserted it into the BioPSE package (and into the Example category), the new trees  would look like this:</p>
+	
+<pre class="example">
+         BioPSE --- Example -- GeomPortTest
+                 |          |- YOUR_NEW_MODULE
+                 |
+                 |- FEM ------ ApplyBC
+                 |          |- BuildFEMatrix
+                 |          |- ...
+                 |
+                 |- ...
+                      
+         SCIRun -- src -- BioPSE -- Modules -- Example -- GeomPortTest.cc
+                                             | |- YOUR_NEW_MODULE.cc
+                                             |
+                                             |- FEM ------ ApplyBC.cc
+                                             | |- BuildFEMatrix.cc
+                                             | |- ...
+                                             |
+                                             |- ...
+</pre>
+
+<p class="nextpara">You can see that the abstract notions of package, category and  module directly correspond to a particular type of file: A package is a directory within the SCIRun/src tree, a category is a  directory beneath a package directory and a single module is a  single .cc file (In the SCIRun .cc files are C++ files) inside a  category directory.</p>
+
+<p class="nextpara">So, is making a module as easy as making a couple of directories  and writing some C++ code? Yes and no. No, because there are  other files in the BioPSE tree, Not just directories and  C++ files. Yes, because creating this tree structure (along with  those other files) can be done with the click of a button via SCIRun.</p>
+
+<p class="nextpara">The next sections will describe, in more detail, how to create all  the files needed to make a package directory.</p>
+	
+	
+<p class="head"><a name="d">Creating a hierarchy automatically</a></p>  
+	
+<p class="firstpara"> Since you're probably like most other humans, you're too lazy to  read through the rest of this document, and just want to get on with  making a new module. Well, you're in luck. There is a way to create  modules, and the associated hierarchy of files, automatically. All  you need to use these facilities are three names: package, category  and module.</p>
+
+<p class="nextpara">From within the &quot;File&quot; menu at the top of the SCIRun network canvas,  select &quot;New&quot; and then &quot;Module&quot;. A dialog will pop up asking for  the three names mentioned above. Once you click the &quot;Ok&quot; button,  SCIRun generates all the files, with the correct hierarchy, that  are necessary. It may also modify existing files if you insert  into an existing hierarchy.</p>
+
+<p class="nextpara">There are three possibilities for choosing names: 1)new package and new category, 2)existing package and new category, and 3)existing package and existing category.</p>
+
+<p class="nextpara">If you type in a package name or category name that already exists,  the module will be inserted into the proper hierarchy. If you type  names that do not already exist, then a new (whole or partial)  hierarchy will be created and/or inserted.</p>
+
+<p class="nextpara"> It is illegal to choose names that are blank or are names of already  existing files that are not part of valid SCIRun hierarchies. It is  also illegal to have two modules with the same name inside the same  category. You may have modules with the same name so long as they  are in different categories. You may also have categories with the  same name so long as they are in different packages.</p> 
+ 
+<p class="nextpara">Once you've created a new module, you will see a dialog that tells  you that you must rebuild SCIRun before you can use it. In some  cases you must first re-configure and then rebuild. To rebuild SCIRun, you should simply run "gmake" from the SCIRun/src directory.  There is no need to "gmake clean" first. To re-configure, run:</p> 
+ 
+<pre class="example"> configure --enable-package="OLD-PACKAGES NEW-PACKAGE"</pre> 
+ 
+<p class="nextpara">Where OLD-PACKAGES are the packages that you already had enabled,  and NEW-PACKAGE is the package you just created.</p> 
+ 
+<p class="nextpara">If you've attempted to create a new module with this facility and  it returned an error or warning, see the trouble shooting section  below. </p> 
+ 
+<p class="head"><a name="e">Creating a Hierarchy by Hand</a></p> 
+ 
+<p class="firstpara"> Ah. You're not lazy. Wanting to know the nuts and bolts of a  system is the sign of a truly great programmer. Here is the full  directory structure for a SCIRun package:</p> 
+ 
+<pre class="example">
+     package -- Modules ------ category1 -- module1.cc
+             |              |            |- module2.cc
+             |              |            |- ...
+             |              |            |- sub.mk
+             |              |
+             |              |- category2 ...
+             |              |- ...
+             |              |- sub.mk
+             |
+             |- GUI ---------- moduleA.tcl
+             |              |- moduleB.tcl
+             |              |- ...
+             |              |- tclIndex
+             |              |- sub.mk
+             |
+             |- share -------- share.h
+             |              |- DllEntry.cc
+             |
+             |- Datatypes ---- group1 -- datatype1.cc
+             |              |         |- datatype1.h
+             |              |         |- datatype2.cc
+             |              |         |- ...
+             |              |         |- sub.mk
+             |              |
+             |              |- group2 ...
+             |              |- ...
+             |              |- sub.mk        
+             |
+             |- ThirdParty ...
+             |
+             |- components.xml
+             |- sub.mk
+</pre>
+ 
+<p class="nextpara">Whew! So there are 5 directories (Modules, GUI, share, Datatypes  and ThirdParty) inside a package, and there are two non-directory files  inside a package (components.xml and sub.mk). It is possible for a  package to have superfluous directories and files without affecting  the integrity of a package. You should, however, not remove any of  the listed files, even if they are empty, as future versions of the SCIRun may require them.</p> 
+ 
+<p class="nextpara">You are already familiar with the &quot;Modules&quot; directory which houses the  category directories, and subsequently the modules themselves.</p> 
+ 
+<p class="nextpara">The "GUI" directory holds all the user interface files. Currently, all the user interfaces in SCIRun are written in tcl. The tcl files  should all have a certain structure in order to work with SCIRun.  You can see examples of the structure in the appendix. New modules  have no user interface file by default.</p> 
+ 
+<p class="nextpara">The "share" directory is a mechanism for remaining platform independent.  It holds information needed by windows machines for building .dll files.  Although the share directory is not strictly needed for UNIX platforms,  it does make life easier when porting your modules to windows.</p> 
+ 
+<p class="nextpara">The &quot;Datatypes&quot; directory holds information about new SCIRun data types that you define. See &quot;How to Create New Datatypes for SCIRun&quot; for  more details on this part of the hierarchy.</p> 
+ 
+<p class="nextpara">The "ThirdParty" directory is an empty directory that may be used to  store third party sources or libraries that your new modules may want  to link with. You can safely ignore this directory, if you have no  need for third party code.</p> 
+ 
+<p class="nextpara">The "components.xml" file is a file that contains information about  the organization and characteristics (input/output types, author, date  created, etc.) of the modules in the package. See the appendix for  examples of a components.xml file.</p> 
+ 
+<p class="nextpara">The &quot;sub.mk&quot; files that are scattered throughout the hierarchy are used  to create makefiles for each directory. They include information such  as sub directories, files to include in the build, and libraries to  be linked against. The appendix has skeleton files for each type of  sub.mk in the tree.</p> 
+ 
+<p class="nextpara">If you choose to generate or edit these files by hand rather than using  the automatic module maker, you will want to consider conforming to  file formats that the module maker uses, so that others can still use  the module maker with these files after you're done with them.</p> 
+ 
+<p class="nextpara">Each of the sub.mk and components.xml files have a format that the  module maker uses. This format allows the module maker to properly  go through each file and insert paragraphs or lines.</p> 
+ 
+<p class="nextpara">The first element of this format is a comment line of the form:</p> 
+ 
+<pre class="example">
+	#[INSERT NEW ????? HERE]
+ 
+	for sub.mk files and 
+ 
+	&lt;!-- INSERT NEW ??????? HERE -->
+ 
+	for components.xml files.
+</pre> 
+ 
+<p class="nextpara">The second element of this format is the context in which these lines  are set.</p> 
+ 
+<p class="nextpara">If either element of the format is disturbed, the module maker will  no longer be able to properly do it's job, and may even break files.</p> 
+ 
+<p class="nextpara"> Here is an example of modifying a sub.mk file within a category  directory to add a module:</p> 
+ 
+<p>before:</p>
+
+<pre class="example">
+       SRCS     += \
+			$(SRCDIR)/ColorMapKey.cc\
+			$(SRCDIR)/CuttingPlane.cc\
+			$(SRCDIR)/GenAxes.cc\
+       #[INSERT NEW MODULE HERE]
+</pre> 
+ 
+<p> after:</p>
+
+<pre class="example">
+      SRCS     += \
+			$(SRCDIR)/ColorMapKey.cc\
+			$(SRCDIR)/CuttingPlane.cc\
+			$(SRCDIR)/GenAxes.cc\
+			$(SRCDIR)/NEW_MODULE_HERE.cc\
+       #[INSERT NEW MODULE HERE]
+</pre>
+ 
+<p class="nextpara"> One important thing to note here is that the new module was inserted  above the line where the [INSERT NEW MODULE HERE] comment line existed.  It is also important to note that the end of the newly inserted line  includes a back slash as the last character.</p> 
+ 
+<p class="nextpara"> The same format rules apply to sub.mk files within a packages "Modules"  directory.</p> 
+ 
+<p class="nextpara"> Modification of the components.xml file is similar:</p> 
+
+<p>before:</p>
+
+<pre class="example">
+  &lt;dataflow-component name="MeshReader"&gt;
+    &lt;meta&gt;
+      &lt;authors&gt;
+        &lt;author&gt;Steven G. Parker&lt;/author&gt;
+      &lt;/authors&gt;
+      &lt;version-date&gt;July 1994&lt;/version-date&gt;
+      &lt;version&gt;1.0&lt;/version&gt;
+      &lt;description&gt;No description available&lt;/description&gt;
+    &lt;/meta&gt;
+    &lt;inputs&gt;&lt;/inputs&gt;
+    &lt;outputs&gt;&lt;/outputs&gt;
+    &lt;parameters&gt;&lt;/parameters&gt;
+    &lt;implementation&gt;
+      &lt;creationFunction&gt;make_MeshReader&lt;/creationFunction&gt;
+    &lt;/implementation&gt;
+  &lt;/dataflow-component&gt;
+
+  &lt;!-- INSERT NEW Readers COMPONENT HERE --&gt;
+</pre>
+
+<p>after:</p>
+
+<pre class="example">
+  &lt;dataflow-component name="MeshReader"&gt;
+    &lt;meta&gt;
+      &lt;authors&gt;
+        &lt;author&gt;Steven G. Parker&lt;/author&gt;
+      &lt;/authors&gt;
+      &lt;version-date&gt;July 1994&lt;/version-date&gt;
+      &lt;version&gt;1.0&lt;/version&gt;
+      &lt;description&gt;No description available&lt;/description&gt;
+    &lt;/meta&gt;
+    &lt;inputs&gt;&lt;/inputs&gt;
+    &lt;outputs&gt;&lt;/outputs&gt;
+    &lt;parameters&gt;&lt;/parameters&gt;
+    &lt;implementation&gt;
+      &lt;creationFunction&gt;make_MeshReader&lt;/creationFunction&gt;
+    &lt;/implementation&gt;
+  &lt;/dataflow-component&gt;
+
+  &lt;dataflow-component name="MatrixReader"&gt;
+    &lt;meta&gt;
+      &lt;authors&gt;
+        &lt;author&gt;Steven G. Parker&lt;/author&gt;
+      &lt;/authors&gt;
+      &lt;version-date&gt;July 1994&lt;/version-date&gt;
+      &lt;version&gt;1.0&lt;/version&gt;
+      &lt;description&gt;No description available&lt;/description&gt;
+    &lt;/meta&gt;
+    &lt;inputs&gt;&lt;/inputs&gt;
+    &lt;outputs&gt;&lt;/outputs&gt;
+    &lt;parameters&gt;&lt;/parameters&gt;
+    &lt;implementation&gt;
+      &lt;creationFunction&gt;make_MatrixReader&lt;/creationFunction&gt;
+    &lt;/implementation&gt;
+  &lt;/dataflow-component&gt;
+
+  &lt;!-- INSERT NEW Readers COMPONENT HERE --&gt;
+</pre>
+
+<p class="head"><a name="f">Adding a User Interface</a></p> 
+ 
+<p class="firstpara">If you want to add a user interface element to your module, you will  have to know tcl, and be familiar with the communication scheme in  SCIRun which allows you to import and export information from the tcl  code into your module code. Both these topics are beyond the scope  of this document.</p> 
+ 
+<p class="nextpara">You will also have to create a .tcl file and place it into the GUI  directory. Please see the appendix for a skeleton .tcl file for a SCIRun module user interface.</p> 
+ 
+<p class="head"><a name="g">Adding ports and functionality</a></p> 
+ 
+<p class="firstpara">Once you have created your new module, and created or chosen a package  for it, you must give it functionality. To function properly, each  module needs to do three things: Get data, operate on the data, generate result data.</p>
+
+<p class="nextpara">The first step is to decide how your module will get it's input data,  and what it will do with the output data that it generates. There are  two methods of getting data into a module (input ports and read from  disk) and two methods for outputting data (output ports and write to  disk).</p> 
+ 
+<p class="nextpara">Modules that read data from disk, or write data to disk are considered, in SCIRun, to be &quot;readers&quot; or &quot;writers&quot; respectively. These types  of modules are very closely tied to specific SCIRun data types. Their use and convention is discussed in the &quot;How to Create New Data Types for SCIRun&quot; document and will not be discussed here.</p> 
+ 
+<p class="nextpara">The other type of module is the kind that takes data into an input  port, runs some algorithm on the data, and then sends output data to the  output port. This is the most common type of module, and perhaps the  most useful. In order to create such a module, you will need to add  lines of code to the module's .cc file.</p> 
+ 
+<p class="nextpara">You will need to identify the SCIRun data type that you will use for  each port, input and output. Then add #include statements to the top  of the file for the header files that define the data type(s) you want.  For example, suppose you want to have a Mesh input port and a Matrix  output port. You would add the following lines to the top of your  module's .cc file:</p> 
+ 
+<pre class="example">
+#include &lt;Dataflow/Ports/FieldPort.h&gt;
+#include &lt;Dataflow/Ports/MatrixPort.h&gt;
+</pre> 
+ 
+<p class="nextpara">The data types can come from any package or core directory within your SCIRun source tree (i.e. they don't have to come from src/Dataflow).</p> 
+ 
+<p class="nextpara">Next, add lines of code to the data declaration section of your module's  class declaration, and declare your ports:</p> 
+ 
+<pre class="example">
+MeshIPort* imesh;
+MatrixOPort* omatr;
+</pre> 
+ 
+<p class="nextpara">Finally, add lines of code to the module's constructor to allocate "new"  instances for each port and add them to the list of ports for this  module:</p> 
+ 
+<pre class="example">imesh=scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
+add_iport(imesh);
+omatr=scinew MatrixOPort(this, "Matrix", MatrixIPort::Atomic);
+add_oport(omatr);
+</pre> 
+
+<p class="nextpara">Once you have ports, you can retrieve data. When a module begins it's  execution cycle, it calls the execute() member function of your module.  It is in this function that you need to add lines of code to extract  data from the input ports, run your module's algorithm on that data,  and send the result to the output port:</p> 
+ 
+<pre class="example">
+	MeshHandle mesh;
+	MatrixHandle matrix;
+
+	/* get the data from the port */
+
+	if (!imesh->get(mesh))  return; 
+ 
+	/* run your algorithm here. For example: */
+ 
+	matrix = GenerateMatrixFromMesh(mesh); 
+
+	/* this function is defined  in other code you wrote */
+ 
+	/* send the results to the output port */ 
+ 
+	omatr->send(matrix); 
+</pre> 
+ 
+<p class="head"><a name="h">Advanced topics </a></p> 
+ 
+<p class="firstpara">What you're still reading? You know, the more you read, the more I  have to write - arrgh!?!? Alright smarty pants, you asked for it...</p> 
+ 
+<p class="nextpara">Keen readers will wonder how a package _really_ works. After all, a  bunch of source code and fancy schmancy directory trees do not an  application make! Good eye.</p> 
+ 
+<p class="nextpara">There is a hidden aspect of the SCIRun package that hasn't been discussed  yet: what does a package's source files get compiled into, and how does  this object, or objects, interface with SCIRun?</p> 
+ 
+<p class="nextpara">When a package is built, the end result has a couple of possibilities:  1) a single, large, shared object library, or 2) a handful of small  shared object libraries. You decide at configure time which kind  of libraries you want (--enable-largesos for large libraries, nothing  for small libraries).</p> 
+ 
+<p class="nextpara">The libraries that contain modules must all export a function of the  following form:</p>
+
+<pre class="example">Module* make_MODULE-NAME()</pre> 
+ 
+<p>for each module that is inside it.</p> 
+ 
+<p class="nextpara">So, in reality, any .so library that has Module-derived classes  defined within it, and also exports these &quot;make&quot; functions, could,  in a way, be considered a SCIRun package - regardless of whether or not  it came from the hierarchy described above or not. But, in order  for the package to be useful to SCIRun, you would still need to  have a components.xml file and possibly a GUI directory for the .tcl  files, if any.</p> 
+ 
+<p class="nextpara">When SCIRun starts it searches the enabled packages (defined  at configure time: --enable-package="...") for components.xml files.  It parses those that it finds and builds the package menus. The .xml  file tells SCIRun where each module's .tcl file be found, which  library(s) to load, and tells it what the name of each module's make  function is. If an entry in the .xml file cannot be confirmed (i.e.  can't find the indicated make function), the associated module will  not be listed. Packages that have no valid modules are also not  listed.</p> 
+ 
+<p class="head"><a name="i">Trouble shooting </a></p> 
+ 
+<p class="firstpara"> If you attempted to automatically generate a module and got  back an error or warning message, you can search the following  table for the error you saw, and find the associated solution:</p> 
+
+<!- TROUBLE SHOOTING TABLE ->
+<table width="80%" cols="3" align="center" cellspacing="20" cellpadding="0" border="0">
+<tr>
+	<td width="20%"><b>Severity</b></td><td width="30%"><b>Message</b></td><td width="50%"><b>Solution</b></td>
+</tr>
+
+<tr>
+	<td valign="top">ERROR</td>
+	<td valign="top">One or more of the entries was left must be filled in.</td>
+	<td valign="top">It is illegal to use blank names for packages, categories,or modules. Retype a non-blank name in the offending field(s).</td>
+</tr>
+
+<tr>
+	<td valign="top">WARNING</td>
+	<td valign="top">Package PACKAGE does entries was left blank. All entries must be filled in.</td>
+	<td valign="top">The package name you typed does not exist.  Did you intend to create a new package?  Did you miss type the package name? All names are case sensitive. If you want to create a new package press "Ok".  Otherwise press "Cancel".</td>
+</tr>
+
+<tr>
+	<td valign="top">ERROR</td>
+	<td valign="top">The name PACKAGE is already in use by a non-package file.</td>
+	<td valign="top">The name you supplied for the package is the name of a non-directory file. Choose a different name.</td>
+</tr>
+
+<tr>
+	<td valign="top">ERROR</td>
+	<td valign="top">The file PACKAGE does not appear to be a valid package or is somehow corrupt...</td>
+	<td valign="top">he name you supplied for the package is the name of a directory that does not conform to the standard package hierarchy.  Choose another package.  This package may be damaged, or was not created/edited correctly.</td>
+</tr>
+
+<tr>
+	<td valign="top">WARNING</td>
+	<td valign="top">Category CATEGORY does not exist. Create it now?</td>
+	<td valign="top">The name you supplied for the category does not exist.  Did you intend to create a new category?  Did you miss type the category name?  If you want to create a new category press "Ok".  Otherwise, press "Cancel".</td>
+</tr>
+
+<tr>
+	<td valign="top">ERROR</td>
+	<td valign="top">The name CATEGORY is already in use by a non-category file.</td>
+	<td valign="top">The name you supplied for the category is the name of a non-directory file. Choose a different name.</td>
+</tr>
+
+<tr>
+	<td valign="top">ERROR</td>
+	<td valign="top">The file CATEGORY does not appear to be a valid category or is somehow corrupt...</td>
+	<td valign="top">The name you supplied for the category  is the name of a directory that does not conform to the standard category hierarchy. Choose another category. This category may be damaged, or was not created/edited correctly.</td>
+</tr>
+
+<tr>
+	<td valign="top">ERROR</td>
+	<td valign="top">The name MODULE is already in use by another file.</td>
+	<td valign="top">The name you supplied for the module is the name of a file that already exists. Choose another name.</td>
+</tr>
+
+</table>
+ 
+<p class="head"><a name="j">Appendix</a></p> 
+ 
+<p class="firstpara"> The following are examples or skeletons for files that are required  for building a package hierarchy. Many of the skeletons contain  macros which must be expanded before the files can be used. The  macros are:</p>
+
+<pre class="example">
+     NEW_MODULE       = name of the new module
+
+     MODULE_AUTHOR    = your name
+
+     MODULE_DATE      = the date the module was created
+
+     PACKAGE_NAME     = the name of the package that 
+                        the module/category belongs to
+
+     NEW_PACKAGE      = the name of the new package
+</pre>
+
+<pre class="example">
+   **** Module .cc file skeleton:
+
+     /*
+      *  NEW_MODULE.cc:  
+      *
+      *  Written by:
+      *   MODULE_AUTHOR
+      *   MODULE_DATE
+      *
+      */
+
+      #include <PSECore/Dataflow/Module.h>
+      #include <SCICore/Malloc/Allocator.h>
+
+      #include <PACKAGE_NAME/share/share.h>
+
+      namespace PACKAGE_NAME {
+      namespace Modules {
+    
+      using namespace PSECore::Dataflow;
+
+      class PACKAGE_NAMESHARE NEW_MODULE : public Module {
+  
+         // [PORT DECLS HERE]
+  
+      public:
+        NEW_MODULE(const clString& id);
+  
+        virtual ~NEW_MODULE();
+  
+        virtual void execute();
+  
+        virtual void tcl_command(TCLArgs&, void*);
+      };
+
+      extern "C" PACKAGE_NAMESHARE Module* 
+      make_NEW_MODULE(const clString& id) {
+        return new NEW_MODULE(id);
+      }
+
+      NEW_MODULE::NEW_MODULE(const clString& id)
+        : Module("NEW_MODULE", id, Source)
+      {
+        // [PORT CONSTRUCTORS HERE]
+      }
+
+      NEW_MODULE::~NEW_MODULE()
+      {
+      }
+
+      void NEW_MODULE::execute()
+      {
+      }
+
+      void NEW_MODULE::tcl_command(TCLArgs& args, void* userdata)
+      {
+        Module::tcl_command(args, userdata);
+      }
+
+      } // End namespace Modules
+      } // End namespace PACKAGE_NAME
+
+
+
+  **** skeleton sub.mk files for various trees:
+
+    ** SCIRun/src/PACKAGE/sub.mk = 
+
+       include $(OBJTOP_ABS)/scripts/largeso_prologue.mk
+
+       SRCDIR := NEW_PACKAGE
+
+       SUBDIRS := $(SRCDIR)/GUI $(SRCDIR)/Datatypes \
+               $(SRCDIR)/Modules
+
+       include $(OBJTOP_ABS)/scripts/recurse.mk
+
+       PSELIBS := PSECore SCICore
+       LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+
+       include $(OBJTOP_ABS)/scripts/largeso_epilogue.mk
+
+    ** SCIRun/src/PACKAGE/Modules/sub.mk = 
+
+       SRCDIR := NEW_PACKAGE/Modules
+
+       SUBDIRS := \
+       #[INSERT NEW SUBDIRS HERE]
+
+       include $(OBJTOP_ABS)/scripts/recurse.mk
+
+    ** SCIRun/src/PACKAGE/Modules/CATEGORY/sub.mk = 
+
+       include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+
+       SRCDIR   := PACKAGE_NAME/Modules/CATEGORY_NAME
+
+       SRCS     += \
+       #[INSERT NEW MODULE HERE]
+
+       PSELIBS := PSECore/Datatypes PSECore/Dataflow \
+               SCICore/Persistent SCICore/Containers SCICore/Util \
+               SCICore/Exceptions SCICore/Thread SCICore/TclInterface \
+               SCICore/Geom SCICore/Datatypes SCICore/Geometry \
+               SCICore/TkExtensions
+       LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+
+       include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+
+    ** SCIRun/src/PACKAGE/GUI/sub.mk = 
+
+       SRCDIR := NEW_PACKAGE/GUI
+
+       ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
+
+       $(SRCDIR)/tclIndex: 
+               scripts/createTclIndex NEW_PACKAGE/GUI
+
+       CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
+
+    ** SCIRun/src/PACKAGE/Datatypes/sub.mk = 
+
+       SRCDIR := NEW_PACKAGE/Datatypes
+
+       SUBDIRS := $(SRCDIR)/none 
+
+       include $(OBJTOP_ABS)/scripts/recurse.mk
+
+    ** SCIRun/src/PACKAGE/Datatypes/GROUP/sub.mk = 
+
+       include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+
+       SRCDIR   := NEW_PACKAGE/Datatypes/none
+
+       SRCS     += 
+
+       PSELIBS :=
+       LIBS :=
+
+       include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+
+  **** share.h skeleton file:
+
+       #undef NEW_PACKAGESHARE
+
+       #ifdef _WIN32
+         #if defined(BUILD_NEW_PACKAGE)
+            #define NEW_PACKAGESHARE __declspec(dllexport)
+         #else
+            #define NEW_PACKAGESHARE __declspec(dllimport)
+         #endif
+       #else
+         #define NEW_PACKAGESHARE
+       #endif
+
+  **** DllEntry.cc skeleton file:
+
+       #ifndef _WIN32
+       #error DllEntry.cc is for Windows platforms only
+       #endif
+
+       #include <afxwin.h>
+       #include <stdio.h>
+
+       BOOL APIENTRY DllMain(HANDLE hModule, 
+                      DWORD  ul_reason_for_call, 
+                      LPVOID lpReserved)
+       {
+       #ifdef DEBUG
+         char reason[100]=&quot;\0&quot;;
+         printf(&quot;Calling DllMain in NEW_PACKAGEd.dll : );
+         printf(&quot;   hModule = %d ***\n&quot;,hModule);
+         switch (ul_reason_for_call){
+           case DLL_PROCESS_ATTACH:sprintf(reason,&quot;DLL_PROCESS_ATTACH&quot;); break;
+           case DLL_THREAD_ATTACH:sprintf(reason,&quot;DLL_THREAD_ATTACH&quot;); break;
+           case DLL_THREAD_DETACH:sprintf(reason,&quot;DLL_THREAD_DETACH&quot;); break;
+           case DLL_PROCESS_DETACH:sprintf(reason,&quot;DLL_PROCESS_DETACH&quot;); break;
+         }
+         printf(&quot;   ul_reason_for_call = %s ***\n&quot;,reason);
+       #endif
+         return TRUE;
+       }
+
+  **** example .tcl file (from GenAxes.tcl inside BioPSE).  The
+       structure required (as mentioned above) is inheritance from
+       Module, and the existence of a method name &quot;ui&quot;.  If &quot;ui&quot; 
+       does not exist, then the module has no user interface:
+
+itcl_class SCIRun_Visualization_GenAxes {
+    inherit Module
+    constructor {config} {
+        set name GenAxes
+        set_defaults
+    }
+    method set_defaults {} {
+        global $this-size
+        set $this-size 1
+        $this-c needexecute
+    }
+    method ui {} {
+        set w .ui[modname]
+        if {[winfo exists $w]} {
+            raise $w
+            return;
+        }
+        toplevel $w
+        frame $w.f
+        pack $w.f -padx 2 -pady 2
+        set n &quot;$this-c needexecute&quot;
+        
+        global $this-size
+        scale $w.f.slide -label Size -from 0.01 -to 9.99 \
+                -showvalue true \
+                -orient horizontal -resolution 0.01 \
+                -digits 3 -variable $this-size \
+                -command &quot;$this-c size_changed&quot;
+        button $w.f.b -text &quot;Execute&quot; -command $n
+        pack $w.f.slide $w.f.b -side top
+    }
+}
+</pre>
+
+<pre class="example">
+  **** example components.xml file (from BioPSE package):
+
+&lt;?xml version='1.0' encoding='us-ascii' ?&gt;
+
+&lt;!-- description of the PSECommon package --&gt;
+
+&lt;package name="PSECommon"&gt;
+  &lt;guiPath&gt;GUI&lt;/guiPath&gt;
+  &lt;scirun-library category="FEM"&gt;
+  &lt;soNames&gt;
+    &lt;soName&gt;libPSECommon_Modules_FEM.so&lt;/soName&gt;
+    &lt;soName&gt;libPSECommon.so&lt;/soName&gt;
+  &lt;/soNames&gt;
+
+  &lt;dataflow-component name="BuildFEMatrix"&gt;
+    &lt;meta&gt;
+      &lt;authors&gt;
+        &lt;author&gt;Ruth Nicholson Klepfer&lt;/author&gt;
+      &lt;/authors&gt;
+      &lt;version-date&gt;October 1994&lt;/version-date&gt;
+      &lt;version&gt;1.0&lt;/version&gt;
+      &lt;description&gt;No description available&lt;/description&gt;
+    &lt;/meta&gt;
+    &lt;inputs&gt;&lt;/inputs&gt;
+    &lt;outputs&gt;&lt;/outputs&gt;
+    &lt;parameters&gt;&lt;/parameters&gt;
+    &lt;implementation&gt;
+      &lt;creationFunction&gt;make_BuildFEMatrix&lt;/creationFunction&gt;
+    &lt;/implementation&gt;
+  &lt;/dataflow-component&gt;
+
+
+  &lt;dataflow-component name="FEMError"&gt;
+    &lt;meta&gt;
+      &lt;authors&gt;
+        &lt;author&gt;Steven G. Parker&lt;/author&gt;
+      &lt;/authors&gt;
+      &lt;version-date&gt;May 1996&lt;/version-date&gt;
+      &lt;version&gt;1.0&lt;/version&gt;
+      &lt;description&gt;No description available&lt;/description&gt;
+    &lt;/meta&gt;
+    &lt;inputs&gt;&lt;/inputs&gt;
+    &lt;outputs&gt;&lt;/outputs&gt;
+    &lt;parameters&gt;&lt;/parameters&gt;
+    &lt;implementation&gt;
+      &lt;creationFunction&gt;make_FEMError&lt;/creationFunction&gt;
+    &lt;/implementation&gt;
+  &lt;/dataflow-component&gt;
+
+...
+
+  &lt;!-- INSERT NEW FEM COMPONENT HERE --&gt;
+  &lt;/scirun-library&gt;
+  &lt;scirun-library category="Readers"&gt;
+  &lt;soNames&gt;
+    &lt;soName&gt;libPSECommon_Modules_Readers.so&lt;/soName&gt;
+    &lt;soName&gt;libPSECommon.so&lt;/soName&gt;
+  &lt;/soNames&gt;
+
+  &lt;dataflow-component name="MatrixReader"&gt;
+    &lt;meta&gt;
+      &lt;authors&gt;
+        &lt;author&gt;Steven G. Parker&lt;/author&gt;
+      &lt;/authors&gt;
+      &lt;version-date&gt;July 1994&lt;/version-date&gt;
+      &lt;version&gt;1.0&lt;/version&gt;
+      &lt;description&gt;No description available&lt;/description&gt;
+    &lt;/meta&gt;
+    &lt;inputs&gt;&lt;/inputs&gt;
+    &lt;outputs&gt;&lt;/outputs&gt;
+    &lt;parameters&gt;&lt;/parameters&gt;
+    &lt;implementation&gt;
+      &lt;creationFunction&gt;make_MatrixReader&lt;/creationFunction&gt;
+    &lt;/implementation&gt;
+  &lt;/dataflow-component&gt;
+
+
+  &lt;dataflow-component name="MeshReader"&gt;
+    &lt;meta&gt;
+      &lt;authors&gt;
+        &lt;author&gt;Steven G. Parker&lt;/author&gt;
+      &lt;/authors&gt;
+      &lt;version-date&gt;July 1994&lt;/version-date&gt;
+      &lt;version&gt;1.0&lt;/version&gt;
+      &lt;description&gt;No description available&lt;/description&gt;
+    &lt;/meta&gt;
+    &lt;inputs&gt;&lt;/inputs&gt;
+    &lt;outputs&gt;&lt;/outputs&gt;
+    &lt;parameters&gt;&lt;/parameters&gt;
+    &lt;implementation&gt;
+      &lt;creationFunction&gt;make_MeshReader&lt;/creationFunction&gt;
+    &lt;/implementation&gt;
+  &lt;/dataflow-component&gt;
+
+...
+
+  &lt;!-- INSERT NEW Readers COMPONENT HERE --&gt;
+  &lt;/scirun-library&gt;
+
+  &lt;!-- INSERT NEW CATEGORY HERE --&gt;
+&lt;/package&gt;
+</pre>
+
+<script type="text/javascript">
+if (inDocTree) {
+document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
+}
+</script>
+
+</body>
+</html> 

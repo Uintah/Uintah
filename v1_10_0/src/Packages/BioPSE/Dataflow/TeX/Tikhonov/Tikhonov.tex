@@ -1,0 +1,226 @@
+% module-template.tex ----
+%
+% Notes:
+%
+% o Rename this file as <Module>-<Category>-<Package>.tex where
+%   bracketed strings are replaced by appropriate names.
+%
+% o Complete relevant sections below.
+%
+% o Use markup commands defined in scirun-doc.tex.
+%   No presentation markup allowed (e.g. no \textbf allowed and even use of
+%   \emph is discouraged).
+%
+% o To make your document web-friendly, use commands from html package. See
+%   latex2html manual or the book ``The Latex Web Companion.''
+%
+% o Don't add new subsections, but freely subsubsection 
+%   existing subsections.
+%
+% o Add local commands if desired (via \newcommand).
+%
+% o Only use packages distributed with Latex2e.
+%
+% o Cite references with the \cite command. Put citations in
+%   a bib file and send along with this file.
+%
+% o Please include at least one image of tk GUI. Provide 
+%   an EPS version and a web friendly version (e.g., jpeg or gif).
+%
+% o Including images:  Create a figure command for each figure using the
+%   template below.  Copy the template (make a copy of the template
+%   for each figure) and uncomment only the first '%' in each line.
+%   Then replace bracketed text with appropriate values.  Here is the
+%   template: 
+% 
+%%begin{latexonly}
+%  \newcommand{\<figure command name>}%
+%  {\centerline{\includegraphics[options]{<path to eps file>}}}
+%%end{latexonly}
+%\begin{htmlonly}
+%  \newcommand{\<figure command name (same as above)>}{%
+%  \htmladdimg[options]{<path to jpg file>}}
+%\end{htmlonly}
+%
+%   Where in the ``latexonly'' part, ``options'' is a list of key-value pair
+%   options.  Typically the options specify graphic width, height, and
+%   bounding box.  See ``The Latex Graphics Companion'' for more
+%   information.  Note that we are using ``\includegraphics'' command
+%   from the ``graphicx'' package.
+%
+%   In the ``htmlonly'' part ``options'' is a list options such as ``align'',
+%   ``width'', ``height'', and ``alt''.  See ``The Latex Web Companion'' for
+%   details.
+%   
+%   Now to actually create figures enclose each figure command as follows:
+%
+%\begin{figure}
+%  \begin{makeimage}
+%  \end{makeimage}
+%  \<figurecommand>
+%  \caption{\label{fig:<figure label>} <Caption text>}
+%\end{figure}
+%
+%   and replace bracket text appropriately.
+%   
+
+% Uncomment following 5 commented lines if you want to process this document
+% with Latex. You must also uncomment the last line of the file.
+
+% Module information: replace the XXXX's
+
+\newcommand{\x}{\times}
+
+\ModuleRef{\Module{Tikhonov}}{\Category{Inverse}}{\Package{BioPSE}}
+
+% Summary of module's purpose. No more than one paragraph.
+
+\ModuleRefSummary
+
+The purpose of this module is to apply Tikhonov regularization to an
+existing forward model, with flexible control of regularization type and
+parameters.  Currently, the module solves the inverse problem at a single
+time instant.  This module requires a forward model matrix, geometries for
+the associated surfaces, and some remote boundary conditions, \ie{}, torso or
+head surface potentials.
+
+% How to use the module.  Describe connections upstream and downstream
+% and how to use the GUI.  If desired, Walk the user through an example.
+% Please include at least one image of tk GUI. Provide 
+% an EPS version and a web-friendly version (e.g., jpeg or gif).
+% See the note above that explains how to include images.
+
+\ModuleRefUse
+
+The \module{Tikhonov} module has three inputs, two outputs, and a user
+interface (UI) to select the regularization parameter. 
+%
+\begin{itemize} 
+  \item {\bf Inputs:} 
+        \begin{enumerate}          
+          \item Forward problem matrix, $\left[{\bf A}\right]$. This matrix
+                could be created using \module{SetupBEMatrix} module, or
+                created elsewhere and saved as SCIRun matrix format and
+                loaded via \module{MatrixReader} module.
+          \item Regularization matrix, $\left[{\bf R}\right]$: this matrix will
+                contain the transform that constrains the regularized
+                inverse solution. It is typically the output of the
+                \module{AttributeTrf} module, but as in the Forward matrix,
+                it can be created externally and loaded via
+                \module{MatrixReader} module. If nothing is connected to
+                this input, identity matrix is used as default.
+          \item Neumann Boundary conditions, $\left[{\bf y}\right]$: Values of
+                potential on the outer boundary of the geometry, typically
+                the body surface or head surface potentials. This is the
+                attributes part of a field data type. The
+                \module{ManageFieldData} module can be used to extract the
+                vector of attributes (\ie the potentials) from the original
+                field data.
+        \end{enumerate}         
+      
+  \item {\bf Outputs:} 
+        \begin{enumerate}         
+          \item Solution potentials, $\left[{\bf x}_{\lambda}\right]$. This
+                is a vector of potentials without any geometry
+                information. This vector can be combined with the
+                appropriate geometry file using the
+                \module{ManageFieldData} module to create a field data
+                format.
+          \item Augmented forward matrix $\left[{\bf A}_{reg}\right]$ where
+                ${\bf A}_{reg} = \left( {\bf A}^{T}\;{\bf A} +
+                \lambda^{2}\;{\bf R}^{T}\;{\bf R}\right)$ 
+% (I am not sure what to do with this :-) )
+        \end{enumerate}         
+             
+  \item {\bf UI:} UI of the \module{Tikhonov} module is used to select
+                method to choose $\lambda$. Fig.[Tikh-UI] shows the UI with
+                the L-curve option selected and the corresponding L-curve
+                plotted. Three options have been implemented so far:
+        \begin{enumerate}         
+          \item Enter a single value: the user can type any value in the UI
+                and the solution is implemented for that $\lambda$ value
+                only. 
+          \item Choose from a slider: the user can select a value by moving
+                the slider. So far, the range of the slider and the
+                increments are pre-defined inside the code. 
+          \item Determine the value using an L-curve: L-curve method
+                described in section~\ref{Sec:regpar} is used to obtain the
+                best $\lambda$ value. Currently, the range of
+                regularization parameters that is used to obtain the
+                L-curve is fixed. 
+        \end{enumerate}
+      
+\end{itemize}
+
+An example SCIRun network to solve for the potentials on the heart surface
+at a particular time instant is shown in Fig.[Tikh-net]. 
+
+% Description of module's algorithms, mathematics, etc.
+
+\ModuleRefDetails
+
+\begin{itemize}
+  \item The standard discretized formulation for the forward problem:
+        \begin{equation}
+          \label{Eqn:prob}
+          {\bf y} = {\bf A \; x} + {\bf n}
+        \end{equation}
+      where ${\bf y}$ is an $M\x1$ vector of outer surface potentials (\eg,
+      torso potentials), ${\bf x}$ is the $N\x1$ vector of inner surface
+      potentials (\eg, epicardial potentials), ${\bf A}$ is the $M\x N$
+      matrix representing the forward solution and ${\bf n}$ is measurement
+      noise of the same dimension as ${\bf y}$ 
+             
+  \item The idea in Tikhonov regularization is to define the regularized
+        solution 
+        ${\bf x}_{\lambda}$ as the minimizer of the following weighted
+        combination 
+        of the residual norm and the side constraint:  
+        \begin{equation}
+          {\bf x}_{\lambda} = \mbox{arg}\min_{{\bf x}}\left\{ ||{\bf A\,x}-{\bf
+          y}||_{2}^{2} + \lambda^{2}\;||{\bf R\;x})||_{2}^{2}\right\}
+        \end{equation}
+      
+      and          
+        \begin{equation}         
+          {\bf x}_{\lambda} = \left( {\bf A}^{T}\;{\bf A} + \lambda^{2}\;{\bf
+          R}^{T}\;{\bf R}\right)^{-1}\; {\bf A}^{T}\;{\bf y}
+        \end{equation}
+      %
+      where the regularization parameter $\lambda$ controls the weight given to
+      minimization of the residual norm. 
+\end{itemize}         
+
+\ModuleRefSubSection{Selecting regularization parameter, $\lambda$}
+\label{Sec:regpar}
+
+\begin{itemize}
+  \item {\bf The L-Curve}
+        Perhaps the most convenient graphical tool for analysis of discrete
+        ill-posed problems is the so-called L-curve which is a plot - for
+        all valid regularization parameters - of the (semi)norm $||{\bf
+        R\;x_{reg}})||$ of the regularized solution versus the
+        corresponding residual norm $||{\bf A\,x_{reg}}-{\bf y}||$. In this
+        way, the L-curve clearly displays the compromise between
+        minimization of these two quantities, which is the heart of any
+        regularization method. For discrete ill-posed problems it turns out
+        that the L-curve, when plotted in log-log scale, almost always has
+        a characteristic L-shaped appearance with a distinct corner
+        separating the vertical and the horizontal parts of the curve.
+        
+\end{itemize}
+             
+% Special notes.  These may be installation instructions, bugs, limitations,
+% etc.
+
+%\ModuleRefNotes
+
+%Write notes here.
+
+% Who is responsible? 
+
+\ModuleRefCredits
+
+Authors of the \module{Tikhonov} module are Yesim Serinagaoglu, Alireza
+Ghodrati and Dana H. Brooks with assistance from Rob MacLeod and Dave
+Weinstein.

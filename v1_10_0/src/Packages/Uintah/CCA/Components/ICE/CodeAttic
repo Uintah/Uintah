@@ -1,0 +1,631 @@
+______________________________________________________________________
+This file contains code that currently isn't being used but we want to 
+keep around in case we ever want to dust it off and use it.  Please put 
+a date around the stuff you put in this file so we know how long to keep
+it.
+
+
+
+
+______________________________________________________________________
+
+____________________backoutGCPressFromVelFC_____________________________
+  11/21/01
+  
+   This code backs out the pressure in the ghost cells.  This was
+   used when testing the gravity field.  When this was used you didn't need
+   to setBC for vel_FC since it was assumed that the face-centered velocity
+   was always equal to the velocity in the extracells.  This insured that
+   the pressure the vel_FC were consistent.
+   
+   
+   
+   __________________________________
+   inside of equilibration pressure where
+   we set the boundary conditions 
+      setBC(press_new,     rho_micro,   rho_CC,
+          vol_frac,     vel_CC,         old_dw,
+          "Pressure",   patch,0);
+          
+__________________________________
+  ICE::computeDelPressAndUpdatePressCC()
+  This call was used where the boundary conditions were updated.
+  
+      setBC(press_CC,     rho_micro,      rho_CC,
+          vol_frac,     vel_CC,         old_dw,
+          "Pressure",   patch,0);
+    
+   
+/* --------------------------------------------------------------------- 
+ Function~  ICE::setBC--
+ Purpose~   Takes care Pressure_CC
+ ---------------------------------------------------------------------  */
+void ICE::setBC(CCVariable<double>& press_CC, 
+                StaticArray<constCCVariable<double> >& rho_micro_CC,
+                StaticArray<constCCVariable<double> >& rho_CC,
+                StaticArray<constCCVariable<double> >& vol_frac_CC,
+                StaticArray<constCCVariable<Vector> >& vel_CC,
+                DataWarehouse* old_dw,
+                const string& kind, 
+                const Patch* patch, const int mat_id)
+{  
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+    BoundCondBase *bcs, *sym_bcs;
+    BoundCond<double> *new_bcs;
+    if (patch->getBCType(face) == Patch::None) {
+      bcs     = patch->getBCValues(mat_id,kind,face);
+      sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
+      new_bcs = dynamic_cast<BoundCond<double> *>(bcs);
+    } else
+      continue;
+ /*`==========TESTING==========*/ 
+    if (sym_bcs != 0) { 
+     cout << "Symetric Boundary Conditions  "<< kind<< " Face "<<face<<endl;
+     ccout << "need to update backoutGCPressFromVelFC "<<endl;
+     exit(1);
+    }
+ /*==========TESTING==========`*/
+
+    if (new_bcs != 0) {
+      if (new_bcs->getKind() == "Dirichlet") 
+       press_CC.fillFace(face,new_bcs->getValue());
+      //__________________________________
+      //  This automatically takes care of the
+      //  hydrostatic pressure gradient.
+      if (new_bcs->getKind() == "Neumann") 
+        backoutGCPressFromVelFC(patch, face, old_dw,
+                              press_CC, rho_micro_CC, rho_CC,
+                              vol_frac_CC,  vel_CC);
+   
+    }
+  }
+}
+ 
+   
+   
+ ======================================================================*
+ Function:  backoutGCPressFromVelFC--           
+ You need to set the pressure in the ghostcells so that it is
+ consistent with the face centered velocies. If you don't then you can easily
+ set the ghostcell pressure so there is flow out of a solid boundary.
+ Currently this computes the pressure based on ice_matl[0] which
+ is the surrounding matl.
+ Note: this function doesn't set the pressure in either the edge or 
+       corners cell of the domain.  There isn't a normal component of 
+       velocity that we can use to compute it.   
+       
+  W A R N I N G:
+  This is only setup for ice_matls.  I need to modify this 
+  when we have mpm_matls on the edge of the domain.
+_______________________________________________________________________ */
+void   ICE::backoutGCPressFromVelFC(const Patch* patch,
+                                Patch::FaceType face,
+                                DataWarehouse* old_dw,
+                                CCVariable<double>& press_CC, 
+                        const StaticArray<constCCVariable<double> >& rho_micro_CC,
+                        const StaticArray<constCCVariable<double> >& rho_CC,
+                        const StaticArray<constCCVariable<double> >& /*vol_frac_CC*/,
+                        const StaticArray<constCCVariable<Vector> >& vel_CC)
+{
+//  int numICEMatls = d_sharedState->getNumICEMatls();
+  int numALLMatls = d_sharedState->getNumMatls();
+  int surrounding_mat;
+  IntVector offset;
+  
+  double term1, term2, term3, term4, term5;
+  double grav, del_Q;
+  double rho_FC, rho_micro_FC;
+  double plus_minus_one;
+ 
+  delt_vartype delT;
+  old_dw->get(delT, d_sharedState->get_delt_label());
+  DenseMatrix K(numALLMatls,numALLMatls), junk(numALLMatls,numALLMatls);
+  K.zero();
+  
+  StaticArray<CCVariable<double> > vel_FC(numALLMatls);
+  for(int m = 0; m < numALLMatls; m++) {
+    vel_FC[m].allocate(patch->getCellLowIndex(),patch->getCellHighIndex());
+    vel_FC[m].initialize(0.0);
+  }
+
+  getExchangeCoefficients(K, junk);
+   
+   //__________________________________
+   // find the index for the first ICE matl
+   // which is the surrounding matl.
+    for(int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial(m);
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      if(ice_matl) { 
+        surrounding_mat = m;
+        m = numALLMatls;
+      }
+    }   
+   
+  //__________________________________
+  //  For each wall
+  //  - convert the vectors into a doubles, vel_CC into vel_FC
+  //  - define the offsets to the interior cells and 
+  //    which component of gravity
+
+  Vector gravity = d_sharedState->getGravity();
+  Vector dx = patch->dCell();
+  
+  if (face == Patch::xplus) {           //  X P L U S
+    offset = IntVector(-1,0,0);
+    grav   = gravity.x();
+    del_Q  = dx.x();
+    plus_minus_one  = -1.0;
+    //cout << "XPLUS:" <<endl;
+  }
+  if(face == Patch::xminus){            //  X M I N U S
+    offset = IntVector(1,0,0);
+    grav   = gravity.x();
+    del_Q  = dx.x();
+    plus_minus_one  = 1.0;
+    //cout << "XMINUS:" <<endl;
+  }
+  if(face == Patch::yplus) {            //  Y P L U S
+    offset = IntVector(0,-1,0);
+    grav   = gravity.y();
+    del_Q  = dx.y();
+    plus_minus_one  = -1.0;
+    //cout << "YPLUS:" <<endl;
+  }
+  if(face == Patch::yminus) {           //  Y M I N U S
+    offset = IntVector(0,1,0);
+    grav   = gravity.y();
+    del_Q  = dx.y();
+    plus_minus_one  = 1.0;
+    //cout << "YMINUS:" <<endl;
+  }
+  if (face == Patch::zplus) {           //  Z P L U S
+    offset = IntVector(0,0,-1);
+    grav   = gravity.z();
+    del_Q  = dx.z();
+    plus_minus_one  = -1.0;
+    //cout << "ZPLUS:" <<endl;
+  } 
+  if (face == Patch::zminus) {          //  Z M I N U S
+    offset = IntVector(0,0,1);
+    grav   = gravity.z();
+    del_Q  = dx.z();
+    plus_minus_one  = 1.0;
+    //cout << "ZMINUS:" <<endl;
+  }
+  //__________________________________
+  //  Set the vel_FC = vel_CC on the 
+  //  face and one cell inward
+  for(int m = 0; m < numALLMatls; m++) {  
+    if (face == Patch::xplus||face == Patch::xminus) {
+      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+        vel_FC[m][*iter]        = vel_CC[m][*iter].x();
+        vel_FC[m][*iter+offset] = vel_CC[m][*iter+offset].x();
+      }
+    }
+    if(face == Patch::yplus || face == Patch::yminus) {  
+      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+         vel_FC[m][*iter]        = vel_CC[m][*iter].y();
+         vel_FC[m][*iter+offset] = vel_CC[m][*iter+offset].y();
+      }
+    }
+    if (face == Patch::zplus || face == Patch::zminus) {  
+      for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+        vel_FC[m][*iter]        = vel_CC[m][*iter].z();
+        vel_FC[m][*iter+offset] = vel_CC[m][*iter+offset].z();
+      }
+    }
+/*`==========TESTING==========*/ 
+  #if 0
+    char description[50];
+    sprintf(description, "TOPbackoutGCPress_mat_%d",m);
+    printData(   patch, 1, description, "vel_FC",      vel_FC[m]);
+  #endif
+ /*==========TESTING==========`*/
+  }  //Loop  
+   
+  //__________________________________
+  // Now loop over the ghostcells in that face
+  // and backout the pressure this doesn't include 
+  // the corner or edge ghostcells.
+  for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+    int m = surrounding_mat;  
+    IntVector gcell = *iter;                  // current ghost cell
+    IntVector adjcell(gcell.x()+offset.x(),   // interior adjacent cell
+                      gcell.y()+offset.y(),
+                      gcell.z()+offset.z());
+
+    rho_micro_FC = rho_micro_CC[m][adjcell] + rho_micro_CC[m][gcell];
+    rho_FC       = rho_CC[m][adjcell]       + rho_CC[m][gcell];
+    ASSERT(rho_FC > 0.0);
+
+    term1 =  vel_FC[m][gcell];
+    //__________________________________
+    // interpolation to the face
+    term2 = (rho_CC[m][adjcell] * vel_FC[m][adjcell] +
+             rho_CC[m][gcell]   * vel_FC[m][gcell])/(rho_FC);
+
+    //__________________________________
+    // Exchange term  CURRENTLY TURNED OFF
+    term3 = 0.0;
+  #if 0
+    for(int n = 0; n < numALLMatls; n++) {
+      tmp    = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][gcell]) * K[n][m];
+      beta   = delT * tmp/ (rho_micro_CC[m][gcell] + rho_micro_CC[m][adjcell]);
+      term3 += beta*(vel_FC[n][gcell] - vel_FC[m][gcell] );
+    }
+  #endif
+
+    //__________________________________
+    //  gravity & denominator
+    term4 =  delT * grav;
+    term5 =  2.0 * delT/(rho_micro_FC);
+    ASSERT(term5 > 0.0);
+  
+    double press_change;                  
+    press_change = plus_minus_one * del_Q *  (term1- term2 - term3 - term4)/term5;
+    press_CC[gcell]  = press_CC[adjcell] + press_change;
+//      cout<< *iter<<adjcell<<" "<<"press_change: "<<press_change<<
+//           " term1: "<<term1<<" term2: "<<term2<<" term3: "<<term3<<
+//           " term4: "<<term4<<" term5: "<<term5<< endl;                       
+    //__________________________________
+    //  Bulletproofing
+    if (press_CC[gcell] < 0.0) {
+     int i,j,k;
+     i   = gcell.x();
+     j   = gcell.y();
+     k   = gcell.z();
+     char warning[100];
+     double stupid = delT;
+     cout<< *iter<<adjcell<<" "<<"press_change: "<<press_change<<
+          " term1: "<<term1<<" term2: "<<term2<<" term3: "<<term3<<
+          " term4: "<<term4<<" term5: "<<term5<< endl;
+     sprintf(warning, " cell[%d][%d][%d]  delT = %e",i,j,k, stupid);
+     Message(1,"ICE::backoutGCPressFromVelFC(): negative pressure detected",
+             " This is usually caused by delT being too small. Now exiting..."
+             , warning);
+    }
+  }  // cell loop
+  //---- P R I N T   D A T A ------ 
+#if 0
+ if( face == Patch::endFace) {
+  char description[50];
+  sprintf(description, "backoutGCPress_patch_%d ", patch->getID());
+  printData(   patch, 1, description, "press_CC",    press_CC);
+  printData(   patch, 1, description, "vel_FC",      vel_FC[m]);
+ // getchar();
+ }
+  #endif
+}
+______________________________________________________________________
+  10/24/01        qOutfluxFirst
+            This may be useful if we ever go to 2nd order advection
+______________________________________________________________________
+
+This section belongs at the top
+                                CCVariable<cflux>::getTypeDescription());
+  q_outLabel = VarLabel::create("q_out",
+                                CCVariable<fflux>::getTypeDescription());
+  q_out_EFLabel = VarLabel::create("q_out_EF",
+                                CCVariable<eflux>::getTypeDescription());
+  q_out_CFLabel = VarLabel::create("q_out_CF",
+                                CCVariable<cflux>::getTypeDescription());
+  q_inLabel = VarLabel::create("q_in",
+                                CCVariable<fflux>::getTypeDescription());
+  q_in_EFLabel = VarLabel::create("q_in_EF",
+                                CCVariable<eflux>::getTypeDescription());
+  q_in_CFLabel = VarLabel::create("q_in_CF",
+                                CCVariable<cflux>::getTypeDescription());
+
+
+  VarLabel::destroy(q_outLabel);
+  VarLabel::destroy(q_out_EFLabel);
+  VarLabel::destroy(q_out_CFLabel);
+  VarLabel::destroy(q_inLabel);
+  VarLabel::destroy(q_in_EFLabel);
+  VarLabel::destroy(q_in_CFLabel);
+/*---------------------------------------------------------------------
+ Function~  ICE::qOutfluxFirst-- 
+ Purpose~  Calculate the quantity \langle q \rangle for each outflux, including
+    the corner flux terms
+
+ References:
+    "Compatible Fluxes for van Leer Advection" W.B VanderHeyden and 
+    B.A. Kashiwa, Journal of Computational Physics, 
+    146, 1-28, (1998) 
+
+ See schematic diagram at bottom of ice.cc
+ FIRST ORDER ONLY AT THIS TIME 10/21/00
+---------------------------------------------------------------------  */ 
+void  ICE::qOutfluxFirst(const CCVariable<double>&   q_CC,const Patch* patch,
+                     CCVariable<fflux>& q_out, CCVariable<eflux>& q_out_EF,
+                     CCVariable<cflux>& q_out_CF)
+{
+  const IntVector gc(1,1,1);
+  for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
+    //__________________________________
+    //  SLABS
+    for(int face = TOP; face <= BACK; face++ ) {
+      q_out[*iter].d_fflux[face] = q_CC[*iter];
+    }
+    //__________________________________
+    //  EDGE fluxes
+    for(int edge = TOP_R; edge <= LEFT_FR; edge++ )  {
+      q_out_EF[*iter].d_eflux[edge] = q_CC[*iter];
+    }
+    
+    //__________________________________
+    //  CORNER fluxes
+    for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ )  {
+      q_out_CF[*iter].d_cflux[corner] = q_CC[*iter];
+    }
+  }
+}
+
+
+______________________________________________________________________
+  10/24/01        qinFlux
+            This may be useful if we ever go to 2nd order advection
+______________________________________________________________________
+/*---------------------------------------------------------------------
+ Function~  ICE::qInflux
+ Purpose~
+    Calculate the influx contribution \langle q \rangle for each slab and 
+    corner flux.   
+ 
+ References:
+    "Compatible Fluxes for van Leer Advection" W.B VanderHeyden 
+    and B.A. Kashiwa, Journal of Computational Physics, 146, 1-28, (1998) 
+              
+Implementation Notes:
+    The quantity q_outflux is needed from one layer of extra cells surrounding
+    the computational domain.
+
+See schematic diagram at bottom of file ice.cc
+---------------------------------------------------------------------  */
+void ICE::qInfluxFirst(const CCVariable<fflux>& q_out, 
+                const CCVariable<eflux>& q_out_EF, 
+                const CCVariable<cflux>& q_out_CF, const Patch* patch,
+                CCVariable<fflux>& q_in, CCVariable<eflux>& q_in_EF, 
+                CCVariable<cflux>& q_in_CF)
+{
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+    IntVector curcell = *iter,adjcell;
+    int i = curcell.x();
+    int j = curcell.y();
+    int k = curcell.z();
+    
+    //   INFLUX SLABS
+    adjcell = IntVector(i, j+1, k);
+    q_in[*iter].d_fflux[TOP]    = q_out[adjcell].d_fflux[BOTTOM];
+    
+    adjcell = IntVector(i, j-1, k);
+    q_in[*iter].d_fflux[BOTTOM] = q_out[adjcell].d_fflux[TOP];
+    
+    adjcell = IntVector(i+1, j, k);
+    q_in[*iter].d_fflux[RIGHT]  = q_out[adjcell].d_fflux[LEFT];
+    
+    adjcell = IntVector(i-1, j, k);
+    q_in[*iter].d_fflux[LEFT]   = q_out[adjcell].d_fflux[RIGHT];
+    
+    adjcell = IntVector(i, j, k+1);
+    q_in[*iter].d_fflux[FRONT]  = q_out[adjcell].d_fflux[BACK];
+    
+    adjcell = IntVector(i, j, k-1);
+    q_in[*iter].d_fflux[BACK]   = q_out[adjcell].d_fflux[FRONT];
+    
+    //    INFLUX EDGES
+    adjcell = IntVector(i+1, j+1, k);
+    q_in_EF[*iter].d_eflux[TOP_R]    = q_out_EF[adjcell].d_eflux[BOT_L];
+    
+    adjcell = IntVector(i, j+1, k+1);
+    q_in_EF[*iter].d_eflux[TOP_FR]   = q_out_EF[adjcell].d_eflux[BOT_BK];
+    
+    adjcell = IntVector(i-1, j+1, k);
+    q_in_EF[*iter].d_eflux[TOP_L]    = q_out_EF[adjcell].d_eflux[BOT_R];
+    
+    adjcell = IntVector(i, j+1, k-1);
+    q_in_EF[*iter].d_eflux[TOP_BK]   = q_out_EF[adjcell].d_eflux[BOT_FR];
+    
+    adjcell = IntVector(i+1, j-1, k);
+    q_in_EF[*iter].d_eflux[BOT_R]    = q_out_EF[adjcell].d_eflux[TOP_L];
+    
+    adjcell = IntVector(i, j-1, k+1);
+    q_in_EF[*iter].d_eflux[BOT_FR]    = q_out_EF[adjcell].d_eflux[TOP_BK];
+    
+    adjcell = IntVector(i-1, j-1, k);
+    q_in_EF[*iter].d_eflux[BOT_L]    = q_out_EF[adjcell].d_eflux[TOP_R];
+    
+    adjcell = IntVector(i, j-1, k-1);
+    q_in_EF[*iter].d_eflux[BOT_BK]    = q_out_EF[adjcell].d_eflux[TOP_FR];
+    
+    adjcell = IntVector(i+1, j, k-1);
+    q_in_EF[*iter].d_eflux[RIGHT_BK]  = q_out_EF[adjcell].d_eflux[LEFT_FR];
+    
+    adjcell = IntVector(i+1, j, k+1);
+    q_in_EF[*iter].d_eflux[RIGHT_FR]  = q_out_EF[adjcell].d_eflux[LEFT_BK];
+    
+    adjcell = IntVector(i-1, j, k-1);
+    q_in_EF[*iter].d_eflux[LEFT_BK]  = q_out_EF[adjcell].d_eflux[RIGHT_FR];
+    
+    adjcell = IntVector(i-1, j, k+1);
+    q_in_EF[*iter].d_eflux[LEFT_FR]  = q_out_EF[adjcell].d_eflux[RIGHT_BK];
+    
+    /*__________________________________
+     *   INFLUX CORNER FLUXES
+     *___________________________________*/
+    adjcell = IntVector(i+1, j+1, k-1);
+    q_in_CF[*iter].d_cflux[TOP_R_BK]= q_out_CF[adjcell].d_cflux[BOT_L_FR];
+    
+    adjcell = IntVector(i+1, j+1, k+1);
+    q_in_CF[*iter].d_cflux[TOP_R_FR]= q_out_CF[adjcell].d_cflux[BOT_L_BK];
+    
+    adjcell = IntVector(i-1, j+1, k-1);
+    q_in_CF[*iter].d_cflux[TOP_L_BK]= q_out_CF[adjcell].d_cflux[BOT_R_FR];
+    
+    adjcell = IntVector(i-1, j+1, k+1);
+    q_in_CF[*iter].d_cflux[TOP_L_FR]= q_out_CF[adjcell].d_cflux[BOT_R_BK];
+    
+    adjcell = IntVector(i+1, j-1, k-1);
+    q_in_CF[*iter].d_cflux[BOT_R_BK]= q_out_CF[adjcell].d_cflux[TOP_L_FR];
+    
+    adjcell = IntVector(i+1, j-1, k+1);
+    q_in_CF[*iter].d_cflux[BOT_R_FR]= q_out_CF[adjcell].d_cflux[TOP_L_BK];
+    
+    adjcell = IntVector(i-1, j-1, k-1);
+    q_in_CF[*iter].d_cflux[BOT_L_BK]= q_out_CF[adjcell].d_cflux[TOP_R_FR];
+    
+    adjcell = IntVector(i-1, j-1, k+1);
+    q_in_CF[*iter].d_cflux[BOT_L_FR]= q_out_CF[adjcell].d_cflux[TOP_R_BK];
+  }
+}
+
+_____________________________makeTecplotFiles______________________________
+________________________________12_12_01___________________________________
+
+This can be used to generate tecplot file from the UCF code if needed.
+This is actually part of SerialMPM, but ICE could use it too.
+
+void SerialMPM::scheduleMakeTecplotFiles(SchedulerP& sched,
+                                         const PatchSet* patches,
+                                         const MaterialSet* matls)
+{
+  Task* t=scinew Task("SerialMPM::makeTecplotFiles",
+                    this, &SerialMPM::makeTecplotFiles);
+
+  t->requires(Task::NewDW, lb->gStressForSavingLabel,  Ghost::None);
+  t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
+  t->requires(Task::NewDW, lb->pStressLabel,           Ghost::None);
+
+  sched->addTask(t, patches, matls);
+}
+
+void SerialMPM::makeTecplotFiles(const ProcessorGroup*,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* ,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label() );
+
+    static double tec_time   = 0.;
+    static double print_time = 0.;
+    static int filenum       = 0;
+    double print_dt          = 0.01;
+    string fileroot = "partout";
+    string filename;
+    char fnum[5];
+
+    tec_time += delT;
+
+    if(tec_time >= print_time){
+      print_time+=print_dt;
+      sprintf(fnum,"%04d",filenum);
+      filename = fileroot+fnum;
+      ofstream partfile(filename.c_str());
+      filenum++;
+
+      int numMPMMatls=d_sharedState->getNumMPMMatls();
+      int numParticles = 0;
+      for(int m = 0; m < numMPMMatls; m++){
+        MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+        numParticles +=  mpm_matl->countParticles(patch);
+      }
+
+      partfile << "TITLE = \"Time =  " << tec_time <<"\"," << endl;
+      partfile << "VARIABLES = X,Y,Z,VonMises" << endl;
+      partfile << "ZONE T=\"PARTICLES\", I=" << numParticles;
+      partfile <<", F=POINT" << endl;
+
+      for(int m = 0; m < numMPMMatls; m++){
+        MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+        int dwindex = mpm_matl->getDWIndex();
+
+        constParticleVariable<Point> px;
+        constParticleVariable<Matrix3> pstress;
+        double vonm;
+
+        ParticleSubset* pset = old_dw->getParticleSubset(dwindex, patch);
+
+        old_dw->get(px,        lb->pXLabel,      pset);
+        new_dw->get(pstress,   lb->pStressLabel, pset);
+        for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();
+            iter++){
+          particleIndex idx = *iter;
+          double sigx = pstress[idx](1,1);
+          double sigy = pstress[idx](2,2);
+          double sigz = pstress[idx](3,3);
+          double tauxy = pstress[idx](1,2);
+          double tauxz = pstress[idx](1,3);
+          double tauyz = pstress[idx](2,3);
+          vonm = pow(.5*(pow(sigx-sigy,2.0) + pow(sigy-sigz,2.0) +
+                 pow(sigz-sigx,2.0) +
+                    6*(pow(tauxy,2.0)+pow(tauxz,2.0)+pow(tauyz,2.0))),.5);
+
+          partfile << px[idx].x() << " " << px[idx].y() << " "
+                   << px[idx].z() << " " << vonm        << endl;
+        }
+
+      }
+      partfile << "ZONE T=\"GRID\", I=" << 41 <<", J="<< 23 <<" K="<< 2;
+      partfile <<", F=BLOCK" << endl;
+      int m = 1;
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwindex = mpm_matl->getDWIndex();
+      constNCVariable<Matrix3> gsFS;
+      new_dw->get(gsFS, lb->gStressForSavingLabel,
+                        dwindex, patch, Ghost::None, 0);
+      Vector dx = patch->dCell();
+      int cnt = 0;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        partfile << ((double) c.x())*dx.x() << " ";
+        cnt ++;
+        if((cnt % 20) == 0){ partfile << endl;}
+      }
+      partfile << endl;
+      cnt = 0;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        partfile << ((double) c.y())*dx.y() << " ";
+        cnt ++;
+        if((cnt % 20) == 0){ partfile << endl;}
+      }
+      partfile << endl;
+      cnt = 0;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        partfile << ((double) c.z())*dx.z() << " ";
+        cnt ++;
+        if((cnt % 20) == 0){ partfile << endl;}
+      }
+      partfile << endl;
+      cnt = 0;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        double sigx  = gsFS[c](1,1);
+        double sigy  = gsFS[c](2,2);
+        double sigz  = gsFS[c](3,3);
+        double tauxy = gsFS[c](1,2);
+        double tauxz = gsFS[c](1,3);
+        double tauyz = gsFS[c](2,3);
+        double vonmg;
+        vonmg = pow(.5*(pow(sigx-sigy,2.0) + pow(sigy-sigz,2.0) +
+                pow(sigz-sigx,2.0) +
+                    6*(pow(tauxy,2.0)+pow(tauxz,2.0)+pow(tauyz,2.0))),.5);
+
+        partfile << vonmg << " ";
+        cnt ++;
+        if((cnt % 20) == 0){ partfile << endl;}
+      }
+      partfile << endl;
+    }
+  }
+}
+
+___________________________________________________________________________

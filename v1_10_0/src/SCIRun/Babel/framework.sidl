@@ -1,0 +1,25 @@
+//test components
+
+version framework 1.0;
+
+package framework{
+
+  class Services implements-all gov.cca.Services{
+	opaque getData();
+  };
+
+  class Component implements-all gov.cca.Component{
+  };
+
+  class Port implements-all gov.cca.Port{
+  };
+
+  class TypeMap implements-all gov.cca.TypeMap{
+  };
+	
+
+  class ComponentID implements-all gov.cca.ComponentID{
+
+  };
+	
+};

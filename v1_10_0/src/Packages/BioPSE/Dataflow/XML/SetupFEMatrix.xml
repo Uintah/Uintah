@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="SetupFEMatrix" category="Forward">
+  <overview>
+    <authors>
+      <author>Alexei Samsonov</author>
+      <author>Ruth Nicholson Klepfer</author>
+    </authors>
+    
+    <summary>The module sets up mesh with conductivity tensors and
+      Dirichlet boundary conditions specifically for bioelectric field
+      probles
+    </summary>
+    
+    <description>
+      <p>Version Date: March 2001</p><p>Version: 1.0</p>
+      <p>The module provides basic means for construction of the FE matrix
+      with linear elements for bioelectric field problems
+      (discretization of Poisson equation for volume conductor
+      problem). The input field should have properties with lookup
+      names that correspondend to the bioelectric field problem. The module conventions appear below:</p>
+      
+      <orderedlist>
+	<listitem>
+	  <p>The Field containing a mesh should be a TetVolField(char) type,
+	  which contains indices to the property 'table'; actual values of the 
+	  conductivity tensors, optimizing
+	  storage.</p>
+	</listitem>
+	<listitem>
+	  <p>The property of the conductivity mesh name 'table' should
+	  have the associated data object Array1(Tensor) type. Any
+	  lookup into the table is done By dereferencing indices of
+	  conductivity mesh, the module performs any lookup into the table.</p>
+	</listitem>
+	<listitem>
+	  <p>Dirichlet boundary conditions, if any, should be
+	  represented as property with name "dirichlet" and be a
+	  vector(pair(int, double)) type, where "int" field corresponds to
+	  node index, and "double" field is the value of potential at
+	  the node</p>
+	</listitem>
+      </orderedlist>
+      
+      <note>
+	<p>The BioPSE::Algorithm::BuildFEMatrix::build_FEMatrix()performs the actual computation 
+	of the matrix. Other
+	modules or any other code may use the algorithm for other
+	kinds of problems involving discretization of the Poisson equation
+	in 3D by linear finite elements.</p>
+      </note>
+      
+      <developer>
+	<p>The discretization of the Poisson equation on the supplied
+	mesh is performed by linear finite elements using Galerkin approach.</p>
+      </developer>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
+      <port>
+	<name>Mesh</name>
+	<description>
+	  <p>Takes a handle to Field object containing properties
+	  described in overview section</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <!-- one of (device port file) -->
+      <port>
+	<name>Stiffness Matrix</name>
+	<description>
+	  <p>Sends a handle to the sparse matrix obtained from
+	  discretization of the problem by finite elements</p>
+	  <note>
+	    <p>The handle is to base class of SparseRowMatrix, namely,
+	    Matrix</p>
+	  </note>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p></p>
+    </description>
+    <parameter>
+      <widget></widget>
+      <datatype></datatype>
+      <label></label>
+      <description>
+	<p></p>
+      </description>
+    </parameter>
+    <img>
+    </img>
+  </gui>
+  <testing>
+  </testing>
+</component>

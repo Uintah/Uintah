@@ -1,0 +1,73 @@
+#!/bin/sh
+
+rm -f Makefile.in
+
+echo "SRCTOP   = @top_srcdir@" >> Makefile.in
+echo "SRCDIR   = @srcdir@" >> Makefile.in
+
+# Find OBJTOP
+ObjTop="."
+while ! ls ${ObjTop}/README.PSE > /dev/null 2>&1 ; do
+  ObjTop="${ObjTop}/.."
+done
+ObjTop="`echo $ObjTop | sed 's+^./++'`"
+
+echo "OBJTOP   = ${ObjTop}" >> Makefile.in
+echo "" >> Makefile.in
+
+#-- SRCS ----------------------------------------------------------------------
+
+FILES="`cat Makefile.main | sed -n '/^OBJS/,/^[ \t]*$/ p' | sed 's/OBJS//' | sed 's/=//' | sed 's/\\\\//' `"
+
+SRCS=""
+
+for i in $FILES ; do
+  Bn="`basename $i .o`"
+  for s in cc c s ; do
+    if ls ${Bn}.${s} > /dev/null 2>&1 ; then
+      SRC="${Bn}.${s}"
+      break
+    fi
+  done
+  SRCS="${SRCS} ${SRC}"
+done
+
+LINE="SRCS     ="
+
+for i in $SRCS ; do
+  NextLine="$LINE $i"
+  Len="`echo "$NextLine" | awk '{ printf("%d\n",length($0)); }'`"
+  if test $Len -gt 77 ; then
+    echo "$LINE \\" >> Makefile.in
+    LINE="           $i"
+  else
+    LINE="$NextLine"
+  fi
+done
+echo "$LINE" >> Makefile.in
+
+echo "" >> Makefile.in
+
+#-- INCLUDES ------------------------------------------------------------------
+
+INCLS="`cat Makefile.main | sed -n '/^INCLUDES/,/^.*[^\\]$/ p' | sed 's/INCLUDES//' | sed 's/=//' | sed 's/\\\\//g' | sed 's/\$(C_DIR)\///g' `"
+
+LINE="INCLUDES = -I\$(OBJTOP)/src"
+for i in $INCLS ; do
+  unset incl
+  incl="`echo "$i" | sed 's/-I//'`"
+  NextLine="$LINE -I$(SRCDIR)/$incl"
+  Len="`echo "$NextLine" | awk '{ printf("%d\n",length($0)); }'`"
+  if test $Len -gt 77 ; then
+    echo "$LINE \\" >> Makefile.in
+    LINE="           -I\$(SRCDIR)/$incl"
+  else
+    LINE="$NextLine"
+  fi
+done
+echo "$LINE" >> Makefile.in
+
+#-----
+
+echo "" >> Makefile.in
+echo "include $(SCIRUN_SCRIPTS)/objs.mk" >> Makefile.in

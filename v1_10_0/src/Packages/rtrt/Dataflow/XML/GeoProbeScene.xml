@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="GeoProbeScene" category="Scenes">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>GeoProbe Scene for RTRT in SCIRun</summary>
+    <description>
+      <p>Version Date: Thu Jan  9 15:55:03 MST 2003</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="yes">
+     <port>
+       <name>Colormap</name>
+       <datatype>SCIRun::ColorMap</datatype>
+     </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Scene</name>
+        <datatype>rtrt::Scene</datatype>
+      </port>
+   </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>
