@@ -229,7 +229,8 @@ namespace SCIRun {
       NeedData,
       JustStarted,
       Executing,
-      Completed
+      Completed,
+      Error
     };
     void update_state(State);
     CPUTimer timer;
@@ -253,7 +254,7 @@ namespace SCIRun {
     State state;
     double progress;
     bool show_stat;
-
+    
     PortManager<OPort*> oports;
     PortManager<IPort*> iports;
     iport_maker dynamic_port_maker;

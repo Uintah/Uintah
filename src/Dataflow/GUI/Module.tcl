@@ -723,6 +723,9 @@ itcl_class Module {
 	} elseif {$state == "Completed"} {
 	    set p 1
 	    set color green
+	} elseif {$state == "Error"} {
+	    set p 1
+	    set color red
 	} else {
 	    set width 0
 		set color grey75
