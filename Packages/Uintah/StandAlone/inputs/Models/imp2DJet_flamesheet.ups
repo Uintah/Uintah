@@ -13,7 +13,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            10          </maxTime>
+       <maxTime>            2          </maxTime>
        <initTime>           0.0        </initTime>
        <delt_min>           0.0        </delt_min>
        <delt_max>           1.e-2      </delt_max>
@@ -51,7 +51,7 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "all" label = "Velocity" var = "Dirichlet">
-                              <value> [0.,10.,0.] </value>
+                              <value> [0.0,5.0,0.0] </value>
         </BCType>
         <BCType id = "all" label = "Temperature" var = "Neumann">
                               <value> 0.0  </value>
@@ -102,11 +102,11 @@
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0,0,0]      </lower>
-              <upper>        [1.0,2.0,0.04]    </upper>
-              <extraCells>   [1,1,1]      </extraCells>
-              <patches>      [1,1,1]      </patches>
-              <resolution>   [50,100,1]    </resolution>
+              <lower>        [0,0,0]        </lower>
+              <upper>        [1.0,2.0,0.04] </upper>
+              <extraCells>   [1,1,1]        </extraCells>
+              <patches>      [1,1,1]        </patches>
+              <resolution>   [50,100,1]     </resolution>
            </Box>
        </Level>
     </Grid>
@@ -115,21 +115,18 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>2D_Jet_flamesheet.uda</filebase>
+      <filebase>test.uda</filebase>
       <outputInterval>0.01</outputInterval>
       <save label="press_equil_CC"/>
       <save label="delP_Dilatate"/>
-      <save label="press_CC"/>
-      <save label="vol_frac_CC"/>  
-      <save label="mass_L_CC"/> 
-      <save label="mom_L_CC"/>
-      <save label="int_eng_L_CC"/>
+      <save label="press_CC"/>  
       <save label="vel_CC"/>
       <save label="rho_CC"/>
       <save label="sp_vol_CC"/>
       <save label="temp_CC"/>
       <save label= "modelEng_src"/>
       <save label= "scalar-f"/>
+      <checkpoint interval="0.001" cycle="2"/>"
    </DataArchiver>
 
    <Debug>
@@ -169,8 +166,7 @@
 	     <!-- Hypre options -->
 	     <solver>         cg  </solver>
 	     <preconditioner> pfmg   </preconditioner>
-	     <tolerance>      1.e-8  </tolerance>
-	     <maxiterations>  7500    </maxiterations>
+	     <maxiterations>  50    </maxiterations>
 	     <npre>           1       </npre>
 	     <npost>          1       </npost>
 	     <skip>           0       </skip>
@@ -225,7 +221,7 @@
                    <radius>           0.1              </radius>
                 </cylinder>
               <res>                [2,2,2]             </res>
-              <velocity>           [.0,10,.0]          </velocity>
+              <velocity>           [0.0,5.0,0.0]       </velocity>
               <density>       1.1792946927374306000e+00</density>
               <pressure>      101325.0                 </pressure>     
               <temperature>   300.0                    </temperature>
@@ -244,11 +240,17 @@
     <Models>
     <!--____________________________________________________________________-->
     <!--    Note: you need a slug of fuel above the jet as an initial       -->
-    <!--          condition to get it to fly                                -->
+    <!--          condition to get it to fly  Methane + Air                 -->
     <!--____________________________________________________________________--> 
       <Model type="flameSheet_rxn">
         <material>source</material>
-	<scalar name="f">
+	 <scalar name="f">
+        <reaction_constants>
+          <f_stoichometric>        0.06207  </f_stoichometric>
+          <delta_H_combustion>     1000     </delta_H_combustion>
+          <oxidizer_temp_infinity> 300      </oxidizer_temp_infinity>
+          <initial_fuel_temp>      300      </initial_fuel_temp>
+        </reaction_constants>
            <geom_object>
               <difference>
                 <box label="world">
