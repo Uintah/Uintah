@@ -67,9 +67,7 @@ RescaleColorMap::execute()
 	return;
     }
     if( isFixed.get() ){
-      cmap->min = min.get();
-      cmap->max = max.get();
-      cerr << "Rescale ColorMap " << min.get() << " " << max.get() << endl;
+      cmap->Scale(min.get(), max.get());
     } else {
       for(int i=0;i<fieldports.size()-1;i++){
         ScalarFieldHandle sfield;
@@ -77,20 +75,12 @@ RescaleColorMap::execute()
 	  double min;
 	  double max;
 	  sfield->get_minmax(min, max);
-	  //	    cmap.detach();
-	  cmap->min=min;
-	  cmap->max=max;
+	  cmap->Scale( min, max);
 	  this->min.set( min );
 	  this->max.set( max );
-	  
-	  cerr << "Rescale ColorMap " << min << " " << max << endl;
 	}
       }
     }
-    cerr << "Rescale: " << cmap.get_rep() << endl;
-    cerr << cmap->colors.size() << " - Size\n";
-    cerr << cmap->min << " - " << cmap->max << endl;
-    
     omap->send(cmap);
 }
 
@@ -115,6 +105,11 @@ RescaleColorMap::connection(ConnectionMode mode, int which_port, int)
 
 //
 // $Log$
+// Revision 1.8  2000/06/13 20:31:19  kuzimmer
+// Modified RescaleColorMap to set the scaled flag in the color map.
+// Modified ColorMapKey so that it scales the colormap to the data if it
+// wasn't previously scaled.
+//
 // Revision 1.7  2000/03/17 09:27:35  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
