@@ -10,8 +10,13 @@ ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
 PSELIBS := Core/CCA/Component/SSIDL Core/CCA/Component/PIDL Core/Thread \
-	Core/Exceptions Core/CCA/Component/Comm Core/globus_threads Core/Containers
+	Core/Exceptions Core/CCA/Component/Comm
 endif
+
+ifeq ($(HAVE_GLOBUS),yes)
+PSELIBS+=Core/globus_threads
+endif
+
 LIBS := 
 
 PROGRAM := $(SRCDIR)/main
