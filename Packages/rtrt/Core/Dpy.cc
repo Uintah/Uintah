@@ -599,7 +599,6 @@ Dpy::renderFrame() {
       char buf[100];
       sprintf( buf, "%3.1lf fps", priv->FrameRate );
       
-      cerr << "Drawing image\n";
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
       gluOrtho2D(0, priv->xres, 0, priv->yres);

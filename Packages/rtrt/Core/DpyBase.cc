@@ -191,7 +191,6 @@ void DpyBase::init() {
 void DpyBase::display() {
   glFinish();
   if (window_mode & BufferModeMask == DoubleBuffered){
-    cerr << "swap!\n";
     glXSwapBuffers(dpy, win);
   }
   XFlush(dpy);
