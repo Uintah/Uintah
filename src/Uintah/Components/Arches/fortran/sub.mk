@@ -7,7 +7,7 @@
 
 SRCDIR   := Uintah/Components/Arches/fortran
 
-SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
+SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F  \
 	$(SRCDIR)/cellg.F
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
@@ -41,6 +41,9 @@ FFLAGS += -g -O3 -OPT:IEEE_arithmetic=3 -CG:if_conversion=false:reverse_if_conve
 
 #
 # $Log$
+# Revision 1.8  2000/06/14 21:25:25  jas
+# removed celltypeInit.F from compilation.
+#
 # Revision 1.7  2000/06/14 20:40:53  rawat
 # modified boundarycondition for physical boundaries and
 # added CellInformation class
