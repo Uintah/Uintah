@@ -36,7 +36,8 @@ protected:
   int depth;
   float iradius;
   BBox bbox;
-
+  Color color;
+  
   double icellsize;
   bool preprocessed; // indicates if it has been preprocessed or not
   
@@ -56,12 +57,14 @@ protected:
 
   void get_uv(UV& uv, const Point& hitpos, const Point& cen);
   Color interp_color(unsigned char *image, double u, double v);
+
 public:
   TextureGridSpheres(float* spheres, size_t nspheres,
-		    float radius,
-		    int *tex_indices,
-		    unsigned char *tex_data, size_t ntextures, int tex_res,
-		    int nsides, int depth);
+		     float radius,
+		     int *tex_indices,
+		     unsigned char* tex_data, size_t ntextures, int tex_res,
+		     int nsides, int depth,
+		     const Color& color = Color(1.0, 1.0, 1.0));
   virtual ~TextureGridSpheres();
   virtual void io(SCIRun::Piostream &stream);
 
