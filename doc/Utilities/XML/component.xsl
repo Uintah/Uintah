@@ -18,8 +18,10 @@ University of Utah. All Rights Reserved.
 -->
 
 <!--
+
 This stylesheet converts the XML based module descriptions to HTML.
 The generated HTML is to be used with the stylesheet component.css.
+
 -->
 
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
