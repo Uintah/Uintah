@@ -216,6 +216,10 @@ public:
   friend struct ImageMeshIFaceIter;
   friend struct ImageMeshIFaceIndex;
 
+  // Backwards compatability with interp fields
+  typedef ImageMeshINodeIndex INodeIndex;
+  typedef ImageMeshIFaceIndex IFaceIndex;
+
   typedef ImageMeshNode Node;
   typedef ImageMeshEdge Edge;
   typedef ImageMeshFace Face;

@@ -443,6 +443,10 @@ public:
   struct MLVMIndex;
   friend struct MLVMIndex;
 
+  // Backwards compatability with interp fields
+  typedef MLVMNodeIndex NodeIndex;
+  typedef MLVMCellIndex CellIndex;
+
   typedef MaskedLatVolMeshNode Node;
   typedef MaskedLatVolMeshEdge Edge;
   typedef MaskedLatVolMeshFace Face;
