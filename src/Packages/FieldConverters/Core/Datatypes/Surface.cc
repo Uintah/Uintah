@@ -112,7 +112,7 @@ PointsSurface* Surface::getPointsSurface() {
 	return 0;
 }
 
-void Surface::set_bc(const clString& bc_expr)
+void Surface::set_bc(const string& bc_expr)
 {
     boundary_expr=bc_expr;
     boundary_type=DirichletExpression;

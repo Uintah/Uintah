@@ -29,7 +29,6 @@
 
 #include <FieldConverters/Core/Datatypes/VectorFieldUG.h>
 #include <Core/Util/NotFinished.h>
-#include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 
 namespace FieldConverters {

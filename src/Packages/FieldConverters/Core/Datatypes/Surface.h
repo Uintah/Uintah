@@ -37,7 +37,6 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/HashTable.h>
-#include <Core/Containers/String.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Geometry/Grid.h>
@@ -58,7 +57,7 @@ typedef LockingHandle<Surface> SurfaceHandle;
 class FieldConvertersSHARE Surface : public Datatype {
 public:
   CrowdMonitor monitor;
-  clString name;
+  string name;
 
 protected:
   enum Representation {
@@ -89,7 +88,7 @@ protected:
     DirichletData,
     BdryNone
   };
-  clString boundary_expr;
+  string boundary_expr;
   BoundaryType boundary_type;
 
 public:
@@ -102,7 +101,7 @@ public:
   TriSurface* getTriSurface();
   PointsSurface* getPointsSurface();
 
-  void set_bc(const clString& expr);
+  void set_bc(const string& expr);
 
   virtual int inside(const Point& p)=0;
   virtual void construct_grid(int, int, int, const Point &, double)=0;

@@ -36,17 +36,17 @@ namespace SCITeem {
 using namespace SCIRun;
 
 extern "C" {
-  TeemSHARE IPort* make_NrrdIPort(Module* module, const clString& name) {
+  TeemSHARE IPort* make_NrrdIPort(Module* module, const string& name) {
   return scinew SimpleIPort<NrrdDataHandle>(module,name);
 }
-  TeemSHARE OPort* make_NrrdOPort(Module* module, const clString& name) {
+  TeemSHARE OPort* make_NrrdOPort(Module* module, const string& name) {
   return scinew SimpleOPort<NrrdDataHandle>(module,name);
 }
 }
 } // End namespace SCITeem
 
 namespace SCIRun {
-template<> clString SimpleIPort<SCITeem::NrrdDataHandle>::port_type("Nrrd");
-template<> clString SimpleIPort<SCITeem::NrrdDataHandle>::port_color("Purple4");
+template<> string SimpleIPort<SCITeem::NrrdDataHandle>::port_type("Nrrd");
+template<> string SimpleIPort<SCITeem::NrrdDataHandle>::port_color("Purple4");
 } // End namespace SCIRun
 

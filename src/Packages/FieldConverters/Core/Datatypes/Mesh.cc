@@ -52,7 +52,6 @@
 
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Util/NotFinished.h>
-#include <Core/Containers/String.h>
 #include <Core/Containers/TrivialAllocator.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Geom/GeomGroup.h>

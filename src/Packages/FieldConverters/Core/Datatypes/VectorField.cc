@@ -28,7 +28,6 @@
  */
 
 #include <FieldConverters/Core/Datatypes/VectorField.h>
-#include <Core/Containers/String.h>
 
 namespace FieldConverters {
 

@@ -30,7 +30,6 @@
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Containers/String.h>
 #include <nrrd.h>
 
 namespace SCITeem {

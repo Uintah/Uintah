@@ -28,7 +28,6 @@
  */
 
 #include <FieldConverters/Core/Datatypes/VectorFieldRG.h>
-#include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 
 namespace FieldConverters {

@@ -31,7 +31,6 @@
 #define SCI_project_ScalarField_h 1
 
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Containers/String.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Geometry/Vector.h>

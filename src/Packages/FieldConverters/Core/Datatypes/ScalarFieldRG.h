@@ -35,6 +35,7 @@
 #include <Core/Math/MiscMath.h>
 #include <FieldConverters/Core/Datatypes/ScalarFieldRGBase.h>
 #include <Core/Containers/Array3.h>
+#include <Core/Containers/StringUtil.h>
 #include <iostream>
 
 namespace FieldConverters {
@@ -160,8 +161,7 @@ void ScalarFieldRGT<T>::io(Piostream& stream)
       if ( raw_filename[0] == '/' )
 	filename = raw_filename;
       else
-	filename = pathname(clString(stream.file_name.c_str()))() + 
-	  string("/") + raw_filename;
+	filename = pathname(stream.file_name + "/" + raw_filename);
       std::cerr << "reading... rawfile=" << filename <<std::endl;
       SCIRun::Pio(stream, grid, filename);
     }
