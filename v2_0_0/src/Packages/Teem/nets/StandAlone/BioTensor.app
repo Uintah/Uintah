@@ -2111,8 +2111,11 @@ class BioTensorApp {
 
 
 	### pack 3 frames
-	pack $attachedPFr $win.viewer $attachedVFr -side left \
-	    -anchor n -fill both -expand 1
+	pack $attachedPFr -side left -anchor n
+
+	pack $win.viewer -side left -anchor n -fill both -expand 1
+
+	pack $attachedVFr -side left -anchor n 
 
 	set total_width [expr $process_width + $viewer_width + $vis_width]
 
@@ -3120,8 +3123,7 @@ class BioTensorApp {
 
 	} else {
 	    wm withdraw $detachedPFr
-	    pack $attachedPFr -anchor n -side left -before $win.viewer \
-	       -fill both -expand 1
+	    pack $attachedPFr -anchor n -side left -before $win.viewer
 	    set new_width [expr $c_width + $process_width]
             append geom $new_width x $c_height + [expr $x - $process_width] + $y
 	    wm geometry $win $geom
