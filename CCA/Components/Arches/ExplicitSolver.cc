@@ -477,6 +477,14 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_scalarINLabel,
 		  Ghost::None, numGhostCells);
   }
+  int nofScalarVars = d_props->getNumMixStatVars();
+  // warning **only works for one scalarVar
+  if (nofScalarVars > 0) {
+    for (int ii = 0; ii < nofScalarVars; ii++) {
+      tsk->requires(Task::OldDW, d_lab->d_scalarVarSPLabel, 
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+  }
 
 
   if (d_reactingScalarSolve)
@@ -500,6 +508,11 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   // warning **only works for one scalar
   for (int ii = 0; ii < nofScalars; ii++)
     tsk->computes(d_lab->d_scalarSPLabel);
+  if (nofScalarVars > 0) {
+    for (int ii = 0; ii < nofScalarVars; ii++) {
+      tsk->computes(d_lab->d_scalarVarSPLabel);
+    }
+  }
 
   if (d_reactingScalarSolve)
     tsk->computes(d_lab->d_reactscalarSPLabel);
@@ -1146,6 +1159,14 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
       new_dw->get(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     }
+    int nofScalarVars = d_props->getNumMixStatVars();
+    StaticArray< constCCVariable<double> > scalarVar (nofScalarVars);
+    if (nofScalarVars > 0) {
+      for (int ii = 0; ii < nofScalarVars; ii++) {
+	old_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch, 
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
+      }
+    }
 
     constCCVariable<double> reactscalar;
     if (d_reactingScalarSolve)
@@ -1209,6 +1230,13 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
       new_dw->allocateAndPut(scalar_new[ii], d_lab->d_scalarSPLabel, 
 			     matlIndex, patch);
       scalar_new[ii].copyData(scalar[ii]); 
+    }
+    StaticArray<CCVariable<double> > scalarVar_new(nofScalarVars);
+    if (nofScalarVars > 0) {
+      for (int ii = 0; ii < nofScalarVars; ii++) {
+	new_dw->allocateAndPut(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch);
+	scalarVar_new[ii].copyData(scalarVar[ii]); // copy old into new
+      }
     }
 
     CCVariable<double> new_reactscalar;
