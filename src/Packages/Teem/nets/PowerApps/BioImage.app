@@ -873,6 +873,8 @@ class BioImageApp {
 
 	    set ww [set $mods(ViewImage)-axial-viewport0-clut_ww]
 	    set wl [set $mods(ViewImage)-axial-viewport0-clut_wl]
+	    set min [expr $wl-$ww/2]
+	    set max [expr $wl+$ww/2]
 
 	    # Update the UnuQuantize min/max and the 
 	    # UnuJhisto axis 0 mins/maxs
@@ -882,11 +884,11 @@ class BioImageApp {
 	    global [set UnuQuantize]-maxf [set UnuQuantize]-minf
 	    global [set UnuJhisto]-maxs [set UnuJhisto]-mins
 
-	    set [set UnuQuantize]-maxf $ww
-	    set [set UnuQuantize]-minf $wl
+	    set [set UnuQuantize]-maxf $max
+	    set [set UnuQuantize]-minf $min
 
-	    set [set UnuJhisto]-maxs "$ww nan"
-	    set [set UnuJhisto]-mins "$wl nan"
+	    set [set UnuJhisto]-maxs "$max nan"
+	    set [set UnuJhisto]-mins "$min nan"
 
 	    # execute modules if volume rendering enabled
 	    global show_vol_ren
