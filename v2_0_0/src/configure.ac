@@ -507,7 +507,7 @@ case $host in
     NUM_CPUS=4
     ;;
   *-darwin*)
-    SCI_CHECK_OS_VERSION(7.0,NEED_OSX_HACK=no,NEED_OSX_HACK=yes)
+    SCI_CHECK_OS_VERSION(7.1,NEED_OSX_HACK=no,NEED_OSX_HACK=yes)
     NUM_CPUS=2
     IS_OSX="yes"
     ;;
