@@ -179,7 +179,7 @@ private:
       //    const VarLabel* d_deltLabel;
       const VarLabel* d_densityLabel;
       const VarLabel* d_pressureLabel;
-      vector<const VarLabel*> d_scalarLabel;
+      const VarLabel* d_scalarLabel;
       const VarLabel* d_uVelocityLabel;
       const VarLabel* d_vVelocityLabel;
       const VarLabel* d_wVelocityLabel;
@@ -192,6 +192,9 @@ private:
 
 //
 // $Log$
+// Revision 1.26  2000/06/13 06:02:31  bbanerje
+// Added some more StencilMatrices and vector<CCVariable> types.
+//
 // Revision 1.25  2000/06/12 21:29:59  bbanerje
 // Added first Fortran routines, added Stencil Matrix where needed,
 // removed unnecessary CCVariables (e.g., sources etc.)
