@@ -1060,6 +1060,10 @@ if test "$F77" = ""; then
   AC_PROG_F77()
   AC_MSG_WARN(Fortran compiler not specified with 'F77' environment \
 	    variable. Using default... $F77)
+  # For some reason, the AC_PROG_F77 macro adds "-g -O2" to FFLAGS.  I think
+  # we should set them, so I clear them out here.  (FYI: FFLAGS is "" before
+  # the AC_PROG_F77() call.)
+  FFLAGS=""
 fi
 
 CC_REALLY_IS=`type $CC | sed 's%^.* %%'`
