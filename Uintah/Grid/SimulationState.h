@@ -7,6 +7,7 @@
 #include <SCICore/Math/MinMax.h>
 #include <Uintah/Grid/Material.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Uintah/Components/ICE/ICEMaterial.h>
 #include <SCICore/Geometry/Vector.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/ProblemSpec.h>
@@ -17,7 +18,7 @@ using SCICore::Math::Max;
 using SCICore::Geometry::Vector;
 using Uintah::Material;
 using Uintah::MPM::MPMMaterial;
-using SCICore::Geometry::Vector;
+using Uintah::ICESpace::ICEMaterial;
 
 namespace Uintah {
 
@@ -62,11 +63,15 @@ namespace Uintah {
       
       void registerMaterial(Material*);
       void registerMPMMaterial(MPMMaterial*);
+      void registerICEMaterial(ICEMaterial*);
       int getNumMatls() const {
 	 return (int)matls.size();
       }
       int getNumMPMMatls() const {
 	 return (int)mpm_matls.size();
+      }
+      int getNumICEMatls() const {
+	 return (int)ice_matls.size();
       }
 
       int getNumVelFields() const {
@@ -83,6 +88,9 @@ namespace Uintah {
       MPMMaterial* getMPMMaterial(int idx) const {
 	 return mpm_matls[idx];
       }
+      ICEMaterial* getICEMaterial(int idx) const {
+	 return ice_matls[idx];
+      }
 
 
       Vector getGravity() const {
@@ -96,6 +104,7 @@ namespace Uintah {
       const VarLabel* delt_label;
       std::vector<Material*> matls;
       std::vector<MPMMaterial*> mpm_matls;
+      std::vector<ICEMaterial*> ice_matls;
       Vector d_gravity;
 
    };
@@ -104,6 +113,10 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.14  2000/11/13 21:39:57  guilkey
+// Added stuff for ICEMaterial analogous to the MPMMaterial stuff added
+// last week.
+//
 // Revision 1.13  2000/11/07 22:42:40  guilkey
 // Added a vector of MPMMaterial* so that we no longer need to do the
 // dynamic cast of a Material* to an MPMMaterial*.  The point here is to
