@@ -91,7 +91,7 @@ void VolumeVisDpy::setup_vars() {
 }
 
 void VolumeVisDpy::run() {
-  //cerr << "GridSpheresDpy:run\n";
+  //cerr << "VolumeVisDpy:run\n";
   xlock.lock();
   // Open an OpenGL window
   Display* dpy=XOpenDisplay(NULL);
@@ -134,7 +134,7 @@ void VolumeVisDpy::run() {
   Window win=XCreateWindow(dpy, RootWindow(dpy, screen),
 			   0, 0, xres, yres, 0, vi->depth,
 			   InputOutput, vi->visual, flags, &atts);
-  char* p="GridSpheres histogram";
+  char* p="VolumeVis GUI";
   XTextProperty tp;
   XStringListToTextProperty(&p, 1, &tp);
   XSizeHints sh;
@@ -182,7 +182,7 @@ void VolumeVisDpy::run() {
   // these are used to keep the points from moving too much
   
   for(;;){
-    //cerr << "GridSpheresDpy:run:eventloop\n";
+    //cerr << "VolumeVisDpy:run:eventloop\n";
     if(need_hist){
       need_hist=false;
       compute_hist(fontbase);
@@ -196,175 +196,179 @@ void VolumeVisDpy::run() {
       XFlush(dpy);
       redraw=false;
     }
-    XEvent e;
-    XNextEvent(dpy, &e);	
-    switch(e.type){
-    case Expose:
-      redraw=true;
-      break;
-    case ConfigureNotify:
-      yres=e.xconfigure.height;
-      if(e.xconfigure.width != xres){
-	xres=e.xconfigure.width;
-	need_hist=true;
-      } else {
+    // We should try to consume all the queued events before we redraw.
+    // That way we don't waste time redrawing after each event
+    while (XEventsQueued(dpy, QueuedAfterReading)) {
+      XEvent e;
+      XNextEvent(dpy, &e);	
+      switch(e.type){
+      case Expose:
 	redraw=true;
-      }
-      break;
-    case KeyPress:
-      switch(XKeycodeToKeysym(dpy, e.xkey.keycode, 0)){
-      case XK_Control_L:
-      case XK_Control_R:
-	//cerr << "Pressed control\n";
-	control_pressed = true;
 	break;
-      case XK_Shift_L:
-      case XK_Shift_R:
-	//cerr << "Pressed shift\n";
-	shift_pressed = true;
-	break;
-      case XK_Page_Up:
-      case XK_plus:
-	rescale_alphas(current_t_inc/2);
-	cout << "current_t_inc = " << current_t_inc << endl;
-	break;
-      case XK_Page_Down:
-      case XK_minus:
-	rescale_alphas(current_t_inc*2);
-	cout << "current_t_inc = " << current_t_inc << endl;
-	break;
-      case XK_w:
-      case XK_W:
-	break;
-      }
-      break;
-    case KeyRelease:
-      switch(XKeycodeToKeysym(dpy, e.xkey.keycode, 0)){
-      case XK_Control_L:
-      case XK_Control_R:
-	control_pressed = false;
-	//cerr << "Releassed control\n";
-	break;
-      case XK_Shift_L:
-      case XK_Shift_R:
-	//cerr << "Releassed shift\n";
-	shift_pressed = false;
-      }
-      break;
-    case ButtonRelease:
-      switch(e.xbutton.button){
-      case Button1:
-	{
-	  create_alpha_transfer();
-	  selected_point = -1;
-	  redraw = true;
+      case ConfigureNotify:
+	yres=e.xconfigure.height;
+	if(e.xconfigure.width != xres){
+	  xres=e.xconfigure.width;
+	  need_hist=true;
+	} else {
+	  redraw=true;
 	}
 	break;
-      }
-      break;
-    case ButtonPress:
-      {
-	int xpos = e.xbutton.x;
-	int ypos = yres - e.xbutton.y;
-	
-	// check boundaries
-	int s=5;
-	int end=yres/2-5;
-	if (ypos < s || ypos > end)
+      case KeyPress:
+	switch(XKeycodeToKeysym(dpy, e.xkey.keycode, 0)){
+	case XK_Control_L:
+	case XK_Control_R:
+	  //cerr << "Pressed control\n";
+	  control_pressed = true;
 	  break;
-	if (xpos < 5 || xpos > xres - 5)
+	case XK_Shift_L:
+	case XK_Shift_R:
+	  //cerr << "Pressed shift\n";
+	  shift_pressed = true;
 	  break;
+	case XK_Page_Up:
+	case XK_plus:
+	  rescale_alphas(current_t_inc/2);
+	  cout << "current_t_inc = " << current_t_inc << endl;
+	  break;
+	case XK_Page_Down:
+	case XK_minus:
+	  rescale_alphas(current_t_inc*2);
+	  cout << "current_t_inc = " << current_t_inc << endl;
+	  break;
+	case XK_w:
+	case XK_W:
+	  break;
+	}
+	break;
+      case KeyRelease:
+	switch(XKeycodeToKeysym(dpy, e.xkey.keycode, 0)){
+	case XK_Control_L:
+	case XK_Control_R:
+	  control_pressed = false;
+	  //cerr << "Releassed control\n";
+	  break;
+	case XK_Shift_L:
+	case XK_Shift_R:
+	  //cerr << "Releassed shift\n";
+	  shift_pressed = false;
+	}
+	break;
+      case ButtonRelease:
 	switch(e.xbutton.button){
 	case Button1:
-	  if (shift_pressed) {
-	    //cerr << "Left button pressed with shift\n";
-	    selected_point = -1;
-	    // create a point at the location of the click
-	    AlphaPos new_guy((xpos-(float)5)/(xres-10),
-			     (ypos-(float)5)/(yres/2-10));
-	    int index = alpha_list.size();
-	    alpha_list.grow(1,5);
-	    while (new_guy.x < alpha_list[index-1].x) {
-	      alpha_list[index] = alpha_list[index-1];
-	      index--;
-	    }
-	    // now insert new_guy
-	    alpha_list[index] = new_guy;
-	    // make it selected for movement
-	    selected_point = index;
-	  } else if (control_pressed) {
-	    //cerr << "Left button pressed with control\n";
-	    selected_point = -1;
-	    // find the point closest and delete it
-	    // can't remove the end points
-	    int index = select_point(xpos,ypos);
-	    if (index > 0 && index < alpha_list.size()-1)
-	      alpha_list.remove(index);
-	  } else {
-	    // find the point closest and make it selected
-	    int index = select_point(xpos,ypos);
-	    if (index >= 0)
-	      selected_point = index;
-	  }
-	  break;
-	case Button2:
-	  if (shift_pressed) {
-	    //cerr << "Middle button pressed with shift\n";
-	  } else if (control_pressed) {
-	    //cerr << "Middle button pressed with control\n";
-	  } else {
-	  }
-	  break;
-	case Button3:
-	  if (shift_pressed) {
-	    //cerr << "Right button pressed with shift\n";
-	  } else if (control_pressed) {
-	    //cerr << "Right button pressed with control\n";
-	  } else {
-	  }
-	  break;
-	}
-      }
-      break;
-    case MotionNotify:
-      {
-	if (shift_pressed || control_pressed) break;
-	switch(e.xmotion.state&(Button1Mask|Button2Mask|Button3Mask)){
-	case Button1Mask:
 	  {
-	    if (selected_point < 0)
-	      // no point is selected, so don't do anything
-	      break;
-	    int xpos = e.xbutton.x;
-	    float xnorm;
-	    if (xpos >= min_x && xpos < max_x)
-	      xnorm = (xpos - (float)5)/(xres-10);
-	    else
-	      xnorm = alpha_list[selected_point].x;
-	    int ypos = yres - e.xbutton.y;
-	    float ynorm;
-	    if (ypos < 5)
-	      ynorm = 0;
-	    else if (ypos > (yres/2-5))
-	      ynorm = 1;
-	    else
-	      ynorm = (ypos - (float)5)/(yres/2-10);
-	    
-	    alpha_list[selected_point] = AlphaPos(xnorm,ynorm);
-
+	    create_alpha_transfer();
+	    selected_point = -1;
 	    redraw = true;
 	  }
 	  break;
-	case Button2Mask:
-	case Button3Mask:
-	  break;
-	} // end switch(button mask with motion)
-      }
-      break;
-    default:
-      cerr << "Unknown event, type=" << e.type << '\n';
-    }
-  }
+	}
+	break;
+      case ButtonPress:
+	{
+	  int xpos = e.xbutton.x;
+	  int ypos = yres - e.xbutton.y;
+	
+	  // check boundaries
+	  int s=5;
+	  int end=yres/2-5;
+	  if (ypos < s || ypos > end)
+	    break;
+	  if (xpos < 5 || xpos > xres - 5)
+	    break;
+	  switch(e.xbutton.button){
+	  case Button1:
+	    if (shift_pressed) {
+	      //cerr << "Left button pressed with shift\n";
+	      selected_point = -1;
+	      // create a point at the location of the click
+	      AlphaPos new_guy((xpos-(float)5)/(xres-10),
+			       (ypos-(float)5)/(yres/2-10));
+	      int index = alpha_list.size();
+	      alpha_list.grow(1,5);
+	      while (new_guy.x < alpha_list[index-1].x) {
+		alpha_list[index] = alpha_list[index-1];
+		index--;
+	      }
+	      // now insert new_guy
+	      alpha_list[index] = new_guy;
+	      // make it selected for movement
+	      selected_point = index;
+	    } else if (control_pressed) {
+	      //cerr << "Left button pressed with control\n";
+	      selected_point = -1;
+	      // find the point closest and delete it
+	      // can't remove the end points
+	      int index = select_point(xpos,ypos);
+	      if (index > 0 && index < alpha_list.size()-1)
+		alpha_list.remove(index);
+	    } else {
+	      // find the point closest and make it selected
+	      int index = select_point(xpos,ypos);
+	      if (index >= 0)
+		selected_point = index;
+	    }
+	    break;
+	  case Button2:
+	    if (shift_pressed) {
+	      //cerr << "Middle button pressed with shift\n";
+	    } else if (control_pressed) {
+	      //cerr << "Middle button pressed with control\n";
+	    } else {
+	    }
+	    break;
+	  case Button3:
+	    if (shift_pressed) {
+	      //cerr << "Right button pressed with shift\n";
+	    } else if (control_pressed) {
+	      //cerr << "Right button pressed with control\n";
+	    } else {
+	    }
+	    break;
+	  }
+	}
+	break;
+      case MotionNotify:
+	{
+	  if (shift_pressed || control_pressed) break;
+	  switch(e.xmotion.state&(Button1Mask|Button2Mask|Button3Mask)){
+	  case Button1Mask:
+	    {
+	      if (selected_point < 0)
+		// no point is selected, so don't do anything
+		break;
+	      int xpos = e.xbutton.x;
+	      float xnorm;
+	      if (xpos >= min_x && xpos < max_x)
+		xnorm = (xpos - (float)5)/(xres-10);
+	      else
+		xnorm = alpha_list[selected_point].x;
+	      int ypos = yres - e.xbutton.y;
+	      float ynorm;
+	      if (ypos < 5)
+		ynorm = 0;
+	      else if (ypos > (yres/2-5))
+		ynorm = 1;
+	      else
+		ynorm = (ypos - (float)5)/(yres/2-10);
+	    
+	      alpha_list[selected_point] = AlphaPos(xnorm,ynorm);
+
+	      redraw = true;
+	    }
+	    break;
+	  case Button2Mask:
+	  case Button3Mask:
+	    break;
+	  } // end switch(button mask with motion)
+	}
+	break;
+      default:
+	cerr << "Unknown event, type=" << e.type << '\n';
+      } // end switch (e.type)
+    } // end of while (there is a queued event)
+  } // end of for(;;)
 }
 
 void VolumeVisDpy::compute_hist(GLuint fid) {
