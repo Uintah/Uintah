@@ -4,6 +4,8 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
+#include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
+#include <Packages/Uintah/CCA/Components/ICE/NearWallTreatment.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
@@ -99,6 +101,7 @@ using namespace SCIRun;
       
       void scheduleAccumulateMomentumSourceSinks(SchedulerP&, 
                                             const PatchSet*,
+                                            const MaterialSubset*,
                                             const MaterialSubset*,
                                             const MaterialSubset*,
                                             const MaterialSet*);
@@ -539,6 +542,7 @@ using namespace SCIRun;
       bool d_RateForm;
       bool d_EqForm;
       bool d_impICE;
+      bool d_Turb;
       int d_dbgVar1;
       int d_dbgVar2;
       int d_max_iter_equilibration;
@@ -559,7 +563,7 @@ using namespace SCIRun;
                         constCCVariable<double>& rho_CC,     
                         constCCVariable<double>& sp_vol_CC,  
                         constCCVariable<Vector>& vel_CC,     
-                        const double viscosity,               
+                        const CCVariable<double>& viscosity,               
                         const Vector dx,                      
                         SFCXVariable<Vector>& tau_X_FC);      
                           
@@ -567,7 +571,7 @@ using namespace SCIRun;
                         constCCVariable<double>& rho_CC,     
                         constCCVariable<double>& sp_vol_CC,  
                         constCCVariable<Vector>& vel_CC,     
-                        const double viscosity,               
+                        const CCVariable<double>& viscosity,              
                         const Vector dx,                      
                         SFCYVariable<Vector>& tau_Y_FC);      
                           
@@ -575,7 +579,7 @@ using namespace SCIRun;
                         constCCVariable<double>& rho_CC,     
                         constCCVariable<double>& sp_vol_CC,  
                         constCCVariable<Vector>& vel_CC,     
-                        const double viscosity,               
+                        const CCVariable<double>& viscosity,              
                         const Vector dx,                      
                         SFCZVariable<Vector>& tau_Z_FC); 
                         
@@ -649,6 +653,7 @@ using namespace SCIRun;
       
       Advector* d_advector;
       std::string d_advect_type;
+      Turbulence* d_turbulence;
       std::string d_delT_scheme;
       
      // exchange coefficients -- off diagonal terms
