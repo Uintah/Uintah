@@ -80,11 +80,14 @@
  */
 
 #include <stdio.h>
+#include <zlib.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <stack>
 #include <iostream> 
+#include <sgi_stl_warnings_on.h>
 
-#include <zlib.h>
 
 #include "matfilebase.h"
 #include "matfiledata.h" 
@@ -151,7 +154,7 @@ class matfile : public matfilebase {
 			long	    flength_;		// File length	
         
 			char	    headertext_[118]; 	// The text in the header of the matfile
-			long		subsysdata_[2];		// NEW IN VERSION 7
+			int32_t		subsysdata_[2];		// NEW IN VERSION 7
 			short 	    version_;			// Version of the matfile.
 			short       byteswap_;			// =1 if bytes need to be swapped
    	

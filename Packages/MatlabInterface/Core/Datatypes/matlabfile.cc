@@ -132,7 +132,6 @@ matlabfile::mitype matlabfile::converttype(matlabfile::mxtype type)
 		case mxCELL: case mxSTRUCT: case mxOBJECT: return(miMATRIX);
 		default: return(miUNKNOWN);
    }
-   return(miUNKNOWN);
 }
 
 matlabfile::mxtype matlabfile::convertclass(matlabfile::mlclass mclass,matlabfile::mitype type)
@@ -167,7 +166,6 @@ matlabfile::mxtype matlabfile::convertclass(matlabfile::mlclass mclass,matlabfil
 		default:
 			return(mxUNKNOWN);
 	}
-	return(mxUNKNOWN);
 }
 
 
@@ -409,7 +407,7 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
 	// first element in this datasegment denotes the matrix class
 	
 	if (matrixclass.size() == 0) { closechild(); return; }
-	long classinfo =  matrixclass.getandcastvalue<unsigned long>(0);
+	unsigned long classinfo =  matrixclass.getandcastvalue<unsigned long>(0);
     mxtype matrixtype = static_cast<mxtype>((0x000000FF & classinfo));
 	
 	// the second byte contains flags.

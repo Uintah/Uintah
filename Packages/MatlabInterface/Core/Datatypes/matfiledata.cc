@@ -356,14 +356,14 @@ matfiledata matfiledata::reorder(const std::vector<long> &newindices)
 	long newbytesize;
 	void *newdatabuffer;
 	
-	newbytesize = elsize()*newindices.size();
+	newbytesize = static_cast<long>(elsize()*newindices.size());
 	newbuffer.newdatabuffer(newbytesize,type());
 	newdatabuffer = newbuffer.databuffer();
 	
 	// get the sizes of the of the old and new datablocks in elements
 	
 	// long osize = size();
-	long dsize = newindices.size();
+	long dsize = static_cast<long>(newindices.size());
 	
 	// check limits
 	// This is overhead but will prevent serious problems as it
@@ -394,8 +394,8 @@ matfiledata matfiledata::reorder(const std::vector<long> &newindices)
 		break;
 		case 4:
 		{
-			long *data = static_cast<long *>(databuffer());
-			long *newdata = static_cast<long *>(newdatabuffer);
+			int32_t *data = static_cast<int32_t *>(databuffer());
+			int32_t *newdata = static_cast<int32_t *>(newdatabuffer);
 			for (long p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
 		}
 		break;
@@ -480,8 +480,8 @@ matfiledata matfiledata::reorder(long *newindices,long dsize)
 		break;
 		case 4:
 		{
-			long *data = static_cast<long *>(databuffer());
-			long *newdata = static_cast<long *>(newdatabuffer);
+			int32_t *data = static_cast<int32_t *>(databuffer());
+			int32_t *newdata = static_cast<int32_t *>(newdatabuffer);
 			for (long p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
 		}
 		break;
@@ -531,13 +531,13 @@ matfiledata matfiledata::castdata(matfiledata::mitype type)
 		break;	
 		case miUINT32: case miUTF32:
 		{
-			unsigned long *ptr = static_cast<unsigned long *>(newdata.databuffer());
+			u_int32_t *ptr = static_cast<u_int32_t *>(newdata.databuffer());
 			getandcast(ptr,newdata.bytesize());
 		}
 		break;
 		case miINT32:
 		{
-			signed long *ptr = static_cast<signed long *>(newdata.databuffer());
+			int32_t *ptr = static_cast<int32_t *>(newdata.databuffer());
 			getandcast(ptr,newdata.bytesize());
 		}
 		break;

@@ -244,7 +244,7 @@ std::vector<long> matlabarray::getdims()
 long matlabarray::getnumdims()
 {
     if (m_ == 0) throw internal_error(); 
-    return(m_->dims_.size());
+    return(static_cast<long>(m_->dims_.size()));
 }
 
 
@@ -628,7 +628,42 @@ void matlabarray::createlongmatrix(long m,long n, long *values)
 }
 
 
+// quick function for creating a long scalar
+void matlabarray::createintscalar(int value)
+{
+	std::vector<long> dims(2); dims[0] = 1; dims[1] = 1;
+	createdensearray(dims,miINT32);
+	setnumericarray(&value,1);
+}
 
+void matlabarray::createintvector(std::vector<int> &values)
+{
+	std::vector<long> dims(2); dims[0] = 1; dims[1] = static_cast<long>(values.size());
+	createdensearray(dims,miINT32);
+	setnumericarray(values);
+}
+
+void matlabarray::createintvector(long n, int *values)
+{
+	std::vector<long> dims(2); dims[0] = 1; dims[1] = n;
+	createdensearray(dims,miINT32);
+	setnumericarray(values,n);
+}
+
+
+void matlabarray::createintmatrix(std::vector<int> &values, std::vector<long> &dims)
+{
+	createdensearray(dims,miINT32);
+	setnumericarray(values);
+}
+
+
+void matlabarray::createintmatrix(long m,long n, int *values)
+{
+	std::vector<long> dims(2); dims[0] = m; dims[1] = n;
+	createdensearray(dims,miINT32);
+	setnumericarray(values,m*n);
+}
 
 
 
@@ -1035,7 +1070,7 @@ void matlabarray::permute(std::vector<long> permorder)
 	m_->preal_ = m_->preal_.reorder(neworder);
 	if (iscomplex()) m_->pimag_ = m_->pimag_.reorder(neworder);
 	
-	long dsize = m_->dims_.size();
+	long dsize = static_cast<long>(m_->dims_.size());
 	std::vector<long> dims(dsize);
 	for (long p = 0;  p< dsize;p++) dims[p] = m_->dims_[permorder[p]];
 	m_->dims_ = dims;
@@ -1065,7 +1100,7 @@ void matlabarray::transpose()
 		m_->pimag_ = newdata;
 	}
 	
-	long dsize = m_->dims_.size();
+	long dsize = static_cast<long>(m_->dims_.size());
 	std::vector<long> dims(dsize);
 	for (long p = 0 ; p < dsize ; p++) dims[p] = m_->dims_[permorder[p]];
 	m_->dims_ = dims;
@@ -1078,7 +1113,7 @@ void matlabarray::reorder_permute(std::vector<long> &newindices,std::vector<long
 	if (m_->dims_.size() != permorder.size()) throw internal_error();
 	newindices.resize(getnumelements());
 	
-	long size = m_->dims_.size();
+	long size = static_cast<long>(m_->dims_.size());
 	
 	for (long p = 0; p < size; p++)
 	{   if ((permorder[p] < 0)||(permorder[p] >= size)) throw out_of_range(); }

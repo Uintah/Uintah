@@ -35,6 +35,10 @@
 #include "matlabconverter.h"
 
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 3201
+#endif
+
 using namespace MatlabIO;
 using namespace std;
 using namespace SCIRun;
@@ -210,7 +214,6 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Mod
       // can be converted using a simple cast
       return(1);			
     }		
-    break;
   case matlabarray::mlSTRUCT:
   {
       long index;
@@ -273,7 +276,6 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Mod
       // can be converted using a simple cast
       return(1);			
     } 
-    break;
   default:
     break;
   }
@@ -732,40 +734,39 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
         switch (nrrdtype)
         {
         case nrrdTypeChar:
-          mlarray.getnumericarray(static_cast<signed char *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          mlarray.getnumericarray(static_cast<signed char *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
           break;
         case nrrdTypeUChar:
-          mlarray.getnumericarray(static_cast<unsigned char *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          mlarray.getnumericarray(static_cast<unsigned char *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
           break;
         case nrrdTypeShort:
-          mlarray.getnumericarray(static_cast<signed short *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          mlarray.getnumericarray(static_cast<signed short *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
           break;
         case nrrdTypeUShort:
-          mlarray.getnumericarray(static_cast<unsigned short *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          mlarray.getnumericarray(static_cast<unsigned short *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
           break;
         case nrrdTypeInt:
-          mlarray.getnumericarray(static_cast<signed long *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          mlarray.getnumericarray(static_cast<signed long *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
           break;
         case nrrdTypeUInt:
-          mlarray.getnumericarray(static_cast<unsigned long *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          mlarray.getnumericarray(static_cast<unsigned long *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
           break;
     #ifdef JGS_MATLABIO_USE_64INTS
         case nrrdTypeLLong:
-          mlarray.getnumericarray(static_cast<int64 *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          mlarray.getnumericarray(static_cast<int64 *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
           break;
         case nrrdTypeULLong:
-          mlarray.getnumericarray(static_cast<uint64 *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          mlarray.getnumericarray(static_cast<uint64 *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
           break;
     #endif
         case nrrdTypeFloat:
-          mlarray.getnumericarray(static_cast<float *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          mlarray.getnumericarray(static_cast<float *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
           break;
         case nrrdTypeDouble:
-          mlarray.getnumericarray(static_cast<double *>(nrrddataptr->nrrd->data),nrrdElementNumber(nrrddataptr->nrrd));
+          mlarray.getnumericarray(static_cast<double *>(nrrddataptr->nrrd->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd)));
           break;
         default:
           throw matlabconverter_error();
-          break;
         }
         
         // set some info on the axis as not all SCIRun modules check whether there is any
@@ -847,7 +848,6 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
       if (subclass != matlabarray::mlDENSE)
       {
         throw matlabconverter_error();
-        return;
       }
 				
       mlArrayTOsciNrrdData(subarray,scinrrd,module);
@@ -855,7 +855,6 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
       if (scinrrd == 0)
       {
         throw matlabconverter_error();
-        return;
       }
 				
       // Add axes properties if they are specified
@@ -881,7 +880,6 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
           if ((axisarrayclass != matlabarray::mlSTRUCT)&&(axisarrayclass != matlabarray::mlOBJECT))
           {
             throw matlabconverter_error();
-            return;
           }
                     
                     
@@ -1380,12 +1378,12 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
     if (fs.vectorfield.isdense()) 
     {  vector<long> dims = fs.vectorfield.getdims();
     // remove the vector dimension from the array
-    fs.dims.createlongvector((dims.size()-1),&(dims[1]));
+    fs.dims.createlongvector(static_cast<long>((dims.size()-1)),&(dims[1]));
     }
     if (fs.tensorfield.isdense()) 
     {  vector<long> dims = fs.tensorfield.getdims();
     // remove the tensor dimension from the array
-    fs.dims.createlongvector((dims.size()-1),&(dims[1]));
+    fs.dims.createlongvector(static_cast<long>((dims.size()-1)),&(dims[1]));
     }
     if (fs.basis_order == 0)
     {
@@ -1997,7 +1995,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
     vector<long> dims = fs.field.getdims();
     if ((valuetype == "Vector")||(valuetype == "Tensor"))
     {	
-      fs.dims.createlongvector((dims.size()-1),&(dims[1])); 
+      fs.dims.createlongvector(static_cast<long>((dims.size()-1)),&(dims[1])); 
     }
     else
     {   
@@ -3067,9 +3065,9 @@ void matlabconverter::mladdxyznodes(LockingHandle<StructCurveMesh> meshH,matlaba
   StructCurveMesh::Node::size_type size;
   meshH->size(size);
   unsigned int numnodes = static_cast<unsigned int>(size);
-  x.createdensearray(numnodes,1,matlabarray::miDOUBLE);
-  y.createdensearray(numnodes,1,matlabarray::miDOUBLE);
-  z.createdensearray(numnodes,1,matlabarray::miDOUBLE);
+  x.createdensearray(static_cast<long>(numnodes),1,matlabarray::miDOUBLE);
+  y.createdensearray(static_cast<long>(numnodes),1,matlabarray::miDOUBLE);
+  z.createdensearray(static_cast<long>(numnodes),1,matlabarray::miDOUBLE);
 	
   vector<double> xbuffer(numnodes);
   vector<double> ybuffer(numnodes);
@@ -3105,9 +3103,9 @@ void matlabconverter::mladdxyznodes(LockingHandle<StructQuadSurfMesh> meshH,matl
 	
   // Note: the dimensions are in reverse order as SCIRun uses C++
   // ordering
-  x.createdensearray(dim2,dim1,matlabarray::miDOUBLE);
-  y.createdensearray(dim2,dim1,matlabarray::miDOUBLE);
-  z.createdensearray(dim2,dim1,matlabarray::miDOUBLE);
+  x.createdensearray(static_cast<long>(dim2),static_cast<long>(dim1),matlabarray::miDOUBLE);
+  y.createdensearray(static_cast<long>(dim2),static_cast<long>(dim1),matlabarray::miDOUBLE);
+  z.createdensearray(static_cast<long>(dim2),static_cast<long>(dim1),matlabarray::miDOUBLE);
 	
   // We use temp buffers to store all the values before committing them to the matlab
   // classes, this takes up more memory, but should decrease the number of actual function
@@ -3154,7 +3152,7 @@ void matlabconverter::mladdxyznodes(LockingHandle<StructHexVolMesh> meshH,matlab
 	
   // Note: the dimensions are in reverse order as SCIRun uses C++
   // ordering
-  vector<long> dims(3); dims[0] = dim3; dims[1] = dim2; dims[2] = dim1;
+  vector<long> dims(3); dims[0] = static_cast<long>(dim3); dims[1] = static_cast<long>(dim2); dims[2] = static_cast<long>(dim1);
   x.createdensearray(dims,matlabarray::miDOUBLE);
   y.createdensearray(dims,matlabarray::miDOUBLE);
   z.createdensearray(dims,matlabarray::miDOUBLE);
@@ -3200,7 +3198,7 @@ bool matlabconverter::mladdfield(vector<Vector> &fdata,matlabarray mlarray)
   matlabarray fieldtype;
 
   fieldtype.createstringarray("vector");
-  field.createdensearray(3,fdata.size(),matlabarray::miDOUBLE);
+  field.createdensearray(3,static_cast<long>(fdata.size()),matlabarray::miDOUBLE);
 		
   unsigned int size = fdata.size();
   unsigned int p,q;
@@ -3223,7 +3221,7 @@ bool matlabconverter::mladdfield(vector<Tensor> &fdata,matlabarray mlarray)
   matlabarray fieldtype;
 
   fieldtype.createstringarray("tensor");
-  field.createdensearray(9,fdata.size(),matlabarray::miDOUBLE);
+  field.createdensearray(9,static_cast<long>(fdata.size()),matlabarray::miDOUBLE);
 	
   unsigned int size = fdata.size();
   unsigned int p,q;
@@ -3556,4 +3554,8 @@ void matlabconverter::setpostmsg(bool val)
 {
   postmsg_ = val;
 }
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 3201
+#endif
 
