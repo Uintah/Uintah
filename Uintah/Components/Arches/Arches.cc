@@ -37,8 +37,9 @@ using namespace Uintah::ArchesSpace;
 Arches::Arches( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
 {
-  d_deltLabel = new VarLabel("delt",
-			     delt_vartype::getTypeDescription() );
+  // don't need deltLabel can get it from sharedState
+  //  d_deltLabel = new VarLabel("delt",
+  //			     delt_vartype::getTypeDescription() );
   d_densityLabel = new VarLabel("density", 
 				CCVariable<double>::getTypeDescription() );
   d_pressureLabel = new VarLabel("pressure", 
@@ -60,9 +61,9 @@ void
 Arches::problemSetup(const ProblemSpecP& params, GridP&,
 		     SimulationStateP& sharedState)
 {
-  // d_sharedState = sharedState;
+  d_sharedState = sharedState;
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
-
+  // not sure, do we need to reduce and put in datawarehouse
   db->require("grow_dt", d_deltaT);
 
   // physical constants
@@ -70,6 +71,7 @@ Arches::problemSetup(const ProblemSpecP& params, GridP&,
 
   // ** BB 5/19/2000 ** For now read the Physical constants from the 
   // CFD-ARCHES block
+  // for gravity, read it from shared state 
   //d_physicalConsts->problemSetup(params);
   d_physicalConsts->problemSetup(db);
 
@@ -132,17 +134,18 @@ Arches::scheduleInitialize(const LevelP& level,
 void 
 Arches::scheduleComputeStableTimestep(const LevelP&,
 				      SchedulerP&,
-				      DataWarehouseP&)
+				      DataWarehouseP& dw)
 {
 #ifdef WONT_COMPILE_YET
-  dw->put(SoleVariable<double>(d_deltaT), "delt"); 
+  delt_vartype delt_var = d_deltaT; // not sure if this will work
+  dw->put((ReductionVariableBase&)d_deltaT,  d_sharedState->get_delt_label()); 
 #endif
 }
 
 void 
 Arches::scheduleTimeAdvance(double time, double dt,
-			    const LevelP&, SchedulerP&,
-			    const DataWarehouseP&, DataWarehouseP&)
+			    const LevelP& level, SchedulerP& sched,
+			    const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
 #ifdef WONT_COMPILE_YET
   int error_code = d_nlSolver->nonlinearSolve(time, dt, level, 
@@ -186,7 +189,7 @@ void
 Arches::paramInit(const ProcessorContext* ,
 		  const Region* region,
 		  DataWarehouseP& old_dw,
-		  DataWarehouseP& )
+		  DataWarehouseP& new_dw)
 {
   // ....but will only compute for computational domain
 
@@ -198,11 +201,11 @@ Arches::paramInit(const ProcessorContext* ,
 
   cerr << "Actual initialization - before allocation : old_dw = " 
        << old_dw <<"\n";
-  old_dw->allocate(velocity, d_velocityLabel, 1, region);
-  old_dw->allocate(pressure, d_pressureLabel, 1, region);
-  old_dw->allocate(scalar, d_scalarLabel, 1, region);
-  old_dw->allocate(density, d_densityLabel, 1, region);
-  old_dw->allocate(viscosity, d_viscosityLabel, 1, region);
+  old_dw->allocate(velocity, d_velocityLabel, 0, region);
+  old_dw->allocate(pressure, d_pressureLabel, 0, region);
+  old_dw->allocate(scalar, d_scalarLabel, 0, region);
+  old_dw->allocate(density, d_densityLabel, 0, region);
+  old_dw->allocate(viscosity, d_viscosityLabel, 0, region);
   cerr << "Actual initialization - after allocation\n";
 
   IntVector lowIndex = region->getCellLowIndex();
@@ -225,6 +228,9 @@ Arches::paramInit(const ProcessorContext* ,
 
 //
 // $Log$
+// Revision 1.27  2000/05/30 15:44:57  rawat
+// modified computeStableTimestep
+//
 // Revision 1.26  2000/05/20 22:54:14  bbanerje
 // Again, adding the first set of changes to get the scheduler to add tasks.
 //
