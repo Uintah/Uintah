@@ -58,8 +58,8 @@ main(int argc, char **argv) {
   LatVolMeshHandle lvm = new LatVolMesh(ni, nj, nk, min, max);
   FieldHandle fH;
   LatVolField<int> *lv;
-  if (c) lv = new LatVolField<int>(lvm, Field::CELL);
-  else lv = new LatVolField<int>(lvm, Field::NODE); 
+  if (c) lv = new LatVolField<int>(lvm, 0);
+  else lv = new LatVolField<int>(lvm, 1); 
   fH=lv;
   
   for (int i=0; i<ni-1; i++) 

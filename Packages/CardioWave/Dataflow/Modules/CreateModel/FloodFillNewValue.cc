@@ -95,16 +95,16 @@ void FloodFillNewValue::execute(){
   PointCloudMesh::Node::index_type node0(0);
   Point p;
   pcf->get_typed_mesh()->get_center(p, node0);
-  int data_at = hvf->data_at();
+  int basis_order = hvf->basis_order();
   
-  if (data_at == Field::NODE) {
+  if (basis_order == 1) {
     hvf->get_typed_mesh()->synchronize(Mesh::LOCATE_E);
     HexVolMesh::Node::index_type loc;
     if (!hvf->get_typed_mesh()->locate(loc, p)) {
       ovol->send(volH);
       return;
     }
-    int new_val = (int)pcf->fdata()[0];
+    int new_val = static_cast<int >(pcf->fdata()[0]);
     int old_val;
     if (!hvf->value(old_val, loc)) {
       error("There's no datavalue in the HexVol at this Node location, even though the call to locate() succeeded.");
@@ -130,7 +130,7 @@ void FloodFillNewValue::execute(){
     hvf = dynamic_cast<HexVolField<int> *>(volH.get_rep());
     
     HexVolField<char> *mask_vol = 
-      scinew HexVolField<char>(hvf->get_typed_mesh(), Field::NODE);
+      scinew HexVolField<char>(hvf->get_typed_mesh(),1);
     
   // set up the mask volume
     HexVolMesh::Node::iterator curr_node, last_node;
@@ -158,9 +158,11 @@ void FloodFillNewValue::execute(){
     while (!Q.empty()) {
       HexVolMesh::Node::index_type curr = Q.front();
       Q.pop_front();
+
       vector<HexVolMesh::Node::index_type> nbrs;
       hvf->get_typed_mesh()->get_neighbors(nbrs, curr);
       vector<HexVolMesh::Node::index_type>::iterator iter = nbrs.begin();
+
       while (iter != nbrs.end()) {
 	char nbr_val;
 	if (mask_vol->value(nbr_val, *iter) && nbr_val == 1) {
@@ -179,7 +181,9 @@ void FloodFillNewValue::execute(){
       ovol->send(volH);
       return;
     }
+
     int new_val = (int)pcf->fdata()[0];
+
     int old_val;
     if (!hvf->value(old_val, loc)) {
       error("There's no datavalue in the HexVol at this Cell location, even though the call to locate() succeeded.");
@@ -205,7 +209,7 @@ void FloodFillNewValue::execute(){
     hvf = dynamic_cast<HexVolField<int> *>(volH.get_rep());
     
     HexVolField<char> *mask_vol = 
-      scinew HexVolField<char>(hvf->get_typed_mesh(), Field::CELL);
+      scinew HexVolField<char>(hvf->get_typed_mesh(), 0);
     
   // set up the mask volume
     HexVolMesh::Cell::iterator curr_cell, last_cell;

@@ -85,7 +85,7 @@ CreateSimpleMesh::execute()
   LatVolMesh *mesh = scinew LatVolMesh(xdim, ydim, zdim, Point(0,0,0),
 				       Point((xdim-1)*dx, (ydim-1)*dy,
 					     (zdim-1)*dz));
-  LatVolField<int> *fld = scinew LatVolField<int>(mesh, Field::NODE);
+  LatVolField<int> *fld = scinew LatVolField<int>(mesh, 1);
   Vector v1(fib1x, fib1y, fib1z);
   if (!v1.length()) {
     error("fib1 was zero length.");

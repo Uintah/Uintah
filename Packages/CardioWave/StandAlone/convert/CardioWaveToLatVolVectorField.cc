@@ -75,7 +75,7 @@ main(int argc, char **argv) {
 
   LatVolMeshHandle lvm = new LatVolMesh((ni-1)/sample+1, (nj-1)/sample+1, 
 					(nk-1)/sample+1, min, max);
-  LatVolField<Vector> *lvf = new LatVolField<Vector>(lvm, Field::NODE);
+  LatVolField<Vector> *lvf = new LatVolField<Vector>(lvm, 1);
   Vector *vdata = &(lvf->fdata()(0,0,0));
   
   int idx=0;

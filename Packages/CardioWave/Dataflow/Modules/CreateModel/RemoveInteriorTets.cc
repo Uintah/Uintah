@@ -75,7 +75,7 @@ void RemoveInteriorTets::execute()
     return;
   }
   
-  if (tv_old->data_at() != Field::NODE && tv_old->data_at() != Field::NONE)
+  if (tv_old->basis_order() != 1 && tv_old->basis_order() != -1)
   {
     error("Must be at the nodes in order for us to remove elements.");
     return;
@@ -157,7 +157,7 @@ void RemoveInteriorTets::execute()
   msgStream_ << "RemoveInteriorTets: ncells="<<count<<"\n";
 
   // copy the fdata for valid nodes
-  TetVolField<Vector> *tv_new = scinew TetVolField<Vector>(new_mesh, Field::NODE);
+  TetVolField<Vector> *tv_new = scinew TetVolField<Vector>(new_mesh,1);
   count=0;
   old_mesh->begin(nb);
   while(nb!=ne) {

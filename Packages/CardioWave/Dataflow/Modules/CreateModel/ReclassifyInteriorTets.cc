@@ -74,7 +74,7 @@ void ReclassifyInteriorTets::execute(){
     return;
   }
   
-  if (tv_old->data_at() != Field::CELL) {
+  if (tv_old->basis_order() != 0) {
     error("Data must be at the cells for reclassification.");
     return;
   }
@@ -91,7 +91,7 @@ void ReclassifyInteriorTets::execute(){
   int tag = atoi(tag_.get().c_str());
 
   // copy the fdata for valid nodes
-  TetVolField<Vector> *tv_new = scinew TetVolField<Vector>(mesh, Field::CELL);
+  TetVolField<Vector> *tv_new = scinew TetVolField<Vector>(mesh, 0 );
 
   // find the tets with centroid far from their nodes
   TetVolMesh::Cell::iterator cb, ce; mesh->begin(cb); mesh->end(ce);
