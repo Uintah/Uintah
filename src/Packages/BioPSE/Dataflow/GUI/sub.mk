@@ -30,6 +30,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ConductivitySearch.tcl\
 	$(SRCDIR)/DipoleSearch.tcl\
 	$(SRCDIR)/SetupFEMatrix.tcl\
+	$(SRCDIR)/ShowDipoles.tcl\
 
 #[INSERT NEW TCL FILE HERE]
 
