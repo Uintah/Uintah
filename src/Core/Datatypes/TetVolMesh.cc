@@ -12,11 +12,16 @@
  */
 
 #include <Core/Datatypes/TetVolMesh.h>
-
+#include <Core/Malloc/Allocator.h>
 
 namespace SCIRun {
 
-PersistentTypeID TetVolMesh::type_id("TetVolMesh", "MeshBase", NULL);
+Persistent* make_TetVolMesh() {
+  return scinew TetVolMesh;
+}
+
+PersistentTypeID TetVolMesh::type_id("TetVolMesh", "MeshBase", 
+				     make_TetVolMesh);
 
 const string
 TetVolMesh::type_name(int)
@@ -56,38 +61,50 @@ TetVolMesh::get_bounding_box() const
   }
   return result;
 }
-#if 0
+
+void 
+TetVolMesh::hash_edge(node_index n1, node_index n2, 
+		      cell_index ci, hash_set<Edge, EdgeHash> &table) const {
+  Edge e;
+  e.nodes_[0] = n1;
+  e.nodes_[1] = n2;
+  hash_set<Edge, EdgeHash>::iterator iter = table.find(e);
+  if (iter == table.end()) {
+    table.insert(e); // insert for the first time
+  } else {
+    Edge e = *iter;
+    e.cells_.push_back(ci); // add this cell
+    table.erase(iter);
+    table.insert(e);
+  }
+}
+
 void 
 TetVolMesh::compute_edges()
 {
+  hash_set<Edge, EdgeHash> table;
+
   cell_iterator ci = cell_begin();
-  while (ci != cell_end())
-  {
+  while (ci != cell_end()) {
     node_array arr;
     get_nodes(arr, *ci); ++ci;
-    pair<node_index, node_index> e;
-    e.first  = arr[0];
-    e.second = arr[1];
-    // hash me
-    e.first  = arr[0];
-    e.second = arr[2];
-    // hash me
-    e.first  = arr[0];
-    e.second = arr[3];
-    // hash me
-    e.first  = arr[1];
-    e.second = arr[1];
-    // hash me
-    e.first  = arr[1];
-    e.second = arr[2];
-    // hash me
-    e.first  = arr[1];
-    e.second = arr[3];
-    // hash me
+    hash_edge(arr[0], arr[1], *ci, table);
+    hash_edge(arr[0], arr[2], *ci, table);
+    hash_edge(arr[0], arr[3], *ci, table);
+    hash_edge(arr[1], arr[1], *ci, table);
+    hash_edge(arr[1], arr[2], *ci, table);
+    hash_edge(arr[1], arr[3], *ci, table);
   }
-  return result;
+  // dump edges into the edges_ container.
+  edges_.resize(table.size());
+  vector<Edge>::iterator              e_iter = edges_.begin();
+  hash_set<Edge, EdgeHash>::iterator ht_iter = table.begin();
+  while (ht_iter != table.end()) {
+    *e_iter = *ht_iter;
+    ++e_iter; ++ht_iter;
+  }
+  
 }
-#endif
 
 TetVolMesh::node_iterator
 TetVolMesh::node_begin() const
