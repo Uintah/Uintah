@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Ports/Regridder.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Core/Geometry/IntVector.h>
 #include <vector>
@@ -56,6 +57,8 @@ WARNING
     RegridderCommon(const ProcessorGroup* pg);
     virtual ~RegridderCommon();
 
+    virtual GridP Regrid (const GridP& origGrid, DataWarehouse* dw);
+
     //! Initialize with regridding parameters from ups file
     virtual void problemSetup(const ProblemSpecP& params,
 			      const GridP& grid,
@@ -79,6 +82,7 @@ WARNING
     int d_cellCreationDilation;
     int d_cellDeletionDilation;
     int d_minBoundaryCells; //! min # of cells to be between levels' boundaries
+    int d_filterType;
 
     //! ratio to divide each patch (inner vector is for x,y,z ratio, 
     //! outer vector is a subsequent value per level)
@@ -90,10 +94,6 @@ WARNING
     SizeList patch_num;
     SizeList patch_size;
 
-    vector<IndexList> cell_error;
-    vector<IndexList> cell_error_create;
-    vector<IndexList> cell_error_delete;
-    vector<IndexList> cell_error_boundary;
 
     vector<IndexList> patch_active;
     vector<IndexList> patch_created;
@@ -114,7 +114,7 @@ WARNING
     IntVector Mod     (const IntVector& a, const IntVector& b);
     IntVector Ceil    (const Vector& a);
 
-    void Dilate( IndexList& flaggedCells, IndexList& dilatedflaggedCells, int filterType );
+    void Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& dilatedFlaggedCells, int filterType, int depth );
   };
 
 } // End namespace Uintah
