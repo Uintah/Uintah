@@ -138,28 +138,26 @@ itcl_class PSECommon_Fields_GenField {
 
 	pack $w.f.r.functions
 
+
+	# Attribute Type
+	frame $w.f.r.attrib
+	radiobutton $w.f.r.attrib.flat -text Flat -variable $this-attribtype -value 1
+	pack $w.f.r.attrib.flat -side left
+	radiobutton $w.f.r.attrib.accel -text Accel -variable $this-attribtype -value 2
+	pack $w.f.r.attrib.accel -side left
+	radiobutton $w.f.r.attrib.brick -text Brick -variable $this-attribtype -value 3
+	pack $w.f.r.attrib.brick -side left
+	radiobutton $w.f.r.attrib.constant -text Constant -variable $this-attribtype -value 4
+	pack $w.f.r.attrib.constant -side left
+	pack $w.f.r.attrib -side top -fill x
+
+	# Structured or Unstructured geometry?
 	frame $w.f.r.geom
 	radiobutton $w.f.r.geom.structured -text Structured -variable $this-geomtype -value 1
 	radiobutton $w.f.r.geom.unstructured -text Unstructured -variable $this-geomtype -value 2
 	pack $w.f.r.geom.structured -side left
 	pack $w.f.r.geom.unstructured -side right
 	pack $w.f.r.geom -side top -fill x
-
-	frame $w.f.r.attrib
-
-	radiobutton $w.f.r.attrib.flat -text Flat -variable $this-attribtype -value 1
-	pack $w.f.r.attrib.flat -side left
-
-	radiobutton $w.f.r.attrib.accel -text Accel -variable $this-attribtype -value 2
-	pack $w.f.r.attrib.accel -side left
-
-	radiobutton $w.f.r.attrib.brick -text Brick -variable $this-attribtype -value 3
-	pack $w.f.r.attrib.brick -side left
-
-	radiobutton $w.f.r.attrib.constant -text Constant -variable $this-attribtype -value 4
-	pack $w.f.r.attrib.constant -side left
-
-	pack $w.f.r.attrib -side top -fill x
 
 	make_entry $w.f.r.nx "X Sample Size" $this-nx "$this-c needexecute"
 	make_entry $w.f.r.ny "Y Sample Size" $this-ny "$this-c needexecute"

@@ -25,6 +25,7 @@
 #include <SCICore/Datatypes/GenSField.h>
 #include <SCICore/Datatypes/GenVField.h>
 #include <SCICore/Datatypes/LatticeGeom.h>
+#include <SCICore/Datatypes/IrregLatticeGeom.h> // Test
 #include <SCICore/Datatypes/MeshGeom.h>
 #include <SCICore/Datatypes/MeshGeom.h>
 #include <SCICore/Datatypes/FlatAttrib.h>
@@ -271,7 +272,13 @@ GenField::send_scalar_field()
   const Point start(tcl_sx.get(), tcl_sy.get(), tcl_sz.get());
   const Point end(tcl_ex.get(), tcl_ey.get(), tcl_ez.get());
   
-  LatticeGeom *geom = new LatticeGeom(x, y, z, start, end);
+  LatticeGeom *geom;
+
+  if (geomtype.get() == 2) {
+    geom = new IrregLatticeGeom(x, y, z, start, end);
+  } else {
+    geom = new LatticeGeom(x, y, z, start, end);
+  }
 
   // Create attrib.
   const int mattribtype = attribtype.get();
@@ -298,6 +305,13 @@ GenField::send_scalar_field()
   fill(attrib, geom, analyt);
 
   dbg << "Attrib in Genfield:\n" << attrib->getInfo() << endl;
+
+  dbg << "Geometry in in Genfield:\n" << geom->getInfo() << endl;
+  geom->getUnscaledTransform().print();
+  geom->getUnscaledTransform().printi();
+  ((Transform &)(geom->getTransform())).print();
+  ((Transform &)(geom->getTransform())).printi();
+
 
   // Create index mapping.
   GenSField<double, LatticeGeom> *isf =

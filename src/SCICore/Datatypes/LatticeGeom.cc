@@ -149,6 +149,17 @@ LatticeGeom::getPoint(int x, int y, int z)
 }
 
 
+void
+LatticeGeom::locate(const Point &p, int &i, int &j, int &k)
+{
+  Point r;
+  itransform(p, r);
+  i = r.x() + 0.5;
+  j = r.y() + 0.5;
+  k = r.z() + 0.5;
+}
+
+
 #if 0
 bool LatticeGeom::locate(const Point& p, int& ix, int& iy, int& iz){
   Vector pn=p-d_bbox.min();

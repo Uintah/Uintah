@@ -60,6 +60,7 @@ public:
 private:
 };
 
+
 class EdgeSimp {
 public:
   EdgeSimp();
@@ -79,6 +80,7 @@ public:
 private:
 };
 
+
 class FaceSimp {
 public:
   FaceSimp();
@@ -89,6 +91,7 @@ public:
   int neighbors[3];
 private:
 };
+
   
 class TetSimp {
 public:
@@ -102,6 +105,7 @@ public:
 private:
 
 };
+
 
 
 class SCICORESHARE UnstructuredGeom : public Geom
