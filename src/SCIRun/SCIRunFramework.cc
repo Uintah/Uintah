@@ -39,6 +39,7 @@
  */
 #include <sci_defs/babel_defs.h>
 #include <SCIRun/SCIRunFramework.h>
+#include <SCIRun/TypeMap.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/ComponentEvent.h>
 #include <SCIRun/Internal/ComponentEventService.h>
@@ -69,24 +70,20 @@ namespace SCIRun {
 SCIRunFramework::SCIRunFramework()
   //:d_slave_sema("Wait for a slave to regester Semaphore",0)
 {
-  models.push_back(internalServices=new InternalComponentModel(this));
-  models.push_back(dflow=new SCIRunComponentModel(this));
-  models.push_back(cca=new CCAComponentModel(this));
+  models.push_back(internalServices = new InternalComponentModel(this));
+  models.push_back(dflow = new SCIRunComponentModel(this));
+  models.push_back(cca = new CCAComponentModel(this));
 #if HAVE_BABEL
   models.push_back(new BridgeComponentModel(this));
-  models.push_back(babel=new BabelComponentModel(this));
+  models.push_back(babel = new BabelComponentModel(this));
 #endif
-  models.push_back(vtk=new VtkComponentModel(this));
+  models.push_back(vtk = new VtkComponentModel(this));
 }
 
 SCIRunFramework::~SCIRunFramework()
 {
-  std::cerr << "~SCIRunFramework called!" << std::endl;;
+  std::cerr << "~SCIRunFramework called!" << std::endl;
   abort();
-  for(std::vector<ComponentModel*>::iterator iter=models.begin();
-      iter != models.end(); iter++) {
-    delete *iter;
-  }
 }
 
 sci::cca::Services::pointer
@@ -102,60 +99,61 @@ SCIRunFramework::createComponentInstance(const std::string& name,
 					 const std::string& t,
 					 const sci::cca::TypeMap::pointer properties)
 {
-  std::string type=t;
-  // See if the type is of the form:
-  //   model:name
-  // If so, extract the model and look up that component specifically.
-  // Otherwise, look at all models for that component
-  ComponentModel* mod=0;
-  unsigned int firstColon = type.find(':');
-  if (firstColon < type.size())
-    {
-    std::string modelName = type.substr(0, firstColon);
-    type = type.substr(firstColon+1);
-    // This is a linear search, but we don't expect to have
-    // a ton of models, nor do we expect instantiation to
-    // occur often
-    for(std::vector<ComponentModel*>::iterator iter=models.begin();
-        iter != models.end(); iter++) {
-      ComponentModel* model = *iter;
-      if(model->prefixName == modelName) {
-        mod=model;
-        break;
-      }
+    std::string type = t;
+    // See if the type is of the form:
+    //   model:name
+    // If so, extract the model and look up that component specifically.
+    // Otherwise, look at all models for that component
+    ComponentModel* mod = 0;
+    unsigned int firstColon = type.find(':');
+    if (firstColon < type.size()) {
+	std::string modelName = type.substr(0, firstColon);
+	type = type.substr(firstColon+1);
+	// This is a linear search, but we don't expect to have
+	// a ton of models, nor do we expect instantiation to
+	// occur often
+	for (std::vector<ComponentModel*>::iterator iter = models.begin();
+	    iter != models.end(); iter++) {
+	    ComponentModel* model = *iter;
+	    if (model->getPrefixName() == modelName) {
+		mod = model;
+		break;
+	    }
+	}
+    } else {
+	int count = 0;
+	for (std::vector<ComponentModel*>::iterator iter = models.begin();
+	    iter != models.end(); iter++) {
+	  ComponentModel* model = *iter;
+	  if (model->haveComponent(type)) {
+	    count++;
+	    mod = model;
+	  }
+        }
+        if (count > 1) {
+	  std::cerr << "More than one component model wants to build " << type << '\n';
+	  throw InternalError("Need CCA Exception here");
+	}
     }
-  } else {
-    int count=0;
-    for(std::vector<ComponentModel*>::iterator iter=models.begin();
-        iter != models.end(); iter++) {
-      ComponentModel* model = *iter;
-      if(model->haveComponent(type)) {
-        count++;
-        mod=model;
-      }
-    }
-    if(count > 1) {
-      std::cerr << "More than one component model wants to build " << type << '\n';
-      throw InternalError("Need CCA Exception here");
-    }
-  }
-  if(!mod) {
+
+  if (!mod) {
     std::cerr << "No component model wants to build " << type << std::endl;
     return ComponentID::pointer(0);
   }
   ComponentInstance* ci;
-  if(mod->getName()=="CCA") {
+  if (mod->getName() == "CCA") {
     ci = ((CCAComponentModel*)mod)->createInstance(name, type, properties);
   } else {
     ci = mod->createInstance(name, type);
   }
-  if(!ci) {
+  if (!ci) {
     std::cerr << "Error: failed to create ComponentInstance" << std::endl;;
     return ComponentID::pointer(0);
   }
   registerComponent(ci, name);
 
-  sci::cca::ComponentID::pointer cid = ComponentID::pointer(new ComponentID(this, ci->instanceName));
+  sci::cca::ComponentID::pointer cid =
+         ComponentID::pointer(new ComponentID(this, ci->instanceName));
 //ComponentID::pointer()
   compIDs.push_back(cid);
   emitComponentEvent(new ComponentEvent(sci::cca::ports::ComponentInstantiated,
@@ -172,57 +170,55 @@ SCIRunFramework::destroyComponentInstance(const sci::cca::ComponentID::pointer
   //any other component
 
   //#1 remove cid from compIDs
-  for(unsigned i=0; i<compIDs.size(); i++)
-    {
-    if(compIDs[i]==cid)
-      {
+  for (unsigned i = 0; i<compIDs.size(); i++) {
+    if (compIDs[i] == cid) {
       compIDs.erase(compIDs.begin()+i);
       break;
-      }
     }
+  }
   
   //#2 unregister the component instance
-  ComponentInstance *ci=unregisterComponent(cid->getInstanceName());
+  ComponentInstance *ci = unregisterComponent(cid->getInstanceName());
   
   //#3 find the associated component model
-  std::string type=ci->className;
+  std::string type = ci->className;
   // See if the type is of the form:
   //   model:name
   // If so, extract the model and look up that component specifically.
   // Otherwise, look at all models for that component
-  ComponentModel* mod=0;
+  ComponentModel* mod = 0;
   unsigned int firstColon = type.find(':');
-  if(firstColon < type.size()){
+  if (firstColon < type.size()) {
     std::string modelName = type.substr(0, firstColon);
     type = type.substr(firstColon+1);
     // This is a linear search, but we don't expect to have
     // a ton of models, nor do we expect instantiation to
     // occur often
-    for(std::vector<ComponentModel*>::iterator iter=models.begin();
+    for (std::vector<ComponentModel*>::iterator iter = models.begin();
 	iter != models.end(); iter++) {
       ComponentModel* model = *iter;
-      if(model->prefixName == modelName){
-	mod=model;
+      if (model->getPrefixName() == modelName) {
+	mod = model;
 	break;
       }
     }
   } 
   else {
-    int count=0;
-    for(std::vector<ComponentModel*>::iterator iter=models.begin();
+    int count = 0;
+    for (std::vector<ComponentModel*>::iterator iter = models.begin();
 	iter != models.end(); iter++) {
       ComponentModel* model = *iter;
-      if(model->haveComponent(type)){
+      if (model->haveComponent(type)) {
 	count++;
-	mod=model;
+	mod = model;
       }
     }
-    if(count > 1){
+    if (count > 1) {
       std::cerr << "More than one component model wants to build " << type << '\n';
       throw InternalError("Need CCA Exception here");
     }
   }
-  if(!mod){
+  if (!mod) {
     std::cerr << "No component model matches component" << type << '\n';
     return;
   }
@@ -236,13 +232,13 @@ void SCIRunFramework::registerComponent(ComponentInstance* ci,
 					const std::string& name)
 {
   std::string goodname = name;
-  int count=0;
+  int count = 0;
   while(activeInstances.find(goodname) != activeInstances.end()) {
     std::ostringstream newname;
     newname << name << "_" << count++;
-    goodname=newname.str();
+    goodname = newname.str();
   }
-  ci->framework=this;
+  ci->framework = this;
   ci->instanceName = goodname;
   activeInstances[ci->instanceName] = ci;
 }
@@ -252,8 +248,8 @@ SCIRunFramework::unregisterComponent(const std::string& instanceName)
 {
   std::map<std::string, ComponentInstance*>::iterator found
     = activeInstances.find(instanceName);
-  if(found != activeInstances.end()) {
-    ComponentInstance *ci=found->second;
+  if (found != activeInstances.end()) {
+    ComponentInstance *ci = found->second;
     activeInstances.erase(found);
     return ci;
   } else {
@@ -267,7 +263,7 @@ ComponentInstance*
 SCIRunFramework::lookupComponent(const std::string& name)
 {
   std::map<std::string, ComponentInstance*>::iterator iter = activeInstances.find(name);
-  if(iter == activeInstances.end()) {
+  if (iter == activeInstances.end()) {
     return 0;
   } else {
     return iter->second;
@@ -277,9 +273,11 @@ SCIRunFramework::lookupComponent(const std::string& name)
 sci::cca::ComponentID::pointer
 SCIRunFramework::lookupComponentID(const std::string& componentInstanceName)
 {
-  for(unsigned i=0; i<compIDs.size();i++)
-    if(componentInstanceName==compIDs[i]->getInstanceName()) 
+  for (unsigned i = 0; i<compIDs.size();i++) {
+    if (componentInstanceName == compIDs[i]->getInstanceName()) {
       return compIDs[i];
+    }
+  }
   return sci::cca::ComponentID::pointer(0);
 }
      
@@ -303,25 +301,52 @@ void
 SCIRunFramework::listAllComponentTypes(std::vector<ComponentDescription*>& list,
 				       bool listInternal)
 {
-  for(std::vector<ComponentModel*>::iterator iter=models.begin();
-      iter != models.end(); iter++)
-    (*iter)->listAllComponentTypes(list, listInternal);
+    for (std::vector<ComponentModel*>::iterator iter = models.begin();
+	    iter != models.end();
+	    iter++) {
+	(*iter)->listAllComponentTypes(list, listInternal);
+    }
+}
+
+ComponentModel*
+SCIRunFramework::lookupComponentModel(const std::string& name)
+{
+    for (std::vector<ComponentModel*>::iterator iter = models.begin();
+	    iter != models.end(); iter++) {
+	if ((*iter)->getName() == name) {
+	    return *iter;
+	}
+    }
+    return 0;
 }
 
 sci::cca::TypeMap::pointer SCIRunFramework::createTypeMap()
 {
-  std::cerr << "SCIRunFramework::createTypeMap not finished\n";
-  return sci::cca::TypeMap::pointer(0);
+  // return empty TypeMap according to CCA spec
+  return sci::cca::TypeMap::pointer(new TypeMap);
 }
 
 void SCIRunFramework::releaseServices(const sci::cca::Services::pointer& svc)
 {
-  std::cerr << "SCIRunFramework::releaseServices not finished\n";
+  // services handle (svc) no longer needed
+  // delete this service from the framework
+  cca->destroyServices(svc);
+  // invalidate any ComponentIDs
+  // and ConnectionIDs
 }
 
 void SCIRunFramework::shutdownFramework()
 {
-  std::cerr << "SCIRunFramework::shutdownFramework not finished\n";
+    // throw CCAException if the framework has already been shutdown
+
+    // cleanup models
+    std::cerr << "SCIRunFramework::shutdownFramework not finished\n";
+    for (std::vector<ComponentModel*>::iterator iter = models.begin();
+	iter != models.end(); iter++) {
+	delete *iter;
+    }
+
+    // shutdown proxy frameworks
 }
 
 sci::cca::AbstractFramework::pointer SCIRunFramework::createEmptyFramework()
@@ -346,7 +371,6 @@ int SCIRunFramework::unregisterLoader(const std::string &loaderName)
   return 0;
 }
 
-
 void
 SCIRunFramework::emitComponentEvent(ComponentEvent* event)
 {
@@ -365,7 +389,7 @@ SCIRunFramework::emitComponentEvent(ComponentEvent* event)
   }
 }
 
-
+#if 0
 // do not delete the following 2 methods
 /* 
 void SCIRunFramework::share(const sci::cca::Services::pointer &svc)
@@ -395,7 +419,7 @@ SCIRunFramework::createComponent(const std::string& name, const std::string& t)
     for(std::vector<ComponentModel*>::iterator iter=models.begin();
 	iter != models.end(); iter++) {
       ComponentModel* model = *iter;
-      if(model->prefixName == modelName){
+      if(model->getPrefixName() == modelName){
 	mod=model;
 	break;
       }
@@ -422,8 +446,8 @@ SCIRunFramework::createComponent(const std::string& name, const std::string& t)
   }
   return  mod->createComponent(name, type);
 }
-
 */
+#endif
 
 
 } // end namespace SCIRun

@@ -133,7 +133,7 @@ public:
       Services  object. */
   virtual void releaseServices(const sci::cca::Services::pointer& svc);
 
-  /** ? */
+  /** Tells the framework it is no longer needed and to clean up after itself. */  
   virtual void shutdownFramework();
 
   /** Creates a new SCIRunFramework instance.  The new framework instance is
@@ -196,7 +196,7 @@ public:
   ComponentInstance * unregisterComponent(const std::string& instanceName);
 
   /** This method is unimplemented. */
-  void shutdownComponent(const std::string& name);
+  //void shutdownComponent(const std::string& name);
 
   /** Compiles a list of all ComponentDescriptions in all ComponentModels
       contained in this framework.*/
@@ -221,6 +221,9 @@ public:
   /** ? */
   sci::cca::ComponentID::pointer lookupComponentID(const std::string&
                                                    componentInstanceName);
+
+  /** ? */
+  ComponentModel* lookupComponentModel(const std::string& name);
 
   //do not delete the following 2 lines
   //void share(const sci::cca::Services::pointer &svc);
