@@ -1,0 +1,205 @@
+#!/usr/local/bin/wish -f
+
+if {![info exists sci_root]} {
+    set sci_root ..
+}
+
+source $sci_root/project/defaults.tcl
+
+set modname_font "-Adobe-Helvetica-bold-R-Normal-*-120-*"
+set ui_font "-Adobe-Helvetica-medium-R-Normal-*-120-*"
+set time_font "-Adobe-Courier-Medium-R-Normal-*-100-*"
+
+proc makeNetworkEditor {} {
+
+    frame .main_menu -relief raised -borderwidth 3
+    pack .main_menu -fill x
+    menubutton .main_menu.file -text "File" -underline 0 \
+	-menu .main_menu.file.menu
+    menu .main_menu.file.menu
+    .main_menu.file.menu add command -label "Quit" -underline 0
+    
+    menubutton .main_menu.stats -text "Statistics" -underline 0 \
+	-menu .main_menu.stats.menu
+    menu .main_menu.stats.menu
+    .main_menu.stats.menu add command -label "Memory..." -underline 0 \
+	    -command showMemStats
+    .main_menu.stats.menu add command -label "Threads..." -underline 0 \
+	    -command showThreadStats
+
+    menubutton .main_menu.help -text "Help" -underline 0 \
+	-menu .main_menu.help.menu
+    menu .main_menu.help.menu
+    .main_menu.help.menu add command -label "Help..." -underline 0
+
+    pack .main_menu.file .main_menu.stats -side left
+    pack .main_menu.help -side right
+
+    tk_menuBar .main_menu .main_menu.file .main_menu.stats .main_menu.help
+
+    frame .l
+    pack .l -anchor w
+    
+    frame .l.lists -relief groove -borderwidth 4
+    pack .l.lists -padx 5 -pady 5 -ipadx 2 -ipady 2 -side left -anchor w
+    
+    frame .l.lists.l1
+    pack .l.lists.l1 -side left -padx 2 -pady 2
+    label .l.lists.l1.title -text "Category"
+    frame .l.lists.l1.f
+    pack .l.lists.l1.title .l.lists.l1.f -anchor w
+    scrollbar .l.lists.l1.f.scroll -relief sunken \
+	-command ".l.lists.l1.f.list yview" \
+	-foreground plum2 -activeforeground SteelBlue2
+    listbox .l.lists.l1.f.list -yscroll ".l.lists.l1.f.scroll set" \
+	-relief sunken -geometry 20x4 -exportselection false
+    pack .l.lists.l1.f.scroll -side right -fill y -padx 2
+    pack .l.lists.l1.f.list -side left -expand yes -fill both
+    
+    global netedit_categorylist
+    set netedit_categorylist .l.lists.l1.f.list
+    
+    frame .l.lists.l2
+    pack .l.lists.l2 -side left -padx 2 -pady 2
+    label .l.lists.l2.title -text "Modules"
+    frame .l.lists.l2.f
+    pack .l.lists.l2.title .l.lists.l2.f -anchor w
+    scrollbar .l.lists.l2.f.scroll -relief sunken \
+	-command ".l.lists.l2.f.list yview" \
+	-foreground plum2 -activeforeground SteelBlue2
+    listbox .l.lists.l2.f.list -yscroll ".l.lists.l2.f.scroll set" \
+	-relief sunken -geometry 20x4 -exportselection false
+    pack .l.lists.l2.f.scroll -side right -fill y -padx 2
+    pack .l.lists.l2.f.list -side left -expand yes -fill both
+    global netedit_modulelist
+    set netedit_modulelist .l.lists.l2.f.list
+    
+    frame .l.all_lists -relief groove -borderwidth 4
+    pack .l.all_lists -side top -padx 5 -pady 5 -ipadx 2 -ipady 2
+    frame .l.all_lists.l
+    pack .l.all_lists.l -side left -padx 2 -pady 2
+    label .l.all_lists.l.title -text "Complete List:"
+    frame .l.all_lists.l.f
+    pack .l.all_lists.l.title .l.all_lists.l.f -anchor w
+    
+    scrollbar .l.all_lists.l.f.scroll -relief sunken \
+	-command ".l.all_lists.l.f.list yview" \
+	-foreground plum2 -activeforeground SteelBlue2
+    listbox .l.all_lists.l.f.list -yscroll ".l.all_lists.l.f.scroll set" \
+	-relief sunken -geometry 20x4 -exportselection false
+    pack .l.all_lists.l.f.scroll -side right -fill y -padx 2
+    pack .l.all_lists.l.f.list -side left -expand yes -fill both
+    global netedit_completelist
+    set netedit_completelist .l.all_lists.l.f.list
+    
+    frame .t -borderwidth 5
+    pack .t
+    text .t.text -relief sunken -bd 2 -yscrollcommand ".t.s set" \
+	-height 3 -width 100
+    scrollbar .t.s -relief sunken -command ".t.text yview" \
+	-foreground plum2 -activeforeground SteelBlue2 
+    pack .t.s -side right -expand yes -fill y -padx 4
+    pack .t.text -expand yes -fill x
+    global netedit_errortext
+    set netedit_errortext .t.text
+    
+    frame .cframe -borderwidth 5
+    pack .cframe -side top -expand yes -fill both
+    
+    frame .cframe.f -relief sunken -borderwidth 3
+    canvas .cframe.f.canvas -scrollregion {0c 0c 100c 100c} \
+	-xscroll ".cframe.hscroll set" -yscroll ".cframe.vscroll set" \
+	-bg "#224488" -width 20c -height 15c
+    scrollbar .cframe.vscroll -relief sunken \
+	-command ".cframe.f.canvas yview" \
+	-foreground plum2 -activeforeground SteelBlue2
+    scrollbar .cframe.hscroll -orient horizontal -relief sunken \
+	-command ".cframe.f.canvas xview" \
+	-foreground plum2 -activeforeground SteelBlue2
+    pack .cframe.vscroll -side right -fill y -padx 4
+    pack .cframe.hscroll -side bottom -fill x -pady 4
+    pack .cframe.f -expand yes -fill both
+    pack .cframe.f.canvas -expand yes -fill both
+
+    updateCategoryList
+    set all_modules [netedit completelist]
+    foreach i $all_modules {
+	$netedit_completelist insert end $i
+    }
+
+    bind $netedit_completelist <Double-1> \
+	    "addModule \[%W get \[%W nearest %y\]\]"
+    bind $netedit_modulelist <Double-1> \
+	    "addModule \[%W get \[%W nearest %y\]\]"
+    bind $netedit_categorylist <Button-1> \
+	    "showCategoryListN \[$netedit_categorylist nearest %y\]"
+    global netedit_canvas
+    set netedit_canvas .cframe.f.canvas
+}
+
+proc updateCategoryList {} {
+    global netedit_categorylist
+    $netedit_categorylist delete 0 end
+    set cats [netedit catlist]
+    global module_cats
+    catch {unset module_cats}
+    set firstcat [lindex [lindex $cats 0] 0]
+    foreach i $cats {
+	# The first item in the list is the category name
+	set name [lindex $i 0]
+	set mods [lindex $i 1]
+	set module_cats($name) $mods
+	$netedit_categorylist insert end $name
+    }
+    showCategoryList $firstcat
+    $netedit_categorylist select from 0
+}
+
+proc showCategoryList {name} {
+    global netedit_modulelist
+    global module_cats
+    set mods $module_cats($name)
+    $netedit_modulelist delete 0 end
+    foreach i $mods {
+	$netedit_modulelist insert end $i
+    }
+    $netedit_modulelist select from 0
+}
+
+proc showCategoryListN {which} {
+    global netedit_categorylist
+    $netedit_categorylist select from $which
+    set name [$netedit_categorylist get $which]
+    showCategoryList $name
+}
+
+proc moveModule {name} {
+    
+}
+
+proc addModule {name} {
+    set modid [netedit addmodule $name]
+    makeModule $modid $name .cframe.f.canvas
+}
+
+# Utility procedures to support dragging of items.
+
+proc itemStartDrag {c x y} {
+    global lastX lastY
+    set lastX [$c canvasx $x]
+    set lastY [$c canvasy $y]
+}
+
+proc itemDrag {c x y} {
+    global lastX lastY
+    set x [$c canvasx $x]
+    set y [$c canvasy $y]
+    $c move current [expr $x-$lastX] [expr $y-$lastY]
+    set lastX $x
+    set lastY $y
+}
+
+source $sci_root/project/Filebox.tcl
+source $sci_root/project/MemStats.tcl
+source $sci_root/project/ThreadStats.tcl
+source $sci_root/project/Module.tcl

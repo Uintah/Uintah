@@ -1,0 +1,102 @@
+
+/*
+ * imake configuration file for the SCI group development
+ * tree.
+ *
+ * Written by Steven G. Parker Feb 1994
+ */
+#ifndef SCI_SCI_H
+#define SCI_SCI_H 1
+
+#include <config/imake.h>
+
+INCLUDES = -I$(TOP) $(LOCALINCLUDES)
+CCC = SCI_CppCompiler
+CCFLAGS = SCI_CppFlags $(INCLUDES)
+CC = SCI_CCompiler
+CFLAGS = SCI_CFlags $(INCLUDES)
+DEFINES = SCI_AssertFlags
+LOADER = SCI_Linker
+SIZE = SCI_Size
+ARR = ar
+ARFLAGS_REPLACE = rcv
+#ifdef SCI_LinkerNeedsCppFlags
+#define ldflags2 SCI_CppFlags $(INCLUDES)
+#else
+#define ldflags2
+#endif
+LDOPTIONS = SCI_LinkerFlags ldflags2
+#undef ldflags2
+CPPINCLUDES = SCI_CppIncludeLocation
+OTHERINCLUDES = -I$(CPPINCLUDES)
+
+.SUFFIXES: .cc
+#ifndef NO_SCI_CC_TARGET
+.cc.o:
+	$(CCC) $(CCFLAGS) -c $<
+#endif
+.cc.a:
+	$(CCC) -c $(CCFLAGS) $<
+	$(ARR) $(ARFLAGS_REPLACE) $@ $*.o
+	rm -f $*.o
+
+
+default: all
+
+#define PassCDebugFlags
+
+IMAKE_DEFINES = -I$(TOP)/.. -I../$(TOP)/..
+
+#ifdef SCI_MakeTemplateLib
+#define SCI_TemplateCommand(objs, libs) \
+	 SCI_MakeTemplateLib SCI_TemplateDir objs libs @@	
+#else
+#define SCI_TemplateCommand(objs, libs)
+#endif
+
+#define SCIProgramTarget(program, objs, libs, ldflags) 		@@\
+AllTarget(program)						@@\
+								@@\
+program: objs libs SCI_LinkerLib				@@\
+	RemoveTargetProgram($@)					@@\
+	SCI_TemplateCommand(objs, libs)\
+$(LOADER) -o $@ $(LDOPTIONS) objs libs SCI_TemplateLib SCI_LinkerLib ldflags @@\
+	$(SIZE) $@						@@\
+								@@\
+InstallProgram(program, $(BINDIR))				@@\
+								@@\
+clean::								@@\
+	$(RM) program
+
+
+#define SCIDependTarget(srcs)					@@\
+depend::							@@\
+	$(DEPEND) -s "# DO NOT DELETE" -- $(ALLDEFINES)	\	@@\
+		$(OTHERINCLUDES) $(LOCALINCLUDES) -- srcs
+
+
+#define SCISubdirs(subdirs)					@@\
+MakeSubdirs(subdirs)						@@\
+MakefileSubdirs(subdirs)					@@\
+DependSubdirs(subdirs)						@@\
+InstallSubdirs(subdirs)						@@\
+CleanSubdirs(subdirs)
+
+#define SCISubdirs2(subdirs)					@@\
+MakefileSubdirs(subdirs)					@@\
+DependSubdirs(subdirs)						@@\
+InstallSubdirs(subdirs)						@@\
+CleanSubdirs(subdirs)
+
+#define SCISubdirs3(subdirs)					@@\
+MakeSubdirs(subdirs)						@@\
+InstallSubdirs(subdirs)						@@\
+CleanSubdirs(subdirs)
+
+#define SCILibraryTarget(objs, lib)				@@\
+AllTarget(lib)							@@\
+
+lib:	objs
+
+#endif
+

@@ -1,0 +1,29 @@
+
+#define NO_SCI_CC_TARGET
+
+#include <config/sci.cf>
+
+LOCALINCLUDES = -I.. -I../../project -I../../../wrapper -I../../../wrapper/Mt
+MODULELIST = ../libmodules.a
+
+#ifdef SCI_MACHINE_LINUX
+OPENGLOBJS =
+OPENGLSRCS = 
+#else
+OPENGLOBJS = OpenGL.o
+OPENGLSRCS = OpenGL.cc
+#endif
+
+OBJS = Postscript.o  Raytracer.o  Salmon.o  Renderer.o  Roe.o  X11.o
+SRCS = Postscript.cc Raytracer.cc Salmon.cc Renderer.cc Roe.cc X11.cc
+
+.cc.o:
+	$(CCC) $(CCFLAGS) -c $<
+
+../modules.o: $(OBJS)
+	cd .. && make modules.o
+
+AllTarget(../modules.o)
+
+SCIDependTarget($(SRCS))
+

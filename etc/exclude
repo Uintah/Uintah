@@ -1,0 +1,12 @@
+project/modules/IsoSurface/mcube.h
+project/tcl/tkFScale
+lib/GL
+project/tcl/tk3.6
+project/tcl/tcl7.3
+project/util
+project/vfield
+templates
+wrapper
+.~
+xc/
+bugs/
