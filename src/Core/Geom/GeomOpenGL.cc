@@ -74,6 +74,7 @@
 #include <Core/Geom/GeomTexSlices.h>
 #include <Core/Geom/TexSquare.h>
 #include <Core/Geom/ColorMapTex.h>
+#include <Core/Geom/HistogramTex.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomTorus.h>
 #include <Core/Geom/GeomTransform.h>
@@ -4156,7 +4157,7 @@ void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
     cerr << "Init" << endl;
     di->dpy = XOpenDisplay( NULL );
     XFontStruct* fontInfo = XLoadQueryFont(di->dpy,
-    	 "-adobe-helvetica-bold-r-normal--10-100-75-75-p-60-iso8859-1");
+    	 "-adobe-helvetica-bold-r-normal-*-14-120-*-*-p-60-iso8859-1");
     if (fontInfo == NULL) {
       cerr << "GeomText: no font found\n";
       return;
@@ -4228,6 +4229,55 @@ void ColorMapTex::draw(DrawInfoOpenGL* di, Material* matl, double)
   } else {
     cerr<<"Some sort of texturing error\n";
   }
+  post_draw(di);
+}
+
+void HistogramTex::draw(DrawInfoOpenGL* di, Material* matl, double) 
+{
+  if(!pre_draw(di, matl, 0)) return;
+  static GLuint texName = 0;
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  if( !glIsTexture( texName ) ){
+    glGenTextures(1, &texName);
+    glBindTexture(GL_TEXTURE_1D, texName);
+  
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+    glTexImage1D( GL_TEXTURE_1D, 0, GL_RGB, 256, 0,
+		  GL_RGBA, GL_UNSIGNED_BYTE,texture );
+  } else {
+    glBindTexture(GL_TEXTURE_1D, texName);
+  }
+
+  int vp[4];
+  float proj[16];
+  glGetIntegerv( GL_VIEWPORT, vp );
+  glClearColor(0.0, 0.0, 0.0, 0.0);
+
+  glDisable(GL_CULL_FACE);
+  glDisable(GL_LIGHTING);
+  
+  double dx = 1.0/nbuckets;
+  double ddx = (b.x() - a.x())/nbuckets;
+  double y_max = log(float(1+buckets[max]));
+  
+  glColor3f(0.5,0.5,0.5);
+  glBegin( GL_QUADS );
+    for(int i = 0; i <nbuckets; i++){
+      float bval = log(float(1+buckets[i]));
+      glTexCoord2f(dx*i, 0.0); 
+      glVertex3f( a.x() + ddx*i, a.y(), a.z() );
+      glVertex3f( a.x() + ddx*(i+1), b.y(), b.z() );
+      glVertex3f( a.x() + ddx*(i+1), a.y() + (c.y()-a.y())*bval/y_max, c.z() );
+      glVertex3f( a.x() + ddx*(i+1), b.y() + (d.y()-b.y())*bval/y_max, d.z() );
+    }
+  glEnd();
+  glFlush();
+  glDisable(GL_TEXTURE_1D);
+  glEnable(GL_LIGHTING);
   post_draw(di);
 }
 
