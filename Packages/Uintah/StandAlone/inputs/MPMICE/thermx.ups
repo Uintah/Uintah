@@ -148,7 +148,7 @@
       <save label="p.volume"/>
       <save label="p.velocity"/>
       <save label="p.temperature"/>
-      <checkpoint interval="0.5" cycle="2"/>"
+      <checkpoint interval="0.002" cycle="2"/>"
    </DataArchiver>
 
    <Debug>
