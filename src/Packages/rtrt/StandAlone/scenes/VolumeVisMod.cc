@@ -94,7 +94,21 @@ void get_material(Array1<Color*> &matls, Array1<float> &alphas,
   for(int i=0;i<ncolors;i++){
     float frac=float(i)/(ncolors-1);
     matls[i] = new Color(spline(frac));
+#if 1
+      if (i>=28 && i<64)
+	alphas[i] = (i-28)*(0.1/36);
+      else if (i>=64 && i<100)
+	alphas[i] = (i-64)*(-0.1/36)+0.1;
+      else if (i>=156 && i<192)
+	alphas[i] = (i-156)*(1.0/36);
+      else if (i>=192 && i<228)
+	alphas[i] = (i-192)*(-1.0/36)+1.0;
+      else
+	alphas[i] = 0;
+      //      cout << "ALPHAS[i="<<i<<"] = "<<alphas[i]<<endl;
+#else
     alphas[i] = alpha_spline(frac);
+#endif
   }
 #else
   if (do_phong) {
@@ -133,7 +147,15 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   bool cut=false;
   bool do_phong = true;
   int ncolors=5000;
-
+  float t_inc = 1;
+  double spec_coeff = 64;
+  double ambient = 0.5;
+  double diffuse = 1.0;
+  double specular = 1.0;
+  float val=1;
+  float data_min_in = -1;
+  float data_max_in = -1;
+  
   for(int i=1;i<argc;i++){
     if(strcmp(argv[i], "-dim")==0){
       i++;
@@ -146,11 +168,15 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     else if (strcmp(argv[i], "-type")==0) {
       i++;
       if (strcmp(argv[i], "nrrd") == 0) {
-	scene_type = 5;
+	scene_type = 6;
 	i++;
 	nrrd_file = argv[i];
       } else {
 	scene_type = atoi(argv[i]);
+	if (scene_type == 5) {
+	  i++;
+	  val = atof(argv[i]);
+	}
       }
     } else if(strcmp(argv[i], "-cut")==0){
       cut=true;
@@ -159,16 +185,53 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     } else if(strcmp(argv[i], "-ncolors")==0){
       i++;
       ncolors = atoi(argv[i]);
+    } else if(strcmp(argv[i], "-tinc")==0){
+      i++;
+      t_inc = atof(argv[i]);
+    } else if(strcmp(argv[i], "-min")==0){
+      i++;
+      data_min_in = atof(argv[i]);
+    } else if(strcmp(argv[i], "-max")==0){
+      i++;
+      data_max_in = atof(argv[i]);
+    } else if(strcmp(argv[i], "-spow")==0){
+      i++;
+      spec_coeff = atof(argv[i]);
+    } else if(strcmp(argv[i], "-ambient")==0){
+      i++;
+      ambient = atof(argv[i]);
+    } else if(strcmp(argv[i], "-diffuse")==0){
+      i++;
+      diffuse = atof(argv[i]);
+    } else if(strcmp(argv[i], "-specular")==0){
+      i++;
+      specular = atof(argv[i]);
     } else {
       cerr << "Unknown option: " << argv[i] << '\n';
       cerr << "Valid options for scene: " << argv[0] << '\n';
       cerr << " -dim [int]x[int]x[int]";
+      cerr << " -type [int or \"nrrd\"]\n";
+      cerr << "\t\t0 - data = z\n";
+      cerr << "\t\t1 - data = y*z\n";
+      cerr << "\t\t2 - data = x*y*z\n";
+      cerr << "\t\t3 - data = y+z\n";
+      cerr << "\t\t4 - data = x+y+z\n";
+      cerr << "\t\t5 [val=float] - data = val\n";
+      cerr << "\t\tnrrd [path to nrrd file] (-dim parameter ignored)\n";
+      cerr << " -cut - turn on the cutting plane\n";
+      cerr << " -lam - use a lambertian surface\n";
+      cerr << " -ncolors [int] - the size of the transfer function\n";
+      cerr << " -tinc [float] - the number of samples per unit\n";
+      cerr << " -spow [float] - the spectral exponent\n";
+      cerr << " -ambient [float] - the ambient factor\n";
+      cerr << " -diffuse [float] - the diffuse factor\n";
+      cerr << " -specular [float] - the specular factor\n";
       return 0;
     }
   }
 
   // check the parameters
-  if (scene_type == 5)
+  if (scene_type == 6)
     if (nrrd_file == 0)
       // the file was not set
       scene_type = 0;
@@ -186,10 +249,15 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Array1<Color*> matls;
   Array1<float> alphas;
   get_material(matls,alphas,do_phong,ncolors);
+#if 0
+  cout << "alphas :\n";
+  for(unsigned int i = 0; i < alphas.size(); i++)
+    cout << "alphas[i="<<i<<"] = "<<alphas[i]<<endl;
+#endif
   BrickArray3<float> data;
   float data_min, data_max;
   Point minP, maxP;
-  if (scene_type == 5) {
+  if (scene_type == 6) {
     // Do the nrrd stuff
     Nrrd *n = nrrdNew();
     // load the nrrd in
@@ -243,6 +311,12 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     maxP = Point((nx - 1) * n->axis[0].spacing,
 		 (ny - 1) * n->axis[1].spacing,
 		 (nz - 1) * n->axis[2].spacing);
+    // lets normalize the dimensions to 1
+    Vector size = maxP - minP;
+    // find the biggest dimension
+    double max_dim = Max(Max(size.x(),size.y()),size.z());
+    maxP = ((maxP-minP)/max_dim).asPoint();
+    minP = Point(0,0,0);
     // copy the data into the brickArray
     cerr << "Number of data members = " << n->num << endl;
     float *p = (float*)n->data; // get the pointer to the raw data
@@ -284,6 +358,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	  case 4:
 	    data(x,y,z) = x+y+z;
 	    break;
+	  case 5:
+	    data(x,y,z) = val;
+	    break;
 	  }
 	}
       }
@@ -306,20 +383,32 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     case 4:
       data_max = (nx-1) + (ny-1) + (nz-1);
       break;
+    case 5:
+      data_min = val;
+      data_max = val;
+      break;
     }
     // set the physical dimensions of the data
     minP = Point(0,0,0);
-    maxP = Point(nx,ny,nz);
+    maxP = Point(1,1,1);
     cout << "dim = (" << nx << ", " << ny << ", " << nz << ")\n";
     cout << "total = " << nz * ny * nz << endl;
   }
-  
+
+  // override the min and max if it was passed in
+  if (data_min_in >= 0)
+    data_min = data_min_in;
+  if (data_max_in >= 0)
+    data_max = data_max_in;
+
+  cout << "minP = "<<minP<<", maxP = "<<maxP<<endl;
   Object* obj = (Object*) new VolumeVis(data, data_min, data_max,
 					nx, ny, nz,
 					minP, maxP,
 					matls, matls.size(),
 					alphas, alphas.size(),
-					64,0.5,1,1);
+					spec_coeff, ambient, diffuse,
+					specular, t_inc);
   
   if(cut){
     PlaneDpy* pd=new PlaneDpy(Vector(0,0,1), Point(0,0,0));
