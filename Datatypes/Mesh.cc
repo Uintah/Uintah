@@ -133,12 +133,22 @@ Mesh* Mesh::clone()
     return scinew Mesh(*this);
 }
 
-#define MESH_VERSION 2
+#define MESH_VERSION 4
 
 void Pio(Piostream& stream, NodeVersion1& node)
 {
     stream.begin_cheap_delim();
     Pio(stream, node.p);
+    stream.end_cheap_delim();
+}
+
+void Pio(Piostream& stream, ElementVersion1& elem)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, elem.n0);
+    Pio(stream, elem.n1);
+    Pio(stream, elem.n2);
+    Pio(stream, elem.n3);
     stream.end_cheap_delim();
 }
 
@@ -154,7 +164,24 @@ void Mesh::io(Piostream& stream)
     } else {
 	Pio(stream, nodes);
     }
-    Pio(stream, elems);
+
+    if (version < 3) {	// didn't used to have conductivities...
+	Array1<ElementVersion1> tmpElements;
+	Pio(stream, tmpElements);
+	elems.resize(tmpElements.size());
+	for (int i=0; i<tmpElements.size(); i++) {
+	    elems[i]=new Element(0, tmpElements[i].n0,
+				 tmpElements[i].n1,
+				 tmpElements[i].n2,
+				 tmpElements[i].n3);
+	}
+    } else		// ... now we do!
+	Pio(stream, elems);
+
+    if (version >= 4){
+	Pio(stream, cond_tensors);
+    }
+
     stream.end_class();
     if(stream.reading()){
 	for(int i=0;i<elems.size();i++){
@@ -169,12 +196,13 @@ void Mesh::io(Piostream& stream)
 void Pio(Piostream& stream, Element*& data)
 {
     if(stream.reading())
-	data=new Element(0, 0,0,0,0);
+	data=new Element(0,0,0,0,0);
     stream.begin_cheap_delim();
     Pio(stream, data->n[0]);
     Pio(stream, data->n[1]);
     Pio(stream, data->n[2]);
     Pio(stream, data->n[3]);
+    Pio(stream, data->cond);
     stream.end_cheap_delim();
 }
 

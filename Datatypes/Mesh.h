@@ -63,7 +63,6 @@ struct Element {
     void get_sphere2(RPoint& cen, BigRational& rad2);
     Point centroid();
 };
-
 void Pio(Piostream&, Element*&);
 
 struct DirichletBC {
@@ -92,6 +91,14 @@ struct NodeVersion1 {
     Point p;
 };
 void Pio(Piostream& stream, NodeVersion1& node);
+
+struct ElementVersion1 {
+    int n0;
+    int n1;
+    int n2;
+    int n3;
+};
+void Pio(Piostream& stream, ElementVersion1& node);
 
 struct Face {
     Face* next;
