@@ -2745,7 +2745,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 #else
   PETSC_SUB=libO
 #fi
-PETSC_VERSION_DIR=petsc-2.1.1
+PETSC_VERSION_DIR=petsc-2.2.1
 
 case $host in
   *-irix*)
@@ -2880,14 +2880,14 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
     done  
   fi
 
-# For Petsc 2.2.0 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
-# Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
+# For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+# Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
   SCI_TRY_LINK(PETSC,
                petsc libraries and headers,
                petsc.h,
                $_sci_inc /usr/include/petsc,
-               petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+               petsc petscvec petscmat petscdm petscsnes petscts petscksp petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
                $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
                $INC_MPI_H -DMPIPP_H,
                ,
@@ -2895,7 +2895,24 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
 
   if test "$HAVE_PETSC" = "yes" ; then
     DEF_PETSC="#define HAVE_PETSC 1"
-  fi
+  else
+    # Give it a shot on the old petsc version if we're not doing Uintah
+    if test "$pkg_Uintah" != "yes"; then
+      SCI_TRY_LINK(PETSC,
+                   petsc libraries and headers (old),
+                   petsc.h,
+                   $_sci_inc /usr/include/petsc,
+                   petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+                   $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
+                   $INC_MPI_H -DMPIPP_H,
+                   ,
+                   optional)
+      if test "$HAVE_PETSC" = "yes"; then
+        DEF_PETSC="#define HAVE_PESC 1"
+      fi
+    fi  
+
+  fi    
     
   if test "$with_petsc" && test ! "$DEF_PETSC"; then
     echo
@@ -2916,13 +2933,13 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
     fi
 
-# For petsc 2.2.0 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscfortran petscksp,
+# For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscfortran petscksp,
 # Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
     SCI_TRY_LINK(PETSC_UNI,
                  petsc-uni libraries and headers,
                  petsc.h,
                  $_sci_inc /usr/include/petsc,
-                 petsc petscvec petscmat petscdm petscsnes petscts petscfortran,
+                 petsc petscvec petscmat petscdm petscsnes petscts petscfortran petscksp,
                  $_sci_lib,
                  $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG -DMPIPP_H,
                  ,
@@ -2930,7 +2947,23 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
 
     if test "$HAVE_PETSC_UNI" = "yes" ; then
       DEF_PETSC_UNI="#define PETSC_UNI 1"
+    else
+    # Give it a shot on the old petsc-uni version
+      SCI_TRY_LINK(PETSC-UNI,
+                   petsc libraries and headers (old),
+                   petsc.h,
+                   $_sci_inc /usr/include/petsc,
+                   petsc petscvec petscmat petscdm petscsnes petscts petscfortran,
+                   $_sci_lib,
+                   $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG -DMPIPP_H,
+                   ,
+                   optional)
+      if test "$HAVE_PETSC_UNI" = "yes" ; then
+        DEF_PETSC_UNI="#define PETSC_UNI 1"
+      fi  
     fi
+
+
    
     if test "$with_unipetsc" && test ! "$DEF_PETSC_UNI"; then
       echo
