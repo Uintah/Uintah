@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../../doc/ReferenceGuide/component.dtd">
 
-
+<!--
 #
 #  The contents of this file are subject to the University of Utah Public
 #  License (the "License"); you may not use this file except in compliance
@@ -17,7 +17,7 @@
 #  The Original Source Code was developed by the University of Utah.
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
-#
+-->
 
 
 <component name="MatrixReceive" category="DataIO">
