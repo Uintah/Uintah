@@ -34,7 +34,6 @@
 #include <qpushbutton.h>
 #include <qmessagebox.h>
 #include "stdlib.h"
-//#include "Matrix.h"
 
 
 using namespace std;
@@ -270,7 +269,7 @@ int myGoPort::go()
     delete dr[0]; 
     delete dr[1];
     com->matrixPort->setCalleeDistribution("DMatrix",arrr); 
-
+    /*
     cerr<<"MATRIX Ag \n======================="<<endl;
     for(int i=0;i<size;i++){
       for(int j=0;j<size;j++){
@@ -279,6 +278,7 @@ int myGoPort::go()
       cerr<<endl;
     }
     cerr<<"====================================="<<endl;
+    */
     return 0;
   }
 }
