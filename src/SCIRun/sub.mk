@@ -41,7 +41,10 @@ endif
 
 SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal $(SRCDIR)/Vtk
 ifeq ($(HAVE_BABEL),yes)
-  SUBDIRS += $(SRCDIR)/Bridge $(SRCDIR)/Babel
+ ifeq ($(HAVE_RUBY),yes)
+ SUBDIRS += $(SRCDIR)/Bridge
+ endif
+ SUBDIRS += $(SRCDIR)/Babel
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
@@ -50,20 +53,32 @@ PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
 	Dataflow/Network Core/GuiInterface Core/CCA/spec \
 	Core/CCA/PIDL Core/CCA/SSIDL \
 	Core/Exceptions Core/TkExtensions Core/Thread \
-	Core/globus_threads Core/CCA/Comm \
-	Core/CCA/tools/strauss/c++ruby
+	Core/globus_threads Core/CCA/Comm
+ ifeq ($(HAVE_RUBY,yes)
+   PSELIBS := $(PSELIBS) Core/CCA/tools/strauss/c++ruby
+ endif
 else
 PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
 	Dataflow/Network Core/GuiInterface Core/CCA/spec \
 	Core/CCA/PIDL Core/CCA/SSIDL \
-	Core/Exceptions Core/TkExtensions Core/Thread \
-	Core/CCA/Comm Core/CCA/tools/strauss/c++ruby
+	Core/Exceptions Core/TkExtensions Core/Thread Core/CCA/Comm
+ ifeq ($(HAVE_RUBY),yes)
+   PSELIBS := $(PSELIBS) Core/CCA/tools/strauss/c++ruby
+ endif	
 endif
 
-LIBS := $(XML_LIBRARY) -lruby-static -lcrypt -ldl 
+LIBS := $(XML_LIBRARY)  
+
+ifeq ($(HAVE_RUBY),yes)
+ INCLUDES := $(RUBY_INCLUDE) $(INCLUDES)
+ LIBS := $(RUBY_LIBRARY) $(LIBS)
+endif
+
 ifeq ($(HAVE_MPI),yes)
  LIBS := $(LIBS) $(MPI_LIBRARY)
 endif
+
+LIBS := $(LIBS) -lcrypt -ldl
 
 ifeq ($(HAVE_BABEL),yes)
   LIBS := $(LIBS) $(SIDL_LIBRARY)
