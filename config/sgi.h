@@ -30,7 +30,6 @@
 #define SCI_GNUCppIncludeLocation /usr/local/gnu/lib/g++-include
 #define SCI_GNULinker g++
 #define SCI_GNULinkerFlags
-#define SCI_GNULinkerLib $(TOP)/gnupt
 
 #define SCI_TemplateLib $(TOP)/templates/fast_templates.o
 

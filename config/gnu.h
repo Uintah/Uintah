@@ -23,5 +23,4 @@
 #endif
 #define SCI_LinkerLib SCI_GNULinkerLib
 
-#define SCI_TemplateDir	$(TOP)/../gnupt
-#define SCI_TemplateLib SCI_TemplateDir/libgnupt.o
+#define SCI_TemplateLib
