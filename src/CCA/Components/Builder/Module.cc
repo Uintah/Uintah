@@ -14,13 +14,13 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-#include <iostream.h>
 #include "Module.h"
 
 #include <qpushbutton.h>
 #include <qlabel.h>
 #include <qpainter.h>
 #include <qmessagebox.h>
+#include <iostream>
 using namespace std;
 
 Module::Module(QWidget *parent, const string& moduleName,
