@@ -34,7 +34,7 @@ static Persistent* maker()
 PersistentTypeID ScalarFieldRG::type_id("ScalarFieldRG", "ScalarField", maker);
 
 ScalarFieldRG::ScalarFieldRG()
-: ScalarFieldRGBase("")
+: ScalarFieldRGBase("double")
 {
 }
 
@@ -404,6 +404,9 @@ void ScalarFieldRG::fill_gradmags() // these guys ignor the vf
 
 //
 // $Log$
+// Revision 1.7  2000/03/05 06:45:02  dmw
+// fixed the constructor so it once again stores its ScalarFieldRGBase::rep as Double
+//
 // Revision 1.6  2000/02/04 01:25:53  dmw
 // added std:: before cerr and endl
 //
