@@ -58,7 +58,12 @@ namespace SCIRun {
 
     Scheduler(Network*);
     ~Scheduler();
-
+    
+    ////////////////////////
+    //Turns scheduler on and off
+    //Returns: true if scheduler is now on, false if scheduler is now off 	
+    bool toggleOnOffScheduling();
+ 
     void do_scheduling();
     void request_multisend(OPort*);
   private:

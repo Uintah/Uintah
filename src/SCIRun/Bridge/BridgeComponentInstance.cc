@@ -45,11 +45,13 @@ BridgeComponentInstance::BridgeComponentInstance(SCIRunFramework* framework,
   : ComponentInstance(framework, instanceName, typeName), component(component)
 {
   mutex=new Mutex("getPort mutex");
+  bmdl = new BridgeModule(component);
 }
 
 BridgeComponentInstance::~BridgeComponentInstance()
 {
   delete mutex;
+  delete bmdl;
 }
 
 PortInstance*
@@ -118,23 +120,25 @@ gov::cca::Port BridgeComponentInstance::getBabelPort(const std::string& name)
   return pi->port;
 }
 
-Port* BridgeComponentInstance::getDataflowPort(const std::string& name)
+Port* BridgeComponentInstance::getDataflowIPort(const std::string& name)
 {
-  mutex->lock();
-  map<string, PortInstance*>::iterator iter = ports.find(name);
-  if(iter == ports.end())
+  IPort *ip = bmdl->get_iport(name);
+  if(!ip) {
+    cerr << "Unable to initialize iport: "<< name << "\n";
     return 0;
-  SCIRunPortInstance* pr = dynamic_cast<SCIRunPortInstance*>(iter->second);
-  if(pr == NULL)
-    return 0;
-  if(pr->porttype != SCIRunPortInstance::Output) {
-    throw InternalError("Cannot call getPort on an Input port");
   }
-  SCIRunPortInstance *pi=dynamic_cast<SCIRunPortInstance*> (pr->getPeer());
-  mutex->unlock();
-  return pi->port;
+  return static_cast<Port*>(ip);
 }
 
+Port* BridgeComponentInstance::getDataflowOPort(const std::string& name)
+{
+  OPort *op = bmdl->get_oport(name);
+  if(!op) {
+    cerr << "Unable to initialize iport: "<< name << "\n";
+    return 0;
+   }
+   return static_cast<Port*>(op);
+}
 
 void BridgeComponentInstance::releasePort(const std::string& name, const modelT model)
 {
@@ -239,8 +243,8 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
     }
 
     portT = SCIRunPortInstance::Output;
-    bmdl.addOPortByName(portName, portType);
-    dflowport = bmdl.getOPort(portName);
+    bmdl->addOPortByName(portName, portType);
+    dflowport = bmdl->getOPort(portName);
     
     if(!dflowport)
       throw InternalError("Wrong port model for addProvidesPort");
@@ -360,8 +364,8 @@ void BridgeComponentInstance::addProvidesPort(void* port,
     }
 
     portT = SCIRunPortInstance::Input;
-    bmdl.addIPortByName(portName, portType);
-    dflowport = bmdl.getIPort(portName);
+    bmdl->addIPortByName(portName, portType);
+    dflowport = bmdl->getIPort(portName);
     
     if(!dflowport)
       throw InternalError("Wrong port model for addProvidesPort");

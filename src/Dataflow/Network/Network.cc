@@ -225,6 +225,34 @@ Module* Network::add_module(const string& packageName,
   return mod;
 }
 
+void Network::add_instantiated_module(Module* mod)
+{
+  if(!mod) {
+    cerr << "Error: can't add instanated module\n";
+    return;
+  }
+  modules.push_back(mod);
+
+  // Binds NetworkEditor and Network instances to module instance.
+  // Instantiates ModuleHelper and starts event loop.
+  mod->set_context(sched, this);
+  
+  // add Module id and ptr to Module to hash table of modules in network
+  module_ids[mod->id] = mod;
+
+  GuiInterface* gui = mod->gui;
+  // Add a TCL command for this module...
+  gui->add_command(mod->id+"-c", mod, 0);
+  ostringstream command;
+
+  string packageName = "unknown";
+  string categoryName = "unknown";
+  string moduleName = "unknonw";
+  command << "addModule2 " << packageName << " " << categoryName << " "
+	 << moduleName << " " << mod->id << '\n';
+  gui->execute(command.str());
+}
+
 Module* Network::get_module_by_id(const string& id)
 {
     MapStringModule::iterator mod;
@@ -295,4 +323,9 @@ void Network::schedule()
 void Network::attach(Scheduler* _sched)
 {
   sched=_sched;
+}
+
+Scheduler* Network::get_scheduler()
+{
+  return sched;
 }

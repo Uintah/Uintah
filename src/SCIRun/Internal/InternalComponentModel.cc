@@ -31,6 +31,7 @@
 #include <SCIRun/Internal/BuilderService.h>
 #include <SCIRun/Internal/ComponentEventService.h>
 #include <SCIRun/Internal/ComponentRegistry.h>
+#include <SCIRun/Dataflow/DataflowScheduler.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <iostream>
 using namespace std;
@@ -45,6 +46,8 @@ InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
 					      &ComponentRegistry::create, true));
   addService(new InternalComponentDescription(this, "cca.ComponentEventService",
 					      &ComponentEventService::create, true));
+  addService(new InternalComponentDescription(this, "cca.DataflowScheduler",
+                                              &DataflowScheduler::create, true));
 }
 
 InternalComponentModel::~InternalComponentModel()

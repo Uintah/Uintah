@@ -103,11 +103,13 @@ public:
   Module* add_module2(const string& packageName,
 		      const string& categoryName,
 		      const string& moduleName);
+  void add_instantiated_module(Module* mod);
   int delete_module(const string& name);
 
   Module* get_module_by_id(const string& id);
 
   void schedule();
+  Scheduler* get_scheduler();
   void attach(Scheduler*);
 
   // CollabVis code begin

@@ -23,7 +23,10 @@ SRCS     += $(SRCDIR)/SCIRunComponentModel.cc \
 	$(SRCDIR)/SCIRunComponentDescription.cc \
 	$(SRCDIR)/SCIRunComponentInstance.cc \
 	$(SRCDIR)/SCIRunPortInstance.cc \
-	$(SRCDIR)/SCIRunUIPort.cc
+	$(SRCDIR)/SCIRunUIPort.cc \
+	$(SRCDIR)/DataflowScheduler.cc 
+
 
 $(SRCDIR)/SCIRunComponentInstance.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/SCIRunComponentModel.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/DataflowScheduler.o: Core/CCA/spec/cca_sidl.h

@@ -30,15 +30,23 @@
 #define SCIRun_Framework_BridgeModule_h
 
 #include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/Network.h>
 #include <SCIRun/Dataflow/SCIRunComponentModel.h>
+#include <SCIRun/Bridge/BridgeComponent.h>
 
 namespace SCIRun {
   class BridgeModule : public Module {
   public:
-    BridgeModule() : Module("BridgeModule", SCIRunComponentModel::gui->createContext("BridgeModule"), Filter) {}
+    BridgeModule(BridgeComponent* bc) 
+    : Module("BridgeModule", SCIRunComponentModel::gui->createContext("BridgeModule_" + bc->bridgeID), Filter),
+      component(bc) 
+    {
+      SCIRunComponentModel::net->add_instantiated_module(this);
+    }
     virtual ~BridgeModule() {}
-    virtual void execute() {}
+    virtual void execute() {component->execute();}
   private:
+    BridgeComponent* component;
   };
 }
 
