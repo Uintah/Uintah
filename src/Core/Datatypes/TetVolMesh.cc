@@ -1049,6 +1049,26 @@ TetVolMesh::Cell::size_type TetVolMesh::cells_size() const
 { return tsize((Cell::size_type *)0); }
 
 const TypeDescription*
+TetVolMesh::get_type_description() const
+{
+  return SCIRun::get_type_description((TetVolMesh *)0);
+}
+
+
+const TypeDescription*
+get_type_description(TetVolMesh *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("TetVolMesh",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
 get_type_description(TetVolMesh::Node *)
 {
   static TypeDescription *td = 0;

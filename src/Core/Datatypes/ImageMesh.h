@@ -380,6 +380,8 @@ public:
   static  const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
+  virtual const TypeDescription *get_type_description() const;
+
 private:
 
   //! the min_Node::index_type ( incase this is a subLattice )
@@ -412,6 +414,7 @@ template <> ImageMesh::Edge::iterator ImageMesh::tend(ImageMesh::Edge::iterator 
 template <> ImageMesh::Face::iterator ImageMesh::tend(ImageMesh::Face::iterator *) const;
 template <> ImageMesh::Cell::iterator ImageMesh::tend(ImageMesh::Cell::iterator *) const;
 
+const TypeDescription* get_type_description(ImageMesh *);
 const TypeDescription* get_type_description(ImageMesh::Node *);
 const TypeDescription* get_type_description(ImageMesh::Edge *);
 const TypeDescription* get_type_description(ImageMesh::Face *);

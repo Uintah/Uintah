@@ -493,6 +493,25 @@ LatVolMesh::get_h_file_path() {
 }
 
 const TypeDescription*
+LatVolMesh::get_type_description() const
+{
+  return SCIRun::get_type_description((LatVolMesh *)0);
+}
+
+const TypeDescription*
+get_type_description(LatVolMesh *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("LatVolMesh",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
 get_type_description(LatVolMesh::Node *)
 {
   static TypeDescription *td = 0;

@@ -163,6 +163,8 @@ public:
   static  const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
+  virtual const TypeDescription *get_type_description() const;
+
   // Extra functionality needed by this specific geometry.
 
   Node::index_type add_find_point(const Point &p, double err = 1.0e-3);
@@ -217,6 +219,7 @@ template <> TriSurfMesh::Edge::iterator TriSurfMesh::tend(TriSurfMesh::Edge::ite
 template <> TriSurfMesh::Face::iterator TriSurfMesh::tend(TriSurfMesh::Face::iterator *) const;
 template <> TriSurfMesh::Cell::iterator TriSurfMesh::tend(TriSurfMesh::Cell::iterator *) const;
 
+const TypeDescription* get_type_description(TriSurfMesh *);
 const TypeDescription* get_type_description(TriSurfMesh::Node *);
 const TypeDescription* get_type_description(TriSurfMesh::Edge *);
 const TypeDescription* get_type_description(TriSurfMesh::Face *);
