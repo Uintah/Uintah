@@ -3,3 +3,5 @@ trees.
 
 Actually, that's a lie.  I changed "tkPort.h" and "tclPort.h" to remove a
 relative path that included things from ../unix/ which are now in this dir.
+
+Now it is really a lie - these files all moved to PSE/src/include - Steve
