@@ -99,9 +99,9 @@ void TCL::execute(const clString& string)
 	    // error case ???
 	}
         gm->putConnection (skt);
-    }
+    } else
 #endif
-    else {
+    {
         TCLTask::lock();
         int code = Tcl_Eval(the_interp, const_cast<char *>(string()));
         if(code != TCL_OK)
@@ -457,6 +457,9 @@ void TCL::set_tclvar(const clString& base, const clString& name,
 
 //
 // $Log$
+// Revision 1.10  1999/09/23 06:33:26  sparker
+// Moved else inside win32 ifdef
+//
 // Revision 1.9  1999/09/23 06:16:24  sparker
 // Fixed win32 ifdef
 //
