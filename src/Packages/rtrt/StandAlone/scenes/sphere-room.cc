@@ -7,6 +7,7 @@
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/UVSphere.h>
+#include <Packages/rtrt/Core/Satellite.h>
 #include <Packages/rtrt/Core/Parallelogram.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <Packages/rtrt/Core/UVCylinder.h>
@@ -23,6 +24,8 @@
 #include <Packages/rtrt/Core/PBNMaterial.h>
 #include <Packages/rtrt/Core/CrowMarble.h>
 #include <Packages/rtrt/Core/Checker.h>
+#include <Packages/rtrt/Core/Halo.h>
+#include <Packages/rtrt/Core/LightMaterial.h>
 #include <iostream>
 #include <math.h>
 #include <string.h>
@@ -47,6 +50,18 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   Camera cam( Point(0,0,0), Point( 0,-1,0 ), Vector(0,0,1), 45.0 );
 
   Material *white = new LambertianMaterial(Color(1,1,1));
+  Material *black = new LambertianMaterial(Color(0,0,0));
+  LightMaterial *sun = new LightMaterial(Color(1,1,1));
+
+  TileImageMaterial *sunmap = 
+    new TileImageMaterial(
+#if INSCILAB
+                          "/home/sci/moulding/images/sun_map.ppm",
+#else
+                          "/home/moulding/images/sunmap.ppm",
+#endif
+                          1,
+                          Color(1,1,1), 0,0, false);
 
   TileImageMaterial *earthmap = 
     new TileImageMaterial(
@@ -189,6 +204,8 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   CrowMarble *crow = new CrowMarble(10,Vector(0,1,0),Color(.1,.1,.8),
                                     Color(.9,.8,.9),Color(.6,.6,.8));
 
+  Halo *halo = new Halo(sun,2);
+
   //MultiMaterial *matl1 = new MultiMaterial();
 #if INSCILAB
   MapBlendMaterial *matl1 = new MapBlendMaterial("/home/sci/moulding/images/scuff.ppm",matl0,stadium);
@@ -199,8 +216,13 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
   //matl1->insert(stadium,255);
   //matl1->insert(crow,0);
+#if INSCILAB
+  MapBlendMaterial *earthspec = new MapBlendMaterial("/home/sci/moulding/images/earthspec4k.ppm",earthmap_specular,earthmap);
+  MapBlendMaterial *earthblend = new MapBlendMaterial("/home/sci/moulding/images/earthclouds.ppm",white,earthspec);
+#else
   MapBlendMaterial *earthspec = new MapBlendMaterial("/home/moulding/images/earthspec4k.ppm",earthmap_specular,earthmap);
   MapBlendMaterial *earthblend = new MapBlendMaterial("/home/moulding/images/earthclouds.ppm",white,earthspec);
+#endif
 
   UVCylinderArc* uvcylarc0 = new UVCylinderArc(matl1,Point(ROOMCENTER,0),
                                                Point(ROOMCENTER,DOORHEIGHT),
@@ -228,7 +250,12 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                                                Vector(.774,0,0),
                                                Vector(0,1,0));
 
-  UVSphere *earth = new UVSphere(earthblend,Point(0,0,8),2);
+  Satellite *sol = new Satellite("Sol",sunmap,Point(0,0,0),.7);
+  sol->set_orb_radius(0);
+  sol->set_orb_speed(0);
+  UVSphere *corona = new UVSphere(halo,Point(0,0,0),1);
+  Satellite *earth = new Satellite("Earth",earthblend,Point(0,0,8),2,
+                                   Vector(-.3,0,1),sol);
   UVSphere *mars  = new UVSphere(marsmap,Point(0,4,8),1);
   UVSphere *jupiter = new UVSphere(jupitermap,Point(0,50,6),20);
   UVSphere *neptune = new UVSphere(neptunemap,Point(20,4,8),5);
@@ -254,12 +281,14 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   //group->add( floor );
   //group->add( obj1 );
   //group->add( bookcover );
+  group->add( sol );
+  group->add( corona );
   group->add( earth );
-  //group->add( mars );
+  group->add( mars );
   //group->add( jupiter );
   //group->add( neptune );
   //group->add( saturn );
-  group->add( luna );
+  //group->add( luna );
   //group->add( venus );
   //group->add( mercury );
   //group->add( io );
@@ -273,9 +302,14 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   Scene* scene=new Scene(group, cam,
                          bgcolor, cdown, cup, groundplane,
                          ambient_scale, Arc_Ambient);
-  scene->add_light( new Light(Point(ROOMCENTER,9.5), Color(1,1,1), 0.0) );
+  scene->addObjectOfInterest(earth,true);
+  scene->add_light( new Light(Point(0,0,0), Color(1,1,1), 0.0) );
 
+#if INSCILAB
+  scene->set_background_ptr( new EnvironmentMapBackground("/home/sci/moulding/images/tycho8.ppm"));
+#else
   scene->set_background_ptr( new EnvironmentMapBackground("/home/moulding/images/tycho8.ppm"));
+#endif
 
 /*
   scene->select_shadow_mode("hard");
