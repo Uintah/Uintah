@@ -62,8 +62,7 @@ set m5 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 389 239]
 set m6 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 407 176]
 set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 353 446]
 set m8 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 389 96]
-set m9 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 371 303]
-set m10 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 353 368]
+set m9 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 371 303]
 
 addConnection $m3 0 $m2 1
 addConnection $m0 0 $m2 0
@@ -75,11 +74,9 @@ addConnection $m3 0 $m7 1
 addConnection $m6 0 $m5 1
 addConnection $m0 0 $m8 0
 addConnection $m8 0 $m6 0
-addConnection $m9 0 $m10 1
+addConnection $m9 0 $m7 0
 addConnection $m5 0 $m9 1
-addConnection $m10 0 $m7 0
 addConnection $m0 0 $m9 0
-addConnection $m0 0 $m10 0
 addConnection $m8 0 $m5 0
 addConnection $m7 0 $m1 2
 addConnection $m6 1 $m1 3
@@ -175,8 +172,6 @@ set $m8-show_status 1
 set $m9-notes {}
 set $m9-show_status 1
 set $m9-interp_op_gui {}
-set $m10-notes {}
-set $m10-show_status 1
 $m2 initialize_ui
 $m4 initialize_ui
 $m5 initialize_ui
