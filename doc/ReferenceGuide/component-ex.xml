@@ -30,27 +30,15 @@
     <cfile>blah2</cfile>
   </implementation>
   <io>
-    <inputs>
+    <inputs lastportdynamic="yes">
       <port>
-        <name>1st Dimension</name>
+        <name>Variable</name>
         <description>
-          <p>Data for 1st variable - Required!</p>
-        </description>
-        <datatype>SAttribute1D</datatype>
-        <componentname>HistoDataGenerator</componentname>
-      </port>
-      <port>
-        <name>2nd Dimension</name>
-        <description>
-          <p>Data for 2nd variable - Optional</p>
-        </description>
-        <datatype>SAttribute1D</datatype>
-        <componentname>HistoDataGenerator</componentname>
-      </port>
-      <port>
-        <name>3rd Dimension</name>
-        <description>
-          <p>Data for 3rd variable - Optional</p>
+	  <p>Data for 1 variable</p>
+	  <note>
+	    <p>This port is dynamic.  Up to 3 ports of this type may
+	      be connected to this module, 1 variable per port.</p>
+	  </note>
         </description>
         <datatype>SAttribute1D</datatype>
         <componentname>HistoDataGenerator</componentname>
@@ -58,6 +46,7 @@
     </inputs>
     <outputs>
       <port>
+	<name>Histogram</name>
         <description>
           <p>
             The histogram's frequency data are contained in the output
