@@ -70,6 +70,8 @@ void matlabfile::open(std::string filename,std::string accessmode)
     	{
     	    readtag(mfd);
 			
+			// Bug fix, this bool was not reset
+			compressedmatrix = false;
 			// If the tag tells that the next block is compressed
 			// Open this compressed block before continuing
 			if (mfd.type() == miCOMPRESSED)
@@ -106,6 +108,7 @@ void matlabfile::open(std::string filename,std::string accessmode)
 		
 		rewind();
     }
+	
 }
 
 
@@ -219,6 +222,7 @@ void matlabfile::exportmatlabarray(matlabarray &matrix)
 				{
 				matfiledata preal;
 				preal = matrix.getpreal();
+				
 				writedat(preal);
 				if (matrix.iscomplex())
 				{
@@ -337,6 +341,7 @@ void matlabfile::exportmatlabarray(matlabarray &matrix)
 
 void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
 {
+
     // make sure the matrix is cleared
 	matrix.clear();
 	bool compressedmatrix = false;
@@ -554,7 +559,7 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
      		      
     closechild();
 	if (compressedmatrix) closecompression();
-	
+
 }
 
 // ***********************************************

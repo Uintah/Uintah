@@ -95,6 +95,7 @@ namespace MatlabIO {
 // the matfile class to the matlabfile class.
 
 class matfile;
+class matfiledata;
 
 class matfiledata : public matfilebase {
 
@@ -107,6 +108,7 @@ class matfiledata : public matfilebase {
 	struct mxdata 
 	{
 		void	*dataptr_;	// Store the data to put in the matfile
+		bool	owndata_;   // Do we own the data
 		long	bytesize_;	// Size of the data in bytes
 		mitype	type_;		// The type of the data
 		long	ref_;		// reference counter
@@ -115,6 +117,7 @@ class matfiledata : public matfilebase {
   // data objects	
   private:
 	mxdata *m_;
+	void *ptr_;
 	void clearptr();
   
   // functions  
@@ -134,6 +137,8 @@ class matfiledata : public matfilebase {
 	// newdatabuffer() will clear the object and will initiate a new 
 	// buffer
 	void newdatabuffer(long bytesize,mitype type);
+	// void extdatabuffer(void *databuffer, long bytesize, mitype type);
+
 	
 	// clone the current object
 	// i.e create a new databuffer and copy the actual data
@@ -208,6 +213,9 @@ class matfiledata : public matfilebase {
 	// will free the databuffer. A similar effect has clearing or
 	// initiating a new buffer. 
 	void *databuffer();
+	
+	void ptrset(void *ptr);
+	void ptrclear();
 
 };
 

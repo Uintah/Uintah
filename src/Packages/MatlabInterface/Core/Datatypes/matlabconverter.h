@@ -427,327 +427,327 @@
  };
  
  ////////////// HERE CODE FOR DYNAMIC FIELDWRITER STARTS ///////////////
+
+// Default function for mladdmesh, in case no suitable converter is found,
+// this one will inform the code that none is available. The return(false) will return in an
+// error message for the user
+template<class MESH>   bool matlabconverter::mladdmesh(SCIRun::LockingHandle<MESH> meshH, matlabarray mlarray)
+{
+	return(false);
+}
  
- // Default function for mladdmesh, in case no suitable converter is found,
- // this one will inform the code that none is available. The return(false) will return in an
- // error message for the user
- template<class MESH>   bool matlabconverter::mladdmesh(SCIRun::LockingHandle<MESH> meshH, matlabarray mlarray)
- {
-   return(false);
- }
+// Check all possible positions of the field data
+template<class FIELD> void matlabconverter::mladdfieldat(FIELD *scifield,matlabarray mlarray)
+{
+	matlabarray fieldat;
+    if (scifield->basis_order() == 1) fieldat.createstringarray("node");
+    if (scifield->basis_order() == 0) fieldat.createstringarray("cell");
+    if (scifield->basis_order() == -1) fieldat.createstringarray("none");
+    if (scifield->basis_order() > 1) fieldat.createstringarray("higher order");
+	mlarray.setfield(0,"fieldat",fieldat);
+	
+}
  
- // Check all possible positions of the field data
- template<class FIELD> void matlabconverter::mladdfieldat(FIELD *scifield,matlabarray mlarray)
- {
-   matlabarray fieldat;
-   if (scifield->basis_order() == 1) fieldat.createstringarray("node");
-   //   if (scifield->basis_order() == SCIRun::Field::EDGE) fieldat.createstringarray("edge");
-   //   if (scifield->basis_order() == SCIRun::Field::FACE) fieldat.createstringarray("face");
-   if (scifield->basis_order() == 0) fieldat.createstringarray("cell");
-   mlarray.setfield(0,"fieldat",fieldat);
+template <class MESH> void matlabconverter::mladdtransform(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray)
+{
+	matlabarray dim;
+	matlabarray transform;
 	
- }
+	// Obtain dimensions and make a matrix with the dimensions of the mesh
+	// This one is needed when we have an image/latvol without any data
+	// Then dim defines the mesh
+	std::vector<unsigned int> dims;
+	meshH->get_dim(dims);
+	dim.createdensearray(1,dims.size(),matlabarray::miDOUBLE);
+	dim.setnumericarray(dims,matlabarray::miDOUBLE);
+	
+	// Obtain transform matrix. This is the affine transformation
+	// matrix.
+	SCIRun::Transform T = meshH->get_transform();
+	transform.createdensearray(4,4,matlabarray::miDOUBLE);
+	// Transform does not have a mechanism to access its internal fields
+	// Hence it is copied to a separate data field
+	std::vector<double> Tbuf(16);
+	// Copy the data to the buffer. Thanks to OpenGL, it is done in the
+	// same order matlab, fortran and most sane programs use, yeahhh
+	// Hence we do not need to reorder any data
+	T.get(&(Tbuf[0]));
+	// Dump the data in the matfile generation classes
+	transform.setnumericarray(Tbuf);
+
+	mlarray.setfield(0,"dims",dims);
+	mlarray.setfield(0,"transform",transform);
+	
+} 
  
- template <class MESH> void matlabconverter::mladdtransform(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray)
- {
-   matlabarray dim;
-   matlabarray transform;
+template <class MESH> void matlabconverter::mladdnodesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray)
+{
+	// A lot of pointless casting, but that is the way SCIRun was setup .....
+	// Iterators and Index classes to make the code really complicated 
+	// The next code tries to get away with minimal use of all this overhead
+
+	matlabarray node;
+	typename MESH::Node::size_type size;
+	meshH->size(size);
+	unsigned int numnodes = static_cast<unsigned int>(size);
+
+	meshH->synchronize(SCIRun::Mesh::NODES_E); 
+
+	SCIRun::Point P;
+	std::vector<double> nodes(3*numnodes);
+	std::vector<long> dims(2);
+	dims[0] = 3; dims[1] = numnodes;
+
+	// Extracting data from the SCIRun classes is a painfull process
+	// and we end up with at least three function calls per node.
+	// I'd like to change this, but hey a lot of code should be rewritten
+	// This works, it might not be really efficient, at least it does not
+	// hack into the object.
+	unsigned int q = 0;
+	for (unsigned int p=0; p<numnodes; p++)
+	{
+		meshH->get_point(P,typename MESH::Node::index_type(p));
+		nodes[q++] = P.x(); nodes[q++] = P.y(); nodes[q++] = P.z(); 
+	}
+	node.createdoublematrix(nodes,dims);
+	mlarray.setfield(0,"node",node);
 	
-   // Obtain dimensions and make a matrix with the dimensions of the mesh
-   // This one is needed when we have an image/latvol without any data
-   // Then dim defines the mesh
-   std::vector<unsigned int> dims;
-   meshH->get_dim(dims);
-   dim.createdensearray(1,dims.size(),matlabarray::miDOUBLE);
-   dim.setnumericarray(dims,matlabarray::miUINT32);
+}
+
+template <class MESH>
+void matlabconverter::mladdedgesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num)
+{
+	// A lot of pointless casting, but that is the way SCIRun was setup .....
+	// Iterators and Index classes to make the code really complicated 
+	// The next code tries to get away with minimal use of all this overhead
+
+	matlabarray edge;
+	typename MESH::Edge::size_type size;
+	meshH->size(size);
+	unsigned int numedges = static_cast<unsigned int>(size);
+
+	meshH->synchronize(SCIRun::Mesh::EDGES_E); 
 	
-   // Obtain transform matrix. This is the affine transformation
-   // matrix.
-   SCIRun::Transform T = meshH->get_transform();
-   transform.createdensearray(4,4,matlabarray::miDOUBLE);
-   // Transform does not have a mechanism to access its internal fields
-   // Hence it is copied to a separate data field
-   std::vector<double> Tbuf(16);
-   // Copy the data to the buffer. Thanks to OpenGL, it is done in the
-   // same order matlab, fortran and most sane programs use, yeahhh
-   // Hence we do not need to reorder any data
-   T.get(&(Tbuf[0]));
-   // Dump the data in the matfile generation classes
-   transform.setnumericarray(Tbuf);
-
-   mlarray.setfield(0,"dims",dims);
-   mlarray.setfield(0,"transform",transform);
+	typename MESH::Node::array_type a;
+	std::vector<typename MESH::Node::index_type> edges(num*numedges);
+	std::vector<long> dims(2);	
+	dims[0] = num; dims[1] = numedges;
 	
- } 
- 
- template <class MESH> void matlabconverter::mladdnodesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray)
- {
-   // A lot of pointless casting, but that is the way SCIRun was setup .....
-   // Iterators and Index classes to make the code really complicated 
-   // The next code tries to get away with minimal use of all this overhead
+	// SCIRun iterators are limited in supporting any index management
+	// Hence I prefer to do it with integer and convert to the required
+	// class at the last moment. Hopefully the compiler is smart and
+	// has a fast translation. Why do we use these iterator classes anyway
+	// they just slow down our simulations......		
+	unsigned int q = 0;
+	for (unsigned int p = 0; p < numedges; p++)
+	{
+		meshH->get_nodes(a,typename MESH::Edge::index_type(p));
+		for (unsigned int r = 0; r < num; r++) edges[q++] = a[r]+1;
+	}
 
-   matlabarray node;
-   typename MESH::Node::size_type size;
-   meshH->size(size);
-   unsigned int numnodes = static_cast<unsigned int>(size);
-
-   meshH->synchronize(SCIRun::Mesh::NODES_E); 
-
-   SCIRun::Point P;
-   std::vector<double> nodes(3*numnodes);
-   std::vector<long> dims(2);
-   dims[0] = 3; dims[1] = numnodes;
-
-   // Extracting data from the SCIRun classes is a painfull process
-   // and we end up with at least three function calls per node.
-   // I'd like to change this, but hey a lot of code should be rewritten
-   // This works, it might not be really efficient, at least it does not
-   // hack into the object.
-   unsigned int q = 0;
-   for (unsigned int p=0; p<numnodes; p++)
-   {
-     meshH->get_point(P,typename MESH::Node::index_type(p));
-     nodes[q++] = P.x(); nodes[q++] = P.y(); nodes[q++] = P.z(); 
-   }
-   node.createdoublematrix(nodes,dims);
-   mlarray.setfield(0,"node",node);
+	edge.createdensearray(dims,matlabarray::miUINT32);
+	edge.setnumericarray(edges); // store them as UINT32 but treat them as doubles
+	mlarray.setfield(0,"edge",edge);
 	
- }
+}
 
- template <class MESH>
- void matlabconverter::mladdedgesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num)
- {
-   // A lot of pointless casting, but that is the way SCIRun was setup .....
-   // Iterators and Index classes to make the code really complicated 
-   // The next code tries to get away with minimal use of all this overhead
+template <class MESH>
+void matlabconverter::mladdfacesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num)
+{
+	// A lot of pointless casting, but that is the way SCIRun was setup .....
+	// Iterators and Index classes to make the code really complicated 
+	// The next code tries to get away with minimal use of all this overhead
 
-   matlabarray edge;
-   typename MESH::Edge::size_type size;
-   meshH->size(size);
-   unsigned int numedges = static_cast<unsigned int>(size);
+	matlabarray face;
+	typename MESH::Face::size_type size;
+	meshH->size(size);
+	unsigned int numfaces = static_cast<unsigned int>(size);
 
-   meshH->synchronize(SCIRun::Mesh::EDGES_E); 
-	
-   typename MESH::Node::array_type a;
-   std::vector<typename MESH::Node::index_type> edges(num*numedges);
-   std::vector<long> dims(2);	
-   dims[0] = num; dims[1] = numedges;
-	
-   // SCIRun iterators are limited in supporting any index management
-   // Hence I prefer to do it with integer and convert to the required
-   // class at the last moment. Hopefully the compiler is smart and
-   // has a fast translation. Why do we use these iterator classes anyway
-   // they just slow down our simulations......		
-   unsigned int q = 0;
-   for (unsigned int p = 0; p < numedges; p++)
-   {
-     meshH->get_nodes(a,typename MESH::Edge::index_type(p));
-     for (unsigned int r = 0; r < num; r++) edges[q++] = a[r];
-   }
+	meshH->synchronize(SCIRun::Mesh::FACES_E);
 
-   edge.createdensearray(dims,matlabarray::miDOUBLE);
-   edge.setnumericarray(edges,matlabarray::miUINT32); // store them as UINT32 but treat them as doubles
-   mlarray.setfield(0,"edge",edge);
-	
- }
-
- template <class MESH>
- void matlabconverter::mladdfacesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num)
- {
-   // A lot of pointless casting, but that is the way SCIRun was setup .....
-   // Iterators and Index classes to make the code really complicated 
-   // The next code tries to get away with minimal use of all this overhead
-
-   matlabarray face;
-   typename MESH::Face::size_type size;
-   meshH->size(size);
-   unsigned int numfaces = static_cast<unsigned int>(size);
-
-   meshH->synchronize(SCIRun::Mesh::FACES_E);
-
-   typename MESH::Node::array_type a;
-   std::vector<typename MESH::Node::index_type> faces(num*numfaces);
-   std::vector<long> dims(2);	
-   dims[0] = num; dims[1] = numfaces;
+	typename MESH::Node::array_type a;
+	std::vector<typename MESH::Node::index_type> faces(num*numfaces);
+	std::vector<long> dims(2);	
+	dims[0] = num; dims[1] = numfaces;
 		
-   // Another painfull and slow conversion process.....
-   unsigned int q = 0;
-   for (unsigned int p = 0; p < numfaces; p++)
-   {
-     meshH->get_nodes(a,typename MESH::Face::index_type(p));
-     for (unsigned int r = 0; r < num; r++) faces[q++] = a[r];
-   }
+	// Another painfull and slow conversion process.....
+	unsigned int q = 0;
+	for (unsigned int p = 0; p < numfaces; p++)
+	{
+		meshH->get_nodes(a,typename MESH::Face::index_type(p));
+		for (unsigned int r = 0; r < num; r++) faces[q++] = a[r]+1;
+	}
 
-   face.createdensearray(dims,matlabarray::miDOUBLE);
-   face.setnumericarray(faces,matlabarray::miUINT32); // store them as UINT32 but treat them as doubles
-   mlarray.setfield(0,"face",face);
+	face.createdensearray(dims,matlabarray::miUINT32);
+	face.setnumericarray(faces); // store them as UINT32 but treat them as doubles
+	mlarray.setfield(0,"face",face);
 
- }
+}
 
 
- template <class MESH>
- void matlabconverter::mladdcellsfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num)
- {
-   // A lot of pointless casting, but that is the way SCIRun was setup .....
-   // Iterators and Index classes to make the code really complicated 
-   // The next code tries to get away with minimal use of all this overhead
+template <class MESH>
+void matlabconverter::mladdcellsfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num)
+{
+	// A lot of pointless casting, but that is the way SCIRun was setup .....
+	// Iterators and Index classes to make the code really complicated 
+	// The next code tries to get away with minimal use of all this overhead
 
-   matlabarray cell;
-   typename MESH::Cell::size_type size;
-   meshH->size(size);
-   unsigned int numcells = static_cast<unsigned int>(size);
+	matlabarray cell;
+	typename MESH::Cell::size_type size;
+	meshH->size(size);
+	unsigned int numcells = static_cast<unsigned int>(size);
 
-   meshH->synchronize(SCIRun::Mesh::CELLS_E);
+	meshH->synchronize(SCIRun::Mesh::CELLS_E);
 
-   typename MESH::Node::array_type a;
-   std::vector<typename MESH::Node::index_type> cells(num*numcells);
-   std::vector<long> dims(2);	
-   dims[0] = num; dims[1] = numcells;
+	typename MESH::Node::array_type a;
+	std::vector<typename MESH::Node::index_type> cells(num*numcells);
+	std::vector<long> dims(2);	
+	dims[0] = num; dims[1] = numcells;
 		
-   // ..............	
-   unsigned int q = 0;
-   for (unsigned int p = 0; p < numcells; p++)
-   {
-     meshH->get_nodes(a,typename MESH::Cell::index_type(p));
-     for (unsigned int r = 0; r < num; r++) cells[q++] = a[r];
-   }
+	// ..............	
+	unsigned int q = 0;
+	for (unsigned int p = 0; p < numcells; p++)
+	{
+		meshH->get_nodes(a,typename MESH::Cell::index_type(p));
+		for (unsigned int r = 0; r < num; r++) cells[q++] = a[r]+1;
+	}
 
-   cell.createdensearray(dims,matlabarray::miDOUBLE);
-   cell.setnumericarray(cells,matlabarray::miUINT32); // store them as UINT32 but treat them as doubles
-   mlarray.setfield(0,"cell",cell);
+	cell.createdensearray(dims,matlabarray::miUINT32);
+	cell.setnumericarray(cells); // store them as UINT32 but treat them as doubles
+	mlarray.setfield(0,"cell",cell);
 	
- }
+}
 
- template<class T>
- bool matlabconverter::mladdfield(std::vector<T> &fdata,matlabarray mlarray)
- {
-   matlabarray field;
-   matlabarray fieldtype;
+template<class T>
+bool matlabconverter::mladdfield(std::vector<T> &fdata,matlabarray mlarray)
+{
+	matlabarray field;
+	matlabarray fieldtype;
 
-   T dummy;
-   matlabarray::mitype	type = field.getmitype(dummy);
-   if (type == matlabarray::miUNKNOWN) return(false);
-   fieldtype.createstringarray("scalar");
-   field.createdensearray(fdata.size(),1,type);
-   field.setnumericarray(fdata);		
-   mlarray.setfield(0,"field",field);
-   mlarray.setfield(0,"fieldtype",fieldtype);
+	T dummy;
+	matlabarray::mitype	type = field.getmitype(dummy);
+	if (type == matlabarray::miUNKNOWN) return(false);
+	fieldtype.createstringarray("scalar");
+	field.createdensearray(fdata.size(),1,type);
+	field.setnumericarray(fdata);		
+	mlarray.setfield(0,"field",field);
+	mlarray.setfield(0,"fieldtype",fieldtype);
 
-   return(true);
- }
+	return(true);
+}
 
 
 
- template<class T>
- bool matlabconverter::mladdfield(SCIRun::FData2d<T> &fdata,matlabarray mlarray)
- {
-   matlabarray field;
-   matlabarray fieldtype;
+template<class T>
+bool matlabconverter::mladdfield(SCIRun::FData2d<T> &fdata,matlabarray mlarray)
+{
+	matlabarray field;
+	matlabarray fieldtype;
 
-   T dummy;
-   matlabarray::mitype	type = field.getmitype(dummy);
-   if (type == matlabarray::miUNKNOWN) return(false);
-   fieldtype.createstringarray("scalar");
+	T dummy;
+	matlabarray::mitype	type = field.getmitype(dummy);
+	if (type == matlabarray::miUNKNOWN) return(false);
+	fieldtype.createstringarray("scalar");
 	
-   std::vector<long> dims(2);
-   dims[0] = fdata.dim2(); dims[1] = fdata.dim1();
-   field.createdensearray(dims,type);
-   field.setnumericarray(fdata.get_dataptr(),fdata.dim2(),fdata.dim1());		
-   mlarray.setfield(0,"field",field);
-   mlarray.setfield(0,"fieldtype",fieldtype);
+	std::vector<long> dims(2);
+	dims[0] = fdata.dim2(); dims[1] = fdata.dim1();
+	field.createdensearray(dims,type);
+	field.setnumericarray(fdata.get_dataptr(),fdata.dim2(),fdata.dim1());		
+	mlarray.setfield(0,"field",field);
+	mlarray.setfield(0,"fieldtype",fieldtype);
 
-   return(true);
- }
+	return(true);
+}
 
- template<class T>
- bool matlabconverter::mladdfield(SCIRun::FData3d<T> &fdata,matlabarray mlarray)
- {
-   matlabarray field;
-   matlabarray fieldtype;
+template<class T>
+bool matlabconverter::mladdfield(SCIRun::FData3d<T> &fdata,matlabarray mlarray)
+{
+	matlabarray field;
+	matlabarray fieldtype;
 
-   T dummy;
-   matlabarray::mitype	type = field.getmitype(dummy);
-   if (type == matlabarray::miUNKNOWN) return(false);
-   fieldtype.createstringarray("scalar");
+	T dummy;
+	matlabarray::mitype	type = field.getmitype(dummy);
+	if (type == matlabarray::miUNKNOWN) return(false);
+	fieldtype.createstringarray("scalar");
 	
-   std::vector<long> dims(3);
-   dims[0] = fdata.dim3(); dims[1] = fdata.dim2(); dims[2] = fdata.dim3();
-   field.createdensearray(dims,type);
-   field.setnumericarray(fdata.get_dataptr(),fdata.dim3(),fdata.dim2(),fdata.dim1());		
-   mlarray.setfield(0,"field",field);
-   mlarray.setfield(0,"fieldtype",fieldtype);
+	std::vector<long> dims(3);
+	dims[0] = fdata.dim3(); dims[1] = fdata.dim2(); dims[2] = fdata.dim3();
+	field.createdensearray(dims,type);
+	field.setnumericarray(fdata.get_dataptr(),fdata.dim3(),fdata.dim2(),fdata.dim1());		
+	mlarray.setfield(0,"field",field);
+	mlarray.setfield(0,"fieldtype",fieldtype);
 	
-   return(true);
- }
+	return(true);
+}
 
- //////// CLASSES FOR DYNAMIC READER ////////////////
-
-
+//////// CLASSES FOR DYNAMIC READER ////////////////
 
 
- template<class MESH>
- bool matlabconverter::createmesh(SCIRun::LockingHandle<MESH> &meshH,fieldstruct &fs)
- {
-   return(false);
- }
 
- // Templates for adding mesh components
 
- template <class MESH>
- void matlabconverter::addnodes(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray)
- {
-   // Get the data from the matlab file, which has been buffered
-   // but whose format can be anything. The next piece of code
-   // copies and casts the data
+template<class MESH>
+bool matlabconverter::createmesh(SCIRun::LockingHandle<MESH> &meshH,fieldstruct &fs)
+{
+	return(false);
+}
+
+// Templates for adding mesh components
+
+template <class MESH>
+void matlabconverter::addnodes(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray)
+{
+	// Get the data from the matlab file, which has been buffered
+	// but whose format can be anything. The next piece of code
+	// copies and casts the data
 	
-   std::vector<double> mldata;
-   mlarray.getnumericarray(mldata);
+	std::vector<double> mldata;
+	mlarray.getnumericarray(mldata);
 		
-   // Again the data is copied but now reorganised into
-   // a vector of Point objects
+	// Again the data is copied but now reorganised into
+	// a vector of Point objects
 	
-   long numnodes = mlarray.getn();	
-   std::vector<SCIRun::Point> points(numnodes);
+	long numnodes = mlarray.getn();	
+	std::vector<SCIRun::Point> points(numnodes);
 
-   meshH->node_reserve(numnodes);
+	meshH->node_reserve(numnodes);
 	
-   long p,q;
-   for (p = 0, q = 0; p < numnodes; p++, q+=3)
-   { meshH->add_point(SCIRun::Point(mldata[q],mldata[q+1],mldata[q+2])); } 
- }
+	long p,q;
+	for (p = 0, q = 0; p < numnodes; p++, q+=3)
+	{ meshH->add_point(SCIRun::Point(mldata[q],mldata[q+1],mldata[q+2])); } 
+}
 
- template <class MESH>
- void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray)
- {
-   // Get the data from the matlab file, which has been buffered
-   // but whose format can be anything. The next piece of code
-   // copies and casts the data
+template <class MESH>
+void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray)
+{
+	// Get the data from the matlab file, which has been buffered
+	// but whose format can be anything. The next piece of code
+	// copies and casts the data
 	
-   std::vector<typename MESH::under_type> mldata;
-   mlarray.getnumericarray(mldata);		
+	std::vector<typename MESH::under_type> mldata;
+	mlarray.getnumericarray(mldata);		
 	
-   // check whether it is zero based indexing 
-   // In short if there is a zero it must be zero
-   // based numbering right ??
-   // If not we assume one based numbering
+	// check whether it is zero based indexing 
+	// In short if there is a zero it must be zero
+	// based numbering right ??
+	// If not we assume one based numbering
 	
-   long p,q;
+	long p,q;
 	
-   bool zerobased = false;  
-   long size = mldata.size();
-   for (p = 0; p < size; p++) { if (mldata[p] == 0) {zerobased = true; break;} }
+	bool zerobased = false;  
+	long size = mldata.size();
+	for (p = 0; p < size; p++) { if (mldata[p] == 0) {zerobased = true; break;} }
 	
-   if (zerobased == false)
-   {   // renumber to go from matlab indexing to C++ indexing
-     for (p = 0; p < size; p++) { mldata[p]--;}
-   }
+	if (zerobased == false)
+	{   // renumber to go from matlab indexing to C++ indexing
+		for (p = 0; p < size; p++) { mldata[p]--;}
+	}
 	
-   meshH->elem_reserve(mlarray.getn());
+	meshH->elem_reserve(mlarray.getn());
 	
-   for (p = 0, q = 0; p < mlarray.getn(); p++, q += 2)
-   {
-     meshH->add_edge(typename MESH::Node::index_type(mldata[q]), typename MESH::Node::index_type(mldata[q+1]));
-   }
+	for (p = 0, q = 0; p < mlarray.getn(); p++, q += 2)
+	{
+		meshH->add_edge(typename MESH::Node::index_type(mldata[q]), typename MESH::Node::index_type(mldata[q+1]));
+	}
 		  
  }
 
@@ -933,10 +933,11 @@
    }
 	
    // Here we finally create the field
-   FIELD *fieldptr = scinew FIELD(meshH,fs.data_at);
+   FIELD *fieldptr = scinew FIELD(meshH,fs.basis_order);
    scifield = static_cast<SCIRun::Field *>(fieldptr);
 	
    fieldptr->resize_fdata();   // make sure it is resized to number of nodes/edges/faces/cells or whatever
+   if (fs.field.isempty()) return(true);	// NEED TO CHECK THIS NOW AS data_at changed into basis_order
    typename FIELD::fdata_type& fdata = fieldptr->fdata();
    if (!(translate.addfield(fdata,fs.field)))
    {
