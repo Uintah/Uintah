@@ -662,7 +662,7 @@ void Thread::initialize() {
     main_sema=usnewsema(arena, 0);
     nprocessors=Thread::numProcessors();
 
-    control_c_sema=usnewsema(poolmutex_arena, 0);
+    control_c_sema=usnewsema(poolmutex_arena, 1);
     if(!poolmutex_lock){
 	perror("usnewlock");
 	exit(-1);
@@ -1044,6 +1044,7 @@ void Thread::waitFor(SysClock time) {
  * Migrate the thread to a CPU.
  */
 void Thread::migrate(int proc) {
+#if 0
     if(proc==-1){
 	if(sysmp(MP_RUNANYWHERE_PID, priv->pid) == -1){
 	    perror("sysmp - MP_RUNANYWHERE_PID");
@@ -1053,6 +1054,7 @@ void Thread::migrate(int proc) {
 	    perror("sysmp - MP_MUSTRUN_PID");
 	}
     }
+#endif
     cpu=proc;
 }
 
