@@ -20,8 +20,8 @@
 SRCDIR   := CCA/Components/VtkTest
 
 SUBDIRS := $(SRCDIR)/Renderer \
-	   $(SRCDIR)/PolyDataMapper \
 	   $(SRCDIR)/Actor \
+	   $(SRCDIR)/PolyDataMapper \
 	   $(SRCDIR)/ContourFilter \
 	   $(SRCDIR)/StructuredPointsReader	
 
