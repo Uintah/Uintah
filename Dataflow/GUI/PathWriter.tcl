@@ -49,7 +49,7 @@ itcl_class SCIRun_DataIO_PathWriter {
 	set defext ".path"
 	
 	# name to appear initially
-	set defname "CameraPath"
+	set defname "MyCameraPath"
 	set title "Save path file"
 
 	# file types to appers in filter box

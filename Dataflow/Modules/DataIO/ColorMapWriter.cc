@@ -1,6 +1,5 @@
-
 /*
- *  ColorMapWriter.cc: ColorMap Writer class
+ *  ColorMapWriter.cc: Save persistent representation of a colormap to a file
  *
  *  Written by:
  *   Steven G. Parker
@@ -11,24 +10,21 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/Persistent/Pstreams.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
-#include <Core/Datatypes/ColorMap.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
 
 namespace SCIRun {
 
-
 class ColorMapWriter : public Module {
-    ColorMapIPort* inport;
-    GuiString filename;
-    GuiString filetype;
+  ColorMapIPort* inport_;
+  GuiString filename_;
+  GuiString filetype_;
 public:
-    ColorMapWriter(const clString& id);
-    virtual ~ColorMapWriter();
-    virtual void execute();
+  ColorMapWriter(const clString& id);
+  virtual ~ColorMapWriter();
+  virtual void execute();
 };
 
 extern "C" Module* make_ColorMapWriter(const clString& id) {
@@ -36,12 +32,12 @@ extern "C" Module* make_ColorMapWriter(const clString& id) {
 }
 
 ColorMapWriter::ColorMapWriter(const clString& id)
-: Module("ColorMapWriter", id, Source), filename("filename", id, this),
-  filetype("filetype", id, this)
+  : Module("ColorMapWriter", id, Source), filename_("filename", id, this),
+    filetype_("filetype", id, this)
 {
-    // Create the output data handle and port
-    inport=scinew ColorMapIPort(this, "Input Data", ColorMapIPort::Atomic);
-    add_iport(inport);
+  // Create the output port
+  inport_=scinew ColorMapIPort(this, "Persistent Data", ColorMapIPort::Atomic);
+  add_iport(inport_);
 }
 
 ColorMapWriter::~ColorMapWriter()
@@ -50,24 +46,30 @@ ColorMapWriter::~ColorMapWriter()
 
 void ColorMapWriter::execute()
 {
+  // Read data from the input port
+  ColorMapHandle handle;
+  if(!inport_->get(handle))
+    return;
 
-    ColorMapHandle handle;
-    if(!inport->get(handle))
-	return;
-    clString fn(filename.get());
-    if(fn == "")
-	return;
-    Piostream* stream;
-    clString ft(filetype.get());
-    if(ft=="Binary"){
-	stream=scinew BinaryPiostream(fn, Piostream::Write);
-    } else {
-	stream=scinew TextPiostream(fn, Piostream::Write);
-    }
-    // Write the file
-    Pio(*stream, handle);
-    delete stream;
+  // If no name is provided, return
+  clString fn(filename_.get());
+  if(fn == "") {
+    error("Warning: no filename in ColorMapWriter");
+    return;
+  }
+   
+  // Open up the output stream
+  Piostream* stream;
+  clString ft(filetype_.get());
+  if(ft=="Binary"){
+    stream=scinew BinaryPiostream(fn, Piostream::Write);
+  } else { // "ASCII"
+    stream=scinew TextPiostream(fn, Piostream::Write);
+  }
+
+  // Write the file
+  Pio(*stream, handle);
+  delete stream;
 }
 
 } // End namespace SCIRun
-

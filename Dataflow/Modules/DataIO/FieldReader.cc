@@ -1,98 +1,75 @@
-
 /*
- *  FieldReader.cc: Reads Field datatype persistent objects
+ *  FieldReader.cc: Read a persistent field from a file
  *
  *  Written by:
- *   Alexei Samsonov
+ *   Steven G. Parker
  *   Department of Computer Science
  *   University of Utah
- *   December 2000
+ *   July 1994
  *
- *  Copyright (C) 2000 SCI Group
+ *  Copyright (C) 1994 SCI Group
  */
-#include <string>
 
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/GuiVar.h>
 
 namespace SCIRun {
 
 class FieldReader : public Module {
-
-  // GROUP: private data
-  //////////
-  // 
-  FieldOPort*       d_oport;
-  GuiString         d_filename;
-  FieldHandle       d_hField;
-  clString            d_oldFilename;
-
+    FieldOPort* outport_;
+    GuiString filename_;
+    FieldHandle handle_;
+    clString old_filename_;
 public:
-  // GROUP: Constructor/Destructor
-  //////////
-  //
-  FieldReader(const clString& id);
-  virtual ~FieldReader();
-  
-  // GROUP: public member functions
-  //////////
-  //
-  virtual void execute();
+    FieldReader(const clString& id);
+    virtual ~FieldReader();
+    virtual void execute();
 };
 
-//////////
-// Module maker function
 extern "C" Module* make_FieldReader(const clString& id) {
   return new FieldReader(id);
 }
 
-//////////
-// Constructor/Desctructor
 FieldReader::FieldReader(const clString& id)
-  : Module("FieldReader", id, Source), d_filename("d_filename", id, this)
+: Module("FieldReader", id, Source), filename_("filename", id, this)
 {
-  d_oport=scinew FieldOPort(this, "Field Output", FieldIPort::Atomic);
-  add_oport(d_oport);
+    // Create the output port
+    outport_=scinew FieldOPort(this, "Output Data", FieldIPort::Atomic);
+    add_oport(outport_);
 }
 
 FieldReader::~FieldReader()
 {
 }
 
-//////////
-// 
 void FieldReader::execute()
 {
-  clString fn(d_filename.get());
-  
-  if(!d_hField.get_rep() || fn != d_oldFilename){
+    clString fn(filename_.get());
 
-    d_oldFilename=fn;
-    Piostream* stream=auto_istream(fn);
+    // If we haven't read yet, or if it's a new filename, then read
+    if(!handle_.get_rep() || fn != old_filename_){
+	old_filename_=fn;
+	Piostream* stream=auto_istream(fn);
+	if(!stream){
+	    error(clString("Error reading file: ")+filename_.get());
+	    return;
+	}
 
-    if(!stream){
-      error(clString("Error reading file: ")+d_filename.get());
-      return; // Can't open file...
+	// Read the file
+	Pio(*stream, handle_);
+	if(!handle_.get_rep() || stream->error()){
+	    error(clString("Error reading Field from file: ")+
+		  filename_.get());
+	    delete stream;
+	    return;
+	}
+	delete stream;
     }
-    
-    // Read the file...
-    Pio(*stream, d_hField);
-    
-    if(!d_hField.get_rep() || stream->error()){
-      error("Error reading Field from file");
-      delete stream;
-      return;
-    }
-    delete stream;
 
-  }
-
-  d_oport->send(d_hField);
+    // Send the data downstream
+    outport_->send(handle_);
 }
 
 } // End namespace SCIRun
-

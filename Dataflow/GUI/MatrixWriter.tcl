@@ -1,5 +1,9 @@
+# example of Writer
+# by Samsonov Alexei
+# October 2000 
+# NOTE: if file to be splitted, uncomment corresponding lines in the file
 
-catch {rename MatrixWriter ""}
+catch {rename SCIRun_DataIO_MatrixWriter ""}
 
 itcl_class SCIRun_DataIO_MatrixWriter {
     inherit Module
@@ -9,28 +13,64 @@ itcl_class SCIRun_DataIO_MatrixWriter {
     }
     method set_defaults {} {
 	global $this-filetype
-	global $this-split
-
 	set $this-filetype Binary
 	set $this-split 0
     }
+    
     method ui {} {
+	global env
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    raise $w
+	    set child [lindex [winfo children $w] 0]
+	    # $w withdrawn by $child's procedures
+	    raise $child
 	    return;
 	}
+	
 	toplevel $w
+	set initdir ""
 
-	make_labeled_radio $w.filetype "Format:" "" left $this-filetype \
-		{Binary ASCII}
-	checkbutton $w.split -text "Split" -relief flat \
-		-variable $this-split
+	# place to put preferred data directory
+	# it's used if $this-filename is empty
+	if {[info exists env(PSE_DATA)]} {
+	    set initdir $env(PSE_DATA)
+	}
+	
+	if { $initdir==""} {
+	    if {[info exists env(SCI_DATA)]} {
+		set initdir $env(SCI_DATA)
+	    }
+	}
 
-	pack $w.filetype $w.split
-	entry $w.f -textvariable $this-filename -width 40 \
-		-borderwidth 2 -relief sunken
-	pack $w.f -side bottom
-	bind $w.f <Return> "$this-c needexecute "
+	#######################################################
+	# to be modified for particular reader
+
+	# extansion to append if no extension supplied by user
+	set defext ".mat"
+	
+	# name to appear initially
+	set defname "MyMatrix"
+	set title "Save matrix file"
+
+	# file types to appers in filter box
+	set types {
+	    {{Matrix}        {.mat} }
+	    {{All Files}       {.*} }
+	}
+	
+	######################################################
+	
+	makeSaveFilebox \
+		-parent $w \
+		-filevar $this-filename \
+		-command "$this-c needexecute" \
+		-cancel "destroy $w" \
+		-title $title \
+		-filetypes $types \
+	        -initialfile $defname \
+		-initialdir $initdir \
+		-defaultextension $defext \
+		-formatvar $this-filetype \
+		-splitvar $this-split
     }
 }

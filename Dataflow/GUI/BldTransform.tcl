@@ -7,7 +7,7 @@
 #  Copyright (C) 1999 SCI Group
 catch {rename BldTransform ""}
 
-itcl_class SCIRun_Matrix_BldTransform {
+itcl_class SCIRun_Math_BldTransform {
     inherit Module
     constructor {config} {
 	set name BldTransform

@@ -47,7 +47,7 @@ itcl_class SCIRun_DataIO_FieldReader {
 
 	# extansion to append if no extension supplied by user
 	set defext ".fld"
-	set title "Open Field File"
+	set title "Open field file"
 	
 	# file types to appers in filter box
 	set types {

@@ -1,6 +1,5 @@
-
 /*
- *  ColorMapReader.cc: ColorMap Reader class
+ *  ColorMapReader.cc: Read a persistent colormap from a file
  *
  *  Written by:
  *   Steven G. Parker
@@ -11,22 +10,18 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
-#include <Core/Datatypes/ColorMap.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/GuiVar.h>
 
 namespace SCIRun {
 
-
-
 class ColorMapReader : public Module {
-    ColorMapOPort* outport;
-    GuiString filename;
-    ColorMapHandle handle;
-    clString old_filename;
+    ColorMapOPort* outport_;
+    GuiString filename_;
+    ColorMapHandle handle_;
+    clString old_filename_;
 public:
     ColorMapReader(const clString& id);
     virtual ~ColorMapReader();
@@ -38,58 +33,43 @@ extern "C" Module* make_ColorMapReader(const clString& id) {
 }
 
 ColorMapReader::ColorMapReader(const clString& id)
-: Module("ColorMapReader", id, Source), filename("filename", id, this)
+: Module("ColorMapReader", id, Source), filename_("filename", id, this)
 {
-    // Create the output data handle and port
-    outport=scinew ColorMapOPort(this, "Output Data", ColorMapIPort::Atomic);
-    add_oport(outport);
+    // Create the output port
+    outport_=scinew ColorMapOPort(this, "Output Data", ColorMapIPort::Atomic);
+    add_oport(outport_);
 }
 
 ColorMapReader::~ColorMapReader()
 {
 }
 
-#ifdef BROKEN
-static void watcher(double pd, void* cbdata)
-{
-    ColorMapReader* reader=(ColorMapReader*)cbdata;
-    if(TCLTask::try_lock()){
-	// Try the malloc lock once before we call update_progress
-	// If we can't get it, then back off, since our caller might
-	// have it locked
-	if(!Task::test_malloc_lock()){
-	    TCLTask::unlock();
-	    return;
-	}
-	reader->update_progress(pd);
-	TCLTask::unlock();
-    }
-}
-#endif
-
 void ColorMapReader::execute()
 {
+    clString fn(filename_.get());
 
-    clString fn(filename.get());
-    if(!handle.get_rep() || fn != old_filename){
-	old_filename=fn;
+    // If we haven't read yet, or if it's a new filename, then read
+    if(!handle_.get_rep() || fn != old_filename_){
+	old_filename_=fn;
 	Piostream* stream=auto_istream(fn);
 	if(!stream){
-	    error(clString("Error reading file: ")+filename.get());
-	    return; // Can't open file...
+	    error(clString("Error reading file: ")+filename_.get());
+	    return;
 	}
-	// Read the file...
-//	stream->watch_progress(watcher, (void*)this);
-	Pio(*stream, handle);
-	if(!handle.get_rep() || stream->error()){
-	    error("Error reading ColorMap from file");
+
+	// Read the file
+	Pio(*stream, handle_);
+	if(!handle_.get_rep() || stream->error()){
+	    error(clString("Error reading ColorMap from file: ")+
+		  filename_.get());
 	    delete stream;
 	    return;
 	}
 	delete stream;
     }
-    outport->send(handle);
+
+    // Send the data downstream
+    outport_->send(handle_);
 }
 
 } // End namespace SCIRun
-

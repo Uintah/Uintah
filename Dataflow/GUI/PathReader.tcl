@@ -33,8 +33,8 @@ itcl_class SCIRun_DataIO_PathReader {
 	
 	# place to put preferred data directory
 	# it's used if $this-filename is empty
-	if {[info exists env(PSE_DATA)]} {
-	    set initdir $env(PSE_DATA)
+	if {[info exists env(SCIRUN_DATA)]} {
+	    set initdir $env(SCIRUN_DATA)
 	}
 	
 	if { $initdir==""} {
@@ -52,8 +52,8 @@ itcl_class SCIRun_DataIO_PathReader {
 	
 	# file types to appers in filter box
 	set types {
-	    {{Camera Path}     {.path}      }
-	    {{All Files}       {.*}   }
+	    {{Camera Path}     {.path} }
+	    {{All Files}       {.*}    }
 	}
 	
 	######################################################
