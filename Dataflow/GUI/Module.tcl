@@ -688,8 +688,7 @@ proc regenModuleMenu {modid menu_id} {
     }
 
     global env
-    if { [info exists env(SCIRUN_GUI_UseGuiFetch)] &&
-	 [boolToInt $env(SCIRUN_GUI_UseGuiFetch)] } {
+    if { [boolToInt SCIRUN_GUI_UseGuiFetch] } {
         $menu_id add separator
 	$menu_id add command -label "Fetch UI"  -command "$modid fetch_ui"
 	$menu_id add command -label "Return UI" -command "$modid return_ui"
