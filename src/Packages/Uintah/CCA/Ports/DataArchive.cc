@@ -336,7 +336,7 @@ DataArchive::queryGlobals( vector<string>& names,
   d_lock.lock();
   DOM_Node vars = findNode("globals", d_indexDoc.getDocumentElement());
   if(vars == 0)
-    throw InternalError("globals section not found\n");
+    return;
   queryVariables(vars, names, types);
 
   d_lock.unlock();
