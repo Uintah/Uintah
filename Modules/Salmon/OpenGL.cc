@@ -313,6 +313,8 @@ void OpenGL::get_pick(Salmon* salmon, Roe* roe, int x, int y,
 		    hit_obj=pick_buffer[idx++];
 		    idx+=nnames-2; // Skip to the last one...
 		    hit_pick=pick_buffer[idx++];
+		} else {
+		    idx+=nnames+1;
 		}
 	    }
 	}
