@@ -30,7 +30,7 @@ set m9 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 226 472]
 
 addConnection $m1 0 $m4 0
 addConnection $m3 0 $m4 1
-addConnection $m3 2 $m5 0
+addConnection $m3 1 $m5 0
 addConnection $m0 0 $m1 0
 addConnection $m0 0 $m3 0
 addConnection $m0 0 $m7 0
