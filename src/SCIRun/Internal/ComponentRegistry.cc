@@ -131,12 +131,22 @@ ComponentRegistry::getAvailableComponentClasses()
   SSIDL::array1<sci::cca::ComponentClassDescription::pointer> ccalist;
 
   for(std::vector<ComponentDescription*>::iterator iter = list.begin();
-      iter != list.end(); iter++)
-    {
+      iter != list.end(); iter++) {
     ccalist.push_back(sci::cca::ComponentClassDescription::pointer(
                           new ComponentClassDescriptionAdapter(*iter)));
-    }
+  }
   return ccalist;
+}
+
+void ComponentRegistry::addComponentClass(const std::string& componentClassName)
+{
+    ComponentModel* cm = framework->lookupComponentModel(componentClassName);
+    if (cm == 0) {
+	std::cerr << "Error: could not find component model "
+		  << componentClassName << std::endl;
+    } else {
+	cm->buildComponentList();
+    }
 }
 
 } // end namespace SCIRun
