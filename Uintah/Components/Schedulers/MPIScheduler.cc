@@ -324,7 +324,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	    ASSERTEQ(comps.size(), 1);
 	    const Task::Dependency* dep = comps[0];
 	    OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
-	    dw->reduceMPI(dep->d_var, d_myworld);
+	    dw->reduceMPI(dep->d_var, dep->d_matlIndex, d_myworld);
 	    double reduceend = Time::currentSeconds();
 	    time_t t(0);
 	    emitNode(tasks[i], t, reduceend - reducestart);
@@ -893,6 +893,9 @@ MPIScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.31  2000/12/06 23:57:38  witzel
+// Added material index to reduceMPI call
+//
 // Revision 1.30  2000/10/13 21:14:15  sparker
 // Commented out called to malloc audit
 //
