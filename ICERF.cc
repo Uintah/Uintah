@@ -97,8 +97,7 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
       ICEMaterial* matl = d_sharedState->getICEMaterial(m);
       int indx = matl->getDWIndex();
       old_dw->get(Temp[m],   lb->temp_CCLabel,  indx,patch,Ghost::None,0);
-      old_dw->get(rho_CC[m],lb->rho_CC_top_cycleLabel,
-                                                indx,patch,Ghost::None,0);
+      old_dw->get(rho_CC[m], lb->rho_CCLabel,   indx,patch,Ghost::None,0);
       old_dw->get(sp_vol_CC[m],
                              lb->sp_vol_CCLabel,indx,patch,Ghost::None,0);
       new_dw->allocate(sp_vol_new[m],lb->sp_vol_CCLabel,    indx, patch); 
