@@ -1,12 +1,15 @@
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Thread/Barrier.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Time.h>
+
 #include <Packages/rtrt/Core/Dpy.h>
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Image.h>
-#include <Packages/rtrt/Core/Transform.h>
-#include <Core/Thread/Barrier.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Time.h>
+#include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/Ball.h>
 #include <Packages/rtrt/Core/BallMath.h>
 #include <Packages/rtrt/visinfo/visinfo.h>
