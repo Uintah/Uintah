@@ -23,3 +23,4 @@ typedef HashTable<clString, Connection*> _dummy8_;
 typedef HashTable<clString, Renderer*> _dummy9_;
 typedef HashTable<clString, int> _dummy10_;
 typedef HashTable<clString, ObjTag*> _dummy11_;
+typedef HashTable<clString, void*> _dummy12_;

@@ -7,6 +7,7 @@
 class SceneItem;
 class Persistent;
 class PortInfo;
+class SLSourceInfo;
 
 typedef HashTable<int, int> _dummy2_;
 typedef HashTable<int, SceneItem*> _dummy3_;
@@ -15,3 +16,5 @@ typedef HashTable<int, PortInfo*> _dummy5_;
 typedef HashTableIter<int, PortInfo*> _dummy6_;
 typedef HashTable<Persistent*, int> _dummy7_;
 typedef HashTable<int, Persistent*> _dummy8_;
+typedef HashTable<int, SLSourceInfo*> _dummy9_;
+typedef HashTableIter<int, SLSourceInfo*> _dummy10_;

@@ -4,6 +4,7 @@
 #include <Classlib/Array1.cc>
 #include <Classlib/String.h>
 #include <Constraints/BaseConstraint.h>
+#include <Constraints/ConstraintSolver.h>
 #include <Geom/Geom.h>
 #include <Geom/Group.h>
 #include <Geom/Material.h>
@@ -18,14 +19,24 @@
 
 class Connection;
 class DebugSwitch;
+class GeomGroup;
 class GeomObj;
+class GeomPick;
+class GeomPolyline;
+class GeomSwitch;
+class GeomTriStrip;
+class GeomTube;
+class GeomVertex;
 class IPort;
 class Light;
 class Module;
 class Node;
 class OPort;
+class PathPoint;
 class Roe;
 class SLine;
+class SLSource;
+class SLTracer;
 class SRibbon;
 class SoundMixer_PortInfo;
 class SSLine;
@@ -51,7 +62,6 @@ typedef Array1<SSurf*> _dummy18_;
 typedef Array1<TCLvar*> _dummy19_;
 
 typedef Array1<unsigned int> _dummy20_;
-typedef Array1<Variable*> _dummy21_;
 typedef Array1<BaseConstraint*> _dummy22_;
 typedef Array1<VPriority> _dummy24_;
 typedef Array1<Light*> _dummy25_;
@@ -78,6 +88,19 @@ typedef Array1<DebugSwitch*> _dummy39_;
 
 typedef Array1<GeomGroup::ITree*> _dummy40_;
 typedef Array1<BSphere> _dummy41_;
+typedef Array1<GeomVertex*> _dummy42_;
+typedef Array1<SLTracer*> _dummy43_;
+typedef Array1<GeomGroup*> _dummy44_;
+typedef Array1<GeomPolyline*> _dummy45_;
+typedef Array1<GeomSwitch*> _dummy46_;
+typedef Array1<GeomTube*> _dummy47_;
+typedef Array1<GeomTriStrip*> _dummy48_;
+typedef Array1<PathPoint*> _dummy49_;
+
+typedef Array1<SLSource*> _dummy50_;
+typedef Array1<GeomPick*> _dummy51_;
+typedef Array1<StackItem> _dummy52_;
+typedef Array1<long> _dummy53_;
 
 static void _fn1_(Piostream& p1, Array1<TSElement*>& p2)
 {

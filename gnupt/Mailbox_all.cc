@@ -2,7 +2,6 @@
 
 #pragma implementation "ITC.h"
 
-#include <Multitask/ITC.cc>
 #include <Datatypes/GeometryComm.h>
 #include <Datatypes/ColormapPort.h>
 #include <Datatypes/ColumnMatrixPort.h>
