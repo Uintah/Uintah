@@ -4140,6 +4140,11 @@ void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
     XFontStruct* fontInfo = XLoadQueryFont(di->dpy,
     	 "-adobe-helvetica-bold-r-normal-*-14-120-*-*-p-60-iso8859-1");
     if (fontInfo == NULL) {
+      fontInfo =
+	XLoadQueryFont(di->dpy, "-schumacher-*-*-*-*-*-*-*-*-*-*-*-*-*");
+    }
+    if (fontInfo == NULL)
+    {
       cerr << "GeomText: no font found\n";
       return;
     }
