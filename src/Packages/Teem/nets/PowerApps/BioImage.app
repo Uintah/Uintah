@@ -2273,7 +2273,8 @@ class BioImageApp {
 
 
             button $page.vol -text "Edit Transfer Function" \
-                -command "$this check_crop; $mods(EditColorMap2D) initialize_ui"
+               -command "$this check_crop; $mods(EditColorMap2D) initialize_ui;
+                         wm title .ui${mods(EditColorMap2D)} {Transfer Function Editor}"
             Tooltip $page.vol "Open up the interface\nfor editing the transfer function"
             pack $page.vol -side top -anchor n -padx 3 -pady 3
             
