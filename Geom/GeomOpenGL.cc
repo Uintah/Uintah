@@ -27,6 +27,7 @@
 #include <Math/Trig.h>
 
 #include <GL/gl.h>
+#include <GL/glu.h>
 
 DrawInfoOpenGL::DrawInfoOpenGL()
 : current_matl(0)
@@ -387,6 +388,15 @@ void GeomPolyline::objdraw(DrawInfoOpenGL* di) {
     for(int i=0;i<pts.size();i++){
 	Point p(pts[i]);
 	glVertex3d(p.x(), p.y(), p.z());
+	double wx, wy, wz;
+	double mm[16];
+	double pm[16];
+	int vp[4];
+	glGetDoublev(GL_MODELVIEW_MATRIX, mm);
+	glGetDoublev(GL_PROJECTION_MATRIX, pm);
+	glGetIntegerv(GL_VIEWPORT, vp);
+	gluProject(p.x(), p.y(), p.z(), mm, pm, vp, &wx, &wy, &wz);
+	cerr << "xp: " << wx << " " << wy << " " << wz << endl;
     }
     glEnd();
 }
