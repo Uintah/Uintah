@@ -141,6 +141,7 @@ void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
 		      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
 		      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
+
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
   new_dw->put(delt_vartype(delT_new), lb->delTLabel);
@@ -354,6 +355,16 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
 
+    delt_vartype doMech;
+    old_dw->get(doMech, lb->doMechLabel);
+
+    if(doMech < 0.){
+	delT_new = WaveSpeed.minComponent();
+    }
+    else{
+	delT_new = 100.0;
+    }
+
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
     new_dw->put(pstress,                lb->pStressLabel_afterStrainRate);
     new_dw->put(deformationGradient,    lb->pDeformationMeasureLabel_preReloc);
@@ -382,6 +393,7 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
   task->requires(Task::NewDW, lb->gVelocityLabel,          matlset, 
                  Ghost::AroundCells, 1);
   task->requires(Task::OldDW, lb->delTLabel);
+  task->requires(Task::OldDW, lb->doMechLabel);
 
   task->computes(lb->pStressLabel_afterStrainRate,      matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
@@ -401,7 +413,6 @@ double CompNeoHookPlas::computeRhoMicroCM(double pressure,
 					  const MPMMaterial* matl)
 {
   double rho_orig = matl->getInitialDensity();
-  //double p_ref=101325.0;
   double bulk = d_initialData.Bulk;
 
   double p_gauge = pressure - p_ref;
@@ -417,7 +428,6 @@ void CompNeoHookPlas::computePressEOSCM(const double rho_cur,double& pressure,
                                         double& dp_drho, double& tmp,
                                         const MPMMaterial* matl)
 {
-// double p_ref=101325.0;
   double bulk = d_initialData.Bulk;
   double shear = d_initialData.Shear;
   double rho_orig = matl->getInitialDensity();

@@ -55,6 +55,8 @@ WARNING
 				   double &delT,
 				   double &Surface_or_Volume) = 0;
 
+	  virtual double getThresholdTemperature() = 0;
+
        protected:
 	  bool d_burnable;
     

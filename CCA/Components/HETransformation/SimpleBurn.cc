@@ -30,7 +30,7 @@ SimpleBurn::~SimpleBurn()
 void SimpleBurn::computeBurn(double gasTemperature,
 			     double gasPressure,
 			     double materialMass,
-			     double materialTemperature,
+			     double /*materialTemperature */,
 			     double &burnedMass,
 			     double &releasedHeat,
 			     double &delT,
@@ -48,4 +48,9 @@ void SimpleBurn::computeBurn(double gasTemperature,
     burnedMass = materialMass;
   }
   releasedHeat = burnedMass * Enthalpy;
+}
+
+double SimpleBurn::getThresholdTemperature()
+{
+   return thresholdTemp;
 }

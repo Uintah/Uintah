@@ -298,7 +298,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
    t->computes(MIlb->cVolumeLabel);
    t->computes(MIlb->vel_CCLabel);
    t->computes(MIlb->temp_CCLabel);
-
+   t->computes( Mlb->doMechLabel);
 
    sched->addTask(t, patches, mpm_matls);
 }
@@ -444,6 +444,7 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   t->requires(Task::NewDW, MIlb->temp_CCLabel, mpm_matls, Ghost::None);
   t->requires(Task::NewDW, MIlb->cMassLabel,   mpm_matls, Ghost::None);
   t->requires(Task::NewDW, Mlb->gMassLabel,    mpm_matls, Ghost::AroundCells,1);
+  t->requires(Task::OldDW, Mlb->doMechLabel);
   
   t->computes(MIlb->burnedMassCCLabel);
   t->computes(MIlb->releasedHeatCCLabel);
@@ -490,6 +491,9 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
   
     new_dw->put(burnedMass,   MIlb->burnedMassCCLabel,   0, patch);
     new_dw->put(releasedHeat, MIlb->releasedHeatCCLabel, 0, patch);
+
+    double doMech = 999.9;
+    new_dw->put(delt_vartype(doMech), Mlb->doMechLabel);
   }
 }
 
@@ -672,7 +676,7 @@ void MPMICE::interpolateVelIncFCToNC(const ProcessorGroup*,
 void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
                                  const PatchSubset* patches,
 				 const MaterialSubset* ,
-                                 DataWarehouse*,
+                                 DataWarehouse* old_dw,
                                  DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
@@ -685,6 +689,27 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
     Vector zero(0.0,0.0,0.);
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
+
+    int reactant_indx = -1;
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      if(mpm_matl->getRxProduct() == Material::reactant){
+	reactant_indx = m;
+      }
+    }
+    delt_vartype doMechOld;
+    double       doMechNew = 999.9;
+    old_dw->get(doMechOld, Mlb->doMechLabel);
+    static int first_small_dt = 0;
+
+    double thresholdTemperature = 1e6;
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      if(mpm_matl->getRxProduct() == Material::reactant)  {
+	thresholdTemperature =
+			mpm_matl->getBurnModel()->getThresholdTemperature();
+      }
+    }
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -713,6 +738,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       new_dw->get(gtemperature, Mlb->gTemperatureLabel, matlindex, patch,
                 Ghost::AroundCells, 1);
       IntVector nodeIdx[8];
+
       //__________________________________
       //  Compute Temp_CC
 #ifdef IDEAL_GAS
@@ -733,8 +759,16 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 	  MassSum += gmass[nodeIdx[in]];
 	}
 
-	if (MassSum > 1.e-20) 
+	if (MassSum > 1.e-20){
 	  Temp_CC[*iter] = MassXTemp / MassSum;    
+	  if((m==reactant_indx && Temp_CC[*iter] > thresholdTemperature) ||
+	     (doMechOld < 0                               )) {
+	     doMechNew = -1.0;
+	     if(first_small_dt > 0){
+		doMechNew = -2.0;
+	     }
+          }
+	}
      }
 #endif
 
@@ -770,6 +804,10 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       new_dw->put(vel_CC,   MIlb->vel_CCLabel,      matlindex, patch);
       new_dw->put(Temp_CC,  MIlb->temp_CCLabel,     matlindex, patch);
     }
+    if(doMechNew < 0.){
+	first_small_dt++;
+    }
+    new_dw->put(delt_vartype(doMechNew), Mlb->doMechLabel);
   }  //patches
 }
 //______________________________________________________________________
@@ -1816,7 +1854,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
         CCVariable<double> solidTemperature;
         CCVariable<double> solidMass;
         CCVariable<double> rho_micro_CC;
-	 NCVariable<double> NCsolidMass;  
+	NCVariable<double> NCsolidMass;  
 
         new_dw->get(solidTemperature, MIlb->temp_CCLabel,      dwindex, patch, 
 							 Ghost::None, 0);
@@ -1824,11 +1862,16 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 							 Ghost::None, 0);
         new_dw->get(rho_micro_CC,      Ilb->rho_micro_CCLabel, dwindex, patch,
 							 Ghost::None, 0);
-	 new_dw->get(NCsolidMass,       Mlb->gMassLabel,        dwindex, patch, 
+	new_dw->get(NCsolidMass,       Mlb->gMassLabel,        dwindex, patch, 
 							 Ghost::AroundCells, 1);
 
         double delt = delT;
         double cv_solid = mpm_matl->getSpecificHeat();
+
+        delt_vartype doMech;
+        old_dw->get(doMech, Mlb->doMechLabel);
+
+       if(doMech < -1.5){
 
         for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
 	  
@@ -1940,6 +1983,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 	  }
 	}  // if (maxMass-MinMass....)
       }  // cell iterator
+     }
     }  // if(mpm_matl == reactant)
 
 //    cout << "TCV = " << total_created_vol << endl;

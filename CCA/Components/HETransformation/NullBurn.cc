@@ -22,10 +22,10 @@ NullBurn::~NullBurn()
 
 }
 
-void NullBurn::computeBurn(double gasTemperature,
-			   double gasPressure,
-			   double materialMass,
-			   double materialTemperature,
+void NullBurn::computeBurn(double /*gasTemperature */,
+			   double /*gasPressure */,
+			   double /*materialMass */,
+			   double /*materialTemperature */,
 			   double &burnedMass,
 			   double &releasedHeat,
 			   double &delT,
@@ -33,5 +33,10 @@ void NullBurn::computeBurn(double gasTemperature,
 {
   burnedMass = 0;
   releasedHeat = 0;
+}
+
+double NullBurn::getThresholdTemperature()
+{
+   return 1.e15;
 }
 

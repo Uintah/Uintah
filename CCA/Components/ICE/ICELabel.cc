@@ -11,6 +11,8 @@ ICELabel::ICELabel()
 {
   delTLabel
     = scinew VarLabel("delT",      delt_vartype::getTypeDescription());
+  doMechLabel
+    = scinew VarLabel("doMech",    delt_vartype::getTypeDescription());
   press_CCLabel     =
     scinew VarLabel("press_CC",    CCVariable<double>::getTypeDescription());
   press_equil_CCLabel   =
@@ -197,5 +199,6 @@ ICELabel::~ICELabel()
     delete KineticEnergyLabel;
     delete CenterOfMassVelocityLabel;
     delete TotalIntEngLabel;    
+    delete doMechLabel;
 }
 
