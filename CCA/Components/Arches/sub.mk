@@ -6,7 +6,7 @@ SRCDIR   := Packages/Uintah/CCA/Components/Arches
 
 SRCS     += $(SRCDIR)/Arches.cc $(SRCDIR)/BoundaryCondition.cc \
 	$(SRCDIR)/NonlinearSolver.cc $(SRCDIR)/PhysicalConstants.cc \
-	$(SRCDIR)/PicardNonlinearSolver.cc \
+	$(SRCDIR)/PicardNonlinearSolver.cc $(SRCDIR)/ExplicitSolver.cc \
 	$(SRCDIR)/Properties.cc $(SRCDIR)/SmagorinskyModel.cc \
 	$(SRCDIR)/TurbulenceModel.cc $(SRCDIR)/Discretization.cc \
 	$(SRCDIR)/LinearSolver.cc \
@@ -45,9 +45,10 @@ LIBS := $(XML_LIBRARY) $(FLIB) $(MPI_LIBRARY) -lm
 ifneq ($(PETSC_DIR),)
 LIBS := $(LIBS) $(PETSC_LIBS) -lpetscsles -lpetscdm -lpetscmat -lpetscvec -lpetsc -lblas
 endif
+#CFLAGS += -DARCHES_PETSC_DEBUG
 #CFLAGS += -g -DARCHES_VEL_DEBUG
 #CFLAGS += -g -DARCHES_DEBUG -DARCHES_GEOM_DEBUG -DARCHES_BC_DEBUG -DARCHES_COEF_DEBUG 
-CFLAGS +=
+CFLAGS += 
 #CFLAGS += -DARCHES_SRC_DEBUG -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG
 ifneq ($(PETSC_DIR),)
 CFLAGS +=	-DHAVE_PETSC

@@ -185,7 +185,9 @@ c     viscous sources
      &              ((VISEI*DUDYE-VISWI*DUDYW)/SEW(I) +
      &              (VISNI*DVDYN-VISSI*DVDYS)/SNSV(J) +
      &              (VISTI*DWDYT-VISBI*DWDYB)/STB(K) +
-     &              old_DEN(I,J,K)*(old_VV(I,J,K)-VV(I,J,K))/
+c     &              old_DEN(I,J,K)*(old_VV(I,J,K)-VV(I,J,K))/
+     &              pt5*(old_DEN(I,J,K)+old_DEN(I,J-1,K))*
+     $              (old_VV(I,J,K))/
      $              DELTAT
      &              + (PT5*(DEN(I,J-1,K)+DEN(I,J,K))-
      $              pt5*(DEN_REF(i,j,k)+den_ref(i,j-1,k)))*

@@ -328,6 +328,77 @@ ArchesLabel::ArchesLabel()
   d_pressPlusHydroLabel = scinew VarLabel("pPlusHydro",
 					CCVariable<double>::getTypeDescription() );
 
+  d_scalarOUTBCLabel =  scinew VarLabel("scalarOUTBC",
+					CCVariable<double>::getTypeDescription() );
+  d_uVelocityOUTBCLabel = scinew VarLabel("uVelocityOUTBC",
+				   SFCXVariable<double>::getTypeDescription() );
+  d_vVelocityOUTBCLabel= scinew VarLabel("vVelocityOUTBC",
+				  SFCYVariable<double>::getTypeDescription() );
+  d_wVelocityOUTBCLabel= scinew VarLabel("wVelocityOUTBC",
+				   SFCZVariable<double>::getTypeDescription() );
+
+  d_uvwoutLabel = scinew VarLabel("uvwout",
+	  ReductionVariable<double, Reductions::Min<double> >::getTypeDescription()); 
+
+
+  // predictor-corrector labels
+  // Scalar Coef
+  d_scalCoefPredLabel = scinew VarLabel("scalCoefPred",
+				   CCVariable<double>::getTypeDescription() );
+  // Scalar Conv Coef
+  d_scalConvCoefPredLabel = scinew VarLabel("scalConvCoefPred",
+				   CCVariable<double>::getTypeDescription() );
+  // Scalar Linear Src
+  d_scalLinSrcPredLabel = scinew VarLabel("scalLinSrcPred",
+				   CCVariable<double>::getTypeDescription() );
+  // Scalar Non Linear Src
+  d_scalNonLinSrcPredLabel = scinew VarLabel("scalNonLinSrcPred",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_scalCoefCorrLabel = scinew VarLabel("scalCoefCorr",
+				   CCVariable<double>::getTypeDescription() );
+  // Scalar Conv Coef
+  d_scalConvCoefCorrLabel = scinew VarLabel("scalConvCoefCorr",
+				   CCVariable<double>::getTypeDescription() );
+  // Scalar Linear Src
+  d_scalLinSrcCorrLabel = scinew VarLabel("scalLinSrcCorr",
+				   CCVariable<double>::getTypeDescription() );
+  // Scalar Non Linear Src
+  d_scalNonLinSrcCorrLabel = scinew VarLabel("scalNonLinSrcCorr",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_scalarPredLabel = scinew VarLabel("scalarPred",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_densityPredLabel = scinew VarLabel("densityPred",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_uVelRhoHatLabel = scinew VarLabel("uvelRhoHat",
+				   SFCXVariable<double>::getTypeDescription() );
+  d_vVelRhoHatLabel= scinew VarLabel("vvelRhoHat",
+				  SFCYVariable<double>::getTypeDescription() );
+  d_wVelRhoHatLabel= scinew VarLabel("wvelRhoHat",
+				   SFCZVariable<double>::getTypeDescription() );
+
+  d_pressurePredLabel = scinew VarLabel("pressurePred", 
+				    CCVariable<double>::getTypeDescription() );
+  // Pressure Coeff Labels
+  d_presCoefCorrLabel = scinew VarLabel("presCoefCorr", 
+				      CCVariable<double>::getTypeDescription() );
+  // Pressure Linear Src Labels
+  d_presLinSrcCorrLabel = scinew VarLabel("presLinSrcCorr", 
+					CCVariable<double>::getTypeDescription() );
+  // Pressure Non Linear Src Labels
+  d_presNonLinSrcCorrLabel = scinew VarLabel("presNonLinSrcCorr", 
+					   CCVariable<double>::getTypeDescription() );
+  // U-Velocity Labels
+  d_uVelocityPredLabel = scinew VarLabel("uVelocityPred", 
+				    SFCXVariable<double>::getTypeDescription() );
+  d_vVelocityPredLabel = scinew VarLabel("vVelocityPred", 
+				    SFCYVariable<double>::getTypeDescription() );
+  d_wVelocityPredLabel = scinew VarLabel("wVelocityPred", 
+				    SFCZVariable<double>::getTypeDescription() );
+
 
 }
 

@@ -13,6 +13,7 @@ c    &     convs,
 c    &     spm, cpl,
 c    $     rv, ra, rcv, 
      &     sew, sns, stb, 
+     &     sewu, snsv, stbw, 
 c    &     sign,
 c    $     ltest,
      $     pcell, ffield, deltat)
@@ -143,6 +144,9 @@ c     double precision rcv(domLo(2):domHi(2))
       double precision sew(domLo(1):domHi(1))
       double precision sns(domLo(2):domHi(2))
       double precision stb(domLo(3):domHi(3))
+      double precision sewu(domLo(1):domHi(1))
+      double precision snsv(domLo(2):domHi(2))
+      double precision stbw(domLo(3):domHi(3))
 
       integer pcell(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
@@ -197,13 +201,13 @@ c     (setting uhat = u on boundaries makes it easy to set bcs. for
 c     the pressure)
 c-----------------------------------------------------------------------
 
-               ue = uu(i+1,j,k)
-               uw = uu(i,j,k)
-               vn = vv(i,j+1,k)
-               vs = vv(i,j,k)
-               wt = ww(i,j,k+1)
-               wb = ww(i,j,k)
-
+               ue = uu(i+1,j,k)*dene
+               uw = uu(i,j,k)*denw
+               vn = vv(i,j+1,k)*denn
+               vs = vv(i,j,k)*dens
+               wt = ww(i,j,k+1)*dent
+               wb = ww(i,j,k)*denb
+               
 c-----------------------------------------------------------------------
 c     calculate pseudovelocities when not on boundaries
 c for multi-patch include ghost cell of size 1 for pcell and uu
@@ -216,7 +220,8 @@ c-----------------------------------------------------------------------
      $                    aus(i,j,k)*uu(i,j-1,k)+
      &                    aut(i,j,k)*uu(i,j,k+1)+
      $                    aub(i,j,k)*uu(i,j,k-1)+
-     &                    suu(i,j,k))/aup(i,j,k)
+     &                    suu(i,j,k)-aup(i,j,k)*uu(i,j,k))*deltat/
+     $                    (sewu(i)*sns(j)*stb(k))
                if (pcell(i+1,j,k).eq.ffield)
      &              ue = (aue(i+1,j,k)*uu(i+2,j,k)+
      &                    auw(i+1,j,k)*uu(i,j,k)+
@@ -224,7 +229,8 @@ c-----------------------------------------------------------------------
      &                    aus(i+1,j,k)*uu(i+1,j-1,k)+
      $                    aut(i+1,j,k)*uu(i+1,j,k+1)+
      &                    aub(i+1,j,k)*uu(i+1,j,k-1)+
-     $                    suu(i+1,j,k))/aup(i+1,j,k)
+     $                    suu(i+1,j,k)-aup(i+1,j,k)*uu(i+1,j,k))*
+     $                    deltat/(sewu(i+1)*sns(j)*stb(k))
                if (pcell(i,j-1,k).eq.ffield)
      &              vs = (ave(i,j,k)*vv(i+1,j,k)+
      $                    avw(i,j,k)*vv(i-1,j,k)+
@@ -232,7 +238,8 @@ c-----------------------------------------------------------------------
      $                    avs(i,j,k)*vv(i,j-1,k)+
      &                    avt(i,j,k)*vv(i,j,k+1)+
      $                    avb(i,j,k)*vv(i,j,k-1)+
-     &                    svu(i,j,k))/avp(i,j,k)
+     &                    svu(i,j,k)-avp(i,j,k)*vv(i,j,k))*
+     $                    deltat/(sew(i)*stb(k)*snsv(j))
                if (pcell(i,j+1,k).eq.ffield)
      &              vn = (ave(i,j+1,k)*vv(i+1,j+1,k)+
      &                    avw(i,j+1,k)*vv(i-1,j+1,k)+
@@ -240,7 +247,8 @@ c-----------------------------------------------------------------------
      &                    avs(i,j+1,k)*vv(i,j,k)+
      $                    avt(i,j+1,k)*vv(i,j+1,k+1)+
      &                    avb(i,j+1,k)*vv(i,j+1,k-1)+
-     $                    svu(i,j+1,k))/avp(i,j+1,k)
+     $                    svu(i,j+1,k)-avp(i,j+1,k)*vv(i,j+1,k))*
+     $                    deltat/(sew(i)*stb(k)*snsv(j+1))
                if (pcell(i,j,k-1).eq.ffield)
      &              wb = (awe(i,j,k)*ww(i+1,j,k)+
      $                    aww(i,j,k)*ww(i-1,j,k)+
@@ -248,7 +256,8 @@ c-----------------------------------------------------------------------
      $                    aws(i,j,k)*ww(i,j-1,k)+
      &                    awt(i,j,k)*ww(i,j,k+1)+
      $                    awb(i,j,k)*ww(i,j,k-1)+
-     &                    swu(i,j,k))/awp(i,j,k)
+     &                    swu(i,j,k)-awp(i,j,k)*ww(i,j,k))*
+     $                    deltat/(sew(i)*stbw(k)*sns(j))
                if (pcell(i,j,k+1).eq.ffield)
      &              wt = (awe(i,j,k+1)*ww(i+1,j,k+1)+
      &                    aww(i,j,k+1)*ww(i-1,j,k+1)+
@@ -256,26 +265,27 @@ c-----------------------------------------------------------------------
      &                    aws(i,j,k+1)*ww(i,j-1,k+1)+
      $                    awt(i,j,k+1)*ww(i,j,k+2)+
      &                    awb(i,j,k+1)*ww(i,j,k)+
-     $                    swu(i,j,k+1))/awp(i,j,k+1)   
+     $                    swu(i,j,k+1)-awp(i,j,k+1)*ww(i,j,k+1))*   
+     $                    deltat/(sew(i)*stbw(k+1)*sns(j))
 
 c-----calculate source terms--------------------------------------------
 
-               ce = dene*areaew
-               cw = denw*areaew
-               cn = denn*arean
-               cs = dens*areas
-               ct = dent*areatb
-               cb = denb*areatb
+               ce = areaew
+               cw = areaew
+               cn = arean
+               cs = areas
+               ct = areatb
+               cb = areatb
                apo = 0.0
                if (ltim) then
                   if (pcell(i,j,k).eq.ffield) 
      $                 apo = (old_den(i,j,k) - den(i,j,k))*vol/deltat
                endif
-               smp = cn*vn-cs*vs+ce*ue-cw*uw+ct*wt-cb*wb - apo
+               smp = (cn*vn-cs*vs+ce*ue-cw*uw+ct*wt-cb*wb - apo)/deltat
 c    $              -sign*spm(i,j,k)
 
 #ifdef ARCHES_PRES_DEBUG
-               if ((i.eq.0).and.(j.eq.2).and.(k.eq.2)) then
+               if ((i.eq.0).and.(j.eq.0).and.(k.eq.0)) then
                   print*,'TESTING PRESSURE SOURCE'
                   print*,'den(i,j,k)=',den(i,j,k)
                   print*,'den(i-1,j,k)=',den(i-1,j,k)

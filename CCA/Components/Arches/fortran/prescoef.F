@@ -5,9 +5,6 @@ c*********************************************************************
       SUBROUTINE prescoef(domLo, domHi, domLong, domHing, 
      $     idxLo, idxHi, DEN,
      &     AE, AW, AN, AS, AT, AB,
-     &     domLoU, domHiU, AUP,
-     &     domLoV, domHiV, AVP,
-     &     domLoW, domHiW, AWP,
      &     SEW, SNS, STB,
      &     SEWU, DXEP, DXPW, 
      &     SNSV, DYNP, DYPS, 
@@ -46,15 +43,6 @@ c*********************************************************************
      &     domLong(2):domHing(2),domLong(3):domHing(3))
       double precision AB(domLong(1):domHing(1),
      &     domLong(2):domHing(2),domLong(3):domHing(3))
-      integer domLoU(3), domHiU(3)
-      double precision AUP(domLoU(1):domHiU(1),
-     &     domLoU(2):domHiU(2),domLoU(3):domHiU(3))
-      integer domLoV(3), domHiV(3)
-      double precision AVP(domLoV(1):domHiV(1),
-     &     domLoV(2):domHiV(2),domLoV(3):domHiV(3))
-      integer domLoW(3), domHiW(3)
-      double precision AWP(domLoW(1):domHiW(1),
-     &     domLoW(2):domHiW(2),domLoW(3):domHiW(3))
       double precision SEWU(domLo(1):domHi(1))
       double precision SEW(domLo(1):domHi(1))
       double precision SNSV(domLo(2):domHi(2))
@@ -85,7 +73,6 @@ c*********************************************************************
       IEND = idxHi(1)
       JEND = idxHi(2)
       KEND = idxHi(3)
-  
 C-----------------------------------------------------------------------
 C     ASSEMBLY OF COEFFICIENTS  
 C-----------------------------------------------------------------------
@@ -115,23 +102,21 @@ C-----------------------------------------------------------------------
                DENT = PT5*(DEN(i,j,k)+DEN(i,j,k+1))
                DENB = PT5*(DEN(i,j,k)+DEN(i,j,k-1))
 
-               AE(i,j,k) = DENE*AREAEW*AREAEW*SEWU(i+1)/
-     &              (DXEP(i)*AUP(i+1,j,k))*EPSG
+               AE(i,j,k) = AREAEW/
+     &              (DXEP(i))*EPSG
 
-               AW(i,j,k) = DENW*AREAEW*AREAEW*SEWU(i)/
-     &              (DXPW(i)*AUP(i,j,k))*EPSG
+               AW(i,j,k) = AREAEW/
+     &              (DXPW(i))*EPSG
 
-               AN(i,j,k) = DENN*AREAN*SEW(i)*SNSV(j+1)*
-     &              STB(k)/(DYNP(j)*AVP(i,j+1,k))*EPSG
+               AN(i,j,k) = AREAN/(DYNP(j))*EPSG
 
-               AS(i,j,k) = DENS*AREAS*SEW(i)*SNSV(j)*
-     &              STB(k)/(DYPS(j)*AVP(i,j,k))*EPSG
+               AS(i,j,k) = AREAS/(DYPS(j))*EPSG
 
-               AT(i,j,k) = DENT*AREATB*AREATB*STBW(k+1)/
-     &              (DZTP(k)*AWP(i,j,k+1))*EPSG
+               AT(i,j,k) = AREATB/
+     &              (DZTP(k))*EPSG
 
-               AB(i,j,k) = DENB*AREATB*AREATB*STBW(k)/
-     &              (DZPB(k)*AWP(i,j,k)) *EPSG
+               AB(i,j,k) = AREATB/
+     &              (DZPB(k)) *EPSG
  100        CONTINUE
  110     CONTINUE
  120  CONTINUE
