@@ -2,16 +2,16 @@
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
-  
+
   Software distributed under the License is distributed on an "AS IS"
   basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
   License for the specific language governing rights and limitations under
   the License.
-  
+
   The Original Source Code is SCIRun, released March 12, 2001.
-  
+
   The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
   University of Utah. All Rights Reserved.
 */
 
@@ -49,13 +49,13 @@ public:
   IndexPair() {}
   IndexPair(Data first, Data second)
     : first(first), second(second) {}
-  IndexPair(const IndexPair &copy) 
+  IndexPair(const IndexPair &copy)
     : first(copy.first), second(copy.second) {}
   ~IndexPair() {}
-  
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX ( Piostream &, 
-					      IndexPair<Data> & ); 
-  
+
+  friend void TEMPLATE_TAG Pio TEMPLATE_BOX ( Piostream &,
+					      IndexPair<Data> & );
+
   Data first;
   Data second;
 };
@@ -71,9 +71,9 @@ void Pio(Piostream &stream, IndexPair<Data> &data)
   Pio(stream,data.first);
   Pio(stream,data.second);
 
-  stream.end_class();  
+  stream.end_class();
 }
- 
+
 class SCICORESHARE ContourMesh : public MeshBase
 {
 public:
@@ -110,28 +110,35 @@ public:
     typedef vector<index_type>          array_type;
   };
 
+  typedef Edge Elem;
+
   typedef vector<double>      weight_array;
 
   ContourMesh() {}
-  ContourMesh(const ContourMesh &copy) 
+  ContourMesh(const ContourMesh &copy)
     : nodes_(copy.nodes_), edges_(copy.edges_) {}
   virtual ContourMesh *clone() { return new ContourMesh(*this); }
   virtual ~ContourMesh() {}
 
-  Node::iterator node_begin() const { return 0; }
-  Node::iterator node_end() const { return (unsigned)nodes_.size(); }
-  Edge::iterator edge_begin() const { return 0; }
-  Edge::iterator edge_end() const { return (unsigned)edges_.size(); }
-  Face::iterator face_begin() const { return 0; }
-  Face::iterator face_end() const { return 0; }
-  Cell::iterator cell_begin() const { return 0; }
-  Cell::iterator cell_end() const { return 0; }
+  template <class I> I tbegin(I*) const;
+  template <class I> I tend(I*) const;
+  template <class S> S tsize(S*) const;
+
+  Node::iterator node_begin() const;
+  Node::iterator node_end() const;
+  Edge::iterator edge_begin() const;
+  Edge::iterator edge_end() const;
+  Face::iterator face_begin() const;
+  Face::iterator face_end() const;
+  Cell::iterator cell_begin() const;
+  Cell::iterator cell_end() const;
 
   //! get the mesh statistics
-  Node::size_type nodes_size() const { return (unsigned)nodes_.size(); }
-  Edge::size_type edges_size() const { return (unsigned)edges_.size(); }
-  Face::size_type faces_size() const { return 0; }
-  Cell::size_type cells_size() const { return 0; }
+  Node::size_type nodes_size() const;
+  Edge::size_type edges_size() const;
+  Face::size_type faces_size() const;
+  Cell::size_type cells_size() const;
+
   virtual BBox get_bounding_box() const;
 
   //! set the mesh statistics
@@ -140,7 +147,7 @@ public:
 
   //! get the child elements of the given index
   void get_nodes(Node::array_type &a, Edge::index_type i) const
-    { a.resize(2,0); a[0] = edges_[i].first; a[1] = edges_[i].second; } 
+    { a.resize(2,0); a[0] = edges_[i].first; a[1] = edges_[i].second; }
   void get_nodes(Node::array_type &, Face::index_type) const {}
   void get_nodes(Node::array_type &, Cell::index_type) const {}
   void get_edges(Edge::array_type &, Face::index_type) const {}
@@ -181,9 +188,9 @@ public:
     { nodes_[index] = point; }
 
   //! use these to build up a new contour mesh
-  Node::index_type add_node(Point p) 
+  Node::index_type add_node(Point p)
     { nodes_.push_back(p); return nodes_.size()-1; }
-  Edge::index_type add_edge(Node::index_type i1, Node::index_type i2) 
+  Edge::index_type add_edge(Node::index_type i1, Node::index_type i2)
     { edges_.push_back(index_pair(i1,i2)); return nodes_.size()-1; }
 
   virtual void io(Piostream&);
@@ -205,7 +212,20 @@ private:
 
 typedef LockingHandle<ContourMesh> ContourMeshHandle;
 
-
+template <> ContourMesh::Node::size_type ContourMesh::tsize(ContourMesh::Node::size_type *) const;
+template <> ContourMesh::Edge::size_type ContourMesh::tsize(ContourMesh::Edge::size_type *) const;
+template <> ContourMesh::Face::size_type ContourMesh::tsize(ContourMesh::Face::size_type *) const;
+template <> ContourMesh::Cell::size_type ContourMesh::tsize(ContourMesh::Cell::size_type *) const;
+				
+template <> ContourMesh::Node::iterator ContourMesh::tbegin(ContourMesh::Node::iterator *) const;
+template <> ContourMesh::Edge::iterator ContourMesh::tbegin(ContourMesh::Edge::iterator *) const;
+template <> ContourMesh::Face::iterator ContourMesh::tbegin(ContourMesh::Face::iterator *) const;
+template <> ContourMesh::Cell::iterator ContourMesh::tbegin(ContourMesh::Cell::iterator *) const;
+				
+template <> ContourMesh::Node::iterator ContourMesh::tend(ContourMesh::Node::iterator *) const;
+template <> ContourMesh::Edge::iterator ContourMesh::tend(ContourMesh::Edge::iterator *) const;
+template <> ContourMesh::Face::iterator ContourMesh::tend(ContourMesh::Face::iterator *) const;
+template <> ContourMesh::Cell::iterator ContourMesh::tend(ContourMesh::Cell::iterator *) const;
 
 } // namespace SCIRun
 

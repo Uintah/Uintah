@@ -2,16 +2,16 @@
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
-  
+
   Software distributed under the License is distributed on an "AS IS"
   basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
   License for the specific language governing rights and limitations under
   the License.
-  
+
   The Original Source Code is SCIRun, released March 12, 2001.
-  
+
   The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
   University of Utah. All Rights Reserved.
 */
 
@@ -41,7 +41,7 @@ using namespace std;
 
 PersistentTypeID LatVolMesh::type_id("LatVolMesh", "MeshBase", maker);
 
-void LatVolMesh::get_random_point(Point &p, const Cell::index_type &ei) const 
+void LatVolMesh::get_random_point(Point &p, const Elem::index_type &ei) const
 {
   static MusilRNG rng(1249);
   Node::array_type ra;
@@ -64,8 +64,8 @@ void LatVolMesh::get_random_point(Point &p, const Cell::index_type &ei) const
   }
   p = p0+(v0*t)+(v1*u)+(v2*v);
 }
-  
-BBox 
+
+BBox
 LatVolMesh::get_bounding_box() const
 {
   BBox result;
@@ -74,14 +74,14 @@ LatVolMesh::get_bounding_box() const
   return result;
 }
 
-void 
+void
 LatVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 {
   array.resize(8);
-  array[0].i_ = idx.i_;   array[0].j_ = idx.j_;   array[0].k_ = idx.k_; 
-  array[1].i_ = idx.i_+1; array[1].j_ = idx.j_;   array[1].k_ = idx.k_; 
-  array[2].i_ = idx.i_+1; array[2].j_ = idx.j_+1; array[2].k_ = idx.k_; 
-  array[3].i_ = idx.i_;   array[3].j_ = idx.j_+1; array[3].k_ = idx.k_; 
+  array[0].i_ = idx.i_;   array[0].j_ = idx.j_;   array[0].k_ = idx.k_;
+  array[1].i_ = idx.i_+1; array[1].j_ = idx.j_;   array[1].k_ = idx.k_;
+  array[2].i_ = idx.i_+1; array[2].j_ = idx.j_+1; array[2].k_ = idx.k_;
+  array[3].i_ = idx.i_;   array[3].j_ = idx.j_+1; array[3].k_ = idx.k_;
   array[4].i_ = idx.i_;   array[4].j_ = idx.j_;   array[4].k_ = idx.k_+1;
   array[5].i_ = idx.i_+1; array[5].j_ = idx.j_;   array[5].k_ = idx.k_+1;
   array[6].i_ = idx.i_+1; array[6].j_ = idx.j_+1; array[6].k_ = idx.k_+1;
@@ -89,7 +89,7 @@ LatVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 }
 
 //! return all cell_indecies that overlap the BBox in arr.
-void 
+void
 LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox) const
 {
   arr.clear();
@@ -97,7 +97,7 @@ LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox) const
   locate(min, bbox.min());
   Cell::index_type max;
   locate(max, bbox.max());
-  
+
   if (max.i_ >= nx_ - 1) max.i_ = nx_ - 2;
   if (max.j_ >= ny_ - 1) max.j_ = ny_ - 2;
   if (max.k_ >= nz_ - 1) max.k_ = nz_ - 2;
@@ -112,11 +112,11 @@ LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox) const
 }
 
 
-void 
+void
 LatVolMesh::get_center(Point &result, Node::index_type idx) const
 {
-  const double sx = (max_.x() - min_.x()) / (nx_ - 1); 
-  const double sy = (max_.y() - min_.y()) / (ny_ - 1); 
+  const double sx = (max_.x() - min_.x()) / (nx_ - 1);
+  const double sy = (max_.y() - min_.y()) / (ny_ - 1);
   const double sz = (max_.z() - min_.z()) / (nz_ - 1);
 
   result.x(idx.i_ * sx + min_.x());
@@ -125,11 +125,11 @@ LatVolMesh::get_center(Point &result, Node::index_type idx) const
 }
 
 
-void 
+void
 LatVolMesh::get_center(Point &result, Cell::index_type idx) const
 {
-  const double sx = (max_.x() - min_.x()) / (nx_ - 1); 
-  const double sy = (max_.y() - min_.y()) / (ny_ - 1); 
+  const double sx = (max_.x() - min_.x()) / (nx_ - 1);
+  const double sy = (max_.y() - min_.y()) / (ny_ - 1);
   const double sz = (max_.z() - min_.z()) / (nz_ - 1);
 
   result.x((idx.i_ + 0.5) * sx + min_.x());
@@ -208,7 +208,7 @@ LatVolMesh::io(Piostream& stream)
   stream.end_class();
 }
 
-const string 
+const string
 LatVolMesh::type_name(int n)
 {
   ASSERT(n >= -1 && n <= 0);
@@ -216,5 +216,117 @@ LatVolMesh::type_name(int n)
   return name;
 }
 
+
+template <>
+LatVolMesh::Node::iterator
+LatVolMesh::tbegin(LatVolMesh::Node::iterator *) const
+{
+  return Node::iterator(this, min_x_, min_y_, min_z_);
+}
+
+template <>
+LatVolMesh::Node::iterator
+LatVolMesh::tend(LatVolMesh::Node::iterator *) const
+{
+  return Node::iterator(this, min_x_, min_y_, min_z_ + nz_);
+}
+
+template <>
+LatVolMesh::Node::size_type
+LatVolMesh::tsize(LatVolMesh::Node::size_type *) const
+{
+  return Node::size_type(nx_,ny_,nz_);
+}
+
+template <>
+LatVolMesh::Edge::iterator
+LatVolMesh::tbegin(LatVolMesh::Edge::iterator *) const
+{
+  return Edge::iterator(this,0);
+}
+
+template <>
+LatVolMesh::Edge::iterator
+LatVolMesh::tend(LatVolMesh::Edge::iterator *) const
+{
+  return Edge::iterator(this,0);
+}
+
+template <>
+LatVolMesh::Edge::size_type
+LatVolMesh::tsize(LatVolMesh::Edge::size_type *) const
+{
+  return Edge::size_type(0);
+}
+
+template <>
+LatVolMesh::Face::iterator
+LatVolMesh::tbegin(LatVolMesh::Face::iterator *) const
+{
+  return Face::iterator(this,0);
+}
+
+template <>
+LatVolMesh::Face::iterator
+LatVolMesh::tend(LatVolMesh::Face::iterator *) const
+{
+  return Face::iterator(this,0);
+}
+
+template <>
+LatVolMesh::Face::size_type
+LatVolMesh::tsize(LatVolMesh::Face::size_type *) const
+{
+  return Face::size_type(0);
+}
+
+template <>
+LatVolMesh::Cell::iterator
+LatVolMesh::tbegin(LatVolMesh::Cell::iterator *) const
+{
+  return Cell::iterator(this,  min_x_, min_y_, min_z_);
+}
+
+template <>
+LatVolMesh::Cell::iterator
+LatVolMesh::tend(LatVolMesh::Cell::iterator *) const
+{
+  return Cell::iterator(this, min_x_, min_y_, min_z_ + nz_-1);
+}
+
+template <>
+LatVolMesh::Cell::size_type
+LatVolMesh::tsize(LatVolMesh::Cell::size_type *) const
+{
+  return Cell::size_type(nx_-1, ny_-1,nz_-1);
+}
+
+
+LatVolMesh::Node::iterator LatVolMesh::node_begin() const
+{ return tbegin((Node::iterator *)0); }
+LatVolMesh::Edge::iterator LatVolMesh::edge_begin() const
+{ return tbegin((Edge::iterator *)0); }
+LatVolMesh::Face::iterator LatVolMesh::face_begin() const
+{ return tbegin((Face::iterator *)0); }
+LatVolMesh::Cell::iterator LatVolMesh::cell_begin() const
+{ return tbegin((Cell::iterator *)0); }
+
+LatVolMesh::Node::iterator LatVolMesh::node_end() const
+{ return tend((Node::iterator *)0); }
+LatVolMesh::Edge::iterator LatVolMesh::edge_end() const
+{ return tend((Edge::iterator *)0); }
+LatVolMesh::Face::iterator LatVolMesh::face_end() const
+{ return tend((Face::iterator *)0); }
+LatVolMesh::Cell::iterator LatVolMesh::cell_end() const
+{ return tend((Cell::iterator *)0); }
+
+LatVolMesh::Node::size_type LatVolMesh::nodes_size() const
+{ return tsize((Node::size_type *)0); }
+LatVolMesh::Edge::size_type LatVolMesh::edges_size() const
+{ return tsize((Edge::size_type *)0); }
+LatVolMesh::Face::size_type LatVolMesh::faces_size() const
+{ return tsize((Face::size_type *)0); }
+LatVolMesh::Cell::size_type LatVolMesh::cells_size() const
+{ return tsize((Cell::size_type *)0); }
 
 } // namespace SCIRun

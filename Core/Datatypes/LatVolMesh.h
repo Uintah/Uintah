@@ -2,16 +2,16 @@
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
-  
+
   Software distributed under the License is distributed on an "AS IS"
   basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
   License for the specific language governing rights and limitations under
   the License.
-  
+
   The Original Source Code is SCIRun, released March 12, 2001.
-  
+
   The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
   University of Utah. All Rights Reserved.
 */
 
@@ -74,29 +74,29 @@ public:
 
   struct UnfinishedIter : public UnfinishedIndex
   {
-    UnfinishedIter(const LatVolMesh *m, unsigned i) 
+    UnfinishedIter(const LatVolMesh *m, unsigned i)
       : UnfinishedIndex(i), mesh_(m) {}
-    
+
     const UnfinishedIndex &operator *() { return *this; }
-    
+
     bool operator ==(const UnfinishedIter &a) const
     {
       return i_ == a.i_ && mesh_ == a.mesh_;
     }
-    
+
     bool operator !=(const UnfinishedIter &a) const
     {
       return !(*this == a);
     }
-    
+
     const LatVolMesh *mesh_;
   };
 
   struct EdgeIter : public UnfinishedIter
   {
-    EdgeIter(const LatVolMesh *m, unsigned i) 
+    EdgeIter(const LatVolMesh *m, unsigned i)
       : UnfinishedIter(m, i) {}
-    
+
     const EdgeIndex &operator *() const { return (const EdgeIndex&)(*this); }
 
     EdgeIter &operator++() { return *this; }
@@ -113,9 +113,9 @@ public:
 
   struct FaceIter : public UnfinishedIter
   {
-    FaceIter(const LatVolMesh *m, unsigned i) 
+    FaceIter(const LatVolMesh *m, unsigned i)
       : UnfinishedIter(m, i) {}
-    
+
     const FaceIndex &operator *() const { return (const FaceIndex&)(*this); }
 
     FaceIter &operator++() { return *this; }
@@ -128,14 +128,14 @@ public:
       operator++();
       return result;
     }
-  };  
+  };
 
   struct LatIndex
   {
   public:
     LatIndex() : i_(0), j_(0), k_(0) {}
     LatIndex(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k) {}
-    
+
     operator unsigned() const { return i_*j_*k_; }
 
     unsigned i_, j_, k_;
@@ -144,41 +144,41 @@ public:
   struct CellIndex : public LatIndex
   {
     CellIndex() : LatIndex() {}
-    CellIndex(unsigned i, unsigned j, unsigned k) : LatIndex(i,j,k) {}    
+    CellIndex(unsigned i, unsigned j, unsigned k) : LatIndex(i,j,k) {}
   };
-  
+
   struct NodeIndex : public LatIndex
   {
     NodeIndex() : LatIndex() {}
-    NodeIndex(unsigned i, unsigned j, unsigned k) : LatIndex(i,j,k) {}    
+    NodeIndex(unsigned i, unsigned j, unsigned k) : LatIndex(i,j,k) {}
   };
-  
+
   struct LatIter : public LatIndex
   {
-    LatIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k) 
+    LatIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
       : LatIndex(i, j, k), mesh_(m) {}
-    
+
     const LatIndex &operator *() { return *this; }
-    
+
     bool operator ==(const LatIter &a) const
     {
       return i_ == a.i_ && j_ == a.j_ && k_ == a.k_ && mesh_ == a.mesh_;
     }
-    
+
     bool operator !=(const LatIter &a) const
     {
       return !(*this == a);
     }
-    
+
     const LatVolMesh *mesh_;
   };
-  
-  
+
+
   struct NodeIter : public LatIter
   {
-    NodeIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k) 
+    NodeIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
       : LatIter(m, i, j, k) {}
-    
+
     const NodeIndex &operator *() const { return (const NodeIndex&)(*this); }
 
     NodeIter &operator++()
@@ -194,7 +194,7 @@ public:
       }
       return *this;
     }
-    
+
   private:
 
     NodeIter operator++(int)
@@ -204,13 +204,13 @@ public:
       return result;
     }
   };
-  
-  
+
+
   struct CellIter : public LatIter
   {
-    CellIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k) 
+    CellIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
       : LatIter(m, i, j, k) {}
-    
+
     const CellIndex &operator *() const { return (const CellIndex&)(*this); }
 
     CellIter &operator++()
@@ -226,7 +226,7 @@ public:
       }
       return *this;
     }
-    
+
   private:
 
     CellIter operator++(int)
@@ -236,43 +236,39 @@ public:
       return result;
     }
   };
-  
+
   //typedef LatIndex        under_type;
-  
+
   //! Index and Iterator types required for Mesh Concept.
   struct Node {
     typedef NodeIndex          index_type;
     typedef NodeIter           iterator;
     typedef NodeIndex          size_type;
     typedef vector<index_type> array_type;
-  };			       
-  			       
-  struct Edge {		       
-    typedef EdgeIndex          index_type;     
+  };			
+  			
+  struct Edge {		
+    typedef EdgeIndex          index_type;
     typedef EdgeIter           iterator;
     typedef EdgeIndex          size_type;
     typedef vector<index_type> array_type;
-  };			       
-			       
-  struct Face {		       
+  };			
+			
+  struct Face {		
     typedef FaceIndex          index_type;
     typedef FaceIter           iterator;
     typedef FaceIndex          size_type;
     typedef vector<index_type> array_type;
-  };			       
-			       
-  struct Cell {		       
+  };			
+			
+  struct Cell {		
     typedef CellIndex          index_type;
     typedef CellIter           iterator;
     typedef CellIndex          size_type;
     typedef vector<index_type> array_type;
   };
-  
-  typedef Cell Elem;
 
-  //typedef Cell::index_type elem_index;
-  //typedef Cell::iterator   elem_iterator;
-  //typedef Cell::size_type  elem_size_type;
+  typedef Cell Elem;
 
   typedef vector<double>      weight_array;
 
@@ -283,55 +279,43 @@ public:
 
   LatVolMesh()
     : min_x_(0), min_y_(0), min_z_(0),
-      nx_(1),ny_(1),nz_(1),min_(Point(0,0,0)),max_(Point(1,1,1)) 
+      nx_(1),ny_(1),nz_(1),min_(Point(0,0,0)),max_(Point(1,1,1))
     {  Vector p = max_-min_; cell_volume_ = (p.x()/(nx_-1))*(p.y()/(ny_-1))*(p.z()/(nz_-1));}
-  LatVolMesh(unsigned x, unsigned y, unsigned z, 
-	     const Point &min, const Point &max) 
+  LatVolMesh(unsigned x, unsigned y, unsigned z,
+	     const Point &min, const Point &max)
     : min_x_(0), min_y_(0), min_z_(0),
-      nx_(x), ny_(y), nz_(z), min_(min),max_(max) 
+      nx_(x), ny_(y), nz_(z), min_(min),max_(max)
     {  Vector p = max_-min_; cell_volume_ = (p.x()/(nx_-1))*(p.y()/(ny_-1))*(p.z()/(nz_-1));}
   LatVolMesh( LatVolMesh* mh,
 	      unsigned mx, unsigned my, unsigned mz,
 	      unsigned x, unsigned y, unsigned z)
     : min_x_(mx), min_y_(my), min_z_(mz),
-      nx_(x), ny_(y), nz_(z), min_(mh->min_),max_(mh->max_) 
+      nx_(x), ny_(y), nz_(z), min_(mh->min_),max_(mh->max_)
     {  Vector p = max_-min_; cell_volume_ = (p.x()/(nx_-1))*(p.y()/(ny_-1))*(p.z()/(nz_-1));}
   LatVolMesh(const LatVolMesh &copy)
     : min_x_(copy.min_x_), min_y_(copy.min_y_), min_z_(copy.min_z_),
       nx_(copy.get_nx()),ny_(copy.get_ny()),nz_(copy.get_nz()),
       min_(copy.get_min()),max_(copy.get_max()) {}
   virtual LatVolMesh *clone() { return new LatVolMesh(*this); }
-  virtual ~LatVolMesh() 
+  virtual ~LatVolMesh()
     {  Vector p = max_-min_; cell_volume_ = (p.x()/(nx_-1))*(p.y()/(ny_-1))*(p.z()/(nz_-1));}
 
-  Node::index_type  node(unsigned i, unsigned j, unsigned k) const
-  { return Node::index_type(i, j, k); }
-  Node::iterator  node_begin() const 
-  { return Node::iterator(this, min_x_, min_y_, min_z_); }
-  Node::iterator  node_end() const 
-  { return Node::iterator(this, min_x_, min_y_, min_z_ + nz_); }
-  Node::size_type nodes_size() const { return Node::size_type(nx_,ny_,nz_); }
+  template <class I> I tbegin(I*) const;
+  template <class I> I tend(I*) const;
+  template <class S> S tsize(S*) const;
 
-  Edge::iterator  edge_begin() const { return Edge::iterator(this,0); }
-  Edge::iterator  edge_end() const { return Edge::iterator(this,0); }
-  Edge::size_type edges_size() const { return Edge::size_type(0); }
-
-  Face::iterator  face_begin() const { return Face::iterator(this,0); }
-  Face::iterator  face_end() const { return Face::iterator(this,0); }
-  Face::size_type faces_size() const { return Face::size_type(0); }
-
-  Cell::index_type  cell(unsigned i, unsigned j, unsigned k) const
-    { return Cell::index_type(i, j, k); }
-  Cell::iterator  cell_begin() const 
-  { return Cell::iterator(this,  min_x_, min_y_, min_z_); }
-  Cell::iterator  cell_end() const 
-  { return Cell::iterator(this, min_x_, min_y_, min_z_ + nz_-1); }
-  Cell::size_type cells_size() const 
-  { return Cell::size_type(nx_-1, ny_-1,nz_-1); }
-
-  Elem::iterator elem_begin() const { return cell_begin(); }
-  Elem::iterator elem_end() const { return cell_end(); }
-  Elem::size_type elems_size() const { return cells_size(); }
+  Node::iterator  node_begin() const;
+  Node::iterator  node_end() const;
+  Node::size_type nodes_size() const;
+  Edge::iterator  edge_begin() const;
+  Edge::iterator  edge_end() const;
+  Edge::size_type edges_size() const;
+  Face::iterator  face_begin() const;
+  Face::iterator  face_end() const;
+  Face::size_type faces_size() const;
+  Cell::iterator  cell_begin() const;
+  Cell::iterator  cell_end() const;
+  Cell::size_type cells_size() const;
 
   //! get the mesh statistics
   unsigned get_nx() const { return nx_; }
@@ -377,7 +361,7 @@ public:
 
   //! similar to get_cells() with Face::index_type argument, but
   //  returns the "other" cell if it exists, not all that exist
-  bool get_neighbor(Cell::index_type & /*neighbor*/, Cell::index_type /*from*/, 
+  bool get_neighbor(Cell::index_type & /*neighbor*/, Cell::index_type /*from*/,
 		    Face::index_type /*idx*/) const {
     ASSERTFAIL("LatVolMesh::get_neighbor not implemented.");
   }
@@ -397,8 +381,8 @@ public:
   void get_normal(Vector &/* result */, Node::index_type /* index */) const
   { ASSERTFAIL("not implemented") }
 
-  void get_random_point(Point &p, const Cell::index_type &ei) const;
-  
+  void get_random_point(Point &p, const Elem::index_type &ei) const;
+
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static  const string type_name(int n = -1);
@@ -408,7 +392,7 @@ private:
 
   //! the min_Node::index_type ( incase this is a subLattice )
   unsigned min_x_, min_y_, min_z_;
-  //! the Node::index_type space extents of a LatVolMesh 
+  //! the Node::index_type space extents of a LatVolMesh
   //! (min=min_Node::index_type, max=min+extents-1)
   unsigned nx_, ny_, nz_;
 
@@ -424,7 +408,20 @@ private:
 
 typedef LockingHandle<LatVolMesh> LatVolMeshHandle;
 
-
+template <> LatVolMesh::Node::size_type LatVolMesh::tsize(LatVolMesh::Node::size_type *) const;
+template <> LatVolMesh::Edge::size_type LatVolMesh::tsize(LatVolMesh::Edge::size_type *) const;
+template <> LatVolMesh::Face::size_type LatVolMesh::tsize(LatVolMesh::Face::size_type *) const;
+template <> LatVolMesh::Cell::size_type LatVolMesh::tsize(LatVolMesh::Cell::size_type *) const;
+				
+template <> LatVolMesh::Node::iterator LatVolMesh::tbegin(LatVolMesh::Node::iterator *) const;
+template <> LatVolMesh::Edge::iterator LatVolMesh::tbegin(LatVolMesh::Edge::iterator *) const;
+template <> LatVolMesh::Face::iterator LatVolMesh::tbegin(LatVolMesh::Face::iterator *) const;
+template <> LatVolMesh::Cell::iterator LatVolMesh::tbegin(LatVolMesh::Cell::iterator *) const;
+				
+template <> LatVolMesh::Node::iterator LatVolMesh::tend(LatVolMesh::Node::iterator *) const;
+template <> LatVolMesh::Edge::iterator LatVolMesh::tend(LatVolMesh::Edge::iterator *) const;
+template <> LatVolMesh::Face::iterator LatVolMesh::tend(LatVolMesh::Face::iterator *) const;
+template <> LatVolMesh::Cell::iterator LatVolMesh::tend(LatVolMesh::Cell::iterator *) const;
 
 } // namespace SCIRun
 

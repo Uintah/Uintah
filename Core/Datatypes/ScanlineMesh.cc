@@ -2,16 +2,16 @@
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
-  
+
   Software distributed under the License is distributed on an "AS IS"
   basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
   License for the specific language governing rights and limitations under
   the License.
-  
+
   The Original Source Code is SCIRun, released March 12, 2001.
-  
+
   The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
   University of Utah. All Rights Reserved.
 */
 
@@ -42,7 +42,7 @@ using namespace std;
 PersistentTypeID ScanlineMesh::type_id("ScanlineMesh", "MeshBase", maker);
 
 
-BBox 
+BBox
 ScanlineMesh::get_bounding_box() const
 {
   BBox result;
@@ -51,7 +51,7 @@ ScanlineMesh::get_bounding_box() const
   return result;
 }
 
-void 
+void
 ScanlineMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 {
   array.resize(2);
@@ -60,17 +60,17 @@ ScanlineMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 }
 
 //! return all cell_indecies that overlap the BBox in arr.
-void 
+void
 ScanlineMesh::get_edges(Edge::array_type &/* arr */, const BBox &/*bbox*/) const
 {
   // TODO: implement this
 }
 
 
-void 
+void
 ScanlineMesh::get_center(Point &result, Node::index_type idx) const
 {
-  const double sx = (max_.x() - min_.x()) / (length_ - 1); 
+  const double sx = (max_.x() - min_.x()) / (length_ - 1);
 
   result.x(idx * sx + min_.x());
   result.y(0);
@@ -78,10 +78,10 @@ ScanlineMesh::get_center(Point &result, Node::index_type idx) const
 }
 
 
-void 
+void
 ScanlineMesh::get_center(Point &result, Edge::index_type idx) const
 {
-  const double sx = (max_.x() - min_.x()) / (length_ - 1); 
+  const double sx = (max_.x() - min_.x()) / (length_ - 1);
 
   result.x((idx + 0.5) * sx + min_.x());
   result.y(0);
@@ -154,7 +154,7 @@ ScanlineMesh::io(Piostream& stream)
   stream.end_class();
 }
 
-const string 
+const string
 ScanlineMesh::type_name(int n)
 {
   ASSERT(n >= -1 && n <= 0);
@@ -162,5 +162,117 @@ ScanlineMesh::type_name(int n)
   return name;
 }
 
+
+template<>
+ScanlineMesh::Node::iterator
+ScanlineMesh::tbegin(ScanlineMesh::Node::iterator *) const
+{
+  return Node::iterator(offset_);
+}
+
+template<>
+ScanlineMesh::Node::iterator
+ScanlineMesh::tend(ScanlineMesh::Node::iterator *) const
+{
+  return Node::iterator(offset_ + length_);
+}
+
+template<>
+ScanlineMesh::Node::size_type
+ScanlineMesh::tsize(ScanlineMesh::Node::size_type *) const
+{
+  return Node::size_type(length_);
+}
+
+template<>
+ScanlineMesh::Edge::iterator
+ScanlineMesh::tbegin(ScanlineMesh::Edge::iterator *) const
+{
+  return Edge::iterator(offset_);
+}
+
+template<>
+ScanlineMesh::Edge::iterator
+ScanlineMesh::tend(ScanlineMesh::Edge::iterator *) const
+{
+  return Edge::iterator(offset_+length_-1);
+}
+
+template<>
+ScanlineMesh::Edge::size_type
+ScanlineMesh::tsize(ScanlineMesh::Edge::size_type *) const
+{
+  return Edge::size_type(length_ - 1);
+}
+
+template<>
+ScanlineMesh::Face::iterator
+ScanlineMesh::tbegin(ScanlineMesh::Face::iterator *) const
+{
+  return Face::iterator(0);
+}
+
+template<>
+ScanlineMesh::Face::iterator
+ScanlineMesh::tend(ScanlineMesh::Face::iterator *) const
+{
+  return Face::iterator(0);
+}
+
+template<>
+ScanlineMesh::Face::size_type
+ScanlineMesh::tsize(ScanlineMesh::Face::size_type *) const
+{
+  return Face::size_type(0);
+}
+
+template<>
+ScanlineMesh::Cell::iterator
+ScanlineMesh::tbegin(ScanlineMesh::Cell::iterator *) const
+{
+  return Cell::iterator(0);
+}
+
+template<>
+ScanlineMesh::Cell::iterator
+ScanlineMesh::tend(ScanlineMesh::Cell::iterator *) const
+{
+  return Cell::iterator(0);
+}
+
+template<>
+ScanlineMesh::Cell::size_type
+ScanlineMesh::tsize(ScanlineMesh::Cell::size_type *) const
+{
+  return Cell::size_type(0);
+}
+
+
+ScanlineMesh::Node::iterator ScanlineMesh::node_begin() const
+{ return tbegin((Node::iterator *)0); }
+ScanlineMesh::Edge::iterator ScanlineMesh::edge_begin() const
+{ return tbegin((Edge::iterator *)0); }
+ScanlineMesh::Face::iterator ScanlineMesh::face_begin() const
+{ return tbegin((Face::iterator *)0); }
+ScanlineMesh::Cell::iterator ScanlineMesh::cell_begin() const
+{ return tbegin((Cell::iterator *)0); }
+
+ScanlineMesh::Node::iterator ScanlineMesh::node_end() const
+{ return tend((Node::iterator *)0); }
+ScanlineMesh::Edge::iterator ScanlineMesh::edge_end() const
+{ return tend((Edge::iterator *)0); }
+ScanlineMesh::Face::iterator ScanlineMesh::face_end() const
+{ return tend((Face::iterator *)0); }
+ScanlineMesh::Cell::iterator ScanlineMesh::cell_end() const
+{ return tend((Cell::iterator *)0); }
+
+ScanlineMesh::Node::size_type ScanlineMesh::nodes_size() const
+{ return tsize((Node::size_type *)0); }
+ScanlineMesh::Edge::size_type ScanlineMesh::edges_size() const
+{ return tsize((Edge::size_type *)0); }
+ScanlineMesh::Face::size_type ScanlineMesh::faces_size() const
+{ return tsize((Face::size_type *)0); }
+ScanlineMesh::Cell::size_type ScanlineMesh::cells_size() const
+{ return tsize((Cell::size_type *)0); }
 
 } // namespace SCIRun

@@ -2,16 +2,16 @@
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
-  
+
   Software distributed under the License is distributed on an "AS IS"
   basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
   License for the specific language governing rights and limitations under
   the License.
-  
+
   The Original Source Code is SCIRun, released March 12, 2001.
-  
+
   The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
   University of Utah. All Rights Reserved.
 */
 
@@ -80,9 +80,6 @@ public:
 
   typedef Face Elem;
 
-  //typedef Face::index_type                  elem_index;
-  //typedef Face::iterator               elem_iterator;
-  
   typedef vector<double>     weight_array;
 
   TriSurfMesh();
@@ -92,29 +89,29 @@ public:
 
   virtual BBox get_bounding_box() const;
 
-  Node::iterator node_begin() const;
-  Node::iterator node_end() const;
-  Edge::iterator edge_begin() const;
-  Edge::iterator edge_end() const;
-  Face::iterator face_begin() const;
-  Face::iterator face_end() const;
-  Cell::iterator cell_begin() const;
-  Cell::iterator cell_end() const;
-  Elem::iterator elem_begin() const;
-  Elem::iterator elem_end() const;
+  template <class I> I tbegin(I*) const;
+  template <class I> I tend(I*) const;
+  template <class S> S tsize(S*) const;
 
-  Node::size_type nodes_size() { return *node_end(); }
-  Edge::size_type edges_size() { return *edge_end(); }
-  Face::size_type faces_size() { return *face_end(); }
-  Cell::size_type cells_size() { return *cell_end(); }
-  Elem::size_type elems_size() { return *face_end(); }
+  Node::iterator node_begin() const;
+  Edge::iterator edge_begin() const;
+  Face::iterator face_begin() const;
+  Cell::iterator cell_begin() const;
+
+  Node::iterator node_end() const;
+  Edge::iterator edge_end() const;
+  Face::iterator face_end() const;
+  Cell::iterator cell_end() const;
+
+  Node::size_type nodes_size() const;
+  Edge::size_type edges_size() const;
+  Face::size_type faces_size() const;
+  Cell::size_type cells_size() const;
 
   void get_nodes(Node::array_type &array, Edge::index_type idx) const;
   void get_nodes(Node::array_type &array, Face::index_type idx) const;
   void get_nodes(Node::array_type &array, Cell::index_type idx) const;
   void get_edges(Edge::array_type &array, Face::index_type idx) const;
-  //void get_edges_from_cell(Edge::array_type &array, Cell::index_type idx) const;
-  //void get_faces_from_cell(Face::array_type &array, Cell::index_type idx) const;
 
   void get_neighbor(Face::index_type &neighbor, Edge::index_type idx) const;
 
@@ -137,7 +134,7 @@ public:
 
   double get_volume(const Cell::index_type &) { return 0; }
   double get_area(const Face::index_type &fi) {
-    Node::array_type ra; 
+    Node::array_type ra;
     get_nodes(ra,fi);
     Point p0,p1,p2;
     get_point(p0,ra[0]);
@@ -147,7 +144,7 @@ public:
   }
 
   void get_random_point(Point &p, const Face::index_type &ei) const;
-  
+
   double get_element_size(const Face::index_type &fi) { return get_area(fi); }
 
   virtual void finish_mesh(); // to get normals calculated.
@@ -196,8 +193,22 @@ private:
   vector<Vector> normals_;
 };
 
-
 typedef LockingHandle<TriSurfMesh> TriSurfMeshHandle;
+
+template <> TriSurfMesh::Node::size_type TriSurfMesh::tsize(TriSurfMesh::Node::size_type *) const;
+template <> TriSurfMesh::Edge::size_type TriSurfMesh::tsize(TriSurfMesh::Edge::size_type *) const;
+template <> TriSurfMesh::Face::size_type TriSurfMesh::tsize(TriSurfMesh::Face::size_type *) const;
+template <> TriSurfMesh::Cell::size_type TriSurfMesh::tsize(TriSurfMesh::Cell::size_type *) const;
+				
+template <> TriSurfMesh::Node::iterator TriSurfMesh::tbegin(TriSurfMesh::Node::iterator *) const;
+template <> TriSurfMesh::Edge::iterator TriSurfMesh::tbegin(TriSurfMesh::Edge::iterator *) const;
+template <> TriSurfMesh::Face::iterator TriSurfMesh::tbegin(TriSurfMesh::Face::iterator *) const;
+template <> TriSurfMesh::Cell::iterator TriSurfMesh::tbegin(TriSurfMesh::Cell::iterator *) const;
+				
+template <> TriSurfMesh::Node::iterator TriSurfMesh::tend(TriSurfMesh::Node::iterator *) const;
+template <> TriSurfMesh::Edge::iterator TriSurfMesh::tend(TriSurfMesh::Edge::iterator *) const;
+template <> TriSurfMesh::Face::iterator TriSurfMesh::tend(TriSurfMesh::Face::iterator *) const;
+template <> TriSurfMesh::Cell::iterator TriSurfMesh::tend(TriSurfMesh::Cell::iterator *) const;
 
 } // namespace SCIRun
 

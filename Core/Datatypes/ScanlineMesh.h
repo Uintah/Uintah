@@ -2,16 +2,16 @@
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
-  
+
   Software distributed under the License is distributed on an "AS IS"
   basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
   License for the specific language governing rights and limitations under
   the License.
-  
+
   The Original Source Code is SCIRun, released March 12, 2001.
-  
+
   The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
   University of Utah. All Rights Reserved.
 */
 
@@ -48,42 +48,44 @@ class SCICORESHARE ScanlineMesh : public MeshBase
 public:
 
   typedef unsigned int    under_type;
-  
+
   //! Index and Iterator types required for Mesh Concept.
   struct Node {
-  typedef NodeIndex<under_type>       index_type;
-  typedef NodeIterator<under_type>    iterator;
-  typedef NodeIndex<under_type>       size_type;
-  typedef vector<index_type>          array_type;
-  };				      
-				      
-  struct Edge {			      
-  typedef EdgeIndex<under_type>       index_type;     
-  typedef EdgeIterator<under_type>    iterator;
-  typedef EdgeIndex<under_type>       size_type;
-  typedef vector<index_type>          array_type;
-  };				      
-  				      
-  struct Face {			      
-  typedef FaceIndex<under_type>       index_type;
-  typedef FaceIterator<under_type>    iterator;
-  typedef FaceIndex<under_type>       size_type;
-  typedef vector<index_type>          array_type;
-  };				      
-				      
-  struct Cell {			      
-  typedef CellIndex<under_type>       index_type;
-  typedef CellIterator<under_type>    iterator;
-  typedef CellIndex<under_type>       size_type;
-  typedef vector<index_type>          array_type;
+    typedef NodeIndex<under_type>       index_type;
+    typedef NodeIterator<under_type>    iterator;
+    typedef NodeIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
+  };				
+				
+  struct Edge {			
+    typedef EdgeIndex<under_type>       index_type;
+    typedef EdgeIterator<under_type>    iterator;
+    typedef EdgeIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
+  };				
+  				
+  struct Face {			
+    typedef FaceIndex<under_type>       index_type;
+    typedef FaceIterator<under_type>    iterator;
+    typedef FaceIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
+  };				
+				
+  struct Cell {			
+    typedef CellIndex<under_type>       index_type;
+    typedef CellIterator<under_type>    iterator;
+    typedef CellIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
   };
+
+  typedef Edge Elem;
 
   // storage types for get_* functions
   typedef vector<double>      weight_array;
 
   ScanlineMesh()
     : offset_(0), length_(0), min_(Point(0,0,0)), max_(Point(1,1,1)) {}
-  ScanlineMesh(unsigned int length, const Point &min, const Point &max) 
+  ScanlineMesh(unsigned int length, const Point &min, const Point &max)
     : offset_(0), length_(length), min_(min), max_(max) {}
   ScanlineMesh(ScanlineMesh* mh, unsigned int offset, unsigned int length)
     : offset_(offset), length_(length), min_(mh->min_), max_(mh->max_) {}
@@ -93,23 +95,25 @@ public:
   virtual ScanlineMesh *clone() { return new ScanlineMesh(*this); }
   virtual ~ScanlineMesh() {}
 
-  Node::index_type  node(unsigned int i) const { return Node::index_type(i); }
-  Node::iterator  node_begin() const { return Node::iterator(offset_); }
-  Node::iterator  node_end() const { return Node::iterator(offset_ + length_); }
-  Node::size_type nodes_size() const { return Node::size_type(length_); }
+  template <class I> I tbegin(I*) const;
+  template <class I> I tend(I*) const;
+  template <class S> S tsize(S*) const;
 
-  Edge::index_type edge(unsigned int i) const { return Edge::index_type(i); }
-  Edge::iterator  edge_begin() const { return Edge::iterator(offset_); }
-  Edge::iterator  edge_end() const { return Edge::iterator(offset_+length_-1); }
-  Edge::size_type edges_size() const { return Edge::size_type(length_ - 1); }
+  Node::iterator  node_begin() const;
+  Node::iterator  node_end() const;
+  Node::size_type nodes_size() const;
 
-  Face::iterator  face_begin() const { return Face::iterator(0); }
-  Face::iterator  face_end() const { return Face::iterator(0); }
-  Face::size_type faces_size() const { return Face::size_type(0); }
+  Edge::iterator  edge_begin() const;
+  Edge::iterator  edge_end() const;
+  Edge::size_type edges_size() const;
 
-  Cell::iterator  cell_begin() const { return Cell::iterator(0); }
-  Cell::iterator  cell_end() const { return Cell::iterator(0); }
-  Cell::size_type cells_size() const { return Cell::size_type(0); }
+  Face::iterator  face_begin() const;
+  Face::iterator  face_end() const;
+  Face::size_type faces_size() const;
+
+  Cell::iterator  cell_begin() const;
+  Cell::iterator  cell_end() const;
+  Cell::size_type cells_size() const;
 
   //! get the mesh statistics
   unsigned get_length() const { return length_; }
@@ -147,7 +151,7 @@ public:
 
   //! similar to get_cells() with Face::index_type argument, but
   //  returns the "other" cell if it exists, not all that exist
-  bool get_neighbor(Cell::index_type & /*neighbor*/, Cell::index_type /*from*/, 
+  bool get_neighbor(Cell::index_type & /*neighbor*/, Cell::index_type /*from*/,
 		    Face::index_type /*idx*/) const {
     ASSERTFAIL("ScanlineMesh::get_neighbor not implemented.");
   }
@@ -167,7 +171,7 @@ public:
   void get_normal(Vector &/* result */, Node::index_type /* index */) const
   { ASSERTFAIL("not implemented") }
 
-  
+
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static  const string type_name(int n = -1);
@@ -178,7 +182,7 @@ private:
   //! the min_Node::index_type ( incase this is a subLattice )
   unsigned int offset_;
 
-  //! the Node::index_type space extents of a ScanlineMesh 
+  //! the Node::index_type space extents of a ScanlineMesh
   //! (min=min_Node::index_type, max=min+extents-1)
   unsigned int length_;
 
@@ -191,7 +195,20 @@ private:
 
 typedef LockingHandle<ScanlineMesh> ScanlineMeshHandle;
 
-
+template <> ScanlineMesh::Node::size_type ScanlineMesh::tsize(ScanlineMesh::Node::size_type *) const;
+template <> ScanlineMesh::Edge::size_type ScanlineMesh::tsize(ScanlineMesh::Edge::size_type *) const;
+template <> ScanlineMesh::Face::size_type ScanlineMesh::tsize(ScanlineMesh::Face::size_type *) const;
+template <> ScanlineMesh::Cell::size_type ScanlineMesh::tsize(ScanlineMesh::Cell::size_type *) const;
+				
+template <> ScanlineMesh::Node::iterator ScanlineMesh::tbegin(ScanlineMesh::Node::iterator *) const;
+template <> ScanlineMesh::Edge::iterator ScanlineMesh::tbegin(ScanlineMesh::Edge::iterator *) const;
+template <> ScanlineMesh::Face::iterator ScanlineMesh::tbegin(ScanlineMesh::Face::iterator *) const;
+template <> ScanlineMesh::Cell::iterator ScanlineMesh::tbegin(ScanlineMesh::Cell::iterator *) const;
+				
+template <> ScanlineMesh::Node::iterator ScanlineMesh::tend(ScanlineMesh::Node::iterator *) const;
+template <> ScanlineMesh::Edge::iterator ScanlineMesh::tend(ScanlineMesh::Edge::iterator *) const;
+template <> ScanlineMesh::Face::iterator ScanlineMesh::tend(ScanlineMesh::Face::iterator *) const;
+template <> ScanlineMesh::Cell::iterator ScanlineMesh::tend(ScanlineMesh::Cell::iterator *) const;
 
 } // namespace SCIRun
 
