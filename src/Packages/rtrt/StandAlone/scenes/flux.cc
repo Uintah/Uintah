@@ -33,7 +33,7 @@
 #include <stdlib.h>
 
 using namespace rtrt;
-using SCIRun::Thread;
+using namespace SCIRun;
 
 #ifdef USE_BRICK
 void create_grid(HVolumeBrick* hvol, TimeObj *group);
@@ -301,7 +301,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   Color cup(1, 0, 0);
   Color cdown(0, 0, 0.2);
 
-  Plane groundplane ( Point(0, 0, 0), Vector(0, -1, 0) );
+  rtrt::Plane groundplane ( Point(0, 0, 0), Vector(0, -1, 0) );
   Camera cam(Point(1501.35, -482.14, -257.168),
 	     Point(1461.09, 56.3614, 31.5762),
 	     Vector(-1,0,0),

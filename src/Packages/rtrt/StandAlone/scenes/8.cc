@@ -5,7 +5,7 @@
 #include "Scene.h"
 #include "Point.h"
 #include "Vector.h"
-#include "Transform.h"
+#include <Core/Geometry/Transform.h>
 #include "Group.h"
 #include "Sphere.h"
 #include "Rect.h"

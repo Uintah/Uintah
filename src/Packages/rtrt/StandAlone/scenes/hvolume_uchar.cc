@@ -110,6 +110,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 #endif
 	obj=group;
 	for(int i=0;i<files.size();i++){
+	  matl0=new Phong(Color(0,0,0), Color(.6,1,.4),
+			  Color(0,0,0), 100, 0);
 	  if (false) {
 	    matl0=new Phong(Color(0,0,0), Color(1,0.1,0.1),
 			    Color(0,0,0), 100, 0);
@@ -156,7 +158,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     Color cup(1, 0, 0);
     Color cdown(0, 0, 0.2);
 
-    Plane groundplane ( Point(0, 0, 0), Vector(0, -1, 0) );
+    rtrt::Plane groundplane ( Point(0, 0, 0), Vector(0, -1, 0) );
     Scene* scene=new Scene(obj, cam,
 			   bgcolor, cdown, cup, groundplane,
 			   ambient_scale);

@@ -10,8 +10,8 @@
 #include <string.h>
 #include <Packages/rtrt/Core/Point4D.h>
 #include <Packages/rtrt/Core/CrowMarble.h>
-#include <Packages/rtrt/Core/Point.h>
-#include <Packages/rtrt/Core/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/Mesh.h>
 #include <Packages/rtrt/Core/Bezier.h>
 #include <Packages/rtrt/Core/BV1.h>
@@ -25,7 +25,7 @@
 #include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/MinMax.h>
 #include <Packages/rtrt/Core/Tri.h>
-#include <Packages/rtrt/Core/Transform.h>
+#include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/Parallelogram.h>
 
@@ -424,7 +424,7 @@ Material *brick = new Speckle(0.01, Color(0.5,0.5,0.5), Color(0.6, 0.62, 0.64) )
       Color cdown(0.1, 0.1, 0.7);
       Color cup(0.5, 0.5, 0.0);
 
-      Plane groundplane ( teapotT.project(Point(0, 0, 0)), Vector(1, 1, 1) );
+      rtrt::Plane groundplane ( teapotT.project(Point(0, 0, 0)), Vector(1, 1, 1) );
       Color bgcolor(0.3, 0.3, 0.3);
       Scene *scene = new Scene(g,cam,bgcolor,cdown, cup,groundplane,ambient_scale);
       scene->ambient_hack = true;

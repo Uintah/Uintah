@@ -1,9 +1,9 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Scene.h>
-#include <Packages/rtrt/Core/Point.h>
-#include <Packages/rtrt/Core/Vector.h>
-#include <Packages/rtrt/Core/Transform.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/Rect.h>
@@ -144,7 +144,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Color cup(0.82, 0.52, 0.22);
   Color cdown(0.03, 0.05, 0.35);
   
-  Plane groundplane ( Point(1000, 0, 0), Vector(0, 2, 1) );
+  rtrt::Plane groundplane ( Point(1000, 0, 0), Vector(0, 2, 1) );
   Scene *scene = new Scene(g,cam,bgcolor,cdown, cup,groundplane,ambient_scale);
   scene->ambient_hack = true;
   scene->set_background_ptr( new LinearBackground(

@@ -7,8 +7,8 @@
 #include <math.h>
 #include <string.h>
 #include <Packages/rtrt/Core/Point4D.h>
-#include <Packages/rtrt/Core/Point.h>
-#include <Packages/rtrt/Core/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/RationalMesh.h>
 #include <Packages/rtrt/Core/RationalBezier.h>
 #include <Packages/rtrt/Core/BV1.h>
@@ -91,7 +91,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       Color cup(0.82, 0.52, 0.22);
       Color cdown(0.03, 0.05, 0.35);
 
-      Plane groundplane ( Point(0, 0, 0), Vector(0, 1, 1) );
+      rtrt::Plane groundplane ( Point(0, 0, 0), Vector(0, 1, 1) );
       Scene *scene = new Scene(g,cam,bgcolor,cdown, cup,groundplane,ambient_scale);
       scene->ambient_hack = true;
       scene->set_background_ptr( new LinearBackground(

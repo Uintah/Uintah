@@ -12,13 +12,14 @@
  *  Copyright (C) 2001 SCI Group
  */
 
+// SCIRun stuff
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 // rtrt Core stuff
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Scene.h>
-#include <Packages/rtrt/Core/Point.h>
-#include <Packages/rtrt/Core/Vector.h>
-#include <Packages/rtrt/Core/Transform.h>
+#include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/Rect.h>
