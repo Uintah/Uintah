@@ -49,6 +49,9 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   all_mpm_matls = 0;
   all_ice_matls = 0;
   all_arches_matls = 0;
+  all_matls = 0;
+  allInOneMatl = 0;
+  refine_flag_matls = 0;
 }
 
 void SimulationState::registerMaterial(Material* matl)
@@ -86,6 +89,8 @@ void SimulationState::registerSimpleMaterial(SimpleMaterial* matl)
 
 void SimulationState::finalizeMaterials()
 {
+  if (all_mpm_matls && all_mpm_matls->removeReference())
+    delete all_mpm_matls;
   all_mpm_matls = scinew MaterialSet();
   all_mpm_matls->addReference();
   vector<int> tmp_mpm_matls(mpm_matls.size());
@@ -93,6 +98,8 @@ void SimulationState::finalizeMaterials()
     tmp_mpm_matls[i] = mpm_matls[i]->getDWIndex();
   all_mpm_matls->addAll(tmp_mpm_matls);
   
+  if (all_arches_matls && all_arches_matls->removeReference())
+    delete all_arches_matls;
   all_arches_matls = scinew MaterialSet();
   all_arches_matls->addReference();
   vector<int> tmp_arches_matls(arches_matls.size());
@@ -100,6 +107,8 @@ void SimulationState::finalizeMaterials()
     tmp_arches_matls[i] = arches_matls[i]->getDWIndex();
   all_arches_matls->addAll(tmp_arches_matls);
 
+  if (all_ice_matls && all_ice_matls->removeReference())
+    delete all_ice_matls;
   all_ice_matls = scinew MaterialSet();
   all_ice_matls->addReference();
   vector<int> tmp_ice_matls(ice_matls.size());
@@ -107,6 +116,8 @@ void SimulationState::finalizeMaterials()
     tmp_ice_matls[i] = ice_matls[i]->getDWIndex();
   all_ice_matls->addAll(tmp_ice_matls);
 
+  if (all_matls && all_matls->removeReference())
+    delete all_matls;
   all_matls = scinew MaterialSet();
   all_matls->addReference();
   vector<int> tmp_matls(matls.size());
@@ -114,6 +125,8 @@ void SimulationState::finalizeMaterials()
     tmp_matls[i] = matls[i]->getDWIndex();
   all_matls->addAll(tmp_matls);
 
+  if (allInOneMatl && allInOneMatl->removeReference())
+    delete allInOneMatl;
   allInOneMatl = scinew MaterialSubset();
   allInOneMatl->addReference();
   // a material that represents all materials 
@@ -121,9 +134,11 @@ void SimulationState::finalizeMaterials()
   allInOneMatl->add((int)matls.size());
 
   //refine matl subset, only done on matl 0 (matl independent)
-  refine_flag_matls = scinew MaterialSubset();
-  refine_flag_matls->addReference();
-  refine_flag_matls->add(0);
+  if (!refine_flag_matls) {
+    refine_flag_matls = scinew MaterialSubset();
+    refine_flag_matls->addReference();
+    refine_flag_matls->add(0);
+  }
 }
 
 int SimulationState::getNumVelFields() const {
