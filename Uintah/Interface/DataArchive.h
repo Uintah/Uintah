@@ -3,6 +3,7 @@
 
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/NCVariable.h>
+#include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/GridP.h>
 #include <SCICore/Thread/Mutex.h>
 #include <SCICore/Thread/Time.h>
@@ -135,6 +136,24 @@ public:
    void query( NCVariable< T >&, const std::string& name, int matlIndex,
 	      const IntVector& index,
 	      double min, double max);
+
+   //////////
+   // query the variable value for a particular particle  overtime;
+   // T = double/float/vector/Tensor I'm not sure of the proper
+   // syntax.
+   template<class T>
+   void query( CCVariable< T >&, const std::string& name, int matlIndex,
+	      const Patch*, double time );
+
+
+   //////////
+   // query the variable value for a particular particle  overtime;
+   // T = double/float/vector/Tensor I'm not sure of the proper
+   // syntax.
+   template<class T>
+   void query( CCVariable< T >&, const std::string& name, int matlIndex,
+	      const IntVector& index,
+	      double min, double max);
    
 #if 0
    //////////
@@ -262,7 +281,7 @@ void DataArchive::query( NCVariable< T >& var, const std::string& name,
       throw InternalError("Variable doesn't have a type");
    string type = toString(typenode.getNodeValue());
    const TypeDescription* td = TypeDescription::lookupType(type);
-   ASSERT(td == NCVariable<T>::getTypeDescription());
+//   ASSERT(td == NCVariable<T>::getTypeDescription());
    var.allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex());
    long start;
    if(!get(vnode, "start", start))
@@ -303,10 +322,71 @@ void DataArchive::query( NCVariable< T >&, const std::string& name, int matlInde
    cerr << "DataArchive::query not finished\n";
 }
 
+template<class T>
+void DataArchive::query( CCVariable< T >& var, const std::string& name,
+			 int matlIndex, const Patch* patch, double time )
+{
+   double tstart = Time::currentSeconds();
+   XMLURL url;
+   DOM_Node vnode = findVariable(name, patch, matlIndex, time, url);
+   if(vnode == 0){
+      cerr << "VARIABLE NOT FOUND: " << name << ", index " << matlIndex << ", patch " << patch->getID() << ", time " << time << '\n';
+      throw InternalError("Variable not found");
+   }
+   DOM_NamedNodeMap attributes = vnode.getAttributes();
+   DOM_Node typenode = attributes.getNamedItem("type");
+   if(typenode == 0)
+      throw InternalError("Variable doesn't have a type");
+   string type = toString(typenode.getNodeValue());
+   const TypeDescription* td = TypeDescription::lookupType(type);
+   ASSERT(td == CCVariable<T>::getTypeDescription());
+   var.allocate(patch->getCellLowIndex(), patch->getCellHighIndex());
+   long start;
+   if(!get(vnode, "start", start))
+      throw InternalError("Cannot get start");
+   long end;
+   if(!get(vnode, "end", end))
+      throw InternalError("Cannot get end");
+   string filename;
+   if(!get(vnode, "filename", filename))
+      throw InternalError("Cannot get filename");
+   XMLURL dataurl(url, filename.c_str());
+   if(dataurl.getProtocol() != XMLURL::File)
+      throw InternalError(string("Cannot read over: ")
+			  +toString(dataurl.getProtocolName()));
+   string datafile(toString(dataurl.getPath()));
+
+   int fd = open(datafile.c_str(), O_RDONLY);
+   if(fd == -1)
+      throw ErrnoException("DataArchive::query (open call)", errno);
+   off64_t ls = lseek64(fd, start, SEEK_SET);
+   if(ls == -1)
+      throw ErrnoException("DataArchive::query (lseek64 call)", errno);
+
+   InputContext ic(fd, start);
+   var.read(ic);
+   ASSERTEQ(end, ic.cur);
+   int s = close(fd);
+   if(s == -1)
+      throw ErrnoException("DataArchive::query (read call)", errno);
+   dbg << "DataArchive::query(CCVariable) completed in " << Time::currentSeconds()-tstart << " seconds\n";
+}
+
+template<class T>
+void DataArchive::query( CCVariable< T >&, const std::string& name, int matlIndex,
+			const IntVector& index,
+			double min, double max)
+{
+   cerr << "DataArchive::query not finished\n";
+}
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.8  2000/07/11 19:44:50  kuzimmer
+// commented out line 284:  ASSERT(td == NCVariable<T>::getTypeDescription()); This was failing because two NCVariable<double> typeDescriptors were getting created.  This should not happen, so a bug report has been filed
+//
 // Revision 1.7  2000/06/27 18:28:35  bigler
 // Steve did some fixing up and moving around
 //
