@@ -23,11 +23,11 @@
       <outputInterval> 1.0 </outputInterval>
       <save label = "p.x"/>
       <save label = "p.xx"/>
-      <save label = "NTractionZMinus"/>
-      <save label = "integralArea"/>
       <save label = "p.mass"/> 
       <save label = "p.stress"/> 
       <save label = "g.stressFS"/>
+      <save label = "BndyForce_yminus"/>
+      <save label = "BndyContactArea_yminus"/>
    </DataArchiver>
 
    <MPM>
@@ -42,6 +42,7 @@
         <num_iters_to_increase_delT>4</num_iters_to_increase_delT>
         <delT_decrease_factor>.5</delT_decrease_factor>
         <delT_increase_factor>2.0</delT_increase_factor>
+        <boundary_traction_faces>[yminus]</boundary_traction_faces>
    </MPM>
 
 
