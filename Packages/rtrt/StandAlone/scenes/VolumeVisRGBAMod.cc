@@ -27,6 +27,10 @@ using SCIRun::Thread;
 //static int np = 1;
 //static int depth = 3;
 
+static Point minPin;
+static Point maxPin;
+static bool use_global_minmax = false;
+
 VolumeVisBase *create_volume_from_nrrd(char *filename,
 				   bool override_data_min, double data_min_in,
 				   bool override_data_max, double data_max_in,
@@ -89,22 +93,27 @@ VolumeVisBase *create_volume_from_nrrd(char *filename,
   cout << "total = " << nz * ny * nz << endl;
   cout << "spacing = " << n->axis[0].spacing << " x "<<n->axis[1].spacing<< " x "<<n->axis[2].spacing<< endl;
   for (int i = 0; i<n->dim; i++)
-    if (!(AIR_EXISTS(n->axis[i].spacing))) {
+    if (!(AIR_EXISTS_D(n->axis[i].spacing))) {
       cout <<"spacing for axis "<<i<<" does not exist.  Setting to 1.\n";
       n->axis[i].spacing = 1;
     }
   data.resize(nx,ny,nz); // resize the bricked data
-  // get the physical bounds
-  minP = Point(0,0,0);
-  maxP = Point((nx - 1) * n->axis[0].spacing,
-	       (ny - 1) * n->axis[1].spacing,
-	       (nz - 1) * n->axis[2].spacing);
-  // lets normalize the dimensions to 1
-  Vector size = maxP - minP;
-  // find the biggest dimension
-  double max_dim = Max(Max(size.x(),size.y()),size.z());
-  maxP = ((maxP-minP)/max_dim).asPoint();
-  minP = Point(0,0,0);
+  if (!use_global_minmax) {
+    // get the physical bounds
+    minP = Point(0,0,0);
+    maxP = Point((nx - 1) * n->axis[0].spacing,
+		 (ny - 1) * n->axis[1].spacing,
+		 (nz - 1) * n->axis[2].spacing);
+    // lets normalize the dimensions to 1
+    Vector size = maxP - minP;
+    // find the biggest dimension
+    double max_dim = Max(Max(size.x(),size.y()),size.z());
+    maxP = ((maxP-minP)/max_dim).asPoint();
+    minP = Point(0,0,0);
+  } else {
+    minP = minPin;
+    maxP = maxPin;
+  }
   // copy the data into the brickArray
   cerr << "Number of data members = " << num_elements << endl;
   float *p = (float*)n->data; // get the pointer to the raw data
@@ -214,6 +223,17 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       g = atof(argv[++i]);
       b = atof(argv[++i]);
       bgcolor = Color(r,g,b);
+    } else if(strcmp(argv[i], "-minmax")==0){
+      float x,y,z;
+      x = atof(argv[++i]);
+      y = atof(argv[++i]);
+      z = atof(argv[++i]);
+      minPin = Point(x,y,z);
+      x = atof(argv[++i]);
+      y = atof(argv[++i]);
+      z = atof(argv[++i]);
+      maxPin = Point(x,y,z);
+      use_global_minmax = true;
     } else {
       cerr << "Unknown option: " << argv[i] << '\n';
       cerr << "Valid options for scene: " << argv[0] << '\n';
