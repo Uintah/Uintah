@@ -6,6 +6,7 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
     protected alphaMap
     protected curX
     protected curY
+    protected selected
     constructor {config} { 
 	puts "constructing GenStandardColorMaps"
         set name GenStandardColorMaps 
@@ -24,6 +25,7 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	set $this-minRes 2
 	set exposed 0
 	set colorMap {}
+	set selected -1
 	set $this-nodeList {}
 	set $this-positionList {}
 	buildColorMaps
@@ -199,20 +201,21 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	set curX $x
 	set curY $y
 	
-	set l [$c find withtag current]
-	set index [lsearch [set $this-nodeList] $l]
+	set selected [$c find withtag current]
+	set index [lsearch [set $this-nodeList] $selected]
 	if { $index == -1 } {
 	    makeNode $x $y
-	}
+	} 
     }
 	
 
     method makeNode { x y } {
 	set w .ui[modname]
 	set c $w.f.f1.canvas
-	set new [$c create rectangle [expr $x - 5] [expr $y - 5] \
+	set new [$c create oval [expr $x - 5] [expr $y - 5] \
 		     [expr $x+5] [expr $y+5] -outline white \
 		     -fill black -tags node]
+	set selected $new
 	$this nodeInsert $new [list $x $y] $x
 	$this drawLines
     }
@@ -246,7 +249,7 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	for {set i 0} { $i < [llength [set $this-nodeList]] } {incr i} {
 	    set x [lindex [lindex [set $this-positionList] $i] 0 ]
 	    set y [lindex [lindex [set $this-positionList] $i] 1 ]
-	    set new [$c create rectangle [expr $x - 5] [expr $y - 5] \
+	    set new [$c create oval [expr $x - 5] [expr $y - 5] \
 		     [expr $x+5] [expr $y+5] -outline white \
 		     -fill black -tags node]
 	    set $this-nodeList [lreplace [set $this-nodeList] $i $i $new]
@@ -279,8 +282,7 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	if { $x > $cw } { set x $cw }
 	if { $y < 0 } { set y 0 }
 	if { $y > $ch } { set y $ch }
-	set l [$c find withtag current]
-	set i [lsearch  [set $this-nodeList] $l]
+	set i [lsearch  [set $this-nodeList] $selected]
 	if { $i != -1 } {
 	    set l [lindex [set $this-nodeList] $i]
 	    $c move $l [expr $x-$curX] [expr $y-$curY]
@@ -313,6 +315,7 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	$this redraw
 	$this-c setColors [join $colorMap]
 	$this-c needexecute
+	set selected -1
     }
     
     method close {} {
