@@ -1230,8 +1230,9 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
                                    f_theta[c] * sum_therm_exp[c]);
                                    
         // This is actually mass * sp_vol
-        spec_vol_source[c] = term1 + if_mpm_matl_ignore[m] * term2;
-        spec_vol_L[c] += spec_vol_source[c] + sp_vol_comb[c]; 
+        double src = term1 + if_mpm_matl_ignore[m] * term2;
+        spec_vol_L[c]     += src + sp_vol_comb[c]; 
+        spec_vol_source[c] = src/(rho_CC[c] * vol);
         
 /*`==========TESTING==========*/
 //    do we really want this?  -Todd        
