@@ -277,7 +277,6 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gAccelerationLabel);
   t->computes(lb->gExternalForceLabel);
   t->computes(lb->gInternalForceLabel);
-  t->computes(lb->gStressForSavingLabel);
   t->computes(lb->TotalMassLabel);
   t->computes(lb->dispIncQNorm0);
   t->computes(lb->dispIncNormMax);
@@ -830,7 +829,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gmass,gvolume;
       NCVariable<Vector> gvelocity_old,gacceleration,dispNew,gvelocity;
       NCVariable<Vector> gexternalforce,ginternalforce;
-      NCVariable<Matrix3> gstress;
       NCVariable<Vector> dispInc;
 
       new_dw->allocateAndPut(gmass,         lb->gMassLabel,         matl,patch);
@@ -841,7 +839,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocateAndPut(gacceleration, lb->gAccelerationLabel, matl,patch);
       new_dw->allocateAndPut(gexternalforce,lb->gExternalForceLabel,matl,patch);
       new_dw->allocateAndPut(ginternalforce,lb->gInternalForceLabel,matl,patch);
-      new_dw->allocateAndPut(gstress,     lb->gStressForSavingLabel,matl,patch);
 
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(0);
@@ -851,7 +848,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gacceleration.initialize(Vector(0,0,0));
       gexternalforce.initialize(Vector(0,0,0));
       ginternalforce.initialize(Vector(0,0,0));
-      gstress.initialize(Matrix3(0.));
 
       double totalmass = 0;
       Vector total_mom(0.0,0.0,0.0);
