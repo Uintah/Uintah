@@ -3,9 +3,7 @@
 
 #include <Geom/Color.h>
 
-#define at()
-
-/*cerr << "@ " << __FILE__ << ":" << __LINE__ << endl */
+#define at() cerr << "@ " << __FILE__ << ":" << __LINE__ << endl
 
 #define TRUE 1
 #define FALSE 0
