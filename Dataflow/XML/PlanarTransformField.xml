@@ -58,7 +58,7 @@
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
-	<name>Transform Matrix</name>
+	<name>Index Matrix</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
