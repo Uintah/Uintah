@@ -22,8 +22,6 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#define SELECT_RANGETREE
-
 namespace Uintah {
 
   using SCIRun::Vector;
@@ -31,10 +29,7 @@ namespace Uintah {
   using SCIRun::IntVector;
   using SCIRun::BBox;
 
-#ifdef SELECT_RANGETREE
-class PatchRangeTree;
-#endif
- 
+  class PatchRangeTree;
   class BoundCondBase;
   class Box;
   class Patch;
@@ -205,8 +200,6 @@ WARNING
       Vector d_dcell;
       bool d_finalized;
       int d_index; // number of the level
-      IntVector d_idxLow;
-      IntVector d_idxHigh;
       IntVector d_patchDistribution;
       IntVector d_periodicBoundaries;
 
@@ -219,20 +212,20 @@ WARNING
       std::vector<Patch*> d_virtualAndRealPatches; // real and virtual
 
       int d_id;
-     IntVector d_refinementRatio;
-     int d_timeRefinementRatio;
-#ifdef SELECT_GRID
+      IntVector d_refinementRatio;
+      int d_timeRefinementRatio;
+
+      // vars for select_grid - don't ifdef them here, so if we change it
+      // we don't have to compile everything
       IntVector d_idxLow;
       IntVector d_idxHigh;
       IntVector d_idxSize;
       IntVector d_gridSize;
       vector<int> d_gridStarts;
       vector<Patch*> d_gridPatches;
-#else
-#ifdef SELECT_RANGETREE
+
+      // vars for select_rangetree
       PatchRangeTree* d_rangeTree;
-#endif
-#endif
    };
 
    const Level* getLevel(const PatchSubset* subset);
