@@ -186,7 +186,7 @@ GenericField<Mesh, FData>::resize_fdata()
 
 
 // PIO
-const int GENERICFIELD_VERSION = 1;
+const int GENERICFIELD_VERSION = 2;
 
 
 template <class Mesh, class FData>
@@ -205,9 +205,12 @@ template <class Mesh, class FData>
 void GenericField<Mesh, FData>::io(Piostream& stream)
 {
   // we need to pass -1 to type_name() on SGI to fix a compile bug
-  stream.begin_class(type_name(-1), GENERICFIELD_VERSION);
+  int version = stream.begin_class(type_name(-1), GENERICFIELD_VERSION);
   Field::io(stream);
-  mesh_->io(stream);
+  if (version < 2)
+    mesh_->io(stream);
+  else
+    Pio(stream, mesh_);
   mesh_->freeze();
   Pio(stream, fdata_);
   freeze();
