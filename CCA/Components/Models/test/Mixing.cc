@@ -310,3 +310,9 @@ void Mixing::scheduleModifyThermoTransportProperties(SchedulerP&,
 {
   // do nothing      
 }
+void Mixing::computeSpecificHeat(CCVariable<double>&,
+                                 const Patch*,
+                                 DataWarehouse*,
+                                 const int)
+{
+}

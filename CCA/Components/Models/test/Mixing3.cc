@@ -454,4 +454,12 @@ void Mixing3::react(const ProcessorGroup*,
     }
   }
 }
-
+//______________________________________________________________________
+//
+void Mixing3::computeSpecificHeat(CCVariable<double>&,
+                                    const Patch*,   
+                                    DataWarehouse*, 
+                                    const int)      
+{
+  //do nothing
+}
