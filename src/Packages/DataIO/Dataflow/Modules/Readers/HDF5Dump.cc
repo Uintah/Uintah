@@ -563,7 +563,8 @@ herr_t HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
       else {
 	*iostr << "\"";
 	for( int jc=0; jc<element_size; jc++ )
-	  *iostr << ((char*) data)[ic*element_size+jc];
+	  if( !iscntrl( ((char*) data)[ic*element_size+jc] ) )
+	    *iostr << ((char*) data)[ic*element_size+jc];
 	*iostr << "\"";
       }
     }
