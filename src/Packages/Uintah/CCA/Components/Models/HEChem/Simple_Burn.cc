@@ -92,7 +92,7 @@ void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
 //______________________________________________________________________
 //     
 void Simple_Burn::scheduleInitialize(SchedulerP&,
-				     const LevelP& level,
+				     const LevelP&,
 				     const ModelInfo*)
 {
   // None necessary...
@@ -164,7 +164,7 @@ void Simple_Burn::scheduleMassExchange(SchedulerP& sched,
 //
 void Simple_Burn::massExchange(const ProcessorGroup*, 
 			     const PatchSubset* patches,
-			     const MaterialSubset* matls,
+			     const MaterialSubset*,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
 			     const ModelInfo* mi)
