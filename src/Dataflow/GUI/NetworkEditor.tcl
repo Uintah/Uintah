@@ -570,6 +570,7 @@ proc findMovedModulePath { packvar catvar modvar } {
 {SCIRun FieldsData BuildInterpMatrix} {SCIRun FieldsData BuildMappingMatrix}
 {SCIRun FieldsData ApplyInterpMatrix} {SCIRun FieldsData ApplyMappingMatrix}
 {SCIRun FieldsData DirectInterpolate} {SCIRun FieldsData DirectMapping}
+{SCIRun Fields DirectInterpolate} {SCIRun FieldsData DirectMapping}
 "
 
     upvar 1 $packvar package $catvar category $modvar module
