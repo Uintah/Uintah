@@ -531,7 +531,7 @@ void Module::error(const string& str)
 
 void Module::warning(const string& str)
 {
-  //gui->postMessage("WARNING: " + moduleName + ": " + str, false);
+  gui->postMessage("WARNING: " + moduleName + ": " + str, false);
   msgStream_ << "WARNING: " << str << endl;
 }
 
