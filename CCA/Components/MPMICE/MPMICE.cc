@@ -313,7 +313,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
     d_ice->scheduleComputeDel_P(                  sched, level,   patches, 
                                                                   one_matl, 
                                                                   press_matl,
-				                                      all_matls);
+				                                  all_matls);
   }                           //  IMPLICIT AND EXPLICIT
 
                                                                   
@@ -394,7 +394,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   d_ice->scheduleMaxMach_on_Lodi_BC_Faces(sched, level,ice_matls,maxMach_PSS);
                                    
   d_ice->scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
-					                              mpm_matls_sub,
+					                         mpm_matls_sub,
                                                                  press_matl,
                                                                  ice_matls);
                                                                   
@@ -412,7 +412,15 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
     //  time to add a new material
     d_ice->scheduleSetNeedAddMaterialFlag(  sched, level,   all_matls);
   }
-
+  if(d_mpm->flags->d_canAddMPMMaterial){
+    //  This checks to see if the model on THIS patch says that it's
+    //  time to add a new material
+    d_mpm->scheduleCheckNeedAddMPMMaterial( sched, patches, mpm_matls);
+                                                                                
+    //  This one checks to see if the model on ANY patch says that it's
+    //  time to add a new material
+    d_mpm->scheduleSetNeedAddMaterialFlag(  sched, level,   mpm_matls);
+  }
 
   sched->scheduleParticleRelocation(level,
                                 Mlb->pXLabel_preReloc, 
@@ -1004,7 +1012,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int indx = mpm_matl->getDWIndex();
-
       // Create arrays for the grid data
       constNCVariable<double> gmass, gvolume, gtemperature, gSp_vol;
       constNCVariable<Vector> gvelocity;
@@ -2032,15 +2039,48 @@ bool MPMICE::needRecompile(double time, double dt, const GridP& grid) {
 void MPMICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
                          SimulationStateP&   sharedState)
 {
-  cout << "In MPMICE::addMaterial" << endl;
   d_recompile = true;
-  d_ice->addMaterial(prob_spec, grid, d_sharedState);
-  cout << "Leaving MPMICE::addMaterial" << endl;
+  if(d_sharedState->needAddMaterial() > 0){
+    d_ice->addMaterial(prob_spec, grid, d_sharedState);
+  }
+  if(d_sharedState->needAddMaterial() < 0){
+    d_mpm->addMaterial(prob_spec, grid, d_sharedState);
+    d_ice->updateExchangeCoefficients(prob_spec, grid, d_sharedState);
+  }
 }
 void MPMICE::scheduleInitializeAddedMaterial(const LevelP& level,
                                              SchedulerP& sched)
 {
-  d_ice->scheduleInitializeAddedMaterial(level,sched);
+  cout << "Entering MPMICE::scheduleInitializeAddedMaterial" << endl;
+
+  if(d_sharedState->needAddMaterial() > 0){
+    d_ice->scheduleInitializeAddedMaterial(level,sched);
+  }
+  if(d_sharedState->needAddMaterial() < 0){
+    d_mpm->scheduleInitializeAddedMaterial(level,sched);
+
+    Task* t = scinew Task("MPMICE::actuallyInitializeAddedMPMMaterial",
+                           this, &MPMICE::actuallyInitializeAddedMPMMaterial);
+
+    int addedMaterialIndex = d_sharedState->getNumMatls() - 1;
+
+    MaterialSubset* add_matl = scinew MaterialSubset();
+    add_matl->add(addedMaterialIndex);
+    add_matl->addReference();
+    t->computes(MIlb->vel_CCLabel,       add_matl);
+    t->computes(Ilb->rho_CCLabel,        add_matl);
+    t->computes(Ilb->temp_CCLabel,       add_matl);
+    t->computes(Ilb->sp_vol_CCLabel,     add_matl);
+    t->computes(Ilb->speedSound_CCLabel, add_matl);
+
+    sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+
+    if (add_matl->removeReference())
+      delete add_matl; // shouln't happen, but...
+  }
+
+  cout << "Leaving MPMICE::scheduleInitializeAddedMaterial" << endl;
+
 }
 /*______________________________________________________________________
  Function~  setBC_rho_micro
@@ -2102,4 +2142,47 @@ void MPMICE::setBC_rho_micro(const Patch* patch,
       } // if not
     } // child loop
   } // face loop
+}
+
+void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*, 
+                                                const PatchSubset* patches,
+                                                const MaterialSubset* ,
+                                                DataWarehouse*,
+                                                DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){ 
+    const Patch* patch = patches->get(p);
+    cout_doing << "Doing actuallyInitializeAddedMPMMaterial on patch "
+               << patch->getID() << "\t\t\t MPMICE" << endl;
+    double junk=-9, tmp;
+    int m    = d_sharedState->getNumMPMMatls() - 1;
+    int indx = d_sharedState->getNumMatls() - 1;
+    double p_ref = d_sharedState->getRefPress();
+    CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, speedSound;
+    CCVariable<Vector> vel_CC;
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    new_dw->allocateTemporary(rho_micro, patch);
+    new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel,    indx,patch);
+    new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,       indx,patch);
+    new_dw->allocateAndPut(speedSound,Ilb->speedSound_CCLabel,indx,patch);
+    new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,      indx,patch);
+    new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,       indx,patch);
+
+    mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
+                                         Temp_CC,     vel_CC, 0,patch);
+
+    setBC(rho_CC,    "Density",      patch, d_sharedState, indx, new_dw);
+    setBC(rho_micro, "Density",      patch, d_sharedState, indx, new_dw);
+    setBC(Temp_CC,   "Temperature",  patch, d_sharedState, indx, new_dw);
+    setBC(vel_CC,    "Velocity",     patch, d_sharedState, indx, new_dw);                                                                                 
+    for (CellIterator iter = patch->getExtraCellIterator();
+                                                      !iter.done();iter++){
+      IntVector c = *iter;
+      sp_vol_CC[c] = 1.0/rho_micro[c];
+                                                                              
+      mpm_matl->getConstitutiveModel()->
+          computePressEOSCM(rho_micro[c],junk, p_ref, junk, tmp,mpm_matl);
+      speedSound[c] = sqrt(tmp);
+    }
+  }
 }
