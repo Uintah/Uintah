@@ -129,6 +129,7 @@ void GLTextureBuilder::real_execute(FieldHandle sfield)
       (sfield->mesh()->get_type_description()->get_name() !=
        get_type_description((LatVolMesh *)0)->get_name()))
   {
+    cerr << "GLTextureBuilder - Field has no representation or is not a LatVolMesh" << endl;
     return;
   }
 
@@ -209,5 +210,10 @@ void GLTextureBuilder::real_execute(FieldHandle sfield)
 }
 
 } // End namespace SCIRun
+
+
+
+
+
 
 

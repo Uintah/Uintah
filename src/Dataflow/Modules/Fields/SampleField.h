@@ -132,8 +132,11 @@ SampleFieldAlgoT<Mesh>::build_weight_table_sfi(MeshHandle mesh_h,
   typename Mesh::Elem::iterator ei, ei_end;
   mesh->begin(ei);
   mesh->end(ei_end);
-  if (ei == ei_end) // empty mesh
+  if (ei == ei_end)
+  {
+    cout << "SampleFieldAlgo:: Empty mesh\n";
     return false;
+  }
 
   // the tables are to be filled with increasing values.
   // degenerate elements (size<=0) will not be included in the table.
@@ -228,7 +231,10 @@ SampleFieldAlgoT<Mesh>::build_weight_table_vfi(MeshHandle mesh_h,
   mesh->begin(ei);
   mesh->end(ei_end);
   if (ei == ei_end) // empty mesh
+  {
+    cout << "SampleFieldAlgo:: Empty mesh\n";
     return false;
+  }
 
   // the tables are to be filled with increasing values.
   // degenerate elements (size<=0) will not be included in the table.
