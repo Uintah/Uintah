@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
     }
     if (!bases_filename) {
       bases_filename = new char[inname_len+20];
-      sprintf(bases_filename, "%s-bases%s", infilename_base, nrrd_ext);
+      sprintf(bases_filename, "%s-basis%s", infilename_base, nrrd_ext);
     }
   } else {
     bool error=false;
@@ -250,7 +250,7 @@ int main(int argc, char *argv[]) {
   
   // Write the normalized basis textures file
   char *nbases_filename = new char[outname_len+20];
-  sprintf(nbases_filename, "%s-bases%s", outfilename_base, nrrd_ext);
+  sprintf(nbases_filename, "%s-basis%s", outfilename_base, nrrd_ext);
   if (nrrdSave(nbases_filename, bases, 0)) {
     err = biffGet(NRRD);
     fprintf(stderr, "%s: trouble saving to %s: %s\n", me, nbases_filename, err);
@@ -309,7 +309,7 @@ int main(int argc, char *argv[]) {
 
   // Write the transform file
   char *transform_filename = new char[outname_len+20];
-  sprintf(transform_filename, "%s-transform%s", outfilename_base, nrrd_ext);
+  sprintf(transform_filename, "%s-coeff%s", outfilename_base, nrrd_ext);
   if (nrrdSave(transform_filename, nout, 0)) {
     err = biffGet(NRRD);
     fprintf(stderr, "%s: trouble saving to %s: %s\n", me, transform_filename, err);

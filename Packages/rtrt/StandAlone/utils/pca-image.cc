@@ -486,7 +486,7 @@ int main(int argc, char *argv[]) {
     cout << "Basis textures complete" << endl;
   
   // Write out the basis textures
-  string basesname(string(outfilename_base) + "-bases" + string(nrrd_ext));
+  string basesname(string(outfilename_base) + "-basis" + string(nrrd_ext));
   if (nrrdSave(basesname.c_str(), bases, 0)) {
     err = biffGet(NRRD);
     fprintf(stderr, "%s: trouble saving to %s: %s\n", me, basesname.c_str(), err);
@@ -514,7 +514,7 @@ int main(int argc, char *argv[]) {
     transform = nrrdNuke(transform);
 
     // Write out the new tranformation matrix
-    string transname(string(outfilename_base) + "-transform" + string(nrrd_ext));
+    string transname(string(outfilename_base) + "-coeff" + string(nrrd_ext));
     if (nrrdSave(transname.c_str(), newTrans, 0)) {
       err = biffGet(NRRD);
       fprintf(stderr, "%s: trouble saving to %s: %s\n", me, transname.c_str(), err);
