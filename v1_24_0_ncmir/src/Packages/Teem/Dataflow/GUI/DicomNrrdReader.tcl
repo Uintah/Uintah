@@ -206,14 +206,11 @@ itcl_class Teem_DataIO_DicomNrrdReader {
 	    $this-c get_series_uid [set $this-dir]
 	    
 	    set len [string length $this-series-uid]
-	    #puts "len = $len"            
-	    #puts "this-series-uid = {[set $this-series-uid]}"
 	    
 	    if { [string length [set $this-series-uid]] != 0 } { 
 		# Break series_uid into a list 
 		set suids [set  $this-series-uid] 
-		#puts "suids = {$suids}"
-		set list_suid [split $suids " "]
+		set list_suid $suids
 		
 		# Delete the first entry in the list -- this is always empty
 		set len [llength $list_suid]
@@ -248,29 +245,24 @@ itcl_class Teem_DataIO_DicomNrrdReader {
             set $this-suid-sel [$src get $i] 
         }
 
-        #puts "this-suid-sel = {[set $this-suid-sel]}"
-
         # Call C++ function to set my $this-files variable as a list of
         # files for the seriesuid that was selected.
         $this-c get_series_files [set $this-dir] [set $this-suid-sel]
 
         # Break series files into a list 
         set fls [set  $this-series-files] 
-        #puts "fls = {$fls}"
-        set list_files [split $fls " "]
+	set list_files $fls
         set $this-series-files ""
          
         # Delete the last entry in the list -- this is always empty
-        #set len [llength $list_files]
-        #set list_files [lrange $list_files [expr $len - 1] $len]
-        set $this-num-files [expr [llength $list_files] -1]
+        set $this-num-files [llength $list_files]
 
         foreach entry $list_files {
             # Grab the filename of the end
             set names [split $entry "/"]
             set len [llength $names]
             set file_name [lindex $names [expr $len - 1]] 
-            set $this-series-files [ concat [set $this-series-files] $file_name ]
+            set $this-series-files [ concat [set $this-series-files] "\{$file_name\}" ]
             $dst insert end $file_name 
         }
     }
@@ -288,7 +280,6 @@ itcl_class Teem_DataIO_DicomNrrdReader {
 	if [ expr [winfo exists $w]] {
 
             set listing [$w.listing childsite]
-            #set seriesuid $listing.seriesuid
             set files $listing.files
             set sd [$w.sd childsite]
             set selected $sd.selected
@@ -302,10 +293,8 @@ itcl_class Teem_DataIO_DicomNrrdReader {
                 if { [llength $list_files] > 0 } {
                     set $this-series-files ""
                     foreach i [$files.list curselection] {
-                        set $this-series-files [ concat [set $this-series-files] [$files.list get $i] ]
+                        set $this-series-files [ concat [set $this-series-files] "\{[$files.list get $i]\}" ]
                     }
-
-                    #puts "this-series-files = [set $this-series-files]"
                 }
 
                 # Update $this-series-files to contain only selected files 
@@ -314,28 +303,20 @@ itcl_class Teem_DataIO_DicomNrrdReader {
                 # Get start and end file
                 # Break series files into a list 
                 set fls [set  $this-series-files] 
-                set list_files [split $fls " "]
+                set list_files $fls
  
-                # Delete the last entry in the list -- this is always empty
-                #set len [llength $list_files]
-                #set list_files [lrange $list_files 0 [expr $len-2]]
-
                 set start_file [lindex $list_files 0]
                 set end_file [lindex $list_files end]
                 set num_files [llength $list_files]
 
                 # Check to make sure this is a unique entry
-                set entry "DIR: [set $this-dir]   SERIES UID: [set $this-suid-sel]   START FILE: $start_file   END FILE: $end_file   NUMBER OF FILES: $num_files"
+                set entry "DIR: \"[set $this-dir]\"   SERIES UID: \"[set $this-suid-sel]\"   START FILE: \"$start_file\"   END FILE: \"$end_file\"   NUMBER OF FILES: $num_files"
 
                 set list_sel [$selected.list get 0 end]
 
                 foreach cur_entry $list_sel {
-                    #puts "entry = {$entry}"
-                    #puts "cur_entry = {$cur_entry}"
-
                     if { [string equal $entry $cur_entry] } {
                         # Duplicate entry 
-                        #puts "duplicate entry"
                         return                    
                     }  
                 }
@@ -362,8 +343,7 @@ itcl_class Teem_DataIO_DicomNrrdReader {
 		    set $this-entry-files$i ""
 
 		    for {set j 0} {$j < [llength $list_files]} {incr j} {
-			set $this-entry-files$i [ concat [set $this-entry-files$i] [lindex $list_files $j] ]
-			#puts [set $this-entry-files$i]
+			set $this-entry-files$i [ concat [set $this-entry-files$i] "\{[lindex $list_files $j]\}" ]
 		    }
 
 		    set $this-max-entries [expr [set $this-max-entries] + 1]
@@ -398,14 +378,14 @@ itcl_class Teem_DataIO_DicomNrrdReader {
 	if [ expr [winfo exists $w] ] {
             set sd [$w.sd childsite]
             set selected $sd.selected
-	    set list_files [split [set $this-entry-files$which] " "]
+	    set list_files [set $this-entry-files$which]
 
 	    set start_file [lindex $list_files 0]
 	    set end_file [lindex $list_files end]
             set num_files [llength $list_files]
 
 	    # Check to make sure this is a unique entry
-	    set entry "DIR: [set $this-entry-dir$which]   SERIES UID: [set $this-entry-suid$which]   START FILE: $start_file   END FILE: $end_file   NUMBER OF FILES: $num_files"
+	    set entry "DIR: \"[set $this-entry-dir$which]\"   SERIES UID: \"[set $this-entry-suid$which]\"   START FILE: \"$start_file\"   END FILE: \"$end_file\"   NUMBER OF FILES: $num_files"
 	    
 	    
 
@@ -414,12 +394,35 @@ itcl_class Teem_DataIO_DicomNrrdReader {
 
 	    # Call the c++ function that adds this data to its data 
 	    # structure.
+	    set $this-entry-files$which [$this fix_entry_files [set $this-entry-files$which]]
+	    
 	    $this-c add_data [set $this-entry-dir$which] [set $this-entry-suid$which] [set $this-entry-files$which]
 	    
 	    # Now add entry to selected data
 	    $selected.list insert end $entry
 	    
 	}  
+    }
+    
+    method fix_entry_files {files} {
+	# The old way of saving entry files was to separate files with spaces.
+	# This approach didn't allow for filenames with spaces.  This
+	# method inserts curly braces around the filenames so that it
+	# can be parsed properly
+	
+	if {[string index $files 0] == "\{"} {
+	    # all ready formatted correctly
+	    return $files
+	}
+
+	# split by spaces
+	set list_files [split $files " "]
+	set files ""
+        foreach f $list_files {
+	    set files [ concat $files "\{$f\}" ]
+	}
+
+	return $files
     }
 
  
@@ -452,7 +455,6 @@ itcl_class Teem_DataIO_DicomNrrdReader {
 
 		# decrement num-entries
 		set $this-num-entries [expr [set $this-num-entries] - 1]
-		puts "Info deleted...num-entries now [set $this-num-entries]"
 
                 # Call the c++ function that deletes this data from its data 
                 # structure.
@@ -503,13 +505,6 @@ itcl_class Teem_DataIO_DicomNrrdReader {
 
 
 	# Select proper series
-	#set i [$w.listing.childsite.seriesuid.list index [set $this-suid-sel]]
-
-	#$w.listing.childsite.seriesuid.list selection clear 0 end
-	#$w.listing.childsite.seriesuid.list selection set $i $i
-	#$w.listing.childsite.seriesuid.list selection set [set $this-suid-sel] [set $this-suid-sel]
-	#$this update_series_files $w.listing.childsite.seriesuid.list $w.listing.childsite.files.list
-
 	set sd [$w.sd childsite]
 	set selected $sd.selected
 	
@@ -523,7 +518,6 @@ itcl_class Teem_DataIO_DicomNrrdReader {
 	    
  	    # delete all of them
 	    $w.listing.childsite.seriesuid.list delete 0 end
- 	    #$this-c clear_data
 	    
  	    set num [set $this-num-entries]
  	    set $this-num-entries 0
