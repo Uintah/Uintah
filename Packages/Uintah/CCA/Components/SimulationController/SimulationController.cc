@@ -297,7 +297,6 @@ void SimulationController::run()
 	  MPI_Reduce(&highwater, &max_highwater, 1, MPI_UNSIGNED_LONG,
 		     MPI_MAX, 0, d_myworld->getComm());
 	}
-	avg_highwater /= d_myworld->size();
       }
       
       if(log_dw_mem){
