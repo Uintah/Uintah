@@ -464,7 +464,7 @@ void MDSPlusDataReader::execute(){
     }
   }
 #else  
-  error( "No HDF5 availible." );
+  error( "No MDSPlus availible." );
   
 #endif
 }
