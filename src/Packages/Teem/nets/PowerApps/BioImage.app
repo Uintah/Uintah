@@ -1362,7 +1362,7 @@ class BioImageApp {
 	bind $page.file.e <Return> "$this execute_Data"
 	
 	button $page.load -text "Browse" \
-	    -command "$NrrdReader initialize_ui" \
+	    -command "$this open_nrrd_reader_ui $which" \
 	    -width 12
 	Tooltip $page.load "Use a file browser to\nselect a data set"
 	pack $page.load -side top -anchor n -padx 3 -pady 1
@@ -1405,7 +1405,7 @@ class BioImageApp {
 	bind $page.file.e <Return> "$this execute_Data"
 
 	button $page.load -text "Browse" \
-	    -command "$FieldReader initialize_ui" \
+	    -command "[set FieldReader] initialize_ui; .ui[set FieldReader].f7.execute configure -state disabled" \
 	    -width 12
 	pack $page.load -side top -anchor n -padx 3 -pady 1
 	
@@ -1446,6 +1446,13 @@ class BioImageApp {
 	Tooltip $w.sentry "Edit the entries to indicate the various orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
 	grid config $w.sentry -row 1 -column 4 -sticky "n"
 	
+    }
+
+    method open_nrrd_reader_ui {i} {
+	set m [lindex [lindex $filters($i) $modules] 0]
+	[set m] initialize_ui
+
+	.ui[set m].f7.execute configure -state disabled
     }
 
     method dicom_ui { } {
@@ -3638,8 +3645,7 @@ class BioImageApp {
                 set $m1-nodeList {514 797 1072 1425}
             }
 	    $m1-c needexecute
-          }
-	}
+       }
     }
 
     method toggle_show_guidelines {} {
