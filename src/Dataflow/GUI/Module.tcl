@@ -1383,7 +1383,7 @@ proc moduleDestroy {modid} {
 
     $modid delete
     if { ![isaSubnetIcon $modid] } {
-	proc $modid { args } { }
+	proc $modid { args } { }  ;# Does nothing, eats up commands
 	netedit deletemodule $modid
     }
     
@@ -1783,7 +1783,7 @@ proc disabledTrace { ArrayName Index mode } {
     if ![string length $Index] return
     networkHasChanged
     global Subnet Disabled Notes Color    
-    if [info exists Subnet($Index)] {
+    if { [info exists Subnet($Index)] } {
 	return
     } else {
 	if { [info exists Disabled($Index)] && $Disabled($Index) } {
@@ -1793,6 +1793,15 @@ proc disabledTrace { ArrayName Index mode } {
 	}
 	set conn [parseConnectionID $Index]
 	if [string equal w $mode] {
+	    if { !$Disabled($Index) } {
+		foreach rconn [findRealConnections $conn] {
+		    eval netedit addconnection $rconn
+		}
+	    } else {
+		foreach conn [findRealConnections $conn] {
+		    netedit deleteconnection [makeConnID $conn] 1
+		}
+	    }
 	    drawConnections [list $conn]	
 	    $Subnet(Subnet$Subnet([oMod conn])_canvas) raise $Index
 	    checkForDisabledModules [oMod conn] [iMod conn]
