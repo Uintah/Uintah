@@ -24,6 +24,10 @@
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>
+
+#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -1010,6 +1014,119 @@ int main(int argc, char** argv)
 		    break;
 		  }
 		  break;
+              //__________________________________
+              //   S F C X   V A R I A B L E S
+		case Uintah::TypeDescription::SFCXVariable:
+		  switch(subtype->getType()){
+		  case Uintah::TypeDescription::double_type:
+		    {
+		      SFCXVariable<double> value;
+		      da->query(value, var, matl, patch, time);
+                    IntVector lo = value.getLowIndex();
+                    IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
+		      IntVector dx(value.getHighIndex()-value.getLowIndex());
+                    
+		      if(dx.x() && dx.y() && dx.z()){
+			double min, max;
+                     IntVector c_min, c_max;
+                     
+                     CellIterator iter=patch->getSFCXIterator();
+			min=max=value[*iter];
+			for(;!iter.done(); iter++){
+			  min=Min(min, value[*iter]);
+                       if (min == value[*iter] ) 
+                         c_min = *iter;
+			  max=Max(max, value[*iter]);
+                       if (max == value[*iter] ) 
+                         c_max = *iter;
+			}                     
+			cout << "\t\t\t\tmin value: " << min << "\t\t"<< c_min <<endl;
+			cout << "\t\t\t\tmax value: " << max << "\t\t"<< c_max <<endl;
+		      }
+		    }
+		  break;
+                default:
+		    cerr << "SCFXVariable  of unknown type: " << subtype->getType() << endl;
+		    break;
+		  }
+		  break;
+              //__________________________________
+              //   S F C Y  V A R I A B L E S
+		case Uintah::TypeDescription::SFCYVariable:
+		  switch(subtype->getType()){
+		  case Uintah::TypeDescription::double_type:
+		    {
+		      SFCYVariable<double> value;
+		      da->query(value, var, matl, patch, time);
+                    IntVector lo = value.getLowIndex();
+                    IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
+		      IntVector dx(value.getHighIndex()-value.getLowIndex());
+                    
+		      if(dx.x() && dx.y() && dx.z()){
+			double min, max;
+                     IntVector c_min, c_max;
+                     
+                     CellIterator iter=patch->getSFCYIterator();
+			min=max=value[*iter];
+			for(;!iter.done(); iter++){
+			  min=Min(min, value[*iter]);
+                       if (min == value[*iter] ) 
+                         c_min = *iter;
+			  max=Max(max, value[*iter]);
+                       if (max == value[*iter] ) 
+                         c_max = *iter;
+			}                     
+			cout << "\t\t\t\tmin value: " << min << "\t\t"<< c_min <<endl;
+			cout << "\t\t\t\tmax value: " << max << "\t\t"<< c_max <<endl;
+		      }
+		    }
+		  break;
+                default:
+		    cerr << "SCFYVariable  of unknown type: " << subtype->getType() << endl;
+		    break;
+		  }
+		  break;
+              //__________________________________
+              //   S F C Z   V A R I A B L E S
+		case Uintah::TypeDescription::SFCZVariable:
+		  switch(subtype->getType()){
+		  case Uintah::TypeDescription::double_type:
+		    {
+		      SFCZVariable<double> value;
+		      da->query(value, var, matl, patch, time);
+                    IntVector lo = value.getLowIndex();
+                    IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
+		      IntVector dx(value.getHighIndex()-value.getLowIndex());
+                    
+		      if(dx.x() && dx.y() && dx.z()){
+			double min, max;
+                     IntVector c_min, c_max;
+                     
+                     CellIterator iter=patch->getSFCZIterator();
+			min=max=value[*iter];
+			for(;!iter.done(); iter++){
+			  min=Min(min, value[*iter]);
+                       if (min == value[*iter] ) 
+                         c_min = *iter;
+			  max=Max(max, value[*iter]);
+                       if (max == value[*iter] ) 
+                         c_max = *iter;
+			}                     
+			cout << "\t\t\t\tmin value: " << min << "\t\t"<< c_min <<endl;
+			cout << "\t\t\t\tmax value: " << max << "\t\t"<< c_max <<endl;
+		      }
+		    }
+		  break;
+                default:
+		    cerr << "SCFZVariable  of unknown type: " << subtype->getType() << endl;
+		    break;
+		  }
+                break;
+              //__________________________________
+              //  BULLET PROOFING
 		default:
 		  cerr << "Variable of unknown type: " << td->getType() << endl;
 		  break;
