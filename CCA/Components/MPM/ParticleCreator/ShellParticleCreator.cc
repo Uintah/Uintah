@@ -51,6 +51,9 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 				      MPMLabel* lb,
 				      vector<GeometryObject*>& d_geom_objs)
 {
+  // Print the physical boundary conditions
+  printPhysicalBCs();
+
   // Get datawarehouse index
   int dwi = matl->getDWIndex();
 
