@@ -608,7 +608,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     
     double tmp, sumBeta, alpha, term2, kappa, sp_vol_source, delta_KE;
 /*`==========TESTING==========*/
-// I've included this term but it's turned off -Todd
+// If this isn't 0.0 then you need to include extra terms -Todd
     double Joule_coeff   = 0.0;         // measure of "thermal imperfection" 
 /*==========TESTING==========`*/
     DenseMatrix beta(numALLMatls,numALLMatls),acopy(numALLMatls,numALLMatls);
@@ -733,31 +733,32 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
           alpha       = if_mpm_matl_ignore[n] * 1.0/Temp_CC[n][c];
           phi[m][n]   = (f_theta[m][c] * vol_frac_CC[n][c]* alpha)/rho_CC[m][c]; 
         }
-      }  
+      } 
       //  off diagonal terms, matrix A    
       for(int m = 0; m < numALLMatls; m++) {
         for(int n = 0; n < numALLMatls; n++)  {
-          a[m][n] = -( (e_prime_v[m] + press_CC[c]) * phi[m][n] + beta[m][n]);
+          a[m][n] = -press_CC[c] * phi[m][n] - beta[m][n];
         }
       }
-      //  diagonal terms, matrix A
+      //  diagonal terms, matrix A wipe out the above
       for(int m = 0; m < numALLMatls; m++) {
-        term2   = ((1.0/f_theta[m][c]) - 1.0) 
-                * (e_prime_v[m] + press_CC[c]) 
-                * phi[m][m];
-        a[m][m] = cv[m] + term2 + sumBeta - beta[m][m];
-      }
+        a[m][m] = cv[m] + (press_CC[c] * phi[m][m])/f_theta[m][c] 
+                 - press_CC[c] * phi[m][m] - beta[m][m];
+                 
+        for(int n = 0; n < numALLMatls; n++) {  // sum beta 
+          a[m][m] += beta[m][n]; 
+        }                
+      } 
 
       // -  F O R M   R H S   (b)         
       for(int m = 0; m < numALLMatls; m++)  {
-        kappa         = sp_vol_CC[m][c]/(speedSound[m][c] * speedSound[m][c]);   
+        kappa         = sp_vol_CC[m][c]/(speedSound[m][c] * speedSound[m][c]);  
         
         sp_vol_source = -cell_vol * vol_frac_CC[m][c] * kappa*delP_Dilatate[c];
         
-        delta_KE      = 0.5 * del_vel_CC[m].length() * del_vel_CC[m].length(); 
-            
+        delta_KE      = 0.5 * del_vel_CC[m].length() * del_vel_CC[m].length();  
+
         b[m]          = int_eng_source[m][c] 
-                      - (e_prime_v[m] * sp_vol_source) 
                       - delta_KE;
 
         for(int n = 0; n < numALLMatls; n++) {
@@ -768,7 +769,6 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       matrixSolver(numALLMatls,a,b,X);
       
       for(int m = 0; m < numALLMatls; m++) {
-        Tdot[m][c]    = X[m]/delT;
         Temp_CC[m][c] = Temp_CC[m][c] + X[m];
       }
     }  //CellIterator loop
@@ -788,7 +788,9 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       for (int m = 0; m < numALLMatls; m++) {
         int_eng_L_ME[m][c] = Temp_CC[m][c] * cv[m] * mass_L[m][c] 
                            + e_prime_v[m]  * sp_vol_source;
-        mom_L_ME[m][c]     = vel_CC[m][c]          * mass_L[m][c];
+        mom_L_ME[m][c]     = vel_CC[m][c]  * mass_L[m][c];
+        Tdot[m][c]         = (Temp_CC[m][c] - old_temp[m][c])/delT; 
+
       }
     }
     //---- P R I N T   D A T A ------ 
