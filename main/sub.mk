@@ -33,17 +33,19 @@
 SRCDIR   := main
 SRCS     := $(SRCDIR)/main.cc
 
+
 ifeq ($(LARGESOS),yes)
   PSELIBS := Dataflow Core
 else
   PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
-	Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm
+	Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
+	Core/ICom Core/Services Dataflow/XMLUtil Core/SystemCall
   ifeq ($(OS_NAME),Darwin)
     PSELIBS += Core/Datatypes Core/ImportExport
   endif
 endif
 
-LIBS := 
+LIBS :=  $(XML_LIBRARY)
 ifeq ($(NEED_SONAME),yes)
   LIBS := $(LIBS) $(XML_LIBRARY) $(TK_LIBRARY) $(DL_LIBRARY) $(Z_LIBRARY) $(SCISOCK_LIBRARY)
 endif
@@ -109,4 +111,29 @@ include $(SCIRUN_SCRIPTS)/program.mk
 endif
 
 endif #Build SCIRun2
+
+SRCDIR   := main
+SRCS     := $(SRCDIR)/scirunremote.cc
+
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Dataflow Core
+else
+  PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
+	Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
+	Core/ICom Core/Services Dataflow/XMLUtil Core/SystemCall
+  ifeq ($(OS_NAME),Darwin)
+    PSELIBS += Core/Datatypes Core/ImportExport
+  endif
+endif
+
+LIBS := $(LIBS) $(XML_LIBRARY)  $(DL_LIBRARY) $(Z_LIBRARY)
+
+PROGRAM := scirunremote
+
+ifeq ($(OS_NAME),Darwin)
+  PROGRAM_LDFLAGS := $(PROGRAM_LDFLAGS) -bind_at_load
+endif
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
 
