@@ -158,8 +158,7 @@ public:
 				 double delta_t,
 				 ArchesVariables* vars,
 				 ArchesConstVariables* constvars,
-				 CellInformation* cellinfo,
-				 const ArchesLabel* lab) = 0;
+				 CellInformation* cellinfo) = 0;
 
       virtual void computeEnthalpyUnderrelax(const ProcessorGroup* pc,
 					     const Patch* patch,
@@ -173,8 +172,7 @@ public:
 				   double delta_t,
 				   ArchesVariables* vars,
 				   ArchesConstVariables* constvars,
-				   CellInformation* cellinfo,
-				   const ArchesLabel* lab) = 0;
+				   CellInformation* cellinfo) = 0;
 
        ////////////////////////////////////////////////////////////////////////
       // Calculate Scalar residuals

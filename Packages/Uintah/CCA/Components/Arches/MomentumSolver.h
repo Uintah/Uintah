@@ -55,6 +55,7 @@ class Filter;
 #endif
 class BoundaryCondition;
 class LinearSolver;
+class TimeIntegratorLabel;
 
 class MomentumSolver {
 
@@ -87,84 +88,37 @@ public:
       void solve(SchedulerP& sched,
 		 const PatchSet* patches,
 		 const MaterialSet* matls,
+		 const TimeIntegratorLabel* timelabels,
 		 int index);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule the build of the linearized momentum matrix
       void sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches,
 				   const MaterialSet* matls,
+		 		   const TimeIntegratorLabel* timelabels,
 				   int index);
  
-      void sched_velocityLinearSolve(SchedulerP& sched, const PatchSet* patches,
-				     const MaterialSet* matls,
-				     int index);
-      void solvePred(SchedulerP& sched,
-		 const PatchSet* patches,
-		 const MaterialSet* matls,
-		 int index);
-   
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the build of the linearized momentum matrix
-      void sched_buildLinearMatrixPred(SchedulerP& sched, const PatchSet* patches,
-				   const MaterialSet* matls,
-				   int index);
-      void solveCorr(SchedulerP& sched,
-		 const PatchSet* patches,
-		 const MaterialSet* matls,
-		 int index);
-   
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the build of the linearized momentum matrix
-      void sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* patches,
-				   const MaterialSet* matls,
-				   int index);
 
-      void solveInterm(SchedulerP& sched,
-		 const PatchSet* patches,
-		 const MaterialSet* matls,
-		 int index);
-   
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the build of the linearized momentum matrix
-      void sched_buildLinearMatrixInterm(SchedulerP& sched, const PatchSet* patches,
-				   const MaterialSet* matls,
-				   int index);
-
-      void solveVelHatPred(const LevelP& level,
-			   SchedulerP&,
-			   const int Runge_Kutta_current_step,
-			   const bool Runge_Kutta_last_step);
+      void solveVelHat(const LevelP& level,
+		       SchedulerP&,
+		       const TimeIntegratorLabel* timelabels);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule the build of the linearized eqn
-      void sched_buildLinearMatrixVelHatPred(SchedulerP&, const PatchSet* patches,
-					     const MaterialSet* matls);
- 
-      void solveVelHatCorr(const LevelP& level,
-			   SchedulerP&,
-			   const int Runge_Kutta_current_step,
-			   const bool Runge_Kutta_last_step);
-   
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the build of the linearized eqn
-      void sched_buildLinearMatrixVelHatCorr(SchedulerP&, const PatchSet* patches,
-					     const MaterialSet* matls);
-
-      void solveVelHatInterm(const LevelP& level,
-			   SchedulerP&,
-			   const int Runge_Kutta_current_step,
-			   const bool Runge_Kutta_last_step);
-   
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the build of the linearized eqn
-      void sched_buildLinearMatrixVelHatInterm(SchedulerP&, const PatchSet* patches,
-					     const MaterialSet* matls);
+      void sched_buildLinearMatrixVelHat(SchedulerP&, const PatchSet* patches,
+					 const MaterialSet* matls,
+					 const TimeIntegratorLabel* timelabels);
  
       void sched_averageRKHatVelocities(SchedulerP& sched,
-					 const PatchSet* patches,
-				 	 const MaterialSet* matls,
-			   		 const int Runge_Kutta_current_step,
-			   		 const int Runge_Kutta_last_step);
+					const PatchSet* patches,
+				 	const MaterialSet* matls,
+				        const TimeIntegratorLabel* timelabels);
+
+	void sched_computeNonlinearTerms(SchedulerP&, 
+					const PatchSet* patches,
+					const MaterialSet* matls,
+					const ArchesLabel* d_lab,
+					const TimeIntegratorLabel* timelabels);
 
 
 #ifdef PetscFilter
@@ -172,6 +126,9 @@ public:
         d_discretize->setFilter(filter);
       }
 #endif
+      inline void setConvectionSchemeType(int conv_scheme) {
+	d_conv_scheme = conv_scheme;
+      }
 protected: 
 
 private:
@@ -189,63 +146,37 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     int index);
-
-      void buildLinearMatrixPred(const ProcessorGroup* pc,
-			     const PatchSubset* patches,
-			     const MaterialSubset* /*matls*/,
-			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
-			     int index);
-
-      void buildLinearMatrixCorr(const ProcessorGroup* pc,
-			     const PatchSubset* patches,
-			     const MaterialSubset* /*matls*/,
-			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
-			     int index);
-   
-      void velocityLinearSolve(const ProcessorGroup* pc,
-			       const PatchSubset* patches,
-			       const MaterialSubset* /*matls*/,
-			       DataWarehouse* old_dw,
-			       DataWarehouse* new_dw,
-			       int index);
-
-      void buildLinearMatrixInterm(const ProcessorGroup* pc,
-			     const PatchSubset* patches,
-			     const MaterialSubset* /*matls*/,
-			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
+		 	     const TimeIntegratorLabel* timelabels,
 			     int index);
 
 
-      void buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
-				       const PatchSubset* patches,
-				       const MaterialSubset* matls,
-				       DataWarehouse*,
-				       DataWarehouse* );
-
-      void buildLinearMatrixVelHatCorr(const ProcessorGroup* pc,
-				       const PatchSubset* patches,
-				       const MaterialSubset* matls,
-				       DataWarehouse*,
-				       DataWarehouse*);
-
-      void buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
-				       const PatchSubset* patches,
-				       const MaterialSubset* matls,
-				       DataWarehouse*,
-				       DataWarehouse*);
-
+      void buildLinearMatrixVelHat(const ProcessorGroup* pc,
+				   const PatchSubset* patches,
+				   const MaterialSubset* matls,
+				   DataWarehouse*,
+				   DataWarehouse*,
+				   const TimeIntegratorLabel* timelabels);
 
       void averageRKHatVelocities(const ProcessorGroup*,
-			   const PatchSubset* patches,
-			   const MaterialSubset* matls,
-			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw,
-			   const int Runge_Kutta_current_step,
-			   const int Runge_Kutta_last_step);
+			          const PatchSubset* patches,
+			          const MaterialSubset* matls,
+			          DataWarehouse* old_dw,
+			          DataWarehouse* new_dw,
+				  const TimeIntegratorLabel* timelabels);
+
+	void computeNonlinearTerms(const ProcessorGroup* pc,
+					const PatchSubset* patches,
+					const MaterialSubset* matls,
+					DataWarehouse* old_dw,
+					DataWarehouse* new_dw,
+					const ArchesLabel* d_lab,
+					const TimeIntegratorLabel* timelabels);
+
+	void filterNonlinearTerms(const ProcessorGroup* pc,
+					const Patch* patch,
+					int index,
+					CellInformation* cellinfo,
+					ArchesVariables* vars);
 
    
 private:
@@ -266,6 +197,7 @@ private:
       BoundaryCondition* d_boundaryCondition;
       // physical constants
       PhysicalConstants* d_physicalConsts;
+      int d_conv_scheme;
 
 
 }; // End class MomentumSolver

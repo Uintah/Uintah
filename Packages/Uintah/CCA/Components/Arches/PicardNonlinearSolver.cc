@@ -14,6 +14,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScalarSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -121,6 +122,7 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
 					     d_physicalConsts, d_myworld);
     d_enthalpySolver->problemSetup(db);
   }
+  d_timeIntegratorType = "Not supported";
 }
 
 // ****************************************************************************
@@ -152,6 +154,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   double nlResidual = 2.0*d_resTol;
   int nofScalars = d_props->getNumMixVars();
 
+  TimeIntegratorLabel* timelabels;
   do{
 
     //correct inlet velocities to account for change in properties
@@ -181,9 +184,9 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
     // calculate density reference array for buoyant plume calculation
 
-    d_props->sched_computeDenRefArray(sched, patches, matls);
+    d_props->sched_computeDenRefArray(sched, patches, matls, timelabels);
 
-    d_pressSolver->solve(level, sched);
+    d_pressSolver->solve(level, sched, timelabels);
 
 
     // Momentum solver
@@ -198,7 +201,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
     for (int index = 1; index <= Arches::NDIM; ++index) {
 
-      d_momSolver->solve(sched, patches, matls, index);
+      d_momSolver->solve(sched, patches, matls, timelabels, index);
 
     }
 
@@ -213,18 +216,19 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve multiple scalars
 
-      d_scalarSolver->solve(sched, patches, matls, index);
+// won't work, just to compile defined timelabels
+      d_scalarSolver->solve(sched, patches, matls, timelabels, index);
 
     }
 
     if (d_enthalpySolve)
-      d_enthalpySolver->solve(sched, patches, matls);
+      d_enthalpySolver->solve(level, sched, patches, matls, timelabels);
 
     // update properties
     // require : densityIN
     // compute : densityCP
 
-    d_props->sched_reComputeProps(sched, patches, matls);
+    d_props->sched_reComputeProps(sched, patches, matls, timelabels, false);
 
     // LES Turbulence model to compute turbulent viscosity
     // that accounts for sub-grid scale turbulence
@@ -233,10 +237,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
     //The following two variables a set just to get appropriate
     //data for reComputeTurbSubmodel
-    int Runge_Kutta_current_step = Arches::FIRST;//this one doesn't matter here
-    bool Runge_Kutta_last_step = true;
-    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
+    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, timelabels);
     ++nlIterations;
 
 #if 0    
@@ -249,7 +250,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
 
-  sched_interpolateFromFCToCC(sched, patches, matls);
+  sched_interpolateFromFCToCC(sched, patches, matls, timelabels);
 
   // print information at probes provided in input file
 
@@ -270,15 +271,7 @@ int PicardNonlinearSolver::noSolve(const LevelP& level,
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
-  int Runge_Kutta_current_step;
-  bool Runge_Kutta_last_step;
-
-  Runge_Kutta_current_step = Arches::FIRST;
-  #ifdef correctorstep
-    Runge_Kutta_last_step = false;
-  #else
-    Runge_Kutta_last_step = true;
-  #endif
+  TimeIntegratorLabel* timelabels;
 
   //initializes and allocates vars for new_dw
   // set initial guess
@@ -294,13 +287,12 @@ int PicardNonlinearSolver::noSolve(const LevelP& level,
   sched_dummySolve(sched, patches, matls);
 
   d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
-					   Runge_Kutta_current_step, 
-					   Runge_Kutta_last_step);
+					   timelabels);
  
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
 
-  sched_interpolateFromFCToCC(sched, patches, matls);
+  sched_interpolateFromFCToCC(sched, patches, matls, timelabels);
   
   // print information at probes provided in input file
 
@@ -441,10 +433,12 @@ PicardNonlinearSolver::sched_dummySolve(SchedulerP& sched,
 void 
 PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched, 
 						   const PatchSet* patches,
-						   const MaterialSet* matls)
+						   const MaterialSet* matls,
+				 const TimeIntegratorLabel* timelabels)
 {
   Task* tsk = scinew Task( "Picard::interpFCToCC",
-			   this, &PicardNonlinearSolver::interpolateFromFCToCC);
+			   this, &PicardNonlinearSolver::interpolateFromFCToCC,
+			   timelabels);
 
   tsk->requires(Task::NewDW, d_lab->d_uVelocityINLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
@@ -769,7 +763,8 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 					     const PatchSubset* patches,
 					     const MaterialSubset*,
 					     DataWarehouse*,
-					     DataWarehouse* new_dw)
+					     DataWarehouse* new_dw,
+				 const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);

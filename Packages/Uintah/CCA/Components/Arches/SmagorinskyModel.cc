@@ -7,6 +7,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
+#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/Core/Grid/Stencil.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -124,87 +125,35 @@ void
 SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched, 
 					      const PatchSet* patches,
 					      const MaterialSet* matls,
-					    const int Runge_Kutta_current_step,
-					    const bool Runge_Kutta_last_step)
+				          const TimeIntegratorLabel* timelabels)
 {
-  Task* tsk = scinew Task("SmagorinskyModel::ReTurbSubmodel",
-			  this,
+  string taskname =  "SmagorinskyModel::ReTurbSubmodel" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this,
 			  &SmagorinskyModel::reComputeTurbSubmodel,
-			  Runge_Kutta_current_step, Runge_Kutta_last_step);
+			  timelabels);
 
   // Requires
-  if (Runge_Kutta_last_step) {
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, 
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-  }
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel, 
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel, 
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-	 break;
+  tsk->requires(Task::NewDW, timelabels->density_out,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, timelabels->uvelocity_out,
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, timelabels->vvelocity_out, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, timelabels->wvelocity_out, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
-	 case Arches::SECOND:
-  tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocityIntermLabel, 
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocityIntermLabel, 
-		Ghost::AroundFaces,
-		Arches::ONEGHOSTCELL);
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
-	 }
-  }
-
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, 
-		Ghost::None,
-		Arches::ZEROGHOSTCELLS);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   // for multimaterial
   if (d_MAlab)
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
       // Computes
-  if (Runge_Kutta_last_step)
-  tsk->computes(d_lab->d_viscosityCTSLabel);
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-  tsk->computes(d_lab->d_viscosityPredLabel);
-	 break;
-
-	 case Arches::SECOND:
-  tsk->computes(d_lab->d_viscosityIntermLabel);
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
-	 }
-  }
+  tsk->computes(timelabels->viscosity_out);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -397,8 +346,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 					const MaterialSubset*,
 					DataWarehouse*,
 					DataWarehouse* new_dw,
-					const int Runge_Kutta_current_step,
-					const bool Runge_Kutta_last_step)
+				        const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -414,63 +362,19 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
 
-  if (Runge_Kutta_last_step)
-    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityPredLabel, matlIndex, patch);
-	 break;
-
-	 case Arches::SECOND:
-    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityIntermLabel, matlIndex, patch);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
-	 }
-  }
+    new_dw->allocateAndPut(viscosity, timelabels->viscosity_out,
+			   matlIndex, patch);
     new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
     
-  if (Runge_Kutta_last_step) {
-    new_dw->get(uVelocity,d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
+    new_dw->get(uVelocity, timelabels->uvelocity_out, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVelocity,d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
+    new_dw->get(vVelocity, timelabels->vvelocity_out, matlIndex, patch,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+    new_dw->get(wVelocity, timelabels->wvelocity_out, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch,
+    new_dw->get(density, timelabels->density_out, matlIndex, patch,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  }
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-    new_dw->get(uVelocity,d_lab->d_uVelocityPredLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVelocity,d_lab->d_vVelocityPredLabel, matlIndex, patch,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVelocity, d_lab->d_wVelocityPredLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(density, d_lab->d_densityPredLabel, matlIndex, patch,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-	 break;
-
-	 case Arches::SECOND:
-    new_dw->get(uVelocity,d_lab->d_uVelocityIntermLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVelocity,d_lab->d_vVelocityIntermLabel, matlIndex, patch,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVelocity, d_lab->d_wVelocityIntermLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(density, d_lab->d_densityIntermLabel, matlIndex, patch,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
-	 }
-  }
     
     if (d_MAlab)
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
@@ -611,41 +515,24 @@ void
 SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched, 
 					      const PatchSet* patches,
 					      const MaterialSet* matls,
-					    const int Runge_Kutta_current_step,
-					    const bool Runge_Kutta_last_step)
+			    		 const TimeIntegratorLabel* timelabels)
 {
-  Task* tsk = scinew Task("SmagorinskyModel::computeScalarVar",
-			  this,
+  string taskname =  "SmagorinskyModel::computeScalarVaraince" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this,
 			  &SmagorinskyModel::computeScalarVariance,
-			  Runge_Kutta_current_step, Runge_Kutta_last_step);
+			  timelabels);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
-  if (Runge_Kutta_last_step)
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
+  tsk->requires(Task::NewDW, timelabels->scalar_out, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 case Arches::SECOND:
-  tsk->requires(Task::NewDW, d_lab->d_scalarIntermLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
-	 }
-  }
   tsk->requires(Task::NewDW, d_lab->d_scalarVarINLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   // Computes
-  if (Runge_Kutta_current_step == Arches::FIRST)
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
      tsk->computes(d_lab->d_scalarVarSPLabel);
   else
      tsk->modifies(d_lab->d_scalarVarSPLabel);
@@ -660,8 +547,7 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 					const MaterialSubset*,
 					DataWarehouse*,
 					DataWarehouse* new_dw,
-					const int Runge_Kutta_current_step,
-					const bool Runge_Kutta_last_step)
+			    		const TimeIntegratorLabel* timelabels)
 {
   //double time = d_lab->d_sharedState->getElapsedTime();
   for (int p = 0; p < patches->size(); p++) {
@@ -672,26 +558,10 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
     // Get the velocity, density and viscosity from the old data warehouse
-    if (Runge_Kutta_last_step)
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
+    new_dw->get(scalar, timelabels->scalar_out, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-    new_dw->get(scalar, d_lab->d_scalarPredLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
 
-	 case Arches::SECOND:
-    new_dw->get(scalar, d_lab->d_scalarIntermLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in ScaleSimilarityModel");
-	 }
-    }
-    if (Runge_Kutta_current_step == Arches::FIRST)
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
     	new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
 			       patch);
     else
@@ -738,57 +608,25 @@ void
 SmagorinskyModel::sched_computeScalarDissipation(SchedulerP& sched, 
 						 const PatchSet* patches,
 						 const MaterialSet* matls,
-					const int Runge_Kutta_current_step,
-					const bool Runge_Kutta_last_step)
+			    		 const TimeIntegratorLabel* timelabels)
 {
-  Task* tsk = scinew Task("SmagorinskyModel::computeScalarDissipation",
-			  this,
+  string taskname =  "SmagorinskyModel::computeScalarDissipation" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this,
 			  &SmagorinskyModel::computeScalarDissipation,
-			  Runge_Kutta_current_step, Runge_Kutta_last_step);
+			  timelabels);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
   // assuming scalar dissipation is computed before turbulent viscosity calculation 
-  if (Runge_Kutta_last_step)
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
+  tsk->requires(Task::NewDW, timelabels->scalar_out,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
+  tsk->requires(Task::NewDW, timelabels->viscosity_in,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 case Arches::SECOND:
-  tsk->requires(Task::NewDW, d_lab->d_scalarIntermLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
-	 }
-  }
-  switch (Runge_Kutta_current_step) {
-  case Arches::FIRST:
-  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  break;
-
-  case Arches::SECOND:
-  tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  break;
-
-  case Arches::THIRD:
-  tsk->requires(Task::NewDW, d_lab->d_viscosityIntermLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  default:
-	throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
-  }
 
   // Computes
-  if (Runge_Kutta_current_step == Arches::FIRST)
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
      tsk->computes(d_lab->d_scalarDissSPLabel);
   else
      tsk->modifies(d_lab->d_scalarDissSPLabel);
@@ -803,8 +641,7 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
 					const MaterialSubset*,
 					DataWarehouse*,
 					DataWarehouse* new_dw,
-					const int Runge_Kutta_current_step,
-					const bool Runge_Kutta_last_step)
+			    		const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -814,46 +651,13 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
     constCCVariable<double> viscosity;
     constCCVariable<double> scalar;
     CCVariable<double> scalarDiss;  // dissipation..chi
-    if (Runge_Kutta_last_step)
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-    new_dw->get(scalar, d_lab->d_scalarPredLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
 
-	 case Arches::SECOND:
-    new_dw->get(scalar, d_lab->d_scalarIntermLabel, matlIndex, patch,
+    new_dw->get(scalar, timelabels->scalar_out, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
-	 }
-    }
-    switch (Runge_Kutta_current_step) {
-    case Arches::FIRST:
-    new_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
+    new_dw->get(viscosity, timelabels->viscosity_in, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    break;
 
-    case Arches::SECOND:
-    new_dw->get(viscosity, d_lab->d_viscosityPredLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    break;
-
-    case Arches::THIRD:
-    new_dw->get(viscosity, d_lab->d_viscosityIntermLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    break;
-
-    default:
-	throw InvalidValue("Invalid Runge-Kutta step in SmagorinskyModel");
-    }
-
-    if (Runge_Kutta_current_step == Arches::FIRST)
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
        new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel,
 			      matlIndex, patch);
     else

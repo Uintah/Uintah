@@ -80,13 +80,11 @@ public:
       //        data User data needed for solve 
       virtual void sched_reComputeTurbSubmodel(SchedulerP&, const PatchSet* patches,
 					       const MaterialSet* matls,
-				     	       const int Runge_Kutta_current_step,
-				               const bool Runge_Kutta_last_step);
+			                 const TimeIntegratorLabel* timelabels);
 
       virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
 					       const MaterialSet* matls,
-				     	       const int Runge_Kutta_current_step,
-				               const bool Runge_Kutta_last_step);
+			    		const TimeIntegratorLabel* timelabels);
 
 
 protected:
@@ -119,24 +117,21 @@ private:
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw,
-				 const int Runge_Kutta_current_step,
-				 const bool Runge_Kutta_last_step);
+			         const TimeIntegratorLabel* timelabels);
  
       void reComputeFilterValues(const ProcessorGroup*,
 				 const PatchSubset* patches,
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw,
-				 const int Runge_Kutta_current_step,
-				 const bool Runge_Kutta_last_step);
+			         const TimeIntegratorLabel* timelabels);
  
       void reComputeSmagCoeff(const ProcessorGroup*,
 			      const PatchSubset* patches,
 			      const MaterialSubset* matls,
 			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw,
-			      const int Runge_Kutta_current_step,
-			      const bool Runge_Kutta_last_step);
+			      const TimeIntegratorLabel* timelabels);
 
 
       ///////////////////////////////////////////////////////////////////////
@@ -148,8 +143,7 @@ private:
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw,
-				 const int Runge_Kutta_current_step,
-				 const bool Runge_Kutta_last_step);
+			         const TimeIntegratorLabel* timelabels);
 
 
  private:

@@ -162,8 +162,7 @@ public:
 			 int index, double delta_t,
 			 ArchesVariables* vars,
 			 ArchesConstVariables* constvars,
-			 CellInformation* cellinfo,
-			 const ArchesLabel* lab);
+			 CellInformation* cellinfo);
 
       ////////////////////////////////////////////////////////////////////////
       // Scalar Underrelaxation
@@ -179,8 +178,7 @@ public:
 			 double delta_t,
 			 ArchesVariables* vars,
 			 ArchesConstVariables* constvars,
-			 CellInformation* cellinfo,
-			 const ArchesLabel* lab);
+			 CellInformation* cellinfo);
    virtual void matrixCreate(const PatchSet* allpatches,
 			     const PatchSubset* mypatches);
    virtual void setPressMatrix(const ProcessorGroup* pc, const Patch* patch,

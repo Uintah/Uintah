@@ -1335,8 +1335,7 @@ HypreSolver::scalarLisolve(const ProcessorGroup*,
 			  int, double,
 			  ArchesVariables*,
 			  ArchesConstVariables*,
-			  CellInformation*,
-			  const ArchesLabel*)
+			  CellInformation*)
 {
 #if 0
   // Get the patch bounds and the variable bounds
@@ -1456,8 +1455,7 @@ HypreSolver::enthalpyLisolve(const ProcessorGroup*,
 			     double,
 			     ArchesVariables*,
 			     ArchesConstVariables*,
-			     CellInformation*,
-			     const ArchesLabel*)
+			     CellInformation*)
 {
 }
 

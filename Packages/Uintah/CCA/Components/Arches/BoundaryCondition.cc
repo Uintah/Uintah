@@ -10,6 +10,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
+#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/Core/Grid/Stencil.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
@@ -1522,10 +1523,11 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
   tsk->computes(d_lab->d_vVelocitySPLabel);
   tsk->computes(d_lab->d_wVelocitySPLabel);
 
-// This should only be done when ENO is used for scalar
+  if (d_conv_scheme > 0) {
     tsk->computes(d_lab->d_maxAbsU_label);
     tsk->computes(d_lab->d_maxAbsV_label);
     tsk->computes(d_lab->d_maxAbsW_label);
+  }
 
   for (int ii = 0; ii < d_props->getNumMixVars(); ii++) 
     tsk->computes(d_lab->d_scalarSPLabel);
@@ -2480,7 +2482,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     }
     
 
-// This should only be done when ENO is used for scalar
+    if (d_conv_scheme > 0) {
     double maxAbsU = 0.0;
     double maxAbsV = 0.0;
     double maxAbsW = 0.0;
@@ -2535,25 +2537,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
         }
       }
       new_dw->put(max_vartype(maxAbsW), d_lab->d_maxAbsW_label); 
-
-    // Put the calculated data into the new DW
-    //new_dw->put(density, d_lab->d_densitySPLabel, matlIndex, patch);
-    // allocateAndPut instead:
-    /* new_dw->put(uVelocity, d_lab->d_uVelocitySPLabel, matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(vVelocity, d_lab->d_vVelocitySPLabel, matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(wVelocity, d_lab->d_wVelocitySPLabel, matlIndex, patch); */;
-    for (int ii =0; ii < d_nofScalars; ii++) {
-      // allocateAndPut instead:
-      /* new_dw->put(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch); */;
     }
-    if (d_reactingScalarSolve)
-      // allocateAndPut instead:
-      /* new_dw->put(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch); */;
-    if (d_enthalpySolve)
-      // allocateAndPut instead:
-      /* new_dw->put(enthalpy, d_lab->d_enthalpySPBCLabel, matlIndex, patch); */;
     
 #ifdef ARCHES_BC_DEBUG
     // Testing if correct values have been put
@@ -3554,7 +3538,6 @@ BoundaryCondition::calculateVelocityPred_mm(const ProcessorGroup* ,
 		      vars->uVelRhoHat,
 		      constvars->pressure,
 		      constvars->density,
-		      constvars->old_density,
 		      constvars->voidFraction,
 		      cellinfo->dxpw,
 		      delta_t, 
@@ -3575,7 +3558,6 @@ BoundaryCondition::calculateVelocityPred_mm(const ProcessorGroup* ,
 		      vars->vVelRhoHat,
 		      constvars->pressure,
 		      constvars->density,
-		      constvars->old_density,
 		      constvars->voidFraction,
 		      cellinfo->dyps,
 		      delta_t, 
@@ -3597,7 +3579,6 @@ BoundaryCondition::calculateVelocityPred_mm(const ProcessorGroup* ,
 		      vars->wVelRhoHat,
 		      constvars->pressure,
 		      constvars->density,
-		      constvars->old_density,
 		      constvars->voidFraction,
 		      cellinfo->dzpb,
 		      delta_t, 
@@ -4128,8 +4109,7 @@ BoundaryCondition::scalarLisolve_mm(const ProcessorGroup*,
 				    double delta_t,
 				    ArchesVariables* vars,
 				    ArchesConstVariables* constvars,
-				    CellInformation* cellinfo,
-				    const ArchesLabel*)
+				    CellInformation* cellinfo)
 {
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -4254,8 +4234,7 @@ BoundaryCondition::enthalpyLisolve_mm(const ProcessorGroup*,
 				      double delta_t,
 				      ArchesVariables* vars,
 				      ArchesConstVariables* constvars,
-				      CellInformation* cellinfo,
-				      const ArchesLabel*)
+				      CellInformation* cellinfo)
 {
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -5896,75 +5875,36 @@ BoundaryCondition::addPresGradVelocityOutletBC(const ProcessorGroup*,
 //****************************************************************************
 void
 BoundaryCondition::sched_getFlowINOUT(SchedulerP& sched,
-					  const PatchSet* patches,
-					  const MaterialSet* matls,
-  					  const int Runge_Kutta_current_step,
-					  const bool Runge_Kutta_last_step)
+				      const PatchSet* patches,
+				      const MaterialSet* matls,
+				      const TimeIntegratorLabel* timelabels)
 {
-  Task* tsk = scinew Task("BoundaryCondition::getFlowINOUT",
-			  this,
+  string taskname =  "BoundaryCondition::getFlowINOUT" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this,
 			  &BoundaryCondition::getFlowINOUT,
-			  Runge_Kutta_current_step,
-			  Runge_Kutta_last_step);
+			  timelabels);
   
   tsk->requires(Task::NewDW, d_lab->d_filterdrhodtLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells,
 		Arches::ONEGHOSTCELL);
 
-  if (Runge_Kutta_last_step) {
-    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
-		  Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->computes(d_lab->d_totalflowINLabel);
-    tsk->computes(d_lab->d_totalflowOUTLabel);
-    tsk->computes(d_lab->d_denAccumLabel);
-    tsk->computes(d_lab->d_netflowOUTBCLabel);
-    tsk->computes(d_lab->d_totalAreaOUTLabel);
-  }
-  else { 
- 	switch (Runge_Kutta_current_step) {
- 	case Arches::FIRST:
-    		tsk->requires(Task::NewDW, d_lab->d_densityPredLabel,
-			      Ghost::None, Arches::ZEROGHOSTCELLS);
-       		tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
-			      Ghost::None, Arches::ZEROGHOSTCELLS);
-      		tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel,
-		 	      Ghost::None, Arches::ZEROGHOSTCELLS);
-     		tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel,
-			      Ghost::None, Arches::ZEROGHOSTCELLS);
-                tsk->computes(d_lab->d_totalflowINPredLabel);
-                tsk->computes(d_lab->d_totalflowOUTPredLabel);
-                tsk->computes(d_lab->d_denAccumPredLabel);
-                tsk->computes(d_lab->d_netflowOUTBCPredLabel);
-                tsk->computes(d_lab->d_totalAreaOUTPredLabel);
-	 break;
+  tsk->requires(Task::NewDW, timelabels->density_out, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, timelabels->uvelocity_out,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, timelabels->vvelocity_out,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, timelabels->wvelocity_out,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-	 case Arches::SECOND:
-    		tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel,
-			      Ghost::None, Arches::ZEROGHOSTCELLS);
-       		tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
-			      Ghost::None, Arches::ZEROGHOSTCELLS);
-      		tsk->requires(Task::NewDW, d_lab->d_vVelocityIntermLabel,
-		 	      Ghost::None, Arches::ZEROGHOSTCELLS);
-     		tsk->requires(Task::NewDW, d_lab->d_wVelocityIntermLabel,
-			      Ghost::None, Arches::ZEROGHOSTCELLS);
-                tsk->computes(d_lab->d_totalflowINIntermLabel);
-                tsk->computes(d_lab->d_totalflowOUTIntermLabel);
-                tsk->computes(d_lab->d_denAccumIntermLabel);
-                tsk->computes(d_lab->d_netflowOUTBCIntermLabel);
-                tsk->computes(d_lab->d_totalAreaOUTIntermLabel);
-	 break;
+  tsk->computes(timelabels->flowIN);
+  tsk->computes(timelabels->flowOUT);
+  tsk->computes(timelabels->denAccum);
+  tsk->computes(timelabels->floutbc);
+  tsk->computes(timelabels->areaOUT);
 
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in getFlowINOUT");
-	 }
-  }
   sched->addTask(tsk, patches, matls);
 }
 
@@ -5973,12 +5913,11 @@ BoundaryCondition::sched_getFlowINOUT(SchedulerP& sched,
 //****************************************************************************
 void 
 BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
-				    const PatchSubset* patches,
-				    const MaterialSubset*,
-				    DataWarehouse*,
-				    DataWarehouse* new_dw,
-  				    const int Runge_Kutta_current_step,
-				    const bool Runge_Kutta_last_step)
+				const PatchSubset* patches,
+				const MaterialSubset*,
+				DataWarehouse*,
+				DataWarehouse* new_dw,
+				const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -6005,46 +5944,14 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-  if (Runge_Kutta_last_step) {
-    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
+    new_dw->get(density, timelabels->density_out, matlIndex, patch, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex,
+    new_dw->get(uVelocity, timelabels->uvelocity_out, matlIndex,
 		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex,
+    new_dw->get(vVelocity, timelabels->vvelocity_out, matlIndex,
 		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex,
+    new_dw->get(wVelocity, timelabels->wvelocity_out, matlIndex,
 		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-  }
-  else { 
- 	switch (Runge_Kutta_current_step) {
- 	case Arches::FIRST:
-    		new_dw->get(density, d_lab->d_densityPredLabel,
-			    matlIndex, patch, 
-			    Ghost::None, Arches::ZEROGHOSTCELLS);
-      		new_dw->get(uVelocity, d_lab->d_uVelocityPredLabel, matlIndex,
-			    patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    		new_dw->get(vVelocity, d_lab->d_vVelocityPredLabel, matlIndex,
-		  	    patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-     		new_dw->get(wVelocity, d_lab->d_wVelocityPredLabel, matlIndex,
-		  	    patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-	 break;
-
-	 case Arches::SECOND:
-    		new_dw->get(density, d_lab->d_densityIntermLabel,
-			    matlIndex, patch, 
-			    Ghost::None, Arches::ZEROGHOSTCELLS);
-      		new_dw->get(uVelocity, d_lab->d_uVelocityIntermLabel, matlIndex,
-			    patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    		new_dw->get(vVelocity, d_lab->d_vVelocityIntermLabel, matlIndex,
-		  	    patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-     		new_dw->get(wVelocity, d_lab->d_wVelocityIntermLabel, matlIndex,
-		  	    patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in getFlowINOUT");
-	 }
-  }
    
     // Get the low and high index for the patch and the variables
     IntVector idxLo = patch->getCellFORTLowIndex();
@@ -6210,35 +6117,11 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
       }
     }
 
-  if (Runge_Kutta_last_step) {
-   new_dw->put(sum_vartype(flowIN), d_lab->d_totalflowINLabel);
-   new_dw->put(sum_vartype(flowOUT), d_lab->d_totalflowOUTLabel);
-   new_dw->put(sum_vartype(denAccum), d_lab->d_denAccumLabel);
-   new_dw->put(sum_vartype(floutbc), d_lab->d_netflowOUTBCLabel);
-   new_dw->put(sum_vartype(areaOUT),d_lab->d_totalAreaOUTLabel);
-  }
-  else { 
- 	switch (Runge_Kutta_current_step) {
-  	 case Arches::FIRST:
-    	  new_dw->put(sum_vartype(flowIN), d_lab->d_totalflowINPredLabel);
-   	  new_dw->put(sum_vartype(flowOUT), d_lab->d_totalflowOUTPredLabel);
-   	  new_dw->put(sum_vartype(denAccum), d_lab->d_denAccumPredLabel);
-  	  new_dw->put(sum_vartype(floutbc), d_lab->d_netflowOUTBCPredLabel);
-  	  new_dw->put(sum_vartype(areaOUT),d_lab->d_totalAreaOUTPredLabel);
-	 break;
-
-	 case Arches::SECOND:
-    	  new_dw->put(sum_vartype(flowIN), d_lab->d_totalflowINIntermLabel);
-   	  new_dw->put(sum_vartype(flowOUT), d_lab->d_totalflowOUTIntermLabel);
-   	  new_dw->put(sum_vartype(denAccum), d_lab->d_denAccumIntermLabel);
-  	  new_dw->put(sum_vartype(floutbc), d_lab->d_netflowOUTBCIntermLabel);
-  	  new_dw->put(sum_vartype(areaOUT),d_lab->d_totalAreaOUTIntermLabel);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in getFlowINOUT");
-	 }
-  }
+  new_dw->put(sum_vartype(flowIN), timelabels->flowIN);
+  new_dw->put(sum_vartype(flowOUT), timelabels->flowOUT);
+  new_dw->put(sum_vartype(denAccum), timelabels->denAccum);
+  new_dw->put(sum_vartype(floutbc), timelabels->floutbc);
+  new_dw->put(sum_vartype(areaOUT), timelabels->areaOUT);
   }
 }
 
@@ -6248,55 +6131,27 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 void BoundaryCondition::sched_correctVelocityOutletBC(SchedulerP& sched,
 					      const PatchSet* patches,
 					      const MaterialSet* matls,
-			  		     const int Runge_Kutta_current_step,
-			  		     const bool Runge_Kutta_last_step)
+				         const TimeIntegratorLabel* timelabels)
 {
-
-  Task* tsk = scinew Task("BoundaryCondition::correctVelocityOutletBC",
-			  this,
+  string taskname =  "BoundaryCondition::correctVelocityOutletBC" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this,
 			  &BoundaryCondition::correctVelocityOutletBC,
-			  Runge_Kutta_current_step,
-			  Runge_Kutta_last_step);
+			  timelabels);
   
-  if (Runge_Kutta_last_step) {
-    tsk->requires(Task::NewDW, d_lab->d_totalflowINLabel);
-    tsk->requires(Task::NewDW, d_lab->d_totalflowOUTLabel);
-    tsk->requires(Task::NewDW, d_lab->d_denAccumLabel);
-    tsk->requires(Task::NewDW, d_lab->d_netflowOUTBCLabel);
-    tsk->requires(Task::NewDW, d_lab->d_totalAreaOUTLabel);
-    tsk->modifies(d_lab->d_uVelocitySPBCLabel);
-    tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-    tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+  tsk->requires(Task::NewDW, timelabels->flowIN);
+  tsk->requires(Task::NewDW, timelabels->flowOUT);
+  tsk->requires(Task::NewDW, timelabels->denAccum);
+  tsk->requires(Task::NewDW, timelabels->floutbc);
+  tsk->requires(Task::NewDW, timelabels->areaOUT);
+
+    tsk->modifies(timelabels->uvelocity_out);
+    tsk->modifies(timelabels->vvelocity_out);
+    tsk->modifies(timelabels->wvelocity_out);
+
+  if (timelabels->integrator_last_step)
     tsk->computes(d_lab->d_uvwoutLabel);
-  }
-  else { 
- 	switch (Runge_Kutta_current_step) {
- 	case Arches::FIRST:
-           tsk->requires(Task::NewDW, d_lab->d_totalflowINPredLabel);
-           tsk->requires(Task::NewDW, d_lab->d_totalflowOUTPredLabel);
-           tsk->requires(Task::NewDW, d_lab->d_denAccumPredLabel);
-           tsk->requires(Task::NewDW, d_lab->d_netflowOUTBCPredLabel);
-           tsk->requires(Task::NewDW, d_lab->d_totalAreaOUTPredLabel);
-	   tsk->modifies(d_lab->d_uVelocityPredLabel);
-	   tsk->modifies(d_lab->d_vVelocityPredLabel);
-	   tsk->modifies(d_lab->d_wVelocityPredLabel);
-	 break;
 
-	 case Arches::SECOND:
-           tsk->requires(Task::NewDW, d_lab->d_totalflowINIntermLabel);
-           tsk->requires(Task::NewDW, d_lab->d_totalflowOUTIntermLabel);
-           tsk->requires(Task::NewDW, d_lab->d_denAccumIntermLabel);
-           tsk->requires(Task::NewDW, d_lab->d_netflowOUTBCIntermLabel);
-           tsk->requires(Task::NewDW, d_lab->d_totalAreaOUTIntermLabel);
-	   tsk->modifies(d_lab->d_uVelocityIntermLabel);
-	   tsk->modifies(d_lab->d_vVelocityIntermLabel);
-	   tsk->modifies(d_lab->d_wVelocityIntermLabel);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in correctVelocityOutletBC");
-	 }
-  }
   sched->addTask(tsk, patches, matls);
 }
 
@@ -6309,42 +6164,17 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
 			      const MaterialSubset*,
 			      DataWarehouse*,
 			      DataWarehouse* new_dw,
-			      const int Runge_Kutta_current_step,
-			      const bool Runge_Kutta_last_step)
+			      const TimeIntegratorLabel* timelabels)
 {
     sum_vartype sum_totalFlowIN, sum_totalFlowOUT, sum_netflowOutbc,
                 sum_totalAreaOUT, sum_denAccum;
     double totalFlowIN, totalFlowOUT, netFlowOUT_outbc, totalAreaOUT, denAccum;
 
-  if (Runge_Kutta_last_step) {
-    new_dw->get(sum_totalFlowIN, d_lab->d_totalflowINLabel);
-    new_dw->get(sum_totalFlowOUT, d_lab->d_totalflowOUTLabel);
-    new_dw->get(sum_denAccum, d_lab->d_denAccumLabel);
-    new_dw->get(sum_netflowOutbc, d_lab->d_netflowOUTBCLabel);
-    new_dw->get(sum_totalAreaOUT,d_lab->d_totalAreaOUTLabel);
-  }
-  else { 
- 	switch (Runge_Kutta_current_step) {
- 	 case Arches::FIRST:
-    	 new_dw->get(sum_totalFlowIN, d_lab->d_totalflowINPredLabel);
-   	 new_dw->get(sum_totalFlowOUT, d_lab->d_totalflowOUTPredLabel);
-   	 new_dw->get(sum_denAccum, d_lab->d_denAccumPredLabel);
-  	 new_dw->get(sum_netflowOutbc, d_lab->d_netflowOUTBCPredLabel);
-  	 new_dw->get(sum_totalAreaOUT,d_lab->d_totalAreaOUTPredLabel);
-	 break;
-
-	 case Arches::SECOND:
-    	 new_dw->get(sum_totalFlowIN, d_lab->d_totalflowINIntermLabel);
-   	 new_dw->get(sum_totalFlowOUT, d_lab->d_totalflowOUTIntermLabel);
-   	 new_dw->get(sum_denAccum, d_lab->d_denAccumIntermLabel);
-  	 new_dw->get(sum_netflowOutbc, d_lab->d_netflowOUTBCIntermLabel);
-  	 new_dw->get(sum_totalAreaOUT,d_lab->d_totalAreaOUTIntermLabel);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in correctVelocityOutletBC");
-	 }
-  }
+    new_dw->get(sum_totalFlowIN, timelabels->flowIN);
+    new_dw->get(sum_totalFlowOUT, timelabels->flowOUT);
+    new_dw->get(sum_denAccum, timelabels->denAccum);
+    new_dw->get(sum_netflowOutbc, timelabels->floutbc);
+    new_dw->get(sum_totalAreaOUT, timelabels->areaOUT);
 			  
     totalFlowIN = sum_totalFlowIN;
     totalFlowOUT = sum_totalFlowOUT;
@@ -6385,6 +6215,8 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
       cerr << "Overall velocity correction " << uvwcorr << endl;
       cerr << "Total Area out " << totalAreaOUT << endl;
     }
+    if (timelabels->integrator_last_step)
+      new_dw->put(delt_vartype(uvwcorr), d_lab->d_uvwoutLabel);
  
     for (int p = 0; p < patches->size(); p++) {
       const Patch* patch = patches->get(p);
@@ -6393,39 +6225,12 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
       SFCXVariable<double> uVelocity;
       SFCYVariable<double> vVelocity;
       SFCZVariable<double> wVelocity;
-  if (Runge_Kutta_last_step) {
-    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex,
-		  patch);
-    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex,
-		  patch);
-    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex,
-		  patch);
-    new_dw->put(delt_vartype(uvwcorr), d_lab->d_uvwoutLabel);
-  }
-  else { 
- 	switch (Runge_Kutta_current_step) {
- 	case Arches::FIRST:
-      		new_dw->getModifiable(uVelocity, d_lab->d_uVelocityPredLabel,
-				      matlIndex, patch);
-    		new_dw->getModifiable(vVelocity, d_lab->d_vVelocityPredLabel,
-				      matlIndex, patch);
-     		new_dw->getModifiable(wVelocity, d_lab->d_wVelocityPredLabel,
-				      matlIndex, patch);
-	 break;
-
-	 case Arches::SECOND:
-      		new_dw->getModifiable(uVelocity, d_lab->d_uVelocityIntermLabel,
-				      matlIndex, patch);
-    		new_dw->getModifiable(vVelocity, d_lab->d_vVelocityIntermLabel,
-				      matlIndex, patch);
-     		new_dw->getModifiable(wVelocity, d_lab->d_wVelocityIntermLabel,
-				      matlIndex, patch);
-	 break;
-
-	 default:
-		throw InvalidValue("Invalid Runge-Kutta step in correctVelocityOutletBC");
-	 }
-  }
+      new_dw->getModifiable(uVelocity, timelabels->uvelocity_out, matlIndex,
+		  	    patch);
+      new_dw->getModifiable(vVelocity, timelabels->vvelocity_out, matlIndex,
+		  	    patch);
+      new_dw->getModifiable(wVelocity, timelabels->wvelocity_out, matlIndex,
+		  	    patch);
 
 // Assuming outlet is xplus
       IntVector indexLow = patch->getCellFORTLowIndex();

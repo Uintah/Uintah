@@ -23,6 +23,7 @@ class Discretization;
 class Source;
 class BoundaryCondition;
 class LinearSolver;
+class TimeIntegratorLabel;
 
 using namespace SCIRun;
 
@@ -89,42 +90,17 @@ public:
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
       // Schedule Solve of linearized pressure equation
-      void solve(const LevelP& level,
-		 SchedulerP&);
+      void solve(const LevelP& level, SchedulerP&,
+		 const TimeIntegratorLabel* timelabels);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule the build of the linearized eqn
       void sched_buildLinearMatrix(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls);
+				   const MaterialSet* matls,
+		 		   const TimeIntegratorLabel* timelabels);
  
-      void sched_pressureLinearSolve(const LevelP& level,
-				     SchedulerP& sched);
-
-      void solvePred(const LevelP& level,
-		     SchedulerP&,
-		     const int Runge_Kutta_current_step,
-		     const bool Runge_Kutta_last_step);
-   
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the build of the linearized eqn
-      void sched_buildLinearMatrixPred(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls);
- 
-      void sched_pressureLinearSolvePred(const LevelP& level,
-				     SchedulerP& sched);
-
-      void solveCorr(const LevelP& level,
-		     SchedulerP&,
-		     const int Runge_Kutta_current_step,
-		     const bool Runge_Kutta_last_step);
-   
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the build of the linearized eqn
-      void sched_buildLinearMatrixCorr(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls);
- 
-      void sched_pressureLinearSolveCorr(const LevelP& level,
-				     SchedulerP& sched);
+      void sched_pressureLinearSolve(const LevelP& level, SchedulerP& sched,
+		 		     const TimeIntegratorLabel* timelabels);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule the addition of the hydrostatic term to the relative pressure
@@ -132,26 +108,6 @@ public:
       void sched_addHydrostaticTermtoPressure(SchedulerP& sched,
 					      const PatchSet* patches,
 					      const MaterialSet* matls);
-      
-      void solveInterm(const LevelP& level,
-		     SchedulerP&,
-		     const int Runge_Kutta_current_step,
-		     const bool Runge_Kutta_last_step);
-   
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the build of the linearized eqn
-      void sched_buildLinearMatrixInterm(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls);
- 
-      void sched_pressureLinearSolveInterm(const LevelP& level,
-				     SchedulerP& sched);
-
-	void sched_computeNonlinearTerms(SchedulerP&, 
-					const PatchSet* patches,
-					const MaterialSet* matls,
-					const ArchesLabel* d_lab,
-					const int Runge_Kutta_current_step,
-					const bool Runge_Kutta_last_step);
 
 protected:
 
@@ -171,65 +127,23 @@ private:
 			     const PatchSubset* patches,
 			     const MaterialSubset* matls,
 			     DataWarehouse* new_dw,
-			     DataWarehouse* matrix_dw);
-      void buildLinearMatrixPress(const ProcessorGroup* pc,
-				  const PatchSubset* patches,
-				  const MaterialSubset* matls,
-				  DataWarehouse* new_dw,
-				  DataWarehouse* matrix_dw);
+			     DataWarehouse* matrix_dw,
+		 	     const TimeIntegratorLabel* timelabels);
 
       void pressureLinearSolve_all(const ProcessorGroup* pc,
 				   const PatchSubset* patches,
                                    const MaterialSubset* matls,
 				   DataWarehouse* new_dw,
-				   DataWarehouse* matrix_dw);
+				   DataWarehouse* matrix_dw,
+		 		   const TimeIntegratorLabel* timelabels);
+
       void pressureLinearSolve(const ProcessorGroup* pc,
 			       const Patch* patch,
 			       const int matlIndex,
 			       DataWarehouse* new_dw,
 			       DataWarehouse* matrix_dw,
-			       ArchesVariables& pressureVars);
-
-
-      void buildLinearMatrixPressPred(const ProcessorGroup* pc,
-				  const PatchSubset* patches,
-				  const MaterialSubset* matls,
-				  DataWarehouse* new_dw,
-				      DataWarehouse* matrix_dw);
-
-      void pressureLinearSolvePred_all(const ProcessorGroup* pc,
-				   const PatchSubset* patches,
-                                   const MaterialSubset* matls,
-				   DataWarehouse* new_dw,
-				   DataWarehouse* matrix_dw);
-      void pressureLinearSolvePred(const ProcessorGroup* pc,
-			       const Patch* patch,
-			       const int matlIndex,
-			       DataWarehouse* new_dw,
-			       DataWarehouse* matrix_dw,
-			       ArchesVariables& pressureVars);
-
-
-
-      void buildLinearMatrixPressCorr(const ProcessorGroup* pc,
-				  const PatchSubset* patches,
-				  const MaterialSubset* matls,
-				  DataWarehouse* new_dw,
-				      DataWarehouse* matrix_dw);
-
-      void pressureLinearSolveCorr_all(const ProcessorGroup* pc,
-				   const PatchSubset* patches,
-                                   const MaterialSubset* matls,
-				   DataWarehouse* new_dw,
-				   DataWarehouse* matrix_dw);
-
-      void pressureLinearSolveCorr(const ProcessorGroup* pc,
-			       const Patch* patch,
-			       const int matlIndex,
-			       DataWarehouse* new_dw,
-			       DataWarehouse* matrix_dw,
-			       ArchesVariables& pressureVars);
-
+			       ArchesVariables& pressureVars,
+		 	       const TimeIntegratorLabel* timelabels);
 
       ////////////////////////////////////////////////////////////////
       // addition of hydrostatic term to relative pressure
@@ -251,42 +165,6 @@ private:
       void updatePressure(const ProcessorGroup* pc,
 			  const Patch* patch,
 			  ArchesVariables* vars);
-
-      void buildLinearMatrixPressInterm(const ProcessorGroup* pc,
-				  const PatchSubset* patches,
-				  const MaterialSubset* matls,
-				  DataWarehouse* new_dw,
-				      DataWarehouse* matrix_dw);
-
-      void pressureLinearSolveInterm_all(const ProcessorGroup* pc,
-				   const PatchSubset* patches,
-                                   const MaterialSubset* matls,
-				   DataWarehouse* new_dw,
-				   DataWarehouse* matrix_dw);
-
-      void pressureLinearSolveInterm(const ProcessorGroup* pc,
-			       const Patch* patch,
-			       const int matlIndex,
-			       DataWarehouse* new_dw,
-			       DataWarehouse* matrix_dw,
-			       ArchesVariables& pressureVars);
-
-	void computeNonlinearTerms(const ProcessorGroup* pc,
-					const PatchSubset* patches,
-					const MaterialSubset* matls,
-					DataWarehouse* old_dw,
-					DataWarehouse* new_dw,
-					const ArchesLabel* d_lab,
-					const int Runge_Kutta_current_step,
-					const bool Runge_Kutta_last_step);
-
-	void filterNonlinearTerms(const ProcessorGroup* pc,
-					const Patch* patch,
-					int index,
-					CellInformation* cellinfo,
-					ArchesVariables* vars);
-
-  
 
  private:
 
