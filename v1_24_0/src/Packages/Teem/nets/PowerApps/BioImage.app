@@ -666,7 +666,7 @@ class BioImageApp {
 	frame $win.detachedP.f -relief flat
 	pack $win.detachedP.f -side left -anchor n -fill both -expand 1
 	
-	wm title $win.detachedP "Processing Window"
+	wm title $win.detachedP "Processing Pane"
 	
 	wm sizefrom $win.detachedP user
 	wm positionfrom $win.detachedP user
@@ -702,7 +702,7 @@ class BioImageApp {
 	frame $win.detachedV.f -relief flat
 	pack $win.detachedV.f -side left -anchor n
 
-	wm title $win.detachedV "Visualization Window"
+	wm title $win.detachedV "Visualization Settings Pane"
 
 	wm sizefrom $win.detachedV user
 	wm positionfrom $win.detachedV user
@@ -1563,7 +1563,7 @@ class BioImageApp {
 	bind $page.file.e <ButtonPress-1> "$this check_crop"
 
 	button $page.load -text "Browse" \
-	    -command "[set FieldReader] initialize_ui; .ui[set FieldReader].f7.execute configure -state disabled" \
+	    -command "$this open_field_reader_ui $which" \
 	    -width 12
 	Tooltip $page.load "Use a file browser to\nselect a Nrrd data set"
 
@@ -1626,10 +1626,27 @@ class BioImageApp {
     }
 
     method open_nrrd_reader_ui {i} {
+	# disable execute button and change behavior of execute command
 	set m [lindex [lindex $filters($i) $modules] 0]
+
 	[set m] initialize_ui
 
 	.ui[set m].f7.execute configure -state disabled
+
+	upvar #0 .ui[set m] data	
+	set data(-command) "wm withdraw .ui[set m]"
+    }
+
+    method open_field_reader_ui {i} {
+	# disable execute button and change behavior of execute command
+	set m [lindex [lindex $filters($i) $modules] 3]
+
+	[set m] initialize_ui
+
+	.ui[set m].f7.execute configure -state disabled
+
+	upvar #0 .ui[set m] data
+	set data(-command) "wm withdraw .ui[set m]"
     }
 
     method dicom_ui { } {
@@ -2019,7 +2036,7 @@ class BioImageApp {
 	if { [winfo exists $m] } {
 	    ### Visualization Frame
 	    iwidgets::labeledframe $m.vis \
-		-labelpos n -labeltext "Visualization" 
+		-labelpos n -labeltext "Visualization Settings" 
 	    pack $m.vis -side right -anchor n -fill y
 	    
 	    set vis [$m.vis childsite]
