@@ -32,8 +32,12 @@
 #define SCI_project_Port_h 1
 
 #include <Dataflow/share/share.h>
-#include <Core/Containers/Array1.h>
 #include <Dataflow/Comm/MessageBase.h>
+#include <vector>
+#include <string>
+
+using std::vector;
+using std::string;
 
 namespace SCIRun {
 
@@ -50,7 +54,7 @@ class PSECORESHARE Port {
 protected:
     Module* module;
     int which_port;
-    Array1<Connection*> connections;
+    vector<Connection*> connections;
     int xlight, ylight;
     enum PortState {
 	Off,

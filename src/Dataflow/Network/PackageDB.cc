@@ -423,7 +423,7 @@ void PackageDB::registerModule(ModuleInfo* info) {
   if(!db->lookup(info->packageName,package))
     {
       db->insert(info->packageName,package=new Package);
-      packageList_.add( info->packageName );
+      packageList_.push_back( info->packageName );
     }
   
   Category* category;
@@ -543,8 +543,9 @@ Module* PackageDB::instantiateModule(const string& packageName,
   return module;
 }
  
-Array1<string> PackageDB::packageNames(void) const {
-   
+vector<string>
+PackageDB::packageNames(void) const
+{
   // packageList_ is used to keep a list of the packages 
   // that are in this PSE IN THE ORDER THAT THEY ARE SPECIFIED
   // by the user in the Makefile (for main.cc) or in their
@@ -553,14 +554,15 @@ Array1<string> PackageDB::packageNames(void) const {
   return packageList_;
 }
 
-Array1<string>
-PackageDB::categoryNames(const string& packageName) const {
+vector<string>
+PackageDB::categoryNames(const string& packageName) const
+{
   Packages* db=(Packages*)db_;
   {
     PackagesIter iter(db);
     for(iter.first();iter.ok();++iter) if(iter.get_key()==packageName) {
       Package* package=iter.get_data();
-      Array1<string> result(package->size());
+      vector<string> result(package->size());
       {
 	PackageIter iter(package);
 	int i=0;
@@ -571,13 +573,14 @@ PackageDB::categoryNames(const string& packageName) const {
   }
   cerr << "WARNING: Unknown package " << packageName << "\n";
   
-  Array1<string> result(0);
+  vector<string> result(0);
   return result;
 }
  
-Array1<string>
+vector<string>
 PackageDB::moduleNames(const string& packageName,
-		       const string& categoryName) const {
+		       const string& categoryName) const
+{
   Packages* db=(Packages*)db_;
   {
     PackagesIter iter(db);
@@ -589,7 +592,7 @@ PackageDB::moduleNames(const string& packageName,
 	  for(iter.first();iter.ok();++iter) 
 	    if(iter.get_key()==categoryName) {
 	      Category* category=iter.get_data();
-	      Array1<string> result(category->size());
+	      vector<string> result(category->size());
 	      {
 		CategoryIter iter(category);
 		int i=0;
@@ -605,7 +608,7 @@ PackageDB::moduleNames(const string& packageName,
   }
  cerr << "WARNING: Unknown package " << packageName << "\n";
  
- Array1<string> result(0);
+ vector<string> result(0);
  return result;
 }
 

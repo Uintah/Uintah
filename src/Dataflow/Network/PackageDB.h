@@ -22,7 +22,6 @@
 
 #include <Dataflow/share/share.h>
 
-#include <Core/Containers/Array1.h>
 #include <Core/Containers/AVLTree.h>
 #include <Core/Util/soloader.h>
 #include <Dataflow/Network/Module.h>
@@ -81,13 +80,13 @@ namespace SCIRun {
                                   const string& moduleName,
                                   const string& instanceName) const;
 
-        Array1<string> packageNames(void) const;
-        Array1<string> categoryNames(const string& packageName) const;
-        Array1<string> moduleNames(const string& packageName,
+        vector<string> packageNames(void) const;
+        vector<string> categoryNames(const string& packageName) const;
+        vector<string> moduleNames(const string& packageName,
                                      const string& categoryName) const;
       public:
         void *             db_;
-        Array1<string>   packageList_;
+        vector<string>     packageList_;
     };
 
     // PackageDB is intended to be a singleton class, but nothing will break

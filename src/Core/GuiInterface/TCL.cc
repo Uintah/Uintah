@@ -160,7 +160,7 @@ TCL::~TCL()
 
 void TCL::emit_vars(ostream& out, string& midx)
 {
-    for(int i=0;i<vars.size();i++)
+    for(unsigned int i=0;i<vars.size();i++)
       {
 //	cerr << "emit: " << vars[i]->str() << endl;
         vars[i]->emit(out, midx);
@@ -262,22 +262,37 @@ string TCLArgs::make_list(const Array1<string>& items)
     return res;
 }
 
+string TCLArgs::make_list(const vector<string>& items)
+{
+    char** argv=scinew char*[items.size()];
+    for(unsigned int i=0; i<items.size(); i++)
+    {
+      argv[i]= ccast_unsafe(items[i]);
+    }
+    char* ilist=Tcl_Merge(items.size(), argv);
+    string res(ilist);
+    free(ilist);
+    delete[] argv;
+    return res;
+}
+
+
 void TCL::reset_vars()
 {
-    for(int i=0;i<vars.size();i++)
+    for (unsigned int i=0; i<vars.size(); i++)
 	vars[i]->reset();
 }
 
 void TCL::register_var(GuiVar* v)
 {
-    vars.add(v);
+    vars.push_back(v);
 }
 
 void TCL::unregister_var(GuiVar* v)
 {
-    for(int i=0;i<vars.size();i++){
+    for (unsigned int i=0;i<vars.size();i++){
 	if(vars[i]==v){
-	    vars.remove(i);
+	    vars.erase(vars.begin() + i);
 	    return;
 	}
     }

@@ -35,15 +35,17 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/GuiManager.h>
 #include <string>
+#include <vector>
 
 using std::string;
+using std::vector;
 
 namespace SCIRun {
 
 class GuiVar;
 
 class SCICORESHARE TCLArgs {
-    Array1<string> args_;
+    vector<string> args_;
 public:
     bool have_error_;
     bool have_result_;
@@ -62,10 +64,11 @@ public:
     static string make_list(const string&, const string&);
     static string make_list(const string&, const string&, const string&);
     static string make_list(const Array1<string>&);
+    static string make_list(const vector<string>&);
 };
 
 class SCICORESHARE TCL {
-    Array1<GuiVar*> vars;
+    vector<GuiVar*> vars;
     friend class GuiVar;
     void register_var(GuiVar*);
     void unregister_var(GuiVar*);
