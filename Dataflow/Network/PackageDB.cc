@@ -167,12 +167,17 @@ void PackageDB::loadPackage(const clString& packPath)
 					    opinfo));
 	}
 	registerModule(info);
+	postMessageNoCRLF(".",false);
+	TCL::eval("update idletasks",result);
       }
     }
+    postMessage("\n",false);
+    TCL::eval("update idletasks",result);
     sprintf(string,"createPackageMenu %d",index++);
     TCL::execute(string);
   }
   
+  // don't do this.  Instead, create each package menu as it's loaded.
   //  TCL::execute("createCategoryMenu");
 }
   
@@ -370,6 +375,9 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.26  2000/11/30 18:52:37  moulding
+// added cute little package load progress indicator to message window.
+//
 // Revision 1.25  2000/11/29 08:24:39  moulding
 // - changed startup print statements
 // - force some tcl commands to complete to allow "see it as it happens" behavior
