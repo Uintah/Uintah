@@ -87,11 +87,11 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
          numCells(2) >3 ) {
      include_delT(2) = 1.0;
     }   
-    
-          
-    for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
-      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-      int indx= ice_matl->getDWIndex();   
+      
+    for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
+      Material* matl = d_sharedState->getMaterial(m);
+      int indx= matl->getDWIndex(); 
+        
       new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gac, 1);
       new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gac, 1);
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gac, 1);
