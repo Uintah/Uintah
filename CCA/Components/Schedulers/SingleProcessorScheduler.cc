@@ -9,6 +9,9 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
+#ifdef USE_PERFEX_COUNTERS
+#include "counters.h"
+#endif
 
 using namespace Uintah;
 using namespace std;
@@ -80,14 +83,22 @@ SingleProcessorScheduler::execute(const ProcessorGroup * pg)
   makeTaskGraphDoc( dts_ );
 
   for(int i=0;i<ntasks;i++){
+#ifdef USE_PERFEX_COUNTERS
+    start_counters(0, 19);  
+#endif    
     double start = Time::currentSeconds();
     DetailedTask* task = dts_->getTask( i );
     task->doit(pg, dws_[Task::OldDW], dws_[Task::NewDW]);
     double delT = Time::currentSeconds()-start;
+    long long flop_count = 0;
+#ifdef USE_PERFEX_COUNTERS
+    long long dummy;
+    read_counters(0, &dummy, 19, &flop_count);
+#endif
     dbg << "Completed task: " << task->getTask()->getName()
 	<< " (" << delT << " seconds)\n";
     scrub(task);
-    emitNode( task, start, delT );
+    emitNode( task, start, delT, delT, flop_count );
   }
 
   dws_[ Task::NewDW ]->finalize();
