@@ -57,12 +57,12 @@ namespace SCIRun {
   // sci_getenv_p
   // will return a bool representing the value of environment variable 'key'
   // returns FALSE if and only if:
-  //   the variable does not exist, is empty,
-  //   is equal (Case insensitive) to 'false', 'no', 'off', or '0' 
+  //   the variable does not exist, 
+  //   or is empty,
+  //   or is equal (Case insensitive) to 'false', 'no', 'off', or '0' 
   // returns TRUE:
   //   otherwise.
   bool sci_getenv_p( const string & key );
 }
-
 
 #endif // #ifndef Core_Util_Environment_h
