@@ -14,7 +14,7 @@
 #ifndef SCI_project_Connection_h
 #define SCI_project_Connection_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 
 #include <SCICore/Containers/String.h>
 #include <PSECore/Comm/MessageBase.h>
@@ -29,7 +29,7 @@ class IPort;
 class Module;
 class OPort;
 
-class SCICORESHARE Connection {
+class PSECORESHARE Connection {
     int connected;
 public:
     Connection(Module*, int, Module*, int);
@@ -57,7 +57,7 @@ public:
 };
 
 
-class SCICORESHARE Demand_Message : public MessageBase {
+class PSECORESHARE Demand_Message : public MessageBase {
 public:
     Connection* conn;
     Demand_Message(Connection* conn);
@@ -69,6 +69,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/26 23:59:07  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.2  1999/08/17 06:38:22  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

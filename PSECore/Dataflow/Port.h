@@ -14,7 +14,7 @@
 #ifndef SCI_project_Port_h
 #define SCI_project_Port_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/String.h>
 #include <PSECore/Comm/MessageBase.h>
@@ -28,7 +28,7 @@ using SCICore::Containers::Array1;
 class Connection;
 class Module;
 
-class SCICORESHARE Port {
+class PSECORESHARE Port {
     clString type_name;
     clString portname;
     clString colorname;
@@ -66,7 +66,7 @@ public:
     clString get_colorname();
 };
 
-class SCICORESHARE IPort : public Port {
+class PSECORESHARE IPort : public Port {
     void update_light();
 protected:
     IPort(Module*, const clString&, const clString&,
@@ -77,7 +77,7 @@ public:
     virtual ~IPort();
 };
 
-class SCICORESHARE OPort : public Port {    
+class PSECORESHARE OPort : public Port {    
     void update_light();
 protected:
     OPort(Module*, const clString&, const clString&,
@@ -95,6 +95,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/26 23:59:08  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.2  1999/08/17 06:38:25  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

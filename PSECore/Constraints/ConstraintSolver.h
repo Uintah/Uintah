@@ -15,7 +15,7 @@
 #ifndef SCI_project_Constraint_Solver_h
 #define SCI_project_Constraint_Solver_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 #include <PSECore/Constraints/BaseConstraint.h>
 #include <SCICore/Containers/Stack.h>
 
@@ -27,7 +27,7 @@ using SCICore::Containers::Stack;
 enum RecurseType { UnInit, RecurseInitial, RecurseNormal, RecurseMax };
 
 typedef unsigned char uchar;
-struct SCICORESHARE StackItem {
+struct PSECORESHARE StackItem {
    inline StackItem() : var(NULL), rtype(UnInit), iter(0) {}
    inline StackItem( BaseVariable* v ) : var(v), rtype(RecurseInitial), iter(0) {}
    inline StackItem( BaseVariable* v, const uchar rt, const uchar i ) : var(v), rtype(rt), iter(i) {}
@@ -44,7 +44,7 @@ struct SCICORESHARE StackItem {
    uchar iter;
 };
 
-class SCICORESHARE ConstraintSolver {
+class PSECORESHARE ConstraintSolver {
 public:
    ConstraintSolver();
    ConstraintSolver( const Real epsilon );
@@ -81,6 +81,9 @@ private:
 
 //
 // $Log$
+// Revision 1.3  1999/08/26 23:57:02  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.2  1999/08/17 06:38:17  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -15,7 +15,7 @@
 #ifndef SCI_project_Base_Variable_h
 #define SCI_project_Base_Variable_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 
 #include <PSECore/Constraints/VarCore.h>
 #include <SCICore/Containers/Array1.h>
@@ -40,7 +40,7 @@ enum Scheme { Scheme1, Scheme2, Scheme3, Scheme4,
 
 class BaseConstraint;
 
-class SCICORESHARE BaseVariable {
+class PSECORESHARE BaseVariable {
    friend class BaseConstraint;
    friend class ConstraintSolver;
 public:
@@ -96,14 +96,14 @@ private:
    void RegisterPriority( const Index index, const VPriority p );
    void printc( ostream& os, const Index c );
 };
-inline SCICORESHARE ostream& operator<<( ostream& os, BaseVariable& v );
+inline PSECORESHARE ostream& operator<<( ostream& os, BaseVariable& v );
 
 
 /* Miscellaneous */
 char* PriorityString( const VPriority p );
 char* SchemeString( const Scheme s );
 
-inline SCICORESHARE int HigherPriority( const VPriority p1, const VPriority p2 )
+inline PSECORESHARE int HigherPriority( const VPriority p1, const VPriority p2 )
 {
    return (p1 > p2);
 }
@@ -137,7 +137,7 @@ BaseVariable::operator Real() const
 }
 
 
-inline SCICORESHARE ostream&
+inline PSECORESHARE ostream&
 operator<<( ostream& os, BaseVariable& v )
 {
    v.print(os);
@@ -149,6 +149,9 @@ operator<<( ostream& os, BaseVariable& v )
 
 //
 // $Log$
+// Revision 1.3  1999/08/26 23:57:01  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.2  1999/08/17 06:38:16  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

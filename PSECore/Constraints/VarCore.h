@@ -15,7 +15,7 @@
 #ifndef SCI_project_VarCore_h
 #define SCI_project_VarCore_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 #include <PSECore/Constraints/manifest.h>
 #include <SCICore/Geometry/Point.h>
 
@@ -27,7 +27,7 @@ using SCICore::Geometry::Vector;
 
 // VarCore is the data of a Variable.  It implements the polymorphism.
 class BaseVariable;
-class SCICORESHARE VarCore {
+class PSECORESHARE VarCore {
 public:
    enum VarType { PointVar, RealVar };
    // This controls operator= with different VarTypes.
@@ -58,7 +58,7 @@ public:
    VarCore& operator+=( const Real r );
 
    inline int epsilonequal( const Real Epsilon, const VarCore& v );
-   friend SCICORESHARE ostream& operator<<( ostream& os, VarCore& c );
+   friend PSECORESHARE ostream& operator<<( ostream& os, VarCore& c );
 private:
    VarType vartype;
    Point pointvalue;
@@ -127,6 +127,9 @@ VarCore::epsilonequal( const Real Epsilon, const VarCore& v )
 
 //
 // $Log$
+// Revision 1.4  1999/08/26 23:57:03  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.3  1999/08/18 20:20:18  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

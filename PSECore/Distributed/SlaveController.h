@@ -50,7 +50,7 @@ using PSECore::Comm::MessageBase;
 using SCICore::Multitask::Task;
 using SCICore::Multitask::Mailbox;
 
-class SCICORESHARE SlaveController : public Task {
+class PSECORESHARE SlaveController : public Task {
     private:
 	Network* 	net;
 	char 		masterHost[HOSTNAME];	
@@ -73,7 +73,7 @@ class SCICORESHARE SlaveController : public Task {
 	virtual int body(int);
 };
 
-class SCICORESHARE R_Scheduler_Module_Message : public MessageBase {
+class PSECORESHARE R_Scheduler_Module_Message : public MessageBase {
 public:
     Connection* conn;
     R_Scheduler_Module_Message();			// execute msg
@@ -81,7 +81,7 @@ public:
     virtual ~R_Scheduler_Module_Message();
 };
 
-class SCICORESHARE R_Module_Scheduler_Message : public MessageBase {
+class PSECORESHARE R_Module_Scheduler_Message : public MessageBase {
 public:
     OPort* p1;
     OPort* p2;
@@ -95,6 +95,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/27 00:06:47  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.2  1999/08/17 06:38:26  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

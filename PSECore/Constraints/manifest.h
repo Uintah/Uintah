@@ -15,7 +15,7 @@
 #ifndef _H_MANIFEST_VALUES
 #define _H_MANIFEST_VALUES
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 
 #include <stdlib.h>
 #include <math.h>
@@ -28,25 +28,25 @@ namespace Constraints {
 typedef double Real;
 typedef unsigned int Index;
 
-inline SCICORESHARE Real
+inline PSECORESHARE Real
 RealAbs ( Real x )
 {
    return fabs(x);
 }
 
-inline SCICORESHARE int
+inline PSECORESHARE int
 RealRound ( Real x )
 {
    return (int)(floor (x + 0.5));
 }
 
-inline SCICORESHARE Real
+inline PSECORESHARE Real
 RealMin ( Real x1, Real x2 )
 {
    return ((x1 < x2) ? x1 : x2);
 }
 
-inline SCICORESHARE Real
+inline PSECORESHARE Real
 RealMax ( Real x1, Real x2 )
 {
    return ((x1 > x2) ? x1 : x2);

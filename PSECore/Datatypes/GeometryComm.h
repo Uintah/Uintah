@@ -14,7 +14,7 @@
 #ifndef SCI_Datatypes_GeometryComm_h
 #define SCI_Datatypes_GeometryComm_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 
 #include <PSECore/Comm/MessageBase.h>
 #include <PSECore/Datatypes/GeometryPort.h>
@@ -44,7 +44,7 @@ struct GeomReply {
     GeomReply(int, int*);
 };
 
-class SCICORESHARE GeometryComm : public MessageBase {
+class PSECORESHARE GeometryComm : public MessageBase {
 public:
     GeometryComm(Mailbox<GeomReply>*);
     GeometryComm(int, GeomID, GeomObj*, const clString&, CrowdMonitor* lock);
@@ -80,6 +80,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/27 00:03:02  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.3  1999/08/25 03:48:20  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

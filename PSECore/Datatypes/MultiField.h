@@ -26,7 +26,7 @@ class ScalarFieldUG;
 class ScalarField;
 typedef LockingHandle<ScalarField> ScalarFieldHandle;
 
-class SCICORESHARE ScalarField : public Datatype {
+class PSECORESHARE ScalarField : public Datatype {
 protected:
     int have_bounds;
     Point bmin;

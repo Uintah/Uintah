@@ -14,7 +14,7 @@
 #ifndef SCI_project_NetworkEditor_h
 #define SCI_project_NetworkEditor_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 #include <PSECore/Comm/MessageBase.h>
 #include <SCICore/Multitask/Task.h>
 #include <SCICore/Multitask/ITC.h>
@@ -39,7 +39,7 @@ class Module;
 class Network;
 class OPort;
 
-class SCICORESHARE NetworkEditor : public Task, public TCL {
+class PSECORESHARE NetworkEditor : public Task, public TCL {
     Network* net;
     void multisend(OPort*);
     void do_scheduling(Module*);
@@ -60,7 +60,7 @@ private:
     virtual void tcl_command(TCLArgs&, void*);
 };
 
-class SCICORESHARE Scheduler_Module_Message : public MessageBase {
+class PSECORESHARE Scheduler_Module_Message : public MessageBase {
 public:
     Connection* conn;
     Scheduler_Module_Message();
@@ -68,7 +68,7 @@ public:
     virtual ~Scheduler_Module_Message();
 };
 
-class SCICORESHARE Module_Scheduler_Message : public MessageBase {
+class PSECORESHARE Module_Scheduler_Message : public MessageBase {
 public:
     OPort* p1;
     OPort* p2;
@@ -82,6 +82,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/26 23:59:07  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.2  1999/08/17 06:38:24  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
