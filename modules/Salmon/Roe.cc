@@ -163,8 +163,8 @@ void Roe::RoeInit(Salmon* s) {
     gr_frame->Create(*left, "frame");
 
     graphics=new GLwMDrawC;
-    graphics->SetWidth(400);
-    graphics->SetHeight(300);
+    graphics->SetWidth(700);
+    graphics->SetHeight(600);
     graphics->SetRgba(True);
     graphics->SetDoublebuffer(True);
     graphics->SetNavigationType(XmSTICKY_TAB_GROUP);
