@@ -89,6 +89,15 @@ public:
   // it is.  --James Bigler
   inline int rank() const { return num; }
 
+  // Alows the Dpy to set the rendering_scene parameter before the
+  // thread starts running.  Setting this during rendering could be a
+  // "bad thing" (TM).
+  void set_rendering_scene(const int new_rendering_scene) {
+    // Be sure to do bounds checks
+    if (new_rendering_scene >= 0 && new_rendering_scene <= 1)
+      rendering_scene = new_rendering_scene;
+  }
+
 };
 
 } // end namespace rtrt
