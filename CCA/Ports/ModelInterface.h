@@ -47,7 +47,8 @@ WARNING
   class ModelSetup {
   public:
     virtual void registerTransportedVariable(const MaterialSubset* matls,
-					     VarLabel* var) = 0;
+					     const VarLabel* var,
+					     const VarLabel* src) = 0;
   };
   class ModelInfo {
   public:
@@ -125,8 +126,9 @@ WARNING
 						    const LevelP& level,
 						    const ModelInfo*) = 0;
 
-   private:
+   protected:
      const ProcessorGroup* d_myworld;
+   private:
 
      ModelInterface(const ModelInterface&);
      ModelInterface& operator=(const ModelInterface&);

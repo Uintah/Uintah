@@ -783,6 +783,12 @@ void ICE::scheduleModelMassExchange(SchedulerP& sched, const LevelP& level,
     task->computes(lb->modelMom_srcLabel);
     task->computes(lb->modelEng_srcLabel);
     task->computes(lb->modelVol_srcLabel);
+    for(vector<TransportedVariable*>::iterator iter = d_modelSetup->tvars.begin();
+	iter != d_modelSetup->tvars.end(); iter++){
+      TransportedVariable* tvar = *iter;
+      if(tvar->src)
+	task->computes(tvar->src, tvar->matls);
+    }
     sched->addTask(task, level->eachPatch(), matls);
 
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
@@ -1141,7 +1147,6 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
                                     const MaterialSet* matls)
 {
   Ghost::GhostType  gac  = Ghost::AroundCells; 
-  Ghost::GhostType  gn  = Ghost::None; 
 
   cout_doing << "ICE::scheduleAdvectAndAdvanceInTime" << endl;
   Task* task = scinew Task("ICE::advectAndAdvanceInTime",
@@ -1174,6 +1179,8 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
        iter != d_modelSetup->tvars.end(); iter++){
       TransportedVariable* tvar = *iter;
       task->requires(Task::OldDW, tvar->var, gac, 2);
+      if(tvar->src)
+	task->requires(Task::NewDW, tvar->src, gac, 2);
       task->computes(tvar->var,   tvar->matls);
     }
   } 
@@ -2807,6 +2814,15 @@ void ICE::zeroModelSources(const ProcessorGroup*,
       mass_src.initialize(0.0);
       vol_src.initialize(0.0);
       mom_src.initialize(Vector(0.0, 0.0, 0.0));
+      for(vector<TransportedVariable*>::iterator iter = d_modelSetup->tvars.begin();
+	  iter != d_modelSetup->tvars.end(); iter++){
+	TransportedVariable* tvar = *iter;
+	if(tvar->src){
+	  CCVariable<double> model_src;
+	  new_dw->allocateAndPut(model_src, tvar->src, matl, patch);
+	  model_src.initialize(0.0);
+	}
+      }
     }
   }
 }
@@ -4085,20 +4101,62 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
            iter != d_modelSetup->tvars.end(); iter++){
           TransportedVariable* tvar = *iter;
           if(tvar->matls->contains(indx)){
-            CCVariable<double> q_CC;
             constCCVariable<double> q_L_CC;
-           
-            new_dw->allocateAndPut(q_CC, tvar->var, indx, patch);
-            old_dw->get(q_L_CC,          tvar->var, indx, patch, gac, 2);
-           
-            advector->advectQ(q_L_CC,patch,q_advected, new_dw);
+	    old_dw->get(q_L_CC,          tvar->var, indx, patch, gac, 2);
+
+	    constCCVariable<double> q_src;
+	    new_dw->get(q_src, tvar->src, indx, patch, gac, 2);
+	    CCVariable<double> q_new;
+	    new_dw->allocateTemporary(q_new, patch, gac, 2);
+	    if(tvar->src){
+	      for(CellIterator iter(q_L_CC.getLowIndex(), q_L_CC.getHighIndex());
+		  !iter.done(); iter++){
+		IntVector c = *iter;                            
+		q_new[c]  = (q_L_CC[c] + q_src[c])*mass_L[c];
+	      }
+	      advector->advectQ(q_new,patch,q_advected, new_dw);
+	    } else {
+	      advector->advectQ(q_L_CC,patch,q_advected, new_dw);
+	    }
             
-            for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
+            CCVariable<double> q_CC;
+            new_dw->allocateAndPut(q_CC, tvar->var, indx, patch);
+
+#if 1
+	    // Origina  way
+	    for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
+	      IntVector c = *iter;
+	      double q_tmp      = q_new[c]/mass_L[c];
+	      //cerr << "c=" << c;
+	      //cerr << ", mass_L=" << mass_L[c];
+	      //cerr << ", q_L_CC=" << q_L_CC[c] << ", q_tmp=" << q_tmp;
+	      double q_a = (q_advected[c] - q_tmp * mass_advected[c])/
+                          ( mass_new[c]);
+	      //cerr << ", q_a=" << q_a;
+	      q_CC[c]    = q_tmp + q_a; 
+	      //cerr << ", q_CC=" << q_CC[c] << '\n';
+	    }
+#endif
+#if 0
+	    // Todd's way
+            for(CellIterator iter = patch->getCellIterator();
+		!iter.done(); iter++){
               IntVector c = *iter;                            
-              q_CC[c]  = q_L_CC[c] + q_advected[c]; 
+              q_CC[c]  = q_L_CC[c] + q_src[c] + q_advected[c]; 
             }
+#endif
+#if 0
+	    // No advection
+            for(CellIterator iter = patch->getCellIterator();
+		!iter.done(); iter++){
+              IntVector c = *iter;                            
+              q_CC[c]  = q_L_CC[c] + q_src[c];
+            }
+#endif
+
            //  Set Neumann = 0 if symmetric Boundary conditions
-           setBC(q_CC, "set_if_sym_BC",patch, d_sharedState, indx); 
+           //setBC(q_CC, "set_if_sym_BC",patch, d_sharedState, indx); 
+	   setBC(q_CC,    "zeroNeumann",  patch, d_sharedState, indx); 
           }
         }
       }
@@ -4911,11 +4969,13 @@ ICE::ICEModelSetup::~ICEModelSetup()
 }
 
 void ICE::ICEModelSetup::registerTransportedVariable(const MaterialSubset* matls,
-                                               VarLabel* var)
+						     const VarLabel* var,
+						     const VarLabel* src)
 {
   TransportedVariable* t = scinew TransportedVariable;
   t->matls = matls;
   t->var = var;
+  t->src = src;
   t->Lvar = VarLabel::create(var->getName()+"-L", var->typeDescription());
   tvars.push_back(t);
 }

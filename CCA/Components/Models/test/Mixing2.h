@@ -1,23 +1,29 @@
 
-#ifndef Packages_Uintah_CCA_Components_Examples_Mixing_h
-#define Packages_Uintah_CCA_Components_Examples_Mixing_h
+#ifndef Packages_Uintah_CCA_Components_Examples_Mixing2_h
+#define Packages_Uintah_CCA_Components_Examples_Mixing2_h
 
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/MaterialProperties.h>
+#include <map>
+#include <vector>
+
+namespace Cantera {
+  class IdealGasMix;
+  class Reactor;
+};
 
 namespace Uintah {
 
 /**************************************
 
 CLASS
-   Mixing
+   Mixing2
    
-   Mixing simulation
+   Mixing2 simulation
 
 GENERAL INFORMATION
 
-   Mixing.h
+   Mixing2.h
 
    Steven G. Parker
    Department of Computer Science
@@ -28,7 +34,7 @@ GENERAL INFORMATION
    Copyright (C) 2000 SCI Group
 
 KEYWORDS
-   Mixing
+   Mixing2
 
 DESCRIPTION
    Long description...
@@ -38,10 +44,10 @@ WARNING
 ****************************************/
 
   class GeometryPiece;
-  class Mixing : public ModelInterface {
+  class Mixing2 : public ModelInterface {
   public:
-    Mixing(const ProcessorGroup* myworld, ProblemSpecP& params);
-    virtual ~Mixing();
+    Mixing2(const ProcessorGroup* myworld, ProblemSpecP& params);
+    virtual ~Mixing2();
     
     //////////
     // Insert Documentation Here:
@@ -81,8 +87,8 @@ WARNING
 	       const MaterialSubset* matls, DataWarehouse*, 
 	       DataWarehouse* new_dw, const ModelInfo*);
 
-    Mixing(const Mixing&);
-    Mixing& operator=(const Mixing&);
+    Mixing2(const Mixing2&);
+    Mixing2& operator=(const Mixing2&);
 
     ProblemSpecP params;
 
@@ -101,22 +107,20 @@ WARNING
     public:
       int index;
       string name;
-      MaterialProperties props;
       VarLabel* massFraction_CCLabel;
       VarLabel* massFraction_source_CCLabel;
       vector<Region*> regions;
     };
 
-    class Reaction {
-    public:
-      int fromStream;
-      int toStream;
-      double energyRelease;
-      double rate;
-    };
-
     vector<Stream*> streams;
-    vector<Reaction*> reactions;
+    map<string, Stream*> names;
+
+    Cantera::IdealGasMix* gas;
+    Cantera::Reactor* reactor;
+    double d_cv;
+    double d_gamma;
+    double d_cp;
+    SimulationStateP sharedState;
   };
 }
 

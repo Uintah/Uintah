@@ -12,6 +12,7 @@ SRCS     += \
 	$(SRCDIR)/SFCZVariableBase.cc \
 	$(SRCDIR)/Grid.cc \
 	$(SRCDIR)/Level.cc $(SRCDIR)/Material.cc \
+	$(SRCDIR)/MaterialProperties.cc \
 	$(SRCDIR)/PatchRangeTree.cc \
 	$(SRCDIR)/NCVariableBase.cc $(SRCDIR)/ParticleSet.cc \
 	$(SRCDIR)/ParticleSubset.cc $(SRCDIR)/ParticleVariableBase.cc \
