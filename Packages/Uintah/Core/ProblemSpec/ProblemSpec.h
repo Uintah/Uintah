@@ -124,7 +124,7 @@ WARNING
       //////////
       // adds a newline with 'tabs' tabs, then creates, appends, and returns
       // a node with name str
-      ProblemSpecP appendChild(const char *str, int tabs = 0);
+      ProblemSpecP appendChild(const char *str, bool lead=0, int tabs = 0);
 
       //////////
       // appends only a node to the tree
