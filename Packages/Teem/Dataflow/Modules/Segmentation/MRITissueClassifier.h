@@ -106,22 +106,33 @@ protected:
 
 
   //VisPack replacement functions
-  void	dilate();
-  void	erode();
-  void	opening();
-  void	closing();
-  void	floodFill();
-  void	floodFill3d();
+  void	dilate(NrrdDataHandle, NrrdDataHandle);
+  void	erode(NrrdDataHandle, NrrdDataHandle);
+  void	opening(NrrdDataHandle, NrrdDataHandle);
+  void	closing(NrrdDataHandle, NrrdDataHandle);
+  void	floodFill(NrrdDataHandle, 
+		  int, int, unsigned int, unsigned int, unsigned int);
+  void	floodFill(NrrdDataHandle,
+		  int, int, unsigned int, unsigned int);
   // 3d nrrds
+  NrrdDataHandle create_nrrd_of_ints(int, int, int);
+  NrrdDataHandle create_nrrd_of_floats(int, int, int);  
   int get_nrrd_int(NrrdDataHandle, int, int, int);
   float get_nrrd_float(NrrdDataHandle, int, int, int);
   void set_nrrd_int(NrrdDataHandle, int, int, int, int);
   void set_nrrd_float(NrrdDataHandle, float, int, int, int);
+  bool nrrd_check_bounds(NrrdDataHandle, int, int, int);
+  NrrdDataHandle extract_nrrd_slice_int(NrrdDataHandle, int);
+
   // 2d nrrds
+  NrrdDataHandle create_nrrd_of_ints(int, int);
+  NrrdDataHandle create_nrrd_of_floats(int, int);
   int get_nrrd_int(NrrdDataHandle, int, int);
   float get_nrrd_float(NrrdDataHandle, int, int);
   void set_nrrd_int(NrrdDataHandle, int, int, int);
   void set_nrrd_float(NrrdDataHandle, float, int, int);
+  bool nrrd_check_bounds(NrrdDataHandle, int, int);
+  
 
 
 
