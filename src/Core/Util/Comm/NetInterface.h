@@ -39,7 +39,9 @@
 
 #ifndef SCI_Core_Util_NetInterface_h
 #define SCI_Core_Util_NetInterface_h
-#include <sci_defs.h>
+
+#include <sci_defs/scisock_defs.h>
+
 #ifdef HAVE_SCISOCK
 
 // SCIRun includes
