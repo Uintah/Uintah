@@ -151,7 +151,8 @@ versions of the guide.
 </row>
 <row>
 <entry><filename>doc/User/FAQ</filename></entry>
-<entry><para>XML sources for the user FAQ.</para></entry>
+<entry><para>XML sources for the user FAQ and Makefile which generates
+the HTML version of the FAQ.</para></entry>
 </row>
 <row>
 <entry><filename>doc/Developer/</filename></entry>
@@ -174,7 +175,8 @@ guide.</para>
 <row>
 <entry><filename>doc/Developer/FAQ</filename></entry>
 <entry>
-<para>XML sources for developer FAQ.</para>
+<para>XML sources for developer FAQ  and Makefile which generates
+the HTML version of the FAQ.</para>
 </entry>
 </row>
 <row>
@@ -216,15 +218,8 @@ invokes sub-makes.  <filename>Index.rhtml</filename> is the cover page for
 <row>
 <entry><filename>doc/Installation/FAQ</filename></entry>
 <entry>
-<para>XML sources for installation FAQ.</para>
-</entry>
-</row>
-<row>
-<entry><filename>doc/FAQBook</filename></entry>
-<entry>
-<para>XML source (<filename>faqbook.xml</filename>) for the &sr; FAQ book
-(it merely assembles FAQ sources into book form).</para>
-<para><filename>Makefile</filename> generates the FAQ book.</para>
+<para>XML sources for installation FAQ  and Makefile which generates
+the HTML version of the FAQ.</para>
 </entry>
 </row>
 </tbody>
@@ -374,9 +369,12 @@ endterm="sec.docmls.title" linkend="sec.docmls"/>.</para>
 <entry><para><filename>doc/Developer/index.html</filename></para></entry>
 </row>
 <row>
-<entry><para>C++ sources in the src side of the tree</para></entry>
+<entry><para><filename>doc/Developer/CodeViews/Doxyconfig.r</filename>
+and C++ sources in the src side of the tree</para></entry>
 <entry><para><filename>doc/Developer/CodeViews/Makefile</filename></para></entry>
-<entry><para><filename>doc/Developer/CodeViews/html/*.html</filename></para></entry>
+<entry><para><filename>doc/Developer/CodeViews/Doxyconfig</filename>
+and
+<filename>doc/Developer/CodeViews/html/*.html</filename></para></entry>
 </row>
 <row>
 <entry>
@@ -385,7 +383,14 @@ endterm="sec.docmls.title" linkend="sec.docmls"/>.</para>
 <filename>doc/Developer/Guide/src/*.xml</filename></para>
 </entry>
 <entry><para><filename>doc/Developer/Guide/Makefile</filename></para></entry>
-<entry><para><filename>doc/Developer/Guide/*.html</filename></para></entry>
+<entry><para><filename>doc/Developer/Guide/main.xml</filename><filename>doc/Developer/Guide/*.html</filename></para></entry>
+</row>
+<row>
+<entry>
+<para><filename>doc/Developer/FAQ/faq.rxml</filename></para> </entry>
+<entry><para><filename>doc/Developer/FAQ/Makefile</filename></para></entry>
+<entry><para><filename>doc/Developer/FAQ/faq.xml</filename> and
+<filename>doc/Developer/FAQ/faq.html</filename></para></entry>
 </row>
 <row>
 <entry>
@@ -399,14 +404,6 @@ endterm="sec.docmls.title" linkend="sec.docmls"/>.</para>
 </entry>
 </row>
 <row>
-<entry><para><filename>doc/FAQBook/faqbook.xml</filename>,
-<filename>doc/Developer/FAQ/faq.xml</filename>,
-<filename>doc/Installation/FAQ/faq.xml</filename>, and
-<filename>doc/User/FAQ/faq.xml</filename></para></entry> 
-<entry><para><filename>doc/FAQBook/Makefile</filename></para></entry>
-<entry><para><filename>doc/FAQBook/*.html</filename></para></entry>
-</row>
-<row>
 <entry><para><filename>doc/Installation/index.rhtml</filename></para></entry>
 <entry><para><filename>doc/Installation/Makefile</filename></para></entry>
 <entry><para><filename>doc/Installation/index.html</filename></para></entry>
@@ -415,6 +412,14 @@ endterm="sec.docmls.title" linkend="sec.docmls"/>.</para>
 <entry><para><filename>doc/Installation/Guide/*.[r]xml</filename></para></entry>
 <entry><para><filename>doc/Installation/Guide/Makefile</filename></para></entry>
 <entry><para><filename>doc/Installation/Guide/*.html</filename></para></entry>
+</row>
+<row>
+<entry>
+<para> <filename>doc/Installation/FAQ/faq.rxml</filename></para>
+</entry>
+<entry><para><filename>doc/Installation/FAQ/Makefile</filename></para></entry>
+<entry><para><filename>doc/Installation/FAQ/faq.xml</filename> and
+<filename>doc/Installation/FAQ/faq.html</filename></para></entry>
 </row>
 <row>
 <entry><para><filename>doc/User/index.rhtml</filename></para></entry>
@@ -452,6 +457,13 @@ the <filename>src</filename> side of the tree generated from JPEG
 and GIF files.</para>
 </entry>
 </row>
+<row>
+<entry>
+<para><filename>doc/User/FAQ/faq.rxml</filename></para> </entry>
+<entry><para><filename>doc/User/FAQ/Makefile</filename></para></entry>
+<entry><para><filename>doc/User/FAQ/faq.xml</filename> and
+<filename>doc/User/FAQ/faq.html</filename></para></entry>
+</row>
 </tbody>
 </tgroup>
 </table>
@@ -472,11 +484,11 @@ languages (ML):
 <para><ulink
 url="http://docbook.org/tdg/en/html/docbook.html">&dbk;</ulink></para></listitem>
 <listitem>
-<para>The (home grown) Component (or module) ML</para></listitem>
+<para>The (home grown) Component (or module) ML</para>
+</listitem>
 <listitem>
-<para>The (home grown) FAQ ML</para></listitem>
-<listitem>
-<para>HTML</para></listitem>
+<para>HTML</para>
+</listitem>
 </itemizedlist>
 <xref linkend="tbl.mls"/> provides document specific details.
 </para>
@@ -512,7 +524,7 @@ product equivalent.</para></note></para>
 </row>
 <row>
 <entry>FAQs</entry>
-<entry>&sr; FAQ ML</entry>
+<entry>&dbk;</entry>
 </row>
 <row>
 <entry>Installation Guide</entry>
@@ -541,10 +553,10 @@ product equivalent.</para></note></para>
 
 <para>Later sections provide information on editing these documents.</para>
 
-<para>The Component (or module) and FAQ markup languages were developed by
-SCI.  The former is defined by its DTD which is in the file
-<filename>doc/Utilities/XML/component.dtd</filename>. The latter is defined
-by its DTD - <filename>doc/Utilities/XML/faq.dtd</filename>.</para>
+<para>The Component (or module)  markup language was developed by
+SCI.  It is defined by its DTD which is the file
+<filename>doc/Utilities/XML/component.dtd</filename>.
+</para>
 
 <para>This document (the one you are reading) is composed in the &dbk;
 ML.</para>
@@ -574,7 +586,7 @@ that use them.  Stylesheets can be found in
 <tbody>
 <row>
 <entry><filename>srdocbook.css</filename></entry>
-<entry>Docbook Documents</entry>
+<entry>Docbook Documents including the FAQs.</entry>
 </row>
 <row>
 <entry><filename>srlatex2html.css</filename></entry>
@@ -597,10 +609,6 @@ that use them.  Stylesheets can be found in
 <entry><filename>doc/Developer/Modules/SCIRun.html</filename>,
 etc. (i.e. HTML files generated by the program
 <filename>doc/Utilities/HTML/makepkgindex.rb)</filename></entry>
-</row>
-<row>
-<entry><filename>faq.css</filename></entry>
-<entry>FAQ documents.</entry>
 </row>
 <row>
 <entry><filename>component.css</filename></entry> <entry>Module
@@ -1154,9 +1162,9 @@ End:
 <title>Editing FAQ Documents</title>
 <para>There are currently three FAQs:
 <simplelist>
-<member>Installation FAQ - <filename>doc/Installation/FAQ/faq.xml</filename></member>
-<member>User FAQ - <filename>doc/User/FAQ/faq.xml</filename></member>
-<member>Developer FAQ - <filename>doc/Developer/FAQ/faq.xml</filename></member>
+<member>Installation FAQ - <filename>doc/Installation/FAQ/faq.rxml</filename></member>
+<member>User FAQ - <filename>doc/User/FAQ/faq.rxml</filename></member>
+<member>Developer FAQ - <filename>doc/Developer/FAQ/faq.rxml</filename></member>
 </simplelist>
 </para>
 <para>To add a new entry to one of these FAQs (using emacs/xemacs XML mode)
@@ -1166,34 +1174,38 @@ do this:
 <para>Open the appropriate file with emacs/xemacs (recommended)</para>
 </listitem>
 <listitem>
-<para>Move cursor to just before the first <sgmltag>entry</sgmltag> element
-or just after the last <sgmltag>entry</sgmltag> element.</para>
+<para>Move point to just before the first
+<sgmltag>qandaentry</sgmltag> element or just after the last
+<sgmltag>qandaentry</sgmltag> element.</para>
 </listitem>
 <listitem>
-<para>Type <userinput>C-c C-e</userinput>.  The mini-buffer should show
-that XML mode is just about to insert a new <sgmltag>entry</sgmltag>
-element.  Press <userinput>RETURN</userinput>. </para>
+<para>
+Insert the following template at point: 
+<programlisting>
+<![CDATA[
+<qandaentry>
+<revhistory>
+<revision>
+<revnumber></revnumber>
+<date></date>
+</revision>
+</revhistory>
+<question>
+<para>
+</para>
+</question>
+<answer>
+<para>
+</para>
+</answer>
+</qandaentry>
+]]>
+</programlisting>
+Fill out the template (using additional DocBook markup if necessary).
+</para>
 </listitem>
 </orderedlist>
 </para>
-<para>XML mode will insert the following:
-<programlisting>
-<![CDATA[
-<entry>
-<keywords></keywords>
-<question>
-</question>
-<answer>
-</answer>
-</entry>
-<entry>
-]]>
-</programlisting>
-Finish by inserting content into the  <sgmltag>keywords</sgmltag>,
-<sgmltag>question</sgmltag>, and <sgmltag>answer</sgmltag> elements.
-</para>
-<para>If you are not using emacs/xemacs then you will need to insert an
-<sgmltag>entry</sgmltag> element manually. </para>
 </section>
 
 <section id="sec.editxmlmoddocs">
@@ -1267,168 +1279,222 @@ in the <filename>src</filename> side of the tree should be based on
 <filename>doc/Documentum/src_template.html</filename>.</para>
 </section>
 
-<!-- <section id="sec.editltxdocs"> -->
-<!-- <title>Editing &ltx; Documents</title> -->
-<!-- <para></para> -->
-<!-- </section> -->
+<section id="sec.editltxdocs">
+<title>Editing &ltx; Documents</title>
+<para>&vellip;</para>
+<para>Some day I need to put something here.</para>
+<para>&vellip;</para>
+ </section>
 
 </section>
 
 <section>
 <title>Publishing to SCI Web Sites</title>
 
-<para>&sr; documentation is published to 3 SCI web sites.  Each web site
-serves a different purpose.</para>
+<para>
+&sr; documentation is published to SCI's external web site.
+</para>
 
-<para>Documentation under development is
-published on the <ulink
-url="http://internal.sci.utah.edu/developer/SCIRun/doc">internal</ulink>
-site.
-Documentation being tested for release is published on the
-<ulink url="http://software2.sci.utah.edu/doc">test</ulink> site.
-Documentation for the current &sr; release is published on the
-<ulink url="http://software.sci.utah.edu/doc">external</ulink>
-site.
+<para>
+Documentation for the current &sr; release is published at <ulink
+url="http://software.sci.utah.edu/doc">http://software.sci.utah.edu/doc</ulink>.
+<para>
+Documentation under development is published at <ulink
+url="http://software.sci.utah.edu/doc/future/doc">http://software.sci.utah.edu/doc/future/doc</ulink>.
+</para>
+</para>
+<para>
+Documentation being tested for release is published at <ulink
+url="http://software.sci.utah.edu/doc/pre-release">http://software.sci.utah.edu/doc/pre-release/doc</ulink>.
 </para>
 
 <para>The following sections describe (approximately) how to publish
 documentation to these sites.</para>
 
-<section>
-<title>Publishing to SCI's Internal Web Site</title>
-<para>&sr; documentation which is under development (from the
-trunk of the CVS tree) is published on
-SCI's internal web site.  To publish docs on the internal web site do
-this:
-<orderedlist>
-<listitem>
-<para>Update your &sr; CVS tree.</para>
-</listitem>
-<listitem>
-<para>Build the docs and create a doc tarball.</para>
-</listitem>
-<listitem>
-<para>Copy the tarball to
-<filename>/usr/sci/projects/SCIRun/docs</filename> and unpack it using
-GNU tar (<command>tar zxf &lt;tarball&gt;</command>).</para>
-</listitem>
-<listitem>
-<para><command>Cd</command> to
-<filename>/usr/sci/projects/SCIRun/docs</filename> and remove the
-<filename>doc</filename> and <filename>src</filename> directories if
-they exist.</para>
-</listitem>
-<listitem>
-<para>Move the <filename>doc</filename> and <filename>src</filename>
-directories from inside the directory created by unpacking the tarball
-to <filename>/usr/sci/projects/SCIRun/docs</filename>.</para>
-</listitem>
-</orderedlist>
-</para>
-</section>
 
 <section>
-<title>Publishing to SCI's Test Web Site</title> 
+<title>Publishing Current Release Documentation</title>
 
-<para>SCI's test web
-site is <filename>http://software2.sci.utah.edu</filename>.  Use this
-site to test documentation (from the release branch of the CVS tree)
-prior to a software release.</para> 
+<para>Documentation for the current &sr; release (from the current
+release branch of the CVS tree) is published on SCI's external web
+site.</para>
 
-<para>To publish the docs on SCI's external web site do this:
+<para>To publish docs on this web site do this:
 <orderedlist>
 <listitem>
 <para>Build a doc tarball from the sources on the release branch.
-Rename the tarball to reflect its release number,
-e.g. <filename>SCIRunDocs-1.6.1.tar.gz</filename>.</para> 
+Rename the tarball to:
+<filename>docs-<replaceable>d.d.d</replaceable>.tar.gz</filename>,
+where <replaceable>d.d.d</replaceable> is the version
+number of the documentation set contained in the tarball.</para>
 </listitem>
 <listitem>
-<para>Copy the doc tarball to the directory
-<filename>/w01/docs/scirun-biopse</filename> on
-<filename>dante.sci.utah.edu</filename>.</para>
-</listitem>
-<listitem>
-<para>Unpack the tarball using GNU tar.</para>
-</listitem>
-<listitem>
-<para>Rename the resulting directory to match the name of the tarball,
-e.g. <filename>SCIRunDocs-1.6.1</filename>.</para>
-</listitem>
-<listitem>
-<para><command>cd</command> to
-<filename>/w01/sciweb/software</filename>.</para>
-</listitem>
-<listitem>
-<para>Remove the symbolic links <filename>doc</filename> and <filename>src</filename>.</para>
-</listitem>
-<listitem>
-<para>Create new symbolic links.  The <filename>doc</filename> link
-should point to
-<filename>../../docs/scirun-biopse/&lt;doc-directory&gt;/doc</filename>
-and the <filename>src</filename> link should point to
-<filename>../../docs/scirun-biopse/&lt;doc-directory&gt;/src</filename>
-where <filename>&lt;doc-directory&gt;</filename> is the name of
-directory created (and renamed) previously.  For example:</para>
-<literallayout class="monospaced">
-ln -s ../../docs/scirun-biopse/1.6.1/doc doc
-ln -s ../../docs/scirun-biopse/1.6.1/src src
+<para>
+Log on to virgil.sci.utah.edu. <command>Cd</command> to
+<filename>/w01/docs/scirun-biopse</filename>.
+</para>
+<para>
+Move the directory named <filename>present</filename> to the
+<filename>past</filename> directory and rename it to reflect the
+version of the docs contained therein, e.g.:
+<literallayout>
+mv present past/1.6.1.
 </literallayout>
+</para>
+</listitem>
+<listitem>
+<para>
+Create a new <filename>present</filename> directory. Copy the new
+doc tarball to it.
+</para>
+</listitem>
+<listitem>
+<para>
+<command>Cd</command> to <filename>present</filename> and unpack the
+tarball using GNU tar.
+</para>
+<para>
+The resulting directory will contain <filename>doc</filename> and
+<filename>src</filename> sub-directories.  Move
+<filename>doc</filename> and <filename>src</filename> up one level (so
+they are children of <filename>present</filename>).  Remove the
+remaining empty directory from <filename>present</filename>.
+</para>
 </listitem>
 </orderedlist>
 </para>
+
+<note>
+<para>
+The symbolic links <filename>/w01/sciweb/software/doc</filename> and
+<filename>/w01/sciweb/software/src</filename> must exist and must
+point to <filename>/w01/docs/scirun-biopse/present/doc</filename> and
+<filename>/w01/docs/scirun-biopse/present/src</filename>
+respectively.  Verify that this is so.
+</para>
+</note>
 
 </section>
 
 <section>
-<title>Publishing to SCI's External Web Site.</title>
+<title>Publishing <quote>Trunk</quote> Documentation</title>
 
-<para>&sr; documentation for the current &sr; release (from the
-current release branch of the CVS tree) is published to the external
-web site.</para>
+<para>
+Documentation under developement (for a future &sr; release) is
+derived from the trunk of the CVS tree and is published on SCI's
+external web site.
+</para>
 
-<para>To publish the docs on SCI's external web site do this:
+<para>
+To publish docs on this web site do this:
 <orderedlist>
 <listitem>
-<para>Build a doc tarball from the sources on the release branch.
-Rename the tarball to reflect its release number,
-e.g. <filename>SCIRunDocs-1.6.1.tar.gz</filename>.</para> 
+<para>
+Build a doc tarball from the sources on the trunk.
+Rename the tarball to:
+<filename>docs-<replaceable>d.d.d</replaceable>.tar.gz</filename>,
+where <replaceable>d.d.d</replaceable> is the version
+number of the documentation set contained in the tarball.
+</para>
 </listitem>
 <listitem>
-<para>Copy the doc tarball to the directory
-<filename>/w01/docs/scirun-biopse</filename> on
-<filename>virgil.sci.utah.edu</filename>.</para>
+<para>
+Log on to virgil.sci.utah.edu. <command>Cd</command> to
+<filename>/w01/docs/scirun-biopse</filename>.
+</para>
+<para>
+Delete the current contents of the directory named
+<filename>future</filename>.  Copy the new doc tarball to
+<filename>future</filename>.
+</para>
 </listitem>
 <listitem>
-<para>Unpack the tarball using GNU tar.</para>
-</listitem>
-<listitem>
-<para>Rename the resulting directory to match the name of the tarball,
-e.g. <filename>SCIRunDocs-1.6.1</filename>.</para>
-</listitem>
-<listitem>
-<para><command>Cd</command> to
-<filename>/w01/sciweb/software</filename>.</para>
-</listitem>
-<listitem>
-<para>Remove the symbolic links <filename>doc</filename> and <filename>src</filename>.</para>
-</listitem>
-<listitem>
-<para>Create new symbolic links.  The  <filename>doc</filename> link
-should point to
-<filename>../../docs/scirun-biopse/&lt;doc-directory&gt;/doc</filename>
-and the <filename>src</filename> link
-should point to
-<filename>../../docs/scirun-biopse/&lt;doc-directory&gt;/src</filename>
-where <filename>&lt;doc-directory&gt;</filename> is the name of
-directory created (and renamed) previously.  For example:</para>
-<literallayout class="monospaced">
-ln -s ../../docs/scirun-biopse/1.6.1/doc doc
-ln -s ../../docs/scirun-biopse/1.6.1/src src
-</literallayout>
+<para>
+<command>Cd</command> to <filename>future</filename> and unpack the
+tarball using GNU tar.
+</para>
+<para>
+The resulting directory will contain <filename>doc</filename> and
+<filename>src</filename> sub-directories.  Move
+<filename>doc</filename> and <filename>src</filename> up one level (so
+they are children of <filename>future</filename>).  Remove the
+remaining empty directory from <filename>future</filename>.
+</para>
 </listitem>
 </orderedlist>
 </para>
+<note>
+<para>
+The symbolic link <filename>/w01/sciweb/software/future</filename>
+must exist and must point to
+<filename>/w01/docs/scirun-biopse/future</filename>.
+Verify that this is so.
+</para>
+</note>
 
+</section>
+
+<section>
+<title>Publishing Pre-release Documentation</title> 
+
+<para>
+Pre-release documentation is documentation derived from a branch which
+has been created in anticipation of a new &sr; release.  Is is
+published on the pre-release web site so that it may be tested and
+debugged prior to a release of &sr;
+</para>
+
+<para>To publish pre-release docs do this:
+<orderedlist>
+<listitem>
+<para>Build a doc tarball from the sources on the newly created branch.
+Rename the tarball to:
+<filename>docs-<replaceable>d.d.d</replaceable>.tar.gz</filename>,
+where <replaceable>d.d.d</replaceable> is the version
+number of the documentation set contained in the tarball.</para>
+</listitem>
+<listitem>
+<para>
+Log on to virgil.sci.utah.edu. <command>Cd</command> to
+<filename>/w01/docs/scirun-biopse</filename>.
+</para>
+<para>
+Delete the current contents of the directory named
+<filename>pre-release</filename>.  Copy the doc tarball to
+<filename>pre-release</filename>.
+</para>
+</listitem>
+<listitem>
+<para>
+<command>Cd</command> to <filename>pre-release</filename> and unpack the
+tarball using GNU tar.
+</para>
+<para>
+The resulting directory will contain <filename>doc</filename> and
+<filename>src</filename> sub-directories.  Move
+<filename>doc</filename> and <filename>src</filename> up one level (so
+they are children of <filename>pre-release</filename>).  Remove the
+remaining empty directory from <filename>future</filename>.
+</para>
+</listitem>
+</orderedlist>
+</para>
+<note>
+<para>
+The symbolic link <filename>/w01/sciweb/software/pre-release</filename>
+must exist and must point to the directory 
+<filename>/w01/docs/scirun-biopse/pre-release</filename>.
+Verify that this is so.
+</para>
+</note>
+
+<para>
+The pre-release site should be updated appropriately until the new
+version of &sr; is released.  After release the
+<filename>pre-release</filename> directory should be emptied and the
+<filename>present</filename> directory should be updated with
+documentation for the new release.
+</para>
 </section>
 
 </section>
@@ -1470,7 +1536,9 @@ tar must be used to extract documentation from its tarball.</para>
 <para>Saxon is an XSLT processor which applies XSL stylesheets to XML
 sources to translate them to other forms (e.g. HTML).  Saxon is written in
 Java.  Saxon is used to translate the Developers guide, the Installation
-guide, the FAQ book, and the XML based module descriptions to HTML and &ltx;.</para>
+guide, the FAQs, and the XML based module descriptions to HTML and
+&ltx;.
+</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -1499,12 +1567,13 @@ documentation from C++ source files.</para>
 Sheets</ulink> (1.51.1)</term>
 <listitem>
 <para>The &dbk; stylesheets translate &dbk; XML documents (Developers
-guide and Installation guide) to HTML.</para> 
-<para>There are 3 &sr;
-specific stylesheets that must be copied into the &dbk; distribution. The
-files <filename>doc/Utilities/XML/srdocbook.xsl</filename>,
-<filename>doc/Utilities/XML/srdocbook-common.xsl</filename>, and
-<filename>doc/Utilities/XML/srdocbook-chunk.xsl</filename> must be copied
+Guide, Installation Guide, and FAQs) to HTML.</para> <para>There are 4
+&sr; specific stylesheets that must be copied into the &dbk;
+distribution. The files
+<filename>doc/Utilities/XML/srdocbook.xsl</filename>,
+<filename>doc/Utilities/XML/srdocbook-common.xsl</filename>,
+<filename>doc/Utilities/XML/srdocbook-chunk.xsl</filename>, and
+<filename>doc/Utilities/XML/srqandaset.xsl</filename> must be copied
 to the <filename>html</filename> directory of the &dbk;
 distribution.</para>
 </listitem>
@@ -1513,7 +1582,8 @@ distribution.</para>
 <term><ulink url="http://www.pragmaticprogrammer.com/ruby/">Ruby</ulink> (1.6
 or later)</term>
 <listitem>
-<para>A number of scripts in the doc tree are written in the programming language Ruby.</para>
+<para>A number of scripts in the doc tree are written in the
+programming language Ruby.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -1551,8 +1621,6 @@ printable version of the users guide.</para>
 <para>The following sections present a never ending list of things to
 be done.</para>
 
-
-
 <section>
 <title>User Docs</title>
 <itemizedlist>
@@ -1581,13 +1649,7 @@ be done.</para>
 <title>FAQs</title>
 <itemizedlist>
 <listitem>
-<para>FAQs are out of date.  Need a volunteer to cull out the cruft.</para>
-</listitem>
-<listitem>
-<para>Convert FAQs to DocBook QandA Set documents.  Doing this allows
-me to get rid of the FAQBook directory as each FAQ can be self
-contained within its own article or as an appendix as part of a
-Book.</para>
+<para>FAQs need reqular maintenance.</para>
 </listitem>
 </itemizedlist>
 </section>
@@ -1612,6 +1674,38 @@ stylesheets.</para>
 </listitem>
 </itemizedlist>
 
+</section>
+
+<section>
+<title>Changes to <filename>component.dtd</filename></title>
+<para>
+Modify <filename>component.dtd</filename> in the following ways:
+<itemizedlist>
+<listitem>
+<para>Replace <sgmltag class="starttag">examplesr</sgmltag> element
+with the <sgmltag class="starttag">docnet</sgmltag> element as
+proposed by Marty.</para>
+</listitem>
+<listitem>
+<para>Enhance <sgmltag class="starttag">description</sgmltag> element
+to allow the <sgmltag class="starttag">img</sgmltag> element.</para>
+</listitem>
+<listitem>
+<para>Don't require that the basic flow patterns start with a <sgmltag
+class="starttag">p</sgmltag> element.</para>
+</listitem>
+<listitem>
+<para>Add <quote>id</quote> attribute to all
+elements and then:</para>
+
+<para>Replace <sgmltag class="starttag">slink</sgmltag> and <sgmltag
+class="starttag">rlink</sgmltag> elements with <sgmltag
+class="starttag">ulink</sgmltag> (for url style links) and <sgmltag
+class="starttag">link</sgmltag> (for intra document
+links).</para>
+</listitem>
+</itemizedlist>
+</para>
 </section>
 
 </section>
