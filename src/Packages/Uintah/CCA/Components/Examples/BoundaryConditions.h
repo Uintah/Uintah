@@ -3,7 +3,7 @@
 #define Packages_Uintah_CCA_Components_Examples_BoundaryConditions_h
 
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/Grid/GeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
