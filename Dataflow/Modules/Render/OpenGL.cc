@@ -1276,6 +1276,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
 	  unsigned int hp2=pick_buffer[idx++];
 	  hit_obj=((long)hp1<<32)|hp2;
 	  //hit_pick_index = pick_buffer[idx++];
+	  idx++;
 #else
 	  // hit_obj=pick_buffer[idx++];
 	  // hit_obj_index=pick_buffer[idx++];
@@ -1283,6 +1284,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
 	  idx+=nnames-3; // Skip to the last one...
 	  hit_pick=pick_buffer[idx++];
 	  hit_obj=pick_buffer[idx++];
+	  idx++;
 	  //hit_pick_index=pick_buffer[idx++];
 #endif
 	  //cerr << "new min... (obj=" << hit_obj
