@@ -42,7 +42,8 @@
 #include <SCIRun/Dataflow/SCIRunComponentInstance.h>
 #include <Dataflow/Network/Module.h>
 #include <iostream>
-using namespace SCIRun;
+
+namespace SCIRun {
 
 SCIRunUIPort::SCIRunUIPort(SCIRunComponentInstance* component)
   : component(component)
@@ -57,8 +58,8 @@ int SCIRunUIPort::ui()
 {
   Module* module = component->getModule();
   module->popupUI();
-  cerr<<"Warning: need return correct value (0 success, -1 fatal error, other values for other errors !\n";
+  std::cerr << "Warning: need return correct value (0 success, -1 fatal error, other values for other errors !" << std::endl;
   return 0;
 }
 
-
+} // end namespace SCIRun

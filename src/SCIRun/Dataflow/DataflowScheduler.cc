@@ -43,11 +43,11 @@
 #include <SCIRun/SCIRunFramework.h>
 #include <Dataflow/Network/Network.h>
 
-using namespace SCIRun;
+namespace SCIRun {
 
 DataflowScheduler::DataflowScheduler(SCIRunFramework* framework,
                                      const std::string& name,
-				     Scheduler* _sched)
+                                     Scheduler* _sched)
   : InternalComponentInstance(framework, name, "internal:DataflowScheduler"), 
     sched(_sched)
 {
@@ -58,9 +58,10 @@ DataflowScheduler::~DataflowScheduler()
 }
 
 InternalComponentInstance* DataflowScheduler::create(SCIRunFramework* framework,
-						     const std::string& name)
+                                                     const std::string& name)
 {
-  DataflowScheduler* n = new DataflowScheduler(framework, name, framework->dflow->net->get_scheduler());
+  DataflowScheduler* n = new DataflowScheduler(framework, name,
+                                               framework->dflow->net->get_scheduler());
   n->addReference();
   return n;
 }
@@ -79,3 +80,5 @@ void DataflowScheduler::do_scheduling()
 { 
   sched->do_scheduling();
 }
+
+} // end namespace SCIRun

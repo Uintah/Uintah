@@ -41,13 +41,13 @@
 #include <SCIRun/Dataflow/SCIRunComponentDescription.h>
 #include <SCIRun/Dataflow/SCIRunComponentModel.h>
 #include <iostream>
-using namespace std;
-using namespace SCIRun;
+
+namespace SCIRun {
 
 SCIRunComponentDescription::SCIRunComponentDescription(SCIRunComponentModel* model,
-						       const std::string& package,
-						       const std::string& category,
-						       const std::string& module)
+                                                       const std::string& package,
+                                                       const std::string& category,
+                                                       const std::string& module)
   : model(model), package(package), category(category), module(module)
 {
 }
@@ -56,7 +56,7 @@ SCIRunComponentDescription::~SCIRunComponentDescription()
 {
 }
 
-string SCIRunComponentDescription::getType() const
+std::string SCIRunComponentDescription::getType() const
 {
   return package+"."+category+"."+module;
 }
@@ -65,3 +65,5 @@ const ComponentModel* SCIRunComponentDescription::getModel() const
 {
   return model;
 }
+
+} // end namespace SCIRun

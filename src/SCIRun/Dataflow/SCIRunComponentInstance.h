@@ -47,42 +47,57 @@
 #include <vector>
 
 namespace SCIRun {
-  class CCAPortInstance;
-  class Module;
-  class SCIRunComponentInstance : public ComponentInstance {
+class CCAPortInstance;
+class Module;
+
+
+/**
+ * \class SCIRunComponentInstance
+ *
+ * A handle for an instantiation of a SCIRun dataflow component in the SCIRun
+ * framework. This class is a container for information about a SCIRun dataflow
+ * component instantiation that is used by the framework.
+ */
+class SCIRunComponentInstance : public ComponentInstance
+{
+public:
+  SCIRunComponentInstance(SCIRunFramework* fwk,
+                          const std::string& instanceName,
+                          const std::string& className,
+                          Module* module);
+  virtual ~SCIRunComponentInstance();
+  
+  // Methods from ComponentInstance
+  /** Returns a uses or provides port instance named \em name.  If no such port
+      exists, returns a null pointer.*/
+  virtual PortInstance* getPortInstance(const std::string& name);
+  /** Returns an iterator for the list of ports associated with this component. */
+  virtual PortInstanceIterator* getPorts();
+
+  /** ? */
+  Module* getModule()
+  {  return module;  }
+private:
+  class Iterator : public PortInstanceIterator {
   public:
-    SCIRunComponentInstance(SCIRunFramework* fwk,
-			    const std::string& instanceName,
-			    const std::string& className,
-			    Module* module);
-    virtual ~SCIRunComponentInstance();
-
-    // Methods from ComponentInstance
-    virtual PortInstance* getPortInstance(const std::string& name);
-    virtual PortInstanceIterator* getPorts();
-    Module* getModule() {
-      return module;
-    }
+    Iterator(SCIRunComponentInstance*);
+    virtual ~Iterator();
+    virtual PortInstance* get();
+    virtual bool done();
+    virtual void next();
   private:
-    class Iterator : public PortInstanceIterator {
-    public:
-      Iterator(SCIRunComponentInstance*);
-      virtual ~Iterator();
-      virtual PortInstance* get();
-      virtual bool done();
-      virtual void next();
-    private:
-      Iterator(const Iterator&);
-      Iterator& operator=(const Iterator&);
-
-      SCIRunComponentInstance* component;
+    Iterator(const Iterator&);
+    Iterator& operator=(const Iterator&);
+    
+    SCIRunComponentInstance* component;
       int idx;
-    };
-    Module* module;
-    std::vector<CCAPortInstance*> specialPorts;
-    SCIRunComponentInstance(const SCIRunComponentInstance&);
-    SCIRunComponentInstance& operator=(const SCIRunComponentInstance);
   };
-}
+  Module* module;
+  std::vector<CCAPortInstance*> specialPorts;
+  SCIRunComponentInstance(const SCIRunComponentInstance&);
+  SCIRunComponentInstance& operator=(const SCIRunComponentInstance);
+};
+
+} // end namespace SCIRun
 
 #endif
