@@ -271,6 +271,13 @@ void Element::get_sphere2(Point& cen, double& rad2)
     rad2=(p0-cen).length2();
 }
 
+void Mesh::detach_nodes()
+{
+    for(int i=0;i<nodes.size();i++)
+	if(nodes[i].get_rep())
+	    nodes[i].detach();
+}
+
 void Mesh::compute_neighbors()
 {
     // Clear old neighbors...
@@ -281,10 +288,14 @@ void Mesh::compute_neighbors()
     for(i=0;i<elems.size();i++){
 	Element* elem=elems[i];
 	if(elem){
-	    nodes[elem->n[0]]->elems.add(i);
-	    nodes[elem->n[1]]->elems.add(i);
-	    nodes[elem->n[2]]->elems.add(i);
-	    nodes[elem->n[3]]->elems.add(i);
+	    if(nodes[elem->n[0]].get_rep())
+		nodes[elem->n[0]]->elems.add(i);
+	    if(nodes[elem->n[1]].get_rep())
+		nodes[elem->n[1]]->elems.add(i);
+	    if(nodes[elem->n[2]].get_rep())
+		nodes[elem->n[2]]->elems.add(i);
+	    if(nodes[elem->n[3]].get_rep())
+		nodes[elem->n[3]]->elems.add(i);
 	}
     }
     // Reset face neighbors
@@ -1079,6 +1090,8 @@ void Mesh::pack_elems()
 	    for(int j=0;j<ne;j++){
 		int elem=n->elems[j];
 		int new_elem=map[elem];
+		if(new_elem == -1234)
+		    cerr << "Warning: pointing to old element: " << elem << endl;
 		n->elems[j]=new_elem;
 	    }
 	}
@@ -1088,6 +1101,8 @@ void Mesh::pack_elems()
 	for(int j=0;j<4;j++){
 	    int face=e->faces[j];
 	    if(face>=0){
+		if(map[face] == -1234)
+		    cerr << "Warning: pointing to old element: " << e->faces[j] << endl;
 		e->faces[j]=map[face];
 	    }
 	}
@@ -1115,10 +1130,19 @@ void Mesh::pack_nodes()
 	Element* e=elems[i];
 	if(e){
 	    for(int j=0;j<4;j++){
+		if(map[e->n[j]]==-1234)
+		    cerr << "Warning: pointing to old node: " << e->n[j] << endl;
 		e->n[j]=map[e->n[j]];
 	    }
 	}
     }
+}
+
+void Mesh::pack_all()
+{
+    compute_neighbors();
+    pack_nodes();
+    pack_elems();
 }
 
 void Mesh::remove_delaunay(int node, int fill)

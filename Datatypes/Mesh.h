@@ -97,6 +97,7 @@ public:
     virtual Mesh* clone();
     virtual ~Mesh();
 
+    void detach_nodes();
     void compute_neighbors();
     int locate(const Point&, int&);
     int inside(const Point& p, Element* elem);
@@ -113,6 +114,7 @@ public:
     void remove_delaunay(int node, int fill);
     void pack_nodes();
     void pack_elems();
+    void pack_all();
     int face_idx(int, int);
     void add_node_neighbors(int node, Array1<int>& idx);
 

@@ -30,7 +30,9 @@ public:
     MultiMesh(const MultiMesh&);
     virtual MultiMesh *clone();
     virtual ~MultiMesh();
-    inline void add_mesh(const MeshHandle &m, int i) {meshes[i]=m->clone();}
+    inline void add_mesh(const MeshHandle &m, int i) {
+	meshes[i]=m->clone();
+    }
     void clean_up();
     void io(Piostream&);
     static PersistentTypeID type_id;

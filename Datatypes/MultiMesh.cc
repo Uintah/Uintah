@@ -36,12 +36,12 @@ MultiMesh::~MultiMesh() {
 void MultiMesh::clean_up() {
 
     for (int i=0; i<meshes.size(); i++) {
+	meshes[i]->compute_neighbors();
 	meshes[i]->remove_delaunay(0,0);
 	meshes[i]->remove_delaunay(1,0);
 	meshes[i]->remove_delaunay(2,0);
 	meshes[i]->remove_delaunay(3,0);
-	meshes[i]->pack_nodes();
-	meshes[i]->compute_neighbors();
+	meshes[i]->pack_all();
     }
 }
     
