@@ -27,282 +27,409 @@ public:
 
   virtual void execute();
   virtual void do_execute();
-  virtual void tcl_command(GuiArgs&, void*);
+
 private:
   vector<GeometryComm*> msg_heads_;
   vector<GeometryComm*> msg_tails_;
-  vector<int> portno_map_;
+  vector<int> physical_portno_;
+  vector<map<GeomID, GeomID, less<GeomID> > > geom_ids_;
 
-  int num_of_IPorts_;
   int max_portno_;
-  int init_ports_;
 
-  GeometryOPort * ogeom_;
+  GeometryOPort *ogeom_;
 
   GuiInt gui_enforce_;
 
-  int enforce_barrier(MessageBase* message);
+  int process_event(MessageBase* message);
   void forward_saved_msg();
   void flush_all_msgs();
-  inline void append_msg(GeometryComm* gmsg);
-  inline void flush_port(int portno);
-  inline int get_enforce();
-  inline bool init_ports();
+  void append_msg(GeometryComm* gmsg);
+  bool flush_port(int portno, int count);
 };
+
 
 
 DECLARE_MAKER(SynchronizeGeometry)
 SynchronizeGeometry::SynchronizeGeometry(GuiContext* ctx)
   : Module("SynchronizeGeometry", ctx, Filter, "Render", "SCIRun"),
+    max_portno_(0),
     gui_enforce_(ctx->subVar("enforce"))
 {
-  have_own_dispatch=true;
-  max_portno_ = 0;
-  init_ports_ = 0;
+  have_own_dispatch = true;
 }
 
-SynchronizeGeometry::~SynchronizeGeometry(){
+
+
+SynchronizeGeometry::~SynchronizeGeometry()
+{
 }
 
-void SynchronizeGeometry::execute() {
+
+
+void
+SynchronizeGeometry::execute()
+{
 }
 
-void SynchronizeGeometry::do_execute() {
-  MessageBase* msg;
 
-  ogeom_ = (GeometryOPort*)getOPort("OutputGeometry");
 
-  if(ogeom_ == NULL) 
-    cout << "ogeom_ is NULL" << std::endl; cout.flush();
+void
+SynchronizeGeometry::do_execute()
+{
+  ogeom_ = (GeometryOPort*)getOPort("Output Geometry");
 
-  for(;;){
-    msg = mailbox.receive();
-    if(enforce_barrier(msg) == 86) {
+  if (ogeom_ == NULL)
+  {
+    error("Unable to initialize iport 'Output Geometry");
+    return;
+  }
+
+  for (;;)
+  {
+    MessageBase *msg = mailbox.receive();
+    if (process_event(msg) == 86)
+    {
       return;
     }
   }
-
 }
 
-int SynchronizeGeometry::enforce_barrier(MessageBase* message) {
-  int enforce = 1;
-  int new_enforce;
-  int portno;
-  MessageBase* msg;
-  GeometryComm* gmsg;
 
-  msg = message;
-  gmsg = (GeometryComm*)msg;
 
-  switch(msg->type) {
+int
+SynchronizeGeometry::process_event(MessageBase* msg)
+{
+  GeometryComm* gmsg = (GeometryComm*)msg;
+
+  switch (msg->type)
+  {
   case MessageTypes::GoAway:
     return 86;
+
   case MessageTypes::GeometryInit:
     gmsg->reply->send(GeomReply(max_portno_));
-    portno_map_.push_back(-1);
+    physical_portno_.push_back(numIPorts()-1);
+    max_portno_++;
     msg_heads_.push_back(NULL);
     msg_tails_.push_back(NULL);
-    max_portno_++;
-    init_ports_++;
-    init_ports();
+    geom_ids_.push_back(map<GeomID, GeomID, less<GeomID> >());
     break;
-  case MessageTypes::GeometryDelObj:
-  case MessageTypes::GeometryDelAll:
-  case MessageTypes::GeometryAddObj:
-    if(!init_ports())
-      break;
-    portno = gmsg->portno;
 
-    new_enforce = get_enforce();
-    if(new_enforce) 
-      append_msg(gmsg);
-    else {
-      gmsg->portno = portno_map_[portno];
-      if(enforce != new_enforce)
+  case MessageTypes::GeometryDetach:
+    {
+      // Remove all of the gmsg->portno objects
+      map<GeomID, GeomID, less<GeomID> >::iterator itr;
+      itr = geom_ids_[gmsg->portno].begin();
+      int counter = 0;
+      while (itr != geom_ids_[gmsg->portno].end())
+      {
+	ogeom_->delObj((*itr).second);
+	++itr;
+	counter++;
+      }
+      geom_ids_[gmsg->portno].clear();
+      if (counter) { ogeom_->flush(); }
+
+      // Maybe still connected geometries are now in sync?
+      gui_enforce_.reset();
+      if (gui_enforce_.get())
+      {
+	forward_saved_msg();
+      }
+      else
+      {
 	flush_all_msgs();
-      if(!(ogeom_->direct_forward(gmsg)))
-	delete gmsg;
-    }
-    enforce = new_enforce;
-    msg = 0;
-    break;
-  case MessageTypes::GeometryFlush:
-  case MessageTypes::GeometryFlushViews:
-    if(!init_ports())
-      break;
-    portno = gmsg->portno;
+      }
 
-    new_enforce = get_enforce();
-    if(new_enforce) {
+      // Fix the portnos.
+      for (unsigned int i=gmsg->portno + 1; i < physical_portno_.size(); i++)
+      {
+	if (physical_portno_[i] != -1) { physical_portno_[i]--; }
+      }
+      physical_portno_[gmsg->portno] = -1;
+
+      // Push changed portno strings to output port?
+    }
+    break;
+
+  case MessageTypes::GeometryDelAll:
+    gui_enforce_.reset();
+    if (gui_enforce_.get())
+    {
+      append_msg(gmsg);
+      msg = 0;
+    }
+    else
+    {
+      flush_all_msgs();
+      map<GeomID, GeomID, less<GeomID> >::iterator itr;
+      itr = geom_ids_[gmsg->portno].begin();
+      while (itr != geom_ids_[gmsg->portno].end())
+      {
+	ogeom_->delObj((*itr).second);
+	++itr;
+      }
+      geom_ids_[gmsg->portno].clear();
+    }
+    break;
+
+  case MessageTypes::GeometryDelObj:
+    gui_enforce_.reset();
+    if (gui_enforce_.get())
+    {
+      append_msg(gmsg);
+      msg = 0;
+    }
+    else
+    {
+      flush_all_msgs();
+      // TODO: verify id found in map.
+      ogeom_->delObj(geom_ids_[gmsg->portno][gmsg->serial]);
+      geom_ids_[gmsg->portno].erase(gmsg->serial);
+    }
+    break;
+    break;
+
+  case MessageTypes::GeometryAddObj:
+    gui_enforce_.reset();
+    if (gui_enforce_.get())
+    {
+      append_msg(gmsg);
+      msg = 0;
+    }
+    else
+    {
+      flush_all_msgs();
+      const string pnum = to_string(physical_portno_[gmsg->portno]);
+      const string newname =  gmsg->name + " (" + pnum + ")";
+      const GeomID id = ogeom_->addObj(gmsg->obj, newname);
+      geom_ids_[gmsg->portno][gmsg->serial] = id;
+    }
+    break;
+
+  case MessageTypes::GeometryFlush:
+    gui_enforce_.reset();
+    if (gui_enforce_.get())
+    {
       append_msg(gmsg);
       forward_saved_msg();
-    } else {
-      gmsg->portno = portno_map_[portno];      
-      if(enforce != new_enforce)
-	flush_all_msgs();
-      if(!(ogeom_->direct_forward(gmsg)))
-	delete gmsg;
+      msg = 0;
     }
-    enforce = new_enforce;
-    msg = 0;
+    else
+    {
+      flush_all_msgs();
+      ogeom_->flush();
+    }
+    break;
+
+  case MessageTypes::GeometryFlushViews:
+    gui_enforce_.reset();
+    if (gui_enforce_.get())
+    {
+      append_msg(gmsg);
+      forward_saved_msg();
+      msg = 0;
+    }
+    else
+    {
+      flush_all_msgs();
+      ogeom_->flushViews();
+    }
+    break;
+
+  case MessageTypes::ExecuteModule:
+    gui_enforce_.reset();
+    if (!gui_enforce_.get())
+    {
+      flush_all_msgs();
+    }
     break;
 
   default:
     break;
   }
 
-  if(msg)
+  if (msg)
+  {
     delete msg;
+  }
 
   return 0;
 }
 
-inline 
-bool 
-SynchronizeGeometry::init_ports() 
+
+
+void
+SynchronizeGeometry::append_msg(GeometryComm* gmsg)
 {
-  if(init_ports_ == 0)
-    return true;
-
-  Connection* connection;
-  if(ogeom_->nconnections()==0)
-    return false;
-  else
-    connection = ogeom_->connection(0);
-
-  if(connection == 0)
-    return false;
-
-  int i, portno;
-  for(i=0; i<init_ports_; i++) {
-    Mailbox<GeomReply> *tmp = 
-      new Mailbox<GeomReply>("Temporary GeometryOPort mailbox", 1);    
-    ogeom_->forward(scinew GeometryComm(tmp));
-    GeomReply reply = tmp->receive();
-    portno=reply.portid;
-    portno_map_[max_portno_ - init_ports_ + i] = portno;
-  }
-
-  init_ports_ = 0;
-
-  return true;
-}
-
-inline int SynchronizeGeometry::get_enforce() {
-  string enforce_string;
-  gui->get(id+"-enforce",enforce_string);
-  return (atoi(enforce_string.c_str()));
-}
-
-inline void SynchronizeGeometry::append_msg(GeometryComm* gmsg) {
   int portno = gmsg->portno;
-    
+
   gmsg->next = NULL;
-  if(msg_heads_[portno]) {
+  if (msg_heads_[portno])
+  {
     msg_tails_[portno]->next = gmsg;
     msg_tails_[portno] = gmsg;
   }
-  else {
+  else
+  {
     msg_heads_[portno] = msg_tails_[portno] = gmsg;
   }
-
-  gmsg->portno = portno_map_[portno];
-    
 }
 
-void SynchronizeGeometry::forward_saved_msg() {
-  int i,num_flush;
-  GeometryComm* tmp_gmsg;
 
-  num_flush = 0;
-  for(i = 0; i < max_portno_; i++){
-    tmp_gmsg = msg_heads_[i];
-    while(tmp_gmsg) {
-      if(tmp_gmsg->type == MessageTypes::GeometryFlush ||
-	 tmp_gmsg->type == MessageTypes::GeometryFlushViews){
-	num_flush++;
-	break;
-      }
-      tmp_gmsg = tmp_gmsg->next;
-    }
-  }
-
-  num_of_IPorts_ = this->numIPorts();
-  if(num_flush == num_of_IPorts_ - 1) {
-    for(i = 0; i < max_portno_; i++){
-      tmp_gmsg = msg_heads_[i];
-      bool flushport = false;
-      while(tmp_gmsg){	
-	if(tmp_gmsg->type == MessageTypes::GeometryFlush ||
-	   tmp_gmsg->type == MessageTypes::GeometryFlushViews) {
-	  flushport = true;
-	  break;
-	} else
-	  tmp_gmsg = tmp_gmsg->next;
-      }
-      if(flushport)
-	flush_port(i);
-
-      tmp_gmsg=msg_heads_[i];
-      while(tmp_gmsg &&
-	    (tmp_gmsg->type == MessageTypes::GeometryFlush ||
-	     tmp_gmsg->type == MessageTypes::GeometryFlushViews)) {
-	flush_port(i);
-	tmp_gmsg = msg_heads_[i];
-      }
-    }
-  } 
-}
-
-inline void SynchronizeGeometry::flush_port(int portno) {
-  bool delete_msg;
-  GeometryComm* gmsg,*gmsg2;
-  gmsg = msg_heads_[portno];
-  while(gmsg){
-    delete_msg = false;
-    if(!(ogeom_->direct_forward(gmsg)))
-      delete_msg  = true;
-
-    if(gmsg->type == MessageTypes::GeometryFlush ||
-       gmsg->type == MessageTypes::GeometryFlushViews)  {
-
-      msg_heads_[portno] = gmsg->next;
-      if(gmsg->next == NULL)
-	msg_tails_[portno] = NULL;
-      
-      if(delete_msg)
-	delete gmsg;
-
-      break;
-    } else {
-      gmsg2 = gmsg;
-      gmsg = gmsg->next;
-      if(delete_msg)
-	delete gmsg2;
-
-    }
-  }
-}
-
-void SynchronizeGeometry::flush_all_msgs() {
-  int i;
-  GeometryComm* gmsg;
-  for(i = 0; i < max_portno_; i++){
-    gmsg = msg_heads_[i];
-    while(gmsg) {
-      if(!(ogeom_->direct_forward(gmsg)))
-	delete gmsg;
-      gmsg = gmsg->next;
-    }
-
-    msg_heads_[i] = msg_tails_[i] = NULL;
-  }
-}
 
 void
-SynchronizeGeometry::tcl_command(GuiArgs& args, void* userdata)
+SynchronizeGeometry::forward_saved_msg()
 {
-  Module::tcl_command(args, userdata);
+  ostringstream str;
+  str << " Checking " << max_portno_ << " ports.";
+  remark( str.str() );
+
+  int i, num_flush, valid;
+
+  num_flush = 0;
+  valid = 0;
+  for (i = 0; i < max_portno_; i++)
+  {
+    if (physical_portno_[i] != -1)
+    {
+      valid++;
+      GeometryComm *tmp_gmsg = msg_heads_[i];
+      while (tmp_gmsg)
+      {
+	if (tmp_gmsg->type == MessageTypes::GeometryFlush ||
+	    tmp_gmsg->type == MessageTypes::GeometryFlushViews)
+	{
+	  num_flush++;
+
+	  ostringstream str;
+	  str << "  port " << i << " is ready.";
+	  remark( str.str() );
+	  break;
+	}
+	tmp_gmsg = tmp_gmsg->next;
+      }
+    }
+  }
+
+  if (num_flush == valid)
+  {
+    remark( " All were ready, flushing." );
+    bool some = false;
+    for (i = 0; i < max_portno_; i++)
+    {
+      if (physical_portno_[i] != -1)
+      {
+	some |= flush_port(i, 1);
+      }
+    }
+    if (some) { ogeom_->flush(); }
+
+    update_progress(1.0);
+    update_state(Completed);
+  }
+  else
+  {
+    update_progress(num_flush, numIPorts() - 1);
+  }
 }
+
+
+
+bool
+SynchronizeGeometry::flush_port(int portno, int count)
+{
+  GeometryComm *gmsg = msg_heads_[portno];
+  const bool some = gmsg;
+  while (gmsg)
+  {
+    // Process messages here.
+    // GeometryDelAll
+    if (gmsg->type == MessageTypes::GeometryDelAll)
+    {
+      map<GeomID, GeomID, less<GeomID> >::iterator itr;
+      itr = geom_ids_[gmsg->portno].begin();
+      while (itr != geom_ids_[gmsg->portno].end())
+      {
+	ogeom_->delObj((*itr).second);
+	++itr;
+      }
+      geom_ids_[gmsg->portno].clear();
+    }
+
+    // GeometryDelObj
+    else if (gmsg->type == MessageTypes::GeometryDelObj)
+    {
+      // TODO: verify id found in map.
+      ogeom_->delObj(geom_ids_[gmsg->portno][gmsg->serial]);
+      geom_ids_[gmsg->portno].erase(gmsg->serial);
+    }
+
+    // GeometryAddObj
+    else if (gmsg->type == MessageTypes::GeometryAddObj)
+    {
+      const string pnum = to_string(physical_portno_[gmsg->portno]);
+      const string newname =  gmsg->name + " (" + pnum + ")";
+      const GeomID id = ogeom_->addObj(gmsg->obj, newname);
+      geom_ids_[gmsg->portno][gmsg->serial] = id;
+    }
+
+    // Eat up the flushes.
+    else if (gmsg->type == MessageTypes::GeometryFlush ||
+	     gmsg->type == MessageTypes::GeometryFlushViews)
+    {
+      count--;
+      if (count == 0)
+      {
+	msg_heads_[portno] = gmsg->next;
+	if (gmsg->next == NULL)
+	{
+	  msg_tails_[portno] = NULL;
+	}
+	delete gmsg;
+	break;
+      }
+    }
+    else
+    {
+      // Unprocessed message.
+    }
+
+    GeometryComm *next = gmsg->next;
+    delete gmsg;
+    gmsg = next;
+  }
+
+  if (gmsg == NULL)
+  {
+    msg_heads_[portno] = NULL;
+    msg_tails_[portno] = NULL;
+  }
+
+  return some;
+}
+
+
+
+void
+SynchronizeGeometry::flush_all_msgs()
+{
+  bool some = false;
+  for (int i = 0; i < max_portno_; i++)
+  {
+    if (physical_portno_[i] != -1)
+    {
+      some |= flush_port(i, -1);
+    }
+  }
+  if (some)
+  {
+    ogeom_->flush();
+  }
+
+  update_progress(1.0);
+  update_state(Completed);
+}
+
 
 } // End namespace SCIRun
