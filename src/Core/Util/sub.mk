@@ -31,7 +31,7 @@ SRCS     += \
 	$(SRCDIR)/ModuleReporter.cc \
 	$(SRCDIR)/RCParse.cc \
 	$(SRCDIR)/RWS.cc \
-	$(SRCDIR)/sci_system.c \
+	$(SRCDIR)/sci_system.cc \
 	$(SRCDIR)/soloader.cc \
         $(SRCDIR)/Signals.cc \
 	$(SRCDIR)/Timer.cc \
