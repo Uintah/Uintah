@@ -46,6 +46,17 @@
 	<save label="tempIN"/>
         <save label="co2IN"/>
 
+	<save label="htfluxConvX"/>
+	<save label="htfluxRadX"/>
+	<save label="htfluxConvY"/>
+	<save label="htfluxRadY"/>
+	<save label="htfluxConvZ"/>
+	<save label="htfluxRadZ"/>
+	<save label="htfluxConvCC"/>
+	<save label="totHtFluxX"/>
+	<save label="totHtFluxY"/>
+	<save label="totHtFluxZ"/>
+
 	<checkpoint timestepInterval="10" cycle="2"/>
 
    </DataArchiver>
@@ -155,7 +166,7 @@
 	        <upper>[3,3,3]</upper>
 	        <resolution>[20,20,20]</resolution>
                 <extraCells>[1,1,1]</extraCells>
-		<patches>[1,1,1]</patches>
+		<patches>[2,2,2]</patches>
 	    </Box>
 	</Level>
     </Grid>
@@ -187,7 +198,7 @@
 		<denUnderrelax>1.0</denUnderrelax>
 		<first_order_drhodt>true</first_order_drhodt>
 	        <ref_point>[3,3,3]</ref_point>
-	        <radiation>false</radiation>
+	        <radiation>true</radiation>
 	        <opl>3.0</opl>
                 <discrete_ordinates>false</discrete_ordinates>
 	        <mixing_model>pdfMixingModel</mixing_model>
@@ -422,7 +433,7 @@
 
 		<cal_enthalpy>true</cal_enthalpy>
 		<EnthalpySolver>
-                    <radiation>false</radiation>
+                    <radiation>true</radiation>
                     <discrete_ordinates>false</discrete_ordinates>
                     <DORadiationModel>
 	            <opl>3.0</opl>
@@ -445,12 +456,12 @@
     <Multimaterial>
 
 	<fluidThermalConductivity>0.03</fluidThermalConductivity>
-	<heatExchange>false</heatExchange>
+	<heatExchange>true</heatExchange>
 	<turbulentPrandtNo>0.7</turbulentPrandtNo>
 	<fluidHeatCapacity>1007.</fluidHeatCapacity>
 	<IfCutCell>false</IfCutCell>
-	<StationarySolid>true</StationarySolid>
-	<inviscid>true</inviscid>
+	<StationarySolid>false</StationarySolid>
+	<inviscid>false</inviscid>
 	<restart>true</restart>
 
     </Multimaterial>
