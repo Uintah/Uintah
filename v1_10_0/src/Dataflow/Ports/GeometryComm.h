@@ -54,7 +54,7 @@ public:
     GeometryComm(Mailbox<GeomReply>*);
     GeometryComm(int, GeomID, GeomHandle,
 		 const string&, CrowdMonitor* lock);
-    GeometryComm(int, GeomID, int del);
+    GeometryComm(int, GeomID);
     GeometryComm(MessageTypes::MessageType, int);
     GeometryComm(MessageTypes::MessageType, int, Semaphore* wait);
     GeometryComm(MessageTypes::MessageType, int, int, View);
@@ -72,7 +72,6 @@ public:
     string name;
     CrowdMonitor* lock;
     Semaphore* wait;
-    int del;
     View view;
 
     GeometryComm* next;
