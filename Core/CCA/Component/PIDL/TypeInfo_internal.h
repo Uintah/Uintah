@@ -49,7 +49,7 @@ KEYWORDS
 DESCRIPTION
    The internal representation of types in PIDL.  These objects are created
    by sidl generated code, and are used by the PIDL type facility and the
-   CIA introspection facility.
+   SIDL introspection facility.
 ****************************************/
 	struct TypeInfo_internal {
 	public:
@@ -90,7 +90,7 @@ DESCRIPTION
 
 	    //////////
 	    // A pointer to the parent class type, if any.  If this
-	    // is an interface or the root class (CIA.Object), this
+	    // is an interface or the root class (SIDL.Object), this
 	    // will be 0.
 	    TypeInfo* parentclass;
 

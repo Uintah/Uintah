@@ -105,7 +105,7 @@ MxNArrayRep::MxNArrayRep(int dimno, Index* dimarr[], Reference* remote_ref)
   received = false;
 }
 
-MxNArrayRep::MxNArrayRep(CIA::array2<int>& arr, Reference* remote_ref) 
+MxNArrayRep::MxNArrayRep(SIDL::array2<int>& arr, Reference* remote_ref) 
 {
   mydimno = arr.size2();
   mydimarr = new Index* [mydimno];
@@ -125,9 +125,9 @@ MxNArrayRep::~MxNArrayRep()
   }
 }
 
-CIA::array2<int> MxNArrayRep::getArray()
+SIDL::array2<int> MxNArrayRep::getArray()
 {
-  CIA::array2<int> dist(3,mydimno);
+  SIDL::array2<int> dist(3,mydimno);
   for(int i=0; i<mydimno; i++) {
     dist[0][i] = mydimarr[i]->myfirst;
     dist[1][i] = mydimarr[i]->mylast;
