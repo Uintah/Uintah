@@ -36,6 +36,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Volume/Texture.h>
+#include <Core/Datatypes/MRLatVolField.h>
 #include <Core/Volume/TextureBrick.h>
 
 #include <iostream>
@@ -106,41 +107,126 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
 				     double gmin, double gmax,
                                      int card_mem)
 {
-  LatVolMeshHandle mesh = (LatVolMesh*)(vfield->mesh().get_rep());
-  int nx = mesh->get_ni();
-  int ny = mesh->get_nj();
-  int nz = mesh->get_nk();
-  if(vfield->basis_order() == 0) {
-    --nx; --ny; --nz;
-  }
-  int nc = gfield.get_rep() ? 2 : 1;
-  int nb[2];
-  nb[0] = gfield.get_rep() ? 4 : 1;
-  nb[1] = gfield.get_rep() ? 1 : 0;
-  Transform tform;
-  mesh->get_canonical_transform(tform);
+  if(   MRLatVolField<value_type>* vmrfield =
+      dynamic_cast< MRLatVolField< value_type >* > (vfield.get_rep()) ) {
 
-  texture->lock_bricks();
-  vector<TextureBrick*>& bricks = texture->bricks();
-  // bbox for the canonical_transform.
-  const BBox bbox(Point(0, 0, 0), Point(1, 1, 1));
-  if (nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
-      || nc != texture->nc() || card_mem != texture->card_mem() ||
-      bbox.min() != texture->bbox().min() ||
-      bbox.max() != texture->bbox().max())
-  {
-    build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
-    texture->set_size(nx, ny, nz, nc, nb);
-    texture->set_card_mem(card_mem);
+    // temporary
+    int nc = 1;
+    int nb[2] = { 1, 0 };
+    MRLatVolField<Vector>* gmrfield = 0;
+    if( gfield.get_rep() ){
+      if( gmrfield = 
+	  dynamic_cast< MRLatVolField<Vector>* > (gfield.get_rep()) ){
+	nc = 2;
+	nb[0] = 4;
+	nb[1] = 1;
+      }
+    }
+
+    
+    if( texture->nlevels() > 1 ){
+      texture->lock_bricks();
+      texture->clear();
+      texture->unlock_bricks();
+    }
+    
+    for(unsigned int i = 0 ; i < vmrfield->nlevels(); i++ ){
+      const MultiResLevel<value_type>* lev = vmrfield->level( i );
+      const MultiResLevel<Vector> * glev =
+	( gmrfield ? gmrfield->level( i ) : 0 );
+      vector<TextureBrick*> new_level;
+      if( i == texture->nlevels() ) {
+	texture->add_level(new_level);
+      }
+//       cerr<<"Texture has "<<texture->nlevels()<<" levels \n";      
+      vector<TextureBrick*>& bricks = texture->bricks(i);
+//       cerr<<"Bricks set\n";
+
+      //
+      cerr<<"Building bricks ... \n";
+      unsigned int k = 0;
+      for(unsigned int j = 0; j < lev->patches.size(); j++ ){
+	LatVolField<value_type>* vmr = lev->patches[j].get_rep(); 
+// 	cerr<<"Field grabbed value = "<<vmr<<"\n";
+	LatVolField< Vector >* gmr = ( glev ? glev->patches[j].get_rep() : 0 );
+//  	LatVolMeshHandle mesh = (LatVolMesh*)(vmr->get_typed_mesh().get_rep());
+	LatVolMeshHandle mesh = vmr->get_typed_mesh();
+// 	cerr<<"Mesh grabbed with value = "<<mesh.get_rep()<<"\n";
+	Transform tform;
+// 	cerr<<"Setting transform ... ";
+	mesh->transform(tform);
+// 	cerr<<"done!\n";
+	int nx = mesh->get_ni();
+	int ny = mesh->get_nj();
+	int nz = mesh->get_nk();
+	if(vfield->basis_order() == 0) {
+	  --nx; --ny; --nz;
+	}
+
+	
+	
+	vector<TextureBrick*> patch_bricks;
+	build_bricks(patch_bricks, nx, ny, nz, nc, nb, mesh->get_bounding_box(),
+		     card_mem);
+	
+	if( i == 0 ){
+	  texture->set_size(nx, ny, nz, nc, nb);
+	  texture->set_card_mem(card_mem);
+	  texture->set_bbox(mesh->get_bounding_box());
+	  texture->set_minmax(vmin, vmax, gmin, gmax);
+	  texture->set_transform(tform);
+	}
+// 	cerr<<"fill bricks and add to texture\n";
+	texture->lock_bricks();
+	for(k = 0; k < patch_bricks.size(); k++){
+	  fill_brick(patch_bricks[k], vmr, vmin, vmax, gmr, gmin, gmax);
+	  patch_bricks[k]->set_dirty(true);
+	  bricks.push_back( patch_bricks[k] );
+	}
+// 	cerr<<"Mesh is "<<mesh.get_rep()<<" after filled bricks\n";
+// 	cerr<<"done filling bricks\n";
+	texture->unlock_bricks();
+      }
+ 	cerr<<bricks.size()<<" bricks added to level "<<i<<"\n";
+
+//       cerr<<"done with level\n\n";
+    }
+//     cerr<<"done with field\n";
+  } else {
+    
+    LatVolMeshHandle mesh = (LatVolMesh*)(vfield->mesh().get_rep());
+    int nx = mesh->get_ni();
+    int ny = mesh->get_nj();
+    int nz = mesh->get_nk();
+    if(vfield->basis_order() == 0) {
+      --nx; --ny; --nz;
+    }
+    int nc = gfield.get_rep() ? 2 : 1;
+    int nb[2];
+    nb[0] = gfield.get_rep() ? 4 : 1;
+    nb[1] = gfield.get_rep() ? 1 : 0;
+    Transform tform;
+    mesh->transform(tform);
+    //
+    texture->lock_bricks();
+    texture->clear();
+    vector<TextureBrick*>& bricks = texture->bricks();
+    if(nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
+       || nc != texture->nc() || card_mem != texture->card_mem()) {
+      //     cerr << "REBUILD" <<  nx << " " << ny << " " << nz << " " << card_mem << endl;
+      build_bricks(bricks, nx, ny, nz, nc, nb, mesh->get_bounding_box(), card_mem);
+      texture->set_size(nx, ny, nz, nc, nb);
+      texture->set_card_mem(card_mem);
+    }
+    texture->set_bbox(mesh->get_bounding_box());
+    texture->set_minmax(vmin, vmax, gmin, gmax);
+    texture->set_transform(tform);
+    for(unsigned int i=0; i<bricks.size(); i++) {
+      fill_brick(bricks[i], vfield, vmin, vmax, gfield, gmin, gmax);
+      bricks[i]->set_dirty(true);
+    }
+    texture->unlock_bricks();
   }
-  texture->set_bbox(bbox);
-  texture->set_minmax(vmin, vmax, gmin, gmax);
-  texture->set_transform(tform);
-  for(unsigned int i=0; i<bricks.size(); i++) {
-    fill_brick(bricks[i], vfield, vmin, vmax, gfield, gmin, gmax);
-    bricks[i]->set_dirty(true);
-  }
-  texture->unlock_bricks();
 }
 
 template<typename FieldType>
