@@ -25,7 +25,6 @@ SRCS     += $(SRCDIR)/Sort.cc \
 	    $(SRCDIR)/StringUtil.cc \
 	    $(SRCDIR)/PQueue.cc \
 	    $(SRCDIR)/TrivialAllocator.cc \
-            $(SRCDIR)/BitArray1.cc \
 	    $(SRCDIR)/templates.cc \
             $(SRCDIR)/ConsecutiveRangeSet.cc
 

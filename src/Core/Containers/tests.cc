@@ -37,7 +37,6 @@ TestTable test_table[] = {
     {"Array3", Array3<int>::test_rigorous, 0},
 //  {"HashTable", HashTable<char*, int>::test_rigorous, 0},
     {"FastHashTable", FastHashTable<int>::test_rigorous, 0},
-    {"BitArray1", &BitArray1::test_rigorous, 0},
     {"PQueue", &PQueue::test_rigorous, 0},
     {0,0,0}
 
