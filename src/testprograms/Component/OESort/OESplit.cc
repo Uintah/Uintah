@@ -156,7 +156,18 @@ int main(int argc, char* argv[])
           std::cerr << "setCalleeDistribution completed\n";
 
 	  cerr << "Waiting for OESplit connections...\n";
-	  cerr << split->getURL().getString() << '\n';
+          /*Reduce all URLs and have root print them out*/
+          typedef char urlString[100] ;
+          urlString s;
+	  strcpy(s, split->getURL().getString().c_str());
+	  urlString *buf;
+          if(myrank==0){
+	    buf=new urlString[mysize];
+          }
+	  MPI_Gather(s, 100, MPI_CHAR, buf, 100, MPI_CHAR, 0, MPI_COMM_WORLD);
+          if(myrank==0)
+	    for(int i=0; i<mysize; i++) 
+	      cerr << buf[i] << '\n';
 
           //Creating a multiplexing proxy from all the URLs
           Object::pointer* obj = new Object::pointer;

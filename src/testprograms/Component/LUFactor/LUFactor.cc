@@ -127,9 +127,18 @@ int main(int argc, char* argv[])
           MxNArrayRep* arrr0 = new MxNArrayRep(2,dr0);
 	  lu->setCalleeDistribution("X",arrr0);
           std::cerr << "setCalleeDistribution completed\n";
-
-	  cerr << "Waiting for LUFactor connections...\n";
-	  cerr << lu->getURL().getString() << '\n';
+          /*Reduce all URLs and have root print them out*/
+          typedef char urlString[100] ;
+          urlString s;
+	  strcpy(s, lu->getURL().getString().c_str());
+	  urlString *buf;
+          if(myrank==0){
+	    buf=new urlString[mysize];
+          }
+	  MPI_Gather(s, 100, MPI_CHAR, buf, 100, MPI_CHAR, 0, MPI_COMM_WORLD);
+          if(myrank==0)
+	    for(int i=0; i<mysize; i++) 
+	      cerr << buf[i] << '\n';
 
 	} else {
 

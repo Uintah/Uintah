@@ -186,7 +186,18 @@ int main(int argc, char* argv[])
 	  serv->setCalleeDistribution("D",arrr);
 
 	  cerr << "Waiting for MxN argtest connections...\n";
-	  cerr << serv->getURL().getString() << '\n';
+          /*Reduce all URLs and have root print them out*/
+          typedef char urlString[100] ;
+          urlString s;
+	  strcpy(s, serv->getURL().getString().c_str());
+	  urlString *buf;
+          if(myrank==0){
+	    buf=new urlString[mysize];
+          }
+	  MPI_Gather(s, 100, MPI_CHAR, buf, 100, MPI_CHAR, 0, MPI_COMM_WORLD);
+          if(myrank==0)
+	    for(int i=0; i<mysize; i++) 
+	      cerr << buf[i] << '\n';
 
 	} else {
           SSIDL::array2<int> c_arr;
