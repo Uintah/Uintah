@@ -563,7 +563,7 @@ void Viewer::emit_vars(ostream& out, clString& midx)
   clString viewwindowstr;
   for(int i=0;i<viewwindow.size();i++){
     viewwindowstr=midx+clString("-ViewWindow_")+to_string(i);
-    out << midx << " ui" << endl;
+    out << midx << " ui\n";
     viewwindow[i]->emit_vars(out, viewwindowstr);
   }
 }
