@@ -86,6 +86,9 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
       nrrdAxisMinMaxSet(n, a, nrrdCenterNode);
   }
 
+  // if nothing was specified, just call it node-centered (arbitrary)
+  if (data_center = nrrdCenterUnknown) data_center = nrrdCenterNode;
+
   Point min(0., 0., 0.);
   Point max;
   
@@ -97,7 +100,7 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
 		0.0, 0.0);
   }
   int off = 0;
-  if (n->axis[1].center == nrrdCenterCell) { off = 1; }
+  if (data_center == nrrdCenterCell) { off = 1; }
   ScanlineMesh *m = new ScanlineMesh(n->axis[1].size + off, min, max);
   ScanlineMeshHandle mh(m);
   FieldHandle fh;
@@ -109,7 +112,7 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
   case 0:
     switch (n->type) {
     case nrrdTypeChar :  
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new ScanlineField<char>(mh, Field::EDGE);
 	ScanlineMesh::Edge::iterator iter, end;
 	mh->begin(iter);
@@ -125,7 +128,7 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
 
       break;
     case nrrdTypeUChar : 
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new ScanlineField<unsigned char>(mh, Field::EDGE);
 	ScanlineMesh::Edge::iterator iter, end;
 	mh->begin(iter);
@@ -141,7 +144,7 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
 
       break;
     case nrrdTypeShort : 
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new ScanlineField<short>(mh, Field::EDGE);
 	ScanlineMesh::Edge::iterator iter, end;
 	mh->begin(iter);
@@ -157,7 +160,7 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
 
       break;
     case nrrdTypeUShort :
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new ScanlineField<unsigned short>(mh, Field::EDGE);
 	ScanlineMesh::Edge::iterator iter, end;
 	mh->begin(iter);
@@ -173,7 +176,7 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
 
       break;
     case nrrdTypeInt : 
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new ScanlineField<int>(mh, Field::EDGE);
 	ScanlineMesh::Edge::iterator iter, end;
 	mh->begin(iter);
@@ -189,7 +192,7 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
 
       break;
     case nrrdTypeUInt :  
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new ScanlineField<unsigned int>(mh, Field::EDGE);
 	ScanlineMesh::Edge::iterator iter, end;
 	mh->begin(iter);
@@ -205,7 +208,7 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
 
       break;
     case nrrdTypeLLong : 
-      //if (n->axis[1].center == nrrdCenterCell) {
+      //if (data_center == nrrdCenterCell) {
       //fh = new ScanlineField<long long>(mh, Field::EDGE);
       //} else {
       //fh = new ScanlineField<long long>(mh, Field::NODE);
@@ -213,7 +216,7 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
       //fill_data((ScanlineField<long long>*)fh.get_rep(), n, iter, end);
       break;
     case nrrdTypeULLong :
-      //if (n->axis[1].center == nrrdCenterCell) {
+      //if (data_center == nrrdCenterCell) {
       //fh = new ScanlineField<unsigned long long>(mh, Field::EDGE);
       //} else {
       //fh = new ScanlineField<unsigned long long>(mh, Field::NODE);
@@ -221,7 +224,7 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
       //fill_data((ScanlineField<unsigned long long>*)fh.get_rep(), n,iter, end);
       break;
     case nrrdTypeFloat :
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new ScanlineField<float>(mh, Field::EDGE);
 	ScanlineMesh::Edge::iterator iter, end;
 	mh->begin(iter);
@@ -237,7 +240,7 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
 
       break;
     case nrrdTypeDouble :
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new ScanlineField<double>(mh, Field::EDGE);
 	ScanlineMesh::Edge::iterator iter, end;
 	mh->begin(iter);
@@ -255,7 +258,7 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
     }
     break;
   case 2: // Vector
-    if (n->axis[1].center == nrrdCenterCell) {
+    if (data_center == nrrdCenterCell) {
       fh = new ScanlineField<Vector>(mh, Field::EDGE);
       ScanlineMesh::Edge::iterator iter, end;
       mh->begin(iter);
@@ -271,7 +274,7 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
 
     break;
   case 6: // Tensor
-    if (n->axis[1].center == nrrdCenterCell) {
+    if (data_center == nrrdCenterCell) {
       fh = new ScanlineField<Tensor>(mh, Field::EDGE);
       ScanlineMesh::Edge::iterator iter, end;
       mh->begin(iter);
@@ -306,17 +309,24 @@ NrrdToField::create_image_field(NrrdDataHandle &nrd)
   Nrrd *n = nrd->nrrd;
 
   double spc[2];
-  int data_center = n->axis[1].center;
+  int data_center = nrrdCenterUnknown;
+  
   for (int a = 1; a < 3; a++) {
     if (!(AIR_EXISTS(n->axis[a].min) && AIR_EXISTS(n->axis[a].max)))
       nrrdAxisMinMaxSet(n, a, nrrdCenterNode);
     if ( AIR_EXISTS(n->axis[a].spacing)) { spc[a-1] = n->axis[a].spacing; }
     else { spc[a-1] = 1.; }
-    if (data_center != n->axis[a].center) {
+    if (data_center == nrrdCenterUnknown) // nothing specified yet
+      data_center = n->axis[a].center;
+    else if (n->axis[a].center != nrrdCenterUnknown && // this one is specified
+	     data_center != n->axis[a].center) { // mismatch!
       error("SCIRun cannot convert a nrrd with mismatched data centers");
       return 0;
-    }
+    } // else this one was nrrdCenterUnknown, or they matched
   }
+
+  // if nothing was specified, just call it node-centered (arbitrary)
+  if (data_center == nrrdCenterUnknown) data_center = nrrdCenterNode;
 
   Point min(0., 0., 0.);
   Point max;
@@ -331,7 +341,7 @@ NrrdToField::create_image_field(NrrdDataHandle &nrd)
 		0.0);
   }
   int off = 0;
-  if (n->axis[1].center == nrrdCenterCell) { off = 1; }
+  if (data_center == nrrdCenterCell) { off = 1; }
   ImageMesh *m = new ImageMesh(n->axis[1].size + off, n->axis[2].size + off,
 			       min, max);
   ImageMeshHandle mh(m);
@@ -343,7 +353,7 @@ NrrdToField::create_image_field(NrrdDataHandle &nrd)
   case 0:
     switch (n->type) {
     case nrrdTypeChar :  
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new ImageField<char>(mh, Field::FACE);
 	ImageMesh::Face::iterator iter, end;
 	mh->begin(iter);
@@ -358,7 +368,7 @@ NrrdToField::create_image_field(NrrdDataHandle &nrd)
       }
       break;
     case nrrdTypeUChar : 
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new ImageField<unsigned char>(mh, Field::FACE);
 	ImageMesh::Face::iterator iter, end;
 	mh->begin(iter);
@@ -373,7 +383,7 @@ NrrdToField::create_image_field(NrrdDataHandle &nrd)
       }
       break;
     case nrrdTypeShort : 
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new ImageField<short>(mh, Field::FACE);
 	ImageMesh::Face::iterator iter, end;
 	mh->begin(iter);
@@ -388,7 +398,7 @@ NrrdToField::create_image_field(NrrdDataHandle &nrd)
       }
       break;
     case nrrdTypeUShort :
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new ImageField<unsigned short>(mh, Field::FACE);
 	ImageMesh::Face::iterator iter, end;
 	mh->begin(iter);
@@ -403,7 +413,7 @@ NrrdToField::create_image_field(NrrdDataHandle &nrd)
       }
       break;
     case nrrdTypeInt : 
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new ImageField<int>(mh, Field::FACE);
 	ImageMesh::Face::iterator iter, end;
 	mh->begin(iter);
@@ -418,7 +428,7 @@ NrrdToField::create_image_field(NrrdDataHandle &nrd)
       }
       break;
     case nrrdTypeUInt :  
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new ImageField<unsigned int>(mh, Field::FACE);
 	ImageMesh::Face::iterator iter, end;
 	mh->begin(iter);
@@ -441,7 +451,7 @@ NrrdToField::create_image_field(NrrdDataHandle &nrd)
       //fill_data((ImageField<unsigned long long>*)fh.get_rep(), n,iter, end);
       break;
     case nrrdTypeFloat :
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new ImageField<float>(mh, Field::FACE);
 	ImageMesh::Face::iterator iter, end;
 	mh->begin(iter);
@@ -456,7 +466,7 @@ NrrdToField::create_image_field(NrrdDataHandle &nrd)
       }
       break;
     case nrrdTypeDouble :
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new ImageField<double>(mh, Field::FACE);
 	ImageMesh::Face::iterator iter, end;
 	mh->begin(iter);
@@ -473,7 +483,7 @@ NrrdToField::create_image_field(NrrdDataHandle &nrd)
     }
     break;
   case 2: // Vector
-    if (n->axis[1].center == nrrdCenterCell) {
+    if (data_center == nrrdCenterCell) {
       fh = new ImageField<Vector>(mh, Field::FACE);
       ImageMesh::Face::iterator iter, end;
       mh->begin(iter);
@@ -488,7 +498,7 @@ NrrdToField::create_image_field(NrrdDataHandle &nrd)
     }
     break;
   case 6: // Tensor
-    if (n->axis[1].center == nrrdCenterCell) {
+    if (data_center == nrrdCenterCell) {
       fh = new ImageField<Tensor>(mh, Field::FACE);
       ImageMesh::Face::iterator iter, end;
       mh->begin(iter);
@@ -521,17 +531,24 @@ NrrdToField::create_latvol_field(NrrdDataHandle &nrd)
 {
   Nrrd *n = nrd->nrrd;
   double spc[3];
-  int data_center = n->axis[1].center;
+  int data_center = nrrdCenterUnknown;
+
   for (int a = 1; a < 4; a++) {
     if (!(AIR_EXISTS(n->axis[a].min) && AIR_EXISTS(n->axis[a].max)))
       nrrdAxisMinMaxSet(n, a, nrrdCenterNode);
     if ( AIR_EXISTS(n->axis[a].spacing)) { spc[a-1] = n->axis[a].spacing; }
     else { spc[a-1] = 1.; }
-    if (data_center != n->axis[a].center) {
+    if (data_center == nrrdCenterUnknown) // nothing specified yet
+      data_center = n->axis[a].center;
+    else if (n->axis[a].center != nrrdCenterUnknown && // this one is specified
+	     data_center != n->axis[a].center) { // mismatch!
       error("SCIRun cannot convert a nrrd with mismatched data centers");
       return 0;
-    }
+    } // else this one was nrrdCenterUnknown, or they matched
   }
+
+  // if nothing was specified, just call it node-centered (arbitrary)
+  if (data_center == nrrdCenterUnknown) data_center = nrrdCenterNode;
 
   Point min(0., 0., 0.);
   Point max;
@@ -547,7 +564,7 @@ NrrdToField::create_latvol_field(NrrdDataHandle &nrd)
   }
 
   int off = 0;
-  if (n->axis[1].center == nrrdCenterCell) { off = 1; }
+  if (data_center == nrrdCenterCell) { off = 1; }
   LatVolMesh *m = new LatVolMesh(n->axis[1].size + off, n->axis[2].size + off, 
 				 n->axis[3].size + off, min, max);
 
@@ -561,7 +578,7 @@ NrrdToField::create_latvol_field(NrrdDataHandle &nrd)
   case 0:
     switch (n->type) {
     case nrrdTypeChar :  
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new LatVolField<char>(mh, Field::CELL);
 	LatVolMesh::Cell::iterator iter, end;
 	mh->begin(iter);
@@ -576,7 +593,7 @@ NrrdToField::create_latvol_field(NrrdDataHandle &nrd)
       }
       break;
     case nrrdTypeUChar : 
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new LatVolField<unsigned char>(mh, Field::CELL);
 	LatVolMesh::Cell::iterator iter, end;
 	mh->begin(iter);
@@ -591,7 +608,7 @@ NrrdToField::create_latvol_field(NrrdDataHandle &nrd)
       }
       break;
     case nrrdTypeShort : 
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new LatVolField<short>(mh, Field::CELL);
 	LatVolMesh::Cell::iterator iter, end;
 	mh->begin(iter);
@@ -606,7 +623,7 @@ NrrdToField::create_latvol_field(NrrdDataHandle &nrd)
       }
       break;
     case nrrdTypeUShort :
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new LatVolField<unsigned short>(mh, Field::CELL);
 	LatVolMesh::Cell::iterator iter, end;
 	mh->begin(iter);
@@ -621,7 +638,7 @@ NrrdToField::create_latvol_field(NrrdDataHandle &nrd)
       }
       break;
     case nrrdTypeInt : 
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new LatVolField<int>(mh, Field::CELL);
 	LatVolMesh::Cell::iterator iter, end;
 	mh->begin(iter);
@@ -636,7 +653,7 @@ NrrdToField::create_latvol_field(NrrdDataHandle &nrd)
       }
       break;
     case nrrdTypeUInt :  
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new LatVolField<unsigned int>(mh, Field::CELL);
 	LatVolMesh::Cell::iterator iter, end;
 	mh->begin(iter);
@@ -659,7 +676,7 @@ NrrdToField::create_latvol_field(NrrdDataHandle &nrd)
       //fill_data((LatVolField<unsigned long long>*)fh.get_rep(), n,iter, end);
       break;
     case nrrdTypeFloat :
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new LatVolField<float>(mh, Field::CELL);
 	LatVolMesh::Cell::iterator iter, end;
 	mh->begin(iter);
@@ -674,7 +691,7 @@ NrrdToField::create_latvol_field(NrrdDataHandle &nrd)
       }
       break;
     case nrrdTypeDouble :
-      if (n->axis[1].center == nrrdCenterCell) {
+      if (data_center == nrrdCenterCell) {
 	fh = new LatVolField<double>(mh, Field::CELL);
 	LatVolMesh::Cell::iterator iter, end;
 	mh->begin(iter);
@@ -691,7 +708,7 @@ NrrdToField::create_latvol_field(NrrdDataHandle &nrd)
     }
     break;
   case 2: // Vector
-    if (n->axis[1].center == nrrdCenterCell) {
+    if (data_center == nrrdCenterCell) {
       fh = new LatVolField<Vector>(mh, Field::CELL);
       LatVolMesh::Cell::iterator iter, end;
       mh->begin(iter);
@@ -706,7 +723,7 @@ NrrdToField::create_latvol_field(NrrdDataHandle &nrd)
     }
     break;
   case 6: // Tensor
-    if (n->axis[1].center == nrrdCenterCell) {
+    if (data_center == nrrdCenterCell) {
       fh = new LatVolField<Tensor>(mh, Field::CELL);
       LatVolMesh::Cell::iterator iter, end;
       mh->begin(iter);
