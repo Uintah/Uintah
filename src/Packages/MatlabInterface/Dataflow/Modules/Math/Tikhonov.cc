@@ -18,6 +18,8 @@
 
 #include <Packages/MatlabInterface/share/share.h>
 
+#include <stdio.h>
+
 void tikhonov(double *f,double *d,double *r,double *w,double *m,
               double noise,double mu,double ml,int Nd,int Nm);
 

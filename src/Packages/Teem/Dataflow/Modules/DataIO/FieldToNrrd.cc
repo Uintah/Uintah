@@ -33,6 +33,8 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <iostream>
 #include <pair.h>
 

@@ -123,7 +123,7 @@ void NrrdToField::execute()
       MaskedLatVolField<Tensor> *f =
 	scinew MaskedLatVolField<Tensor>(lvm, Field::CELL);
       float *p=(float *)n->data;
-      Array1<double> tens(6);
+      vector<double> tens(6);
       for (k=0; k<nz; k++)
 	for (j=0; j<ny; j++)
 	  for (i=0; i<nx; i++) {

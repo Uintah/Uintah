@@ -50,7 +50,7 @@ main(int argc, char **argv) {
   double fraction = atof(argv[2]);
 
   BBox b;
-  Array1<Point> pts;
+  vector<Point> pts;
   int i, npts;
   istream >> npts;
   MusilRNG mr;
@@ -63,7 +63,7 @@ main(int argc, char **argv) {
     }
     istream >> y >> z;
     b.extend(Point(x,y,z));
-    if (mr() <= fraction) pts.add(Point(x,y,z));
+    if (mr() <= fraction) pts.push_back(Point(x,y,z));
   }
 
   // shuffle the points
@@ -83,7 +83,7 @@ main(int argc, char **argv) {
   ofstream ostream(argv[3]);
   ostream << pts.size() << "\n";
   for (i=0; i<pts.size(); i++) {
-    Point p = pts[i];
+    const Point &p = pts[i];
 //    Vector d0((mr()-.5)*2*d.x(), (mr()-.5)*2*d.y(), (mr()-.5)*2*d.z());
 //    p += d0;
     ostream << p.x() << " " << p.y() <<" " << p.z() <<"\n";
