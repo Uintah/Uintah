@@ -60,6 +60,8 @@ public:
     inline Point& operator/=(const double);
     inline Point operator/(const double) const;
     inline Point operator-() const;
+    inline double& operator()(int idx);
+    inline double operator()(int idx) const;
     inline void x(const double);
     inline double x() const;
     inline void y(const double);
@@ -202,6 +204,15 @@ inline void Point::x(const double d)
     _x=d;
 }
 
+inline double& Point::operator()(int idx) {
+	return (&_x)[idx];
+}
+
+inline double Point::operator()(int idx) const {
+	return (&_x)[idx];
+}
+
+
 inline double Point::x() const
 {
     return _x;
@@ -273,6 +284,12 @@ inline double Dot(const Point& p1, const Point& p2)
 
 //
 // $Log$
+// Revision 1.8  2000/07/18 00:29:54  tan
+// Added operator()(int idx) to pointer.  In consistant with IntVector and Vector
+// p(0) = p.x(),
+// p(1) = p.y()
+// p(2) = p.z()
+//
 // Revision 1.7  2000/06/15 20:43:19  sparker
 // Added "inline" statements in class file
 //
