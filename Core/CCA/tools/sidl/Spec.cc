@@ -802,7 +802,7 @@ std::string ArrayType::fullname() const
 std::string ArrayType::cppfullname(SymbolTable* localScope) const
 {
   std::ostringstream o;
-  o << "::CIA::array" << dim << "< " << subtype->cppfullname(localScope);
+  o << "::SIDL::array" << dim << "< " << subtype->cppfullname(localScope);
   if(dynamic_cast<ArrayType*>(subtype) || dynamic_cast<NamedType*>(subtype))
     o << " "; // Keep > > from being >>
   o << ">";
