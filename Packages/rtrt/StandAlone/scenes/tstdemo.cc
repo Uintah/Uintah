@@ -636,6 +636,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   char *cmap_type = "InvRainbow";
   char *gridconfig = 0;
   string *var_names = 0;
+
+  // This is number of times to repeat the last timestep
+  int repeat_last_timestep = 0;
   
   for(int i=1;i<argc;i++){
     if (strcmp(argv[i], "-type")==0) {
@@ -761,6 +764,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       var_names = new string[num_varnames];
       for(int v = 0; v < num_varnames; v++)
         var_names[v] = string(argv[++i]);
+    } else if (strcmp(argv[i], "-repeatlast") == 0) {
+      repeat_last_timestep = atoi(argv[++i]);
     } else {
       cerr << "Unknown option: " << argv[i] << '\n';
       cerr << "Valid options for scene: " << argv[0] << '\n';
@@ -793,6 +798,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       cerr<<"  -cmaptype <type>     type of colormap\n";
       cerr << " -gridconfig <filename> use this file as the config file.\n";
       cerr << " -varnames [number] vname1 \"v name 2\"\n";
+      cerr << " -repeatlast [number]  number of times to repeat the last timestep\n";
       return 0;
     }
   }
@@ -881,6 +887,10 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
         volume->set_child(gsphere);
         if (myfile) free(myfile);
       }
+      // Repeat the last timestep if need be.
+      for(int repeat = 0; repeat < repeat_last_timestep; repeat++)
+        timeobj->add(timeobj->objs[timeobj->numObjects()-1]);
+      // Set the object
       obj = (Object*)timeobj;
     } else {
       char *myfile = strdup(data_files[0].c_str());
@@ -948,6 +958,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   light0->updateIntensity(0.7);
   scene->add_light(light0);
   scene->attach_display(dpy);
+  scene->attach_display(display);
   scene->addGuiObject("Fire", obj);
   scene->select_shadow_mode( No_Shadows );
   
