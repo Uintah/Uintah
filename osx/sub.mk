@@ -29,7 +29,4 @@ LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-clean::
-	rm -f $(GENSRCS)
-	rm -f $(patsubst %.cc,%.h,$(GENSRCS))
 
