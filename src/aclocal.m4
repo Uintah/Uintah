@@ -119,7 +119,11 @@ LIBS="$_sci_libs $7 $LIBS"
 
 AC_TRY_LINK([$3],[$8],[
 eval LIB_DIR_$1='"$6"'
-eval $1_LIB_DIR_FLAG='"$_sci_lib_path"'
+if test "$6" = "$SCI_THIRDPARTY_LIB_DIR"; then
+  eval $1_LIB_DIR_FLAG=''
+else
+  eval $1_LIB_DIR_FLAG='"$_sci_lib_path"'
+fi
 eval $1_LIB_FLAG='"$_sci_libs"'
 eval HAVE_$1="yes"
 eval INC_$1_H='"$_sci_includes"'
@@ -134,7 +138,7 @@ eval HAVE_$1="no"
 eval INC_$1_H=''
 eval HAVE_$1_H="no"
 AC_MSG_RESULT(not found)
-if test "$9" =  "not-optional"; then
+if test "$9" = "not-optional"; then
   SCI_MSG_ERROR([[Test for required $1 failed. 
     To see the failed compile information, look in config.log, 
     search for $1. Please install the relevant libraries
