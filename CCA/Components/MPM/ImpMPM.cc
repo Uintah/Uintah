@@ -1731,10 +1731,12 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
 
       dispNew.copyData(dispNew_old);
 
-      for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+      if(!mpm_matl->getIsRigid()){
+       for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
         IntVector n = *iter;
         dispNew[n] += dispInc[n];
         velocity[n] = dispNew[n]*(2./dt) - oneifdyn*velocity_old[n];
+       }
       }
 
       if(d_rigid_body){  // overwrite some of the values computed above
@@ -1752,7 +1754,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
           } // if contact == 2
         } // for
       } // if d_rigid_body
-    }
+    }   // matls
   }
 }
 
