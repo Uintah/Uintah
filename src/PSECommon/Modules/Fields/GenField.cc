@@ -27,7 +27,7 @@
 #include <SCICore/Datatypes/MeshGeom.h>
 #include <SCICore/Datatypes/MeshGeom.h>
 #include <SCICore/Datatypes/FlatAttrib.h>
-#include <SCICore/Datatypes/Accel3Attrib.h>
+#include <SCICore/Datatypes/AccelAttrib.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Containers/String.h>
@@ -159,10 +159,10 @@ GenField::execute()
       }
     case 2:
       {
-	Accel3Attrib<double> *attrib = new Accel3Attrib<double>(x, y, z);
-	fill((Accel3Attrib<double> *) attrib, x, y, z);
-	GenSField<double, LatticeGeom, Accel3Attrib<double> > *osf =
-	  new GenSField<double, LatticeGeom, Accel3Attrib<double> >(geom, attrib);
+	AccelAttrib<double> *attrib = new AccelAttrib<double>(x, y, z);
+	fill((AccelAttrib<double> *) attrib, x, y, z);
+	GenSField<double, LatticeGeom, AccelAttrib<double> > *osf =
+	  new GenSField<double, LatticeGeom, AccelAttrib<double> >(geom, attrib);
 	osf->set_bbox(Point(0, 0, 0), Point(x-1, y-1, z-1));
 	ofield->send(osf);
 	break;
