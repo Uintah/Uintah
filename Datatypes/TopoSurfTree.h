@@ -15,7 +15,16 @@
 
 #include <Datatypes/SurfTree.h>
 
+struct SrchLst;
+
 class TopoSurfTree : public SurfTree {
+    void addPatchAndDescend(SrchLst*, Array1<Array1<int> > &, 
+			    Array1<Array1<Array1<int> > > &,
+			    Array1<int> &visList);
+    void addWireAndDescend(SrchLst*, Array1<Array1<int> > &, 
+			   Array1<Array1<Array1<int> > > &,
+			   Array1<int> &visList);
+    void addJunctionAndDescend(SrchLst*, Array1<int> &visList);
 public:
     Array1< Array1<int> > patches;	// indices into the SurfTree elems
     Array1< Array1< Array1<int> > > patchesOrient;

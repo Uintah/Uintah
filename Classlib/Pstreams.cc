@@ -840,3 +840,287 @@ double BinaryPiostream::get_percent_done()
 	return 0;
     }
 }
+
+GzipPiostream::GzipPiostream(const clString& filename, Direction dir)
+: Piostream(dir, -1)
+{
+    if(dir==Read){
+	cerr << "GzipPiostream CTOR not finished...\n";
+	gzfile=0;
+    } else {
+	gzfile=gzopen(filename(), "w");
+	char str[100];
+	sprintf(str, "SCI\nGZ\n1\n");
+	gzwrite(gzfile, str, strlen(str));
+	version=1;
+    }
+}
+
+GzipPiostream::GzipPiostream(char* name, int version)
+: Piostream(Read, version), have_peekname(0)
+{
+    gzfile=gzopen(name, "r");
+    char str[9];
+    gzread(gzfile, str, 9);
+    char hdr[12];
+    sprintf(hdr, "SCI\nGZ\n%d\n", 1);
+    if (strncmp(str, hdr, 9)) {
+	gzclose(gzfile);
+	gzfile=0;
+	return;
+    }
+}
+
+GzipPiostream::~GzipPiostream()
+{
+    cancel_timers();
+    gzclose(gzfile);
+}
+
+clString GzipPiostream::peek_class()
+{
+    have_peekname=1;
+    io(peekname);
+    return peekname;
+}
+
+int GzipPiostream::begin_class(const clString& classname,
+			       int current_version)
+{
+    if(err)return -1;
+    int version=current_version;
+    clString gname;
+    if(dir==Write){
+	gname=classname;
+	io(gname);
+    } else if(dir==Read && have_peekname){
+	gname=peekname;
+    } else {
+	io(gname);
+    }
+    have_peekname=0;
+
+    if(dir==Read){
+	if(classname != gname){
+	    err=1;
+	    cerr << "Expecting class: " << classname << ", got class: " << gname << endl;
+	    return 0;
+	}
+    }
+    io(version);
+    return version;
+}
+
+void GzipPiostream::end_class()
+{
+    // No-op
+}
+
+void GzipPiostream::begin_cheap_delim()
+{
+    // No-op
+}
+
+void GzipPiostream::end_cheap_delim()
+{
+    // No-op
+}
+
+void GzipPiostream::io(char& data)
+{
+    int sz=sizeof(char);
+    if(err)return;
+    if(dir == Read) {
+	if (gzread(gzfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "gzread failed\n";
+	}
+    } else {
+	if (!gzwrite(gzfile, &data, sz)) {
+	    err=1;
+	    cerr << "gzwrite failed\n";
+	}
+    }
+}
+
+void GzipPiostream::io(unsigned char& data)
+{
+    int sz=sizeof(unsigned char);
+    if(err)return;
+    if(dir == Read) {
+	if (gzread(gzfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "gzread failed\n";
+	}
+    } else {
+	if (!gzwrite(gzfile, &data, sz)) {
+	    err=1;
+	    cerr << "gzwrite failed\n";
+	}
+    }
+}
+
+void GzipPiostream::io(short& data)
+{
+    int sz=sizeof(short);
+    if(err)return;
+    if(dir == Read) {
+	if (gzread(gzfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "gzread failed\n";
+	}
+    } else {
+	if (!gzwrite(gzfile, &data, sz)) {
+	    err=1;
+	    cerr << "gzwrite failed\n";
+	}
+    }
+}
+
+void GzipPiostream::io(unsigned short& data)
+{
+    int sz=sizeof(unsigned short);
+    if(err)return;
+    if(dir == Read) {
+	if (gzread(gzfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "gzread failed\n";
+	}
+    } else {
+	if (!gzwrite(gzfile, &data, sz)) {
+	    err=1;
+	    cerr << "gzwrite failed\n";
+	}
+    }
+}
+
+void GzipPiostream::io(int& data)
+{
+    int sz=sizeof(int);
+    if(err)return;
+    if(dir == Read) {
+	if (gzread(gzfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "gzread failed\n";
+	}
+    } else {
+	if (!gzwrite(gzfile, &data, sz)) {
+	    err=1;
+	    cerr << "gzwrite failed\n";
+	}
+    }
+}
+
+void GzipPiostream::io(unsigned int& data)
+{
+    int sz=sizeof(unsigned int);
+    if(err)return;
+    if(dir == Read) {
+	if (gzread(gzfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "gzread failed\n";
+	}
+    } else {
+	if (!gzwrite(gzfile, &data, sz)) {
+	    err=1;
+	    cerr << "gzwrite failed\n";
+	}
+    }
+}
+
+void GzipPiostream::io(long& data)
+{
+    int sz=sizeof(long);
+    if(err)return;
+    if(dir == Read) {
+	if (gzread(gzfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "gzread failed\n";
+	}
+    } else {
+	if (!gzwrite(gzfile, &data, sz)) {
+	    err=1;
+	    cerr << "gzwrite failed\n";
+	}
+    }
+}
+
+void GzipPiostream::io(unsigned long& data)
+{
+    int sz=sizeof(unsigned long);
+    if(err)return;
+    if(dir == Read) {
+	if (gzread(gzfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "gzread failed\n";
+	}
+    } else {
+	if (!gzwrite(gzfile, &data, sz)) {
+	    err=1;
+	    cerr << "gzwrite failed\n";
+	}
+    }
+}
+
+void GzipPiostream::io(double& data)
+{
+    int sz=sizeof(double);
+    if(err)return;
+    if(dir == Read) {
+	if (gzread(gzfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "gzread failed\n";
+	}
+    } else {
+	if (!gzwrite(gzfile, &data, sz)) {
+	    err=1;
+	    cerr << "gzwrite failed\n";
+	}
+    }
+}
+
+void GzipPiostream::io(float& data)
+{
+    int sz=sizeof(float);
+    if(err)return;
+    if(dir == Read) {
+	if (gzread(gzfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "gzread failed\n";
+	}
+    } else {
+	if (!gzwrite(gzfile, &data, sz)) {
+	    err=1;
+	    cerr << "gzwrite failed\n";
+	}
+    }
+}
+
+void GzipPiostream::io(clString& data)
+{
+    if(err)return;
+    if(dir == Read) {
+	char c='1';
+	while (c != '\0' && !err) {
+	    io(c);
+	    data+=c;
+	}
+    } else {
+	int sz=strlen(data());
+	if (!gzwrite(gzfile, data(), sz+1)) {
+	    err=1;
+	    cerr << "gzwrite failed\n";
+	}
+    }
+}
+
+void GzipPiostream::emit_pointer(int& have_data, int& pointer_id)
+{
+    io(have_data);
+    io(pointer_id);
+}
+
+double GzipPiostream::get_percent_done()
+{
+    return 0;
+}

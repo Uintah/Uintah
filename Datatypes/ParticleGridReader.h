@@ -47,7 +47,7 @@ public:
 
   //////////
   // SetFile expects a filename include full path
-    virtual void SetFile(const clString& filename);
+    virtual void SetFile(const clString& filename)=0;
   //////////
     virtual clString GetFile() = 0;
     virtual int GetNTimesteps()=0;

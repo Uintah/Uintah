@@ -383,6 +383,16 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 		    orient[0]=0; orient[1]=1; orient[2]=0;
 		    surf.faceI[iii+1].edges = edges; 
 		    surf.faceI[iii+1].edgeOrient = orient;
+
+		    surf.faceI[iii].surfIdx.add(bcomp);
+		    surf.faceI[iii].surfOrient.add(1);
+		    surf.faceI[iii+1].surfIdx.add(bcomp);
+		    surf.faceI[iii+1].surfOrient.add(1);
+
+		    surf.faceI[iii].surfIdx.add(comp);
+		    surf.faceI[iii].surfOrient.add(0);
+		    surf.faceI[iii+1].surfIdx.add(comp);
+		    surf.faceI[iii+1].surfOrient.add(0);		    
 		    
 //		    if (surf.outer[comp]!=bcomp) {
 			surf.surfI[bcomp].faces.add(iii);
@@ -507,6 +517,16 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 		    surf.faceI[iii+1].edges = edges; 
 		    surf.faceI[iii+1].edgeOrient = orient;
 
+		    surf.faceI[iii].surfIdx.add(bcomp);
+		    surf.faceI[iii].surfOrient.add(1);
+		    surf.faceI[iii+1].surfIdx.add(bcomp);
+		    surf.faceI[iii+1].surfOrient.add(1);
+
+		    surf.faceI[iii].surfIdx.add(comp);
+		    surf.faceI[iii].surfOrient.add(0);
+		    surf.faceI[iii+1].surfIdx.add(comp);
+		    surf.faceI[iii+1].surfOrient.add(0);
+
 //		    if (surf.outer[comp]!=bcomp) {
 			surf.surfI[bcomp].faces.add(iii);
 			surf.surfI[bcomp].faces.add(iii+1);
@@ -629,6 +649,16 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 		    orient[0]=0; orient[1]=1; orient[2]=0;
 		    surf.faceI[iii+1].edges = edges; 
 		    surf.faceI[iii+1].edgeOrient = orient;
+
+		    surf.faceI[iii].surfIdx.add(bcomp);
+		    surf.faceI[iii].surfOrient.add(1);
+		    surf.faceI[iii+1].surfIdx.add(bcomp);
+		    surf.faceI[iii+1].surfOrient.add(1);
+
+		    surf.faceI[iii].surfIdx.add(comp);
+		    surf.faceI[iii].surfOrient.add(0);
+		    surf.faceI[iii+1].surfIdx.add(comp);
+		    surf.faceI[iii+1].surfOrient.add(0);
 
 //		    if (surf.outer[comp]!=bcomp) {
 			surf.surfI[bcomp].faces.add(iii);

@@ -33,6 +33,8 @@ typedef struct _SurfInfo {
 } SurfInfo;
 
 typedef struct _FaceInfo {
+    Array1<int> surfIdx;
+    Array1<int> surfOrient;
     int patchIdx;
     int patchEntry;
     Array1<int> edges;		// indices of the edges of each face

@@ -433,6 +433,8 @@ void Pio(Piostream& stream, SurfInfo& surf)
 void Pio(Piostream& stream, FaceInfo& face)
 {
     stream.begin_cheap_delim();
+    Pio(stream, face.surfIdx);
+    Pio(stream, face.surfOrient);
     Pio(stream, face.patchIdx);
     Pio(stream, face.patchEntry);
     Pio(stream, face.edges);

@@ -189,7 +189,7 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 Piostream* auto_istream(const clString& filename)
 {
     ifstream* inp=scinew ifstream(filename());
-    return auto_istream(inp);
+    return auto_istream(inp, filename());
 }
 
 Piostream* auto_istream(int fd)
@@ -198,8 +198,12 @@ Piostream* auto_istream(int fd)
     return auto_istream(inp);
 }
 
-Piostream* auto_istream(ifstream* inp)
+Piostream* auto_istream(ifstream* inp, char *name)
 {
+    GzipPiostream *gzp=scinew GzipPiostream(name, 1);
+    if (gzp->fileOpen()) return gzp;
+    delete gzp;
+
     ifstream& in=(*inp);
     if(!in){
 	cerr << "file not found: " << inp->rdbuf()->fd() << endl;
@@ -236,8 +240,8 @@ Piostream* auto_istream(ifstream* inp)
     } else if(m1 == 'A' && m2 == 'S' && m3 == 'C'){
 	return scinew TextPiostream(inp, version);
     } else {
-	cerr << inp->rdbuf()->fd() << " is an unknown type!\n";
-	return 0;
+        cerr << name << " is an unknown type!\n";
+        return 0;
     }
 }
 

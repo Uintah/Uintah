@@ -12,6 +12,7 @@
  */
 #include <iostream.h>
 #include <Classlib/Assert.h>
+#include <Classlib/HashTable.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/Queue.h>
 #include <Classlib/TrivialAllocator.h>
@@ -50,25 +51,6 @@ void TopoSurfTree::BldTopoInfo() {
     BldJunctions();
 }
 
-inline int getIdx(const Array1<int>& a, int size) {
-    int val=0;
-    for (int k=a.size()-1; k>=0; k--)
-	val = val*size + a[k];
-    return val;
-}
-
-void getList(Array1<int>& surfList, int i, int size) {
-    int valid=1;
-//    cerr << "starting list...\n";
-    while (valid) {
-	surfList.add(i%size);
-//	cerr << "just added "<<i%size<<" to the list.\n";
-	if (i >= size) valid=1; else valid=0;
-	i /= size;
-    }
- //   cerr << "done with list.\n";
-}
-
 void order(Array1<int>& a) {
     int swap=1;
     int tmp;
@@ -101,12 +83,107 @@ void order(Array1<int>& a) {
 //	regionCtr just indexes the regions the patch separates
 //	surfG is the global index of the neighboring region/surface
 
-// allFaceSurfaces[faceG][surfCtr]=surfG
+// allFaceRegions[faceG][surfCtr]=surfG
 //	faceG is the true face number
 //	surfCtr is a counter of all the surfaces this face touches
 //	surfG is the global index of each region/surface this face neighbors
 
+struct SrchLst {
+    Array1<int> items;
+    Array1<int> lookup;
+    Array1<Array1<int> > orient;
+    Array1<SrchLst *> next;
+    void *operator new(size_t);
+    void operator delete(void*, size_t);
+};
 
+static TrivialAllocator SrchLst_alloc(sizeof(SrchLst));
+
+void* SrchLst::operator new(size_t)
+{
+    return SrchLst_alloc.alloc();
+}
+
+void SrchLst::operator delete(void* rp, size_t)
+{
+    SrchLst_alloc.free(rp);
+}
+
+void TopoSurfTree::addPatchAndDescend(SrchLst* curr, 
+			      Array1<Array1<int> > &tmpPatches, 
+			      Array1<Array1<Array1<int> > > &tmpPatchesOrient, 
+			      Array1<int> &visList) {
+    if (curr->items.size()) {
+	int currSize=patchRegions.size();
+	patchBdryEdgeFace.resize(currSize+1);
+	patchBdryEdgeFace[currSize].resize(edgeI.size());
+	patchBdryEdgeFace[currSize].initialize(-1);
+	patches.resize(currSize+1);
+	tmpPatches.resize(currSize+1);
+	tmpPatches[currSize]=curr->items;
+	patchesOrient.resize(currSize+1);
+	patchesOrient[currSize].resize(curr->orient.size());
+	tmpPatchesOrient.resize(currSize+1);
+	tmpPatchesOrient[currSize]=curr->orient;
+	patchRegions.add(visList);
+	for (int j=0; j<curr->items.size(); j++) {
+	    faceI[curr->items[j]].patchIdx=currSize;
+	    faceI[curr->items[j]].patchEntry=j;
+	}
+    }
+    for (int j=0; j<curr->next.size(); j++) {
+	visList.add(curr->lookup[j]);
+	addPatchAndDescend(curr->next[j],tmpPatches,tmpPatchesOrient,visList);
+	visList.resize(visList.size()-1);
+    }
+}
+
+void TopoSurfTree::addWireAndDescend(SrchLst* curr, 
+			      Array1<Array1<int> > &tmpWires, 
+			      Array1<Array1<Array1<int> > > &tmpWiresOrient, 
+			      Array1<int> &visList) {
+    if (curr->items.size()) {
+	int currSize=wirePatches.size();
+	wires.resize(currSize+1);
+	tmpWires.resize(currSize+1);
+	wireBdryNodes.resize(currSize+1);
+	wiresOrient.resize(currSize+1);
+	tmpWiresOrient.resize(currSize+1);
+	tmpWiresOrient[currSize]=curr->orient;
+	tmpWires[currSize]=curr->items;
+	wirePatches.add(visList);
+	for (int j=0; j<curr->items.size(); j++) {
+	    edgeI[curr->items[j]].wireIdx=currSize;
+	    edgeI[curr->items[j]].wireEntry=j;
+	}
+    }
+    for (int j=0; j<curr->next.size(); j++) {
+	visList.add(curr->lookup[j]);
+	addWireAndDescend(curr->next[j], tmpWires, tmpWiresOrient, visList);
+	visList.resize(visList.size()-1);
+    }
+}
+
+void TopoSurfTree::addJunctionAndDescend(SrchLst* curr, Array1<int> &visList) {
+    for (int j=0; j<curr->items.size(); j++) {
+	int currSize=junctionWires.size();
+	junctions.resize(currSize+1);
+	junctions[currSize]=curr->items[j];
+	junctionWires.add(visList);
+    }
+    for (j=0; j<curr->next.size(); j++) {
+	visList.add(curr->lookup[j]);
+	addJunctionAndDescend(curr->next[j], visList);
+	visList.resize(visList.size()-1);
+    }
+}
+
+void descendAndFree(SrchLst *curr) {
+    for (int i=0; i<curr->next.size(); i++) {
+	descendAndFree(curr->next[i]);
+    }
+    delete(curr);
+}
 
 void TopoSurfTree::BldPatches() {
     int i,j,k,l;
@@ -117,77 +194,104 @@ void TopoSurfTree::BldPatches() {
     cerr << "We have "<<faces.size()<<" faces.\n";
     if (!faces.size()) return;
 
-    // make a list of what surfaces each faces is attached to
-    Array1<Array1<int> > allFaceSurfaces(faces.size());
-//    cerr << "Membership.size()="<<allFaceSurfaces.size()<<"\n";
+    // make a list of what regions a faces bounds
+    Array1<Array1<int> > allFaceRegions(faces.size());
+//    cerr << "Membership.size()="<<allFaceRegions.size()<<"\n";
     for (i=0; i<surfI.size(); i++)
 	for (j=0; j<surfI[i].faces.size(); j++)
-	    allFaceSurfaces[surfI[i].faces[j]].add(i);
-    int maxSurfacesOnAFace=1;
+	    allFaceRegions[surfI[i].faces[j]].add(i);
 
     // sort all of the lists from above, and find the maximum number of
     // surfaces any face belongs to
-    for (i=0; i<allFaceSurfaces.size(); i++)
-	if (allFaceSurfaces[i].size() > 1) {
-	    if (allFaceSurfaces[i].size() > maxSurfacesOnAFace)
-		maxSurfacesOnAFace=allFaceSurfaces[i].size();
-	    order(allFaceSurfaces[i]);
+    for (i=0; i<allFaceRegions.size(); i++)
+	if (allFaceRegions[i].size() > 1) {
+	    order(allFaceRegions[i]);
 	}
-    int sz=pow(surfI.size(), maxSurfacesOnAFace);
-    cerr << "allocating "<<maxSurfacesOnAFace<<" levels with "<< surfI.size()<< " types (total="<<sz<<").\n";
 
-    // allocate all combinations of the maximum number of surfaces
-    // from the lists of which surfaces each face belong to,
-    // construct a list of faces which belong for each surface
-    // combination
+    // create a recursive array structure that can be descended by
+    // indexing all of the regions a face touches (allFaceRegions[])
+    //
+    // the list of faces for a patch is stored in an items[][] array
+    // there is also an array of orientations for a patch, orient[][][], 
+    //   indexed by the patch, then the region, and then the face
 
-    // a better way to do this is to HASH on each surface(regions) --
-    // each hashed key should find another hash table, as well as a
-    // list of faces (we'll need a new struct for this).
-    // NOTE - we should use this multi-level hashing technique in
-    // SegFldToSurfTree when we hash the faces and edges.
+    SrchLst *tmpPatchIdx = new SrchLst;
 
-    Array1 <Array1<int> > tmpPatchIdx(pow(surfI.size(), maxSurfacesOnAFace));
-    Array1 <Array1 <Array1<int> > > tmpPatchIdxOrient(pow(surfI.size(), maxSurfacesOnAFace));
-    cerr << "AllFaceSurfaces.size()="<<allFaceSurfaces.size()<<"\n";
-    for (i=0; i<allFaceSurfaces.size(); i++) {
+    cerr << "allFaceRegions.size()="<<allFaceRegions.size()<<"\n";
+    for (i=0; i<allFaceRegions.size(); i++) {
 //	cerr << "Face="<<i<<"\n";
 //	if ((i%1000)==0) cerr << i <<" ";
 //	cerr << "  **** LOOKING IT UP!\n";
-	int idx=getIdx(allFaceSurfaces[i], surfI.size());
-//	cerr << "   idx="<<idx<<"\n";
-//	cerr << "this faces has index: "<<idx<<"\n";
-	tmpPatchIdx[idx].add(i);
-	Array1<int> surfList;
-	getList(surfList, idx, surfI.size());
-	if (!tmpPatchIdxOrient[idx].size()) 
-	    tmpPatchIdxOrient[idx].resize(surfList.size());
-	// for each surf in the list, we have to look up face i, find its
-	// orientation and add it to 
-	for (j=0; j<surfList.size(); j++) {
-//	    cerr << "     j="<<j<<"\n";
-	    for (k=0; k<surfI[surfList[j]].faces.size(); k++) {
-//		cerr << "       k="<<k<<"\n";
-		if (surfI[surfList[j]].faces[k] == i) {
-//		    cerr <<"         idx="<<idx<<" j="<<j<<" k="<<k<<" or="<<surfI[j].faceOrient[k]<<"\n";
-		    tmpPatchIdxOrient[idx][j].add(surfI[surfList[j]].faceOrient[k]);
-		    break;
-		}
+
+	// initially, point to the top level array
+
+	SrchLst *currLst=tmpPatchIdx;
+
+	// for each region, recursively descend
+
+	for (j=0; j<allFaceRegions[i].size(); j++) {
+
+	    // reg is the next region in the list for this face
+
+	    int reg=allFaceRegions[i][j];
+
+	    // search through the lookup array to find which next[] corresponds
+	    //   to the region we want to descend to.
+	    // if we get to the end of the list, allocate a new one and add 
+	    //   reg to the end of the lookup array
+
+	    for (k=0; k<currLst->lookup.size(); k++) 
+		if (currLst->lookup[k] == reg) break;
+	    if (k==currLst->lookup.size()) {
+		currLst->lookup.add(reg);
+		currLst->next.add(new SrchLst);
 	    }
+
+	    // k has the index for region reg - now descend
+
+	    currLst=currLst->next[k];
 	}
-    }
+
+	// currLst now has the right patch (we've decended through all
+	//   of the regions) -- now store this face's info in the items[][]
+	//   and orient[][][] arrays
+
+	// if the orient[][] array hasn't been allocated yet (first face
+	//   of the patch) - allocate it big enough for all of the regions
+
+	if (!currLst->orient.size())
+	    currLst->orient.resize(j);
+
+	// add this face to the list for the patch
+
+	currLst->items.add(i);
+
+	// for all of the regions this face bounds, find this face in the
+	//   list and add its orientation information to orient[][]
+
+        for (j=0; j<allFaceRegions[i].size(); j++) {
+
+	    for (k=0; k<faceI[i].surfIdx.size(); k++)
+		if (allFaceRegions[i][j] == faceI[i].surfIdx[k]) break;
+	    currLst->orient[j].add(faceI[i].surfOrient[k]);
+
+
 
 #if 0
-    for (i=0; i<tmpPatchIdxOrient.size(); i++)
-	for (j=0; j<tmpPatchIdxOrient[i].size(); j++)
-	    for (k=0; k<tmpPatchIdxOrient[i][j].size(); k++)
-		cerr << "tmpPatchIdxOrient["<<i<<"]["<<j<<"]["<<k<<"] = "<<tmpPatchIdxOrient[i][j][k]<<"\n";
-    cerr << "\n";
-    for (i=0; i<tmpPatchIdx.size(); i++)
-	for (j=0; j<tmpPatchIdx[i].size(); j++)
-	    cerr << "tmpPatchIdx["<<i<<"]["<<j<<"] = "<<tmpPatchIdx[i][j]<<"\n";
-    cerr << "\n";
+//          cerr << "     j="<<j<<"\n";
+            for (k=0; k<surfI[allFaceRegions[i][j]].faces.size(); k++) {
+//              cerr << "       k="<<k<<"\n";
+                if (surfI[allFaceRegions[i][j]].faces[k] == i) {
+//                  cerr <<"         idx="<<idx<<" j="<<j<<" k="<<k<<" or="<<surfI[j].faceOrient[k]<<"\n";
+                    currLst->orient[j].add(surfI[allFaceRegions[i][j]].faceOrient[k]);
+                    break;
+                }
+            }
 #endif
+
+
+        }
+    }
 
     // these will temporarily hold the faces for each patch.  
     // since a patch should be a single connected component, these 
@@ -200,34 +304,13 @@ void TopoSurfTree::BldPatches() {
     cerr << "Allocating and storing temporary patch values... ";
 
     cerr << "\nPatchRegions.size()="<<patchRegions.size()<<"\n";
-    for (i=0; i<tmpPatchIdx.size(); i++) {
+    
+    // recursively descend the tmpPatchIdx srchList -- add all items
+    // to the tmpPatches and tmpPatchesOrient lists
 
-	// if there are any faces of this combination type...
-
-	if (tmpPatchIdx[i].size()) {
-
-	    // find out what surfaces there were	
-
-	    Array1<int> surfList;
-	    getList(surfList, i, surfI.size());
-	    int currSize=patchRegions.size();
-	    patchBdryEdgeFace.resize(currSize+1);
-	    patchBdryEdgeFace[currSize].resize(edgeI.size());
-	    patchBdryEdgeFace[currSize].initialize(-1);
-	    patches.resize(currSize+1);
-	    tmpPatches.resize(currSize+1);
-	    patchesOrient.resize(currSize+1);
-	    patchesOrient[currSize].resize(tmpPatchIdxOrient[i].size());
-	    tmpPatchesOrient.resize(currSize+1);
-	    tmpPatchesOrient[currSize]=tmpPatchIdxOrient[i];
-	    tmpPatches[currSize]=tmpPatchIdx[i];
-	    patchRegions.add(surfList);
-	    for (j=0; j<tmpPatchIdx[i].size(); j++) {
-		faceI[tmpPatchIdx[i][j]].patchIdx=currSize;
-		faceI[tmpPatchIdx[i][j]].patchEntry=j;
-	    }
-	}
-    }
+    Array1<int> descend;
+    addPatchAndDescend(tmpPatchIdx, tmpPatches, tmpPatchesOrient, descend);
+    descendAndFree(tmpPatchIdx);
 
 #if 0
     cerr << "patches.size()="<<patches.size()<<"\n";
@@ -427,23 +510,15 @@ void TopoSurfTree::BldWires() {
 
     if (maxFacesOnAnEdge<2) return;
 
-    int sz=pow(patches.size(), maxFacesOnAnEdge);
-    cerr << "allocating "<<maxFacesOnAnEdge<<" levels with "<< patches.size()<< " types (total="<<sz<<").\n";
+    // create a recursive array structure that can be descended by
+    // indexing all of the patches an edge touches (allEdgePatches[])
+    //
+    // the list of edges for a wire is stored in an items[][] array
+    // there is also an array of orientations for wire, orient[][][], 
+    //   indexed by the wire, then the patch, and then the edge
 
-    // allocate all combinations of the maximum number of patches
-    // from the lists of which patches each edge belong to,
-    // construct a list of edges which belong for each patch
-    // combination
+    SrchLst *tmpWireIdx = new SrchLst;
 
-    // a better way to do this is to HASH on each patch --
-    // each hashed key should find another hash table, as well as a
-    // list of edges (we'll need a new struct for this).
-    // NOTE - we should use this multi-level hashing technique in
-    // SegFldToSurfTree when we hash the faces and edges.
-
-    Array1 <Array1<int> > tmpWireIdx(pow(patches.size(), maxFacesOnAnEdge));
-    Array1 <Array1 <Array1<int> > > tmpWireIdxOrient(pow(patches.size(), 
-							 maxFacesOnAnEdge));
     cerr << "AllEdgePatches.size()="<<allEdgePatches.size()<<"\n";
     for (i=0; i<allEdgePatches.size(); i++) {
 
@@ -452,40 +527,64 @@ void TopoSurfTree::BldWires() {
 	edgeI[i].wireEntry=-1;
 
 	if (!allEdgePatches[i].size()) continue; // only use bdry edges
-	// cerr << "  **** LOOKING IT UP!\n";
-	int idx=getIdx(allEdgePatches[i], patches.size());
-	// cerr << "this faces has index: "<<idx<<"\n";
-	tmpWireIdx[idx].add(i);
-	Array1<int> patchList;
-	getList(patchList, idx, patches.size());
-	if (!tmpWireIdxOrient[idx].size()) 
-	    tmpWireIdxOrient[idx].resize(patchList.size());
 
-	// for each patch in the list, we have to look up edge i, find its
-	// orientation and add it to tmpWireIdxOrient
-	for (j=0; j<patchList.size(); j++) {
+	// initially, point to the top level array
+
+	SrchLst *currLst=tmpWireIdx;
+
+	// for each patch, recursively descend
+
+	for (j=0; j<allEdgePatches[i].size(); j++) {
+
+	    // ptch is the next patch in the list for this edge
+
+	    int ptch=allEdgePatches[i][j];
+
+	    // search through the lookup array to find which next[] corresponds
+	    //   to the patch we want to descend to.
+	    // if we get to the end of the list, allocate a new one and add 
+	    //   reg to the end of the lookup array
+
+	    for (k=0; k<currLst->lookup.size(); k++) 
+		if (currLst->lookup[k] == ptch) break;
+	    if (k==currLst->lookup.size()) {
+		currLst->lookup.add(ptch);
+		currLst->next.add(new SrchLst);
+	    }
+
+	    // k has the index for patch ptch - now descend
+
+	    currLst=currLst->next[k];
+	}
+
+	// currLst now has the right wire (we've decended through all
+	//   of the patches) -- now store this edge's info in the items[][]
+	//   and orient[][][] arrays
+
+	// if the orient[][] array hasn't been allocated yet (first edge
+	//   of the wire) - allocate it big enough for all of the regions
+
+	if (!currLst->orient.size())
+	    currLst->orient.resize(j);
+
+	// add this edge to the list for the wire
+
+	currLst->items.add(i);
+
+	// for all of the patches this edge bounds, find this edge in the
+	//   list and add its orientation information to orient[][]
+
+        for (j=0; j<allEdgePatches[i].size(); j++) {
 	    int fidx=patchBdryEdgeFace[j][i];
 	    if (fidx == -1) continue;
-	    for (k=0; k<faceI[fidx].edges.size(); k++) {
+            for (k=0; k<faceI[fidx].edges.size(); k++) {
 		if (faceI[fidx].edges[k] == i) {
-		    tmpWireIdxOrient[idx][j].add(faceI[fidx].edgeOrient[k]);
+		    currLst->orient[j].add(faceI[fidx].edgeOrient[k]);
 		    break;
 		}
 	    }
 	}
     }
-
-#if 0
-    for (i=0; i<tmpWireIdxOrient.size(); i++)
-	for (j=0; j<tmpWireIdxOrient[i].size(); j++)
-	    for (k=0; k<tmpWireIdxOrient[i][j].size(); k++)
-		cerr << "tmpWireIdxOrient["<<i<<"]["<<j<<"]["<<k<<"] = "<<tmpWireIdxOrient[i][j][k]<<"\n";
-    cerr << "\n";
-    for (i=0; i<tmpWireIdx.size(); i++)
-	for (j=0; j<tmpWireIdx[i].size(); j++)
-	    cerr << "tmpWireIdx["<<i<<"]["<<j<<"] = "<<tmpWireIdx[i][j]<<"\n";
-    cerr << "\n";
-#endif
 
     // these will temporarily hold the edges for each wire.
     // since a wire should be a single connected component, these
@@ -495,31 +594,12 @@ void TopoSurfTree::BldWires() {
     Array1<Array1<int> > tmpWires;
     Array1<Array1<Array1<int> > > tmpWiresOrient;
 
-    for (i=0; i<tmpWireIdx.size(); i++) {
+    // recursively descend the tmpWireIdx srchList -- add all items
+    // to the tmpWires and tmpWiresOrient lists
 
-	// if there are any faces of this combination type...
-
-	if (tmpWireIdx[i].size()) {
-
-	    // find out what patches there were	
-
-	    Array1<int> patchList;
-	    getList(patchList, i, patches.size());
-	    int currSize=wirePatches.size();
-	    wires.resize(currSize+1);
-	    tmpWires.resize(currSize+1);
-	    wireBdryNodes.resize(currSize+1);
-	    wiresOrient.resize(currSize+1);
-	    tmpWiresOrient.resize(currSize+1);
-	    tmpWiresOrient[currSize]=tmpWireIdxOrient[i];
-	    tmpWires[currSize]=tmpWireIdx[i];
-	    wirePatches.add(patchList);
-	    for (j=0; j<tmpWireIdx[i].size(); j++) {
-		edgeI[tmpWireIdx[i][j]].wireIdx=currSize;
-		edgeI[tmpWireIdx[i][j]].wireEntry=j;
-	    }
-	}
-    }
+    Array1<int> descend;
+    addWireAndDescend(tmpWireIdx, tmpWires, tmpWiresOrient, descend);
+    descendAndFree(tmpWireIdx);
 
     // now we have to do connectivity searches on each wire -- make sure
     // it's one connected component.  If it isn't, break it into separate
@@ -691,7 +771,7 @@ void TopoSurfTree::BldJunctions() {
     //    it's part of and insert the node into the tmpTypeMembers list
     // for every non-empty tmpTypeMembers array, build the: junctions
     //    and junctionsWires arrays
-    int i,j;
+    int i,j,k;
 
     nodeToJunction.resize(nodes.size());
     nodeToJunction.initialize(-1);
@@ -708,62 +788,67 @@ void TopoSurfTree::BldJunctions() {
 //	    cerr << "   wireBdryNodes["<<i<<"]["<<j<<"]="<<wireBdryNodes[i][j]<<"\n";
 	    allNodeWires[wireBdryNodes[i][j]].add(i);
 	}
-    int maxWiresOnANode=1;
 
     // sort all of the lists from above, and find the maximum number of
     // wires a node belongs to
     for (i=0; i<allNodeWires.size(); i++)
 	if (allNodeWires[i].size() > 1) {
-	    if (allNodeWires[i].size() > maxWiresOnANode)
-		maxWiresOnANode=allNodeWires[i].size();
 	    order(allNodeWires[i]);
 	}
 
-    int sz=pow(wires.size(), maxWiresOnANode);
-    cerr << "allocating "<<maxWiresOnANode<<" levels with "<< wires.size()<< " types (total="<<sz<<").\n";
+    // create a recursive array structure that can be descended by
+    // indexing all of the wires a node touches (allNodeWires[])
+    //
+    // the list of nodes for a junction is stored in an items[][] array
 
-    // allocate all combinations of the maximum number of wires
-    // from the lists of which wires each node belong to,
-    // construct a list of nodes which belong for each wire
-    // combination
+    SrchLst *tmpJunctionIdx = new SrchLst;
 
-    // a better way to do this is to HASH on each wire --
-    // each hashed key should find another hash table, as well as a
-    // list of nodes (we'll need a new struct for this).
-
-    Array1 <Array1<int> > tmpJunctions(pow(wires.size(), maxWiresOnANode));
     cerr << "AllNodeWires.size()="<<allNodeWires.size()<<"\n";
     for (i=0; i<allNodeWires.size(); i++) {
 //	cerr << "  **** LOOKING IT UP!\n";
 	if (!allNodeWires[i].size()) continue;
-	int idx=getIdx(allNodeWires[i], wires.size());
-//	cerr << "this faces has index: "<<idx<<"\n";
-	tmpJunctions[idx].add(i);
-    }
 
-#if 0
-    for (i=0; i<tmpJunctions.size(); i++)
-	for (j=0; j<tmpJunctions[i].size(); j++)
-	    cerr << "tmpJunctions["<<i<<"]["<<j<<"] = "<<tmpJunctions[i][j]<<"\n";
-#endif
+	// initially, point to the top level array
 
-    for (i=0; i<tmpJunctions.size(); i++) {
+	SrchLst *currLst=tmpJunctionIdx;
 
-	// if there are any nodes of this combination type...
+	// for each wire, recursively descend
 
-	if (tmpJunctions[i].size()) {
+	for (j=0; j<allNodeWires[i].size(); j++) {
 
-	    // find out what wires there were	
+	    // wr is the next wire in the list for this node
 
-	    Array1<int> wireList;
-	    getList(wireList, i, wires.size());
-	    int currSize=junctionWires.size();
-	    junctions.resize(currSize+1);
-	    junctionWires.add(wireList);
-	    for (j=0; j<tmpJunctions[i].size(); j++)
-		junctions[currSize]=tmpJunctions[i][j];
+	    int wr=allNodeWires[i][j];
+
+	    // search through the lookup array to find which next[] corresponds
+	    //   to the wire we want to descend to.
+	    // if we get to the end of the list, allocate a new one and add 
+	    //   wr to the end of the lookup array
+
+	    for (k=0; k<currLst->lookup.size(); k++) 
+		if (currLst->lookup[k] == wr) break;
+	    if (k==currLst->lookup.size()) {
+		currLst->lookup.add(wr);
+		currLst->next.add(new SrchLst);
+	    }
+
+	    // k has the index for wire wr - now descend
+
+	    currLst=currLst->next[k];
 	}
+
+	// currLst now has the right junction (we've decended through all
+	//   of the wires) -- now store this node's info in the items[][] array
+
+	currLst->items.add(i);
     }
+
+    // recursively descend the tmpJunctionsIdx srchList -- add all items
+    // to the junctions and junctionWires lists
+
+    Array1<int> descend;
+    addJunctionAndDescend(tmpJunctionIdx, descend);
+    descendAndFree(tmpJunctionIdx);
 
 #if 0
     cerr << "Junctions.size() = "<<junctions.size()<<"\n";

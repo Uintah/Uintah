@@ -84,7 +84,7 @@ public:
 
 Piostream* auto_istream(const clString& filename);
 Piostream* auto_istream(int fd);
-Piostream* auto_istream(ifstream* inp);
+Piostream* auto_istream(ifstream* inp, char *name=0);
 
 class Persistent {
 public:
