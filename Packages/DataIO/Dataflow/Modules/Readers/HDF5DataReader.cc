@@ -1815,9 +1815,11 @@ HDF5DataReader::createDumpFile( string filename, string dumpname ) {
     gui->execute( "reset_cursor" );
     return -1;
   }
-  
-  if( DataIO::HDF5Dump_file( filename, &sPtr ) < 0 ) {
-    error( DataIO::HDF5Dump_error() );
+
+  HDF5Dump hdf( &sPtr );
+
+  if( hdf.file( filename ) < 0 ) {
+    error( hdf.error() );
     gui->execute( "reset_cursor" );
 
     sPtr.flush();

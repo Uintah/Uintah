@@ -128,26 +128,38 @@ namespace DataIO {
 
 using namespace std;
 
-static int HDF5Dump_indent = 0;
-static string HDF5Dump_error_msg;
+herr_t
+hdf5_attr_iter(hid_t group_id, const char *name, void *op_data) {
 
-std::string
-HDF5Dump_error()
-{
-  return HDF5Dump_error_msg;
+  HDF5Dump *hdf = (HDF5Dump*) op_data;
+
+  return hdf->attr( group_id, name );
 }
 
+herr_t
+hdf5_group_iter(hid_t group_id, const char *name, void *op_data) {
+
+  HDF5Dump *hdf = (HDF5Dump*) op_data;
+
+  return hdf->all( group_id, name );
+}
+
+HDF5Dump::HDF5Dump( ostream *iostr ) :
+  indent_(0)
+{
+  iostr_ = iostr;
+}
 
 void
-HDF5Dump_tab( ostream* iostr )
+HDF5Dump::tab()
 {
-  for( int i=0; i<HDF5Dump_indent; i++ )
-    *iostr << "   ";
+  for( unsigned int i=0; i<indent_; i++ )
+    *iostr_ << "   ";
 }
 
 
 herr_t
-HDF5Dump_file(const string fname, ostream *iostr) {
+HDF5Dump::file(const string fname) {
 
   herr_t status = 0;
 
@@ -155,31 +167,31 @@ HDF5Dump_file(const string fname, ostream *iostr) {
   hid_t file_id = H5Fopen(fname.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
   if (file_id < 0) {
-    HDF5Dump_error_msg = "Unable to open file: " + fname;
+    error_msg_ = "Unable to open file: " + fname;
     status = -1;
   }
 
-  *iostr << "HDF5 \"" << fname << "\" {" << endl;
+  *iostr_ << "HDF5 \"" << fname << "\" {" << endl;
 
   hid_t group_id = H5Gopen(file_id, "/");
 
   if (group_id < 0) {
-    HDF5Dump_error_msg = string("Unable to open root group");
+    error_msg_ = string("Unable to open root group");
     status = 1;
-  } else if( HDF5Dump_group(group_id, "/", iostr) < 0 ) {
-    HDF5Dump_error_msg = string("Unable to dump root group");
+  } else if( group(group_id, "/") < 0 ) {
+    error_msg_ = string("Unable to dump root group");
     status = -1;
   }
   
-  *iostr << "}" << endl;
+  *iostr_ << "}" << endl;
 
   if (H5Gclose(group_id) < 0) {
-    HDF5Dump_error_msg = "Unable to close root group";
+    error_msg_ = "Unable to close root group";
     status = -1;
   }
 
   if (H5Fclose(file_id ) < 0) {
-    HDF5Dump_error_msg = "Unable to close file: " + fname;
+    error_msg_ = "Unable to close file: " + fname;
     status = -1;
   }
 
@@ -188,67 +200,29 @@ HDF5Dump_file(const string fname, ostream *iostr) {
 
 
 herr_t
-HDF5Dump_attr(hid_t group_id, const char * name, void* op_data) {
+HDF5Dump::group(hid_t group_id, const char *name ) {
 
   herr_t status = 0;
 
-  ostream* iostr = (ostream*) op_data;
+  tab();
+  *iostr_ << "GROUP \"" << name << "\" {" << endl;
+  indent_++;
 
-  HDF5Dump_tab( iostr );
-  *iostr << "ATTRIBUTE \"" << name << "\" {" << endl;
-  HDF5Dump_indent++;
+  H5Aiterate(group_id,      NULL, hdf5_attr_iter,  this);
+  H5Giterate(group_id, ".", NULL, hdf5_group_iter, this);
 
-  hid_t attr_id = H5Aopen_name(group_id, name);
+  indent_--;
+  tab();
+  *iostr_ << "}" << endl;
 
-  if (attr_id < 0) {
-    HDF5Dump_error_msg =
-      string("Unable to open attribute \"") + name + "\"";
-    status = -1;
-  } else {
-
-    /* Open the file space in the file.
-    hid_t file_space_id = H5Aget_space( attr_id );
-
-    if( file_space_id < 0 ) {
-      HDF5Dump_error_msg =
-        string("Unable to open file space \"") + name + "\"";
-      return -1;
-    } else if( HDF5Dump_dataspace(file_space_id) < 0 ) {
-      HDF5Dump_error_msg =
-	string("Unable to dump attribute data \"") + name + "\"";
-      return -1;
-    }
-
-    H5Sclose(file_space_id);
-    */
-
-    if( HDF5Dump_datatype( attr_id, 0, iostr ) < 0) {
-      HDF5Dump_error_msg =
-	string("Unable to dump attribute type \"") + name + "\"";
-      status = -1;
-    } else if( HDF5Dump_data(attr_id, 0, iostr) < 0 ) {
-      HDF5Dump_error_msg =
-	string("Unable to dump attribute data \"") + name + "\"";
-      status = -1;
-    }
-
-    H5Aclose(attr_id);
-  }    
-
-  HDF5Dump_indent--;
-  HDF5Dump_tab( iostr );
-  *iostr << "}" << endl;
-  
   return status;
 }
 
 
 herr_t
-HDF5Dump_all(hid_t obj_id, const char * name, void* op_data) {
+HDF5Dump::all(hid_t obj_id, const char *name) {
 
   herr_t status = 0;
-
-  ostream* iostr = (ostream*) op_data;
 
   H5G_stat_t  statbuf;
   hid_t group_id;
@@ -259,10 +233,10 @@ HDF5Dump_all(hid_t obj_id, const char * name, void* op_data) {
   switch (statbuf.type) {
   case H5G_GROUP:
     if ((group_id = H5Gopen(obj_id, name)) < 0) {
-      HDF5Dump_error_msg = string("Unable to open group \"") + name + "\"";
+      error_msg_ = string("Unable to open group \"") + name + "\"";
       status = -1;
-    } else if( HDF5Dump_group(group_id, name, iostr) < 0 ) {
-      HDF5Dump_error_msg = string("Unable to dump group \"") + name + "\"";
+    } else if( group(group_id, name) < 0 ) {
+      error_msg_ = string("Unable to dump group \"") + name + "\"";
       status = -1;
     } else {
       H5Gclose(group_id);
@@ -272,10 +246,10 @@ HDF5Dump_all(hid_t obj_id, const char * name, void* op_data) {
     break;
   case H5G_DATASET:
     if ((dataset_id = H5Dopen(obj_id, name)) < 0) {
-      HDF5Dump_error_msg = string("Unable to open dataset \"") + name + "\"";
+      error_msg_ = string("Unable to open dataset \"") + name + "\"";
       status = -1;
-    } else if( HDF5Dump_dataset(dataset_id, name, iostr) < 0) {
-      HDF5Dump_error_msg = string("Unable to dump dataset \"") + name + "\"";
+    } else if( dataset(dataset_id, name) < 0) {
+      error_msg_ = string("Unable to dump dataset \"") + name + "\"";
       status = -1;
     } else {
       H5Dclose(dataset_id);
@@ -293,69 +267,101 @@ HDF5Dump_all(hid_t obj_id, const char * name, void* op_data) {
 
 
 herr_t
-HDF5Dump_group(hid_t group_id, const char * name, ostream* iostr ) {
+HDF5Dump::attr(hid_t group_id, const char *name) {
 
   herr_t status = 0;
 
-  HDF5Dump_tab( iostr );
-  *iostr << "GROUP \"" << name << "\" {" << endl;
-  HDF5Dump_indent++;
+  tab();
+  *iostr_ << "ATTRIBUTE \"" << name << "\" {" << endl;
+  indent_++;
 
-  H5Aiterate(group_id, NULL, HDF5Dump_attr, iostr);
-  H5Giterate(group_id, ".", NULL, HDF5Dump_all, iostr);
+  hid_t attr_id = H5Aopen_name(group_id, name);
 
-  HDF5Dump_indent--;
-  HDF5Dump_tab( iostr );
-  *iostr << "}" << endl;
+  if (attr_id < 0) {
+    error_msg_ = string("Unable to open attribute \"") + name + "\"";
+    status = -1;
+  } else {
 
+    /* Open the file space in the file.
+    hid_t file_space_id = H5Aget_space( attr_id );
+
+    if( file_space_id < 0 ) {
+      error_msg_ =
+        string("Unable to open file space \"") + name + "\"";
+      return -1;
+    } else if( dataspace(file_space_id) < 0 ) {
+      error_msg_ =
+	string("Unable to dump attribute data \"") + name + "\"";
+      return -1;
+    }
+
+    H5Sclose(file_space_id);
+    */
+
+    if( datatype(attr_id, 0) < 0) {
+      error_msg_ =
+	string("Unable to dump attribute type \"") + name + "\"";
+      status = -1;
+    } else if( data(attr_id, 0) < 0 ) {
+      error_msg_ =
+	string("Unable to dump attribute data \"") + name + "\"";
+      status = -1;
+    }
+
+    H5Aclose(attr_id);
+  }    
+
+  indent_--;
+  tab();
+  *iostr_ << "}" << endl;
+  
   return status;
 }
 
 
 herr_t
-HDF5Dump_dataset(hid_t dataset_id, const char * name, ostream* iostr) {
+HDF5Dump::dataset(hid_t dataset_id, const char *name) {
 
   herr_t status = 0;
 
-  HDF5Dump_tab( iostr );
-  *iostr << "DATASET \"" << name << "\" {" << endl;
-  HDF5Dump_indent++;
+  tab();
+  *iostr_ << "DATASET \"" << name << "\" {" << endl;
+  indent_++;
 
   hid_t file_space_id = H5Dget_space( dataset_id );
 
   /* Open the data space in the file. */
-  if( HDF5Dump_datatype( dataset_id, H5G_DATASET, iostr ) < 0) {
-    HDF5Dump_error_msg = string("Unable to dump datatype \"") + name + "\"";
+  if( datatype( dataset_id, H5G_DATASET ) < 0) {
+    error_msg_ = string("Unable to dump datatype \"") + name + "\"";
     status = -1;
   } else if( file_space_id < 0 ) {
-    HDF5Dump_error_msg = string("Unable to open dataspace \"") + name + "\"";
+    error_msg_ = string("Unable to open dataspace \"") + name + "\"";
     status = -1;
-  } else if( HDF5Dump_dataspace( file_space_id, iostr ) < 0) {
-    HDF5Dump_error_msg = string("Unable to dump dataspace \"") + name + "\"";
+  } else if( dataspace( file_space_id ) < 0) {
+    error_msg_ = string("Unable to dump dataspace \"") + name + "\"";
     status = -1;
   } else {
     H5Sclose(file_space_id);
     /*    
-    if( HDF5Dump_data(dataset_id, H5G_DATASET, iostr) < 0 ) {
-      HDF5Dump_error_msg = "Unable to dump dataset data \"" + name + "\"";
+    if( data(dataset_id, H5G_DATASET, iostr_) < 0 ) {
+      error_msg_ = "Unable to dump dataset data \"" + name + "\"";
       status = -1;
     }
     */
   }
 
-  H5Aiterate(dataset_id, NULL, HDF5Dump_attr, iostr);
+  H5Aiterate(dataset_id, NULL, hdf5_attr_iter, this);
 
-
-  HDF5Dump_indent--;
-  HDF5Dump_tab( iostr );
-  *iostr << "}" << endl;
+  indent_--;
+  tab();
+  *iostr_ << "}" << endl;
 
   return status;
 }
 
 
 herr_t
-HDF5Dump_datatype(hid_t obj_id, hid_t type, ostream* iostr)
+HDF5Dump::datatype(hid_t obj_id, hid_t type)
 {
   herr_t status = 0;
 
@@ -368,12 +374,12 @@ HDF5Dump_datatype(hid_t obj_id, hid_t type, ostream* iostr)
     type_id = H5Aget_type(obj_id);
   }
 
-  HDF5Dump_tab( iostr );
-  *iostr << "DATATYPE \"";
+  tab();
+  *iostr_ << "DATATYPE \"";
 
   switch (H5Tget_class(type_id)) {
   case H5T_INTEGER:
-    *iostr << "Integer";
+    *iostr_ << "Integer";
     break;
 
   case H5T_FLOAT:
@@ -381,42 +387,42 @@ HDF5Dump_datatype(hid_t obj_id, hid_t type, ostream* iostr)
 	H5Tequal(type_id, H5T_IEEE_F32LE) ||
 	H5Tequal(type_id, H5T_NATIVE_FLOAT)) {
       // Float
-      *iostr << "Float";
+      *iostr_ << "Float";
 
     } else if (H5Tequal(type_id, H5T_IEEE_F64BE) ||
 	       H5Tequal(type_id, H5T_IEEE_F64LE) ||
 	       H5Tequal(type_id, H5T_NATIVE_DOUBLE) ||
 	       H5Tequal(type_id, H5T_NATIVE_LDOUBLE)) {
       // Double
-      *iostr << "Double";
+      *iostr_ << "Double";
 
     } else {
-      *iostr << "Undefined HDF5 float.";
+      *iostr_ << "Undefined HDF5 float.";
     }
     break;
 
   case H5T_STRING:
-    *iostr << "String";
+    *iostr_ << "String";
     if( type == H5G_DATASET )
-      *iostr << " - Unsupported";
+      *iostr_ << " - Unsupported";
     break;
 
   case H5T_COMPOUND:
-    *iostr << "Compound - Unsupported";
+    *iostr_ << "Compound - Unsupported";
     break;
       
   case H5T_REFERENCE:
-    *iostr << "Reference";
+    *iostr_ << "Reference";
     if( type == H5G_DATASET )
-      *iostr << " - Unsupported";
+      *iostr_ << " - Unsupported";
     break;
       
   default:
-    *iostr << "Unsupported or unknown data type";
+    *iostr_ << "Unsupported or unknown data type";
     break;
   }
 
-  *iostr << "\"" << endl;
+  *iostr_ << "\"" << endl;
 
   H5Tclose(type_id);
 
@@ -425,7 +431,7 @@ HDF5Dump_datatype(hid_t obj_id, hid_t type, ostream* iostr)
 
 
 herr_t
-HDF5Dump_dataspace(hid_t file_space_id, ostream* iostr) {
+HDF5Dump::dataspace(hid_t file_space_id) {
 
   herr_t status = 0;
 
@@ -437,8 +443,8 @@ HDF5Dump_dataspace(hid_t file_space_id, ostream* iostr) {
     if (ndims == 0) {
       /* scalar dataspace */
 
-      HDF5Dump_tab( iostr );
-      *iostr << "DATASPACE  SCALAR { ( 1 ) }" << endl;
+      tab();
+      *iostr_ << "DATASPACE  SCALAR { ( 1 ) }" << endl;
     } else {
       /* simple dataspace */
 
@@ -448,17 +454,17 @@ HDF5Dump_dataspace(hid_t file_space_id, ostream* iostr) {
       int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
 
       if( ndim != ndims ) {
-	HDF5Dump_error_msg = "Data dimensions not match.";
+	error_msg_ = "Data dimensions not match.";
 	return -1;
       }
 
-      HDF5Dump_tab( iostr );
-      *iostr << "DATASPACE  SIMPLE { ( " << dims[0];
+      tab();
+      *iostr_ << "DATASPACE  SIMPLE { ( " << dims[0];
 
       for( int i = 1; i < ndims; i++ )
-	*iostr << ", " << dims[i];
+	*iostr_ << ", " << dims[i];
       
-      *iostr << " ) }" << endl;
+      *iostr_ << " ) }" << endl;
 
       delete dims;
     }
@@ -469,7 +475,7 @@ HDF5Dump_dataspace(hid_t file_space_id, ostream* iostr) {
 
 
 herr_t
-HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
+HDF5Dump::data(hid_t obj_id, hid_t type) {
 
   hid_t type_id, file_space_id, mem_type_id;
 
@@ -483,7 +489,7 @@ HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
   }
 
   if( file_space_id < 0 ) {
-    HDF5Dump_error_msg = "Unable to open data ";
+    error_msg_ = "Unable to open data ";
     return -1;
   }
 
@@ -520,7 +526,7 @@ HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
       mem_type_id = H5T_NATIVE_DOUBLE;
 
     } else {
-      HDF5Dump_error_msg = "Undefined HDF5 float";
+      error_msg_ = "Undefined HDF5 float";
       return -1;
     }
     break;
@@ -529,7 +535,7 @@ HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
     break;
 
   default:
-    HDF5Dump_error_msg = "Unknown or unsupported HDF5 data type";
+    error_msg_ = "Unknown or unsupported HDF5 data type";
     return -1;
   }
 
@@ -543,7 +549,7 @@ HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
   int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
 
   if( ndim != ndims ) {
-    HDF5Dump_error_msg = "Data dimensions not match.";
+    error_msg_ = "Data dimensions not match.";
     return -1;
   }
 
@@ -565,7 +571,7 @@ HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
   char *data = new char[size];
 
   if( data == NULL ) {
-    HDF5Dump_error_msg = "Can not allocate enough memory for the data";
+    error_msg_ = "Can not allocate enough memory for the data";
     return -1;
   }
 
@@ -579,14 +585,14 @@ HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
     status = H5Aread(obj_id, mem_type_id, data);
 
   if( status < 0 ) {
-    HDF5Dump_error_msg = "Can not read data";
+    error_msg_ = "Can not read data";
     return -1;
   }
 
-  HDF5Dump_tab( iostr );
-  *iostr << "DATA {" << endl;
+  tab();
+  *iostr_ << "DATA {" << endl;
 
-  HDF5Dump_indent++;
+  indent_++;
 
   unsigned int *counters = new unsigned int[ndims];
 
@@ -594,14 +600,14 @@ HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
     counters[ic] = 0;
 
 
-  HDF5Dump_tab( iostr );
+  tab();
   for( int ic=0; ic<cc; ic++ ) {
     if (mem_type_id == H5T_NATIVE_INT)
-      *iostr << ((int*) data)[ic];
+      *iostr_ << ((int*) data)[ic];
     else if (mem_type_id == H5T_NATIVE_FLOAT)
-      *iostr << ((float*) data)[ic];
+      *iostr_ << ((float*) data)[ic];
     else if (mem_type_id == H5T_NATIVE_DOUBLE)
-      *iostr << ((double*) data)[ic];
+      *iostr_ << ((double*) data)[ic];
     else if (mem_type_id == H5T_STD_REF_OBJ) {
 
       // Find out the type of the object the reference points to.
@@ -621,43 +627,43 @@ HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
       /* Print object type and close object */
       switch (ref_type) {
       case H5G_GROUP:
-	*iostr << "GROUPNAME ";
+	*iostr_ << "GROUPNAME ";
 	H5Gclose(ref_obj_id);
 	break;
       case H5G_DATASET:
-	*iostr << "DATASET ";
+	*iostr_ << "DATASET ";
 	H5Dclose(ref_obj_id);
 	break;
       case H5G_TYPE:
-	*iostr << "DATATYPE ";
+	*iostr_ << "DATATYPE ";
 	H5Tclose(ref_obj_id);
 	break;
       case H5G_LINK:
-	*iostr  << "LINK ";
+	*iostr_  << "LINK ";
 	break;
       }
 
-      *iostr << name << " ";
-//      *iostr << sb.objno[1] << ":" << sb.objno[0];
+      *iostr_ << name << " ";
+//      *iostr_ << sb.objno[1] << ":" << sb.objno[0];
     } else if( H5Tget_class(type_id) == H5T_STRING ) {
       if(H5Tis_variable_str(type_id))
-	*iostr << ((char*) data)[ic];
+	*iostr_ << ((char*) data)[ic];
       // For non variable types all of the string data is read together
       // so parse it out based on the element size.
       else {
-	*iostr << "\"";
+	*iostr_ << "\"";
 	for( int jc=0; jc<element_size; jc++ )
 	  if( !iscntrl( ((char*) data)[ic*element_size+jc] ) )
-	    *iostr << ((char*) data)[ic*element_size+jc];
+	    *iostr_ << ((char*) data)[ic*element_size+jc];
 	  else
 	    break;
 
-	*iostr << "\"";
+	*iostr_ << "\"";
       }
     }
 
     if( cc > 1 && ic<cc-1)
-      *iostr << ", ";
+      *iostr_ << ", ";
 
     if( ndims ) {
       counters[ndims-1]++;
@@ -666,19 +672,18 @@ HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
 	if( counters[jc] == dims[jc] ) {
 	  counters[jc] = 0;
 	  counters[jc-1]++;
-	  *iostr << endl;
-	  HDF5Dump_tab( iostr );
+	  *iostr_ << endl;
+	  tab();
 	}
       }
     }
   }
 
-  *iostr << endl;
+  *iostr_ << endl;
 
-  HDF5Dump_indent--;
-
-  HDF5Dump_tab( iostr );
-  *iostr << "}" << endl;
+  indent_--;
+  tab();
+  *iostr_ << "}" << endl;
 
   H5Tclose(type_id);
 
