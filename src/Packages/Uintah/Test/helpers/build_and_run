@@ -54,6 +54,7 @@ while [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; do
 	echo "Showing make errors:"
 	# show the compile errors (just the stuff it can't compile)
 	nice /usr/local/gnu/bin/make -k -j$MAKE_PARALLELISM
+	echo ""
 
 	# failed make, set a lock for this build
 	if [ ! -d "${BUILD_DIR}/make-${mode}.lock" ]; then
