@@ -139,6 +139,12 @@ private:
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
+  void removeFixedDOF(                 const ProcessorGroup*, 
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls, 
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
   void rigidBody(                      const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
@@ -212,14 +218,6 @@ private:
                                        DataWarehouse* new_dw,
                                        const bool recursion);
 
-  void removeFixedDOF(                 const ProcessorGroup*, 
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls, 
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw,
-                                       const bool recursion);
-
-
   void solveForDuCG(                   const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
@@ -277,13 +275,13 @@ private:
   void scheduleFormQ(               SchedulerP&, const PatchSet*,
                                     const MaterialSet*, const bool recursion);
 
-  void scheduleRemoveFixedDOF(      SchedulerP&, const PatchSet*, 
-                                    const MaterialSet*,const bool recursion);
-
   void scheduleUpdateGridKinematics(SchedulerP&, const PatchSet*, 
 				    const MaterialSet*, const bool recursion);
 
   void scheduleInterpolateParticlesToGrid(     SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
+
+  void scheduleRemoveFixedDOF(                 SchedulerP&, const PatchSet*, 
                                                const MaterialSet*);
 
   void scheduleRigidBody(                      SchedulerP&, const PatchSet*,
