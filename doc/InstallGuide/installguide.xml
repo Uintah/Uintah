@@ -8,6 +8,7 @@
 <!ENTITY requirements SYSTEM "requirements.xml">
 <!ENTITY recommendations SYSTEM "recommendations.xml">
 <!ENTITY appendix SYSTEM "appendix.xml">
+<!ENTITY edition  SYSTEM "../edition.xml">
 ]>
 
 
@@ -37,6 +38,7 @@
 
   <bookinfo>
     <title>installguide.xml</title>
+    &edition;
     <authorgroup>
       <author>
         <firstname>Chris</firstname>

@@ -11,6 +11,7 @@
 <!ENTITY chapter7 SYSTEM "../../src/Core/Util/doc/dirspec.xml">
 <!ENTITY chapter8 SYSTEM "../../src/Core/Exceptions/doc/dirspec.xml">
 <!ENTITY chapter9 SYSTEM "../../src/Dataflow/Network/doc/dirspec.xml">
+<!ENTITY edition  SYSTEM "../edition.xml">
 ]>
 
 
@@ -40,6 +41,7 @@
 
   <bookinfo>
     <title>devguide.xml</title>
+    &edition;
     <authorgroup>
       <author>
         <firstname>Chris</firstname>
