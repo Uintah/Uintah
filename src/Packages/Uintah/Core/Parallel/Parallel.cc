@@ -1,3 +1,4 @@
+#define MPI_VERSION_CHECK
 
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -110,8 +111,8 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
   // Look for SGI MPI
   if(getenv("MPI_ENVIRONMENT")){
     ::usingMPI=true;
-  } else if(getenv("RMS_PROCS")){
-    // Look for CompaqMPI
+  } else if(getenv("RMS_PROCS") || getenv("RMS_STOPONELANINIT")){
+    // Look for CompaqMPI - that latter is set on ASCI Q
     // This isn't conclusive, but we will go with it.
     ::usingMPI=true;
   } else {
