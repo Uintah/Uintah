@@ -2,7 +2,7 @@
 
 ./rtrt -np 12 -scene scenes/multi-scene 5 -scene scenes/sphere-room2
 -scene scenes/living-room -scene scenes/science-room -scene
-scenes/min-museum -scene scenes/basic-sea 
+scenes/3min-museum -scene scenes/basic-sea 
 
 
 rtrt -np 8 -eye -18.9261 -22.7011 52.5255 -lookat -7.20746 -8.61347 -16.643 -up 0.490986 -0.866164 -0.0932288 -fov 40 -scene scenes/graphics-museum 
@@ -101,7 +101,7 @@ using namespace SCIRun;
 #define INSERTHISTORYMODELS 1
 #define INSERTMULTIWALLLIGHTS 0
 
-#define INSERTHUGEMODELS 0
+#define INSERTHUGEMODELS 1
 
 #if INSERTMODERNMODELS
 
@@ -1691,16 +1691,17 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
 
 #if INSERTHUGEMODELS
   Transform davidT (Point(0,0,0),
-		    Vector(0.001000,0.,0.),
-		    Vector(0.,0.,-0.001), 
-		    Vector(0.,0.001000,0.));
-  davidT.pre_translate (Vector(-14.743912,-21.719974, 1.951428));
+		    Vector(-0.001,0.,0.),
+		    Vector(0.,-0.001,0.), 
+		    Vector(0.,0.,0.001000));
+//    davidT.pre_translate (Vector(-13.256088,-20.334214,5.427));
+  davidT.pre_translate (Vector(-13.256088,-20.334214,5.127));
   davidT.print();
   read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_1mm.ply",davidg,&davidT);
 #else
   Transform davidT (Point(0,0,0),
 		    Vector(0.001000,0.,0.),
-		    Vector(0.,0.,0.001000),
+		    Vector(0.,0.001,0.001000),
 		    Vector(0.,-0.001000,0.));
   davidT.pre_translate (Vector(-14.079300,-33.336876,3.586000));
   davidT.print();
@@ -3172,8 +3173,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // KEY functions!  
 
   build_david_room (solidg,scene, DavL1, DavL2);
-  build_history_hall (solidg, clearg, fakeg, scene, HistoryL0,HistoryL1, HistoryL2); 
-  build_modern_room (solidg,clearg,fakeg,scene);
+  //  build_history_hall (solidg, clearg, fakeg, scene, HistoryL0,HistoryL1, HistoryL2); 
+  //  build_modern_room (solidg,clearg,fakeg,scene);
 
  /*
   Transform outlet_trans;

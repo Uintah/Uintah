@@ -80,8 +80,8 @@ Scene* make_scene(int argc, char* argv[])
 	 diag.x(),diag.y(),diag.z());
   Transform davidT;
 
-  davidT.pre_translate(-Vector((max.x()+min.x())/2.,min.y(),(max.z()+min.z())/2.)); // center david over 0
-  davidT.pre_rotate(M_PI,Vector(1,0,0));  // make z up
+  davidT.pre_translate(-Vector((max.x()+min.x())/2.,(max.y()+min.y())/2.,min.z())); // center david over 0
+  davidT.pre_rotate(M_PI,Vector(0,0,1));  // Face front
   davidT.pre_scale(Vector(scale,scale,scale)); // make units meters
   davidT.pre_translate(dav_ped_top.asVector());
 
