@@ -93,7 +93,7 @@ public:
   }
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
+  virtual bool saveobj(std::ostream&, const std::string& format, GeomSave*);
 
   void setup();
   void preDraw();

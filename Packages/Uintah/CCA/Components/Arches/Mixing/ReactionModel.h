@@ -49,9 +49,9 @@
 
 #include <vector>
 
+namespace  Uintah {
 using namespace std;
 
-namespace  Uintah {
   class ChemkinInterface;
   class Stream;
   class MixingModel;
@@ -125,6 +125,9 @@ namespace  Uintah {
 
 //
 // $Log$
+// Revision 1.8  2002/05/09 18:35:32  sparker
+// Namespace fixes
+//
 // Revision 1.7  2002/04/08 18:09:43  rawat
 // i) modified sub.mk's to make separate lib's for Mixing and fortran dirs
 // ii) Modified computeStableTImeStep to include diffusion time scale

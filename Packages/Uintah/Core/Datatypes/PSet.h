@@ -14,9 +14,8 @@
 #include <iostream>
 #include <vector>
 
-using std::vector;
-
 namespace Uintah {
+using std::vector;
 using namespace SCIRun;
 /**************************************
 

@@ -11,7 +11,7 @@
 
 namespace Uintah {
 
-using namespace std;
+  using namespace std;
   class DetailedTask;
   class DetailedTasks;
   class LoadBalancer;

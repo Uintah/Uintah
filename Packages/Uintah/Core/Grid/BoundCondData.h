@@ -7,11 +7,11 @@
 #include <Packages/Uintah/Core/ProblemSpec/Handle.h>
 #include <Packages/Uintah/Core/Grid/BoundCondBase.h>
 
+namespace Uintah {
 using std::vector;
 using std::map;
 using std::string;
 
-namespace Uintah {
 
 /**************************************
 

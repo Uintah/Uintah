@@ -15,9 +15,9 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
-using std::vector;
-
+  using namespace SCIRun;
+  using std::vector;
+  
 class SCICORESHARE CCTensorField: public TensorField {
 public:
   int nx;

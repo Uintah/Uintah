@@ -5,9 +5,9 @@
 #include <assert.h>
 #include <valarray>
 #include <numeric>
-using namespace std;
 
 namespace Uintah {
+using namespace std;
 
 template<class ValueType, class IndexType, class ContainerType> 
 class MatrixElement {
