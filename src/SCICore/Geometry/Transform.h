@@ -27,6 +27,7 @@ class SCICORESHARE Transform {
     double imat[4][4];
     int inverse_valid;
     void install_mat(double[4][4]);
+    void build_permute(double m[4][4], int, int, int, int pre);
     void build_rotate(double m[4][4], double, const Vector&);
     void build_shear(double mat[4][4], Vector, const Vector&, double);
     void build_scale(double m[4][4], const Vector&);
@@ -37,6 +38,7 @@ class SCICORESHARE Transform {
     void switch_rows(double m[4][4], int row1, int row2) const;
     void sub_rows(double m[4][4], int row1, int row2, double mul) const;
     void load_identity(double[4][4]);
+    void load_zero(double[4][4]);
 public:
     Transform();
     Transform(const Transform&);
@@ -53,6 +55,8 @@ public:
     void print(void);
     void printi(void);
 
+    void pre_permute(int xmap, int ymap, int zmap);
+    void post_permute(int xmap, int ymap, int zmap);
     void pre_scale(const Vector&);
     void post_scale(const Vector&);
     void pre_shear(const Vector&, const Vector&, double);
@@ -81,6 +85,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  2000/03/13 05:05:12  dmw
+// Added Transform::permute for swapping axes, and fixed compute_imat
+//
 // Revision 1.2  1999/08/17 06:39:29  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

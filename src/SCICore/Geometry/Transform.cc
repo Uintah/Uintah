@@ -264,6 +264,35 @@ void Transform::post_rotate(double angle, const Vector& axis)
     inverse_valid=0;
 }	
 
+void Transform::build_permute(double m[4][4],int xmap, int ymap, int zmap, 
+			      int pre){
+    load_zero(m);
+    m[3][3]=1;
+    if (pre) {	// for each row, set the mapped column
+	if (xmap<0) m[0][-1-xmap]=-1; else m[0][xmap-1]=1;
+	if (ymap<0) m[1][-1-ymap]=-1; else m[1][ymap-1]=1;
+	if (zmap<0) m[2][-1-zmap]=-1; else m[2][zmap-1]=1;
+    } else {	// for each column, set the mapped row
+	if (xmap<0) m[-1-xmap][0]=-1; else m[xmap-1][0]=1;
+	if (ymap<0) m[-1-ymap][1]=-1; else m[ymap-1][1]=1;
+	if (zmap<0) m[-1-zmap][2]=-1; else m[zmap-1][2]=1;
+    }
+}
+
+void Transform::pre_permute(int xmap, int ymap, int zmap) {
+    double m[4][4];
+    build_permute(m, xmap, ymap, zmap, 1);
+    pre_mulmat(m);
+    inverse_valid=0;
+}
+
+void Transform::post_permute(int xmap, int ymap, int zmap) {
+    double m[4][4];
+    build_permute(m, xmap, ymap, zmap, 0);
+    post_mulmat(m);
+    inverse_valid=0;
+}
+
 Point Transform::project(const Point& p)
 {
     return Point(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z()+mat[0][3],
@@ -320,6 +349,15 @@ void Transform::set(double* pmat)
     inverse_valid=0;
 }
 
+void Transform::load_zero(double m[4][4])
+{
+    for(int i=0;i<4;i++){
+	for(int j=0;j<4;j++){
+	    m[i][j]=0;
+	}
+    }
+}
+
 void Transform::load_identity()
 {
     for(int i=0;i<4;i++){
@@ -374,7 +412,7 @@ void Transform::compute_imat()
         + i*b*g*p - i*b*h*o - i*f*c*p + i*f*d*o + i*n*c*h - i*n*d*g
         - m*b*g*l + m*b*h*k + m*f*c*l - m*f*d*k - m*j*c*h + m*j*d*g;
 
-    if (q<0.000000001) {
+    if (SCICore::Math::Abs(q)<0.000000001) {
         imat[0][0]=imat[1][1]=imat[2][2]=imat[3][3]=1;
         imat[1][0]=imat[1][2]=imat[1][3]=0;
         imat[2][0]=imat[2][1]=imat[2][3]=0;
@@ -562,6 +600,9 @@ Transform& Transform::operator=(const Transform& copy)
 
 //
 // $Log$
+// Revision 1.5  2000/03/13 05:05:12  dmw
+// Added Transform::permute for swapping axes, and fixed compute_imat
+//
 // Revision 1.4  1999/10/07 02:07:56  sparker
 // use standard iostreams and complex type
 //
