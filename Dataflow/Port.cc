@@ -99,7 +99,7 @@ void IPort::update_light()
     }
     char buf[1000];
     ostrstream str(buf, 1000);
-    str << ".cframe.f.canvas.module" << module->id << ".iportlight" << which_port << " configure -background " << color;
+    str << ".cframe.f.canvas.module" << module->id << ".iportlight" << which_port << " configure -background " << color << '\0';
     TCL::execute(str.str());
 }
 
@@ -123,7 +123,7 @@ void OPort::update_light()
     }
     char buf[1000];
     ostrstream str(buf, 1000);
-    str << ".cframe.f.canvas.module" << module->id << ".oportlight" << which_port << " configure -background " << color;
+    str << ".cframe.f.canvas.module" << module->id << ".oportlight" << which_port << " configure -background " << color << '\0';
     TCL::execute(str.str());
 }
 

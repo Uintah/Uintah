@@ -56,13 +56,19 @@ void Module::update_state(State st)
 	s="Completed";
 	break;
     }
-    TCL::execute("updateState "+id+" "+s);
+    double time=timer.time();
+    TCL::execute("updateState "+id+" "+s+" "+to_string(time));
 }
 
 void Module::update_progress(double p)
 {
-    TCL::execute("updateProgress "+id+" "+to_string(p));
-    progress=p;
+    int opp=(int)(progress*100);
+    int npp=(int)(p*100);
+    if(opp != npp){
+	double time=timer.time();
+	TCL::execute("updateProgress "+id+" "+to_string(p)+" "+to_string(time));
+	progress=p;
+    }
 }
 
 void Module::update_progress(int n, int max)

@@ -28,7 +28,7 @@ proc makeModule {modid name canvas} {
     pack $p.inset -side left -expand yes -fill both -padx 2 -pady 2
     frame $p.inset.graph -relief raised -width 0 -borderwidth 2 \
 	-background red
-    pack $p.inset.graph -fill y -expand yes
+    pack $p.inset.graph -fill y -expand yes -anchor nw
     $canvas create window $modx $mody -window $modframe \
 	    -tags $modid -anchor nw 
 
@@ -394,15 +394,15 @@ proc moduleEndDrag {mframe} {
     }
 }
 
-proc updateProgress {modid p} {
+proc updateProgress {modid p time} {
     global moduleframe
     set w $moduleframe($modid)
     set width [winfo width $w.ff.inset]
-    $w.ff.inset.graph configure -width [expr $p*($width-4)] \
-	-background color
+    $w.ff.inset.graph configure -width [expr $p*($width-4)]
+    updateTime $modid $time
 }
 
-proc updateState {modid state} {
+proc updateState {modid state time} {
     global moduleframe
     set w $moduleframe($modid)
     if {$state == "Executing"} {
@@ -416,4 +416,12 @@ proc updateState {modid state} {
 	set color black
     }
     $w.ff.inset.graph configure -width $width -background $color
+    updateTime $modid $time
+}
+
+proc updateTime {modid time} {
+    global moduleframe
+    set w $moduleframe($modid)
+    $w.ff.time configure -text $time
+    update idletasks
 }

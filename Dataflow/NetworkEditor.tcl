@@ -185,7 +185,7 @@ proc moveModule {name} {
 proc addModule {name} {
     set modid [netedit addmodule $name]
     makeModule $modid $name .cframe.f.canvas
-    update
+    update idletasks
     return $modid
 }
 
@@ -195,7 +195,7 @@ proc addConnection {omodid owhich imodid iwhich} {
     buildConnection $connid $portcolor $omodid $owhich $imodid $iwhich
     configureOPorts $omodid
     configureIPorts $imodid
-    update
+    update idletasks
 }
 
 # Utility procedures to support dragging of items.
