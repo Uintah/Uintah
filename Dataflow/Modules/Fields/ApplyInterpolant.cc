@@ -32,71 +32,680 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/Dispatch2.h>
 #include <iostream>
-using std::cerr;
 #include <stdio.h>
 
 namespace SCIRun {
+
+using std::cerr;
+using std::vector;
+using std::pair;
+
+
+#if 0
+template <> const string find_type_name(TetVolMesh::node_index *);
+template <> const string find_type_name(TetVolMesh::edge_index *);
+template <> const string find_type_name(TetVolMesh::face_index *);
+template <> const string find_type_name(TetVolMesh::cell_index *);
+template <> const string find_type_name(LatVolMesh::node_index *);
+template <> const string find_type_name(LatVolMesh::edge_index *);
+template <> const string find_type_name(LatVolMesh::face_index *);
+template <> const string find_type_name(LatVolMesh::cell_index *);
+#endif
+
+template <> const string find_type_name(vector<pair<TetVolMesh::node_index, double> > *);
+template <> const string find_type_name(vector<pair<TetVolMesh::edge_index, double> > *);
+template <> const string find_type_name(vector<pair<TetVolMesh::face_index, double> > *);
+template <> const string find_type_name(vector<pair<TetVolMesh::cell_index, double> > *);
+template <> const string find_type_name(vector<pair<LatVolMesh::node_index, double> > *);
+template <> const string find_type_name(vector<pair<LatVolMesh::edge_index, double> > *);
+template <> const string find_type_name(vector<pair<LatVolMesh::face_index, double> > *);
+template <> const string find_type_name(vector<pair<LatVolMesh::cell_index, double> > *);
+
+void Pio(Piostream &, TetVolMesh::node_index);
+void Pio(Piostream &, TetVolMesh::edge_index);
+void Pio(Piostream &, TetVolMesh::face_index);
+void Pio(Piostream &, TetVolMesh::cell_index);
+
+void Pio(Piostream &, LatVolMesh::node_index);
+void Pio(Piostream &, LatVolMesh::edge_index);
+void Pio(Piostream &, LatVolMesh::face_index);
+void Pio(Piostream &, LatVolMesh::cell_index);
+
+// TetVol
+// TetVol
+
+template <>
+GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::interp_type *
+GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::interp_type *
+GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::interp_type *
+GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::interp_type *
+GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::interp_type *
+GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::interp_type *
+GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::interp_type *
+GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::interp_type *
+GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::query_interpolate() const;
+
+// LatVol
+
+template <>
+GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::node_index, double> > > >::interp_type *
+GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::node_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::edge_index, double> > > >::interp_type *
+GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::edge_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::face_index, double> > > >::interp_type *
+GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::face_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::cell_index, double> > > >::interp_type *
+GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::cell_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::node_index, double> > > >::interp_type *
+GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::node_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::edge_index, double> > > >::interp_type *
+GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::edge_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::face_index, double> > > >::interp_type *
+GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::face_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::cell_index, double> > > >::interp_type *
+GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::cell_index, double> > > >::query_interpolate() const;
+
+// TriSurf
+
+template <>
+GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::interp_type *
+GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::interp_type *
+GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::interp_type *
+GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::interp_type *
+GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::interp_type *
+GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::interp_type *
+GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::interp_type *
+GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::interp_type *
+GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::query_interpolate() const;
+
+
+template <> Vector TetVol<vector<pair<TetVolMesh::node_index, double> > >::cell_gradient(TetVolMesh::cell_index);
+template <> Vector TetVol<vector<pair<TetVolMesh::edge_index, double> > >::cell_gradient(TetVolMesh::cell_index);
+template <> Vector TetVol<vector<pair<TetVolMesh::face_index, double> > >::cell_gradient(TetVolMesh::cell_index);
+template <> Vector TetVol<vector<pair<TetVolMesh::cell_index, double> > >::cell_gradient(TetVolMesh::cell_index);
+template <> Vector TetVol<vector<pair<LatVolMesh::node_index, double> > >::cell_gradient(TetVolMesh::cell_index);
+template <> Vector TetVol<vector<pair<LatVolMesh::edge_index, double> > >::cell_gradient(TetVolMesh::cell_index);
+template <> Vector TetVol<vector<pair<LatVolMesh::face_index, double> > >::cell_gradient(TetVolMesh::cell_index);
+template <> Vector TetVol<vector<pair<LatVolMesh::cell_index, double> > >::cell_gradient(TetVolMesh::cell_index);
+
+template <> bool LatticeVol<vector<pair<TetVolMesh::node_index, double> > >::get_gradient(Vector &, Point &);
+template <> bool LatticeVol<vector<pair<TetVolMesh::edge_index, double> > >::get_gradient(Vector &, Point &);
+template <> bool LatticeVol<vector<pair<TetVolMesh::face_index, double> > >::get_gradient(Vector &, Point &);
+template <> bool LatticeVol<vector<pair<TetVolMesh::cell_index, double> > >::get_gradient(Vector &, Point &);
+template <> bool LatticeVol<vector<pair<LatVolMesh::node_index, double> > >::get_gradient(Vector &, Point &);
+template <> bool LatticeVol<vector<pair<LatVolMesh::edge_index, double> > >::get_gradient(Vector &, Point &);
+template <> bool LatticeVol<vector<pair<LatVolMesh::face_index, double> > >::get_gradient(Vector &, Point &);
+template <> bool LatticeVol<vector<pair<LatVolMesh::cell_index, double> > >::get_gradient(Vector &, Point &);
+
 
 class ApplyInterpolant : public Module {
 public:
   ApplyInterpolant(const clString& id);
   virtual ~ApplyInterpolant();
+
   virtual void execute();
-private:
-  FieldIPort  *source_field_;
-  FieldIPort  *dest_field_;
-  FieldIPort  *interp_field_;
-  FieldOPort  *output_field_;
+
+  template <class FDST, class FSRC, class FITP>
+  void dispatch_src_node(FDST *fdst, FSRC *fsrc, FITP *fitp);
+
+  template <class FDST, class FSRC, class FITP>
+  void dispatch_src_edge(FDST *fdst, FSRC *fsrc, FITP *fitp);
+
+  template <class FDST, class FSRC, class FITP>
+  void dispatch_src_face(FDST *fdst, FSRC *fsrc, FITP *fitp);
+
+  template <class FDST, class FSRC, class FITP>
+  void dispatch_src_cell(FDST *fdst, FSRC *fsrc, FITP *fitp);
 };
+
 
 extern "C" Module* make_ApplyInterpolant(const clString& id)
 {
   return new ApplyInterpolant(id);
 }
 
+
 ApplyInterpolant::ApplyInterpolant(const clString& id)
   : Module("ApplyInterpolant", id, Filter, "Fields", "SCIRun")
 {
-  // Create the input ports
-  source_field_ = scinew FieldIPort(this, "Source", FieldIPort::Atomic);
-  add_iport(source_field_);
-  dest_field_ = scinew FieldIPort(this, "Destination", FieldIPort::Atomic);
-  add_iport(dest_field_);
-  interp_field_ = scinew FieldIPort(this, "Interpolant", FieldIPort::Atomic);
-  add_iport(interp_field_);
-
-  // Create the output port
-  output_field_ = scinew FieldOPort(this, "Output", FieldIPort::Atomic);
-  add_oport(output_field_);
 }
+
 
 ApplyInterpolant::~ApplyInterpolant()
 {
 }
 
-void ApplyInterpolant::execute()
+
+
+template <class FDST, class FSRC, class FITP>
+void
+ApplyInterpolant::dispatch_src_node(FDST *fdst, FSRC *fsrc, FITP *fitp)
 {
-  FieldHandle sourceH;
-  FieldHandle destH;
-  FieldHandle interpH;
+  FDST *fout = fdst->clone();
+  FieldHandle fhout(fout);
 
-  if(!source_field_->get(sourceH))
+  switch(fdst->data_at())
+  {
+  case Field::NODE:
+    {
+      typename FDST::mesh_type::node_iterator iter =
+	fout->get_typed_mesh()->node_begin();
+      while (iter != fout->get_typed_mesh()->node_end())
+      {
+	vector<pair<typename FSRC::mesh_type::node_index, double> > v;
+	fitp->value(v, *iter);
+	typename FDST::value_type val = fsrc->value(v[0].first) * v[0].second;
+	vector<pair<typename FSRC::mesh_type::node_index, double> >::size_type j;
+	for (j = 1; j < v.size(); j++)
+	{
+	  val += fsrc->value(v[j].first) * v[j].second;
+	}
+	fout->set_value(val, *iter);
+      }
+    }
+    break;
+
+  case Field::EDGE:
+    {
+      typename FDST::mesh_type::edge_iterator iter =
+	fout->get_typed_mesh()->edge_begin();
+      while (iter != fout->get_typed_mesh()->edge_end())
+      {
+	vector<pair<typename FSRC::mesh_type::node_index, double> > v;
+	fitp->value(v, *iter);
+	typename FDST::value_type val = fsrc->value(v[0].first) * v[0].second;
+	vector<pair<typename FSRC::mesh_type::node_index, double> >::size_type j;
+	for (j = 1; j < v.size(); j++)
+	{
+	  val += fsrc->value(v[j].first) * v[j].second;
+	}
+	fout->set_value(val, *iter);
+      }
+    }
+    break;
+
+  case Field::FACE:
+    {
+      typename FDST::mesh_type::face_iterator iter =
+	fout->get_typed_mesh()->face_begin();
+      while (iter != fout->get_typed_mesh()->face_end())
+      {
+	vector<pair<typename FSRC::mesh_type::node_index, double> > v;
+	fitp->value(v, *iter);
+	typename FDST::value_type val = fsrc->value(v[0].first) * v[0].second;
+	vector<pair<typename FSRC::mesh_type::node_index, double> >::size_type j;
+	for (j = 1; j < v.size(); j++)
+	{
+	  val += fsrc->value(v[j].first) * v[j].second;
+	}
+	fout->set_value(val, *iter);
+      }
+    }
+    break;
+
+  case Field::CELL:
+    {
+      typename FDST::mesh_type::cell_iterator iter =
+	fout->get_typed_mesh()->cell_begin();
+      while (iter != fout->get_typed_mesh()->cell_end())
+      {
+	vector<pair<typename FSRC::mesh_type::node_index, double> > v;
+	fitp->value(v, *iter);
+	typename FDST::value_type val = fsrc->value(v[0].first) * v[0].second;
+	vector<pair<typename FSRC::mesh_type::node_index, double> >::size_type j;
+	for (j = 1; j < v.size(); j++)
+	{
+	  val += fsrc->value(v[j].first) * v[j].second;
+	}
+	fout->set_value(val, *iter);
+      }
+    }
+
+  default:
     return;
-  if(!dest_field_->get(destH))
+  }
+
+  FieldOPort *ofp = (FieldOPort *)get_oport("Output");
+  ofp->send(fhout);
+}
+
+
+template <class FDST, class FSRC, class FITP>
+void
+ApplyInterpolant::dispatch_src_edge(FDST *fdst, FSRC *fsrc, FITP *fitp)
+{
+  FDST *fout = fdst->clone();
+  FieldHandle fhout(fout);
+
+  switch(fdst->data_at())
+  {
+  case Field::NODE:
+    {
+      typename FDST::mesh_type::node_iterator iter =
+	fout->get_typed_mesh()->node_begin();
+      while (iter != fout->get_typed_mesh()->node_end())
+      {
+	vector<pair<typename FSRC::mesh_type::edge_index, double> > v;
+	fitp->value(v, *iter);
+	typename FDST::value_type val = fsrc->value(v[0].first) * v[0].second;
+	vector<pair<typename FSRC::mesh_type::edge_index, double> >::size_type j;
+	for (j = 1; j < v.size(); j++)
+	{
+	  val += fsrc->value(v[j].first) * v[j].second;
+	}
+	fout->set_value(val, *iter);
+      }
+    }
+    break;
+
+  case Field::EDGE:
+    {
+      typename FDST::mesh_type::edge_iterator iter =
+	fout->get_typed_mesh()->edge_begin();
+      while (iter != fout->get_typed_mesh()->edge_end())
+      {
+	vector<pair<typename FSRC::mesh_type::edge_index, double> > v;
+	fitp->value(v, *iter);
+	typename FDST::value_type val = fsrc->value(v[0].first) * v[0].second;
+	vector<pair<typename FSRC::mesh_type::edge_index, double> >::size_type j;
+	for (j = 1; j < v.size(); j++)
+	{
+	  val += fsrc->value(v[j].first) * v[j].second;
+	}
+	fout->set_value(val, *iter);
+      }
+    }
+    break;
+
+  case Field::FACE:
+    {
+      typename FDST::mesh_type::face_iterator iter =
+	fout->get_typed_mesh()->face_begin();
+      while (iter != fout->get_typed_mesh()->face_end())
+      {
+	vector<pair<typename FSRC::mesh_type::edge_index, double> > v;
+	fitp->value(v, *iter);
+	typename FDST::value_type val = fsrc->value(v[0].first) * v[0].second;
+	vector<pair<typename FSRC::mesh_type::edge_index, double> >::size_type j;
+	for (j = 1; j < v.size(); j++)
+	{
+	  val += fsrc->value(v[j].first) * v[j].second;
+	}
+	fout->set_value(val, *iter);
+      }
+    }
+    break;
+
+  case Field::CELL:
+    {
+      typename FDST::mesh_type::cell_iterator iter =
+	fout->get_typed_mesh()->cell_begin();
+      while (iter != fout->get_typed_mesh()->cell_end())
+      {
+	vector<pair<typename FSRC::mesh_type::edge_index, double> > v;
+	fitp->value(v, *iter);
+	typename FDST::value_type val = fsrc->value(v[0].first) * v[0].second;
+	vector<pair<typename FSRC::mesh_type::edge_index, double> >::size_type j;
+	for (j = 1; j < v.size(); j++)
+	{
+	  val += fsrc->value(v[j].first) * v[j].second;
+	}
+	fout->set_value(val, *iter);
+      }
+    }
+    break;
+
+  default:
     return;
-  if(!interp_field_->get(interpH))
+  }
+
+  FieldOPort *ofp = (FieldOPort *)get_oport("Output");
+  ofp->send(fhout);
+}
+
+template <class FDST, class FSRC, class FITP>
+void
+ApplyInterpolant::dispatch_src_face(FDST *fdst, FSRC *fsrc, FITP *fitp)
+{
+  FDST *fout = fdst->clone();
+  FieldHandle fhout(fout);
+
+  switch(fdst->data_at())
+  {
+  case Field::NODE:
+    {
+      typename FDST::mesh_type::node_iterator iter =
+	fout->get_typed_mesh()->node_begin();
+      while (iter != fout->get_typed_mesh()->node_end())
+      {
+	vector<pair<typename FSRC::mesh_type::face_index, double> > v;
+	fitp->value(v, *iter);
+	typename FDST::value_type val = fsrc->value(v[0].first) * v[0].second;
+	vector<pair<typename FSRC::mesh_type::face_index, double> >::size_type j;
+	for (j = 1; j < v.size(); j++)
+	{
+	  val += fsrc->value(v[j].first) * v[j].second;
+	}
+	fout->set_value(val, *iter);
+      }
+    }
+    break;
+
+  case Field::EDGE:
+    {
+      typename FDST::mesh_type::edge_iterator iter =
+	fout->get_typed_mesh()->edge_begin();
+      while (iter != fout->get_typed_mesh()->edge_end())
+      {
+	vector<pair<typename FSRC::mesh_type::face_index, double> > v;
+	fitp->value(v, *iter);
+	typename FDST::value_type val = fsrc->value(v[0].first) * v[0].second;
+	vector<pair<typename FSRC::mesh_type::face_index, double> >::size_type j;
+	for (j = 1; j < v.size(); j++)
+	{
+	  val += fsrc->value(v[j].first) * v[j].second;
+	}
+	fout->set_value(val, *iter);
+      }
+    }
+    break;
+
+  case Field::FACE:
+    {
+      typename FDST::mesh_type::face_iterator iter =
+	fout->get_typed_mesh()->face_begin();
+      while (iter != fout->get_typed_mesh()->face_end())
+      {
+	vector<pair<typename FSRC::mesh_type::face_index, double> > v;
+	fitp->value(v, *iter);
+	typename FDST::value_type val = fsrc->value(v[0].first) * v[0].second;
+	vector<pair<typename FSRC::mesh_type::face_index, double> >::size_type j;
+	for (j = 1; j < v.size(); j++)
+	{
+	  val += fsrc->value(v[j].first) * v[j].second;
+	}
+	fout->set_value(val, *iter);
+      }
+    }
+    break;
+
+  case Field::CELL:
+    {
+      typename FDST::mesh_type::cell_iterator iter =
+	fout->get_typed_mesh()->cell_begin();
+      while (iter != fout->get_typed_mesh()->cell_end())
+      {
+	vector<pair<typename FSRC::mesh_type::face_index, double> > v;
+	fitp->value(v, *iter);
+	typename FDST::value_type val = fsrc->value(v[0].first) * v[0].second;
+	vector<pair<typename FSRC::mesh_type::face_index, double> >::size_type j;
+	for (j = 1; j < v.size(); j++)
+	{
+	  val += fsrc->value(v[j].first) * v[j].second;
+	}
+	fout->set_value(val, *iter);
+      }
+    }
+    break;
+
+  default:
     return;
+  }
 
-  FieldHandle outputH;
+  FieldOPort *ofp = (FieldOPort *)get_oport("Output");
+  ofp->send(fhout);
+}
 
-  // TODO: create the output field (clone dest Mesh), assign it to outputH
-  //   make sure the dimensions/locations of source/dest/interp all line up
-  //   map the data from source, through interp, into output
+template <class FDST, class FSRC, class FITP>
+void
+ApplyInterpolant::dispatch_src_cell(FDST *fdst, FSRC *fsrc, FITP *fitp)
+{
+  FDST *fout = fdst->clone();
+  FieldHandle fhout(fout);
 
-  // ...
+  switch(fdst->data_at())
+  {
+  case Field::NODE:
+    {
+      typename FDST::mesh_type::node_iterator iter =
+	fout->get_typed_mesh()->node_begin();
+      while (iter != fout->get_typed_mesh()->node_end())
+      {
+	vector<pair<typename FSRC::mesh_type::cell_index, double> > v;
+	fitp->value(v, *iter);
+	typename FDST::value_type val = fsrc->value(v[0].first) * v[0].second;
+	vector<pair<typename FSRC::mesh_type::cell_index, double> >::size_type j;
+	for (j = 1; j < v.size(); j++)
+	{
+	  val += fsrc->value(v[j].first) * v[j].second;
+	}
+	fout->set_value(val, *iter);
+      }
+    }
+    break;
 
-  output_field_->send(outputH);
+  case Field::EDGE:
+    {
+      typename FDST::mesh_type::edge_iterator iter =
+	fout->get_typed_mesh()->edge_begin();
+      while (iter != fout->get_typed_mesh()->edge_end())
+      {
+	vector<pair<typename FSRC::mesh_type::cell_index, double> > v;
+	fitp->value(v, *iter);
+	typename FDST::value_type val = fsrc->value(v[0].first) * v[0].second;
+	vector<pair<typename FSRC::mesh_type::cell_index, double> >::size_type j;
+	for (j = 1; j < v.size(); j++)
+	{
+	  val += fsrc->value(v[j].first) * v[j].second;
+	}
+	fout->set_value(val, *iter);
+      }
+    }
+    break;
+
+  case Field::FACE:
+    {
+      typename FDST::mesh_type::face_iterator iter =
+	fout->get_typed_mesh()->face_begin();
+      while (iter != fout->get_typed_mesh()->face_end())
+      {
+	vector<pair<typename FSRC::mesh_type::cell_index, double> > v;
+	fitp->value(v, *iter);
+	typename FDST::value_type val = fsrc->value(v[0].first) * v[0].second;
+	vector<pair<typename FSRC::mesh_type::cell_index, double> >::size_type j;
+	for (j = 1; j < v.size(); j++)
+	{
+	  val += fsrc->value(v[j].first) * v[j].second;
+	}
+	fout->set_value(val, *iter);
+      }
+    }
+    break;
+
+  case Field::CELL:
+    {
+      typename FDST::mesh_type::cell_iterator iter =
+	fout->get_typed_mesh()->cell_begin();
+      while (iter != fout->get_typed_mesh()->cell_end())
+      {
+	vector<pair<typename FSRC::mesh_type::cell_index, double> > v;
+	fitp->value(v, *iter);
+	typename FDST::value_type val = fsrc->value(v[0].first) * v[0].second;
+	vector<pair<typename FSRC::mesh_type::cell_index, double> >::size_type j;
+	for (j = 1; j < v.size(); j++)
+	{
+	  val += fsrc->value(v[j].first) * v[j].second;
+	}
+	fout->set_value(val, *iter);
+      }
+    }
+    break;
+
+  default:
+    return;
+  }
+
+  FieldOPort *ofp = (FieldOPort *)get_oport("Output");
+  ofp->send(fhout);
+}
+
+
+#define HAIRY_MACRO(FDST, DDST, FSRC, DSRC) \
+switch(src_field->data_at())\
+{\
+case Field::NODE:\
+  dispatch_src_node((FDST<DDST> *) dst_field,\
+		    (FSRC<DSRC> *) src_field,\
+		    (FDST<vector<pair<FSRC<DSRC>::mesh_type::node_index, double> > > *)itp_field);\
+  break;\
+\
+case Field::EDGE:\
+  dispatch_src_edge((FDST<DDST> *) dst_field,\
+		    (FSRC<DSRC> *) src_field,\
+		    (FDST<vector<pair<FSRC<DSRC>::mesh_type::edge_index, double> > > *)itp_field);\
+  break;\
+\
+case Field::FACE:\
+  dispatch_src_face((FDST<DDST> *) dst_field,\
+		    (FSRC<DSRC> *) src_field,\
+		    (FDST<vector<pair<FSRC<DSRC>::mesh_type::face_index, double> > > *)itp_field);\
+  break;\
+\
+case Field::CELL:\
+  dispatch_src_cell((FDST<DDST> *) dst_field,\
+		    (FSRC<DSRC> *) src_field,\
+		    (FDST<vector<pair<FSRC<DSRC>::mesh_type::cell_index, double> > > *)itp_field);\
+  break;\
+\
+default:\
+  return;\
+}
+
+
+void
+ApplyInterpolant::execute()
+{
+  FieldIPort *dst_port = (FieldIPort *)get_iport("Destination");
+  FieldHandle dfieldhandle;
+  Field *dst_field;
+  if (!(dst_port->get(dfieldhandle) && (dst_field = dfieldhandle.get_rep())))
+  {
+    return;
+  }
+
+  FieldIPort *src_port = (FieldIPort *)get_iport("Source");
+  FieldHandle sfieldhandle;
+  Field *src_field;
+  if (!(src_port->get(sfieldhandle) && (src_field = sfieldhandle.get_rep())))
+  {
+    return;
+  }
+
+  FieldIPort *itp_port = (FieldIPort *)get_iport("Interpolant");
+  FieldHandle ifieldhandle;
+  Field *itp_field;
+  if (!(itp_port->get(ifieldhandle) && (itp_field = ifieldhandle.get_rep())))
+  {
+    return;
+  }
+
+  const string dst_geom_name = dst_field->get_type_name(0);
+  const string dst_data_name = dst_field->get_type_name(1);
+  const string src_geom_name = src_field->get_type_name(0);
+  const string src_data_name = src_field->get_type_name(1);
+
+  if (dst_geom_name == "TetVol" && dst_data_name == "double" &&
+      src_geom_name == "TetVol" && src_data_name == "double")
+  {
+    HAIRY_MACRO(TetVol, double, TetVol, double)
+  }
+  else if (dst_geom_name == "TetVol" && dst_data_name == "double" &&
+	   src_geom_name == "LatticeVol" && src_data_name == "double")
+  {
+    HAIRY_MACRO(TetVol, double, LatticeVol, double)
+  }
+  else if (dst_geom_name == "LatticeVol" && dst_data_name == "double" &&
+	   src_geom_name == "TetVol" && src_data_name == "double")
+  {
+    HAIRY_MACRO(LatticeVol, double, TetVol, double)
+  }
+  else if (dst_geom_name == "LatticeVol" && dst_data_name == "double" &&
+	   src_geom_name == "LatticeVol" && src_data_name == "double")
+  {
+    HAIRY_MACRO(LatticeVol, double, LatticeVol, double)
+  }
+  else if (dst_geom_name == "TriSurf" && dst_data_name == "double" &&
+	   src_geom_name == "TetVol" && src_data_name == "double")
+  {
+    HAIRY_MACRO(TriSurf, double, TetVol, double)
+  }
+  else if (dst_geom_name == "TriSurf" && dst_data_name == "double" &&
+	   src_geom_name == "LatticeVol" && src_data_name == "double")
+  {
+    HAIRY_MACRO(TriSurf, double, LatticeVol, double)
+  }
 }
 
 } // End namespace SCIRun

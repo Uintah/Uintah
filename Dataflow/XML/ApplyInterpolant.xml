@@ -30,6 +30,26 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Source</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Destination</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Interpolant</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Output</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
   </io>
   <testing>
   </testing>

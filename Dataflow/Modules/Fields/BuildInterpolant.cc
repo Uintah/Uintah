@@ -32,13 +32,334 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/TriSurf.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
-using std::cerr;
 #include <stdio.h>
 
 namespace SCIRun {
+
+using std::cerr;
+using std::vector;
+using std::pair;
+
+
+#if 0
+template <> const string find_type_name(TetVolMesh::node_index *)
+{ return "unknown"; }
+
+template <> const string find_type_name(TetVolMesh::edge_index *)
+{ return "unknown"; }
+
+template <> const string find_type_name(TetVolMesh::face_index *)
+{ return "unknown"; }
+
+template <> const string find_type_name(TetVolMesh::cell_index *)
+{ return "unknown"; }
+
+template <> const string find_type_name(LatVolMesh::node_index *)
+{ return "unknown"; }
+
+template <> const string find_type_name(LatVolMesh::edge_index *)
+{ return "unknown"; }
+
+template <> const string find_type_name(LatVolMesh::face_index *)
+{ return "unknown"; }
+
+template <> const string find_type_name(LatVolMesh::cell_index *)
+{ return "unknown"; }
+
+#endif
+
+template <> const string find_type_name(vector<pair<TetVolMesh::node_index, double> > *)
+{ return "unknown"; }
+
+template <> const string find_type_name(vector<pair<TetVolMesh::edge_index, double> > *)
+{ return "unknown"; }
+
+template <> const string find_type_name(vector<pair<TetVolMesh::face_index, double> > *)
+{ return "unknown"; }
+
+template <> const string find_type_name(vector<pair<TetVolMesh::cell_index, double> > *)
+{ return "unknown"; }
+
+template <> const string find_type_name(vector<pair<LatVolMesh::node_index, double> > *)
+{ return "unknown"; }
+
+template <> const string find_type_name(vector<pair<LatVolMesh::edge_index, double> > *)
+{ return "unknown"; }
+
+template <> const string find_type_name(vector<pair<LatVolMesh::face_index, double> > *)
+{ return "unknown"; }
+
+template <> const string find_type_name(vector<pair<LatVolMesh::cell_index, double> > *)
+{ return "unknown"; }
+
+void Pio(Piostream &, TetVolMesh::node_index) {}
+void Pio(Piostream &, TetVolMesh::edge_index) {}
+void Pio(Piostream &, TetVolMesh::face_index) {}
+void Pio(Piostream &, TetVolMesh::cell_index) {}
+
+void Pio(Piostream &, LatVolMesh::node_index) {}
+void Pio(Piostream &, LatVolMesh::edge_index) {}
+void Pio(Piostream &, LatVolMesh::face_index) {}
+void Pio(Piostream &, LatVolMesh::cell_index) {}
+
+
+// TetVol
+
+template <>
+GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::interp_type *
+GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::interp_type *
+GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::interp_type *
+GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::interp_type *
+GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::interp_type *
+GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::interp_type *
+GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::interp_type *
+GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::interp_type *
+GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+// LatVol
+
+template <>
+GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::node_index, double> > > >::interp_type *
+GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::node_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::edge_index, double> > > >::interp_type *
+GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::edge_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::face_index, double> > > >::interp_type *
+GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::face_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::cell_index, double> > > >::interp_type *
+GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::cell_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::node_index, double> > > >::interp_type *
+GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::node_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::edge_index, double> > > >::interp_type *
+GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::edge_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::face_index, double> > > >::interp_type *
+GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::face_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::cell_index, double> > > >::interp_type *
+GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::cell_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+// TriSurf
+
+template <>
+GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::interp_type *
+GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::interp_type *
+GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::interp_type *
+GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::interp_type *
+GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::interp_type *
+GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::interp_type *
+GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::interp_type *
+GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <>
+GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::interp_type *
+GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::query_interpolate() const
+{
+  return NULL;
+}
+
+template <> Vector TetVol<vector<pair<TetVolMesh::node_index, double> > >::cell_gradient(TetVolMesh::cell_index) { return Vector(0.0, 0.0, 0.0); }
+template <> Vector TetVol<vector<pair<TetVolMesh::edge_index, double> > >::cell_gradient(TetVolMesh::cell_index) { return Vector(0.0, 0.0, 0.0); }
+template <> Vector TetVol<vector<pair<TetVolMesh::face_index, double> > >::cell_gradient(TetVolMesh::cell_index) { return Vector(0.0, 0.0, 0.0); }
+template <> Vector TetVol<vector<pair<TetVolMesh::cell_index, double> > >::cell_gradient(TetVolMesh::cell_index) { return Vector(0.0, 0.0, 0.0); }
+template <> Vector TetVol<vector<pair<LatVolMesh::node_index, double> > >::cell_gradient(TetVolMesh::cell_index) { return Vector(0.0, 0.0, 0.0); }
+template <> Vector TetVol<vector<pair<LatVolMesh::edge_index, double> > >::cell_gradient(TetVolMesh::cell_index) { return Vector(0.0, 0.0, 0.0); }
+template <> Vector TetVol<vector<pair<LatVolMesh::face_index, double> > >::cell_gradient(TetVolMesh::cell_index) { return Vector(0.0, 0.0, 0.0); }
+template <> Vector TetVol<vector<pair<LatVolMesh::cell_index, double> > >::cell_gradient(TetVolMesh::cell_index) { return Vector(0.0, 0.0, 0.0); }
+
+
+template <> bool LatticeVol<vector<pair<TetVolMesh::node_index, double> > >::get_gradient(Vector &, Point &) { return false; }
+template <> bool LatticeVol<vector<pair<TetVolMesh::edge_index, double> > >::get_gradient(Vector &, Point &) { return false; }
+template <> bool LatticeVol<vector<pair<TetVolMesh::face_index, double> > >::get_gradient(Vector &, Point &) { return false; }
+template <> bool LatticeVol<vector<pair<TetVolMesh::cell_index, double> > >::get_gradient(Vector &, Point &) { return false; }
+template <> bool LatticeVol<vector<pair<LatVolMesh::node_index, double> > >::get_gradient(Vector &, Point &) { return false; }
+template <> bool LatticeVol<vector<pair<LatVolMesh::edge_index, double> > >::get_gradient(Vector &, Point &) { return false; }
+template <> bool LatticeVol<vector<pair<LatVolMesh::face_index, double> > >::get_gradient(Vector &, Point &) { return false; }
+template <> bool LatticeVol<vector<pair<LatVolMesh::cell_index, double> > >::get_gradient(Vector &, Point &) { return false; }
+
+
+template class GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >;
+template class GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >;
+template class GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >;
+template class GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >;
+template class GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >;
+template class GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >;
+template class GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >;
+template class GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >;
+
+template class GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::node_index, double> > > >;
+template class GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::edge_index, double> > > >;
+template class GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::face_index, double> > > >;
+template class GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::cell_index, double> > > >;
+template class GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::node_index, double> > > >;
+template class GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::edge_index, double> > > >;
+template class GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::face_index, double> > > >;
+template class GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::cell_index, double> > > >;
+
+template class GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >;
+template class GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >;
+template class GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >;
+template class GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >;
+template class GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >;
+template class GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >;
+template class GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >;
+template class GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >;
+
+
+template class TetVol<vector<pair<TetVolMesh::node_index, double> > >;
+template class TetVol<vector<pair<TetVolMesh::edge_index, double> > >;
+template class TetVol<vector<pair<TetVolMesh::face_index, double> > >;
+template class TetVol<vector<pair<TetVolMesh::cell_index, double> > >;
+template class TetVol<vector<pair<LatVolMesh::node_index, double> > >;
+template class TetVol<vector<pair<LatVolMesh::edge_index, double> > >;
+template class TetVol<vector<pair<LatVolMesh::face_index, double> > >;
+template class TetVol<vector<pair<LatVolMesh::cell_index, double> > >;
+
+template class LatticeVol<vector<pair<TetVolMesh::node_index, double> > >;
+template class LatticeVol<vector<pair<TetVolMesh::edge_index, double> > >;
+template class LatticeVol<vector<pair<TetVolMesh::face_index, double> > >;
+template class LatticeVol<vector<pair<TetVolMesh::cell_index, double> > >;
+template class LatticeVol<vector<pair<LatVolMesh::node_index, double> > >;
+template class LatticeVol<vector<pair<LatVolMesh::edge_index, double> > >;
+template class LatticeVol<vector<pair<LatVolMesh::face_index, double> > >;
+template class LatticeVol<vector<pair<LatVolMesh::cell_index, double> > >;
+
+template class TriSurf<vector<pair<TetVolMesh::node_index, double> > >;
+template class TriSurf<vector<pair<TetVolMesh::edge_index, double> > >;
+template class TriSurf<vector<pair<TetVolMesh::face_index, double> > >;
+template class TriSurf<vector<pair<TetVolMesh::cell_index, double> > >;
+template class TriSurf<vector<pair<LatVolMesh::node_index, double> > >;
+template class TriSurf<vector<pair<LatVolMesh::edge_index, double> > >;
+template class TriSurf<vector<pair<LatVolMesh::face_index, double> > >;
+template class TriSurf<vector<pair<LatVolMesh::cell_index, double> > >;
+
+
 
 class BuildInterpolant : public Module
 {
@@ -48,6 +369,29 @@ public:
   BuildInterpolant(const clString& id);
   virtual ~BuildInterpolant();
   virtual void execute();
+
+  template <class FOUT, class MDST, class MSRC>
+  void dispatch_src_node(MDST *mdst, MSRC *msrc,
+			 Field::data_location mdstloc,
+			 FOUT *);
+
+  template <class FOUT, class MDST, class MSRC>
+  void dispatch_src_edge(MDST *mdst, MSRC *msrc,
+			 Field::data_location mdstloc,
+			 FOUT *);
+
+  template <class FOUT, class MDST, class MSRC>
+  void dispatch_src_face(MDST *mdst, MSRC *msrc,
+			 Field::data_location mdstloc,
+			 FOUT *);
+
+  template <class FOUT, class MDST, class MSRC>
+  void dispatch_src_cell(MDST *mdst, MSRC *msrc,
+			 Field::data_location mdstloc,
+			 FOUT *);
+
+  double point_distance(const Point &p1, const Point &p2);
+  void normalize(vector<pair<int, double> > &v);
 };
 
 extern "C" Module* make_BuildInterpolant(const clString& id)
@@ -65,10 +409,829 @@ BuildInterpolant::~BuildInterpolant()
 {
 }
 
+
+double
+BuildInterpolant::point_distance(const Point &p1, const Point &p2)
+{
+  const double dx = p2.x() - p1.x();
+  const double dy = p2.y() - p1.y();
+  const double dz = p2.z() - p1.z();
+
+  return sqrt(dx * dx + dy * dy + dz * dz);
+}
+
+
+void
+BuildInterpolant::normalize(vector<pair<int, double> > &v)
+{
+  if (v.empty()) { return; } 
+
+  double sum = 0.0;
+  vector<pair<int, double> >::size_type i;
+  for (i = 0; i < v.size(); i++)
+  {
+    sum += v[i].second;
+  }
+
+  sum = 1.0 / sum;
+  for (i = 0; i < v.size(); i++)
+  {
+    v[i].second *= sum;
+  }
+}
+
+
+template <class FOUT, class MDST, class MSRC>
+void
+BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
+				    Field::data_location mdstloc,
+				    FOUT *)
+{
+  FOUT *ofield = new FOUT(mdst, mdstloc);
+  FieldHandle fh(ofield);
+  
+  switch(mdstloc)
+  {
+  case Field::NODE:
+    {
+      typename MDST::node_iterator itr = mdst->node_begin();
+      while (itr != mdst->node_end())
+      {
+	Point p;
+	mdst->get_center(p, *itr);
+    
+	typename MSRC::cell_index idx;
+	msrc->locate(idx, p);
+	vector<pair<typename MSRC::node_index, double> > v;
+
+	typename MSRC::node_array array;
+	msrc->get_nodes(array, idx);
+  
+	typename MSRC::node_array::iterator array_itr =
+	  array.begin();
+	while (array_itr != array.end())
+	{
+	  Point p2;
+	  msrc->get_center(p2, *array_itr);
+	  
+	  v.push_back(pair<typename MSRC::node_index, double>
+		      (*array_itr, point_distance(p, p2)));
+	  ++array_itr;
+	}
+	ofield->set_value(v, *itr);
+	++itr;
+      }
+    }
+    break;
+
+  case Field::EDGE:
+    {
+      typename MDST::edge_iterator itr = mdst->edge_begin();
+      while (itr != mdst->edge_end())
+      {
+	Point p;
+	mdst->get_center(p, *itr);
+    
+	typename MSRC::cell_index idx;
+	msrc->locate(idx, p);
+	vector<pair<typename MSRC::node_index, double> > v;
+
+	typename MSRC::node_array array;
+	msrc->get_nodes(array, idx);
+  
+	typename MSRC::node_array::iterator array_itr =
+	  array.begin();
+	while (array_itr != array.end())
+	{
+	  Point p2;
+	  msrc->get_center(p2, *array_itr);
+	  
+	  v.push_back(pair<typename MSRC::node_index, double>
+		      (*array_itr, point_distance(p, p2)));
+	  ++array_itr;
+	}
+	ofield->set_value(v, *itr);
+	++itr;
+      }
+    }
+    break;
+
+  case Field::FACE:
+    {
+      typename MDST::face_iterator itr = mdst->face_begin();
+      while (itr != mdst->face_end())
+      {
+	Point p;
+	mdst->get_center(p, *itr);
+    
+	typename MSRC::cell_index idx;
+	msrc->locate(idx, p);
+	vector<pair<typename MSRC::node_index, double> > v;
+
+	typename MSRC::node_array array;
+	msrc->get_nodes(array, idx);
+  
+	typename MSRC::node_array::iterator array_itr =
+	  array.begin();
+	while (array_itr != array.end())
+	{
+	  Point p2;
+	  msrc->get_center(p2, *array_itr);
+	  
+	  v.push_back(pair<typename MSRC::node_index, double>
+		      (*array_itr, point_distance(p, p2)));
+	  ++array_itr;
+	}
+	ofield->set_value(v, *itr);
+	++itr;
+      }
+    }
+    break;
+
+  case Field::CELL:
+    {
+      typename MDST::cell_iterator itr = mdst->cell_begin();
+      while (itr != mdst->cell_end())
+      {
+	Point p;
+	mdst->get_center(p, *itr);
+    
+	typename MSRC::cell_index idx;
+	msrc->locate(idx, p);
+	vector<pair<typename MSRC::node_index, double> > v;
+
+	typename MSRC::node_array array;
+	msrc->get_nodes(array, idx);
+  
+	typename MSRC::node_array::iterator array_itr =
+	  array.begin();
+	while (array_itr != array.end())
+	{
+	  Point p2;
+	  msrc->get_center(p2, *array_itr);
+	  
+	  v.push_back(pair<typename MSRC::node_index, double>
+		      (*array_itr, point_distance(p, p2)));
+	  ++array_itr;
+	}
+	ofield->set_value(v, *itr);
+	++itr;
+      }
+    }
+    break;
+
+  default:
+    // no data at value for destination field
+    return;
+  }
+
+  FieldOPort *ofp = (FieldOPort *)get_oport("Interpolant");
+  ofp->send(fh);
+}
+
+template <class FOUT, class MDST, class MSRC>
+void
+BuildInterpolant::dispatch_src_edge(MDST *mdst, MSRC *msrc,
+				    Field::data_location mdstloc,
+				    FOUT *)
+{
+  FOUT *ofield = new FOUT(mdst, mdstloc);
+  FieldHandle fh(ofield);
+  
+  switch(mdstloc)
+  {
+  case Field::NODE:
+    {
+      typename MDST::node_iterator itr = mdst->node_begin();
+      while (itr != mdst->node_end())
+      {
+	Point p;
+	mdst->get_center(p, *itr);
+    
+	typename MSRC::cell_index idx;
+	msrc->locate(idx, p);
+	vector<pair<typename MSRC::edge_index, double> > v;
+
+	typename MSRC::edge_array array;
+	msrc->get_edges(array, idx);
+  
+	typename MSRC::edge_array::iterator array_itr =
+	  array.begin();
+	while (array_itr != array.end())
+	{
+	  Point p2;
+	  msrc->get_center(p2, *array_itr);
+	  
+	  v.push_back(pair<typename MSRC::edge_index, double>
+		      (*array_itr, point_distance(p, p2)));
+	  ++array_itr;
+	}
+	ofield->set_value(v, *itr);
+	++itr;
+      }
+    }
+    break;
+
+  case Field::EDGE:
+    {
+      typename MDST::edge_iterator itr = mdst->edge_begin();
+      while (itr != mdst->edge_end())
+      {
+	Point p;
+	mdst->get_center(p, *itr);
+    
+	typename MSRC::cell_index idx;
+	msrc->locate(idx, p);
+	vector<pair<typename MSRC::edge_index, double> > v;
+
+	typename MSRC::edge_array array;
+	msrc->get_edges(array, idx);
+  
+	typename MSRC::edge_array::iterator array_itr =
+	  array.begin();
+	while (array_itr != array.end())
+	{
+	  Point p2;
+	  msrc->get_center(p2, *array_itr);
+	  
+	  v.push_back(pair<typename MSRC::edge_index, double>
+		      (*array_itr, point_distance(p, p2)));
+	  ++array_itr;
+	}
+	ofield->set_value(v, *itr);
+	++itr;
+      }
+    }
+    break;
+
+  case Field::FACE:
+    {
+      typename MDST::face_iterator itr = mdst->face_begin();
+      while (itr != mdst->face_end())
+      {
+	Point p;
+	mdst->get_center(p, *itr);
+    
+	typename MSRC::cell_index idx;
+	msrc->locate(idx, p);
+	vector<pair<typename MSRC::edge_index, double> > v;
+
+	typename MSRC::edge_array array;
+	msrc->get_edges(array, idx);
+  
+	typename MSRC::edge_array::iterator array_itr =
+	  array.begin();
+	while (array_itr != array.end())
+	{
+	  Point p2;
+	  msrc->get_center(p2, *array_itr);
+	  
+	  v.push_back(pair<typename MSRC::edge_index, double>
+		      (*array_itr, point_distance(p, p2)));
+	  ++array_itr;
+	}
+	ofield->set_value(v, *itr);
+	++itr;
+      }
+    }
+    break;
+
+  case Field::CELL:
+    {
+      typename MDST::cell_iterator itr = mdst->cell_begin();
+      while (itr != mdst->cell_end())
+      {
+	Point p;
+	mdst->get_center(p, *itr);
+    
+	typename MSRC::cell_index idx;
+	msrc->locate(idx, p);
+	vector<pair<typename MSRC::edge_index, double> > v;
+
+	typename MSRC::edge_array array;
+	msrc->get_edges(array, idx);
+  
+	typename MSRC::edge_array::iterator array_itr =
+	  array.begin();
+	while (array_itr != array.end())
+	{
+	  Point p2;
+	  msrc->get_center(p2, *array_itr);
+	  
+	  v.push_back(pair<typename MSRC::edge_index, double>
+		      (*array_itr, point_distance(p, p2)));
+	  ++array_itr;
+	}
+	ofield->set_value(v, *itr);
+	++itr;
+      }
+    }
+    break;
+
+  default:
+    // no data at value for destination field
+    return;
+  }
+
+  FieldOPort *ofp = (FieldOPort *)get_oport("Interpolant");
+  ofp->send(fh);
+}
+
+
+template <class FOUT, class MDST, class MSRC>
+void
+BuildInterpolant::dispatch_src_face(MDST *mdst, MSRC *msrc,
+				    Field::data_location mdstloc,
+				    FOUT *)
+{
+  FOUT *ofield = new FOUT(mdst, mdstloc);
+  FieldHandle fh(ofield);
+  
+  switch(mdstloc)
+  {
+  case Field::NODE:
+    {
+      typename MDST::node_iterator itr = mdst->node_begin();
+      while (itr != mdst->node_end())
+      {
+	Point p;
+	mdst->get_center(p, *itr);
+    
+	typename MSRC::cell_index idx;
+	msrc->locate(idx, p);
+	vector<pair<typename MSRC::face_index, double> > v;
+
+	typename MSRC::face_array array;
+	msrc->get_faces(array, idx);
+  
+	typename MSRC::face_array::iterator array_itr =
+	  array.begin();
+	while (array_itr != array.end())
+	{
+	  Point p2;
+	  msrc->get_center(p2, *array_itr);
+	  
+	  v.push_back(pair<typename MSRC::face_index, double>
+		      (*array_itr, point_distance(p, p2)));
+	  ++array_itr;
+	}
+	ofield->set_value(v, *itr);
+	++itr;
+      }
+    }
+    break;
+
+  case Field::EDGE:
+    {
+      typename MDST::edge_iterator itr = mdst->edge_begin();
+      while (itr != mdst->edge_end())
+      {
+	Point p;
+	mdst->get_center(p, *itr);
+    
+	typename MSRC::cell_index idx;
+	msrc->locate(idx, p);
+	vector<pair<typename MSRC::face_index, double> > v;
+
+	typename MSRC::face_array array;
+	msrc->get_faces(array, idx);
+  
+	typename MSRC::face_array::iterator array_itr =
+	  array.begin();
+	while (array_itr != array.end())
+	{
+	  Point p2;
+	  msrc->get_center(p2, *array_itr);
+	  
+	  v.push_back(pair<typename MSRC::face_index, double>
+		      (*array_itr, point_distance(p, p2)));
+	  ++array_itr;
+	}
+	ofield->set_value(v, *itr);
+	++itr;
+      }
+    }
+    break;
+
+  case Field::FACE:
+    {
+      typename MDST::face_iterator itr = mdst->face_begin();
+      while (itr != mdst->face_end())
+      {
+	Point p;
+	mdst->get_center(p, *itr);
+    
+	typename MSRC::cell_index idx;
+	msrc->locate(idx, p);
+	vector<pair<typename MSRC::face_index, double> > v;
+
+	typename MSRC::face_array array;
+	msrc->get_faces(array, idx);
+  
+	typename MSRC::face_array::iterator array_itr =
+	  array.begin();
+	while (array_itr != array.end())
+	{
+	  Point p2;
+	  msrc->get_center(p2, *array_itr);
+	  
+	  v.push_back(pair<typename MSRC::face_index, double>
+		      (*array_itr, point_distance(p, p2)));
+	  ++array_itr;
+	}
+	ofield->set_value(v, *itr);
+	++itr;
+      }
+    }
+    break;
+
+  case Field::CELL:
+    {
+      typename MDST::cell_iterator itr = mdst->cell_begin();
+      while (itr != mdst->cell_end())
+      {
+	Point p;
+	mdst->get_center(p, *itr);
+    
+	typename MSRC::cell_index idx;
+	msrc->locate(idx, p);
+	vector<pair<typename MSRC::face_index, double> > v;
+
+	typename MSRC::face_array array;
+	msrc->get_faces(array, idx);
+  
+	typename MSRC::face_array::iterator array_itr =
+	  array.begin();
+	while (array_itr != array.end())
+	{
+	  Point p2;
+	  msrc->get_center(p2, *array_itr);
+	  
+	  v.push_back(pair<typename MSRC::face_index, double>
+		      (*array_itr, point_distance(p, p2)));
+	  ++array_itr;
+	}
+	ofield->set_value(v, *itr);
+	++itr;
+      }
+    }
+    break;
+
+  default:
+    // no data at value for destination field
+    return;
+  }
+
+  FieldOPort *ofp = (FieldOPort *)get_oport("Interpolant");
+  ofp->send(fh);
+}
+
+
+template <class FOUT, class MDST, class MSRC>
+void
+BuildInterpolant::dispatch_src_cell(MDST *mdst, MSRC *msrc,
+				    Field::data_location mdstloc,
+				    FOUT *)
+{
+  FOUT *ofield = new FOUT(mdst, mdstloc);
+  FieldHandle fh(ofield);
+  
+  switch(mdstloc)
+  {
+  case Field::NODE:
+    {
+      typename MDST::node_iterator itr = mdst->node_begin();
+      while (itr != mdst->node_end())
+      {
+	Point p;
+	mdst->get_center(p, *itr);
+    
+	typename MSRC::cell_index idx;
+	msrc->locate(idx, p);
+	vector<pair<typename MSRC::cell_index, double> > v;
+	v.push_back(pair<typename MSRC::cell_index, double>(idx, 1.0));
+
+	ofield->set_value(v, *itr);
+	++itr;
+      }
+    }
+    break;
+
+  case Field::EDGE:
+    {
+      typename MDST::edge_iterator itr = mdst->edge_begin();
+      while (itr != mdst->edge_end())
+      {
+	Point p;
+	mdst->get_center(p, *itr);
+    
+	typename MSRC::cell_index idx;
+	msrc->locate(idx, p);
+	vector<pair<typename MSRC::cell_index, double> > v;
+	v.push_back(pair<typename MSRC::cell_index, double>(idx, 1.0));
+
+	ofield->set_value(v, *itr);
+	++itr;
+      }
+    }
+    break;
+
+  case Field::FACE:
+    {
+      typename MDST::face_iterator itr = mdst->face_begin();
+      while (itr != mdst->face_end())
+      {
+	Point p;
+	mdst->get_center(p, *itr);
+    
+	typename MSRC::cell_index idx;
+	msrc->locate(idx, p);
+	vector<pair<typename MSRC::cell_index, double> > v;
+	v.push_back(pair<typename MSRC::cell_index, double>(idx, 1.0));
+
+	ofield->set_value(v, *itr);
+	++itr;
+      }
+    }
+    break;
+
+  case Field::CELL:
+    {
+      typename MDST::cell_iterator itr = mdst->cell_begin();
+      while (itr != mdst->cell_end())
+      {
+	Point p;
+	mdst->get_center(p, *itr);
+    
+	typename MSRC::cell_index idx;
+	msrc->locate(idx, p);
+	vector<pair<typename MSRC::cell_index, double> > v;
+	v.push_back(pair<typename MSRC::cell_index, double>(idx, 1.0));
+
+	ofield->set_value(v, *itr);
+	++itr;
+      }
+    }
+    break;
+
+  default:
+    // no data at value for destination field
+    return;
+  }
+
+  FieldOPort *ofp = (FieldOPort *)get_oport("Interpolant");
+  ofp->send(fh);
+}
+
+
 void
 BuildInterpolant::execute()
 {
+  FieldIPort *dst_port = (FieldIPort *)get_iport("Destination");
+  FieldHandle dfieldhandle;
+  Field *dst_field;
+  if (!(dst_port->get(dfieldhandle) && (dst_field = dfieldhandle.get_rep())))
+  {
+    return;
+  }
+
+  FieldIPort *src_port = (FieldIPort *)get_iport("Source");
+  FieldHandle sfieldhandle;
+  Field *src_field;
+  if (!(src_port->get(sfieldhandle) && (src_field = sfieldhandle.get_rep())))
+  {
+    return;
+  }
   
+  const string dst_mesh_name = dst_field->get_type_name(0);
+  const string src_mesh_name = src_field->get_type_name(1);
+
+  if (dst_mesh_name == "TetVol" &&
+      src_mesh_name == "TetVol")
+  {
+    switch (src_field->data_at())
+    {
+    case Field::NODE:
+      dispatch_src_node((TetVolMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TetVol<vector<pair<TetVolMesh::node_index, double> > > *) 0);
+      break;
+
+    case Field::EDGE:
+      dispatch_src_edge((TetVolMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TetVol<vector<pair<TetVolMesh::edge_index, double> > > *) 0);
+      break;
+
+    case Field::FACE:
+      dispatch_src_face((TetVolMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TetVol<vector<pair<TetVolMesh::face_index, double> > > *) 0);
+      break;
+
+    case Field::CELL:
+      dispatch_src_cell((TetVolMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TetVol<vector<pair<TetVolMesh::cell_index, double> > > *) 0);
+      break;
+
+    default:
+      return;
+    }
+  }
+  else if (dst_mesh_name == "TetVol" &&
+	   src_mesh_name == "LatticeVol")
+  {
+    switch (src_field->data_at())
+    {
+    case Field::NODE:
+      dispatch_src_node((TetVolMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TetVol<vector<pair<LatVolMesh::node_index, double> > > *) 0);
+      break;
+
+    case Field::EDGE:
+      dispatch_src_edge((TetVolMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TetVol<vector<pair<LatVolMesh::edge_index, double> > > *) 0);
+      break;
+
+    case Field::FACE:
+      dispatch_src_face((TetVolMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TetVol<vector<pair<LatVolMesh::face_index, double> > > *) 0);
+      break;
+
+    case Field::CELL:
+      dispatch_src_cell((TetVolMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TetVol<vector<pair<LatVolMesh::cell_index, double> > > *) 0);
+      break;
+
+    default:
+      return;
+    }
+  }
+  else if (dst_mesh_name == "LatticeVol" &&
+	   src_mesh_name == "LatticeVol")
+  {
+    switch (src_field->data_at())
+    {
+    case Field::NODE:
+      dispatch_src_node((LatVolMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(LatticeVol<vector<pair<LatVolMesh::node_index, double> > > *) 0);
+      break;
+
+    case Field::EDGE:
+      dispatch_src_edge((LatVolMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(LatticeVol<vector<pair<LatVolMesh::edge_index, double> > > *) 0);
+      break;
+
+    case Field::FACE:
+      dispatch_src_face((LatVolMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(LatticeVol<vector<pair<LatVolMesh::face_index, double> > > *) 0);
+      break;
+
+    case Field::CELL:
+      dispatch_src_cell((LatVolMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(LatticeVol<vector<pair<LatVolMesh::cell_index, double> > > *) 0);
+      break;
+
+    default:
+      return;
+    }
+  }
+  else if (dst_mesh_name == "LatticeVol" &&
+	   src_mesh_name == "TetVol")
+  {
+    switch (src_field->data_at())
+    {
+    case Field::NODE:
+      dispatch_src_node((LatVolMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(LatticeVol<vector<pair<TetVolMesh::node_index, double> > > *) 0);
+      break;
+
+    case Field::EDGE:
+      dispatch_src_edge((LatVolMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(LatticeVol<vector<pair<TetVolMesh::edge_index, double> > > *) 0);
+      break;
+
+    case Field::FACE:
+      dispatch_src_face((LatVolMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(LatticeVol<vector<pair<TetVolMesh::face_index, double> > > *) 0);
+      break;
+
+    case Field::CELL:
+      dispatch_src_cell((LatVolMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(LatticeVol<vector<pair<TetVolMesh::cell_index, double> > > *) 0);
+      break;
+
+    default:
+      return;
+    }
+  }
+  else if (dst_mesh_name == "TriSurf" &&
+	   src_mesh_name == "TetVol")
+  {
+    switch (src_field->data_at())
+    {
+    case Field::NODE:
+      dispatch_src_node((TriSurfMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TriSurf<vector<pair<TetVolMesh::node_index, double> > > *) 0);
+      break;
+
+    case Field::EDGE:
+      dispatch_src_edge((TriSurfMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TriSurf<vector<pair<TetVolMesh::edge_index, double> > > *) 0);
+      break;
+
+    case Field::FACE:
+      dispatch_src_face((TriSurfMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TriSurf<vector<pair<TetVolMesh::face_index, double> > > *) 0);
+      break;
+
+    case Field::CELL:
+      dispatch_src_cell((TriSurfMesh *)dst_field->mesh().get_rep(),
+			(TetVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TriSurf<vector<pair<TetVolMesh::cell_index, double> > > *) 0);
+      break;
+
+    default:
+      return;
+    }
+  }
+  else if (dst_mesh_name == "TriSurf" &&
+	   src_mesh_name == "LatticeVol")
+  {
+    switch (src_field->data_at())
+    {
+    case Field::NODE:
+      dispatch_src_node((TriSurfMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TriSurf<vector<pair<LatVolMesh::node_index, double> > > *) 0);
+      break;
+
+    case Field::EDGE:
+      dispatch_src_edge((TriSurfMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TriSurf<vector<pair<LatVolMesh::edge_index, double> > > *) 0);
+      break;
+
+    case Field::FACE:
+      dispatch_src_face((TriSurfMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TriSurf<vector<pair<LatVolMesh::face_index, double> > > *) 0);
+      break;
+
+    case Field::CELL:
+      dispatch_src_cell((TriSurfMesh *)dst_field->mesh().get_rep(),
+			(LatVolMesh *)src_field->mesh().get_rep(),
+			dst_field->data_at(),
+			(TriSurf<vector<pair<LatVolMesh::cell_index, double> > > *) 0);
+      break;
+
+    default:
+      return;
+    }
+  }
+  else
+  {
+    // Can't build that kind of interpolant.
+  }
 }
 
 } // End namespace SCIRun
