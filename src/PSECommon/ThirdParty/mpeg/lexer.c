@@ -1,6 +1,4 @@
 # include "stdio.h"
-#include <string.h>
-
 # define U(x) ((unsigned char)(x))
 # define NLSTATE yyprevious=YYNEWLINE
 # define BEGIN yybgin = yysvec + 1 +
@@ -84,6 +82,7 @@ Stanford University) name.
    to worry about lex library */
 
 # define yywrap() (1)
+# include <string.h>
 
 static char *ReservedWords[] = {
 "ADD",
@@ -271,7 +270,7 @@ LINK *next;
 ID *Cid=NULL;
 
 
-# line 213 "lexer.l"
+# line 214 "lexer.l"
 /*PUBLIC*/
 
 extern void initparser();
@@ -288,11 +287,11 @@ static void CompileProgram();
 static int mylex();
 
 
-# line 228 "lexer.l"
+# line 229 "lexer.l"
 /*PRIVATE*/
 
 
-# line 230 "lexer.l"
+# line 231 "lexer.l"
 /*NOPROTO*/
 
 # define NORMAL 2
@@ -306,12 +305,12 @@ case 0:
 if(yywrap()) return(0); break;
 case 1:
 
-# line 256 "lexer.l"
+# line 257 "lexer.l"
 {}
 break;
 case 2:
 
-# line 258 "lexer.l"
+# line 259 "lexer.l"
 {Cid = enter(0,yytext,yyleng); 
 		 if (LexDebug)
 		   {
@@ -333,7 +332,7 @@ case 2:
 break;
 case 3:
 
-# line 276 "lexer.l"
+# line 277 "lexer.l"
         {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "REAL");
@@ -343,7 +342,7 @@ case 3:
 break;
 case 4:
 
-# line 282 "lexer.l"
+# line 283 "lexer.l"
 {if (LexDebug)
 			   {             
 			     printf("%s : %s\n", yytext, "INTEGER");
@@ -353,7 +352,7 @@ case 4:
 break;
 case 5:
 
-# line 288 "lexer.l"
+# line 289 "lexer.l"
 {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "(HEX)INTEGER");
@@ -363,7 +362,7 @@ case 5:
 break;
 case 6:
 
-# line 294 "lexer.l"
+# line 295 "lexer.l"
 {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "(HEX)INTEGER");
@@ -373,7 +372,7 @@ case 6:
 break;
 case 7:
 
-# line 300 "lexer.l"
+# line 301 "lexer.l"
 {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "(OCT)INTEGER");
@@ -383,7 +382,7 @@ case 7:
 break;
 case 8:
 
-# line 306 "lexer.l"
+# line 307 "lexer.l"
 {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "(OCT)INTEGER");
@@ -393,7 +392,7 @@ case 8:
 break;
 case 9:
 
-# line 312 "lexer.l"
+# line 313 "lexer.l"
 {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "(CHAR)INTEGER");
@@ -443,7 +442,7 @@ case 9:
 break;
 case 10:
 
-# line 358 "lexer.l"
+# line 359 "lexer.l"
         {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "LBRACKET");
@@ -452,7 +451,7 @@ case 10:
 break;
 case 11:
 
-# line 363 "lexer.l"
+# line 364 "lexer.l"
         {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "RBRACKET");
@@ -461,7 +460,7 @@ case 11:
 break;
 case 12:
 
-# line 368 "lexer.l"
+# line 369 "lexer.l"
 {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "STRING");
@@ -470,17 +469,17 @@ case 12:
 break;
 case 13:
 
-# line 374 "lexer.l"
+# line 375 "lexer.l"
 {CommentDepth++; BEGIN COMMENT;}
 break;
 case 14:
 
-# line 376 "lexer.l"
+# line 377 "lexer.l"
 	{CommentDepth--;if(!CommentDepth) BEGIN NORMAL;}
 break;
 case 15:
 
-# line 378 "lexer.l"
+# line 379 "lexer.l"
   	  	{
 		  	    /* None of the above rules applicable, so
 			       it's a bad symbol. */
@@ -491,7 +490,7 @@ case 15:
 break;
 case 16:
 
-# line 386 "lexer.l"
+# line 387 "lexer.l"
 	{}
 break;
 case -1:
@@ -501,7 +500,7 @@ default:
 } return(0); }
 /* end of yylex */
 
-# line 389 "lexer.l"
+# line 390 "lexer.l"
 
 /*PROTO*/
 #define NUMBER_PROGRAMS 10
