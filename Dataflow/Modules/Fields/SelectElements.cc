@@ -39,7 +39,7 @@ using namespace std;
 
 class PSECORESHARE SelectElements : public Module {
 public:
-  GuiInt value_;
+  GuiString value_;
   SelectElements(const string& id);
   virtual ~SelectElements();
   virtual void execute();
@@ -73,13 +73,28 @@ void SelectElements::execute()
   ScalarFieldInterface *sfi = field->query_scalar_interface();
   double min, max;
   sfi->compute_min_max(min, max);
-  int value = value_.get();
-  if (value < min) {
-    cerr << "Error - min="<<min<<" value="<<value<<"\n";
-    value=(int)min;
-  } else if (value > max) {
-    cerr << "Error - max="<<max<<" value="<<value<<"\n";
-    value=(int)max;
+  string value = value_.get();
+  char **v;
+  char *value_str = new char[30];
+  v = &value_str;
+  strcpy(value_str, value.c_str());
+  char *matl;
+  Array1<int> values;
+  while (matl = strtok(value_str, " ,")) {
+    value_str=0;
+    values.add(atoi(matl));
+  }
+  delete[] (*v);
+
+  int ii;
+  for (ii=0; ii<values.size(); ii++) {
+    if (values[ii] < min) {
+      cerr << "Error - min="<<min<<" value="<<values[ii]<<"\n";
+      values[ii]=(int)min;
+    } else if (values[ii] > max) {
+      cerr << "Error - max="<<max<<" value="<<values[ii]<<"\n";
+      values[ii]=(int)max;
+    }
   }
 
   TetVolField<int> *tvI = dynamic_cast<TetVolField<int> *>(field.get_rep());
@@ -113,7 +128,7 @@ void SelectElements::execute()
   TetVolMesh::Cell::size_type ntets;
   tvm->size(ntets);
   Array1<int> tet_valid(ntets);
-  tet_valid.initialize(1);
+  tet_valid.initialize(0);
   TetVolMesh::Cell::iterator citer; tvm->begin(citer);
   TetVolMesh::Cell::iterator citere; tvm->end(citere);
   int count=0;
@@ -121,18 +136,18 @@ void SelectElements::execute()
   while (citer != citere) {
     TetVolMesh::Cell::index_type ci = *citer;
     ++citer;
-    if (tvI->fdata()[ci] != value) {
-      tet_valid[count]=0;
-    } else {
-      fdata.push_back(value);
-      indices.add(count);
+    for (ii=0; ii<values.size(); ii++) {
+      if (tvI->fdata()[ci] == values[ii]) {
+	tet_valid[count]=1;
+	fdata.push_back(values[ii]);
+	indices.add(count);
+      }
     }
     count++;
   }
-  cerr << "Found "<<fdata.size()<<" elements (out of "<<count<<") with conductivity index "<<value<<".\n";
+  cerr << "Found "<<fdata.size()<<" elements (out of "<<count<<") with specified conductivity indices.\n";
 
   ColumnMatrix *cm = scinew ColumnMatrix(indices.size()*3);
-  int ii;
   for (ii=0; ii<indices.size(); ii++) {
     (*cm)[ii*3]=indices[ii]*3;
     (*cm)[ii*3+1]=indices[ii]*3+1;
@@ -193,6 +208,7 @@ void SelectElements::execute()
   TetVolMesh::Node::array_type narr;
   int total=0;
   int added=0;
+//  FILE *fout = fopen("/tmp/map-entire-volume-nodes-to-heart-volume-nodes.txt", "wt");
   while(niter != niter_end) {
     mesh->get_neighbors(narr, *niter);
     if (narr.size()) {
@@ -201,10 +217,12 @@ void SelectElements::execute()
       node_map[total]=added;
       added++;
       mesh_no_unattached_nodes->add_point(p);
+//      fprintf(fout, "%d\n", total);
     }
     ++niter;
     total++;
   }
+//  fclose(fout);
   mesh->begin(citer);
   mesh->end(citere);
   while(citer != citere) {
