@@ -67,7 +67,8 @@ MDSPlusReader::MDSPlusReader() : socket_(-1)
 }
 
 // Simple connection interface that insures thread safe calls and the correct socket.
-int MDSPlusReader::connect( std::string server )
+int
+MDSPlusReader::connect( std::string server )
 {
 #ifdef HAVE_MDSPLUS
   int retVal;
@@ -94,8 +95,9 @@ int MDSPlusReader::connect( std::string server )
 }
 
 // Simple open interface that insures thread safe calls and the correct socket.
-int MDSPlusReader::open( const std::string tree,
-			 const int shot )
+int
+MDSPlusReader::open( const std::string tree,
+		     const unsigned int shot )
 {
 #ifdef HAVE_MDSPLUS
   int retVal;
@@ -117,7 +119,8 @@ int MDSPlusReader::open( const std::string tree,
 
 // Simple disconnect interface that insures thread safe calls and
 // the correct socket.
-void MDSPlusReader::disconnect()
+void
+MDSPlusReader::disconnect()
 {
 #ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
@@ -135,7 +138,8 @@ void MDSPlusReader::disconnect()
 
 // Simple valid interface that insures thread safe calls
 // and the correct socket.
-bool MDSPlusReader::valid( const std::string signal )
+bool
+MDSPlusReader::valid( const std::string signal )
 {
 #ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
@@ -152,28 +156,11 @@ bool MDSPlusReader::valid( const std::string signal )
 #endif
 }
 
-// Simple rank (number of dimensions) interface that insures thread safe calls
-// and the correct socket.
-int MDSPlusReader::rank( const std::string signal )
-{
-#ifdef HAVE_MDSPLUS
-  mdsPlusLock_.lock();
-
-  MDS_SetSocket( socket_ );
-
-  int rank = get_rank( signal.c_str() );
-
-  mdsPlusLock_.unlock();
-
-  return rank;
-#else
-  return 0;
-#endif
-}
 
 // Simple type (data type) interface that insures thread safe calls
 // and the correct socket.
-int MDSPlusReader::type( const std::string signal )
+int
+MDSPlusReader::type( const std::string signal )
 {
 #ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
@@ -190,9 +177,30 @@ int MDSPlusReader::type( const std::string signal )
 #endif
 }
 
+// Simple rank (number of dimensions) interface that insures thread safe calls
+// and the correct socket.
+int
+MDSPlusReader::rank( const std::string signal )
+{
+#ifdef HAVE_MDSPLUS
+  mdsPlusLock_.lock();
+
+  MDS_SetSocket( socket_ );
+
+  int rank = get_rank( signal.c_str() );
+
+  mdsPlusLock_.unlock();
+
+  return rank;
+#else
+  return 0;
+#endif
+}
+
 // Simple dims (number of dimension) interface that insures thread safe calls
 // and the correct socket.
-int MDSPlusReader::dims( const std::string signal, int** dims )
+int
+MDSPlusReader::dims( const std::string signal, unsigned int** dims )
 {
 #ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
@@ -209,90 +217,10 @@ int MDSPlusReader::dims( const std::string signal, int** dims )
 #endif
 }
 
-// Simple data (double data) interface that insures thread safe calls
-//  and the correct socket.
-void* MDSPlusReader::values( const std::string signal, int dtype )
-{
-#ifdef HAVE_MDSPLUS
-  mdsPlusLock_.lock();
 
-  MDS_SetSocket( socket_ );
-
-  void* values = get_values( signal.c_str(), dtype );
-
-  mdsPlusLock_.unlock();
-
-  return values;
-#else
-  return 0;
-#endif
-}
-
-// Simple search interface that insures thread safe calls and
-// the correct socket.
-int MDSPlusReader::search( const std::string signal,
-			   const int regexp,
-			   std::vector<std::string> &signals ) 
-{
-#ifdef HAVE_MDSPLUS
-  mdsPlusLock_.lock();
-
-  MDS_SetSocket( socket_ );
-
-  // Search for the signals.
-  signals.push_back("\\NIMROD::TOP.OUTPUTS.CODE.GRID:R");
-  signals.push_back("\\NIMROD::TOP.OUTPUTS.CODE.GRID:Z");
-  signals.push_back("\\NIMROD::TOP.OUTPUTS.CODE.GRID:PHI");
-  signals.push_back("\\NIMROD::TOP.OUTPUTS.CODE.GRID:K");
-
-  mdsPlusLock_.unlock();
-
-  return signals.size();
-#else
-  return 0;
-#endif
-}
-
-// Simple grid (elements) interface that insures thread safe calls and
-// the correct socket.
-double* MDSPlusReader::grid( const std::string axis, int **dims )
-{
-#ifdef HAVE_MDSPLUS
-  mdsPlusLock_.lock();
-
-  MDS_SetSocket( socket_ );
-
-  double* data = get_grid( axis.c_str(), dims );
-
-  mdsPlusLock_.unlock();
-
-  return data;
-#else
-  return NULL;
-#endif
-}
-
-// Simple slice nids (nids number are ids) interface that insures thread safe calls and
-// the correct socket.
-int MDSPlusReader::slice_ids( int **nids ) 
-{
-#ifdef HAVE_MDSPLUS
-  mdsPlusLock_.lock();
-
-  MDS_SetSocket( socket_ );
-
-  int nSlices = get_slice_ids( nids );
-
-  mdsPlusLock_.unlock();
-
-  return nSlices;
-#else
-  return 0;
-#endif
-}
-
-// Simple slice name interface that insures thread safe calls and the correct socket.
-std::string MDSPlusReader::name( const int nid )
+// Simple interface that insures thread safe calls and the correct socket.
+std::string
+MDSPlusReader::name( const unsigned int nid )
 {
 #ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
@@ -309,45 +237,6 @@ std::string MDSPlusReader::name( const int nid )
 #endif
 }
 
-// Simple slice time interface that insures thread safe calls and the correct socket.
-double MDSPlusReader::slice_time( const std::string name )
-{
-#ifdef HAVE_MDSPLUS
-  mdsPlusLock_.lock();
-
-  MDS_SetSocket( socket_ );
-
-  double time = get_slice_time( name.c_str() );
-
-  mdsPlusLock_.unlock();
-
-  return time;
-#else
-  return 0;
-#endif
-}
-
-
-// Simple slice data interface that insures thread safe calls and the correct socket.
-double *MDSPlusReader::slice_data( const std::string name,
-				   const std::string space,
-				   const std::string node,
-				   int **dims )
-{
-#ifdef HAVE_MDSPLUS
-  mdsPlusLock_.lock();
-
-  MDS_SetSocket( socket_ );
-
-  double* data =
-    get_slice_data( name.c_str(), space.c_str(), node.c_str(), dims );
-  mdsPlusLock_.unlock();
-
-  return data;
-#else
-  return NULL;
-#endif
-}
 
 // Simple interface that insures thread safe calls and the correct socket.
 unsigned int
@@ -390,7 +279,8 @@ MDSPlusReader::names( const std::string signal,
 }
 
 unsigned int 
-MDSPlusReader::nids( const std::string signal, int **nids ){
+MDSPlusReader::nids( const std::string signal, unsigned int **nids )
+{
 #ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
 
@@ -401,6 +291,24 @@ MDSPlusReader::nids( const std::string signal, int **nids ){
   mdsPlusLock_.unlock();
 
   return nnids;
+#else
+  return NULL;
+#endif
+}
+
+void *
+MDSPlusReader::values( const std::string signal, unsigned int dtype )
+{
+#ifdef HAVE_MDSPLUS
+  mdsPlusLock_.lock();
+
+  MDS_SetSocket( socket_ );
+
+  void * values = get_values( signal.c_str(), dtype );
+
+  mdsPlusLock_.unlock();
+
+  return values;
 #else
   return NULL;
 #endif

@@ -58,33 +58,25 @@ extern "C" {
 
 #ifdef HAVE_MDSPLUS
   int MDS_Connect( const char *server );
-  int MDS_Open( const char *tree, int shot );
+  int MDS_Open( const char *tree, unsigned int shot );
   void MDS_SetSocket( int socket );
   void MDS_Disconnect();
 
-  int is_valid( const char *signal );
+  unsigned int is_valid( const char *signal );
 
   int get_rank( const char *signal );
   int get_size( const char *signal );
   int get_type( const char *signal );
 
-  int get_dims( const char *signal, int **dims );
-  char *get_name( const int nid );
+  int get_dims( const char *signal, unsigned int **dims );
+  char *get_name( const unsigned int nid );
 
   void *get_value( const char *signal, int dtype);
   void *get_values( const char *signal, int dtype );
 
-  double *get_grid( const char *axis, int **dims );
-  int get_slice_ids( int **nids );
-  double get_slice_time( const char *name );
-  double *get_slice_data( const char *name,
-			  const char *space,
-			  const char *node,
-			  int **dims );
-
   unsigned int get_names( const char *signal, char **names,
 			  char recurse, char absolute, char type );
-  unsigned int get_nids ( const char *signal,  int **nids  );
+  unsigned int get_nids ( const char *signal, unsigned int **nids  );
 
 #endif  // HAVE_MDSPLUS
 

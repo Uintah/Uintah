@@ -84,33 +84,22 @@ public:
   MDSPlusReader();
 
   int connect( const std::string server );
-  int open( const std::string tree, int shot );
+  int open( const std::string tree, unsigned int shot );
   void disconnect();
 
   bool valid( const std::string signal );
 
   int type( const std::string signal );
   int rank( const std::string signal );
-  int dims( const std::string signal, int** dims );
-  void* values( const std::string signal, int dtype );
-
-  int search( const std::string signal,
-	      const int regexp,
-	      std::vector<std::string> &signals );
-
-  double *grid( const std::string axis, int **dims  );
-  int slice_ids( int **nids );
-  std::string name( const int nid );
-  double slice_time( const std::string name );
-
-  double *slice_data( const std::string name,
-		      const std::string space,
-		      const std::string node,
-		      int **dims );
-
-  unsigned int names( const std::string signal, std::vector<std::string> &nameList,
+  int dims( const std::string signal, unsigned int** dims );
+  std::string name( const unsigned int nid );
+  unsigned int names( const std::string signal, 
+		      std::vector<std::string> &nameList,
 		      bool recurse, bool absolute, bool type );
-  unsigned int nids( const std::string signal, int **nids  );
+
+  unsigned int nids( const std::string signal, unsigned int **nids  );
+
+  void *values( const std::string signal, unsigned int dtype );
 
 protected:
   int socket_;

@@ -66,11 +66,14 @@ public:
   int dataspace( const std::string signal );
   int datatype ( const std::string signal );
 
+  std::string error() { return error_msg_; };
+
 private:
   unsigned int indent_;
   unsigned int max_indent_;
 
   ostream *iostr_;
+  std::string error_msg_;
 
   MDSPlusReader mds_;
 };

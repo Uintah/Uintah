@@ -69,22 +69,26 @@ MDSPlusDump::tree( std::string server,
   int trys = 0;
   int retVal = 0;
 
+  char shotstr[12];
+
+  sprintf( shotstr, "%d", shot );
+
   indent_ = 0;
   max_indent_ = max_nodes;
 
   while( trys < 10 && (retVal = mds_.connect( server.c_str()) ) == -2 ) {
-    cerr << "Waiting for the connection to become free." << endl;
+    error_msg_ = "Waiting for the connection to become free.";
 //    sleep( 1 );
     trys++;
   }
 
   /* Connect to MDSplus */
   if( retVal == -2 ) {
-    cerr << "Connection to Mds Server " << server << " too busy ... giving up." << endl;
+    error_msg_ = "Connection to Mds Server " + server + " too busy ... giving up.";
     return -1;
   }
   else if( retVal < 0 ) {
-    cerr << "Can not connect to Mds Server " << server << endl;
+    error_msg_ = "Can not connect to Mds Server " + server;
     return -1;
   }
 
@@ -92,17 +96,17 @@ MDSPlusDump::tree( std::string server,
   trys = 0;
 
   while( trys < 10 && (retVal = mds_.open( tree.c_str(), shot) ) == -2 ) {
-    cerr <<  "Waiting for the tree and shot to become free." << endl;
+    error_msg_ = "Waiting for the tree and shot to become free.";
 //    sleep( 1 );
     trys++;
   }
 
   if( retVal == -2 ) {
-    cerr << "Opening " << tree << " tree and shot " << shot << " too busy ... giving up.";
+    error_msg_ = "Opening " + tree + " tree and shot " + shotstr + " too busy ... giving up.";;
     return -1;
   }
   if( retVal < 0 ) {
-    cerr << "Can not open " << tree << " tree and shot " << shot;
+    error_msg_ = "Can not open " + tree + " tree and shot " + shotstr;
     return -1;
   }
 
@@ -126,7 +130,7 @@ MDSPlusDump::tree( std::string server,
 int
 MDSPlusDump::nodes( const std::string path ) {
 
-  int *nids = NULL;
+  unsigned int *nids = NULL;
   int nnodes = mds_.nids(path.c_str(), &nids);
 
   for( int i=0; i<nnodes; i++ ) {
@@ -311,7 +315,7 @@ MDSPlusDump::datatype( const std::string path ) {
 int
 MDSPlusDump::dataspace( const std::string path ) {
 
-  int *dims = NULL; 
+  unsigned int *dims = NULL; 
   int rank = mds_.dims( path.c_str(), &dims );
 
   if (rank == 0) {

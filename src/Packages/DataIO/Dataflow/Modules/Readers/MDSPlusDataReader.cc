@@ -671,7 +671,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
   }
 
   // Get the mds data rank from the signal.
-  int* dims;
+  unsigned int* dims;
   int ndims = mds.dims( signal, &dims );
 
   if( ndims < 1 ) {
@@ -996,13 +996,15 @@ void MDSPlusDataReader::tcl_command(GuiArgs& args, void* userdata)
 
     if( !sPtr ) {
       error( string("Unable to open output file: ") + dumpname );
+      gui->execute( "reset_cursor" );
       return;
     }
   
     MDSPlusDump mdsdump( &sPtr );
 
     if( mdsdump.tree(server, tree, shot, signal, depth ) < 0 ) {
-      error( string("Could not create dump file: ") + dumpname );
+      error( mdsdump.error() );
+      gui->execute( "reset_cursor" );
       return;
     }
 
