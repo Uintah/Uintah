@@ -603,11 +603,8 @@ fi
 
 XML_INCLUDE_DIR=$XML_LIB_DIR/../include
 
-if test -e $XML_LIB_DIR/libxerces-c1_1.so; then
-  XML_LIB_FLAG="-lxerces-c1_1"
-elif test -e $XML_LIB_DIR/libxerces-c1_2.so; then
-  XML_LIB_FLAG="-lxerces-c1_2"
-fi
+XML_LIB_FLAG="-l`basename $XML_LIB_DIR/libxerces-c1_?.so |\
+	      sed -e's,lib,,g' -e 's,.so,,g'`"
 
 echo "-L$XML_LIB_DIR $XML_LIB_FLAG"
 
@@ -826,6 +823,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.53.2.4  2000/12/04 04:22:08  moulding
+# moved fixes for newer xerces version from HEAD to FIELD_REDESIGN
+#
 # Revision 1.53.2.3  2000/10/26 13:16:58  moulding
 # merge HEAD into FIELD_REDESIGN
 #
