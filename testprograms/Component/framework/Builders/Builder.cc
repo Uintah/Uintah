@@ -90,18 +90,18 @@ Builder::connect_components()
       return;
     }
 
-  ConnectionServices connect_port = 
-     pidl_cast<ConnectionServices>( services_->getPort("ConnectionServices") );
+  BuilderServices build_port = 
+     pidl_cast<BuilderServices>( services_->getPort("BuilderServices") );
 
-  if ( !connect_port ) {
-    cerr << "Could not get connection port\n";
+  if ( !build_port ) {
+    cerr << "Could not get builder port\n";
     return;
   }
 
-  connect_port->connect( componentIds[ user ], "scrUserIn0", 
-			 componentIds[ provider ], "scrOut0" );
+  build_port->connect( componentIds[ user ], "scrUserIn0", 
+		       componentIds[ provider ], "scrOut0" );
     
-  services_->releasePort( "ConnectionServices" );
+  services_->releasePort( "BuilderServices" );
 
   scruser->go();
 }
