@@ -31,30 +31,12 @@ int main(int argc, char** argv)
     // the rest is handled "automagically".
     ArgProcessor::process_args(argc, argv);
 
-    // If the environmental variable SCI_DATA is set, change
-    // to that directory
-    char* datadir=getenv("SCI_DATA");
-    if(datadir){
-#if REALLY_CHDIR
-	cerr << "Changing to directory: " << datadir << endl;
-	if(chdir(datadir) == -1){
-	    perror("chdir");
-	    cerr << "Cannot change to directory: " << datadir << endl;
-	}
-#endif
-	static char dirbuf[1000];
-	sprintf(dirbuf, "PWD=%s", datadir);
-	putenv(dirbuf);
-    }
-
     // Initialize the multithreader
     Task::initialize(argv[0]);
 
     // Start up TCL...
     TCLTask* tcl_task = new TCLTask(argc, argv);
-    tcl_task->activate(0);
-    tcl_task->wait_start();
-    
+
     // Create initial network
     // We build the Network with a 1, indicating that this is the
     // first instantiation of the network class, and this network
@@ -72,6 +54,9 @@ int main(int argc, char** argv)
     // Fork the dial box manager
     Dialbox* dialtask=new Dialbox;
     dialtask->activate(0);
+
+    // Now activate the TCL event loop
+    tcl_task->activate(0);
 
     // This will wait until all tasks have completed before exiting
     Task::main_exit();
