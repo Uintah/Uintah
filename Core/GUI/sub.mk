@@ -34,6 +34,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Graph.tcl \
 	$(SRCDIR)/Diagram.tcl \
 	$(SRCDIR)/Hairline.tcl \
+	$(SRCDIR)/MinMaxWidget.tcl \
 	$(SRCDIR)/OpenGLWindow.tcl\
 	$(SRCDIR)/PartManager.tcl\
 	$(SRCDIR)/NullGui.tcl\

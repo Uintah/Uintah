@@ -72,6 +72,63 @@ NrrdData::copy_sci_data(const NrrdData &cp)
   originating_field_ = cp.originating_field_;
 }
 
+int
+NrrdData::get_tuple_axis_size() const
+{
+  vector<string> elems;
+  get_tuple_indecies(elems);
+  return elems.size();
+}
+
+bool
+NrrdData::get_tuple_indecies(vector<string> &elems) const
+{
+  if (!nrrd) return false;
+  string tup(nrrd->axis[0].label);
+  
+  string::size_type s, e;
+  s = 0;
+  e = 0;
+
+  while (e < (tup.size() - 1)) {
+    e = tup.find(",", s);
+    elems.push_back(tup.substr(s, e));
+    s = e + 1;
+  }
+}
+
+bool 
+NrrdData::get_tuple_index_info(int tmin, int tmax, int &min, int &max) const
+{
+  if (!nrrd) return false;
+  string tup(nrrd->axis[0].label);
+  vector<string> elems;
+  get_tuple_indecies(elems);
+
+  if (tmin < 0 || tmin > (int)elems.size() - 1 || 
+      tmax < 0 || tmax > (int)elems.size() - 1 ) return false;
+
+  min = 0;
+  max = 0;
+  for (int i = 0; i <= tmax; i++) {
+    
+    string &s = elems[i];
+    int inc = 0;
+    if (s.find(string("Scalar")) <= tup.size() - 1) {
+      inc = 1;
+    } else if (s.find(string("Vector")) <= tup.size() - 1) {
+      inc = 3;
+    } else if (s.find(string("Tensor")) <= tup.size() - 1) {
+      inc = 6;
+    }
+    if (tmin > i) min+=inc;
+    if (tmax > i) max+=inc;
+    if (tmax == i) max+= inc - 1;
+    
+  } 
+  return true;
+}
+
 #define NRRDDATA_VERSION 1
 
 //////////

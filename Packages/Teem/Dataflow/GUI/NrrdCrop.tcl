@@ -40,12 +40,24 @@ itcl_class Teem_Filters_NrrdCrop {
         global $this-maxAxis1
         global $this-minAxis2
         global $this-maxAxis2
+	global $this-minAxis3
+        global $this-maxAxis3
+	global $this-absmaxAxis0
+	global $this-absmaxAxis1
+	global $this-absmaxAxis2
+	global $this-absmaxAxis3
         set $this-minAxis0 0
         set $this-maxAxis0 127
+	set $this-absmaxAxis0 127
         set $this-minAxis1 0
         set $this-maxAxis1 127
+	set $this-absmaxAxis1 127
         set $this-minAxis2 0
         set $this-maxAxis2 127
+	set $this-absmaxAxis2 127
+	set $this-minAxis3 0
+        set $this-maxAxis3 127
+	set $this-absmaxAxis3 127
     }
     method make_entry {w text v c} {
         frame $w
@@ -56,6 +68,22 @@ itcl_class Teem_Filters_NrrdCrop {
         bind $w.e <Return> $c
         pack $w.e -side right
     }
+
+    method set_max_vals {} {
+	set w .ui[modname]
+
+	if {[winfo exists $w]} {
+	    set_scale_max_value $w.f.ta [set $this-absmaxAxis0]
+	    set $this-maxAxis0 [set $this-absmaxAxis0]
+	    set_scale_max_value $w.f.a1 [set $this-absmaxAxis1]
+	    set $this-maxAxis1 [set $this-absmaxAxis1]
+	    set_scale_max_value $w.f.a2 [set $this-absmaxAxis2]
+	    set $this-maxAxis2 [set $this-absmaxAxis2]
+	    set_scale_max_value $w.f.a3 [set $this-absmaxAxis3]
+	    set $this-maxAxis3 [set $this-absmaxAxis3]
+	}
+    }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -66,22 +94,20 @@ itcl_class Teem_Filters_NrrdCrop {
         toplevel $w
         wm minsize $w 150 80
         frame $w.f
+	
+
         pack $w.f -padx 2 -pady 2 -side top -expand yes
-	make_entry $w.f.minAxis0 "Min: Axis 0" $this-minAxis0 \
-		"$this-c needexecute"
-	make_entry $w.f.maxAxis0 "Max: Axis 0" $this-maxAxis0 \
-		"$this-c needexecute"
-	make_entry $w.f.minAxis1 "Min: Axis 1" $this-minAxis1 \
-		"$this-c needexecute"
-	make_entry $w.f.maxAxis1 "Max: Axis 1" $this-maxAxis1 \
-		"$this-c needexecute"
-	make_entry $w.f.minAxis2 "Min: Axis 2" $this-minAxis2 \
-		"$this-c needexecute"
-	make_entry $w.f.maxAxis2 "Max: Axis 2" $this-maxAxis2 \
-		"$this-c needexecute"
+	min_max_widget $w.f.ta "Tuple Axis" \
+	    $this-minAxis0 $this-maxAxis0 $this-absmaxAxis0
+	min_max_widget $w.f.a1 Axis1 \
+	    $this-minAxis1 $this-maxAxis1 $this-absmaxAxis1
+	min_max_widget $w.f.a2 Axis2 \
+	    $this-minAxis2 $this-maxAxis2 $this-absmaxAxis2
+	min_max_widget $w.f.a3 Axis3 \
+	    $this-minAxis3 $this-maxAxis3 $this-absmaxAxis3
+
 	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.minAxis0 $w.f.maxAxis0 $w.f.minAxis1 $w.f.maxAxis1 \
-		$w.f.minAxis2 $w.f.maxAxis2 $w.f.b -side top -expand 1 -fill x
+	pack $w.f.b -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
     }
 }
