@@ -18,17 +18,6 @@ template class GenericField<ScanlineMesh, vector<unsigned int> >;
 template class GenericField<ScanlineMesh, vector<unsigned short> >;
 template class GenericField<ScanlineMesh, vector<unsigned char> >;
 
-template class GenericField<PointCloudMesh, vector<Tensor> >;
-template class GenericField<PointCloudMesh, vector<Vector> >;
-template class GenericField<PointCloudMesh, vector<double> >;
-template class GenericField<PointCloudMesh, vector<float> >;
-template class GenericField<PointCloudMesh, vector<int> >;
-template class GenericField<PointCloudMesh, vector<short> >;
-template class GenericField<PointCloudMesh, vector<char> >;
-template class GenericField<PointCloudMesh, vector<unsigned int> >;
-template class GenericField<PointCloudMesh, vector<unsigned short> >;
-template class GenericField<PointCloudMesh, vector<unsigned char> >;
-
 template class ScanlineField<Tensor>;
 template class ScanlineField<Vector>;
 template class ScanlineField<double>;
@@ -51,6 +40,19 @@ const TypeDescription* get_type_description(ScanlineField<unsigned int> *);
 const TypeDescription* get_type_description(ScanlineField<unsigned short> *);
 const TypeDescription* get_type_description(ScanlineField<unsigned char> *);
 
+template class GenericField<PointCloudMesh, vector<string> >;
+template class GenericField<PointCloudMesh, vector<Tensor> >;
+template class GenericField<PointCloudMesh, vector<Vector> >;
+template class GenericField<PointCloudMesh, vector<double> >;
+template class GenericField<PointCloudMesh, vector<float> >;
+template class GenericField<PointCloudMesh, vector<int> >;
+template class GenericField<PointCloudMesh, vector<short> >;
+template class GenericField<PointCloudMesh, vector<char> >;
+template class GenericField<PointCloudMesh, vector<unsigned int> >;
+template class GenericField<PointCloudMesh, vector<unsigned short> >;
+template class GenericField<PointCloudMesh, vector<unsigned char> >;
+
+template class PointCloudField<string>;
 template class PointCloudField<Tensor>;
 template class PointCloudField<Vector>;
 template class PointCloudField<double>;
@@ -62,6 +64,7 @@ template class PointCloudField<unsigned int>;
 template class PointCloudField<unsigned short>;
 template class PointCloudField<unsigned char>;
 
+const TypeDescription* get_type_description(PointCloudField<string> *);
 const TypeDescription* get_type_description(PointCloudField<Tensor> *);
 const TypeDescription* get_type_description(PointCloudField<Vector> *);
 const TypeDescription* get_type_description(PointCloudField<double> *);
