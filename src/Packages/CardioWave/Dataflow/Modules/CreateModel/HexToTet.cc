@@ -96,10 +96,90 @@ HexToTet::execute()
     return;
   }
 
-  TetVolField<int> *tvfield = 0;
+#ifdef HAVE_HASH_MAP
+  typedef hash_map<unsigned int,
+    HexVolMesh::Node::index_type,
+    hash<unsigned int>,
+    equal_to<unsigned int> > hash_type;
+#else
+  typedef map<unsigned int,
+    HexVolMesh::Node::index_type,
+    equal_to<unsigned int> > hash_type;
+#endif
+
+  HexVolMeshHandle hvmesh = hvfield->get_typed_mesh();
+  TetVolMeshHandle tvmesh = scinew TetVolMesh();
+
+  // Copy points directly, assuming they will have the same order.
+  HexVolMesh::Node::iterator nbi, nei;
+  hvmesh->begin(nbi); hvmesh->end(nei);
+  while (nbi != nei)
+  {
+    Point p;
+    hvmesh->get_center(p, *nbi);
+    tvmesh->add_point(p);
+    ++nbi;
+  }
+
+  hash_type nodemap;
+  vector<HexVolMesh::Elem::index_type> elemmap;
+
+  HexVolMesh::Elem::iterator bi, ei;
+  hvmesh->begin(bi); hvmesh->end(ei);
+  while (bi != ei)
+  {
+    HexVolMesh::Node::array_type hvnodes;
+    hvmesh->get_nodes(hvnodes, *bi);
+
+    
+    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
+		    (TetVolMesh::Node::index_type)(hvnodes[1]),
+		    (TetVolMesh::Node::index_type)(hvnodes[2]),
+		    (TetVolMesh::Node::index_type)(hvnodes[5]));
+
+    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
+		    (TetVolMesh::Node::index_type)(hvnodes[2]),
+		    (TetVolMesh::Node::index_type)(hvnodes[3]),
+		    (TetVolMesh::Node::index_type)(hvnodes[7]));
+
+    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
+		    (TetVolMesh::Node::index_type)(hvnodes[2]),
+		    (TetVolMesh::Node::index_type)(hvnodes[5]),
+		    (TetVolMesh::Node::index_type)(hvnodes[7]));
+
+    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
+		    (TetVolMesh::Node::index_type)(hvnodes[4]),
+		    (TetVolMesh::Node::index_type)(hvnodes[5]),
+		    (TetVolMesh::Node::index_type)(hvnodes[7]));
+
+    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[2]),
+		    (TetVolMesh::Node::index_type)(hvnodes[5]),
+		    (TetVolMesh::Node::index_type)(hvnodes[6]),
+		    (TetVolMesh::Node::index_type)(hvnodes[7]));
+
+    elemmap.push_back(*bi);
+
+    ++bi;
+  }
+  tvmesh->flush_changes();
+
+
+  TetVolField<int> *tvfield = scinew TetVolField<int>(tvmesh, Field::CELL);
+  *(PropertyManager *)tvfield = *(PropertyManager *)hvfield;
+
+  int val;
+  for (unsigned int i = 0; i < elemmap.size(); i++)
+  {
+    hvfield->value(val, elemmap[i]);
+    tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+0));
+    tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+1));
+    tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+2));
+    tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+3));
+    tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+4));
+  }
 
   // Forward the results.
-  FieldOPort *ofp = (FieldOPort *)get_oport("Masked HexVol");
+  FieldOPort *ofp = (FieldOPort *)get_oport("TetVol");
   if (!ofp)
   {
     error("Unable to initialize " + name + "'s Output port.");
