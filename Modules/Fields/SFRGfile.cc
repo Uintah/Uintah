@@ -295,6 +295,13 @@ void SFRGfile::revoxelize() {
     cerr << "Omin="<<Omin<<"  Ospan="<<Ospan<<"\n";
     cerr << "Nmin="<<Nmin<<"  Nspan="<<Nspan<<"\n";
 
+    ScalarFieldRGuchar *ifuo=ifu;
+    ScalarFieldRGchar *ifco=ifc;
+    ScalarFieldRGshort *ifso=ifs;
+    ScalarFieldRGint *ifio=ifi;
+    ScalarFieldRGfloat *iffo=iff;
+    ScalarFieldRGdouble *ifdo=ifd;
+
     if (outVoxel == UCHAR) {
 	ifu = new ScalarFieldRGuchar;
 	ifu->resize(nx,ny,nz);
@@ -320,7 +327,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifu->grid(i,j,k) = SETVAL(ifu->grid(i,j,k));
+			ifu->grid(i,j,k) = SETVAL(ifuo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -328,7 +335,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifc->grid(i,j,k) = SETVAL(ifu->grid(i,j,k));
+			ifc->grid(i,j,k) = SETVAL(ifuo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -336,7 +343,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifs->grid(i,j,k) = SETVAL(ifu->grid(i,j,k));
+			ifs->grid(i,j,k) = SETVAL(ifuo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -344,7 +351,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifi->grid(i,j,k) = SETVAL(ifu->grid(i,j,k));
+			ifi->grid(i,j,k) = SETVAL(ifuo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -352,7 +359,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			iff->grid(i,j,k) = SETVAL(ifu->grid(i,j,k));
+			iff->grid(i,j,k) = SETVAL(ifuo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -360,7 +367,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifd->grid(i,j,k) = SETVAL(ifu->grid(i,j,k));
+			ifd->grid(i,j,k) = SETVAL(ifuo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -370,7 +377,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifu->grid(i,j,k) = SETVAL(ifc->grid(i,j,k));
+			ifu->grid(i,j,k) = SETVAL(ifco->grid(i,j,k));
 		    }
 		}
 	    }
@@ -378,7 +385,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifc->grid(i,j,k) = SETVAL(ifc->grid(i,j,k));
+			ifc->grid(i,j,k) = SETVAL(ifco->grid(i,j,k));
 		    }
 		}
 	    }
@@ -386,7 +393,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifs->grid(i,j,k) = SETVAL(ifc->grid(i,j,k));
+			ifs->grid(i,j,k) = SETVAL(ifco->grid(i,j,k));
 		    }
 		}
 	    }
@@ -394,7 +401,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifi->grid(i,j,k) = SETVAL(ifc->grid(i,j,k));
+			ifi->grid(i,j,k) = SETVAL(ifco->grid(i,j,k));
 		    }
 		}
 	    }
@@ -402,7 +409,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			iff->grid(i,j,k) = SETVAL(ifc->grid(i,j,k));
+			iff->grid(i,j,k) = SETVAL(ifco->grid(i,j,k));
 		    }
 		}
 	    }
@@ -410,7 +417,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifd->grid(i,j,k) = SETVAL(ifc->grid(i,j,k));
+			ifd->grid(i,j,k) = SETVAL(ifco->grid(i,j,k));
 		    }
 		}
 	    }
@@ -420,7 +427,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifu->grid(i,j,k) = SETVAL(ifs->grid(i,j,k));
+			ifu->grid(i,j,k) = SETVAL(ifso->grid(i,j,k));
 		    }
 		}
 	    }
@@ -428,7 +435,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifc->grid(i,j,k) = SETVAL(ifs->grid(i,j,k));
+			ifc->grid(i,j,k) = SETVAL(ifso->grid(i,j,k));
 		    }
 		}
 	    }
@@ -436,7 +443,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifs->grid(i,j,k) = SETVAL(ifs->grid(i,j,k));
+			ifs->grid(i,j,k) = SETVAL(ifso->grid(i,j,k));
 		    }
 		}
 	    }
@@ -444,7 +451,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifi->grid(i,j,k) = SETVAL(ifs->grid(i,j,k));
+			ifi->grid(i,j,k) = SETVAL(ifso->grid(i,j,k));
 		    }
 		}
 	    }
@@ -452,7 +459,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			iff->grid(i,j,k) = SETVAL(ifs->grid(i,j,k));
+			iff->grid(i,j,k) = SETVAL(ifso->grid(i,j,k));
 		    }
 		}
 	    }
@@ -460,7 +467,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifd->grid(i,j,k) = SETVAL(ifs->grid(i,j,k));
+			ifd->grid(i,j,k) = SETVAL(ifso->grid(i,j,k));
 		    }
 		}
 	    }
@@ -470,7 +477,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifu->grid(i,j,k) = SETVAL(ifi->grid(i,j,k));
+			ifu->grid(i,j,k) = SETVAL(ifio->grid(i,j,k));
 		    }
 		}
 	    }
@@ -478,7 +485,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifc->grid(i,j,k) = SETVAL(ifi->grid(i,j,k));
+			ifc->grid(i,j,k) = SETVAL(ifio->grid(i,j,k));
 		    }
 		}
 	    }
@@ -486,7 +493,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifs->grid(i,j,k) = SETVAL(ifi->grid(i,j,k));
+			ifs->grid(i,j,k) = SETVAL(ifio->grid(i,j,k));
 		    }
 		}
 	    }
@@ -494,7 +501,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifi->grid(i,j,k) = SETVAL(ifi->grid(i,j,k));
+			ifi->grid(i,j,k) = SETVAL(ifio->grid(i,j,k));
 		    }
 		}
 	    }
@@ -502,7 +509,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			iff->grid(i,j,k) = SETVAL(ifi->grid(i,j,k));
+			iff->grid(i,j,k) = SETVAL(ifio->grid(i,j,k));
 		    }
 		}
 	    }
@@ -510,7 +517,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifd->grid(i,j,k) = SETVAL(ifi->grid(i,j,k));
+			ifd->grid(i,j,k) = SETVAL(ifio->grid(i,j,k));
 		    }
 		}
 	    }
@@ -520,7 +527,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifu->grid(i,j,k) = SETVAL(iff->grid(i,j,k));
+			ifu->grid(i,j,k) = SETVAL(iffo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -528,7 +535,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifc->grid(i,j,k) = SETVAL(iff->grid(i,j,k));
+			ifc->grid(i,j,k) = SETVAL(iffo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -536,7 +543,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifs->grid(i,j,k) = SETVAL(iff->grid(i,j,k));
+			ifs->grid(i,j,k) = SETVAL(iffo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -544,7 +551,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifi->grid(i,j,k) = SETVAL(iff->grid(i,j,k));
+			ifi->grid(i,j,k) = SETVAL(iffo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -552,7 +559,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			iff->grid(i,j,k) = SETVAL(iff->grid(i,j,k));
+			iff->grid(i,j,k) = SETVAL(iffo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -560,7 +567,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifd->grid(i,j,k) = SETVAL(iff->grid(i,j,k));
+			ifd->grid(i,j,k) = SETVAL(iffo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -570,7 +577,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifu->grid(i,j,k) = SETVAL(ifd->grid(i,j,k));
+			ifu->grid(i,j,k) = SETVAL(ifdo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -578,7 +585,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifc->grid(i,j,k) = SETVAL(ifd->grid(i,j,k));
+			ifc->grid(i,j,k) = SETVAL(ifdo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -586,7 +593,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifs->grid(i,j,k) = SETVAL(ifd->grid(i,j,k));
+			ifs->grid(i,j,k) = SETVAL(ifdo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -594,7 +601,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifi->grid(i,j,k) = SETVAL(ifd->grid(i,j,k));
+			ifi->grid(i,j,k) = SETVAL(ifdo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -602,7 +609,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			iff->grid(i,j,k) = SETVAL(ifd->grid(i,j,k));
+			iff->grid(i,j,k) = SETVAL(ifdo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -610,7 +617,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifd->grid(i,j,k) = SETVAL(ifd->grid(i,j,k));
+			ifd->grid(i,j,k) = SETVAL(ifdo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -619,7 +626,7 @@ void SFRGfile::revoxelize() {
 }
 
 void SFRGfile::setOutputFieldHandle() {
-    if (outVoxel == UCHAR) ofh=ifu;
+    if (outVoxel == UCHAR) ofh=ifu;    
     else if (outVoxel == CHAR) ofh=ifc;
     else if (outVoxel == USHORT) ofh=ifs;
     else if (outVoxel == INT) ofh=ifi;

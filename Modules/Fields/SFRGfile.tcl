@@ -122,5 +122,7 @@ itcl_class SFRGfile {
 		-padx 4 -fill x -expand 1
 	pack $w.m.c -side top -fill x -expand 1
 	pack $w.m -side top -fill x -expand 1
+	button $w.ex -text "Execute" -command "$this-c needexecute"
+	pack $w.ex -side top -fill both -expand 1
     }
 }
