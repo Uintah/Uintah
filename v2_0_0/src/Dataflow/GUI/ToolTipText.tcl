@@ -8,8 +8,8 @@ proc loadToolTipText {} {
 
     # Module Help texts
     set ToolTipText(Module) "L - Select\nR - Menu"
-    set ToolTipText(ModuleUI) "L - Open (or raise) GUI"
-    set ToolTipText(ModuleMessageBtn) "L - Open (or raise) Module Log.\nColor code: Gray -> No Message. Blue -> Informational Message.  Yellow -> Warning Message.  Red -> Error Message."
+    set ToolTipText(ModuleUI) "L - Open module's GUI window."
+    set ToolTipText(ModuleMessageBtn) "L - Open module Log window.\nColor code:\nGray -> No Message.\nBlue -> Informational Message.\nYellow -> Warning Message.\nRed -> Error Message."
     set ToolTipText(ModuleTime) "Displays the amount of CPU time spent on this module."
     set ToolTipText(ModuleProgress) "Displays the progress of this module towards completion."
     set ToolTipText(ModulePort) "L - Highlight pipe(s) from this port (if a pipe exists).\nM - Connect port to another module (if an open port exists.)  Also displays the port's name."
