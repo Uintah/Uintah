@@ -27,7 +27,7 @@
 #
 
 %define defname SCIRun
-%define defver	1.22
+%define defver	1.24
 %define dotver  0
 %define gccver  3.2
 %define plat	rh8.0
@@ -41,7 +41,7 @@
 
 Name:		%{defname}WithFusion
 Version:	%{defver}.%{dotver}
-Serial:		6
+Serial:		7
 Release:	%{plat}
 Summary:	Problem Solving Environment Software
 Copyright:	University of Utah Limited
