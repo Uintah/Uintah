@@ -368,19 +368,12 @@ _____________________________________________________________________*/
 void MPMICE::finishMPMICEproblemSetup(const ProblemSpecP& prob_spec, 
                             GridP&, SimulationStateP&)    
 {
-#if 1
   ProblemSpecP mat_ps       =  prob_spec->findBlock("MaterialProperties");
   ProblemSpecP mpm_ice_ps   =  mat_ps->findBlock("MPMICE");
   ProblemSpecP exch_ps = mpm_ice_ps->findBlock("exchange_coefficients");
   exch_ps->require("momentum",d_K_mom);
   exch_ps->require("heat",d_K_heat);
- 
-  for (int i = 0; i<(int)d_K_mom.size(); i++)
-    cout << "K_mom = " << d_K_mom[i] << endl;
-  for (int i = 0; i<(int)d_K_heat.size(); i++)
-    cout << "K_heat = " << d_K_heat[i] << endl;
   cerr << "Pulled out exchange coefficients of the input file \t\t MPMICE" << endl;
-#endif
 }
 
 /* --------------------------------------------------------------------- 
@@ -456,7 +449,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
                                  DataWarehouseP& new_dw)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
-  Vector zero(0.,0.,0.);
+  Vector zero(0.0,0.0,0.);
   Vector dx = patch->dCell();
   static int timestep = 0;
  // double vol = dx.x()*dx.y()*dx.z();    MIGHT BE EXTRA
@@ -480,7 +473,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 
      new_dw->allocate(cmass,     MIlb->cMassLabel,         matlindex, patch);
      new_dw->allocate(cvolume,   MIlb->cVolumeLabel,       matlindex, patch);
-    // new_dw->allocate(rho_CC,    MIlb->rho_CCLabel,        matlindex, patch); EXTRA
+  // new_dw->allocate(rho_CC,    MIlb->rho_CCLabel,        matlindex, patch); EXTRA
      new_dw->allocate(vel_CC,    MIlb->vel_CCLabel,        matlindex, patch);
      new_dw->allocate(Temp_CC,   MIlb->temp_CCLabel,       matlindex, patch);
      new_dw->allocate(cv_CC,     MIlb->cv_CCLabel,         matlindex, patch);
@@ -489,7 +482,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       
      cmass.initialize(0.);
      cvolume.initialize(0.);
-/*`==========TESTING==========*/ 
+/*`========TESTING==========*/ 
      vel_CC.initialize(zero);     // carry the velocity forward in cells where there are no
                                     // mpm matls
  /*==========TESTING==========`*/
@@ -527,6 +520,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 //      don't then the Malloc lib initializes it as a NAN.
     if(timestep==0){
     cout<<"I've hardwired the initial CC Vars for mpm matl"<<endl;
+
       double initialTemp_CC = 300.0;
       double initialCv_CC   = 716.0;
       Temp_CC.initialize(initialTemp_CC);
@@ -659,19 +653,10 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   H.zero();
   a.zero();
   
- // for (int i = 0; i < numALLMatls; i++ ) {
-//      K[numICEMatls-1-i][i] = d_ice->d_K_mom[i];
-//      H[numICEMatls-1-i][i] = d_ice->d_K_heat[i];
-//  }
-
-  // Hardwiring the values for the momentum exchange for now
-  // Need to change input file 
-  K[0][0] = 0.;         H[0][0] = 0.;
-  K[0][1] = 1.e10;      H[0][1] = 0.0;
-  K[1][0] = 1.e10;      H[1][0] = 0.0;
-  K[0][1] = 0.;         H[0][1] = 0.;
-  K[1][0] = 0.;         H[1][0] = 0.;
-  K[1][1] = 0.;         H[1][1] = 0.;
+  for (int i = 0; i < numALLMatls; i++ ) {
+      K[numALLMatls-1-i][i] =d_K_mom[i];
+      H[numALLMatls-1-i][i] =d_K_heat[i];
+  }
  
   for (int m = 0; m < numALLMatls; m++) {
     Material* matl = d_sharedState->getMaterial( m );
@@ -960,8 +945,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   double    converg_coeff = 10;
   double    convergence_crit = converg_coeff * DBL_EPSILON;
   double    sum, tmp;
-//  static int timestep=0;            EXTRA
-
   int numICEMatls = d_sharedState->getNumICEMatls();
   int numMPMMatls = d_sharedState->getNumMPMMatls();
   int numALLMatls = numICEMatls + numMPMMatls;
@@ -1006,7 +989,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(ice_matl){                    // I C E
       old_dw->get(cv[m],      Ilb->cv_CCLabel,  dwindex, patch, Ghost::None,0);
-      // old_dw->get(rho_CC[m],  Ilb->rho_CCLabel, dwindex, patch, Ghost::None,0);  EXTRA
+   // old_dw->get(rho_CC[m],  Ilb->rho_CCLabel, dwindex, patch, Ghost::None,0);  EXTRA
       old_dw->get(Temp[m],    Ilb->temp_CCLabel,dwindex, patch, Ghost::None,0);
       old_dw->get(mass_CC[m], Ilb->mass_CCLabel,dwindex, patch, Ghost::None,0);
       old_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,
@@ -1112,20 +1095,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
      }
   }
  
-#if 0  
-// JIM: I DON'T THINK WE NEED THIS 
-//__________________________________
-//  HARDWIRE
- if(timestep==0){
-  //cout << "First timestep" << endl;
-  for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
-	vol_frac[1][*iter] = 1.0 - vol_frac[0][*iter];
-	rho_CC[0][*iter] = vol_frac[0][*iter]*rho_micro[0][*iter] + d_SMALL_NUM;
-	rho_CC[1][*iter] = vol_frac[1][*iter]*rho_micro[1][*iter] + d_SMALL_NUM;
-  }
- }
- timestep++;
-#endif
+
 /*`==========DEBUG============*/
   if(d_ice -> switchDebug_equilibration_press)  { 
       d_ice->printData( patch, 1, "TOP_equilibration", "Press_CC_top", press);
@@ -1135,11 +1105,15 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        int dwindex = matl->getDWIndex();
        char description[50];
        sprintf(description, "TOP_equilibration_Mat_%d ",dwindex);
+  #if 0
        d_ice->printData( patch,1,description, "rho_CC",     rho_CC[m]);
        d_ice->printData( patch,1,description, "rho_micro",  rho_micro[m]);
+  #endif
        d_ice->printData( patch,0,description, "speedSound", speedSound_new[m]);
        d_ice->printData( patch,1,description, "Temp_CC",    Temp[m]);
+ #if 0
        d_ice->printData( patch,1,description, "vol_frac_CC",vol_frac[m]);
+ #endif
       }
     }
  /*==========DEBUG============`*/
@@ -1339,7 +1313,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
 
 /*`==========TESTING==========*/ 
-#if 1
   //__________________________________
   // Now change how rho_CC is defined to 
   // rho_CC = mass_CC/cell_volume  NOT mass/mat_volume 
@@ -1359,7 +1332,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        rho_CC[m][*iter]   = mat_mass[m]/cell_vol + d_SMALL_NUM;           
      }
   }
- #endif
  /*==========TESTING==========`*/
 
 
@@ -1400,7 +1372,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   if(d_ice -> switchDebug_equilibration_press)  { 
     d_ice->printData( patch, 1, "BOTTOM", "Press_CC_equil", press_new);
     d_ice->printData( patch, 1, "BOTTOM", "delPress",       scratch);
-                  
+ #if 0                 
     for (int m = 0; m < numALLMatls; m++)  {
        Material* matl = d_sharedState->getMaterial( m );
        int dwindex = matl->getDWIndex(); 
@@ -1411,6 +1383,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        d_ice->printData( patch,1,description, "rho_micro_CC",rho_micro[m]);
        d_ice->printData( patch,1,description, "vol_frac_CC", vol_frac[m]);
     }
+   #endif
   }
  /*==========DEBUG============`*/
   
