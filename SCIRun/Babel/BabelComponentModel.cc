@@ -191,12 +191,11 @@ bool BabelComponentModel::haveComponent(const std::string& type)
 }
 
 ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
-						     const std::string& type,
-						     const std::string& url)
+						     const std::string& type)
 {
   
   govcca::Component component;
-  if(url==""){  //local component 
+  if(true){  //local component 
     componentDB_type::iterator iter = components.find(type);
     if(iter == components.end())
       return 0;

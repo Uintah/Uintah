@@ -46,7 +46,7 @@ CCAComponentInstance::CCAComponentInstance(SCIRunFramework* framework,
 
 CCAComponentInstance::~CCAComponentInstance()
 {
-  cerr << "CCAComponentInstance destroyed...\n";
+  cerr << "CCAComponentInstance "<<instanceName<<" destroyed...\n";
 }
 
 PortInstance*
@@ -127,9 +127,20 @@ void CCAComponentInstance::registerUsesPort(const std::string& portName,
   ports.insert(make_pair(portName, new CCAPortInstance(portName, portType, properties, CCAPortInstance::Uses)));
 }
 
-void CCAComponentInstance::unregisterUsesPort(const std::string& name)
+void CCAComponentInstance::unregisterUsesPort(const std::string& portName)
 {
-  cerr << "unregisterUsesPort not done, name=" << name << '\n';
+  map<string, CCAPortInstance*>::iterator iter = ports.find(portName);
+  if(iter != ports.end()){
+    if(iter->second->porttype == CCAPortInstance::Provides)
+      throw CCAException("name conflict between uses and provides ports");
+    else {
+      ports.erase(portName);
+    }
+  }
+  else{
+    cerr<<"port name not found, unregisterUsesPort not done\n";
+    throw CCAException("port name not found");
+  }
 }
 void CCAComponentInstance::addProvidesPort(const gov::cca::Port::pointer& port,
 					   const std::string& portName,

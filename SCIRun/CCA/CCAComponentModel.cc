@@ -89,7 +89,7 @@ void CCAComponentModel::buildComponentList()
   }
 
   destroyComponentList();
-  string component_path = "../src/CCA/Components/Builder";
+  string component_path = "../src/CCA/Components/xml";
   while(component_path != ""){
     unsigned int firstColon = component_path.find(':');
     string dir;
@@ -175,15 +175,14 @@ CCAComponentModel::createServices(const std::string& instanceName,
 
 bool CCAComponentModel::haveComponent(const std::string& type)
 {
-  cerr << "CCA looking for component of type: " << type << '\n';
+  //cerr << "CCA looking for component of type: " << type << '\n';
   return components.find(type) != components.end();
 }
 
 ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
-						     const std::string& type,
-						     const std::string& url)
+						     const std::string& type)
 {
-  
+  std::string url=""; 
   gov::cca::Component::pointer component;
   if(url==""){  //local component 
     componentDB_type::iterator iter = components.find(type);
@@ -228,7 +227,7 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
     gov::cca::AbstractFramework::pointer remoteFramework=
       pidl_cast<gov::cca::AbstractFramework::pointer>(obj);
 
-    std::string comURL=remoteFramework->createComponent(name, type);
+    std::string comURL; //=remoteFramework->createComponent(name, type);
     //cerr<<"comURL="<<comURL<<endl;
     Object::pointer comObj=PIDL::objectFrom(comURL);
     if(comObj.isNull()){
@@ -242,15 +241,16 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
 						      gov::cca::TypeMap::pointer(0),
 						      component);
   component->setServices(gov::cca::Services::pointer(ci));
-  ci->addReference();
+  ci->addReference(); //what is this for?
   return ci;
 }
 
 bool CCAComponentModel::destroyInstance(ComponentInstance *ci)
 {
-  cerr<<"CCAComponentModel::destroyInstance() is not done"<<endl;
+
   //make sure why ci->addReference() is called in createInstace();
-  delete ci;  
+  cerr<<"TODO: CCAComponentModel::destroyInstance() is not done"<<endl;
+  //delete ci;  //how?  
   return false;
 }
 

@@ -50,8 +50,7 @@ namespace SCIRun {
 					       const govcca::TypeMap& properties);
     virtual bool haveComponent(const std::string& type);
     virtual ComponentInstance* createInstance(const std::string& name,
-					      const std::string& type,
-					      const std::string& url );
+					      const std::string& type);
 
     virtual std::string createComponent(const std::string& name,
 					 const std::string& type);

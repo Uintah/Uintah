@@ -117,20 +117,35 @@ SCIRunFramework::createComponentInstance(const std::string& name,
     cerr << "No component model wants to build " << type << '\n';
     return ComponentID::pointer(0);
   }
-  ComponentInstance* ci = mod->createInstance(name, type, url);
+  //ComponentInstance* ci = mod->createInstance(name, type, url);
+  ComponentInstance* ci = mod->createInstance(name, type);
   if(!ci){
     cerr<<"Error: failed to create ComponentInstance"<<endl;
     return ComponentID::pointer(0);
     
   }
   registerComponent(ci, name);
-  return ComponentID::pointer(new ComponentID(this, ci->instanceName));
+  compIDs.push_back(ComponentID::pointer(new ComponentID(this, ci->instanceName)));
+  return compIDs[compIDs.size()-1];
 }
 
-bool SCIRunFramework::destroyComponentInstance(gov::cca::ComponentID::pointer &cid )
+void SCIRunFramework::destroyComponentInstance(const gov::cca::ComponentID::pointer &cid, float timeout )
 {
-  ComponentInstance *ci=unregisterComponent(cid->getInstanceName());
+  //assuming no connections between this component and 
+  //any other component
 
+  //#1 remove cid from compIDs
+  for(unsigned i=0; i<compIDs.size(); i++){
+    if(compIDs[i]==cid){
+      compIDs.erase(compIDs.begin()+i);
+      break;
+    }
+  }
+
+  //#2 unregister the component instance
+  ComponentInstance *ci=unregisterComponent(cid->getInstanceName());
+  
+  //#3 find the associated component model
   string type=ci->className;
   // See if the type is of the form:
   //   model:name
@@ -170,12 +185,11 @@ bool SCIRunFramework::destroyComponentInstance(gov::cca::ComponentID::pointer &c
   }
   if(!mod){
     cerr << "No component model matches component" << type << '\n';
-    return false;
+    return;
   }
-  //reverse mod->createInstance (maybe we need decide the modal type first)
-  return mod->destroyInstance(ci);
-
-  return true;
+  //#4 destroy the component instance
+  mod->destroyInstance(ci);
+  return;
 }
 
 
@@ -186,20 +200,18 @@ void SCIRunFramework::registerComponent(ComponentInstance* ci,
   int count=0;
   while(activeInstances.find(goodname) != activeInstances.end()){
     ostringstream newname;
-    newname << name << "_" << count++ << "\n";
+    newname << name << "_" << count++;
     goodname=newname.str();
   }
   ci->framework=this;
   ci->instanceName = goodname;
   activeInstances[ci->instanceName] = ci;
-  cerr<<"#####component "<<goodname<<" is registered"<<endl;
   // Get the component event service and send a creation event
-  cerr << "Should register a creation event for component " << name << '\n';
+  cerr << "TODO: register a creation event for component " << name << '\n';
 }
 
 ComponentInstance * SCIRunFramework::unregisterComponent(const std::string& instanceName)
 {
-  cerr<<"unregisterComponent() is not done!"<<endl;
   std::map<std::string, ComponentInstance*>::iterator found=activeInstances.find(instanceName);
   if(found != activeInstances.end()){
     ComponentInstance *ci=found->second;
@@ -207,7 +219,7 @@ ComponentInstance * SCIRunFramework::unregisterComponent(const std::string& inst
     return ci;
   }
   else{
-    cerr<<"Error: component instance "<<instanceName<<" is not found!"<<endl;
+    cerr<<"Error: component instance "<<instanceName<<" not found!"<<endl;
     return 0;
   }
 }
@@ -221,6 +233,17 @@ SCIRunFramework::lookupComponent(const std::string& name)
   else
     return iter->second;
 }
+
+gov::cca::ComponentID::pointer
+SCIRunFramework::lookupComponentID(const std::string& componentInstanceName)
+{
+  for(unsigned i=0; i<compIDs.size();i++)
+    if(componentInstanceName==compIDs[i]->getInstanceName()) 
+      return compIDs[i];
+  return gov::cca::ComponentID::pointer(0);
+}
+     
+
 
 gov::cca::Port::pointer
 SCIRunFramework::getFrameworkService(const std::string& type,
@@ -266,13 +289,13 @@ gov::cca::AbstractFramework::pointer SCIRunFramework::createEmptyFramework()
   cerr << "SCIRunFramework::createEmptyFramework not finished\n";
   return gov::cca::AbstractFramework::pointer(0);
 }
-
+// do not delete the following 2 methods
+/* 
 void SCIRunFramework::share(const gov::cca::Services::pointer &svc)
 {
   Thread* t = new Thread(new CCACommunicator(this,svc), "SCIRun CCA Communicator");
   t->detach(); 
 }
-
 
 //used for remote creation of a CCA component
 //return URL of the new component
@@ -323,7 +346,7 @@ SCIRunFramework::createComponent(const std::string& name, const std::string& t)
   return  mod->createComponent(name, type);
 }
 
-
+*/
 
 
 

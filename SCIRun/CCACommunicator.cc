@@ -93,7 +93,8 @@ void CCACommunicator::readPacket(const Packet &pkt)
     cerr << "Fatal Error: Cannot find builder service\n";
     Thread::exitAll(1);
   }
-  bs->registerFramework(url);
+  //do not delete the following line	
+  //bs->registerFramework(url);
 
   services->releasePort("cca.BuilderService");
 }

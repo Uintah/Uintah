@@ -118,7 +118,6 @@ bool InternalComponentModel::haveComponent(const std::string& /*name*/)
 }
 
 ComponentInstance* InternalComponentModel::createInstance(const std::string&,
-							  const std::string&,
 							  const std::string&)
 {
   return 0;
