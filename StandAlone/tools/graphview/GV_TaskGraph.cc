@@ -3,13 +3,14 @@
 #include <sstream>
 #include <stdio.h>
 #include <assert.h>
-#include <Dataflow/XMLUtil/SimpleErrorHandler.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
 #include "GV_TaskGraph.h"
 #include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 
 using namespace std;
 using namespace SCIRun;
+using namespace Uintah;
 
 float safePercent(double num, double denom)
 { return (denom != 0) ? num / denom: 0; }
@@ -69,22 +70,17 @@ void Edge::relaxEdgeDown()
 GV_TaskGraph*
 GV_TaskGraph::inflate(string xmlDir)
 {
-  try {
-    XMLPlatformUtils::Initialize();
-  } catch (const XMLException& e) {
-    cerr << "Unable to initialize XML library: " << e.getMessage() << endl;
-    return 0;
-  }
+//    try {
+//      XMLPlatformUtils::Initialize();
+//    } catch (const XMLException& e) {
+//      cerr << "Unable to initialize XML library: " << e.getMessage() << endl;
+//      return 0;
+//    }
 
-  list<DOMDocument*> docs;
+  list<ProblemSpecP> docs;
 
   GV_TaskGraph* pGraph = scinew GV_TaskGraph();
   
-  XercesDOMParser* parser = new XercesDOMParser;
-  parser->setDoValidation(false);
-  SimpleErrorHandler handler;
-  parser->setErrorHandler(&handler);
-
   int process = 0;
   string xmlFileName;
   FILE* tstFile;
@@ -97,15 +93,13 @@ GV_TaskGraph::inflate(string xmlDir)
       break;
     fclose(tstFile);
 
-    parser->parse(xmlFileName.c_str());
-    if (handler.foundError) {
-      cerr << "Error parsing taskgraph file " << xmlFileName << endl;
-      return 0;
-    }
- 
-    docs.push_back(parser->getDocument());
+    ProblemSpecReader psr(xmlFileName);
 
-    pGraph->readNodes(parser->getDocument());
+    ProblemSpecP prob_spec = psr.readInputFile();
+ 
+    docs.push_back(prob_spec);
+
+    pGraph->readNodes(prob_spec);
     process++;
   } while (process < 100000 /* it will most likely always break out of loop
 			       -- but just so it won't ever be caught in an
@@ -117,13 +111,12 @@ GV_TaskGraph::inflate(string xmlDir)
     return 0;
   }
   
-  for (list<DOMDocument*>::iterator docIter = docs.begin();
+  for (list<ProblemSpecP>::iterator docIter = docs.begin();
        docIter != docs.end(); docIter++) {
     pGraph->readEdges(*docIter);
   }
   pGraph->computeMaxPathLengths();
   
-  delete parser;
   return pGraph;
 }
 
@@ -132,16 +125,15 @@ GV_TaskGraph::GV_TaskGraph()
 {
 }
 
-void GV_TaskGraph::readNodes(DOMDocument* xmlDoc)
+void GV_TaskGraph::readNodes(ProblemSpecP xmlDoc)
 {
-  DOMElement* docElement = xmlDoc->getDocumentElement();
-  const DOMNode* nodes = findNode("Nodes", docElement);
-  for (DOMNode* node = const_cast<DOMNode*>(findNode("node", nodes)); node != 0;
-       node = const_cast<DOMNode*>(findNextNode("node", node))) {
+  ProblemSpecP nodes = xmlDoc->findBlock("Nodes");
+  for (ProblemSpecP node = nodes->findBlock("node"); node != 0;
+       node = node->findNextBlock("node")) {
     string task_name;
     double task_duration;
-    get(node, "name", task_name);
-    get(node, "duration", task_duration);
+    node->get("name", task_name);
+    node->get("duration", task_duration);
     
     GV_Task* task;
     if ((task = findTask(task_name)) != NULL) {
@@ -158,17 +150,15 @@ void GV_TaskGraph::readNodes(DOMDocument* xmlDoc)
   }
 }
 
-void GV_TaskGraph::readEdges(DOMDocument* xmlDoc)
+void GV_TaskGraph::readEdges(ProblemSpecP xmlDoc)
 {
-  const DOMElement* docElement = xmlDoc->getDocumentElement();
-  const DOMNode* edges = findNode("Edges", docElement);
-  for (DOMNode* node = const_cast<DOMNode*>(findNode("edge", edges)); 
-       node != 0;
-       node = const_cast<DOMNode*>(findNextNode("edge", node))) {
+  ProblemSpecP edges = xmlDoc->findBlock("Edges");
+  for (ProblemSpecP node = edges->findBlock("edge"); node != 0;
+       node = node->findNextBlock("edge")) {
     string source;
     string target;
-    get(node, "source", source);
-    get(node, "target", target);
+    node->get("source", source);
+    node->get("target", target);
     GV_Task* sourceTask = m_taskMap[source];
     GV_Task* targetTask = m_taskMap[target];
 

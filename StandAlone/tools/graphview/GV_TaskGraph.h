@@ -1,12 +1,13 @@
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <list>
 #include <vector>
 #include <map>
 #include <string>
 
-class DOMDocument;
-
 class Edge;
 class GV_TaskGraph;
+
+using Uintah::ProblemSpecP;
 
 class GV_Task {
   friend class Edge;
@@ -60,7 +61,7 @@ public:
   { return m_sorted; }
   
   void resetFlags()
-  { m_visited = false; m_sorted = false; }
+  { m_sorted = false; m_visited = false; }
 private:
   // The below are called by Edge::relaxEdgeDown() and
   // Edge::relaxEdgeUp() respectively.
@@ -160,10 +161,10 @@ private:
   GV_TaskGraph();
 
   // read the nodes from the xml document and create them in the graph
-  void readNodes(DOMDocument* xmlDoc);
+  void readNodes(ProblemSpecP xmlDoc);
 
   // read the edges from the xml document and create them in the graph
-  void readEdges(DOMDocument* xmlDoc);
+  void readEdges(ProblemSpecP xmlDoc);
 
   // Compute the maximum paths above and below each
   // node as well as the critical path cost.

@@ -10,7 +10,7 @@
  *  Copyright (C) 2000 U of U
  */
 
-#include <Packages/Uintah/CCA/Ports/DataArchive.h>
+#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -28,7 +28,6 @@
 #include <Core/OS/Dir.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -1037,14 +1036,6 @@ int main(int argc, char** argv)
   cerr << setprecision(digits_precision);
   cout << setprecision(digits_precision);
 
-  try {
-    XMLPlatformUtils::Initialize();
-  } catch(const XMLException& toCatch) {
-    cerr << "Caught XML exception: " << to_char_ptr(toCatch.getMessage()) 
-	 << '\n';
-    Thread::exitAll( 1 );
-  }
-  
   try {
     DataArchive* da1 = scinew DataArchive(filebase1);
     DataArchive* da2 = scinew DataArchive(filebase2);
