@@ -562,8 +562,19 @@ ShowField::execute()
   {
     color_map_changed = true;
     color_map_generation_ = color_map_.get_rep()?color_map_->generation:-1;
-    // Colormap was added or went away.
+
+    // Colormap changed.
     if (tensors_on_.get()) { data_dirty_ = true; }
+
+    // Colormap added or deleted, mark all dirty.
+    if (((bool)(color_map_.get_rep())) != was_color_map)
+    {
+      nodes_dirty_ = true;
+      edges_dirty_ = true;
+      faces_dirty_ = true;
+      data_dirty_ = true;
+      text_dirty_ = true;
+    }
   }
 
   if (gui_node_resolution_.get() != node_resolution_) {
