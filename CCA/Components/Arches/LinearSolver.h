@@ -79,9 +79,8 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // Pressure Underrelaxation
       virtual void computePressUnderrelax(const ProcessorGroup* pc,
-				  const Patch* patch,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw, ArchesVariables* vars)= 0;
+					  const Patch* patch,
+					  ArchesVariables* vars)= 0;
 
       ////////////////////////////////////////////////////////////////////////
       // Pressure Solve
@@ -111,16 +110,14 @@ public:
       // Velocity Underrelaxation
       virtual void computeVelUnderrelax(const ProcessorGroup* pc,
 					const Patch* patch,
-					DataWarehouseP& old_dw,
-					DataWarehouseP& new_dw, int index,
+					int index,
 					ArchesVariables* vars)= 0;
 
       ////////////////////////////////////////////////////////////////////////
       // Velocity Solve
       virtual void velocityLisolve(const ProcessorGroup* pc,
 				   const Patch* patch,
-				   DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw, int index,
+				   int index,
 				   double delta_t,
 				   ArchesVariables* vars,
 				   CellInformation* cellinfo,
@@ -146,16 +143,14 @@ public:
       // Scalar Underrelaxation
       virtual void computeScalarUnderrelax(const ProcessorGroup* pc,
 					   const Patch* patch,
-					   DataWarehouseP& old_dw,
-					   DataWarehouseP& new_dw, int index,
+					   int index,
 					   ArchesVariables* vars)= 0;
 
       ////////////////////////////////////////////////////////////////////////
       // Scalar Solve
       virtual void scalarLisolve(const ProcessorGroup* pc,
 				 const Patch* patch,
-				 DataWarehouseP& old_dw,
-				 DataWarehouseP& new_dw, int index,
+				 int index,
 				 double delta_t,
 				 ArchesVariables* vars,
 				 CellInformation* cellinfo,
@@ -179,8 +174,6 @@ public:
 
    virtual void matrixCreate(const LevelP& level, LoadBalancer* lb) = 0;
    virtual void setPressMatrix(const ProcessorGroup* pc, const Patch* patch,
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw, 
 			       ArchesVariables* vars,
 			       const ArchesLabel* lab) = 0;
    

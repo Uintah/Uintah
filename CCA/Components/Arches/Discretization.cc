@@ -47,11 +47,9 @@ Discretization::~Discretization()
 void 
 Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 				       const Patch* patch,
-				       DataWarehouseP&,
-				       DataWarehouseP&,
 				       double delta_t,
 				       int index,
-				       int eqnType, CellInformation* cellinfo,
+				       CellInformation* cellinfo,
 				       ArchesVariables* coeff_vars)
 {
   // Get the domain size with ghost cells
@@ -388,8 +386,8 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 void 
 Discretization::calculatePressureCoeff(const ProcessorGroup*,
 				       const Patch* patch,
-				       DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw,
+				       DataWarehouse* old_dw,
+				       DataWarehouse* new_dw,
 				       double delta_t, 
 				       CellInformation* cellinfo,
 				       ArchesVariables* coeff_vars)
@@ -475,8 +473,6 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
 void 
 Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
 				     const Patch* patch,
-				     DataWarehouseP& old_dw,
-				     DataWarehouseP& new_dw,
 				     double delta_t,
 				     int index, 
 				     CellInformation* cellinfo,
@@ -587,10 +583,7 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
 void 
 Discretization::calculateVelDiagonal(const ProcessorGroup*,
 				     const Patch* patch,
-				     DataWarehouseP& old_dw,
-				     DataWarehouseP& new_dw,
 				     int index,
-				     int eqnType,
 				     ArchesVariables* coeff_vars)
 {
   
@@ -759,8 +752,8 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 void 
 Discretization::calculatePressDiagonal(const ProcessorGroup*,
 				       const Patch* patch,
-				       DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw,
+				       DataWarehouse* old_dw,
+				       DataWarehouse* new_dw,
 				       ArchesVariables* coeff_vars) 
 {
   
@@ -802,8 +795,6 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
 void 
 Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 					const Patch* patch,
-					DataWarehouseP& old_dw,
-					DataWarehouseP& new_dw,
 					int index,
 					ArchesVariables* coeff_vars)
 {

@@ -76,11 +76,8 @@ public:
       // coefficients
       void calculateVelocityCoeff(const ProcessorGroup*,
 				  const Patch* patch,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw,
 				  double delta_t,
 				  int index,
-				  int eqnType,
 				  CellInformation* cellinfo,
 				  ArchesVariables* vars);
 
@@ -90,8 +87,8 @@ public:
       // coefficients
       void calculatePressureCoeff(const ProcessorGroup*,
 				  const Patch* patch,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw,
+				  DataWarehouse* old_dw,
+				  DataWarehouse* new_dw,
 				  double delta_t, 
 				  CellInformation* cellinfo,
 				  ArchesVariables* vars); 
@@ -102,8 +99,6 @@ public:
       // coefficients
       void calculateScalarCoeff(const ProcessorGroup*,
 				const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw,
 				double delta_t,
 				int Index,
 				CellInformation* cellinfo,
@@ -113,24 +108,20 @@ public:
       // Documentation here
       void calculateVelDiagonal(const ProcessorGroup*,
 				const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw,
 				int index,
-				int eqnType, ArchesVariables* vars);
+				ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       // Documentation here
       void calculatePressDiagonal(const ProcessorGroup*,
 				  const Patch* patch,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw, ArchesVariables* vars);
+				  DataWarehouse* old_dw,
+				  DataWarehouse* new_dw, ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       // Documentation here
       void calculateScalarDiagonal(const ProcessorGroup*,
 				   const Patch* patch,
-				   DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw,
 				   int Index, ArchesVariables* vars);
 protected:
 

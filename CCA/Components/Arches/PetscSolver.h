@@ -76,8 +76,7 @@ public:
       // Pressure Underrelaxation
       void computePressUnderrelax(const ProcessorGroup* pc,
 				  const Patch* patch,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw, ArchesVariables* vars);
+				  ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       // Pressure Solve
@@ -107,17 +106,15 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // Velocity Underrelaxation
       void computeVelUnderrelax(const ProcessorGroup* pc,
-					const Patch* patch,
-					DataWarehouseP& old_dw,
-					DataWarehouseP& new_dw, int index,
-					ArchesVariables* vars);
+				const Patch* patch,
+				int index,
+				ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       // Velocity Solve
       void velocityLisolve(const ProcessorGroup* pc,
 			   const Patch* patch,
-			   DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw, int index,
+			   int index,
 			   double delta_t,
 			   ArchesVariables* vars,
 			   CellInformation* cellinfo,
@@ -158,8 +155,6 @@ public:
       // Scalar Underrelaxation
       void computeScalarUnderrelax(const ProcessorGroup* pc,
 				   const Patch* patch,
-				   DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw, 
 				   int index,
 				   ArchesVariables* vars);
 
@@ -167,8 +162,6 @@ public:
       // Scalar Solve
       void scalarLisolve(const ProcessorGroup* pc,
 			 const Patch* patch,
-			 DataWarehouseP& old_dw,
-			 DataWarehouseP& new_dw, 
 			 int index, double delta_t,
 			 ArchesVariables* vars,
 			 CellInformation* cellinfo,
@@ -178,8 +171,6 @@ public:
 
    virtual void matrixCreate(const LevelP& level, LoadBalancer* lb);
    virtual void setPressMatrix(const ProcessorGroup* pc, const Patch* patch,
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw, 
 			       ArchesVariables* vars,
 			       const ArchesLabel* lab);
    
