@@ -12,8 +12,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <DaveW/Datatypes/General/PathPort.h>
-#include <DaveW/Datatypes/General/Path.h>
+#include <PSECore/Datatypes/PathPort.h>
+#include <SCICore/Datatypes/Path.h>
 #include <PSECore/Dataflow/Module.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLTask.h>
@@ -22,7 +22,7 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace DaveW::Datatypes;
+using namespace SCICore::Datatypes;
 using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
@@ -103,6 +103,9 @@ void PathReader::execute()
 
 //
 // $Log$
+// Revision 1.2  2000/07/19 19:29:35  samsonov
+// Moving from DaveW
+//
 // Revision 1.1  2000/07/18 23:12:56  samsonov
 // Added PathReader module
 //

@@ -12,18 +12,18 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <DaveW/Datatypes/General/Path.h>
-#include <DaveW/Datatypes/General/PathPort.h>
+#include <SCICore/Datatypes/Path.h>
+#include <PSECore/Datatypes/PathPort.h>
 #include <PSECore/Dataflow/Module.h>
 #include <SCICore/Persistent/Pstreams.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <as_debug.h>
+
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace DaveW::Datatypes;
+using namespace SCICore::Datatypes;
 using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
@@ -78,9 +78,6 @@ void PathWriter::execute()
     Piostream* stream;
     clString ft(filetype.get());
 
-    MSG ("File name to write:");
-    MSG (fn);
-
     if(ft=="Binary"){
 	stream=scinew BinaryPiostream(fn, Piostream::Write);
     } else {
@@ -88,7 +85,7 @@ void PathWriter::execute()
     }
     // Write the file
     //stream->watch_progress(watcher, (void*)this);
-    MSG ("Starting to write");
+ 
     Pio(*stream, handle);
     delete stream;
 }
@@ -98,6 +95,9 @@ void PathWriter::execute()
 
 //
 // $Log$
+// Revision 1.2  2000/07/19 19:30:20  samsonov
+// Moving from DaveW
+//
 // Revision 1.1  2000/07/18 23:14:12  samsonov
 // PathWriter module is transfered from DaveW package
 //

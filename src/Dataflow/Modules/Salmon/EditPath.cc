@@ -38,6 +38,8 @@ namespace Modules {
 
 using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
+using namespace SCICore::Datatypes;
+
 using namespace SCICore::Containers;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Geometry;
@@ -54,8 +56,8 @@ class EditPath : public Module {
 		   init_exist, test_path, stop_test, test_views, save_path, get_to_view, 
 		   calc_path, refr_tcl_info, update_path, switch_loop, switch_dir, set_rate, set_step_size};
     
-    HashTable<clString, ExecMsg>    msg_lookup;
-    void         RegisterMessages();
+  //  HashTable<clString, ExecMsg>    msg_lookup;
+  //    void         RegisterMessages();
   
     TCLvarint    tcl_is_new, tcl_curr_view, tcl_num_views,
                  tcl_intrp_type, tcl_speed_mode, tcl_acc_mode, 
@@ -143,7 +145,7 @@ EditPath::EditPath(const clString& id)
     new_path_h=curr_path_h=scinew Path();
     new_path_h->set_step(step_size);
     
-    RegisterMessages();
+    //    RegisterMessages();
 
     UI_Init.set(0);
     update_tcl_var();
@@ -157,31 +159,31 @@ EditPath::~EditPath()
 {
 }
 
-void EditPath::RegisterMessages(){
-    msg_lookup.insert("Default", Default);
-    msg_lookup.insert("add_vp", add_vp);
-    msg_lookup.insert("rem_vp", rem_vp);
-    msg_lookup.insert("ins_vp", ins_vp);
-    msg_lookup.insert("init", init);
-    msg_lookup.insert("init_new", init_new);
-    msg_lookup.insert("init_exist", init_exist);
-    msg_lookup.insert("test_path", test_path);
-    msg_lookup.insert(" stop_test",  stop_test);
-    msg_lookup.insert("test_views", test_views);
-    msg_lookup.insert("save_path", save_path);
-    msg_lookup.insert("get_to_view", get_to_view);
-    msg_lookup.insert("calc_path", calc_path);
-    msg_lookup.insert("refr_tcl_info", refr_tcl_info);
-    msg_lookup.insert("update_path", update_path);
-    msg_lookup.insert("switch_loop", switch_loop);
-    msg_lookup.insert("switch_dir", switch_dir);
-    msg_lookup.insert("set_rate", set_rate);
-    msg_lookup.insert("set_step_size", set_step_size);
-    //     msg_lookup.insert("", );
-    //     msg_lookup.insert("", );
-    //     msg_lookup.insert("", );
+// void EditPath::RegisterMessages(){
+//     msg_lookup.insert("Default", Default);
+//     msg_lookup.insert("add_vp", add_vp);
+//     msg_lookup.insert("rem_vp", rem_vp);
+//     msg_lookup.insert("ins_vp", ins_vp);
+//     msg_lookup.insert("init", init);
+//     msg_lookup.insert("init_new", init_new);
+//     msg_lookup.insert("init_exist", init_exist);
+//     msg_lookup.insert("test_path", test_path);
+//     msg_lookup.insert(" stop_test",  stop_test);
+//     msg_lookup.insert("test_views", test_views);
+//     msg_lookup.insert("save_path", save_path);
+//     msg_lookup.insert("get_to_view", get_to_view);
+//     msg_lookup.insert("calc_path", calc_path);
+//     msg_lookup.insert("refr_tcl_info", refr_tcl_info);
+//     msg_lookup.insert("update_path", update_path);
+//     msg_lookup.insert("switch_loop", switch_loop);
+//     msg_lookup.insert("switch_dir", switch_dir);
+//     msg_lookup.insert("set_rate", set_rate);
+//     msg_lookup.insert("set_step_size", set_step_size);
+//     //     msg_lookup.insert("", );
+//     //     msg_lookup.insert("", );
+//     //     msg_lookup.insert("", );
 
-}
+// }
 
 
 void EditPath::execute()
@@ -591,6 +593,9 @@ bool EditPath::Msg_Box(const clString& title, const clString& message){
 
 //
 // $Log$
+// Revision 1.3  2000/07/19 19:28:53  samsonov
+// Moving from DaveW
+//
 // Revision 1.2  2000/07/19 19:27:16  samsonov
 // Moving from DaveW package
 //
