@@ -80,14 +80,8 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Modules/Render/Ball.h>
 
-
-#if (defined(__linux) && !defined(__ECC)) || defined(__APPLE__)
-#define HAVE_PBUFFER
-#endif
-
-#if defined(HAVE_PBUFFER)
+// HAVE_PBUFFER now comes from PBuffer.h
 #include <Dataflow/Modules/Render/PBuffer.h>
-#endif
  
 #include <Dataflow/Modules/Render/ViewWindow.h>
 #include <Dataflow/Modules/Render/Viewer.h>
