@@ -471,15 +471,28 @@ void ParticleVis::geom_pick(GeomPickHandle pick,
   cerr << "this = "<< this <<", pick = "<<pick.get_rep()<<endl;
   cerr << "User data = "<<userdata<<endl;
   //  cerr << "sphere index = "<<index<<endl<<endl;
-  long long id(-1);
+  
+  // This variable should not need to be initialized, because if the
+  // getID fails then we don't use the value.  If it succeeds then we
+  // initialize it.
+  
+  long long id;
   if ( picked_obj->getId(id)) {
     cerr<<"Id = "<< id <<endl;
+    // Check to make sure that the ID is not bogus
+    if( id != PARTICLE_FIELD_EXTRACTOR_BOGUS_PART_ID ) {
+      // Check to see if we have a call back class
+      if( cbClass != 0 ) {
+	((ParticleFieldExtractor *)cbClass)->callback( id );
+      } else {
+	error("Cannot graph values, because no callback class was found.");
+      } 
+    } else {
+      error("Particle has no id\nDoes the DataArchive have particleIDs saved?\n");
+    }
   } else {
-    cerr<<"Not getting the correct data\n";
+    error("Every particle should have some ID associated with it, but this one dies not.  Please save dataset and net and file a bug report to bugzilla.\n");
   }
-  if( cbClass != 0 && id != -1 )
-    ((ParticleFieldExtractor *)cbClass)->callback( id );
-  // Now modify so that points and spheres store index.
 }
   
 DECLARE_MAKER(ParticleVis)
