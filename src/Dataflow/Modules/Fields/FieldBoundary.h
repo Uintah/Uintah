@@ -418,7 +418,7 @@ FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
     CompileInfoHandle ci =
       FieldBoundaryAlgoAux::get_compile_info(mtd, algoname);
     Handle<FieldBoundaryAlgoAux> algo;
-    if (mod->module_dynamic_compile(ci, algo))
+    if (DynamicCompilation::compile(ci, algo, true, mod))
     {
       algo->execute(mesh, boundary, interp);
     }
@@ -430,7 +430,7 @@ FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
     CompileInfoHandle ci =
       FieldBoundaryAlgoAux::get_compile_info(mtd, "Curve");
     Handle<FieldBoundaryAlgoAux> algo;
-    if (mod->module_maybe_dynamic_compile(ci, algo))
+    if (DynamicCompilation::compile(ci, algo, true, mod))
     {
       algo->execute(mesh, boundary, interp);
     }
