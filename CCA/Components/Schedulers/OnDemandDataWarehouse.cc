@@ -1703,11 +1703,15 @@ getGridVar(VariableBase& var, DWDatabase& db,
 				    "on patch":"on neighbor"));
 	VariableBase* srcvar = var.cloneType();
 	db.get(label, matlIndex, neighbor, *srcvar);
+	if(neighbor->isVirtual())
+	  srcvar->offsetGrid(neighbor->getVirtualOffset());
 	
-	low = Max(lowIndex,
-		  neighbor->getLowIndex(basis, label->getBoundaryLayer()));
-	high= Min(highIndex, 
-		  neighbor->getHighIndex(basis, label->getBoundaryLayer()));
+	IntVector low = Max(lowIndex,
+			    neighbor->getLowIndex(basis,
+						  label->getBoundaryLayer()));
+	IntVector high= Min(highIndex, 
+			    neighbor->getHighIndex(basis,
+						   label->getBoundaryLayer()));
 	
 	if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
 	    || ( high.z() < low.z() ) )
