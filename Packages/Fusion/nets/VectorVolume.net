@@ -10,7 +10,7 @@ set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 187 159]
 set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 16 306]
 set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 16 403]
 set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 188 16]
-set m5 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 16 157]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 16 157]
 
 addConnection $m1 0 $m2 1
 addConnection $m2 0 $m3 0
@@ -113,7 +113,7 @@ set $m4-minRes {12}
 set $m4-resolution {255}
 set $m4-realres {255}
 set $m4-gamma {0.00}
-set $m5-Fusion_Fields_EditFusionField_0 {}
+set $m5-Fusion_Fields_FieldSubSample_0 {}
 set $m5-notes {}
 set $m5-show_status {1}
 set $m5-idim {385}

@@ -2,24 +2,19 @@
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
 set m0 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 393 119]
 set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 18 539]
-set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 18 670]
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 18 729]
 set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 392 10]
 set m4 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 18 10]
 set m5 [addModuleAtPosition "SCIRun" "Math" "AppendMatrix" 36 229]
-set m6 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 204 28]
+set m6 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 204 10]
 set m7 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 18 117]
 set m8 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 204 119]
 set m9 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 36 313]
 set m10 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 18 411]
 set m11 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 215 577]
-set m12 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 439 368]
-set m13 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 464 285]
-set m14 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 215 494]
+set m12 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 215 494]
 
 addConnection $m0 0 $m1 1
 addConnection $m1 0 $m2 0
@@ -35,30 +30,40 @@ addConnection $m4 0 $m0 1
 addConnection $m6 0 $m0 2
 addConnection $m11 1 $m2 1
 addConnection $m4 0 $m10 0
-addConnection $m4 0 $m12 0
-addConnection $m6 0 $m13 0
-addConnection $m10 0 $m14 0
-addConnection $m14 0 $m11 0
+addConnection $m10 0 $m12 0
+addConnection $m12 0 $m11 0
 
 set $m0-notes {}
 set $m0-show_status {1}
 set $m0-isFixed {0}
 set $m0-min {      -0.00360463}
 set $m0-max {           735375}
+set $m0-makeSymmetric {0}
 set $m1-notes {}
 set $m1-show_status {1}
 set $m1-nodes-on {1}
 set $m1-nodes-as-disks {0}
 set $m1-edges-on {0}
+set $m1-faces-on {0}
 set $m1-use-normals {0}
 set $m1-use-transparency {0}
-set $m1-faces-on {0}
 set $m1-vectors-on {0}
 set $m1-normalize-vectors {0}
 set $m1-has_vec_data {0}
 set $m1-bidirectional {0}
 set $m1-arrow-heads-on {1}
-set $m1-error-cones-on {0}
+set $m1-text-on {0}
+set $m1-text-use-default-color {1}
+set $m1-text-color-r {1.0}
+set $m1-text-color-g {1.0}
+set $m1-text-color-b {1.0}
+set $m1-text-backface-cull {0}
+set $m1-text-fontsize {1}
+set $m1-text-show-data {1}
+set $m1-text-show-nodes {0}
+set $m1-text-show-edges {0}
+set $m1-text-show-faces {0}
+set $m1-text-show-cells {0}
 set $m1-def-color-r {0.5}
 set $m1-def-color-g {0.5}
 set $m1-def-color-b {0.5}
@@ -71,7 +76,8 @@ set $m1-edge_scale {0.03}
 set $m1-vectors_scale {0.03}
 set $m1-show_progress {0}
 set $m1-interactive_mode {Interactive}
-set $m1-resolution {4}
+set $m1-node-resolution {6}
+set $m1-edge-resolution {6}
 set $m2-notes {}
 set $m2-show_status {1}
 $m2 ui
@@ -111,7 +117,6 @@ set $m2-ViewWindow_0-resy {}
 set $m2-ViewWindow_0-aspect {}
 set $m2-ViewWindow_0-aspect_ratio {}
 set $m2-ViewWindow_0-unused {1}
-set $m2-ViewWindow_0-unused {1}
 set $m3-notes {}
 set $m3-show_status {1}
 set $m3-tcl_status {Calling GenStandardColorMaps!}
@@ -149,18 +154,22 @@ set $m9-selectable_units {Units}
 set $m9-range_min {0}
 set $m9-range_max {1}
 set $m9-playmode {loop}
-set $m9-current {1}
-set $m9-execmode {init}
+set $m9-current {0}
+set $m9-execmode {play}
 set $m9-delay {1000}
 set $m10-notes {}
 set $m10-show_status {1}
 set $m11-notes {}
 set $m11-show_status {1}
-set $m11-isoval {452448}
-set $m11-isoval-min {1.04083e-17}
-set $m11-isoval-max {476463}
+set $m11-isoval {452448.000}
+set $m11-isoval-min {-0.00360463}
+set $m11-isoval-max {735375}
 set $m11-isoval-typed {0}
 set $m11-isoval-quantity {1}
+set $m11-quantity-range {colormap}
+set $m11-quantity-min {0}
+set $m11-quantity-max {100}
+set $m11-isoval-list {0}
 set $m11-extract-from-new-field {1}
 set $m11-algorithm {0}
 set $m11-build_trisurf {0}
@@ -173,27 +182,26 @@ set $m11-color-g {0.2}
 set $m11-color-b {0.9}
 set $m12-notes {}
 set $m12-show_status {1}
-set $m13-notes {}
-set $m13-show_status {1}
-set $m14-notes {}
-set $m14-show_status {1}
-set $m14-idim {385}
-set $m14-jdim {192}
-set $m14-kdim {10}
-set $m14-istart {0}
-set $m14-jstart {0}
-set $m14-kstart {0}
-set $m14-idelta {384}
-set $m14-jdelta {192}
-set $m14-kdelta {10}
-set $m14-iskip {10}
-set $m14-jskip {5}
-set $m14-kskip {1}
+set $m12-wrap {1}
+set $m12-dims {3}
+set $m12-i-dim {385}
+set $m12-j-dim {192}
+set $m12-k-dim {10}
+set $m12-i-start {0}
+set $m12-j-start {0}
+set $m12-k-start {0}
+set $m12-i-stop {384}
+set $m12-j-stop {191}
+set $m12-k-stop {9}
+set $m12-i-skip {1}
+set $m12-j-skip {1}
+set $m12-k-skip {1}
+set $m12-i-wrap {0}
+set $m12-j-wrap {0}
+set $m12-k-wrap {0}
 $m5 initialize_ui
 $m9 initialize_ui
 $m11 initialize_ui
 $m12 initialize_ui
-$m13 initialize_ui
-$m14 initialize_ui
 
 ::netedit scheduleok
