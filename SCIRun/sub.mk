@@ -34,7 +34,7 @@ SRCS     += \
 	$(SRCDIR)/resourceReference.cc \
 	$(SRCDIR)/TypeMap.cc
 
-ifneq ($(HAVE_MPI),)
+ifeq ($(HAVE_MPI),yes)
 SRCS += $(SRCS) $(SRCDIR)/SCIRunLoader.cc
 endif
 
@@ -60,7 +60,7 @@ PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
 endif
 
 LIBS := $(XML_LIBRARY)
-ifneq ($(HAVE_MPI),)
+ifeq ($(HAVE_MPI),yes)
  LIBS := $(LIBS) $(MPI_LIBRARY)
 endif
 
