@@ -9,9 +9,9 @@ SRCS	+= \
 	$(SRCDIR)/ICELabel.cc    \
 	$(SRCDIR)/ICEMaterial.cc \
 	$(SRCDIR)/GeometryObject2.cc \
-       $(SRCDIR)/MathToolbox.cc \
+ 	$(SRCDIR)/MathToolbox.cc \
 
-SUBDIRS := $(SRCDIR)/EOS 
+SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection
 
 include $(SCIRUN_SCRIPTS)/recurse.mk          
 
