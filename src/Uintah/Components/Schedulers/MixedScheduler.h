@@ -3,6 +3,7 @@
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Components/Schedulers/TaskGraph.h>
+#include <Uintah/Components/Schedulers/MessageLog.h>
 #include <Uintah/Components/Schedulers/ThreadPool.h>
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Interface/DataWarehouseP.h>
@@ -154,9 +155,14 @@ WARNING
 
 //
 // $Log$
+// Revision 1.2  2000/09/27 01:47:47  dav
+// added missing #endif
+//
 // Revision 1.1  2000/09/26 18:50:26  dav
 // Initial commit.  These files are derived from Steve's MPIScheduler,
 // and thus have a lot in common.  Perhaps in the future, the common
 // routines should be moved into a common location.
 //
 //
+
+#endif
