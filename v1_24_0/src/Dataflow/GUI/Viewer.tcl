@@ -296,7 +296,7 @@ itcl_class BaseViewWindow {
 	}
 
 	upvar \#0 $this-currentvisual visual
-	$this-c setgl $renderWindow $visual
+	$this-c setgl $renderWindow $visual $width $height
 	bindEvents $renderWindow
 	$this-c startup
     }
