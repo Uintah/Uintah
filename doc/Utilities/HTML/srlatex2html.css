@@ -21,8 +21,25 @@ University of Utah. All Rights Reserved.
 This stylesheet is used by html documents generated from docbook sources.
 */
 
-body {background-color:#CCCCCC; text-color:#000000; font-family:"times"; margin-left:1em; margin-right:1em; margin-top:1em}
+body 
+{
+background-color:#CCCCCC; 
+text-color:#000000; 
+font-family:"times"; 
+margin-left:1em; 
+margin-right:1em; 
+margin-top:1em
+}
 
-div.top-banner-margins {margin-left:-1em; margin-right:-1em; margin-top:-1em}
-div.bottom-banner-margins {margin-left:-1em; margin-right:-1em}
+div.top-banner-margins 
+{
+margin-left:-1em; 
+margin-right:-1em; 
+margin-top:-1em
+}
 
+div.bottom-banner-margins
+{
+margin-left:-1em; 
+margin-right:-1em
+}
