@@ -1,7 +1,7 @@
-version gov 0.1;
+version sci 0.1;
 version cca 0.6; 
 
-package gov {
+package sci {
 package cca {
 
     /** All ports must derive from this port type */
@@ -68,7 +68,7 @@ package cca {
 
    
     /** Most CCA interfaces throw this exception */
-    abstract class CCAException extends SIDL.BaseException {
+    abstract class CCAException extends SSIDL.BaseException {
 	abstract CCAExceptionType getCCAExceptionType();
     } // end class CCAException
 
@@ -195,7 +195,7 @@ package cca {
 	 * This Port is now available for the framework to connect 
 	 * to other components. 
 	 * @param inPort An abstract interface (tagged with CCA-ness
-	 * 	by inheriting from gov.cca.Port) the framework will
+	 * 	by inheriting from sci.cca.Port) the framework will
 	 * 	make available to other components.
 	 * 
 	 * @param portName string uniquely describing this port.  This string
@@ -406,7 +406,7 @@ package cca {
      *  This is an interface presented by a CCA-compliant framework to access its 
      *  application framing capabilities. Most of the manipulation of the 
      *  underlying framework is expected to be be done with the 
-     *  gov.cca.BuilderService Port. This class exists as a sort of bootstrap 
+     *  sci.cca.BuilderService Port. This class exists as a sort of bootstrap 
      *  to get a Services object necessary to retrieve Port's, including 
      *  BuilderService, from the underlying framework. How the interface and 
      *  the underlying framework is created is entirely unspecified and is up 
@@ -426,8 +426,8 @@ package cca {
      *    cca.reference.Framework fwkimpl = new cca.reference.Framework();
      *    // change fwkimpl above to use different cca implementations when
      *    // AbstractFramework becomes part of the standard.
-     *    gov.cca.AbstractFramework fwk = (gov.cca.AbstractFramework)fwkimpl;
-     *    gov.cca.Services svc = 
+     *    sci.cca.AbstractFramework fwk = (sci.cca.AbstractFramework)fwkimpl;
+     *    sci.cca.Services svc = 
      *	   fwk.getServices("instance0","AppDriver",null);
      *    // From here on, access all services, components, etc
      *    // through svc.
@@ -439,11 +439,11 @@ package cca {
      *
      *  // c++
      *  int functionName() {
-     *    ::gov::sandia::ccafe::Framework fwkimpl;
-     *    ::gov::cca::AbstractFrameworkPtr fwk;
+     *    ::sci::sandia::ccafe::Framework fwkimpl;
+     *    ::sci::cca::AbstractFrameworkPtr fwk;
      *
      *    fwk = fwkimpl.getStandardFramework();
-     *    ::gov::cca::Services_Interface * svc = 0;
+     *    ::sci::cca::Services_Interface * svc = 0;
      *    svc = fwk->getServices("instance0","AppDriver",0);
      *    // From here on, access all services, components, etc
      *    // through svc.
@@ -541,7 +541,7 @@ package cca {
 	2. listening to other frameworks' broadcasting
 	3. query the CCA components set availabe in other framewors.	 				
 	*/	
-	//void share(in gov.cca.Services svc);
+	//void share(in sci.cca.Services svc);
 	/** This one is in test for distributed computing		
       
 	*/	 
@@ -942,12 +942,12 @@ package cca {
 			       in float timeout) throws cca.CCAException ; 
 	    //<<<<<<<<<<<<<<<<<<<<<<<
 	   /* get available ports in c2 that can be connected to port1 of c1*/ 	
-   	   array<string> getCompatiblePortList(in gov.cca.ComponentID c1,
+   	   array<string> getCompatiblePortList(in sci.cca.ComponentID c1,
 				       in string port1,
-				       in gov.cca.ComponentID c2);
+				       in sci.cca.ComponentID c2);
 	    		
 	    //void registerFramework(in string frameworkURL); 	
-	    //void registerServices(in gov.cca.Services svc);
+	    //void registerServices(in sci.cca.Services svc);
 	    //>>>>>>>>>>>>>>>>>>>>>		
 	} // end interface BuilderService
 	
@@ -984,7 +984,7 @@ package cca {
 #include "SCIRun2Classes.sidl"
 //>>>>>>>>>>>>>>>>>>>>>>>>>
 } // end of package cca
-} // end package gov
+} // end package sci
 
 
 
