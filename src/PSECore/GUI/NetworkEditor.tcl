@@ -139,7 +139,8 @@ proc makeNetworkEditor {} {
     text .top.errorFrame.text -relief sunken -bd 3 -bg #036 -fg white \
 	    -yscrollcommand ".top.errorFrame.s set" -height 10 -width 180 
     .top.errorFrame.text insert end "Messages:\n"
-    .top.errorFrame.text insert end "--------\n\n"
+    .top.errorFrame.text insert end "--------------------------\n\n"
+    .top.errorFrame.text insert end "Loading packages, please wait...\n"
     .top.errorFrame.text tag configure errtag -foreground red
 
 # Why on earth was this here?
