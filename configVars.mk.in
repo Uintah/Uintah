@@ -229,7 +229,7 @@ XML_TLINK := -L$(XML_LIB_DIR)
 
 ifeq ($(BUILD_PARALLEL),yes)
 GLOBUS_LIB_DIR := @GLOBUS_LIB@
-GLOBUS_LIBS := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_nexus -lglobus_io -lglobus_dc -lglobus_common
+GLOBUS_LIBS := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_nexus -lglobus_io -lglobus_dc -lglobus_common @GLOBUS_EXTRA_DIRS@
 GLOBUS_COMMON := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_common
 GLOBUS_TLINK := -L$(GLOBUS_LIB_DIR)
 endif
