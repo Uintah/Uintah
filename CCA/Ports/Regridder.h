@@ -52,6 +52,9 @@ WARNING
     virtual bool needRecompile(double time, double delt,
 			       const GridP& grid) = 0;
 
+    //! Asks if we are going to do regridding
+    virtual bool isAdaptive() = 0;
+
     //! Create a new Grid
     virtual Grid* regrid(Grid* oldGrid, SchedulerP sched) = 0;
   private:
