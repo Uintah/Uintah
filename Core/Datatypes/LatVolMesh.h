@@ -28,6 +28,7 @@ class SCICORESHARE LatVolMesh : public MeshBase
 public:
   struct LatIndex
   {
+  public:
     LatIndex() : i_(0), j_(0), k_(0) {}
     LatIndex(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k) {}
     
@@ -77,10 +78,10 @@ public:
     NodeIter &operator++()
     {
       i_++;
-      if (i_ > mesh_->nx_)	{
+      if (i_ >= mesh_->nx_)	{
 	i_ = 0;
 	j_++;
-	if (j_ > mesh_->ny_) {
+	if (j_ >= mesh_->ny_) {
 	  j_ = 0;
 	  k_++;
 	}
