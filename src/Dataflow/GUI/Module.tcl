@@ -1171,17 +1171,111 @@ proc htmlHelp {modid} {
 	set usehtml 1
     }
     
-    if { $usehtml } {
-	set ping [netedit sci_system /scratch/firefox/firefox -remote 'ping()']
-	if {!$ping} {
-	    netedit sci_system /scratch/firefox/firefox $url &
-	} else {
-	    netedit sci_system /scratch/firefox/firefox -remote 'openurl($url)' &
+    if { !$usehtml } { return 0 }
+
+    global tcl_platform
+    if { $tcl_platform(os) == "Darwin" } {
+	set ret_val [netedit sci_system open $url]
+	return [expr $ret_val == 0]
+    } elseif { $tcl_platform(platform) == "unix" } {
+	set browser [auto_execok [netedit getenv BROWSER]]
+	if { $browser == "" } {
+	    set browsers {mozilla firefox netscape opera galeon konqueror}
+	    foreach command $browsers {
+		set command [auto_execok $command]
+		if { $command != "" } {
+		    lappend browser $command
+		}
+	    }
+	}
+
+	if { [llength $browser] == 0 } {
+	    return 0
+	}
+
+	if { [llength $browser] == 1 } { 
+	    setBrowser $browser $url
+	    return 1
+	}
+	
+	set w .choosebrowser
+	toplevel $w
+	wm title $w "Choose Help Browser"
+	label $w.text -text "Choose Browser for HTML Help:" \
+	    -justify left -anchor w
+	pack $w.text -side top -expand 1 -fill x -ipady 5
+       	
+	listbox $w.list -selectmode single
+	
+	foreach command $browser {
+	    $w.list insert end $command
+	}
+	
+	frame $w.f
+
+	$w.list activate 0
+	global BROWSER_DONT_ASK
+	set BROWSER_DONT_ASK 1
+	checkbutton $w.f.ask -variable BROWSER_DONT_ASK \
+	    -text "Dont ask for help viewer again"
+	pack $w.f.ask -side top -ipady 5 -fill x
+	
+
+	button $w.f.cancel -text "View Help as Text" -command "textHelp $modid"
+	
+	button $w.f.ok -text "Open in HTML" \
+	    -command "setBrowser \[$w.list get active\] $url"
+
+	pack $w.f.ok $w.f.cancel -side right -ipadx 5 -ipady 5 -padx 5 -pady 5
+	pack $w.f -side bottom -expand 1 -fill x -padx 5 -pady 5
+	pack $w.list -side top -expand 1 -fill both -padx 10
+	return 1
+    }
+    return 0
+}
+
+proc textHelp { modid } {
+    if { [winfo exists .choosebrowser] } {
+	destroy .choosebrowser
+    }
+    netedit setenv BROWSER text
+    moduleHelp $modid
+    global BROWSER_DONT_ASK
+    if { !$BROWSER_DONT_ASK } {
+	netedit setenv BROWSER ""
+    }
+}
+
+proc setBrowser { browser url } {
+    puts "setBrowser $browser"
+    if { ![openBrowser $browser $url] } { 
+	if { [winfo exists .choosebrowser] } {
+	    destroy .choosebrowser
+	}
+	global BROWSER_DONT_ASK
+	if { $BROWSER_DONT_ASK } {
+	    netedit setenv BROWSER $browser
 	}
     }
 }
 
-proc moduleHelp {modid} {
+    
+# return 0 on success, exit code otherwise
+proc openBrowser { command url } {
+    set teststring [string tolower $command]
+    if { [string match -nocase "*mozilla*" $command] || \
+	     [string match -nocase "*firefox*" $command] || \
+	     [string match -nocase "*netscape*" $command] } {
+	set ping [netedit sci_system $command -remote 'ping()' 2> /dev/null > /dev/null]
+	if {$ping} {
+	    return [netedit sci_system $command -remote 'openurl($url)' 2> /dev/null > /dev/null &]
+	}
+    } 
+    return [netedit sci_system $command $url 2> /dev/null > /dev/null &]
+}
+
+
+proc moduleHelp { modid } {
     set w .mHelpWindow[$modid name]
 	
     # does the window exist?
@@ -1189,6 +1283,8 @@ proc moduleHelp {modid} {
 	SciRaise $w
 	return
     }
+
+    if { [netedit getenv BROWSER] != "text" && [htmlHelp $modid] } return
 	
     # create the window
     toplevel $w
