@@ -20,6 +20,7 @@ SRCS     += \
 	$(SRCDIR)/Switch.cc\
 	$(SRCDIR)/ImageReaderFloat2D.cc\
 	$(SRCDIR)/ImageReaderFloat3D.cc\
+	$(SRCDIR)/ImageReaderUShort2D.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Insight/Core/Datatypes Dataflow/Network \
