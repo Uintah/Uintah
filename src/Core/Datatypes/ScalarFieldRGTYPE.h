@@ -45,7 +45,7 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
     
-    double get_value( const Point& ivoxel );
+    virtual double get_value( const Point& ivoxel );
     double get_value( int x, int y, int z );
 
     Vector get_normal( const Point& ivoxel );
@@ -77,6 +77,9 @@ ScalarFieldRGTYPE::get_value( int x, int y, int z )
 
 //
 // $Log$
+// Revision 1.4  1999/09/05 23:14:15  dmw
+// added virtual accessor method
+//
 // Revision 1.3  1999/08/25 03:48:37  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
