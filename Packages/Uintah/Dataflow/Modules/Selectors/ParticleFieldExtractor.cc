@@ -354,7 +354,7 @@ void ParticleFieldExtractor::addGraphingVars(long64 particleID,
   for (iter = vars.begin(); iter != vars.end(); iter++, i++) {
      ostringstream call;
      call << id << " addGraphingVar " << particleID << " " << (*iter).name <<
-	" { " << get_matl_from_particleID(particleID) << " } " << type <<
+	" { " << get_matl_from_particleID(particleID, (*iter).matls) << " } " << type <<
        //	" {" << (*iter).matls.expandedString() << "} " << type <<
 	" " << i;
      gui->execute(call.str().c_str());
@@ -378,7 +378,8 @@ void ParticleFieldExtractor::callback(long64 particleID)
 // over all the particle ID's for each materials searching for a match.
 // Since this should only be used in debugging experiments it doesn't need
 // to be super speedy, just responsive.
-int ParticleFieldExtractor::get_matl_from_particleID(long64 particleID) {
+int ParticleFieldExtractor::get_matl_from_particleID(long64 particleID, 
+                                                     const ConsecutiveRangeSet& matls) {
   DataArchive& archive = *((*(archiveH.get_rep()))());
   GridP grid = archive.queryGrid( time );
   LevelP level = grid->getLevel( 0 );
@@ -388,17 +389,23 @@ int ParticleFieldExtractor::get_matl_from_particleID(long64 particleID) {
       patch != level->patchesEnd();
       patch++ )
     {
-      for(int matl = 0; matl < num_materials; matl++) {
+      for(ConsecutiveRangeSet::iterator iter = matls.begin(); 
+          iter != matls.end(); ++iter) {
 	ParticleVariable< long64 > pvi;
-	archive.query(pvi, particleIDs, matl, *patch, time);
+        try {
+          archive.query(pvi, particleIDs, *iter, *patch, time);
+        } catch(VariableNotFoundInGrid& e) {
+          cout << e.message() << "\n";
+          continue;
+        }
 	ParticleSubset* pset = pvi.getParticleSubset();
 	// check if we have an particles on this patch
 	if(pset->numParticles() > 0){
 	  // now loop over the ParticleVariables and find it
-	  for(ParticleSubset::iterator iter = pset->begin();
-	      iter != pset->end(); iter++) {
-	    if (pvi[*iter] == particleID)
-	      return matl;
+	  for(ParticleSubset::iterator part_iter = pset->begin();
+	      part_iter != pset->end(); part_iter++) {
+	    if (pvi[*part_iter] == particleID)
+	      return *iter;
 	  }
 	}
       }
