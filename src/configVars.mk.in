@@ -236,7 +236,15 @@ endif
 THREAD_LIBS := @THREAD_LIBS@
 PLATFORM_LDFLAGS := @PLATFORM_LDFLAGS@
 
-GL_LIBS := $(X_LIBRARY) -lGLU -lGL -lXext -lX11 $(X_EXTRA_LIBS)
+GL_INCLUDE := @GL_INCLUDE@
+ifneq ($(GL_INCLUDE),)
+  GL_INCLUDE := -I$(GL_INCLUDE)
+endif
+LIBGL := @LIBGL@
+ifneq ($(LIBGL),)
+  LIBGL := $(LDRUN_PREFIX)$(LIBGL) -L$(LIBGL)
+endif
+GL_LIBS := $(X_LIBRARY) $(LIBGL) -lGLU -lGL -lXext -lX11 $(X_EXTRA_LIBS)
 X11_LIBS := $(X_LIBRARY) -lXext -lX11 $(X_EXTRA_LIBS)
 
 PROGRAM_PSE   := @EXENAME@
@@ -269,6 +277,10 @@ TEEM_LIBRARY := $(LDRUN_PREFIX)$(TEEM_LIB_DIR) -L$(TEEM_LIB_DIR)
 
 DL_LIBRARY := @LIBDL_FLAG@
 
+GZ_INCLUDE := @LIBZ_INCLUDE@
+ifneq ($(GZ_INCLUDE),)
+  GZ_INCLUDE := -I$(GZ_INCLUDE)
+endif
 GZ_LIBRARY := @LIBZ_FLAG@ 
 
 XML_LIB_DIR := @LIBXERCES_C@
@@ -347,7 +359,7 @@ PETSC_LIBS := $(LDRUN_PREFIX)$(PETSC_LIBDIR) -L$(PETSC_LIBDIR) $(PETSC_EXTRA_LIB
 
 endif
 
-INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(SRCTOP)/Packages $(TCL_INCLUDE) $(TK_INCLUDE) $(ITCL_INCLUDE) $(ITK_INCLUDE) $(BLT_INCLUDE) $(GLOBUS_INCLUDE) $(QT_INCLUDE) $(XML_INCLUDE) $(PETSC_INCLUDES) $(TAU_INCLUDE) $(MPI_INCLUDE) $(UNI_PETSC_INCLUDE)
+INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(SRCTOP)/Packages $(TCL_INCLUDE) $(TK_INCLUDE) $(ITCL_INCLUDE) $(ITK_INCLUDE) $(BLT_INCLUDE) $(GLOBUS_INCLUDE) $(QT_INCLUDE) $(XML_INCLUDE) $(PETSC_INCLUDES) $(TAU_INCLUDE) $(MPI_INCLUDE) $(UNI_PETSC_INCLUDE) $(GL_INCLUDE) $(LIBZ_INCLUDE)
 FINCLUDES += -I$(SRCTOP) -I$(OBJTOP)
 
 SSTREAM_COMPAT := @SSTREAM_COMPAT@
@@ -372,6 +384,7 @@ ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
 F77		:= @F77@
 FFLAGS		:= @FFLAGS@ $(FFLAGS)
 FLIBS		:= @FLIBS@
+REPOSITORY_FLAGS := @REPOSITORY_FLAGS@
 
 ################################################################
 # Auto dependency generation flags
@@ -387,6 +400,12 @@ F77_DEPEND_EXT	    := @F77_DEPEND_EXT@
 NEED_SONAME	:= @NEED_SONAME@
 ECHO :=		echo @ECHO_N@
 
+ifeq ($(REPOSITORY_FLAGS),)
+  repository = 
+else
+  repository = $(REPOSITORY_FLAGS) $(patsubst %:$(1),%,$(filter %:$(1),$(ALL_LIB_ASSOCIATIONS)))
+endif
+
 ifeq ($(NEED_SONAME),yes)
   SONAMEFLAG = -Wl,-soname,$(notdir $@)
 else
@@ -397,10 +416,10 @@ endif
 
 .cc.o: $<
 ifeq ($(CC_DEPEND_MODE),normal)
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 else
 ifeq ($(CC_DEPEND_MODE),move)
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 	sed 's,^$(basename $@):,$@:,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
 	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
 else
@@ -418,7 +437,7 @@ ifeq ($(CC_DEPEND_MODE),stdout)
 
         # Now do the actual compile!
 	@echo "ACTUALLY COMPILING:"
-	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(CXX) $(CFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
 else
 	$(ECHO) Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)
 	exit 1
@@ -428,10 +447,10 @@ endif
 
 .cpp.o: $<
 ifeq ($(CC_DEPEND_MODE),normal)
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 else
 ifeq ($(CC_DEPEND_MODE),move)
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 	sed 's,^$(basename $@):,$@:,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
 	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
 else
@@ -449,7 +468,7 @@ ifeq ($(CC_DEPEND_MODE),stdout)
 
         # Now do the actual compile!
 	@echo "ACTUALLY COMPILING:"
-	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(CXX) $(CFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
 else
 	$(ECHO) Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)
 	exit 1
