@@ -17,6 +17,7 @@
 #include <Dataflow/Network/StrX.h>
 #include <Core/Util/DebugStream.h>
 #include <dlfcn.h>
+#include <Core/Util/sci_system.h>
 
 namespace SCIRun {
 
@@ -182,7 +183,7 @@ ManipFields::tcl_command(TCLArgs& args, void* userdata)
     
     cout << "Launch Editor: " << ecmd << endl;
 
-    if (system(ecmd) != 0) {
+    if (sci_system(ecmd) != 0) {
       cerr << "SCIRun::Modules::Fields::ManipFields " << endl
 	   << "editor command failed" << endl;
     }
@@ -257,7 +258,7 @@ ManipFields::compileFile(const char *file)
 {
   char command[1024];
   sprintf(command, "cd %s; gmake %s.so", FIELD_MANIP_COMPILATION_PATH, file);
-  if (system(command) != 0) {
+  if (sci_system(command) != 0) {
     cerr << "SCIRun::Modules::Fields::ManipFields::compileFile() error: "
 	 << "system call failed:\n" << command << endl;
     return false;

@@ -9,9 +9,10 @@ SRCS     += \
 	$(SRCDIR)/soloader.cc \
 	$(SRCDIR)/DebugStream.cc \
 	$(SRCDIR)/Timer.cc \
+	$(SRCDIR)/sci_system.c \
 
 PSELIBS := Core/Containers Core/Exceptions
-LIBS := $(DL_LIBRARY)
+LIBS := $(DL_LIBRARY) $(THREAD_LIBS)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
