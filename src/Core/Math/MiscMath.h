@@ -15,6 +15,7 @@
 #ifndef SCI_Math_MiscMath_h
 #define SCI_Math_MiscMath_h 1
 
+#include <math.h>
 #include <Core/share/share.h>
 
 namespace SCIRun {
@@ -124,24 +125,12 @@ inline SCICORESHARE int Round(double d)
 
 inline SCICORESHARE int Floor(double d)
 {
-  if(d>=0){
-    return (int)d;
-  } else {
-    return -(int)(-d);
-  }
+  return (int)floor(d);
 }
 
 inline SCICORESHARE int Ceil(double d)
 {
-  if(d==(int)d){
-    return (int)d;
-  } else {
-    if(d>0){
-      return 1+(int)d;
-    } else {
-      return -(1+(int)(-d));
-    }
-  }
+  return (int)ceil(d);
 }
 
 inline SCICORESHARE int Tile(int tile, int tf)
