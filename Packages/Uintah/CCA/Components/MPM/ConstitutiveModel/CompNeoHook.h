@@ -66,6 +66,7 @@ namespace Uintah {
 						  SparseMatrix<double,int>& KK,
 #ifdef HAVE_PETSC
 						  Mat &A,
+						  map<const Patch*, Array3<int> >& d_petscLocalToGlobal,
 #endif
 						  const bool recursion);
 

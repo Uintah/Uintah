@@ -198,6 +198,8 @@ void ImpMPM::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
   scheduleInterpolateParticlesToGrid(sched,d_perproc_patches, matls);
 
   scheduleApplyBoundaryConditions(sched,d_perproc_patches,matls);
+
+  scheduleDestroyMatrix(sched, d_perproc_patches, matls);
 #if 1
   scheduleCreateMatrix(sched, d_perproc_patches, matls);
 #endif
@@ -301,6 +303,16 @@ void ImpMPM::scheduleCreateMatrix(SchedulerP& sched,
 {
 
   Task* t = scinew Task("ImpMPM::createMatrix",this,&ImpMPM::createMatrix);
+  sched->addTask(t, patches, matls);
+
+}
+
+void ImpMPM::scheduleDestroyMatrix(SchedulerP& sched,
+				   const PatchSet* patches,
+				   const MaterialSet* matls)
+{
+
+  Task* t = scinew Task("ImpMPM::destroyMatrix",this,&ImpMPM::destroyMatrix);
   sched->addTask(t, patches, matls);
 
 }
@@ -553,6 +565,11 @@ void ImpMPM::iterate(const ProcessorGroup*,
 
   // Create the tasks
 
+  scheduleDestroyMatrix(subsched, level->eachPatch(),
+			d_sharedState->allMPMMaterials());
+
+  scheduleCreateMatrix(subsched, level->eachPatch(), 
+		       d_sharedState->allMPMMaterials());
   
   scheduleComputeStressTensorR(subsched,level->eachPatch(),
 			      d_sharedState->allMPMMaterials(),
@@ -1464,6 +1481,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 
 {
 
+#if 0
   KK.clear();
 #ifdef HAVE_PETSC
   PetscTruth exists;
@@ -1471,6 +1489,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
   // Probably should zero out things instead of destroying it.
   if (exists == PETSC_TRUE)
     MatDestroy(A);
+#endif
 #endif
 
   int numProcessors = d_myworld->size();
@@ -1580,26 +1599,46 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 #ifdef PETSC_DEBUG
   cerr << "matrixCreate: local size: " << numlrows << ", " << numlcolumns << ", global size: " << globalrows << ", " << globalcolumns << "\n";
 #endif
-#if 0
+#ifdef HAVE_PETSC
    MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-		   globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+		   globalcolumns, PETSC_DEFAULT, PETSC_NULL, PETSC_DEFAULT,
+		   PETSC_NULL, &A);
 
    /* 
      Create vectors.  Note that we form 1 vector from scratch and
      then duplicate as needed.
   */
-  ierr = VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_x);
-  if(ierr)
-    throw PetscError(ierr, "VecCreateMPI");
-  ierr = VecSetFromOptions(d_x);
-  if(ierr)
-    throw PetscError(ierr, "VecSetFromOptions");
-  ierr = VecDuplicate(d_x,&d_b);
-  if(ierr)
-    throw PetscError(ierr, "VecDuplicate(d_b)");
-  ierr = VecDuplicate(d_x,&d_u);
-  if(ierr)
-    throw PetscError(ierr, "VecDuplicate(d_u)");
+
+   VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&petscQ);
+   VecDuplicate(petscQ,&petscTemp2);
+#endif
+
+   KK.setSize(globalrows,globalcolumns);
+
+}
+
+void ImpMPM::destroyMatrix(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset* ,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw)
+{
+  cout_doing <<"Doing destroyMatrix " <<"\t\t\t\t\t IMPM"
+	       << "\n" << "\n";
+  KK.clear();
+#ifdef HAVE_PETSC
+  PetscTruth exists;
+  PetscObjectExists((PetscObject)A,&exists);
+  if (exists == PETSC_TRUE)
+    MatDestroy(A);
+
+  PetscObjectExists((PetscObject)petscQ,&exists);
+  if (exists == PETSC_TRUE)
+    VecDestroy(petscQ);
+  
+  PetscObjectExists((PetscObject)petscTemp2,&exists);
+  if (exists == PETSC_TRUE)
+    VecDestroy(petscTemp2);
 #endif
 
 }
@@ -1615,6 +1654,7 @@ void ImpMPM::computeStressTensor(const ProcessorGroup*,
 
   cout_doing <<"Doing computeStressTensor " <<"\t\t\t\t IMPM"<< "\n" << "\n";
 
+#if 0
 
   KK.clear();
 #ifdef HAVE_PETSC
@@ -1623,13 +1663,14 @@ void ImpMPM::computeStressTensor(const ProcessorGroup*,
   if (exists == PETSC_TRUE)
     MatDestroy(A);
 #endif
-  
+
+#endif
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
 #ifdef HAVE_PETSC
     cm->computeStressTensorImplicit(patches, mpm_matl, old_dw, new_dw,KK,A,
-				    recursion);
+				    d_petscLocalToGlobal, recursion);
 #else
     cm->computeStressTensorImplicit(patches, mpm_matl, old_dw, new_dw,KK,
 				    recursion);
@@ -1650,6 +1691,7 @@ void ImpMPM::computeStressTensorOnly(const ProcessorGroup*,
   cout_doing <<"Doing computeStressTensorOnly " <<"\t\t\t\t IMPM"<< "\n" 
 	     << "\n";
 
+#if 0
   KK.clear();
 #ifdef HAVE_PETSC
   PetscTruth exists;
@@ -1657,7 +1699,8 @@ void ImpMPM::computeStressTensorOnly(const ProcessorGroup*,
   if (exists == PETSC_TRUE)
     MatDestroy(A);
 #endif
-  
+
+#endif
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -1757,6 +1800,10 @@ void ImpMPM::formStiffnessMatrixPetsc(const ProcessorGroup*,
 	       <<"\t\t\t\t IMPM"<< "\n" << "\n";
 
     // IntVector nodes = patch->getNNodes();
+    IntVector lowIndex = patch->getNodeLowIndex();
+    IntVector highIndex = patch->getNodeHighIndex();
+    Array3<int> l2g(lowIndex,highIndex);
+    l2g.copy(d_petscLocalToGlobal[patch]);
 
     int numMatls = d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
@@ -1778,11 +1825,19 @@ void ImpMPM::formStiffnessMatrixPetsc(const ProcessorGroup*,
 	   iter++) {
 	IntVector n = *iter;
 	int dof[3];
+#if 0
 	int node_num = n.x() + (nodes.x())*(n.y()) + (nodes.y())*
 	  (nodes.x())*(n.z());
+
 	dof[0] = 3*node_num;
 	dof[1] = 3*node_num+1;
 	dof[2] = 3*node_num+2;
+#endif
+	int l2g_node_num = l2g[n];
+	dof[0] = l2g_node_num;
+	dof[1] = l2g_node_num+1;
+	dof[2] = l2g_node_num+2;
+
 #if 1
 	cout << "gmass[" << *iter << "]= " << gmass[*iter] << "\n";
 	cout << "KK[" << dof[0] << "][" << dof[0] << "]= " 
@@ -1991,6 +2046,10 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
     cout_doing <<"Doing formQPetsc on patch " << patch->getID()
 	       <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
 
+    IntVector lowIndex = patch->getNodeLowIndex();
+    IntVector highIndex = patch->getNodeHighIndex();
+    Array3<int> l2g(lowIndex,highIndex);
+    l2g.copy(d_petscLocalToGlobal[patch]);
 
     delt_vartype dt;
     old_dw->get(dt, d_sharedState->get_delt_label());
@@ -2002,6 +2061,7 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
     valarray<double> temp2(0.,num_nodes);
     Q.resize(num_nodes);
 #ifdef HAVE_PETSC
+#if 0
     PetscTruth exists;
     PetscObjectExists((PetscObject)petscQ,&exists);
     if (exists == PETSC_TRUE)
@@ -2013,6 +2073,7 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
 
     VecCreateMPI(PETSC_COMM_WORLD,num_nodes,PETSC_DETERMINE,&petscQ);
     VecCreateMPI(PETSC_COMM_WORLD,num_nodes,PETSC_DETERMINE,&petscTemp2);
+#endif
     PetscScalar v = 0.;
     VecSet(&v,petscQ);
     VecSet(&v,petscTemp2);
@@ -2055,11 +2116,18 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
     for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
       IntVector n = *iter;
       int dof[3];
+#if 0
       int node_num = n.x() + (nodes.x())*(n.y()) + (nodes.y())*
 	(nodes.x())*(n.z());
       dof[0] = 3*node_num;
       dof[1] = 3*node_num+1;
       dof[2] = 3*node_num+2;
+#endif
+      int l2g_node_num = l2g[n];
+      dof[0] = l2g_node_num;
+      dof[1] = l2g_node_num+1;
+      dof[2] = l2g_node_num+2;
+
 
       cout << "external force = " << externalForce[n] << " internal force = " 
 	   << internalForce[n] << "\n";
@@ -2118,7 +2186,7 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
 #ifdef HAVE_PETSC
       PetscScalar minusone = -1.;
       VecAXPY(&minusone,petscTemp2,petscQ);
-      VecDestroy(petscTemp2);
+      //VecDestroy(petscTemp2);
 #endif
     }
 #ifdef HAVE_PETSC
@@ -2332,6 +2400,10 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
     cout_doing <<"Doing removeFixedDOFPetsc on patch " << patch->getID()
 	       <<"\t\t\t\t IMPM"<< "\n" << "\n";
 
+    IntVector lowIndex = patch->getNodeLowIndex();
+    IntVector highIndex = patch->getNodeHighIndex();
+    Array3<int> l2g(lowIndex,highIndex);
+    l2g.copy(d_petscLocalToGlobal[patch]);
     // Just look on the grid to see if the gmass is 0 and then remove that
 
     IntVector nodes = patch->getNNodes();
@@ -2350,11 +2422,19 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
       IntVector n = *iter;
       
       int dof[3];
+#if 0
       int node_num = n.x() + (nodes.x())*(n.y()) + (nodes.y())*
 	(nodes.x())*(n.z());
       dof[0] = 3*node_num;
       dof[1] = 3*node_num+1;
       dof[2] = 3*node_num+2;
+#endif
+
+      int l2g_node_num = l2g[n];
+      dof[0] = l2g_node_num;
+      dof[1] = l2g_node_num+1;
+      dof[2] = l2g_node_num+2;
+      
       
       if (compare(mass[n],0.)) {
 	fixedDOF.insert(dof[0]);
@@ -2371,12 +2451,21 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
       for(NodeIterator it(l,h); !it.done(); it++) {
 	IntVector n = *it;
 	int dof[3];
+#if 0
 	int node_num = n.x() + (nodes.x())*(n.y()) + (nodes.y())*
 	  (nodes.x())*(n.z());
 
 	dof[0] = 3*node_num;
 	dof[1] = 3*node_num+1;
 	dof[2] = 3*node_num+2;
+
+#endif
+	
+	int l2g_node_num = l2g[n];
+	dof[0] = l2g_node_num;
+	dof[1] = l2g_node_num+1;
+	dof[2] = l2g_node_num+2;
+
 
 	fixedDOF.insert(dof[0]);
 	fixedDOF.insert(dof[1]);

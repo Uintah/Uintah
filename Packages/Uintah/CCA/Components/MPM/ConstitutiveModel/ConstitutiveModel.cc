@@ -29,6 +29,7 @@ void ConstitutiveModel::computeStressTensorImplicit(const PatchSubset*,
 						    SparseMatrix<double,int>&,
 #ifdef HAVE_PETSC
 						    Mat&,
+						    map<const Patch*, Array3<int> >& d_petscLocalToGlobal,
 #endif
 						    const bool)
 {

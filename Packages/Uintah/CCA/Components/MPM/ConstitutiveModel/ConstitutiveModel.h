@@ -5,6 +5,7 @@
 #include <vector>
 #include <Packages/Uintah/Core/Math/Sparse.h>
 #include <Core/Containers/StaticArray.h>
+#include <Packages/Uintah/Core/Grid/Array3.h>
 
 #ifdef HAVE_PETSC
 extern "C" {
@@ -75,6 +76,8 @@ WARNING
 						  SparseMatrix<double,int>& K,
 #ifdef HAVE_PETSC
 						  Mat &A,
+						  map<const Patch*, Array3<int> >& d_petscLocalToGlobal,
+
 #endif
 						  const bool recursion);
 	 

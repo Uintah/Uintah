@@ -166,7 +166,12 @@ private:
 		    const MaterialSubset* matls,
 		    DataWarehouse* old_dw,
 		    DataWarehouse* new_dw);
-  
+
+  void destroyMatrix(const ProcessorGroup*,
+		    const PatchSubset* patches,
+		    const MaterialSubset* matls,
+		    DataWarehouse* old_dw,
+		    DataWarehouse* new_dw);
   //////////
   // Insert Documentation Here:
 
@@ -301,6 +306,8 @@ private:
 				       const MaterialSet*);
 
   void scheduleCreateMatrix(SchedulerP&, const PatchSet*,const MaterialSet*);
+
+  void scheduleDestroyMatrix(SchedulerP&, const PatchSet*,const MaterialSet*);
 
   void scheduleComputeStressTensorI(SchedulerP&, const PatchSet*,
 				    const MaterialSet*,
