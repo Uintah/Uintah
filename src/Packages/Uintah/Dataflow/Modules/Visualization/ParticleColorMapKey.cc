@@ -74,8 +74,8 @@ void ParticleColorMapKey::execute() {
       }
       map->Scale(min,max);
     } else {
-      max = map->max;
-      min = map->min;
+      max = map->getMax();
+      min = map->getMin();
     }
   
     // some bases for positioning text
