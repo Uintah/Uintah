@@ -301,6 +301,8 @@ private:
       const PatchSet* d_perproc_patches;
       bool d_3d_periodic;
       double d_u_norm,d_v_norm,d_w_norm, d_rho_norm;
+      bool d_calScalar;
+      bool d_dynScalarModel;
 
 }; // End class PicardNonlinearSolver
 } // End namespace Uintah

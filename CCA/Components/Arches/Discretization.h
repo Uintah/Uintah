@@ -125,7 +125,7 @@ public:
 				CellInformation* cellinfo,
 				ArchesVariables* vars,
 				ArchesConstVariables* constvars,
-				int conv_scheme);
+				int conv_scheme, double prandtlno);
 
       ////////////////////////////////////////////////////////////////////////
       // Documentation here

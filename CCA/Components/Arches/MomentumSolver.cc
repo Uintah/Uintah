@@ -601,11 +601,11 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       tsk->requires(Task::OldDW, d_lab->d_stressTensorCompLabel,
-		    d_lab->d_stressTensorMatl,Task::OutOfDomain,
+		    d_lab->d_tensorMatl,Task::OutOfDomain,
 		    Ghost::AroundCells, Arches::ONEGHOSTCELL);
     else
       tsk->requires(Task::NewDW, d_lab->d_stressTensorCompLabel,
-		    d_lab->d_stressTensorMatl,Task::OutOfDomain,
+		    d_lab->d_tensorMatl,Task::OutOfDomain,
 		    Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 
@@ -1056,13 +1056,13 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 	StencilMatrix<constCCVariable<double> > stressTensor; //9 point tensor
         if (timelabels->integrator_step_number == 
 			TimeIntegratorStepNumber::First)
-	  for (int ii = 0; ii < d_lab->d_stressTensorMatl->size(); ii++) {
+	  for (int ii = 0; ii < d_lab->d_tensorMatl->size(); ii++) {
 	    old_dw->get(stressTensor[ii], 
 			d_lab->d_stressTensorCompLabel, ii, patch,
 			Ghost::AroundCells, Arches::ONEGHOSTCELL);
 	  }
 	else
-	  for (int ii = 0; ii < d_lab->d_stressTensorMatl->size(); ii++) {
+	  for (int ii = 0; ii < d_lab->d_tensorMatl->size(); ii++) {
 	    new_dw->get(stressTensor[ii], 
 			d_lab->d_stressTensorCompLabel, ii, patch,
 			Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1313,7 +1313,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     if (d_boundaryCondition->getOutletBC())
     d_boundaryCondition->velRhoHatOutletBC(pc, patch, cellinfo, delta_t,
 					   &velocityVars, &constVelocityVars,
-					   maxUxplus, maxAbsV, maxAbsW);
+					   avUxplus, maxAbsV, maxAbsW);
     /*
   if (d_pressure_correction) {
   int outlet_celltypeval = d_boundaryCondition->outletCellType();
@@ -1952,19 +1952,19 @@ MomentumSolver::sched_computeNonlinearTerms(SchedulerP& sched,
 
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->computes(d_lab->d_filteredRhoUjULabel, d_lab->d_scalarFluxMatl,
+    tsk->computes(d_lab->d_filteredRhoUjULabel, d_lab->d_vectorMatl,
 		  Task::OutOfDomain);
-    tsk->computes(d_lab->d_filteredRhoUjVLabel, d_lab->d_scalarFluxMatl,
+    tsk->computes(d_lab->d_filteredRhoUjVLabel, d_lab->d_vectorMatl,
 		  Task::OutOfDomain);
-    tsk->computes(d_lab->d_filteredRhoUjWLabel, d_lab->d_scalarFluxMatl,
+    tsk->computes(d_lab->d_filteredRhoUjWLabel, d_lab->d_vectorMatl,
 		  Task::OutOfDomain);
   }
   else {
-    tsk->modifies(d_lab->d_filteredRhoUjULabel, d_lab->d_scalarFluxMatl,
+    tsk->modifies(d_lab->d_filteredRhoUjULabel, d_lab->d_vectorMatl,
 		  Task::OutOfDomain);
-    tsk->modifies(d_lab->d_filteredRhoUjVLabel, d_lab->d_scalarFluxMatl,
+    tsk->modifies(d_lab->d_filteredRhoUjVLabel, d_lab->d_vectorMatl,
 		  Task::OutOfDomain);
-    tsk->modifies(d_lab->d_filteredRhoUjWLabel, d_lab->d_scalarFluxMatl,
+    tsk->modifies(d_lab->d_filteredRhoUjWLabel, d_lab->d_vectorMatl,
 		  Task::OutOfDomain);
   }
 
@@ -2018,7 +2018,7 @@ MomentumSolver::computeNonlinearTerms(const ProcessorGroup* pc,
 		matlIndex, patch,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
-    for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
+    for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
       if (timelabels->integrator_step_number ==
 			TimeIntegratorStepNumber::First) {
         new_dw->allocateAndPut(velocityVars.filteredRhoUjU[ii], 
