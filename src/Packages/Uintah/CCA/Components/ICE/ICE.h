@@ -39,8 +39,11 @@ using namespace SCIRun;
       void scheduleComputeEquilibrationPressure(SchedulerP&, const PatchSet*,
 						const MaterialSet*);
       
-      void scheduleComputeFaceCenteredVelocities(SchedulerP&, const PatchSet*,
-						 const MaterialSet*);
+      void scheduleComputeFaceCenteredVelocities(SchedulerP&, 
+                                                const PatchSet*,
+                                                const MaterialSubset*,
+                                                const MaterialSubset*,
+                                                const MaterialSet*);
       
       void scheduleAddExchangeContributionToFCVel(SchedulerP&, const PatchSet*,
 						  const MaterialSet*);
@@ -57,10 +60,12 @@ using namespace SCIRun;
       void scheduleAccumulateEnergySourceSinks(SchedulerP&, const PatchSet*,
 					       const MaterialSet*);
       
-      void  scheduleComputeLagrangianValues(SchedulerP&, const PatchSet*,
-					    const MaterialSet*);
+      void scheduleComputeLagrangianValues(SchedulerP&, 
+                                          const PatchSet*,
+                                          const MaterialSubset*,
+					       const MaterialSet*);
                  
-      void  scheduleAddExchangeToMomentumAndEnergy(SchedulerP&, const PatchSet*,
+      void scheduleAddExchangeToMomentumAndEnergy(SchedulerP&, const PatchSet*,
 						   const MaterialSet*);
       
       void scheduleAdvectAndAdvanceInTime(SchedulerP&, const PatchSet*,
