@@ -42,11 +42,11 @@
 
 	<p>In this first chapter, we will construct a SCIRun network
         [link to 4.0 UG working with networks] to perform a visualization task: rendering of a
-        tetrahedral mesh.  Our &quot;net&quot;, will consist of three
+        tetrahedral mesh.  Our &quot;net,&quot will consist of three
         modules: data reader, geometry converter, and renderer.<br> 
 
  
-	<p>We will read [in the datafile from disk|<dfn>Field</dfn> data from a file], set some rendering
+	<p>We will read the <dfn>Field</dfn> data from a file, set some rendering
         properties for the nodes, edges, and faces (the
         nodes will be rendered as blue spheres), and render the
         geometry to the screen in an interactive viewing window.<br>  
@@ -66,8 +66,8 @@
 
         <p><b><H4><A name="#section 1">FieldReader User Interface</A></b></H4><br>
 
-        <p>You should set [the|2] environment variables in your shell
-        before [we run|starting] SCIRun[link to 3.0 UG Starting SCIRun].  
+        <p>You should set two environment variables in your shell
+        before starting SCIRun[link to 3.0 UG Starting SCIRun].  
 	<ol>
 	<li value="1.">The SCIRUN_DATA variable points to the location 
 	of the SCIRunData directory on your system.  
@@ -77,8 +77,7 @@
 
         <p>For example, we will construct a network that loads a geometric mesh from disk 
 	and renders it to the screen. Such a network will work on a wide variety of inputs. 
-	The SCIRUN_DATASET variable [indicates what the user selects to
-	view|selects the data set of interest.<br>
+	The SCIRUN_DATASET variable selects the data set of interest.<br>
 
 	<p>To begin, in your Unix shell window:
 	<ol>
@@ -118,8 +117,8 @@
 	<div align="left">
 	<p><br>
 
-        <p>We will first create a FieldReader module. [Go to the pulldown|From] the
-        SCIRun menu [and|] select DataIO/FieldReader, as shown in
+        <p>We will first create a FieldReader module,from the
+        SCIRun menu, select DataIO/FieldReader, as shown in
         <b>Figure 1.3.1.</b><p>
 
 	</div>
@@ -164,7 +163,7 @@
 	<div align="left">
 	<p><br>
 
-	<p> We have just [finished reading-in|loaded] the SCIRun
+	<p> We have just loaded the SCIRun
         Field dataset.  A Field contains a geometric mesh and
         a collection of data values mapped onto that mesh.  In this case,
         we use a tetrahedral mesh with voltages defined at the nodes of the
@@ -216,14 +215,12 @@
         <p>We will now add a second module to our network.  
 	<ol>
 	<li value="1.">Select ShowField from the SCIRun/Visualization menu. 
-	(Use this module to visualize various field types).</ol><br>  
-	<p>ShowField has a User Interface (UI) option for rendering [geometry
-        from the field|a field's geometery], and special options for rendering vector data.  
+	(Use this module to visualize various field types).</ol> 
+	<p>ShowField has a User Interface (UI) option for rendering a field's geometery, and special options for rendering vector data.  
 	ShowField can use color to represent data within
         the geometry, if desired.  For now, we will 
-        render blue spheres as the nodes of the geometry.<br>
-	<ol>
-	<li value="2.">Select the UI button on the ShowField module(<b>Figure 1.6</b>).</ol>
+        render blue spheres as the nodes of the geometry.
+	<ol><li value="2.">Select the UI button on the ShowField module(<b>Figure 1.6</b>).</ol>
 	</div>
 	<center>
 	<p><img height="512" width="500" src="images/figures/1_6.gif"><br>
@@ -231,10 +228,8 @@
 	</center>
 	<div align="left">
 
-        <p>[The Nodes tab selects by default in addition to
-        the Sphere Display Type.|We will display the Field's nodes as
-	spheres and set their color to blue:]  [However,
-	the default color is grey.|]<br>
+        <p>We will display the Field's nodes as
+	spheres and set their color to blue:<br>
 
 	<ol>
         <li value= "3.">Select the Default Color button
@@ -261,16 +256,16 @@
                   
 	<p>To hook the modules together:
 	<ol>       
-	<li value="1.">[With your middle mouse button select|Position the
-	  mouse's pointer over] the yellow output port on
-        the FieldReader (<b>Figure 1.7.1</b>). [|Now press and hold down
-	the mouse's middle button]. You will see the name of
+	<li value="1.">Position the
+	  mouse's pointer over the yellow output port on
+        the FieldReader (<b>Figure 1.7.1</b>). Now press and hold down
+	the mouse's middle button. You will see the name of
 	the port and lines that indicate possible connections.
-	<li value="2."> Drag [your middle] the mouse toward the ShowField input
+	<li value="2."> Drag your middle mouse toward the ShowField input
         Field port (yellow). 
 	<li>When the line turns red (<b>Figure 1.7.2</b>), release the mouse
         button. 
-	<li>You should see a yellow [|line showing] a [datapipe|data flow] connection
+	<li>You should see a yellow line showing a data flow connection
         between FieldReader and ShowField (<b>Figure 1.7.3</b>).</ol>
 
 	</div>
@@ -298,22 +293,15 @@
 	<li value="5.">Next, press the "Execute" button on the ShowField UI that forces the
         module to execute its algorithm. </ol><br>
 
-	<p>[ShowField should work on any of our numerous Field types, each of which may contain 
-	any data type. For example, ShowField should
-        visualize TetVol with double data, or TetVol with Vector
-        or Tensor data. This is also true for TriSurf and all of our Fields, 
-	creating a combined explosion of accepted types. We have
-        used the C++ template mechanism to achieve such versatility, which also requires 
-	compiling all of the types we might ever use into our code
-	base.|ShowField will work with any of the SCIRun Field data types.
+	<p>ShowField works with any of the SCIRun Field data types.
 	However, you will notice a delay when ShowField is asked to
-	visualize a Field data type for the first time - this is because
+	visualize a Field data type for the first time--this is because
 	the data type must be first compiled into a shared library (which
 	is saved for future runs of SCIRun).  See <a
         href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
-        Compilation</a> for more information.]<br>
+        Compilation</a> for more information.<br>
 
-        [<p>Since we have compiled only algorithms with an
+        <p>Since we have compiled only algorithms with an
         exact field type, this information becomes known only after a module
         recieves its input data. We accomplish this by using <a
         href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
@@ -323,10 +311,10 @@
 	This happens when the module compiles the algorithm specific to the field type, and loads it
         into SCIRun.  We cache away this compiled algorithm in a
         shared library, loading it without delay the next time you run
-        SCIRun.|]
+        SCIRun.
 
         <p>ShowField will then execute the newly loaded algorithm
-        passing its results [along downstream|to downstream modules].
+        passing its results to downstream modules.
 
         <p><b><A name="#section 5">Viewer module</b><br></A>
 
@@ -339,12 +327,9 @@
 	</ol> 
 
 	<p>As a result, the Viewer module has generated a new input port. The Viewer provides an example 
-	of SCIRun modules that have dynamic input ports. [These d|D]ynamic ports always allow 
-	the Viewer to accept additional data to render.<br>
+	of SCIRun modules that have dynamic input ports.
 
-	<p>[To see the graphical rendering of the data (<b>Figure 1.10</b>)
-	that passes into the Viewer module, press the Viewer UI button.|To
-	render the data press the Viewer's UI button.  See <b>Figure 1.10</b>]<br>
+	<p>To render the data press the Viewer's UI button. See <b>Figure 1.10</b><br>
 
 		
 	</div>
@@ -359,33 +344,32 @@
 
 	<p><b><A name="#section 6">Navigating the Viewer Window</b><br></A>
 
-	<p>Since the viewer is one of the most important [elements|modules] of SCIRun,
+	<p>Since the viewer is one of the most important modules of SCIRun,
 	you may want to know more about its functionality.  The User's Guide 
 	[link to UG 5.0 Viewer] provides a full description of the Viewer.  
  
 	<p> <b>Figure 1.10</b> shows the Viewer window with the
-	network you have built earlier in this chapter.  [In the lower window panel,
-	locate|In the lower right corner of the Viewer's window you will
-	find buttons] for [setting|controlling] the display.  However, the controls you will 
+	network you have built earlier in this chapter. In the lower right corner of the Viewer's window you will
+	find buttons for controlling the display.  However, the controls you will 
 	use most frequently are not visible.
  
 	<p><b><A name="section 7">Mouse controls</b><br></A>
  
-	<p>[The mouse has great functionality that works with the Viewer.|<Awkward>]
+	<p>The mouse has functionality that works well with the Viewer:
 	<ol>
 	<li value="1.">Move the mouse to the center of the Viewer window.
 	<li value="2."> Click and hold the left mouse button. 
 	<li>Slide the mouse and objects in the View window shift to follow the mouse movement.  
 	<li>Slide the mouse with the middle mouse button and objects stop
-	shifting and [|rotate] instead[, begin to rotate|].
- 	<li>[Let|Release] the buttons [go|] and move the mouse to the edge of
+	shifting and rotate instead.
+ 	<li>Release the buttons and move the mouse to the edge of
 	the object in the viewer window.  
 	<li>Click, hold, and drag the middle mouse button. The object rotates in a
 	different direction.</ol><br>
   
-	<p>[Up and down motions cause the objects to rotate counterclockwise and clockwise, 
+	<p>Up and down motions cause the objects to rotate counterclockwise and clockwise, 
 	rather than around a horizontal axis by clicking on the middle of the
-	objects|<Awkward>].<br>
+	objects.<br>
  
 	<p>To picture the rotation action of the mouse, imagine the objects sitting 
 	within a sphere. To grab a point on the sphere, click the middle mouse button,
@@ -398,8 +382,8 @@
 	<p>Using this type of mouse control, objects can rotate in three dimensions 
 	while the mouse moves only in two.  With experimentation, you will
 	be able to orient objects in whatever direction you
-	wish through simple mouse manipulations.<br> For more information, 
-	you may consult the User's Guide [link to UG 5.3] 
+	wish through simple mouse manipulations.<br>
+	<p>For more information, you may consult the User's Guide [link to UG 5.3]. 
  
 	<p>Pressing the right mouse button and moving the mouse
 	cause the contents of the View window to get larger and
@@ -475,7 +459,7 @@
 	<p>Widgets are graphical elements, objects in the Viewer that allow the interactive user
 	to control the display.  SCIRun supports a family of widgets
 	that have a similar look and feel, but manipulate different
-	aspects of the display.<br>[link to UG 5.5 Control Widgets]
+	aspects of the display [link to UG 5.5 Control Widgets].
  
 	<p>In order to include a widget in the display, its associated 
 	widget module must be present in the network.<br> 
@@ -495,8 +479,7 @@
 	<li>Shift-click the widget's spheres (control points), and the widget 
 	rotates around its center. </ol>
  
-	<p> [In order to greatly enhance your capabilities with SCIRun, l|L]earn more 
-	about the Viewer's components in the User's Guide.[link to UG 5.0 Visualization with the Viewer]<br>
+	<p>Learn more about the Viewer's components in the User's Guide.[link to UG 5.0 Visualization with the Viewer]<br>
  
         <p><b><A name="section 10">Saving and reloading networks[link to Ug 4.13]</b><br></A>
 
@@ -543,17 +526,23 @@
         two options if we want to re-save our net:
 	<ul>
 	<li>Overwrite the existing show-torso-mesh.net file by simply
-        pulling down File -&gt; Save.  
-	<li>Alternatively, save it to a new file using File -&gt; Save As...  
-	</ul><br>
+        pulling down File > Save.  
+	<li>Alternatively, save it to a new file using File > Save As...  
+	</ul>
 
 	<p>For more information on the File menu options (such as Insert and
         Clear), please refer to the User's Guide.
 
 	<p><b><H4>Summary</b></H4>
-	<p> needs content
+	<p>In this chapter, we created a three module network to visualize the goemetry 
+	of a mesh.  We rendered that mesh to the viewing window, and practiced saving 
+	and reloading networks.
 
-
+	<p>The next chapter features additional tools to examine data values, 
+	and instructions for varying colors over the geometry. 
+	<br>
+	<br>
+	<br>
 	</td>
 	</tr>
 </table>
