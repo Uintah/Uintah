@@ -295,6 +295,32 @@ GenStandardColorMaps::BlackBodyColorMap::BlackBodyColorMap()
 }
 
 // ---------------------------------------------------------------------- // 
+
+GenStandardColorMaps::DonColorMap::DonColorMap()
+{
+  int  cols[][3] = { {   0,  90, 255 },
+		     {  51, 104, 255 },
+		     { 103, 117, 255 },
+		     { 166, 131, 245 },
+		     { 181, 130, 216 },
+		     { 192, 129, 186 },
+		     { 197, 128, 172 },
+		     { 230, 126,  98 },
+		     { 240, 126,  49 },
+		     { 255, 133,   0 }
+  };
+
+  int ncolors = 10;
+  colors.setsize(ncolors);
+  for(int i = 0; i < ncolors; i++){
+    colors[i].r(cols[i][0]/255.0);
+    colors[i].g(cols[i][1]/255.0);
+    colors[i].b(cols[i][2]/255.0);
+  }
+
+}
+
+// ---------------------------------------------------------------------- // 
   
 
 Module* make_GenStandardColorMaps(const clString& id) { 
@@ -318,7 +344,7 @@ GenStandardColorMaps::GenStandardColorMaps(const clString& id)
   resolution.set(2);
   minRes.set(2);
   mapType.set(0);
-  mapTypes.setsize(8);
+  mapTypes.setsize(9);
   mapTypes[0] = (StandardColorMap *)(scinew GrayColorMap());
   mapTypes[1] = (StandardColorMap *)(scinew InverseGrayColorMap());
   mapTypes[2] = (StandardColorMap *)(scinew RainbowColorMap());
@@ -327,6 +353,7 @@ GenStandardColorMaps::GenStandardColorMaps(const clString& id)
   mapTypes[5] = (StandardColorMap *)(scinew InverseDarkHue());
   mapTypes[6] = (StandardColorMap *)(scinew BlackBodyColorMap());
   mapTypes[7] = (StandardColorMap *)(scinew LightHueColorMap());    
+  mapTypes[8] = (StandardColorMap *)(scinew DonColorMap());    
 } 
 
 //---------------------------------------------------------- 
