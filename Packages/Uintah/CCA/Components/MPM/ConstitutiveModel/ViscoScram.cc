@@ -514,7 +514,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       Matrix3 pVelGrad(0.0);
       for(int k = 0; k < flag->d_8or27; k++) {
-	Vector gvel;
+        Vector gvel;
         if (flag->d_fracture) {
           if(pgCode[idx][k]==1) gvel = gVelocity[ni[k]];
           if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
@@ -604,6 +604,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       // Stress intensity factor
       double crad   = pCrackRadius[idx];
+      ASSERT(crad != 0.0);
       double sqrtc  = sqrt(crad);
       double sif    = sqrtopf*sqrtPI*sqrtc*sigmae;
 
@@ -621,10 +622,10 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       }
 
       dbg  << "vres = " << vres << " sif = " << sif 
-	   << " sigmae = " << sigmae << endl;
+           << " sigmae = " << sigmae << endl;
       dbg  << "crad = " << crad << " xmup = " << xmup << " a = " << a
-	   << " b = " << b << " termm = " << termm << " rko = " << rko
-	   << " skp = " << skp << " sk1 = " << sk1 << endl;
+           << " b = " << b << " termm = " << termm << " rko = " << rko
+           << " skp = " << skp << " sk1 = " << sk1 << endl;
 
       double cdot,cc,rk1c,rk2c,rk3c,rk4c;
 
@@ -650,8 +651,8 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       }
 
       dbg << "c = " << crad << " cdot = " << cdot << " cc = " << cc
-	   << " rk1c = " << rk1c << " rk2c = " << rk2c
-	   << " rk3c = " << rk3c << " rk3c = " << rk3c << endl;
+           << " rk1c = " << rk1c << " rk2c = " << rk2c
+           << " rk3c = " << rk3c << " rk3c = " << rk3c << endl;
 
       // Deviatoric stress integration
       for(int imw=0;imw<5;imw++){
@@ -730,15 +731,15 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
                         (DPrime*2.*G - DevStressT - DevStressS*con1)*con3/con2)
                        *(Gmw[imw]/G))*delT;
 
-	dbg << "imw = " << imw << endl;
-	dbg << "   rk1 = [" << rk1(0,0) << " " << rk1(1,1) << " " << rk1(2,2)
-	     << rk1(1,2) << " " << rk1(2,0) << " " << rk1(0,1) << endl;
-	dbg << "   rk2 = [" << rk2(0,0) << " " << rk2(1,1) << " " << rk2(2,2)
-	     << rk2(1,2) << " " << rk2(2,0) << " " << rk2(0,1) << endl;
-	dbg << "   rk3 = [" << rk3(0,0) << " " << rk3(1,1) << " " << rk3(2,2)
-	     << rk3(1,2) << " " << rk3(2,0) << " " << rk3(0,1) << endl;
-	dbg << "   rk4 = [" << rk4(0,0) << " " << rk4(1,1) << " " << rk4(2,2)
-	     << rk4(1,2) << " " << rk4(2,0) << " " << rk4(0,1) << endl;
+        dbg << "imw = " << imw << endl;
+        dbg << "   rk1 = [" << rk1(0,0) << " " << rk1(1,1) << " " << rk1(2,2)
+             << rk1(1,2) << " " << rk1(2,0) << " " << rk1(0,1) << endl;
+        dbg << "   rk2 = [" << rk2(0,0) << " " << rk2(1,1) << " " << rk2(2,2)
+             << rk2(1,2) << " " << rk2(2,0) << " " << rk2(0,1) << endl;
+        dbg << "   rk3 = [" << rk3(0,0) << " " << rk3(1,1) << " " << rk3(2,2)
+             << rk3(1,2) << " " << rk3(2,0) << " " << rk3(0,1) << endl;
+        dbg << "   rk4 = [" << rk4(0,0) << " " << rk4(1,1) << " " << rk4(2,2)
+             << rk4(1,2) << " " << rk4(2,0) << " " << rk4(0,1) << endl;
 
         // Update Maxwell element Deviatoric Stresses
         pStatedata[idx].DevStress[imw] +=
