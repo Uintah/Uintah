@@ -165,6 +165,9 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
   failcode = 0
 
+  # this is to see if any tests actually ran (so we can say tests skipped)
+  ran_any_tests = 0
+
   solotest_found = 0
   for test in TESTS:
     if solotest != "" and nameoftest(test) != solotest:
@@ -175,6 +178,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       continue
     solotest_found = 1 # if there is a solotest, that is
     testname = nameoftest(test)
+    ran_any_tests = 1
 
     # make sure that this test exists in the gold standard
     try:
@@ -270,11 +274,16 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     system("cp -r %s %s/" % (resultsdir, outputpath))
     # remove uda dirs from web server
     system("find %s -name '*.uda*' | xargs rm -rf " % outputpath)
+
   if solotest != "" and solotest_found == 0:
     print "unknown test: %s" % solotest
     system("rm -rf %s" % (resultsdir))
     exit(1)
 
+  # no tests ran
+  if ran_any_tests == 0:
+    exit(3)
+    
   if failcode == 0:
     if solotest != "":
       print ""
