@@ -200,19 +200,18 @@ MatlabCall::MatlabCall() :
 {
 	handler_ = scinew MatlabCallHandler(this);
 	error_handler_ = scinew  MatlabCallErrorHandler(this);
-	SystemCallHandlerHandle handle = dynamic_cast<SystemCallHandler*>(handler_.get_rep());
-	add_stdout_handler(handle);
-	handle = dynamic_cast<SystemCallHandler*>(error_handler_.get_rep());
-	add_stderr_handler(handle);
+	add_stdout_handler(dynamic_cast<SystemCallHandler*>(handler_.get_rep()));
+	add_stderr_handler(dynamic_cast<SystemCallHandler*>(error_handler_.get_rep()));
 }
 
 MatlabCall::~MatlabCall()
 {
-	close_engine();
-	SystemCallHandlerHandle handle = dynamic_cast<SystemCallHandler*>(handler_.get_rep());
-	rem_stdout_handler(handle);
-	handle = dynamic_cast<SystemCallHandler*>(error_handler_.get_rep());
-	rem_stderr_handler(handle);
+    close_engine();
+    SystemCallHandler *handle;
+    handle = dynamic_cast<SystemCallHandler*>(handler_.get_rep());
+    if (handle) rem_stdout_handler(handle);
+    handle = dynamic_cast<SystemCallHandler*>(error_handler_.get_rep());
+    if (handle) rem_stderr_handler(handle);
 }
 
 void	MatlabCall::obtain()
@@ -273,10 +272,13 @@ inline void MatlabCall::start_engine(std::string command)
 
 inline void MatlabCall::close_engine()
 {
-	std::string exitcmd = "exit\n";
-	put_stdin_int(exitcmd);
-	// Give the engine 20 seconds before we pull the plug
-	kill(20);
+    if (isrunning())
+    {
+        std::string exitcmd = "exit\n";
+        put_stdin_int(exitcmd);
+        // Give the engine 20 seconds before we pull the plug
+        kill(20);
+    }
 }
 
 
@@ -322,6 +324,7 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
 			putmsg("MatlabEngine: Could not read startmatlab from matlabengine.rc file");
 			packet->settag(TAG_MERROR);
 			packet->setstring("The matlabengine.rc file does not specify how to start matlab");
+            matlab_processes_lock_.unlock();
 			return(false);
 		}  
 		try
@@ -355,6 +358,10 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
 		{
 			putmsg("MatlabEngine: Could not launch matlab process");
 			putmsg("MatlabEngine: std-lib-exception: " + std::string(exp.what()));
+   			matlab_processes_lock_.unlock();
+			packet->settag(TAG_MERROR);
+			packet->setstring("Could not launch matlab");
+			return(false);	
 		}
 		catch(...)
 		{
@@ -433,21 +440,47 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
 
 void MatlabEngine::close_service()
 {
-	int session = getsession();
+    try
+    {
+        int session = getsession();
 
-	if (matlab_handle_.get_rep() == 0)
-	{   	
-		stop_forward_stdout();
-		stop_forward_stderr();
-		stop_forward_exit();
-		matlab_processes_lock_.lock();
-		if (matlab_handle_->release())
-		{
-			matlab_processes_[session] = 0;
-		}
-		matlab_processes_lock_.unlock();
-		matlab_handle_ = 0;
-	}
+        if (matlab_handle_.get_rep() != 0)
+        {   	 
+            try
+            {
+                stop_forward_stdout();
+                stop_forward_stderr();
+                stop_forward_exit();
+            }
+            catch(SystemCallError& error)
+            {
+                std::cerr << "MatlabEngine Caught an exception:" << std::endl;
+                std::cerr << "Error: " << error.geterror() << std::endl;
+            }
+            matlab_processes_lock_.lock();
+            try
+            {
+                if (matlab_handle_->release())
+                {
+                    matlab_processes_[session] = 0;
+                }
+            }
+            catch(SystemCallError& error)
+            {
+                std::cerr << "MatlabEngine Caught an exception:" << std::endl;
+                std::cerr << "Error: " << error.geterror() << std::endl;
+            }        
+            matlab_processes_lock_.unlock();
+            matlab_handle_ = MatlabCallHandle(0);
+        }
+    }
+    catch (...)
+    {
+        // This process may have crashed but we want others to continue
+        // Hence unlocking this lock is important
+       matlab_processes_lock_.unlock(); 
+       throw;
+    } 
 }
 
 
