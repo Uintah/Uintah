@@ -126,12 +126,16 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
   d_SMALL_NUM   = 1.e-100;
   cerr << "In the preprocessor . . ." << endl;
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
+  if(dataArchiver == 0){
+    cout<<"dataArhiver in ICE is null now exiting; "<<endl;
+    exit(1);
+  }
   // Find the switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
   if (debug_ps) {
     d_dbgStartTime = 0.;
-    d_dbgStartTime = 1.;
-    d_dbgStartTime = 1.;
+    d_dbgStopTime = 1.;
+    d_dbgOutputInterval = 0.0;
     debug_ps->get("dbg_timeStart",     d_dbgStartTime);
     debug_ps->get("dbg_timeStop",      d_dbgStopTime);
     debug_ps->get("dbg_outputInterval",d_dbgOutputInterval);
@@ -2953,7 +2957,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     }
   }  // patch loop
    // This belongs at the bottom of the timestep
-  d_dbgNextDumpTime = d_dbgOldTime + d_dbgOutputInterval; 
+   d_dbgNextDumpTime = d_dbgOldTime + d_dbgOutputInterval; 
 }
 
 
