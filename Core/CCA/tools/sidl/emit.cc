@@ -355,7 +355,7 @@ void CI::emit(EmitState& e)
       iter != parent_ifaces.end(); iter++){
     (*iter)->emit(e);
   }
-  
+
   emitted_declaration=true;
   emit_proxyclass(e);
   if(!do_emit)
@@ -488,9 +488,9 @@ void CI::emit_handlers(EmitState& e)
   e.out << "  message->destroyMessage();\n";
   e.out << "}\n\n";
 
-  // Emit method handlers...
+  // Get method handler numbers...
   std::vector<Method*> vtab;
-  gatherVtable(vtab, false);
+  gatherVtable(vtab, false); 
   int handlerOff=0;
   for(vector<Method*>::const_iterator iter=vtab.begin();
       iter != vtab.end();iter++){
@@ -498,10 +498,20 @@ void CI::emit_handlers(EmitState& e)
     e.handlerNum++;
     m->handlerNum=e.handlerNum;
     m->handlerOff=handlerOff++;
-    m->emit_handler(e, this);
   }
 
-
+  // Emit unique method handlers...
+  int savNum = e.handlerNum;
+  std::vector<Method*> vtabQ;
+  gatherVtable(vtabQ, true);
+  for(vector<Method*>::const_iterator iter=vtabQ.begin();
+      iter != vtabQ.end();iter++){
+    Method* m=*iter;
+    e.handlerNum=m->handlerNum;
+    m->emit_handler(e, this);
+  }
+  e.handlerNum = savNum;
+    
   // Emit setCallerDistribution Handler
   if(doRedistribution) {
     callerDistHandler=++e.handlerNum;
@@ -590,38 +600,33 @@ bool CI::singly_inherited() const
   return true;
 }
 
-void CI::emit_handler_table_body(EmitState& e, int& vtable_base, bool top)
+void CI::emit_handler_table_body(EmitState& k, EmitState& e, int& vtable_base, bool top)
 {
   bool single=singly_inherited();
-  if(single)
-    emit_recursive_vtable_comment(e, true);
-  else
-    e.out << "  // " << (iam_class()?"class ":"interface ") << name << "\n";
-  e.out << "  // vtable_base = " << vtable_base << '\n';
-  std::vector<Method*> vtab;
-  gatherVtable(vtab, false);
-  int i = vtable_base;
-  for(vector<Method*>::const_iterator iter=vtab.begin();
-      iter != vtab.end();iter++){
-    if(iter != vtab.begin())
+  SymbolTable* localScope=symbols->getParent();
+  std::vector<Method*> vtabQ;
+  gatherVtable(vtabQ, true);
+  for(vector<Method*>::const_iterator iter=vtabQ.begin();
+      iter != vtabQ.end();iter++){
+    if(iter != vtabQ.begin())
       e.out << "\n";
     Method* m=*iter;
     m->emit_comment(e, "  ", false);
-    i++;
-    e.out << "  epc->registerHandler(" << i <<",(void*)_handler" << m->handlerNum << ");";
+    e.out << "  epc->registerHandler((void*)_handler" << m->handlerNum << ");";
   } 
+
+  std::vector<Method*> vtab;
+  gatherVtable(vtab, false);
   if (doRedistribution) {
     e.out << "\n  //setCallerDistribution handler";
-    e.out << "\n  epc->registerHandler(" << (++i)
-          << ",(void*)_handler" << callerDistHandler << ");";
-    vtable_base+=vtab.size()+2;
-  }
-  else {
+    e.out << "\n  epc->registerHandler("
+          << "(void*)_handler" << callerDistHandler << ");";
     vtable_base+=vtab.size()+1;
   }
-  i++;
-  e.out << "\n    // Red zone\n";    
-  e.out << "  epc->registerHandler(" << i <<",NULL);";
+  else {
+    vtable_base+=vtab.size();
+  }
+
 
   if(single){
     if(top){
@@ -632,42 +637,122 @@ void CI::emit_handler_table_body(EmitState& e, int& vtable_base, bool top)
 	(*iter)->vtable_base=vtable_base;
       }
     }
-    return;
   }
-  // For each parent, emit the handler table...
-  if(parentclass){
-    if(top)
+  else {
+    // MULTIPLE INHERITANCE: for each parent, emit the handler table...
+    k.out << "  //MULTIPLE INHERITANCE: add superclasses' vtables\n";
+    if(parentclass){
       parentclass->vtable_base=vtable_base;
-    parentclass->emit_handler_table_body(e, vtable_base, false);
-  }
-  for(vector<Interface*>::iterator iter=parent_ifaces.begin();
-      iter != parent_ifaces.end(); iter++){
-    if(top)
+      std::vector<Method*> vtabP;
+      parentclass->gatherVtable(vtabP, false);      
+      vtable_base+=vtabP.size();
+      k.out << "  // " << (iam_class()?"class ":"interface ") << parentclass->name << "\n";
+      k.out << "  // vtable_base = " << parentclass->vtable_base << '\n';
+      if(parentclass->parent_ifaces.size() > 0){
+	vector<Interface*> grandparents;
+	parentclass->gatherParentInterfaces(grandparents);
+	for(vector<Interface*>::iterator iter=grandparents.begin();
+	    iter != grandparents.end(); iter++){
+	  if(*iter != this){
+	    k.out << "  " << (*iter)->cppfullname(localScope) << "::filltable(epc);\n";
+	  }
+	}
+      }
+      e.out << "  " << parentclass->cppfullname(localScope) << "::filltable(epc);\n";
+    }
+    for(vector<Interface*>::iterator iter=parent_ifaces.begin();
+	iter != parent_ifaces.end(); iter++){
       (*iter)->vtable_base=vtable_base;
-    (*iter)->emit_handler_table_body(e, vtable_base, false);
-  }
+      std::vector<Method*> vtabP;
+      (*iter)->gatherVtable(vtabP, false);      
+      vtable_base+=vtabP.size();
+      k.out << "  // " << (iam_class()?"class ":"interface ") << (*iter)->name << "\n";
+      k.out << "  // vtable_base = " << (*iter)->vtable_base << '\n';
+      if((*iter)->parent_ifaces.size() > 0){
+	vector<Interface*> grandparents;
+	(*iter)->gatherParentInterfaces(grandparents);
+	for(vector<Interface*>::iterator grand_iter=grandparents.begin();
+	    grand_iter != grandparents.end(); grand_iter++){
+	  if((*grand_iter) != this){
+	    k.out << "  " << (*grand_iter)->cppfullname(localScope) << "::filltable(epc);\n";
+	  }
+	}
+      }
+      k.out << "  " << (*iter)->cppfullname(localScope) << "::filltable(epc);\n";
+    }
+  }  //END OF MULTIPLE INHERITANCE
+
+
+  return;
 }
 
 void CI::emit_handler_table(EmitState& e)
 {
+  bool single=singly_inherited();
+
   e.out << "// handler table for " << (iam_class()?"class ":"interface ") << name << "\n";
   e.out << "//" << curfile << ":" << lineno << "\n\n";
   e.out << "void "<< cppfullname(0)
         << "::registerhandlers(SCIRun::EpChannel* epc)\n";
   e.out << "{\n";
 
+  int vtable_base=3;
+
+  /*
+  int size;
+  std::vector<Method*> vtab;
+  gatherVtable(vtab, false);
+  if (doRedistribution) {
+    size = vtable_base + vtab.size() + 2;
+  }
+  else {
+    size = vtable_base + vtab.size() + 1;
+  }
+  */
+
   EmitState* tempe = new EmitState();
-  int vtable_base=3;  
-  emit_handler_table_body(*tempe, vtable_base, true);
+  EmitState* phoenix = new EmitState();
+  emit_handler_table_body(*phoenix, *tempe, vtable_base, true);
   
-  e.out << "  epc->allocateHandlerTable(" << (vtable_base) << ");\n";
-  e.out << "  epc->registerHandler(1,(void*)_handler" << isaHandler << ");\n";
-  e.out << "  epc->registerHandler(2,(void*)_handler" << deleteReferenceHandler << ");\n";
-  e.out << "  epc->registerHandler(3,NULL);\n";
+  e.out << "  epc->allocateHandlerTable(" << (vtable_base+1) << ");\n";
+  e.out << "  epc->registerHandler((void*)_handler" << isaHandler << ");\n";
+  e.out << "  epc->registerHandler((void*)_handler" << deleteReferenceHandler << ");\n";
+  e.out << "  epc->registerHandler(NULL);\n";
+
+
+  if(single)
+   emit_recursive_vtable_comment(e, true);
+  else
+    e.out << "  // " << (iam_class()?"class ":"interface ") << name << "\n";
+  e.out << "  // vtable_base = 3\n";
+  //Emitting code to fill handler table with all parent class handlers
+  SymbolTable* localScope=symbols->getParent();
+  if(parent_ifaces.size() > 0){
+    e.out << "  //Fill table with parent classes' handlers\n";
+    vector<Interface*> parents;
+    gatherParentInterfaces(parents);
+    for(vector<Interface*>::iterator iter=parents.begin();
+              iter != parents.end(); iter++){
+      if(*iter != this){
+	e.out << "  " << (*iter)->cppfullname(localScope) << "::filltable(epc);\n";
+      }
+    }
+  }
+  e.out << "  //Finally fill table with current class\n"; 
+  e.out << "  filltable(epc);\n";
+  e.out << phoenix->out.str();
+  delete phoenix;
+  e.out << "  // Red zone\n";
+  e.out << "  epc->registerHandler(NULL);\n";
+  e.out << "} // end of registerhandlers\n\n";
+
+  //Emit the filltable routine handlers
+  e.out << "void "<< cppfullname(0)
+        << "::filltable(SCIRun::EpChannel* epc)\n";
+  e.out << "{\n";
   e.out << tempe->out.str();
   delete tempe;
-
-  e.out << "\n} // vtable_size=" << vtable_base << "\n\n";
+  e.out << "\n} // end of filltable\n\n";
 }
 
 bool Method::reply_required() const
@@ -751,7 +836,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   e.out << leader2 << "void* _v=message->getLocalObj();\n";
   string myclass = emit_class->cppfullname(0);
   e.out << leader2 << "::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(_v);\n";
-  e.out << leader2 << myclass << "* _obj=static_cast< " << myclass << "*>(_sc->d_ptr);\n";
+  e.out << leader2 << myclass << "* _obj=dynamic_cast< " << myclass << "*>(_sc->d_ptr);\n";
   e.out << "\n";
   
 
@@ -1097,6 +1182,7 @@ void CI::emit_header(EmitState& e)
   e.decl << leader2 << "  static const ::SCIRun::TypeInfo* _static_getTypeInfo();\n";
   e.decl << leader2 << "protected:\n";
   e.decl << leader2 << "  " << name << "(bool initServer=true);\n";
+  e.decl << leader2 << "  void filltable(SCIRun::EpChannel* epc);\n";
   e.decl << leader2 << "private:\n";
   e.decl << leader2 << "  void registerhandlers(SCIRun::EpChannel* epc);\n";
   e.decl << leader2 << "  " << name << "(const " << name << "&);\n";

@@ -68,7 +68,7 @@ Message* SocketEpChannel::getMessage() {
 
 void SocketEpChannel::allocateHandlerTable(int /*size*/) { }
 
-void SocketEpChannel::registerHandler(int /*num*/, void* /*handle*/) { }
+void SocketEpChannel::registerHandler(void* /*handle*/) { }
 
 void SocketEpChannel::bind(SpChannel* /*spchan*/) { }
 

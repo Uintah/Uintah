@@ -125,7 +125,7 @@ protected:
   // in the entire inheritance tree.  The last one to call
   // will be the most derived class, which is the only
   // one that we care about.
-  void initializeServer(const TypeInfo* typeinfo, void* ptr, EpChannel* epc);
+  void initializeServer(const TypeInfo* typeinfo, Object* ptr, EpChannel* epc);
 
 private:
 
