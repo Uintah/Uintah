@@ -59,7 +59,6 @@ itcl_class Roe {
 	set $this-framerate 15
 	global $this-totframes
 	set $this-totframes 30
-
 	#
 	# Get the list of supported renderers for the pulldown
 	#
@@ -99,6 +98,8 @@ itcl_class Roe {
 	$w.menu.edit.menu add command -label "Clipping Planes..." -underline 0 -command "$this makeClipPopup"
 	$w.menu.edit.menu add command -label "Animation..." -underline 0 \
 		-command "$this makeAnimationPopup"
+	$w.menu.edit.menu add command -label "Point Size..." -underline 0 \
+		-command "$this makePointSizePopup"
 	menubutton $w.menu.spawn -text "Spawn" -underline 0 \
 		-menu $w.menu.spawn.menu
 	menu $w.menu.spawn.menu
@@ -121,7 +122,7 @@ itcl_class Roe {
 	foreach t [$this-c listvisuals $w] {
 	    $w.menu.visual.menu add radiobutton -value $i -label $t \
 		-variable $this-currentvisual \
-		-font "-adobe-helvetica-bold-r-normal-*-*-90-75-*-*-*-*-*" \
+		-font "-adobe-helvetica-bold-r-normal-*-*-80-75-*-*-*-*-*" \
 		-command "$this switchvisual $i"
 	    incr i
 	}
@@ -185,7 +186,7 @@ itcl_class Roe {
 		-anchor nw
 	
 	button $w.bframe.more -text "+" -padx 3 \
-		-font "-Adobe-Helvetica-bold-R-Normal-*-140-75-*" \
+		-font "-Adobe-Helvetica-bold-R-Normal-*-120-75-*" \
 		-command "$this addMFrame $w"
 	pack $w.bframe.more -pady 2 -padx 2 -anchor se -side right
 
@@ -210,12 +211,14 @@ itcl_class Roe {
 
 	global "$this-global-light"
 	global "$this-global-fog"
+	global "$this-global-psize"
 	global "$this-global-type"
 	global "$this-global-debug"
 	global "$this-global-clip"
 
 	set "$this-global-light" 1
 	set "$this-global-fog" 0
+	set "$this-global-psize" 1
 	set "$this-global-type" Gouraud
 	set "$this-global-debug" 0
 	set "$this-global-clip" 0
@@ -428,6 +431,26 @@ itcl_class Roe {
 	set m $w.mframe.f
 	pack forget $m.objlist.canvas.frame.objt$objid
     }
+
+    method makePointSizePopup {} {
+	set w .psize$this
+	if {[winfo exists $w]} {
+	    raise $w
+	    return;
+	}
+	toplevel $w
+	wm title $w "Point Size"
+	wm minsize $w 250 100 
+
+	frame $w.f
+	global $this-global-psize
+	scale $w.f.scale -command "$this-c redraw" -variable \
+		$this-global-psize -orient horizontal -from 1 -to 5 \
+		-resolution .1 -showvalue true -tickinterval 1 -digits 0 \
+		-label "Pixel Size:"
+	pack $w.f.scale -fill x -expand 1
+	pack $w.f -fill x -expand 1
+    }	
 
     method makeClipPopup {} {
 	set w .clip$this

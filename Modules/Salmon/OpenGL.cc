@@ -893,10 +893,12 @@ void OpenGL::redraw_obj(Salmon* salmon, Roe* roe, GeomObj* obj)
 void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
 {
     clString val;
+    double dval;
     clString type(tclID+"-"+"type");
     clString lighting(tclID+"-"+"light");
     clString fog(tclID+"-"+"fog");
     clString debug(tclID+"-"+"debug");
+    clString psize(tclID+"-"+"psize");
 
     clString use_clip(tclID+"-"+"clip");
 
@@ -939,6 +941,10 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
 	    cerr << "Error, no debug level set!\n";
 	    drawinfo->debug = 0;
 	}
+
+        if (get_tcl_doublevar(id,psize,dval)) {
+            drawinfo->point_size = dval;
+        }
 
 	if (get_tcl_stringvar(id,use_clip,val)) {
 	    if (val == "0")
