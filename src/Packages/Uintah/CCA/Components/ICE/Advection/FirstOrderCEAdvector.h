@@ -52,7 +52,7 @@ namespace Uintah {
 			 DataWarehouse* new_dw);
 
 
-
+    struct fflux { double d_fflux[6]; };          //face flux
     struct eflux { double d_eflux[12]; };         //edge flux
     struct cflux { double d_cflux[8]; };          //corner flux
     
@@ -69,16 +69,16 @@ namespace Uintah {
                     F save_q_FC);                                  
 
   private:
-    FirstOrderAdvector d_advector;
+    CCVariable<fflux> d_OFS;
     CCVariable<eflux> d_OFE;
     CCVariable<cflux> d_OFC;
     const VarLabel* OFE_CCLabel;
     const VarLabel* OFC_CCLabel;
+    const VarLabel* OFS_CCLabel;
     
+    friend const TypeDescription* fun_getTypeDescription(fflux*);    
     friend const TypeDescription* fun_getTypeDescription(eflux*);
-    friend const TypeDescription* fun_getTypeDescription(cflux*);
-
-    
+    friend const TypeDescription* fun_getTypeDescription(cflux*); 
   };
 }
 
@@ -86,6 +86,7 @@ namespace Uintah {
 #include <Core/Datatypes/TypeName.h>
 #include <string>
 namespace SCIRun {
+void swapbytes( Uintah::FirstOrderCEAdvector::fflux& ); 
 void swapbytes( Uintah::FirstOrderCEAdvector::eflux& );
 void swapbytes( Uintah::FirstOrderCEAdvector::cflux& );
 } // namespace SCIRun

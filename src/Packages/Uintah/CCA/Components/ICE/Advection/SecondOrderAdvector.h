@@ -75,6 +75,7 @@ namespace Uintah {
     template<class T, typename F> 
       void advectSlabs(StaticArray<CCVariable<T> >& q_OAFS,
 		         const Patch* patch,
+                       const CCVariable<T>& q_CC,
 		         CCVariable<T>& q_advected,
                        SFCXVariable<double>& q_XFC,
                        SFCYVariable<double>& q_YFC,
