@@ -21,8 +21,7 @@ using std::endl;
 using namespace std;
 
 #include <string.h>
-
-#include "BaWGL.h"
+#include <PSECommon/Modules/Salmon/BaWGL.h>
 
 const int TOKENSIZE = 1024;
 
