@@ -6,13 +6,27 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/ProblemSpecInterface.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Grid/Grid.h>
+#include <Uintah/Grid/Level.h>
 #include <SCICore/Thread/Time.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/IntVector.h>
+#include <SCICore/Math/MiscMath.h>
+#include <iostream>
+using std::cerr;
 
 using SCICore::Thread::Time;
 
 using Uintah::Exceptions::ProblemSetupException;
 using Uintah::Interface::ProblemSpecInterface;
 using Uintah::Components::SimulationController;
+using Uintah::Parallel::UintahParallelPort;
+using Uintah::Grid::Grid;
+using Uintah::Grid::Level;
+using SCICore::Geometry::IntVector;
+using SCICore::Geometry::Vector;
+using SCICore::Geometry::Point;
+using SCICore::Math::Abs;
 
 SimulationController::SimulationController()
 {
@@ -24,7 +38,8 @@ SimulationController::~SimulationController()
 
 void SimulationController::run()
 {
-    ProblemSpecInterface* psi = dynamic_cast<ProblemSpecInterface*>(getPort("problem spec"));
+    UintahParallelPort* pp = getPort("problem spec");
+    ProblemSpecInterface* psi = dynamic_cast<ProblemSpecInterface*>(pp);
 
     // Get the problem specification
     ProblemSpecP params = psi->readInputFile();
@@ -33,23 +48,24 @@ void SimulationController::run()
 
     releasePort("problem spec");
 
-#if 0
-    // Get the problem specification.  Hard-coded for now - create a 
-    // component later
-    ProblemSpecP params = new ProblemSpec;
+    ProblemSpecP ups = params->findBlock("Uintah_specification");
+    if(!ups)
+	throw ProblemSetupException("Input file is not a Uintah specification");
 
-    // Componentize later
-    OutputP output = new Output;
-    
     // Setup the initial grid
-    GridP grid=new Grid();
+    GridP grid=new Uintah::Grid::Grid();
 
-    problemSetup(params, grid);
+    problemSetup(ups, grid);
 
     if(grid->numLevels() == 0){
 	cerr << "No problem specified.  Exiting SimulationController.\n";
 	return;
     }
+
+    grid->performConsistencyCheck();
+    grid->printStatistics();
+
+#if 0
 
     DataWarehouseP old_ds = scheduler->createDataWarehouse();
 
@@ -99,10 +115,69 @@ void SimulationController::run()
 void SimulationController::problemSetup(const ProblemSpecP& params,
 					GridP& grid)
 {
-#if 0
-    LevelP mainLevel = new Level();
-    grid->addLevel(mainLevel);
-#endif
+    ProblemSpecP grid_ps = params->findBlock("Grid");
+    if(!grid_ps)
+	return;
+
+    for(ProblemSpecP level_ps = grid_ps->findBlock("Level");
+	level_ps != 0; level_ps = level_ps->findNextBlock("Level")){
+	LevelP level = new Level();
+	
+	for(ProblemSpecP box_ps = level_ps->findBlock("Box");
+	    box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
+	    Point lower;
+	    box_ps->require("lower", lower);
+	    Point upper;
+	    box_ps->require("upper", upper);
+
+	    IntVector resolution;
+	    bool have_res=false;
+	    if(box_ps->get("resolution", resolution)){
+		have_res=true;
+	    }
+	    Vector spacing;
+	    if(box_ps->get("spacing", spacing)){
+		if(have_res)
+		    throw ProblemSetupException("Cannot specify spacing AND resolution for Box");
+
+		have_res=true;
+		Vector diag = upper-lower;
+		Vector res = diag/spacing;
+		resolution.x((int)(res.x()+0.5));
+		resolution.y((int)(res.y()+0.5));
+		resolution.z((int)(res.z()+0.5));
+		if(Abs(resolution.x() - res.x()) > 1.e-6
+		   || Abs(resolution.y() - res.y()) > 1.e-6
+		   || Abs(resolution.z() - res.z()) > 1.e-6)
+		    throw ProblemSetupException("Grid spacing does not allow an integer number of cells");
+	    }
+
+
+	    if(!have_res)
+		throw ProblemSetupException("Box resolution is not specified");
+
+	    IntVector patches;
+	    if(box_ps->get("patches", patches)){
+		Vector diag(upper-lower);
+		Vector scale(1./patches.x(), 1./patches.y(), 1./patches.z());
+		for(int i=0;i<patches.x();i++){
+		    for(int j=0;j<patches.y();j++){
+			for(int k=0;k<patches.z();k++){
+			    IntVector startcell = resolution*IntVector(i,j,k)/patches;
+			    IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches;
+			    IntVector ncells = endcell-startcell;
+			    level->addRegion(lower+diag*Vector(i,j,k)*scale,
+					     lower+diag*Vector(i+1,j+1,k+1)*scale,
+					     resolution);
+			}
+		    }
+		}
+	    } else {
+		level->addRegion(lower, upper, resolution);
+	    }
+	}
+	grid->addLevel(level);
+    }
 }
 
 void SimulationController::computeStableTimestep(LevelP& level,
@@ -239,6 +314,9 @@ void SimulationController::timeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.5  2000/04/12 23:00:09  sparker
+// Start of reading grids
+//
 // Revision 1.4  2000/04/11 07:10:42  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications
