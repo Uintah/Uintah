@@ -21,6 +21,7 @@ namespace SCIRun {
 
 class MatrixSelectVector : public Module {
   MatrixIPort* imat_;
+  MatrixIPort* ivec_;
   MatrixOPort* ovec_;
   GuiInt row_;
   GuiInt row_max_;
@@ -53,6 +54,9 @@ MatrixSelectVector::MatrixSelectVector(const string& id)
   // Create the input port
   imat_=new MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
   add_iport(imat_);
+  
+  ivec_=new MatrixIPort(this, "Weight Vector", MatrixIPort::Atomic);
+  add_iport(ivec_);
   
   // Create the output port
   ovec_=new MatrixOPort(this,"Vector", MatrixIPort::Atomic);
@@ -94,9 +98,38 @@ void MatrixSelectVector::execute() {
   }
   
   reset_vars();
-  
-  int which;
   int use_row=(row_or_col_.get() == "row");
+
+  MatrixHandle weightsH;
+  if (ivec_->get(weightsH) && weightsH.get_rep()) {
+    ColumnMatrix *w = dynamic_cast<ColumnMatrix*>(weightsH.get_rep());
+    ColumnMatrix *cm;
+    if (use_row) {
+      cm=new ColumnMatrix(mh->ncols());
+      cm->zero();
+      double *data=cm->get_rhs();
+      for (int i=0; i<w->nrows(); i++) {
+	int idx = (*w)[i*2];
+	double wt = (*w)[i*2+1];
+	for (int j=0; j<mh->ncols(); j++)
+	  data[j]+=mh->get(idx, j)*wt;
+      }
+    } else {
+      cm=new ColumnMatrix(mh->nrows());
+      cm->zero();
+      double *data=cm->get_rhs();
+      for (int i=0; i<w->nrows(); i++) {
+	int idx = (*w)[i*2];
+	double wt = (*w)[i*2+1];
+	for (int j=0; j<mh->nrows(); j++)
+	  data[j]+=mh->get(j, idx)*wt;
+      }
+    }
+    ovec_->send(MatrixHandle(cm));
+    return;
+  }
+
+  int which;
   if (use_row) which=row_.get();
   else which=col_.get();
   
