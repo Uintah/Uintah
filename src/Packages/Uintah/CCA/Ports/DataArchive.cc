@@ -295,6 +295,32 @@ DataArchive::queryVariables( vector<string>& names,
   DOM_Node vars = findNode("variables", d_indexDoc.getDocumentElement());
   if(vars == 0)
     throw InternalError("variables section not found\n");
+  queryVariables(vars, names, types);
+
+  d_lock.unlock();
+  dbg << "DataArchive::queryVariables completed in " << Time::currentSeconds()-start << " seconds\n";
+}
+
+void
+DataArchive::queryGlobals( vector<string>& names,
+			   vector<const TypeDescription*>& types)
+{
+  double start = Time::currentSeconds();
+  d_lock.lock();
+  DOM_Node vars = findNode("globals", d_indexDoc.getDocumentElement());
+  if(vars == 0)
+    throw InternalError("globals section not found\n");
+  queryVariables(vars, names, types);
+
+  d_lock.unlock();
+
+  dbg << "DataArchive::queryGlobals completed in " << Time::currentSeconds()-start << " seconds\n";   
+}
+
+void
+DataArchive::queryVariables(DOM_Node vars, vector<string>& names,
+			    vector<const TypeDescription*>& types)
+{
   for(DOM_Node n = vars.getFirstChild(); n != 0; n = n.getNextSibling()){
     if(n.getNodeName().equals("variable")){
       DOM_NamedNodeMap attributes = n.getAttributes();
@@ -320,8 +346,6 @@ DataArchive::queryVariables( vector<string>& names,
       cerr << "WARNING: Unknown variable data: " << toString(n.getNodeName()) << '\n';
     }
   }
-  d_lock.unlock();
-  dbg << "DataArchive::queryVariables completed in " << Time::currentSeconds()-start << " seconds\n";
 }
 
 void
@@ -471,11 +495,21 @@ void
 DataArchive::restartInitialize(int& timestep, const GridP& grid,
 			       DataWarehouse* dw, double* pTime, double* pDelt)
 {
+  unsigned int i = 0;  
   vector<int> indices;
   vector<double> times;
   queryTimesteps(indices, times);
-   
-  unsigned int i = 0;
+
+  vector<string> names;
+  vector< const TypeDescription *> typeDescriptions;
+  queryVariables(names, typeDescriptions);
+  queryGlobals(names, typeDescriptions);  
+  
+  map<string, VarLabel*> varMap;
+  for (i = 0; i < names.size(); i++) {
+    varMap[names[i]] = VarLabel::find(names[i]);
+  }
+    
 
   if (timestep == 0) {
     i = 0; // timestep == 0 means use the first timestep
@@ -509,7 +543,7 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid,
   if (!get(timeBlock, "delt", *pDelt))
     *pDelt = 0;
   
-  // iterator through all patch, initializing on each patch
+  // iterate through all patch, initializing on each patch
   // (perhaps not the most efficient, but this is only initialization)
   for (i = 0; i < (unsigned int)grid->numLevels(); i++) {
     LevelP level = grid->getLevel(i);
@@ -520,6 +554,7 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid,
     for ( ; levelPatchIter != level->patchesEnd(); levelPatchIter++)
       patches.push_back(*levelPatchIter);
 
+    map<string, VarLabel*>::iterator labelIter;    
     for (list<Patch*>::iterator patchIter = patches.begin();
 	 patchIter != patches.end(); patchIter++)
       {
@@ -531,13 +566,21 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid,
 	    const VarHashMap& hashMap = matVec[matl+1];
 	    VarHashMapIterator varIter(const_cast<VarHashMap*>(&hashMap));
 	    for (varIter.first(); varIter.ok(); ++varIter) {
-	      VarLabel* label = VarLabel::find(varIter.get_key());
-	      if (label == NULL)
-		throw UnknownVariable(label->getName(), patch, matl,
-				      "on DataArchive::scheduleRestartInitialize");
-
-	      initVariable(patch, dw, label,
-			   matl, varIter.get_data());
+	      // skip if the variable isn't in the top level variable list
+	      // (this is useful for manually editting the index.xml to
+	      // remove variables when combining patches)
+	      labelIter = varMap.find(varIter.get_key());
+	      if (labelIter != varMap.end()) {
+		VarLabel* label = labelIter->second;
+		if (label == 0) {
+		  throw UnknownVariable(varIter.get_key(), patch, matl,
+					"on DataArchive::scheduleRestartInitialize");
+		}
+		else {
+		  initVariable(patch, dw, labelIter->second,
+			       matl, varIter.get_data());
+		}
+	      }
 	    }
 	  }
 	}
@@ -586,6 +629,7 @@ DataArchive::initVariable(const Patch* patch,
   ParticleVariableBase* particles;
   if ((particles = dynamic_cast<ParticleVariableBase*>(var))) {
     if (!dw->haveParticleSubset(matl, patch)) {
+      cerr << "Saved ParticleSubset on matl " << matl << " patch " << patch << endl;
       dw->saveParticleSubset(matl, patch, particles->getParticleSubset());
     }
     else {
@@ -594,8 +638,7 @@ DataArchive::initVariable(const Patch* patch,
     }
   }
 
-  var->setAllocationLabel(label);
-  dw->put(var, label, matl, patch);
+  dw->put(var, label, matl, patch); 
   delete var; // should have been cloned when it was put
 }
 
