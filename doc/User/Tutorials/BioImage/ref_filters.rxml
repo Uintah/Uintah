@@ -1,0 +1,102 @@
+<!--
+For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<chapter id="chap.filters">
+  <title>Filters</title>
+  <para>
+    Any number of filters can be added or inserted to the processing
+    pipeline that BioImage uses.  In order to set up a filter, add the
+    filter as was done in the tutorial, and choose the values it will
+    use in the filter's UI.  The filters will be applied starting at
+    the top of the list and progressing downward.
+    <note>
+      <para>
+	No filter is applied to the processing pipeline until the
+	green "Update" button is clicked.  This will insert the filter
+	properly into the processing chain.
+      </para>
+    </note>
+  </para>
+  
+  <section>
+    <title>Crop</title>
+    <para>
+      Crop the volume to the specified size.  When the cropping filter
+      is being manipulated, a transparent green bounding window will
+      be shown in the various 2D windows.  To manipulate this cropping
+      window, simply click on one of the corners and drag it to the
+      desired place.  To directly edit the values for the crop filter,
+      simply type in the desired cropping bounds in the filter's
+      parameter window.  In order for the filter to be successfully
+      applied, values must be specified for all parameters,
+      left/right, posterior/anterior, and inferior/superior.
+    </para>
+  </section>
+  
+  <section>
+    <title>Histogram</title>
+    <para>
+      Display and manipulate a histogram of the data.  When the
+      histogram filter is active, not only will a histogram of the
+      full data set be displayed, but some of the properties of it can
+      be changed.  The minimum and maximum data values in the
+      histogram can be changed as needed.  However, extreme care
+      should be taken when manipulating these values as they will
+      change the values used and displayed in later processing stages.
+      If data values are excluded in the histogram filter, the changes
+      may affect the values being used to manipulate the images
+      through the window and level sliders.
+    </para>
+  </section>
+  
+  <section>
+    <title>CMedian</title>
+    <para>
+      Apply a median type filter to the data.  The median filter can
+      be used to remove "streaks," "salt-and-pepper" noise, and
+      several other acquisition or processing artifacts associated
+      with medical data.  For fine control, the radius of the filter
+      can be manipulated as necessary to achieve the desired results.
+    </para>
+  </section>
+  
+  <section>
+    <title>Resample</title>
+    <para>
+      The resample filter is often used to provide smoothing of the data
+      in one or more axes.  To choose the axes to apply the filter on,
+      change the values of the appropriate axes.  Values preceeded by an
+      'x' represent multiplication coefficients.  This means that 'x0.5'
+      would produce half as many samples along the specified axis.
+      After changing the axes to be resampled, the kernel, or filter
+      type, must be chosen.  The possible kernel types are Gaussian,
+      box, tent, Catmull-Romm, B-Spline, and Quartic.
+    </para>
+  </section>
+
+</chapter>

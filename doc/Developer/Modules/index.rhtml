@@ -1,6 +1,6 @@
-<!--% require("../../Utilities/Publish/srdoc.rb") %-->
-<!--% doc = Doc.create(Doc::HTML) %-->
-
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3c.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  
 <!--
    For more information, please see: http://software.sci.utah.edu
 
@@ -29,6 +29,8 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::HTML) %-->
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
@@ -51,7 +53,10 @@
   <body>
     <script type="text/javascript">doc.preContent();</script>
 
-    <h1 class="page-title">Module Descriptions by Package<br/>(v. <!--%= doc.edition %-->)</h1>
+    <div class="page-title">
+      <h1>Module Descriptions by Package</h1>
+      <h2>v. <!--%= doc.edition %--></h2>
+    </div>
 
     <div class="doc-group">
       <h1>Packages</h1>

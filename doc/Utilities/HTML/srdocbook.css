@@ -29,7 +29,8 @@
 
 
 /*
-This stylesheet is used by html documents generated from docbook sources.
+This stylesheet is used by html documents generated from docbook
+sources by Norm Walsh's xsl stylesheets.
 */
 
 @import url(common.css);
@@ -44,10 +45,80 @@ img.top-banner {
   margin-right: auto;
 }
 
-.title {
+div.book div.titlepage h1.title {
+  font-size: 225%;
+  color: rgb(73, 91, 105);
+  font-style: normal;                                  
+}
+
+div.part div.titlepage h1.title {
+  font-size: 225%;
+  color: rgb(73, 91, 105);
+  border-top: 10px solid black;
+  border-bottom: 2px solid black;
+  text-align: left;
+  font-style: normal;                                  
+}
+
+div.article div.titlepage h2.title { 
+  font-size: 225%;
+  color: rgb(73, 91, 105);
+  font-style: normal;
+  margin-bottom: 0;
+}
+
+h3.subtitle {
+  margin-top: 0;            
+  font-size: 180%;
+  text-align: center;              
+}
+
+div.chapter div.titlepage h2.title {
   color: rgb(73, 91, 105);
   text-align: left;
-  font-size: 100%
+  font-size: 190%;
+  border: none;                                     
+  font-style: normal;                                  
+}
+
+div.section div.titlepage h2.title {
+  color: rgb(73, 91, 105);
+  text-align: left;
+  font-size: 160%;
+  border: none;                                     
+  font-style: normal;                                  
+}
+
+div.section div.titlepage h3.title {
+  color: rgb(73, 91, 105);
+  text-align: left;
+  font-size: 130%;
+  border: none;                                     
+  font-style: normal;                                  
+}
+
+div.section div.titlepage h4.title {
+  color: rgb(73, 91, 105);
+  text-align: left;
+  font-size: 120%;
+  border: none;                                     
+  font-style: oblique;                                  
+}
+
+div.section div.titlepage h5.title {
+  color: rgb(73, 91, 105);
+  text-align: left;
+  font-size: 110%;
+  border: none;                                     
+  font-style: oblique;                                  
+}
+
+div.section div.titlepage h6.title {
+  color: rgb(73, 91, 105);
+  text-align: left;
+  font-size: 110%;
+  border: none;                                     
+  font-style: oblique;                                  
 }
 
 .subtitle {
@@ -55,41 +126,18 @@ img.top-banner {
   text-align: left
 }
 
+div.figure p.title {
+  color: black;
+  font-style: normal;
+  width: 50%;
+  margin-left: auto;                     
+  margin-right: auto;                     
+}
+
 /* Table titles */
 div.table p.title { 
   color: rgb(73, 91, 105);
   text-align: left;
-}
-
-/* Top-level section titles */
-h2.title {
-  border-bottom: 1px solid;
-  border-left: 1px solid;
-  font-style: normal;
-  padding-left: 4px;
-  font-size: 150%;
-  text-align: left
-}
-
-/* section section titles */
-h3.title { 
-  border-bottom: 1px dotted;
-  border-left: 1px dotted;
-  font-size: 125%;
-  font-style: normal;
-  text-align: left
-}
-
-/* section section section titles */
-h4.title {
-  font-size: 110%;
-  text-align: left
-}
-
-/* section section section section titles */
-h5.title { 
-  font-size: 100%;
-  text-align: left
 }
 
 /* Note titles */
@@ -134,22 +182,8 @@ tt {
 .navheader, .navfooter {
 }
 
-/* evil to force size smaller but it does look better */
-.literal, .token, .database {
-  font-family: "Lucida Console", "Courier", monospace;
-}
-
 .guiicon, .guibutton, .guilabel, .interface {
   font-weight: bold
-}
-
-.chapter h1 { 
-  font-size: 34px
-}
-
-/* we need the a specifier so this wins out over the chapter h1 */
-h1.section a { 
-  font-size: 24px
 }
 
 .navheader td, .navfooter td {

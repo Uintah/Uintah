@@ -51,39 +51,59 @@ doc.insertDocType("article", entities)
     <qandaentry>
       <revhistory>
 	<revision>
+	  <revnumber>001</revnumber>
+	  <date>01/27/05</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+	  I just upgraded SCIRun and I'm experiencing a number of bad
+	  behaviors.  Any ideas?
+	</para>
+      </question>
+      <answer>
+	<para>
+	  Try this: Rename ~/.scirunrc to ~/.scirunrc.O.  Run SCIRun
+	  again.  If the problems resolve then merge any changes you made
+	  in ~/.scirunrc.O into the new ~/.scirunrc created by
+	  SCIRun and delete ~/.scirunrc.O.
+	</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <revhistory>
+	<revision>
 	  <revnumber>1.0</revnumber>
 	  <date>7/29/01</date>
 	</revision>
       </revhistory>
       <question>
 	<para>
-	  What systems are compatible with &sr;?
+	  What systems are compatible with SCIRun?
 	</para>
       </question>
 
       <answer>
 	<para>
-	  &sr; should be compatible with any SGI machine running Irix 6.5. 
+	  SCIRun should be compatible with any SGI machine running Irix 6.5. 
 	</para>
 	<para>
-	  &sr; has been tested on the following Linux distributions:
+	  SCIRun has been tested on the following Linux distributions:
+          (With past versions we have run on RedHat 7 and 8, and
+           Mandrake 8.  While these systems should still work, all local
+           systems have been updated to Redhat 9 and Mandrake 9.2.)
 	  <itemizedlist>
 	    <listitem>
-	      <simpara>Mandrake 7.2 &amp; 8.0</simpara>
+	      <simpara>Mandrake 9.2</simpara>
 	    </listitem>
 	    <listitem>
-	      <simpara>Redhat 6.2, 7.0 &amp; 7.1</simpara>
-	    </listitem>
-	    <listitem>
-	      <simpara>SuSE 6.4, 7.0 &amp; 7.2</simpara>
-	    </listitem>
-	    <listitem>
-	      <simpara>Debian testing</simpara>
+	      <simpara>Redhat 9.0</simpara>
 	    </listitem>
 	  </itemizedlist> 
 	</para>
 	<para>
-	  &sr; has been tested on the following PC processor configurations:
+	  SCIRun has been tested on the following PC processor configurations:
 	  <itemizedlist>
 	    <listitem>
 	      <simpara>Dual Intel Pentium II</simpara>
@@ -103,11 +123,14 @@ doc.insertDocType("article", entities)
 	  </itemizedlist>
 	</para>
 	<para>
-	  &sr; has been tested with the following PC graphics cards:
+	  SCIRun has been tested with the following PC graphics cards:
 	  <itemizedlist>
 	    <listitem>
-	      <simpara>NVIDIA GeForce, GeForce II &amp; GeForce3</simpara>
+	      <simpara>NVIDIA GeForce &amp; FX</simpara>
 	    </listitem>
+            <listitem>
+              <simpara>ATI Radeon 9700</simpara>
+            </listitem>
 	  </itemizedlist>
 	</para>
       </answer>
@@ -122,7 +145,7 @@ doc.insertDocType("article", entities)
       </revhistory>
       <question>
 	<para>
-	  What is the relationship between &sr;, BioPSE, and other SCI
+	  What is the relationship between SCIRun, BioPSE, and other SCI
 	  Institute software?
 	</para>
       </question>
@@ -131,9 +154,9 @@ doc.insertDocType("article", entities)
 	<para>
 	  It is important to understand the hierarchy of computational problem solving
 	  environments developed at the SCI Institute.  From a historical
-	  perspective, &sr;, which started development in 1992, was the
+	  perspective, SCIRun, which started development in 1992, was the
 	  original implementation of the computational framework.  Since then,
-	  &sr; and its computational workbench infrastructure has been the
+	  SCIRun and its computational workbench infrastructure has been the
 	  origin of many significant application-specific projects. Two major
 	  examples are the DOE sponsored Uintah system and the NIH sponsored
 	  BioPSE system (from the <ulink url="http://www.ncrr.nih.gov/">National
@@ -144,20 +167,20 @@ doc.insertDocType("article", entities)
 	  distributed, shared memory architectures. The goal of the BioPSE
 	  project is to create software for geometric modeling, simulation, and
 	  visualization for solving bioelectric field problems.  A
-	  secondary goal of the &sr; system is to make source code for 
+	  secondary goal of the SCIRun system is to make source code for 
 	  problem solving environments publicly available to the scientific
 	  community.
 	</para>
 	<para>
-	  To realize these significant projects, the &sr; infrastructure
+	  To realize these significant projects, the SCIRun infrastructure
 	  has required significant reorganization, extension, and
-	  enhancement.  Even with these changes, &sr; remains the
+	  enhancement.  Even with these changes, SCIRun remains the
 	  core infrastructure for problem solving environments, and the name
 	  used to refer to the entire ensemble of software.  Thus, a user may
-	  install and operate the core &sr; software and also augment its
+	  install and operate the core SCIRun software and also augment its
 	  functionality with one or more of the <quote>packages</quote> such as
 	  BioPSE.  SCI anticipates that the collection of packages will grow as
-	  the advantages of the &sr; infrastructure become available to
+	  the advantages of the SCIRun infrastructure become available to
 	  scientists and engineers of all disciplines.
 	</para>
 	
@@ -173,8 +196,8 @@ doc.insertDocType("article", entities)
 	      </imageobject>
 	      <caption>
 		<para>
-		  This figure shows the relationship among &sr; and its packages.
-		  BioPSE consists of the basic &sr; software together with the BioPSE
+		  This figure shows the relationship among SCIRun and its packages.
+		  BioPSE consists of the basic SCIRun software together with the BioPSE
 		  modules and support libraries.
 		</para>
 	      </caption>
@@ -184,28 +207,28 @@ doc.insertDocType("article", entities)
 
 	<para>
 	  In addition to major projects that have both leveraged and
-	  advanced &sr;, there exist a number of smaller packages that 
-	  extend &sr;'s utility. Examples include the Teem package for raster
+	  advanced SCIRun, there exist a number of smaller packages that 
+	  extend SCIRun's utility. Examples include the Teem package for raster
 	  data processing, the NetSolve package for linear algebra subroutines
 	  (developed by researchers at the University of Tennessee and
 	  Knoxville), and a communications interface recently introduced
 	  to the Matlab program. SCI has developed various forms of software
-	  wrappers or interfaces that allow &sr; to leverage the strengths of
+	  wrappers or interfaces that allow SCIRun to leverage the strengths of
 	third party tools, links referred to as "bridges."  </para>
 	<para>
 	  There are instances when a tighter level of integration than
-	  a bridge between &sr; and third-party software is necessary. One
+	  a bridge between SCIRun and third-party software is necessary. One
 	  example is the addition of mpeg support for capturing animations from
-	  the &sr; Viewer module. SCI uses the Berkeley and Alex
+	  the SCIRun Viewer module. SCI uses the Berkeley and Alex
 	  Knowles' mpeg encoding tools.  Another example is the set of image
 	  generation and manipulation tools from Paul Haeberli called
 	  libimage. To indicate if such tools are available, the
-	  configure scripts for &sr; contain optional control flags.
+	  configure scripts for SCIRun contain optional control flags.
 	</para>
 	<para>
 	  The combination of a robust infrastructure and
 	  modular extensibility through packages and third-party libraries 
-	  allows &sr; to grow and adapt to changing needs and opportunities.
+	  allows SCIRun to grow and adapt to changing needs and opportunities.
 	</para>
 
       </answer>
@@ -222,7 +245,7 @@ doc.insertDocType("article", entities)
 
       <question>
 	<para>
-	  What citation should be used when referring to &sr; and BioPSE in a
+	  What citation should be used when referring to SCIRun and BioPSE in a
 	  paper or grant application?
 	</para>
       </question>
@@ -233,13 +256,13 @@ doc.insertDocType("article", entities)
 	  citations can be used.
 <!--%=
 doc.doIfHTML {<<HTML_TEXT
-Here are &sr; and BioPSE <ulink url="&sr_bibtex_cit;">citations</ulink>.
+Here are SCIRun and BioPSE <ulink url="&sr_bibtex_cit;">citations</ulink>.
 HTML_TEXT
 }
 %-->
 <!--%=
 doc.doIfPrint {<<PRINT_TEXT
-For &sr; and BioPSE citations go to: 
+For SCIRun and BioPSE citations go to: 
 <literallayout class="monospaced">
 &sr_bibtex_cit_url;
 </literallayout>
@@ -268,9 +291,9 @@ PRINT_TEXT
 	<para>
 	  A set of command line utilities, called
 	  <firstterm>converters</firstterm>, convert <quote>foreign</quote> data
-	  into &sr; file objects (and vice-versa). See Section&#xA0;<ulink
+	  into SCIRun file objects (and vice-versa). See Section&#xA0;<ulink
 	  url="(%= doc.treeUrl(%Q{doc/User/Guide/usersguide/srug7.html}) %)"><citetitle>Importing and
-	  Exporting &sr; Data</citetitle></ulink> in the &sr; <citetitle>User's
+	  Exporting SCIRun Data</citetitle></ulink> in the SCIRun <citetitle>User's
 	  Guide</citetitle> for information on the use of converter
 	  programs.
 	</para>
@@ -578,10 +601,8 @@ PRINT_TEXT
 	<para>Does SCIRun support 2D visualization?</para>
       </question>
       <answer>
-	<para>No, not in general.  But, in the BioPSE package there is a
-	module called ShowLeads that takes a matrix as input, and
-	renders a 2d graph. The module assumes that rows are a time
-	series of data, with columns the timestep values.</para>
+	<para>Yes. The ShowSlices module will display orthogonal slices of
+	      a 3D nrrd in a 2D OpenGL window.</para>
       </answer>
     </qandaentry>
 
@@ -813,11 +834,11 @@ PRINT_TEXT
       </revhistory>
       <question>
 	<para>
-	  When running &sr;, one or more messages appear in the
+	  When running SCIRun, one or more messages appear in the
 	  message window indicating a problem with a package and/or
 	  module.  The message(s) is/are similar to the following:
 	  <literallayout class="monospaced">
-	    Loading package '&sr;' Unable to load module 'CastField' :
+	    Loading package 'SCIRun' Unable to load module 'CastField' :
 	    - can't find symbol 'make_CastField'
 	  </literallayout>
 	  or
@@ -834,7 +855,7 @@ PRINT_TEXT
       <answer>
 	<para>
 	  Each module for a given package has its own .xml file that
-	  describes it. When &sr; starts, it parses all .xml files in
+	  describes it. When SCIRun starts, it parses all .xml files in
 	  the packages (under Dataflow/XML) and tries to find the
 	  matching code within the related .so files. If the .so files
 	  cannot be found, the message <quote>No such file or
@@ -844,10 +865,10 @@ PRINT_TEXT
 	  given.
 	</para>
 	<para>
-	  The message(s) may or may not indicate a problem with &sr;. For some
+	  The message(s) may or may not indicate a problem with SCIRun. For some
 	  modules, the .xml file may be listed, but the code has not been
 	  completed (this may be common for module developers). For other modules,
-	  the &sr; installation is some how corrupt (.so files
+	  the SCIRun installation is some how corrupt (.so files
 	  have been deleted, moved, etc.)
 	</para> 
 	<para>
