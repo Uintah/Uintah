@@ -17,8 +17,8 @@
   University of Utah. All Rights Reserved.
 */
 
-#ifndef ASCIITABLE_H
-#define ASCIITABLE_H
+#ifndef SCIRun_Core_2d_asciitable_h
+#define SCIRun_Core_2d_asciitable_h 1
 
 #define TABLE_PIXEL_WIDTH 510
 #define TABLE_PIXEL_HEIGHT 510

@@ -17,8 +17,8 @@
   University of Utah. All Rights Reserved.
 */
 
-#ifndef TEXTURE_H
-#define TEXTURE_H
+#ifndef SCIRun_Core_2d_texture_h
+#define SCIRun_Core_2d_texture_h 1
 
 typedef struct {
   float wslop;

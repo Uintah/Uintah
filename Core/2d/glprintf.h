@@ -17,8 +17,8 @@
   University of Utah. All Rights Reserved.
 */
 
-#ifndef GLPRINTF_H
-#define GLPRINTF_H
+#ifndef SCIRun_Core_2d_glprintf_h
+#define SCIRun_Core_2d_glprintf_h 1
 
 #ifdef __cplusplus
 extern "C" {
