@@ -65,7 +65,6 @@ stamp-defs: ${SRCTOP}/sci_testdefs.h.in ${OBJTOP}/config.status
 config.status: ${SRCTOP}/configure
 	@if test -n "`find ${SRCTOP}/configure.in -newer config.cache`"; then echo "removing config.cache and confdefs.h as they may be out of date"; /bin/rm -f config.cache confdefs.h; fi
 	./config.status --recheck
-	./config.status
 
 Makefile: ${SRCTOP}/Makefile.in ${OBJTOP}/config.status
 	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES=`echo $${Here} | sed -e "s%^"$${Top}"/%%" -e "s%^"$${Top}"%.%"`/Makefile CONFIG_HEADERS="" ./config.status ) 1>&2
@@ -98,7 +97,13 @@ TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
 ETAGS := @ETAGS@
 CTAGS := ctags
 
-all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM
+all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM Uintah_StateTables
+
+# FYI: If Uintah is being used, then Uintah_StateTables is defined in
+# src/Packages/Uintah/StandAlone/sub.mk.  Otherwise just make it do nothing.
+ifneq ($(findstring Uintah,$(LOAD_PACKAGE)),Uintah)
+  Uintah_StateTables:
+endif
 
 .PHONY: prereqs
 prereqs: $(MAKEFILEDIRS) $(MATLAB_ENGINE_FILES) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN)
