@@ -332,6 +332,29 @@ void TextPiostream::io(char& data)
   }
 }
 
+
+void TextPiostream::io(signed char& data)
+{
+  if(err)return;
+  if(dir==Read){
+    istream& in=*istr;
+    in >> data;
+    if(!in){
+      cerr << "Error reading signed char\n";
+      char buf[100];
+      in.clear();
+      in.getline(buf, 100);
+      cerr << "Rest of line is: " << buf << endl;
+      err=1;
+      return;
+    }
+    expect(' ');
+  } else {
+    ostream& out=*ostr;
+    out << data << " ";
+  }
+}
+
 void TextPiostream::io(unsigned char& data)
 {
   if(err)return;
@@ -494,6 +517,28 @@ void TextPiostream::io(long long& data)
     in >> data;
     if(!in){
       cerr << "Error reading long long\n";
+      char buf[100];
+      in.clear();
+      in.getline(buf, 100);
+      cerr << "Rest of line is: " << buf << endl;
+      err=1;
+      return;
+    }
+    expect(' ');
+  } else {
+    ostream& out=*ostr;
+    out << data << " ";
+  }
+}
+
+void TextPiostream::io(unsigned long long& data)
+{
+  if(err)return;
+  if(dir==Read){
+    istream& in=*istr;
+    in >> data;
+    if(!in){
+      cerr << "Error reading unsigned long long\n";
       char buf[100];
       in.clear();
       in.getline(buf, 100);
@@ -839,6 +884,11 @@ void FastPiostream::io(char& data)
   gen_io(data, "char");
 }
 
+void FastPiostream::io(signed char& data)
+{
+  gen_io(data, "signed char");
+}
+
 void FastPiostream::io(unsigned char& data)
 {
   gen_io(data, "unsigned char");
@@ -877,6 +927,11 @@ void FastPiostream::io(unsigned long& data)
 void FastPiostream::io(long long& data)
 {
   gen_io(data, "long long");
+}
+
+void FastPiostream::io(unsigned long long& data)
+{
+  gen_io(data, "unsigned long long");
 }
 
 void FastPiostream::io(double& data)
@@ -1088,6 +1143,7 @@ void BinaryPiostream::end_cheap_delim()
 
 void BinaryPiostream::io(bool& data)
 {
+  if(err)return;
   unsigned char tmp = data;
   io(tmp);
   if (dir == Read)
@@ -1102,6 +1158,17 @@ void BinaryPiostream::io(char& data)
   if(!xdr_char(xdr, &data)){
     err=1;
     cerr << "xdr_char failed\n";
+  }
+}
+
+void BinaryPiostream::io(signed char& data)
+{
+  if(err)return;
+  short tmp = data;
+  io(tmp);
+  if (dir == Read)
+  {
+    data = tmp;
   }
 }
 
@@ -1181,6 +1248,27 @@ void BinaryPiostream::io(long long& data)
   if(!xdr_longlong_t(xdr, (int64_t*)(&data))){
     err=1;
     cerr << "xdr_longlong_t failed\n";
+  }
+#  else
+  cerr << "xdr_longlong_t is not implemented on Apple\n";
+  err = 1;
+#  endif
+#endif
+}
+
+void BinaryPiostream::io(unsigned long long& data)
+{
+  if(err)return;
+#if defined(__x86_64__)
+  if(!xdr_u_longlong_t(xdr, (u_quad_t*)(&data))){
+    err=1;
+    cerr << "xdr_u_longlong_t failed\n";
+  }
+#else
+#  if !defined(__APPLE__) && !defined(__osf__)
+  if(!xdr_u_longlong_t(xdr, (uint64_t*)(&data))){
+    err=1;
+    cerr << "xdr_u_longlong_t failed\n";
   }
 #  else
   cerr << "xdr_longlong_t is not implemented on Apple\n";
@@ -1334,6 +1422,23 @@ void GzipPiostream::io(char& data)
   }
 }
 
+void GzipPiostream::io(signed char& data)
+{
+  int sz=sizeof(signed char);
+  if(err)return;
+  if(dir == Read) {
+    if (gzread(gzfile, &data, sz) == -1) {
+      err=1;
+      cerr << "gzread failed\n";
+    }
+  } else {
+    if (!gzwrite(gzfile, &data, sz)) {
+      err=1;
+      cerr << "gzwrite failed\n";
+    }
+  }
+}
+
 void GzipPiostream::io(unsigned char& data)
 {
   int sz=sizeof(unsigned char);
@@ -1456,6 +1561,23 @@ void GzipPiostream::io(unsigned long& data)
 void GzipPiostream::io(long long& data)
 {
   int sz=sizeof(long long);
+  if(err)return;
+  if(dir == Read) {
+    if (gzread(gzfile, &data, sz) == -1) {
+      err=1;
+      cerr << "gzread failed\n";
+    }
+  } else {
+    if (!gzwrite(gzfile, &data, sz)) {
+      err=1;
+      cerr << "gzwrite failed\n";
+    }
+  }
+}
+
+void GzipPiostream::io(unsigned long long& data)
+{
+  int sz=sizeof(unsigned long long);
   if(err)return;
   if(dir == Read) {
     if (gzread(gzfile, &data, sz) == -1) {
@@ -1620,6 +1742,23 @@ void GunzipPiostream::io(char& data)
   }
 }
 
+void GunzipPiostream::io(signed char& data)
+{
+  int sz=sizeof(signed char);
+  if(err)return;
+  if(dir == Read) {
+    if (read(unzipfile, &data, sz) == -1) {
+      err=1;
+      cerr << "unzipread failed\n";
+    }
+  } else {
+    if (!write(unzipfile, &data, sz)) {
+      err=1;
+      cerr << "unzipwrite failed\n";
+    }
+  }
+}
+
 void GunzipPiostream::io(unsigned char& data)
 {
   int sz=sizeof(unsigned char);
@@ -1742,6 +1881,23 @@ void GunzipPiostream::io(unsigned long& data)
 void GunzipPiostream::io(long long& data)
 {
   int sz=sizeof(long long);
+  if(err)return;
+  if(dir == Read) {
+    if (read(unzipfile, &data, sz) == -1) {
+      err=1;
+      cerr << "unzipread failed\n";
+    }
+  } else {
+    if (!write(unzipfile, &data, sz)) {
+      err=1;
+      cerr << "unzipwrite failed\n";
+    }
+  }
+}
+
+void GunzipPiostream::io(unsigned long long& data)
+{
+  int sz=sizeof(unsigned long long);
   if(err)return;
   if(dir == Read) {
     if (read(unzipfile, &data, sz) == -1) {

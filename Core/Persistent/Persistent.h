@@ -111,6 +111,7 @@ public:
 
   virtual void io(bool&)=0;
   virtual void io(char&)=0;
+  virtual void io(signed char&)=0;
   virtual void io(unsigned char&)=0;
   virtual void io(short&)=0;
   virtual void io(unsigned short&)=0;
@@ -119,6 +120,7 @@ public:
   virtual void io(long&)=0;
   virtual void io(unsigned long&)=0;
   virtual void io(long long&)=0;
+  virtual void io(unsigned long long&)=0;
   virtual void io(double&)=0;
   virtual void io(float&)=0;
   virtual void io(string& str)=0;
@@ -143,14 +145,16 @@ public:
 //----------------------------------------------------------------------
 SCICORESHARE inline void Pio(Piostream& stream, bool& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, char& data) { stream.io(data); }
+SCICORESHARE inline void Pio(Piostream& stream, signed char& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, unsigned char& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, short& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, unsigned short& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, int& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, unsigned int& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, long& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, long long& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, unsigned long& data) { stream.io(data); }
+SCICORESHARE inline void Pio(Piostream& stream, long long& data) { stream.io(data); }
+SCICORESHARE inline void Pio(Piostream& stream, unsigned long long& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, double& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, float& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, string& data) { stream.io(data); }
