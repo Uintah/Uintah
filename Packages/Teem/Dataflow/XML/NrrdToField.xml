@@ -28,15 +28,15 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Data</name>
-        <datatype>Teem::Nrrd</datatype>
-      </port>
-      <port>
         <name>Points</name>
         <datatype>Teem::Nrrd</datatype>
       </port>
       <port>
         <name>Connections</name>
+        <datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Data</name>
         <datatype>Teem::Nrrd</datatype>
       </port>
       <port>
