@@ -52,11 +52,17 @@ DTPoint::getMessage(){
   return PIDL::getDT()->getMessage(this);
 }
 
-void DTPoint::putMessage(DTMessage *msg){
+void 
+DTPoint::putMessage(DTMessage *msg){
   msg->sender=this;
   PIDL::getDT()->putMessage(msg);
 }
 
+
+void 
+DTPoint::wakeup(){
+  sema->up();
+}
 
 
 

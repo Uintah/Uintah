@@ -130,9 +130,9 @@ DataTransmitter::putMessage(DTMessage *msg){
 DTMessage *
 DataTransmitter::getMessage(DTPoint *pt){
   recvQ_mutex->lock();
-  while(recv_msgQ.size()==0){
+  /*  while(recv_msgQ.size()==0){
     recvQ_cond->wait(*recvQ_mutex);
-  }
+    }*/
   DTMessage *msg=NULL;
   deque<DTMessage*>::iterator iter=recv_msgQ.begin();
   for(deque<DTMessage*>::iterator iter=recv_msgQ.begin(); iter!=recv_msgQ.end(); iter++){
@@ -313,7 +313,9 @@ DataTransmitter::runRecvingThread(){
 	  recvQ_mutex->lock();
 	  recv_msgQ.push_back(msg);
 	  recvQ_mutex->unlock();
-	  recvQ_cond->conditionSignal();
+	  /*
+	    recvQ_cond->conditionSignal();
+	   */
 	  SemaphoreMap::iterator found=semamap.find(msg->recver);
 	  if(found!=semamap.end()){
 	    found->second->up();
