@@ -64,15 +64,16 @@ void Hello::setServices(const gov::cca::Services::pointer& svc)
 
   gov::cca::TypeMap::pointer props = svc->createTypeMap();
   myUIPort::pointer p(&port0);
-  svc->addProvidesPort(p,"ui","UIPort", props);
-  svc->addProvidesPort(p,"UIPort1","UIPort", props);
-  svc->addProvidesPort(p,"UIPort2","UIPort", props);
+  svc->addProvidesPort(p,"ui","gov.cca.UIPort", props);
+  svc->addProvidesPort(p,"UIPort1","gov.cca.UIPort", props);
+  svc->addProvidesPort(p,"UIPort2","gov.cca.UIPort", props);
 
   // Remember that if the PortInfo is created but not used in a call to the svc object
   // then it must be freed.
-  svc->registerUsesPort("UU#0", "UIPort", props);
-  svc->registerUsesPort("UU#1", "UIPort", props);
-  svc->registerUsesPort("UU#2", "UIPort", props);
+  // Actually - the ref counting will take care of that automatically - Steve
+  svc->registerUsesPort("UU#0", "gov.cca.UIPort", props);
+  svc->registerUsesPort("UU#1", "gov.cca.UIPort", props);
+  svc->registerUsesPort("UU#2", "gov.cca.UIPort", props);
 
 
   QApplication* app = QtUtils::getApplication();

@@ -57,7 +57,7 @@ void ZList::setServices(const gov::cca::Services::pointer& svc)
   gov::cca::TypeMap::pointer props = svc->createTypeMap();
   ImUIPort1::pointer uip(&uiport);
   ImZListPort::pointer zlp(&listport);
-  svc->addProvidesPort(uip,"ui","UIPort", props);
+  svc->addProvidesPort(uip,"ui","gov.cca.UIPort", props);
   svc->addProvidesPort(zlp,"listport","ZListPort", props);
 }
 

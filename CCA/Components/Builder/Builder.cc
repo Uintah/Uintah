@@ -47,7 +47,6 @@ Builder::Builder()
 
 Builder::~Builder()
 {
-  cerr << "called ~Builder()\n";
 }
 
 void Builder::setServices(const gov::cca::Services::pointer& svc)

@@ -31,6 +31,7 @@
 #include <CCA/Components/Builder/NetworkCanvasView.h>
 #include <qwmatrix.h>
 #include <Core/CCA/spec/cca_sidl.h>
+using namespace std;
 
 //using namespace SCIRun;
 
@@ -210,32 +211,34 @@ void NetworkCanvasView::contentsMouseMoveEvent(QMouseEvent* e)
   }
 }
 
-void NetworkCanvasView::addModule(const char *name, gov::cca::ports::UIPort::pointer &uip,CIA::array1<std::string> & up, CIA::array1<std::string> &pp , const gov::cca::ComponentID::pointer &cid)
+void NetworkCanvasView::addModule(const string& name,
+				  CIA::array1<std::string> & up,
+				  CIA::array1<std::string> &pp ,
+				  const gov::cca::ComponentID::pointer &cid)
 {
-	
-	Module *module=new Module(this,name,uip,up,pp, cid);
-        addChild(module,20, 20);
-	modules.push_back(module);
-	module->show();		
+  Module *module=new Module(this,name,up,pp, services, cid);
+  addChild(module,20, 20);
+  modules.push_back(module);
+  module->show();		
 }
 
 void NetworkCanvasView::addConnection(Module *m1,const std::string &portname1,  Module *m2, const std::string &portname2)
 {
 
-gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.builderService"));
+  gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(bs.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
   }
   gov::cca::ConnectionID::pointer connID=bs->connect(m1->cid, portname1, m2->cid, portname2);
 
-  services->releasePort("cca.builderService");
+  services->releasePort("cca.BuilderService");
+  
+  Connection *con=new Connection(m1,portname1, m2,portname2, connID,this);
 
-	Connection *con=new Connection(m1,portname1, m2,portname2, connID,this);
 
-
-	con->show();
-	connections.push_back(con);
-	canvas()->update();
+  con->show();
+  connections.push_back(con);
+  canvas()->update();
 
 }
 
@@ -250,12 +253,12 @@ void NetworkCanvasView::removeConnection(QCanvasItem *c)
 		//canvas()->removeChild(c); //
                 cerr<<"connection.size()="<<connections.size()<<endl;
                 cerr<<"all item.size before del="<<canvas()->allItems().size()<<endl;
-		gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.builderService"));
+		gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
 		if(bs.isNull()){
 		  cerr << "Fatal Error: Cannot find builder service\n";
 		}
 		bs->disconnect((*iter)->getConnectionID(),0);
-		services->releasePort("cca.builderService");		
+		services->releasePort("cca.BuilderService");
 		delete c;
                 cerr<<"all item.size after del="<<canvas()->allItems().size()<<endl;
 	        canvas()->update();
@@ -275,19 +278,19 @@ void NetworkCanvasView::showPossibleConnections(Module *m, const std::string &po
 						Module::PortType porttype)
 {
   
-  gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.builderService"));
+  gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(bs.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
   }
 
   cerr<<"Possible Ports:"<<endl;
   for(unsigned int i=0; i<modules.size(); i++){
-      CIA::array1<std::string> portList=bs->getAvailablePortList(m->cid,portname,modules[i]->cid );
+      CIA::array1<std::string> portList=bs->getCompatiblePortList(m->cid,portname,modules[i]->cid );
       for(unsigned int j=0; j<portList.size(); j++){
 	Connection *con;
 	if(porttype==Module::USES)
 	   con=new Connection(m,portname, modules[i],portList[j], 
-			      gov::cca::ConnectionID::pointer(0),this);			      
+			      gov::cca::ConnectionID::pointer(0),this);      
 	else			       
 	   con=new Connection(modules[i],portList[j], m, portname, 
 			     gov::cca::ConnectionID::pointer(0),this);
@@ -297,7 +300,7 @@ void NetworkCanvasView::showPossibleConnections(Module *m, const std::string &po
 	cerr<<portList[j]<<endl;
       }
   }    
-  services->releasePort("cca.builderService");		
+  services->releasePort("cca.BuilderService");		
 	  
   
 }
