@@ -295,7 +295,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set res [$window.resolution childsite]
 
 	scale $res.scale -orient horizontal -variable $this-resolution \
-		-from 1 -to 15 -showvalue true -resolution 1
+		-from 3 -to 20 -showvalue true -resolution 1
 
 	pack $res.scale -side top -fill both -expand 1
 
