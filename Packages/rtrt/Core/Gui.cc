@@ -890,7 +890,22 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     break;
   case 'w':
     cerr << "Saving ppm image file\n";
-    activeGui->dpy_->priv->dumpFrame = true;
+    activeGui->dpy_->priv->dumpFrame = 1;
+    break;
+  case 'M':
+    cerr << "Saving every frame to ppm image\n";
+    switch (activeGui->dpy_->priv->dumpFrame)
+      {
+      case 0:
+      case 1: // Start
+        activeGui->dpy_->priv->dumpFrame = -1;
+        break;
+      case -1: // Stop
+      case -2:
+      case -3:
+        activeGui->dpy_->priv->dumpFrame = -3;
+        break;
+      }
     break;
   case 'd':
     {
@@ -1159,7 +1174,7 @@ Gui::handleWindowResizeCB( int width, int height )
     activeGui->dpy_->release(win);
     first=false;
   }
-  if (activeGui->dpy_->display_frames) {
+  if (0 && activeGui->dpy_->display_frames) {
     activeGui->dpy_->priv->xres=width;
     activeGui->dpy_->priv->yres=height;
     activeGui->camera_->setWindowAspectRatio((double)height/width);
