@@ -107,6 +107,9 @@ WARNING
          double getThermalConductivity() const;
          double getSpecificHeat() const;
          double getHeatTransferCoefficient() const;
+
+         // For MPMICE
+         double getGamma() const;
 				
       private:
 	 
@@ -128,6 +131,8 @@ WARNING
          double d_thermalConductivity;
          double d_specificHeat;
          
+         double d_gamma;
+
          //for ThermalContactModel
          double d_heatTransferCoefficient;
 
