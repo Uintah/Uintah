@@ -248,9 +248,10 @@ WARNING
       ProblemSpecP get(const std::string& name, vector<double>& value);   
       ProblemSpecP get(const std::string& name, vector<int>& value); 
       ProblemSpecP get(const std::string& name, vector<IntVector>& value);
-
+      ProblemSpecP get(const std::string& name, vector<std::string>& value);
+      
       void parseIntVector(const std::string& str, IntVector& value);
-
+      
       //////////
       // look for the first child text node and passes it back to
       // value
@@ -273,6 +274,7 @@ WARNING
       ProblemSpecP getWithDefault(const std::string& name, Point& value, const Point& defaultVal);
       ProblemSpecP getWithDefault(const std::string& name, vector<double>& value, const vector<double>& defaultVal);   
       ProblemSpecP getWithDefault(const std::string& name, vector<int>& value, const vector<int>& defaultVal); 
+      ProblemSpecP getWithDefault(const std::string& name, vector<std::string>& value, const vector<std::string>& defaultVal); 
 
       //////////
       // Add a stylesheet to this document, to be output at the top of the page
