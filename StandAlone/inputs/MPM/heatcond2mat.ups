@@ -25,9 +25,11 @@
 	<save label = "StrainEnergy"/>
 	<save label = "CenterOfMassPosition"/>
 	<save label = "CenterOfMassVelocity"/>
+	<save label = "p.particleID"/>
 	<save label = "p.x"/>
 	<save label = "p.volume"/>
 	<save label = "p.stress"/>
+	<save label = "p.temperature"/>
 	<save label = "g.mass"/>
 	<save label = "g.stressFS"/>
 	<checkpoint cycle = "2" interval = "0.01"/>
