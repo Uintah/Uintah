@@ -27,12 +27,12 @@
 */
 
 
-
-#include <sci_config.h>
-#include <Core/share/share.h>
+#include <include/sci_defs/config_defs.h> /* for HAVE_LIMITS etc, for tcl files */
 
 #include <tk.h>
 #include <tk3d.h>
+
+#include <Core/share/share.h>
 
 SCICORESHARE GC Tk_BorderDarkGC(Tk_3DBorder border);
 SCICORESHARE GC Tk_BorderLightGC(Tk_3DBorder border);

@@ -43,17 +43,20 @@
 #ifndef SCI_Endianness_h
 #define SCI_Endianness_h
 
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <sgi_stl_warnings_off.h>
-#include <string>
-#include <sgi_stl_warnings_on.h>
+#include <include/sci_defs/config_defs.h>
+
 #if HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
 #if HAVE_STDINT_H
 #include <stdint.h>
 #endif
+
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <sgi_stl_warnings_off.h>
+#include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun{
 using std::string;

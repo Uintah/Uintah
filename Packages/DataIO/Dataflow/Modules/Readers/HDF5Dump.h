@@ -33,7 +33,10 @@
 //             University of Utah
 //    Date   : July 2003
 
-#include <sci_defs.h>
+#ifndef HDF5_DUMP_API
+#define HDF5_DUMP_API
+
+#include <include/sci_defs/hdf5_defs.h>
 
 #include <iostream>
 
@@ -58,4 +61,6 @@ herr_t HDF5Dump_data(hid_t obj_id, hid_t type, ostream *iostr);
 
 }
 
-#endif
+#endif  // HAVE_HDF5
+
+#endif  // HDF5_DUMP_API

@@ -48,7 +48,6 @@
 #include <Core/2d/BBox2d.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Thread/CrowdMonitor.h>
-#include <sci_config.h>
 #include <stdio.h>
 
 #include <sgi_stl_warnings_off.h>

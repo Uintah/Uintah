@@ -39,8 +39,9 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <stdio.h>
-#include <sci_defs.h>
+#include <include/sci_defs/lapack_defs.h>
+#include <include/sci_defs/blas_defs.h>
+
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
@@ -65,7 +66,6 @@ extern "C"{
 #endif
 #endif
 
-using std::cerr;
 using std::cout;
 using std::endl;
 using std::vector;

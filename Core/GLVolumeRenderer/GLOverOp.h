@@ -29,6 +29,7 @@
 
 #ifndef GLOVEROP_H
 #define GLOVEROP_H
+
 #include <Core/GLVolumeRenderer/GLTexRenState.h>
 
 namespace SCIRun {

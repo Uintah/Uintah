@@ -43,9 +43,7 @@
 #ifndef SCI_Containers_LockingHandle_h
 #define SCI_Containers_LockingHandle_h 1
 
-#include <sci_config.h>
-
-#include <Core/Util/Assert.h>
+#include <include/sci_defs/template_defs.h>
 #include <Core/Persistent/Persistent.h>
 
 namespace SCIRun {

@@ -40,7 +40,6 @@
  */
 
 
-#include <sci_config.h>
 #include <stdio.h>
 #include <math.h>
 

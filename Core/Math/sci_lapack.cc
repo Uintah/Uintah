@@ -39,10 +39,11 @@
  *  Copyright (C) 2003 SCI Group
 */
 
+#include <include/sci_defs/lapack_defs.h>
+
 #include <math.h>
 #include <Core/Math/sci_lapack.h>
 #include <Core/Util/Assert.h>
-#include <sci_defs.h>
 
 //Functions to switch between Fortran and C style matrices
 

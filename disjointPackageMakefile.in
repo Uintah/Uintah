@@ -144,7 +144,7 @@ distclean:: clean
 	rm -f config.status config.log config.cache
 	rm -f $(CREATETCLINDEX) $(SCIRUN_SCRIPTS)/CC $(SCIRUN_SCRIPTS)/cc
 	rm -f $(patsubst %,%/Makefile, $(ALLOBJSUBDIRS))
-	rm -f sci_config.h sci_defs.h stamp-
+	rm -f stamp-
 
 cleanall:: cleanai cleanAI cleanjs cleanJS cleantz cleanTZ cleanrest
 

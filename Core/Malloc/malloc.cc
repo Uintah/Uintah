@@ -39,9 +39,10 @@
  *  Copyright (C) 199? SCI Group
  */
 
+#include <include/sci_defs/malloc_defs.h>
+
 #include <Core/Malloc/Allocator.h>
 #include <Core/Malloc/AllocPriv.h>
-#include <sci_defs.h>
 
 // irix64 KCC stuff
 #include <strings.h>

@@ -43,7 +43,7 @@
 #ifndef SCI_Containers_Assert_h
 #define SCI_Containers_Assert_h 1
 
-#include <sci_config.h>
+#include <include/sci_defs/error_defs.h>
 
 #include <Core/Exceptions/AssertionFailed.h>
 #include <Core/Exceptions/ArrayIndexOutOfBounds.h>

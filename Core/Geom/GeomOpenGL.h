@@ -62,8 +62,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-
-#include <sci_config.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 

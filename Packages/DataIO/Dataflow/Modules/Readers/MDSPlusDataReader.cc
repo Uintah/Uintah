@@ -40,7 +40,7 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <sci_defs.h>
+#include <include/sci_defs/mdsplus_defs.h>
 
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>

@@ -41,11 +41,22 @@
  */
 
 
-#include <sci_defs.h>
-#include <Core/Util/Environment.h>
+#include <include/sci_defs/ogl_defs.h>
+
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#include <GL/glxew.h>
+#else
+#include <GL/gl.h>
+#include <sci_glu.h>
+#include <GL/glx.h>
+#endif
+
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/logo.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Util/Environment.h>
+
 #ifdef __APPLE__
 #include <float.h>
 #define MAXDOUBLE DBL_MAX
@@ -113,6 +124,9 @@ OpenGL::OpenGL(GuiInterface* gui) :
   gui(gui),
   helper(0),
   tkwin(0),
+#if defined(HAVE_PBUFFER)
+  have_pbuffer_(false),
+#endif
   do_hi_res(false),
   encoding_mpeg_(false),
 
@@ -185,7 +199,7 @@ OpenGL::~OpenGL()
   while (recv_mb.tryReceive(r)) ;
 
   fpstimer.stop();
-  
+
   delete drawinfo; drawinfo = 0;
 }
 
@@ -687,7 +701,8 @@ OpenGL::redraw_frame()
     }
     glXMakeCurrent(dpy, win, cx);
     glXWaitX();
-#if defined(HAVE_GLEW)      
+#if defined(HAVE_GLEW)
+      glewExperimental = GL_TRUE;
       GLenum err = glewInit();
       if (GLEW_OK != err )
       {
@@ -743,7 +758,9 @@ OpenGL::redraw_frame()
     //    cerr<<"width = "<<xres<<", height == "<<yres<<"\n";
     pbuffer.destroy();
     if( !pbuffer.create( dpy, screen, xres, yres, 8, 8 ) ) {
-      //      printf( "Pbuffer create failed.  PBuffering will not be used.\n" );
+      printf( "Pbuffer create failed.  PBuffering will not be used.\n" );
+    } else {
+      have_pbuffer_ = true;
     }
   }
 
@@ -751,7 +768,7 @@ OpenGL::redraw_frame()
     pbuffer.makeCurrent();
     glDrawBuffer( GL_FRONT );
 
-  } else if( pbuffer.is_current() ) {
+  } else if( have_pbuffer_ && pbuffer.is_current() ) {
     glXMakeCurrent(dpy, win, cx);
   }
 #endif
@@ -781,7 +798,7 @@ OpenGL::redraw_frame()
   drawinfo->point_size_=viewwindow->point_size.get();
   drawinfo->polygon_offset_factor_=viewwindow->polygon_offset_factor.get();
   drawinfo->polygon_offset_units_=viewwindow->polygon_offset_units.get();
-  
+
 #ifdef __sgi
   //  --  BAWGL  --
   int do_bawgl = viewwindow->do_bawgl.get();
@@ -880,15 +897,18 @@ OpenGL::redraw_frame()
 	else
 	{
 #if defined(HAVE_PBUFFER)
-	  if(!viewwindow->doingMovie){
-	    if( pbuffer.is_current() )
-	      cerr<<"pbuffer is current while not doing Movie\n";
+	  if(have_pbuffer_){
+	    if(!viewwindow->doingMovie){
+	      if( pbuffer.is_current() )
+		cerr<<"pbuffer is current while not doing Movie\n";
 #endif
 	    glDrawBuffer(GL_BACK);
 #if defined(HAVE_PBUFFER)
-	  }
-	  else{
+	    } else {
 	    glDrawBuffer(GL_FRONT);
+	    }
+	  } else {
+	    glDrawBuffer(GL_BACK);
 	  }
 #endif	
 	}
@@ -1183,7 +1203,7 @@ OpenGL::redraw_frame()
 
       // Show the pretty picture
 #if defined(HAVE_PBUFFER)
-      if( !viewwindow->doingMovie )
+      if( !have_pbuffer_ || !viewwindow->doingMovie )
 #endif
       glXSwapBuffers(dpy, win);
 
@@ -1219,7 +1239,7 @@ OpenGL::redraw_frame()
           }
         }
         cerr << "**************************NUM COLORED PIXELS = " << numColoredPixels << endl;
- 
+
         // test code
         glRasterPos2i( 0, 0 );
         glDrawPixels( _x, _y, GL_RGB, GL_UNSIGNED_BYTE, image);
@@ -1229,7 +1249,7 @@ OpenGL::redraw_frame()
       }
 #endif
       // CollabVis code end
-      
+
       //  #ifdef __sgi
       //  	  if(saveprefix != ""){
       //  	    // Save out the image...
@@ -1303,7 +1323,7 @@ OpenGL::redraw_frame()
 #endif
     }
 #if defined(HAVE_PBUFFER)
-      if( !viewwindow->doingMovie )
+      if( !have_pbuffer_ || !viewwindow->doingMovie )
 #endif
     glXSwapBuffers(dpy, win);
   }
@@ -1648,7 +1668,7 @@ OpenGL::dump_image(const string& name, const string& /* type */)
 
 
 #if defined(HAVE_PBUFFER)
-  if( pbuffer.is_valid() && pbuffer.is_current() ){
+  if( have_pbuffer_ && pbuffer.is_valid() && pbuffer.is_current() ){
     glXMakeCurrent( dpy, win, cx ); 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -1689,7 +1709,7 @@ OpenGL::dump_image(const string& name, const string& /* type */)
   }
   // now dump the file
   dumpfile.write((const char *)pxl,n);
-  
+
   delete [] pxl;
   delete [] tmp_row;
 }
@@ -2309,7 +2329,7 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
     glGetDoublev(GL_PROJECTION_MATRIX, res->projection);
     glGetIntegerv(GL_VIEWPORT, res->viewport);
   }
-  
+
 #endif
 // CollabVis code end
 
@@ -2334,7 +2354,7 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
   }
   // CollabVis code end
 #endif
-  
+
   result->send(res);
 }
 
@@ -2414,7 +2434,7 @@ OpenGL::AddMpegFrame()
   glReadPixels(0,0,width,height,GL_RGB,GL_UNSIGNED_BYTE,ptr);
 
 #if defined(HAVE_PBUFFER)
-  if( pbuffer.is_valid() && pbuffer.is_current() ){
+  if( have_pbuffer_ && pbuffer.is_valid() && pbuffer.is_current() ){
     glXMakeCurrent( dpy, win, cx ); 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -2625,7 +2645,7 @@ createGenAxes()
   all->add(scinew GeomMaterial(xn, dk_red));
   all->add(scinew GeomMaterial(yn, dk_green));
   all->add(scinew GeomMaterial(zn, dk_blue));
-  
+
   return all;
 }
 
@@ -2724,7 +2744,7 @@ OpenGL::render_rotation_axis(const View &view,
   }
 
   drawinfo->viewwindow = viewwindow;
-  
+
   // Use depthrange to force the icon to move forward.
   // Ideally the rest of the scene should be drawn at 0.05 1.0,
   // so there was no overlap at all, but that would require

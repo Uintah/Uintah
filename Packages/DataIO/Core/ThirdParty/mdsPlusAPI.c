@@ -46,7 +46,8 @@
    It is not a complete general purpose interface although several of
    the functions are.
 */
-#include <sci_defs.h>
+
+#include <include/sci_defs/mdsplus_defs.h>
 
 #ifdef HAVE_MDSPLUS
 

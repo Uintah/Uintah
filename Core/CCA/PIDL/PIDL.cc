@@ -40,6 +40,9 @@
  *  Copyright (C) 1999 SCI Group
  */
 
+#include <include/sci_defs/mpi_defs.h>
+#include <include/sci_defs/globus_defs.h>
+
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/Object_proxy.h>
 #include <Core/CCA/PIDL/Warehouse.h>
@@ -49,10 +52,8 @@
 #include <Core/CCA/Comm/SocketMessage.h>
 #include <Core/CCA/Comm/Intra/IntraComm.h>
 #include <Core/Exceptions/InternalError.h> 
-#include <sci_defs.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <sci_defs.h>
 #include <iostream>
 #include <sstream>
 

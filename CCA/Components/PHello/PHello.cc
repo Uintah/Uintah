@@ -38,7 +38,7 @@
  *
  */
 
-#include <sci_config.h> // For MPIPP_H on SGI
+#include <include/sci_defs/config_defs.h> // For MPIPP_H on SGI
 #include <CCA/Components/PHello/PHello.h>
 #include <iostream>
 #include <Core/CCA/PIDL/PIDL.h>

@@ -49,8 +49,6 @@
 
 #include <Packages/Fusion/Dataflow/Modules/Fields/NIMRODConverter.h>
 
-#include <sci_defs.h>
-
 namespace Fusion {
 
 using namespace SCIRun;

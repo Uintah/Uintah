@@ -47,7 +47,6 @@
 #include <Core/2d/BBox2d.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Thread/Mutex.h>
-#include <sci_config.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>

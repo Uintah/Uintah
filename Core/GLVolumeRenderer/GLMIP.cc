@@ -26,14 +26,15 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <include/sci_defs/ogl_defs.h>
 
-#include <Core/GLVolumeRenderer/GLMIP.h>
 #if defined( HAVE_GLEW )
 #include <GL/glew.h>
 #else
 #include <GL/gl.h>
 #endif
 
+#include <Core/GLVolumeRenderer/GLMIP.h>
 
 namespace SCIRun {
 

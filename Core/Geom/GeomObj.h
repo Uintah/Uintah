@@ -43,12 +43,13 @@
 #ifndef SCI_Geom_GeomObj_h
 #define SCI_Geom_GeomObj_h 1
 
+#include <include/sci_defs/ogl_defs.h>
+
 #include <Core/Containers/Array1.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Persistent/Persistent.h>
-#include <sci_config.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>

@@ -38,15 +38,7 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <sci_defs.h>
-
-#include <Core/Malloc/Allocator.h>
-#include <Dataflow/Modules/Render/SCIBaWGL.h>
-#include <Dataflow/Modules/Render/ViewWindow.h>
-#include <Dataflow/Modules/Render/Viewer.h>
-
-#include <unistd.h>
-#include <math.h>
+#include <include/sci_defs/ogl_defs.h>
 
 #if defined( HAVE_GLEW )
 #include <GL/glew.h>
@@ -55,12 +47,18 @@
 #include <sci_glu.h>
 #endif
 
+#include <Dataflow/Modules/Render/SCIBaWGL.h>
+
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Modules/Render/ViewWindow.h>
+#include <Dataflow/Modules/Render/Viewer.h>
+
+#include <unistd.h>
+#include <math.h>
 #include <string.h>
 
 #include <iostream>
 using std::cerr;
-
-#include <Dataflow/Modules/Render/SCIBaWGL.h>
 
 namespace SCIRun {
 

@@ -47,11 +47,10 @@
    the functions are.
 */
 
-#include <sci_defs.h>
-
 #ifndef MDS_PLUS_API
-
 #define MDS_PLUS_API
+
+#include <include/sci_defs/mdsplus_defs.h>
 
 #ifdef __cplusplus
 extern "C" {

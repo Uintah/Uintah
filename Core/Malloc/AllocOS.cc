@@ -39,6 +39,8 @@
  *  Copyright (C) 199? SCI Group
  */
 
+#include <include/sci_defs/bits_defs.h>
+
 #include <Core/Malloc/AllocOS.h>
 #include <Core/Malloc/AllocPriv.h>
 #ifdef __APPLE__
@@ -50,7 +52,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sci_config.h>
 #define ALIGN 16
 
 #if defined(sun) || defined(__linux)

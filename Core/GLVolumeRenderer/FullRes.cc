@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <sci_defs.h>
+#include <include/sci_defs/ogl_defs.h>
 
 #include <Core/GLVolumeRenderer/FullRes.h>
 #include <Core/Geometry/Ray.h>

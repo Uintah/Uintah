@@ -43,8 +43,8 @@
 #ifndef SCI_Containers_Array1_h
 #define SCI_Containers_Array1_h 1
 
-#include <sci_config.h>
-#include <Core/Util/Assert.h>
+#include <include/sci_defs/template_defs.h>
+
 #include <Core/Persistent/Persistent.h>
 
 #ifdef _WIN32

@@ -26,17 +26,20 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <include/sci_defs/ogl_defs.h>
 
-#include <Core/GLVolumeRenderer/GLVolumeRenderer.h>
-#include <Core/Util/NotFinished.h>
-#include <Core/Geom/GeomOpenGL.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/Color.h>
 #if defined( HAVE_GLEW )
 #include <GL/glew.h>
 #else
 #include <GL/gl.h>
 #endif
+
+#include <Core/GLVolumeRenderer/GLVolumeRenderer.h>
+
+#include <Core/Util/NotFinished.h>
+#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Datatypes/Color.h>
 
 #include <iostream>
 

@@ -30,17 +30,6 @@
 #ifndef GLTEXRENSTATE_H
 #define GLTEXRENSTATE_H
 
-#include <iostream>
-using std::string;
-#include <sci_defs.h>
-
-#if defined(HAVE_GLEW)
-#include <GL/glew.h>
-#else
-#include <GL/gl.h>
-#include <sci_glu.h>
-#endif
-
 namespace SCIRun {
 
 

@@ -54,7 +54,6 @@
 #include <sci_glu.h>
 #include <GL/glx.h>
 
-#include <sci_config.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 

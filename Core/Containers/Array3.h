@@ -43,6 +43,8 @@
 #ifndef SCI_Containers_Array3_h
 #define SCI_Containers_Array3_h 1
 
+#include <include/sci_defs/template_defs.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
@@ -53,7 +55,6 @@
 #include <fcntl.h>
 #include <sys/times.h>
 
-#include <Core/Util/Assert.h>
 #include <Core/Persistent/Persistent.h>
 
 

@@ -42,7 +42,8 @@
  *
  */
 
-#include <sci_config.h>
+#include <include/sci_defs/config_defs.h> /* for HAVE_LIMITS etc, for tcl files */
+
 #include "tclInt.h"
 #include "tclPort.h"
 #include <signal.h> 

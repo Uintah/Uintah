@@ -55,7 +55,7 @@
 #include <SCIRun/Dataflow/SCIRunComponentInstance.h>
 #include <SCIRun/SCIRunErrorHandler.h>
 #include <iostream>
-#include <sci_defs.h>
+
 using namespace std;
 using namespace SCIRun;
 

@@ -37,15 +37,7 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomObj.h>
-// #if defined( HAVE_GLEW )
-// #include <GL/glew.h>
-// #else
-// #include <GL/gl.h>
-// #include <sci_glu.h>
-// #endif
-
 #include <Core/Containers/Octree.h>
-
 #include <Core/GLVolumeRenderer/Brick.h>
 #include <Core/GLVolumeRenderer/GLTexRenState.h>
 #include <Core/GLVolumeRenderer/GLVolRenState.h>
@@ -60,8 +52,6 @@
 #include <Core/GLVolumeRenderer/GLTexture3D.h>
 
 namespace SCIRun {
-
-
 
 class GLVolumeRenderer : public GeomObj
 {
