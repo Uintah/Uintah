@@ -8,6 +8,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
+#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/MathToolbox.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -867,12 +868,12 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 
       //__________________________________
       //  Set BC's
-      d_ice->setBC(vel_CC,  "Velocity",   patch, matlindex);
-      d_ice->setBC(Temp_CC, "Temperature",patch, matlindex);
+      setBC(vel_CC,  "Velocity",   patch, matlindex);
+      setBC(Temp_CC, "Temperature",patch, d_sharedState, matlindex);
       
       //  Set if symmetric Boundary conditions
-      d_ice->setBC(cmass,   "set_if_sym_BC",patch, matlindex);
-      d_ice->setBC(cvolume, "set_if_sym_BC",patch, matlindex);
+      setBC(cmass,   "set_if_sym_BC",patch, d_sharedState, matlindex);
+      setBC(cvolume, "set_if_sym_BC",patch, d_sharedState, matlindex);
       
      //---- P R I N T   D A T A ------
      if(switchDebug_InterpolateNCToCC_0) {
@@ -969,8 +970,8 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
        } 
        //__________________________________
        //  Set if symmetric Boundary conditions
-       d_ice->setBC(cmomentum, "set_if_sym_BC",patch, matlindex);
-       d_ice->setBC(int_eng,   "set_if_sym_BC",patch, matlindex);
+       setBC(cmomentum, "set_if_sym_BC",patch, matlindex);
+       setBC(int_eng,   "set_if_sym_BC",patch, d_sharedState, matlindex);
 
       //---- P R I N T   D A T A ------ 
       if(switchDebug_InterpolateNCToCC) {
@@ -1234,16 +1235,16 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int dwindex = matl->getDWIndex();
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      d_ice->setBC(vel_CC[m], "Velocity",   patch,dwindex);
-      d_ice->setBC(Temp_CC[m],"Temperature",patch,dwindex);
+      setBC(vel_CC[m], "Velocity",   patch,dwindex);
+      setBC(Temp_CC[m],"Temperature",patch, d_sharedState, dwindex);
       
       //__________________________________
       //  Symetry BC dTdt: Neumann = 0
       //             dvdt: tangent components Neumann = 0
       //                   normal component negInterior
       if(mpm_matl){
-        d_ice->setBC(dTdt_CC[m], "set_if_sym_BC", patch, dwindex);
-        d_ice->setBC(dvdt_CC[m], "set_if_sym_BC", patch, dwindex);
+        setBC(dTdt_CC[m], "set_if_sym_BC", patch, d_sharedState, dwindex);
+        setBC(dvdt_CC[m], "set_if_sym_BC", patch, dwindex);
       }
     }
     //__________________________________
@@ -1780,11 +1781,12 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        Material* matl = d_sharedState->getMaterial( m );
        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
        if(ice_matl){
-         d_ice->setBC(rho_CC[m],   "Density" ,patch, ice_matl->getDWIndex());
+         setBC(rho_CC[m],   "Density" ,patch, d_sharedState, 
+               ice_matl->getDWIndex());
        }  
     }  
-    d_ice->setBC(press_new,rho_micro[SURROUND_MAT],
-                 "rho_micro", "Pressure", patch, 0, new_dw);
+    setBC(press_new,rho_micro[SURROUND_MAT],
+          "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
     
     //__________________________________
     // compute sp_vol_CC
