@@ -64,13 +64,13 @@
 #ifndef BIOPSE_TYPENAME_H
 #define BIOPSE_TYPENAME_H
 
+namespace BioPSE {
+  class NeumannBC;
+}
+
 namespace SCIRun {
 
-using std::string;
-using BioPSE::NeumannBC;
-
-class NeumannBC;
-template<> const string find_type_name(NeumannBC*);
+  template<> const std::string find_type_name(BioPSE::NeumannBC*);
 
 } // namespace SCIRun
 
