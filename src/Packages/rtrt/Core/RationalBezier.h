@@ -1,8 +1,6 @@
 #ifndef RationalBezier_H
 #define RationalBezier_H
 
-#include <iostream>
-
 #include <Packages/rtrt/Core/RationalMesh.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/BBox.h>
