@@ -73,7 +73,7 @@ public:
       ////////////////////////////////////////////////////////////////////////
       //
       enum d_eqnType { PRESSURE, MOMENTUM, SCALAR };
-      enum d_velName { VEL, UVEL, VVEL, WVEL };
+      enum d_dirName { NODIR, XDIR, YDIR, ZDIR };
       enum d_stencilName { AP, AE, AW, AN, AS, AT, AB };
 
       // GROUP: Constructors:
@@ -208,6 +208,9 @@ private:
 
 //
 // $Log$
+// Revision 1.33  2000/07/09 00:23:58  bbanerje
+// Made changes to calcVelocitySource .. still getting seg violation here.
+//
 // Revision 1.32  2000/07/08 23:42:53  bbanerje
 // Moved all enums to Arches.h and made corresponding changes.
 //
