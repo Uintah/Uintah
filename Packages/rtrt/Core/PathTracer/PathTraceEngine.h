@@ -10,9 +10,14 @@
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Array2.h>
 
+namespace SCIRun {
+  class Semaphore;
+}
+
 namespace rtrt {
 
   using SCIRun::Runnable;
+  using SCIRun::Semaphore;
 
   class PerProcessorContext;
   class DepthStats;
@@ -36,7 +41,8 @@ namespace rtrt {
   public:
     PathTraceContext(const Color &color, const PathTraceLight &light,
 		     Object* geometry, Background *background,
-		     int num_samples, int max_depth);
+		     int num_samples, int max_depth,
+		     Semaphore *semi = 0);
 
     // Light source
     PathTraceLight light;
@@ -51,6 +57,9 @@ namespace rtrt {
     int num_samples_root;
     // Maximum ray depth
     int max_depth;
+
+    // Semephore for threading
+    Semaphore *semi;
 
     // Stuff for PerProcessorContext
     int pp_size;
@@ -91,6 +100,8 @@ namespace rtrt {
     friend class PathTraceWorker;
   public:
     TextureSphere(const Point &cen, double radius, int tex_res=16);
+    ~TextureSphere() {}
+    
     void writeTexture(char* basename, size_t index);
     void writeData(FILE *outfile);
   };
