@@ -297,46 +297,49 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle ifield_h,
     // Put the new field into the correct location.
     Transform trans;
 
-    if( dim.size() == 3 ) {
+    if( dim.size() == 3 && axis == 0 ) {
 
-      if( axis == 0 ) {
-
-	trans.pre_translate( (Vector) (-o) );
-
-	trans.pre_rotate( -PI/2.0, Vector(0.0, 1.0, 0.0) );
-
-	trans.pre_translate( (Vector) (o) );
-
-      } else if( axis == 1 ) {
-
-	trans.pre_translate( (Vector) (-o) );
-
-	trans.pre_rotate( PI/2.0, Vector(1.0, 0.0, 0.0) );
-
-	trans.pre_translate( (Vector) (o) );
-      }
-    } else if( dim.size() == 2 ) {
-
-      if( axis == 0 ) {
-
-	// Get two point that along with the orgin define the "Z" plane.
+	// Get two points that along with the origin define the "Y" plane.
 	++inodeItr;
-	imesh->get_center(p1, *inodeItr);
-
-	for (it=0; it<old_i-1; it++)
-	  ++inodeItr;
 	imesh->get_center(p2, *inodeItr);
 
-	// Get the plane the data is in.
-	Vector normal = Cross( Vector(p1-o).normal(), Vector(p2-o).normal() );
+	for (it=0; it<old_i*old_j-1; it++)
+	  ++inodeItr;
+	imesh->get_center(p1, *inodeItr);
 
-	trans.pre_translate( (Vector) (-o) );
+    } else if( dim.size() == 3 && axis == 1 ) {
 
-	// Rotate around the orgin.
-	trans.pre_rotate( PI/2.0, normal.normal() );
+      // Get two points that along with the origin define the "X" plane.
+      for (it=0; it<old_i; it++)
+	++inodeItr;
+      
+      imesh->get_center(p1, *inodeItr);
+      
+      for (it=0; it<old_i*(old_j-1); it++)
+	++inodeItr;
+      imesh->get_center(p2, *inodeItr);
 
-	trans.pre_translate( (Vector) (o) );
-      }
+    } else if( dim.size() == 2 && axis == 0 ) {
+
+      // Get two points that along with the origin define the "Z" plane.
+      ++inodeItr;
+      imesh->get_center(p1, *inodeItr);
+
+      for (it=0; it<old_i-1; it++)
+	++inodeItr;
+      imesh->get_center(p2, *inodeItr);
+    }
+
+    if( axis < dim.size() - 1 ) { 
+      // Get the plane the data is in.
+      Vector normal = Cross( Vector(p1-o).normal(), Vector(p2-o).normal() );
+
+      trans.pre_translate( (Vector) (-o) );
+
+      // Rotate around the orgin.
+      trans.pre_rotate( PI/2.0, normal.normal() );
+
+      trans.pre_translate( (Vector) (o) );
     }
 
     trans.pre_translate( (Vector) (p-o) );
