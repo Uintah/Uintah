@@ -15,6 +15,7 @@ SRCS     += \
 	$(SRCDIR)/GLTextureBuilder.cc\
 	$(SRCDIR)/GenStandardColorMaps.cc\
 	$(SRCDIR)/GenTransferFunc.cc\
+	$(SRCDIR)/Isosurface.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
 	$(SRCDIR)/ShowField.cc\
 	$(SRCDIR)/Streamline.cc\
@@ -22,7 +23,6 @@ SRCS     += \
 	$(SRCDIR)/TextureVolVis.cc\
 [INSERT NEW CODE FILE HERE]
 
-#	$(SRCDIR)/IsoSurface.cc\
 
 
 

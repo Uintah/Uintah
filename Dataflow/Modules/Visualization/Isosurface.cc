@@ -1,0 +1,269 @@
+/*
+ *  Isosurface.cc:  
+ *
+ *   \authur Yarden Livnat
+ *   Department of Computer Science
+ *   University of Utah
+ *
+ *   \date Feb 2001
+ *
+ *  Copyright (C) 2001 SCI Institute
+ */
+
+#include <map.h>
+#include <iostream>
+using std::cerr;
+using std::cin;
+using std::endl;
+#include <sstream>
+using std::ostringstream;
+
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Material.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Algorithms/Visualization/TetMC.h>
+#include <Core/Algorithms/Visualization/HexMC.h>
+#include <Core/Algorithms/Visualization/MarchingCubes.h>
+
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/FieldPort.h>
+//#include <Dataflow/Ports/SurfacePort.h>
+
+
+namespace SCIRun {
+
+
+class Isosurface : public Module {
+
+  // Input Ports
+  FieldIPort* infield;
+  FieldIPort* incolorfield;
+  ColorMapIPort* inColorMap;
+
+  // Output Ports
+  GeometryOPort* ogeom;
+  FieldOPort* osurf;
+  
+
+  //! GUI variables
+  GuiDouble gui_iso_value;
+  GuiInt    extract_from_new_field;
+  GuiInt    use_algorithm;
+
+  //! 
+  double iso_value;
+  FieldHandle field_;
+  GeomObj *surface;
+  FieldHandle colorfield;
+  ColorMapHandle cmap;
+
+  //! status variables
+  int init;
+  int geom_id;
+  double prev_min, prev_max;
+  int last_generation;
+  bool have_colorfield;
+  bool have_ColorMap;
+
+  MarchingCubesAlg *mc_alg;
+
+  MaterialHandle matl;
+
+public:
+  Isosurface(const clString& id);
+  virtual ~Isosurface();
+  virtual void execute();
+
+  void initialize();
+  void new_field( FieldHandle & );
+  void send_results();
+};
+
+
+extern "C" Module* make_Isosurface(const clString& id) {
+  return new Isosurface(id);
+}
+
+//static clString module_name("Isosurface");
+static clString surface_name("Isosurface");
+static clString widget_name("Isosurface");
+
+Isosurface::Isosurface(const clString& id)
+  : Module("Isosurface", id, Filter), 
+    gui_iso_value("isoval", id, this),
+    extract_from_new_field("extract-from-new-field", id, this ),
+    use_algorithm("algorithm", id, this)
+{
+    // Create the input ports
+  infield=scinew FieldIPort(this, "Field", FieldIPort::Atomic);
+  add_iport(infield);
+  incolorfield=scinew FieldIPort(this, "Color Field", FieldIPort::Atomic);
+  add_iport(incolorfield);
+  inColorMap=scinew ColorMapIPort(this, "Color Map", ColorMapIPort::Atomic);
+  add_iport(inColorMap);
+  
+
+  // Create the output port
+  ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+  add_oport(ogeom);
+//   osurf=scinew FieldOPort(this, "Surface", FieldIPort::Atomic);
+//   add_oport(osurf);
+  
+  matl = scinew Material(Color(0,.3,0), Color(0,.6,0), Color(.7,.7,.7), 50);
+
+  geom_id=0;
+  
+  prev_min=prev_max=0;
+  last_generation = -1;
+  mc_alg = 0;
+  init = true;
+}
+
+Isosurface::~Isosurface()
+{
+}
+
+void Isosurface::execute()
+{
+  update_state(NeedData);
+
+  FieldHandle field;
+  infield->get(field);
+  if(!field.get_rep()){
+    return;
+  }
+
+  
+  update_state(JustStarted);
+
+  if( init ) {
+    initialize();
+    init = false;
+  }
+  
+  if ( field->generation != last_generation ) {
+    // new field
+    cerr << "new field\n";
+    new_field( field );
+    last_generation = field->generation;
+    if ( !extract_from_new_field.get() )
+      return;
+
+    // fall through and extract isosurface from the new field
+  }
+
+  cerr << "continue...\n";
+
+  // Color the surface
+  have_colorfield=incolorfield->get(colorfield);
+  have_ColorMap=inColorMap->get(cmap);
+  
+  iso_value = gui_iso_value.get();
+  cerr << "isovalue: iso = " << iso_value << endl; 
+  switch ( use_algorithm.get() ) {
+  case 0:  // Marching Cubes
+    // for now, use a trivial MC
+    if ( !mc_alg ) {
+      string type = field->get_type_name();
+      cerr << "field type = " << type << endl;
+      if ( type == "TetVol<double>" ) {
+	mc_alg = make_tet_mc_alg( this, 
+			      dynamic_cast<TetVol<double> *>(field.get_rep()));
+      }
+      if ( type == "LatticeVol<double>" ) {
+	mc_alg = make_lattice_mc_alg( this, 
+			 dynamic_cast<LatticeVol<double> *>(field.get_rep()));
+      }
+      else {
+	error( "can not work with this field\n");
+	return;
+      }
+    }
+    // mc_alg should be set now
+    surface = mc_alg->search( iso_value );
+
+    break;
+  case 1:  // Noise
+    error("Noise not implemented\n");
+    break;
+  case 2:  // View Dependent
+    error("View dependent not implemented\n");
+    break;
+  default: // Error
+    error("Unknow Algorithm requested\n");
+    return;
+    break;
+  }
+
+
+  send_results();
+}
+
+void
+Isosurface::send_results()
+{
+  // stop showing the prev. surface
+  if ( geom_id )
+    ogeom->delObj( geom_id );
+
+  // if no surface than we are done
+  if( !surface ) {
+    geom_id=0;
+    
+    return;
+  }
+
+  GeomObj *geom;
+  
+  if(have_ColorMap && !have_colorfield){
+    // Paint entire surface based on ColorMap
+    geom=scinew GeomMaterial( surface , cmap->lookup(iso_value) );
+  } else if(have_ColorMap && have_colorfield){
+    geom = surface;     // Nothing - done per vertex
+  } else {
+    geom=scinew GeomMaterial( surface, matl); // Default material
+  }
+
+  // send to viewer
+  geom_id=ogeom->addObj( geom, surface_name);
+
+  // output surface
+//   if (emit_surface.get()) {
+//     //osurf->send(TSurfaceHandle(surf));
+//     //osurf->send(FieldHandle(f));
+//   }
+}
+
+void
+Isosurface::initialize()
+{
+//   widget_id = ogeom->addObj(widget->GetWidget(), widget_name, &widget_lock);
+//   widget->Connect(ogeom);
+}
+
+void
+Isosurface::new_field( FieldHandle &field )
+{
+  // reset the GUI
+  double min, max;
+  min = max = 0;
+  field->get_minmax(min, max);  
+  if(min != prev_min || max != prev_max){
+    ostringstream str;
+    str << id << " set_minmax " << min << " " << max;
+    TCL::execute(str.str().c_str());
+    prev_min = min;
+    prev_max = max;
+  }
+
+  // delete any algorithms created for the previous field.
+  if ( mc_alg ) { delete mc_alg; mc_alg = 0;}
+}
+
+
+} // End namespace SCIRun
