@@ -29,14 +29,6 @@
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Mutex.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
 
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/LatVolMesh.h>
@@ -103,7 +95,6 @@ WARNING
 ****************************************/
 
 class NodeHedgehog : public Module {
-  ArchiveIPort* ingrid;
   FieldIPort *invectorfield;
   FieldIPort* inscalarfield;
   ColorMapIPort *inColorMap;
@@ -120,9 +111,6 @@ class NodeHedgehog : public Module {
   virtual void widget_moved(int last);
 
   // GROUP: Private Function:
-  //////////////////////
-  // getGrid -
-  GridP getGrid();
 
   // struct to pass into add_arrow
   struct ArrowInfo {
@@ -152,7 +140,9 @@ class NodeHedgehog : public Module {
   GuiInt skip_node;
   GuiDouble shaft_rad;
   MaterialHandle outcolor;
-  int grid_id;
+  // This number is used to delete only the arrow geometry without destroying
+  // the widget geometry
+  int geom_id;
   int need_find2d;
   int need_find3d;
 
@@ -329,25 +319,6 @@ extern "C" Module* make_NodeHedgehog(const string& id) {
   return scinew NodeHedgehog(id);
 }       
 
-// obtains a pointer to the grid via the Archive in Port
-GridP NodeHedgehog::getGrid()
-{
-  ArchiveHandle handle;
-  if(!ingrid->get(handle)){
-    std::cerr<<"Didn't get a handle on archive\n";
-    return 0;
-  }
-
-  // access the grid through the handle and dataArchive
-  DataArchive& dataArchive = *((*(handle.get_rep()))());
-  vector< double > times;
-  vector< int > indices;
-  dataArchive.queryTimesteps( indices, times );
-  GridP grid = dataArchive.queryGrid(times[0]);
-
-  return grid;
-}
-
 NodeHedgehog::NodeHedgehog(const string& id)
 : Module("NodeHedgehog", id, Filter, "Visualization", "Uintah"),
   widget_lock("NodeHedgehog widget lock"),
@@ -373,7 +344,7 @@ NodeHedgehog::NodeHedgehog(const string& id)
   
   widget2d = scinew FrameWidget(this, &widget_lock, INIT, true);
   widget3d = scinew BoxWidget(this, &widget_lock, INIT, false, true);
-  grid_id=0;
+  geom_id=0;
   
   need_find2d=1;
   need_find3d=1;
@@ -430,18 +401,17 @@ void NodeHedgehog::add_arrow(Point &v_origin, Vector &vf_value,
 
 void NodeHedgehog::execute()
 {
-  int old_grid_id = grid_id;
+  int old_geom_id = geom_id;
   cout << "NodeHedgehog::execute:start\n";
 
     // Create the input port
-  ingrid = (ArchiveIPort *) get_iport("Data Archive");
   inscalarfield = (FieldIPort *) get_iport("Scalar Field");
   invectorfield = (FieldIPort *) get_iport("Vector Field");
   inColorMap = (ColorMapIPort *) get_iport("ColorMap");
 					
   // Create the output port
   ogeom = (GeometryOPort *) get_oport("Geometry"); 
-  // Must have a vector field and a grid, otherwise exit
+  // Must have a vector field, otherwise exit
   FieldHandle vfield;
   if (!invectorfield->get( vfield ))
     return;
@@ -463,10 +433,6 @@ void NodeHedgehog::execute()
     cerr << "Cannot cast field into a LatVolField\n";
     return;
   }
-  
-  GridP grid = getGrid();
-  if (!grid)
-    return;
   
   // Get the scalar field and ColorMap...if you can
   FieldHandle ssfield;
@@ -614,7 +580,6 @@ void NodeHedgehog::execute()
   max_length = 0;
   max_vector = Vector(0,0,0);
   
-#if 1
   // We need a few pieces of information.
   // 1. All the Node/Cell locations (we'll call that v_origin)
   // 2. The value of the vector field at v_origin ( vf_value )
@@ -737,79 +702,14 @@ void NodeHedgehog::execute()
     }
   }
 #endif // ifdef USE_HOG_THREADS
-#else
-  //-----------------------------------------
-  // for each level in the grid
-  for(int l = 0;l<numLevels;l++){
-    LevelP level = grid->getLevel(l);
-
-    Level::const_patchIterator iter;
-#ifdef USE_HOG_THREADS
-    // set up the worker thread stuff
-    int max_workers = Max(Thread::numProcessors()/2, 2);
-    Semaphore* thread_sema = scinew Semaphore( "nodehedge semahpore",
-					       max_workers);
-#endif
-    //---------------------------------------
-    // for each patch in the level
-    for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
-      Patch* patch = *iter;
-
-#ifdef USE_HOG_THREADS
-      thread_sema->down();
-      Thread *thrd = scinew
-	Thread(scinew NodeHedgehogWorker(patch,
-					 fld,
-					 ssfield,
-					 have_sfield,
-					 cmap,
-					 have_cmap,
-					 boundaryRegion,
-					 this,
-					 arrows,
-					 &max_length,
-					 &max_vector,
-					 &add_arrows,
-					 thread_sema),
-	       "nodehedgehogworker");
-      thrd->detach();
-#else      
-      if( fld->data_at() == Field::NODE) {
-	//------------------------------------
-	// for each node in the patch
-	for(NodeIterator iter = patch->getNodeIterator(boundaryRegion); !iter.done(); iter+=skip){
-	  IntVector idx = *iter;
-	  Point p = patch->nodePosition(idx);
-	  Vector vv = fld->fdata().get_data_by_patch_and_index(patch, idx);
-	  add_arrow(vv, ssfield, have_sfield, cmap,
-		    length_scale.get(), min_crop_length.get(),
-		    max_crop_length.get(), arrows, p);
-	} // end for loop
-      } else if( fld->data_at() == Field::CELL) {
-	for(CellIterator iter = patch->getCellIterator(boundaryRegion); !iter.done(); iter+=skip){
-	  IntVector idx = *iter;
-	  Point p = patch->cellPosition(idx);
-	  Vector vv = fld->fdata().get_data_by_patch_and_index(patch, idx);
-	  add_arrow(vv, ssfield, have_sfield, cmap,
-		    length_scale.get(), min_crop_length.get(),
-		    max_crop_length.get(), arrows, p);
-	} // end for loop
-      } // end if NODE
-#endif
-    } // end for each patch
-#ifdef USE_HOG_THREADS
-    thread_sema->down(max_workers);
-    if( thread_sema ) delete thread_sema;
-#endif
-  } // end for each level
-#endif // end switch between current and old code
   cout << "\nNodeHedgehog::execute:finished adding arrows\n";
   
-  // delete the old grid/cutting plane
-  if (old_grid_id != 0)
-    ogeom->delObj( old_grid_id );
+  // This needs to happen so that we don't destroy the widget.
+  // Delete the old geometry.
+  if (old_geom_id != 0)
+    ogeom->delObj( old_geom_id );
   
-  grid_id = ogeom->addObj(arrows, module_name);
+  geom_id = ogeom->addObj(arrows, module_name);
 
   // set the max vector stuff in the tcl code
   max_vector_length.set(max_length);
@@ -859,84 +759,6 @@ void NodeHedgehog::tcl_command(TCLArgs& args, void* userdata)
     Module::tcl_command(args, userdata);
   }
 }
-
-#if 0
-bool  
-NodeHedgehog::interpolate(FieldHandle vfld, const Point& p, Vector& val)
-{
-  const string field_type = vfld->get_type_name(0);
-  const string type = vfld->get_type_name(1);
-  if( field_type == "LatVolField"){
-    if (type == "Vector") {
-      if( LatVolField<Vector> *fld =
-	dynamic_cast<LatVolField<Vector>*>(vfld.get_rep())){
-	return fld->interpolate(val ,p);
-      } else {
-	return false;
-      }
-    } else {
-      cerr << "Uintah::NodeHedgehog::interpolate:: error - unknown Field type: " << type << endl;
-      return false;
-    }
-  } else {
-    if( field_type == "LatVolField"){
-   // use virtual field interpolation
-      VectorFieldInterface *vfi;
-      if(( vfi = vfld->query_vector_interface())){
-	return vfi->interpolate( val, p);
-      } 
-    }    
-    return false;
-  }
-  //  return false;
-}
-
-
-bool  
-NodeHedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
-{
-  //  const string field_type = sfld->get_type_name(0);
-  const string type = sfld->get_type_name(1);
-  if( sfld->get_type_name(0) == "LatVolField" ){
-    if (type == "double") {
-      if(LatVolField<double> *fld =
-	dynamic_cast<LatVolField<double>*>(sfld.get_rep())){;
-	return fld->interpolate(val ,p);
-      } else {
-	return false;
-      }
-    } else if (type == "float") {
-      float result;
-      bool success;
-      LatVolField<float> *fld =
-	dynamic_cast<LatVolField<float>*>(sfld.get_rep());
-      success = fld->interpolate(result ,p);   
-      val = (double)result;
-      return success;
-    } else if (type == "long") {
-      long result;
-      bool success;
-      LatVolField<long> *fld =
-	dynamic_cast<LatVolField<long>*>(sfld.get_rep());
-      success =  fld->interpolate(result,p);
-      val = (double)result;
-      return success;
-    } else {
-      cerr << "Uintah::NodeHedgehog::interpolate:: error - unimplemented Field type: " << type << endl;
-      return false;
-    }
-  } else if( sfld->get_type_name(0) == "LatVolField" ){
-    // use virtual field interpolation
-    ScalarFieldInterface *sfi;
-    if(( sfi = sfld->query_scalar_interface())){
-      return sfi->interpolate( val, p);
-    }
-    return false;
-  } else {
-    return false;
-  }
-}
-#endif
 
 } // End namespace Uintah
 
