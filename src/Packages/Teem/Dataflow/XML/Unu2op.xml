@@ -51,6 +51,10 @@ that - can probably only be used once (reliably).</summary>
         <name>InputNrrd</name>
         <datatype>Teem::Nrrd</datatype>
       </port>
+      <port>
+        <name>InputNrrd2</name>
+        <datatype>Teem::Nrrd</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
