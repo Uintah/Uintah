@@ -455,7 +455,6 @@ QuadSurfMesh::flush_changes()
 void
 QuadSurfMesh::compute_normals()
 {
-#if 0
   if (normals_.size() > 0) { return; }
   normals_.resize(points_.size()); // 1 per node
 
@@ -464,7 +463,7 @@ QuadSurfMesh::compute_normals()
   //! face normals (not normalized) so that magnitude is also the area.
   vector<Vector> face_normals(faces_.size());
   // Computing normal per face.
-  Node::array_type nodes(3);
+  Node::array_type nodes(4);
   Face::iterator iter, iter_end;
   begin(iter);
   end(iter_end);
@@ -472,20 +471,23 @@ QuadSurfMesh::compute_normals()
   {
     get_nodes(nodes, *iter);
 
-    Point p1, p2, p3;
-    get_point(p1, nodes[0]);
-    get_point(p2, nodes[1]);
-    get_point(p3, nodes[2]);
+    Point p0, p1, p2, p3;
+    get_point(p0, nodes[0]);
+    get_point(p1, nodes[1]);
+    get_point(p2, nodes[2]);
+    get_point(p3, nodes[3]);
+
     // build table of faces that touch each node
     node_in_faces[nodes[0]].push_back(*iter);
     node_in_faces[nodes[1]].push_back(*iter);
     node_in_faces[nodes[2]].push_back(*iter);
+    node_in_faces[nodes[3]].push_back(*iter);
 
-    Vector v0 = p2 - p1;
-    Vector v1 = p3 - p2;
+    Vector v0 = p1 - p0;
+    Vector v1 = p2 - p1;
     Vector n = Cross(v0, v1);
     face_normals[*iter] = n;
-//    cerr << "normal mag: " << n.length() << endl;
+
     ++iter;
   }
   //Averaging the normals.
@@ -503,7 +505,6 @@ QuadSurfMesh::compute_normals()
     normals_[i] = ave; ++i;
     ++nif_iter;
   }
-#endif
 }
 
 
@@ -723,7 +724,7 @@ QuadSurfMesh::clip(ClipperHandle clipper)
 	nnodes[i] = nodemap[onodes[i]];
       }
 
-      clipped->add_quad(nnodes[0], nnodes[1], nnodes[2], nnodes[3]);
+      clipped->add_elem(nnodes);
     }
     
     ++bi;
