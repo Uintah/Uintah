@@ -277,11 +277,13 @@ void LinAlgBinary::execute() {
     if (aH->is_sparse() || bH->is_sparse())
     {
       error("NormalizeAtoB does not currently support SparseRowMatrices.");
+      return;
     }
     
     if (aH->get_data_size() == 0 || bH->get_data_size() == 0)
     {
       error("Cannot NormalizeAtoB with empty matrices.");
+      return;
     }
     
     double amin, amax, bmin, bmax;
@@ -302,7 +304,7 @@ void LinAlgBinary::execute() {
     }
 
     MatrixHandle anewH = aH->clone();
-    double *anew = &((*(anewH.get_rep()))[0][0]);
+    double *anew = anewH->get_data_pointer();
     const double scale = (bmax - bmin)/(amax - amin);
     for (i=0; i<na; i++)
       anew[i] = (a[i]-amin)*scale+bmin;
