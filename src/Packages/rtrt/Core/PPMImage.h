@@ -22,25 +22,6 @@ using std::cerr;
 using std::vector;
 using std::string;
 
-void eat_comments_and_whitespace(ifstream &str)
-{
-  char c;
-  str.get(c);
-  for(;;) {
-    if (c==' '||c=='\t'||c=='\n') {
-      str.get(c);
-      continue;
-    } else if (c=='#') {
-      str.get(c);
-      while(c!='\n')
-        str.get(c);
-    } else {
-      str.unget();
-      break;
-    }
-  }
-}
-
 class PPMImage
 {
 
@@ -50,6 +31,8 @@ class PPMImage
   bool                valid_;
   vector<rtrt::Color> image_;
   bool                flipped_;
+
+  void eat_comments_and_whitespace(ifstream &str);
 
  public:
   PPMImage(const string& s, bool flip=false) 
