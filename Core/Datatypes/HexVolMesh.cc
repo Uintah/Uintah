@@ -886,6 +886,14 @@ tetinterp(const Point &p, Point nodes[8],
 //                       with V[n]=V[0] and V[n+1]=V[1]
 //            Point N = unit normal vector of the polygon's plane
 //    Return: the (float) area of the polygon
+
+// Copyright 2000, softSurfer (www.softsurfer.com)
+// This code may be freely used and modified for any purpose
+// providing that this copyright notice is included with it.
+// SoftSurfer makes no warranty for this code, and cannot be held
+// liable for any real or imagined damage resulting from its use.
+// Users of this code must verify correctness for their application.
+
 double
 HexVolMesh::polygon_area(const Node::array_type &ni, const Vector N) const
 {
@@ -941,17 +949,20 @@ HexVolMesh::polygon_area(const Node::array_type &ni, const Vector N) const
 double
 HexVolMesh::pyramid_volume(const Node::array_type &face, const Point &p) const
 {
-  Node::index_type min_index = 3;
-  for (int i = 0; i < 2; i++)
-    if (face[i] < face[min_index]) min_index = i;
-  Vector v2(points_[face[(min_index+1)%4]]-points_[face[min_index]]);
-  Vector v1(points_[face[(min_index+1)%4]]-points_[face[(min_index+2)%4]]);
-  if (Cross(v2,v1).length2()<=0.0) return 0;
-  Plane plane(points_[face[min_index]], 
-	      points_[face[(min_index+1)%4]], 
-	      points_[face[(min_index+2)%4]]);
-  double dist = plane.eval_point(p);
-  return fabs(plane.eval_point(p)*polygon_area(face,plane.normal())*0.25);
+  Vector e1(points_[face[1]]-points_[face[0]]);
+  Vector e2(points_[face[1]]-points_[face[2]]);
+  if (Cross(e1,e2).length2()>0.0) {
+    Plane plane(points_[face[0]], points_[face[1]], points_[face[2]]);
+    double dist = plane.eval_point(p);
+    return fabs(plane.eval_point(p)*polygon_area(face,plane.normal())*0.25);
+  }
+  Vector e3(points_[face[3]]-points_[face[2]]);
+  if (Cross(e2,e3).length2()>0.0) {
+    Plane plane(points_[face[1]], points_[face[2]], points_[face[3]]);
+    double dist = plane.eval_point(p);
+    return fabs(plane.eval_point(p)*polygon_area(face,plane.normal())*0.25);
+  }
+  return 0.0;
 }
   
   
