@@ -665,8 +665,8 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   //  WSB1 burn model
   t->requires(Task::OldDW, MIlb->TempGradLabel,   react_matls, gn);
   t->requires(Task::OldDW, MIlb->aveSurfTempLabel,react_matls, gn);
-  t->computes( MIlb->TempGradLabel);
-  t->computes( MIlb->aveSurfTempLabel);
+  t->computes( MIlb->TempGradLabel,    react_matls);
+  t->computes( MIlb->aveSurfTempLabel, react_matls);
   //__________________________________
   
   t->computes( Ilb->int_eng_comb_CCLabel); 
