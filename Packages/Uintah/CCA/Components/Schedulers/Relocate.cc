@@ -30,6 +30,7 @@ extern DebugStream mixedDebug;
 Relocate::Relocate()
 {
   reloc_old_posLabel = reloc_new_posLabel = 0;
+  reloc_keepDeleteLabel = 0;
   reloc_matls = 0;
 }
 
@@ -213,6 +214,8 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
       constParticleVariable<Point> px;
       new_dw->get(px, reloc_old_posLabel, pset);
+      constParticleVariable<int> pkeepDelete;
+      new_dw->get(pkeepDelete, reloc_keepDeleteLabel, pset);
 
       ParticleSubset* relocset = scinew ParticleSubset(pset->getParticleSet(),
 						       false, -1, 0);
@@ -223,14 +226,15 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
 	particleIndex idx = *iter;
-	if(patch->getBox().contains(px[idx])){
+	if(patch->getBox().contains(px[idx]) && pkeepDelete[idx] == 1){
 	  keepset->addParticle(idx);
-	} else {
+	}
+        else if(pkeepDelete[idx] == 1) {
 	  relocset->addParticle(idx);
 	}
       }
 
-      if(relocset->numParticles() == 0){
+      if(keepset->numParticles() == pset->numParticles()){
 	delete keepset;
 	keepset=pset;
       }
@@ -377,6 +381,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
 				     LoadBalancer* lb,
 				     const LevelP& level,
 				     const VarLabel* old_posLabel,
+				     const VarLabel* keepDeleteLabel,
 				     const vector<vector<const VarLabel*> >& old_labels,
 				     const VarLabel* new_posLabel,
 				     const vector<vector<const VarLabel*> >& new_labels,
@@ -384,6 +389,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
 				     const MaterialSet* matls)
 {
   reloc_old_posLabel = old_posLabel;
+  reloc_keepDeleteLabel = keepDeleteLabel;
   reloc_old_labels = old_labels;
   reloc_new_posLabel = new_posLabel;
   reloc_new_labels = new_labels;
@@ -403,6 +409,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   if(lb)
     t->usesMPI();
   t->requires( Task::NewDW, old_posLabel, Ghost::None);
+  t->requires( Task::NewDW, keepDeleteLabel, Ghost::None);
   for(int m=0;m < numMatls;m++){
     MaterialSubset* thismatl = scinew MaterialSubset();
     thismatl->add(m);
@@ -582,6 +589,8 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
       constParticleVariable<Point> px;
       new_dw->get(px, reloc_old_posLabel, pset);
+      constParticleVariable<int> pkeepDelete;
+      new_dw->get(pkeepDelete, reloc_keepDeleteLabel, pset);
 
       ParticleSubset* relocset = scinew ParticleSubset(pset->getParticleSet(),
 						       false, -1, 0);
@@ -592,14 +601,15 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
 	particleIndex idx = *iter;
-	if(patch->getBox().contains(px[idx])){
+	if(patch->getBox().contains(px[idx]) && pkeepDelete[idx] == 1){
 	  keepset->addParticle(idx);
-	} else {
+	}
+        else if(pkeepDelete[idx] == 1) {
 	  relocset->addParticle(idx);
 	}
       }
 
-      if(relocset->numParticles() == 0){
+      if(keepset->numParticles() == pset->numParticles()){
 	delete keepset;
 	keepset=pset;
       }
