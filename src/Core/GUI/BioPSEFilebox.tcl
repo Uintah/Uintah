@@ -1178,6 +1178,8 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     global env
     set defaultdirs ""
 
+    $data(dirMenu) add separator 
+
     if {[info exists env(SCIRUN_DATA)]} {
 	lappend defaultdirs $env(SCIRUN_DATA)
     }
