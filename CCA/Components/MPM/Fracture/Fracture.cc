@@ -8,17 +8,11 @@ Fracture::Fracture(ProblemSpecP& ps)
 {
   lb = scinew MPMLabel();
 
-  ps->require("pressure_rate",d_pressureRate);
   ps->require("constraint",d_constraint);
 }
 
 Fracture::~Fracture()
 {
-}
-
-double Fracture::getPressureRate() const
-{
-  return d_pressureRate;
 }
 
 int Fracture::getConstraint() const

@@ -31,8 +31,11 @@ using std::vector;
       
       const VarLabel* pXXLabel;
       
-      const VarLabel* pStressAfterFractureReleaseLabel;
-      const VarLabel* pStressAfterStrainRateLabel;
+      const VarLabel* pStressLabel_afterFracture;
+      const VarLabel* pStressLabel_afterStrainRate;
+
+      const VarLabel* pVelocityLabel_afterFracture;
+      const VarLabel* pVelocityLabel_afterUpdate;
       
       const VarLabel* pStrainEnergyLabel;
       const VarLabel* pRotationRateLabel;
@@ -55,6 +58,7 @@ using std::vector;
       const VarLabel* pExtensionDirectionLabel; //for fracture
       const VarLabel* pToughnessLabel; //for fracture
       const VarLabel* pEnergyReleaseRateLabel; //for fracture
+      const VarLabel* pCrackSurfacePressureLabel; //for explosive fracture
       const VarLabel* pTemperatureLabel; //for heat conduction
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pExternalHeatRateLabel; //for heat conduction
@@ -76,6 +80,7 @@ using std::vector;
       const VarLabel* pExtensionDirectionLabel_preReloc; //for fracture
       const VarLabel* pToughnessLabel_preReloc; //for fracture
       const VarLabel* pEnergyReleaseRateLabel_preReloc; //for fracture
+      const VarLabel* pCrackSurfacePressureLabel_preReloc; //for explosive fracture
       const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
       const VarLabel* pExternalHeatRateLabel_preReloc; //for heat conduction
       const VarLabel* pParticleIDLabel_preReloc;

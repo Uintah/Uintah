@@ -295,7 +295,7 @@ void NormalFracture::computeFracture(
     ParticleVariable<double> pVolume_pg;
 
     old_dw->get(pX_pg, lb->pXLabel, pset_pg);
-    new_dw->get(pVelocity_pg, lb->pVelocityLabel_preReloc, pset_pg);
+    new_dw->get(pVelocity_pg, lb->pVelocityLabel_afterUpdate, pset_pg);
     old_dw->get(pVolume_pg, lb->pVolumeLabel, pset_pg);
 
     //patchOnly data
@@ -309,16 +309,23 @@ void NormalFracture::computeFracture(
     ParticleVariable<Vector>  pTipNormal_p;
     ParticleVariable<Vector>  pExtensionDirection_p;
     ParticleVariable<double>  pToughness_p;
+    ParticleVariable<double>  pCrackSurfacePressure_p;
+    ParticleVariable<double>  pStrainEnergy_p;
+    ParticleVariable<double>  pMass_p;
 
     new_dw->get(pX_p, lb->pXXLabel, pset_p);
     new_dw->get(pRotationRate_p, lb->pRotationRateLabel, pset_p);
-    new_dw->get(pStress_p, lb->pStressAfterStrainRateLabel, pset_p);
+    new_dw->get(pStress_p, lb->pStressLabel_afterStrainRate, pset_p);
     old_dw->get(pIsBroken_p, lb->pIsBrokenLabel, pset_p);
     old_dw->get(pCrackNormal_p, lb->pCrackNormalLabel, pset_p);
     old_dw->get(pTipNormal_p, lb->pTipNormalLabel, pset_p);
     old_dw->get(pExtensionDirection_p, lb->pExtensionDirectionLabel, pset_p);
     old_dw->get(pToughness_p, lb->pToughnessLabel, pset_p);
-
+    old_dw->get(pCrackSurfacePressure_p, 
+      lb->pCrackSurfacePressureLabel, pset_p);
+    new_dw->get(pStrainEnergy_p, lb->pStrainEnergyLabel, pset_p);
+    old_dw->get(pMass_p, lb->pMassLabel, pset_p);
+    
     //particle index exchange from patch to patch+ghost
     vector<int> pIdxEx( pset_p->numParticles() );
     fit(pset_p,pX_p,pset_pg,pX_pg,pIdxEx);
@@ -327,10 +334,15 @@ void NormalFracture::computeFracture(
     ParticleVariable<int> pIsBroken_p_new;
     ParticleVariable<Vector> pCrackNormal_p_new;
     ParticleVariable<Matrix3> pStress_p_new;
+    ParticleVariable<double> pCrackSurfacePressure_p_new;
+    ParticleVariable<Vector> pVelocity_p_new;
   
     new_dw->allocate(pIsBroken_p_new, lb->pIsBrokenLabel, pset_p);
     new_dw->allocate(pCrackNormal_p_new, lb->pCrackNormalLabel, pset_p);
     new_dw->allocate(pStress_p_new, lb->pStressLabel, pset_p);
+    new_dw->allocate(pCrackSurfacePressure_p_new,
+      lb->pCrackSurfacePressureLabel, pset_p);
+    new_dw->allocate(pVelocity_p_new, lb->pVelocityLabel, pset_p);
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel);
@@ -343,9 +355,19 @@ void NormalFracture::computeFracture(
     
       pIsBroken_p_new[pIdx_p] = pIsBroken_p[pIdx_p];
       pStress_p_new[pIdx_p] = pStress_p[pIdx_p];
-    
-      pCrackNormal_p_new[pIdx_p] = pCrackNormal_p[pIdx_p];
+      
+      //for explosive fracture
+      pCrackSurfacePressure_p_new[pIdx_p] = pCrackSurfacePressure_p[pIdx_p];
+      if(pCrackSurfacePressure_p[pIdx_p]>0) {
+        pCrackSurfacePressure_p_new[pIdx_p] += 
+	  mpm_matl->getPressureRate() * delT;
+	//cout<<"pCrackSurfacePressure="<<pCrackSurfacePressure_p_new[pIdx_p]
+	//<<endl;
+      }
 
+      pVelocity_p_new[pIdx_p] = pVelocity_pg[pIdx_pg];
+
+      pCrackNormal_p_new[pIdx_p] = pCrackNormal_p[pIdx_p];
       if( pIsBroken_p_new[pIdx_p] > 0 ) {
         pCrackNormal_p_new[pIdx_p] += Cross( pRotationRate_p[pIdx_p] * delT, 
 	                            pCrackNormal_p_new[pIdx_p] );
@@ -387,18 +409,24 @@ void NormalFracture::computeFracture(
       Vector& N = pCrackNormal_p_new[pIdx_p];
       if( G > pToughness_p[pIdx_p] ) {
         double sigmay = getMaxEigenvalue(pStress_p[pIdx_p], N);
+	if( sigmay <= 0 ) continue;
 	double rel = Dot(N,ny);
 	if( fabs(rel) < 0.7 ) continue;
 	if( rel < 0 ) N = -N;
 
         //stress release
-/*
+        double I2 = 0;
         for(int i=1;i<=3;++i)
         for(int j=1;j<=3;++j) {
+	  I2 += pStress_p[pIdx_p](i,j) * pStress_p[pIdx_p](i,j);
           pStress_p_new[pIdx_p](i,j) -= N[i] * sigmay * N[j];
         }
-*/
+        double v = sqrt( pStrainEnergy_p[pIdx_p] * sigmay * sigmay / I2 / 
+          pMass_p[pIdx_p] );
+	pVelocity_p_new[pIdx_p] -= N * v;
+
         pIsBroken_p_new[pIdx_p] = 1;
+	pCrackSurfacePressure_p_new[pIdx_p] = mpm_matl->getExplosivePressure();
       
         cout<<"crack! "
 	    <<"normal="<<pCrackNormal_p_new[pIdx_p]<<endl;
@@ -408,7 +436,9 @@ void NormalFracture::computeFracture(
     new_dw->put(pToughness_p, lb->pToughnessLabel_preReloc);
     new_dw->put(pIsBroken_p_new, lb->pIsBrokenLabel_preReloc);
     new_dw->put(pCrackNormal_p_new, lb->pCrackNormalLabel_preReloc);
-    new_dw->put(pStress_p_new, lb->pStressAfterFractureReleaseLabel);
+    new_dw->put(pStress_p_new, lb->pStressLabel_afterFracture);
+    new_dw->put(pCrackSurfacePressure_p_new, lb->pCrackSurfacePressureLabel_preReloc);
+    new_dw->put(pVelocity_p_new, lb->pVelocityLabel_afterFracture);
   }
 }
 

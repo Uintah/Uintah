@@ -227,7 +227,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new),lb->delTLabel);
-    new_dw->put(pstress,               lb->pStressAfterStrainRateLabel);
+    new_dw->put(pstress,               lb->pStressLabel_afterStrainRate);
     new_dw->put(deformationGradient,   lb->pDeformationMeasureLabel_preReloc);
     new_dw->put(sum_vartype(d_se),     lb->StrainEnergyLabel);
     new_dw->put(pvolume,               lb->pVolumeDeformedLabel);
@@ -249,7 +249,7 @@ void HypoElastic::addComputesAndRequires(Task* task,
   task->requires(Task::NewDW, lb->gMomExedVelocityLabel,   matlset,
                   Ghost::AroundCells, 1);
 
-  task->computes(lb->pStressAfterStrainRateLabel,       matlset);
+  task->computes(lb->pStressLabel_afterStrainRate,      matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
 }
