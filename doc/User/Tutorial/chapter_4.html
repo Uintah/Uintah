@@ -3,7 +3,6 @@
 <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
 <meta name="generator" content="Adobe GoLive 4">
 <title>Multi-Vis</title>
-<!-- Changed by: Ted Dustman, 21-Mar-2002 -->
 </head>
 
 <body bgcolor="#a9a9a9">
@@ -62,21 +61,23 @@
         <p><b><A name="section-1">Putting the nets together</b></A>
 
         <p>Now we will perform all of the 3A, 3B, and 3C work in a single
-        network. This procedure involves sharing the FieldReader, and
-        Viewer modules across the A, B, and C networks we created in the
+        network. This procedure involves sharing the FieldReader and
+        Viewer modules across the A, B, and C networks that we created in the
         last chapter. 
-	<ol>
-	<li value+"1.">Repeat all of the steps for creating A.
-	<li value="2.">Do the same for B and C, but use the FieldReader and
+	<ul>
+	<li>Repeat all of the steps for creating <b><A href="chapter_3.html#section-1">3A</b></A> in Chapter 3 .
+	<li>Do the same for <b><A href="chapter_3.html#section-2">3B</b></A> and <b><A href="chapter_3.html#section-3">3C</b></A>, but use the FieldReader and
 	  Viewer from 
-        A.</ol>
+       3A.</ul>
                   
-        <p>You will find the complete network in <b>Figure 4.1</b> color
-	coded to show the  
+        <p>You can use the complete, color-coded network in <b>Figure 4.1</b> that shows the  
 	previous chapter's networks. Yellow corresponds to 3A, green to 3B,
-	and red to 3C. As soon as 
-	Isosurface executes, you will see this surface appear in the viewer
-	<b>(Figure 4.2)</b>.
+	and red to 3C. As soon as the 
+	Isosurface module executes, you will see this surface appear in the ViewWindow.</p>
+
+<p>Or, you may use the File/Insert command to insert all of the nets you saved in Chapter 3, along with their settings.  You will need to destroy all but one Viewer module by right-clicking on the module and selecting the Destroy option.  To destroy a connection between two modules, right-click on the pipe connecting those modules. In addition to the Viewer, these nets will also share the FieldReader module (in the left uppermost corner of <b>Figure 4.1</b>), which loads the utahtorso-lowres-electrodes.pcd.fld file.
+
+
 	<ol><li value="1.">Create an Isosurface module---select
 	  Visualization/Isosurface from the SCIRun menu. 
 	<li value="2.">Connect the FieldReader module's output port to the
@@ -169,5 +170,6 @@
 </table>
 </body>
 </html>
+
 
 
