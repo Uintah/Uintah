@@ -339,7 +339,7 @@ void setBC(CCVariable<double>& variable, const string& kind,
 /*`==========TESTING==========*/
 #if JET_BC
 //        cout << " I'm in density "<< face << endl;
-        double hardCodedDensity = 1.1792946927/1000.0;
+        double hardCodedDensity = 1.1792946927* (300.0/1000.0);
         AddSourceBC<CCVariable<double>,double >(variable, patch, face,
                               hardCodedDensity, offset);  
  #endif 
@@ -804,4 +804,68 @@ void checkValveBC( CCVariable<Vector>& var,
     break; 
   }
 }
+/* --------------------------------------------------------------------- 
+ Function~  ImplicitMatrixBC--      
+ Purpose~   Along each face of the domain set the stencil weight in
+           that face = 0
+ Naming convention
+      +x -x +y -y +z -z
+       e, w, n, s, t, b 
+ ---------------------------------------------------------------------  */
+void ImplicitMatrixBC( CCVariable<Stencil7>& A, 
+                   const Patch* patch)        
+{ 
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+    switch (face) {
+    case Patch::xplus:
+      for(CellIterator iter = patch->getFaceCellIterator(face); 
+                                               !iter.done(); iter++) { 
+        IntVector c(*iter - IntVector(1,0,0));
+        A[c].e = 0.0;
+      }
+      break;
+    case Patch::xminus:
+      for(CellIterator iter = patch->getFaceCellIterator(face); 
+                                               !iter.done(); iter++) { 
+        IntVector c(*iter + IntVector(1,0,0));
+        A[c].w = 0.0;
+      }
+      break;
+    case Patch::yplus:
+      for(CellIterator iter = patch->getFaceCellIterator(face); 
+                                               !iter.done(); iter++) { 
+        IntVector c(*iter - IntVector(0,1,0));
+        A[c].n = 0.0;
+      }
+      break;
+    case Patch::yminus:
+      for(CellIterator iter = patch->getFaceCellIterator(face); 
+                                               !iter.done(); iter++) { 
+        IntVector c(*iter + IntVector(0,1,0)); 
+        A[c].s = 0.0;
+      }
+      break;
+    case Patch::zplus:
+      for(CellIterator iter = patch->getFaceCellIterator(face); 
+                                               !iter.done(); iter++) { 
+        IntVector c(*iter - IntVector(0,0,1));
+        A[c].t = 0.0;
+      }
+      break;
+    case Patch::zminus:
+      for(CellIterator iter = patch->getFaceCellIterator(face); 
+                                               !iter.done(); iter++) { 
+        IntVector c(*iter + IntVector(0,0,1));
+        A[c].b = 0.0;
+      }
+      break;
+    case Patch::numFaces:
+      break;
+    case Patch::invalidFace:
+      break; 
+    }
+  }
+}
+
 }  // using namespace Uintah
