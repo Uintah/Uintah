@@ -14,6 +14,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/SmagorinskyModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/IncDynamicProcedure.h>
+#include <Packages/Uintah/CCA/Components/Arches/CompDynamicProcedure.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -159,14 +160,21 @@ Arches::problemSetup(const ProblemSpecP& params,
   else if (turbModel == "dynamicprocedure") 
     d_turbModel = scinew IncDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
 					  d_boundaryCondition);
+  else if (turbModel == "compdynamicprocedure")
+    d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
+					  d_boundaryCondition);
   else if (turbModel == "mixmodel") { 
     d_turbModel = scinew ScaleSimilarityModel(d_lab, d_MAlab, d_physicalConsts,
 					      d_boundaryCondition);
   }
   else 
     throw InvalidValue("Turbulence Model not supported" + turbModel);
-  if (d_turbModel)
-    d_turbModel->problemSetup(db);
+//  if (d_turbModel)
+  d_turbModel->problemSetup(db);
+  d_dynScalarModel = d_turbModel->getDynScalarModel();
+  if (d_dynScalarModel)
+    d_turbModel->setCombustionSpecifics(d_reactingFlow, d_calcEnthalpy,
+		                        d_calcReactingScalar);
 
 #ifdef PetscFilter
     d_filter = scinew Filter(d_lab, d_boundaryCondition, d_myworld);
@@ -336,6 +344,14 @@ Arches::sched_paramInit(const LevelP& level,
 
     tsk->computes(d_lab->d_densityCPLabel);
     tsk->computes(d_lab->d_viscosityCTSLabel);
+    if (d_dynScalarModel) {
+      if (d_reactingFlow)
+        tsk->computes(d_lab->d_scalarDiffusivityLabel);
+      if (d_calcEnthalpy)
+        tsk->computes(d_lab->d_enthalpyDiffusivityLabel);
+      if (d_calcReactingScalar)
+        tsk->computes(d_lab->d_reactScalarDiffusivityLabel);
+    }
     tsk->computes(d_lab->d_oldDeltaTLabel);
     // for reacting flows save temperature and co2 
     if (d_MAlab) {
@@ -382,6 +398,9 @@ Arches::paramInit(const ProcessorGroup* ,
     CCVariable<double> enthalpy;
     CCVariable<double> density;
     CCVariable<double> viscosity;
+    CCVariable<double> scalarDiffusivity;
+    CCVariable<double> enthalpyDiffusivity;
+    CCVariable<double> reactScalarDiffusivity;
     CCVariable<double> pPlusHydro;
     CCVariable<double> mmgasVolFrac;
     std::cerr << "Material Index: " << matlIndex << endl;
@@ -486,6 +505,14 @@ Arches::paramInit(const ProcessorGroup* ,
     }
     new_dw->allocateAndPut(density, d_lab->d_densityCPLabel, matlIndex, patch);
     new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
+    if (d_dynScalarModel) {
+      if (d_reactingFlow)
+        new_dw->allocateAndPut(scalarDiffusivity, d_lab->d_scalarDiffusivityLabel, matlIndex, patch);
+      if (d_calcEnthalpy)
+        new_dw->allocateAndPut(enthalpyDiffusivity, d_lab->d_enthalpyDiffusivityLabel, matlIndex, patch);
+      if (d_calcReactingScalar)
+        new_dw->allocateAndPut(reactScalarDiffusivity, d_lab->d_reactScalarDiffusivityLabel, matlIndex, patch);
+    }  
 
   // ** WARNING **  this needs to be changed soon (6/9/2000)
     IntVector domLoU = uVelocity.getFortLowIndex();
@@ -513,6 +540,14 @@ Arches::paramInit(const ProcessorGroup* ,
 	      vVelocity, vVal, idxLoW, idxHiW, wVelocity, wVal,
 	      idxLo, idxHi, pressure, pVal, density, denVal,
 	      viscosity, visVal);
+    if (d_dynScalarModel) {
+      if (d_reactingFlow)
+        scalarDiffusivity.initialize(visVal/0.4);
+      if (d_calcEnthalpy)
+        enthalpyDiffusivity.initialize(visVal/0.4);
+      if (d_calcReactingScalar)
+        reactScalarDiffusivity.initialize(visVal/0.4);
+    }
     for (int ii = 0; ii < d_nofScalars; ii++) {
       double scalVal = 0.0;
       fort_initscal(idxLo, idxHi, scalar[ii], scalVal);

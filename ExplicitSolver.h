@@ -307,6 +307,8 @@ private:
     bool nosolve_timelabels_allocated;
     bool d_pressure_correction;
     bool d_3d_periodic;
+    bool d_calScalar;
+    bool d_dynScalarModel;
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

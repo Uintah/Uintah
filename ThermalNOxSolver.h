@@ -155,6 +155,8 @@ private:
       // physical constants
       PhysicalConstants* d_physicalConsts;
       int d_conv_scheme;
+      bool d_dynScalarModel;
+      double d_turbPrNo;
 
 #ifdef multimaterialform
       // set the values in problem setup

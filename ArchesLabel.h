@@ -47,10 +47,10 @@ namespace Uintah {
 
       // material subset for stencils
       MaterialSubset* d_stencilMatl;
-      // material subset for turbulent stress, required by scalesimilarity model
-      MaterialSubset* d_stressTensorMatl;
-      MaterialSubset* d_stressSymTensorMatl;
-      MaterialSubset* d_scalarFluxMatl;
+
+      MaterialSubset* d_vectorMatl;
+      MaterialSubset* d_tensorMatl;
+      MaterialSubset* d_symTensorMatl;
 
       // Cell Information
       // for old_dw, perpatch var
@@ -84,6 +84,9 @@ namespace Uintah {
       // Viscosity Labels
       // for old_dw in computeTurbModel
       const VarLabel* d_viscosityCTSLabel;
+      const VarLabel* d_scalarDiffusivityLabel;
+      const VarLabel* d_enthalpyDiffusivityLabel;
+      const VarLabel* d_reactScalarDiffusivityLabel;
 
 
       // Pressure Labels
@@ -150,7 +153,6 @@ namespace Uintah {
       // Scalar NonLinear Src
 
       const VarLabel* d_scalNonLinSrcSBLMLabel;
-
 
 
       // reactive scalars
@@ -391,6 +393,31 @@ namespace Uintah {
       const VarLabel* d_totalAreaOUTIntermLabel;
  
       const VarLabel* d_oldDeltaTLabel;
+// test filtered terms for variable density dynamic Smagorinsky model
+      const VarLabel* d_filterRhoULabel;
+      const VarLabel* d_filterRhoVLabel;
+      const VarLabel* d_filterRhoWLabel;
+      const VarLabel* d_filterRhoLabel;
+      const VarLabel* d_filterRhoFLabel;
+      const VarLabel* d_filterRhoELabel;
+      const VarLabel* d_filterRhoRFLabel;
+      const VarLabel* d_scalarGradientCompLabel;
+      const VarLabel* d_filterScalarGradientCompLabel;
+      const VarLabel* d_enthalpyGradientCompLabel;
+      const VarLabel* d_filterEnthalpyGradientCompLabel;
+      const VarLabel* d_reactScalarGradientCompLabel;
+      const VarLabel* d_filterReactScalarGradientCompLabel;
+      const VarLabel* d_filterStrainTensorCompLabel;
+      const VarLabel* d_scalarNumeratorLabel; 
+      const VarLabel* d_scalarDenominatorLabel; 
+      const VarLabel* d_enthalpyNumeratorLabel; 
+      const VarLabel* d_enthalpyDenominatorLabel; 
+      const VarLabel* d_reactScalarNumeratorLabel; 
+      const VarLabel* d_reactScalarDenominatorLabel; 
+      const VarLabel* d_ShFLabel;
+      const VarLabel* d_ShELabel;
+      const VarLabel* d_ShRFLabel;
+
     }; // End class ArchesLabel
 } // End namespace Uintah
 
