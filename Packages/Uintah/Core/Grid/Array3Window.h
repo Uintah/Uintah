@@ -3,7 +3,7 @@
 
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <Packages/Uintah/Core/Grid/Array3Data.h>
-
+#include <limits.h>
 #include <Core/Geometry/IntVector.h>
 
 /**************************************
