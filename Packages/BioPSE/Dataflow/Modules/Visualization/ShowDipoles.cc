@@ -67,10 +67,10 @@ extern "C" BioPSESHARE Module* make_ShowDipoles(const clString& id) {
 ShowDipoles::ShowDipoles(const clString& id) :
   Module("ShowDipoles", id, Filter, "Visualization", "BioPSE"),
   widgetSizeGui_("widgetSizeGui_", id, this),
-  widget_lock_("ShowDipoles widget lock"),
   scaleModeGui_("scaleModeGui_", id, this),
   showLastVecGui_("showLastVecGui_", id, this),
-  showLinesGui_("showLinesGui_", id, this)
+  showLinesGui_("showLinesGui_", id, this),
+  widget_lock_("ShowDipoles widget lock")
 {
   // Create the input port
   ifield_=scinew FieldIPort(this, "dipoleFld", FieldIPort::Atomic);
