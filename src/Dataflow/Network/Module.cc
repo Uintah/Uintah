@@ -116,7 +116,8 @@ Module::Module(const string& name, GuiContext* ctx,
     categoryName(cat), sched(0), pid_(0), have_own_dispatch(0),
     helper_done("Module helper finished flag"), id(ctx->getfullname()), 
     abort_flag(0), msgStream_(ctx->subVar("msgStream")), need_execute(0),
-    sched_class(sched_class), state(NeedData), progress(0), msg_state(Nothing), 
+    sched_class(sched_class), state(NeedData), msg_state(Nothing), 
+    progress(0),
     show_stat(false), helper(0), network(0), 
     notes(ctx->subVar("notes")), show_status(ctx->subVar("show_status"))
 {
