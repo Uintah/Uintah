@@ -69,19 +69,19 @@ public:
 		      bool face_transparency,
 		      bool bidirectional) = 0;
 
-  virtual GeomSwitch *render_text(FieldHandle fld,
-				  ColorMapHandle color_handle,
-				  bool use_default_material,
-				  MaterialHandle default_material,
-				  bool backface_cull_p,
-				  int  fontsize,
-				  int  precision,
-				  bool render_locations,
-				  bool render_data,
-				  bool render_nodes,
-				  bool render_edges,
-				  bool render_faces,
-				  bool render_cells) = 0;
+  virtual GeomHandle render_text(FieldHandle fld,
+				 ColorMapHandle color_handle,
+				 bool use_default_material,
+				 MaterialHandle default_material,
+				 bool backface_cull_p,
+				 int  fontsize,
+				 int  precision,
+				 bool render_locations,
+				 bool render_data,
+				 bool render_nodes,
+				 bool render_edges,
+				 bool render_faces,
+				 bool render_cells) = 0;
 
   RenderFieldBase();
   virtual ~RenderFieldBase();
@@ -124,84 +124,84 @@ public:
 		      bool face_transparency,
 		      bool bidirectional);
 
-  virtual GeomSwitch *render_text(FieldHandle fld,
-				  ColorMapHandle color_handle,
-				  bool use_default_material,
-				  MaterialHandle default_material,
-				  bool backface_cull_p,
-				  int fontsize,
-				  int precision,
-				  bool render_locations,
-				  bool render_data,
-				  bool render_nodes,
-				  bool render_edges,
-				  bool render_faces,
-				  bool render_cells);
+  virtual GeomHandle render_text(FieldHandle fld,
+				 ColorMapHandle color_handle,
+				 bool use_default_material,
+				 MaterialHandle default_material,
+				 bool backface_cull_p,
+				 int fontsize,
+				 int precision,
+				 bool render_locations,
+				 bool render_data,
+				 bool render_nodes,
+				 bool render_edges,
+				 bool render_faces,
+				 bool render_cells);
 
 private:
-  GeomSwitch *render_nodes(const Fld *fld, 
-			   const string &node_display_mode,
-			   ColorMapHandle color_handle,
-			   MaterialHandle def_mat,
-			   double node_scale,
-			   int node_resolution,
-			   bool use_transparency);
-  GeomSwitch *render_edges(const Fld *fld,
-			   const string &edge_display_mode,
-			   ColorMapHandle color_handle,
-			   MaterialHandle def_mat,
-			   double edge_scale,
-			   int cylinder_resolution,
-			   bool transparent_p);
-  GeomSwitch *render_faces(const Fld *fld, 
-			   ColorMapHandle color_handle,
-			   MaterialHandle def_mat,
-			   bool use_normals,
-			   bool use_transparency);
+  GeomHandle render_nodes(const Fld *fld, 
+			  const string &node_display_mode,
+			  ColorMapHandle color_handle,
+			  MaterialHandle def_mat,
+			  double node_scale,
+			  int node_resolution,
+			  bool use_transparency);
+  GeomHandle render_edges(const Fld *fld,
+			  const string &edge_display_mode,
+			  ColorMapHandle color_handle,
+			  MaterialHandle def_mat,
+			  double edge_scale,
+			  int cylinder_resolution,
+			  bool transparent_p);
+  GeomHandle render_faces(const Fld *fld, 
+			  ColorMapHandle color_handle,
+			  MaterialHandle def_mat,
+			  bool use_normals,
+			  bool use_transparency);
 
-  GeomSwitch *render_text_data(FieldHandle fld,
+  GeomHandle render_text_data(FieldHandle fld,
+			      ColorMapHandle color_handle,
+			      bool use_default_material,
+			      MaterialHandle default_material,
+			      bool backface_cull_p,
+			      int fontsize,
+			      int precision);
+  GeomHandle render_text_data_nodes(FieldHandle fld,
+				    ColorMapHandle color_handle,
+				    bool use_default_material,
+				    MaterialHandle default_material,
+				    bool backface_cull_p,
+				    int fontsize,
+				    int precision);
+  GeomHandle render_text_nodes(FieldHandle fld,
 			       ColorMapHandle color_handle,
 			       bool use_default_material,
 			       MaterialHandle default_material,
 			       bool backface_cull_p,
 			       int fontsize,
-			       int precision);
-  GeomSwitch *render_text_data_nodes(FieldHandle fld,
-				     ColorMapHandle color_handle,
-				     bool use_default_material,
-				     MaterialHandle default_material,
-				     bool backface_cull_p,
-				     int fontsize,
-				     int precision);
-  GeomSwitch *render_text_nodes(FieldHandle fld,
-				ColorMapHandle color_handle,
-				bool use_default_material,
-  				MaterialHandle default_material,
-				bool backface_cull_p,
-				int fontsize,
-				int precision,
-				bool render_locations);
-  GeomSwitch *render_text_edges(FieldHandle fld,
-				ColorMapHandle color_handle,
-  				bool use_default_material,
-  				MaterialHandle default_material,
-				int fontsize,
-				int precision,
-				bool render_locations);
-  GeomSwitch *render_text_faces(FieldHandle fld,
-				ColorMapHandle color_handle,
-  				bool use_default_material,
-  				MaterialHandle default_material,
-				int fontsize,
-				int precision,
-				bool render_locations);
-  GeomSwitch *render_text_cells(FieldHandle fld,
-				ColorMapHandle color_handle,
-				bool use_default_material,
-				MaterialHandle default_material,
-				int fontsize,
-				int precision,
-				bool render_locations);
+			       int precision,
+			       bool render_locations);
+  GeomHandle render_text_edges(FieldHandle fld,
+			       ColorMapHandle color_handle,
+			       bool use_default_material,
+			       MaterialHandle default_material,
+			       int fontsize,
+			       int precision,
+			       bool render_locations);
+  GeomHandle render_text_faces(FieldHandle fld,
+			       ColorMapHandle color_handle,
+			       bool use_default_material,
+			       MaterialHandle default_material,
+			       int fontsize,
+			       int precision,
+			       bool render_locations);
+  GeomHandle render_text_cells(FieldHandle fld,
+			       ColorMapHandle color_handle,
+			       bool use_default_material,
+			       MaterialHandle default_material,
+			       int fontsize,
+			       int precision,
+			       bool render_locations);
 };
 
 
@@ -295,7 +295,7 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
 
 
 template <class Fld, class Loc>
-GeomSwitch *
+GeomHandle
 RenderField<Fld, Loc>::render_nodes(const Fld *sfld, 
 				    const string &node_display_mode,
 				    ColorMapHandle color_handle,
@@ -349,11 +349,6 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
     }
     lines->setLineWidth(3);
   }
-
-  GeomSwitch *node_switch =
-    scinew GeomSwitch(scinew GeomColorMap(scinew GeomMaterial(display_list,
-							      def_mat),
-					  color_handle));
 
   // First pass: over the nodes
   mesh->synchronize(Mesh::NODES_E);
@@ -441,13 +436,13 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
     ++niter;
   }
 
-  return node_switch;
+  return display_list;
 }
 
 
 
 template <class Fld, class Loc>
-GeomSwitch *
+GeomHandle
 RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 				    const string &edge_display_mode,
 				    ColorMapHandle color_handle,
@@ -484,10 +479,6 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
     }
     lines->setLineWidth(edge_scale);
   }
-  GeomSwitch *edge_switch =
-    scinew GeomSwitch(scinew GeomColorMap(scinew GeomMaterial(display_list,
-							      def_mat),
-					  color_handle));
 
   // Second pass: over the edges
   mesh->synchronize(Mesh::EDGES_E);
@@ -554,13 +545,13 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
     ++eiter;
   }
 
-  return edge_switch;
+  return display_list;
 }
 
 
 
 template <class Fld, class Loc>
-GeomSwitch *
+GeomHandle 
 RenderField<Fld, Loc>::render_faces(const Fld *sfld,
 				    ColorMapHandle color_handle,
 				    MaterialHandle def_mat,
@@ -571,7 +562,7 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
   const bool with_normals = (use_normals && mesh->has_normals());
 
-  GeomSwitch *face_switch;
+  GeomHandle face_switch;
   GeomFastTriangles* faces;
   GeomFastQuads* qfaces;
   if (use_transparency)
@@ -581,9 +572,7 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
     GeomGroup *tmp = scinew GeomGroup;
     tmp->add(faces);
     tmp->add(qfaces);
-    face_switch =
-      scinew GeomSwitch(scinew GeomColorMap(scinew GeomMaterial(tmp, def_mat),
-					    color_handle));
+    face_switch = tmp;
   }
   else
   {
@@ -593,9 +582,7 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
     tmp->add(faces);
     tmp->add(qfaces);
     GeomDL *dl = scinew GeomDL(tmp);
-    face_switch =
-      scinew GeomSwitch(scinew GeomColorMap(scinew GeomMaterial(dl, def_mat),
-					    color_handle));
+    face_switch = dl;
   }
 
   // Third pass: over the faces
@@ -758,7 +745,7 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
 
 
 template <class Fld, class Loc>
-GeomSwitch *
+GeomHandle 
 RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
 				   ColorMapHandle color_handle,
 				   bool use_default_material,
@@ -774,7 +761,7 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
 				   bool render_cells)
 {
   GeomGroup *texts = scinew GeomGroup;
-  GeomSwitch *text_switch = scinew GeomSwitch(texts);
+  GeomHandle text_switch = scinew GeomSwitch(texts);
 
   if (render_data)
   {
@@ -816,7 +803,7 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
 
 
 template <class Fld, class Loc>
-GeomSwitch *
+GeomHandle 
 RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
 					ColorMapHandle color_handle,
 					bool use_default_material,
@@ -839,7 +826,7 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
 
   GeomTexts *texts = scinew GeomTexts();
-  GeomSwitch *text_switch = scinew GeomSwitch(scinew GeomDL(texts));
+  GeomHandle text_switch = scinew GeomSwitch(scinew GeomDL(texts));
   texts->set_font_index(fontsize);
 
   std::ostringstream buffer;
@@ -878,7 +865,7 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
 
 
 template <class Fld, class Loc>
-GeomSwitch *
+GeomHandle 
 RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
 					      ColorMapHandle color_handle,
 					      bool use_default_material,
@@ -894,7 +881,7 @@ RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
 
   GeomTexts *texts = 0;
   GeomTextsCulled *ctexts = 0;
-  GeomSwitch *text_switch = 0;
+  GeomHandle text_switch = 0;
   const bool culling_p = backface_cull_p && mesh->has_normals();
   if (culling_p)
   {
@@ -956,7 +943,7 @@ RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
 
 
 template <class Fld, class Loc>
-GeomSwitch *
+GeomHandle 
 RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
 					 ColorMapHandle color_handle,
 					 bool use_default_material,
@@ -972,7 +959,7 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
   GeomTexts *texts = 0;
   GeomTextsCulled *ctexts = 0;
-  GeomSwitch *text_switch = 0;
+  GeomHandle text_switch = 0;
 
   const bool culling_p = backface_cull_p && mesh->has_normals();
   if (culling_p)
@@ -1041,7 +1028,7 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
 
 
 template <class Fld, class Loc>
-GeomSwitch *
+GeomHandle 
 RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
 					 ColorMapHandle color_handle,
 					 bool use_default_material,
@@ -1057,7 +1044,7 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
   mesh->synchronize(Mesh::EDGES_E);
 
   GeomTexts *texts = scinew GeomTexts;
-  GeomSwitch *text_switch = scinew GeomSwitch(scinew GeomDL(texts));
+  GeomHandle text_switch = scinew GeomSwitch(scinew GeomDL(texts));
   texts->set_font_index(fontsize);
 
   ostringstream buffer;
@@ -1102,7 +1089,7 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
 }
 
 template <class Fld, class Loc>
-GeomSwitch *
+GeomHandle 
 RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
 					 ColorMapHandle color_handle,
 					 bool use_default_material,
@@ -1118,7 +1105,7 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
   mesh->synchronize(Mesh::FACES_E);
 
   GeomTexts *texts = scinew GeomTexts;
-  GeomSwitch *text_switch = scinew GeomSwitch(scinew GeomDL(texts));
+  GeomHandle text_switch = scinew GeomSwitch(scinew GeomDL(texts));
   texts->set_font_index(fontsize);
 
   ostringstream buffer;
@@ -1164,7 +1151,7 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
 
 
 template <class Fld, class Loc>
-GeomSwitch *
+GeomHandle 
 RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
 					 ColorMapHandle color_handle,
 					 bool use_default_material,
@@ -1180,7 +1167,7 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
   mesh->synchronize(Mesh::CELLS_E);
 
   GeomTexts *texts = scinew GeomTexts;
-  GeomSwitch *text_switch = scinew GeomSwitch(scinew GeomDL(texts));
+  GeomHandle text_switch = scinew GeomSwitch(scinew GeomDL(texts));
   texts->set_font_index(fontsize);
 
   ostringstream buffer;
@@ -1232,14 +1219,14 @@ class RenderVectorFieldBase : public DynamicAlgoBase
 {
 public:
 
-  virtual GeomSwitch *render_data(FieldHandle vfld_handle,
-				  FieldHandle cfld_handle,
-				  ColorMapHandle cmap,
-				  MaterialHandle default_material,
-				  const string &data_display_mode,
-				  double scale, bool normalize,
-				  bool bidirectional,
-				  int resolution) = 0;
+  virtual GeomHandle render_data(FieldHandle vfld_handle,
+				 FieldHandle cfld_handle,
+				 ColorMapHandle cmap,
+				 MaterialHandle default_material,
+				 const string &data_display_mode,
+				 double scale, bool normalize,
+				 bool bidirectional,
+				 int resolution) = 0;
 
 
 
@@ -1269,20 +1256,20 @@ template <class VFld, class CFld, class Loc>
 class RenderVectorField : public RenderVectorFieldBase
 {
 public:
-  virtual GeomSwitch *render_data(FieldHandle vfld_handle,
-				  FieldHandle cfld_handle,
-				  ColorMapHandle cmap,
-				  MaterialHandle default_material,
-				  const string &data_display_mode,
-				  double scale,
-				  bool normalize,
-				  bool bidirectional,
-				  int resolution);
+  virtual GeomHandle render_data(FieldHandle vfld_handle,
+				 FieldHandle cfld_handle,
+				 ColorMapHandle cmap,
+				 MaterialHandle default_material,
+				 const string &data_display_mode,
+				 double scale,
+				 bool normalize,
+				 bool bidirectional,
+				 int resolution);
 };
 
 
 template <class VFld, class CFld, class Loc>
-GeomSwitch *
+GeomHandle 
 RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 						FieldHandle cfld_handle,
 						ColorMapHandle cmap,
@@ -1306,7 +1293,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   const bool cones_p = (display_mode == "Cones");
   const bool arrows_p = (display_mode == "Arrows");
   const bool disks_p = (display_mode == "Disks");
-  GeomSwitch *data_switch;
+  GeomHandle data_switch;
   if (disks_p || cones_p)
   {
     disks = scinew GeomGroup();
@@ -1435,13 +1422,13 @@ class RenderTensorFieldBase : public DynamicAlgoBase
 {
 public:
 
-  virtual GeomSwitch *render_data(FieldHandle vfld_handle,
-				  FieldHandle cfld_handle,
-				  ColorMapHandle cmap,
-				  MaterialHandle default_material,
-				  const string &data_display_mode,
-				  double scale,
-				  int resolution) = 0;
+  virtual GeomHandle render_data(FieldHandle vfld_handle,
+				 FieldHandle cfld_handle,
+				 ColorMapHandle cmap,
+				 MaterialHandle default_material,
+				 const string &data_display_mode,
+				 double scale,
+				 int resolution) = 0;
 
 
 
@@ -1464,18 +1451,18 @@ template <class VFld, class CFld, class Loc>
 class RenderTensorField : public RenderTensorFieldBase
 {
 public:
-  virtual GeomSwitch *render_data(FieldHandle vfld_handle,
-				  FieldHandle cfld_handle,
-				  ColorMapHandle cmap,
-				  MaterialHandle default_material,
-				  const string &data_display_mode,
-				  double scale,
-				  int resolution);
+  virtual GeomHandle render_data(FieldHandle vfld_handle,
+				 FieldHandle cfld_handle,
+				 ColorMapHandle cmap,
+				 MaterialHandle default_material,
+				 const string &data_display_mode,
+				 double scale,
+				 int resolution);
 };
 
 
 template <class VFld, class CFld, class Loc>
-GeomSwitch *
+GeomHandle 
 RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 						FieldHandle cfld_handle,
 						ColorMapHandle cmap,
@@ -1509,7 +1496,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   }
 
   GeomGroup *objs = scinew GeomGroup(); 
-  GeomSwitch *data_switch =
+  GeomHandle data_switch =
     scinew GeomSwitch(scinew GeomMaterial(scinew GeomDL(objs), def_mat));
 
   typename VFld::mesh_handle_type mesh = vfld->get_typed_mesh();
@@ -1554,14 +1541,14 @@ class RenderScalarFieldBase : public DynamicAlgoBase
 {
 public:
 
-  virtual GeomSwitch *render_data(FieldHandle vfld_handle,
-				  FieldHandle cfld_handle,
-				  ColorMapHandle cmap,
-				  MaterialHandle default_material,
-				  const string &data_display_mode,
-				  double scale,
-				  int resolution,
-				  bool transparent_p) = 0;
+  virtual GeomHandle render_data(FieldHandle vfld_handle,
+				 FieldHandle cfld_handle,
+				 ColorMapHandle cmap,
+				 MaterialHandle default_material,
+				 const string &data_display_mode,
+				 double scale,
+				 int resolution,
+				 bool transparent_p) = 0;
 
 
 
@@ -1585,19 +1572,19 @@ template <class VFld, class CFld, class Loc>
 class RenderScalarField : public RenderScalarFieldBase
 {
 public:
-  virtual GeomSwitch *render_data(FieldHandle vfld_handle,
-				  FieldHandle cfld_handle,
-				  ColorMapHandle cmap,
-				  MaterialHandle default_material,
-				  const string &data_display_mode,
-				  double scale,
-				  int resolution,
-				  bool transparent_p);
+  virtual GeomHandle render_data(FieldHandle vfld_handle,
+				 FieldHandle cfld_handle,
+				 ColorMapHandle cmap,
+				 MaterialHandle default_material,
+				 const string &data_display_mode,
+				 double scale,
+				 int resolution,
+				 bool transparent_p);
 };
 
 
 template <class SFld, class CFld, class Loc>
-GeomSwitch *
+GeomHandle 
 RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
 						FieldHandle cfld_handle,
 						ColorMapHandle cmap,
@@ -1613,7 +1600,7 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
   const bool points_p = (display_mode == "Points");
   const bool sized_p = (display_mode == "Scaled Spheres");
 
-  GeomSwitch *data_switch = 0;
+  GeomHandle data_switch = 0;
   GeomGroup *objs = 0;
   GeomPoints *points = 0;
 
