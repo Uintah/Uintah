@@ -1,0 +1,9 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../../..
+
+SRCS     = Downhill_Simplex.cc OptDip.cc SGI_LU.cc SGI_Solve.cc
+
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
+
+include $(SRCTOP)/scripts/objs.mk
