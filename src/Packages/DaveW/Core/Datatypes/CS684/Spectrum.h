@@ -11,8 +11,8 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef SCI_Packages/DaveW_Datatypes_Spectrum_h
-#define SCI_Packages/DaveW_Datatypes_Spectrum_h 1
+#ifndef SCI_Packages_DaveW_Datatypes_Spectrum_h
+#define SCI_Packages_DaveW_Datatypes_Spectrum_h 1
 
 #include <Core/Containers/Array1.h>
 #include <Core/Geom/Color.h>
@@ -60,9 +60,11 @@ void vectorScaleBy(Array1<double> &a, double s);
 double vectorDotProd(const Array1<double> &a, const Array1<double> &b);
 double vectorDotProd(double *a, double *b, int num);
 
-void Pio(Piostream&, LiteSpectrum&);
 } // End namespace DaveW
-void Pio(Piostream&, Spectrum&);
 
+namespace SCIRun {
+void Pio(Piostream&, DaveW::LiteSpectrum&);
+void Pio(Piostream&, DaveW::Spectrum&);
+}
 
 #endif

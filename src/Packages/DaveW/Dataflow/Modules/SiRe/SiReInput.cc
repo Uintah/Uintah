@@ -46,7 +46,7 @@ void sire_wrtsireinp(char [], SIRE_FLAGS, char [], SIRE_DIRINFO,
 }
 
 namespace DaveW {
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 using namespace SCIRun;
 
 class SiReInput : public Module {

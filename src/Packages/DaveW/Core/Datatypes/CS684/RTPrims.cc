@@ -49,11 +49,11 @@ BRDF::~BRDF() {
 
 #define BRDF_VERSION 1
 void BRDF::io(Piostream& stream) {
-    
-    /*int version=*/stream.begin_class("BRDF", BRDF_VERSION);
-    int* repp=(int*)&rep;
-    Pio(stream, *repp);
-    stream.end_class();
+ 
+  /*int version=*/stream.begin_class("BRDF", BRDF_VERSION);
+  int* repp=(int*)&rep;
+  SCIRun::Pio(stream, *repp);
+  stream.end_class();
 }
 
 Lambertian::Lambertian() 
@@ -144,13 +144,14 @@ static Persistent* make_RTCamera() {
 
 #define RTCamera_VERSION 1
 void RTCamera::io(Piostream& stream) {
-    using DaveW::Datatypes::Pio;
-
-    /* int version=*/stream.begin_class("RTCamera", RTCamera_VERSION);
-    Pio(stream, view);
-    Pio(stream, apperture);
-    Pio(stream, fLength);
-    stream.end_class();
+  using DaveW::Pio;
+  using SCIRun::Pio;
+  
+  /* int version=*/stream.begin_class("RTCamera", RTCamera_VERSION);
+  Pio(stream, view);
+  Pio(stream, apperture);
+  Pio(stream, fLength);
+  stream.end_class();
 }
     
 PersistentTypeID RTCamera::type_id("RTCamera", "Persistent", make_RTCamera);
@@ -213,7 +214,8 @@ PersistentTypeID RTMaterial::type_id("RTMaterial", "Persistent", make_RTMaterial
 
 #define RTMaterial_VERSION 2
 void RTMaterial::io(Piostream& stream) {
-    using DaveW::Datatypes::Pio;
+    using DaveW::Pio;
+    using SCIRun::Pio;
 
     /*int version=*/stream.begin_class("RTMaterial", RTMaterial_VERSION);
     Pio(stream, name);		      
@@ -414,7 +416,8 @@ RTPlane* RTObject::getPlane() {
 
 #define RTObject_VERSION 1
 void RTObject::io(Piostream& stream) {
-    using DaveW::Datatypes::Pio;
+    using DaveW::Pio;
+    using SCIRun::Pio;
 
     /*int version=*/stream.begin_class("RTObject", RTObject_VERSION);
     int* repp=(int*)&rep;
@@ -435,7 +438,8 @@ static Persistent* make_RTSphere()
 
 #define RTSphere_VERSION 1
 void RTSphere::io(Piostream& stream) {
-
+    using DaveW::Pio;
+    using SCIRun::Pio;
     /* int version=*/stream.begin_class("RTSphere", RTSphere_VERSION);
     RTObject::io(stream);
     Pio(stream, center);
@@ -532,7 +536,8 @@ int RTPlane::intersect(const RTRay& ray, RTHit &hit) {
 
 #define RTPlane_VERSION 1
 void RTPlane::io(Piostream& stream) {
-
+    using DaveW::Pio;
+    using SCIRun::Pio;
     /* int version=*/stream.begin_class("RTPlane", RTPlane_VERSION);
     RTObject::io(stream);
     Pio(stream, d);
@@ -676,7 +681,8 @@ int RTBox::intersect(const RTRay& ray, RTHit &hit) {
 
 #define RTBox_VERSION 1
 void RTBox::io(Piostream& stream) {
-
+    using DaveW::Pio;
+    using SCIRun::Pio;
     /* int version=*/stream.begin_class("RTBox", RTBox_VERSION);
     RTObject::io(stream);
     Pio(stream, center);
@@ -691,7 +697,8 @@ static Persistent* make_RTRect()
 
 #define RTRect_VERSION 1
 void RTRect::io(Piostream& stream) {
-
+    using DaveW::Pio;
+    using SCIRun::Pio;
     /* int version=*/stream.begin_class("RTRect", RTRect_VERSION);
     RTObject::io(stream);
     Pio(stream, c);
@@ -824,7 +831,8 @@ static Persistent* make_RTTris()
 
 #define RTTris_VERSION 1
 void RTTris::io(Piostream& stream) {
-
+    using DaveW::Pio;
+    using SCIRun::Pio;
     /* int version=*/stream.begin_class("RTTris", RTTris_VERSION);
     RTObject::io(stream);    
     Pio(stream, surf);
@@ -951,7 +959,8 @@ static Persistent* make_RTTrin()
 
 #define RTTrin_VERSION 1
 void RTTrin::io(Piostream& stream) {
-
+    using DaveW::Pio;
+    using SCIRun::Pio;
     /* int version=*/stream.begin_class("RTTrin", RTTrin_VERSION);
     RTObject::io(stream);    
     Pio(stream, surf);		     
@@ -1147,7 +1156,8 @@ double Fres(const RTRay& I, Vector N, double nu_trans) {
 
 void Pio(Piostream& stream, RTLight& l)
 {
-
+    using DaveW::Pio;
+    using SCIRun::Pio;
     stream.begin_cheap_delim();
     Pio(stream, l.pos);
     Pio(stream, l.color);

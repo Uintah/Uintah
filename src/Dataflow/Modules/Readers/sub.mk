@@ -29,7 +29,7 @@ SRCS     += \
 	$(SRCDIR)/PathReader.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Dataflow/Network Core/Datatypes Core/Datatypes \
+PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Core/Datatypes \
 	Core/Persistent Core/Exceptions Core/Thread \
 	Core/Containers Core/TclInterface Core/Geom
 LIBS := 

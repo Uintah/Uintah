@@ -11,8 +11,8 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#ifndef SCI_Packages/DaveW_Datatypes_ManhattanDist_h
-#define SCI_Packages/DaveW_Datatypes_ManhattanDist_h 1
+#ifndef SCI_Packages_DaveW_Datatypes_ManhattanDist_h
+#define SCI_Packages_DaveW_Datatypes_ManhattanDist_h 1
 
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array3.h>

@@ -21,14 +21,15 @@ SRCS     += \
 	$(SRCDIR)/ScalarFieldWriter.cc\
 	$(SRCDIR)/SurfaceWriter.cc\
 	$(SRCDIR)/TetraWriter.cc\
+	$(SRCDIR)/TiffWriter.cc\
 	$(SRCDIR)/VectorFieldWriter.cc\
 	$(SRCDIR)/VoidStarWriter.cc\
 	$(SRCDIR)/PathWriter.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Dataflow/Network Core/Datatypes Core/Persistent \
+PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Core/Persistent \
 	Core/Thread Core/Exceptions Core/TclInterface \
-	Core/Geom Core/Containers Core/Datatypes
+	Core/Geom Core/Containers Core/Datatypes Core/Math Core/TkExtensions
 LIBS := 
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

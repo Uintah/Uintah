@@ -49,7 +49,7 @@ void sire_wrtrcvrimg(char *, int, int, int, short int *);
 }
 
 namespace DaveW {
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 using namespace SCIRun;
 
 class SiReOutput : public Module {

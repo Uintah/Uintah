@@ -44,7 +44,7 @@ using std::endl;
 #include <stdio.h>
 
 namespace DaveW {
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 using namespace SCIRun;
 
 int airCtr=0;

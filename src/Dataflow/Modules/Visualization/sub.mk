@@ -62,7 +62,7 @@ PSELIBS := Core/Algorithms/Visualization \
 	Dataflow/Network Core/Datatypes Dataflow/Widgets \
 	Core/Containers Core/Exceptions Core/Thread \
 	Core/TclInterface Core/Geom Core/Persistent \
-	Core/Datatypes Core/Geometry Core/Util \
+	Dataflow/Ports Core/Geometry Core/Util \
 	Core/TkExtensions Dataflow/Modules/Salmon
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 

@@ -13,39 +13,35 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Datatypes/Image/ImagePort.h>
+#include <Dataflow/Ports/ImagePort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/TclInterface/TCLvar.h>
 
 namespace SCIRun {
 
-
-
-using namespace SCIRun::Datatypes;
-
 class WhiteNoiseImage : public Module {
-    ImageOPort* oport;
-    TCLint xres;
-    TCLint yres;
+  ImageOPort* oport;
+  TCLint xres;
+  TCLint yres;
 public:
-    WhiteNoiseImage(const clString& id);
-    virtual ~WhiteNoiseImage();
-    virtual void execute();
+  WhiteNoiseImage(const clString& id);
+  virtual ~WhiteNoiseImage();
+  virtual void execute();
 };
 
 extern "C" Module* make_WhiteNoiseImage(const clString& id)
 {
-    return scinew WhiteNoiseImage(id);
+  return scinew WhiteNoiseImage(id);
 }
 
 WhiteNoiseImage::WhiteNoiseImage(const clString& id)
-: Module("WhiteNoiseImage", id, Source), xres("xres", id, this),
-  yres("yres", id, this)
+  : Module("WhiteNoiseImage", id, Source), xres("xres", id, this),
+    yres("yres", id, this)
 {
-    // Create the output port
-    oport=scinew ImageOPort(this, "Image", ImageIPort::Atomic);
-    add_oport(oport);
+  // Create the output port
+  oport=scinew ImageOPort(this, "Image", ImageIPort::Atomic);
+  add_oport(oport);
 }
 
 WhiteNoiseImage::~WhiteNoiseImage()
@@ -54,18 +50,18 @@ WhiteNoiseImage::~WhiteNoiseImage()
 
 void WhiteNoiseImage::execute()
 {
-    MusilRNG rng;
-    int xr=xres.get();
-    int yr=yres.get();
-    Image* image=new Image(xr, yr);
-    for(int y=0;y<yr;y++){
-	float* p=image->rows[y];
-	for(int x=0;x<xr;x++){
-	    *p++=rng()*2-1;
-	    *p++=0;
-	}
+  MusilRNG rng;
+  int xr=xres.get();
+  int yr=yres.get();
+  Image* image=new Image(xr, yr);
+  for(int y=0;y<yr;y++){
+    float* p=image->rows[y];
+    for(int x=0;x<xr;x++){
+      *p++=rng()*2-1;
+      *p++=0;
     }
-    oport->send(image);
+  }
+  oport->send(image);
 }
 
 } // End namespace SCIRun

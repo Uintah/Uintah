@@ -10,8 +10,8 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef SCI_Packages/DaveW_Datatypes_SiRe_h
-#define SCI_Packages/DaveW_Datatypes_SiRe_h 1
+#ifndef SCI_Packages_DaveW_Datatypes_SiRe_h
+#define SCI_Packages_DaveW_Datatypes_SiRe_h 1
 
 #include <Core/Datatypes/VoidStar.h>
 #include <Packages/DaveW/Core/ThirdParty/SiRe/include/fftw.h>

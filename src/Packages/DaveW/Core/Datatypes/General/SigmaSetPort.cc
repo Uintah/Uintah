@@ -19,14 +19,14 @@
 //namespace Datatypes {
 
 using namespace SCIRun;
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 
 extern "C" {
-Packages/DaveWSHARE IPort* make_SigmaSetIPort(Module* module,
+DAVEWSHARE IPort* make_SigmaSetIPort(Module* module,
 					 const clString& name) {
   return scinew SimpleIPort<SigmaSetHandle>(module,name);
 }
-Packages/DaveWSHARE OPort* make_SigmaSetOPort(Module* module,
+DAVEWSHARE OPort* make_SigmaSetOPort(Module* module,
 					 const clString& name) {
   return scinew SimpleOPort<SigmaSetHandle>(module,name);
 }

@@ -32,7 +32,7 @@
 
 namespace DaveW {
 using namespace SCIRun;
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 
 class MagneticFieldAtPoints : public Module {
   ColumnMatrixIPort* sourceLocationP;

@@ -11,7 +11,7 @@
 
 namespace DaveW {
 using namespace SCIRun;
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 
 class TensorAccessFields : public Module 
 { 

@@ -1,4 +1,4 @@
-itcl_class Dataflow_Fields_GenField {
+itcl_class Fields_GenField {
     inherit Module
     constructor {config} {
 	set name GenField

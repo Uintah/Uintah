@@ -126,7 +126,8 @@ int VectorFieldMI::interpolate(const Point& p, Vector& value)
 
 void VectorFieldMI::io(Piostream& stream)
 {
-  using DaveW::Datatypes::Pio;
+  using DaveW::Pio;
+  using SCIRun::Pio;
 
   VectorFieldRG* rg = dynamic_cast<VectorFieldRG*> (field);
   

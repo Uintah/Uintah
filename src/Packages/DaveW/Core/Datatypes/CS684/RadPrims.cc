@@ -32,6 +32,8 @@ using std::cerr;
 
 namespace DaveW {
 using namespace SCIRun;
+using DaveW::Pio;
+using SCIRun::Pio;
 
 RadObj::RadObj()
 {	
@@ -510,7 +512,8 @@ RadMesh* RadMesh::clone()
 
 #define RadMesh_VERSION 1
 void RadMesh::io(Piostream& stream) {
-    using DaveW::Datatypes::Pio;
+    using DaveW::Pio;
+    using SCIRun::Pio;
 
     /* int version=*/stream.begin_class("RadMesh", RadMesh_VERSION);
     Pio(stream, rho_coeff);

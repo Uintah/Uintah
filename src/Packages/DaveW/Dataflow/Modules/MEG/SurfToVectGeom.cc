@@ -42,7 +42,7 @@
 
 namespace DaveW {
 using namespace SCIRun;
-using DaveW::Datatypes::VectorFieldMI;
+using DaveW::VectorFieldMI;
 
 class SurfToVectGeom : public Module {
     SurfaceIPort* isurface;

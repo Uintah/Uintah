@@ -2,7 +2,6 @@
 <!DOCTYPE component SYSTEM "../../../doc/ReferenceGuide/component.dtd">
 
 <component name="GenField" category="Fields">
-
   <overview>
     <authors>
       <author>Michael Callahan</author>
@@ -12,21 +11,35 @@
       <p>Version Date: Oct 2000</p><p>Version: 1.0</p>
     </description>
   </overview>
-
   <io>
-    <inputs lastportdynamic=no>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
     </inputs>
     <outputs>
-      <port>
-	<description>Generated field.</description>
-        <datatype>Field</datatype>
-      </port>
+      <!-- one of (device port file) -->
     </outputs>
   </io>
-
   <gui>
+    <description>
+      <p></p>
+    </description>
+    <parameter>
+      <widget></widget>
+      <label></label>
+      <description>
+	<p></p>
+      </description>
+    </parameter>
+    <img></img>
   </gui>
-
   <testing>
+    <plan>
+      <description>
+	<p></p>
+      </description>
+      <step>
+	<p></p>
+      </step>
+    </plan>
   </testing>
 </component>

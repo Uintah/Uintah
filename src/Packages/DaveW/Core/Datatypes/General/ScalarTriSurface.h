@@ -11,8 +11,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_Packages/DaveW_Datatypes_ScalarTriSurface_h
-#define SCI_Packages/DaveW_Datatypes_ScalarTriSurface_h 1
+#ifndef SCI_Packages_DaveW_Datatypes_ScalarTriSurface_h
+#define SCI_Packages_DaveW_Datatypes_ScalarTriSurface_h 1
 
 #include <Core/Datatypes/TriSurface.h>
 #include <Core/Containers/Array1.h>

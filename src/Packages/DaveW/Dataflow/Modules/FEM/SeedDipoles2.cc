@@ -27,7 +27,7 @@ using std::cerr;
 namespace DaveW {
 using namespace SCIRun;
 
-class Packages/DaveWSHARE SeedDipoles2 : public Module {
+class DAVEWSHARE SeedDipoles2 : public Module {
   MeshIPort* imesh;
   MatrixOPort* omat;  
   TCLstring seedRandTCL;
@@ -39,7 +39,7 @@ public:
   virtual void execute();
 };
 
-extern "C" Packages/DaveWSHARE Module* make_SeedDipoles2(const clString& id) {
+extern "C" DAVEWSHARE Module* make_SeedDipoles2(const clString& id) {
   return new SeedDipoles2(id);
 }
 

@@ -15,7 +15,7 @@ SRCS     += \
 	$(SRCDIR)/MeshIterator.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Dataflow/Network Core/Datatypes Core/Persistent \
+PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Core/Persistent \
 	Core/Exceptions Core/Thread Core/TclInterface \
 	Core/Containers Core/Datatypes
 LIBS := 

@@ -11,8 +11,8 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef SCI_Packages/DaveW_Datatypes_TensorFieldPort_h
-#define SCI_Packages/DaveW_Datatypes_TensorFieldPort_h 1
+#ifndef SCI_Packages_DaveW_Datatypes_TensorFieldPort_h
+#define SCI_Packages_DaveW_Datatypes_TensorFieldPort_h 1
 
 #include <Dataflow/Ports/SimplePort.h>
 #include <Packages/DaveW/Core/Datatypes/General/TensorFieldBase.h>

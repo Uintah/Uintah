@@ -36,8 +36,8 @@ SRCS     += \
 	$(SRCDIR)/EditPath.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Dataflow/Widgets Dataflow/Network Core/Datatypes Dataflow/Comm \
-	Core/Persistent Core/Exceptions Core/Geometry \
+PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
+	Dataflow/Comm Core/Persistent Core/Exceptions Core/Geometry \
 	Core/Geom Core/Thread Core/Containers \
 	Core/TclInterface Core/TkExtensions Core/Util \
 	Core/TkExtensions Core/Datatypes

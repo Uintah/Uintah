@@ -1,5 +1,5 @@
-#ifndef SCI_Packages/DaveW_Datatypes_Scene_h
-#define SCI_Packages/DaveW_Datatypes_Scene_h 1
+#ifndef SCI_Packages_DaveW_Datatypes_Scene_h
+#define SCI_Packages_DaveW_Datatypes_Scene_h 1
 
 #include <Packages/DaveW/Core/Datatypes/CS684/RTPrims.h>
 #include <Packages/DaveW/Core/Datatypes/CS684/RadPrims.h>

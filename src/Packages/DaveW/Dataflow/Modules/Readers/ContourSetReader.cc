@@ -19,7 +19,7 @@
 #include <Core/TclInterface/TCLvar.h>
 
 namespace DaveW {
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 using namespace SCIRun;
 
 class ContourSetReader : public Module {

@@ -11,8 +11,8 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef SCI_Packages/DaveW_Datatypes_Pixel_h
-#define SCI_Packages/DaveW_Datatypes_Pixel_h 1
+#ifndef SCI_Packages_DaveW_Datatypes_Pixel_h
+#define SCI_Packages_DaveW_Datatypes_Pixel_h 1
 
 #include <Packages/DaveW/Core/Datatypes/CS684/Spectrum.h>
 #include <Core/Containers/Array1.h>
@@ -47,8 +47,11 @@ public:
     ~Pixel();
 };
 
+
+
 } // End namespace DaveW
-void Pio( Piostream &, Pixel & );
 
-
+namespace SCIRun {
+void Pio( Piostream &, DaveW::Pixel & );
+}
 #endif

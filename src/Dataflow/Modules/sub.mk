@@ -14,8 +14,10 @@ SUBDIRS := \
 	$(SRCDIR)/Example\
         $(SRCDIR)/FEM\
         $(SRCDIR)/Fields\
+	$(SRCDIR)/Image\
 	$(SRCDIR)/Iterators\
         $(SRCDIR)/Matrix\
+	$(SRCDIR)/Mesh\
         $(SRCDIR)/Readers\
 	$(SRCDIR)/Salmon\
         $(SRCDIR)/Surface\

@@ -12,8 +12,8 @@
    Eric Lundberg,  10/8/1998
    
    */
-#ifndef SCI_Packages/DaveW_Datatypes_TensorFieldBase_h
-#define SCI_Packages/DaveW_Datatypes_TensorFieldBase_h 1
+#ifndef SCI_Packages_DaveW_Datatypes_TensorFieldBase_h
+#define SCI_Packages_DaveW_Datatypes_TensorFieldBase_h 1
 
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>

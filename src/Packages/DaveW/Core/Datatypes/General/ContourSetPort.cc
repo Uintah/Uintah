@@ -19,14 +19,14 @@
 //namespace Datatypes {
 
 using namespace SCIRun;
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 
 extern "C" {
-Packages/DaveWSHARE IPort* make_ContourSetIPort(Module* module,
+DAVEWSHARE IPort* make_ContourSetIPort(Module* module,
 					 const clString& name) {
   return scinew SimpleIPort<ContourSetHandle>(module,name);
 }
-Packages/DaveWSHARE OPort* make_ContourSetOPort(Module* module,
+DAVEWSHARE OPort* make_ContourSetOPort(Module* module,
 					 const clString& name) {
   return scinew SimpleOPort<ContourSetHandle>(module,name);
 }

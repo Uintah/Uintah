@@ -19,14 +19,14 @@
 //namespace Datatypes {
 
 using namespace SCIRun;
-using namespace DaveW::Datatypes;
+using namespace DaveW;
 
 extern "C" {
-Packages/DaveWSHARE IPort* make_TensorFieldIPort(Module* module,
+DAVEWSHARE IPort* make_TensorFieldIPort(Module* module,
 					 const clString& name) {
   return scinew SimpleIPort<TensorFieldHandle>(module,name);
 }
-Packages/DaveWSHARE OPort* make_TensorFieldOPort(Module* module,
+DAVEWSHARE OPort* make_TensorFieldOPort(Module* module,
 					 const clString& name) {
   return scinew SimpleOPort<TensorFieldHandle>(module,name);
 }

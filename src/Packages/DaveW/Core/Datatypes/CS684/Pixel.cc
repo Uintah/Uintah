@@ -34,23 +34,23 @@ Pixel::Pixel(const Array1<DenseMatrix>& S, const Array1<DenseMatrix>& D,
 
 Pixel::~Pixel() {
 }
+} // End namespace DaveW
+
+namespace SCIRun {
+using namespace DaveW;
 
 void Pio(Piostream& stream, Pixel& p)
 {
-using namespace SCIRun;
-    using DaveW::Datatypes::Pio;
-
-    stream.begin_cheap_delim();
-    Pio(stream, p.S);
-    Pio(stream, p.D);
-    Pio(stream, p.R);
-    Pio(stream, p.S0);
-    Pio(stream, p.E);
-    Pio(stream, p.spec);
-    Pio(stream, p.xyz);
-    Pio(stream, p.c);
-    stream.end_cheap_delim();
+  stream.begin_cheap_delim();
+  Pio(stream, p.S);
+  Pio(stream, p.D);
+  Pio(stream, p.R);
+  Pio(stream, p.S0);
+  Pio(stream, p.E);
+  Pio(stream, p.spec);
+  Pio(stream, p.xyz);
+  Pio(stream, p.c);
+  stream.end_cheap_delim();
 }
-} // End namespace DaveW
 
-
+} // End namespace SCIRun
