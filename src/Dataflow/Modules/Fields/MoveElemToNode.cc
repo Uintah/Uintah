@@ -89,7 +89,7 @@ MoveElemToNode::execute()
     }
     ext = "Lat";
   }
-  if (mtd->get_name() == "StructHexVolMesh")
+  else if (mtd->get_name() == "StructHexVolMesh")
   {
     if (ifield->data_at() != Field::CELL)
     {
@@ -107,9 +107,18 @@ MoveElemToNode::execute()
     }
     ext = "Img";
   }
+  else if (mtd->get_name() == "StructQuadSurfMesh")
+  {
+    if (ifield->data_at() != Field::FACE)
+    {
+      error("StructQuadSurfMesh data must be at face centers.");
+      return;
+    }
+    ext = "SQuad";
+  }
   else
   {
-    error("Unsupported mesh type.  This only works on LatVols and Images.");
+    error("Unsupported mesh type.  This module only works on LatVols, StructHexVols, Images, and StructQuadSurfs.");
     return;
   }
 
