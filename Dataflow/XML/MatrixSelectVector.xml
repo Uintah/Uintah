@@ -64,6 +64,13 @@ the GUI dialog window, the user specifies a delay (in milliseconds) that
 controls the speed at which the selected rows or columns may be sent to the
 output port.</p>
 
+        <p>The Increment entry can be used to skip through the input matrix
+        by more than one element at a time.  This can be used with the
+        Send Amount entry to send more than one row/column at a time.
+        For instance, if both entries are set to three, the module
+        will send three rows/columns at a time, which can then be
+        mapped onto a vector field by the ManageFieldData module. </p>
+
 	<p>The second input port of the MatrixSelectVector module, Weight
 Vector, allows the user to to select mutliple columns of a matrix and add
 them together. The Weight Vector port can only take a column vector as
