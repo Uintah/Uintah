@@ -24,6 +24,14 @@ class BaseWidget;
 class MessageBase;
 class Module;
 
+struct BState {
+   unsigned int control:1;
+   unsigned int alt:1;
+   unsigned int shift:1;
+   unsigned int btn:2;
+};
+
+
 class GeomPick : public GeomContainer {
     Module* module;
     void* cbdata;
@@ -55,9 +63,9 @@ public:
     void set_module_data(void*);
     void set_widget_data(int);
 
-    void pick();
-    void moved(int axis, double distance, const Vector& delta);
-    void release();
+    void pick(const BState& bs);
+    void moved(int axis, double distance, const Vector& delta, const BState& bs);
+    void release(const BState& bs);
 
     // For OpenGL
 #ifdef SCI_OPENGL

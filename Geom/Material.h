@@ -37,6 +37,7 @@ public:
     Material();
     Material(const Color&, const Color&, const Color&, double);
     Material(const Material&);
+    Material& operator=(const Material&);
     ~Material();
     Material* clone();
 

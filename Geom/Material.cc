@@ -47,6 +47,18 @@ Material::~Material()
 {
 }
 
+Material& Material::operator=(const Material& copy)
+{
+   ambient=copy.ambient;
+   diffuse=copy.diffuse;
+   specular=copy.specular;
+   shininess=copy.shininess;
+   reflectivity=copy.reflectivity;
+   transparency=copy.transparency;
+   refraction_index=copy.refraction_index;
+   return *this;
+}
+
 Material* Material::clone()
 {
     return new Material(*this);

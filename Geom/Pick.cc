@@ -102,28 +102,28 @@ void GeomPick::set_widget_data(int _wd)
     widget_data=_wd;
 }
 
-void GeomPick::pick()
+void GeomPick::pick(const BState& bs)
 {
     selected=1;
     if(widget)
-	widget->geom_pick(widget_data);
+	widget->geom_pick(widget_data, bs);
     if(module)
 	module->geom_pick(cbdata);
 }
 
-void GeomPick::release()
+void GeomPick::release(const BState& bs)
 {
     selected=0;
     if(widget)
-	widget->geom_release(widget_data);
+	widget->geom_release(widget_data, bs);
     if(module)
 	module->geom_release(cbdata);
 }
 
-void GeomPick::moved(int axis, double distance, const Vector& delta)
+void GeomPick::moved(int axis, double distance, const Vector& delta, const BState& bs)
 {
     if(widget)
-	widget->geom_moved(axis, distance, delta, widget_data);
+	widget->geom_moved(axis, distance, delta, widget_data, bs);
     if(module)
 	module->geom_moved(axis, distance, delta, cbdata);
 }
