@@ -101,7 +101,7 @@ void IdealGas::computeSpeedSound(const Patch* patch,
   new_dw->allocate(speedSound,lb->speedSound_CCLabel,vfindex,patch);
 
 
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     double dp_drho = (gamma - 1.0) * cv[*iter] * temp[*iter];
     double dp_de   = (gamma - 1.0) * rho_micro[*iter];
     double press   = (gamma - 1.0) * rho_micro[*iter]*cv[*iter]*temp[*iter];
@@ -153,7 +153,7 @@ void IdealGas::computeRhoMicro(const Patch* patch,
 
   double gamma = matl->getGamma();
 
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     rho_micro[*iter] = press[*iter]/((gamma -1.)*cv[*iter]*temp[*iter]);
   }
 
@@ -178,11 +178,11 @@ void IdealGas::computePressEOS(const Patch* patch,
 
   old_dw->get(temp, lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
   old_dw->get(cv, lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
-  old_dw->get(rho_micro, lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
-  new_dw->allocate(press,lb->rho_micro_CCLabel,vfindex,patch);
+  old_dw->get(rho_micro, lb->rho_micro_CCLabel, vfindex,patch,Ghost::None, 0); 
+  new_dw->allocate(press,lb->press_CCLabel,vfindex,patch);
 
 
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     press[*iter] = (gamma - 1.)* rho_micro[*iter] * cv[*iter] * temp[*iter];
   }
 
@@ -192,6 +192,10 @@ void IdealGas::computePressEOS(const Patch* patch,
 
 
 //$Log$
+//Revision 1.8  2000/11/14 04:02:12  jas
+//Added getExtraCellIterator and things now appear to be working up to
+//face centered velocity calculations.
+//
 //Revision 1.7  2000/10/31 04:14:28  jas
 //Added stiff gas EOS type.  It is just a copy of IdealGas.
 //

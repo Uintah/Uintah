@@ -22,6 +22,7 @@ namespace Uintah {
     const VarLabel* pressdP_CCLabel;
     const VarLabel* delPress_CCLabel;
     const VarLabel* rho_micro_CCLabel;
+    const VarLabel* rho_micro_equil_CCLabel;
     const VarLabel* rho_CCLabel;
     const VarLabel* temp_CCLabel;
     const VarLabel* uvel_CCLabel;
@@ -75,6 +76,10 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.13  2000/11/14 04:02:11  jas
+// Added getExtraCellIterator and things now appear to be working up to
+// face centered velocity calculations.
+//
 // Revision 1.12  2000/10/25 23:12:17  guilkey
 // Fixed step2, reorganized 6and7 just a little bit.
 //

@@ -103,6 +103,16 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
      sharedState->registerMaterial(mat);
   }     
 
+  // Pull out the exchange coefficients
+
+  ProblemSpecP exch_ps = ice_mat_ps->findBlock("exchange_coefficients");
+
+  exch_ps->require("momentum",d_K_mom);
+  exch_ps->require("heat",d_K_heat);
+
+  cout << "K_mom = " << d_K_mom << endl;
+  cout << "K_heat = " << d_K_heat << endl;
+
   cout << "Number of materials: " << d_sharedState->getNumMatls() << endl;
 
   // Pull out the initial conditions
@@ -150,6 +160,9 @@ void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched,
 	t->computes(dw, lb->uvel_CCLabel,ice_matl->getDWIndex(),patch);
 	t->computes(dw, lb->vvel_CCLabel,ice_matl->getDWIndex(),patch);
 	t->computes(dw, lb->wvel_CCLabel,ice_matl->getDWIndex(),patch);
+	t->computes(dw, lb->uvel_FCLabel,ice_matl->getDWIndex(),patch);
+	t->computes(dw, lb->vvel_FCLabel,ice_matl->getDWIndex(),patch);
+	t->computes(dw, lb->wvel_FCLabel,ice_matl->getDWIndex(),patch);
       }
     }
 
@@ -227,6 +240,8 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 				matl->getDWIndex(), patch);
 	       t->computes(new_dw,lb->speedSound_equiv_CCLabel,
 				matl->getDWIndex(), patch);
+	       t->computes(new_dw,lb->rho_micro_equil_CCLabel,
+				matl->getDWIndex(), patch);
 	  }
 	}
 
@@ -254,6 +269,9 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(old_dw,lb->wvel_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(new_dw,lb->rho_micro_equil_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+
 
 	    t->computes(new_dw,lb->uvel_FCLabel,matl->getDWIndex(), patch);
 	    t->computes(new_dw,lb->vvel_FCLabel,matl->getDWIndex(), patch);
@@ -272,7 +290,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	  Material* matl = d_sharedState->getMaterial(m);
 	  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
 	  if(ice_matl){
-	    t->requires(new_dw,lb->rho_micro_CCLabel,
+	    t->requires(new_dw,lb->rho_micro_equil_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(new_dw,lb->vol_frac_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
@@ -312,7 +330,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(new_dw,lb->speedSound_equiv_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(new_dw,lb->rho_micro_CCLabel,
+	    t->requires(new_dw,lb->rho_micro_equil_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
 
 	    t->computes(new_dw,lb->div_velfc_CCLabel,matl->getDWIndex(),patch);
@@ -400,7 +418,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	  Material* matl = d_sharedState->getMaterial(m);
 	  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
 	  if(ice_matl){
-	    t->requires(new_dw,lb->rho_micro_CCLabel,
+	    t->requires(new_dw,lb->rho_micro_equil_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(new_dw,lb->speedSound_equiv_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
@@ -474,7 +492,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(new_dw,lb->vol_frac_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(new_dw,lb->rho_micro_CCLabel,
+	    t->requires(new_dw,lb->rho_micro_equil_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(old_dw,lb->cv_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
@@ -537,6 +555,8 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
   CCVariable<double> uvel_CC,vvel_CC,wvel_CC, visc_CC,vol_frac_CC;
   new_dw->allocate(press,lb->press_CCLabel,0,patch);
 
+  FCVariable<double> uvel_FC,vvel_FC,wvel_FC;
+
   // Store the initial pressure
   press.initialize(d_pressure);
   // The application of the pressure bcs will overwrite the extra cell
@@ -545,22 +565,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
   // Store the pressure BCs
 
   setBC(press,"Pressure",patch);
-#if 0
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCondBase* > bcs;
-    bcs = patch->getBCValues(face);
-    for (int i = 0; i<(int)bcs.size(); i++ ) {
-      string bcs_type = bcs[i]->getType();
-      if (bcs_type == "Pressure") {
-	PressureBoundCond* bc = 
-	  static_cast<PressureBoundCond*>(bcs[i]);
-	cout << "bc value = " << bc->getValue() << endl;
-	press.fillFace(face,bc->getValue());
-      }
-    }
-  }
-#endif
+
 
 #if 1
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
@@ -585,6 +590,10 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocate(vvel_CC,lb->vvel_CCLabel,vfindex,patch);
       new_dw->allocate(wvel_CC,lb->wvel_CCLabel,vfindex,patch);
 
+      new_dw->allocate(uvel_FC,lb->uvel_FCLabel,vfindex,patch);
+      new_dw->allocate(vvel_FC,lb->vvel_FCLabel,vfindex,patch);
+      new_dw->allocate(wvel_FC,lb->wvel_FCLabel,vfindex,patch);
+
       // Set the initial conditions:
       uvel_CC.initialize(d_ic[m].d_velocity.x());
       vvel_CC.initialize(d_ic[m].d_velocity.y());
@@ -597,59 +606,25 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       visc_CC.initialize(ice_matl->getViscosity());
       cv.initialize(ice_matl->getSpecificHeat());
 
+      // Initialize the face centered velocities to 0
+
+      uvel_FC.initialize(0.);
+      vvel_FC.initialize(0.);
+      wvel_FC.initialize(0.);
 
       // Set the boundary conditions:
       //    uvel,vvel,wvel,temp,rho_CC
-      
+
       setBC(rho_CC,"Density",patch);
       setBC(temp,"Temperature",patch);
       setBC(uvel_CC,"Velocity","x",patch);
       setBC(vvel_CC,"Velocity","y",patch);
       setBC(wvel_CC,"Velocity","z",patch);
-#if 0
-      for(Patch::FaceType face = Patch::startFace;
-	  face <= Patch::endFace; face=Patch::nextFace(face)){
-	vector<BoundCondBase* > bcs;
-	bcs = patch->getBCValues(face);
-	for (int i = 0; i<(int)bcs.size(); i++ ) {
-	  string bcs_type = bcs[i]->getType();
-	  if (bcs_type == "Density") {
-	    DensityBoundCond* bc =
-	      static_cast<DensityBoundCond*>(bcs[i]);
-	    if (bc->getKind() == "Dirichlet")
-	      rho_CC.fillFace(face,bc->getValue());
-	    if (bc->getKind() == "Neumann")
-	      rho_CC.fillFaceFlux(face,bc->getValue());
-	  }
-	  if (bcs_type == "Temperature") {
-	    TemperatureBoundCond* bc = 
-	      static_cast<TemperatureBoundCond*>(bcs[i]);
-	    if (bc->getKind() == "Dirichlet")
-	      temp.fillFace(face,bc->getValue());
-	    if (bc->getKind() == "Neumann")
-	      temp.fillFaceFlux(face,bc->getValue());
-	  }
-	  if (bcs_type == "Velocity") {
-	    VelocityBoundCond* bc = 
-	      static_cast<VelocityBoundCond*>(bcs[i]);
-	    if (bc->getKind() == "Dirichlet") {
-	      uvel_CC.fillFace(face,bc->getValue().x());
-	      vvel_CC.fillFace(face,bc->getValue().y());
-	      wvel_CC.fillFace(face,bc->getValue().z());
-	    }
-	    if (bc->getKind() == "Neumann") {
-	      uvel_CC.fillFaceFlux(face,bc->getValue().x());
-	      vvel_CC.fillFaceFlux(face,bc->getValue().y());
-	      wvel_CC.fillFaceFlux(face,bc->getValue().z());
-	    }
-	
-	  }
-	}
-      }
-#endif
 
 #if 0
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      cout << "After doing the boundary conditions" << endl;
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+	  iter++){
 	cout << "rho_CC["<< *iter<< "]=" << rho_CC[*iter] << endl;
 	cout << "temp["<< *iter<< "]=" << temp[*iter] << endl;
 	cout << "uvel_CC["<< *iter<< "]=" << uvel_CC[*iter] << endl;
@@ -668,6 +643,9 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->put(uvel_CC,lb->uvel_CCLabel,vfindex,patch);
       new_dw->put(vvel_CC,lb->vvel_CCLabel,vfindex,patch);
       new_dw->put(wvel_CC,lb->wvel_CCLabel,vfindex,patch);
+      new_dw->put(uvel_FC,lb->uvel_FCLabel,vfindex,patch);
+      new_dw->put(vvel_FC,lb->vvel_FCLabel,vfindex,patch);
+      new_dw->put(wvel_FC,lb->wvel_FCLabel,vfindex,patch);
       new_dw->put(visc_CC,lb->viscosity_CCLabel,vfindex,patch);
     }
   }
@@ -690,7 +668,7 @@ void ICE::actuallyStep1a(const ProcessorGroup*,
 		   DataWarehouseP& new_dw)
 {
 
-  cout << "Doing actually step1a" << endl;
+  cout << "Doing actually step1a -- speed_of_sound_MM" << endl;
 
   int numMatls = d_sharedState->getNumMatls();
 
@@ -713,7 +691,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 		   DataWarehouseP& new_dw)
 {
 
-  cout << "Doing actually step1b" << endl;
+  cout << "Doing actually step1b -- calc_equilibration_pressure" << endl;
 
   int numMatls = 0;
 
@@ -753,7 +731,8 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
       old_dw->get(rho,lb->rho_CCLabel, vfindex,patch,Ghost::None, 0); 
       new_dw->get(rho_micro,lb->rho_micro_CCLabel, vfindex,patch,
 		  Ghost::None, 0); 
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+	  iter++){
 	vol_frac[m][*iter] = rho[*iter]/rho_micro[*iter];
       }
       
@@ -763,7 +742,8 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
   vector<double> delVol_frac(numMatls),press_eos(numMatls);
   vector<double> dp_drho(numMatls),dp_de(numMatls);
   
-  vector<CCVariable<double> > rho_micro(numMatls),rho(numMatls);
+  vector<CCVariable<double> > rho_micro(numMatls),rho_micro_equil(numMatls);
+  vector<CCVariable<double> > rho(numMatls);
   vector<CCVariable<double> > cv(numMatls);
   vector<CCVariable<double> > Temp(numMatls);
   vector<CCVariable<double> > speedSound(numMatls),speedSound_old(numMatls);
@@ -785,6 +765,8 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 
       new_dw->allocate(speedSound[m],lb->speedSound_equiv_CCLabel,vfindex,
 		       patch);
+      new_dw->allocate(rho_micro_equil[m],lb->rho_micro_equil_CCLabel,vfindex,
+		       patch);
       new_dw->get(rho_micro[m],lb->rho_micro_CCLabel,vfindex,patch,
 		  Ghost::None,0);
     }
@@ -792,7 +774,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 
   press_new = press;
 
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     double delPress = 0.;
     bool converged = false;
     while( converged == false) {
@@ -830,7 +812,6 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
      }
      double vol_frac_not_close_packed = 1.;
      delPress = (A - vol_frac_not_close_packed - B)/C;
-     cout << "delPress=" << delPress << endl;
      press_new[*iter] += delPress;
 
      for (int m = 0; m < numMatls; m++) {
@@ -885,30 +866,13 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
   // Update the boundary conditions for the variables:
   // Pressure (press_new)
 
-  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++) {
+#if 0
+  for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++) {
     cout << "press_new["<<*iter<<"]="<<press_new[*iter] << endl;
   }
-
+#endif
 
   setBC(press_new,"Pressure",patch);
-#if 0
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCondBase* > bcs;
-    bcs = patch->getBCValues(face);
-    for (int i = 0; i<(int)bcs.size(); i++ ) {
-      string bcs_type = bcs[i]->getType();
-      if (bcs_type == "Pressure") {
-	PressureBoundCond* bc = 
-	  static_cast<PressureBoundCond*>(bcs[i]);
-	if (bc->getType() == "Pressure")
-	  press_new.fillFace(face,bc->getPressure());
-	else if (bc->getType() == "Flux")
-	  press_new.fillFace(face,bc->getFlux());
-      }
-    }
-  }
-#endif  
  
   
   // Hydrostatic pressure adjustment - subtract off the hydrostatic pressure
@@ -924,7 +888,8 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
   
   if (gravity.x() != 0.) {
     // x direction
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+	iter++){
       IntVector curcell = *iter;
       double press_hydro = 0.;
       for (int m = 0; m < numMatls; m++) {
@@ -936,7 +901,8 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
   }
   if (gravity.y() != 0.) {
     // y direction
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+	iter++){
       IntVector curcell = *iter;
       double press_hydro = 0.;
       for (int m = 0; m < numMatls; m++) {
@@ -948,7 +914,8 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
   }
   if (gravity.z() != 0.) {
     // z direction
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+	iter++){
       IntVector curcell = *iter;
       double press_hydro = 0.;
       for (int m = 0; m < numMatls; m++) {
@@ -968,6 +935,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
       int vfindex = matl->getVFIndex();
       new_dw->put(vol_frac[m],lb->vol_frac_CCLabel,vfindex,patch);
       new_dw->put(speedSound[m],lb->speedSound_equiv_CCLabel,vfindex,patch);
+      new_dw->put(rho_micro[m],lb->rho_micro_equil_CCLabel,vfindex,patch);
     }
   }
   new_dw->put(press_new,lb->press_CCLabel,0,patch);
@@ -980,7 +948,7 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 		   DataWarehouseP& new_dw)
 {
 
-  cout << "Doing actually step1c" << endl;
+  cout << "Doing actually step1c -- compute_face_centered_velocities" << endl;
 
   int numMatls = d_sharedState->getNumMatls();
 
@@ -1003,7 +971,7 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
       int vfindex = matl->getVFIndex();
 
       old_dw->get(rho_CC,  lb->rho_CCLabel,  vfindex, patch, Ghost::None, 0);
-      old_dw->get(rho_micro_CC, lb->rho_micro_CCLabel,
+      new_dw->get(rho_micro_CC, lb->rho_micro_equil_CCLabel,
 				vfindex, patch, Ghost::None, 0);
       old_dw->get(uvel_CC, lb->uvel_CCLabel,  vfindex, patch, Ghost::None, 0);
       old_dw->get(vvel_CC, lb->vvel_CCLabel,  vfindex, patch, Ghost::None, 0);
@@ -1019,7 +987,7 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 
       double term1, term2, term3, press_coeff, rho_micro_FC, rho_FC;
 
-#if 0
+#if 1
    // This can't be uncommented until ExtraCells are implemented
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
 	IntVector curcell = *iter;
@@ -1028,7 +996,13 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 	IntVector adjcell(curcell.x(),curcell.y()+1,curcell.z()); 
 
 	rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
+	cout << "rho_micro_CC adjacent = " << rho_micro_CC[adjcell] << 
+	  " current = " << rho_micro_CC[curcell] << endl;
+	cout << "Top face rho_micro_FC = " << rho_micro_FC << endl;
 	rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
+	cout << "Top face rho_FC = " << rho_FC << endl;
+	cout << "vvel_CC adjacent = " << vvel_CC[adjcell] << " current = " 
+	     << vvel_CC[curcell] << endl;
 
 	term1 = (rho_CC[adjcell] * vvel_CC[adjcell] +
 		 rho_CC[curcell] * vvel_CC[curcell])/rho_FC;
@@ -1039,11 +1013,14 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 			(press_CC[adjcell] - press_CC[curcell])/dx.y();
 	term3 =  delT * gravity.y();
 
+	cout << "Top face term 1 = " << term1 << " term 2 = " << term2 << 
+	  " term 3 = " << term3 << endl;
+
 	// I don't know what this is going to look like yet
 	// but the equations are right I think.
-//	uvel_FC[curcell][top] = 0.0;
-//	vvel_FC[curcell][top] = term1- term2 + term3;
-//	wvel_FC[curcell][top] = 0.0;
+	uvel_FC[curcell + IntVector(0,1,0)] = 0.0;
+	vvel_FC[curcell + IntVector(0,1,0)] = term1- term2 + term3;
+	wvel_FC[curcell + IntVector(0,1,0)] = 0.0;
 
        // Right face
 	adjcell = IntVector(curcell.x()+1,curcell.y(),curcell.z()); 
@@ -1051,8 +1028,8 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 	rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
 	rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
 
-	term1 = (rho_CC[adjcell] * vvel_CC[adjcell] +
-		 rho_CC[curcell] * vvel_CC[curcell])/rho_FC;
+	term1 = (rho_CC[adjcell] * uvel_CC[adjcell] +
+		 rho_CC[curcell] * uvel_CC[curcell])/rho_FC;
 
 	press_coeff = 2.0/(rho_micro_FC);
 
@@ -1060,11 +1037,14 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 			(press_CC[adjcell] - press_CC[curcell])/dx.x();
 	term3 =  delT * gravity.x();
 
+	cout << "Right face term 1 = " << term1 << " term 2 = " << term2 << 
+	  " term 3 = " << term3 << endl;
+
 	// I don't know what this is going to look like yet
 	// but the equations are right I think.
-//	uvel_FC[curcell][top] = term1- term2 + term3;
-//	vvel_FC[curcell][top] = 0.0;
-//	wvel_FC[curcell][top] = 0.0;
+	uvel_FC[curcell + IntVector(1,0,0)] = term1- term2 + term3;
+	vvel_FC[curcell + IntVector(1,0,0)] = 0.0;
+	wvel_FC[curcell + IntVector(1,0,0)] = 0.0;
 
        // Front face
 	adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+1); 
@@ -1072,8 +1052,8 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 	rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
 	rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
 
-	term1 = (rho_CC[adjcell] * vvel_CC[adjcell] +
-		 rho_CC[curcell] * vvel_CC[curcell])/rho_FC;
+	term1 = (rho_CC[adjcell] * wvel_CC[adjcell] +
+		 rho_CC[curcell] * wvel_CC[curcell])/rho_FC;
 
 	press_coeff = 2.0/(rho_micro_FC);
 
@@ -1081,11 +1061,14 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 			(press_CC[adjcell] - press_CC[curcell])/dx.z();
 	term3 =  delT * gravity.z();
 
+	cout << "Front face term 1 = " << term1 << " term 2 = " << term2 << 
+	  " term 3 = " << term3 << endl;
+
 	// I don't know what this is going to look like yet
 	// but the equations are right I think.
-//	uvel_FC[curcell][top] = 0.0;
-//	vvel_FC[curcell][top] = 0.0;
-//	wvel_FC[curcell][top] = term1- term2 + term3;
+	uvel_FC[curcell + IntVector(0,0,1)] = 0.0;
+	vvel_FC[curcell + IntVector(0,0,1)] = 0.0;
+	wvel_FC[curcell + IntVector(0,0,1)] = term1- term2 + term3;
       }
 #endif
 
@@ -1094,32 +1077,17 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
       setBC(uvel_CC,"Velocity","x",patch);
       setBC(vvel_CC,"Velocity","y",patch);
       setBC(wvel_CC,"Velocity","z",patch);
-#if 0
-      for(Patch::FaceType face = Patch::startFace;
-	  face <= Patch::endFace; face=Patch::nextFace(face)){
-	vector<BoundCondBase* > bcs;
-	bcs = patch->getBCValues(face);
-	for (int i = 0; i<(int)bcs.size(); i++ ) {
-	  string bcs_type = bcs[i]->getType();
-	  if (bcs_type == "Velocity") {
-	    VelocityBoundCond* bc = 
-	      static_cast<VelocityBoundCond*>(bcs[i]);
-	    if (bc->getKind() == "Dirichlet") {
-	      uvel_CC.fillFace(face,bc->getValue().x());
-	      vvel_CC.fillFace(face,bc->getValue().y());
-	      wvel_CC.fillFace(face,bc->getValue().z());
-	    }
-	    if (bc->getKind() == "Neumann") {
-	      uvel_CC.fillFaceFlux(face,bc->getValue().x());
-	      vvel_CC.fillFaceFlux(face,bc->getValue().y());
-	      wvel_CC.fillFaceFlux(face,bc->getValue().z());
-	    }
-	  }
-	}
-      }
-#endif
+      setBC(uvel_FC,"Velocity","x",patch);
+      setBC(vvel_FC,"Velocity","y",patch);
+      setBC(wvel_FC,"Velocity","z",patch);
 
-            
+#if 1
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+	  iter++) {
+	cout << "face velocity = " << uvel_FC[*iter] << " " << 
+	  vvel_FC[*iter] << " " << wvel_FC[*iter] << endl;
+      }
+#endif       
       // Put the result in the datawarehouse
       new_dw->put(uvel_FC, lb->uvel_FCLabel, vfindex, patch);
       new_dw->put(vvel_FC, lb->vvel_FCLabel, vfindex, patch);
@@ -1133,7 +1101,7 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
 		   DataWarehouseP& old_dw,
 		   DataWarehouseP& new_dw)
 {
-  cout << "Doing actually step1d" << endl;
+  cout << "Doing actually step1d -- Add_exchange_contribution_to_FC_vel" << endl;
 
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
@@ -1159,13 +1127,16 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
 
   vector<double> b(NVFs);
   DenseMatrix beta(NVFs,NVFs),a(NVFs,NVFs),K(NVFs,NVFs);
+  for (int i = 0; i < NVFs; i++ ) {
+      K[NVFs-1-i][i] = d_K_mom(i);
+  }
 
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     if(ice_matl){
       int vfindex = matl->getVFIndex();
-      new_dw->get(rho_micro_CC[vfindex], lb->rho_micro_CCLabel,
+      new_dw->get(rho_micro_CC[vfindex], lb->rho_micro_equil_CCLabel,
 				vfindex, patch, Ghost::None, 0);
       new_dw->get(vol_frac_CC[vfindex],  lb->vol_frac_CCLabel,
 				vfindex, patch, Ghost::None, 0);
@@ -1187,7 +1158,7 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     IntVector curcell = *iter;
 
-#if 0
+#if 1
    // Top face
     IntVector adjcell(curcell.x(),curcell.y()+1,curcell.z()); 
 
@@ -1222,38 +1193,76 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
 
    // Right face
     adjcell = IntVector(curcell.x()+1,curcell.y(),curcell.z()); 
+    for(int m = 0; m < NVFs; m++){
+      for(int n = 0; n < NVFs; n++){
+	temp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
+	beta[m][n] = delT * temp/
+		       (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
+	a[m][n] = -beta[m][n];
+      }
+    }
+
+    for(int m = 0; m < NVFs; m++){
+      a[m][m] = 1.;
+      for(int n = 0; n < NVFs; n++){
+	a[m][m] +=  beta[m][n];
+      }
+    }
+
+    for(int m = 0; m < NVFs; m++){
+      b[m] = 0.0;
+      for(int n = 0; n < NVFs; n++){
+	b[m] += beta[m][n] * (vvel_FC[n][*iter] - vvel_FC[m][*iter]);
+      }
+    }
+
+    itworked = a.solve(b);
+
+    for(int m = 0; m < NVFs; m++){
+      vvel_FCME[m][*iter] = vvel_FC[m][*iter] + b[m];
+    }
 
    // Front face
     adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+1); 
+for(int m = 0; m < NVFs; m++){
+      for(int n = 0; n < NVFs; n++){
+	temp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
+	beta[m][n] = delT * temp/
+		       (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
+	a[m][n] = -beta[m][n];
+      }
+    }
+
+    for(int m = 0; m < NVFs; m++){
+      a[m][m] = 1.;
+      for(int n = 0; n < NVFs; n++){
+	a[m][m] +=  beta[m][n];
+      }
+    }
+
+    for(int m = 0; m < NVFs; m++){
+      b[m] = 0.0;
+      for(int n = 0; n < NVFs; n++){
+	b[m] += beta[m][n] * (vvel_FC[n][*iter] - vvel_FC[m][*iter]);
+      }
+    }
+
+    itworked = a.solve(b);
+
+    for(int m = 0; m < NVFs; m++){
+      vvel_FCME[m][*iter] = vvel_FC[m][*iter] + b[m];
+    }
 #endif
   }
 
 
   // Apply grid boundary conditions to the velocity
   // before storing the data
+ 
   for (int m = 0; m < NVFs; m++) {
-    for(Patch::FaceType face = Patch::startFace;
-	face <= Patch::endFace; face=Patch::nextFace(face)){
-      vector<BoundCondBase* > bcs;
-      bcs = patch->getBCValues(face);
-      for (int i = 0; i<(int)bcs.size(); i++ ) {
-	string bcs_type = bcs[i]->getType();
-	if (bcs_type == "Velocity") {
-	  VelocityBoundCond* bc = 
-	    static_cast<VelocityBoundCond*>(bcs[i]);
-	  if (bc->getKind() == "Dirichlet") {
-	    uvel_FCME[m].fillFace(face,bc->getValue().x());
-	    vvel_FCME[m].fillFace(face,bc->getValue().y());
-	    wvel_FCME[m].fillFace(face,bc->getValue().z());
-	  }
-	  if (bc->getKind() == "Neumann") {
-	    uvel_FCME[m].fillFaceFlux(face,bc->getValue().x());
-	    vvel_FCME[m].fillFaceFlux(face,bc->getValue().y());
-	    wvel_FCME[m].fillFaceFlux(face,bc->getValue().z());
-	  }
-	}
-      }
-    }
+    setBC(uvel_FCME[m],"Velocity","x",patch);
+    setBC(vvel_FCME[m],"Velocity","y",patch);
+    setBC(wvel_FCME[m],"Velocity","z",patch);
   }
   // Put the result in the datawarehouse
   for(int m = 0; m < NVFs; m++){
@@ -1268,7 +1277,7 @@ void ICE::actuallyStep2(const ProcessorGroup*,
 		   DataWarehouseP& old_dw,
 		   DataWarehouseP& new_dw)
 {
-  cout << "Doing actually step2" << endl;
+  cout << "Doing actually step2 -- divergence_of_face_centered_velocity_MM" << endl;
 
   int numMatls = d_sharedState->getNumMatls();
   delt_vartype delT;
@@ -1300,10 +1309,10 @@ void ICE::actuallyStep2(const ProcessorGroup*,
   new_dw->allocate(term2, lb->term3Label, 0, patch);
   new_dw->allocate(term3, lb->term3Label, 0, patch);
 
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-	term1[*iter] = 0.; term2[*iter] = 0.; term3[*iter] = 0.;
-  }
-
+  term1.initialize(0.);
+  term2.initialize(0.);
+  term3.initialize(0.);
+  
   // Compute the divergence of the face centered velocities
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
@@ -1319,7 +1328,7 @@ void ICE::actuallyStep2(const ProcessorGroup*,
       new_dw->get(vvel_FC, lb->vvel_FCMELabel,  vfindex, patch, Ghost::None, 0);
       new_dw->get(wvel_FC, lb->wvel_FCMELabel,  vfindex, patch, Ghost::None, 0);
       new_dw->get(vol_frac,lb->vol_frac_CCLabel,vfindex,patch,Ghost::None, 0);
-      new_dw->get(rho_micro_CC, lb->rho_micro_CCLabel,
+      new_dw->get(rho_micro_CC, lb->rho_micro_equil_CCLabel,
 						 vfindex,patch,Ghost::None, 0);
       new_dw->get(speedSound,lb->speedSound_equiv_CCLabel,
 					         vfindex,patch,Ghost::None, 0);
@@ -1329,12 +1338,16 @@ void ICE::actuallyStep2(const ProcessorGroup*,
       new_dw->allocate(div_velfc_CC, lb->div_velfc_CCLabel, vfindex, patch);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-//	top      =  dx.x()*dx.z()* vvel_FC[*iter][TOP];
-//	bottom   = -dx.x()*dx.z()* vvel_FC[*iter][BOTTOM];
-//	left     = -dx.y()*dx.z()* uvel_FC[*iter][LEFT];
-//	right    =  dx.y()*dx.z()* uvel_FC[*iter][RIGHT];
-//	front    =  dx.x()*dx.y()* wvel_FC[*iter][FRONT];
-//	back     = -dx.x()*dx.y()* wvel_FC[*iter][BACK];
+	top      =  dx.x()*dx.z()* vvel_FC[*iter+IntVector(0,1,0)];
+	bottom   = -dx.x()*dx.z()* vvel_FC[*iter+IntVector(0,-1,0)];
+	left     = -dx.y()*dx.z()* uvel_FC[*iter+IntVector(-1,0,0)];
+	right    =  dx.y()*dx.z()* uvel_FC[*iter+IntVector(1,0,0)];
+	front    =  dx.x()*dx.y()* wvel_FC[*iter+IntVector(0,0,1)];
+	back     = -dx.x()*dx.y()* wvel_FC[*iter+IntVector(0,0,-1)];
+	cout << "top = " << top << " bottom = " << bottom << " left = " 
+	     << left << " right = " << right << " front = " << front 
+	     << " back = " << back << endl;
+	  
 	div_velfc_CC[*iter] = vol_frac[*iter]*
 			     (top + bottom + left + right + front  + back );
       }
@@ -1344,7 +1357,8 @@ void ICE::actuallyStep2(const ProcessorGroup*,
       influxOutfluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,OFS,OFE,IFS,IFE);
 
       { // Compute Advection of the volume fraction
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();
+	    iter++){
           q_CC[*iter] = vol_frac[*iter] * invvol;
         }
 
@@ -1352,11 +1366,12 @@ void ICE::actuallyStep2(const ProcessorGroup*,
                      q_advected);
       }
 
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+	  iter++){
 	term1[*iter] = 0.;
 	term2[*iter] -= q_advected[*iter];
-	term3[*iter] += vol_frac[*iter] / (rho_micro_CC[*iter] *
-					   speedSound[*iter]*speedSound[*iter]);
+	term3[*iter] += vol_frac[*iter] /(rho_micro_CC[*iter] *
+					  speedSound[*iter]*speedSound[*iter]);
       }
 
       new_dw->put(div_velfc_CC, lb->div_velfc_CCLabel, vfindex, patch);
@@ -1372,7 +1387,7 @@ void ICE::actuallyStep2(const ProcessorGroup*,
   new_dw->allocate(delPress,     lb->delPress_CCLabel, 0, patch);
   new_dw->allocate(pressdP,      lb->pressdP_CCLabel,  0, patch);
 
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
 	delPress[*iter] = (delT * term1[*iter] - term2[*iter])/(term3[*iter]);
 	pressdP[*iter]  = pressure[*iter] + delPress[*iter];
   }
@@ -1381,22 +1396,6 @@ void ICE::actuallyStep2(const ProcessorGroup*,
   // Update the pressure BC
 
   setBC(pressdP,"Pressure",patch);
-#if 0
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCondBase* > bcs;
-    bcs = patch->getBCValues(face);
-    for (int i = 0; i<(int)bcs.size(); i++ ) {
-      string bcs_type = bcs[i]->getType();
-      if (bcs_type == "Pressure") {
-	PressureBoundCond* bc = 
-	  static_cast<PressureBoundCond*>(bcs[i]);
-	pressdP.fillFace(face,bc->getPressure());
-      }
-    }
-  }
-#endif
-
 
   new_dw->put(delPress, lb->delPress_CCLabel, 0, patch);
   new_dw->put(pressdP,  lb->pressdP_CCLabel,  0, patch);
@@ -1408,7 +1407,7 @@ void ICE::actuallyStep3(const ProcessorGroup*,
 		   DataWarehouseP& old_dw,
 		   DataWarehouseP& new_dw)
 {
-  cout << "Doing actually step3" << endl;
+  cout << "Doing actually step3 -- press_face_MM" << endl;
 
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
@@ -1436,7 +1435,7 @@ void ICE::actuallyStep3(const ProcessorGroup*,
     }
   }
 
-#if 0
+#if 1
    // This can't be uncommented until ExtraCells are implemented
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     IntVector curcell = *iter;
@@ -1452,7 +1451,7 @@ void ICE::actuallyStep3(const ProcessorGroup*,
     }
     sum_all_rho  = sum_rho     +  sum_rho_adj;
 
-    press_FC[curcell][TOP]      =
+    press_FC[curcell+IntVector(0,1,0)]      =
              (press_CC[curcell] * sum_rho
            +  press_CC[adjcell] * sum_rho_adj)/sum_all_rho;
 
@@ -1468,7 +1467,7 @@ void ICE::actuallyStep3(const ProcessorGroup*,
     }
     sum_all_rho  = sum_rho     +  sum_rho_adj;
 
-    press_FC[curcell][RIGHT]    =
+    press_FC[curcell+IntVector(1,0,0)]    =
              (press_CC[curcell] * sum_rho
            +  press_CC[adjcell] * sum_rho_adj)/sum_all_rho;
 
@@ -1484,7 +1483,7 @@ void ICE::actuallyStep3(const ProcessorGroup*,
     }
     sum_all_rho  = sum_rho     +  sum_rho_adj;
 
-    press_FC[curcell][FRONT]    =
+    press_FC[curcell+IntVector(0,0,1)]    =
              (press_CC[curcell] * sum_rho
            +  press_CC[adjcell] * sum_rho_adj)/sum_all_rho;
 
@@ -1497,22 +1496,9 @@ void ICE::actuallyStep3(const ProcessorGroup*,
     *___________________________________*/
 
     // Update the pressure BC
+  setBC(press_FC,"Pressure",patch);
 
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCondBase* > bcs;
-    bcs = patch->getBCValues(face);
-    for (int i = 0; i<(int)bcs.size(); i++ ) {
-      string bcs_type = bcs[i]->getType();
-      if (bcs_type == "Pressure") {
-	PressureBoundCond* bc = 
-	  static_cast<PressureBoundCond*>(bcs[i]);
-	press_FC.fillFace(face,bc->getValue());
-      }
-    }
-  }
-
-   new_dw->put(press_FC,lb->press_FCLabel, 0, patch);
+  new_dw->put(press_FC,lb->press_FCLabel, 0, patch);
 }
 
 
@@ -1521,7 +1507,7 @@ void ICE::actuallyStep4a(const ProcessorGroup*,
 		   DataWarehouseP& old_dw,
 		   DataWarehouseP& new_dw)
 {
-  cout << "Doing actually step4a" << endl;
+  cout << "Doing actually step4a -- accumulate_momentum_source_sinks_MM" << endl;
 
   int numMatls = d_sharedState->getNumMatls();
   delt_vartype delT;
@@ -1565,10 +1551,14 @@ void ICE::actuallyStep4a(const ProcessorGroup*,
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
 	 mass = rho_CC[*iter] * vol;
          // x-momentum
-         //pressure_source = press_FC[*iter][RIGHT] - press_FC[*iter][LEFT];
-         //viscous_source  = tau_X_FC[*iter][RIGHT] - tau_X_FC[*iter][LEFT]
-         //                + tau_X_FC[*iter][TOP]   - tau_X_FC[*iter][BOTTOM]
-         //                + tau_X_FC[*iter][FRONT] - tau_X_FC[*iter][BACK];
+         pressure_source = press_FC[*iter+IntVector(1,0,0)] - 
+	   press_FC[*iter+IntVector(-1,0,0)];
+         viscous_source  = tau_X_FC[*iter+IntVector(1,0,0)] - 
+	   tau_X_FC[*iter+IntVector(-1,0,0)] + 
+	   tau_X_FC[*iter+IntVector(0,1,0)]  - 
+	   tau_X_FC[*iter+IntVector(0,-1,0)] + 
+	   tau_X_FC[*iter+IntVector(0,0,1)] - 
+	   tau_X_FC[*iter+IntVector(0,0,-1)];
          xmom_source[*iter]  =   (-pressure_source * dx.y() * dx.z() +
                                    mass * gravity.x()) * delT;
       }
@@ -1585,7 +1575,7 @@ void ICE::actuallyStep4b(const ProcessorGroup*,
                    DataWarehouseP& old_dw,
                    DataWarehouseP& new_dw)
 {
-  cout << "Doing actually step4b" << endl;
+  cout << "Doing actually step4b -- accumulate_energy_source_sinks" << endl;
 
   int numMatls = d_sharedState->getNumMatls();
   delt_vartype delT;
@@ -1609,7 +1599,7 @@ void ICE::actuallyStep4b(const ProcessorGroup*,
     if(ice_matl){
       int vfindex = matl->getVFIndex();
       // Get required variables for this patch
-      old_dw->get(rho_micro_CC,lb->rho_micro_CCLabel,
+      new_dw->get(rho_micro_CC,lb->rho_micro_equil_CCLabel,
 						vfindex,patch,Ghost::None,0);
       new_dw->get(speedSound, lb->speedSound_equiv_CCLabel,
 						vfindex,patch,Ghost::None, 0);
@@ -1618,7 +1608,8 @@ void ICE::actuallyStep4b(const ProcessorGroup*,
       // Create variables for the results
       new_dw->allocate(int_eng_source,lb->int_eng_source_CCLabel,vfindex,patch);
 
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+	  iter++){
 	A = vol * vol_frac[*iter] * press_CC[*iter];
         B = rho_micro_CC[*iter] * speedSound[*iter]*speedSound[*iter];
         int_eng_source[*iter] = (A/B) * delPress[*iter];
@@ -1634,7 +1625,7 @@ void ICE::actuallyStep5a(const ProcessorGroup*,
 		   DataWarehouseP& old_dw,
 		   DataWarehouseP& new_dw)
 {
-  cout << "Doing actually step5a" << endl;
+  cout << "Doing actually step5a -- lagrangian_vol_MM" << endl;
 
   int numMatls = d_sharedState->getNumMatls();
   Vector dx = patch->dCell();
@@ -1686,7 +1677,8 @@ void ICE::actuallyStep5a(const ProcessorGroup*,
       new_dw->allocate(rho_L,     lb->rho_L_CCLabel,     vfindex,patch);
 
       double vol = dx.x()*dx.y()*dx.z();
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+	  iter++){
 	double   mass = rho_CC[*iter] * vol;
 	mass_L[*iter] = mass; // +  mass_source[*iter];
 	rho_L[*iter]  = mass_L[*iter]/vol;
@@ -1718,7 +1710,7 @@ void ICE::actuallyStep5b(const ProcessorGroup*,
 		   DataWarehouseP& old_dw,
 		   DataWarehouseP& new_dw)
 {
-  cout << "Doing actually step5b" << endl;
+  cout << "Doing actually step5b -- calc_flux_or_primitive_vars" << endl;
 
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
@@ -1769,7 +1761,7 @@ void ICE::actuallyStep5b(const ProcessorGroup*,
 				vfindex, patch, Ghost::None, 0);
       new_dw->get(vol_frac_CC[vfindex], lb->vol_frac_CCLabel,
 				vfindex, patch, Ghost::None, 0);
-      new_dw->get(rho_micro_CC[vfindex], lb->rho_micro_CCLabel,
+      new_dw->get(rho_micro_CC[vfindex], lb->rho_micro_equil_CCLabel,
 				vfindex, patch, Ghost::None, 0);
       old_dw->get(cv_CC[vfindex], lb->cv_CCLabel,
 				vfindex, patch, Ghost::None, 0);
@@ -1783,7 +1775,7 @@ void ICE::actuallyStep5b(const ProcessorGroup*,
   }
 
   double vol = dx.x()*dx.y()*dx.z();
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     // Do Momentum Exchange here
     for(int m = 0; m < NVFs; m++){
       temp = rho_micro_CC[m][*iter];
@@ -1893,30 +1885,6 @@ void ICE::actuallyStep5b(const ProcessorGroup*,
     setBC(xmom_L_ME[m],"Velocity",patch);
     setBC(ymom_L_ME[m],"Velocity",patch);
     setBC(zmom_L_ME[m],"Velocity",patch);
-#if 0
-    for(Patch::FaceType face = Patch::startFace;
-	face <= Patch::endFace; face=Patch::nextFace(face)){
-      vector<BoundCondBase* > bcs;
-      bcs = patch->getBCValues(face);
-      for (int i = 0; i<(int)bcs.size(); i++ ) {
-	string bcs_type = bcs[i]->getType();
-	if (bcs_type == "Value") {
-	  VelocityBoundCond* bc = 
-	    static_cast<VelocityBoundCond*>(bcs[i]);
-	  if (bc->getKind() == "Dirichlet") {
-	    xmom_L_ME[m].fillFace(face,bc->getValue().x());
-	    ymom_L_ME[m].fillFace(face,bc->getValue().y());
-	    zmom_L_ME[m].fillFace(face,bc->getValue().z());
-	  }
-	  if (bc->getKind() == "Neumann") {
-	    xmom_L_ME[m].fillFaceFlux(face,bc->getValue().x());
-	    ymom_L_ME[m].fillFaceFlux(face,bc->getValue().y());
-	    zmom_L_ME[m].fillFaceFlux(face,bc->getValue().z());
-	  }
-	}
-      }
-    }
-#endif
   }
   
 
@@ -2006,7 +1974,8 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
       //		 r_out_x_CF, r_out_y_CF, r_out_z_CF);
 
       { // Advection of the mass (density)
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+	    iter++){
 	  q_CC[*iter] = mass_L[*iter] * invvol;
         }
 
@@ -2203,27 +2172,114 @@ void ICE::setBC(CCVariable<double>& variable, const  string& kind,
     
     if (bc_base->getType() == "Velocity") {
       VelocityBoundCond* bc = dynamic_cast<VelocityBoundCond*>(bc_base);
-      if (bc->getKind() == "Dirichlet") 
+      if (bc->getKind() == "Dirichlet") {
 	if (comp == "x")
 	  variable.fillFace(face,bc->getValue().x());
-      if (comp == "y")
-	variable.fillFace(face,bc->getValue().y());
-      if (comp == "z")
-	variable.fillFace(face,bc->getValue().z());
+	if (comp == "y")
+	  variable.fillFace(face,bc->getValue().y());
+	if (comp == "z")
+	  variable.fillFace(face,bc->getValue().z());
+      }
       
-      if (bc->getKind() == "Neumann") 
+      if (bc->getKind() == "Neumann") {
 	if (comp == "x")
 	  variable.fillFaceFlux(face,bc->getValue().x(),dx);
-      if (comp == "y")
-	variable.fillFaceFlux(face,bc->getValue().y(),dx);
-      if (comp == "z")
-	variable.fillFaceFlux(face,bc->getValue().z(),dx);
+	if (comp == "y")
+	  variable.fillFaceFlux(face,bc->getValue().y(),dx);
+	if (comp == "z")
+	  variable.fillFaceFlux(face,bc->getValue().z(),dx);
+      }
     }
   }
 
 }
 
+void ICE::setBC(FCVariable<double>& variable, const string& kind, 
+		const Patch* patch)
+{
 
+  Vector dx = patch->dCell();
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+    vector<BoundCondBase* > bcs;
+    bcs = patch->getBCValues(face);
+    
+    BoundCondBase* bc_base = 0;
+    for (int i = 0; i<(int)bcs.size(); i++ ) {
+      if (bcs[i]->getType() == kind) {
+	bc_base = bcs[i];
+	break;
+      }
+    }
+    
+    if (bc_base->getType() == "Pressure") {
+      PressureBoundCond* bc = dynamic_cast<PressureBoundCond*>(bc_base);
+      if (bc->getKind() == "Dirichlet") 
+	variable.fillFace(face,bc->getValue());
+      
+      if (bc->getKind() == "Neumann") 
+	variable.fillFaceFlux(face,bc->getValue(),dx);
+    }
+    if (bc_base->getType() == "Density") {
+      DensityBoundCond* bc = dynamic_cast<DensityBoundCond*>(bc_base);
+      if (bc->getKind() == "Dirichlet") 
+	variable.fillFace(face,bc->getValue());
+      
+      if (bc->getKind() == "Neumann") 
+	variable.fillFaceFlux(face,bc->getValue(),dx);
+    }
+    if (bc_base->getType() == "Temperature") {
+      TemperatureBoundCond* bc = dynamic_cast<TemperatureBoundCond*>(bc_base);
+      if (bc->getKind() == "Dirichlet") 
+	variable.fillFace(face,bc->getValue());
+      
+      if (bc->getKind() == "Neumann") 
+	variable.fillFaceFlux(face,bc->getValue(),dx);
+    }
+  }
+
+}
+
+void ICE::setBC(FCVariable<double>& variable, const  string& kind, 
+		const string& comp, const Patch* patch) 
+{
+  Vector dx = patch->dCell();
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+    vector<BoundCondBase* > bcs;
+    bcs = patch->getBCValues(face);
+    
+    BoundCondBase* bc_base = 0;
+    for (int i = 0; i<(int)bcs.size(); i++ ) {
+      if (bcs[i]->getType() == kind) {
+	bc_base = bcs[i];
+	break;
+      }
+    }
+    
+    if (bc_base->getType() == "Velocity") {
+      VelocityBoundCond* bc = dynamic_cast<VelocityBoundCond*>(bc_base);
+      if (bc->getKind() == "Dirichlet") {
+	if (comp == "x")
+	  variable.fillFace(face,bc->getValue().x());
+	if (comp == "y")
+	  variable.fillFace(face,bc->getValue().y());
+	if (comp == "z")
+	  variable.fillFace(face,bc->getValue().z());
+      }
+      
+      if (bc->getKind() == "Neumann") {
+	if (comp == "x")
+	  variable.fillFaceFlux(face,bc->getValue().x(),dx);
+	if (comp == "y")
+	  variable.fillFaceFlux(face,bc->getValue().y(),dx);
+	if (comp == "z")
+	  variable.fillFaceFlux(face,bc->getValue().z(),dx);
+      }
+    }
+  }
+
+}
 
 void ICE::influxOutfluxVolume(const FCVariable<double>& uvel_CC,
 			      const FCVariable<double>& vvel_CC,
@@ -2517,6 +2573,10 @@ const TypeDescription* fun_getTypeDescription(ICE::eflux*)
 
 //
 // $Log$
+// Revision 1.56  2000/11/14 04:02:11  jas
+// Added getExtraCellIterator and things now appear to be working up to
+// face centered velocity calculations.
+//
 // Revision 1.55  2000/11/02 21:33:05  jas
 // Added new bc implementation.  Things now work thru step 1b.  Neumann bcs
 // are now set correctly.
