@@ -204,16 +204,15 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
       new_dw->get(gmass[vfi], gMassLabel,vfi , region, 0);
       new_dw->allocate(gsurfnorm, gSurfNormLabel, vfi, region);
 
-//      IntVector lowi(gsurfnorm.getLowIndex());
-//      IntVector highi(gsurfnorm.getHighIndex());
-      IntVector lowi(0,0,0);
-      IntVector highi(20,20,3);
+      IntVector lowi(gsurfnorm.getLowIndex());
+      IntVector highi(gsurfnorm.getHighIndex());
 
-      for(int i = lowi.x()+1; i < highi.x(); i++){
-        for(int j = lowi.y()+1; j < highi.y(); j++){
-          for(int k = lowi.z()+1; k < highi.z(); k++){
-             // WARNING  This assumes dx=dy=dz.  This will be fixed eventually.
-//	     gsurfnorm[IntVector(i,j,k)] = Vector(
+//      cout << "Low" << lowi << endl;
+//      cout << "High" << highi << endl;
+
+      for(int i = lowi.x()+1; i < highi.x()-1; i++){
+        for(int j = lowi.y()+1; j < highi.y()-1; j++){
+          for(int k = lowi.z()+1; k < highi.z()-1; k++){
 	     surnor = Vector(
 	        -(gmass[vfi][IV(i+1,j,k)] - gmass[vfi][IV(i-1,j,k)])/dx.x(),
          	-(gmass[vfi][IV(i,j+1,k)] - gmass[vfi][IV(i,j-1,k)])/dx.y(), 
@@ -231,10 +230,10 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
     }
   }
 
-  IntVector lowi(0,0,0);
-  IntVector highi(20,20,3);
+  IntVector lowi(gsurfnorm.getLowIndex());
+  IntVector highi(gsurfnorm.getHighIndex());
   ofstream tfile("tecplotfile");
-  int I=21,J=21,K=4;
+  int I=highi.x()-lowi.x(),J=highi.y()-lowi.y(),K=highi.z()-lowi.z();
   static int ts=0;
   tfile << "TITLE = \"Time Step # " << ts <<"\"," << endl;
   tfile << "VARIABLES = X,Y,Z,SNX,SNY,SNZ" << endl;
@@ -242,9 +241,9 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   tfile <<", F=BLOCK" << endl;
   new_dw->get(gsurfnorm, gSurfNormLabel, 0, region,0);
   int n=0;
-  for(int k = lowi.z(); k <= highi.z(); k++){
-    for(int j = lowi.y(); j <= highi.y(); j++){
-      for(int i = lowi.x(); i <= highi.x(); i++){
+  for(int k = lowi.z(); k < highi.z(); k++){
+    for(int j = lowi.y(); j < highi.y(); j++){
+      for(int i = lowi.x(); i < highi.x(); i++){
 	  tfile << i*dx.x() << " ";
 	  n++;
 	  if((n % 20) == 0){ tfile << endl; }
@@ -254,9 +253,9 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   cout << n << endl;
   tfile << endl;
   n = 0;
-  for(int k = lowi.z(); k <= highi.z(); k++){
-    for(int j = lowi.y(); j <= highi.y(); j++){
-      for(int i = lowi.x(); i <= highi.x(); i++){
+  for(int k = lowi.z(); k < highi.z(); k++){
+    for(int j = lowi.y(); j < highi.y(); j++){
+      for(int i = lowi.x(); i < highi.x(); i++){
 	  tfile << j*dx.y() << " ";
 	  n++;
 	  if((n % 20) == 0){ tfile << endl; }
@@ -265,9 +264,9 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   }
   tfile << endl;
   n = 0;
-  for(int k = lowi.z(); k <= highi.z(); k++){
-    for(int j = lowi.y(); j <= highi.y(); j++){
-      for(int i = lowi.x(); i <= highi.x(); i++){
+  for(int k = lowi.z(); k < highi.z(); k++){
+    for(int j = lowi.y(); j < highi.y(); j++){
+      for(int i = lowi.x(); i < highi.x(); i++){
 	  tfile << k*dx.z() << " ";
 	  n++;
 	  if((n % 20) == 0){ tfile << endl; }
@@ -276,9 +275,9 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   }
   tfile << endl;
   n = 0;
-  for(int k = lowi.z(); k <= highi.z(); k++){
-    for(int j = lowi.y(); j <= highi.y(); j++){
-      for(int i = lowi.x(); i <= highi.x(); i++){
+  for(int k = lowi.z(); k < highi.z(); k++){
+    for(int j = lowi.y(); j < highi.y(); j++){
+      for(int i = lowi.x(); i < highi.x(); i++){
         tfile << gsurfnorm[IntVector(i,j,k)].x() << " " ;
         n++;
         if((n % 20) == 0){ tfile << endl; }
@@ -287,9 +286,9 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   }
   tfile << endl;
   n = 0;
-  for(int k = lowi.z(); k <= highi.z(); k++){
-    for(int j = lowi.y(); j <= highi.y(); j++){
-      for(int i = lowi.x(); i <= highi.x(); i++){
+  for(int k = lowi.z(); k < highi.z(); k++){
+    for(int j = lowi.y(); j < highi.y(); j++){
+      for(int i = lowi.x(); i < highi.x(); i++){
         tfile << gsurfnorm[IntVector(i,j,k)].y() << " " ;
         n++;
         if((n % 20) == 0){ tfile << endl; }
@@ -298,9 +297,9 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   }
   tfile << endl;
   n = 0;
-  for(int k = lowi.z(); k <= highi.z(); k++){
-    for(int j = lowi.y(); j <= highi.y(); j++){
-      for(int i = lowi.x(); i <= highi.x(); i++){
+  for(int k = lowi.z(); k < highi.z(); k++){
+    for(int j = lowi.y(); j < highi.y(); j++){
+      for(int i = lowi.x(); i < highi.x(); i++){
         tfile << gsurfnorm[IntVector(i,j,k)].z() << " " ;
         n++;
         if((n % 20) == 0){ tfile << endl; }
@@ -457,6 +456,9 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.12  2000/05/06 11:03:25  guilkey
+// Removed some hardwired crap.  Now using getLowIndex and getHighIndex.
+//
 // Revision 1.11  2000/05/06 00:01:49  bard
 // Finished frictional contact logic.  Compiles but doesn't yet work.
 //
