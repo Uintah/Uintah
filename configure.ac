@@ -172,17 +172,20 @@ SCI_ARG_WITH(thirdparty,
 SCI_ARG_WITH(blas,
   AC_HELP_STRING(--with-blas=DIR,
                  Use the blas installation in DIR),
-  [with_blas="$withval"],
+  [with_blas="$withval"
+   sci_check_blas=yes],
   [with_blas=""])
 SCI_ARG_WITH(lapack,
   AC_HELP_STRING(--with-lapack=DIR, 
                  Use the lapack installation in DIR),
-  [with_lapack="$withval"],
+  [with_lapack="$withval"
+   sci_check_lapack=yes],
   [with_lapack=""])
 SCI_ARG_WITH(mpi,
   AC_HELP_STRING(--with-mpi=DIR,
                  Use the mpi installation in DIR),
-  [with_mpi="$withval"],
+  [with_mpi="$withval"
+   sci_check_mpi=yes],
   [with_mpi=""])
 SCI_ARG_WITH(mpiuni,
   AC_HELP_STRING(--with-mpiuni=DIR,
@@ -192,42 +195,50 @@ SCI_ARG_WITH(mpiuni,
 SCI_ARG_WITH(hypre,
   AC_HELP_STRING(--with-hypre=DIR,
                  Use the hypre installation in DIR),
-  [with_hypre="$withval"],
+  [with_hypre="$withval"
+   sci_check_hypre=yes],
   [with_hypre=""])
 SCI_ARG_WITH(netsolve,
-  AC_HELP_STRING(--with-petsc=DIR,
-                 Use the petsc installation in DIR),
-  [with_netsolve="$withval"],
+  AC_HELP_STRING(--with-netsolve=DIR,
+                 Use the netsolve installation in DIR),
+  [with_netsolve="$withval"
+   sci_check_netsolve=yes],
   [with_netsolve=""])
 SCI_ARG_WITH(petsc,
   AC_HELP_STRING(--with-petsc=DIR,
                  Use the petsc installation in DIR),
-  [with_petsc="$withval"],
+  [with_petsc="$withval"
+   sci_check_petsc=yes],
   [with_petsc=""])
 SCI_ARG_WITH(unipetsc,
   AC_HELP_STRING(--with-unipetsc=DIR,
                  Use the unipetsc installation in DIR),
-  [with_unipetsc="$withval"],
+  [with_unipetsc="$withval"
+   sci_check_unipetc=yes],
   [with_unipetsc=""])
 SCI_ARG_WITH(tau,
   AC_HELP_STRING(--with-tau=<tau-makefile>,
                  Specify a Tau Makefile),
-  [with_tau="$withval"],
+  [with_tau="$withval"
+   sci_check_tau=yes],
   [with_tau=""])
 SCI_ARG_WITH(globus,
   AC_HELP_STRING(--with-globus=DIR,
                  Use the globus installation in DIR),
-  [with_globus="$withval"],
+  [with_globus="$withval"
+   sci_check_globus=yes],
   [with_globus=""])
 SCI_ARG_WITH(insight,
   AC_HELP_STRING(--with-insight=DIR,
 	         Use the Insight installation in DIR),
-  [with_insight="$withval"],
+  [with_insight="$withval"
+   sci_check_insight=yes],
   [with_insight=""])
 SCI_ARG_WITH(qt,
   AC_HELP_STRING(--with-qt=DIR,
                  Use the Qt installation in DIR),
-  [with_qt="$withval"],
+  [with_qt="$withval"
+   sci_check_qt=yes],
   [with_qt=""])
 SCI_ARG_WITH(opengl,
   AC_HELP_STRING(--with-opengl=DIR,
@@ -242,45 +253,53 @@ SCI_ARG_WITH(zlib,
 SCI_ARG_WITH(jpeg,
   AC_HELP_STRING(--with-jpeg=DIR,
                  Use the jpeg installation in DIR),
-  [with_jpeg="$withval"],
+  [with_jpeg="$withval"
+   sci_check_jpeg=yes],
   [with_jpeg=""])
 SCI_ARG_WITH(tiff,
   AC_HELP_STRING(--with-tiff=DIR,
                  Use the tiff installation in DIR),
-  [with_tiff="$withval"],
+  [with_tiff="$withval"
+   sci_check_tiff=yes],
   [with_tiff=""])
 
 SCI_ARG_WITH(mdsplus,
   AC_HELP_STRING(--with-mdsplus=DIR,
                  Use the mdsplus installation in DIR),
-  [with_mdsplus="$withval"],
+  [with_mdsplus="$withval"
+   sci_check_mdsplus=yes],
   [with_mdsplus=""])
 
 SCI_ARG_WITH(hdf5,
   AC_HELP_STRING(--with-hdf5=DIR,
                  Use the hdf5 installation in DIR),
-  [with_hdf5="$withval"],
+  [with_hdf5="$withval"
+   sci_check_hdf5=yes],
   [with_hdf5=""])
 
 SCI_ARG_WITH(glut,
   AC_HELP_STRING(--with-glut=DIR,
                  Use the glut installation in DIR),
-  [with_glut="$withval"],
+  [with_glut="$withval"
+   sci_check_glut=yes],
   [with_glut=""])
 SCI_ARG_WITH(glui,
   AC_HELP_STRING(--with-glui=DIR,
                  Use the glui installation in DIR),
-  [with_glui="$withval"],
+  [with_glui="$withval"
+   sci_check_glui=yes],
   [with_glui=""])
 SCI_ARG_WITH(oogl,
   AC_HELP_STRING(--with-oogl=DIR,
                  Use the oogl installation in DIR),
-  [with_oogl="$withval"],
+  [with_oogl="$withval"
+   sci_check_oogl=yes],
   [with_oogl=""])
 SCI_ARG_WITH(audio,
   AC_HELP_STRING(--with-audio=DIR,
                  Use the audio installation in DIR),
-  [with_audio="$withval"],
+  [with_audio="$withval"
+   sci_check_audio=yes],
   [with_audio=""])
 SCI_ARG_ENABLE(verbosity,
   AC_HELP_STRING(--enable-verbosity,
@@ -385,6 +404,11 @@ for i in $package; do
    SCI_SET_PACKAGE_CHECKS($i)
 done
 
+if test "$sci_check_blas" == "yes"; then
+   sci_check_fortran=yes
+fi
+
+
 # Set the subdir name in the bin tree for matlab engine.
 if test "$pkg_MatlabInterface" == "yes"; then
   MATLAB_ENG=matlab
@@ -435,6 +459,7 @@ if test "$CXX" = ""; then
   AC_MSG_WARN(C++ compiler not specified with 'CXX' environment variable.\
 	    Using default... $CXX)
 fi
+
 
 if test $sci_check_fortran = "yes"; then
 
