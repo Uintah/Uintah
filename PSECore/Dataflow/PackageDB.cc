@@ -234,6 +234,7 @@ static DOMString findText(DOM_Node& node)
   return 0;
 }
 
+#if !NEW_MODULE_MAKER
 static void processDataflowComponent(PackageDB* db, const DOMString& pkgname,
 				     const DOMString& catname,
 				     LIBRARY_HANDLE so,
@@ -389,6 +390,7 @@ static void processPackage(PackageDB* db, const DOM_Node& pkgNode,
     }
   }
 }
+#endif
 
 void PackageDB::loadPackage(const clString& packPath)
 {
@@ -739,6 +741,11 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.18  2000/10/19 08:05:02  moulding
+// cordoned off an old section of code with #if !NEW_MODULE_MAKER that
+// traversed the old components.xml file.  It will be defunct soon, and will
+// be removed at that time.
+//
 // Revision 1.17  2000/10/19 07:58:49  moulding
 // - finishing touches for phase 1 of new module maker.
 //
