@@ -58,7 +58,7 @@ itcl_class Teem_DataIO_NrrdReader {
 	    return;
 	}
 
-	toplevel $w
+	#toplevel $w
 	set initdir ""
 	
 	# place to put preferred data directory
@@ -92,8 +92,8 @@ itcl_class Teem_DataIO_NrrdReader {
 	makeOpenFilebox \
 	    -parent $w \
 	    -filevar $this-filename \
-	    -command "set $this-axis \"\";$this-c read_nrrd;destroy $w" \
-	    -cancel "destroy $w" \
+	    -command "set $this-axis \"\";$this-c read_nrrd;destroy " \
+	    -cancel "destroy " \
 	    -title $title \
 	    -filetypes $types \
 	    -initialdir $initdir \
