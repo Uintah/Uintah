@@ -204,9 +204,11 @@ void VectorFieldExtractor::execute()
       }
     case TypeDescription::CCVariable:
       if( mesh_handle_.get_rep() == 0 ){
-	if(cellHi == hi){
-	  mesh_handle_ = scinew LatVolMesh(range.x()+1, range.y()+1,
-					   range.z()+1, box.min(),
+	if(is_periodic_bcs(cellHi, hi)){
+	  IntVector newrange(0,0,0);
+	  get_periodic_bcs_range( cellHi, hi, range, newrange);
+	  mesh_handle_ = scinew LatVolMesh(newrange.x(), newrange.y(),
+					   newrange.z(), box.min(),
 					   box.max());
 	} else {
 	  mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
@@ -216,9 +218,11 @@ void VectorFieldExtractor::execute()
       } else if(mesh_handle_->get_ni() != range.x() ||
 		mesh_handle_->get_nj() != range.y() ||
 		mesh_handle_->get_nk() != range.z() ){
-	if(cellHi == hi){
-	  mesh_handle_ = scinew LatVolMesh(range.x()+1, range.y()+1,
-					   range.z()+1, box.min(),
+	if(is_periodic_bcs(cellHi, hi)){
+	  IntVector newrange(0,0,0);
+	  get_periodic_bcs_range( cellHi, hi, range, newrange);
+	  mesh_handle_ = scinew LatVolMesh(newrange.x(), newrange.y(),
+					   newrange.z(), box.min(),
 					   box.max());
 	} else {
 	  mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
