@@ -3153,7 +3153,6 @@ class BioTensorApp {
     # Save out all of the class variables 
     method save_class_variables { fileid} {
 	puts $fileid "\n# Class Variables\n"
-	puts $c
 	foreach v [info variable] {
 	    set var [get_class_variable_name $v]
 	    if {$var != "this" } {
@@ -3425,10 +3424,8 @@ class BioTensorApp {
 	    configure_fibers_tabs
 	    
 	    # bring tabs forward
-	    if {[info exists $c_procedure_tab]} {
-		$proc_tab1 view $c_procedure_tab
-		$proc_tab2 view $c_procedure_tab
-	    }
+	    $proc_tab1 view $c_procedure_tab
+	    $proc_tab2 view $c_procedure_tab
 
 	    $data_tab1 view $c_data_tab
 	    $data_tab2 view $c_data_tab
