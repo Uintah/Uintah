@@ -91,7 +91,8 @@ bool SCIRunComponentModel::haveComponent(const std::string& type)
 
 ComponentInstance*
 SCIRunComponentModel::createInstance(const std::string& name,
-				     const std::string& type)
+				     const std::string& type,
+				     const std::string& /*url*/)
 {
   string package, category, module;
   if(!split_name(type, package, category, module))

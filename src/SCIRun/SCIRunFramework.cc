@@ -32,8 +32,13 @@
 #include <SCIRun/CCA/CCAComponentModel.h>
 #include <SCIRun/ComponentInstance.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/spec/cca_sidl.h>
 #include <iostream>
 #include <sstream>
+
+#include "CCACommunicator.h"
+
 using namespace std;
 using namespace SCIRun;
 
@@ -63,7 +68,8 @@ SCIRunFramework::getServices(const std::string& selfInstanceName,
 
 gov::cca::ComponentID::pointer
 SCIRunFramework::createComponentInstance(const std::string& name,
-					 const std::string& t)
+					 const std::string& t,
+					 const std::string& url)
 {
   string type=t;
   // See if the type is of the form:
@@ -105,10 +111,12 @@ SCIRunFramework::createComponentInstance(const std::string& name,
     cerr << "No component model wants to build " << type << '\n';
     return ComponentID::pointer(0);
   }
-  ComponentInstance* ci = mod->createInstance(name, type);
-  if(!ci)
+  ComponentInstance* ci = mod->createInstance(name, type, url);
+  if(!ci){
+    cerr<<"Error: failed to create ComponentInstance"<<endl;
     return ComponentID::pointer(0);
-  registerComponent(ci, name);
+    
+  }registerComponent(ci, name);
   return ComponentID::pointer(new ComponentID(this, ci->instanceName));
 }
 
@@ -177,6 +185,7 @@ void SCIRunFramework::registerComponent(ComponentInstance* ci,
   ci->framework=this;
   ci->instanceName = goodname;
   activeInstances[ci->instanceName] = ci;
+  cerr<<"#####component "<<goodname<<" is registered"<<endl;
   // Get the component event service and send a creation event
   cerr << "Should register a creation event for component " << name << '\n';
 }
@@ -250,3 +259,72 @@ gov::cca::AbstractFramework::pointer SCIRunFramework::createEmptyFramework()
   cerr << "SCIRunFramework::createEmptyFramework not finished\n";
   return gov::cca::AbstractFramework::pointer(0);
 }
+
+void SCIRunFramework::share(const gov::cca::Services::pointer &svc)
+{
+  Thread* t = new Thread(new CCACommunicator(this,svc), "SCIRun CCA Communicator");
+  t->detach(); 
+}
+
+
+//used for remote creation of a CCA component
+//return URL of the new component
+std::string
+SCIRunFramework::createComponent(const std::string& name, const std::string& t)
+{
+  string type=t;
+  // See if the type is of the form:
+  //   model:name
+  // If so, extract the model and look up that component specifically.
+  // Otherwise, look at all models for that component
+  ComponentModel* mod=0;
+  unsigned int firstColon = type.find(':');
+  if(firstColon < type.size()){
+    string modelName = type.substr(0, firstColon);
+    type = type.substr(firstColon+1);
+    // This is a linear search, but we don't expect to have
+    // a ton of models, nor do we expect instantiation to
+    // occur often
+    for(vector<ComponentModel*>::iterator iter=models.begin();
+	iter != models.end(); iter++) {
+      ComponentModel* model = *iter;
+      if(model->prefixName == modelName){
+	mod=model;
+	break;
+      }
+    }
+  } 
+  else {
+    int count=0;
+    for(vector<ComponentModel*>::iterator iter=models.begin();
+	iter != models.end(); iter++) {
+      ComponentModel* model = *iter;
+      if(model->haveComponent(type)){
+	count++;
+	mod=model;
+      }
+    }
+    if(count > 1){
+      cerr << "More than one component model wants to build " << type << '\n';
+      throw InternalError("Need CCA Exception here");
+    }
+  }
+  if(!mod){
+    cerr << "No component model wants to build " << type << '\n';
+    return "";
+  }
+  return  mod->createComponent(name, type);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

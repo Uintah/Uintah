@@ -47,10 +47,20 @@ bool ComponentModel::haveComponent(const std::string& type)
 }
 
 ComponentInstance* ComponentModel::createInstance(const std::string& name,
-						  const std::string& type)
+						  const std::string& type,
+						  const std::string& url)
 {
   cerr << "Error: this component model does not implement createInstance\n";
   return 0;
+}
+
+
+std::string ComponentModel::createComponent(const std::string&,
+					    const std::string&)
+							    
+{
+  cerr << "Error: this component model does not implement createComponent\n";
+  return "";
 }
 
 bool  ComponentModel::destroyInstance(ComponentInstance* ic)

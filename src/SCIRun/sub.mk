@@ -29,7 +29,8 @@ SRCS     += \
 	$(SRCDIR)/PortDescription.cc \
 	$(SRCDIR)/SCIRunErrorHandler.cc \
 	$(SRCDIR)/PortInstance.cc \
-	$(SRCDIR)/PortInstanceIterator.cc
+	$(SRCDIR)/PortInstanceIterator.cc\
+	$(SRCDIR)/CCACommunicator.cc
 
 SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal
 
@@ -47,3 +48,4 @@ $(SRCDIR)/BuilderService.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/SCIRunFramework.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/Services.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/ComponentInstance.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/CCACommunicator.o: Core/CCA/spec/cca_sidl.h
