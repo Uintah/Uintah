@@ -14,6 +14,7 @@ else
 	Packages/rtrt/Core \
 	Packages/rtrt/visinfo \
 	Core/Thread \
+	Core/Geometry \
 	Core/Exceptions
 
 endif
