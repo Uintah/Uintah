@@ -5,7 +5,7 @@ from time import asctime,localtime,time
 from sys import argv,exit
 from helpers.runSusTest import runSusTest,input,modes,num_processes
 
-TESTS = [   ("methane_explicit.ups",		["dbg", "dbgmpi", "mpi"], 1, "chem_meth.bin")
+TESTS = [   ("methane_explicit.ups",		["dbgmpi", "mpi"], 1, "chem_meth.bin")
     	]
 
 def chemfile (test):
