@@ -28,7 +28,7 @@ using namespace rtrt;
 using SCIRun::Thread;
 
 // Whether or not to use the HVolumeVis code
-static bool use_hvolume = false;
+static bool use_hvolume = true;
 static int np = 1;
 static int depth = 3;
 
@@ -100,7 +100,7 @@ VolumeVis2D *create_volume_from_nrrd2( char *filename1, char *filename2,
     case nrrdTypeDouble: cerr << "nrrdTypeDouble"; break;
     default: cerr << "Unknown!!";
       cerr << " to nrrdTypeFloat\n";
-  }
+    }
     Nrrd *new_n1 = nrrdNew();
     nrrdConvert( new_n1, n1, nrrdTypeFloat );
     // since the data was copied, blow away the memory for the old nrrd
@@ -447,7 +447,7 @@ VolumeVis2D *create_volume_from_nrrd(char *filename,
 
 
 extern "C" 
-Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
+Scene* make_scene(int argc, char* argv[], int nworkers)
 {
   int scene_type = 0;
   vector<string> data_files;
@@ -469,6 +469,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   bool loadWidgetFile = false;
   char* widgetFile;
   char* colormap_file = 0;
+  np = nworkers;
 
   Color bgcolor(1.,1.,1.);
   
@@ -536,8 +537,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       g = atof(argv[++i]);
       b = atof(argv[++i]);
       bgcolor = Color(r,g,b);
-    } else if(strcmp(argv[i], "-usehv")==0){
-      use_hvolume = true;
+    } else if(strcmp(argv[i], "-nohv")==0){
+      use_hvolume = false;
     } else if(strcmp(argv[i], "-depth")==0) {
       depth = atoi(argv[++i]);
       if (depth < 2) {
@@ -570,6 +571,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       cerr << " -colormap [filename.nrrd] - read in a nrrd for the colormap\n";
       cerr << " -bgcolor [float] [float] [float] - the three floats are r, g, b\n";
       cerr << " -loadfile [filename.txt] - read in a widget configuration to load upon initialization\n";
+      cerr << " -depth - the number of depths to use for the HVolumeVis.\n";
+      cerr << "          [defaults to "<<depth<<"]\n";
+      cerr << " -nohv  - do not use the accelaration structure version.\n";
       return 0;
     }
   }
