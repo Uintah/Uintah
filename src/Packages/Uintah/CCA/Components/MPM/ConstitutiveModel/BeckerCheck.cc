@@ -1,6 +1,7 @@
 #include "BeckerCheck.h"
 #include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Math/SymmMatrix3.h>
 #include <math.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -10,7 +11,7 @@
 using namespace Uintah;
 using namespace std;
 
-BeckerCheck::BeckerCheck(ProblemSpecP& ps)
+BeckerCheck::BeckerCheck(ProblemSpecP& )
 {
 }
 
@@ -25,6 +26,17 @@ BeckerCheck::checkStability(const Matrix3& stress ,
 			    Vector& )
 {
   // Find the magnitudes and directions of the principal stresses
+	
+  SymmMatrix3 sigma(stress);
+  Vector sig(0.0,0.0,0.0);
+  Matrix3 evec;
+  sigma.eigen(sig, evec);
+  //cout << "stress = \n";
+  //cout << stress << endl;
+  //cout << "Eigenvalues : " << sig << endl;
+  //cout << "Eigenvectors : " << evec << endl;
+
+  /* OLD CALC USING MATRIX3 methods
   // If all three principal stresses are equal, numEV = 1,
   // If two principal stresses are equal, numEV = 2, and the largest
   // is in sig[0].
@@ -41,6 +53,8 @@ BeckerCheck::checkStability(const Matrix3& stress ,
   // Calculate the coefficients of the quadric
   if (numEV == 1) sig[2] = sig[0];
   else if (numEV == 2) sig[2] = sig[1];
+  */
+
   double A = M(2,0,2,0)*(-sig[2] + 2.0*M(2,2,2,2));
   double C = M(2,0,2,0)*(-sig[0] + 2.0*M(0,0,0,0));
   double B = M(2,0,2,0)*(sig[2] - 2.0*M(0,0,2,2) + sig[0] - 2.0*M(2,2,0,0)) +
