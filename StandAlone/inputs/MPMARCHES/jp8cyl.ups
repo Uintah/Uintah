@@ -31,7 +31,6 @@
 	<save label = "p.x"/>
 	<save label = "p.temperature"/>
 
-	<save label="uvwout"/>
 	<save label="totalflowIN"/>
 	<save label="totalflowOUT"/>
 	<save label="denAccum"/>
