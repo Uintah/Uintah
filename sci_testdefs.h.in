@@ -30,6 +30,10 @@
 @THREAD_DEFINE@
 @MALLOC_DEFINE@
 
+/* MPI++ on SGI has a bad interaction with <iostream>.  This prevents
+   it from  being included.  We don't use it anyway. */
+#define MPIPP_H
+
 /* paths for alternate compilation directories */
 #define MATH_MANIP_SRC "@abs_conftop_dir@/@top_srcdir@/Dataflow/Modules/Math/Manip"
 #define MATH_MANIP_OBJ "@abs_conftop_dir@/Dataflow/Modules/Math/Manip"
