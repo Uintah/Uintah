@@ -18,7 +18,7 @@
 .PHONY: tar tarball
 
 root := ${shell cd ..; basename `pwd` }
-TARFILE := ${notdir ${shell cd ..; pwd}}_Docs.tar
+TARFILE := ${notdir ${shell cd ..; pwd}}.tar
 TARBALL := ${TARFILE}.gz
 TARCMD := gnutar --exclude='*CVS*' --exclude='auto' \
 --create --verbose --file=${root}/doc/${TARFILE} 
