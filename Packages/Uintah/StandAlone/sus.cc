@@ -541,7 +541,8 @@ main( int argc, char** argv )
 	delete ctl;
 	delete reader;
 	sch->removeReference();
-	delete sch;
+	//delete sch; -- this currently crashes system because the
+	// refcount > 0 - we're looking into it
     } catch (Exception& e) {
 
       cerrLock.lock();
