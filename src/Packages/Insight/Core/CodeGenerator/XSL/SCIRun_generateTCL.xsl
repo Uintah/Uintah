@@ -100,13 +100,17 @@
 <xsl:call-template name="determine_type"/>
 </xsl:variable>
 <xsl:variable name="gui_default"><xsl:value-of select="/filter/filter-gui/parameters/param[@name=$name]/default"/></xsl:variable>
+<xsl:variable name="itk_default"><xsl:value-of select="default"/></xsl:variable>
 <xsl:if test="$const != 'yes'">
 <xsl:if test="$defined_object = 'no'">
 <xsl:choose>
-<xsl:when test="$gui_default=''">
-         set $this-<xsl:value-of select="name"/><xsl:text> </xsl:text><xsl:value-of select="default"/></xsl:when>
+<xsl:when test="$gui_default!=''">
+         set $this-<xsl:value-of select="name"/><xsl:text> </xsl:text><xsl:value-of select="$gui_default"/></xsl:when>
+<xsl:when test="$itk_default !=''">
+         set $this-<xsl:value-of select="name"/><xsl:text> </xsl:text><xsl:value-of select="$itk_default"/>
+</xsl:when>
 <xsl:otherwise>
-         set $this-<xsl:value-of select="name"/><xsl:text> </xsl:text><xsl:value-of select="$gui_default"/></xsl:otherwise>
+         set $this-<xsl:value-of select="name"/> 0</xsl:otherwise>
 </xsl:choose>
 </xsl:if>
 </xsl:if>
@@ -263,6 +267,7 @@
 <xsl:if test="$const!='yes'">
 <xsl:if test="$defined_object = 'yes'">
 <xsl:variable name="gui_default"><xsl:value-of select="/filter/filter-gui/parameters/param[@name=$name]/default"/></xsl:variable>
+<xsl:variable name="itk_default"><xsl:value-of select="default"/></xsl:variable>
 <xsl:variable name="path"><xsl:value-of select="$name"/>.<xsl:value-of select="name"/></xsl:variable>
     method init_<xsl:value-of select="$name"/>_dimensions {} {
      	set w .ui[modname]
@@ -283,11 +288,14 @@
 		    # create widget for this dimension
                     global $this-<xsl:value-of select="$name"/>$i
 <xsl:choose>
-<xsl:when test="$gui_default=''">
-                    set $this-<xsl:value-of select="$name"/>$i<xsl:text> </xsl:text><xsl:value-of select="default"/>
+<xsl:when test="$gui_default!=''">
+                    set $this-<xsl:value-of select="$name"/>$i<xsl:text> </xsl:text><xsl:value-of select="$gui_default"/>
+</xsl:when>
+<xsl:when test="$itk_default !=''">
+                    set $this-<xsl:value-of select="$name"/>$i<xsl:text> </xsl:text><xsl:value-of select="$itk_default"/>
 </xsl:when>
 <xsl:otherwise>
-                    set $this-<xsl:value-of select="$name"/>$i <xsl:value-of select="$gui_default"/>
+                    set $this-<xsl:value-of select="$name"/>$i 0
 </xsl:otherwise>
 </xsl:choose>
 
