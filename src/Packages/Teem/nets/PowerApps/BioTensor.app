@@ -4996,14 +4996,18 @@ class BioTensorApp {
 
     method dicom_ui { m } {
 	$m initialize_ui
-	# disable execute button 
-	.ui$m.buttonPanel.btnBox.execute configure -state disabled
+	if {[winfo exists .ui$m]} {
+	    # disable execute button 
+	    .ui$m.buttonPanel.btnBox.execute configure -state disabled
+	}
     }
 
     method analyze_ui { m } {
 	$m initialize_ui
-	# disable execute button 
-	.ui$m.buttonPanel.btnBox.execute configure -state disabled
+	if {[winfo exists .ui$m]} {
+	    # disable execute button 
+	    .ui$m.buttonPanel.btnBox.execute configure -state disabled
+	}
     }
 
 
