@@ -13,7 +13,7 @@
 \end{htmlonly}
 
 
-\section{Starting Up}
+\section{Starting \sr{}}
 \label{sec:startingup}
 
 \subsection{The \command{scirun} Command}
@@ -23,9 +23,9 @@ Start \sr{} by typing \keyboard{scirun} in a terminal (\eg \command{xterm})
 window.  Don't start \sr{} in the background, \ie don't type
 \keyboard{scirun \&}.
 
-The \command{scirun} command is located in the \directory{src} directory of
-the \directory{\sr} install directory.  The person who installed \sr{} can
-locate this command for you.
+The \command{scirun} command is located in the
+\directory{src} directory of the \directory{\sr} install directory.  The
+person who installed \sr{} can locate this command for you.
 
 
 \begin{figure}[htb]
@@ -41,11 +41,11 @@ window as shown in Figure~\ref{fig:srwindow}.  The main features of this
 window are discussed in \secref{Anatomy of the Main
   Window}{sec:windowanatomy}.
 
-The \command{scirun} command may take 1 argument which is the name of a
-\sr{} \dfn{network} \index{network} file (these files have a \filename{.net}
-extension).  These files hold previously defined \sr{} networks.  \sr{} will
-load the specified network.  Network files will be discussed in a later
-section.
+The \command{scirun} command may take 1 argument
+which is the name of a \sr{} \dfn{network} \index{network} file (these
+files have a \filename{.net} extension).  These files hold previously
+defined \sr{} networks.  \sr{} will load the specified network.  Network
+files will be discussed in a later section.
 
 \sr{} may encounter errors during start up.  These will be displayed in \sr{}'s
 error message pane (see Figure~\ref{fig:srwindow}).  \AuthorNote{Need to
@@ -85,13 +85,22 @@ Figure~\ref{fig:srwindow}):
     popup menu (activated by clicking the right most mouse button when the
     mouse pointer is in the network pane) also provides access to the
     \menu{SCIRun} (and possibly other) package menus.  An overview of the
+    contents of the \sr{} package is given in \secref{The \pse{}
+      Package}{sec:biopsepackage}.
+  \end{description}
+
+  \begin{description}
+  \item[\menu{BioPSE}] The \menu{BioPSE} menu is used to create modules
+    (from the \pse package) for use in the network pane.  It consists
+    of category submenus and module menu items.   An overview of the
     contents of the \sr{} package is given in \secref{The SCIRun
       Package}{sec:srpackage}.
   \end{description}
 
   \begin{description}
-  \item [\textit{Possibly Other Package Menus}] There may be other package
-    menus if other packages have been installed.
+  \item [\textit{Other Package Menus}] There may be other package
+    menus if other packages have been installed.  They too will consist
+    of category submenus and module menu items.
   \end{description}
   
 \item[Navigator Pane] The Navigator Pane is located in the upper left
@@ -125,11 +134,11 @@ use of this program will be described in a later section.
 \subsection{\envvar{SCIRUN\_DATA}}
 \label{sec:scirundata}
 
-The environment variable \envvar{SCIRUN\_DATA} affects the behavior of \sr{} 
-It specifies the default location of \sr{} data files.  It mainly affects
-the behavior of file browsing dialogs -- they will prompt for a file within
-the \envvar{SCIRUN\_DATA} directory (of course you may have the dialog look
-elsewhere).
+The environment variable \envvar{SCIRUN\_DATA} specifies the default
+directory of \sr{} data files.  \sr will first look in this directory to
+find data and network files.  It affects the behavior of file browsing
+dialogs -- they will prompt for a file within the \envvar{SCIRUN\_DATA}
+directory (of course you may have the dialog look elsewhere).
 
 
 \subsection{Stopping}
