@@ -45,7 +45,7 @@ using std::pair;
 
 class PSECORESHARE ChangeFieldDataAt : public Module {
 public:
-  GuiString dataat_;     // the out data at
+  GuiString outputdataat_;     // the out data at
   int              generation_;
   ChangeFieldDataAt(GuiContext* ctx);
   virtual ~ChangeFieldDataAt();
@@ -57,7 +57,7 @@ public:
 
 ChangeFieldDataAt::ChangeFieldDataAt(GuiContext* ctx)
   : Module("ChangeFieldDataAt", ctx, Source, "Fields", "SCIRun"),
-    dataat_(ctx->subVar("dataat2")),
+    outputdataat_(ctx->subVar("outputdataat")),
     generation_(-1)
 {
 }
@@ -75,13 +75,13 @@ void ChangeFieldDataAt::update_input_attributes(FieldHandle f)
   switch(f->data_at())
   {
   case Field::NODE:
-    gui->execute(string("set ")+id+"-dataat Nodes"); break;
+    gui->execute(string("set ")+id+"-inputdataat Nodes"); break;
   case Field::EDGE: 
-    gui->execute(string("set ")+id+"-dataat Edges"); break;
+    gui->execute(string("set ")+id+"-inputdataat Edges"); break;
   case Field::FACE: 
-    gui->execute(string("set ")+id+"-dataat Faces"); break;
+    gui->execute(string("set ")+id+"-inputdataat Faces"); break;
   case Field::CELL: 
-    gui->execute(string("set ")+id+"-dataat Cells"); break;
+    gui->execute(string("set ")+id+"-inputdataat Cells"); break;
   default: ;
   }
 
@@ -108,7 +108,7 @@ ChangeFieldDataAt::execute()
   FieldHandle fh;
   if (!iport->get(fh) || !fh.get_rep())
   {
-    gui->execute(string("set ")+id+"-dataat \"---\"");
+    gui->execute(string("set ")+id+"-inputdataat \"---\"");
     gui->execute(id+" update_multifields");
     return;
   }
@@ -127,7 +127,7 @@ ChangeFieldDataAt::execute()
   }
 
   Field::data_location dataat = fh->data_at();
-  const string &d = dataat_.get();
+  const string &d = outputdataat_.get();
   if (d == "Nodes")
   {
     dataat = Field::NODE;

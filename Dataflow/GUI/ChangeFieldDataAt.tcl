@@ -29,13 +29,13 @@ itcl_class SCIRun_Fields_ChangeFieldDataAt {
 
 	# these won't be saved 
 	global $this-fldname
-	global $this-dataat
+	global $this-inputdataat
 	set $this-fldname "---"
-	set $this-dataat "---"
+	set $this-inputdataat "---"
 
 	# these will be saved
-	global $this-dataat2
-	set $this-dataat2 "Nodes"
+	global $this-outputdataat
+	set $this-outputdataat "Nodes"
     }
 
     method ui {} {
@@ -53,7 +53,7 @@ itcl_class SCIRun_Fields_ChangeFieldDataAt {
 	set att [$w.att childsite]
 	
 	labelpair $att.l1 "Name" $this-fldname
-	labelpair $att.l2 "Data at" $this-dataat
+	labelpair $att.l2 "Data at" $this-inputdataat
 	pack $att.l1 $att.l2 -side top 
 
 	iwidgets::Labeledframe $w.edit -labelpos nw \
@@ -62,7 +62,7 @@ itcl_class SCIRun_Fields_ChangeFieldDataAt {
 	pack $w.edit 
 	set edit [$w.edit childsite]
 	labelcombo $edit.l1 "Data at" {Nodes Edges Faces Cells} \
-		   $this-dataat2 $this-cdataat
+		   $this-outputdataat $this-cdataat
 	pack $edit.l1 -side top 
 
 	frame $w.exec
@@ -134,7 +134,7 @@ itcl_class SCIRun_Fields_ChangeFieldDataAt {
 	set edit [$w.edit childsite]
 
 	config_labelcombo $w.edit.l1 {Nodes Edges Faces Cells} \
-            [set $this-dataat]
+            [set $this-inputdataat]
     }
 
 

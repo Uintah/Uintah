@@ -28,42 +28,42 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
 	set $this-firstwidth 12
 
 	# these won't be saved 
-	global $this-datamin
-	global $this-datamax
-        global $this-cx
-        global $this-cy
-        global $this-cz
+	global $this-inputdatamin
+	global $this-inputdatamax
+        global $this-inputcenterx
+        global $this-inputcentery
+        global $this-inputcenterz
         global $this-sizex
-        global $this-sizey
-        global $this-sizez
-	set $this-datamin "---"
-	set $this-datamax "---"
-        set $this-cx "---"
-        set $this-cy "---"
-        set $this-cz "---"
-        set $this-sizex "---"
-        set $this-sizey "---"
-        set $this-sizez "---"
+        global $this-inputsizey
+        global $this-inputsizez
+	set $this-inputdatamin "---"
+	set $this-inputdatamax "---"
+        set $this-inputcenterx "---"
+        set $this-inputcentery "---"
+        set $this-inputcenterz "---"
+        set $this-inputsizex "---"
+        set $this-inputsizey "---"
+        set $this-inputsizez "---"
 
 	# these will be saved
-	global $this-datamin2
-	global $this-datamax2
-	global $this-cdataminmax
-        global $this-cx2
-        global $this-cy2
-        global $this-cz2
-        global $this-sizex2
-        global $this-sizey2
-        global $this-sizez2
-	set $this-datamin2 0
-	set $this-datamax2 0
-	set $this-cdataminmax 0
-        set $this-cx2 0
-        set $this-cy2 0
-        set $this-cz2 0
-        set $this-sizex2 0
-        set $this-sizey2 0
-        set $this-sizez2 0
+	global $this-outputdatamin
+	global $this-outputdatamax
+	global $this-copydataminmax
+        global $this-outputcenterx
+        global $this-outputcentery
+        global $this-outputcenterz
+        global $this-outputsizex
+        global $this-outputsizey
+        global $this-outputsizez
+	set $this-outputdatamin 0
+	set $this-outputdatamax 0
+	set $this-copydataminmax 0
+        set $this-outputcenterx 0
+        set $this-outputcentery 0
+        set $this-outputcenterz 0
+        set $this-outputsizex 0
+        set $this-outputsizey 0
+        set $this-outputsizez 0
     }
 
     method ui {} {
@@ -80,12 +80,12 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
 	pack $w.att 
 	set att [$w.att childsite]
 	
-        labelpairmulti $att.l1 "Center (x,y,z)" "[set $this-cx], \
-                               [set $this-cy], [set $this-cz]"
-        labelpairmulti $att.l2 "Size (x,y,z)" "[set $this-sizex], \
-                               [set $this-sizey], [set $this-sizez]" 
-	labelpairmulti $att.l3 "Data min,max" "[set $this-datamin], \
-		                          [set $this-datamax]"
+        labelpairmulti $att.l1 "Center (x,y,z)" \
+	    "[set $this-inputcenterx], [set $this-inputcentery], [set $this-inputcenterz]"
+        labelpairmulti $att.l2 "Size (x,y,z)" "[set $this-inputsizex], \
+                               [set $this-inputsizey], [set $this-inputsizez]"
+	labelpairmulti $att.l3 "Data min,max" "[set $this-inputdatamin], \
+		                          [set $this-inputdatamax]"
 	pack $att.l1 $att.l2 $att.l3 -side top 
 
 	iwidgets::Labeledframe $w.edit -labelpos nw \
@@ -93,12 +93,15 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
 	pack $w.edit 
 	set edit [$w.edit childsite]
 	
-        labelentry3 $edit.l1 "Center (x,y,z)" $this-cx2 $this-cy2 $this-cz2 \
-                    "$this-c update_widget"
-        labelentry3 $edit.l2 "Size (x,y,z)" $this-sizex2 $this-sizey2 \
-                    $this-sizez2 "$this-c update_widget"
-	labelentry2 $edit.l3 "Data min,max" $this-datamin2 $this-datamax2 \
-		    $this-cdataminmax
+        labelentry3 $edit.l1 "Center (x,y,z)" \
+	    $this-outputcenterx $this-outputcentery $this-outputcenterz \
+	    "$this-c update_widget"
+        labelentry3 $edit.l2 "Size (x,y,z)" \
+	    $this-outputsizex $this-outputsizey \
+	    $this-outputsizez "$this-c update_widget"
+	labelentry2 $edit.l3 "Data min,max" \
+	    $this-outputdatamin $this-outputdatamax \
+	    $this-copydataminmax
 
 	pack $edit.l1 $edit.l2 $edit.l3 -side top 
 
@@ -114,11 +117,12 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
 	    return
 	}
 	set att [$w.att childsite]
-	$att.l1.l2 configure -text "[set $this-cx], [set $this-cy], \
-		                  [set $this-cz]"
-	$att.l2.l2 configure -text "[set $this-sizex], [set $this-sizey], \
-		                  [set $this-sizez]"
-	$att.l3.l2 configure -text "[set $this-datamin], [set $this-datamax]"
+	$att.l1.l2 configure -text \
+	    "[set $this-inputcenterx], [set $this-inputcentery], [set $this-inputcenterz]"
+	$att.l2.l2 configure -text \
+	    "[set $this-inputsizex], [set $this-inputsizey], [set $this-inputsizez]"
+	$att.l3.l2 configure -text \
+	    "[set $this-inputdatamin], [set $this-inputdatamax]"
     }
 
     method labelpair { win text1 text2 } {
@@ -258,17 +262,17 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
 	set att [$w.att childsite]
 	set edit [$w.edit childsite]
 
-        if {"[set $this-cdataminmax]"!="1"} {
-	  set $this-datamin2 [set $this-datamin]
-	  set $this-datamax2 [set $this-datamax]
+        if {"[set $this-copydataminmax]"!="1"} {
+	  set $this-outputdatamin [set $this-inputdatamin]
+	  set $this-outputdatamax [set $this-inputdatamax]
         }
 
-	set $this-cx2 [set $this-cx]
-	set $this-cy2 [set $this-cy]
-	set $this-cz2 [set $this-cz]
-	set $this-sizex2 [set $this-sizex]
-	set $this-sizey2 [set $this-sizey]
-	set $this-sizez2 [set $this-sizez]
+	set $this-outputcenterx [set $this-inputcenterx]
+	set $this-outputcentery [set $this-inputcentery]
+	set $this-outputcenterz [set $this-inputcenterz]
+	set $this-outputsizex [set $this-inputsizex]
+	set $this-outputsizey [set $this-inputsizey]
+	set $this-outputsizez [set $this-inputsizez]
     }
 
 
