@@ -417,19 +417,24 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 
-  if (d_accStrainEnergy) {
-    // Compute the accumulated strain energy
-    t = scinew Task("MPM::computeAccStrainEnergy",
-		    this, &SerialMPM::computeAccStrainEnergy);
-    t->requires(Task::OldDW, lb->AccStrainEnergyLabel);
-    t->requires(Task::NewDW, lb->StrainEnergyLabel);
-    t->computes(lb->AccStrainEnergyLabel);
-    sched->addTask(t, patches, matls);
-  }
+  if (d_accStrainEnergy) scheduleComputeAccStrainEnergy(sched, patches, matls);
 
   if(d_artificial_viscosity){
     scheduleComputeArtificialViscosity(   sched, patches, matls);
   }
+}
+
+// Compute the accumulated strain energy
+void SerialMPM::scheduleComputeAccStrainEnergy(SchedulerP& sched,
+                                               const PatchSet* patches,
+                                               const MaterialSet* matls)
+{
+  Task* t = scinew Task("MPM::computeAccStrainEnergy",
+			this, &SerialMPM::computeAccStrainEnergy);
+  t->requires(Task::OldDW, lb->AccStrainEnergyLabel);
+  t->requires(Task::NewDW, lb->StrainEnergyLabel);
+  t->computes(lb->AccStrainEnergyLabel);
+  sched->addTask(t, patches, matls);
 }
 
 void SerialMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,

@@ -459,6 +459,74 @@ MPMLabel::MPMLabel()
                       sum_vartype::getTypeDescription());
   pDampingCoeffLabel = VarLabel::create("dampingCoeff", 
                        max_vartype::getTypeDescription());
+
+  // Labels for shell materials
+  pThickTopLabel = VarLabel::create("p.thickTop",
+                     ParticleVariable<double>::getTypeDescription());
+  pThickBotLabel = VarLabel::create("p.thickBot",
+                     ParticleVariable<double>::getTypeDescription());
+  pInitialThickTopLabel = VarLabel::create("p.thickTop0",
+                     ParticleVariable<double>::getTypeDescription());
+  pInitialThickBotLabel = VarLabel::create("p.thickBot0",
+                     ParticleVariable<double>::getTypeDescription());
+  pNormalLabel = VarLabel::create("p.normal",
+                     ParticleVariable<Vector>::getTypeDescription());
+  pInitialNormalLabel = VarLabel::create("p.normal0",
+                     ParticleVariable<Vector>::getTypeDescription());
+  pNormalRotRateLabel = VarLabel::create("p.normalRotRate",
+                     ParticleVariable<Vector>::getTypeDescription());
+  pRotationLabel = VarLabel::create("p.rotation",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pDefGradTopLabel = VarLabel::create("p.defGradTop",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pDefGradCenLabel = VarLabel::create("p.defGradCen",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pDefGradBotLabel = VarLabel::create("p.defGradBot",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pStressTopLabel = VarLabel::create("p.stressTop",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pStressCenLabel = VarLabel::create("p.stressCen",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pStressBotLabel = VarLabel::create("p.stressBot",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+
+  pThickTopLabel_preReloc = VarLabel::create("p.thickTop+",
+                     ParticleVariable<double>::getTypeDescription());
+  pThickBotLabel_preReloc = VarLabel::create("p.thickBot+",
+                     ParticleVariable<double>::getTypeDescription());
+  pInitialThickTopLabel_preReloc = VarLabel::create("p.thickTop0+",
+                     ParticleVariable<double>::getTypeDescription());
+  pInitialThickBotLabel_preReloc = VarLabel::create("p.thickBot0+",
+                     ParticleVariable<double>::getTypeDescription());
+  pNormalLabel_preReloc = VarLabel::create("p.normal+",
+                     ParticleVariable<Vector>::getTypeDescription());
+  pInitialNormalLabel_preReloc = VarLabel::create("p.normal0+",
+                     ParticleVariable<Vector>::getTypeDescription());
+  pNormalRotRateLabel_preReloc = VarLabel::create("p.normalRotRate+",
+                     ParticleVariable<Vector>::getTypeDescription());
+  pRotationLabel_preReloc = VarLabel::create("p.rotation+",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pDefGradTopLabel_preReloc = VarLabel::create("p.defGradTop+",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pDefGradCenLabel_preReloc = VarLabel::create("p.defGradCen+",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pDefGradBotLabel_preReloc = VarLabel::create("p.defGradBot+",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pStressTopLabel_preReloc = VarLabel::create("p.stressTop+",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pStressCenLabel_preReloc = VarLabel::create("p.stressCen+",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pStressBotLabel_preReloc = VarLabel::create("p.stressBot+",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+
+  gNormalRotRateLabel = VarLabel::create( "g.normalRotRate",
+		     NCVariable<Vector>::getTypeDescription());
+  gNormalRotMomentLabel = VarLabel::create( "g.normalRotMoment",
+		     NCVariable<Vector>::getTypeDescription());
+  gNormalRotMassLabel = VarLabel::create( "g.normalRotMass",
+		     NCVariable<double>::getTypeDescription());
+  gNormalRotAccLabel = VarLabel::create( "g.normalRotAcc",
+		     NCVariable<Vector>::getTypeDescription());
 } 
 
 MPMLabel::~MPMLabel()
@@ -626,6 +694,38 @@ MPMLabel::~MPMLabel()
   // Destroy the MPM Damping rate labels
   VarLabel::destroy(pDampingRateLabel);
   VarLabel::destroy(pDampingCoeffLabel);
+
+  // Destroy Labels for shell materials
+  VarLabel::destroy(pThickTopLabel);
+  VarLabel::destroy(pThickBotLabel);
+  VarLabel::destroy(pInitialThickTopLabel);
+  VarLabel::destroy(pInitialThickBotLabel);
+  VarLabel::destroy(pNormalLabel);
+  VarLabel::destroy(pInitialNormalLabel);
+  VarLabel::destroy(pNormalRotRateLabel); 
+  VarLabel::destroy(pDefGradTopLabel);
+  VarLabel::destroy(pDefGradCenLabel);
+  VarLabel::destroy(pDefGradBotLabel);
+  VarLabel::destroy(pStressTopLabel);
+  VarLabel::destroy(pStressCenLabel);
+  VarLabel::destroy(pStressBotLabel);
+  VarLabel::destroy(pThickTopLabel_preReloc);
+  VarLabel::destroy(pThickBotLabel_preReloc);
+  VarLabel::destroy(pInitialThickTopLabel_preReloc);
+  VarLabel::destroy(pInitialThickBotLabel_preReloc);
+  VarLabel::destroy(pNormalLabel_preReloc);
+  VarLabel::destroy(pInitialNormalLabel_preReloc);
+  VarLabel::destroy(pNormalRotRateLabel_preReloc); 
+  VarLabel::destroy(pDefGradTopLabel_preReloc);
+  VarLabel::destroy(pDefGradCenLabel_preReloc);
+  VarLabel::destroy(pDefGradBotLabel_preReloc);
+  VarLabel::destroy(pStressTopLabel_preReloc);
+  VarLabel::destroy(pStressCenLabel_preReloc);
+  VarLabel::destroy(pStressBotLabel_preReloc);
+  VarLabel::destroy(gNormalRotRateLabel); 
+  VarLabel::destroy(gNormalRotMomentLabel); 
+  VarLabel::destroy(gNormalRotMassLabel); 
+  VarLabel::destroy(gNormalRotAccLabel); 
 }
 
 void MPMLabel::registerPermanentParticleState(int i,
