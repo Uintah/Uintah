@@ -1547,7 +1547,8 @@ case $host in
     ;;
   *aix*)
     # AIX Fortran Library Check
-    SCI_CHECK_LIB(,xlf,main,FLIBS=-lxlf90,,,not-optional)
+    SCI_CHECK_LIB(,xlf90,main,,,not-optional)
+    FLIBS=-lxlf90
     ;;
   *linux*)
     # Linux Library Check
