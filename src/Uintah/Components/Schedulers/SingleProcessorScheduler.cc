@@ -1,7 +1,7 @@
 /* REFERENCED */
 static char *id="@(#) $Id$";
 
-#include <Uintah/Components/Schedulers/BrainDamagedScheduler.h>
+#include <Uintah/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <Uintah/Grid/Patch.h>
@@ -10,12 +10,9 @@ static char *id="@(#) $Id$";
 #include <Uintah/Parallel/ProcessorContext.h>
 
 #include <SCICore/Exceptions/InternalError.h>
-#include <SCICore/Thread/SimpleReducer.h>
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Thread/Time.h>
-#include <SCICore/Thread/ThreadPool.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Util/DebugStream.h>
+#include <SCICore/Thread/Time.h>
 
 #include <algorithm>
 #include <fstream>
@@ -26,43 +23,27 @@ static char *id="@(#) $Id$";
 using namespace Uintah;
 
 using SCICore::Exceptions::InternalError;
-using SCICore::Thread::SimpleReducer;
-using SCICore::Thread::Thread;
-using SCICore::Thread::Time;
-using SCICore::Thread::ThreadPool;
 using SCICore::Util::DebugStream;
 using namespace std;
+using namespace SCICore::Thread;
 
-static DebugStream dbg("BrainDamagedScheduler", false);
+static DebugStream dbg("SingleProcessorScheduler", false);
 
-BrainDamagedScheduler::BrainDamagedScheduler( int MpiRank, int MpiProcesses ) :
+SingleProcessorScheduler::SingleProcessorScheduler( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
 {
-    d_numThreads=0;
-    d_reducer = 
-        scinew SimpleReducer("BrainDamagedScheduler only barrier/reducer");
-    d_pool = scinew ThreadPool("BrainDamagedScheduler worker threads");
 }
 
-BrainDamagedScheduler::~BrainDamagedScheduler()
+SingleProcessorScheduler::~SingleProcessorScheduler()
 {
     vector<TaskRecord*>::iterator iter;
 
     for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ )
 	delete *iter;
-
-    delete d_reducer;
-    delete d_pool;
 }
 
 void
-BrainDamagedScheduler::setNumThreads(int nt)
-{
-    d_numThreads = nt;
-}
-
-void
-BrainDamagedScheduler::initialize()
+SingleProcessorScheduler::initialize()
 {
     vector<TaskRecord*>::iterator iter;
 
@@ -70,12 +51,11 @@ BrainDamagedScheduler::initialize()
 	delete *iter;
 
     d_tasks.clear();
-    d_targets.clear();
     d_allcomps.clear();
 }
 
 void
-BrainDamagedScheduler::setupTaskConnections()
+SingleProcessorScheduler::setupTaskConnections()
 {
    // Look for all of the reduction variables - we must treat those
    // special.  Create a fake task that performs the reduction
@@ -138,7 +118,7 @@ BrainDamagedScheduler::setupTaskConnections()
 }
 
 void
-BrainDamagedScheduler::performTask(TaskRecord* task,
+SingleProcessorScheduler::performTask(TaskRecord* task,
 				   const ProcessorContext * pc) const
 {
    dbg << "Looking at task: " << task->task->getName();
@@ -177,7 +157,7 @@ BrainDamagedScheduler::performTask(TaskRecord* task,
 }
 
 void
-BrainDamagedScheduler::execute(const ProcessorContext * pc,
+SingleProcessorScheduler::execute(const ProcessorContext * pc,
 			             DataWarehouseP   & dwp )
 {
     if(d_tasks.size() == 0){
@@ -194,125 +174,15 @@ BrainDamagedScheduler::execute(const ProcessorContext * pc,
     for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
        TaskRecord* task = *iter;
        if(!task->task->isCompleted()){
-
-#if 0
-	 const Patch * patch = task->task->getPatch();
-
-	 // Figure out which MPI node should be doing this task.
-	 // need to actually figure it out... THIS IS A HACK
-	 int taskLocation;
-	 if( !patch || patch->getID() >= 0 && patch->getID() <= 2 )
-	   taskLocation = 0;
-	 else if( patch->getID() >= 3 && patch->getID() <= 11 )
-	   taskLocation = 1;
-	 else
-	    throw InternalError("BrainDamagedScheduler: Unknown patch");		                              
-#else
-	 int taskLocation=0;
-#endif
-	 
-	 // If it is this node, then kick off the task.
-	 // Either way, record which node is doing the task so
-	 // so that if one of our tasks needs data from it, we
-	 // will know where to go get it from.
-
-	 // Run through all the variables that this task computes and
-	 // register them in the DataWarehouse so that the DW will know
-	 // where to find them if it needs to at some future point.
-	 const vector<Task::Dependency*> & computes = 
-		                                  task->task->getComputes();
-	 vector<Task::Dependency*>::const_iterator iter = 
-		                                  computes.begin();
-	 while( iter != computes.end() ) {
-	   dwp->registerOwnership( (*iter)->d_var,
-				   (*iter)->d_patch,
-				   taskLocation );
-	   iter++;
-	 }
-
-	 if( d_MpiRank == taskLocation ) {  // I am responsible for this task
-	   performTask(task, pc);
-	 }
+	 performTask(task, pc);
        }
     }
-#if 0
-    int totalcompleted = 0;
-    int numThreads = pc->numThreads();
-    for(;;){
-	int ncompleted=0;
-	vector<TaskRecord*>::iterator iter;
-	for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ){
-	    
-	    TaskRecord* task=*iter;
-	    double start = Time::currentSeconds();
-	    if(!task->task->isCompleted() && allDependenciesCompleted(task)){
-
-	        // Figure out which MPI node should be doing this task.
-
-	        int taskLocation = d_MpiRank; // need to actually
-		                              // figure it out...
-
-	        // If it is this node, then kick off the task.
-	        // Either way, record which node is doing the task so
-	        // so that if one of our tasks needs data from it, we
-	        // will know where to go get it from.
-
-	        if( d_MpiRank == taskLocation ) { 
-		  // I am responsible for this task
-		  if(task->task->usesThreads()){
-		    //cerr << "Performing task with " << numThreads 
-		    //     << " threads: " << task->task->getName() << '\n';
-                    d_pool->parallel(this,
-				     &BrainDamagedScheduler::runThreadedTask,
-				     numThreads,
-				     task, pc, d_reducer);
-		    //task->task->doit(threadpc);
-		  } else {
-		    //cerr << "Performing task: " << task->task->getName() 
-		    //     << '\n';
-		    task->task->doit(pc);
-		  }
-		} else { // I am not responsible for this task, so run
-		         // through all the variables that it computes
-		         // and register them in the DataWarehouse so
-		         // that it will know where to find them if it
-		         // needs to at some future point.
-
-		  const vector<Task::Dependency*> & computes = 
-		                                     task->task->getComputes();
-		  vector<Task::Dependency*>::const_iterator iter = 
-		                                              computes.begin();
-		  while( iter != computes.end() ) {
-		    dwp->registerOwnership( (*iter)->d_var,
-					    (*iter)->d_patch,
-					    taskLocation );
-		    iter++;
-		  }
-		}
-		double dt = Time::currentSeconds()-start;
-		cout << "Completed task: " << task->task->getName() << " (" << dt << " seconds)\n";
-		ncompleted++;
-	    }
-	}
-	if(ncompleted == 0)
-	    throw InternalError("BrainDamagedScheduler stalled");
-	totalcompleted += ncompleted;
-	if(totalcompleted == d_tasks.size())
-	    break;
-    }
-#endif
     OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dwp.get_rep());;
     dw->finalize();
 }
 
 void
-BrainDamagedScheduler::addTarget(const VarLabel* target)
-{
-    d_targets.push_back(target);
-}
-
-void
-BrainDamagedScheduler::addTask(Task* task)
+SingleProcessorScheduler::addTask(Task* task)
 {
    TaskRecord* tr = scinew TaskRecord(task);
    d_tasks.push_back(tr);
@@ -330,31 +200,20 @@ BrainDamagedScheduler::addTask(Task* task)
 }
 
 bool
-BrainDamagedScheduler::allDependenciesCompleted(TaskRecord*) const
+SingleProcessorScheduler::allDependenciesCompleted(TaskRecord*) const
 {
-    //cerr << "BrainDamagedScheduler::allDependenciesCompleted broken!\n";
+    //cerr << "SingleProcessorScheduler::allDependenciesCompleted broken!\n";
     return true;
 }
 
 DataWarehouseP
-BrainDamagedScheduler::createDataWarehouse( int generation )
+SingleProcessorScheduler::createDataWarehouse( int generation )
 {
     return scinew OnDemandDataWarehouse( d_MpiRank, d_MpiProcesses, generation );
 }
 
 void
-BrainDamagedScheduler::runThreadedTask(int threadNumber, TaskRecord* task,
-				       const ProcessorContext* pc,
-				       SimpleReducer* barrier)
-{
-    ProcessorContext* subpc = 
-               pc->createContext(threadNumber, pc->numThreads(), barrier);
-    task->task->doit(subpc);
-    delete subpc;
-}
-
-void
-BrainDamagedScheduler::dumpDependencies()
+SingleProcessorScheduler::dumpDependencies()
 {
     static int call_nr = 0;
     
@@ -367,7 +226,7 @@ BrainDamagedScheduler::dumpDependencies()
 	
     ofstream depfile("dependencies");
     if (!depfile) {
-	cerr << "BrainDamagedScheduler::dumpDependencies: unable to open output file!\n";
+	cerr << "SingleProcessorScheduler::dumpDependencies: unable to open output file!\n";
 	return;	// dependency dump failure shouldn't be fatal to anything else
     }
 
@@ -405,13 +264,13 @@ BrainDamagedScheduler::dumpDependencies()
     depfile.close();
 }
 
-BrainDamagedScheduler::
+SingleProcessorScheduler::
 TaskRecord::~TaskRecord()
 {
     delete task;
 }
 
-BrainDamagedScheduler::
+SingleProcessorScheduler::
 TaskRecord::TaskRecord(Task* t)
     : task(t)
 {
@@ -420,6 +279,11 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.1  2000/06/15 23:14:07  sparker
+// Cleaned up scheduler code
+// Renamed BrainDamagedScheduler to SingleProcessorScheduler
+// Created MPIScheduler to (eventually) do the MPI work
+//
 // Revision 1.20  2000/06/15 21:57:11  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

@@ -191,7 +191,6 @@ void SimulationController::run()
       
       // Begin next time step...
       scheduleComputeStableTimestep(level, scheduler, new_ds, cfd, mpm, md);
-      scheduler->addTarget(sharedState->get_delt_label());
       scheduler->execute(pc, new_ds);
       
       old_ds = new_ds;
@@ -278,6 +277,12 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	    cerr << "diff=" << diff_upper << '\n';
 	    throw ProblemSetupException("Box upper corner does not coincide with grid");
 	 }
+	 IntVector extraCells;
+	 if(box_ps->get("extraCells", extraCells)){
+	    lowCell = lowCell-extraCells;
+	    highCell = highCell+extraCells;
+	 }
+
 	 IntVector resolution(highCell-lowCell);
 	 if(resolution.x() < 1 || resolution.y() < 1 || resolution.z() < 1)
 	    throw ProblemSetupException("Degeneration patch");
@@ -453,6 +458,11 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.33  2000/06/15 23:14:09  sparker
+// Cleaned up scheduler code
+// Renamed BrainDamagedScheduler to SingleProcessorScheduler
+// Created MPIScheduler to (eventually) do the MPI work
+//
 // Revision 1.32  2000/06/15 21:57:13  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

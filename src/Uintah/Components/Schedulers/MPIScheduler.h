@@ -1,5 +1,5 @@
-#ifndef UINTAH_HOMEBREW_BRAINDAMAGEDSCHEDULER_H
-#define UINTAH_HOMEBREW_BRAINDAMAGEDSCHEDULER_H
+#ifndef UINTAH_HOMEBREW_MPISCHEDULER_H
+#define UINTAH_HOMEBREW_MPISCHEDULER_H
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/Scheduler.h>
@@ -9,26 +9,19 @@
 #include <vector>
 #include <map>
 
-namespace SCICore {
-    namespace Thread {
-	class SimpleReducer;
-	class ThreadPool;
-    }
-}
-
 namespace Uintah {
    class Task;
    class ProcessorContext;
 /**************************************
 
 CLASS
-   BrainDamagedScheduler
+   MPIScheduler
    
    Short description...
 
 GENERAL INFORMATION
 
-   BrainDamagedScheduler.h
+   MPIScheduler.h
 
    Steven G. Parker
    Department of Computer Science
@@ -48,10 +41,10 @@ WARNING
   
 ****************************************/
 
-   class BrainDamagedScheduler : public UintahParallelComponent, public Scheduler {
+   class MPIScheduler : public UintahParallelComponent, public Scheduler {
    public:
-      BrainDamagedScheduler( int MpiRank, int MpiProcesses );
-      virtual ~BrainDamagedScheduler();
+      MPIScheduler( int MpiRank, int MpiProcesses );
+      virtual ~MPIScheduler();
       
       //////////
       // Insert Documentation Here:
@@ -64,23 +57,15 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      virtual void addTarget(const VarLabel*);
-      
-      //////////
-      // Insert Documentation Here:
       virtual void addTask(Task* t);
       
       //////////
       // Insert Documentation Here:
       virtual DataWarehouseP createDataWarehouse( int generation );
       
-      //////////
-      // Insert Documentation Here:
-      void setNumThreads(int numThreads);
-      
    private:
-      BrainDamagedScheduler(const BrainDamagedScheduler&);
-      BrainDamagedScheduler& operator=(const BrainDamagedScheduler&);
+      MPIScheduler(const MPIScheduler&);
+      MPIScheduler& operator=(const MPIScheduler&);
 
       struct TaskRecord {
 	 TaskRecord(Task*);
@@ -102,20 +87,10 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      void runThreadedTask(int, TaskRecord*, const ProcessorContext*,
-			   SCICore::Thread::SimpleReducer*);
-      
-      //////////
-      // Insert Documentation Here:
       void dumpDependencies();
 
-      SCICore::Thread::SimpleReducer* d_reducer;
-
       std::vector<TaskRecord*>        d_tasks;
-      std::vector<const VarLabel*>    d_targets;
 
-      SCICore::Thread::ThreadPool*    d_pool;
-      int                             d_numThreads;
       std::map<TaskProduct, TaskRecord*>   d_allcomps;
    };
    
@@ -123,6 +98,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.1  2000/06/15 23:14:07  sparker
+// Cleaned up scheduler code
+// Renamed BrainDamagedScheduler to SingleProcessorScheduler
+// Created MPIScheduler to (eventually) do the MPI work
+//
 // Revision 1.11  2000/05/19 18:35:10  jehall
 // - Added code to dump the task dependencies to a file, which can be made
 //   into a pretty dependency graph.
