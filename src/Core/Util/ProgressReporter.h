@@ -74,14 +74,15 @@ public:
   virtual std::ostream &msgStream() { return std::cerr; }
   virtual void msgStream_flush() {}
 
-
+  // Compilation progress.  Should probably have different name.
   virtual void report_progress( ProgressState ) {}
 
-  virtual void update_progress(double) {}
-  virtual void update_progress(double, Timer &) {}
-  virtual void update_progress(int, int) {}
-  virtual void update_progress(int, int, Timer &) {}
-  virtual void accumulate_progress(int) {}
+  // Execution time progress.
+  // Percent is number between 0.0-1.0
+  // unsigned int will probably become size_t
+  virtual void update_progress(double percent) {}
+  virtual void update_progress(unsigned int n, unsigned int max) {}
+
 protected:
   // accumulation storage;
   int                current_;
