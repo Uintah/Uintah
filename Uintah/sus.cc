@@ -188,17 +188,8 @@ int main(int argc, char** argv)
 	// Connect a MPM module if applicable
 	MPMInterface* mpm = 0;
 	if(do_mpm){
-
-//	    if(numThreads == 0){
-		mpm = scinew MPM::SerialMPM(world);
-//	    } else {
-#ifdef WONT_COMPILE_YET
-		mpm = scinew ThreadedMPM();
-#else
-		mpm = 0;
-#endif
-//	    }
-	    sim->attachPort("mpm", mpm);
+	  mpm = scinew MPM::SerialMPM(world);
+	  sim->attachPort("mpm", mpm);
 	}
 
 	// Connect a CFD module if applicable
@@ -303,6 +294,13 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.29  2000/10/02 17:54:45  dav
+// Changed the semantics of numThreads.  By specifying "-nthreads", you
+// are no longer asking for the threaded version of components.  You ARE
+// asking for a threaded scheduler to use threads for separate patches.
+// In the future, we will need, for example, another flag (-mpmthreaded)
+// to specify the explicitly threaded version of mpm.
+//
 // Revision 1.28  2000/09/29 20:41:45  dav
 // Added hack to allow -nthreads to be set
 //
