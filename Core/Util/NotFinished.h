@@ -33,7 +33,7 @@
 
 #include <iostream>
 
-#define NOT_FINISHED(what) std::cerr << what << ": Not Finished " << __FILE__ << " (line " << __LINE__ << ") " << std::endl
+#define NOT_FINISHED(what) std::cerr << "Not finished: " << what << " (" << __FILE__ << ", line " << __LINE__ << ") " << std::endl
 
 #endif /* SCI_project_NotFinished_h */
 
