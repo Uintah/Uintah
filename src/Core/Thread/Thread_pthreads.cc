@@ -59,6 +59,7 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Barrier.h>
+#include <Core/Thread/CleanupManager.h>
 #include <Core/Thread/ConditionVariable.h>
 #include <Core/Thread/RecursiveMutex.h>
 #include <Core/Thread/Semaphore.h>
@@ -533,6 +534,7 @@ Thread::detach()
 void
 Thread::exitAll(int code)
 {
+  CleanupManager::call_callbacks();
   if (getenv("SCIRUN_EXIT_CRASH_WORKAROUND"))
   {
     raise(SIGKILL);

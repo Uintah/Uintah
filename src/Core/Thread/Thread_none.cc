@@ -57,6 +57,7 @@
 #undef protected
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Barrier.h>
+#include <Core/Thread/CleanupManager.h>
 #include <Core/Thread/ConditionVariable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
@@ -141,6 +142,7 @@ Thread::checkExit()
 void
 Thread::exitAll(int code)
 {
+  CleanupManager::call_callbacks();
   delete mainthread;
   delete ThreadGroup::s_default_group; 
   ::exit(code);
