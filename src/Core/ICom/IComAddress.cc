@@ -213,7 +213,11 @@ bool IComAddress::setaddress(std::string protocol,std::string name,std::string s
     isvalid_ = false;
 
     // Assume we do not specify what kind of address we want
+#ifdef _WIN32
+    int            socktype = AF_INET;
+#else
     sa_family_t    socktype = AF_INET;
+#endif
     // in case of a server you want to be able to specify whether you have a
     // ipv6 or ipv4 server. The following settings overrule the default setting
     if (iptype == "ipv4") socktype = AF_INET;
@@ -333,7 +337,14 @@ bool IComAddress::setaddress(std::string protocol,std::string name,std::string s
                     portnum_[sincnt] = ntohs(saddr->sin_port);
                     // Copy the address as a text string
                     char    str[46];
+#ifdef _WIN32
+                    // inet_ntop doesn't exist on win32, is this what we want to do instead?
+                    char* strp = str;
+                    strp = ::inet_ntoa(saddr->sin_addr);
+                    if (!strp) throw could_not_resolve_address();
+#else
                     if (!(::inet_ntop(AF_INET, &(ipaddress_[sincnt][0]), str, sizeof(str)))) throw could_not_resolve_address();
+#endif
                     ipname_[sincnt] = std::string(str);
                     sincnt++;
                     
@@ -347,7 +358,15 @@ bool IComAddress::setaddress(std::string protocol,std::string name,std::string s
                     for (int q=0;q<16;q++) ipaddress_[sin6cnt+numipv4][q] = addr[q];
                     portnum_[sin6cnt+numipv4] = ntohs(saddr->sin6_port);
                     char    str[46];
+#ifdef _WIN32
+                    // inet_ntop doesn't exist on win32, is this what we want to do instead?
+                    // win32 inet_ntoa does not support ipv6
+                    //str = ::inet_ntoa(saddr->sin_addr);
+                    //if (str[0] == 0) 
+                      throw could_not_resolve_address();
+#else
                     if (!(::inet_ntop(AF_INET6, &(ipaddress_[sin6cnt+numipv4][0]), str, sizeof(str)))) throw could_not_resolve_address();
+#endif
                     ipname_[sin6cnt+numipv4] = std::string(str);
                     sin6cnt++;
 
@@ -546,13 +565,23 @@ bool IComAddress::setaddress(std::string protocol, sockaddr *sa)
         // ::getnameinfo(reinterpret_cast<sockaddr*>(&(sin_[0])),sizeof(sin_[0]),host,NI_MAXHOST,0,0,0);
         hostent *hst = ::gethostbyaddr(addr,4,AF_INET);
         if (hst) inetname_[0] = hst->h_name;
+#ifndef _WIN32
+        // win32 doesn't have this - fix later
         ::endhostent();
+#endif
         DNSLock.unlock();
         
         // Retrieve the ipname as text
         char    str[46];    // maximum for both ipv4 and ipv6
         // The next function needs better error management
+#ifdef _WIN32
+        // inet_ntop doesn't exist on win32, is this what we want to do instead?
+        char* strp = str;
+        strp = ::inet_ntoa(saddr->sin_addr);
+        if (!strp) throw could_not_resolve_address();
+#else
         if (!(::inet_ntop(AF_INET, &(ipaddress_[0][0]), str, 46))) str[0] = '\0';
+#endif
         ipname_[0] = std::string(str);
         
         // Set the DNS names
@@ -592,7 +621,15 @@ bool IComAddress::setaddress(std::string protocol, sockaddr *sa)
         DNSLock.unlock();
         
         char    str[46];
+#ifdef _WIN32
+        // inet_ntop doesn't exist on win32, is this what we want to do instead?
+        // win32 inet_ntoa does not support ipv6
+        //str = ::inet_ntoa(saddr->sin_addr);
+        //if (str[0] == 0) 
+        throw could_not_resolve_address();
+#else
         if (!(::inet_ntop(AF_INET6, &(ipaddress_[0][0]), str, 46))) str[0] = '\0';
+#endif
         ipname_[0] = std::string(str);
         
         std::ostringstream oss;
@@ -756,6 +793,11 @@ bool IComAddress::setlocaladdress()
 {
 
     clear();
+#ifdef _WIN32
+    char hostname[256];
+    gethostname(hostname, 256);
+    std::string name(hostname);
+#else
     struct utsname localname;
     
     if (::uname(&localname) < 0)
@@ -764,6 +806,7 @@ bool IComAddress::setlocaladdress()
     }
     
     std::string name(localname.nodename);
+#endif
     return(setaddress("scirun",name,"any"));
 }
 
@@ -835,7 +878,7 @@ int IComAddress::ga_getaddrinfo(const char *hostname, const char *servname,
 
 	if (hintsp == 0) 
     {
-		bzero(&hints, sizeof(hints));
+		memset(&hints, 0, sizeof(hints));
 		hints.ai_family = AF_UNSPEC;
 	} 
     else
@@ -856,31 +899,43 @@ int IComAddress::ga_getaddrinfo(const char *hostname, const char *servname,
         {
 			struct in_addr	inaddr;
 
+#ifndef _WIN32
+                        // win32 doesn't have this - fix later
 			if (::inet_pton(AF_INET, sptr->host, &inaddr) == 1) 
             {
 				if (hints.ai_family != AF_UNSPEC && hints.ai_family != AF_INET)
+#ifdef _WIN32
+					{ error = EAI_FAMILY; goto bad; }
+#else
 					{ error = EAI_ADDRFAMILY; goto bad; }
+#endif
 				if (sptr->family != AF_INET)
 					continue;		/* ignore */
 				error = ga_aistruct(&aipnext, &hints, &inaddr, AF_INET);
 				if (error) goto bad;
 			}
+#endif
 		}
 
 		if ((isxdigit(sptr->host[0]) || sptr->host[0] == ':') && (strchr(sptr->host, ':') != 0)) 
         {
 
 			struct in6_addr	in6addr;
-
+#ifndef _WIN32
 			if (::inet_pton(AF_INET6, sptr->host, &in6addr) == 1) {
 				if (hints.ai_family != AF_UNSPEC && hints.ai_family != AF_INET6)
+#ifdef _WIN32
+					{ error = EAI_FAMILY; goto bad; }
+#else
 					{ error = EAI_ADDRFAMILY; goto bad; }
+#endif
 				if (sptr->family != AF_INET6)
 					continue;		/* ignore */
 				error = ga_aistruct(&aipnext, &hints, &in6addr, AF_INET6);
 				if (error) goto bad;
 				continue;
 			}
+#endif
 		}
 
         hptr = ::gethostbyname(sptr->host);
@@ -896,7 +951,11 @@ int IComAddress::ga_getaddrinfo(const char *hostname, const char *servname,
 			/* 4check for address family mismatch if one specified */
 		if (hints.ai_family != AF_UNSPEC && hints.ai_family != hptr->h_addrtype)
 		{
+#ifdef _WIN32
+	    error = EAI_FAMILY; goto bad;
+#else
             error = EAI_ADDRFAMILY; goto bad;
+#endif
         }
 
 			/* 4save canonical name first time */

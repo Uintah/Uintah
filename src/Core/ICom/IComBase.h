@@ -44,9 +44,13 @@
 #include <list>
 #include <string>
 #include <map>
+#ifndef _WIN32
 #include <sys/socket.h>
-#include <netdb.h>
 #include <arpa/inet.h>
+#include <netdb.h>
+#else
+#include <winsock2.h>
+#endif
 
 namespace SCIRun {
 
