@@ -49,146 +49,183 @@ namespace SCIRun {
 
 
 class SCICORESHARE BinaryPiostream : public Piostream {
-    FILE* fp;
-    void* addr;
-    XDR* xdr;
-    bool mmapped;
-    virtual void emit_pointer(int&, int&);
-    int have_peekname;
-    string peekname;
+  FILE* fp;
+  void* addr;
+  XDR* xdr;
+  bool mmapped;
+  virtual void emit_pointer(int&, int&);
+  int have_peekname;
+  string peekname;
 public:
-    BinaryPiostream(const string& filename, Direction dir);
-    BinaryPiostream(int fd, Direction dir);
+  BinaryPiostream(const string& filename, Direction dir);
+  BinaryPiostream(int fd, Direction dir);
 
-    virtual ~BinaryPiostream();
-    virtual string peek_class();
-    virtual int begin_class(const string& name, int);
-    virtual void end_class();
+  virtual ~BinaryPiostream();
+  virtual string peek_class();
+  virtual int begin_class(const string& name, int);
+  virtual void end_class();
 
-    virtual void begin_cheap_delim();
-    virtual void end_cheap_delim();
+  virtual void begin_cheap_delim();
+  virtual void end_cheap_delim();
 
-    virtual void io(bool&);
-    virtual void io(char&);
-    virtual void io(unsigned char&);
-    virtual void io(short&);
-    virtual void io(unsigned short&);
-    virtual void io(int&);
-    virtual void io(unsigned int&);
-    virtual void io(long&);
-    virtual void io(unsigned long&);
-    virtual void io(long long&);
-    virtual void io(double&);
-    virtual void io(float&);
-    virtual void io(string& str);
+  virtual void io(bool&);
+  virtual void io(char&);
+  virtual void io(unsigned char&);
+  virtual void io(short&);
+  virtual void io(unsigned short&);
+  virtual void io(int&);
+  virtual void io(unsigned int&);
+  virtual void io(long&);
+  virtual void io(unsigned long&);
+  virtual void io(long long&);
+  virtual void io(double&);
+  virtual void io(float&);
+  virtual void io(string& str);
 };
 
 class SCICORESHARE TextPiostream : public Piostream {
-    std::ifstream* istr;
-    std::ofstream* ostr;
-    int have_peekname;
-    string peekname;
-    void expect(char);
-    virtual void emit_pointer(int&, int&);
+  std::ifstream* istr;
+  std::ofstream* ostr;
+  int have_peekname;
+  string peekname;
+  void expect(char);
+  virtual void emit_pointer(int&, int&);
 public:
-    TextPiostream(const string& filename, Direction dir);
-    virtual ~TextPiostream();
-    virtual string peek_class();
-    virtual int begin_class(const string& name, int);
-    virtual void end_class();
+  TextPiostream(const string& filename, Direction dir);
+  virtual ~TextPiostream();
+  virtual string peek_class();
+  virtual int begin_class(const string& name, int);
+  virtual void end_class();
 
-    virtual void begin_cheap_delim();
-    virtual void end_cheap_delim();
+  virtual void begin_cheap_delim();
+  virtual void end_cheap_delim();
 
-    virtual void io(bool&);
-    virtual void io(char&);
-    virtual void io(unsigned char&);
-    virtual void io(short&);
-    virtual void io(unsigned short&);
-    virtual void io(int&);
-    virtual void io(unsigned int&);
-    virtual void io(long&);
-    virtual void io(unsigned long&);
-    virtual void io(long long&);
-    virtual void io(double&);
-    virtual void io(float&);
-    virtual void io(string& str);
-    void io(int, string& str);
+  virtual void io(bool&);
+  virtual void io(char&);
+  virtual void io(unsigned char&);
+  virtual void io(short&);
+  virtual void io(unsigned short&);
+  virtual void io(int&);
+  virtual void io(unsigned int&);
+  virtual void io(long&);
+  virtual void io(unsigned long&);
+  virtual void io(long long&);
+  virtual void io(double&);
+  virtual void io(float&);
+  virtual void io(string& str);
+  void io(int, string& str);
 };
 
 //! The Fast stream is binary, its results can only safely be used
 //! on the architecture where the file is generated.
-class SCICORESHARE FastPiostream : public TextPiostream {
+class SCICORESHARE FastPiostream : public Piostream {
 public:
-  FastPiostream(const string& filename, Direction dir) :
-    TextPiostream(filename, dir)
-  {}
+  FastPiostream(const string& filename, Direction dir);
+  FastPiostream(int fd, Direction dir);
+
+  virtual ~FastPiostream();
+  virtual string peek_class();
+  virtual int begin_class(const string& name, int);
+  virtual void end_class();
+
+  virtual void begin_cheap_delim();
+  virtual void end_cheap_delim();
+
+  virtual void io(bool&);
+  virtual void io(char&);
+  virtual void io(unsigned char&);
+  virtual void io(short&);
+  virtual void io(unsigned short&);
+  virtual void io(int&);
+  virtual void io(unsigned int&);
+  virtual void io(long&);
+  virtual void io(unsigned long&);
+  virtual void io(long long&);
+  virtual void io(double&);
+  virtual void io(float&);
+  virtual void io(string& str);
+
+  virtual bool supports_block_io() { return true; }
+  virtual void block_io(void*, size_t, size_t);
+
+private:
+  virtual void emit_pointer(int&, int&);
+  void error(const string &);
+  template <class T>
+  void gen_io(T&, const string &);
+
+
+  FILE* fp_;
+  void* addr_;
+  int have_peekname_;
+  string peekname_;
+
 };
 
 class SCICORESHARE GzipPiostream : public Piostream {
-    gzFile gzfile;
-    int have_peekname;
-    string peekname;
-    void expect(char);
-    virtual void emit_pointer(int&, int&);
+  gzFile gzfile;
+  int have_peekname;
+  string peekname;
+  void expect(char);
+  virtual void emit_pointer(int&, int&);
 public:
-    GzipPiostream(const string& filename, Direction dir);
-    virtual ~GzipPiostream();
-    virtual string peek_class();
-    virtual int begin_class(const string& name, int);
-    virtual void end_class();
+  GzipPiostream(const string& filename, Direction dir);
+  virtual ~GzipPiostream();
+  virtual string peek_class();
+  virtual int begin_class(const string& name, int);
+  virtual void end_class();
 
-    virtual void begin_cheap_delim();
-    virtual void end_cheap_delim();
+  virtual void begin_cheap_delim();
+  virtual void end_cheap_delim();
 
-    virtual void io(bool&);
-    virtual void io(char&);
-    virtual void io(unsigned char&);
-    virtual void io(short&);
-    virtual void io(unsigned short&);
-    virtual void io(int&);
-    virtual void io(unsigned int&);
-    virtual void io(long&);
-    virtual void io(unsigned long&);
-    virtual void io(long long&);
-    virtual void io(double&);
-    virtual void io(float&);
-    virtual void io(string& str);
-    void io(int, string& str);
-    inline int fileOpen() { return (gzfile!=0); }
+  virtual void io(bool&);
+  virtual void io(char&);
+  virtual void io(unsigned char&);
+  virtual void io(short&);
+  virtual void io(unsigned short&);
+  virtual void io(int&);
+  virtual void io(unsigned int&);
+  virtual void io(long&);
+  virtual void io(unsigned long&);
+  virtual void io(long long&);
+  virtual void io(double&);
+  virtual void io(float&);
+  virtual void io(string& str);
+  void io(int, string& str);
+  inline int fileOpen() { return (gzfile!=0); }
 };
 
 class SCICORESHARE GunzipPiostream : public Piostream {
-    int unzipfile;	// file descriptor
-    int have_peekname;
-    string peekname;
-    void expect(char);
-    virtual void emit_pointer(int&, int&);
+  int unzipfile;	// file descriptor
+  int have_peekname;
+  string peekname;
+  void expect(char);
+  virtual void emit_pointer(int&, int&);
 public:
-    GunzipPiostream(const string& filename, Direction dir);
-    virtual ~GunzipPiostream();
-    virtual string peek_class();
-    virtual int begin_class(const string& name, int);
-    virtual void end_class();
+  GunzipPiostream(const string& filename, Direction dir);
+  virtual ~GunzipPiostream();
+  virtual string peek_class();
+  virtual int begin_class(const string& name, int);
+  virtual void end_class();
 
-    virtual void begin_cheap_delim();
-    virtual void end_cheap_delim();
+  virtual void begin_cheap_delim();
+  virtual void end_cheap_delim();
 
-    virtual void io(bool&);
-    virtual void io(char&);
-    virtual void io(unsigned char&);
-    virtual void io(short&);
-    virtual void io(unsigned short&);
-    virtual void io(int&);
-    virtual void io(unsigned int&);
-    virtual void io(long&);
-    virtual void io(unsigned long&);
-    virtual void io(long long&);
-    virtual void io(double&);
-    virtual void io(float&);
-    virtual void io(string& str);
-    void io(int, string& str);
-    inline int fileOpen() { return (unzipfile!=0); }
+  virtual void io(bool&);
+  virtual void io(char&);
+  virtual void io(unsigned char&);
+  virtual void io(short&);
+  virtual void io(unsigned short&);
+  virtual void io(int&);
+  virtual void io(unsigned int&);
+  virtual void io(long&);
+  virtual void io(unsigned long&);
+  virtual void io(long long&);
+  virtual void io(double&);
+  virtual void io(float&);
+  virtual void io(string& str);
+  void io(int, string& str);
+  inline int fileOpen() { return (unzipfile!=0); }
 };
 
 } // End namespace SCIRun
