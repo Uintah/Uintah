@@ -111,7 +111,7 @@ void PCAGridSpheres::shade(Color& result, const Ray& ray,
 
   float luminance = interp_luminance(u, v, tex_index);
   Color surface;
-  if (cmap) {
+  if (cmap && dpy->shade_method == 1) {
     surface = surface_color(hit);
   } else {
     surface = color;
