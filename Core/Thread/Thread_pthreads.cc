@@ -826,7 +826,6 @@ ConditionVariable::ConditionVariable(const char* name)
 
 ConditionVariable::~ConditionVariable()
 {
-  pthread_cond_broadcast(&priv_->cond);
   if(pthread_cond_destroy(&priv_->cond) != 0)
     throw ThreadError(std::string("pthread_cond_destroy: ")
 		      +strerror(errno));
