@@ -2,7 +2,7 @@ c
 c $Id$
 c
       subroutine scalsrc(domLo, domHi, idxLo, idxHi, 
-     $     su, sp, 
+     $     sp, su, 
      &     old_den, old_scal, 
      &     sew, sns, stb, 
      &     deltat)
@@ -35,7 +35,7 @@ c
       logical ltim, lexpl
 
       ltim = .true.
-      lexpl = .false.
+      lexpl = .true.
       IST = idxLo(1)
       JST = idxLo(2)
       KST = idxLo(3)
@@ -64,6 +64,9 @@ c-----------------------------------------------------------------------
       end
 c
 c $Log$
+c Revision 1.2  2000/08/19 16:36:40  rawat
+c fixed some bugs in scalarcoef calculations
+c
 c Revision 1.1  2000/07/30 22:59:32  bbanerje
 c Added scalar source term calcs.
 c

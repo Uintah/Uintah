@@ -1008,383 +1008,6 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
       cerr << endl;
     }
   }
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->dxep[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " dxpw = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->dxpw[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " sew = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->sew[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " xu = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->xu[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " dxpwu = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->dxpwu[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " dxepu = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->dxepu[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " sewu = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->sewu[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " cee = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->cee[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " cww = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->cww[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " cwe = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->cwe[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " ceeu = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->ceeu[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " cwwu = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->cwwu[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " cweu = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->cweu[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " efac = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->efac[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " wfac = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->wfac[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " fac1u = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->fac1u[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " fac2u = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->fac2u[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " iesdu = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->iesdu[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " fac3u = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->fac3u[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " fac4u = " ;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->fac4u[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " iwsdu = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->iwsdu[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " dynp = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->dynp[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " dyps = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->dyps[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " sns = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->sns[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " yv = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->yv[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " dypsv = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->dypsv[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " dynpv = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->dynpv[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " snsv = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->snsv[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " cnn = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->cnn[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " css = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->css[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " csn = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->csn[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " cnnv = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->cnnv[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " cssv = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->cssv[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " csnv = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->csnv[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " enfac = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->enfac[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " sfac = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->sfac[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " fac1v = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->fac1v[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " fac2v = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->fac2v[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " jnsdv = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->jnsdv[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " fac3v = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->fac3v[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " fac4v = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->fac4v[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " jssdv = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->jssdv[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " After CELLG : " << endl;
-  cerr << " dztp = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->dztp[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " dzpb = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->dzpb[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " stb = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->stb[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " zw = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->zw[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " dzpbw = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->dzpbw[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " dztpw = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->dztpw[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " stbw = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->stbw[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " ctt = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->ctt[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " cbb = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->cbb[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " cbt = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->cbt[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " cttw = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->cttw[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " cbbw = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->cbbw[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " cbtw = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->cbtw[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " tfac = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->tfac[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " bfac = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->bfac[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " fac1w = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->fac1w[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " fac2w = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->fac2w[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " ktsdw = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->ktsdw[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " fac3w = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->fac3w[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " fac4w = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->fac4w[ii] << " " ; 
-  }
-  cerr << endl;
-  cerr << " kbsdw = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
-    cerr.width(10);
-    cerr << cellinfo->kbsdw[ii] << " " ; 
-  }
   cerr << endl;
 #endif
 
@@ -1612,16 +1235,16 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
     }
 #endif
 
-    FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
-	       idxLo.get_pointer(), idxHi.get_pointer(),
-	       coeff_vars->uVelocityCoeff[Arches::AP].getPointer(), 
-	       coeff_vars->uVelocityCoeff[Arches::AE].getPointer(), 
-	       coeff_vars->uVelocityCoeff[Arches::AW].getPointer(), 
-	       coeff_vars->uVelocityCoeff[Arches::AN].getPointer(), 
-	       coeff_vars->uVelocityCoeff[Arches::AS].getPointer(), 
-	       coeff_vars->uVelocityCoeff[Arches::AT].getPointer(), 
-	       coeff_vars->uVelocityCoeff[Arches::AB].getPointer(),
-	       coeff_vars->uVelLinearSrc.getPointer());
+    FORT_APCAL_VEL(domLo.get_pointer(), domHi.get_pointer(),
+		   idxLo.get_pointer(), idxHi.get_pointer(),
+		   coeff_vars->uVelocityCoeff[Arches::AP].getPointer(), 
+		   coeff_vars->uVelocityCoeff[Arches::AE].getPointer(), 
+		   coeff_vars->uVelocityCoeff[Arches::AW].getPointer(), 
+		   coeff_vars->uVelocityCoeff[Arches::AN].getPointer(), 
+		   coeff_vars->uVelocityCoeff[Arches::AS].getPointer(), 
+		   coeff_vars->uVelocityCoeff[Arches::AT].getPointer(), 
+		   coeff_vars->uVelocityCoeff[Arches::AB].getPointer(),
+		   coeff_vars->uVelLinearSrc.getPointer());
 
 #ifdef ARCHES_DEBUG
     cerr << "AFTER Calculate U Velocity Diagonal :" << endl;
@@ -1659,16 +1282,16 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
     }
 #endif
 
-    FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
-	       idxLo.get_pointer(), idxHi.get_pointer(),
-	       coeff_vars->vVelocityCoeff[Arches::AP].getPointer(), 
-	       coeff_vars->vVelocityCoeff[Arches::AE].getPointer(), 
-	       coeff_vars->vVelocityCoeff[Arches::AW].getPointer(), 
-	       coeff_vars->vVelocityCoeff[Arches::AN].getPointer(), 
-	       coeff_vars->vVelocityCoeff[Arches::AS].getPointer(), 
-	       coeff_vars->vVelocityCoeff[Arches::AT].getPointer(), 
-	       coeff_vars->vVelocityCoeff[Arches::AB].getPointer(),
-	       coeff_vars->vVelLinearSrc.getPointer());
+    FORT_APCAL_VEL(domLo.get_pointer(), domHi.get_pointer(),
+		   idxLo.get_pointer(), idxHi.get_pointer(),
+		   coeff_vars->vVelocityCoeff[Arches::AP].getPointer(), 
+		   coeff_vars->vVelocityCoeff[Arches::AE].getPointer(), 
+		   coeff_vars->vVelocityCoeff[Arches::AW].getPointer(), 
+		   coeff_vars->vVelocityCoeff[Arches::AN].getPointer(), 
+		   coeff_vars->vVelocityCoeff[Arches::AS].getPointer(), 
+		   coeff_vars->vVelocityCoeff[Arches::AT].getPointer(), 
+		   coeff_vars->vVelocityCoeff[Arches::AB].getPointer(),
+		   coeff_vars->vVelLinearSrc.getPointer());
 
 #ifdef ARCHES_DEBUG
     cerr << "AFTER Calculate V Velocity Diagonal :" << endl;
@@ -1706,16 +1329,16 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
     }
 #endif
 
-    FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
-	       idxLo.get_pointer(), idxHi.get_pointer(),
-	       coeff_vars->wVelocityCoeff[Arches::AP].getPointer(), 
-	       coeff_vars->wVelocityCoeff[Arches::AE].getPointer(), 
-	       coeff_vars->wVelocityCoeff[Arches::AW].getPointer(), 
-	       coeff_vars->wVelocityCoeff[Arches::AN].getPointer(), 
-	       coeff_vars->wVelocityCoeff[Arches::AS].getPointer(), 
-	       coeff_vars->wVelocityCoeff[Arches::AT].getPointer(), 
-	       coeff_vars->wVelocityCoeff[Arches::AB].getPointer(),
-	       coeff_vars->wVelLinearSrc.getPointer());
+    FORT_APCAL_VEL(domLo.get_pointer(), domHi.get_pointer(),
+		   idxLo.get_pointer(), idxHi.get_pointer(),
+		   coeff_vars->wVelocityCoeff[Arches::AP].getPointer(), 
+		   coeff_vars->wVelocityCoeff[Arches::AE].getPointer(), 
+		   coeff_vars->wVelocityCoeff[Arches::AW].getPointer(), 
+		   coeff_vars->wVelocityCoeff[Arches::AN].getPointer(), 
+		   coeff_vars->wVelocityCoeff[Arches::AS].getPointer(), 
+		   coeff_vars->wVelocityCoeff[Arches::AT].getPointer(), 
+		   coeff_vars->wVelocityCoeff[Arches::AB].getPointer(),
+		   coeff_vars->wVelLinearSrc.getPointer());
 
 #ifdef ARCHES_DEBUG
     cerr << "AFTER Calculate W Velocity Diagonal :" << endl;
@@ -1861,6 +1484,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.43  2000/08/19 16:36:35  rawat
+// fixed some bugs in scalarcoef calculations
+//
 // Revision 1.42  2000/08/10 21:29:09  rawat
 // fixed a bug in cellinformation
 //
