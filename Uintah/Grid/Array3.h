@@ -107,8 +107,16 @@ namespace Uintah {
 	 return d_window->get(idx.x(), idx.y(), idx.z());
       }
       
-      IntVector getLowIndex() const;
-      IntVector getHighIndex() const;
+      IntVector getLowIndex() const {
+	return IntVector(d_window->getOff1(),d_window->getOff2(),
+					     d_window->getOff3());
+      }
+
+      IntVector getHighIndex() const {
+	return IntVector(d_window->getOff1()+d_window->dim1(),
+			 d_window->getOff2()+d_window->dim2(),
+			 d_window->getOff3()+d_window->dim3());
+      }
       
    private:
       Array3Window<T>* d_window;
@@ -125,6 +133,10 @@ namespace Uintah {
    
 //
 // $Log$
+// Revision 1.8  2000/05/06 10:56:25  guilkey
+// Filled in body of getLowIndex and getHighIndex.  Works for one
+// region, should double check it for multiple regions.
+//
 // Revision 1.7  2000/05/02 06:07:21  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //
