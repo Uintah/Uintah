@@ -32,7 +32,7 @@ enum { FrameW_SphereUL, FrameW_SphereUR, FrameW_SphereDR, FrameW_SphereDL,
        FrameW_CylU, FrameW_CylR, FrameW_CylD, FrameW_CylL };
 enum { FrameW_PointMatl, FrameW_EdgeMatl, FrameW_HighMatl };
 
-FrameWidget::FrameWidget( Module* module, double widget_scale )
+FrameWidget::FrameWidget( Module* module, Real widget_scale )
 : BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, widget_scale*0.1)
 {
    Real INIT = 1.0*widget_scale;
@@ -65,7 +65,7 @@ FrameWidget::FrameWidget( Module* module, double widget_scale )
 							    variables[FrameW_Hypo]);
    constraints[FrameW_ConstHypo]->VarChoices(Scheme1, 1, 0);
    constraints[FrameW_ConstHypo]->VarChoices(Scheme2, 1, 0);
-   constraints[FrameW_ConstHypo]->Priorities(P_Highest, P_Default);
+   constraints[FrameW_ConstHypo]->Priorities(P_Default, P_Highest);
    constraints[FrameW_ConstULUR] = new DistanceConstraint("Const12",
 							  NumSchemes,
 							  variables[FrameW_PointUL],
@@ -130,6 +130,9 @@ FrameWidget::FrameWidget( Module* module, double widget_scale )
    }
    widget->set_pick(new GeomPick(module));
 
+   
+   SetEpsilon(widget_scale*1e-4);
+   
    // Init variables.
    for (Index vindex=0; vindex<NumVariables; vindex++)
       variables[vindex]->Order();
@@ -147,6 +150,7 @@ FrameWidget::~FrameWidget()
 void
 FrameWidget::execute()
 {
+   cerr << "Execute called..." << endl;
    cerr << "widget_scale=" << widget_scale << endl;
    
    ((GeomSphere*)geometries[FrameW_SphereUL])->move(variables[FrameW_PointUL]->Get(),
@@ -170,6 +174,8 @@ FrameWidget::execute()
 						  variables[FrameW_PointUL]->Get(),
 						  0.5*widget_scale);
 
+   SetEpsilon(widget_scale*1e-4);
+
    Vector spvec1(variables[FrameW_PointUR]->Get() - variables[FrameW_PointUL]->Get());
    Vector spvec2(variables[FrameW_PointDL]->Get() - variables[FrameW_PointUL]->Get());
    spvec1.normalize();
@@ -184,28 +190,42 @@ void
 FrameWidget::geom_moved( int axis, double dist, const Vector& delta,
 			 void* cbdata )
 {
+   Vector delt = delta;
    cerr << "Moved called..." << endl;
    switch((int)cbdata){
    case FrameW_SphereUL:
-      variables[FrameW_PointUL]->SetDelta(delta);
+      cerr << "  FrameW_SphereUL moved" << endl;
+      delt.z(0.0);
+      variables[FrameW_PointUL]->SetDelta(delt);
       break;
    case FrameW_SphereUR:
-      variables[FrameW_PointUR]->SetDelta(delta);
+      cerr << "  FrameW_SphereUR moved" << endl;
+      delt.z(0.0);
+      variables[FrameW_PointUR]->SetDelta(delt);
       break;
    case FrameW_SphereDR:
-      variables[FrameW_PointDR]->SetDelta(delta);
+      cerr << "  FrameW_SphereDR moved" << endl;
+      delt.z(0.0);
+      variables[FrameW_PointDR]->SetDelta(delt);
       break;
    case FrameW_SphereDL:
-      variables[FrameW_PointDL]->SetDelta(delta);
+      cerr << "  FrameW_SphereDL moved" << endl;
+      delt.z(0.0);
+      variables[FrameW_PointDL]->SetDelta(delt);
       break;
    case FrameW_CylU:
    case FrameW_CylR:
    case FrameW_CylD:
    case FrameW_CylL:
-      variables[FrameW_PointUL]->MoveDelta(delta);
-      variables[FrameW_PointUR]->MoveDelta(delta);
-      variables[FrameW_PointDR]->MoveDelta(delta);
-      variables[FrameW_PointDL]->MoveDelta(delta);
+      cerr << "  FrameW_CylU moved" << endl;
+      cerr << "  FrameW_CylR moved" << endl;
+      cerr << "  FrameW_CylD moved" << endl;
+      cerr << "  FrameW_CylL moved" << endl;
+      delt.z(0.0);
+      variables[FrameW_PointUL]->MoveDelta(delt);
+      variables[FrameW_PointUR]->MoveDelta(delt);
+      variables[FrameW_PointDR]->MoveDelta(delt);
+      variables[FrameW_PointDL]->MoveDelta(delt);
       break;
    }
 }

@@ -29,12 +29,14 @@ public:
    BaseWidget( Module* module,
 	       const Index vars, const Index cons,
 	       const Index geoms, const Index mats,
-	       const double widget_scale );
+	       const Real widget_scale );
    BaseWidget( const BaseWidget& );
    ~BaseWidget();
 
-   inline void SetScale( const double scale );
+   inline void SetScale( const Real scale );
    inline double GetScale() const;
+
+   inline void SetEpsilon( const Real Epsilon );
 
    inline GeomGroup* GetWidget();
 
@@ -62,7 +64,7 @@ protected:
    Array1<MaterialHandle> materials;
 
    GeomGroup* widget;
-   double widget_scale;
+   Real widget_scale;
 
    Module* module;
 };
@@ -81,6 +83,14 @@ inline double
 BaseWidget::GetScale() const
 {
    return widget_scale;
+}
+
+
+inline void
+BaseWidget::SetEpsilon( const Real Epsilon )
+{
+   for (Index i=0; i<NumVariables; i++)
+      variables[i]->SetEpsilon(Epsilon);
 }
 
 

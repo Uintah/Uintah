@@ -105,7 +105,7 @@ void
 ArrowWidget::geom_moved( int axis, double dist, const Vector& delta,
 			 void* cbdata )
 {
-   cerr << "Moved called..." << endl;
+   cerr << "Moved called... ArrowWidget" << endl;
    switch((int)cbdata){
    case ArrowW_Sphere:
    case ArrowW_Cylinder:
