@@ -1,5 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE dir SYSTEM "../../../doc/UserGuide/dirspec.dtd">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE dir SYSTEM "../../../../doc/dirspec.dtd">
+<?xml-stylesheet href="../../../../doc/dirspec.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
  
 <dir name="Core/GuiInterface">
 
@@ -98,11 +100,11 @@
          ...
          GuiInt gui_min, gui_max;         // define GUI variables
 
-	 Demo( const clString& id );
+	 Demo( const clString&amp; id );
 	 void init();
        };
 
-       Demo::Demo( const clString &id ) 
+       Demo::Demo( const clString &amp;id ) 
          : Module(...), 
 	   gui_min("min",id, this),       // initialize a variable with
 	   gui_max("max",id,this)         // its name on the tcl side.

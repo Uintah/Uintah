@@ -1,5 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE dir SYSTEM "dirspec.dtd">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE dir SYSTEM "../../../../doc/dirspec.dtd">
+<?xml-stylesheet href="../../../../doc/dirspec.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -139,8 +141,8 @@ how it fits
     </p>
     <p>
       For templated types, the "type_name()" function is implemented.
-      This function turns, for example, the type vector<int>, into the
-      string, "vector<int>".  
+      This function turns, for example, the type vector&lt;int&gt;, into the
+      string, "vector&lt;int&gt;".  
     </p>
   </definition>
 
@@ -193,7 +195,7 @@ how it fits
       1) Inherit from class Persistent (or from class Datatype.)
       2) Add the following to your class:
 
- 	 void    io(Piostream &stream);
+ 	 void    io(Piostream &amp;stream);
 	 static  PersistentTypeID type_id;
 
          static const string type_name(int n = -1);
@@ -235,7 +237,7 @@ how it fits
       
       <pre>
       void 
-      MyClass::io( Piostream & stream )
+      MyClass::io( Piostream &amp; stream )
       {
         // All input/ouptut starts with this line:
 #IF THERE IS MORE THAN ONE VERSION
@@ -246,7 +248,7 @@ how it fits
 	// Save/Load Base Class fields first:
 	MyBaseClass::io( stream );
 
-	if( version > 1 ) {
+	if( version &gt; 1 ) {
 	  Pio( stream, new_data_field_ );
         }
 
