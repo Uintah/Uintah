@@ -114,7 +114,7 @@ ModuleReporter::module_maybe_dynamic_compile(const CompileInfo &ci, DC &result)
     if (! (status && DynamicLoader::scirun_loader().fetch(ci, algo_handle)))
     {
       error("Could not compile algorithm for '" +
-	    ci.template_class_name_ + "<" + ci.template_arg_ + ">'.");
+    	    ci.template_class_name_ + "<" + ci.template_arg_ + ">'.");
       return false;
     }
   }
@@ -122,8 +122,6 @@ ModuleReporter::module_maybe_dynamic_compile(const CompileInfo &ci, DC &result)
   result = dynamic_cast<typename DC::pointer_type>(algo_handle.get_rep());
   if (result.get_rep() == 0) 
   {
-    error("Could not get algorithm for '" +
-	  ci.template_class_name_ + "<" + ci.template_arg_ + ">'.");
     return false;
   }
   return true;
