@@ -12,7 +12,6 @@
 
 #include <PSECore/Datatypes/MeshPort.h>
 #include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Containers/HashTable.h>
 #include <SCICore/Datatypes/TriSurface.h>
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Geometry/Point.h>
@@ -238,6 +237,10 @@ void InsertDelaunay::connection(ConnectionMode mode, int which_port, int)
 
 //
 // $Log$
+// Revision 1.3  2000/03/11 00:41:55  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.2  1999/10/07 02:08:19  sparker
 // use standard iostreams and complex type
 //

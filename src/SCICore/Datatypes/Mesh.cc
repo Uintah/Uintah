@@ -1333,6 +1333,15 @@ int Edge::operator==(const Edge& e) const
     return n[0]==e.n[0] && n[1]==e.n[1];
 }
 
+//----------------------------------------------------------------------
+// this operator< is here mostly to replace the function of hash() as
+// a way to index into hash tables.  It provides an ordering for use
+// in STL maps
+int Edge::operator<(const Edge& e) const
+{
+    return ((n[0] + n[1]) < (e.n[0] + e.n[1]));
+}
+
 int Mesh::face_idx(int p, int f)
 {
     Element* e=elems[p];
@@ -1974,6 +1983,10 @@ void Pio(Piostream& stream, SCICore::Datatypes::ElementVersion1& elem)
 
 //
 // $Log$
+// Revision 1.13  2000/03/11 00:41:29  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.12  2000/03/04 00:18:29  dmw
 // added new Mesh BC and fixed sparserowmatrix bug
 //

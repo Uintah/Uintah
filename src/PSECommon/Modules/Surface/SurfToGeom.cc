@@ -134,6 +134,7 @@ static MaterialHandle black(new Material(Color(.2,.2,.2), Color(.2,.2,.2),
 				  Color(.5,.5,.5), 30));
 static Color blackClr(.2,.2,.2);
 
+//----------------------------------------------------------------------
 void SurfToGeom::execute()
 {
     SurfaceHandle surf;
@@ -141,9 +142,13 @@ void SurfToGeom::execute()
     reset_vars();
     if (!isurface->get(surf)){
 	ogeom->delAll();
+	cerr << "SurfToGeom: No Surface" << endl;
 	return;
     }
-    if (!surf.get_rep()) return;
+    if (!surf.get_rep()) {
+      cerr << "SurfToGeom: No Rep" << endl;
+      return;
+    }
     update_state(JustStarted);
     reset_vars();
     ColorMapHandle cmap;
@@ -669,6 +674,10 @@ void SurfToGeom::execute()
 
 //
 // $Log$
+// Revision 1.11  2000/03/11 00:39:54  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.10  2000/03/10 09:09:33  dmw
 // fixed SurfToGeom to create vertex normals (smooth surfaces), and IsoSurfaceDW to: autoupdate, generate surfaces for MC, and support log isovals
 //

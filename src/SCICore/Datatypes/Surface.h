@@ -25,7 +25,7 @@
 #include <SCICore/Thread/CrowdMonitor.h>
 
 namespace SCICore {
-
+    
 namespace Geometry {
   class Grid;
 }
@@ -34,13 +34,13 @@ namespace Geom {
 }
 
 namespace Datatypes {
-
+  
 using Containers::Handle;
 using Containers::LockingHandle;
 using Geometry::Point;
 using Geometry::Grid;
 using GeomSpace::GeomObj;
-using Containers::HashTable;
+//using Containers::HashTable;
 using Containers::Array1;
 using Containers::clString;
 
@@ -74,7 +74,10 @@ public:
     int closed;
     clString name;
     Grid *grid;
-    HashTable<int, int> *pntHash;
+  
+  //HashTable<int, int> *pntHash;
+  typedef map<int, int, less<int> > MapIntInt;
+  MapIntInt* pntHash;
 
     // Boundary conditions...
     enum BoundaryType {
@@ -111,6 +114,10 @@ public:
 
 //
 // $Log$
+// Revision 1.7  2000/03/11 00:41:30  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.6  2000/02/02 22:07:11  dmw
 // Handle - added detach and Pio
 // TrivialAllocator - fixed mis-allignment problem in alloc()

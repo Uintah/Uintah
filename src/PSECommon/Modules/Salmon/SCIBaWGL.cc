@@ -9,6 +9,7 @@
  *  Copyright (C) 1999 SCI Group
  */
 
+#include <SCICore/Malloc/Allocator.h>
 #include <PSECommon/Modules/Salmon/SCIBaWGL.h>
 #include <PSECommon/Modules/Salmon/Roe.h>
 #include <PSECommon/Modules/Salmon/Salmon.h>

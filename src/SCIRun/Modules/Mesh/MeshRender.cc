@@ -13,7 +13,6 @@
 
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <PSECore/Datatypes/MeshPort.h>
-#include <SCICore/Containers/HashTable.h>
 #include <SCICore/Geom/Color.h>
 #include <SCICore/Geom/GeomCylinder.h>
 #include <SCICore/Geom/GeomGroup.h>
@@ -32,6 +31,10 @@ using namespace SCICore::Geometry;
 using namespace SCICore::TclInterface;
 
 class MeshRender : public Module {
+public:
+    typedef map<Edge, int, less<Edge> > MapEdgeInt;
+  
+private:
     MeshIPort* imesh;
     GeometryOPort* ogeom;
 
@@ -77,7 +80,7 @@ void MeshRender::execute()
     double dist = sqrt(v.x() * v.x() + v.y() * v.y() + v.z() * v.z());
     double radius = dist * 0.01;
     
-    HashTable<Edge, int> edge_table;
+    MapEdgeInt edge_table;
 
     int n=to.get();
     if(n==0){
@@ -96,25 +99,24 @@ void MeshRender::execute()
 	Edge e5(elm->n[1], elm->n[3]);
 	Edge e6(elm->n[2], elm->n[3]);
 	
-	int dummy=0;
-	if (!(edge_table.lookup(e1, dummy)))
-	    edge_table.insert(e1, 0);
-	if (!(edge_table.lookup(e2, dummy)))
-	    edge_table.insert(e2, 0);
-	if (!(edge_table.lookup(e3, dummy)))
-	    edge_table.insert(e3, 0);
-	if (!(edge_table.lookup(e4, dummy)))
-	    edge_table.insert(e4, 0);
-	if (!(edge_table.lookup(e5, dummy)))
-	    edge_table.insert(e5, 0);
-	if (!(edge_table.lookup(e6, dummy)))
-	    edge_table.insert(e6, 0);
+	if (edge_table.find(e1) == edge_table.end())
+	    edge_table[e1] = 0;
+	if (edge_table.find(e2) == edge_table.end())
+	    edge_table[e2] = 0;
+	if (edge_table.find(e3) == edge_table.end())
+	    edge_table[e3] = 0;
+	if (edge_table.find(e4) == edge_table.end())
+	    edge_table[e4] = 0;
+	if (edge_table.find(e5) == edge_table.end())
+	    edge_table[e5] = 0;
+	if (edge_table.find(e6) == edge_table.end())
+	    edge_table[e6] = 0;
     }
 
-    HashTableIter<Edge, int> eiter(&edge_table);
-    for(eiter.first(); eiter.ok(); ++eiter)
+    MapEdgeInt::iterator eiter;
+    for(eiter = edge_table.begin(); eiter != edge_table.end(); ++eiter)
     {
-	Edge e(eiter.get_key());
+	Edge e((*eiter).first);
 	Point p1(mesh->nodes[e.n[0]]->p);
 	Point p2(mesh->nodes[e.n[1]]->p);
 	GeomCylinder* cyl = new GeomCylinder(p1, p2, radius, 10, 2);
@@ -122,9 +124,8 @@ void MeshRender::execute()
     }
 
     GeomMaterial* matl=new GeomMaterial(group,
-					new Material(Color(0,0,0),
-						     Color(0,.6,0), 
-						     Color(.5,.5,.5), 20));
+	new Material(Color(0,0,0), Color(0,.6,0), Color(.5,.5,.5), 20));
+    
     ogeom->delAll();
     ogeom->addObj(matl, "Mesh1");
 }
@@ -135,6 +136,10 @@ void MeshRender::execute()
 
 //
 // $Log$
+// Revision 1.3  2000/03/11 00:41:55  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.2  1999/09/08 02:27:06  sparker
 // Various #include cleanups
 //
