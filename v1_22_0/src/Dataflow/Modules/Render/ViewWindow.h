@@ -72,19 +72,20 @@
 
 // define 'the_time()' function for UniCam
 #ifdef WIN32
-#include <windows.h>
-#include <winbase.h>
-inline double the_time() {
-    return double(GetTickCount())/1000.0;
-}
-#else
-#include <sys/time.h>
+#  include <windows.h>
+#  include <winbase.h>
 
-inline double the_time() {
-    struct timeval ts; struct timezone tz;
-    gettimeofday(&ts, &tz);
-    return (double)(ts.tv_sec + (double)ts.tv_usec/1e6);
-}
+   inline double the_time() {
+      return double(GetTickCount())/1000.0;
+   }
+#else
+#  include <sys/time.h>
+
+   inline double the_time() {
+      struct timeval ts; struct timezone tz;
+      gettimeofday(&ts, &tz);
+      return (double)(ts.tv_sec + (double)ts.tv_usec/1e6);
+   }
 #endif
 
 
@@ -103,6 +104,7 @@ class OpenGL;
 class DBContext;
 class Viewer;
 class SCIBaWGL;
+
 class GeomViewerItem;
 class BallData;
 class OpenGL;
@@ -198,6 +200,7 @@ public:
   int prev_time[3];		// history for quaternions and time
   HVect prev_quat[3];
   
+  bool doingImage;
   bool doingMovie;
   bool makeMPEG;
   int curFrame;
@@ -434,8 +437,8 @@ public:
   int time;
   
   ViewWindowMouseMessage(const string& rid, MouseHandler handler,
-			 int action, int x, int y, int state, int btn,
-			 int time);
+                         int action, int x, int y, int state, int btn,
+                         int time);
   virtual ~ViewWindowMouseMessage();
 };
 
