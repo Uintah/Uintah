@@ -110,6 +110,10 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
       {
 	int k;
 	glBegin(GL_POLYGON);
+	Vector n = Cross(Vector((*(polys[i]))[0] - (*polys[i])[1]),
+			 Vector((*(polys[i]))[0] - (*polys[i])[2]));
+	n.normalize();
+	glNormal3f(n.x(), n.y(), n.z());
 	for(k =0; k < polys[i]->size(); k++)
 	{
 	  glVertex3f((*(polys[i]))[k].x(),(*(polys[i]))[k].y(),

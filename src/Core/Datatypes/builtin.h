@@ -87,7 +87,9 @@ inline const string find_type_name(Double*){return find_type_name((double *)0);}
 
 template<class T> bool is_scalar() { return false; }
 template<> inline bool is_scalar<char>() { return true; }
+template<> inline bool is_scalar<unsigned char>() { return true; }
 template<> inline bool is_scalar<short>() { return true; }
+template<> inline bool is_scalar<unsigned short>() { return true; }
 template<> inline bool is_scalar<int>() { return true; }
 template<> inline bool is_scalar<float>() { return true; }
 template<> inline bool is_scalar<double>() { return true; }
