@@ -26,7 +26,14 @@ itcl_class SCIRun_Math_LinearAlgebra {
     }
 
     method set_defaults {} {
-	set $this-function "A"
+	set $this-function "o1 = scinew DenseMatrix(10, 20);"
+    }
+
+    method update_text {} {
+	set w .ui[modname]
+        if {[winfo exists $w]} {
+	    set $this-function [$w.row1 get 1.0 end]
+        }
     }
 
     method ui {} {
@@ -37,9 +44,12 @@ itcl_class SCIRun_Math_LinearAlgebra {
         }
         toplevel $w
 
-	frame $w.row1	
-	entry $w.row1.entry -textvariable $this-function -width 60
-	pack $w.row1.entry -side left -fill x -padx 5
+	option add *textBackground white	
+	iwidgets::scrolledtext $w.row1 -height 150 -width 500 \
+	    -hscrollmode dynamic
+
+	bind $w.row1 <Leave> "$this update_text"
+	$w.row1 insert end [set $this-function]
 
 	frame $w.row2
 	button $w.row2.execute -text "Execute" -command "$this-c needexecute"

@@ -31,6 +31,13 @@ itcl_class SCIRun_Fields_TransformData3 {
 	set $this-outputdatatype "input 0"
     }
 
+    method update_text {} {
+	set w .ui[modname]
+        if {[winfo exists $w]} {
+	    set $this-function [$w.row1 get 1.0 end]
+        }
+    }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -45,9 +52,11 @@ itcl_class SCIRun_Fields_TransformData3 {
 		 char short int float double Vector Tensor} \
 	    $this-outputdatatype
 
-	frame $w.row1	
-	entry $w.row1.entry -textvariable $this-function -width 60
-	pack $w.row1.entry -side left -fill x -padx 5
+	option add *textBackground white	
+	iwidgets::scrolledtext $w.row1 -height 60 -hscrollmode dynamic
+
+	bind $w.row1 <Leave> "$this update_text"
+	$w.row1 insert end [set $this-function]
 
 	frame $w.row2
 	button $w.row2.execute -text "Execute" -command "$this-c needexecute"
