@@ -64,6 +64,10 @@ struct ColorPoint {
   Color _rgb;
   HSVColor _hsv;  // you have both reps...
 };
+struct AlphaPoint {
+  float _t;
+  float _alpha;
+};
 
 class GenTransferFunc : public Module {
 
@@ -73,10 +77,11 @@ class GenTransferFunc : public Module {
   GuiInt		RGBorHSV; // which mode
   GuiInt		lineVSspline; // linear vs. spline interpolate
 
-  Array1< ColorPoint > points;   // actual line(s)
-
-  vector< float >	alphas;   // alpha polyline
-  vector< float >       aTimes;   // alpha times
+//   Array1< ColorPoint > points;   // actual line(s)
+  vector< ColorPoint > points;   // actual line(s)
+  vector< AlphaPoint > alphas;
+  //vector< float >	alphas;   // alpha polyline
+  //  vector< float >       aTimes;   // alpha times
 
   Array1< Point >       otherGraph; // xyz to RGB or HSV
 
@@ -141,6 +146,7 @@ public:
 DECLARE_MAKER(GenTransferFunc)
 GenTransferFunc::GenTransferFunc( GuiContext* ctx)
   : Module("GenTransferFunc",ctx,Source, "Visualization", "SCIRun"),
+    inport(0), outport(0), ogeom(0),
     RGBorHSV(ctx->subVar("rgbhsv")),lineVSspline(ctx->subVar("linespline")),
     activeLine(-1),selNode(-1),graphStat(-1),bdown(-1),whichWin(-1),
     cmap_generation(-1)
@@ -156,24 +162,37 @@ GenTransferFunc::GenTransferFunc( GuiContext* ctx)
   p._rgb = Color(0,.05,.1);
   p._hsv = HSVColor(p._rgb);
 
-  points.add(p);
+  points.push_back(p);
 
   p._t = 1.0;
   p._rgb = Color(1,.95,.9);
   p._hsv = HSVColor(p._rgb);
 
-  points.add(p);
+  points.push_back(p);
 
-  alphas.push_back(0);
-  alphas.push_back(0);
-  alphas.push_back(.5);
-  alphas.push_back(.8);
-  alphas.push_back(.8);
-  aTimes.push_back(0);
-  aTimes.push_back(.25);
-  aTimes.push_back(.5);
-  aTimes.push_back(.75);
-  aTimes.push_back(1);
+  AlphaPoint a;
+  a._t = 0; a._alpha = 0;
+  alphas.push_back(a);
+  a._t = .25; 
+  alphas.push_back(a);
+  a._t = .5; a._alpha = .5;
+  alphas.push_back(a);
+  a._t = .75; a._alpha = .8;
+  alphas.push_back(a);
+  a._t = 1; a._alpha = .8;
+  alphas.push_back(a);
+
+//   alphas.push_back(0);
+//   alphas.push_back(0);
+//   alphas.push_back(.5);
+//   alphas.push_back(.8);
+//   alphas.push_back(.8);
+//   aTimes.push_back(0);
+//   aTimes.push_back(.25);
+//   aTimes.push_back(.5);
+//   aTimes.push_back(.75);
+//   aTimes.push_back(1);
+
 
   ctxs[0] = ctxs[1] = ctxs[2] = 0;
 }
@@ -266,6 +285,7 @@ void GenTransferFunc::DrawGraphs( int flush)
   if (!makeCurrent())
     return; // don't care if you can't make current...
 
+
   glXMakeCurrent(dpy[0],win0,ctxs[0]);
   // other state should be fine...
 
@@ -296,7 +316,8 @@ void GenTransferFunc::DrawGraphs( int flush)
   glBegin(GL_LINE_STRIP);
   
   for(i=0;i<alphas.size();i++) {
-    glVertex2f(aTimes[i],alphas[i]);
+//     glVertex2f(aTimes[i],alphas[i]);
+    glVertex2f(alphas[i]._t,alphas[i]._alpha);
   }
   glEnd();
 
@@ -305,7 +326,8 @@ void GenTransferFunc::DrawGraphs( int flush)
     if (i == selNode)
       mul = 0.7;
     glColor3f(mul,mul,mul);
-    drawBox(aTimes[i],alphas[i],winDX[0],winDY[0]);
+//     drawBox(aTimes[i],alphas[i],winDX[0],winDY[0]);
+    drawBox(alphas[i]._t,alphas[i]._alpha,winDX[0],winDY[0]);
   }
 
   // now the polylines have been draw, draw the points...
@@ -324,12 +346,12 @@ void GenTransferFunc::DrawGraphs( int flush)
 
   glXSwapBuffers(dpy[0],win0);
 
-  // clear the middle window (why not?)
-  
-  glXMakeCurrent(dpy[1],win1,ctxs[1]);
-  glDrawBuffer(GL_BACK);
-  glClear(GL_COLOR_BUFFER_BIT);
-  glXSwapBuffers(dpy[1],win1);
+  // clear the middle window (why not?)-- Because it doesn't do anything KZ
+// ****** Temporary comment out of HSV Window ******  
+//   glXMakeCurrent(dpy[1],win1,ctxs[1]);
+//   glDrawBuffer(GL_BACK);
+//   glClear(GL_COLOR_BUFFER_BIT);
+//   glXSwapBuffers(dpy[1],win1);
 
   // go to the last window...
 
@@ -358,9 +380,12 @@ void GenTransferFunc::DrawGraphs( int flush)
   
   glBegin(GL_QUAD_STRIP);
   for(i=0;i<alphas.size();i++) {
-    glColor4f(0,0,0,alphas[i]);
-    glVertex2f(aTimes[i],0);
-    glVertex2f(aTimes[i],1);
+//     glColor4f(0,0,0,alphas[i]);
+//     glVertex2f(aTimes[i],0);
+//     glVertex2f(aTimes[i],1);
+    glColor4f(0,0,0,alphas[i]._alpha);
+    glVertex2f(alphas[i]._t,0);
+    glVertex2f(alphas[i]._t,1);
   }
   glEnd();
 
@@ -383,20 +408,28 @@ void GenTransferFunc::DrawGraphs( int flush)
   if (cmap.get_rep()) {
     vector<Color> ncolors(points.size());
     vector<float> times(points.size());
+    vector<float> a(alphas.size());
+    vector<float> t(alphas.size());
 
     for(int i=0;i<points.size();i++) {
       ncolors[i] = points[i]._rgb;
       times[i] = points[i]._t;
     }
+    for (int i=0; i < alphas.size(); i++){
+      a[i] = alphas[i]._alpha;
+      t[i] = alphas[i]._t;
+    }
     
-    cmap.get_rep()->SetRaw(ncolors,times,alphas,aTimes,256);
+//     cmap.get_rep()->SetRaw(ncolors,times,alphas,aTimes,256);
+    cmap.get_rep()->SetRaw(ncolors,times,a,t,256);
 
     glXMakeCurrent(dpy[0],None,NULL);
 
     gui->unlock();
-    if ( flush )
+    if ( flush && ogeom ){
       ogeom->flushViews();
-
+      want_to_execute();
+    }
     return;
 
   }
@@ -404,7 +437,6 @@ void GenTransferFunc::DrawGraphs( int flush)
   glXMakeCurrent(dpy[0],None,NULL);
 
   gui->unlock();
-
 }
 
 // this is how the gui talks with this thing
@@ -503,12 +535,13 @@ GetClosest(float time, float val, int& cline, int& cpoint)
       }
     }
   } else { // HSV space...
-    error("HSV window doesn't exist.");
+    //    error("HSV window doesn't exist.");
   }
 
   // now check alpha...
 
-  for(i=0;i<alphas.size() && (aTimes[i] <= time); i++) {
+//   for(i=0;i<alphas.size() && (aTimes[i] <= time); i++) {
+  for(i=0;i<alphas.size() && (alphas[i]._t <= time); i++) {
     ; // do nothing - just getting index...
   }
 
@@ -519,11 +552,15 @@ GetClosest(float time, float val, int& cline, int& cpoint)
   } 
 
 
-  d1 = time - aTimes[i-1];  d1 = d1*d1;
-  d2 = aTimes[i] - time;  d2 = d2*d2;
+//   d1 = time - aTimes[i-1];  d1 = d1*d1;
+//   d2 = aTimes[i] - time;  d2 = d2*d2;
+  d1 = time - alphas[i-1]._t;  d1 = d1*d1;
+  d2 = alphas[i]._t - time;  d2 = d2*d2;
 
-  d1 += (alphas[i-1]-val)*(alphas[i-1]-val);
-  d2 += (alphas[i]-val)*(alphas[i]-val);
+//   d1 += (alphas[i-1]-val)*(alphas[i-1]-val);
+//   d2 += (alphas[i]-val)*(alphas[i]-val);
+  d1 += (alphas[i-1]._alpha-val)*(alphas[i-1]._alpha-val);
+  d2 += (alphas[i]._alpha-val)*(alphas[i]._alpha-val);
   
   if (d1 < d2) {
     if (d1 < minP) {
@@ -558,14 +595,20 @@ void GenTransferFunc::DoMotion(int, int x, int y)
 
   if (activeLine == 7) {
     if (selNode && selNode < alphas.size()-1) {
-      if (aTimes[selNode-1] > time)
-	time = aTimes[selNode-1];
-      if (aTimes[selNode+1] < time)
-	time = aTimes[selNode+1];
+//       if (aTimes[selNode-1] > time)
+// 	time = aTimes[selNode-1];
+//       if (aTimes[selNode+1] < time)
+// 	time = aTimes[selNode+1];
+      if (alphas[selNode-1]._t > time)
+	time = alphas[selNode-1]._t;
+      if (alphas[selNode+1]._t < time)
+	time = alphas[selNode+1]._t;
     } else {
-      time = aTimes[selNode];
+//       time = aTimes[selNode];
+      time = alphas[selNode]._t;
     }
-    aTimes[selNode] = time;
+//     aTimes[selNode] = time;
+    alphas[selNode]._t = time;
   } else {
     if (selNode && selNode < points.size()-1) {
       if (points[selNode-1]._t > time)
@@ -593,7 +636,8 @@ void GenTransferFunc::DoMotion(int, int x, int y)
       points[selNode]._hsv = HSVColor(points[selNode]._rgb);
     }
   } else { // it is the alpha value...
-    alphas[selNode] = val;
+//     alphas[selNode] = val;
+    alphas[selNode]._alpha = val;
   }
 
   // now you just have to redraw this
@@ -661,11 +705,12 @@ void GenTransferFunc::DoDown(int win, int x, int y, int button)
       p._rgb[idx]=points[cpoint-1]._rgb[idx]*w1+points[cpoint]._rgb[idx]*w2;
       idx=((cline>>1)+2)%3;
       p._rgb[idx]=points[cpoint-1]._rgb[idx]*w1+points[cpoint]._rgb[idx]*w2;
-      points.insert(cpoint,p);
+      points.insert(points.begin() + cpoint,p);
 	  
     } else { // this is the alpha curve...
       if (cpoint && cpoint != alphas.size()-1) {
-	if (aTimes[cpoint] <= time)
+// 	if (aTimes[cpoint] <= time)
+	if (alphas[cpoint]._t <= time)
 	  cpoint = cpoint+1;
       }	
       else {
@@ -673,9 +718,12 @@ void GenTransferFunc::DoDown(int win, int x, int y, int button)
 	  cpoint = 1;
 	}
       }
-  
-      alphas.insert(alphas.begin() + cpoint, val);
-      aTimes.insert(aTimes.begin() + cpoint, time);
+      AlphaPoint a;
+      a._t = time;
+      a._alpha = val;
+      alphas.insert(alphas.begin() + cpoint, a);
+//       alphas.insert(alphas.begin() + cpoint, val);
+//       aTimes.insert(aTimes.begin() + cpoint, time);
     }
 
   }
@@ -704,12 +752,13 @@ void GenTransferFunc::DoRelease(int win, int x, int y, int button)
     if (activeLine == 7) {
       if (selNode && (selNode != alphas.size()-1)) {
 	alphas.erase(alphas.begin() + selNode);
-	aTimes.erase(alphas.begin() + selNode);
+// 	aTimes.erase(alphas.begin() + selNode);
       }
 
     }  else {
       if (selNode && (selNode != points.size()-1))
-	points.remove(selNode);
+//	points.remove(selNode);
+	points.erase(points.begin() + selNode);
     }
     break;
       
@@ -767,23 +816,40 @@ GenTransferFunc::execute(void)
       points[i]._rgb = newcmap->rawRampColor[i];
     }
 
-    alphas = newcmap->rawRampAlpha;
-    aTimes = newcmap->rawRampAlphaT;
+    alphas.resize(newcmap->rawRampAlpha.size());
+    for(int i = 0; i < alphas.size(); i++ ){
+      alphas[i]._t = newcmap->rawRampAlphaT[i];
+      alphas[i]._alpha = newcmap->rawRampAlpha[i];
+    }
+//     alphas = newcmap->rawRampAlpha;
+//     aTimes = newcmap->rawRampAlphaT;
   }
   else
   {
     vector<Color> ncolors(points.size());
     vector<float> times(points.size());
+    vector<float> a(alphas.size());
+    vector<float> t(alphas.size());
+
     
     for(int i=0;i<points.size();i++)
     {
       ncolors[i] = points[i]._rgb;
       times[i] = points[i]._t;
     }
-    cmap.get_rep()->SetRaw(ncolors,times,alphas,aTimes); 
+    for (int i=0; i < alphas.size(); i++){
+      a[i] = alphas[i]._alpha;
+      t[i] = alphas[i]._t;
+    }
+
+//     cmap.get_rep()->SetRaw(ncolors,times,alphas,aTimes); 
+
+//     // Bad for Volume Rendering?
+//     cmap = scinew ColorMap(ncolors,times,alphas,aTimes,256);
+    cmap.get_rep()->SetRaw(ncolors,times,a,t); 
 
     // Bad for Volume Rendering?
-    cmap = scinew ColorMap(ncolors,times,alphas,aTimes,256);
+    cmap = scinew ColorMap(ncolors,times,a,t,256);
   }
   DrawGraphs(0);
 #if 0  
@@ -810,7 +876,7 @@ int GenTransferFunc::makeCurrent(void)
 			    Tk_MainWindow(the_interp));
 
     if (!tkwin) {
-      error("Unable to locate window!");
+      warning("Unable to locate window!");
 
       // unlock mutex
       gui->unlock();
@@ -832,36 +898,36 @@ int GenTransferFunc::makeCurrent(void)
 	return 0;
       }
   }	
+// ****** Temporary comment out of HSV Window ******
+//   if (!ctxs[1]) {
+//     const string myname(".ui" + id + ".f.gl2.gl");
+//     tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
+// 			    Tk_MainWindow(the_interp));
 
-  if (!ctxs[1]) {
-    const string myname(".ui" + id + ".f.gl2.gl");
-    tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
-			    Tk_MainWindow(the_interp));
+//     if (!tkwin) {
+//       error("Unable to locate window!");
 
-    if (!tkwin) {
-      error("Unable to locate window!");
-
-      // unlock mutex
-      gui->unlock();
-      return 0;
-    }
+//       // unlock mutex
+//       gui->unlock();
+//       return 0;
+//     }
     
-    winX[1] = Tk_Width(tkwin);
-    winY[1] = Tk_Height(tkwin);
+//     winX[1] = Tk_Width(tkwin);
+//     winY[1] = Tk_Height(tkwin);
 
-    dpy[1] = Tk_Display(tkwin);
-    win1 = Tk_WindowId(tkwin);
+//     dpy[1] = Tk_Display(tkwin);
+//     win1 = Tk_WindowId(tkwin);
 
-    ctxs[1] = OpenGLGetContext(the_interp, ccast_unsafe(myname));
+//     ctxs[1] = OpenGLGetContext(the_interp, ccast_unsafe(myname));
 
-    // check if it was created
-    if(!ctxs[1])
-      {
-	error("Unable to create OpenGL Context!");
-	gui->unlock();
-	return 0;
-      }
-  }	
+//     // check if it was created
+//     if(!ctxs[1])
+//       {
+// 	error("Unable to create OpenGL Context!");
+// 	gui->unlock();
+// 	return 0;
+//       }
+//   }	
 
   if (!ctxs[2]) {
     const string myname(".ui" + id + ".f.gl3.gl");
