@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <iostream>
+#include <unistd.h>
 
 using namespace SCICore::OS;
 using namespace SCICore::Exceptions;
@@ -38,6 +39,15 @@ Dir& Dir::operator=(const Dir& copy)
    return *this;
 }
 
+void Dir::remove()
+{
+    cerr << "Removing: " << d_name << "\n";
+    int code = rmdir(d_name.c_str());
+    if (code != 0)
+    	throw ErrnoException("Dir::remove (rmdir call)", errno);
+    return;
+}
+
 Dir Dir::createSubdir(const string& sub)
 {
    return create(d_name+"/"+sub);
@@ -51,6 +61,9 @@ Dir Dir::getSubdir(const string& sub)
 
 //
 // $Log$
+// Revision 1.2  2000/05/31 15:20:44  jehall
+// - Added ability to remove() directories
+//
 // Revision 1.1  2000/05/15 19:28:12  sparker
 // New directory: OS for operating system interface classes
 // Added a "Dir" class to create and iterate over directories (eventually)
