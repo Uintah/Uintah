@@ -53,7 +53,6 @@ using namespace std;
 
 namespace SCIRun {
 
-static map<string, ColorMapIEPlugin *> *plugin_table = 0;
 
 #ifdef __APPLE__
 // On the Mac, this comes from Core/Util/DynamicLoader.cc because
@@ -62,10 +61,12 @@ static map<string, ColorMapIEPlugin *> *plugin_table = 0;
 // (Yes, this is a hack.  Perhaps this problem will go away in later
 // OSX releases, but probably not as it has something to do with the
 // Mac philosophy on when to load dynamic libraries.)
+extern map<string, ColorMapIEPlugin *> *colormap_plugin_table;
 extern Mutex colormapIEPluginMutex;
 #else
 // Same problem on Linux really.  We need control of the static
 // initializer order.
+static map<string, ColorMapIEPlugin *> *colormap_plugin_table = 0;
 extern Mutex colormapIEPluginMutex;
 #endif
 
@@ -86,20 +87,20 @@ ColorMapIEPlugin::ColorMapIEPlugin(const string& pname,
     filewriter(fwriter)
 {
   colormapIEPluginMutex.lock();
-  if (!plugin_table)
+  if (!colormap_plugin_table)
   {
-    plugin_table = scinew map<string, ColorMapIEPlugin *>();
+    colormap_plugin_table = scinew map<string, ColorMapIEPlugin *>();
   }
 
   string tmppname = pluginname;
   int counter = 2;
   while (1)
   {
-    map<string, ColorMapIEPlugin *>::iterator loc = plugin_table->find(tmppname);
-    if (loc == plugin_table->end())
+    map<string, ColorMapIEPlugin *>::iterator loc = colormap_plugin_table->find(tmppname);
+    if (loc == colormap_plugin_table->end())
     {
       if (tmppname != pluginname) { ((string)pluginname) = tmppname; }
-      (*plugin_table)[pluginname] = this;
+      (*colormap_plugin_table)[pluginname] = this;
       break;
     }
     if (*(*loc).second == *this)
@@ -121,30 +122,30 @@ ColorMapIEPlugin::ColorMapIEPlugin(const string& pname,
 
 ColorMapIEPlugin::~ColorMapIEPlugin()
 {
-  if (plugin_table == NULL)
+  if (colormap_plugin_table == NULL)
   {
-    cerr << "WARNING: ColorMapIEPlugin.cc: ~ColorMapIEPlugin(): plugin_table is NULL\n";
+    cerr << "WARNING: ColorMapIEPlugin.cc: ~ColorMapIEPlugin(): colormap_plugin_table is NULL\n";
     cerr << "         For: " << pluginname << "\n";
     return;
   }
 
   colormapIEPluginMutex.lock();
 
-  map<string, ColorMapIEPlugin *>::iterator iter = plugin_table->find(pluginname);
-  if (iter == plugin_table->end())
+  map<string, ColorMapIEPlugin *>::iterator iter = colormap_plugin_table->find(pluginname);
+  if (iter == colormap_plugin_table->end())
   {
     cerr << "WARNING: ColorMapIEPlugin " << pluginname << 
       " not found in database for removal.\n";
   }
   else
   {
-    plugin_table->erase(iter);
+    colormap_plugin_table->erase(iter);
   }
 
-  if (plugin_table->size() == 0)
+  if (colormap_plugin_table->size() == 0)
   {
-    delete plugin_table;
-    plugin_table = 0;
+    delete colormap_plugin_table;
+    colormap_plugin_table = 0;
   }
 
   colormapIEPluginMutex.unlock();
@@ -167,8 +168,8 @@ void
 ColorMapIEPluginManager::get_importer_list(vector<string> &results)
 {
   colormapIEPluginMutex.lock();
-  map<string, ColorMapIEPlugin *>::const_iterator itr = plugin_table->begin();
-  while (itr != plugin_table->end())
+  map<string, ColorMapIEPlugin *>::const_iterator itr = colormap_plugin_table->begin();
+  while (itr != colormap_plugin_table->end())
   {
     if ((*itr).second->filereader != NULL)
     {
@@ -184,8 +185,8 @@ void
 ColorMapIEPluginManager::get_exporter_list(vector<string> &results)
 {
   colormapIEPluginMutex.lock();
-  map<string, ColorMapIEPlugin *>::const_iterator itr = plugin_table->begin();
-  while (itr != plugin_table->end())
+  map<string, ColorMapIEPlugin *>::const_iterator itr = colormap_plugin_table->begin();
+  while (itr != colormap_plugin_table->end())
   {
     if ((*itr).second->filewriter != NULL)
     {
@@ -201,8 +202,8 @@ ColorMapIEPlugin *
 ColorMapIEPluginManager::get_plugin(const string &name)
 {
   // Should check for invalid name.
-  map<string, ColorMapIEPlugin *>::iterator loc = plugin_table->find(name);
-  if (loc == plugin_table->end())
+  map<string, ColorMapIEPlugin *>::iterator loc = colormap_plugin_table->find(name);
+  if (loc == colormap_plugin_table->end())
   {
     return NULL;
   }
