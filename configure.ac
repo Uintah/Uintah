@@ -263,6 +263,30 @@ SCI_ARG_WITH(qt,
   [with_qt="$withval"
    sci_required_qt=yes],
   [with_qt=""])
+SCI_ARG_WITH(ruby,
+  AC_HELP_STRING(--with-ruby=DIR,
+                 Use the ruby installation in DIR),
+  [with_ruby="$withval"
+   sci_required_ruby=yes],
+  [with_ruby=""])
+SCI_ARG_WITH(vtk,
+  AC_HELP_STRING(--with-vtk=DIR,
+                 Build the VTK components. Use VTK build in DIR),
+  [with_vtk="$withval"
+   sci_required_vtk=yes],
+  [with_vtk=""])
+SCI_ARG_WITH(vtklibraries,
+  AC_HELP_STRING(--with-vtklibraries=DIR,
+                 Build the VTK components. Use the vtk libraries in DIR),
+  [with_vtk_libraries="$withval"
+   sci_required_vtk=yes],
+  [with_vtk_libraries=""])
+SCI_ARG_WITH(vtkheaders,
+  AC_HELP_STRING(--with-vtkheaders=DIR,
+                 Build the VTK components. Use the vtk headers in DIR),
+  [with_vtk_headers="$withval"
+   sci_required_vtk=yes],
+  [with_vtk_headers=""])
 SCI_ARG_WITH(opengl,
   AC_HELP_STRING(--with-opengl=DIR,
                  Use the OpenGL installation in DIR),
@@ -3229,6 +3253,76 @@ AC_SUBST(INC_QT_MT_H)
 AC_SUBST(QT_MT_LIB_FLAG)
 AC_SUBST(QT_MT_LIB_DIR_FLAG)
 AC_SUBST(QT_MOC_BIN)
+
+##  --  search for ruby  ----------------------------------------------------
+##  -- Point to the BUILD directory of ruby unless you installed ruby in the standard
+##  -- locations on your system (i.e. /usr/include, /usr/lib).
+if test "$sci_required_ruby" = "yes"; then
+  if test "$with_ruby"; then
+    _sci_lib="$with_ruby"
+  else
+    _sci_lib="$sci_thirdparty_libs"
+  fi
+
+  _ruby_inc="$with_ruby"
+  
+  # Only looking for one .h file... assuming all the rest are in the same place.
+  SCI_TRY_LINK(RUBY,ruby library,ruby.h,$_ruby_inc,ruby-static,$_sci_lib,,,optional)
+
+  if test "$HAVE_RUBY" = "yes"; then
+     DEF_RUBY="#define HAVE_RUBY 1"
+     HAVE_RUBY="yes"
+  fi
+  
+  if test "$with_ruby" && test ! "$DEF_RUBY"; then
+    echo
+    AC_MSG_ERROR(One or more of the ruby components are missing.)
+    echo
+  fi
+fi # end sci_required_ruby
+
+AC_SUBST(HAVE_RUBY)
+AC_SUBST(DEF_RUBY)
+AC_SUBST(INC_RUBY_H)
+AC_SUBST(RUBY_LIB_FLAG)
+AC_SUBST(RUBY_LIB_DIR_FLAG)
+
+##  --  search for vtk  ----------------------------------------------------
+if test "$sci_required_vtk" = "yes"; then
+  if test "$with_vtk_libraries"; then
+    _sci_lib="$with_vtk_libraries"
+  else
+    _sci_lib="$sci_thirdparty_libs"
+  fi
+
+  if test "$with_vtk_headers"; then
+     _vtk_inc="$with_vtk_headers"
+  else
+     _vtk_inc="$sci_thirdparty_includes"
+  fi
+
+  
+  # Only looking for one .h file... assuming all the rest are in the same place.
+  SCI_TRY_LINK(VTK,vtk library, vtkImageData.h,$_vtk_inc,vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtkjpeg vtkpng vtkzlib,$_sci_lib,,,optional)
+
+
+  if test "$HAVE_VTK" = "yes"; then
+     DEF_VTK="#define HAVE_VTK 1"
+     HAVE_VTK="yes"
+  fi
+  
+  if test "$with_vtk" && test ! "$DEF_VTK"; then
+    echo
+    AC_MSG_ERROR(One or more of the vtk components are missing.)
+    echo
+  fi
+fi # end sci_required_vtk
+
+AC_SUBST(HAVE_VTK)
+AC_SUBST(DEF_VTK)
+AC_SUBST(INC_VTK_H)
+AC_SUBST(VTK_LIB_FLAG)
+AC_SUBST(VTK_LIB_DIR_FLAG)
 
 ##  --  search for VDT  ----------------------------------------------------
 

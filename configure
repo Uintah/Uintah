@@ -328,7 +328,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP DEF_CHROMIUM DEF_NEED_ATI_CARD_FIX DEF_NO_DYNAMIC_CAST MATLAB_ENG DEF_COLLAB_VIS HAVE_COLLAB_VIS build build_cpu build_vendor build_os host host_cpu host_vendor host_os IS_OSX ac_ct_CC EXEEXT OBJEXT ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION ASSERTION_LEVEL NOPRINTDIR DEF_MALLOC PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT GMAKE MAKE AWK YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX EGREP NBITS INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z F_LIB_FLAG HAVE_BLAS HAVE_CBLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS DEF_CBLAS FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPIUNI INC_MPIUNI_H MPIUNI_LIB_FLAG MPIUNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_CRYPTO SSL_LIB_FLAG SSL_LIB_DIR_FLAG DEF_SSL HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG UUID_LIB_FLAG DEF_SCIRUN2 BUILD_SCIRUN2 abs_conftop_dir abs_srcdir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP DEF_CHROMIUM DEF_NEED_ATI_CARD_FIX DEF_NO_DYNAMIC_CAST MATLAB_ENG DEF_COLLAB_VIS HAVE_COLLAB_VIS build build_cpu build_vendor build_os host host_cpu host_vendor host_os IS_OSX ac_ct_CC EXEEXT OBJEXT ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION ASSERTION_LEVEL NOPRINTDIR DEF_MALLOC PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT GMAKE MAKE AWK YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX EGREP NBITS INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z F_LIB_FLAG HAVE_BLAS HAVE_CBLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS DEF_CBLAS FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPIUNI INC_MPIUNI_H MPIUNI_LIB_FLAG MPIUNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_CRYPTO SSL_LIB_FLAG SSL_LIB_DIR_FLAG DEF_SSL HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG UUID_LIB_FLAG DEF_SCIRUN2 BUILD_SCIRUN2 abs_conftop_dir abs_srcdir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -935,6 +935,11 @@ Optional Packages:
                           globus)
 --with-insight=DIR      Use the Insight installation in DIR
 --with-qt=DIR           Use the Qt installation in DIR
+--with-ruby=DIR         Use the ruby installation in DIR
+--with-vtk=DIR          Build the VTK components. Use VTK build in DIR
+--with-vtklibraries=DIR Build the VTK components. Use the vtk libraries in
+                          DIR
+--with-vtkheaders=DIR   Build the VTK components. Use the vtk headers in DIR
 --with-opengl=DIR       Use the OpenGL installation in DIR
 --with-zlib=DIR         Use the zlib installation in DIR
 --with-jpeg=DIR         Use the jpeg installation in DIR
@@ -1535,6 +1540,7 @@ fi
   sci_required_petsc=no
   sci_required_plplot=no
   sci_required_qt=no
+  sci_required_ruby=no
   sci_required_ssl=no
   sci_required_tau=no
   sci_required_teem=no
@@ -1544,6 +1550,7 @@ fi
   sci_required_unipetc=no
   sci_required_uuid=no
   sci_required_vdt=no
+  sci_required_vtk=no
 
 
 
@@ -1859,6 +1866,78 @@ fi;
   if test -n "$qt" -a ! -e "$qt"; then
     { { echo "$as_me:$LINENO: error: The file or directory parameter ($qt) specified for --with-qt does not exist!  Please verify that the path and file are correct." >&5
 echo "$as_me: error: The file or directory parameter ($qt) specified for --with-qt does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+
+
+
+# Check whether --with-ruby or --without-ruby was given.
+if test "${with_ruby+set}" = set; then
+  withval="$with_ruby"
+  with_ruby="$withval"
+   sci_required_ruby=yes
+else
+  with_ruby=""
+fi;
+  sci_arg_with_list="$sci_arg_with_list --with-ruby --without-ruby"
+  if test -n "$ruby" -a ! -e "$ruby"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($ruby) specified for --with-ruby does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($ruby) specified for --with-ruby does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+
+
+
+# Check whether --with-vtk or --without-vtk was given.
+if test "${with_vtk+set}" = set; then
+  withval="$with_vtk"
+  with_vtk="$withval"
+   sci_required_vtk=yes
+else
+  with_vtk=""
+fi;
+  sci_arg_with_list="$sci_arg_with_list --with-vtk --without-vtk"
+  if test -n "$vtk" -a ! -e "$vtk"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($vtk) specified for --with-vtk does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($vtk) specified for --with-vtk does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+
+
+
+# Check whether --with-vtklibraries or --without-vtklibraries was given.
+if test "${with_vtklibraries+set}" = set; then
+  withval="$with_vtklibraries"
+  with_vtk_libraries="$withval"
+   sci_required_vtk=yes
+else
+  with_vtk_libraries=""
+fi;
+  sci_arg_with_list="$sci_arg_with_list --with-vtklibraries --without-vtklibraries"
+  if test -n "$vtklibraries" -a ! -e "$vtklibraries"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($vtklibraries) specified for --with-vtklibraries does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($vtklibraries) specified for --with-vtklibraries does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+
+
+
+# Check whether --with-vtkheaders or --without-vtkheaders was given.
+if test "${with_vtkheaders+set}" = set; then
+  withval="$with_vtkheaders"
+  with_vtk_headers="$withval"
+   sci_required_vtk=yes
+else
+  with_vtk_headers=""
+fi;
+  sci_arg_with_list="$sci_arg_with_list --with-vtkheaders --without-vtkheaders"
+  if test -n "$vtkheaders" -a ! -e "$vtkheaders"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($vtkheaders) specified for --with-vtkheaders does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($vtkheaders) specified for --with-vtkheaders does not exist!  Please verify that the path and file are correct." >&2;}
    { (exit 1); exit 1; }; }
   fi
 
@@ -2272,6 +2351,7 @@ case SCIRun2 in
   SCIRun2)
     sci_required_babel=yes
     sci_required_uuid=yes
+    sci_required_ruby=yes
   ;;
   Remote)
     sci_required_jpeg=yes
@@ -2432,6 +2512,7 @@ case $i in
   SCIRun2)
     sci_required_babel=yes
     sci_required_uuid=yes
+    sci_required_ruby=yes
   ;;
   Remote)
     sci_required_jpeg=yes
@@ -4124,7 +4205,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4127:" \
+echo "$as_me:4208:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -30620,6 +30701,668 @@ fi # end sci_required_qt
 
 
 
+##  --  search for ruby  ----------------------------------------------------
+##  -- Point to the BUILD directory of ruby unless you installed ruby in the standard
+##  -- locations on your system (i.e. /usr/include, /usr/lib).
+if test "$sci_required_ruby" = "yes"; then
+  if test "$with_ruby"; then
+    _sci_lib="$with_ruby"
+  else
+    _sci_lib="$sci_thirdparty_libs"
+  fi
+
+  _ruby_inc="$with_ruby"
+
+  # Only looking for one .h file... assuming all the rest are in the same place.
+
+## arguments mean:
+## arg 1 : variable base name i.e. MATH
+## arg 2 : checking message
+## arg 3 : includes that arg 6 needs to compile
+## arg 4 : include paths -I
+## arg 5 : list of libs to link against -l
+## arg 6 : lib paths -L
+## arg 7 : extra link flags
+## arg 8 : body of code to compile. can be empty
+## arg 9 : 'optional' or 'required' or 'specific' required argument
+##             If specific, then SCI_TRY_LINK will take only one lib
+##             path and one include path and will verify that the
+##             libs/includes are in that path.
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      LIB_DIR_RUBY        => lib path
+##      RUBY_LIB_DIR_FLAG   => all the -L's
+##      RUBY_LIB_FLAG       => all the -l's
+##      HAVE_RUBY           => yes or no
+##      INC_RUBY_H          => all the -I's
+##      HAVE_RUBY_H         => yes or no
+
+if test 9 != 9; then
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for ruby library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for ruby library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+
+echo "$as_me:$LINENO: checking for ruby library (optional)" >&5
+echo $ECHO_N "checking for ruby library (optional)... $ECHO_C" >&6
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for ruby library must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for ruby library must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+# If $_ruby_inc (the -I paths) is blank, do nothing, else do the for statement.
+
+for i in $_ruby_inc; do
+  if test "$i" = "/usr/include"; then
+     echo ""
+     { { echo "$as_me:$LINENO: error: Please do not specify /usr/include as the location for ruby library include files." >&5
+echo "$as_me: error: Please do not specify /usr/include as the location for ruby library include files." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_includes"; then
+      _sci_includes=-I$i
+    else
+      _sci_includes="$_sci_includes -I$i"
+    fi
+  fi
+done
+
+if test "optional" = "specific"; then
+  # If 'specific' then only one lib is allowed:
+  ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
+  __sci_pass=false
+  __sci_first_time=true
+
+  # Must have the "" for the SGI sh.
+  for value in "" $_sci_lib; do
+    if test "$value" = "/usr/lib"; then
+       echo ""
+       { { echo "$as_me:$LINENO: error: Please do not specify /usr/lib as the location for libs ruby-static." >&5
+echo "$as_me: error: Please do not specify /usr/lib as the location for libs ruby-static." >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for ruby library only one library path may be specified (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for ruby library only one library path may be specified (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  # and only one include path:
+  ### Determine if there is only one item in $_ruby_inc
+  __sci_pass=false
+  __sci_first_time=true
+  for value in ""$_ruby_inc; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for ruby library only one include path may be specified (you had: $_ruby_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for ruby library only one include path may be specified (you had: $_ruby_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+fi
+
+
+for i in ruby-static; do
+  if test -z "$_sci_libs"; then
+    _sci_libs=-l$i
+  else
+    _sci_libs="$_sci_libs -l$i"
+  fi
+done
+
+_sci_lib_path=
+
+for i in $_sci_lib; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_lib_path"; then
+      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
+    else
+      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
+    fi
+  fi
+done
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+LDFLAGS="$_sci_lib_path $LDFLAGS"
+LIBS="$_sci_libs  $LIBS"
+
+# Build up a list of the #include <file> lines for use in compilation:
+__sci_pound_includes=
+for i in ""ruby.h; do
+    # Have to have the "" for the SGI sh.
+    if test "$i" = ""; then
+      continue
+    fi
+    __sci_pound_includes="$__sci_pound_includes
+#include <$i>"
+done
+
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$__sci_pound_includes
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+eval LIB_DIR_RUBY='"$_sci_lib"'
+
+if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
+  eval RUBY_LIB_DIR_FLAG=''
+else
+  eval RUBY_LIB_DIR_FLAG='"$_sci_lib_path"'
+fi
+
+eval RUBY_LIB_FLAG='"$_sci_libs"'
+eval HAVE_RUBY="yes"
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_RUBY_H=''
+else
+  eval INC_RUBY_H='"$_sci_includes"'
+fi
+
+eval HAVE_RUBY_H="yes"
+echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+eval LIB_DIR_RUBY=''
+eval RUBY_LIB_DIR_FLAG=''
+eval RUBY_LIB_FLAG=''
+eval HAVE_RUBY="no"
+eval INC_RUBY_H=''
+eval HAVE_RUBY_H="no"
+echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+if test "optional" != "optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it, the true
+    error most likely will show up.
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it, the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: Test for required RUBY failed.
+    To see the failed compile information, look in config.log,
+    search for RUBY. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&5
+echo "$as_me: error: Test for required RUBY failed.
+    To see the failed compile information, look in config.log,
+    search for RUBY. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+
+if test "optional" = "specific"; then
+#echo specific
+  # Make sure the exact includes were found
+  for i in ""ruby.h; do
+#echo looking for $_ruby_inc/$i
+    if test ! -e $_ruby_inc/$i; then
+     { { echo "$as_me:$LINENO: error: Specificly requested ruby library include file '$_ruby_inc/$i' was not found" >&5
+echo "$as_me: error: Specificly requested ruby library include file '$_ruby_inc/$i' was not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  done
+  # Make sure the exact libraries were found
+  for i in ""ruby-static; do
+#echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specificly requested ruby library library file '$_sci_lib/$i' was not found" >&5
+echo "$as_me: error: Specificly requested ruby library library file '$_sci_lib/$i' was not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  done
+fi
+
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+
+
+  if test "$HAVE_RUBY" = "yes"; then
+     DEF_RUBY="#define HAVE_RUBY 1"
+     HAVE_RUBY="yes"
+  fi
+
+  if test "$with_ruby" && test ! "$DEF_RUBY"; then
+    echo
+    { { echo "$as_me:$LINENO: error: One or more of the ruby components are missing." >&5
+echo "$as_me: error: One or more of the ruby components are missing." >&2;}
+   { (exit 1); exit 1; }; }
+    echo
+  fi
+fi # end sci_required_ruby
+
+
+
+
+
+
+
+##  --  search for vtk  ----------------------------------------------------
+if test "$sci_required_vtk" = "yes"; then
+  if test "$with_vtk_libraries"; then
+    _sci_lib="$with_vtk_libraries"
+  else
+    _sci_lib="$sci_thirdparty_libs"
+  fi
+
+  if test "$with_vtk_headers"; then
+     _vtk_inc="$with_vtk_headers"
+  else
+     _vtk_inc="$sci_thirdparty_includes"
+  fi
+
+
+  # Only looking for one .h file... assuming all the rest are in the same place.
+
+## arguments mean:
+## arg 1 : variable base name i.e. MATH
+## arg 2 : checking message
+## arg 3 : includes that arg 6 needs to compile
+## arg 4 : include paths -I
+## arg 5 : list of libs to link against -l
+## arg 6 : lib paths -L
+## arg 7 : extra link flags
+## arg 8 : body of code to compile. can be empty
+## arg 9 : 'optional' or 'required' or 'specific' required argument
+##             If specific, then SCI_TRY_LINK will take only one lib
+##             path and one include path and will verify that the
+##             libs/includes are in that path.
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      LIB_DIR_VTK        => lib path
+##      VTK_LIB_DIR_FLAG   => all the -L's
+##      VTK_LIB_FLAG       => all the -l's
+##      HAVE_VTK           => yes or no
+##      INC_VTK_H          => all the -I's
+##      HAVE_VTK_H         => yes or no
+
+if test 9 != 9; then
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for vtk library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for vtk library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+
+echo "$as_me:$LINENO: checking for vtk library (optional)" >&5
+echo $ECHO_N "checking for vtk library (optional)... $ECHO_C" >&6
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for vtk library must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for vtk library must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+# If $_vtk_inc (the -I paths) is blank, do nothing, else do the for statement.
+
+for i in $_vtk_inc; do
+  if test "$i" = "/usr/include"; then
+     echo ""
+     { { echo "$as_me:$LINENO: error: Please do not specify /usr/include as the location for vtk library include files." >&5
+echo "$as_me: error: Please do not specify /usr/include as the location for vtk library include files." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_includes"; then
+      _sci_includes=-I$i
+    else
+      _sci_includes="$_sci_includes -I$i"
+    fi
+  fi
+done
+
+if test "optional" = "specific"; then
+  # If 'specific' then only one lib is allowed:
+  ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
+  __sci_pass=false
+  __sci_first_time=true
+
+  # Must have the "" for the SGI sh.
+  for value in "" $_sci_lib; do
+    if test "$value" = "/usr/lib"; then
+       echo ""
+       { { echo "$as_me:$LINENO: error: Please do not specify /usr/lib as the location for libs vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtkjpeg vtkpng vtkzlib." >&5
+echo "$as_me: error: Please do not specify /usr/lib as the location for libs vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtkjpeg vtkpng vtkzlib." >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for vtk library only one library path may be specified (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for vtk library only one library path may be specified (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  # and only one include path:
+  ### Determine if there is only one item in $_vtk_inc
+  __sci_pass=false
+  __sci_first_time=true
+  for value in ""$_vtk_inc; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for vtk library only one include path may be specified (you had: $_vtk_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for vtk library only one include path may be specified (you had: $_vtk_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+fi
+
+
+for i in vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtkjpeg vtkpng vtkzlib; do
+  if test -z "$_sci_libs"; then
+    _sci_libs=-l$i
+  else
+    _sci_libs="$_sci_libs -l$i"
+  fi
+done
+
+_sci_lib_path=
+
+for i in $_sci_lib; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_lib_path"; then
+      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
+    else
+      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
+    fi
+  fi
+done
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+LDFLAGS="$_sci_lib_path $LDFLAGS"
+LIBS="$_sci_libs  $LIBS"
+
+# Build up a list of the #include <file> lines for use in compilation:
+__sci_pound_includes=
+for i in ""vtkImageData.h; do
+    # Have to have the "" for the SGI sh.
+    if test "$i" = ""; then
+      continue
+    fi
+    __sci_pound_includes="$__sci_pound_includes
+#include <$i>"
+done
+
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$__sci_pound_includes
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+eval LIB_DIR_VTK='"$_sci_lib"'
+
+if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
+  eval VTK_LIB_DIR_FLAG=''
+else
+  eval VTK_LIB_DIR_FLAG='"$_sci_lib_path"'
+fi
+
+eval VTK_LIB_FLAG='"$_sci_libs"'
+eval HAVE_VTK="yes"
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_VTK_H=''
+else
+  eval INC_VTK_H='"$_sci_includes"'
+fi
+
+eval HAVE_VTK_H="yes"
+echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+eval LIB_DIR_VTK=''
+eval VTK_LIB_DIR_FLAG=''
+eval VTK_LIB_FLAG=''
+eval HAVE_VTK="no"
+eval INC_VTK_H=''
+eval HAVE_VTK_H="no"
+echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+if test "optional" != "optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it, the true
+    error most likely will show up.
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it, the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: Test for required VTK failed.
+    To see the failed compile information, look in config.log,
+    search for VTK. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&5
+echo "$as_me: error: Test for required VTK failed.
+    To see the failed compile information, look in config.log,
+    search for VTK. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+
+if test "optional" = "specific"; then
+#echo specific
+  # Make sure the exact includes were found
+  for i in ""vtkImageData.h; do
+#echo looking for $_vtk_inc/$i
+    if test ! -e $_vtk_inc/$i; then
+     { { echo "$as_me:$LINENO: error: Specificly requested vtk library include file '$_vtk_inc/$i' was not found" >&5
+echo "$as_me: error: Specificly requested vtk library include file '$_vtk_inc/$i' was not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  done
+  # Make sure the exact libraries were found
+  for i in ""vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtkjpeg vtkpng vtkzlib; do
+#echo looking for $_sci_lib/$i
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specificly requested vtk library library file '$_sci_lib/$i' was not found" >&5
+echo "$as_me: error: Specificly requested vtk library library file '$_sci_lib/$i' was not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  done
+fi
+
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+
+
+
+  if test "$HAVE_VTK" = "yes"; then
+     DEF_VTK="#define HAVE_VTK 1"
+     HAVE_VTK="yes"
+  fi
+
+  if test "$with_vtk" && test ! "$DEF_VTK"; then
+    echo
+    { { echo "$as_me:$LINENO: error: One or more of the vtk components are missing." >&5
+echo "$as_me: error: One or more of the vtk components are missing." >&2;}
+   { (exit 1); exit 1; }; }
+    echo
+  fi
+fi # end sci_required_vtk
+
+
+
+
+
+
+
 ##  --  search for VDT  ----------------------------------------------------
 
 if test "$sci_required_vdt" = "yes"; then
@@ -32534,6 +33277,16 @@ s,@DEF_QT@,$DEF_QT,;t t
 s,@INC_QT_MT_H@,$INC_QT_MT_H,;t t
 s,@QT_MT_LIB_FLAG@,$QT_MT_LIB_FLAG,;t t
 s,@QT_MT_LIB_DIR_FLAG@,$QT_MT_LIB_DIR_FLAG,;t t
+s,@HAVE_RUBY@,$HAVE_RUBY,;t t
+s,@DEF_RUBY@,$DEF_RUBY,;t t
+s,@INC_RUBY_H@,$INC_RUBY_H,;t t
+s,@RUBY_LIB_FLAG@,$RUBY_LIB_FLAG,;t t
+s,@RUBY_LIB_DIR_FLAG@,$RUBY_LIB_DIR_FLAG,;t t
+s,@HAVE_VTK@,$HAVE_VTK,;t t
+s,@DEF_VTK@,$DEF_VTK,;t t
+s,@INC_VTK_H@,$INC_VTK_H,;t t
+s,@VTK_LIB_FLAG@,$VTK_LIB_FLAG,;t t
+s,@VTK_LIB_DIR_FLAG@,$VTK_LIB_DIR_FLAG,;t t
 s,@DEF_VDT@,$DEF_VDT,;t t
 s,@INC_VDT_H@,$INC_VDT_H,;t t
 s,@VDT_LIB_FLAG@,$VDT_LIB_FLAG,;t t
