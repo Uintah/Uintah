@@ -198,6 +198,7 @@ void AMRSimulationController::run()
                                 &AMRSimulationController::initializeErrorEstimate,
                                 sharedState);
        task->computes(sharedState->get_refineFlag_label(), sharedState->refineFlagMaterials());
+       task->computes(sharedState->get_oldRefineFlag_label(), sharedState->refineFlagMaterials());
        task->computes(sharedState->get_refinePatchFlag_label(), sharedState->refineFlagMaterials());
        sched->addTask(task, currentGrid->getLevel(i)->eachPatch(),
                       sharedState->allMaterials());
@@ -247,6 +248,7 @@ void AMRSimulationController::run()
 				  &AMRSimulationController::initializeErrorEstimate,
 				  sharedState);
 	 task->computes(sharedState->get_refineFlag_label(), sharedState->refineFlagMaterials());
+	 task->computes(sharedState->get_oldRefineFlag_label(), sharedState->refineFlagMaterials());
          task->computes(sharedState->get_refinePatchFlag_label(), sharedState->refineFlagMaterials());
 	 sched->addTask(task, currentGrid->getLevel(i)->eachPatch(),
 			sharedState->allMaterials());
@@ -315,6 +317,9 @@ void AMRSimulationController::run()
          scheduler->mapDataWarehouse(Task::OldDW, 0);
          scheduler->mapDataWarehouse(Task::NewDW, 1);
          
+	 scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
+	 scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
+
          OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(scheduler->get_dw(0));
          OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(scheduler->getLastDW());
          
@@ -328,21 +333,21 @@ void AMRSimulationController::run()
              VarLabelMatlPatch currentVar = variableInfo[i];
              task->computes(currentVar.label_);
            }
-           cout << "RANDY: Going to copy data for level " << levelIndex << " with ID of ";
-           cout << currentGrid->getLevel(levelIndex)->getID() << endl;
+	   //           cout << "RANDY: Going to copy data for level " << levelIndex << " with ID of ";
+	   //           cout << currentGrid->getLevel(levelIndex)->getID() << endl;
            scheduler->addTask(task, currentGrid->getLevel(levelIndex)->eachPatch(), sharedState->allMaterials());
            if ( levelIndex != 0 ) {
              sim->scheduleRefine(currentGrid->getLevel(levelIndex), scheduler);
            }
          }
 	
-         scheduler->compile();
-         scheduler->execute();
+	 scheduler->compile(); 
+	 scheduler->execute();
 
          vector<VarLabelMatlLevel> reductionVariableInfo;
          oldDataWarehouse->getVarLabelMatlLevelTriples(reductionVariableInfo);
          
-         cerr << getpid() << ": RANDY: Copying reduction variables" << endl;
+	 //         cerr << getpid() << ": RANDY: Copying reduction variables" << endl;
 
          for ( unsigned int i = 0; i < reductionVariableInfo.size(); i++ ) {
            VarLabelMatlLevel currentReductionVar = reductionVariableInfo[i];
@@ -443,7 +448,7 @@ void AMRSimulationController::run()
        DumpAllocator(DefaultAllocator(), filename.c_str());
      }
 
-     if(needRecompile(t, delt, currentGrid, sim, output, lb, regridder, levelids) || first){
+     if(needRecompile(t, delt, currentGrid, sim, output, lb, regridder, levelids) || first ){
        first=false;
        if(d_myworld->myrank() == 0)
 	 cout << "Compiling taskgraph...\n";
@@ -463,6 +468,7 @@ void AMRSimulationController::run()
 				  &AMRSimulationController::initializeErrorEstimate,
 				  sharedState);
 	 task->computes(sharedState->get_refineFlag_label(), sharedState->refineFlagMaterials());
+	 task->computes(sharedState->get_oldRefineFlag_label(), sharedState->refineFlagMaterials());
          task->computes(sharedState->get_refinePatchFlag_label(), sharedState->refineFlagMaterials());
 	 sched->addTask(task, currentGrid->getLevel(i)->eachPatch(),
 			sharedState->allMaterials());
@@ -603,12 +609,16 @@ AMRSimulationController::initializeErrorEstimate(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     CCVariable<int> refineFlag;
-    PerPatch<PatchFlagP> refinePatchFlag(new PatchFlag);
     new_dw->allocateAndPut(refineFlag, sharedState->get_refineFlag_label(),
                            0, patch);
+    refineFlag.initialize(0);
+    CCVariable<int> oldRefineFlag;
+    new_dw->allocateAndPut(oldRefineFlag, sharedState->get_oldRefineFlag_label(),
+                           0, patch);
+    oldRefineFlag.initialize(0);
+    PerPatch<PatchFlagP> refinePatchFlag(new PatchFlag);
     new_dw->put(refinePatchFlag, sharedState->get_refinePatchFlag_label(),
                 0, patch);
-    refineFlag.initialize(0);
   }
 }
 
