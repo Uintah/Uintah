@@ -77,8 +77,11 @@ GursonYield::evalDerivOfYieldFunction(const Matrix3& sig,
   double fStar = f;
   if (f > d_CM.f_c) fStar = d_CM.f_c + d_CM.k*(f - d_CM.f_c);
 
+  double maxinsinh = 30.0;
+  double insinh = 0.5*d_CM.q2*trSig/sigY;
+  if (fabs(insinh) > 30.0) insinh = copysign(maxinsinh,insinh);
   derivative = sigDev*3.0 + 
-               I*((d_CM.q1*d_CM.q2*fStar*sigY)*sinh(0.5*d_CM.q2*trSig/sigY));
+               I*((d_CM.q1*d_CM.q2*fStar*sigY)*sinh(insinh));
 }
 
 void 
@@ -115,6 +118,8 @@ GursonYield::evalDerivativeWRTPlasticityScalar(double trSig,
   double BsigY = B/sigY;
 
   // Calculate derivative
+  double maxinsinh = 30.0;
+  if (fabs(BsigY) > 30.0) BsigY = copysign(maxinsinh,BsigY);
   double dPhidV = -ABdsigYdV*sinh(BsigY) + 2.0*sigYdsigYdV*(A*cosh(BsigY)-C);
   return dPhidV;
 }
