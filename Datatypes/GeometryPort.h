@@ -40,6 +40,26 @@ public:
     virtual void finish();
 };
 
+class Image;
+class DepthImage;
+class View;
+
+struct GeometryData {
+    Image* colorbuffer;
+    DepthImage* depthbuffer;
+
+    View* view;
+    int xres, yres;
+    double znear, zfar;
+    GeometryData();
+    ~GeometryData();
+};
+
+#define GEOM_VIEW 1
+#define GEOM_COLORBUFFER 2
+#define GEOM_DEPTHBUFFER 4
+#define GEOM_ALLDATA 7
+
 class GeometryOPort : public OPort {
     GeometryIPort* in;
     int portid;
@@ -71,6 +91,9 @@ public:
 
     virtual int have_data();
     virtual void resend(Connection*);
+
+    int getNRoe();
+    GeometryData* getData(int which_roe, int mask);
 };
 
 #endif /* SCI_project_GeometryPort_h */

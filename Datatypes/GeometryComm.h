@@ -18,6 +18,7 @@
 #include <Datatypes/GeometryPort.h>
 #include <Multitask/ITC.h>
 class GeomObj;
+template<class T> class AsyncReply;
 
 struct GeomReply {
     int portid;
@@ -33,6 +34,11 @@ public:
     GeometryComm(int, GeomID, int del);
     GeometryComm(MessageTypes::MessageType, int);
     GeometryComm(MessageTypes::MessageType, int, Semaphore* wait);
+    GeometryComm(MessageTypes::MessageType, int portid,
+		 AsyncReply<GeometryData*>* reply,
+		 int which_roe, int datamask);
+    GeometryComm(MessageTypes::MessageType, int portid,
+		 AsyncReply<int>* reply);
     virtual ~GeometryComm();
 
     Mailbox<GeomReply>* reply;
@@ -45,6 +51,11 @@ public:
     int del;
 
     GeometryComm* next;
+
+    int which_roe;
+    int datamask;
+    AsyncReply<GeometryData*>* datareply;
+    AsyncReply<int>* nreply;
 };
 
 #endif /* SCI_Datatypes_GeometryComm_h */

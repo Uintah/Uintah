@@ -21,6 +21,7 @@
 #include <Dataflow/Module.h>
 #include <Dataflow/Port.h>
 #include <Malloc/Allocator.h>
+#include <Multitask/AsyncReply.h>
 
 #include <iostream.h>
 
@@ -197,6 +198,24 @@ void GeometryOPort::resend(Connection*)
     cerr << "GeometryOPort can't resend and shouldn't need to!\n";
 }
 
+int GeometryOPort::getNRoe()
+{
+    if(nconnections() == 0)
+	return 0;
+    AsyncReply<int> reply;
+    outbox->send(new GeometryComm(MessageTypes::GeometryGetNRoe, portid, &reply));
+    return reply.wait();
+}
+
+GeometryData* GeometryOPort::getData(int which_roe, int datamask)
+{
+    if(nconnections() == 0)
+	return 0;
+    AsyncReply<GeometryData*> reply;
+    outbox->send(new GeometryComm(MessageTypes::GeometryGetData, portid, &reply, which_roe, datamask));
+    return reply.wait();
+}
+
 GeometryComm::GeometryComm(Mailbox<GeomReply>* reply)
 : MessageBase(MessageTypes::GeometryInit), reply(reply)
 {
@@ -225,6 +244,20 @@ GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno)
 {
 }
 
+GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
+			   AsyncReply<GeometryData*>* datareply,
+			   int which_roe, int datamask)
+: MessageBase(type), portno(portno), datareply(datareply),
+  which_roe(which_roe), datamask(datamask)
+{
+}
+
+GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
+			   AsyncReply<int>* nreply)
+: MessageBase(type), portno(portno), nreply(nreply)
+{
+}
+
 GeometryComm::~GeometryComm()
 {
 }
@@ -236,6 +269,13 @@ GeomReply::GeomReply()
 GeomReply::GeomReply(int portid, int* busy_bit)
 : portid(portid), busy_bit(busy_bit)
 {
+}
+
+GeometryData::GeometryData()
+{
+    view=0;
+    colorbuffer=0;
+    depthbuffer=0;
 }
 
 #ifdef __GNUG__
