@@ -176,7 +176,35 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    int numMatls = d_sharedState->getNumMatls();
    for(Level::const_regionIterator iter=level->regionsBegin();
        iter != level->regionsEnd(); iter++){
+
       const Region* region=*iter;
+
+      if(d_fractureModel) {
+	 /*
+	  * labelSelfContactNodesAndCells
+	  *   in(C.SURFACENORMAL,P.SURFACENORMAL)
+	  *   operation(label the cell which has self-contact)
+	  *   out(C.SELFCONTACTLABEL)
+	  */
+	 Task* t = new Task("Fracture::labelSelfContactCells",
+			    region, old_dw, new_dw,
+			    d_fractureModel,
+			    &Fracture::labelSelfContactNodesAndCells);
+
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    t->requires( old_dw, cSurfaceNormalLabel, idx, region,
+			 Ghost::None);
+	    t->requires( old_dw, pSurfaceNormalLabel, idx, region,
+			 Ghost::None);
+
+	    t->computes( new_dw, cSelfContactLabel, idx, region );
+	 }
+
+	 sched->addTask(t);
+      }
+
       {
 	 /*
 	  * interpolateParticlesToGrid
@@ -391,32 +419,6 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	}
 
 	sched->addTask(t);
-      }
-
-      if(d_fractureModel) {
-	 /*
-	  * labelSelfContactCells
-	  *   in(C.SURFACENORMAL,P.SURFACENORMAL)
-	  *   operation(label the cell which has self-contact)
-	  *   out(C.SELFCONTACTLABEL)
-	  */
-	 Task* t = new Task("Fracture::labelSelfContactCells",
-			    region, old_dw, new_dw,
-			    d_fractureModel,
-			    &Fracture::labelSelfContactCells);
-
-	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
-	    int idx = matl->getDWIndex();
-	    t->requires( old_dw, cSurfaceNormalLabel, idx, region,
-			 Ghost::None);
-	    t->requires( old_dw, pSurfaceNormalLabel, idx, region,
-			 Ghost::None);
-
-	    t->computes( new_dw, cSelfContactLabel, idx, region );
-	 }
-
-	 sched->addTask(t);
       }
 
       if(d_fractureModel) {
@@ -1051,6 +1053,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.54  2000/05/15 18:59:46  tan
+// Initialized NCVariables and CCVaribles for Fracture.
+//
 // Revision 1.53  2000/05/12 01:45:17  tan
 // Added call to initializeFracture in SerialMPM's actuallyInitailize.
 //
