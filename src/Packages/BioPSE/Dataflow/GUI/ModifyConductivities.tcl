@@ -66,9 +66,9 @@ itcl_class BioPSE_Forward_ModifyConductivities {
 
 	$w.f.h column configure treeView -hide yes
 	$w.f.h column insert end \
-		Material Scale M00 M01 M02 M10 M11 M12 M20 M21 M22
+		Material Scale C00 C01 C02 C10 C11 C12 C20 C21 C22
 	$w.f.h column configure \
-		Material Scale M00 M01 M02 M10 M11 M12 M20 M21 M22 -edit yes
+		Material Scale C00 C01 C02 C10 C11 C12 C20 C21 C22 -edit yes
 	$w.f.h column configure Material -justify right
 
 	$w.f.h text configure -selectborderwidth 0
