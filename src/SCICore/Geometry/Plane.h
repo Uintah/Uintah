@@ -29,11 +29,13 @@ public:
     Plane(const Plane &copy);
     Plane(const Point &p1, const Point &p2, const Point &p3);
     Plane();
+    Plane(double a, double b, double c, double d);
     ~Plane();
-    double eval_point(const Point &p);
+    double eval_point(const Point &p) const;
     void flip();
-    Point project(const Point& p);
-   Vector normal();
+    Point project(const Point& p) const;
+    Vector project(const Vector& v) const;
+    Vector normal() const;
 
    // changes the plane ( n and d )
    
@@ -50,6 +52,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  2000/08/04 19:09:25  dmw
+// fixed shear
+//
 // Revision 1.2  1999/08/17 06:39:28  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
