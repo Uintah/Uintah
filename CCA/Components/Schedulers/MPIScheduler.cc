@@ -704,9 +704,6 @@ MPIScheduler::execute()
       cerrLock.unlock();
     }
 
-    if (dws[dws.size()-1]->timestepRestarted() || dws[dws.size()-1]->timestepAborted())
-      return;
-
     numTasksDone++;
     dbg << me << " Initiating task: "; printTask(dbg, task); dbg << '\n';
 
