@@ -8,7 +8,7 @@
 SRCDIR := Packages/Butson/Dataflow/Modules
 
 SUBDIRS := \
-	$(SRCDIR)/Genesis \
+	$(SRCDIR)/Modeling \
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SRCTOP_ABS)/scripts/recurse.mk

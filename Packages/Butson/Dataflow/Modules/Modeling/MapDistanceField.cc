@@ -34,7 +34,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Packages/BioPSE/Dataflow/Modules/Forward/MapDistanceField.h>
+#include <Packages/Butson/Dataflow/Modules/Modeling/MapDistanceField.h>
 #include <Core/Containers/Handle.h>
 #include <iostream>
 #include <stdio.h>
@@ -66,7 +66,7 @@ DECLARE_MAKER(MapDistanceField)
 
 
 MapDistanceField::MapDistanceField(GuiContext *context) : 
-  Module("MapDistanceField", context, Filter, "Forward", "BioPSE"),
+  Module("MapDistanceField", context, Filter, "Modeling", "Butson"),
   interp_op_gui_(context->subVar("interp_op_gui"))
 {
 }
