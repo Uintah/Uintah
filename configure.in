@@ -119,18 +119,11 @@ if test "$yarden" = "yes"; then
   EXENAME="yarden"
   package_output="$package_output \
 	      Yarden/Makefile \
+		Yarden/GUI/Makefile \
                 Yarden/Datatypes/Makefile \
-                  Yarden/Datatypes/BRDF/Makefile \
-                  Yarden/Datatypes/Fracture/Makefile \
                   Yarden/Datatypes/General/Makefile \
                 Yarden/Modules/Makefile \
-                  Yarden/Modules/BRDF/Makefile \
-                  Yarden/Modules/EEG/Makefile \
-                  Yarden/Modules/EGI/Makefile \
-                  Yarden/Modules/FEM/Makefile \
-                  Yarden/Modules/Readers/Makefile \
                   Yarden/Modules/Visualization/Makefile \
-                  Yarden/Modules/Writers/Makefile \
                 Yarden/convert/Makefile \
 		"
 fi
