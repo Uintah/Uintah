@@ -59,9 +59,9 @@ Persistent::~Persistent()
 {
 }
 
-Piostream::Piostream(Direction dir, int version)
+Piostream::Piostream(Direction dir, int version, const clString &name)
 : dir(dir), version(version), err(0), outpointers(0), inpointers(0),
-  current_pointer_id(1)
+  current_pointer_id(1), file_name(name)
 {
 }
 

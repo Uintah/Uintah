@@ -41,7 +41,7 @@ namespace SCICore {
 namespace PersistentSpace {
 
 TextPiostream::TextPiostream(const clString& filename, Direction dir)
-: Piostream(dir, -1)
+: Piostream(dir, -1, filename)
 {
     if(dir==Read){
 	ostr=0;
@@ -557,7 +557,7 @@ BinaryPiostream::~BinaryPiostream()
 }
 
 BinaryPiostream::BinaryPiostream(const clString& filename, Direction dir)
-: Piostream(dir, -1), have_peekname(0)
+: Piostream(dir, -1, filename), have_peekname(0)
 {
     mmapped = false;
     if(dir==Read){
