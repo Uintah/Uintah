@@ -19,6 +19,10 @@
 #include <Field3D.h>
 class ColormapPort;
 class Field3DIPort;
+class GeomCone;
+class GeomCylinder;
+class GeomDisc;
+class GeomSphere;
 class GeometryOPort;
 class MaterialProp;
 class MUI_slider_real;
@@ -39,12 +43,20 @@ class IsoSurface : public UserModule {
     int make_normals;
     int do_3dwidget;
     double scalar_val;
+    ObjGroup* widget;
+    GeomSphere* widget_sphere;
+    GeomCylinder* widget_cylinder;
+    GeomCone* widget_cone;
+    GeomDisc* widget_disc;
+    double widget_scale;
+
+    int widget_id;
+    int isosurface_id;
 
     double old_min;
     double old_max;
     MUI_slider_real* value_slider;
 
-    int widget_id;
     MaterialProp* widget_matl;
     MaterialProp* widget_highlight_matl;
 
@@ -57,6 +69,8 @@ class IsoSurface : public UserModule {
     void iso_tetrahedra(const Field3DHandle&, double, ObjGroup*);
 
     void find_seed_from_value(const Field3DHandle&);
+
+    virtual void geom_moved(int, double, const Vector&, void*);
 public:
     IsoSurface();
     IsoSurface(const IsoSurface&, int deep);

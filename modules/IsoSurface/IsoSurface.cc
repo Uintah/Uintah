@@ -60,7 +60,7 @@ IsoSurface::IsoSurface()
     add_ui(value_slider);
     have_seedpoint=0;
 //    seed_point=Point(0,0,0);
-//    have_seedpoint=1;
+    have_seedpoint=1;
     seed_point=Point(.5,.5,.5);
     add_ui(new MUI_point("Seed Point", &seed_point,
 			 MUI_widget::Immediate, 1));
@@ -82,6 +82,8 @@ IsoSurface::IsoSurface()
 				 Color(.5,.5,.5), 20);
     widget_highlight_matl=new MaterialProp(Color(0,0,0), Color(.7,.7,.7),
 					   Color(0,0,.6), 20);
+    widget=0;
+    isosurface_id=0;
 }
 
 IsoSurface::IsoSurface(const IsoSurface& copy, int deep)
@@ -102,7 +104,10 @@ Module* IsoSurface::clone(int deep)
 void IsoSurface::execute()
 {
     abort_flag=0;
-    ogeom->delAll();
+    if(isosurface_id){
+	cerr << "Deleting object: " << isosurface_id << endl;
+	ogeom->delObj(isosurface_id);
+    }
     Field3DHandle field;
     if(!infield->get_field(field))
 	return;
@@ -122,28 +127,50 @@ void IsoSurface::execute()
 	need_seed=0;
     }
     if(do_3dwidget){
-	double widget_scale=0.05;
-	GeomSphere* ptobj=new GeomSphere(seed_point, 1*widget_scale);
+	if(!widget){
+	    widget_scale=0.05;
+	    widget_sphere=new GeomSphere(seed_point, 1*widget_scale);
+	    Vector grad(field->gradient(seed_point));
+	    grad.normalize();
+	    Point cyl_top(seed_point+grad*(2*widget_scale));
+	    widget_cylinder=new GeomCylinder(seed_point, cyl_top,
+					     0.5*widget_scale);
+	    Point cone_top(cyl_top+grad*(1.0*widget_scale));
+	    widget_cone=new GeomCone(cyl_top, cone_top,
+				     0.75*widget_scale, 0);
+	    widget_disc=new GeomDisc(cyl_top, -grad,
+				     0.75*widget_scale);
+	    widget=new ObjGroup;
+	    widget->add(widget_sphere);
+	    widget->add(widget_cylinder);
+	    widget->add(widget_cone);
+	    widget->add(widget_disc);
+	    widget->set_matl(widget_matl);
+	    GeomPick* pick=new GeomPick(this, grad);
+	    pick->set_highlight(widget_highlight_matl);
+	    widget->set_pick(pick);
+	    widget_id=ogeom->addObj(widget);
+	}
+	widget_sphere->cen=seed_point;
+	widget_sphere->rad=1*widget_scale;
+	widget_sphere->adjust();
 	Vector grad(field->gradient(seed_point));
 	grad.normalize();
 	Point cyl_top(seed_point+grad*(2*widget_scale));
-	GeomCylinder* cylinder=new GeomCylinder(seed_point, cyl_top,
-						0.5*widget_scale);
+	widget_cylinder->bottom=seed_point;
+	widget_cylinder->top=cyl_top;
+	widget_cylinder->rad=0.5*widget_scale;
+	widget_cylinder->adjust();
 	Point cone_top(cyl_top+grad*(1.0*widget_scale));
-	GeomCone* cone=new GeomCone(cyl_top, cone_top,
-				    0.75*widget_scale, 0);
-	GeomDisc* disc=new GeomDisc(cyl_top, -grad,
-				    0.75*widget_scale);
-	ObjGroup* widget=new ObjGroup;
-	widget->add(ptobj);
-	widget->add(cylinder);
-	widget->add(cone);
-	widget->add(disc);
-	widget->set_matl(widget_matl);
-	GeomPick* pick=new GeomPick(grad);
-	pick->set_highlight(widget_highlight_matl);
-	widget->set_pick(pick);
-	widget_id=ogeom->addObj(widget);
+	widget_cone->bottom=cyl_top;
+	widget_cone->top=cone_top;
+	widget_cone->bot_rad=0.75*widget_scale;
+	widget_cone->top_rad=0;
+	widget_cone->adjust();
+	widget_disc->cen=cyl_top;
+	widget_disc->normal=-grad;
+	widget_disc->rad=0.75*widget_scale;
+	widget_disc->adjust();
     }
     ObjGroup* group=new ObjGroup;
     switch(field->get_rep()){
@@ -166,8 +193,9 @@ void IsoSurface::execute()
 
     if(group->size() == 0){
 	delete group;
+	isosurface_id=0;
     } else {
-	ogeom->addObj(group);
+	isosurface_id=ogeom->addObj(group);
     }
 }
 
@@ -444,13 +472,16 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
     GeomID groupid=0;
     while(!surfQ.is_empty()) {
 	if (counter%400 == 0) {
-	    if (counter != 400)
+	    if (groupid)
 		ogeom->delObj(groupid);
 	    groupid=ogeom->addObj(group->clone());
 	    ogeom->flushViews();
 	}
-	if(abort_flag)
+	if(abort_flag){
+	    if(groupid)
+		ogeom->delObj(groupid);
 	    return;
+	}
 	pLoc=surfQ.pop();
 	pz=pLoc/(nx*ny);
 	dummy=pLoc%(nx*ny);
@@ -545,8 +576,10 @@ void IsoSurface::find_seed_from_value(const Field3DHandle& field)
 
 void IsoSurface::mui_callback(void*, int which)
 {
-    abort_flag=1;
-    want_to_execute();
+    if(!abort_flag){
+	abort_flag=1;
+	want_to_execute();
+    }
     if(which==0){
 	have_seedpoint=0;
     }
@@ -555,5 +588,15 @@ void IsoSurface::mui_callback(void*, int which)
 	    have_seedpoint=1;
 	    need_seed=1;
 	}
+    }
+}
+
+void IsoSurface::geom_moved(int, double, const Vector& delta, void*)
+{
+    seed_point+=delta;
+    have_seedpoint=1;
+    if(!abort_flag){
+	abort_flag=1;
+	want_to_execute();
     }
 }
