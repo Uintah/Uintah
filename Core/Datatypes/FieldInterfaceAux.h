@@ -107,7 +107,7 @@ SFInterface<F, L>::finterpolate(double &result, const Point &p) const
   vector<double> weights;
   mesh->get_weights(p, locs, weights);
 
-  // weights is empty if point not found.
+  // Weights is empty if point not found.
   if (weights.size() <= 0) return false;
 
   result = 0.0;
@@ -308,7 +308,7 @@ VFInterface<F, L>::finterpolate(Vector &result, const Point &p) const
   vector<double> weights;
   mesh->get_weights(p, locs, weights);
 
-  // weights is empty if point not found.
+  // Weights is empty if point not found.
   if (weights.size() <= 0) return false;
 
   result = Vector(0.0, 0.0, 0.0);
@@ -511,7 +511,7 @@ TFInterface<F, L>::finterpolate(Tensor &result, const Point &p) const
   vector<double> weights;
   mesh->get_weights(p, locs, weights);
 
-  // weights is empty if point not found.
+  // Weights is empty if point not found.
   if (weights.size() <= 0) return false;
 
   result = Tensor(0);
