@@ -1431,11 +1431,7 @@ if test "$with_X11_lib"; then
   _x_lib_dir="$with_X11_lib"
   _x_inc_dir="$with_X11_lib/../include"
 else 
-  if test "$NBITS" == "64"; then
-    _x_lib_dir="/usr/X11R6/lib64"
-  else
-    _x_lib_dir="/usr/X11R6/lib"
-  fi
+  _x_lib_dir="/usr/X11R6/$BASE_LIB_DIR"
   _x_inc_dir="/usr/X11R6/include"
 fi
 
@@ -2008,29 +2004,22 @@ AC_SUBST(DEF_MAGICK)
 
 ##  --  search for png --------------------------------------
 
+AC_MSG_CHECKING(for PNG)
+
 if test "$with_png"; then
-  _sci_lib="$with_png/lib"
+  _sci_lib="$with_png/$BASE_LIB_DIR"
+  _sci_inc="$with_png/include"
 else
   _sci_lib="$sci_thirdparty_dir"
+  _sci_inc="$sci_thirdparty_includes"
 fi
 
-for i in $_sci_lib; do
-  if test ! -d "$i"; then
-    continue
-  fi
+SCI_TRY_LINK(PNG,png library and headers,[
+#include <png.h>
+],$_sci_inc,png,$_sci_lib,,,optional)
 
-  #this is where the lib actually lives
-  if test ! -d "$i/lib"; then
-    continue
-  fi
-
-
-  SCI_TRY_LINK(PNG,png library and headers,[
-  #include <png.h>
-  ],$i/include,png,$i/lib,,,optional)
-
-  # Now check for the correct version.
-  if test "$HAVE_PNG" = "yes"; then
+# Now check for the correct version.
+if test "$HAVE_PNG" = "yes"; then
 
     AC_MSG_CHECKING(for PNG version 1.0.2 or better.)
     cat > conftest-png.c <<EOF
@@ -2068,8 +2057,7 @@ EOF
     fi
 
     break
-  fi
-done
+fi
  
 if test "$with_png" && test ! "$DEF_PNG"; then
   echo
