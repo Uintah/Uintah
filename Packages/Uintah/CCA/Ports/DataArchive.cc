@@ -185,6 +185,7 @@ DataArchive::queryGrid( double time )
       LevelP level = scinew Level(grid.get_rep(), anchor, dcell);
       int numPatches = -1234;
       long totalCells = 0;
+      IntVector periodicBoundaries(0, 0, 0);      
       for(DOM_Node r = n.getFirstChild(); r != 0; r=r.getNextSibling()){
 	if(r.getNodeName().equals("numPatches") ||
 	   r.getNodeName().equals("numRegions")){
@@ -213,6 +214,9 @@ DataArchive::queryGrid( double time )
 	} else if(r.getNodeName().equals("anchor")
 		  || r.getNodeName().equals("cellspacing")){
 	  // Nothing - handled above
+	} else if(r.getNodeName().equals("periodic") {
+	  if(!get(r, periodicBoundaries))
+	    throw InternalError("Error parsing peridoc");
 	} else if(r.getNodeType() != DOM_Node::TEXT_NODE){
 	  cerr << "WARNING: Unknown level data: " << ::toString(n.getNodeName()) << '\n';
 	}
@@ -220,8 +224,7 @@ DataArchive::queryGrid( double time )
       ASSERTEQ(level->numPatches(), numPatches);
       ASSERTEQ(level->totalCells(), totalCells);
       
-      IntVector periodicBoundaries;
-      if(get(n, "periodic", periodicBoundaries)){
+      if(periodicBoundaries != IntVector(0, 0, 0)){
 	level->finalizeLevel(periodicBoundaries.x() != 0,
 			     periodicBoundaries.y() != 0,
 			     periodicBoundaries.z() != 0);
