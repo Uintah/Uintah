@@ -80,6 +80,7 @@ namespace rtrt {
 
   class RectWidget: public Widget {
   public:
+    RectWidget( float x, float y, float w, float h, float c[3], int t );
     RectWidget( float x, float y, float w, float h, float c[3], float o, int t,
 		float o_x, float o_y, Texture<GLfloat> *text, int sF );
     RectWidget( int t, float x, float y, float w, float h, float r, float g,
@@ -98,7 +99,8 @@ namespace rtrt {
     virtual void invertColor( void );
     virtual void reflectTrans( void );
     void adjustFocus( float x, float y );
-  
+    void reposition( float x, float y, float w, float h );
+    
     //private:
     GLStar *focusStar;
     GLStar *translateStar;
