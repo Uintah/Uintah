@@ -49,6 +49,8 @@ class AVLTree {
 public:
     friend class AVLTreeIter<Key, Data>;
     AVLTree();
+    AVLTree(const AVLTree<Key, Data>&);
+    AVLTree<Key, Data>& operator=(const AVLTree<Key, Data>&);
     ~AVLTree();
     void insert(const Key& key, const Data& data);
     int lookup(const Key& key, Data& data);
