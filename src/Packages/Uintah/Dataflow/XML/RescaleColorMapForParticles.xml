@@ -15,14 +15,14 @@
   </overview>
   <io>
     <inputs lastportdynamic="no">
-     <port>
-       <name>ColorMap</name>
-       <datatype>SCIRun::ColorMap</datatype>
-     </port>
       <port>
         <name>Scalar Particles</name>
         <datatype>Uintah::ScalarParticles</datatype>
       </port>
+     <port>
+       <name>ColorMap</name>
+       <datatype>SCIRun::ColorMap</datatype>
+     </port>
     </inputs>
     <outputs>
      <port>
