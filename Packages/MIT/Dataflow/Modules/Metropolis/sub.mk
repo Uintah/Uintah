@@ -43,7 +43,7 @@ PSELIBS := Packages/MIT/Core/Datatypes \
 LIBS := -L/usr/local/lib -L$(TCL_LIB_DIR) \
 	$(LAPACK_LIBRARY)  $(BLAS_LIBRARY) \
 	 -lcvode -lunuran -lranlib -llinpack \
-	$(FLIBS) -lm
+	$(BLAS_LIBRARY) $(FLIBS) -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
