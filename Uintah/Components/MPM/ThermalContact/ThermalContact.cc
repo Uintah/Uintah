@@ -2,6 +2,7 @@
 #include <Uintah/Components/MPM/Contact/Contact.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <Uintah/Components/MPM/MPMLabel.h>
+#include <Uintah/Components/MPM/MPMPhysicalModules.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/NodeIterator.h>
@@ -52,6 +53,9 @@ void ThermalContact::computeHeatExchange(const ProcessorGroup*,
     }
   }
 
+  double heatTransferCoefficient =
+     MPMPhysicalModules::heatConductionModel->getHeatTransferCoefficient();
+
   for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++)
   {
     for(n = 0; n < NVFs; n++)
@@ -67,7 +71,7 @@ void ThermalContact::computeHeatExchange(const ProcessorGroup*,
           if( !compare(gTemperature[vfindex][*iter],temp) )
           {
             gExternalHeatRate[n][*iter] += 
-              mpm_matl->getHeatTransferCoefficient() *
+              heatTransferCoefficient *
                 ( gmass[vfindex][*iter] * gTemperature[vfindex][*iter] 
                 - gmass[n][*iter] * temp );
           }
@@ -106,6 +110,10 @@ void ThermalContact::addComputesAndRequires(Task* t,
 
 //
 // $Log$
+// Revision 1.8  2000/06/22 22:33:29  tan
+// Moved heat conduction physical parameters (thermalConductivity, specificHeat,
+// and heatTransferCoefficient) from MPMMaterial class to HeatConduction class.
+//
 // Revision 1.7  2000/06/20 05:10:02  tan
 // Currently thermal_conductivity, specific_heat and heat_transfer_coefficient
 // are set in MPM::MPMMaterial class.

@@ -92,11 +92,6 @@ WARNING
 	 int checkForSurface(const GeometryPiece* piece,
 				const Point p, const Vector dxpp);
 				
-	 //tan: material constants for heat conduction
-	 double  getThermalConductivity() const;
-	 double  getSpecificHeat() const;
-	 double  getHeatTransferCoefficient() const;
-
       private:
 	 
 	 // Specific constitutive model associated with this material
@@ -107,14 +102,8 @@ WARNING
 	 
 	 double d_density;
 	 double d_toughness;
-	 double d_temp;
 	 std::vector<GeometryObject*> d_geom_objs;
 
-	 //tan: material constants for heat conduction
-	 double d_thermal_cond;
-	 double d_spec_heat;
-         double d_heatTransferCoefficient;
-         
 	 // Prevent copying of this class
 	 // copy constructor
 	 MPMMaterial(const MPMMaterial &mpmm);
@@ -127,6 +116,10 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.24  2000/06/22 22:37:37  tan
+// Moved heat conduction physical parameters (thermalConductivity, specificHeat,
+// and heatTransferCoefficient) from MPMMaterial class to HeatConduction class.
+//
 // Revision 1.23  2000/06/08 16:50:52  guilkey
 // Changed some of the dependencies to account for what goes on in
 // the burn models.

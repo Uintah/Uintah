@@ -54,8 +54,6 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 
    ps->require("density",d_density);
    ps->require("toughness",d_toughness);
-   ps->require("thermal_conductivity",d_thermal_cond);
-   ps->require("specific_heat",d_spec_heat);
 
    // Step 3 -- Loop through all of the pieces in this geometry object
 
@@ -293,22 +291,11 @@ int MPMMaterial::checkForSurface(const GeometryPiece* piece, const Point p,
   }
 }
 
-double  MPMMaterial::getThermalConductivity() const
-{
-  return d_thermal_cond;
-}
-
-double  MPMMaterial::getSpecificHeat() const
-{
-  return d_spec_heat;
-}
-
-double  MPMMaterial::getHeatTransferCoefficient() const
-{
-  return d_heatTransferCoefficient;
-}
-
 // $Log$
+// Revision 1.34  2000/06/22 22:37:47  tan
+// Moved heat conduction physical parameters (thermalConductivity, specificHeat,
+// and heatTransferCoefficient) from MPMMaterial class to HeatConduction class.
+//
 // Revision 1.33  2000/06/17 07:06:36  sparker
 // Changed ProcessorContext to ProcessorGroup
 //
