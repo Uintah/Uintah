@@ -5,6 +5,7 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Datatypes/Field.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <iostream>
