@@ -56,16 +56,22 @@ namespace SCIRun {
 
 template <class HType>
 class GenericWriter : public Module {
-public:
+protected:
+  HType       handle_;
   GuiFilename filename_;
-  GuiString filetype_;
-  GuiInt    confirm_;
+  GuiString   filetype_;
+  GuiInt      confirm_;
+  bool        exporting_;
+
+  virtual bool overwrite();
+  virtual bool call_exporter(const string &filename);
+
+public:
   GenericWriter(const string &name, GuiContext* ctx,
 		const string &category, const string &package);
   virtual ~GenericWriter();
 
   virtual void execute();
-  virtual bool overwrite();
 };
 
 
@@ -75,7 +81,8 @@ GenericWriter<HType>::GenericWriter(const string &name, GuiContext* ctx,
   : Module(name, ctx, Sink, cat, pack),
     filename_(ctx->subVar("filename")),
     filetype_(ctx->subVar("filetype")),
-    confirm_(ctx->subVar("confirm"))
+    confirm_(ctx->subVar("confirm")),
+    exporting_(false)
 {
 }
 
@@ -101,6 +108,13 @@ GenericWriter<HType>::overwrite()
 }
   
 
+template <class HType>
+bool
+GenericWriter<HType>::call_exporter(const string &filename)
+{
+  return false;
+}
+
 
 template <class HType>
 void
@@ -113,8 +127,7 @@ GenericWriter<HType>::execute()
   }
 
   // Read data from the input port
-  HType handle;
-  if (!inport->get(handle) || !handle.get_rep())
+  if (!inport->get(handle_) || !handle_.get_rep())
   {
     remark("No data on input port.");
     return;
@@ -129,29 +142,40 @@ GenericWriter<HType>::execute()
   }
 
   if (!overwrite()) return;
-   
-  // Open up the output stream
-  Piostream* stream;
-  string ft(filetype_.get());
-  if (ft == "Binary")
+ 
+  if (exporting_)
   {
-    stream = scinew BinaryPiostream(fn, Piostream::Write);
+    if (!call_exporter(fn))
+    {
+      error("Export failed.");
+      return;
+    }
   }
   else
   {
-    stream = scinew TextPiostream(fn, Piostream::Write);
-  }
+    // Open up the output stream
+    Piostream* stream;
+    string ft(filetype_.get());
+    if (ft == "Binary")
+    {
+      stream = scinew BinaryPiostream(fn, Piostream::Write);
+    }
+    else
+    {
+      stream = scinew TextPiostream(fn, Piostream::Write);
+    }
 
-  if (stream->error())
-  {
-    error("Could not open file for writing" + fn);
+    if (stream->error())
+    {
+      error("Could not open file for writing" + fn);
+    }
+    else
+    {
+      // Write the file
+      Pio(*stream, handle_);
+    } 
+    delete stream;
   }
-  else
-  {
-    // Write the file
-    Pio(*stream, handle);
-  } 
-  delete stream;
 }
 
 } // End namespace SCIRun
