@@ -106,7 +106,7 @@ FieldBoundary::execute()
     Handle<FieldBoundaryAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
-    algo->execute(this, mesh, tri_fh_, interp_mh_);
+    algo->execute(this, mesh, tri_fh_, interp_mh_, input->data_at());
   }
   osurf_->send(tri_fh_);
   ointerp_->send(interp_mh_);
