@@ -945,7 +945,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 	       Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 						d_S[k].z()*oodx[2]);
 	       internalforce[ni[k]] -=
-			(div * (pstress[idx] - Id*p_pressure[idx]) * pvol[idx]);
+			(div * (pstress[idx] + Id*p_pressure[idx]) * pvol[idx]);
                gstress[ni[k]] += pstress[idx] * pmass[idx] * S[k];
                gstressglobal[ni[k]] += pstress[idx] * pmass[idx] * S[k];
 	     }
