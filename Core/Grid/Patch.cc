@@ -1081,6 +1081,42 @@ Patch::getArrayBCValues(Patch::FaceType face,int mat_id,string type,
   return bc;
 }
 
+bool 
+Patch::haveBC(FaceType face,int mat_id,string bc_type,string bc_variable) const
+{
+  map<Patch::FaceType,BCDataArray >* m = 
+    const_cast<map<Patch::FaceType,BCDataArray>* >(&array_bcs);
+  BCDataArray* ubc = &((*m)[face]);
+#if 0
+  cout << "Inside haveBC" << endl;
+  ubc->print();
+#endif
+  BCDataArray::bcDataArrayType::const_iterator v_itr;
+  vector<BCGeomBase*>::const_iterator it;
+
+  v_itr = ubc->d_BCDataArray.find(mat_id);
+  if (v_itr != ubc->d_BCDataArray.end()) { 
+    for (it = v_itr->second.begin(); it != v_itr->second.end(); ++it) {
+      BCData bc;
+      (*it)->getBCData(bc);
+      bool found_variable = bc.find(bc_type,bc_variable);
+      if (found_variable)
+	return true;
+    }
+  } 
+  // Check the mat_it = "all" case
+  v_itr = ubc->d_BCDataArray.find(-1);
+  if (v_itr != ubc->d_BCDataArray.end()) {
+    for (it = v_itr->second.begin(); it != v_itr->second.end(); ++it) {
+      BCData bc;
+      (*it)->getBCData(bc);
+      bool found_variable = bc.find(bc_type,bc_variable);
+      if (found_variable)
+	return true;
+    }
+  }
+  return false;
+}
 
 void
 Patch::getFace(FaceType face, const IntVector& insideOffset,
