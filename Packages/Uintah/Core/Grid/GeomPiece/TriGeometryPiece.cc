@@ -38,6 +38,10 @@ bool TriGeometryPiece::inside(const Point &p) const
   // of crossings is odd, the point is inside, else it 
   // is outside.
 
+  // Check if Point p is outside the bounding box
+  if (!(p == Max(p,d_box.lower()) && p == Min(p,d_box.upper())))
+    return false;
+      
   Vector infinity = Vector(-1e10,0.,0.) - p.asVector();
   //cerr << "Testing point " << p << endl;
   int crossings = 0, NES = 0;
