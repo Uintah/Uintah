@@ -25,6 +25,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/Core/Variables/VarTypes.h>
 #include <Core/Containers/StaticArray.h>
+#include <Core/OS/Dir.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <iostream>
@@ -1389,7 +1390,7 @@ void Crack::OutputCrackGeometry(const int& m, const int& timestep)
       strcat(crackDir,timestepbuf);
       strcat(crackDir,"/crackData");
     
-      mkdir(crackDir,0777);
+      MKDIR(crackDir,0777);
 
       // Task 2: Specify output file names 
       char ceFileName[200]="";
