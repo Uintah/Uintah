@@ -88,7 +88,7 @@ CTAGS := ctags
 
 SCIRUN_APP_DIR := $(OBJTOP_ABS)/../$(SCIRUN_APP_NAME).app/Contents
 
-all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM
+all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM BioImage
 
 .PHONY: prereqs
 prereqs: $(MAKEFILEDIRS) $(MATLAB_ENGINE_FILES) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN)
@@ -219,7 +219,7 @@ endif
 	-rm -f sciTAGS
 	rm -f on-the-fly-libs/*.*
 	rm -f include/sci_defs/*.h
-	rm -f BioTensor BioFEM
+	rm -f BioTensor BioFEM BioImage
 
 distclean:: clean
 	rm -f config.status config.log config.cache
@@ -296,4 +296,12 @@ ifeq ($(findstring BioPSE,$(LOAD_PACKAGE)),BioPSE)
 	@chmod +x BioFEM
 else
   $(OBJTOP)/BioFEM :
+endif
+
+ifeq ($(findstring Teem,$(LOAD_PACKAGE)),Teem)
+  $(OBJTOP)/BioImage : $(SRCDIR)/Packages/Teem/nets/PowerApps/BioImage
+	@(sed -e "s%__SRC_DIR__%$(SRCTOP_ABS)%" $(SRCDIR)/Packages/Teem/nets/PowerApps/BioImage | sed -e "s%__OBJ_DIR__%$(OBJTOP_ABS)%" > $(OBJTOP)/BioImage)
+	@chmod +x BioImage
+else
+  $(OBJTOP)/BioImage :
 endif
