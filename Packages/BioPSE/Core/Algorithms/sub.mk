@@ -4,5 +4,6 @@ SRCDIR := Packages/BioPSE/Core/Algorithms
 
 SUBDIRS := \
 	$(SRCDIR)/NumApproximation \
+	$(SRCDIR)/Forward \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

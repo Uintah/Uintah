@@ -55,7 +55,6 @@ BuildFEMatrix::BuildFEMatrix(TetVolFieldIntHandle hField,
   TetVolMesh::Node::size_type nsize; hMesh_->size(nsize);
   unsigned int nNodes = nsize;
   rows_ = scinew int[nNodes+1];
-//  cerr << "unitsScale_ = "<< unitsScale_ << "\n";
 }
 BuildFEMatrix::~BuildFEMatrix(){}
 
@@ -79,9 +78,7 @@ bool BuildFEMatrix::build_FEMatrix(TetVolFieldIntHandle hField,
     new BuildFEMatrix(hField, tens, hA, np, unitsScale);
 //  cerr << "SetupFEMatrix: number of threads being used = " << np << endl;
 
-  Thread::parallel(Parallel<BuildFEMatrix>(hMaker.get_rep(), 
-					   &BuildFEMatrix::parallel),
- 		   np, true);
+  Thread::parallel(Parallel<BuildFEMatrix>(hMaker.get_rep(), &BuildFEMatrix::parallel), np, true);
   
   // -- refer to the object one more time not to make it die before
   hMaker = 0;
@@ -93,8 +90,8 @@ bool BuildFEMatrix::build_FEMatrix(TetVolFieldIntHandle hField,
 }
 
 // -- callback routine to execute in parallel
-void BuildFEMatrix::parallel(int proc)
-{
+void BuildFEMatrix::parallel(int proc) {
+
   //! dividing nodes among processors
   TetVolMesh::Node::size_type nsize; hMesh_->size(nsize);
   int nNodes     = nsize;
@@ -108,8 +105,9 @@ void BuildFEMatrix::parallel(int proc)
   //----------------------------------------------------------------------
   //! Creating sparse matrix structure
   Array1<int> mycols(0, 15*ndof);
-  
-  if (proc==0){
+
+  // main thread
+  if (proc==0){ 
     hMesh_->synchronize(Mesh::EDGES_E | Mesh::NODE_NEIGHBORS_E);
   }
 
@@ -135,7 +133,8 @@ void BuildFEMatrix::parallel(int proc)
   
   //! check point
   barrier_.wait(np_);
-  
+
+  // main thread
   int st=0;
   if (proc == 0){  
     for(i=0;i<np_;i++){
@@ -194,8 +193,7 @@ void BuildFEMatrix::parallel(int proc)
    
   TetVolMesh::Node::array_type cell_nodes(4);
   hMesh_->begin(ii); hMesh_->end(iie);
-  for (; ii != iie; ++ii){
- 
+  for (; ii != iie; ++ii){ 
     if (hMesh_->test_nodes_range(*ii, start_node, end_node)){ 
       build_local_matrix(lcl_matrix, *ii);
       add_lcl_gbl(lcl_matrix, *ii, start_node, end_node, cell_nodes);
@@ -204,12 +202,13 @@ void BuildFEMatrix::parallel(int proc)
   barrier_.wait(np_);
 }
 
-void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::Cell::index_type c_ind)
-{
+void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::Cell::index_type c_ind) {
   Vector grad1, grad2, grad3, grad4;
   double vol = hMesh_->get_gradient_basis(c_ind, grad1, grad2, grad3, grad4);
  
-  int  ind = hField_->value(c_ind);
+  //int  ind = hField_->value(c_ind);
+  int ind = c_ind;
+  // cout << "cell index: " << ind << endl;
 
   double (&el_cond)[3][3] = tens_[ind].second.mat_;
  
@@ -275,7 +274,6 @@ void BuildFEMatrix::add_lcl_gbl(double lcl_a[4][4], TetVolMesh::Cell::index_type
   }
 }
 
-void BuildFEMatrix::io(Piostream&){
-}
+void BuildFEMatrix::io(Piostream&){}
 
 } // end namespace BioPSE
