@@ -23,34 +23,6 @@
 
 namespace SCIRun {
 
-
-/**************************************
-CLASS
-   RescaleColorMap
-
-   A module that can scale the colormap values to fit the data
-   or express a fixed data range.
-
-GENERAL INFORMATION
-   RescaleColorMap.h
-   Written by:
-
-     Kurt Zimmerman<br>
-     Department of Computer Science<br>
-     University of Utah<br>
-     June 1999
-
-     Copyright (C) 1998 SCI Group
-
-KEYWORDS
-   ColorMap, Transfer Function
-
-DESCRIPTION
-   This module takes a color map and some data or vector field
-   and scales the map to fit that field.
-
-****************************************/
-
 class RescaleColorMap : public Module {
   ColorMapOPort* omap;
   Array1<FieldIPort*> fieldports;
@@ -71,6 +43,7 @@ public:
         // Destructor
   virtual ~RescaleColorMap();
 
+  bool get_minmax(Field*, pair<double,double>& pair);
 
         // GROUP:  Access functions:
         ///////////////////////////
