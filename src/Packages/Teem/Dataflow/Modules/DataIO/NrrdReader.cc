@@ -79,9 +79,11 @@ private:
 
 } // end namespace SCITeem
 
+
 using namespace SCITeem;
 
 DECLARE_MAKER(NrrdReader)
+
 
 NrrdReader::NrrdReader(SCIRun::GuiContext* ctx) : 
   Module("NrrdReader", ctx, Filter, "DataIO", "Teem"),
@@ -92,6 +94,7 @@ NrrdReader::NrrdReader(SCIRun::GuiContext* ctx) :
   cached_label_(0)
 {
 }
+
 
 NrrdReader::~NrrdReader()
 {
@@ -113,7 +116,8 @@ NrrdReader::read_nrrd()
 
   // Read the status of this file so we can compare modification timestamps.
   struct stat buf;
-  if (stat(fn.c_str(), &buf) == - 1) {
+  if (stat(fn.c_str(), &buf) == - 1)
+  {
     error(string("FieldReader error - file not found: '")+fn+"'");
     return false;
   }
@@ -125,9 +129,10 @@ NrrdReader::read_nrrd()
 #else
   time_t new_filemodification = buf.st_mtime;
 #endif
-    if(!read_handle_.get_rep() || 
-  fn != old_filename_ || 
-  new_filemodification != old_filemodification_)
+
+  if (!read_handle_.get_rep() || 
+      fn != old_filename_ || 
+      new_filemodification != old_filemodification_)
   {
     old_filemodification_ = new_filemodification;
     old_filename_=fn;
@@ -149,7 +154,8 @@ NrrdReader::read_nrrd()
 
 
     // check that the last 3 chars are .nd for us to pio
-    if (fn.substr(len - ext.size(), ext.size()) == ext) {
+    if (fn.substr(len - ext.size(), ext.size()) == ext)
+    {
       Piostream *stream = auto_istream(fn);
       if (!stream)
       {
@@ -166,50 +172,63 @@ NrrdReader::read_nrrd()
 	return true;
       }
       delete stream;
-    } else { // assume it is just a nrrd
-      if (fn.substr(len - vff_ext.size(), vff_ext.size()) == vff_ext){
+    }
+    else
+    { // assume it is just a nrrd
+      if (fn.substr(len - vff_ext.size(), vff_ext.size()) == vff_ext)
+      {
 	string tmpfilename;
 	write_tmpfile(filename, &tmpfilename, vff_conv_command);
 	return read_file(tmpfilename);	
 	
-      } else if ((fn.substr(len - pic_ext.size(), pic_ext.size()) == pic_ext) ||
-		  fn.substr(len - pic_ext2.size(), pic_ext2.size()) == pic_ext2){
+      }
+      else if ((fn.substr(len - pic_ext.size(), pic_ext.size()) == pic_ext) ||
+               fn.substr(len - pic_ext2.size(), pic_ext2.size()) == pic_ext2)
+      {
 	string tmpfilename;
 	write_tmpfile(filename, &tmpfilename, pic_conv_command);
 	return read_file(tmpfilename);
 	
-      } else if (fn.substr(len - vol_ext.size(), vol_ext.size()) == vol_ext){
+      }
+      else if (fn.substr(len - vol_ext.size(), vol_ext.size()) == vol_ext)
+      {
 	string tmpfilename;
 	write_tmpfile(filename, &tmpfilename, vol_conv_command);
 	return read_file(tmpfilename);
 	
-      } else if (fn.substr(len - vista_ext.size(), vista_ext.size()) == vista_ext){
+      }
+      else if (fn.substr(len - vista_ext.size(), vista_ext.size()) == vista_ext)
+      {
 	string tmpfilename;
 	write_tmpfile(filename, &tmpfilename, vista_conv_command);
 	return read_file(tmpfilename);
 	
-      } else {
+      }
+      else
+      {
 	return read_file(fn);
-	
       }
     }
     return true;
   }
-    return false;
+  return false;
 }
 
 
-bool NrrdReader::read_file(string fn){
-
+bool
+NrrdReader::read_file(string fn)
+{
   NrrdData *n = scinew NrrdData;
-  if (nrrdLoad(n->nrrd=nrrdNew(), strdup(fn.c_str()), 0)) {
+  if (nrrdLoad(n->nrrd=nrrdNew(), strdup(fn.c_str()), 0))
+  {
     char *err = biffGetDone(NRRD);
     error("Read error on '" + fn + "': " + err);
     free(err);
     return true;
   }
   read_handle_ = n;
-  for (int i = 0; i < read_handle_->nrrd->dim; i++) {
+  for (int i = 0; i < read_handle_->nrrd->dim; i++)
+  {
     if (!(airExists(read_handle_->nrrd->axis[i].min) && 
 	  airExists(read_handle_->nrrd->axis[i].max)))
       nrrdAxisInfoMinMaxSet(read_handle_->nrrd, i, nrrdCenterNode);
@@ -217,7 +236,11 @@ bool NrrdReader::read_file(string fn){
   return false;
 }
 
-bool NrrdReader::write_tmpfile(string filename, string* tmpfilename, string conv_command){
+
+bool
+NrrdReader::write_tmpfile(string filename, string* tmpfilename,
+                          string conv_command)
+{
   string::size_type loc = filename.find_last_of("/");
   const string basefilename =
     (loc==string::npos)?filename:filename.substr(loc+1);
@@ -240,16 +263,19 @@ bool NrrdReader::write_tmpfile(string filename, string* tmpfilename, string conv
   string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     conv_command;
-  while ((loc = command.find("%f")) != string::npos){
+  while ((loc = command.find("%f")) != string::npos)
+  {
     command.replace(loc, 2, filename);
   }
-  while ((loc = command.find("%t")) != string::npos){
+  while ((loc = command.find("%t")) != string::npos)
+  {
     command.replace(loc, 2, *tmpfilename);
   }
   const int status = sci_system(command.c_str());
   ASSERT(status == 0);
   return true;
 }
+
 
 void
 NrrdReader::execute()
@@ -274,7 +300,7 @@ NrrdReader::execute()
 void 
 NrrdReader::tcl_command(GuiArgs& args, void* userdata)
 {
-  if(args.count() < 2)
+  if (args.count() < 2)
   {
     args.error("NrrdReader needs a minor command");
     return;
