@@ -90,12 +90,6 @@ public:
                                           const MaterialSubset*,
                                           const MaterialSet*);
 
-  void scheduleCCMomExchange(SchedulerP&, 
-                            const PatchSet*,
-                            const MaterialSubset*,
-                            const MaterialSubset*,
-                            const MaterialSet*);
-
   void scheduleInterpolateCCToNC(SchedulerP&, const PatchSet*,
                                  const MaterialSet*);
 
@@ -163,11 +157,6 @@ public:
                                     DataWarehouse*, 
                                     DataWarehouse*);
 
-  void doCCMomExchange(const ProcessorGroup*,
-                       const PatchSubset* patch,
-                       const MaterialSubset* matls,
-                       DataWarehouse* old_dw,
-                       DataWarehouse* new_dw);
 
   void interpolateCCToNC(const ProcessorGroup*,
                          const PatchSubset* patch,
