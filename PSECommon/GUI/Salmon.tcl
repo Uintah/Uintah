@@ -965,7 +965,6 @@ itcl_class Roe {
 	global $this-saveType
 	toplevel .ui[modname]-saveImage
 	set w .ui[modname]-saveImage
-	puts [set $this-saveFile]
 	makeFilebox $w \
 	    $this-saveFile "$this doSaveImage" \
 	    "destroy $w"
