@@ -222,7 +222,7 @@ Gui::setDpy( Dpy * dpy )
   dpy_     = dpy;
   priv     = dpy->priv;
   stealth_ = dpy->stealth_;
-  camera_  = dpy_->guiCam_;
+  camera_  = dpy->guiCam_;
 }
 
 GLuint        fontbase, fontbase2;
@@ -1824,7 +1824,8 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   glutAttachMenu(GLUT_RIGHT_BUTTON);
 
   // Build GLUI Windows
-  activeGui->mainWindow = GLUI_Master.create_glui( "SIGGRAPH", 0, 804, 0 );
+  activeGui->mainWindow = GLUI_Master.create_glui( "RTRT Controls",
+						   0, 804, 0 );
   if( !showGui ){
     activeGui->mainWindow->hide();
     activeGui->mainWindowVisible = false;
@@ -1956,9 +1957,14 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   // Jitter
   GLUI_Panel * jitter = 
     activeGui->mainWindow->add_panel_to_panel( display_panel, "Jitter" );
-  activeGui->jitterButton_ = activeGui->mainWindow->
-    add_button_to_panel( jitter, "Turn Jitter ON",
-			 TURN_ON_JITTER_BTN, toggleJitterCB );
+  if (activeGui->dpy_->scene->rtrt_engine->do_jitter)
+    activeGui->jitterButton_ = activeGui->mainWindow->
+      add_button_to_panel( jitter, "Turn Jitter OFF",
+			   TURN_ON_JITTER_BTN, toggleJitterCB );
+  else
+    activeGui->jitterButton_ = activeGui->mainWindow->
+      add_button_to_panel( jitter, "Turn Jitter ON",
+			   TURN_ON_JITTER_BTN, toggleJitterCB );
 
   // FOV
   activeGui->fovValue_ = activeGui->camera_->get_fov();
@@ -2565,8 +2571,9 @@ Gui::toggleAutoJitterCB( int /*id*/ )
 void
 Gui::toggleJitterCB( int /*id*/ )
 {
-  activeGui->dpy_->doJitter_ = !activeGui->dpy_->doJitter_;
-  if( !activeGui->dpy_->doJitter_ )
+  int *do_jitter = &(activeGui->dpy_->scene->rtrt_engine->do_jitter);
+  *do_jitter = !(*do_jitter);
+  if( !(*do_jitter))
     activeGui->jitterButton_->set_name("Turn Jitter ON");
   else
     activeGui->jitterButton_->set_name("Turn Jitter OFF");
