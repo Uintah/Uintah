@@ -186,7 +186,8 @@ void ForwardMEG::parallel2(int proc)
     
      Vector m = Vector((*magneticMatrix)[i][0],(*magneticMatrix)[i][1],(*magneticMatrix)[i][2]);
 
-     (*magnitudeMatrix)[i] = m.length();
+     //     (*magnitudeMatrix)[i] = m.length();
+     (*magnitudeMatrix)[i] = Dot(m,normal);
 
      /*    
         double angle = Dot(value,magneticField)/(value.length()*magneticField.length());
@@ -213,7 +214,7 @@ void ForwardMEG::parallel2(int proc)
     cerr << "Bz B(J) (return picked up by detector): " << Dot(normal,magneticField) <<"\n\n";
     mutex.unlock();
      */
- }
+  }
 
 }
 
@@ -246,10 +247,11 @@ void ForwardMEG::execute() {
 
   // J = (sigma)*E + J(source)
 
+
   VectorFieldHandle eField;
 
   if (!electricFieldP->get(eField)) return;
-
+  
   ugfield = ((VectorFieldUG*)(eField.get_rep()));
 
   mesh = ugfield->mesh;
@@ -263,7 +265,7 @@ void ForwardMEG::execute() {
   if (!detectorPtsP->get(detectLocsM)) return;
 
   detectorPts = dynamic_cast<DenseMatrix*>(detectLocsM.get_rep());
-
+  
   Norms = true;
   MatrixHandle detectNormsM;
   if (!detectorNormalsP->get(detectNormsM)) Norms = false;
@@ -272,21 +274,22 @@ void ForwardMEG::execute() {
   currentDensityField = new VectorFieldUG(mesh,VectorFieldUG::ElementValues);
 
   nelems = mesh->elems.size();
-
-  //initialize mesh::make_grid, so not problems in parallel
-  Point min,max;
-  mesh->get_bounds(min,max);
-  mesh->make_grid(20,20,20,min,max,0);
+  
+  //initialize mesh::get_bounds, so not problems in parallel
+  //  Point min,max;
+  //  mesh->get_bounds(min,max);
+  // mesh->make_grid(20,20,20,min,max,0);
    //////////////////////////
-
+  
   np=Thread::numProcessors();
   if (np>4) np/=2;
   cerr << "Number of Processors Used: " << np <<endl;
   Thread::parallel(Parallel<ForwardMEG>(this, &ForwardMEG::parallel1),np, true);
-
+  
+  
   //field of J's for each element
   currentDensityFieldMI = new VectorFieldMI(currentDensityField); 
-
+  
   magneticMatrix = new DenseMatrix(detectorPts->nrows(),detectorPts->ncols());
 
   magnitudeMatrix = new ColumnMatrix(detectorPts->nrows());
