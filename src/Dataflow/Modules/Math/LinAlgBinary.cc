@@ -94,7 +94,7 @@ void LinAlgBinary::execute() {
       return;
     }
     
-    ColumnMatrix *r;
+    //    ColumnMatrix *r;
 //    omat_->send(MatrixHandle(m));
     return;
   } else {

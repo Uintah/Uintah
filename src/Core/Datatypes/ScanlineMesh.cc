@@ -149,7 +149,7 @@ ScanlineMesh::get_weights(const Point &p,
 
   node0 = (unsigned int)r.x();
 
-  if (node0 >= 0 && node0 < (length_-1))
+  if (node0 < (length_ - 1))
   {
     const double dx1 = r.x() - node0;
     const double dx0 = 1.0 - dx1;
