@@ -229,14 +229,14 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // inputs : [u,v,w]VelocityCPBC, densityCP, viscosityCTS
   // outputs: [u,v,w]VelConvCoefMBLM, [u,v,w]VelCoefMBLM
   d_discretize->calculateVelocityCoeff(pc, patch, old_dw, new_dw, 
-				       delta_t, index,
+				       delta_t, 
 				       Arches::MOMENTUM);
 
   // Calculate velocity source
   // inputs : [u,v,w]VelocityCPBC, densityCP, viscosityCTS
   // outputs: [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
   d_source->calculateVelocitySource(pc, patch, old_dw, new_dw, 
-				    delta_t, index,
+				    delta_t, 
 				    Arches::MOMENTUM);
 
   // Velocity Boundary conditions
@@ -245,7 +245,6 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   //  outputs: [u,v,w]VelCoefMBLM, [u,v,w]VelLinSrcMBLM, 
   //           [u,v,w]VelNonLinSrcMBLM
   d_boundaryCondition->velocityBC(pc, patch, old_dw, new_dw, 
-				  index,
 				  Arches::MOMENTUM);
 
   // Modify Velocity Mass Source
@@ -254,14 +253,13 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   //           [u,v,w]VelNonLinSrcMBLM
   //  outputs: [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
   d_source->modifyVelMassSource(pc, patch, old_dw,
-				new_dw, delta_t, index,
+				new_dw, delta_t, 
 				Arches::MOMENTUM);
 
   // Calculate Velocity Diagonal
   //  inputs : [u,v,w]VelCoefMBLM, [u,v,w]VelLinSrcMBLM
   //  outputs: [u,v,w]VelCoefMBLM
   d_discretize->calculateVelDiagonal(pc, patch, new_dw, new_dw, 
-				     index,
 				     Arches::MOMENTUM);
 
   // Add the pressure source terms
@@ -274,6 +272,9 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.18  2000/07/18 22:33:51  bbanerje
+// Changes to PressureSolver for put error. Added ArchesLabel.
+//
 // Revision 1.17  2000/07/17 22:06:58  rawat
 // modified momentum source
 //

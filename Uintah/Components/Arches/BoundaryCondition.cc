@@ -531,98 +531,6 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 }
     
 //****************************************************************************
-// Schedule the calculation of the velocity BCs
-//****************************************************************************
-void 
-BoundaryCondition::sched_velocityBC(const LevelP& level,
-				    SchedulerP& sched,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw,
-				    int index)
-{
-#ifdef WONT_COMPILE_YET
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-      Task* tsk = scinew Task("BoundaryCondition::VelocityBC",
-			      patch, old_dw, new_dw, this,
-			      &BoundaryCondition::velocityBC,
-			      index);
-
-      int numGhostCells = 0;
-      int matlIndex = 0;
-
-      // This task requires old velocity, density and viscosity
-      // for all cases
-      tsk->requires(old_dw, d_uVelocityLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_vVelocityLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_wVelocityLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_densityLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_viscosityLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-
-      // For the three cases u or v or w are required based on index
-      switch(index) {
-      case 1:
-	tsk->requires(old_dw, d_uVelCoefLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-	tsk->requires(old_dw, d_uVelLinSrcLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-	tsk->requires(old_dw, d_uVelNonLinSrcLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
-	break;
-      case 2:
-	tsk->requires(old_dw, d_vVelCoefLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-	tsk->requires(old_dw, d_vVelLinSrcLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-	tsk->requires(old_dw, d_vVelNonLinSrcLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
-	break;
-      case 3:
-	tsk->requires(old_dw, d_wVelCoefLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-	tsk->requires(old_dw, d_wVelLinSrcLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-	tsk->requires(old_dw, d_wVelNonLinSrcLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
-	break;
-      default:
-	throw InvalidValue("Invalid component for velocity" +index);
-      }
-
-      // This task computes new u, v, w coefs, lin & non lin src terms
-      switch(index) {
-      case 1:
-	tsk->computes(new_dw, d_uVelCoefLabel, matlIndex, patch);
-	tsk->computes(new_dw, d_uVelLinSrcLabel, matlIndex, patch);
-	tsk->computes(new_dw, d_uVelNonLinSrcLabel, matlIndex, patch);
-	break;
-      case 2:
-	tsk->computes(new_dw, d_vVelCoefLabel, matlIndex, patch);
-	tsk->computes(new_dw, d_vVelLinSrcLabel, matlIndex, patch);
-	tsk->computes(new_dw, d_vVelNonLinSrcLabel, matlIndex, patch);
-	break;
-      case 3:
-	tsk->computes(new_dw, d_wVelCoefLabel, matlIndex, patch);
-	tsk->computes(new_dw, d_wVelLinSrcLabel, matlIndex, patch);
-	tsk->computes(new_dw, d_wVelNonLinSrcLabel, matlIndex, patch);
-	break;
-      default:
-	throw InvalidValue("Invalid component for velocity" +index);
-      }
-      sched->addTask(tsk);
-    }
-  }
-#endif
-}
-
-//****************************************************************************
 // Schedule the computation of the presures bcs
 //****************************************************************************
 void 
@@ -960,7 +868,7 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
 			      const Patch* patch,
 			      DataWarehouseP& old_dw,
 			      DataWarehouseP& new_dw,
-			      int index, int eqnType) 
+			      int eqnType) 
 {
   CCVariable<int> cellType;
   CCVariable<double> density;
@@ -1009,36 +917,40 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
   //get Molecular Viscosity of the fluid
   double molViscosity = d_turbModel->getMolecularViscosity();
 
-  // Call the fortran routines
-  switch(index) {
-  case 1:
-    uVelocityBC(new_dw, patch, &cellType, &uVelocity, 
-		&molViscosity, cellinfo, eqnType);
-    break;
-  case 2:
-    vVelocityBC(new_dw, patch, &cellType, &vVelocity,
-		&molViscosity, cellinfo, eqnType);
-    break;
-  case 3:
-    wVelocityBC(new_dw, patch, &cellType, &wVelocity, 
-		&molViscosity, cellinfo, eqnType);
-    break;
-  default:
-    cerr << "Invalid Index value" << endl;
-    break;
+  // For the three directions
+  for (int index = 1; index <= Arches::NDIM; index++) {
+
+    // Call the fortran routines
+    switch(index) {
+    case 1:
+      uVelocityBC(new_dw, patch, &cellType, &uVelocity, 
+		  &molViscosity, cellinfo, eqnType);
+      break;
+    case 2:
+      vVelocityBC(new_dw, patch, &cellType, &vVelocity,
+		  &molViscosity, cellinfo, eqnType);
+      break;
+    case 3:
+      wVelocityBC(new_dw, patch, &cellType, &wVelocity, 
+		  &molViscosity, cellinfo, eqnType);
+      break;
+    default:
+      cerr << "Invalid Index value" << endl;
+      break;
+    }
+    // Calculate the velocity wall BC
+    // For Arches::PRESSURE
+    //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
+    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
+    //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM, 
+    //           [u,v,w]VelNonLinSrcPBLM
+    // For Arches::MOMENTUM
+    //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefMBLM
+    //           [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
+    //  outputs: [u,v,w]VelCoefMBLM, [u,v,w]VelLinSrcMBLM, 
+    //           [u,v,w]VelNonLinSrcMBLM
+    d_turbModel->calcVelocityWallBC(pc, patch, old_dw, new_dw, index, eqnType);
   }
-  // Calculate the velocity wall BC
-  // For Arches::PRESSURE
-  //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
-  //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
-  //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM, 
-  //           [u,v,w]VelNonLinSrcPBLM
-  // For Arches::MOMENTUM
-  //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefMBLM
-  //           [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
-  //  outputs: [u,v,w]VelCoefMBLM, [u,v,w]VelLinSrcMBLM, 
-  //           [u,v,w]VelNonLinSrcMBLM
-  d_turbModel->calcVelocityWallBC(pc, patch, old_dw, new_dw, index, eqnType);
 }
 
 //****************************************************************************
@@ -1975,6 +1887,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.45  2000/07/18 22:33:51  bbanerje
+// Changes to PressureSolver for put error. Added ArchesLabel.
+//
 // Revision 1.44  2000/07/17 22:06:58  rawat
 // modified momentum source
 //

@@ -157,16 +157,6 @@ public:
 
       ////////////////////////////////////////////////////////////////////////
       //
-      // Schedule Computation of Velocity boundary conditions terms. 
-      //
-      void sched_velocityBC(const LevelP& level,
-			    SchedulerP& sched,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw,
-			    int index);
-
-      ////////////////////////////////////////////////////////////////////////
-      //
       // Schedule Computation of Pressure boundary conditions terms. 
       //
       void sched_pressureBC(const LevelP& level,
@@ -245,7 +235,6 @@ public:
 		      const Patch* patch,
 		      DataWarehouseP& old_dw,
 		      DataWarehouseP& new_dw,
-		      const int index,
 		      int eqnType);
 
       ////////////////////////////////////////////////////////////////////////
@@ -503,6 +492,9 @@ private:
   
 //
 // $Log$
+// Revision 1.38  2000/07/18 22:33:51  bbanerje
+// Changes to PressureSolver for put error. Added ArchesLabel.
+//
 // Revision 1.37  2000/07/17 22:06:58  rawat
 // modified momentum source
 //

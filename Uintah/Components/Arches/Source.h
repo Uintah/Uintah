@@ -106,7 +106,6 @@ public:
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw,
 				   double delta_t, 
-				   int index,
 				   int eqnType);
 
       ////////////////////////////////////////////////////////////////////////
@@ -131,7 +130,6 @@ public:
 			       DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw,
 			       double delta_t, 
-			       int index,
 			       int eqnType);
 
       ////////////////////////////////////////////////////////////////////////
@@ -231,6 +229,9 @@ private:
   
 //
 // $Log$
+// Revision 1.22  2000/07/18 22:33:52  bbanerje
+// Changes to PressureSolver for put error. Added ArchesLabel.
+//
 // Revision 1.21  2000/07/17 22:06:59  rawat
 // modified momentum source
 //

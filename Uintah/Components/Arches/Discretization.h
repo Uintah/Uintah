@@ -91,7 +91,6 @@ public:
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw,
 				  double delta_t,
-				  int index,
 				  int eqnType);
 
       ////////////////////////////////////////////////////////////////////////
@@ -127,7 +126,6 @@ public:
 				const Patch* patch,
 				DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw,
-				int index,
 				int eqnType);
 
       ////////////////////////////////////////////////////////////////////////
@@ -221,6 +219,9 @@ private:
   
 //
 // $Log$
+// Revision 1.26  2000/07/18 22:33:51  bbanerje
+// Changes to PressureSolver for put error. Added ArchesLabel.
+//
 // Revision 1.25  2000/07/14 05:23:50  bbanerje
 // Added scalcoef.F and updated related stuff in C++. scalcoef ==> coefs.f
 // in Kumar's code.

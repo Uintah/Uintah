@@ -26,13 +26,6 @@ using namespace Uintah::ArchesSpace;
 using namespace std;
 
 //****************************************************************************
-// Private constructor for PressureSolver
-//****************************************************************************
-PressureSolver::PressureSolver()
-{
-}
-
-//****************************************************************************
 // Default constructor for PressureSolver
 //****************************************************************************
 PressureSolver::PressureSolver(int nDim,
@@ -45,59 +38,7 @@ PressureSolver::PressureSolver(int nDim,
 				     d_physicalConsts(physConst),
 				     d_generation(0)
 {
-  d_cellTypeLabel = scinew VarLabel("cellType", 
-				    CCVariable<int>::getTypeDescription() );
-  // Inputs
-  d_pressureSPBCLabel = scinew VarLabel("pressureSPBC",
-			     CCVariable<double>::getTypeDescription() );
-  d_uVelocitySPBCLabel = scinew VarLabel("uVelocitySPBC",
-				 SFCXVariable<double>::getTypeDescription() );
-  d_vVelocitySPBCLabel = scinew VarLabel("vVelocitySPBC",
-				 SFCYVariable<double>::getTypeDescription() );
-  d_wVelocitySPBCLabel = scinew VarLabel("wVelocitySPBC",
-				 SFCZVariable<double>::getTypeDescription() );
-  d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
-				 SFCXVariable<double>::getTypeDescription() );
-  d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
-				 SFCYVariable<double>::getTypeDescription() );
-  d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC",
-				 SFCZVariable<double>::getTypeDescription() );
-  d_densityCPLabel = scinew VarLabel("densityCP",
-			       CCVariable<double>::getTypeDescription() );
-  d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
-			       CCVariable<double>::getTypeDescription() );
-
-  // Computed
-  d_uVelConvCoefPBLMLabel = scinew VarLabel("uVelConvectCoefPBLM",
-				   SFCXVariable<double>::getTypeDescription() );
-  d_vVelConvCoefPBLMLabel = scinew VarLabel("vVelConvectCoefPBLM",
-				   SFCYVariable<double>::getTypeDescription() );
-  d_wVelConvCoefPBLMLabel = scinew VarLabel("wVelConvectCoefPBLM",
-				   SFCZVariable<double>::getTypeDescription() );
-  d_uVelCoefPBLMLabel = scinew VarLabel("uVelCoefPBLM",
-			       SFCXVariable<double>::getTypeDescription() );
-  d_vVelCoefPBLMLabel = scinew VarLabel("vVelCoefPBLM",
-			       SFCYVariable<double>::getTypeDescription() );
-  d_wVelCoefPBLMLabel = scinew VarLabel("wVelCoefPBLM",
-			       SFCZVariable<double>::getTypeDescription() );
-  d_uVelLinSrcPBLMLabel = scinew VarLabel("uVelLinSrcPBLM",
-				 SFCXVariable<double>::getTypeDescription() );
-  d_vVelLinSrcPBLMLabel = scinew VarLabel("vVelLinSrcPBLM",
-				 SFCYVariable<double>::getTypeDescription() );
-  d_wVelLinSrcPBLMLabel = scinew VarLabel("wVelLinSrcPBLM",
-				 SFCZVariable<double>::getTypeDescription() );
-  d_uVelNonLinSrcPBLMLabel = scinew VarLabel("uVelNonLinSrcPBLM",
-				    SFCXVariable<double>::getTypeDescription() );
-  d_vVelNonLinSrcPBLMLabel = scinew VarLabel("vVelNonLinSrcPBLM",
-				    SFCYVariable<double>::getTypeDescription() );
-  d_wVelNonLinSrcPBLMLabel = scinew VarLabel("wVelNonLinSrcPBLM",
-				    SFCZVariable<double>::getTypeDescription() );
-  d_presCoefPBLMLabel = scinew VarLabel("presCoefPBLM",
-			       CCVariable<double>::getTypeDescription() );
-  d_presLinSrcPBLMLabel = scinew VarLabel("presLinSrcPBLM",
-				 CCVariable<double>::getTypeDescription() );
-  d_presNonLinSrcPBLMLabel = scinew VarLabel("presNonLinSrcPBLM",
-				    CCVariable<double>::getTypeDescription() );
+  d_lab = scinew ArchesLabel();
 }
 
 //****************************************************************************
@@ -159,11 +100,9 @@ void PressureSolver::solve(const LevelP& level,
   //computes stencil coefficients and source terms
   // require : old_dw -> pressureSPBC, densityCP, viscosityCTS, [u,v,w]VelocitySPBC
   //           new_dw -> pressureSPBC, densityCP, viscosityCTS, [u,v,w]VelocitySIVBC
-  // compute : uVelConvCoefPBLM, vVelConvCoefPBLM, wVelConvCoefPBLM
-  //           uVelCoefPBLM, vVelCoefPBLM, wVelCoefPBLM, uVelLinSrcPBLM
-  //           vVelLinSrcPBLM, wVelLinSrcPBLM, uVelNonLinSrcPBLM 
-  //           vVelNonLinSrcPBLM, wVelNonLinSrcPBLM, presCoefPBLM 
-  //           presLinSrcPBLM, presNonLinSrcPBLM
+  // compute : new_dw -> [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM,
+  //                     [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM,
+  //                     presCoefPBLM, presLinSrcPBLM, presNonLinSrcPBLM
   //sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t);
   sched_buildLinearMatrix(level, sched, old_dw, new_dw, delta_t);
 
@@ -184,7 +123,7 @@ void PressureSolver::solve(const LevelP& level,
   // require :
   // compute :
   //sched_normPressure(level, sched, new_dw, matrix_dw);
-  sched_normPressure(level, sched, old_dw, new_dw);
+  //sched_normPressure(level, sched, old_dw, new_dw);
   
 }
 
@@ -198,77 +137,320 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
 					DataWarehouseP& new_dw,
 					double delta_t)
 {
+  // Create tasks for each of the actions in BuildLinearMatrix for the
+  // Pressure Solve
+  int eqnType = Arches::PRESSURE;
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
-    {
-      Task* tsk = scinew Task("PressureSolver::BuildCoeff",
-			   patch, old_dw, new_dw, this,
-			   &PressureSolver::buildLinearMatrix, delta_t);
 
+    // Task 1 : CalculateVelocityCoeff
+    // requires : [u,v,w]VelocitySIVBC, densityCP, viscosityCTS
+    // computes : [u,v,w]VelCoefP0, [u,v,w]VelConvCoefPBLM 
+    {
+      Task* tsk = scinew Task("Pressure::VelCoef",
+			      patch, old_dw, new_dw, d_discretize,
+			      &Discretization::calculateVelocityCoeff, 
+			      delta_t, eqnType);
       int numGhostCells = 0;
       int matlIndex = 0;
-
-      // Requires
-      // from old_dw for time integration
-      tsk->requires(old_dw, d_cellTypeLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_uVelocitySPBCLabel, matlIndex, patch, 
+      tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_vVelocitySPBCLabel, matlIndex, patch, 
+      tsk->requires(new_dw, d_lab->densityCPLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_wVelocitySPBCLabel, matlIndex, patch, 
+      tsk->requires(new_dw, d_lab->viscosityCTSLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-      // from new_dw
-      tsk->requires(new_dw, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_uVelocitySIVBCLabel, matlIndex, patch, 
+      tsk->requires(new_dw, d_lab->uVelocitySIVBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-      tsk->requires(new_dw, d_vVelocitySIVBCLabel, matlIndex, patch, 
+      tsk->requires(new_dw, d_lab->vVelocitySIVBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-      tsk->requires(new_dw, d_wVelocitySIVBCLabel, matlIndex, patch, 
+      tsk->requires(new_dw, d_lab->wVelocitySIVBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-
-      /// requires convection coeff because of the nodal
-      // differencing
-      // computes all the components of velocity
-      tsk->computes(new_dw, d_uVelConvCoefPBLMLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelConvCoefPBLMLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelConvCoefPBLMLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_uVelCoefPBLMLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelCoefPBLMLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelCoefPBLMLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_uVelLinSrcPBLMLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelLinSrcPBLMLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelLinSrcPBLMLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_uVelNonLinSrcPBLMLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_presCoefPBLMLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_presLinSrcPBLMLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_presNonLinSrcPBLMLabel, matlIndex, patch);
-     
+      
+      tsk->computes(new_dw, d_lab->uVelCoefP0Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelCoefP0Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelCoefP0Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->uVelConvCoefPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelConvCoefPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelConvCoefPBLMLabel, matlIndex, patch);
+      
+      sched->addTask(tsk);
+    }
+    
+    // Task 2: CalculateVelocitySource
+    //  requires : [u,v,w]VelocitySIVBC, densityCP, viscosityCTS
+    //  computes: [u,v,w]VelLinSrcP0, [u,v,w]VelNonLinSrcP0
+    {
+      Task* tsk = scinew Task("Pressure::VelSource",
+			      patch, old_dw, new_dw, d_source,
+			      &Source::calculateVelocitySource, 
+			      delta_t, eqnType);
+      int numGhostCells = 0;
+      int matlIndex = 0;
+      tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->densityCPLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->viscosityCTSLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      
+      tsk->computes(new_dw, d_lab->uVelLinSrcP0Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelLinSrcP0Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelLinSrcP0Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->uVelNonLinSrcP0Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelNonLinSrcP0Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelNonLinSrcP0Label, matlIndex, patch);
+      
       sched->addTask(tsk);
     }
 
+    // Task 3: VelocityBC
+    //  requires : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefP0
+    //           [u,v,w]VelLinSrcP0, [u,v,w]VelNonLinSrcP0
+    //  computes: [u,v,w]VelCoefP1, [u,v,w]VelLinSrcP1, 
+    //           [u,v,w]VelNonLinSrcP1
+    {
+      Task* tsk = scinew Task("Pressure::VelBC",
+			      patch, old_dw, new_dw, d_boundaryCondition,
+			      &BoundaryCondition::velocityBC, 
+			      eqnType);
+      int numGhostCells = 0;
+      int matlIndex = 0;
+      tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelCoefP0Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelCoefP0Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelCoefP0Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      
+      tsk->computes(new_dw, d_lab->uVelCoefP1Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelCoefP1Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelCoefP1Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->uVelLinSrcP1Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelLinSrcP1Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelLinSrcP1Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->uVelNonLinSrcP1Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelNonLinSrcP1Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelNonLinSrcP1Label, matlIndex, patch);
+      
+      sched->addTask(tsk);
+    }
+
+    // Task 4: Modify Velocity Mass Source
+    //  requires : [u,v,w]VelocitySIVBC, [u,v,w]VelCoefP1, 
+    //           [u,v,w]VelConvCoefPBLM, [u,v,w]VelLinSrcP1, 
+    //           [u,v,w]VelNonLinSrcP1
+    //  computes: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
+    {
+      Task* tsk = scinew Task("Pressure::VelMassSource",
+			      patch, old_dw, new_dw, d_source,
+			      &Source::modifyVelMassSource, 
+			      delta_t, eqnType);
+      int numGhostCells = 0;
+      int matlIndex = 0;
+      tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelCoefP1Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelCoefP1Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelCoefP1Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelLinSrcP1Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelLinSrcP1Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelLinSrcP1Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelNonLinSrcP1Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelNonLinSrcP1Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelNonLinSrcP1Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+
+      tsk->computes(new_dw, d_lab->uVelLinSrcPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelLinSrcPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelLinSrcPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->uVelNonLinSrcPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelNonLinSrcPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelNonLinSrcPBLMLabel, matlIndex, patch);
+      
+      sched->addTask(tsk);
+    }
+
+    // Task 5: Calculate Velocity Diagonal
+    //  requires : [u,v,w]VelCoefP1, [u,v,w]VelLinSrcPBLM
+    //  computes: [u,v,w]VelCoefPBLM
+    {
+      Task* tsk = scinew Task("Pressure::VelDiagonal",
+			      patch, old_dw, new_dw, d_discretize,
+			      &Discretization::calculateVelDiagonal, 
+			      eqnType);
+      int numGhostCells = 0;
+      int matlIndex = 0;
+      tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelCoefP1Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelCoefP1Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelCoefP1Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelLinSrcPBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelLinSrcPBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelLinSrcPBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+
+      tsk->computes(new_dw, d_lab->uVelCoefPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelCoefPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelCoefPBLMLabel, matlIndex, patch);
+      
+      sched->addTask(tsk);
+    }
+
+    // Task 6: Calculate Pressure Coeffs
+    //  requires : densityCP, [u,v,w]VelCoefPBLM[Arches::AP]
+    //  computes: presCoefP0[Arches::AE..AB] 
+    {
+      Task* tsk = scinew Task("Pressure::PresCoef",
+			      patch, old_dw, new_dw, d_discretize,
+			      &Discretization::calculatePressureCoeff, 
+			      delta_t);
+      int numGhostCells = 0;
+      int matlIndex = 0;
+      tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->densityCPLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelCoefPBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelCoefPBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelCoefPBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      
+      tsk->computes(new_dw, d_lab->presCoefP0Label, matlIndex, patch);
+      
+      sched->addTask(tsk);
+    }
+
+    // Task 7: Calculate Pressure Source
+    //  requires : pressureSPBC, [u,v,w]VelocitySIVBC, densityCP,
+    //           [u,v,w]VelCoefPBLM, [u,v,w]VelNonLinSrcPBLM
+    //  computes: presLinSrcPBLM, presNonLinSrcPBLM
+    {
+      Task* tsk = scinew Task("Pressure::PresSource",
+			      patch, old_dw, new_dw, d_source,
+			      &Source::calculatePressureSource, 
+			      delta_t);
+      int numGhostCells = 0;
+      int matlIndex = 0;
+      tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->densityCPLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->pressureSPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelCoefPBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelCoefPBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelCoefPBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelNonLinSrcPBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelNonLinSrcPBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelNonLinSrcPBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      
+      tsk->computes(new_dw, d_lab->presLinSrcPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->presNonLinSrcPBLMLabel, matlIndex, patch);
+      
+      sched->addTask(tsk);
+    }
+
+    // Task 8: Calculate Pressure BC
+    //  requires : pressureSPBC, presCoefP0
+    //  computes: presCoefP1
+    {
+      Task* tsk = scinew Task("Pressure::PresBC",
+			      patch, old_dw, new_dw, d_boundaryCondition,
+			      &BoundaryCondition::pressureBC);
+      int numGhostCells = 0;
+      int matlIndex = 0;
+      tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->pressureSPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->presCoefP0Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+
+      tsk->computes(new_dw, d_lab->presCoefP1Label, matlIndex, patch);
+      
+      sched->addTask(tsk);
+    }
+
+    // Task 9: Calculate Pressure Diagonal
+    //  requires : presCoefP1, presLinSrcPBLM
+    //  computes: presCoefPBLM 
+    {
+      Task* tsk = scinew Task("Pressure::PresDiagonal",
+			      patch, old_dw, new_dw, d_discretize,
+			      &Discretization::calculatePressDiagonal);
+      int numGhostCells = 0;
+      int matlIndex = 0;
+      tsk->requires(new_dw, d_lab->presCoefP1Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->presLinSrcPBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+
+      tsk->computes(new_dw, d_lab->presCoefPBLMLabel, matlIndex, patch);
+      
+      sched->addTask(tsk);
+    }
   }
 }
 
 //****************************************************************************
-// Actually build of linear matrix
+// Actual build of linear matrix
 //****************************************************************************
+/*
 void 
-PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
-				  const Patch* patch,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw,
-				  double delta_t)
+PressureSolver::buildLinearMatrix(const ProcessorGroup* ,
+				  const Patch* ,
+				  DataWarehouseP& ,
+				  DataWarehouseP& ,
+				  double )
 {
   // compute all three componenets of velocity stencil coefficients
   for(int index = 1; index <= Arches::NDIM; ++index) {
@@ -333,12 +515,13 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   //  inputs : presCoefPBLM, presLinSrcPBLM
   //  outputs: presCoefPBLM 
   d_discretize->calculatePressDiagonal(pc, patch, old_dw, new_dw);
-
 }
+*/
 
 //****************************************************************************
 // Schedule the creation of the .. more documentation here
 //****************************************************************************
+/*
 void 
 PressureSolver::sched_normPressure(const LevelP& ,
 		                   SchedulerP& ,
@@ -346,10 +529,11 @@ PressureSolver::sched_normPressure(const LevelP& ,
 		                   DataWarehouseP& )
 {
 }  
-
+*/
 //****************************************************************************
 // Actually do normPressure
 //****************************************************************************
+/*
 void 
 PressureSolver::normPressure(const Patch* ,
 	                     SchedulerP& ,
@@ -357,9 +541,13 @@ PressureSolver::normPressure(const Patch* ,
 	                     DataWarehouseP& )
 {
 }
+*/
 
 //
 // $Log$
+// Revision 1.38  2000/07/18 22:33:52  bbanerje
+// Changes to PressureSolver for put error. Added ArchesLabel.
+//
 // Revision 1.37  2000/07/17 22:06:58  rawat
 // modified momentum source
 //
