@@ -140,7 +140,7 @@ void Smagorinsky_Model::computeStrainRate(const Patch* patch,
 
 void Smagorinsky_Model::scheduleTurbulence1(SchedulerP& sched,
                                             const PatchSet* patches,
-                                            const MaterialSet* matls)
+                                            const MaterialSet* /*matls*/)
 {
   if(filterScalars.size() > 0){
     for(int i=0;i<static_cast<int>(filterScalars.size());i++){

@@ -103,7 +103,7 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
                                    const LevelP&,
                                    const PatchSet* patches,
                                    const MaterialSubset* ice_matls,          
-                                   const MaterialSubset* mpm_matls,
+                                   const MaterialSubset* /*mpm_matls*/,
                                    const MaterialSubset* press_matl,
                                    const MaterialSet* all_matls)
 {

@@ -5123,7 +5123,7 @@ ICE::refineBoundaries(const Patch*, SFCZVariable<double>&,
   throw InternalError("trying to do AMR iwth the non-AMR component!");
 }
 
-bool ICE::needRecompile(double time, double dt, const GridP& grid)
+bool ICE::needRecompile(double /*time*/, double /*dt*/, const GridP& /*grid*/)
 {
   if(d_recompile){
     d_recompile = false;
@@ -5136,7 +5136,7 @@ bool ICE::needRecompile(double time, double dt, const GridP& grid)
 
 void ICE::scheduleCheckNeedAddMaterial(SchedulerP& sched,
                                        const LevelP& level,
-                                       const MaterialSet* ice_matls)
+                                       const MaterialSet* /*ice_matls*/)
 {
   if(d_models.size() != 0){
     cout_doing << "ICE::scheduleCheckNeedAddMaterial" << endl;

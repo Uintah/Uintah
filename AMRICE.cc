@@ -573,7 +573,7 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
                                   const VarLabel* varLabel,
                                   const int indx,
                                   DataWarehouse* new_dw,
-                                  const double ratio,
+                                  const double /*ratio*/,
                                   const Patch* finePatch,
                                   const Level* fineLevel,
                                   const Level* coarseLevel)
@@ -598,7 +598,7 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
     
     cout_dbg << " coarseToFineOperator: coarsePatch " << *coarsePatch
              << " finePatch " << *finePatch << endl;
-    IntVector refinementRatio = coarseLevel->getRefinementRatio();
+    //IntVector refinementRatio = coarseLevel->getRefinementRatio();
     
     // iterate over fine level cells
     for(CellIterator iter(fl, fh); !iter.done(); iter++){
@@ -797,8 +797,8 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
 /*_____________________________________________________________________
  Function~  AMRICE::scheduleInitialErrorEstimate--
 ______________________________________________________________________*/
-void AMRICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
-                                          SchedulerP& sched)
+void AMRICE::scheduleInitialErrorEstimate(const LevelP& /*coarseLevel*/,
+                                          SchedulerP& /*sched*/)
 {
 #if 0
   scheduleErrorEstimate(coarseLevel, sched);
@@ -920,12 +920,13 @@ void AMRICE::set_refineFlags( CCVariable<Vector>& q_CC_grad,
 /*_____________________________________________________________________
  Function~  AMRICE::errorEstimate--
 ______________________________________________________________________*/
-void AMRICE::errorEstimate(const ProcessorGroup*,
-			      const PatchSubset* patches,
-			      const MaterialSubset* matls,
-			      DataWarehouse*,
-			      DataWarehouse* new_dw,
-                           bool initial)
+void
+AMRICE::errorEstimate(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* /*matls*/,
+                      DataWarehouse*,
+                      DataWarehouse* new_dw,
+                      bool /*initial*/)
 {
   cout_doing << "Doing errorEstimate \t\t\t\t\t AMRICE"<< endl;
   for(int p=0;p<patches->size();p++){
