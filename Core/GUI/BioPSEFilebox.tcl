@@ -1357,7 +1357,8 @@ proc biopseFDialog_SetFilter {w type} {
     upvar \#0 $data(icons) icons
   
     set data(filter) [lindex $type 1]
-    set $data(-selectedfiletype) [lindex $type 0]
+    set data(-selectedfiletype) [lindex $type 0]
+    
     $data(typeMenuBtn) config -text [lindex $type 0] -indicatoron 1
 
     $icons(sbar) set 0.0 0.0
