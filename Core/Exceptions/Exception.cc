@@ -51,16 +51,16 @@ Exception::Exception()
     for(int i=1;i<nframes;i++)
       stacktrace << "0x" << (void*)addrs[i] << ": " << names[i] << '\n';
   }
-  d_stacktrace = strdup(stacktrace.str().c_str());
+  stacktrace_ = strdup(stacktrace.str().c_str());
 #else
-  d_stacktrace = 0;
+  stacktrace_ = 0;
 #endif
 }
 
 Exception::~Exception()
 {
-  if(d_stacktrace)
-    free((char*)d_stacktrace);
+  if(stacktrace_)
+    free((char*)stacktrace_);
 }
 
 // This is just to fool the compiler so that it will not complain about
@@ -89,8 +89,8 @@ void Exception::sci_throw(const Exception& exc)
   // If the mode is not "throw", we print out a message
   if(strcasecmp(emode, "throw") != 0){
     cerr << "\n\nAn exception was thrown.  Msg: " << exc.message() << "\n";
-    if(exc.d_stacktrace){
-      cerr << exc.d_stacktrace;
+    if(exc.stacktrace_){
+      cerr << exc.stacktrace_;
     }
     // Print out the exception type (clasname) and the message
     cerr << "\nException type: " << exc.type() << '\n';

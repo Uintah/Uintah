@@ -91,8 +91,8 @@ WARNING
 	    void writeUnlock();
 
 	private:
-	    const char* d_name;
-	    CrowdMonitor_private* d_priv;
+	    const char* name_;
+	    CrowdMonitor_private* priv_;
 
 	    // Cannot copy them
 	    CrowdMonitor(const CrowdMonitor&);

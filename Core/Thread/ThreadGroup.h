@@ -91,11 +91,11 @@ DESCRIPTION
 	    static ThreadGroup* s_default_group;
 
 	private:
-	    Mutex d_lock;
-	    const char* d_name;
-	    ThreadGroup* d_parent;
-	    std::vector<ThreadGroup*> d_groups;
-	    std::vector<Thread*> d_threads;
+	    Mutex lock_;
+	    const char* name_;
+	    ThreadGroup* parent_;
+	    std::vector<ThreadGroup*> groups_;
+	    std::vector<Thread*> threads_;
 	    void addme(ThreadGroup* t);
 	    void addme(Thread* t);
 

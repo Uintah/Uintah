@@ -61,15 +61,15 @@ DESCRIPTION
 	private:
 	    //////////
 	    // The next ID
-	    AtomicCounter d_nextID;
+	    AtomicCounter nextID_;
 
  	    //////////
 	    // The number of Mutexes in the pool
-	    int d_size;
+	    int size_;
 
  	    //////////
 	    // The array of Mutex objects.
-	    Mutex** d_pool;
+	    Mutex** pool_;
 
  	    //////////
 	    // Private copy ctor to prevent accidental copying

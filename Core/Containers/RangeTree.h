@@ -118,25 +118,25 @@ private:
     void deleteStructure(int d);
 
     inline bool isLeaf()
-    { return d_leftChild == NULL; }
+    { return leftChild_ == NULL; }
     
     inline bool isPointInRange(Point& low, Point& high, int d);
 
     inline RangeTreeNode* getChild(int i)
-    { return (i == 0) ? d_leftChild : d_rightChild; }
+    { return (i == 0) ? leftChild_ : rightChild_; }
 
     inline RangeTreeNode* getOtherChild(int i)
-    { return (i != 0) ? d_leftChild : d_rightChild; }
+    { return (i != 0) ? leftChild_ : rightChild_; }
     
     void singleDimensionDump(int d);
     
-    RangeTreeNode* d_leftChild;
-    RangeTreeNode* d_rightChild;
+    RangeTreeNode* leftChild_;
+    RangeTreeNode* rightChild_;
     union {
       RangeTreeNode* rtn;
       BaseLevelSet* bls;
-    } d_lowerLevel;
-    Point* d_point; // either the leaf point or the sorting mid point
+    } lowerLevel_;
+    Point* point_; // either the leaf point or the sorting mid point
   };
 
   // Associated data structure for the base level (d == 0).
@@ -149,15 +149,15 @@ private:
     BaseLevelSet(Point** points, int n);
 
     ~BaseLevelSet()
-    { delete[] d_points; delete[] d_leftSubLinks; delete[] d_rightSubLinks; }
+    { delete[] points_; delete[] leftSubLinks_; delete[] rightSubLinks_; }
     
     inline void setLeftSubLinks(BaseLevelSet* leftSubset)
-    { //d_leftSubset = leftSubset;
-      setSubLinks(d_leftSubLinks, leftSubset); }
+    { //leftSubset_ = leftSubset;
+      setSubLinks(leftSubLinks_, leftSubset); }
     
     inline void setRightSubLinks(BaseLevelSet* rightSubset)
-    { //d_rightSubset = rightSubset;
-      setSubLinks(d_rightSubLinks, rightSubset); }
+    { //rightSubset_ = rightSubset;
+      setSubLinks(rightSubLinks_, rightSubset); }
     
     int findGreaterEq(PointElem e);
 
@@ -170,30 +170,30 @@ private:
                     getRightSubGreaterEq(i /* , sub */); }
 
     inline int getLeftSubGreaterEq(int i /*, BaseLevelSet* sub */)
-    { /* assert(d_leftSubset == sub); */ return d_leftSubLinks[i]; }
+    { /* assert(leftSubset_ == sub); */ return leftSubLinks_[i]; }
 
     inline int getRightSubGreaterEq(int i /*, BaseLevelSet* sub */)
-    { /* assert(d_rightSubset == sub); */ return d_rightSubLinks[i]; }
+    { /* assert(rightSubset_ == sub); */ return rightSubLinks_[i]; }
 
-    // Append points to found list in the range from d_points[start]
-    // until d_points[j] <= high.
+    // Append points to found list in the range from points_[start]
+    // until points_[j] <= high.
     void getRange(list<Point*>& found, int start, PointElem high);
 
     void dump(); // for debugging
   private:
     void setSubLinks(int* sublinks, BaseLevelSet* subset);
 		     
-    Point** d_points; // array sorted in the zero'th dimension
-    int d_size; // size of points array
+    Point** points_; // array sorted in the zero'th dimension
+    int size_; // size of points array
 
-    //BaseLevelSet* d_leftSubset; /* was used for debugging */
-    //BaseLevelSet* d_rightSubset;
+    //BaseLevelSet* leftSubset_; /* was used for debugging */
+    //BaseLevelSet* rightSubset_;
     
     // Indexes to the elements of A(lc(v)) and A(rc(v))
     // respectively that are greater than or equal to corresponding
-    // elements in d_points.
-    int* d_leftSubLinks;
-    int* d_rightSubLinks;
+    // elements in points_.
+    int* leftSubLinks_;
+    int* rightSubLinks_;
   };
 
   void query(RangeTreeNode* root, list<Point*>& found,
@@ -208,8 +208,8 @@ private:
   void queryFromSplitD1(RangeTreeNode* root, list<Point*>& found,
 			Point& low, Point& high);
     
-  RangeTreeNode* d_root;
-  int d_dimensions;
+  RangeTreeNode* root_;
+  int dimensions_;
 };
 
 template<class Point>
@@ -230,17 +230,17 @@ class CompareDimension
 {
 public:
   CompareDimension(int d)
-    : d_dim(d) { }
+    : dim_(d) { }
 
   bool operator()(Point* x, Point* y)
-  { return comparePoints(x, y, d_dim) < 0; }
+  { return comparePoints(x, y, dim_) < 0; }
 private:
-  int d_dim;
+  int dim_;
 };
 
 template<class Point, class PointElem>
 RangeTree<Point, PointElem>::RangeTree(list<Point*> points, int dimensions)
-  : d_dimensions(dimensions)
+  : dimensions_(dimensions)
 {
   assert(dimensions >= 2);
   
@@ -259,7 +259,7 @@ RangeTree<Point, PointElem>::RangeTree(list<Point*> points, int dimensions)
   }
 
   int d = dimensions - 1;
-  d_root = scinew RangeTreeNode(d, pointSorts[d], pointSorts, 0, n);
+  root_ = scinew RangeTreeNode(d, pointSorts[d], pointSorts, 0, n);
 
   for (i = 0; i < d; i++)
     delete[] pointSorts[i];
@@ -269,30 +269,30 @@ RangeTree<Point, PointElem>::RangeTree(list<Point*> points, int dimensions)
 template<class Point, class PointElem>
 RangeTree<Point, PointElem>::~RangeTree()
 {
-  d_root->deleteStructure(d_dimensions - 1);
-  delete d_root;
+  root_->deleteStructure(dimensions_ - 1);
+  delete root_;
 }
 
 template<class Point, class PointElem>
 void RangeTree<Point, PointElem>::query(Point& low, Point& high,
 					list<Point*>& found)
 {
-  query(d_root, found, low, high, d_dimensions - 1);
+  query(root_, found, low, high, dimensions_ - 1);
 }
 
 template<class Point, class PointElem>
 void RangeTree<Point, PointElem>::topLevelDump() // for debugging
 {
-  d_root->singleDimensionDump(d_dimensions - 1);
+  root_->singleDimensionDump(dimensions_ - 1);
 }
 
 template<class Point, class PointElem>
 void RangeTree<Point, PointElem>::bottomLevelDump()
 {
-  RangeTreeNode* rtn = d_root;
-  for (int d = 2; d < d_dimensions; d++)
-    rtn = rtn->d_lowerLevel.rtn;
-  rtn->d_lowerLevel.bls->dump();
+  RangeTreeNode* rtn = root_;
+  for (int d = 2; d < dimensions_; d++)
+    rtn = rtn->lowerLevel_.rtn;
+  rtn->lowerLevel_.bls->dump();
 }
 
 template<class Point>
@@ -307,11 +307,11 @@ bool testSorted(Point** sorted, int d, int low, int high)
 template<class Point, class PointElem>
 RangeTree<Point, PointElem>::RangeTreeNode::
 RangeTreeNode(int d, Point** dSorted, Point*** subDSorted, int low, int high)
-  : d_leftChild(NULL),
-    d_rightChild(NULL),
-    d_point(NULL)
+  : leftChild_(NULL),
+    rightChild_(NULL),
+    point_(NULL)
 {
-  d_lowerLevel.rtn = NULL;
+  lowerLevel_.rtn = NULL;
   
   int i, j;
 
@@ -327,14 +327,14 @@ RangeTreeNode(int d, Point** dSorted, Point*** subDSorted, int low, int high)
       for (j = low; j < high; j++)
 	subSubDSorted[i][j-low] = subDSorted[i][j];
     }
-    d_lowerLevel.rtn = scinew RangeTreeNode(d-1, &subDSorted[d-1][low],
+    lowerLevel_.rtn = scinew RangeTreeNode(d-1, &subDSorted[d-1][low],
 				  subSubDSorted, 0, high-low);
     for (i = 0; i < d-1; i++)
       delete[] subSubDSorted[i];
     delete[] subSubDSorted;
   }
   else if (d == 1) {
-    d_lowerLevel.bls = scinew BaseLevelSet(&subDSorted[0][low], high-low);
+    lowerLevel_.bls = scinew BaseLevelSet(&subDSorted[0][low], high-low);
   }
 
   // split points by the mid value of the (d-1)th dimension
@@ -343,7 +343,7 @@ RangeTreeNode(int d, Point** dSorted, Point*** subDSorted, int low, int high)
   if (high - low > 1) {
     // contains more than just one point
     Point* p;
-    d_point = dSorted[mid_pos];
+    point_ = dSorted[mid_pos];
 
     if (d > 0) {
       // split the sorted vectors of sub-dimensions between 'left'
@@ -360,7 +360,7 @@ RangeTreeNode(int d, Point** dSorted, Point*** subDSorted, int low, int high)
 	left_index = right_index = 0;
 	for (j = low; j < high; j++) {
 	  p = subDSorted[i][j];
-	  if (comparePoints(p, d_point, d) < 0)
+	  if (comparePoints(p, point_, d) < 0)
 	    tmpLeftSorted[left_index++] = p;
 	  else
 	    tmpRightSorted[right_index++] = p;
@@ -379,17 +379,17 @@ RangeTreeNode(int d, Point** dSorted, Point*** subDSorted, int low, int high)
       delete[] tmpRightSorted;
     }
 
-    d_leftChild = scinew RangeTreeNode(d, dSorted, subDSorted, low, mid_pos);
-    d_rightChild = scinew RangeTreeNode(d, dSorted, subDSorted, mid_pos,
+    leftChild_ = scinew RangeTreeNode(d, dSorted, subDSorted, low, mid_pos);
+    rightChild_ = scinew RangeTreeNode(d, dSorted, subDSorted, mid_pos,
 					high); 
 
     if (d == 1) {
-      d_lowerLevel.bls->setLeftSubLinks(d_leftChild->d_lowerLevel.bls);
-      d_lowerLevel.bls->setRightSubLinks(d_rightChild->d_lowerLevel.bls);
+      lowerLevel_.bls->setLeftSubLinks(leftChild_->lowerLevel_.bls);
+      lowerLevel_.bls->setRightSubLinks(rightChild_->lowerLevel_.bls);
     } 
   }
   else {
-    d_point = dSorted[low];
+    point_ = dSorted[low];
   }
 }
 
@@ -397,16 +397,16 @@ template<class Point, class PointElem>
 void RangeTree<Point, PointElem>::RangeTreeNode::deleteStructure(int d)
 {
   if (d > 1)
-    d_lowerLevel.rtn->deleteStructure(d-1);
+    lowerLevel_.rtn->deleteStructure(d-1);
   else
-    delete d_lowerLevel.bls;
+    delete lowerLevel_.bls;
 
-  if (d_leftChild != NULL) {
-    d_leftChild->deleteStructure(d);
-    delete d_leftChild;
-    //assert(d_rightChild != NULL)
-    d_rightChild->deleteStructure(d);
-    delete d_rightChild;
+  if (leftChild_ != NULL) {
+    leftChild_->deleteStructure(d);
+    delete leftChild_;
+    //assert(rightChild_ != NULL)
+    rightChild_->deleteStructure(d);
+    delete rightChild_;
   }
 }
 
@@ -415,7 +415,7 @@ inline bool RangeTree<Point, PointElem>::RangeTreeNode::
 isPointInRange(Point& low, Point& high, int d)
 {
   for (int i = 0; i <= d; i++)
-    if ((*d_point)[i] < low[i] || (*d_point)[i] > high[i])
+    if ((*point_)[i] < low[i] || (*point_)[i] > high[i])
       return false; // leaf point is out of range
   return true; // leaf point is in range
 }
@@ -424,24 +424,24 @@ template<class Point, class PointElem>
 void RangeTree<Point, PointElem>::RangeTreeNode::
 singleDimensionDump(int d)
 {
-  if (d_leftChild != NULL) {
-    assert(d_rightChild != NULL);
-    d_leftChild->singleDimensionDump(d);
-    d_rightChild->singleDimensionDump(d);
+  if (leftChild_ != NULL) {
+    assert(rightChild_ != NULL);
+    leftChild_->singleDimensionDump(d);
+    rightChild_->singleDimensionDump(d);
   }
   else
-    cout << (*d_point)[d] << endl;
+    cout << (*point_)[d] << endl;
 }
 
 template<class Point, class PointElem>
 RangeTree<Point, PointElem>::BaseLevelSet::
 BaseLevelSet(Point** points, int n)
-  : d_points(scinew Point*[n]), d_size(n),
-    //d_leftSubset(NULL), d_rightSubset(NULL),
-    d_leftSubLinks(scinew int[n+1]), d_rightSubLinks(scinew int[n+1])
+  : points_(scinew Point*[n]), size_(n),
+    //leftSubset_(NULL), rightSubset_(NULL),
+    leftSubLinks_(scinew int[n+1]), rightSubLinks_(scinew int[n+1])
 {
   for (int i = 0; i < n; i++)
-    d_points[i] = points[i];
+    points_[i] = points[i];
 }
 
 template<class Point, class PointElem>
@@ -449,21 +449,21 @@ int RangeTree<Point, PointElem>::BaseLevelSet::
 findGreaterEq(PointElem e) // binary searches
 {
   int low = 0;
-  int high = d_size;
+  int high = size_;
 
   while (high - low > 1) {
     int mid = (high + low) / 2;
-    if (e <= (*d_points[mid-1])[0])
+    if (e <= (*points_[mid-1])[0])
       high = mid;
     else
       low = mid;
   }
 
   if (high - low == 0)
-    return d_size;
+    return size_;
   else {
-    //assert((low == 0) || (e > (*d_points[low-1])[0]));
-    return (e <= (*d_points[low])[0]) ? low : d_size;
+    //assert((low == 0) || (e > (*points_[low-1])[0]));
+    return (e <= (*points_[low])[0]) ? low : size_;
   }
 }
 
@@ -472,18 +472,18 @@ void RangeTree<Point, PointElem>::BaseLevelSet::
 setSubLinks(int* sublinks, BaseLevelSet* subset)
 {
   int i;
-  for (i = 0; i < d_size; i++)
-    sublinks[i] = subset->findGreaterEq((*d_points[i])[0]);
-  sublinks[i] = subset->d_size;
+  for (i = 0; i < size_; i++)
+    sublinks[i] = subset->findGreaterEq((*points_[i])[0]);
+  sublinks[i] = subset->size_;
 }
 
 template<class Point, class PointElem>
 void RangeTree<Point, PointElem>::BaseLevelSet::
 getRange(list<Point*>& found, int start, PointElem high)
 {
-  for (int i = start; i < d_size; i++) {
-    if ((*d_points[i])[0] <= high)
-      found.push_back(d_points[i]);
+  for (int i = start; i < size_; i++) {
+    if ((*points_[i])[0] <= high)
+      found.push_back(points_[i]);
     else
       return;
   }
@@ -493,13 +493,13 @@ template<class Point, class PointElem>
 void RangeTree<Point, PointElem>::BaseLevelSet::
 dump()
 {
-  for (int i = 0; i < d_size; i++) {
-    cout << (*d_points[i])[0] << " "; //(" << d_points[i]->getId() << ") ";
+  for (int i = 0; i < size_; i++) {
+    cout << (*points_[i])[0] << " "; //(" << points_[i]->getId() << ") ";
   }
   cout << endl;
-  if (d_leftSubset != NULL) {
-    d_leftSubset->dump();
-    d_rightSubset->dump();
+  if (leftSubset_ != NULL) {
+    leftSubset_->dump();
+    rightSubset_->dump();
   }
 }
 
@@ -517,10 +517,10 @@ query(RangeTreeNode* root, list<Point*>& found,
   // find split node which indicates the sub-tree at this
   // dimension level where the low..high points are contained
   while (!vsplit->isLeaf()) {
-    if (low[d] > (*vsplit->d_point)[d])
-      vsplit = vsplit->d_rightChild;
-    else if (high[d] < (*vsplit->d_point)[d])
-      vsplit = vsplit->d_leftChild;
+    if (low[d] > (*vsplit->point_)[d])
+      vsplit = vsplit->rightChild_;
+    else if (high[d] < (*vsplit->point_)[d])
+      vsplit = vsplit->leftChild_;
     else 
       // split node found
       break;
@@ -529,7 +529,7 @@ query(RangeTreeNode* root, list<Point*>& found,
   if (vsplit->isLeaf()) {
     // if one child is NULL the other one should be and it is a leaf
     if (vsplit->isPointInRange(low, high, d))
-      found.push_back(vsplit->d_point); // leaf point is in range
+      found.push_back(vsplit->point_); // leaf point is in range
   }
   else {
     if (d > 1)
@@ -550,12 +550,12 @@ queryFromSplit(RangeTreeNode* vsplit, list<Point*>& found,
     RangeTreeNode* v = vsplit->getChild(i);
     while (!v->isLeaf()) {
       if (i == 0)
-	cond = (low[d] <= (*v->d_point)[d]); // left side check
+	cond = (low[d] <= (*v->point_)[d]); // left side check
       else
-	cond = (high[d] >= (*v->d_point)[d]); // right side check
+	cond = (high[d] >= (*v->point_)[d]); // right side check
 
       if (cond) {
-	query(v->getOtherChild(i)->d_lowerLevel.rtn, found, low, high, d-1);
+	query(v->getOtherChild(i)->lowerLevel_.rtn, found, low, high, d-1);
 	v = v->getChild(i);
       }
       else
@@ -564,7 +564,7 @@ queryFromSplit(RangeTreeNode* vsplit, list<Point*>& found,
     
     // check if v is in range itself
     if (v->isPointInRange(low, high, d))
-      found.push_back(v->d_point); // leaf point is in range
+      found.push_back(v->point_); // leaf point is in range
   }
 }
 
@@ -580,7 +580,7 @@ queryFromSplitD1(RangeTreeNode* vsplit, list<Point*>& found,
 
   // Do one log(n) search here, then use constant lookup tables
   // to find firstGreaterEq indices as it descends down the tree.
-  int splitSubFirstGreaterEq = vsplit->d_lowerLevel.bls->findGreaterEq(low[0]);
+  int splitSubFirstGreaterEq = vsplit->lowerLevel_.bls->findGreaterEq(low[0]);
   int firstGreaterEqLow;
 
   // check left side (i = 0), then right side (i = 1)
@@ -589,20 +589,20 @@ queryFromSplitD1(RangeTreeNode* vsplit, list<Point*>& found,
     bool downLeftSide = (i == 0);
     bool wentLeft;
     RangeTreeNode* v = vsplit->getChild(i);
-    parentSub = v->d_lowerLevel.bls;
+    parentSub = v->lowerLevel_.bls;
     parentSubFirstGreaterEq = vsplit->
-      d_lowerLevel.bls->getSubGreaterEq(downLeftSide, splitSubFirstGreaterEq
-					/* , v->d_lowerLevel.bls */);
+      lowerLevel_.bls->getSubGreaterEq(downLeftSide, splitSubFirstGreaterEq
+					/* , v->lowerLevel_.bls */);
     
     while (!v->isLeaf()) {
       if (downLeftSide)
-	cond = (low[d] <= (*v->d_point)[d]); // left side check
+	cond = (low[d] <= (*v->point_)[d]); // left side check
       else
-	cond = (high[d] >= (*v->d_point)[d]); // right side check
+	cond = (high[d] >= (*v->point_)[d]); // right side check
 
       if (cond) {
 	// constant time lookup (key to algorithm speedup)
-	sub = v->getOtherChild(i)->d_lowerLevel.bls;
+	sub = v->getOtherChild(i)->lowerLevel_.bls;
 	firstGreaterEqLow = parentSub->
 	  getSubGreaterEq(!downLeftSide, parentSubFirstGreaterEq /*, sub*/);
 	sub->getRange(found, firstGreaterEqLow, high[0]);
@@ -617,14 +617,14 @@ queryFromSplitD1(RangeTreeNode* vsplit, list<Point*>& found,
       // constant time lookup (key to algorithm speedup)
       parentSubFirstGreaterEq = parentSub->
 	getSubGreaterEq(wentLeft, parentSubFirstGreaterEq /* ,
-			v->d_lowerLevel.bls */);
+			v->lowerLevel_.bls */);
 
-      parentSub = v->d_lowerLevel.bls;
+      parentSub = v->lowerLevel_.bls;
     }
     
     // check if v is in range itself
     if (v->isPointInRange(low, high, d))
-      found.push_back(v->d_point); // leaf point is in range
+      found.push_back(v->point_); // leaf point is in range
   }
 }
 

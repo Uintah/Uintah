@@ -56,18 +56,18 @@ class ConsecutiveRangeSetException : public Exception
 {
 public:
   ConsecutiveRangeSetException(std::string msg)
-    : d_msg(msg) { }
+    : msg_(msg) { }
 
   ConsecutiveRangeSetException(const ConsecutiveRangeSetException& copy)
-    : d_msg(copy.d_msg) { }
+    : msg_(copy.msg_) { }
 
   virtual const char* message() const
-  { return d_msg.c_str(); }
+  { return msg_.c_str(); }
   
   virtual const char* type() const
   { return "ConsecutiveRangeSetException"; }
 private:
-  std::string d_msg;
+  std::string msg_;
 };
 
 class ConsecutiveRangeSet
@@ -80,19 +80,19 @@ public:
   {
   public:
     iterator(const ConsecutiveRangeSet* set, int range, int offset)
-      : d_set(set), d_range(range), d_offset(offset) { }
+      : set_(set), range_(range), offset_(offset) { }
     iterator(const iterator& it2)
-      : d_set(it2.d_set), d_range(it2.d_range), d_offset(it2.d_offset) { }
+      : set_(it2.set_), range_(it2.range_), offset_(it2.offset_) { }
 
     iterator& operator=(const iterator& it2) {
-      d_set = it2.d_set; d_range = it2.d_range; d_offset = it2.d_offset;
+      set_ = it2.set_; range_ = it2.range_; offset_ = it2.offset_;
       return *this;
     }
     
     inline int operator*() throw(ConsecutiveRangeSetException);
 
     bool operator==(const iterator& it2) const
-    { return d_range == it2.d_range && d_offset == it2.d_offset; }
+    { return range_ == it2.range_ && offset_ == it2.offset_; }
 
     bool operator!=(const iterator& it2) const
     { return !(*this == it2); }
@@ -100,9 +100,9 @@ public:
     iterator& operator++();
     inline iterator operator++(int);
   private:
-    const ConsecutiveRangeSet* d_set;
-    int d_range;
-    int d_offset;
+    const ConsecutiveRangeSet* set_;
+    int range_;
+    int offset_;
   };
 
   
@@ -111,25 +111,25 @@ public:
   {
     Range(int low, int high);
     Range(const Range& r2)
-      : d_low(r2.d_low), d_extent(r2.d_extent) { }
+      : low_(r2.low_), extent_(r2.extent_) { }
 
     Range& operator=(const Range& r2)
-    { d_low = r2.d_low; d_extent = r2.d_extent; return *this; }
+    { low_ = r2.low_; extent_ = r2.extent_; return *this; }
 
     bool operator==(const Range& r2) const
-    { return d_low == r2.d_low && d_extent == r2.d_extent; }
+    { return low_ == r2.low_ && extent_ == r2.extent_; }
 
     bool operator!=(const Range& r2) const
-    { return d_low != r2.d_low || d_extent != r2.d_extent; }
+    { return low_ != r2.low_ || extent_ != r2.extent_; }
     
     bool operator<(const Range& r2) const
-    { return d_low < r2.d_low; }
+    { return low_ < r2.low_; }
 
     inline void display(std::ostream& out) const;
 	
-    int high() const { return (int)(d_low + d_extent); }
-    int d_low;
-    unsigned long d_extent;
+    int high() const { return (int)(low_ + extent_); }
+    int low_;
+    unsigned long extent_;
   };
 
 public:
@@ -137,18 +137,18 @@ public:
 
   ConsecutiveRangeSet(int low, int high); // single consecutive range
 
-  ConsecutiveRangeSet() : d_size(0) {} // empty set
+  ConsecutiveRangeSet() : size_(0) {} // empty set
   
   // initialize a range set with a string formatted like: "1, 2-8, 10, 15-30"
   ConsecutiveRangeSet(std::string setstr) throw(ConsecutiveRangeSetException);
 
   ConsecutiveRangeSet(const ConsecutiveRangeSet& set2)
-    : d_rangeSet(set2.d_rangeSet), d_size(set2.d_size) { }
+    : rangeSet_(set2.rangeSet_), size_(set2.size_) { }
   
   ~ConsecutiveRangeSet() {}
 
   ConsecutiveRangeSet& operator=(const ConsecutiveRangeSet& set2)
-  { d_rangeSet = set2.d_rangeSet; d_size = set2.d_size; return *this; }
+  { rangeSet_ = set2.rangeSet_; size_ = set2.size_; return *this; }
 
   // Add to the range set, asserting that value is greater or equal
   // to anything already in the set.
@@ -173,10 +173,10 @@ public:
   { return iterator(this, 0, 0); }
 
   inline iterator end() const
-  { return iterator(this, (int)d_rangeSet.size(), 0); }
+  { return iterator(this, (int)rangeSet_.size(), 0); }
 
   unsigned long size() const
-  { return d_size; }
+  { return size_; }
 
   std::string toString() const;
  
@@ -185,7 +185,7 @@ public:
 
   // used for debugging
   int getNumRanges()
-  { return (int)d_rangeSet.size(); }
+  { return (int)rangeSet_.size(); }
 
   static const ConsecutiveRangeSet empty;
   static const ConsecutiveRangeSet all;  
@@ -193,18 +193,18 @@ public:
 private:
   template <class InputIterator>
   ConsecutiveRangeSet(InputIterator begin, InputIterator end)
-    : d_rangeSet(begin, end) { setSize(); }
+    : rangeSet_(begin, end) { setSize(); }
   void setSize();
   
-  std::vector<Range> d_rangeSet;
-  unsigned long d_size; // sum of range (extent+1)'s
+  std::vector<Range> rangeSet_;
+  unsigned long size_; // sum of range (extent+1)'s
 };
 
 inline int ConsecutiveRangeSet::iterator::operator*()
   throw(ConsecutiveRangeSetException)
 {
-  CHECKARRAYBOUNDS(d_range, 0, (long)d_set->d_rangeSet.size());
-  return d_set->d_rangeSet[d_range].d_low + d_offset;
+  CHECKARRAYBOUNDS(range_, 0, (long)set_->rangeSet_.size());
+  return set_->rangeSet_[range_].low_ + offset_;
 }
 
 inline
@@ -218,10 +218,10 @@ ConsecutiveRangeSet::iterator ConsecutiveRangeSet::iterator::operator++(int)
 inline
 void ConsecutiveRangeSet::Range::display(std::ostream& out) const
 {
-  if (d_extent == 0)
-    out << d_low;
+  if (extent_ == 0)
+    out << low_;
   else
-    out << d_low << " - " << high();
+    out << low_ << " - " << high();
 }
 
 } // End namespace SCIRun

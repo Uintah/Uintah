@@ -28,56 +28,56 @@ public:
   }
   inline IntVector(const IntVector& copy) {
     for (int indx = 0; indx < 3; indx ++)
-      d_value[indx] = copy.d_value[indx];
+      value_[indx] = copy.value_[indx];
   }
   inline IntVector& operator=(const IntVector& copy) {
     for (int indx = 0; indx < 3; indx ++)
-      d_value[indx] = copy.d_value[indx];
+      value_[indx] = copy.value_[indx];
     return *this;	
   }
 
   inline bool operator==(const IntVector& a) {
-    return d_value[0] == a.d_value[0] && d_value[1] == a.d_value[1] && d_value[2] == a.d_value[2];
+    return value_[0] == a.value_[0] && value_[1] == a.value_[1] && value_[2] == a.value_[2];
   }
 
   inline bool operator!=(const IntVector& a) {
-    return d_value[0] != a.d_value[0] || d_value[1] != a.d_value[1] || d_value[2] != a.d_value[2];
+    return value_[0] != a.value_[0] || value_[1] != a.value_[1] || value_[2] != a.value_[2];
   }
 
   inline IntVector(int x, int y, int z) {
-    d_value[0] = x;
-    d_value[1] = y;
-    d_value[2] = z;
+    value_[0] = x;
+    value_[1] = y;
+    value_[2] = z;
   }
 
   inline IntVector operator*(const IntVector& v) const {
-    return IntVector(d_value[0]*v.d_value[0], d_value[1]*v.d_value[1],
-		     d_value[2]*v.d_value[2]);
+    return IntVector(value_[0]*v.value_[0], value_[1]*v.value_[1],
+		     value_[2]*v.value_[2]);
   }
   inline IntVector operator/(const IntVector& v) const {
-    return IntVector(d_value[0]/v.d_value[0], d_value[1]/v.d_value[1],
-		     d_value[2]/v.d_value[2]);
+    return IntVector(value_[0]/v.value_[0], value_[1]/v.value_[1],
+		     value_[2]/v.value_[2]);
   }
   inline IntVector operator+(const IntVector& v) const {
-    return IntVector(d_value[0]+v.d_value[0], d_value[1]+v.d_value[1], 
-		     d_value[2]+v.d_value[2]);
+    return IntVector(value_[0]+v.value_[0], value_[1]+v.value_[1], 
+		     value_[2]+v.value_[2]);
   }
   inline IntVector operator-(const IntVector& v) const {
-    return IntVector(d_value[0]-v.d_value[0], d_value[1]-v.d_value[1], 
-		     d_value[2]-v.d_value[2]);
+    return IntVector(value_[0]-v.value_[0], value_[1]-v.value_[1], 
+		     value_[2]-v.value_[2]);
   }
 
   inline IntVector& operator+=(const IntVector& v) {
-    d_value[0]+=v.d_value[0];
-    d_value[1]+=v.d_value[1];
-    d_value[2]+=v.d_value[2];
+    value_[0]+=v.value_[0];
+    value_[1]+=v.value_[1];
+    value_[2]+=v.value_[2];
     return *this;
   }
 
   inline IntVector& operator-=(const IntVector& v) {
-    d_value[0]-=v.d_value[0];
-    d_value[1]-=v.d_value[1];
-    d_value[2]-=v.d_value[2];
+    value_[0]-=v.value_[0];
+    value_[1]-=v.value_[1];
+    value_[2]-=v.value_[2];
     return *this;
   }
 
@@ -86,47 +86,47 @@ public:
   //           i(2)=i.z()
   //   --tan
   inline int operator()(int i) const {
-    return d_value[i];
+    return value_[i];
   }
 
   inline int& operator()(int i) {
-    return d_value[i];
+    return value_[i];
   }
 
   inline int operator[](int i) const {
-    return d_value[i];
+    return value_[i];
   }
 
   inline int& operator[](int i) {
-    return d_value[i];
+    return value_[i];
   }
 
   inline int x() const {
-    return d_value[0];
+    return value_[0];
   }
   inline int y() const {
-    return d_value[1];
+    return value_[1];
   }
   inline int z() const {
-    return d_value[2];
+    return value_[2];
   }
   inline void x(int x) {
-    d_value[0]=x;
+    value_[0]=x;
   }
   inline void y(int y) {
-    d_value[1]=y;
+    value_[1]=y;
   }
   inline void z(int z) {
-    d_value[2]=z;
+    value_[2]=z;
   }
   // get the array pointer
   inline int* get_pointer() {
-    return d_value;
+    return value_;
   }
   friend inline Vector operator*(const Vector&, const IntVector&);
   friend inline Vector operator*(const IntVector&, const Vector&);
 private:
-  int d_value[3];
+  int value_[3];
 };
 
 inline Vector operator*(const Vector& a, const IntVector& b) {

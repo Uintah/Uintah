@@ -43,71 +43,71 @@ CrowdMonitor_private::~CrowdMonitor_private()
 }
 
 CrowdMonitor::CrowdMonitor(const char* name)
-  : d_name(name)
+  : name_(name)
 {
-  d_priv=new CrowdMonitor_private;
+  priv_=new CrowdMonitor_private;
 }
 
 CrowdMonitor::~CrowdMonitor()
 {
-  delete d_priv;
+  delete priv_;
 }
 
 void
 CrowdMonitor::readLock()
 {
-  int oldstate=Thread::couldBlock(d_name);
-  d_priv->lock.lock();
-  while(d_priv->num_writers > 0){
-    d_priv->num_readers_waiting++;
-    int s=Thread::couldBlock(d_name);
-    d_priv->read_waiters.wait(d_priv->lock);
+  int oldstate=Thread::couldBlock(name_);
+  priv_->lock.lock();
+  while(priv_->num_writers > 0){
+    priv_->num_readers_waiting++;
+    int s=Thread::couldBlock(name_);
+    priv_->read_waiters.wait(priv_->lock);
     Thread::couldBlockDone(s);
-    d_priv->num_readers_waiting--;
+    priv_->num_readers_waiting--;
   }
-  d_priv->num_readers++;
-  d_priv->lock.unlock();
+  priv_->num_readers++;
+  priv_->lock.unlock();
   Thread::couldBlockDone(oldstate);
 }
 
 void
 CrowdMonitor::readUnlock()
 {
-  d_priv->lock.lock();
-  d_priv->num_readers--;
-  if(d_priv->num_readers == 0 && d_priv->num_writers_waiting > 0)
-    d_priv->write_waiters.conditionSignal();
-  d_priv->lock.unlock();
+  priv_->lock.lock();
+  priv_->num_readers--;
+  if(priv_->num_readers == 0 && priv_->num_writers_waiting > 0)
+    priv_->write_waiters.conditionSignal();
+  priv_->lock.unlock();
 }
 
 void
 CrowdMonitor::writeLock()
 {
-  int oldstate=Thread::couldBlock(d_name);
-  d_priv->lock.lock();
-  while(d_priv->num_writers || d_priv->num_readers){
+  int oldstate=Thread::couldBlock(name_);
+  priv_->lock.lock();
+  while(priv_->num_writers || priv_->num_readers){
     // Have to wait...
-    d_priv->num_writers_waiting++;
-    int s=Thread::couldBlock(d_name);
-    d_priv->write_waiters.wait(d_priv->lock);
+    priv_->num_writers_waiting++;
+    int s=Thread::couldBlock(name_);
+    priv_->write_waiters.wait(priv_->lock);
     Thread::couldBlockDone(s);
-    d_priv->num_writers_waiting--;
+    priv_->num_writers_waiting--;
   }
-  d_priv->num_writers++;
-  d_priv->lock.unlock();
+  priv_->num_writers++;
+  priv_->lock.unlock();
   Thread::couldBlockDone(oldstate);
 } // End namespace SCIRun
 
 void
 CrowdMonitor::writeUnlock()
 {
-  d_priv->lock.lock();
-  d_priv->num_writers--;
-  if(d_priv->num_writers_waiting)
-    d_priv->write_waiters.conditionSignal(); // Wake one of them up...
-  else if(d_priv->num_readers_waiting)
-    d_priv->read_waiters.conditionBroadcast(); // Wake all of them up...
-  d_priv->lock.unlock();
+  priv_->lock.lock();
+  priv_->num_writers--;
+  if(priv_->num_writers_waiting)
+    priv_->write_waiters.conditionSignal(); // Wake one of them up...
+  else if(priv_->num_readers_waiting)
+    priv_->read_waiters.conditionBroadcast(); // Wake all of them up...
+  priv_->lock.unlock();
 }
 
 } // End namespace SCIRun

@@ -92,8 +92,8 @@ public:
   void set(int);
 
 private:
-  const char* d_name;
-  AtomicCounter_private* d_priv;
+  const char* name_;
+  AtomicCounter_private* priv_;
 
   // Cannot copy them
   AtomicCounter(const AtomicCounter&);

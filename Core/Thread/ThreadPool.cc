@@ -49,36 +49,36 @@ public:
 };	
 
 ThreadPool::ThreadPool(const char* name)
-  : d_name(name), d_lock("ThreadPool lock"), barrier("ThreadPool barrier")
+  : name_(name), lock_("ThreadPool lock"), barrier("ThreadPool barrier")
 {
-  d_group = 0;
+  group_ = 0;
 }
 
 ThreadPool::~ThreadPool()
 {
   // All of the threads will go away with this
-  delete d_group;
+  delete group_;
 }
 
 void ThreadPool::wait()
 {
-  barrier.wait(d_threads.size()+1);
+  barrier.wait(threads_.size()+1);
 }
 
 void
 ThreadPool::parallel(const ParallelBase& helper, int nthreads)
 {
-  d_lock.lock();
-  if(nthreads >= (int)d_threads.size()){
-    if(!d_group)
-      d_group=new ThreadGroup("Parallel group");
-    int oldsize = d_threads.size();
-    d_threads.resize(nthreads);
+  lock_.lock();
+  if(nthreads >= (int)threads_.size()){
+    if(!group_)
+      group_=new ThreadGroup("Parallel group");
+    int oldsize = threads_.size();
+    threads_.resize(nthreads);
     for(int i=oldsize;i<nthreads;i++){
       char buf[50];
       sprintf(buf, "Parallel thread %d of %d", i, nthreads);
-      d_threads[i] = new ThreadPoolHelper(i, this);
-      Thread* t = new Thread(d_threads[i], buf, d_group,
+      threads_[i] = new ThreadPoolHelper(i, this);
+      Thread* t = new Thread(threads_[i], buf, group_,
 			     Thread::Stopped);
       t->setDaemon(true);
       t->detach();
@@ -88,16 +88,16 @@ ThreadPool::parallel(const ParallelBase& helper, int nthreads)
   }
   Thread::self()->migrate(nthreads%Thread::numProcessors());
   for(int i=0;i<nthreads;i++){
-    d_threads[i]->helper = &helper;
-    //	d_threads[i]->start_sema.up();
+    threads_[i]->helper = &helper;
+    //	threads_[i]->start_sema.up();
   }
   barrier.wait(nthreads+1);
   barrier.wait(nthreads+1);
   for(int i=0;i<nthreads;i++){
-    //d_threads[i]->done_sema.down();
-    d_threads[i]->helper = 0;
+    //threads_[i]->done_sema.down();
+    threads_[i]->helper = 0;
   }
-  d_lock.unlock();
+  lock_.unlock();
 }
 
 } // End namespace SCIRun

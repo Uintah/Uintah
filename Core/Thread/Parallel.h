@@ -43,8 +43,8 @@ public:
   //////////
   // Destroy the Parallel object - the threads will remain alive.
   virtual ~Parallel();
-  T* d_obj;
-  void (T::*d_pmf)(int);
+  T* obj_;
+  void (T::*pmf_)(int);
 protected:
   virtual void run(int proc);
 private:
@@ -58,10 +58,10 @@ void
 Parallel<T>::run(int proc)
 {
     // Copy out do make sure that the call is atomic
-    T* obj=d_obj;
-    void (T::*pmf)(int) = d_pmf;
-    if(d_wait)
-	d_wait->up();
+    T* obj=obj_;
+    void (T::*pmf)(int) = pmf_;
+    if(wait_)
+	wait_->up();
     (obj->*pmf)(proc);
     // Cannot do anything here, since the object may be deleted by the
     // time we return
@@ -69,9 +69,9 @@ Parallel<T>::run(int proc)
 
 template<class T>
 Parallel<T>::Parallel(T* obj, void (T::*pmf)(int))
-    : d_obj(obj), d_pmf(pmf)
+    : obj_(obj), pmf_(pmf)
 {
-    d_wait=0; // This may be set by Thread::parallel
+    wait_=0; // This may be set by Thread::parallel
 } // End namespace SCIRun
 
 template<class T>

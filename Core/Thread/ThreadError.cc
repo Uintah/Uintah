@@ -16,12 +16,12 @@ namespace SCIRun {
 
 
 ThreadError::ThreadError(const std::string& message)
-    : d_message(message)
+    : message_(message)
 {
 }
 
 ThreadError::ThreadError(const ThreadError& copy)
-    : d_message(copy.d_message)
+    : message_(copy.message_)
 {
 }
 
@@ -32,7 +32,7 @@ ThreadError::~ThreadError()
 const char*
 ThreadError::message() const
 {
-    return d_message.c_str();
+    return message_.c_str();
 }
 
 const char*

@@ -25,7 +25,7 @@ Dir::Dir()
 }
 
 Dir::Dir(const string& name)
-   : d_name(name)
+   : name_(name)
 {
 }
 
@@ -35,13 +35,13 @@ Dir::~Dir()
 
 Dir& Dir::operator=(const Dir& copy)
 {
-   d_name = copy.d_name;
+   name_ = copy.name_;
    return *this;
 }
 
 void Dir::remove()
 {
-  int code = rmdir(d_name.c_str());
+  int code = rmdir(name_.c_str());
   if (code != 0)
     throw ErrnoException("Dir::remove (rmdir call)", errno);
   return;
@@ -49,15 +49,15 @@ void Dir::remove()
 
 void Dir::forceRemove()
 {
-   int code = system((string("rm -f -r ") + d_name).c_str());
+   int code = system((string("rm -f -r ") + name_).c_str());
    if (code != 0)
-      throw InternalError(string("Dir::remove failed to remove: ") + d_name);
+      throw InternalError(string("Dir::remove failed to remove: ") + name_);
    return;
 }
 
 void Dir::remove(const string& filename)
 {
-   string filepath = d_name + "/" + filename;
+   string filepath = name_ + "/" + filename;
    int code = system((string("rm -f ") + filepath).c_str());
    if (code != 0)
       throw InternalError(string("Dir::remove failed to remove: ") + filepath);
@@ -66,35 +66,35 @@ void Dir::remove(const string& filename)
 
 Dir Dir::createSubdir(const string& sub)
 {
-   return create(d_name+"/"+sub);
+   return create(name_+"/"+sub);
 }
 
 Dir Dir::getSubdir(const string& sub)
 {
    // This should probably do more
-   return Dir(d_name+"/"+sub);
+   return Dir(name_+"/"+sub);
 }
 
 void Dir::copy(Dir& destDir)
 {
-   int code = system((string("cp -r ") + d_name + " " + destDir.d_name).c_str());
+   int code = system((string("cp -r ") + name_ + " " + destDir.name_).c_str());
    if (code != 0)
-      throw InternalError(string("Dir::copy failed to copy: ") + d_name);
+      throw InternalError(string("Dir::copy failed to copy: ") + name_);
    return;
 }
 
 void Dir::move(Dir& destDir)
 {
-   int code = system((string("mv ") + d_name + " " + destDir.d_name).c_str());
+   int code = system((string("mv ") + name_ + " " + destDir.name_).c_str());
    if (code != 0)
-      throw InternalError(string("Dir::move failed to move: ") + d_name);
+      throw InternalError(string("Dir::move failed to move: ") + name_);
    return;
 }
 
 void Dir::copy(const std::string& filename, Dir& destDir)
 {
-   string filepath = d_name + "/" + filename;
-   int code =system((string("cp ") + filepath + " " + destDir.d_name).c_str());
+   string filepath = name_ + "/" + filename;
+   int code =system((string("cp ") + filepath + " " + destDir.name_).c_str());
    if (code != 0)
       throw InternalError(string("Dir::copy failed to copy: ") + filepath);
    return;
@@ -102,8 +102,8 @@ void Dir::copy(const std::string& filename, Dir& destDir)
 
 void Dir::move(const std::string& filename, Dir& destDir)
 {
-   string filepath = d_name + "/" + filename;
-   int code =system((string("mv ") + filepath + " " + destDir.d_name).c_str());
+   string filepath = name_ + "/" + filename;
+   int code =system((string("mv ") + filepath + " " + destDir.name_).c_str());
    if (code != 0)
       throw InternalError(string("Dir::move failed to move: ") + filepath);
    return;

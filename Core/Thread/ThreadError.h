@@ -59,7 +59,7 @@ DESCRIPTION
 
 	protected:
 	private:
-	    std::string d_message;
+	    std::string message_;
 
 	    ThreadError& operator=(const ThreadError&);
 	};

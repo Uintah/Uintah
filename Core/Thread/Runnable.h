@@ -45,7 +45,7 @@ DESCRIPTION
 	class SCICORESHARE Runnable {
 	protected:
 	    friend class Thread;
-	    Thread* d_my_thread;
+	    Thread* my_thread_;
     
 	    //////////
 	    // Create a new runnable, and initialize it's state.

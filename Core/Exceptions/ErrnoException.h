@@ -29,8 +29,8 @@ public:
   int getErrno() const;
 protected:
 private:
-  std::string d_message;
-  int d_errno;
+  std::string message_;
+  int errno_;
 
   ErrnoException& operator=(const ErrnoException&);
 };

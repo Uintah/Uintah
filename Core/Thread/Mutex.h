@@ -63,8 +63,8 @@ public:
   // blocked waiting for the Mutex.
   void unlock();
 private:
-  Mutex_private* d_priv;
-  const char* d_name;
+  Mutex_private* priv_;
+  const char* name_;
 
   // Cannot copy them
   Mutex(const Mutex&);

@@ -15,12 +15,12 @@ namespace SCIRun {
 
 
 InternalError::InternalError(const std::string& message)
-    : d_message(message)
+    : message_(message)
 {
 }
 
 InternalError::InternalError(const InternalError& copy)
-    : d_message(copy.d_message)
+    : message_(copy.message_)
 {
 }
 
@@ -30,7 +30,7 @@ InternalError::~InternalError()
 
 const char* InternalError::message() const
 {
-    return d_message.c_str();
+    return message_.c_str();
 }
 
 const char* InternalError::type() const

@@ -64,19 +64,19 @@ DESCRIPTION
 	    T (*f_op)(const T&, const T&);
 	    struct DataArray {
 		// We want this on it's own cache line
-		T d_data;
+		T data_;
 		// Assumes 128 bytes in a cache line...
-		char d_filler[128];
+		char filler_[128];
 	    };
-	    DataArray* d_join[2];
+	    DataArray* join_[2];
 
 	    struct BufArray {
 		int which;
-		char d_filler[128-sizeof(int)];
+		char filler_[128-sizeof(int)];
 	    };
-	    BufArray* d_p;
+	    BufArray* p_;
 
-	    int d_array_size;
+	    int array_size_;
 	    void collectiveResize(int proc, int numThreads);
 	    void allocate(int size);
 
@@ -91,28 +91,28 @@ template<class T>
 Reducer<T>::Reducer(const char* name, ReductionOp op)
     : Barrier(name), f_op(op)
 {
-    d_array_size=-1;
-    d_p=0;
+    array_size_=-1;
+    p_=0;
 }
 
 template<class T>
 void
 Reducer<T>::allocate(int n)
 {
-    d_join[0]=new DataArray[2*numThreads+2]-1;
-    d_join[1]=d_join[0]+numThreads;
-    d_p=new BufArray[d_num_threads+2]+1;
-    for(int i=0;i<d_num_threads;i++)
-        d_p[i].d_whichBuffer=0;
-    d_array_size=n;
+    join_[0]=new DataArray[2*numThreads+2]-1;
+    join_[1]=join_[0]+numThreads;
+    p_=new BufArray[num_threads_+2]+1;
+    for(int i=0;i<num_threads_;i++)
+        p_[i].whichBuffer_=0;
+    array_size_=n;
 }
 
 template<class T>
 Reducer<T>::~Reducer()
 {
-    if(d_p){
-	delete[] (void*)(d_join[0]-1);
-	delete[] (void*)(d_p-1);
+    if(p_){
+	delete[] (void*)(join_[0]-1);
+	delete[] (void*)(p_-1);
     }
 }
 
@@ -126,10 +126,10 @@ Reducer<T>::collectiveResize(int proc, int n)
     // or they will skip down too soon...
     wait(n);
     if(proc==0){
-	delete[] (void*)(d_join[0]-1);
-	delete[] (void*)(d_p-1);
+	delete[] (void*)(join_[0]-1);
+	delete[] (void*)(p_-1);
 	allocate(n);
-	d_array_size=n;
+	array_size_=n;
     }
     wait(n);
 }
@@ -138,21 +138,21 @@ template<class T>
 T
 Reducer<T>::reduce(int proc, int n, const T& myresult)
 {
-    if(n != d_array_size){
+    if(n != array_size_){
         collectiveResize(proc, n);
 } // End namespace SCIRun
     if(n<=1)
 	return myresult;
 
-    int buf=d_p[proc].d_whichBuffer;
-    d_p[proc].d_whichBuffer=1-buf;
+    int buf=p_[proc].whichBuffer_;
+    p_[proc].whichBuffer_=1-buf;
 
-    dataArray* j=d_join[buf];
-    j[proc].d_data=myresult;
+    dataArray* j=join_[buf];
+    j[proc].data_=myresult;
     wait(n);
-    T red=j[0].d_data;
+    T red=j[0].data_;
     for(int i=1;i<n;i++)
-        red=(*f_op)(red, j[i].d_data);
+        red=(*f_op)(red, j[i].data_);
     return red;
 
 #endif

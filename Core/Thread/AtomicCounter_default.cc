@@ -35,35 +35,35 @@ AtomicCounter_private::~AtomicCounter_private()
 }
 
 AtomicCounter::AtomicCounter(const char* name)
-    : d_name(name)
+    : name_(name)
 {
-    d_priv=new AtomicCounter_private;
+    priv_=new AtomicCounter_private;
 }
 
 AtomicCounter::AtomicCounter(const char* name, int value)
-    : d_name(name)
+    : name_(name)
 {
-    d_priv=new AtomicCounter_private;
-    d_priv->value=value;
+    priv_=new AtomicCounter_private;
+    priv_->value=value;
 }
 
 AtomicCounter::~AtomicCounter()
 {
-    delete d_priv;
+    delete priv_;
 }
 
 AtomicCounter::operator int() const
 {
-    return d_priv->value;
+    return priv_->value;
 }
 
 int
 AtomicCounter::operator++()
 {
-    int oldstate=Thread::couldBlock(d_name);
-    d_priv->lock.lock();
-    int ret=++d_priv->value;
-    d_priv->lock.unlock();
+    int oldstate=Thread::couldBlock(name_);
+    priv_->lock.lock();
+    int ret=++priv_->value;
+    priv_->lock.unlock();
     Thread::couldBlockDone(oldstate);
     return ret;
 }
@@ -71,10 +71,10 @@ AtomicCounter::operator++()
 int
 AtomicCounter::operator++(int)
 {
-    int oldstate=Thread::couldBlock(d_name);
-    d_priv->lock.lock();
-    int ret=d_priv->value++;
-    d_priv->lock.unlock();
+    int oldstate=Thread::couldBlock(name_);
+    priv_->lock.lock();
+    int ret=priv_->value++;
+    priv_->lock.unlock();
     Thread::couldBlockDone(oldstate);
     return ret;
 }
@@ -82,10 +82,10 @@ AtomicCounter::operator++(int)
 int
 AtomicCounter::operator--()
 {
-    int oldstate=Thread::couldBlock(d_name);
-    d_priv->lock.lock();
-    int ret=--d_priv->value;	
-    d_priv->lock.unlock();
+    int oldstate=Thread::couldBlock(name_);
+    priv_->lock.lock();
+    int ret=--priv_->value;	
+    priv_->lock.unlock();
     Thread::couldBlockDone(oldstate);
     return ret;
 }
@@ -93,10 +93,10 @@ AtomicCounter::operator--()
 int
 AtomicCounter::operator--(int)
 {
-    int oldstate=Thread::couldBlock(d_name);
-    d_priv->lock.lock();
-    int ret=d_priv->value--;
-    d_priv->lock.unlock();
+    int oldstate=Thread::couldBlock(name_);
+    priv_->lock.lock();
+    int ret=priv_->value--;
+    priv_->lock.unlock();
     Thread::couldBlockDone(oldstate);
     return ret;
 } 
@@ -104,9 +104,9 @@ AtomicCounter::operator--(int)
 void
 AtomicCounter::set(int v)
 {
-    int oldstate=Thread::couldBlock(d_name);
-    d_priv->lock.lock();
-    d_priv->value=v;
-    d_priv->lock.unlock();
+    int oldstate=Thread::couldBlock(name_);
+    priv_->lock.lock();
+    priv_->value=v;
+    priv_->lock.unlock();
     Thread::couldBlockDone(oldstate);
 }

@@ -30,7 +30,7 @@ namespace SCIRun {
 	 virtual const char* message() const=0;
 	 virtual const char* type() const=0;
 	 const char* stackTrace() const {
-	    return d_stacktrace;
+	    return stacktrace_;
 	 }
 
 	 static void sci_throw(const Exception& exc);
@@ -38,7 +38,7 @@ namespace SCIRun {
       protected:
       private:
 	 Exception& operator=(const Exception&);
-	 const char* d_stacktrace;
+	 const char* stacktrace_;
       };
 } // End namespace SCIRun
 

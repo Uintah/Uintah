@@ -1743,7 +1743,7 @@ void GeomLine::draw(DrawInfoOpenGL* di, Material* matl, double)
     if(!pre_draw(di, matl, 0)) return;
     di->polycount++;
     // Set line width. Set it 
-    glLineWidth(d_lineWidth);
+    glLineWidth(lineWidth_);
     glBegin(GL_LINE_STRIP);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glVertex3d(p2.x(), p2.y(), p2.z());

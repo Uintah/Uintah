@@ -94,11 +94,11 @@ public:
   }
 
 private:
-  const char* d_name;
-  ThreadGroup* d_group;
-  Mutex d_lock;
-  std::vector<ThreadPoolHelper*> d_threads;
-  int d_numThreads;
+  const char* name_;
+  ThreadGroup* group_;
+  Mutex lock_;
+  std::vector<ThreadPoolHelper*> threads_;
+  int numThreads_;
   Barrier barrier;
   friend class ThreadPoolHelper;
   void wait();

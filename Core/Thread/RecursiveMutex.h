@@ -62,8 +62,8 @@ public:
   void unlock();
 
 private:
-  const char* d_name;
-  RecursiveMutex_private* d_priv;
+  const char* name_;
+  RecursiveMutex_private* priv_;
 
   // Cannot copy them
   RecursiveMutex(const RecursiveMutex&);

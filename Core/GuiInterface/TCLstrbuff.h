@@ -27,10 +27,10 @@ class SCICORESHARE TCLstrbuff : public GuiVar, public ostringstream{
   // GROUP: private data
   //////////
   // Placeholder to C-type string for communication with Tcl
-  char*      d_buff;
+  char*      buff_;
   //////////
   // Size of allocated C-string
-  int        d_bSize;
+  int        bSize_;
 
 public:
   

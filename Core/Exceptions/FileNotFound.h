@@ -28,7 +28,7 @@ namespace SCIRun {
 	    virtual const char* type() const;
 	protected:
 	private:
-	    std::string d_message;
+	    std::string message_;
 	    FileNotFound& operator=(const FileNotFound&);
 	};
 } // End namespace SCIRun

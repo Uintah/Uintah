@@ -67,39 +67,39 @@ bool exiting=false;
 
 Mutex::Mutex(const char* name)
 {
-	d_priv = scinew Mutex_private;
-	d_priv->lock = CreateMutex(NULL,0,name);
-	if (d_priv->lock == 0)
+	priv_ = scinew Mutex_private;
+	priv_->lock = CreateMutex(NULL,0,name);
+	if (priv_->lock == 0)
 	{
 		int check = GetLastError();
 		::exit(1);
 	}
 
 	int length = strlen(name);
-	d_name = new char[length+1];
-	sprintf((char*)d_name,"%s",name);
+	name_ = new char[length+1];
+	sprintf((char*)name_,"%s",name);
 }
 
 Mutex::~Mutex()
 {
-	CloseHandle(d_priv->lock);
-	delete[] (char*)d_name;
-	delete d_priv;
+	CloseHandle(priv_->lock);
+	delete[] (char*)name_;
+	delete priv_;
 }
 
 void Mutex::lock()
 {
-	WaitForSingleObject(d_priv->lock,INFINITE);
+	WaitForSingleObject(priv_->lock,INFINITE);
 }
 
 void Mutex::unlock()
 {
-	ReleaseMutex(d_priv->lock);
+	ReleaseMutex(priv_->lock);
 }
 
 bool Mutex::tryLock()
 {
-	int check = WaitForSingleObject(d_priv->lock,0);
+	int check = WaitForSingleObject(priv_->lock,0);
 	if (check == WAIT_OBJECT_0)
 		return 1;
 	else if (check == WAIT_TIMEOUT)
@@ -121,30 +121,30 @@ static HANDLE control_c_sema;
 
 Semaphore::Semaphore(const char* name,int count)
 {
-	d_priv = scinew Semaphore_private;
-	d_priv->hSema = CreateSemaphore(NULL,count,MAX(10,MIN(2*count,100)),name);
-	if (d_priv->hSema == 0)
+	priv_ = scinew Semaphore_private;
+	priv_->hSema = CreateSemaphore(NULL,count,MAX(10,MIN(2*count,100)),name);
+	if (priv_->hSema == 0)
 	{
 		int check = GetLastError();
 		::exit(1);
 	}
 	int length = strlen(name);
-	d_name = new char[length+1];
-	sprintf((char*)d_name,"%s",name);
+	name_ = new char[length+1];
+	sprintf((char*)name_,"%s",name);
 }
 
 Semaphore::~Semaphore()
 {
-	CloseHandle(d_priv->hSema);
-	delete[] (char*)d_name;
-	delete d_priv;
+	CloseHandle(priv_->hSema);
+	delete[] (char*)name_;
+	delete priv_;
 }
 
 void Semaphore::down(int dec)
 {
 	int check;
 	for (int loop = 0;loop<dec;loop++) {
-		check = WaitForSingleObject(d_priv->hSema,INFINITE);
+		check = WaitForSingleObject(priv_->hSema,INFINITE);
 		if (check != WAIT_OBJECT_0)
 		{
 			if (check == WAIT_ABANDONED);
@@ -161,7 +161,7 @@ void Semaphore::down(int dec)
 
 bool Semaphore::tryDown()
 {
-	int check = WaitForSingleObject(d_priv->hSema,0);
+	int check = WaitForSingleObject(priv_->hSema,0);
 	if (check == WAIT_OBJECT_0)
 		return 0;
 	else if (check == WAIT_TIMEOUT)
@@ -177,7 +177,7 @@ bool Semaphore::tryDown()
 void Semaphore::up(int inc)
 {
 	long count;
-	ReleaseSemaphore(d_priv->hSema,inc,&count);
+	ReleaseSemaphore(priv_->hSema,inc,&count);
 }
 
 
@@ -227,43 +227,43 @@ void Thread::initialize()
 
     ThreadGroup::s_default_group=new ThreadGroup("default group", 0);
     Thread* mainthread=new Thread(ThreadGroup::s_default_group, "main");
-    mainthread->d_priv=new Thread_private;
-    mainthread->d_priv->thread=mainthread;
-	mainthread->d_priv->threadid = GetCurrentThreadId();
-    mainthread->d_priv->state=RUNNING;
-    mainthread->d_priv->bstacksize=0;
+    mainthread->priv_=new Thread_private;
+    mainthread->priv_->thread=mainthread;
+	mainthread->priv_->threadid = GetCurrentThreadId();
+    mainthread->priv_->state=RUNNING;
+    mainthread->priv_->bstacksize=0;
 
-	cerr << "mainthread id = " << mainthread->d_priv->threadid << endl;
+	cerr << "mainthread id = " << mainthread->priv_->threadid << endl;
 
 	thread_local = new ThreadLocalMemory;
 	thread_local->current_thread = mainthread;
 
-	mainthread->d_priv->done = CreateSemaphore(0,0,10,"done");
-	if (!mainthread->d_priv->done) {
+	mainthread->priv_->done = CreateSemaphore(0,0,10,"done");
+	if (!mainthread->priv_->done) {
 		cerr << "unable to create semaphore name done" << endl;
 		::exit(-1);
 	}
 
-	mainthread->d_priv->delete_ready = CreateSemaphore(0,0,10,"delete_ready");
-	if (!mainthread->d_priv->delete_ready) {
+	mainthread->priv_->delete_ready = CreateSemaphore(0,0,10,"delete_ready");
+	if (!mainthread->priv_->delete_ready) {
 		cerr << "unable to create semaphore name delete_ready" << endl;
 		::exit(-1);
 	}
 
-	mainthread->d_priv->main_sema = CreateSemaphore(0,2,MAXTHREADS,"main_sema");
-	if (!mainthread->d_priv->main_sema) {
+	mainthread->priv_->main_sema = CreateSemaphore(0,2,MAXTHREADS,"main_sema");
+	if (!mainthread->priv_->main_sema) {
 		cerr << "unable to create semaphore name main_sema" << endl;
 		::exit(-1);
 	}
 
-	mainthread->d_priv->control_c_sema = CreateSemaphore(0,1,MAXTHREADS,"control_c_sema");
-	if (!mainthread->d_priv->control_c_sema) {
+	mainthread->priv_->control_c_sema = CreateSemaphore(0,1,MAXTHREADS,"control_c_sema");
+	if (!mainthread->priv_->control_c_sema) {
 		cerr << "unable to create semaphore name control_c_sema" << endl;
 		::exit(-1);
 	}
 
     lock_scheduler();
-    active[numActive]=mainthread->d_priv;
+    active[numActive]=mainthread->priv_;
     numActive++;
     unlock_scheduler();
 
@@ -287,7 +287,7 @@ void Thread::migrate(int proc)
 
 static void Thread_shutdown(Thread* thread)
 {
-    Thread_private* priv=thread->d_priv;
+    Thread_private* priv=thread->priv_;
 
 	if (WaitForSingleObject(priv->done,INFINITE)!=WAIT_OBJECT_0) {
 		cerr << "WaitForSingleObject() failed on semaphore named done" << endl;
@@ -303,7 +303,7 @@ static void Thread_shutdown(Thread* thread)
 	}
 
     // Allow this thread to run anywhere...
-    if(thread->d_cpu != -1)
+    if(thread->cpu_ != -1)
 	thread->migrate(-1);
 
     priv->thread=0;
@@ -358,32 +358,32 @@ void Thread::os_start(bool stopped)
     if(!initialized)
 	Thread::initialize();
 
-    d_priv=new Thread_private;
+    priv_=new Thread_private;
 
-	d_priv->done = CreateSemaphore(0,0,100,"done");
-	if (!d_priv->done) {
+	priv_->done = CreateSemaphore(0,0,100,"done");
+	if (!priv_->done) {
 		cerr << "CreateSemaphore failed" << endl;
 		::exit(-1);
 	}
-	d_priv->delete_ready = CreateSemaphore(0,0,100,"delete_ready");
-	if (!d_priv->delete_ready) {
+	priv_->delete_ready = CreateSemaphore(0,0,100,"delete_ready");
+	if (!priv_->delete_ready) {
 		cerr << "CreateSemaphore failed" << endl;
 		::exit(-1);
 	}
 
-    d_priv->state=STARTUP;
-    d_priv->bstacksize=0;
-    d_priv->thread=this;
-    d_priv->threadid=0;
-	d_priv->main_sema = main_sema;
+    priv_->state=STARTUP;
+    priv_->bstacksize=0;
+    priv_->thread=this;
+    priv_->threadid=0;
+	priv_->main_sema = main_sema;
 
     lock_scheduler();
-	d_priv->t = CreateThread(0,0,run_threads,d_priv,(stopped?CREATE_SUSPENDED:0),(unsigned long*)&d_priv->threadid);
-	if (!d_priv->t) {
+	priv_->t = CreateThread(0,0,run_threads,priv_,(stopped?CREATE_SUSPENDED:0),(unsigned long*)&priv_->threadid);
+	if (!priv_->t) {
 		cerr << "CreateSemaphore failed" << endl;
 		::exit(-1);
 	}
-    active[numActive]=d_priv;
+    active[numActive]=priv_;
     numActive++;
     unlock_scheduler();
 }
@@ -408,10 +408,10 @@ void Thread::checkExit()
 void Thread::detach()
 {
 	long last;
-	ReleaseSemaphore(d_priv->delete_ready,1,&last);
-    d_detached=true;
+	ReleaseSemaphore(priv_->delete_ready,1,&last);
+    detached_=true;
 #if 0
-    if(pthread_detach(d_priv->threadid) != 0)
+    if(pthread_detach(priv_->threadid) != 0)
 	throw ThreadError(std::string("pthread_detach failed")
 			  +strerror(errno));
 #endif
@@ -419,17 +419,17 @@ void Thread::detach()
 
 void Thread::stop()
 {
-	SuspendThread(d_priv->t);
+	SuspendThread(priv_->t);
 }
 
 void Thread::resume()
 {
-	ResumeThread(d_priv->t);
+	ResumeThread(priv_->t);
 }
 
 void Thread::join()
 {
-	WaitForSingleObject(d_priv->t,INFINITE);
+	WaitForSingleObject(priv_->t,INFINITE);
 }
 
 void Thread::yield()
