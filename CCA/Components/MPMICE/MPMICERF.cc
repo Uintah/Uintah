@@ -206,6 +206,27 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
       new_dw->put( rho_CC_new[m],    Ilb->rho_CCLabel,        indx, patch);
     }
     new_dw->put(press_new,Ilb->press_equil_CCLabel,0,patch);
+    
+   //---- P R I N T   D A T A ------   
+    if (d_ice->switchDebug_EQ_RF_press) {
+      ostringstream desc;
+      desc << "BOT_computeRFPress_patch_" << patch->getID();
+      d_ice->printData( patch, 1, desc.str(), "Press_CC_RF", press_new);
 
+      for (int m = 0; m < numALLMatls; m++)  {
+        Material* matl = d_sharedState->getMaterial( m );
+        int indx = matl->getDWIndex(); 
+        ostringstream desc;
+        desc<< "BOT_computeRFPress_Mat_"<< indx << "_patch_"<<patch->getID();
+    #if 0
+        d_ice->printData( patch, 1,desc.str(),"matl_press",  matl_press[m]);
+        d_ice->printData( patch, 1,desc.str(),"f_theta",     f_theta[m]);  
+        d_ice->printData( patch, 1,desc.str(),"sp_vol_CC",   sp_vol_new[m]); 
+    #endif 
+        d_ice->printData( patch, 1,desc.str(),"rho_CC",      rho_CC_new[m]);       
+        d_ice->printData( patch, 1,desc.str(),"rho_micro_CC",rho_micro[m]);    
+        d_ice->printData( patch, 1,desc.str(),"vol_frac_CC", vol_frac[m]);     
+      }
+    }
   } // patches
 }
