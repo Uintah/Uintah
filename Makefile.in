@@ -85,6 +85,7 @@ TK_LIB_DIR    := @TK_LIB_DIR@
 TK_LIB_FLAG   := @TK_LIB_FLAG@
 ITCL_LIB_DIR  := @ITCL_LIB_DIR@
 ITCL_LIB_FLAG := @ITCL_LIB_FLAG@
+ITCL_BIN_DIR  := @ITCL_BIN_DIR@
 BLT_LIB_DIR  := @BLT_LIB_DIR@
 BLT_LIB_FLAG := @BLT_LIB_FLAG@
 BLT_TLINK := -L$(BLT_LIB_DIR)
@@ -228,6 +229,7 @@ include $(SRCTOP)/scripts/recurse.mk
 MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
 MAKEFILEDIRS := $(subst $(SRCTOP),$(OBJTOP_ABS),$(MAKEFILEDIRS))
 SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
+CREATETCLINDEX := $(SRCTOP)/scripts/createTclIndex
 
 #
 # etags generation
@@ -243,6 +245,8 @@ ETAGS := @ETAGS@
 
 all:: $(MAKEFILEDIRS)
 
+all:: $(CREATETCLINDEX)
+
 all:: $(LIBDIR) $(SUBMAKEFILES)
 
 all:: $(ALLGEN) $(ALLTARGETS)
@@ -250,6 +254,11 @@ all:: $(ALLGEN) $(ALLTARGETS)
 $(MAKEFILEDIRS):
 	@echo creating directory $@
 	@mkdir -p $@
+
+$(CREATETCLINDEX): $(SRCTOP)/scripts/createTclIndex.in
+	sed -e 's,ITCL_BIN_DIR,$(ITCL_BIN_DIR),g'\
+            $(SRCTOP)/scripts/createTclIndex.in > $(CREATETCLINDEX)
+	chmod a+x $(CREATETCLINDEX)
 
 $(LIBDIR):
 	mkdir -p $(LIBDIR)
@@ -365,6 +374,9 @@ endif
 
 #
 # $Log$
+# Revision 1.39  2000/09/04 06:20:52  moulding
+# fixed execute permissions for createTclIndex
+#
 # Revision 1.38  2000/08/15 20:55:57  dav
 # added -f flag to rm of sciTAGS
 #
