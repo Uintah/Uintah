@@ -325,6 +325,14 @@
 
 <!-- ********** Table of Contents ********* -->
 
+<a>
+  <xsl:attribute name="href">
+    <xsl:value-of
+      select="concat($source,'?dir=2&amp;cont=1')"/>
+  </xsl:attribute>
+  NEXT
+</a>
+
 <p class="title">
   <xsl:value-of select="./title" />
 </p>
@@ -369,8 +377,38 @@
 
 <xsl:for-each select="./chapter">
   <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
+  <xsl:variable name="prev">
+    <xsl:value-of select="$chapnum - 1"/>
+  </xsl:variable>
+  <xsl:variable name="next">
+    <xsl:value-of select="$chapnum + 1"/>
+  </xsl:variable>
 
   <xsl:if test="$chapnum=$cont">
+    <table border="0"><tr><td width="50">
+    <xsl:if test="$chapnum&gt;0">
+      <a>
+        <xsl:attribute name="href">
+          <xsl:value-of
+            select="concat($source,'?dir=2&amp;cont=',$prev)"/>
+        </xsl:attribute>
+        PREV
+        <xsl:value-of select="concat(' ',' ')"/>
+      </a>
+    </xsl:if></td>
+
+    <td width="50">
+    <xsl:if test="$chapnum&lt;last()">
+      <a>
+        <xsl:attribute name="href">
+          <xsl:value-of
+            select="concat($source,'?dir=2&amp;cont=',$next)"/>
+        </xsl:attribute>
+        NEXT
+      </a>
+    </xsl:if>
+    </td></tr></table>
+
     <p class="title">Chapter <xsl:value-of select="$chapnum"/>: <xsl:value-of select="./title"/></p>
   </xsl:if>
 
