@@ -55,25 +55,34 @@ GenField::~GenField(){
 
 void GenField::execute()
 {
-  int n    = 16;     // number samples in each dimension
-  double b = 3.15;   // extent of the samples in each dimension
+  // create an example 3D field of Vectors, which is 64^3
+  // and has extents equal to [-3.15,3.15]x[-3.15,3.15]x[-3.15,3.15]
+  int x,y,z;
+  x = y = z = 64;        // number of samples in each dimension
+  double b = 3.15;   
+  Point start(-b,-b,-b); // extents of the geometry.
+  Point end(b,b,b);
 
-  Point s(-b,-b,-b);
-  Point e(b,b,b);
+  // create geometry and attribute objects.  Note that the
+  // geometry and the attribute have the same dimensions (3D),
+  // and the same number of samples (x,y,z) in each dimension.
+  LatticeGeom* geom = scinew LatticeGeom(x,y,z,start,end);
+  DiscreteAttrib<Vector>* attr = scinew FlatAttrib<Vector>(x,y,z);
 
-  LatticeGeom* geom = new LatticeGeom(n,n,n,s,e);
-  DiscreteAttrib<Vector>* attr = new FlatAttrib<Vector>(n,n,n);
+  // create a field using the above geometry and attribute.
   GenVField<Vector,LatticeGeom>* field = 
-    new GenVField<Vector,LatticeGeom>(geom,attr);
+    scinew GenVField<Vector,LatticeGeom>(geom,attr);
 
+  // populate the field with some values.
   int i,j,k;
-  double gap = b*2.0/n;
+  double gap = b*2.0/(x-1);  // distance between nodes along the x axis
 
-  for (i=0;i<n;i++) 
-    for (j=0;j<n;j++)
-      for (k=0;k<n;k++)
-	attr->set3(i,j,k,Vector(1,sin(-b+j*gap),0));
+  for (i=0;i<x;i++) 
+    for (j=0;j<y;j++)
+      for (k=0;k<z;k++)
+	attr->set3(i,j,k,Vector(1,sin(-b+i*gap),0));
 
+  // send the field out the output port.
   FieldHandle* handle = scinew FieldHandle(field);
   oport->send(*handle);
 }
