@@ -29,6 +29,7 @@ SRCDIR   := Packages/BioPSE/Dataflow/Modules/Modeling
 SRCS     += \
 	$(SRCDIR)/ExtractSepSurfs.cc\
 	$(SRCDIR)/ExtractSingleSurface.cc\
+        $(SRCDIR)/ModifyConductivities.cc\
 	$(SRCDIR)/SegFieldOps.cc\
 	$(SRCDIR)/SegFieldToLatVol.cc\
 	$(SRCDIR)/SepSurfToQuadSurf.cc\

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
 
-<component name="ModifyConductivities" category="Forward">
+<component name="ModifyConductivities" category="Modeling">
   <overview>
     <authors>
       <author>Michael Callahan</author>

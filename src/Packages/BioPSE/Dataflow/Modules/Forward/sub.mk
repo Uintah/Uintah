@@ -42,7 +42,6 @@ SRCS     += $(SRCDIR)/AnisoSphereModel.cc\
 	    $(SRCDIR)/InsertElectrodes.cc\
 	    $(SRCDIR)/InsertVoltageSource.cc\
 	    $(SRCDIR)/IntegrateCurrent.cc\
-	    $(SRCDIR)/ModifyConductivities.cc\
 	    $(SRCDIR)/SetupBEMatrix.cc\
 	    $(SRCDIR)/SetupFEMatrix.cc\
 	    $(SRCDIR)/SphereModel.cc\
