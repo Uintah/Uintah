@@ -87,7 +87,7 @@ ScaleFieldData::execute()
   {
     return;
   }
-  const int rows = imatrix->nrows();
+  const unsigned int rows = imatrix->nrows();
 
   // Create a new Vector field with the same geometry handle as field.
   const string geom_name = ifield->get_type_name(0);
@@ -100,7 +100,7 @@ ScaleFieldData::execute()
       return;
     }
     PointCloud<Vector> *pcs = pc->clone();
-    for (int i=0; i<pc->fdata().size(); i++) {
+    for (unsigned int i=0; i<pc->fdata().size(); i++) {
       pcs->fdata()[i] = pc->fdata()[i] * imatrix->get(i, 0);
     }
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");

@@ -150,7 +150,7 @@ void DipoleInSphere::execute() {
       }
       
       DenseMatrix dip_mtrx(pos.size(), 6);
-      int i;
+      unsigned int i;
       msgStream_ << "Dipoles: " << endl;
       for (i=0; i<pos.size(); ++i){
 	qdip = dips[i];

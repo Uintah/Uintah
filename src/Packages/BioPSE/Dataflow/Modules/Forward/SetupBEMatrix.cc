@@ -197,7 +197,7 @@ void SetupBEMatrix::execute(){
       ColumnMatrix phiInn(pinn.size());
       phiOut_.resize(pOut->get_typed_mesh()->nodes_size());
       
-      for (int i=0; i<pinn.size(); ++i){
+      for (unsigned int i=0; i<pinn.size(); ++i){
 	phiInn[i] = pinn[i];
       }
       int f, m;
@@ -213,7 +213,7 @@ void SetupBEMatrix::execute(){
   if (pOut2){
     vector<double>& pout = pOut2->fdata();
     pout.resize(phiOut_.nrows()); 
-    for (int i=0; i<pout.size(); ++i){
+    for (unsigned int i=0; i<pout.size(); ++i){
       pout[i] = phiOut_[i];
     }
   }
