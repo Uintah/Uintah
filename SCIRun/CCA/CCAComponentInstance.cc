@@ -74,7 +74,7 @@ gov::cca::Port::pointer CCAComponentInstance::getPort(const std::string& name)
     throw CCAException("Cannot call getPort on a Provides port");
 
   if(pr->connections.size() != 1)
-    throw CCAException("More than 1 port connected, but getPort called");
+	return gov::cca::Port::pointer(0); 
   return pr->connections[0]->port;
 }
 

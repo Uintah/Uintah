@@ -72,3 +72,36 @@ bool CCAPortInstance::connect(PortInstance* to)
   }
   return false;
 }
+
+bool CCAPortInstance::disconnect(PortInstance* to)
+{
+  CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
+  if(!p2)
+    return false;
+
+  if(porttype !=Uses){
+    cerr<<"disconnect can be called only by user"<<endl; 
+    return false;
+  } 
+  std::vector<CCAPortInstance*>::iterator iter;
+  for(iter=connections.begin(); iter<connections.end();iter++){
+    if(p2==(*iter)){
+      connections.erase(iter);
+      return true;
+    }
+  }
+  return false;
+}
+
+bool CCAPortInstance::canConnectTo(PortInstance* to)
+{
+  CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
+  if( p2 && to && type==p2->type && porttype!=p2->porttype){
+    if(porttype==Uses && connections.size()>0)return false;
+    if(p2->porttype==Uses && p2->connections.size()>0) return false;
+    return true;
+  }  
+  return false;
+}
+
+

@@ -34,6 +34,7 @@
 #include <SCIRun/PortInstance.h>
 #include <SCIRun/CCA/ComponentID.h>
 #include <SCIRun/ComponentInstance.h>
+#include <SCIRun/CCA/ConnectionID.h>
 #include <iostream>
 using namespace std;
 using namespace SCIRun;
@@ -81,7 +82,7 @@ gov::cca::ConnectionID::pointer BuilderService::connect(const gov::cca::Componen
   if(!pr1->connect(pr2))
     throw CCAException("Cannot connect");
   cerr << "connect should return a connection ID\n";
-  return gov::cca::ConnectionID::pointer(0);
+  return gov::cca::ConnectionID::pointer(new ConnectionID(c1, port1, c2, port2));
 }
 
 InternalComponentInstance* BuilderService::create(SCIRunFramework* framework,
@@ -183,7 +184,16 @@ void BuilderService::setConnectionProperties(const gov::cca::ConnectionID::point
 void BuilderService::disconnect(const gov::cca::ConnectionID::pointer& connID,
 			    float timeout)
 {
-  cerr << "BuilderService::disconnect not finished\n";
+  ComponentID* userID=dynamic_cast<ComponentID*>(connID->getUser().getPointer());
+  ComponentID* providerID=dynamic_cast<ComponentID*>(connID->getProvider().getPointer());
+
+  ComponentInstance* user=framework->getComponent(userID->name);
+  ComponentInstance* provider=framework->getComponent(providerID->name);
+
+  PortInstance* userPort=user->getPortInstance(connID->getUserPortName());
+  PortInstance* providerPort=provider->getPortInstance(connID->getProviderPortName());
+  userPort->disconnect(providerPort);
+  cerr << "BuilderService::disconnect: timeout or safty check needed "<<endl;
 }
 
 void BuilderService::disconnectAll(const gov::cca::ComponentID::pointer& id1,
@@ -193,6 +203,43 @@ void BuilderService::disconnectAll(const gov::cca::ComponentID::pointer& id1,
   cerr << "BuilderService::disconnectAll not finished\n";
 }
 
+CIA::array1<std::string>  BuilderService::getAvailablePortList(
+     const gov::cca::ComponentID::pointer& c1,
+     const std::string& port1,
+     const gov::cca::ComponentID::pointer& c2)
+{
+  ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
+  ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
+  if(!cid1 || !cid2)
+    throw CCAException("Cannot understand this ComponentID");
+  if(cid1->framework != framework || cid2->framework != framework){
+    throw CCAException("Cannot connect components from different frameworks");
+  }
+  ComponentInstance* comp1=framework->getComponent(cid1->name);
+  ComponentInstance* comp2=framework->getComponent(cid2->name);
+  PortInstance* pr1=comp1->getPortInstance(port1);
+  if(!pr1)
+    throw CCAException("Unknown port");
+
+
+  CIA::array1<std::string> availablePorts;
+  CIA::array1<std::string> portnames=comp2->getUsesPortNames();
+  for(unsigned int i=0; i<portnames.size();i++){
+    PortInstance* pr2=comp2->getPortInstance(portnames[i]);
+    if(pr1->canConnectTo(pr2)){
+      availablePorts.push_back(portnames[i]);
+    }
+  }  
+
+  portnames=comp2->getProvidesPortNames();
+  for(unsigned int i=0; i<portnames.size();i++){
+    PortInstance* pr2=comp2->getPortInstance(portnames[i]);
+    if(pr1->canConnectTo(pr2)){
+      availablePorts.push_back(portnames[i]);
+    }
+  }  
+  return availablePorts;
+}
 
 std::string BuilderService::getFrameworkURL()
 {
@@ -215,3 +262,16 @@ gov::cca::Port::pointer BuilderService::getUIPort(const std::string &com_name)
    ComponentInstance *ci=framework->getComponent(com_name);
    return ci->getUIPort();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

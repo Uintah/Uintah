@@ -56,7 +56,8 @@ namespace SCIRun {
     gov::cca::Port::pointer port;
     PortType porttype;
     virtual bool connect(PortInstance*);
-
+    virtual bool disconnect(PortInstance*);
+    virtual bool canConnectTo(PortInstance*);
   private:
     CCAPortInstance(const CCAPortInstance&);
     CCAPortInstance& operator=(const CCAPortInstance&);

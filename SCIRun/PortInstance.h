@@ -36,6 +36,8 @@ namespace SCIRun {
     virtual ~PortInstance();
 
     virtual bool connect(PortInstance*) = 0;
+    virtual bool disconnect(PortInstance*) =0;
+    virtual bool canConnectTo(PortInstance *)=0;
   private:
     PortInstance(const PortInstance&);
     PortInstance& operator=(const PortInstance&);
