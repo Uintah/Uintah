@@ -303,6 +303,11 @@ void DrawInfoOpenGL::set_matl(Material* matl)
     (matl->ambient*ambient_scale_).get_color(color);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
     (matl->diffuse*diffuse_scale_).get_color(color);
+    if (matl->transparency < 1.0)
+    {
+      color[3] = matl->transparency * matl->transparency;
+      color[3] *= color[3];
+    }
     glColor4fv(color);
     (matl->specular*specular_scale_).get_color(color);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
@@ -2275,7 +2280,7 @@ void GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double) {
     if (!have_drawn) {
 	have_drawn=1;
     }
-    double model_mat[16]; // this is the modelview matrix
+    GLdouble model_mat[16]; // this is the modelview matrix
   
     glGetDoublev(GL_MODELVIEW_MATRIX,model_mat);
     
@@ -2976,6 +2981,131 @@ void GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
+
+void
+GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if (!pre_draw(di, matl, 1)) return;
+  const unsigned int pcount = verts.size() / 3;
+  if (pcount <= 0)
+  {
+    return;
+  }
+  di->polycount += pcount;
+
+  if (!sorted_p_)
+  {
+    SortPolys();
+  }
+
+  GLdouble matrix[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, matrix);
+  const double lvx = fabs(matrix[2]);
+  const double lvy = fabs(matrix[6]);
+  const double lvz = fabs(matrix[10]);
+  if (lvx >= lvy && lvx >= lvz)
+  {
+    di->axis = 0;
+    if (matrix[2] > 0) { di->dir = 1; }
+    else { di->dir = -1; }
+      
+  }
+  else if (lvy >= lvx && lvy >= lvz)
+  {
+    di->axis = 1;
+    if (matrix[6] > 0) { di->dir = 1; }
+    else { di->dir = -1; }
+  }
+  else if (lvz >= lvx && lvz >= lvy)
+  {
+    di->axis = 2;
+    if (matrix[10] > 0) { di->dir = 1; }
+    else { di->dir = -1; }
+  }
+
+  const vector<pair<float, unsigned int> >&clist =
+    (di->axis==0)?xlist_:((di->axis==1)?ylist_:zlist_);
+
+  const int sort_dir = (di->dir<0)?-1:1;
+  const unsigned int sort_start = (sort_dir>0)?0:(clist.size()-1);
+  unsigned int i, ndone;
+
+#ifdef SCI_NORM_OGL
+  glEnable(GL_NORMALIZE);
+#else
+  glDisable(GL_NORMALIZE);
+#endif
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glDepthMask(GL_FALSE); // No zbuffering for now.
+
+  switch(di->get_drawtype())
+  {
+  case DrawInfoOpenGL::WireFrame:
+    {
+      for (i = sort_start, ndone = 0; ndone < pcount; ndone++, i += sort_dir)
+      {
+	glBegin(GL_LINE_LOOP);
+	if (di->currently_lit)
+	{
+	  glNormal3d(normals[clist[i].second/3].x(),
+		     normals[clist[i].second/3].y(),
+		     normals[clist[i].second/3].z());
+	}
+	verts[clist[i].second+0]->emit_all(di);
+	verts[clist[i].second+1]->emit_all(di);
+	verts[clist[i].second+2]->emit_all(di);
+	glEnd();
+      }
+    }
+    break;
+  case DrawInfoOpenGL::Flat:
+    {
+      glBegin(GL_TRIANGLES);
+      for (i = sort_start, ndone = 0; ndone < pcount; ndone++, i += sort_dir)
+      {
+       	if (di->currently_lit)
+	{
+	  glNormal3d(normals[clist[i].second/3].x(),
+		     normals[clist[i].second/3].y(),
+		     normals[clist[i].second/3].z());
+	}
+	verts[clist[i].second+0]->emit_point(di);
+	verts[clist[i].second+1]->emit_point(di);
+	verts[clist[i].second+2]->emit_all(di);
+      }
+      glEnd();
+    }
+    break;
+  case DrawInfoOpenGL::Gouraud:
+    {
+      glBegin(GL_TRIANGLES);
+      for (i = sort_start, ndone = 0; ndone < pcount; ndone++, i += sort_dir)
+      {      
+	if (di->currently_lit)
+	{
+	  glNormal3d(normals[clist[i].second/3].x(),
+		     normals[clist[i].second/3].y(),
+		     normals[clist[i].second/3].z());
+	}
+	verts[clist[i].second+0]->emit_all(di);
+	verts[clist[i].second+1]->emit_all(di);
+	verts[clist[i].second+2]->emit_all(di);
+      }
+      glEnd();
+    }
+    break;
+  }
+
+  glDepthMask(GL_TRUE); // Turn zbuff back on.
+  glDisable(GL_BLEND);
+  glEnable(GL_NORMALIZE);
+
+  post_draw(di);
+}
+
+
 void GeomTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(points.size() == 0)
@@ -3137,37 +3267,42 @@ void GeomTrianglesPT1d::draw(DrawInfoOpenGL* di, Material* matl, double)
 void GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!size())
+  {
     return;
+  }
+
+#if 0
   if (di->multiple_transp) { // multiple transparent objects!!!
-    Array1<float>& check = (di->axis==0)?xc:(di->axis==1)?yc:zc;
-    
-    //Array1<int> *tclist;
-    //int sort_start=0; // front of list
-    int sort_dir=1;   // positive direction
-    
-    sort_dir = di->dir;
-    //Vector view = di->view;
-    
-    if (!xlist.size()) {
+    if (!sorted_p_)
+    {
       SortPolys(); // sort the iso-surface...
     }
 
+    Array1<float>& check = (di->axis==0)?xc:(di->axis==1)?yc:zc;
+    
+    const int sort_dir = di->dir;
+    
     Array1<int> &cur_list = (di->axis==0)?xlist:((di->axis==1)?ylist:zlist);
 
-    if (di->multiple_transp&MULTI_TRANSP_FIRST_PASS) {
-      list_pos=0;
+    if (di->multiple_transp & MULTI_TRANSP_FIRST_PASS)
+    {
+      int list_pos=0;
       if (sort_dir == -1) list_pos = cur_list.size()-1;
       if(!pre_draw(di,matl,1)) return; // yes, this is lit...
 
       di->polycount += size();
     } 
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     if (!has_color)
-      glColor4f(0,1.0,0.0,alpha);
+    {
+      glColor4f(0,1.0,0.0,alpha_);
+    }
     else
-      glColor4f(r,g,b,alpha);
+    {
+      glColor4f(r,g,b,alpha_);
+    }
     
     glDepthMask(GL_FALSE); // no zbuffering for now...
 #ifdef SCI_NORM_OGL
@@ -3236,7 +3371,10 @@ void GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDepthMask(GL_TRUE); // turn zbuff back on...
     glDisable(GL_BLEND);
     glEnable(GL_NORMALIZE);
-  } else {
+  }
+  else
+#endif
+  {
     if(!pre_draw(di,matl,1)) return; // yes, this is lit...
 
     di->polycount += size();
@@ -3245,22 +3383,18 @@ void GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
     if (!has_color)
-      glColor4f(0,1.0,0.0,alpha);
+    {
+      glColor4f(0,1.0,0.0,alpha_);
+    }
     else
-      glColor4f(r,g,b,alpha);
-
-    //Array1<int> *tclist;
-    int sort_start=0; // front of list
-    int sort_dir=1;   // positive direction
-
-    sort_dir = di->dir;
-    //Vector view = di->view;
-
-    if (!xlist.size()) {
-      SortPolys(); // sort the iso-surface...
+    {
+      glColor4f(r,g,b,alpha_);
     }
 
-    Array1<int> &cur_list = (di->axis==0)?xlist:((di->axis==1)?ylist:zlist);
+    if (!sorted_p_)
+    {
+      SortPolys(); // sort the iso-surface...
+    }
 
     glDepthMask(GL_FALSE); // no zbuffering for now...
 #ifdef SCI_NORM_OGL
@@ -3268,33 +3402,67 @@ void GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
 #else
     glDisable(GL_NORMALIZE);
 #endif
-    glBegin(GL_TRIANGLES); // just spit out triangles...
 
-    if (sort_dir == -1) {
-      sort_start = cur_list.size()-1; // walk backwards...
+#if 1     
+    GLdouble matrix[16];
+    glGetDoublev(GL_MODELVIEW_MATRIX, matrix);
+    //const Vector vx(matrix[0], matrix[1], matrix[2]);
+    //const Vector vy(matrix[4], matrix[5], matrix[6]);
+    //const Vector vz(matrix[8], matrix[9], matrix[10]);
+    const double lvx = fabs(matrix[2]);
+    const double lvy = fabs(matrix[6]);
+    const double lvz = fabs(matrix[10]);
+    if (lvx >= lvy && lvx >= lvz)
+    {
+      di->axis = 0;
+      if (matrix[2] > 0) { di->dir = 1; }
+      else { di->dir = -1; }
+      
     }
-    
-    if (di->currently_lit) {
-      int ndone=0;
-      for(int i=sort_start;ndone < cur_list.size();ndone++,i += sort_dir) {
-	int nindex = cur_list[i]*3;
-	int pindex = nindex*3;
+    else if (lvy >= lvx && lvy >= lvz)
+    {
+      di->axis = 1;
+      if (matrix[6] > 0) { di->dir = 1; }
+      else { di->dir = -1; }
+    }
+    else if (lvz >= lvx && lvz >= lvy)
+    {
+      di->axis = 2;
+      if (matrix[10] > 0) { di->dir = 1; }
+      else { di->dir = -1; }
+    }
+#endif
 
+    const vector<pair<float, unsigned int> >&cur_list =
+      (di->axis==0)?xlist_:((di->axis==1)?ylist_:zlist_);
+
+    const int sort_dir = (di->dir<0)?-1:1;
+    const unsigned int sort_start = (sort_dir>0)?0:(cur_list.size()-1);
+    unsigned int i;
+    unsigned int ndone = 0;
+    glBegin(GL_TRIANGLES);
+    if (di->currently_lit)
+    {
+      for (i = sort_start ; ndone < cur_list.size(); ndone++, i += sort_dir)
+      {
+	const unsigned int nindex = cur_list[i].second * 3;
+	const unsigned int pindex = nindex * 3;
 	glNormal3fv(&normals[nindex]);
-	glVertex3fv(&points[pindex]);
+	glVertex3fv(&points[pindex+0]);
 	glVertex3fv(&points[pindex+3]);
 	glVertex3fv(&points[pindex+6]);
       }  
-    } else {
-      int ndone=0;
-      for(int i=sort_start;ndone < cur_list.size();ndone++,i += sort_dir) {
-	int pindex = cur_list[i]*9;
+    }
+    else
+    {
+      for(i = sort_start; ndone < cur_list.size(); ndone++, i += sort_dir)
+      {
+	const int pindex = cur_list[i].second * 9;
 
-	glVertex3fv(&points[pindex]);
+	glVertex3fv(&points[pindex+0]);
 	glVertex3fv(&points[pindex+3]);
 	glVertex3fv(&points[pindex+6]);
       }
-
     }
     glEnd();
 
