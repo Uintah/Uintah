@@ -38,6 +38,8 @@
 
 namespace SCIRun {
 
+class Thread;
+
 /**************************************
  
 CLASS

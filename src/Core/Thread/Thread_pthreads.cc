@@ -62,6 +62,32 @@ extern "C" {
 #include <string>
 #include <unistd.h>
 
+#ifdef _AIX
+
+#  include <sys/mman.h>
+#  define sem_t msemaphore *
+#  define SEM_UNLOCK(sem)            msem_unlock(*(sem),0)
+#  define SEM_LOCK(sem)              msem_lock(*(sem),0)
+#  define SEM_TRYLOCK(sem)           msem_lock(*(sem), MSEM_IF_NOWAIT)
+#  define SEM_INIT(sem, shared, val) msem_init(*(sem), \
+					 ((val)==0)?MSEM_UNLOCKED:MSEM_LOCKED)
+#  define SEM_INIT_SUCCESS(val)      (((val)!= 0)?true:false)
+#  define SEM_DESTROY(sem)           msem_remove(*(sem)) 
+
+#else
+
+   extern "C" {
+#  include <semaphore.h>
+   };
+#  define SEM_UNLOCK(sem)            sem_post((sem))
+#  define SEM_LOCK(sem)              sem_wait((sem))
+#  define SEM_TRYLOCK(sem)           sem_trywait((sem))
+#  define SEM_INIT(sem, shared, val) sem_init( (sem), (shared), (val) )
+#  define SEM_INIT_SUCCESS(val)      (((val)== 0)?true:false)
+#  define SEM_DESTROY(sem)           sem_destroy((sem))
+
+#endif
+
 typedef void (*SIG_HANDLER_T)(int);
 
 /*
@@ -75,7 +101,6 @@ typedef void (*SIG_HANDLER_T)(int);
 #include "Barrier_default.cc"
 #include "CrowdMonitor_default.cc"
 
-
 using SCIRun::ConditionVariable;
 using SCIRun::Mutex;
 using SCIRun::RecursiveMutex;
@@ -87,11 +112,18 @@ using SCIRun::ThreadGroup;
 bool exiting=false;
 
 #define MAXBSTACK 10
-#define MAXTHREADS 4000
 
+#if defined(_AIX) && defined(MAXTHREADS)
+#  undef MAXTHREADS
+#endif
+
+#define MAXTHREADS 4000
 
 namespace SCIRun {
 struct Thread_private {
+#ifdef _AIX
+  Thread_private();
+#endif
   Thread* thread;
   pthread_t threadid;
   Thread::ThreadState state;
@@ -103,7 +135,30 @@ struct Thread_private {
   bool is_blocked;
   bool ismain;
 };
+
+#ifdef _AIX
+Thread_private::Thread_private()
+{
+  done = (msemaphore*) mmap(NULL,sizeof(msemaphore),
+			    PROT_READ | PROT_WRITE,
+			    MAP_SHARED | MAP_ANONYMOUS | MAP_VARIABLE, -1, 0 );
+  delete_ready = 
+    (msemaphore*) mmap(NULL,sizeof(msemaphore),
+		       PROT_READ | PROT_WRITE,
+		       MAP_SHARED | MAP_ANONYMOUS | MAP_VARIABLE, -1, 0 );
+  block_sema = 
+    (msemaphore*) mmap(NULL,sizeof(msemaphore),
+		       PROT_READ | PROT_WRITE,
+		       MAP_SHARED | MAP_ANONYMOUS | MAP_VARIABLE, -1, 0 );
+  if( (int)done == -1 || (int)delete_ready == -1 || (int)block_sema == -1 )
+    {
+      throw ThreadError(std::string("semaphore allocation failed") +
+			strerror(errno));
+    }
 }
+#endif
+
+} // end namespace SCIRun
 
 static const char* bstack_init="Unused block stack entry";
 
@@ -170,14 +225,14 @@ Thread_shutdown(Thread* thread)
 {
    Thread_private* priv=thread->priv_;
 
-   if(sem_post(&priv->done) != 0)
-      throw ThreadError(std::string("sem_post failed")
+   if(SEM_UNLOCK(&priv->done) != 0)
+      throw ThreadError(std::string("SEM_UNLOCK failed")
 			+strerror(errno));
 
    // Wait to be deleted...
    if (!priv->ismain)
-      if(sem_wait(&priv->delete_ready) == -1)
-	 throw ThreadError(std::string("sem_wait failed")
+      if(SEM_LOCK(&priv->delete_ready) == -1)
+	 throw ThreadError(std::string("SEM_LOCK failed")
 			   +strerror(errno));
 
    // Allow this thread to run anywhere...
@@ -204,8 +259,8 @@ Thread_shutdown(Thread* thread)
    delete priv;
    Thread::checkExit();
    if(wait_main){
-      if(sem_wait(&main_sema) == -1)
-	 throw ThreadError(std::string("sem_wait failed")
+      if(SEM_LOCK(&main_sema) == -1)
+	 throw ThreadError(std::string("SEM_LOCK failed")
 			   +strerror(errno));
    }
    pthread_exit(0);
@@ -248,8 +303,8 @@ Thread::join()
 {
     Thread* us=Thread::self();
     int os=push_bstack(us->priv_, JOINING, threadname_);
-    if(sem_wait(&priv_->done) != 0)
-	throw ThreadError(std::string("sem_wait failed")
+    if(SEM_LOCK(&priv_->done) != 0)
+	throw ThreadError(std::string("SEM_LOCK failed")
 			  +strerror(errno));
     pop_bstack(us->priv_, os);
     detach();
@@ -279,9 +334,10 @@ run_threads(void* priv_v)
 		      +strerror(errno));
   }
   priv->is_blocked=true;
-  if(sem_wait(&priv->block_sema) != 0)
-    throw ThreadError(std::string("sem_wait: ")
-		      +strerror(errno));
+
+  if(SEM_LOCK(&priv->block_sema) != 0)
+    throw ThreadError(std::string("SEM_LOCK: ") + strerror(errno));
+
   priv->is_blocked=false;
   priv->state=Thread::RUNNING;
   Thread_run(priv->thread);
@@ -298,12 +354,11 @@ Thread::os_start(bool stopped)
 
   priv_=new Thread_private;
 
-  if(sem_init(&priv_->done, 0, 0) != 0)
-    throw ThreadError(std::string("sem_init failed")
-		      +strerror(errno));
-  if(sem_init(&priv_->delete_ready, 0, 0) != 0)
-    throw ThreadError(std::string("sem_init failed")
-		      +strerror(errno));
+  if( !SEM_INIT_SUCCESS( SEM_INIT(&priv_->done, 0, 0) ) )
+    throw ThreadError(std::string("SEM_INIT failed") + strerror(errno));
+  if( !SEM_INIT_SUCCESS( SEM_INIT(&priv_->delete_ready, 0, 0) ) )
+    throw ThreadError(std::string("SEM_INIT failed") + strerror(errno));
+
   priv_->state=STARTUP;
   priv_->bstacksize=0;
   for(int i=0;i<MAXBSTACK;i++)
@@ -314,9 +369,8 @@ Thread::os_start(bool stopped)
   priv_->is_blocked=false;
   priv_->ismain=false;
 
-  if(sem_init(&priv_->block_sema, 0, stopped?0:1))
-    throw ThreadError(std::string("sem_init failed")
-		      +strerror(errno));
+  if( !SEM_INIT_SUCCESS( SEM_INIT(&priv_->block_sema, 0, stopped?0:1)) )
+    throw ThreadError(std::string("SEM_INIT failed") + strerror(errno));
 
   pthread_attr_t attr;
   pthread_attr_init(&attr);
@@ -335,13 +389,13 @@ void
 Thread::stop()
 {
     lock_scheduler();
-    if(sem_trywait(&priv_->block_sema) != 0){
+    if(SEM_TRYLOCK(&priv_->block_sema) != 0){
 	if(errno != EAGAIN)
-	    throw ThreadError(std::string("sem_trywait: ")
+	    throw ThreadError(std::string("SEM_TRYLOCK: ")
 			      +strerror(errno));
 	if(this == self()) {
-	    if(sem_wait(&priv_->block_sema) != 0)
-		throw ThreadError(std::string("sem_wait: ")
+	    if(SEM_LOCK(&priv_->block_sema) != 0)
+		throw ThreadError(std::string("SEM_LOCK: ")
 				  +strerror(errno));
 	} else {
 	    pthread_kill(priv_->threadid, SIGUSR2);
@@ -354,7 +408,7 @@ void
 Thread::resume()
 {
     lock_scheduler();
-    if(sem_post(&priv_->block_sema) != 0)
+    if(SEM_UNLOCK(&priv_->block_sema) != 0)
 	throw ThreadError(std::string("sem_post: ")
 			  +strerror(errno));
     unlock_scheduler();
@@ -365,9 +419,10 @@ Thread::detach()
 {
     detached_=true;
     pthread_t id = priv_->threadid;
-    if(sem_post(&priv_->delete_ready) != 0)
-	throw ThreadError(std::string("sem_post failed")
-			  +strerror(errno));
+
+    if(SEM_UNLOCK(&priv_->delete_ready) != 0)
+	throw ThreadError(std::string("SEM_UNLOCK failed") + strerror(errno));
+
     if(pthread_detach(id) != 0)
 	throw ThreadError(std::string("pthread_detach failed")
 			  +strerror(errno));
@@ -408,12 +463,12 @@ Thread::exitAll(int code)
 	for(int i=0;i<numActive;i++){
 	  Thread_private* t = active[i];
 	  if(t->thread != me && !t->is_blocked)
-	    fprintf(stderr, "Thread: %s is slow to stop, giving up\n", t->thread->getThreadName());
+	    fprintf(stderr, "Thread: %s is slow to stop, giving up\n", 
+		    t->thread->getThreadName());
 	}
       }
-      if(sem_destroy(&main_sema) != 0)
-	throw ThreadError(std::string("sem_destroy failed")
-			  +strerror(errno));
+      if(SEM_DESTROY(&main_sema) != 0)
+	throw ThreadError(std::string("SEM_DESTROY failed") + strerror(errno));
       unlock_scheduler();
     }
     ::exit(code);
@@ -453,11 +508,14 @@ handle_abort_signals(int sig,
 #ifdef PPC
     void* addr=(void*)ctx.regs->dsisr;
 #else
-#if 0
-    void* addr=(void*)ctx.cr2;
-#else
-    void* addr=0;
-#endif
+#  ifdef _AIX
+     // Not sure if this is correct, but here it is.
+     // On IMB SP2 sigcontext is defined in /usr/include/sys/context.h
+     void* addr=(void*)ctx.sc_jmpbuf.jmp_context.o_vaddr;
+#  else
+//     void* addr=(void*)ctx.cr2;
+     void* addr=0;
+#  endif
 #endif
 #endif
     char* signam=Core_Thread_signal_name(sig, addr);
@@ -505,13 +563,13 @@ handle_quit(int sig, struct sigcontext /*ctx*/)
     Thread* self=Thread::self();
     if(self==0)
 	return; // This is an idle thread...
-    if(sem_trywait(&control_c_sema) != 0){
+    if(SEM_TRYLOCK(&control_c_sema) != 0){
 	// This will wait until the other thread is done
 	// handling the interrupt
-	if(sem_wait(&control_c_sema) != 0)
+	if(SEM_LOCK(&control_c_sema) != 0)
 	    throw ThreadError(std::string("sem_wait failed")
 			      +strerror(errno));
-	if(sem_post(&control_c_sema) != 0)
+	if(SEM_UNLOCK(&control_c_sema) != 0)
 	    throw ThreadError(std::string("sem_post failed")
 			      +strerror(errno));
 	return;
@@ -524,9 +582,8 @@ handle_quit(int sig, struct sigcontext /*ctx*/)
     int pid=getpid();
     fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s\n", tname, pid, signam);
     Thread::niceAbort(); // Enter the monitor
-    if(sem_post(&control_c_sema) != 0)
-	throw ThreadError(std::string("sem_post failed")
-			  +strerror(errno));
+    if(SEM_UNLOCK(&control_c_sema) != 0)
+	throw ThreadError(std::string("sem_post failed") + strerror(errno));
 }
 
 /*
@@ -534,7 +591,7 @@ handle_quit(int sig, struct sigcontext /*ctx*/)
  */
 static
 void
-handle_siguser1(int)
+handle_siguser2(int)
 {
   Thread* self=Thread::self();
   if(!self){
@@ -545,9 +602,8 @@ handle_siguser1(int)
 	self=active[i]->thread;
   }
   self->priv_->is_blocked=true;
-  if(sem_wait(&self->priv_->block_sema) != 0)
-    throw ThreadError(std::string("sem_wait: ")
-		      +strerror(errno));
+  if(SEM_LOCK(&self->priv_->block_sema) != 0)
+    throw ThreadError(std::string("SEM_LOCK: ") + strerror(errno));
   self->priv_->is_blocked=false;
 }
 
@@ -564,33 +620,25 @@ install_signal_handlers()
 
     action.sa_handler=(SIG_HANDLER_T)handle_abort_signals;
     if(sigaction(SIGILL, &action, NULL) == -1)
-	throw ThreadError(std::string("SIGILL failed")
-			  +strerror(errno));
+	throw ThreadError(std::string("SIGILL failed") + strerror(errno));
     if(sigaction(SIGABRT, &action, NULL) == -1)
-	throw ThreadError(std::string("SIGABRT failed")
-			  +strerror(errno));
+	throw ThreadError(std::string("SIGABRT failed") + strerror(errno));
     if(sigaction(SIGTRAP, &action, NULL) == -1)
-	throw ThreadError(std::string("SIGTRAP failed")
-			  +strerror(errno));
+	throw ThreadError(std::string("SIGTRAP failed") + strerror(errno));
     if(sigaction(SIGBUS, &action, NULL) == -1)
-	throw ThreadError(std::string("SIGBUS failed")
-			  +strerror(errno));
+	throw ThreadError(std::string("SIGBUS failed") + strerror(errno));
     if(sigaction(SIGSEGV, &action, NULL) == -1)
-	throw ThreadError(std::string("SIGSEGV failed")
-			  +strerror(errno));
+	throw ThreadError(std::string("SIGSEGV ailed") + strerror(errno));
 
     action.sa_handler=(SIG_HANDLER_T)handle_quit;
     if(sigaction(SIGQUIT, &action, NULL) == -1)
-	throw ThreadError(std::string("SIGQUIT failed")
-			  +strerror(errno));
+	throw ThreadError(std::string("SIGQUIT failed") + strerror(errno));
     if(sigaction(SIGINT, &action, NULL) == -1)
-	throw ThreadError(std::string("SIGINT failed")
-			  +strerror(errno));
+	throw ThreadError(std::string("SIGINT failed") + strerror(errno));
 
-    action.sa_handler=(SIG_HANDLER_T)handle_siguser1;
+    action.sa_handler=(SIG_HANDLER_T)handle_siguser2;
     if(sigaction(SIGUSR2, &action, NULL) == -1)
-	throw ThreadError(std::string("SIGUSR2 failed")
-			  +strerror(errno));
+        throw ThreadError(std::string("SIGUSR2 failed") + strerror(errno));
 }
 
 static void exit_handler()
@@ -638,23 +686,32 @@ Thread::initialize()
   mainthread->priv_->is_blocked=false;
   mainthread->priv_->threadid=pthread_self();
   mainthread->priv_->ismain=true;
+
+#ifdef _AIX
+  main_sema = 
+    (msemaphore*) mmap(NULL,sizeof(msemaphore),
+		       PROT_READ | PROT_WRITE,
+		       MAP_SHARED | MAP_ANONYMOUS | MAP_VARIABLE, -1, 0 );
+  control_c_sema = 
+    (msemaphore*) mmap(NULL,sizeof(msemaphore),
+		       PROT_READ | PROT_WRITE,
+		       MAP_SHARED | MAP_ANONYMOUS | MAP_VARIABLE, -1, 0 );
+#endif
+
   for(int i=0;i<MAXBSTACK;i++)
       mainthread->priv_->blockstack[i]=bstack_init;
   if(pthread_setspecific(thread_key, mainthread) != 0)
     throw ThreadError(std::string("pthread_setspecific failed")
 		      +strerror(errno));
-  if(sem_init(&mainthread->priv_->done, 0, 0) != 0)
-    throw ThreadError(std::string("sem_init failed")
-		      +strerror(errno));
-  if(sem_init(&mainthread->priv_->delete_ready, 0, 0) != 0)
-    throw ThreadError(std::string("sem_init failed")
-		      +strerror(errno));
-  if(sem_init(&main_sema, 0, 0) != 0)
-    throw ThreadError(std::string("sem_init failed")
-		      +strerror(errno));
-  if(sem_init(&control_c_sema, 0, 1) != 0)
-    throw ThreadError(std::string("sem_init failed")
-		      +strerror(errno));
+  if( !SEM_INIT_SUCCESS( SEM_INIT(&mainthread->priv_->done, 0, 0) ) )
+    throw ThreadError(std::string("sem_init failed") + strerror(errno));
+  if( !SEM_INIT_SUCCESS( SEM_INIT(&mainthread->priv_->delete_ready, 0, 0) ) )
+    throw ThreadError(std::string("sem_init failed") + strerror(errno));
+  if( !SEM_INIT_SUCCESS( SEM_INIT(&main_sema, 0, 0) ) )
+    throw ThreadError(std::string("sem_init failed") + strerror(errno));
+  if( !SEM_INIT_SUCCESS( SEM_INIT(&control_c_sema, 0, 1) ) )
+    throw ThreadError(std::string("sem_init failed") + strerror(errno));
+
   lock_scheduler();
   active[numActive]=mainthread->priv_;
   numActive++;
@@ -819,34 +876,41 @@ Semaphore::Semaphore(const char* name, int value)
   if(!Thread::initialized)
     Thread::initialize();    
   priv_=new Semaphore_private;
-  if(sem_init(&priv_->sem, 0, value) != 0)
-    throw ThreadError(std::string("sem_init: ")
-		      +strerror(errno));
+#ifdef _AIX
+  priv_->sem = 
+    (msemaphore*) mmap(NULL,sizeof(msemaphore),
+		       PROT_READ | PROT_WRITE,
+		       MAP_SHARED | MAP_ANONYMOUS | MAP_VARIABLE, -1, 0 );
+#endif
+  if( !SEM_INIT_SUCCESS( SEM_INIT(&priv_->sem, 0, value) ) )
+    throw ThreadError(std::string("SEM_INIT: ") + strerror(errno));
 }
     
 Semaphore::~Semaphore()
 {
+#ifndef _AIX
+  // Dd: Don't know exactly what to do about this for AIX...
   int val;
   sem_getvalue(&priv_->sem,&val);
   while(val<=0) {
-    sem_post(&priv_->sem);
+    SEM_UNLOCK(&priv_->sem);
     sem_getvalue(&priv_->sem,&val);
   }
-  if(sem_destroy(&priv_->sem) != 0)
+  if(SEM_DESTROY(&priv_->sem) != 0)
     throw ThreadError(std::string("sem_destroy: ")
 		      +strerror(errno));
   
   delete priv_;
   priv_=0;
+#endif
 }
 
 void
 Semaphore::up(int count)
 {
     for(int i=0;i<count;i++){
-	if(sem_post(&priv_->sem) != 0)
-	    throw ThreadError(std::string("sem_post: ")
-			      +strerror(errno));
+	if(SEM_UNLOCK(&priv_->sem) != 0)
+	    throw ThreadError(std::string("SEM_UNLOCK: ") + strerror(errno));
     }
 }
 
@@ -856,9 +920,8 @@ Semaphore::down(int count)
     Thread_private* p=Thread::self()->priv_;
     int oldstate=Thread::push_bstack(p, Thread::BLOCK_SEMAPHORE, name_);
     for(int i=0;i<count;i++){
-	if(sem_wait(&priv_->sem) != 0)
-	    throw ThreadError(std::string("sem_wait: ")
-			      +strerror(errno));
+	if(SEM_LOCK(&priv_->sem) != 0)
+	    throw ThreadError(std::string("SEM_LOCK: ") + strerror(errno));
     }
     Thread::pop_bstack(p, oldstate);
 }
@@ -866,11 +929,10 @@ Semaphore::down(int count)
 bool
 Semaphore::tryDown()
 {
-    if(sem_trywait(&priv_->sem) != 0){
+    if(SEM_TRYLOCK(&priv_->sem) != 0){
 	if(errno == EAGAIN)
 	    return false;
-	throw ThreadError(std::string("sem_trywait: ")
-			  +strerror(errno));
+	throw ThreadError(std::string("SEM_TRYLOCK: ") + strerror(errno));
     }
     return true;
 }
