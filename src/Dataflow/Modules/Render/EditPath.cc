@@ -170,6 +170,7 @@ EditPath::EditPath(GuiContext* ctx)
   sem("EditPath Semaphore", 0)
 {
   cross_widget =scinew CrosshairWidget(this, &widget_lock, 0.01);
+  cross_widget->Connect((GeometryOPort *)get_oport("Geometry"));
   cross_widget->SetState(0);
   cross_widget->SetPosition(Point(0, 0, 0));
   cross_id=0;

@@ -156,7 +156,9 @@ ShowDipoles::execute()
 	for (i=nDips_; i<(unsigned int)(widget_switch_.size()); i++)
 	  widget_switch_[i]->set_state(1);
 	for (; i<field_pcv->fdata().size(); i++) {
-	  widget_.add(scinew ArrowWidget(this, &widget_lock_, widgetSize));
+	  ArrowWidget *a = scinew ArrowWidget(this, &widget_lock_, widgetSize);
+	  a->Connect(ogeom_);
+	  widget_.add(a);
 	  deflMatl_=widget_[0]->GetMaterial(0);
 	  widget_switch_.add(widget_[i]->GetWidget());
 	  widget_switch_[i]->set_state(1);

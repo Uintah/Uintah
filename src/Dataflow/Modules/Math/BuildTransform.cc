@@ -116,6 +116,7 @@ BuildTransform::BuildTransform(GuiContext* ctx)
 {
   
   box_widget_=scinew BoxWidget(this, &widget_lock_, 0.2, false, false);
+  box_widget_->Connect((GeometryOPort*)get_oport("Geometry"));
   widget_switch_=box_widget_->GetWidget();
 }
 
