@@ -404,6 +404,8 @@ SimpleSimulationController::run()
         double dt=Time::currentSeconds() - start;
         if(d_myworld->myrank() == 0)
           cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
+
+        sharedState->setNeedAddMaterial(false);
       }
       else {
         if (output)
