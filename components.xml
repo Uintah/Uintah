@@ -201,6 +201,22 @@ Level 6: Magenta</documentation>
       <creationFunction>make_InPlaneEigenEvaluator</creationFunction>
     </implementation>
   </dataflow-component>
+  <dataflow-component name="TensorElementExtractor">
+    <meta>
+      <authors>
+        <author>Wayne Witzel</author>
+      </authors>
+      <version-date>August 2000</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs>TensorField</inputs>
+    <outputs>ScalarField</outputs>
+    <parameters>int,int</parameters>
+    <implementation>
+      <creationFunction>make_TensorElementExtractor</creationFunction>
+    </implementation>
+  </dataflow-component>
   </scirun-library>
 
   <scirun-library category="MPMViz">
