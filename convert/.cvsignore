@@ -1,2 +1,12 @@
 Makefile
 .~*
+SegToCS
+SurfToJAS
+JAStoSurf
+ScFldToIves
+CPtoTriSurf
+GenScalp
+ConvMesh
+JAStoUG
+GEtoSF
+VPtoTriSurf
