@@ -1808,13 +1808,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
                  " on patch "<<patch->getID()<<endl; 
 
     //__________________________________
-    // update Boundary conditions
-    // make copy of press for implicit calc.
-    setBC(press_new,   rho_micro[SURROUND_MAT],
-          "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw);    
-
-    press_copy.copyData(press_new);
-    //__________________________________
     // compute sp_vol_CC
     for (int m = 0; m < numMatls; m++)   {
       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
@@ -1843,7 +1836,19 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         f_theta[m][c] = vol_frac[m][c]*kappa[m]/sumVolFrac_kappa;
       }
     }
-
+    //__________________________________
+    // update Boundary conditions
+    // make copy of press for implicit calc.   
+ /*`==========TESTING==========*/
+#ifndef LODI_BCS
+    setBC(press_new,   rho_micro[SURROUND_MAT],
+          "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw);
+#else 
+    setBCPress_LODI( press_new, rho_micro, Temp, f_theta,
+                     "rho_micro", "Pressure", patch ,d_sharedState, 0, new_dw); 
+#endif
+/*==========TESTING==========`*/
+    press_copy.copyData(press_new);
    //---- P R I N T   D A T A ------   
     if (switchDebug_EQ_RF_press) {
       ostringstream desc;
@@ -2541,26 +2546,38 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     setBC(press_CC, sp_vol_CC[SURROUND_MAT],
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw);
 #else 
+
+    //__________________________________
+    // TO CLEAN THIS UP FIGURE OUT A WAY TO TEMPLATE SETPRESSLODI
+    // FOR EITHER StaticArray<constCCVariable<double> or 
+    //           StaticArray<CCVariable<double>
     StaticArray<constCCVariable<double> > Temp_CC(numMatls);
-    StaticArray<constCCVariable<double> > f_theta(numMatls);  
-    
+    StaticArray<constCCVariable<double> > f_theta_tmp(numMatls);  
+    StaticArray<CCVariable<double> > f_theta(numMatls);
+    StaticArray<CCVariable<double> > sp_vol_tmp(numMatls);
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-         
+
+ 
       if(ice_matl){                // I C E
-        old_dw->get(Temp_CC[m],  lb->temp_CCLabel,    indx,patch,gn,0);
-        new_dw->get(f_theta[m],  lb->f_theta_CCLabel, indx,patch,gn,0); 
+        old_dw->get(Temp_CC[m],     lb->temp_CCLabel,    indx,patch,gn,0);
+        new_dw->get(f_theta_tmp[m], lb->f_theta_CCLabel, indx,patch,gn,0); 
       }
       if(mpm_matl){                // M P M
-        new_dw->get(Temp_CC[m],  lb->temp_CCLabel,    indx,patch,gn,0);
-        new_dw->get(f_theta[m],  lb->f_theta_CCLabel, indx,patch,gn,0);
+        new_dw->get(Temp_CC[m],     lb->temp_CCLabel,    indx,patch,gn,0);
+        new_dw->get(f_theta_tmp[m], lb->f_theta_CCLabel, indx,patch,gn,0);
       }
+      new_dw->allocateTemporary(f_theta[m],     patch);
+      new_dw->allocateTemporary(sp_vol_tmp[m],  patch);
+
+      f_theta[m].copyData(f_theta_tmp[m]);
+      sp_vol_tmp[m].copyData(sp_vol_CC[m]);
     }
-    setBCPress_LODI( press_CC, sp_vol_CC, Temp_CC, f_theta,
-                    "Pressure", patch ,d_sharedState, 0, new_dw); 
+    setBCPress_LODI( press_CC, sp_vol_tmp, Temp_CC, f_theta,
+                    "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw); 
 #endif
 /*==========TESTING==========`*/
 
@@ -3848,6 +3865,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }      // if mpm_matl
     }        // for ALL matls
 #endif
+/*`==========TESTING==========*/
 #ifndef LODI_BCS
     //__________________________________
     //  Set the Boundary conditions 
@@ -3857,7 +3875,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       setBC(vel_CC[m], "Velocity",   patch,dwindex);
       setBC(Temp_CC[m],"Temperature",patch, d_sharedState, dwindex);
     }
-#endif
+#endif 
+/*==========TESTING==========`*/
     //__________________________________
     // Convert vars. primitive-> flux 
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
@@ -4017,9 +4036,11 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         rho_CC[c]    = mass_new[c] * invvol;
       }   
       
+/*`==========TESTING==========*/
 #ifndef LODI_BCS
       setBC(rho_CC, "Density", patch, d_sharedState, indx);
-#endif
+#endif 
+/*==========TESTING==========`*/
 
       //__________________________________
       // Advect  momentum and backout vel_CC
@@ -4036,9 +4057,11 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 //      vel_CC[c] = (mom_L_ME[c] + qV_advected[c])/mass_new[c] ; 
       }
       
+/*`==========TESTING==========*/
 #ifndef LODI_BCS    
       setBC(vel_CC, "Velocity", patch,indx);
-#endif
+#endif 
+/*==========TESTING==========`*/
 
       //__________________________________
       // Advect internal energy and backout Temp_CC
@@ -4077,9 +4100,11 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         }
       }
 
+/*`==========TESTING==========*/
 #ifndef LODI_BCS     
       setBC(temp, "Temperature", patch, d_sharedState, indx);
-#endif
+#endif 
+/*==========TESTING==========`*/
 
       //__________________________________
       // Advection of specific volume
@@ -4132,6 +4157,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       }
 //______________________ L O D I__________________________________
 #ifdef LODI_BCS  
+cout << "using LODI BCS" <<endl;
       Ghost::GhostType  gn  = Ghost::None;  
       constCCVariable<double> press_new, speedSound,vol_frac_new;
       CCVariable<double> rho_L;
