@@ -132,8 +132,15 @@ int main(int argc, char** argv)
   Thread* t2=new Thread(gui_task, "Scheduler");
   t2->setDaemon(true);
   t2->detach();
+
+  char* HOME = getenv("HOME");
   
-  RCParse("/res/sci/data1/moulding/.scirunrc",SCIRun::scirunrc);
+  if (HOME) {
+    string home(HOME);
+    home += "/.scirunrc";
+    cerr << "HOME = " << home << endl;
+    RCParse(home.c_str(),SCIRun::scirunrc);
+  }
 
   // wait for the main window to display before continuing the startup.
   TCL::eval("tkwait visibility .top.globalViewFrame.canvas",result);
