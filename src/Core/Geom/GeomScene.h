@@ -55,7 +55,7 @@ struct SCICORESHARE GeomScene : public Persistent {
     Lighting* lighting;
     GeomObj* top;
     virtual void io(Piostream&);
-    bool save(const clString& filename, const clString& format);
+    bool save(const string& filename, const string& format);
 };
 
 } // End namespace SCIRun

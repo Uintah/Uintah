@@ -91,7 +91,7 @@ public:
   virtual void get_triangles( Array1<float> &);
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  bool saveobj(std::ostream& out, const clString& format,
+  bool saveobj(std::ostream& out, const string& format,
 	       GeomSave* saveinfo);
     
   clString& getString(void) { return name;}

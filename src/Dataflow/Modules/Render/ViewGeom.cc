@@ -122,7 +122,7 @@ void GeomViewerItem::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomViewerItem::saveobj(ostream& out, const clString& format,
+bool GeomViewerItem::saveobj(ostream& out, const string& format,
 			     GeomSave* saveinfo)
 {
     return child->saveobj(out, format, saveinfo);

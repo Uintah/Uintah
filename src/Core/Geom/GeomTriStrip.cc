@@ -82,7 +82,7 @@ void GeomTriStrip::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTriStrip::saveobj(ostream& out, const clString& format, GeomSave* saveinfo)
+bool GeomTriStrip::saveobj(ostream& out, const string& format, GeomSave* saveinfo)
 {
     if(format == "vrml" || format == "iv") {
       NOT_FINISHED("GeomTriStrip::saveobj");
@@ -184,7 +184,7 @@ void GeomTriStripList::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTriStripList::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomTriStripList::saveobj(ostream&, const string&, GeomSave*)
 {
     NOT_FINISHED("GeomTriStripList::saveobj");
     return false;

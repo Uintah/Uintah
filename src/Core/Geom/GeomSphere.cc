@@ -156,7 +156,7 @@ void GeomSphere::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomSphere::saveobj(ostream& out, const clString& format,
+bool GeomSphere::saveobj(ostream& out, const string& format,
 			 GeomSave* saveinfo)
 {
     cerr << "saveobj Sphere\n";

@@ -45,12 +45,12 @@ class SCICORESHARE GeomText : public GeomObj {
   static int init;
   static GLuint fontbase;
 public:
-  clString text;
+  string text;
   Point at;
   Color c;
 public:
   GeomText();
-  GeomText( const clString &, const Point &, const Color &c = Color(1,1,1));
+  GeomText( const string &, const Point &, const Color &c = Color(1,1,1));
   GeomText(const GeomText&);
   virtual ~GeomText();
   virtual GeomObj* clone();
@@ -63,7 +63,7 @@ public:
 #endif
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
+    virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
 } // End namespace SCIRun

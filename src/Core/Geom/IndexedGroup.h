@@ -78,7 +78,7 @@ public:
     
     MapIntGeomObj* getHash(void); // gets the table
     
-    virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
+    virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
 } // End namespace SCIRun

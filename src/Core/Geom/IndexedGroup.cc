@@ -102,7 +102,7 @@ void GeomIndexedGroup::io(Piostream& stream)
 }
 
 //----------------------------------------------------------------------
-bool GeomIndexedGroup::saveobj(ostream& out, const clString& format,
+bool GeomIndexedGroup::saveobj(ostream& out, const string& format,
 			       GeomSave* saveinfo)
 {
     cerr << "saveobj IndexedGroup\n";

@@ -165,7 +165,7 @@ void GeomTri::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTri::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomTri::saveobj(ostream&, const string&, GeomSave*)
 {
     NOT_FINISHED("GeomTri::saveobj");
     return false;

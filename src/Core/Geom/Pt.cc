@@ -169,7 +169,7 @@ void GeomPts::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomPts::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomPts::saveobj(ostream&, const string&, GeomSave*)
 {
     NOT_FINISHED("GeomPts::saveobj");
     return false;
@@ -341,7 +341,7 @@ void GeomTimedParticles::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTimedParticles::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomTimedParticles::saveobj(ostream&, const string&, GeomSave*)
 {
     NOT_FINISHED("GeomTimedParticles::saveobj");
     return false;

@@ -83,7 +83,7 @@ void ColorMapTex::io(Piostream& stream) {
   stream.end_class();
 }
 
-bool ColorMapTex::saveobj(ostream&, const clString&, GeomSave*) {
+bool ColorMapTex::saveobj(ostream&, const string&, GeomSave*) {
   NOT_FINISHED("ColorMapTex::saveobj");
   return false;
 }

@@ -73,7 +73,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
+    virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
 class SCICORESHARE GeomCappedCylinder : public GeomCylinder {
@@ -91,7 +91,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
+    virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
     
 } // End namespace SCIRun

@@ -92,7 +92,7 @@ void TexSquare::io(Piostream& stream) {
   stream.end_class();
 }
 
-bool TexSquare::saveobj(ostream&, const clString&, GeomSave*) {
+bool TexSquare::saveobj(ostream&, const string&, GeomSave*) {
   NOT_FINISHED("TexSquare::saveobj");
   return false;
 }

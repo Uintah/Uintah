@@ -257,7 +257,7 @@ void GeomPick::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomPick::saveobj(ostream& out, const clString& format, GeomSave* saveinfo)
+bool GeomPick::saveobj(ostream& out, const string& format, GeomSave* saveinfo)
 {
     return child->saveobj(out, format, saveinfo);
 }

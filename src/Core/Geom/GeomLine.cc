@@ -113,7 +113,7 @@ void GeomLine::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomLine::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomLine::saveobj(ostream&, const string&, GeomSave*)
 {
 #if 0
     NOT_FINISHED("GeomLine::saveobj");
@@ -165,7 +165,7 @@ void GeomLines::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomLines::saveobj(ostream&, const clString&, GeomSave*)
+bool GeomLines::saveobj(ostream&, const string&, GeomSave*)
 {
 #if 0
     NOT_FINISHED("GeomLines::saveobj");
@@ -228,7 +228,7 @@ void TexGeomLines::io(Piostream& stream)
     stream.end_class();
 }
 
-bool TexGeomLines::saveobj(ostream&, const clString&, GeomSave*)
+bool TexGeomLines::saveobj(ostream&, const string&, GeomSave*)
 {
     NOT_FINISHED("TexGeomLines::saveobj");
     return false;

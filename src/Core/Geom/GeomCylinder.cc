@@ -147,7 +147,7 @@ void GeomCylinder::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomCylinder::saveobj(ostream& out, const clString& format,
+bool GeomCylinder::saveobj(ostream& out, const string& format,
 			   GeomSave* saveinfo)
 {
     if(format == "vrml" || format == "iv"){
@@ -213,7 +213,7 @@ void GeomCappedCylinder::io(Piostream& stream)
     Pio(stream, nvdisc);
 }
 
-bool GeomCappedCylinder::saveobj(ostream& out, const clString& format,
+bool GeomCappedCylinder::saveobj(ostream& out, const string& format,
 				 GeomSave* saveinfo)
 {
     if(format == "vrml" || format == "iv"){

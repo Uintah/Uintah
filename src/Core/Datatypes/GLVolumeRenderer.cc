@@ -226,7 +226,7 @@ void GLVolumeRenderer::io(Piostream&)
 
 
 bool
-GLVolumeRenderer::saveobj(std::ostream&, const clString&, GeomSave*)
+GLVolumeRenderer::saveobj(std::ostream&, const string&, GeomSave*)
 {
    NOT_FINISHED("GLVolumeRenderer::saveobj");
     return false;

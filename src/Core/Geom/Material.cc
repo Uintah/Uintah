@@ -168,7 +168,7 @@ void GeomMaterial::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomMaterial::saveobj(ostream& out, const clString& format,
+bool GeomMaterial::saveobj(ostream& out, const string& format,
 			   GeomSave* saveinfo)
 {
     cerr << "saveobj Material\n";

@@ -118,8 +118,8 @@ OpenGL::OpenGL()
   pinchMaterial = scinew Material(Color(0,0,0), Color(0,.8,0), Color(.5,.5,.5), 20);
   pinchSphere = scinew GeomSphere(Point(0,0,0), 0.4, 20, 10);
   
-  pinchText[0] = scinew GeomText(clString(""),Point(1,1,1));
-  pinchText[1] = scinew GeomText(clString(""),Point(1,1,1));
+  pinchText[0] = scinew GeomText("",Point(1,1,1));
+  pinchText[1] = scinew GeomText("",Point(1,1,1));
   
   pinchCylinder[0] = scinew GeomCappedCylinder(Point(0,0,0), Point(1,0,0), 0.2, 20, 10);
   pinchCylinder[1] = scinew GeomCappedCylinder(Point(0,0,0), Point(-1,0,0), 0.2, 20, 10);
@@ -670,7 +670,7 @@ void OpenGL::redraw_frame()
 		delete pinchText[0];
 		sprintf(scalestr, "Scale: %.2f", bawgl->virtualViewScale);
 		
-		pinchText[0] = scinew GeomText(clString(scalestr),Point(1,1,1));
+		pinchText[0] = scinew GeomText(scalestr, Point(1,1,1));
 		pinchText[0]->draw(drawinfo, pinchMaterial, current_time);
 		
 		glPopMatrix();
@@ -713,7 +713,7 @@ void OpenGL::redraw_frame()
 		delete pinchText[1];
 		sprintf(scalestr, "Velocity: %.2f", -1000*bawgl->velocity);
 		
-		pinchText[1] = scinew GeomText(clString(scalestr),Point(1,1,1));
+		pinchText[1] = scinew GeomText(scalestr, Point(1,1,1));
 		pinchText[1]->draw(drawinfo, pinchMaterial, 
 				   current_time);
 		

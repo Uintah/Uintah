@@ -117,7 +117,7 @@ void GeomBBoxCache::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomBBoxCache::saveobj(ostream& out, const clString& format,
+bool GeomBBoxCache::saveobj(ostream& out, const string& format,
 			    GeomSave* saveinfo)
 {
     return child->saveobj(out, format, saveinfo);

@@ -157,7 +157,7 @@ void TimeGrid::io(Piostream& stream)
     stream.end_class();
 }    
 
-bool TimeGrid::saveobj(ostream&, const clString&, GeomSave*)
+bool TimeGrid::saveobj(ostream&, const string&, GeomSave*)
 {
   return 0;
 }
