@@ -138,7 +138,28 @@ if (!oldStyleAdvect.active()){
   d_ref_gamma_index = table->addDependentVariable("reference_gamma");
   d_ref_temp_index  = table->addDependentVariable("reference_Temp");
   table->setup();
-  
+
+#if 0
+  ofstream out("graph.dat");
+  int ng = 100;
+  vector<double> mm(1);
+  for(int i=0;i<=ng;i++){
+    double mix = i/(double)ng;
+    mm[0]=mix;
+    out << mix << " "
+        << table->interpolate(tmp_index, mm) << " "
+        << table->interpolate(d_temp_index, mm) << " "
+        << table->interpolate(d_density_index, mm) << " "
+        << table->interpolate(d_gamma_index, mm) << " "
+        << table->interpolate(d_cv_index, mm) << " "
+        << table->interpolate(d_viscosity_index, mm) << " "
+        << table->interpolate(d_thermalcond_index, mm) << " "
+        << table->interpolate(d_ref_cv_index, mm) << " "
+        << table->interpolate(d_ref_gamma_index, mm) << " "
+        << table->interpolate(d_ref_temp_index, mm) << "\n";
+  }
+#endif
+
   //__________________________________
   // - create Label names
   // - Let ICE know that this model computes the 
