@@ -15,6 +15,8 @@
   University of Utah. All Rights Reserved.
 */
 
+#include <sci_defs.h>
+
 #include <GL/gl.h>
 #include <Core/GLVolumeRenderer/GLVolRenState.h>
 #include <Core/GLVolumeRenderer/GLVolumeRenderer.h>
@@ -202,6 +204,8 @@ GLVolRenState::loadColorMap(Brick& brick)
                GL_UNSIGNED_BYTE, // try shorts...
                arr);
 #elif defined( GL_SHARED_TEXTURE_PALETTE_EXT )
+
+#ifndef HAVE_CHROMIUM
   ASSERT(glColorTableEXT != NULL );
   glColorTableEXT(GL_SHARED_TEXTURE_PALETTE_EXT,
 	       GL_RGBA,
@@ -209,6 +213,7 @@ GLVolRenState::loadColorMap(Brick& brick)
                GL_RGBA,  // need an alpha value...
                GL_UNSIGNED_BYTE, // try shorts...
                arr);
+#endif
 //   glCheckForError("After glColorTableEXT");
 #endif
 }
