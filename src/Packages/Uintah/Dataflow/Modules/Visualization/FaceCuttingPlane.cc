@@ -236,21 +236,21 @@ void FaceCuttingPlane::execute(void)
     return;
 
   if(field->get_type_name(0) != "LatVolField"){
-    warning("This module only works with a LatVolField as input. No action!");
+    error("This module only works with a LatVolField as input. No action!");
     return;
   }
 
   if(!field->is_scalar()){
-    cerr<<"Not a scalar field\n ";
+    error("Not a scalar field:  No action!");
     return;
   }
 
   if (!icmap_) {
-    error("Unable to initialize iport 'Color Map'.");
+    error("Unable to initialize iport 'Color Map'. No action!");
     return;
   }
   if (!ogeom_) {
-    error("Unable to initialize oport 'Geometry'.");
+    error("Unable to initialize oport 'Geometry'. No action!");
     return;
   }
   
@@ -261,7 +261,7 @@ void FaceCuttingPlane::execute(void)
 
   
   if(!(mesh_ = dynamic_cast<LatVolMesh *>(field->mesh().get_rep()))){
-    error("Mesh must be a LatVolMesh.");
+    error("Mesh must be a LatVolMesh. No action!");
     return;
   }
 
@@ -279,7 +279,7 @@ void FaceCuttingPlane::execute(void)
 	     dynamic_cast<LatVolField<long> *>(field.get_rep())){
     real_execute( lvf, cmap );
   } else {
-    error("Unknown field type line 239.");
+    error("Unknown field type line 239. No action!");
   }
 }  
 template<class MyField> 
@@ -292,7 +292,7 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
   if( td != TypeDescription::SFCXVariable &&
       td != TypeDescription::SFCYVariable &&
       td != TypeDescription::SFCZVariable ){
-    warning("Did not receive a Uintah FaceVariable, no action.");
+    warning("Did not receive a Uintah FaceVariable. No action!");
     return;
   }
 
@@ -346,7 +346,6 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
   nf = need_find.get();
   Vector u,v;
   bool horiz = false; // false if vert, true if horiz.
-  cerr<<"entering type check\n";
 
   if(td == TypeDescription::SFCXVariable){
     u_num = nx;
@@ -392,18 +391,11 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
   }
   GeomGroup *faces = scinew GeomGroup();
 
-//   ScalarFieldInterface *sfi = 0;
-//   if( field->get_type_name(0) == "LatVolField")
-//     sfi = field->query_scalar_interface();
-
   double sval;
   MaterialHandle matl;
   LatVolMesh::NodeIndex node;
   int i, j, u_, v_;
   u_ = u_num; v_ = v_num;
-//   if(horiz) {u_ = u_num; v_ = v_num;}
-//   else {u_ = u_num; v_ = v_num;}
-  cerr<<"pre-line loop: u = "<<u_<<", v = "<<v_<<"\n";
 
   for (i = 0; i < u_; i++){
     for (j = 0; j < v_; j++) {
@@ -422,18 +414,12 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
       GeomLine *line = 0;
       if( mesh_->locate(node, p0 + (p1 - p0) * 0.5)){
 	sval = lvf->fdata()[node];
-// 	cerr<<"located: sval = "<<sval<<" at index ["<<node.i_
-// 	    <<", "<<node.j_<<", "<<node.k_<<"]"<<endl;
-      //      get the color from cmap for p 	    
-//       if( sfi->interpolate( sval, p0)){
  	matl = cmap->lookup( sval);
 	line = new GeomLine(p0,p1);
 	float linesz = line_size.get();
-// 	cerr<<"line size is "<<linesz<<endl;
 	line->setLineWidth((float)line_size.get());
 	faces->add( scinew GeomMaterial( line, matl));
       } else {
-// 	cerr<<"p0 = "<<p0<<" which is out of bounds\n";
 	matl = outcolor;
 	sval = 0;
       }
@@ -447,12 +433,7 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
   if (old_grid_id != 0) {
     ogeom_->delObj( old_grid_id );
   }
-  //   Transform t; t.post_translate( Vector(xt.get(), yt.get(), zt.get()));
-  //   GeomTransform *gt =
-  //     scinew GeomTransform( grid, t);
-  //   grid_id = ogeom->addObj(gt, "Face Cutting Plane");
   grid_id = ogeom_->addObj(faces,  "Face Cutting Plane");
-  //   grid_id = ogeom_->addObj(pts, "FaceCuttingPlane");
   old_grid_id = grid_id;
 }
 
@@ -473,37 +454,6 @@ bool FaceCuttingPlane::get_dimensions(LatVolMesh* m,
     return true;
   }
 
-// bool
-// FaceCuttingPlane::get_dimensions(FieldHandle texfld_,  int& nx, int& ny, int& nz)
-// {
-//   const string type = texfld_->get_type_name(1);
-//   if(texfld_->get_type_name(0) == "LatVolField"){
-//     LatVolMeshHandle mesh;
-//     if (type == "double") {
-//       LatVolField<double> *fld =
-// 	dynamic_cast<LatVolField<double>*>(texfld_.get_rep());
-//       mesh = fld->get_typed_mesh();
-//     } else if (type == "float") {
-//       LatVolField<float> *fld =
-// 	dynamic_cast<LatVolField<float>*>(texfld_.get_rep());
-//       mesh = fld->get_typed_mesh();
-//     } else if (type == "long") {
-//       LatVolField<long> *fld =
-// 	dynamic_cast<LatVolField<long>*>(texfld_.get_rep());
-//       mesh = fld->get_typed_mesh();
-//     } else if (type == "int") {
-//       LatVolField<int> *fld =
-// 	dynamic_cast<LatVolField<int>*>(texfld_.get_rep());
-//       mesh = fld->get_typed_mesh();
-//     } else {
-//       cerr << "FaceCuttingPlane error - unknown LatVolField type: " << type << endl;
-//       return false;
-//     }
-//     return get_dimensions( mesh, nx, ny, nz );
-//   } else {
-//     return false;
-//   }
-// }
 
 
 } // End namespace Uintah
