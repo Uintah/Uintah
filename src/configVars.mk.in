@@ -61,7 +61,7 @@ SUBDIRS := Core Dataflow $(COMPONENT_DIRS) main \
 
 # Libraries and other flags
 
-TCL_LIB_DIR    := @TCL_LIB_DIR@g
+TCL_LIB_DIR    := @TCL_LIB_DIR@
 TCL_LIB_FLAG   := @TCL_LIB_FLAG@
 TCL_INIT_DIR   := @TCL_INIT_DIR@
 
