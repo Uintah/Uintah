@@ -32,9 +32,6 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
-
-#include <Core/Datatypes/ColumnMatrix.h>
 
 #include <Core/Datatypes/HexVolField.h>
 
@@ -57,9 +54,9 @@ public:
   virtual void tcl_command(TCLArgs&, void*);
 
 protected:
-  MatrixHandle mHandle_;
+  FieldHandle fHandle_;
 
-  int generation_;
+  int fGeneration_;
 
   int idim_;
   int jdim_;
@@ -73,7 +70,7 @@ extern "C" FusionSHARE Module* make_RadialGridDifferent(const string& id) {
 RadialGridDifferent::RadialGridDifferent(const string& id)
   : Module("RadialGridDifferent", id, Source, "Fields", "Fusion"),
 
-    generation_( -1 ),
+    fGeneration_( -1 ),
 
     idim_(0),
     jdim_(0),
@@ -86,13 +83,10 @@ RadialGridDifferent::~RadialGridDifferent(){
 
 void RadialGridDifferent::execute(){
 
-  bool update = false;
-
   // Get a handle to the input field port.
   FieldHandle  fHandle;
 
-  FieldIPort* ifield_port =
-    (FieldIPort *)	get_iport("Input Grid Field");
+  FieldIPort* ifield_port = (FieldIPort *) get_iport("Input Field");
 
   if (!ifield_port) {
     error( "Unable to initialize "+name+"'s iport" );
@@ -106,80 +100,79 @@ void RadialGridDifferent::execute(){
     return;
   }
 
-
-  // Check to see if the input data has changed.
-  if( generation_ != fHandle->generation ) {
-    generation_  = fHandle->generation;
-
-    cout << "MeshBuilder - New Data." << endl;
-
-    update = true;
-  }
-
   // Get the current HexVolMesh.
-  HexVolMesh *hvmInput = (HexVolMesh*) (fHandle->mesh().get_rep());
+  HexVolMesh *hvm = NULL;
 
+  if( (hvm = dynamic_cast<HexVolMesh*> (fHandle->mesh().get_rep()) ) ) {
 
-  // Get the dimensions of the mesh.
-  if( !hvmInput->get_property( "I Dim", idim_ ) ||
-      !hvmInput->get_property( "J Dim", jdim_ ) ||
-      !hvmInput->get_property( "K Dim", kdim_ ) ) {
-    error( "No Mesh Dimensions." );
-    return;
-  }
-
-
-  HexVolMesh::Node::size_type npts;
-
-  hvmInput->size( npts );
-
-  // Make sure they match the number of points in the mesh.
-  if( npts != idim_ * jdim_ * kdim_ ) {
-    error( "Mesh dimensions do not match mesh size." );
-    return;
-  }
-
-  // Create a new HexVolMesh based on the old points;
-  if( !mHandle_.get_rep() || update ) {
-
-    ColumnMatrix *dMatrix = scinew ColumnMatrix(npts);
-
-    Vector vec;
-
-    double dRad;
-
-    // Get the length between nodes in the radial direction
-    for( int i=0; i<npts; i++ )
-    {
-      // Skip the first point.
-      if( i % idim_ == 0 ) {
-	dMatrix->put(i, 0, 0.0);
-      }
-      else {
-
-	vec = Vector( hvmInput->point( i ) - hvmInput->point( i-1 ) );
-	dRad = vec.length() * 100.0;
-
-	dMatrix->put(i, 0, dRad );
-      }
-
+    // Get the dimensions of the mesh.
+    if( !hvm->get_property( "I Dim", idim_ ) ||
+	!hvm->get_property( "J Dim", jdim_ ) ||
+	!hvm->get_property( "K Dim", kdim_ ) ) {
+      error( "No Mesh Dimensions." );
+      return;
     }
 
-    mHandle_ = MatrixHandle( dMatrix );
+    HexVolMesh::Node::size_type npts;
+
+    hvm->size( npts );
+
+    // Make sure they match the number of points in the mesh.
+    if( npts != idim_ * jdim_ * kdim_ ) {
+      error( "Mesh dimensions do not match mesh size." );
+      return;
+    }
+
+    // If no data or a changed recreate the mesh.
+    if( !fHandle_.get_rep() ||
+	fGeneration_ != fHandle->generation ) {
+      fGeneration_ = fHandle->generation;
+
+      HexVolField<double> *hvf = 
+	scinew HexVolField<double>(HexVolMeshHandle(hvm), Field::NODE);
+
+      fHandle_ = FieldHandle( hvf );
+
+      // Add the data to the field.
+      HexVolField<double>::fdata_type::iterator out = hvf->fdata().begin();
+
+      Vector vec;
+
+      // Get the length between nodes in the radial direction
+      for( int i=0; i<npts; i++ )
+      {
+	// Skip the first point.
+	if( i % idim_ == 0 ) {
+	  *out = 0;
+	  out++;
+	}
+	else {
+	  vec = Vector( hvm->point( i ) - hvm->point( i-1 ) );
+
+	  *out = vec.length();
+	  out++;
+	}
+      }
+    }
+  }
+  else {
+    error( "Only availible for HexVol Mesh data" );
+    return;
   }
 
-  // Get a handle to the output V Field matrix port.
+  // Get a handle to the output Field port.
+  if( fHandle_.get_rep() )
   {
-    MatrixOPort *omatrix_port =
-      (MatrixOPort *) get_oport("Output Radial Diff.");
+    FieldOPort *ofield_port =
+      (FieldOPort *) get_oport("Output Radial Diff. Field");
 
-    if (!omatrix_port) {
+    if (!ofield_port) {
       error("Unable to initialize "+name+"'s oport\n");
       return;
     }
 
     // Send the data downstream
-    omatrix_port->send( mHandle_ );
+    ofield_port->send( fHandle_ );
   }
 }
 
