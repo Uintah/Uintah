@@ -101,7 +101,6 @@ WARNING
 	 HEBurn *d_burn;
 	 
 	 double d_density;
-	 double d_toughness;
 	 std::vector<GeometryObject*> d_geom_objs;
 
 	 // Prevent copying of this class
@@ -116,6 +115,9 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.25  2000/06/23 01:26:02  tan
+// Moved material property toughness to Fracture class.
+//
 // Revision 1.24  2000/06/22 22:37:37  tan
 // Moved heat conduction physical parameters (thermalConductivity, specificHeat,
 // and heatTransferCoefficient) from MPMMaterial class to HeatConduction class.
