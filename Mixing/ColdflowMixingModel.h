@@ -104,8 +104,10 @@ public:
 	return 0;
       }
       inline ReactionModel* getRxnModel() const {
+	return 0;
       }
       inline Integrator* getIntegrator() const {
+	return 0;
       }
 
 
@@ -145,6 +147,9 @@ private:
 
 //
 // $Log$
+// Revision 1.12  2002/05/20 18:14:13  sparker
+// Fix gcc 3.1 problems and warnings
+//
 // Revision 1.11  2002/04/08 18:09:42  rawat
 // i) modified sub.mk's to make separate lib's for Mixing and fortran dirs
 // ii) Modified computeStableTImeStep to include diffusion time scale
