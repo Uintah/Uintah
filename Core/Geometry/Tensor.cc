@@ -123,6 +123,7 @@ Tensor::Tensor(const double **cmat) {
 }
 
 void Tensor::build_mat_from_eigens() {
+  if (!have_eigens_) return;
   double E[3][3];
   double S[3][3];
   double SE[3][3];
