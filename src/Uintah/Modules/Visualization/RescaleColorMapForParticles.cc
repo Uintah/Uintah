@@ -76,7 +76,7 @@ void RescaleColorMapForParticles::execute()
     double mn = 1e30;
  
    if( scaleMode.get() == "auto") {
-      ParticleSubset *ps = part->getPositions().getParticleSubset();
+
       part->get_minmax(mn, mx);
 
 
