@@ -22,6 +22,9 @@ LevelMesh:: LevelMesh( LevelMesh* mh, int mx, int my, int mz,
        getNodePosition( idxLow_ + IntVector(x,y,z)))
 {
   cerr<<"in LevelMesh constructor \n";
+  cerr<<"level = "<<level_<<",\nidxLow = "<<idxLow_<<","
+      <<"nx,ny,nz = "<<nx_<<","<<ny_<<","<<nz_<<endl;
+  cerr<<"min = "<< min_<<", max = "<< max_<<endl;
 }
 
 void
@@ -41,6 +44,11 @@ LevelMesh::init()
 
   min_ = grid_->getLevel( level_ )->getNodePosition( low );
   max_ = grid_->getLevel( level_)->getNodePosition( high );
+
+  cerr<<"in LevelMesh constructor \n";
+  cerr<<"level = "<<level_<<",\nidxLow = "<<idxLow_<<","
+      <<"nx,ny,nz = "<<nx_<<","<<ny_<<","<<nz_<<endl;
+  cerr<<"min = "<< min_<<", max = "<< max_<<endl;
 }  
 
 LevelMesh::LevelIndex::LevelIndex(const LevelMesh *m, int i,
@@ -138,41 +146,52 @@ LevelMesh::get_center(Point &result, cell_index idx) const
 bool
 LevelMesh::locate(cell_index &cell, const Point &p) const
 {
-  IntVector idx = grid_->getLevel(level_)->getCellIndex( p );
-
-  cell.i_ = (int)idx.x();
-  cell.j_ = (int)idx.y();
-  cell.k_ = (int)idx.z();
-
-  return true;
+  if( grid_->getLevel(level_)->containsPoint(p) ) {
+    IntVector idx = grid_->getLevel(level_)->getCellIndex( p );
+    cell.i_ = (int)idx.x();
+    cell.j_ = (int)idx.y();
+    cell.k_ = (int)idx.z();
+    cell.mesh_ = this;
+    cell.patch_ = grid_->getLevel(level_)->selectPatchForCellIndex( idx);
+    return true;
+  } else {
+    return false;
+  }
 }
 
 bool
 LevelMesh::locate(node_index &node, const Point &p) const
-{
+{ 
   node_array nodes;     // storage for node_indeces
   cell_index cell;
   double max;
   int loop;
-
-  // locate the cell enclosing the point (including weights)
-  if (!locate(cell,p)) return false;
-  weight_array w;
-  calc_weights(this, cell, p, w);
-
-  // get the node_indeces in this cell
-  get_nodes(nodes,cell);
-
-  // find, and return, the "heaviest" node
-  max = w[0];
-  loop=1;
-  while (loop<8) {
-    if (w[loop]>max) {
-      max=w[loop];
-      node=nodes[loop];
+  
+  if( grid_->getLevel(level_)->containsPoint(p) ) {
+    // locate the cell enclosing the point (including weights)
+    if (!locate(cell,p)) return false;
+    weight_array w;
+    calc_weights(this, cell, p, w);
+    
+    // get the node_indeces in this cell
+    get_nodes(nodes,cell);
+    
+    // find, and return, the "heaviest" node
+    max = w[0];
+    loop=1;
+    while (loop<8) {
+      if (w[loop]>max) {
+	max=w[loop];
+	node=nodes[loop];
+      }
     }
+    node.mesh_ = this;
+    node.patch_ = grid_->getLevel(level_)->
+      selectPatchForNodeIndex(IntVector(node.i_, node.j_, node.k_)  );
+    return true;
+  } else {
+    return false;
   }
-  return true;
 }
 
 #define LEVELMESH_VERSION 1

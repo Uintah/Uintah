@@ -64,12 +64,11 @@ public:
 
 
   LevelData():
-    vector<Array3<Data> >(), begin_initialized(false), end_initialized(false),
-    begin_(this, IntVector(0,0,0)), end_(this, IntVector(0,0,0)){}
+    vector<Array3<Data> >(), begin_initialized(false),
+    end_initialized(false), begin_(0), end_(0){}
   LevelData(const LevelData& data) :
-    vector<Array3<Data> >(data), 
-    begin_initialized(false),   end_initialized(false),
-    begin_(this, IntVector(0,0,0)), end_(this, IntVector(0,0,0)) {} 
+    vector<Array3<Data> >(data), begin_initialized(false),
+    end_initialized(false), begin_(0), end_(0){}
   virtual ~LevelData(){ }
   
   const value_type &operator[](typename LevelMesh::cell_index idx) const 
@@ -124,7 +123,8 @@ void resize(const LevelMesh::cell_size_type &) {}
 	  }
 	}
       }
-    
+    iterator(const vector<Array3<Data> >* data) 
+      : it_( (*data)[0].begin() ), vit_(data->begin()), vitend_(data->end()){}
     iterator(const iterator& iter) 
       : it_(iter.it_), vit_(iter.vit_), vitend_(iter.vitend_){}
     iterator& operator=(const iterator& it)
@@ -154,28 +154,28 @@ void resize(const LevelMesh::cell_size_type &) {}
   };
   
 inline iterator begin() { 
-  if( begin_initialized ) return begin_;
+  if( begin_initialized ) return *begin_;
   else {
     const Array3<Data>& a = parent::operator[](0);
-    begin_ =  iterator(this, a.getLowIndex());
+    begin_ =  new iterator(this, a.getLowIndex());
     begin_initialized = true;
-    return begin_;
+    return *begin_;
   }
 }
 inline iterator end()  {
-  if( end_initialized ) return end_;
+  if( end_initialized ) return *end_;
   else {
     const Array3<Data>& a = parent::operator[](size()-1);
     iterator it(this, a.getHighIndex() - IntVector(1,1,1));
-    end_ = ++it;
+    end_ = new iterator(++it);
     end_initialized = true;
-    return end_;
+    return *end_;
   }
 }
 private:
-iterator begin_;
+iterator *begin_;
 bool begin_initialized;
-iterator end_;
+iterator *end_;
 bool end_initialized;
 };
 
@@ -238,8 +238,8 @@ public:
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
-  bool get_gradient(Vector &, Point &);
-  bool interpolate(Data&, Point&);
+  bool get_gradient(Vector &, const Point &);
+  bool interpolate(Data&, const Point&);
 private:
   static Persistent* maker();
 };
@@ -303,67 +303,72 @@ LevelField<Data>::type_name(int n)
 
 
 template <class Data>
-bool LevelField<Data>::get_gradient(Vector &g, Point &p) {
+bool LevelField<Data>::get_gradient(Vector &g, const Point &p) {
   // for now we only know how to do this for fields with scalars at the nodes
-  ASSERT(data_at() == Field::NODE)
-  ASSERT(type_name(1) == "double")
-  LevelField<double> *lvd = dynamic_cast<LevelField<double> *>(this);
 
-  mesh_handle_type mesh = get_typed_mesh();
-  Vector pn=p-mesh->get_min();
-  Vector diagonal = mesh->diagonal();
-  int nx=mesh->get_nx();
-  int ny=mesh->get_ny();
-  int nz=mesh->get_nz();
-  double diagx=diagonal.x();
-  double diagy=diagonal.y();
-  double diagz=diagonal.z();
-  double x=pn.x()*(nx-1)/diagx;
-  double y=pn.y()*(ny-1)/diagy;
-  double z=pn.z()*(nz-1)/diagz;
-  int ix0=(int)x;
-  int iy0=(int)y;
-  int iz0=(int)z;
-  int ix1=ix0+1;
-  int iy1=iy0+1;
-  int iz1=iz0+1;
-  if(ix0<0 || ix1>=nx)return false;
-  if(iy0<0 || iy1>=ny)return false;
-  if(iz0<0 || iz1>=nz)return false;
-  double fx=x-ix0;
-  double fy=y-iy0;
-  double fz=z-iz0;
-  double d000=lvd->value(LevelMesh::node_index(ix0,iy0,iz0));
-  double d100=lvd->value(LevelMesh::node_index(ix1,iy0,iz0));
-  double d010=lvd->value(LevelMesh::node_index(ix0,iy1,iz0));
-  double d110=lvd->value(LevelMesh::node_index(ix1,iy1,iz0));
-  double d001=lvd->value(LevelMesh::node_index(ix0,iy0,iz1));
-  double d101=lvd->value(LevelMesh::node_index(ix1,iy0,iz1));
-  double d011=lvd->value(LevelMesh::node_index(ix0,iy1,iz1));
-  double d111=lvd->value(LevelMesh::node_index(ix1,iy1,iz1));
-  double z00=Interpolate(d000, d001, fz);
-  double z01=Interpolate(d010, d011, fz);
-  double z10=Interpolate(d100, d101, fz);
-  double z11=Interpolate(d110, d111, fz);
-  double yy0=Interpolate(z00, z01, fy);
-  double yy1=Interpolate(z10, z11, fy);
-  double dx=(yy1-yy0)*(nx-1)/diagx;
-  double x00=Interpolate(d000, d100, fx);
-  double x01=Interpolate(d001, d101, fx);
-  double x10=Interpolate(d010, d110, fx);
-  double x11=Interpolate(d011, d111, fx);
-  double y0=Interpolate(x00, x10, fy);
-  double y1=Interpolate(x01, x11, fy);
-  double dz=(y1-y0)*(nz-1)/diagz;
-  double z0=Interpolate(x00, x01, fz);
-  double z1=Interpolate(x10, x11, fz);
-  double dy=(z1-z0)*(ny-1)/diagy;
-  g = Vector(dx, dy, dz);
-  return true;
+  if( type_name(1) == "double" ||
+      type_name(1) == "long" ||
+      type_name(1) == "float" ) {
+
+    if( data_at() == Field::NODE){
+      mesh_handle_type mesh = get_typed_mesh();
+      Vector pn=p-mesh->get_min();
+      Vector diagonal = mesh->diagonal();
+      int nx=mesh->get_nx();
+      int ny=mesh->get_ny();
+      int nz=mesh->get_nz();
+      double diagx=diagonal.x();
+      double diagy=diagonal.y();
+      double diagz=diagonal.z();
+      double x=pn.x()*(nx-1)/diagx;
+      double y=pn.y()*(ny-1)/diagy;
+      double z=pn.z()*(nz-1)/diagz;
+      int ix0=(int)x;
+      int iy0=(int)y;
+      int iz0=(int)z;
+      int ix1=ix0+1;
+      int iy1=iy0+1;
+      int iz1=iz0+1;
+      if(ix0<0 || ix1>=nx)return false;
+      if(iy0<0 || iy1>=ny)return false;
+      if(iz0<0 || iz1>=nz)return false;
+      double fx=x-ix0;
+      double fy=y-iy0;
+      double fz=z-iz0;
+      double d000=(double)value(mesh->node(ix0,iy0,iz0));
+      double d100=(double)value(mesh->node(ix1,iy0,iz0));
+      double d010=(double)value(mesh->node(ix0,iy1,iz0));
+      double d110=(double)value(mesh->node(ix1,iy1,iz0));
+      double d001=(double)value(mesh->node(ix0,iy0,iz1));
+      double d101=(double)value(mesh->node(ix1,iy0,iz1));
+      double d011=(double)value(mesh->node(ix0,iy1,iz1));
+      double d111=(double)value(mesh->node(ix1,iy1,iz1));
+      double z00=Interpolate(d000, d001, fz);
+      double z01=Interpolate(d010, d011, fz);
+      double z10=Interpolate(d100, d101, fz);
+      double z11=Interpolate(d110, d111, fz);
+      double yy0=Interpolate(z00, z01, fy);
+      double yy1=Interpolate(z10, z11, fy);
+      double dx=(yy1-yy0)*(nx-1)/diagx;
+      double x00=Interpolate(d000, d100, fx);
+      double x01=Interpolate(d001, d101, fx);
+      double x10=Interpolate(d010, d110, fx);
+      double x11=Interpolate(d011, d111, fx);
+      double y0=Interpolate(x00, x10, fy);
+      double y1=Interpolate(x01, x11, fy);
+      double dz=(y1-y0)*(nz-1)/diagz;
+      double z0=Interpolate(x00, x01, fz);
+      double z1=Interpolate(x10, x11, fz);
+      double dy=(z1-z0)*(ny-1)/diagy;
+      g = Vector(dx, dy, dz);
+      return true;
+    }
+  }
+  return false;
 }
 
 template <class Data>
-bool LevelField<Data>::interpolate(Data &g, Point &p) {
+bool LevelField<Data>::interpolate(Data &g, const Point &p) {
   // for now we only know how to do this for fields with scalars at the nodes
   mesh_handle_type mesh = get_typed_mesh();
   if(data_at() == Field::NODE) {
@@ -401,10 +406,13 @@ bool LevelField<Data>::interpolate(Data &g, Point &p) {
     Data y0=Interpolate(x00, x10, fy);
     Data y1=Interpolate(x01, x11, fy);
     g=Interpolate(y0, y1, fz);
-  } else if( data_at() == Field::CELL){
-    mesh_type::cell_index ci;
-    mesh->locate(ci, p);
-    g = value( ci );
+  } else if( data_at() == Field::CELL) {
+    typename mesh_type::cell_index ci;
+    if( mesh->locate(ci, p) ) {
+      g = value( ci );
+    } else {
+      return false;
+    }
   } else {
     return false;
   }
