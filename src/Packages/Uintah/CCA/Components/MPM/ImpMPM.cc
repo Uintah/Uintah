@@ -2579,8 +2579,8 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup* pg,
 
     for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
       IntVector n = *iter;
-      int dof[3];
 #ifdef HAVE_PETSC
+      int dof[3];
       int l2g_node_num = l2g[n] - begin;
       dof[0] = l2g_node_num;
       dof[1] = l2g_node_num+1;
@@ -2588,6 +2588,7 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup* pg,
       dispInc[n] = Vector(xPetsc[dof[0]],xPetsc[dof[1]],xPetsc[dof[2]]);
 #else
 #ifdef OLD_SPARSE
+      int dof[3];
 //      int node_num = n.x() + (nodes.x())*(n.y()) + (nodes.y())*
 //	(nodes.x())*(n.z());
       int node_num = n.x() + (n.x())*(n.y()) + (n.y())*
