@@ -3,11 +3,45 @@
 <?xml-stylesheet href="../../../../../doc/Utilities/XML/package-component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
 <component name="FusionSlicer" category="Fields">
   <overview>
     <authors>
       <author>ARSanderson</author>
     </authors>
+    <summary>
+      <p>
+The Fusion Slicer module reduces the dimension of a structured grid
+from 3 dimensions to 2 dimensions resulting in a structured surface. 
+      </p>
+    </summary>
+    <description>
+      <p>
+The Fusion Slicer module reduces the dimension of a structured grid
+from 3 dimensions to 2 dimensions resulting in a structured surface.
+      </p>
+
+<p> The Fusion Slicer input port is a field that is structured in
+3D. This field will be reduced to 2D and piped to the output port. The
+user must supply two input values via the module GUI, the axis the
+field is reduced along and location along the selected axis. </p> 
+    </description>
   </overview>
   <implementation>
   </implementation>
