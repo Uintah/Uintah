@@ -276,10 +276,14 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
     // get physical constants
   double mol_viscos; // molecular viscosity
   mol_viscos = d_physicalConsts->getMolecularViscosity();
-  FORT_SMAGMODEL(domLoVelx.get_pointer(), domHiVelx.get_pointer(), uVelocity.getPointer(),
-		 domLoVely.get_pointer(), domHiVely.get_pointer(), vVelocity.getPointer(),
-		 domLoVelz.get_pointer(), domHiVelz.get_pointer(), wVelocity.getPointer(),
-		 domLoDen.get_pointer(), domHiDen.get_pointer(), density.getPointer(),
+  FORT_SMAGMODEL(domLoVelx.get_pointer(), domHiVelx.get_pointer(), 
+		 uVelocity.getPointer(),
+		 domLoVely.get_pointer(), domHiVely.get_pointer(), 
+		 vVelocity.getPointer(),
+		 domLoVelz.get_pointer(), domHiVelz.get_pointer(), 
+		 wVelocity.getPointer(),
+		 domLoDen.get_pointer(), domHiDen.get_pointer(), 
+		 density.getPointer(),
 		 domLoVis.get_pointer(), domHiVis.get_pointer(), 
 		 lowIndex.get_pointer(), highIndex.get_pointer(), 
 		 viscosity.getPointer(),
@@ -312,39 +316,30 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 
   // Get the velocity, density and viscosity from the old data warehouse
   int matlIndex = 0;
-  int numGhostCells = 0;
-  new_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
+  int numGhostCells = 1;
+  int zeroGhostCells = 0;
+  old_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::AroundCells,
 	      numGhostCells);
-  new_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::AroundCells,
 	      numGhostCells);
-  new_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::AroundCells,
 	      numGhostCells);
-  new_dw->get(density, d_densityRCPLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
+  old_dw->get(density, d_densityRCPLabel, matlIndex, patch, Ghost::None,
+	      zeroGhostCells);
   old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-
-#ifdef WONT_COMPILE_YET
-  // using chain of responsibility pattern for getting cell information
-  DataWarehouseP top_dw = new_dw->getTop();
+	      zeroGhostCells);
   PerPatch<CellInformation*> cellinfop;
-  if(top_dw->exists("cellinfo", patch)){
-    top_dw->get(cellinfop, "cellinfo", patch);
+  if (old_dw->exists(d_cellInfoLabel, patch)) {
+    old_dw->get(cellinfop, d_cellInfoLabel, matlIndex, patch);
   } else {
     cellinfop.setData(scinew CellInformation(patch));
-    top_dw->put(cellinfop, "cellinfo", patch);
-  } 
+    old_dw->put(cellinfop, d_cellInfoLabel, matlIndex, patch);
+  }
   CellInformation* cellinfo = cellinfop;
-#endif
 
   // get physical constants
   double mol_viscos; // molecular viscosity
   mol_viscos = d_physicalConsts->getMolecularViscosity();
-
-  // Create the new viscosity variable to write the result to 
-  // and allocate space in the new data warehouse for this variable
-  CCVariable<double> new_viscosity;
-  new_dw->allocate(new_viscosity, d_viscosityRCTSLabel, matlIndex, patch);
 
   // Get the patch and variable details
   IntVector domLoU = uVelocity.getFortLowIndex();
@@ -364,7 +359,27 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-#ifdef WONT_COMPILE_YET
+  FORT_SMAGMODEL(domLoU.get_pointer(), domHiU.get_pointer(), 
+		 uVelocity.getPointer(),
+		 domLoV.get_pointer(), domHiV.get_pointer(), 
+		 vVelocity.getPointer(),
+		 domLoW.get_pointer(), domHiW.get_pointer(), 
+		 wVelocity.getPointer(),
+		 domLo.get_pointer(), domHi.get_pointer(), 
+		 density.getPointer(),
+		 domLo.get_pointer(), domHi.get_pointer(), 
+		 idxLo.get_pointer(), idxHi.get_pointer(), 
+		 viscosity.getPointer(),
+		 cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+		 cellinfo->stb.get_objs(), &mol_viscos,
+		 &d_CF, &d_factorMesh, &d_filterl);
+
+  // Create the new viscosity variable to write the result to 
+  // and allocate space in the new data warehouse for this variable
+  /*
+  CCVariable<double> new_viscosity;
+  new_dw->allocate(new_viscosity, d_viscosityRCTSLabel, matlIndex, patch);
+
   FORT_SMAGMODEL(domLo.get_pointer(), domHi.get_pointer(),
 		 idxLo.get_pointer(), idxHi.get_pointer(),
 		 new_viscosity.getPointer(), 
@@ -389,10 +404,10 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		 cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
 		 cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
 		 cellinfo->tfac, cellinfo->bfac);
-#endif
+  */
 
   // Put the calculated viscosityvalue into the new data warehouse
-  new_dw->put(new_viscosity, d_viscosityRCTSLabel, matlIndex, patch);
+  new_dw->put(viscosity, d_viscosityRCTSLabel, matlIndex, patch);
 }
 
 //****************************************************************************
@@ -666,6 +681,10 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.21  2000/06/30 05:12:16  bbanerje
+// Changed reComputeTurbModel to reflect chnages to computeTurbModel.
+// Changed name Subroutine mixltm to Subroutine smagmodel
+//
 // Revision 1.20  2000/06/30 04:19:17  rawat
 // added turbulence model and compute properties
 //
