@@ -306,7 +306,6 @@ proc canvasScroll { canvas { dx 0.0 } { dy 0.0 } } {
 proc activate_file_submenus { } {
     global maincanvas minicanvas    
     loadSubnetScriptsFromDisk
-    createModulesMenu $maincanvas.modulesMenu 0
     
     .main_menu.file.menu entryconfig  0 -state active
     .main_menu.file.menu entryconfig  1 -state active
@@ -356,9 +355,6 @@ proc modulesMenu { subnet x y } {
     set mouseY $y
     set canvas $Subnet(Subnet${subnet}_canvas)
     createModulesMenu $canvas.modulesMenu $subnet
-    if { $subnet } {
-	createModulesMenu .subnet${subnet}.main_menu.packages.menu $subnet
-    }
     tk_popup $canvas.modulesMenu [expr $x + [winfo rootx $canvas]] \
 	[expr $y + [winfo rooty $canvas]]
 }
@@ -449,7 +445,6 @@ proc createPackageMenu {index} {
 	}
     }
     global maincanvas
-    createModulesMenu $maincanvas.modulesMenu 0
     update idletasks
 }
 
@@ -462,11 +457,15 @@ proc createModulesMenu { menu subnet } {
     # return if there is no information to put in menu
     if ![info exists ModuleMenu] return
     # destroy the old menu
-    if [winfo exists $menu] {	
-	destroy $menu
-    }
+#    if [winfo exists $menu] {	
+#	destroy $menu
+#    }
     # create a new menu
-    menu $menu -tearoff false -disabledforeground black
+    if { ![winfo exists $menu] } {	
+	menu $menu
+    }
+    $menu delete 0 end
+    $menu configure -tearoff false -disabledforeground black
 
     foreach pack $ModuleMenu(packages) {
 	# Add a menu separator if this package isn't the first one
@@ -478,7 +477,10 @@ proc createModulesMenu { menu subnet } {
 	foreach cat $ModuleMenu(${pack}_categories) {
 	    # Add the category to the right-button menu
 	    $menu add cascade -label "  $ModuleMenu($cat)" -menu $menu.$cat
-	    menu $menu.$cat -tearoff false
+	    if { ![winfo exists $menu.$cat] } {	
+		menu $menu.$cat -tearoff false
+	    }
+	    $menu.$cat delete 0 end
 
 	    foreach mod $ModuleMenu(${pack}_${cat}_modules) {
 		$menu.$cat add command -label "$ModuleMenu($mod)" \
@@ -489,7 +491,9 @@ proc createModulesMenu { menu subnet } {
     
     $menu add separator
     $menu add cascade -label "Sub-Networks" -menu $menu.subnet
-    menu $menu.subnet -tearoff false
+    if { ![winfo exists $menu.subnet] } {	
+	menu $menu.subnet -tearoff false
+    }
 
     createSubnetMenu $menu $subnet
 	
@@ -1092,13 +1096,14 @@ proc loadnet { netedit_loadfile } {
 }
 
 proc SCIRunNew_source { args } {
-    if { [file exists $args] } {    
-	return [uplevel 1 SCIRunBackup_source \{$args\}]
+    set filename [lindex $args 0]
+    if { [file exists $filename] } {    
+	return [uplevel 1 SCIRunBackup_source \{$filename\}]
     }
 
-    set lastSettings [string last .settings $args]
+    set lastSettings [string last .settings $filename]
     if { ($lastSettings != -1) && \
-	     ([expr [string length $args] - $lastSettings] == 9) } {
+	     ([expr [string length $filename] - $lastSettings] == 9) } {
 	set file "[netedit getenv SCIRUN_SRCDIR]/nets/default.settings"
 	global recentlyWarnedAboutDefaultSettings
 	if { ![info exists recentlyWarnedAboutDefaultSettings] } {
@@ -1108,7 +1113,7 @@ proc SCIRunNew_source { args } {
 	}
 	return [uplevel 1 SCIRunBackup_source \{$file\}]
     }
-    puts "SCIRun TCL cannot source \'$args\': File does not exist."
+    puts "SCIRun TCL cannot source \'$filename\': File does not exist."
 }
 
 proc renameSourceCommand {} {
