@@ -11,6 +11,7 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Dpy.h>
 #include <Packages/rtrt/Core/Grid.h>
+#include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/HierarchicalGrid.h>
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/Light.h>
@@ -349,8 +350,18 @@ int main(int argc, char* argv[])
 						  gridcellsize, 
 						  gridcellsizeL2,
 						  gridcellsizeL3,
-						  minObjs1, minObjs2,
-						  1 ) );
+						  minObjs1, minObjs2 ));
+      } else if(use_bv==5){
+	Object *obj = scene->get_object();
+	Group *g = dynamic_cast<Group *>(obj);
+	if (g)
+	  for (int i=0; i<g->objs.size(); i++) {
+	    Group *gg = new Group;
+	    gg->add(new BV1(g->objs[i]));
+	    g->objs[i] = gg;
+	  }
+	else
+	  scene->set_object(new BV1(obj));
       } else {
 	cerr << "WARNING: Unknown bv method\n";
       }
@@ -389,9 +400,9 @@ int main(int argc, char* argv[])
     
     rtrt_engine->Gjitter_vals[ii] *= 0.25;
     
-    rtrt_engine->Gjitter_valsb[ii] = drand48() - 1.0;
+    rtrt_engine->Gjitter_valsb[ii] = drand48()*2 - 1.0;
     while (fabs(rtrt_engine->Gjitter_valsb[ii]) >= 0.85)// sort of possion...
-      rtrt_engine->Gjitter_valsb[ii] = drand48() - 1.0;
+      rtrt_engine->Gjitter_valsb[ii] = drand48()*2 - 1.0;
     
     rtrt_engine->Gjitter_valsb[ii] *= 0.25;
   }
