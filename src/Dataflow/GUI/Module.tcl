@@ -1031,6 +1031,7 @@ proc startPortConnection { port } {
 	if {$addSubnetPort} {
 	    set num [portCount "Subnet$subnet 0 [invType port]"]
 	    set temp "Subnet$subnet $num [invType port]"
+	    drawPort $temp [portColor $port] 0
 	    lappend possiblePorts $temp
 	}
     }
@@ -1066,14 +1067,14 @@ proc trackPortConnection { port x y } {
     } 
 }
 
-proc endPortConnection { subnet } {
+proc endPortConnection { port } {
     global Subnet possibleConnection
-    $Subnet(Subnet${subnet}_canvas) delete temp
+    $Subnet(Subnet$Subnet([pMod port])_canvas) delete temp
     if [info exists possibleConnection] {
 	createConnection $possibleConnection 1
 	unset possibleConnection
     }
-    if $subnet { drawPorts Subnet$subnet }
+    if $Subnet([pMod port]) { drawPorts Subnet$Subnet([pMod port]) }
 }
 
 proc parseConnectionID {conn} {
@@ -1499,7 +1500,7 @@ proc moduleDestroy {modid} {
     }
 
     # Deleting the module connections backwards works for dynamic modules
-    set connections $Subnet({$modid}_connections)
+    set connections $Subnet(${modid}_connections)
     for {set j [expr [llength $connections]-1]} {$j >= 0} {incr j -1} {
 	destroyConnection [lindex $connections $j]
     }
@@ -1671,22 +1672,17 @@ proc findRealConnections { conn } {
 }
 
 proc drawPorts { modid { porttypes "i o" } } {
-    global Subnet ToolTipText
-    global port_spacing port_width port_height port_light_height
+    global Subnet
     if { ![info exists Subnet($modid)] } { return }
     set subnet $Subnet($modid)
-    set isSubnetEditor [isaSubnetEditor $modid]
-    if $isSubnetEditor {
+    if [isaSubnetEditor $modid] {
 	drawPorts SubnetIcon$subnet
 	set modframe .subnet${subnet}.can
     } else {
 	set modframe $Subnet(Subnet${subnet}_canvas).module$modid
 	$modid resize_icon
     }
-
     foreach porttype $porttypes {
-	set isoport [string equal $porttype o]
-
 	set i 0
 	while {[winfo exists $modframe.port$porttype$i]} {
 	    destroy $modframe.port$porttype$i
@@ -1696,50 +1692,59 @@ proc drawPorts { modid { porttypes "i o" } } {
 	set num [portCount "$modid 0 $porttype"]
 	for {set i 0 } {$i < $num} {incr i} {
 	    set port [list $modid $i $porttype]
-	    set x [expr $i*$port_spacing+6]
-	    if $isSubnetEditor { set x [expr $x+3] }
-	    set e [expr $isoport?"bottom":"top"]
-	    if [portIsConnected $port] { set e out$e }
-	    set portbevel $modframe.port$porttype$i
-	    set portlight $modframe.portlight$porttype$i
-	    bevel $portbevel -width $port_width -height $port_height \
-		-borderwidth 3 -edge $e -background [portColor $port] \
-		-pto 2 -pwidth 7 -pborder 2
-	    frame $portlight -width $port_width -height 4 \
-		-relief raised -background black -borderwidth 0
+	    drawPort $port [portColor $port] [portIsConnected $port]
+	}
+    }
+}
 
-	    Tooltip $portlight $ToolTipText(ModulePortlight)
-	    Tooltip $portbevel $ToolTipText(ModulePort)
+proc drawPort { port { color red } { connected 0 } } {
+    global Subnet ToolTipText
+    global port_spacing port_width port_height port_light_height
+    set isSubnetEditor [isaSubnetEditor [pMod port]]
+    set subnet $Subnet([pMod port])
+    if $isSubnetEditor {
+	set modframe .subnet${subnet}.can
+    } else {
+	set modframe $Subnet(Subnet${subnet}_canvas).module[pMod port]
+    }
+    set isoport [string equal [pType port] o]
+    set x [expr [pNum port]*$port_spacing+($isSubnetEditor?9:6)]
+    set e [expr $connected?"out":""][expr $isoport?"bottom":"top"]
+    set portbevel $modframe.port[pType port][pNum port]
+    set portlight $modframe.portlight[pType port][pNum port]
+    bevel $portbevel -width $port_width -height $port_height \
+	-borderwidth 3 -edge $e -background $color \
+	-pto 2 -pwidth 7 -pborder 2
+    frame $portlight -width $port_width -height 4 \
+	-relief raised -background black -borderwidth 0
 
-	    if { $isSubnetEditor } {
-		if $isoport {
-		    place $portbevel -bordermode outside \
-			-y $port_light_height -anchor nw -x $x
-		    place $portlight -in $portbevel -x 0 -y 0 -anchor sw
-		} else {
-		    place $portbevel -bordermode ignore \
-			-x $x -rely 1 -y -4 -anchor sw
-		    place $portlight -in $portbevel -x 0 -rely 1.0 -anchor nw
-		} 
-	    } else {
-		if $isoport {
-		    place $portbevel -bordermode ignore \
-			-rely 1 -anchor sw -x $x
-		    place $portlight -in $portbevel -x 0 -y 0 -anchor sw
-		} else {
-		    place $portbevel -bordermode outside -x $x -y 0 -anchor nw
-		    place $portlight -in $portbevel -x 0 -rely 1.0 -anchor nw
-		}
-	    }
-	    foreach p [list $portbevel $portlight] {
-		bind $p <2> "startPortConnection {$port}"
-		bind $p <B2-Motion> "trackPortConnection {$port} %x %y"
-		bind $p <ButtonRelease-2> "endPortConnection $subnet"
-		bind $p <ButtonPress-1> "tracePort {$port}"
-		bind $p <Control-Button-1> "tracePort {$port} 1"
-		bind $p <ButtonRelease-1> "deleteTraces"
-	    }
-	} 
+    Tooltip $portlight $ToolTipText(ModulePortlight)
+    Tooltip $portbevel $ToolTipText(ModulePort)
+
+    if { $isSubnetEditor && $isoport } {
+	place $portbevel -bordermode outside \
+	    -y $port_light_height -anchor nw -x $x
+    } elseif { $isSubnetEditor && !$isoport } {
+	place $portbevel -bordermode ignore -x $x -rely 1 -y -4 -anchor sw
+    } elseif { !$isSubnetEditor && $isoport } {
+	place $portbevel -bordermode ignore -rely 1 -anchor sw -x $x
+    } elseif { !$isSubnetEditor && !$isoport } {
+	place $portbevel -bordermode outside -x $x -y 0 -anchor nw
+    }
+
+    if $isoport {
+	place $portlight -in $portbevel -x 0 -y 0 -anchor sw
+    } else {
+	place $portlight -in $portbevel -x 0 -rely 1.0 -anchor nw
+    }
+	
+    foreach p [list $portbevel $portlight] {
+	bind $p <2> "startPortConnection {$port}"
+	bind $p <B2-Motion> "trackPortConnection {$port} %x %y"
+	bind $p <ButtonRelease-2> "endPortConnection {$port}"
+	bind $p <ButtonPress-1> "tracePort {$port}"
+	bind $p <Control-Button-1> "tracePort {$port} 1"
+	bind $p <ButtonRelease-1> "deleteTraces"
     }
 }
 
