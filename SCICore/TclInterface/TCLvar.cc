@@ -417,6 +417,11 @@ void TCLvarint::set(int nv)
     value=nv;
 }
 
+void TCLvardouble::set(double dv)
+{
+    value=dv;
+}
+
 void TCLvarint::emit(ostream& out)
 {
     out << "set " << format_varname() << " " << get() << endl;
@@ -520,6 +525,9 @@ void TCLVector::emit(ostream& out)
 
 //
 // $Log$
+// Revision 1.4  2000/07/07 03:15:50  samsonov
+// Added TCLvardouble::set(double) implementation
+//
 // Revision 1.3  1999/10/07 02:08:03  sparker
 // use standard iostreams and complex type
 //
