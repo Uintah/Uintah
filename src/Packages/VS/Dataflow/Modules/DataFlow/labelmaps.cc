@@ -467,3 +467,23 @@ VH_Anatomy_findBoundingBox(VH_AnatomyBoundingBox *list, char *targetname)
   return(listPtr);
 } // end VH_Anatomy_findBoundingBox()
 
+                                                                                
+/******************************************************************************
+ * class VH_injuryList
+ *
+ * description: Contains the name of an injured tissue and
+ *              iconic geometry to display to indicate the injury extent
+ ******************************************************************************/                                                                                
+bool
+is_injured(char *targetName, char **injured_tissue_list, int size_injList)
+{
+  int i;
+  for(i = 0; i < size_injList; i++)
+  {
+    if(!strcmp(targetName, injured_tissue_list[i])) return true;
+  }
+  // (else)
+  return false;
+}
+ 
+
