@@ -33,6 +33,7 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or
 
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
+  ps->get("useModifiedEOS",d_useModifiedEOS);
   d_tol = 1.0e-10;
   ps->get("tolerance",d_tol);
 
@@ -498,15 +499,18 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       tensorD = (tensorR*tensorD)*(tensorR.Transpose());
       Matrix3 avgStress = (pStress_new[idx] + pStress[idx])*0.5;
       double pStrainEnergy = (tensorD(1,1)*avgStress(1,1) +
-				tensorD(2,2)*avgStress(2,2) + tensorD(3,3)*avgStress(3,3) +
-				2.0*(tensorD(1,2)*avgStress(1,2) + 
-				tensorD(1,3)*avgStress(1,3) + tensorD(2,3)*avgStress(2,3)))*
-	                        pVolume_deformed[idx]*delT;
+                              tensorD(2,2)*avgStress(2,2) +
+                              tensorD(3,3)*avgStress(3,3) +
+                         2.0*(tensorD(1,2)*avgStress(1,2) + 
+                              tensorD(1,3)*avgStress(1,3) +
+                              tensorD(2,3)*avgStress(2,3)))*
+                              pVolume_deformed[idx]*delT;
       totalStrainEnergy += pStrainEnergy;		   
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
-      double c_dil = sqrt((bulk + 4.0*shear/3.0)*pVolume_deformed[idx]/pMass[idx]);
+      double c_dil = sqrt((bulk + 4.0*shear/3.0)*
+                              pVolume_deformed[idx]/pMass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
 		       Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
 		       Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
@@ -689,22 +693,55 @@ double HypoElasticPlastic::computeRhoMicroCM(double pressure,
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;
+
   double p_gauge = pressure - p_ref;
-  return (rho_orig/(1.0-p_gauge/bulk));
+  double rho_cur;
+
+  if(d_useModifiedEOS && p_gauge < 0.0) {
+    double A = p_ref;  // modified EOS
+    double n = p_ref/bulk;
+    rho_cur  = rho_orig*pow(pressure/A,n);
+  } else {             // Standard EOS
+    rho_cur = rho_orig*(p_gauge/bulk + sqrt((p_gauge/bulk)*(p_gauge/bulk) +1));
+  }
+  return rho_cur;
 }
+//{
+//  double rho_orig = matl->getInitialDensity();
+//  double bulk = d_initialData.Bulk;
+//  double p_gauge = pressure - p_ref;
+//  return (rho_orig/(1.0-p_gauge/bulk));
+//}
 
 void HypoElasticPlastic::computePressEOSCM(double rho_cur,double& pressure,
 					   double p_ref,  
 					   double& dp_drho, double& tmp,
 					   const MPMMaterial* matl)
 {
-  double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;
-  double p_g = bulk*(1.0 - rho_orig/rho_cur);
-  pressure = p_ref + p_g;
-  dp_drho  = bulk*rho_orig/(rho_cur*rho_cur);
-  tmp = bulk/rho_cur;  // speed of sound squared
+  double rho_orig = matl->getInitialDensity();
+
+  if(d_useModifiedEOS && rho_cur < rho_orig){
+    double A = p_ref;           // MODIFIED EOS
+    double n = bulk/p_ref;
+    pressure = A*pow(rho_cur/rho_orig,n);
+    dp_drho  = (bulk/rho_orig)*pow(rho_cur/rho_orig,n-1);
+    tmp      = dp_drho;         // speed of sound squared
+  } else {                      // STANDARD EOS
+    double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
+    pressure   = p_ref + p_g;
+    dp_drho    = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
+    tmp        = bulk/rho_cur;  // speed of sound squared
+  }
 }
+//{
+//  double rho_orig = matl->getInitialDensity();
+//  double bulk = d_initialData.Bulk;
+//  double p_g = bulk*(1.0 - rho_orig/rho_cur);
+//  pressure = p_ref + p_g;
+//  dp_drho  = bulk*rho_orig/(rho_cur*rho_cur);
+//  tmp = bulk/rho_cur;  // speed of sound squared
+//}
 
 double HypoElasticPlastic::getCompressibility()
 {

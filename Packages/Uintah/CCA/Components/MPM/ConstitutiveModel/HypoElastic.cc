@@ -232,7 +232,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 		   D(1,3)*AvgStress(1,3) +
 		   D(2,3)*AvgStress(2,3))) * pvolume_deformed[idx]*delT;
 
-      se += e;		   
+      se += e;
 
       // Compute wave speed at each particle, store the maximum
       Vector pvelocity_idx = pvelocity[idx];
