@@ -34,7 +34,7 @@
 using namespace SCIRun;
 
 HandlerStorage::HandlerStorage()
-  :d_data_sema("Handler Buffer Get Semaphore",0), d_data_mutex("Handler Buffer Map Mutex")
+  :d_data_sema("Handler Buffer Get Semaphore",0), d_data_mutex("Handler Buffer Map Mutex"),threadcount(0)
 {
 }
 
@@ -70,20 +70,28 @@ void HandlerStorage::clear(int handler_num)
 
 void HandlerStorage::add(int handler_num, int queue_num, void* data)
 {
+  /*Insert data into queue:*/
   d_data_mutex.lock();
   if ((unsigned int)queue_num > d_data[handler_num].size())
     d_data[handler_num].resize(queue_num);
   voidvec::iterator viter = (d_data[handler_num]).begin() + queue_num;
   (*(d_data.find(handler_num))).second.insert(viter,data);
   d_data_mutex.unlock();
-  
-  d_data_sema.up();
+ 
+  /*Release all (up to M-1) threads that could be stuck:*/ 
+  /*Heuristically, give each thread a chance to loop twice,*/
+  /*and also provide provision for non-accounted threads, if*/
+  /*they exist*/ 
+  d_data_sema.up(threadcount*2);
+  threadcount=0;
 }
 
 void* HandlerStorage::get(int handler_num, int queue_num)
 {
   void* getData;
 
+  /*Retreive data*/
+  threadcount++;
   d_data_mutex.lock();
   if (d_data.find(handler_num) == d_data.end())
     getData = NULL;
@@ -92,8 +100,11 @@ void* HandlerStorage::get(int handler_num, int queue_num)
   d_data_mutex.unlock();
   
   while (getData == NULL) {
+    /*Wait for some sort of data to arrive:*/
+    threadcount++;
     d_data_sema.down();
 
+    /*Check if the package we were waiting on arrived:*/ 
     d_data_mutex.lock();
     if (d_data.find(handler_num) == d_data.end()) {
       getData = NULL;

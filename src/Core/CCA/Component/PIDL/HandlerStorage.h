@@ -110,6 +110,9 @@ DESCRIPTION
     // Mutex used to control access of the d_data variable abover
     Mutex d_data_mutex;
 
+    ///////
+    // Count the number of threads that are waiting for the semaphore.
+    int threadcount;
   };
 } // End namespace SCIRun
 
