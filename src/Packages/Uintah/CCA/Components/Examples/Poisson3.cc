@@ -102,8 +102,6 @@ void Poisson3::initialize(const ProcessorGroup*,
 	for(NodeIterator iter(l,h); !iter.done(); iter++)
 	  phi[*iter]=1;
       }
-      // allocateAndPut instead:
-      /* new_dw->put(phi, lb_->phi, matl, patch); */;
       new_dw->put(sum_vartype(-1), lb_->residual);
     }
   }
@@ -155,8 +153,6 @@ void Poisson3::timeAdvance(const ProcessorGroup*,
       ASSERT(numFaceBoundaries == patch->getNumBoundaryFaces());
 #endif
       new_dw->put(sum_vartype(residual), lb_->residual);
-      // allocateAndPut instead:
-      /* new_dw->put(newphi, lb_->phi, matl, patch); */;
     }
   }
 }
@@ -166,8 +162,14 @@ void Poisson3::timeAdvance(const ProcessorGroup*,
 
 void Poisson3::scheduleRefine(LevelP& coarseLevel, LevelP& fineLevel, SchedulerP& sched)
 {
+  PatchSubset* coarsePatches = (PatchSubset*) (coarseLevel->allPatches()->getUnion());
+  PatchSubset* finePatches = (PatchSubset*) (fineLevel->allPatches()->getUnion());
+
   Task* task = scinew Task("refine", this, &Poisson3::refine, coarseLevel);
-  task->requires(Task::NewDW, lb_->phi, Ghost::AroundNodes, interpolator_.getMaxSupportRefine());
+  task->requires(Task::OldDW, lb_->phi, coarsePatches, Task::OutOfDomain, 0, Task::NormalDomain, 
+                 Ghost::AroundNodes, interpolator_.getMaxSupportRefine());
+  task->computes(lb_->phi);
+  task->computes(sharedState_->get_delt_label());
   sched->addTask(task, fineLevel->eachPatch(), sharedState_->allMaterials());
 }
 
@@ -192,25 +194,104 @@ void Poisson3::refine(const ProcessorGroup*,
       coarseDW->get(coarsePhi, lb_->phi, matl, coarsePatch, Ghost::AroundNodes, interpolator_.getMaxSupportRefine());
 
       NCVariable<double> finePhi;
-      fineDW->allocateTemporary(finePhi,  finePatch);
+      fineDW->allocateAndPut(finePhi, lb_->phi, matl, finePatch);
 
       IntVector l = finePatch->getNodeLowIndex();
       IntVector h = finePatch->getNodeHighIndex(); 
       // For all finegrid nodes
       for(NodeIterator iter(l, h); !iter.done(); iter++){
-	finePhi[*iter] = interpolator_.refine(coarsePhi, *iter, Interpolator::Inner);
+	finePhi[*iter] = interpolator_.refine(coarsePhi, *iter, Interpolator::inner);
       }
     }
   }
+
+  // Set the new delt
+  fineDW->put(delt_vartype(delt_), sharedState_->get_delt_label());
+}
+
+
+void Poisson3::scheduleRefineInterface(LevelP& coarseLevel,
+			               LevelP& fineLevel,
+			               SchedulerP& sched)
+{
+  PatchSubset* coarsePatches = (PatchSubset*) (coarseLevel->allPatches()->getUnion());
+  PatchSubset* finePatches = (PatchSubset*) (fineLevel->allPatches()->getUnion());
+
+  Task* task = scinew Task("refineInterface", this, &Poisson3::refine, coarseLevel);
+  task->requires(Task::OldDW, lb_->phi, coarsePatches, Task::OutOfDomain, 0, Task::NormalDomain, 
+                 Ghost::AroundNodes, interpolator_.getMaxSupportRefine());
+  task->computes(lb_->phi);
+  task->computes(sharedState_->get_delt_label());
+  sched->addTask(task, fineLevel->eachPatch(), sharedState_->allMaterials());
+}
+
+
+void Poisson3::refineInterface(const ProcessorGroup*,
+	                       const PatchSubset* finePatches, 
+		               const MaterialSubset* matls,
+                               DataWarehouse* fineDW, 
+		               DataWarehouse* coarseDW,
+                               LevelP coarseLevel)
+{
+  // For all patches
+  for(int p = 0; p < finePatches->size(); p++){
+    const Patch* finePatch = finePatches->get(p);
+    Point low = finePatch->nodePosition(finePatch->getNodeLowIndex());
+    const Patch* coarsePatch = coarseLevel->getPatchFromPoint(low);
+
+    if(finePatch->getBCType(Patch::xminus) != Patch::Neighbor
+       || finePatch->getBCType(Patch::yminus) != Patch::Neighbor
+       || finePatch->getBCType(Patch::zminus) != Patch::Neighbor
+       || finePatch->getBCType(Patch::xplus)  != Patch::Neighbor
+       || finePatch->getBCType(Patch::yplus)  != Patch::Neighbor
+       || finePatch->getBCType(Patch::zplus)  != Patch::Neighbor)
+    {
+      // For all materials
+      for(int m = 0; m < matls->size(); m++){
+	int matl = matls->get(m);
+	constNCVariable<double> coarsePhi;
+	coarseDW->get(coarsePhi, lb_->phi, matl, coarsePatch, Ghost::AroundNodes, interpolator_.getMaxSupportRefine());
+
+	NCVariable<double> finePhi;
+        fineDW->getModifiable(finePhi, lb_->phi, matl, finePatch);
+
+	// For all Interfaces:
+        IntVector l,h;
+        for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace; face = Patch::nextFace(face))
+	{
+	  if(finePatch->getBCType(face) != Patch::Neighbor)
+	  {
+	    finePatch->getFace(face, 0, l, h);
+
+	    // For all finegrid nodes
+	    for(NodeIterator iter(l, h); !iter.done(); iter++){
+	      finePhi[*iter] = interpolator_.refine(coarsePhi, *iter, Interpolator::inner);
+	    }
+	  }
+        }
+      }
+    }
+  }
+
+  // Set the new delt
+  fineDW->put(delt_vartype(delt_), sharedState_->get_delt_label());
 }
 
 
 void Poisson3::scheduleCoarsen(LevelP& coarseLevel, LevelP& fineLevel, SchedulerP& sched)
 {
+  PatchSubset* coarsePatches = (PatchSubset*) coarseLevel->allPatches()->getUnion();
+  PatchSubset* finePatches = (PatchSubset*) fineLevel->allPatches()->getUnion();
+
   Task* task = scinew Task("coarsen", this, &Poisson3::coarsen, coarseLevel);
-  task->requires(Task::NewDW, lb_->phi, Ghost::AroundNodes, interpolator_.getMaxSupportCoarsen());
+  task->requires(Task::OldDW, lb_->phi, Ghost::AroundNodes, interpolator_.getMaxSupportCoarsen());
+  task->modifies(lb_->phi, coarsePatches, Task::OutOfDomain, 0, Task::NormalDomain);
+  //task->requires(Task::NewDW, lb_->phi, coarsePatches, Task::OutOfDomain, 0, Task::NormalDomain, Ghost::None, 0);
+  //task->computes(lb_->phi, coarsePatches, Task::OutOfDomain, 0, Task::NormalDomain);
   sched->addTask(task, fineLevel->eachPatch(), sharedState_->allMaterials());
 }
+
+
 
 
 void Poisson3::coarsen(const ProcessorGroup*,
@@ -233,7 +314,7 @@ void Poisson3::coarsen(const ProcessorGroup*,
       fineDW->get(finePhi, lb_->phi, matl, finePatch, Ghost::AroundNodes, interpolator_.getMaxSupportCoarsen());
 
       NCVariable<double> coarsePhi;
-      coarseDW->allocateTemporary(coarsePhi,  coarsePatch);
+      coarseDW->getModifiable(coarsePhi, lb_->phi, matl, coarsePatch);
 
       IntVector fl = finePatch->getNodeLowIndex();
       IntVector l;
@@ -245,8 +326,10 @@ void Poisson3::coarsen(const ProcessorGroup*,
 
       // For all coarsegrid nodes
       for(NodeIterator iter(l, h); !iter.done(); iter++){
-	coarsePhi[*iter] = interpolator_.coarsen(finePhi, *iter, Interpolator::Inner);
+	coarsePhi[*iter] = interpolator_.coarsen(finePhi, *iter, Interpolator::inner);
       }
+
+      coarseDW->put(coarsePhi, lb_->phi, matl, coarsePatch);
     }
   }
 }
