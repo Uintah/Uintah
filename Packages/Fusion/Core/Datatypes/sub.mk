@@ -12,11 +12,12 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Fusion/Core/Datatypes
 
-SRCS     += \
-#[INSERT NEW CODE FILE HERE]
+SRCS     += $(SRCDIR)/StructHexVolMesh.cc	    	\
+	    $(SRCDIR)/templates.cc
 
-PSELIBS :=
-LIBS :=
+PSELIBS := Core/Persistent Core/Disclosure Core/Exceptions Core/Containers \
+	Core/Thread Core/Geometry Core/Math Core/Util
+LIBS := -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
