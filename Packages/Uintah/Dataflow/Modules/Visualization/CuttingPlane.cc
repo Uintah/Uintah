@@ -36,7 +36,7 @@
 #include <Core/Thread/CrowdMonitor.h>
 
 #include <iostream>
-#include <values.h> // for DBL_MAX, DBL_MIN
+#include <sci_values.h> // for DBL_MAX, DBL_MIN
 
 using std::cerr;
 using std::cin;
