@@ -1,0 +1,458 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global userName
+set userName "allen"
+
+global runDate
+set runDate " Wed  Jan 30 2002"
+
+global runTime
+set runTime " 13:48:42"
+
+set bbox {15.0 17.0 1273 880}
+
+set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 16 17]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 186 154]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 15 684]
+set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 15 836]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 272 685]
+set m5 [addModuleAtPosition "Fusion" "DataIO" "MDSPlusFieldReader" 234 18]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 662 18]
+set m7 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 16 182]
+set m8 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 822 180]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 822 374]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 903 553]
+set m11 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 840 265]
+set m12 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 921 465]
+set m13 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 130 286]
+set m14 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 111 475]
+set m15 [addModuleAtPosition "SCIRun" "Visualization" "TextureVolVis" 110 559]
+set m16 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 112 382]
+set m17 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 725 471]
+set m18 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 725 555]
+set m19 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 1098 124]
+set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1098 335]
+set m21 [addModuleAtPosition "SCIRun" "Visualization" "TexCuttingPlanes" 407 567]
+set m22 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 407 199]
+set m23 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 437 293]
+set m24 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 407 387]
+set m25 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 407 479]
+set m26 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1116 240]
+
+addConnection $m1 0 $m2 1
+addConnection $m1 0 $m4 1
+addConnection $m2 0 $m3 0
+addConnection $m6 0 $m1 0
+addConnection $m9 0 $m10 0
+addConnection $m11 0 $m9 1
+addConnection $m12 0 $m10 1
+addConnection $m9 0 $m12 1
+addConnection $m6 0 $m12 0
+addConnection $m14 0 $m15 0
+addConnection $m1 0 $m15 1
+addConnection $m16 0 $m14 0
+addConnection $m13 0 $m16 1
+addConnection $m17 0 $m18 0
+addConnection $m1 0 $m18 1
+addConnection $m9 0 $m17 1
+addConnection $m1 0 $m21 1
+addConnection $m23 0 $m24 1
+addConnection $m24 0 $m25 0
+addConnection $m25 0 $m21 0
+addConnection $m4 1 $m3 1
+addConnection $m15 0 $m3 2
+addConnection $m21 0 $m3 3
+addConnection $m11 1 $m3 4
+addConnection $m18 0 $m3 5
+addConnection $m10 0 $m3 6
+addConnection $m20 0 $m3 7
+addConnection $m26 0 $m20 1
+addConnection $m6 0 $m26 0
+addConnection $m0 0 $m7 0
+addConnection $m7 0 $m2 0
+addConnection $m0 0 $m22 0
+addConnection $m22 0 $m4 0
+addConnection $m22 0 $m23 0
+addConnection $m22 0 $m24 0
+addConnection $m7 0 $m13 0
+addConnection $m7 0 $m16 0
+addConnection $m0 1 $m8 0
+addConnection $m8 0 $m9 0
+addConnection $m8 0 $m11 0
+addConnection $m0 2 $m19 0
+addConnection $m19 0 $m20 0
+addConnection $m19 0 $m26 1
+addConnection $m0 0 $m1 1
+addConnection $m22 0 $m17 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename {/mnt/z/SCIRunData/fusion/NIMROD_10107_00.mds}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-isFixed {0}
+set $m1-min {-0.0155957}
+set $m1-max {0.725127}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-nodes-on {1}
+set $m2-nodes-as-disks {0}
+set $m2-edges-on {1}
+set $m2-use-normals {0}
+set $m2-use-transparency {0}
+set $m2-faces-on {1}
+set $m2-vectors-on {0}
+set $m2-normalize-vectors {0}
+set $m2-has_vec_data {0}
+set $m2-def-color-r {0.5}
+set $m2-def-color-g {0.5}
+set $m2-def-color-b {0.5}
+set $m2-def-color-a {0.5}
+set $m2-node_display_type {Points}
+set $m2-edge_display_type {Lines}
+set $m2-active_tab {Edges}
+set $m2-node_scale {0.03}
+set $m2-edge_scale {0.03}
+set $m2-vectors_scale {0.03}
+set $m2-show_progress {0}
+set $m2-interactive_mode {Interactive}
+set $m2-resolution {4}
+set $m3-notes {}
+set $m3-show_status {1}
+$m3 ui
+set $m3-ViewWindow_0-pos {z1_x0}
+set $m3-ViewWindow_0-caxes {0}
+set $m3-ViewWindow_0-iaxes {40}
+set $m3-ViewWindow_0-view-eyep-x {8.29426}
+set $m3-ViewWindow_0-view-eyep-y {10.5358}
+set $m3-ViewWindow_0-view-eyep-z {15.4953}
+set $m3-ViewWindow_0-view-lookat-x {0.00294031}
+set $m3-ViewWindow_0-view-lookat-y {-0.0941945}
+set $m3-ViewWindow_0-view-lookat-z {-0.0133723}
+set $m3-ViewWindow_0-view-up-x {-0.356966}
+set $m3-ViewWindow_0-view-up-y {-0.670482}
+set $m3-ViewWindow_0-view-up-z {0.650406}
+set $m3-ViewWindow_0-view-fov {20}
+set $m3-ViewWindow_0-view-eyep-x {8.29426}
+set $m3-ViewWindow_0-view-eyep-y {10.5358}
+set $m3-ViewWindow_0-view-eyep-z {15.4953}
+set $m3-ViewWindow_0-view-eyep-x {8.29426}
+set $m3-ViewWindow_0-view-eyep-y {10.5358}
+set $m3-ViewWindow_0-view-eyep-z {15.4953}
+set $m3-ViewWindow_0-view-lookat-x {0.00294031}
+set $m3-ViewWindow_0-view-lookat-y {-0.0941945}
+set $m3-ViewWindow_0-view-lookat-z {-0.0133723}
+set $m3-ViewWindow_0-view-lookat-x {0.00294031}
+set $m3-ViewWindow_0-view-lookat-y {-0.0941945}
+set $m3-ViewWindow_0-view-lookat-z {-0.0133723}
+set $m3-ViewWindow_0-view-up-x {-0.356966}
+set $m3-ViewWindow_0-view-up-y {-0.670482}
+set $m3-ViewWindow_0-view-up-z {0.650406}
+set $m3-ViewWindow_0-view-up-x {-0.356966}
+set $m3-ViewWindow_0-view-up-y {-0.670482}
+set $m3-ViewWindow_0-view-up-z {0.650406}
+set $m3-ViewWindow_0-view-fov {20}
+set $m3-ViewWindow_0-view-eyep_offset-x {3.90872e-311}
+set $m3-ViewWindow_0-view-eyep_offset-y {1.44168e-310}
+set $m3-ViewWindow_0-view-eyep_offset-z {4.15699e-311}
+set $m3-ViewWindow_0-view-eyep_offset-x {3.90872e-311}
+set $m3-ViewWindow_0-view-eyep_offset-y {1.44168e-310}
+set $m3-ViewWindow_0-view-eyep_offset-z {4.15699e-311}
+set $m3-ViewWindow_0-bgcolor-r {0}
+set $m3-ViewWindow_0-bgcolor-g {0}
+set $m3-ViewWindow_0-bgcolor-b {0}
+set $m3-ViewWindow_0-bgcolor-r {0}
+set $m3-ViewWindow_0-bgcolor-g {0}
+set $m3-ViewWindow_0-bgcolor-b {0}
+set $m3-ViewWindow_0-shading {}
+set $m3-ViewWindow_0-do_stereo {0}
+set $m3-ViewWindow_0-ambient-scale {1}
+set $m3-ViewWindow_0-diffuse-scale {1}
+set $m3-ViewWindow_0-specular-scale {0.4}
+set $m3-ViewWindow_0-emission-scale {1}
+set $m3-ViewWindow_0-shininess-scale {1}
+set $m3-ViewWindow_0-sbase {0.4}
+set $m3-ViewWindow_0-sr {1}
+set $m3-ViewWindow_0-do_bawgl {0}
+set $m3-ViewWindow_0-drawimg {126}
+set $m3-ViewWindow_0-saveprefix {}
+set $m3-ViewWindow_0-resx {28}
+set $m3-ViewWindow_0-resy {10081}
+set $m3-ViewWindow_0-aspect {68}
+set $m3-ViewWindow_0-aspect_ratio {7.21479e-313}
+set $m3-ViewWindow_0-unused {0}
+set $m3-ViewWindow_0-unused {0}
+set $m3-ViewWindow_0-unused {0}
+set $m3-ViewWindow_0-unused {1}
+set $m3-ViewWindow_0-unused {0}
+set $m3-ViewWindow_0-unused {1}
+set $m3-ViewWindow_0-unused {0}
+set $m3-ViewWindow_0-unused {1}
+set $m3-ViewWindow_0-unused {1}
+set $m3-ViewWindow_0-unused {1}
+set $m3-ViewWindow_0-unused {0}
+set $m3-ViewWindow_0-unused {1}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-isoval {298371}
+set $m4-extract-from-new-field {0}
+set $m4-algorithm {0}
+set $m4-build_trisurf {0}
+set $m4-np {1}
+set $m4-active_tab {MC}
+set $m4-update_type {on release}
+set $m4-color-r {0.4}
+set $m4-color-g {0.2}
+set $m4-color-b {0.9}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-serverName {atlas.gat.com}
+set $m5-treeName {NIMROD}
+set $m5-shotNumber {10089}
+set $m5-sliceNumber {0}
+set $m5-bPressure {1}
+set $m5-bBField {0}
+set $m5-bVField {0}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m6-tcl_status {Calling GenStandardColorMaps!}
+set $m6-positionList {{0 35} {2 23} {389 0}}
+set $m6-nodeList {256 257 1716}
+set $m6-width {389}
+set $m6-height {40}
+set $m6-mapType {3}
+set $m6-minRes {12}
+set $m6-resolution {255}
+set $m6-realres {255}
+set $m6-gamma {-0.6}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-idim {145}
+set $m7-jdim {84}
+set $m7-kdim {40}
+set $m7-istart {0}
+set $m7-jstart {0}
+set $m7-kstart {0}
+set $m7-idelta {144}
+set $m7-jdelta {84}
+set $m7-kdelta {30}
+set $m7-iskip {10}
+set $m7-jskip {5}
+set $m7-kskip {1}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m8-idim {145}
+set $m8-jdim {84}
+set $m8-kdim {40}
+set $m8-istart {0}
+set $m8-jstart {0}
+set $m8-kstart {0}
+set $m8-idelta {144}
+set $m8-jdelta {84}
+set $m8-kdelta {40}
+set $m8-iskip {10}
+set $m8-jskip {5}
+set $m8-kskip {1}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m9-stepsize {0.001}
+set $m9-tolerance {0.001}
+set $m9-maxsteps {100}
+set $m9-direction {0}
+set $m9-remove-colinear {1}
+set $m10-notes {}
+set $m10-show_status {1}
+set $m10-nodes-on {1}
+set $m10-nodes-as-disks {0}
+set $m10-edges-on {1}
+set $m10-use-normals {0}
+set $m10-use-transparency {0}
+set $m10-faces-on {0}
+set $m10-vectors-on {0}
+set $m10-normalize-vectors {25277570}
+set $m10-has_vec_data {0}
+set $m10-def-color-r {0.5}
+set $m10-def-color-g {0.5}
+set $m10-def-color-b {0.5}
+set $m10-def-color-a {0.5}
+set $m10-node_display_type {Spheres}
+set $m10-edge_display_type {Cylinders}
+set $m10-active_tab {Nodes}
+set $m10-node_scale {0.05}
+set $m10-edge_scale {0.03}
+set $m10-vectors_scale {0.3}
+set $m10-show_progress {39848618}
+set $m10-interactive_mode {Interactive}
+set $m10-resolution {4}
+set $m11-notes {}
+set $m11-show_status {1}
+set $m11-endpoints {1}
+set $m11-endpoint0x {1.97785}
+set $m11-endpoint0y {0.0023881}
+set $m11-endpoint0z {0.00733424}
+set $m11-endpoint1x {1.98503}
+set $m11-endpoint1y {0.00189332}
+set $m11-endpoint1z {0.0201022}
+set $m11-widgetscale {0.103313}
+set $m11-maxseeds {2}
+set $m11-numseeds {10}
+set $m11-rngseed {1}
+set $m11-clamp {0}
+set $m11-autoexecute {0}
+set $m11-type {}
+set $m11-dist {impuni}
+set $m11-whichtab {Widget}
+set $m12-notes {}
+set $m12-show_status {1}
+set $m12-isFixed {0}
+set $m12-min {0}
+set $m12-max {1}
+set $m13-notes {}
+set $m13-show_status {1}
+set $m13-sizex {32}
+set $m13-sizey {32}
+set $m13-sizez {32}
+set $m13-padpercent {0}
+set $m13-data-at {Nodes}
+set $m14-notes {}
+set $m14-show_status {1}
+set $m14-is_fixed {0}
+set $m14-max_brick_dim {64}
+set $m14-sel_brick_dim {64}
+set $m14-min {2.122e-314}
+set $m14-max {733699}
+set $m15-notes {}
+set $m15-show_status {1}
+set $m15-num_slices {128}
+set $m15-draw_mode {0}
+set $m15-render_style {0}
+set $m15-alpha_scale {-0.745}
+set $m15-interp_mode {1}
+set $m16-notes {}
+set $m16-show_status {1}
+set $m16-use_interp {1}
+set $m16-use_closest {0}
+set $m16-closeness_distance {1e+15}
+set $m17-notes {}
+set $m17-show_status {1}
+set $m17-use_interp {1}
+set $m17-use_closest {1}
+set $m17-closeness_distance {1e+15}
+set $m18-notes {}
+set $m18-show_status {1}
+set $m18-nodes-on {0}
+set $m18-nodes-as-disks {0}
+set $m18-edges-on {1}
+set $m18-use-normals {0}
+set $m18-use-transparency {0}
+set $m18-faces-on {0}
+set $m18-vectors-on {0}
+set $m18-normalize-vectors {39847676}
+set $m18-has_vec_data {0}
+set $m18-def-color-r {0.5}
+set $m18-def-color-g {0.5}
+set $m18-def-color-b {0.5}
+set $m18-def-color-a {0.5}
+set $m18-node_display_type {Spheres}
+set $m18-edge_display_type {Cylinders}
+set $m18-active_tab {Edges}
+set $m18-node_scale {0.03}
+set $m18-edge_scale {0.03}
+set $m18-vectors_scale {0.3}
+set $m18-show_progress {19551847}
+set $m18-interactive_mode {Interactive}
+set $m18-resolution {4}
+set $m19-notes {}
+set $m19-show_status {1}
+set $m19-idim {145}
+set $m19-jdim {84}
+set $m19-kdim {40}
+set $m19-istart {0}
+set $m19-jstart {0}
+set $m19-kstart {0}
+set $m19-idelta {144}
+set $m19-jdelta {84}
+set $m19-kdelta {40}
+set $m19-iskip {10}
+set $m19-jskip {5}
+set $m19-kskip {5}
+set $m20-notes {}
+set $m20-show_status {1}
+set $m20-nodes-on {0}
+set $m20-nodes-as-disks {1}
+set $m20-edges-on {0}
+set $m20-use-normals {0}
+set $m20-use-transparency {0}
+set $m20-faces-on {0}
+set $m20-vectors-on {1}
+set $m20-normalize-vectors {39847828}
+set $m20-has_vec_data {1}
+set $m20-def-color-r {0.67}
+set $m20-def-color-g {0.47}
+set $m20-def-color-b {0.27}
+set $m20-def-color-a {0.5}
+set $m20-node_display_type {Spheres}
+set $m20-edge_display_type {Lines}
+set $m20-active_tab {Vectors}
+set $m20-node_scale {0.03}
+set $m20-edge_scale {0.015}
+set $m20-vectors_scale {0.2}
+set $m20-show_progress {23097422}
+set $m20-interactive_mode {Interactive}
+set $m20-resolution {4}
+set $m21-notes {}
+set $m21-show_status {1}
+set $m21-drawX {0}
+set $m21-drawY {0}
+set $m21-drawZ {1}
+set $m21-drawView {0}
+set $m21-interp_mode {1}
+set $m21-draw_phi_0 {1}
+set $m21-draw_phi_1 {1}
+set $m21-phi_0 {35}
+set $m21-phi_1 {90}
+set $m21-cyl_active {0}
+set $m22-notes {}
+set $m22-show_status {1}
+set $m22-idim {145}
+set $m22-jdim {84}
+set $m22-kdim {40}
+set $m22-istart {0}
+set $m22-jstart {0}
+set $m22-kstart {0}
+set $m22-idelta {144}
+set $m22-jdelta {84}
+set $m22-kdelta {40}
+set $m22-iskip {10}
+set $m22-jskip {5}
+set $m22-kskip {1}
+set $m23-notes {}
+set $m23-show_status {1}
+set $m23-sizex {32}
+set $m23-sizey {32}
+set $m23-sizez {32}
+set $m23-padpercent {0}
+set $m23-data-at {Nodes}
+set $m24-notes {}
+set $m24-show_status {1}
+set $m24-use_interp {1}
+set $m24-use_closest {1}
+set $m24-closeness_distance {1e+15}
+set $m25-notes {}
+set $m25-show_status {1}
+set $m25-is_fixed {0}
+set $m25-max_brick_dim {64}
+set $m25-sel_brick_dim {64}
+set $m25-min {1.04083e-17}
+set $m25-max {733699}
+set $m26-notes {}
+set $m26-show_status {1}
+set $m26-isFixed {0}
+set $m26-min {0}
+set $m26-max {2664.12}
+$m19 initialize_ui
+$m22 initialize_ui
+
+::netedit scheduleok

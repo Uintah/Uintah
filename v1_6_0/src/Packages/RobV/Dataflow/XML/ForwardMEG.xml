@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="ForwardMEG" category="Magnetic">
+  <overview>
+    <authors>
+    </authors>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>ElectricVectorField</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>SourceLocation</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>DectorLocations</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>DetectorNormals</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>MagneticFieldAtPts</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>MagnitudeAtPts</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

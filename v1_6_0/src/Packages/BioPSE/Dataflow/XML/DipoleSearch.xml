@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="DipoleSearch" category="Inverse">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>Summary not available yet.</summary>
+    <description>
+      <p>Version Date: May 1999</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>DipoleSeeds</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>TetMesh</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>TestMisfit</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>TestDirection</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>LeadFieldSelectionMatrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>DipoleSimplex</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>TestDipole</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

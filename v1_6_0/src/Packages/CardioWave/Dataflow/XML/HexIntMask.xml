@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="HexIntMask" category="CreateModel">
+  <overview>
+    <authors>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>Change the conductivity tensors in a field.</summary>
+    <description>
+      <p>
+	Given a HexVol of type int (data at cells) as input, send a
+HexVol of type int (data still at cells) as output -- the user should be
+able to specify a list of "mask-out" datavalues via a GuiVar --
+all cells with any of those datavalues should be removed from the
+Field, and any nodes that are no longer attached to any cells
+should also, obviously, be removed at the end.  The
+PropertyManager should be copied from the input field to the
+output field as should the remaining fdata values.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Input HexVol</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Masked HexVol</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

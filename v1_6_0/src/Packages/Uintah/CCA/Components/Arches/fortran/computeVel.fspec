@@ -1,0 +1,4 @@
+void computevel(IntVector idxLoU, IntVector idxHiU, Array3<double> uu,
+	CCVariable<double> press, CCVariable<double> den,
+	CCVariable<double> old_den, double deltat, int ioff, int joff,
+	int koff, OffsetArray1<double> dxpw);

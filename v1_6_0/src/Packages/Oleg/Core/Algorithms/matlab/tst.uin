@@ -1,0 +1,42 @@
+# SCI Network 1.0
+
+######################
+# These commands generated automatically, DO NOT REMOVE!
+loadfile /home/oleg/scirun/sndrcv/tst.uin
+return
+######################
+::netedit dontschedule
+global userName
+set userName "oleg"
+
+global runDate
+set runDate " Tue  Jan 9 19101"
+
+global runTime
+set runTime " 13:8:59"
+
+set m0 [addModuleAtPosition "Oleg" "DataIO" "MatrixReceive" 176 181]
+set m1 [addModuleAtPosition "Oleg" "DataIO" "MatrixSend" 176 100]
+set m2 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 194 16]
+set m3 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 194 268]
+
+addConnection $m1 0 $m0 0
+addConnection $m0 1 $m3 0
+addConnection $m2 0 $m1 1
+
+set ::Oleg_DataIO_MatrixReceive_0-notes {}
+set ::Oleg_DataIO_MatrixReceive_0-show_status 1
+set ::Oleg_DataIO_MatrixReceive_0-hpTCL {}
+set ::Oleg_DataIO_MatrixSend_0-notes {}
+set ::Oleg_DataIO_MatrixSend_0-show_status 1
+set ::Oleg_DataIO_MatrixSend_0-hpTCL {rapture:5505}
+set ::SCIRun_DataIO_MatrixReader_0-notes {}
+set ::SCIRun_DataIO_MatrixReader_0-show_status 1
+set ::SCIRun_DataIO_MatrixReader_0-filename {/home/oleg/scirun/sndrcv/inp.mat}
+set ::SCIRun_DataIO_MatrixWriter_0-notes {}
+set ::SCIRun_DataIO_MatrixWriter_0-show_status 1
+set ::SCIRun_DataIO_MatrixWriter_0-filename {/home/oleg/scirun/sndrcv/res.mat}
+set ::SCIRun_DataIO_MatrixWriter_0-filetype {ASCII}
+set ::SCIRun_DataIO_MatrixWriter_0-split 0
+
+::netedit scheduleok

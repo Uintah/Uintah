@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="MatrixWriter" category="DataIO">
+  <overview>
+    <authors>
+      <author>Steven G. Parker</author>
+    </authors>
+    <summary>The MatrixWriter modules saves a persistent representation of a matrix to disk.</summary>
+    <description><p>Upon opening, the MatrixWriter GUI defaults to the directory that the user sets for their SCIRUN_DATA environment variable.   Otherwise, the GUI will default to the directory where the user's SCIRun executable resides. The user can enter the name of a file that the matrix saves to. The file should have a .mat extension.  The default file name is MyMatrix.  The user may also choose between a Binary or ASCII file format.  The Split check box option splits the reader file and matrix data into two files.
+    </p></description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Input Data</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+  </io>
+  <gui>
+    <img>../Modules/DataIO/doc/SaveFileUI.jpg</img>
+  </gui>
+  <testing>
+  </testing>
+</component>
