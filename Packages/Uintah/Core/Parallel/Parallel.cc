@@ -68,6 +68,14 @@ Parallel::noThreading()
 void
 Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 {
+   if( worldRank != -1 ) {
+      // If worldRank is not -1, then we have already been initialized..
+      // This only happens (I think) if usage() is called (due to bad
+      // input parameters (to sus)) and usage() needs to init mpi so that
+      // it only displays the usage to the root process.
+      return;
+   }
+
    if( char * max = getenv( "PSE_MAX_THREADS" ) ){
       ::maxThreads = atoi( max );
       ::allowThreads = true;
