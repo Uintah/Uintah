@@ -99,7 +99,7 @@ typedef CommRecMPI<ReceiveHandler> RecvRecord;
 template <class AfterCommunicationHandler>
 void CommRecMPI<AfterCommunicationHandler>::
 add(MPI_Request id, int bytes, AfterCommunicationHandler* handler,
-    int groupID = 0) {
+    int groupID) {
   ids.push_back(id);
   groupIDs.push_back(groupID);
   handlers.push_back(handler);
