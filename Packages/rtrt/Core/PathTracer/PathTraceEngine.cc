@@ -94,6 +94,17 @@ PathTraceWorker::PathTraceWorker(Group *group, PathTraceContext *ptc,
 	}
 	u+=inc;
       }
+#if 1
+      // Reshuffle our points, so that we don't get any correlation
+      // between sets of points.
+      for(int sample = 0; sample < ptc->num_samples[div_index]; sample++) {
+	Point2D temp = sample_points(sgindex, div_index)[sample];
+	int random_index = rng() * (ptc->num_samples[div_index]-1);
+	sample_points(sgindex, div_index)[sample] = 
+	  sample_points(sgindex, div_index)[random_index];
+	sample_points(sgindex, div_index)[random_index] = temp;
+      }
+#endif
     } // end div_index
   } // end sgindex
 
@@ -279,10 +290,7 @@ void PathTraceWorker::run() {
 	      // Accumulate bg color?
 	      Color bgcolor;
 	      ptc->background->color_in_direction(ray.direction(), bgcolor);
-
-	      // Expecting a gray-scale bg image, so just take the first channel
-	      result += bgcolor.red()*ptc->luminance;
-	      
+	      result += bgcolor.luminance()*ptc->luminance;
 	      break;
 	    }
 	  } // end depth
