@@ -120,7 +120,7 @@ private:
   GuiInt num_entries_;
   vector< GuiString* > entry_dir_;
   vector< GuiString* > entry_suid_;
-  vector< GuiString* > entry_files_;
+  vector< GuiFilename* > entry_files_;
 
 
   //! Ports
@@ -399,7 +399,8 @@ void DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
 
     ostringstream str3;
     str3 << "entry-files" << all_series_.size() - 1;
-    entry_files_.insert(entry_files_.end(), new GuiString(ctx->subVar(str3.str())));
+    //entry_files_.insert(entry_files_.end(), new GuiString(ctx->subVar(str3.str())));
+    entry_files_.insert(entry_files_.end(), new GuiFilename(ctx->subVar(str3.str())));
 
 #endif
   } 
@@ -441,7 +442,7 @@ void DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
     vector<struct series>::iterator iter = all_series_.begin();
     vector<GuiString*>::iterator iter2 = entry_dir_.begin();
     vector<GuiString*>::iterator iter3 = entry_suid_.begin();
-    vector<GuiString*>::iterator iter4 = entry_files_.begin();
+    vector<GuiFilename*>::iterator iter4 = entry_files_.begin();
      
     for( int i = 0; i < num_series; i++ )
     {
@@ -548,7 +549,7 @@ int DicomNrrdReader::build_nrrds( vector<Nrrd*> & array )
     int dim = image.get_dimension();
     if( dim == 3 ) 
     {
-      if( nrrdWrap(nrrd, image.get_pixel_buffer(), image.get_nrrd_type(), 
+      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeFloat, 
                3, image.get_size(0), 
                image.get_size(1), image.get_size(2)) ) 
       {
@@ -579,7 +580,7 @@ int DicomNrrdReader::build_nrrds( vector<Nrrd*> & array )
     }
     else if( dim == 2 ) 
     {
-      if( nrrdWrap(nrrd, image.get_pixel_buffer(), image.get_nrrd_type(), 
+      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeFloat, 
                2, image.get_size(0), 
                image.get_size(1)) ) 
       {
