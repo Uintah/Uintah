@@ -100,11 +100,11 @@ void
 TransformField::dispatch(F *ifield)
 {
   // do our own detach / clone
-  F::mesh_type *omesh=ifield->get_typed_mesh()->clone();
+  typename F::mesh_type *omesh=ifield->get_typed_mesh()->clone();
   F *ofield = scinew F(omesh, ifield->data_at());
   ofield->fdata() = ifield->fdata();
-  
-  for (int i=0; i<ofield->get_typed_mesh()->nodes_size(); i++) {
+  int sz = ofield->get_typed_mesh()->nodes_size();
+  for (int i = 0; i < sz; i++) {
     Point p;
     ofield->get_typed_mesh()->get_point(p, i);
     ofield->get_typed_mesh()->set_point(trans_.project(p), i);
