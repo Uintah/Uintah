@@ -189,6 +189,21 @@ DenseMatrix::sparse()
   return scinew SparseRowMatrix(nrows_, ncols_, rows, columns, nnz, a);
 }
 
+
+double *
+DenseMatrix::get_data_pointer()
+{
+  return dataptr;
+}
+
+
+size_t
+DenseMatrix::get_data_size()
+{
+  return nrows() * ncols();
+}
+
+
 //! destructor
 DenseMatrix::~DenseMatrix()
 {

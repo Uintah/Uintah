@@ -95,6 +95,9 @@ public:
   virtual int* get_row()    { return 0; }
   virtual int* get_col()    { return 0; }
 
+  virtual double *get_data_pointer() = 0;
+  virtual size_t get_data_size() = 0;
+
   virtual void zero() = 0;
   virtual double& get(int, int) const = 0;
   virtual void    put(int r, int c, double val) = 0;

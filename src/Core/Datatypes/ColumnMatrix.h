@@ -72,6 +72,9 @@ public:
   virtual SparseRowMatrix *sparse();
   virtual ColumnMatrix *column();
 
+  virtual double *get_data_pointer();
+  virtual size_t get_data_size();
+
   inline double& operator[](int r) const
   {
     ASSERTRANGE(r, 0, nrows_)

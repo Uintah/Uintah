@@ -80,6 +80,9 @@ public:
   virtual SparseRowMatrix *sparse();
   virtual ColumnMatrix *column();
 
+  virtual double *get_data_pointer();
+  virtual size_t get_data_size();
+
   //! slow setters/getter for polymorphic operations
   virtual void    zero();
   virtual double& get(int r, int c) const;

@@ -178,6 +178,20 @@ SparseRowMatrix::column()
 }
 
 
+double *
+SparseRowMatrix::get_data_pointer()
+{
+  return a;
+}
+
+
+size_t
+SparseRowMatrix::get_data_size()
+{
+  return nnz;
+}
+
+
 SparseRowMatrix *
 SparseRowMatrix::transpose()
 {

@@ -86,6 +86,9 @@ public:
   virtual SparseRowMatrix *sparse();
   virtual ColumnMatrix *column();
 
+  virtual double *get_data_pointer();
+  virtual size_t get_data_size();
+
   int getIdx(int, int);
   int get_nnz() { return nnz; }
   
