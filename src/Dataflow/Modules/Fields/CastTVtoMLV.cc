@@ -106,7 +106,7 @@ void CastTVtoMLV::execute()
     if (tvm->locate(tet, p)) {
       cnt++;
       TetVolMesh::Node::array_type nodes;
-      vector<double> weights;
+      double weights[MESH_WEIGHT_MAXSIZE];
       tvm->get_weights(p, nodes, weights);
       Vector f1(0,0,0);
       for (unsigned int i=0; i<nodes.size(); i++) {
