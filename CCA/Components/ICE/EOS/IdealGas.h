@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include "EquationOfState.h"
 
 namespace Uintah {
@@ -42,7 +43,7 @@ WARNING
 	 
 	 IdealGas(ProblemSpecP& ps);
 	 virtual ~IdealGas();
-	 
+
 	 //////////
 	 // Create space in data warehouse for CM data
 	 virtual void initializeEOSData(const Patch* patch,
@@ -84,7 +85,6 @@ WARNING
 				      const ICEMaterial* matl,
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw);
-
 	 // Per cell
 	 virtual double computeRhoMicro(double& press,double& gamma,
 				        double& cv, double& Temp);
@@ -93,6 +93,14 @@ WARNING
 				      double& cv, double& Temp,
 				      double& press, double& dp_drho,
 				      double& dp_de);
+        //per patch                          
+        virtual void computeTemp_CC(const Patch* patch,
+                                const CCVariable<double>& press, 
+                                const double& gamma,
+				    const CCVariable<double>& cv,
+                                const CCVariable<double>& rho_micro, 
+                                CCVariable<double>& Temp);
+
 
 	 double getGasConstant() const;
 
