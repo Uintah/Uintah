@@ -31,11 +31,13 @@
 
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Modules/Fields/EditField.h>
 #include <Dataflow/Widgets/ScaledBoxWidget.h>
 #include <Dataflow/Network/NetworkEditor.h>
+#include <Core/Datatypes/DenseMatrix.h>
 #include <map>
 
 namespace SCIRun {
@@ -309,8 +311,7 @@ EditField::build_widget(FieldHandle f)
   GeomGroup *widget_group = scinew GeomGroup;
   widget_group->add(box_->GetWidget());
 
-  GeometryOPort *ogport=0;
-  ogport = (GeometryOPort*)get_oport("Transformation Widget");
+  GeometryOPort *ogport = (GeometryOPort*)get_oport("Transformation Widget");
   if (!ogport) {
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;
@@ -319,29 +320,6 @@ EditField::build_widget(FieldHandle f)
 			     &widget_lock_);
   ogport->flushViews();
 }
-
-
-static bool
-check_ratio(double x, double y, double lower, double upper)
-{
-  if (fabs(x) < 1e-6)
-  {
-    if (!(fabs(y) < 1e-6))
-    {
-      return false;
-    }
-  }
-  else
-  {
-    const double ratio = y / x;
-    if (ratio < lower || ratio > upper)
-    {
-      return false;
-    }
-  }
-  return true;
-}
-
 
 void
 EditField::execute()
@@ -527,6 +505,25 @@ EditField::execute()
   }
     
   oport->send(ef);
+
+  // The output port is required.
+  MatrixOPort *moport = (MatrixOPort*)get_oport("Transform matrix");
+  if (!oport) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }  
+
+  // convert the transform into a matrix and send it out   
+  DenseMatrix *matrix_transform = scinew DenseMatrix(4,4);
+  double dummy[16];   
+  box_initial_transform__.get(dummy);   
+  double *p=&(dummy[0]);   
+  int cnt=0;   
+  for (int i=0; i<4; i++)     
+    for (int j=0; j<4; j++, cnt++)       
+      (*matrix_transform)[i][j]=*p++;
+
+  moport->send(matrix_transform);
 }
 
     
