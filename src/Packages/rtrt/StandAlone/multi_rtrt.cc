@@ -373,7 +373,7 @@ int main(int argc, char* argv[])
     // Start up display thread...
     Dpy* dpy=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
 		     ncounters, c0, c1, 1.0, 1.0, display_frames,
-		     pp_size, scratchsize, do_frameless==true);
+		     pp_size, scratchsize, false, do_frameless==true, false);
     /* <<<< bigler >>>> */
     char buf1[100];
     sprintf(buf1, "Display thread %d", nr);
