@@ -33,9 +33,13 @@
 
 #include <Dataflow/share/share.h>
 #include <Dataflow/Network/Port.h>
+#include <Dataflow/Comm/MessageBase.h>
 #include <Core/Thread/Mailbox.h>
+#include <string>
+
 namespace SCIRun {
 
+  using namespace std;
 class GeomObj;
 class View;
 class CrowdMonitor;
@@ -48,14 +52,7 @@ typedef int GeomID;
 
 class PSECORESHARE GeometryIPort : public IPort {
 public:
-    enum Protocol {
-	Atomic=0x01
-    };
-
-protected:
-    friend class GeometryOPort;
-public:
-    GeometryIPort(Module*, const string& name, int protocol=GeometryIPort::Atomic);
+    GeometryIPort(Module*, const string& name);
     virtual ~GeometryIPort();
 
     virtual void reset();
@@ -97,7 +94,7 @@ class PSECORESHARE GeometryOPort : public OPort {
     Mailbox<MessageBase*>* outbox;
     virtual void attach(Connection*);
 public:
-    GeometryOPort(Module*, const string& name, int protocol=GeometryIPort::Atomic);
+    GeometryOPort(Module*, const string& name);
     virtual ~GeometryOPort();
 
     GeomID addObj(GeomObj*, const string& name, CrowdMonitor* lock=0);
@@ -109,7 +106,7 @@ public:
 
     void forward(GeometryComm* msg);
 
-    virtual int have_data();
+    virtual bool have_data();
     virtual void resend(Connection*);
 
     int getNViewWindows();

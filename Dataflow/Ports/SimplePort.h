@@ -35,17 +35,18 @@
 #include <Core/Util/Timer.h>    
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Util/Assert.h>
+#include <Dataflow/Comm/MessageTypes.h>
+#include <Dataflow/Comm/MessageBase.h>
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/GuiInterface/Remote.h>
 #include <Core/Datatypes/Field.h>
 #include <iostream>
 #include <unistd.h> // for the call to sleep
 
-using std::cerr;
-using std::endl;
-
 namespace SCIRun {
+  using std::cerr;
+  using std::endl;
+
 
 class Module;
 
@@ -63,23 +64,18 @@ template<class T> class SimpleOPort;
 template<class T>
 class SimpleIPort : public IPort {
 public:
-  enum Protocol {
-    Atomic=0x01
-  };
-
   friend class SimpleOPort<T>;
   Mailbox<SimplePortComm<T>*> mailbox;
 
   static string port_type_;
   static string port_color_;
 
-  SimpleIPort(Module*, const string& name, int protocol=Atomic);
+  SimpleIPort(Module*, const string& name);
   virtual ~SimpleIPort();
   virtual void reset();
   virtual void finish();
 
   int get(T&);
-  int special_get(T&);
 private:
   int recvd_;
 };
@@ -87,8 +83,7 @@ private:
 template<class T>
 class SimpleOPort : public OPort {
 public:
-  SimpleOPort(Module*, const string& name, 
-	      int protocol=SimpleIPort<T>::Atomic);
+  SimpleOPort(Module*, const string& name);
   virtual ~SimpleOPort();
 
   virtual void reset();
@@ -97,7 +92,7 @@ public:
   void send(const T&);
   void send_intermediate(const T&);
 
-  virtual int have_data();
+  virtual bool have_data();
   virtual void resend(Connection* conn);
 private:
   void do_send(const T&);
@@ -105,10 +100,6 @@ private:
 
   int sent_something_;
   T handle_;
-#ifdef DEBUG
-  WallClockTimer timer1_;
-#endif
-
 };
 
 } // End namespace SCIRun
@@ -120,10 +111,9 @@ namespace SCIRun {
 
 template<class T>
 SimpleIPort<T>::SimpleIPort(Module* module, 
-			    const string& portname,
-			    int protocol) : 
-  IPort(module, port_type_, portname, port_color_, protocol),
-  mailbox("Port mailbox (SimpleIPort)", 2)
+			    const string& portname)
+  : IPort(module, port_type_, portname, port_color_),
+    mailbox("Port mailbox (SimpleIPort)", 2)
 {
 }
 
@@ -134,10 +124,9 @@ SimpleIPort<T>::~SimpleIPort()
 
 template<class T>
 SimpleOPort<T>::SimpleOPort(Module* module, 
-			    const string& portname,
-			    int protocol) : 
-  OPort(module, SimpleIPort<T>::port_type_, portname,
-	SimpleIPort<T>::port_color_, protocol)
+			    const string& portname)
+  : OPort(module, SimpleIPort<T>::port_type_, portname,
+	  SimpleIPort<T>::port_color_)
 {
 }
 
@@ -156,10 +145,10 @@ template<class T>
 void SimpleIPort<T>::finish()
 {
   if(!recvd_ && nconnections() > 0) {
-    if (module->show_stat) turn_on(Finishing);
+    if (module->showStats()) turn_on(Finishing);
     SimplePortComm<T>* msg=mailbox.receive();
     delete msg;
-    if (module->show_stat) { turn_off(); }
+    if (module->showStats()) { turn_off(); }
   }
 }
 
@@ -173,29 +162,16 @@ void SimpleOPort<T>::reset()
 template<class T>
 void SimpleOPort<T>::finish()
 {
-  // get timestamp here to measure communication time, print to screen
-#ifdef DEBUG
-  timer1.stop();
-  double time = timer1.time();
-#endif
-
-#ifdef DEBUG
-  cerr << "Done in " << time << " seconds\n"; 
-  cerr << "Entering SimpleOPort<T>::finish()\n";
-#endif
-
   if(!sent_something_ && nconnections() > 0){
     // Tell them that we didn't send anything...
-    if (module->show_stat) { turn_on(Finishing); }
+    if (module->showStats()) { turn_on(Finishing); }
     for(int i=0;i<nconnections();i++) {
       SimplePortComm<T>* msg = new SimplePortComm<T>();
       ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
     }
     
-#ifdef DEBUG
-    cerr << "Exiting SimpleOPort<T>::finish()\n";
-#endif
-    if (module->show_stat) { turn_off(); }
+    if (module->showStats())
+       turn_off();
   }
 }
 
@@ -215,50 +191,20 @@ template<class T>
 void SimpleOPort<T>::do_send(const T& data)
 {
 
-#ifdef DEBUG
-  cerr << "Entering SimpleOPort<T>::send (data)\n";
-#endif
-
   handle_ = data;
   if (nconnections() == 0) { return; }
 
   // change oport state and colors on screen
-  if (module->show_stat) { turn_on(); }
+  if (module->showStats()) { turn_on(); }
 
   for (int i = 0; i < nconnections(); i++) {
-    if (connections[i]->isRemote()) {
-      
-      // start timer here
-#ifdef DEBUG
-      timer1.clear();
-      timer1.start();
-#endif
-      
-      // send data - must only be binary files, text truncates and causes
-      // problems when diffing outputs 
-      Piostream *outstream= new BinaryPiostream(connections[i]->remSocket,
-						Piostream::Write);
-      if (!outstream) {
-	perror ("Couldn't open outfile");
-	exit (-1);
-      }
-
-      // stream data out
-      Pio (*outstream, handle_);
-      delete outstream;
-
-    } else {
-      SimplePortComm<T>* msg = new SimplePortComm<T>(data);
-      ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
-    }
+    SimplePortComm<T>* msg = new SimplePortComm<T>(data);
+    ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
   }
   sent_something_ = 1;
 
-#ifdef DEBUG
-  cerr << "Exiting SimpleOPort<T>::send (data)\n";
-#endif
-
-  if (module->show_stat) { turn_off(); }
+  if (module->showStats())
+    turn_off();
 }
 
 template<>
@@ -275,147 +221,59 @@ void SimpleOPort<T>::do_send_intermediate(const T& data)
 {
   handle_=data;
   if(nconnections() == 0) { return; }
-  if (module->show_stat) { turn_on(); }
+  if (module->showStats()) { turn_on(); }
 
-  module->multisend(this);
+  module->request_multisend(this);
   for(int i=0;i<nconnections();i++){
     SimplePortComm<T>* msg=new SimplePortComm<T>(data);
     ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
   }
-  if (module->show_stat) { turn_off(); }
+  if (module->showStats()) { turn_off(); }
 }
 
 template<class T>
 int SimpleIPort<T>::get(T& data)
 {
-
-#ifdef DEBUG
-  cerr << "Entering SimpleIPort<T>::get (data)\n";
-#endif
-
   if(nconnections()==0) { return 0; }
-  if (module->show_stat) { turn_on(); }
-
-  if (connections[0]->isRemote()) {
-
-    // receive data - unmarshal data read from socket. no auto_istream as
-    // it could try to mmap a file, which doesn't apply here.
-    Piostream *instream = new BinaryPiostream(connections[0]->remSocket,
-					      Piostream::Read);
-    if (!instream) {
-      perror ("Couldn't open infile");
-      exit (-1);
-    }
-    Pio (*instream, data);
-    delete instream;
-
-    if (!data.get_rep()) {
-      perror ("Error reading data from socket");
-      exit (-1);
-    }
-	
-#ifdef DEBUG
-    cerr << "SimpleIPort<T>::get (data) read data from socket\n";
-#endif
-    if (module->show_stat) { turn_off(); }
-    return 1;
-
-  } else {
-
-    // Wait for the data...
-    SimplePortComm<T>* comm=mailbox.receive();
-    recvd_=1;
-    if(comm->have_data_){
-      data=comm->data_;
-      delete comm;
-#ifdef DEBUG
-      cerr << "SimpleIPort<T>::get (data) has data\n";
-#endif
-      if (module->show_stat) { turn_off(); }
-      return 1;
-    } else {
-#ifdef DEBUG
-      cerr << "SimpleIPort<T>::get (data) mailbox has no data\n";
-#endif
-      delete comm;
-      if (module->show_stat) { turn_off(); }
-      return 0;
-    }
-  }
-}
-
-template<class T>
-int SimpleIPort<T>::special_get(T& data)
-{
-
-
-  if(nconnections()==0) { return 0; }
-  if (module->show_stat) { turn_on(); }
+  if (module->showStats()) { turn_on(); }
 
   // Wait for the data...
-  SimplePortComm<T>* comm;
-  while(!mailbox.tryReceive(comm)){
-    MessageBase* msg;
-    if(module->mailbox.tryReceive(msg)){
-      switch(msg->type){
-      case MessageTypes::ExecuteModule:
-	cerr << "Dropping execute...\n";
-	break;
-      case MessageTypes::TriggerPort:
-	cerr << "Dropping trigger...\n";
-	break;
-      case MessageTypes::Demand:
-	{
-	  Demand_Message* dmsg=(Demand_Message*)msg;
-	  if(dmsg->conn->oport->have_data()){
-	    dmsg->conn->oport->resend(dmsg->conn);
-	  } else {
-	    cerr << "Dropping demand...\n";
-	  }
-	}
-	break;
-      default:
-	cerr << "Illegal Message type: " << msg->type << endl;
-	break;
-      }
-      delete msg;
-    } else {
-      sleep(1);
-      // sginap(1);
-    }
-  }
-	
+  SimplePortComm<T>* comm=mailbox.receive();
   recvd_=1;
   if(comm->have_data_){
     data=comm->data_;
     delete comm;
-    if (module->show_stat) turn_off();
+    if (module->showStats())
+      turn_off();
     return 1;
   } else {
     delete comm;
-    if (module->show_stat) turn_off();
+    if (module->showStats())
+      turn_off();
     return 0;
   }
 }
 
 template<class T>
-int SimpleOPort<T>::have_data()
+bool SimpleOPort<T>::have_data()
 {
-  if(handle_.get_rep()) { return 1; }
-  return 0;
+  if(handle_.get_rep())
+    return true;
+  else 
+    return false;
 }
 
 template<class T>
 void SimpleOPort<T>::resend(Connection* conn)
 {
-  if (module->show_stat) { turn_on(); }
+  if (module->showStats()) { turn_on(); }
   for(int i=0;i<nconnections();i++){
     if(connections[i] == conn){
       SimplePortComm<T>* msg=new SimplePortComm<T>(handle_);
       ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
     }
   }
-  if (module->show_stat) { turn_off(); }
+  if (module->showStats()) { turn_off(); }
 }
 
 template<class T>
