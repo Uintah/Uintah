@@ -155,7 +155,6 @@ VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 VolumeRenderer::draw_volume()
 {
-#ifdef HAVE_AVR_SUPPORT
   if( tex_->nlevels() > 1 ){
     multi_level_draw();
     return;
@@ -451,7 +450,6 @@ VolumeRenderer::draw_volume()
   CHECK_OPENGL_ERROR("VolumeRenderer::draw_volume end");
 
   tex_->unlock_bricks();
-#endif
 }
 
 
@@ -459,7 +457,6 @@ VolumeRenderer::draw_volume()
 void
 VolumeRenderer::multi_level_draw()
 {
-#ifdef HAVE_AVR_SUPPORT
   // all temporary ************************
   vector< cmap_data* > cmaps; //(  tex_->nlevels() );
   for(int i = 0; i < tex_->nlevels(); i++ ){
@@ -840,7 +837,6 @@ VolumeRenderer::multi_level_draw()
   CHECK_OPENGL_ERROR("VolumeRenderer::multi_level_draw end");
 
   tex_->unlock_bricks();
-#endif  
 }
 
 

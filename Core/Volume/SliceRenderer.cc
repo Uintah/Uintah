@@ -115,8 +115,6 @@ SliceRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 SliceRenderer::draw_slice()
 {
-#ifdef HAVE_AVR_SUPPORT
-
   if( tex_->nlevels() > 1 ){
     multi_level_draw();
     return;
@@ -314,14 +312,12 @@ SliceRenderer::draw_slice()
   glBindTexture(GL_TEXTURE_3D, 0);
 
   tex_->unlock_bricks();
-#endif
 }
 
 
 void
 SliceRenderer::multi_level_draw()
 {
-#ifdef HAVE_AVR_SUPPORT
   tex_->lock_bricks();
   
   Ray view_ray = compute_view();
@@ -704,22 +700,19 @@ SliceRenderer::multi_level_draw()
     }
   }
 
-
-
   glPopMatrix();
   
   //-------------------------------------------------------------------------
   // turn off stenciling
   if(use_stencil_)
     glDisable(GL_STENCIL_TEST);
+
   //--------------------------------------------------------------------------
   // release shaders
-
   if(shader && shader->valid())
     shader->release();
 
   //--------------------------------------------------------------------------
-  
   glDisable(GL_ALPHA_TEST);
   glDepthMask(GL_TRUE);
 
@@ -735,7 +728,6 @@ SliceRenderer::multi_level_draw()
   glBindTexture(GL_TEXTURE_3D, 0);
 
   tex_->unlock_bricks();
-#endif
 }
 
 
