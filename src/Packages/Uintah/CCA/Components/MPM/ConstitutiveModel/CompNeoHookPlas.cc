@@ -176,13 +176,13 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     delt_vartype delT;
 
     old_dw->get(px,                  lb->pXLabel,                  pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(bElBar,              bElBarLabel,                  pset);
-    new_dw->allocate(pstress,        lb->pStressLabel,             pset);
     old_dw->get(statedata,           p_statedata_label,            pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
+    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
+    new_dw->allocate(pstress,        lb->pStressLabel,             pset);
 
     new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,patch,
 	      Ghost::AroundCells, 1);
