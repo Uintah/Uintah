@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
 #include <PSECore/Dataflow/FileUtils.h>
 
 namespace PSECore {
@@ -26,6 +27,34 @@ void InsertStringInFile(char* filename, char* match, char* replacement)
 
   delete[] string;
   delete[] mod;
+}
+
+std::map<int,char*>* GetFilenamesEndingWith(char* d, char* ext)
+{
+  std::map<int,char*>* newmap = 0;
+  dirent* file = 0;
+  DIR* dir = opendir(d);
+  char* newstring = 0;
+
+  if (!dir) {
+    printf("directory not found: %s\n",d);
+    return 0;
+  }
+
+  newmap = new std::map<int,char*>;
+
+  file = readdir(dir);
+  while (file) {
+    if ((strlen(file->d_name)>=strlen(ext)) && 
+	(strcmp(&(file->d_name[strlen(file->d_name)-strlen(ext)]),ext)==0)) {
+      newstring = new char[strlen(file->d_name)+1];
+      sprintf(newstring,"%s",file->d_name);
+      newmap->insert(std::pair<int,char*>(newmap->size(),newstring));
+    }
+    file = readdir(dir);
+  }
+
+  return newmap;
 }
 
 } // Dataflow
