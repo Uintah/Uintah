@@ -1,6 +1,6 @@
 
 #include <config/sci.cf>
 
-SUBDIRS = modules project convert
+SUBDIRS = modules project convert gen
 
 SCISubdirs($(SUBDIRS))
