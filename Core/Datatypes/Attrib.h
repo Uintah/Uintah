@@ -31,28 +31,6 @@ namespace SCIRun {
 
 using namespace std;
 
-/////////
-// Structure to hold Neumann BC related values
-class NeumannBC {
-public:  
-  // GROUP: public data
-  //////////
-  // 
-  NeumannBC(){};
-  NeumannBC(Vector v, double d): dir(v), val(d){};
-  //////////
-  // Direction to take derivative in
-  Vector dir;
-  //////////
-  // Value of the derivative
-  double val;
-};
-
-//////////
-// PIO for NeumannBC objects
-void  Pio(Piostream&, NeumannBC&);
-ostream& operator<<(ostream&, NeumannBC&);
-
 class Attrib;
 typedef LockingHandle<Attrib> AttribHandle;
 
