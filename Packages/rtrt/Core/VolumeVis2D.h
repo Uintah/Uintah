@@ -8,8 +8,12 @@
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/PlaneDpy.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Ray.h>
 #include <stdlib.h>
 #include <iostream>
+#include <map>
+#include <Packages/rtrt/Core/MouseCallBack.h>
 
 namespace rtrt {
 
@@ -20,10 +24,10 @@ namespace rtrt {
 #define MAXUNSIGNEDSHORT 65535
 #endif
 
-// template<class T>
+  // template<class T>
 class VolumeVis2DDpy;
 
- template<class T>
+template<class T>
 class Voxel2D {
 public:
   T _data[2];
@@ -100,6 +104,9 @@ protected:
   bool cutplane_active;
   bool use_cutplane_material;
   
+  // stuff for callback functions
+
+
   inline int bound(const int val, const int min, const int max) {
     return (val>min?(val<max?val:max):min);
   }
@@ -142,8 +149,31 @@ public:
   virtual void animate(double t, bool& changed);
   virtual void cblookup( Object* obj );
   virtual void initialize_cuttingPlane( PlaneDpy *cdpy );
+  void initialize_callbacks() {
+    MouseCallBack::assignCB_MD( VolumeVis2D::mouseDown_Wrap, this );
+    MouseCallBack::assignCB_MU( VolumeVis2D::mouseUp_Wrap, this );
+    MouseCallBack::assignCB_MM( VolumeVis2D::mouseMotion_Wrap, this );
+  }
+  static void mouseDown_Wrap( int x, int y, Object *obj,
+			      const Ray& ray, const HitInfo& hit ) {
+    VolumeVis2D *vobj = (VolumeVis2D*)obj;
+    vobj->mouseDown( x, y, ray, hit );
+  }
+  void mouseDown( int x, int y, const Ray& ray, const HitInfo& hit );
+  static void mouseUp_Wrap( int x, int y, Object *obj,
+			    const Ray& ray, const HitInfo& hit) {
+    VolumeVis2D *vobj = (VolumeVis2D*) obj;
+    vobj->mouseUp( x, y, ray, hit );
+  }
+  void mouseUp( int x, int y, const Ray& ray, const HitInfo& hit );
+  static void mouseMotion_Wrap( int x, int y, Object *obj,
+				const Ray& ray, const HitInfo& hit ) {
+    VolumeVis2D *vobj = (VolumeVis2D*) obj;
+    vobj->mouseMotion( x, y, ray, hit );
+  }
+  void mouseMotion( int x, int y, const Ray& ray, const HitInfo& hit );
 };
-  
+
 } // end namespace rtrt
 
 #endif
