@@ -192,7 +192,7 @@ setGlobal $m3-show_progress {}
 setGlobal $m3-field-name {Original Field}
 
 # Setup GUI for the SCIRun->FieldsData->MaskLattice Module
-setGlobal $m4-maskfunction {x + y + z < 0.0}
+setGlobal $m4-maskfunction {x + y + z < 0.000001}
 $m4 initialize_ui
 
 # Setup GUI for the SCIRun->Visualization->ShowField Module
