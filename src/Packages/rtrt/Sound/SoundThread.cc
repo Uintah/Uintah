@@ -7,6 +7,7 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Gui.h>
 
+#include <Core/Thread/Time.h>
 #include <Core/Math/MinMax.h>
 
 #include <dmedia/audiofile.h>
@@ -30,7 +31,7 @@ const int SoundThread::numChannels_ = 2;
 
 SoundThread::SoundThread( const Camera * eyepoint, Scene * scene,
 			  Gui * gui ) :
-  eyepoint_( eyepoint ), scene_( scene ), gui_( gui )
+  eyepoint_( eyepoint ), scene_( scene ), gui_( gui ), sleepTime_(0.0)
 {
   ALpv  pv;
 
@@ -106,6 +107,11 @@ SoundThread::run()
   for(;;)
     {
       int maxFrames = 0;
+
+      if( sleepTime_ )
+	{
+	  Time::waitFor( sleepTime_ );
+	}
 
       if( soundQueue_.size() > 0 )
 	{
