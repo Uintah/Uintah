@@ -22,83 +22,6 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
 
 using namespace Uintah;
 namespace Uintah {
-//______________________________________________________________________
-// Update pressure boundary conditions due to hydrostatic pressure
-
-void setHydrostaticPressureBC(CCVariable<double>& press,Patch::FaceType face, 
-                           Vector& gravity,
-                           const CCVariable<double>& rho,
-                           const Vector& dx, IntVector offset )
-{ 
-  BC_doing << "setHydrostaticPressureBC"<< endl;
-  IntVector low,hi;
-  low = press.getLowIndex() + offset;
-  hi = press.getHighIndex() - offset;
-  
-  // cout<< "CCVARIABLE LO" << low <<endl;
-  // cout<< "CCVARIABLE HI" << hi <<endl;
-  
-  switch (face) {
-  case Patch::xplus:
-    for (int j = low.y(); j<hi.y(); j++) {
-      for (int k = low.z(); k<hi.z(); k++) {
-       press[IntVector(hi.x()-1,j,k)] = 
-         press[IntVector(hi.x()-2,j,k)] + 
-         gravity.x() * rho[IntVector(hi.x()-2,j,k)] * dx.x();
-      }
-    }
-    break;
-  case Patch::xminus:
-    for (int j = low.y(); j<hi.y(); j++) {
-      for (int k = low.z(); k<hi.z(); k++) {
-       press[IntVector(low.x(),j,k)] = 
-         press[IntVector(low.x()+1,j,k)] - 
-         gravity.x() * rho[IntVector(low.x()+1,j,k)] * dx.x();;
-      }
-    }
-    break;
-  case Patch::yplus:
-    for (int i = low.x(); i<hi.x(); i++) {
-      for (int k = low.z(); k<hi.z(); k++) {
-       press[IntVector(i,hi.y()-1,k)] = 
-         press[IntVector(i,hi.y()-2,k)] + 
-         gravity.y() * rho[IntVector(i,hi.y()-2,k)] * dx.y();
-      }
-    }
-    break;
-  case Patch::yminus:
-    for (int i = low.x(); i<hi.x(); i++) {
-      for (int k = low.z(); k<hi.z(); k++) {
-       press[IntVector(i,low.y(),k)] = 
-         press[IntVector(i,low.y()+1,k)] - 
-         gravity.y() * rho[IntVector(i,low.y()+1,k)] * dx.y();
-      }
-    }
-    break;
-  case Patch::zplus:
-    for (int i = low.x(); i<hi.x(); i++) {
-      for (int j = low.y(); j<hi.y(); j++) {
-       press[IntVector(i,j,hi.z()-1)] = 
-         press[IntVector(i,j,hi.z()-2)] +
-         gravity.z() * rho[IntVector(i,j,hi.z()-2)] * dx.z();
-      }
-    }
-    break;
-  case Patch::zminus:
-    for (int i = low.x(); i<hi.x(); i++) {
-      for (int j = low.y(); j<hi.y(); j++) {
-       press[IntVector(i,j,low.z())] =
-         press[IntVector(i,j,low.z()+1)] -  
-         gravity.z() * rho[IntVector(i,j,low.z()+1)] * dx.z();
-      }
-    }
-    break;
-  case Patch::numFaces:
-    break;
-  case Patch::invalidFace:
-    break;
-  }
-}
 
 /* --------------------------------------------------------------------- 
  Function~  ImplicitMatrixBC--      
@@ -173,15 +96,12 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
     }  // face on edge of domain?
   }  // face loop
 }
-
-
-
 /* --------------------------------------------------------------------- 
  Function~  get_rho_micro--
  Purpose~  This handles all the logic of getting rho_micro on the faces
-    a) when using lodi bcs get all ice and mpm matls
-    b) with gravity != 0 get rho_micro on P_dir faces, all ICE matls
-    c) during intializaton only get rho_micro for ice_matls, you can't
+    a) when using lodi bcs get rho_micro for all ice and mpm matls
+    b) with gravity != 0 get rho_micro on P_dir faces, for all ICE matls
+    c) during initialization only get rho_micro for ice_matls, you can't
        get rho_micro for mpm_matls
  ---------------------------------------------------------------------  */
 void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
@@ -193,38 +113,18 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
                    DataWarehouse* new_dw,
                    Lodi_vars_pressBC* lv)
 {
+  BC_doing << "get_rho_micro: Which_var " << which_Var << endl;
+  
   if( which_Var !="rho_micro" && which_Var !="sp_vol" ){
     throw InternalError("setBC (pressure): Invalid option for which_var");
   }
-  bool usingLODI = lv->usingLODI;
   
-  int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
-  
-/*`==========TESTING==========*/
-  Vector gravity = sharedState->getGravity();
-  if (gravity.length() != 0){
-    throw InternalError(" You currently can't use gravity in ICE"
-                        " a few issues still need to be sorted out in the BC --Todd" );
-  } 
-
-#if 0
-  //__________________________________
-  //  select which matls to get and when
-  if (gravity.length() != 0 || isPressBC_Lodi){
-    getRhoMicro = true;
-  }
-  if (getRhoMicro){
-    
-  } 
-#endif
-/*==========TESTING==========`*/
-
-  int numMatls = 0;
-  if ( usingLODI && topLevelTimestep > 0 ) {
-    numMatls  = sharedState->getNumICEMatls();
+  Vector gravity = sharedState->getGravity(); 
+  int numMatls  = sharedState->getNumICEMatls();
+  if ( lv->usingLODI ) {
     numMatls += sharedState->getNumMPMMatls();
-  }    
-  
+  }
+      
   for (int m = 0; m < numMatls; m++) {
     new_dw->allocateTemporary(rho_micro[m],  patch);
   }
@@ -236,9 +136,25 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
        iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     
-    if(is_LODI_face(patch, face, sharedState) ) {  // only need rhoMicro on gravity or lodi faces
-      CellIterator iterLimits = patch->getFaceCellIterator(face, "plusEdgeCells");
-
+    if(is_LODI_face(patch, face, sharedState) || gravity.length() > 0) {
+      
+      //__________________________________
+      // Create an iterator that iterates over the face
+      // + 2 cells inward (hydrostatic press tweak).  
+      // We don't need to hit every  cell on the patch. 
+      CellIterator iter_tmp = patch->getFaceCellIterator(face, "plusEdgeCells");
+      IntVector lo = iter_tmp.begin();
+      IntVector hi = iter_tmp.end();
+    
+      int P_dir = patch->faceAxes(face)[0];  //principal dir.
+      if(face==Patch::xminus || face==Patch::yminus || face==Patch::zminus){
+        hi[P_dir] += 2;
+      }
+      if(face==Patch::xplus || face==Patch::yplus || face==Patch::zplus){
+        lo[P_dir] -= 2;
+      }
+      CellIterator iterLimits(lo,hi);
+      
       for (int m = 0; m < numMatls; m++) {
         if (which_Var == "rho_micro") { 
           for (CellIterator iter=iterLimits; !iter.done();iter++) {
@@ -253,17 +169,17 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
           }
         }  // sp_vol
       }  // numMatls
-    }  // LODI face
+    }  // LODI face or gravity != 0
   }  // face iter 
 }
 
 /* --------------------------------------------------------------------- 
  Function~  setBC-- (pressure)
- Purpose~   
  ---------------------------------------------------------------------  */
 void setBC(CCVariable<double>& press_CC,
            StaticArray<CCVariable<double> >& rho_micro_tmp,   //or placeHolder
            StaticArray<constCCVariable<double> >& sp_vol_CC,  //or placeHolder
+           const int surroundingMatl_indx,
            const string& which_Var,
            const string& kind, 
            const Patch* patch,
@@ -276,15 +192,15 @@ void setBC(CCVariable<double>& press_CC,
            << " mat_id = " << mat_id << endl;
 
   int numMatls = sharedState->getNumMatls();  
+  Vector gravity = sharedState->getGravity();
   StaticArray<CCVariable<double> > rho_micro(numMatls);
-  
+
   get_rho_micro(rho_micro, rho_micro_tmp, sp_vol_CC, 
-                patch, which_Var, sharedState,  new_dw, lv);  
-                
+                patch, which_Var, sharedState,  new_dw, lv);
   //__________________________________
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType>::const_iterator iter;
-  
+
   for (iter  = patch->getBoundaryFaces()->begin(); 
        iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
@@ -323,8 +239,7 @@ void setBC(CCVariable<double>& press_CC,
           bc_kind = "zeroNeumann";
         }
         int p_dir = patch->faceAxes(face)[0];     // principal  face direction
-        Vector gravity = sharedState->getGravity(); 
-
+        
         if (gravity[p_dir] == 0) { 
           IveSetBC = setNeumanDirichletBC<double>(patch, face, press_CC,bound, 
 						        bc_kind, bc_value, cell_dx);
@@ -332,22 +247,19 @@ void setBC(CCVariable<double>& press_CC,
         //__________________________________
         // With gravity
         // change gravity sign according to the face direction
-        if (gravity[p_dir] != 0) {  
-
+        if (gravity[p_dir] != 0) {
           Vector faceDir = patch->faceDirection(face).asVector();
           double grav = gravity[p_dir] * (double)faceDir[p_dir]; 
           IntVector oneCell = patch->faceDirection(face);
           vector<IntVector>::const_iterator iter;
-
-/*`==========TESTING==========*/
+          
           for (iter=bound.begin();iter != bound.end(); iter++) { 
             IntVector adjCell = *iter - oneCell;
             press_CC[*iter] = press_CC[adjCell] 
-                            + grav * dx * rho_micro[0][adjCell];
-          } 
-/*==========TESTING==========`*/
+                            + grav * dx * rho_micro[surroundingMatl_indx][adjCell];
+          }
           IveSetBC = true;
-        }  // with gravity
+        }  // with gravity 
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
@@ -585,6 +497,7 @@ void setBC(CCVariable<double>& var,
 void setBC(CCVariable<double>& press_CC,          
          StaticArray<CCVariable<double> >& rho_micro,
          StaticArray<constCCVariable<double> >& sp_vol,
+         const int surroundingMatl_indx,
          const std::string& whichVar, 
          const std::string& kind, 
          const Patch* p, 
@@ -594,8 +507,8 @@ void setBC(CCVariable<double>& press_CC,
   Lodi_vars_pressBC* lv = new Lodi_vars_pressBC(0);
   lv->setLodiBcs = false;
   
-  setBC(press_CC, rho_micro, sp_vol, whichVar, kind, p, sharedState, mat_id, 
-        new_dw, lv); 
+  setBC(press_CC, rho_micro, sp_vol, surroundingMatl_indx,
+        whichVar, kind, p, sharedState, mat_id, new_dw, lv); 
         
   delete lv;           
 }          
