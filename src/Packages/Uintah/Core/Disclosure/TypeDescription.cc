@@ -3,6 +3,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
+#include <Core/Thread/Mutex.h>
 #include <sci_defs.h>
 #include <map>
 #include <vector>
@@ -11,6 +12,8 @@
 using namespace Uintah;
 using namespace std;
 using namespace SCIRun;
+
+static Mutex lock("TypeDescription::getMPIType lock");
 
 struct KillMap {
   KillMap();
@@ -59,8 +62,7 @@ void TypeDescription::register_type()
 TypeDescription::TypeDescription(Type type, const std::string& name,
 				 bool isFlat, MPI_Datatype (*mpitypemaker)())
    : d_type(type), d_subtype(0), d_name(name), d_isFlat(isFlat),
-     d_mpitype(-1), d_mpitypemaker(mpitypemaker), d_maker(0),
-     d_lock("TypeDescription::getMPIType lock")
+     d_mpitype(-1), d_mpitypemaker(mpitypemaker), d_maker(0)
 {
   register_type();
 }
@@ -68,8 +70,7 @@ TypeDescription::TypeDescription(Type type, const std::string& name,
 TypeDescription::TypeDescription(Type type, const std::string& name,
 				 bool isFlat, MPI_Datatype mpitype)
    : d_type(type), d_subtype(0), d_name(name), d_isFlat(isFlat),
-     d_mpitype(mpitype), d_mpitypemaker(0), d_maker(0),
-     d_lock("TypeDescription::getMPIType lock")
+     d_mpitype(mpitype), d_mpitypemaker(0), d_maker(0)
 {
   register_type();
 }
@@ -78,8 +79,7 @@ TypeDescription::TypeDescription(Type type, const std::string& name,
 				 Variable* (*maker)(),
 				 const TypeDescription* subtype)
    : d_type(type), d_subtype(subtype), d_name(name), d_isFlat(false),
-     d_mpitype(-2), d_mpitypemaker(0), d_maker(maker),
-     d_lock("TypeDescription::getMPIType lock")
+     d_mpitype(-2), d_mpitypemaker(0), d_maker(maker)
 {
   register_type();
 }
@@ -120,16 +120,16 @@ TypeDescription::Register::~Register()
 MPI_Datatype TypeDescription::getMPIType() const
 {
   if(d_mpitype == -1){
-    d_lock.lock();
+    lock.lock();
     if (d_mpitype == -1) {
       if(d_mpitypemaker){
 	d_mpitype = (*d_mpitypemaker)();
       } else {
-	d_lock.unlock();
+	lock.unlock();
 	throw InternalError("MPI Datatype requested, but do not know how to make it");
       }
     }
-    d_lock.unlock();
+    lock.unlock();
   }
   ASSERT(d_mpitype != -2);
   return d_mpitype;

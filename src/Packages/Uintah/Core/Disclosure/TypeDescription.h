@@ -4,11 +4,9 @@
 #include <string>
 #include <sci_config.h> // For MPIPP_H on SGI
 #include <mpi.h>
-#include <Core/Thread/Mutex.h>
 
 namespace Uintah {
 using std::string;
-using namespace SCIRun;
 
 class Variable;
 
@@ -109,8 +107,6 @@ class Variable;
       MPI_Datatype (*d_mpitypemaker)();
       Variable* (*d_maker)();
 
-      mutable Mutex d_lock;
-       
       TypeDescription(const TypeDescription&);
       TypeDescription& operator=(const TypeDescription&);
 
