@@ -15,8 +15,7 @@ PSELIBS := \
 	Packages/Uintah/testprograms/TestSuite \
 	Core/Exceptions \
 	Core/Thread     \
-	Core/Geometry   \
-	Dataflow/XMLUtil
+	Core/Geometry
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 

@@ -11,7 +11,6 @@ SRCS     += \
 	$(SRCDIR)/TensorParticlesPort.cc 
 
 PSELIBS := \
-	Dataflow/XMLUtil \
 	Dataflow/Network \
 	Dataflow/Comm \
 	Core/Containers \
@@ -25,7 +24,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Datatypes 
 
-LIBS := $(XML_LIBRARY)
+LIBS := 
 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

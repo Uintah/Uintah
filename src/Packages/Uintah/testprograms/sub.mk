@@ -19,6 +19,6 @@ PSELIBS := Packages/Uintah/testprograms/TestSuite \
 	Packages/Uintah/testprograms/TestRangeTree \
 	Packages/Uintah/testprograms/TestBoxGrouper
 
-LIBS := $(XML_LIBRARY) $(M_LIBRARY)
+LIBS := $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk

@@ -25,7 +25,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Disclosure   \
 	Packages/Uintah/Core/Parallel
 
-LIBS := $(XML_LIBRARY) $(M_LIBRARY)
+LIBS := $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -25,12 +25,11 @@ PSELIBS := \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/Core/Math        \
 	Core/Exceptions Core/Thread      \
-	Core/Geometry Dataflow/XMLUtil   \
-	Core/Util 			 \
+	Core/Geometry Core/Util		 \
 	Packages/Uintah/CCA/Components/HETransformation
 
 
-LIBS := $(XML_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS := $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -22,10 +22,9 @@ PSELIBS := \
 	Core/Exceptions \
 	Core/Thread     \
 	Core/Geometry   \
-	Core/Util	\
-	Dataflow/XMLUtil
+	Core/Util
 
-LIBS := $(XML_LIBRARY) $(M_LIBRARY)
+LIBS := $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
