@@ -679,7 +679,7 @@ TextureRenderer::build_colormap2()
         vector<CM2WidgetHandle> widgets = cmap2_->widgets();
         for (unsigned int i=0; i<widgets.size(); i++) {
           raster_buffer_->bind(GL_FRONT);
-	      widgets[i]->rasterize(*shader_factory_, cmap2_->faux(), raster_buffer_);
+	  widgets[i]->rasterize(*shader_factory_, raster_buffer_);
           raster_buffer_->release(GL_FRONT);
           raster_buffer_->swapBuffers();
         }
@@ -751,7 +751,7 @@ TextureRenderer::build_colormap2()
         vector<CM2WidgetHandle>& widget = cmap2_->widgets();
         // rasterize widgets
         for(unsigned int i=0; i<widget.size(); i++) {
-          widget[i]->rasterize(raster_array_, cmap2_->faux());
+          widget[i]->rasterize(raster_array_);
         }
         for(int i=0; i<raster_array_.dim1(); i++) {
           for(int j=0; j<raster_array_.dim2(); j++) {
