@@ -3,8 +3,8 @@
 // Symbol:        framework.Services-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20030306 10:46:17 MST
-// Generated:     20030306 10:46:23 MST
+// SIDL Created:  20030328 15:22:11 MST
+// Generated:     20030328 15:22:16 MST
 // Description:   Server-side implementation for framework.Services
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
