@@ -3,9 +3,9 @@ puts "NetworkEditor.tcl start"
 source $PSECoreTCL/defaults.tcl
 source $PSECoreTCL/devices.tcl
 
-set modname_font "-Adobe-Helvetica-bold-R-Normal-16-120-75-*"
-set ui_font "-Adobe-Helvetica-medium-R-Normal-12-120-75-*"
-set time_font "-Adobe-Courier-Medium-R-Normal-14-100-75-*"
+set modname_font "-Adobe-Helvetica-Bold-R-Normal-*-12-120-75-*"
+set ui_font "-Adobe-Helvetica-Medium-R-Normal-*-12-120-75-*"
+set time_font "-Adobe-Courier-Medium-R-Normal-*-12-120-75-*"
 
 set mainCanvasWidth    4500.0
 set mainCanvasHeight   4500.0
@@ -468,8 +468,8 @@ proc itemDrag {c x y} {
 
 proc popupSaveMenu {} {
     set types {
-	{{Uintah Scripts Files} {.uin} }
 	{{SCIRun Script} {.sr} }
+	{{Uintah Scripts Files} {.uin} }
 	{{Other} { * } }
     } 
     set netedit_savefile [ tk_getSaveFile -defaultextension {.uin} \
@@ -483,8 +483,8 @@ proc popupSaveMenu {} {
 proc popupLoadMenu {} {
     global netedit
     set types {
-	{{Uintah Scripts Files} {.uin} }
 	{{SCIRun Script} {.sr} }
+	{{Uintah Scripts Files} {.uin} }
 	{{Other} { * } }
     } 
     
