@@ -79,7 +79,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   d_mpm->setMPMLabel(Mlb);
   d_mpm->setWithICE();
   d_mpm->problemSetup(prob_spec, grid, d_sharedState);
-  d_8or27 = d_mpm-> d_8or27; 
+  d_8or27 = d_mpm->d_8or27; 
   //__________________________________
   //  I C E
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
@@ -1786,13 +1786,14 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       }
     }
     
+  if(d_ice->d_massExchange)  { 
     IntVector nodeIdx[8];
     //__________________________________
     // M P M  matls
     // compute the burned mass and released Heat
     // if burnModel != null  && material == reactant
     double total_created_vol = 0;
-    for(int m = 0; m < numALLMatls; m++) {  
+    for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl); 
 
@@ -1934,6 +1935,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
        }  // if(doMech)
       }  // if(mpm_matl == reactant)
      }  // numALLMatls loop
+    }  // if d_massExchange
     
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
