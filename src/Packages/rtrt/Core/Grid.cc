@@ -4,18 +4,24 @@
 #include <Packages/rtrt/Core/TexturedTri.h>
 #include <Packages/rtrt/Core/Tri.h>
 #include <Packages/rtrt/Core/Names.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Time.h>
+#include <Packages/rtrt/Core/Color.h>
+#include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/HitInfo.h>
+
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Time.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <stdlib.h>
-#include "Color.h"
-#include "LambertianMaterial.h"
 
 using namespace rtrt;
 using namespace SCIRun;
+using namespace std;
 
 SCIRun::Persistent* grid_maker() {
   return new Grid;

@@ -5,13 +5,11 @@
 
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Color.h>
-#include <Packages/rtrt/Core/Names.h>
 
 #include <Core/Geometry/Transform.h>
 #include <Core/Persistent/Persistent.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <iostream>
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
@@ -66,8 +64,6 @@ class Object : public virtual SCIRun::Persistent {
 protected:
   bool was_preprocessed;
 public:
-  //string name_;
-
   Object(Material* matl, UVMapping* uv=0);
   virtual ~Object();
 
@@ -131,8 +127,8 @@ public:
 				   const Ray &/*ray*/, const double /*t*/)
   { return false; }; 
 
-  string get_name() const { return Names::getName(this); }
-  void set_name(const string &s) { Names::nameObject(s, this); }
+  const string& get_name() const;
+  void set_name(const string &s);
 };
 
 } // end namespace rtrt

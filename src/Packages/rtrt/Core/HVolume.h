@@ -155,7 +155,7 @@ public:
 			    float datamin, float datamax);
   virtual void get_minmax(float& min, float& max);
 
-  virtual void print(ostream& out);
+  virtual void print(std::ostream& out);
   virtual bool interior_value( double& /*value*/, const Ray &/*ray*/,
 			       const double /*t*/);
 };
@@ -185,7 +185,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
   size_t filebase_size = strlen(filebase) + 20;
   char *buf = new char[filebase_size];
   snprintf(buf, filebase_size, "%s.hdr", filebase);
-  ifstream in(buf);
+  std::ifstream in(buf);
   if(!in){
     cerr << "Error opening header: " << buf << '\n';
     exit(1);
@@ -249,7 +249,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
     SCIRun::Thread::parallel(phelper, bnp, true);
     delete work;
     
-    int bout_fd;
+    int bout_fd = -1;
 #if defined(__sgi) || defined(__APPLE__)
     ///////////////////////////////////////////////////////////////
     // write the bricked data to a file, so that we don't have to rebrick it
@@ -424,9 +424,10 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
 			int _nx, int _ny, int _nz,
 			Point min, Point max,
 			T _datamin, T _datamax, Array3<T> _indata):
-  VolumeBase(matl, dpy), depth(depth), work(NULL), filebase(NULL),
-  nx(_nx), ny(_ny), nz(_nz), min(min), datadiag(max-min),
-  datamin(_datamin), datamax(_datamax)
+  VolumeBase(matl, dpy), min(min), datadiag(max-min),
+  nx(_nx), ny(_ny), nz(_nz),
+  datamin(_datamin), datamax(_datamax), depth(depth),
+  work(NULL), filebase(NULL)
 {
   indata.resize(nx,ny,nz);
   int nn=nx*ny*nz;
@@ -1177,7 +1178,7 @@ void HVolume<T,A,B>::compute_hist(int nhist, int* hist,
     // though we allocated enough memory for it.
     snprintf(buf, size, "%s.hist_%d", filebase, nhist);
     cerr << "Looking for histogram in " << buf << "\n";
-    ifstream in(buf);
+    std::ifstream in(buf);
     if(in){
       for(int i=0;i<nhist;i++){
 	in >> hist[i];
@@ -1229,7 +1230,7 @@ void HVolume<T,A,B>::compute_hist(int nhist, int* hist,
       }
     }
     if (filebase != NULL) {
-      ofstream out(buf);
+      std::ofstream out(buf);
       if (out) {
 	for(int i=0;i<nhist;i++){
 	  out << hist[i] << '\n';
@@ -1272,7 +1273,7 @@ void HVolume<T,A,B>::get_minmax(float& min, float& max)
 }
 
 template<class T, class A, class B>
-void HVolume<T,A,B>::print(ostream& out) {
+void HVolume<T,A,B>::print(std::ostream& out) {
   //  out << "name_ = "<<get_name()<<endl;
   out << "min = "<<min<<endl;
   out << "datadiag = "<<datadiag<<", hierdiag = "<<hierdiag<<", ihierdiag = "<<ihierdiag<<", sdiag = "<<sdiag<<endl;

@@ -18,8 +18,7 @@
 
 using namespace rtrt;
 using namespace SCIRun;
-using std::cerr;
-using std::vector;
+using namespace std;
 
 SCIRun::Persistent* maker() {
   return new TexturedTri();

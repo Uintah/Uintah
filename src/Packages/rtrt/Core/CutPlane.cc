@@ -9,7 +9,9 @@
 
 #include <Core/Math/MiscMath.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace rtrt;
 using namespace SCIRun;
@@ -32,7 +34,7 @@ CutPlane::CutPlane(Object* child, PlaneDpy* dpy)
 }
 
 CutPlane::CutPlane(Object* child, const Vector& n, const double d)
-  : Object(0), child(child), dpy(0), n(n), d(d),
+  : Object(0), child(child), n(n), d(d), dpy(0),
     active(true), use_material(true)
 {}
 

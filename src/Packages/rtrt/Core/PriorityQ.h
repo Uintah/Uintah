@@ -2,7 +2,7 @@
 #ifndef PRIORITYQ_H
 #define PRIORITYQ_H 1
 
-#include <iostream>
+#include <stdio.h>
 #include <stdlib.h>
 
 //namespace rtrt { 
@@ -57,8 +57,9 @@ void PriorityQ<T, heapsize>::heapify(int n, int i)
 template<class T, int heapsize>
 void PriorityQ<T, heapsize>::overflow()
 {
-    std::cerr << "PriorityQ overflow!\n";
-    abort();
+  fprintf(stderr, "PriorityQ overflow!\n");
+  fflush(stderr);
+  abort();
 }
 
 template<class T, int heapsize>

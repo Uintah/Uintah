@@ -1,17 +1,25 @@
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Transform.h>
+
 #include <Packages/rtrt/Core/Group.h>
-#include <iostream>
-#include <math.h>
-#include <string.h>
-#include <stdio.h>
 #include <Packages/rtrt/Core/TriMesh.h>
 #include <Packages/rtrt/Core/GridTris.h>
 #include <Packages/rtrt/Core/MeshedTri.h>
 #include <Packages/rtrt/Core/ply.h>
 #include <Packages/rtrt/Core/PLYReader.h>
+
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Transform.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <math.h>
+#include <string.h>
+#include <stdio.h>
+
 using namespace rtrt;
+using namespace std;
 
 #define SCALE 700
 /* user's vertex and face definitions for a polygonal object */

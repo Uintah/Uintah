@@ -1,20 +1,71 @@
 
 #include <Packages/rtrt/Core/Satellite.h>
 
-extern double ORBIT_SPEED;
-extern double ROTATE_SPEED;
-extern bool   HOLO_ON;
+#include <sgi_stl_warnings_off.h>
+#include <string>
+#include <sgi_stl_warnings_on.h>
+
+#include <stdlib.h>
 
 namespace rtrt {
-using namespace SCIRun;
-
-Persistent* satellite_maker() {
-  return new Satellite();
+  // These are found in Gui.cc
+  extern double ORBIT_SPEED;
+  extern double ROTATE_SPEED;
+  
+  using namespace SCIRun;
+  
+  Persistent* satellite_maker() {
+    return new Satellite();
+  }
+  
+  // initialize the static member type_id
+  PersistentTypeID Satellite::type_id("Satellite", "Object", satellite_maker);
 }
 
-// initialize the static member type_id
-PersistentTypeID Satellite::type_id("Satellite", "Object", satellite_maker);
+using namespace rtrt;
 
+
+Satellite::Satellite(const string &name, Material *mat, const Point &center,
+                     double radius, double orb_radius, const Vector &up, 
+                     Satellite *parent) 
+  : UVSphere(mat, center, radius, up), parent_(parent), 
+    rev_speed_(1), orb_radius_(orb_radius), orb_speed_(1)
+{
+  //theta_ = drand48()*6.282;
+  theta_ = 0;
+  Names::nameObject(name, this);
+  
+  if (orb_radius_ && parent_) {
+    cen = parent->get_center();
+    cen += Vector(orb_radius_*cos(theta_),
+                  orb_radius_*sin(theta_),0);
+  }
+}
+
+void Satellite::compute_bounds(BBox& bbox, double offset) {
+#if _USING_GRID2_
+  bbox.extend(cen,radius+offset);
+#else
+  if (parent_) {
+    Point center = parent_->get_center();
+    bbox.extend(center);
+    Point extent = 
+      Point(center.x()+parent_->get_orb_radius()+orb_radius_+radius+offset,
+            center.y()+parent_->get_orb_radius()+orb_radius_+radius+offset,
+            center.z()+radius+offset);
+    bbox.extend( extent );
+    extent = 
+      Point(center.x()-(parent_->get_orb_radius()+orb_radius_+radius+offset),
+            center.y()-(parent_->get_orb_radius()+orb_radius_+radius+offset),
+            center.z()-(radius+offset));
+    bbox.extend( extent );
+    
+  } else {
+    bbox.extend(cen, orb_radius_+radius+offset);
+  }
+#endif
+}
+  
 void Satellite::animate(double t, bool& changed)
 {
   changed = false;
@@ -66,7 +117,6 @@ Satellite::io(SCIRun::Piostream &str)
   SCIRun::Pio(str, theta_);
   str.end_class();
 }
-} // end namespace
 
 namespace SCIRun {
 void Pio(SCIRun::Piostream& stream, rtrt::Satellite*& obj)

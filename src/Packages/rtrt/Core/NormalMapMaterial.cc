@@ -11,6 +11,11 @@
 #include <Packages/rtrt/Core/UVMapping.h>
 #include <Packages/rtrt/Core/vec.h>
 
+#include <sgi_stl_warnings_off.h>
+#include <fstream>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <math.h>
 
 using namespace rtrt;
@@ -133,8 +138,8 @@ Vector NormalMapMaterial::fval(double u, double v)
   int iu,iv,iu1,iv1;
   Vector fu0,fu1;
   double du,dv;
-  iu = ((double)dimension_x*u);
-  iv = ((double)dimension_y*v);
+  iu = static_cast<int>((double)dimension_x*u);
+  iv = static_cast<int>((double)dimension_y*v);
   if(iu >= dimension_x || iu < 0) iu = 0;
   if(iv >= dimension_y || iv < 0) iv = 0;
   iu1 = iu+1; 

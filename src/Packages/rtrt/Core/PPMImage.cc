@@ -4,11 +4,24 @@
 #include <Core/Persistent/PersistentSTL.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <map>
+#include <iostream>
+#include <fstream>
 #include <sgi_stl_warnings_on.h>
 
 using namespace rtrt;
 using namespace std;
+
+PPMImage::PPMImage(const string& s, bool flip) 
+  : flipped_(flip) 
+{ 
+  valid_ = read_image(s.c_str());
+}
+
+PPMImage::PPMImage(int nu, int nv, bool flip) 
+  : u_(nu), v_(nv), valid_(false), flipped_(flip) 
+{
+  image_.resize(u_*v_);
+}
 
 void
 PPMImage::eat_comments_and_whitespace(ifstream &str)
@@ -30,7 +43,61 @@ PPMImage::eat_comments_and_whitespace(ifstream &str)
   }
 }
 
-map<string,PPMImage*> readInImages;
+void PPMImage::get_dimensions_and_data(Array2<rtrt::Color> &c,
+                                       int &nu, int &nv) {
+  if (valid_) {
+    c.resize(u_+2,v_+2);  // image size + slop for interpolation
+    nu=u_;
+    nv=v_;
+    for (unsigned v=0; v<v_; ++v)
+      for (unsigned u=0; u<u_; ++u)
+        c(u,v)=image_[v*u_+u];
+  } else {
+    c.resize(0,0);
+    nu=0;
+    nv=0;
+  }
+}
+
+bool PPMImage::write_image(const char* filename, int bin)
+{
+  ofstream outdata(filename);
+  if (!outdata.is_open()) {
+    cerr << "PPMImage: ERROR: I/O fault: couldn't write image file: "
+         << filename << "\n";
+    return false;
+  }
+  if (bin)
+    outdata << "P6\n# PPM binary image created with rtrt\n";
+  else
+    outdata << "P3\n# PPM ASCII image created with rtrt\n";
+
+  outdata << u_ << " " << v_ << "\n";
+  outdata << "255\n";
+
+  unsigned char c[3];
+  if (bin) {
+    for(unsigned v=0;v<v_;++v){
+      for(unsigned u=0;u<u_;++u){
+        c[0]=(unsigned char)(image_[v*u_+u].red()*255);
+        c[1]=(unsigned char)(image_[v*u_+u].green()*255);
+        c[2]=(unsigned char)(image_[v*u_+u].blue()*255);
+        outdata.write((char *)c, 3);
+      }
+    }
+  } else {
+    int count=0;
+    for(unsigned v=0;v<v_;++v){
+      for(unsigned u=0;u<u_;++u, ++count){
+        if (count == 5) { outdata << "\n"; count=0; }
+        outdata << (int)(image_[v*u_+u].red()*255) << " ";
+        outdata << (int)(image_[v*u_+u].green()*255) << " ";
+        outdata << (int)(image_[v*u_+u].blue()*255) << " ";
+      }
+    }
+  }
+  return true;
+}
 
 bool
 PPMImage::read_image(const char* filename)
@@ -39,16 +106,6 @@ PPMImage::read_image(const char* filename)
   unsigned char color[3];
   string token;
     
-#if 0
-  map<string,PPMImage*>::iterator iter = 
-                               readInImages.find( filename );
-  if( iter != readInImages.end() )
-    {
-      cout << "Returning already read image!\n";
-      return (*iter).second;
-    }
-#endif
-
   if (!indata.is_open()) {
     cerr << "PPMImage: ERROR: I/O fault: no such file: " 
 	 << filename << "\n";
@@ -68,10 +125,6 @@ PPMImage::read_image(const char* filename)
   if (flipped_)
     cerr << " (flipped!)";
   cerr << endl;
-
-#if 0
-  readInImages[filename] = this;
-#endif
 
   eat_comments_and_whitespace(indata);
   indata >> u_ >> v_;

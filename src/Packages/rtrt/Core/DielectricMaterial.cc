@@ -7,8 +7,12 @@
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/Context.h>
-#include <math.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <math.h>
 
 using namespace rtrt;
 using namespace SCIRun;
@@ -127,35 +131,41 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
 				     powf(extinction_in.green(), scaled_dist),
 				     powf(extinction_in.blue(), scaled_dist));
     }
+#if 1
     result += color * phong_term( ray.direction(), light_dir,
 				  normal, phong_exponent);
+#else
+    phongshade(result, extinction_out, light->get_color(), phong_exponent,
+	       0, ray, hit, depth-1, atten, accumcolor, cx);
+#endif
   }
 
-    
-  // Snell's Law: n sin t = n' sin t'
-  // so n^2 sin^2 t =  n'^2 sin ^2 t'
-  // so n^2 (1 - cos^2 t)  =  n'^2 (1 - cos ^2 t')
-  // cos^2 t' = [ n'^2 - n^2 (1 - cos^2 t) ] /  n'^2
-  //          = 1 - (n^2 / n'^2) (1 - cos^2 t)
-  // refracted ray, geometry
-  //
-  //            ^
-  //            | N
-  //     \      |
-  //     V \    |
-  //         \  |
-  //           \|
-  //             --------> U
-  //             \ 
-  //              \ 
-  //               \  
-  //                \ V'
-  //
-  //     V = Usint - Ncost
-  //     U = (V +  Ncost) / sint
-  //     V'= Usint'- Ncost'
-  //       = (V + Ncost) (n/n') -  Ncost'
-  //
+
+  /************************************
+  Snell's Law: n sin t = n' sin t'
+  so n^2 sin^2 t =  n'^2 sin ^2 t'
+  so n^2 (1 - cos^2 t)  =  n'^2 (1 - cos ^2 t')
+  cos^2 t' = [ n'^2 - n^2 (1 - cos^2 t) ] /  n'^2
+           = 1 - (n^2 / n'^2) (1 - cos^2 t)
+  refracted ray, geometry
+  
+             ^
+             | N
+      \      |
+      V \    |
+          \  |
+            \|
+              --------> U
+              \
+               \ 
+                \  
+                 \ V'
+  
+      V = Usint - Ncost
+      U = (V +  Ncost) / sint
+      V'= Usint'- Ncost'
+        = (V + Ncost) (n/n') -  Ncost'
+  ***************************************/  
   if (depth < cx->scene->maxdepth){
     double n;
     double nPrime;
@@ -200,9 +210,10 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
 	cx->stats->ds[depth].nbg++;
 	Color bg;
 	cx->scene->get_bgcolor( ray.direction(), bg );
+	// Hacks for demos are bad.  Whoever did this should be ashamed of themselves.
 	if(incoming)
 	  result += bg_in; // I'm changing this so the water is blue
-//	  result += bg_in*bg;
+//        result += bg_in*bg;
 	else
 	  result += bg_out; // changing this for the same reason
 //	  result += bg_out*bg;

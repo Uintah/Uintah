@@ -13,7 +13,8 @@
 using namespace rtrt;
 
 AirBubble::AirBubble(Material* matl, const Point& cen, double radius, double vert, double horiz, double _speed)
-   : Sphere(matl, cen, radius), ocen(cen), vertical(vert / speed), horizontal(horiz), speed(_speed)
+   : Sphere(matl, cen, radius), ocen(cen), speed(_speed),
+     vertical(vert / speed), horizontal(horiz)
 {}
 
 AirBubble::~AirBubble()

@@ -3,18 +3,23 @@
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Names.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Tri.h>
+#include <Packages/rtrt/Core/TexturedTri.h>
+
 #include <Core/Thread/Parallel.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/WorkQueue.h>
-#include <Packages/rtrt/Core/Ray.h>
-#include <Packages/rtrt/Core/Stats.h>
-#include <Packages/rtrt/Core/HitInfo.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <stdlib.h>
-#include <Packages/rtrt/Core/Tri.h>
-#include <Packages/rtrt/Core/TexturedTri.h>
 
 extern "C" {
 #include <Packages/rtrt/Core/pcube.h>
@@ -22,6 +27,7 @@ extern "C" {
 
 using namespace rtrt;
 using namespace SCIRun;
+using namespace std;
 
 int HierarchicalGrid::L1Cells = 0;
 int HierarchicalGrid::L2Cells = 0;
@@ -97,7 +103,7 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
     if (was_preprocessed) return;
     was_preprocessed=true;
 
-    if (Names::hasName(this)) std::cerr << "\n\n"
+    if (Names::hasName(this)) cerr << "\n\n"
                               << "\n==========================================================\n"
 					<< "* Building Hierarchical Grid for Object " << Names::getName(this)
                               << "\n==========================================================\n";

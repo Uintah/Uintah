@@ -2,11 +2,17 @@
 #include <Packages/rtrt/Core/RServer.h>
 #include <Packages/rtrt/Core/remote.h>
 #include <Packages/rtrt/Core/Image.h>
+
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Barrier.h>
 #include <Core/Thread/Mutex.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <sys/socket.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,8 +20,8 @@
 #include <netdb.h>
 #include <strings.h>
 #include <sys/param.h>
-#include <iostream>
 #include <unistd.h>
+
 using namespace std;
 using namespace rtrt;
 using namespace SCIRun;
@@ -125,8 +131,8 @@ namespace rtrt {
     unsigned char sendbuf[MAXBUFSIZE];
     int bufsize;
     void init();
-    RServer* rserver;
     int idx;
+    RServer* rserver;
     virtual void run();
   };
 }

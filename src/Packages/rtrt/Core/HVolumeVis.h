@@ -17,11 +17,14 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/WorkQueue.h>
 
+#include <sgi_stl_warnings_off.h>
+#include <fstream>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <stdlib.h>
 #include <stdio.h>
-#include <fstream>
 #include <unistd.h>
-#include <iostream>
 #include <fcntl.h>
 #include <math.h>
 

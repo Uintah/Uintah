@@ -51,7 +51,7 @@ namespace rtrt {
     // This can be used to generate default values
     RegularColorMap(int type = RegCMap_InvRainbow, int size = 256);
 
-    ~RegularColorMap();
+    virtual ~RegularColorMap();
 
     // This return the enum of the type based on the input string
     // passed in.

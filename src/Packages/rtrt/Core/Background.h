@@ -20,7 +20,6 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Persistent/Persistent.h>
 #include <Packages/rtrt/Core/Array2.h>
-#include <Packages/rtrt/Core/ppm.h>
 
 namespace rtrt {
 class Background;

@@ -17,7 +17,7 @@ void MIPGroup::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 {
     double maxval=0;
     Object* maxobj=0;
-    double maxt;
+    double maxt = 0;
     for(int i=0;i<objs.size();i++){
 	HitInfo newhit;
 	objs[i]->intersect(ray, newhit, st, ppc);

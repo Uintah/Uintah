@@ -4,7 +4,7 @@ using namespace rtrt;
 using namespace SCIRun;
 
 SpinningInstance::SpinningInstance(InstanceWrapperObject* o, Transform* trans, Point cen, Vector _axis, double _rate) 
-  : Instance(o, trans), cen(cen), dorotate(true), ctime(0)
+  : Instance(o, trans), dorotate(true), ctime(0), cen(cen)
 {
   cpdpy = 0;
 

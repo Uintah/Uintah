@@ -1,7 +1,11 @@
 
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/HitInfo.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <sci_values.h>
 
 using namespace rtrt;

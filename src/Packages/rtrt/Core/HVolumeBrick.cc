@@ -40,8 +40,8 @@ namespace rtrt {
 
 HVolumeBrick::HVolumeBrick(Material* matl, VolumeDpy* dpy,
 			   char* filebase, int depth, int np)
-  : VolumeBase(matl, dpy), depth(depth), filebase(filebase),
-    work(0)
+  : VolumeBase(matl, dpy), depth(depth),
+    work(0), filebase(filebase)
 {
   if(depth<=0)
     this->depth=depth=1;
@@ -344,9 +344,10 @@ HVolumeBrick::HVolumeBrick(Material* matl, VolumeDpy* dpy,
 			   int _nx, int _ny, int _nz,
 			   Point min, Point max,
 			   float _datamin, float _datamax, float* _indata):
-  VolumeBase(matl, dpy), depth(depth), work(0), filebase(NULL),
-  nx(_nx), ny(_ny), nz(_nz), datadiag(max-min),
-  datamin(_datamin), datamax(_datamax), indata(_indata)
+  VolumeBase(matl, dpy), min(min), datadiag(max-min), 
+  nx(_nx), ny(_ny), nz(_nz),
+  indata(_indata), datamin(_datamin), datamax(_datamax),
+  depth(depth), work(0), filebase(NULL)
 {
   //  filebase="junk";
   if(depth<=0)

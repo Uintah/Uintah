@@ -1,11 +1,11 @@
 
-/*******************************************************************************\
- *                                                                             *
- * filename: TimeVaryingInstance.h                                             *
- * author  : R. Keith Morley                                                   *
- * last mod: 07/12/02                                                          *
- *                                                                             *
-\*******************************************************************************/ 
+/****************************************************************************\
+ *                                                                          *
+ * filename: TimeVaryingInstance.h                                          *
+ * author  : R. Keith Morley                                                *
+ * last mod: 07/12/02                                                       *
+ *                                                                          *
+\****************************************************************************/ 
 
 #ifndef _TIME_VARYING_INSTANCE_
 #define _TIME_VARYING_INSTANCE_ 1
@@ -32,7 +32,7 @@ namespace SCIRun {
 namespace rtrt 
 {
 
-/*******************************************************************************/
+/***************************************************************************/
 class TimeVaryingInstance: public Instance
 {
 public:
@@ -57,20 +57,20 @@ public:
 		 PerProcessorContext* ppc);
 }; // TimeVaryingInstance
 
-/*******************************************************************************/
+/****************************************************************************/
 class FishInstance1 : public TimeVaryingInstance
 {
 public:   
   double vertHeightScale;
-  double vertPerScale;
   double horizHeightScale;
+  double vertPerScale;
   double horizPerScale;
   double rotPerSec;
   double startTime;
   double vertShift;
    
-  FishInstance1(InstanceWrapperObject* obj, double _vertHeightScale, 
-		double _horizHeightScale, 
+  FishInstance1(InstanceWrapperObject* obj,
+                double _vertHeightScale, double _horizHeightScale, 
 		double _vertPerScale, double _horizPerScale,   
 		double _rotPerSec, double _startTime, 
 		double _vertShift);
@@ -84,19 +84,20 @@ public:
   virtual void computeTransform(double t);
 }; // FishInstance1
 
-/*******************************************************************************/
+/****************************************************************************/
 class FishInstance2 : public TimeVaryingInstance
 {
 public:   
   double vertHeightScale;
-  double vertPerScale;
   double horizHeightScale;
+  double vertPerScale;
   double horizPerScale;
   double rotPerSec;
   double startTime;
   double vertShift;
 
-  FishInstance2(InstanceWrapperObject* obj, double _vertHeightScale, double _horizHeightScale, 
+  FishInstance2(InstanceWrapperObject* obj,
+                double _vertHeightScale, double _horizHeightScale, 
 		double _vertPerScale, double _horizPerScale,   
 		double _rotPerSec, double _startTime, 
 		double _vertShift);

@@ -4,17 +4,21 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/BBox.h>
-#include <Core/Math/MiscMath.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/CutPlaneDpy.h>
-#include <iostream>
+
+#include <Core/Math/MiscMath.h>
 #include <sci_values.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace rtrt;
 using namespace SCIRun;
 
 CutGroup::CutGroup(const Vector& n, const Point& cen)
-    : Group(), n(n), dpy(0)
+    : Group(), dpy(0), n(n)
 {
     this->n.normalize();
     d=Dot(this->n, cen);
@@ -37,14 +41,14 @@ CutGroup::~CutGroup()
 }
 
 void 
-CutGroup::io(SCIRun::Piostream &str)
+CutGroup::io(SCIRun::Piostream &/*str*/)
 {
   ASSERTFAIL("Pio for CutGroup not implemented");
 }
 
-void CutGroup::softshadow_intersect(Light* light, Ray& ray, HitInfo& hit,
-				 double dist, Color& atten, DepthStats* st,
-				 PerProcessorContext* ppc)
+void CutGroup::softshadow_intersect(Light* /*light*/, Ray& ray, HitInfo& hit,
+                                    double /*dist*/, Color& atten,
+                                    DepthStats* st, PerProcessorContext* ppc)
 {
   light_intersect(ray, hit, atten, st, ppc);
 }
@@ -293,7 +297,7 @@ void CutGroup::shade(Color& result, const Ray& ray,
   mat->shade(result, ray, hit, depth, atten, accumcolor, cx);
 }
 
-Vector CutGroup::normal(const Point& p, const HitInfo& hit)
+Vector CutGroup::normal(const Point& /*p*/, const HitInfo& hit)
 {
   Vector* n=(Vector*)hit.scratchpad;
   return *n;  

@@ -2,14 +2,12 @@
 #ifndef BSPLINEMATERIAL_H
 #define BSPLINEMATERIAL_H 1
 
-#include <iostream>
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Array2.h>
 #include <Packages/rtrt/Core/PerProcessorContext.h>
 
 namespace rtrt {
-using namespace std;
   
 class Knot {
 private:

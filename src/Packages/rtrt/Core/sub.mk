@@ -26,7 +26,6 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Sphere.cc \
 	$(SRCDIR)/Hemisphere.cc \
 	$(SRCDIR)/Satellite.cc \
-	$(SRCDIR)/SubMaterial.cc \
 	$(SRCDIR)/Background.cc \
 	$(SRCDIR)/Object.cc \
 	$(SRCDIR)/Phong.cc \

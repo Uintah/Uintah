@@ -53,7 +53,7 @@ void CutMaterial::shade(Color& result, const Ray& ray,
 
       //use the cut group to test just the related objects, and to treat them
       //as one object (ie visible female sections are all equal)
-      Object *cutobj = *((Object **)(hit.scratchpad+CUTGROUPPTR));
+      //      Object *cutobj = *((Object **)(hit.scratchpad+CUTGROUPPTR));
       CutGroup* cutgrp = (CutGroup *)hit.hit_obj;
       
       //use sub_intersect instead of intersect to ignore the cutting plane

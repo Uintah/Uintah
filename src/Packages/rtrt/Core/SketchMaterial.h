@@ -233,9 +233,10 @@ SketchMaterial<ArrayType, DataType>::~SketchMaterial() {
 template<class ArrayType, class DataType>
 void
 SketchMaterial<ArrayType, DataType>::shade(Color& result, const Ray& ray,
-					const HitInfo& hit, int depth,
-					double atten, const Color& accumcolor,
-					Context* cx) {
+                                           const HitInfo& hit, int depth,
+                                           double /*atten*/,
+                                           const Color& /*accumcolor*/,
+                                           Context* cx) {
   Point hit_pos(ray.origin()+ray.direction()*(hit.min_t));
   if (normal_method == 0) {
     Color surface(0.9, 0.9, 0.9);

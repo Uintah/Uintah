@@ -86,6 +86,7 @@ class BitmapToken : public Token
   BitmapToken() : Token("*BITMAP") { nargs_ = 1; }
   virtual ~BitmapToken() {}
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
     Indent(str);
     str << moniker_ << " \"" << args_[0] << "\"" << endl;
@@ -131,6 +132,7 @@ class MaterialToken : public Token
   }
   virtual ~MaterialToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     str >> index_;
     ParseChildren(str);
@@ -146,11 +148,12 @@ class MaterialToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
     Indent(str);
     str << "*MATERIAL " << index_ << " {" << endl;
     ++indent_;
-    unsigned length = children_.size();
+    size_t length = children_.size();
     for (unsigned loop=0; loop<length; ++loop)
       children_[loop]->Write(str);
     --indent_;
@@ -227,12 +230,14 @@ class MaterialNameToken : public Token
   MaterialNameToken() : Token("*MATERIAL_NAME") { nargs_ = 1; }
   ~MaterialNameToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     ParseArgs(str);
     ((MaterialToken*)parent_)->SetName(args_[0]);
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
     Indent(str);
     str << "*MATERIAL_NAME \"" << ((MaterialToken*)parent_)->GetName() 
@@ -252,6 +257,7 @@ class MaterialAmbientToken : public Token
   MaterialAmbientToken() : Token("*MATERIAL_AMBIENT") {}
   ~MaterialAmbientToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     double color[3];
     str >> color[0] >> color[1] >> color [2];
@@ -259,6 +265,7 @@ class MaterialAmbientToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
     Indent(str);
     double color[3];
@@ -282,6 +289,7 @@ class MaterialDiffuseToken : public Token
   MaterialDiffuseToken() : Token("*MATERIAL_DIFFUSE") {}
   ~MaterialDiffuseToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     double color[3];
     str >> color[0] >> color[1] >> color [2];
@@ -289,6 +297,7 @@ class MaterialDiffuseToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
     Indent(str);
     double color[3];
@@ -312,6 +321,7 @@ class MaterialSpecularToken : public Token
   MaterialSpecularToken() : Token("*MATERIAL_SPECULAR") {}
   ~MaterialSpecularToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     double color[3];
     str >> color[0] >> color[1] >> color [2];
@@ -319,6 +329,7 @@ class MaterialSpecularToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
     Indent(str);
     double color[3];
@@ -342,6 +353,7 @@ class MaterialShineToken : public Token
   MaterialShineToken() : Token("*MATERIAL_SHINE") {}
   ~MaterialShineToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     double shine;
     str >> shine;
@@ -349,6 +361,7 @@ class MaterialShineToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
     Indent(str);
     str << "*MATERIAL_SHINE " << ((MaterialToken*)parent_)->GetShine() << endl;
@@ -367,6 +380,7 @@ class MaterialTransparencyToken : public Token
   MaterialTransparencyToken() : Token("*MATERIAL_TRANSPARENCY") {}
   ~MaterialTransparencyToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     double t;
     str >> t;
@@ -374,6 +388,7 @@ class MaterialTransparencyToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
     Indent(str);
     str << "*MATERIAL_TRANSPARENCY " 
@@ -395,6 +410,7 @@ class MapDiffuseToken : public Token
   }
   ~MapDiffuseToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
     if (children_.size()>0) {
@@ -419,6 +435,7 @@ class MapBumpToken : public Token
   }
   ~MapBumpToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
     if (children_.size()>0) {
@@ -443,6 +460,7 @@ class MapOpacityToken : public Token
   }
   ~MapOpacityToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
     if (children_.size()>0) {
@@ -467,6 +485,7 @@ class MapSelfIllumToken : public Token
   }
   ~MapSelfIllumToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
     if (children_.size()>0) {
@@ -515,6 +534,7 @@ class SubMaterialToken : public Token
   }
   virtual ~SubMaterialToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     str >> index_;
     ParseChildren(str);
@@ -533,11 +553,12 @@ class SubMaterialToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
     Indent(str);
     str << "*SUBMATERIAL " << index_ << " {" << endl;
     ++indent_;
-    unsigned length = children_.size();
+    size_t length = children_.size();
     for (unsigned loop=0; loop<length; ++loop)
       children_[loop]->Write(str);
     --indent_;
@@ -624,6 +645,7 @@ class GeomObjectToken : public Token
   }
   virtual ~GeomObjectToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     ParseArgs(str);
     cout << endl << "Token: *GEOMOBJECT" << endl;
@@ -655,6 +677,7 @@ class NodeNameToken : public Token
   NodeNameToken() : Token("*NODE_NAME") { nargs_ = 1; }
   virtual ~NodeNameToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     bool status = ParseArgs(str);
     if (status) 
@@ -667,6 +690,7 @@ class NodeNameToken : public Token
     return status;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
     Indent(str);
     str << moniker_ << " \"" << args_[0] << "\"" << endl;
@@ -758,6 +782,7 @@ class MeshNumVertexToken : public Token
   MeshNumVertexToken() : Token("*MESH_NUMVERTEX") { nargs_ = 1; }
   virtual ~MeshNumVertexToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     unsigned num;
     str >> num;
@@ -765,6 +790,7 @@ class MeshNumVertexToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
     Indent(str);
     str << "*MESH_NUMVERTEX " << ((MeshToken*)parent_)->GetNumVertices()
@@ -784,6 +810,7 @@ class MeshNumTVertexToken : public Token
   MeshNumTVertexToken() : Token("*MESH_NUMTVERTEX") { nargs_ = 1; }
   virtual ~MeshNumTVertexToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     unsigned num;
     str >> num;
@@ -791,6 +818,7 @@ class MeshNumTVertexToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
     Indent(str);
     str << "*MESH_NUMTVERTEX " << ((MeshToken*)parent_)->GetNumTVertices()
@@ -810,6 +838,7 @@ class MeshNumFacesToken : public Token
   MeshNumFacesToken() : Token("*MESH_NUMFACES") { nargs_ = 1; }
   virtual ~MeshNumFacesToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     unsigned num;
     str >> num;
@@ -817,6 +846,7 @@ class MeshNumFacesToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
     Indent(str);
     str << "*MESH_NUMFACES " << ((MeshToken*)parent_)->GetNumFaces()
@@ -836,6 +866,7 @@ class MeshNumTVFacesToken : public Token
   MeshNumTVFacesToken() : Token("*MESH_NUMTVFACES") { nargs_ = 1; }
   virtual ~MeshNumTVFacesToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     unsigned num;
     str >> num;
@@ -843,6 +874,7 @@ class MeshNumTVFacesToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
     Indent(str);
     str << "*MESH_NUMTVFACES " << ((MeshToken*)parent_)->GetNumTFaces()
@@ -866,6 +898,7 @@ class MeshVertexListToken : public Token
   MeshVertexListToken() : Token("*MESH_VERTEX_LIST") {}
   virtual ~MeshVertexListToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     unsigned index;
     unsigned numvertices = ((MeshToken*)parent_)->GetNumVertices();
@@ -874,7 +907,7 @@ class MeshVertexListToken : public Token
     str >> curstring; // opening delimiter
     DELIMITER delimiter = (DELIMITER)curstring[0];
     str >> curstring;
-    while(1) {
+    for(;;) {
       if (curstring == "*MESH_VERTEX") {
 	str >> index; // vertex index
 	str >> vertices_[index*3]; // X
@@ -894,8 +927,9 @@ class MeshVertexListToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
-    unsigned loop, length;
+    size_t loop, length;
     
     Indent(str);
     str << "*MESH_VERTEX_LIST {" << endl;
@@ -932,6 +966,7 @@ class MeshTVertListToken : public Token
   MeshTVertListToken() : Token("*MESH_TVERTLIST") {}
   virtual ~MeshTVertListToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     unsigned numtvertices = ((MeshToken*)parent_)->GetNumTVertices();
     tvertices_.resize(numtvertices*3);
@@ -940,7 +975,7 @@ class MeshTVertListToken : public Token
     str >> curstring; // opening delimiter
     DELIMITER delimiter = (DELIMITER)curstring[0];
     str >> curstring;
-    while(1) {
+    for(;;) {
       if (curstring == "*MESH_TVERT") {
 	str >> index; // vertex index
 	str >> tvertices_[index*3]; // X
@@ -960,8 +995,9 @@ class MeshTVertListToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
-    unsigned loop, length;
+    size_t loop, length;
     
     Indent(str);
     str << "*MESH_TVERTLIST {" << endl;
@@ -1000,6 +1036,7 @@ class MeshFaceListToken : public Token
   MeshFaceListToken() : Token("*MESH_FACE_LIST") {}
   virtual ~MeshFaceListToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     unsigned numfaces = ((MeshToken*)parent_)->GetNumFaces();
     faces_.resize(numfaces*3);
@@ -1008,7 +1045,7 @@ class MeshFaceListToken : public Token
     str >> curstring; // opening delimiter
     DELIMITER delimiter = (DELIMITER)curstring[0];
     str >> curstring;
-    while(1) {
+    for(;;) {
       if (curstring == "*MESH_FACE") {
 	str >> index; // face index
 	str >> curstring; // :
@@ -1047,8 +1084,9 @@ class MeshFaceListToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
-    unsigned loop, length;
+    size_t loop, length;
     
     Indent(str);
     str << "*MESH_FACE_LIST {" << endl;
@@ -1086,6 +1124,7 @@ class MeshTFaceListToken : public Token
   MeshTFaceListToken() : Token("*MESH_TFACELIST") {}
   virtual ~MeshTFaceListToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     unsigned numtfaces = ((MeshToken*)parent_)->GetNumTFaces();
     tfaces_.resize(numtfaces*3);
@@ -1094,7 +1133,7 @@ class MeshTFaceListToken : public Token
     str >> curstring; // opening delimiter
     DELIMITER delimiter = (DELIMITER)curstring[0];
     str >> curstring;
-    while(1) {
+    for(;;) {
       if (curstring == "*MESH_TFACE") {
 	str >> index; // face index
 	str >> tfaces_[index*3]; // A
@@ -1118,8 +1157,9 @@ class MeshTFaceListToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
-    unsigned loop, length;
+    size_t loop, length;
     
     Indent(str);
     str << "*MESH_TFACELIST {" << endl;
@@ -1160,6 +1200,7 @@ class MeshNormalsToken : public Token
   }
   virtual ~MeshNormalsToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     unsigned faceindex;
     unsigned numfaces = ((MeshToken*)parent_)->GetNumFaces();
@@ -1169,7 +1210,7 @@ class MeshNormalsToken : public Token
     str >> curstring; // opening delimiter
     DELIMITER delimiter = (DELIMITER)curstring[0];
     str >> curstring;
-    while(1) {
+    for(;;) {
       if (curstring == "*MESH_FACENORMAL") {
 	str >> faceindex; // face index
 	str >> face_normals_[faceindex*3]; // X
@@ -1209,6 +1250,7 @@ class MeshNormalsToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
     unsigned loop, length;
     
@@ -1267,6 +1309,7 @@ class MaterialRefToken : public Token
   MaterialRefToken() : Token("*MATERIAL_REF") {}
   virtual ~MaterialRefToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     str >> index_;
 
@@ -1274,6 +1317,7 @@ class MaterialRefToken : public Token
     return true;
   }
 
+  virtual void Write() {}
   virtual void Write(ofstream &str) {
     Indent(str);
     str << "*MATERIAL_REF " << index_ << endl;
@@ -1295,6 +1339,7 @@ class GroupToken : public Token
   }
   virtual ~GroupToken() {}
 
+  virtual bool Parse() { return false; }
   virtual bool Parse(ifstream &str) {
     ParseArgs(str);
     cout << endl << "Token: start *GROUP " << args_[0] 
@@ -1396,11 +1441,12 @@ class ASEFile : public Token
     return A.Parse(str_);
   } 
 #endif
+  virtual bool Parse(ifstream &) { return false; }
 
 
   void Write() {
 #ifndef _WIN32
-    unsigned loop, length;
+    size_t loop, length;
     int check;
     string dirname, filename;
     char geomcountbuf[100] = "\0";
@@ -1475,7 +1521,7 @@ class ASEFile : public Token
 
       // write a Group
       else if (children_[loop]->GetMoniker() == "*GROUP") {
-	unsigned loop2, length2;
+        size_t loop2, length2;
 	token_list *children;
 	children = children_[loop]->GetChildren();
 	length2 = children->size();
@@ -1504,6 +1550,7 @@ class ASEFile : public Token
     }
 #endif
   }
+  virtual void Write(ofstream&) {}
 
   virtual Token *MakeToken() { return new ASEFile("no-filename-given"); }
 
@@ -1548,9 +1595,9 @@ class ASEDir
     curstring += dir_ + "/__++temp++__";
     system(curstring.c_str());
     
-    unsigned length = asefiles.size();
+    size_t length = asefiles.size();
     cout << "found " << length << " ASE files" << endl;
-    unsigned loop;
+    size_t loop;
     for (loop=0; loop<length; ++loop) {
       asefiles[loop]->Parse();
     }

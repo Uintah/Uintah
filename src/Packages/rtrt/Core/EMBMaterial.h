@@ -35,9 +35,9 @@ public:
   friend void SCIRun::Pio(SCIRun::Piostream&, EMBMaterial*&);
 
   virtual void shade(Color& result, const Ray& ray,
-                     const HitInfo& hit, int depth, 
-                     double atten, const Color& accumcolor,
-                     Context* cx)
+                     const HitInfo& /*hit*/, int /*depth*/, 
+                     double /*atten*/, const Color& /*accumcolor*/,
+                     Context* /*cx*/)
   {
     color_in_direction(ray.direction(),result);
   }    

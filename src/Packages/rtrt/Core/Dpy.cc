@@ -106,9 +106,7 @@
 
 using namespace rtrt;
 using namespace SCIRun;
-
-using std::endl;
-using std::cerr;
+using namespace std;
 
 extern bool pin;
 
@@ -152,7 +150,9 @@ static MusilRNG rng;
 
 static double   lightoff_frame = -1.0;
 
-double _HOLO_STATE_=1;
+namespace rtrt {
+  double _HOLO_STATE_=1;
+}
 
 //static float float_identity[4][4] = { {1,0,0,0}, {0,1,0,0},
 //	 			        {0,0,1,0}, {0,0,0,1} };
@@ -657,7 +657,6 @@ Dpy::renderFrame() {
 	// Now we want to draw a gray box beneth the font using blending. :)
 	glEnable(GL_BLEND);
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-	int textheight=fontInfo->descent+fontInfo->ascent;
 	glColor4f(0.5,0.5,0.5,0.5);
 	glRecti(8,3-fontInfo->descent-2,12+width,fontInfo->ascent+3);
 	glDisable(GL_BLEND);

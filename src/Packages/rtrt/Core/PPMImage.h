@@ -1,6 +1,6 @@
 
-#ifndef PPMIMAGE_H
-#define PPMIMAGE_H 1
+#ifndef RTRT_PPMIMAGE_H
+#define RTRT_PPMIMAGE_H 1
 
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array2.h>
@@ -10,8 +10,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
-#include <iostream>
-#include <fstream>
+#include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
 #include <stdio.h>
@@ -29,11 +28,6 @@ void Pio(Piostream& stream, std::vector<rtrt::Color>& data);
 
 namespace rtrt {
 
-using std::ifstream;
-using std::ofstream;
-using std::cout;
-using std::cerr;
-using std::endl;
 using std::vector;
 using std::string;
 
@@ -47,21 +41,12 @@ class PPMImage
   vector<rtrt::Color> image_;
   bool                flipped_;
 
-  void eat_comments_and_whitespace(ifstream &str);
+  void eat_comments_and_whitespace(std::ifstream &str);
 
  public:
   PPMImage() {} // for Pio.
-  PPMImage(const string& s, bool flip=false) 
-    : flipped_(flip) 
-  { 
-    valid_ = read_image(s.c_str());
-  }
-  PPMImage(int nu, int nv, bool flip=false) 
-    : u_(nu), v_(nv), valid_(false), flipped_(flip) 
-  {
-    image_.resize(u_*v_);
-  }
-
+  PPMImage(const string& s, bool flip=false); 
+  PPMImage(int nu, int nv, bool flip=false);
   virtual ~PPMImage() {}
 
   friend void SCIRun::Pio(SCIRun::Piostream&, PPMImage&);
@@ -69,24 +54,10 @@ class PPMImage
   unsigned get_width() { return u_; }
   unsigned get_height() { return v_; }
   unsigned get_size() { return max_; }
-
-  void get_dimensions_and_data(Array2<rtrt::Color> &c, int &nu, int &nv) {
-    if (valid_) {
-      c.resize(u_+2,v_+2);  // image size + slop for interpolation
-      nu=u_;
-      nv=v_;
-      for (unsigned v=0; v<v_; ++v)
-        for (unsigned u=0; u<u_; ++u)
-          c(u,v)=image_[v*u_+u];
-    } else {
-      c.resize(0,0);
-      nu=0;
-      nv=0;
-    }
-  }
-
   bool valid() { return valid_; }
 
+  void get_dimensions_and_data(Array2<rtrt::Color> &c, int &nu, int &nv);
+  
   rtrt::Color &operator()(unsigned u, unsigned v)
   {
     if (v>=v_) v=v_-1;
@@ -101,46 +72,7 @@ class PPMImage
     return image_[v*u_+u];
   }
 
-  bool write_image(const char* filename, int bin=1)
-  {
-    ofstream outdata(filename);
-    if (!outdata.is_open()) {
-      cerr << "PPMImage: ERROR: I/O fault: couldn't write image file: "
-	   << filename << "\n";
-      return false;
-    }
-    if (bin)
-      outdata << "P6\n# PPM binary image created with rtrt\n";
-    else
-      outdata << "P3\n# PPM ASCII image created with rtrt\n";
-
-    outdata << u_ << " " << v_ << "\n";
-    outdata << "255\n";
-
-    unsigned char c[3];
-    if (bin) {
-      for(unsigned v=0;v<v_;++v){
-	for(unsigned u=0;u<u_;++u){
-	  c[0]=(unsigned char)(image_[v*u_+u].red()*255);
-	  c[1]=(unsigned char)(image_[v*u_+u].green()*255);
-	  c[2]=(unsigned char)(image_[v*u_+u].blue()*255);
-	  outdata.write((char *)c, 3);
-	}
-      }
-    } else {
-      int count=0;
-      for(unsigned v=0;v<v_;++v){
-	for(unsigned u=0;u<u_;++u, ++count){
-	  if (count == 5) { outdata << "\n"; count=0; }
-	  outdata << (int)(image_[v*u_+u].red()*255) << " ";
-	  outdata << (int)(image_[v*u_+u].green()*255) << " ";
-	  outdata << (int)(image_[v*u_+u].blue()*255) << " ";
-	}
-      }
-    }
-    return true;
-  }
-
+  bool write_image(const char* filename, int bin=1);
   bool read_image(const char* filename);
 };
 

@@ -3,18 +3,19 @@
 #ifndef STEALTH_H
 #define STEALTH_H 1
 
-#include <iostream>
-#include <vector>
-
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <vector>
+#include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace rtrt {
 
 using SCIRun::Vector;
 using SCIRun::Point;
 
-using std::cout;
 using std::vector;
 using std::string;
 
@@ -58,25 +59,7 @@ public:
   // velocity vector.
   void updatePosition();
 
-  inline double getSpeed( int direction ) const {
-    switch( direction ) {
-    case 0:
-      return speed_;
-    case 1:
-      return horizontal_speed_;
-    case 2:
-      return vertical_speed_;
-    case 3:
-      return pitch_speed_;
-    case 4:
-      return rotate_speed_;
-    default:
-      cout << "Error in Stealth::getSpeed, bad direction " << direction 
-	   << "\n";
-      exit( 1 );
-      return 0.0;
-    }
-  }
+  double getSpeed( int direction ) const;
 
   // Slows down in all dimensions (pitch, speed, turn, etc);
   void slowDown();

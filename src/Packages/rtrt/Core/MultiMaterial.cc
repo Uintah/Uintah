@@ -20,13 +20,13 @@ MultiMaterial::io(SCIRun::Piostream &str)
   str.begin_class("MultiMaterial", MULTIMATERIAL_VERSION);
   Material::io(str);
 
-  unsigned int size = material_stack_.size();
+  size_t size = material_stack_.size();
   SCIRun::Pio(str, size);
   if (str.reading()) {
     material_stack_.resize(size);
   }
   
-  for (unsigned int i = 0; i < size; i++) {
+  for (size_t i = 0; i < size; i++) {
     MatPercent* m = 0;
     if (str.reading()) {
       m = new MatPercent(0, 0.0);

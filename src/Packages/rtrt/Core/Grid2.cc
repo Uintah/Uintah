@@ -2,13 +2,18 @@
 #include <Packages/rtrt/Core/Grid2.h>
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Array1.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Time.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/MiscMath.h>
+
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Time.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <stdlib.h>
 
 using namespace rtrt;
@@ -267,6 +272,8 @@ void Grid2::intersect(Ray& ray, HitInfo& hit,
 	t=MIN;
     } else if(MAX > 1.e-6){
 	t=0;
+    } else {
+      return;
     }
 
     double lt;
@@ -399,7 +406,7 @@ void Grid2::remove(Object* object, const BBox& obj_bbox)
 
 	idx = px * nynz + py * nz + pz;
 	voxel = grid[idx];
-	int object_count = (long)voxel[0];
+	long object_count = (long)voxel[0];
 	for (int c = 1; c < object_count; c++)
 	  if (object == voxel[c])
 	  {

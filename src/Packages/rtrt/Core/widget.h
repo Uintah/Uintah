@@ -210,6 +210,8 @@ namespace rtrt {
     ColorMapWidget( Widget* old_wid );
     ColorMapWidget( float x, float y, float w, float h, float o_x, float foc_x,
 		    float foc_y, int cmap_x, int cmap_y, TextureAlign tA );
+    virtual ~ColorMapWidget() {}
+    
     virtual void paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
 				 float master_opacity );
     virtual void genTransFunc( void );

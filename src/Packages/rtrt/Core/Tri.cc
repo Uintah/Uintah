@@ -10,15 +10,16 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Thread/Mutex.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 #include <stdio.h>
 
 using namespace rtrt;
 using namespace SCIRun;
-using std::cerr;
-using std::vector;
+using namespace std;
 
 Persistent* rtrttri_maker() {
   return new Tri();

@@ -1,20 +1,26 @@
+
 #include <Packages/rtrt/Core/MIPMaterial.h>
 #include <Packages/rtrt/Core/PPMImage.h>
-#include <Core/Math/MinMax.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/UVMapping.h>
 #include <Packages/rtrt/Core/UV.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Ray.h>
 #include <Packages/rtrt/Core/Object.h>
-#include <iostream>
-#include <fstream>
-#include <stdio.h>
-#include <stdlib.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Context.h>
 #include <Packages/rtrt/Core/Worker.h>
+
+#include <Core/Math/MinMax.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Ray.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <fstream>
+#include <sgi_stl_warnings_on.h>
+
+#include <stdio.h>
+#include <stdlib.h>
 
 using namespace rtrt;
 using namespace std;
@@ -22,7 +28,7 @@ using namespace SCIRun;
 
 MIPMaterial::MIPMaterial(const string &texfile, 
 			 double Kd, const Color specular,
-			 double specpow, double refl,
+			 int specpow, double refl,
 			 bool flipped)
   : Kd(Kd), specular(specular),
     specpow(specpow), refl(refl)
@@ -77,7 +83,7 @@ MIPMaterial::MIPMaterial(const string &texfile,
 MIPMaterial::MIPMaterial(const string &texfile, ImageMaterial::Mode , 
                          ImageMaterial::Mode,
 			 double Kd, const Color specular,
-			 double specpow, double refl,
+			 int specpow, double refl,
 			 bool flipped)
   : Kd(Kd), specular(specular),
     specpow(specpow), refl(refl)
@@ -150,7 +156,7 @@ void MIPMaterial::shade(Color& result, const Ray& ray,
     // calculate distance of hitpoint
     Point origin = ray.origin();
     Point hitpt = origin + ray.direction()*hit.min_t;
-    Vector normal = hit.hit_obj->normal(hitpt,hit);
+    //    Vector normal = hit.hit_obj->normal(hitpt,hit);
 
     int which = cx->worker->rendering_scene;
     

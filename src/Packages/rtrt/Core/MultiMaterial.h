@@ -41,7 +41,7 @@ class MultiMaterial : public Material {
 
   MultiMaterial() {}
   virtual ~MultiMaterial() {
-    unsigned loop,length;
+    size_t loop,length;
     length = material_stack_.size(); 
     for (loop=0; loop<length; ++loop) {
       delete material_stack_[loop];
@@ -57,7 +57,7 @@ class MultiMaterial : public Material {
   unsigned insert(Material *m, double percent)
   {
     material_stack_.push_back(new MatPercent(m,percent));
-    return material_stack_.size();
+    return static_cast<unsigned int>(material_stack_.size());
   }
 
   void set(unsigned index, double percent) 
@@ -68,7 +68,7 @@ class MultiMaterial : public Material {
                      Context *cx)
   {
     // this can be really inefficient, should be improved
-    unsigned loop,length;
+    size_t loop,length;
     Color final,original=result;
     double percent;
     length = material_stack_.size();

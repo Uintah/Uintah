@@ -13,10 +13,15 @@
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/UVMapping.h>
 #include <Packages/rtrt/Core/UV.h>
+
 #include <Core/Thread/Time.h>
-#include <stdlib.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <string>
+#include <sgi_stl_warnings_on.h>
+
+#include <stdlib.h>
 
 using namespace rtrt;
 using namespace SCIRun;
@@ -30,7 +35,7 @@ VideoMap::VideoMap ()
 
 /********************************************************************/
 VideoMap::VideoMap (char* fileName, int _numFrames, double _framesPerSec, 
-                    const Color& _specular, double _specPower, double _refl)
+                    const Color& _specular, int _specPower, double _refl)
    : numFrames(_numFrames), framesPerSec(_framesPerSec), specular(_specular), 
      specPower(_specPower), refl(_refl)
 {
