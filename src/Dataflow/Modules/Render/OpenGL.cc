@@ -1788,17 +1788,17 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
   if (movieName.valid())
     curName = movieName.get();
 
+  GuiInt movieFrame(ctx->subVar(tclID+"-movieFrame",false));
+  if (movieFrame.valid())
+    curFrame = movieFrame.get();
+
   GuiInt movie(ctx->subVar(tclID+"-movie",false));
   if (movie.valid()) {
-    if (!movie.get())
-    {
+    if (!movie.get()) {
       doingMovie = 0;
       makeMPEG = 0;
-    }
-    else if (!doingMovie)
-    {
+    } else if (!doingMovie) {
       doingMovie = 1;
-      curFrame=0;
       if (movie.get() == 1)
 	makeMPEG = 0;
       else if (movie.get() == 2)
