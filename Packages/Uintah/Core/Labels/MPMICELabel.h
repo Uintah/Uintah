@@ -1,7 +1,7 @@
 #ifndef UINTAH_HOMEBREW_MPMICELABEL_H
 #define UINTAH_HOMEBREW_MPMICELABEL_H
 
-#include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/Core/Variables/VarLabel.h>
 
 namespace Uintah {
 

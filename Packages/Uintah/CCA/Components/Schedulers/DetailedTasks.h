@@ -2,11 +2,11 @@
 #define UINTAH_HOMEBREW_DetailedTasks_H
 
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-//#include <Packages/Uintah/Core/Grid/PSPatchMatlGhost.h>
-#include <Packages/Uintah/Core/Grid/VarLabelMatlPatchDW.h>
+//#include <Packages/Uintah/Core/Variables/PSPatchMatlGhost.h>
+#include <Packages/Uintah/Core/Variables/VarLabelMatlPatchDW.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/ConditionVariable.h>

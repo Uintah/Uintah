@@ -7,11 +7,11 @@
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Variables/PerPatch.h>
+#include <Packages/Uintah/Core/Variables/VarLabel.h>
+#include <Packages/Uintah/Core/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Core/Util/DebugStream.h>

@@ -17,7 +17,8 @@ PSELIBS := \
 	Packages/Uintah/Core/Exceptions \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Math \
-	Packages/Uintah/Core/ProblemSpec
+	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/Core/Variables 
 
 LIBS := $(MPI_LIBRARY)
 

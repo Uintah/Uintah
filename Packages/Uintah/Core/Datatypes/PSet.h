@@ -1,7 +1,7 @@
 #ifndef  UINTAH_DATATYPES_PSet_H
 #define  UINTAH_DATATYPES_PSet_H
 
-#include <Packages/Uintah/Core/Grid/ShareAssignParticleVariable.h>
+#include <Packages/Uintah/Core/Variables/ShareAssignParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Level.h>

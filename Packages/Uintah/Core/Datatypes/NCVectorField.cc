@@ -1,7 +1,7 @@
 #include <Packages/Uintah/Core/Datatypes/NCVectorField.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/ProblemSpec/Handle.h>
+#include <Packages/Uintah/Core/Util/Handle.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 
 #include <Core/Geometry/Vector.h>

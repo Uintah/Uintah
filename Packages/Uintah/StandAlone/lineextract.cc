@@ -17,10 +17,10 @@
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Variables/NodeIterator.h>
+#include <Packages/Uintah/Core/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Grid/ShareAssignParticleVariable.h>
+#include <Packages/Uintah/Core/Variables/ShareAssignParticleVariable.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
@@ -28,9 +28,9 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>
 
-#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCZVariable.h>
 #include <iostream>
 #include <string>
 #include <vector>

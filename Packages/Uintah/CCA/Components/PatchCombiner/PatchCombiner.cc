@@ -1,11 +1,11 @@
 #include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
-#include <Packages/Uintah/Core/Grid/LocallyComputedPatchVarMap.h>
+#include <Packages/Uintah/Core/Variables/LocallyComputedPatchVarMap.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/MaterialSetP.h>
+#include <Packages/Uintah/Core/Variables/MaterialSetP.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 
 using namespace Uintah;

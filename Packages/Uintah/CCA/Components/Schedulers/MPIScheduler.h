@@ -7,10 +7,10 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/PackBufferInfo.h>
-#include <Packages/Uintah/Core/Grid/TaskProduct.h>
+#include <Packages/Uintah/Core/Parallel/PackBufferInfo.h>
+ 
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/BufferInfo.h>
+#include <Packages/Uintah/Core/Parallel/BufferInfo.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>

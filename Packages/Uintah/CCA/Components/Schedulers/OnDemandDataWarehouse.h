@@ -6,8 +6,8 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DWDatabase.h>
-#include <Packages/Uintah/Core/Grid/VarLabelMatlPatch.h>
-#include <Packages/Uintah/Core/Grid/VarLabelMatlPatchDW.h>
+#include <Packages/Uintah/Core/Variables/VarLabelMatlPatch.h>
+#include <Packages/Uintah/Core/Variables/VarLabelMatlPatchDW.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 
 #include <sgi_stl_warnings_off.h>

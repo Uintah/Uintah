@@ -1,8 +1,8 @@
 #ifndef __PARTICLE_CREATOR_H__
 #define __PARTICLE_CREATOR_H__
 
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>

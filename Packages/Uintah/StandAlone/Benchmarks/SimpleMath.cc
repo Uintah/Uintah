@@ -10,8 +10,8 @@
  *  Copyright (C) 2000 U of U
  */
 
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Variables/CCVariable.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Thread/Time.h>
 #include <iostream>

@@ -3,7 +3,7 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/PerPatch.h>
+#include <Packages/Uintah/Core/Variables/PerPatch.h>
 #include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 
 namespace Uintah {

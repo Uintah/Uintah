@@ -6,6 +6,7 @@ SUBDIRS := \
 	$(SRCDIR)/DataArchiver \
 	$(SRCDIR)/Examples \
 	$(SRCDIR)/Models \
+	$(SRCDIR)/LoadBalancers \
 	$(SRCDIR)/Schedulers \
 	$(SRCDIR)/Regridder \
 	$(SRCDIR)/SimulationController \

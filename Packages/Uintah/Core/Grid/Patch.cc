@@ -1,14 +1,14 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/NodeIterator.h>
+#include <Packages/Uintah/Core/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
 #include <Packages/Uintah/Core/Math/Primes.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/BCData.h>
-#include <Packages/Uintah/Core/Grid/BCDataArray.h>
-#include <Packages/Uintah/Core/Grid/BoundCond.h>
+#include <Packages/Uintah/Core/BoundaryConditions/BCData.h>
+#include <Packages/Uintah/Core/BoundaryConditions/BCDataArray.h>
+#include <Packages/Uintah/Core/BoundaryConditions/BoundCond.h>
 #include <Core/Containers/StaticArray.h>
 
 #include <Core/Thread/AtomicCounter.h>

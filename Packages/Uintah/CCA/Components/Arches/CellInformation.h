@@ -32,7 +32,7 @@ WARNING
 ****************************************/
 
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
+#include <Packages/Uintah/Core/Util/RefCounted.h>
 #include <Core/Containers/OffsetArray1.h>
 namespace Uintah {
   using namespace SCIRun;

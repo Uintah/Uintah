@@ -5,8 +5,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/Core/ProblemSpec
 
 SRCS     += \
-	$(SRCDIR)/ProblemSpec.cc \
-	$(SRCDIR)/RefCounted.cc
+	$(SRCDIR)/ProblemSpec.cc 
 
 PSELIBS := \
 	Packages/Uintah/Core/Exceptions \

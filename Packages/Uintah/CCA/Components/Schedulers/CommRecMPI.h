@@ -1,8 +1,8 @@
 #ifndef UINTAH_SCHEDULERS_COMMRECMPI_H
 #define UINTAH_SCHEDULERS_COMMRECMPI_H
 
-#include <Packages/Uintah/Core/Grid/PackBufferInfo.h>
-#include <Packages/Uintah/Core/Grid/BufferInfo.h>
+#include <Packages/Uintah/Core/Parallel/PackBufferInfo.h>
+#include <Packages/Uintah/Core/Parallel/BufferInfo.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/BatchReceiveHandler.h>
 
 namespace Uintah {

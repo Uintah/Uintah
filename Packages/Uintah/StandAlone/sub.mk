@@ -51,6 +51,7 @@ else
         Packages/Uintah/CCA/Components/MPM \
         Packages/Uintah/CCA/Components/MPMICE \
         Packages/Uintah/CCA/Components/DataArchiver \
+        Packages/Uintah/CCA/Components/LoadBalancers \
         Packages/Uintah/CCA/Components/Regridder \
         Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/CCA/Components/SimulationController \
@@ -300,6 +301,8 @@ ifeq ($(LARGESOS),yes)
 else
   PSELIBS := \
 	Packages/Uintah/Core/Grid \
+	Packages/Uintah/Core/Util \
+	Packages/Uintah/Core/GeometryPiece \
 	Packages/Uintah/Core/Parallel \
 	Packages/Uintah/Core/Exceptions \
 	Packages/Uintah/Core/Math \
@@ -379,6 +382,7 @@ ifeq ($(LARGESOS),yes)
 else
   PSELIBS := \
       Packages/Uintah/Core/Grid \
+      Packages/Uintah/Core/Util \
       Packages/Uintah/Core/Parallel \
       Packages/Uintah/Core/Exceptions \
       Packages/Uintah/Core/Math \

@@ -15,6 +15,7 @@ SRCS	= $(SRCDIR)/RunTests.cc
 
 PSELIBS := Packages/Uintah/testprograms/TestSuite \
 	Packages/Uintah/testprograms/TestMatrix3 \
+	Packages/Uintah/Core/Util \
 	Packages/Uintah/testprograms/TestConsecutiveRangeSet \
 	Packages/Uintah/testprograms/TestRangeTree \
 	Packages/Uintah/testprograms/TestBoxGrouper

@@ -7,8 +7,8 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Packages/Uintah/Core/Grid/Variable.h>
-#include <Packages/Uintah/Core/Grid/Array3.h>
+#include <Packages/Uintah/Core/Variables/Variable.h>
+#include <Packages/Uintah/Core/Variables/Array3.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Core/Util/Timer.h>
