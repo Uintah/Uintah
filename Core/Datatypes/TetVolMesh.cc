@@ -31,12 +31,14 @@
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
+#include <algorithm>
 
 namespace SCIRun {
 
 using std::for_each;
 using std::cerr;
 using std::endl;
+using std::copy;
 
 Persistent* make_TetVolMesh() {
   return scinew TetVolMesh;
@@ -141,8 +143,8 @@ TetVolMesh::compute_faces()
 
   face_table_lock_.lock();
   cell_iterator ci = cell_begin();
+  node_array arr(4);
   while (ci != cell_end()) {
-    node_array arr;
     get_nodes(arr, *ci); 
     // 4 faces
     hash_face(arr[0], arr[1], arr[2], *ci, face_table_);
@@ -186,10 +188,9 @@ TetVolMesh::compute_edges()
 
   edge_table_lock_.lock();
   cell_iterator ci = cell_begin();
+  node_array arr(4);
   while (ci != cell_end()) {
-    node_array arr;
-    get_nodes(arr, *ci); 
-    // 6 edges
+    get_nodes(arr, *ci);
     hash_edge(arr[0], arr[1], *ci, edge_table_);
     hash_edge(arr[0], arr[2], *ci, edge_table_);
     hash_edge(arr[0], arr[3], *ci, edge_table_);
@@ -652,14 +653,11 @@ double
 TetVolMesh::get_gradient_basis(cell_index ci, Vector& g0, Vector& g1, 
 			       Vector& g2, Vector& g3)
 {
-  Point p1, p2, p3, p4;
-  node_array nodes;
-  get_nodes(nodes, ci);
-  get_point(p1, nodes[0]);
-  get_point(p2, nodes[1]);
-  get_point(p3, nodes[2]);
-  get_point(p4, nodes[3]);
-
+  Point& p1 = points_[cells_[ci * 4]];
+  Point& p2 = points_[cells_[ci * 4+1]];
+  Point& p3 = points_[cells_[ci * 4+2]];
+  Point& p4 = points_[cells_[ci * 4+3]];
+  
   double x1=p1.x();
   double y1=p1.y();
   double z1=p1.z();
