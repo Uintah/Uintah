@@ -246,6 +246,9 @@ WARNING
       ProblemSpecP get(const std::string& name, Point& value);
       ProblemSpecP get(const std::string& name, vector<double>& value);   
       ProblemSpecP get(const std::string& name, vector<int>& value); 
+      ProblemSpecP get(const std::string& name, vector<IntVector>& value);
+
+      void parseIntVector(const std::string& str, IntVector& value);
 
       //////////
       // look for the first child text node and passes it back to
