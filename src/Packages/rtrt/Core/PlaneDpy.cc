@@ -131,12 +131,19 @@ void PlaneDpy::button_pressed(MouseButton button, const int x, const int y){
     starty = y;
     move(x, y);
     redraw=true;
-  }	
+  } else if (button == MouseButton2) {
+    starty = y;
+    startx = x;
+  }
 }    
 
 void PlaneDpy::button_motion(MouseButton button, const int x, const int /*y*/) {
   if (button == MouseButton1) {
     move(x, starty);
+    redraw=true;
+  } else if (button == MouseButton2) {
+    offset(x-startx, starty);
+    startx = x;
     redraw=true;
   }
 }
@@ -163,6 +170,31 @@ void PlaneDpy::move(int x, int y)
   } else {
     // X...
     n.x(movement_sensitivity*(xn*2-1));
+  }
+}
+
+void PlaneDpy::offset(int dx, int y)
+{
+  float movement_sensitivity;
+  float xn=float(dx)/xres;
+  // Adjust how sensitive x is
+  if ( shift_pressed )
+    movement_sensitivity = 0.1f;
+  else if( control_pressed )
+    movement_sensitivity = 10.0f;
+  else
+    movement_sensitivity = 1.0f;
+  
+  float yn=float(y)/yres;
+  if(yn>.75){
+    d+=movement_sensitivity*(xn*20-10);
+  } else if(yn>.5){
+    n.z(n.z()+movement_sensitivity*(xn*2-1));
+  } else if(yn>.25){
+    n.y(n.y()+movement_sensitivity*(xn*2-1));
+  } else {
+    // X...
+    n.x(n.x()+movement_sensitivity*(xn*2-1));
   }
 }
 
