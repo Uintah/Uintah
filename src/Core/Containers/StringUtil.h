@@ -45,6 +45,7 @@ bool string_to_double(const string &str, double &result);
 
 string to_string(int val);
 string to_string(unsigned int val);
+string to_string(unsigned long val);
 string to_string(double val);
 
 //////////

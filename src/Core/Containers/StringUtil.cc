@@ -64,6 +64,14 @@ to_string(unsigned int val)
 }
 
 string
+to_string(unsigned long val)
+{
+  char s[50];
+  sprintf(s, "%lu", val);
+  return string(s);
+}
+
+string
 to_string(double val)
 {
   char s[50];
