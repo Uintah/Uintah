@@ -101,7 +101,8 @@ public:
   void post_shear(const Vector&, const Plane&);
   void pre_rotate(double, const Vector& axis);
   void post_rotate(double, const Vector& axis);
-  void rotate(const Vector& from, const Vector& to);
+  // Returns true if the rotation happened, false otherwise.
+  bool rotate(const Vector& from, const Vector& to);
   void pre_translate(const Vector&);
   void post_translate(const Vector&);
 
