@@ -8702,7 +8702,6 @@ echo "$as_me: error: Specifically requested M include file '/$i' was not found" 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for /$i
     if test ! -e /lib$i.so && test ! -e /lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested M library file '/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested M library file '/$i' (.so or .a) was not found" >&2;}
@@ -9234,7 +9233,6 @@ echo "$as_me: error: Specifically requested X include file '$_x_inc_dir/$i' was 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_x_lib_dir/$i
     if test ! -e $_x_lib_dir/lib$i.so && test ! -e $_x_lib_dir/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested X library file '$_x_lib_dir/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested X library file '$_x_lib_dir/$i' (.so or .a) was not found" >&2;}
@@ -9767,7 +9765,6 @@ echo "$as_me: error: Specifically requested FETCHOP include file '/$i' was not f
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for /$i
     if test ! -e /lib$i.so && test ! -e /lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested FETCHOP library file '/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested FETCHOP library file '/$i' (.so or .a) was not found" >&2;}
@@ -10212,7 +10209,6 @@ echo "$as_me: error: Specifically requested PTHREAD include file '/$i' was not f
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for /$i
     if test ! -e /lib$i.so && test ! -e /lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested PTHREAD library file '/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested PTHREAD library file '/$i' (.so or .a) was not found" >&2;}
@@ -10918,7 +10914,6 @@ echo "$as_me: error: Specifically requested GL include file '$_sci_inc/$i' was n
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested GL library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested GL library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -12046,7 +12041,6 @@ echo "$as_me: error: Specifically requested DL include file '/$i' was not found"
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for /$i
     if test ! -e /lib$i.so && test ! -e /lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested DL library file '/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested DL library file '/$i' (.so or .a) was not found" >&2;}
@@ -12532,7 +12526,6 @@ echo "$as_me: error: Specifically requested DL include file '$sci_thirdparty_inc
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $sci_thirdparty_lib/$i
     if test ! -e $sci_thirdparty_lib/lib$i.so && test ! -e $sci_thirdparty_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested DL library file '$sci_thirdparty_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested DL library file '$sci_thirdparty_lib/$i' (.so or .a) was not found" >&2;}
@@ -12974,7 +12967,6 @@ echo "$as_me: error: Specifically requested DL include file '/$i' was not found"
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for /$i
     if test ! -e /lib$i.so && test ! -e /lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested DL library file '/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested DL library file '/$i' (.so or .a) was not found" >&2;}
@@ -13428,7 +13420,6 @@ echo "$as_me: error: Specifically requested STAT64 include file '/$i' was not fo
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for /$i
     if test ! -e /lib$i.so && test ! -e /lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested STAT64 library file '/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested STAT64 library file '/$i' (.so or .a) was not found" >&2;}
@@ -13878,7 +13869,6 @@ echo "$as_me: error: Specifically requested STD_HDRS include file '/$i' was not 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for /$i
     if test ! -e /lib$i.so && test ! -e /lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested STD_HDRS library file '/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested STD_HDRS library file '/$i' (.so or .a) was not found" >&2;}
@@ -14323,7 +14313,6 @@ echo "$as_me: error: Specifically requested STD_HDRS include file '/$i' was not 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for /$i
     if test ! -e /lib$i.so && test ! -e /lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested STD_HDRS library file '/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested STD_HDRS library file '/$i' (.so or .a) was not found" >&2;}
@@ -14764,7 +14753,6 @@ echo "$as_me: error: Specifically requested STD_HDRS include file '/$i' was not 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for /$i
     if test ! -e /lib$i.so && test ! -e /lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested STD_HDRS library file '/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested STD_HDRS library file '/$i' (.so or .a) was not found" >&2;}
@@ -15221,7 +15209,6 @@ echo "$as_me: error: Specifically requested STL_HEADERS include file '/$i' was n
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for /$i
     if test ! -e /lib$i.so && test ! -e /lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested STL_HEADERS library file '/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested STL_HEADERS library file '/$i' (.so or .a) was not found" >&2;}
@@ -15877,7 +15864,6 @@ echo "$as_me: error: Specifically requested TCL include file '$_sci_tcl_inc/$i' 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested TCL library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested TCL library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -16411,7 +16397,6 @@ echo "$as_me: error: Specifically requested TK include file '$_x_inc_dir $_sci_t
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested TK library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested TK library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -16924,7 +16909,6 @@ echo "$as_me: error: Specifically requested ITCL include file '$_sci_inc/$i' was
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested ITCL library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested ITCL library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -17452,7 +17436,6 @@ echo "$as_me: error: Specifically requested ITK include file '$_x_inc_dir $_sci_
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested ITK library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested ITK library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -17965,7 +17948,6 @@ echo "$as_me: error: Specifically requested BLT include file '$_sci_inc/$i' was 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested BLT library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested BLT library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -18688,7 +18670,6 @@ echo "$as_me: error: Specifically requested XERCES_C include file '$_xer_inc/$i'
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_xer_lib_path/$i
     if test ! -e $_xer_lib_path/lib$i.so && test ! -e $_xer_lib_path/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested XERCES_C library file '$_xer_lib_path/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested XERCES_C library file '$_xer_lib_path/$i' (.so or .a) was not found" >&2;}
@@ -19166,7 +19147,6 @@ echo "$as_me: error: Specifically requested SSTREAM include file '/$i' was not f
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for /$i
     if test ! -e /lib$i.so && test ! -e /lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested SSTREAM library file '/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested SSTREAM library file '/$i' (.so or .a) was not found" >&2;}
@@ -19666,7 +19646,6 @@ echo "$as_me: error: Specifically requested EXC include file '$_sci_inc/$i' was 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested EXC library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested EXC library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -20182,7 +20161,6 @@ echo "$as_me: error: Specifically requested Z include file '$_sci_inc/$i' was no
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested Z library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested Z library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -20654,7 +20632,6 @@ echo "$as_me: error: Specifically requested JPEG include file '/$i' was not foun
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested JPEG library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested JPEG library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -21109,7 +21086,6 @@ echo "$as_me: error: Specifically requested TIFF include file '/$i' was not foun
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested TIFF library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested TIFF library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -21647,7 +21623,6 @@ echo "$as_me: error: Specifically requested PNG include file '$_sci_inc/$i' was 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested PNG library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested PNG library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -22210,7 +22185,6 @@ echo "$as_me: error: Specifically requested PNG include file '/usr/sci/local/inc
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $png_lib_dir/$i
     if test ! -e $png_lib_dir/lib$i.so && test ! -e $png_lib_dir/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested PNG library file '$png_lib_dir/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested PNG library file '$png_lib_dir/$i' (.so or .a) was not found" >&2;}
@@ -22690,7 +22664,6 @@ echo "$as_me: error: Specifically requested MPEGE include file '/$i' was not fou
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested MPEGE library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested MPEGE library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -23277,7 +23250,6 @@ echo "$as_me: error: Specifically requested MAGICK include file '$includes/$i' w
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $MAGICK_LIB_DIR_FLAG/$i
     if test ! -e $MAGICK_LIB_DIR_FLAG/lib$i.so && test ! -e $MAGICK_LIB_DIR_FLAG/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested MAGICK library file '$MAGICK_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested MAGICK library file '$MAGICK_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&2;}
@@ -23844,7 +23816,6 @@ echo "$as_me: error: Specifically requested UNP include file '$_sci_inc/$i' was 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested UNP library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested UNP library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -24310,7 +24281,6 @@ echo "$as_me: error: Specifically requested F include file '/$i' was not found" 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -24751,7 +24721,6 @@ echo "$as_me: error: Specifically requested F include file '/$i' was not found" 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -25193,7 +25162,6 @@ echo "$as_me: error: Specifically requested F include file '/$i' was not found" 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -25632,7 +25600,6 @@ echo "$as_me: error: Specifically requested F include file '/$i' was not found" 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -26073,7 +26040,6 @@ echo "$as_me: error: Specifically requested F include file '/$i' was not found" 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -26554,7 +26520,6 @@ echo "$as_me: error: Specifically requested F include file '$_sci_inc/$i' was no
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -26994,7 +26959,6 @@ echo "$as_me: error: Specifically requested F include file '/$i' was not found" 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested F library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -27536,7 +27500,6 @@ echo "$as_me: error: Specifically requested CAMAL include file '$_sci_inc/$i' wa
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested CAMAL library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested CAMAL library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -28060,7 +28023,6 @@ echo "$as_me: error: Specifically requested BLAS include file '-faltivec/$i' was
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for /$i
     if test ! -e /lib$i.so && test ! -e /lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested BLAS library file '/$i' (.so or .a) was not found" >&2;}
@@ -28540,7 +28502,6 @@ echo "$as_me: error: Specifically requested BLAS include file '$_sci_inc/$i' was
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -29008,7 +28969,6 @@ echo "$as_me: error: Specifically requested BLAS include file '/$i' was not foun
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -29448,7 +29408,6 @@ echo "$as_me: error: Specifically requested BLAS include file '/$i' was not foun
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -29930,7 +29889,6 @@ echo "$as_me: error: Specifically requested BLAS include file '$_sci_inc/$i' was
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -30414,7 +30372,6 @@ echo "$as_me: error: Specifically requested BLAS include file '$_sci_inc/$i' was
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -30858,7 +30815,6 @@ echo "$as_me: error: Specifically requested BLAS include file '/$i' was not foun
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -31297,7 +31253,6 @@ echo "$as_me: error: Specifically requested BLAS include file '/$i' was not foun
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -31738,7 +31693,6 @@ echo "$as_me: error: Specifically requested BLAS include file '/$i' was not foun
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested BLAS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -32225,7 +32179,6 @@ echo "$as_me: error: Specifically requested LAPACK include file '/$i' was not fo
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for /$i
     if test ! -e /lib$i.so && test ! -e /lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested LAPACK library file '/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested LAPACK library file '/$i' (.so or .a) was not found" >&2;}
@@ -32668,7 +32621,6 @@ echo "$as_me: error: Specifically requested LAPACK include file '/$i' was not fo
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested LAPACK library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested LAPACK library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -33110,7 +33062,6 @@ echo "$as_me: error: Specifically requested LAPACK include file '/$i' was not fo
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested LAPACK library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested LAPACK library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -33560,7 +33511,6 @@ echo "$as_me: error: Specifically requested LAPACK include file '/$i' was not fo
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested LAPACK library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested LAPACK library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -34001,7 +33951,6 @@ echo "$as_me: error: Specifically requested LAPACKMP include file '/$i' was not 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested LAPACKMP library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested LAPACKMP library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -34552,7 +34501,6 @@ echo "$as_me: error: Specifically requested MPI include file '$_sci_inc /usr/inc
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -35045,7 +34993,6 @@ echo "$as_me: error: Specifically requested MPI include file '$_sci_inc /usr/inc
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -35535,7 +35482,6 @@ echo "$as_me: error: Specifically requested MPI include file '$_sci_inc /usr/inc
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -36025,7 +35971,6 @@ echo "$as_me: error: Specifically requested MPI include file '$_sci_inc /usr/inc
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested MPI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -36702,7 +36647,6 @@ echo "$as_me: error: Specifically requested MPI_UNI include file '$_sci_inc/$i' 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested MPI_UNI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested MPI_UNI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -37182,7 +37126,6 @@ echo "$as_me: error: Specifically requested MPI_UNICH include file '$_sci_inc/$i
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested MPI_UNICH library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested MPI_UNICH library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -37737,7 +37680,6 @@ echo "$as_me: error: Specifically requested PETSC include file '$_sci_inc /usr/i
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i
     if test ! -e $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.so && test ! -e $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested PETSC library file '$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested PETSC library file '$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&2;}
@@ -38221,7 +38163,6 @@ echo "$as_me: error: Specifically requested PETSC include file '$_sci_inc /usr/i
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i
     if test ! -e $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.so && test ! -e $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested PETSC library file '$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested PETSC library file '$_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&2;}
@@ -38729,7 +38670,6 @@ echo "$as_me: error: Specifically requested PETSC_UNI include file '$_sci_inc /u
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested PETSC_UNI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested PETSC_UNI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -39212,7 +39152,6 @@ echo "$as_me: error: Specifically requested PETSC-UNI include file '$_sci_inc /u
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested PETSC-UNI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested PETSC-UNI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -40030,7 +39969,6 @@ echo "$as_me: error: Specifically requested SIDL include file '$_sci_inc/$i' was
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested SIDL library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested SIDL library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -40545,7 +40483,6 @@ echo "$as_me: error: Specifically requested NETSOLVE include file '/$i' was not 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested NETSOLVE library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested NETSOLVE library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -41166,7 +41103,6 @@ echo "$as_me: error: Specifically requested GLUT include file '$_sci_inc/$i' was
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested GLUT library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested GLUT library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -41837,7 +41773,6 @@ echo "$as_me: error: Specifically requested GLUI include file '$_sci_inc/$i' was
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested GLUI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested GLUI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -42354,7 +42289,6 @@ echo "$as_me: error: Specifically requested OOGL include file '$_sci_inc/$i' was
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested OOGL library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested OOGL library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -42894,7 +42828,6 @@ echo "$as_me: error: Specifically requested GLEW include file '$_sci_inc/$i' was
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested GLEW library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested GLEW library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -43434,7 +43367,6 @@ echo "$as_me: error: Specifically requested FREETYPE include file '$_sci_inc/$i'
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested FREETYPE library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested FREETYPE library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -43958,7 +43890,6 @@ echo "$as_me: error: Specifically requested FTGL include file '$_sci_inc/$i' was
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested FTGL library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested FTGL library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -44421,7 +44352,6 @@ echo "$as_me: error: Specifically requested AUDIO include file '/$i' was not fou
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested AUDIO library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested AUDIO library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -45000,7 +44930,6 @@ echo "$as_me: error: Specifically requested TEEM include file '$_sci_inc/$i' was
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG/$i
     if test ! -e $_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG/lib$i.so && test ! -e $_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested TEEM library file '$_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested TEEM library file '$_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&2;}
@@ -45555,7 +45484,6 @@ echo "$as_me: error: Specifically requested MDSPLUS include file '$_sci_inc/$i' 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested MDSPLUS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested MDSPLUS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -46074,7 +46002,6 @@ echo "$as_me: error: Specifically requested HDF5 include file '$_sci_inc/$i' was
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested HDF5 library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested HDF5 library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -46533,7 +46460,6 @@ echo "$as_me: error: Specifically requested PERFEX include file '/$i' was not fo
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested PERFEX library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested PERFEX library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -46991,7 +46917,6 @@ echo "$as_me: error: Specifically requested CRYPTO include file '/$i' was not fo
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested CRYPTO library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested CRYPTO library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -47460,7 +47385,6 @@ echo "$as_me: error: Specifically requested SSL include file '/$i' was not found
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested SSL library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested SSL library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -47982,7 +47906,6 @@ echo "$as_me: error: Specifically requested GLOBUS include file '$_sci_inc/$i' w
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested GLOBUS library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested GLOBUS library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -48764,7 +48687,6 @@ echo "$as_me: error: Specifically requested QT_MT include file '$_sci_inc/$i' wa
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested QT_MT library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested QT_MT library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -49325,7 +49247,6 @@ echo "$as_me: error: Specifically requested RUBY include file '$_ruby_inc/$i' wa
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested RUBY library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested RUBY library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -49836,7 +49757,6 @@ echo "$as_me: error: Specifically requested VTK include file '$_vtk_inc/$i' was 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested VTK library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested VTK library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
@@ -50372,7 +50292,6 @@ echo "$as_me: error: Specifically requested VDT include file '$_vdt_inc/$i' was 
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_vdt_lib_path/$i
     if test ! -e $_vdt_lib_path/lib$i.so && test ! -e $_vdt_lib_path/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested VDT library file '$_vdt_lib_path/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested VDT library file '$_vdt_lib_path/$i' (.so or .a) was not found" >&2;}
@@ -50886,7 +50805,6 @@ echo "$as_me: error: Specifically requested HYPRE include file '$_sci_inc/$i' wa
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    #echo looking for $_sci_lib/$i
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
      { { echo "$as_me:$LINENO: error: Specifically requested HYPRE library file '$_sci_lib/$i' (.so or .a) was not found" >&5
 echo "$as_me: error: Specifically requested HYPRE library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
