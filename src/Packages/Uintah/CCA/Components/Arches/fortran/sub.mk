@@ -24,6 +24,7 @@ SRCS += \
 	$(SRCDIR)/bcwvel.F \
 	$(SRCDIR)/calcpressgrad.F \
 	$(SRCDIR)/calpbc.F \
+        $(SRCDIR)/hatvelcalpbc.F \
 	$(SRCDIR)/cellg.F \
 	$(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/computeVel.F \
@@ -42,6 +43,7 @@ SRCS += \
 	$(SRCDIR)/linegs.F \
 	$(SRCDIR)/mascal.F \
 	$(SRCDIR)/mascal_scalar.F \
+	$(SRCDIR)/uvelcoeffupdate.F \
 	$(SRCDIR)/mm_computevel.F\
 	$(SRCDIR)/mm_modify_prescoef.F \
 	$(SRCDIR)/mmbcvelocity.F \
@@ -53,6 +55,8 @@ SRCS += \
 	$(SRCDIR)/outletbc.F \
 	$(SRCDIR)/outletbcenth.F \
 	$(SRCDIR)/prescoef.F \
+        $(SRCDIR)/prescoef_var.F \
+        $(SRCDIR)/pressrcpred_var.F \
 	$(SRCDIR)/pressrc.F \
 	$(SRCDIR)/pressrccorr.F \
 	$(SRCDIR)/pressrcpred.F \
@@ -123,9 +127,11 @@ $(SRCDIR)/outletbcenth.o: $(SRCDIR)/outletbcenth_fort.h
 $(SRCDIR)/prdbc1.o: $(SRCDIR)/prdbc1_fort.h
 $(SRCDIR)/prdbc2.o: $(SRCDIR)/prdbc2_fort.h
 $(SRCDIR)/prescoef.o: $(SRCDIR)/prescoef_fort.h
+$(SRCDIR)/prescoef_var.o: $(SRCDIR)/prescoef_var_fort.h
 $(SRCDIR)/pressrc.o: $(SRCDIR)/pressrc_fort.h
 $(SRCDIR)/pressrccorr.o: $(SRCDIR)/pressrccorr_fort.h
 $(SRCDIR)/pressrcpred.o: $(SRCDIR)/pressrcpred_fort.h
+$(SRCDIR)/pressrcpred_var.o: $(SRCDIR)/pressrcpred_var_fort.h
 $(SRCDIR)/profscalar.o: $(SRCDIR)/profscalar_fort.h
 $(SRCDIR)/profv.o: $(SRCDIR)/profv_fort.h
 $(SRCDIR)/rescal.o: $(SRCDIR)/rescal_fort.h

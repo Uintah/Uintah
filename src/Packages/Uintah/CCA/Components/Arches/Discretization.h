@@ -13,7 +13,6 @@
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 
 #include <Core/Containers/Array1.h>
-
 namespace Uintah {
   class ProcessorGroup;
 
@@ -136,6 +135,11 @@ public:
       void calculateScalarDiagonal(const ProcessorGroup*,
 				   const Patch* patch,
 				   int Index, ArchesVariables* vars);
+
+      void computeDivergence(const ProcessorGroup*,
+				  const Patch* patch,
+				  ArchesVariables* vars);
+
 protected:
 
 private:

@@ -48,6 +48,7 @@ c     Local Variables :
 c*********************************************************************
       integer IST, JST, KST, IEND, JEND, KEND
       integer i, j, k
+      double precision avden, avdenlow
 
 c*********************************************************************
 c     Start :
@@ -71,19 +72,30 @@ c*********************************************************************
          DO 190 K=KST,KEND
 	    DO 180 J=JST,JEND
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                  UU(I,J,K) = -delta_t*uvwout*(old_uu(i,j,k)-
-     $                         old_uu(i-1,j,k))/dxpwu(i) + 
-     $                         old_uu(i,j,k)
+                  avden = 0.5*(den(i,j,k)+den(i-1,j,k))
+                  avdenlow = 0.5*(den(i-1,j,k)+den(i-2,j,k))
+c                  avden = 1.0
+c                  avdenlow = 1.0
+                  UU(I,J,K) = (-delta_t*uvwout*(avden*old_uu(i,j,k)-
+     $                         avdenlow*old_uu(i-1,j,k))/(dxpwu(i)) + 
+     $                         avden*old_uu(i,j,k))/avden
+                  flowout = flowout+ avden*
+     $                 uu(i,j,k)*sns(j)*stb(k)
                   UU(I+1,J,K) = uu(i,j,k)
                   VV(I,J,K) = -delta_t*uvwout*(old_vv(i,j,k)-
-     $                         old_vv(i-1,j,k))/dxpw(i) + 
+     $                         old_vv(i-1,j,k))/(dxpw(i)) + 
      $                         old_vv(i,j,k)
                   WW(I,J,K) = -delta_t*uvwout*(old_ww(i,j,k)-
-     $                         old_ww(i-1,j,k))/dxpw(i) + 
+     $                         old_ww(i-1,j,k))/(dxpw(i)) + 
      $                         old_ww(i,j,k)
                   ff(i,j,k) = -delta_t*uvwout*(old_ff(i,j,k)-
-     $                         old_ff(i-1,j,k))/dxpw(i) + 
+     $                         old_ff(i-1,j,k))/(dxpw(i)) + 
      $                         old_ff(i,j,k)
+                  if (ff(i,j,k) .lt. 0.0) then 
+                     ff(i,j,k) = 0.0
+                  else if (ff(i,j,k) .gt. 1.0) then
+                     ff(i,j,k) = 1.0
+                  endif
                endif
  180        CONTINUE
  190     CONTINUE

@@ -48,7 +48,7 @@ using namespace SCIRun;
   class CellInformation;
 class VarLabel;
 class GeometryPiece;
-class TurbulenceModel;
+class PhysicalConstants;
 class Properties;
 class Stream;
 class InletStream;
@@ -72,7 +72,7 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // BoundaryCondition constructor used in  PSE
       BoundaryCondition(const ArchesLabel* label, const MPMArchesLabel* MAlb,
-			TurbulenceModel* turb_model, Properties* props,
+			PhysicalConstants* phyConsts, Properties* props,
 			bool calcReactScalar, bool calcEnthalpy);
 
       // GROUP: Destructors:
@@ -145,6 +145,9 @@ public:
 				  const MaterialSet* matls);
       void sched_computeOMB(SchedulerP& sched, const PatchSet* patches,
 			    const MaterialSet* matls);
+
+      void sched_correctOutletBC(SchedulerP& sched, const PatchSet* patches,
+				 const MaterialSet* matls);
 
       void sched_transOutletBC(SchedulerP& sched, 
 			       const PatchSet* patches,
@@ -347,6 +350,12 @@ private:
 		      DataWarehouse* old_dw,
 		      DataWarehouse* new_dw);
 
+      void correctOutletBC(const ProcessorGroup* pc,
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw);
+
       ////////////////////////////////////////////////////////////////////////
       // Actually calculate pressure bcs
       void calcPressureBC(const ProcessorGroup* pc,
@@ -440,7 +449,7 @@ private:
 private:
 
       // used for calculating wall boundary conditions
-      TurbulenceModel* d_turbModel;
+      PhysicalConstants* d_physicalConsts;
       // used to get properties of different streams
       Properties* d_props;
       // mass flow

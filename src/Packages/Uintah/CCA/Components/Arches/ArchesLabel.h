@@ -60,6 +60,7 @@ namespace Uintah {
       // Labels for inlet and flow rate
       const VarLabel* d_totalflowINLabel;
       const VarLabel* d_totalflowOUTLabel;
+      const VarLabel* d_netflowOUTBCLabel;
       const VarLabel* d_totalflowOUToutbcLabel;
       // net outlet area, mass balance, and overall outlet velocity
       const VarLabel* d_totalAreaOUTLabel;
@@ -73,6 +74,10 @@ namespace Uintah {
 
       // for old_dw in computeProps
       const VarLabel* d_densityCPLabel;
+
+      // for computing divergence constraint
+      const VarLabel* d_drhodfCPLabel;
+      const VarLabel* d_drhodfPredLabel;
 
       // computed for old_dw in setProfile
       const VarLabel* d_densitySPLabel;
@@ -256,6 +261,15 @@ namespace Uintah {
       // Scalar Coef
 
       const VarLabel* d_scalCoefSBLMLabel;
+
+      // scalar diffusion coeffs, required for divergence constraint
+      const VarLabel* d_scalDiffCoefPredLabel;
+
+      const VarLabel* d_scalDiffCoefCorrLabel;
+
+      const VarLabel* d_enthDiffCoefPredLabel;
+
+      const VarLabel* d_enthDiffCoefCorrLabel;
 
       // Scalar Conv Coef
 
@@ -497,6 +511,8 @@ namespace Uintah {
       const VarLabel* d_uVelRhoHatLabel;
       const VarLabel* d_vVelRhoHatLabel;
       const VarLabel* d_wVelRhoHatLabel;
+      // divergence constraint
+      const VarLabel* d_divConstraintLabel;
 
       const VarLabel* d_pressurePredLabel;
       const VarLabel* d_pressureCorrSPBCLabel;

@@ -74,12 +74,12 @@ c             note: with d's in the a's, a's will always be finite
 c                   unless explicitly set to zero
 c                   and at symtry planes the velocity is also zero
 c
-                  if (ae(i,j,k).lt.tiny) cesav(i,j,k) = zero
-                  if (aw(i,j,k).lt.tiny) cwsav(i,j,k) = zero
-                  if (an(i,j,k).lt.tiny) cnsav(i,j,k) = zero
-                  if (as(i,j,k).lt.tiny) cssav(i,j,k) = zero
-                  if (at(i,j,k).lt.tiny) ctsav(i,j,k) = zero
-                  if (ab(i,j,k).lt.tiny) cbsav(i,j,k) = zero
+                  if (abs(ae(i,j,k)).lt.tiny) cesav(i,j,k) = zero
+                  if (abs(aw(i,j,k)).lt.tiny) cwsav(i,j,k) = zero
+                  if (abs(an(i,j,k)).lt.tiny) cnsav(i,j,k) = zero
+                  if (abs(as(i,j,k)).lt.tiny) cssav(i,j,k) = zero
+                  if (abs(at(i,j,k)).lt.tiny) ctsav(i,j,k) = zero
+                  if (abs(ab(i,j,k)).lt.tiny) cbsav(i,j,k) = zero
 
  400           continue
  410        continue
@@ -97,11 +97,12 @@ c-----calculate mass source------------------------------------------
                smp = cnsav(i,j,k) - cssav(i,j,k) + cesav(i,j,k) -
      &              cwsav(i,j,k) + ctsav(i,j,k) - cbsav(i,j,k) 
 c    $              - sign*spm(i,j,k)
-               cpplus = max(zero,smp)
-               cpo = - min(zero,smp)*tcons
-               if (l2up.and..not.ltest) cpo = cpplus*tcons
-               su(i,j,k) = su(i,j,k) + cpo*phi(i,j,k)
-               sp(i,j,k) = sp(i,j,k) - cpplus
+c               cpplus = max(zero,smp)
+c               cpo = - min(zero,smp)*tcons
+c               if (l2up.and..not.ltest) cpo = cpplus*tcons
+c               su(i,j,k) = su(i,j,k) + cpo*phi(i,j,k)
+               su(i,j,k) = su(i,j,k) - smp*phi(i,j,k)
+c               sp(i,j,k) = sp(i,j,k) - cpplus
 
  500        continue
  510     continue

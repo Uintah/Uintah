@@ -122,20 +122,22 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   // read turbulence mode
   // read turbulence model
-  string turbModel;
-  db->require("turbulence_model", turbModel);
-  if (turbModel == "smagorinsky") 
-    d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts);
-  else 
-    throw InvalidValue("Turbulence Model not supported" + turbModel);
-  d_turbModel->problemSetup(db);
 
   // read boundary
-  d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_turbModel,
+  d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
 						 d_props, d_calcReactingScalar,
 						 d_calcEnthalpy);
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->problemSetup(db);
+  string turbModel;
+  db->require("turbulence_model", turbModel);
+  if (turbModel == "smagorinsky") 
+    d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
+					  d_boundaryCondition);
+  else 
+    throw InvalidValue("Turbulence Model not supported" + turbModel);
+  d_turbModel->problemSetup(db);
+
   d_props->setBC(d_boundaryCondition);
 
   string nlSolver;

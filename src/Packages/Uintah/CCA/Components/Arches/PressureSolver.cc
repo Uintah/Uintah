@@ -1132,10 +1132,10 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 		  Ghost::AroundCells, numGhostCells+1);
 #ifdef correctorstep
     tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
-		  Ghost::AroundCells, numGhostCells+1);
+		  Ghost::AroundCells, numGhostCells);
 #else
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
-		  Ghost::AroundCells, numGhostCells+1);
+		  Ghost::AroundCells, numGhostCells);
 #endif
     tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
 		  Ghost::AroundCells, numGhostCells);
@@ -1145,8 +1145,33 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 		  Ghost::AroundFaces, numGhostCells+1);
     tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
 		  Ghost::AroundFaces, numGhostCells+1);
+#if 0
+    tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,
+		  Ghost::None, zeroGhostCells);
+    tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,
+		  Ghost::None, zeroGhostCells);
+    tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,
+		  Ghost::None, zeroGhostCells);
+#endif
     tsk->requires(Task::NewDW, d_lab->d_denRefArrayLabel,
     		  Ghost::AroundCells, numGhostCells);
+    // required for computing div constraint
+#ifdef divergenceconstraint
+#ifdef correctorstep
+    tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
+		  Ghost::AroundCells, numGhostCells);
+    tsk->requires(Task::NewDW, d_lab->d_drhodfPredLabel, 
+		  Ghost::None, zeroGhostCells);
+#else
+    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
+		  Ghost::AroundCells, numGhostCells);
+    tsk->requires(Task::NewDW, d_lab->d_drhodfCPLabel, 
+		  Ghost::None, zeroGhostCells);
+#endif
+    tsk->requires(Task::NewDW, d_lab->d_scalDiffCoefPredLabel, 
+		  d_lab->d_stencilMatl, Task::OutOfDomain,
+		  Ghost::None, zeroGhostCells);
+#endif
 
     // for multi-material
     // requires su_drag[x,y,z], sp_drag[x,y,z] for arches
@@ -1176,7 +1201,9 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
     tsk->computes(d_lab->d_uVelRhoHatLabel);
     tsk->computes(d_lab->d_vVelRhoHatLabel);
     tsk->computes(d_lab->d_wVelRhoHatLabel);
-    
+#ifdef divergenceconstraint
+    tsk->computes(d_lab->d_divConstraintLabel);
+#endif
     sched->addTask(tsk, patches, matls);
   }
 
@@ -1241,6 +1268,10 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel,
 		  Ghost::AroundFaces, numGhostCells);
+#ifdef divergenceconstraint
+    tsk->requires(Task::NewDW, d_lab->d_divConstraintLabel,
+		  Ghost::None, zeroGhostCells);
+#endif
     tsk->computes(d_lab->d_presNonLinSrcPBLMLabel);
 
     if (d_MAlab) {
@@ -1305,6 +1336,27 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     new_dw->getCopy(pressureVars.denRefArray, d_lab->d_denRefArrayLabel,
     		matlIndex, patch, Ghost::AroundCells, numGhostCells);
 
+#ifdef divergenceconstraint
+#ifdef correctorstep
+    new_dw->getCopy(pressureVars.scalar, d_lab->d_scalarPredLabel,
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->getCopy(pressureVars.drhodf, d_lab->d_drhodfPredLabel,
+		    matlIndex, patch);
+#else
+    new_dw->getCopy(pressureVars.scalar, d_lab->d_scalarSPLabel,
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->getCopy(pressureVars.drhodf, d_lab->d_drhodfCPLabel,
+		    matlIndex, patch);
+#endif
+    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
+      new_dw->getCopy(pressureVars.scalarDiffusionCoeff[ii], 
+		      d_lab->d_scalDiffCoefPredLabel, 
+		      ii, patch, Ghost::None, zeroGhostCells);
+    new_dw->allocate(pressureVars.divergence, d_lab->d_divConstraintLabel,
+		     matlIndex, patch);
+    pressureVars.divergence.initialize(0.0);
+#endif
+
     PerPatch<CellInformationP> cellInfoP;
 
     //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
@@ -1333,19 +1385,19 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 #if 0
     old_dw->getCopy(pressureVars.old_uVelocity, d_lab->d_uVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+		matlIndex, patch, Ghost::None, zeroGhostCells);
     old_dw->getCopy(pressureVars.old_vVelocity, d_lab->d_vVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+		matlIndex, patch, Ghost::None, zeroGhostCells);
     old_dw->getCopy(pressureVars.old_wVelocity, d_lab->d_wVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
-#endif
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+#else
     new_dw->getCopy(pressureVars.old_uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->getCopy(pressureVars.old_vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->getCopy(pressureVars.old_wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-
+#endif
     new_dw->getCopy(pressureVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->getCopy(pressureVars.cellType, d_lab->d_cellTypeLabel, 
@@ -1515,18 +1567,26 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     //           [u,v,w]VelConvCoefPBLM, [u,v,w]VelLinSrcPBLM, 
     //           [u,v,w]VelNonLinSrcPBLM
     //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
+#if 0
+      d_discretize->calculateVelDiagonal(pc, patch,
+					 index,
+					 &pressureVars);
 
-    d_source->modifyVelMassSource(pc, patch, delta_t, index,
-				  &pressureVars);
+      d_source->modifyVelMassSource(pc, patch, delta_t, index,
+				    &pressureVars);
+#endif
+      d_source->modifyVelMassSource(pc, patch, delta_t, index,
+				    &pressureVars);
+      d_discretize->calculateVelDiagonal(pc, patch,
+					 index,
+					 &pressureVars);
 
-    // Calculate Velocity diagonal
-    //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
-    //  outputs: [u,v,w]VelCoefPBLM
 
-    d_discretize->calculateVelDiagonal(pc, patch,
-				       index,
-				       &pressureVars);
-    d_discretize->calculateVelRhoHat(pc, patch, index, delta_t,
+      // Calculate Velocity diagonal
+      //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
+      //  outputs: [u,v,w]VelCoefPBLM
+
+      d_discretize->calculateVelRhoHat(pc, patch, index, delta_t,
 				     cellinfo, &pressureVars);
 
 #ifdef ARCHES_PRES_DEBUG
@@ -1534,9 +1594,15 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 #endif
     
     }
-    d_boundaryCondition->newrecomputePressureBC(pc, patch,
-						cellinfo, &pressureVars); 
+    d_boundaryCondition->newrecomputePressureBC(pc, patch, cellinfo,
+						&pressureVars);
 
+#ifdef divergenceconstraint    
+    // compute divergence constraint to use in pressure equation
+    d_discretize->computeDivergence(pc, patch, &pressureVars);
+    new_dw->put(pressureVars.divergence, d_lab->d_divConstraintLabel,
+		matlIndex, patch);
+#endif
   // put required vars
 
     new_dw->put(pressureVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel, 
@@ -1621,6 +1687,10 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
     new_dw->getCopy(pressureVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel, 
 		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     //**warning
+#ifdef divergenceconstraint
+    new_dw->getCopy(pressureVars.divergence, d_lab->d_divConstraintLabel,
+		    matlIndex, patch, Ghost::None, zeroGhostCells);
+#endif
     new_dw->getCopy(pressureVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     old_dw->getCopy(pressureVars.old_old_density, d_lab->d_densityINLabel, 
@@ -1669,11 +1739,16 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
     // Calculate Pressure BC
     //  inputs : pressureIN, presCoefPBLM
     //  outputs: presCoefPBLM
+
+
     d_discretize->calculatePressDiagonal(pc, patch, old_dw, new_dw, 
 					 &pressureVars);
 
     d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw, 
 				    cellinfo, &pressureVars);
+
+
+
     // do multimaterial bc
 
     if (d_MAlab)
@@ -1955,13 +2030,22 @@ PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		  Ghost::AroundCells, numGhostCells);
     //    tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
     //		  Ghost::None, zeroGhostCells);
+#if 1
     tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
-		  Ghost::AroundFaces, numGhostCells+1);
+		  Ghost::None, zeroGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel,
-		  Ghost::AroundFaces, numGhostCells+1);
+		  Ghost::AroundFaces, zeroGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
-		  Ghost::AroundFaces, numGhostCells+1);
+		  Ghost::AroundFaces, zeroGhostCells);
 
+#else
+    tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,
+		  Ghost::None, zeroGhostCells);
+    tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,
+		  Ghost::None, zeroGhostCells);
+    tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,
+		  Ghost::None, zeroGhostCells);
+#endif
   // from new_dw
   // for new task graph to work
 
@@ -1983,6 +2067,15 @@ PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		  Ghost::AroundFaces, numGhostCells+1);
     tsk->requires(Task::NewDW, d_lab->d_denRefArrayLabel,
     		  Ghost::AroundCells, numGhostCells);
+#ifdef divergenceconstraint
+    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
+		  Ghost::AroundCells, numGhostCells);
+    tsk->requires(Task::NewDW, d_lab->d_drhodfCPLabel, 
+		  Ghost::None, zeroGhostCells);
+    tsk->requires(Task::NewDW, d_lab->d_scalDiffCoefCorrLabel, 
+		  d_lab->d_stencilMatl, Task::OutOfDomain,
+		  Ghost::None, zeroGhostCells);
+#endif
 
     // for multi-material
     // requires su_drag[x,y,z], sp_drag[x,y,z] for arches
@@ -2012,6 +2105,9 @@ PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
     tsk->computes(d_lab->d_uVelRhoHatCorrLabel);
     tsk->computes(d_lab->d_vVelRhoHatCorrLabel);
     tsk->computes(d_lab->d_wVelRhoHatCorrLabel);
+#ifdef divergenceconstraint
+    tsk->modifies(d_lab->d_divConstraintLabel);
+#endif
     
     sched->addTask(tsk, patches, matls);
   }
@@ -2055,6 +2151,10 @@ PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatCorrLabel,
 		  Ghost::AroundFaces, numGhostCells);
+#ifdef divergenceconstraint
+    tsk->requires(Task::NewDW, d_lab->d_divConstraintLabel,
+		  Ghost::None, zeroGhostCells);
+#endif
 
     tsk->computes(d_lab->d_presCoefCorrLabel, d_lab->d_stencilMatl,
 		   Task::OutOfDomain);
@@ -2109,6 +2209,20 @@ PressureSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     new_dw->getCopy(pressureVars.denRefArray, d_lab->d_denRefArrayLabel,
     		matlIndex, patch, Ghost::AroundCells, numGhostCells);
 
+#ifdef divergenceconstraint
+    new_dw->getCopy(pressureVars.scalar, d_lab->d_scalarSPLabel,
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->getCopy(pressureVars.drhodf, d_lab->d_drhodfCPLabel,
+		    matlIndex, patch);
+    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
+      new_dw->getCopy(pressureVars.scalarDiffusionCoeff[ii], 
+		      d_lab->d_scalDiffCoefCorrLabel, 
+		      ii, patch, Ghost::None, zeroGhostCells);
+    new_dw->getModifiable(pressureVars.divergence, d_lab->d_divConstraintLabel,
+		          matlIndex, patch);
+    pressureVars.divergence.initialize(0.0);
+#endif
+
     PerPatch<CellInformationP> cellInfoP;
 
     //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
@@ -2135,12 +2249,21 @@ PressureSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(pressureVars.wVelocity, d_lab->d_wVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+#if 1
     new_dw->getCopy(pressureVars.old_uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->getCopy(pressureVars.old_vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->getCopy(pressureVars.old_wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
+#else
+    old_dw->getCopy(pressureVars.old_uVelocity, d_lab->d_uVelocitySPBCLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    old_dw->getCopy(pressureVars.old_vVelocity, d_lab->d_vVelocitySPBCLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    old_dw->getCopy(pressureVars.old_wVelocity, d_lab->d_wVelocitySPBCLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+#endif
 
     new_dw->getCopy(pressureVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
@@ -2311,17 +2434,25 @@ PressureSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     //           [u,v,w]VelConvCoefPBLM, [u,v,w]VelLinSrcPBLM, 
     //           [u,v,w]VelNonLinSrcPBLM
     //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
+#if 0
+      d_discretize->calculateVelDiagonal(pc, patch,
+					 index,
+					 &pressureVars);
 
-    d_source->modifyVelMassSource(pc, patch, delta_t, index,
-				  &pressureVars);
+      d_source->modifyVelMassSource(pc, patch, delta_t, index,
+				    &pressureVars);
+#endif
+      d_source->modifyVelMassSource(pc, patch, delta_t, index,
+				    &pressureVars);
+      d_discretize->calculateVelDiagonal(pc, patch,
+					 index,
+					 &pressureVars);
+
 
     // Calculate Velocity diagonal
     //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
     //  outputs: [u,v,w]VelCoefPBLM
 
-    d_discretize->calculateVelDiagonal(pc, patch,
-				       index,
-				       &pressureVars);
     d_discretize->calculateVelRhoHat(pc, patch, index, delta_t,
 				     cellinfo, &pressureVars);
 
@@ -2331,7 +2462,12 @@ PressureSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     
     }
     d_boundaryCondition->newrecomputePressureBC(pc, patch,
-						cellinfo, &pressureVars); 
+    						cellinfo, &pressureVars); 
+#ifdef divergenceconstraint    
+    // compute divergence constraint to use in pressure equation
+    d_discretize->computeDivergence(pc, patch, &pressureVars);
+#endif
+
 
   // put required vars
 
@@ -2413,6 +2549,10 @@ PressureSolver::buildLinearMatrixPressCorr(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(pressureVars.wVelRhoHat, d_lab->d_wVelRhoHatCorrLabel, 
 		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+#ifdef divergenceconstraint
+    new_dw->getCopy(pressureVars.divergence, d_lab->d_divConstraintLabel,
+		    matlIndex, patch, Ghost::None, zeroGhostCells);
+#endif
     
     // Calculate Pressure Coeffs
     //  inputs : densityIN, pressureIN, [u,v,w]VelCoefPBLM[Arches::AP]
