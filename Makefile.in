@@ -183,6 +183,7 @@ endif
 	rm -f y.output
 	rm -Rf $(LIBDIR)
 	-rm -f sciTAGS
+	rm -f on-the-fly-libs/*.*
 
 distclean:: clean
 	rm -f config.status config.log config.cache
