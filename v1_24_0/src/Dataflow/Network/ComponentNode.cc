@@ -36,20 +36,18 @@
  *   University of Utah
  */
 
-#include <Core/Util/RWS.h>
 #include <Dataflow/Network/ComponentNode.h>
+
 #include <Dataflow/XMLUtil/XMLUtil.h>
-#include <Dataflow/Network/PackageDBHandler.h>
 #include <Dataflow/XMLUtil/StrX.h>
+#include <Dataflow/Network/PackageDBHandler.h>
+#include <Core/Util/RWS.h>
+
+#include <stdlib.h>
 
 #include <iostream>
 #include <fstream>
-#include <stdlib.h>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#define IRIX
-#pragma set woff 1375
-#endif
 #include <xercesc/util/TransService.hpp>
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/sax/SAXException.hpp>
@@ -58,17 +56,13 @@
 #include <xercesc/dom/DOMNamedNodeMap.hpp>
 #include <xercesc/dom/DOMNodeList.hpp>
 #include <xercesc/sax/ErrorHandler.hpp>
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1375
-#endif
 
+using namespace SCIRun;
 using std::map;
 using std::cout;
 using std::endl;
 
 #define rWSgSC(x) removeLTWhiteSpace(getSerializedChildren(x))
-
-namespace SCIRun {
 
 typedef map<int,char*>::iterator char_iter;
 typedef map<int,parameter_node*>::iterator param_iter;
@@ -79,7 +73,8 @@ typedef map<int,file_node*>::iterator file_iter;
 typedef map<int,device_node*>::iterator device_iter;
 typedef map<int,implementation_node*>::iterator impl_iter;
 
-component_node* CreateComponentNode(int type)
+component_node*
+SCIRun::CreateComponentNode(int type)
 {
   component_node* n = new component_node;
   switch (type) {
@@ -142,7 +137,8 @@ component_node* CreateComponentNode(int type)
   return n;
 }
 
-void DestroyOverviewNode(overview_node* n)
+void
+DestroyOverviewNode(overview_node* n)
 {
   if (n->authors) {
     for(char_iter i=n->authors->begin();
@@ -156,14 +152,16 @@ void DestroyOverviewNode(overview_node* n)
   delete n;
 }
 
-void DestroyFileNode(file_node* n)
+void
+DestroyFileNode(file_node* n)
 {
   if (n->description && n->description!=NOT_SET) delete[] n->description;
   if (n->datatype && n->datatype!=NOT_SET) delete[] n->datatype;
   delete n;
 }
 
-void DestroyInportNode(inport_node* n)
+void
+DestroyInportNode(inport_node* n)
 {
   if (n->name && n->name!=NOT_SET) delete[] n->name;
   if (n->description && n->description!=NOT_SET) delete[] n->description;
@@ -181,7 +179,8 @@ void DestroyInportNode(inport_node* n)
   delete n;
 }
 
-void DestroyOutportNode(outport_node* n)
+void
+DestroyOutportNode(outport_node* n)
 {
   if (n->name && n->name!=NOT_SET) delete[] n->name;
   if (n->description && n->description!=NOT_SET) delete[] n->description;
@@ -199,13 +198,15 @@ void DestroyOutportNode(outport_node* n)
   delete n;
 }
 
-void DestroyDeviceNode(device_node* n)
+void
+DestroyDeviceNode(device_node* n)
 {
   if (n->devicename && n->devicename!=NOT_SET) delete[] n->devicename;
   if (n->description && n->description!=NOT_SET) delete[] n->description;
 }
 
-void DestroyIoNode(io_node* n)
+void
+DestroyIoNode(io_node* n)
 {
   inport_iter i2;
   outport_iter i3;
@@ -257,7 +258,8 @@ void DestroyIoNode(io_node* n)
   delete n;
 }
 
-void DestroyParameterNode(parameter_node* n)
+void
+DestroyParameterNode(parameter_node* n)
 {
   if (n->widget && n->widget!=NOT_SET) delete[] n->widget;
   if (n->datatype && n->datatype!=NOT_SET) delete[] n->datatype;
@@ -266,7 +268,8 @@ void DestroyParameterNode(parameter_node* n)
   delete n;
 }
 
-void DestroyGuiNode(gui_node* n)
+void
+DestroyGuiNode(gui_node* n)
 {
   if (n->description && n->description!=NOT_SET) delete[] n->description;
   if (n->image && n->image!=NOT_SET) delete[] n->image;
@@ -280,7 +283,8 @@ void DestroyGuiNode(gui_node* n)
   delete n;
 }
 
-void DestroyPlanNode(plan_node* n)
+void
+DestroyPlanNode(plan_node* n)
 {
   if (n->description && n->description!=NOT_SET) delete[] n->description;
 
@@ -294,7 +298,8 @@ void DestroyPlanNode(plan_node* n)
   delete n;
 }
 
-void DestroyImplementationNode(implementation_node* n)
+void
+DestroyImplementationNode(implementation_node* n)
 {
   char_iter i;
   for (i=n->ccfiles->begin();
@@ -311,7 +316,8 @@ void DestroyImplementationNode(implementation_node* n)
     delete[] (*i).second;
 }
 
-void DestroyComponentNode(component_node* n)
+void
+SCIRun::DestroyComponentNode(component_node* n)
 {
   if (n->name && n->name!=NOT_SET) delete[] n->name;
   if (n->category && n->category!=NOT_SET) delete[] n->category;
@@ -330,7 +336,8 @@ void DestroyComponentNode(component_node* n)
   delete n;
 }
 
-void PrintComponentNode(component_node* n)
+void
+SCIRun::PrintComponentNode(component_node* n)
 {
   char_iter i;
   file_iter i2;
@@ -492,8 +499,6 @@ void PrintComponentNode(component_node* n)
   }
 }
 
-
-
 void 
 ProcessFileNode(const DOMNode& d, file_node* n)
 {
@@ -511,11 +516,10 @@ ProcessFileNode(const DOMNode& d, file_node* n)
   }
 }
 
-void ProcessInportNode(const DOMNode& d, inport_node* n)
+void
+ProcessInportNode(const DOMNode& d, inport_node* n)
 {
-  for (DOMNode *child = d.getFirstChild();
-       child!=0;
-       child=child->getNextSibling()) 
+  for (DOMNode *child = d.getFirstChild(); child!=0; child=child->getNextSibling()) 
   {
     const XMLCh* childname = child->getNodeName();
     if (string_is(childname, "description") && n->description==NOT_SET)
@@ -530,7 +534,8 @@ void ProcessInportNode(const DOMNode& d, inport_node* n)
   }				       
 }
 
-void ProcessOutportNode(const DOMNode& d, outport_node* n)
+void
+ProcessOutportNode(const DOMNode& d, outport_node* n)
 {
   for (DOMNode *child = d.getFirstChild();
        child!=0;
@@ -548,7 +553,8 @@ void ProcessOutportNode(const DOMNode& d, outport_node* n)
   }
 }
 
-void ProcessDeviceNode(const DOMNode& d, device_node* n)
+void
+ProcessDeviceNode(const DOMNode& d, device_node* n)
 {
   for (DOMNode *child = d.getFirstChild();
        child!=0;
@@ -561,7 +567,8 @@ void ProcessDeviceNode(const DOMNode& d, device_node* n)
   }
 }
 
-void ProcessIoNode(const DOMNode& d, io_node* n)
+void
+ProcessIoNode(const DOMNode& d, io_node* n)
 {
   for (DOMNode *child = d.getFirstChild();
        child!=0;
@@ -648,7 +655,8 @@ void ProcessIoNode(const DOMNode& d, io_node* n)
   }
 }
 
-void ProcessParameterNode(const DOMNode& d, parameter_node* n)
+void
+ProcessParameterNode(const DOMNode& d, parameter_node* n)
 {
   for (DOMNode *child = d.getFirstChild();
        child!=0;
@@ -665,7 +673,8 @@ void ProcessParameterNode(const DOMNode& d, parameter_node* n)
   }
 }
 
-void ProcessGuiNode(const DOMNode& d, gui_node* n)
+void
+ProcessGuiNode(const DOMNode& d, gui_node* n)
 {
   for (DOMNode *child = d.getFirstChild();
        child!=0;
@@ -688,7 +697,8 @@ void ProcessGuiNode(const DOMNode& d, gui_node* n)
   }
 }
 
-void ProcessPlanNode(const DOMNode& d, plan_node* n)
+void
+ProcessPlanNode(const DOMNode& d, plan_node* n)
 {
   for (DOMNode *child = d.getFirstChild();
        child!=0;
@@ -702,7 +712,8 @@ void ProcessPlanNode(const DOMNode& d, plan_node* n)
   }
 }
 
-void ProcessOverviewNode(const DOMNode& d, overview_node* n)
+void
+ProcessOverviewNode(const DOMNode& d, overview_node* n)
 {
   for (DOMNode *child = d.getFirstChild();
        child!=0;
@@ -714,8 +725,12 @@ void ProcessOverviewNode(const DOMNode& d, overview_node* n)
            author = author->getNextSibling()) {
         const XMLCh* authorname = author->getNodeName();
         if (string_is(authorname, "author")) {
-	  char* nv = 
-	    strdup(to_char_ptr(author->getFirstChild()->getNodeValue()));
+          
+          // Copy the author into a new string.
+          const char * author_p = to_char_ptr(author->getFirstChild()->getNodeValue());
+          char * nv = new char[strlen( author_p )];
+          sprintf( nv, "%s", author_p );
+
           n->authors->insert(std::pair<int,char*>(n->authors->size(), nv));
 	}
       }
@@ -729,7 +744,8 @@ void ProcessOverviewNode(const DOMNode& d, overview_node* n)
   }
 }
 
-void ProcessImplementationNode(const DOMNode& d, implementation_node* n)
+void
+ProcessImplementationNode(const DOMNode& d, implementation_node* n)
 {
   for (DOMNode *child = d.getFirstChild();
        child!=0;
@@ -745,7 +761,8 @@ void ProcessImplementationNode(const DOMNode& d, implementation_node* n)
   }
 }
 
-void ProcessComponentNode(const DOMNode& d, component_node* n)
+void
+SCIRun::ProcessComponentNode(const DOMNode& d, component_node* n)
 {
   if (n->name==NOT_SET) {
     const XMLCh* xs = to_xml_ch_ptr("name");
@@ -753,7 +770,10 @@ void ProcessComponentNode(const DOMNode& d, component_node* n)
     if (name == 0) 
       cout << "ERROR: Component has no name." << endl;
     else {
-      n->name = strdup(to_char_ptr(name->getNodeValue()));
+
+      char * name_p = new char[strlen(to_char_ptr(name->getNodeValue()))];
+      sprintf( name_p, "%s", to_char_ptr(name->getNodeValue()) );
+      n->name = name_p;
     }
   }
   
@@ -762,7 +782,10 @@ void ProcessComponentNode(const DOMNode& d, component_node* n)
     if (name == 0)
       cout << "ERROR: Component has no category." << endl;
     else {
-      n->category = strdup(to_char_ptr(name->getNodeValue()));
+      char * cat_p = new char[strlen(to_char_ptr(name->getNodeValue()))];
+      sprintf( cat_p, "%s", to_char_ptr(name->getNodeValue()) );
+
+      n->category = cat_p;
     }
   }
 
@@ -771,7 +794,11 @@ void ProcessComponentNode(const DOMNode& d, component_node* n)
     if (name == 0)
       cout << "ERROR: Component has no optional." << endl;
     else {
-      n->optional = strdup(to_char_ptr(name->getNodeValue()));
+
+      char * opt_p = new char[strlen(to_char_ptr(name->getNodeValue()))];
+      sprintf( opt_p, "%s", to_char_ptr(name->getNodeValue()) );
+
+      n->optional = opt_p;
     }
   }
 
@@ -811,7 +838,8 @@ void ProcessComponentNode(const DOMNode& d, component_node* n)
   }
 }
 
-void WriteOverviewNodeToStream(overview_node* n, std::ofstream& o)
+void
+WriteOverviewNodeToStream(overview_node* n, std::ofstream& o)
 {
   o << "  <overview>" << endl;
   
@@ -840,7 +868,8 @@ void WriteOverviewNodeToStream(overview_node* n, std::ofstream& o)
   o << "  </overview>" << endl;
 }
 
-void WriteFileNodeToStream(file_node* n, std::ofstream& o)
+void
+WriteFileNodeToStream(file_node* n, std::ofstream& o)
 {
   o << "      <file>" << endl;
 
@@ -856,7 +885,8 @@ void WriteFileNodeToStream(file_node* n, std::ofstream& o)
   o << "      </file>" << endl;
 }
 
-void WriteDeviceNodeToStream(device_node* n, std::ofstream& o)
+void
+WriteDeviceNodeToStream(device_node* n, std::ofstream& o)
 {
   o << "      <device>" << endl;
     
@@ -872,7 +902,8 @@ void WriteDeviceNodeToStream(device_node* n, std::ofstream& o)
   o << "      </device>" << endl;
 }
 
-void WriteInportNodeToStream(inport_node* n, std::ofstream& o)
+void
+WriteInportNodeToStream(inport_node* n, std::ofstream& o)
 {
   char_iter i;
 
@@ -901,7 +932,8 @@ void WriteInportNodeToStream(inport_node* n, std::ofstream& o)
   o << "      </port>" << endl;
 }
 
-void WriteOutportNodeToStream(outport_node* n, std::ofstream& o)
+void
+WriteOutportNodeToStream(outport_node* n, std::ofstream& o)
 {
   char_iter i;
 
@@ -930,7 +962,8 @@ void WriteOutportNodeToStream(outport_node* n, std::ofstream& o)
   o << "      </port>" << endl;
 }
 
-void WriteIoNodeToStream(io_node* n, std::ofstream& o)
+void
+WriteIoNodeToStream(io_node* n, std::ofstream& o)
 {
   file_iter i2;
   inport_iter i5;
@@ -998,7 +1031,8 @@ void WriteIoNodeToStream(io_node* n, std::ofstream& o)
   o << "  </io>" << endl;
 }
 
-void WriteParameterNodeToStream(parameter_node* n, std::ofstream& o)
+void
+WriteParameterNodeToStream(parameter_node* n, std::ofstream& o)
 {
   o << "    <parameter>" << endl;
 
@@ -1019,7 +1053,8 @@ void WriteParameterNodeToStream(parameter_node* n, std::ofstream& o)
   o << "    </parameter>" << endl;
 }
 
-void WriteGuiNodeToStream(gui_node* n, std::ofstream& o)
+void
+WriteGuiNodeToStream(gui_node* n, std::ofstream& o)
 {
   param_iter i2;
 
@@ -1043,7 +1078,8 @@ void WriteGuiNodeToStream(gui_node* n, std::ofstream& o)
   o << "  </gui>" << endl;
 }
 
-void WritePlanNodeToStream(plan_node* n, std::ofstream& o)
+void
+WritePlanNodeToStream(plan_node* n, std::ofstream& o)
 {
   char_iter i;
 
@@ -1065,7 +1101,8 @@ void WritePlanNodeToStream(plan_node* n, std::ofstream& o)
   o << "    </plan>" << endl;
 }
 
-void WriteImplementationNodeToStream(implementation_node* n, std::ofstream& o)
+void
+WriteImplementationNodeToStream(implementation_node* n, std::ofstream& o)
 {
   char_iter i;
 
@@ -1091,7 +1128,8 @@ void WriteImplementationNodeToStream(implementation_node* n, std::ofstream& o)
   }
 }
 
-void WriteComponentNodeToFile(component_node* n, const char* filename)
+void
+SCIRun::WriteComponentNodeToFile(component_node* n, const char* filename)
 {
   std::ofstream o(filename);
 
@@ -1133,8 +1171,9 @@ void WriteComponentNodeToFile(component_node* n, const char* filename)
   o << endl;
 }
 
-int ReadComponentNodeFromFile(component_node* n, const char* filename,
-			      GuiInterface* gui)
+int
+SCIRun::ReadComponentNodeFromFile(component_node* n, const char* filename,
+                                  GuiInterface* gui)
 {
   // Initialize the XML4C system
   try {
@@ -1180,7 +1219,4 @@ int ReadComponentNodeFromFile(component_node* n, const char* filename,
   }
   return 1;
 }
-
-} // End namespace SCIRun
-
 
