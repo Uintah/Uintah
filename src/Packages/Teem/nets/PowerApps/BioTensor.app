@@ -2353,8 +2353,8 @@ class BioTensorApp {
 	set detachedPFr $win.detachedP
 	set attachedPFr $win.attachedP
 
-	init_Pframe $detachedPFr.f 0
-	init_Pframe $attachedPFr.f 1
+	init_Pframe $detachedPFr.f 1
+	init_Pframe $attachedPFr.f 2
 
 	### create detached width and heigh
 	append geomP $process_width x $process_height
@@ -3101,8 +3101,18 @@ class BioTensorApp {
             label $process.indicatorL -text "Press Execute to Load Data..."
             pack $process.indicatorL -side bottom -anchor sw -padx 5 -pady 3
 	    	    
-	    set indicator$case $process.indicator.canvas
-	    set indicatorL$case $process.indicatorL
+            # The new way of keeping track of tabs is to use 0 and 1.  The old
+	    # old way was to use 1 and 2.  This app uses the old way except with
+	    # regards to the indicator object, because it is used in the PowerAppBase
+	    # class.
+	    if {$case == 1} {
+		set indicator0 $process.indicator.canvas
+		set indicatorL0 $process.indicatorL
+	    } else {
+		set indicator1 $process.indicator.canvas
+		set indicatorL1 $process.indicatorL
+	    }
+
 
 	    Tooltip $process.indicatorL $tips(IndicatorLabel)
 	    
@@ -9743,7 +9753,7 @@ class BioTensorApp {
     variable planes_tab2
 
     variable isosurface_tab1
-    variable isosurface_tab0
+    variable isosurface_tab2
 
     variable glyphs_tab1
     variable glyphs_tab2
