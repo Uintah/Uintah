@@ -40,7 +40,7 @@ DEALINGS IN THE SOFTWARE.
   quickly investigate a volume slice by slice or via a maximum
   intensity projection. The 2D views provide standard zooming and
   translation capabilities as well as the ability to change the
-  brightness and contrast (also known as window and level) of the
+  window and level of the
   images. <xref linkend="sec.2dviewers"/> discusses 2D visualization
   in detail.</para>
  
