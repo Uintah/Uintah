@@ -456,7 +456,8 @@ Source::addReactiveScalarSource(const ProcessorGroup*,
       for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	IntVector currCell(colX, colY, colZ);
 	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-	vars->scalarNonlinearSrc[currCell] += vol*vars->reactscalarSRC[currCell];
+	vars->scalarNonlinearSrc[currCell] += vol*vars->reactscalarSRC[currCell]*
+	                                      vars->density[currCell];
       }
     }
   }
