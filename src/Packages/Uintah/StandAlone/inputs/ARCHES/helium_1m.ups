@@ -40,7 +40,7 @@
 	    <Box label = "1">
 	        <lower>[0,0,0]</lower>
 	        <upper>[3,3,3]</upper>
-	        <resolution>[10,10,10]</resolution>
+	        <resolution>[20,20,20]</resolution>
                 <extraCells>[1,1,1]</extraCells>
 		<patches>[1,1,1]</patches>
 	    </Box>
@@ -168,7 +168,7 @@
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
 		      <box label = "topWall">
-			<min>[4,-1,-1]</min>
+			<min>[3,-1,-1]</min>
 			<max>[5,5,5]</max>
 		      </box>
 		    </geom_object>
@@ -198,7 +198,7 @@
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>petsc</linear_solver>
 		    <LinearSolver>
-			<pctype>jacobi</pctype>
+			<ksptype>cg</ksptype>
 			<overlap>1</overlap>
 			<max_iter>75</max_iter>
 			<res_tol>0.0003</res_tol>
