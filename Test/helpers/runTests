@@ -75,7 +75,9 @@ fi
 echo "" >> "$BUILDROOT"/log
 
 /bin/chgrp -Rh csafe "$BUILDROOT"
-/bin/chmod g+ws "$BUILDROOT"
+/bin/chmod -R g+ws "$BUILDROOT"
+/bin/chgrp -Rh csafe "$TEST_DATA"
+/bin/chmod -R g+ws "$TEST_DATA"
 
 if [ "$SEND_MAIL_TO" != "" ]; then
     if [ $failed == "0" ]; then
