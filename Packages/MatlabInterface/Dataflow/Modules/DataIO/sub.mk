@@ -32,6 +32,7 @@ SRCDIR   := Packages/MatlabInterface/Dataflow/Modules/DataIO
 SRCS     += \
         $(SRCDIR)/MatrixReceive.cc \
         $(SRCDIR)/MatrixSend.cc \
+	$(SRCDIR)/Matlab.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \

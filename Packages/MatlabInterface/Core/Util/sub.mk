@@ -30,9 +30,15 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/MatlabInterface/Core/Util
 
 SRCS     += $(SRCDIR)/bring.c \
+            $(SRCDIR)/transport.cc \
+
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS :=
+PSELIBS := Core/Datatypes \
+        Core/Persistent Core/Containers Core/Util \
+        Core/Exceptions Core/Thread Core/GuiInterface \
+        Core/Geom Core/Datatypes Core/Geometry
+
 LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
