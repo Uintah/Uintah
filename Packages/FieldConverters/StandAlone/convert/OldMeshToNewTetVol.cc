@@ -7,7 +7,7 @@
  *   University of Utah
  *   February 2001
  *
- *  Copyright (C) 2001 SCI Group
+ *  Copyright (C) 2001 SCI Institute
  */
 
 #include <FieldConverters/Core/Datatypes/Mesh.h>
@@ -18,6 +18,8 @@
 #include <fstream>
 #include <stdlib.h>
 
+#include "MeshToTet.h"
+
 using std::cerr;
 using std::cout;
 using std::ifstream;
@@ -27,20 +29,11 @@ using namespace SCIRun;
 using namespace FieldConverters;
 
 
-// Functor to extract a Point from a NodeHandle.
-struct NodePointFtor{
-  Point operator()(NodeHandle nh) {
-    static int i = 0;
-    cout << "NodePointFtor: " << i++ << endl;
-    return nh->p;
-  }
-};
-
 int
 main(int argc, char **argv) {
   
   if (argc !=3) {
-    cerr << "Usage: " << argv[0] << " OldMesh to NewTetVol"<< endl;
+    cerr << "Usage: " << argv[0] << " Old Mesh to New TetVol"<< endl;
     cerr << "       " << "argv[1] Input File (Old Mesh)" << endl;
     cerr << "       " << "argv[2] Output File (TetVol)" << endl;
     exit(0);
@@ -67,19 +60,19 @@ main(int argc, char **argv) {
 	 << ".  Exiting..." << endl;
     exit(0);
   }
+  // Set up neighbors.
+  mesh->compute_neighbors();
+  mesh->compute_face_neighbors();
+
 
   // A Mesh is Geometry only, so attach no data to the new TetVol.
   TetVol<double> *field = new TetVol<double>(Field::NODE);
   FieldHandle fH(field); 
 
   TetVolMeshHandle tvm = field->get_typed_mesh();
+  
+  load_mesh(mesh, tvm);
 
-  NodeHandle &s = mesh->nodes[0];
-  NodeHandle *begin = &s;
-  NodeHandle *end = begin + mesh->nodes.size();
-  tvm->fill_points(begin, end, NodePointFtor());
-
-  // FIX_ME fill the cells and neihbor info up.
   TextPiostream outstream(argv[2], Piostream::Write);
   Pio(outstream, fH);
 

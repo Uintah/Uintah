@@ -86,6 +86,13 @@ public:
   
   template <class Iter, class Functor>
   void fill_points(Iter begin, Iter end, Functor fill_ftor);
+  template <class Iter, class Functor>
+  void fill_cells(Iter begin, Iter end, Functor fill_ftor);
+  template <class Iter, class Functor>
+  void fill_neighbors(Iter begin, Iter end, Functor fill_ftor);
+  template <class Iter, class Functor>
+  void fill_data(Iter begin, Iter end, Functor fill_ftor);
+  
  
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
@@ -96,9 +103,11 @@ private:
 
   bool inside4_p(int, const Point &p);
 
-
+  //! all the nodes.
   vector<Point>        points_;
+  //! each 4 indecies make up a tet
   vector<index_type>   cells_;
+  //! face neighbors index to tet opposite the corresponding node in cells_
   vector<index_type>   neighbors_;
 
 };
@@ -111,16 +120,53 @@ typedef LockingHandle<TetVolMesh> TetVolMeshHandle;
 template <class Iter, class Functor>
 void
 TetVolMesh::fill_points(Iter begin, Iter end, Functor fill_ftor) {
-  cout << "started" << endl;
   Iter iter = begin;
   points_.resize(end - begin); // resize to the new size
   vector<Point>::iterator piter = points_.begin();
   while (iter != end) {
     *piter = fill_ftor(*iter);
     ++piter; ++iter;
-  }
-  
+  } 
 }
+
+template <class Iter, class Functor>
+void
+TetVolMesh::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
+  Iter iter = begin;
+  cells_.resize((end - begin) * 4); // resize to the new size
+  vector<index_type>::iterator citer = cells_.begin();
+  while (iter != end) {
+    int *nodes = fill_ftor(*iter); // returns an array of length 4
+    *citer = nodes[0];
+    ++citer;
+    *citer = nodes[1];
+    ++citer;
+    *citer = nodes[2];
+    ++citer;
+    *citer = nodes[3];
+    ++citer; ++iter;
+  } 
+}
+
+template <class Iter, class Functor>
+void
+TetVolMesh::fill_neighbors(Iter begin, Iter end, Functor fill_ftor) {
+  Iter iter = begin;
+  neighbors_.resize((end - begin) * 4); // resize to the new size
+  vector<index_type>::iterator citer = neighbors_.begin();
+  while (iter != end) {
+    int *face_nbors = fill_ftor(*iter); // returns an array of length 4
+    *citer = face_nbors[0];
+    ++citer;
+    *citer = face_nbors[1];
+    ++citer;
+    *citer = face_nbors[2];
+    ++citer;
+    *citer = face_nbors[3];
+    ++citer; ++iter;
+  } 
+}
+
 } // namespace SCIRun
 
 

@@ -14,6 +14,8 @@
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/FieldAlgo.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
@@ -40,7 +42,7 @@ class ShowField : public Module
   //! Private Data
   DebugStream              dbg_;  
   FieldIPort*              infield_;
-  FieldHandle              sfield_;
+  FieldHandle              field_handle_;
   GeometryOPort           *ogeom_;  
 
   //! Scene graph ID's
@@ -169,7 +171,7 @@ ShowField::~ShowField() {}
 void 
 ShowField::execute()
 {
-#if 0 // FIX_ME new fields
+
   // Check for generation number. FIX_ME
   cerr << "Starting Execution..." << endl;
   dbg_ << "SHOWGEOMETRY EXECUTING" << endl;
@@ -178,28 +180,40 @@ ShowField::execute()
   // This is typically salmon, it owns the scene graph memory we create here.
     
   ogeom_->delAll(); 
-  infield_->get(sfield_);
-  if(!sfield_.get_rep()){
+  infield_->get(field_handle_);
+  if(!field_handle_.get_rep()){
+    cerr << "No data in input field" << endl;
     return;
   }
 
-  if (!sfield_->getAttrib().get_rep())
-    cerr << "NO attribute!!1" << endl;
-  dbg_ << sfield_->getAttrib()->getInfo();
+  TetVol<double> tv;
+  // Test the interpolation interface
+  Point p(5.5, 3.4, 6.6);
+  
+  LinearInterp<TetVol<double>, TetVolMesh::node_index> ftor; 
+  interpolate(tv, p, ftor);
 
-  Gradient *gradient = sfield_->query_interface((Gradient *)0);
+
+
+
+#if 0 // FIX_ME new fields
+  if (!field_handle_->getAttrib().get_rep())
+    cerr << "NO attribute!!1" << endl;
+  dbg_ << field_handle_->getAttrib()->getInfo();
+
+  Gradient *gradient = field_handle_->query_interface((Gradient *)0);
   if(!gradient){
     error("Gradient not supported by input field");
   }
 
   SLInterpolate *slinterpolate = 
-    sfield_->query_interface((SLInterpolate *)0);
+    field_handle_->query_interface((SLInterpolate *)0);
   if(!slinterpolate){
     error("SLInterpolate not supported by input field");
   }
 
   BBox bbox;
-  sfield_->get_geom()->getBoundingBox(bbox);
+  field_handle_->get_geom()->getBoundingBox(bbox);
 
   dbg_ << bbox.min().x() << " " << bbox.min().y() << " " 
        << bbox.min().z() << " " << bbox.max().x() << " " << bbox.max().y() 
@@ -209,7 +223,7 @@ ShowField::execute()
   conSwitch_ = scinew GeomSwitch(bb);
 
   GeomGroup *verts = scinew GeomGroup;
-  GeomHandle geom = sfield_->get_geom();
+  GeomHandle geom = field_handle_->get_geom();
 
   dbg_ << geom->getInfo();
 

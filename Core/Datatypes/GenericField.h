@@ -72,6 +72,9 @@ public:
   value_type value(typename mesh_type::cell_index i) const 
   { return fdata_[i]; }
 
+  fdata_type& fdata() { return fdata_; }
+  const fdata_type& fdata() const { return fdata_; }
+
   mesh_handle_type get_typed_mesh() const { return mesh_; };
 
   //! Persistent I/O.
@@ -102,7 +105,8 @@ GenericField<Mesh, FData>::GInterp::interpolate(const Point& /*p*/,
 						double& /*value*/) const
 {
   cerr << "Error: NO interp defined!" << endl;
-  assert(0);
+  ASSERT(0);
+  return false;
 }
 
 template <class Mesh, class FData>

@@ -38,9 +38,9 @@ public:
 // FIX_ME support the int arg return vals...
 template <class T> 
 const string 
-TetVol<T>::type_name(int a)
+TetVol<T>::type_name(int /*a*/)
 {
-  const static string name =  "TetVol<" + find_type_name((T *)0) + ">";
+  static const string name =  "TetVol<" + find_type_name((T *)0) + ">";
   return name;
 }
 
