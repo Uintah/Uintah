@@ -6,9 +6,9 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DWDatabase.h>
-#include <Packages/Uintah/Core/Variables/VarLabelMatlPatch.h>
+#include <Packages/Uintah/Core/Variables/VarLabelMatl.h>
 #include <Packages/Uintah/Core/Variables/PSPatchMatlGhost.h>
-#include <Packages/Uintah/Core/Variables/VarLabelMatlPatchDW.h>
+#include <Packages/Uintah/Core/Variables/VarLabelMatlDW.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -100,6 +100,15 @@ public:
 			 const Level* level = 0, int matIndex = -1);
    virtual void print(ostream& intout, const VarLabel* label,
 		      const Level* level, int matlIndex = -1);
+
+   // Sole Variables
+   virtual void get(SoleVariableBase&, const VarLabel*,
+		    const Level* level = 0, int matIndex = -1);
+   virtual void put(const SoleVariableBase&, const VarLabel*,
+		    const Level* level = 0, int matIndex = -1);
+
+   virtual void override(const SoleVariableBase&, const VarLabel*,
+			 const Level* level = 0, int matIndex = -1);
 
    // Particle Variables
    virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
@@ -279,7 +288,8 @@ public:
    void decrementScrubCount(const VarLabel* label, int matlIndex,
 			    const Patch* patch);
    void scrub(const VarLabel* label, int matlIndex, const Patch* patch);
-   void initializeScrubs(int dwid, const map<VarLabelMatlPatchDW, int>& scrubcounts);
+   void initializeScrubs(int dwid, const map<VarLabelMatlDW<Patch>, int>& scrubcounts);
+   void initializeScrubs(int dwid, const map<VarLabelMatlDW<Level>, int>& scrubcounts);
 
    // For timestep abort/restart
    virtual bool timestepAborted();
@@ -303,8 +313,8 @@ public:
    }
 
    // The following is for support of regriding
-   void getVarLabelMatlPatchTriples( vector<VarLabelMatlPatch>& vars ) const;
-   void getVarLabelMatlLevelTriples( vector<VarLabelMatlLevel>& vars ) const;
+   void getVarLabelMatlPatchTriples(vector<VarLabelMatl<Patch> >& vars ) const;
+   void getVarLabelMatlLevelTriples(vector<VarLabelMatl<Level> >& vars ) const;
 
    friend class SchedulerCommon;
    friend class AMRSimulationController;
@@ -327,7 +337,7 @@ private:
      IntVector highOffset;
    };
   
-   typedef map<VarLabelMatlPatch, AccessInfo> VarAccessMap;
+   typedef map<VarLabelMatl<Patch>, AccessInfo> VarAccessMap;
 
    struct RunningTaskInfo {
      RunningTaskInfo()
@@ -418,6 +428,7 @@ private:
    DWDatabase<SFCZVariableBase, Patch>      d_sfczDB;
    DWDatabase<ParticleVariableBase, Patch>  d_particleDB;
    DWDatabase<ReductionVariableBase, Level> d_reductionDB;
+   DWDatabase<SoleVariableBase, Level>      d_soleDB;
    DWDatabase<PerPatchBase, Patch>          d_perpatchDB;
    psetDBType                        d_psetDB;
    psetDBType                        d_delsetDB;

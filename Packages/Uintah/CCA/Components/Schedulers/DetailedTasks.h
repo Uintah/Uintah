@@ -6,7 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 //#include <Packages/Uintah/Core/Variables/PSPatchMatlGhost.h>
-#include <Packages/Uintah/Core/Variables/VarLabelMatlPatchDW.h>
+#include <Packages/Uintah/Core/Variables/VarLabelMatlDW.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/ConditionVariable.h>
@@ -140,7 +140,8 @@ namespace Uintah {
     {}
   };
 
-  typedef map<VarLabelMatlPatchDW, int> ScrubCountMap;
+  typedef map<VarLabelMatlDW<Patch>, int> ScrubCountMapPatch;
+  typedef map<VarLabelMatlDW<Level>, int> ScrubCountMapLevel;
   
   class DetailedTask {
   public:
@@ -302,9 +303,14 @@ namespace Uintah {
     void incrementDependencyGeneration();
 
     void addScrubCount(const VarLabel* var, int matlindex,
-		       const Patch* patch, int dw);
+                            const Patch* patch, int dw);
+    void addScrubCount(const VarLabel* var, int matlindex,
+                       const Level* level, int dw);
+
     bool getScrubCount(const VarLabel* var, int matlindex,
 		       const Patch* patch, int dw, int& count);
+    bool getScrubCount(const VarLabel* var, int matlindex,
+		       const Level* level, int dw, int& count);
 
     SchedulerCommon* sc_;
     const ProcessorGroup* d_myworld;
@@ -339,7 +345,8 @@ namespace Uintah {
     Mutex readyQueueMutex_;
     Semaphore readyQueueSemaphore_;
 
-    ScrubCountMap scrubCountMap_;
+    ScrubCountMapPatch scrubCountMapPatch_;
+    ScrubCountMapLevel scrubCountMapLevel_;
 
     DetailedTasks(const DetailedTasks&);
     DetailedTasks& operator=(const DetailedTasks&);
