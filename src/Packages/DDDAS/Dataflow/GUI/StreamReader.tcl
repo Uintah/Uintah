@@ -27,10 +27,12 @@ itcl_class DDDAS_DataIO_StreamReader {
 	global $this-port
 	global $this-file-read
 	global $this-file-write
+        global $this-stop-sr
 	set $this-hostname "arthur.ccs.uky.edu"
 	set $this-port 8000
 	set $this-file-read "test_file.mp3"
 	set $this-file-write "sample.txt"
+	set $this-stop-sr 0
     }
 
     method ui {} {
@@ -46,10 +48,11 @@ itcl_class DDDAS_DataIO_StreamReader {
 	frame $w.row7
 	frame $w.row8
 	frame $w.row4
+	frame $w.row9
 	frame $w.which -relief groove -borderwidth 2
 
-        pack $w.row5 $w.row6 $w.row7 $w.row8  $w.which $w.row4 -side top \
-		-e y -f both -padx 5 -pady 5
+        pack $w.row5 $w.row6 $w.row7 $w.row8  $w.which $w.row4 $w.row9 \
+             -side top -e y -f both -padx 5 -pady 5
 	
 	label $w.row5.hostname_label -text "Hostname   "
 	entry $w.row5.hostname -textvariable $this-hostname
@@ -65,8 +68,12 @@ itcl_class DDDAS_DataIO_StreamReader {
 	pack $w.row7.file-read_label $w.row7.file-read -side left	
         pack $w.row8.file-write_label $w.row8.file-write -side left
 
-	button $w.row4.execute -text "Execute" -command "$this-c needexecute"
+	button $w.row4.execute -text "Execute" -command "set $this-stop-sr 0; $this-c needexecute"
 	pack $w.row4.execute -side top -e n -f both
+
+	button $w.row9.stop-sr_button -text "Stop" -command "set $this-stop-sr 1"
+	entry $w.row9.stop-sr -textvariable $this-stop-sr
+	pack $w.row9.stop-sr_button -side top -e n -f both
 
     }
 }
