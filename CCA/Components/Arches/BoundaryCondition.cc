@@ -123,6 +123,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 {
 
   ProblemSpecP db = params->findBlock("BoundaryConditions");
+  d_flowfieldCellTypeVal = -1;
   d_numInlets = 0;
   int total_cellTypes = 0;
   int numMixingScalars = d_props->getNumMixVars();
@@ -238,7 +239,6 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 #endif
     // initialize CCVariable to -1 which corresponds to flowfield
     int celltypeval;
-    d_flowfieldCellTypeVal = -1;
     fort_celltypeinit(idxLo, idxHi, cellType, d_flowfieldCellTypeVal);
     
     // Find the geometry of the patch
