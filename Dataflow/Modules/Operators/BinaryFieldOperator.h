@@ -88,9 +88,9 @@ bool BinaryFieldOperator::initField(FieldLeft* left_field,
   typename FieldLeft::mesh_handle_type mhl = left_field->get_typed_mesh();
   typename FieldRight::mesh_handle_type mhr = right_field->get_typed_mesh();
   // Check the data dimensions
-  if (mhl->get_nx() != mhr->get_nx() ||
-      mhl->get_ny() != mhr->get_ny() ||
-      mhl->get_nz() != mhr->get_nz())
+  if (mhl->get_ni() != mhr->get_ni() ||
+      mhl->get_nj() != mhr->get_nj() ||
+      mhl->get_nk() != mhr->get_nk())
     return false;
 
   // Now here's a sticky situation.  We've determined that the data dimensions
@@ -111,9 +111,9 @@ bool BinaryFieldOperator::initField(FieldLeft* left_field,
   // Now we can initialize the outgoing field to match those coming in.
   typename ScalarField::mesh_handle_type smh = scalarField->get_typed_mesh();
   //resize the geometry
-  smh->set_nx(mhl->get_nx());
-  smh->set_ny(mhl->get_ny());
-  smh->set_nz(mhl->get_nz());
+  smh->set_ni(mhl->get_ni());
+  smh->set_nj(mhl->get_nj());
+  smh->set_nk(mhl->get_nk());
   smh->set_transform(mhl->get_transform());
   //resize the data storage
   scalarField->resize_fdata();
