@@ -42,8 +42,12 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
   new_lower = Point(lower.asVector() - spacing);
   new_upper = Point(upper.asVector() + spacing);
   Box grid_box(new_lower,new_upper);
-  
-  cout << "Grid box = " << grid_box << endl;
+
+  if (grid_box.contains(d_box.lower()) && grid_box.contains(d_box.upper()))
+    ;
+  else
+    throw ProblemSetupException("triangular surface is not within the grid boundary, extend the grid boundary to encompass the triangular surface");
+
   list<Tri> tri_list;
   Tri tri;
 
@@ -195,7 +199,6 @@ void TriGeometryPiece::readPoints(const string& file)
   min = min - fudge;
   max = max + fudge;
   d_box = Box(min,max);
-  cout << "d_box = " << d_box << endl;
 }
 
 
