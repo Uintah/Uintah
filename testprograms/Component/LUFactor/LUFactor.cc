@@ -122,8 +122,8 @@ int main(int argc, char* argv[])
 	  
           //Set up server's requirement of the distribution array 
           Index** dr0 = new Index* [2];
-	  dr0[0] = new Index(myrank,SIZE,mysize,mysize);
-          dr0[1] = new Index(0,SIZE,1);
+	  dr0[1] = new Index(myrank,SIZE,mysize,mysize);
+          dr0[0] = new Index(0,SIZE,1);
           MxNArrayRep* arrr0 = new MxNArrayRep(2,dr0);
 	  lu->setCalleeDistribution("X",arrr0);
           std::cerr << "setCalleeDistribution completed\n";
@@ -156,8 +156,8 @@ int main(int argc, char* argv[])
 	  //Inform everyone else of my distribution
           //(this sends a message to all the callee objects)
           Index** dr0 = new Index* [2];
-	  dr0[0] = new Index(0,SIZE,1);
-          dr0[1] = new Index(0,SIZE,1);
+	  dr0[1] = new Index(0,SIZE,1);
+          dr0[0] = new Index(0,SIZE,1);
           MxNArrayRep* arrr0 = new MxNArrayRep(2,dr0);
 	  jc->setCallerDistribution("X",arrr0);
           std::cerr << "setCallerDistribution completed\n";

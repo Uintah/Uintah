@@ -42,6 +42,7 @@
 #include <testprograms/Component/pingpongArr/PingPong_sidl.h>
 #include <Core/Thread/Time.h>
 #include <assert.h>
+#include <unistd.h>
 
 using namespace std;
 using namespace SCIRun;
@@ -84,7 +85,7 @@ int main(int argc, char* argv[])
 	bool client=false;
 	bool server=false;
 	vector <URL> server_urls;
-	int reps=1;
+	int reps=2;
 
         MPI_Comm_size(MPI_COMM_WORLD,&mysize);
         MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
@@ -165,17 +166,18 @@ int main(int argc, char* argv[])
           //(this sends a message to all the callee objects)
           Index* dr[1];
           dr[0] = BLOCK(myrank,mysize,100);
-	  cout << "sta=" << sta << ", dr[0]->myfirst=" << dr[0]->myfirst << "\n";
-	  cout << "fin=" << fin << ", dr[0]->myfirst=" << dr[0]->mylast << "\n";
           init(arr,dr[0]->myfirst,dr[0]->mylast);
 
 	  MxNArrayRep* arrr = new MxNArrayRep(1,dr);
 	  pp->setCallerDistribution("D",arrr); 
-	  std::cerr << "setCallerDistribution completed\n";
+	  std::cerr << "**************setCallerDistribution completed\n";
 
 	  for(int i=0;i<reps;i++){
             int j=pp->pingpong(arr);
 	    cerr << "sum of all array elements = " << j << "\n";
+            sleep(2);
+	    pp->setCallerDistribution("D",arrr);
+	    std::cerr << "**************setCallerDistribution completed\n";
 	  }
 	  double dt=Time::currentSeconds()-stime;
 	  cerr << reps << " reps in " << dt << " seconds\n";
