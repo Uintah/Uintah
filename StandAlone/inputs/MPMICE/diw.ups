@@ -17,7 +17,7 @@
     <!--   timestep_mulipler= ???????????                                   -->
     <!--____________________________________________________________________-->
    <Time>
-	<maxTime>            0.15       </maxTime>
+	<maxTime>            2.0       </maxTime>
 	<initTime>           0.0         </initTime>
 	<delt_min>           0.0         </delt_min>
 	<delt_max>           1.0         </delt_max>
@@ -122,8 +122,8 @@
 	<Level>
 	    <Box label = "1">
 	    	<lower>       [0,0,0]     </lower>
-	    	<upper>       [3.5,2.5,2.5]     </upper>
-               <extraCells> [1,1,1]     </extraCells>
+	    	<upper>       [4.5,2.5,2.5]     </upper>
+                <extraCells>  [1,1,1]     </extraCells>
 		<patches>     [1,1,1]     </patches>
 	    </Box>
 	    <spacing>        [0.125,0.125,0.125]  </spacing>
@@ -143,11 +143,14 @@
         <save label = "vel_CC"/>
         <save label = "press_CC"/>
         <save label = "press_equil_CC"/>
-        <save label = "delPress_CC"/>
         <save label = "rho_CC"/>
+        <save label = "rho_micro_CC"/>
+        <save label = "vol_frac_CC"/>
+	<save label = "temp_CC"/>
         <save label = "p.x"/>
         <save label = "p.volume"/>
         <save label = "p.velocity"/>
+	<save label = "p.temperature"/>
    </DataArchiver>
 
    <Debug>
@@ -170,7 +173,7 @@
    <CFD>
   	<cfl>0.5</cfl>
 	<ICE>
-	    <max_iteration_equilibration> 50 </max_iteration_equilibration>
+	    <max_iteration_equilibration> 100 </max_iteration_equilibration>
 	</ICE>	 
     </CFD>
 
@@ -180,7 +183,6 @@
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
 	<gravity>[0,0,0]</gravity>
-	<reference_pressure>101325.0</reference_pressure>
     </PhysicalConstants>
 
 
@@ -191,16 +193,16 @@
         <MPM>
             <material>
                 <burn type = "null" />
-	        <EOS type = "ideal_gas">
-		    <gas_constant>      287             </gas_constant>
-	        </EOS>
+                <EOS type = "ideal_gas">
+                    <gas_constant>      287             </gas_constant>
+                </EOS>
                 <density>   1.1792946927374306000e+00   </density>
                 <constitutive_model type="comp_neo_hook">
-                    <bulk_modulus>      2000.0          </bulk_modulus>
-                    <shear_modulus>     1500.0          </shear_modulus>
+                    <bulk_modulus>      40000.0          </bulk_modulus>
+                    <shear_modulus>     30000.0          </shear_modulus>
                 </constitutive_model>
                 <toughness>             10.e6           </toughness>
-                <thermal_conductivity>  1.0             </thermal_conductivity>
+                <thermal_conductivity>  400.0           </thermal_conductivity>
                 <specific_heat>         716.0           </specific_heat>
 	        <gamma>                 1.4             </gamma>	    
                 <geom_object>
@@ -223,9 +225,9 @@
 	<ICE>
 	  <material>
             <burn type = "null" />
-	    <EOS type = "ideal_gas">
-		<gas_constant>            287             </gas_constant>
-	    </EOS>
+            <EOS type = "ideal_gas">
+                 <gas_constant>      287             </gas_constant>
+            </EOS>
 	    <viscosity>                  0.0             </viscosity>
 	    <thermal_conductivity>       0.0             </thermal_conductivity>
 	    <specific_heat>              716.0           </specific_heat>
@@ -235,28 +237,28 @@
 		<difference>
                 <box label = "gpice">
                     <min>           [-1.0,-1.0,-1.0]    </min>
-                    <max>           [4.0,4.0,4.0 ]      </max>
+                    <max>           [5.0,4.0,4.0 ]      </max>
                 </box>
 		<box label = "gpicehole">
                     <min>           [1.0,0.0,1.0]       </min>
                     <max>           [1.5,1.5,1.5]       </max>
                 </box>
 		</difference>
-	        <res>		        [2,2,2]             </res>
-	        <velocity>           [10.0,0.0,0.0]       </velocity>
-	        <temperature>        300.0               </temperature>
-	        <density>    1.1792946927374306000e+00   </density>
-               <pressure>           101325.0            </pressure>
+	        <res>		        [2,2,2]          </res>
+	        <velocity>           [0.0,0.0,0.0]      </velocity>
+	        <temperature>        400.0               </temperature>
+	        <density>              0.88447102        </density>
+               <pressure>           101325.0             </pressure>
 	    </geom_object>
 	  </material>
 	</ICE>	
        
-    	<exchange_properties>  
+        <exchange_properties>
          <exchange_coefficients>
-	       <momentum>	       [1e15, 1e15]         </momentum>
-	       <heat>                  [0.0, 0.0]           </heat>
-	 </exchange_coefficients>
-    	</exchange_properties>  
+               <momentum>               [1e15, 1e15]         </momentum>
+               <heat>                  [1e4, 1e4]           </heat>
+         </exchange_coefficients>
+        </exchange_properties>
     </MaterialProperties>
             
 
@@ -266,4 +268,3 @@
     </PhysicalBC>
 	
 </Uintah_specification>
-
