@@ -1,0 +1,638 @@
+FieldsCreate/Centroids.net
+
+Create a PointCloudField containing the center points of the faces
+from an ImageField.
+
+
+
+
+FieldsCreate/ClipByFunction-byvalue.net
+
+This network demonstrates using the ClipByFunction module to extract
+the lungs from the torso model.  The lungs are already classified in
+the torso model and have a particular conductivity table entry of 4,
+so we can extract all of the elements from the torso with conductivity
+of 4 and just get the lungs.
+
+Note that alternatively we could use 'v != 4' to get a model with the
+lungs removed.  Or we could use the different values in the field to
+single out the ribs, heart, and others that were already classified.
+
+
+
+
+FieldsCreate/ClipByFunction-positional.net
+
+This demonstrates using ClipByFunction to chop out a wedge from a
+field so that we can more easily view the interior.  The original
+field is draw in a transparent wireframe for reference.
+
+
+
+
+FieldsCreate/ClipField-mesh.net
+
+The ClipField module is used to extract a spherical input mesh from
+it's bounding SampleLattice.  The remaining cubes are the elements
+that the bounding box covers but that do not actually fall inside of
+the input field.
+
+
+
+
+FieldsCreate/ClipField-widget.net
+
+In this netowrk the ClipField module widget is used to select a chunk
+of the input field for extraction.  Further editing could be done by
+hand.
+
+
+
+
+FieldsCreate/FieldBoundary.net
+
+Use the FieldBoundary module to extract just the outside shell of the
+sphere module, then use ApplyInterpolant to put the values from the
+original field onto the boundary.
+
+
+
+
+FieldsCreate/FieldBoundary-quadtest.net
+
+Convert the sphere data set into a HexVol, then test FieldBoundary on
+that HexVol to make sure that a QuadSurf is created successfully.
+Then chop a chunk of that closed QuadSurf boundary out and test
+FieldBoundary on that to make sure that the edge of the cut is
+properly clipped out.  See also FieldBoundary-tritest.net
+
+
+
+
+FieldsCreate/FieldBoundary-tritest.net
+
+Test out the FieldBoundary module on a TetVolMesh, then clip out a
+chunk of that closed sphere and test FieldBoundary on the resulting
+TriSurfMesh to make sure that it is detected properly.  See also
+FieldBoundary-quadtest.net
+
+
+
+
+FieldsCreate/FieldSlicer.net
+
+Read in the utah torso model and display it's boundary for reference.
+Then resample the model using the SampleLattice module to fit it to a
+regular grid which is then visualized as a point cloud.  Finally the
+FieldSlicer module is used to select an arbitrary plane from the
+sampled lattice.  This plane is then drawn using larger dots and
+compared with the underlying mesh to determine that it was selected
+correctly.
+
+
+
+
+FieldsCreate/FieldSlicer-testimgi.net
+FieldsCreate/FieldSlicer-testlati.net
+FieldsCreate/FieldSlicer-testlatj.net
+FieldsCreate/FieldSlicer-testshexi.net
+
+Create a sample field, populate it with a nice synthetic data set, and
+move it to an arbitrary non-identity transformation in space.  Then
+FieldSlicer is used to extract a particular plane or scanline from the
+field and the result is visualized for comparison purposes.
+
+
+
+
+FieldsCreate/FieldSubSample.net
+
+Read in the utah torso model and display it's boundary for reference.
+Then resample the model using the SampleLattice module to fit it to a
+regular grid which is then visualized as a point cloud.  Finally the
+FieldSubSample module is used to select a sublattice from the sampled
+lattice.  This sublattice is then drawn using larger dots and compared
+with the underlying mesh to determine that it was selected correctly.
+
+
+
+
+FieldsCreate/GatherPoints.net
+
+Read in two fields and extract all of the node points from both of
+them into a new PointCloud using the GatherPoints module.
+
+
+
+
+FieldsCreate/IsoClip-boundarytest.net
+
+Test the IsoClip module to make sure that the outer clip boundary is
+consistent.  We do this by creating a regular lattice with a distance
+function at the nodes, then converting that lattice into a tetrahedral
+mesh and doing the IsoClip to get a sphere.  The sphere is then run
+through FieldBoundary and half of it is clipped away with
+ClipByFunction so that we can see the interior.  If everything is
+working properly we will then see a relatively smooth hemispherical
+bowl.  If the adjacent tetrahedra are miscut then the interior has a
+rough geode appearance because all of the miscut tetrahera are added
+to the boundary.
+
+
+
+
+FieldsCreate/IsoClip-datatest.net
+
+Test the IsoClip module to make sure that the data from the input
+field is preserved in the output field.
+
+
+
+
+FieldsCreate/IsoClip-probe.net
+
+Example network demonstrating the use of a Probe widget to determine
+where an IsoClip should take place.  A Tetrahedral mesh is created by
+mapping the distance function onto a unit lattice.  Then the Probe is
+used to extract an isovalue from that Tetrahedral mesh which is then
+passed through ManageFieldData to convert it into a matrix and then
+used by IsoCilp to determine which value to clip against.
+
+
+
+
+
+FieldsCreate/IsoClip-tet.net
+FieldsCreate/IsoClip-tri.net
+
+Test networks for the IsoClip module.  TetVolMesh and TriSurfMesh
+field types are both supported by the IsoClip module so we make sure
+that they are both working.
+
+
+
+
+FieldsCreate/Probe.net
+
+Display the sphere voltage data set as translucent lines, and then use
+the Probe widget to examine parts of the data set.
+
+
+
+
+FieldsCreate/SampleField-rakestreamlines.net
+
+Use the rake widget from the SampleField module to select some seed
+points for streamlines in a vector field.  The vector field is created
+by using the gradients from the sphere-voltage model.  All of the
+streamlines should pass through the rake widget at regular intervals.
+
+
+
+
+FieldsCreate/SampleField-weightedrandom.net
+
+Use the SampleField module to resample a point cloud field onto the
+sphere-voltage model.  In this example the density of the point cloud
+is determined by the square of the voltage magnitude in the original
+model.  This gives us a nice way to visualize the voltage magnitude of
+the original field.
+
+
+
+
+FieldsCreate/SampleLattice.net
+
+Create and draw a LatVolField using the SampleLattice module.  The
+lattice is not fitted to any input field nor is it transformed so the
+output is a box ranging from [-1, -1, -1] to [1, 1, 1].
+
+
+
+
+FieldsCreate/SamplePlane.net
+
+Create and draw an ImageField using the SamplePlane module.  The plane
+is then drawn with different colors for the faces, edges, and text.
+
+
+
+
+FieldsCreate/SampleStructHex-cylinder.net
+
+Create and draw a StructHexVolField using the SampleStructHex module.
+The default StructHexVolField created by the module is visually
+indistinguishable from the lattice created by SampleLattice, so this network
+shows off the capabilities of the StructHexVolField by using the
+ManageFieldMesh module to transform the points into a low-distortion
+cylinder.
+
+
+
+
+FieldsCreate/ScalarFieldStats.net
+
+Read in a scalar field and then view a histogram of it's values using
+ScalarFieldStats.
+
+
+
+
+FieldsData/ApplyInterpolant.net
+
+Build an interpolant from an input field onto a plane, and then use
+ApplyInterpolant to apply the data from the input field back to the
+interpolant field.
+
+Note that the same thing could be done by replacing both
+BuildInterpolant and ApplyInterpolant with a DirectInterpolate module.
+ApplyInterpolate was meant primarily to be used in conjunction with
+loops and time dependent data, such that the interpolant field could
+be computed once and then applied multiple times.
+
+See also BuildInterpolant, DirectInterpolate, FieldBoundary
+
+
+
+FieldsData/AttractNormals.net
+
+Use AttractNormals to make a vector field all point to the same
+location.  The location in this network is determined by a probe, but
+it could be the first point of any input field.
+
+
+
+
+FieldsData/BuildInterpolant.net
+
+Build an interpolant from an input field onto a plane using
+BuildInterpolant, and then apply the data from the input field back to
+the interpolant field.
+
+Note that the same thing could be done by replacing both
+BuildInterpolant and ApplyInterpolant with a DirectInterpolate module.
+ApplyInterpolate was meant primarily to be used in conjunction with
+loops and time dependent data, such that the interpolant field could
+be computed once and then applied multiple times.
+
+See also ApplyInterpolant, DirectInterpolate, FieldBoundary
+
+
+
+
+FieldsData/ChangeFieldDataType.net
+
+Here we convert the input from a field of doubles to a field of short
+integers.  Because the original field ranges from around -6.0 to 5.0,
+we first scale the data values such that they fall between 0 and 255.
+Otherwise the output field would be mostly truncated to integers
+between -6 and 4.
+
+Note that the scale and data type change could be handled by the
+TransformData module by selecting 'Short' as the output type and using
+a function that first converted the data values to the desired range.
+
+See also TransformData, TransformData2, TransformData3
+
+
+
+
+FieldsData/DirectInterpolate.net
+
+SamplePlane is used to place a cutting plane through the utah torso
+model, and then the voltage values from the torso field are
+interpolated onto this cutting plane.  The field boundary is also
+displayed for reference.
+
+
+
+
+FieldsData/Gradient.net
+
+Compute the gradient of a scalar field, then display the gradient
+using uniformly sized cones colored by the data values from the
+original field.  See ChangeFieldDataAt, DirectInterpolate.
+
+
+
+
+FieldsData/MaskLattice.net
+
+Use the MaskLattice module to mask away a portion of an input lattice
+and display it against the original to verify that it has been masked.
+
+
+
+
+FieldsData/MoveElemToNode-img.net
+
+Test the MoveElemToNode module by moving the data in an ImageField
+from the faces onto the nodes while retaining the same data locations.
+The ImageField is first so that the positions are better tested.
+
+
+
+
+FieldsData/MoveElemToNode-lat.net
+
+Test the MoveElemToNode module by moving the data in a LatVolField
+from the cells onto the nodes while retaining the same data locations.
+The LatVolField is first so that the positions are better tested.
+
+
+
+
+FieldsData/MoveNodeToElem-img.net
+
+Test the MoveNodeToElem module by moving the data in an ImageField
+from the nodes onto the faces while retaining the same data locations.
+The ImageField is first so that the positions are better tested.
+
+
+
+
+FieldsData/MoveNodeToElem-lat.net
+
+Test the MoveNodeToElem module by moving the data in a LatVolField
+from the nodes onto the cells while retaining the same data locations.
+The LatVolField is first so that the positions are better tested.
+
+
+
+
+FieldsData/TransformData2.net
+
+Demonstrate usage of the TransformData2 module.  First a cyclone data
+set is created by resampling a LatVolField onto a PointCloud and then using
+TransformData to assign vectors to that PointCloud using a cylindrical
+mapping.  A scalar field containing the x position of
+each point in the PointCloud is also created.  The two PointCloudField
+data sets are then merged using TransformData by recreating a vector
+for each point in the PointCloud that contains the direction of the
+input vector field and the magnitude of the input scalar field.
+Finally this merged field is visualized using ShowField.
+
+
+
+
+FieldsData/TransformData3.net
+
+Use the TransformData3 to merge three scalar fields into a vector
+field.  First we create a PointCloudField by resampling a square
+lattice.  Then TransformData is used repeatedly to create three scalar
+fields, one containin the X positions, one containing the Y positions,
+and one containing the Z positions.  Then TransformData3 is used to
+merge these three scalar fields into one vector field.  Finally that
+vector field is visualized using ShowField.  Note that this
+network is meant to demonstrate useage of the TransformData3 module
+and thus is not the most efficient means of creating the final field.
+The same field would be created by running the results of SampleField
+through a TransformData module with the function set to be
+"result = Vector(x, y z);" and the output to be of type Vector.
+
+
+
+
+FieldsData/TransformData-scalarsphere.net
+
+Use the TransformData module to set the values in a LatVolField to be
+the distance function, then use ShowField and transparency in the
+GenStandardColorMaps module to display a sphere within that lattice.
+
+
+
+
+FieldsData/TransformData-vectorvortex.net
+
+Use the TransformData module to create a cylcone data set by
+resampling a LatVolField onto a PointCloudField, then setting each
+point to be a vector of position crossed with the up vector.  This
+dataset is then viewed using the ShowField Module.
+
+
+
+
+FieldsData/TransformScalarData.net
+
+Use the TransformScalarData module to cube the values in a the
+sphere-voltage model.  Note that the TransformScalarData module is
+deprecated, TransformData should be used instead.
+
+
+
+
+FieldsData/TransformVectorData.net
+
+Use the TransformVectorData module to create a synthetic vector data
+set using the geometry of the sphere-voltage model.  Note that the
+TransformVectorData module is deprecated, TransformData should be used
+instead.
+
+
+
+
+FieldsGeometry/ChangeFieldBounds.net
+
+Input a field, and then use the widget from ChangeFieldBounds to
+transform the field to a new position.  Both the original and
+transformed fields are displayed, with the original being a wireframe
+and the transformed field being solid.  In addition to simply moving
+the input field we also do an asymetric scale on it such that it
+becomes flattened.
+
+
+
+
+FieldsGeometry/HexToTet-hex.net
+FieldsGeometry/HexToTet-lat.net
+FieldsGeometry/HexToTet-shex.net
+
+Convert a Hexahedral field into a Tetrahedral field using the HexToTet
+module, and draw both the Hex and Tet fields for reference.  The code
+for converting the various hexahedral meshes into tets is different
+internally, so we do the tests for each of the various hexahedral
+field types independently.  There should be no visual difference
+between the results of these three test networks.
+
+
+
+
+FieldsGeometry/ManageFieldMesh-extract.net
+
+Use the ManageFieldMesh module to extract the XYZ positions of the
+mesh nodes from the input mesh into an Nx3 matrix.  Then we glue those
+positions back onto the input mesh as Vector data (but not as a
+position change) using the ManageFieldData module.  The vector field
+is then displayed as a cube with all of the vectors pointing away from
+the center.
+
+
+
+
+FieldsGeometry/ManageFieldMesh-insert.net
+
+Here we use ManageFieldMesh to extract the XYZ positions of the nodes
+from an input mesh.  Then those positions are transformed with the
+LinAlgUnary module.  The transformed positions are put back into the
+original mesh and the before/after of the two meshes is displayed.
+
+
+
+
+FieldsGeometry/QuadToTri-img.net
+FieldsGeometry/QuadToTri-quad.net
+
+Use QuadToTri to convert an ImageField or QuadSurfField into a
+TriSurfField.  The TriSurfField is then displayed in comparison with
+the original field for verification that it was properly triangulated.
+
+
+
+
+FieldsGeometry/Unstructure.net
+
+Convert an ImageField into a QuadSurfMesh using the Unstructure
+module.  Then clip out part of the QuadSurfMesh using the
+ClipByFunction module and display the two fields for comparison
+purposes.
+
+
+
+
+FieldsOther/FieldInfo.net
+
+Read in a field and examine some details with the FieldInfo module.
+
+
+
+
+FieldsOther/InterpolantToTransferMatrix.net
+
+Extract an interpolant field from an input field onto a sample lattice
+for example purposes.  Then that interpolant is applied to the input
+field using two different techniques:  First it is applied with the
+ApplyInterpolant module.  Second it is converted into a matrix using
+the InterpolantToTransferMatrix module, and then that matrix is
+multiplied with the data from the original field to compute the
+interpolation.  The results of both methods are then compared using
+the ErrorMetric module to verify that they are equivalent.
+
+
+
+
+Visualization/Isosurface-list.net
+
+Test the Isosurface module by creating a list of values to isocontour
+on the boundary of the sphere-voltage test model.
+
+
+
+
+Visualization/Isosurface-mcmp.net
+
+Test the Field output of the Isosurface module in multiprocessor
+marching cubes mode.  This network demonstrates that the code which
+does the join for the different parts leaves a seam on the output
+field where the points are duplicated and thus breaks subsequent
+FieldBoundary and similar computations.  The lines across the middle
+of the sphere reflect the places where the data was cut up and
+assigned to different processors.
+
+
+
+
+Visualization/Isosurface-probe.net
+
+Test useage of the Probe module to dynamically select which isovalue
+to use in the IsoSurface module.  The Probe widget can be moved around
+and the isovalue will cut through that point.
+
+
+
+
+Visualization/Isosurface-quantity.net
+
+Test the Quantity method of selecting isovalues in the Isosurface
+module.  The boundary of the sphere-voltage model is isocontoured at
+10 evenly spaced intervals and the result is then displayed.
+
+
+
+
+Visualization/Isosurface-slider.net
+
+Test the Slider method of selecting an isovalue in the IssSurface
+module.  The slider is used to select the value for an isocontour on
+the boundary of the sphere-volume data set.
+
+
+
+
+Visualization/ShowField-colorcube.net
+
+Create and display a color cube using vectors to represent RGB values
+in a lattice volume.
+
+
+
+
+Visualization/ShowField-rgbscalars.net
+
+Create and display a color cube using vectors to represent RGB values
+in a lattice volume.  The cell centers are scaled by the vector
+magnitude of the RGB values in addition to being colored.
+
+
+
+
+Visualization/ShowField-vectorarrows.net
+
+Test Showfield to make sure that it renders vector fields as arrows
+properly.  The gradient is taken of the sphere-voltage data set and
+then this is displayed as an arrow field colored by the original
+scalar values.
+
+
+
+
+Visualization/ShowField-vectorcones.net
+
+Test Showfield to make sure that it renders vector fields as cones
+properly.  The gradient is taken of the sphere-voltage data set and
+then this is displayed as a cone field colored by the original
+scalar values.
+
+
+
+
+Visualization/ShowField-vectorneedles.net
+
+Test Showfield to make sure that it renders vector fields as needles
+properly.  The gradient is taken of the sphere-voltage data set and
+then this is displayed as a needle field colored by the original
+scalar values.
+
+
+
+
+Visualization/StreamLines-cellwalk.net
+
+Test the StreamLine cellwalk code by making a synthetic cell centered
+lattice vortex data set and then computing a set of streamlines
+through that data set.
+
+
+
+
+Visualization/StreamLines-lic.net
+
+Use the StreamLines module to create a Line Interval Convolution like
+visualization of a vector data set.  First the scalar voltages for the
+utahtorso-lowres model are loaded in and then the gradient is taken of
+that data set.  Then 1000 seeds are randomly picked from inside the
+torso.  These are then streamlined and colored according to which seed
+they are.  Since the seeds are randomly distributed this results in
+a random but unique color per streamline.  Finally all of the 1000
+streamlines are displayed as transparent lines along with a reference
+torso boundary and the heart model.  For full 3D effect the model should
+be rotated interactively.

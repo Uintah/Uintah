@@ -22,13 +22,6 @@
 <title>Introduction</title>
 
 <para>
-<ulink url="http://www.python.org">Python</ulink> (version 1.5.2 or
-later) and <ulink url="http://www.gnu.org/directory/make.html">GNU
-make</ulink> (version 3.79 or later) must be present before proceeding
-with the source installation.
-</para>
-
-<para>
 Installation from sources consists of these steps:
 <orderedlist>
 <listitem>
@@ -49,7 +42,7 @@ third party software, sample data sets, and documentation.</para>
 
 <note>
 <title>Itanium Architecture</title>
-<para>When building &sr; for the Itanium architecture the GNU compiler
+<para>When building &sr; for the Itanium architecture, the GNU compiler
 collection (gcc) must be used and the values of the environment
 variables <envar>CFLAGS</envar> and <envar>CXXFFLAGS</envar> must be
 set as follows:</para>
@@ -69,8 +62,8 @@ export CFLAGS CXXFLAGS
 </note>
 </section>
 
-<section>
-<title>Downloading and Unpacking Sources</title>
+<section id="sec.sources">
+<title id="sec.title.sources">Downloading and Unpacking Sources</title>
 
 <orderedlist>
 
@@ -90,14 +83,22 @@ archive</ulink> page obtain the following:
 <para>
 &sr; package sources, e.g. <filename>BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
 </para>
+<note>
+<para>Download
+<filename>Insight.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+to add support for ITK in &sr;.  See also <link
+endterm="sec.title.obitk" linkend="sec.obitk"/>.
+</para>
+</note>
 </listitem>
 <listitem>
 <para>
 Third-party sources,
-<filename>Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz</filename>for
+<filename>Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+ for
 SGI/Linux and
 <filename>Thirdparty_install_osx.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-for &osx; users.
+ for &osx; users.
 </para>
 </listitem>
 <listitem>
@@ -121,17 +122,16 @@ Unpack the &sr; sources:
 <literallayout class="monospaced">
 gunzip -c &sr;.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
-This will create a directory called <filename>&sr;</filename>. Below,
-the term <quote>&sr;</quote> is used to refer to this
-directory.
+This creates a directory called <filename>&sr;</filename>.  The term
+<quote>&sr;</quote> refers to this directory.
 </para>
 </listitem>
 
 <listitem>
 <para>
 Unpack the compressed package sources into
-<filename>&sr;/src/Packages</filename>, for example, to unpack the
-BioPSE package type
+<filename>&sr;/src/Packages</filename>. For example, to unpack the
+BioPSE package type:
 <literallayout class="monospaced">
 gunzip -c BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz | (cd &sr;/src/Packages &amp;&amp; tar xf -)
 </literallayout>
@@ -144,9 +144,9 @@ Unpack the sample datasets:
 <literallayout class="monospaced">
 gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
-This will create the directory <filename>&sr;Data</filename>.  The
-directory can be moved to a new location, say
-<filename>/usr/local</filename>, accessible to all &sr; users.
+This creates the directory <filename>&sr;Data</filename>.
+<filename>&sr;Data</filename> should be moved to a location accessible to all &sr; users, say
+<filename>/usr/local</filename>.
 </para>
 </listitem>
 
@@ -159,13 +159,13 @@ For SGI/Linux:
 <literallayout class="monospaced">
 gunzip -c Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
-This will create the directory
+This creates the directory
 <filename>Thirdparty_install.<replaceable>x.x.x</replaceable></filename>.
 For &osx;:
 <literallayout class="monospaced">
 gunzip -c Thirdparty_install_osx.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
-This will create the directory
+This creates the directory
 <filename>Thirdparty_install_osx.<replaceable>x.x.x</replaceable></filename>.
 </para>
 </listitem>
@@ -176,7 +176,7 @@ Unpack the documentation:
 <literallayout class="monospaced">
 gunzip -c docs.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
-This will create the directory <filename>&sr;Docs</filename>. This
+This creates the directory <filename>&sr;Docs</filename>. This
 directory can be moved to a new location, say
 <filename>/usr/local</filename>, accessible to all &sr; users.  Point
 a browser at <filename>&sr;Docs/doc/index.html</filename> to access
@@ -208,7 +208,13 @@ SGI/Linux and &osx; platforms respectively.</para>
 <title>SGI/Linux</title>
 
 <para>
+<ulink url="http://www.python.org">Python</ulink> (version 1.5.2 or
+later) and <ulink url="http://www.gnu.org/directory/make.html">GNU
+make</ulink> (version 3.79 or later) must be present to proceed
+with source installation.
+</para>
 
+<para>
 Follow these steps to install the third-party distribution on
 SGI/Linux platforms:
 
@@ -276,7 +282,7 @@ Mandrake 9.0 Linux machine, the installation command:
 <literallayout class="monospaced">
 python install /usr/local/&sr;/Thirdparty
 </literallayout>
-will create the installation under:
+creates the installation under:
 <literallayout class="monospaced">
 /usr/local/&sr;/Thirdparty/1.8/Linux/gcc-3.2-32bit
 </literallayout>
@@ -297,8 +303,16 @@ tarball in the distribution.  Answer <userinput>y</userinput> to reinstall.
 the &osx; platform:
 <orderedlist>
 <listitem>
+<para>Create a directory for third-party binaries and libraries,
+for example:
+<literallayout class="monospaced">
+mkdir /usr/local/&sr;/Thirdparty_osx
+</literallayout></para>
+</listitem>
+
+<listitem>
 <para>
-<command>cd</command> to the third-party software directory:
+<command>cd</command> to the third-party sources directory:
 <literallayout class="monospaced">
 cd Thirdparty_install_osx.<replaceable>x.x.x</replaceable>
 </literallayout>
@@ -309,12 +323,12 @@ cd Thirdparty_install_osx.<replaceable>x.x.x</replaceable>
 <para>
 Run the third party installation script:
 <literallayout class="monospaced">
-install <replaceable>dir</replaceable>
+./install.sh <replaceable>dir</replaceable>
 </literallayout>
 where <replaceable>dir</replaceable> is the third-party installation
 directory.  For example:
 <literallayout class="monospaced">
-install /usr/local/&sr;/Thirdparty_osx
+./install.sh /usr/local/&sr;/Thirdparty_osx
 </literallayout>
 The path to the third-party installation directory is used in the
 configure step of the build process described in Section&nbsp;<link
@@ -363,17 +377,12 @@ configure command for SGI/Linux platforms is:
   --with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Irix/CC-32bit \
   --enable-package="BioPSE MatlabInterface"
 </literallayout>
-  An example
-configure command for &osx; is:
-<literallayout class="monospaced">
-../src/configure \
-  --with-thirdparty=/usr/local/&sr;/Thirdparty_osx \
-  --enable-package="BioPSE MatlabInterface"
-</literallayout>For &sr; to use the <acronym>PETSc</acronym> libraries the option
-<option>--with-unipetsc</option> must be used.  Options
-<option>--with-lapack</option> and <option>--with-blas</option> must
-be used if the <acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
-libraries are not in <filename>/usr/lib</filename> (<citetitle><xref
+
+Use option <option>--with-unipetsc</option> to add support for
+<acronym>PETSc</acronym>.  Options <option>--with-lapack</option> and
+<option>--with-blas</option> must be used if the
+<acronym>BLAS</acronym> and <acronym>LAPACK</acronym> libraries are
+not in <filename>/usr/lib</filename> (<citetitle><xref
 endterm="title.petsc_sr_config"
 linkend="sec.petsc_sr_config"/></citetitle> describes these options).
 For example:
@@ -388,31 +397,30 @@ For example:
 </para>
 
 <para>
-<!-- <inlinemediaobject> -->
-<!-- <imageobject> -->
-<!-- <imagedata fileref="osx.gif" format="GIF"/> -->
-<!-- </imageobject> -->
-<!-- </inlinemediaobject> -->
 &osx; builds of &sr; require use of configure options
 <option>--enable-32bit</option> and
-<option>--disable-sci-malloc</option>.  The configure command must
-also include the following environment variable assignments:
+<option>--disable-sci-malloc</option>.  Also, option
+<option>--enable-debug</option> is needed when building under &osx;
+10.2 using gcc 3.1 (December 2002 developer tools).  Option
+<option>--enable-debug</option> is not needed when building under
+&osx; 10.3 using gcc 3.3.  The configure command must also include the
+following environment variable assignments:
 <userinput>CC=gcc</userinput> and <userinput>CXX=g++</userinput>.  For
 example:
 <literallayout class="monospaced">
 ../src/configure \
-  --with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/OSX/CC-32bit \
+  --with-thirdparty=/usr/local/&sr;/Thirdparty_osx \
   --enable-package="BioPSE MatlabInterface" \
   --enable-32bit \
   --disable-sci-malloc \
+  --enable-debug \
   CC=gcc CXX=g++
 </literallayout>
 </para>
 
 <para>
-There are options to the configure command that have not been
-mentioned. The <command>configure --help</command> command lists them
-all.
+Not all of <command>configure</command>'s options have been
+mentioned. Command <command>configure --help</command> lists them all.
 </para>
 
 </listitem>
@@ -423,7 +431,7 @@ Run (GNU) make from the previously used directory when running
 configure (e.g. <filename>&sr;/linux</filename>,
 <filename>&sr;/sgi32</filename>, <filename>&sr;/sgi64</filename>, or
 <filename>&sr;/osx</filename>).  Note that the
-<quote>configure</quote> directory will be called
+<quote>configure</quote> directory is called
 <replaceable>build_dir</replaceable> from this point on.
 <literallayout class="monospaced">
 cd <replaceable>build_dir</replaceable>
@@ -442,7 +450,7 @@ make -j <replaceable>N</replaceable>
 </literallayout>
 where <replaceable>N</replaceable> is the number of processors
 available for use by make.  Using this option on a multiprocessor
-machine will often significantly reduce the time to build &sr;.
+machine can significantly reduce the time to build &sr;.
 </para>
 <para>
 Be sure to read <citetitle pubwork="section"><xref
@@ -462,7 +470,7 @@ will contain the <filename>scirun</filename> executable.
 It is possible to build &sr; for multiple machine architectures. For instance, 
 a Linux version and 32 bit and 64 bit Irix versions.  If the
 <filename>&sr;</filename> directory resides on a volume shared by all
-machines then do the following:
+machines, do the following:
 <literallayout class="monospaced">
 mkdir &sr;/linux
 mkdir &sr;/sgi32

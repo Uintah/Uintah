@@ -44,8 +44,6 @@ namespace SCITeem {
 class UnuResample : public Module {
 public:
   int getint(const char *str, int *n, int *none);
-  int get_sizes(vector<string> &resampAxis, Nrrd *nrrd, 
-		NrrdResampleInfo *info);
   UnuResample(GuiContext *ctx);
   virtual ~UnuResample();
   virtual void execute();
@@ -124,33 +122,6 @@ UnuResample::getint(const char *str, int *n, int *none)
     return 1;
   }
   return 0;
-}
-
-
-int 
-UnuResample::get_sizes(vector<string> &resampAxis, Nrrd *nrrd, NrrdResampleInfo *info)
-{
-  msgStream_ << "NrrdResample sizes: ";
-  // set tuple axis info
-  info->samples[0] = nrrd->axis[0].size;
-  info->kernel[0] = 0;
-  dim_.reset();
-  for (int a = 1; a < dim_.get(); a++) {
-    // only do work on geometric axes.
-    info->samples[a] = nrrd->axis[a].size;
-    const char *str = resampAxis[a].c_str();
-    int none=0;
-    if (getint(str, &(info->samples[a]), &none)) { 
-      msgStream_ << "NrrdResample -- bad size.\n"; 
-      return 0;
-    }
-    if (none) info->kernel[a] = 0;
-    msgStream_ << info->samples[a];
-    if (!info->kernel[a]) msgStream_ << "=";
-    msgStream_ << " ";
-  }
-  msgStream_ << endl;
-  return 1;
 }
 
 void 
@@ -250,17 +221,36 @@ UnuResample::execute()
 
   for (int a = 0; a < dim_.get(); a++) {
     info->kernel[a] = kern;
+    msgStream_ << "NrrdResample sizes: ";
+    if (a==0) {
+      info->samples[0] = nin->axis[0].size;
+      info->kernel[0]=0;
+    } else {
+      info->samples[a]=nin->axis[a].size;
+      char *str = strdup(resampAxes_[a]->get().c_str());
+      int none=0;
+      if (getint(str, &(info->samples[a]), &none)) {
+	error("NrrdResample -- bad size."); 
+	return;
+      }
+      if (none) info->kernel[a] = 0;
+      msgStream_ << info->samples[a];
+      if (!info->kernel[a]) msgStream_ << "=";
+      msgStream_ << " ";
+    }
     memcpy(info->parm[a], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
-    if (!(AIR_EXISTS(nin->axis[a].min) && AIR_EXISTS(nin->axis[a].max)))
-      nrrdAxisMinMaxSet(nrrdH->nrrd, a, nrrdCenterNode);
+    if (info->kernel[a] && 
+	(!(AIR_EXISTS(nin->axis[a].min) && AIR_EXISTS(nin->axis[a].max)))) {
+      nrrdAxisMinMaxSet(nrrdH->nrrd, a, nin->axis[a].center ? 
+			nin->axis[a].center : nrrdDefCenter);
+    }
     info->min[a] = nrrdH->nrrd->axis[a].min;
     info->max[a] = nrrdH->nrrd->axis[a].max;
   }    
+  msgStream_ << endl;
   info->boundary = nrrdBoundaryBleed;
   info->type = nin->type;
   info->renormalize = AIR_TRUE;
-
-  if (!get_sizes(last_RA_, nrrdH->nrrd, info)) return;
 
   last_generation_ = nrrdH->generation;
 

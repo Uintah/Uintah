@@ -75,7 +75,7 @@ ChooseColorMap::execute()
   while (pi != range.second && idx != 0) { ++pi ; idx--; }
   int port_number=pi->second;
   if (pi == range.second || ++pi == range.second) { 
-    error("Selected port index out of range"); return; 
+    error("An input pipe is not plugged into the specified port."); return; 
   }
   
   ColorMapIPort *ifield = (ColorMapIPort *)get_iport(port_number);

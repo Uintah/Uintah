@@ -77,6 +77,9 @@ private:
 
   Point pick_pointvar_;
   Point pick_headvar_;
+  double pick_scale_;
+  double pick_length_;
+  Vector pick_dir_;
 };
 
 } // End namespace SCIRun

@@ -1,0 +1,222 @@
+# SCI Network 1.20
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+set bbox {9 8 823 527}
+set Name {Main}
+
+# Create the Modules
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 9 8]
+set m1 [addModuleAtPosition "SCIRun" "FieldsData" "Gradient" 640 156]
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 411 483]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 233 221]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 233 284]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 9 397]
+set m6 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 233 96]
+set m7 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 215 162]
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 215 380]
+set m9 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 658 219]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 622 404]
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 640 280]
+set m12 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 622 341]
+set m13 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldBoundary" 447 221]
+set m14 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 447 285]
+
+# Set the Module Notes Dispaly Options
+
+# Create the Connections between Modules
+set c0 [addConnection $m0 0 $m13 0]
+set c1 [addConnection $m0 0 $m9 0]
+set c2 [addConnection $m0 0 $m7 0]
+set c3 [addConnection $m0 0 $m12 0]
+set c4 [addConnection $m0 0 $m1 0]
+set c5 [addConnection $m0 0 $m5 0]
+set c6 [addConnection $m13 0 $m14 0]
+set c7 [addConnection $m7 0 $m8 0]
+set c8 [addConnection $m12 0 $m10 0]
+set c9 [addConnection $m1 0 $m11 0]
+set c10 [addConnection $m3 0 $m4 0]
+set c11 [addConnection $m5 1 $m2 0]
+set c12 [addConnection $m6 0 $m7 1]
+set c13 [addConnection $m9 0 $m11 1]
+set c14 [addConnection $m7 0 $m4 1]
+set c15 [addConnection $m4 0 $m5 1]
+set c16 [addConnection $m4 0 $m8 1]
+set c17 [addConnection $m4 0 $m10 1]
+set c18 [addConnection $m8 0 $m2 1]
+set c19 [addConnection $m11 0 $m12 1]
+set c20 [addConnection $m14 0 $m2 2]
+set c21 [addConnection $m9 1 $m2 3]
+set c22 [addConnection $m10 0 $m2 4]
+
+# Mark which Connections are Disabled
+
+# Set the Connection Notes and Dislpay Options
+
+# Set the GUI variables for each Module
+set $m0-notes {}
+set $m0-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
+
+set $m1-notes {}
+
+set $m2-notes {}
+$m2 ui
+set $m2-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m2-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m2-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m2-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m2-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m2-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m2-ViewWindow_0-view-up-x ${view-up-x}
+set $m2-ViewWindow_0-view-up-y ${view-up-y}
+set $m2-ViewWindow_0-view-up-z ${view-up-z}
+set $m2-ViewWindow_0-view-fov ${view-fov}
+set $m2-ViewWindow_0-specular-scale {0.4}
+
+set $m3-notes {}
+set $m3-tcl_status {Calling GenStandardColorMaps!}
+set $m3-positionList {}
+set $m3-nodeList {}
+set $m3-width {1}
+set $m3-height {1}
+set $m3-mapType {3}
+set $m3-minRes {12}
+set $m3-resolution {128}
+set $m3-realres {128}
+set $m3-gamma {0}
+set $m4-notes {}
+set $m4-isFixed {0}
+set $m4-min {-78.301809804673255}
+set $m4-max {61.098199999999999}
+set $m4-makeSymmetric {0}
+
+set $m5-notes {}
+set $m5-isoval {0}
+set $m5-isoval-min {-5058.8599999999997}
+set $m5-isoval-max {1780.3499999999999}
+set $m5-isoval-typed {0}
+set $m5-isoval-quantity {1}
+set $m5-quantity-range {field}
+set $m5-quantity-min {0}
+set $m5-quantity-max {100}
+set $m5-isoval-list {0.0 1.0 2.0 3.0}
+set $m5-extract-from-new-field {1}
+set $m5-algorithm {0}
+set $m5-build_trisurf {1}
+set $m5-np {1}
+set $m5-active-isoval-selection-tab {0}
+set $m5-active_tab {}
+set $m5-update_type {on release}
+set $m5-color-r {0.4}
+set $m5-color-g {0.2}
+set $m5-color-b {0.9}
+
+set $m6-notes {}
+set $m6-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
+
+set $m7-notes {}
+set $m7-interpolation_basis {linear}
+set $m7-map_source_to_single_dest {0}
+set $m7-exhaustive_search {1}
+set $m7-exhaustive_search_max_dist {-1}
+set $m7-np {1}
+
+set $m8-notes {}
+set $m8-nodes-on {1}
+set $m8-edges-on {0}
+set $m8-faces-on {0}
+set $m8-text-on {0}
+set $m8-def-color-r {0.5}
+set $m8-def-color-g {0.5}
+set $m8-def-color-b {0.5}
+set $m8-def-color-a {0.5}
+set $m8-node_display_type {Spheres}
+set $m8-active_tab {Nodes}
+set $m8-node_scale [expr 0.03 * ${global-scale}]
+set $m8-field-name {Electrodes}
+set $m8-node-resolution {6}
+
+set $m9-notes {}
+set $m9-maxseeds {50}
+set $m9-numseeds {35}
+set $m9-whichtab {Widget}
+
+set $m10-notes {}
+set $m10-nodes-on {0}
+set $m10-edges-on {1}
+set $m10-faces-on {0}
+set $m10-text-on {0}
+set $m10-def-color-r {0.5}
+set $m10-def-color-g {0.5}
+set $m10-def-color-b {0.5}
+set $m10-def-color-a {0.5}
+set $m10-edge_display_type {Cylinders}
+set $m10-edge_scale [expr 0.01 * ${global-scale}]
+set $m10-field-name {StreamLines}
+set $m10-edge-resolution {6}
+
+set $m11-notes {}
+set $m11-stepsize {0.8}
+set $m11-tolerance {0.8}
+set $m11-maxsteps {250}
+set $m11-direction {1}
+set $m11-color {1}
+set $m11-remove-colinear {1}
+set $m11-method {5}
+set $m11-np {1}
+
+set $m12-notes {}
+set $m12-interpolation_basis {linear}
+set $m12-map_source_to_single_dest {0}
+set $m12-exhaustive_search {1}
+set $m12-exhaustive_search_max_dist {-1}
+set $m12-np {1}
+
+set $m13-notes {}
+
+set $m14-notes {}
+set $m14-nodes-on {0}
+set $m14-edges-on {1}
+set $m14-edges-transparency {1}
+set $m14-faces-on {0}
+set $m14-text-on {0}
+set $m14-def-color-r {0.30}
+set $m14-def-color-g {0.30}
+set $m14-def-color-b {0.30}
+set $m14-def-color-a {0.80}
+set $m14-edge_display_type {Lines}
+set $m14-active_tab {Edges}
+set $m14-edge_scale {2.00}
+set $m14-field-name {Boundary}
+
+::netedit scheduleok

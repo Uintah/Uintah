@@ -42,7 +42,7 @@ This filter produces an output image whose pixels are either one of two values (
     </input>  
   </inputs>
   <outputs>
-    <output name="OutputImge">
+    <output name="OutputImage">
       <type>OutputImageType</type>
       <call>GetOutput</call>
     </output>

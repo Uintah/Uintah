@@ -136,18 +136,24 @@ TransformData2::execute()
     "<" + outputdatatype + "> ";
   int hoffset = 0;
   Handle<TransformData2Algo> algo;
+
+  // remove trailing white-space from the function string
+  string func=function_.get();
+  while (func.size() && isspace(func[func.size()-1]))
+    func.resize(func.size()-1);
+
   while (1)
   {
     CompileInfoHandle ci =
-      TransformData2Algo::get_compile_info(ftd0, ftd1, oftn, ltd,
-					   function_.get(), hoffset);
+      TransformData2Algo::get_compile_info(ftd0, ftd1, oftn, ltd, 
+					   func, hoffset);
     if (!DynamicCompilation::compile(ci, algo, false, this))
     {
       DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
       error("Your function would not compile.");
       return;
     }
-    if (algo->identify() == function_.get())
+    if (algo->identify() == func)
     {
       break;
     }

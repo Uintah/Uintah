@@ -59,13 +59,15 @@ DECLARE_MAKER(Viewer)
 //----------------------------------------------------------------------
 Viewer::Viewer(GuiContext* ctx)
   : Module("Viewer", ctx, ViewerSpecial,"Render","SCIRun"),
+    view_window_lock_("Viewer view window lock"),
     geomlock_("Viewer geometry lock"), 
     // CollabVis code begin
 #ifdef HAVE_COLLAB_VIS
     newViewWindowMailbox( "NewViewWindowMailbox", 10 ),
 #endif
     // CollabVis code end
-    max_portno_(0)
+    max_portno_(0),
+    stop_rendering_(false)
 {
 
   map<LightID, int> li;
@@ -105,15 +107,15 @@ Viewer::Viewer(GuiContext* ctx)
 //----------------------------------------------------------------------
 Viewer::~Viewer()
 {
+
 }
-
-
 //----------------------------------------------------------------------
-void Viewer::do_execute()
+void
+Viewer::do_execute()
 {
   for(;;)
   {
-    if(mailbox.numItems() == 0)
+    if(!stop_rendering_ && mailbox.numItems() == 0)
     {
       // See if anything needs to be redrawn...
       int did_some=1;
@@ -122,31 +124,35 @@ void Viewer::do_execute()
 	did_some=0;
 	for(unsigned int i=0;i<view_window_.size();i++)
 	{
-	  if (view_window_[i]->need_redraw)
-	  {
-	    did_some++;
-	    view_window_[i]->redraw_if_needed();
+	  if (view_window_[i]) {
+	    if (view_window_[i]->need_redraw)
+	    {
+	      did_some++;
+	      view_window_[i]->redraw_if_needed();
+	    }
 	  }
 	}
       }
     }
-    if (process_event() == 86)
+    if (process_event() == 86)  
     {
-      //for(unsigned int i=0;i<view_window_.size();i++)
-      //{
-      //	View_Window_* r=view_window_[i];
-      //if (r && r->current_renderer)
-      //{
-      //r->current_renderer->kill_helper();
-      //	}
-      //      }
+      for(unsigned int i=0;i<view_window_.size();i++)
+      {
+      	ViewWindow* r=view_window_[i];
+	if (r && r->current_renderer)
+	{
+	  r->current_renderer->kill_helper();
+	  r->manager = 0;
+      	}
+      }
       return;
     }
   }
 }
 
 //----------------------------------------------------------------------
-int Viewer::process_event()
+int 
+Viewer::process_event()
 {
   MessageBase* msg=mailbox.receive();
   GeometryComm* gmsg=(GeometryComm*)msg;
@@ -154,6 +160,14 @@ int Viewer::process_event()
   {
   case MessageTypes::GoAway:
     return 86;
+
+  case MessageTypes::GoAwayWarn:
+    stop_rendering_ = true;
+    //stop spinning windows...
+    for(unsigned i = 0; i < view_window_.size(); i++) {
+      view_window_[i]->inertia_mode = 0;
+    }    
+    break;
 
   case MessageTypes::ExecuteModule:
     // We ignore these messages...
@@ -528,15 +542,15 @@ void Viewer::delObj(GeomViewerPort* port, int serial)
 void Viewer::delAll(GeomViewerPort* port)
 {
   GeomIndexedGroup::IterIntGeomObj iter = port->getIter();
-  
-  for ( ; iter.first != iter.second; iter.first++)
-  {
-    GeomViewerItem* si =
-      (GeomViewerItem*)((*iter.first).second.get_rep());
-    for (unsigned int i=0; i<view_window_.size(); i++)
-      view_window_[i]->itemDeleted(si);
+  if (!stop_rendering_) {
+    for ( ; iter.first != iter.second; iter.first++)
+    {
+      GeomViewerItem* si =
+	(GeomViewerItem*)((*iter.first).second.get_rep());
+      for (unsigned int i=0; i<view_window_.size(); i++)
+	view_window_[i]->itemDeleted(si);
+    }
   }
-  
   port->delAll();
 }
 
@@ -588,8 +602,10 @@ void Viewer::delete_viewwindow(ViewWindow* delviewwindow)
   {
     if(view_window_[i] == delviewwindow)
     {
+      view_window_lock_.lock();
       view_window_.erase(view_window_.begin() + i);
       delete delviewwindow;
+      view_window_lock_.unlock();
     }
   }
 }

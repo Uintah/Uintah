@@ -83,6 +83,7 @@ SamplePlane::~SamplePlane()
 void
 SamplePlane::execute()
 {
+  update_state(NeedData);
   const int axis = Min(2, Max(0, axis_.get()));
   Transform trans;
   trans.load_identity();

@@ -97,19 +97,25 @@ MaskLattice::execute()
   
   Handle<MaskLatticeAlgo> algo;
   int hoff = 0;
+
+  // remove trailing white-space from the function string
+  string maskfunc=maskfunction_.get();
+  while (maskfunc.size() && isspace(maskfunc[maskfunc.size()-1]))
+    maskfunc.resize(maskfunc.size()-1);
+
   while (1)
   {
     const TypeDescription *ftd = ifieldhandle->get_type_description();
     const TypeDescription *ltd = ifieldhandle->data_at_type_description();
     CompileInfoHandle ci =
-      MaskLatticeAlgo::get_compile_info(ftd, ltd, maskfunction_.get(), hoff);
+      MaskLatticeAlgo::get_compile_info(ftd, ltd, maskfunc, hoff);
     if (!DynamicCompilation::compile(ci, algo, false, this))
     {
       DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
       error("Your function would not compile.");
       return;
     }
-    if (algo->identify() == maskfunction_.get())
+    if (algo->identify() == maskfunc)
     {
       break;
     }

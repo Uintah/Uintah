@@ -46,7 +46,6 @@ itcl_class SCIRun_Visualization_StreamLines {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -95,7 +94,9 @@ itcl_class SCIRun_Visualization_StreamLines {
 
 
 	frame $w.meth -relief groove -borderwidth 2
-	label $w.meth.label -text "Computation Method"
+	label $w.meth.label -text "Sreamline Computation Method"
+	radiobutton $w.meth.cw -text "Cell Walk" \
+	    -variable $this-method -value 5
 	radiobutton $w.meth.ab -text "Adams-Bashforth Multi-Step" \
 	    -variable $this-method -value 0
 	#radiobutton $w.meth.o2 -text "Adams Moulton Multi Step" -variable $this-method \
@@ -108,22 +109,18 @@ itcl_class SCIRun_Visualization_StreamLines {
 	    -variable $this-method -value 4
 	
 	pack $w.meth.label -side top -fill both
-	pack $w.meth.ab $w.meth.heun $w.meth.rk4 $w.meth.rkf \
+	pack $w.meth.cw $w.meth.ab $w.meth.heun $w.meth.rk4 $w.meth.rkf \
 	    -side top -anchor w
 
 
 	checkbutton $w.filter -text "Filter Colinear Points" \
 		-variable $this-remove-colinear -justify left
 
-
-	frame $w.row4
-	button $w.row4.execute -text "Execute" -command "$this-c needexecute"
-	
-	pack $w.row4.execute -side top -e n -f both
-
-	pack $w.meth $w.e $w.direction $w.color $w.filter $w.row4 \
-		-side top -e y -f both \
+	pack $w.meth $w.e $w.direction $w.color $w.filter -side top -e y -f both \
 		-padx 5 -pady 5
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
 

@@ -200,9 +200,7 @@ itcl_class SCIRun_Visualization_TexCuttingPlanes {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    wm deiconify $w
-	    raise $w
-	    return;
+	    return
 	}
 	toplevel $w
 	set n "$this-c needexecute "
@@ -234,7 +232,7 @@ itcl_class SCIRun_Visualization_TexCuttingPlanes {
 	pack $w.frame_title -side top -expand yes
 
 	frame $w.f3 -relief groove -borderwidth 2
-	pack $w.f3 -padx 2 -pady 2 -fill x
+	pack $w.f3 -padx 4 -pady 4 -fill x
 
 	label $w.f3.l -text "Interpolation Mode"
 	radiobutton $w.f3.interp -text "Interpolate" -relief flat \
@@ -245,14 +243,10 @@ itcl_class SCIRun_Visualization_TexCuttingPlanes {
 		-variable $this-interp_mode -value 0 \
 		-anchor w -command $n
 
-	pack $w.f3.l $w.f3.interp $w.f3.near \
-		-side top -fill x
+	pack $w.f3.l $w.f3.interp $w.f3.near -side top -fill x -padx 4 -pady 2
 	
-	button $w.exec -text "Execute" -command $n
-	pack $w.exec -side top -fill x
-	
-	button $w.close -text "Close" -command "wm withdraw $w"
-	pack $w.close -side top -fill x
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
 
 	$this state 
     }

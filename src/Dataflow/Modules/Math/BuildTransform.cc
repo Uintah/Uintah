@@ -61,6 +61,7 @@ class BuildTransform : public Module {
   GuiInt pre_transform_gui_;
   GuiString which_transform_gui_;
   GuiDouble widget_scale_gui_;
+  GuiInt ignoring_widget_changes_gui_;
 
   MatrixHandle omatrixH_;
   BoxWidget *box_widget_;
@@ -69,7 +70,6 @@ class BuildTransform : public Module {
   Transform composite_trans_, latest_trans_, latest_widget_trans_;
   Transform widget_trans_, widget_pose_inv_trans_;
   Point widget_pose_center_;
-  int ignoring_widget_changes_;
   int have_been_initialized_;
   int widgetid_;
 
@@ -112,8 +112,8 @@ BuildTransform::BuildTransform(GuiContext* ctx) :
   pre_transform_gui_(ctx->subVar("pre_transform")),
   which_transform_gui_(ctx->subVar("which_transform")),
   widget_scale_gui_(ctx->subVar("widget_scale")),
+  ignoring_widget_changes_gui_(ctx->subVar("ignoring_widget_changes")),
   widget_lock_("BuildTransform widget lock"),
-  ignoring_widget_changes_(1),
   have_been_initialized_(0),
   widgetid_(0)
 {
@@ -222,7 +222,7 @@ void BuildTransform::execute()
     box_widget_->SetPosition(C, R, D, I);
     
     // find the difference between widget_pose(_inv) and the current pose
-    if (!ignoring_widget_changes_) {
+    if (!ignoring_widget_changes_gui_.get()) {
       local_transform.load_frame(C,R-C,D-C,I-C);
       local_transform.post_trans(widget_pose_inv_trans_);
       local_transform.post_translate(-widget_pose_center_.vector());
@@ -280,12 +280,6 @@ void BuildTransform::tcl_command(GuiArgs& args, void* userdata) {
     widget_pose_center_=Point(0,0,0);
     widget_pose_inv_trans_.load_identity();
     want_to_execute();
-  } else if (args[1] == "change_ignore") {
-    if (args[2] == "1") {	// start ignoring widget changes
-      ignoring_widget_changes_=1;
-    } else {		        // stop ignoring widget changes
-      ignoring_widget_changes_=0;
-    }
   } else if (args[1] == "change_handles") {
     if (args[2] == "1") {	// start showing resize handles
       box_widget_->SetCurrentMode(1);

@@ -14,6 +14,7 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Datatypes/MatrixOperations.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Math/function.h>
 #include <Dataflow/Ports/MatrixPort.h>
@@ -94,39 +95,15 @@ void LinAlgBinary::execute() {
       error("Addition requires A and B must be the same size.");
       return;
     }
-    if (aH->is_column() && bH->is_column())
-    {
-      ColumnMatrix *ac = aH->as_column();
-      ColumnMatrix *bc = bH->as_column();
-      ColumnMatrix *cc = scinew ColumnMatrix(ac->nrows());
-      Add(*cc, *ac, *bc);
-      omat_->send(MatrixHandle(cc));
-    }
-    else if (aH->is_sparse() && bH->is_sparse())
-    {
-      SparseRowMatrix *as = aH->as_sparse();
-      SparseRowMatrix *bs = bH->as_sparse();
-      SparseRowMatrix *cs = AddSparse(*as, *bs);
-      omat_->send(MatrixHandle(cs));
-    }
-    else
-    {
-      DenseMatrix *ad=aH->dense();
-      DenseMatrix *bd=bH->dense();
-      DenseMatrix *cd=scinew DenseMatrix(ad->nrows(), bd->ncols());
-      Add(*cd, *ad, *bd);
-      if (!(aH->as_dense())) { delete ad; }
-      if (!(bH->as_dense())) { delete bd; }
-      omat_->send(MatrixHandle(cd));
-    }
+    omat_->send(aH + bH);
     return;
   } else if (op == "Mult") {
     if (!aH.get_rep()) {
-      error("Empty A matrix for Add");
+      error("Empty A matrix for Mult");
       return;
     }
     if (!bH.get_rep()) {
-      error("Empty B matrix for Add");
+      error("Empty B matrix for Mult");
       return;
     }
     if (aH->ncols() != bH->nrows())
@@ -134,13 +111,7 @@ void LinAlgBinary::execute() {
       error("Matrix multiply requires the number of columns in A to be the same as the number of rows in B.");
       return;
     }
-    DenseMatrix *ad=aH->dense();
-    DenseMatrix *bd=bH->dense();
-    DenseMatrix *cd=scinew DenseMatrix(ad->nrows(), bd->ncols());
-    Mult(*cd, *ad, *bd);
-    if (!(aH->is_dense())) { delete ad; }
-    if (!(bH->is_dense())) { delete bd; }
-    omat_->send(MatrixHandle(cd));
+    omat_->send(aH * bH);
     return;
   } else if (op == "Function") {
     if (aH->nrows()*aH->ncols() != bH->nrows()*bH->ncols()) {

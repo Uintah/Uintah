@@ -103,6 +103,7 @@ DECLARE_MAKER(<xsl:value-of select="/filter/filter-sci/@name"/>)
 #include &lt;Core/Malloc/Allocator.h&gt;
 #include &lt;Core/GuiInterface/GuiVar.h&gt;
 #include &lt;Packages/Insight/share/share.h&gt;
+#include &lt;Packages/Insight/Dataflow/Ports/ITKDatatypePort.h&gt;
 <xsl:for-each select="/filter/filter-sci/includes/file">
 #include &lt;<xsl:value-of select="."/>&gt;
 </xsl:for-each>
@@ -120,6 +121,9 @@ DECLARE_MAKER(<xsl:value-of select="/filter/filter-sci/@name"/>)
 <xsl:text> : public Module 
 {
 public:
+
+  // Filter Declaration
+  itk::Object::Pointer filter_;
 
   // Declare GuiVars
   </xsl:text>
@@ -156,17 +160,7 @@ public:
 <xsl:text>, </xsl:text>
 </xsl:if>
 </xsl:for-each><xsl:text> &gt; 
-  bool run( </xsl:text>
-<xsl:for-each select="/filter/filter-itk/inputs/input">
-<xsl:variable name="import"><xsl:value-of select="@import"/></xsl:variable>
-<xsl:choose>
-  <xsl:when test="$import = 'yes'">
-  <xsl:variable name="import_name"><xsl:value-of select="type"/></xsl:variable>itk::Object*</xsl:when>
-  <xsl:otherwise>itk::Object* </xsl:otherwise>
-</xsl:choose>
-<xsl:if test="position() &lt; last()">
-<xsl:text>, </xsl:text>
-</xsl:if></xsl:for-each> );
+  bool run( </xsl:text><xsl:for-each select="/filter/filter-itk/inputs/input">itk::Object* <xsl:text> </xsl:text><xsl:if test="position() &lt; last()"><xsl:text>, </xsl:text></xsl:if></xsl:for-each> );
 };
 
 </xsl:template>
@@ -186,7 +180,7 @@ public:
 <xsl:choose>
 <xsl:when test="$defined_object = 'yes'">
 <xsl:variable name="data_type"><xsl:value-of select="type"/></xsl:variable>
-<xsl:variable name="type2"><xsl:value-of select="/filter/filter-itk/datatypes/datatype[@name=$data_type]/member-var/elem-type"/></xsl:variable>
+<xsl:variable name="type2"><xsl:value-of select="/filter/filter-itk/datatypes/array[@name=$data_type]/elem-type"/></xsl:variable>
 
 <xsl:choose>
 <xsl:when test="$type2 = 'double'">vector&lt; GuiDouble* &gt; </xsl:when>
@@ -204,6 +198,10 @@ vector&lt; GuiDouble* &gt; </xsl:otherwise>
 <xsl:when test="$type = 'float'">GuiDouble </xsl:when>
 <xsl:when test="$type = 'int'">GuiInt </xsl:when>
 <xsl:when test="$type = 'bool'">GuiInt </xsl:when>
+<xsl:when test="$type = 'char'">GuiString </xsl:when>
+<xsl:when test="$type = 'unsigned char'">GuiString </xsl:when>
+<xsl:when test="$type = 'short'">GuiInt </xsl:when>
+<xsl:when test="$type = 'unsigned short'">GuiInt </xsl:when>
 <xsl:otherwise>
 GuiDouble </xsl:otherwise>
 </xsl:choose>
@@ -227,47 +225,25 @@ GuiDouble </xsl:otherwise>
 <xsl:variable name="type-name"><xsl:value-of select="type"/></xsl:variable>
 <xsl:variable name="iport">inport_<xsl:value-of select="@name"/></xsl:variable>
 <xsl:variable name="ihandle">inhandle_<xsl:value-of select="@name"/></xsl:variable>
-<xsl:variable name="import"><xsl:value-of select="@import"/></xsl:variable>
 <xsl:variable name="optional"><xsl:value-of select="@optional"/></xsl:variable>
-<xsl:choose>
-  <xsl:when test="$import = 'yes'">
-  <xsl:variable name="import_filter"><xsl:value-of select="type"/></xsl:variable>
-  <xsl:variable name="import_port"><xsl:value-of select="port"/></xsl:variable>
-  <xsl:variable name="import_type"><xsl:value-of select="/filter/filter-itk/filter[@name=$import_filter]/filter-itk/inputs/input[@name=$import_port]/type"/></xsl:variable><!-- hard coded datatype --><xsl:text>  </xsl:text>ITKDatatype<xsl:text>IPort* </xsl:text><xsl:value-of select="$iport"/><xsl:text>_;
-  </xsl:text><!-- hard coded datatype --><xsl:text>ITKDatatypeHandle </xsl:text><xsl:value-of select="$ihandle"/>_;
-  </xsl:when>
-  <xsl:otherwise>
 <!-- hard coded datatype --><xsl:text>ITKDatatypeIPort* </xsl:text><xsl:value-of select="$iport"/><xsl:text>_;
   </xsl:text><!-- hard coded datatype --><xsl:text>ITKDatatypeHandle </xsl:text><xsl:value-of select="$ihandle"/>_;
-  </xsl:otherwise>
-</xsl:choose>
-
+  int last_<xsl:value-of select="@name"/>_;
 <xsl:if test="$optional = 'yes'">  bool <xsl:value-of select="$iport"/>_has_data_;
 </xsl:if>
 <xsl:text>
   </xsl:text>
-</xsl:for-each>
+  </xsl:for-each>
 
 <xsl:for-each select="/filter/filter-itk/outputs/output">
 <xsl:variable name="type-name"><xsl:value-of select="type"/></xsl:variable>
 <xsl:variable name="oport">outport_<xsl:value-of select="@name"/></xsl:variable>
 <xsl:variable name="ohandle">outhandle_<xsl:value-of select="@name"/></xsl:variable>
-<xsl:variable name="import"><xsl:value-of select="@import"/></xsl:variable>
-<xsl:choose>
-  <xsl:when test="$import = 'yes'">
-  <xsl:variable name="import_filter"><xsl:value-of select="type"/></xsl:variable>
-  <xsl:variable name="import_port"><xsl:value-of select="port"/></xsl:variable>
-  <xsl:variable name="import_type"><xsl:value-of select="/filter/filter-itk/filter[@name=$import_filter]/filter-itk/outputs/output[@name=$import_port]/type"/></xsl:variable>
-<!-- hard coded datatype --><xsl:text>ITKDatatypeIPort* </xsl:text><xsl:value-of select="$oport"/><xsl:text>_;
-  </xsl:text><!-- hard coded datatype --><xsl:text>ITKDatatypeHandle </xsl:text><xsl:value-of select="$ohandle"/>_;
-  </xsl:when>
-  <xsl:otherwise>
 <!-- hard coded datatype --><xsl:text>ITKDatatypeOPort* </xsl:text><xsl:value-of select="$oport"/><xsl:text>_;
   </xsl:text><!-- hard coded datatype --><xsl:text>ITKDatatypeHandle </xsl:text><xsl:value-of select="$ohandle"/><xsl:text>_;
 
   </xsl:text>
-  </xsl:otherwise>
-</xsl:choose></xsl:for-each>
+</xsl:for-each>
 </xsl:template>
 
 
@@ -291,35 +267,16 @@ template&lt;</xsl:text>
 bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 
 <xsl:for-each select="/filter/filter-itk/inputs/input">
-<xsl:variable name="var">obj_<xsl:value-of select="@name"/> </xsl:variable>
-<xsl:variable name="import"><xsl:value-of select="@import"/></xsl:variable>
-<xsl:choose>
-  <xsl:when test="$import = 'yes'">
-  <xsl:variable name="import_name"><xsl:value-of select="type"/></xsl:variable>itk::Object* </xsl:when>
-  <xsl:otherwise>itk::Object<xsl:text> *</xsl:text>
-  </xsl:otherwise>
-</xsl:choose>
-<xsl:value-of select="$var"/>
+<xsl:variable name="var">obj_<xsl:value-of select="@name"/> </xsl:variable>itk::Object<xsl:text> *</xsl:text><xsl:value-of select="$var"/>
   <xsl:if test="position() &lt; last()"><xsl:text>, </xsl:text>
-  </xsl:if>
-</xsl:for-each>) 
+  </xsl:if></xsl:for-each>) 
 {
 <xsl:for-each select="/filter/filter-itk/inputs/input">
 <xsl:variable name="type"><xsl:value-of select="type"/></xsl:variable>
 <xsl:variable name="data">data_<xsl:value-of select="@name"/></xsl:variable>
 <xsl:variable name="obj">obj_<xsl:value-of select="@name"/></xsl:variable>
-<xsl:variable name="import"><xsl:value-of select="@import"/></xsl:variable>
 <xsl:text>  </xsl:text>
-<xsl:choose>
-  <xsl:when test="$import = 'yes'">
-  <xsl:variable name="import_filter"><xsl:value-of select="type"/></xsl:variable>
-  <xsl:variable name="port"><xsl:value-of select="port"/></xsl:variable>
-  <xsl:value-of select="/filter/filter-itk/filter[@name=$import_filter]/filter-itk/inputs/input[@name=$port]/type"/>
-  </xsl:when>
-  <xsl:otherwise>
   <xsl:value-of select="$type"/> *<xsl:value-of select="$data"/> = dynamic_cast&lt;  <xsl:value-of select="$type"/> * &gt;(<xsl:value-of select="$obj"/>);
-</xsl:otherwise>
-</xsl:choose>
   <xsl:variable name="optional"><xsl:value-of select="@optional"/></xsl:variable>
   <xsl:choose>
   <xsl:when test="$optional = 'yes'">
@@ -343,10 +300,47 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   </xsl:if>
  </xsl:for-each> &gt; FilterType;
 
-  // create a new filter
-  typename FilterType::Pointer filter = FilterType::New();
+  // Check if filter_ has been created
+  // or the input data has changed. If
+  // this is the case, set the inputs.
 
-  // set filter 
+  if(filter_ == 0<xsl:for-each select="/filter/filter-itk/inputs/input"><xsl:variable name="optional"><xsl:value-of select="@optional"/></xsl:variable> || <xsl:choose>
+<xsl:when test="$optional='yes'">
+     (inport_<xsl:value-of select="@name"/>_has_data_ &amp;&amp; inhandle_<xsl:value-of select="@name"/>_->generation != last_<xsl:value-of select="@name"/>_)</xsl:when><xsl:otherwise>
+     inhandle_<xsl:value-of select="@name"/>_->generation != last_<xsl:value-of select="@name"/>_</xsl:otherwise></xsl:choose></xsl:for-each>) {
+     <xsl:for-each select="/filter/filter-itk/inputs/input">
+<xsl:variable name="optional"><xsl:value-of select="@optional"/></xsl:variable>
+<xsl:choose>
+<xsl:when test="$optional='yes'">
+     if(inport_<xsl:value-of select="@name"/>_has_data_) {
+       last_<xsl:value-of select="@name"/>_ = inhandle_<xsl:value-of select="@name"/>_->generation;
+     }
+</xsl:when>
+<xsl:otherwise>
+     last_<xsl:value-of select="@name"/>_ = inhandle_<xsl:value-of select="@name"/>_->generation;</xsl:otherwise></xsl:choose>
+     </xsl:for-each>
+
+     // create a new one
+     filter_ = FilterType::New();
+
+     // set inputs 
+     <xsl:for-each select="/filter/filter-itk/inputs/input">
+  <!-- if input is optional, only call if we have data -->
+  <xsl:variable name="optional"><xsl:value-of select="@optional"/></xsl:variable>  
+  <xsl:choose>
+  <xsl:when test="$optional='yes'">
+     if( inport_<xsl:value-of select="@name"/>_has_data_ ) {
+       dynamic_cast&lt;FilterType* &gt;(filter_.GetPointer())-><xsl:value-of select="call"/>( data_<xsl:value-of select="@name"/> );  
+     }
+  </xsl:when>
+  <xsl:otherwise>
+     dynamic_cast&lt;FilterType* &gt;(filter_.GetPointer())-><xsl:value-of select="call"/>( data_<xsl:value-of select="@name"/> );
+  </xsl:otherwise>
+  </xsl:choose>
+   </xsl:for-each>     
+  }
+
+  // set filter parameters
   <xsl:for-each select="/filter/filter-itk/parameters/param">
   <xsl:variable name="type"><xsl:value-of select="type"/></xsl:variable>
   <xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
@@ -358,15 +352,15 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   <xsl:choose>
   <xsl:when test="$defined_object = 'yes'">
   <xsl:value-of select="type"/><xsl:text> </xsl:text><xsl:value-of select="name"/>;
-  <xsl:variable name="call"><xsl:value-of select="/filter/filter-itk/datatypes/datatype[@name=$type]/member-var/size-call"/></xsl:variable>
-  <xsl:variable name="type2"><xsl:value-of select="/filter/filter-itk/datatypes/datatype[@name=$type]/member-var/elem-type"/></xsl:variable>
+  <xsl:variable name="call"><xsl:value-of select="/filter/filter-itk/datatypes/array[@name=$type]/size-call"/></xsl:variable>
+  <xsl:variable name="type2"><xsl:value-of select="/filter/filter-itk/datatypes/array[@name=$type]/elem-type"/></xsl:variable>
 
   <xsl:choose>
   <xsl:when test="$const = 'yes'">
   for(int i=0; i&lt;<xsl:value-of select="name"/>.<xsl:value-of select="$call"/>(); i++) {
     <xsl:value-of select="name"/>[i] = <xsl:value-of select="default"/>;
   }
-  filter-><xsl:value-of select="call"/>( <xsl:value-of select="name"/> );
+  dynamic_cast&lt;FilterType* &gt;(filter_.GetPointer())-><xsl:value-of select="call"/>( <xsl:value-of select="name"/> );
 
   </xsl:when>
   <xsl:otherwise>
@@ -411,7 +405,7 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
     <xsl:value-of select="name"/>[i] = gui_<xsl:value-of select="name"/>_[i]-&gt;get();
   }
 
-  filter-&gt;<xsl:value-of select="call"/>( <xsl:value-of select="name"/> );
+  dynamic_cast&lt;FilterType* &gt;(filter_.GetPointer())-&gt;<xsl:value-of select="call"/>( <xsl:value-of select="name"/> );
 
   </xsl:otherwise>
   </xsl:choose>
@@ -429,19 +423,19 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   <xsl:variable name="case"><xsl:value-of select="default"/></xsl:variable>
   <xsl:choose>
   <xsl:when test="$case='0'">
-  filter-><xsl:value-of select="call[@value='off']"/>( );
+  dynamic_cast&lt;FilterType* &gt;(filter_.GetPointer())-><xsl:value-of select="call[@value='off']"/>( );
   </xsl:when>
   <xsl:otherwise>
-  filter-><xsl:value-of select="call[@value='on']"/>( );
+  dynamic_cast&lt;FilterType* &gt;(filter_.GetPointer())-><xsl:value-of select="call[@value='on']"/>( );
   </xsl:otherwise>  
   </xsl:choose>
   </xsl:when>
   <xsl:otherwise>
   if( gui_<xsl:value-of select="name"/>_.get() ) {
-    filter-><xsl:value-of select="call[@value='on']"/>( );   
+    dynamic_cast&lt;FilterType* &gt;(filter_.GetPointer())-><xsl:value-of select="call[@value='on']"/>( );   
   } 
   else { 
-    filter-><xsl:value-of select="call[@value='off']"/>( );
+    dynamic_cast&lt;FilterType* &gt;(filter_.GetPointer())-><xsl:value-of select="call[@value='off']"/>( );
   }  
   </xsl:otherwise>
   </xsl:choose>
@@ -449,10 +443,10 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   <xsl:otherwise>
   <xsl:choose>
   <xsl:when test="$const='yes'">
-  filter-><xsl:value-of select="call"/>( <xsl:value-of select="default"/> ); 
+  dynamic_cast&lt;FilterType* &gt;(filter_.GetPointer())-><xsl:value-of select="call"/>( <xsl:value-of select="default"/> ); 
   </xsl:when>
   <xsl:otherwise>
-  filter-><xsl:value-of select="call"/>( gui_<xsl:value-of select="name"/>_.get() ); 
+  dynamic_cast&lt;FilterType* &gt;(filter_.GetPointer())-><xsl:value-of select="call"/>( gui_<xsl:value-of select="name"/>_.get() ); 
   </xsl:otherwise>
   </xsl:choose>
   </xsl:otherwise>
@@ -462,10 +456,10 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   <xsl:otherwise>
   <xsl:choose>
   <xsl:when test="$const = 'yes'">
-  filter-><xsl:value-of select="call"/>( <xsl:value-of select="default"/> ); 
+  dynamic_cast&lt;FilterType* &gt;(filter_.GetPointer())-><xsl:value-of select="call"/>( <xsl:value-of select="default"/> ); 
   </xsl:when>
   <xsl:otherwise>
-  filter-><xsl:value-of select="call"/>( gui_<xsl:value-of select="name"/>_.get() ); 
+  dynamic_cast&lt;FilterType* &gt;(filter_.GetPointer())-><xsl:value-of select="call"/>( gui_<xsl:value-of select="name"/>_.get() ); 
   </xsl:otherwise>
   </xsl:choose>
   </xsl:otherwise>
@@ -473,28 +467,11 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   </xsl:otherwise>
   </xsl:choose>
   </xsl:for-each>
-<xsl:text>   
-  // set inputs 
-</xsl:text>
-  <xsl:for-each select="/filter/filter-itk/inputs/input">
-  <!-- if input is optional, only call if we have data -->
-  <xsl:variable name="optional"><xsl:value-of select="@optional"/></xsl:variable>  
-  <xsl:choose>
-  <xsl:when test="$optional='yes'">
-  if( inport_<xsl:value-of select="@name"/>_has_data_ ) {
-    filter-><xsl:value-of select="call"/>( data_<xsl:value-of select="@name"/> );  
-  }
-  </xsl:when>
-  <xsl:otherwise>
-  filter-><xsl:value-of select="call"/>( data_<xsl:value-of select="@name"/> );
-  </xsl:otherwise>
-  </xsl:choose>
-   </xsl:for-each>
 
   // execute the filter
   try {
 
-    filter->Update();
+    dynamic_cast&lt;FilterType* &gt;(filter_.GetPointer())->Update();
 
   } catch ( itk::ExceptionObject &amp; err ) {
      error("ExceptionObject caught!");
@@ -512,10 +489,10 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   ITKDatatype* out_<xsl:value-of select="@name"/>_ = scinew ITKDatatype; 
   <xsl:choose>
   <xsl:when test="$const = 'yes'">
-  out_<xsl:value-of select="@name"/>_->data_ = const_cast&lt;<xsl:value-of select="type"/>*  &gt;(filter-><xsl:value-of select="call"/>());
+  out_<xsl:value-of select="@name"/>_->data_ = const_cast&lt;<xsl:value-of select="type"/>*  &gt;(dynamic_cast&lt;FilterType* &gt;(filter_.GetPointer())-><xsl:value-of select="call"/>());
   </xsl:when>
   <xsl:otherwise>
-  out_<xsl:value-of select="@name"/>_->data_ = filter-><xsl:value-of select="call"/>();
+  out_<xsl:value-of select="@name"/>_->data_ = dynamic_cast&lt;FilterType* &gt;(filter_.GetPointer())-><xsl:value-of select="call"/>();
   </xsl:otherwise>
   </xsl:choose>
   outhandle_<xsl:value-of select="@name"/>_ = out_<xsl:value-of select="@name"/>_; 
@@ -557,8 +534,11 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 </xsl:for-each>
 <xsl:if test="$has_defined_objects != ''">,
     gui_dimension_(ctx-&gt;subVar(&quot;dimension&quot;))</xsl:if>
+<xsl:for-each select="/filter/filter-itk/inputs/input">, 
+     last_<xsl:value-of select="@name"/>_(-1)</xsl:for-each>
 <xsl:text>
 {
+  filter_ = 0;
 </xsl:text>
 <xsl:for-each select="/filter/filter-itk/inputs/input">
   <xsl:variable name="optional"><xsl:value-of select="@optional"/></xsl:variable>
@@ -696,7 +676,7 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
     </xsl:when>
     <xsl:otherwise>
   <xsl:for-each select="/filter/filter-sci/instantiations/instance">
-  <xsl:variable name="num"><xsl:value-of select="@num"/></xsl:variable>
+  <xsl:variable name="num"><xsl:value-of select="position()"/></xsl:variable>
   <xsl:text> 
   else if(run&lt; </xsl:text>
 <xsl:for-each select="type">
@@ -704,7 +684,7 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 <xsl:for-each select="/filter/filter-itk/templated/template">
 <xsl:variable name="templated_type"><xsl:value-of select="."/></xsl:variable>	      
 <xsl:if test="$type = $templated_type">
-<xsl:value-of select="/filter/filter-sci/instantiations/instance[@num=$num]/type[@name=$type]/value"/>
+<xsl:value-of select="/filter/filter-sci/instantiations/instance[position()=$num]/type[@name=$type]/value"/>
 <xsl:if test="position() &lt; last()">
 <xsl:text>, </xsl:text>
 </xsl:if>
@@ -758,6 +738,10 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 <xsl:when test="$type='float'">no</xsl:when>
 <xsl:when test="$type='double'">no</xsl:when>
 <xsl:when test="$type='bool'">no</xsl:when>
+<xsl:when test="$type='char'">no</xsl:when>
+<xsl:when test="$type='unsigned char'">no</xsl:when>
+<xsl:when test="$type='short'">no</xsl:when>
+<xsl:when test="$type='unsigned short'">no</xsl:when>
 <xsl:otherwise>yes</xsl:otherwise>
 </xsl:choose>
 </xsl:template>

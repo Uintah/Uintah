@@ -53,12 +53,6 @@
 
 % Module reference specific markup
 \newcommand{\version}{%<= doc.edition %>}
-\newcommand{\viewer}{\emph{Viewer}}
-\newcommand{\installguideurl}{\htmlurl{\scisoftware{}/doc/Installation/Guide/index.html}}
-\newcommand{\descitem}[1]{\item[#1]\latex{\mbox{}\\}}
-\newcommand{\menudesc}[1]{\item[\menu{#1}]\latex{\mbox{}\\}}
-\newcommand{\menuitemdesc}[1]{\item[\menuitem{#1}]\latex{\mbox{}\\}}
-\newcommand{\buttondesc}[1]{\item[\button{#1}]\latex{\mbox{}\\}}
 
 % Markup used by latex module descriptions.
 \newcommand{\ModuleRef}[3]{\subsection{#1} #1 is in Category #2 of Package #3}
@@ -70,6 +64,7 @@
 \newcommand{\ModuleRefDetails}{\subsubsection*{Details}}
 \newcommand{\ModuleRefNotes}{\subsubsection*{Notes}}
 \newcommand{\ModuleRefCredits}{\subsubsection*{Credits}}
+\newcommand{\ModuleRefSection}[1]{\subsubsection*{#1}}
 \newcommand{\ModuleRefSubSection}[1]{\paragraph*{#1}}
 \newcommand{\ModuleRefSubSubSection}[1]{\subparagraph*{#1}}
 \newcommand{\ModuleRefFigName}[1]{#1}

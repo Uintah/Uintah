@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
-<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
 <!--
@@ -39,10 +39,6 @@ box is used to init the transform</p>
       <port>
         <name>Matrix</name>
 	<datatype>SCIRun::Matrix</datatype>
-      </port>
-      <port>
-        <name>Field BBox</name>
-	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>

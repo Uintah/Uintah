@@ -45,8 +45,6 @@ itcl_class SCIRun_FieldsOther_ScalarFieldStats {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-	    wm deiconify $w
-            raise $w
             return
         }
         toplevel $w

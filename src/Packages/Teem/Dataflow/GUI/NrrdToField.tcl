@@ -32,6 +32,7 @@ itcl_class Teem_DataIO_NrrdToField {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
+	    wm deiconify $w
             raise $w
             return
         }
@@ -43,6 +44,9 @@ itcl_class Teem_DataIO_NrrdToField {
 	    "Build Eigendecomposition for Tensor Fields" -variable \
 	    $this-build-eigens
 	pack $w.c.buildeigens -side top -expand yes -fill x
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
 

@@ -2,32 +2,80 @@
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 18 19]
-set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 36 207]
-set m2 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 18 348]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 92 104]
-set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 36 459]
+set bbox {}
+
+set m0 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 19 17]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 37 412]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 19 553]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 93 309]
+set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 37 664]
+set m5 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 19 110]
+set m6 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 232 103]
+set m7 [addModuleAtPosition "Fusion" "Fields" "NrrdFieldConverter" 19 207]
 
 addConnection $m1 0 $m2 1
 addConnection $m3 0 $m1 0
-addConnection $m0 0 $m1 1
 addConnection $m2 1 $m4 0
-addConnection $m0 0 $m2 0
+addConnection $m0 0 $m5 0
+addConnection $m0 1 $m5 1
+addConnection $m0 2 $m6 0
+addConnection $m5 0 $m7 0
+addConnection $m6 0 $m7 1
+addConnection $m7 0 $m1 1
+addConnection $m7 0 $m2 0
 
 set $m0-notes {}
-set $m0-show_status {1}
-set $m0-filename {/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10089_00.mds}
+set $m0-selectable_min {0}
+set $m0-selectable_max {100}
+set $m0-selectable_inc {1}
+set $m0-range_min {0}
+set $m0-range_max {0}
+set $m0-playmode {once}
+set $m0-current {0}
+set $m0-execmode {init}
+set $m0-delay {0}
+set $m0-inc-amount {1}
+set $m0-filename {/z/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10107.h5}
+set $m0-datasets {{/ NIMROD OUTPUTS CODE GRID PHI} {/ NIMROD OUTPUTS CODE GRID R} {/ NIMROD OUTPUTS CODE GRID Z} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE PRESSURE Values}}
+set $m0-dumpname {/tmp/NIMROD_10107.h5.dump}
+set $m0-ports {   0   1   1   2}
+set $m0-ndims {0}
+set $m0-mergeData {1}
+set $m0-assumeSVT {1}
+set $m0-animate {0}
+set $m0-0-dim {41}
+set $m0-0-start {0}
+set $m0-0-count {41}
+set $m0-0-stride {1}
+set $m0-1-dim {2}
+set $m0-1-start {0}
+set $m0-1-count {1}
+set $m0-1-stride {1}
+set $m0-2-dim {2}
+set $m0-2-start {0}
+set $m0-2-count {1}
+set $m0-2-stride {1}
+set $m0-3-dim {2}
+set $m0-3-start {0}
+set $m0-3-count {1}
+set $m0-3-stride {1}
+set $m0-4-dim {2}
+set $m0-4-start {0}
+set $m0-4-count {1}
+set $m0-4-stride {1}
+set $m0-5-dim {2}
+set $m0-5-start {0}
+set $m0-5-count {1}
+set $m0-5-stride {1}
 set $m1-notes {}
-set $m1-show_status {1}
 set $m1-isFixed {0}
-set $m1-min {      1.04083e-17}
-set $m1-max {           476463}
+set $m1-min {-0.0058362519159978693}
+set $m1-max {0.72543642484822879}
 set $m1-makeSymmetric {0}
 set $m2-notes {}
-set $m2-show_status {1}
-set $m2-isoval {250527.000}
-set $m2-isoval-min {1.04083e-17}
-set $m2-isoval-max {476463}
+set $m2-isoval {0}
+set $m2-isoval-min {-0.0058362519159978693}
+set $m2-isoval-max {0.72543642484822879}
 set $m2-isoval-typed {0}
 set $m2-isoval-quantity {1}
 set $m2-quantity-range {colormap}
@@ -45,7 +93,6 @@ set $m2-color-r {0.4}
 set $m2-color-g {0.2}
 set $m2-color-b {0.9}
 set $m3-notes {}
-set $m3-show_status {1}
 set $m3-tcl_status {Calling GenStandardColorMaps!}
 set $m3-positionList {}
 set $m3-nodeList {}
@@ -57,6 +104,13 @@ set $m3-resolution {255}
 set $m3-realres {255}
 set $m3-gamma {0}
 set $m4-notes {}
-set $m4-show_status {1}
+set $m5-notes {}
+set $m5-datasets {{-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-R:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-Z:Scalar} }
+set $m5-nmodes {0}
+set $m6-notes {}
+set $m6-datasets {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar}
+set $m6-nmodes {0}
+set $m7-notes {}
+set $m7-datasets {{-NIMROD-OUTPUTS-CODE-GRID-XYZ:Vector} {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar} }
 
 ::netedit scheduleok

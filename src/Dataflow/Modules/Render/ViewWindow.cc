@@ -80,6 +80,24 @@ using std::ostringstream;
 
 namespace SCIRun {
   
+class KillRenderer :public Runnable {
+public:
+  KillRenderer(OpenGL *cr, Viewer* m, ViewWindow *vw) :
+    cur_renderer_(cr),
+    manager_(m),
+    vw_(vw)
+  {}
+  
+  void run() {
+    cur_renderer_->kill_helper();
+    manager_->delete_viewwindow(vw_);
+  }
+private:
+  OpenGL     *cur_renderer_;
+  Viewer     *manager_;
+  ViewWindow *vw_;
+};
+
 //static DebugSwitch autoview_sw("ViewWindow", "autoview");
 static ViewWindow::MapStringObjTag::iterator viter;
 
@@ -208,6 +226,19 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
 #endif
   // CollabVis code end
 
+  // Clip plane variables, declare them so that they are saved out.
+  ctx->subVar("clip-num");
+  ctx->subVar("clip-visible");
+  ctx->subVar("clip-selected");
+  for (unsigned int i = 0; i < 6; i++)
+  {
+    const string istr = to_string(i+1);
+    ctx->subVar("clip-visible-" + istr);
+    ctx->subVar("clip-normal-x-" + istr);
+    ctx->subVar("clip-normal-y-" + istr);
+    ctx->subVar("clip-normal-z-" + istr);
+    ctx->subVar("clip-normal-d-" + istr);
+  }
 }
 
 
@@ -2346,10 +2377,15 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
 					Color(r,g,b)));
 
   } else if (args[1] == "killwindow") {
-    current_renderer->kill_helper();
+    
     inertia_mode=0;
-    manager->delete_viewwindow(this);
+    KillRenderer *kr = scinew KillRenderer(current_renderer, manager, 
+					   (ViewWindow*)this);
+    string tname(id + "VW kill current renderer thread");
+    Thread *ren_deleter = scinew Thread(kr, tname.c_str());
+    ren_deleter->detach();
     return;
+
   } else if(args[1] == "saveobj") {
     if(args.count() != 6){
       args.error("ViewWindow::dump_viewwindow needs an output file name and format!");
@@ -2532,7 +2568,7 @@ void ViewWindow::redraw()
   ctx->reset();
   // Get animation variables
   double ct;
-  if(!ctx->getSub("current_time", ct)){
+  if(!ctx || !ctx->getSub("current_time", ct)){
     manager->error("Error reading current_time");
     return;
   }
@@ -2699,9 +2735,7 @@ void ViewWindow::dump_objects(const string& filename, const string& format)
 void ViewWindow::getData(int datamask, FutureValue<GeometryData*>* result)
 {
   if(current_renderer){
-    cerr << "calling current_renderer->getData\n";
     current_renderer->getData(datamask, result);
-    cerr << "current_renderer...\n";
   } else {
     result->send(0);
   }

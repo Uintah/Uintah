@@ -61,6 +61,9 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/cd_templates_fields_5.cc	\
 	$(SRCDIR)/cd_templates_fields_6.cc
 
+ifeq ($(OS_NAME),Darwin)
+  SRCS += $(SRCDIR)/MacForceLoad.cc
+endif
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/GuiInterface \

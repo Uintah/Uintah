@@ -51,6 +51,18 @@ void fill_data<Vector>(Vector &v, double *p) {
 }
 
 template <>
+void fill_data<Tensor>(Tensor &t, double *p) {
+  p[0] = 1.0;
+  p[1] = t.mat_[0][0];
+  p[2] = t.mat_[0][1];
+  p[3] = t.mat_[0][2];
+  p[4] = t.mat_[1][1];
+  p[5] = t.mat_[1][2];
+  p[6] = t.mat_[2][2];
+  p += 7;
+}
+
+template <>
 void* 
 get_raw_data_ptr<FData2d<char> >(FData2d<char> &data, int) {
   return &(data(0,0));
@@ -186,7 +198,6 @@ get_raw_data_ptr<FData3d<Vector> >(FData3d<Vector> &data, int)  {
       }
     }
   }
-  
   return new_data;
 }
 
@@ -213,7 +224,78 @@ get_raw_data_ptr<FData3d<Tensor> >(FData3d<Tensor> &data, int)  {
       }
     }
   }
+  return new_data;
+}
 
+template <>
+void* 
+get_raw_data_ptr<FData2d<Vector> >(FData2d<Vector> &data, int)  {
+  int nx = data.dim2();
+  int ny = data.dim1();
+  double *new_data = new double[nx * ny * 3];
+  double *p = new_data;
+  for (int j = 0; j < ny; j++) {
+    for (int i = 0; i < nx; i++) {
+      fill_data(data(j,i), p);
+      p += 3;
+    }
+  }
+  return new_data;
+}
+
+template <>
+void* 
+get_raw_data_ptr<FData2d<Tensor> >(FData2d<Tensor> &data, int)  {
+  int nx = data.dim2();
+  int ny = data.dim1();
+  float *new_data = new float[nx * ny * 7];
+  float *p = new_data;
+  for (int j = 0; j < ny; j++) {
+    for (int i = 0; i < nx; i++) {
+      Tensor &t = data(j,i);
+      p[0] = 1.0;
+      p[1] = t.mat_[0][0];
+      p[2] = t.mat_[0][1];
+      p[3] = t.mat_[0][2];
+      p[4] = t.mat_[1][1];
+      p[5] = t.mat_[1][2];
+      p[6] = t.mat_[2][2];
+      p += 7;
+    }
+  }
+  return new_data;
+}
+
+template <>
+void*
+get_raw_data_ptr<vector<Vector> >(vector<Vector> &data, int)  {
+  int sz = data.size();
+  double *new_data = new double[sz * 3];
+  double *p = new_data;
+  for (int i = 0; i < sz; i++) {
+    fill_data(data[i], p);
+    p += 3;
+  }
+  return new_data;
+}
+
+template <>
+void* 
+get_raw_data_ptr<vector<Tensor> >(vector<Tensor> &data, int)  {
+  int sz = data.size();
+  float *new_data = new float[sz * 7];
+  float *p = new_data;
+  for (int i = 0; i < sz; i++) {
+    Tensor &t = data[i];
+    p[0] = 1.0;
+    p[1] = t.mat_[0][0];
+    p[2] = t.mat_[0][1];
+    p[3] = t.mat_[0][2];
+    p[4] = t.mat_[1][1];
+    p[5] = t.mat_[1][2];
+    p[6] = t.mat_[2][2];
+    p += 7;
+  }
   return new_data;
 }
 

@@ -44,6 +44,7 @@ private:
   NrrdOPort*      otens_;
   //NrrdOPort*      oerr_;
 
+  GuiInt       knownB0_;
   GuiInt       use_default_threshold_;
   GuiDouble    threshold_;
   GuiDouble    soft_;
@@ -54,6 +55,7 @@ DECLARE_MAKER(TendEstim)
 
 TendEstim::TendEstim(SCIRun::GuiContext *ctx) : 
   Module("TendEstim", ctx, Filter, "Tend", "Teem"), 
+  knownB0_(ctx->subVar("knownB0")),
   use_default_threshold_(ctx->subVar("use-default-threshold")),
   threshold_(ctx->subVar("threshold")),
   soft_(ctx->subVar("soft")),
@@ -128,31 +130,26 @@ TendEstim::execute()
   if (use_default_threshold_.get()) threshold = AIR_NAN;
   else threshold = threshold_.get();
 
-  if (tenEstimate4D(nout, NULL, dwi_handle->nrrd, sliced_bmat, 
-		    threshold_.get(), soft_.get(), scale_.get()))
+  int knownB0 = knownB0_.get(); // TRUE for brains, FALSE for dog hearts
+  Nrrd* dummy = nrrdNew();
+  if (tenEstimateLinear4D(nout, NULL, &dummy, dwi_handle->nrrd, sliced_bmat, 
+			  knownB0, threshold, soft_.get(), 
+			  scale_.get()))
   {
     char *err = biffGetDone(TEN);
     error(string("Error in epireg: ") + err);
     free(err);
     return;
   }
-  
+  nrrdNuke(dummy);
+
   nrrdNuke(sliced_bmat);
   NrrdData *output = scinew NrrdData;
   output->nrrd = nout;
   output->copy_sci_data(*dwi_handle.get_rep());
-
-  output->nrrd->axis[0].label = "Unknown:Tensor";
-
-
-
-  output->nrrd->axis[1].spacing = dwi_handle->nrrd->axis[1].spacing;
-  output->nrrd->axis[2].spacing = dwi_handle->nrrd->axis[2].spacing;
-  output->nrrd->axis[3].spacing = dwi_handle->nrrd->axis[3].spacing;
-
-
-
+  output->nrrd->axis[0].label = strdup("Unknown:Tensor");
   otens_->send(NrrdDataHandle(output));
+  update_state(Completed);
 }
 
 } // End namespace SCITeem

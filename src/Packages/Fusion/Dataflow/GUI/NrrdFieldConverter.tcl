@@ -19,9 +19,6 @@
 # by Allen R. Sanderson
 # May 2003
 
-# This GUI interface is for selecting a file name via the makeOpenFilebox
-# and other reading functions.
-
 catch {rename Fusion_Fields_NrrdFieldConverter ""}
 
 itcl_class Fusion_Fields_NrrdFieldConverter {
@@ -34,8 +31,10 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
     method set_defaults {} {
 
 	global $this-datasets
-
 	set $this-datasets ""
+
+	global $this-nomesh
+	set $this-nomesh 0
     }
 
     method ui {} {
@@ -60,6 +59,18 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
 
 	toplevel $w
 
+	global $this-nomesh
+
+	frame $w.mesh
+	label $w.mesh.label -text "No Mesh - regular topology and geometry" \
+	    -width 40 -anchor w -just left
+	checkbutton $w.mesh.button -variable $this-nomesh
+	
+	pack $w.mesh.button $w.mesh.label -side left
+
+	pack $w.mesh -side top
+
+
 	frame $w.grid
 	label $w.grid.l -text "Inputs: (Execute to show list)" -width 30 -just left
 
@@ -69,7 +80,7 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
 	frame $w.datasets
 	
 	global $this-datasets
-	set_names 1 [set $this-datasets]
+	set_names [set $this-datasets]
 
 	pack $w.datasets -side top -pady 10
 
@@ -81,12 +92,9 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
 	pack $w.misc -side bottom -pady 10
     }
 
-    method set_names {dims datasets} {
+    method set_names {datasets} {
 
-	global $this-ndims
 	global $this-datasets
-
-	set $this-ndims $dims
 	set $this-datasets $datasets
 
         set w .ui[modname]

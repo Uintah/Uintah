@@ -85,7 +85,6 @@ BuildMisfitField::BuildMisfitField(GuiContext *context)
 BuildMisfitField::~BuildMisfitField(){}
 
 double BuildMisfitField::compute_misfit(double *b, double *bprime, int nr) {
-  double misfit;
   double avg1=0, avg2=0;
   int r;
   for (r=0; r<nr; r++) {
@@ -132,10 +131,6 @@ double BuildMisfitField::compute_misfit(double *b, double *bprime, int nr) {
 }
 
 void BuildMisfitField::execute() {
-  MatrixIPort* leadfield_iport_;
-  MatrixIPort* measurements_iport_;
-  MatrixOPort* misfit_oport_;
-
   MatrixIPort *leadfield_iport = 
     (MatrixIPort *)get_iport("Leadfield (nelecs x nelemsx3)");
   MatrixIPort *measurements_iport = 

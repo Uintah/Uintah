@@ -36,20 +36,19 @@ itcl_class SCIRun_FieldsData_MaskLattice {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
 
 	frame $w.row1	
-	label $w.row1.label -text "Function"
+	label $w.row1.label -text "Function:"
 	entry $w.row1.entry -textvariable $this-maskfunction
 	pack $w.row1.label $w.row1.entry -side left -fill x
-	
-	frame $w.row2
-	button $w.row2.execute -text "Execute" -command "$this execrunmode"
-	pack $w.row2.execute -side left -e y -f both -padx 5 -pady 5
-	pack $w.row1 $w.row2 -side top -e y -f both -padx 5 -pady 5
+
+	pack $w.row1 -e y -f both -padx 5 -pady 5
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
 

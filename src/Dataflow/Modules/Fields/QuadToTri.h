@@ -236,7 +236,7 @@ ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   {
     typename FSRC::mesh_type::Node::array_type inodes;
     imesh->get_nodes(inodes, *bi);
-    if (((*bi).i_ ^ (*bi).j_)&1)
+    if (!(((*bi).i_ ^ (*bi).j_)&1))
     {
       tmesh->add_triangle(nindex_type((unsigned int)inodes[0]),
 			  nindex_type((unsigned int)inodes[1]),

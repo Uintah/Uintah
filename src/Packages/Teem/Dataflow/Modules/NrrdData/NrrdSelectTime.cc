@@ -87,11 +87,13 @@ NrrdSelectTime::send_selection(NrrdDataHandle nrrd_handle,
 			       int which, unsigned int time_axis, bool last_p)
 {
   NrrdOPort *onrrd = (NrrdOPort *)get_oport("Time Slice");
-  onrrd->set_dont_cache();
+
   if (!onrrd) {
     error("Unable to initialize oport 'Time Slice'.");
     return;
   }
+
+  onrrd->set_cache( 0 );
 
   current_.set(which);
 
@@ -309,15 +311,13 @@ NrrdSelectTime::execute()
   }
   else
   {
-    if (playmode_.get() == "inc_w_exec")
-    {
-      int which = current_.get();
-
-      send_selection(nrrd_handle, which, time_axis, true);
+    int which = current_.get();
+    
+    send_selection(nrrd_handle, which, time_axis, true);
+    
+    if (playmode_.get() == "inc_w_exec") {
       which = increment(which, lower, upper);
       current_.set(which);
-    } else {
-      send_selection(nrrd_handle, current_.get(), time_axis, true);
     }
   }
   execmode_.set("init");

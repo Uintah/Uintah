@@ -32,7 +32,7 @@ define textohtml
 ruby ${treetop}/doc/Utilities/TeX/modtex2html.rb ${1}
 endef
 
-# Produce list of html files which correspond to xml files in directory
+# Produce list of html files that correspond to xml files in directory
 #  given by ${1}
 define xmlhtmlfiles
 ${patsubst %.xml,%.html,${wildcard ${1}/*.xml}}
@@ -44,8 +44,16 @@ define texhtmldirs
 ${filter-out %/CVS,${foreach n,${notdir ${wildcard ${1}/*}},${1}/${n}/${n}}}
 endef
 
+# Return path of directory for package given by ${1}
+# If ${1} is undefined then return package directory for SCIRun pseudo 
+# package.
+define packagedir
+${treetop}/src/${if ${1},Packages/${1}}
+endef
 
 # Return path of XML directory for package given by ${1}
+# If ${1} is undefined then return XML directory for SCIRun pseudo 
+# package.
 define xmldir
 ${treetop}/src/${if ${1},Packages/${1}/}Dataflow/XML
 endef
@@ -83,13 +91,6 @@ define texfiles
 ${wildcard ${treetop}/src/${if ${1},Packages/${1}/}Dataflow/TeX/*/*.tex}
 endef
 
-# Return path of XML directory for package given by ${1}
-# If ${1} is undefined then return XML directory for SCIRun pseudo 
-# package.
-define xmldir
-${treetop}/src/${if ${1},Packages/${1}/}Dataflow/XML
-endef
-
 # Convert xml file given by $< to tex equivalent and save tex file as $@.
 define xmltotex
 -java com.icl.saxon.StyleSheet -w2 $< ${print_stylesheet} frag=1 relpath=${dir $<} > $@
@@ -120,6 +121,9 @@ endef
 # Top of tree relative to this directory
 treetop:=../../..
 
+# TeX utilities directory
+texutils := ${treetop}/doc/Utilities/TeX
+
 # Location of stylesheet relative to this directory.
 html_stylesheet:=${treetop}/doc/Utilities/XML/component.xsl
 
@@ -142,21 +146,24 @@ latex:=latex -interaction=nonstopmode
 # Name of root doc sans extension.
 bn := srmrg
 
-# The macros template file used to generate the macros file used by latex.
-# one.
-rmacrosfile := ${bn}macros.rtex
+# Locations of scirun-doc style files
+stylefile1 := ${texutils}/scirun-doc.sty
+stylefile2 := ${texutils}/scirun-doc.tex
+stylefiles := ${stylefile1} ${stylefile2}
 
-# Macros used by latex.  Generated from ${rmacrosfile}
-macrosfile := ${bn}macros.tex
+# Symbolic links to scirun-doc style files.
+stylefile1link := scirun-doc.sty
+stylefile2link := scirun-doc.tex
+stylefilelinks := ${stylefile1link} ${stylefile2link}
 
-# Style file used by latex.   This file has the exact same content as
-# ${macrosfile} and is automatically generated from it.
-styfile := ${bn}macros.sty
+# Additional macros used by the srmrg.  The latter is generated from
+# the former.  
+rsrmrgmacrosfile := ${bn}macros.rtex
+srmrgmacrosfile := ${bn}macros.tex
 
 # User created/edited sources (generated sources come into play further
 # down). 
-srcs:=${styfile} ${bn}.tex title.tex modules.tex \
-../../Utilities/TeX/scirun-doc.tex
+srcs:=${bn}.tex title.tex modules.tex
 
 mainfile := ${bn}.tex
 dvifile := ${bn}.dvi
@@ -182,7 +189,7 @@ packages := SCIRun
 endif
 
 ifeq (${SRGROUP},biopse)
-packages := SCIRun BioPSE Teem VDT MatlabInterface Fusion
+packages := SCIRun BioPSE Teem MatlabInterface Insight Fusion DataIO
 endif
 
 ifeq (${SRGROUP},uintah)
@@ -199,10 +206,9 @@ endif
 # ########## Primary targets
 
 .PHONY: all dvi pdf
-.PHONY: SCIRun BioPSE Teem Fusion VDT MatlabInterface clean veryclean
+.PHONY: SCIRun BioPSE Teem Insight Fusion DataIO MatlabInterface clean veryclean
 
 .DELETE_ON_ERROR:
-
 
 all: index.html ${packages} dvi pdf
 
@@ -213,15 +219,20 @@ dvi: ${dvifile}
 
 pdf: ${pdffile}
 
-${dvifile}: ${macrosfile} ${mainfile} ${srcs} \
-  ${packagetargets}
+${stylefile1link}:
+	ln -s ${stylefile1} ${stylefile1link}
+
+${stylefile2link}:
+	ln -s ${stylefile2} ${stylefile2link}
+
+${dvifile}: ${mainfile} ${srcs} ${packagetargets} \
+${srmrgmacrosfile} ${stylefiles} ${stylefilelinks}
 	-${latex}  ${bn}
 	-makeindex ${bn}.idx
 	-${latex} ${bn}
 
-${macrosfile}: ${rmacrosfile} ${edition}
+${srmrgmacrosfile}: ${rsrmrgmacrosfile} ${edition}
 	eruby --delimiters tex $< >$@
-	cp ${macrosfile} ${styfile}
 
 ${pdffile}: ${dvifile}
 	dvipdfm -o ${pdffile} -p letter ${dvifile}
@@ -435,58 +446,74 @@ MatlabInterface_veryclean_xml_tex_files
 	${call rmfiles,${MatlabInterface_tex_html_files}}
 	${call rmdirs,${MatlabInterface_tex_html_dirs}}
 
-# ########## VDT
-VDT : VDT.html VDT_modules.tex
+# ########## Insight
 
-VDT_xml_dir:=${call xmldir,VDT}
-VDT_xml_html_files:=${call xmlhtmlfiles,${VDT_xml_dir}}
-VDT_tex_dir:=${call texdir,VDT}
-VDT_tex_html_dirs:=${call texhtmldirs,${VDT_tex_dir}}
+Insight : Insight.html Insight_modules.tex
 
-VDT.html : ${edition} ${VDT_xml_html_files} ${VDT_tex_html_dirs} \
+Insight_package_dir := ${call packagedir,Insight}
+Insight_xml_dir:=${call xmldir,Insight}
+Insight_sci_filters_xml_dir:=${Insight_package_dir}/Dataflow/Modules/Filters/XML
+Insight_sci_filter_xml_files:=${wildcard ${Insight_sci_filters_xml_dir}/sci_*.xml}
+Insight_generated_xml_files:=${addprefix ${Insight_xml_dir}/,${notdir ${subst sci_,,${Insight_sci_filter_xml_files}}}}
+Insight_xml_files:=${filter-out ${Insight_generated_xml_files},${wildcard ${Insight_xml_dir}/*.xml}}
+
+Insight_generate_xml_files: ${Insight_generated_xml_files}
+
+${Insight_generated_xml_files}: ${Insight_xml_dir}/%.xml: ${Insight_sci_filters_xml_dir}/sci_%.xml
+	java SCIRun.GenerateSCIRunCode ${Insight_package_dir} $< ${Insight_package_dir}/Core/CodeGenerator/XSL/SCIRun_generateXML.xsl $@
+
+Insight_xml_html_files:=${patsubst %.xml,%.html,${Insight_xml_files}} ${patsubst %.xml,%.html,${Insight_generated_xml_files}}
+Insight_tex_dir:=${call texdir,Insight}
+Insight_tex_html_dirs:=${call texhtmldirs,${Insight_tex_dir}}
+
+Insight.html : ${edition} ${Insight_xml_html_files} ${Insight_tex_html_dirs} \
 		${pkgindexgenscript} ${pkgbycatgenscript}
-	${call makepkgindex,VDT,${VDT_xml_dir},${VDT_tex_dir}}
+	${call makepkgindex,Insight,${Insight_xml_dir},${Insight_tex_dir}}
 
-${VDT_xml_html_files}: %.html: %.xml ${html_stylesheet}
+${Insight_xml_html_files}: %.html: %.xml ${html_stylesheet}
 	${call xmltohtml,${xmlpkgtreetop}}
 
-${VDT_tex_html_dirs}: %: %.tex
+${Insight_tex_html_dirs}: %: %.tex
 	${call textohtml,${dir $@}}
 
-VDT_xml_tex_files := ${call xmltexfiles,VDT}
-VDT_jpg_eps_files := ${call imageepsfiles,jpg,VDT}
-VDT_gif_eps_files := ${call imageepsfiles,gif,VDT}
-VDT_tex_files := ${call texfiles,VDT}
+Insight_xml_tex_files := ${patsubst %.xml,%.tex,${Insight_xml_files}} ${patsubst %.xml,%.tex,${Insight_generated_xml_files}}
+Insight_jpg_eps_files := ${call imageepsfiles,jpg,Insight}
+Insight_gif_eps_files := ${call imageepsfiles,gif,Insight}
+Insight_tex_files := ${call texfiles,Insight}
 
-VDT_modules.tex : ${VDT_jpg_eps_files} ${VDT_gif_eps_files} \
-${VDT_xml_tex_files} ${VDT_tex_files}
-	${call makemodtexfile,VDT,${VDT_xml_tex_files} ${VDT_tex_files}}
+Insight_modules.tex : ${Insight_jpg_eps_files} ${Insight_gif_eps_files} \
+${Insight_xml_tex_files} ${Insight_tex_files}
+	${call makemodtexfile,Insight,${Insight_xml_tex_files} ${Insight_tex_files}}
 
-${VDT_jpg_eps_files}: %.${eps} : %.jpg
+${Insight_jpg_eps_files}: %.${eps} : %.jpg
 	${call imagetoeps}
 
-${VDT_gif_eps_files}: %.${eps} : %.gif
+${Insight_gif_eps_files}: %.${eps} : %.gif
 	${call imagetoeps}
 
-${VDT_xml_tex_files}: %.tex : %.xml ${print_stylesheet}
+${Insight_xml_tex_files}: %.tex : %.xml ${print_stylesheet}
 	${call xmltotex}
 
-VDT_veryclean_eps_files:
-	${call rmfiles,${VDT_jpg_eps_files}}
-	${call rmfiles,${VDT_gif_eps_files}}
+Insight_veryclean_eps_files:
+	${call rmfiles,${Insight_jpg_eps_files}}
+	${call rmfiles,${Insight_gif_eps_files}}
 
-VDT_veryclean_xml_tex_files:
-	${call rmfiles,${VDT_xml_tex_files} VDT_modules.tex}
+Insight_veryclean_xml_tex_files:
+	${call rmfiles,${Insight_xml_tex_files} Insight_modules.tex}
 
-VDT_clean:
+Insight_clean_generated_xml_files:
+	${call rmfiles,${Insight_generated_xml_files}}
+
+Insight_clean:
 	@echo $@
 
-VDT_veryclean: VDT_clean VDT_veryclean_eps_files \
-VDT_veryclean_xml_tex_files
-	${call rmfiles,${VDT_xml_html_files}}
-	${call rmfiles,${VDT_tex_html_files}}
-	${call rmdirs,${VDT_tex_html_dirs}}
-
+Insight_veryclean: Insight_clean \
+Insight_veryclean_eps_files \
+Insight_veryclean_xml_tex_files \
+Insight_clean_generated_xml_files
+	${call rmfiles,${Insight_xml_html_files}}
+	${call rmfiles,${Insight_tex_html_files}}
+	${call rmdirs,${Insight_tex_html_dirs}}
 
 # ########## Fusion
 Fusion : Fusion.html Fusion_modules.tex
@@ -540,13 +567,64 @@ Fusion_veryclean_xml_tex_files
 	${call rmfiles,${Fusion_tex_html_files}}
 	${call rmdirs,${Fusion_tex_html_dirs}}
 
+# ########## DataIO
+DataIO : DataIO.html DataIO_modules.tex
+
+DataIO_xml_dir:=${call xmldir,DataIO}
+DataIO_xml_html_files:=${call xmlhtmlfiles,${DataIO_xml_dir}}
+DataIO_tex_dir:=${call texdir,DataIO}
+DataIO_tex_html_dirs:=${call texhtmldirs,${DataIO_tex_dir}}
+
+DataIO.html : ${edition} ${DataIO_xml_html_files} ${DataIO_tex_html_dirs} \
+		${pkgindexgenscript} ${pkgbycatgenscript}
+	${call makepkgindex,DataIO,${DataIO_xml_dir},${DataIO_tex_dir}}
+
+${DataIO_xml_html_files}: %.html: %.xml ${html_stylesheet}
+	${call xmltohtml,${xmlpkgtreetop}}
+
+${DataIO_tex_html_dirs}: %: %.tex
+	${call textohtml,${dir $@}}
+
+DataIO_xml_tex_files := ${call xmltexfiles,DataIO}
+DataIO_jpg_eps_files := ${call imageepsfiles,jpg,DataIO}
+DataIO_gif_eps_files := ${call imageepsfiles,gif,DataIO}
+DataIO_tex_files := ${call texfiles}
+
+DataIO_modules.tex : ${DataIO_jpg_eps_files} ${DataIO_gif_eps_files} \
+${DataIO_xml_tex_files} ${DataIO_tex_files}
+	${call makemodtexfile,DataIO,${DataIO_xml_tex_files} ${DataIO_tex_files}}
+
+${DataIO_jpg_eps_files}: %.${eps} : %.jpg
+	${call imagetoeps}
+
+${DataIO_gif_eps_files}: %.${eps} : %.gif
+	${call imagetoeps}
+
+${DataIO_xml_tex_files}: %.tex : %.xml ${print_stylesheet}
+	${call xmltotex}
+
+DataIO_veryclean_eps_files:
+	${call rmfiles,${DataIO_jpg_eps_files}}
+	${call rmfiles,${DataIO_gif_eps_files}}
+
+DataIO_veryclean_xml_tex_files:
+	${call rmfiles,${DataIO_xml_tex_files} DataIO_modules.tex}
+
+DataIO_clean:
+	@echo $@
+
+DataIO_veryclean: DataIO_clean DataIO_veryclean_eps_files \
+DataIO_veryclean_xml_tex_files
+	${call rmfiles,${DataIO_xml_html_files}}
+	${call rmfiles,${DataIO_tex_html_files}}
+	${call rmdirs,${DataIO_tex_html_dirs}}
+
 # ########## Cleanage
 clean: ${addsuffix _clean,${packages}}
 	${call rmfiles,${bn}.aux ${bn}.log ${bn}.toc ${bn}.lot \
 	${bn}.lof ${bn}.dvi ${bn}.blg ${bn}.idx ${bn}.ilg \
-	${bn}.ind}
+	${bn}.ind ${srmrgmacrosfile} ${stylefilelinks}}
 
 veryclean: clean ${addsuffix _veryclean,${packages}}
 	${call rmfiles,${addsuffix .html,${packages}} ${addsuffix _bycat.html,${packages}} index.html} 
-	${call rmfiles,${pdffile} ${macrosfile} ${styfile}}
-
+	${call rmfiles,${pdffile}}

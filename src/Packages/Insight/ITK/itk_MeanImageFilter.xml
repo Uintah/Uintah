@@ -18,12 +18,10 @@ Applies an averaging filter to an image.  Computes an image where a given pixel 
   </templated>
 
   <datatypes>
-    <datatype name="FilterType::InputSizeType">
-      <member-var type="array">
-        <elem-type>int</elem-type>
-        <size-call>GetSizeDimension</size-call>
-      </member-var>
-    </datatype>
+    <array name="FilterType::InputSizeType">
+      <elem-type>int</elem-type>
+      <size-call>GetSizeDimension</size-call>
+    </array>
   </datatypes>
 
   <inputs>

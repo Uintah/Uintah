@@ -28,18 +28,28 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Tend
 
 
 SRCS     += \
+	$(SRCDIR)/TendAnscale.cc\
 	$(SRCDIR)/TendAnvol.cc\
 	$(SRCDIR)/TendBmat.cc\
 	$(SRCDIR)/TendEpireg.cc\
 	$(SRCDIR)/TendEstim.cc\
 	$(SRCDIR)/TendEval.cc\
+	$(SRCDIR)/TendEvalClamp.cc\
+	$(SRCDIR)/TendEvalPow.cc\
 	$(SRCDIR)/TendEvec.cc\
-	$(SRCDIR)/TendExpand.cc\
-	$(SRCDIR)/TendMake.cc\
-	$(SRCDIR)/TendPoint.cc\
-	$(SRCDIR)/TendSatin.cc\
-	$(SRCDIR)/TendShrink.cc\
+	$(SRCDIR)/TendEvecRGB.cc\
+	$(SRCDIR)/TendFiber.cc\
+	$(SRCDIR)/TendNorm.cc\
+
 #[INSERT NEW CODE FILE HERE]
+
+# the following are stubs that need implementations
+#	$(SRCDIR)/TendExpand.cc\
+#	$(SRCDIR)/TendMake.cc\
+#	$(SRCDIR)/TendPoint.cc\
+#	$(SRCDIR)/TendSatin.cc\
+#	$(SRCDIR)/TendShrink.cc\
+
 
 PSELIBS := Packages/Teem/Core/Datatypes Core/Datatypes \
 	Dataflow/Network Dataflow/Ports \

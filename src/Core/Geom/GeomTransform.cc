@@ -94,8 +94,10 @@ void GeomTransform::get_bounds(BBox& bb)
 {
     BBox b;
     child_->get_bounds(b);
-    bb.extend(trans.project(b.min()));
-    bb.extend(trans.project(b.max()));
+    BBox b1;
+    b1.extend(trans.project(b.min()));
+    b1.extend(trans.project(b.max()));
+    bb.extend(b1);
 }
 
 #define GEOMTransform_VERSION 1

@@ -1,0 +1,105 @@
+
+Release Note Summary - SCIRun Version 1.20 - Oct 27, 2003
+
+New Projects in Version 1.20
+----------------------------
+
+- Support for the NLM Insight Segmentation and Registration Toolkit
+  (www.itk.org)!  Many Insight Filters are wrapped with SCIRun
+  modules.  SCIRun infrastructure updated to easily allow wrapping of
+  new filters.  See Chapter 8 of the Users Guide on how to use ITK
+  Filters. For source distributions, Insight must be installed
+  separately.  See the installation guide on how to install Insight.
+  The RPM distribution includes Insight.
+
+- New stand alone SCIRun Power Apps!  These applications hide the
+  complexities of the powerful SCIRun dataflow interface, allowing the
+  user to focus on a specific task.  Currently there are two Power
+  Apps.  BioTensor and BioFEM.
+
+  * BioTensor is used for doing Diffusion Tensor Imaging.  This
+    application takes the user from data acquisition, through
+    registration and building diffusion tensors.  In addition, several
+    visualization techniques such as Planes, Isosurfaces, Glyphs and
+    Fibers are provided to allow the user to investigate the data.
+
+  * BioFEM is an encapsulation of the forward-fem network that is
+    included in the BioPSE package and described in the BioPSE
+    Tutorial.  With BioFEM, the user can run finite element
+    bioelectric field simulations based on volume conductor models and
+    dipolar sources, and can interactively visualize the simulation
+    results with electric field streamlines and isopotential surfaces.
+
+- Upgraded the Network Editor to be much more user friendly.  See
+  "Network Editor" below (and Chapter 5 of the Users Guide).
+
+- Full support of OSX (See installation guide).
+
+Data Sets
+---------
+* New "insight" directory with sample data for Insight nets.
+* New "brain-dt" directory with sample data for the BioTensor Power App.
+
+New Modules
+-----------
+
+  SCIRun Modules
+  --------------
+
+  - ChooseColorMap, ChooseField, ChooseMatrix, FieldCage, IsoClip,
+    LinearAlgebra, ManageFieldMesh, MoveElemToNode, MoveNodeToElem,
+    SampleStructHex, TransformData, TransformData2, TransformData3
+
+  Teem Modules
+  ------------
+
+  - ChooseNrrd, EditTupleAxis, TendFiber, TendAnscale, TendBmat,
+    TendEpireg, TendEstim, TendEvalClamp, TendEvalPow, TendEval,
+    TendEvec, TendMake, TendNorm, TendPoint, TendShrink, UnuAxmerge,
+    UnuAxsplit, UnuCmedian, UnudHisto, UnuFlip, UnuHisto, UnuPad,
+    UnuProject, UnuSlice
+
+  BioPSE Modules
+  --------------
+
+  - SetupBEMatrix
+
+
+Enhanced Modules
+----------------
+
+  SCIRun Modules
+  --------------
+
+  - FieldToCanonicalTransform, GenTransferFunc, HexToTet, Isosurface, 
+    LinAlgBinary, MaskLattice, MatrixSelectVector, QuadToTri,
+    ShowColorMap, ShowField, Viewer
+
+
+  BioPSE Modules
+  --------------
+
+  - Finite element modules, ForwardMagneticField
+
+  Teem Modules
+  ------------
+
+  - Reorganized the Teem package to more closely mirror Teem's Unu and
+    Tend interfaces.
+  - NrrdToField
+
+Network Editor Enhancements
+---------------------------
+
+  The SCIRun Dataflow Network Editor has been reworked to make use
+much easier.  New features include the ability to select multiple
+modules and group them.  These grouped modules can be merged into a
+Sub-Network (also known as a Macro Module) allowing for the ability to
+more easily deal with complex networks.  Modules and pipes can now be
+disabled to temporarily turn off parts of comlex networks.  Pipes and
+modules can be annotated on the Network Editor canvas to help make the
+dataflow layout easier to understand.  A basic undo feature has been
+added allowing the user to undo/redo the creation/deletion of pipe
+connections.  Tool tips have been added to may widgets.
+
+

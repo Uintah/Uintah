@@ -44,6 +44,8 @@ using std::endl;
 #include <Dataflow/Network/Port.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/GuiInterface/GuiContext.h>
+#include <Core/Containers/StringUtil.h>
 
 using namespace SCIRun;
 
@@ -58,6 +60,7 @@ void Connection::connect()
 {
   iport->attach(this);
   oport->attach(this);
+  makeID();
 }
 
 Connection::~Connection()
@@ -66,3 +69,13 @@ Connection::~Connection()
   iport->detach(this);
 }
 
+void Connection::makeID()
+{
+  if (!oport || !iport || !oport->get_module() || !iport->get_module()) return;
+  oport->get_module()->getGui()->eval("makeConnID {"+
+				      oport->get_module()->getID()+" "+
+				      to_string(oport->get_which_port())+" "+
+				      iport->get_module()->getID()+" "+
+				      to_string(iport->get_which_port())+"}",
+				      id);
+}

@@ -67,7 +67,6 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -78,9 +77,8 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
 	frame $w.row3
 	frame $w.row4
 	frame $w.which -relief groove -borderwidth 2
-	frame $w.row5
 
-	pack $w.row1 $w.row2 $w.row21 $w.row3 $w.row4 $w.which $w.row5 \
+	pack $w.row1 $w.row2 $w.row21 $w.row3 $w.row4 $w.which \
 	    -side top -e y -f both -padx 5 -pady 5
 	
 	label $w.row1.xsize_label -text "Width    "
@@ -127,8 +125,8 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
 	pack $w.which.node $w.which.edge $w.which.face \
 	    $w.which.none -anchor nw
 
-	button $w.row5.execute -text "Execute" -command "$this-c needexecute"
-	pack $w.row5.execute -side top -e n -f both
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
 

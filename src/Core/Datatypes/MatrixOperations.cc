@@ -121,13 +121,32 @@ operator*(MatrixHandle A, MatrixHandle B)
 
   ASSERTEQ(A->ncols(), B->nrows());
 
-  DenseMatrix *ad = A->dense();
-  DenseMatrix *bd = B->dense();
-  DenseMatrix *cd = scinew DenseMatrix(ad->nrows(), bd->ncols());
-  Mult(*cd, *ad, *bd);
-  if (!(A->is_dense())) { delete ad; }
-  if (!(B->is_dense())) { delete bd; }
-  return cd;
+  if (B->is_column())
+  {
+    ColumnMatrix *cd = scinew ColumnMatrix(A->nrows());
+    Mult(*cd, *(A.get_rep()), *(B->column()));
+    return cd;
+  }
+  else if (A->is_sparse())
+  {
+    SparseRowMatrix *ad = A->sparse();
+    DenseMatrix *bd = B->dense();
+    DenseMatrix *cd = scinew DenseMatrix(ad->nrows(), bd->ncols());
+    ad->sparse_mult(*bd, *cd);
+    if (!(B->is_dense())) { delete bd; }
+    return cd;
+  }
+  else
+  {
+    DenseMatrix *ad = A->dense();
+    DenseMatrix *bd = B->dense();
+    DenseMatrix *cd = scinew DenseMatrix(ad->nrows(), bd->ncols());
+    Mult(*cd, *ad, *bd);
+
+    if (!(A->is_dense())) { delete ad; }
+    if (!(B->is_dense())) { delete bd; }
+    return cd;
+  }
 }
 
 

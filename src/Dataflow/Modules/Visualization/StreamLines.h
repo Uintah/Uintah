@@ -50,6 +50,10 @@ typedef struct _SLData {
   _SLData() : lock("StreamLines Lock") {}
 } SLData;
 
+void StreamLinesCleanupPoints(vector<Point> &v, const vector<Point> &input,
+			      double e2);
+
+
 class StreamLinesAlgo : public DynamicAlgoBase
 {
 public:
@@ -251,6 +255,7 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
 
   return cf;
 
+#if 0
   CurveMesh::Node::size_type count;
   cf->get_typed_mesh()->size(count);
   if (((unsigned int)count) == 0)
@@ -262,7 +267,232 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
   {
     return cf;
   }
+#endif
 }
+
+
+class StreamLinesAccAlgo : public DynamicAlgoBase
+{
+public:
+  virtual FieldHandle execute(MeshHandle seed_mesh_h,
+			      FieldHandle vfield_h,
+			      int maxsteps,
+			      int direction,
+			      int color,
+			      bool remove_colinear_p) = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfoHandle get_compile_info(const TypeDescription *smesh,
+					    const TypeDescription *sloc,
+					    const TypeDescription *vfld);
+
+  static double RayPlaneIntersection(const Point &p, const Vector &dir,
+				     const Point &p0, const Vector &normal);
+};
+
+
+template <class SMESH, class SLOC, class VFLD>
+class StreamLinesAccAlgoT : public StreamLinesAccAlgo
+{
+public:
+
+  virtual FieldHandle execute(MeshHandle seed_mesh_h,
+			      FieldHandle vfield_h,
+			      int maxsteps,
+			      int direction,
+			      int color,
+			      bool remove_colinear_p);
+
+  void FindNodes(vector<Point>& nodes, Point seed, int maxsteps, 
+		 VFLD *vfield, bool remove_colinear_p, bool back);
+};
+
+
+template <class SMESH, class SLOC, class VFLD>
+void
+StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::FindNodes(vector<Point> &v,
+						  Point seed,
+						  int maxsteps,
+						  VFLD *vfield,
+						  bool remove_colinear_p,
+						  bool back)
+{
+  typename VFLD::mesh_handle_type vmesh = vfield->get_typed_mesh();
+
+  typename VFLD::mesh_type::Elem::index_type elem, neighbor;
+  typename VFLD::mesh_type::Face::array_type faces;
+  typename VFLD::mesh_type::Node::array_type nodes;
+  typename VFLD::mesh_type::Face::index_type minface;
+  Vector lastnormal, minnormal;
+  Vector dir;
+
+  if (!vmesh->locate(elem, seed)) { return; }
+  for (int i=0; i < maxsteps; i++)
+  {
+    vfield->value(dir, elem);
+    dir.safe_normalize();
+    if (back) { dir *= -1.0; }
+    
+    double ddl;
+    if (i && (ddl = Dot(dir, lastnormal)) < 1.0e-3)
+    {
+      dir = dir - lastnormal * (ddl / Dot (lastnormal, lastnormal));
+      if (dir.safe_normalize() < 1.0e-3) { break; }
+    }
+
+    vmesh->get_faces(faces, elem);
+    double mindist = 1.0e24;
+    bool found = false;
+    Point ecenter;
+    vmesh->get_center(ecenter, elem);
+    for (unsigned int j=0; j < faces.size(); j++)
+    {
+      Point p0, p1, p2;
+      vmesh->get_nodes(nodes, faces[j]);
+      vmesh->get_center(p0, nodes[0]);
+      vmesh->get_center(p1, nodes[1]);
+      vmesh->get_center(p2, nodes[2]);
+      Vector normal = Cross(p1-p0, p2-p0);
+      if (Dot(normal, ecenter-p0) > 0.0) { normal *= -1.0; }
+      const double dist = RayPlaneIntersection(seed, dir, p0, normal);
+      if (dist > -1.0e-6 && dist < mindist)
+      {
+	mindist = dist;
+	minface = faces[j];
+	minnormal = normal;
+	found = true;
+      }
+    }
+    if (!found) { break; }
+
+    seed = seed + dir * mindist;
+
+    v.push_back(seed);
+    if (!vmesh->get_neighbor(neighbor, elem, minface)) { break; }
+    elem = neighbor;
+    lastnormal = minnormal;
+    if (Dot(lastnormal, dir) < 0.0) { lastnormal *= -1; }
+  }
+
+  if (remove_colinear_p)
+  {
+    vector<Point> tmp;
+    StreamLinesCleanupPoints(tmp, v, 1.0e-6);
+    v = tmp;
+  }
+}
+						  
+
+
+template <class SMESH, class SLOC, class VFLD>
+FieldHandle
+StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::execute(MeshHandle seed_mesh_h,
+						FieldHandle vfield_h,
+						int maxsteps,
+						int direction,
+						int color,
+						bool remove_colinear_p)
+{
+  SMESH *smesh = dynamic_cast<SMESH *>(seed_mesh_h.get_rep());
+  VFLD *vfield = dynamic_cast<VFLD *>(vfield_h.get_rep());
+
+  vfield->mesh()->synchronize(Mesh::FACE_NEIGHBORS_E);
+
+  CurveMeshHandle cmesh = scinew CurveMesh();
+  CurveField<double> *cf = scinew CurveField<double>(cmesh, Field::NODE);
+
+  Point seed;
+  typename VFLD::mesh_type::Elem::index_type elem;
+  vector<Point> nodes;
+  nodes.reserve(maxsteps);
+
+  vector<Point>::iterator node_iter;
+  CurveMesh::Node::index_type n1, n2;
+
+  // Try to find the streamline for each seed point.
+  typename SLOC::iterator seed_iter, seed_iter_end;
+  smesh->begin(seed_iter);
+  smesh->end(seed_iter_end);
+  int count = 0;
+  while (seed_iter != seed_iter_end)
+  {
+    smesh->get_point(seed, *seed_iter);
+
+    // Is the seed point inside the field?
+    if (!vfield->get_typed_mesh()->locate(elem, seed))
+    {
+      ++seed_iter;
+      ++count;
+      continue;
+    }
+
+    nodes.clear();
+    nodes.push_back(seed);
+
+    int cc = 0;
+
+    // Find the negative streamlines.
+    if( direction <= 1 )
+    {
+      FindNodes(nodes, seed, maxsteps, vfield, remove_colinear_p, true);
+      if ( direction == 1 )
+      {
+	std::reverse(nodes.begin(), nodes.end());
+	cc = nodes.size();
+	cc = -(cc - 1);
+      }
+    }
+    // Append the positive streamlines.
+    if( direction >= 1 )
+    {
+      FindNodes(nodes, seed, maxsteps, vfield, remove_colinear_p, false);
+    }
+
+    node_iter = nodes.begin();
+
+    if (node_iter != nodes.end())
+    {
+      lock.lock();
+      n1 = cf->get_typed_mesh()->add_node(*node_iter);
+      cf->resize_fdata();
+      if( color )
+	cf->set_value((double)abs(cc), n1);
+      else
+	cf->set_value((double)(*seed_iter), n1);
+
+      ++node_iter;
+
+      cc++;
+
+      while (node_iter != nodes.end())
+      {
+	n2 = cf->get_typed_mesh()->add_node(*node_iter);
+	cf->resize_fdata();
+
+	if( color )
+	  cf->set_value((double)abs(cc), n2);
+	else
+	  cf->set_value((double)(*seed_iter), n2);
+
+	cf->get_typed_mesh()->add_edge(n1, n2);
+
+	n1 = n2;
+	++node_iter;
+
+	cc++;
+      }
+      lock.unlock();
+    }
+
+    ++seed_iter;
+    ++count;
+  }
+
+  cf->freeze();
+
+  return FieldHandle(cf);
+}
+
 
 
 } // end namespace SCIRun

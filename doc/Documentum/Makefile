@@ -55,6 +55,8 @@ edition := ../edition.xml
   module-latex-print \
   clean \
   veryclean
+#  component-html \
+#  component-print
 
 .DELETE_ON_ERROR:
 
@@ -66,6 +68,8 @@ all: \
   module-xml-print \
   module-latex-html \
   module-latex-print
+#  component-html \
+#  component-print
 
 # Rule for building index.html
 
@@ -93,6 +97,28 @@ documentum.pdf : documentum.rxml ${edition}
 -d ${stylesheet_print}  ${params_print} ${XML_DCL} documentum.pxml 
 	for i in 1 2 ; do jadetex documentum.tex ; done
 	dvipdfm -p letter documentum.dvi
+
+# Rules for building component reference.
+
+component : component-html component-print
+
+component-html : component.html
+
+component.html : component.rxml ${edition}
+	${call rxml_to_hxml,$<}
+	java com.icl.saxon.StyleSheet -w2 component.hxml \
+         ${stylesheet_chunk} ${parms_chunk}
+	java com.icl.saxon.StyleSheet -w2 component.hxml \
+         ${stylesheet_nochunk} ${parms_nochunk} >$@
+
+component-print : component.pdf
+
+component.pdf : component.rxml ${edition}
+	${call rxml_to_pxml,$<}
+	openjade -t tex -V tex-backend -c ${CATALOG} -o component.tex \
+-d ${stylesheet_print}  ${params_print} ${XML_DCL} component.pxml 
+	for i in 1 2 ; do jadetex component.tex ; done
+	dvipdfm -p letter component.dvi
 
 # Rules for building module-xml docs
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
 
 <component name="Hase" category="Visualization">
   <overview>

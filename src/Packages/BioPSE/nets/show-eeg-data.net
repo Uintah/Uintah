@@ -88,7 +88,7 @@ set $m4-faces-on {0}
 set $m4-use-normals {0}
 set $m4-use-transparency {0}
 set $m4-vectors-on {1}
-set $m4-normalize-vectors {}
+set $m4-normalize-vectors {1}
 set $m4-has_vector_data {0}
 set $m4-bidirectional {0}
 set $m4-arrow-heads-on {1}

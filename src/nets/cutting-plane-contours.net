@@ -26,7 +26,7 @@ if {[llength [array get env SCIRUN_DATA]] == 0} {
    displayErrorWarningOrInfo "" error
    displayErrorWarningOrInfo "*** Error: This net depends on the SCIRUN_DATA enviroment variable." error
    displayErrorWarningOrInfo "*** Please exit, set it in your shell, and rerun." error
-   displayErrorWarningOrInfo "*** (e.g. setenv SCIRUN_DATA /usr/sci/data/SCIRunData/1.10.0)" error
+   displayErrorWarningOrInfo "*** (e.g. setenv SCIRUN_DATA /usr/sci/data/SCIRunData/1.20.0)" error
    displayErrorWarningOrInfo "" error
    ::netedit scheduleok
    return

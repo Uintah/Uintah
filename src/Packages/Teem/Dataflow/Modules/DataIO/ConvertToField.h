@@ -65,8 +65,45 @@ public:
   static CompileInfoHandle get_compile_info(const TypeDescription *td);
 };
 
+class ConvertToFieldEigenBase : public DynamicAlgoBase
+{
+public:
+  virtual bool convert_to_field(SCIRun::FieldHandle, NrrdDataHandle, 
+				SCIRun::FieldHandle &) = 0;
+  virtual ~ConvertToFieldEigenBase();
+
+  static const string& get_h_file_path();
+  static string dyn_file_name(const TypeDescription *td) {
+    // add no extension.
+    return template_class_name() + "." + td->get_filename() + ".";
+  }
+
+  static const string base_class_name() {
+    static string name("ConvertToFieldEigenBase");
+    return name;
+  }
+
+  static const string template_class_name() {
+    static string name("ConvertToFieldEigen");
+    return name;
+  }
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfoHandle get_compile_info(const TypeDescription *td);
+};
+
 template <class Fld>
 class ConvertToField : public ConvertToFieldBase
+{
+public:
+  //! virtual interface.
+  virtual bool convert_to_field(SCIRun::FieldHandle, NrrdDataHandle in, 
+				SCIRun::FieldHandle &);
+};
+
+
+template <class Fld>
+class ConvertToFieldEigen : public ConvertToFieldEigenBase
 {
 public:
   //! virtual interface.
@@ -124,8 +161,8 @@ fill_data(Fld *fld, Nrrd *inrrd, Iter &iter, Iter &end)
 
 template <class Fld>
 bool
-ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle  fld, 
-				      NrrdDataHandle       in,
+ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld, 
+				      NrrdDataHandle      in,
 				      SCIRun::FieldHandle &out)
 {
   Nrrd *inrrd = in->nrrd;
@@ -257,6 +294,143 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle  fld,
     return false;
   }
 
+  return true;
+}
+
+template <class Fld>
+bool
+ConvertToFieldEigen<Fld>::convert_to_field(SCIRun::FieldHandle fld, 
+					   NrrdDataHandle      in,
+					   SCIRun::FieldHandle &out)
+{
+  Nrrd *inrrd = in->nrrd;
+  vector<unsigned int> dims;
+  // The input fld in not neccessarily the exact type Fld, 
+  // it will have the exact same mesh type however.
+  typedef typename Fld::mesh_type Msh;
+  Msh *mesh = dynamic_cast<Msh*>(fld->mesh().get_rep());
+  ASSERT(mesh != 0);
+  int off = 0;
+  bool uns = false;
+  if (! mesh->get_dim(dims)) {
+    uns = true;
+    // Unstructured fields fall into this category, for them we create nrrds
+    // of dimension 1 (2 with the tuple axis).
+    switch (fld->data_at()) {
+    case Field::NODE :
+      {
+	typename Fld::mesh_type::Node::size_type sz;
+	mesh->size(sz);
+	dims.push_back(sz);
+      }
+    break;
+    case Field::EDGE :
+      {
+	typename Fld::mesh_type::Edge::size_type sz;
+	mesh->size(sz);
+	dims.push_back(sz);
+      }
+    break;
+    case Field::FACE :
+      {
+	typename Fld::mesh_type::Face::size_type sz;
+	mesh->size(sz);
+	dims.push_back(sz);
+      }
+    break;
+    case Field::CELL :
+      {
+	typename Fld::mesh_type::Cell::size_type sz;
+	mesh->size(sz);
+	dims.push_back(sz);
+      }
+    break;
+    default:
+      return false;
+    }
+  }
+  if ((!uns) && fld->data_at() == Field::CELL) {
+    off = 1;
+  }
+  // All sci nrrds should have a tuple axis, we assume it.
+  // It is axis 0.  Make sure sizes along each dim still match.
+
+  if (inrrd->dim != (int)dims.size() + 1) {
+    return false;
+  }
+  switch (inrrd->dim -1) {
+  case 1:
+    {
+      // make sure size of dimensions match up
+      unsigned int nx = inrrd->axis[1].size + off;
+      if (nx != dims[0]) { return false; }
+    }
+    break;
+  case 2:
+    {
+      unsigned int nx = inrrd->axis[1].size + off;
+      unsigned int ny = inrrd->axis[2].size + off;
+      if ((nx != dims[0]) || (ny != dims[1])) {
+	return false;
+      }
+    }
+    break;
+  case 3:
+    {
+      unsigned int nx = inrrd->axis[1].size + off;
+      unsigned int ny = inrrd->axis[2].size + off;
+      unsigned int nz = inrrd->axis[3].size + off;
+      if ((nx != dims[0]) || (ny != dims[1]) || (nz != dims[2])) {
+	return false;
+      }
+    }
+    break;
+  default:   // anything else is invalid.
+    return false;
+  }
+  // Things match up, create the new output field.
+  out = new Fld(typename Fld::mesh_handle_type(mesh), fld->data_at());
+  
+  // Copy all of the non-transient properties from the original field.
+  *((PropertyManager *)(out.get_rep()))=*((PropertyManager *)(fld.get_rep()));
+
+  // Copy the data into the field.
+  switch (fld->data_at()) {
+  case Field::NODE :
+    {
+      typename Fld::mesh_type::Node::iterator iter, end;
+      mesh->begin(iter);
+      mesh->end(end);
+      fill_eigen_data((Fld*)out.get_rep(), inrrd, iter, end);
+    }
+  break;
+  case Field::EDGE :
+    {
+      typename Fld::mesh_type::Edge::iterator iter, end;
+      mesh->begin(iter);
+      mesh->end(end);
+      fill_eigen_data((Fld*)out.get_rep(), inrrd, iter, end);
+    }
+  break;
+  case Field::FACE :
+    {
+      typename Fld::mesh_type::Face::iterator iter, end;
+      mesh->begin(iter);
+      mesh->end(end);
+      fill_eigen_data((Fld*)out.get_rep(), inrrd, iter, end);
+    }
+  break;
+  case Field::CELL :
+    {
+      typename Fld::mesh_type::Cell::iterator iter, end;
+      mesh->begin(iter);
+      mesh->end(end);
+      fill_eigen_data((Fld*)out.get_rep(), inrrd, iter, end);
+    }
+  break;
+  default:
+    return false;
+  }
   return true;
 }
 

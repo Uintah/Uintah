@@ -17,14 +17,14 @@
 %
 
 \documentclass[11pt,titlepage]{article}
-\usepackage[]{fancyhdr}
-\usepackage[]{graphics}
-\usepackage[]{epsfig}
-\usepackage[]{html}
+\usepackage{fancyhdr}
+\usepackage{graphics}
+\usepackage{epsfig}
+\usepackage{html}
 \usepackage{makeidx}
-\usepackage[]{../../Utilities/TeX/scirun-doc}
-\usepackage[]{srmrgmacros}
-\makeindex
+\usepackage{scirun-doc}
+\input{scirun-doc}
+\input{srmrgmacros}
 
 \begin{document}
 
@@ -34,9 +34,13 @@
 \tableofcontents
 \newpage
 
-% Now the main sections of the manual
-\input{modules}
-
-\printindex
+% Main sections of the manual
+\input{SCIRun_modules.tex}
+\input{BioPSE_modules.tex}
+\input{Teem_modules.tex}
+\input{Insight_modules.tex}
+\input{MatlabInterface_modules.tex}
+\input{DataIO_modules.tex}
+\input{Fusion_modules.tex}
 
 \end{document}

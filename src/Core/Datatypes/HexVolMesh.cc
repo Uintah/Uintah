@@ -183,6 +183,10 @@ void
 HexVolMesh::compute_faces()
 {
   face_table_lock_.lock();
+  if (synchronized_ & FACES_E) {
+    face_table_lock_.unlock();
+    return;
+  }
   face_table_.clear();
 
   Cell::iterator ci, cie;
@@ -234,7 +238,10 @@ void
 HexVolMesh::compute_edges()
 {
   edge_table_lock_.lock();
-
+  if (synchronized_ & EDGES_E) {
+    edge_table_lock_.unlock();
+    return;
+  }
   Cell::iterator ci, cie;
   begin(ci); end(cie);
   Node::array_type arr;
@@ -554,6 +561,10 @@ HexVolMesh::compute_node_neighbors()
 {
   if (!(synchronized_ & EDGES_E)) synchronize(EDGES_E);
   node_nbor_lock_.lock();
+  if (synchronized_ & NODE_NEIGHBORS_E) {
+    node_nbor_lock_.unlock();
+    return;
+  }
   node_neighbors_.clear();
   node_neighbors_.resize(points_.size());
   Edge::iterator ei, eie;
@@ -744,6 +755,18 @@ HexVolMesh::locate(Face::index_type &face, const Point &p)
 bool
 HexVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
+  // Check last cell found first.  Copy cache to cell first so that we
+  // don't care about thread safeness, such that worst case on
+  // context switch is that cache is not found.
+  static Cell::index_type cache(0);
+  cell = cache;
+  if (cell > Cell::index_type(0) &&
+      cell < Cell::index_type(cells_.size()/8) &&
+      inside8_p(cell, p))
+  {
+    return true;
+  }
+
   if ( (!synchronized_) & LOCATE_E) // I hope I got the () right.
     synchronize(LOCATE_E);
   ASSERT(grid_.get_rep());
@@ -1116,6 +1139,10 @@ void
 HexVolMesh::compute_grid()
 {
   grid_lock_.lock();
+  if (synchronized_ & LOCATE_E) {
+    grid_lock_.unlock();
+    return;
+  }
   if (grid_.get_rep() != 0) {grid_lock_.unlock(); return;} // only create once.
 
   BBox bb = get_bounding_box();

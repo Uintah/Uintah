@@ -53,15 +53,20 @@ using namespace SCITeem;
 
 class NIMRODConverterAlgo : public DynamicAlgoBase
 {
+protected:
+  enum { NONE = 0, MESH = 1, SCALAR = 2, REALSPACE = 4, PERTURBED = 8 };
+  enum { R = 0, Z = 1, PHI = 2, K = 3 };
+
 public:
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info( const string converter,
 					     const unsigned int ntype );
 
 public:
-  virtual NrrdDataHandle execute(vector< NrrdDataHandle > nHandles,
-				 vector< int > mesh,
-				 vector< int > data,
+  virtual NrrdDataHandle execute(vector< NrrdDataHandle >& nHandles,
+				 vector< int >& mesh,
+				 vector< int >& data,
+				 vector< int >& modes,
 				 int idim, int jdim, int kdim) = 0;
 };
 
@@ -70,18 +75,20 @@ class NIMRODMeshConverterAlgoT : public NIMRODConverterAlgo
 {
 public:
 
-  virtual NrrdDataHandle execute(vector< NrrdDataHandle > nHandles,
-				 vector< int > mesh,
-				 vector< int > data,
+  virtual NrrdDataHandle execute(vector< NrrdDataHandle >& nHandles,
+				 vector< int >& mesh,
+				 vector< int >& data,
+				 vector< int >& modes,
 				 int idim, int jdim, int kdim);
 };
 
 
 template< class NTYPE >
 NrrdDataHandle
-NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle > nHandles,
-					   vector< int > mesh,
-					   vector< int > data,
+NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
+					   vector< int >& mesh,
+					   vector< int >& data,
+					   vector< int >& modes,
 					   int idim, int jdim, int kdim)
 {
   int sink_size = 1;
@@ -93,9 +100,9 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle > nHandles,
 
   register int i,j,k,cc = 0;
 
-  NTYPE *ptrR   = (NTYPE *)(nHandles[mesh[0]]->nrrd->data);
-  NTYPE *ptrZ   = (NTYPE *)(nHandles[mesh[1]]->nrrd->data);
-  NTYPE *ptrPhi = (NTYPE *)(nHandles[mesh[2]]->nrrd->data);
+  NTYPE *ptrR   = (NTYPE *)(nHandles[mesh[R]]->nrrd->data);
+  NTYPE *ptrZ   = (NTYPE *)(nHandles[mesh[Z]]->nrrd->data);
+  NTYPE *ptrPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
     
   for( i=0; i<idim; i++ ) {
     double cosPhi = cos( ptrPhi[i] );
@@ -116,14 +123,14 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle > nHandles,
     }
   }
 
-  nrrdWrap(nout->nrrd, ndata, nHandles[mesh[2]]->nrrd->type,
+  nrrdWrap(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
 	   ndims+1, sink_size, idim, jdim, kdim);
   nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
   vector< string > dataset;
 
-  nHandles[mesh[2]]->get_tuple_indecies(dataset);
+  nHandles[mesh[PHI]]->get_tuple_indecies(dataset);
 
   dataset[0].replace( dataset[0].find( "PHI:Scalar" ), 10, "XYZ:Vector" );
 
@@ -133,7 +140,7 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle > nHandles,
   nout->nrrd->axis[3].label = strdup("Radial");
 
   *((PropertyManager *)nout) =
-    *((PropertyManager *)(nHandles[mesh[2]].get_rep()));
+    *((PropertyManager *)(nHandles[mesh[PHI]].get_rep()));
 
   nout->set_property( "Coordinate System", string("Cartesian - XYZ"), false );
 
@@ -146,19 +153,22 @@ class NIMRODScalarConverterAlgoT : public NIMRODConverterAlgo
 {
 public:
 
-  virtual NrrdDataHandle execute(vector< NrrdDataHandle > nHandles,
-				 vector< int > mesh,
-				 vector< int > data,
+  virtual NrrdDataHandle execute(vector< NrrdDataHandle >& nHandles,
+				 vector< int >& mesh,
+				 vector< int >& data,
+				 vector< int >& modes,
 				 int idim, int jdim, int kdim);
 };
 
 
 template< class NTYPE >
 NrrdDataHandle
-NIMRODScalarConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle > nHandles,
-					     vector< int > mesh,
-					     vector< int > data,
-					     int idim, int jdim, int kdim)
+NIMRODScalarConverterAlgoT< NTYPE >::
+execute(vector< NrrdDataHandle >& nHandles,
+	vector< int >& mesh,
+	vector< int >& data,
+	vector< int >& modes,
+	int idim, int jdim, int kdim)
 {
   int sink_size = 1;
   int ndims = 3;
@@ -211,9 +221,10 @@ class NIMRODRealSpaceConverterAlgoT : public NIMRODConverterAlgo
 {
 public:
 
-  virtual NrrdDataHandle execute(vector< NrrdDataHandle > nHandles,
-				 vector< int > mesh,
-				 vector< int > data,
+  virtual NrrdDataHandle execute(vector< NrrdDataHandle >& nHandles,
+				 vector< int >& mesh,
+				 vector< int >& data,
+				 vector< int >& modes,
 				 int idim, int jdim, int kdim);
 };
 
@@ -221,9 +232,10 @@ public:
 template< class NTYPE >
 NrrdDataHandle
 NIMRODRealSpaceConverterAlgoT< NTYPE >::
-execute(vector< NrrdDataHandle > nHandles,
-	vector< int > mesh,
-	vector< int > data,
+execute(vector< NrrdDataHandle >& nHandles,
+	vector< int >& mesh,
+	vector< int >& data,
+	vector< int >& modes,
 	int idim, int jdim, int kdim)
 {
   int sink_size = 1;
@@ -235,11 +247,11 @@ execute(vector< NrrdDataHandle > nHandles,
 
   register int i,j,k,cc = 0;
 
-  NTYPE *ptrR   = (NTYPE *)(nHandles[data[0]]->nrrd->data);
-  NTYPE *ptrZ   = (NTYPE *)(nHandles[data[1]]->nrrd->data);
-  NTYPE *ptrPhi = (NTYPE *)(nHandles[data[2]]->nrrd->data);
+  NTYPE *ptrR   = (NTYPE *)(nHandles[data[R]]->nrrd->data);
+  NTYPE *ptrZ   = (NTYPE *)(nHandles[data[Z]]->nrrd->data);
+  NTYPE *ptrPhi = (NTYPE *)(nHandles[data[PHI]]->nrrd->data);
   
-  NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[2]]->nrrd->data);
+  NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
 
   for( i=0; i<idim; i++ ) {
     double cosPhi = cos( ptrMeshPhi[i] );
@@ -260,14 +272,14 @@ execute(vector< NrrdDataHandle > nHandles,
     }
   }
 
-  nrrdWrap(nout->nrrd, ndata, nHandles[data[2]]->nrrd->type,
+  nrrdWrap(nout->nrrd, ndata, nHandles[data[PHI]]->nrrd->type,
 	   ndims+1, sink_size, idim, jdim, kdim);
   nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
   vector< string > dataset;
 
-  nHandles[data[2]]->get_tuple_indecies(dataset);
+  nHandles[data[PHI]]->get_tuple_indecies(dataset);
 
   dataset[0].replace( dataset[0].find( "PHI:Scalar" ), 10, "XYZ:Vector" );
 
@@ -277,7 +289,7 @@ execute(vector< NrrdDataHandle > nHandles,
   nout->nrrd->axis[3].label = strdup("Radial");
 
   *((PropertyManager *)nout) =
-    *((PropertyManager *)(nHandles[data[2]].get_rep()));
+    *((PropertyManager *)(nHandles[data[PHI]].get_rep()));
 
   nout->set_property( "Coordinate System", string("Cartesian - XYZ"), false );
 
@@ -289,9 +301,10 @@ class NIMRODPerturbedConverterAlgoT : public NIMRODConverterAlgo
 {
 public:
 
-  virtual NrrdDataHandle execute(vector< NrrdDataHandle > nHandles,
-				 vector< int > mesh,
-				 vector< int > data,
+  virtual NrrdDataHandle execute(vector< NrrdDataHandle >& nHandles,
+				 vector< int >& mesh,
+				 vector< int >& data,
+				 vector< int >& modes,
 				 int idim, int jdim, int kdim);
 };
 
@@ -299,9 +312,10 @@ public:
 template< class NTYPE >
 NrrdDataHandle
 NIMRODPerturbedConverterAlgoT< NTYPE >::
-execute(vector< NrrdDataHandle > nHandles,
-	vector< int > mesh,
-	vector< int > data,
+execute(vector< NrrdDataHandle >& nHandles,
+	vector< int >& mesh,
+	vector< int >& data,
+	vector< int >& modes,
 	int idim, int jdim, int kdim)
 {
   unsigned int sink_size = 1;
@@ -309,7 +323,7 @@ execute(vector< NrrdDataHandle > nHandles,
 
   NrrdData *nout = scinew NrrdData(false);
 
-  register int i,j,k,cc = 0;
+  register int i,j,k,m,cc = 0;
 
   unsigned int rank = data.size() / 2;
 
@@ -318,44 +332,33 @@ execute(vector< NrrdDataHandle > nHandles,
   for( unsigned int i=0; i<data.size(); i++ )
     ptrs[i] = (NTYPE *)(nHandles[data[i]]->nrrd->data);
 
-  NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[2]]->nrrd->data);
-  NTYPE *ptrMeshK   = (NTYPE *)(nHandles[mesh[3]]->nrrd->data);
+  NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
+  NTYPE *ptrMeshK   = (NTYPE *)(nHandles[mesh[K]]->nrrd->data);
 
-  unsigned int nmodes = nHandles[mesh[3]]->nrrd->axis[1].size;
+  int nmodes = nHandles[mesh[K]]->nrrd->axis[1].size;
 
-  unsigned int mode = idim;
-  idim = nHandles[mesh[2]]->nrrd->axis[1].size; // Phi
-  
   NTYPE* ndata = scinew NTYPE[idim*jdim*kdim*rank];
 
   for( i=0; i<idim; i++ ) {
+
     double phi = ptrMeshPhi[i];
 
     for( j=0; j<jdim; j++ ) {
       for( k=0; k<kdim; k++ ) {
-      
-	unsigned int m;
+      	for( m=0; m<nmodes; m++ ) {  // Mode loop.
 
-	//  If summing start at 0 otherwise start with the mode
-	if( mode == nmodes ) m = 0;
-	else                 m = mode;
-
-	for( ; m<nmodes; m++ ) {  // Mode loop.
-
-	  unsigned int index = (m * jdim + j) * kdim + k;
+	  if( modes[m] || modes[nmodes] ) {
+	    unsigned int index = (m * jdim + j) * kdim + k;
 	
-	  double angle = ptrMeshK[m] * phi; // Mode * phi slice.
+	    double angle = ptrMeshK[m] * phi; // Mode * phi slice.
 
-	  for( unsigned int c=0; c<rank; c++ )
-	    ndata[cc*rank+c] = 0;
+	    for( unsigned int c=0; c<rank; c++ )
+	      ndata[cc*rank+c] = 0;
 
-	  for( unsigned int c=0; c<rank; c++ )
-	    ndata[cc*rank+c] += 2.0 * ( cos( angle ) * ptrs[c     ][index] -
-					sin( angle ) * ptrs[c+rank][index] );
-
-	  //  Not summing so quit.
-	  if( mode < nmodes )
-	    break;
+	    for( unsigned int c=0; c<rank; c++ )
+	      ndata[cc*rank+c] += 2.0 * ( cos( angle ) * ptrs[c     ][index] -
+					  sin( angle ) * ptrs[c+rank][index] );
+	  }
 	}
 
 	++cc;
@@ -374,10 +377,10 @@ execute(vector< NrrdDataHandle > nHandles,
 
   char tmpstr[12];
   
-  if( mode == nmodes )
-    sprintf( tmpstr,"SUM" );
+  if( modes[nmodes] == 1 )
+    sprintf( tmpstr,"SUM-ALL" );
   else
-    sprintf( tmpstr,"MODE-%d-", mode );
+    sprintf( tmpstr,"SUM-MODE" );
 
   dataset[0].replace( dataset[0].find( "REAL" ), 4, tmpstr );
 

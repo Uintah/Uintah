@@ -75,7 +75,7 @@ set $m2-vectors-on {1}
 set $m2-normalize-vectors {0}
 set $m2-has_vector_data {1}
 set $m2-bidirectional {0}
-set $m2-vector-usedefcolor {1}
+set $m2-vectors-usedefcolor {1}
 set $m2-tensors-on {0}
 set $m2-has_tensor_data {0}
 set $m2-scalars-on {0}

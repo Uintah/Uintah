@@ -55,6 +55,12 @@ TriSurfMesh::TriSurfMesh()
     faces_(0),
     edge_neighbors_(0),
     node_neighbors_(0),
+    point_lock_("TriSurfMesh point_lock_"),
+    edge_lock_("TriSurfMesh edge_lock_"),
+    face_lock_("TriSurfMesh face_lock_"),
+    edge_neighbor_lock_("TriSurfMesh edge_neighbor_lock_"),
+    normal_lock_("TriSurfMesh normal_lock_"),    
+    node_neighbor_lock_("TriSurfMesh node_neighbor_lock_"),
     synchronized_(NODES_E | FACES_E | CELLS_E)
 {
 }
@@ -64,7 +70,14 @@ TriSurfMesh::TriSurfMesh(const TriSurfMesh &copy)
     edges_(copy.edges_),
     faces_(copy.faces_),
     edge_neighbors_(copy.edge_neighbors_),
+    normals_(copy.normals_),
     node_neighbors_(copy.node_neighbors_),
+    point_lock_("TriSurfMesh point_lock_"),
+    edge_lock_("TriSurfMesh edge_lock_"),
+    face_lock_("TriSurfMesh face_lock_"),
+    edge_neighbor_lock_("TriSurfMesh edge_neighbor_lock_"),
+    normal_lock_("TriSurfMesh normal_lock_"),    
+    node_neighbor_lock_("TriSurfMesh node_neighbor_lock_"),
     synchronized_(copy.synchronized_)
 {
 }
@@ -122,6 +135,7 @@ TriSurfMesh::get_bounding_box() const
 void
 TriSurfMesh::transform(const Transform &t)
 {
+  point_lock_.lock();
   vector<Point>::iterator itr = points_.begin();
   vector<Point>::iterator eitr = points_.end();
   while (itr != eitr)
@@ -129,6 +143,7 @@ TriSurfMesh::transform(const Transform &t)
     *itr = t.project(*itr);
     ++itr;
   }
+  point_lock_.unlock();
 }
 
 
@@ -282,6 +297,11 @@ TriSurfMesh::get_neighbor(Face::index_type &neighbor,
 void
 TriSurfMesh::compute_node_neighbors()
 {
+  node_neighbor_lock_.lock();
+  if (synchronized_ & NODE_NEIGHBORS_E) {
+    node_neighbor_lock_.unlock();
+    return;
+  }
   node_neighbors_.clear();
   node_neighbors_.resize(points_.size(),set<int>());
   unsigned int nfaces = faces_.size();
@@ -291,6 +311,7 @@ TriSurfMesh::compute_node_neighbors()
     node_neighbors_[faces_[f]].insert(faces_[prev(f)]);
   }
   synchronized_ |= NODE_NEIGHBORS_E;
+  node_neighbor_lock_.unlock();
 }
       
 
@@ -444,45 +465,34 @@ TriSurfMesh::get_gradient_basis(Face::index_type fi, Vector& g0, Vector& g1,
   Point newp1;
   Point newp2;
   Point newp3;
-  Point tempp1;
-  Point tempp2;
-  Point tempp3;
   newp1 = p1;
   newp2 = p2;
   newp3 = p3;
 
   // 1. Translate so that p1 is at the origin
   trans1.post_translate(Vector(-x1,-y1,-z1));
-  tempp1 = trans1.project(newp1);
-  tempp2 = trans1.project(newp2);
-  tempp3 = trans1.project(newp3);
-  newp1 = tempp1;
-  newp2 = tempp2;
-  newp3 = tempp3;
+  newp1 = trans1.project(newp1);
+  newp2 = trans1.project(newp2);
+  newp3 = trans1.project(newp3);
 
   // 2. Rotate about z axis - this will bring the p1-p2 edge into the xz 
   //    plane and make p2y=0;
   double phi = Atan(newp2.y()/newp2.x());
   rot1.post_rotate(-phi, Vector(0,0,1));
-  tempp2 = rot1.project(newp2);
-  tempp3 = rot1.project(newp3);
-  newp2 = tempp2;
-  newp3 = tempp3;
+  newp2 = rot1.project(newp2);
+  newp3 = rot1.project(newp3);
 
   // 3. Rotate about y-axis so that newp2.z() = 0 and p1-p2 edge is 
   //    coincident with the x-axis
   double theta = Atan(newp2.z()/newp2.x());
   rot2.post_rotate(theta, Vector(0,1,0));
-  tempp2 = rot2.project(newp2);
-  tempp3 = rot2.project(newp3);
-  newp2 = tempp2;
-  newp3 = tempp3;
+  newp2 = rot2.project(newp2);
+  newp3 = rot2.project(newp3);
 
   // 4. Rotate p3 about x axis so that pnew3.z() = 0.
   theta = Atan(newp3.z()/newp3.y());
   rot3.post_rotate(theta, Vector(1,0,0));
-  tempp3 = rot3.project(newp3);
-  newp3 = tempp3;
+  newp3 = rot3.project(newp3);
 
   // All nodes are now in the x-y plane. Compute basis vectors.
 
@@ -517,30 +527,23 @@ TriSurfMesh::get_gradient_basis(Face::index_type fi, Vector& g0, Vector& g1,
   Vector g2prime=Vector(b2*iA2, c2*iA2, 0);
 
   // apply the inverse rotations to the basis vectors
-  Vector g0temp;
-  Vector g1temp;
-  Vector g2temp; 
-  g0temp = rot3.unproject(g0prime);
-  g0 = rot2.unproject(g0temp);
-  g0temp = g0;
-  g0 = rot1.unproject(g0temp);
-  g0temp = g0;
-  g1temp = rot3.unproject(g1prime);
-  g1 = rot2.unproject(g1temp);
-  g1temp = g1;
-  g1 = rot1.unproject(g1temp);
-  g1temp = g1;
-  g2temp = rot3.unproject(g2prime);
-  g2 = rot2.unproject(g2temp);
-  g2temp = g2;
-  g2 = rot1.unproject(g2temp);
-  g2temp = g2;
+  g0 = rot3.unproject(g0prime);
+  g0 = rot2.unproject(g0);
+  g0 = rot1.unproject(g0);
+
+  g1 = rot3.unproject(g1prime);
+  g1 = rot2.unproject(g1);
+  g1 = rot1.unproject(g1);
+  
+  g2 = rot3.unproject(g2prime);
+  g2 = rot2.unproject(g2);
+  g2 = rot1.unproject(g2);
 
   // apply the inverse translation
-  g0 = trans1.unproject(g0temp);
-  g1 = trans1.unproject(g1temp);
-  g2 = trans1.unproject(g2temp);
-  
+  g0 = trans1.unproject(g0);
+  g1 = trans1.unproject(g1);
+  g2 = trans1.unproject(g2);
+    
   // return the area of the element
   double area=(1./iA2)/2.0;
   return(area);
@@ -657,6 +660,11 @@ TriSurfMesh::synchronize(unsigned int tosync)
 void
 TriSurfMesh::compute_normals()
 {
+  normal_lock_.lock();
+  if (synchronized_ & NORMALS_E) {
+    normal_lock_.unlock();
+    return;
+  }
   normals_.resize(points_.size()); // 1 per node
 
   // build table of faces that touch each node
@@ -715,6 +723,7 @@ TriSurfMesh::compute_normals()
     ++nif_iter;
   }
   synchronized_ |= NORMALS_E;
+  normal_lock_.unlock();
 }
 
 
@@ -728,7 +737,11 @@ TriSurfMesh::insert_node(Face::index_type face, const Point &p)
   const unsigned f0 = face*3;
   const unsigned f1 = faces_.size();
   const unsigned f2 = f1+3;
-  
+
+  face_lock_.lock();
+  edge_neighbor_lock_.lock();
+  normal_lock_.lock();
+
   faces_.push_back(faces_[f0+1]);
   faces_.push_back(faces_[f0+2]);
   faces_.push_back(pi);
@@ -764,7 +777,6 @@ TriSurfMesh::insert_node(Face::index_type face, const Point &p)
 			     normals_[faces_[f0]] + 
 			     normals_[faces_[f1]] + 
 			     normals_[faces_[f2]]).normalize() );
-
     normals_.push_back(normals_[faces_[f1]]);
     normals_.push_back(normals_[faces_[f2]]);
     normals_.push_back(normal);
@@ -781,8 +793,9 @@ TriSurfMesh::insert_node(Face::index_type face, const Point &p)
   synchronized_ &= ~EDGES_E;
   if (!do_normals) synchronized_ &= ~NORMALS_E;
 
-    
-  
+  face_lock_.unlock();
+  edge_neighbor_lock_.unlock();
+  normal_lock_.unlock();     
 }
 
   
@@ -833,6 +846,9 @@ TriSurfMesh::bisect_element(const Face::index_type face)
 			     normals_[faces_[next(f0+edge)]]).normalize());
 
   }
+  face_lock_.lock();
+  edge_neighbor_lock_.lock();
+  normal_lock_.lock();
 
   const unsigned f1 = faces_.size();
   faces_.push_back(nodes[0]);
@@ -853,9 +869,9 @@ TriSurfMesh::bisect_element(const Face::index_type face)
   faces_[f0+1] = nodes[4];
   faces_[f0+2] = nodes[5];
 
+
   if (do_neighbors)
   {
-
     edge_neighbors_.push_back(edge_neighbors_[f0+0]);
     edge_neighbors_.push_back(f0+2);
     edge_neighbors_.push_back(-1);
@@ -872,7 +888,6 @@ TriSurfMesh::bisect_element(const Face::index_type face)
     edge_neighbors_[f0+0] = f2+1;
     edge_neighbors_[f0+1] = f3+1;
     edge_neighbors_[f0+2] = f1+1;
-
   }
 
   if (do_normals)
@@ -972,6 +987,9 @@ TriSurfMesh::bisect_element(const Face::index_type face)
   synchronized_ &= ~EDGES_E;
   if (!do_normals) synchronized_ &= ~NORMALS_E;
 
+  face_lock_.unlock();
+  edge_neighbor_lock_.unlock();
+  normal_lock_.unlock();
 }
 
 
@@ -1000,7 +1018,12 @@ struct edgehash
 void
 TriSurfMesh::compute_edges()
 {
-
+  edge_lock_.lock();
+  if (synchronized_ & EDGES_E) {
+    edge_lock_.unlock();
+    return;
+  }
+    
 #ifdef HAVE_HASH_MAP
 
   hash_map<pair<int, int>, int, edgehash, edgecompare> edge_map;
@@ -1040,8 +1063,9 @@ TriSurfMesh::compute_edges()
   {
     edges_.push_back((*itr).second);
   }
-
+  
   synchronized_ |= EDGES_E;
+  edge_lock_.unlock();
 }
 
 
@@ -1056,8 +1080,12 @@ TriSurfMesh::add_find_point(const Point &p, double err)
   }
   else
   {
+    node_neighbor_lock_.lock();
+    point_lock_.lock();
     points_.push_back(p);
     node_neighbors_.push_back(set<int>());
+    node_neighbor_lock_.unlock();
+    point_lock_.unlock();
     return static_cast<Node::index_type>(points_.size() - 1);
   }
 }
@@ -1066,35 +1094,43 @@ TriSurfMesh::add_find_point(const Point &p, double err)
 void
 TriSurfMesh::add_triangle(Node::index_type a, Node::index_type b, Node::index_type c)
 {
+  face_lock_.lock();
   faces_.push_back(a);
   faces_.push_back(b);
   faces_.push_back(c);
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~NORMALS_E;
+  face_lock_.unlock();
 }
 
 
 TriSurfMesh::Elem::index_type
 TriSurfMesh::add_elem(Node::array_type a)
 {
+  face_lock_.lock();
   faces_.push_back(a[0]);
   faces_.push_back(a[1]);
   faces_.push_back(a[2]);
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   synchronized_ &= ~NODE_NEIGHBORS_E;
   synchronized_ &= ~NORMALS_E;
+  face_lock_.unlock();
   return static_cast<Elem::index_type>((faces_.size() - 1) / 3);
 }
 
 
 void
-TriSurfMesh::compute_edge_neighbors(double err)
+TriSurfMesh::compute_edge_neighbors(double /*err*/)
 {
   // TODO: This is probably broken with the new indexed edges.
   ASSERTMSG(synchronized_ & EDGES_E,
 	    "Must call synchronize EDGES_E on TriSurfMesh first");
-
+  edge_neighbor_lock_.lock();
+  if (synchronized_ & EDGE_NEIGHBORS_E) {
+    edge_neighbor_lock_.unlock();
+    return;
+  }
 #ifdef HAVE_HASH_MAP
 
   hash_map<pair<int, int>, int, edgehash, edgecompare> edge_map;
@@ -1143,6 +1179,7 @@ TriSurfMesh::compute_edge_neighbors(double err)
   }
 
   synchronized_ |= EDGE_NEIGHBORS_E;
+  edge_neighbor_lock_.unlock();
 }
 
 
@@ -1150,9 +1187,15 @@ TriSurfMesh::compute_edge_neighbors(double err)
 TriSurfMesh::Node::index_type
 TriSurfMesh::add_point(const Point &p)
 {
+  normal_lock_.lock();
+  node_neighbor_lock_.lock();
+  point_lock_.lock();
   points_.push_back(p);
   if (synchronized_ & NORMALS_E) normals_.push_back(Vector());
   if (synchronized_ & NODE_NEIGHBORS_E) node_neighbors_.push_back(set<int>());
+  normal_lock_.unlock();
+  node_neighbor_lock_.unlock();
+  point_lock_.unlock();
   return static_cast<Node::index_type>(points_.size() - 1);
 }
 

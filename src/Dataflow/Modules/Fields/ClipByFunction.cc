@@ -99,17 +99,23 @@ ClipByFunction::execute()
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   Handle<ClipByFunctionAlgo> algo;
   int hoffset = 0;
+
+  // remove trailing white-space from the function string
+  string clipfunc=clipfunction_.get();
+  while (clipfunc.size() && isspace(clipfunc[clipfunc.size()-1]))
+    clipfunc.resize(clipfunc.size()-1);
+
   while (1)
   {
     CompileInfoHandle ci =
-      ClipByFunctionAlgo::get_compile_info(ftd, clipfunction_.get(), hoffset);
+      ClipByFunctionAlgo::get_compile_info(ftd, clipfunc, hoffset);
     if (!DynamicCompilation::compile(ci, algo, false, this))
     {
       DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
       error("Your function would not compile.");
       return;
     }
-    if (algo->identify() == clipfunction_.get())
+    if (algo->identify() == clipfunc)
     {
       break;
     }

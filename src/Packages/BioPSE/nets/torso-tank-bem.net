@@ -1,0 +1,622 @@
+# SCI Network 1.20
+
+::netedit dontschedule
+
+global userName
+set userName ""
+
+global runDate
+set runDate ""
+
+global runTime
+set runTime ""
+
+global notes
+set notes ""
+
+set bbox {13 11 1179 903}
+set Name {Main}
+
+# Create the Modules
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 57 304]
+set m1 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 231 454]
+set m2 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 1009 458]
+set m3 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 1009 538]
+set m4 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 589 551]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 389 768]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 196 609]
+set m7 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 774 615]
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 774 776]
+set m9 [addModuleAtPosition "SCIRun" "Render" "Viewer" 160 859]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowColorMap" 196 768]
+set m11 [addModuleAtPosition "SCIRun" "Math" "LinAlgBinary" 231 388]
+set m12 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 13 11]
+set m13 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 589 80]
+set m14 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 774 537]
+set m15 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 13 768]
+set m16 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 57 535]
+set m17 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 13 612]
+set m18 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 13 76]
+set m19 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 975 708]
+set m20 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 993 839]
+set m21 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 975 777]
+set m22 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 196 691]
+set m23 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 571 688]
+set m24 [addModuleAtPosition "SCIRun" "Visualization" "ShowColorMap" 571 771]
+set m25 [addModuleAtPosition "BioPSE" "Forward" "SetupBEMatrix" 231 305]
+set m26 [addModuleAtPosition "SCIRun" "FieldsOther" "SetProperty" 400 162]
+set m27 [addModuleAtPosition "SCIRun" "FieldsOther" "SetProperty" 231 162]
+set m28 [addModuleAtPosition "SCIRun" "FieldsOther" "SetProperty" 231 227]
+set m29 [addModuleAtPosition "SCIRun" "FieldsOther" "SetProperty" 400 228]
+set m30 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 571 615]
+
+# Set the Module Notes Dispaly Options
+set Notes($m0-Position) {s}
+set Notes($m1-Color) {#ecb882}
+set Notes($m1-Position) {e}
+set Notes($m2-Position) {n}
+set Notes($m3-Position) {s}
+set Notes($m4-Position) {w}
+set Notes($m5-Position) {n}
+set Notes($m7-Position) {s}
+set Notes($m8-Position) {n}
+set Notes($m10-Position) {n}
+set Notes($m11-Position) {def}
+set Notes($m12-Position) {e}
+set Notes($m13-Position) {def}
+set Notes($m14-Position) {n}
+set Notes($m15-Position) {n}
+set Notes($m16-Position) {def}
+set Notes($m17-Position) {s}
+set Notes($m18-Position) {e}
+set Notes($m19-Position) {n}
+set Notes($m20-Color) {#eeb482}
+set Notes($m20-Position) {w}
+set Notes($m24-Position) {n}
+set Notes($m25-Position) {def}
+set Notes($m26-Position) {e}
+set Notes($m27-Position) {w}
+set Notes($m28-Position) {w}
+set Notes($m29-Position) {def}
+
+# Create the Connections between Modules
+set c0 [addConnection $m25 0 $m11 0]
+set c1 [addConnection $m12 0 $m18 0]
+set c2 [addConnection $m13 0 $m4 0]
+set c3 [addConnection $m13 0 $m26 0]
+set c4 [addConnection $m14 0 $m7 0]
+set c5 [addConnection $m0 0 $m16 0]
+set c6 [addConnection $m2 0 $m3 0]
+set c7 [addConnection $m19 0 $m21 0]
+set c8 [addConnection $m4 0 $m19 0]
+set c9 [addConnection $m4 0 $m5 0]
+set c10 [addConnection $m7 0 $m8 0]
+set c11 [addConnection $m17 0 $m15 0]
+set c12 [addConnection $m21 1 $m20 0]
+set c13 [addConnection $m18 0 $m17 0]
+set c14 [addConnection $m18 0 $m27 0]
+set c15 [addConnection $m26 0 $m29 0]
+set c16 [addConnection $m27 0 $m28 0]
+set c17 [addConnection $m28 0 $m25 0]
+set c18 [addConnection $m11 0 $m1 0]
+set c19 [addConnection $m6 0 $m22 0]
+set c20 [addConnection $m30 0 $m23 0]
+set c21 [addConnection $m22 0 $m10 0]
+set c22 [addConnection $m23 0 $m24 0]
+set c23 [addConnection $m15 0 $m9 0]
+set c24 [addConnection $m0 0 $m11 1]
+set c25 [addConnection $m4 0 $m23 1]
+set c26 [addConnection $m7 0 $m19 1]
+set c27 [addConnection $m17 0 $m22 1]
+set c28 [addConnection $m18 1 $m9 1]
+set c29 [addConnection $m29 0 $m25 1]
+set c30 [addConnection $m1 0 $m4 1]
+set c31 [addConnection $m3 0 $m7 1]
+set c32 [addConnection $m3 0 $m20 1]
+set c33 [addConnection $m16 0 $m17 1]
+set c34 [addConnection $m22 0 $m15 1]
+set c35 [addConnection $m23 0 $m5 1]
+set c36 [addConnection $m23 0 $m8 1]
+set c37 [addConnection $m1 1 $m3 2]
+set c38 [addConnection $m1 1 $m16 2]
+set c39 [addConnection $m10 0 $m9 2]
+set c40 [addConnection $m5 0 $m9 3]
+set c41 [addConnection $m24 0 $m9 4]
+set c42 [addConnection $m8 0 $m9 5]
+
+# Mark which Connections are Disabled
+
+# Set the Connection Notes and Dislpay Options
+
+# Set the GUI variables for each Module
+set $m0-notes {Read the time-dependent
+known (inner surface)
+potentials}
+set $m0-filename {/usr/sci/data/SCIRunData/1.20.0/time-dependent/Ucager.mat}
+set $m1-notes {Choose which time-step
+from the computed output
+potentials (outer
+surface) to visualize}
+set $m1-row_or_col {col}
+set $m1-selectable_min {0}
+set $m1-selectable_max {              509}
+set $m1-selectable_inc {510}
+set $m1-selectable_units {Units}
+set $m1-range_min {0}
+set $m1-range_max {509}
+set $m1-playmode {once}
+set $m1-dependence {independent}
+set $m1-current {81}
+set $m1-execmode {init}
+set $m1-delay {0}
+set $m1-inc-amount {1}
+set $m1-send-amount {1}
+set $m1-update-function {1}
+set $m2-notes {Read the time-dependent
+outer surface potentials
+(measured)}
+set $m2-filename {/usr/sci/data/SCIRunData/1.20.0/time-dependent/Utankr.mat}
+set $m3-notes {Choose the same time
+instant as the other data}
+set $m3-row_or_col {col}
+set $m3-selectable_min {0}
+set $m3-selectable_max {              509}
+set $m3-selectable_inc {510}
+set $m3-selectable_units {Units}
+set $m3-range_min {0}
+set $m3-range_max {509}
+set $m3-playmode {once}
+set $m3-dependence {independent}
+set $m3-current {81}
+set $m3-execmode {init}
+set $m3-delay {0}
+set $m3-inc-amount {1}
+set $m3-send-amount {1}
+set $m3-update-function {1}
+set $m4-notes {Merge outer surface
+geometry with
+ selected time-step
+of computed potentials}
+set $m5-notes {Show computed
+outer surface}
+set $m5-nodes-on {0}
+set $m5-nodes-transparency {0}
+set $m5-nodes-as-disks {0}
+set $m5-nodes-usedefcolor {0}
+set $m5-edges-on {1}
+set $m5-edges-transparency {0}
+set $m5-edges-usedefcolor {0}
+set $m5-faces-on {1}
+set $m5-use-normals {1}
+set $m5-use-transparency {1}
+set $m5-faces-usedefcolor {0}
+set $m5-vectors-on {0}
+set $m5-normalize-vectors {}
+set $m5-has_vector_data {0}
+set $m5-bidirectional {0}
+set $m5-vectors-usedefcolor {0}
+set $m5-tensors-on {0}
+set $m5-has_tensor_data {0}
+set $m5-tensors-usedefcolor {0}
+set $m5-scalars-on {0}
+set $m5-scalars-transparency {0}
+set $m5-scalars-usedefcolor {0}
+set $m5-has_scalar_data {1}
+set $m5-text-on {0}
+set $m5-text-use-default-color {1}
+set $m5-text-color-r {1.0}
+set $m5-text-color-g {1.0}
+set $m5-text-color-b {1.0}
+set $m5-text-backface-cull {0}
+set $m5-text-fontsize {1}
+set $m5-text-precision {2}
+set $m5-text-render_locations {0}
+set $m5-text-show-data {1}
+set $m5-text-show-nodes {0}
+set $m5-text-show-edges {0}
+set $m5-text-show-faces {0}
+set $m5-text-show-cells {0}
+set $m5-def-color-r {0.5}
+set $m5-def-color-g {0.5}
+set $m5-def-color-b {0.5}
+set $m5-def-color-a {0.5}
+set $m5-node_display_type {Spheres}
+set $m5-edge_display_type {Cylinders}
+set $m5-data_display_type {Arrows}
+set $m5-tensor_display_type {Boxes}
+set $m5-scalar_display_type {Points}
+set $m5-active_tab {Nodes}
+set $m5-node_scale {3.000000e-02}
+set $m5-edge_scale {1.550000e+00}
+set $m5-vectors_scale {0.30}
+set $m5-tensors_scale {0.30}
+set $m5-scalars_scale {3.000000e-01}
+set $m5-show_progress {}
+set $m5-interactive_mode {Interactive}
+set $m5-field-name {Torso Tank}
+set $m5-field-name-update {1}
+set $m5-node-resolution {6}
+set $m5-edge-resolution {6}
+set $m5-data-resolution {6}
+set $m6-notes {}
+set $m6-tcl_status {Calling GenStandardColorMaps!}
+set $m6-positionList {{0 9} {374 9}}
+set $m6-nodeList {256 257}
+set $m6-width {296}
+set $m6-height {40}
+set $m6-mapType {9}
+set $m6-minRes {19}
+set $m6-resolution {255}
+set $m6-realres {255}
+set $m6-gamma {0}
+set $m7-notes {Merge outer surface
+geometry with
+measured potentials}
+set $m8-notes {Show measurement sites}
+set $m8-nodes-on {1}
+set $m8-nodes-transparency {0}
+set $m8-nodes-as-disks {0}
+set $m8-nodes-usedefcolor {0}
+set $m8-edges-on {0}
+set $m8-edges-transparency {0}
+set $m8-edges-usedefcolor {0}
+set $m8-faces-on {1}
+set $m8-use-normals {0}
+set $m8-use-transparency {0}
+set $m8-faces-usedefcolor {0}
+set $m8-vectors-on {0}
+set $m8-normalize-vectors {}
+set $m8-has_vector_data {0}
+set $m8-bidirectional {0}
+set $m8-vectors-usedefcolor {0}
+set $m8-tensors-on {0}
+set $m8-has_tensor_data {0}
+set $m8-tensors-usedefcolor {0}
+set $m8-scalars-on {0}
+set $m8-scalars-transparency {0}
+set $m8-scalars-usedefcolor {0}
+set $m8-has_scalar_data {1}
+set $m8-text-on {0}
+set $m8-text-use-default-color {1}
+set $m8-text-color-r {1.0}
+set $m8-text-color-g {1.0}
+set $m8-text-color-b {1.0}
+set $m8-text-backface-cull {0}
+set $m8-text-fontsize {1}
+set $m8-text-precision {2}
+set $m8-text-render_locations {0}
+set $m8-text-show-data {1}
+set $m8-text-show-nodes {1}
+set $m8-text-show-edges {0}
+set $m8-text-show-faces {0}
+set $m8-text-show-cells {0}
+set $m8-def-color-r {0.5}
+set $m8-def-color-g {0.5}
+set $m8-def-color-b {0.5}
+set $m8-def-color-a {0.5}
+set $m8-node_display_type {Spheres}
+set $m8-edge_display_type {Lines}
+set $m8-data_display_type {Arrows}
+set $m8-tensor_display_type {Boxes}
+set $m8-scalar_display_type {Points}
+set $m8-active_tab {Nodes}
+set $m8-node_scale {6.000000e+00}
+set $m8-edge_scale {1.500000e-02}
+set $m8-vectors_scale {0.30}
+set $m8-tensors_scale {0.30}
+set $m8-scalars_scale {3.000000e-01}
+set $m8-show_progress {}
+set $m8-interactive_mode {Interactive}
+set $m8-field-name {Tank Measurement Sites}
+set $m8-field-name-update {1}
+set $m8-node-resolution {6}
+set $m8-edge-resolution {6}
+set $m8-data-resolution {6}
+set $m9-notes {}
+$m9 ui
+set $m9-ViewWindow_0-pos {}
+set $m9-ViewWindow_0-caxes {0}
+set $m9-ViewWindow_0-raxes {1}
+set $m9-ViewWindow_0-iaxes {}
+set $m9-ViewWindow_0-have_collab_vis {0}
+set $m9-ViewWindow_0-view-eyep-x {-16.361616039997148}
+set $m9-ViewWindow_0-view-eyep-y {-1629.8247534837797}
+set $m9-ViewWindow_0-view-eyep-z {282.30212037629855}
+set $m9-ViewWindow_0-view-lookat-x {-28.385513083150023}
+set $m9-ViewWindow_0-view-lookat-y {38.169308489818896}
+set $m9-ViewWindow_0-view-lookat-z {187.24155955555329}
+set $m9-ViewWindow_0-view-up-x {-0.0023372522982730692}
+set $m9-ViewWindow_0-view-up-y {0.056881670059959352}
+set $m9-ViewWindow_0-view-up-z {0.99837819129971217}
+set $m9-ViewWindow_0-view-fov {20}
+set $m9-ViewWindow_0-view-eyep_offset-x {}
+set $m9-ViewWindow_0-view-eyep_offset-y {}
+set $m9-ViewWindow_0-view-eyep_offset-z {}
+set $m9-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m9-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m9-ViewWindow_0-bgcolor-r {                0}
+set $m9-ViewWindow_0-bgcolor-g {                0}
+set $m9-ViewWindow_0-bgcolor-b {                0}
+set $m9-ViewWindow_0-shading {}
+set $m9-ViewWindow_0-do_stereo {0}
+set $m9-ViewWindow_0-ambient-scale {1.0}
+set $m9-ViewWindow_0-diffuse-scale {1.0}
+set $m9-ViewWindow_0-specular-scale {0.4}
+set $m9-ViewWindow_0-emission-scale {1.0}
+set $m9-ViewWindow_0-shininess-scale {1.0}
+set $m9-ViewWindow_0-polygon-offset-factor {1.0}
+set $m9-ViewWindow_0-polygon-offset-units {0.0}
+set $m9-ViewWindow_0-point-size {1.0}
+set $m9-ViewWindow_0-line-width {1.0}
+set $m9-ViewWindow_0-sbase {0.40}
+set $m9-ViewWindow_0-sr {1}
+set $m9-ViewWindow_0-do_bawgl {0}
+set $m9-ViewWindow_0-drawimg {}
+set $m9-ViewWindow_0-saveprefix {}
+set $m9-ViewWindow_0-resx {640}
+set $m9-ViewWindow_0-resy {512}
+set $m9-ViewWindow_0-aspect {}
+set $m9-ViewWindow_0-aspect_ratio {}
+set $m9-ViewWindow_0-global-light {1}
+set $m9-ViewWindow_0-global-fog {0}
+set $m9-ViewWindow_0-global-debug {0}
+set $m9-ViewWindow_0-global-clip {0}
+set $m9-ViewWindow_0-global-cull {0}
+set $m9-ViewWindow_0-global-dl {0}
+set $m9-ViewWindow_0-global-type {Gouraud}
+set $m9-ViewWindow_0-ortho-view {0}
+set $m9-ViewWindow_0-clip-num {}
+set $m9-ViewWindow_0-clip-visible {}
+set $m9-ViewWindow_0-clip-selected {}
+set $m9-ViewWindow_0-clip-visible-1 {}
+set $m9-ViewWindow_0-clip-normal-x-1 {}
+set $m9-ViewWindow_0-clip-normal-y-1 {}
+set $m9-ViewWindow_0-clip-normal-z-1 {}
+set $m9-ViewWindow_0-clip-normal-d-1 {}
+set $m9-ViewWindow_0-clip-visible-2 {}
+set $m9-ViewWindow_0-clip-normal-x-2 {}
+set $m9-ViewWindow_0-clip-normal-y-2 {}
+set $m9-ViewWindow_0-clip-normal-z-2 {}
+set $m9-ViewWindow_0-clip-normal-d-2 {}
+set $m9-ViewWindow_0-clip-visible-3 {}
+set $m9-ViewWindow_0-clip-normal-x-3 {}
+set $m9-ViewWindow_0-clip-normal-y-3 {}
+set $m9-ViewWindow_0-clip-normal-z-3 {}
+set $m9-ViewWindow_0-clip-normal-d-3 {}
+set $m9-ViewWindow_0-clip-visible-4 {}
+set $m9-ViewWindow_0-clip-normal-x-4 {}
+set $m9-ViewWindow_0-clip-normal-y-4 {}
+set $m9-ViewWindow_0-clip-normal-z-4 {}
+set $m9-ViewWindow_0-clip-normal-d-4 {}
+set $m9-ViewWindow_0-clip-visible-5 {}
+set $m9-ViewWindow_0-clip-normal-x-5 {}
+set $m9-ViewWindow_0-clip-normal-y-5 {}
+set $m9-ViewWindow_0-clip-normal-z-5 {}
+set $m9-ViewWindow_0-clip-normal-d-5 {}
+set $m9-ViewWindow_0-clip-visible-6 {}
+set $m9-ViewWindow_0-clip-normal-x-6 {}
+set $m9-ViewWindow_0-clip-normal-y-6 {}
+set $m9-ViewWindow_0-clip-normal-z-6 {}
+set $m9-ViewWindow_0-clip-normal-d-6 {}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m9-ViewWindow_0-unused {1}
+set $m10-notes {Legend for inner surface}
+set $m10-length {half1}
+set $m10-side {left}
+set $m10-numlabels {5}
+set $m10-scale {1.0}
+set $m10-units {mV}
+set $m10-text_color {1}
+set $m11-notes {Compute the time-dependent
+output (outer surface)
+potentials}
+set $m11-op {Mult}
+set $m11-function {x+y}
+set $m12-notes {Read the inner surface (heart)}
+set $m12-filename {/usr/sci/data/SCIRunData/1.20.0/time-dependent/cage.fld}
+set $m13-notes {Read the outer surface (torso)}
+set $m13-filename {/usr/sci/data/SCIRunData/1.20.0/time-dependent/tank.fld}
+set $m14-notes {Read geometry for
+measurment sites
+on outer surface}
+set $m14-filename {/usr/sci/data/SCIRunData/1.20.0/time-dependent/tank_measured_only.fld}
+set $m15-notes {Show inner surface}
+set $m15-nodes-on {0}
+set $m15-nodes-transparency {0}
+set $m15-nodes-as-disks {0}
+set $m15-nodes-usedefcolor {0}
+set $m15-edges-on {0}
+set $m15-edges-transparency {0}
+set $m15-edges-usedefcolor {0}
+set $m15-faces-on {1}
+set $m15-use-normals {0}
+set $m15-use-transparency {0}
+set $m15-faces-usedefcolor {0}
+set $m15-vectors-on {0}
+set $m15-normalize-vectors {}
+set $m15-has_vector_data {0}
+set $m15-bidirectional {0}
+set $m15-vectors-usedefcolor {0}
+set $m15-tensors-on {0}
+set $m15-has_tensor_data {0}
+set $m15-tensors-usedefcolor {0}
+set $m15-scalars-on {0}
+set $m15-scalars-transparency {0}
+set $m15-scalars-usedefcolor {0}
+set $m15-has_scalar_data {1}
+set $m15-text-on {0}
+set $m15-text-use-default-color {1}
+set $m15-text-color-r {1.0}
+set $m15-text-color-g {1.0}
+set $m15-text-color-b {1.0}
+set $m15-text-backface-cull {0}
+set $m15-text-fontsize {1}
+set $m15-text-precision {2}
+set $m15-text-render_locations {0}
+set $m15-text-show-data {1}
+set $m15-text-show-nodes {0}
+set $m15-text-show-edges {0}
+set $m15-text-show-faces {0}
+set $m15-text-show-cells {0}
+set $m15-def-color-r {0.5}
+set $m15-def-color-g {0.5}
+set $m15-def-color-b {0.5}
+set $m15-def-color-a {0.5}
+set $m15-node_display_type {Spheres}
+set $m15-edge_display_type {Lines}
+set $m15-data_display_type {Arrows}
+set $m15-tensor_display_type {Boxes}
+set $m15-scalar_display_type {Points}
+set $m15-active_tab {Text}
+set $m15-node_scale {3.000000e-02}
+set $m15-edge_scale {1.500000e-02}
+set $m15-vectors_scale {0.30}
+set $m15-tensors_scale {0.30}
+set $m15-scalars_scale {3.000000e-01}
+set $m15-show_progress {}
+set $m15-interactive_mode {Interactive}
+set $m15-field-name {Heart Cage}
+set $m15-field-name-update {1}
+set $m15-node-resolution {6}
+set $m15-edge-resolution {6}
+set $m15-data-resolution {6}
+set $m16-notes {Choose the same
+time instant from
+the input data
+(inner surface)}
+set $m16-row_or_col {col}
+set $m16-selectable_min {0}
+set $m16-selectable_max {              509}
+set $m16-selectable_inc {510}
+set $m16-selectable_units {Units}
+set $m16-range_min {0}
+set $m16-range_max {509}
+set $m16-playmode {once}
+set $m16-dependence {independent}
+set $m16-current {81}
+set $m16-execmode {update}
+set $m16-delay {0}
+set $m16-inc-amount {1}
+set $m16-send-amount {1}
+set $m16-update-function {1}
+set $m17-notes {Merge inner surface
+geometry with
+computed potentials}
+set $m18-notes {Move inner surface via widget
+(translate, rotate, scale)}
+set $m18-outputcenterx {-15.17}
+set $m18-outputcentery {44.325}
+set $m18-outputcenterz {287.85}
+set $m18-outputsizex {100.52}
+set $m18-outputsizey {100.87}
+set $m18-outputsizez {158.84}
+set $m18-useoutputcenter {0}
+set $m18-useoutputsize {0}
+set $m18-box-scale {-1}
+set $m18-box-center-x {}
+set $m18-box-center-y {}
+set $m18-box-center-z {}
+set $m18-box-right-x {}
+set $m18-box-right-y {}
+set $m18-box-right-z {}
+set $m18-box-down-x {}
+set $m18-box-down-y {}
+set $m18-box-down-z {}
+set $m18-box-in-x {}
+set $m18-box-in-y {}
+set $m18-box-in-z {}
+set $m18-resetting {0}
+set $m19-notes {Interpolate computed
+potentials from outer
+surface to electrode sites}
+set $m19-interpolation_basis {constant}
+set $m19-map_source_to_single_dest {0}
+set $m19-exhaustive_search {1}
+set $m19-exhaustive_search_max_dist {-1}
+set $m19-np {1}
+set $m20-notes {Compare the computed
+potentials and the
+measured potentials}
+set $m20-haveUI {1}
+set $m20-methodTCL {CCinv}
+set $m20-pTCL {1}
+set $m21-notes {}
+set $m22-notes {}
+set $m22-isFixed {0}
+set $m22-min {-1.8029289656005858}
+set $m22-max {0.62231256434097304}
+set $m22-makeSymmetric {0}
+set $m23-notes {}
+set $m23-isFixed {0}
+set $m23-min {-0.19427569802265432}
+set $m23-max {0.071471147946599908}
+set $m23-makeSymmetric {0}
+set $m24-notes {Legend for outer surface}
+set $m24-length {half1}
+set $m24-side {bottom}
+set $m24-numlabels {4}
+set $m24-scale {1.0}
+set $m24-units {mV}
+set $m24-text_color {1}
+set $m25-notes {Compute the transfer
+matrix between the
+inner and outer
+surfaces}
+set $m26-notes {Set this as the
+outer surface
+(sought values)}
+set $m26-prop {in/out}
+set $m26-val {out}
+set $m26-meshprop {0}
+set $m27-notes {Set this as the
+inside surface
+(known values)}
+set $m27-prop {in/out}
+set $m27-val {in}
+set $m27-meshprop {0}
+set $m28-notes {Set the conductivity
+of the region within
+this surface}
+set $m28-prop {Inside Conductivity}
+set $m28-val {1}
+set $m28-meshprop {0}
+set $m29-notes {Set the conductivity
+of the region within
+this surface}
+set $m29-prop {Inside Conductivity}
+set $m29-val {2}
+set $m29-meshprop {0}
+set $m30-notes {}
+set $m30-tcl_status {Calling GenStandardColorMaps!}
+set $m30-positionList {}
+set $m30-nodeList {}
+set $m30-width {296}
+set $m30-height {40}
+set $m30-mapType {2}
+set $m30-minRes {12}
+set $m30-resolution {256}
+set $m30-realres {256}
+set $m30-gamma {0}
+$m1 initialize_ui
+$m20 initialize_ui
+
+::netedit scheduleok

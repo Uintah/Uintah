@@ -98,6 +98,8 @@ namespace SCIRun {
       string getCategoryName(const string &packName,
 			     const string &catName,
 			     const string &modName);
+      void setSplashPath(string p);
+      void setLoadingApp(bool b);
     private:
       LIBRARY_HANDLE findLibInPath(string,string);
       bool findMaker(ModuleInfo* info);
@@ -107,6 +109,8 @@ namespace SCIRun {
       Packages *             db_;
       vector<string>     packageList_;
       GuiInterface* gui;
+      string splash_path_;
+      bool loading_app_;
     };
 
     // PackageDB is intended to be a singleton class, but nothing will break

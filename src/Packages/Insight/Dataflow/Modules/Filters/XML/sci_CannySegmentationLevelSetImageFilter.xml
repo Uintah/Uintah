@@ -28,7 +28,7 @@
   <category>Filters</category>
 
   <instantiations>
-    <instance num="1">
+    <instance>
       <type name="SeedImageType">
         <value>itk::Image&lt;float, 2&gt;</value>
       </type>
@@ -42,7 +42,6 @@
   </instantiations>
 
   <includes>
-    <file>Packages/Insight/Dataflow/Ports/ITKDatatypePort.h</file>
   </includes>
 
 </filter-sci>
