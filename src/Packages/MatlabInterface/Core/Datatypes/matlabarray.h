@@ -442,6 +442,8 @@ class matlabarray : public matfilebase {
 	mitype  getmitype(signed long &test);
 	mitype  getmitype(float &test);
 	mitype  getmitype(double &test); 
+	mitype  getmitype(unsigned int &test);
+	mitype  getmitype(signed int &test);
 
 
   private:
@@ -748,6 +750,12 @@ matlabarray::mitype  inline matlabarray::getmitype(unsigned long &test)
 { return(matlabarray::miUINT32); }
 
 matlabarray::mitype  inline matlabarray::getmitype(signed long &test) 
+{ return(matlabarray::miINT32); }
+
+matlabarray::mitype  inline matlabarray::getmitype(unsigned int &test) 
+{ return(matlabarray::miUINT32); }
+
+matlabarray::mitype  inline matlabarray::getmitype(signed int &test) 
 { return(matlabarray::miINT32); }
 
 matlabarray::mitype  inline matlabarray::getmitype(float &test) 

@@ -188,7 +188,7 @@ void matlabfile::exportmatlabarray(matlabarray &matrix)
 	{   // in case of an empty matrix goto the next one
 		
 		// Write an empty matrix if no data was given
-		nexttag();
+		// nexttag();
 		mxtype   m =mxDOUBLE;
 		classinfo[0] = m;
 		classinfo[1] = 0;
