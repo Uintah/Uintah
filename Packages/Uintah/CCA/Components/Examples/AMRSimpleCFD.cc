@@ -90,8 +90,9 @@ void AMRSimpleCFD::scheduleInitialize(const LevelP& level,
 //______________________________________________________________________
 //
 void AMRSimpleCFD::initialize(const ProcessorGroup*,
-			      const PatchSubset* patches, const MaterialSubset* matls,
-			      DataWarehouse* old_dw, DataWarehouse* new_dw)
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
 {
   cout_doing << "Doing initialize  \t\t\t\t AMRSimpleCFD" << '\n';
 
@@ -109,10 +110,11 @@ void AMRSimpleCFD::initialize(const ProcessorGroup*,
 }
 //______________________________________________________________________
 //
-void AMRSimpleCFD::scheduleRefineInterface(const LevelP& fineLevel,
-				       SchedulerP& sched,
-				       int step, int nsteps)
+void AMRSimpleCFD::scheduleRefineInterface(const LevelP& /*fineLevel*/,
+					   SchedulerP& /*sched*/,
+					   int /*step*/, int /*nsteps*/)
 {
+  cout_doing << "AMRSimpleCFD::scheduleRefineInterface not implemented.\n";
 }
 //______________________________________________________________________
 //
