@@ -46,7 +46,11 @@ using Uintah::Interface::Scheduler;
 using Uintah::Parallel::ProcessorContext;
 using Uintah::Parallel::UintahParallelPort;
 
-SimulationController::SimulationController()
+namespace Uintah {
+namespace Components {
+
+SimulationController::SimulationController( int MpiRank, int MpiProcesses ) :
+  UintahParallelComponent( MpiRank, MpiProcesses )
 {
    restarting=false;
    delt_label=new VarLabel("delt", ReductionVariable<double>::getTypeDescription());
@@ -373,8 +377,14 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 #endif
 }
 
+} // end namespace Components
+} // end namespace Uintah
+
 //
 // $Log$
+// Revision 1.9  2000/04/19 20:59:25  dav
+// adding MPI support
+//
 // Revision 1.8  2000/04/19 05:26:12  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)

@@ -2,28 +2,25 @@
 static char *id="@(#) $Id$";
 
 #include "Parallel.h"
+
 #include <iostream>
-using std::cerr;
-#if HAVE_MPI
 #include <mpi.h>
-#endif
 #include <stdlib.h>
 
+using std::cerr;
 
 namespace Uintah {
 namespace Parallel {
 
 static bool usingMPI;
-#if 0
 static MPI_Comm worldComm;
-#endif
+
 static int worldSize;
 static int worldRank;
 
-#if 0
 static
 void
-MPI_Error(char* what, int errorcode)
+MpiError(char* what, int errorcode)
 {
     // Simple error handling for now...
     char string[1000];
@@ -32,23 +29,34 @@ MPI_Error(char* what, int errorcode)
     cerr << "MPI Error in " << what << ": " << string << '\n';
     exit(1);
 }
-#endif
+
+int
+Parallel::getSize() 
+{
+  return worldSize;
+}
+
+int
+Parallel::getRank()
+{
+  return worldRank;
+}
 
 void
 Parallel::initializeManager(int argc, char* argv[])
 {
     if(getenv("MPI_ENVIRONMENT")){
+
 	usingMPI=true;
-#if 0
+
 	int status;
 	if((status=MPI_Init(&argc, &argv)) != MPI_SUCCESS)
-	    MPI_Error("MPI_Init", status);
+	    MpiError("MPI_Init", status);
 	worldComm=MPI_COMM_WORLD;
 	if((status=MPI_Comm_size(worldComm, &worldSize)) != MPI_SUCCESS)
-	    MPI_Error("MPI_Comm_size", status);
+	    MpiError("MPI_Comm_size", status);
 	if((status=MPI_Comm_rank(worldComm, &worldRank)) != MPI_SUCCESS)
-	    MPI_Error("MPI_Comm_rank", status);
-#endif
+	    MpiError("MPI_Comm_rank", status);
     } else {
 	usingMPI=false;
 #if 0
@@ -67,11 +75,9 @@ void
 Parallel::finalizeManager()
 {
     if(usingMPI){
-#if 0
 	int status;
 	if((status=MPI_Finalize()) != MPI_SUCCESS)
-	    MPI_Error("MPI_Finalize", status);
-#endif
+	    MpiError("MPI_Finalize", status);
     }
 }
 
@@ -80,6 +86,9 @@ Parallel::finalizeManager()
 
 //
 // $Log$
+// Revision 1.4  2000/04/19 20:58:56  dav
+// adding MPI support
+//
 // Revision 1.3  2000/03/17 09:30:21  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

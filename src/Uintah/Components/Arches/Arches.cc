@@ -25,7 +25,8 @@ using namespace Uintah::Grid;
 namespace Uintah {
 namespace Components {
 
-Arches::Arches()
+Arches::Arches( int MpiRank, int MpiProcesses ) :
+  UintahParallelComponent( MpiRank, MpiProcesses )
 {
 }
 
@@ -182,6 +183,9 @@ void Arches::paramInit(const ProcessorContext*,
 
 //
 // $Log$
+// Revision 1.20  2000/04/19 20:59:11  dav
+// adding MPI support
+//
 // Revision 1.19  2000/04/19 05:25:56  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)
