@@ -130,7 +130,11 @@ private:
     inline ProblemSpecP findVariable(const string& name, const Patch* patch,
 				 int matl, XMLURL& foundUrl);
     MaterialHashMaps* findPatchData(const Patch* patch);
+
+    void setTime(double t) { time = t; }
   private:
+    double time;
+    void parseProc(int proc);
     void parse();    
     void add(const string& name, int patchid, int matl,
 	     ProblemSpecP varNode, XMLURL url)
@@ -138,8 +142,10 @@ private:
     
     map<int, MaterialHashMaps> d_matHashMaps;
     map<int, MaterialHashMaps>::iterator d_lastFoundIt;
-    list<XMLURL> d_xmlUrls;
-    bool d_isParsed;
+    vector<XMLURL> d_xmlUrls;
+    bool d_allParsed;           // True if all patches have been parsed
+    vector<bool> d_xmlParsed;   // Same size as d_xmlUrls, indicates
+                                // if that xml has been parsed
     vector<ProblemSpecP> docs; // kept around for memory cleanup purposes
   };
   
