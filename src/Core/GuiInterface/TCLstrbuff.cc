@@ -46,6 +46,7 @@ using namespace std;
 TCLstrbuff::TCLstrbuff(GuiContext* ctx)
  : GuiVar(ctx), ostringstream()
 {
+  ctx->dontSave();
   ctx->lock();
   
   buff_ = Tcl_Alloc(bSize_=256);

@@ -39,9 +39,9 @@ namespace SCIRun {
   class GuiInterface;
   class GuiContext {
   public:
-    GuiContext(GuiInterface* ctx, const std::string& name);
+    GuiContext(GuiInterface* ctx, const std::string& name, bool save=true);
 
-    GuiContext* subVar(const std::string& name);
+    GuiContext* subVar(const std::string& name, bool save=true);
 
     void lock();
     void unlock();
@@ -64,12 +64,14 @@ namespace SCIRun {
 
     GuiInterface* getInterface();
     std::string getfullname();
+    void dontSave();
   private:
     std::string format_varname();
     GuiInterface* gui;
     std::string name;
     std::vector<GuiContext*> children;
     bool cached;
+    bool save;
 
     GuiContext(const GuiContext&);
     GuiContext& operator=(const GuiContext&);
