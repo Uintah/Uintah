@@ -232,13 +232,11 @@ void BCDataArray::print()
   for (bcda_itr = d_BCDataArray.begin(); bcda_itr != d_BCDataArray.end(); 
        bcda_itr++) {
     cout << endl << "mat_id = " << bcda_itr->first << endl;
-    const vector<BCGeomBase*>& array_vec = bcda_itr->second;
-    for (int i = 0; i < (int)array_vec.size(); i++) {
-      BCData bcd;
-      cout << "BCGeometry Type = " << typeid(*(array_vec[i])).name() <<  " "
-	   << array_vec[i] << endl;
-      array_vec[i]->getBCData(bcd);
-      bcd.print();
+    for (vector<BCGeomBase*>::const_iterator i = bcda_itr->second.begin();
+	 i != bcda_itr->second.end(); ++i) {
+      cout << "BCGeometry Type = " << typeid((*i)).name() <<  " "
+	   << *i << endl;
+      (*i)->print();
     }
   }
 	

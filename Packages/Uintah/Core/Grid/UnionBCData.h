@@ -54,6 +54,7 @@ WARNING
      void addBC(BoundCondBase* bc);
      void addBCData(BCGeomBase* bc);
      bool inside(const Point& p) const;
+     virtual void print();
          
    private:
      std::vector<BCGeomBase*> child;
