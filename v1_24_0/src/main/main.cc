@@ -443,7 +443,7 @@ main(int argc, char *argv[], char **environment) {
       gui->eval("showProgress 1 465 1");
     } else if(strstr(argv[startnetno], "BioImage")) {
       // need to make a BioImage splash screen
-      gui->eval("set splashImageFile $bioFEMSplashImageFile");
+      gui->eval("set splashImageFile $bioImageSplashImageFile");
       gui->eval("showProgress 1 310 1");
     } else if(strstr(argv[startnetno], "FusionViewer")) {
       // need to make a FusionViewer splash screen
