@@ -7,15 +7,20 @@ using namespace rtrt;
 using namespace SCIRun;
 using std::cerr;
 
-Stealth::Stealth( double scale, double gravity_force ) :
+static double translate_base = 1.5;      
+static double translate_max_count = 8;   
+static double rotate_base = 1.5;     
+static double rotate_max_count = 8;  
+
+Stealth::Stealth( double translate_scale, double rotate_scale, 
+		  double gravity_force ) :
   speed_( 0 ), horizontal_speed_( 0 ), vertical_speed_( 0 ),
   pitch_speed_( 0 ), rotate_speed_( 0 ),
   accel_cnt_( 0 ), horizontal_accel_cnt_( 0 ),
   vertical_accel_cnt_( 0 ), pitch_accel_cnt_( 0 ), rotate_accel_cnt_( 0 ),
-  scale_( scale ), segment_percentage_( 0 ), gravity_force_( gravity_force )
+  translate_scale_( translate_scale ), rotate_scale_(rotate_scale), 
+  segment_percentage_( 0 ), gravity_force_( gravity_force )
 {
-  cout << "scale is " << scale << "\n";
-
   path_.push_back( Point(-5.5,-5,5) );
   path_.push_back( Point(4.5,5.3,1) );
   path_.push_back( Point(0,10.2,5.1) );
@@ -42,45 +47,43 @@ Stealth::print()
 void
 Stealth::slideRight()
 {
-  increase_a_speed( horizontal_speed_, horizontal_accel_cnt_ );
+  increase_a_speed( horizontal_speed_, horizontal_accel_cnt_ , translate_scale_, translate_base, translate_max_count );
 }
 
 void
 Stealth::slideLeft()
 {
-  decrease_a_speed( horizontal_speed_, horizontal_accel_cnt_ );
+  decrease_a_speed( horizontal_speed_, horizontal_accel_cnt_, translate_scale_, translate_base, translate_max_count );
 }
 
 void
 Stealth::goUp()
 {
-  increase_a_speed( vertical_speed_, vertical_accel_cnt_ );
+  increase_a_speed( vertical_speed_, vertical_accel_cnt_, translate_scale_, translate_base, translate_max_count );
 }
 
 void
 Stealth::goDown()
 {
-  decrease_a_speed( vertical_speed_, vertical_accel_cnt_ );
+  decrease_a_speed( vertical_speed_, vertical_accel_cnt_, translate_scale_, translate_base, translate_max_count );
 }
 
 void
 Stealth::accelerate()
 {
-  increase_a_speed( speed_, accel_cnt_ );
+  increase_a_speed( speed_, accel_cnt_, translate_scale_, translate_base, translate_max_count );
 }
 
 void
 Stealth::decelerate()
 {
-  decrease_a_speed( speed_, accel_cnt_ );
+  decrease_a_speed( speed_, accel_cnt_, translate_scale_, translate_base, translate_max_count );
 }
 
-static double base = 1.8; // 2.0 gets too big to quickly... i think
-static int    max_accel_rate = 8;
 void
-Stealth::increase_a_speed( double & speed, int & accel_cnt )
+Stealth::increase_a_speed( double & speed, int & accel_cnt, double scale, double base, double max_count)
 {
-  if( accel_cnt > max_accel_rate ) {
+  if( accel_cnt > max_count ) {
     cout << "Going too fast... can't speed up\n";
     return;
   }
@@ -91,11 +94,11 @@ Stealth::increase_a_speed( double & speed, int & accel_cnt )
   double amount;
 
   if( accel_cnt == 0 )
-    amount = 1 / scale_;
+    amount = 1 / scale;
   else if( accel_cnt > 0 )
-    amount = pow(base, (double)accel_cnt - 1.0) / scale_;
+    amount = pow(base, (double)accel_cnt - 1.0) / scale;
   else
-    amount = pow(base, (double)(-accel_cnt)) / scale_;
+    amount = pow(base, (double)(-accel_cnt)) / scale;
 
   printf("accelerating by %lf\n", amount);
 
@@ -103,9 +106,9 @@ Stealth::increase_a_speed( double & speed, int & accel_cnt )
 }
 
 void
-Stealth::decrease_a_speed( double & speed, int & accel_cnt )
+Stealth::decrease_a_speed( double & speed, int & accel_cnt, double scale, double base, double max_count )
 {
-  if( accel_cnt < -max_accel_rate ) {
+  if( accel_cnt < -max_count ) {
     cout << "Going too fast (in reverse)... can't speed up\n";
     return;
   }
@@ -116,9 +119,9 @@ Stealth::decrease_a_speed( double & speed, int & accel_cnt )
   double amount; // = pow(base, (double)abs(accel_cnt)) / scale_;
 
   if( accel_cnt >= 0 )
-    amount = pow(base, accel_cnt) / scale_;
+    amount = pow(base, accel_cnt) / scale;
   else
-    amount = pow(base, (double)(-accel_cnt) - 1.0) / scale_;
+    amount = pow(base, (double)(-accel_cnt) - 1.0) / scale;
 
   printf("reversing by %lf\n", amount);
 
@@ -128,25 +131,25 @@ Stealth::decrease_a_speed( double & speed, int & accel_cnt )
 void
 Stealth::turnRight()
 {
-  increase_a_speed( rotate_speed_, rotate_accel_cnt_ );
+  increase_a_speed( rotate_speed_, rotate_accel_cnt_, rotate_scale_, rotate_base, rotate_max_count );
 }
 
 void
 Stealth::turnLeft()
 {
-  decrease_a_speed( rotate_speed_, rotate_accel_cnt_ );
+  decrease_a_speed( rotate_speed_, rotate_accel_cnt_, rotate_scale_, rotate_base, rotate_max_count );
 }
 
 void
 Stealth::pitchUp()
 {
-  increase_a_speed( pitch_speed_, pitch_accel_cnt_ );
+  increase_a_speed( pitch_speed_, pitch_accel_cnt_, rotate_scale_, rotate_base, rotate_max_count );
 }
 
 void
 Stealth::pitchDown()
 {
-  decrease_a_speed( pitch_speed_, pitch_accel_cnt_ );
+  decrease_a_speed( pitch_speed_, pitch_accel_cnt_, rotate_scale_, rotate_base, rotate_max_count );
 }
 
 void
@@ -192,33 +195,33 @@ void
 Stealth::slowDown()
 {
   if( speed_ > 0 ) {
-    decrease_a_speed( speed_, accel_cnt_ );
+    decrease_a_speed( speed_, accel_cnt_, translate_scale_, translate_base, translate_max_count );
   } else if( speed_ < 0 ) {
-    increase_a_speed( speed_, accel_cnt_ );
+    increase_a_speed( speed_, accel_cnt_, translate_scale_, translate_base, translate_max_count );
   }
 
   if( horizontal_speed_ > 0 ) {
-    decrease_a_speed( horizontal_speed_, horizontal_accel_cnt_ );
+    decrease_a_speed( horizontal_speed_, horizontal_accel_cnt_, translate_scale_, translate_base, translate_max_count );
   } else if( horizontal_speed_ < 0 ) {
-    increase_a_speed( horizontal_speed_, horizontal_accel_cnt_ );
+    increase_a_speed( horizontal_speed_, horizontal_accel_cnt_, translate_scale_, translate_base, translate_max_count );
   }
 
   if( vertical_speed_ > 0 ) {
-    decrease_a_speed( vertical_speed_, vertical_accel_cnt_ );
+    decrease_a_speed( vertical_speed_, vertical_accel_cnt_, translate_scale_, translate_base, translate_max_count );
   } else if( vertical_speed_ < 0 ) {
-    increase_a_speed( vertical_speed_, vertical_accel_cnt_ );
+    increase_a_speed( vertical_speed_, vertical_accel_cnt_, translate_scale_, translate_base, translate_max_count );
   }
 
   if( pitch_speed_ > 0 ) {
-    decrease_a_speed( pitch_speed_, pitch_accel_cnt_ );
+    decrease_a_speed( pitch_speed_, pitch_accel_cnt_, rotate_scale_, rotate_base, rotate_max_count );
   } else if( pitch_speed_ < 0 ) {
-    increase_a_speed( pitch_speed_, pitch_accel_cnt_ );
+    increase_a_speed( pitch_speed_, pitch_accel_cnt_, rotate_scale_, rotate_base, rotate_max_count );
   }
 
   if( rotate_speed_ > 0 ) {
-    decrease_a_speed( rotate_speed_, rotate_accel_cnt_ );
+    decrease_a_speed( rotate_speed_, rotate_accel_cnt_, rotate_scale_, rotate_base, rotate_max_count );
   } else if( rotate_speed_ < 0 ) {
-    increase_a_speed( rotate_speed_, rotate_accel_cnt_ );
+    increase_a_speed( rotate_speed_, rotate_accel_cnt_, rotate_scale_, rotate_base, rotate_max_count );
   }
 }
 
