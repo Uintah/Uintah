@@ -8,12 +8,15 @@ SRCDIR := PSECommon/Modules
 SUBDIRS := $(SRCDIR)/Example $(SRCDIR)/FEM $(SRCDIR)/Fields \
 	$(SRCDIR)/Iterators $(SRCDIR)/Matrix $(SRCDIR)/Readers \
 	$(SRCDIR)/Salmon $(SRCDIR)/Surface $(SRCDIR)/Visualization \
-	$(SRCDIR)/Writers
+	$(SRCDIR)/Writers $(SRCDIR)/Domain
 
 include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.2.2.1  2000/06/07 17:23:37  kuehne
+# Revised sub.mk to include Domain modules
+#
 # Revision 1.2  2000/03/20 19:36:52  sparker
 # Added VPATH support
 #
