@@ -86,7 +86,7 @@ OnDemandDataWarehouse::get(ReductionVariableBase& var,
    if(iter == d_reductionDB.end()) {
       cerr << "OnDemandDataWarehouse: get Reduction: UnknownVariable: " 
 	   << label->getName() << "\n";
-      throw UnknownVariable(label->getName());
+      throw UnknownVariable(label->getName(), "on reduction");
    }
 
    var.copyPointer(*iter->second->var);
@@ -232,9 +232,8 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch)
    psetDBType::key_type key(matlIndex, patch);
    psetDBType::iterator iter = d_psetDB.find(key);
    if(iter == d_psetDB.end()){
-      cerr << "matlIndex = " << matlIndex << '\n';
-      cerr << "patch=" << patch << '\n';
-      throw UnknownVariable("Cannot find particle set on patch");
+      throw UnknownVariable("ParticleSet", patch->getID(), patch->toString(),
+			    matlIndex, "Cannot find particle set on patch");
    }
    return iter->second;
 }
@@ -314,7 +313,8 @@ OnDemandDataWarehouse::get(ParticleVariableBase& var,
 
    if(pset->getGhostType() == Ghost::None){
       if(!d_particleDB.exists(label, matlIndex, patch))
-	 throw UnknownVariable("Unknown variable on neighbor: "+label->getName());
+	 throw UnknownVariable(label->getName(), patch->getID(),
+			       patch->toString(), matlIndex);
       d_particleDB.get(label, matlIndex, patch, var);
    } else {
       const vector<const Patch*>& neighbors = pset->getNeighbors();
@@ -322,7 +322,9 @@ OnDemandDataWarehouse::get(ParticleVariableBase& var,
       vector<ParticleVariableBase*> neighborvars(neighbors.size());
       for(int i=0;i<neighbors.size();i++){
 	 if(!d_particleDB.exists(label, matlIndex, neighbors[i]))
-	    throw UnknownVariable("Unknown variable on neighbor: "+label->getName());
+	    throw UnknownVariable(label->getName(), patch->getID(),
+				  patch->toString(), matlIndex,
+				  neighbors[i] == patch?"on patch":"on neighbor");
 	 neighborvars[i] = d_particleDB.get(label, matlIndex, neighbors[i]);
       }
       var.gather(pset, neighbor_subsets, neighborvars);
@@ -377,7 +379,8 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
 	 throw InternalError("Ghost cells specified with task type none!\n");
 #endif
       if(!d_ncDB.exists(label, matlIndex, patch))
-	 throw UnknownVariable(label->getName());
+	 throw UnknownVariable(label->getName(), patch->getID(),
+			       patch->toString(), matlIndex);
       d_ncDB.get(label, matlIndex, patch, var);
 #if 1
    } else {
@@ -480,7 +483,8 @@ OnDemandDataWarehouse::get(PerPatchBase& var, const VarLabel* label,
                            int matlIndex, const Patch* patch)
 {
   if(!d_perpatchDB.exists(label, matlIndex, patch))
-     throw UnknownVariable(label->getName());
+     throw UnknownVariable(label->getName(), patch->getID(), patch->toString(),
+			   matlIndex, "perpatch data");
   d_perpatchDB.get(label, matlIndex, patch, var);
 
 }
@@ -526,7 +530,8 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
 	 throw InternalError("Ghost cells specified with task type none!\n");
 #endif
       if(!d_ccDB.exists(label, matlIndex, patch))
-	 throw UnknownVariable(label->getName());
+	 throw UnknownVariable(label->getName(), patch->getID(),
+			       patch->toString(), matlIndex);
       d_ccDB.get(label, matlIndex, patch, var);
 #if 0
    } else {
@@ -636,7 +641,8 @@ OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
 	 throw InternalError("Ghost cells specified with task type none!\n");
 #endif
       if(!d_fcDB.exists(label, matlIndex, patch))
-	 throw UnknownVariable(label->getName());
+	 throw UnknownVariable(label->getName(), patch->getID(),
+			       patch->toString(), matlIndex);
       d_fcDB.get(label, matlIndex, patch, var);
 #if 0
    } else {
@@ -856,14 +862,15 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
      var->emit(oc);
      return;
    }
-   throw UnknownVariable(label->getName());
+   throw UnknownVariable(label->getName(), patch->getID(), patch->toString(),
+			 matlIndex, "on emit");
 }
 
 void OnDemandDataWarehouse::emit(ostream& intout, const VarLabel* label) const
 {
    reductionDBtype::const_iterator iter = d_reductionDB.find(label);
    if(iter == d_reductionDB.end()){
-      throw UnknownVariable(label->getName());
+      throw UnknownVariable(label->getName(), "on emit reduction");
    } else {
       iter->second->var->emit(intout);
    }
@@ -1121,6 +1128,9 @@ OnDemandDataWarehouse::scheduleParticleRelocation(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.38  2000/06/19 22:36:50  sparker
+// Improved message for UnknownVariable
+//
 // Revision 1.37  2000/06/17 07:26:51  sparker
 // Fixed a memory leak in scatter/gather
 //
