@@ -88,7 +88,7 @@ UnuCrop::load_gui() {
   lastmin_.resize(num_axes_.get(), -1);
   lastmax_.resize(num_axes_.get(), -1);  
 
-  if (mins_.size() != num_axes_.get()) {
+  if (mins_.size() != (unsigned int) num_axes_.get()) {
     for (int a = 0; a < num_axes_.get(); a++) {
       ostringstream str;
       str << "minAxis" << a;
