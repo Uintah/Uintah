@@ -464,6 +464,7 @@ class BioImageApp {
 	    foreach axis "sagittal coronal axial" {
 		# get Nrrd Dimensions from NrrdInfo Module
 		upvar \#0 $which-size$axis_num nrrd_size
+		if {![info exists nrrd_size]} return
 		set size [expr $nrrd_size - 1]
 
 		$slice_frame($axis).modes.slider.slice.s configure -from 0 -to $size
@@ -2449,7 +2450,7 @@ class BioImageApp {
         # Transfer Function Widgets
         #-----------------------------------------------------------
         button $page.paint -text "Add Paint Layer" \
-           -command "$mods(ViewSlices)-c add_paint_widget"
+           -command "$mods(EditColorMap2D)-c addpaint"
         pack $page.paint -side top -expand 0 -padx 10 -pady 3
 
         $mods(EditColorMap2D) label_widget_columns $page.widgets_label
