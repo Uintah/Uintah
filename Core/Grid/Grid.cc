@@ -471,14 +471,15 @@ void Grid::problemSetupAMR(const ProblemSpecP& params, const ProcessorGroup *pg)
 
 ostream& operator<<(ostream& out, const Grid& grid)
 {
+  out.setf(ios::floatfield);
+  out.precision(6);
   out << "Grid has " << grid.numLevels() << " level(s)" << endl;
   for ( int levelIndex = 0; levelIndex < grid.numLevels(); levelIndex++ ) {
     LevelP level = grid.getLevel( levelIndex );
     out << "  Level " << level->getID() << " has " << level->numPatches() << " patch(es)" << endl;
     for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
       const Patch* patch = *patchIter;
-      out << "    Patch " << patch->getID() << ", ";
-      out << patch->getLowIndex() << ", " << patch->getHighIndex() << endl;
+      out << *patch << endl;
     }
   }
   return out;
