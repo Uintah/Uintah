@@ -1190,6 +1190,7 @@ if test "$BLAS_LIB_DIR"; then
   BLAS_LIBS="-lblas"
   AC_MSG_RESULT(-L$BLAS_LIB_DIR $BLAS_LIBS)
 else
+  BLAS_DEF=""
   AC_MSG_RESULT(no)
 fi
 

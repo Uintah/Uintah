@@ -30,6 +30,7 @@
 @THREAD_DEFINE@
 @MALLOC_DEFINE@
 @UNI_PETSC_DEF@
+@BLAS_DEF@
 
 /* MPI++ on SGI has a bad interaction with <iostream>.  This prevents
    it from  being included.  We don't use it anyway. */
