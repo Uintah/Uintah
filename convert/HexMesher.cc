@@ -149,6 +149,16 @@ void read_elems (HexMesh * mesh, char * infile)
     elem_file >> index;
     for (c = 0; c < 8; c++)
       elem_file >> e.index[c];
+    if(e.index[7] == 0){
+	e.index[7]=e.index[3];
+	e.index[6]=e.index[2];
+	e.index[5]=e.index[1];
+	e.index[4]=e.index[1];
+	e.index[3]=e.index[0];
+	e.index[2]=e.index[0];
+	e.index[1]=e.index[0];
+	e.index[0]=e.index[0];
+   }
     mesh->add_element (index, e);
     //printf ("*");
     //fflush (stdout);

@@ -70,7 +70,7 @@ int main(int argc, char **argv)
   // Read in the data values
 
   grid->data.resize (mesh->high_node()+1);
-  read_data (grid->data, (dir + "OUTFILE")());
+  read_data (grid->data, (dir + "S5")());
           
   // Write out the scalar field to a file.
   
