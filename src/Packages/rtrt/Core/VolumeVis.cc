@@ -277,6 +277,13 @@ void VolumeVis::shade(Color& result, const Ray& ray,
       //cout << "value = " << value << endl;
 
 #if 0
+      // One thing to note is that this bit of code indicated that there were
+      // occasions when value was close to 0, but on the negative side.  This
+      // is OK, because rounding schemes would basically round that number to
+      // 0 rather than -1 which would be bad.
+      //
+      // The moral of the story is that negative numbers of very small
+      // magnitude are OK, and don't need to be clamped.
       if (value < data_min || value > data_max) {
 	cerr << "value is bad!! value = "<<value<<", data_min = "<<data_min<<", data_max = "<<data_max<<endl;
 	flush(cerr);
@@ -306,6 +313,7 @@ void VolumeVis::shade(Color& result, const Ray& ray,
 	dz = dzly1 * x_weight_low + dzly2 * (1 - x_weight_low);
 	if (dx || dy || dz){
 	  float length2 = dx*dx+dy*dy+dz*dz;
+	  // this lets the compiler use a special 1/sqrt() operation
 	  float ilength2 = 1/sqrtf(length2);
 	  gradient = Vector(dx*ilength2, dy*ilength2, dz*ilength2);
 	} else
