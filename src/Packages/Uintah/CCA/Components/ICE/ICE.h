@@ -637,6 +637,9 @@ using namespace SCIRun;
       double d_initialDt;
       double d_CFL;
       double d_delT_knob;
+      
+      //__________________________________
+      // need by printData
       double d_dbgTime; 
       double d_dbgStartTime;
       double d_dbgStopTime;
@@ -648,6 +651,9 @@ using namespace SCIRun;
       IntVector d_dbgEndIndx; 
       vector<int> d_dbgMatls; 
       int d_dbgSigFigs;
+      
+      vector<bool> d_is_LODI_face;
+      bool d_usingLODI;
       
       Advector* d_advector;
       std::string d_advect_type;
