@@ -804,11 +804,11 @@ BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
 		    numGhostCells);
       tsk->requires(new_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(new_dw, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(new_dw, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(new_dw, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
       // This task computes new density, uVelocity, vVelocity and wVelocity
@@ -1483,11 +1483,11 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
   // get cellType, velocity and density
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  new_dw->get(uVelocity, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(uVelocity, d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  new_dw->get(vVelocity, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(vVelocity, d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  new_dw->get(wVelocity, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(wVelocity, d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
   new_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
@@ -1958,6 +1958,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.42  2000/07/13 06:32:09  bbanerje
+// Labels are once more consistent for one iteration.
+//
 // Revision 1.41  2000/07/13 04:51:32  bbanerje
 // Added pressureBC (bcp) .. now called bcpress.F (bcp.F removed)
 //

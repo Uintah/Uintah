@@ -159,7 +159,10 @@ Arches::scheduleInitialize(const LevelP& level,
   // require : densityCP, viscosityIN, [u,v,w]VelocitySP
   // compute : viscosityCTS
   d_turbModel->sched_computeTurbSubmodel(level, sched, dw, dw);
+
   // Computes velocities at apecified pressure b.c's
+  // require : densityCP, pressureIN, [u,v,w]VelocitySP
+  // compute : pressureSPBC, [u,v,w]VelocitySPBC
   if (d_boundaryCondition->getPressureBC()) 
     d_boundaryCondition->sched_computePressureBC(level, sched, dw, dw);
 }
@@ -334,6 +337,9 @@ Arches::paramInit(const ProcessorGroup* ,
   
 //
 // $Log$
+// Revision 1.52  2000/07/13 06:32:09  bbanerje
+// Labels are once more consistent for one iteration.
+//
 // Revision 1.51  2000/07/11 15:46:26  rawat
 // added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
 //
