@@ -2,7 +2,8 @@
 
 SRCDIR := Packages/Uintah/StandAlone
 
-SUBDIRS := $(SRCDIR)/tools
+SUBDIRS := \
+	$(SRCDIR)/tools
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
@@ -74,7 +75,6 @@ ifeq ($(CC),newmpxlc)
         $(TCL_LIBRARY) $(TK_LIBRARY) $(ITCL_LIBRARY) $(ITK_LIBRARY) \
 	$(BLT_LIBRARY) \
         $(XML_LIBRARY) \
-        $(TAU_LIBRARY) \
         $(GL_LIBRARY) $(Z_LIBRARY) \
         $(THREAD_LIBRARY) \
         $(F_LIBRARY) \
@@ -85,7 +85,7 @@ ifeq ($(CC),newmpxlc)
         $(MPI_LIBRARY) \
         -lld $(M_LIBRARY)
 else
-  LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
+  LIBS := $(XML_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
           $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 endif
 
