@@ -46,11 +46,12 @@ ParticleDatabase::IncompleteTimestep::IncompleteTimestep(int nproc)
     numReported=0;
 }
 
-ParticleDatabase::ParticleDatabase()
+ParticleDatabase::ParticleDatabase(PSECore::Dataflow::Module* module)
     : listenerlock("ParticleDatabase listener list lock"),
       varlock("ParticleDatabase variable lock"),
       waitStart("ParticleDatabase startup condition"),
-      timestep_lock("ParticleDatbase timestep rw lock")
+      timestep_lock("ParticleDatbase timestep rw lock"),
+      module(module)
 {
 }
 
@@ -70,6 +71,7 @@ void ParticleDatabase::setup(const CIA::array1<CIA::string>& names)
 void ParticleDatabase::notifyGUI(double time)
 {
     cerr << "timestep start: " << time << '\n';
+    module->update_progress(0);
 }
 
 void ParticleDatabase::timestep(double time, int myrank, int nproc,
@@ -93,18 +95,20 @@ void ParticleDatabase::timestep(double time, int myrank, int nproc,
 
     its->lock.lock();
     its->numReported++;
+    module->update_progress(its->numReported, nproc);
     if(its->numReported == nproc){
 	// We are the last one, make this a complete timestep and notify the world.
 
 	// This sucks - consider trying to be smarter about already sorted data
-	cerr << "Sorting and processing...\n";
 	int totalParticles=0;
 	for(int i=0;i<nproc;i++)
 	    totalParticles+=its->ids[i].size();
 	cerr << "totalParticles: " << totalParticles << '\n';
 
-	int part=0;
 	int nvars=varnames.size();
+#ifdef SUCKS
+	cerr << "Sorting and processing...\n";
+	int part=0;
 	vector<int> ids(totalParticles);
 	array2<double> data(varnames.size(), totalParticles);
 	for(int p=0;p<nproc;p++){
@@ -133,6 +137,26 @@ void ParticleDatabase::timestep(double time, int myrank, int nproc,
 	    for(int j=0;j<nvars;j++)
 		ts->data[j][i]=data[j][s];
 	}
+#else
+	Timestep* ts=new Timestep(time, varnames.size(), totalParticles);
+	int part=0;
+	for(int p=0;p<nproc;p++){
+	    vector<int>& pids=its->ids[p];
+	    array2<double>& pdata=its->data[p];
+	    int sp=part;
+	    for(int i=0;i<pids.size();i++){
+		ts->ids[part]=pids[i];
+		part++;
+	    }
+	    for(int j=0;j<nvars;j++){
+		part=sp;
+		for(int i=0;i<pids.size();i++){
+		    ts->data[j][part]=pdata[j][i];
+		    part++;
+		}
+	    }
+	}
+#endif
 
 	timestep_lock.writeLock();
 	timesteps.push_back(ts);
@@ -176,7 +200,11 @@ CIA::array1<CIA::string> ParticleDatabase::listVariables()
 
 CIA::array1<double> ParticleDatabase::listTimesteps()
 {
-    NOT_FINISHED("CIA::array1<double> listTimesteps()");
+    CIA::array1<double> result;
+    for(vector<Timestep*>::iterator iter=timesteps.begin();
+	iter != timesteps.end();iter++)
+	result.push_back((*iter)->time);
+    return result;
 }
 
 void ParticleDatabase::getTimestep(double time, int dataIndex,
@@ -227,6 +255,9 @@ void ParticleDatabase::unregisterNotify(int cbid)
 
 //
 // $Log$
+// Revision 1.2  1999/10/15 20:23:00  sparker
+// Mostly working
+//
 // Revision 1.1  1999/10/07 02:08:27  sparker
 // use standard iostreams and complex type
 //
