@@ -361,6 +361,9 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
       tensorSig = (tensorR.Transpose())*(tensorSig*tensorR);
       tensorS = tensorSig - one*(tensorSig.Trace()/3.0);
       Matrix3 tensorHy = tensorSig - tensorS;
+      //cout << "Tensor Sigma = \n" << tensorSig << endl;
+      //cout << "Tensor Hydro = \n" << tensorHy << endl;
+      //cout << "Tensor Devia = \n" << tensorS << endl;
 
       // Integrate the stress rate equation to get a elastic trial stress
       Matrix3 trialSig = tensorSig + 
@@ -458,9 +461,14 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
         // Do radial return adjustment
         tensorS = Stilde*(sig*sqrtTwo/(sqrtThree*Stilde.Norm()));
         equivStress = sqrt((tensorS.NormSquared())*1.5);
+        //cout << "After plastic adjustment : \n";
+        //cout << "FlowStress = " << sqrt(flowStress) << " Equiv. Stress = " 
+        //     << equivStress << endl;
 
         // Update the total stress tensor
         tensorSig = tensorS + tensorHy;
+        //cout << "New Stress after plastic update for particle "<<idx<<" = \n" << tensorS << endl
+        //     << "+" << tensorHy << endl;
 
         // Compute the strain energy for the particles
         double pStrainEnergy = (tensorD(1,1)*tensorSig(1,1) +

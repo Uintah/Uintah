@@ -6,8 +6,6 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-static constParticleVariable<double> pPlasticStrain;
-static ParticleVariable<double> pPlasticStrain_new;
 
 JohnsonCookPlastic::JohnsonCookPlastic(ProblemSpecP& ps)
 {
@@ -61,10 +59,9 @@ void
 JohnsonCookPlastic::initializeInternalVars(ParticleSubset* pset,
 				           DataWarehouse* new_dw)
 {
-  ParticleVariable<double> pPlasticStrain_init;
-  new_dw->allocateAndPut(pPlasticStrain_init, pPlasticStrainLabel, pset);
+  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel, pset);
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
-    pPlasticStrain_init[*iter] = 0.0;
+    pPlasticStrain_new[*iter] = 0.0;
   }
 }
 

@@ -330,6 +330,20 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       tensorF_new = tensorV*tensorR;
       double J = tensorF_new.Determinant();
 
+         // Test that this leads to same deformation gradient as before
+         //cout << "Tensor F using new algorithm = \n" << tensorF_new << endl;
+         //cout << "Determinant of F = " << J << endl;
+         //Matrix3 deformationGradientInc = tensorF*delT + one;
+         //double Jinc = deformationGradientInc.Determinant();
+         //Matrix3 deformationGradient_new = deformationGradientInc*pDeformGrad[idx];
+         //double J_new = deformationGradient_new.Determinant();
+         //cout << "Tensor F using old algorithm = \n" << deformationGradient_new << endl;
+         //cout << "Determinant of F = " << J_new << endl;
+         //double vol_new_algo = pMass[idx]/rho_0*J;
+         //double vol_old_algo = Jinc*pVolume[idx];
+         //cout << "New volume using new algorithm = " << vol_new_algo << endl;
+         //cout << "New volume using old algorithm = " << vol_old_algo << endl;
+
       // Update the kinematic variables
       pLeftStretch_new[idx] = tensorV;
       pRotation_new[idx] = tensorR;
@@ -347,7 +361,11 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       tensorSig = pStress[idx];
       tensorSig = (tensorR.Transpose())*(tensorSig*tensorR);
-      tensorS = tensorSig - one*(tensorSig.Trace()/3.0);
+      Matrix3 tensorP = one*(tensorSig.Trace()/3.0);
+      tensorS = tensorSig - tensorP;
+      //cout << "Tensor Sigma = \n" << tensorSig << endl;
+      //cout << "Tensor Hydro = \n" << tensorP << endl;
+      //cout << "Tensor Devia = \n" << tensorS << endl;
 
       // Integrate the stress rate equation to get a trial stress
       Matrix3 trialS = tensorS + tensorD*(2.0*shear*delT);
@@ -371,9 +389,10 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         pVolume_deformed[idx]=pMass[idx]/rho_cur;
 
         // For the elastic region : the updated stress is the trial stress
-        double pressure = d_eos->computePressure(matl, bulk, shear, tensorF_new, tensorEta, 
-                                                 tensorS, pTemperature[idx], rho_cur, delT);
-        Matrix3 tensorSig = trialS + one*pressure;
+        Matrix3 tensorDElastic = tensorD;
+        Matrix3 tensorHy = d_eos->computePressure(matl, bulk, shear, tensorF_new, tensorDElastic, 
+                                                 tensorP, pTemperature[idx], rho_cur, delT);
+        Matrix3 tensorSig = trialS + tensorHy;
 
         // Compute the strain energy for the particles
         double pStrainEnergy = (tensorD(1,1)*tensorSig(1,1) +
@@ -457,10 +476,13 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         pVolume_deformed[idx]=pMass[idx]/rho_cur;
 
         // Update the total stress tensor
-        double pressure = d_eos->computePressure(matl, bulk, shear, tensorF_new, tensorEta, 
-                                                 tensorS, pTemperature[idx], rho_cur, delT);
-        Matrix3 tensorSig = tensorS + one*pressure;
+        Matrix3 tensorDElastic = zero;
+        Matrix3 tensorHy = d_eos->computePressure(matl, bulk, shear, tensorF_new, tensorDElastic, 
+                                                 tensorP, pTemperature[idx], rho_cur, delT);
+        Matrix3 tensorSig = tensorS + tensorHy;
 
+        //cout << "New Stress after plastic update for particle "<<idx<<" = \n" << tensorS << endl
+        //     << "\n" << (one*pressure) << "\n" << tensorP << endl;
         // Compute the strain energy for the particles
         double pStrainEnergy = (tensorD(1,1)*tensorSig(1,1) +
 				tensorD(2,2)*tensorSig(2,2) + tensorD(3,3)*tensorSig(3,3) +
@@ -670,6 +692,68 @@ double HypoElasticPlastic::getCompressibility()
 {
   return 1.0/d_initialData.Bulk;
 }
+
+/*
+Matrix3
+HypoElasticPlastic::computeVelocityGradient(const Patch* patch,
+					   const double* oodx, 
+					   const Point& px, 
+					   const Vector& psize, 
+					   constNCVariable<Vector>& gVelocity) 
+{
+  // Initialize
+  Matrix3 velGrad(0.0);
+
+  // Get the node indices that surround the cell
+  IntVector ni[MAX_BASIS];
+  Vector d_S[MAX_BASIS];
+
+  patch->findCellAndShapeDerivatives27(px, ni, d_S, psize);
+
+  //cout << "ni = " << ni << endl;
+  for(int k = 0; k < d_8or27; k++) {
+    //if(patch->containsNode(ni[k])) {
+    const Vector& gvel = gVelocity[ni[k]];
+    //cout << "GridVel = " << gvel << endl;
+    for (int j = 0; j<3; j++){
+      for (int i = 0; i<3; i++) {
+	velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+      }
+    }
+    //}
+  }
+  //cout << "VelGrad = " << velGrad << endl;
+  return velGrad;
+}
+
+Matrix3
+HypoElasticPlastic::computeVelocityGradient(const Patch* patch,
+					   const double* oodx, 
+					   const Point& px, 
+					   constNCVariable<Vector>& gVelocity) 
+{
+  // Initialize
+  Matrix3 velGrad(0.0);
+
+  // Get the node indices that surround the cell
+  IntVector ni[MAX_BASIS];
+  Vector d_S[MAX_BASIS];
+
+  patch->findCellAndShapeDerivatives(px, ni, d_S);
+
+  for(int k = 0; k < d_8or27; k++) {
+    const Vector& gvel = gVelocity[ni[k]];
+    //cout << "GridVel = " << gvel << endl;
+    for (int j = 0; j<3; j++){
+      for (int i = 0; i<3; i++) {
+	velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+      }
+    }
+  }
+  //cout << "VelGrad = " << velGrad << endl;
+  return velGrad;
+}
+*/
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1209

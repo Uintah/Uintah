@@ -71,7 +71,7 @@ WARNING
 	 
 	 //////////
 	 // Calculate the pressure using a equation of state
-	 virtual double computePressure(const MPMMaterial* matl,
+	 virtual Matrix3 computePressure(const MPMMaterial* matl,
                                         const double& bulk,
                                         const double& shear,
                                         const Matrix3& deformGrad,
