@@ -181,7 +181,7 @@ addConnection $m51 0 $m20 6
 addConnection $m21 0 $m18 0
 addConnection $m0 0 $m21 0
 addConnection $m41 0 $m52 0
-addConnection $m52 0 $m20 7
+#addConnection $m52 0 $m20 7
 
 set $m0-notes {}
 set $m0-show_status {1}
@@ -198,7 +198,7 @@ set $m3-notes {}
 set $m3-show_status {1}
 set $m3-sourceNodeTCL {4}
 set $m3-sinkNodeTCL {14}
-set $m3-modeTCL {sources-and-sinks}
+set $m3-modeTCL {sources and sinks}
 set $m4-notes {}
 set $m4-show_status {1}
 set $m4-target_error {1e-08}

@@ -76,7 +76,7 @@ set m12 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 379 589]
 set m13 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 9 667]
 
 # Create a SCIRun->FieldsCreate->FieldBoundary Module
-set m14 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldBoundary" 9 748]
+set m14 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldBoundary" 27 748]
 
 # Create a SCIRun->Visualization->Isosurface Module
 set m15 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 197 979]
@@ -99,8 +99,8 @@ set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 606 385]
 # Create a SCIRun->Render->Viewer Module
 set m21 [addModuleAtPosition "SCIRun" "Render" "Viewer" 197 1123]
 
-# Create a SCIRun->FieldsData->ApplyInterpolant Module
-set m22 [addModuleAtPosition "SCIRun" "FieldsData" "ApplyInterpolant" 9 822]
+# Create a SCIRun->FieldsData->ApplyInterpMatrix Module
+set m22 [addModuleAtPosition "SCIRun" "FieldsData" "ApplyInterpMatrix" 9 822]
 
 # Create a SCIRun->FieldsData->TransformData Module
 set m23 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 43 301]
@@ -132,7 +132,7 @@ set c20 [addConnection $m24 0 $m20 0]
 set c21 [addConnection $m16 0 $m17 0]
 set c22 [addConnection $m18 0 $m21 0]
 set c23 [addConnection $m11 0 $m12 1]
-set c24 [addConnection $m14 1 $m22 1]
+set c24 [addConnection $m14 0 $m22 1]
 set c25 [addConnection $m22 0 $m17 1]
 set c26 [addConnection $m23 0 $m7 1]
 set c27 [addConnection $m23 0 $m8 1]
@@ -148,6 +148,7 @@ set c36 [addConnection $m10 0 $m11 2]
 set c37 [addConnection $m19 0 $m21 2]
 set c38 [addConnection $m7 0 $m11 3]
 set c39 [addConnection $m20 0 $m21 3]
+set c40 [addConnection $m14 1 $m22 2]
 
 # Setup GUI for the SCIRun->DataIO->FieldReader Module
 setGlobal $m1-filename "$DATADIR/$DATASET/$DATASET-mesh.tvt.fld"
@@ -194,7 +195,7 @@ setGlobal $m4-sizeFlag {1}
 # Setup GUI for the BioPSE->Forward->SetupFEMatrix Module
 
 # Setup GUI for the BioPSE->Forward->ApplyFEMCurrentSource Module
-setGlobal $m7-modeTCL {sources-and-sinks}
+setGlobal $m7-modeTCL {sources and sinks}
 
 # Setup GUI for the SCIRun->FieldsData->BuildInterpolant Module
 
@@ -204,7 +205,7 @@ setGlobal $m7-modeTCL {sources-and-sinks}
 setGlobal $m10-interpolation_basis {constant}
 
 # Setup GUI for the BioPSE->Forward->ApplyFEMCurrentSource Module
-setGlobal $m11-modeTCL {sources-and-sinks}
+setGlobal $m11-modeTCL {sources and sinks}
 
 # Setup GUI for the SCIRun->Math->SolveMatrix Module
 setGlobal $m12-target_error {0.000001}
@@ -353,7 +354,7 @@ setGlobal $m21-ViewWindow_0-clip-normal-y-6 {}
 setGlobal $m21-ViewWindow_0-clip-normal-z-6 {}
 setGlobal $m21-ViewWindow_0-clip-normal-d-6 {}
 
-# Setup GUI for the SCIRun->FieldsData->ApplyInterpolant Module
+# Setup GUI for the SCIRun->FieldsData->ApplyInterpMatrix Module
 
 # Setup GUI for the SCIRun->FieldsData->TransformData Module
 setGlobal $m23-function {result = -1.0;

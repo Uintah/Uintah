@@ -110,8 +110,8 @@ public:
   GuiInt sourceNodeTCL_;
   GuiInt sinkNodeTCL_;
   GuiString modeTCL_; 
-  // modeTCL_ (above) can be either: "dipole", "electrode pair", or "electrode set" 
-  // The iportInter_ input is only used if mode is "electrode pair" or "electrode set". 
+  // modeTCL_ (above) can be either: "dipole", "sources and sinks", or "electrode set" 
+  // The iportInter_ input is only used if mode is "sources and sinks" or "electrode set". 
 
   //! Constructor/Destructor
   ApplyFEMCurrentSource(GuiContext *context);
@@ -369,8 +369,8 @@ void ApplyFEMCurrentSource::execute()
 	  for (int i=0; i<weights.size(); i++) (*w)[i]=weights[i];
 	  oportWeights_->send(MatrixHandle(w));
 	  oportRhs_->send(MatrixHandle(rhs)); 
-	} // TET + ELECTRODE PAIR 
-        else if(modeTCL_.get() == "electrode pair") {
+	} // TET + SOURCES AND SINKS 
+        else if(modeTCL_.get() == "sources and sinks") {
 	  FieldHandle hInterp;
 	  iportInterp_->get(hInterp);
 	  FieldHandle hSource;
@@ -547,8 +547,8 @@ void ApplyFEMCurrentSource::execute()
 	}
 	oportRhs_->send(MatrixHandle(rhs));
     }
-    // HEX + ELECTRODE PAIR (not implemented yet)
-    else if (modeTCL_.get() == "electrode pair") { 
+    // HEX + SOURCES AND SINKS (not implemented yet)
+    else if (modeTCL_.get() == "sources and sinks") { 
 	error("source/sink modelling is not yet available for HexFEM");
 	return;
     }
@@ -631,8 +631,8 @@ void ApplyFEMCurrentSource::execute()
         for (int i=0; i<weights.size(); i++) (*w)[i]=weights[i];
         oportWeights_->send(MatrixHandle(w));
     }
-    // TRI + ELECTRODE PAIR 
-    else if (modeTCL_.get() == "electrode pair") {
+    // TRI + SOURCES AND SINKS 
+    else if (modeTCL_.get() == "sources and sinks") {
 
         FieldHandle hInterp;
         iportInterp_->get(hInterp);
