@@ -1,4 +1,6 @@
 
+#include <TauProfilerForSCIRun.h>
+
 #include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
@@ -12,6 +14,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <mpi.h>
 #include <iomanip>
+#include <map>
 #include <Packages/Uintah/Core/Parallel/Vampir.h>
 
 using namespace std;
@@ -157,12 +160,51 @@ MPIScheduler::compile(const ProcessorGroup* pg, bool init_timestep)
   dbg << "MPIScheduler finished compile\n";
 }
 
+map<string,int> taskname_to_id_map;
+int unique_id = 9999;
+
+int
+tau_mapping_create( const string & taskname )
+{
+  map<string,int>::iterator iter = taskname_to_id_map.find( taskname );
+  if( iter != taskname_to_id_map.end() )
+    {
+      return (*iter).second;
+    }
+  else
+    {
+      TAU_MAPPING_CREATE( taskname, "[MPIScheduler::execute()]",
+			  (TauGroup_t) unique_id, taskname, 0 );
+      taskname_to_id_map[ taskname ] = unique_id;
+      unique_id++;
+      return (unique_id - 1);
+    }
+}
+
+
 void
 MPIScheduler::execute(const ProcessorGroup * pg )
 {
   ASSERT(dt != 0);
   dbg << "MPIScheduler executing\n";
   VT_begin(VT_EXECUTE);
+
+   TAU_PROFILE("MPIScheduler::execute()", " ", TAU_USER); 
+   TAU_PROFILE_TIMER(doittimer, "Task execution", "[MPIScheduler::execute()] " , TAU_USER); 
+   TAU_PROFILE_TIMER(reducetimer, "Reductions", "[MPIScheduler::execute()] " , TAU_USER); 
+   TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[MPIScheduler::execute()] " , TAU_USER); 
+   TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[MPIScheduler::execute()] " , TAU_USER); 
+   TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[MPIScheduler::execute()] ", 
+	TAU_USER); 
+   TAU_PROFILE_TIMER(testsometimer, "Test Some", "[MPIScheduler::execute()] ", 
+	TAU_USER); 
+   TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[MPIScheduler::execute()] ", 
+	TAU_USER); 
+   TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[MPIScheduler::execute()] ", 
+	TAU_USER); 
+   TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[MPIScheduler::execute()] ", 
+	TAU_USER); 
+
 
   d_labels.clear();
   d_times.clear();
@@ -267,9 +309,22 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 	dbg << me << " Starting task: ";
 	printTask(dbg, task);
 	dbg << '\n';
+
+	int id;
+	id = tau_mapping_create( task->getTask()->getName() );
+
+  TAU_MAPPING_OBJECT(tautimer)
+  TAU_MAPPING_LINK(tautimer, (TauGroup_t)id);  // EXTERNAL ASSOCIATION
+
+  TAU_MAPPING_PROFILE_TIMER(doitprofiler, tautimer, 0)
+
+  TAU_PROFILE_START(doittimer);
+
 	double taskstart = Time::currentSeconds();
 	task->doit(pg, dw[Task::OldDW], dw[Task::NewDW]);
 	double sendstart = Time::currentSeconds();
+
+  TAU_PROFILE_STOP(doittimer);
 	
 	VT_end(VT_PERFORM_TASK);
 	VT_begin(VT_SEND_COMPUTES);
