@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
+#include <sci_config.h> // For MPIPP_H on SGI
 #include <mpi.h>
 
 namespace Uintah {
