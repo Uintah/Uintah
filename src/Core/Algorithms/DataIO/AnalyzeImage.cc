@@ -97,7 +97,12 @@ AnalyzeImage::AnalyzeImage( itk::AnalyzeImageIO::Pointer io,
     pixel_buffer_[i] = *data++;
   }
 
+#if ((ITK_VERSION_MAJOR == 1) && (ITK_VERSION_MINOR >= 8)) || (ITK_VERSION_MAJOR > 1)
+  const std::type_info& type = io->GetComponentTypeInfo();
+#else
   const std::type_info& type = io->GetPixelType();
+#endif
+
 
   if( type == typeid(short) )
   {
