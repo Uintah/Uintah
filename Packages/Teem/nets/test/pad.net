@@ -1,3 +1,20 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
 # SCI Network 1.0
 
 ::netedit dontschedule
@@ -15,15 +32,13 @@ addConnection $m4 0 $m2 0
 
 set $m0-notes {}
 set $m0-show_status {1}
-set $m0-dim {4}
-set $m0-minAxis0 {0}
-set $m0-maxAxis0 {0}
-set $m0-minAxis1 {10}
-set $m0-maxAxis1 {10}
+set $m0-dim {3}
+set $m0-minAxis0 {10}
+set $m0-maxAxis0 {10}
+set $m0-minAxis1 {0}
+set $m0-maxAxis1 {0}
 set $m0-minAxis2 {0}
-set $m0-maxAxis2 {0}
-set $m0-minAxis3 {0}
-set $m0-maxAxis3 {5}
+set $m0-maxAxis2 {5}
 set $m1-notes {}
 set $m1-show_status {1}
 set $m2-notes {}

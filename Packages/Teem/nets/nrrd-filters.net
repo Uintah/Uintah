@@ -17,16 +17,14 @@
 
 # SCI Network 1.0
 
-if {[llength [array get env SCIRUN_DATA]] == 0} {
+if {[string length [netedit getenv SCIRUN_DATA]] == 0} {
    puts ""
    puts "*** Error: This net depends on the SCIRUN_DATA enviroment variable."
    puts "*** Please exit, set it in your shell, and rerun."
    puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
    puts ""
-   ::netedit scheduleok
-   return
 }
-set DATADIR $env(SCIRUN_DATA)
+set DATADIR [netedit getenv SCIRUN_DATA]
 if {![file isdirectory $DATADIR]} {
    puts ""
    puts "*** Error: $DATADIR is not a valid directory."
@@ -36,7 +34,6 @@ if {![file isdirectory $DATADIR]} {
    ::netedit scheduleok
    return
 }
-puts "*** Using SCIRUN_DATA $DATADIR"
 
 source $DATADIR/brain-dmw/brain-dmw.settings
 
@@ -72,7 +69,8 @@ addConnection $m8 0 $m9 0
 addConnection $m9 1 $m2 1
 addConnection $m0 0 $m1 0
 addConnection $m7 0 $m6 0
-addConnection $m6 0 $m8 0
+addConnection $m6 0 $m8 2
+addConnection $m0 0 $m8 3
 
 set $m0-notes {}
 set $m0-show_status {1}
