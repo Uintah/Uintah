@@ -66,17 +66,6 @@ Ray& Ray::operator=(const Ray& copy)
     return *this;
 }
 
-Point Ray::origin() const
-{
-    return o_;
-}
-
-
-Vector Ray::direction() const
-{
-    return d_;
-}
-
 Point Ray::parameter(double t) const
 {
   return o_ + d_*t;

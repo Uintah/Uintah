@@ -67,8 +67,8 @@ public:
   Ray& operator=(const Ray&);
   
   //! Return data
-  Point origin() const;
-  Vector direction() const;
+  const Point &origin() const { return o_; }
+  const Vector &direction() const { return d_; }
 
   /*!
     Returns the Point at parameter t, but does not pre-normalize d
