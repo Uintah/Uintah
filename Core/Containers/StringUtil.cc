@@ -85,5 +85,22 @@ ccast_unsafe(const string &str)
 }
 
 
+vector<string> split_string(const std::string& str, char sep)
+{
+  vector<string> result;
+  string s(str);
+  while(s != ""){
+    unsigned int first = s.find(sep);
+    if(first < s.size()){
+      result.push_back(s.substr(0, first));
+      s = s.substr(first+1);
+    } else {
+      result.push_back(s);
+      break;
+    }
+  }
+  return result;
+}
+
 } // End namespace SCIRun
 
