@@ -184,7 +184,8 @@ void ParticleVis::execute()
   vector<ParticleVariable<long> >& ids = pset->getIDs();
   vector<ParticleVariable<long> >::iterator id_it = ids.begin();
   vector<ParticleVariable<double> >& values = part->get();
-  vector<ParticleVariable<Point> >::iterator p_it;
+  vector<ParticleVariable<Point> >::iterator p_it = points.begin();
+  vector<ParticleVariable<Point> >::iterator p_it_end = points.end();
   vector<ParticleVariable<double> >::iterator s_it = values.begin();
   vector<ParticleVariable<double> >::iterator scale_it;
   vector<ParticleVariable<Vector> >::iterator v_it;
@@ -195,9 +196,10 @@ void ParticleVis::execute()
   if( hasTensors ) t_it = tens->get().begin();
   
 
-  for(p_it = points.begin(); p_it != points.end(); p_it++, s_it++, id_it++){
-    ParticleSubset *ps = (*p_it).getParticleSubset();
 
+  for(; p_it != p_it_end; p_it++, s_it++, id_it++){
+    ParticleSubset *ps = (*p_it).getParticleSubset();
+    GeomGroup *obj = scinew GeomGroup;
 
     // default colormap--nobody has scaled it.
     if( !cmap->IsScaled()) {
@@ -207,18 +209,13 @@ void ParticleVis::execute()
 	max += 0.001;
       }
       cmap->Scale(min,max);
-      //cerr << "min=" << min << ", max=" << max << '\n';
     }  
 
     //--------------------------------------
-    //cerr << "numParticles: " << ps->getParticleSet()->numParticles() << '\n';
-
-
     if( drawspheres.get() == 1 && ps->getParticleSet()->numParticles()) {
       float t = (polygons.get() - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
       int nu = int(MIN_NU + t*(MAX_NU - MIN_NU)); 
       int nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
-      GeomGroup *obj = scinew GeomGroup;
       GeomArrows* arrows;
       if( drawVectors.get() == 1){
 	arrows = scinew GeomArrows(width_scale.get(),
@@ -227,21 +224,6 @@ void ParticleVis::execute()
 				   shaft_rad.get());
       }
       int count = 0;
-      //     ParticleSubset::iterator iter;
-      //     ParticleSubset::iterator siter;
-      //     ParticleSubset *ss;
-      //     ParticleSubset::iterator psbeginaddr = ps->begin();
-      //     ParticleSubset::iterator psendaddr = ps->end();
-      //     ParticleSubset::iterator ssbeginaddr;
-      //     ParticleSubset::iterator ssendaddr;
-
-
-      // if( hasScale ){
-	//       ss = scaleSet->getPositions().getParticleSubset();
-      //       siter = ss->begin();
-      //       ssbeginaddr = ss->begin();
-      //       ssendaddr = ss->end();
-      //     }
     
       for(ParticleSubset::iterator iter = ps->begin();
 	  iter != ps->end(); iter++){
@@ -324,7 +306,6 @@ void ParticleVis::execute()
       }
       // Let's set it up so that we can pick the particle set -- Kurt Z. 12/18/98
       GeomPick *pick = scinew GeomPick( obj, this);
-      ogeom->delAll();
       ogeom->addObj(pick, "Particles");      
     } else if( ps->getParticleSet()->numParticles() ) { // Particles
       GeomGroup *obj = scinew GeomGroup;
@@ -359,20 +340,11 @@ void ParticleVis::execute()
       if( drawVectors.get() == 1 && hasVectors){
 	obj->add( arrows );
       }
-      // GeomPick *pick = scinew GeomPick( obj, this);
-      ogeom->delAll();
       ogeom->addObj(obj, "Particles");      
     }
     if(hasVectors) v_it++;
     if(hasTensors) t_it++;
   }
-//     GeomMaterial* matl=new GeomMaterial(obj,
-//    					  scinew Material(Color(0,0,0),
-//    							  Color(0,.6,0), 
-//    							  Color(.5,.5,.5),20));
-    
-  //    ogeom->delAll();
-  //    ogeom->addObj(matl, "Particles");
 }
 
 
