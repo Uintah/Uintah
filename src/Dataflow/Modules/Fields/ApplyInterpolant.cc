@@ -124,7 +124,12 @@ ApplyInterpolant::execute()
     return;
   }
     
-  ofp->send(algo->execute(fsrc_h, fitp_h));
+  FieldHandle ofieldhandle(algo->execute(fsrc_h, fitp_h));
+  string units;
+  if (fsrc_h->get_property("units", units))
+    ofieldhandle->set_property("units", units, false);
+
+  ofp->send(ofieldhandle);
 }
 
 
