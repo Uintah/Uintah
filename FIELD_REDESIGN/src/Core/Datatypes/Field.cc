@@ -15,12 +15,16 @@ namespace Datatypes{
   
 PersistentTypeID Field::type_id("Field", "Datatype", 0);
 
-Field::Field(){
-  // Set default values;
-  status = NEW;
-  data_loc = NODE;
-
+Field::Field()
+  : status(NEW),
+    data_loc(NODE)
+{
 }
+
+Field::~Field()
+{
+}
+
 
 template <class T> T* Field::query_interface(T *)
 {

@@ -26,8 +26,8 @@ using SCICore::Containers::LockingHandle;
 using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
 
-class SField;
-typedef LockingHandle<SField> SFieldHandle;
+  //class SField;
+  //typedef LockingHandle<SField> SFieldHandle;
 
 
 class SCICORESHARE SField:public Field{
@@ -38,11 +38,11 @@ public:
 
   //////////
   // Destructor
-  ~SField();
+  virtual ~SField();
 
   //////////
   // Used by SFieldHandle to obtain a SField*
-  inline SField* get_base() {return this;};
+  //inline SField* get_base() {return this;};
 
   virtual bool get_minmax(double &imin, double &imax) = 0;
 

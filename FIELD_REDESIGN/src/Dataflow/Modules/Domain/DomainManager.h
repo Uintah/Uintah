@@ -21,7 +21,7 @@
 #include <stdio.h>
 
 #include <SCICore/Datatypes/Domain.h>
-#include <SCICore/Datatypes/SField.h>
+#include <SCICore/Datatypes/Field.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Containers/String.h>
 
@@ -29,7 +29,7 @@
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/DomainPort.h>
 #include <PSECore/Datatypes/FieldWrapperPort.h>
-#include <PSECore/Datatypes/SFieldPort.h>
+#include <PSECore/Datatypes/FieldPort.h>
 #include <SCICore/Util/DebugStream.h>
 
 #include <vector>
