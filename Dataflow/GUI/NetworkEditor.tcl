@@ -534,7 +534,7 @@ proc CreateNewModule {} {
 }
 
 proc GetPathAndPackage { compaddr compname catname } {
-    set w .componentlocation
+    set w .newmoduledialog
     if {[winfo exists $w]} {
 	destroy $w
     }
