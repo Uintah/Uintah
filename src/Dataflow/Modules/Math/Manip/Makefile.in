@@ -22,7 +22,7 @@ INCLUDES := $(sort $(INCLUDES))
 LIBDIR := -L../../../../lib/
 
 include $(MATRIX_MANIP_SRC)/sub.mk
-#SRCS := $(patsubst %.cc,$(MATRIX_MANIP_SRC)/%.cc, $(SRCS))
+
 # The libraries are specified like Core/Thread but get
 # name-mangled to Core_Thread
 SRLIBS := $(subst /,_,$(SRLIBS))

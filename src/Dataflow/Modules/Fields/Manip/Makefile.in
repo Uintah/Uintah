@@ -3,17 +3,25 @@
 # Default target
 default: all
 
-SCIRUN_SRCTOP = ../../../../
+MANIP_OBJTOP_ABS    := $(shell cd ../../../.. ; pwd)
 
-include $(SCIRUN_SRCTOP)/configVars.mk
+include $(MANIP_OBJTOP_ABS)/configVars.mk
 
-SRCTOP := $(SCIRUN_SRCTOP)$(SRCTOP)
+MANIP_SRCTOP_ABS    := $(MANIP_OBJTOP_ABS)/$(SRCDIR)
 
-INCLUDES = -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I@TCL_INCLUDE_DIR@ -I@TK_INCLUDE_DIR@ -I@ITCL_INCLUDE_DIR@ -I@BLT_INCLUDE_DIR@ @GLOBUS_INCLUDE@ $(XML_INCLUDE) -I@GL_INCLUDE_DIR@ $(PETSC_INCLUDES)
+FIELD_MANIP_SRC := $(MANIP_SRCTOP_ABS)/Dataflow/Modules/Fields/Manip
+FIELD_MANIP_OBJ := $(MANIP_OBJTOP_ABS)/Dataflow/Modules/Fields/Manip
+
+INCLUDES = -I$(MANIP_SRCTOP_ABS)/include -I$(MANIP_SRCTOP_ABS) -I$(MANIP_OBJTOP_ABS) -I@TCL_INCLUDE_DIR@ -I@TK_INCLUDE_DIR@ -I@ITCL_INCLUDE_DIR@ -I@BLT_INCLUDE_DIR@ @GLOBUS_INCLUDE@ $(XML_INCLUDE) -I@GL_INCLUDE_DIR@ $(PETSC_INCLUDES)
+
+ifeq ($(SSTREAM_COMPAT),yes)
+INCLUDES := $(INCLUDES) -I$(MANIP_SRCTOP_ABS)/include/compat
+endif
+INCLUDES := $(sort $(INCLUDES))
 
 LIBDIR := -L../../../../lib/
 
-include $(SCIRUN_SRCTOP)$(FIELD_MANIP_SRC_DIR)/sub.mk
+include $(FIELD_MANIP_SRC)/sub.mk
 
 # The libraries are specified like Core/Thread but get
 # name-mangled to Core_Thread
@@ -27,14 +35,16 @@ else
 SONAMEFLAG = 
 endif
 
+
 .SUFFIXES: .cc .so
 
-Makefile: ${SCIRUN_SRCTOP}${FIELD_MANIP_SRC_DIR}/Makefile.in ${SCIRUN_SRCTOP}/config.status
-	@( Here="`pwd`" ; cd ${SCIRUN_SRCTOP} ; Top="`pwd`" ; CONFIG_FILES="`echo $${Here} | sed -e "s!^$${Top}/!!" -e "s!^$${Top}!.!"`/Makefile" CONFIG_HEADERS="" ./config.status ) 1>&2
+Makefile: $(FIELD_MANIP_SRC)/Makefile.in $(MANIP_OBJTOP_ABS)/config.status
+	@( Here="`pwd`" ; cd $(MANIP_SRCTOP_ABS) ; Top="`pwd`" ; CONFIG_FILES="`echo $${Here} | sed -e "s!^$${Top}/!!" -e "s!^$${Top}!.!"`/Makefile" CONFIG_HEADERS="" ./config.status ) 1>&2
 
-.cc.so: $< Makefile sub.mk
+
+%.so : $(FIELD_MANIP_SRC)/%.cc
 	rm -f $@
-	echo 'helo' $(patsubst %.cc,$(%LIBS),$<)
-	$(CXX) $(CFLAGS) $($(patsubst %.cc,%INCLUDES,$<)) $(INCLUDES) $(CC_DEPEND_REGEN) $(SOFLAGS) $< -o $@ $(SONAMEFLAG) $($(patsubst %.cc,%LIBPATH,$<)) $(LIBDIR) $($(patsubst %.cc,%LIBS,$<))
+	echo $<
+	$(CXX) $(CFLAGS) $($(patsubst $(FIELD_MANIP_SRC)/%.cc,%INCLUDES,$<)) $(INCLUDES) $(CC_DEPEND_REGEN) $(SOFLAGS) $< -o $@ $($(patsubst $(FIELD_MANIP_SRC)/%.cc,%LIBPATH,$<)) $(LIBDIR) $($(patsubst $(FIELD_MANIP_SRC)/%.cc,%LIBS,$<))
 
 all: $(MANIP_LIBS)

@@ -338,7 +338,6 @@ ManipMatrix::getFunctionFromDL(const string& f)
     {
       cerr << "ManipMatrix::getFunctionFromDL() error:"
 	   << "could not open " << dynamicLibrary << endl;
-
       cerr << "Reported Error: " << dlerror() << endl;
     }
     else
@@ -348,6 +347,7 @@ ManipMatrix::getFunctionFromDL(const string& f)
       {
         cerr << "ManipMatrix::getFunctionFromDL() error: "
              << "dlsym failed" << endl;
+	cerr << "Reported Error: " << dlerror() << endl;
       }
     }
   }

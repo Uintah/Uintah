@@ -2,7 +2,8 @@
 <!DOCTYPE srcs SYSTEM "srcs.dtd">
 
 <srcs>
-  <src name="foo">
-    <description>Dummy</description>
+  <src name="ExampleFieldManip">
+    <description>Example Field Manip</description>
+    <lib name="Core_Datatypes"/>
   </src>
 </srcs>
