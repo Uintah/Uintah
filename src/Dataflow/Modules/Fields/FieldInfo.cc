@@ -208,12 +208,13 @@ FieldInfo::update_input_attributes(FieldHandle f)
   Handle<FieldInfoAlgoCount> algo;
   if (!module_dynamic_compile(ci, algo)) return;
 
-  int num_nodes;
-  int num_elems;
-  algo->execute(f->mesh(), num_nodes, num_elems);
+  //string num_nodes, num_elems;
+  //int num_nodes, num_elems;
+  const string num_nodes = algo->execute_node(f->mesh());
+  const string num_elems = algo->execute_elem(f->mesh());
 
-  gui_numnodes_.set(to_string(num_nodes));
-  gui_numelems_.set(to_string(num_elems));
+  gui_numnodes_.set(num_nodes);
+  gui_numelems_.set(num_elems);
 }
 
 
