@@ -58,7 +58,7 @@
                 produce a new derived Field as output.  Rather than
                 building one net to introduce all of these new
                 modules, we will construct several nets, with each
-                describing a single algorithm.  To keep things simple,
+                describing a single technique.  To keep things simple,
                 we will divide this chapter into three sections,
                 one for each method.
                 
@@ -99,80 +99,122 @@
                 We can visualize its geometry, though, using a
                 ShowField module and a Viewer module.
 
-                <p>SampleField generates samples from any type of
-                input field and outputs the samples as a PointCloud
-                field.  The samples can be generated randomly or user
-                selected via a 3D widget.  The random sampling can be
-                weighted by importance (determined by the data value
-                of the sample) or left unweighted.  The random
-                sampling can also be limited to the selection of node
-                points, rather than points from the interior of the
-                fields elements, by clamping the samples to nodes.
-                The &quot;uniform&quot; distributions are a uniformly
-                random function over the spacial extents of the field
-                (i.e.  the elements are weighted by their volume or
-                area), whereas the &quot;scattered&quot; distributions
-                are a uniformly random function over the elements only
-                (i.e.  all elements have the same weight).  The
-                &quot;importance weighted&quot; distributions multiply
-                the existing weight of a sample by the interpolated
-                data value associated with it, while the &quot;not
-                weighted&quot; distributions leave the existing weight
-                of a sample unchanged.
+                <p>Another sample generation module in SCIRun is the
+                SampleField module.  SampleField generates samples
+                from any type of input field and outputs the samples
+                as a PointCloud field.  The samples can be generated
+                randomly or can be user selected via a 3D widget.  The
+                random sampling can be weighted by importance
+                (determined by the data value of the sample) or left
+                unweighted.  The random sampling can also be limited
+                to the selection of node points, rather than points
+                from the interior of the fields elements, by clamping
+                the samples to nodes.  The &quot;uniform&quot;
+                distributions are a uniformly random function over the
+                spacial extents of the field (i.e. the elements are
+                weighted by their volume or area), whereas the
+                &quot;scattered&quot; distributions are a uniformly
+                random function over the elements only (i.e. all
+                elements have the same weight).  The &quot;importance
+                weighted&quot; distributions multiply the existing
+                weight of a sample by the interpolated data value
+                associated with it, while the &quot;not weighted&quot;
+                distributions leave the existing weight of a sample
+                unchanged.
 
                 <p>&lt;section:3B - DirectInterpolate&gt;<br>
 
                 <p>In the previous sub-section, we generated sample
                 distributions based on an input Field.  In this
                 section, we will use the DirectInterpolate module to
-                interpolate datavalues onto that geometry.  We begin
-                by creating a FieldReader and a SamplePlane module, as
-                described above.  To map datavalues onto the plane, we
-                use the DirectInterpolate module.  To the first input
-                port we attach the datavalues source, in this case the
-                output from the FieldReader.  To the second input port
-                we attach the destination field, in this case the
-                output from SamplePlane.  The DirectInterpolate module
-                uses linear interpolation to compute new values.
+                interpolate datavalues onto those new samples.  We
+                begin by creating a FieldReader and a SamplePlane
+                module, as described above.  To map datavalues onto
+                the plane, we use the DirectInterpolate module.  To
+                the first input port we attach the datavalues source,
+                in this case the output from the FieldReader.  To the
+                second input port we attach the destination field, in
+                this case the output from SamplePlane.  The
+                DirectInterpolate module uses linear interpolation to
+                produce a new Field containing the geometry of the
+                second input Field mapped with datavalues from the
+                first input Field.
                   
                 <p>Having computed the values on the plane, we can now
-                visualize the plane with color-mapped geometry.  To do
-                this, we hook up the modules just as we did in Chapter
-                2.  The net you are using should look like the one in
-                Figure xx, and the image in the ViewWindow should look
-                like the image in Figure xx.  DirectInterpolate
-                generates a new field that contains the geometry of
-                the destination field, but with all of the data values
-                linearly interpolated from the source field.  It
-                should work correctly with all of the current field
-                and data types.  The data will be stored at the
-                elements specified in the destination field.
+                visualize those datavluaes with color-mapped geometry.
+                To do this, we hook up the modules just as shown in
+                Figure xx.  The resulting ViewWindow image should look
+                like the image in Figure xx.
 
-                <p>&lt;section:3C - Streamlines network&gt;<br>
+                <p>&lt;section:3C - StreamLines network&gt;<br>
 
                 <p>The last visualization module we will introduce in
-                this Chapter will be the StreamLines module.  This
-                module takes in a VectorField, and a Field of sample
-                points (as might have been generated using for example
-                a Rake), and outputs a new Field consisting of a
-                sequence of advected path-integral positions generated
-                from integrating the sample positions through the
-                (derivative) VectorField.  In the example Datasets
-                directories, we do not have any
+                this Chapter is the StreamLines module.  This
+                module takes in a vector Field, and a Field of sample
+                points, and outputs a new Field consisting of a
+                sequence of path-integral curves generated
+                from advecting (integrating) the sample positions
+                through the (derivative) vector Field.
 
-                <p>To use this module, we connect the field we would
-                like to sample to the input port on top of the module.
-                The sample points come out at the bottom and in this
-                case are connected to the StreamLines module as the
-                seed points for the streamlines.  If the widget is to
-                be used to generate the sample points, it's port is
-                connected to the Viewer as well.
-                  
-                <p>The field we are interested in interpolating from
-                is connected to the Source port on the top left of the
-                module.  The new field that we wish to fill in with
-                values from the source field is connected to the
-                Destination port on the top right of the module.
+		<p>We will generate the input vector Field by using
+		the Gradient module (SCIRun/Fields/Gradient) to compute
+		the gradient of the utahtorso-lowres-voltage.tvd.fld
+		(this produces the negative electric field).  Connect
+		the output from the Gradient module to the the first
+		Field input port of the StreamLines module.
+
+		<p>To generate a sample distribution of streamline
+		seed points, we will use the SampleField module
+		described above.  We want to interactively position a
+		"rake" of seed points within the volume, so we must
+		connect the Geometry output port (pink) from this
+		module to the Viewer module.  Then select the "rake"
+		option from the SampleField UI and set the number of
+		samples to 15.  Finally, connect the Field output port
+		from this module to the second Field input port of the
+		StreamLines module.
+
+		<p>At this point, we have streamlines coming out of
+                the StreamLines module, and we would like to render
+                them.  Before we do, though, we can attach scalar
+                datavalues to the streamline nodes.  To accomplish
+                this, we use the DirectInterpolate module described
+                above.  We will again use the voltage datavalues from
+                the utahtorso-lowres-voltage.tvd.fld Field.  Attaching
+                all of the modules, we have the network shown in
+                Figure XXX.
+
+		<p>The Streamlines module works by integrating the
+		seed points through the vector Field.  The integration
+		method that we are using is a fifth order
+		Runge-Kutta-Fehlberg algorithm.  To run this
+		algorithm, we must set three parameters: Error
+		Tolerance, Step Size, and a Maximum Number of Steps.
+		These three parameters should be set to 0.01, 0.1, and
+		200, respectively, in the StreamLines UI (as shown in
+		Figure XXX).
+
+                <p>&lt;subhead:Network execution and data dependence&gt;<br>
+
+		<p>There are several ways to initiate execution of a
+		SCIRun network that has not yet "fired".  The first is
+		to click the right mouse button on the name of one of
+		the module icons, and to select the "Execute" option
+		from the dropdown menu.  The second is to press any of
+		the "Execute" buttons that appear on many of the
+		module User Interface.  Either of these actions will
+		initiate the execution of the selected module, as well
+		as the execution of any modules that are part of the
+		data dependency graph of that selected module.
+
+		<p>After executing the network, you should see an
+		image like Figure XXX in the ViewWindow.  The rake
+		widget appears as a gray stick in the scene.  You can
+		move this widget around to new positions by pressing
+		down the shift key and then clicking on the widget
+		with the left mouse button.  When you release the
+		mouse button, the streamlines will automatically be
+		recomputed from the new seed positions.
 
               </div>
 
