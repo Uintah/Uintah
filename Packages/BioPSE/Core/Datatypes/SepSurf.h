@@ -78,7 +78,7 @@ public:
 
 
   virtual ~SepSurf();
-  virtual SepSurf* clone();
+  virtual SepSurf* clone() const;
   
   void bldNodeInfo();
   void printNbrInfo();
