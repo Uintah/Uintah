@@ -23,7 +23,9 @@
 #include <Uintah/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Uintah/Components/Schedulers/MPIScheduler.h>
 #include <Uintah/Components/Schedulers/SingleProcessorLoadBalancer.h>
+#include <Uintah/Components/Schedulers/RoundRobinLoadBalancer.h>
 #include <Uintah/Components/DataArchiver/DataArchiver.h>
+#include <Uintah/Parallel/ProcessorGroup.h>
 #include <SCICore/Exceptions/Exception.h>
 #include <ieeefp.h>
 
@@ -47,6 +49,11 @@ void usage(const std::string& badarg, const std::string& progname)
 
 int main(int argc, char** argv)
 {
+    /*
+     * Initialize MPI
+     */
+    Parallel::initializeManager(argc, argv);
+
     fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
 
     /*
@@ -137,15 +144,10 @@ int main(int argc, char** argv)
     }
 
     /*
-     * Initialize MPI
-     */
-    Parallel::initializeManager(argc, argv);
-
-    /*
      * Create the components
      */
-    const ProcessorGroup* world = Parallel::getRootProcessorGroup();
     try {
+	const ProcessorGroup* world = Parallel::getRootProcessorGroup();
 	SimulationController* sim = scinew SimulationController(world);
 
 	// Reader
@@ -182,10 +184,16 @@ int main(int argc, char** argv)
 	Output* output = scinew DataArchiver(world);
 	sim->attachPort("output", output);
 
+	if(world->myrank() == 0){
+	   cerr << "Using scheduler: " << scheduler << " and load balancer: " << loadbalancer << '\n';
+	}
+
 	// Load balancer
-	SingleProcessorLoadBalancer* bal;
+	LoadBalancer* bal;
 	if(loadbalancer == "SingleProcessorLoadBalancer"){
 	   bal = scinew SingleProcessorLoadBalancer(world);
+	} else if(loadbalancer == "RoundRobinLoadBalancer"){
+	   bal = scinew RoundRobinLoadBalancer(world);
 	} else {
 	   cerr << "Unknown load balancer: " << loadbalancer << '\n';
 	   exit(1);
@@ -213,9 +221,13 @@ int main(int argc, char** argv)
 	sim->run();
     } catch (Exception& e) {
 	cerr << "Caught exception: " << e.message() << '\n';
+	if(e.stackTrace())
+	   cerr << "Stack trace: " << e.stackTrace() << '\n';
+	Parallel::finalizeManager(Parallel::Abort);
 	abort();
     } catch(...){
 	cerr << "Caught unknown exception\n";
+	Parallel::finalizeManager(Parallel::Abort);
 	abort();
     }
 
@@ -227,6 +239,10 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.16  2000/07/27 22:39:40  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.15  2000/07/26 20:14:14  jehall
 // Moved taskgraph/dependency output files to UDA directory
 // - Added output port parameter to schedulers

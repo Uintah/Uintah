@@ -3,7 +3,6 @@
 
 #include <Uintah/Parallel/Parallel.h>
 #include <Uintah/Parallel/ProcessorGroup.h>
-#include <SCICore/Thread/Mutex.h>
 #include <SCICore/Exceptions/InternalError.h>
 #include <SCICore/Malloc/Allocator.h>
 
@@ -13,12 +12,11 @@
 
 using namespace Uintah;
 using std::cerr;
-using namespace SCICore::Thread;
 using namespace SCICore::Exceptions;
 
 static bool usingMPI;
 static MPI_Comm worldComm;
-static bool initialized = false;
+static ProcessorGroup* rootContext = 0;
 
 static
 void
@@ -48,11 +46,19 @@ Parallel::initializeManager(int argc, char* argv[])
       if((status=MPI_Init(&argc, &argv)) != MPI_SUCCESS)
 	 MpiError("MPI_Init", status);
       worldComm=MPI_COMM_WORLD;
+      int worldSize;
+      if((status=MPI_Comm_size(worldComm, &worldSize)) != MPI_SUCCESS)
+	 MpiError("MPI_Comm_size", status);
+      int worldRank;
+      if((status=MPI_Comm_rank(worldComm, &worldRank)) != MPI_SUCCESS)
+	 MpiError("MPI_Comm_rank", status);
+      rootContext = scinew ProcessorGroup(0, worldComm, true,
+					  worldRank,worldSize);
    } else {
       ::usingMPI=false;
+      rootContext = scinew ProcessorGroup(0,0, false, 0, 1);
       worldComm=-1;
    }
-   initialized=true;
 
    ProcessorGroup* world = getRootProcessorGroup();
    cerr << "Parallel: processor " << world->myrank() << " of " << world->size();
@@ -62,46 +68,34 @@ Parallel::initializeManager(int argc, char* argv[])
 }
 
 void
-Parallel::finalizeManager()
+Parallel::finalizeManager(Circumstances circumstances)
 {
    if(::usingMPI){
-      int status;
-      if((status=MPI_Finalize()) != MPI_SUCCESS)
-	 MpiError("MPI_Finalize", status);
+      if(circumstances == Abort){
+	 MPI_Abort(worldComm, 1);
+      } else {
+	 int status;
+	 if((status=MPI_Finalize()) != MPI_SUCCESS)
+	    MpiError("MPI_Finalize", status);
+      }
    }
 }
-
-static Mutex rootlock("ProcessorGroup lock");
-static ProcessorGroup* rootContext = 0;
 
 ProcessorGroup*
 Parallel::getRootProcessorGroup()
 {
-   if(!initialized)
-      throw InternalError("getProcessorGroup() called before initialization");
-   if(!rootContext) {
-      rootlock.lock();
-      if(!rootContext){
-	 if(usingMPI()){
-	    int worldSize;
-	    int status;
-	    if((status=MPI_Comm_size(worldComm, &worldSize)) != MPI_SUCCESS)
-	       MpiError("MPI_Comm_size", status);
-	    int worldRank;
-	    if((status=MPI_Comm_rank(worldComm, &worldRank)) != MPI_SUCCESS)
-	       MpiError("MPI_Comm_rank", status);
-	    rootContext = scinew ProcessorGroup(0,worldRank,worldSize);
-	 } else {
-	    rootContext = scinew ProcessorGroup(0,0, 1);
-	 }
-      }
-      rootlock.unlock();
-   }
+   if(!rootContext)
+      throw InternalError("Parallel not initialized");
+
    return rootContext;
 }
 
 //
 // $Log$
+// Revision 1.8  2000/07/27 22:39:54  sparker
+// Implemented MPIScheduler
+// Added associated support
+//
 // Revision 1.7  2000/06/17 07:06:48  sparker
 // Changed ProcessorContext to ProcessorGroup
 //
