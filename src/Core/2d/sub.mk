@@ -35,7 +35,9 @@ SRCS     += $(SRCDIR)/Point2d.cc \
 	$(SRCDIR)/glprintf.cc \
 	$(SRCDIR)/asciitable.cc \
 	$(SRCDIR)/texture.cc \
-	$(SRCDIR)/Axes.cc 
+	$(SRCDIR)/Axes.cc \
+	$(SRCDIR)/BoxObj.cc \
+	$(SRCDIR)/Zoom.cc \
 
 
 PSELIBS := Core/Persistent Core/Exceptions \

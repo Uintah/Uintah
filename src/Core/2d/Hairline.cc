@@ -74,6 +74,7 @@ Hairline::~Hairline()
 void
 Hairline::select( double x, double y, int b )
 {
+  update_hair();
   hair_->select( x, y, b );
   update();
 }
@@ -81,6 +82,7 @@ Hairline::select( double x, double y, int b )
 void
 Hairline::move( double x, double y, int b)
 {
+  update_hair();
   hair_->move( x, y, b );
   update();
 }
@@ -88,13 +90,14 @@ Hairline::move( double x, double y, int b)
 void
 Hairline::release( double x, double y, int b)
 {
+  update_hair();
   hair_->release( x, y, b );
   update();
 }
   
 
 void
-Hairline::update()
+Hairline::update_hair()
 {
   parent_->get_active( poly_ );
 
@@ -104,12 +107,18 @@ Hairline::update()
   for (int i=0; i<poly_.size(); i++) 
     poly_[i]->get_bounds( bbox_ );
 
-  if ( !bbox_.valid() )
+  if ( !bbox_.valid() ) {
+    cerr << "bbox not valid...\n";
     return;
+  }
 
-  hair_->set_bbox ( BBox2d( Point2d( bbox_.min().x(), 0 ),
+  hair_->set_bbox ( BBox2d( Point2d( bbox_.min().x(), 0 ), 
 			    Point2d( bbox_.max().x(), 1 ) ) );
+}
 
+void
+Hairline::update()
+{
   // get and sort the values
 
   double at = hair_->at();

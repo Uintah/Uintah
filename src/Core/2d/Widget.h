@@ -36,7 +36,7 @@
 namespace SCIRun {
   
 class SCICORESHARE Widget :  public DrawObj {
-private:
+protected:
   BBox2d bbox_;
 
 public:

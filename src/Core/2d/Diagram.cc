@@ -40,6 +40,7 @@ using std::ostringstream;
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/Diagram.h>
 #include <Core/2d/Hairline.h>
+#include <Core/2d/Zoom.h>
 #include <Core/2d/BBox2d.h>
 #include <Core/2d/OpenGLWindow.h>
 
@@ -96,7 +97,7 @@ Diagram::reset_bbox()
 {
   graphs_bounds_.reset();
   for (int i=0; i<poly_.size(); i++)
-    if ( poly_[i]->is_enabled() )
+    if ( active_[i] )
       poly_[i]->get_bounds( graphs_bounds_ );
 }
   
@@ -153,6 +154,9 @@ Diagram::tcl_command(TCLArgs& args, void* userdata)
     if ( args[2] == "hairline" ) {
       add_hairline();
     }
+    else if ( args[2] == "zoom" ) {
+      add_zoom();
+    }
     else {
       cerr << "Diagram[tcl_command]: unknown widget requested" << endl;
     }
@@ -165,18 +169,29 @@ Diagram::tcl_command(TCLArgs& args, void* userdata)
 void
 Diagram::add_hairline() 
 {
-  cerr << "add_hairline\n";
   Hairline *hair = scinew Hairline( this, "Hairline");
   int w = add_widget( hair );
 
   string window_name;
   tcl_eval( "new-opt " , window_name );
   hair->set_id( id()+"-hairline-" + to_string(w) );
-  hair->set_window( window_name, string("hair")+ to_string(w));
+  hair->set_window( window_name, string("hair-")+ to_string(w));
 
   redraw();
 }
 
+
+void
+Diagram::add_zoom()
+{
+//   Zoom *zoom = scinew Zoom( this, bbox_, "Zoom" );
+//   int w = add_widget( zoom );
+
+//   zoom->set_id( id()+"-zoom-"+to_string(w) );
+//   zoom->set_window( "", string("Zoom-")+to_string(w));
+  
+//   redraw();
+}
 
 void
 Diagram::set_id( const string & id )
