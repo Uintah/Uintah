@@ -53,6 +53,7 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
          $(SRCDIR)/Polygon.cc \
          $(SRCDIR)/SliceTable.cc \
          $(SRCDIR)/VolumeUtils.cc \
+	$(SRCDIR)/TypeName.cc \
 
 
 $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
@@ -119,6 +120,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.11  2000/12/17 12:55:41  samsonov
+# added compilation of TypeName.cc
+#
 # Revision 1.10  2000/12/09 17:36:55  moulding
 # Port Kurt' volume rendering stuff to linux and move it to PSECommon.
 #
