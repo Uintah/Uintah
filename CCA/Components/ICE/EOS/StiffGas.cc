@@ -8,7 +8,7 @@ using namespace Uintah;
 StiffGas::StiffGas(ProblemSpecP& ps)
 {
    // Constructor
-  ps->require("gas_constant",d_gas_constant);
+  ps->get("gas_constant",d_gas_constant);
   lb = scinew ICELabel();
 
 }
