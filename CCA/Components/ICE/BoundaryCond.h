@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/Stencil7.h>
 
 namespace Uintah {
   class DataWarehouse;
@@ -49,6 +50,7 @@ namespace Uintah {
     void checkValveBC( CCVariable<Vector>& var, const Patch* patch,
                     Patch::FaceType face); 
 
+    void ImplicitMatrixBC( CCVariable<Stencil7>& var, const Patch* patch);
 
 } // End namespace Uintah
 #endif
