@@ -177,7 +177,6 @@ public:
 		     std::vector< const TypeDescription *>&  );
   void queryTimesteps( std::vector<int>& index,
 		       std::vector<double>& times );
-  string queryEndianness();
   GridP queryGrid( double time );
 
   void purgeTimestepCache(double time)
@@ -269,6 +268,8 @@ private:
   DataArchive& operator=(const DataArchive&);
   
   DOM_Node getTimestep(double time, XMLURL& url);
+  string queryEndianness();  
+  int queryNBits();  
   void query( Variable& var, DOM_Node vnode, XMLURL url,
 	      int matlIndex,	const Patch* patch );
 
@@ -294,9 +295,12 @@ private:
 		    VarLabel* label, int matl,
 		    pair<DOM_Node, XMLURL> dataRef);   
   
-  std::string d_filebase;
+  std::string d_filebase;  
   DOM_Document d_indexDoc;
   XMLURL d_base;
+
+  bool d_swapBytes;
+  int d_nBytes;
   
   bool have_timesteps;
   std::vector<int> d_tsindex;
