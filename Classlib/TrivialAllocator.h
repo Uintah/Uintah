@@ -14,6 +14,8 @@
 #ifndef sci_Classlib_TrivialAllocator_h
 #define sci_Classlib_TrivialAllocator_h 1
 
+#include <Multitask/ITC.h>
+
 class TrivialAllocator {
     struct List {
 	List* next;
@@ -24,6 +26,7 @@ class TrivialAllocator {
     unsigned int nalloc;
     unsigned int alloc_size;
     unsigned int size;
+    Mutex lock;
 public:
     TrivialAllocator(unsigned int size);
     ~TrivialAllocator();
