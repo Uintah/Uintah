@@ -1,5 +1,6 @@
 #!/usr/local/bin/python
 
+from os import symlink,environ
 from sys import argv,exit
 from helpers.runSusTests import runSusTests, inputs_root
 from helpers.modUPS import modUPS
@@ -10,20 +11,24 @@ methane8patch_ups = modUPS("%s/ARCHES" % inputs_root(), \
                             "<maxTime>10.0</maxTime>"])
 
 
-TESTS = [ ("ice_perf_test", "performanceTest.ups", "", 1, "ALL", "ice"),     \
-          ("mpm_perf_test", "performanceTest.ups", "", 1, "ALL", "mpmice"),     \
-          ("disks2mat4patch4proc", "disks2mat4patch.ups", "", 4, "ALL","mpm"), \
+TESTS = [ ("ice_perf_test", "performanceTest.ups", "", 1, "ALL","","ice"),  \
+          ("mpm_perf_test", "performanceTest.ups", "", 1, "ALL","","mpmice"),\
+          ("disks2mat4patch4proc", "disks2mat4patch.ups", "", 4, "ALL","","mpm"), \
           ("methane_explicit_8patch", methane8patch_ups, "", 8, "ALL","chem_meth", "arches") \
     	]
+
+def chemfile (test):
+    return test[5]
 
 def chemfileCallback (test, susdir, inputsdir, compare_root, algo, mode, max_parallelism):
   symlink("%s/input.dtd" % (inputsdir), "input.dtd")
   cfile = chemfile(test)
-  if platform[0:5] == "linux":
+  if cfile != "":    
+    if platform[0:5] == "linux":
       cfile = cfile + ".linux.bin"
-  else:
+    else:
       cfile = cfile + ".bin"
-  symlink("%s/%s" % (inputsdir, cfile), "chem.bin")
+    symlink("%s/%s" % (inputsdir, cfile), "chem.bin")
 
 
-exit(runSusTests(argv, TESTS, "performance"))
+exit(runSusTests(argv, TESTS, "performance", chemfileCallback))
