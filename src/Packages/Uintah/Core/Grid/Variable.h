@@ -13,6 +13,7 @@ namespace Uintah {
    class OutputContext;
    class Patch;
    class RefCounted;
+   class VarLabel;
 
 /**************************************
      
@@ -63,12 +64,18 @@ public:
   
   virtual void allocate(const Patch* patch) = 0;
 
+  void setAllocationLabel(const VarLabel* label)
+  { allocationLabel_ = label; }
+
+  const VarLabel* getAllocationLabel() const
+  { return allocationLabel_; }
+  
   virtual RefCounted* getRefCounted() = 0;
 protected:
   Variable();
   virtual ~Variable();
 
-private:
+private:    
   Variable(const Variable&);
   Variable& operator=(const Variable&);
 
@@ -78,6 +85,7 @@ private:
   // other one.
   string* gzipCompress(string* pUncompressed, string* pBuffer);
   bool d_foreign;
+  const VarLabel* allocationLabel_;
 };
 
 } // End namespace Uintah

@@ -17,6 +17,7 @@ using namespace std;
 using namespace Uintah;
 
 Variable::Variable()
+  : allocationLabel_(0)
 {
    d_foreign = false;
 }
