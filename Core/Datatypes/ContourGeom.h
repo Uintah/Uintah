@@ -18,7 +18,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/DebugStream.h>
-//#include <sstream>
+#include <sstream>  // for std::ostringstream on linux
 #include <vector>
 #include <string>
 //#include <set>
