@@ -321,7 +321,7 @@ ContourMesh::clip(ClipperHandle clipper)
 	nnodes[i] = nodemap[onodes[i]];
       }
 
-      clipped->add_edge(nnodes[0], nnodes[1]);
+      clipped->add_elem(nnodes);
     }
     
     ++bi;

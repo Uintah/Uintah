@@ -204,6 +204,8 @@ public:
   void add_hex(const Point &p0, const Point &p1, const Point &p2,
 	       const Point &p3, const Point &p4, const Point &p5, 
 	       const Point &p6, const Point &p7);
+  void add_elem(Node::array_type a)
+  { add_hex(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]); }
 
   // Must call connect after adding Hexs this way.
   Node::index_type add_point(const Point &p);
