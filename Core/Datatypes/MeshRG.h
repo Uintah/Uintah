@@ -15,14 +15,99 @@
 #define SCI_project_MeshRG_h 1
 
 #include <Core/Datatypes/Datatype.h>
+#include <Datatypes/FieldIterator.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Containers/LockingHandle.h>
 
 
 namespace SCIRun {
 
 class SCICORESHARE MeshRG : public Datatype
 {
+public:
 
+  typedef int index_type;
+
+  //! Index and Iterator types required for Mesh Concept.
+  typedef NodeIndex<index_type>       node_index;
+  typedef NodeIterator<index_type>    node_iterator;
+ 
+  typedef EdgeIndex<index_type>       edge_index;
+  typedef EdgeIterator<index_type>    edge_iterator;
+ 
+  typedef FaceIndex<index_type>       face_index;
+  typedef FaceIterator<index_type>    face_iterator;
+ 
+  typedef CellIndex<index_type>       cell_index;
+  typedef CellIterator<index_type>    cell_iterator;
+
+  typedef vector<node_index> node_array;
+  typedef vector<edge_index> edge_array;
+  typedef vector<face_index> face_array;
+
+
+  MeshRG(int x, int y, int z);
+  MeshRG(const MeshRG &);
+  virtual ~MeshRG();
+
+
+  virtual BBox get_bounding_box() const;
+
+
+  node_iterator node_begin() const;
+  node_iterator node_end() const;
+  edge_iterator edge_begin() const;
+  edge_iterator edge_end() const;
+  face_iterator face_begin() const;
+  face_iterator face_end() const;
+  cell_iterator cell_begin() const;
+  cell_iterator cell_end() const;
+
+  void get_nodes(node_array &array, edge_index idx) const;
+  void get_nodes(node_array &array, face_index idx) const;
+  void get_nodes(node_array &array, cell_index idx) const;
+  void get_edges(edge_array &array, face_index idx) const;
+  void get_edges(edge_array &array, cell_index idx) const;
+  void get_faces(face_array &array, cell_index idx) const;
+  void get_neighbor(cell_index &neighbor, face_index idx) const;
+  void get_center(Point &result, node_index idx) const;
+  void get_center(Point &result, edge_index idx) const;
+  void get_center(Point &result, face_index idx) const;
+  void get_center(Point &result, cell_index idx) const;
+
+  void locate_node(node_index &node, const Point &p);
+  //void locate_edge(edge_index &edge, const Point &p);
+  //void locate_face(face_index &face, const Point &p);
+  void locate_cell(cell_index &cell, const Point &p);
+
+
+  void unlocate(Point &result, const Point &p);
+
+  void get_point(Point &result, const node_index &index) const;
+
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+
+private:
+  int nx_, ny_, nz_;
+
+  
+
+  static Persistent *maker();
+};
+
+
+
+} // namespace SCIRun
+
+
+
+
+
+
+#if 0
+  //old iterator and index stuff
   struct IPoint
   {
     IPoint() {}
@@ -109,76 +194,13 @@ class SCICORESHARE MeshRG : public Datatype
       return result;
     }
   };
-
-public:
-
-  typedef IPoint          node_index;
-  typedef NodeIter        node_iterator;
-
-  typedef void *          edge_index; 
-  typedef void *          edge_iterator;
-	                
-  typedef void *          face_index;
-  typedef void *          face_iterator;
-	                
-  typedef IPoint          cell_index;
-  typedef CellIter        cell_iterator;
-
-  typedef vector<node_index> node_array;
-  typedef vector<edge_index> edge_array;
-  typedef vector<face_index> face_array;
-
-
-  MeshRG(int x, int y, int z);
-  MeshRG(const MeshRG &);
-  virtual ~MeshRG();
-
-
-  virtual BBox get_bounding_box() const;
-
-
-  node_iterator node_begin() const;
-  node_iterator node_end() const;
-  edge_iterator edge_begin() const;
-  edge_iterator edge_end() const;
-  face_iterator face_begin() const;
-  face_iterator face_end() const;
-  cell_iterator cell_begin() const;
-  cell_iterator cell_end() const;
-
-#if 0
-  void get_nodes_from_edge(node_array &array, const edge_index &idx) const;
-  void get_nodes_from_face(node_array &array, const face_index &idx) const;
-  void get_nodes_from_cell(node_array &array, const cell_index &idx) const;
-  void get_edges_from_face(edge_array &array, const face_index &idx) const;
-  void get_edges_from_cell(edge_array &array, const cell_index &idx) const;
-  void get_faces_from_cell(face_array &array, const cell_index &idx) const;
-
-  void get_neighbor_from_face(cell_index &neighbor, const face_index &idx) const;
 #endif
 
-  void locate_node(node_index &node, const Point &p);
-  //void locate_edge(edge_index &edge, const Point &p);
-  //void locate_face(face_index &face, const Point &p);
-  void locate_cell(cell_index &cell, const Point &p);
-
-
-  void unlocate(Point &result, const Point &p);
-
-  void get_point(Point &result, const node_index &index) const;
-
-  virtual void io(Piostream&);
-  static PersistentTypeID type_id;
-  friend struct NodeIter;
-  friend struct CellIter;
-
-private:
-  int nx_, ny_, nz_;
-
-  static Persistent *maker();
-};
-
-} // namespace SCIRun
 
 
 #endif // SCI_project_MeshRG_h
+
+
+
+
+
