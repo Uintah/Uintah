@@ -5,6 +5,19 @@
 #include <Packages/rtrt/Core/texture.h>
 #include <Packages/rtrt/Core/shape.h>
 
+#define menuHeight 80.0f
+#define borderSize 5.0f
+#define worldWidth 500.0f
+#define worldHeight 330.0f
+
+// widget in-focus/out-of-focus colors
+#define focusR 0.0
+#define focusG 0.6
+#define focusB 0.85
+#define unfocusR 0.85
+#define unfocusG 0.6
+#define unfocusB 0.6
+
 namespace rtrt {
 
   // particular point on widget (usually where a manipulation point is)
@@ -69,8 +82,10 @@ namespace rtrt {
     } // blend()
 
     virtual Vertex* getBase( void ) = 0;
-    virtual Vertex* getTextUBound( void ) = 0;
-    virtual Vertex* getTextLBound( void ) = 0;
+    virtual Vertex* getTextULBound( void ) = 0;
+    virtual Vertex* getTextURBound( void ) = 0;
+    virtual Vertex* getTextLLBound( void ) = 0;
+    virtual Vertex* getTextLRBound( void ) = 0;
     virtual float getCenterX( void ) = 0;
     virtual float getCenterY( void ) = 0;
     virtual Vertex* getFocus( void ) = 0;
@@ -123,8 +138,10 @@ namespace rtrt {
     virtual void changeColor( float r, float g, float b );
     virtual void invertFocus( void ) {}
     virtual void genTransFunc( void );
-    virtual Vertex* getTextLBound( void ) { return lboundRight; }
-    virtual Vertex* getTextUBound( void ) { return uboundLeft; }
+    virtual Vertex* getTextLLBound( void ) { return lboundLeft; }
+    virtual Vertex* getTextLRBound( void ) { return lboundRight; }
+    virtual Vertex* getTextULBound( void ) { return uboundLeft; }
+    virtual Vertex* getTextURBound( void ) { return uboundRight; }
     virtual float getCenterX( void ) { return base->x; }
     virtual float getCenterY( void ) { return 0.5*(uboundLeft->y+base->y); }
     virtual Vertex* getFocus( void ) {
@@ -146,6 +163,8 @@ namespace rtrt {
     float focus_y;
     Vertex *topLeft;
     Vertex *bottomRight;
+    Vertex *topRight;
+    Vertex *bottomLeft;
 
     GLStar *focusStar;
     GLStar *translateStar;
@@ -161,15 +180,17 @@ namespace rtrt {
     virtual bool insideWidget( float x, float y );
     virtual void changeColor( float r, float g, float b );
     virtual void adjustOpacity( float x );
-    virtual void invertFocus( void );
+    void invertFocus( void );
     virtual void paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
 				 float master_opacity ) = 0;
     virtual void genTransFunc( void ) = 0;
-    virtual Vertex* getTextLBound( void ) { return bottomRight; }
-    virtual Vertex* getTextUBound( void ) { return topLeft; }
+    virtual Vertex* getTextLLBound( void ) { return bottomLeft; }
+    virtual Vertex* getTextLRBound( void ) { return bottomRight; }
+    virtual Vertex* getTextULBound( void ) { return topLeft; }
+    virtual Vertex* getTextURBound( void ) { return topRight; }
     virtual float getCenterX(void) { return (topLeft->x+bottomRight->x)*0.5; }
     virtual float getCenterY(void) { return 0.5*(topLeft->y+bottomRight->y); }
-    virtual Vertex* getFocus(void) {
+    Vertex* getFocus(void) {
       Vertex *v = new Vertex;
       v->x = focus_x;
       v->y = focus_y;
