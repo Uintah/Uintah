@@ -17,6 +17,7 @@
 #include "argtest_sidl.h"
 #include <SCICore/Thread/Time.h>
 #include <vector>
+#include <sstream>
 using std::cerr;
 using std::cout;
 using std::vector;
@@ -24,6 +25,8 @@ using argtest::ref;
 using argtest::Server;
 using std::string;
 using CIA::array1;
+using std::istringstream;
+using std::ostringstream;
 
 static void init(array1<int>& a, int s)
 {
@@ -37,8 +40,67 @@ static bool test(const array1<int>& a, int s)
     if(a.size() != s)
 	return false;
     for(int i=0;i<s;i++){
-	cerr << "a[" << i << "]=" << a[i] << "=" << s+i << '\n';
 	if(a[i] != s+i)
+	    return false;
+    }
+    return true;
+}
+
+static void init(array1<array1<int> >& a, int s)
+{
+    a.resize(s);
+    for(int i=0;i<s;i++)
+	init(a[i], i+s);
+}
+
+static bool test(const array1<array1<int> >& a, int s)
+{
+    if(a.size() != s)
+	return false;
+    for(int i=0;i<s;i++){
+	if(!test(a[i], i+s))
+	    return false;
+    }
+    return true;
+}
+
+static void init(array1<string>& a, int s)
+{
+    a.resize(s);
+    for(int i=0;i<s;i++){
+	ostringstream o;
+	o << s+i;
+	a[i]=o.str();
+    }
+}
+
+static bool test(const array1<string>& a, int s)
+{
+    if(a.size() != s)
+	return false;
+    for(int i=0;i<s;i++){
+	istringstream in(a[i]);
+	int t;
+	in >> t;
+	if(t != s+i)
+	    return false;
+    }
+    return true;
+}
+
+static void init(array1<bool>& a, int s)
+{
+    a.resize(s);
+    for(int i=0;i<s;i++)
+	a[i]=((s+i)&1)?true:false;
+}
+
+static bool test(const array1<bool>& a, int s)
+{
+    if(a.size() != s)
+	return false;
+    for(int i=0;i<s;i++){
+	if(a[i] != (((s+i)&1)?true:false))
 	    return false;
     }
     return true;
@@ -94,6 +156,26 @@ public:
     virtual void in_array(const array1<int>& a);
     virtual void out_array(array1<int>& a);
     virtual void inout_array(array1<int>& a);
+
+    virtual array1<bool> return_arraybool();
+    virtual void in_arraybool(const array1<bool>& a);
+    virtual void out_arraybool(array1<bool>& a);
+    virtual void inout_arraybool(array1<bool>& a);
+
+    virtual array1<string> return_arraystring();
+    virtual void in_arraystring(const array1<string>& a);
+    virtual void out_arraystring(array1<string>& a);
+    virtual void inout_arraystring(array1<string>& a);
+
+    virtual array1<array1<int> > return_arrayarray();
+    virtual void in_arrayarray(const array1<array1<int> >& a);
+    virtual void out_arrayarray(array1<array1<int> >& a);
+    virtual void inout_arrayarray(array1<array1<int> >& a);
+
+    virtual array1<ref> return_arrayref();
+    virtual void in_arrayref(const array1<ref>& a);
+    virtual void out_arrayref(array1<ref>& a);
+    virtual void inout_arrayref(array1<ref>& a);
 
     bool getSuccess();
 };
@@ -199,6 +281,124 @@ void Server_impl::out_array(array1<int>& a)
 }
 
 void Server_impl::inout_array(array1<int>& a)
+{
+    if(!test(a, 13))
+	success=false;
+    init(a, 14);
+}
+
+array1<string> Server_impl::return_arraystring()
+{
+    array1<string> ret;
+    init(ret, 10);
+    return ret;
+}
+
+void Server_impl::in_arraystring(const array1<string>& a)
+{
+    if(!test(a, 11))
+	success=false;
+}
+
+void Server_impl::out_arraystring(array1<string>& a)
+{
+    init(a, 12);
+}
+
+void Server_impl::inout_arraystring(array1<string>& a)
+{
+    if(!test(a, 13))
+	success=false;
+    init(a, 14);
+}
+
+array1<bool> Server_impl::return_arraybool()
+{
+    array1<bool> ret;
+    init(ret, 10);
+    return ret;
+}
+
+void Server_impl::in_arraybool(const array1<bool>& a)
+{
+    if(!test(a, 11))
+	success=false;
+}
+
+void Server_impl::out_arraybool(array1<bool>& a)
+{
+    init(a, 12);
+}
+
+void Server_impl::inout_arraybool(array1<bool>& a)
+{
+    if(!test(a, 13))
+	success=false;
+    init(a, 14);
+}
+
+array1<array1<int> > Server_impl::return_arrayarray()
+{
+    array1<array1<int> > ret;
+    init(ret, 10);
+    return ret;
+}
+
+void Server_impl::in_arrayarray(const array1<array1<int> >& a)
+{
+    if(!test(a, 11))
+	success=false;
+}
+
+void Server_impl::out_arrayarray(array1<array1<int> >& a)
+{
+    init(a, 12);
+}
+
+void Server_impl::inout_arrayarray(array1<array1<int> >& a)
+{
+    if(!test(a, 13))
+	success=false;
+    init(a, 14);
+}
+
+static void init(array1<ref>& a, int s)
+{
+    a.resize(s);
+    for(int i=0;i<s;i++)
+	a[i]=new ref_impl(s+i);
+}
+
+static bool test(const array1<ref>& a, int s)
+{
+    if(a.size() != s)
+	return false;
+    for(int i=0;i<s;i++){
+	if(a[i]->test() != s+i)
+	    return false;
+    }
+    return true;
+}
+
+array1<ref> Server_impl::return_arrayref()
+{
+    array1<ref> ret;
+    init(ret, 10);
+    return ret;
+}
+
+void Server_impl::in_arrayref(const array1<ref>& a)
+{
+    if(!test(a, 11))
+	success=false;
+}
+
+void Server_impl::out_arrayref(array1<ref>& a)
+{
+    init(a, 12);
+}
+
+void Server_impl::inout_arrayref(array1<ref>& a)
 {
     if(!test(a, 13))
 	success=false;
@@ -327,6 +527,67 @@ int main(int argc, char* argv[])
 		fail("inout_array");
 	    if(!rm->getSuccess())
 		fail("array failure on remote side");
+
+	    array1<bool> test_arraybool=rm->return_arraybool();
+	    if(!test(test_arraybool, 10))
+		fail("return_arraybool");
+	    init(test_arraybool, 11);
+	    rm->in_arraybool(test_arraybool);
+	    rm->out_arraybool(test_arraybool);
+	    if(!test(test_arraybool, 12))
+		fail("out_arraybool");
+	    init(test_arraybool, 13);
+	    rm->inout_arraybool(test_arraybool);
+	    if(!test(test_arraybool, 14))
+		fail("inout_arraybool");
+	    if(!rm->getSuccess())
+		fail("arraybool failure on remote side");
+
+	    array1<string> test_arraystring=rm->return_arraystring();
+	    if(!test(test_arraystring, 10))
+		fail("return_arraystring");
+	    init(test_arraystring, 11);
+	    rm->in_arraystring(test_arraystring);
+	    rm->out_arraystring(test_arraystring);
+	    if(!test(test_arraystring, 12))
+		fail("out_arraystring");
+	    init(test_arraystring, 13);
+	    rm->inout_arraystring(test_arraystring);
+	    if(!test(test_arraystring, 14))
+		fail("inout_arraystring");
+	    if(!rm->getSuccess())
+		fail("arraystring failure on remote side");
+
+	    array1<array1<int> > test_arrayarray=rm->return_arrayarray();
+	    if(!test(test_arrayarray, 10))
+		fail("return_arrayarray");
+	    init(test_arrayarray, 11);
+	    rm->in_arrayarray(test_arrayarray);
+	    rm->out_arrayarray(test_arrayarray);
+	    if(!test(test_arrayarray, 12))
+		fail("out_arrayarray");
+	    init(test_arrayarray, 13);
+	    rm->inout_arrayarray(test_arrayarray);
+	    if(!test(test_arrayarray, 14))
+		fail("inout_arrayarray");
+	    if(!rm->getSuccess())
+		fail("arrayarray failure on remote side");
+
+	    array1<ref> test_arrayref=rm->return_arrayref();
+	    if(!test(test_arrayref, 10))
+		fail("return_arrayref");
+	    init(test_arrayref, 11);
+	    rm->in_arrayref(test_arrayref);
+	    rm->out_arrayref(test_arrayref);
+	    if(!test(test_arrayref, 12))
+		fail("out_arrayref");
+	    init(test_arrayref, 13);
+	    rm->inout_arrayref(test_arrayref);
+	    if(!test(test_arrayref, 14))
+		fail("inout_arrayref");
+	    if(!rm->getSuccess())
+		fail("arrayref failure on remote side");
+
 	}
 	PIDL::serveObjects();
 	cerr << "Argtest successful\n";
@@ -343,6 +604,10 @@ int main(int argc, char* argv[])
 
 //
 // $Log$
+// Revision 1.2  1999/09/29 07:34:29  sparker
+// Test more parameter passing modes - arrays of strings, arrays of
+//    bools, arrays of references and arrays of arrays
+//
 // Revision 1.1  1999/09/28 08:21:04  sparker
 // new program to test various parameter passing modes
 //
