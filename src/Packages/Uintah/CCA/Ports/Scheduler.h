@@ -110,6 +110,8 @@ WARNING
 					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls) = 0;
 
+    //! Schedule copying data to new grid after regridding
+    virtual void scheduleDataCopy(const GridP& grid, SimulationStateP& state) = 0;
 
     // Get the SuperPatch (set of connected patches making a larger rectangle)
     // for the given label and patch and find the largest extents encompassing

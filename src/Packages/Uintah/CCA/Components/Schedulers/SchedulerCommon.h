@@ -9,6 +9,8 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/GhostOffsetVarMap.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
@@ -129,6 +131,8 @@ WARNING
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw);
 
+    virtual void scheduleDataCopy(const GridP& grid, SimulationStateP& state);
+    
   protected:
     void finalizeTimestep();
     virtual void actuallyCompile() = 0;
@@ -166,6 +170,12 @@ WARNING
     bool emit_taskgraph;
     GhostOffsetVarMap m_ghostOffsetVarMap;
     LocallyComputedPatchVarMap m_locallyComputedPatchVarMap;
+
+    //! These are to store which vars we have to copy to the new grid
+    //! in a copy data task.  Set in scheduleDataCopy and used in
+    //! copyDataToNewGrid.
+    typedef map<const VarLabel*, MaterialSubset*> label_matl_map;
+    label_matl_map label_matls_;
   };
 } // End namespace Uintah
 
