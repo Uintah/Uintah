@@ -231,6 +231,11 @@ bool
 to_double(const Tensor&, double &);
 
 
+template <>
+bool
+to_double(const string&, double &);
+
+
 template <class Dat>
 bool 
 add_data(const Point &, const Dat &, GeomArrows *, 
