@@ -119,7 +119,7 @@ if [ "$WEEKLY" == "1" ]; then
   BUILD_DIR="$BUILD_DIR"/Weekly
 fi
 
-PATH="$SCRIPT_DIR":/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/usr/bin:/bin:"$PATH":.
+PATH="$SCRIPT_DIR":/usr/bin:/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/bin:"$PATH":.
 CVSROOT="csf.cs.utah.edu:/csafe_noexport/cvs/cvsroot"
 CVS_RSH=ssh
 export PATH CVSROOT CVS_RSH WEEKLY mallocstrict
@@ -283,8 +283,8 @@ if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
 	DBG_CONFIGURE="'--enable-package=Uintah' '--enable-debug' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.1.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b/src/hypre'"
 	OPT_CONFIGURE="'--enable-package=Uintah' '--enable-optimize=-Ofast -G0 -OPT:div_split=OFF' '--disable-sci-malloc' '--enable-assertion-level=0' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.1.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b/src/hypre'"
 else
-	DBG_CONFIGURE="--enable-package='Uintah' --enable-debug --with-thirdparty=/usr/sci/projects/SCIRun/Thirdparty/1.7/Linux/gcc-3.2-32bit --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-32bit/petsc-2.1.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-32bit/hypre-1.7.7b/src/hypre"
-	OPT_CONFIGURE="--enable-package='Uintah' '--enable-optimize=-march=pentium4 -msse -msse2 -O3' --disable-sci-malloc --enable-assertion-level=0 --with-thirdparty=/usr/sci/projects/SCIRun/Thirdparty/1.7/Linux/gcc-3.2-32bit --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-32bit/petsc-2.1.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-32bit/hypre-1.7.7b/src/hypre"
+	DBG_CONFIGURE="--enable-package='Uintah' --enable-debug --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-32bit/petsc-2.1.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-32bit/hypre-1.7.7b/src/hypre --with-mpi=/usr/local/lam-mpi"
+	OPT_CONFIGURE="--enable-package='Uintah' '--enable-optimize=-march=pentium4 -msse -msse2 -O3' --disable-sci-malloc --enable-assertion-level=0 --with-thirdparty=/usr/sci/projects/SCIRun/Thirdparty/1.7/Linux/gcc-3.2-32bit --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-32bit/petsc-2.1.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-32bit/hypre-1.7.7b/src/hypre --with-mpi=/usr/local/lam-mpi"
 fi
 
 # where the webpage will be, and init webpage
@@ -301,7 +301,7 @@ TITLE=`date`
 echo "<HTML><HEAD><TITLE> $OS tests on $TITLE</TITLE></HEAD><BODY><pre>" >> $HTMLLOG 
 echo "Regression Tester results from `hostname`" >> $HTMLLOG
 echo "Architecture: ${OS}" >> $HTMLLOG
-echo ""
+echo "" >> $HTMLLOG
 echo "Using build: ${BUILDROOT}" >> $HTMLLOG
 echo "LOG: $HTMLLOG" >> $HTMLLOG
 
