@@ -6,7 +6,8 @@ SRCDIR := Packages/Uintah
 SUBDIRS := \
 	$(SRCDIR)/Core         \
 	$(SRCDIR)/Dataflow     \
-	$(SRCDIR)/CCA
+	$(SRCDIR)/CCA          \
+	$(SRCDIR)/tools
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
