@@ -24,7 +24,6 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
