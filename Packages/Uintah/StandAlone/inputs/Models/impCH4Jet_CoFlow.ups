@@ -182,13 +182,28 @@
       <cfl>0.15</cfl>
       <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "FirstOrder"/>
+        <advection type = "SecondOrder"/>
         <solution technique = "EqForm"/>
+        
+        <!--______________turbulence models____________-->
+<!--     <turbulence model = "Germano">                 
+          <filter_width>        1.0 </filter_width>
+          <test_filter_width>   2.0 </test_filter_width>
+          <turb_Pr>             0.4 </turb_Pr>                          
+        </turbulence>
+       
+        <turbulence model = "Smagorinsky">         
+          <model_constant>      0.1 </model_constant>            
+          <filter_width>        1.0 </filter_width>
+          <turb_Pr>             0.4 </turb_Pr>                          
+         </turbulence> 
+-->        
         <TimeStepControl>
           <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.01            </knob_for_speedSound>
         </TimeStepControl>
         
+         
         <ImplicitSolver>
            <max_outer_iterations>      20    </max_outer_iterations>
            <outer_iteration_tolerance> 1e-7 </outer_iteration_tolerance>
