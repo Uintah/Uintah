@@ -379,6 +379,8 @@ SimpleSimulationController::run()
       t += delt;
       TAU_DB_DUMP();
    }
+
+   scheduler->get_new_dw()->scrubExtraneous();
 }
 
 void 
