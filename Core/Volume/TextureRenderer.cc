@@ -436,6 +436,37 @@ TextureRenderer::draw_polygons(Array1<float>& vertex, Array1<float>& texcoord,
 #endif
 }
 
+
+void
+TextureRenderer::draw_polygons_wireframe(Array1<float>& vertex,
+					 Array1<float>& texcoord,
+					 Array1<int>& poly,
+					 bool normal, bool fog,
+					 Pbuffer* buffer)
+{
+#ifdef HAVE_AVR_SUPPORT
+  di_->polycount += poly.size();
+  float mvmat[16];
+  if(fog) {
+    glGetFloatv(GL_MODELVIEW_MATRIX, mvmat);
+  }
+  for(int i=0, k=0; i<poly.size(); i++)
+  {
+    glBegin(GL_LINE_LOOP);
+    {
+      for(int j=0; j<poly[i]; j++)
+      {
+        float* v = &vertex[(k+j)*3];
+	glVertex3f(v[0], v[1], v[2]);
+      }
+    }
+    glEnd();
+    k += poly[i];
+  }
+#endif
+}
+
+
 void
 TextureRenderer::build_colormap1()
 {
