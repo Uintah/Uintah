@@ -322,9 +322,10 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
     ParticleVariable< Matrix3 > pvt;
     ParticleVariable< double > pvs;
     ParticleVariable< Point  > pvp;
+    ParticleVariable< long > pvi;
      
     int numMatls = archive.queryNumMaterials(positionName, *r, time);
-
+    //int numMatls = 29;
     for(int matl=0;matl<numMatls;matl++){
       clString result;
       eval(id + " isOn p" + to_string(matl), result);
@@ -361,29 +362,37 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 	  scalars[dest]=pvs[*iter];
 	else
 	  scalars[dest]=0;
-	positions[dest]=pvp[*iter];
 	if(have_tp)
-	  tensors[dest]=Matrix3(0.0);
-	else
 	  tensors[dest]=pvt[*iter];
+	else
+	  tensors[dest]=Matrix3(0.0);
+
+	positions[dest]=pvp[*iter];
       }
     }
+  
+    if(have_sp) {
+      if( sp == 0 ){
+	sp = scinew ScalarParticles();
+	sp->SetCallbackClass( this );
+      }
+      sp->AddVar( positions, scalars, *r);
+    } else 
+      sp = 0;
+    if(have_vp) {
+      if( vp == 0 ){
+	vp = scinew VectorParticles();
+	vp->SetCallbackClass( this );
+      }
+      vp->AddVar( positions, vectors, *r);
+    } else 
+      sp = 0;
   }
-  if(have_sp) {
-    sp =  scinew ScalarParticles( positions, scalars, this);
-    sp->SetCallbackClass( this );
-  } else 
-    sp = 0;
   if(have_tp){
     tp =  scinew TensorParticles( positions, tensors, this);
     tp->SetCallbackClass( this );
   } else
     tp = 0;
-  if(have_vp){
-    vp = scinew VectorParticles( positions, vectors, this);
-    vp->SetCallbackClass( this );
-  } else 
-    vp = 0;
 } 
 
 //--------------------------------------------------------------- 
