@@ -17,7 +17,7 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/GuiInterface
 
@@ -32,5 +32,5 @@ PSELIBS := Core/Exceptions Core/Util Core/Thread \
 		Core/Containers Core/TkExtensions
 LIBS := $(TCL_LIBRARY) $(ITK_LIBRARY) $(X11_LIBS)
 
-include $(SRCTOP)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

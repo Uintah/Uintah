@@ -17,7 +17,7 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/CCA/Component/CIA
 
@@ -48,5 +48,5 @@ GENHDRS := $(SRCDIR)/CIA_sidl.h
 PSELIBS := Core/CCA/Component/PIDL
 LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common
 
-include $(SRCTOP)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

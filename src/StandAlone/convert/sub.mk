@@ -28,32 +28,32 @@ LIBS := -lm
 
 PROGRAM := $(SRCDIR)/RawToContourField
 SRCS := $(SRCDIR)/RawToContourField.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/RawToLatticeVol
 SRCS := $(SRCDIR)/RawToLatticeVol.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/RawToTetVol
 SRCS := $(SRCDIR)/RawToTetVol.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/RawToTriSurf
 SRCS := $(SRCDIR)/RawToTriSurf.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/ContourFieldToRaw
 SRCS := $(SRCDIR)/ContourFieldToRaw.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/LatticeVolToRaw
 SRCS := $(SRCDIR)/LatticeVolToRaw.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TetVolToRaw
 SRCS := $(SRCDIR)/TetVolToRaw.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TriSurfToRaw
 SRCS := $(SRCDIR)/TriSurfToRaw.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk

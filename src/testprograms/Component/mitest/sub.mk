@@ -31,5 +31,5 @@ PROGRAM := $(SRCDIR)/mitest
 SRCS := $(SRCDIR)/mitest.cc $(SRCDIR)/mitest_sidl.cc
 GENHDRS := $(SRCDIR)/mitest_sidl.h
 
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 

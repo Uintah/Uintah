@@ -1,6 +1,6 @@
 # Makefile fragment for this subdirectory
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/Arches
 
@@ -27,7 +27,7 @@ ifneq ($(CC_DEPEND_REGEN),-MD)
 # The fortran code doesn't work under g++ yet
 SUBDIRS := $(SRCDIR)/fortran $(SRCDIR)/Mixing
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 FLIB := -lftn
 endif
 
@@ -54,5 +54,5 @@ CFLAGS +=	-DHAVE_PETSC
 endif
 #LIBS += -lblas
 
-include $(SRCTOP)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -14,6 +14,6 @@ SUBDIRS := \
 	$(SRCDIR)/Field\
 #[INSERT NEW CATEGORY DIR HERE]
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
 

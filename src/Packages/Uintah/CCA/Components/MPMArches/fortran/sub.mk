@@ -1,6 +1,6 @@
 # Makefile fragment for this subdirectory
 
-#include $(SRCTOP)/scripts/smallso_prologue.mk
+#include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/MPMArches/fortran
 
@@ -21,5 +21,5 @@ PSELIBS :=
 #FFLAGS += -g -O3 -OPT:IEEE_arithmetic=3 -CG:if_conversion=false:reverse_if_conversion=false -LNO:pf2=0 -avoid_gp_overflow -I$(SRCDIR)
 FFLAGS += -g 
 
-#include $(SRCTOP)/scripts/smallso_epilogue.mk
+#include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

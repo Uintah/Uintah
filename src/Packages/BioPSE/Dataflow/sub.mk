@@ -17,16 +17,16 @@
 
 #Makefile fragment for the Packages/BioPSE/Dataflow directory
 
-include $(SRCTOP_ABS)/scripts/largeso_prologue.mk
+include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
 SRCDIR := Packages/BioPSE/Dataflow
 SUBDIRS := \
 	$(SRCDIR)/GUI \
 	$(SRCDIR)/Modules \
 
-include $(SRCTOP_ABS)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := Packages/BioPSE/Core
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
-include $(SRCTOP_ABS)/scripts/largeso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk

@@ -1,6 +1,6 @@
 # Makefile fragment for this subdirectory
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := Packages/Uintah/Core/Datatypes
 
@@ -47,6 +47,6 @@ PSELIBS := $(PSELIBS) Core/CCA/Component/CIA Core/CCA/Component/PIDL
 LIBS := $(LIBS) $(GLOBUS_LIBS) -lglobus_nexus
 endif
 
-include $(SRCTOP)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 

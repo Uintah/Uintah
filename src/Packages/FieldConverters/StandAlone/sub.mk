@@ -21,4 +21,4 @@ SRCDIR := Packages/FieldConverters/StandAlone
 SUBDIRS := \
 	$(SRCDIR)/convert \
 
-include $(SRCTOP_ABS)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk

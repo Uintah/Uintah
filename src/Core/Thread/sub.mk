@@ -17,7 +17,7 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Thread
 
@@ -33,5 +33,5 @@ SRCS += $(TIME_IMPL) $(THREAD_IMPL)
 PSELIBS := Core/Exceptions
 LIBS := $(THREAD_LIBS) $(TRACEBACK_LIB)
 
-include $(SRCTOP)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -32,7 +32,7 @@ SIDL_EXE := $(PROGRAM)
 PSELIBS :=
 LIBS := -luuid
 
-include $(SRCTOP_ABS)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 $(SRCDIR)/scanner.cc: $(SRCDIR)/scanner.l
 	$(LEX) -t $< > $@

@@ -11,5 +11,5 @@ SUBDIRS := \
 #	$(SRCDIR)/Writers       \
 
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 

@@ -15,5 +15,5 @@ PSELIBS := \
 
 LIBS := $(XML_LIBRARY)
 
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 

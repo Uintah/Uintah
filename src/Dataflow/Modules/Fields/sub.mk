@@ -24,7 +24,7 @@
 # if you want to edit this file by hand, see the "Create A New Module"
 # documentation on how to do it correctly.
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Dataflow/Modules/Fields
 
@@ -55,5 +55,5 @@ PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil \
 	Core/Math Core/Util
 LIBS := $(TK_LIBRARY) $(GL_LIBS) $(FLEX_LIBS) -lm $(XML_LIBRARY) $(THREAD_LIBS)
 
-include $(SRCTOP)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

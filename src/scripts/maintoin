@@ -70,4 +70,4 @@ echo "$LINE" >> Makefile.in
 #-----
 
 echo "" >> Makefile.in
-echo "include $(SRCTOP)/scripts/objs.mk" >> Makefile.in
+echo "include $(SCIRUN_SCRIPTS)/objs.mk" >> Makefile.in

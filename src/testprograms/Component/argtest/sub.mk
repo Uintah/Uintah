@@ -31,5 +31,5 @@ PROGRAM := $(SRCDIR)/argtest
 SRCS := $(SRCDIR)/argtest.cc $(SRCDIR)/argtest_sidl.cc
 GENHDRS := $(SRCDIR)/argtest_sidl.h
 
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 

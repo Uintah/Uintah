@@ -28,40 +28,40 @@ LIBS := -lm
 
 PROGRAM := $(SRCDIR)/OldSFRGtoNewLatticeVol
 SRCS := $(SRCDIR)/OldSFRGtoNewLatticeVol.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/OldVFRGtoNewLatticeVol
 SRCS := $(SRCDIR)/OldVFRGtoNewLatticeVol.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/NewLatticeVolToOldSFRG
 SRCS := $(SRCDIR)/NewLatticeVolToOldSFRG.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/OldSFUGtoNewTetVol
 SRCS := $(SRCDIR)/OldSFUGtoNewTetVol.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/NewTetVolToOldSFUG
 SRCS := $(SRCDIR)/NewTetVolToOldSFUG.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/OldMeshToNewTetVol
 SRCS := $(SRCDIR)/OldMeshToNewTetVol.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/OldMeshToNewField
 SRCS := $(SRCDIR)/OldMeshToNewField.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/NewTetVolToOldMesh
 SRCS := $(SRCDIR)/NewTetVolToOldMesh.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/OldSurfaceToNewTriSurf
 SRCS := $(SRCDIR)/OldSurfaceToNewTriSurf.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/NewTriSurfToOldSurface
 SRCS := $(SRCDIR)/NewTriSurfToOldSurface.cc
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk

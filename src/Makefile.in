@@ -23,6 +23,13 @@
 # Default target
 default: all
 
+# Directory variables
+SRCTOP  := @top_srcdir@
+SRCDIR  := @srcdir@
+OBJTOP  := .
+OBJTOP_ABS    := $(shell cd $(OBJTOP) ; pwd)
+SRCTOP_ABS    := $(shell cd $(SRCTOP) ; pwd)
+SCIRUN_SCRIPTS = $(SRCTOP)/scripts
 include configVars.mk
 
 # Rules for autoconf
@@ -47,7 +54,7 @@ configVars.mk: ${SRCTOP}/configVars.mk.in ${OBJTOP}/config.status
 
 # Actually include the module makefile fragments
 ALLSUBDIRS := . 
-include $(SRCTOP)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 ALLOBJSUBDIRS :=$(patsubst $(SRCTOP)%,$(OBJTOP)%, $(ALLSUBDIRS))
 MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
 MAKEFILEDIRS := $(subst $(SRCTOP),$(OBJTOP_ABS),$(MAKEFILEDIRS))

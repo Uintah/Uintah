@@ -30,6 +30,6 @@ SRCDIR := Packages/FieldConverters/Dataflow/Modules
 SUBDIRS := \
 #[INSERT NEW CATEGORY DIR HERE]
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
 

@@ -1,6 +1,6 @@
 # Makefile fragment for this subdirectory
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/ProblemSpecification
 
@@ -14,11 +14,11 @@ PSELIBS := \
 	Dataflow/XMLUtil
 LIBS 	:= $(XML_LIBRARY)
 
-include $(SRCTOP)/scripts/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 #PROGRAM	:= $(SRCDIR)/testing
 #SRCS	:= $(SRCDIR)/testing.cc
-#include $(SRCTOP)/scripts/program.mk
+#include $(SCIRUN_SCRIPTS)/program.mk
 #PROGRAM	:= $(SRCDIR)/test2
 #SRCS	:= $(SRCDIR)/test2.cc 
 #ifeq ($(LARGESOS),yes)
@@ -32,6 +32,6 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 #	Dataflow/XMLUtil
 #endif
 #LIBS 	:= $(XML_LIBRARY)
-#include $(SRCTOP)/scripts/program.mk
+#include $(SCIRUN_SCRIPTS)/program.mk
 
 

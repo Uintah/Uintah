@@ -22,5 +22,5 @@ SRCDIR := testprograms/Component
 SUBDIRS := $(SRCDIR)/argtest $(SRCDIR)/memstress $(SRCDIR)/mitest \
 	$(SRCDIR)/objects $(SRCDIR)/pingpong 
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
