@@ -229,9 +229,11 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
     d_add_heat = true;
     add_heat_ps->require("add_heat_matls",d_add_heat_matls);
     add_heat_ps->require("add_heat_coeff",d_add_heat_coeff);
-    add_heat_ps->require("add_heat_n_iters",d_add_heat_iters);
+    add_heat_ps->require("add_heat_t_start",d_add_heat_t_start);
+    add_heat_ps->require("add_heat_t_final",d_add_heat_t_final);
     cout_norm << "HEAT WILL BE ADDED"<<endl;
-    cout_norm << "  d_add_heat_n_iters: "<< d_add_heat_iters<< endl;
+    cout_norm << "  d_add_heat_t_start: "<< d_add_heat_t_start
+              << "  d_add_heat_t_final: "<< d_add_heat_t_final<< endl;
     for (int i = 0; i<(int) d_add_heat_matls.size(); i++) {
       cout_norm << "  d_add_heat_matl " << d_add_heat_matls[i] 
                 << "  d_add_heat_coeff "<< d_add_heat_coeff[i]<< endl;
@@ -2798,10 +2800,11 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       }
 
       //__________________________________
-      //  User specified source/sink   
-      int n_iter = dataArchiver->getCurrentTimestep();
-
-      if(d_add_heat && n_iter <= d_add_heat_iters){
+      //  User specified source/sink 
+      double Time= dataArchiver->getCurrentTime();  
+      if (  d_add_heat &&
+            Time >= d_add_heat_t_start && 
+            Time <= d_add_heat_t_final ) { 
         for (int i = 0; i<(int) d_add_heat_matls.size(); i++) {
           if(m == d_add_heat_matls[i] ){
              for(CellIterator iter = patch->getCellIterator();!iter.done();
