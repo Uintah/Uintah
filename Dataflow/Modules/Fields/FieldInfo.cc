@@ -232,6 +232,7 @@ FieldInfo::execute()
   if (!iport->get(fh) || !fh.get_rep())
   {
     clear_vals();
+    generation_ = -1;
     return;
   }
 
