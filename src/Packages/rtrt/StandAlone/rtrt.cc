@@ -36,20 +36,6 @@
 #include <string.h>
 #include <sys/param.h>
 
-#include <GL/glut.h>
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1430
-#pragma set woff 3201
-#pragma set woff 1375
-#endif
-#include <glui.h>
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1430
-#pragma reset woff 3201
-#pragma reset woff 1375
-#endif
-
-
 using namespace rtrt;
 using namespace std;
 
@@ -255,10 +241,6 @@ main(int argc, char* argv[])
 
   bool do_sils = false;
   float sil_value = -1;
-  
-  printf("before glutInit\n");
-  glutInit( &argc, argv );
-  printf("after glutInit\n");
 
   Camera usercamera(Point(1,0,0), Point(0,0,0), Vector(0,0,1), 60);
   bool use_usercamera = false;
@@ -447,8 +429,8 @@ main(int argc, char* argv[])
       rtrt_engine->worker_run_gl_test = true;
     } else if (strcmp(argv[i], "-display_gltest") == 0) {
       rtrt_engine->display_run_gl_test = true;
-    } else if (strcmp(argv[i], "-no_gui") == 0 || strcmp(argv[i], "-nogui") == 0) {
-      show_gui = false;
+    } else if (strcmp(argv[i], "-show_gui") == 0 || strcmp(argv[i], "-showgui") == 0 || strcmp(argv[i], "-glut") == 0) {
+      show_gui = true;
     } else if (strcmp(argv[i], "-stereo") == 0) {
       stereo = true;
     } else if (strcmp(argv[i], "-sils") == 0) {
@@ -706,73 +688,18 @@ main(int argc, char* argv[])
   //////////////////////////////////////////////////////////////////
   // This is the glut glui stuff
 
-  Gui * gui = 0;
-  
   if (show_gui) {
-    gui = new Gui();
+    GGT* ggt = new GGT();
 
-    Gui::setActiveGui( gui );
-    gui->setDpy( dpy );
-    
-    // Initialize GLUT and GLUI stuff.
-    DpyBase::xlock();
-    printf("start glut inits\n");
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
-    
-    glutInitWindowPosition( 0, 0 );
-    
-    mainWindowId = glutCreateWindow("RTRT");
-    DpyBase::xunlock();
-    
-    if( fullscreen ) {
-      //glutFullScreen(); // only if full screen is 1280x1024
-      glutReshapeWindow( 1280, 1024 );
-    } else {
-      glutReshapeWindow( xres, yres );
-    }
-    
-    //////////////////////////////////////////////////////////////////
-    
-    cout << "sb: " << glutDeviceGet( GLUT_HAS_SPACEBALL ) << "\n";
-    
-    glutKeyboardFunc( Gui::handleKeyPressCB );
-    glutSpecialFunc( Gui::handleSpecialKeyCB );
-    glutMouseFunc( Gui::handleMouseCB );
-    glutMotionFunc( Gui::handleMouseMotionCB );
-    glutSpaceballMotionFunc( Gui::handleSpaceballMotionCB );
-    glutSpaceballRotateFunc( Gui::handleSpaceballRotateCB );
-    glutSpaceballButtonFunc( Gui::handleSpaceballButtonCB );
-    
-    glutReshapeFunc( Gui::handleWindowResizeCB );
-    glutDisplayFunc( Gui::redrawBackgroundCB );
-    
+    ggt->setDpy( dpy );
+    ggt->setDpyGui( dpygui );
+
+    new Thread(ggt, "Glut Glui Thread", rtrt_engine_tg);
   }
 
   /*  bigler */
-  new Thread(dpy, "Display thread", rtrt_engine_tg);
+  new Thread(dpy, "Render Display", rtrt_engine_tg);
 
-  if (show_gui) {
-    // Must do this after glut is initialized.
-    Gui::createMenus( mainWindowId, startSoundThread, show_gui);  
-    
-    // Let the GUI know about the lights.
-    int cnt;
-    for( cnt = 0; cnt < scene->nlights(); cnt++ ) {
-      gui->addLight( scene->light( cnt ) );
-    }
-    for( ; cnt < scene->nlights()+scene->nPerMatlLights(); cnt++ ) {
-      Light *light = scene->per_matl_light( cnt - scene->nlights() );
-      if( light->name_ != "" )
-        light->name_ = light->name_ + " (pm)";
-      gui->addLight( light );
-    }
-    
-    printf("end glut inits\n");
-    
-    /* Register the idle callback with GLUI, *not* with GLUT */
-    //GLUI_Master.set_glutIdleFunc( Gui::idleFunc );
-  }
-  
   // Start up worker threads...
   for(int i=0;i<rtrt_engine->nworkers;i++){
     char buf[100];
@@ -780,10 +707,11 @@ main(int argc, char* argv[])
     Worker * worker = new Worker(dpy, scene, i,
 				 pp_size, scratchsize,
 				 ncounters, c0, c1);
-    Thread * thread = new Thread( worker, buf, rtrt_engine_tg);
+    new Thread( worker, buf, rtrt_engine_tg);
   } // end for (create workers)
 
-  //  Thread::exit();
+  // If we return now, we won't be able to access stdin, or CNTR-C and
+  // stuff.
   rtrt_engine_tg->join();
   
   return 0;
