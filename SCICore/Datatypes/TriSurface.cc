@@ -110,6 +110,7 @@ TriSurface& TriSurface::operator=(const TriSurface& t)
     nodeNbrs=t.nodeNbrs;
     normType=t.normType;
     normals=t.normals;
+    return *this;
 }
 
 TriSurface::~TriSurface() {
@@ -1146,6 +1147,9 @@ void Pio(Piostream& stream, TSEdge*& data)
 
 //
 // $Log$
+// Revision 1.8  1999/09/02 04:55:05  dmw
+// fixed the = operator I just added (forgot the return at the end before)
+//
 // Revision 1.7  1999/09/02 03:24:32  dmw
 // added = operator for TriSurface
 //
