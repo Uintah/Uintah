@@ -330,8 +330,12 @@ void MPMICE::scheduleInterpolatePressCCToPressNC(SchedulerP& sched,
   
   Task* t=scinew Task("MPMICE::interpolatePressCCToPressNC",
                     this, &MPMICE::interpolatePressCCToPressNC);
-  
-  t->requires(Task::NewDW,Ilb->press_CCLabel, press_matl,Ghost::AroundCells, 1);
+
+  Ghost::GhostType  gac = Ghost::AroundCells;
+/*`==========TESTING==========*/
+   t->requires(Task::NewDW,Ilb->press_CCLabel,       press_matl, gac, 1);
+// t->requires(Task::NewDW,Ilb->press_equil_CCLabel, press_matl, gac, 1);
+/*`==========TESTING==========*/
   t->computes(MIlb->press_NCLabel, press_matl);
   
   sched->addTask(t, patches, matls);
@@ -704,7 +708,11 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
     constCCVariable<double> pressCC;
     NCVariable<double> pressNC;
 
-    new_dw->get(pressCC, Ilb->press_CCLabel, 0, patch,Ghost::AroundCells, 1);
+    Ghost::GhostType  gac = Ghost::AroundCells;
+/*`==========TESTING==========*/
+    new_dw->get(pressCC, Ilb->press_CCLabel,       0, patch, gac, 1);
+//  new_dw->get(pressCC, Ilb->press_equil_CCLabel, 0, patch, gac, 1);
+/*`==========TESTING==========*/
     new_dw->allocate(pressNC, MIlb->press_NCLabel, 0, patch);
     pressNC.initialize(0.0);
     
@@ -1489,6 +1497,10 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        delPress = (A - vol_frac_not_close_packed - B)/C;
 
        press_new[c] += delPress;
+
+       if(press_new[c] < convergence_crit ){
+         press_new[c] = fabs(delPress);
+       }
 
        //__________________________________
        // backout rho_micro_CC at this new pressure
