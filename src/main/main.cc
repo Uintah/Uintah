@@ -58,7 +58,7 @@ using std::endl;
 
 // This needs to be synced with the contents of
 // SCIRun/doc/edition.xml and Dataflow/GUI/NetworkEditor.tcl
-#define VERSION "1.20.1"                         
+#define VERSION "1.20.2"
 
 using namespace SCIRun;
 
