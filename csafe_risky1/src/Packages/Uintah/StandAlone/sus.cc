@@ -99,10 +99,11 @@ int main(int argc, char** argv)
     /*
      * Default values
      */
-    bool do_mpm=false;
-    bool do_arches=false;
-    bool do_ice=false;
-    bool numThreads = 0;
+    bool   do_mpm=false;
+    bool   do_arches=false;
+    bool   do_ice=false;
+
+    int    numThreads = 0;
     string filename;
     string scheduler;
     string loadbalancer;
@@ -171,12 +172,6 @@ int main(int argc, char** argv)
     if(do_ice && do_arches){
 	usage( "ICE and Arches do not work together", "", argv[0]);
     }
-    if(do_ice && numThreads>0){
-	usage( "ICE doesn't support threads yet", "", argv[0]);
-    }
-    if(do_arches && numThreads>0){
-	usage( "Arches doesn't do threads yet", "", argv[0]);
-    }
 
     if(!(do_ice || do_arches || do_mpm)){
 	usage( "You need to specify -arches, -ice, or -mpm", "", argv[0]);
@@ -196,17 +191,8 @@ int main(int argc, char** argv)
 	// Connect a MPM module if applicable
 	MPMInterface* mpm = 0;
 	if(do_mpm){
-
-	    if(numThreads == 0){
-		mpm = scinew MPM::SerialMPM(world);
-	    } else {
-#ifdef WONT_COMPILE_YET
-		mpm = scinew ThreadedMPM();
-#else
-		mpm = 0;
-#endif
-	    }
-	    sim->attachPort("mpm", mpm);
+	  mpm = scinew MPM::SerialMPM(world);
+	  sim->attachPort("mpm", mpm);
 	}
 
 	// Connect a CFD module if applicable
@@ -253,6 +239,11 @@ int main(int argc, char** argv)
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
 	} else if(scheduler == "MixedScheduler"){
+	   if( numThreads > 0 ){
+	     if( Parallel::getMaxThreads() == 1 ){
+	       Parallel::setMaxThreads( numThreads );
+	     }
+	   }
 	   MixedScheduler* sched =
 	      scinew MixedScheduler(world, output);
 	   sim->attachPort("scheduler", sched);
@@ -291,22 +282,16 @@ int main(int argc, char** argv)
 	cerr << "Caught exception: " << e.message() << '\n';
 	if(e.stackTrace())
 	   cerr << "Stack trace: " << e.stackTrace() << '\n';
-	/*
 	Parallel::finalizeManager(Parallel::Abort);
 	abort();
-	*/
     } catch (std::exception e){
         cerr << "Caught std exception: " << e.what() << '\n';
-	/*
 	Parallel::finalizeManager(Parallel::Abort);
 	abort();       
-	*/
     } catch(...){
 	cerr << "Caught unknown exception\n";
-	/*
 	Parallel::finalizeManager(Parallel::Abort);
 	abort();
-	*/
     }
 
     /*
@@ -317,6 +302,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.25.2.3  2000/10/17 19:44:05  dav
+// mixed scheduler updates
+//
 // Revision 1.25.2.2  2000/10/10 05:28:01  sparker
 // Added support for NullScheduler (used for profiling taskgraph overhead)
 //
