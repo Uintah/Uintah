@@ -44,6 +44,7 @@ public:
    Data *end() { return &((*this)(dim1()-1,dim2()-1))+1; }
     
   FData2d() : Array2<Data>() {}
+  FData2d(int) : Array2<Data>() {} //default var sgi bug workaround.
   FData2d(const FData2d& data) { Array2<Data>::copy(data); }
   virtual ~FData2d();
   

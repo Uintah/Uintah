@@ -320,6 +320,7 @@ DynamicLoader::create_cc(const CompileInfo &info, ostream &serr)
     ++iter;
   }
 
+
   // generate other includes
   iter = info.includes_.begin();
   while (iter != info.includes_.end()) { 
@@ -340,7 +341,6 @@ DynamicLoader::create_cc(const CompileInfo &info, ostream &serr)
     }
     ++nsiter;
   }
-
 
   fstr << endl;
 
