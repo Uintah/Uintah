@@ -247,23 +247,26 @@ Camera::updatePosition( Stealth & stealth,
     double time = hit.min_t;
 
     // I want to stay this far from the ground:
-    double height_off_ground = 100;
+    double height_off_ground = 50;
 
 
     if( time < MAXDOUBLE ) // Ie: ray hit the ground
       {
 	double gravity = stealth.getGravityForce();
 
-	if( time > height_off_ground )
+	if( ( time > height_off_ground ) &&
+	    fabs(time - height_off_ground) > gravity )
 	  {
+	    cout << "going down: time: " << time << "\n";
 	    // Move downward
 	    eye    -= up * gravity;
 	    lookat -= up * gravity;
 	  }
 	else if( time < height_off_ground ) 
 	  { // move upwards to maintain constant distance from ground
-	    eye(2)    += height_off_ground - time;
-	    lookat(2) += height_off_ground - time;
+	    eye    += up * gravity;
+	    lookat += up * gravity;
+	    cout << "going up: time: " << time << "\n";
 	  }
       }
   }
