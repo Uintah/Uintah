@@ -374,6 +374,12 @@ void NetworkEditor::save_network(const clString& filename)
     out << "\n";
     out << "::netedit dontschedule\n";
     out << "\n";
+    out << "######################\n";
+    out << "# These commands generated automatically, DO NOT REMOVE!\n";
+    out << "puts \"Sorry, PSE files may no longer be sourced,\"\n";
+    out << "puts \"please use \'loadfile\' instead \"\n";
+    out << "return\n";
+    out << "######################\n";
     net->read_lock();
 
     // Added by Mohamed Dekhil for saving extra information
@@ -715,6 +721,10 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.14  2000/08/25 17:40:51  nbenson
+// Modified save_network() member function as part of module-loading bug
+// fix.  See /PSECore/GUI/NetworkEditor.tcl for more info.
+//
 // Revision 1.13  2000/06/07 00:02:32  moulding
 // removed the package maker, ane added the module maker
 //
