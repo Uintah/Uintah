@@ -92,7 +92,10 @@ proc addLabeledFrame { w text } {
     set frame $w.[string tolower [join $text ""]]
     iwidgets::labeledframe $frame -labelpos nw -labeltext $text
     pack $frame -side top -fill x -expand 0 -pady 0 -ipady 0
-    return [$frame childsite]
+    set frame [$frame childsite]
+#    frame $frame
+#    pack $frame -expand 1 -fill both
+    return $frame
 }
 
 proc displayRadios { w var text } {
@@ -121,6 +124,12 @@ proc labeledSlider { w text var from to res {width 13}} {
     return $frame.scale
 }
 
+proc setVars { tovar name1 name2 op} {
+    upvar \#0 $name1 var
+    setGlobal $tovar $var
+    return 1
+}
+
 
 itcl_class SCIRun_Visualization_GenAxes {
     inherit Module
@@ -132,8 +141,8 @@ itcl_class SCIRun_Visualization_GenAxes {
     method set_defaults {} {
 	setGlobal $this-precision  "3"
 	setGlobal $this-squash  "0.7"
-	setGlobal $this-valuerez  "0.25"
-	setGlobal $this-labelrez "0.5"
+	setGlobal $this-valuerez  "72"
+	setGlobal $this-labelrez "72"
 	createDefaultPlaneAxisVariables $this-Plane-01-0-Axis
 	createDefaultPlaneAxisVariables $this-Plane-01-1-Axis
 	createDefaultPlaneAxisVariables $this-Plane-02-0-Axis
@@ -193,16 +202,221 @@ itcl_class SCIRun_Visualization_GenAxes {
 	setGlobal $varPrefix-valuesize		"3"	
     }
 
+    method linkVars { allaxes args } {
+	set fromPre "[modname]-all-[join [join $allaxes ""] ""]"
+	createDefaultPlaneAxisVariables $fromPre
+	foreach varName $args {
+	    foreach axes $allaxes  {
+		foreach axis $axes {
+		    set planeName [join "Plane-$axes" ""]
+		    set axisName [join "$axis-Axis" ""]
+		    set toVar "$this-$planeName-$axisName-$varName"
+		    set fromVar "$fromPre-$varName"
+		    global $toVar $fromVar
+		    set command "trace variable $fromVar w \"setVars $toVar\""
+		    uplevel \#0 $command
+		}
+	    }
+	}
+	return $fromPre
+    }
 
-    method build_plane_ui { w axes { text "" }} {
 
-	set tab [$w.tabs add -label "[axisName $axes] Plane"]
+    method build_all_tab { tabs } {
+
+	set fromPre [linkVars {"0 1" "0 2" "1 2"} lines divisions percent absolute offset range-frist range-second min-percent max-percent min-absolute max-absolute minplane maxplane lines minticks maxticks minlabel maxlabel minvalue maxvalue width tickangle ticktilt labelangle lableheight ticksize valuesquash valuesize]
+
+	set tab [$tabs add -label "All"]
+	set tabframe $tab.frame
+	frame $tabframe
+	pack $tabframe -expand 1 -fill both
+	
+	build_plane_dir_ui $tabframe $fromPre "0 1 2" "0 1 2"
+
+    }
+
+
+
+    method build_plane_dir_ui { f varPrefix axes axis } {
+	setGlobal $varPrefix-text \
+	    "[axisName $axes] Plane [axisName $axis] Axis"
+	
+	trace variable $varPrefix-percent w \
+	    "updatedPercentage $varPrefix-range-first $varPrefix-range-second $varPrefix-absolute 0"
+	
+	
+	trace variable $varPrefix-percent w \
+	    "updatedPercentage2 $varPrefix-divisions"
+	
+	trace variable $varPrefix-divisions w \
+	    "updatedPercentage2 $varPrefix-percent"
+	
+	
+	trace variable $varPrefix-absolute w \
+	    "updatedAbsolute $varPrefix-range-first $varPrefix-range-second $varPrefix-percent 0"
+	
+	trace variable $varPrefix-range-first w \
+	    "updatedRangeFirst $varPrefix-range-second $varPrefix-absolute $varPrefix-percent 0"
+	
+	trace variable $varPrefix-range-second w \
+	    "updatedRangeSecond $varPrefix-range-first $varPrefix-absolute $varPrefix-percent 0"
+	
+	
+	set title "[axisName $axis] Axis Intervals"
+	set Frame [addLabeledFrame $f $title]
+	set Frame1 $Frame
+	
+	labeledSlider $Frame "Total \#:" $varPrefix-divisions 0 100 0.5 7
+	
+	set frame $Frame.end
+	frame $frame
+	pack $frame -side top -expand 1 -fill x
+	label $frame.label -anchor w -text "Interval: " -width 7
+	pack $frame.label -side left -expand 0 -fill none
+	
+	scale $frame.scale -orient horizontal -from 0 \
+	    -to 100 -showvalue 0 -resolution 0.001 \
+	    -variable $varPrefix-percent
+	
+	entry $frame.percent -width 4 -justify right \
+	    -text $varPrefix-percent
+	label $frame.label2 -text "% = " -width 4
+	
+	entry $frame.absolute -width 7 -justify right \
+	    -text $varPrefix-absolute
+	pack $frame.absolute $frame.label2 $frame.percent \
+	    -side right -expand 0
+	pack $frame.scale  -side left -expand 1 -fill x
+	
+	set frame $Frame.offset
+	frame $frame
+	checkbutton $frame.offset -variable $varPrefix-offset \
+	    -text "Offset Intervals from Range Minimum" 
+	pack $frame.offset -side left -expand 0 -fill none
+	pack $frame -side top -expand 1 -fill x
+	
+	
+	#######################################
+	
+	trace variable $varPrefix-min-percent w "updatedPercentage $varPrefix-range-first $varPrefix-range-second $varPrefix-min-absolute 1"
+	
+	trace variable $varPrefix-max-percent w "updatedPercentage $varPrefix-range-first $varPrefix-range-second $varPrefix-max-absolute 1"
+	
+	trace variable $varPrefix-min-absolute w "updatedAbsolute $varPrefix-range-first $varPrefix-range-second $varPrefix-min-percent 1"
+	
+	trace variable $varPrefix-max-absolute w "updatedAbsolute $varPrefix-range-first $varPrefix-range-second $varPrefix-max-percent 1"
+	
+	set Frame [addLabeledFrame $f "[axisName $axis] Variable Range"]
+	set Frame2 $Frame
+	
+	set frame $Frame.begin
+	frame $frame
+	pack $frame -expand 1 -fill x
+	label $frame.label -text "Min: " -anchor w -width 4
+	pack $frame.label -side left -expand 0 -fill none
+	
+	scale $frame.scale -orient horizontal -from -100 \
+	    -to 100 -showvalue 0 -resolution 1 \
+	    -variable $varPrefix-min-percent
+	
+	entry $frame.percent -width 4 -text $varPrefix-min-percent \
+	    -justify right
+	label $frame.label2 -text "% = " -width 4
+	
+	entry $frame.absolute -width 7 -text $varPrefix-min-absolute \
+	    -justify right
+	pack $frame.absolute $frame.label2 $frame.percent \
+	    -side right -expand 0
+	pack $frame.scale  -side left -expand 1 -fill x
+	
+	set frame $Frame.end
+	frame $frame
+	pack $frame -expand 1 -fill x
+	label $frame.label -text "Max: " -anchor w -width 4
+	pack $frame.label -side left -expand 0 -fill none
+	
+	scale $frame.scale -orient horizontal -from 0 \
+	    -to 200 -showvalue 0 -resolution 1 \
+	    -variable $varPrefix-max-percent
+	
+	entry $frame.percent -width 4 -text $varPrefix-max-percent \
+	    -justify right
+	label $frame.label2 -text "% = " -width 4
+	
+	entry $frame.absolute -width 7 -text $varPrefix-max-absolute \
+	    -justify right
+	pack $frame.absolute $frame.label2 $frame.percent \
+	    -side right -expand 0
+	pack $frame.scale  -side left -expand 1 -fill x
+	
+	
+	#######################################
+	update idletasks
+	
+	set Frame [addLabeledFrame $f "Display Options - (Click to Hide)"]
+	update idletasks
+	set Hidden [join [lrange [split $Frame .] 0 end-1] .]
+	button $f.but -text "Show Display Options" -command "showOptions $this"
+	bind $Hidden.label <ButtonRelease> "hideOptions $this"
+	global $this-displayFrames $this-displayButtons
+	lappend $this-displayFrames $Hidden
+	lappend $this-displayButtons $f.but
+
+	pack forget $Hidden; 
+	pack $f.but -side top -expand 0 -pady 0 -ipady 0;
+
+	set frame $Frame.text
+	frame $frame
+	pack $frame -side top -expand 1 -fill x
+	label $frame.label -anchor w -text "Label Text: " -width 13
+	pack $frame.label -side left -expand 0
+	entry $frame.entry -text $varPrefix-text -justify right
+	pack $frame.entry -side left -expand 1 -fill x
+	
+	
+	#	    displayRadios $Frame $varPrefix-minplane "Min Plane"
+	#	    displayRadios $Frame $varPrefix-maxplane "Max Plane"
+	
+	displayRadios $Frame $varPrefix-lines "Lines"
+	displayRadios $Frame $varPrefix-minticks "Min Ticks"
+	displayRadios $Frame $varPrefix-maxticks "Max Ticks"
+	displayRadios $Frame $varPrefix-minlabel "Min Label"
+	displayRadios $Frame $varPrefix-maxlabel "Max Label"
+	displayRadios $Frame $varPrefix-minvalue "Min Values"
+	displayRadios $Frame $varPrefix-maxvalue "Max Values"
+	
+	
+	labeledSlider $Frame "Line Width:" $varPrefix-width 0 10 0.1
+	labeledSlider $Frame "Tick Angle:" $varPrefix-tickangle 0 360 1
+	labeledSlider $Frame "Tick Tilt:" $varPrefix-ticktilt -90 90 1
+	labeledSlider $Frame "Tick Size:" $varPrefix-ticksize 0 25 0.5
+	labeledSlider $Frame "Label Angle:" $varPrefix-labelangle 0 360 1
+	labeledSlider $Frame "Label Size:" $varPrefix-labelheight 0 50 0.1
+	labeledSlider $Frame "Values Size:" $varPrefix-valuesize 0 30 0.1
+	labeledSlider $Frame "Values Squash:" $varPrefix-valuesquash 0 2 0.1
+	
+	update idletasks
+	
+    }
+    
+
+    method build_plane_tab { tabs axes { text "" }} {
+
+	set tab [$tabs add -label "[axisName $axes] Plane"]
 	set tabframe $tab.frame
 	frame $tabframe
 	pack $tabframe -expand 1 -fill both
 	iwidgets::tabnotebook $tabframe.tabs -width 330 -raiseselect true \
 	    -tabpos n -backdrop gray -equaltabs 0 -bevelamount 5
 	pack $tabframe.tabs -expand 1 -fill both
+
+	set fromPre [linkVars [list $axes] lines divisions percent absolute offset range-frist range-second min-percent max-percent min-absolute max-absolute minplane maxplane lines minticks maxticks minlabel maxlabel minvalue maxvalue width tickangle ticktilt labelangle lableheight ticksize valuesquash valuesize]
+
+	set frame [$tabframe.tabs add -label "Both"].frame
+	frame $frame
+	pack $frame -expand 1 -fill both
+
+	build_plane_dir_ui $frame $fromPre $axes $axes
 
 	foreach axis $axes {	   
 	    set tab [$tabframe.tabs add -label "[axisName $axis] Axis $text"]
@@ -216,170 +430,14 @@ itcl_class SCIRun_Visualization_GenAxes {
 	    set axisName [join "$axis-Axis" ""]
 	    set varPrefix "$this-$planeName-$axisName"
 	    
-	    setGlobal $varPrefix-text \
-		"[axisName $axes] Plane [axisName $axis] Axis"
-#######################################
-
-	    trace variable $varPrefix-percent w \
-		"updatedPercentage $varPrefix-range-first $varPrefix-range-second $varPrefix-absolute 0"
-
-
-	    trace variable $varPrefix-percent w \
-		"updatedPercentage2 $varPrefix-divisions"
-
-	    trace variable $varPrefix-divisions w \
-		"updatedPercentage2 $varPrefix-percent"
-
-
-	    trace variable $varPrefix-absolute w \
-		"updatedAbsolute $varPrefix-range-first $varPrefix-range-second $varPrefix-percent 0"
-
-	    trace variable $varPrefix-range-first w \
-		"updatedRangeFirst $varPrefix-range-second $varPrefix-absolute $varPrefix-percent 0"
-
-	    trace variable $varPrefix-range-second w \
-		"updatedRangeSecond $varPrefix-range-first $varPrefix-absolute $varPrefix-percent 0"
-
-
-	    set title "[axisName $axis] Axis Intervals"
-	    set Frame [addLabeledFrame $f $title]
-
-	    labeledSlider $Frame "Total \#:" $varPrefix-divisions 0 100 0.5 7
-
-	    set frame $Frame.end
-	    frame $frame
-	    pack $frame -side top -expand 1 -fill x
-	    label $frame.label -anchor w -text "Interval: " -width 7
-	    pack $frame.label -side left -expand 0 -fill none
-
-	    scale $frame.scale -orient horizontal -from 0 \
-		-to 100 -showvalue 0 -resolution 0.001 \
-		-variable $varPrefix-percent
-	    
-	    entry $frame.percent -width 4 -justify right \
-		-text $varPrefix-percent
-	    label $frame.label2 -text "% = " -width 4
-
-	    entry $frame.absolute -width 7 -justify right \
-		-text $varPrefix-absolute
-	    pack $frame.absolute $frame.label2 $frame.percent \
-		-side right -expand 0
-	    pack $frame.scale  -side left -expand 1 -fill x
-
-	    set frame $Frame.offset
-	    frame $frame
-	    checkbutton $frame.offset -variable $varPrefix-offset \
-		-text "Offset Intervals from Range Minimum" 
-	    pack $frame.offset -side left -expand 0 -fill none
-	    pack $frame -side top -expand 1 -fill x
-
-
-#######################################
-
-	    trace variable $varPrefix-min-percent w "updatedPercentage $varPrefix-range-first $varPrefix-range-second $varPrefix-min-absolute 1"
-
-	    trace variable $varPrefix-max-percent w "updatedPercentage $varPrefix-range-first $varPrefix-range-second $varPrefix-max-absolute 1"
-	    
-	    trace variable $varPrefix-min-absolute w "updatedAbsolute $varPrefix-range-first $varPrefix-range-second $varPrefix-min-percent 1"
-
-	    trace variable $varPrefix-max-absolute w "updatedAbsolute $varPrefix-range-first $varPrefix-range-second $varPrefix-max-percent 1"
-
-	    set Frame [addLabeledFrame $f "[axisName $axis] Variable Range"]
-
-	    set frame $Frame.begin
-	    frame $frame
-	    pack $frame -expand 1 -fill x
-	    label $frame.label -text "Min: " -anchor w -width 4
-	    pack $frame.label -side left -expand 0 -fill none
-
-	    scale $frame.scale -orient horizontal -from -100 \
-		-to 100 -showvalue 0 -resolution 1 \
-		-variable $varPrefix-min-percent
-
-	    entry $frame.percent -width 4 -text $varPrefix-min-percent \
-		-justify right
-	    label $frame.label2 -text "% = " -width 4
-
-	    entry $frame.absolute -width 7 -text $varPrefix-min-absolute \
-		-justify right
-	    pack $frame.absolute $frame.label2 $frame.percent \
-		-side right -expand 0
-	    pack $frame.scale  -side left -expand 1 -fill x
-
-	    set frame $Frame.end
-	    frame $frame
-	    pack $frame -expand 1 -fill x
-	    label $frame.label -text "Max: " -anchor w -width 4
-	    pack $frame.label -side left -expand 0 -fill none
-
-	    scale $frame.scale -orient horizontal -from 0 \
-		-to 200 -showvalue 0 -resolution 1 \
-		-variable $varPrefix-max-percent
-
-	    entry $frame.percent -width 4 -text $varPrefix-max-percent \
-		-justify right
-	    label $frame.label2 -text "% = " -width 4
-
-	    entry $frame.absolute -width 7 -text $varPrefix-max-absolute \
-		-justify right
-	    pack $frame.absolute $frame.label2 $frame.percent \
-		-side right -expand 0
-	    pack $frame.scale  -side left -expand 1 -fill x
-
-
-#######################################
-
-	    set Frame [addLabeledFrame $f "Display Options"]
-
-	    set frame $Frame.text
-	    frame $frame
-	    pack $frame -side top -expand 1 -fill x
-	    label $frame.label -anchor w -text "Label Text: " -width 13
-	    pack $frame.label -side left -expand 0
-	    entry $frame.entry -text $varPrefix-text -justify right
-	    pack $frame.entry -side left -expand 1 -fill x
-	    
-	    
-#	    displayRadios $Frame $varPrefix-minplane "Min Plane"
-#	    displayRadios $Frame $varPrefix-maxplane "Max Plane"
-
-	    displayRadios $Frame $varPrefix-lines "Lines"
-	    displayRadios $Frame $varPrefix-minticks "Min Ticks"
-	    displayRadios $Frame $varPrefix-maxticks "Max Ticks"
-	    displayRadios $Frame $varPrefix-minlabel "Min Label"
-	    displayRadios $Frame $varPrefix-maxlabel "Max Label"
-	    displayRadios $Frame $varPrefix-minvalue "Min Values"
-	    displayRadios $Frame $varPrefix-maxvalue "Max Values"
-
-
-	    labeledSlider $Frame "Line Width:" $varPrefix-width 0 10 0.1
-	    labeledSlider $Frame "Tick Angle:" $varPrefix-tickangle 0 360 1
-	    labeledSlider $Frame "Tick Tilt:" $varPrefix-ticktilt -90 90 1
-	    labeledSlider $Frame "Tick Size:" $varPrefix-ticksize 0 25 0.5
-	    labeledSlider $Frame "Label Angle:" $varPrefix-labelangle 0 360 1
-	    labeledSlider $Frame "Label Size:" $varPrefix-labelheight 0 50 0.1
-	    labeledSlider $Frame "Values Size:" $varPrefix-valuesize 0 30 0.1
-	    labeledSlider $Frame "Values Squash:" $varPrefix-valuesquash 0 2 0.1
-
-	 
+	    build_plane_dir_ui $f $varPrefix $axes $axis
 	    
 	}
     }
 
-    method ui {} {
-        set w .ui[modname]
-        if {[winfo exists $w]} {
-            raise $w
-            return
-        }
-        toplevel $w
-
- 	iwidgets::tabnotebook $w.tabs -height 600 -raiseselect true -tabpos n \
-	    -backdrop gray -equaltabs 0 -bevelamount 5 -borderwidth 0
-	pack $w.tabs -expand 1 -fill both
-	set options [$w.tabs add -label "Fonts"]
+    method build_options_tab { tabs } {
+	set options [$tabs add -label "Fonts"]
 	pack $options -side top -expand 1 -fill both
-	$w.tabs view 0
 
 	set valueframe $options.valuefont
 	frame $valueframe -borderwidth 2 -relief groove
@@ -400,10 +458,9 @@ itcl_class SCIRun_Visualization_GenAxes {
 
 	labeledSlider $valueframe "Value Precision:" $this-precision 1 12 1 14
 	labeledSlider $valueframe "Value Squash:" $this-squash 0 2 .1 14
-	set rez [labeledSlider $valueframe "Value Resolution:" $this-valuerez 0.1 2 .01 14]
+	set rez [labeledSlider $valueframe "Value Resolution:" $this-valuerez 1 500 1 14]
 	bind $rez <ButtonRelease> "$this-c valueFontChanged"
 
-	
 	set labelframe $options.labelfont
 	frame $labelframe -borderwidth 2 -relief groove
 	pack $labelframe -side top -expand 0 -fill x
@@ -421,13 +478,12 @@ itcl_class SCIRun_Visualization_GenAxes {
 	$frame.menu config -takefocus 1 -highlightthickness 2 \
 	    -relief raised -bd 2 -anchor w
 
-	set rez [labeledSlider $labelframe "Label Resolution:" $this-labelrez 0.1 2 .01 14]
+	set rez [labeledSlider $labelframe "Label Resolution:" $this-labelrez 1 500 1 14]
 	bind $rez <Button> "$this-c labelFontChanged"
 
 	global SCIRUN_SRCDIR
 	set dir [file join $SCIRUN_SRCDIR Fonts]
 	set files [glob -nocomplain -dir $dir *.ttf]
-	puts "Files are $files"
 	set def 0
 	set i 0
 	foreach font [lsort $files] {
@@ -449,57 +505,73 @@ itcl_class SCIRun_Visualization_GenAxes {
 	    incr i
 	}
 
-	
-
 	if $i {
 	    $frame.menu.m invoke $def
 	    $frame2.menu.m invoke $def
 	}
 
-	#set major [$w.tabs add -label "Major"]
- 	#iwidgets::tabnotebook $major.tabs -raiseselect true -tabpos n \
-	#    -backdrop gray -equaltabs 0  -bevelamount 5 -borderwidth 0
-	#pack $major.tabs -expand 1 -fill both
-
-	build_plane_ui $w "0 1"
-	build_plane_ui $w "0 2"
-	build_plane_ui $w "1 2"
-
-#	$major.tabs view 0
-
-	$w.tabs view 1
+    }
 
 
-	# this sucks! if we create too many tabs for some reason we crash!
-	if 0 {
-	    set minor [$w.tabs add -label "Minor"]
-	    iwidgets::tabnotebook $minor.tabs -raiseselect true -tabpos n \
-		-backdrop gray -equaltabs 0 -bevelamount 5
-	    pack $minor.tabs -expand 1 -fill both
-	    
-	    build_plane_ui $minor "3 4"	    
-	    build_plane_ui $minor "3 5"
-	    build_plane_ui $minor "4 5"
-
-	    $minor.tabs view 0
-	}
 
 
-	    
-	makeSciButtonPanel $w $w $this
+    method ui {} {
+        set w .ui[modname]
+        if {[winfo exists $w]} {
+            raise $w
+            return
+        }
+        toplevel $w
 	moveToCursor $w
+
+ 	iwidgets::tabnotebook $w.tabs -height 600 -raiseselect true -tabpos n \
+	    -backdrop gray -equaltabs 0 -bevelamount 5 -borderwidth 0
+	pack $w.tabs -expand 1 -fill both
+
+
+	build_all_tab $w.tabs
+	build_plane_tab $w.tabs "0 1"
+	build_plane_tab $w.tabs "0 2"
+	build_plane_tab $w.tabs "1 2"
+	build_options_tab $w.tabs
+
+	$w.tabs view 0
+
+	makeSciButtonPanel $w $w $this
+
+    }
+}
+
+
+proc showOptions {this} {
+    global $this-displayFrames $this-displayButtons
+    foreach button [set $this-displayButtons] {
+	pack forget $button
     }
 
-    method labelEntry { w text var {width 0}} {
-	set e $w.$var
-	frame $e
-	label $e.label -just left -text "$text: "
-	entry $e.entry -just right -text $var
-	if $width { $e.entry configure -width $width }
-	pack $e.label -fill x -expand 1 -side left
-	pack $e.entry -fill none -expand 0 -side right
-	return $e
+    foreach frame [set $this-displayFrames] {
+	pack $frame -side top -fill x -expand 0 -pady 0 -ipady 0
     }
+    
+#    set w .ui[$this modname]
+#    set x [lindex [split [wm geometry $w] x] 0]
+#    wm geometry $w ${x}x800
+}
+
+
+proc hideOptions {this} {
+    global $this-displayFrames $this-displayButtons
+    foreach frame [set $this-displayFrames] {
+	pack forget $frame
+    }
+
+    foreach button [set $this-displayButtons] {
+	pack $button -side top -expand 0 -pady 0 -ipady 0
+    }
+#    set w .ui[$this modname]
+#    set x [lindex [split [wm geometry $w] x] 0]
+#    wm geometry $w ${x}x400
 
 }
+
 
