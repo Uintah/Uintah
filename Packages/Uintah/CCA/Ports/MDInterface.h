@@ -53,21 +53,17 @@ WARNING
       //////////
       // Insert Documentation Here:
       virtual void scheduleInitialize(const LevelP& level,
-				      SchedulerP&,
-				      DataWarehouseP&) = 0;
+				      SchedulerP&) = 0;
       
       //////////
       // Insert Documentation Here:
       virtual void scheduleComputeStableTimestep(const LevelP& level,
-						 SchedulerP&,
-						 DataWarehouseP&) = 0;
+						 SchedulerP&) = 0;
       
       //////////
       // Insert Documentation Here:
       virtual void scheduleTimeAdvance(double t, double dt,
-				       const LevelP& level, SchedulerP&,
-				       DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw) = 0;
+				       const LevelP& level, SchedulerP&) = 0;
    private:
       MDInterface(const MDInterface&);
       MDInterface& operator=(const MDInterface&);

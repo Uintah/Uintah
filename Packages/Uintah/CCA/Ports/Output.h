@@ -59,11 +59,14 @@ WARNING
       // problemSetup.
       virtual void restartSetup(Dir& restartFromDir, int timestep,
 				double time, bool removeOldDir) = 0;
+
+     virtual bool need_recompile(double time, double delt,
+				 const LevelP& level) = 0;
+
       //////////
       // Insert Documentation Here:
       virtual void finalizeTimestep(double t, double delt, const LevelP&,
-				    SchedulerP&,
-				    DataWarehouseP&) = 0;
+				    SchedulerP&) = 0;
 
       //////////
       // Insert Documentation Here:
@@ -77,7 +80,7 @@ WARNING
       // Returns true if the last timestep was one
       // in which data was output.
       virtual bool wasOutputTimestep() = 0;
-     
+
       //////////
       // Get the directory of the current time step for outputting info.
       virtual const std::string& getLastTimestepOutputLocation() const = 0;

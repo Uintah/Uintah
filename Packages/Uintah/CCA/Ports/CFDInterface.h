@@ -53,20 +53,17 @@ WARNING
       //////////
       // Insert Documentation Here:
       virtual void scheduleComputeStableTimestep(const LevelP& level,
-						 SchedulerP&,
-						 DataWarehouseP&) = 0;
+						 SchedulerP&) = 0;
       
       //////////
       // Insert Documentation Here:
       virtual void scheduleInitialize(const LevelP& level,
-				      SchedulerP&,
-				      DataWarehouseP&) = 0;
+				      SchedulerP&) = 0;
       
       //////////
       // Insert Documentation Here:
       virtual void scheduleTimeAdvance(double t, double dt,
-				       const LevelP& level, SchedulerP&,
-				       DataWarehouseP&, DataWarehouseP&) = 0;
+				       const LevelP& level, SchedulerP&) = 0;
 
    private:
       CFDInterface(const CFDInterface&);

@@ -46,10 +46,9 @@ WARNING
 			SimulationStateP& state) = 0;
       
       virtual void performAnalyze(
-				  const Patch* patch,
 				  SchedulerP&,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw) = 0;      
+				  const PatchSet* patches,
+				  const MaterialSet* matls) = 0;
    private:
    };
 } // End namespace Uintah

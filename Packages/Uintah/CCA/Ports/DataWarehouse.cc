@@ -10,23 +10,12 @@ using namespace SCIRun;
 using std::cerr;
 
 DataWarehouse::DataWarehouse(const ProcessorGroup* myworld, 
-			     int generation, 
-			     DataWarehouseP& parent_dw) :
-  d_myworld(myworld),
-  d_generation( generation ), d_parent(parent_dw)
+			     int generation)
+  : d_myworld(myworld), d_generation( generation )
 {
 }
 
 DataWarehouse::~DataWarehouse()
 {
-}
-
-DataWarehouseP
-DataWarehouse::getTop() const{
-  DataWarehouseP parent = d_parent;
-  //while (parent->d_parent) {
-   // parent = parent->d_parent;
-  //}
-  return parent;
 }
 

@@ -3,12 +3,14 @@
 #define UINTAH_HOMEBREW_LOADBALANCER_H
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
 
 namespace Uintah {
 
-class Patch;
-class ProcessorGroup;
-class TaskGraph;
+  class Patch;
+  class ProcessorGroup;
+  class DetailedTasks;
 
 /****************************************
 
@@ -39,19 +41,20 @@ WARNING
   
 ****************************************/
 
-    class LoadBalancer : public UintahParallelPort {
-    public:
-       LoadBalancer();
-       virtual ~LoadBalancer();
+  class LoadBalancer : public UintahParallelPort {
+  public:
+    LoadBalancer();
+    virtual ~LoadBalancer();
+    
+    virtual void assignResources(DetailedTasks& tg,
+				 const ProcessorGroup* resources) = 0;
+    virtual int getPatchwiseProcessorAssignment(const Patch* patch,
+						const ProcessorGroup* resources) = 0;
 
-       virtual void assignResources(TaskGraph& tg, const ProcessorGroup* resources) = 0;
-       virtual int getPatchwiseProcessorAssignment(const Patch* patch,
-						   const ProcessorGroup* resources) = 0;
-
-    private:
-       LoadBalancer(const LoadBalancer&);
-       LoadBalancer& operator=(const LoadBalancer&);
-    };
+  private:
+    LoadBalancer(const LoadBalancer&);
+    LoadBalancer& operator=(const LoadBalancer&);
+  };
 } // End namespace Uintah
     
 #endif
