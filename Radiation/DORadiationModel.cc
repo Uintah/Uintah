@@ -24,6 +24,7 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rordrtn_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/radarray_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/radcoef_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/radcoefthin_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/radcal_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdombc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdomsolve_fort.h>
@@ -85,8 +86,10 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
   lprobone = false;
   lprobtwo = false;
   lprobthree = false;
+
   lradcal = false;
   lambda = 1;
+  loptthin = false;
 
   fraction.resize(1,100);
   fraction.initialize(0.0);
@@ -105,8 +108,6 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
 
 void
 DORadiationModel::computeOrdinatesOPL() {
-
-  //  d_opl = 0.771429*d_xumax;
 
   //  if(lprobone==true){
     d_opl = 1.0*d_xumax; 
@@ -159,21 +160,34 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
     IntVector domLo = patch->getCellLowIndex();
     IntVector domHi = patch->getCellHighIndex();    
 
+  if (loptthin == false) {
     fort_radcoef(idxLo, idxHi, vars->temperature, 
 		 constvars->co2, constvars->h2o, constvars->cellType, ffield, 
 		 d_opl, constvars->sootFV, vars->ABSKG, vars->ESRCG,
 		 cellinfo->xx, cellinfo->yy, cellinfo->zz, fraction, 
 		 lprobone, lprobtwo, lprobthree, lambda, lradcal);
-    /*
-//<<<<<<< DORadiationModel.cc
-//=======
-    fort_radcoef(idxLo, idxHi, vars->temperature, 
-		 constvars->co2, constvars->h2o, constvars->cellType,
-		 ffield, d_opl,
-		 constvars->sootFV, vars->ABSKG, vars->ESRCG,
-		 cellinfo->xx, cellinfo->yy, cellinfo->zz);
-//>>>>>>> 1.3
-    */
+  }
+
+   rgamma.resize(1,29);
+   sd15.resize(1,481);
+   sd.resize(1,2257);
+   sd7.resize(1,49);
+   sd3.resize(1,97);
+
+   rgamma.initialize(0.0);
+   sd15.initialize(0.0);
+   sd.initialize(0.0);
+   sd7.initialize(0.0);
+   sd3.initialize(0.0);
+
+  if (loptthin == true) {
+
+   fort_radarray(rgamma, sd15, sd, sd7, sd3);
+
+   fort_radcoefthin(idxLo, idxHi, vars->ABSKG, vars->ESRCG, constvars->cellType, ffield, constvars->co2, constvars->h2o, constvars->sootFV, vars->temperature, fraction, lambda, rgamma, sd15, sd, sd7, sd3, d_opl);
+
+  }  
+
 }
 
 //***************************************************************************
