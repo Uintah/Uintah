@@ -60,7 +60,27 @@
     <Grid>
     <BoundaryConditions>
       <Face side = "x-">
+<!-- 3D
          <BCType id = "all" var = "symmetry" label = "Symmetric">
+        </BCType>
+-->
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f"     var = "Dirichlet">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Dirichlet">
+                              <value> 0.0</value>
         </BCType>
       </Face>
       <Face side = "x+">
