@@ -302,6 +302,7 @@ void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
                    this,&PassiveScalar::computeModelSources, mi);
                      
   Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gn = Ghost::None;
   t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
   t->modifies(d_scalar->scalar_source_CCLabel);
@@ -313,7 +314,10 @@ void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
   }
   // compute sum(scalar_f * mass)
   if(d_test_conservation){
-    t->requires(Task::OldDW, mi->density_CCLabel, Ghost::None);
+    t->requires(Task::OldDW, mi->density_CCLabel, gn,0);
+    t->requires(Task::OldDW, lb->uvel_FCMELabel,  gn,0);    
+    t->requires(Task::OldDW, lb->vvel_FCMELabel,  gn,0);    
+    t->requires(Task::OldDW, lb->wvel_FCMELabel,  gn,0);    
     t->computes(Slb->sum_scalar_fLabel);
   }
   sched->addTask(t, level->eachPatch(), d_matl_set);
@@ -362,20 +366,76 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
 
     //__________________________________
     //  conservation of f test
+    // - ignore the first timestep, vel_FC isn't computed
+    //   at this point in the algorithm on the first timestep
     double sum_mass_f = 0.0;
-    if(d_test_conservation) {
+    int ts = d_dataArchiver->getCurrentTimestep();
+    
+    if(d_test_conservation && ts > 1 ) {
+    
       constCCVariable<double> rho_CC_old;
       old_dw->get(rho_CC_old, mi->density_CCLabel, indx, patch, gn, 0);
      
       Vector dx = patch->dCell();
       double cellVol = dx.x()*dx.y()*dx.z();
+      double sum_mass_f_interior = 0;
       
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
-        sum_mass_f += rho_CC_old[c]* cellVol *( f_old[c] + f_src[c] );
+        sum_mass_f_interior += rho_CC_old[c]*cellVol*f_old[c];
       }
-      // cout << " sum_mass_F " << sum_mass_f << endl;
-      new_dw->put(max_vartype(sum_mass_f), Slb->sum_scalar_fLabel);  
+      
+      //__________________________________
+      // sum the fluxes crossing the boundaries of the
+      // computational domain
+      double sum_mass_f_fluxes = 0.0;
+      constSFCXVariable<double> uvel_FC;
+      constSFCYVariable<double> vvel_FC;
+      constSFCZVariable<double> wvel_FC;
+       
+      old_dw->get(uvel_FC, lb->uvel_FCMELabel, indx,patch,gn, 0);
+      old_dw->get(vvel_FC, lb->vvel_FCMELabel, indx,patch,gn, 0);
+      old_dw->get(wvel_FC, lb->wvel_FCMELabel, indx,patch,gn, 0);
+      vector<Patch::FaceType>::const_iterator iter;
+  
+      for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
+        Patch::FaceType face = *iter;
+        
+        IntVector axes = patch->faceAxes(face);
+        int P_dir = axes[0];  // principal direction
+        double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+        
+        if (face == Patch::xminus || face == Patch::xplus) {    // X faces
+          for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+            !iter.done();iter++) {
+            IntVector c = *iter;
+            sum_mass_f_fluxes -= plus_minus_one*uvel_FC[c]*rho_CC_old[c]*cellVol*f_old[c];
+          }
+        }
+        if (face == Patch::yminus || face == Patch::yplus) {    // Y faces
+          for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+            !iter.done();iter++) {
+            IntVector c = *iter;
+            sum_mass_f_fluxes -= plus_minus_one*vvel_FC[c]*rho_CC_old[c]*cellVol*f_old[c];
+          }
+        }
+        if (face == Patch::zminus || face == Patch::zplus) {    // Z faces
+          for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+            !iter.done();iter++) {
+            IntVector c = *iter;
+            sum_mass_f_fluxes -= plus_minus_one*wvel_FC[c]*rho_CC_old[c]*cellVol*f_old[c];
+          }
+        }
+      }
+      sum_mass_f = sum_mass_f_interior + delT * sum_mass_f_fluxes;
+      
+      //cout<< " sum_mass_f: interior " << sum_mass_f_interior
+      //    << " faces " << sum_mass_f_fluxes
+      //    << " sum " << sum_mass_f << endl;
+    }
+    if(d_test_conservation) {
+      new_dw->put(sum_vartype(sum_mass_f), Slb->sum_scalar_fLabel);
     }
 
     //__________________________________
