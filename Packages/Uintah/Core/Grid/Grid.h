@@ -59,7 +59,7 @@ WARNING
     
     //////////
     // Adds a level to the grid.
-    void    addLevel(const LevelP& level);
+    Level* addLevel(const Point& anchor, const Vector& dcell);
     
     void performConsistencyCheck() const;
     void printStatistics() const;

@@ -377,6 +377,17 @@ WARNING
 			 const IntVector& highOffset,
 			 IntVector& low, IntVector& high) const;
 
+     /* Get overlapping patches on other levels. */
+     
+     void getFineLevelPatches(Level::selectType& finePatches) const
+     { getOtherLevelPatches(1, finePatches); }
+     
+     void getCoarseLevelPatches(Level::selectType& coarsePatches) const
+     { getOtherLevelPatches(-1, coarsePatches); } // likely only 1
+
+     void getOtherLevelPatches(int levelOffset, Level::selectType& patches)
+       const;
+     
      class Compare {
      public:
        inline bool operator()(const Patch* p1, const Patch* p2) const {
