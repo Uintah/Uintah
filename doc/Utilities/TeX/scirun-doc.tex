@@ -204,6 +204,12 @@
 % Mark up an xml attribute
 \newmucmd{xmlattrname}{texttt}
 
+% Alternate item commands inside a description environment
+\newcommand{\descitem}[1]{\item[#1]\latex{\mbox{}\\}}
+\newcommand{\menudesc}[1]{\item[\menu{#1}]\latex{\mbox{}\\}}
+\newcommand{\menuitemdesc}[1]{\item[\menuitem{#1}]\latex{\mbox{}\\}}
+\newcommand{\buttondesc}[1]{\item[\button{#1}]\latex{\mbox{}\\}}
+
 % Sci Urls ========================================= 
 
 % www style urls.
