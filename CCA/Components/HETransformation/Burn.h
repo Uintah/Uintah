@@ -52,7 +52,8 @@ WARNING
 				   double materialTemp,
 				   double &burnedMass,
 				   double &releasedHeat,
-				   double &delT) = 0;
+				   double &delT,
+				   double &Surface_or_Volume) = 0;
 
        protected:
 	  bool d_burnable;
@@ -62,6 +63,7 @@ WARNING
 } // End namespace Uintah
 
 #endif // __Burn_H__
+
 
 
 

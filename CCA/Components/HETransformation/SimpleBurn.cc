@@ -28,15 +28,16 @@ SimpleBurn::~SimpleBurn()
 }
 
 void SimpleBurn::computeBurn(double gasTemperature,
-			       double gasPressure,
-			       double materialMass,
-			       double materialTemperature,
-			       double &burnedMass,
-			       double &releasedHeat,
-			       double &delT)
+			     double gasPressure,
+			     double materialMass,
+			     double materialTemperature,
+			     double &burnedMass,
+			     double &releasedHeat,
+			     double &delT,
+			     double &surfaceArea)
 {
   if ((gasTemperature > thresholdTemp) && (gasPressure > thresholdPressure)) {
-      burnedMass = BurnCoeff * pow(gasPressure,0.778);
+      burnedMass = surfaceArea * BurnCoeff * pow(gasPressure,0.778);
   }
   else {
       burnedMass = 0;

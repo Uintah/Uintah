@@ -56,7 +56,8 @@ WARNING
 		       double materialTemperature,
 		       double &burnedMass,
 		       double &releasedHeat,
-		       double &delT);
+		       double &delT,
+		       double &surfaceArea);
 
 
     };
