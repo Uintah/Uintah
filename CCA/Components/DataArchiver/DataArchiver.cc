@@ -820,7 +820,8 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
 	d_nextCheckpointTimestep += d_checkpointTimestepInterval;
     }
     
-    index->release();
+    if (d_writeMeta)
+      index->release();
   } else {
     d_wasCheckpointTimestep=false;
   }
