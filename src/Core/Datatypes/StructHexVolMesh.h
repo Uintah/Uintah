@@ -50,6 +50,7 @@
 
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Containers/Array3.h>
+#include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
 
 
@@ -78,6 +79,11 @@ public:
   //! get the mesh statistics
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
+
+  void set_dim(Array1<unsigned int> dims) {
+    LatVolMesh::set_dim(dims);
+    points_.newsize(dims[0], dims[1], dims[2]);
+  }
 
   //! get the center point (in object space) of an element
   void get_center(Point &, const Node::index_type &) const;

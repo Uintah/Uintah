@@ -47,6 +47,7 @@
 
 #include <Core/Datatypes/ImageMesh.h>
 #include <Core/Containers/Array2.h>
+#include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
 
 namespace SCIRun {
@@ -65,6 +66,12 @@ public:
   //! get the mesh statistics
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
+
+  void set_dim(Array1<unsigned int> dims) {
+    ImageMesh::set_dim(dims);
+    points_.newsize(dims[0], dims[1]);
+    normals_.newsize(dims[0], dims[1]);
+  }
 
   //! get the child elements of the given index
   void get_nodes(Node::array_type &, Edge::index_type) const;
