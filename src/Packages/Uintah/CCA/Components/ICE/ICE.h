@@ -58,12 +58,12 @@ using namespace SCIRun;
                                          const MaterialSubset* mpm_matls, 
                                          const MaterialSet* all_matls);    
                                               
-      void scheduleComputeFaceCenteredVelocities(SchedulerP&, 
-                                                const PatchSet*,
-                                                const MaterialSubset*,
-                                                const MaterialSubset*,
-                                                const MaterialSubset*,
-                                                const MaterialSet*);
+      void scheduleComputeFC_vel_Temp(SchedulerP&, 
+                                      const PatchSet*,                
+                                      const MaterialSubset*,          
+                                      const MaterialSubset*,          
+                                      const MaterialSubset*,          
+                                      const MaterialSet*);            
       
       void scheduleAddExchangeContributionToFCVel(SchedulerP&, 
                                             const PatchSet*,
@@ -150,12 +150,18 @@ using namespace SCIRun;
                                           DataWarehouse*, 
                                           DataWarehouse*);
       
-      void computeFaceCenteredVelocities(const ProcessorGroup*, 
-                                         const PatchSubset* patch,
-                                         const MaterialSubset* matls,
-                                         DataWarehouse*,
-                                         DataWarehouse*);
-
+      void computeFC_vel_Temp(const ProcessorGroup*, 
+                              const PatchSubset* patch,              
+                              const MaterialSubset* matls,           
+                              DataWarehouse*,                        
+                              DataWarehouse*);  
+                              
+      template<class T> void computeTempFace(CellIterator it,
+                                            IntVector adj_offset,
+                                            constCCVariable<double>& rho_CC,
+                                            constCCVariable<double>& Temp_CC,
+                                            T& Temp_FC);
+                                       
       template<class T> void computeVelFace(int dir, CellIterator it,
                                        IntVector adj_offset,double dx,
                                        double delT, double gravity,
