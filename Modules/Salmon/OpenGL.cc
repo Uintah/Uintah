@@ -1280,9 +1280,9 @@ void OpenGL::listvisuals(TCLArgs& args)
     visuals.add(&vinfo[i]);
     scores.add(score);
   }
-  for(i=0;i<scores.size();i++){
-    for(int j=0;j<i-1;j++){
-      if(scores[j] < scores[j+1]){
+  for(i=0;i<scores.size()-1;i++){
+    for(int j=i+1;j<scores.size();j++){
+      if(scores[i] < scores[j]){
 	// Swap...
 	int tmp1=scores[i];
 	scores[i]=scores[j];
