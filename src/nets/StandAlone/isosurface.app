@@ -1235,7 +1235,7 @@ class IsoApp {
 	append connection "_to_$modB"
 	append connection "_p$portB"
 
-	block_pipe $connection $modA $portA $modB $portB $color
+	block_pipe $connection $modA $portA $modB $portB
     }
 
     method display_module_error {} {
