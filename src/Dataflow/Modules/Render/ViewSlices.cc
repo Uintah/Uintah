@@ -2322,7 +2322,7 @@ ViewSlices::send_mip_textures(SliceWindow &window)
     GeomHandle gobj = group;
     slice.do_unlock();
     if (gobjs_[name]) geom_oport_->delObj(gobjs_[name]);
-    gobjs_[name] = geom_oport_->addObj(gobj, name,slice_lock_);
+    gobjs_[name] = geom_oport_->addObj(gobj, name,&slice_lock_);
   }
   return value;
 }
@@ -2962,7 +2962,7 @@ ViewSlices::send_slice_textures(NrrdSlice &slice) {
   slice.do_unlock();
 
   if (gobjs_[name]) geom_oport_->delObj(gobjs_[name]);
-  gobjs_[name] = geom_oport_->addObj(gobj, name, slice_lock_);
+  gobjs_[name] = geom_oport_->addObj(gobj, name, &slice_lock_);
   return 1;
 }
 
