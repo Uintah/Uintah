@@ -322,7 +322,7 @@ void ArchesTable::setup()
   if(in){
     cerr << "Rest of file:\n";
     while(in)
-      cerr << in.get();
+      cerr << (char)in.get();
     cerr << '\n';
     throw InternalError("Data remaining in file after read\n");
   }
@@ -760,10 +760,10 @@ double ArchesTable::interpolate(int index, vector<double>& independents)
 {
   Dep* dep = deps[index];
   int ni = dep->axes.size();
-  ASSERT(ni < MAXINDEPENDENTS);
-  ASSERT(ni == static_cast<int>(independents.size()));
   if(dep->type == Dep::ConstantValue)
     return dep->constantValue;
+  ASSERT(ni < MAXINDEPENDENTS);
+  ASSERT(ni == static_cast<int>(independents.size()));
 
   double w[MAXINDEPENDENTS];
   long idx0[MAXINDEPENDENTS];
@@ -787,8 +787,17 @@ double ArchesTable::interpolate(int index, vector<double>& independents)
     } else {
       int l=0;
       int h=axis->weights.size()-1;
-      if(value < axis->weights[l] || value > axis->weights[h])
-        throw InternalError("Interpolate outside range of table");
+      if(value < axis->weights[l] || value > axis->weights[h]){
+        if(value < axis->weights[l] && value > axis->weights[l]-1.e-1)
+          value = axis->weights[l];
+        else if(value > axis->weights[h] && value < axis->weights[h]+1.e-1)
+          value = axis->weights[h];
+        else {
+          cerr.precision(17);
+          cerr << "value=" << value << ", low=" << axis->weights[l] << ", high=" << axis->weights[h] << "\n";
+          throw InternalError("Interpolate outside range of table");
+        }
+      }
       while(h > l+1){
         int m = (h+l)/2;
         if(value < axis->weights[m])
