@@ -109,7 +109,7 @@ void ParticleFieldExtractor::add_type(string &type_list,
   }
 }  
 
-void ParticleFieldExtractor::setVars(ArchiveHandle ar)
+bool ParticleFieldExtractor::setVars(ArchiveHandle ar)
 {
   string command;
   DataArchive& archive = *((*(ar.get_rep()))());
@@ -143,6 +143,7 @@ void ParticleFieldExtractor::setVars(ArchiveHandle ar)
   
   // get all of the NC and Particle Variables
   const TypeDescription *td;
+  bool found = false;
   for( int i = 0; i < (int)names.size(); i++ ){
     td = types[i];
     if(td->getType() ==  TypeDescription::ParticleVariable){
@@ -153,20 +154,27 @@ void ParticleFieldExtractor::setVars(ArchiveHandle ar)
       case TypeDescription::double_type:
       case TypeDescription::int_type:
         scalarVars.push_back(VarInfo(names[i], matls));
+	found = true;
 	break;
       case  TypeDescription::Vector:
         vectorVars.push_back(VarInfo(names[i], matls));
+	found = true;
 	break;
       case  TypeDescription::Matrix3:
 	tensorVars.push_back(VarInfo(names[i], matls));
+	found = true;
 	break;
       case  TypeDescription::Point:
         pointVars.push_back(VarInfo(names[i], matls));
+	found = true;
 	break;
       case TypeDescription::long64_type:
 	particleIDVar = VarInfo(names[i], matls);
+	found = true;
+	break;
       default:
 	cerr<<"Unknown particle type\n";
+	found = false;
       }// else { Tensor,Other}
     }
   }
@@ -183,6 +191,7 @@ void ParticleFieldExtractor::setVars(ArchiveHandle ar)
      gui->execute(id + " buildPMaterials " + to_string(num_materials));
      gui->execute(id + " buildVarList");    
   }
+  return found;
 }
 
 
@@ -374,9 +383,12 @@ void ParticleFieldExtractor::execute()
 	 gui->execute(id + " buildTopLevel");
        }
      }
-     cerr << "Calling setVars\n";
-     setVars( handle );
-     cerr << "done with setVars\n";
+     
+     if( !setVars( handle )){
+       warning("Cannot read any ParticleVariables, no action.");
+       return;
+     }
+
      archiveH = handle;
    }
    showVarsForMatls();
