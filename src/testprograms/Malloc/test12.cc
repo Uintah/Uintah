@@ -18,7 +18,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <strings.h>#
+#include <strings.h>
 #if defined(__sun)
 #include <string.h>
 #define bcopy(src,dest,n) memcpy(dest,src,n)
