@@ -183,8 +183,7 @@ public:
 
     void set_current_time(double time);
 
-    void saveall(const clString&, const clString& format);
-
+    void dump_objects(const clString&, const clString& format);
 };
 
 class RoeMouseMessage : public MessageBase {

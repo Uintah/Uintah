@@ -56,6 +56,8 @@ public:
 			   Hit& hit);
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+    bool saveobj(ostream& out, const clString& format,
+		 GeomSave* saveinfo);
     
     clString& getString(void) { return name;}
 };

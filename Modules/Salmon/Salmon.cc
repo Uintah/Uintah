@@ -40,7 +40,7 @@ Salmon::Salmon(const clString& id)
     // Create the input port
     add_iport(scinew GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
     default_matl=scinew Material(Color(.1,.1,.1), Color(.6,0,0),
-			      Color(.7,.7,.7), 10);
+			      Color(.7,.7,.7), 50);
     busy_bit=1;
     have_own_dispatch=1;
 
@@ -148,7 +148,7 @@ int Salmon::process_event(int block)
 	    for(int i=0;i<roe.size();i++){
 		Roe* r=roe[i];
 		if(r->id == rmsg->rid){
-		    r->current_renderer->dump_image(rmsg->filename);
+		    r->dump_objects(rmsg->filename, rmsg->format);
 		    break;
 		}
 	    }
@@ -359,6 +359,13 @@ SalmonMessage::SalmonMessage(const clString& rid, double tbeg, double tend,
 SalmonMessage::SalmonMessage(MessageTypes::MessageType type,
 			     const clString& rid, const clString& filename)
 : MessageBase(type), rid(rid), filename(filename)
+{
+}
+
+SalmonMessage::SalmonMessage(MessageTypes::MessageType type,
+			     const clString& rid, const clString& filename,
+			     const clString& format)
+: MessageBase(type), rid(rid), filename(filename), format(format)
 {
 }
 

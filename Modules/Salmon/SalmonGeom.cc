@@ -1,8 +1,18 @@
+
 #include <Geom/GeomOpenGL.h>
+#include <Malloc/Allocator.h>
 #include <Modules/Salmon/SalmonGeom.h>
 #include <Geom/BBoxCache.h>
 #include <iostream.h>
 #include <Modules/Salmon/Roe.h>
+
+Persistent* make_GeomSalmonItem()
+{
+    return scinew GeomSalmonItem;
+}
+
+PersistentTypeID GeomSalmonItem::type_id("GeomSalmonItem", "GeomObj",
+					 make_GeomSalmonItem);
 
 GeomSalmonPort::GeomSalmonPort(int no)
 :portno(no),msg_head(0),msg_tail(0)
@@ -18,7 +28,6 @@ GeomSalmonPort::~GeomSalmonPort()
 GeomSalmonItem::GeomSalmonItem()
 :child(0),lock(0)
 {
-    // probably shouldn't be called...
 }
 
 GeomSalmonItem::GeomSalmonItem(GeomObj* obj,const clString& nm, 
@@ -73,8 +82,29 @@ void GeomSalmonItem::intersect(const Ray& ray, Material* m,
     child->intersect(ray,m,hit);
 }
 
-void GeomSalmonItem::io(Piostream& pio)
+#define GEOMSALMONITEM_VERSION 1
+
+void GeomSalmonItem::io(Piostream& stream)
 {
-    cerr << "GeomSalmonItem::io not implemented!\n";
+
+    stream.begin_class("GeomSalmonItem", GEOMSALMONITEM_VERSION);
+    int have_lock;
+    if(stream.writing())
+	have_lock=lock?1:0;
+    Pio(stream, have_lock);
+    if(stream.reading())
+	if(have_lock)
+	    lock=new CrowdMonitor;
+	else
+	    lock=0;
+    Pio(stream, name);
+    Pio(stream, child);
+    stream.end_class();
+}
+
+bool GeomSalmonItem::saveobj(ostream& out, const clString& format,
+			     GeomSave* saveinfo)
+{
+    return child->saveobj(out, format, saveinfo);
 }
 

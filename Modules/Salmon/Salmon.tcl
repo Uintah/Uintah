@@ -31,10 +31,8 @@ itcl_class Roe {
     public salmon
     constructor {config} {
 	$salmon-c addroe $this
-	puts "addroe done."
 	set w .ui$this
 	toplevel $w
-	puts "toplevel done"
 	wm title $w "Roe"
 	wm iconname $w "Roe"
 	wm minsize $w 100 100
@@ -65,9 +63,7 @@ itcl_class Roe {
 	#
 	# Get the list of supported renderers for the pulldown
 	#
-	puts "calling listrenderers"
 	set r [$salmon-c listrenderers]
-	puts "listrenderers done"
 	
 	# OpenGL is the preferred renderer, X11 the next best.
 	# Otherwise just pick the first one for the default
@@ -117,9 +113,7 @@ itcl_class Roe {
 		$w.menu.spawn $w.menu.dialbox
 
 	# Create Dialbox and attach to it
-	puts "making dialbox"
 	Dialbox $w.dialbox "Salmon - Translate/Scale"
-	puts "dialbox made"
 	$w.dialbox unbounded_dial 0 "Translate X" 0.0 1.0 "$this translate x"
 	$w.dialbox unbounded_dial 2 "Translate Y" 0.0 1.0 "$this translate y" 
 	$w.dialbox unbounded_dial 4 "Translate Z" 0.0 1.0 "$this translate z"
@@ -135,8 +129,6 @@ itcl_class Roe {
 	$w.dialbox2 wrapped_dial 2 "Tilt" 0.0 0.0 360.0 1.0 "$this tilt"
 	$w.dialbox2 bounded_dial 3 "FOV" 0.0 0.0 180.0 1.0 "$this fov"
 
-	puts "done with dialboxes"
-	
 	frame $w.mframe
 	frame $w.mframe.f
 	pack $w.mframe -side bottom -fill x
@@ -174,8 +166,6 @@ itcl_class Roe {
 		-command "$this addMFrame $w"
 	pack $w.bframe.more -pady 2 -padx 2 -anchor se -side right
 
-	puts "making stuff..."
-	
 	set m $w.mframe.f
 	set r "$this-c redraw"
 	
@@ -203,15 +193,16 @@ itcl_class Roe {
 
 	set "$this-global-light" 1
 	set "$this-global-fog" 0
-	set "$this-global-type" Flat
+	set "$this-global-type" Gouraud
 	set "$this-global-debug" 0
-	set "$this-global-clip" 1
+	set "$this-global-clip" 0
 
 	frame $m.objlist -relief groove -borderwidth 2
 	pack $m.objlist -side left -padx 2 -pady 2 -fill y
 	label $m.objlist.title -text "Objects:"
 	pack $m.objlist.title -side top
 	canvas $m.objlist.canvas -width 400 -height 100 \
+	        -scrollregion "0 0 500 100" \
 		-yscrollcommand "$m.objlist.scroll set" -borderwidth 0
 	pack $m.objlist.canvas -side right -padx 2 -pady 2 -fill y
 	
@@ -229,8 +220,6 @@ itcl_class Roe {
 	checkbutton $m.stereo -text "Stereo" -variable $this-do_stereo
 	pack $m.stereo -side top
 
-	puts "stereo done"
-
 	global $this-tracker_state
 	set $this-tracker_state 0
 	checkbutton $m.tracker -text "Tracker" -variable $this-tracker_state \
@@ -246,15 +235,11 @@ itcl_class Roe {
 	
 	set width 600
 	set height 500
-	puts "calling setrenderer"
 	set wcommand [$this-c setrenderer [set $this-renderer] $w.wframe.draw $width $height]
-	puts "seterenderer done"
 	eval $wcommand
-	puts "eval done"
 	bindEvents $w.wframe.draw
 	pack $w.wframe.draw -expand yes -fill both
 
-	puts "calling startup"
 	$this-c startup
     }
     method bindEvents {w} {
@@ -396,6 +381,12 @@ itcl_class Roe {
 	$menup entryconfigure 3 -command "[$menup entrycget 3 -command] ; $this-c redraw"
 	pack $m.objlist.canvas.frame.objt$objid -side top -anchor w
 	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid $m.objlist.canvas.frame.menu2_$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
+	#tkwait visibility $m.objlist.canvas.frame.obj$objid
+	set width [winfo width $m.objlist.canvas.frame]
+	set height [winfo height $m.objlist.canvas.frame]
+	$m.objlist.canvas configure -scrollregion "0 0 $width $height" \
+		-width $width -height $height
+
     }
     
     method addObject2 {objid} {
@@ -719,12 +710,14 @@ itcl_class Roe {
 	makeFilebox .ui$this-save $this-saveobjfile \
 		"$this doSaveObjects" "destroy .ui$this-save"
 	set ex .ui$this-save.f.extra
-	radiobutton $ex.geom -variable $this-saveformat \
-		-text "SCIRun geom object file" -value "scirun"
+	radiobutton $ex.geomb -variable $this-saveformat \
+		-text "SCIRun geom object file (Binary)" -value "scirun_binary"
+	radiobutton $ex.geoma -variable $this-saveformat \
+		-text "SCIRun geom object file (ASCII)" -value "scirun_ascii"
 	radiobutton $ex.vrml -variable $this-saveformat \
 		-text "VRML file" -value "vrml"
-	$ex.geom select
-	pack $ex.geom $ex.vrml -side top -anchor w
+	$ex.geomb select
+	pack $ex.geomb $ex.geoma $ex.vrml -side top -anchor w
     }
     method doSaveObjects {} {
 	global $this-saveobjfile $this-saveformat

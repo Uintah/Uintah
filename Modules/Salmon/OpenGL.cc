@@ -170,7 +170,7 @@ public:
     virtual int body(int);
 };
 
-OpenGLHelper::OpenGLHelper(char*, OpenGL* opengl)
+OpenGLHelper::OpenGLHelper(char* name, OpenGL* opengl)
 : Task(name, 1, DEFAULT_PRIORITY), opengl(opengl)
 {
 }
@@ -243,32 +243,23 @@ void OpenGL::redraw_loop()
     while(1){
 	int nreply=0;
 	if(roe->inertia_mode){
-//	    cerr << "Inertia mode...";
-//	    cerr << "framerate=" << framerate << endl;
 	    double current_time=throttle.time();
 	    if(framerate==0)
 		framerate=30;
 	    double frametime=1./framerate;
 	    double delta=current_time-newtime;
-//	    cerr << "delta=" << delta << endl;
 	    if(delta > 1.5*frametime){
-//		cerr << "REALLY backing off..." << endl;
 		framerate=1./delta;
 		frametime=delta;
 		newtime=current_time;
-//		cerr << "now=" << framerate << endl;
 	    } if(delta > .85*frametime){
-//		cerr << "Backing off framerate.." << endl;
 		framerate*=.9;
-//		cerr << "now=" << framerate << endl;
 		frametime=1./framerate;
 		newtime=current_time;
 	    } else if(delta < .5*frametime){
-//		cerr << "Advancing off framrate..." << endl;
 		framerate*=1.1;
 		if(framerate>30)
 		    framerate=30;
-//		cerr << "now=" << framerate << endl;
 		frametime=1./framerate;
 		newtime=current_time;
 	    }
@@ -288,15 +279,10 @@ void OpenGL::redraw_loop()
 		}
 	    }
 
-//	    View view(roe->view.get());
-//	    view.eyep(view.eyep()+(view.eyep()-view.lookat())*0.01);
-//	    roe->view.set(view);
-
 	    // you want to just rotate around the current rotation
 	    // axis - the current quaternion is roe->ball->qNow	    
 	    // the first 3 components of this 
 
-//	    cerr << "Using time: " << newtime << endl;
 	    roe->ball->SetAngle(newtime*roe->angular_v);
 
 	    View tmpview(roe->rot_view);
@@ -552,7 +538,7 @@ void OpenGL::redraw_frame()
 	    // Wait for the right time before swapping buffers
 	    //TCLTask::unlock();
 	    double realtime=t*frametime;
-	    //throttle.wait_for_time(realtime);
+	    throttle.wait_for_time(realtime);
 	    //TCLTask::lock();
 	    TCL::execute("update idletasks");
 

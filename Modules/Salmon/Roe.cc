@@ -30,6 +30,7 @@
 #include <Geom/GeomOpenGL.h>
 #include <Geom/Pick.h>
 #include <Geom/PointLight.h>
+#include <Geom/Scene.h>
 #include <Geom/Sphere.h>
 #include <Malloc/Allocator.h>
 #include <Math/Trig.h>
@@ -772,9 +773,9 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	}
     } else if(args[1] == "reset_tracker"){
 	have_trackerdata=0;
-    } else if(args[1] == "saveall") {
-	if(args.count() != 3){
-	    args.error("Roe::dump_roe needs an output file name!");
+    } else if(args[1] == "saveobj") {
+	if(args.count() != 4){
+	    args.error("Roe::dump_roe needs an output file name and format!");
 	    return;
 	}
 	// We need to dispatch this one to the remote thread
@@ -784,7 +785,7 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	    cerr << "Redraw event dropped, mailbox full!\n";
 	} else {
 	    manager->mailbox.send(scinew SalmonMessage(MessageTypes::RoeDumpObjects,
-						       id, args[2]));
+						       id, args[2], args[3]));
 	}
     } else {
 	args.error("Unknown minor command for Roe");
@@ -996,7 +997,7 @@ void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
 	    if(visible.lookup(si->name, vis)){
 		if(vis->visible->get()){
 		    if(si->lock)
-			si->lock->read_lock();
+			si->lock->read_lock ();
 		    (r->*pmf)(manager, this, si);
 		    if(si->lock)
 			si->lock->read_unlock();
@@ -1080,40 +1081,32 @@ void Roe::head_moved(const TrackerPosition& pos)
     need_redraw=1;
 }
 
-void Roe::saveall(const clString& filename, const clString& format)
+void Roe::dump_objects(const clString& filename, const clString& format)
 {
-#ifdef BROKEN
-    Piostream* stream;
-    if(format == "binary")
-	stream=new BinaryPiostream(filename, Piostream::Write);
-    else
-	stream=new TextPiostream(filename, Piostream::Write);
-//    HashTableIter<int, PortInfo*> iter(&manager->portHash);
-    HashTableIter<int,GeomObj*> iter = manager->ports.getIter();    
-    for (iter.first(); iter.ok(); ++iter) {
-//	HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
-//	HashTableIter<int, SceneItem*> serIter(serHash);
-	HashTableIter<int,GeomObj*> serIter = 
-	    ((GeomSalmonPort*)iter.get_data())->getIter();
-	for (serIter.first(); serIter.ok(); ++serIter) {
-	    GeomSalmonItem *si=(GeomSalmonItem*)serIter.get_data();
-	    // Look up the name to see if it should be drawn...
-	    ObjTag* vis;
-	    if(visible.lookup(si->name, vis)){
-		if(vis->visible->get()){
-		    if(si->lock)
-			si->lock->read_lock();
-		    Pio(*stream, si);
-		    if(si->lock)
-			si->lock->read_unlock();
-		}
-	    } else {
-		cerr << "Warning: object " << si->name << " not in visibility database...\n";
-	    }
+    if(format == "scirun_binary" || format == "scirun_ascii"){
+	Piostream* stream;
+	if(format == "scirun_binary")
+	    stream=new BinaryPiostream(filename, Piostream::Write);
+	else
+	    stream=new TextPiostream(filename, Piostream::Write);
+	if(stream->error()){
+	    delete stream;
+	    return;
 	}
+	manager->geomlock.read_lock();
+	GeomScene scene(bgcolor.get(), view.get(), &manager->lighting,
+			&manager->ports);
+	Pio(*stream, scene);
+	if(stream->error()){
+	    cerr << "Error writing geom file: " << filename << endl;
+	} else {
+	    cerr << "Done writing geom file: " << filename << endl;
+	}
+	delete stream;
+	manager->geomlock.read_unlock();
+    } else {
+	cerr << "WARNING: format " << format << " not supported!\n";
     }
-    delete stream;
-#endif
 }
 
 #ifdef __GNUG__

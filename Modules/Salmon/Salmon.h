@@ -98,6 +98,7 @@ class SalmonMessage : public MessageBase {
 public:
     clString rid;
     clString filename;
+    clString format;
     double tbeg, tend;
     int nframes;
     double framerate;
@@ -106,6 +107,9 @@ public:
 		  int nframes, double framerate);
     SalmonMessage(MessageTypes::MessageType,
 		  const clString& rid, const clString& filename);
+    SalmonMessage(MessageTypes::MessageType,
+		  const clString& rid, const clString& filename,
+		  const clString& format);
     virtual ~SalmonMessage();
 };
 
