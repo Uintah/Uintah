@@ -44,10 +44,6 @@ public:
   virtual ScanlineField<Data> *clone() const;
   virtual ~ScanlineField();
 
-  virtual ScalarFieldInterface* query_scalar_interface() const;
-  virtual VectorFieldInterface* query_vector_interface() const;
-  virtual TensorFieldInterface* query_tensor_interface() const;
-
   //! Persistent IO
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
@@ -96,58 +92,6 @@ ScanlineField<Data>::~ScanlineField()
 {
 }
 
-template <> ScalarFieldInterface *
-ScanlineField<double>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-ScanlineField<float>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-ScanlineField<int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-ScanlineField<short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-ScanlineField<char>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-ScanlineField<unsigned int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-ScanlineField<unsigned short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-ScanlineField<unsigned char>::query_scalar_interface() const;
-
-template <class T>
-ScalarFieldInterface*
-ScanlineField<T>::query_scalar_interface() const 
-{
-  return 0;
-}
-
-template <>
-VectorFieldInterface*
-ScanlineField<Vector>::query_vector_interface() const;
-
-template <class T>
-VectorFieldInterface*
-ScanlineField<T>::query_vector_interface() const
-{
-  return 0;
-}
-
-template <>
-TensorFieldInterface*
-ScanlineField<Tensor>::query_tensor_interface() const;
-
-template <class T>
-TensorFieldInterface*
-ScanlineField<T>::query_tensor_interface() const
-{
-  return 0;
-}
 
 #define SCANLINE_FIELD_VERSION 1
 

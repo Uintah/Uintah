@@ -42,10 +42,6 @@ public:
   virtual PointCloudField<Data> *clone() const; 
   virtual ~PointCloudField();
 
-  virtual ScalarFieldInterface* query_scalar_interface() const;
-  virtual VectorFieldInterface* query_vector_interface() const;
-  virtual TensorFieldInterface* query_tensor_interface() const;
-
   //! Persistent IO
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
@@ -115,60 +111,8 @@ PointCloudField<Data>::clone() const
 {
   return new PointCloudField<Data>(*this);
 }
+
  
-template <> ScalarFieldInterface *
-PointCloudField<double>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-PointCloudField<float>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-PointCloudField<int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-PointCloudField<short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-PointCloudField<char>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-PointCloudField<unsigned int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-PointCloudField<unsigned short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-PointCloudField<unsigned char>::query_scalar_interface() const;
-
-template <class T>
-ScalarFieldInterface*
-PointCloudField<T>::query_scalar_interface() const 
-{
-  return 0;
-}
-
-template <>
-VectorFieldInterface*
-PointCloudField<Vector>::query_vector_interface() const;
-
-template <class T>
-VectorFieldInterface*
-PointCloudField<T>::query_vector_interface() const
-{
-  return 0;
-}
-
-template <>
-TensorFieldInterface*
-PointCloudField<Tensor>::query_tensor_interface() const;
-
-template <class T>
-TensorFieldInterface*
-PointCloudField<T>::query_tensor_interface() const
-{
-  return 0;
-}
-
 template <class Data>
 const string
 PointCloudField<Data>::type_name(int n)

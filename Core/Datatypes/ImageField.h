@@ -115,10 +115,6 @@ public:
   virtual ImageField<Data> *clone() const;
   virtual ~ImageField();
 
-  virtual ScalarFieldInterface* query_scalar_interface() const;
-  virtual VectorFieldInterface* query_vector_interface() const;
-  virtual TensorFieldInterface* query_tensor_interface() const;
-
   //! Persistent IO
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
@@ -165,60 +161,6 @@ ImageField<Data>::clone() const
 template <class Data>
 ImageField<Data>::~ImageField()
 {
-}
-
-
-template <> ScalarFieldInterface *
-ImageField<double>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-ImageField<float>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-ImageField<int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-ImageField<short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-ImageField<char>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-ImageField<unsigned int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-ImageField<unsigned short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-ImageField<unsigned char>::query_scalar_interface() const;
-
-template <class T>
-ScalarFieldInterface*
-ImageField<T>::query_scalar_interface() const 
-{
-  return 0;
-}
-
-template <>
-VectorFieldInterface*
-ImageField<Vector>::query_vector_interface() const;
-
-template <class T>
-VectorFieldInterface*
-ImageField<T>::query_vector_interface() const
-{
-  return 0;
-}
-
-template <>
-TensorFieldInterface*
-ImageField<Tensor>::query_tensor_interface() const;
-
-template <class T>
-TensorFieldInterface*
-ImageField<T>::query_tensor_interface() const
-{
-  return 0;
 }
 
 

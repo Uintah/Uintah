@@ -43,10 +43,6 @@ public:
   virtual CurveField<T> *clone() const;
   virtual ~CurveField();
 
-  virtual ScalarFieldInterface* query_scalar_interface() const;
-  virtual VectorFieldInterface* query_vector_interface() const;
-  virtual TensorFieldInterface* query_tensor_interface() const;
-
   //! Persistent IO
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
@@ -116,58 +112,6 @@ CurveField<T>::clone() const
   return new CurveField<T>(*this);
 }
 
-template <> ScalarFieldInterface *
-CurveField<double>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-CurveField<float>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-CurveField<int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-CurveField<short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-CurveField<char>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-CurveField<unsigned int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-CurveField<unsigned short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-CurveField<unsigned char>::query_scalar_interface() const;
-
-template <class T>
-ScalarFieldInterface*
-CurveField<T>::query_scalar_interface() const 
-{
-  return 0;
-}
-
-template <>
-VectorFieldInterface*
-CurveField<Vector>::query_vector_interface() const;
-
-template <class T>
-VectorFieldInterface*
-CurveField<T>::query_vector_interface() const
-{
-  return 0;
-}
-
-template <>
-TensorFieldInterface*
-CurveField<Tensor>::query_tensor_interface() const;
-
-template <class T>
-TensorFieldInterface*
-CurveField<T>::query_tensor_interface() const
-{
-  return 0;
-}
 
 template <class T>
 const string

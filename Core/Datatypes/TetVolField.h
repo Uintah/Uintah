@@ -50,10 +50,6 @@ public:
   virtual TetVolField<T> *clone() const;
   virtual ~TetVolField();
 
-  virtual ScalarFieldInterface* query_scalar_interface() const;
-  virtual VectorFieldInterface* query_vector_interface() const;
-  virtual TensorFieldInterface* query_tensor_interface() const;
-
   //! Persistent IO
   virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
@@ -97,59 +93,6 @@ TetVolField<T>::clone() const
 template <class T>
 TetVolField<T>::~TetVolField()
 {
-}
-
-template <> ScalarFieldInterface *
-TetVolField<double>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-TetVolField<float>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-TetVolField<int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-TetVolField<short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-TetVolField<char>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-TetVolField<unsigned int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-TetVolField<unsigned short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-TetVolField<unsigned char>::query_scalar_interface() const;
-
-template <class T>
-ScalarFieldInterface*
-TetVolField<T>::query_scalar_interface() const 
-{
-  return 0;
-}
-
-template <>
-VectorFieldInterface*
-TetVolField<Vector>::query_vector_interface() const;
-
-template <class T>
-VectorFieldInterface*
-TetVolField<T>::query_vector_interface() const
-{
-  return 0;
-}
-
-template <>
-TensorFieldInterface*
-TetVolField<Tensor>::query_tensor_interface() const;
-
-template <class T>
-TensorFieldInterface*
-TetVolField<T>::query_tensor_interface() const
-{
-  return 0;
 }
 
 

@@ -17,6 +17,8 @@
 
 
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/FieldInterfaceAux.h>
+
 
 namespace SCIRun{
 
@@ -51,18 +53,63 @@ Field::get_type_name(int n) const
   return get_type_description(n)->get_name();
 }
 
-ScalarFieldInterface* Field::query_scalar_interface() const
+
+ScalarFieldInterface*
+Field::query_scalar_interface() const
 {
+  const TypeDescription *ftd = get_type_description();
+  CompileInfo *ci = ScalarFieldInterfaceMaker::get_compile_info(ftd);
+  DynamicAlgoHandle algo_handle;
+  if (! DynamicLoader::scirun_loader().maybe_get(*ci, algo_handle))
+  {
+    return 0;
+  }
+  ScalarFieldInterfaceMaker *algo =
+    dynamic_cast<ScalarFieldInterfaceMaker *>(algo_handle.get_rep());
+  if (algo)
+  {
+    return algo->make(this);
+  }
   return 0;
 }
 
-VectorFieldInterface* Field::query_vector_interface() const
+
+VectorFieldInterface*
+Field::query_vector_interface() const
 {
+  const TypeDescription *ftd = get_type_description();
+  CompileInfo *ci = VectorFieldInterfaceMaker::get_compile_info(ftd);
+  DynamicAlgoHandle algo_handle;
+  if (! DynamicLoader::scirun_loader().maybe_get(*ci, algo_handle))
+  {
+    return 0;
+  }
+  VectorFieldInterfaceMaker *algo =
+    dynamic_cast<VectorFieldInterfaceMaker *>(algo_handle.get_rep());
+  if (algo)
+  {
+    return algo->make(this);
+  }
   return 0;
 }
 
-TensorFieldInterface* Field::query_tensor_interface() const
+
+TensorFieldInterface*
+Field::query_tensor_interface() const
 {
+  const TypeDescription *ftd = get_type_description();
+  CompileInfo *ci = TensorFieldInterfaceMaker::get_compile_info(ftd);
+  DynamicAlgoHandle algo_handle;
+  if (! DynamicLoader::scirun_loader().maybe_get(*ci, algo_handle))
+  {
+    return 0;
+  }
+  TensorFieldInterfaceMaker *algo =
+    dynamic_cast<TensorFieldInterfaceMaker *>(algo_handle.get_rep());
+  if (algo)
+  {
+    return algo->make(this);
+  }
   return 0;
 }
 
