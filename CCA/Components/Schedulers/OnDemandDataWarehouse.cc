@@ -1942,6 +1942,10 @@ OnDemandDataWarehouse::checkAccesses(RunningTaskInfo* currentTaskInfo,
 	find_iter = currentTaskAccesses.find(key);
 	if (find_iter == currentTaskAccesses.end() ||
 	    (*find_iter).second.accessType != accessType) {
+	  if ((*find_iter).second.accessType == ModifyAccess && accessType == GetAccess) {
+	    // If you require with ghost cells and modify, it can get into this situation.
+	    continue;
+	  }
 	  // Makes request that is never followed through.
 	  string has, needs;
 	  if (accessType == GetAccess) {
@@ -1959,9 +1963,14 @@ OnDemandDataWarehouse::checkAccesses(RunningTaskInfo* currentTaskInfo,
 	    has = "task modifies";
 	    needs = "datawarehouse modify";
 	  }
+
+	  throw DependencyException(currentTask, label, matl, patch,
+				    has, needs);	  
 	}
-	else if ((*find_iter).second.lowOffset != lowOffset ||
-		 (*find_iter).second.highOffset != highOffset) {
+	else if (((*find_iter).second.lowOffset != lowOffset ||
+		  (*find_iter).second.highOffset != highOffset) &&
+		 accessType != ModifyAccess /* Can == ModifyAccess when you require with
+					       ghost cells and modify */ ) {
 	  // Makes request for ghost cells that are never gotten.
 	  AccessInfo accessInfo = (*find_iter).second;	
 	  ASSERT(accessType == GetAccess);
