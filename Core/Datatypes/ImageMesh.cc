@@ -164,6 +164,19 @@ ImageMesh::locate(Node::index_type &node, const Point &p)
 }
 
 
+void
+ImageMesh::get_weights(const Point &p,
+		       Face::array_type &l, vector<double> &w)
+{
+  Face::index_type idx;
+  if (locate(idx, p))
+  {
+    l.push_back(idx);
+    w.push_back(1.0);
+  }
+}
+
+
 #define LATVOLMESH_VERSION 1
 
 void

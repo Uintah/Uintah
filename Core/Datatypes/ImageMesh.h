@@ -353,7 +353,7 @@ public:
 
   void get_weights(const Point &p, Node::array_type &l, vector<double> &w) {}
   void get_weights(const Point &p, Edge::array_type &l, vector<double> &w) {}
-  void get_weights(const Point &p, Face::array_type &l, vector<double> &w) {}
+  void get_weights(const Point &p, Face::array_type &l, vector<double> &w);
   void get_weights(const Point &p, Cell::array_type &l, vector<double> &w) {}
 
   void get_point(Point &p, Node::index_type i) const
