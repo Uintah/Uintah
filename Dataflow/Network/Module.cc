@@ -216,6 +216,9 @@ void Module::update_state(State st)
   case Completed:
     s="Completed";
     break;
+  case Error:
+    s="Error";
+    break;
   }
   double time = timer.time();
   if(time<0)
@@ -452,19 +455,19 @@ void Module::get_position(int& x, int& y)
 {
   string result;
   if(!gui->eval(id+" get_x", result)){
-    error("Error getting x coordinate");
+    error("Error getting x coordinate.");
     return;
   }
   if(!string_to_int(result, x)) {
-    error("Error parsing x coordinate");
+    error("Error parsing x coordinate.");
     return;
   }
   if(!gui->eval(id+" get_y", result)){
-    error("Error getting y coordinate");
+    error("Error getting y coordinate.");
     return;
   }
   if(!string_to_int(result, y)) {
-    error("Error parsing y coordinate");
+    error("Error parsing y coordinate.");
     return;
   }
 }
@@ -521,17 +524,21 @@ void Module::setPid(int pid)
 // Error conditions
 void Module::error(const string& str)
 {
-  gui->postMessage(moduleName + ": " + str, true);
+  gui->postMessage("ERROR: " + moduleName + ": " + str, true);
+  msgStream_ << "ERROR: " << str << endl;
+  update_state(Error);
 }
 
 void Module::warning(const string& str)
 {
-  gui->postMessage(moduleName + ": " + str, false);
+  //gui->postMessage("WARNING: " + moduleName + ": " + str, false);
+  msgStream_ << "WARNING: " << str << endl;
 }
 
 void Module::remark(const string& str)
 {
-  gui->postMessage(moduleName + ": " + str, false);
+  //gui->postMessage("REMARK: " + moduleName + ": " + str, false);
+  msgStream_ << "REMARK: " << str << endl;
 }
 
 void Module::postMessage(const string& str)
@@ -562,7 +569,10 @@ void Module::do_execute()
   timer.start();
   execute();
   timer.stop();
-  update_state(Completed);
+  if (state != Error)
+  {
+    update_state(Completed);
+  }
 
   // Call finish on all ports...
   for(int i=0;i<iports.size();i++){
@@ -628,14 +638,14 @@ bool Module::haveUI()
 {
   string result;
   if(!gui->eval(id+" have_ui", result)){
-    error("error looking for UI");
+    error("Could not find UI tcl function.");
     return false;
   }
   istringstream res(result);
   int flag;
   res >> flag;
   if(!res){
-    error("error looking for UI");
+    error("Could not run UI tcl function.");
     return false;
   }
   return flag == 1;
