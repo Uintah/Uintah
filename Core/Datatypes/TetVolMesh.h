@@ -216,6 +216,7 @@ public:
   
 
   typedef Cell Elem;
+  enum { ELEMENTS_E = CELLS_E };
 
   TetVolMesh();
   TetVolMesh(const TetVolMesh &copy);
@@ -252,7 +253,7 @@ public:
   void get_faces(Face::array_type &array, Edge::index_type idx) const;
   void get_faces(Face::array_type &array, Cell::index_type idx) const;
 
-  void get_cells(Cell::array_type &array, Node::index_type idx);
+  void get_cells(Cell::array_type &array, Node::index_type idx) const;
   void get_cells(Cell::array_type &array, Edge::index_type idx) const;
   void get_cells(Cell::array_type &array, Face::index_type idx) const;
   
@@ -332,13 +333,8 @@ public:
   void flip(Cell::index_type, bool recalculate = false);
   void rewind_mesh();
 
-  //! (re)create the edge and faces data based on cells.
-  virtual void flush_changes();
-  void recompute_connectivity();
-  virtual void		compute_nodes();
-  void			compute_edges();
-  void			compute_faces();
-  void			compute_grid();
+
+  virtual bool		synchronize(const synchronized_t &);
 
   //! Persistent IO
   virtual void io(Piostream&);
@@ -379,6 +375,11 @@ public:
   virtual bool		is_editable() const { return true; }
 
 protected:
+  void			compute_node_neighbors();
+  void			compute_edges();
+  void			compute_faces();
+  void			compute_grid();
+
   void			orient(Cell::index_type ci);
   double		volume(TetVolMesh::Cell::index_type ci);
   bool			inside4_p(int, const Point &p);
@@ -388,8 +389,12 @@ protected:
   void			delete_cell_edges(Cell::index_type);
   void			create_cell_faces(Cell::index_type);
   void			delete_cell_faces(Cell::index_type);
-  void			create_cell_nodes(Cell::index_type);
-  void			delete_cell_nodes(Cell::index_type);
+  void			create_cell_node_neighbors(Cell::index_type);
+  void			delete_cell_node_neighbors(Cell::index_type);
+
+
+
+
 
   //! all the vertices
   vector<Point>		points_;
@@ -401,7 +406,6 @@ protected:
 
   typedef LockingHandle<Edge::HalfEdgeSet> HalfEdgeSetHandle;
   typedef LockingHandle<Edge::EdgeSet> EdgeSetHandle;
-  bool			edges_computed_p_;
 #ifdef HAVE_HASH_SET
   Edge::CellEdgeHasher	edge_hasher_;
 #endif
@@ -415,7 +419,6 @@ protected:
 
   typedef LockingHandle<Face::HalfFaceSet> HalfFaceSetHandle;
   typedef LockingHandle<Face::FaceSet> FaceSetHandle;
-  bool			faces_computed_p_;
 #ifdef HAVE_HASH_SET
   Face::CellFaceHasher	face_hasher_;
 #endif
@@ -427,18 +430,16 @@ protected:
   Face::FaceSet		faces_;
   Mutex			face_lock_;
 
-  typedef vector<vector<Cell::index_type> > NodeMap;
-  typedef LockingHandle<NodeMap> NodeMapHandle;
-  bool			nodes_computed_p_;
-  NodeMap		nodes_;
-  Mutex			node_lock_;
+  typedef vector<vector<Cell::index_type> > NodeNeighborMap;
+  //  typedef LockingHandle<NodeMap> NodeMapHandle;
+  NodeNeighborMap	node_neighbors_;
+  Mutex			node_neighbor_lock_;
 
   typedef LockingHandle<LatVolField<vector<Cell::index_type> > > grid_handle;
   grid_handle           grid_;
   Mutex                 grid_lock_; // Bad traffic!
 
-  bool			dirty_;
-  
+  synchronized_t	synchronized_;
 public:
   inline grid_handle get_grid() {return grid_;}
 
