@@ -107,6 +107,13 @@ public:
 	return d_numMixingVars; 
       }
 
+      ///////////////////////////////////////////////////////////////////////
+      // Get the number of mixing variables
+
+      inline int getNumMixStatVars() const{ 
+	return d_numMixStatVars; 
+      }
+
       // GROUP: Set Methods :
       ///////////////////////////////////////////////////////////////////////
       // Set the boundary consition pointer
@@ -174,6 +181,7 @@ private:
       bool d_enthalpySolve;
       bool d_radiationCalc;
       int d_numMixingVars;
+      int d_numMixStatVars;
       double d_denUnderrelax;
       IntVector d_denRef;
       MixingModel* d_mixingModel;

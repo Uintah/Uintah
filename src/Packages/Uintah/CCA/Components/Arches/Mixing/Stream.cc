@@ -299,7 +299,7 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
   out << "Species concentration in mole fraction: " << endl;
     for (int ii = 0; ii < d_speciesConcn.size(); ii++) {
       out.width(10);
-      out << d_speciesConcn[ii]/specMW[ii] << " " ; 
+      out << d_speciesConcn[ii]/specMW[ii]*d_moleWeight << " " ; 
       if (!(ii % 10)) out << endl; 
     }
     out << endl;
@@ -308,6 +308,13 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
 
 //
 // $Log$
+// Revision 1.6  2001/08/25 07:32:45  skumar
+// Incorporated Jennifer's beta-PDF mixing model code with some
+// corrections to the equilibrium code.
+// Added computation of scalar variance for use in PDF model.
+// Properties::computeInletProperties now uses speciesStateSpace
+// instead of computeProps from d_mixingModel.
+//
 // Revision 1.5  2001/07/27 20:51:40  sparker
 // Include file cleanup
 // Fix uninitialized array element

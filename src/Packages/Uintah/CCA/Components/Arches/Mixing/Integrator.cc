@@ -77,8 +77,8 @@ Integrator::integrate(int* tableKeyIndex)
   upLimit = 1.0;
   // this can be moved to problem setup
   epsabs = 0.0;
-  epsrel = 0.005; // relative error
-  //epsrel = 0.0005; // relative error
+  //epsrel = 0.005; // relative error
+  epsrel = 0.0005; // relative error
   npts2 = 3;
   int mixIndex = 0;
   if (!(pdfMixModel->isAdiabatic()))
@@ -95,8 +95,8 @@ Integrator::integrate(int* tableKeyIndex)
   convertKeytoMeanValues(tableKeyIndex);
   // d_keyValues is used for Integral function evaluation
   d_keyValues = d_meanValues;
-  if (d_meanValues[mixVarIndex] > 0.1) {
-  //if (d_meanValues[mixVarIndex] > 0.005) {
+  //if (d_meanValues[mixVarIndex] > 0.1) {
+  if (d_meanValues[mixVarIndex] > 0.005) {
     npts2 = 4;
     // points calculated for Gaussian Quadrature
     double nearEdge = (fstoic - lowLimit) / 20.;
@@ -139,7 +139,9 @@ Integrator::integrate(int* tableKeyIndex)
   Stream meanSpaceVars = d_rxnModel->computeRxnStateSpace(unreactedStream,d_varsHFPi,
 							  pdfMixModel->isAdiabatic());
   // compute pdf function for given values of mean and variance
+  //  cout << "made it 1" << endl;
   d_mixingPDF->computePDFFunction(&d_meanValues[mixIndex], d_meanValues[mixVarIndex]);
+  //  cout << "made it 2" << endl;
   // if lfavre temp = temp/density
   vector<double> meanStateSpaceVars = meanSpaceVars.convertStreamToVec(d_lfavre);
   // store integral values in vector and then copy to stream
@@ -147,6 +149,8 @@ Integrator::integrate(int* tableKeyIndex)
   // Assumption:
   // Only integrated over mixing variable; rxn_dim = 0
   // check if gammafnc is valid
+  //  bool hoho = d_mixingPDF->validIntegral();
+  //  cout << "valid integral " <<  hoho << endl;
   if (d_mixingPDF->validIntegral()) { 
     for (d_count = 0; d_count < resultStateSpaceVars.size(); d_count++) 
       {
@@ -160,6 +164,7 @@ Integrator::integrate(int* tableKeyIndex)
 	if (ier == 0) {
 	  integralSuccess = true;
 	  resultStateSpaceVars[d_count] = result;
+	  cout << "Int::result = " << result << endl;
 	}
 	else
 	  integralSuccess = false;
@@ -172,7 +177,7 @@ Integrator::integrate(int* tableKeyIndex)
     // favre averaged
   }
   else {
-    cout << "Invalid Gamma Function" << endl;
+    //    cout << "Invalid Gamma Function" << endl;
     resultStateSpaceVars = meanStateSpaceVars;
     
   }
@@ -247,14 +252,19 @@ Integrator::fun(double *x) {
     d_keyValues[mixIndex] = *x;
     d_varsHFPi[mixIndex] = *x;
     vector<double> mixVars(pdfMixModel->getNumMixVars());
-    for (int jj = 0; jj < pdfMixModel->getNumMixVars(); jj++)
+    for (int jj = 0; jj < pdfMixModel->getNumMixVars(); jj++) {
       mixVars[jj] = d_keyValues[mixIndex+jj];
+      if (mixVars[jj] > 0.99) 
+	mixVars[jj] = 1.0;
+    }
+
     Stream unreactedStream = pdfMixModel->speciesStateSpace(mixVars);
     Stream stateVars = d_rxnModel->computeRxnStateSpace(unreactedStream,
 				d_varsHFPi, pdfMixModel->isAdiabatic());
     // from the stream class get relevant variable corresponding to count
     // if lfavre then get temp = temp/density
     double integrand = stateVars.getValue(d_count, d_lfavre);
+    //cout << "integrand = " << integrand << endl;
     // pass only mixing variables
     integrand *= d_mixingPDF->computeShapeFunction(&d_keyValues[mixIndex]);
     return integrand;

@@ -24,8 +24,12 @@ FFLAGS +=
 
 #
 # $Log$
-# Revision 1.3  2001/07/16 21:15:40  rawat
-# added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
+# Revision 1.4  2001/08/25 07:32:47  skumar
+# Incorporated Jennifer's beta-PDF mixing model code with some
+# corrections to the equilibrium code.
+# Added computation of scalar variance for use in PDF model.
+# Properties::computeInletProperties now uses speciesStateSpace
+# instead of computeProps from d_mixingModel.
 #
 # Revision 1.2  2001/04/24 19:46:10  mcole
 # prelim checking for package only compilation, scripts refferred to by SCIRUN_SCRIPTS variable

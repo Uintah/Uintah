@@ -69,9 +69,7 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
   db->require("cf", d_CF);
   db->require("fac_mesh", d_factorMesh);
   db->require("filterl", d_filterl);
-#ifdef variance_model
   db->require("var_const",d_CFVar); // const reqd by variance eqn
-#endif
 }
 
 //****************************************************************************
