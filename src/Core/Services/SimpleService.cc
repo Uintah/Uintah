@@ -32,7 +32,7 @@
 #include <Core/Services/SimpleService.h>
 #include <sstream>
 
-using namespace SCIRun;
+namespace SCIRun {
 
 SimpleServiceOutputInfo::SimpleServiceOutputInfo(IComSocket socket,ServiceLogHandle log) :
   lock("SimpleServiceOutputThread"),
@@ -68,46 +68,46 @@ void SimpleServiceOutputThread::run()
       std::list<IComPacketHandle> *plist;
       handle_->lock.lock();
       while(!handle_->exit_)
-        {
-          handle_->wait_.wait(handle_->lock);
+      {
           if (handle_->packet_list_)
-            {
+          {
               plist = handle_->packet_list_;
               handle_->packet_list_ = 0;
               handle_->lock.unlock();
               std::list<IComPacketHandle>::iterator it;
               for (it = plist->begin(); it != plist->end(); it++)
-                {
+              {
                   if(!(handle_->socket_.send((*it))))
-                    {
-						
-                    }
-                }	
+                  {
+                     std::cerr << "SimpleServiceOutputThread: error sending packet" << std::endl;
+                  }
+              }	
               delete  plist;
               handle_->lock.lock();	
             }
+            handle_->wait_.wait(handle_->lock);
         }
 		
       if (handle_->exit_)
-        {
+      {
           IComPacketHandle packet = scinew IComPacket;
           packet->settag(TAG_END_);
           handle_->socket_.send(packet);
-        }
-    }
+      }
+  }
   catch(...)
-    {
+  {
       handle_->log_->putmsg("SimpleServiceOutputThread: thread caught an exception");
-    }
+  }
 	
   // In case we caught an exception wait until we receive an exit signal
   // from the main task. It is using this threads resources so we cannot exit
 	
   handle_->lock.lock();
   if (!handle_->exit_)
-    {
+  {
       while (!handle_->exit_)
-        {
+      {
           handle_->wait_.wait(handle_->lock);
           // delete all incoming traffic
           // This process stalled and we cannot relay
@@ -115,9 +115,9 @@ void SimpleServiceOutputThread::run()
           // immediately we do not forward any messages
           if (handle_->packet_list_) delete handle_->packet_list_;
           handle_->packet_list_ = 0;
-        }
+      }
 
-    }
+  }
   handle_->lock.unlock();
 }
 
@@ -139,13 +139,13 @@ void SimpleServiceOutputHandler::start(std::list<std::string> &buffer)
 {
   std::list<std::string>::iterator it;
   for (it = buffer.begin(); it != buffer.end(); it++)
-    {
+  {
       IComPacketHandle handle = scinew IComPacket();
       handle->settag(tag_);
       handle->setparam1(count_++);
       handle->setstring((*it));
       handle_->add_packet(handle);
-    }
+  }
 }
 
 bool SimpleServiceOutputHandler::execute(std::string line)
@@ -196,48 +196,49 @@ void SimpleService::forward_exit(SystemCallHandle syscall)
 void SimpleService::stop_forward_stdout()
 {
   if (stdout_syscall_.get_rep())
-    {
+  {
       if (stdout_handler_.get_rep()) 
-        {
+      {
           SystemCallHandlerHandle handle = dynamic_cast<SystemCallHandler*>(stdout_handler_.get_rep());
           stdout_syscall_->rem_stdout_handler(handle);
-        }
+      }
       stdout_handler_ = 0;
       stdout_syscall_ = 0;
-    }
+  }
 }
 
 void SimpleService::stop_forward_stderr()
 {
   if (stderr_syscall_.get_rep())
-    {
+  {
       if (stderr_handler_.get_rep()) 
-        {
+      {
           SystemCallHandlerHandle handle = dynamic_cast<SystemCallHandler*>(stderr_handler_.get_rep());
           stderr_syscall_->rem_stderr_handler(handle);
-        }
+      }
       stderr_handler_ = 0;
       stderr_syscall_ = 0;
-    }
+  }
 }
 
 void SimpleService::stop_forward_exit()
 {
   if (exit_syscall_.get_rep())
-    {
+  {
       if (exit_handler_.get_rep())
-        {
+      {
           SystemCallHandlerHandle handle = dynamic_cast<SystemCallHandler*>(exit_handler_.get_rep());
           exit_syscall_->rem_exit_handler(handle);
-        }
+      }
       exit_handler_ = 0;
       exit_syscall_ = 0;
-    }
+  }
 }
 
 
 SimpleService::SimpleService(ServiceContext &ctx) :
-  Service(ctx)
+  Service(ctx),
+  output_thread_(0)  
 {
 }
 
@@ -254,30 +255,50 @@ SimpleService::~SimpleService()
 }
 
 
+void SimpleService::create_service_info()
+{
+    
+    // if it is already running
+    if (info_handle_.get_rep() != 0) return;
+
+    try
+    {
+        info_handle_ = scinew SimpleServiceOutputInfo(getsocket(),getlog());
+    }
+    catch (...)
+    {
+        // Just inform of what went wrong
+        // This is a crucial error, so we do not recover from this one
+        errormsg("Could not launch object for handling output");
+        throw;
+    }
+
+}
+
 void SimpleService::create_output_thread()
 {
-  // launch output thread
-  // Since communication over socket may be interupted by small pauses we do not
-  // want the input handling and buffering of stdout/stderr to be affected. Hence
-  // output is generate asynchronely
-	
-  // if it is already running
-  if (info_handle_.get_rep() != 0) return;
-	
-  try
+    // launch output thread
+    // Since communication over socket may be interupted by small pauses we do not
+    // want the input handling and buffering of stdout/stderr to be affected. Hence
+    // output is generate asynchronely
+
+    if (info_handle_.get_rep() == 0) return;
+    
+    try
     {
-      info_handle_ = scinew SimpleServiceOutputInfo(getsocket(),getlog());
-      SimpleServiceOutputThread* ssot = scinew SimpleServiceOutputThread(info_handle_);
-		
-      Thread* thread = scinew Thread(ssot,"SimpleService Output Thread");
-      thread->detach();
+        SimpleServiceOutputThread* ssot = scinew SimpleServiceOutputThread(info_handle_);
+        
+        output_thread_ = scinew Thread(ssot,"SimpleServiceOutputThread");
+        output_thread_->detach();
+        output_thread_ = 0;
+
     }
-  catch (...)
+    catch (...)
     {
-      // Just inform of what went wrong
-      // This is a crucial error, so we do not recover from this one
-      errormsg("Could not launch a thread for handling output");
-      throw;
+        // Just inform of what went wrong
+        // This is a crucial error, so we do not recover from this one
+        errormsg("Could not launch a thread for handling output");
+        throw;
     }
 }
 
@@ -290,23 +311,38 @@ void SimpleService::kill_output_thread()
 
 void SimpleService::execute()
 {
-  putmsg("SimpleService: Create output thread");
-  create_output_thread();
-  putmsg("SimpleService: Send first packet");
-  IComPacketHandle packet = scinew IComPacket;
-  bool success = init_service(packet);
-  putmsg("SimpleService: Send this packet");
-  if (success) send(packet);
-  putmsg("SimpleService: Main loop starts here");
-  // Main loop of handling packages
-  handle_input();
-  putmsg("SimpleService: Main loop ends here");
-	
-  close_service();
-  kill_output_thread();
+    putmsg("SimpleService: Create service info object");
+    create_service_info();
+    
+    IComPacketHandle packet = scinew IComPacket;
+    
+    putmsg("SimpleService: Initiate service");
+    bool success = init_service(packet);
+
+    if (success)
+    {
+        info_handle_->add_packet(packet,true);    // Let the output thread deal with this
+        putmsg("SimpleService: Starting output thread after successfull initialization");
+        create_output_thread();
+        // Main loop of handling packages
+        putmsg("SimpleService: Main loop starts here");
+        handle_input();
+        putmsg("SimpleService: Main loop ends here");
+        putmsg("SimpleService: closing down sevice");
+        close_service();
+        kill_output_thread();
+    }
+    else
+    {
+        putmsg("SimpleService: Initialization failure, sending out one more packet  to report failure");    
+        send(packet);
+        putmsg("SimpleService: closing down sevice");
+        close_service();
+        // no thread to kill
+    }
 }
 
-void SimpleService::handle_stdpacket(IComPacketHandle &/*packet*/)
+void SimpleService::handle_stdpacket(IComPacketHandle& /*packet*/)
 {
   // I need to finish this function
 }
@@ -356,3 +392,7 @@ void SimpleService::handle_service(IComPacketHandle& /*packet*/)
   // Overwrite with user defined function.
   // This is the default function that does nothing
 }
+
+
+} // end namespace
+

@@ -35,129 +35,129 @@ namespace SCIRun {
 void IComRHostPattern::insert(std::string pattern)
 {
 
-	int starpos = -1;
-	int numstar = 0;
+    size_t starpos = -1;
+    size_t numstar = 0;
 
-	// Count the number of stars
-	while( (starpos = pattern.find('*',(starpos+1))) < pattern.size()) numstar++;
-	std::vector<unsigned int> starposvec(numstar);
-	
-	numstar = 0;
-	while( (starpos = pattern.find('*',(starpos+1))) < pattern.size()) starposvec[numstar++] = starpos;
-	
-	if (starposvec.size() == 0)
-	{
-		start_ = pattern;
-		return;
-	}
-	
-	if (starposvec[0] == 0)
-	{
-		start_ = "";
-	}
-	else
-	{
-		start_ = pattern.substr(0,starposvec[0]);
-	}
-	
-	if (starposvec[starposvec.size()-1] == (pattern.size()-1))
-	{
-		end_ = "";
-	}
-	else
-	{
-		end_ = pattern.substr(starposvec[starposvec.size()-1]+1);
-	}
-	
-	inbetween_.resize(starposvec.size()-1);
-	for (int p = 0; p < (starposvec.size()-1); p++)
-	{
-		inbetween_[p] = pattern.substr(starposvec[p]+1,starposvec[p+1]);
-	}
-	return;
+    // Count the number of stars
+    while( (starpos = pattern.find('*',(starpos+1))) < pattern.size()) numstar++;
+    std::vector<size_t> starposvec(numstar);
+    
+    numstar = 0;
+    while( (starpos = pattern.find('*',(starpos+1))) < pattern.size()) starposvec[numstar++] = starpos;
+    
+    if (starposvec.size() == 0)
+    {
+        start_ = pattern;
+        return;
+    }
+    
+    if (starposvec[0] == 0)
+    {
+        start_ = "";
+    }
+    else
+    {
+        start_ = pattern.substr(0,starposvec[0]);
+    }
+    
+    if (starposvec[starposvec.size()-1] == (pattern.size()-1))
+    {
+        end_ = "";
+    }
+    else
+    {
+        end_ = pattern.substr(starposvec[starposvec.size()-1]+1);
+    }
+    
+    inbetween_.resize(starposvec.size()-1);
+    for (size_t p = 0; p < (starposvec.size()-1); p++)
+    {
+        inbetween_[p] = pattern.substr(starposvec[p]+1,starposvec[p+1]);
+    }
+    return;
 }
 
 
 bool IComRHostPattern::compare(std::string host)
 {
-	if (start_.size() > 0) if (host.substr(0,start_.size()) != start_) return(false);
-	if (end_.size() > 0) if (host.substr(host.size() - end_.size()) !=  end_) return(false);
-	std::string rem = host.substr(start_.size(),host.size() - end_.size());
-	unsigned int patloc;
-	for (int p =0; p < inbetween_.size(); p++)
-	{
-		if ( patloc = rem.find(inbetween_[p]) < rem.size())
-		{
-			rem = rem.substr(patloc+inbetween_[p].size());
-		}
-		else
-		{
-			return(false);
-		}
-	}
-	return(true);
+    if (start_.size() > 0) if (host.substr(0,start_.size()) != start_) return(false);
+    if (end_.size() > 0) if (host.substr(host.size() - end_.size()) !=  end_) return(false);
+    std::string rem = host.substr(start_.size(),host.size() - end_.size());
+    size_t patloc;
+    for (size_t p =0; p < inbetween_.size(); p++)
+    {
+        if ( patloc = rem.find(inbetween_[p]) < rem.size())
+        {
+            rem = rem.substr(patloc+inbetween_[p].size());
+        }
+        else
+        {
+            return(false);
+        }
+    }
+    return(true);
 }
 
 
 
 void IComRHostList::insert(std::string patternlist)
 {
-	// analyse comma/space separated list
+    // analyse comma/space separated list
 
-	int numpatterns;
-	
-	int patternstart = 0;
-	int patternstop = 0;
-	int strpos = 0;
-	int numpat = 0;
-	
-	while (strpos < patternlist.size())
-	{
-		for (; strpos < patternlist.size(); strpos++) { if ((patternlist[strpos] != ' ')&&(patternlist[strpos] != '\t')&&(patternlist[strpos] != ',')) break;}
-		patternstart = strpos;
-		for (; strpos < patternlist.size(); strpos++) if ((patternlist[strpos] == ' ')||(patternlist[strpos] == '\t')||(patternlist[strpos] == ',')) break;
-		patternstop = strpos;
-		if (patternstop > (patternstart+1)) numpat++;
-	}
+    size_t numpatterns;
+    
+    size_t patternstart = 0;
+    size_t patternstop = 0;
+    size_t strpos = 0;
+    size_t numpat = 0;
+    
+    while (strpos < patternlist.size())
+    {
+        for (; strpos < patternlist.size(); strpos++) { if ((patternlist[strpos] != ' ')&&(patternlist[strpos] != '\t')&&(patternlist[strpos] != ',')) break;}
+        patternstart = strpos;
+        for (; strpos < patternlist.size(); strpos++) if ((patternlist[strpos] == ' ')||(patternlist[strpos] == '\t')||(patternlist[strpos] == ',')) break;
+        patternstop = strpos;
+        if (patternstop > (patternstart+1)) numpat++;
+    }
 
-	patterns_.resize(numpat);
-	
-	numpat = 0;
-	while (strpos < patternlist.size())
-	{
-		for (; strpos < patternlist.size(); strpos++) { if ((patternlist[strpos] != ' ')&&(patternlist[strpos] != '\t')&&(patternlist[strpos] != ',')) break;}
-		patternstart = strpos;
-		for (; strpos < patternlist.size(); strpos++) if ((patternlist[strpos] == ' ')||(patternlist[strpos] == '\t')||(patternlist[strpos] == ',')) break;
-		patternstop = strpos;
-		patterns_[numpat++].insert(patternlist.substr(patternstart,patternstop));
-	}
+    patterns_.resize(numpat);
+    
+    numpat = 0;
+    while (strpos < patternlist.size())
+    {
+        for (; strpos < patternlist.size(); strpos++) { if ((patternlist[strpos] != ' ')&&(patternlist[strpos] != '\t')&&(patternlist[strpos] != ',')) break;}
+        patternstart = strpos;
+        for (; strpos < patternlist.size(); strpos++) if ((patternlist[strpos] == ' ')||(patternlist[strpos] == '\t')||(patternlist[strpos] == ',')) break;
+        patternstop = strpos;
+        patterns_[numpat++].insert(patternlist.substr(patternstart,patternstop));
+    }
 
-	return;
+    return;
 }
 
 bool IComRHostList::compare(IComAddress &address)
 {
-	//We cannot allow invalid addresses to be used
-	if (!address.isvalid()) return(false);
-	
-	// In case no patterns are defined assume that 
-	if (patterns_.size() == 0) return(true);
-	
-	if (!address.isinternal())
-	{
-		for (int p=0;p<patterns_.size();p++)
-		{
-			if(patterns_[p].compare(address.getinetname())) return(true);
-			if(patterns_[p].compare(address.getipname())) return(true); 
-		}
-	}
-	else
-	{
-		// internal addresses are always allowed
-		return(true);
-	}	
-	
-	return(false);
+    //We cannot allow invalid addresses to be used
+    if (!address.isvalid()) return(false);
+    
+    // In case no patterns are defined assume that 
+    if (patterns_.size() == 0) return(true);
+    
+    if (!address.isinternal())
+    {
+        for (int p=0;p<patterns_.size();p++)
+        {
+            if(patterns_[p].compare(address.getinetname())) return(true);
+            if(patterns_[p].compare(address.getipname())) return(true); 
+        }
+    }
+    else
+    {
+        // internal addresses are always allowed
+        return(true);
+    }    
+    
+    return(false);
 }
 
 }

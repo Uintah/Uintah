@@ -55,13 +55,13 @@ class ServiceInfo {
                                  // defined in the XML file
   std::string    classname;      // name of the class used for the
                                  // service, defined in XML file
-  std::string    version;      // version number of this class,
-                               // defined in XML file
+  std::string    version;        // version number of this class,
+                                 // defined in XML file
   bool      activated;      // boolean indicating whether service is
                             // activated each service needs to be
                             // activated, before it can be used
-  bool      disabled;      // In case the service is fully disabled
-  ServiceMaker  maker;        // dynamic loading of class
+  bool      disabled;       // In case the service is fully disabled
+  ServiceMaker  maker;      // dynamic loading of class
 
   // RCFile stuff
   std::string    rcfile;        // the name of the rcfile used to

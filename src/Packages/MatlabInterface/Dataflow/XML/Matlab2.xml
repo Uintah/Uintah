@@ -34,18 +34,13 @@
 <component name="Matlab2" category="DataIO">
   <overview>
     <authors>
-      <author>Oleg Portniaguine</author>
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
       Interactive Matlab Interface.  The Matlab module is part of the DataIO category in the MatlabInterface package.
     </summary>
     <description>
-      <p>The Matlab module is part of the MatlabInterface package that enables
-calls from SCIRun to Matlab, either to interactive commands or via Matlab
-scripts.  Sockets are the underlying coupling mechanism that connect SCIRun
-and Matlab because they run as separate processes.  The Matlab module facilitates both simple tasks such as converting files between SCIRun and Matlab, and more complex tasks such as creating interactive SCIRun programs that call Matlab scripts to perform real-time applications.</p>
-      <p>Version Date: Sep 2001</p><p>Version: 1.0</p>
+    <note> Documentation will follow once this module is finished</note>
     </description>
   </overview>
   <implementation>

@@ -87,6 +87,7 @@ class Service : public ServiceBase {
 
 	// Get information about this services
 	int				getsession();
+    void            setsession(int session);
 	std::string		getservicename();
 	std::string		getpackagename();
 	std::string		getparameter(std::string);
@@ -162,6 +163,11 @@ inline bool Service::haserror()
 inline int Service::getsession()
 {
 	return(ctx_.session);
+}
+
+inline void Service::setsession(int session)
+{
+    ctx_.session = session;
 }
 
 inline std::string Service::getservicename()

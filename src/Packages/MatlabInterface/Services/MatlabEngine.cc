@@ -72,7 +72,7 @@ class   MatlabCall : public SystemCall {
 	virtual ~MatlabCall();
 	
 	void				start_engine(std::string command);
-	inline void			close_engine();
+	void                close_engine();
 	void				lock_engine(MatlabEngine* ptr);
 	void				unlock_engine();
 	
@@ -152,8 +152,9 @@ bool MatlabCallHandler::execute(std::string line)
 		{   
 			handle_->passed_test_ = true;
 			handle_->wait_test_.conditionBroadcast();
+            return(false); // Don't forward this to the user
 		}
-		return(false); // Don't forward this to the user
+		return(true); // Don't forward this to the user
 	}
 	return(true);	
 }
@@ -227,11 +228,15 @@ bool MatlabCall::release()
 	engine_count--;
 	if (engine_count == 0) 
 	{
+        unlock();
 		close_engine();
 		return(true);
 	}
-	unlock();
-	return(false);
+    else
+    {
+        unlock();
+        return(false);
+    }
 }
 
 void	MatlabCall::lock_engine(MatlabEngine* ptr)
@@ -291,7 +296,20 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
  
 	matlab_processes_lock_.lock();
 	matlab_handle_ = matlab_processes_[session];
+    
+    if (session == 0)
+    {
+        // Create new unique session
+        int p = 1;
+        while(1)
+        {
+            if(matlab_processes_[p].get_rep() == 0) break;
+        }
+        session = p;
+        setsession(session);
+    }
 	
+    
 	putmsg("MatlabEngine: getting matlab process handle");
 	
 	if (matlab_handle_.get_rep() == 0)
@@ -312,6 +330,11 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
 			matlab_handle_ = scinew MatlabCall;
 			if (matlab_handle_.get_rep() == 0) throw SystemCallError("Could not create Systemcall",0,SystemCallBase::SCE_BADALLOC);
 
+            putmsg("MatlabEngine: Start forwarding stdio");
+            forward_stdout(matlab_handle_->getsyscallhandle());
+            forward_stderr(matlab_handle_->getsyscallhandle());
+            forward_exit(matlab_handle_->getsyscallhandle());            
+            
 			putmsg("MatlabEngine: start matlab engine");
 			matlab_handle_->start_engine(startmatlab);
 			matlab_handle_->obtain();
@@ -348,8 +371,14 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
 		putmsg("MatlabEngine: Matlab is already running");
 		matlab_handle_->obtain();
 		matlab_processes_lock_.unlock();		
-
-	}
+            
+            
+        putmsg("MatlabEngine: Start forwarding stdio");
+        forward_stdout(matlab_handle_->getsyscallhandle());
+        forward_stderr(matlab_handle_->getsyscallhandle());
+        forward_exit(matlab_handle_->getsyscallhandle());
+        
+    }
 
 
 	putmsg("MatlabEngine: Send test to matlab to see whether it is working");
@@ -393,15 +422,12 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
 	}
 	matlab_handle_->unlock();
 
-	putmsg("MatlabEngine: Start forwarding stdio");
-	forward_stdout(matlab_handle_->getsyscallhandle());
-	forward_stderr(matlab_handle_->getsyscallhandle());
-	forward_exit(matlab_handle_->getsyscallhandle());
 
 	// Need to add some code to validate test
 	
 	putmsg("MatlabEngine: Success, send success signal to client");
 	packet->settag(TAG_MSUCCESS);
+    packet->setparam1(session);    
 	return(true);
 }
 
@@ -465,14 +491,14 @@ std::string	MatlabEngine::addcode(std::string &mfile)
 	// This function wraps an error detection mechanism arounf the m-code the
 	// user supplied
 
-	int lastslash = -1;
-	for (int p = 0; p < mfile.size(); p++)
+	size_t lastslash = mfile.size()+1;
+	for (size_t p = 0; p < mfile.size(); p++)
 	{
 		if (mfile[p] == '/') lastslash = p;
 	}
 	std::string path;
 	std::string command;
-	if (lastslash > -1)
+	if (lastslash <= mfile.size())
 	{
 		path = mfile.substr(0,lastslash+1);
 		command = mfile.substr(lastslash+1);
