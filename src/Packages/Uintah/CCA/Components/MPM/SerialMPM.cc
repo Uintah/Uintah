@@ -2261,11 +2261,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	combustion_problem=true;
 	rho_frac_min = .1;
       }
+      const Level* lvl = patch->getLevel();
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
-	                           iter != pset->end(); 
-	                           iter++){
+	                           iter != pset->end(); iter++){
 	particleIndex idx = *iter;
 
 	// Get the node indices that surround the cell
@@ -2310,15 +2310,23 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	}
 	pmassNew[idx]        = Max(pmass[idx]*(1.    - burnFraction),0.);
 	pvolumeNew[idx]      = pmassNew[idx]/rho;
-	if(pmassNew[idx] <= d_min_part_mass ||
-	   (rho_frac_min < 1.0 && pvelocitynew[idx].length() > d_max_vel)){
-	  delset->addParticle(idx);
-	}
-	    
+
 	thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
 	ke += .5*pmass[idx]*pvelocitynew[idx].length2();
 	CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
 	CMV += pvelocitynew[idx]*pmass[idx];
+      }
+
+      if(d_with_ice){  // Delete particles based on various criteria
+        for(ParticleSubset::iterator iter  = pset->begin();
+                                     iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          bool pointInLevel = lvl->containsPointInRealCells(pxnew[idx]);
+          if(pmassNew[idx] <= d_min_part_mass || !pointInLevel ||
+             pvelocitynew[idx].length() > d_max_vel){
+            delset->addParticle(idx);
+          }
+        }
       }
 
       new_dw->deleteParticles(delset);      
