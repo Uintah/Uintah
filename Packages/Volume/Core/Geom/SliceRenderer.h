@@ -36,10 +36,8 @@ namespace Volume {
 
 using SCIRun::GeomObj;
 using SCIRun::DrawInfoOpenGL;
-
-#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
 class FragmentProgramARB;
-#endif
+
 class SliceRenderer : public TextureRenderer
 {
 public:
@@ -93,7 +91,6 @@ protected:
   
 public:
   virtual GeomObj* clone();
-
   
 protected:
   Point                 control_point_;
@@ -109,10 +106,10 @@ protected:
   bool                  draw_cyl_;
   unsigned char     transfer_function_[1024];
 
-#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
-  FragmentProgramARB *VolShader;
-#endif
-
+  FragmentProgramARB* VolShader1;
+  FragmentProgramARB* VolShader4;
+  FragmentProgramARB* FogVolShader1;
+  FragmentProgramARB* FogVolShader4;
 };
 
 } // End namespace SCIRun

@@ -575,8 +575,3 @@ VolumeRenderer::BuildTransferFunction()
     }
   }
 }
-
-
-
-
-
