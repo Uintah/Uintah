@@ -158,7 +158,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 	d_checkpointCycle = atoi(attrib_5.c_str());
    }
    // must specify something
-   if ( attrib_1 == "" && attrib_2 == "" && attrib_3 == "")
+   if ( attrib_1 == "" && attrib_2 == "" && attrib_3 == "" && checkpoint != 0)
      throw ProblemSetupException("ERROR: \n In checkpointing: must specify either interval, timestepInterval or walltimeStart");
 
    // can't use both checkpointInterval and checkpointTimestepInterval
