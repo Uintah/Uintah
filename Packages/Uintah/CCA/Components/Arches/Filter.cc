@@ -89,7 +89,8 @@ Filter::buildFilterMatrix (const ProcessorGroup* ,
 			   DataWarehouse* )
 {
   // initializeMatrix...
-  matrixCreate(d_perproc_patches, patches);
+  if (!d_matrixInitialize)
+    matrixCreate(d_perproc_patches, patches);
 }
 
 
@@ -251,85 +252,86 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
 #endif
   // Get the patch bounds and the variable bounds
    // #ifdef notincludeBdry
+   if (!d_matrixInitialize) {
 #if 1
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+     IntVector idxLo = patch->getCellFORTLowIndex();
+     IntVector idxHi = patch->getCellFORTHighIndex();
 #else
-  IntVector idxLo = patch->getLowIndex();
-  IntVector idxHi = patch->getHighIndex()-IntVector(1,1,1);
+     IntVector idxLo = patch->getLowIndex();
+     IntVector idxHi = patch->getHighIndex()-IntVector(1,1,1);
 #endif
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
          Compute the matrix that defines the filter function Ax
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
     /* 
-     Create parallel matrix, specifying only its global dimensions.
-     When using MatCreate(), the matrix format can be specified at
-     runtime. Also, the parallel partitioning of the matrix is
-     determined by PETSc at runtime.
-
-     Performance tuning note:  For problems of substantial size,
-     preallocation of matrix memory is crucial for attaining good 
-     performance.  Since preallocation is not possible via the generic
-     matrix creation routine MatCreate(), we recommend for practical 
-     problems instead to use the creation routine for a particular matrix
-     format, e.g.,
-         MatCreateMPIAIJ() - parallel AIJ (compressed sparse row)
-         MatCreateMPIBAIJ() - parallel block AIJ
-     See the matrix chapter of the users manual for details.
-  */
-  int ierr;
-  int col[27];
-  double value[27];
-  // fill matrix for internal patches
-  // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
-  // petsc matrix
-  IntVector lowIndex = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
-  IntVector highIndex = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
-
-  Array3<int> l2g(lowIndex, highIndex);
-  l2g.copy(d_petscLocalToGlobal[patch]);
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	IntVector currCell(colX, colY, colZ);
-	int count = 0;
-	double totalVol = 0.0;
-	for (int kk = -1; kk <= 1; kk ++) {
-	  for (int jj = -1; jj <= 1; jj ++) {
-	    for (int ii = -1; ii <= 1; ii ++) {
-	      IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
-	      double vol = cellinfo->sew[colX+ii]*cellinfo->sns[colY+jj]*
-		           cellinfo->stb[colZ+kk]*
-		           (1.0-0.5*abs(ii))*
-		           (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
-	      col[count] = l2g[filterCell];  //ab
-	      if (col[count] != -1234) // not on the boundary
-		totalVol += vol;
-	      value[count] = vol;
-	      count++;
-	    }
-	  }
-	}
-	for (int ii = 0; ii < d_nz; ii++)
-	  value[ii] /= totalVol;
-	int row = l2g[IntVector(colX,colY,colZ)];
+       Create parallel matrix, specifying only its global dimensions.
+       When using MatCreate(), the matrix format can be specified at
+       runtime. Also, the parallel partitioning of the matrix is
+       determined by PETSc at runtime.
+       
+       Performance tuning note:  For problems of substantial size,
+       preallocation of matrix memory is crucial for attaining good 
+       performance.  Since preallocation is not possible via the generic
+       matrix creation routine MatCreate(), we recommend for practical 
+       problems instead to use the creation routine for a particular matrix
+       format, e.g.,
+       MatCreateMPIAIJ() - parallel AIJ (compressed sparse row)
+       MatCreateMPIBAIJ() - parallel block AIJ
+       See the matrix chapter of the users manual for details.
+    */
+     int ierr;
+     int col[27];
+     double value[27];
+     // fill matrix for internal patches
+     // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
+     // petsc matrix
+     IntVector lowIndex = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
+     IntVector highIndex = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
+     
+     Array3<int> l2g(lowIndex, highIndex);
+     l2g.copy(d_petscLocalToGlobal[patch]);
+     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	 for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	   IntVector currCell(colX, colY, colZ);
+	   int count = 0;
+	   double totalVol = 0.0;
+	   for (int kk = -1; kk <= 1; kk ++) {
+	     for (int jj = -1; jj <= 1; jj ++) {
+	       for (int ii = -1; ii <= 1; ii ++) {
+		 IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
+		 double vol = cellinfo->sew[colX+ii]*cellinfo->sns[colY+jj]*
+		   cellinfo->stb[colZ+kk]*
+		   (1.0-0.5*abs(ii))*
+		   (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+		 col[count] = l2g[filterCell];  //ab
+		 if (col[count] != -1234) // not on the boundary
+		   totalVol += vol;
+		 value[count] = vol;
+		 count++;
+	       }
+	     }
+	   }
+	   for (int ii = 0; ii < d_nz; ii++)
+	     value[ii] /= totalVol;
+	   int row = l2g[IntVector(colX,colY,colZ)];
 #if 0
-	cerr << "row" << "=" << row << endl;
-	cerr << "l2g" << currCell << "=" << l2g[currCell] << endl; 
-	for (int ii = 0; ii < d_nz; ii++) {
-	  cerr << "value" << ii << "=" << value[ii] << endl;
-	  cerr << "col" << ii << "=" << col[ii] << endl;
-	}
+	   cerr << "row" << "=" << row << endl;
+	   cerr << "l2g" << currCell << "=" << l2g[currCell] << endl; 
+	   for (int ii = 0; ii < d_nz; ii++) {
+	     cerr << "value" << ii << "=" << value[ii] << endl;
+	     cerr << "col" << ii << "=" << col[ii] << endl;
+	   }
 #endif
-
-	ierr = MatSetValues(A,1,&row,d_nz,col,value,INSERT_VALUES);
-	if(ierr)
-	  throw PetscError(ierr, "MatSetValues");
-      }
-    }
-  }
-  d_matrixInitialize = true; 
-
+	   
+	   ierr = MatSetValues(A,1,&row,d_nz,col,value,INSERT_VALUES);
+	   if(ierr)
+	     throw PetscError(ierr, "MatSetValues");
+	 }
+       }
+     }
+     d_matrixInitialize = true; 
+   }
 }
 
 
