@@ -389,3 +389,36 @@ void Node::operator delete(void* rp, size_t)
 {
     Node_alloc.free(rp);
 }
+
+int Element::orient()
+{
+    double sgn=volume();
+    if(sgn< 0.0){
+	// Switch two of the edges so that the volume is positive
+	int tmp=n[0];
+	n[0]=n[1];
+	n[1]=tmp;
+	sgn=-sgn;
+    }
+    if(sgn < 1.e-6){
+	return 0; // Degenerate...
+    } else {
+	return 1;
+    }
+}
+
+double Element::volume()
+{
+    NOT_FINISHED("Element::volume()");
+    return 0;
+}
+
+void Mesh::get_bounds(Point& min, Point& max)
+{
+    min=nodes[0]->p;
+    max=nodes[0]->p;
+    for(int i=1;i<nodes.size();i++){
+	min=Min(min, nodes[i]->p);
+	max=Max(max, nodes[i]->p);
+    }
+}    
