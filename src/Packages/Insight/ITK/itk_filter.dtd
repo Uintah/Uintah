@@ -28,19 +28,19 @@
 <!ELEMENT defaults (default*)>
 
 <!ELEMENT default (#PCDATA)>
+  <!ATTLIST default const (yes|no) "no">
 
 <!ELEMENT datatypes (datatype*)>
 
-<!ELEMENT datatype (field)>
+<!ELEMENT datatype (member-var+)>
   <!ATTLIST datatype name CDATA #REQUIRED>
 
-<!ELEMENT field (access-method, type, variable-call)>
+<!ELEMENT member-var (elem-type,size-call)>
+  <!ATTLIST member-var type CDATA #REQUIRED>
 
-<!ELEMENT access-method (#PCDATA)>
+<!ELEMENT elem-type (#PCDATA)>
 
-<!ELEMENT type (#PCDATA)>
-
-<!ELEMENT variable-call (#PCDATA)>
+<!ELEMENT size-call (#PCDATA)>
  
 <!ELEMENT inputs (input*)>
 
@@ -61,8 +61,9 @@
 
 <!ELEMENT parameters (param*)>
 
-<!ELEMENT param (name, type, call+)>
-  <!ATTLIST param defined (yes|no) "no">
+<!ELEMENT param (name, type, call+, default)>
+
+<!ELEMENT type (#PCDATA)>
 
 <!ELEMENT includes (file*)>
 

@@ -51,11 +51,13 @@ This filter is a process object class that implements a step in the N-d watershe
       <name>flood_level</name>
       <type>double</type>
       <call>SetFloodLevel</call>
+      <default>0.1</default>
     </param>
    <param>
       <name>merge</name>
       <type>bool</type>
       <call>SetMerge</call>
+      <default>0</default>
     </param>
   </parameters>
 

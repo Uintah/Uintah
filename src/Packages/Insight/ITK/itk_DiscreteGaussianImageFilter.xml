@@ -52,11 +52,13 @@
       <name>variance</name>
       <type>double</type>
       <call>SetVariance</call>
+      <default>10</default>
     </param>
     <param>
       <name>maximum_error</name>
       <type>double</type>
       <call>SetMaximumError</call>
+      <default>0.001</default>
     </param>
   </parameters>
   <includes>

@@ -59,47 +59,56 @@
       <name>iterations</name>
       <type>int</type>
       <call>SetMaximumIterations</call>
+      <default>10</default>
     </param>
     <param>
       <name>reverse_expansion_direction</name>
       <type>bool</type>
       <call value="on">ReverseExpansionDirectionOn</call>
       <call value="off">ReverseExpansionDirectionOff</call>
+      <default>1</default>
     </param>
     <param>
       <name>max_rms_change</name>
       <type>double</type>
       <call>SetMaximumRMSError</call>
+      <default>0.001</default>
     </param>
     <param>
       <name>threshold</name>
       <type>double</type>
       <call>SetThreshold</call>
-    </param>
+      <default>0.001</default>
+    </param>    
     <param>
       <name>variance</name>
       <type>double</type>
       <call>SetVariance</call>
+      <default>10</default>
     </param>
     <param>
       <name>propagation_scaling</name>
       <type>double</type>
       <call>SetPropagationScaling</call>
+     <default>1.0</default>
     </param>
     <param>
       <name>advection_scaling</name>
       <type>double</type>
       <call>SetAdvectionScaling</call>
+      <default>1.0</default>
     </param>
     <param>
       <name>curvature_scaling</name>
       <type>double</type>
       <call>SetCurvatureScaling</call>
+      <default>1.0</default>
     </param>
     <param>
       <name>isovalue</name>
       <type>double</type>
       <call>SetIsoSurfaceValue</call>
+      <default>0.5</default>
     </param>
   </parameters>
   <includes>

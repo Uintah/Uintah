@@ -53,21 +53,25 @@ This filter produces an output image whose pixels are either one of two values (
       <name>lower_threshold</name>
       <type>float</type>
       <call>SetLowerThreshold</call>
+      <default>0.0</default>
     </param>
     <param>
       <name>upper_threshold</name>
       <type>float</type>
       <call>SetUpperThreshold</call>
+      <default>1.0</default>
     </param>
     <param>
       <name>inside_value</name>
       <type>float</type>
       <call>SetInsideValue</call>
+      <default>1</default>
     </param>
     <param>
       <name>outside_value</name>
       <type>float</type>
       <call>SetOutsideValue</call>
+      <default>0</default>
     </param>
   </parameters>
 
