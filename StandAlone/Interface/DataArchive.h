@@ -13,6 +13,9 @@
 #include <list>
 #include <hash_map>
 
+using std::hex;
+using std::dec;
+
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1375
@@ -233,6 +236,12 @@ public:
 	      double min, double max);
    
    //////////
+   // query the variable value for a particular particle  overtime;
+   template<class T>
+     void query(std::vector<T>& values, const std::string& name,
+		int matlIndex, long particleID,
+		double startTime, double endTime) ;
+   //////////
    // similarly, we want to be able to track variable values in a particular
    // patch cell over time.
    template<class T>
@@ -272,7 +281,9 @@ private:
 
    DOM_Node findVariable(const string& name, const Patch* patch,
 			 int matl, double time, XMLURL& url);
-
+   void findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
+			  long particleID, int matIndex,
+			  double time);
    static DebugStream dbg;
 };
 
@@ -335,13 +346,6 @@ void DataArchive::query( ParticleVariable< T >& var, const std::string& name,
    dbg << "DataArchive::query(ParticleVariable) completed in " << Time::currentSeconds()-tstart << " seconds\n";
 }
    
-template<class T>
-void DataArchive::query(ParticleVariable< T >& var, const std::string& name,
-			int matlIndex, particleId id,
-			double min, double max)
-{
-   cerr << "DataArchive::query not finished\n";
-}
 
 template<class T>
 void DataArchive::query( NCVariable< T >& var, const std::string& name,
@@ -468,6 +472,74 @@ void DataArchive::query( CCVariable< T >&, const std::string& name, int matlInde
 }
 
 template<class T>
+void DataArchive::query(ParticleVariable< T >& var, const std::string& name,
+			int matlIndex, particleId id,
+			double min, double max)
+{
+   cerr << "DataArchive::query not finished\n";
+}
+
+
+template<class T>
+void DataArchive::query(std::vector<T>& values, const std::string& name,
+    	    	    	int matlIndex, long particleID,
+			double startTime, double endTime)
+{
+  double call_start = Time::currentSeconds();
+
+  if (!have_timesteps) {
+    vector<int> index;
+    vector<double> times;
+    queryTimesteps(index, times);
+    // will build d_ts* as a side effect
+  }
+  // figure out what kind of variable we're looking for
+  vector<string> type_names;
+  vector<const TypeDescription*> type_descriptions;
+  queryVariables(type_names, type_descriptions);
+  const TypeDescription* type = NULL;
+  vector<string>::iterator name_iter = type_names.begin();
+  vector<const TypeDescription*>::iterator type_iter = type_descriptions.begin();
+  for ( ; name_iter != type_names.end() && type == NULL;
+	name_iter++, type_iter++) {
+    if (*name_iter == name)
+      type = *type_iter;
+  }
+  if (type == NULL)
+    throw InternalError("Unable to determine variable type");
+  if (type->getType() != TypeDescription::ParticleVariable)    
+    throw InternalError("Variable type is not ParticleVariable");
+  // find the first timestep
+  int ts = 0;
+  while ((ts < d_tstimes.size()) && (startTime > d_tstimes[ts]))
+    ts++;
+  GridP grid = queryGrid( d_tstimes[ts] );
+  Patch* patch = NULL;
+  particleIndex idx;
+  for ( ; (ts < d_tstimes.size()) && (d_tstimes[ts] < endTime); ts++) {
+    double t = d_tstimes[ts];
+
+    // figure out what patch contains the cell. As far as I can tell,
+    // nothing prevents this from changing between timesteps, so we have to
+    // do this every time -- if that can't actually happen we might be able
+    // to speed this up.
+    findPatchAndIndex(grid, patch, idx, particleID, matlIndex, t);
+    //    cerr <<" Patch = 0x"<<hex<<patch<<dec<<", index = "<<idx;
+    if (patch == NULL)
+      throw InternalError("Couldn't find patch containing location");
+      
+    ParticleVariable<T> var;
+    query(var, name, matlIndex, patch, t);
+      //now find the index that corresponds to the particleID
+    //cerr <<" time = "<<t<<",  value = "<<var[idx]<<endl;
+    values.push_back(var[idx]);
+    
+  }
+  dbg << "DataArchive::query(values) completed in "
+      << (Time::currentSeconds() - call_start) << " seconds\n";
+}  
+
+template<class T>
 void DataArchive::query(std::vector<T>& values, const std::string& name,
     	    	    	int matlIndex, IntVector loc,
 			double startTime, double endTime)
@@ -555,6 +627,9 @@ void DataArchive::query(std::vector<T>& values, const std::string& name,
 
 //
 // $Log$
+// Revision 1.13  2000/11/02 19:19:21  kuzimmer
+// Added particleVariable  query function
+//
 // Revision 1.12  2000/09/25 18:13:09  sparker
 // Do not use 64 bit lseek64 except on SGI
 //
