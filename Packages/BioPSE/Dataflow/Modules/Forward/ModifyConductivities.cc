@@ -42,18 +42,23 @@ namespace SCIRun {
 class ModifyConductivities : public Module
 {
 private:
-  unsigned int last_gui_hash_;
-  unsigned int last_field_hash_;
-  int last_field_gen_;
+  unsigned int last_field_generation_;
+  vector<pair<string, Tensor> > last_field_tensors_;
+  vector<pair<string, Tensor> > last_gui_tensors_;
+  bool addnew_;
+  bool redo_gui_;
 
 public:
   ModifyConductivities(GuiContext *context);
   virtual ~ModifyConductivities();
 
-  void update_gui(const vector<pair<string, Tensor> > &tensors);
-  void push_changes(vector<pair<string, Tensor> > &tensors);
-  unsigned int hash_tensors(vector<pair<string, Tensor> > &tensors);
+  void update_to_gui(const vector<pair<string, Tensor> > &tensors);
+  bool update_from_gui(vector<pair<string, Tensor> > &tensors);
+  bool different_tensors(const vector<pair<string, Tensor> > &a,
+			 const vector<pair<string, Tensor> > &b);
+
   virtual void execute();
+  virtual void tcl_command(GuiArgs &args, void *);
 };
 
 
@@ -62,9 +67,9 @@ DECLARE_MAKER(ModifyConductivities)
 
 ModifyConductivities::ModifyConductivities(GuiContext *context)
   : Module("ModifyConductivities", context, Filter, "Forward", "BioPSE"),
-    last_gui_hash_(0),
-    last_field_hash_(0),
-    last_field_gen_(0)
+    last_field_generation_(0),
+    addnew_(false),
+    redo_gui_(false)
 {
 }
 
@@ -76,9 +81,14 @@ ModifyConductivities::~ModifyConductivities()
 
 
 void
-ModifyConductivities::update_gui(const vector<pair<string, Tensor> > &tensors)
+ModifyConductivities::update_to_gui(const vector<pair<string, Tensor> > &tensors)
 {
   string result;
+  gui->eval(id + " isopen", result);
+  if (result != "open")
+  {
+    return;
+  }
   gui->eval(id + " ui", result);
   gui->eval(id + " clear_all", result);
 
@@ -120,13 +130,19 @@ getafter(const string &after, const string &str)
 
 
 
-void
-ModifyConductivities::push_changes(vector<pair<string, Tensor> > &tensors)
+bool
+ModifyConductivities::update_from_gui(vector<pair<string, Tensor> > &tensors)
 {
+  string result;
+  gui->eval(id + " isopen", result);
+  if (result != "open")
+  {
+    return false;
+  }
+
   for (unsigned int i = 0; i < tensors.size(); i++)
   {
-    string result;
-    string command = id + " get_item i" + to_string(i);
+    const string command = id + " get_item i" + to_string(i);
     gui->eval(command, result);
 
     tensors[i].first = getafter("Material", result);
@@ -191,28 +207,36 @@ ModifyConductivities::push_changes(vector<pair<string, Tensor> > &tensors)
       tensors[i].second = tensors[i].second * scale;
     }
   }
+  return true;
 }
 
 
-unsigned int
-ModifyConductivities::hash_tensors(vector<pair<string, Tensor > > &tens)
+bool
+ModifyConductivities::different_tensors(const vector<pair<string, Tensor> > &a,
+					const vector<pair<string, Tensor> > &b)
 {
-  unsigned int h = 0;
-  for (unsigned int i = 0; i < tens.size(); i++)
+  if (a.size() != b.size())
   {
-    const char *s = tens[i].first.c_str();
-    for ( ; *s; ++s)
+    return true;
+  }
+  for (unsigned int i=0; i < a.size(); i++)
+  {
+    if (a[i].first != b[i].first)
     {
-      h = 5 * h + *s;
+      return true;
     }
-
-    const char *d = (const char *)(tens[i].second.mat_);
-    for (unsigned int i = 0; i < sizeof(double) * 9; i++)
+    for (int j = 0; j < 2; j++)
     {
-      h = 5 * h + d[i];
+      for (int k = 0; k < 2; k++)
+      {
+	if (a[i].second.mat_[j][k] != b[i].second.mat_[j][k])
+	{
+	  return true;
+	}
+      }
     }
   }
-  return h;
+  return false;
 }
 
 
@@ -231,12 +255,19 @@ ModifyConductivities::execute()
     return;
   }
 
-  // Get the tensors from the field.
-  bool created_p = false;
-  vector<pair<string, Tensor> > tensors;
-  if (!field->get_property("conductivity_table", tensors))
+  bool new_field_p = false;
+  if (field->generation != last_field_generation_)
   {
-    remark("Using identity conductivity tensors.");
+    last_field_generation_ = field->generation;
+    new_field_p = true;
+  }
+
+  // Get the tensors from the field.
+  vector<pair<string, Tensor> > field_tensors;
+  bool created_p = false;
+  if (!field->get_property("conductivity_table", field_tensors))
+  {
+    //remark("Using identity conductivity tensors.");
     created_p = true;
     ScalarFieldInterface *sfi = field->query_scalar_interface();
     double maxval;
@@ -256,53 +287,92 @@ ModifyConductivities::execute()
       return;
     }
 
-    tensors.resize((unsigned int)(maxval + 1.5));
+    field_tensors.resize((unsigned int)(maxval + 1.5));
+    if (field_tensors.size() == last_gui_tensors_.size())
+    {
+      // Tensors in gui appear to work, just use those.
+      field_tensors = last_gui_tensors_;
+    }
+    else
+    {
+      // Create some new ones.
+      vector<double> t(6);
+      t[0] = t[3] = t[5] = 1;
+      t[1] = t[2] = t[4] = 0;
 
+      Tensor tn(t);
+      for (unsigned int i = 0; i < field_tensors.size(); i++)
+      {
+	field_tensors[i] =
+	  pair<string, Tensor>("conductivity-" + to_string(i), tn);
+      }
+    }
+    created_p = true;
+  }
+  
+  // New input tensors, update the gui.
+  if (different_tensors(field_tensors, last_field_tensors_))
+  {
+    update_to_gui(field_tensors);
+    last_field_tensors_ = field_tensors;
+    last_gui_tensors_ = field_tensors;
+  }
+
+  if (redo_gui_)
+  {
+    update_to_gui(last_gui_tensors_);
+    redo_gui_ = false;
+  }
+
+  vector<pair<string, Tensor> > gui_tensors;
+  gui_tensors.resize(last_gui_tensors_.size());
+  if (!update_from_gui(gui_tensors))
+  {
+    gui_tensors = last_gui_tensors_;
+  }
+  if (addnew_)
+  {
+    addnew_ = false;
+
+    string result;
     vector<double> t(6);
     t[0] = t[3] = t[5] = 1;
     t[1] = t[2] = t[4] = 0;
 
+    const int i = gui_tensors.size();
+
     Tensor tn(t);
-    for (unsigned int i = 0; i < tensors.size(); i++)
-    {
-      tensors[i] = pair<string, Tensor>("conductivity-" + to_string(i), tn);
-    }
+    gui_tensors.push_back(pair<string, Tensor>("conductivity-" + to_string(i),
+					       tn));
+
+    string command = id + " set_item i" + to_string(i) +
+      " { Material \"" + gui_tensors[i].first + "\" Scale 1.0 C00 " +
+      to_string(gui_tensors[i].second.mat_[0][0]) + " C01 " +
+      to_string(gui_tensors[i].second.mat_[0][1]) + " C02 " +
+      to_string(gui_tensors[i].second.mat_[0][2]) + " C10 " +
+      to_string(gui_tensors[i].second.mat_[1][0]) + " C11 " +
+      to_string(gui_tensors[i].second.mat_[1][1]) + " C12 " +
+      to_string(gui_tensors[i].second.mat_[1][2]) + " C20 " +
+      to_string(gui_tensors[i].second.mat_[2][0]) + " C21 " +
+      to_string(gui_tensors[i].second.mat_[2][1]) + " C22 " +
+      to_string(gui_tensors[i].second.mat_[2][2]) + " }";
+
+    gui->eval(command, result);
   }
-
-  // Update the GUI if the tensors are new.
-  unsigned int hash1 = hash_tensors(tensors);
-  if (hash1 != last_gui_hash_)
+  
+  bool changed_table_p = false;
+  if (different_tensors(gui_tensors, last_gui_tensors_) ||
+      different_tensors(gui_tensors, field_tensors) ||
+      created_p)
   {
-    last_gui_hash_ = hash1;
-    last_field_hash_ = hash1;
-    update_gui(tensors);
-  }
-
-  bool was_new_field_p = false;
-  if (last_field_gen_ != field->generation)
-  {
-    last_field_gen_ = field->generation;
-    was_new_field_p = true;
-  }
-
-  push_changes(tensors);
-  bool stored_p = false;
-  unsigned int hash2 = hash_tensors(tensors);
-  if (created_p ||
-      (hash2 != last_field_hash_) ||
-      (last_field_hash_ != last_gui_hash_ && was_new_field_p))
-  {
-    // Edits were made.
-    last_field_hash_ = hash2;
-
     field.detach();
 
-    field->set_property("conductivity_table", tensors, false);
-
-    stored_p = true;
+    field->set_property("conductivity_table", gui_tensors, false);
+    last_gui_tensors_ = gui_tensors;
+    changed_table_p = true;
   }
 
-  if (stored_p || was_new_field_p)
+  if (new_field_p || changed_table_p)
   {
     // Forward the results.
     FieldOPort *ofp = (FieldOPort *)get_oport("Output");
@@ -311,6 +381,34 @@ ModifyConductivities::execute()
       return;
     }
     ofp->send(field);
+  }
+}
+
+
+void
+ModifyConductivities::tcl_command(GuiArgs &args, void *extra)
+{
+  if (args.count() == 2 && args[1] == "addnew")
+  {
+    addnew_ = true;
+    if (!abort_flag)
+    {
+      abort_flag = 1;
+      want_to_execute();
+    }
+  }
+  else if (args.count() == 2 && args[1] == "redo_gui")
+  {
+    redo_gui_ = true;
+    if (!abort_flag)
+    {
+      abort_flag = 1;
+      want_to_execute();
+    }
+  }      
+  else
+  {
+    Module::tcl_command(args, extra);
   }
 }
 

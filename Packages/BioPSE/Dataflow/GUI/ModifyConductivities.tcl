@@ -31,7 +31,6 @@ itcl_class BioPSE_Forward_ModifyConductivities {
 	
 	set ent [$ht insert end $name]
 	$ht entry configure $ent -data $data
-	#pack $ht
 	return $ent
     }
 
@@ -43,6 +42,14 @@ itcl_class BioPSE_Forward_ModifyConductivities {
     method clear_all {} {
 	set ht .ui[modname].f.h
 	$ht delete 0
+    }
+
+    method isopen {} {
+	set w .ui[modname]
+	if {[winfo exists $w]} {
+	    return "open"
+	}
+	return "closed"
     }
 
     method ui {} {
@@ -90,10 +97,16 @@ itcl_class BioPSE_Forward_ModifyConductivities {
 	focus $w.f.h
 	bind $w.f.h <ButtonPress-1> "$w.f.h text get %x %y; focus $w.f.h.edit"
 
+	frame $w.controls
 
-        button $w.execute -text "Execute" -command "$this-c needexecute"
+        button $w.controls.execute -text "Execute" \
+	    -command "$this-c needexecute"
+        button $w.controls.addnew -text "Add New" -command "$this-c addnew"
 
-	pack $w.f $w.execute -side top
+	pack $w.controls.execute $w.controls.addnew -side left -fill x
+	pack $w.f $w.controls -side top
+
+	$this-c redo_gui
     }
 }
 
