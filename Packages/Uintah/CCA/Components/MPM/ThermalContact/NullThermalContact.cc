@@ -11,7 +11,7 @@
 using namespace Uintah;
 
 #define FRACTURE
-//#undef FRACTURE
+#undef FRACTURE
 
 NullThermalContact::NullThermalContact(ProblemSpecP&,SimulationStateP& d_sS,
 								MPMLabel* Mlb)

@@ -28,7 +28,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 #define FRACTURE
-//#undef FRACTURE
+#undef FRACTURE
 
 HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 {
