@@ -483,9 +483,10 @@ itcl_class Module {
 	    return
 	}
 	
-	# create the window
-	toplevel $w
-	moveToCursor $w "leave_up"
+	# create the window (immediately withdraw it to avoid flicker)
+	toplevel $w; wm withdraw $w
+	update
+
 	append t "Log for " [modname]
 	set t "$t -- pid=[$this-c getpid]"
 	wm title $w $t
@@ -518,6 +519,9 @@ itcl_class Module {
 	pack $w.fbuttons -side top -padx 5 -pady 2 -fill x
 
 	wm minsize $w 450 150
+
+	# Move window to cursor after it has been created.
+	moveToCursor $w "leave_up"
 
 	$msgLogStream registerOutput $w.log.txt
     }
