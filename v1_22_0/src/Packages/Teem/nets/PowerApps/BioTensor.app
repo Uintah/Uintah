@@ -378,7 +378,7 @@ if {[file exists $DATADIR/$DATASET/demo-DWI.nrrd]} {
 } 
 set $m1-notes {}
 set $m1-axis {3}
-set $m1-position {8}
+set $m1-position {0}
 set $m2-notes {}
 set $m2-gradient_list {}
 set $m2-reference {-1}
@@ -416,7 +416,7 @@ set $m4-gradient_list {  -0.41782350500888   0.82380935278446   0.38309485630448
 }
 set $m5-notes {}
 set $m5-axis {3}
-set $m5-position {8}
+set $m5-position {0}
 set $m6-notes {}
 set $m6-build-eigens {0}
 set $m7-notes {}
@@ -3846,8 +3846,7 @@ class BioTensorApp {
 	global $mods(ShowField-Glyphs)-tensors-on
 	global $mods(ShowField-Fibers)-edges-on
 	global show_plane_x show_plane_y show_plane_z
-	
-	
+
 	if {$which == $mods(ChooseNrrd1) && $state == "JustStarted"} {
 	    change_indicator_labels "Loading Data..."
 	    change_indicate_val 1
@@ -5273,8 +5272,8 @@ class BioTensorApp {
 	global $mods(UnuSlice2)-position
 
 	# configure slice slider
-	$variance_tab1.slice configure -from 0 -to [expr $size_z]
-	$variance_tab2.slice configure -from 0 -to [expr $size_z]
+	$variance_tab1.slice configure -from 0 -to $size_z
+	$variance_tab2.slice configure -from 0 -to $size_z
 
 	set $mods(UnuSlice1)-position [expr $size_z / 2]
 	set $mods(UnuSlice2)-position [expr $size_z / 2]
@@ -9037,8 +9036,7 @@ class BioTensorApp {
 	    set indicator 0
 	}
     }
-	
-    
+
     method change_indicate_val { v } {
 	# only change an error state if it has been cleared (error_module empty)
 	# it will be changed by the indicate_error method when fixed
