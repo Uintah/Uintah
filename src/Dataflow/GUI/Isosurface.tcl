@@ -349,25 +349,11 @@ itcl_class SCIRun_Visualization_Isosurface {
 	$mf.tabs view [set $this-active_tab]
 	$mf.tabs configure -tabpos "n"
 
-	
 	pack $mf.tabs -side top -fill x -expand 1
 	pack $w.f.meth -side top -fill x -expand 1
+
     }
 
-    method change-isoval { n } {
-	global $this-continuous
-
-	if { [set $this-continuous] == 1.0 } {
-	    eval "$this-c needexecute"
-	}
-
-	if { [set $this-update_type] == "Auto" } {
-	    set $this-continuous 1
-	} else {
-	    set $this-continuous 0
-	}
-    }
-    
     method set-isoval {} {
 	global $this-update
 
@@ -440,7 +426,6 @@ itcl_class SCIRun_Visualization_Isosurface {
 
     method set_minmax {min max} {
 	set w .ui[modname]
-
 	global $this-isoval-min $this-isoval-max
 	set $this-isoval-min $min
 	set $this-isoval-max $max
@@ -451,6 +436,19 @@ itcl_class SCIRun_Visualization_Isosurface {
 		  configure -tickinterval [expr ($max - $min)/3.001]
 	  bind $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.r.e \
 		  <Return> "$this manualSliderEntry $min $max $this-isoval $this-isoval2"
+	}
+
+	# have to set this value here -- it needs to be set after
+	#  the first call to set_minmax, otherwise a net that has 
+	#  update_type set to "Auto" will execute immediately... rather
+	#  than waiting for a user-generated execute event
+	# (the configure commands just above are what cause this)
+	global $this-continuous
+	global $this-update_type
+	if { [set $this-update_type] == "Auto" } {
+	    set $this-continuous 1
+	} else {
+	    set $this-continuous 0
 	}
     }
 
@@ -480,29 +478,23 @@ itcl_class SCIRun_Visualization_Isosurface {
 
     method updateSliderEntry {var1 var2 someUknownVar} {
 	set $var2 [set $var1]
+	set n [set $var1]
 
-	change-isoval [set $var1]
+	global $this-continuous
+
+	if { [set $this-continuous] == 1.0 } {
+	    eval "$this-c needexecute"
+	}
     }
-
+    
     method manualSliderEntry { start stop var1 var2 } {
-
-	puts stdout $start
-	puts stdout $stop
-	puts stdout $var1
-	puts stdout $var2
-
 	if { [set $var2] < $start } {
 	    set $var2 $start
 	}
-	
 	if { [set $var2] > $stop } {
-	    set $var2 $stop }
-	
+	    set $var2 $stop 
+	}
 	set $var1 [set $var2]
-
-	puts stdout [set $var1]
-	puts stdout [set $var2]
-
-	change-isoval [set $var1]
+	eval "$this-c needexecute"
     }
 }
