@@ -163,18 +163,18 @@ Discretization::calculateVelRhoHat(const ProcessorGroup* /*pc*/,
 		      delta_t, ioff, joff, koff);
 
 #ifdef ARCHES_VEL_DEBUG
-    cerr << "Print wvelhat" << endl;
+    cerr << "Print wvelhat" << "\n";
     vars->wVelRhoHat.print(cerr);
 
-    cerr << " After W Vel Explicit solve : " << endl;
+    cerr << " After W Vel Explicit solve : " << "\n";
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "W Vel for ii = " << ii << endl;
+      cerr << "W Vel for ii = " << ii << "\n";
       for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
 	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
 	  cerr.width(14);
 	  cerr << vars->wVelocity[IntVector(ii,jj,kk)] << " " ; 
 	}
-	cerr << endl;
+	cerr << "\n";
       }
     }
 #endif
@@ -200,14 +200,14 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup*,
 				       ArchesVariables* coeff_vars)
 {
 #ifdef ARCHES_COEF_DEBUG
-  cerr << "BEFORE VELCOEF" << endl;
-  cerr << "Print Density" << endl;
+  cerr << "BEFORE VELCOEF" << "\n";
+  cerr << "Print Density" << "\n";
   coeff_vars->density.print(cerr);
-  cerr << "Print uVelocity" << endl;
+  cerr << "Print uVelocity" << "\n";
   coeff_vars->uVelocity.print(cerr);
-  cerr << "Print vVelocity" << endl;
+  cerr << "Print vVelocity" << "\n";
   coeff_vars->vVelocity.print(cerr);
-  cerr << "Print wVelocity" << endl;
+  cerr << "Print wVelocity" << "\n";
   coeff_vars->wVelocity.print(cerr);
 #endif
 
@@ -217,7 +217,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup*,
     IntVector idxLoU = patch->getSFCXFORTLowIndex();
     IntVector idxHiU = patch->getSFCXFORTHighIndex();
 #ifdef ARCHES_COEF_DEBUG
-    cerr << "idxLou, idxHiU" << idxLoU << " " << idxHiU << endl;
+    cerr << "idxLou, idxHiU" << idxLoU << " " << idxHiU << "\n";
 #endif
     // Calculate the coeffs
     fort_uvelcoef(coeff_vars->uVelocity,
@@ -248,30 +248,30 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup*,
 		  cellinfo->sfac, cellinfo->tfac, cellinfo->bfac,
 		  idxLoU, idxHiU);
 #ifdef ARCHES_COEF_DEBUG
-    cerr << "After UVELCOEF" << endl;
-    cerr << "Print UAW" << endl;
+    cerr << "After UVELCOEF" << "\n";
+    cerr << "Print UAW" << "\n";
     coeff_vars->uVelocityConvectCoeff[Arches::AW].print(cerr);
-    cerr << "Print UAE" << endl;
+    cerr << "Print UAE" << "\n";
     coeff_vars->uVelocityConvectCoeff[Arches::AE].print(cerr);
-    cerr << "Print UAN" << endl;
+    cerr << "Print UAN" << "\n";
     coeff_vars->uVelocityConvectCoeff[Arches::AN].print(cerr);
-    cerr << "Print UAS" << endl;
+    cerr << "Print UAS" << "\n";
     coeff_vars->uVelocityConvectCoeff[Arches::AS].print(cerr);
-    cerr << "Print UAT" << endl;
+    cerr << "Print UAT" << "\n";
     coeff_vars->uVelocityConvectCoeff[Arches::AT].print(cerr);
-    cerr << "Print UAB" << endl;
+    cerr << "Print UAB" << "\n";
     coeff_vars->uVelocityConvectCoeff[Arches::AB].print(cerr);
-    cerr << "Print UAW" << endl;
+    cerr << "Print UAW" << "\n";
     coeff_vars->uVelocityCoeff[Arches::AW].print(cerr);
-    cerr << "Print UAE" << endl;
+    cerr << "Print UAE" << "\n";
     coeff_vars->uVelocityCoeff[Arches::AE].print(cerr);
-    cerr << "Print UAN" << endl;
+    cerr << "Print UAN" << "\n";
     coeff_vars->uVelocityCoeff[Arches::AN].print(cerr);
-    cerr << "Print UAS" << endl;
+    cerr << "Print UAS" << "\n";
     coeff_vars->uVelocityCoeff[Arches::AS].print(cerr);
-    cerr << "Print UAT" << endl;
+    cerr << "Print UAT" << "\n";
     coeff_vars->uVelocityCoeff[Arches::AT].print(cerr);
-    cerr << "Print UAB" << endl;
+    cerr << "Print UAB" << "\n";
     coeff_vars->uVelocityCoeff[Arches::AB].print(cerr);
 #endif
   } else if (index == Arches::YDIR) {
@@ -309,30 +309,30 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup*,
 		  cellinfo->wfac, cellinfo->tfac, cellinfo->bfac,
 		  idxLoV, idxHiV);
 #ifdef ARCHES_COEF_DEBUG
-    cerr << "After VVELCOEF" << endl;
-    cerr << "Print VAW" << endl;
+    cerr << "After VVELCOEF" << "\n";
+    cerr << "Print VAW" << "\n";
     coeff_vars->vVelocityConvectCoeff[Arches::AW].print(cerr);
-    cerr << "Print VAE" << endl;
+    cerr << "Print VAE" << "\n";
     coeff_vars->vVelocityConvectCoeff[Arches::AE].print(cerr);
-    cerr << "Print VAN" << endl;
+    cerr << "Print VAN" << "\n";
     coeff_vars->vVelocityConvectCoeff[Arches::AN].print(cerr);
-    cerr << "Print VAS" << endl;
+    cerr << "Print VAS" << "\n";
     coeff_vars->vVelocityConvectCoeff[Arches::AS].print(cerr);
-    cerr << "Print VAT" << endl;
+    cerr << "Print VAT" << "\n";
     coeff_vars->vVelocityConvectCoeff[Arches::AT].print(cerr);
-    cerr << "Print VAB" << endl;
+    cerr << "Print VAB" << "\n";
     coeff_vars->vVelocityConvectCoeff[Arches::AB].print(cerr);
-    cerr << "Print VAW" << endl;
+    cerr << "Print VAW" << "\n";
     coeff_vars->vVelocityCoeff[Arches::AW].print(cerr);
-    cerr << "Print VAE" << endl;
+    cerr << "Print VAE" << "\n";
     coeff_vars->vVelocityCoeff[Arches::AE].print(cerr);
-    cerr << "Print VAN" << endl;
+    cerr << "Print VAN" << "\n";
     coeff_vars->vVelocityCoeff[Arches::AN].print(cerr);
-    cerr << "Print VAS" << endl;
+    cerr << "Print VAS" << "\n";
     coeff_vars->vVelocityCoeff[Arches::AS].print(cerr);
-    cerr << "Print VAT" << endl;
+    cerr << "Print VAT" << "\n";
     coeff_vars->vVelocityCoeff[Arches::AT].print(cerr);
-    cerr << "Print VAB" << endl;
+    cerr << "Print VAB" << "\n";
     coeff_vars->vVelocityCoeff[Arches::AB].print(cerr);
 #endif
   } else if (index == Arches::ZDIR) {
@@ -370,30 +370,30 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup*,
 		  cellinfo->wfac, cellinfo->enfac, cellinfo->sfac,
 		  idxLoW, idxHiW);
 #ifdef ARCHES_COEF_DEBUG
-    cerr << "After WVELCOEF" << endl;
-    cerr << "Print WAW" << endl;
+    cerr << "After WVELCOEF" << "\n";
+    cerr << "Print WAW" << "\n";
     coeff_vars->wVelocityConvectCoeff[Arches::AW].print(cerr);
-    cerr << "Print WAE" << endl;
+    cerr << "Print WAE" << "\n";
     coeff_vars->wVelocityConvectCoeff[Arches::AE].print(cerr);
-    cerr << "Print WAN" << endl;
+    cerr << "Print WAN" << "\n";
     coeff_vars->wVelocityConvectCoeff[Arches::AN].print(cerr);
-    cerr << "Print WAS" << endl;
+    cerr << "Print WAS" << "\n";
     coeff_vars->wVelocityConvectCoeff[Arches::AS].print(cerr);
-    cerr << "Print WAT" << endl;
+    cerr << "Print WAT" << "\n";
     coeff_vars->wVelocityConvectCoeff[Arches::AT].print(cerr);
-    cerr << "Print WAB" << endl;
+    cerr << "Print WAB" << "\n";
     coeff_vars->wVelocityConvectCoeff[Arches::AB].print(cerr);
-    cerr << "Print WAW" << endl;
+    cerr << "Print WAW" << "\n";
     coeff_vars->wVelocityCoeff[Arches::AW].print(cerr);
-    cerr << "Print WAE" << endl;
+    cerr << "Print WAE" << "\n";
     coeff_vars->wVelocityCoeff[Arches::AE].print(cerr);
-    cerr << "Print WAN" << endl;
+    cerr << "Print WAN" << "\n";
     coeff_vars->wVelocityCoeff[Arches::AN].print(cerr);
-    cerr << "Print WAS" << endl;
+    cerr << "Print WAS" << "\n";
     coeff_vars->wVelocityCoeff[Arches::AS].print(cerr);
-    cerr << "Print WAT" << endl;
+    cerr << "Print WAT" << "\n";
     coeff_vars->wVelocityCoeff[Arches::AT].print(cerr);
-    cerr << "Print WAB" << endl;
+    cerr << "Print WAB" << "\n";
     coeff_vars->wVelocityCoeff[Arches::AB].print(cerr);
 #endif
   }
@@ -500,20 +500,20 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
   IntVector idxHi = patch->getCellFORTHighIndex();
 
 #ifdef ARCHES_COEF_DEBUG
-  cerr << "BEFORE FORT_PRESSCOEFF" << endl;
-  cerr << "Print density:" << endl;
+  cerr << "BEFORE FORT_PRESSCOEFF" << "\n";
+  cerr << "Print density:" << "\n";
   coeff_vars->density.print(cerr);
-  cerr << "Print uVelocity AP:" << endl;
+  cerr << "Print uVelocity AP:" << "\n";
   coeff_vars->uVelocityCoeff[Arches::AP].print(cerr);
-  cerr << "Print AP - V Vel Coeff: " << endl;
+  cerr << "Print AP - V Vel Coeff: " << "\n";
   coeff_vars->vVelocityCoeff[Arches::AP].print(cerr);
-  cerr << "Print AP - W Vel Coeff: " << endl;
+  cerr << "Print AP - W Vel Coeff: " << "\n";
   coeff_vars->wVelocityCoeff[Arches::AP].print(cerr);
-  cerr << "Print uVelocity:" << endl;
+  cerr << "Print uVelocity:" << "\n";
   coeff_vars->uVelocity.print(cerr);
-  cerr << "Print vVelocity: " << endl;
+  cerr << "Print vVelocity: " << "\n";
   coeff_vars->vVelocity.print(cerr);
-  cerr << "Print wVelocity: " << endl;
+  cerr << "Print wVelocity: " << "\n";
   coeff_vars->wVelocity.print(cerr);
 #endif
 #ifdef divergenceconstraint
@@ -542,18 +542,18 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
 		cellinfo->stbw, cellinfo->dztp, cellinfo->dzpb);
 #endif
 #ifdef ARCHES_COEF_DEBUG
-  cerr << "After PRESSCOEFF" << endl;
-  cerr << "Print PAW" << endl;
+  cerr << "After PRESSCOEFF" << "\n";
+  cerr << "Print PAW" << "\n";
   coeff_vars->pressCoeff[Arches::AW].print(cerr);
-  cerr << "Print PAE" << endl;
+  cerr << "Print PAE" << "\n";
   coeff_vars->pressCoeff[Arches::AE].print(cerr);
-  cerr << "Print PAN" << endl;
+  cerr << "Print PAN" << "\n";
   coeff_vars->pressCoeff[Arches::AN].print(cerr);
-  cerr << "Print PAS" << endl;
+  cerr << "Print PAS" << "\n";
   coeff_vars->pressCoeff[Arches::AS].print(cerr);
-  cerr << "Print PAT" << endl;
+  cerr << "Print PAT" << "\n";
   coeff_vars->pressCoeff[Arches::AT].print(cerr);
-  cerr << "Print PAB" << endl;
+  cerr << "Print PAB" << "\n";
   coeff_vars->pressCoeff[Arches::AB].print(cerr);
 #endif
 }
@@ -595,21 +595,23 @@ Discretization::calculateScalarCoeff(const ProcessorGroup*,
 				     int conv_scheme)
 {
 
+  cout << "calculateScalarCoeff: " << patch << ", " << cellinfo << ", " 
+       << coeff_vars << "\n";
+
   // Get the domain size and the patch indices
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   
 #ifdef ARCHES_COEF_DEBUG
-  cerr << "BEFORE SCALARCOEFF for scalar " << index <<" " << endl;
-  cerr << "Print Density: " << endl;
+  cerr << "Print Density: " << "\n";
   coeff_vars->density.print(cerr);
-  cerr << "Print Viscosity: " << endl;
+  cerr << "Print Viscosity: " << "\n";
   coeff_vars->viscosity.print(cerr);
-  cerr << "Print uVelocity: " << endl;
+  cerr << "Print uVelocity: " << "\n";
   coeff_vars->uVelocity.print(cerr);
-  cerr << "Print vVelocity: " << endl;
+  cerr << "Print vVelocity: " << "\n";
   coeff_vars->vVelocity.print(cerr);
-  cerr << "Print wVelocity: " << endl;
+  cerr << "Print wVelocity: " << "\n";
   coeff_vars->wVelocity.print(cerr);
 #endif
 
@@ -644,30 +646,29 @@ Discretization::calculateScalarCoeff(const ProcessorGroup*,
 		conv_scheme);
 
 #ifdef ARCHES_COEF_DEBUG
-  cerr << "After SCALARCOEFF for scalar " << index <<" " << endl;
-  cerr << "SAE Convect Coeff: " << endl;
+  cerr << "SAE Convect Coeff: " << "\n";
   coeff_vars->scalarConvectCoeff[Arches::AE].print(cerr);
-  cerr << "SAW Convect Coeff: " << endl;
+  cerr << "SAW Convect Coeff: " << "\n";
   coeff_vars->scalarConvectCoeff[Arches::AW].print(cerr);
-  cerr << "SAN Convect Coeff: " << endl;
+  cerr << "SAN Convect Coeff: " << "\n";
   coeff_vars->scalarConvectCoeff[Arches::AN].print(cerr);
-  cerr << "SAS Convect Coeff: " << endl;
+  cerr << "SAS Convect Coeff: " << "\n";
   coeff_vars->scalarConvectCoeff[Arches::AS].print(cerr);
-  cerr << "SAT Convect Coeff: " << endl;
+  cerr << "SAT Convect Coeff: " << "\n";
   coeff_vars->scalarConvectCoeff[Arches::AT].print(cerr);
-  cerr << "SAB Convect Coeff: " << endl;
+  cerr << "SAB Convect Coeff: " << "\n";
   coeff_vars->scalarConvectCoeff[Arches::AB].print(cerr);
-  cerr << "SAE Convect Coeff: " << endl;
+  cerr << "SAE Convect Coeff: " << "\n";
   coeff_vars->scalarCoeff[Arches::AE].print(cerr);
-  cerr << "SAW  Coeff: " << endl;
+  cerr << "SAW  Coeff: " << "\n";
   coeff_vars->scalarCoeff[Arches::AW].print(cerr);
-  cerr << "SAN  Coeff: " << endl;
+  cerr << "SAN  Coeff: " << "\n";
   coeff_vars->scalarCoeff[Arches::AN].print(cerr);
-  cerr << "SAS  Coeff: " << endl;
+  cerr << "SAS  Coeff: " << "\n";
   coeff_vars->scalarCoeff[Arches::AS].print(cerr);
-  cerr << "SAT  Coeff: " << endl;
+  cerr << "SAT  Coeff: " << "\n";
   coeff_vars->scalarCoeff[Arches::AT].print(cerr);
-  cerr << "SAB  Coeff: " << endl;
+  cerr << "SAB  Coeff: " << "\n";
   coeff_vars->scalarCoeff[Arches::AB].print(cerr);
 #endif
 }
@@ -695,15 +696,15 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
     idxHi = patch->getSFCXFORTHighIndex();
 
 #ifdef ARCHES_COEF_DEBUG
-    cerr << "BEFORE Calculate U Velocity Diagonal :" << endl;
+    cerr << "BEFORE Calculate U Velocity Diagonal :" << "\n";
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SP - U Vel Linear Source for ii = " << ii << endl;
+      cerr << "SP - U Vel Linear Source for ii = " << ii << "\n";
       for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
 	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
 	  cerr.width(10);
 	  cerr << (coeff_vars->uVelLinearSrc)[IntVector(ii,jj,kk)] << " " ; 
 	}
-	cerr << endl;
+	cerr << "\n";
       }
     }
 #endif
@@ -718,22 +719,22 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 		  coeff_vars->uVelLinearSrc);
 
 #ifdef ARCHES_COEF_DEBUG
-    cerr << "After UVELCOEF" << endl;
+    cerr << "After UVELCOEF" << "\n";
     for(CellIterator iter = patch->getCellIterator();
 	!iter.done(); iter++){
       cerr.width(10);
       cerr <<"AP"<< *iter << ": " << (coeff_vars->uVelocityCoeff[Arches::AP])[*iter] << "\n" ; 
     }
-    cerr << "AFTER Calculate U Velocity Diagonal :" << endl;
+    cerr << "AFTER Calculate U Velocity Diagonal :" << "\n";
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "AP - U Vel Coeff for ii = " << ii << endl;
+      cerr << "AP - U Vel Coeff for ii = " << ii << "\n";
       for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
 	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
 	  cerr.width(10);
 	  cerr << (coeff_vars->uVelocityCoeff[Arches::AP])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
-	cerr << endl;
+	cerr << "\n";
       }
     }
 #endif
@@ -746,15 +747,15 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
     idxHi = patch->getSFCYFORTHighIndex();
 
 #ifdef ARCHES_COEF_DEBUG
-    cerr << "BEFORE Calculate V Velocity Diagonal :" << endl;
+    cerr << "BEFORE Calculate V Velocity Diagonal :" << "\n";
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SP - V Vel Linear Source for ii = " << ii << endl;
+      cerr << "SP - V Vel Linear Source for ii = " << ii << "\n";
       for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
 	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
 	  cerr.width(10);
 	  cerr << (coeff_vars->vVelLinearSrc)[IntVector(ii,jj,kk)] << " " ; 
 	}
-	cerr << endl;
+	cerr << "\n";
       }
     }
 #endif
@@ -769,16 +770,16 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 		  coeff_vars->vVelLinearSrc);
 
 #ifdef ARCHES_COEF_DEBUG
-    cerr << "AFTER Calculate V Velocity Diagonal :" << endl;
+    cerr << "AFTER Calculate V Velocity Diagonal :" << "\n";
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "AP - V Vel Coeff for ii = " << ii << endl;
+      cerr << "AP - V Vel Coeff for ii = " << ii << "\n";
       for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
 	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
 	  cerr.width(10);
 	  cerr << (coeff_vars->vVelocityCoeff[Arches::AP])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
-	cerr << endl;
+	cerr << "\n";
       }
     }
 #endif
@@ -791,15 +792,15 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
     idxHi = patch->getSFCZFORTHighIndex();
 
 #ifdef ARCHES_COEF_DEBUG
-    cerr << "BEFORE Calculate W Velocity Diagonal :" << endl;
+    cerr << "BEFORE Calculate W Velocity Diagonal :" << "\n";
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "SP - W Vel Linear Source for ii = " << ii << endl;
+      cerr << "SP - W Vel Linear Source for ii = " << ii << "\n";
       for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
 	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
 	  cerr.width(10);
 	  cerr << (coeff_vars->wVelLinearSrc)[IntVector(ii,jj,kk)] << " " ; 
 	}
-	cerr << endl;
+	cerr << "\n";
       }
     }
 #endif
@@ -814,16 +815,16 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 		  coeff_vars->wVelLinearSrc);
 
 #ifdef ARCHES_COEF_DEBUG
-    cerr << "AFTER Calculate W Velocity Diagonal :" << endl;
+    cerr << "AFTER Calculate W Velocity Diagonal :" << "\n";
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "AP - W Vel Coeff for ii = " << ii << endl;
+      cerr << "AP - W Vel Coeff for ii = " << ii << "\n";
       for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
 	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
 	  cerr.width(10);
 	  cerr << (coeff_vars->wVelocityCoeff[Arches::AP])
 	    [IntVector(ii,jj,kk)] << " " ; 
 	}
-	cerr << endl;
+	cerr << "\n";
       }
     }
 #endif
@@ -851,8 +852,8 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
   IntVector idxHi = patch->getCellFORTHighIndex();
 
 #ifdef ARCHES_COEF_DEBUG
-  cerr << "BEFORE Calculate Pressure Diagonal :" << endl;
-  cerr << "Print SP - Pressure Linear source: " << endl;
+  cerr << "BEFORE Calculate Pressure Diagonal :" << "\n";
+  cerr << "Print SP - Pressure Linear source: " << "\n";
   coeff_vars->pressLinearSrc.print(cerr);
 #endif
 
@@ -866,10 +867,10 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
 	     coeff_vars->pressCoeff[Arches::AB],
 	     coeff_vars->pressLinearSrc);
 #ifdef ARCHES_COEF_DEBUG
-  cerr << "AFTER Calculate Pressure Diagonal :" << endl;
-  cerr << "Print AP - Pressure Linear source: " << endl;
+  cerr << "AFTER Calculate Pressure Diagonal :" << "\n";
+  cerr << "Print AP - Pressure Linear source: " << "\n";
   coeff_vars->pressCoeff[Arches::AP].print(cerr);
-  cerr << "Print nonlinear source: " << endl;
+  cerr << "Print nonlinear source: " << "\n";
   coeff_vars->pressNonlinearSrc.print(cerr);
 #endif
 
@@ -890,8 +891,7 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
   IntVector idxHi = patch->getCellFORTHighIndex();
 
 #ifdef ARCHES_COEF_DEBUG
-  cerr << "BEFORE Calculate Scalar" << index << " Diagonal :" << endl;
-  cerr << "Print SSP - Scalar Linear Source" << endl;
+  cerr << "Print SSP - Scalar Linear Source" << "\n";
   coeff_vars->scalarLinearSrc.print(cerr);
 #endif
 
@@ -915,8 +915,7 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 	     coeff_vars->scalarLinearSrc);
 
 #ifdef ARCHES_COEF_DEBUG
-  cerr << "AFTER Calculate Scalar" << index << " Diagonal :" << endl;
-  cerr << "SAP - Scalar Coeff " << endl;
+  cerr << "SAP - Scalar Coeff " << "\n";
   coeff_vars->scalarCoeff[Arches::AP].print(cerr);
 #endif
 
@@ -951,25 +950,25 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
   IntVector domHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
 //  IntVector idxLo = patch->getCellFORTLowIndex();
 //  IntVector idxHi = patch->getCellFORTHighIndex();
-//  cout << "idxLo" << idxLo.x() << idxLo.y() << idxLo.z() << endl;
-//  cout << "idxHi" << idxHi.x() << idxHi.y() << idxHi.z() << endl;
+//  cout << "idxLo" << idxLo.x() << idxLo.y() << idxLo.z() << "\n";
+//  cout << "idxHi" << idxHi.x() << idxHi.y() << idxHi.z() << "\n";
 
-//  cout << "maxAbsVelocity" << maxAbsU << maxAbsV << maxAbsW << endl;
+//  cout << "maxAbsVelocity" << maxAbsU << maxAbsV << maxAbsW << "\n";
 
   IntVector idxLo = domLo + IntVector(1,1,1);
   IntVector idxHi = domHi - IntVector(1,1,1);
-//  cout << "idxLo" << idxLo.x() << idxLo.y() << idxLo.z() << endl;
-//  cout << "idxHi" << idxHi.x() << idxHi.y() << idxHi.z() << endl;
+//  cout << "idxLo" << idxLo.x() << idxLo.y() << idxLo.z() << "\n";
+//  cout << "idxHi" << idxHi.x() << idxHi.y() << idxHi.z() << "\n";
   x_flux.resize(idxLo,idxHi+IntVector(1,0,0));
   y_flux.resize(idxLo,idxHi+IntVector(0,1,0));
   z_flux.resize(idxLo,idxHi+IntVector(0,0,1));
   x_flux.initialize(0.0);
   y_flux.initialize(0.0);
   z_flux.initialize(0.0);
-//  cout << "domLo" << domLo.x() << domLo.y() << domLo.z() << endl;
-//  cout << "domHi" << domHi.x() << domHi.y() << domHi.z() << endl;
-//  cout << "idxLo" << idxLo.x() << idxLo.y() << idxLo.z() << endl;
-//  cout << "idxHi" << idxHi.x() << idxHi.y() << idxHi.z() << endl;
+//  cout << "domLo" << domLo.x() << domLo.y() << domLo.z() << "\n";
+//  cout << "domHi" << domHi.x() << domHi.y() << domHi.z() << "\n";
+//  cout << "idxLo" << idxLo.x() << idxLo.y() << idxLo.z() << "\n";
+//  cout << "idxHi" << idxHi.x() << idxHi.y() << idxHi.z() << "\n";
   
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -977,7 +976,7 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
   bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-//  cout << "NOW Got here" << endl;
+//  cout << "NOW Got here" << "\n";
   int x_start = idxLo.x();
   int x_end = idxHi.x();
   int y_start = idxLo.y();
@@ -1133,10 +1132,10 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
     z_domend --; 
   }
 
-// cout << "start " << x_start << "  " << y_start << "  " << z_start << endl;
-// cout << "end " << x_end << "  " << y_end << "  " << z_end << endl;
-//  cout << x_start << y_start << z_start << endl;
-//  cout << x_end << y_end << z_end << endl;
+// cout << "start " << x_start << "  " << y_start << "  " << z_start << "\n";
+// cout << "end " << x_end << "  " << y_end << "  " << z_end << "\n";
+//  cout << x_start << y_start << z_start << "\n";
+//  cout << x_end << y_end << z_end << "\n";
   int x_domstartminus=x_domstart-1;
   int y_domstartminus=y_domstart-1;
   int z_domstartminus=z_domstart-1;
@@ -1204,7 +1203,7 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
       }
     }
   }
-//  cout << "Got here" << endl;
+//  cout << "Got here" << "\n";
   for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
       for (int colX = x_domstart; colX < x_domend; colX ++) {
@@ -1398,7 +1397,7 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
     }
   }
 
-//  cout << "AND NOW Got here" << endl;
+//  cout << "AND NOW Got here" << "\n";
   double areaew;
   double areans;
   double areatb;
@@ -1449,25 +1448,25 @@ Discretization::calculateScalarWENOscheme(const ProcessorGroup*,
   IntVector domHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
 //  IntVector idxLo = patch->getCellFORTLowIndex();
 //  IntVector idxHi = patch->getCellFORTHighIndex();
-//  cout << "idxLo" << idxLo.x() << idxLo.y() << idxLo.z() << endl;
-//  cout << "idxHi" << idxHi.x() << idxHi.y() << idxHi.z() << endl;
+//  cout << "idxLo" << idxLo.x() << idxLo.y() << idxLo.z() << "\n";
+//  cout << "idxHi" << idxHi.x() << idxHi.y() << idxHi.z() << "\n";
 
-//  cout << "maxAbsVelocity" << maxAbsU << maxAbsV << maxAbsW << endl;
+//  cout << "maxAbsVelocity" << maxAbsU << maxAbsV << maxAbsW << "\n";
 
   IntVector idxLo = domLo + IntVector(1,1,1);
   IntVector idxHi = domHi - IntVector(1,1,1);
-//  cout << "idxLo" << idxLo.x() << idxLo.y() << idxLo.z() << endl;
-//  cout << "idxHi" << idxHi.x() << idxHi.y() << idxHi.z() << endl;
+//  cout << "idxLo" << idxLo.x() << idxLo.y() << idxLo.z() << "\n";
+//  cout << "idxHi" << idxHi.x() << idxHi.y() << idxHi.z() << "\n";
   x_flux.resize(idxLo,idxHi+IntVector(1,0,0));
   y_flux.resize(idxLo,idxHi+IntVector(0,1,0));
   z_flux.resize(idxLo,idxHi+IntVector(0,0,1));
   x_flux.initialize(0.0);
   y_flux.initialize(0.0);
   z_flux.initialize(0.0);
-//  cout << "domLo" << domLo.x() << domLo.y() << domLo.z() << endl;
-//  cout << "domHi" << domHi.x() << domHi.y() << domHi.z() << endl;
-//  cout << "idxLo" << idxLo.x() << idxLo.y() << idxLo.z() << endl;
-//  cout << "idxHi" << idxHi.x() << idxHi.y() << idxHi.z() << endl;
+//  cout << "domLo" << domLo.x() << domLo.y() << domLo.z() << "\n";
+//  cout << "domHi" << domHi.x() << domHi.y() << domHi.z() << "\n";
+//  cout << "idxLo" << idxLo.x() << idxLo.y() << idxLo.z() << "\n";
+//  cout << "idxHi" << idxHi.x() << idxHi.y() << idxHi.z() << "\n";
   
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -1475,7 +1474,7 @@ Discretization::calculateScalarWENOscheme(const ProcessorGroup*,
   bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-//  cout << "NOW Got here" << endl;
+//  cout << "NOW Got here" << "\n";
   int x_start = idxLo.x();
   int x_end = idxHi.x();
   int y_start = idxLo.y();
@@ -1631,10 +1630,10 @@ Discretization::calculateScalarWENOscheme(const ProcessorGroup*,
     z_domend --; 
   }
 
-// cout << "start " << x_start << "  " << y_start << "  " << z_start << endl;
-// cout << "end " << x_end << "  " << y_end << "  " << z_end << endl;
-//  cout << x_start << y_start << z_start << endl;
-//  cout << x_end << y_end << z_end << endl;
+// cout << "start " << x_start << "  " << y_start << "  " << z_start << "\n";
+// cout << "end " << x_end << "  " << y_end << "  " << z_end << "\n";
+//  cout << x_start << y_start << z_start << "\n";
+//  cout << x_end << y_end << z_end << "\n";
   int x_domstartminus=x_domstart-1;
   int y_domstartminus=y_domstart-1;
   int z_domstartminus=z_domstart-1;
@@ -1693,7 +1692,7 @@ Discretization::calculateScalarWENOscheme(const ProcessorGroup*,
       }
     }
   }
-//  cout << "Got here" << endl;
+//  cout << "Got here" << "\n";
 
 
   double uplus, uminus, vplus, vminus, wplus, wminus;
@@ -1881,7 +1880,7 @@ Discretization::calculateScalarWENOscheme(const ProcessorGroup*,
     }
   }
 
-//  cout << "AND NOW Got here" << endl;
+//  cout << "AND NOW Got here" << "\n";
   double areaew;
   double areans;
   double areatb;
