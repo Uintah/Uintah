@@ -23,7 +23,7 @@ namespace SCIRun {
 // within the PSE source tree whose path is given
 // by "psepath".
 
-void GenComponent(component_node* node, char* package, char* psepath);
+int GenComponent(component_node* node, char* package, char* psepath);
 
 
 ///////////////////////////////
@@ -35,7 +35,7 @@ void GenComponent(component_node* node, char* package, char* psepath);
 // named "package" within the PSE source tree
 // whose path is given by "psepath"
 
-void GenPackage(char* package, char* psepath);
+int GenPackage(char* package, char* psepath);
 
 
 ///////////////////////////////
@@ -47,7 +47,7 @@ void GenPackage(char* package, char* psepath);
 // "package" within the PSE source tree
 // whose path is given by "psepath"
 
-void GenCategory(char* category, char* package, char* psepath);
+int GenCategory(char* category, char* package, char* psepath);
 
 } // End namespace SCIRun
 

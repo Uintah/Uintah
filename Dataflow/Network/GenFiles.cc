@@ -11,9 +11,9 @@
 
 namespace SCIRun {
 
-void GenPackage(char* packname, char* psepath)
+int GenPackage(char* packname, char* psepath)
 {
-  int check;
+  int check,checkall;
   char* string = 0;
   FILE* file = 0;
 
@@ -22,49 +22,54 @@ void GenPackage(char* packname, char* psepath)
 
   /* create all directories associated with a package */
   sprintf(string,"%s/src/Packages/%s",psepath,packname);
-  check = mkdir(string,PERM);
+  checkall |= check = mkdir(string,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",string);
 
   sprintf(string,"%s/src/Packages/%s/Dataflow",psepath,packname);
-  check = mkdir(string,PERM);
+  checkall |= check = mkdir(string,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",string);
 
   sprintf(string,"%s/src/Packages/%s/Core",psepath,packname);
-  check = mkdir(string,PERM);
+  checkall |= check = mkdir(string,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",string);
 
   sprintf(string,"%s/src/Packages/%s/Dataflow/Modules",psepath,packname);
-  check = mkdir(string,PERM);
+  checkall |= check = mkdir(string,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",string);
   
   sprintf(string,"%s/src/Packages/%s/Dataflow/GUI",psepath,packname);
-  check = mkdir(string,PERM);
+  checkall |= check = mkdir(string,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",string);
 
   sprintf(string,"%s/src/Packages/%s/Dataflow/XML",psepath,packname);
-  check = mkdir(string,PERM);
+  checkall |= check = mkdir(string,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",string);
   
   sprintf(string,"%s/src/Packages/%s/share",psepath,packname);
-  check = mkdir(string,PERM);
+  checkall |= check = mkdir(string,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",string);
 
   sprintf(string,"%s/src/Packages/%s/Core/ThirdParty",psepath,packname);
-  check = mkdir(string,PERM);
+  checkall |= check = mkdir(string,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",string);
 
   sprintf(string,"%s/src/Packages/%s/Core/Datatypes",psepath,packname);
-  check = mkdir(string,PERM);
+  checkall |= check = mkdir(string,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",string);
+
+  if (checkall) {
+    printf("Could not create one or more directories.  Giving up.");
+    return 0;
+  }
 
   /* create all the non-directory files associated with a package */
   sprintf(string,"%s/src/Packages/%s/share/share.h",psepath,packname);
@@ -114,7 +119,7 @@ void GenPackage(char* packname, char* psepath)
   delete[] string;
 }
 
-void GenCategory(char* catname, char* packname, char* psepath)
+int GenCategory(char* catname, char* packname, char* psepath)
 {
   int check;
   char* string = 0;
@@ -127,8 +132,10 @@ void GenCategory(char* catname, char* packname, char* psepath)
   sprintf(string,"%s/src/Packages/%s/Dataflow/Modules/%s",
 	  psepath,packname,catname);
   check = mkdir(string,PERM);
-  if (check)
-    printf("could not create directory \"%s\"\n",string);
+  if (check) {
+    printf("could not create directory \"%s\".  Giving up.\n",string);
+    return 0;
+  }
 
   /* create category sub.mk file */
   sprintf(string,"%s/src/Packages/%s/Dataflow/Modules/%s/sub.mk",
@@ -148,7 +155,7 @@ void GenCategory(char* catname, char* packname, char* psepath)
   delete[] string;
 }
 
-void GenComponent(component_node* n, char* packname, char* psepath)
+int GenComponent(component_node* n, char* packname, char* psepath)
 {
   char* filename = 0;
   char* string = 0;

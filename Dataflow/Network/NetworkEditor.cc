@@ -690,42 +690,42 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
       TCL::execute(clString("GetPathAndPackage {")+string+"} {"+
 		   n->name+"} {"+n->category+"}");
     } else if (args[1] == "create_pac_cat_mod"){
-        int check = 1;
         if (args.count()!=7) {
           args.error("create_pac_cat_mod needs 5 arguments");
           return;
         }
-	GenPackage((char*)args[3](),(char*)args[2]());
-	GenCategory((char*)args[4](),(char*)args[3](),(char*)args[2]());
-	GenComponent((component_node*)atol(args[6]()),
-		     (char*)args[3](),(char*)args[2]());
-        if (!check) {
-          args.error("create_pac_cat_mod failed.");
+	if (!(GenPackage((char*)args[3](),(char*)args[2]()) &&
+	      GenCategory((char*)args[4](),(char*)args[3](),
+			  (char*)args[2]()) &&
+	      GenComponent((component_node*)atol(args[6]()),
+			   (char*)args[3](),(char*)args[2]()))) {
+          args.error("Unable to create new package, category or module."
+		     "  Check your paths and names and try again.");
           return;
         }
     } else if (args[1] == "create_cat_mod"){
-        int check = 1;
         if (args.count()!=7) {
           args.error("create_cat_mod needs 3 arguments");
           return;
         }
-	GenCategory((char*)args[4](),(char*)args[3](),(char*)args[2]());
-	GenComponent((component_node*)atol(args[6]()),
-		     (char*)args[3](),(char*)args[2]());
-	if (!check) {
-	  args.error("create_cat_mod failed.");
+	
+	if (!(GenCategory((char*)args[4](),(char*)args[3](),
+			  (char*)args[2]()) &&
+	      GenComponent((component_node*)atol(args[6]()),
+			   (char*)args[3](),(char*)args[2]()))) {
+          args.error("Unable to create new category or module."
+		     "  Check your paths and names and try again.");
 	  return;
 	}
     } else if (args[1] == "create_mod"){
-        int check = 1;
         if (args.count()!=7) {
           args.error("create_mod needs 3 arguments");
           return;
         }
-	GenComponent((component_node*)atol(args[6]()),
-		     (char*)args[3](),(char*)args[2]());
-	if (!check) {
-	  args.error("create_mod failed.");
+	if (!(GenComponent((component_node*)atol(args[6]()),
+			   (char*)args[3](),(char*)args[2]()))) {
+          args.error("Unable to create new module."
+		     "  Check your paths and names and try again.");
 	  return;
 	}
     } else if (args[1] == "set_group") {
