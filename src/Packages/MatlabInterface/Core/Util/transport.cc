@@ -68,7 +68,10 @@ MatrixHandle transport(int wordy, int flag, const char *hport, MatrixHandle mh)
      endiswap(nnz*4, (char*)cols, 4);
    }
 
-   smatr=scinew SparseRowMatrix(nr,nc,rows,cols,nnz,db);
+   // Transpose internals by creatinc c/r matrix and then transposing.
+   SparseRowMatrix *smatrt = scinew SparseRowMatrix(nc,nr,rows,cols,nnz,db);
+   smatr = smatrt->transpose();
+   delete smatrt;
    mh=MatrixHandle(smatr);
    return(mh);
   }
