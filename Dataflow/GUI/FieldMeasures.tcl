@@ -24,6 +24,7 @@ itcl_class SCIRun_Fields_FieldMeasures {
 	global $this-xFlag
 	global $this-yFlag
 	global $this-zFlag
+	global $this-idxFlag
 	global $this-sizeFlag
 	global $this-valenceFlag
 	global $this-lengthFlag
@@ -38,6 +39,7 @@ itcl_class SCIRun_Fields_FieldMeasures {
 	set $this-xFlag 1
 	set $this-yFlag 0
 	set $this-zFlag 0
+	set $this-idxFlag 0
 	set $this-sizeFlag 0
 	set $this-valenceFlag 0
 	set $this-lengthFlag 0
@@ -69,8 +71,9 @@ itcl_class SCIRun_Fields_FieldMeasures {
 	checkbutton $w.general.x -text "X position" -variable $this-xFlag
 	checkbutton $w.general.y -text "Y position" -variable $this-yFlag
 	checkbutton $w.general.z -text "Z position" -variable $this-zFlag
+	checkbutton $w.general.idx -text "Index" -variable $this-idxFlag
 	pack $w.general.l -side top
-	pack $w.general.x $w.general.y $w.general.z -anchor nw
+	pack $w.general.x $w.general.y $w.general.z $w.general.idx -anchor nw
 
 	frame $w.node -relief groove -borderwidth 2
 	label $w.node.l -text "Node Measures"
