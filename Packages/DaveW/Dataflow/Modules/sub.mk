@@ -5,14 +5,27 @@
 
 SRCDIR := DaveW/Modules
 
-SUBDIRS := $(SRCDIR)/CS684 $(SRCDIR)/EEG $(SRCDIR)/EGI $(SRCDIR)/FDM \
-	$(SRCDIR)/FEM $(SRCDIR)/ISL $(SRCDIR)/MEG $(SRCDIR)/Path \
-	$(SRCDIR)/Readers $(SRCDIR)/Tensor $(SRCDIR)/Writers
+SUBDIRS := \
+	$(SRCDIR)/CS684\
+	$(SRCDIR)/EEG\
+	$(SRCDIR)/EGI\
+	$(SRCDIR)/FDM\
+	$(SRCDIR)/FEM\
+	$(SRCDIR)/ISL\
+	$(SRCDIR)/MEG\
+	$(SRCDIR)/Path\
+	$(SRCDIR)/Readers\
+	$(SRCDIR)/Tensor\
+	$(SRCDIR)/Writers\
+#[INSERT NEW SUBDIRS HERE]
 
 include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.3  2000/06/07 20:54:54  moulding
+# made changes to allow the module maker to add to and edit this file
+#
 # Revision 1.2  2000/03/20 19:36:02  sparker
 # Added VPATH support
 #

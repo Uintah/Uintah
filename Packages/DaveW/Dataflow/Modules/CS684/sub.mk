@@ -7,9 +7,15 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := DaveW/Modules/CS684
 
-SRCS     += $(SRCDIR)/BldBRDF.cc $(SRCDIR)/BldScene.cc \
-	$(SRCDIR)/RTrace.cc $(SRCDIR)/Radiosity.cc $(SRCDIR)/RayMatrix.cc \
-	$(SRCDIR)/RayTest.cc $(SRCDIR)/XYZtoRGB.cc
+SRCS     += \
+	$(SRCDIR)/BldBRDF.cc\
+	$(SRCDIR)/BldScene.cc\
+	$(SRCDIR)/RTrace.cc\
+	$(SRCDIR)/Radiosity.cc\
+	$(SRCDIR)/RayMatrix.cc\
+	$(SRCDIR)/RayTest.cc\
+	$(SRCDIR)/XYZtoRGB.cc\
+#[INSERT NEW MODULE HERE]
 
 PSELIBS := DaveW/Datatypes/CS684 PSECore/Widgets PSECore/Dataflow \
 	PSECore/Datatypes SCICore/Containers SCICore/Exceptions \
@@ -22,6 +28,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/06/07 20:54:54  moulding
+# made changes to allow the module maker to add to and edit this file
+#
 # Revision 1.2  2000/03/20 19:36:04  sparker
 # Added VPATH support
 #
