@@ -44,9 +44,11 @@ SRCS     += \
 	$(SRCDIR)/matlabarray.cc \
 	$(SRCDIR)/matlabfile.cc \
 	$(SRCDIR)/matlabconverter.cc \
+  $(SRCDIR)/matlabIEplugin.cc \
+  $(SRCDIR)/Startup.cc \
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Core/Containers \
+PSELIBS := Core/Datatypes Core/ImportExport Core/Containers \
 	 Core/Exceptions Core/Thread \
 	 Core/Persistent Core/Geometry \
 	 Core/Util Core/Bundle 
