@@ -23,6 +23,8 @@ ICELabel::ICELabel()
     scinew VarLabel("delPress_CC",  CCVariable<double>::getTypeDescription());
   rho_CCLabel       = 
     scinew VarLabel("rho_CC",       CCVariable<double>::getTypeDescription());
+  rho_CC_top_cycleLabel       = 
+    scinew VarLabel("rho_top_cycle",CCVariable<double>::getTypeDescription());
   temp_CCLabel      = 
     scinew VarLabel("temp_CC",      CCVariable<double>::getTypeDescription());
   vel_CCLabel       = 
@@ -33,8 +35,8 @@ ICELabel::ICELabel()
     scinew VarLabel("rho_micro_CC", CCVariable<double>::getTypeDescription());
   sp_vol_CCLabel =
     scinew VarLabel("sp_vol_CC",    CCVariable<double>::getTypeDescription());
-  sp_vol_newLabel =
-    scinew VarLabel("sp_vol_new",   CCVariable<double>::getTypeDescription());
+  sp_vol_equilLabel =
+    scinew VarLabel("sp_vol_equil", CCVariable<double>::getTypeDescription());
 
   mass_CCLabel =
     scinew VarLabel("mass_CC",      CCVariable<double>::getTypeDescription());
@@ -113,12 +115,13 @@ ICELabel::~ICELabel()
     delete press_equil_CCLabel;
     delete delPress_CCLabel;
     delete rho_CCLabel;
+    delete rho_CC_top_cycleLabel;
     delete temp_CCLabel;
     delete vel_CCLabel;
     delete cv_CCLabel;
     delete rho_micro_CCLabel;
     delete sp_vol_CCLabel;
-    delete sp_vol_newLabel;
+    delete sp_vol_equilLabel;
     delete mass_CCLabel;
     delete speedSound_CCLabel;
     delete div_velfc_CCLabel;
