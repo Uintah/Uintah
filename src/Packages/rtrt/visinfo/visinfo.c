@@ -425,7 +425,7 @@ FetchVariable(XVisualInfo* visual, int variable) {
 			var = !var;
 			break;
 		case VIS_VAR_MS:
-#ifdef GL_SGIS_multisample
+#if defined(GL_SGIS_multisample) && defined(__sgi)
 			glXGetConfig(DisplayPointer, visual, GLX_SAMPLES_SGIS,
 				&var);
 #else

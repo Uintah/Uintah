@@ -29,7 +29,6 @@
 #include <string.h>
 #include "visinfo.h"
 
-
 char* AppName;
 
 
@@ -167,7 +166,7 @@ DescribeVisual(Display* dpy, XVisualInfo* v, int verbose, FILE* f) {
 	if (value || value2 || value3 || value4)
 		fprintf(f,", accum %d/%d/%d/%d", value, value2, value3, value4);
 
-#ifdef GL_SGIS_multisample
+#if defined(GL_SGIS_multisample) && defined(__sgi)
 	glXGetConfig(dpy, v, GLX_SAMPLES_SGIS, &value);
 	if (value)	fprintf(f, ", samples %d", value);
 #endif
