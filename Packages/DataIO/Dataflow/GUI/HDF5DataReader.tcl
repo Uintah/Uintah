@@ -60,6 +60,16 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set have_attributes 0
 	set have_datasets   0
  
+	global $this-animate_tab
+	global $this-basic_tab
+	global $this-extended_tab
+	global $this-playmode_tab
+
+	set $this-animate_tab ""
+	set $this-basic_tab ""
+	set $this-extended_tab ""
+	set $this-playmode_tab ""
+
         global $this-selectable_min
         global $this-selectable_max
         global $this-selectable_inc
@@ -71,6 +81,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	global $this-delay
 	global $this-inc-amount
 
+	global $this-update_type
+	global $this-continuous
+
         set $this-selectable_min     0
         set $this-selectable_max     100
         set $this-selectable_inc     1
@@ -81,18 +94,11 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set $this-execmode           "init"
 	set $this-delay              0
 	set $this-inc-amount         1
+
+	set $this-update_type "On Release"
+	set $this-continuous 0
+
 	trace variable $this-current w "update idletasks;\#"
-
-	global $this-animate_tab
-	global $this-basic_tab
-	global $this-extended_tab
-	global $this-playmode_tab
-
-	set $this-animate_tab ""
-	set $this-basic_tab ""
-	set $this-extended_tab ""
-	set $this-playmode_tab ""
-
 
 	global $this-mergeData
 	global $this-assumeSVT
@@ -154,7 +160,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	global read_error
 	set read_error 0
 
-	trace variable $this-filename w "$this update_range"
+	trace variable $this-update_type    w "$this update_type_callback"
+	trace variable $this-selectable_max w "$this update_range_callback"
     }
 
     method set_power_app { cmd } {
@@ -1390,6 +1397,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
     method maybeRestart { args } {
 	upvar \#0 $this-execmode execmode
 	if ![string equal $execmode play] return
+
 	$this-c needexecute
     }
 
@@ -1467,31 +1475,50 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	Tooltip $vcr.fforward $ToolTipText(VCRfastforward)
 
 
+	upvar \#0 $this-selectable_min min
+	upvar \#0 $this-selectable_max max
+
+
 	iwidgets::labeledframe $basic_tab.cur -labelpos nw -labeltext "Current"
 	set tmp [$basic_tab.cur childsite]
 	scale $tmp.cur -variable $this-current \
+	    -from $min -to $max \
 	    -showvalue true -orient horizontal -length 200 \
-	    -command "$this maybeRestart"
-	pack $tmp.cur  -side left -fill both -expand 1
+	    -command "$this updateCurrentEntry"
+	pack $tmp.cur -side left -fill both -expand 1
+
+	bind $tmp.cur <ButtonRelease> "$this updateCurrentEntryOnRelease"
 
 
-	pack $basic_tab.vcr -padx 5 -pady 15 -fill x -expand 0
-	pack $basic_tab.cur -padx 5 -pady 20 -fill x -expand 0
+	iwidgets::labeledframe $basic_tab.opt -labelpos nw -labeltext "Options"
+	set opt [$basic_tab.opt childsite]
+	
+	iwidgets::optionmenu $opt.update -labeltext "Update:" \
+		-labelpos w -command "$this set_update_type $opt.update"
+	$opt.update insert end Auto Manual "On Release"
+	$opt.update select [set $this-update_type]
+
+	pack $opt.update -side left -fill both -expand 1
 
 
-	# Save range, creating the scale resets it to defaults.
-	set rmin [set $this-range_min]
-	set rmax [set $this-range_max]
+	pack $basic_tab.vcr -padx 5 -pady 10 -fill x -expand 0
+	pack $basic_tab.cur -padx 5 -pady  5 -fill x -expand 0
+	pack $basic_tab.opt -padx 5 -pady  5 -fill x -expand 0
 
 
 	global $this-extended_tab
 	set extended_tab [$w.tnb add -label "Extended" -command "$this change_tab 1"]
 	set $this-extended_tab $extended_tab
 	
+	# Save range, creating the scale resets it to defaults.
+	set rmin [set $this-range_min]
+	set rmax [set $this-range_max]
+
 	# Create the various range sliders
 	iwidgets::labeledframe $extended_tab.min -labelpos nw -labeltext "Start"
 	set tmp [$extended_tab.min childsite]
         scale $tmp.min -variable $this-range_min \
+	    -from $min -to $max \
 	    -showvalue true -orient horizontal -length 200 \
 	    -command "$this maybeRestart"
 	pack $tmp.min  -side left -fill both -expand 1
@@ -1499,6 +1526,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	iwidgets::labeledframe $extended_tab.max -labelpos nw -labeltext "End"
 	set tmp [$extended_tab.max childsite]
 	scale $tmp.max -variable $this-range_max \
+	    -from $min -to $max \
 	    -showvalue true -orient horizontal -length 200 \
 	    -command "$this maybeRestart"
 	pack $tmp.max  -side left -fill both -expand 1
@@ -1506,15 +1534,13 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	iwidgets::labeledframe $extended_tab.inc -labelpos nw -labeltext "Increment"
 	set tmp [$extended_tab.inc childsite]
 	scale $tmp.inc -variable $this-inc-amount \
+	    -from 1 -to [expr $max-$min] \
 	    -showvalue true -orient horizontal -length 200 \
 	    -command "$this maybeRestart"
 	pack $tmp.inc  -side left -fill both -expand 1
 
 	pack $extended_tab.min $extended_tab.max $extended_tab.inc \
 	    -padx 5 -fill x -expand 0
-
-
-	update_range 0 0 0
 
 	# Restore range to pre-loaded value
 	set $this-range_min $rmin
@@ -1560,7 +1586,35 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	change_tab 0
     }
 
-    method update_range {name element op} {
+    method update_type_callback { name1 name2 op } {
+	global $this-animate_frame
+	set w [set $this-animate_frame]
+
+        if {[winfo exists $w]} {
+
+	    upvar \#0 $this-basic_tab basic_tab
+
+	    set opt [$basic_tab.opt childsite]
+
+	    $opt.update select [set $this-update_type]
+	}
+    }
+
+    method set_update_type { w } {
+	global $w
+	global $this-continuous
+	global $this-update_type
+
+	set $this-update_type [$w get]
+
+	if { [set $this-update_type] == "Auto" } {
+	    set $this-continuous 1
+	} else {
+	    set $this-continuous 0
+	}
+    }
+
+    method update_range_callback {name element op} {
 	global $this-animate_frame
 	set w [set $this-animate_frame]
 
@@ -1584,7 +1638,43 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	    set $this-range_min $min
 	    set $this-range_max $max
-        }
+	}
+    }
+
+    method updateCurrentEntry { op } {
+
+	global $this-execmode
+	set $this-execmode init
+
+	global $this-continuous
+
+	if { [set $this-continuous] == 1.0 } {
+	    eval "$this-c needexecute"
+	} elseif { [set $this-update_type] == "Auto" } {
+	    set $this-continuous 1
+	} 
+    }
+
+    method updateCurrentEntryOnRelease { } {
+
+	global $this-execmode
+	set $this-execmode init
+
+	global $this-animate_frame
+	set w [set $this-animate_frame]
+
+        if {[winfo exists $w]} {
+
+	    upvar \#0 $this-basic_tab basic_tab
+
+	    set opt [$basic_tab.opt childsite]
+	    
+	    $opt.update select [set $this-update_type]
+
+	    if { [$opt.update get] == "On Release" } {
+		eval "$this-c needexecute"
+	    }
+	}
     }
 
     method set_watch_cursor {} {
