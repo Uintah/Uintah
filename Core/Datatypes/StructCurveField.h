@@ -16,7 +16,7 @@
 */
 
 /*
- *  StructQuadSurfField.h
+ *  StructCurveField.cc: Templated Field defined on a 1D Structured Grid
  *
  *  Written by:
  *   Allen R. Sanderson
@@ -26,6 +26,10 @@
  *
  *  Copyright (C) 2002 SCI Institute
  */
+
+/*
+  See StructCurveMesh.h for field/mesh comments.
+*/
 
 #ifndef Datatypes_StructCurveField_h
 #define Datatypes_StructCurveField_h

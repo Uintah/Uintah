@@ -16,10 +16,10 @@
 */
 
 /*
- *  StructCurveMesh.cc: Templated Mesh defined on a 3D Structured Grid
+ *  StructCurveMesh.cc: Templated Mesh defined on a 1D Structured Grid
  *
  *  Written by:
- *   Allen Sanderson
+ *   Allen R. Sanderson
  *   Department of Computer Science
  *   University of Utah
  *   December 2002
@@ -27,6 +27,10 @@
  *  Copyright (C) 2002 SCI Group
  *
  */
+
+/*
+  See StructCurveMesh.h for field/mesh comments.
+*/
 
 #include <Core/Datatypes/StructCurveMesh.h>
 #include <Core/Datatypes/FieldAlgo.h>

@@ -16,7 +16,7 @@
 */
 
 /*
- *  StructHexVolField.h
+ *  StructHexVolField.h: Templated Field defined on an 3D Structured Grid
  *
  *  Written by:
  *   Michael Callahan
@@ -26,6 +26,10 @@
  *
  *  Copyright (C) 2002 SCI Institute
  */
+
+/*
+  See StructHexVolMesh.h for field/mesh comments.
+*/
 
 #ifndef Datatypes_StructHexVolField_h
 #define Datatypes_StructHexVolField_h

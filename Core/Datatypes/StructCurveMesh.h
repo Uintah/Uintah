@@ -16,16 +16,28 @@
 */
 
 /*
- *  StructCurveMesh.h: Templated Mesh defined on a 3D Structured Grid
+ *  StructCurveMesh.h: Templated Mesh defined on a 1D Structured Grid
  *
  *  Written by:
- *   Michael Callahan
+ *   Allen R. Sanderson
  *   Department of Computer Science
  *   University of Utah
- *   January 2001
+ *   November 2002
  *
- *  Copyright (C) 2001 SCI Group
+ *  Copyright (C) 2002 SCI Group
  *
+ */
+
+/*
+  A sturctured curve is a dataset with regular topology but with irregular geometry.
+  The line defined may have any shape but can not be overlapping or self-intersecting.
+  
+  The topology of structured curve is represented using a 1D vector with
+  the points being stored in an index based array. The ordering of the curve is
+  implicity defined based based upon its indexing.
+
+  For more information on datatypes see Schroeder, Martin, and Lorensen,
+  "The Visualization Toolkit", Prentice Hall, 1998.
  */
 
 #ifndef SCI_project_StructCurveMesh_h
