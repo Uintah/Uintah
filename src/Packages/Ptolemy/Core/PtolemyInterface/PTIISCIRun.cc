@@ -225,68 +225,75 @@ void AddModule::run()
     JNIUtils::sem().up();
 }
 
-void ChangeFile::run()
+void Iterate::run()
 {
-	std::string state = "";
 	std::string readerName = "SCIRun_DataIO_FieldReader_0";
-	std::string viewName = "SCIRun_Render_Viewer_0";
 	std::string cmapName = "SCIRun_DataIO_ColorMapWriter_0";
 	std::string genName = "SCIRun_Visualization_GenStandardColorMaps_0";
-	std::string count;
+
+	Module* readptr = JNIUtils::cachedNet->get_module_by_id(readerName);
+	Module* cmap = JNIUtils::cachedNet->get_module_by_id(cmapName);
+	Module* gen = JNIUtils::cachedNet->get_module_by_id(genName);
 	
 	JNIUtils::sem().down();
     
-	Module* modptr = JNIUtils::cachedNet->get_module_by_id(readerName);
-	ASSERT(modptr);
-	GuiInterface* readerGui = modptr->getGui();
-	ASSERT(readerGui);
-	
-	//colormap writer
-	Module* cmap = JNIUtils::cachedNet->get_module_by_id(cmapName);
-	GuiInterface* cmapGUI = cmap->getGui();
-	
-	//color maps generator
-	Module* gen = JNIUtils::cachedNet->get_module_by_id(genName);
-	GuiInterface* genGUI = gen->getGui();
-	
-	for(int i = 0; i < 3; i++){
-		//set new file for SCIRun to process
-		readerGui->set("::" + readerName + "-filename", file);	
+	//set the initial parameters
+	Module* modptr;
+	GuiInterface* modGui;
 
+	for(jint i = 0; i < size1; i++){
+		modptr = JNIUtils::cachedNet->get_module_by_id(doOnce[i]);
+		ASSERT(modptr);
+		i++;
+		modGui = modptr->getGui();
+		ASSERT(modGui);
 		
-		//setcolor maps
-		if(i == 1){
-			count = "1";
-			genGUI->set("::" + genName + "-mapName", "Rainbow");
-		}
-		else if(i == 2){
-			count = "2";
-			genGUI->set("::" + genName + "-mapName", "Orange Tint");
-		}
-		else{
-			count = "3";
-			genGUI->set("::" + genName + "-mapName", "Green Tint");
-		}
+		std::cout << "doOnce " << doOnce[i-1] << " " << doOnce[i] << " " << doOnce[i+1] << std::endl;
 		
-		//setfilename for the last module		
-		cmapGUI->set("::" + cmapName + "-filename", "/scratch/result" + count + ".cmap");
+		modGui->set("::" + doOnce[i-1] + doOnce[i], doOnce[i+1]);
+		i++;
+	
+	
+	}
+	
+	
+	//iterate through the tasks given to SCIRun
+	for(jint i = 0; i < numParams; i++){
+		
+		for(jint j = 0; j < size2; j=j+numParams-i){
+			//TODO ask if it would be better here to have a dynamically
+			//allocated array of module pointers for each thing
+			//depends on how efficient getmodbyid really is
+			modptr = JNIUtils::cachedNet->get_module_by_id(iterate[j]);
+			ASSERT(modptr);
+			j++;
+			modGui = modptr->getGui();
+			ASSERT(modGui);
+		
+			std::cout << "iterate " << iterate[j-1] << " " << iterate[j] << " " << iterate[j+i+1] << std::endl;
+		
+			
+			modGui->set("::" + iterate[j-1] + iterate[j], iterate[j+i+1]);
+			j=j+i+1;
+		}
 
 		//tell the first module that it wants to execute
-		modptr->want_to_execute();
-
+		readptr->want_to_execute();
+		gen->want_to_execute();
+		
 		while(cmap->getState() != 3){
 			//spin and wait
 			//TODO there has got to be a better way to wait on the network
 			//this will definitely need to be fixed
 		}
 
-		std::cout << "State of cmap: " << cmap->getState() << std::endl;
+		//std::cout << "State of cmap: " << cmap->getState() << std::endl;
 		
 		//reset the states of the ones we care about
 		cmap->resetState();
 		gen->resetState();
 		modptr->resetState();
-		std::cout << "State of cmap: " << cmap->getState() << std::endl;
+		//std::cout << "State of cmap: " << cmap->getState() << std::endl;
 		
 	}
 		
@@ -295,7 +302,7 @@ void ChangeFile::run()
 	
 	/*  doesnt work because you need pointer to view window not viewer.  
 		dont know how to get that.
-		
+		std::string state = "";	
 	GuiInterface* viewGui = viewer->getGui();
 	while(state == ""){
 		viewGui->get("::" + viewName + "-ViewWindow_0-resx",state);
@@ -311,6 +318,13 @@ void ChangeFile::run()
 	
 	JNIUtils::sem().up();
 }
+
+Iterate::~Iterate(){
+	//free dynamically allocated memory
+	delete [] doOnce;
+	delete [] iterate;
+}
+
 
 void SignalExecuteReady::run()
 {
