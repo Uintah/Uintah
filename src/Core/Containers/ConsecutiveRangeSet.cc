@@ -40,7 +40,7 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(list<int>& set)
 
   list<Range> rangeSet;
   for (it++; it != set.end(); it++) {
-    if ((unsigned long)*it == range.low_ + range.extent_ + 1)
+    if ((unsigned long)*it - range.low_ == range.extent_ + 1)
       range.extent_++;
     else {
       // end of range
@@ -129,7 +129,7 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(std::string setstr)
   int last_high = (*it).high();
   for (it++; it != rangeSet.end(); it++)
   {
-    if ((unsigned long)last_high + 1 >= (unsigned long)(*it).low_) {
+    if (last_high + 1 >= (*it).low_) {
       // combine ranges
       int high = (last_high > (*it).high()) ? last_high : (*it).high();
       it--;
@@ -161,7 +161,7 @@ void ConsecutiveRangeSet::addInOrder(int value)
 	 throw ConsecutiveRangeSetException(msg.str());
       }
       if (value > last_value) {
-	 if ((unsigned long)value == (unsigned long)last_value + 1)
+	 if (value == last_value + 1)
 	    range.extent_++;
 	 else {
 	    // end of range
@@ -179,7 +179,7 @@ void ConsecutiveRangeSet::setSize()
   size_ = 0;
   vector<Range>::iterator it = rangeSet_.begin();
   for ( ; it != rangeSet_.end() ; it++) {
-    size_ += (unsigned long)(*it).extent_ + 1;
+    size_ += (*it).extent_ + 1;
   }
 }
 
@@ -205,6 +205,8 @@ bool ConsecutiveRangeSet::operator==(const ConsecutiveRangeSet& set2) const
     if (*it != *it2)
       return false;
   }
+  if (it != rangeSet_.end() || it2 != set2.rangeSet_.end())
+    return false;
   
   return true;
 }
@@ -274,7 +276,9 @@ ConsecutiveRangeSet ConsecutiveRangeSet::unioned(const ConsecutiveRangeSet&
     Range& lastRange = newRangeSet.back();
 
     // check for overlap
-    if ((unsigned long)lastRange.high() + 1 >= (unsigned long)range.low_) {
+    // being careful about overflow -- for example all == MIN_INT..MAX_INT
+    if ((lastRange.high() >= range.low_) ||
+	((unsigned long)range.low_ - lastRange.high() == 1)) {
       // combine ranges
       if (range.high() > lastRange.high())
 	lastRange.extent_ =  (unsigned long)range.high() - lastRange.low_;
