@@ -71,9 +71,6 @@ void Triangle::draw() {
     glVertex3d(p2.x(), p2.y(), p2.z());
     glVertex3d(p3.x(), p3.y(), p3.z());
     glEnd();
-    cerr << "Triangle: (" << p1.x() << ", " << p1.y() << ", " << p1.z() <<
-	"), (" << p2.x() << ", " << p2.y() << ", " << p2.z() <<
-	"), (" << p3.x() << ", " << p3.y() << ", " << p3.z() << ")\n";
 }
 
 GeomPt::GeomPt(const Point& p)
