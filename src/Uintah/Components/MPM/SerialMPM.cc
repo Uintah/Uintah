@@ -18,6 +18,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/Patch.h>
+#include <Uintah/Grid/PerPatch.h>
 #include <Uintah/Grid/NodeIterator.h> // Must be included after Patch.h
 #include <Uintah/Grid/ReductionVariable.h>
 #include <Uintah/Grid/SimulationState.h>
@@ -88,9 +89,12 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 {
    Level::const_patchIterator iter;
 
+   const MPMLabel* lb = MPMLabel::getLabels();
+
    for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
 
       const Patch* patch=*iter;
+
       {
 	 Task* t = scinew Task("SerialMPM::actuallyInitialize", patch, dw, dw,
 			       this, &SerialMPM::actuallyInitialize);
@@ -625,6 +629,12 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
 				   DataWarehouseP& new_dw)
 {
   int numMatls = d_sharedState->getNumMatls();
+  const MPMLabel* lb = MPMLabel::getLabels();
+
+  PerPatch<long> NAPID(0);
+  if(new_dw->exists(lb->ppNAPIDLabel, 0, patch))
+      new_dw->get(NAPID,lb->ppNAPIDLabel, 0, patch);
+
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -633,7 +643,12 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
        cerr << "dwindex=" << matl->getDWIndex() << '\n';
        particleIndex numParticles = mpm_matl->countParticles(patch);
 
-       mpm_matl->createParticles(numParticles, patch, new_dw);
+       mpm_matl->createParticles(numParticles, NAPID, patch, new_dw);
+
+       NAPID=NAPID + numParticles;
+
+       cout << "NAPID " << NAPID << endl;
+
        mpm_matl->getConstitutiveModel()->initializeCMData(patch,
 						mpm_matl, new_dw);
        int vfindex = matl->getVFIndex();
@@ -645,6 +660,8 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
        }
     }
   }
+  cout << "NAPID " << NAPID << endl;
+  new_dw->put(NAPID, lb->ppNAPIDLabel, 0, patch);
 }
 
 
@@ -1098,8 +1115,6 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       sum_vartype strainEnergy;
       new_dw->get(strainEnergy, lb->StrainEnergyLabel);
 
-      cout << strainEnergy << endl;
-
       new_dw->get(acceleration, lb->gAccelerationLabel, vfindex, patch,
 		  Ghost::None, 0);
       new_dw->get(velocity, lb->gMomExedVelocityLabel, vfindex, patch,
@@ -1367,6 +1382,11 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.80  2000/06/05 19:48:57  guilkey
+// Added Particle IDs.  Also created NAPID (Next Available Particle ID)
+// on a per patch basis so that any newly created particles will know where
+// the indexing left off.
+//
 // Revision 1.79  2000/06/03 05:25:44  sparker
 // Added a new for pSurfLabel (was uninitialized)
 // Uncommented pleaseSaveIntegrated

@@ -5,6 +5,7 @@
 #include <Uintah/Grid/Material.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Grid/ParticleVariable.h>
+#include <Uintah/Grid/PerPatch.h>
 #include <vector>
 
 namespace SCICore {
@@ -68,8 +69,10 @@ WARNING
 	 particleIndex countParticles(GeometryObject* obj,
 				      const Patch*) const;
 	 void createParticles(particleIndex numParticles,
+			      PerPatch<long> NAPID,
 			      const Patch*,
 			      DataWarehouseP& new_dw);
+
 	 particleIndex createParticles(GeometryObject* obj,
 				       particleIndex start,
 				       ParticleVariable<Point>& position,
@@ -80,6 +83,7 @@ WARNING
 				       ParticleVariable<int>& pissurf,
 				       ParticleVariable<double>& temperature,
 				       ParticleVariable<long>& particleID,
+				       PerPatch<long>& NAPID,
 				       const Patch*);
 
 	 int checkForSurface(const GeometryPiece* piece,
@@ -120,6 +124,11 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.22  2000/06/05 19:48:58  guilkey
+// Added Particle IDs.  Also created NAPID (Next Available Particle ID)
+// on a per patch basis so that any newly created particles will know where
+// the indexing left off.
+//
 // Revision 1.21  2000/06/02 22:51:55  jas
 // Added infrastructure for Burn models.
 //
