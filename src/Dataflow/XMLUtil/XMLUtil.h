@@ -49,10 +49,8 @@ namespace SCIRun {
 
 #define NOT_SET ((char*)_NOTSET_)
 
-using std::string;
-
-
 namespace SCIRun {
+  using std::string;
      
       DOM_Node findNode(const std::string &name,DOM_Node node);
       DOM_Node findNextNode(const std::string& name, DOM_Node node);

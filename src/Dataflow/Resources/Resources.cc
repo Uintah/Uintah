@@ -42,7 +42,6 @@ void post_message(const string &msg )
   cerr << msg << endl;
 }
 
-
 Resources::Resources() 
 {
 }
