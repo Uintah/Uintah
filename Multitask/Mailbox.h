@@ -34,7 +34,6 @@ public:
     /*
      * Destroy the mailbox.  All items in the queue are silently dropped.
      */
-    Mailbox(int max);
     ~Mailbox();
 
     /*

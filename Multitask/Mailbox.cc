@@ -33,20 +33,6 @@ template<class Item> struct Mailbox_private {
 
 
 template<class Item>
-Mailbox<Item>::Mailbox()
-{
-  int max = 200;
-  priv=scinew Mailbox_private<Item>;
-  priv->ring_buffer=new Item[max];
-  priv->head=0;
-  priv->len=0;
-  priv->send_wait=0;
-  priv->recv_wait=0;
-  priv->max=max;
-}
-
-
-template<class Item>
 Mailbox<Item>::Mailbox(int max)
 {
     priv=scinew Mailbox_private<Item>;
