@@ -6,6 +6,8 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Barrier.h>
 
+#include <Packages/rtrt/Core/Scene.h> // for ShadowType
+
 #include <X11/Xlib.h>
 
 namespace rtrt {
@@ -15,19 +17,37 @@ using SCIRun::Mutex;
 using SCIRun::Runnable;
 
 //class Barrier;
-class Scene;
-class Stats;
-class PerProcessorContext;
-class Worker;
 //class Mutex;
-class Counters;
+
+class  Scene;
+class  Stats;
+class  PerProcessorContext;
+class  Worker;
+class  Gui;
+class  Stealth;
+class  Counters;
+class  Camera;
+struct DpyPrivate;
 
 extern Mutex xlock;
-  //extern Mutex cameralock; // to synchronize camera...
 
-struct Dpy_private;
+//////////////////////////////////////////////////////////
+// WARNING: Currently there can only be ONE Dpy at a time!
+//////////////////////////////////////////////////////////
 
 class Dpy : public Runnable {
+
+  friend class Gui;
+
+  // Gui Interaction Flags:
+  Image    * showImage_;
+  bool       doAutoJitter_; // Jitter when not moving
+  bool       doJitter_;     // Jitter on/off
+  int        shadowMode_; // Must be an int so GLUI can write to it.
+
+  Camera   * guiCam_;
+  Stealth  * stealth_;
+
   Scene    * scene;
   char     * criteria1;
   char     * criteria2;
@@ -42,7 +62,7 @@ class Dpy : public Runnable {
 
   PerProcessorContext* ppc;
 
-  Dpy_private* priv; // allows cleaner integration of frameless stuff
+  DpyPrivate* priv; // allows cleaner integration of frameless stuff
   
   float xScale,yScale; // for using pixelzoom 
   
@@ -51,13 +71,10 @@ class Dpy : public Runnable {
 
   bool display_frames; // whether or not to display the rendering
   
-  void get_input();         // some common code for frameless vs. not frameless
+  static void idleFunc();
+  void renderFrame();
+  void renderFrameless();
 
-  // case statement for keypresses
-  void handle_keypress( XEvent & e ); 
-  // case statement for mouse press events
-  void handle_mouse_press( XEvent & e ); 
-  
 public:
   Dpy(Scene* scene, char* criteria1, char* criteria2,
       int nworkers, bool bench, int ncounters, int c0, int c1,
