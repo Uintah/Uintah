@@ -438,6 +438,11 @@ SCI_ARG_ENABLE(ati-card-fix,
                  Enable the ati car fix to repair bad polygons),
   [enable_ati_card_fix="$enableval"],
   [enable_ati_card_fix=${enable_ati_card_fix='no'}])
+SCI_ARG_ENABLE(no-dynamic-cast,
+  AC_HELP_STRING(--enable-no-dynamic-cast,
+	         Disable dynamic casting, SGI compiler bug workaround.),
+  [enable_no_dynamic_cast="$enableval"],
+  [enable_no_dynamic_cast=${enable_no_dynamic_cast='no'}])
 
 
 if test "$enable_rpath" = "no"; then
@@ -455,6 +460,11 @@ if test "$enable_ati_card_fix" = "yes"; then
    DEF_NEED_ATI_CARD_FIX="#define NEED_ATI_CARD_FIX 1"
 fi
 AC_SUBST(DEF_NEED_ATI_CARD_FIX)
+
+if test "$enable_no_dynamic_cast" = "yes"; then
+   DEF_NO_DYNAMIC_CAST="#define NO_DYNAMIC_CAST 1"
+fi
+AC_SUBST(DEF_NO_DYNAMIC_CAST)
 
 ##  --------------------------------------------------------------------
 ##  Save off the arguments to configure, being careful to save 
