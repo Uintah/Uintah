@@ -69,7 +69,9 @@ MixedScheduler::wait_till_all_done()
 }
 
 void
-MixedScheduler::initiateTask( DetailedTask          * task )
+MixedScheduler::initiateTask( DetailedTask          * task,
+			      bool /* only_old_recvs */,
+			      int /* abort_point */)
 {
   d_threadPool->addTask( task );
 }

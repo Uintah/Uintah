@@ -90,7 +90,8 @@ WARNING
 					    const MaterialSet* matls);
     
     void postMPIRecvs( DetailedTask* task, CommRecMPI& recvs,
-		       list<DependencyBatch*>& externalRecvs );
+		       list<DependencyBatch*>& externalRecvs,
+		       bool only_old_recvs, int abort_point);
     void processMPIRecvs( DetailedTask* task, CommRecMPI& recvs,
 		       list<DependencyBatch*>& externalRecvs );    
 
@@ -107,7 +108,8 @@ WARNING
     virtual void actuallyCompile( const ProcessorGroup * pg );
     
     // Runs the task. (In Mixed, gives the task to a thread.)
-    virtual void initiateTask( DetailedTask          * task );
+    virtual void initiateTask( DetailedTask          * task,
+			       bool only_old_recvs, int abort_point);
 
     // Performs the reduction task. (In Mixed, gives the task to a thread.)    
     virtual void initiateReduction( DetailedTask          * task );    

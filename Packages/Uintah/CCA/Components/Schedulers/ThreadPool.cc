@@ -289,7 +289,7 @@ Receiver::addAwaitingTasks()
     recvs_.setDefaultGroupID(slot);    
     list<DependencyBatch*> externalRecvs;
     unsigned long prevNumRequests = recvs_.numRequests();
-    d_parent->getScheduler()->postMPIRecvs(task, recvs_, externalRecvs);
+    d_parent->getScheduler()->postMPIRecvs(task, recvs_, externalRecvs, false, 0);
     ASSERT(awaitingTasks_[slot] == 0);
     awaitingTasks_[slot] = scinew AwaitingTask(task, externalRecvs, d_id);
     if (recvs_.numRequests() == prevNumRequests) {

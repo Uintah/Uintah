@@ -65,7 +65,8 @@ private:
 
   MessageLog log;
 
-  virtual void initiateTask( DetailedTask* task );
+  virtual void initiateTask( DetailedTask* task,
+			     bool only_old_recvs, int abort_point );
   virtual void initiateReduction( DetailedTask* task );  
 
   // Waits until all tasks have finished. (Ie: talks to the ThreadPool
