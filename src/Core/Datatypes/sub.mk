@@ -31,7 +31,6 @@ SRCS += $(GENSRCS) \
         $(SRCDIR)/Geom.cc		    \
         $(SRCDIR)/HexMesh.cc		    \
         $(SRCDIR)/Image.cc		    \
-        $(SRCDIR)/Interval.cc		    \
         $(SRCDIR)/LatticeGeom.cc	    \
         $(SRCDIR)/Matrix.cc		    \
         $(SRCDIR)/Mesh.cc		    \
@@ -91,6 +90,7 @@ SRCS += $(GENSRCS) \
 	$(SRCDIR)/Polygon.cc \
 	$(SRCDIR)/SliceTable.cc \
 	$(SRCDIR)/VolumeUtils.cc \
+#        $(SRCDIR)/Interval.cc		    \
 
 
 $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h

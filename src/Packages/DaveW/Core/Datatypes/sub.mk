@@ -2,7 +2,8 @@
 
 SRCDIR := Packages/DaveW/Core/Datatypes
 
-SUBDIRS := $(SRCDIR)/CS684 $(SRCDIR)/General
+SUBDIRS := $(SRCDIR)/General 
+#	$(SRCDIR)/CS684 
 
 include $(SRCTOP)/scripts/recurse.mk
 

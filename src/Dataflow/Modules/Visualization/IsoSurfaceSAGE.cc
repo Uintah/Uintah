@@ -54,7 +54,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/GeometryComm.h>
 #include <Dataflow/Ports/SurfacePort.h>
-#include <Dataflow/Ports/CameraViewPort.h>
+#include <Dataflow/Ports/PathPort.h>
 
 #include <Core/Algorithms/Visualization/Sage.h>
 
@@ -89,7 +89,7 @@ namespace SCIRun {
       ScalarFieldIPort* infield;  // input scalar fields (bricks)
       ScalarFieldIPort* incolorfield;
       ColorMapIPort* incolormap;
-      CameraViewIPort* icam_view;
+      PathIPort* icam_view;
 
       // ouput
       GeometryOPort* ogeom;       // input from salmon - view point
@@ -109,7 +109,7 @@ namespace SCIRun {
       int surface_id;
       int points_id;
 
-      CameraView       camv;
+      Path       camv;
       bool has_camera_view;
 
       MaterialHandle bone;
@@ -192,8 +192,8 @@ namespace SCIRun {
       incolormap=scinew ColorMapIPort(this,"Color Map",ColorMapIPort::Atomic);
       add_iport(incolormap);
     
-      icam_view=scinew CameraViewIPort(this, "Camera View",  
-				       CameraViewIPort::Atomic);
+      icam_view=scinew PathIPort(this, "Camera View",  
+				       PathIPort::Atomic);
       add_iport(icam_view);
 
       // output port
@@ -301,8 +301,8 @@ namespace SCIRun {
       // Get View information 
       
       // first, check if we got a view in the input port
-      CameraViewHandle camera;
-      if ( !icam_view->get( camera ) || !set_view( camera->get_view() )) {
+      PathHandle camera;
+      if ( !icam_view->get( camera ) || !camera.get_rep() || !camera->keyViews.size() || !set_view( camera->keyViews[0] )) {
 	cerr << "using Salmon" << endl;
 	// no. get the view from salmon
 	gd = ogeom->getData(0, GEOM_VIEW);
@@ -319,7 +319,7 @@ namespace SCIRun {
       search();
 
       if ( has_camera_view ) 
-	ogeom->setView( 0, camera->get_view() );
+	ogeom->setView( 0, camera->keyViews[0] );
       else if ( tcl_poll.get() ) { 
 	  GeometryData *tmp_gd = ogeom->getData(0, GEOM_VIEW);
 	  if ((*gd->view == *tmp_gd->view) ) 

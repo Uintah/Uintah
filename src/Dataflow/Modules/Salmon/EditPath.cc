@@ -41,7 +41,6 @@ POSSIBLE REVISIONS
 
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/PathPort.h>
-#include <Dataflow/Ports/CameraViewPort.h>
 #include <Dataflow/Widgets/CrosshairWidget.h>
 
 #include <Core/Geom/View.h>
@@ -104,11 +103,9 @@ namespace SCIRun {
     
     PathIPort*   ipath;
     PathOPort*   opath;
-    CameraViewOPort* ocam_view;
+    PathOPort*   ocam_view;
     GeometryOPort* ogeom;
     PathHandle   ext_path_h, new_path_h, curr_path_h;
-    CameraViewHandle cv_h;
-    CameraView       camv;
     
 public:
     EditPath(const clString& id);
@@ -159,7 +156,6 @@ EditPath::EditPath(const clString& id)
   widget_lock("EditPath module widget lock"),
   sem("EditPath Semaphore", 0),
   message(""),
-  camv(),
   c_view(Point(1, 1, 1), Point(0, 0, 0), Vector(-1, -1, 1), 20)
 {
   ipath=scinew PathIPort(this, "Path", PathIPort::Atomic);
@@ -168,11 +164,8 @@ EditPath::EditPath(const clString& id)
   add_oport(opath);
   ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
   add_oport(ogeom);
-  ocam_view=scinew CameraViewOPort(this, "Camera View",  CameraViewIPort::Atomic);
+  ocam_view=scinew PathOPort(this, "Camera View", PathIPort::Atomic);
   add_oport(ocam_view);
-
-  cv_h=&camv;
-
   cross_widget =scinew CrosshairWidget(this, &widget_lock, 0.01);
   cross_widget->SetState(0);
   cross_widget->SetPosition(Point(0, 0, 0));
@@ -531,14 +524,17 @@ void EditPath::execute()
 
 void EditPath::send_view(){
   
-  cv_h->set_view(c_view);
-
   switch (tcl_send_dir.get()){
   case to_ogeom:
     ogeom->setView(0, c_view);
     break;
   case to_oview:
+    {
+    Path* cv=new Path;
+    PathHandle cv_h(cv);
+    cv_h->add_keyF(c_view);
     ocam_view->send(cv_h);
+    }
     break;
   default:
     break;

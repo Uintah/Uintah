@@ -9,9 +9,10 @@ SRCS     += $(SRCDIR)/ContourSet.cc $(SRCDIR)/ContourSetPort.cc \
 	$(SRCDIR)/ScalarTriSurface.cc \
 	$(SRCDIR)/SegFld.cc $(SRCDIR)/SegFldPort.cc \
 	$(SRCDIR)/SigmaSet.cc $(SRCDIR)/SigmaSetPort.cc \
-	$(SRCDIR)/TensorField.cc $(SRCDIR)/TensorFieldBase.cc \
-	$(SRCDIR)/TensorFieldPort.cc $(SRCDIR)/TopoSurfTree.cc \
+        $(SRCDIR)/TopoSurfTree.cc \
 	$(SRCDIR)/VectorFieldMI.cc
+#	$(SRCDIR)/TensorField.cc $(SRCDIR)/TensorFieldBase.cc \
+#	$(SRCDIR)/TensorFieldPort.cc \
 
 PSELIBS := Dataflow/Network Core/Persistent Core/Geometry \
 	Core/Exceptions Core/Datatypes Core/Thread \

@@ -10,12 +10,10 @@
 SRCDIR := Dataflow/Modules
 
 SUBDIRS := \
-	$(SRCDIR)/Domain\
 	$(SRCDIR)/Example\
         $(SRCDIR)/FEM\
         $(SRCDIR)/Fields\
 	$(SRCDIR)/Image\
-	$(SRCDIR)/Iterators\
         $(SRCDIR)/Matrix\
 	$(SRCDIR)/Mesh\
         $(SRCDIR)/Readers\
@@ -23,6 +21,8 @@ SUBDIRS := \
         $(SRCDIR)/Surface\
         $(SRCDIR)/Visualization\
 	$(SRCDIR)/Writers\
+#	$(SRCDIR)/Iterators\
+#	$(SRCDIR)/Domain\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SRCTOP)/scripts/recurse.mk

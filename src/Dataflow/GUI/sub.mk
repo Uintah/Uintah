@@ -12,7 +12,6 @@ $(SRCDIR)/tclIndex: \
 			$(SRCDIR)/CriticalPointWidget.tcl \
 			$(SRCDIR)/ComponentWizard.tcl \
 			$(SRCDIR)/CrosshairWidget.tcl \
-			$(SRCDIR)/Delaunay.tcl \
 			$(SRCDIR)/Edge.tcl \
 			$(SRCDIR)/FrameWidget.tcl \
 			$(SRCDIR)/GaugeWidget.tcl \
@@ -21,7 +20,6 @@ $(SRCDIR)/tclIndex: \
 			$(SRCDIR)/LightWidget.tcl \
 			$(SRCDIR)/MeshInterpVals.tcl \
 			$(SRCDIR)/MeshToGeom.tcl \
-			$(SRCDIR)/MeshView.tcl \
 			$(SRCDIR)/Module.tcl \
 			$(SRCDIR)/NetworkEditor.tcl \
 			$(SRCDIR)/Noise.tcl \
@@ -49,6 +47,10 @@ $(SRCDIR)/tclIndex: \
 			$(SRCDIR)/WriteField.tcl \
 #[INSERT NEW TCL FILE HERE]
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Dataflow/GUI
+
+#			$(SRCDIR)/Delaunay.tcl \
+#			$(SRCDIR)/MeshView.tcl \
+
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 

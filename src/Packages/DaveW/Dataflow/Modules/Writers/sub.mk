@@ -15,8 +15,9 @@ SRCS     += \
 	$(SRCDIR)/ContourSetWriter.cc\
 	$(SRCDIR)/SegFldWriter.cc\
 	$(SRCDIR)/SigmaSetWriter.cc\
-	$(SRCDIR)/TensorFieldWriter.cc\
 #[INSERT NEW CODE FILE HERE]
+
+#	$(SRCDIR)/TensorFieldWriter.cc\
 
 PSELIBS := Packages/DaveW/Core/Datatypes/General Dataflow/Ports \
 	Dataflow/Network Core/Persistent Core/Exceptions Core/Containers \

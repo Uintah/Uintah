@@ -39,6 +39,7 @@
 #include <Core/Geom/Pt.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Math/Expon.h>
 #include <Core/Math/Trig.h>
 
 #include <Core/Algorithms/Visualization/Screen.h>
@@ -469,7 +470,7 @@ void Sage<T,F,AI>::search( double iso,
   tri_number = 0;
 
   int prev_counter = 0;
-  double size = 5*pow(dx*dy*dz,2.0/3);
+  double size = 5*Pow(dx*dy*dz,2.0/3);
   while ( !stack->empty() ) {
 
     if ( counter >  prev_counter * 1.5 ) {

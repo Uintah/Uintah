@@ -39,8 +39,8 @@ namespace SCIRun {
 
 
 
-#define OCTREE_MAXDEPTH 2
-#define OCTREE_MAXELEMENTS 300
+//#define OCTREE_MAXDEPTH 2
+//#define OCTREE_MAXELEMENTS 300
 
 static TrivialAllocator Element_alloc(sizeof(Element));
 static TrivialAllocator Node_alloc(sizeof(Node));
@@ -94,10 +94,10 @@ PersistentTypeID Node::type_id("Node", "0", make_Node);
 
 Mesh::Mesh()
   : have_all_neighbors(0),
-    bld_grid(0),
-    delaunay_generation(NULL)
+//    delaunay_generation(NULL),
+    bld_grid(0)
 {
-  octree=0;
+//  octree=0;
   grid.nx=grid.ny=grid.nz=0;
   cond_tensors.grow(1);
   cond_tensors[0].grow(6);
@@ -113,10 +113,10 @@ Mesh::Mesh(int nnodes, int nelems)
   : nodes(nnodes),
     elems(nelems),
     have_all_neighbors(0),
-    delaunay_generation(NULL),
+//    delaunay_generation(NULL),
     bld_grid(0)
 {
-  octree=0;
+//  octree=0;
   grid.nx=grid.ny=grid.nz=0;
   cond_tensors.grow(1);
   cond_tensors[0].grow(6);
@@ -133,7 +133,7 @@ Mesh::Mesh(const Mesh& copy)
     elems(copy.elems.size()),
     cond_tensors(copy.cond_tensors),
     have_all_neighbors(0),
-    delaunay_generation(NULL),
+//    delaunay_generation(NULL),
     bld_grid(0)
 {
   // we're gonna copy the nodes, rather than share pointers... otherwise
@@ -142,7 +142,7 @@ Mesh::Mesh(const Mesh& copy)
   for (i=0; i<copy.nodes.size(); i++) {
     nodes[i] = new Node(copy.point(i));
   }
-  octree=0;
+//  octree=0;
   grid.nx=grid.ny=grid.nz=0;
   int nelems=elems.size();
   for (i=0;i<nelems;i++) {
@@ -153,8 +153,8 @@ Mesh::Mesh(const Mesh& copy)
 
 Mesh::~Mesh()
 {
-  if (octree)
-    delete octree;
+//  if (octree)
+//    delete octree;
   remove_all_elements();
 }
 
@@ -956,6 +956,7 @@ bool Mesh::overlaps(Element* e, const Point& v0, const Point& v1)
   return false;  
 }
 
+#if 0
 void Mesh::make_octree(int level, MeshOctree*& octree,
 		       const Point& min, const Point& max,
 		       const Array1<int>& inelems)
@@ -1051,6 +1052,7 @@ int MeshOctree::locate(Mesh* mesh, const Point& p, double epsilon1)
   else
     return -1;
 }
+#endif
 
 void Mesh::make_grid(int nx, int ny, int nz, const Point &min, 
 		     const Point &max, double eps) {
@@ -1326,6 +1328,7 @@ void Mesh::draw_element(int in_element, GeomGroup* group)
   draw_element(e, group);
 }
 
+#if 0
 bool
 Mesh::insert_delaunay( const Point& p )
 {
@@ -1477,6 +1480,7 @@ Mesh::insert_delaunay( int nn )
     
   // Go through and look for small elements - try to get rid of
   // them by swapping an edge
+#endif
 #if 0
   for (int degen=start_new;degen<elems.size();degen++) {
     Element* e=elems[degen];
@@ -1593,9 +1597,6 @@ Mesh::insert_delaunay( int nn )
       }
     }
   }
-#endif
-
-#if 0
   {
     int nelems=elems.size();
     for (int i=0;i<nelems;i++) {
@@ -1654,10 +1655,10 @@ Mesh::insert_delaunay( int nn )
     }
   }
 #endif
-
+#if 0
   return true;
 }
-
+#endif
 
 void Mesh::pack_elems()
 {
@@ -1740,6 +1741,7 @@ void Mesh::pack_all()
   pack_elems();
 }
 
+#if 0
 void Mesh::remove_delaunay(int node, int fill)
 {
   if(!fill) {
@@ -1755,6 +1757,7 @@ void Mesh::remove_delaunay(int node, int fill)
     NOT_FINISHED("Mesh::remove_delaunay");
   }
 }
+#endif
 
 void Mesh::compute_face_neighbors()
 {
@@ -1867,6 +1870,7 @@ void Mesh::get_boundary_lines(Array1<Point>&)
   NOT_FINISHED("Mesh::get_boundary_lines");
 }
 
+#if 0
 MeshOctree::MeshOctree()
 {
   for (int i=0;i<8;i++)
@@ -1880,6 +1884,7 @@ MeshOctree::~MeshOctree()
       delete child[i];
   }
 }
+#endif
 
 void Pio(Piostream& stream, Element*& data)
 {

@@ -21,8 +21,8 @@ SRCS     += \
 	$(SRCDIR)/SolveMatrix.cc\
 	$(SRCDIR)/VecVec.cc\
 	$(SRCDIR)/VisualizeMatrix.cc\
-	$(SRCDIR)/cConjGrad.cc\
-	$(SRCDIR)/cPhase.cc\
+#	$(SRCDIR)/cConjGrad.cc\
+#	$(SRCDIR)/cPhase.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Core/Persistent \
