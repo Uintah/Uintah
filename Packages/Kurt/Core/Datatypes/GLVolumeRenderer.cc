@@ -164,7 +164,7 @@ GLVolumeRenderer::setup()
 
 
 #endif
-      cmapHasChanged = false;
+      cmapHasChanged = true;
     }
   }
   glColor4f(1,1,1,1); // set to all white for modulation
