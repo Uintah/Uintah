@@ -251,9 +251,8 @@ MPMLabel::MPMLabel()
   dTdt_NCLabel     = scinew VarLabel("dTdt_NC",
 			NCVariable<double>::getTypeDescription());
 
-  // Cell centered variables
-  cBurnedMassLabel = scinew VarLabel( "c.burnedMass",
-			CCVariable<double>::getTypeDescription() );
+  massBurnFractionLabel  = scinew VarLabel("massBurnFraction",
+			NCVariable<double>::getTypeDescription());
 
   // Reduction variables
   partCountLabel = scinew VarLabel("particleCount",
@@ -366,9 +365,9 @@ MPMLabel::~MPMLabel()
   delete gStressForSavingLabel;
   delete gVolumeLabel;
   delete gWeightLabel;
-  delete cBurnedMassLabel;
   delete gradPressNCLabel;
   delete dTdt_NCLabel;
+  delete massBurnFractionLabel;
 
   delete partCountLabel;
   delete delTLabel;
