@@ -34,6 +34,7 @@ public:
    
    int VariablesChanged() const {return changed;}
    void ResetChanged() {changed = 0;}
+   void SetChanged() {changed = 1;}
    
    friend class BaseVariable;
 private:
