@@ -43,6 +43,10 @@ PROGRAM := $(SRCDIR)/vq
 SRCS := $(SRCDIR)/vq.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/vq-error
+SRCS := $(SRCDIR)/vq-error.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/pca-reconstruct
 SRCS := $(SRCDIR)/pca-reconstruct.cc
 # Does need teem
