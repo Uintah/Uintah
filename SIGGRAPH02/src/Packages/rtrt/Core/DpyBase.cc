@@ -234,7 +234,8 @@ void DpyBase::run() {
 
   for(;;){
     // Now we need to test to see if we should die
-    if (scene->get_rtrt_engine()->stop_execution() || on_death_row) {
+    //if (scene->get_rtrt_engine()->stop_execution() || on_death_row) {
+    if (on_death_row) {
       close_display();
       return;
     }
@@ -247,7 +248,8 @@ void DpyBase::run() {
     // That way we don't waste time redrawing after each event
     while (XEventsQueued(dpy, QueuedAfterReading)) {
       // Now we need to test to see if we should die
-      if (scene->get_rtrt_engine()->stop_execution() || on_death_row) {
+      //if (scene->get_rtrt_engine()->stop_execution() || on_death_row) {
+      if (on_death_row) {
 	close_display();
 	return;
       }

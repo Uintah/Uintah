@@ -180,13 +180,13 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
 	double scaled_dist = rhit.min_t*extinction_scale;
 	Color filter;
 	if(incoming){
-	  filter = Color(powf(extinction_out.red(), scaled_dist),
-			 powf(extinction_out.green(), scaled_dist),
-			 powf(extinction_out.blue(), scaled_dist));
-	} else {
 	  filter = Color(powf(extinction_in.red(), scaled_dist),
 			 powf(extinction_in.green(), scaled_dist),
 			 powf(extinction_in.blue(), scaled_dist));
+	} else {
+	  filter = Color(powf(extinction_out.red(), scaled_dist),
+			 powf(extinction_out.green(), scaled_dist),
+			 powf(extinction_out.blue(), scaled_dist));
 	}
 	double ratten = atten * filter.max_component();
 	Color rcolor;
@@ -201,9 +201,11 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
 	Color bg;
 	cx->scene->get_bgcolor( ray.direction(), bg );
 	if(incoming)
-	  result += bg_in*bg;
+	  result += bg_in; // I'm changing this so the water is blue
+//	  result += bg_in*bg;
 	else
-	  result += bg_out*bg;
+	  result += bg_out; // changing this for the same reason
+//	  result += bg_out*bg;
       }
 
       cx->stats->ds[depth].nrefl++;
@@ -224,13 +226,13 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
 	double scaled_dist = rhit.min_t*extinction_scale;
 	Color filter;
 	if(incoming){
-	  filter = Color(powf(extinction_out.red(), scaled_dist),
-			 powf(extinction_out.green(), scaled_dist),
-			 powf(extinction_out.blue(), scaled_dist));
-	} else {
 	  filter = Color(powf(extinction_in.red(), scaled_dist),
 			 powf(extinction_in.green(), scaled_dist),
 			 powf(extinction_in.blue(), scaled_dist));
+	} else {
+	  filter = Color(powf(extinction_out.red(), scaled_dist),
+			 powf(extinction_out.green(), scaled_dist),
+			 powf(extinction_out.blue(), scaled_dist));
 	}
 	Ratten *= filter.max_component();
 	// Could do another if(Ratten > COLOR_EPS) here, but I suspect
@@ -264,13 +266,13 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
 	double scaled_dist = thit.min_t*extinction_scale;
 	Color filter;
 	if(incoming){
-	  filter = Color(powf(extinction_in.red(), scaled_dist),
-			 powf(extinction_in.green(), scaled_dist),
-			 powf(extinction_in.blue(), scaled_dist));
-	} else {
 	  filter = Color(powf(extinction_out.red(), scaled_dist),
 			 powf(extinction_out.green(), scaled_dist),
 			 powf(extinction_out.blue(), scaled_dist));
+	} else {
+	  filter = Color(powf(extinction_in.red(), scaled_dist),
+			 powf(extinction_in.green(), scaled_dist),
+			 powf(extinction_in.blue(), scaled_dist));
 	}
 	Tatten *= filter.max_component();
 	// Could do another if(Ratten > COLOR_EPS) here, but I suspect
@@ -284,12 +286,12 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
 	// Someday, perhaps we should have a background distance, so that
 	// You could actually see the background if you wanted...
 	cx->stats->ds[depth].nbg++;
-	Color bg;
-	cx->scene->get_bgcolor( ray.direction(), bg );
+//	Color bg;
+//	cx->scene->get_bgcolor( ray.direction(), bg );
 	if(incoming)
-	  result += bg_in*bg*(1-R);
+	  result += bg_out*(1-R);
 	else
-	  result += bg_out*bg*(1-R);
+	  result += bg_in*(1-R);
       }
     }
   }
