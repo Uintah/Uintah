@@ -390,15 +390,11 @@ For example:
 </para>
 
 <para>
-<!-- <inlinemediaobject> -->
-<!-- <imageobject> -->
-<!-- <imagedata fileref="osx.gif" format="GIF"/> -->
-<!-- </imageobject> -->
-<!-- </inlinemediaobject> -->
 &osx; builds of &sr; require use of configure options
 <option>--enable-32bit</option> and
-<option>--disable-sci-malloc</option>.  The configure command must
-also include the following environment variable assignments:
+<option>--disable-sci-malloc</option> and
+<option>--enable-debug</option>.  The configure command must also
+include the following environment variable assignments:
 <userinput>CC=gcc</userinput> and <userinput>CXX=g++</userinput>.  For
 example:
 <literallayout class="monospaced">
@@ -407,8 +403,15 @@ example:
   --enable-package="BioPSE MatlabInterface" \
   --enable-32bit \
   --disable-sci-malloc \
+  --enable-debug \
   CC=gcc CXX=g++
 </literallayout>
+<note>
+<para>Option <option>--enable-debug</option> is not needed when using
+gcc 3.3.  Option <option>--enable-debug</option> is needed only when
+using an earlier version of gcc.
+</para>
+</note>
 </para>
 
 <para>

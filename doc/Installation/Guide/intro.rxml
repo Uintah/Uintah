@@ -87,12 +87,10 @@ linkend="tbl.pltfm_req"/>.
 <listitem>
 <para>Apple's <ulink url="http://www.apple.com/macosx/x11/">X11
 Public Beta 3</ulink> and X11 <acronym>SDK</acronym> for &osx;
-10.2.6</para> <para>Apple's X11 and X11 <acronym>SDK</acronym>
-are distributed with &osx; but must be installed separately</para>
-</listitem>
-<listitem>
-<para><quote>dlcompat</quote> library (provides
-<function>dlopen</function> functionality)</para>
+10.2.6</para> 
+
+<para>Apple's X11 and X11 <acronym>SDK</acronym>
+are distributed with &osx; 10.3 but must be installed separately</para>
 </listitem>
 <listitem>
 <para>G4 processor</para>
