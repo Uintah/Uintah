@@ -12,6 +12,11 @@
  *                                                              *
  ****************************************************************/
 
+#include <DaveW/ThirdParty/OldLinAlg/matrix.h>
+#include <DaveW/ThirdParty/OldLinAlg/vector.h>
+#include <DaveW/ThirdParty/NumRec/dsvdcmp.h>
+#include <DaveW/ThirdParty/NumRec/dsvbksb.h>
+
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/MatrixPort.h>
 #include <PSECore/Datatypes/ColumnMatrixPort.h>
@@ -89,7 +94,37 @@ void LeastSquaresSolve::execute()
 	    bbp[i]+=AH->get(k,i)*(b[k]);
     }
 
-    AA->solve(*bb);
+    if (!AA->solve(*bb)) {
+	// copy the matrix and rhs into numerical recipes structures 
+	//   and use SVD to solve this
+	double **a0 = makeMatrix(ncols, ncols);
+	double **v0 = makeMatrix(ncols, ncols);
+	double *x0 = makeVector(ncols);
+	double *w0 = makeVector(ncols);
+	double *b0 = makeVector(ncols);
+	for (i=0; i<ncols; i++) {
+	    for (j=0; j<ncols; j++) 
+		a0[i+1][j+1]=(*AA)[i][j];
+	    b0[i+1]=bbp[i];
+	}
+	dsvdcmp(a0, ncols, ncols, w0, v0, 30);
+	int trunc=0;
+	for (i=1; i<ncols; i++) 
+	    if (w0[i] < 0.00001) {
+		w0[i]=0;
+		trunc++;
+	    }
+	cerr << "LeastSquaresSolve truncated "<<trunc<<" terms.\n";
+	dsvbksb(a0, w0, v0, ncols, ncols, b0, x0);
+	for (i=0; i<ncols; i++) {
+	    bbp[i]=x0[i+1];
+	}
+	freeMatrix(a0);
+	freeMatrix(v0);
+	freeVector(x0);
+	freeVector(w0);
+	freeVector(b0);
+    }
     x_port->send(bb);
 } 
 
@@ -98,6 +133,9 @@ void LeastSquaresSolve::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/12/10 07:00:58  dmw
+// if DenseMatrix::solve() (Gaussian-Elimination) fails, use SVD and backsubstitution to get the least squares solution
+//
 // Revision 1.2  1999/12/09 09:56:26  dmw
 // got this module working
 //
