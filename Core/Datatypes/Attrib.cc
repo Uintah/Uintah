@@ -31,20 +31,25 @@ ostream& operator<<(ostream& ostr, NeumannBC& nmn){
   return ostr;
 }
 
-
 // GROUP: Implementation of Attrib class
 //////////
-// 
-
-PersistentTypeID Attrib::type_id("Attrib", "Datatype", 0);
+//
 
 //////////
-// Persistent IO
+// PIO support
+string Attrib::typeName(int){
+  static string name = "Attrib";
+  return name;
+}
+
+PersistentTypeID Attrib::type_id(typeName(0), 
+				 "Datatype", 
+				 0);
 #define ATTRIB_VERSION 1
 
 void Attrib::io(Piostream& stream){
   
-  stream.begin_class("Attrib", ATTRIB_VERSION);
+  stream.begin_class(typeName(0).c_str(), ATTRIB_VERSION);
   
   cout << "Starting attrib output" << endl;
   Pio(stream, d_name);
@@ -54,6 +59,18 @@ void Attrib::io(Piostream& stream){
   Pio(stream, d_unitName);
 
   stream.end_class();
+}
+
+//////////
+// Constructor/Destructor
+Attrib::Attrib(){
+}
+
+Attrib::~Attrib(){
+}
+
+string Attrib::getTypeName(int n){
+  return typeName(n);
 }
 
 }  // end namespace SCIRun
