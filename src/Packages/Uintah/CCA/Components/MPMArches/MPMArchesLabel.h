@@ -175,6 +175,7 @@ namespace Uintah {
       // cut cell labels;
 
       const VarLabel* cutCellLabel;
+      const VarLabel* d_cutCellInfoLabel;
 
     };
 

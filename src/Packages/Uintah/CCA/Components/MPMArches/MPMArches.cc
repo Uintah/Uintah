@@ -1,6 +1,8 @@
 // MPMArches.cc
 
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/CutCellInfo.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/CutCellInfoP.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
@@ -67,7 +69,6 @@ MPMArches::MPMArches(const ProcessorGroup* myworld)
   d_arches      = scinew Arches(myworld);
   d_SMALL_NUM = 1.e-100;
   nofTimeSteps = 0;
-  //  cutCellLabel = 0;
 }
 
 // ****************************************************************************
@@ -160,6 +161,13 @@ void MPMArches::scheduleInitializeKStability(SchedulerP& sched,
   t->computes(d_MAlb->KStabilityVLabel);
   t->computes(d_MAlb->KStabilityWLabel);
   t->computes(d_MAlb->KStabilityHLabel);
+
+  // temporarily using this function to initialize cut cells;
+  // need to put it in a separate function later;
+  // Seshadri Kumar, August 4, 2003
+
+  t->computes(d_MAlb->cutCellLabel);
+
   sched->addTask(t, patches, arches_matls);
 }
 
@@ -194,9 +202,43 @@ void MPMArches::initializeKStability(const ProcessorGroup*,
     new_dw->allocateAndPut(KStabilityH, d_MAlb->KStabilityHLabel,
 			   matlindex, patch); 
     KStabilityH.initialize(0.);
+
+    CCVariable<cutcell> d_CCell;
+    new_dw->allocateAndPut(d_CCell, d_MAlb->cutCellLabel, 
+			   matlindex, patch);
+
+    PerPatch<CutCellInfoP> cutCellInfoP;
+    if (new_dw->exists(d_MAlb->d_cutCellInfoLabel, matlindex, patch)) 
+      new_dw->get(cutCellInfoP, d_MAlb->d_cutCellInfoLabel, matlindex, patch);
+    else {
+      cutCellInfoP.setData(scinew CutCellInfo());
+      new_dw->put(cutCellInfoP, d_MAlb->d_cutCellInfoLabel, matlindex, patch);
+    }
+    CutCellInfo* ccinfo = cutCellInfoP.get().get_rep();
+
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+
+      IntVector c = *iter;
+      for (int kk = CENX; kk <= AREAB; kk++) {
+	d_CCell[c].d_cutcell[kk] = 0.0;
+      }
+    }
+
+    /*
+    cin >> ccinfo->nwalls >> endl;
+    cin >> ccinfo->iwst >> ccinfo->jwst >> ccinfo->kwst >> endl;
+    cin >> ccinfo->iwend >> ccinfo->jwend >> ccinfo->kwend >> endl;
+    cin >> ccinfo->nccells >> endl;
+    cin >> ccinfo->iccst >> ccinfo->jccst >> ccinfo->kccst >> endl;
+    cin >> ccinfo->iccend >> ccinfo->jccend >> ccinfo->kccend >> endl;
+    */
+
+    ccinfo->nwalls = 20;
+    ccinfo->nccells = 40;
+    ccinfo->iwst = 21;
+	  
   }
 }
-
 
 //______________________________________________________________________
 //
@@ -510,7 +552,6 @@ void MPMArches::scheduleComputeTotalHT(SchedulerP& sched,
   // + partialcellflux(i+1,j,k) + partialcellflux(i-1,j,k)
   // and similarly for the other two directions
 
-  int zeroGhostCells = 0;
   int numGhostCells = 1;
 
   t->requires(Task::NewDW, d_MAlb->integHTS_CCLabel,
@@ -692,7 +733,6 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   Task* t=scinew Task("MPMArches::doMomExchange",
 		      this, &MPMArches::doMomExchange);
   int numGhostCells = 1;
-  int zeroGhostCells = 0;
 
   // requires from Arches: celltype, pressure, velocity at cc.
   // also, from mpmarches, void fraction
