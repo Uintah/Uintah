@@ -170,14 +170,14 @@ public:
       min_(copy.get_min()),max_(copy.get_max()) {};
   virtual ~LatVolMesh();
 
-  node_iterator node_begin() const;
-  node_iterator node_end() const;
-  edge_iterator edge_begin() const;
-  edge_iterator edge_end() const;
-  face_iterator face_begin() const;
-  face_iterator face_end() const;
-  cell_iterator cell_begin() const;
-  cell_iterator cell_end() const;
+  node_iterator node_begin() const { return node_iterator(this, 0, 0, 0); }
+  node_iterator node_end() const { return node_iterator(this, 0, 0, nz_); }
+  edge_iterator edge_begin() const { return 0; }
+  edge_iterator edge_end() const { return 0; }
+  face_iterator face_begin() const { return 0; }
+  face_iterator face_end() const { return 0; }
+  cell_iterator cell_begin() const { return cell_iterator(this, 0, 0, 0); }
+  cell_iterator cell_end() const { return cell_iterator(this, 0, 0, nz_-1); }
 
   //! get the mesh statistics
   unsigned get_nx() const { return nx_; }
