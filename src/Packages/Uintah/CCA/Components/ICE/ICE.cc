@@ -61,6 +61,9 @@ ICE::ICE(const ProcessorGroup* myworld)
   switchDebug_PressDiffRF         = false;
   switchDebug_Exchange_FC         = false;
   switchDebug_explicit_press      = false;
+  switchDebug_setupMatrix         = false;
+  switchDebug_setupRHS            = false;
+  switchDebug_updatePressure      = false;
   switchDebug_PressFC             = false;
   switchDebugLagrangianValues     = false;
   switchDebugLagrangianSpecificVol= false;
@@ -155,6 +158,12 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
        switchDebug_Exchange_FC          = true;
       else if (debug_attr["label"] == "switchDebug_explicit_press")
        switchDebug_explicit_press       = true;
+      else if (debug_attr["label"] == "switchDebug_setupMatrix")
+       switchDebug_setupMatrix          = true;
+      else if (debug_attr["label"] == "switchDebug_setupRHS")
+       switchDebug_setupRHS             = true;
+      else if (debug_attr["label"] == "switchDebug_updatePressure")
+       switchDebug_updatePressure       = true;
       else if (debug_attr["label"] == "switchDebug_PressFC")
        switchDebug_PressFC              = true;
       else if (debug_attr["label"] == "switchDebugLagrangianValues")
@@ -324,6 +333,12 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
     cout_norm << "switchDebug_Exchange_FC is ON" << endl;
   if (switchDebug_explicit_press == true) 
     cout_norm << "switchDebug_explicit_press is ON" << endl;
+  if (switchDebug_setupMatrix == true) 
+    cout_norm << "switchDebug_setupMatrix is ON" << endl;
+  if (switchDebug_setupRHS == true) 
+    cout_norm << "switchDebug_setupRHS is ON" << endl;
+  if (switchDebug_updatePressure == true) 
+    cout_norm << "switchDebug_updatePressure is ON" << endl;
   if (switchDebug_PressFC == true) 
     cout_norm << "switchDebug_PressFC is ON" << endl;
   if (switchDebugLagrangianValues == true) 
