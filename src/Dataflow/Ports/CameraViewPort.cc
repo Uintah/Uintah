@@ -18,6 +18,17 @@ namespace PSECore {
 
     using namespace SCICore::Containers;
     
+    extern "C" {
+      PSECORESHARE IPort* make_CameraViewIPort(Module* module,
+					       const clString& name) {
+	return new SimpleIPort<CameraViewHandle>(module,name);
+      }
+      PSECORESHARE OPort* make_CameraViewOPort(Module* module,
+					       const clString& name) {
+	return new SimpleOPort<CameraViewHandle>(module,name);
+      }
+    }
+
     template<> clString SimpleIPort<CameraViewHandle>::port_type("CameraView");
     template<> clString SimpleIPort<CameraViewHandle>::port_color("chocolate1");
 
