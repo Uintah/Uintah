@@ -67,7 +67,8 @@ INCLUDES := $(INCLUDES) -I$(SCIRUN_SRCTOP)/include/compat
 endif
 INCLUDES := $(sort $(INCLUDES))
 
-SOFLAGS         := @SOFLAGS@  $(CFLAGS)
+# This comes from the configVars.mk file (Dd)  (Can remove this line if no one objects...)
+#SOFLAGS         := @SOFLAGS@  $(CFLAGS)
 
 SRCS = $(wildcard *.cc)
 OTF_LIBS := $(patsubst %.cc,%.$(SO_OR_A_FILE), $(SRCS))
