@@ -25,6 +25,7 @@ SRCS     += \
 	$(SRCDIR)/VectorFieldWriter.cc\
 	$(SRCDIR)/VoidStarWriter.cc\
 	$(SRCDIR)/PathWriter.cc\
+	$(SRCDIR)/WriteField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Core/Persistent \
