@@ -19,6 +19,9 @@
    <DataArchiver>
         <filebase>billet.static.uda</filebase>
 	<outputTimestepInterval>1</outputTimestepInterval>
+<!--
+	<save label="p.xx"/>
+-->
 	<save label="p.x"/>
 	<save label="p.velocity"/>
 	<save label="p.volume"/>
@@ -37,6 +40,7 @@
         <solver>petsc</solver>
         <convergence_criteria_disp>1.e-6</convergence_criteria_disp>
         <convergence_criteria_energy>4.e-6</convergence_criteria_energy>
+        <do_grid_reset>true</do_grid_reset>
     </MPM>
 
     <PhysicalConstants>
