@@ -29,7 +29,7 @@ using namespace SCICore::Containers;
 class RecipBasis : public Module {    
     MeshIPort* mesh_iport;
     ColumnMatrixIPort* idx_iport;
-    ColumnMatrixIPort* sol_iport;
+    MatrixIPort* sol_iport;
     ColumnMatrixOPort* rhs_oport;
     MatrixOPort* basis_oport;
 public:
@@ -53,8 +53,8 @@ RecipBasis::RecipBasis(const clString& id)
     idx_iport = new ColumnMatrixIPort(this, "Electrode Indices",
 				       ColumnMatrixIPort::Atomic);
     add_iport(idx_iport);
-    sol_iport = new ColumnMatrixIPort(this,"Solution Vector",
-				      ColumnMatrixIPort::Atomic);
+    sol_iport = new MatrixIPort(this,"Solution Vectors",
+				      MatrixIPort::Atomic);
     add_iport(sol_iport);
     rhs_oport = new ColumnMatrixOPort(this,"RHS Vector",
 				       ColumnMatrixIPort::Atomic);
@@ -75,29 +75,33 @@ void RecipBasis::execute() {
     ColumnMatrixHandle idx_in;
     if (!idx_iport->get(idx_in)) {
 	cerr << "RecipBasis -- couldn't get index vector.  Returning.\n";
+	return;
     }
     int nelecs=idx_in->nrows();
     int nnodes=mesh_in->nodes.size();
+    int nelems=mesh_in->elems.size();
     int counter=0;
-    DenseMatrix *bmat=new DenseMatrix(nnodes, nelecs-1);
+    DenseMatrix *bmat=new DenseMatrix((nelecs-1)*3, nelems);
 
     while (counter<(nelecs-1)) {
 	// send rhs
 	ColumnMatrix* rhs=new ColumnMatrix(nnodes);
-	for (int i=0; i<nnodes; i++) (*rhs)[i]=0;
+	int i;
+	for (i=0; i<nnodes; i++) (*rhs)[i]=0;
 	(*rhs)[0]=1;
 	(*rhs)[counter+1]=-1;
-	if (counter<(nelecs-1)) rhs_oport->send_intermediate(rhs);
+	if (counter<(nelecs-2)) rhs_oport->send_intermediate(rhs);
 	else rhs_oport->send(rhs);
 
 	// read sol'n
-	ColumnMatrixHandle sol_in;
+	MatrixHandle sol_in;
 	if (!sol_iport->get(sol_in)) {
 	    cerr <<"RecipBasis -- couldn't get solution vector.  Returning.\n";
+	    return;
 	}
-	for (int i=0; i<nnodes; i++) {
-	    (*bmat)[counter][i]=(*(sol_in.get_rep()))[i];
-	}
+	for (i=0; i<nelems; i++)
+	    for (int j=0; j<3; j++)
+		(*bmat)[counter*3+i][j]=(*sol_in.get_rep())[i][j];
 	counter++;
     }
     
@@ -109,6 +113,9 @@ void RecipBasis::execute() {
 
 //
 // $Log$
+// Revision 1.2  1999/09/05 23:16:19  dmw
+// build scalar field of error values from Basis Matrix
+//
 // Revision 1.1  1999/09/05 01:14:02  dmw
 // new module for source localization
 //
