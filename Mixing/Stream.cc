@@ -11,8 +11,6 @@
 using namespace Uintah;
 using namespace std;
 
-const int Stream::NUM_DEP_VARS = 9;
-
 Stream::Stream()
 {
 }
@@ -41,8 +39,8 @@ Stream::Stream(int numSpecies,  int numElements)
 }
 
 
-Stream::Stream(int numSpecies, int numElements, 
-	       int numMixVars, int numRxnVars, bool lsoot): 
+Stream::Stream(int numSpecies, int numElements, int numMixVars, 
+	       int numRxnVars, bool lsoot): 
   d_numMixVars(numMixVars), d_numRxnVars(numRxnVars), d_lsoot(lsoot)
 {
   d_speciesConcn = vector<double>(numSpecies, 0.0); // initialize with 0
@@ -73,8 +71,8 @@ Stream::Stream(int numSpecies, int numElements,
   // includes mass fraction of each species, soot volume fraction and 
   // diameter, source terms (rxn rates) for each rxn variable, and min/max 
   // values of each rxn variable for normalization
-  d_depStateSpaceVars = NUM_DEP_VARS + numSpecies + 2*sootTrue + 
-    3*d_numRxnVars;
+  d_depStateSpaceVars = NUM_DEP_VARS + numSpecies + 2*sootTrue
+    + 3*d_numRxnVars;
 }
 
 
@@ -176,7 +174,7 @@ Stream::addStream(const Stream& strm, ChemkinInterface* chemInterf,
       Cp = chemInterf->getMixSpecificHeat(d_temperature, d_speciesConcn);
       if (Cp < 1e-10) {
 	del = 1e-10;  //***Use CONST here***
-	//cout<<"WARNING in Stream.cc."<<endl  ???Do I need this???
+	//cout<<"WARNING in Stream.cc."<<endl
 	//	  <<"The mixture heat capacity is "<< Cp <<endl;     
       }
       else {
@@ -246,7 +244,6 @@ Stream::getValue(int count, bool lfavre)
 	  return d_temperature/d_density;
 	}
 	else
-	  //cout<<"Stream::temp = "<<d_temperature<<endl;
 	  return d_temperature;
       case 3:
 	return d_enthalpy;
@@ -280,8 +277,7 @@ Stream::normalizeStream() {
 	
 void
 Stream::convertVecToStream(const vector<double>& vec_stateSpace, bool lfavre,
-                           int numMixVars, int numRxnVars,
-			   bool lsoot) {
+                           int numMixVars, int numRxnVars, bool lsoot) {
   d_depStateSpaceVars = vec_stateSpace.size();
   d_pressure = vec_stateSpace[0];
   d_density = vec_stateSpace[1];
@@ -331,9 +327,9 @@ Stream::convertVecToStream(const vector<double>& vec_stateSpace, bool lfavre,
     if (!(ii % 10)) cout << endl; 
     cout << endl;
   }
-   cout << d_numMixVars << " " << d_numRxnVars << " " << d_lsoot << " " << d_mole << " " << d_depStateSpaceVars << endl; 
 #endif
-}     
+}
+     
 
 vector<double>
 //Stream::convertStreamToVec(bool lsoot)
@@ -368,8 +364,6 @@ Stream::convertStreamToVec()
     for (vector<double>::iterator iter = d_sootData.begin(); 
        iter != d_sootData.end(); ++iter)
     vec_stateSpace.push_back(*iter);
-    //cout << "Stream::streamToVec::sootData = " << d_sootData[0] << " " 
-    // << d_sootData[1] << endl;
   }
   return vec_stateSpace;
 }
@@ -471,14 +465,15 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
 
 //
 // $Log$
-// Revision 1.16  2002/04/17 22:33:53  witzel
-// In order to get a compile on bugs.sci, NUM_DEP_VARS must be defined in
-// Stream.cc instead of within the class definition.
+// Revision 1.17  2002/05/31 22:04:45  spinti
+// *** empty log message ***
 //
-// Revision 1.15  2002/04/08 18:09:43  rawat
-// i) modified sub.mk's to make separate lib's for Mixing and fortran dirs
-// ii) Modified computeStableTImeStep to include diffusion time scale
-// iii) changed mixing model back to the old one
+// Revision 1.14  2002/03/28 23:14:51  spinti
+// 1. Added in capability to save mixing and reaction tables as KDTree or 2DVector
+// 2. Tables can be declared either static or dynamic
+// 3. Added capability to run using static clipped Gaussian MixingModel table
+// 4. Removed mean values mixing model option from PDFMixingModel and made it
+//    a separate mixing model, MeanMixingModel.
 //
 // Revision 1.13  2002/02/28 03:05:46  rawat
 // Added divergence constraint and modified pressure/outlet boundary condition.

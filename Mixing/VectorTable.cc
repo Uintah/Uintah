@@ -2,7 +2,8 @@
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/VectorTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixRxnTableInfo.h>
-//#include <iostream>;
+
+#include<iostream>
 
 using namespace std;
 using namespace Uintah;
@@ -21,10 +22,6 @@ VectorTable::VectorTable(int numIndepVars, MixRxnTableInfo* tableInfo)
       + 1;
   d_tableVec = vector< vector <double> > (totalEntries);
   cout << "vectorTable total entries = " << totalEntries << endl;
-  //for (int ii = 0; ii < totalEntries; ii++) {
-  //   d_tableVec[ii] = vector<double> (stateSpaceDim);
-   
-  // }
   // Initialize to 0
 }
 
@@ -43,9 +40,10 @@ VectorTable::Lookup(int keyIndex[], vector<double>& stateSpaceVars)
   int tableIndex = 0;
   for (int ii = 0; ii < d_numIndepVars; ii++) {
     int nextTerm = 1;
-    for (int jj = ii; jj < d_numIndepVars-1; jj++)
+    for (int jj = ii; jj < d_numIndepVars-1; jj++) {
       nextTerm *=  d_tableInfo->getNumDivsBelow(jj+1) + 
 	d_tableInfo->getNumDivsAbove(jj+1)+1;
+    }
     nextTerm *= keyIndex[ii];
     tableIndex += nextTerm;
   }
@@ -57,7 +55,7 @@ VectorTable::Lookup(int keyIndex[], vector<double>& stateSpaceVars)
 }
 
 bool
-VectorTable::Insert(int keyIndex[], vector<double> stateSpaceVars) 
+VectorTable::Insert(int keyIndex[], vector<double>& stateSpaceVars) 
 {
     // Returns true if the inserted node is nonzero vector
   int tableIndex = 0;
@@ -70,7 +68,6 @@ VectorTable::Insert(int keyIndex[], vector<double> stateSpaceVars)
     tableIndex += nextTerm;
   }
 
-  //cout << "tableIndex" << tableIndex << endl;
   if (d_tableVec[tableIndex].size() != 0) {
     cout << "Tried to insert but failed" << d_tableVec[tableIndex].size()<< endl;
     return(false);
@@ -80,4 +77,42 @@ VectorTable::Insert(int keyIndex[], vector<double> stateSpaceVars)
   return(true);
 }
   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

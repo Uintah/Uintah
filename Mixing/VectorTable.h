@@ -69,23 +69,22 @@ class VectorTable: public MixRxnTable {
   // GROUP: Manipulate
   //////////////////////////////////////////////////////////////////////
   // Inserts stateSpaceVars vector in table at location based on keyIndex.  
-  virtual bool Insert(int keyIndex[], vector<double> stateSpaceVars); 
+  virtual bool Insert(int keyIndex[], std::vector<double>& stateSpaceVars); 
 
   // GROUP: Access
   //////////////////////////////////////////////////////////////////////
   // Lookup function looks up state space vector in the table at location 
   // based on keyIndex. If it is found, it stores the state space vars in 
   // stateSpaceVars and returns true, else it just returns false.
-  virtual bool Lookup(int keyIndex[], vector<double>& stateSpaceVars);
+  virtual bool Lookup(int keyIndex[], std::vector<double>& stateSpaceVars);
 
 
  private:
  
   int d_numIndepVars;
-  vector< vector <double> > d_tableVec;
-  vector<double> d_stateSpaceVec;
+  std::vector< std::vector <double> > d_tableVec;
+  std::vector<double> d_stateSpaceVec;
   MixRxnTableInfo* d_tableInfo;
-
     
 }; // End Class VectorTable
 

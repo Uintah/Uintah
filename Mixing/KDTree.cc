@@ -50,7 +50,7 @@ KD_Tree::Lookup(int key[], vector<double>& Phi){
 
 
 bool
-KD_Tree::Insert(int key[], vector<double> Phi) {
+KD_Tree::Insert(int key[], vector<double>& Phi) {
     // returns true if the inserted node has correct Phi
   return(TreeInsert(d_root, key, Phi, 0)->Phi == Phi);
 }
@@ -183,6 +183,9 @@ KD_Tree::DestroyTree(KD_Node *x){
 
 //
 // $Log$
+// Revision 1.7  2002/05/31 22:04:44  spinti
+// *** empty log message ***
+//
 // Revision 1.6  2001/11/08 19:13:44  spinti
 // 1. Corrected minor problems in ILDMReactionModel.cc
 // 2. Added tabulation capability to StanjanEquilibriumReactionModel.cc. Now,

@@ -38,11 +38,11 @@ POSSIBLE REVISIONS
      1. Non-Uniform table spacing
 ***************************************************************************/
 
-//#include <Packages/Uintah/CCA/Components/Arches/Mixing/PDFShape.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/MixRxnTable.h>
 
 #include <vector>
+
 namespace Uintah {
-using namespace std;
 
   ///////////////////////////////////////////////////////////////////////////
   // structure KD_Node is the basic element of the KD_Tree .
@@ -58,18 +58,18 @@ using namespace std;
     int dim;
     int Phi_dim;
     int* keys;
-    vector<double> Phi;
+    std::vector<double> Phi;
   
     //Constructor Node transfer the value keyes & Data .
 
     KD_Node(){
         keys = 0;
-        Phi = vector<double>();
+        Phi = std::vector<double>();
         left =0;
         right = 0;
     }
 
-    KD_Node(int dim, int Phi_dim, int Key[],vector<double> Phi, KD_Node *left=0, 
+    KD_Node(int dim, int Phi_dim, int Key[],std::vector<double> Phi, KD_Node *left=0, 
             KD_Node *right=0):   
       dim(dim), Phi_dim(Phi_dim),Phi(Phi),left(left),right(right){
         keys = new int[dim];
@@ -80,9 +80,7 @@ using namespace std;
 
   };
 
-class PDFMixingModel; //??Should I change this to MixingModel to make it general??
-class MixRxnTableInfo;
-class KD_Tree {
+class KD_Tree: public MixRxnTable {
 
   public:
 
@@ -103,21 +101,21 @@ class KD_Tree {
   //
   // Destructor 
   //
-  ~KD_Tree();
+  virtual ~KD_Tree();
 
   // GROUP: Manipulate
   //////////////////////////////////////////////////////////////////////
   // Store a key and value pair into the KD_Node and inserts in   
   // the Tree.  
 
-  bool Insert(int key[], vector<double> Phi);
+  virtual bool Insert(int key[], std::vector<double>& Phi);
 
   // GROUP: Access
   //////////////////////////////////////////////////////////////////////
   // Lookup function looks up the tree for key. If its found it stores the
   // statespcae vars in Phi vector and returns true, else it just returns
   // false.
-  bool Lookup(int key[], vector<double>& Phi);
+  virtual bool Lookup(int key[], std::vector<double>& Phi);
 
   // GROUP: Manipulate
   //////////////////////////////////////////////////////////////////////
@@ -142,7 +140,7 @@ class KD_Tree {
  private:
    //** Insert a new Node z which contain a given key into the Tree.
 
-   KD_Node* TreeInsert(KD_Node*& x, int key[], vector<double> phi, int lev);
+   KD_Node* TreeInsert(KD_Node*& x, int key[], std::vector<double> phi, int lev);
 
   
    //** Given a key to search which contain this key in Tree
@@ -159,7 +157,7 @@ class KD_Tree {
 
    //** Retrieves and deletes the leftmost descendant of a given node.
        
-   void ProcessLeftMost(KD_Node*& x, vector<double>& phi);
+   void ProcessLeftMost(KD_Node*& x, std::vector<double>& phi);
    
    //** Destroy a tree;
    
