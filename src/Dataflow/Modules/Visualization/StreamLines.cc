@@ -105,10 +105,14 @@ private:
 
   //! find the nodes that make up a single stream line.
   //! This particular implementation uses Runge-Kutta-Fehlberg
-  void FindStreamLineNodes(vector<Point>&, Point, float, float, int);
+  template <class VectorField>
+  void FindStreamLineNodes(vector<Point>&, Point, float, float, int, 
+			   VectorField *);
 
   //! compute the inner terms of the RKF formula
-  int ComputeRKFTerms(vector<Vector>&,const Point&, float);
+  template <class VectorField>
+  int ComputeRKFTerms(vector<Vector>&,
+		      const Point&, float, VectorField *);
 };
 
 extern "C" PSECORESHARE Module* make_StreamLines(const clString& id) {
@@ -121,17 +125,6 @@ StreamLines::StreamLines(const clString& id)
     maxsteps_("maxsteps",id,this)
 
 {
-  // these ports are now done automatically by the port manager
-
-  //vfport_ = scinew FieldIPort(this, "FlowField", FieldIPort::Atomic);
-  //add_iport(vfport_);
-
-  //sfport_ = scinew FieldIPort(this, "SeedField", FieldIPort::Atomic);
-  //add_iport(sfport_);
-
-  //oport_ = scinew FieldOPort(this, "StreamLines", FieldIPort::Atomic);
-  //add_oport(oport_);
-
   vf_ = 0;
   sf_ = 0;
   cf_ = 0;
@@ -143,22 +136,60 @@ StreamLines::~StreamLines()
 {
 }
 
+template <class VectorField>
 int
-StreamLines::ComputeRKFTerms(vector<Vector>& v /* storage for terms */,
-			     const Point& p    /* previous point */,
-			     float s           /* current step size */)
+StreamLines::ComputeRKFTerms(vector<Vector> &v /* storage for terms */,
+			     const Point &p    /* previous point */,
+			     float s           /* current step size */,
+			     VectorField *vf)
 {
+  typedef typename VectorField::mesh_type   vf_mesh_type;
+  typedef typename vf_mesh_type::cell_index cell_index;
   int check = 0;
-
-  check |= interp_->interpolate(p,v[0]);
-  check |= interp_->interpolate(p+v[0]*d[1][0],v[1]);
-  check |= interp_->interpolate(p+v[0]*d[2][0]+v[1]*d[2][1],v[2]);
-  check |= interp_->interpolate(p+v[0]*d[3][0]+v[1]*d[3][1]+v[2]*d[3][2],v[3]);
-  check |= interp_->interpolate(p+v[0]*d[4][0]+v[1]*d[4][1]+v[2]*d[4][2]+
-				v[3]*d[4][3],v[4]);
-  check |= interp_->interpolate(p+v[0]*d[5][0]+v[1]*d[5][1]+v[2]*d[5][2]+
-				v[3]*d[5][3]+v[4]*d[5][4],v[5]);
+  int c;
+  cell_index ci;
   
+  vf_mesh_type *mesh = 
+    dynamic_cast<vf_mesh_type*>(vf->get_typed_mesh().get_rep());
+
+  if (!mesh) {
+    cerr << "StreamLines: ERROR: unable to get mesh from field.  Exiting."
+	 << endl;
+  }
+
+  if (vf->data_at() == Field::NODE) {
+    check |= c = interp_->interpolate(p,v[0]);
+    if (!c) return 0;
+    check &= c = interp_->interpolate(p+v[0]*d[1][0],v[1]);
+    if (!c) v[1] = v[0];
+    check |= c = interp_->interpolate(p+v[0]*d[2][0]+v[1]*d[2][1],v[2]);
+    if (!c) v[2] = v[1];
+    check |= c = interp_->interpolate(p+v[0]*d[3][0]+v[1]*d[3][1]+v[2]*d[3][2],
+				      v[3]);
+    if (!c) v[3] = v[2];
+    check |= c = interp_->interpolate(p+v[0]*d[4][0]+v[1]*d[4][1]+v[2]*d[4][2]+
+				  v[3]*d[4][3],v[4]);
+    if (!c) v[4] = v[3];
+    check |= c = interp_->interpolate(p+v[0]*d[5][0]+v[1]*d[5][1]+v[2]*d[5][2]+
+				  v[3]*d[5][3]+v[4]*d[5][4],v[5]);
+    if (!c) v[5] = v[4];
+  } else if (vf->data_at() == Field::CELL) {
+    check |= c = mesh->locate(ci,p); 
+    if (c) vf->value(v[0],ci); else return 0;
+    check |= c = mesh->locate(ci,p+v[0]*d[1][0]); 
+    if (c) vf->value(v[1],ci); else v[1] = v[0];
+    check |= c = mesh->locate(ci,p+v[0]*d[2][0]+v[1]*d[2][1]); 
+    if (c) vf->value(v[2],ci); else v[2] = v[1];
+    check |= c = mesh->locate(ci,p+v[0]*d[3][0]+v[1]*d[3][1]+v[2]*d[3][2]);
+    if (c) vf->value(v[3],ci); else v[3] = v[2];
+    check |= c = mesh->locate(ci,p+v[0]*d[4][0]+v[1]*d[4][1]+v[2]*d[4][2]+
+			  v[3]*d[4][3]); 
+    if (c) vf->value(v[4],ci); else v[4] = v[3];
+    check |= c = mesh->locate(ci,p+v[0]*d[5][0]+v[1]*d[5][1]+v[2]*d[5][2]+
+			  v[3]*d[5][3]+v[4]*d[5][4]); 
+    if (c) vf->value(v[5],ci); else v[5] = v[4];
+  }
+
   v[0]*=s;
   v[1]*=s;
   v[2]*=s;
@@ -169,18 +200,26 @@ StreamLines::ComputeRKFTerms(vector<Vector>& v /* storage for terms */,
   return check;
 }
   
+template <class VectorField>
 void
-StreamLines::FindStreamLineNodes(vector<Point>& v /* storage for points */,
+StreamLines::FindStreamLineNodes(vector<Point> &v /* storage for points */,
 				 Point x          /* initial point */,
 				 float t          /* error tolerance */,
 				 float s          /* initial step size */,
-				 int n            /* max number of steps */)
+				 int n            /* max number of steps */,
+				 VectorField *vf)
 {
   int loop;
-  vector<Vector> terms;
+  vector <Vector> terms;
   Vector error;
   double err;
   Vector xv;
+
+  typedef typename VectorField::mesh_type     mesh_type;
+  typedef typename mesh_type::cell_index      cell_index;
+
+  mesh_type *mesh = 
+    dynamic_cast<mesh_type*>(vf->get_typed_mesh().get_rep());
 
   terms.resize(6,0);
 
@@ -190,7 +229,7 @@ StreamLines::FindStreamLineNodes(vector<Point>& v /* storage for points */,
   for (loop=0;loop<n;loop++) {
 
     // compute the next set of terms
-    if (!ComputeRKFTerms(terms,x,s))
+    if (!ComputeRKFTerms(terms,x,s,vf))
       break;
 
     // compute the approximate local truncation error
@@ -212,21 +251,31 @@ StreamLines::FindStreamLineNodes(vector<Point>& v /* storage for points */,
             terms[3]*a[3]+terms[4]*a[4]+terms[5]*a[5];
 
     // if the new point is inside the field, add it.  Otherwise stop.
-    if (interp_->interpolate(x,xv))
-      v.push_back(x);
-    else
-      break;
+    if (vf->data_at() == Field::NODE) {
+      if (interp_->interpolate(x,xv))
+	v.push_back(x);
+      else
+	break;
+    } else if (vf->data_at() == Field::CELL) {
+      cell_index ci;
+      if (mesh->locate(ci,x))
+	v.push_back(x);
+      else
+	break;
+    }
   }
 }
 
 template <class VectorField, class SeedField>
-void StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
+void 
+StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
 {
   typedef typename VectorField::mesh_type        vf_mesh_type;
   typedef typename SeedField::mesh_type          sf_mesh_type;
   typedef typename vf_mesh_type::node_iterator   vf_node_iterator;
   typedef typename sf_mesh_type::node_iterator   sf_node_iterator;
   typedef typename ContourMesh::node_index       node_index;
+  typedef typename vf_mesh_type::cell_index      cell_index;
 
   Point seed;
   Vector test;
@@ -245,21 +294,30 @@ void StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
 
   vmesh->finish_mesh();
 
-  cerr << "finished the mesh..." << endl;
-
   // try to find the streamline for each seed point
   sf_node_iterator seed_iter = smesh->node_begin();
 
   while (seed_iter!=smesh->node_end()) {
 
-    // Is the seed point inside the field?
     smesh->get_point(seed,*seed_iter);
-    if (!interp_->interpolate(seed,test)) {
-      postMessage("StreamLines: WARNING: seed point "
-		  "was not inside the field.");
-      ++seed_iter;
-      continue;
-    }
+
+    // Is the seed point inside the field?
+    if (vf->data_at() == Field::NODE) {
+      if (!interp_->interpolate(seed,test)) {
+	postMessage("StreamLines: WARNING: seed point "
+		    "was not inside the field.");
+	++seed_iter;
+	continue;
+      }
+    } else if (vf->data_at() == Field::CELL) {
+      cell_index ci;
+      if (!vmesh->locate(ci,seed)) {
+	postMessage("StreamLines: WARNING: seed point "
+		    "was not inside the field.");
+	++seed_iter;
+	continue;
+      }
+    } 
 
     cerr << "new streamline." << endl;
 
@@ -267,7 +325,7 @@ void StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
     get_gui_doublevar(id,"stepsize",stepsize);
     get_gui_intvar(id,"maxsteps",maxsteps);
 
-    FindStreamLineNodes(nodes,seed,tolerance,stepsize,maxsteps);
+    FindStreamLineNodes(nodes,seed,tolerance,stepsize,maxsteps,vf);
 
     cerr << "done finding streamline." << endl;
 
@@ -335,15 +393,7 @@ void StreamLines::execute()
   // this is a pain...
   // use Marty's dispatch here instead...
   if (vf_->get_type_name(0) == "LatticeVol") {
-    if (vf_->get_type_name(1) == "double") {
-      if (sf_->get_type_name(-1) == "ContourField<double>") {
-	TemplatedExecute((LatticeVol<double>*)vf_,(ContourField<double>*)sf_);
-      } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
-	TemplatedExecute((LatticeVol<double>*)vf_,(TriSurf<double>*)sf_);
-      } else if (sf_->get_type_name(-1) == "PointCloud<double>") {
-	TemplatedExecute((LatticeVol<double>*)vf_,(PointCloud<double>*)sf_);
-      }
-    } else if (vf_->get_type_name(1) == "Vector") {
+    if (vf_->get_type_name(1) == "Vector") {
       if (sf_->get_type_name(-1) == "ContourField<double>") {
 	TemplatedExecute((LatticeVol<Vector>*)vf_,(ContourField<double>*)sf_);
       } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
@@ -353,15 +403,7 @@ void StreamLines::execute()
       }
     }
   } else if (vf_->get_type_name(0) =="TetVol") {
-    if (vf_->get_type_name(1) == "double") {
-      if (sf_->get_type_name(-1) == "ContourField<double>") {
-	TemplatedExecute((TetVol<double>*)vf_,(ContourField<double>*)sf_);
-      } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
-	TemplatedExecute((TetVol<double>*)vf_,(TriSurf<double>*)sf_);
-      } else if (sf_->get_type_name(-1) == "PointCloud<double>") {
-	TemplatedExecute((TetVol<double>*)vf_,(PointCloud<double>*)sf_);
-      }
-    } else if (vf_->get_type_name(1) == "Vector") {
+    if (vf_->get_type_name(1) == "Vector") {
       if (sf_->get_type_name(-1) == "ContourField<double>") {
 	TemplatedExecute((TetVol<Vector>*)vf_,(ContourField<double>*)sf_);
       } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
