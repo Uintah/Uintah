@@ -20,9 +20,18 @@ using namespace std;
 #include "NexusEpChannel.h"
 #include "NexusHandlerThread.h"
 
+/////////////
+// Hostname of this computer
+static char* hostname;
+
+/////////////
+// Port to listen to. Nexus assigns this.
+static unsigned short port;
+
 void NexusEpChannel::printDebug(string d) {
   cout << d << endl;
 }
+
 
 static globus_nexus_handler_t emptytable[] = { };
 
@@ -103,13 +112,17 @@ NexusEpChannel::~NexusEpChannel() {
 }
 
 void NexusEpChannel::openConnection() {
-  if (kDEBUG) printDebug("NexusEpChannel::openConnection()");
-
-  if(int gerr=globus_module_activate(GLOBUS_NEXUS_MODULE))
-    throw CommError("Unable to initialize nexus", gerr);
-  if(int gerr=globus_nexus_allow_attach(&port, &hostname, approval_fn, 0))
-    throw CommError("globus_nexus_allow_attach failed", gerr);
-  globus_nexus_enable_fault_tolerance(NULL, 0);
+  static bool once = false;
+  if(!once){
+    once=true;
+    if (kDEBUG) printDebug("NexusEpChannel::openConnection()");
+  
+    if(int gerr=globus_module_activate(GLOBUS_NEXUS_MODULE))
+      throw CommError("Unable to initialize nexus", gerr);
+    if(int gerr=globus_nexus_allow_attach(&port, &hostname, approval_fn, 0))
+      throw CommError("globus_nexus_allow_attach failed", gerr);
+    globus_nexus_enable_fault_tolerance(NULL, 0);
+  }
 }
 
 void NexusEpChannel::closeConnection() {
@@ -172,10 +185,3 @@ void NexusEpChannel::bind(SpChannel* spchan) {
   if(int gerr=globus_nexus_startpoint_bind(&(nspchan->d_sp), &d_endpoint))
     throw CommError("startpoint_bind", gerr);    
 }
-
-
-
-
-
-
-
