@@ -220,7 +220,8 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
       c_rot = Max(c_rot, mu*pvolume[idx]/pmass[idx]);
     }
     WaveSpeed = sqrt(Max(c_rot,c_dil));
-    double delt_new = Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
+    // Fudge factor of .8 added, just in case
+    double delt_new = .8*Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
     new_dw->put(delt_vartype(delt_new), deltLabel);
     new_dw->put(pstress, pStressLabel, matlindex, region);
     new_dw->put(deformationGradient, pDeformationMeasureLabel,
@@ -322,6 +323,9 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 #endif
 
 // $Log$
+// Revision 1.22  2000/05/03 20:35:20  guilkey
+// Added fudge factor to the other place where delt is calculated.
+//
 // Revision 1.21  2000/05/02 22:57:50  guilkey
 // Added fudge factor to timestep calculation
 //
