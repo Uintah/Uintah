@@ -165,8 +165,22 @@ Scheduler::finalizeNodes(int process /* = 0*/)
     m_graphDoc = NULL;
 }
 
+void
+Scheduler::problemSetup(const ProblemSpecP&)
+{
+   // For schedulers that need no setup
+}
+
+
 //
 // $Log$
+// Revision 1.10  2000/09/20 15:50:30  sparker
+// Added problemSetup interface to scheduler
+// Added ability to get/release the loadBalancer from the scheduler
+//   (used for getting processor assignments to create per-processor
+//    tasks in arches)
+// Added getPatchwiseProcessorAssignment to LoadBalancer interface
+//
 // Revision 1.9  2000/09/08 17:49:50  witzel
 // Changing finalizeNodes so that it outputs different taskgraphs
 // in different timestep directories and the taskgraph information

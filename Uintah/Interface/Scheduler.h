@@ -13,6 +13,7 @@ class DOM_Document;
 class DOM_Element;
 
 namespace Uintah {
+   class LoadBalancer;
     class Task;
     class TaskGraph;
     class VarLabel;
@@ -51,6 +52,9 @@ WARNING
     public:
        Scheduler(Output* oport);
        virtual ~Scheduler();
+
+       virtual void problemSetup(const ProblemSpecP& prob_spec);
+
        
        //////////
        // Insert Documentation Here:
@@ -65,6 +69,9 @@ WARNING
        //////////
        // Insert Documentation Here:
        virtual void addTask(Task* t) = 0;
+
+       virtual LoadBalancer* getLoadBalancer() = 0;
+       virtual void releaseLoadBalancer() = 0;
        
        //////////
        // Insert Documentation Here:
@@ -91,16 +98,23 @@ WARNING
        Scheduler(const Scheduler&);
        Scheduler& operator=(const Scheduler&);
 
-		Output* m_outPort;
-    	DOM_Document* m_graphDoc;
-    	DOM_Element* m_nodes;
-      //unsigned int m_executeCount;
+       Output* m_outPort;
+       DOM_Document* m_graphDoc;
+       DOM_Element* m_nodes;
+       //unsigned int m_executeCount;
     };
     
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.19  2000/09/20 15:50:30  sparker
+// Added problemSetup interface to scheduler
+// Added ability to get/release the loadBalancer from the scheduler
+//   (used for getting processor assignments to create per-processor
+//    tasks in arches)
+// Added getPatchwiseProcessorAssignment to LoadBalancer interface
+//
 // Revision 1.18  2000/09/08 17:49:50  witzel
 // Changing finalizeNodes so that it outputs different taskgraphs
 // in different timestep directories and the taskgraph information
