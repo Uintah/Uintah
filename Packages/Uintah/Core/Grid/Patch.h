@@ -355,6 +355,14 @@ WARNING
        return (FaceType)((int)face+1);
      }
      
+     //__________________________________
+     // returns and IntVector with 0 or 1 depending on
+     // if there are neighboring patches.  Low examines
+     // the minus faces and High the plus faces
+     
+     IntVector neighborsLow() const;
+     IntVector neighborsHigh() const;
+     
      //////////
      // Insert Documentation Here:
      inline bool containsNode(const IntVector& idx) const {
@@ -563,9 +571,6 @@ WARNING
      
      // used only by friend class Level
      inline void setLevelIndex( int idx ){ d_level_index = idx;}
-
-     IntVector neighborsLow() const;
-     IntVector neighborsHigh() const;
      
      //////////
      // Locations in space of opposite box corners.
