@@ -167,7 +167,7 @@ Array3<T>::Array3()
 template<class T>
 void Array3<T>::allocate()
 {
-  if( dm1 & dm2 & dm3 ){
+  if( dm1 && dm2 && dm3 ){
     objs=new T**[dm1];
     T** p=new T*[dm1*dm2];
     T* pp=new T[dm1*dm2*dm3];
