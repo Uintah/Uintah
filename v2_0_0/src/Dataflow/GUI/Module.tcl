@@ -121,6 +121,16 @@ itcl_class Module {
         $this ui
 	if {[winfo exists .ui[modname]]!= 0} {
 	    set w .ui[modname]
+
+	    # Mac Hac to keep GUI windows from "growing..."  Hopefully
+	    # a TCL fix will come out for this soon and we can remove
+	    # the following line: (after 1 "wm geometry $w {}") Note:
+	    # this forces the GUIs to resize themselves to their
+	    # "best" size.  However, if the user has resized the GUI
+	    # for some reason, then this will resize it back to the
+	    # "original" size.  Perhaps not the best behavior. :-(
+	    after 1 "wm geometry $w {}"
+
 	    wm title $w [set_title [modname]]
 	}
     }
