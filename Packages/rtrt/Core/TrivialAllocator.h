@@ -68,7 +68,9 @@ inline void* TrivialAllocator::alloc()
 inline void TrivialAllocator::free(void* rp)
 {
     if(ta_disable){
-	delete[] rp;
+      // I think this should be cast to char* since the memory was
+      // allocated as an array of chars. --James Bigler
+	delete[] (char*)(rp);
 	return;
     }
     //lock.lock();
