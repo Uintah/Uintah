@@ -16,7 +16,7 @@
 */
 
 /*
- *  ImageReaderUChar2D.cc:
+ *  ImageReaderUShort3D.cc:
  *
  *  Written by:
  *   darbyb
@@ -36,20 +36,19 @@ namespace Insight {
 
 using namespace SCIRun;
 
-class InsightSHARE ImageReaderUChar2D : public Module {
+class InsightSHARE ImageReaderUShort3D : public Module {
 public:
-
   //! GUI variables
-  GuiString gui_FileName_;
+  GuiString gui_filename_;
 
   ITKDatatypeOPort* outport_;
   ITKDatatypeHandle handle_;
 
   string prevFile;
-  
-  ImageReaderUChar2D(GuiContext*);
 
-  virtual ~ImageReaderUChar2D();
+  ImageReaderUShort3D(GuiContext*);
+
+  virtual ~ImageReaderUShort3D();
 
   virtual void execute();
 
@@ -57,53 +56,50 @@ public:
 };
 
 
-DECLARE_MAKER(ImageReaderUChar2D)
-ImageReaderUChar2D::ImageReaderUChar2D(GuiContext* ctx)
-  : Module("ImageReaderUChar2D", ctx, Source, "DataIO", "Insight"),
-    gui_FileName_(ctx->subVar("FileName"))
+DECLARE_MAKER(ImageReaderUShort3D)
+ImageReaderUShort3D::ImageReaderUShort3D(GuiContext* ctx)
+  : Module("ImageReaderUShort3D", ctx, Source, "DataIO", "Insight"),
+    gui_filename_(ctx->subVar("filename"))
 {
   prevFile = "";
 }
 
-ImageReaderUChar2D::~ImageReaderUChar2D(){
+ImageReaderUShort3D::~ImageReaderUShort3D(){
 }
 
-void
- ImageReaderUChar2D::execute(){
+void ImageReaderUShort3D::execute(){
   // check ports
-  outport_ = (ITKDatatypeOPort *)get_oport("Image");
+  outport_ = (ITKDatatypeOPort *)get_oport("OutputImage");
   if(!outport_) {
-    error("Unable to initialize oport 'Image'.");
+    error("Unable to initialize oport 'OutputImage'.");
     return;
   }
 
-  typedef itk::ImageFileReader<itk::Image<unsigned char, 2> > FileReaderType;
+  typedef itk::ImageFileReader<itk::Image<unsigned short, 3> > FileReaderType;
   
   // create a new reader
   FileReaderType::Pointer reader = FileReaderType::New();
   
   // set reader
-  string fn = gui_FileName_.get();
+  string fn = gui_filename_.get();
   reader->SetFileName( fn.c_str() );
   
   reader->Update();  
   
   // get reader output
   if(!handle_.get_rep() || (fn != prevFile))
-  {
-    ITKDatatype *im = scinew ITKDatatype;
-    im->data_ = reader->GetOutput();  
-    handle_ = im; 
-    prevFile = fn;
-  }
+    {
+      ITKDatatype *im = scinew ITKDatatype;
+      im->data_ = reader->GetOutput();  
+      handle_ = im; 
+      prevFile = fn;
+    }
   
   // Send the data downstream
   outport_->send(handle_);
-    
 }
 
-void
- ImageReaderUChar2D::tcl_command(GuiArgs& args, void* userdata)
+void ImageReaderUShort3D::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }
