@@ -170,6 +170,7 @@ ShowField::ShowField(GuiContext* ctx) :
   edge_id_(0),
   face_id_(0),
   data_id_(0),
+  text_id_(0),
   nodes_on_(ctx->subVar("nodes-on")),
   nodes_as_disks_(ctx->subVar("nodes-as-disks")),
   nodes_dirty_(true),
@@ -221,6 +222,8 @@ ShowField::ShowField(GuiContext* ctx) :
   render_state_[FACE] = faces_on_.get();
   vectors_on_.reset();
   render_state_[DATA] = vectors_on_.get();
+  text_on_.reset();
+  render_state_[TEXT] = text_on_.get();
 }
 
 
