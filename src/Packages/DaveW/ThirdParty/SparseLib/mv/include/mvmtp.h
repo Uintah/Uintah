@@ -41,10 +41,12 @@ struct Matrix_
 };
 
 
-#include <iostream.h>       // for formatted printing of matrices
+#include <iostream>       // for formatted printing of matrices
 #ifdef MV_MATRIX_BOUNDS_CHECK
 #   include <assert.h>
 #endif
+
+using namespace std;
 
 
 template <class TYPE>

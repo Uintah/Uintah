@@ -15,7 +15,7 @@
 #ifndef MATRIX_TRIDIAG_H
 #define MATRIX_TRIDIAG_H 1
 
-#include <iostream.h>
+#include <iostream>
 #include <assert.h>
 
 #include "Matrix.h"
@@ -23,6 +23,8 @@
 #include "Index.h"
 #include "utils.h"
 #include "Complex.h"
+
+using namespace std;
 
 template<class Data_Type> class MatrixDense;
 

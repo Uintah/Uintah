@@ -16,6 +16,7 @@ template<> ZVector<double>::ZVector(int N,double x_re[],double x_im[]){
 
 }
 
+#if 0
 template<>
 ostream &operator<< (ostream &output, ZVector<double>  &b){
 
@@ -26,7 +27,7 @@ ostream &operator<< (ostream &output, ZVector<double>  &b){
   
   return(output);
 }
-
+#endif
 
 //-----------------------------------------------------------------
 template<> void ZVector<double>:: info(){

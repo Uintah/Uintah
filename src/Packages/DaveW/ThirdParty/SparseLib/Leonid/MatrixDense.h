@@ -16,8 +16,8 @@
 #ifndef MATRIX_DENSE_H
 #define MATRIX_DENSE_H 1
 
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
@@ -27,6 +27,7 @@
 #include "Index.h"
 #include "utils.h"
 
+using namespace std;
 
 template<class Data_Type> class MatrixSparse;
 template<class Data_Type> class MatrixTridiag;
