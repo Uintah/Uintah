@@ -57,7 +57,7 @@ PSELIBS := \
 	Core/Exceptions \
 	Core/Geometry
 
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) -lm
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 ifneq ($(HAVE_PETSC),)
 LIBS := $(LIBS) $(PETSC_LIBRARY) 
