@@ -1520,6 +1520,7 @@ void Roe::mouse_pick(int action, int x, int y, int, int)
 				       ", "+to_string(total_y)+
 				       ", "+to_string(total_z));
 	    }
+//	    geomSelected->pick->motion(prin_dir, dist, mtn);
 	    evl->unlock();
 	    last_x = x;
 	    last_y = y;
