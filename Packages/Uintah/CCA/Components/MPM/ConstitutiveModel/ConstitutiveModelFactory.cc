@@ -6,6 +6,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Membrane.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -34,6 +35,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
    
    else if (mat_type ==  "comp_neo_hook")
       return(scinew CompNeoHook(child,lb,n8or27));
+      
+   else if (mat_type ==  "ideal_gas")
+      return(scinew IdealGasMP(child,lb,n8or27));
       
    else if (mat_type == "comp_neo_hook_plastic")
       return(scinew CompNeoHookPlas(child,lb,n8or27));

@@ -12,6 +12,7 @@ SRCS     += \
 	$(SRCDIR)/ViscoScram.cc               \
 	$(SRCDIR)/HypoElastic.cc              \
 	$(SRCDIR)/MWViscoElastic.cc           \
+	$(SRCDIR)/IdealGasMP.cc               \
 	$(SRCDIR)/Membrane.cc 
 
 PSELIBS := Packages/Uintah/Core/Grid \
