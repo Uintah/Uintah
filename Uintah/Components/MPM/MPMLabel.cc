@@ -250,10 +250,6 @@ MPMLabel::MPMLabel()
   // Cell centered variables
   cBurnedMassLabel = scinew VarLabel( "c.burnedMass",
 			CCVariable<double>::getTypeDescription() );
-  cVelocityLabel = scinew VarLabel( "c.velocity",
-			CCVariable<Vector>::getTypeDescription() );
-  cMassLabel = scinew VarLabel( "c.mass",
-			CCVariable<double>::getTypeDescription() );
 
   // Reduction variables
 
@@ -372,8 +368,6 @@ MPMLabel::~MPMLabel()
   delete gExternalHeatRateLabel;
   delete gThermalContactHeatExchangeRateLabel;
   delete cBurnedMassLabel;
-  delete cVelocityLabel;
-  delete cMassLabel;
 
   delete delTAfterConstitutiveModelLabel;
   delete delTAfterFractureLabel;
@@ -407,6 +401,9 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.44  2000/12/28 20:27:11  guilkey
+// Moved some labels from MPMLabel to MPMICELabel.
+//
 // Revision 1.43  2000/12/01 22:02:47  guilkey
 // Made the scheduling of each task a function.  This was done to make
 // scheduleTimeAdvance managable, as well as to make it easier to create
