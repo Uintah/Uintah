@@ -67,6 +67,8 @@ WARNING
   
 ****************************************/
 
+/// A Problem Spec class.
+/// This really is a problem Spec class.
    class ProblemSpec : public RefCounted {
    public:
      
@@ -196,17 +198,17 @@ WARNING
 
       //////////
       // append a node with given value (of varied types) to this node
-      void appendElement(const char* name, const std::string& value);
-      void appendElement(const char* name, const char* value);
-      void appendElement(const char* name, int value);
-      void appendElement(const char* name, long value);
-      void appendElement(const char* name, const IntVector& value);
-      void appendElement(const char* name, const Point& value);
-      void appendElement(const char* name, const Vector& value);
-      void appendElement(const char* name, double value);
-      void appendElement(const char* name, const vector<double>& value);
-      void appendElement(const char* name, const vector<int>& value);
-      void appendElement(const char* name, bool value);
+      void appendElement(const char* name, const std::string& val, bool trail=0, int tabs=1);
+      void appendElement(const char* name, const char* value, bool trail=0, int tabs=1);
+      void appendElement(const char* name, int value, bool trail=0, int tabs=1);
+      void appendElement(const char* name, long value, bool trail=0, int tabs=1);
+      void appendElement(const char* name, const IntVector& value, bool trail=0, int tabs=1);
+      void appendElement(const char* name, const Point& value, bool trail=0, int tabs=1);
+      void appendElement(const char* name, const Vector& value, bool trail=0, int tabs=1);
+      void appendElement(const char* name, double value, bool trail=0, int tabs=1);
+      void appendElement(const char* name, const vector<double>& val,bool trail=0, int tabs=1);
+      void appendElement(const char* name, const vector<int>& val, bool trail=0, int tabs=1);
+      void appendElement(const char* name, bool value, bool trail=0, int tabs=1);
 
 
 

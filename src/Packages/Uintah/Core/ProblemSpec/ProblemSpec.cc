@@ -740,9 +740,16 @@ ProblemSpecP ProblemSpec::getWithDefault(const std::string& name,
   return ps;
 }
 
-void ProblemSpec::appendElement(const char* name, const std::string& value) 
+void ProblemSpec::appendElement(const char* name, const std::string& value,
+                                bool trail /*=0*/, int tabs /*=1*/) 
 {
-   XMLCh* str = XMLString::transcode("\n\t");
+  ostringstream ostr;
+  ostr.clear();
+  ostr << "\n";
+  for (int i = 0; i < tabs; i++)
+    ostr << "\t";
+
+   XMLCh* str = XMLString::transcode(ostr.str().c_str());
 
    DOMText *leader = d_node->getOwnerDocument()->createTextNode(str);
    delete [] str;
@@ -758,67 +765,76 @@ void ProblemSpec::appendElement(const char* name, const std::string& value)
    delete [] str;
    newElem->appendChild(newVal);
 
-   str = XMLString::transcode("\n");
-   DOMText *trailer = d_node->getOwnerDocument()->createTextNode(str);
-   delete [] str;
-   d_node->appendChild(trailer);
-
+   if (trail) {
+     str = XMLString::transcode("\n");
+     DOMText *trailer = d_node->getOwnerDocument()->createTextNode(str);
+     delete [] str;
+     d_node->appendChild(trailer);
+   }
 }
 
 //basically to make sure correct overloaded function is called
-void ProblemSpec::appendElement(const char* name, const char* value) {
-  appendElement(name, string(value));
+void ProblemSpec::appendElement(const char* name, const char* value,
+                                bool trail /*=0*/, int tabs /*=1*/) {
+  appendElement(name, string(value), trail, tabs);
 }
 
 
-void ProblemSpec::appendElement(const char* name, int value) 
+void ProblemSpec::appendElement(const char* name, int value,
+                                bool trail /*=0*/, int tabs /*=1*/) 
 {
    ostringstream val;
    val << value;
-   appendElement(name, val.str());
+   appendElement(name, val.str(), trail, tabs);
 
 }
 
-void ProblemSpec::appendElement(const char* name, long value) 
+void ProblemSpec::appendElement(const char* name, long value,
+                                bool trail /*=0*/, int tabs /*=1*/) 
 {
    ostringstream val;
    val << value;
-   appendElement(name, val.str());
+   appendElement(name, val.str(), trail, tabs);
 
 }
 
-void ProblemSpec::appendElement(const char* name, const IntVector& value) 
+void ProblemSpec::appendElement(const char* name, const IntVector& value,
+                                bool trail /*=0*/, int tabs /*=1*/) 
 {
    ostringstream val;
    val << '[' << value.x() << ", " << value.y() << ", " << value.z() << ']';
-   appendElement(name, val.str());
+   appendElement(name, val.str(), trail, tabs);
 }
 
-void ProblemSpec::appendElement(const char* name, const Point& value) 
+void ProblemSpec::appendElement(const char* name, const Point& value,
+                                bool trail /*=0*/, int tabs /*=1*/) 
 {
    ostringstream val;
    val << '[' << setprecision(17) << value.x() << ", " << setprecision(17) << value.y() << ", " << setprecision(17) << value.z() << ']';
-   appendElement(name, val.str());
+   appendElement(name, val.str(), trail, tabs);
 
 }
 
-void ProblemSpec::appendElement(const char* name, const Vector& value)
+void ProblemSpec::appendElement(const char* name, const Vector& value,
+                                bool trail /*=0*/, int tabs /*=1*/)
 {
    ostringstream val;
    val << '[' << setprecision(17) << value.x() << ", " << setprecision(17) << value.y() << ", " << setprecision(17) << value.z() << ']';
-   appendElement(name, val.str());
+   appendElement(name, val.str(), trail, tabs);
 
 }
 
-void ProblemSpec::appendElement(const char* name, double value)
+void ProblemSpec::appendElement(const char* name, double value,
+                                bool trail /*=0*/, int tabs /*=1*/)
 {
    ostringstream val;
    val << setprecision(17) << value;
-   appendElement(name, val.str());
+   appendElement(name, val.str(), trail, tabs);
 
 }
 
-void ProblemSpec::appendElement(const char* name, const vector<double>& value)
+void ProblemSpec::appendElement(const char* name, const vector<double>& value,
+                                bool trail /*=0*/, int tabs /*=1*/)
 {
    ostringstream val;
    val << '[';
@@ -829,11 +845,12 @@ void ProblemSpec::appendElement(const char* name, const vector<double>& value)
      
    }
    val << ']';
-   appendElement(name, val.str());
+   appendElement(name, val.str(), trail, tabs);
 
 }
 
-void ProblemSpec::appendElement(const char* name, const vector<int>& value)
+void ProblemSpec::appendElement(const char* name, const vector<int>& value,
+                                bool trail /*=0*/, int tabs /*=1*/)
 {
    ostringstream val;
    val << '[';
@@ -844,16 +861,17 @@ void ProblemSpec::appendElement(const char* name, const vector<int>& value)
      
    }
    val << ']';
-   appendElement(name, val.str());
+   appendElement(name, val.str(), trail, tabs);
 
 }
 
-void ProblemSpec::appendElement(const char* name, bool value)
+void ProblemSpec::appendElement(const char* name, bool value,
+                                bool trail /*=0*/, int tabs /*=1*/)
 {
   if (value)
-    appendElement(name, string("true"));
+    appendElement(name, string("true"), trail, tabs);
   else
-    appendElement(name, string("false"));
+    appendElement(name, string("false"), trail, tabs);
 }
 
 void ProblemSpec::require(const std::string& name, double& value)
@@ -1106,7 +1124,6 @@ void ProblemSpec::appendText(const char* str) {
 ProblemSpecP ProblemSpec::appendChild(const char *str, int tabs) {
   ostringstream ostr;
   ostr.clear();
-  ostr << "\n";
   for (int i = 0; i < tabs; i++)
     ostr << "\t";
   appendText(ostr.str().c_str());
