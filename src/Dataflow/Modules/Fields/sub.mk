@@ -12,17 +12,17 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Fields
 
 SRCS     += \
-	$(SRCDIR)/AddAttribute.cc\
+	$(SRCDIR)/ApplyInterpolant.cc\
 	$(SRCDIR)/CastField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
-	$(SRCDIR)/LocateNbrhd.cc\
-	$(SRCDIR)/LocatePoints.cc\
-	$(SRCDIR)/ManipFields.cc\
+	$(SRCDIR)/BuildInterpolant.cc\
 	$(SRCDIR)/SeedField.cc\
+	$(SRCDIR)/SetFieldData.cc\
 	$(SRCDIR)/TransformField.cc\
 #[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/ChangeCellType.cc\
 #	$(SRCDIR)/Gradient.cc\
+#	$(SRCDIR)/ManipFields.cc\
 
 CFLAGS   := $(CFLAGS)
 
