@@ -20,8 +20,13 @@ HierarchicalRegridder::~HierarchicalRegridder()
 
 }
 
-Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP scheduler)
+Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP scheduler, const ProblemSpecP& ups)
 {
+  ProblemSpecP grid_ps = ups->findBlock("Grid");
+  if (!grid_ps) {
+    throw InternalError("HierarchicalRegridder::regrid() Grid section of UPS file not found!");
+  }
+
   /*
   scheduler->initialize();
 
@@ -118,19 +123,15 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP scheduler)
 	}
       }
     }
-    /*
-    if(oldGrid->getLevel(levelIdx)->d_periodicBoundaries != IntVector(0,0,0)) {
-      newLevel->finalizeLevel(oldLevel->d_periodicBoundaries.x() != 0,
-			      oldLevel->d_periodicBoundaries.y() != 0,
-			      oldLevel->d_periodicBoundaries.z() != 0);
+    if((levelIdx < oldGrid->numLevels()) && oldGrid->getLevel(levelIdx)->getPeriodicBoundaries() != IntVector(0,0,0)) {
+      newLevel->finalizeLevel(oldGrid->getLevel(levelIdx)->getPeriodicBoundaries().x() != 0,
+			      oldGrid->getLevel(levelIdx)->getPeriodicBoundaries().y() != 0,
+			      oldGrid->getLevel(levelIdx)->getPeriodicBoundaries().z() != 0);
     }
     else {
       newLevel->finalizeLevel();
     }
     newLevel->assignBCS(grid_ps);
-    */
-
-    newLevel->finalizeLevel();
   }
 
   d_newGrid = true;
