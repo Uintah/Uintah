@@ -594,10 +594,6 @@ Discretization::calculateScalarCoeff(const ProcessorGroup*,
 				     ArchesVariables* coeff_vars,
 				     int conv_scheme)
 {
-
-  cout << "calculateScalarCoeff: " << patch << ", " << cellinfo << ", " 
-       << coeff_vars << "\n";
-
   // Get the domain size and the patch indices
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
