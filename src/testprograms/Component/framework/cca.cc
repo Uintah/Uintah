@@ -1,0 +1,125 @@
+
+
+
+#include <sys/utsname.h> 
+#include <iostream>
+#include <string>
+
+#include <Core/Containers/StringUtil.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/Thread.h>
+
+#include <testprograms/Component/framework/cca.h>
+#include <testprograms/Component/framework/FrameworkImpl.h>
+#include <testprograms/Component/framework/ComponentImpl.h>
+#include <testprograms/Component/framework/LocalFramework.h>
+
+namespace sci_cca {
+
+using namespace SCIRun;
+
+class Server : public Runnable {
+public:
+  Server() {}
+
+  void run() { PIDL::PIDL::serveObjects(); }
+};
+
+
+bool CCA::initialized_ = false;
+Framework CCA::framework_;
+Thread *CCA::framework_thread_;
+bool CCA::is_server_;
+Component CCA::local_framework_;
+
+string CCA::framework_url_;
+string CCA::hostname_;
+string CCA::program_;
+
+CCA::CCA() 
+{
+}
+
+bool
+CCA::init( int &argc, char *argv[] )
+{
+  if ( initialized_ ) return false; // error: init can be called only once.
+
+  is_server_ = true;
+
+  // get general info
+  
+  struct utsname rec;
+  uname( &rec );
+  hostname_ = rec.nodename;
+
+  program_ = basename( string(argv[0]) );
+
+  // parse args
+  int last = 1;
+  int num = argc;
+ 
+  for (int i=1; i<num; i++ ) {
+    string arg(argv[i]);
+
+    if ( arg == "-server" ) {
+      if ( ++i >= argc ) {
+	cerr << "missing server url" << endl;
+	return 0;
+      }
+      framework_url_ = string(argv[i]);
+      argc -= 2;
+      is_server_ = false;
+    } else { // not a cca option
+      argv[last] = argv[i];
+    }
+  }
+
+  // init framework
+
+  try {
+    PIDL::PIDL::initialize( argc, argv );
+    if ( is_server_ ) {
+      // start server
+      framework_ = new FrameworkImpl;
+
+      cerr << "server = " << framework_->getURL().getString() << endl;
+      framework_thread_ = new Thread( new Server,"cca server thread" );
+      framework_thread_->setDaemon();
+      framework_thread_->detach();
+    }
+    else {
+      // connect to server
+      framework_ = pidl_cast<Framework>(PIDL::PIDL::objectFrom(framework_url_));
+    }
+  } catch (const Exception &e ) {
+    cerr << "cca_init caught exception `" << e.message() << "'" << endl;
+    return false;
+  } catch (...) { 
+    cerr << "cca_init caught unknown exception " << endl;
+    return false;
+  }
+
+  // framework's local agent 
+//   local_framework_ = new LocalFramework;
+//   if ( !framework_->registerComponent( hostname_, program_, local_framework_ ))
+//       return false;
+
+
+  initialized_ = true;
+  return true;
+}
+
+
+bool
+CCA::init( Component &component )
+{
+  if ( !initialized_ )
+    return false;
+
+  // user's component
+  return framework_->registerComponent( hostname_, program_, component );
+}
+
+} // namespace sci_cca
