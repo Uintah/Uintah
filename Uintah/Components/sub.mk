@@ -8,15 +8,17 @@ SRCDIR := Uintah/Components
 
 SUBDIRS :=  $(SRCDIR)/DataArchiver \
 	$(SRCDIR)/Schedulers $(SRCDIR)/SimulationController \
-	$(SRCDIR)/MPM \
+	$(SRCDIR)/MPM $(SRCDIR)/ICE \
 	$(SRCDIR)/Arches $(SRCDIR)/ProblemSpecification
 
-#	$(SRCDIR)/MPM $(SRCDIR)/ICE \
 
 include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.9  2000/06/09 22:46:43  sparker
+# Put ICE back, so that we can get sus to link
+#
 # Revision 1.8  2000/06/08 02:25:12  jas
 # Don't build ICE since it has some stand alone code dependencies that
 # still need to be sorted out.
