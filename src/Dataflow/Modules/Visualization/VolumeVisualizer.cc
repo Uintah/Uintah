@@ -176,7 +176,12 @@ VolumeVisualizer::execute()
     return;
   }
 
-  gui->execute(id + " change_shading_state " + ((tex->nb(0) == 1)?"0":"1"));
+#ifdef HAVE_AVR_SUPPORT
+  const bool shading_state = (tex->nb(0) == 1);
+#else
+  const bool shading_state = false;
+#endif
+  gui->execute(id + " change_shading_state " + (shading_state?"0":"1"));
   
   ColorMapHandle cmap1;
   ColorMap2Handle cmap2;
