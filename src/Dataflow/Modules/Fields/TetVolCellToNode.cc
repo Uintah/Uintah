@@ -73,7 +73,9 @@ void TetVolCellToNode::execute()
     return;
 
   // we expect that the input field is a TetVol<Vector>
-  if (infield_->get_type_name() != "TetVol<Vector>") {
+  if (infield_->get_type_description()->get_name() !=
+      get_type_description((TetVol<Vector> *)0)->get_name())
+  {
     postMessage("TetVolCellToNode: ERROR: Cell centered volume is not a "
 		"TetVol of Vectors.  Exiting.");
     return;
