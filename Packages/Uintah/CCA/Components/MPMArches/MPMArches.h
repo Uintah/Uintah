@@ -39,10 +39,14 @@ WARNING
 
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
+#include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 
 #include <Core/Geometry/Vector.h>
+
+#undef RIGID_MPM
+#define RIGID_MPM
 
 namespace Uintah {
 
@@ -257,7 +261,13 @@ public:
   MPMLabel* Mlb;
   const ArchesLabel* d_Alab;
   const MPMArchesLabel* d_MAlb;
+
+#ifdef RIGID_MPM
+  RigidMPM*        d_mpm;
+#else
   SerialMPM*       d_mpm;
+#endif
+
   Arches*          d_arches;
 
   double d_tcond;
