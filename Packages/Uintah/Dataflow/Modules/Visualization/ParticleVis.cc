@@ -22,7 +22,7 @@
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomPick.h>
-#include <Core/Geom/Pt.h>
+#include <Core/Geom/Pt.h> 
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomEllipsoid.h>
 #include <Core/Malloc/Allocator.h>
@@ -100,48 +100,75 @@ void ParticleVis::execute()
   cin= (ColorMapIPort *) get_iport("ColorMap"); 
   ogeom= (GeometryOPort *) get_oport("Geometry"); 
   ogeom->delAll();
+
+  if(!spin0) {
+    error("Unable to initialize iport 'Scalar Particles'.");
+  }
+
+  if(!ogeom) {
+    error("Unable to initialize oport 'Geometry'.");
+    return;
+  }
+
   
   ScalarParticlesHandle part;
   ScalarParticlesHandle scaleSet;
   VectorParticlesHandle vect;
   TensorParticlesHandle tens;
-  bool hasScale = false, hasVectors = false, hasTensors = false;
+  bool hasScale = false, 
+     hasVectors = false, 
+     hasTensors = false;
   if (!spin0->get(part)){
+    last_idx=-1;
+    return;
+  } else if(!part.get_rep()) {
     last_idx=-1;
     return;
   }
 
-  if(spin1->get(scaleSet)){
-    if( scaleSet.get_rep() != 0) {
-      hasScale = true;
-      gui->execute(id + " scalable 1");
+  if( spin1 ) {
+    if(spin1->get(scaleSet)){
+      if( scaleSet.get_rep() ) {
+	hasScale = true;
+	gui->execute(id + " scalable 1");
+      } else {
+	gui->execute(id + " scalable 0");
+      }
     } else {
       gui->execute(id + " scalable 0");
     }
   } else {
     gui->execute(id + " scalable 0");
   }
-
-
-  if(vpin->get(vect)){
-    if( vect.get_rep() != 0)
-      hasVectors = true;
+  
+  if(vpin){
+    if(vpin->get(vect)){
+      if( vect.get_rep() != 0)
+	hasVectors = true;
+    }
   }
-
-  if(tpin->get(tens)){
-    if(tens.get_rep() != 0 )
-      hasTensors = true;
+  if( tpin ) {
+    if(tpin->get(tens)){
+      if(tens.get_rep() != 0 )
+	hasTensors = true;
+    }
   }
   
-  if(part.get_rep() == 0) return;
-
-
-  // grap the color map from the input port
+  
+  // grab the color map from the input port
   ColorMapHandle cmh;
   ColorMap *cmap;
-  if( cin->get( cmh ) )
-    cmap = cmh.get_rep();
-  else {
+  bool create_cmap = true;
+  if (cin ) {
+    if( cin->get( cmh ) ){
+      if( cmh.get_rep() ){
+	cmap = cmh.get_rep();
+	create_cmap = false;
+      }
+    }
+  }
+  
+  if( create_cmap ){
     // create a default colormap
     vector<Color> rgb;
     vector<float> rgbT;
@@ -155,12 +182,12 @@ void ParticleVis::execute()
     alphas.push_back(1.0);
     alphaT.push_back(1.0);
     alphaT.push_back(1.0);
-      
+    
     cmap = scinew ColorMap(rgb,rgbT,alphas,alphaT,16);
   }
   double max = -1e30;
   double min = 1e30;
-
+  
 
   // All three particle variables use the same particle subset
   // so just grab one
@@ -181,12 +208,12 @@ void ParticleVis::execute()
   if( hasVectors ) v_it = vect->get().begin();
   if( hasTensors ) t_it = tens->get().begin();
   
-
-
+  
+  
   for(; p_it != p_it_end; p_it++, s_it++, id_it++){
     ParticleSubset *ps = (*p_it).getParticleSubset();
     GeomGroup *obj = scinew GeomGroup;
-
+    
     // default colormap--nobody has scaled it.
     if( !cmap->IsScaled()) {
       part->get_minmax(min,max);
@@ -196,7 +223,7 @@ void ParticleVis::execute()
       }
       cmap->Scale(min,max);
     }  
-
+    
     //--------------------------------------
     if( drawspheres.get() == 1 && ps->getParticleSet()->numParticles()) {
       float t = (polygons.get() - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
@@ -210,7 +237,6 @@ void ParticleVis::execute()
 				   shaft_rad.get());
       }
       int count = 0;
-    
       for(ParticleSubset::iterator iter = ps->begin();
 	  iter != ps->end(); iter++){
 	count++;
@@ -218,20 +244,26 @@ void ParticleVis::execute()
 	  GeomObj *sp = 0;
 	  
 	  if( hasScale ) {
-	    double smin = 0, smax = 0;
+	    double smin = 1e30, smax = -1e30;
+	    double sv = (*scale_it)[*iter];
 	    if( isFixed.get() == 1 ){
 	      smin = min_.get();
 	      smax = max_.get();
-	      } else {
-		scaleSet->get_minmax(smin,smax);
-		min_.set(smin);
-		max_.set(smax);
-	      }
-	    double scalefactor = 1;   // If smin = smax
-                                     // then set scale = 1 -Todd
-                                     // This was originally set to 0
-           if (smax-smin > 1e-10)
-              scalefactor = ((*scale_it)[*iter] - smin)/(smax - smin);
+	    } else {
+	      scaleSet->get_minmax(smin,smax);
+	      min_.set(smin);
+	      max_.set(smax);
+	    }
+	    if( sv < smin ) sv = smin;
+	    if( sv > smax ) sv = smax;
+
+	    double scalefactor = 1;
+	    // if smin = smax
+	    // then set scale = 1 - Todd
+	    // This was originally set to 0
+	    if (smax-smin > 1e-10)
+	      scalefactor = (sv - smin)/(smax - smin);
+
 	    if( scalefactor >= 1e-6 ){
 	      if(!hasTensors){
 		//cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
@@ -346,6 +378,7 @@ void ParticleVis::execute()
     }
     if(hasVectors) v_it++;
     if(hasTensors) t_it++;
+    if(hasScale) scale_it++;
   }
 }
 
