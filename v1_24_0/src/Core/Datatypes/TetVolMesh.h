@@ -758,7 +758,7 @@ TetVolMesh::fill_points(Iter begin, Iter end, Functor fill_ftor) {
     ++piter; ++iter;
   }
   points_lock_.unlock();
-  dirty_ = true;
+  //dirty_ = true; // FIXME
 }
 
 template <class Iter, class Functor>
@@ -780,7 +780,7 @@ TetVolMesh::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
     ++citer; ++iter;
   }
   cells_lock_.unlock();
-  dirty_ = true;
+  //dirty_ = true; // FIXME
 }
 
 
