@@ -466,7 +466,7 @@ compare(MaterialParticleVarData& data2, ParticleVariable<T>* value1,
       if (name_ != "p.particleID") {
 	ASSERT(getParticleID(i) == data2.getParticleID(i));
       }
-      cerr << "DIFFERENCE on particle id=" << hex << setfill('0') << setw(16) << getParticleID(i) <<
+      cerr << "DIFFERENCE on particle id= 0x" << hex << setfill('0') << setw(16) << getParticleID(i) <<
 	endl;
       const Patch* patch1 = getPatch(i);
       const Patch* patch2 = data2.getPatch(i);
