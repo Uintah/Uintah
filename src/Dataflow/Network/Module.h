@@ -170,9 +170,12 @@ public:
     // return port at position
     IPort* get_iport(int item) { return iports[item]; }
     OPort* get_oport(int item) { return oports[item]; }
+    IPort* get_iport(const char *name);
+    OPort* get_oport(const char *name);
+
     // return port(s) with name
-    dynamic_port_range get_iport(const char *name) { return iports[name]; }
-    dynamic_port_range get_oport(const char *name) { return oports[name]; }
+    dynamic_port_range get_iports(const char *name) { return iports[name]; }
+    dynamic_port_range get_oports(const char *name) { return oports[name]; }
 
     // Used by Module subclasses
     void error(const clString&);
