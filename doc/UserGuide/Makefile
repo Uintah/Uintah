@@ -27,7 +27,7 @@ running.tex network.tex viewer.tex import.tex
 # Latex2html options.  Change as needed.
 LATEX2HTMLOPTIONS = -split 4 -no_white -link 1 -bottom_navigation \
 -html_version 4.0,math -show_section_numbers -local_icons \
--long_titles 1 -prefix srug \
+-long_titles 1 -prefix srug -image_type gif \
 -style ../../doc_styles.css
 
 # Change to reflect installation locations.
