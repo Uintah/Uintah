@@ -1,6 +1,7 @@
 #include <Packages/Uintah/Core/Grid/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/Grid/BoxGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/SphereGeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/SphereMembraneGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/CylinderGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/TriGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/UnionGeometryPiece.h>
@@ -30,6 +31,9 @@ void GeometryPieceFactory::create(const ProblemSpecP& ps,
       
       else if (go_type == "sphere")
 	 objs.push_back(new SphereGeometryPiece(child));
+
+      else if (go_type == "sphere_membrane")
+	 objs.push_back(new SphereMembraneGeometryPiece(child));
 
       else if (go_type ==  "cylinder")
 	 objs.push_back(new CylinderGeometryPiece(child));
