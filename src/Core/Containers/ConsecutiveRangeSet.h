@@ -186,6 +186,7 @@ public:
 
   static const ConsecutiveRangeSet empty;
   static const ConsecutiveRangeSet all;  
+   friend class ConsecutiveRangeSet::iterator;
 private:
   template <class InputIterator>
   ConsecutiveRangeSet(InputIterator begin, InputIterator end)

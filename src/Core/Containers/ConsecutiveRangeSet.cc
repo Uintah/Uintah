@@ -1,5 +1,5 @@
-#ifdef __sgi
-#include "ConsecutiveRangeSet.h"
+
+#include <Core/Containers/ConsecutiveRangeSet.h>
 #include <sstream>
 #include <errno.h>
 
@@ -317,4 +317,3 @@ ostream& operator<<(ostream& out, const ConsecutiveRangeSet& set)
 }
 } // End namespace SCIRun
 
-#endif // __sgi
