@@ -350,7 +350,7 @@ void ICE::scheduleComputeEquilibrationPressure(const Patch* patch,
 					       DataWarehouseP& new_dw)
 {
   Task* task = scinew Task("ICE::computeEquilibrationPressure",
-                        patch, old_dw, new_dw,this,
+			   patch, old_dw, new_dw,this,
 			   &ICE::computeEquilibrationPressure);
   
   task->requires(old_dw,lb->press_CCLabel, 0,patch,Ghost::None);
@@ -602,12 +602,12 @@ void ICE:: scheduleComputeLagrangianValues(const Patch* patch,
     int dwindex = matl->getDWIndex();
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     if(ice_matl){
-      task->requires( new_dw, lb->rho_CCLabel,       dwindex,patch,Ghost::None);
-      task->requires( old_dw, lb->vel_CCLabel,       dwindex,patch,Ghost::None);
-      task->requires( old_dw, lb->temp_CCLabel,      dwindex,patch,Ghost::None);
-      task->requires( new_dw, lb->mom_source_CCLabel,dwindex,patch,Ghost::None);
-      task->requires( new_dw, lb->int_eng_source_CCLabel,
-				                     dwindex,patch,Ghost::None);
+      task->requires( new_dw,lb->rho_CCLabel,dwindex,patch,Ghost::None);
+      task->requires( old_dw,lb->vel_CCLabel,dwindex,patch,Ghost::None);
+      task->requires( old_dw,lb->temp_CCLabel,dwindex,patch,Ghost::None);
+      task->requires( new_dw,lb->mom_source_CCLabel,dwindex,patch,Ghost::None);
+      task->requires( new_dw,lb->int_eng_source_CCLabel,dwindex,patch,
+		      Ghost::None);
 
       task->computes( new_dw, lb->mom_L_CCLabel,      dwindex,patch);
       task->computes( new_dw, lb->int_eng_L_CCLabel,  dwindex,patch);
@@ -810,19 +810,19 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
   for (int m = 0; m < numMatls; m++ ) {
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
     int dwindex = ice_matl->getDWIndex();
-    new_dw->allocate(rho_micro[m],     lb->rho_micro_CCLabel,     dwindex,patch);
-    new_dw->allocate(sp_vol_CC[m],     lb->sp_vol_CCLabel,        dwindex,patch);
-    new_dw->allocate(mass_CC[m],       lb->mass_CCLabel,          dwindex,patch);
-    new_dw->allocate(rho_top_cycle[m], lb->rho_CC_top_cycleLabel, dwindex,patch);
-    new_dw->allocate(Temp_CC[m],       lb->temp_CCLabel,          dwindex,patch);
-    new_dw->allocate(speedSound[m],    lb->speedSound_CCLabel,    dwindex,patch);
-    new_dw->allocate(visc_CC[m],       lb->viscosity_CCLabel,     dwindex,patch);
-    new_dw->allocate(vol_frac_CC[m],   lb->vol_frac_CCLabel,      dwindex,patch);
-    new_dw->allocate(vel_CC[m],        lb->vel_CCLabel,           dwindex,patch);
+    new_dw->allocate(rho_micro[m],   lb->rho_micro_CCLabel,     dwindex,patch);
+    new_dw->allocate(sp_vol_CC[m],   lb->sp_vol_CCLabel,        dwindex,patch);
+    new_dw->allocate(mass_CC[m],     lb->mass_CCLabel,          dwindex,patch);
+    new_dw->allocate(rho_top_cycle[m],lb->rho_CC_top_cycleLabel,dwindex,patch);
+    new_dw->allocate(Temp_CC[m],     lb->temp_CCLabel,          dwindex,patch);
+    new_dw->allocate(speedSound[m],  lb->speedSound_CCLabel,    dwindex,patch);
+    new_dw->allocate(visc_CC[m],     lb->viscosity_CCLabel,     dwindex,patch);
+    new_dw->allocate(vol_frac_CC[m], lb->vol_frac_CCLabel,      dwindex,patch);
+    new_dw->allocate(vel_CC[m],      lb->vel_CCLabel,           dwindex,patch);
  
-    new_dw->allocate(uvel_FC[m],       lb->uvel_FCLabel,          dwindex,patch);
-    new_dw->allocate(vvel_FC[m],       lb->vvel_FCLabel,          dwindex,patch);
-    new_dw->allocate(wvel_FC[m],       lb->wvel_FCLabel,          dwindex,patch);
+    new_dw->allocate(uvel_FC[m],     lb->uvel_FCLabel,          dwindex,patch);
+    new_dw->allocate(vvel_FC[m],     lb->vvel_FCLabel,          dwindex,patch);
+    new_dw->allocate(wvel_FC[m],     lb->wvel_FCLabel,          dwindex,patch);
   }
   for (int m = 0; m < numMatls; m++ ) {
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
@@ -851,9 +851,8 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
       
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       double gamma = ice_matl->getGamma();
-      ice_matl->getEOS()->computeTemp_CC( patch,
-                                          press_CC,   gamma,   cv[m],
-                                          rho_micro[m],    Temp_CC[m]);
+      ice_matl->getEOS()->computeTempCC(patch, press_CC,   gamma,   cv[m],
+					rho_micro[m],    Temp_CC[m]);
     }
 
 //______________________________________________________
@@ -964,8 +963,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     ICEMaterial* matl = d_sharedState->getICEMaterial(m);
     int dwindex = matl->getDWIndex();
     old_dw->get(Temp[m],      lb->temp_CCLabel,  dwindex,patch,Ghost::None, 0);
-    old_dw->get(rho_CC[m],    lb->rho_CC_top_cycleLabel,   
-                                                 dwindex,patch,Ghost::None, 0);
+    old_dw->get(rho_CC[m],lb->rho_CC_top_cycleLabel,dwindex,patch,
+		Ghost::None,0);
                   
     new_dw->allocate(speedSound_new[m],lb->speedSound_CCLabel,dwindex, patch);
     new_dw->allocate(rho_micro[m],     lb->rho_micro_CCLabel, dwindex, patch); 
@@ -1051,6 +1050,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
                                            cv[m],Temp[m][*iter],
                                            press_eos[m], dp_drho[m], dp_de[m]);
      }
+
+
      //__________________________________
      // - compute delPress
      // - update press_CC     
@@ -2555,7 +2556,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
     // Advection of specific volume.  Advected quantity is a volume fraction
     if (numICEmatls != numALLmatls)  {
       sp_vol_CC.initialize(1.0);  // Do this so extra cells work out
-      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
+      for(CellIterator iter=patch->getCellIterator(gc); !iter.done();iter++){
         q_CC[*iter] = (mass_L[*iter]/rho_micro[*iter])*invvol;
       }
 
@@ -2566,7 +2567,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
       }
      // Divide by the new rho_CC.  This must be done in the extraCells
      // for now, because I don't know how to set the BCs for sp_vol.
-     for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){        if(rho_CC[*iter] > 1000.*d_SMALL_NUM){
+     for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){        if(rho_CC[*iter] > 1000.*d_SMALL_NUM){
                 sp_vol_CC[*iter] /= (rho_CC[*iter] + d_SMALL_NUM);
         }
         else{
