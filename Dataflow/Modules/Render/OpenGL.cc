@@ -1799,7 +1799,7 @@ void OpenGL::AddMpegFrame()
 
   // set up the ImVfb used to store the image 
   if( !image ){
-    image=MPEGe_ImVfbAlloc( width,height, IMVFBRGB, TRUE );
+    image=MPEGe_ImVfbAlloc( width,height, IMVFBRGB, 1 );
     if( !image ){
       cerr<<"Couldn't allocate memory for frame buffer\n";
       exit(2);
