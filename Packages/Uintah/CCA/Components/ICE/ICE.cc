@@ -2373,11 +2373,25 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
                                cv * temp_CC[*iter] * burnedMass[*iter];
 
           int_eng_L[*iter] = std::max(int_eng_tmp, min_int_eng) + 
-                             int_eng_source[*iter] + releasedHeat[*iter];     
+                             int_eng_source[*iter] + releasedHeat[*iter];  
          }
 	cout << "Mass gained by the gas this timestep = " << massGain << endl;
-       }  // 
-     }  // if (ice_matl)
+       }  //  if (mass exchange)
+  
+        //__________________________________
+        //  B U L L E T   P R O O F I N G   
+        // catch negative internal energies
+        double plusMinusOne = 1.0;
+        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+	      iter++) {
+          plusMinusOne *= int_eng_L[*iter]/fabs(int_eng_L[*iter]);     
+        }
+        if (plusMinusOne < 0.0) {
+          Message(1,"ICE::computeLagrangianValues",
+                " Negative Internal energy or Temperature detected ", 
+                " ....Now exiting");
+        }
+      }  // if (ice_matl)
       //---- P R I N T   D A T A ------ 
       // Dump out all the matls data
       if (switchDebugLagrangianValues ) {
