@@ -1,4 +1,19 @@
 
+/* REFERENCED */
+static char *id="$Id$";
+
+/*
+ *  Thread_pthreads.cc: Posix threads implementation of the thread library
+ *
+ *  Written by:
+ *   Author: Steve Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: June 1997
+ *
+ *  Copyright (C) 1997 SCI Group
+ */
+
 #include "Barrier.h"
 #include "ConditionVariable.h"
 #include "Mutex.h"
@@ -570,3 +585,11 @@ void WorkQueue::refill(int new_ta, int new_numThreads,
 	init();
     }
 }
+//
+// $Log$
+// Revision 1.3  1999/08/25 02:38:02  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//
+

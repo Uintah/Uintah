@@ -1,4 +1,19 @@
 
+/* REFERENCED */
+static char *id="$Id$";
+
+/*
+ *  CrowdMonitor.h: Multiple reader/single writer locks
+ *
+ *  Written by:
+ *   Author: Steve Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: June 1997
+ *
+ *  Copyright (C) 1997 SCI Group
+ */
+
 #include "Guard.h"
 #include "CrowdMonitor.h"
 #include "Mutex.h"
@@ -41,4 +56,12 @@ Guard::~Guard()
     else
         d_monitor->writeUnlock();
 }
+
+//
+// $Log$
+// Revision 1.2  1999/08/25 02:37:56  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//
 

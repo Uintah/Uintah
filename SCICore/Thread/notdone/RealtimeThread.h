@@ -47,8 +47,8 @@ PATTERNS
 WARNING
    
 ****************************************/
-class SCICORESHARE RealtimeThread {
-    int interval;
+class RealtimeThread {
+    int d_interval;
 public:
     //////////
     //Arrange to have the thread frame scheduled, so that it can execute every <i>interval</i>
@@ -83,7 +83,7 @@ public:
     //////////
     //Return the frame interval in microseconds.  For frames which are keyed to the vertical retrace
     //interval, this may be different than the interval supplied in the constructor.
-    int frameInterval() ;
+    int frameInterval();
 };
 
 #endif

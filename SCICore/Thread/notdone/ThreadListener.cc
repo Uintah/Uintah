@@ -13,13 +13,16 @@
  * specified.
  */
 
-void ThreadListener::send_event(Thread*, ThreadEvent) {
-    cerr << "ThreadListener::send_event not finished\n";
+void ThreadListener::sendEvent(Thread*, ThreadEvent)
+{
+    cerr << "ThreadListener::sendEvent not finished\n";
 }
 
-ThreadListener::ThreadListener() {
+ThreadListener::ThreadListener()
+{
 }
 
-ThreadListener::~ThreadListener() {
+ThreadListener::~ThreadListener()
+{
 }
 

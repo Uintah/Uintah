@@ -1,4 +1,19 @@
 
+/* REFERENCED */
+static char *id="$Id$";
+
+/*
+ *  ConditionVariable.h: Condition variable primitive
+ *
+ *  Written by:
+ *   Author: Steve Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: June 1997
+ *
+ *  Copyright (C) 1997 SCI Group
+ */
+
 #include "ConditionVariable.h"
 #include "Thread.h"
 
@@ -57,4 +72,12 @@ void ConditionVariable::conditionBroadcast()
     }
     d_mutex.unlock();
 }
+
+//
+// $Log$
+// Revision 1.3  1999/08/25 02:37:55  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//
 

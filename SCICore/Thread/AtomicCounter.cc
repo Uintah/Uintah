@@ -1,3 +1,17 @@
+/* REFERENCED */
+static char *id="$Id$";
+
+/*
+ *  AtomicCounter.h: Thread-safe integer variable
+ *
+ *  Written by:
+ *   Author: Steve Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: June 1997
+ *
+ *  Copyright (C) 1997 SCI Group
+ */
 
 #include "AtomicCounter.h"
 
@@ -65,3 +79,11 @@ void AtomicCounter::set(int v)
     d_value=v;
     d_lock.unlock();
 }
+//
+// $Log$
+// Revision 1.3  1999/08/25 02:37:54  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//
+

@@ -1,4 +1,19 @@
 
+/* REFERENCED */
+static char *id="$Id$";
+
+/*
+ *  Barrier.h: Barrier synchronization primitive
+ *
+ *  Written by:
+ *   Author: Steve Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: June 1997
+ *
+ *  Copyright (C) 1997 SCI Group
+ */
+
 #include "RecursiveMutex.h"
 #include "Thread.h"
 
@@ -41,4 +56,12 @@ void RecursiveMutex::unlock()
         d_myLock.unlock();
     }
 }
+
+//
+// $Log$
+// Revision 1.3  1999/08/25 02:37:58  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//
 

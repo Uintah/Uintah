@@ -1,6 +1,20 @@
 
-#ifndef SCI_THREAD_MUTEX_H
-#define SCI_THREAD_MUTEX_H 1
+// $Id$
+
+/*
+ *  Mutex.h: Standard locking primitive
+ *
+ *  Written by:
+ *   Author: Steve Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: June 1997
+ *
+ *  Copyright (C) 1997 SCI Group
+ */
+
+#ifndef SCICore_Thread_Mutex_h
+#define SCICore_Thread_Mutex_h
 
 /**************************************
  
@@ -22,37 +36,50 @@ WARNING
    
 ****************************************/
 
-class Mutex_private;
-#include <string>
+namespace SCICore {
+    namespace Thread {
+	class Mutex_private;
 
-class Mutex {
-    Mutex_private* d_priv;
-    std::string d_name;
-public:
-    //////////
-    // Create the mutex.  The mutex is allocated in the unlocked state.
-    // <i>name</i> should be a string which describes the primitive
-    // for debugging purposes.  
-    Mutex(const std::string& name);
+	class Mutex {
+	    Mutex_private* d_priv;
+	    const char* d_name;
+	public:
+	    //////////
+	    // Create the mutex.  The mutex is allocated in the unlocked
+	    // state. <i>name</i> should be a static string which describes
+	    // the primitive for debugging purposes.  
+	    Mutex(const char* name);
 
-    //////////
-    // Destroy the mutex.  Destroying the mutex in the locked state has
-    // undefined results.
-    ~Mutex();
+	    //////////
+	    // Destroy the mutex.  Destroying the mutex in the locked state
+	    // has undefined results.
+	    ~Mutex();
 
-    //////////
-    // Acquire the Mutex.  This method will block until the mutex is acquired.
-    void lock();
+	    //////////
+	    // Acquire the Mutex.  This method will block until the mutex
+	    // is acquired.
+	    void lock();
 
-    //////////
-    // Attempt to acquire the Mutex without blocking.  Returns true if the
-    // mutex was available and actually acquired.
-    bool tryLock();
+	    //////////
+	    // Attempt to acquire the Mutex without blocking.  Returns
+	    // true if the mutex was available and actually acquired.
+	    bool tryLock();
 
-    //////////
-    // Release the Mutex, unblocking any other threads that are blocked
-    // waiting for the Mutex.
-    void unlock();
-};
+	    //////////
+	    // Release the Mutex, unblocking any other threads that are
+	    // blocked waiting for the Mutex.
+	    void unlock();
+	};
+    }
+}
 
 #endif
+
+//
+// $Log$
+// Revision 1.4  1999/08/25 02:37:57  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//
+

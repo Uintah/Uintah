@@ -1,4 +1,20 @@
 
+/* REFERENCED */
+static char *id="$Id$";
+
+/*
+ *  WorkQueue.h: Manage assignments of work
+ *
+ *  Written by:
+ *   Author: Steve Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: June 1997
+ *
+ *  Copyright (C) 1997 SCI Group
+ */
+
+
 #include "WorkQueue.h"
 <<<<<<< WorkQueue.cc
 
@@ -47,3 +63,11 @@ void WorkQueue::fill()
 #include "Thread.h"
 #include <iostream.h>
 >>>>>>> 1.8
+//
+// $Log$
+// Revision 1.3  1999/08/25 02:38:03  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//
+

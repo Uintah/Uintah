@@ -1,4 +1,19 @@
 
+/* REFERENCED */
+static char *id="$Id$";
+
+/*
+ *  TestThreads.cc: Tests for the thread library
+ *
+ *  Written by:
+ *   Author: Steve Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: June 1997
+ *
+ *  Copyright (C) 1997 SCI Group
+ */
+
 #include <Thread/TestThreads.h>
 #include <Thread/Guard.h>
 #include <iostream.h>
@@ -398,3 +413,11 @@ void TestThreads::test1(int proc)
 #endif
 
 }
+//
+// $Log$
+// Revision 1.1  1999/08/25 02:38:09  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//
+
