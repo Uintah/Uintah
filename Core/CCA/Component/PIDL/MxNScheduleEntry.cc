@@ -228,8 +228,11 @@ void MxNScheduleEntry::doReceive(int rank)
 	::std::cout << "received dist rank=" << i << "\n";
 	//If we have already received this, something is happening
 	//out of order, so we yield until things sort out.
-	while(caller_rep[i]->received) Thread::yield();
-	recv_mutex.lock();
+	while(caller_rep[i]->received) {
+          recv_sema.up();
+      	  Thread::yield();
+        }
+  	recv_mutex.lock();
 	caller_rep[i]->received = true;
 	recv_mutex.unlock();
 	recv_sema.up();
