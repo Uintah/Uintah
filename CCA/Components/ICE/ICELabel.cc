@@ -46,6 +46,8 @@ ICELabel::ICELabel()
     VarLabel::create("vol_frac_CC",  CCVariable<double>::getTypeDescription());
   viscosity_CCLabel =
     VarLabel::create("viscosity_CC", CCVariable<double>::getTypeDescription());
+  press_force_CCLabel =
+    VarLabel::create("press_force",  CCVariable<Vector>::getTypeDescription());
   mom_source_CCLabel = 
     VarLabel::create("mom_source_CC",CCVariable<Vector>::getTypeDescription());
   int_eng_source_CCLabel = 
@@ -182,6 +184,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(Kappa_CCLabel);
     VarLabel::destroy(vol_frac_CCLabel);
     VarLabel::destroy(viscosity_CCLabel);
+    VarLabel::destroy(press_force_CCLabel); 
     VarLabel::destroy(mom_source_CCLabel);
     VarLabel::destroy(int_eng_source_CCLabel);
     VarLabel::destroy(spec_vol_source_CCLabel);
