@@ -14,7 +14,7 @@
 #ifndef SCI_project_module_SolveMatrix_h
 #define SCI_project_module_SolveMatrix_h
 
-#include <Module.h>
+#include <Dataflow/Module.h>
 
 class SolveMatrix : public Module {
 public:

@@ -11,11 +11,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SoundMixer/SoundMixer.h>
+#include <Modules/Sound/SoundMixer.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
-#include <SoundPort.h>
 #include <iostream.h>
 
 static Module* make_SoundMixer(const clString& id)

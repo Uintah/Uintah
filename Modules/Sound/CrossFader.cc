@@ -11,10 +11,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CrossFader/CrossFader.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
-#include <SoundPort.h>
+#include <Modules/Sound/CrossFader.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
 #include <iostream.h>
 

@@ -10,19 +10,19 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Salmon/Salmon.h>
-#include <Salmon/Renderer.h>
-#include <Salmon/Roe.h>
-#include <Connection.h>
-#include <DBContext.h>
-#include <HelpUI.h>
-#include <MessageTypes.h>
-#include <ModuleHelper.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
-#include <iostream.h>
-#include <Geom.h>
+#include <Modules/Salmon/Salmon.h>
+#include <Modules/Salmon/Renderer.h>
+#include <Modules/Salmon/Roe.h>
 #include <Classlib/HashTable.h>
+#include <Classlib/NotFinished.h>
+#include <Comm/MessageTypes.h>
+#include <Dataflow/Connection.h>
+#include <Dataflow/HelpUI.h>
+#include <Dataflow/ModuleHelper.h>
+#include <Dataflow/ModuleList.h>
+#include <Devices/DBContext.h>
+#include <Geom/Geom.h>
+#include <iostream.h>
 
 static Module* make_Salmon(const clString& id)
 {

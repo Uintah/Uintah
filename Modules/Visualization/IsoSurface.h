@@ -14,10 +14,10 @@
 #ifndef SCI_project_module_IsoSurface_h
 #define SCI_project_module_IsoSurface_h
 
-#include <Module.h>
+#include <Dataflow/Module.h>
+#include <Datatypes/ScalarField.h>
+#include <Datatypes/ScalarFieldPort.h>
 #include <Geometry/Point.h>
-#include <ScalarField.h>
-#include <ScalarFieldPort.h>
 class ColormapPort;
 class Element;
 class GeomCone;

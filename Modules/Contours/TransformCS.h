@@ -14,11 +14,12 @@
 #ifndef SCI_project_module_TransformCS_h
 #define SCI_project_module_TransformCS_h
 
-#include <UserModule.h>
-#include <ContourSet.h>
-#include <ContourSetPort.h>
+#include <Dataflow/Module.h>
+#include <Datatypes/ContourSet.h>
+#include <Datatypes/ContourSetPort.h>
+class DBContext;
 
-class TransformCS : public UserModule {
+class TransformCS : public Module {
     ContourSetIPort* icontour;
     ContourSetOPort* ocontour;
     DBContext *dbcontext_st;
@@ -29,7 +30,7 @@ class TransformCS : public UserModule {
     double spacing;
     ContourSetHandle contours;
 public:
-    TransformCS();
+    TransformCS(const clString&);
     TransformCS(const TransformCS&, int deep);
     virtual ~TransformCS();
     virtual Module* clone(int deep);

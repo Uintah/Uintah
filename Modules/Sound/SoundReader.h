@@ -14,14 +14,14 @@
 #ifndef SCI_project_module_SoundReader_h
 #define SCI_project_module_SoundReader_h
 
-#include <Module.h>
+#include <Dataflow/Module.h>
 class SoundOPort;
 
 class SoundReader : public Module {
     SoundOPort* osound;
     clString filename;
 public:
-    SoundReader();
+    SoundReader(const clString& id);
     SoundReader(const SoundReader&, int deep);
     virtual ~SoundReader();
     virtual Module* clone(int deep);

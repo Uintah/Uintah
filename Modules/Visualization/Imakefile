@@ -1,0 +1,12 @@
+
+#include <config/sci.cf>
+
+OBJS = FrameTest.o  Hedgehog.o  IsoSurface.o  Streamline.o  \
+	Streamsurf.o
+SRCS = FrameTest.cc Hedgehog.cc IsoSurface.cc Streamline.cc \
+	Streamsurf.cc
+
+LIBNAME = Visualization
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS))

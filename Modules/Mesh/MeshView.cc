@@ -11,17 +11,17 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <stdio.h>
+#include <Modules/Mesh/MeshView.h>
 #include <Classlib/HashTable.h>
-#include <MeshView/MeshView.h>
-#include <Geometry/Point.h>
-#include <Geom.h>
-#include <GeometryPort.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
-#include <iostream.h>
-#include <fstream.h>
+#include <Classlib/NotFinished.h>
 #include <Classlib/Queue.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/GeometryPort.h>
+#include <Geometry/Point.h>
+#include <Geom/Geom.h>
+#include <fstream.h>
+#include <iostream.h>
+#include <stdio.h>
 #include <string.h>
 
 static Module* make_MeshView(const clString& id)

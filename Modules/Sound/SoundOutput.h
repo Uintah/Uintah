@@ -14,13 +14,13 @@
 #ifndef SCI_project_module_SoundOutput_h
 #define SCI_project_module_SoundOutput_h
 
-#include <Module.h>
+#include <Dataflow/Module.h>
 class SoundIPort;
 
 class SoundOutput : public Module {
     SoundIPort* isound;
 public:
-    SoundOutput();
+    SoundOutput(const clString& id);
     SoundOutput(const SoundOutput&, int deep);
     virtual ~SoundOutput();
     virtual Module* clone(int deep);

@@ -11,16 +11,18 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <LaceContours/LaceContours.h>
-#include <ContourSet.h>
-#include <Surface.h>
-#include <SurfacePort.h>
-#include <ContourSetPort.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
+#include <Modules/Contours/LaceContours.h>
+
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/ContourSet.h>
+#include <Datatypes/ContourSetPort.h>
+#include <Datatypes/Surface.h>
+#include <Datatypes/SurfacePort.h>
+#include <Math/MiscMath.h>
+
 #include <iostream.h>
 #include <fstream.h>
-#include <Math/MiscMath.h>
 
 #define Sqr(x) ((x)*(x))
 static Module* make_LaceContours(const clString& id)

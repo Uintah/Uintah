@@ -11,12 +11,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Hedgehog/Hedgehog.h>
-#include <Geom.h>
-#include <GeometryPort.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
+#include <Modules/Visualization/Hedgehog.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/GeometryPort.h>
 #include <Geometry/Point.h>
+#include <Geom/Geom.h>
 #include <iostream.h>
 #include <fstream.h>
 

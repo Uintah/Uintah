@@ -1,6 +1,6 @@
 
-#include <Salmon/Renderer.h>
-#include <NotFinished.h>
+#include <Modules/Salmon/Renderer.h>
+#include <Classlib/NotFinished.h>
 
 class Raytracer : public Renderer {
 public:

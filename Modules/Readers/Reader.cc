@@ -11,9 +11,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Readers/TYPEReader.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
+#include <Modules/Readers/TYPEReader.h>
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
 
 static Module* make_TYPEReader(const clString& id)
 {

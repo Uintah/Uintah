@@ -14,13 +14,13 @@
 #ifndef SCI_project_module_Streamline_h
 #define SCI_project_module_Streamline_h
 
-#include <Module.h>
+#include <Dataflow/Module.h>
+#include <Datatypes/ScalarField.h>
+#include <Datatypes/ScalarFieldPort.h>
+#include <Datatypes/VectorField.h>
+#include <Datatypes/VectorFieldPort.h>
 #include <Geometry/Point.h>
-#include <ScalarField.h>
-#include <ScalarFieldPort.h>
-#include <TCLvar.h>
-#include <VectorField.h>
-#include <VectorFieldPort.h>
+#include <TCL/TCLvar.h>
 class ColormapPort;
 class GeomCylinder;
 class GeomDisc;

@@ -10,13 +10,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <BuildFEMatrix/BuildFEMatrix.h>
-#include <MatrixPort.h>
-#include <MeshPort.h>
-#include <ModuleList.h>
-#include <NotFinished.h>
-#include <SurfacePort.h>
+#include <Modules/FEM/BuildFEMatrix.h>
+
+#include <Classlib/NotFinished.h>
+#include <Dataflow/ModuleList.h>
+#include <Datatypes/MatrixPort.h>
+#include <Datatypes/MeshPort.h>
+#include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
+
 #include <iostream.h>
 #include <fstream.h>
 

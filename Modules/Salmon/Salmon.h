@@ -13,11 +13,11 @@
 #ifndef SCI_project_module_Salmon_h
 #define SCI_project_module_Salmon_h
 
-#include <Module.h>
-#include <GeometryPort.h>
+#include <Dataflow/Module.h>
 #include <Classlib/Array1.h>
-#include <Multitask/ITC.h>
 #include <Classlib/HashTable.h>
+#include <Datatypes/GeometryPort.h>
+#include <Multitask/ITC.h>
 
 class GeomObj;
 class GeometryIPort;

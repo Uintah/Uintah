@@ -1,9 +1,5 @@
 
-#define NO_SCI_CC_TARGET
-
 #include <config/sci.cf>
-
-LOCALINCLUDES = -I.. -I../../project
 
 OBJS = ContourSetReader.o  ScalarFieldReader.o  SurfaceReader.o \
 	VectorFieldReader.o
@@ -12,16 +8,11 @@ SRCS = ContourSetReader.cc ScalarFieldReader.cc SurfaceReader.cc \
 TCLS = ContourSetReader.tcl ScalarFieldReader.tcl SurfaceReader.tcl \
 	VectorFieldReader.tcl
 
-.cc.o:
-	$(CCC) $(CCFLAGS) -c $<
-
-../modules.o: $(OBJS)
-	cd .. && make modules.o
-
-AllTarget(../modules.o)
-AllTarget($(TCLS))
+LIBNAME = Readers
 
 SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME), $(OBJS))
+AllTarget($(TCLS))
 
 ContourSetReader.h: Reader.h
 	sed 's/TYPE/ContourSet/g' < Reader.h > ContourSetReader.h
