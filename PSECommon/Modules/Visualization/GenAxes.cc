@@ -21,6 +21,8 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
+#include <PSECommon/share/share.h>
+
 namespace PSECommon {
 namespace Modules {
 
@@ -61,7 +63,7 @@ WARNING
 
 ****************************************/
 
-class GenAxes : public Module {
+class PSECOMMONSHARE GenAxes : public Module {
     TCLdouble size;
     int size_changed;
     GeometryOPort* ogeom;
@@ -103,7 +105,7 @@ public:
     virtual void tcl_command(TCLArgs&, void*);
 };
 
-Module* make_GenAxes(const clString& id) {
+PSECOMMONSHARE Module* make_GenAxes(const clString& id) {
   return new GenAxes(id);
 }
 
@@ -188,6 +190,9 @@ void GenAxes::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.6  1999/11/10 19:40:01  moulding
+// first commit of an NT'ified module for the new PSE
+//
 // Revision 1.5  1999/08/25 03:48:06  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
