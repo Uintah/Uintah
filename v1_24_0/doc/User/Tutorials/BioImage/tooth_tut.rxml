@@ -412,13 +412,106 @@ DEALINGS IN THE SOFTWARE.
       <section><title>Volume Rendering</title>
         <para>
 	  In addition to viewing 2D slices of the data, it is also possible to
-	  view full 3D Volume rendering of the data.
+	  view a full 3D Volume rendering of the data.
 	</para>
-	
-        <para>
-	  (Talk about the paintbrush interface, link to transfer
-	  function stuff in the advanced techniques section)
-	</para>
+	<figure id="fig.3dVolRen"><title>Volume Rendering in 3D Viewer Window</title>
+	  <mediaobject>
+	    <textobject>
+	      <phrase>Volume Rendering in 3D Viewer Window</phrase>
+	    </textobject>
+	    <imageobject>
+	      <imagedata fileref="Figures/3dVolRen.eps" align="center" format="EPS"/>
+	    </imageobject>
+	    <imageobject>
+	      <imagedata fileref="Figures/3dVolRen.jpg" align="center" format="JPG"/>
+	    </imageobject>
+	  </mediaobject>
+	</figure>
+	<section><title>Turning on Volume Rendering</title>
+	  <para>
+	    To turn on Volume Rendering, select the Volume Rendering tab and put a checkmark in
+	    the box labelled "Show Volume Rendering".
+	  </para>
+	  <figure id="fig.show_vol_ren_button"><title>Turning on Volume Rendering</title>
+	    <mediaobject>
+	      <textobject>
+		<phrase>Turning on Volume Rendering</phrase>
+	      </textobject>
+	      <imageobject>
+		<imagedata fileref="Figures/show_vol_ren_button.eps" align="center" format="EPS"/>
+	      </imageobject>
+	      <imageobject>
+		<imagedata fileref="Figures/show_vol_ren_button.jpg" align="center" format="JPG"/>
+	      </imageobject>
+	    </mediaobject>
+	  </figure>
+	</section><!-- end:Turning on Volume Rendering -->
+	<section><title>Using the Paintbrush</title>
+          <para>
+	    (Talk about the paintbrush interface when it is ready) 
+	  </para>
+	</section><!-- end:Using the Paintbrush -->
+	<section><title>Editing the Transfer Function</title> 
+	  <para>
+	    The Transfer Function assigns optical properties to 3D data in order to  
+	    help the user comprehend the data visually. The transfer function maps
+	    color to specific data values. 
+	  </para>
+	  <para>
+	    To edit the transfer function directly, select the "Edit Transfer Function"
+	    button in the Volume Rendering Tab. <xref linkend="fig.show_vol_ren_button"/>
+	  </para>
+	  <section><title>The Edit Transfer Function Window</title>
+            <figure id="fig.editTFWindow"><title>The Edit Transfer Function Window</title>
+              <mediaobject>
+		<textobject>
+		  <phrase>The Edit Transfer Function Window</phrase>
+		</textobject>
+		<imageobject>
+		  <imagedata fileref="Figures/editTFWindow.eps" align="center" format="EPS"/>
+		</imageobject>
+		<imageobject>
+		  <imagedata fileref="Figures/editTFWindow.jpg" align="center" format="JPG"/>
+		</imageobject>
+	      </mediaobject>
+	    </figure>
+	    <para>
+	      The Edit Transfer Function Window <xref linkend="fig.editTFWindow"/>
+	      provides an advanced interface to the color-to-data mapping used for
+	      volume rendering.
+	    </para>
+	    <para>
+	      The Edit Transfer Function Window shows a histogram <xref linkend="fig.hist"/>
+	      of the data values contained in the dataset.
+	    </para>
+	    <figure id="fig.histo"><title>Histogram of values in dataset</title>
+	      <mediaobject>
+		<textobject>
+		  <phrase>Histogram of values in dataset</phrase>
+		</textobject>
+		<imageobject>
+		  <imagedata fileref="Figures/histo.eps" align="center" format="EPS"/>
+		</imageobject>
+		<imageobject>
+		  <imagedata fileref="Figures/histo.jpg" align="center" format="JPG"/>
+		</imageobject>
+	      </mediaobject>
+	    </figure>
+	    <para>
+	      The X axis of the histogram corresponds to the value or 'V' of the dataset, and 
+	      usually corresponds with a measured quantity, such as density. For the sample
+	      tooth dataset, the X axis has a range from 0-1300.
+	    </para>
+	    <para>
+	      The Y axis of the histogram corresponds to the Gradient Magnitude 
+	      or 'G' of the dataset. Areas with high Gradient Magnitude correspond to
+	      material borders in the dataset.
+	    </para>
+	    <para>
+	      In the tooth histogram <xref linkend="fig.histo"/> there are four distinct
+	    </para>
+	  </section><!-- end:The Edit Transfer Function Window -->
+	</section><!-- end: Editing the Transfer Fuction -->
       </section><!-- end:Volume Rendering -->
     </section><!-- end:3D Viewer -->
   </section><!-- Visualization -->
