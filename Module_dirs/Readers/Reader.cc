@@ -91,15 +91,12 @@ void TYPEReader::execute()
 	// Read the file...
 //	stream->watch_progress(watcher, (void*)this);
 	Pio(*stream, handle);
-	cerr << "Pio done!\n";
-	if(!handle.get_rep()){
+	if(!handle.get_rep() || stream->error()){
 	    error("Error reading TYPE from file");
 	    delete stream;
 	    return;
 	}
-	cerr << "deleting stream:" << stream << "\n";
 	delete stream;
-	cerr << "delete done\n";
     }
     outport->send(handle);
 }
