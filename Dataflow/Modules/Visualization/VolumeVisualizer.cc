@@ -32,6 +32,7 @@
 
 #include <sci_defs/ogl_defs.h>
 #include <Dataflow/Network/Module.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geom/ColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
@@ -50,6 +51,8 @@
 #include <Core/Volume/VideoCardInfo.h>
 
 #include <iostream>
+#include <sstream>
+#include <string>
 #ifdef __sgi
 #include <ios>
 #endif
@@ -95,6 +98,9 @@ private:
   GuiDouble gui_shine_;
   GuiInt gui_light_;
   GuiInt gui_blend_res_;
+  GuiInt gui_multi_level_;
+  GuiInt gui_use_stencil_;
+  GuiInt gui_invert_opacity_;
   GuiInt gui_num_slices_;  // unused except for backwards compatability
 
   VolumeRenderer* volren_;
@@ -126,6 +132,9 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     gui_shine_(ctx->subVar("shine")),
     gui_light_(ctx->subVar("light")),
     gui_blend_res_(ctx->subVar("blend_res")),
+    gui_multi_level_(ctx->subVar("multi_level")),
+    gui_use_stencil_(ctx->subVar("use_stencil")),
+    gui_invert_opacity_(ctx->subVar("invert_opacity")),
     gui_num_slices_(ctx->subVar("num_slices", false)), // don't save
     volren_(0)
 {}
@@ -203,6 +212,22 @@ VolumeVisualizer::execute()
   if(c1) cmap1_prevgen = cmap1->generation;
   if(c2) cmap2_prevgen = cmap2->generation;
 
+  string s;
+  gui->eval(id + " hasUI", s);
+  if( s == "0" )
+    gui->execute(id + " buildTopLevel");
+
+//    cerr<<"tex->nlevels() = "<<tex->nlevels() <<"\n";
+  if( tex->nlevels() > 1 && gui_multi_level_.get() == 1){
+    gui_multi_level_.set(tex->nlevels());
+//      cerr<<"building multi-level ... ";
+    gui->execute(id + " build_multi_level");
+//      cerr<<" done \n";
+  } else if(tex->nlevels() == 1 && gui_multi_level_.get() > 1){
+    gui_multi_level_.set(1);
+    gui->execute(id + " destroy_multi_level");
+  }
+
   if(!volren_) {
     volren_ = new VolumeRenderer(tex, cmap1, cmap2, int(card_mem_*1024*1024*0.8));
     oldmin = tex->bbox().min();
@@ -262,6 +287,26 @@ VolumeVisualizer::execute()
   volren_->set_adaptive(gui_adaptive_.get());
   volren_->set_colormap_size(1 << gui_cmap_size_.get());
   volren_->set_slice_alpha(gui_alpha_scale_.get());
+  volren_->set_stencil( bool(gui_use_stencil_.get()) );
+  volren_->invert_opacity( bool(gui_invert_opacity_.get()));
+  if( tex->nlevels() > 1 ){
+    for(int i = 0; i < tex->nlevels(); i++){
+      string result;
+      gui->eval(id + " isOn l" + to_string(i), result);
+      if ( result == "0")
+	volren_->set_draw_level(tex->nlevels()-1 -i, false);
+      else 
+	volren_->set_draw_level(tex->nlevels()-1 -i, true);
+
+
+      gui->eval(id + " alphaVal s" + to_string(i), result);
+      double val;
+      if( string_to_double( result, val )){
+	volren_->set_level_alpha(tex->nlevels()-1 -i, val);
+      }
+    }
+  }
+
   if(!volren_->use_pbuffer()) {
     gui_sw_raster_.set(1);
   } else {

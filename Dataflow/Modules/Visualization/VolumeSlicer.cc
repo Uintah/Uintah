@@ -32,6 +32,7 @@
 
 #include <sci_defs/ogl_defs.h>
 #include <Dataflow/Network/Module.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geom/ColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
@@ -93,6 +94,9 @@ private:
   GuiDouble phi0_;
   GuiDouble phi1_;
   GuiInt cyl_active_;
+  GuiInt gui_multi_level_;
+  GuiInt gui_outline_levels_;
+  GuiInt gui_use_stencil_;
 
   TextureHandle old_tex_;
   ColorMapHandle old_cmap_;
@@ -132,7 +136,10 @@ VolumeSlicer::VolumeSlicer(GuiContext* ctx)
     draw_phi1_(ctx->subVar("draw_phi_1")),
     phi0_(ctx->subVar("phi_0")),
     phi1_(ctx->subVar("phi_1")),
-    cyl_active_(ctx->subVar("cyl_active")),
+    cyl_active_(ctx->subVar("cyl_active")),   
+    gui_multi_level_(ctx->subVar("multi_level")),
+    gui_outline_levels_(ctx->subVar("outline_levels")),
+    gui_use_stencil_(ctx->subVar("use_stencil")),
     old_tex_(0),
     old_cmap_(0),
     old_min_(Point(0,0,0)), old_max_(Point(0,0,0)),
@@ -223,10 +230,32 @@ void VolumeSlicer::execute()
     ddview_ = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
   }
 
+  string s;
+  gui->eval(id + " hasUI", s);
+  if( s == "0" )
+    gui->execute(id + " buildTopLevel");
+
+//    cerr<<"tex_->nlevels() = "<<tex_->nlevels() <<"\n";
+  if( tex_->nlevels() > 1 && gui_multi_level_.get() == 1){
+    gui_multi_level_.set(tex_->nlevels());
+//      cerr<<"building multi-level ... ";
+    gui->execute(id + " build_multi_level");
+//      cerr<<" done \n";
+  } else if(tex_->nlevels() == 1 && gui_multi_level_.get() > 1){
+//      cerr<<"destroying multi_level\n";
+    gui_multi_level_.set(1);
+    gui->execute(id + " destroy_multi_level");
+  }
+
+
+
   //AuditAllocator(default_allocator);
   if(!slice_ren_) {
-    slice_ren_ = new SliceRenderer(tex_, cmap1, cmap2, int(card_mem_*1024*1024*0.8));
-    slice_ren_->set_control_point(tex_->transform().unproject(control_widget_->ReferencePoint()));
+    slice_ren_ = new SliceRenderer(tex_, cmap1, cmap2,
+				   int(card_mem_*1024*1024*0.8));
+    slice_ren_->
+      set_control_point(tex_->transform().unproject(control_widget_->
+						    ReferencePoint()));
     //    ogeom->delAll();
     geom_id_ = ogeom_->addObj(slice_ren_, "Volume Slicer");
     cyl_active_.reset();
@@ -296,6 +325,8 @@ void VolumeSlicer::execute()
   slice_ren_->set_y(draw_y_.get());
   slice_ren_->set_z(draw_z_.get());
   slice_ren_->set_view(draw_view_.get());
+  slice_ren_->set_stencil( bool(gui_use_stencil_.get()) );
+  slice_ren_->set_level_outline( bool (gui_outline_levels_.get()));
   cyl_active_.reset();
   draw_phi0_.reset();
   phi0_.reset();
@@ -303,6 +334,21 @@ void VolumeSlicer::execute()
   phi1_.reset();
   slice_ren_->set_cylindrical(cyl_active_.get(), draw_phi0_.get(), phi0_.get(), 
                               draw_phi1_.get(), phi1_.get());
+
+  if( tex_->nlevels() > 1 ){
+    for(int i = 0; i < tex_->nlevels(); i++){
+      string result;
+//        cerr<<"Calling isOn from module execute ... ";
+      gui->eval(id + " isOn l" + to_string(i), result);
+      if ( result == "0"){
+//  	cerr<<"result = 0\n";
+  	slice_ren_->set_draw_level(tex_->nlevels()-1 -i, false);
+      } else {
+//  	cerr<<"result = 1\n";
+  	slice_ren_->set_draw_level(tex_->nlevels()-1 -i, true);
+      }
+    }
+  }
   
   ogeom_->flushViews();		  
   //AuditAllocator(default_allocator);
