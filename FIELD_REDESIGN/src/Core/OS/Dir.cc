@@ -59,8 +59,8 @@ Dir Dir::getSubdir(const string& sub)
 
 //
 // $Log$
-// Revision 1.2.2.1  2000/09/28 03:11:41  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.2.2.2  2000/10/26 17:06:35  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.3  2000/06/15 19:52:38  sparker
 // Removed chatter
