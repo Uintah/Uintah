@@ -178,8 +178,12 @@ c                    TSO2 = TG(I,J,K)
 c                    CALL EICO2( TSO2,PSO2F,ESO2 )
 c                    EMG = EMG + ESO2
 c                  END IF
-c	          EMG = MAX (EMG, 0.0d0)
-c	          EMG = MIN (EMG, 0.9d0)
+
+c WARNING! The second of the following limits is needed to make sure
+c negative argument will not go in log function. Gautham needs to investigate
+c why emg becomes greater then one.
+                   EMG = MAX (EMG, 0.0d0)
+                   EMG = MIN (EMG, 0.9d0)
 C
 C	Calculate absorption coefficient from Bouguer's Law
 C
