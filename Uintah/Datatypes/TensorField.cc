@@ -17,8 +17,15 @@ void TensorField::io(Piostream& stream)
     stream.end_class();
 }
 
-void TensorField::get_bounds(Point&, Point&){
-  cerr<<"Get_bounds\n";
+void TensorField::get_bounds(Point& min, Point& max){
+    if(!have_bounds){
+	compute_bounds();
+	have_bounds=1;
+	diagonal=bmax-bmin;
+    }
+    max=bmax;
+    min=bmin;
 }
 } // End namespace Datatypes
 } // End namespace SCICore
+

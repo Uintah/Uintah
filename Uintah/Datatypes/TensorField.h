@@ -19,7 +19,8 @@ typedef LockingHandle<TensorField> TensorFieldHandle;
 
 class SCICORESHARE TensorField : public Datatype {
 public:
-
+  TensorField()
+    : have_bounds(0) {}
   virtual ~TensorField() {}
   virtual TensorField* clone()=0;
 
