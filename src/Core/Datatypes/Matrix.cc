@@ -138,7 +138,7 @@ int
 Matrix::cg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
 		 double &err, int &niter,
 		 int &flops, int &memrefs,
-		 double max_error, int toomany) const
+		 double max_error, int toomany, int useLhsAsGuess) const
 {
   if (rhs.ncols() != lhs.ncols()) return 0;
   for (int i=0; i<rhs.ncols(); i++) {
@@ -146,7 +146,8 @@ Matrix::cg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
     int j;
     for (j=0; j<rh.nrows(); j++)
       rh[j]=rhs[i][j];
-    if (!cg_solve(rh, lh, err, niter, flops, memrefs)) return 0;
+    if (!cg_solve(rh, lh, err, niter, flops, memrefs, max_error, 
+		  toomany, useLhsAsGuess)) return 0;
     for (j=0; j<rh.nrows(); j++)
       lhs[i][j]=lh[j];
   }
@@ -157,12 +158,13 @@ int
 Matrix::cg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
 		 double &err, int &niter, 
 		 int& flops, int& memrefs,
-		 double max_error, int toomany) const
+		 double max_error, int toomany, int useLhsAsGuess) const
 {
   int size=nrows();  
   niter=0;
   flops=0;
   memrefs=0;
+  if (!useLhsAsGuess) lhs.zero();
 
   if(toomany == 0) toomany=100*size;
 
@@ -250,7 +252,7 @@ int
 Matrix::bicg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
 		   double &err, int &niter,
 		   int &flops, int &memrefs,
-		   double max_error, int toomany) const
+		   double max_error, int toomany, int useLhsAsGuess) const
 {
   if (rhs.ncols() != lhs.ncols()) return 0;
   for (int i=0; i<rhs.ncols(); i++) {
@@ -258,7 +260,8 @@ Matrix::bicg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
     int j;
     for (j=0; j<rh.nrows(); j++)
       rh[j]=rhs[i][j];
-    if (!bicg_solve(rh, lh, err, niter, flops, memrefs)) return 0;
+    if (!bicg_solve(rh, lh, err, niter, flops, memrefs, 
+		    max_error, useLhsAsGuess)) return 0;
     for (j=0; j<rh.nrows(); j++)
       lhs[i][j]=lh[j];
   }
@@ -269,13 +272,14 @@ int
 Matrix::bicg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
 		   double &err, int &niter, 
 		   int& flops, int& memrefs,
-		   double max_error, int toomany) const
+		   double max_error, int toomany, int useLhsAsGuess) const
 {
   int size=nrows();  
   niter=0;
   flops=0;
   memrefs=0;
-
+  if (!useLhsAsGuess) lhs.zero();
+  
   if(toomany == 0) toomany=100*size;
 
   if (rhs.vector_norm(flops, memrefs) < 0.0000001) {
