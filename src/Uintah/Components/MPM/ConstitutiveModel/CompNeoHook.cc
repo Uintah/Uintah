@@ -1,59 +1,39 @@
-//  CompNeoHook.cc 
-//  
-//  class ConstitutiveModel ConstitutiveModel data type -- 3D - 
-//  holds ConstitutiveModel
-//  information for the FLIP technique:
-//    This is for Compressible Neo-Hookean materials
-//     
-//
-//    Features:
-//     
-//      
-//      Usage:
-
 
 #include "ConstitutiveModelFactory.h"
 #include "CompNeoHook.h"
+#include <Uintah/Grid/Region.h>
+#include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Grid/NCVariable.h>
+#include <Uintah/Grid/ParticleSet.h>
+#include <Uintah/Grid/ParticleVariable.h>
+#include <Uintah/Grid/ReductionVariable.h>
+#include <Uintah/Grid/Task.h>
+#include <Uintah/Grid/VarLabel.h>
+#include <SCICore/Math/MinMax.h>
+#include <Uintah/Components/MPM/Util/Matrix3.h>
+#include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Uintah/Grid/VarTypes.h>
 #include <fstream>
 #include <iostream>
+
+using std::cerr;
 using namespace Uintah::MPM;
-using namespace std;
+using SCICore::Math::Min;
+using SCICore::Math::Max;
+using SCICore::Geometry::Vector;
 
 CompNeoHook::CompNeoHook(ProblemSpecP& ps)
 {
-  // Constructor
-  // Initialize deformationGradient and bElBar
+  ps->require("bulk_modulus",d_initialData.Bulk);
+  ps->require("shear_modulus",d_initialData.Shear);
 
+  p_cmdata_label = new VarLabel("p.cmdata",
+                                ParticleVariable<CMData>::getTypeDescription());
 
-  ps->require("bulk_modulus",d_Bulk);
-  ps->require("shear_modulus",d_Shear);
+  bElBarLabel = new VarLabel("p.bElBar",
+                ParticleVariable<Point>::getTypeDescription(),
+                                VarLabel::PositionVariable);
 
-
-  deformationGradient.Identity();
-  bElBar.Identity();
- 
-}
-
-CompNeoHook::CompNeoHook(double bulk, double shear): 
-  d_Bulk(bulk),d_Shear(shear)
-{
-  // Main constructor
-  // Initialize deformationGradient and bElBar
-
-  deformationGradient.Identity();
-  bElBar.Identity();
-
- }
-
-CompNeoHook::CompNeoHook(const CompNeoHook &cm):
-  deformationGradient(cm.deformationGradient),
-  bElBar(cm.bElBar),
-  stressTensor(cm.stressTensor),
-  d_Bulk(cm.d_Bulk),
-  d_Shear(cm.d_Shear)
- 
-{
-  // Copy constructor
  
 }
 
@@ -63,138 +43,251 @@ CompNeoHook::~CompNeoHook()
  
 }
 
-void CompNeoHook::setBulk(double bulk)
+void CompNeoHook::initializeCMData(const Region* region,
+                                        const MPMMaterial* matl,
+                                        DataWarehouseP& new_dw)
 {
-  // Assign CompNeoHook Bulk Modulus
+   // Put stuff in here to initialize each particle's
+   // constitutive model parameters and deformationMeasure
+   Matrix3 Identity, zero(0.);
+   Identity.Identity();
 
-  d_Bulk = bulk;
-}
+   ParticleVariable<CMData> cmdata;
+   new_dw->allocate(cmdata, p_cmdata_label, matl->getDWIndex(), region);
+   ParticleVariable<Matrix3> deformationGradient;
+   new_dw->allocate(deformationGradient,
+                pDeformationMeasureLabel, matl->getDWIndex(), region);
+   ParticleVariable<Matrix3> pstress;
+   new_dw->allocate(pstress, pStressLabel, matl->getDWIndex(), region);
+   ParticleVariable<Matrix3> bElBar;
+   new_dw->allocate(bElBar,  bElBarLabel, matl->getDWIndex(), region);
 
-void CompNeoHook::setShear(double shear)
-{
-  // Assign CompNeoHook Shear Modulus
+   ParticleSubset* pset = cmdata.getParticleSubset();
+   for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++) {
+            cmdata[*iter] = d_initialData;
+          deformationGradient[*iter] = Identity;
+          bElBar[*iter] = Identity;
+          pstress[*iter] = zero;
+   }
+   new_dw->put(cmdata, p_cmdata_label, matl->getDWIndex(), region);
+   new_dw->put(deformationGradient, pDeformationMeasureLabel,
+                                 matl->getDWIndex(), region);
+   new_dw->put(pstress, pStressLabel, matl->getDWIndex(), region);
+   new_dw->put(bElBar, bElBarLabel, matl->getDWIndex(), region);
 
-  d_Shear = shear;
-}
-
-void CompNeoHook::setStressTensor(Matrix3 st)
-{
-  // Assign the stress tensor (3 x 3 Matrix)
-
-  stressTensor = st;
-
-}
-
-void CompNeoHook::setDeformationMeasure(Matrix3 dg) 
-{
-  // Assign the deformation gradient tensor (3 x 3 Matrix)
-
-  deformationGradient = dg;
-
-}
-
-Matrix3 CompNeoHook::getStressTensor() const
-{
-  // Return the stress tensor (3 x 3 Matrix)
-
-  return stressTensor;
-
-}
-
-Matrix3 CompNeoHook::getDeformationMeasure() const
-{
-  // Return the strain tensor (3 x 3 Matrix)
-
-  return deformationGradient;
+   computeStableTimestep(region, matl, new_dw);
 
 }
 
-std::vector<double> CompNeoHook::getMechProps() const
+void CompNeoHook::computeStableTimestep(const Region* region,
+                                             const MPMMaterial* matl,
+                                             DataWarehouseP& new_dw)
 {
-  // Return bulk and shear modulus
+   // This is only called for the initial timestep - all other timesteps
+   // are computed as a side-effect of computeStressTensor
+  Vector dx = region->dCell();
+  int matlindex = matl->getDWIndex();
 
-  std::vector<double> props(2,0.0);
+  // Retrieve the array of constitutive parameters
+  ParticleVariable<CMData> cmdata;
+  new_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None, 0);
+  ParticleVariable<double> pmass;
+  new_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None, 0);
+  ParticleVariable<double> pvolume;
+  new_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None, 0);
 
-  props[0] = d_Bulk;
-  props[1] = d_Shear;
+  ParticleSubset* pset = pmass.getParticleSubset();
+  ASSERT(pset == pvolume.getParticleSubset());
 
-  return props;
+  double c_dil = 0.0,c_rot = 0.0;
+  for(ParticleSubset::iterator iter = pset->begin();
+      iter != pset->end(); iter++){
+     particleIndex idx = *iter;
+
+     // Compute wave speed at each particle, store the maximum
+     double mu = cmdata[idx].Shear;
+     double lambda = cmdata[idx].Bulk -.6666666667*cmdata[idx].Shear;
+     c_dil = Max(c_dil,(lambda + 2.*mu)*pvolume[idx]/pmass[idx]);
+     c_rot = Max(c_rot, mu*pvolume[idx]/pmass[idx]);
+    }
+    double WaveSpeed = sqrt(Max(c_rot,c_dil));
+    // Fudge factor of .8 added, just in case
+    double delt_new = .8*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
+    new_dw->put(delt_vartype(delt_new), deltLabel);
 
 }
 
-void CompNeoHook::computeStressTensor(const Region* /*region*/,
-				      const MPMMaterial* /*matl*/,
-				      DataWarehouseP& /*old_dw*/,
-				      DataWarehouseP& /*new_dw*/)
+void CompNeoHook::computeStressTensor(const Region* region,
+                                          const MPMMaterial* matl,
+                                          DataWarehouseP& old_dw,
+                                          DataWarehouseP& new_dw)
 {
-#ifdef WONT_COMPILE_YET
-  Matrix3 bElBarTrial,shearTrial,fbar,deformationGradientInc;
+  Matrix3 velGrad,Shear,fbar,deformationGradientInc;
   double J,p;
+  double c_dil, c_rot,WaveSpeed;
   double onethird = (1.0/3.0);
   Matrix3 Identity;
 
   Identity.Identity();
 
-  // Calculate the stress Tensor (symmetric 3 x 3 Matrix) given the
-  // time step and the velocity gradient and the material constants
-  
-  // Compute the deformation gradient increment using the time_step
-  // velocity gradient
-  // F_n^np1 = dudx * dt + Identity
-  deformationGradientInc = velocityGradient * time_step + Identity;
+  Vector dx = region->dCell();
+  double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
-  // Update the deformation gradient tensor to its time n+1 value.
-  deformationGradient = deformationGradientInc * deformationGradient;
+  int matlindex = matl->getDWIndex();
 
-  // Calculate the stress tensor
+  // Create array for the particle position
+  ParticleVariable<Point> px;
+  old_dw->get(px, pXLabel, matlindex, region, Ghost::None, 0);
+  // Create array for the particle deformation
+  ParticleVariable<Matrix3> deformationGradient;
+  old_dw->get(deformationGradient, pDeformationMeasureLabel,
+              matlindex, region, Ghost::None, 0);
+  ParticleVariable<Matrix3> bElBar;
+  old_dw->get(bElBar, bElBarLabel, matlindex, region, Ghost::None, 0);
 
-  fbar = deformationGradientInc *
-		pow(deformationGradientInc.Determinant(),-onethird);
+  // Create array for the particle stress
+  ParticleVariable<Matrix3> pstress;
+  new_dw->allocate(pstress, pStressLabel, matlindex, region);
 
-  bElBarTrial = fbar*bElBar*fbar.Transpose();
+  // Retrieve the array of constitutive parameters
+  ParticleVariable<CMData> cmdata;
+  old_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None, 0);
+  ParticleVariable<double> pmass;
+  old_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None, 0);
+  ParticleVariable<double> pvolume;
+  old_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None, 0);
 
-  // Get the shear part of the stress.  shearTrial is equal to the
-  // shear modulus times the deviatoric part of bElBar
-  shearTrial = (bElBarTrial - Identity*onethird*bElBarTrial.Trace())*d_Shear;
+  NCVariable<Vector> gvelocity;
 
-  // get the volumetric part of the deformation
-  J = deformationGradient.Determinant();
+  new_dw->get(gvelocity, gMomExedVelocityLabel, matlindex,region,
+              Ghost::None, 0);
+  delt_vartype delt;
+  old_dw->get(delt, deltLabel);
 
-  // get the hydrostatic part of the stress
-  p = 0.5*d_Bulk*(J - 1.0/J);
+  ParticleSubset* pset = px.getParticleSubset();
+  ASSERT(pset == pstress.getParticleSubset());
+  ASSERT(pset == deformationGradient.getParticleSubset());
+  ASSERT(pset == pmass.getParticleSubset());
+  ASSERT(pset == pvolume.getParticleSubset());
 
-  // compute the total stress (volumetric + deviatoric)
+  for(ParticleSubset::iterator iter = pset->begin();
+     iter != pset->end(); iter++){
+     particleIndex idx = *iter;
 
-  stressTensor = Identity*J*p + shearTrial;
+     velGrad.set(0.0);
+     // Get the node indices that surround the cell
+     IntVector ni[8];
+     Vector d_S[8];
+     if(!region->findCellAndShapeDerivatives(px[idx], ni, d_S))
+         continue;
 
-  bElBar = bElBarTrial;
-#endif
+      for(int k = 0; k < 8; k++) {
+          Vector& gvel = gvelocity[ni[k]];
+          for (int j = 0; j<3; j++){
+            for (int i = 0; i<3; i++) {
+                velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
+            }
+          }
+      }
+
+    // Calculate the stress Tensor (symmetric 3 x 3 Matrix) given the
+    // time step and the velocity gradient and the material constants
+    double shear = cmdata[idx].Shear;
+    double bulk  = cmdata[idx].Bulk;
+
+    // Compute the deformation gradient increment using the time_step
+    // velocity gradient
+    // F_n^np1 = dudx * dt + Identity
+    deformationGradientInc = velGrad * delt + Identity;
+
+    // Update the deformation gradient tensor to its time n+1 value.
+    deformationGradient[idx] = deformationGradientInc *
+                             deformationGradient[idx];
+
+    // get the volume preserving part of the deformation gradient increment
+    fbar = deformationGradientInc *
+                        pow(deformationGradientInc.Determinant(),-onethird);
+
+    bElBar[idx] = fbar*bElBar[idx]*fbar.Transpose();
+
+    // Shear is equal to the shear modulus times dev(bElBar)
+    Shear = (bElBar[idx] - Identity*onethird*bElBar[idx].Trace())*shear;
+
+    // get the volumetric part of the deformation
+    J = deformationGradient[idx].Determinant();
+
+    // get the hydrostatic part of the stress
+    p = 0.5*bulk*(J - 1.0/J);
+
+    // compute the total stress (volumetric + deviatoric)
+    pstress[idx] = Identity*J*p + Shear;
+
+    // Compute wave speed at each particle, store the maximum
+    double mu = cmdata[idx].Shear;
+    double lambda = cmdata[idx].Bulk -.6666666667*cmdata[idx].Shear;
+
+    c_dil = Max(c_dil,(lambda + 2.*mu)*pvolume[idx]/pmass[idx]);
+    c_rot = Max(c_rot, mu*pvolume[idx]/pmass[idx]);
+  }
+
+  WaveSpeed = sqrt(Max(c_rot,c_dil));
+  // Fudge factor of .8 added, just in case
+  double delt_new = .8*Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
+  new_dw->put(delt_vartype(delt_new), deltLabel);
+  new_dw->put(pstress, pStressLabel, matlindex, region);
+  new_dw->put(deformationGradient, pDeformationMeasureLabel,
+                matlindex, region);
+  new_dw->put(bElBar, bElBarLabel, matlindex, region);
+
+  // This is just carried forward with the updated alpha
+  new_dw->put(cmdata, p_cmdata_label, matlindex, region);
+  // Volume is currently being carried forward, will be updated
+  new_dw->put(pvolume,pVolumeLabel, matlindex,region);
 
 }
 
-double CompNeoHook::computeStrainEnergy(const Region* /*region*/,
-					const MPMMaterial* /*matl*/,
-					DataWarehouseP& /*new_dw*/)
+double CompNeoHook::computeStrainEnergy(const Region* region,
+                                        const MPMMaterial* matl,
+                                        DataWarehouseP& new_dw)
 {
-#ifdef WONT_COMPILE_YET
-  double se,J,U,W;
+  double U,W,J,se=0;
+  int matlindex = matl->getDWIndex();
 
-  J = deformationGradient.Determinant();
-  U = .5*d_Bulk*(.5*(pow(J,2.0) - 1.0) - log(J));
-  W = .5*d_Shear*(bElBar.Trace() - 3.0);
+  // Create array for the particle deformation
+  ParticleVariable<Matrix3> deformationGradient;
+  new_dw->get(deformationGradient, pDeformationMeasureLabel,
+              matlindex, region, Ghost::None, 0);
 
-  se = U + W;
+  // Get the elastic part of the shear strain
+  ParticleVariable<Matrix3> bElBar;
+  new_dw->get(bElBar, bElBarLabel, matlindex, region, Ghost::None, 0);
+  // Retrieve the array of constitutive parameters
+  ParticleVariable<CMData> cmdata;
+  new_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None, 0);
+  ParticleVariable<double> pvolume;
+  new_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None, 0);
+
+  ParticleSubset* pset = deformationGradient.getParticleSubset();
+  ASSERT(pset == pvolume.getParticleSubset());
+
+  for(ParticleSubset::iterator iter = pset->begin();
+     iter != pset->end(); iter++){
+     particleIndex idx = *iter;
+
+     double shear = cmdata[idx].Shear;
+     double bulk  = cmdata[idx].Bulk;
+
+     J = deformationGradient[idx].Determinant();
+
+     U = .5*bulk*(.5*(pow(J,2.0) - 1.0) - log(J));
+     W = .5*shear*(bElBar[idx].Trace() - 3.0);
+
+     se += (U + W)*pvolume[idx];
+  }
 
   return se;
-#endif
 }
-
-void CompNeoHook::initializeCMData(const Region* /*region*/,
-                            const MPMMaterial* /*matl*/,
-                            DataWarehouseP& /*new_dw*/)
-{
-}
-
 
 void CompNeoHook::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
@@ -202,123 +295,55 @@ void CompNeoHook::addComputesAndRequires(Task* task,
 					 DataWarehouseP& old_dw,
 					 DataWarehouseP& new_dw) const
 {
-   cerr << "CompNeoHook::addComputesAndRequires needs to be filled in\n";
+   task->requires(old_dw, pXLabel, matl->getDWIndex(), region,
+                  Ghost::None);
+   task->requires(old_dw, pDeformationMeasureLabel, matl->getDWIndex(), region,
+                  Ghost::None);
+   task->requires(old_dw, p_cmdata_label, matl->getDWIndex(),  region,
+                  Ghost::None);
+   task->requires(old_dw, pMassLabel, matl->getDWIndex(),  region,
+                  Ghost::None);
+   task->requires(old_dw, pVolumeLabel, matl->getDWIndex(),  region,
+                  Ghost::None);
+   task->requires(new_dw, gMomExedVelocityLabel, matl->getDWIndex(), region,
+                  Ghost::AroundCells, 1);
+   task->requires(old_dw, bElBarLabel, matl->getDWIndex(), region,
+                  Ghost::None);
+   task->requires(old_dw, deltLabel);
+
+   task->computes(new_dw, deltLabel);
+   task->computes(new_dw, pStressLabel, matl->getDWIndex(),  region);
+   task->computes(new_dw, pDeformationMeasureLabel, matl->getDWIndex(), region);
+   task->computes(new_dw, bElBarLabel, matl->getDWIndex(),  region);
+   task->computes(new_dw, p_cmdata_label, matl->getDWIndex(),  region);
+   task->computes(new_dw, pVolumeLabel, matl->getDWIndex(), region);
+
 }
-
-double CompNeoHook::getLambda() const
-{
-  // Return the Lame constant lambda
-
-  double lambda;
-
-  lambda = d_Bulk - .6666666667*d_Shear;
-
-  return lambda;
-
-}
-
-double CompNeoHook::getMu() const
-{
-  // Return the Lame constant mu
-
-  return d_Shear;
-
-}
-
-void CompNeoHook::readParameters(ProblemSpecP ps, double *p_array)
-{
-  ps->require("bulk_modulus",p_array[0]);
-  ps->require("shear_modulus",p_array[1]);
-}
-
-void CompNeoHook::writeParameters(ofstream& out, double *p_array)
-{
-  out << p_array[0] << " " << p_array[1] << " ";
-}
-
-ConstitutiveModel* CompNeoHook::readParametersAndCreate(ProblemSpecP ps)
-{
-  double p_array[2];
-  readParameters(ps, p_array);
-  return(create(p_array));
-}
-
-void CompNeoHook::writeRestartParameters(ofstream& out) const
-{
-  out << getType() << " ";
-  out << d_Bulk << " " << d_Shear << " ";
-  out << (getDeformationMeasure())(1,1) << " "
-      << (getDeformationMeasure())(1,2) << " "
-      << (getDeformationMeasure())(1,3) << " "
-      << (getDeformationMeasure())(2,1) << " "
-      << (getDeformationMeasure())(2,2) << " "
-      << (getDeformationMeasure())(2,3) << " "
-      << (getDeformationMeasure())(3,1) << " "
-      << (getDeformationMeasure())(3,2) << " "
-      << (getDeformationMeasure())(3,3) << endl;
-}
-
-ConstitutiveModel* CompNeoHook::readRestartParametersAndCreate(ProblemSpecP ps)
-{
-
-#if 0
-  Matrix3 dg(0.0);
-  ConstitutiveModel *cm = readParametersAndCreate(in);
-  
-  in >> dg(1,1) >> dg(1,2) >> dg(1,3)
-     >> dg(2,1) >> dg(2,2) >> dg(2,3)
-     >> dg(3,1) >> dg(3,2) >> dg(3,3);
-  cm->setDeformationMeasure(dg);
-  
-  return(cm);
+#ifdef __sgi
+#define IRIX
+#pragma set woff 1209
 #endif
-}
 
-ConstitutiveModel* CompNeoHook::create(double *p_array)
+namespace Uintah {
+   namespace MPM {
+const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 {
-  return(new CompNeoHook(p_array[0], p_array[1]));
+   static TypeDescription* td = 0;
+   if(!td){
+      ASSERTEQ(sizeof(CompNeoHook::CMData), sizeof(double)*2);
+      td = new TypeDescription(TypeDescription::Other, "CompNeoHook::CMData", true);
+   }
+   return td;
 }
-
-int CompNeoHook::getType() const
-{
-  //  return(ConstitutiveModelFactory::CM_NEO_HOOK);
+   }
 }
-
-string CompNeoHook::getName() const
-{
-  return("Neo-Hk");
-}
-
-int CompNeoHook::getNumParameters() const
-{
-  return(2);
-}
-
-void CompNeoHook::printParameterNames(ofstream& out) const
-{
-  out << "bulk" << endl
-      << "shear" << endl;
-}
-
-ConstitutiveModel* CompNeoHook::copy() const
-{
-  return( new CompNeoHook(*this) );
-}
-
-int CompNeoHook::getSize() const
-{
-  int s = 0;
-  s += sizeof(double) * 9;  // matrix elements
-  s += sizeof(double) * 9;  // bElBar elements
-  s += sizeof(double) * 6;  // stress tensor elements
-  s += sizeof(double) * 2;  // properties
-  s += sizeof(int) * 1;     // type
-  return(s);
-}
-
-
 
 // $Log$
+// Revision 1.9  2000/05/26 18:15:11  guilkey
+// Brought the CompNeoHook constitutive model up to functionality
+// with the UCF.  Also, cleaned up all of the working models to
+// rid them of the SAMRAI crap.
+//
 // Revision 1.8  2000/05/11 20:10:13  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //

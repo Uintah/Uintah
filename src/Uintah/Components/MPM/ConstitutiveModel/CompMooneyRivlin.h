@@ -91,23 +91,6 @@ WARNING
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const;
 
-	 // class function to read correct number of parameters
-	 // from the input file
-	 static void readParameters(ProblemSpecP ps, double *p_array);
-
-	 // class function to read correct number of parameters
-	 // from the input file, and create a new object
-	 static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
- 
-	 // member function to read correct number of parameters
-	 // from the input file, and any other particle information
-	 // need to restart the model for this particle 
-	 // and create a new object
-	 static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps);
-
-	 // class function to create a new object from parameters
-	 static ConstitutiveModel* create(double *p_array);
-	 
 	 const VarLabel* p_cmdata_label;
       };
 
@@ -117,6 +100,11 @@ WARNING
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.21  2000/05/26 18:15:11  guilkey
+// Brought the CompNeoHook constitutive model up to functionality
+// with the UCF.  Also, cleaned up all of the working models to
+// rid them of the SAMRAI crap.
+//
 // Revision 1.20  2000/05/20 08:09:06  sparker
 // Improved TypeDescription
 // Finished I/O

@@ -358,16 +358,6 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
 
 }
 
-void CompNeoHookPlas::readParameters(ProblemSpecP ps, double *p_array)
-{
-  ps->require("bulk_modulus",p_array[0]);
-  ps->require("shear_modulus",p_array[1]);
-  ps->require("yield_stress",p_array[2]);
-  ps->require("hardening_modulus",p_array[3]);
-  ps->require("alpha",p_array[4]);
-
-}
-
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1209
@@ -387,55 +377,12 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
    }
 }
 
-#ifdef WONT_COMPILE_YET
-ConstitutiveModel* CompNeoHookPlas::readParametersAndCreate(ProblemSpecP ps)
-{
-  double p_array[4];
-  readParameters(ps, p_array);
-  return(create(p_array));
-}
-   
-void CompNeoHookPlas::writeRestartParameters(ofstream& out) const
-{
-  out << getType() << " ";
-  out << d_Bulk << " " << d_Shear << " "
-      << d_FlowStress << " " << d_K << " " << d_Alpha << " ";
-  out << (getDeformationMeasure())(1,1) << " "
-      << (getDeformationMeasure())(1,2) << " "
-      << (getDeformationMeasure())(1,3) << " "
-      << (getDeformationMeasure())(2,1) << " "
-      << (getDeformationMeasure())(2,2) << " "
-      << (getDeformationMeasure())(2,3) << " "
-      << (getDeformationMeasure())(3,1) << " "
-      << (getDeformationMeasure())(3,2) << " "
-      << (getDeformationMeasure())(3,3) << endl;
-}
-
-ConstitutiveModel* CompNeoHookPlas::readRestartParametersAndCreate
-							(ProblemSpecP ps)
-{
-#if 0
-  Matrix3 dg(0.0);
-  double p_array[5];
-  
-  readParameters(in, p_array);
-  in >> p_array[4];
-  
-  ConstitutiveModel *cm = new CompNeoHookPlas(p_array[0], p_array[1], 
-p_array[2],
-					      p_array[3], p_array[4]);
-
-  in >> dg(1,1) >> dg(1,2) >> dg(1,3)
-     >> dg(2,1) >> dg(2,2) >> dg(2,3)
-     >> dg(3,1) >> dg(3,2) >> dg(3,3);
-  cm->setDeformationMeasure(dg);
-  
-  return(cm);
-#endif
-}
-#endif
-
 // $Log$
+// Revision 1.15  2000/05/26 18:15:12  guilkey
+// Brought the CompNeoHook constitutive model up to functionality
+// with the UCF.  Also, cleaned up all of the working models to
+// rid them of the SAMRAI crap.
+//
 // Revision 1.14  2000/05/20 08:09:06  sparker
 // Improved TypeDescription
 // Finished I/O

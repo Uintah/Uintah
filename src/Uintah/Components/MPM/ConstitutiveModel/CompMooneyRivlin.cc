@@ -305,15 +305,6 @@ double CompMooneyRivlin::computeStrainEnergy(const Region* region,
 
 }
 
-void CompMooneyRivlin::readParameters(ProblemSpecP ps, double *p_array)
-{
-  ps->require("he_constant_1",p_array[0]);
-  ps->require("he_constant_2",p_array[1]);
-  ps->require("he_constant_3",p_array[2]);
-  ps->require("he_constant_4",p_array[3]);
- 
-}
-
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1209
@@ -333,38 +324,12 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
    }
 }
 
-#ifdef WONT_COMPILE_YET
-ConstitutiveModel* CompMooneyRivlin::readParametersAndCreate(ProblemSpecP ps)
-{
-
-  double p_array[4];
-  readParameters(ps, p_array);
-  return(create(p_array));
-  
-}
-
-ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
-                                             ProblemSpecP ps)
-{
-#if 0
-  Matrix3 st(0.0);
-  ConstitutiveModel *cm = readParametersAndCreate(ps);
-  
-  in >> st(1,1) >> st(1,2) >> st(1,3)
-     >> st(2,2) >> st(2,3) >> st(3,3);
-  st(2,1)=st(1,2);
-  st(3,1)=st(1,3);
-  st(3,2)=st(2,3);
-  cm->setStressTensor(st);
-  
-  return(cm);
-
-
-#endif
-}
-#endif
-
 // $Log$
+// Revision 1.32  2000/05/26 18:15:11  guilkey
+// Brought the CompNeoHook constitutive model up to functionality
+// with the UCF.  Also, cleaned up all of the working models to
+// rid them of the SAMRAI crap.
+//
 // Revision 1.31  2000/05/20 08:09:06  sparker
 // Improved TypeDescription
 // Finished I/O
