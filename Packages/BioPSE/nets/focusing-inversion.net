@@ -40,7 +40,7 @@ if {[llength [array get env SCIRUN_DATASET]] == 0} {
    puts "*** Using DATASET $DATASET"
 }
 
-source $DATADIR/$DATASET/$DATASET-settings.net
+source $DATADIR/$DATASET/$DATASET.settings
 
 ::netedit dontschedule
 

@@ -1,3 +1,4 @@
+# SCI Network 1.0
 #
 # The contents of this file are subject to the University of Utah Public
 # License (the "License"); you may not use this file except in compliance
@@ -13,9 +14,6 @@
 # The Original Source Code was developed by the University of Utah.
 # Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
 # University of Utah. All Rights Reserved.
-#
-
-# SCI Network 1.0
 
 if {[llength [array get env SCIRUN_DATA]] == 0} {
    puts ""
@@ -40,7 +38,7 @@ if {[llength [array get env SCIRUN_DATASET]] == 0} {
    puts "*** Using DATASET $DATASET"
 }
 
-source $DATADIR/$DATASET/$DATASET-settings.net
+source $DATADIR/$DATASET/$DATASET.settings
 
 ::netedit dontschedule
 
@@ -48,138 +46,124 @@ global userName
 set userName "dmw"
 
 global runDate
-set runDate " Tue  Mar 13 2001"
+set runDate " Tue  Jan 1 2002"
 
 global runTime
-set runTime " 0:22:14"
+set runTime " 14:25:13"
 
-set bbox {91.0 3.0 702 823}
+set bbox {4.0 4.0 846 735}
 
-set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 91 8]
-set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 401 3]
-set m2 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 148 168]
-set m3 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 307 168]
-set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 148 281]
-set m5 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 401 69]
-set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 91 360]
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 294 462]
-set m8 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 91 448]
-set m9 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 91 525]
-set m10 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 92 610]
-set m11 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 294 700]
-set m12 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 312 264]
-set m13 [addModuleAtPosition "SCIRun" "Render" "Viewer" 498 779]
-set m14 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 558 70]
-set m15 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 540 169]
-set m16 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 522 253]
-set m17 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 522 365]
-set m18 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 312 363]
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 4 4]
+set m1 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 22 162]
+set m2 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 173 162]
+set m3 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 105 240]
+set m4 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 4 318]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 582 400]
+set m6 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 457 83]
+set m7 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 157 4]
+set m8 [addModuleAtPosition "SCIRun" "Render" "Viewer" 439 691]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 108 438]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 108 517]
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 4 612]
+set m12 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 328 378]
+set m13 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 310 439]
+set m14 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 310 600]
+set m15 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 702 400]
+set m16 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 564 610]
+set m17 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 582 479]
+set m18 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 564 540]
 
-addConnection $m0 0 $m3 0
+addConnection $m0 0 $m1 0
 addConnection $m0 0 $m2 0
-addConnection $m2 0 $m4 0
-addConnection $m5 0 $m3 1
-addConnection $m1 0 $m5 0
+addConnection $m1 0 $m3 0
+addConnection $m2 0 $m3 1
 addConnection $m3 0 $m4 1
-addConnection $m4 0 $m6 1
-addConnection $m0 0 $m6 0
-addConnection $m6 0 $m7 0
-addConnection $m6 0 $m8 0
-addConnection $m8 0 $m9 0
-addConnection $m9 0 $m10 1
-addConnection $m8 0 $m10 0
-addConnection $m10 0 $m11 0
-addConnection $m11 0 $m13 0
-addConnection $m9 1 $m13 1
-addConnection $m7 1 $m13 2
-addConnection $m5 1 $m13 3
-addConnection $m14 0 $m15 1
-addConnection $m6 0 $m15 0
-addConnection $m15 0 $m16 1
-addConnection $m6 0 $m16 0
-addConnection $m18 0 $m7 1
-addConnection $m18 0 $m11 1
-addConnection $m18 0 $m17 1
-addConnection $m12 0 $m18 0
-addConnection $m16 0 $m17 0
-addConnection $m17 0 $m13 4
-addConnection $m16 0 $m18 1
+addConnection $m0 0 $m4 0
+addConnection $m4 0 $m5 0
+addConnection $m6 0 $m2 1
+addConnection $m7 0 $m6 0
+addConnection $m9 0 $m10 0
+addConnection $m10 0 $m11 1
+addConnection $m4 0 $m11 0
+addConnection $m12 0 $m13 1
+addConnection $m4 0 $m13 0
+addConnection $m13 0 $m14 0
+addConnection $m10 0 $m14 1
+addConnection $m5 0 $m17 0
+addConnection $m15 0 $m17 1
+addConnection $m4 0 $m15 0
+addConnection $m17 0 $m18 1
+addConnection $m4 0 $m18 0
+addConnection $m18 0 $m16 0
+addConnection $m10 0 $m16 1
+addConnection $m11 1 $m8 0
+addConnection $m14 0 $m8 1
+addConnection $m6 1 $m8 2
+addConnection $m15 1 $m8 3
+addConnection $m16 0 $m8 4
+addConnection $m13 0 $m10 1
 
 set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
-set $m1-filename $DATADIR/$DATASET/$DATASET-dipole.pcv.fld
-set $m2-UseCondTCL 1
-set $m2-BCFlag {none}
-set $m4-target_error 0.0001
-set $m4-orig_error 1
-set $m4-current_error {9.84662e-05}
-set $m4-method {Conjugate Gradient & Precond. (SCI)}
-set $m4-precond {jacobi}
-set $m4-maxiter 200
-set $m4-use_previous_soln 1
-set $m4-emit_partial 1
-set $m4-np 4
-set $m5-widgetSizeGui_ [expr 0.05 * ${global-scale}]
-set $m5-scaleModeGui_ {scale}
-set $m5-showLastVecGui_ 1
-set $m5-showLinesGui_ 0
-set $m7-isoval 0.1
-set $m7-extract-from-new-field 1
-set $m7-algorithm 0
-set $m7-build_trisurf 0
-set $m7-np 1
-set $m9-maxseeds 15
-set $m9-numseeds 10
-set $m9-rngseed 1234
-set $m9-type {}
-set $m9-dist {impuni}
-set $m9-whichtab {Widget}
-set $m10-stepsize 0.1
-set $m10-tolerance 0.01
-set $m10-maxsteps 200
-set $m11-nodes-on 1
-set $m11-edges-on 1
-set $m11-faces-on 1
-set $m11-node_display_type {Spheres}
-set $m11-edge_display_type {Lines}
-set $m11-node_scale [expr 0.03 * ${global-scale}]
-set $m11-edge_scale [expr 0.03 * ${global-scale}]
-set $m11-resolution 4
-set $m12-tcl_status {Calling GenStandardColorMaps!}
-set $m12-positionList {}
-set $m12-nodeList {}
-set $m12-width 1
-set $m12-height 1
-set $m12-mapType 3
-set $m12-minRes 12
-set $m12-resolution 12
-$m13 initialize_ui
-set $m13-ViewWindow_0-view-eyep-x ${view-eyep-x}
-set $m13-ViewWindow_0-view-eyep-y ${view-eyep-y}
-set $m13-ViewWindow_0-view-eyep-z ${view-eyep-z}
-set $m13-ViewWindow_0-view-lookat-x ${view-lookat-x}
-set $m13-ViewWindow_0-view-lookat-y ${view-lookat-y}
-set $m13-ViewWindow_0-view-lookat-z ${view-lookat-z}
-set $m13-ViewWindow_0-view-up-x ${view-up-x}
-set $m13-ViewWindow_0-view-up-y ${view-up-y}
-set $m13-ViewWindow_0-view-up-z ${view-up-z}
-set $m13-ViewWindow_0-view-fov ${view-fov}
-set $m14-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
-set $m15-interp_op_gui {}
-set $m17-nodes-on 1
-set $m17-edges-on 0
-set $m17-faces-on 0
-set $m17-def-color-r 0.5
-set $m17-def-color-g 0.5
-set $m17-def-color-b 0.5
-set $m17-node_display_type {Spheres}
-set $m17-edge_display_type {Lines}
-set $m17-node_scale [expr 0.03 * ${global-scale}]
-set $m17-resolution 10
-set $m18-isFixed 0
-set $m18-min -0.254406
-set $m18-max 1.22203
-$m4 initialize_ui
-$m7 initialize_ui
 
+set $m3-target_error {0.0001}
+set $m3-orig_error {1}
+set $m3-current_error {9.84662e-05}
+set $m3-iteration {86}
+set $m3-maxiter {200}
+set $m3-use_previous_soln {1}
+set $m3-emit_partial {0}
+
+set $m6-widgetSizeGui_ [expr 0.05 * ${global-scale}]
+set $m6-scaleModeGui_ {normalize}
+set $m6-showLastVecGui_ {1}
+
+set $m7-filename $DATADIR/$DATASET/$DATASET-dipole.pcv.fld
+
+$m8 initialize_ui
+set $m8-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m8-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m8-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m8-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m8-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m8-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m8-ViewWindow_0-view-up-x ${view-up-x}
+set $m8-ViewWindow_0-view-up-y ${view-up-y}
+set $m8-ViewWindow_0-view-up-z ${view-up-z}
+set $m8-ViewWindow_0-view-fov ${view-fov}
+
+set $m9-mapType {3}
+set $m9-minRes {12}
+set $m9-resolution {128}
+set $m9-realres {128}
+
+set $m11-extract-from-new-field {1}
+set $m11-update_type {on release}
+
+set $m12-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
+
+set $m14-nodes-on {1}
+set $m14-edges-on {0}
+set $m14-faces-on {0}
+set $m14-node_display_type {Spheres}
+set $m14-node_scale [expr 0.03 * ${global-scale}]
+set $m14-resolution {7}
+
+set $m15-maxseeds {50}
+set $m15-numseeds {35}
+
+set $m16-nodes-on {1}
+set $m16-edges-on {1}
+set $m16-faces-on {0}
+set $m16-node_display_type {Spheres}
+set $m16-edge_display_type {Cylinders}
+set $m16-node_scale [expr 0.01 * ${global-scale}]
+set $m16-edge_scale [expr 0.01 * ${global-scale}]
+set $m16-resolution {7}
+
+set $m17-stepsize [expr 0.004 * ${global-scale}]
+set $m17-tolerance [expr 0.004 * ${global-scale}]
+set $m17-maxsteps {250}
+
+$m3 initialize_ui
 
 ::netedit scheduleok
