@@ -383,6 +383,9 @@ StructHexVolMesh::pyramid_volume(const Node::array_type &face, const Point &p) c
   int min_index = 3;
   for (int i = 0; i < 2; i++)
     if (face[i] < face[min_index]) min_index = i;
+  Vector v2(get_point(face[(min_index+1)%4])-get_point(face[min_index]));
+  Vector v1(get_point(face[(min_index+1)%4])-get_point(face[(min_index+2)%4]));
+  if (Cross(v2,v1).length2()<=0.0) return 0;
   Plane plane(get_point(face[min_index]), 
 	      get_point(face[(min_index+1)%4]), 
 	      get_point(face[(min_index+2)%4]));
