@@ -1,5 +1,4 @@
 // MPMICE.cc
-
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
@@ -18,6 +17,7 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Util/NotFinished.h>
@@ -146,7 +146,7 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
   cout_doing << "Done with Initialization \t\t\t MPMICE" <<endl;
-  cout_norm << "--------------------------------\n"<<endl; 
+  cout_norm << "--------------------------------\n"<<endl;   
 }
 
 void MPMICE::restartInitialize()
@@ -426,10 +426,9 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
    t->requires(Task::NewDW, MIlb->burnedMassCCLabel,      Ghost::None);
    t->requires(Task::NewDW, Ilb->int_eng_comb_CCLabel,    Ghost::None);
    t->requires(Task::NewDW, Ilb->mom_comb_CCLabel,        Ghost::None);
-/*`==========TESTING==========*/
    t->requires(Task::NewDW, MIlb->temp_CCLabel,           Ghost::None);
    t->requires(Task::NewDW, MIlb->vel_CCLabel,            Ghost::None); 
-/*==========TESTING==========`*/
+
    t->modifies(Ilb -> rho_CCLabel); 
    t->computes(Ilb -> mass_L_CCLabel);
    t->computes(Ilb -> mom_L_CCLabel);
@@ -629,7 +628,6 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     cout_doing << "Doing Initialize on patch " << patch->getID() 
      << "\t\t\t MPMICE" << endl;
 
-    
     NCVariable<double> NC_CCweight;
     new_dw->allocate(NC_CCweight,  MIlb->NC_CCweightLabel,    0, patch);
    //__________________________________
@@ -679,9 +677,28 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
         sp_vol_CC[c] = 1.0/rho_micro[c];
       }
       //__________________________________
+      //    B U L L E T   P R O O F I N G
+      IntVector neg_cell;
+      ostringstream warn;
+      if( !d_ice->areAllValuesPositive(rho_CC, neg_cell) ) {
+        warn<<"ERROR MPMICE::actuallyInitialize, mat "<<indx<< " cell "
+            <<neg_cell << " rho_CC is negative\n";
+        throw ProblemSetupException(warn.str() );
+      }
+      if( !d_ice->areAllValuesPositive(Temp_CC, neg_cell) ) {
+        warn<<"ERROR MPMICE::actuallyInitialize, mat "<<indx<< " cell "
+            <<neg_cell << " Temp_CC is negative\n";
+        throw ProblemSetupException(warn.str() );
+      }
+      if( !d_ice->areAllValuesPositive(sp_vol_CC, neg_cell) ) {
+        warn<<"ERROR MPMICE::actuallyInitialize, mat "<<indx<< " cell "
+            <<neg_cell << " sp_vol_CC is negative\n";
+        throw ProblemSetupException(warn.str() );
+      }
+      
+      //__________________________________
       //You may need to adjust Temp_CC if g!=0
       // for thermo consistency, for now ignore it 2/11/02
-      
       new_dw->put(sp_vol_CC,    Ilb->sp_vol_CCLabel, indx,patch);        
       new_dw->put(rho_CC,       Ilb->rho_CCLabel,    indx,patch);        
       new_dw->put(Temp_CC,     MIlb->temp_CCLabel,   indx,patch);        
@@ -700,12 +717,12 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
         d_ice->printVector(patch, 1, desc.str(), "vvel_CC", 1,  vel_CC);
         d_ice->printVector(patch, 1, desc.str(), "wvel_CC", 2,  vel_CC);
       }          
-    }  // num_MPM_matls loop  
-    
+    }  // num_MPM_matls loop 
+
     double doMech = 999.9;
     new_dw->put(delt_vartype(doMech), Mlb->doMechLabel);
     new_dw->put(NC_CCweight,  MIlb->NC_CCweightLabel,    0, patch);
-  }
+  } // Patch loop
 }
 
 //______________________________________________________________________
