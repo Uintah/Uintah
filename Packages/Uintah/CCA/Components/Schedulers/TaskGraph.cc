@@ -121,13 +121,13 @@ void
 TaskGraph::setupTaskConnections()
 {
   vector<Task*>::iterator iter;
+  // Initialize variables on the tasks
+  for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
+    Task* task = *iter;
+    task->visited=false;
+    task->sorted=false;
+  }    
   if (edges.size() > 0) {
-    // Initialize variables on the tasks
-    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
-      Task* task = *iter;
-      task->visited=false;
-      task->sorted=false;
-    }    
     return; // already been done
   }
 
@@ -226,7 +226,7 @@ TaskGraph::setupTaskConnections()
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
     Task* task = *iter;
     if(dbg.active())
-      dbg << "  Looking at dependencies for task: " << task->getName() << '\n';
+      dbg << "  Looking at dependencies for task: " << *task << '\n';
     addDependencyEdges(task, task->getRequires(), comps, false);
     addDependencyEdges(task, task->getModifies(), comps, true);
     // Used here just to warn if a modifies comes before its computes
@@ -315,7 +315,12 @@ void TaskGraph::addDependencyEdges(Task* task, Task::Dependency* req,
 	    else
 	      cerr << "requires '";
 	    cerr << req->var->getName() << "' was added before computing task";
-	    cerr << ", '" << edge->comp->task->getName() << "'\n\n";
+	    cerr << ", '" << edge->comp->task->getName() << "'\n";
+	    cerr << "  Required/modified by: " << *task << '\n';
+	    cerr << "  req: " << *req << '\n';
+	    cerr << "  Computed by: " << *edge->comp->task << '\n';
+	    cerr << "  comp: " << *comp << '\n';
+	    cerr << "\n";
 	  }
 	  count++;
 	  if(dbg.active()){
@@ -332,6 +337,8 @@ void TaskGraph::addDependencyEdges(Task* task, Task::Dependency* req,
 	  for(int i=0;i<req->patches->size();i++)
 	    cerr << req->patches->get(i)->getID() << " ";
 	  cerr << '\n';
+	} else if(req->reductionLevel) {
+	  cerr << "On level " << req->reductionLevel->getIndex() << '\n';
 	} else if(task->getPatchSet()){
 	  cerr << "Patches from task: ";
 	  const PatchSet* patches = task->getPatchSet();
@@ -342,8 +349,6 @@ void TaskGraph::addDependencyEdges(Task* task, Task::Dependency* req,
 	    cerr << " ";
 	  }
 	  cerr << '\n';
-	} else if(req->reductionLevel) {
-	  cerr << "On level " << req->reductionLevel->getIndex() << '\n';
 	} else {
 	  cerr << "On global level\n";
 	}
@@ -838,6 +843,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	Level::selectType neighbors;
 	IntVector low, high;
 	patch->computeVariableExtents(req->var->typeDescription()->getType(),
+				      req->var->getBoundaryLayer(),
 				      req->gtype, req->numGhostCells,
 				      neighbors, low, high);
 	ASSERT(is_sorted(neighbors.begin(), neighbors.end(),

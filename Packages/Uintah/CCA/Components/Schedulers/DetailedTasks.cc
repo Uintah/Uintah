@@ -264,6 +264,7 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	  Level::selectType neighbors;
 	  IntVector low, high;
 	  patch->computeVariableExtents(req->var->typeDescription()->getType(),
+					req->var->getBoundaryLayer(),
 					req->gtype, req->numGhostCells,
 					neighbors, low, high);
 	  for(int i=0;i<neighbors.size();i++){
@@ -398,6 +399,7 @@ void DetailedTasks::createScrubCounts()
 	  Level::selectType neighbors;
 	  IntVector low, high;
 	  patch->computeVariableExtents(req->var->typeDescription()->getType(),
+					req->var->getBoundaryLayer(),
 					req->gtype, req->numGhostCells,
 					neighbors, low, high);
 	  for(int i=0;i<neighbors.size();i++){

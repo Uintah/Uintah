@@ -20,6 +20,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/VarLabelMatlPatch.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
+#include <map>
 
 namespace Uintah {
 
@@ -71,7 +72,7 @@ private:
     IntVector highOffset_;
   };
 
-  typedef map<VarLabelMatlPatch, Offsets> Map;
+  typedef std::map<VarLabelMatlPatch, Offsets> Map;
   Map map_;
 };
 

@@ -272,7 +272,7 @@ SchedulerCommon::advanceDataWarehouse(const GridP& grid)
   // The last becomes last old, and the rest are new
   dws[numOldDWs-1] = dws[dws.size()-1];
   if (dws.size() == 2 && dws[0] == 0) {
-    // first datawarehouse -- indicate that it is the "initialization"= dw.
+    // first datawarehouse -- indicate that it is the "initialization" dw.
     int generation = d_generation++;
     dws[1] = scinew OnDemandDataWarehouse(d_myworld, this, generation, grid,
 					  true /* initialization dw */);

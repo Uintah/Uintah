@@ -102,7 +102,6 @@ int
 SimpleLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
 						    const ProcessorGroup* group)
 {
-  int maxThreads = Parallel::getMaxThreads();
   int numProcs = group->size();
 
   int proc = (patch->getLevelIndex()*numProcs)/patch->getLevel()->numPatches();
@@ -143,8 +142,9 @@ SimpleLoadBalancer::createNeighborhood(const GridP& grid,
       if(getPatchwiseProcessorAssignment(patch, group) == me){
 	Level::selectType n;
 	IntVector lowIndex, highIndex;
-	patch->computeVariableExtents(Patch::CellBased, Ghost::AroundCells,
-				      maxGhost, n, lowIndex, highIndex);
+	patch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0),
+				      Ghost::AroundCells, maxGhost, n,
+				      lowIndex, highIndex);
 	for(int i=0;i<(int)n.size();i++){
 	  const Patch* neighbor = n[i]->getRealPatch();
 	  if(neighbors.find(neighbor) == neighbors.end())
