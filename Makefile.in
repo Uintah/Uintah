@@ -133,12 +133,6 @@ $(SUBMAKEFILES): scripts/Makefile.tmpl
 	@echo creating $@
 	@sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(strip $(SRCTOP)), -e 's,@HERE_TARGET@,$(strip $(HERE)),' $< > $@
 
-ifeq ($(CC_DEPEND_REGEN),-MD)
-  ALLDEPENDS :=  $(patsubst %,%/*.d, $(ALLOBJSUBDIRS))
-else
-  ALLDEPENDS := $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
-endif
-
 clean::
 	rm -f $(patsubst %,%/*.o, $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
@@ -147,7 +141,11 @@ clean::
 	  do if test -d $$fname; then rm -rf $$fname; fi; done
 	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
 	rm -f $(LIBDIR)so_locations ./so_locations
-	rm -f $(ALLDEPENDS)
+ifeq ($(CC_DEPEND_EXT),depend.mk)
+	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+else
+	rm -f $(patsubst %,%/*.$(CC_DEPEND_EXT), $(ALLOBJSUBDIRS))
+endif
 	rm -f $(CLEANLIBS)
 	rm -f $(CLEANPROGS)
 	rm -f y.output
@@ -204,7 +202,7 @@ ifeq (,$(findstring objs,$(MAKECMDGOALS)))
 # This includes all of the dependencies.  We prepend the absolute path
 # to the obj dir to prevent make from wasting time searching for them
 # in other directories
-  ifeq ($(CC_DEPEND_MODE),perdir)
+  ifeq ($(CC_DEPEND_EXT),depend.mk)
     -include $(patsubst %,$(OBJTOP_ABS)/%/depend.mk, $(patsubst $(SRCTOP)/%,%,$(ALLSUBDIRS)))
   else
     -include $(patsubst %.o,$(OBJTOP_ABS)/%.$(CC_DEPEND_EXT), $(CLEANOBJS))
