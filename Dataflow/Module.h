@@ -81,8 +81,11 @@ public:
 
     // Callbacks
     virtual void connection(Module::ConnectionMode, int, int);
+    virtual void geom_pick(GeomPick*, void*, int);
     virtual void geom_pick(GeomPick*, void*);
+    virtual void geom_release(GeomPick*, void*, int);
     virtual void geom_release(GeomPick*, void*);
+    virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, int);
     virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
     virtual void widget_moved(int);
     virtual void widget_moved2(int last, void *) {

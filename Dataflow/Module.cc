@@ -180,14 +180,30 @@ void Module::want_to_execute()
     netedit->mailbox.send(scinew Module_Scheduler_Message);
 }
 
+void Module::geom_pick(GeomPick* gp, void* userdata, int)
+{
+  geom_pick(gp, userdata);
+}
+
 void Module::geom_pick(GeomPick*, void*)
 {
     cerr << "Caught stray pick event!\n";
 }
 
+void Module::geom_release(GeomPick* gp, void* userdata, int)
+{
+  geom_release(gp, userdata);
+}
+
 void Module::geom_release(GeomPick*, void*)
 {
     cerr << "Caught stray release event!\n";
+}
+
+void Module::geom_moved(GeomPick* gp, int which, double delta,
+			const Vector& dir, void* cbdata, int)
+{
+  geom_moved(gp, which, delta, dir, cbdata);
 }
 
 void Module::geom_moved(GeomPick*, int, double, const Vector&, void*)

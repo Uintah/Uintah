@@ -198,7 +198,13 @@ proc addModule {name} {
 proc addModuleAtPosition {name xpos ypos} {
     set modid [netedit addmodule $name]
     # Create the itcl object
-    if {[catch "$name $modid"]} {
+    if {[catch "$name $modid" problem]} {
+	if {[string first "invalid command" $problem] == -1} {
+	    puts "Error instantiating module: $name"
+	    puts $problem
+	
+	    puts ""
+	}
 	# Use generic module
 	Module $modid -name $name
     }
