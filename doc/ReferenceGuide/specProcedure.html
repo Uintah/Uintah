@@ -6,7 +6,7 @@
 <meta name="Author" content="Martin Cole">
 <link rel=stylesheet type="text/css" href="http://www.sci.utah.edu/scirun_docs/doc/doc_styles.css">
 <title>Specification Procedure</title>
-<!-- Changed by: Mjc, 09-Oct-2000 -->
+<!-- Changed by: Mjc, Mon Nov 13 08:28:40 MST 2000 -->
 </head>
 <body>
 
@@ -42,7 +42,7 @@ width="150"></a>
 <p class="head"><a NAME="spec"></a>Create Specification</p>
 <p class="firstpara">This specification is an xml file whose structure is defined by component.dtd. This file will contain information that the Module Maker will need to automatically generate the files for your module. It will contain all of the specifications and documentation about the module.  The xml structure is decribed in detail in <a href="component.html">XML Component Specification Guide</a></p>
 
-<p class="nextpara">Documentation for all modules will be extracted from the collection of these files. This document will live side by side in our tree with the modules .cc file. It will need to be kept current just as the .cc needs to be current. Familiarize yourself with the more detailed description of the structure of the file and its contents. If your module has a gui, you will need to get a screen capture of the dialog, and place in ./doc/&lt;<i>ModuleName</i>>.gif. Remember that when you add a binary file you need to use the -kb option like this: <b>cvs add -kb &lt;<i>ModuleName</i>>.gif </b></p>
+<p class="nextpara">Documentation for all modules will be extracted from the collection of these files. This document will live in the Package XML directory, much like the .tcl file lives in the GUI directory. It will need to be kept current just as the .cc needs to be current. Familiarize yourself with the more detailed description of the structure of the file and its contents. If your module has a gui, you will need to get a screen capture of the dialog, and place in ./doc/&lt;<i>ModuleName</i>>.gif. Remember that when you add a binary file you need to use the -kb option like this: <b>cvs add -kb &lt;<i>ModuleName</i>>.gif </b></p>
 
 <p class="nextpara"><a href="psgmlInEmacs.html">There is an xml-mode for emacs that is
 useful.</a> It makes editing the xml file easier to read and help you choose the right tag to add at the right spot.</p>
@@ -65,14 +65,14 @@ useful.</a> It makes editing the xml file easier to read and help you choose the
 <p class="firstpara">Update the repository. Commit the changes you made to the .h, .cc, .mk, tcl, and .xml files for this module. Add the files you created to the cvs repository. If you had to create the ./doc directory, you will also have to create it in the cvs source tree before checking in the files underneath it. <a href="cvs_info.html">checking things into cvs.</a></p>
 
 <p class="head"><a NAME="example"></a>Example Module</p>
-<p class="firstpara">An example module that has followed this procedure is ShowGeometry. This module lives on the FIELD_REDESIGN branch, but has been merged back into the trunk as a convienience to those using this documentation. The following files make up the module:
+<p class="firstpara">An example module that has followed this procedure is ShowGeometry. This module lives on the FIELD_REDESIGN branch. The following files make up the module:
 <br>
 <br>PSE/src/PSECommon/Modules/Fields/ShowGeometry.cc
-<br>PSE/src/PSECommon/Modules/Fields/ShowGeometry.xml
+<br>PSE/src/PSECommon/XML/ShowGeometry.xml
 <br>PSE/src/PSECommon/Modules/Fields/doc/ShowGeometryGUI.gif
+<br>PSE/src/PSECommon/GUI/ShowGeometry.tcl
 <br>
 <br>Please note that even .tcl files can have comments and descriptive variable names.
-<br>PSE/src/PSECommon/GUI/ShowGeometry.tcl
 </p>
 <p class="nextpara">This example is code in progress and as such <b>all</b> of the above files will change frequently. The main thing to remember is that all files are always <i>live</i> files until they are retired from the tree. Assume that your code will have a long life, with perhaps many authors.</p>
 
