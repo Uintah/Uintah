@@ -4,7 +4,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/NG_NozzleBCs.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
-
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
 
 #include <string.h>
@@ -205,7 +205,21 @@ Uintah::p2_p1_ratio( double  gamma,
 
   gamma_ratio2    = (gamma - 1.0)/(2.0 * a4);
   exponent        = -2.0*gamma/(gamma - 1.0);
-
+  double p2_p1;
+  p2_p1 =  p4_p1 - p2_p1_guess * pow( (1.0 + gamma_ratio2 * boxed_quantity), exponent);
+  //_________________________
+  // Bulletproofing
+  if (isnan(p2_p1) != 0 || isinf(p2_p1)) {
+    cout << " p4_p1 " << p4_p1 << " p2_p1_guess " << p2_p1_guess
+         << " boxed_quantity "<< boxed_quantity
+         << " exponent " << exponent
+         << " sqrt " << sqroot
+         << " fraction " << fraction << endl;
+    cout << " boxed_quantity: u4 " << u4 << " u1 " << u1 << " a1 " << a1 << " gamma " << gamma
+         << " fraction " << fraction << endl;
+    cout << " (1.0 + gamma_ratio2 * boxed_quantity) " << (1.0 + gamma_ratio2 * boxed_quantity) << endl;
+    throw InternalError( "p2_p1_ratio: I've computed a nan or inf for p2_p1");
+  }
   return p4_p1 - p2_p1_guess * pow( (1.0 + gamma_ratio2 * boxed_quantity), exponent);
 }
 
@@ -279,15 +293,13 @@ Uintah::Solve_Riemann_problem(
 *___________________________________*/
     p4_p1           = p4/p1;
     if (p2_p1_guess > 1){
-      p2_p1_guess0    = 0.999* p2_p1_guess;
-      p2_p1_guess00   = 1.0001* p2_p1_guess;
-    }else
-    {
+      p2_p1_guess0    = 0.9* p2_p1_guess;
+      p2_p1_guess00   = 1.1* p2_p1_guess;
+    }else{
       p2_p1_guess0    = 0.5 * p4_p1;
-      p2_p1_guess00   = 0.05* p4_p1;
+      p2_p1_guess00   = 2.0 * p4_p1;
     }
-    iter            = 0;    
-    //fudge           = 0.99;
+    iter              = 0;
 /*______________________________________________________________________
 *   Use the secant method to solve for pressure ratio across the shock
 *                   p2_p1
@@ -304,15 +316,24 @@ Uintah::Solve_Riemann_problem(
 
     while (fabs(delta) > CONVERGENCE && iter < MAX_ITER){
       p2_p1_guess_new = p2_p1_ratio( gamma,  p4_p1, p2_p1_guess, a4, a1, u4, u1  );
-      delta           = -p2_p1_guess_new/( (p2_p1_guess_new - p2_p1_guess_old)/(delta + 1e-100) );
+      delta           = -(p2_p1_guess_new * delta )/(p2_p1_guess_new - p2_p1_guess_old + 1e-100);
       p2_p1_guess     = p2_p1_guess + delta;
 
       p2_p1_guess_old = p2_p1_guess_new;
-     // cout << " p2_p1_guess " << p2_p1_guess << " delta " << delta << endl;
+
       iter ++;
     }
     p2_p1               = p2_p1_guess;
- 
+    
+    //____________________
+    // bullet proofing
+    if(isnan(p2_p1) != 0|| isinf(p2_p1) != 0){
+      cout << " ---------------------------ERROR" << endl;
+      cout << " p4/p1 " << p4_p1 << " p4 " << p4 << " p1 " << p1 << endl;
+      cout << " p2_p1_guess0 " << p2_p1_guess0 << " p2_p1_guess00 " << p2_p1_guess00 << endl;
+      cout << " p2_p1 " << p2_p1 << endl;
+      throw InternalError("Solve_Riemann_problem: p2_p1 is either inf or nan");
+    }
 /*______________________________________________________________________
 *   Now compute the properties
 *   that are constant in each section
@@ -480,11 +501,11 @@ Uintah::solveRiemannProblemInterface( const double t_final,
   // NOTE: this analysis assumes that an ideal gas with identical properties
   //         is used in both partitions.
   for ( i = qLoLimit; i <= qHiLimit; i++){
-    u_Rieman[i]     = 0.0;
-    a_Rieman[i]     = 0.0;
-    p_Rieman[i]     = 0.0;
-    rho_Rieman[i]   = 0.0; 
-    T_Rieman[i]     = 0.0;          
+    u_Rieman[i]     = -9.0;
+    a_Rieman[i]     = -9.0;
+    p_Rieman[i]     = -9.0;
+    rho_Rieman[i]   = -9.0; 
+    T_Rieman[i]     = -9.0;          
   }
           
   Solve_Riemann_problem(  qLoLimit,       qHiLimit,       diaphragm_location ,
