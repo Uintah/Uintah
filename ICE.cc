@@ -85,7 +85,6 @@ ICE::ICE(const ProcessorGroup* myworld)
   switchDebugSource_Sink          = false;
   switchDebug_advance_advect      = false;
   switchDebug_advectQFirst        = false;
-  switchTestConservation          = false;
 
   d_massExchange = false;
   
@@ -147,8 +146,6 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
 	switchDebug_advance_advect       = true;
       else if (debug_attr["label"] == "switchDebug_advectQFirst")
 	switchDebug_advectQFirst         = true;
-      else if (debug_attr["label"] == "switchTestConservation")
-	switchTestConservation           = true;
     }
   }
   cerr << "Pulled out the debugging switches from input file" << endl;
@@ -238,8 +235,6 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
     cout << "switchDebug_advance_advect is ON" << endl;
   if (switchDebug_advectQFirst == true) 
     cout << "switchDebug_advectQFirst is ON" << endl;
-  if (switchTestConservation == true) 
-    cout << "switchTestConservation is ON" << endl;
 
 }
 /* ---------------------------------------------------------------------
@@ -298,7 +293,6 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
   cout << "ICE::scheduleTimeAdvance" << endl;
 #endif
   const PatchSet* patches = level->eachPatch();
-  const PatchSet* allPatches = level->allPatches();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();  
@@ -339,9 +333,8 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
 
   scheduleAdvectAndAdvanceInTime(sched, patches, all_matls);
 
-  if (switchTestConservation){ 
-    schedulePrintConservedQuantities(sched, patches, press_matl,all_matls); 
-  }
+  schedulePrintConservedQuantities(sched, patches, press_matl,all_matls); 
+  
 }
 
 /* ---------------------------------------------------------------------
@@ -2711,12 +2704,12 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
   int numICEmatls = d_sharedState->getNumICEMatls();
   int flag = -9;
   double mass;
-  vector<Vector> mat_mom_xyz(numICEmatls);
-  vector<double> mat_mass(numICEmatls);
-  vector<double> mat_total_mom(numICEmatls);
-  vector<double> mat_total_eng(numICEmatls);
-  vector<double> mat_int_eng(numICEmatls);
-  vector<double> mat_KE(numICEmatls);
+  vector<Vector> mat_mom_xyz(numICEmatls,Vector(0.,0.,0.));
+  vector<double> mat_mass(numICEmatls,0.);
+  vector<double> mat_total_mom(numICEmatls,0.);
+  vector<double> mat_total_eng(numICEmatls,0.);
+  vector<double> mat_int_eng(numICEmatls,0.);
+  vector<double> mat_KE(numICEmatls,0.);
   Vector total_mom_xyz(0.0, 0.0, 0.0);
   
   double total_momentum = 0.0;
