@@ -1,23 +1,17 @@
 /*
   TODO:
-Fix ribbondirection on pointsource - pass in field DONE
-Fix normals on ribbons DONE
-1) Line Widget DONE
 2) Square Widget
-3) Ring Widget DONE
-4) Tubes DONE
-5) Ribbon DONE
-6) Surfaces IMPLEMENTED
-7) colormap and sfield DONE
+6) Surfaces IMPLEMENTED, not tested
 8) RK4
 9) PC
 10) Stream function
-11) Time animation DONE
 13) Multiple sources  **
+Keep them registered...
 14) Redo user interface **
-Fix problems with entry widget DONE
 hook up user interface buttons
 15) direction switch - downstream, upstream, both
+16) update_progress
+17) watch abort_flag
 */
 
 
@@ -76,21 +70,21 @@ struct SLTracer {
     SLTracer(const Point&, double s, double t,
 	     const VectorFieldHandle& vfield);
     virtual ~SLTracer();
-    virtual int advance(const VectorFieldHandle&, double stepsize)=0;
+    virtual int advance(const VectorFieldHandle&, double stepsize, int skip)=0;
 };
 
 struct SLEulerTracer : public SLTracer {
     SLEulerTracer(const Point&, double s, double t,
 		  const VectorFieldHandle& vfield);
     virtual ~SLEulerTracer();
-    virtual int advance(const VectorFieldHandle&, double stepsize);
+    virtual int advance(const VectorFieldHandle&, double stepsize, int skip);
 };    
 
 struct SLRK4Tracer : public SLTracer {
     SLRK4Tracer(const Point&, double s, double t,
 		const VectorFieldHandle& vfield);
     virtual ~SLRK4Tracer();
-    virtual int advance(const VectorFieldHandle&, double stepsize);
+    virtual int advance(const VectorFieldHandle&, double stepsize, int skip);
 };    
 
 struct SLSource {
@@ -154,6 +148,7 @@ struct SLSourceInfo {
     Array1<SLSource*> sources;
     SLSource* source;
 
+    int need_find;
     // Manipulate groups for animation
     GeomGroup* get_group(double t);
     double anim_begin;
@@ -163,7 +158,9 @@ struct SLSourceInfo {
     void make_anim_groups(const clString& animation, GeomGroup* group,
 			  double total_time, int timesteps);
 
-    SLSourceInfo(int sid);
+    SLSourceInfo(int sid, Streamline* module, GeometryOPort* ogeom);
+    void pick_source(const clString& source, const VectorFieldHandle& vfield,
+		     Streamline* module);
 };
 
 class Streamline : public Module {
@@ -194,21 +191,21 @@ class Streamline : public Module {
 			  const VectorFieldHandle& vfield,
 			  ALGS alg_enum);
     void do_streamline(SLSourceInfo* si, const VectorFieldHandle&,
-		       double stepsize, int maxsteps,
+		       double stepsize, int maxsteps, int skip,
 		       const ScalarFieldHandle& sfield,
 		       const ColormapHandle& cmap, ALGS alg_enum);
     void do_streamtube(SLSourceInfo* si, const VectorFieldHandle&,
-		       double stepsize, int maxsteps,
+		       double stepsize, int maxsteps, int skip,
 		       const ScalarFieldHandle& sfield,
 		       const ColormapHandle& cmap, ALGS alg_enum,
 		       double tubesize);
     void do_streamribbon(SLSourceInfo* si, const VectorFieldHandle&,
-			 double stepsize, int maxsteps,
+			 double stepsize, int maxsteps, int skip,
 			 const ScalarFieldHandle& sfield,
 			 const ColormapHandle& cmap, ALGS alg_enum,
 			 double ribbonsize);
     void do_streamsurface(SLSourceInfo* si, const VectorFieldHandle&,
-			  double stepsize, int maxsteps,
+			  double stepsize, int maxsteps, int skip,
 			  const ScalarFieldHandle& sfield,
 			  const ColormapHandle& cmap, ALGS alg_enum,
 			  double maxbend);
@@ -299,6 +296,7 @@ void Streamline::execute()
 	// Find the current source...
 	SLSourceInfo* si=iter.get_data();
 	clString sidstr(id+"-"+to_string(si->sid));
+	cerr << "Processing source: " << si->sid << endl;
 
 	si->source=0;
 	clString sname;
@@ -307,61 +305,7 @@ void Streamline::execute()
 	    return;
 	}
 
-	for(int i=0;i<si->sources.size();i++)
-	    if(si->sources[i]->name == sname)
-		si->source=si->sources[i];
-	if(!si->source){
-	    // Make it....
-	    if(sname == "Point"){
-		si->source=new SLPointSource(this);
-	    } else if(sname == "Line"){
-		si->source=new SLLineSource(this);
-	    } else if(sname == "Ring"){
-		si->source=new SLRingSource(this);
-	    } else {
-		error("Illegal name of source: "+sname);
-		return;
-	    }
-	    si->sources.add(si->source);
-	    if(si->widget_group){
-		// Just add it
-		widget_lock.write_lock();
-		si->widget_group->add(si->source->widget->GetWidget());
-		widget_lock.write_unlock();
-	    } else {
-		// Make the group;
-		si->widget_group=new GeomGroup;
-		si->widget_group->add(si->source->widget->GetWidget());
-		si->widget_geomid=ogeom->addObj(si->widget_group,
-						widget_name, &widget_lock);
-	    }
-	}
-	for(i=0;i<si->sources.size();i++)
-	    si->sources[i]->widget->SetState(si->sources[i] == si->source);
-
-	// See if we need to find the field
-	int need_find;
-    
-	if(!get_tcl_boolvar(sidstr, "need_find", need_find)){
-	    error("Error reading need_find variable");
-	    return;
-	}
-	if(need_find){
-	    // Find the field
-	    Point min, max;
-	    vfield->get_bounds(min, max);
-	    Point cen(AffineCombination(min, 0.5, max, 0.5));
-	    Vector axis;
-	    if(!vfield->interpolate(cen, axis)){
-		// No field???
-		error("Can't find center of field");
-		return;
-	    }
-	    axis.normalize();
-	    double scale=vfield->longest_dimension();
-	    set_tclvar(sidstr, "need_find", "false");
-	    si->source->find(cen, axis, scale);
-	}
+	si->pick_source(sname, vfield, this);
 
 	// Calculate Streamlines
 	double stepsize;
@@ -374,6 +318,12 @@ void Streamline::execute()
 	    error("Error reading maxsteps variable");
 	    return;
 	}
+	int skip;
+	if(!get_tcl_intvar(sidstr, "skip", skip)){
+	    error("Error reading skip variable");
+	    return;
+	}
+	maxsteps/=skip;
 
 	// Set up animations
 	clString animation;
@@ -414,7 +364,7 @@ void Streamline::execute()
 
 	// Do it...
 	if(markertype == "Line"){
-	    do_streamline(si, vfield, stepsize, maxsteps,
+	    do_streamline(si, vfield, stepsize, maxsteps, skip,
 			  sfield, cmap, alg_enum);
 	} else if(markertype == "Tube"){
 	    double tubesize;
@@ -422,7 +372,7 @@ void Streamline::execute()
 		error("Error reading tubesize variable");
 		return;
 	    }
-	    do_streamtube(si, vfield, stepsize, maxsteps,
+	    do_streamtube(si, vfield, stepsize, maxsteps, skip,
 			  sfield, cmap, alg_enum, tubesize);
 	} else if(markertype == "Ribbon"){
 	    double ribbonsize;
@@ -430,7 +380,7 @@ void Streamline::execute()
 		error("Error reading ribbonsize variable");
 		return;
 	    }
-	    do_streamribbon(si, vfield, stepsize, maxsteps,
+	    do_streamribbon(si, vfield, stepsize, maxsteps, skip,
 			    sfield, cmap, alg_enum, ribbonsize);
 	} else if(markertype == "Surface"){
 	    double maxbend;
@@ -438,7 +388,7 @@ void Streamline::execute()
 		error("Error reading ribbonsize variable");
 		return;
 	    }
-	    do_streamsurface(si, vfield, stepsize, maxsteps,
+	    do_streamsurface(si, vfield, stepsize, maxsteps, skip,
 			     sfield, cmap, alg_enum, maxbend);
 	} else {
 	    error("Unknown marketype");
@@ -447,7 +397,7 @@ void Streamline::execute()
 	// Remove the old and add the new
 	if(si->geomid)
 	    ogeom->delObj(si->geomid);
-	si->geomid=ogeom->addObj(group, module_name);
+	si->geomid=ogeom->addObj(group, module_name+to_string(si->sid));
 
     }
     // Flush it all out..
@@ -575,7 +525,7 @@ GeomVertex* Streamline::get_vertex(const Point& p,
 
 void Streamline::do_streamline(SLSourceInfo* si,
 			       const VectorFieldHandle& field,
-			       double stepsize, int maxsteps,
+			       double stepsize, int maxsteps, int skip,
 			       const ScalarFieldHandle& sfield,
 			       const ColormapHandle& cmap,
 			       ALGS alg_enum)
@@ -610,7 +560,7 @@ void Streamline::do_streamline(SLSourceInfo* si,
 	// Advance the tracers
 	ninside=0;
 	for(int i=0;i<tracers.size();i++){
-	    int inside=tracers[i]->advance(field, stepsize);
+	    int inside=tracers[i]->advance(field, stepsize, skip);
 	    if(inside){
 		GeomVertex* vtx=get_vertex(tracers[i]->p, sfield, cmap);
 		lines[i]->add(vtx);
@@ -622,7 +572,7 @@ void Streamline::do_streamline(SLSourceInfo* si,
 
 void Streamline::do_streamtube(SLSourceInfo* si,
 			       const VectorFieldHandle& field,
-			       double stepsize, int maxsteps,
+			       double stepsize, int maxsteps, int skip,
 			       const ScalarFieldHandle& sfield,
 			       const ColormapHandle& cmap,
 			       ALGS alg_enum,
@@ -660,7 +610,7 @@ void Streamline::do_streamtube(SLSourceInfo* si,
 	// Advance the tracers
 	ninside=0;
 	for(int i=0;i<tracers.size();i++){
-	    int inside=tracers[i]->advance(field, stepsize);
+	    int inside=tracers[i]->advance(field, stepsize, skip);
 	    if(inside){
 		Vector grad=tracers[i]->grad;
 		field->interpolate(tracers[i]->p, grad);
@@ -674,7 +624,7 @@ void Streamline::do_streamtube(SLSourceInfo* si,
 
 void Streamline::do_streamribbon(SLSourceInfo* si,
 				 const VectorFieldHandle& field,
-				 double stepsize, int maxsteps,
+				 double stepsize, int maxsteps, int skip,
 				 const ScalarFieldHandle& sfield,
 				 const ColormapHandle& cmap,
 				 ALGS alg_enum,
@@ -707,7 +657,7 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 		    // Left tracer
 		    Vector grad=left_tracer(tracers, i)->grad;
 		    field->interpolate(left_tracer(tracers, i)->p, grad);
-		    Vector n1(Cross(grad, vec));
+		    Vector n1(Cross(vec, grad));
 		    GeomVertex* vtx=get_vertex(left_tracer(tracers, i)->p,
 					       sfield, cmap, n1);
 		    ribbons[i]->add(vtx);
@@ -715,7 +665,7 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 		    // Right tracer
 		    grad=right_tracer(tracers, i)->grad;
 		    field->interpolate(right_tracer(tracers, i)->p, grad);
-		    Vector n2(Cross(grad, -vec));
+		    Vector n2(Cross(vec, grad));
 		    vtx=get_vertex(right_tracer(tracers, i)->p,
 				   sfield, cmap, n2);
 		    ribbons[i]->add(vtx);
@@ -729,8 +679,8 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 	// Advance the tracers
 	ninside=0;
 	for(int i=0;i<ribbons.size();i++){
-	    int linside=left_tracer(tracers, i)->advance(field, stepsize);
-	    int rinside=right_tracer(tracers, i)->advance(field, stepsize);
+	    int linside=left_tracer(tracers, i)->advance(field, stepsize, skip);
+	    int rinside=right_tracer(tracers, i)->advance(field, stepsize, skip);
 	    if(linside && rinside){
 		// Normalize the distance between them...
 		Point p1(left_tracer(tracers, i)->p);
@@ -745,14 +695,14 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 		// Get left vertex
 		Vector grad=left_tracer(tracers, i)->grad;
 		field->interpolate(left_tracer(tracers, i)->p, grad);
-		Vector n1(Cross(grad, vec));
+		Vector n1(Cross(vec, grad));
 		GeomVertex* lvtx=get_vertex(left_tracer(tracers, i)->p,
 					   sfield, cmap, n1);
 
 		// Get right vertex
 		grad=right_tracer(tracers, i)->grad;
 		field->interpolate(right_tracer(tracers, i)->p, grad);
-		Vector n2(Cross(grad, -vec));
+		Vector n2(Cross(vec, grad));
 		GeomVertex* rvtx=get_vertex(right_tracer(tracers, i)->p,
 			       sfield, cmap, n2);
 
@@ -770,7 +720,7 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 
 void Streamline::do_streamsurface(SLSourceInfo* si,
 				  const VectorFieldHandle& field,
-				  double stepsize, int maxsteps,
+				  double stepsize, int maxsteps, int skip,
 				  const ScalarFieldHandle& sfield,
 				  const ColormapHandle& cmap,
 				  ALGS alg_enum,
@@ -831,7 +781,7 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
 	// Advance the tracers
 	ninside=0;
 	for(int i=0;i<tracers.size();i++)
-	    ninside+=tracers[i]->advance(field, stepsize);
+	    ninside+=tracers[i]->advance(field, stepsize, skip);
 
 	// Draw new points...
 	for(i=0;i<surfs.size();i++){
@@ -897,7 +847,7 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
 
 		    // Advect it to the current point
 		    for(int i=0;i<=step;i++)
-			tracer->advance(field, stepsize);
+			tracer->advance(field, stepsize, skip);
 		}
 	    }
 
@@ -1047,8 +997,8 @@ void SLLineSource::get_n(int& ns, int& nt)
 }
 
 Vector SLLineSource::ribbon_direction(double, double,
-				       const Point&,
-				       const VectorFieldHandle&)
+				      const Point&,
+				      const VectorFieldHandle&)
 {
     Point p1, p2;
     gw->GetEndpoints(p1, p2);
@@ -1083,8 +1033,8 @@ Point SLRingSource::trace_start(double s, double)
     Vector normal;
     double rad;
     rw->GetPosition(cen, normal, rad);
-    Vector v1(rw->GetAxis1());
-    Vector v2(rw->GetAxis2());
+    Vector v1, v2;
+    rw->GetPlane(v1, v2);
     return cen+v1*(rad*Cos(angle))+v2*(rad*Sin(angle));
 }
 
@@ -1104,8 +1054,8 @@ Vector SLRingSource::ribbon_direction(double s, double,
 {
     double ratio=rw->GetRatio();
     double angle=s*ratio*2*Pi;
-    Vector v1(rw->GetAxis1());
-    Vector v2(rw->GetAxis2());
+    Vector v1, v2;
+    rw->GetPlane(v1, v2);
     return v1*Sin(angle)+v2*Cos(angle);
 }
 
@@ -1132,14 +1082,17 @@ SLEulerTracer::~SLEulerTracer()
 {
 }
 
-int SLEulerTracer::advance(const VectorFieldHandle& vfield, double stepsize)
+int SLEulerTracer::advance(const VectorFieldHandle& vfield, double stepsize, int skip)
 {
-    if(!vfield->interpolate(p, grad)){
-	inside=0;
-    } else {
-	p+=(grad*stepsize);
+    for(int i=0;i<skip;i++){
+	if(!vfield->interpolate(p, grad)){
+	    inside=0;
+	    return 0;
+	} else {
+	    p+=(grad*stepsize);
+	}
     }
-    return inside;
+    return 1;
 }
 
 SLRK4Tracer::SLRK4Tracer(const Point& p, double s, double t,
@@ -1152,7 +1105,7 @@ SLRK4Tracer::~SLRK4Tracer()
 {
 }
 
-int SLRK4Tracer::advance(const VectorFieldHandle&, double)
+int SLRK4Tracer::advance(const VectorFieldHandle&, double, int)
 {
     NOT_FINISHED("SLRK4Tracer::advance");
     return 0;
@@ -1174,13 +1127,85 @@ void Streamline::tcl_command(TCLArgs& args, void* userdata)
 	    args.error("newsource has a bad SID");
 	    return;
 	}
-	source_info.insert(sid, new SLSourceInfo(sid));
+	source_info.insert(sid, new SLSourceInfo(sid, this, ogeom));
+    } else if(args[1] == "need_find"){
+	if(args.count() != 3){
+	    args.error("need_find must have a SID");
+	    return;
+	}
+	int sid;
+	if(!args[2].get_int(sid)){
+	    args.error("need_find has a bad SID");
+	    return;
+	}
+	SLSourceInfo* si;
+	if(!source_info.lookup(sid, si)){
+	    args.error("bad SID for need_find");
+	    return;
+	}
+	si->need_find=1;
     } else {
 	Module::tcl_command(args, userdata);
     }
 }
 
-SLSourceInfo::SLSourceInfo(int)
+SLSourceInfo::SLSourceInfo(int sid, Streamline* module, GeometryOPort* ogeom)
+: sid(sid), widget_group(0), widget_geomid(0), geomid(0),
+  source(0), need_find(1)
 {
-    NOT_FINISHED("SLSourceInfo");
+    sources.add(new SLPointSource(module));
+    sources.add(new SLLineSource(module));
+    sources.add(new SLRingSource(module));
+    // Make the group;
+    widget_group=new GeomGroup;
+    for(int i=0;i<sources.size();i++)
+	widget_group->add(sources[i]->widget->GetWidget());
+    widget_geomid=ogeom->addObj(widget_group,
+				widget_name+to_string(sid),
+				&module->widget_lock);
+}
+
+void SLSourceInfo::pick_source(const clString& sname,
+			       const VectorFieldHandle& vfield,
+			       Streamline* module)
+{
+    SLSource* newsource=0;
+    for(int i=0;i<sources.size();i++)
+	if(sources[i]->name == sname)
+	    newsource=sources[i];
+    if(!newsource){
+	module->error("No such source!");
+	return;
+    }
+    if(newsource != source){
+	for(i=0;i<sources.size();i++)
+	    sources[i]->widget->SetState(sources[i] == newsource);
+	if(source){
+	    Point olds(source->widget->ReferencePoint());
+	    Point news(source->widget->ReferencePoint());
+	    Vector moved(news-olds);
+	    newsource->widget->MoveDelta(moved);
+	}
+	source=newsource;
+    }
+
+    // See if we need to find the field
+    if(need_find){
+	// Find the field
+	Point min, max;
+	vfield->get_bounds(min, max);
+	Point cen(AffineCombination(min, 0.5, max, 0.5));
+	Vector axis;
+	if(!vfield->interpolate(cen, axis)){
+	    // No field???
+	    module->error("Can't find center of field");
+	    return;
+	}
+	axis.normalize();
+	double scale=vfield->longest_dimension();
+	need_find=0;
+	cerr << "scale=" << scale << endl;
+	for(int i=0;i<sources.size();i++)
+	    sources[i]->find(cen, axis, scale);
+    }
 }

@@ -51,6 +51,8 @@ itcl_class Streamline {
 	$ss.list selection clear 0 end
 	$ss.list selection set 0
 	selectsource [$ss.list get 0]
+
+	button $w.execute -text "Execute" -command "$this-c needexecute "
     }
 
     protected ss ""
@@ -103,7 +105,7 @@ itcl_class Streamline {
 	#
 	# Selector for source type - point, line, square, ring
 	#
-	make_labeled_radio $si.widgets "Source:" "$this selectsource" \
+	make_labeled_radio $si.widgets "Source:" "$this sourcetype" \
 		left $this-source \
 		{Point Line Square Ring}
 	pack $si.widgets -side bottom
@@ -146,12 +148,13 @@ itcl_class Streamline {
 	pack $mi.info -side top -fill x
 
 	frame $mi.info.iLine
-	expscale $mi.info.iTube -orient horizontal
-	expscale $mi.info.iRibbon -orient horizontal
+	expscale $mi.info.iTube -orient horizontal -label "Tube scale:"
+	expscale $mi.info.iRibbon -orient horizontal -label "Ribbon scale:"
 	scale $mi.info.iSurface -orient horizontal -from 0 -to 90 \
-		-tickinterval 30
+		-tickinterval 30 -label "Maximum Angle:"
 
-	scale $mi.skip -from 1 -to 10 -orient horizontal
+	scale $mi.skip -from 1 -to 20 -orient horizontal \
+		-label "Skip:"
 	pack $mi.skip -side top -fill x
 
 	make_labeled_radio $mi.colorize "Colorize?" "" \
@@ -178,9 +181,7 @@ itcl_class Streamline {
 
 	#
 	# Parameters
-	scale $ii.stepsize -digits 3 \
-		-from -2.0 -to 2.0 -label "Step size:" \
-		-resolution .01 -showvalue true -tickinterval 2 \
+	expscale $ii.stepsize -label "Step size:" \
 		-orient horizontal
 	pack $ii.stepsize -fill x -pady 2
 	
@@ -277,27 +278,31 @@ itcl_class Streamline {
 	global $s-animation
 	set $s-animation "None"
 
-	global $s-anim_steps
-	set $s-anim_steps 30
+	global $s-anim_timesteps
+	set $s-anim_timesteps 30
 
 	global $s-stepsize
-	set $s-stepsize 0.02
+	set $s-stepsize 0.01
+
+	global $s-skip
+	set $s-skip 5
 
 	global $s-maxsteps
-	set $s-maxsteps 50
+	set $s-maxsteps 200
 
 	global $s-widget_scale
 	set $s-widget_scale 1
-
-	global $s-need_find
-	set $s-need_find 1
-
-	set sname $sid
+	
+	$this-c need_find $sid
+	$this-c needexecute
     }
-
+    method selectmarker {} {
+	setup_markerspec $sourcelist($currentsource)
+	$this-c needexecute
+    }
     method setup_markerspec {sid} {
 	set s $this-$sid
-	$mi.info.iTube config -variable $s-tuberadius
+	$mi.info.iTube config -variable $s-tubesize
 	$mi.info.iRibbon config -variable $s-ribbonsize
 	$mi.info.iSurface config -variable $s-maxbend
 
@@ -324,7 +329,7 @@ itcl_class Streamline {
 	#
 	# Connect all of the UI components to this source...
 	#
-	$si.widgetscale config -variable $s-widgetscale
+	$si.widgetscale config -variable $s-widget_scale
 	change_radio_var $si.widgets $s-source
 	$si.f.name delete 0 end
 	$si.f.name insert 0 $sname
@@ -335,8 +340,10 @@ itcl_class Streamline {
 	change_radio_var $mi.colorize $s-colorize
 
 	change_radio_var $ii.alg $s-algorithm
-	$ii.stepsize config -variable $this-stepsize
-	$ii.maxsteps config -variable $this-maxsteps
+	global $s-stepsize
+	puts "before config: stepsize=[set $s-stepsize]"
+	$ii.stepsize config -variable $s-stepsize
+	$ii.maxsteps config -variable $s-maxsteps
 	change_radio_var $ii.dir $s-direction
 
 	change_radio_var $ai.anim $s-animation
@@ -348,5 +355,10 @@ itcl_class Streamline {
 	set sourcelist($newname) $sid
 	set currentsource $newname
 	rebuild_sourcelist
+    }
+    method sourcetype {} {
+	# Called when changing the type of the source.
+	# Update UI components...
+	$this-c needexecute
     }
 }
