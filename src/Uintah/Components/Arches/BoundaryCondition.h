@@ -15,7 +15,7 @@ GENERAL INFORMATION
    
    C-SAFE 
    
-   Copyright U of U 1998
+   Copyright U of U 2000
 
 KEYWORDS
 

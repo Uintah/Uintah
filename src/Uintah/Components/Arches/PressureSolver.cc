@@ -9,57 +9,28 @@ PressureSolver::~PressureSolver()
 {
 }
 
-void PressureSolver::problemSetup(DatabaseP& db)
+void PressureSolver::problemSetup(const ProblemSpecP& params)
 {
-  if (db->keyExists("ipref")) {
-    d_ipref = db->getInt("ipref");
-  } else {
-    cerr << "ipref not in input database" << endl;
-  }
-  if (db->keyExists("jpref")) {
-    d_jpref = db->getInt("jpref");
-  } else {
-    cerr << "jpref not in input database" << endl;
-  }
-  if (db->keyExists("kpref")) {
-    d_kpref = db->getInt("kpref");
-  } else {
-    cerr << "kpref not in input database" << endl;
-  }
-  if (db->keyExists("underrelax")) {
-    d_underrelax = db->getDouble("underrelax");
-  } else {
-    cerr << "underrelax not in input database" << endl;
-  }
-  int finite_diff;
-  if (db->keyExists("finite_difference")) {
-    finite_diff = db->getInt("finite_difference");
-  } else {
-    cerr << "finite_difference not in input database" << endl;
-  } 
-  if (finite_diff == 1) {
+  ProblemSpecP db = params->findBlock("Pressure Solver");
+  db->require("ipref", d_ipref);
+  db->require("jpref", d_jpref);
+  db->require("kpref", d_kpref);
+  db->require("underrelax", d_underrelax);
+  string finite_diff;
+  db->require("finite_difference", finite_diff);
+  if (finite_diff == "Secondorder") 
     d_discretize = new Discretization();
-  } else {
-    cerr << "invalid option for discretization" << endl;
-  }
-  int linear_sol;
-  if (db->keyExists("linear_solver")) {
-    linear_sol = db->getInt("linear_solver");
-  } else {
-    cerr << "linear_solver not in input database" << endl;
-  } 
-  if (linear_sol == 1) {
+  else 
+    throw InvalidValue("Finite Differencing scheme 
+                        not supported" + finite_diff, db);
+  string linear_sol;
+  db->require("linear_solver", linear_sol);
+  if (linear_sol == "GaussSiedel")
     d_linearSolver = new LineGS();
-  } else {
-    cerr << "invalid option for linear solver" << endl;
-  }
-  
-  if (db->keyExists("Linear Solver")) {
-    DatabaseP& linearSolDB = db->getDatabase("Linear Solver");
-  } else {
-    cerr << "Linear Solver DB not in input database" << endl;
-  }
-  d_linearSolver->problemSetup(linearSolDB);
+  else 
+    throw InvalidValue("linear solver option
+                        not supported" + linear_sol, db);
+  d_linearSolver->problemSetup(db);
 }
 
 void PressureSolver::solve(const LevelP& level,
@@ -106,8 +77,7 @@ void PressureSolver::buildLinearMatrix(const LevelP& level,
 					  old_dw, new_dw);
   d_boundaryCondition->sched_pressureBC(level, sched,
 					old_dw, new_dw);
-  d_discretize->sched_modifyPressureCoeff(level, sched,
-					  old_dw, new_dw);
+  sched_modifyCoeff(level, sched, old_dw, new_dw);
 
 }
 

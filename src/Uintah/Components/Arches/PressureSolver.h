@@ -15,7 +15,7 @@ GENERAL INFORMATION
    
    C-SAFE 
    
-   Copyright U of U 1998
+   Copyright U of U 2000
 
 KEYWORDS
 
@@ -61,9 +61,6 @@ class PressureSolver :
   //
   // Default constructor.
    PressureSolver();
-   PressureSolver(Pointer<PatchHierarchy> patch_hierarchy,
-		     int max_iterations);
-
 
   // GROUP: Destructors:
   ////////////////////////////////////////////////////////////////////////
@@ -75,22 +72,48 @@ class PressureSolver :
    const double getResidual() const;
    const double getOrderMagnitude() const;
    // sets parameters at start time
-   void problemSetup();
+   void problemSetup(const ProblemSpecP& params);
 
    // linearize eqn
-   void buildLinearMatrix();
+   void buildLinearMatrix(const LevelP& level,
+			  SchedulerP& sched,
+			  const DataWarehouseP& old_dw,
+			  DataWarehouseP& new_dw);
  
    ////////////////////////////////////////////////////////////////////////
    // solve linearized pressure equation
-   void solve();
-
+   void solve(const LevelP& level,
+	      SchedulerP& sched,
+	      const DataWarehouseP& old_dw,
+	      DataWarehouseP& new_dw);
    
+    void sched_modifyCoeff(const LevelP& level,
+			   SchedulerP& sched,
+			   const DataWarehouseP& old_dw,
+			   DataWarehouseP& new_dw);
+  
  private:
 
    // functions
-   void calculateResidual();
+   void calculateResidual(const LevelP& level,
+			  SchedulerP& sched,
+			  const DataWarehouseP& old_dw,
+			  DataWarehouseP& new_dw);
 
-   void underrelaxEqn();
+   calculateOrderMagnitude(const LevelP& level,
+			   SchedulerP& sched,
+			   const DataWarehouseP& old_dw,
+			   DataWarehouseP& new_dw);
+      // Modify coefficients
+   void modifyCoeff(const Region* region,
+		    SchedulerP& sched,
+		    const DataWarehouseP& old_dw,
+		    DataWarehouseP& new_dw);
+
+   void underrelaxEqn(const LevelP& level,
+		      SchedulerP& sched,
+		      const DataWarehouseP& old_dw,
+		      DataWarehouseP& new_dw);
 
    ////////////////////////////////////////////////////////////////////////
    // Read input data from specified database and initializes solver.

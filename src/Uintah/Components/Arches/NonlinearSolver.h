@@ -32,7 +32,7 @@ WARNING
 #ifndef Uintah_Component_Arches_NonlinearSolver_h
 #define Uintah_Component_Arches_NonlinearSolver_h
 
-#include "Arches.h"
+#include <Uintah/Components/Arches/Arches.h>
 
 namespace Uintah {
     namespace Components {

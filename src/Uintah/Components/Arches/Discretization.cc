@@ -19,8 +19,6 @@ void Discretization::sched_calculateVelocityCoeff(const int index,
       iter != level->regionsEnd(); iter++){
     const Region* region=*iter;
     {
-      //copies old db to new_db and then uses non-linear
-      //solver to compute new values
       Task* tsk = new Task("Discretization::VelocityCoeff",index,
 			   region, old_dw, new_dw, this,
 			   Discretization::calculateVelocityCoeff);
@@ -32,20 +30,23 @@ void Discretization::sched_calculateVelocityCoeff(const int index,
 		    CCVariable<double>::getTypeDescription());
       /// requires convection coeff because of the nodal
       // differencing
-      tsk->computes(new_dw, "ConvectionCoeff", region, 0,
-		    FCVariable<Vector>::getTypeDescription());
       if (index == 1) 
+	tsk->computes(new_dw, "uVelocityConvectCoeff", region, 0,
+		    FCVariable<Vector>::getTypeDescription());
 	tsk->computes(new_dw, "uVelocityCoeff", region, 0,
 		      FCVariable<Vector>::getTypeDescription());
       else if (index == 2) 
+      tsk->computes(new_dw, "vVelocityConvectCoeff", region, 0,
+		    FCVariable<Vector>::getTypeDescription());
 	tsk->computes(new_dw, "vVelocityCoeff", region, 0,
 		    FCVariable<Vector>::getTypeDescription());
       else if (index == 3)
+      tsk->computes(new_dw, "wVelocityConvectCoeff", region, 0,
+		    FCVariable<Vector>::getTypeDescription());
 	tsk->computes(new_dw, "wVelocityCoeff", region, 0,
 		    FCVariable<Vector>::getTypeDescription());
       else 
-	cerr << "Invalid choice for velocity component" << endl;
-     
+	throw InvalidValue("Invalid component for velocity" +index);
       sched->addTask(tsk);
     }
 

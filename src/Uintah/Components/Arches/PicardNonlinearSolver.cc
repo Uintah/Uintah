@@ -1,4 +1,5 @@
 #include <Uintah/Components/Arches/PicardNonlinearSolver.h>
+#include <Uintah/Components/Arches/Arches.h>
 #include <SCICore/Util/NotFinished.h>
 #include <math.h>
 
@@ -10,88 +11,40 @@ PicardNonlinearSolver::~PicardNonlinearSolver()
 {
 }
 
-void PicardNonlinearSolver::problemSetup(DatabaseP& db)
+void PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
 {
-  if (db->keyExists("max_iter")) {
-    d_nonlinear_its = db->getInt("max_iter");
-  } else {
-    cerr << "max_iter not in input database" << endl;
-  }
-  if (db->keyExists("res_tol")) {
-    d_residual = db->getDouble("nonlinear_solver");
-  } else {
-    cerr << "res_tol not in input database" << endl;
-  }
+  ProblemSpecP db = params->findBlock("Picard Solver");
+  db->require("max_iter", d_nonlinear_its);
+  db->require("res_tol", d_residual);
   bool calPress;
-  if (db->keyExists("cal_pressure")) {
-    calPress = db->getBool("cal_pressure");
-  } else {
-    cerr << "cal_pressure not in input database" << endl;
-  } 
+  db->require("cal_pressure", calPress);
   if (calPress) {
     d_pressSolver = new PressureSolver();
+    d_pressSolver->problemSetup(db);
   }
-  if (db->keyExists("Pressure Solver")) {
-    DatabaseP& PressureDB = db->getDatabase("Pressure Solver");
-  } else {
-    cerr << "Pressure Solver DB not in input database" << endl;
-  }
-  d_pressSolver->problemSetup(PressureDB);
   bool calMom;
-  if (db->keyExists("cal_momentum")) {
-    calMom = db->getBool("cal_momentum");
-  } else {
-    cerr << "cal_momentum not in input database" << endl;
-  } 
+  db->require("cal_momentum", calMom);
   if (calMom) {
     d_momSolver = new MomentumSolver();
+    d_momSolver->problemSetup(db);
   }
-  if (db->keyExists("Momentum Solver")) {
-    DatabaseP& MomentumDB = db->getDatabase("Momentum Solver");
-  } else {
-    cerr << "Momentum Solver DB not in input database" << endl;
-  }
-  d_momSolver->problemSetup(MomentumDB);
   bool calScalar;
-  if (db->keyExists("cal_scalar")) {
-    calScalar = db->getBool("cal_scalar");
-  } else {
-    cerr << "cal_scalar not in input database" << endl;
-  } 
+  db->require("cal_scalar", calScalar);
   if (calScalar) {
     d_scalarSolver = new ScalarSolver();
+    d_scalarSolver->problemSetup(db);
   }
-  if (db->keyExists("Scalar Solver")) {
-    DatabaseP& scalarDB = db->getDatabase("Scalar Solver");
-  } else {
-    cerr << "Scalar Solver DB not in input database" << endl;
-  }
-  d_scalarSolver->problemSetup(scalarDB);
-  int turbModel;
-  if (db->keyExists("turbulence_model")) {
-    turbModel = db->getInt("turbulence_model");
-  } else {
-    cerr << "turbulence_model type not in db" << endl;
-  }
-  if (turbModel == 0) {
+  string turbModel;
+  db->require("turbulence_model", turbModel);
+  if (turbModel == "Smagorinsky") 
     d_turbModel = new SmagorinskyModel();
-  } else {
-    cerr << "wrong turbulence option" << endl;
-  }
-  if (db->keyExists("Turbulence Model")) {
-    DatabaseP& turbDB = db->getDatabase("Turbulence Model");
-  } else {
-    cerr << "Turbulence Model DB not in database" << endl;
-  }
-  d_turbModel->problemSetup(turbDB);
+  else 
+    throw InvalidValue("Turbulence Model not supported" + turbModel, db);
+  
+  d_turbModel->problemSetup(db);
 
   d_props = new Properties();
-  if (db->keyExists("Properties")) {
-    DatabaseP& propsDB = db->getDatabase("Properties");
-  } else {
-    cerr << "Properties DB not in the database" << endl;
-  }
-  d_props->problemSetup(propsDB);
+  d_props->problemSetup(db);
 }
 
 int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
@@ -116,15 +69,12 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     d_boundaryCondition->computePressureBC(pc, level, new_dw,
 					   nonlinear_dw);
     // x-velocity    
-    int index = 1;
-    d_momSolver->solve(index, level, sched, new_dw, nonlinear_dw);
-    ++index;
-    d_momSolver->solve(index, level, sched, new_dw, nonlinear_dw);
-    ++index;
-    d_momSolver->solve(index, level, sched, new_dw, nonlinear_dw);
+    for (int index = 1; index <= Arches::NDIM; ++index) {
+      d_momSolver->solve(index, level, sched, new_dw, nonlinear_dw);
+    }
     
     // equation for scalars
-    index = 1;
+    int index = 1;
     // in this case we're only solving for one scalar...but
     // the same subroutine can be used to solve different scalars
     d_scalarSolver->solve(index, level, sched, new_dw, nonlinear_dw);
@@ -157,20 +107,13 @@ double PicardNonlinearSolver::computeResidual(const LevelP& level,
   residual = d_pressSolver->getResidual();
   omg = d_pressSolver->getOrderMagnitude();
   nlresidual = MACHINEPRECISSION + log(residual/omg);
-  int index = 0;
-  residual = d_momSolver->getResidual(index);
-  omg = d_momSolver->getOrderMagnitude(index);
-  nlresidual = max(nlresidual, MACHINEPRECISSION+log(residual/omg));
-  ++index;
-  residual = d_momSolver->getResidual(index);
-  omg = d_momSolver->getOrderMagnitude(index);
-  nlresidual = max(nlresidual, MACHINEPRECISSION+log(residual/omg));
-  ++index;
-  residual = d_momSolver->getResidual(index);
-  omg = d_momSolver->getOrderMagnitude(index);
-  nlresidual = max(nlresidual, MACHINEPRECISSION+log(residual/omg));
+  for (int index = 1; index <= Arches::NDIM; ++index) {
+    residual = d_momSolver->getResidual(index);
+    omg = d_momSolver->getOrderMagnitude(index);
+    nlresidual = max(nlresidual, MACHINEPRECISSION+log(residual/omg));
+  }
   //for multiple scalars iterate
-  int index = 0;
+  int index = 1;
   residual = d_scalarSolver->getResidual(index);
   omg = d_scalarSolver->getOrderMagnitude(index);
   nlresidual = max(nlresidual, MACHINEPRECISSION+log(residual/omg));
