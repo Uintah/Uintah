@@ -1,5 +1,8 @@
 
 #include <sci_defs.h> // For HAVE_OOGL
+#if defined(HAVE_OOGL)
+#undef HAVE_OOGL
+#endif
 #include <Packages/rtrt/Core/Gui.h>
 #include <Packages/rtrt/Core/Dpy.h>
 #include <Packages/rtrt/Core/DpyPrivate.h>

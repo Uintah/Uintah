@@ -4,6 +4,9 @@
 #define IMAGE_H 1
 
 #include <sci_defs.h> // For HAVE_OOGL
+#if defined(HAVE_OOGL)
+#undef HAVE_OOGL
+#endif
 
 #include <Core/Persistent/Persistent.h>
 #include <Packages/rtrt/Core/Color.h>
