@@ -25,8 +25,10 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 
     method set_defaults {} {
 	global $this-num-entries
+	global $this-use-gui-values
 
 	set $this-num-entries 0
+	set $this-use-gui-values 0
     }
 
     method create_entries {} {
@@ -130,7 +132,7 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 
 	iwidgets::scrolledframe $w.tensors -hscrollmode none
 
-	puts "modcon: $w"
+	#puts "modcon: $w"
 
 	frame $w.title
 	label $w.title.name -text "Material Name" \
@@ -153,6 +155,9 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 	    $w.title.empty \
 	    -side left 
 
+	checkbutton $w.guivals -text "Use GUI Values (if possible)" \
+	    -variable $this-use-gui-values
+
 	frame $w.controls
 	button $w.controls.execute -text "Execute" \
 	    -command "$this-c needexecute"
@@ -163,6 +168,7 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 
 	pack $w.title  -fill x
 	pack $w.tensors -side top -fill both -expand yes
+	pack $w.guivals -anchor w -padx 10
 	pack $w.controls -fill x 
 
 	create_entries
