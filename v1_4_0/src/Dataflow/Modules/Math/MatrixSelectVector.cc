@@ -220,6 +220,14 @@ MatrixSelectVector::execute()
       which = current_.get();
     }
   }
+  if (which == start && playmode_.get() == "bounce")
+  {
+    inc_ *= -1;
+    if (start == end)
+    {
+      inc_ = 1;
+    }
+  }
   for (;!stop_; which += inc_, current_.set(which))
   {
     ColumnMatrix *cm;
@@ -252,7 +260,7 @@ MatrixSelectVector::execute()
 
     if (which == end)
     {
-      if (playmode_.get() == "bounce")
+      if (playmode_.get() == "bounce" && start != end)
       {
 	inc_ *= -1;
       }
@@ -265,6 +273,13 @@ MatrixSelectVector::execute()
 	stop_ = true;
       }
     }
+    if (which == start)
+    {
+      if (playmode_.get() == "bounce" && start != end)
+      {
+	inc_ *= -1;
+      }
+    } 
     if (execmode_.get() == "step")
     {
       stop_ = true;

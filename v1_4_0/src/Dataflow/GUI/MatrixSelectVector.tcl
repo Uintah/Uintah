@@ -91,7 +91,7 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 		-showvalue true -orient horizontal -relief groove -length 200
 
 	frame $w.location.cur
-	label $w.location.cur.label -text "Current Value" -width 10 -just left
+	label $w.location.cur.label -text "Next Value" -width 10 -just left
 	entry $w.location.cur.entry -width 10 -textvariable $this-current
 	pack $w.location.cur.label $w.location.cur.entry \
 		-side left -anchor n -expand yes -fill x
@@ -109,7 +109,8 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 		-variable $this-playmode -value bounce
 
 	pack $w.playmode.label -side top -expand yes -fill both
-	pack $w.playmode.once $w.playmode.loop $w.playmode.bounce \
+	# Disabled bounce for now.
+	pack $w.playmode.once $w.playmode.loop \
 		-side top -anchor w
 
 
