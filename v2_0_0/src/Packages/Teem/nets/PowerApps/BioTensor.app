@@ -1248,14 +1248,6 @@ set $m91-exhaustive_search {0}
 set $m91-exhaustive_search_max_dist {-1}
 set $m91-np {1}
 set $m92-notes {}
-set $m92-endpoints {1}
-set $m92-endpoint0x {11.133508890092173}
-set $m92-endpoint0y {85.711169630030724}
-set $m92-endpoint0z {32.408377222523043}
-set $m92-endpoint1x {159.86649110990783}
-set $m92-endpoint1y {147.68324555495391}
-set $m92-endpoint1z {75.788830369969276}
-set $m92-widgetscale {4.4619894665944697}
 set $m92-maxseeds {15}
 set $m92-numseeds {10}
 set $m92-rngseed {1}
@@ -1268,20 +1260,11 @@ set $m92-whichtab {Widget}
 set $m93-notes {}
 set $m93-port-index {2}
 set $m94-notes {}
-set $m94-locx {1.3022900636159871e-296}
-set $m94-locy {8.0169258393150308e-292}
-set $m94-locz {8.0169640657928678e-292}
-set $m94-value {[-0.466733 -0.282872 0.0540473 1.46286e-312 -0.626182 -0.0654924 2.82972e-254 1.06938e-315 -0.227296]}
-set $m94-node {0}
-set $m94-edge {160395}
-set $m94-face {0}
-set $m94-cell {0}
-set $m94-show-value {1}
-set $m94-show-node {1}
+set $m94-show-value {0}
+set $m94-show-node {0}
 set $m94-show-edge {0}
 set $m94-show-face {0}
-set $m94-show-cell {1}
-set $m94-probe_scale {5.0}
+set $m94-show-cell {0}
 set $m95-notes {}
 set $m95-nodes-on {0}
 set $m95-nodes-transparency {0}
@@ -1436,7 +1419,7 @@ set $m118-notes {}
 set $m118-port-index {1}
 set $m119-notes {}
 set $m120-notes {}
-set $m120-port-index {2}
+set $m120-port-index {1}
 set $m121-notes {}
 set $m121-interpolation_basis {linear}
 set $m121-map_source_to_single_dest {0}
@@ -1547,29 +1530,12 @@ set $m128-gray {0.5}
 set $m128-gamma {1.6}
 set $m129-notes {}
 set $m130-notes {}
-set $m130-locx {89.4178080635233}
-set $m130-locy {54.31557446344981}
-set $m130-locz {22.94385244720455}
-set $m130-value {}
-set $m130-node {78734}
-set $m130-edge {359078}
-set $m130-face {347741}
-set $m130-cell {67789}
 set $m130-show-value {0}
 set $m130-show-node {0}
 set $m130-show-edge {0}
 set $m130-show-face {0}
 set $m130-show-cell {0}
-set $m130-probe_scale {5.0}
 set $m131-notes {}
-set $m131-endpoints {1}
-set $m131-endpoint0x {14.61881744818555}
-set $m131-endpoint0y {86.87295581606185}
-set $m131-endpoint0z {6.279754362046386}
-set $m131-endpoint1x {156.3807825518145}
-set $m131-endpoint1y {145.9404412759072}
-set $m131-endpoint1z {47.62699418393815}
-set $m131-widgetscale {4.252858953108867}
 set $m131-maxseeds {75}
 set $m131-numseeds {10}
 set $m131-rngseed {1}
@@ -2193,7 +2159,7 @@ class BioTensorApp {
         # Building Diffusion Tensors
         disableModule $mods(NrrdReader-BMatrix) 1
         disableModule $mods(TendEstim) 1
-	disableModule $mods(ChooseNrrd-DT) 1
+#	disableModule $mods(ChooseNrrd-DT) 1
 
         # Planes
         #disableModule $mods(QuadToTri-X) 1
