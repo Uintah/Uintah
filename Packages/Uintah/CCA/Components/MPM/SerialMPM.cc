@@ -1361,12 +1361,19 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       acceleration.initialize(zero);
 
       // Do the computation of a = F/m for nodes where m!=0.0
+      // You need if(mass>small_num) so you don't get pressure
+      // acceleration where there isn't any mass. 3.30.01 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-	  acceleration[*iter] =
-		(internalforce[*iter] + externalforce[*iter] +
-			gradPressNC[*iter]/delT)/ mass[*iter] + gravity;
+        if(mass[*iter]>1e-10){
+          acceleration[*iter] =
+                (internalforce[*iter] + externalforce[*iter] +
+                        gradPressNC[*iter]/delT)/ mass[*iter] + gravity;
+        }
+        else{
+          acceleration[*iter] = Vector(0.,0.,0.);
+        }
       }
-
+   
       // Put the result in the datawarehouse
       new_dw->put(acceleration, lb->gAccelerationLabel, matlindex, patch);
     }
