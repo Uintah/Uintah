@@ -49,7 +49,7 @@ public:
     void gatherParents(std::vector<CI*>& parents) const;
     void gatherParentInterfaces(std::vector<Interface*>& parents) const;
     void gatherMethods(std::vector<Method*>&) const;
-    void gatherVtable(std::vector<Method*>&) const;
+    void gatherVtable(std::vector<Method*>&, bool onlyNewMethods) const;
     std::vector<Method*>& myMethods();
     std::string cppfullname(SymbolTable* forpackage) const;
     std::string cppclassname() const;
@@ -91,12 +91,13 @@ public:
     bool matches(const Argument* arg, bool checkmode) const;
     std::string fullsignature() const;
 
-    void emit_unmarshall(EmitState& e, const std::string& var,
-			 const std::string& bufname) const;
-    void emit_marshall(EmitState& e, const std::string& var,
+    void emit_unmarshal(EmitState& e, const std::string& var,
+			 const std::string& bufname, bool declare) const;
+    void emit_marshal(EmitState& e, const std::string& var,
 		       const std::string& bufname) const;
-    void emit_marshallsize(EmitState& e, const std::string& var) const;
-    void emit_startpoints(EmitState& e, const std::string& var) const;
+    void emit_declaration(EmitState& e, const std::string& var) const;
+    void emit_marshalsize(EmitState& e, const std::string& var) const;
+    void emit_presizeof(EmitState& e, const std::string& var) const;
     void emit_prototype(SState&, SymbolTable* localScope) const;
     void emit_prototype_defin(SState&, const std::string&,
 			      SymbolTable* localScope) const;
@@ -321,12 +322,25 @@ protected:
 public:
     virtual ~Type();
     virtual void staticCheck(SymbolTable* names) const=0;
-    virtual void emit_unmarshall(EmitState& e, const std::string& arg,
-				 const std::string& bufname) const=0;
-    virtual void emit_marshall(EmitState& e, const std::string& arg,
+    virtual void emit_unmarshal(EmitState& e, const std::string& arg,
+				 const std::string& bufname, bool declare) const=0;
+    virtual void emit_unmarshal_array_subtype(EmitState& e,
+					       const std::string& base,
+					       const std::string& size,
+					       const std::string& bufname) const=0;
+    virtual void emit_marshal(EmitState& e, const std::string& arg,
 			       const std::string& bufname) const=0;
-    virtual void emit_marshallsize(EmitState& e, const std::string& arg) const=0;
-    virtual void emit_startpoints(EmitState& e, const std::string& arg) const=0;
+    virtual void emit_marshalsize_array_subtype(EmitState& e,
+						const std::string& base,
+						const std::string& size,
+						const std::string& varname) const=0;
+    virtual void emit_marshal_array_subtype(EmitState& e,
+					     const std::string& base,
+					     const std::string& size,
+					     const std::string& bufname) const=0;
+    virtual void emit_declaration(EmitState& e, const std::string& var) const=0;
+    virtual void emit_marshalsize(EmitState& e, const std::string& arg) const=0;
+    virtual void emit_presizeof(EmitState& e, const std::string& arg) const=0;
     virtual void emit_rettype(EmitState& e, const std::string& name) const=0;
 
     enum ArgContext {
@@ -362,12 +376,25 @@ public:
 class BuiltinType : public Type {
 public:
     virtual void staticCheck(SymbolTable* names) const;
-    virtual void emit_unmarshall(EmitState& e, const std::string& arg,
-				   const std::string& bufname) const;
-    virtual void emit_marshall(EmitState& e, const std::string& arg,
+    virtual void emit_unmarshal(EmitState& e, const std::string& arg,
+				   const std::string& bufname, bool declare) const;
+    virtual void emit_unmarshal_array_subtype(EmitState& e,
+					       const std::string& base,
+					       const std::string& size,
+					       const std::string& bufname) const;
+    virtual void emit_marshalsize_array_subtype(EmitState& e,
+						const std::string& base,
+						const std::string& size,
+						const std::string& varname) const;
+    virtual void emit_marshal_array_subtype(EmitState& e,
+					     const std::string& base,
+					     const std::string& size,
+					     const std::string& bufname) const;
+    virtual void emit_marshal(EmitState& e, const std::string& arg,
 			       const std::string& bufname) const;
-    virtual void emit_marshallsize(EmitState& e, const std::string& arg) const;
-    virtual void emit_startpoints(EmitState& e, const std::string& arg) const;
+    virtual void emit_declaration(EmitState& e, const std::string& var) const;
+    virtual void emit_marshalsize(EmitState& e, const std::string& arg) const;
+    virtual void emit_presizeof(EmitState& e, const std::string& arg) const;
     virtual void emit_rettype(EmitState& e, const std::string& name) const;
     virtual void emit_prototype(SState& s, ArgContext ctx,
 				SymbolTable* localScope) const;
@@ -388,12 +415,25 @@ public:
     NamedType(const std::string& curfile, int lineno, ScopedName*);
     virtual ~NamedType();
     virtual void staticCheck(SymbolTable* names) const;
-    virtual void emit_unmarshall(EmitState& e, const std::string& arg,
-				   const std::string& bufname) const;
-    virtual void emit_marshall(EmitState& e, const std::string& arg,
+    virtual void emit_unmarshal(EmitState& e, const std::string& arg,
+				   const std::string& bufname, bool declare) const;
+    virtual void emit_unmarshal_array_subtype(EmitState& e,
+					       const std::string& base,
+					       const std::string& size,
+					       const std::string& bufname) const;
+    virtual void emit_marshalsize_array_subtype(EmitState& e,
+						const std::string& base,
+						const std::string& size,
+						const std::string& varname) const;
+    virtual void emit_marshal_array_subtype(EmitState& e,
+					     const std::string& base,
+					     const std::string& size,
+					     const std::string& bufname) const;
+    virtual void emit_marshal(EmitState& e, const std::string& arg,
 			       const std::string& bufname) const;
-    virtual void emit_marshallsize(EmitState& e, const std::string& arg) const;
-    virtual void emit_startpoints(EmitState& e, const std::string& arg) const;
+    virtual void emit_declaration(EmitState& e, const std::string& var) const;
+    virtual void emit_marshalsize(EmitState& e, const std::string& arg) const;
+    virtual void emit_presizeof(EmitState& e, const std::string& arg) const;
     virtual void emit_rettype(EmitState& e, const std::string& name) const;
     virtual void emit_prototype(SState& s, ArgContext ctx,
 				SymbolTable* localScope) const;
@@ -411,12 +451,25 @@ private:
 class ArrayType : public Type {
 public:
     virtual void staticCheck(SymbolTable* names) const;
-    virtual void emit_unmarshall(EmitState& e, const std::string& arg,
-				   const std::string& bufname) const;
-    virtual void emit_marshall(EmitState& e, const std::string& arg,
+    virtual void emit_unmarshal(EmitState& e, const std::string& arg,
+				   const std::string& bufname, bool declare) const;
+    virtual void emit_unmarshal_array_subtype(EmitState& e,
+					       const std::string& base,
+					       const std::string& size,
+					       const std::string& bufname) const;
+    virtual void emit_marshalsize_array_subtype(EmitState& e,
+						const std::string& base,
+						const std::string& size,
+						const std::string& varname) const;
+    virtual void emit_marshal_array_subtype(EmitState& e,
+					     const std::string& base,
+					     const std::string& size,
+					     const std::string& bufname) const;
+    virtual void emit_marshal(EmitState& e, const std::string& arg,
 			       const std::string& bufname) const;
-    virtual void emit_marshallsize(EmitState& e, const std::string& arg) const;
-    virtual void emit_startpoints(EmitState& e, const std::string& arg) const;
+    virtual void emit_declaration(EmitState& e, const std::string& var) const;
+    virtual void emit_marshalsize(EmitState& e, const std::string& arg) const;
+    virtual void emit_presizeof(EmitState& e, const std::string& arg) const;
     virtual void emit_rettype(EmitState& e, const std::string& name) const;
     virtual void emit_prototype(SState& s, ArgContext ctx,
 				SymbolTable* localScope) const;
@@ -436,6 +489,11 @@ private:
 
 //
 // $Log$
+// Revision 1.7  1999/09/28 08:21:42  sparker
+// Added support for arrays (incomplete)
+// Added support for strings
+// Added support for out and inout variables
+//
 // Revision 1.6  1999/09/26 06:13:00  sparker
 // Added (distributed) reference counting to PIDL objects.
 // Began campaign against memory leaks.  There seem to be no more

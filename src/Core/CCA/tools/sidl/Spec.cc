@@ -182,15 +182,19 @@ void CI::gatherMethods(vector<Method*>& allmethods) const
     mymethods->gatherMethods(allmethods);
 }
 
-void CI::gatherVtable(vector<Method*>& uniquemethods) const
+void CI::gatherVtable(vector<Method*>& uniquemethods, bool onlyNewMethods) const
 {
     if(parentclass)
-	parentclass->gatherVtable(uniquemethods);
+	parentclass->gatherVtable(uniquemethods, false);
     for(vector<Interface*>::const_iterator iter=parent_ifaces.begin();
 	iter != parent_ifaces.end(); iter++){
-	(*iter)->gatherVtable(uniquemethods);
+	(*iter)->gatherVtable(uniquemethods, false);
     }
+    int s=uniquemethods.size();
     mymethods->gatherVtable(uniquemethods);
+    if(onlyNewMethods){
+	uniquemethods.erase(uniquemethods.begin(), uniquemethods.begin()+s);
+    }
 }
 
 vector<Method*>& CI::myMethods()
@@ -652,6 +656,8 @@ static map<pair<Type*, int>, Type*> arrays;
 
 Type* Type::arraytype(Type* t, int dim)
 {
+    if(dim == 0)
+	dim=1;
     map<pair<Type*, int>, Type*>::iterator iter=arrays.find(pair<Type*, int>(t, dim));
     if(iter == arrays.end()){
 	return (arrays[pair<Type*, int>(t, dim)]=new ArrayType(t, dim));
@@ -730,9 +736,13 @@ bool ArrayType::isvoid() const
     return false;
 }
 
-
 //
 // $Log$
+// Revision 1.7  1999/09/28 08:21:42  sparker
+// Added support for arrays (incomplete)
+// Added support for strings
+// Added support for out and inout variables
+//
 // Revision 1.6  1999/09/24 06:26:29  sparker
 // Further implementation of new Component model and IDL parser, including:
 //  - fixed bugs in multiple inheritance
