@@ -6,10 +6,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/FractureMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
@@ -253,50 +250,63 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
  // Scheduling
   d_ice->scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
    
-  d_mpm->scheduleApplyExternalLoads(sched, patches, mpm_matls);
+  d_mpm->scheduleApplyExternalLoads(              sched, patches, mpm_matls);
   // Fracture
-  d_mpm->scheduleParticleVelocityField(sched, patches, mpm_matls);
-  d_mpm->scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
+  d_mpm->scheduleParticleVelocityField(           sched, patches, mpm_matls);
+  d_mpm->scheduleInterpolateParticlesToGrid(      sched, patches, mpm_matls);
 
-  d_mpm->scheduleComputeHeatExchange(sched, patches, mpm_matls);
+  d_mpm->scheduleComputeHeatExchange(             sched, patches, mpm_matls);
 
   // Fracture
-  d_mpm->scheduleAdjustCrackContactInterpolated(sched,patches,mpm_matls);
+  d_mpm->scheduleAdjustCrackContactInterpolated(  sched,patches,  mpm_matls);
 
   // schedule the interpolation of mass and volume to the cell centers
-  scheduleInterpolateNCToCC_0(sched, patches, one_matl, mpm_matls);
+  scheduleInterpolateNCToCC_0(                    sched, patches, one_matl, 
+                                                                  mpm_matls);
 
-  scheduleComputePressure(sched, patches, ice_matls_sub,mpm_matls_sub,
-			  press_matl,all_matls);
+  scheduleComputePressure(                        sched, patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
+			                                             press_matl,
+                                                                  all_matls);
 
   if (d_ice->d_RateForm) {
-    d_ice->schedulecomputeDivThetaVel_CC(sched, patches, ice_matls_sub,
-					 mpm_matls_sub,all_matls);
+    d_ice->schedulecomputeDivThetaVel_CC(         sched, patches, ice_matls_sub,
+					                               mpm_matls_sub,
+                                                                  all_matls);
   }
   
-  d_ice->scheduleComputeTempFC( sched, patches, ice_matls_sub,mpm_matls_sub,
-				all_matls);
+  d_ice->scheduleComputeTempFC(                   sched, patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
+				                                      all_matls);
   d_ice->scheduleComputeModelSources(             sched, level,   all_matls);
 
   d_ice->scheduleUpdateVolumeFraction(            sched, level,   all_matls);
   
   if(d_ice->d_impICE) {        //  I M P L I C I T 
-    d_ice->scheduleImplicitPressureSolve(sched, level,patches,one_matl, 
-					 press_matl,ice_matls_sub,
-					 mpm_matls_sub, all_matls);
+    d_ice->scheduleImplicitPressureSolve(         sched, level,   patches,
+                                                                  one_matl, 
+					                               press_matl,
+                                                                  ice_matls_sub,
+					                               mpm_matls_sub,
+                                                                  all_matls);
                                                            
-    d_ice->scheduleComputeDel_P(sched,  level,  patches, one_matl, press_matl,
-				all_matls);
+    d_ice->scheduleComputeDel_P(                  sched, level,   patches, 
+                                                                  one_matl, 
+                                                                  press_matl,
+				                                      all_matls);
   }                           //  IMPLICIT AND EXPLICIT
   d_ice->scheduleComputeVel_FC(sched, patches,   ice_matls_sub, mpm_matls_sub,
 			       press_matl, all_matls, false);
                                                                
-  d_ice->scheduleAddExchangeContributionToFCVel(sched, patches,all_matls,false);
+  d_ice->scheduleAddExchangeContributionToFCVel(  sched, patches, ice_matls_sub,
+                                                                  all_matls,
+                                                                  false);
                                                                   
   if(!(d_ice->d_impICE)){       //  E X P L I C I T 
     d_ice->scheduleComputeDelPressAndUpdatePressCC(sched,patches, press_matl,
-						   ice_matls_sub,mpm_matls_sub,
-						   all_matls);
+						                        ice_matls_sub,
+                                                                  mpm_matls_sub,
+						                        all_matls);
   } 
   
   d_mpm->scheduleExMomInterpolated(               sched, patches, mpm_matls);
@@ -1641,30 +1651,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     
 /*`==========TESTING==========*/
 #if 0
-      //__________________________________
-      // set boundary conditions on rhoMicro.
-      vector<Patch::FaceType>::const_iterator f;
-      for (f  = patch->getBoundaryFaces()->begin(); 
-           f != patch->getBoundaryFaces()->end(); ++f){
-        Patch::FaceType face = *f;
-        CellIterator iterLim = patch->getFaceCellIterator(face,"plusEdgeCells");
-               
-        if(ice_matl[m]){
-          for(CellIterator iter=iterLim; !iter.done();iter++) {
-            IntVector c = *iter;
-            rho_micro[m][c] = 
-              ice_matl[m]->getEOS()->computeRhoMicro(press_new[c],gamma[m][c],
-                                           cv[m][c],Temp[m][c],rho_micro[m][c]);
-          }
-        } else if(mpm_matl[m]){
-          for(CellIterator iter=iterLim; !iter.done();iter++) {
-            IntVector c = *iter;
-            rho_micro[m][c] =  
-              mpm_matl[m]->getConstitutiveModel()->computeRhoMicroCM(
-                                         press_new[c],press_ref,mpm_matl[m]);
-          }
-        }  // mpm
-      } // face loop
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      setBC_rho_micro( patch,mpm_matl[m], ice_matl[m], indx,
+                       cv[m], gamma[m],  press_new, Temp[m],  
+                       press_ref, rho_micro[m]);
 #endif   
 /*===========TESTING==========`*/
       
@@ -1900,4 +1891,64 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
     }  //ALLmatls  
   }  //patches
 }
-
+/*______________________________________________________________________
+ Function~  setBC_rho_micro
+ Purpose: set the boundary conditions for the microscopic density in 
+ MPMICE computeEquilibration Press
+______________________________________________________________________*/
+void MPMICE::setBC_rho_micro(const Patch* patch,
+                             MPMMaterial* mpm_matl,
+                             ICEMaterial* ice_matl,
+                             const int indx,
+                             const CCVariable<double>& cv,
+                             const CCVariable<double>& gamma,
+                             const CCVariable<double>& press_new,
+                             const CCVariable<double>& Temp,
+                             const double press_ref,
+                             CCVariable<double>& rho_micro)
+{
+  //__________________________________
+  //  loop over faces on the boundary
+  vector<Patch::FaceType>::const_iterator f;
+  for (f  = patch->getBoundaryFaces()->begin(); 
+       f != patch->getBoundaryFaces()->end(); ++f){
+    Patch::FaceType face = *f;
+    
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(indx);
+    for (int child = 0;  child < numChildren; child++) {
+      double bc_value = -9;
+      string bc_kind = "NotSet";
+      vector<IntVector> bound;
+      
+      bool foundIterator =
+        getIteratorBCValueBCKind<double>( patch, face, child, "Density", indx,
+					    bc_value, bound, bc_kind); 
+      
+      //cout << " face " << face << " bc_kind " << bc_kind << " \t indx " << indx 
+      //     <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1) << endl;
+      
+      if (foundIterator && bc_kind == "Dirichlet") { 
+        // what do you put here?
+      }
+      if (foundIterator && bc_kind != "Dirichlet") {      // Everything else
+        vector<IntVector>::const_iterator iter;
+        
+        if(ice_matl){             //  I C E
+          for (iter=bound.begin(); iter != bound.end(); iter++) {
+            IntVector c = *iter;
+            rho_micro[c] = 
+              ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma[c],
+                                           cv[c],Temp[c],rho_micro[c]);
+          }
+        } else if(mpm_matl){     //  M P M
+          for (iter=bound.begin(); iter != bound.end(); iter++) {
+            IntVector c = *iter;
+            rho_micro[c] =  
+              mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
+                                         press_new[c],press_ref,mpm_matl);
+          }
+        }  // mpm
+      } // if not
+    } // child loop
+  } // face loop
+}
