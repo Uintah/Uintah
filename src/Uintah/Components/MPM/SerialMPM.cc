@@ -44,16 +44,17 @@ using namespace std;
 SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
 {
-   pDeformationMeasureLabel = 
-               new VarLabel("p.deformationMeasure",
+   pDeformationMeasureLabel = new VarLabel("p.deformationMeasure",
 			    ParticleVariable<Matrix3>::getTypeDescription());
+
    pStressLabel = new VarLabel( "p.stress",
 			     ParticleVariable<Matrix3>::getTypeDescription() );
 
    pVolumeLabel = new VarLabel( "p.volume",
 			     ParticleVariable<double>::getTypeDescription());
 
-   pMassLabel = new VarLabel( "p.mass", ParticleVariable<double>::getTypeDescription() );
+   pMassLabel = new VarLabel( "p.mass",
+			ParticleVariable<double>::getTypeDescription() );
 
    pVelocityLabel = new VarLabel( "p.velocity", 
 			     ParticleVariable<Vector>::getTypeDescription() );
@@ -61,7 +62,7 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
    pExternalForceLabel = new VarLabel( "p.externalforce",
 			     ParticleVariable<Vector>::getTypeDescription() );
 
-   pXLabel =   new VarLabel( "p.x", ParticleVariable<Point>::getTypeDescription(),
+   pXLabel = new VarLabel( "p.x", ParticleVariable<Point>::getTypeDescription(),
 			     VarLabel::PositionVariable);
 
    //H.Tan:
@@ -85,7 +86,7 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
 				  NCVariable<Vector>::getTypeDescription() );
 
    gMomExedVelocityLabel = new VarLabel( "g.momexedvelocity",
-					NCVariable<Vector>::getTypeDescription() );
+				NCVariable<Vector>::getTypeDescription() );
 
    gExternalForceLabel = new VarLabel( "g.externalforce",
 			      NCVariable<Vector>::getTypeDescription() );
@@ -439,7 +440,10 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
        particleIndex numParticles = mpm_matl->countParticles(region);
 
        mpm_matl->createParticles(numParticles, region, new_dw);
-       mpm_matl->getConstitutiveModel()->initializeCMData(region, mpm_matl, new_dw);
+       mpm_matl->getConstitutiveModel()->initializeCMData(region,
+						mpm_matl, new_dw);
+       int vfindex = matl->getVFIndex();
+       d_contactModel->initializeContact(region,vfindex,new_dw);
     }
   }
 }
@@ -864,6 +868,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 
 
 // $Log$
+// Revision 1.45  2000/05/08 18:46:16  guilkey
+// Added call to initializeContact in SerialMPM's actuallyInitailize
+//
 // Revision 1.44  2000/05/08 17:16:51  tan
 // Added grid VarLabel selfContactLabel for fracture simulation.
 //
