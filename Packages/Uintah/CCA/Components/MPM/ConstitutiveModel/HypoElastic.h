@@ -115,6 +115,11 @@ namespace Uintah {
 				  std::vector<const VarLabel*>& to);
     // class function to create a new object from parameters
     static ConstitutiveModel* create(double *p_array);
+
+    // Convert J-integral into stress intensity factors for hypoelastic materials
+    virtual void ConvertJToK(const MPMMaterial* matl, const Vector& J,
+                             const Vector& C,const Vector& V,
+                             Vector& SIF);
   };
 
 } // End namespace Uintah
