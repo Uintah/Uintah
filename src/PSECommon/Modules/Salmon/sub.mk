@@ -42,7 +42,7 @@ SRCS     += \
 	$(SRCDIR)/EditPath.cc\
 #[INSERT NEW MODULE HERE]
 
-PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Comm \
+PSELIBS := PSECore/Widgets PSECore/Dataflow PSECore/Datatypes PSECore/Comm \
 	SCICore/Persistent SCICore/Exceptions SCICore/Geometry \
 	SCICore/Geom SCICore/Thread SCICore/Containers \
 	SCICore/TclInterface SCICore/TkExtensions SCICore/Util \
@@ -55,6 +55,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.9  2000/09/27 22:49:43  yarden
+# add PSECore/Widgets to PSELIBS
+#
 # Revision 1.8  2000/07/18 23:11:11  samsonov
 # EditPath module added
 #
