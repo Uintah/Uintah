@@ -11,12 +11,12 @@
 	<maxTime>200e-6</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.0</delt_min>
-	<delt_max>5e-6</delt_max>
+	<delt_max>2e-6</delt_max>
 	<timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>DENCrackProp.uda</filebase>
-	<outputInterval>5e-6</outputInterval>
+	<outputTimestepInterval>2</outputTimestepInterval>
 	<save label = "KineticEnergy"/>
 	<save label = "TotalMass"/>
 	<save label = "StrainEnergy"/>
@@ -39,6 +39,7 @@
         <!-- <J_radius>4.0e-3</J_radius> -->   
         <do_crack_propagation>every_time_step</do_crack_propagation>
         <dadx>1.0</dadx>
+        <do_crack_visualization>true</do_crack_visualization>
     </MPM>
 
     <PhysicalConstants>
@@ -130,7 +131,7 @@
 		<lower>[-10.0e-3,      0.0, -3.0e-3]</lower>
 		<upper>[110.0e-3, 120.0e-3,  3.0e-3]</upper>
 	        <resolution>[60,60,3]</resolution>
-		<patches>[4,4,1]</patches>
+		<patches>[2,1,1]</patches>
 	    </Box>
 	</Level>
     </Grid>
