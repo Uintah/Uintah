@@ -136,11 +136,11 @@ private:
       OffsetArray1<double> qfluxbbm;
       const ProcessorGroup* d_myworld;
 
-      double rgamma[7][4];
-      double sd15[80][6];
-      double sd[376][6];
-      double sd7[16][3];
-      double sd3[32][3];
+      OffsetArray1<double> rgamma;
+      OffsetArray1<double> sd15;
+      OffsetArray1<double> sd;
+      OffsetArray1<double> sd7;
+      OffsetArray1<double> sd3;
 
 }; // end class RadiationModel
 
