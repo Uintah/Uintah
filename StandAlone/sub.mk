@@ -162,3 +162,5 @@ sus: prereqs Packages/Uintah/StandAlone/sus
 puda: prereqs Packages/Uintah/StandAlone/puda
 
 compare_uda: prereqs Packages/Uintah/StandAlone/compare_uda
+
+restart_merger: prereqs Packages/Uintah/StandAlone/restart_merger
