@@ -37,13 +37,11 @@ SCICORESHARE void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* sym
 
 
 /////////////////////////////////////////////////////////////////
-// CloseLibraries()
-// disassociates all libraries opened, by the calling process, using
-// the GetLibrarySymbolAddress() or GetLibraryHandle()
-// functions.  Call this function to clean up stuff when shutting the
-// application down.
+// CloseLibrary()
+//
+// disassociates the given library handle from the calling process.
 
-SCICORESHARE void CloseLibraries();
+SCICORESHARE void CloseLibrary(LIBRARY_HANDLE);
 
 
 ////////////////////////////////////////////////////////////////
