@@ -770,13 +770,13 @@ case $host in
                echo "Using Assembler ${AS}"
              fi
            fi
-           CFLAGS="-fullwarn -xansi -LANG:ansi-for-init-scope=ON ${CFLAGS} $BINARYFLAGS"
+           CFLAGS="-fullwarn -xansi -LANG:std ${CFLAGS} $BINARYFLAGS"
 	   ASFLAGS="$BINARYFLAGS ${ASFLAGS}"
-           SOFLAGS="-shared $BINARYFLAGS -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(OBJTOP)/so_locations ${SOFLAGS}"
-           LDFLAGS="$BINARYFLAGS -no_unresolved -J\$(MAKE_PARALLELISM)"
+           SOFLAGS="-shared $BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(OBJTOP)/so_locations ${SOFLAGS}"
+           LDFLAGS="$BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM)"
            LDRUN_PREFIX="-Wl,-rpath -Wl,"
 	   TEMPLATE_TAG=
-	   TEMPLATE_BOX=
+	   TEMPLATE_BOX="<>"
 	   LOCK_IMPL=lock_mips.s
            if test "$threads" = "unknown"; then
              threads="irix"

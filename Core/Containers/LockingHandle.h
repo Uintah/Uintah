@@ -29,6 +29,11 @@ namespace Containers {
 using SCICore::PersistentSpace::Piostream;
 
 template<class T>
+class LockingHandle;
+template<class T>
+void Pio(Piostream& stream, LockingHandle<T>& data);
+
+template<class T>
 class LockingHandle {
     T* rep;
 public:
@@ -190,6 +195,10 @@ void Pio(Piostream& stream, LockingHandle<T>& data)
 
 //
 // $Log$
+// Revision 1.5  1999/08/30 20:19:26  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.4  1999/08/19 23:52:58  sparker
 // Removed extraneous includes of iostream.h  Fixed a few NotFinished.h
 // problems.  May have broken KCC support.

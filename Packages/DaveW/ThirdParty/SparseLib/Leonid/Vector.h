@@ -125,7 +125,7 @@ ZVector<Complex>::ZVector(int N,double x_re[],double x_im[]){
 #endif
 
 //-----------------------------------------------------------------
-ZVector<double>::ZVector(int N,double x_re[],double x_im[]){
+template<> ZVector<double>::ZVector(int N,double x_re[],double x_im[]){
 
  cout << "Not implemented for doubles!"<<endl;  
 
@@ -490,7 +490,7 @@ void ZVector<Data_Type>::write(char * filename){
 }
 
 //-----------------------------------------------------------------
-void ZVector<double>:: info(){
+template<> void ZVector<double>:: info(){
   
   cout<<"********************************************"<<endl; 
   cout<<"Vector:"<<endl;

@@ -19,14 +19,18 @@ namespace Datatypes {
 
 using namespace SCICore::Datatypes;
 
-clString SimpleIPort<ContourSetHandle>::port_type("ContourSet");
-clString SimpleIPort<ContourSetHandle>::port_color("#388e8e");
+template<> clString SimpleIPort<ContourSetHandle>::port_type("ContourSet");
+template<> clString SimpleIPort<ContourSetHandle>::port_color("#388e8e");
 
 } // End namespace Datatypes
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.4  1999/08/30 20:19:23  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.3  1999/08/25 03:48:19  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
