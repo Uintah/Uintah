@@ -138,27 +138,39 @@ ManageFieldData::execute()
     {
       matrix_svt_flag = 2;
     }
+    else
+    {
+      error("Input matrix row/column size mismatch.");
+      error("Input matrix does not appear to fit in the field.");
+      return;
+    }
 
     CompileInfoHandle ci_mesh =
       ManageFieldDataAlgoMesh::
-      get_compile_info(ifieldhandle->mesh()->get_type_description(),
-		       ifieldhandle->get_type_description(),
-		       matrix_svt_flag);
+      get_compile_info(ifieldhandle->get_type_description(), matrix_svt_flag);
     Handle<ManageFieldDataAlgoMesh> algo_mesh;
     if (!module_dynamic_compile(ci_mesh, algo_mesh)) return;
 
     result_field =
       algo_mesh->execute(this, ifieldhandle->mesh(), imatrixhandle);
 
-    // copy the properties
+    if (!result_field.get_rep())
+    {
+      return;
+    }
+
+    // Copy the properties.
     *((PropertyManager *)(result_field.get_rep())) =
       *((PropertyManager *)(ifieldhandle.get_rep()));
+
+    // Copy units property from the matrix.
+    string units;
+    if (imatrixhandle->get_property("units", units))
+    {
+      result_field->set_property("units", units, false);
+    }
   }
 
-  string units;
-  if (imatrixhandle.get_rep() && imatrixhandle->get_property("units", units))
-    result_field->set_property("units", units, false);
-  
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
   if (!ofp) {
     error("Unable to initialize oport 'Output Field'.");
@@ -209,8 +221,7 @@ ManageFieldDataAlgoField::get_compile_info(const TypeDescription *fsrc,
 
 
 CompileInfoHandle
-ManageFieldDataAlgoMesh::get_compile_info(const TypeDescription *msrc,
-					  const TypeDescription *fsrc,
+ManageFieldDataAlgoMesh::get_compile_info(const TypeDescription *fsrc,
 					  int svt_flag)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
@@ -242,11 +253,10 @@ ManageFieldDataAlgoMesh::get_compile_info(const TypeDescription *msrc,
 
   CompileInfo *rval = 
     scinew CompileInfo(base_class_name + extension + "." +
-		       msrc->get_filename() + "." +
 		       to_filename(fout) + ".",
                        base_class_name, 
                        base_class_name + extension, 
-                       msrc->get_name() + ", " + fout);
+                       fout);
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
