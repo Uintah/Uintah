@@ -263,13 +263,13 @@ namespace PSECommon {
   IsoSurfaceNOISE::makeNoise( F *f )
   {
     // create a MC interpolant
-    MCRGScan<F> *mc =  new MCRGScan<F>( f );
+    MCRGScan<F> *mc =  scinew MCRGScan<F>( f );
     
     // create SpanSpace
-    SpanSpace<T> *span = new SpanSpaceBuild<T, F>( f );
+    SpanSpace<T> *span = scinew SpanSpaceBuild<T, F>( f );
     
     // create Noise
-    return new Noise<T,MCRGScan<F>,Module> (span, mc,this);
+    return scinew Noise<T,MCRGScan<F>,Module> (span, mc,this);
   }
 
   } // namespace Modules
