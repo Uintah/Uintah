@@ -112,6 +112,10 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     specular_scale(ctx->subVar("specular-scale")),
     emission_scale(ctx->subVar("emission-scale")),
     shininess_scale(ctx->subVar("shininess-scale")),
+    polygon_offset_factor(ctx->subVar("polygon-offset-factor")),
+    polygon_offset_units(ctx->subVar("polygon-offset-units")),
+    point_size(ctx->subVar("point-size")),
+    line_width(ctx->subVar("line-width")),
     sbase(ctx->subVar("sbase")),
     sr(ctx->subVar("sr")),
     // --  BAWGL -- 

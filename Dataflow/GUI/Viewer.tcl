@@ -117,7 +117,7 @@ itcl_class ViewWindow {
 	if {![info exists $this-bgcolor-b]} {set $this-bgcolor-b 0}
 
 	# Need to initialize the scene material scales
-	global $this-ambientscale
+	global $this-ambient-scale
 	if {![info exists $this-ambient-scale]} {set $this-ambient-scale 1.0}
 	global $this-diffuse-scale
 	if {![info exists $this-diffuse-scale]} {set $this-diffuse-scale 1.0}
@@ -125,8 +125,19 @@ itcl_class ViewWindow {
 	if {![info exists $this-specular-scale]} {set $this-specular-scale 0.4}
 	global $this-emission-scale
 	if {![info exists $this-emission-scale]} {set $this-emission-scale 1.0}
-	global $this-shininessscale
+	global $this-shininess-scale
 	if {![info exists $this-shininess-scale]} {set $this-shininess-scale 1.0}
+	# Initialize point size, line width, and polygon offset
+	global $this-point-size
+	if {![info exists $this-point-size]} {set $this-point-size 1.0}
+	global $this-line-width
+	if {![info exists $this-line-width]} {set $this-line-width 1.0}
+	global $this-polygon-offset-factor
+ 	if {![info exists $this-polygon-offset-factor]} \
+	    {set $this-polygon-offset-factor 1.0}
+	global $this-polygon-offset-units
+	if {![info exists $this-polygon-offset-units]} \
+	    {set $this-polygon-offset-units 0.0}
 
 	global $this-sbase
 	if {![info exists $this-sbase]} {set $this-sbase 0.4}
@@ -483,10 +494,6 @@ itcl_class ViewWindow {
 	if { [winfo exists $m] } {
 	global "$this-global-light"
 	global "$this-global-fog"
-	global "$this-global-psize"
-	global "$this-global-lineWidth"
-	global "$this-global-polygonOffsetFactor"
-	global "$this-global-polygonOffsetUnits"
 	global "$this-global-type"
 	global "$this-global-debug"
 	global "$this-global-clip"
@@ -506,10 +513,6 @@ itcl_class ViewWindow {
 	
 	set "$this-global-light" 1
 	set "$this-global-fog" 0
-	set "$this-global-psize" 1
-	set "$this-global-lineWidth" 1
-	set "$this-global-polygonOffsetFactor" 0
-	set "$this-global-polygonOffsetUnits" 0
 	set "$this-global-type" Gouraud
 	set "$this-global-debug" 0
 	set "$this-global-clip" 0
@@ -1011,9 +1014,9 @@ itcl_class ViewWindow {
 	wm title $w "Line Width"
 	wm minsize $w 250 100
 	frame $w.f
-	global $this-global-lineWidth
+	global $this-line-width
 	scale $w.f.scale -command "$this-c redraw" -variable \
-		$this-global-lineWidth -orient horizontal -from 1 -to 5 \
+		$this-line-width -orient horizontal -from 1 -to 5 \
 		-resolution .1 -showvalue true -tickinterval 1 -digits 0 \
 		-label "Line Width:"
 	pack $w.f.scale -fill x -expand 1
@@ -1030,14 +1033,14 @@ itcl_class ViewWindow {
 	wm title $w "Polygon Offset"
 	wm minsize $w 250 100
 	frame $w.f
-	global $this-global-polygonOffsetFactor
-	global $this-global-polygonOffsetUnits
+	global $this-polygon-offset-factor
+	global $this-polygon-offset-units
 	scale $w.f.factor -command "$this-c redraw" -variable \
-		$this-global-polygonOffsetFactor -orient horizontal -from -4 \
+		$this-polygon-offset-factor -orient horizontal -from -4 \
 		-to 4 -resolution .01 -showvalue true -tickinterval 2 \
 		-digits 3 -label "Offset Factor:"
 	scale $w.f.units -command "$this-c redraw" -variable \
-		$this-global-polygonOffsetUnits -orient horizontal -from -4 \
+		$this-polygon-offset-units -orient horizontal -from -4 \
 		-to 4 -resolution .01 -showvalue true -tickinterval 2 \
 		-digits 3 -label "Offset Units:"
 #	pack $w.f.factor $w.f.units -fill x -expand 1 -pady 10
@@ -1056,9 +1059,9 @@ itcl_class ViewWindow {
 	wm minsize $w 250 100 
 
 	frame $w.f
-	global $this-global-psize
+	global $this-point-size
 	scale $w.f.scale -command "$this-c redraw" -variable \
-		$this-global-psize -orient horizontal -from 1 -to 5 \
+		$this-point-size -orient horizontal -from 1 -to 5 \
 		-resolution .1 -showvalue true -tickinterval 1 -digits 0 \
 		-label "Pixel Size:"
 	pack $w.f.scale -fill x -expand 1

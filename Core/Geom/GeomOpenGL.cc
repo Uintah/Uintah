@@ -1996,7 +1996,7 @@ GeomCLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   glDrawArrays(GL_LINES, 0, points_.size()/3);
 
-  glLineWidth(di->line_width);
+  glLineWidth(di->line_width_);
 
   //glDisable(GL_BLEND);
 

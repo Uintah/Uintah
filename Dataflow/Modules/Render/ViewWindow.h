@@ -323,6 +323,11 @@ public:
   GuiDouble emission_scale;
   GuiDouble shininess_scale;
 
+  GuiDouble polygon_offset_factor;
+  GuiDouble polygon_offset_units;
+  GuiDouble point_size;
+  GuiDouble line_width;
+
   GuiDouble sbase;
   GuiInt sr;
 
@@ -338,7 +343,6 @@ public:
   GuiInt file_resy;
   GuiInt file_aspect;
   GuiDouble file_aspect_ratio;
-  
 				// Object processing utility routines
   void do_for_visible(OpenGL*, ViewWindowVisPMF);
   

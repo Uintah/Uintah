@@ -693,7 +693,11 @@ OpenGL::redraw_frame()
   drawinfo->specular_scale_=viewwindow->specular_scale.get();
   drawinfo->shininess_scale_=viewwindow->shininess_scale.get();
   drawinfo->emission_scale_=viewwindow->emission_scale.get();
-
+  drawinfo->line_width_=viewwindow->line_width.get();
+  drawinfo->point_size_=viewwindow->point_size.get();
+  drawinfo->polygon_offset_factor_=viewwindow->polygon_offset_factor.get();
+  drawinfo->polygon_offset_units_=viewwindow->polygon_offset_units.get();
+  
 #ifdef __sgi
   //  --  BAWGL  --
   int do_bawgl = viewwindow->do_bawgl.get();
@@ -884,13 +888,13 @@ OpenGL::redraw_frame()
 	glGetIntegerv(GL_VIEWPORT, get_depth_view);
 	
 	// set up point size, line size, and polygon offset
-	glPointSize(drawinfo->point_size);
-	glLineWidth(drawinfo->line_width);
+	glPointSize(drawinfo->point_size_);
+	glLineWidth(drawinfo->line_width_);
 	glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
-	if (drawinfo->polygon_offset_factor || 
-	    drawinfo->polygon_offset_units) {
-	  glPolygonOffset(drawinfo->polygon_offset_factor, 
-			  drawinfo->polygon_offset_units);
+	if (drawinfo->polygon_offset_factor_ || 
+	    drawinfo->polygon_offset_units_) {
+	  glPolygonOffset(drawinfo->polygon_offset_factor_, 
+			  drawinfo->polygon_offset_units_);
 	  glEnable(GL_POLYGON_OFFSET_FILL);
 	} else {
 	  glDisable(GL_POLYGON_OFFSET_FILL);
@@ -1546,17 +1550,12 @@ void
 ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
 {
   string val;
-  double dval;
   string type(tclID+"-"+"type");
   string lighting(tclID+"-"+"light");
   string fog(tclID+"-"+"fog");
   string cull(tclID+"-"+"cull");
   string dl(tclID+"-"+"dl");
   string debug(tclID+"-"+"debug");
-  string psize(tclID+"-"+"psize");
-  string lineWidth(tclID+"-"+"lineWidth");
-  string polygonOffsetFactor(tclID+"-"+"polygonOffsetFactor");
-  string polygonOffsetUnits(tclID+"-"+"polygonOffsetUnits");
   string movie(tclID+"-"+"movie");
   string movieName(tclID+"-"+"movieName");
   string movieFrame(tclID+"-"+"movieFrame");
@@ -1609,23 +1608,6 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
     {
       cerr << "Error, no debug level set!\n";
       drawinfo->debug = 0;
-    }
-
-    if (ctx->getSub(psize,dval))
-    {
-      drawinfo->point_size = dval;
-    }
-    if (ctx->getSub(lineWidth,dval))
-    {
-      drawinfo->line_width = dval;
-    }
-    if (ctx->getSub(polygonOffsetFactor,dval))
-    {
-      drawinfo->polygon_offset_factor = dval;
-    }
-    if (ctx->getSub(polygonOffsetUnits,dval))
-    {
-      drawinfo->polygon_offset_units = dval;
     }
 
     if (ctx->getSub(use_clip,val))
