@@ -11,7 +11,7 @@ namespace Uintah {
     CGSolver(const ProcessorGroup* myworld);
     virtual ~CGSolver();
 
-    virtual SolverParameters* readParameters(const ProblemSpecP& params,
+    virtual SolverParameters* readParameters(ProblemSpecP& params,
 					     const std::string& name);
 
     virtual void scheduleSolve(const LevelP& level, SchedulerP& sched,

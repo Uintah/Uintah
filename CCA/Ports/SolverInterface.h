@@ -32,7 +32,7 @@ namespace Uintah {
     SolverInterface();
     virtual ~SolverInterface();
 
-    virtual SolverParameters* readParameters(const ProblemSpecP& params,
+    virtual SolverParameters* readParameters(ProblemSpecP& params,
 					     const std::string& name) = 0;
 
     virtual void scheduleSolve(const LevelP& level, SchedulerP& sched,
