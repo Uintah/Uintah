@@ -34,7 +34,7 @@
 #include <mpi.h>
 using namespace std;
 using namespace SCIRun;
-using namespace sci::cca;
+   using namespace sci::cca;
 #define VERSION "2.0.0" // this needs to be synced with the contents of
                         // SCIRun/doc/edition.xml
 #include <sys/stat.h>
