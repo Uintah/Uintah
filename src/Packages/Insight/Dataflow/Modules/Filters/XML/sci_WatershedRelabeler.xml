@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE filter SYSTEM "sci_filter.dtd">
 <filter name="watershed::Relabeler">
   <include href="ITK/itk_WatershedRelabeler.xml"/>
   <include href="Dataflow/Modules/Filters/XML/gui_WatershedRelabeler_Darby.xml"/>
@@ -30,7 +31,7 @@
   </instantiations>
 
   <includes>
-    <include>Packages/Insight/Dataflow/Ports/ITKDatatypePort.h</include>
+    <file>Packages/Insight/Dataflow/Ports/ITKDatatypePort.h</file>
   </includes>
 
 </filter-sci>

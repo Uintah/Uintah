@@ -1,0 +1,19 @@
+<!ELEMENT filter-gui (parameters*)>
+  <!ATTLIST filter-gui name CDATA #REQUIRED>
+
+<!ELEMENT parameters (param*)>
+
+<!ELEMENT param (gui, min?, max?, values?, default)>
+  <!ATTLIST param name CDATA #REQUIRED>
+
+<!ELEMENT gui (#PCDATA)>
+
+<!ELEMENT min (#PCDATA)>
+
+<!ELEMENT max (#PCDATA)>
+
+<!ELEMENT values (val+)>
+
+<!ELEMENT val (#PCDATA)>
+
+<!ELEMENT default (#PCDATA)>
