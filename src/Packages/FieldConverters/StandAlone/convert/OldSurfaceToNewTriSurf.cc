@@ -13,6 +13,9 @@
 #include <Packages/FieldConverters/Core/Datatypes/TriSurface.h>
 #include <Core/Datatypes/TriSurf.h>
 #include <Core/Persistent/Pstreams.h>
+#include <Core/Containers/HashTable.h>
+#include <Core/Datatypes/FieldSet.h>
+#include <Core/Geometry/Vector.h>
 
 #include <iostream>
 #include <fstream>
@@ -66,20 +69,73 @@ main(int argc, char **argv) {
   }
 
   tsm->connect();
-  
-  
-  //bcidx
-  //bcval
-  //valtype
-
-  //normtype
-  //normals
-  //havenormals
-
-  // Write out the new field.
-  BinaryPiostream out_stream(argv[2], Piostream::Write);
   TriSurfMeshHandle tsmh(tsm);
-  Pio(out_stream, tsmh);
 
+  BinaryPiostream out_stream(argv[2], Piostream::Write);
+
+#if 0
+  // Package up the boundary conditions into a field.
+  Field::data_location bcloc = Field::NONE;
+  if (ts->valType == TriSurface::NodeType)
+  {
+    bcloc = Field::NODE;
+  }
+  else
+  {
+    bcloc = Field::FACE;
+  }
+
+  GenericField<TriSurfMesh, HashTable<int, double> > *bcfield =
+    new GenericField<TriSurfMesh, HashTable<int, double> >(tsmh, bcloc);
+
+  HashTable<int, double> &table = bcfield->fdata();
+  
+  for (i=0; i<ts->bcIdx.size(); i++)
+  {
+    table.insert(ts->bcIdx[i],ts->bcVal[i])
+  }
+
+
+  // Package up the normals into a field.
+  Field::data_location loc = Field::NONE;
+  switch (ts->normType)
+  {
+  case TriSurface::PointType:
+    loc = Field::NODE;
+    break;
+  case TriSurface::VertexType:
+    loc = Field::EDGE;
+    break;
+  case TriSurface::ElementType:
+    loc = Field::FACE;
+    break;
+  default:
+    loc = Field::NONE;
+  }
+  if (loc != Field::NONE)
+  {
+    TriSurf<Vector> *normals = new TriSurf<Vector>(tsmh, loc);
+    vector<Vector> &vec = normals->fdata();
+    for (int i = 0; i< ts->normals.size(); i++)
+    {
+      vec.push_back(ts->normals[i]);
+    }
+
+    FieldSet *fset = new FieldSet();
+    //fset->add(GenericField<TriSurfMesh, HashTable<int, double> >::handle_type(bcfield));
+    //fset->add(TriSurf<Vector>::handle_type(normals));
+
+    FieldSetHandle fsetH(fset);
+
+    // Write out the new field.
+    Pio(out_stream, fsetH);
+  }
+  else
+  {
+    //GenericField<TriSurfMesh, HashTable<int, double> >::handle_type bch(bcfield);    
+    //Pio(out_stream, bch);
+  }
+
+#endif
   return 0;  
 }    
