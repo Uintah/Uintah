@@ -56,6 +56,8 @@ private:
   NrrdOPort   *onrrd_;
   
   GuiString    label_;
+  int          ifield_generation_;
+  NrrdDataHandle onrrd_handle_;
 };
 
 } // end namespace SCITeem
@@ -66,7 +68,9 @@ DECLARE_MAKER(FieldToNrrd)
 
 FieldToNrrd::FieldToNrrd(GuiContext *ctx):
   Module("FieldToNrrd", ctx, Filter, "DataIO", "Teem"),
-  label_(ctx->subVar("label"))
+  label_(ctx->subVar("label")),
+  ifield_generation_(-1),
+  onrrd_handle_(0)
 {
 }
 
@@ -78,32 +82,34 @@ void FieldToNrrd::execute()
 {
   ifield_ = (FieldIPort *)get_iport("Field");
   onrrd_ = (NrrdOPort *)get_oport("Nrrd");
-
+  
   if (!ifield_) {
     error("Unable to initialize iport 'Field'.");
     return;
   }
-
+  
   if (!onrrd_) {
     error("Unable to initialize oport 'Nrrd'.");
     return;
   }
-
+  
   FieldHandle field_handle; 
   if (!ifield_->get(field_handle))
     return;
-
-  const TypeDescription *td = field_handle->get_type_description();
-  CompileInfoHandle ci = ConvertToNrrdBase::get_compile_info(td);
-  Handle<ConvertToNrrdBase> algo;
-  if (!module_dynamic_compile(ci, algo)) return;  
   
-  label_.reset();
-  string lab = label_.get();
-  NrrdDataHandle onrrd_handle = algo->convert_to_nrrd(field_handle, lab);
-
-  onrrd_handle->set_orig_field(field_handle);
-
-  onrrd_->send(onrrd_handle);
+  if (ifield_generation_ != field_handle->generation) {
+    ifield_generation_ = field_handle->generation;
+    
+    const TypeDescription *td = field_handle->get_type_description();
+    CompileInfoHandle ci = ConvertToNrrdBase::get_compile_info(td);
+    Handle<ConvertToNrrdBase> algo;
+    if (!module_dynamic_compile(ci, algo)) return;  
+    
+    label_.reset();
+    string lab = label_.get();
+    onrrd_handle_ = algo->convert_to_nrrd(field_handle, lab);
+  }
+  
+  onrrd_->send(onrrd_handle_);
 }
 
