@@ -21,11 +21,11 @@ echo "0.0">>meanTime  # mean time data isn't collect the first 4 timestps
 echo "0.0">>meanTime
 echo "0.0">>meanTime
 
-grep elap out | cut -d"=" -f4 | cut -d "," -f1 >& elapsedTime
-grep mean out | cut -d" " -f 3 >> meanTime
-grep elap out | cut -d"=" -f2 | cut -d"," -f1 >& PhysicalTime
-grep delT out | cut -d"=" -f3 | cut -d"," -f1 >& delT
-grep delT out | cut -d"=" -f5 >& memUse
+grep elap $out | cut -d"=" -f4 | cut -d "," -f1 >& elapsedTime
+grep mean $out | cut -d" " -f 3 >> meanTime
+grep elap $out | cut -d"=" -f2 | cut -d"," -f1 >& PhysicalTime
+grep delT $out | cut -d"=" -f3 | cut -d"," -f1 >& delT
+grep delT $out | cut -d"=" -f5 >& memUse
 paste -d "  " elapsedTime meanTime PhysicalTime delT memUse>& data
 
 #__________________________________
