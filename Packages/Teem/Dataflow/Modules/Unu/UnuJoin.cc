@@ -97,7 +97,7 @@ UnuJoin::execute()
 
     NrrdDataHandle nrrd;
     
-    if (inrrd->get(nrrd)) {
+    if (inrrd->get(nrrd) && nrrd.get_rep()) {
       // check to see if we need to do the join or can output the cached onrrd.
       if (in_generation_.size() <= i) {
 	// this is a new input, never been joined.
