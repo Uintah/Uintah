@@ -619,7 +619,7 @@ proc edit_port {portnum} {
     global $edescript
     set sydescript $fdescript.sy
     global $sydescript
-    prompted_text $edescript "<description information in HTML>" "" \
+    prompted_text $edescript "<textual description of port data>" "" \
         -wrap word -yscrollcommand "$sydescript set" -height 5 -width 50
     pack $edescript -side left -fill x -expand true -padx 5
     if [info exists ${portnum}(descript)] {
@@ -902,7 +902,7 @@ proc CreateNewModule { packname catname compname } {
         set answer [createSciDialog -title "CATEGORY NAME WARNING" -warning \
                     -message "Category \"$basepath/Dataflow/Modules/$catname\"\
 		    does not exist.  Create it now?" -button1 "Yes" -button2 "No"]
-        if { $anwer == 1 } {
+        if { $answer == 1 } {
             netedit create_cat_mod $psepath $packname $catname $compname $xmlname
             destroy .componentWizard; 
             newModuleMessage $compname
