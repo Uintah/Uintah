@@ -13,6 +13,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Source.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/OdtClosure.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -105,7 +106,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
   }
 
   d_linearSolver->problemSetup(db);
-
+  d_mixedModel=d_turbModel->getMixedModel();
 }
 
 //****************************************************************************
@@ -584,16 +585,16 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 		Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
 #endif
 
-  if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) 
+  if ((dynamic_cast<const OdtClosure*>(d_turbModel))||d_mixedModel) {
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       tsk->requires(Task::OldDW, d_lab->d_stressTensorCompLabel,
 		    d_lab->d_tensorMatl,Task::OutOfDomain,
 		    Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    else
-      tsk->requires(Task::NewDW, d_lab->d_stressTensorCompLabel,
-		    d_lab->d_tensorMatl,Task::OutOfDomain,
-		    Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
+   else 
+    tsk->requires(Task::NewDW, d_lab->d_stressTensorCompLabel,
+                  d_lab->d_tensorMatl,Task::OutOfDomain,
+                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  }
 
     // for multi-material
     // requires su_drag[x,y,z], sp_drag[x,y,z] for arches
@@ -1008,10 +1009,10 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 #endif
 
       // for scalesimilarity model add stress tensor to the source of velocity eqn.
-      if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
-	StencilMatrix<constCCVariable<double> > stressTensor; //9 point tensor
+      if ((dynamic_cast<const OdtClosure*>(d_turbModel))||d_mixedModel) {
+        StencilMatrix<constCCVariable<double> > stressTensor; //9 point tensor
         if (timelabels->integrator_step_number == 
-			TimeIntegratorStepNumber::First)
+            TimeIntegratorStepNumber::First)
 	  for (int ii = 0; ii < d_lab->d_tensorMatl->size(); ii++) {
 	    old_dw->get(stressTensor[ii], 
 			d_lab->d_stressTensorCompLabel, ii, patch,

@@ -91,6 +91,45 @@ IncDynamicProcedure::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("filter_cs_squared",d_filter_cs_squared,false);
 
 }
+void
+IncDynamicProcedure::initializeSmagCoeff( const ProcessorGroup*,
+                                                const PatchSubset* patches,
+                                                const MaterialSubset* ,
+                                                DataWarehouse*,
+                                                DataWarehouse* new_dw,
+                                                const TimeIntegratorLabel* ) {
+  int archIndex = 0; // only one arches material
+  int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    CCVariable<double> Cs; //smag coeff 
+    new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, matlIndex, patch);  
+    Cs.initialize(0.0);
+  }
+}
+
+//****************************************************************************
+// Schedule initialization of the smag coeff sub model 
+//****************************************************************************
+void 
+IncDynamicProcedure::sched_initializeSmagCoeff( SchedulerP& sched, 
+                                                      const PatchSet* patches,
+                                                      const MaterialSet* matls,
+                                                      const TimeIntegratorLabel* timelabels )
+{
+  string taskname =  "IncDynamicProcedure::initializeSmagCoeff" + timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this,
+                          &IncDynamicProcedure::initializeSmagCoeff,
+                          timelabels);
+
+  tsk->computes(d_lab->d_CsLabel);
+  sched->addTask(tsk, patches, matls);
+}
+
+
+
 
 //****************************************************************************
 // Schedule recomputation of the turbulence sub model 

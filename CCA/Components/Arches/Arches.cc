@@ -15,6 +15,8 @@
 #include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/IncDynamicProcedure.h>
 #include <Packages/Uintah/CCA/Components/Arches/CompDynamicProcedure.h>
+#include <Packages/Uintah/CCA/Components/Arches/CompLocalDynamicProcedure.h>
+#include <Packages/Uintah/CCA/Components/Arches/OdtClosure.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -69,6 +71,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_MAlab = 0; // will be set by setMPMArchesLabel
   d_props = 0;
   d_turbModel = 0;
+  d_scaleSimilarityModel = 0;
   d_boundaryCondition = 0;
   d_nlSolver = 0;
   d_physicalConsts = 0;
@@ -90,6 +93,7 @@ Arches::~Arches()
   delete d_lab;
   delete d_props;
   delete d_turbModel;
+  delete d_scaleSimilarityModel;
   delete d_boundaryCondition;
   delete d_nlSolver;
   delete d_physicalConsts;
@@ -125,6 +129,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     db->require("solve_enthalpy", d_calcEnthalpy);
     db->getWithDefault("solve_thermalnox", d_calcThermalNOx,false);
   }
+  db->getWithDefault("turnonMixedModel",d_mixedModel,false);
 
   // physical constant
   // physical constants
@@ -157,30 +162,42 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (turbModel == "smagorinsky") 
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
 					  d_boundaryCondition);
-  else if (turbModel == "dynamicprocedure") 
+  else  if (turbModel == "dynamicprocedure") 
     d_turbModel = scinew IncDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
 					  d_boundaryCondition);
   else if (turbModel == "compdynamicprocedure")
     d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
 					  d_boundaryCondition);
-  else if (turbModel == "mixmodel") { 
-    d_turbModel = scinew ScaleSimilarityModel(d_lab, d_MAlab, d_physicalConsts,
-					      d_boundaryCondition);
-  }
+  else if (turbModel == "complocaldynamicprocedure")
+    d_turbModel = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition);
   else 
     throw InvalidValue("Turbulence Model not supported" + turbModel);
 //  if (d_turbModel)
   d_turbModel->problemSetup(db);
-  d_dynScalarModel = d_turbModel->getDynScalarModel();
-  if (d_dynScalarModel)
-    d_turbModel->setCombustionSpecifics(d_reactingFlow, d_calcEnthalpy,
-		                        d_calcReactingScalar);
+  d_turbModel->setMixedModel(d_mixedModel);
 
 #ifdef PetscFilter
     d_filter = scinew Filter(d_lab, d_boundaryCondition, d_myworld);
     d_filter->problemSetup(db);
     d_turbModel->setFilter(d_filter);
 #endif
+
+  if (d_mixedModel) {
+//    cout << "turn on MixedModel in Arches.cc (and creating a scale sim model\n";
+    d_scaleSimilarityModel=scinew ScaleSimilarityModel(d_lab, d_MAlab, d_physicalConsts,
+                                                       d_boundaryCondition);	
+    d_scaleSimilarityModel->problemSetup(db);
+
+    d_scaleSimilarityModel->setMixedModel(d_mixedModel);
+#ifdef PetscFilter
+    d_scaleSimilarityModel->setFilter(d_filter);
+#endif
+  }
+
+  d_dynScalarModel = d_turbModel->getDynScalarModel();
+  if (d_dynScalarModel)
+    d_turbModel->setCombustionSpecifics(d_reactingFlow, d_calcEnthalpy,
+		                        d_calcReactingScalar);
 
   d_props->setBC(d_boundaryCondition);
 
@@ -197,7 +214,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   else if (nlSolver == "explicit") {
         d_nlSolver = scinew ExplicitSolver(d_lab, d_MAlab, d_props,
 					   d_boundaryCondition,
-					   d_turbModel, d_physicalConsts,
+					   d_turbModel, d_scaleSimilarityModel, 
+					   d_physicalConsts,
 					   d_calcReactingScalar,
 					   d_calcEnthalpy,
 				       	   d_calcThermalNOx,
@@ -285,9 +303,14 @@ Arches::scheduleInitialize(const LevelP& level,
     }
 #endif
 
-  d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
-					   init_timelabel);
-
+    if (d_mixedModel) {
+//  	cout << "turn on MixedModel in Arches 2\n";
+        d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, patches, matls,
+                                                            init_timelabel);
+    }
+    
+//    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
+    d_turbModel->sched_initializeSmagCoeff(sched, patches, matls, init_timelabel);
   }
 
   // Computes velocities at apecified pressure b.c's
@@ -295,7 +318,7 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : pressureSPBC, [u,v,w]VelocitySPBC
   if (d_boundaryCondition->getPressureBC()) 
     d_boundaryCondition->sched_computePressureBC(sched, patches, matls);
-}
+} // end scheduleInitialize()
 
 // ****************************************************************************
 // schedule the initialization of parameters
@@ -317,6 +340,7 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_newCCVVelocityLabel);
     tsk->computes(d_lab->d_newCCWVelocityLabel);
     tsk->computes(d_lab->d_pressurePSLabel);
+//    tsk->computes(d_lab->d_CsLabel);
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE")))
       tsk->computes(d_lab->d_pressurePredLabel);
     if (d_timeIntegratorType == "RK3SSP")
@@ -407,6 +431,7 @@ Arches::paramInit(const ProcessorGroup* ,
     CCVariable<double> reactScalarDiffusivity;
     CCVariable<double> pPlusHydro;
     CCVariable<double> mmgasVolFrac;
+//    CCVariable<double> Cs;
     std::cerr << "Material Index: " << matlIndex << endl;
     new_dw->allocateAndPut(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
     new_dw->allocateAndPut(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
@@ -420,9 +445,11 @@ Arches::paramInit(const ProcessorGroup* ,
     new_dw->allocateAndPut(uVelRhoHat, d_lab->d_uVelRhoHatLabel, matlIndex, patch);
     new_dw->allocateAndPut(vVelRhoHat, d_lab->d_vVelRhoHatLabel, matlIndex, patch);
     new_dw->allocateAndPut(wVelRhoHat, d_lab->d_wVelRhoHatLabel, matlIndex, patch);
+//    new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, matlIndex, patch);
     uVelRhoHat.initialize(0.0);
     vVelRhoHat.initialize(0.0);
     wVelRhoHat.initialize(0.0);
+//    Cs.initialize(0.0);
     new_dw->allocateAndPut(pressure, d_lab->d_pressurePSLabel, matlIndex, patch);
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))) {
       new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel,
@@ -614,6 +641,7 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw)
 {
+//	cout << "nofTimeSteps in computeStableTimeStep= " << nofTimeSteps << "\n";
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -784,6 +812,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 {
   double time = d_lab->d_sharedState->getElapsedTime();
   nofTimeSteps++ ;
+//  cout << "nofTimeSteps in scheduleTimeAdvance= " << nofTimeSteps << "\n";
   if (d_MAlab) {
 #ifndef ExactMPMArchesInitialize
     //    if (nofTimeSteps < 2) {
