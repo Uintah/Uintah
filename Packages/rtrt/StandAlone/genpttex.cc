@@ -39,6 +39,7 @@ using namespace rtrt;
 using namespace SCIRun;
 using namespace std;
 
+const size_t work_load_max = 1000;
 int tex_size = 16;
 double radius = 0;
 double radius_factor = 1.0;
@@ -335,6 +336,10 @@ int main(int argc, char** argv)
   char *bg="/home/sci/cgribble/research/datasets/mpm/misc/envmap.ppm";
   char *outfile = 0;
   int nworkers = 1;
+  bool dilate = false;
+  int support = 2;
+  int use_weighted_ave = 0;
+  float threshold = 0.3;
   
   for(int i=1;i<argc;i++) {
     if(strcmp(argv[i], "-light_pos")==0) {
@@ -371,19 +376,34 @@ int main(int argc, char** argv)
       gridcellsize = atoi(argv[++i]);
     } else if (strcmp(argv[i],"-gdepth")==0) {
       griddepth = atoi(argv[++i]);
+    } else if (strcmp(argv[i],"-dilate")==0) {
+      dilate = true;
+    } else if (strcmp(argv[i],"-s")==0) {
+      support = atoi(argv[++i]);
+    } else if (strcmp(argv[i],"-wa")==0) {
+      use_weighted_ave = 1;
+    } else if (strcmp(argv[i],"-thresh")==0) {
+      threshold = atof(argv[++i]);
     } else {
       cerr<<"unrecognized option \""<<argv[i]<<"\""<<endl;
 
-      cerr << "valid options are: \n";
-      cerr << "-light_pos <lx> <ly> <lz>\n";
-      cerr << "-lr <float>\n";
-      cerr << "-intensity <float>\n";
-      cerr << "-num_samples <int>\n";
-      cerr << "-depth <int>\n";
-      cerr << "-tex_size <int>\n";
-      cerr << "-file <filename>\n";
-      cerr << "-bg <background image>\n";
-      cerr << "-o <outfile name>\n";
+      cerr<<"valid options are: \n";
+      cerr<<"  -light_pos <lx> <ly> <lz>   position of light source (-0.25, 0.2, -0.1)\n";
+      cerr<<"  -lr <float>                 radius of light source (0.01)\n";
+      cerr<<"  -intensity <float>          intensity of light source (1000.0)\n";
+      cerr<<"  -num_samples <int>          number of samples per texel (100)\n";
+      cerr<<"  -depth <int>                maximum ray depth (3)\n";
+      cerr<<"  -tex_res <int>              texture resolution (16)\n";
+      cerr<<"  -radius <float>             sphere radius (0.0)\n";
+      cerr<<"  -i <filename>               input filename (null)\n";
+      cerr<<"  -bg <filename>              background image name (envmap.ppm)\n";
+      cerr<<"  -o <filename>               basename of texture files (null)\n";
+      cerr<<"  -nsides <int>               grid cell size (6)\n";
+      cerr<<"  -gdepth <int>               grid depth (2)\n";
+      cerr<<"  -dilate                     dilate textures before writing (false)\n";
+      cerr<<"  -s <int>                    size of support kernel for dilation (2)\n";
+      cerr<<"  -wa                         use weighted averaging during dilation (false)\n";
+      cerr<<"  -t <float>                  threshold for contribution determination (0.3)\n";
       exit(1);
     }
   }
@@ -410,9 +430,10 @@ int main(int argc, char** argv)
   }
 
   // Create the context for rendering
-  Semaphore sema("genpttex::Semaphore", nworkers);
+  Semaphore sem("genpttex::Semaphore", nworkers);
   PathTraceContext ptcontext(Color(0.1,0.7,0.2), ptlight, geometry, emap,
-			     num_samples, depth, &sema);
+			     num_samples, depth, dilate, support, use_weighted_ave,
+			     threshold, &sem);
   
   if (outfile == 0) {
     outfile = "sphere";
@@ -433,10 +454,10 @@ int main(int argc, char** argv)
     // We need to determine how many spheres to do per work unit
     size_t work_load = (size_t)ceil((double)total_num_spheres/nworkers);
     // This prevents the work load from getting too large
-    if (work_load > 100)
-      work_load = 100;
+    if (work_load > work_load_max)
+      work_load = work_load_max;
     while (next_sphere < total_num_spheres) {
-      sema.down();
+      sem.down();
       // Get the next range of spheres
       size_t last_work = next_sphere;
       Group *work_unit = get_next_sphere_set(work_load);
@@ -446,7 +467,7 @@ int main(int argc, char** argv)
       Thread *thread = new Thread(ptworker, "PathTraceWorker");
       thread->detach();
     }
-    sema.down(nworkers);
+    sem.down(nworkers);
   }
       
   return 0;
