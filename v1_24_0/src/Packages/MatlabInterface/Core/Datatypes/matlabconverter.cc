@@ -143,6 +143,12 @@ void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,PropertyManager *h
   string propval;
   matlabarray proparray;
 
+  string dummyinfo;
+  int matrixscore;
+ 
+   NrrdDataHandle  nrrd;
+  MatrixHandle    matrix;
+  
   // properties are stored in field property
   long propindex = ma.getfieldnameindexCI("property");
         
@@ -163,7 +169,40 @@ void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,PropertyManager *h
               propname = proparray.getfieldname(p);
               propval = subarray.getstring();
               handle->set_property(propname,propval,false);
+              continue;
             }
+          if ((matrixscore = sciMatrixCompatible(subarray,dummyinfo,0)))
+          {
+            if (matrixscore > 1)
+            {
+                 propname = proparray.getfieldname(p);
+                 mlArrayTOsciMatrix(subarray,matrix,0);
+                 handle->set_property(propname,matrix,false);         
+                 continue;
+            }
+            else
+            {
+              if (sciNrrdDataCompatible(subarray,dummyinfo,0))
+              {
+                 propname = proparray.getfieldname(p);
+                 mlArrayTOsciNrrdData(subarray,nrrd,0);
+                 handle->set_property(propname,nrrd,false);         
+                 continue;              
+              }
+                 propname = proparray.getfieldname(p);
+                 mlArrayTOsciMatrix(subarray,matrix,0);
+                 handle->set_property(propname,matrix,false);         
+                 continue;           
+            }
+          }
+          if (sciNrrdDataCompatible(subarray,dummyinfo,0))
+          {
+               propname = proparray.getfieldname(p);
+               mlArrayTOsciNrrdData(subarray,nrrd,0);
+               handle->set_property(propname,nrrd,false);         
+               continue;
+          }
+ 
         }
     }
 }
@@ -175,6 +214,8 @@ void matlabconverter::sciPropertyTOmlProperty(PropertyManager *handle,matlabarra
   string propname;
   string propvalue;
   matlabarray subarray;
+  MatrixHandle matrix;
+  NrrdDataHandle nrrd;
         
   proparray.createstructarray();
   numfields = handle->nproperties();
@@ -187,6 +228,24 @@ void matlabconverter::sciPropertyTOmlProperty(PropertyManager *handle,matlabarra
           subarray.createstringarray(propvalue);
           proparray.setfield(0,propname,subarray);
         }
+      if (handle->get_property(propname,nrrd))
+        {
+          subarray.clear();
+          bool oldnumericarray_ = numericarray_;
+          numericarray_ = true;
+          sciNrrdDataTOmlArray(nrrd,subarray,0);
+          numericarray_ = oldnumericarray_;
+          proparray.setfield(0,propname,subarray);
+        }
+      if (handle->get_property(propname,matrix))
+        {
+          subarray.clear();
+          bool oldnumericarray_ = numericarray_;
+          numericarray_ = true;
+          sciMatrixTOmlArray(matrix,subarray,0);
+          numericarray_ = oldnumericarray_;
+          proparray.setfield(0,propname,subarray);
+        } 
     }
         
   ma.setfield(0,"property",proparray);
