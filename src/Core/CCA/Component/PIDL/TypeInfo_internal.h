@@ -65,7 +65,7 @@ DESCRIPTION
 	    TypeInfo_internal(const std::string& fullclassname,
 			      const std::string& uuid,
 			      void* table, int tableSize,
-			      Object* (*create_proxy)(const SCIRun::refList&));
+			      Object* (*create_proxy)(const SCIRun::ReferenceMgr&));
 
 	    //////////
 	    // The fully qualified classname for this type.
@@ -86,7 +86,7 @@ DESCRIPTION
 
 	    //////////
 	    // The function to create a new proxy to this type.
-	    Object* (*create_proxy)(const SCIRun::refList&);
+	    Object* (*create_proxy)(const SCIRun::ReferenceMgr&);
 
 	    //////////
 	    // A pointer to the parent class type, if any.  If this

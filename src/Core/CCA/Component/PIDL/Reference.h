@@ -75,15 +75,6 @@ DESCRIPTION
     //////////
     // The vtable base offset
     int d_vtable_base;
-
-    /////////
-    // For parallel proxies, number of cohorts
-    int par_size;
-    
-    /////////
-    // For parallel proxies, my ordered number
-    int par_rank;
-
   };
 } // End namespace SCIRun
 

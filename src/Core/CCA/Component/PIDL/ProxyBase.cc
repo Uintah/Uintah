@@ -46,45 +46,39 @@ ProxyBase::ProxyBase()
 ProxyBase::ProxyBase(const Reference& ref)
 : proxy_uuid("NONE")
 { 
-  d_ref.insert(d_ref.begin(),ref);
+  rm.insertReference(ref);
 }
 
-ProxyBase::ProxyBase(const refList& refL)
+ProxyBase::ProxyBase(const ReferenceMgr& refM)
 : proxy_uuid("NONE")
 { 
-  d_ref = refL;
+  rm = refM;
 }
 
 ProxyBase::~ProxyBase()
 {
-  refList::iterator iter = d_ref.begin();
-  for(unsigned int i=0; i < d_ref.size(); i++, iter++) {
-    (*iter).chan->closeConnection();
-  }
 }
 
 void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
 {
   if (copy) {
+    /*Clean up the passed reference just in case*/
     if (ref.chan != NULL) {
       delete (ref.chan);
       ref.chan = NULL;
     }
-    ref.chan = (d_ref[0].chan)->SPFactory(true);
+
+    ref.chan = (rm.d_ref[0].chan)->SPFactory(true);
   }
   else {
-    ref = d_ref[0];
+    ref = (rm.d_ref[0]);
   }
-}
-
-void ProxyBase::addParReference(Reference& ref)
-{
-  d_ref.insert(d_ref.begin(),ref);
 }
 
 void ProxyBase::_proxyGetReferenceList(refList& ref, bool copy) const
 {
   if (copy) {
+    /*Clean up the passed reference just in case*/
     refList::iterator iter = ref.begin();
     for(unsigned int i=0; i < ref.size(); i++, iter++) {      
       if ((*iter).chan != NULL) {
@@ -93,24 +87,29 @@ void ProxyBase::_proxyGetReferenceList(refList& ref, bool copy) const
       }
     }
 
-    ref = d_ref;
+    ref = (rm.d_ref);
     for(unsigned int i=0; i < ref.size(); i++) {      
-      ref[i].chan = (d_ref[i].chan)->SPFactory(true);
+      ref[i].chan = (rm.d_ref[i].chan)->SPFactory(true);
     }
   }
   else {
-    ref = d_ref; 
+    ref = (rm.d_ref); 
   }
+}
+
+ReferenceMgr* ProxyBase::_proxyGetReferenceMgr()  
+{
+  return (&rm);
 }
 
 ::std::string ProxyBase::getProxyUUID()
 {
   if(proxy_uuid == "NONE") {
-    if(d_ref[0].par_rank == 0) {
-      proxy_uuid = getUUID(); 
+    if(rm.localRank == 0) {
+//    proxy_uuid = getUUID(); 
     }
 #ifdef TRANSFER_UUID
-    MPI_Bcast(const_cast<char*>(proxy_uuid.c_str()),64,MPI_CHAR,0,MPI_COMM_WORLD);
+//    MPI_Bcast(const_cast<char*>(proxy_uuid.c_str()),64,MPI_CHAR,0,MPI_COMM_WORLD);
 #endif
   }
   return proxy_uuid;

@@ -36,7 +36,6 @@ using namespace SCIRun;
 HandlerStorage::HandlerStorage()
   :d_data_sema("Handler Buffer Get Semaphore",0), d_data_mutex("Handler Buffer Map Mutex")
 {
-
 }
 
 HandlerStorage::~HandlerStorage()
@@ -49,15 +48,6 @@ void HandlerStorage::clear(int handler_num)
   if (handler_num == 0) {
     /*CLEAR ALL*/
     d_data_mutex.lock();
-    /*
-    dataList::iterator diter = d_data.begin();
-    for(;diter != d_data.end(); diter++) {
-      voidvec::iterator viter = (*diter).second.begin();
-      for(;viter != (*diter).second.end();viter++) {
-	delete (*viter);
-      }      
-    }
-    */
     d_data.clear();
     d_data_mutex.unlock(); 
   }
@@ -71,12 +61,6 @@ void HandlerStorage::clear(int handler_num)
       return;
     }
     else {
-      /*
-      voidvec::iterator viter = (*diter).second.begin();
-      for(;viter != (*diter).second.end();viter++) {
-	delete (*viter);
-      }
-      */
       d_data.erase(diter);
 
     }

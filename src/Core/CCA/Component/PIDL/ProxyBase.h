@@ -32,6 +32,7 @@
 #define Component_PIDL_ProxyBase_h
 
 #include <Core/CCA/Component/PIDL/Reference.h>
+#include <Core/CCA/Component/PIDL/ReferenceMgr.h>
 #include <Core/CCA/Component/PIDL/MxNScheduler.h>
 #include <vector> 
 #include <string>
@@ -52,8 +53,6 @@ DESCRIPTION
    component).  This class should not be used outside of PIDL
    or automatically generated sidl code.
 ****************************************/
-        typedef std::vector<Reference> refList;
-
 	class ProxyBase {
 	public:
 
@@ -71,16 +70,16 @@ DESCRIPTION
 
 	  ////////////
 	  // Create the proxy from the given reference list.
-	  ProxyBase(const refList&);	  
+	  ProxyBase(const ReferenceMgr&);	  
 
 	  ///////////
 	  // Destructor which closes connection
 	  virtual ~ProxyBase();
 	  
 	  //////////
-	  // A vector of reference to the remote objects.
-	  refList d_ref;
-	  
+	  // A pointer to thereference manager.
+	  ReferenceMgr rm; 
+
 	  //////////
 	  // TypeInfo is a friend so that it can call _proxyGetReference
 	  friend class TypeInfo;
@@ -89,13 +88,13 @@ DESCRIPTION
 	  // Return a the first internal reference or a copy of it.  
 	  void _proxyGetReference(Reference& ref, bool copy) const;
 
-	  //////////
-	  // Adds another reference (parallel component situation)  
-	  void addParReference(Reference& ref);
-
 	  /////////
 	  // Returns the whole reference list or a copy of it.
 	  void _proxyGetReferenceList(refList& ref, bool copy) const;
+
+          //////////
+	  // Returns the reference manager 
+	  ReferenceMgr* _proxyGetReferenceMgr();
 
 	  //////////
 	  // Returns the unique identifier of this proxy 

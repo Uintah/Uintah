@@ -221,6 +221,7 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   out << "#include <Core/CCA/Component/PIDL/Object_proxy.h>\n";
   out << "#include <Core/CCA/Component/PIDL/ProxyBase.h>\n";
   out << "#include <Core/CCA/Component/PIDL/Reference.h>\n";
+  out << "#include <Core/CCA/Component/PIDL/ReferenceMgr.h>\n";
   out << "#include <Core/CCA/Component/PIDL/ServerContext.h>\n";
   out << "#include <Core/CCA/Component/PIDL/TypeInfo.h>\n";
   out << "#include <Core/CCA/Component/PIDL/TypeInfo_internal.h>\n";
@@ -230,6 +231,7 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   out << "#include <Core/Util/NotFinished.h>\n";
   out << "#include <Core/Thread/Thread.h>\n";
   out << "#include <iostream>\n";
+  out << "#include <vector>\n";
   out << "#include <sci_config.h>\n";
   out << "#if HAVE_MPI || HAVE_MPICH\n";
   out << "#include <mpi.h> //Debugging purposes\n";
@@ -766,8 +768,8 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
 
   if (isCollective) {
     e.out << leader2 << "//Unmarshal distribution flag\n";
-    e.out << leader2 << "int _flag;\n";
-    e.out << leader2 << "message->unmarshalInt(&_flag);\n";
+    e.out << leader2 << "::SCIRun::callType _flag;\n";
+    e.out << leader2 << "message->unmarshalInt(&(int)_flag);\n";
     e.out << leader2 << "//Unmarshal sessionID and number of calls\n";
     e.out << leader2 << "::std::string _sessionID(64, ' ');\n";
     e.out << leader2 << "message->unmarshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
@@ -783,7 +785,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   string f_leader;
   string a_leader;
   if (isCollective) {
-    e.out << leader2 << "if ((_flag == 2)||(_flag == 3)) {  /*CALLONLY || CALLNORET*/ \n";
+    e.out << leader2 << "if ((_flag == ::SCIRun::CALLONLY)||(_flag == ::SCIRun::CALLNORET)) {  /*CALLONLY || CALLNORET*/ \n";
     f_leader=e.out.push_leader();
   }
 
@@ -844,7 +846,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
 
     if (isCollective) {
       e.out << leader2 << "// Clear Storage from previous data\n";
-      e.out << leader2 << "if (_flag != 3)\n";
+      e.out << leader2 << "if (_flag != ::SCIRun::CALLNORET)\n";
       e.out << leader2 << "  _sc->storage->clear(" << e.handlerNum << ");\n";
     }
 
@@ -879,7 +881,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     if (isCollective) {
       //Do this here because CALLNORET needs data redistribution
       //calls found in emit_marshal (OUT args)
-      e.out << leader2 << "if (_flag == 3) {\n";
+      e.out << leader2 << "if (_flag == ::SCIRun::CALLNORET) {\n";
       e.out << leader2 << "  message->destroyMessage();\n";
       e.out << leader2 << "  return;\n";
       e.out << leader2 << "}\n";
@@ -905,7 +907,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   /*NOCALLRET                        */
   /***********************************/
   if (isCollective) {
-    e.out << leader2 << "if (_flag == 4) {  /*NOCALLRET*/ \n";
+    e.out << leader2 << "if (_flag == ::SCIRun::NOCALLRET) {  /*NOCALLRET*/ \n";
     f_leader=e.out.push_leader();
     
     if(reply_required()){
@@ -964,7 +966,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
       e.out << leader2 << "#undef _arg" << argNum << "\n";
     }
 
-    e.out << leader2 << "if (_flag == 1) {  /*REDISONLY*/ \n";
+    e.out << leader2 << "if (_flag == ::SCIRun::REDIS) {  /*REDISONLY*/ \n";
 
     f_leader=e.out.push_leader();
     e.out << leader2 << "//Unmarshal received distribution name\n";
@@ -1026,7 +1028,7 @@ void CI::emit_proxyclass(EmitState& e)
 
   e.proxy << leader2 << "class " << pname << " : public ::SCIRun::ProxyBase, public " << name << " {\n";
   e.proxy << leader2 << "public:\n";
-  e.proxy << leader2 << "  " << pname << "(const ::SCIRun::refList&);\n";
+  e.proxy << leader2 << "  " << pname << "(const ::SCIRun::ReferenceMgr&);\n";
   e.proxy << leader2 << "  " << pname << "(const ::SCIRun::Reference&);\n";
   std::string oldleader=e.proxy.push_leader();
   std::vector<Method*> vtab;
@@ -1049,7 +1051,7 @@ void CI::emit_proxyclass(EmitState& e)
   e.proxy << leader2 << "private:\n";
   e.proxy << leader2 << "  virtual void _getReference(::SCIRun::Reference&, bool copy) const;\n";
   e.proxy << leader2 << "  friend const ::SCIRun::TypeInfo* " << name << "::_static_getTypeInfo();\n";
-  e.proxy << leader2 << "  static ::SCIRun::Object* create_proxy(const ::SCIRun::refList&);\n";
+  e.proxy << leader2 << "  static ::SCIRun::Object* create_proxy(const ::SCIRun::ReferenceMgr&);\n";
   e.proxy << leader2 << "  " << pname << "(const " << pname << "&);\n";
   e.proxy << leader2 << "  " << pname << "& operator=(const " << pname << "&);\n";
   e.proxy << leader2 << "};\n\n";
@@ -1188,7 +1190,7 @@ void CI::emit_proxy(EmitState& e)
   if(fn[0] == ':' && fn[1] == ':')
     fn=fn.substr(2);
   std::string cn=cppclassname()+"_proxy";
-  e.out << fn << "::" << cn << "(const ::SCIRun::refList& _ref) :\n";
+  e.out << fn << "::" << cn << "(const ::SCIRun::ReferenceMgr& _ref) :\n";
   SymbolTable* localScope=symbols->getParent();
   
   e.out << "::SCIRun::ProxyBase(_ref),";
@@ -1234,7 +1236,7 @@ void CI::emit_proxy(EmitState& e)
   e.out << "{\n";
   e.out << "  _proxyGetReference(ref,copy);\n";
   e.out << "}\n\n";
-  e.out << "::SCIRun::Object* " << fn << "::create_proxy(const ::SCIRun::refList& ref)\n";
+  e.out << "::SCIRun::Object* " << fn << "::create_proxy(const ::SCIRun::ReferenceMgr& ref)\n";
   e.out << "{\n";
   e.out << "  return new " << cn << "(ref);\n";
   e.out << "}\n\n";
@@ -1265,7 +1267,7 @@ void CI::emit_proxy(EmitState& e)
 #ifdef MxNDEBUG
     e.out << "  //Turn on debug to a file\n";
     e.out << "  std::ostringstream fname;\n";
-    e.out << "  fname << distname << \"_\" <<  _refL[0].par_rank << \".caller.out\";\n";
+    e.out << "  fname << distname << \"_\" << rm.localRank  << \".caller.out\";\n";
     e.out << "  d_sched->dbg.open(fname.str().c_str(), std::ios_base::app);\n";
 #endif
     e.out << "  \n";
@@ -1278,10 +1280,10 @@ void CI::emit_proxy(EmitState& e)
     e.out << "    message->marshalInt(&distname_s, 1);\n";
     e.out << "    message->marshalChar((char*)distname.c_str(),distname_s);\n";
     e.out << "    //Marshal rank\n";
-    e.out << "    int rank = _refL[0].par_rank;\n";
+    e.out << "    int rank = rm.localRank;\n";
     e.out << "    message->marshalInt(&rank, 1);\n";
     e.out << "    //Marshal size\n";
-    e.out << "    int size = _refL[0].par_size;\n";
+    e.out << "    int size = rm.localSize;\n";
     e.out << "    message->marshalInt(&size, 1);\n";
     e.out << "    //Marshal distribution representation array\n";
     e.out << "    int _rep_mdim[2];\n";
@@ -1329,9 +1331,8 @@ void Method::emit_proxy(EmitState& e, const string& fn,
   emit_prototype_defin(e, fn+"::", localScope);
   e.out << "\n{\n";
   string oldleader=e.out.push_leader();  
-  e.out << leader2 << "::SCIRun::refList _refL;\n";
-  e.out << leader2 << "::SCIRun::refList::iterator iter;\n";
-  e.out << leader2 << "_proxyGetReferenceList(_refL,false);\n";
+  e.out << leader2 << "::SCIRun::ReferenceMgr* _rm = _proxyGetReferenceMgr();\n";
+  e.out << leader2 << "::std::vector< ::SCIRun::Reference*> _ref;\n";
 
   if(reply_required()){
     if(return_type) {
@@ -1365,25 +1366,26 @@ void Method::emit_proxy(EmitState& e, const string& fn,
   /*NOCALLRET                        */
   /***********************************/
   if (isCollective) {
-    e.out << leader2 << "if(_refL[0].par_rank >= (int)_refL.size()) {\n";
+    e.out << leader2 << "int remoteSize = _rm->getRemoteSize();\n";
+    e.out << leader2 << "if(_rm->localRank >= remoteSize) {\n";
     e.out << leader2 << "  /*NOCALLRET*/\n";
     string nocallret_ldr=e.out.push_leader();
-    e.out << leader2 << "int rank_offset = ( _refL[0].par_rank % _refL.size() );\n";
-    e.out << leader2 << "iter = _refL.begin() + rank_offset;\n";
-    e.out << leader2 << "::SCIRun::Message* message = (*iter).chan->getMessage();\n";
+
+    e.out << leader2 << "_ref = _rm->getCollectiveReference(SCIRun::NOCALLRET);\n";
+    e.out << leader2 << "::SCIRun::Message* message = (_ref[0])->chan->getMessage();\n";
     e.out << leader2 << "message->createMessage();\n";
     e.out << leader2 << "//Marshal flag which informs handler that\n";
     e.out << leader2 << "// this message is NOCALLRET:\n";
-    e.out << leader2 << "int _flag = 4;\n";
-    e.out << leader2 << "message->marshalInt(&_flag);\n";
+    e.out << leader2 << "::SCIRun::callType _flag = ::SCIRun::NOCALLRET;\n";
+    e.out << leader2 << "message->marshalInt(&(int)_flag);\n";
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
     e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
-    e.out << leader2 << "int _numCalls = (_refL[0].par_size / (int)_refL.size())+" << numRedisMessages << ";\n";
-    e.out << leader2 << "((_refL[0].par_size % (int)_refL.size()) > rank_offset) ?_numCalls++ :0;\n";
+    e.out << leader2 << "int _numCalls = (_rm->localSize / remoteSize)+" << numRedisMessages << ";\n";
+    e.out << leader2 << "((_rm->localSize % remoteSize) > (_rm->localRank % remoteSize)) ?_numCalls++ :0;\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
     e.out << leader2 << "// Send the message\n";
-    e.out << leader2 << "int _handler=(*iter).getVtableBase()+" << handlerOff << ";\n";
+    e.out << leader2 << "int _handler=(_ref[0])->getVtableBase()+" << handlerOff << ";\n";
     e.out << leader2 << "message->sendMessage(_handler);\n";
 
     if(reply_required()){
@@ -1431,24 +1433,23 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "else {\n";
 
     call_ldr=e.out.push_leader();
-    e.out << leader2 << "\n";
-    e.out << leader2 << "int rate = _refL[0].par_size;\n";
-    e.out << leader2 << "iter = _refL.begin() + (_refL[0].par_rank + rate);\n";
     
-    e.out << leader2 << "for(int i=(_refL[0].par_rank + rate); i < (int)_refL.size(); i+=rate, iter+=rate) {\n";
+    e.out << leader2 << "_ref = _rm->getCollectiveReference(SCIRun::CALLNORET);\n";
+    e.out << leader2 << "::std::vector< ::SCIRun::Reference*>::iterator iter = _ref.begin();\n";
+    e.out << leader2 << "for(unsigned int i=0; i < _ref.size(); i++, iter++) {\n";
     e.out << leader2 << "  /*CALLNORET*/\n";
     string loop_leader1=e.out.push_leader();
-    e.out << leader2 << "::SCIRun::Message* message = (*iter).chan->getMessage();\n";
+    e.out << leader2 << "::SCIRun::Message* message = (*iter)->chan->getMessage();\n";
     e.out << leader2 << "message->createMessage();\n";
     e.out << leader2 << "//Marshal flag which informs handler that\n";
     e.out << leader2 << "// this message is CALLNORET\n";
-    e.out << leader2 << "int _flag = 3;\n";
-    e.out << leader2 << "message->marshalInt(&_flag);\n";
+    e.out << leader2 << "::SCIRun::callType _flag = ::SCIRun::CALLNORET;\n";
+    e.out << leader2 << "message->marshalInt(&(int)_flag);\n";
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
     e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
-    e.out << leader2 << "int _numCalls = (_refL[0].par_size / (int)_refL.size())+" << numRedisMessages << ";\n";
-    e.out << leader2 << "((_refL[0].par_size % (int)_refL.size()) > i) ?_numCalls++ :0;\n";
+    e.out << leader2 << "//CALLNORET always sends (1 call + redis) number of calls per callee proc.\n";
+    e.out << leader2 << "int _numCalls = 1+" << numRedisMessages << ";\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
     
     if(list.size() != 0)
@@ -1465,7 +1466,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     }
     
     e.out << leader2 << "// Send the message\n";
-    e.out << leader2 << "int _handler=(*iter).getVtableBase()+" << handlerOff << ";\n";
+    e.out << leader2 << "int _handler=(*iter)->getVtableBase()+" << handlerOff << ";\n";
     e.out << leader2 << "message->sendMessage(_handler);\n";
     e.out << leader2 << "message->destroyMessage();\n";
     
@@ -1480,25 +1481,26 @@ void Method::emit_proxy(EmitState& e, const string& fn,
   /***********************************/
   if (isCollective) { 
     e.out << leader2 << "/*CALLONLY*/\n";
-    e.out << leader2 << "iter = _refL.begin() + _refL[0].par_rank;\n";
+    e.out << leader2 << "_ref = _rm->getCollectiveReference(SCIRun::CALLONLY);\n";  
+    e.out << leader2 << "::SCIRun::Message* message = (_ref[0])->chan->getMessage();\n";
   } else {
-    e.out << leader2 << "iter = _refL.begin() + ( _refL[0].par_rank % _refL.size() );\n";
+    e.out << leader2 << "::SCIRun::Reference* _i_ref = _rm->getIndependentReference();\n";
+    e.out << leader2 << "::SCIRun::Message* message = _i_ref->chan->getMessage();\n"; 
   }
 
-  e.out << leader2 << "::SCIRun::Message* message = (*iter).chan->getMessage();\n";
   e.out << leader2 << "message->createMessage();\n";
 
   int argNum=0;
   if (isCollective) {
     e.out << leader2 << "//Marshal flag which informs handler that\n";
     e.out << leader2 << "// this message is CALLONLY:\n";
-    e.out << leader2 << "int _flag = 2;\n";
-    e.out << leader2 << "message->marshalInt(&_flag);\n";
+    e.out << leader2 << "::SCIRun::callType _flag = ::SCIRun::CALLONLY;\n";
+    e.out << leader2 << "message->marshalInt(&(int)_flag);\n";
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
     e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
-    e.out << leader2 << "int _numCalls = (_refL[0].par_size / (int)_refL.size())+" << numRedisMessages << ";\n";
-    e.out << leader2 << "((_refL[0].par_size % (int)_refL.size()) > _refL[0].par_rank) ?_numCalls++ :0;\n";
+    e.out << leader2 << "int _numCalls = (_rm->localSize / remoteSize)+" << numRedisMessages << ";\n";
+    e.out << leader2 << "((_rm->localSize % remoteSize) > _rm->localRank) ?_numCalls++ :0;\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
   }
 
@@ -1516,7 +1518,12 @@ void Method::emit_proxy(EmitState& e, const string& fn,
   }
 
   e.out << leader2 << "// Send the message\n";
-  e.out << leader2 << "int _handler=(*iter).getVtableBase()+" << handlerOff << ";\n";
+  if (isCollective) {
+    e.out << leader2 << "int _handler=(_ref[0])->getVtableBase()+" << handlerOff << ";\n";
+  }
+  else {
+    e.out << leader2 << "int _handler=_i_ref->getVtableBase()+" << handlerOff << ";\n";
+  }
   e.out << leader2 << "message->sendMessage(_handler);\n";
 
   if(reply_required()){
@@ -2202,21 +2209,21 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  SCIRun::Message* message = _rl_out[i]->getReference()->chan->getMessage();\n";
 	string dimname=arg+"_mdim";
 	e.out << leader2 << "  message->createMessage();\n";
-	e.out << leader2 << "  //Marshal the distribution flag\n";
-	e.out << leader2 << "  int _flag = 1;\n";
-	e.out << leader2 << "  message->marshalInt(&_flag);\n";
+	e.out << leader2 << "  //Marshal the redistribution call flag\n";
+	e.out << leader2 << "  ::SCIRun::callType _flag = ::SCIRun::REDIS;\n";
+	e.out << leader2 << "  message->marshalInt(&(int)_flag);\n";
 	e.out << leader2 << "  //Marshal the sessionID and number of actual calls from this proxy\n";
         e.out << leader2 << "  ::std::string _sessionID = getProxyUUID();\n";
         e.out << leader2 << "  message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
-	e.out << leader2 << "  int _numCalls = (_refL[0].par_size / (int)_refL.size())+" << thisMethod->numRedisMessages << ";\n";
-	e.out << leader2 << "  ((_refL[0].par_size % (int)_refL.size()) > i) ?_numCalls++ :0;\n";
+	e.out << leader2 << "  int _numCalls = (_rm->localSize / _rm->getRemoteSize())+" << thisMethod->numRedisMessages << ";\n";
+	e.out << leader2 << "  ((_rm->localSize % _rm->getRemoteSize()) > i) ?_numCalls++ :0;\n";
 	e.out << leader2 << "  message->marshalInt(&_numCalls);\n";
 	e.out << leader2 << "  //Marshal the distribution name:\n";
 	e.out << leader2 << "  int namesize = " << distarr->getName().size()+4 << ";\n";
 	e.out << leader2 << "  message->marshalInt(&namesize);\n";
 	e.out << leader2 << "  message->marshalChar(\"" << distarr->getName() << ".out\",namesize);\n";
 	e.out << leader2 << "  //Marshal the rank\n";
-	e.out << leader2 << "  int rank = _refL[0].par_rank;\n";
+	e.out << leader2 << "  int rank = _rm->localRank;\n";
 	e.out << leader2 << "  message->marshalInt(&rank);\n";
 	e.out << leader2 << "  //Intersect and create distribution representation\n";
 	e.out << leader2 << "  SCIRun::MxNArrayRep* _meta_arr_rep = _this_rep->Intersect(_rl_out[i]);\n"; 
@@ -2265,7 +2272,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "if (1) {\n";
 	string testleader = e.out.push_leader();
 	e.out << leader2 << "std::ostringstream fname;\n";
-	e.out << leader2 << "fname << \"" << distarr->getName() << "\" << \"_\" << _refL[0].par_rank << \".caller.out\";\n";
+	e.out << leader2 << "fname << \"" << distarr->getName() << "\" << \"_\" << rm.localRank << \".caller.out\";\n";
 	e.out << leader2 << "d_sched->dbg.open(fname.str().c_str(), std::ios_base::app);\n";
 	e.out << leader2 << "d_sched->dbg << \"Complete distribution received;\\n\";\n";
 	if (arr_t->dim == 1) {
@@ -2461,20 +2468,20 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	string dimname=arg+"_mdim";
 	e.out << leader2 << "  message->createMessage();\n";
 	e.out << leader2 << "  //Marshal the distribution flag\n";
-	e.out << leader2 << "  int _flag = 1;\n";
-	e.out << leader2 << "  message->marshalInt(&_flag);\n";
+	e.out << leader2 << "  ::SCIRun::callType _flag = ::SCIRun::REDIS;\n";
+	e.out << leader2 << "  message->marshalInt(&(int)_flag);\n";
 	e.out << leader2 << "  //Marshal the sessionID and number of actual calls from this proxy\n";
         e.out << leader2 << "  ::std::string _sessionID = getProxyUUID();\n";
         e.out << leader2 << "  message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);\n";
-	e.out << leader2 << "  int _numCalls = (_refL[0].par_size / (int)_refL.size())+" << thisMethod->numRedisMessages << ";\n";
-	e.out << leader2 << "  ((_refL[0].par_size % (int)_refL.size()) > i) ?_numCalls++ :0;\n";
+	e.out << leader2 << "  int _numCalls = (_rm->localSize / _rm->getRemoteSize())+" << thisMethod->numRedisMessages << ";\n";
+	e.out << leader2 << "  ((_rm->localSize % _rm->getRemoteSize()) > i) ?_numCalls++ :0;\n";
 	e.out << leader2 << "  message->marshalInt(&_numCalls);\n";
 	e.out << leader2 << "  //Marshal the distribution name:\n";
 	e.out << leader2 << "  int namesize = " << distarr->getName().size()+3 << ";\n";
 	e.out << leader2 << "  message->marshalInt(&namesize);\n";
 	e.out << leader2 << "  message->marshalChar(\"" << distarr->getName() << ".in\",namesize);\n";
 	e.out << leader2 << "  //Marshal the rank\n";
-	e.out << leader2 << "  int rank = _refL[0].par_rank;\n";
+	e.out << leader2 << "  int rank = _rm->localRank;\n";
 	e.out << leader2 << "  message->marshalInt(&rank);\n";
 	e.out << leader2 << "  //Intersect and create distribution representation\n";
 	e.out << leader2 << "  SCIRun::MxNArrayRep* _meta_arr_rep = this_rep->Intersect(rl[i]);\n"; 

@@ -40,7 +40,7 @@ Reference::Reference()
 }
 
 Reference::Reference(const Reference& copy)
-  :d_vtable_base(copy.d_vtable_base), par_size(copy.par_size), par_rank(copy.par_rank) 
+  :d_vtable_base(copy.d_vtable_base) 
 {
   chan = (copy.chan)->SPFactory(false);
 }
@@ -56,14 +56,12 @@ Reference& Reference::operator=(const Reference& copy)
 {
   d_vtable_base=copy.d_vtable_base;
   chan = (copy.chan)->SPFactory(false);
-  par_rank = copy.par_rank;
-  par_size = copy.par_size;
   return *this;
 }
 
 int Reference::getVtableBase() const
 {
-    return d_vtable_base;
+  return d_vtable_base;
 }
 
 

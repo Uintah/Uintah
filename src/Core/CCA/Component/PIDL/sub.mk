@@ -39,7 +39,8 @@ SRCS     += \
 	$(SRCDIR)/MxNScheduler.cc \
 	$(SRCDIR)/MxNScheduleEntry.cc \
 	$(SRCDIR)/HandlerStorage.cc \
-	$(SRCDIR)/HandlerGateKeeper.cc
+	$(SRCDIR)/HandlerGateKeeper.cc \
+	$(SRCDIR)/ReferenceMgr.cc
 
 PSELIBS := Core/Exceptions Core/Thread Core/globus_threads
 LIBS := $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARYK) $(MPI_LIBRARY) $(UUID_LIB)
