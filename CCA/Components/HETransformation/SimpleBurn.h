@@ -39,6 +39,7 @@ WARNING
     class SimpleBurn : public Burn { 
     private:
       double thresholdTemp, thresholdPressure, Enthalpy, BurnCoeff;
+      double refPressure;
       
       // Prevent copying of this class
       // copy constructor
