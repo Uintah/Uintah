@@ -65,8 +65,8 @@ itcl_class SCIRun_Fields_FieldInfo {
         }
         toplevel $w
 
-	wm minsize $w 416 408
-	wm maxsize $w 416 1000
+#	wm minsize $w 416 408
+#	wm maxsize $w 416 1000
 
 	iwidgets::Labeledframe $w.att -labelpos nw \
 		               -labeltext "Input Field Attributes" 
