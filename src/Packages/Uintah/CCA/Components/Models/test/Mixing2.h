@@ -75,9 +75,14 @@ WARNING
     virtual void scheduleMassExchange(SchedulerP&,
 				      const LevelP& level,
 				      const ModelInfo*);
+                                  
     virtual void scheduleMomentumAndEnergyExchange(SchedulerP&,
 						   const LevelP& level,
 						   const ModelInfo*);
+                                             
+    virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
+                                               const LevelP&,
+                                               const MaterialSet*);
 
   private:
     void initialize(const ProcessorGroup*, const PatchSubset* patches,

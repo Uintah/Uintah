@@ -383,3 +383,9 @@ void Simple_Burn::scheduleMomentumAndEnergyExchange(SchedulerP&,
 {
   // None
 }
+void Simple_Burn::scheduleModifyThermoTransportProperties(SchedulerP&,
+                                                        const LevelP&,
+                                                        const MaterialSet*)
+{
+  // do nothing      
+}

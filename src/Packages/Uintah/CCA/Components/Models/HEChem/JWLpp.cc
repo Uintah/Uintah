@@ -81,7 +81,7 @@ void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState,
 //______________________________________________________________________
 //     
 void JWLpp::scheduleInitialize(SchedulerP&,
-                               const LevelP& level,
+                               const LevelP&,
                                const ModelInfo*)
 {
   // None necessary...
@@ -141,7 +141,7 @@ void JWLpp::scheduleMassExchange(SchedulerP& sched,
 //
 void JWLpp::massExchange(const ProcessorGroup*, 
                          const PatchSubset* patches,
-                         const MaterialSubset* matls,
+                         const MaterialSubset*,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw,
                          const ModelInfo* mi)
@@ -255,4 +255,10 @@ void JWLpp::scheduleMomentumAndEnergyExchange(SchedulerP&,
 				       const ModelInfo*)
 {
   // None
+}
+void JWLpp::scheduleModifyThermoTransportProperties(SchedulerP&,
+                                                    const LevelP&,
+                                                    const MaterialSet*)
+{
+  // do nothing      
 }

@@ -1,7 +1,7 @@
 
 #ifndef Packages_Uintah_CCA_Components_Examples_SimpleRxn_h
 #define Packages_Uintah_CCA_Components_Examples_SimpleRxn_h
-
+#include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
@@ -69,8 +69,20 @@ WARNING
     virtual void scheduleMomentumAndEnergyExchange(SchedulerP&,
 						   const LevelP& level,
 						   const ModelInfo*);
+                                            
+   virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
+                                                const LevelP&,
+                                                const MaterialSet*);
 
   private:
+    ICELabel* lb;
+                                                
+   void modifyThermoTransportProperties(const ProcessorGroup*, 
+                                        const PatchSubset* patches,        
+                                        const MaterialSubset*,             
+                                        DataWarehouse*,                    
+                                        DataWarehouse* new_dw);             
+   
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,
 		      const MaterialSubset* matls, 
@@ -96,8 +108,8 @@ WARNING
 
     ProblemSpecP params;
 
-    const Material* matl;
-    MaterialSet* mymatl;
+    const Material* d_matl;
+    MaterialSet* d_matl_set;
 
     class Region {
     public:
@@ -113,14 +125,16 @@ WARNING
       string name;
       VarLabel* scalar_CCLabel;
       VarLabel* scalar_source_CCLabel;
+      VarLabel* diffusionCoefLabel;
+      
       vector<Region*> regions;
       double f_stoic;
-      
       double diff_coeff;
       int  initialize_diffusion_knob;
     };
     Scalar* d_scalar;
-    
+    double d_rho_air;
+    double d_rho_fuel;
     double d_cp;
     SimulationStateP sharedState;
   };

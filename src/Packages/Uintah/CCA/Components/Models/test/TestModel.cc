@@ -201,10 +201,17 @@ void TestModel::massExchange(const ProcessorGroup*,
     cerr << "Total mass transferred: " << tm << '\n';
   }
 }
-
+//______________________________________________________________________  
 void TestModel::scheduleMomentumAndEnergyExchange(SchedulerP&,
 						  const LevelP&,
 						  const ModelInfo*)
 {
   // None
+}
+   
+void TestModel::scheduleModifyThermoTransportProperties(SchedulerP&,
+                                                        const LevelP&,
+                                                        const MaterialSet*)
+{
+  // do nothing      
 }

@@ -15,8 +15,9 @@
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
-
+#include <sgi_stl_warnings_on.h>
 using namespace Uintah;
 using namespace std;
 
@@ -210,9 +211,9 @@ void Mixing::scheduleComputeStableTimestep(SchedulerP&,
   // None necessary...
 }
       
-void Mixing::scheduleMassExchange(SchedulerP& sched,
-				  const LevelP& level,
-				  const ModelInfo* mi)
+void Mixing::scheduleMassExchange(SchedulerP&,
+				  const LevelP&,
+				  const ModelInfo*)
 {
   // None required
 }
@@ -301,3 +302,11 @@ void Mixing::react(const ProcessorGroup*,
   }
 }
 
+
+//______________________________________________________________________
+void Mixing::scheduleModifyThermoTransportProperties(SchedulerP&,
+                                                     const LevelP&,
+                                                     const MaterialSet*)
+{
+  // do nothing      
+}

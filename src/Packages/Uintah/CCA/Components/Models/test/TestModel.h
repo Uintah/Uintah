@@ -70,6 +70,10 @@ WARNING
     virtual void scheduleMomentumAndEnergyExchange(SchedulerP&,
 						   const LevelP& level,
 						   const ModelInfo*);
+                                             
+    virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
+                                               const LevelP&,
+                                               const MaterialSet*);
 
   private:    
     void massExchange(const ProcessorGroup*, const PatchSubset* patches,
