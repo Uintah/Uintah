@@ -31,6 +31,7 @@ MP(TopoSurfToGeom)
 
 // EGI
 MP(Anneal)
+MP(DipoleInSphere)
 
 // FDM
 MP(BuildFDMatrix)
@@ -112,6 +113,7 @@ void initPackage(const clString& tcl) {
 
   // EGI
   RM("EGI",	      "Anneal",		 	 make_Anneal,		    tcl+"/Anneal.tcl");
+  RM("EGI",	      "DipoleInSphere",		 make_DipoleInSphere,	    tcl+"/DipoleInSphere.tcl");
 
   // FDM
   RM("FDM",	      "BuildFDField",		 make_BuildFDField,	    "");

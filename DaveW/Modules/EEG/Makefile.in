@@ -7,7 +7,7 @@ SRCS     = BldEEGMesh.cc Coregister.cc \
 	   STreeExtractSurf.cc SegFldOps.cc SegFldToSurfTree.cc \
 	   SelectSurfNodes.cc Taubin.cc Thermal.cc TopoSurfToGeom.cc
 
-SPARSELIB = ../../ThirdParty/SparseLib
+SPARSELIB = $(SRCDIR)/../../ThirdParty/SparseLib
 
 IML_INCLUDE = $(SPARSELIB)/iml
 MV_INCLUDE = $(SPARSELIB)/mv/include
