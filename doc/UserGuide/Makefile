@@ -20,6 +20,7 @@
 BN = usersguide
 
 # Provide name of other sources
+# Note: Probably should add figures to this list.
 SRCS = srugmacros.tex title.tex intro.tex concepts.tex \
 running.tex network.tex viewer.tex import.tex
 
