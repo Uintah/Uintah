@@ -119,8 +119,7 @@ void FieldExtractor::build_field(DataArchive& archive,
     if( sfd->data_at() == Field::CELL){
       low = (*r)->getCellLowIndex();
       hi = (*r)->getCellHighIndex();
-    } else {
-      sfd->get_property("vartype", vartype);
+    } else if(sfd->get_property("vartype", vartype)){
       low = (*r)->getNodeLowIndex();
       switch (vartype) {
       case TypeDescription::SFCXVariable:
@@ -135,13 +134,13 @@ void FieldExtractor::build_field(DataArchive& archive,
       default:
 	hi = (*r)->getNodeHighIndex();	
       } 
-    }
+    } 
 
     IntVector range = hi - low;
 
     int z_min = low.z();
     int z_max = low.z() + hi.z() - low.z();
-    int z_step, i, z, N = 0;
+    int z_step, z, N = 0;
     if ((z_max - z_min) >= max_workers){
       // in case we have large patches we'll divide up the work 
       // for each patch, if the patches are small we'll divide the
@@ -151,8 +150,8 @@ void FieldExtractor::build_field(DataArchive& archive,
       N = Min(Max(S/cs, 1), (max_workers-1));
     }
     N = Max(N,2);
-    z_step = (z_max - z_min)/N;
-    for(i = 0, z = z_min ; i < N; i++, z += z_step) {
+    z_step = (z_max - z_min)/(N - 1);
+    for(z = z_min ; z < z_max; z += z_step) {
       
       IntVector min_i(low.x(), low.y(), z);
       IntVector max_i(hi.x(), hi.y(), Min(z+z_step, z_max));
