@@ -16,7 +16,7 @@
 -->
 
 <section id="sec.petsc">
-<title id="title.petsc">PETSc Installation<acronym></acronym></title>
+<title id="title.petsc"><acronym>PETSc</acronym> Installation (Optional)</title>
 
 <section>
 <title>Introduction</title>
@@ -34,7 +34,7 @@ use it), &sr;'s SolveMatrix module enables the use of
 </para>
 <para>
 The installation of <acronym>PETSc</acronym> is optional.  SolveMatrix
-provides builtin solvers if <acronym>PETSc</acronym> is not available.
+provides built-in solvers if <acronym>PETSc</acronym> is not available.
 </para>
 <para>
 <acronym>PETSc</acronym> is built and installed from its source code
@@ -70,7 +70,7 @@ instructions.
 </listitem>
 <listitem>
 <para>
-<acronym>PETSc</acronym> must be installed before building and
+<acronym>PETSc</acronym> must be installed before 
 installing &sr;. See <citetitle pubwork="section"><xref
 endterm="title.petsc_inst" linkend="sec.petsc_inst"/></citetitle> for
 <acronym>PETSc</acronym> installation instructions.
@@ -100,7 +100,7 @@ Download and unpack <acronym>PETSc</acronym>'s source distribution:
 <listitem>
 <para>
 Browser download:
-<literallayout class="monospaced"> <ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz">ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz</ulink>.
+<literallayout class="monospaced"> <ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz">ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz</ulink>
 </literallayout>
 </para>
 </listitem>
@@ -167,7 +167,8 @@ Because <acronym>PETSc</acronym> depends on <acronym>BLAS</acronym>
 and <acronym>LAPACK</acronym> they must be installed before installing
 <acronym>PETSc</acronym>.  A vendor version of <acronym>BLAS</acronym>
 is recommended.  <acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
-may already be installed.  Check with your system administrator.  Skip
+may already be installed.  Check with your system administrator.
+<link linkend="sec.petsc_inst">Skip</link>
 this section if <acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
 are installed.
 </para>
@@ -180,9 +181,10 @@ or a combined <acronym>BLAS</acronym>/<acronym>LAPACK</acronym> <link linkend="s
 </para>
 
 <section id="sec.blas_lapack_rpm">
-<title id="title.blas_lapack_rpm"><acronym>RPM</acronym>s (Linux)</title>
+<title id="title.blas_lapack_rpm"><acronym>RPM</acronym>s
+(Linux)</title>
 <para>
-Root privilages are needed to install the
+Root privileges are needed to install the
 <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>
 <acronym>RPM</acronym>s.
 </para>
@@ -208,6 +210,7 @@ and install the <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>
 rpm -ivh blas-3_0-2_i386.rpm
 rpm -ivh lapack-3_0-2_i386.rpm
 </literallayout>
+Type <command>exit</command> to leave the root account.
 </para>
 </section>
 
@@ -243,9 +246,9 @@ Build <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>:
 cd fblaslapack
 make
 </literallayout>
-The creates the libraries <filename>libfblas.a</filename> and
-<filename>liblapack.a</filename> in the
-<filename>fblaslapack</filename> directory.
+The creates libraries <filename>libfblas.a</filename> and
+<filename>liblapack.a</filename> in directory
+<filename>fblaslapack</filename>.
 </para>
 </listitem>
 </orderedlist>
@@ -274,13 +277,14 @@ Configure <acronym>PETSc</acronym> to use the uniprocessor
 <acronym>MPI</acronym> package.  
 </para>
 <para>
-With an editor (e.g. emacs or vi), open the file
-<filename>${PETSC_DIR}/bmake/${PETSC_ARCH}/packages</filename>. 
-and make the following changes:
+With an editor (e.g. emacs or vi), open 
+<literallayout class="monospaced">
+<filename>${PETSC_DIR}/bmake/${PETSC_ARCH}/packages</filename>
+</literallayout>and make the following changes:
 <orderedlist>
 <listitem>
 <para>
-Find the line that starts with <quote><literal>BLASLAPACK_LIB
+Find the line that begins with <quote><literal>BLASLAPACK_LIB
 =</literal></quote> (near the beginning of the file) and change it as
 follows:
                   <itemizedlist>
@@ -288,7 +292,7 @@ follows:
 <para>
 If using vendor supplied <acronym>BLAS</acronym>/
 <acronym>LAPACK</acronym> libraries or if using 
-<acronym>RPM</acronym> versions of these libraries then:
+the <acronym>RPM</acronym> installed libraries then:
 <literallayout class="monospaced">
 BLASLAPACK_LIB = -llapack -lblas
 </literallayout>
@@ -308,7 +312,7 @@ BLASLAPACK_LIB = -L <replaceable>path-to-fblaslapack</replaceable> -lflapack -lf
 </listitem>
 <listitem>
 <para>
-Find the line that starts with
+Find the line that begins with
 <quote><literal>MPI_LIB =</literal></quote> and change it to:
 <literallayout class="monospaced">
 MPI_LIB = ${PETSC_DIR}/lib/lib${BOPT}/${PETSC_ARCH}/libmpiuni.a
@@ -317,7 +321,7 @@ MPI_LIB = ${PETSC_DIR}/lib/lib${BOPT}/${PETSC_ARCH}/libmpiuni.a
 </listitem>
 <listitem>
 <para>
-Find the line that starts with
+Find the line that begins with
 <quote><literal>MPI_INCLUDE =</literal></quote> and change it to
 <literallayout class="monospaced">
 MPI_INCLUDE = -I${PETSC_DIR}/src/sys/src/mpiuni
@@ -326,7 +330,7 @@ MPI_INCLUDE = -I${PETSC_DIR}/src/sys/src/mpiuni
 </listitem>
 <listitem>
 <para>
-Find the line that starts with
+Find the line that begins with
 <quote><literal>MPIRUN =</literal></quote> and change it to
 <literallayout class="monospaced">
 MPIRUN = ${PETSC_DIR}/lib/lib${BOPT}/${PETSC_ARCH}/libmpiuni.a
@@ -361,19 +365,24 @@ endterm="title.build-sr"/>).
 <varlistentry>
 <term><option>--with-unipetsc=<replaceable>path-to-petsc</replaceable></option></term>
 <listitem>
-<para>Specifies the path to the <acronym>PETSc</acronym> directory.</para>
+<para>Specifies the path to the <acronym>PETSc</acronym> directory.
+</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term><option>--with-blas=<replaceable>path-to-blas-libs</replaceable></option></term>
 <listitem>
-<para>Specifies the path to the <acronym>BLAS</acronym> libraries.</para>
+<para>Specifies the path to the <acronym>BLAS</acronym> libraries.
+Not needed if using a vendor supplied library or if the
+<acronym>BLAS</acronym> <acronym>RPM</acronym> was installed.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term><option>--with-lapack=<replaceable>path-to-lapack-libs</replaceable></option></term>
 <listitem>
-<para>Specifies the path to the <acronym>LAPACK</acronym> libraries.</para>
+<para>Specifies the path to the <acronym>LAPACK</acronym> libraries.
+Not needed if using a vendor supplied library or if the
+<acronym>LAPACK</acronym> <acronym>RPM</acronym> was installed.</para>
 </listitem>
 </varlistentry>
 </variablelist>

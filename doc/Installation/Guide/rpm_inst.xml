@@ -16,14 +16,15 @@
 -->
 
 <section id="sec.rpminst">
-<title>RPMs (Linux)</title>
+<title>&sr; Installation from RPMs (Linux)</title>
 
 <section>
 <title>Introduction</title>
 
 <para>
-Root privileges are required to install &sr;.  The system
-administrator can install &sr; if necessary.
+Root privileges are required to install the &sr;
+<acronym>RPM</acronym>s.  The system administrator can install these
+if necessary.
 </para>
 
 <para>
@@ -158,7 +159,7 @@ and type:
 gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
 </literallayout>
 This will create <filename>/usr/local/&sr;Data</filename>, the
-sample data sets directory.  Type <command>exit</command> to exit the
+sample data sets directory.  Type <command>exit</command> to leave the
 root account.
 </para>
 </section>
@@ -177,7 +178,7 @@ documentation tarball and type:
 gunzip -c docs.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
 </literallayout>
 This will create <filename>/usr/local/&sr;Docs</filename>, the
-&sr; documentation directory. Type <command>exit</command> to exit the
+&sr; documentation directory. Type <command>exit</command> to leave the
 root account.
 </para>
 <para>

@@ -43,9 +43,9 @@ end
 %-->
 <title>&sr; Installation Guide (v. <!--%= version %-->)</title>
 &intro;
+&petsc;
 &rpm_inst;
 &source_inst;
-&petsc;
 &preparing;
 &starting;
 &help;
