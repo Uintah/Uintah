@@ -95,7 +95,13 @@ HistObj::compute()
   for (int i=0; i<bins_; i++)
     data_[i] = 0;
 
+  ref_min_ = ref_max_ = ref_[0];
   for (int i=0; i<ref_.size(); i++) {
+    // compute ref_ min/max
+    if ( ref_[i] < ref_min_ ) ref_min_ = ref_[i];
+    else if ( ref_max_ < ref_[i] ) ref_max_ = ref_[i];
+
+    // histogram 
     int pos = int((ref_[i]-min_) * bins_ / ( max_ - min_ ));
     if ( pos == bins_ ) pos--;
     data_[pos]++;
@@ -113,14 +119,26 @@ HistObj::at( double v )
 {
   double val;
 
-  if ( v < 0  || v >= data_.size()-1 ) 
+  if ( v < ref_min_  || v > ref_max_ ) 
     val = 0;
   else {
-    val  = data_[int(v)];
+    int pos (bins_ * (v-ref_min_)/ (ref_max_ - ref_min_) );
+    if ( pos == data_.size() ) 
+      pos--;
+    val = data_[pos];
   }
 
   return val;
 }
+
+
+void
+HistObj::get_bounds( BBox2d &bb )
+{
+  bb.extend( Point2d(ref_min_, min_));
+  bb.extend( Point2d(ref_max_, max_ ) );
+}
+
 
 #define HistObj_VERSION 1
 

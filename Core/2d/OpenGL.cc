@@ -84,18 +84,15 @@ void
 HistObj::draw( bool )
 {
   glColor3f( color_.r(), color_.g(), color_.b() );
-
-//   glBegin(GL_LINE_STRIP);
-//   for (int i=0; i<data_.size(); i++) {
-//     glVertex2f( i, data_[i] );
-//   }
-
   glBegin(GL_QUADS);
+  double pos = ref_min_;
+  double dp = (ref_max_ - ref_min_)/bins_;
   for (int i=0; i<data_.size(); i++) {
-    glVertex2i(i,0);
-    glVertex2i(i+1,0);
-    glVertex2f(i+1,data_[i]);
-    glVertex2f(i,data_[i]);
+    glVertex2f(pos,0);
+    glVertex2f(pos+dp,0);
+    glVertex2f(pos+dp,data_[i]);
+    glVertex2f(pos,data_[i]);
+    pos += dp;
   }
   glEnd();
 
@@ -117,11 +114,6 @@ Diagram::draw( bool pick)
 	reset_bbox();
 	
 	if ( graphs_bounds_.valid() ) {
-
-// 	  cerr << "Diagram bounds " << name() << " " 
-// 	       << graphs_bounds_.min() << "  "
-// 	       << graphs_bounds_.max() << endl;
-
 	  glPushMatrix();
 	  glOrtho( graphs_bounds_.min().x(),  graphs_bounds_.max().x(),
 		   graphs_bounds_.min().y(),  graphs_bounds_.max().y(),
