@@ -202,7 +202,7 @@ WARNING
       string toString() const;
 
       int getID() const {
-	 return id;
+	 return d_id;
       }
       const Region* getNeighbor(const IntVector&) const;
       void setNeighbor(const IntVector&, const Region*);
@@ -214,7 +214,8 @@ WARNING
       Region(const SCICore::Geometry::Point& min,
 	     const SCICore::Geometry::Point& max,
 	     const SCICore::Geometry::IntVector& d_lowIndex,
-	     const SCICore::Geometry::IntVector& d_highIndex);
+	     const SCICore::Geometry::IntVector& d_highIndex,
+	     int id=-1);
       ~Region();
 
    private:
@@ -233,7 +234,7 @@ WARNING
 
       const Region* neighbors[27];
       
-      int id;
+      int d_id;
       friend class NodeIterator;
    };
    
@@ -243,6 +244,11 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Region* r);
 
 //
 // $Log$
+// Revision 1.20  2000/05/20 08:09:27  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.19  2000/05/10 20:03:02  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

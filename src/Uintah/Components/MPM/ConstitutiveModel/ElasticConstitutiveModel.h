@@ -47,7 +47,7 @@ namespace Uintah {
 	    // Poisson's Ratio
 	    double PoiRat;
 	 };
-	 friend bool isFlat(const CMData&);
+	 friend const TypeDescription* fun_getTypeDescription(CMData*);
 	 
       public:
 	 // constructors
@@ -175,6 +175,11 @@ namespace Uintah {
 #endif  // __ELASTIC_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.12  2000/05/20 08:09:07  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.11  2000/05/15 19:39:39  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups

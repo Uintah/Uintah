@@ -10,13 +10,18 @@ SRCDIR   := Uintah/Components/DataArchiver
 SRCS     += $(SRCDIR)/DataArchiver.cc
 
 PSELIBS := Uintah/Interface Uintah/Parallel Uintah/Grid Uintah/Exceptions \
-	SCICore/OS SCICore/Exceptions
+	SCICore/OS SCICore/Exceptions PSECore/XMLUtil
 LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2  2000/05/20 08:09:04  sparker
+# Improved TypeDescription
+# Finished I/O
+# Use new XML utility libraries
+#
 # Revision 1.1  2000/05/15 19:39:35  sparker
 # Implemented initial version of DataArchive (output only so far)
 # Other misc. cleanups

@@ -51,6 +51,15 @@ Region* Level::addRegion(const Point& lower, const Point& upper,
     return r;
 }
 
+Region* Level::addRegion(const Point& lower, const Point& upper,
+			 const IntVector& lowIndex, const IntVector& highIndex,
+			 int ID)
+{
+    Region* r = new Region(lower, upper, lowIndex, highIndex, ID);
+    d_regions.push_back(r);
+    return r;
+}
+
 int Level::numRegions() const
 {
   return (int)d_regions.size();
@@ -115,6 +124,11 @@ GridP Level::getGrid() const
 
 //
 // $Log$
+// Revision 1.9  2000/05/20 08:09:21  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.8  2000/05/20 02:36:05  kuzimmer
 // Multiple changes for new vis tools and DataArchive
 //

@@ -67,7 +67,7 @@ WARNING
       particleIndex addParticles(particleIndex count) {
 	particleIndex oldsize = d_pset->addParticles(count);
 	particleIndex newsize = oldsize+count;
-	particleIndex start = d_particles.size();
+	particleIndex start = (particleIndex)d_particles.size();
 	d_particles.resize(d_particles.size()+newsize);
 	for(particleIndex idx = oldsize; idx < newsize; idx++, start++)
 	  d_particles[start] = idx;
@@ -126,6 +126,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.6  2000/05/20 08:09:24  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.5  2000/05/20 02:36:06  kuzimmer
 // Multiple changes for new vis tools and DataArchive
 //

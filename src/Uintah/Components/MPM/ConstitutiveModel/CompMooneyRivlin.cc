@@ -314,6 +314,25 @@ void CompMooneyRivlin::readParameters(ProblemSpecP ps, double *p_array)
  
 }
 
+#ifdef __sgi
+#define IRIX
+#pragma set woff 1209
+#endif
+
+namespace Uintah {
+   namespace MPM {
+const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
+{
+   static TypeDescription* td = 0;
+   if(!td){
+      ASSERTEQ(sizeof(CompMooneyRivlin::CMData), sizeof(double)*4);
+      td = new TypeDescription(TypeDescription::Other, "CompMooneyRivlin::CMData", true);
+   }
+   return td;   
+}
+   }
+}
+
 #ifdef WONT_COMPILE_YET
 ConstitutiveModel* CompMooneyRivlin::readParametersAndCreate(ProblemSpecP ps)
 {
@@ -346,6 +365,11 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 #endif
 
 // $Log$
+// Revision 1.31  2000/05/20 08:09:06  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.30  2000/05/18 19:45:57  guilkey
 // Fixed (really this time) the statements inside the ASSERTS.
 //

@@ -17,6 +17,7 @@ ParticleSubset::~ParticleSubset()
 ParticleSubset::ParticleSubset() :
   d_pset( new ParticleSet )
 {
+   d_pset->addReference();
 }
 
 ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill)
@@ -33,6 +34,11 @@ ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill)
 
 //
 // $Log$
+// Revision 1.6  2000/05/20 08:09:24  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.5  2000/05/20 02:36:06  kuzimmer
 // Multiple changes for new vis tools and DataArchive
 //

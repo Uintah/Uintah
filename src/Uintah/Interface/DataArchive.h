@@ -1,17 +1,27 @@
 #ifndef UINTAH_HOMEBREW_DataArchive_H
 #define UINTAH_HOMEBREW_DataArchive_H
 
-#include <string>
-#include <vector>
-#include <Uintah/Grid/ParticleSet.h>
-#include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/NCVariable.h>
+#include <Uintah/Grid/GridP.h>
+#include <string>
+#include <vector>
 
+#ifdef __sgi
+#define IRIX
+#pragma set woff 1375
+#endif
+#include <util/PlatformUtils.hpp>
+#include <parsers/DOMParser.hpp>
+#include <dom/DOM_Node.hpp>
+#include <dom/DOM_NamedNodeMap.hpp>
+#include <util/XMLURL.hpp>
+#ifdef __sgi
+#pragma reset woff 1375
+#endif
 
 namespace Uintah {
-
-class Region;
+   class Region;
    
    /**************************************
      
@@ -24,7 +34,7 @@ class Region;
       
        DataArchive.h
       
-       Steven G. Parker
+       Kurt Zimmerman
        Department of Computer Science
        University of Utah
       
@@ -57,15 +67,11 @@ public:
    // variables. We also need to determine the type of each variable.
    // Get a list of scalar or vector variable names and  
    // a list of corresponding data types
-  void listVariables( std::vector< std::string>& names,
-		      std::vector< const TypeDescription *>& type );
-  void listTimesteps( std::vector<int>& index,
-		      std::vector<double>& times );
-  void listRegions( std::vector<const Region*> regions,
-		    double time );
-
-  GridP getGrid( double time );
-
+   void queryVariables( std::vector< std::string>& names,
+		       std::vector< const TypeDescription *>&  );
+   void queryTimesteps( std::vector<int>& index,
+		       std::vector<double>& times );
+   GridP queryGrid( double time );
    
 #if 0
    //////////
@@ -77,45 +83,47 @@ public:
    
    //////////
    // how long does a particle live?  Not variable specific.
-   void lifetime( double& min, double& max, particleIndex id);
+   void queryLifetime( double& min, double& max, particleId id);
    
    //////////
    // how long does a region live?  Not variable specific
-   void lifetime( double& min, double& max, const Region* region);
-   
+   void queryLifetime( double& min, double& max, const Region* region);
+
+   int queryNumMaterials(const std::string& name, const Region* region,
+			double time);
 
    //////////
-   // list the variable value for a particular particle  overtime;
+   // query the variable value for a particular particle  overtime;
    // T = double/float/vector/Tensor I'm not sure of the proper
    // syntax.
    template<class T>
-   void list( ParticleVariable< T >, const std::string& name, 
-	      particleIndex idx,
+   void query( ParticleVariable< T >&, const std::string& name, int matlIndex,
+	      particleId id,
 	      double min, double max);
    
    //////////
-   // list the variable value for a particular particle  overtime;
+   // query the variable value for a particular particle  overtime;
    // T = double/float/vector/Tensor I'm not sure of the proper
    // syntax.
    template<class T>
-   void list( ParticleVariable< T >, const std::string& name, 
+   void query( ParticleVariable< T >&, const std::string& name, int matlIndex,
 	      const Region*, double time );
    
    //////////
-   // list the variable value for a particular particle  overtime;
+   // query the variable value for a particular particle  overtime;
    // T = double/float/vector/Tensor I'm not sure of the proper
    // syntax.
    template<class T>
-   void list( NCVariable< T >, const std::string& name, 
+   void query( NCVariable< T >&, const std::string& name, int matlIndex,
 	      const Region*, double time );
 
 
    //////////
-   // list the variable value for a particular particle  overtime;
+   // query the variable value for a particular particle  overtime;
    // T = double/float/vector/Tensor I'm not sure of the proper
    // syntax.
    template<class T>
-   void list( NCVariable< T >, const std::string& name, 
+   void query( NCVariable< T >&, const std::string& name, int matlIndex,
 	      const IntVector& index,
 	      double min, double max);
    
@@ -124,7 +132,7 @@ public:
    // similarly, we want to be able to track variable values in a particular
    // region cell over time.
    template<class T>
-   void list( std::vector< T >, const std::string& name,  
+   void query( std::vector< T >, const std::string& name,  
 	      const Region *,
 	      IntVector i, const time& min, const time& max);
    
@@ -144,14 +152,26 @@ protected:
 private:
    DataArchive(const DataArchive&);
    DataArchive& operator=(const DataArchive&);
+
+   DOM_Node getTimestep(double time, XMLURL& url) const;
    
-   
+   std::string d_filebase;
+   DOM_Document d_indexDoc;
+   XMLURL d_base;
+
+   DOM_Node findVariable(const string& name, const Region* region,
+			 int matl, double time, XMLURL& url) const;
 };
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.3  2000/05/20 08:09:36  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.2  2000/05/20 02:34:56  kuzimmer
 // Multiple changes for new vis tools and DataArchive
 //

@@ -3,7 +3,6 @@
 
 #include <Uintah/Grid/Array3.h>
 #include <Uintah/Grid/NCVariableBase.h>
-#include <Uintah/Grid/EmitUtils.h>
 #include <Uintah/Grid/TypeDescription.h>
 #include <Uintah/Interface/OutputContext.h>
 #include <SCICore/Exceptions/ErrnoException.h>
@@ -78,7 +77,7 @@ WARNING
      NCVariable<T>& operator=(const NCVariable<T>&);
      
      // Replace the values on the indicated face with value
-     void fillFace(Region::FaceType face, Vector value)
+     void fillFace(Region::FaceType face, const T& value)
        { 
 	 IntVector low = getLowIndex();
 	 IntVector hi = getHighIndex();
@@ -195,16 +194,23 @@ WARNING
       };
      
       virtual void emit(OutputContext&);
+      static TypeDescription::Register registerMe;
    private:
    };
    
+   template<class T>
+      TypeDescription::Register NCVariable<T>::registerMe(getTypeDescription());
+
    template<class T>
       const TypeDescription*
       NCVariable<T>::getTypeDescription()
       {
 	 static TypeDescription* td;
-	 if(!td)
-	    td = new TypeDescription(false, TypeDescription::Node);
+	 if(!td){
+	    td = new TypeDescription(TypeDescription::NCVariable,
+				     "NCVariable",
+				     fun_getTypeDescription((T*)0));
+	 }
 	 return td;
       }
    
@@ -280,8 +286,8 @@ WARNING
       void
       NCVariable<T>::emit(OutputContext& oc)
       {
-	 T* t=0;
-	 if(isFlat(*t)){
+	 const TypeDescription* td = fun_getTypeDescription((T*)0);
+	 if(td->isFlat()){
 	    // This could be optimized...
 	    IntVector l(getLowIndex());
 	    IntVector h(getHighIndex());
@@ -302,6 +308,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.21  2000/05/20 08:09:22  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.20  2000/05/19 00:37:29  guilkey
 // Tested and fixed fillFaceNormal.
 //

@@ -25,7 +25,6 @@ SRCS := $(SRCDIR)/sus.cc
 PROGRAM := Uintah/sus
 ifeq ($(LARGESOS),yes)
 PSELIBS := Uintah
-LIBS :=
 else
 PSELIBS := Uintah/Grid Uintah/Parallel Uintah/Components/MPM \
 	Uintah/Components/DataArchiver \
@@ -33,13 +32,30 @@ PSELIBS := Uintah/Grid Uintah/Parallel Uintah/Components/MPM \
 	Uintah/Components/Schedulers Uintah/Components/Arches \
 	Uintah/Components/ProblemSpecification \
 	SCICore/Exceptions Uintah/Interface SCICore/Thread
-LIBS :=
 endif
+LIBS :=
+
+include $(SRCTOP)/scripts/program.mk
+
+SRCS := $(SRCDIR)/puda.cc
+PROGRAM := Uintah/puda
+ifeq ($(LARGESOS),yes)
+PSELIBS := Uintah
+else
+PSELIBS := Uintah/Exceptions Uintah/Grid Uintah/Interface \
+	PSECore/XMLUtil SCICore/Exceptions SCICore/Geometry
+endif
+LIBS 	:= $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.8  2000/05/20 08:09:01  sparker
+# Improved TypeDescription
+# Finished I/O
+# Use new XML utility libraries
+#
 # Revision 1.7  2000/05/15 19:39:29  sparker
 # Implemented initial version of DataArchive (output only so far)
 # Other misc. cleanups

@@ -58,7 +58,6 @@
 
 
 #include "Matrix.h"
-				    
 
 template<class T> Matrix<T>::Matrix()
 {
@@ -903,10 +902,14 @@ template<class T> Matrix<T>  operator * (const Matrix<T> &left,
   // Return the result
   return result;
 }
-   
-  
+
 
 // $Log$
+// Revision 1.2  2000/05/20 08:09:11  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.1  2000/03/14 22:12:43  jas
 // Initial creation of the utility directory that has old matrix routines
 // that will eventually be replaced by the PSE library.

@@ -64,6 +64,12 @@ WARNING
 			const SCICore::Geometry::IntVector& lowIndex,
 			const SCICore::Geometry::IntVector& highIndex);
       
+      Region* addRegion(const SCICore::Geometry::Point& lower,
+			const SCICore::Geometry::Point& upper,
+			const SCICore::Geometry::IntVector& lowIndex,
+			const SCICore::Geometry::IntVector& highIndex,
+			int ID);
+      
       int numRegions() const;
       long totalCells() const;
 
@@ -84,6 +90,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.12  2000/05/20 08:09:22  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.11  2000/05/20 02:36:06  kuzimmer
 // Multiple changes for new vis tools and DataArchive
 //

@@ -40,16 +40,16 @@ WARNING
 ****************************************/
 
       class CompMooneyRivlin : public ConstitutiveModel {
-      private:
 	 // Create datatype for storing model parameters
+      public:
 	 struct CMData {
 	    double C1;
 	    double C2;
 	    double C3;
 	    double C4;
 	 };
-	 friend bool isFlat(const CMData&);
-
+      private:
+	 friend const TypeDescription* fun_getTypeDescription(CMData*);
 	 CMData d_initialData;
 	 
 	 // Prevent copying of this class
@@ -117,6 +117,11 @@ WARNING
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.20  2000/05/20 08:09:06  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.19  2000/05/15 19:39:39  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups
