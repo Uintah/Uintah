@@ -32,10 +32,6 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
-
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/ColumnMatrix.h>
 
 #include <Packages/Fusion/Core/Datatypes/StructHexVolField.h>
 #include <Packages/Fusion/share/share.h>
@@ -255,37 +251,65 @@ void FusionFieldReader::execute(){
       return;
     }
 
-    int idim, jdim, kdim;
-    ifs >> idim >> jdim >> kdim; 
+    // Read whether the data is wrapped our clamped
+    bool repeated = false;
 
-    // The Fusion data repeats in the theta and phi directions but
-    // it is accounted for in the Mesh generation.
-    //jdim--;
-    //kdim--;
+    ifs >> token;
+
+    if( strcmp( token, "REPEATED" ) == 0 )
+      repeated = true;
+    else if( strcmp( token, "SINGULAR" ) == 0 )
+      repeated = false;
+    else {
+      error( string("Bad token: expected REPEATED or SINGULAR but read ") + token );
+      return;
+    }
+
+    unsigned int idim, jdim, kdim;
+
+    ifs >> idim >> jdim >> kdim; 
 
     cout << "FusionFieldReader - " << idim << "  " << jdim << "  " << kdim << endl;
 
     // Create the grid, and scalar and vector data matrices.
-    StructHexVolMesh *hvm = scinew StructHexVolMesh(idim, jdim, kdim);
+    StructHexVolMesh *hvm = NULL;
+
+    if( readOrder[GRID_XYZ    ] > -1 ||
+	readOrder[GRID_R_PHI_Z] > -1 ||
+	readOrder[GRID_R_Z_PHI] > -1 ) {
+    
+      if( repeated )
+	hvm = scinew StructHexVolMesh(idim, jdim, kdim);
+      else
+	hvm = scinew StructHexVolMesh(idim, jdim+1, kdim+1);
+    }
+    else {
+      error( string("No grid present - unable to create the field(s).") );
+      return;
+    }
 
     // Now after the mesh has been created, create the field.
-    StructHexVolField<Vector> *bfield = 0;
-    StructHexVolField<Vector> *vfield = 0;
-    StructHexVolField<double> *pfield = 0;
+    StructHexVolField<Vector> *bfield = NULL;
+    StructHexVolField<Vector> *vfield = NULL;
+    StructHexVolField<double> *pfield = NULL;
 
     if( readOrder[BFIELD_XYZ    ] > -1 ||
 	readOrder[BFIELD_R_PHI_Z] > -1 ||
-	readOrder[BFIELD_R_Z_PHI] > -1 )
+	readOrder[BFIELD_R_Z_PHI] > -1 ) {
       bfield = scinew StructHexVolField<Vector>(hvm, Field::NODE);
-
+      bHandle_ = bfield;
+    }
     if( readOrder[VFIELD_XYZ    ] > -1 ||
 	readOrder[VFIELD_R_PHI_Z] > -1 ||
-	readOrder[VFIELD_R_Z_PHI] > -1 )
+	readOrder[VFIELD_R_Z_PHI] > -1 ) {
       vfield = scinew StructHexVolField<Vector>(hvm, Field::NODE);
+      vHandle_ = vfield;
+    }
 
-    if( readOrder[PRESSURE] > -1 )
+    if( readOrder[PRESSURE] > -1 ) {
       pfield = scinew StructHexVolField<double>(hvm, Field::NODE);
-
+      pHandle_ = pfield;
+    }
 
     // Read the data.
     double* data = new double[nVals];
@@ -294,14 +318,17 @@ void FusionFieldReader::execute(){
 
     bool phi_read;
 
-    for( int k=0; k<kdim; k++ ) {
-      for( int j=0; j<jdim; j++ ) {
-	for( int i=0; i<idim; i++ ) {
+    StructHexVolMesh::Node::index_type node, node0;
+
+    register unsigned int i, j, k;
+
+    for( k=0; k<kdim; k++ ) {
+      for( j=0; j<jdim; j++ ) {
+	for( i=0; i<idim; i++ ) {
 
 	  // Read the data in no matter the order.
 	  for( index=0; index<nVals; index++ ) {
-	    ifs >> data[index];
-			
+	    ifs >> data[index];			
 
 	    if( ifs.eof() ) {
 	      error( string("Could not read grid ") + new_filename );
@@ -313,7 +340,10 @@ void FusionFieldReader::execute(){
 	  }
 
 	  phi_read = false;
-	  StructHexVolMesh::Node::index_type node(i, j, k);
+
+	  node.i_ = i;
+	  node.j_ = j;
+	  node.k_ = k;
 
 	  // Grid
 	  if( readOrder[GRID_XYZ] > -1 ) {
@@ -356,7 +386,7 @@ void FusionFieldReader::execute(){
 	    yVal = -rad * sin( phi );
 	    zVal =  data[index+1];
 
-	    hvm->set_point(node,  Point( xVal, yVal, zVal ) );
+	    hvm->set_point(node, Point( xVal, yVal, zVal ) );
 	  }
 
 
@@ -460,6 +490,65 @@ void FusionFieldReader::execute(){
 	  }
 	}
       }
+
+      // If needed repeat the radial values for this theta.
+      if( !repeated )
+      {
+	Point pt;
+
+	node.j_ = jdim;
+	node.k_ = k;
+
+	node0.j_ = 0;
+	node0.k_ = k;
+
+	for( i=0; i<idim; i++ ) {
+
+	  node.i_ = i;
+	  node0.i_ = i;
+
+	  hvm->get_center(pt, node0 );
+	  hvm->set_point( node, pt );
+
+	  if( bfield )
+	    bfield->set_value(bfield->value( node0 ), node);
+	  if( vfield )
+	    vfield->set_value(vfield->value( node0 ), node);
+	  if( pfield )
+	    pfield->set_value(pfield->value( node0 ), node);
+	}
+      }
+    }
+
+    // If needed repeat the first phi slice.
+    if( !repeated )
+    {
+      Point pt;
+
+      node.k_ = kdim;
+      node0.k_ = 0;
+
+      for( j=0; j<jdim+1; j++ ) {
+
+	node.j_ = j;
+	node0.j_ = j;
+
+	for( i=0; i<idim; i++ ) {
+
+	  node.i_ = i;
+	  node0.i_ = i;
+
+	  hvm->get_center(pt, node0 );
+	  hvm->set_point( node, pt );
+
+	  if( bfield )
+	    bfield->set_value(bfield->value( node0 ), node);
+	  if( vfield )
+	    vfield->set_value(vfield->value( node0 ), node);
+	  if( pfield )
+	    pfield->set_value(pfield->value( node0 ), node);
+	}
+      }
     }
 
     // Make sure that all of the data was read.
@@ -471,18 +560,15 @@ void FusionFieldReader::execute(){
       error( string("not all data was read ") + new_filename );
       error( string("not all data was read ") + tmpStr );
     }
-
-    bHandle_ = bfield;
-    vHandle_ = vfield;
-    pHandle_ = pfield;
   }
   else
   {
-    cout << "Already read the file " <<  new_filename << endl;
+    cout << "FusionFieldReader - Already read the file " <<  new_filename << endl;
   }
 
 
   // Get a handle to the output field port.
+  if( pHandle_.get_rep() )
   {
     FieldOPort *ofield_port = 
       (FieldOPort *) get_oport("Output Pressure Field");
@@ -497,6 +583,7 @@ void FusionFieldReader::execute(){
   }
 
   // Get a handle to the output field port.
+  if( bHandle_.get_rep() )
   {
     FieldOPort *ofield_port = 
       (FieldOPort *) get_oport("Output B Field");
@@ -511,6 +598,7 @@ void FusionFieldReader::execute(){
   }
 
   // Get a handle to the output field port.
+  if( vHandle_.get_rep() )
   {
     FieldOPort *ofield_port = 
       (FieldOPort *) get_oport("Output V Field");
@@ -527,3 +615,7 @@ void FusionFieldReader::execute(){
 
 
 } // End namespace Fusion
+
+
+
+
