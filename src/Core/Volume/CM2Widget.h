@@ -250,7 +250,7 @@ class PaintCM2Widget : public CM2Widget
 public:
   typedef pair<double, double>		Coordinate;
   typedef vector<Coordinate>		Stroke;
-  typedef vector<Stroke>		Strokes;
+  typedef vector<pair<double, Stroke> >	Strokes;
 
   PaintCM2Widget();
   ~PaintCM2Widget();
@@ -270,17 +270,17 @@ public:
   virtual void		io(Piostream &stream);
   static PersistentTypeID type_id;
 
-  void			add_stroke();
+  void			add_stroke(double width = -1.0);
   bool			pop_stroke();
   void			add_coordinate(const Coordinate &);
 protected:
   void			normalize();
   void			un_normalize();  
-  void			line(Array3<float> &, int, int, int, int, bool first);
-  void			draw_point(Array3<float> &, int, int);
-  void			splat(Array3<float> &, int, int);
+
+  void			line(Array3<float> &, double, 
+			     int, int, int, int, bool first);
+  void			splat(Array3<float> &, double, int, int);
   Strokes		strokes_;
-  Array3<float>		pixels_;
 };
 
 } // End namespace SCIRun

@@ -92,6 +92,7 @@ SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
   a(a_)
 {
   if (a == 0) { a = scinew double[nnz]; }
+  //validate();
 }
 
 
@@ -105,6 +106,7 @@ SparseRowMatrix::SparseRowMatrix(const SparseRowMatrix& copy) :
   memcpy(a, copy.a, sizeof(double)*nnz);
   memcpy(rows, copy.rows, sizeof(int)*(nrows_+1));
   memcpy(columns, copy.columns, sizeof(int)*nnz);
+  //validate();
 }
 
 
@@ -122,6 +124,33 @@ SparseRowMatrix::~SparseRowMatrix()
   {
     delete[] rows;
   }
+}
+
+
+void
+SparseRowMatrix::validate()
+{
+  int i, j;
+
+  ASSERTMSG(rows[0] == 0, "Row start is nonzero.");
+  for (i = 0; i< nrows_; i++)
+  {
+    ASSERTMSG(rows[i] <= rows[i+1], "Malformed rows, not increasing.");
+    for (j = rows[i]; j < rows[i+1]; j++)
+    {
+      ASSERTMSG(columns[j] >= 0 && columns[j] < ncols_, "Column out of range.");
+      if (j != rows[i])
+      {
+        if (columns[j-1] >= columns[j])
+        {
+          cout << i << " : " << columns[j-1] << " " << columns[j] << "\n";
+          cout << i << " : " << a[j-1] << " " << a[j] << "\n";
+        }
+        ASSERTMSG(columns[j-1] < columns[j], "Column out of order.");
+      }
+    }
+  }
+  ASSERTMSG(rows[nrows_] == nnz, "Row end is incorrect.");
 }
 
 

@@ -180,6 +180,8 @@ CurveMesh::Node::index_type
 QuadMC<Field>::find_or_add_edgepoint(unsigned int u0, unsigned int u1,
 				     double d0, const Point &p) 
 {
+  if (d0 <= 0.0) { u1 = (unsigned int)-1; }
+  if (d0 >= 1.0) { u0 = (unsigned int)-1; }
   edgepair_t np;
   if (u0 < u1)  { np.first = u0; np.second = u1; np.dfirst = d0; }
   else { np.first = u1; np.second = u0; np.dfirst = 1.0 - d0; }
@@ -278,7 +280,8 @@ void QuadMC<Field>::extract_n( cell_index_type cell, double v )
       CurveMesh::Node::array_type cnode(2);
       cnode[0] = find_or_add_edgepoint(node[a], node[b], d0, p0);
       cnode[1] = find_or_add_edgepoint(node[c], node[d], d1, p1);
-      out_mesh_->add_elem(cnode);
+      if (cnode[0] != cnode[1])
+        out_mesh_->add_elem(cnode);
     }
   }
   else if (code == 5)
@@ -302,7 +305,8 @@ void QuadMC<Field>::extract_n( cell_index_type cell, double v )
 	CurveMesh::Node::array_type cnode(2);
 	cnode[0] = find_or_add_edgepoint(node[a], node[b], d0, p0);
 	cnode[1] = find_or_add_edgepoint(node[c], node[d], d0, p1);
-	out_mesh_->add_elem(cnode);
+        if (cnode[0] != cnode[1])
+          out_mesh_->add_elem(cnode);
       }
     }
     {
@@ -324,7 +328,8 @@ void QuadMC<Field>::extract_n( cell_index_type cell, double v )
 	CurveMesh::Node::array_type cnode(2);
 	cnode[0] = find_or_add_edgepoint(node[a], node[b], d0, p0);
 	cnode[1] = find_or_add_edgepoint(node[c], node[d], d1, p1);
-	out_mesh_->add_elem(cnode);
+        if (cnode[0] != cnode[1])
+          out_mesh_->add_elem(cnode);
       }
     }
   }
@@ -349,7 +354,8 @@ void QuadMC<Field>::extract_n( cell_index_type cell, double v )
 	CurveMesh::Node::array_type cnode(2);
 	cnode[0] = find_or_add_edgepoint(node[a], node[b], d0, p0);
 	cnode[1] = find_or_add_edgepoint(node[c], node[d], d1, p1);
-	out_mesh_->add_elem(cnode);
+        if (cnode[0] != cnode[1])
+          out_mesh_->add_elem(cnode);
       }
     }
     {
@@ -371,7 +377,8 @@ void QuadMC<Field>::extract_n( cell_index_type cell, double v )
 	CurveMesh::Node::array_type cnode(2);
 	cnode[0] = find_or_add_edgepoint(node[a], node[b], d0, p0);
 	cnode[1] = find_or_add_edgepoint(node[c], node[d], d1, p1);
-	out_mesh_->add_elem(cnode);
+        if (cnode[0] != cnode[1])
+          out_mesh_->add_elem(cnode);
       }
     }
   }
@@ -467,12 +474,27 @@ QuadMC<Field>::get_interpolant()
       ++eiter;
     }
 
-    for (int i = 0; i <= nrows; i++)
+    int nnz = 0;
+    int i;
+    for (i = 0; i < nrows; i++)
     {
-      rr[i] = i * 2;
+      rr[i] = nnz;
+      if (cc[i * 2 + 0] > 0)
+      {
+        cc[nnz] = cc[i * 2 + 0];
+        dd[nnz] = dd[i * 2 + 0];
+        nnz++;
+      }
+      if (cc[i * 2 + 1] > 0)
+      {
+        cc[nnz] = cc[i * 2 + 1];
+        dd[nnz] = dd[i * 2 + 1];
+        nnz++;
+      }
     }
+    rr[i] = nnz;
 
-    return scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows*2, dd);
+    return scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, dd);
   }
   else
   {

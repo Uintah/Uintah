@@ -29,66 +29,38 @@
 
 
 /*
- *  GuiCallback.h: Interface to user interface
+ *  DimensionMismatch.h: Exception to indicate a failed bounds check
  *
  *  Written by:
- *   Steven G. Parker
+ *   McKay Davis
  *   Department of Computer Science
  *   University of Utah
- *   April 2002
+ *   Feb 2005
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 2005 SCI Group
  */
 
-#ifndef SCIRun_Core_GuiInterface_GuiCallback_h
-#define SCIRun_Core_GuiInterface_GuiCallback_h
+#ifndef Core_Exceptions_GuiException_h
+#define Core_Exceptions_GuiException_h
 
-#include <Core/GuiInterface/TCLTask.h> // for TCLCONST
-
-#include <sgi_stl_warnings_off.h>
-#include <vector>
+#include <Core/Exceptions/Exception.h>
 #include <string>
-#include <sgi_stl_warnings_on.h>
+using std::string;
 
 namespace SCIRun {
-
-  using std::string;
-  using std::vector;
-
-  class GuiVar;
-
-  class GuiArgs {
-    vector<string> args_;
-  public:
-    bool have_error_;
-    bool have_result_;
-    string string_;
-    
-    GuiArgs(int argc, TCLCONST char* argv[]);
-    ~GuiArgs();
-    int count();
-    string operator[](int i);
-    string get_string(int i);
-    int get_int(int i);
-    double get_double(int i);
-    
-    void error(const string&);
-    void result(const string&);
-    void append_result(const string&);
-    void append_element(const string&);
-
-    static string make_list(const string&, const string&);
-    static string make_list(const string&, const string&, const string&);
-    static string make_list(const vector<string>&);
-  };
-
-  class GuiCallback {
-  public:
-    GuiCallback();
-    virtual ~GuiCallback();
-    virtual void tcl_command(GuiArgs&, void*)=0;
-  };
+class GuiException : public Exception {
+public:
+  GuiException(string msg) : msg_(msg) { stacktrace_ = 0; }
+  virtual ~GuiException() {};
+  virtual const char* message() const { return msg_.c_str(); }
+  virtual const char* type() const { return "GuiException"; }
+protected:
+private:
+  string msg_;
+  GuiException& operator=(const GuiException);
+};
 } // End namespace SCIRun
 
+#endif  // Core_Exceptions_GuiException_h
 
-#endif
+

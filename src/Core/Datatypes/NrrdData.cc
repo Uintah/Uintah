@@ -278,7 +278,7 @@ void NrrdData::io(Piostream& stream)
 			
 	// Need error checking here as well
 	nrrd->axis[q].label= airStrdup(label.c_str());
-	nrrd->axis[q].unit= airStrdup(unit.c_str());
+	nrrd->axis[q].units= airStrdup(unit.c_str());
 	stream.end_cheap_delim();
       }
       stream.end_cheap_delim();
@@ -480,7 +480,7 @@ void NrrdData::io(Piostream& stream)
 	stream.io(nrrd->axis[q].kind);
 	std::string label, unit;
 	if ( nrrd->axis[q].label) { label = nrrd->axis[q].label; } else { label = ""; };
-	if ( nrrd->axis[q].unit) { label = nrrd->axis[q].unit; } else { unit = ""; };
+	if ( nrrd->axis[q].units) { label = nrrd->axis[q].units; } else { unit = ""; };
 	stream.io(label);
 	stream.io(unit);
 	stream.end_cheap_delim();

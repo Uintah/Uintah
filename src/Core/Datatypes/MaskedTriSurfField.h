@@ -81,11 +81,11 @@ public:
 
   virtual ~MaskedTriSurfField() {};
 
-  bool value(T &val, typename TriSurfMesh::Node::index_type i) const
+  bool value(T &val, TriSurfMesh::Node::index_type i) const
   { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
-  bool value(T &val, typename TriSurfMesh::Edge::index_type i) const
+  bool value(T &val, TriSurfMesh::Edge::index_type i) const
   { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
-  bool value(T &val, typename TriSurfMesh::Cell::index_type i) const
+  bool value(T &val, TriSurfMesh::Cell::index_type i) const
   { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
 
   void initialize_mask(char masked) {

@@ -622,44 +622,35 @@ Transform::set_trans(double* pmat)
 void
 Transform::load_zero(double m[4][4])
 {
-  for(int i=0;i<4;i++){
-    for(int j=0;j<4;j++){
-      m[i][j]=0;
-    }
-  }
+  m[0][0] = 0.0; m[0][1] = 0.0; m[0][2] = 0.0; m[0][3] = 0.0;
+  m[1][0] = 0.0; m[1][1] = 0.0; m[1][2] = 0.0; m[1][3] = 0.0;
+  m[2][0] = 0.0; m[2][1] = 0.0; m[2][2] = 0.0; m[2][3] = 0.0;
+  m[3][0] = 0.0; m[3][1] = 0.0; m[3][2] = 0.0; m[3][3] = 0.0;
 }
 
 void
 Transform::load_identity()
 {
-  for(int i=0;i<4;i++){
-    for(int j=0;j<4;j++){
-      mat[i][j]=0;
-    }
-    mat[i][i]=1.0;
-  }
+  mat[0][0] = 1.0; mat[0][1] = 0.0; mat[0][2] = 0.0; mat[0][3] = 0.0;
+  mat[1][0] = 0.0; mat[1][1] = 1.0; mat[1][2] = 0.0; mat[1][3] = 0.0;
+  mat[2][0] = 0.0; mat[2][1] = 0.0; mat[2][2] = 1.0; mat[2][3] = 0.0;
+  mat[3][0] = 0.0; mat[3][1] = 0.0; mat[3][2] = 0.0; mat[3][3] = 1.0;
   inverse_valid=0;
 }
 
 void
 Transform::install_mat(double m[4][4])
 {
-  for(int i=0;i<4;i++){
-    for(int j=0;j<4;j++){
-      mat[i][j]=m[i][j];
-    }
-  }
+  memcpy(mat, m, sizeof(double) * 16);
 }
 
 void
 Transform::load_identity(double m[4][4]) 
 {
-  for(int i=0;i<4;i++){
-    for(int j=0;j<4;j++){
-      m[i][j]=0;
-    }
-    m[i][i]=1.0;
-  }
+  m[0][0] = 1.0; m[0][1] = 0.0; m[0][2] = 0.0; m[0][3] = 0.0;
+  m[1][0] = 0.0; m[1][1] = 1.0; m[1][2] = 0.0; m[1][3] = 0.0;
+  m[2][0] = 0.0; m[2][1] = 0.0; m[2][2] = 1.0; m[2][3] = 0.0;
+  m[3][0] = 0.0; m[3][1] = 0.0; m[3][2] = 0.0; m[3][3] = 1.0;
 }
 
 void

@@ -1752,24 +1752,22 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
   GeomHandle texture_face;
   float tex_coords[8];
   float pos_coords[12];
-  int colorbytes;
-  colorbytes = 4;
+  const int colorbytes = 4;
 
   GeomTexRectangle *tr = scinew GeomTexRectangle();
   texture_face = tr;
 
   ImageMesh *im = dynamic_cast<ImageMesh *> (mesh.get_rep());
-  // set up the texture parameters //
-  // power of 2 dimensions
+
+  // Set up the texture parameters, power of 2 dimensions.
   int width = NextPowerOf2(im->get_ni());
   int height = NextPowerOf2(im->get_nj());
 
-  // use for the texture coordinates 
+  // Use for the texture coordinates 
   double tmin_x, tmax_x, tmin_y, tmax_y;
 
-  // create texture array 
+  // Create texture array 
   unsigned char * texture = new unsigned char[colorbytes*width*height];
-  //  cerr<<"texture size is "<< colorbytes*width*height<<"\n";
 
   //***************************************************
   // we need to find the corners of the square in space
@@ -1800,13 +1798,12 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
   pos_coords[9] = p4.x();
   pos_coords[10] = p4.y();
   pos_coords[11] = p4.z();
-  //***************************************************
-
 
   vector<typename Fld::value_type> vals(20);
   vector<double> dvals(20);
 
-  if( sfld->basis_order() == 1){ 
+  if ( sfld->basis_order() == 1)
+  {
     tr->interpolate(true);
 
     tmin_x = 0.5/(double)width;
@@ -1819,38 +1816,37 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
     tex_coords[4] = tmax_x; tex_coords[5] = tmax_y;
     tex_coords[6] = tmin_x; tex_coords[7] = tmax_y;
 
-
     typename Fld::mesh_type::Node::iterator niter; mesh->begin(niter);  
     typename Fld::mesh_type::Node::iterator niter_end; mesh->end(niter_end);  
     typename Fld::mesh_type::Node::array_type nodes;
-    while(niter != niter_end ){
-      int idx;
-      // convert data values to double
+    while(niter != niter_end )
+    {
+      // Convert data values to double.
       typename Fld::value_type val;
       double dval;      
       sfld->value(val, *niter);
       to_double(val, dval);
-      // compute index into texture array
-      idx = (niter.i_ * colorbytes) + (niter.j_ * width * colorbytes);
+
+      // Compute index into texture array.
+      const int idx = (niter.i_ * colorbytes) + (niter.j_ * width *colorbytes);
       
-
-
-      // compute the ColorMap index and retreive the color
-      double cmin = color_handle->getMin();
-      double cmax = color_handle->getMax();
-      double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
+      // Compute the ColorMap index and retreive the color.
+      const double cmin = color_handle->getMin();
+      const double cmax = color_handle->getMax();
+      const double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
       const Color &c = color_handle->getColor(index);
 
-      // fill the texture
+      // Fill the texture.
       texture[idx] = (unsigned char)(Clamp(c.r(), 0.0, 1.0)*255);
       texture[idx+1] =  (unsigned char)(Clamp(c.g(), 0.0, 1.0)*255);
       texture[idx+2] = (unsigned char)(Clamp(c.b(), 0.0, 1.0)*255);
-      texture[idx+3] = (unsigned char)(Clamp(color_handle->getAlpha(index), 
-					     0.0, 1.0)*255);
+      texture[idx+3] = (unsigned char)(Clamp(color_handle->getAlpha(index),
+                                             0.0, 1.0)*255);
       ++niter;
     }
-
-   } else if( sfld->basis_order() == 0){
+  }
+  else if( sfld->basis_order() == 0)
+  {
      tr->interpolate( false );
      tmin_x = 0.0;
      tmax_x = (im->get_ni()-1)/(double)width;
@@ -1860,49 +1856,50 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
      tex_coords[2] = tmax_x; tex_coords[3] = tmin_y;
      tex_coords[4] = tmax_x; tex_coords[5] = tmax_y;
      tex_coords[6] = tmin_x; tex_coords[7] = tmax_y;
-     int idx;
       
      typename Fld::mesh_type::Face::iterator fiter; mesh->begin(fiter);  
      typename Fld::mesh_type::Face::iterator fiter_end; mesh->end(fiter_end);  
 
-     while (fiter != fiter_end) {
+     while (fiter != fiter_end)
+     {
        typename Fld::value_type val;
        double dval;
        sfld->value(val, *fiter);
        to_double(val, dval);
 
-       // compute index into texture array
-       idx = (fiter.i_ * colorbytes) + (fiter.j_ * width * colorbytes);
-       // compute the ColorMap index and retreive the color
-       double cmin = color_handle->getMin();
-       double cmax = color_handle->getMax();
-       double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
+       // Compute index into texture array.
+       const int idx = (fiter.i_ * colorbytes) + (fiter.j_ * width *colorbytes);
+       // Compute the ColorMap index and retreive the color.
+       const double cmin = color_handle->getMin();
+       const double cmax = color_handle->getMax();
+       const double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
        const Color &c = color_handle->getColor(index);
 
-       // fill the texture
+       // Fill the texture.
        texture[idx] = (unsigned char)(Clamp(c.r(), 0.0, 1.0)*255);
        texture[idx+1] =  (unsigned char)(Clamp(c.g(), 0.0, 1.0)*255);
        texture[idx+2] = (unsigned char)(Clamp(c.b(), 0.0, 1.0)*255);
-       texture[idx+3] = (unsigned char)(Clamp(color_handle->getAlpha(index), 
-					      0.0, 1.0) * 255);
-
-     ++fiter;
+       texture[idx+3] = (unsigned char)(Clamp(color_handle->getAlpha(index),
+                                              0.0, 1.0) * 255);
+       ++fiter;
      }
    }
 
-  // set normal for lighting
+  // Set normal for lighting.
   Vector normal = Cross( p2 - p1, p4 - p1 );
   normal.normalize();
   float n[3];
   n[0] = normal.x(); n[1] = normal.y(); n[2] = normal.z();
   tr->set_normal( n );
 
-  if( use_transparency ){
+  if( use_transparency )
+  {
     tr->set_transparency( true );
   }
 
   tr->set_coords(tex_coords, pos_coords);
   tr->set_texture( texture, colorbytes, width, height );
+
   delete [] texture;
   return texture_face;
 }

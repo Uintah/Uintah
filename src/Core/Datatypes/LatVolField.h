@@ -65,22 +65,22 @@ public:
   FData3d(const FData3d& data) {Array3<Data>::copy(data); }
   virtual ~FData3d();
   
-  const value_type &operator[](typename LatVolMesh::Cell::index_type idx) const
+  const value_type &operator[](const LatVolMesh::Cell::index_type &idx) const
   { return this->operator()(idx.k_,idx.j_,idx.i_); } 
-  const value_type &operator[](typename LatVolMesh::Face::index_type idx) const
+  const value_type &operator[](const LatVolMesh::Face::index_type &idx) const
   { return this->operator()(0, 0, idx); }
-  const value_type &operator[](typename LatVolMesh::Edge::index_type idx) const
+  const value_type &operator[](const LatVolMesh::Edge::index_type &idx) const
   { return this->operator()(0, 0, idx); }    
-  const value_type &operator[](typename LatVolMesh::Node::index_type idx) const
+  const value_type &operator[](const LatVolMesh::Node::index_type &idx) const
   { return this->operator()(idx.k_,idx.j_,idx.i_); }    
 
-  value_type &operator[](typename LatVolMesh::Cell::index_type idx)
+  value_type &operator[](const LatVolMesh::Cell::index_type &idx)
   { return this->operator()(idx.k_,idx.j_,idx.i_); } 
-  value_type &operator[](typename LatVolMesh::Face::index_type idx)
+  value_type &operator[](const LatVolMesh::Face::index_type &idx)
   { return this->operator()(0, 0, idx); }
-  value_type &operator[](typename LatVolMesh::Edge::index_type idx)
+  value_type &operator[](const LatVolMesh::Edge::index_type &idx)
   { return this->operator()(0, 0, idx); }    
-  value_type &operator[](typename LatVolMesh::Node::index_type idx)
+  value_type &operator[](const LatVolMesh::Node::index_type &idx)
   { return this->operator()(idx.k_,idx.j_,idx.i_); }    
 
   void resize(const LatVolMesh::Node::size_type &size)
