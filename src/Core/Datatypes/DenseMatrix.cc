@@ -196,6 +196,7 @@ int DenseMatrix::solve(ColumnMatrix& sol)
 		row=j;
 	    }
 	}
+//	ASSERT(Abs(max) > 1.e-12);
 	if (Abs(max) < 1.e-12) {
 	    sol=b;
 	    return 0;
@@ -224,10 +225,6 @@ int DenseMatrix::solve(ColumnMatrix& sol)
     // Back-substitution
     for(i=1;i<nr;i++){
 //	cout << "Solve: " << i << " of " << nr << endl;
-	if (Abs(data[i][i] < 1.e-12)) {
-	    sol=b;
-	    return 0;
-	}
 //	ASSERT(Abs(data[i][i]) > 1.e-12);
 	if (Abs(data[i][i]) < 1.e-12) {
 	    sol=b;
@@ -519,6 +516,9 @@ void DenseMatrix::mult(double s)
 
 //
 // $Log$
+// Revision 1.8  1999/12/11 05:47:41  dmw
+// sparserowmatrix -- someone had commented out the code that lets you get() a zero entry... I put it back in.    densematrix -- just cleaned up some comments
+//
 // Revision 1.7  1999/12/10 06:58:57  dmw
 // DenseMatrix::solve() now returns an int (instead of void) indicating whether it succeeded or not.
 //

@@ -126,13 +126,13 @@ double& SparseRowMatrix::get(int i, int j)
     int h=next_idx-1;
     for(;;){
 	if(h<l){
-	  //#if 0
+    #if 0
 	  cerr << "column " << j << " not found in row "<<i << ": ";
 	    for(int idx=row_idx;idx<next_idx;idx++)
 		cerr << columns[idx] << " ";
 	    cerr << endl;
 	    ASSERTFAIL("Column not found");
-	    //#endif
+    #endif
 	    static double zero;
 	    zero=0;
 	    return zero;
@@ -319,6 +319,9 @@ void SparseRowMatrix::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.6  1999/12/11 05:47:41  dmw
+// sparserowmatrix -- someone had commented out the code that lets you get() a zero entry... I put it back in.    densematrix -- just cleaned up some comments
+//
 // Revision 1.5  1999/10/07 02:07:34  sparker
 // use standard iostreams and complex type
 //
