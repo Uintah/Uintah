@@ -10,6 +10,7 @@
 
 class Connection;
 class IPort;
+class Light;
 class Module;
 class Node;
 class OPort;
@@ -41,6 +42,7 @@ typedef Array1<unsigned int> _dummy20_;
 typedef Array1<Variable*> _dummy21_;
 typedef Array1<BaseConstraint*> _dummy22_;
 typedef Array1<VPriority> _dummy24_;
+typedef Array1<Light*> _dummy25_;
 
 static void _fn1_(Piostream& p1, Array1<Node*>& p2)
 {
