@@ -39,11 +39,9 @@
 #else
 #include <stdint.h>
 #endif
-using std::string;
-using SCIRun::Point;
-using SCIRun::Vector;
 
 namespace SCIRun{
+using std::string;
 
 #define SWAP_2(u2)/* IronDoc macro to swap two byte quantity */ \
   { unsigned char* _p = (unsigned char*)(&(u2)); \

@@ -36,9 +36,9 @@
 #include <Dataflow/Constraints/BaseConstraint.h>
 
 #include <stack>
-using std::stack;
 
 namespace SCIRun {
+using std::stack;
 
 
 typedef unsigned char uchar;

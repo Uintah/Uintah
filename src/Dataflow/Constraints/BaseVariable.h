@@ -38,12 +38,9 @@
 #include <string>
 #include <vector>
 
+namespace SCIRun {
 using std::string;
 using std::vector;
-
-
-namespace SCIRun {
-
 
 /* Priority levels */
 // P_constant is for a variable in reference to a constraint.
