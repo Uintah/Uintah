@@ -149,7 +149,7 @@ namespace Uintah {
   {
     ASSERT(!un);
     for(int i=0;i<n;i++){
-      ComputeSubset<T>* subset = new ComputeSubset<T>(0);
+      ComputeSubset<T>* subset = scinew ComputeSubset<T>(0);
       subset->addReference();
       set.push_back(subset);
     }
