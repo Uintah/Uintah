@@ -16,7 +16,7 @@ KEYWORDS
     ParticleGridReader, Material/Particle Method
 
 AUTHOR
-    Packages/Kurt Zimmerman
+    Kurt Zimmerman, James Bigler
     Department of Computer Science
     University of Utah
     June, 2000
@@ -51,8 +51,6 @@ LOG
 #include <sgi_stl_warnings_on.h>
 
 
-#define TEMPLATE_FUN 1
-
 namespace Uintah {
 using namespace SCIRun;
 
@@ -74,7 +72,9 @@ public:
   ////////// 
   virtual void execute(); 
 
-#ifdef TEMPLATE_FUN
+  // This class is used to store parameters passed up the chain to the
+  // build field functions.  This makes it easier to pass a large
+  // number of parameters.
   class QueryInfo {
   public:
     QueryInfo() {}
@@ -104,7 +104,6 @@ public:
     int timestep;
     double dt;
   };
-#endif
 
 protected:
   virtual void get_vars(vector< string >&,
@@ -116,80 +115,53 @@ protected:
   bool is_periodic_bcs(IntVector cellir, IntVector ir);
   void get_periodic_bcs_range(IntVector cellir, IntVector ir,
                               IntVector range, IntVector& newir);
-  
-#ifdef TEMPLATE_FUN
+
+  // Sets all sorts of properties using the PropertyManager facility
+  // of the Field.  This is called for all types of Fields.
   void set_field_properties(Field* field, QueryInfo& qinfo,
                             IntVector& offset);
 
+  // Creates a MRLatVolField.
   template <class Var, class T>
-  FieldHandle build_multi_level_field( QueryInfo& qinfo, int loc);
+  FieldHandle build_multi_level_field( QueryInfo& qinfo, int basis_order);
 
 
+  // This does the actuall work of getting the data from the
+  // DataArchive for a single patch and filling the field.  This is
+  // called by both build_field and build_patch_field.
   template <class Var, class T>
   void getPatchData(QueryInfo& qinfo, IntVector& offset,
                     LatVolField<T>* sfield, const Patch* patch);
   
-  // For help with build_multi_level_field
+  // Similar to build_field, but is called from build_multi_level_field.
   template <class Var, class T>
   void build_patch_field(QueryInfo& qinfo,
                          const Patch* patch,
                          IntVector& offset,
                          LatVolField<T>* field);
-  
+
+  // Calls query for a single-level data set.
   template <class Var, class T>
   void build_field(QueryInfo& qinfo, IntVector& offset, LatVolField<T>* field);
 
+  // This function makes a switch between building multi-level data or
+  // single-level data.  Makes a call to either build_field or or
+  // build_multi_level_field.  The basis_order pertains to whether the
+  // data is node or cell centerd.  Type Var should look something
+  // like CCVariable<T> or NCVariable<T>.
   template<class Var, class T>
   FieldHandle getData(QueryInfo& qinfo, IntVector& offset,
                       LatVolMeshHandle mesh_handle,
                       int basis_order);
-  
+
+  // This is the first function on your way to getting a field.  This
+  // makes a template switch on the type of variable (CCVariable,
+  // NCVariable, etc.).  It then calls getData.  The type of T is
+  // double, int, Vector, etc.
   template<class T>
   FieldHandle getVariable(QueryInfo& qinfo, IntVector& offset,
                           LatVolMeshHandle mesh_handle);
-#endif
 
-  template <class T, class Var>
-  void build_patch_field(DataArchive& archive,
-                         const Patch* patch,
-                         IntVector& lo,
-                         const string& varname,
-                         int mat,
-                         double time,
-                         Var& v,
-                         LatVolField<T>*& sfd);
-  template <class T, class Var>
-  void build_field(DataArchive& archive,
-                   const LevelP& level,
-                   IntVector& lo,
-                   const string& varname,
-                   int mat,
-                   double time,
-                   Var& v,
-                   LatVolField<T>*& sfd);
-
-  template <class T, class Var>
-  void
-  build_multi_level_field( DataArchive& archive, GridP grid,
-                           string& var, Var& v, int mat,
-                           int generation, double time, int timestep,
-                           double dt, int loc,
-                           TypeDescription::Type type,
-                           TypeDescription::Type subtype,
-                           MRLatVolField<T>*& mrfield);
-  template <class T>
-  void set_scalar_properties(LatVolField<T>*& sfd, string& varname,
-                             double time, IntVector& low,
-                             TypeDescription::Type type);
-  template <class T>
-  void set_vector_properties(LatVolField<T>*& vfd, string& var,
-                             int generation, int timestep,
-                             IntVector& low, double dt,
-                             TypeDescription::Type type);
-  template <class T>
-  void set_tensor_properties(LatVolField<T>*& tfd, 
-                             IntVector& low,
-                             TypeDescription::Type type);
   void update_mesh_handle( LevelP& level,
                            IntVector& hi,
                            IntVector& range,
