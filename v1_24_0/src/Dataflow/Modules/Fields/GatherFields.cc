@@ -91,7 +91,7 @@ GatherFields::execute()
   if (range.first == range.second)
     return;
 
-  port_map_type::iterator pi = range.first;
+  //port_map_type::iterator pi = range.first;
 
   // Gather up all of the field handles.
   if (range.first != range.second) {
