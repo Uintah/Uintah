@@ -65,7 +65,7 @@ WARNING
 
     virtual void clearMappings();
     virtual void mapDataWarehouse(Task::WhichDW, int dwTag);
-    void compile( const ProcessorGroup * pg);
+    void compile();
 
     //////////
     // Insert Documentation Here:
@@ -121,7 +121,7 @@ WARNING
 
   protected:
     void finalizeTimestep();
-    virtual void actuallyCompile( const ProcessorGroup * pc ) = 0;
+    virtual void actuallyCompile() = 0;
     
     void makeTaskGraphDoc(const DetailedTasks* dt,
 			  int rank = 0);

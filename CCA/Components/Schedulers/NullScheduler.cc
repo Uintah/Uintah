@@ -4,11 +4,11 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/ReductionVariable.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
@@ -59,7 +59,7 @@ NullScheduler::advanceDataWarehouse(const GridP& grid)
 }
 
 void
-NullScheduler::actuallyCompile(const ProcessorGroup* pg)
+NullScheduler::actuallyCompile()
 {
   if( dts_ )
     delete dts_;
@@ -70,7 +70,7 @@ NullScheduler::actuallyCompile(const ProcessorGroup* pg)
 
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
-  dts_ = graph.createDetailedTasks( pg, lb, useInternalDeps() );
+  dts_ = graph.createDetailedTasks(lb, useInternalDeps() );
 
   if(dts_->numTasks() == 0){
     cerr << "WARNING: Scheduler executed, but no tasks\n";
@@ -78,14 +78,14 @@ NullScheduler::actuallyCompile(const ProcessorGroup* pg)
   
   lb->assignResources(*dts_, d_myworld);
 
-  graph.createDetailedDependencies(dts_, lb, pg);
+  graph.createDetailedDependencies(dts_, lb);
   releasePort("load balancer");
 
-  dts_->assignMessageTags(pg->myrank());
+  dts_->assignMessageTags(d_myworld->myrank());
 }
 
 void
-NullScheduler::execute(const ProcessorGroup *)
+NullScheduler::execute()
 {
   if(dts_ == 0){
     cerr << "NullScheduler skipping execute, no tasks\n";
