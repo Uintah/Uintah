@@ -7,8 +7,8 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ArrowWidget.tcl \
 	$(SRCDIR)/BaseWidget.tcl \
-	$(SRCDIR)/BldTransform.tcl \
 	$(SRCDIR)/BoxWidget.tcl \
+	$(SRCDIR)/BuildTransform.tcl \
 	$(SRCDIR)/CastField.tcl \
 	$(SRCDIR)/ChangeCellType.tcl \
 	$(SRCDIR)/ColorMapReader.tcl \
