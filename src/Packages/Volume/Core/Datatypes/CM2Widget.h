@@ -39,6 +39,7 @@
 namespace Volume {
 
 class CM2ShaderFactory;
+class Pbuffer;
 
 class CM2Widget
 {
@@ -49,7 +50,7 @@ public:
   
   // appearance
   virtual void draw() = 0;
-  virtual void rasterize(CM2ShaderFactory& factory, bool faux, bool blend) = 0;
+  virtual void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer) = 0;
   virtual void rasterize(SCIRun::Array3<float>& array, bool faux) = 0;
   virtual CM2Widget* clone() = 0;
   
@@ -84,39 +85,6 @@ protected:
   int selected_;
 };
 
-class FragmentProgramARB;
-
-enum {
-  CM2_TRIANGLE = 0,
-  CM2_TRIANGLE_FAUX = 1,
-  CM2_TRIANGLE_BLEND = 2,
-  CM2_TRIANGLE_FAUX_BLEND = 3,
-  CM2_RECTANGLE_1D = 4,
-  CM2_RECTANGLE_1D_FAUX = 5,
-  CM2_RECTANGLE_1D_BLEND = 6,
-  CM2_RECTANGLE_1D_FAUX_BLEND = 7,
-  CM2_RECTANGLE_ELLIPSOID = 8,
-  CM2_RECTANGLE_ELLIPSOID_FAUX = 9,
-  CM2_RECTANGLE_ELLIPSOID_BLEND = 10,
-  CM2_RECTANGLE_ELLIPSOID_FAUX_BLEND = 11,
-  CM2_LAST = 12
-};
-
-class CM2ShaderFactory
-{
-public:
-  CM2ShaderFactory();
-  ~CM2ShaderFactory();
-  
-  bool create();
-  void destroy();
-
-  FragmentProgramARB* shader(int type);
-
-protected:
-  FragmentProgramARB** shader_;
-};
-
 class TriangleCM2Widget : public CM2Widget
 {
 public:
@@ -130,7 +98,7 @@ public:
   
   // appearance
   void draw();
-  void rasterize(CM2ShaderFactory& factory, bool faux, bool blend);
+  void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
   void rasterize(SCIRun::Array3<float>& array, bool faux);
   
   // behavior
@@ -153,11 +121,17 @@ protected:
   int pick_ix_, pick_iy_;
 };
 
+enum CM2RectangleType
+{
+  CM2_RECTANGLE_1D = 0,
+  CM2_RECTANGLE_ELLIPSOID = 1
+};
+
 class RectangleCM2Widget : public CM2Widget
 {
 public:
   RectangleCM2Widget();
-  RectangleCM2Widget(int type, float left_x, float left_y,
+  RectangleCM2Widget(CM2RectangleType type, float left_x, float left_y,
                      float width, float height, float offset);
   ~RectangleCM2Widget();
   RectangleCM2Widget(RectangleCM2Widget& copy);
@@ -166,7 +140,7 @@ public:
 
   // appearance
   void draw();
-  void rasterize(CM2ShaderFactory& factory, bool faux, bool blend);
+  void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
   void rasterize(SCIRun::Array3<float>& array, bool faux);
   
   // behavior
@@ -179,7 +153,7 @@ public:
   virtual void tcl_unpickle(const std::string &p);
 
 protected:
-  int type_;
+  CM2RectangleType type_;
   float left_x_, left_y_;
   float width_, height_, offset_;
 
@@ -187,7 +161,6 @@ protected:
   float last_x_, last_y_;
   int pick_ix_, pick_iy_;
 };
-
 
 } // End namespace Volume
 

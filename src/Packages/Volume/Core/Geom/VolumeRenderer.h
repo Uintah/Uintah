@@ -83,8 +83,6 @@ protected:
   double ambient_, diffuse_, specular_, shine_;
   int light_;
   bool adaptive_;
-
-  VolShaderFactory* shader_factory_;
 };
 
 } // End namespace SCIRun

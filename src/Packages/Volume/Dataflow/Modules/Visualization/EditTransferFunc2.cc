@@ -37,7 +37,9 @@
 
 #include <sci_gl.h>
 #include <Packages/Volume/Core/Util/Pbuffer.h>
+#include <Packages/Volume/Core/Util/ShaderProgramARB.h>
 #include <Packages/Volume/Dataflow/Ports/Colormap2Port.h>
+#include <Packages/Volume/Core/Datatypes/CM2Shader.h>
 #include <Packages/Volume/Core/Datatypes/CM2Widget.h>
 #include <Packages/Teem/Core/Datatypes/NrrdData.h>
 #include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
@@ -576,12 +578,15 @@ EditTransferFunc2::redraw()
   if(use_pbuffer_ || use_back_buffer_) {
     if(!shader_factory_) {
       shader_factory_ = new CM2ShaderFactory();
-      if(shader_factory_->create()) {
+      FragmentProgramARB dummy("ARBfp1.0\nMOV result.color, 0.0;\nEND");
+      if(dummy.create()) {
+        dummy.destroy();
         use_pbuffer_ = false;
         use_back_buffer_ = false;
         cerr << "[EditTransferFunction2] Shaders not supported; "
              << "switching to software rasterization" << endl;
       }
+      dummy.destroy();
     }
   }
 
@@ -633,7 +638,7 @@ EditTransferFunc2::redraw()
     
       // Rasterize widgets
       for (unsigned int i=0; i<widgets_.size(); i++) {
-        widgets_[i]->rasterize(*shader_factory_, gui_faux_.get(), false);
+        widgets_[i]->rasterize(*shader_factory_, gui_faux_.get(), 0);
       }
 
       glDisable(GL_BLEND);
@@ -733,7 +738,7 @@ EditTransferFunc2::redraw()
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     for(unsigned int i=0; i<widgets_.size(); i++) {
-      widgets_[i]->rasterize(*shader_factory_, gui_faux_.get(), false);
+      widgets_[i]->rasterize(*shader_factory_, gui_faux_.get(), 0);
     }
 
     glBlendFunc(GL_ONE, GL_DST_ALPHA);

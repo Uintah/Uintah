@@ -32,6 +32,7 @@
 #include <string>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Packages/Volume/Core/Geom/SliceRenderer.h>
+#include <Packages/Volume/Core/Geom/VolShader.h>
 #include <Packages/Volume/Core/Datatypes/Brick.h>
 #include <Packages/Volume/Core/Util/SliceTable.h>
 #include <Packages/Volume/Core/Util/ShaderProgramARB.h>
@@ -40,122 +41,6 @@ using std::string;
 using SCIRun::DrawInfoOpenGL;
 
 namespace Volume {
-
-static const string ShaderString1 =
-"!!ARBfp1.0 \n"
-"TEMP v, c; \n"
-"ATTRIB t = fragment.texcoord[0]; \n"
-"ATTRIB f = fragment.color; \n"
-"TEX v, t, texture[0], 3D; \n"
-"TEX c, v, texture[2], 1D; \n"
-"MUL result.color, c, f; \n"
-"END";
-
-static const string ShaderString4 =
-"!!ARBfp1.0 \n"
-"TEMP v, c; \n"
-"ATTRIB t = fragment.texcoord[0]; \n"
-"ATTRIB f = fragment.color; \n"
-"TEX v, t, texture[0], 3D; \n"
-"TEX c, v.w, texture[2], 1D; \n"
-"MUL result.color, c, f; \n"
-"END";
-
-static const string ShaderString1_2 =
-"!!ARBfp1.0 \n"
-"TEMP v, c; \n"
-"ATTRIB t = fragment.texcoord[0]; \n"
-"ATTRIB f = fragment.color; \n"
-"TEX v.x, t, texture[0], 3D; \n"
-"TEX v.y, t, texture[1], 3D; \n"
-"TEX c, v, texture[2], 2D; \n"
-"MUL result.color, c, f; \n"
-"END";
-
-static const string ShaderString4_2 =
-"!!ARBfp1.0 \n"
-"TEMP v, c; \n"
-"ATTRIB t = fragment.texcoord[0]; \n"
-"ATTRIB f = fragment.color; \n"
-"TEX v.w, t, texture[0], 3D; \n"
-"TEX v.x, t, texture[1], 3D; \n"
-"TEX c, v.wxyz, texture[2], 2D; \n"
-"MUL result.color, c, f; \n"
-"END";
-
-static const string FogShaderString1 =
-"!!ARBfp1.0 \n"
-"TEMP value, color, fogFactor; \n"
-"PARAM fogColor = state.fog.color; \n"
-"PARAM fogParam = state.fog.params; \n"
-"ATTRIB fogCoord = fragment.texcoord[1];\n"
-"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
-"ATTRIB texCoord = fragment.texcoord[0]; \n"
-"ATTRIB fragmentColor = fragment.color; \n"
-"SUB fogFactor.x, fogParam.z, fogCoord.x; \n"
-"MUL_SAT fogFactor.x, fogFactor.x, fogParam.w; \n"
-"TEX value, texCoord, texture[0], 3D; \n"
-"TEX color, value, texture[2], 1D; \n"
-"MUL color, color, fragmentColor; \n"
-"LRP color.xyz, fogFactor.x, color.xyzz, fogColor.xyzz; \n"
-"MOV result.color, color; \n"
-"END";
-
-static const string FogShaderString1_2 =
-"!!ARBfp1.0 \n"
-"TEMP value, color, fogFactor; \n"
-"PARAM fogColor = state.fog.color; \n"
-"PARAM fogParam = state.fog.params; \n"
-"ATTRIB fogCoord = fragment.texcoord[1];\n"
-"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
-"ATTRIB texCoord = fragment.texcoord[0]; \n"
-"ATTRIB fragmentColor = fragment.color; \n"
-"SUB fogFactor.x, fogParam.z, fogCoord.x; \n"
-"MUL_SAT fogFactor.x, fogFactor.x, fogParam.w; \n"
-"TEX value.x, texCoord, texture[0], 3D; \n"
-"TEX value.y, texCoord, texture[1], 3D; \n"
-"TEX color, value, texture[2], 2D; \n"
-"MUL color, color, fragmentColor; \n"
-"LRP color.xyz, fogFactor.x, color.xyzz, fogColor.xyzz; \n"
-"MOV result.color, color; \n"
-"END";
-
-static const string FogShaderString4 =
-"!!ARBfp1.0 \n"
-"TEMP value, color, fogFactor, finalColor; \n"
-"PARAM fogColor = state.fog.color; \n"
-"PARAM fogParam = state.fog.params; \n"
-"ATTRIB fogCoord = fragment.texcoord[1];\n"
-"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
-"ATTRIB texCoord = fragment.texcoord[0]; \n"
-"ATTRIB fragmentColor = fragment.color; \n"
-"SUB fogFactor.x, fogParam.z, fogCoord.x; \n"
-"MUL_SAT fogFactor.x, fogFactor.x, fogParam.w; \n"
-"TEX value, texCoord, texture[0], 3D; \n"
-"TEX color, value.w, texture[2], 1D; \n"
-"MUL color, color, fragmentColor; \n"
-"LRP color.xyz, fogFactor.x, color.xyzz, fogColor.xyzz; \n"
-"MOV result.color, color; \n"
-"END";
-
-static const string FogShaderString4_2 =
-"!!ARBfp1.0 \n"
-"TEMP value, color, fogFactor; \n"
-"PARAM fogColor = state.fog.color; \n"
-"PARAM fogParam = state.fog.params; \n"
-"ATTRIB fogCoord = fragment.texcoord[1];\n"
-"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
-"ATTRIB texCoord = fragment.texcoord[0]; \n"
-"ATTRIB fragmentColor = fragment.color; \n"
-"SUB fogFactor.x, fogParam.z, fogCoord.x; \n"
-"MUL_SAT fogFactor.x, fogFactor.x, fogParam.w; \n"
-"TEX value.w, texCoord, texture[0], 3D; \n"
-"TEX value.x, texCoord, texture[1], 3D; \n"
-"TEX color, value.wxyz, texture[2], 2D; \n"
-"MUL color, color, fragmentColor; \n"
-"LRP color.xyz, fogFactor.x, color.xyzz, fogColor.xyzz; \n"
-"MOV result.color, color; \n"
-"END";
 
 SliceRenderer::SliceRenderer(TextureHandle tex,
                              ColorMapHandle cmap1, Colormap2Handle cmap2):
@@ -171,14 +56,6 @@ SliceRenderer::SliceRenderer(TextureHandle tex,
   phi1_(0),
   draw_cyl_(false)
 {
-  vol_shader1_ = new FragmentProgramARB(ShaderString1);
-  vol_shader4_ = new FragmentProgramARB(ShaderString4);
-  fog_vol_shader1_ = new FragmentProgramARB(FogShaderString1);
-  fog_vol_shader4_ = new FragmentProgramARB(FogShaderString4);
-  vol_shader1_2_ = new FragmentProgramARB(ShaderString1_2);
-  vol_shader4_2_ = new FragmentProgramARB(ShaderString4_2);
-  fog_vol_shader1_2_ = new FragmentProgramARB(FogShaderString1_2);
-  fog_vol_shader4_2_ = new FragmentProgramARB(FogShaderString4_2);
   lighting_ = 1;
   mode_ = MODE_SLICE;
 }
@@ -196,14 +73,6 @@ SliceRenderer::SliceRenderer(const SliceRenderer& copy ) :
   phi1_(copy.phi1_),
   draw_cyl_(copy.draw_cyl_)
 {
-  vol_shader1_ = copy.vol_shader1_;
-  vol_shader4_ = copy.vol_shader4_;
-  fog_vol_shader1_ = copy.fog_vol_shader1_;
-  fog_vol_shader4_ = copy.fog_vol_shader4_;
-  vol_shader1_2_ = copy.vol_shader1_2_;
-  vol_shader4_2_ = copy.vol_shader4_2_;
-  fog_vol_shader1_2_ = copy.fog_vol_shader1_2_;
-  fog_vol_shader4_2_ = copy.fog_vol_shader4_2_;
   lighting_ = 1;
 }
 
@@ -286,55 +155,16 @@ SliceRenderer::draw()
 
   //--------------------------------------------------------------------------
   // set up shaders
-  FragmentProgramARB* fragment_shader = 0;
+  FragmentProgramARB* shader = 0;
+  int blend_mode = 0;
+  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0, false, true,
+                                       use_fog, blend_mode);
 
-  if(use_cmap2) {
-    if(use_fog) {
-      switch(nb0) {
-      case 1:
-        fragment_shader = fog_vol_shader1_2_;
-        break;
-      case 4:
-        fragment_shader = fog_vol_shader4_2_;
-        break;
-      }
-    } else { // !use_fog
-      switch(nb0) {
-      case 1:
-        fragment_shader = vol_shader1_2_;
-        break;
-      case 4:
-        fragment_shader = vol_shader4_2_;
-        break;
-      }
+  if(shader) {
+    if(!shader->valid()) {
+      shader->create();
     }
-  } else { // !use_cmap2
-    if(use_fog) {
-      switch (nb0) {
-      case 1:
-        fragment_shader = fog_vol_shader1_;
-        break;
-      case 4:
-        fragment_shader = fog_vol_shader4_;
-        break;
-      }
-    } else { // !use_fog
-      switch(nb0) {
-      case 1:
-        fragment_shader = vol_shader1_;
-        break;
-      case 4:
-        fragment_shader = vol_shader4_;
-        break;
-      }
-    }
-  }
-
-  if(fragment_shader) {
-    if(!fragment_shader->valid()) {
-      fragment_shader->create();
-    }
-    fragment_shader->bind();
+    shader->bind();
   }
 
   //--------------------------------------------------------------------------
@@ -436,8 +266,8 @@ SliceRenderer::draw()
   //--------------------------------------------------------------------------
   // release shaders
 
-  if(fragment_shader && fragment_shader->valid())
-    fragment_shader->release();
+  if(shader && shader->valid())
+    shader->release();
 
   //--------------------------------------------------------------------------
   

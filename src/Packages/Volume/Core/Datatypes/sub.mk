@@ -10,6 +10,7 @@ SRCS     += \
 	 $(SRCDIR)/BrickNode.cc \
 	 $(SRCDIR)/BrickWindow.cc \
 	 $(SRCDIR)/Colormap2.cc \
+	 $(SRCDIR)/CM2Shader.cc \
 	 $(SRCDIR)/CM2Widget.cc \
 	 $(SRCDIR)/Texture.cc \
 #[INSERT NEW CODE FILE HERE]
