@@ -2454,7 +2454,7 @@ OpenGL::compute_depth(ViewWindow* viewwindow, const View& view,
       return false;
     dir.normalize();
     const double d = -Dot(eyep, dir);
-    for (int i=0;i<7;i++)
+    for (int i=0;i<8;i++)
     {
       Point p((i&1)?max.x():min.x(),
 	      (i&2)?max.y():min.y(),
