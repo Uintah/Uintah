@@ -39,11 +39,7 @@
 
 #include <sci_defs.h>
 
-#ifdef HAVE_STAT64
-#include <sys/stat64.h>
-#else
 #include <sys/stat.h>
-#endif
 
 #include <fstream>
 #include <algorithm>
@@ -1592,7 +1588,7 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 #ifdef HAVE_STAT64
     if (stat64(tmp_filename.c_str(), &buf)) {
 #else
-    if (stat(new_filename.c_str(), &buf)) {
+    if (stat(tmp_filename.c_str(), &buf)) {
 #endif
 	error( string("Temporary dump file not found ") + tmp_filename );
 	return;
