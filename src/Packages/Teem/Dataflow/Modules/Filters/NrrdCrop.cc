@@ -254,8 +254,8 @@ NrrdCrop::execute()
     }
   }
 
-  int *min = new int[num_axes_.get()];
-  int *max = new int[num_axes_.get()];
+  int min[num_axes_.get()];
+  int max[num_axes_.get()];
 
   for(int i = 1; i <  num_axes_.get(); i++) {
     min[i] = mins_[i]->get();
