@@ -599,7 +599,7 @@ C
       CALL CKUML (T, ICKWRK, RCKWRK, RCKWRK(NcK2))
       RLNP = RCKWRK(NcRU) * LOG(P / RCKWRK(NcPA))
 C
-      ABML = 0.0
+      ABML = 0.0D0
       DO 100 K = 1, NKK
          ABML = ABML + X(K) * ( RCKWRK(NcK2 + K - 1) - T *
      1          (RCKWRK(NcK1 + K - 1) - RCKWRK(NcRU)
@@ -665,7 +665,7 @@ C
 C
       RLNP = RCKWRK(NcRU) * LOG (P / RCKWRK(NcPA))
 C
-      SUM = 0.0
+      SUM = 0.0D0
       DO 100 K = 1, NKK
          SUM = SUM + RCKWRK(NcK3 + K - 1) *
      1             ( RCKWRK(NcK2 + K - 1) - T *
@@ -990,8 +990,8 @@ C
 
 C
       DO 100 K = 1, NKK
-         CDOT(K) = 0.0
-         DDOT(K) = 0.0
+         CDOT(K) = 0.0D0
+         DDOT(K) = 0.0D0
   100 CONTINUE
       DO 200 I = 1, NII
          RKF = RCKWRK(NcI1 + I -1)
@@ -1109,8 +1109,8 @@ C
 
 C
       DO 100 K = 1, NKK
-         CDOT(K) = 0.0
-         DDOT(K) = 0.0
+         CDOT(K) = 0.0D0
+         DDOT(K) = 0.0D0
   100 CONTINUE
       DO 200 I = 1, NII
          RKF = RCKWRK(NcI1 + I - 1)
@@ -1228,8 +1228,8 @@ C
      8             RCKWRK(NcKOR))
 C
       DO 100 K = 1, NKK
-         CDOT(K) = 0.0
-         DDOT(K) = 0.0
+         CDOT(K) = 0.0D0
+         DDOT(K) = 0.0D0
   100 CONTINUE
       DO 200 I = 1, NII
          RKF = RCKWRK(NcI1 + I - 1)
@@ -1347,8 +1347,8 @@ C
      8             RCKWRK(NcKOR))
 C
       DO 100 K = 1, NKK
-         CDOT(K) = 0.0
-         DDOT(K) = 0.0
+         CDOT(K) = 0.0D0
+         DDOT(K) = 0.0D0
   100 CONTINUE
       DO 200 I = 1, NII
          RKF = RCKWRK(NcI1 + I - 1)
@@ -1467,8 +1467,8 @@ C
      8             RCKWRK(NcKOR))
 C
       DO 100 K = 1, NKK
-         CDOT(K) = 0.0
-         DDOT(K) = 0.0
+         CDOT(K) = 0.0D0
+         DDOT(K) = 0.0D0
   100 CONTINUE
       DO 200 I = 1, NII
          RKF = RCKWRK(NcI1 + I - 1)
@@ -1650,7 +1650,7 @@ C
 #include "ckstrt.h"
 C
       DO 100 I = 1, NII
-         CIK(I) = 0.0
+         CIK(I) = 0.0D0
   100 CONTINUE
       DO 200 N = 1, MXSP
          DO 200 I = 1, NII
@@ -1720,7 +1720,7 @@ C
 C
       CALL CKCPML (T, ICKWRK, RCKWRK, RCKWRK(NcK1))
 C
-      CPBML = 0.0
+      CPBML = 0.0D0
       DO 100 K = 1, NKK
          CPBML = CPBML + X(K)*RCKWRK(NcK1 + K - 1)
   100 CONTINUE
@@ -1774,7 +1774,7 @@ C
 C
       CALL CKCPMS (T, ICKWRK, RCKWRK, RCKWRK(NcK1))
 C
-      CPBMS = 0.0
+      CPBMS = 0.0D0
       DO 100 K = 1, NKK
          CPBMS = CPBMS + Y(K)*RCKWRK(NcK1 + K - 1)
   100 CONTINUE
@@ -1823,7 +1823,7 @@ C
 C
 #include "ckstrt.h"
 C
-      TN(1) = 1.0
+      TN(1) = 1.0D0
       DO 150 N = 2, NCP
          TN(N) = T**(N-1)
 150   CONTINUE
@@ -1885,7 +1885,7 @@ C
 C
 #include "ckstrt.h"
 C
-      TN(1) = 1.0
+      TN(1) = 1.0D0
       DO 150 N = 2, NCP
          TN(N) = T**(N-1)
 150   CONTINUE
@@ -1898,7 +1898,7 @@ C
  220     CONTINUE
 C
          NA1 = NcAA + (L-1)*NCP2 + (K-1)*NCP2T
-         SUM = 0.0
+         SUM = 0.0D0
          DO 240 N = 1, NCP
             SUM = SUM + TN(N)*RCKWRK(NA1 + N - 1)
   240    CONTINUE
@@ -1950,7 +1950,7 @@ C
 C
 #include "ckstrt.h"
 C
-      TN(1) = 1.0
+      TN(1) = 1.0D0
       DO 150 N = 2, NCP
          TN(N) = T**(N-1)
 150   CONTINUE
@@ -1963,7 +1963,7 @@ C
  220     CONTINUE
 C
          NA1 = NcAA + (L-1)*NCP2 + (K-1)*NCP2T
-         CPOR(K) = 0.0
+         CPOR(K) = 0.0D0
          DO 250 N = 1, NCP
             CPOR(K) = CPOR(K) + TN(N)*RCKWRK(NA1 + N - 1)
 250   CONTINUE
@@ -2174,7 +2174,7 @@ C
 C
 #include "ckstrt.h"
 C
-      CTOT = 0.0
+      CTOT = 0.0D0
       DO 100 K = 1, NKK
          CTOT = CTOT + C(K)
   100 CONTINUE
@@ -2357,7 +2357,7 @@ C
 C
 #include "ckstrt.h"
 C
-      RHO = 0.0
+      RHO = 0.0D0
       DO 100 K = 1, NKK
          RHO = RHO + C(K)*RCKWRK(NcWT + K - 1)
   100 CONTINUE
@@ -2544,7 +2544,7 @@ C
 C
       CALL CKCVML (T, ICKWRK, RCKWRK, RCKWRK(NcK1))
 C
-      CVBML = 0.0
+      CVBML = 0.0D0
       DO 100 K = 1, NKK
          CVBML = CVBML + X(K)*RCKWRK(NcK1 + K - 1)
   100 CONTINUE
@@ -2597,7 +2597,7 @@ C
 C
       CALL CKCVMS (T, ICKWRK, RCKWRK, RCKWRK(NcK1))
 C
-      CVBMS = 0.0
+      CVBMS = 0.0D0
       DO 100 K = 1, NKK
          CVBMS = CVBMS + Y(K)*RCKWRK(NcK1 + K - 1)
   100 CONTINUE
@@ -3132,7 +3132,7 @@ C
 C
       DO 150 I = 1, NII
          DO 140 N = 1, NFAR
-            FPAR(N,I) = 0.0
+            FPAR(N,I) = 0.0D0
   140    CONTINUE
   150 CONTINUE
 C
@@ -3215,7 +3215,7 @@ C
       CALL CKHML (T, ICKWRK, RCKWRK, RCKWRK(NcK2))
 C
       RLNP = RCKWRK(NcRU) * LOG(P / RCKWRK(NcPA))
-      GBML = 0.0
+      GBML = 0.0D0
       DO 100 K = 1, NKK
          GBML = GBML + X(K) * ( RCKWRK(NcK2 + K - 1) - T *
      1          (RCKWRK(NcK1 + K - 1) - RCKWRK(NcRU) *
@@ -3280,7 +3280,7 @@ C
       CALL CKYTX (Y, ICKWRK, RCKWRK, RCKWRK(NcK3))
 C
       RLNP = RCKWRK(NcRU) * LOG(P / RCKWRK(NcPA))
-      SUM = 0.0
+      SUM = 0.0D0
       DO 100 K = 1, NKK
          SUM = SUM + RCKWRK(NcK3 + K - 1) *
      1             ( RCKWRK(NcK2 + K - 1) - T *
@@ -3440,7 +3440,7 @@ C
 C
       CALL CKHML (T, ICKWRK, RCKWRK, RCKWRK(NcK1))
 C
-      HBML = 0.0
+      HBML = 0.0D0
       DO 100 K = 1, NKK
          HBML = HBML + X(K)*RCKWRK(NcK1 + K - 1)
   100 CONTINUE
@@ -3493,7 +3493,7 @@ C
 C
       CALL CKHMS (T, ICKWRK, RCKWRK, RCKWRK(NcK1))
 C
-      HBMS = 0.0
+      HBMS = 0.0D0
       DO 100 K = 1, NKK
          HBMS = HBMS + Y(K)*RCKWRK(NcK1 + K - 1)
   100 CONTINUE
@@ -3541,7 +3541,7 @@ C
 #include "ckstrt.h"
 C
       RUT = T*RCKWRK(NcRU)
-      TN(1) = 1.0
+      TN(1) = 1.0D0
       DO 150 N = 2, NCP
          TN(N) = T**(N-1)/N
 150   CONTINUE
@@ -3554,7 +3554,7 @@ C
  220     CONTINUE
 C
          NA1 = NcAA + (L-1)*NCP2 + (K-1)*NCP2T
-         SUM = 0.0
+         SUM = 0.0D0
          DO 225 N = 1, NCP
             SUM = SUM + TN(N)*RCKWRK(NA1 + N - 1)
   225    CONTINUE
@@ -3603,7 +3603,7 @@ C
 #include "ckstrt.h"
 C
       RUT = T*RCKWRK(NcRU)
-      TN(1)=1.0
+      TN(1)=1.0D0
       DO 150 N = 2, NCP
          TN(N) = T**(N-1)/N
 150   CONTINUE
@@ -3616,7 +3616,7 @@ C
  220     CONTINUE
 C
          NA1 = NcAA + (L-1)*NCP2 + (K-1)*NCP2T
-         SUM = 0.0
+         SUM = 0.0D0
          DO 225 N = 1, NCP
             SUM = SUM + TN(N)*RCKWRK(NA1 + N - 1)
   225    CONTINUE
@@ -3723,7 +3723,7 @@ C
       CHARACTER STR*(*), IST(10)*(1)
       LOGICAL KERR
       DATA IST/'0','1','2','3','4','5','6','7','8','9'/
-      BIGI = 2147483647.
+      BIGI = 2147483647.D0
 C
       I = 0
       STR = ' '
@@ -3746,7 +3746,7 @@ C
       NCOL = NINT(LOG10(REAL(INUM))) + 1
 C
       DO 10 J = NCOL, 1, -1
-         IDIV = INUM / 10.0**(J-1)
+         IDIV = INUM / 10.0D0**(J-1)
          IF (J.EQ.NCOL .AND. IDIV.EQ.0) GO TO 10
          LT = ILASCH(STR)
          IF (LT .EQ. ILEN) THEN
@@ -3755,7 +3755,7 @@ C
             RETURN
          ENDIF
          STR(LT+1:) = IST(IDIV+1)
-         INUM = INUM - IDIV*10.0**(J-1)
+         INUM = INUM - IDIV*10.0D0**(J-1)
    10 CONTINUE
       I = ILASCH(STR)
 C
@@ -4092,7 +4092,7 @@ C
 C     PERTURBATION FACTOR
 C
       DO 10 I = 1, II
-         RCKWRK(NcCO + (I-1)*(NPAR+1) + NPAR) = 1.0
+         RCKWRK(NcCO + (I-1)*(NPAR+1) + NPAR) = 1.0D0
    10 CONTINUE
 C
       IF (NREV .GT. 0) READ (LINC,err=444)
@@ -4511,12 +4511,12 @@ C
 C
 #include "ckstrt.h"
 C
-      CTOT = 0.0
+      CTOT = 0.0D0
       DO 100 K = 1, NKK
          CTOT = CTOT + C(K)
   100 CONTINUE
 C
-      WTM = 0.0
+      WTM = 0.0D0
       DO 200 K = 1, NKK
          WTM = WTM + C(K)*RCKWRK(NcWT + K - 1)
   200 CONTINUE
@@ -4566,7 +4566,7 @@ C
 C
 #include "ckstrt.h"
 C
-      WTM = 0.0
+      WTM = 0.0D0
       DO 100 K = 1, NKK
          WTM = WTM + X(K)*RCKWRK(NcWT + K - 1)
   100 CONTINUE
@@ -4614,11 +4614,11 @@ C
 C
 #include "ckstrt.h"
 C
-      SUMYOW=0.0
+      SUMYOW=0.0D0
       DO 150 K = 1, NKK
          SUMYOW = SUMYOW + Y(K)/RCKWRK(NcWT + K - 1)
 150   CONTINUE
-      WTM = 1.0/SUMYOW
+      WTM = 1.0D0/SUMYOW
       RETURN
       END
 C
@@ -5004,8 +5004,8 @@ C
 C
 #include "ckstrt.h"
 C
-      CTOT = 0.0
-      SUM = 0.0
+      CTOT = 0.0D0
+      SUM = 0.0D0
       DO 100 K = 1, NKK
          CTOT = CTOT + C(K)
          SUM  = SUM + C(K)*RCKWRK(NcWT + K - 1)
@@ -5202,7 +5202,7 @@ C
 C
 #include "ckstrt.h"
 C
-      SUM = 0.0
+      SUM = 0.0D0
       DO 100 K = 1, NKK
          SUM = SUM + X(K)*RCKWRK(NcWT + K - 1)
   100 CONTINUE
@@ -5258,7 +5258,7 @@ C
 C
 #include "ckstrt.h"
 C
-      SUMYOW = 0.0
+      SUMYOW = 0.0D0
       DO 150 K = 1, NKK
          SUMYOW = SUMYOW + Y(K)/RCKWRK(NcWT + K - 1)
 150   CONTINUE
@@ -5699,7 +5699,7 @@ C
          RETURN
       ENDIF
 C
-      IF (RNUM .EQ. 0.0) THEN
+      IF (RNUM .EQ. 0.0D0) THEN
          STR = ' 0.00'
          I = 5
          RETURN
@@ -5708,8 +5708,8 @@ C
 C     convert RNUM to a value between 100.0 and 999.0
 C
       IF (RNUM.LT.-BIG.OR.RNUM.GT.BIG .OR.
-     1   (RNUM.GT.0.0 .AND. RNUM.LT.SMALL) .OR.
-     2   (RNUM.LT.0.0 .AND. RNUM.GT.SMALL)) THEN
+     1   (RNUM.GT.0.0D0 .AND. RNUM.LT.SMALL) .OR.
+     2   (RNUM.LT.0.0D0 .AND. RNUM.GT.SMALL)) THEN
          KERR = .TRUE.
          RETURN
       ENDIF
@@ -5723,15 +5723,15 @@ C
 C
    25 CONTINUE
       IF (IE .LT. 0) THEN
-         RVAL = VAL * 10.0**(IABS(IE) - 1) * 1000.0
+         RVAL = VAL * 10.0D0**(IABS(IE) - 1) * 1000.0D0
       ELSEIF (IE .GT. 0) THEN
-         RVAL = VAL * 10.0**(-IE + 1) * 10.0
+         RVAL = VAL * 10.0D0**(-IE + 1) * 10.0D0
       ELSE
-         RVAL = VAL * 100.0
+         RVAL = VAL * 100.0D0
       ENDIF
-      IF (RVAL.LT.100.0 .OR. RVAL.GE.1000.0) THEN
-         IF (RVAL .LT. 100.0) IE = IE - 1
-         IF (RVAL .GE. 1000.0)IE = IE + 1
+      IF (RVAL.LT.100.0D0 .OR. RVAL.GE.1000.0D0) THEN
+         IF (RVAL .LT. 100.0D0) IE = IE - 1
+         IF (RVAL .GE. 1000.0D0)IE = IE + 1
          GO TO 25
       ELSE
          IVAL = NINT (RVAL)
@@ -5868,7 +5868,7 @@ C
       ALOGT = LOG(T)
 C
       DO 20 I = 1, II
-         CTB(I) = 1.0
+         CTB(I) = 1.0D0
          RKFT(I) = PAR(1,I) * EXP(PAR(2,I)*ALOGT - PAR(3,I)/T)
    20 CONTINUE
 C
@@ -5876,7 +5876,7 @@ C        Landau-Teller reactions
 C
       DO 25 N = 1, NLAN
          I = ILAN(N)
-         TFAC = PLT(1,N)/T**(1.0/3.0) + PLT(2,N)/T**(2.0/3.0)
+         TFAC = PLT(1,N)/T**(1.0D0/3.0D0) + PLT(2,N)/T**(2.0D0/3.0D0)
          RKFT(I) = RKFT(I) * EXP(TFAC)
    25 CONTINUE
 C
@@ -5930,14 +5930,14 @@ C     if reverse Landau-Teller parameters have been given:
 C
       DO 75 N = 1, NRLT
          I = IRLT(N)
-         TFAC = RPLT(1,N)/T**(1.0/3.0) + RPLT(2,N)/T**(2.0/3.0)
+         TFAC = RPLT(1,N)/T**(1.0D0/3.0D0) + RPLT(2,N)/T**(2.0D0/3.0D0)
          RKRT(I) = RKRT(I) * EXP(TFAC)
          EQK(I) = RKFT(I)/RKRT(I)
    75 CONTINUE
 C
 C     third-body reactions
 C
-      CTOT = 0.0
+      CTOT = 0.0D0
       DO 10 K = 1, KK
          CTOT = CTOT + C(K)
    10 CONTINUE
@@ -5945,7 +5945,7 @@ C
       DO 80 N = 1, NTHB
          CTB(ITHB(N)) = CTOT
          DO 80 L = 1, NTBS(N)
-            CTB(ITHB(N)) = CTB(ITHB(N)) + (AIK(L,N)-1.0)*C(NKTB(L,N))
+            CTB(ITHB(N)) = CTB(ITHB(N)) + (AIK(L,N)-1.0D0)*C(NKTB(L,N))
    80 CONTINUE
 C
 C     If fall-off (pressure dependence):
@@ -5956,7 +5956,7 @@ C        CONCENTRATION OF THIRD BODY
 C
          IF (KFAL(N) .EQ. 0) THEN
             CTHB = CTB(IFAL(N))
-            CTB(IFAL(N)) = 1.0
+            CTB(IFAL(N)) = 1.0D0
          ELSE
             CTHB = C(KFAL(N))
          ENDIF
@@ -5977,7 +5977,7 @@ C
 C
 C              SRI FORM
 C
-               XP = 1.0/(1.0 + PRLOG**2)
+               XP = 1.0D0/(1.0D0 + PRLOG**2)
                FC = ((FPAR(4,N)*EXP(-FPAR(5,N)/T) + EXP(-T/FPAR(6,N)))
      1              **XP) * FPAR(7,N) * T**FPAR(8,N)
 C
@@ -5985,7 +5985,7 @@ C
 C
 C              6-PARAMETER TROE FORM
 C
-               FCENT = (1.0-FPAR(4,N)) * EXP(-T/FPAR(5,N))
+               FCENT = (1.0D0-FPAR(4,N)) * EXP(-T/FPAR(5,N))
      1               + FPAR(4,N) * EXP(-T/FPAR(6,N))
 C
 C              7-PARAMETER TROE FORM
@@ -5993,13 +5993,13 @@ C
                IF (IFOP(N) .EQ. 4) FCENT = FCENT + EXP(-FPAR(7,N)/T)
 C
                FCLOG = LOG10(MAX(FCENT,SMALL))
-               XN    = 0.75 - 1.27*FCLOG
-               CPRLOG= PRLOG - (0.4 + 0.67*FCLOG)
-               FLOG = FCLOG/(1.0 + (CPRLOG/(XN-0.14*CPRLOG))**2)
-               FC = 10.0**FLOG
+               XN    = 0.75D0 - 1.27D0*FCLOG
+               CPRLOG= PRLOG - (0.4D0 + 0.67D0*FCLOG)
+               FLOG = FCLOG/(1.0D0 + (CPRLOG/(XN-0.14D0*CPRLOG))**2)
+               FC = 10.0D0**FLOG
             ENDIF
          ENDIF
-         PCOR = FC * PR/(1.0+PR)
+         PCOR = FC * PR/(1.0D0+PR)
          RKFT(IFAL(N)) = RKFT(IFAL(N)) * PCOR
          RKRT(IFAL(N)) = RKRT(IFAL(N)) * PCOR
    90 CONTINUE
@@ -6110,13 +6110,13 @@ C        Landau-Teller reactions
 C
       DO 25 N = 1, NLAN
          I = ILAN(N)
-         TFAC = PLT(1,N)/T**(1.0/3.0) + PLT(2,N)/T**(2.0/3.0)
+         TFAC = PLT(1,N)/T**(1.0D0/3.0D0) + PLT(2,N)/T**(2.0D0/3.0D0)
          RKFT(I) = RKFT(I) * EXP(TFAC)
    25 CONTINUE
 C
       CALL CKSMH (T, ICKWRK, RCKWRK, SMH)
       DO 50 I = 1, II
-          SUMSMH = 0.0
+          SUMSMH = 0.0D0
           DO 40 N = 1, MAXSP
              IF (NUNK(N,I).NE.0)
 C*****precision > double
@@ -6126,16 +6126,16 @@ C*****precision > single
 C     1           SUMSMH = SUMSMH + REAL(NU(N,I))*SMH(NUNK(N,I))
 C*****END precision > single
    40     CONTINUE
-          IF (SUMSMH .NE. 0.0) EQK(I) = EXP(MIN(SUMSMH,EXPARG))
+          IF (SUMSMH .NE. 0.0D0) EQK(I) = EXP(MIN(SUMSMH,EXPARG))
    50 CONTINUE
 C
       DO 55 N = 1, NRNU
-         SUMSMH = 0.0
+         SUMSMH = 0.0D0
          I = IRNU(N)
          DO 45 L = 1, MAXSP
             IF (NUNK(L,I).NE.0) SUMSMH=SUMSMH+RNU(L,N)*SMH(NUNK(L,I))
    45    CONTINUE
-         IF (SUMSMH .NE. 0.0) EQK(I) = EXP(MIN(SUMSMH,EXPARG))
+         IF (SUMSMH .NE. 0.0D0) EQK(I) = EXP(MIN(SUMSMH,EXPARG))
    55 CONTINUE
 C
       PFAC = PATM / (RU*T)
@@ -6154,7 +6154,7 @@ C
 C
 C     RKR=0.0 for irreversible reactions, else RKR=RKF/MAX(EQK,SMALL)
 C
-         RKRT(I) = 0.0
+         RKRT(I) = 0.0D0
          IF (NSPEC(I).GT.0) RKRT(I) = RKFT(I) / MAX(EQK(I),SMALL)
    68 CONTINUE
 C
@@ -6170,7 +6170,7 @@ C     if reverse Landau-Teller parameters have been given:
 C
       DO 75 N = 1, NRLT
          I = IRLT(N)
-         TFAC = RPLT(1,N)/T**(1.0/3.0) + RPLT(2,N)/T**(2.0/3.0)
+         TFAC = RPLT(1,N)/T**(1.0D0/3.0D0) + RPLT(2,N)/T**(2.0D0/3.0D0)
          RKRT(I) = RKRT(I) * EXP(TFAC)
          EQK(I) = RKFT(I)/RKRT(I)
    75 CONTINUE
@@ -6212,22 +6212,22 @@ C
       COMMON /MACH/ SMALL,BIG,EXPARG
 C
       DO 20 I = 1, II
-         CTB(I) = 1.0
-         RKF(I) = 0.0
-         RKR(I) = 0.0
+         CTB(I) = 1.0D0
+         RKF(I) = 0.0D0
+         RKR(I) = 0.0D0
    20 CONTINUE
 C
 C     third-body reactions
 C
       IF (NTHB .GT. 0) THEN
-         CTOT = 0.0
+         CTOT = 0.0D0
          DO 10 K = 1, KK
             CTOT = CTOT + C(K)
    10    CONTINUE
          DO 80 N = 1, NTHB
             CTB(ITHB(N)) = CTOT
             DO 80 L = 1, NTBS(N)
-               CTB(ITHB(N)) = CTB(ITHB(N)) + (AIK(L,N)-1.0)*C(NKTB(L,N))
+               CTB(ITHB(N)) = CTB(ITHB(N))+(AIK(L,N)-1.0D0)*C(NKTB(L,N))
    80    CONTINUE
       ENDIF
 C
@@ -6244,12 +6244,12 @@ C        CONCENTRATION OF THIRD BODY
 C
             IF (KFAL(N) .EQ. 0) THEN
                PR = RKLOW * CTB(IFAL(N)) / RKFT(IFAL(N))
-               CTB(IFAL(N)) = 1.0
+               CTB(IFAL(N)) = 1.0D0
             ELSE
                PR = RKLOW * C(KFAL(N)) / RKFT(IFAL(N))
             ENDIF
 C
-            PCOR = PR / (1.0 + PR)
+            PCOR = PR / (1.0D0 + PR)
 C
             IF (IFOP(N) .GT. 1) THEN
                PRLOG = LOG10(MAX(PR,SMALL))
@@ -6258,7 +6258,7 @@ C
 C
 C              8-PARAMETER SRI FORM
 C
-                  XP = 1.0/(1.0 + PRLOG**2)
+                  XP = 1.0D0/(1.0D0 + PRLOG**2)
                   FC = ((FPAR(4,N)*EXP(-FPAR(5,N)/T) 
      1                   + EXP(-T/FPAR(6,N))) **XP)
      2                  * FPAR(7,N) * T**FPAR(8,N)
@@ -6267,7 +6267,7 @@ C
 C
 C              6-PARAMETER TROE FORM
 C
-                  FCENT = (1.0-FPAR(4,N)) * EXP(-T/FPAR(5,N))
+                  FCENT = (1.0D0-FPAR(4,N)) * EXP(-T/FPAR(5,N))
      1                  +       FPAR(4,N) * EXP(-T/FPAR(6,N))
 C
 C              7-PARAMETER TROE FORM
@@ -6275,10 +6275,10 @@ C
                   IF (IFOP(N) .EQ. 4) FCENT = FCENT + EXP(-FPAR(7,N)/T)
 C
                   FCLOG = LOG10(MAX(FCENT,SMALL))
-                  XN    = 0.75 - 1.27*FCLOG
-                  CPRLOG= PRLOG - (0.4 + 0.67*FCLOG)
-                  FLOG = FCLOG/(1.0 + (CPRLOG/(XN-0.14*CPRLOG))**2)
-                  FC = 10.0**FLOG
+                  XN    = 0.75D0 - 1.27D0*FCLOG
+                  CPRLOG= PRLOG - (0.4D0 + 0.67D0*FCLOG)
+                  FLOG = FCLOG/(1.0D0 + (CPRLOG/(XN-0.14D0*CPRLOG))**2)
+                  FC = 10.0D0**FLOG
                ENDIF
                PCOR = FC * PCOR
             ENDIF
@@ -6506,8 +6506,8 @@ C
 C
 #include "ckstrt.h"
 C
-      CTOT = 0.0
-      SUM  = 0.0
+      CTOT = 0.0D0
+      SUM  = 0.0D0
       DO 100 K = 1, NKK
          CTOT = CTOT + C(K)
          SUM = SUM + C(K)*RCKWRK(NcWT + K - 1)
@@ -6564,7 +6564,7 @@ C
 C
 #include "ckstrt.h"
 C
-      SUM = 0.0
+      SUM = 0.0D0
       DO 100 K = 1, NKK
          SUM = SUM + X(K)*RCKWRK(NcWT + K - 1)
   100 CONTINUE
@@ -6621,7 +6621,7 @@ C
 C
 #include "ckstrt.h"
 C
-      SUMYOW = 0.0
+      SUMYOW = 0.0D0
       DO 150 K = 1, NKK
          SUMYOW = SUMYOW + Y(K)/RCKWRK(NcWT + K - 1)
 150   CONTINUE
@@ -6795,7 +6795,7 @@ C
       CALL CKSML (T, ICKWRK, RCKWRK, RCKWRK(NcK1))
 C
       RLNP = RCKWRK(NcRU) * LOG(P / RCKWRK(NcPA))
-      SBML = 0.0
+      SBML = 0.0D0
       DO 100 K = 1, NKK
          SBML = SBML + X(K) * ( RCKWRK(NcK1 + K - 1) -
      1          RCKWRK(NcRU)*LOG(MAX(X(K),SMALL)) - RLNP )
@@ -6858,7 +6858,7 @@ C
       CALL CKYTX (Y, ICKWRK, RCKWRK, RCKWRK(NcK2))
 C
       RLNP = RCKWRK(NcRU) * LOG (P / RCKWRK(NcPA))
-      SUM = 0.0
+      SUM = 0.0D0
       DO 100 K = 1, NKK
          SUM = SUM + RCKWRK(NcK2 + K - 1) *
      1             ( RCKWRK(NcK1 + K - 1)
@@ -6913,7 +6913,7 @@ C
 C
 #include "ckstrt.h"
 C
-      TN(1) = LOG(T) - 1.0
+      TN(1) = LOG(T) - 1.0D0
       DO 150 N = 2, NCP
          TN(N) = T**(N-1)/((N-1)*N)
  150  CONTINUE
@@ -6926,7 +6926,7 @@ C
  220     CONTINUE
 C
          NA1 = NcAA + (L-1)*NCP2 + (K-1)*NCP2T
-         SUM = 0.0
+         SUM = 0.0D0
          DO 225 N = 1, NCP
             SUM = SUM + TN(N)*RCKWRK(NA1 + N - 1)
   225    CONTINUE
@@ -6990,7 +6990,7 @@ C
  220     CONTINUE
 C
          NA1 = NcAA + (L-1)*NCP2 + (K-1)*NCP2T
-         SUM = 0.0
+         SUM = 0.0D0
          DO 225 N = 1, NCP
             SUM = SUM + TN(N)*RCKWRK(NA1 + N - 1)
   225    CONTINUE
@@ -7053,7 +7053,7 @@ C
  220     CONTINUE
 C
          NA1 = NcAA + (L-1)*NCP2 + (K-1)*NCP2T
-         SUM = 0.0
+         SUM = 0.0D0
          DO 225 N = 1, NCP
             SUM = SUM + TN(N)*RCKWRK(NA1 + N - 1)
   225    CONTINUE
@@ -7225,7 +7225,7 @@ C
  220     CONTINUE
 C
          NA1 = NcAA + (L-1)*NCP2 + (K-1)*NCP2T
-         SUM = 0.0
+         SUM = 0.0D0
          DO 225 N = 1, NCP
             SUM = SUM + TN(N)*RCKWRK(NA1 + N - 1)
   225    CONTINUE
@@ -7536,7 +7536,7 @@ C
                   WRITE (LOUT, 500)
                   RETURN
                ENDIF
-               IF (J.EQ.1.AND.W.LT.0.0 .OR. J.EQ.2.AND.W.GT.0.0)
+               IF (J.EQ.1.AND.W.LT.0.0D0 .OR. J.EQ.2.AND.W.GT.0.0D0)
      1             ISTR(LT+1:) = '+HV'
             ENDIF
    80    CONTINUE
@@ -7730,7 +7730,7 @@ C
 C
       CALL CKUML (T, ICKWRK, RCKWRK, RCKWRK(NcK1))
 C
-      UBML = 0.0
+      UBML = 0.0D0
       DO 100 K = 1, NKK
          UBML = UBML + X(K)*RCKWRK(NcK1 + K - 1)
   100 CONTINUE
@@ -7783,7 +7783,7 @@ C
 C
       CALL CKUMS (T, ICKWRK, RCKWRK, RCKWRK(NcK1))
 C
-      UBMS = 0.0
+      UBMS = 0.0D0
       DO 100 K = 1, NKK
          UBMS = UBMS + Y(K)*RCKWRK(NcK1 + K - 1)
   100 CONTINUE
@@ -7932,7 +7932,7 @@ C
 #include "ckstrt.h"
 C
       DO 100 I = 1, NII
-         WL(I) = 0.0
+         WL(I) = 0.0D0
   100 CONTINUE
       DO 150 N = 1, NWL
          WL(ICKWRK(IcWL+N-1)) = RCKWRK(NcWL+N-1)
@@ -7997,7 +7997,7 @@ C
 C
       DO 25 K = 1, NKK
          RCKWRK(NcK1 + K - 1) = C(K)
-         WDOT(K) = 0.0
+         WDOT(K) = 0.0D0
    25 CONTINUE
 C
       CALL CKRATX (NII, NKK, MXSP, MXTB, T, RCKWRK(NcK1), ICKWRK(IcNS),
@@ -8154,7 +8154,7 @@ C
      8             RCKWRK(NcKOR))
 C
       DO 50 K = 1, NKK
-         WDOT(K) = 0.0
+         WDOT(K) = 0.0D0
    50 CONTINUE
 C
       DO 100 N = 1, MXSP
@@ -8257,7 +8257,7 @@ C
      8             RCKWRK(NcKOR))
 C
       DO 50 K = 1, NKK
-         WDOT(K) = 0.0
+         WDOT(K) = 0.0D0
    50 CONTINUE
       DO 100 N = 1, MXSP
          DO 100 I = 1, NII
@@ -8359,7 +8359,7 @@ C
      8             RCKWRK(NcKOR))
 C
       DO 50 K = 1, NKK
-         WDOT(K) = 0.0
+         WDOT(K) = 0.0D0
    50 CONTINUE
       DO 100 N = 1, MXSP
          DO 100 I = 1, NII
@@ -8467,7 +8467,7 @@ C
      8             RCKWRK(NcKOR))
 C
       DO 50 K = 1, NKK
-         WDOT(K) = 0.0
+         WDOT(K) = 0.0D0
    50 CONTINUE
       DO 100 N = 1, MXSP
          DO 100 I = 1, NII
@@ -8569,7 +8569,7 @@ C
      8             RCKWRK(NcKOR))
 C
       DO 50 K = 1, NKK
-         WDOT(K) = 0.0
+         WDOT(K) = 0.0D0
    50 CONTINUE
       DO 100 N = 1, MXSP
          DO 100 I = 1, NII
@@ -8805,7 +8805,7 @@ C
 C
 #include "ckstrt.h"
 C
-      SUM = 0.0
+      SUM = 0.0D0
       DO 100 K = 1, NKK
          SUM = SUM + X(K)*RCKWRK(NcWT + K - 1)
   100 CONTINUE
@@ -8859,7 +8859,7 @@ C
 C
 #include "ckstrt.h"
 C
-      SUM = 0.0
+      SUM = 0.0D0
       DO 100 K = 1, NKK
          SUM = SUM + X(K)*RCKWRK(NcWT + K - 1)
   100 CONTINUE
@@ -8919,7 +8919,7 @@ C
 C
 #include "ckstrt.h"
 C
-      SUMYOW = 0.0
+      SUMYOW = 0.0D0
       DO 150 K = 1, NKK
          SUMYOW = SUMYOW + Y(K) / RCKWRK(NcWT + K - 1)
 150   CONTINUE
@@ -9027,7 +9027,7 @@ C
 C
 #include "ckstrt.h"
 C
-      SUMYOW = 0.0
+      SUMYOW = 0.0D0
       DO 150 K = 1, NKK
          SUMYOW = SUMYOW + Y(K)/RCKWRK(NcWT + K - 1)
 150   CONTINUE
