@@ -1122,6 +1122,8 @@ Gui::handleMouseRelease(int button, int mouse_x, int mouse_y)
   }
 } // end handleMouseRelease()
 
+extern Window** __glutWindowList;
+
 void
 Gui::handleWindowResizeCB( int width, int height )
 {
@@ -1129,7 +1131,6 @@ Gui::handleWindowResizeCB( int width, int height )
   // This is an ugly, cheaty way of getting the window id out of glut...
   static bool first=true;
   if(first){
-    extern Window** __glutWindowList;
     Window win = __glutWindowList[activeGui->glutDisplayWindowId-1][1];
     cerr << "winid=" << (void*)win << '\n';
     activeGui->dpy_->release(win);
