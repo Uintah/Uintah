@@ -1,0 +1,332 @@
+#!/usr/local/bin/perl
+
+sub usage();
+sub description();
+sub catchZap( $ );
+
+$argc = $#ARGV + 1;
+
+$argu = $ARGV[0];
+
+$argu1 = $ARGV[1];
+
+$SIG{INT} = \&catchZap;  # best strategy
+
+if( $argc == 0 ){
+    usage();
+    exit();
+}
+
+if( $ARGV[0] eq "-help" ){
+    usage();
+    description();
+    exit();
+}
+
+
+if( $ARGV[0] eq "-qd" ){
+    
+    use LWP::Simple;
+    use URI::URL;
+    $username = $ARGV[1];
+    $runDate = $ARGV[2];
+    $runDate1 = $ARGV[3];
+    $runDate2 = $ARGV[4];
+
+    my $url1 = url('http://panda.cs.utah.edu/blazer/BlazerQuery');
+    $url1->query_form(username => $username , Date => $runDate);
+    $content = get($url1);
+    print($content);
+    exit();
+}
+
+if( $ARGV[0] eq "-q" ){
+    
+    use LWP::Simple;
+    use URI::URL;
+    $SimName = $ARGV[1];
+
+    my $url1 = url('http://panda.cs.utah.edu/blazer/BlazerQuery2');
+    $url1->query_form(sim_name => $SimName);
+    $content = get($url1);
+    print($content);
+    exit();
+}
+
+
+if( $ARGV[0] eq "-a" ){
+    
+    use LWP::Simple;
+    use URI::URL;
+    $jobid = $ARGV[1];
+    $fileNM = $ARGV[2];
+
+    my $url1 = url('http://panda.cs.utah.edu/blazer/BlazerAdd');
+    if($fileNM ne ""){
+	if( ! -e $fileNM){
+	    print( $fileNM . " does not exist.  Aborting.\n" );
+	    exit();
+	}
+
+	else {
+	    
+	    use Net::FTP;
+	    $ftp = Net::FTP->new("panda.cs.utah.edu")             or die "Can't connect: $@\n";
+	    $ftp->login('blazer','blazer2001')       or die "Couldn't login\n";       
+	    $dir2 =  "d:\\apusers\\uintah\\tmp";
+	    $ftp->cwd($dir2)                  or die "Couldn't change directory\n"; 
+	    $ftp->type("I");	
+	    $ftp->put($fileNM);
+	    $url1->query_form(Job_ID => $jobid, filename =>$fileNM );   
+	    $content = get($url1);	
+	}
+    }
+    else{
+	$url1->query_form(Job_ID => $jobid);   
+	$content = get($url1);
+    }
+    print($content);
+    exit();
+}
+
+
+if($argu1 ne "-uda"){
+
+    $dirName = $ARGV[0];
+
+    if( ! -e $dirName . "\/input.xml" ){
+	print( $dirName . "\/input.xml does not exist.  Aborting.\n" );
+	exit();
+    }
+    
+    if( ! -e $dirName . "\/index.xml" ){
+	print( $dirName . "\/index.xml does not exist.  Aborting.\n" );
+	exit();
+    }
+
+    use LWP::Simple;
+    use URI::URL;
+        
+    my $url1 = url('http://panda.cs.utah.edu/blazer/MakeDir');
+    $url1->query_form(SysName => $dirName);
+    $content = get($url1);
+        
+           
+    print("Please Input Creator name: ", "\n");;
+    $System = <STDIN>;
+    @author = split(/ /, $System);
+    $creator = $author[0].$author[1].$author[2];
+    chop($creator);
+    open(OUTF,">".$creator."Register.txt") or &dienice("Can't open Register.txt"); 
+    print(OUTF $dirName, "\n");
+    print OUTF $System;
+    #print("Please Input your Simulation name: ", "\n");
+    #$SimName = <STDIN>;
+    #print OUTF $SimName;
+    print("Enter one line of comments:\n");
+    $Comment = <STDIN>;
+    print OUTF $Comment;
+    print("Enter one line of description:\n");
+    $Descript = <STDIN>;
+    $Register = $creator . "Register.txt";
+
+    print OUTF $Descript;
+        
+    close(OUTF);
+        
+    $filename1 = $dirName."\/";
+    @file = split(/\./, $filename1);
+    $filename2 = $file[0].".ups";
+    $filename = $filename1 . $filename2 ;
+    $tar = $creator."NewFile.tar.zip";
+    $input = $creator."input.xml";    
+    $index = $creator."index.xml";    
+
+    #system("cp", "Register.txt", $Register);
+    system("tar", "-cvf", "NewFile.tar", $dirName);
+        
+    system("zip", $tar, "NewFile.tar");
+    
+    system("cp", $dirName . "\/input.xml", $input);
+    system("cp", $dirName . "\/index.xml", $index);
+        
+    use Net::FTP;
+    $ftp = Net::FTP->new("panda.cs.utah.edu")             or die "Can't connect: $@\n";
+    $ftp->login('blazer','blazer2001')       or die "Couldn't login\n";       
+    $dir2 =  "d:\\apusers\\uintah\\tmp\\" . $dirName ;
+    $ftp->cwd($dir2)                  or die "Couldn't change directory\n"; 
+    $ftp->type("I");
+    $ftp->put($Register);
+    $ftp->put($tar);
+    $ftp->put($input);
+    $ftp->put($index);
+     
+#$ftp->put($filename);
+    $Answer1 = "Y";
+    print("Attach a thumbnail image for this run ? (Y\/N) ");
+    $Answer1 = <STDIN> ;
+    chop $Answer1;
+    while(($Answer1 ne "Y") && ($Answer1 ne "y") && ($Answer1 ne "N")&& ($Answer1 ne "n")){
+	print("Please answer(Y\/N) ");
+	$Answer1 = <STDIN> ;
+	chop $Answer1;
+    }
+    if(!($Answer1 ne "Y") || !($Answer1 ne "y")){
+	print("Please enter image file name:\n");
+	$InputImage = <STDIN>;
+	chop($InputImage);
+	if( -e $InputImage ){
+	    system("cp",$InputImage, $creator.$InputImage);
+	    $ftp->put($creator.$InputImage);
+	    system("rm -f ".$creator.$InputImage);
+	} else {
+	    print( "$InputImage does not exist.  Not attaching.\n" );
+	}
+    }
+    
+    $Answer = "Y";
+    @NewFile = ();
+    while(!($Answer ne "Y") || !($Answer ne "y")){  
+	print("Do you wish to register additional files with this uda?(Y\/N)");
+	$Answer = <STDIN> ;
+	chop $Answer;	
+	while(($Answer ne "Y") && ($Answer ne "y") && ($Answer ne "N")&& ($Answer ne "n")){
+	    print("Please answer(Y\/N) ");
+	    $Answer = <STDIN> ;
+	    chop $Answer;
+	}
+	if(!($Answer ne "Y") || !($Answer ne "y")){
+	    print("Please input your filename:\n");
+	    $InputName = <STDIN>;
+	    chop($InputName);
+
+	    if( -e $InputName ){
+		$ftp->put($InputName);
+		push(@NewFile, $InputName);
+#push(@NewFile, '|');
+	    } else {
+		print( "$InputName does not exist.  Not registering it.\n" );
+	    }
+	}
+    }
+    $ftp->quit();
+        
+    # Clean up
+    system("rm -f NewFile.tar");
+    system("rm -f ". $Register);
+    system("rm -f ". $tar);
+    system("rm -f ". $input);
+    system("rm -f ". $index);
+    
+        
+    use LWP::Simple;
+    use URI::URL;
+        
+    my $url = url('http://panda.cs.utah.edu/blazer/NewBlazer');
+    $files1 = join("|",@NewFile);
+#print $files1;
+    if( -e $InputImage ){
+	$url->query_form(SysName => $dirName, Image => $InputImage, Creator => $creator,  Files => $files1);
+    }
+    else {
+	$url->query_form(SysName => $dirName, Creator => $creator, Files => $files1);
+    }
+    $content = get($url);
+    print($content, "\n");
+        
+} else {
+    use LWP::Simple;
+    use URI::URL;
+        
+    $files = $argu;
+    $dirName = $ARGV[2];
+
+    use Net::FTP;
+    $ftp = Net::FTP->new("panda.cs.utah.edu") or die "Can't connect: $@\n";
+    $ftp->login('blazer','blazer2001')        or die "Couldn't login\n";       
+    $dir2 =  "d:\\apusers\\uintah\\tmp\\" . $dirName ;
+    $ftp->cwd($dir2) or die "Couldn't change directory to $dirName\n"; 
+    $ftp->type("I");
+    $ftp->put($files);
+
+    my $url1 = url('http://panda.cs.utah.edu/blazer/ImageBlazer');
+    $url1->query_form(SysName => $dirName, Files => $files);
+    $content = get($url1);
+    print($content , "\n");
+}
+
+sub usage() {
+    print("Blazer Data Registration Script:\n" .
+	  "Usage:\n" .
+	  "      Register <.uda directory name>\n" .
+	  "        Example: Register PSE/src/uda/tmp.uda.001\n" .
+	  "      Register <thumbnail> -uda <Registered .uda directory>\n" .
+	  "        Example: Register fire.jpg -uda PSE/src/uda/tmp.uda.001\n" .
+	  "      Register -q <.uda directory name>\n" .
+	  "        Example: Register -q  PSE/src/uda/tmp.uda.001\n" .
+	  "      Register -qd <username> \n" .
+	  "        Example: Register -qd  xichen" .
+	  "      Register -qd <username>  <date>\n" .
+	  "        Example: Register -qd xichen April \n" .
+	  "      Register -a Job_ID \n" .
+	  "        Example: Register -a 6" .
+	  "      Register -a Job_ID <FileName>\n" .
+	  "        Example: Register -a 6 input.xml" .
+	  "      Register -help\n" );    
+}
+
+sub description() {
+    print("Description:\n" .
+	  "      This script will transfer your input information,\n" .
+	  "      your .ups file(renames inputs.xml), your .sr/.ui\n" .
+	  "      files and tar your whole .uda directory into blazer\n" .
+	  "      server machine.\n" .
+	  "Link your new thumbnail file to your Registered uda file:\n" .
+	  "      Register <thumbnail image> -uda <Registered uda filename>\n".
+	  "Add files into your old run:\n" .         
+	  "      First, Get your Job_ID from blazer database:\n" .
+	  "      1) By simulation run name:\n" .
+          "         Register -q <.uda directory name>\n" .        
+          "      2) By username and run date:\n".
+          "         Register -qd <username>\n".
+          "         or\n" .
+          "         Register -qd <username>  <date>\n" .
+          "         Note: here the date should be one word, either month, or day, or year\n" .
+          "     Then, add your file by Job_ID \n" .
+          "         Register -a Job_ID <FileName>\n" .
+          "         if you only type Job_ID without FileName, then it will list all your files\n" .
+          "         with this Job_ID in database.\n" .     
+	  "About Unregister:\n" .
+	  "      If you made a mistake during register, you can use\n" .
+	  "      \"Unregister <whole uda direcotry name>\" to\n" .
+	  "      unregister it.\n" .
+	  "After you register:\n" .
+	  "      You can go to \"http:\/\/panda.cs.utah.edu\/~Uintah/\"\n" .
+	  "      to check your input from blazer database.\n" .
+	  "About Delete old files: \n" .
+	  "      When you want to delete the old files, go to the password\n" .
+	  "      protected admin page to delete your file. \n" .
+	  "The URL for Blazer Server machine: \n" .
+	  "      Blazer's URL is \"http:\/\/panda.cs.utah.edu\/~Uintah/\" \n" .
+	  "Any comments or question: \n" .
+	  "      please send email to xichen\@cs\.utah\.edu \n" );
+}
+
+sub catchZap( $ ) {
+    $zaps++;
+    if( $zaps == 2 ) { 
+        # Do I need to clean up before exiting?
+	exit(); 
+    }
+    print( "Caught Cnt-C.  Press Cnt-C one more time to really quit.\n" );
+    use LWP::Simple;
+    use URI::URL;
+        
+    my $url = url('http://panda.cs.utah.edu/blazer/Ctrl');
+    if( -e $InputImage ){
+	$url->query_form(SysName => $dirName, Image => $InputImage, Creator => $creator,  Files => $files1);
+    }
+    else {
+	$url->query_form(SysName => $dirName, Creator => $creator, Files => $files1);
+    }
+}
