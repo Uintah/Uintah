@@ -55,6 +55,9 @@ itcl_class VS_Render_ICUMonitor {
 	global  $this-show_time
 	global  $this-dump_frames
 	global  $this-geom
+	global  $this-2ndplot_color-r
+	global  $this-2ndplot_color-g
+	global  $this-2ndplot_color-b
 
 	set $this-edit          0
 	set $this-edit-target   0
@@ -76,6 +79,9 @@ itcl_class VS_Render_ICUMonitor {
 	set $this-show_time 0
 	set $this-dump_frames   0
 	set $this-geom "640x640+0+0"
+	set $this-2ndplot_color-r 0.8
+	set $this-2ndplot_color-g 0.8
+	set $this-2ndplot_color-b 0.8
     }
     method do_expose {} {
 	if {[winfo exists .ui[modname]]!= 0} {
@@ -300,6 +306,11 @@ itcl_class VS_Render_ICUMonitor {
                  -showvalue true -resolution 0.1 \
                  -orient horizontal -command "$this-c init"
 	    #pack $plots.f.fs.font -fill x
+
+	    frame $plots.f.col -borderwidth 2
+		 pack $plots.f.col
+	    addColorSelection $plots.f.col "Secondary Plot Color" $this-2ndplot_color  \
+		"redraw"	   
 
             pack $w.prefs.plots -fill x -expand yes -side top
 
@@ -614,7 +625,7 @@ itcl_class VS_Render_ICUMonitor {
 
 	    SciRaise $w
 
-	    wm title $w "ICU Monitor"
+	    wm title $w "Physiology Monitor"
 	    #wm minsize $w 640 128
 	    wm geometry $w [set $this-geom]
 	}
