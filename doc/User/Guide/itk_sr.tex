@@ -832,15 +832,19 @@ or 1 (true):
 
 A scrollbar widget allows the user to select one value from a
 range of values.  A scrollbar widget is given a min value, a max
-value, and an initial value:
+value, an optional scroll step value, and an initial value:
 
 \begin{alltt}
   <scrollbar>
     <min>\replaceable{min\_value}</min>
     <max>\replaceable{max\_value}</max>
+    <step>\replaceable{step\_value}</step>
     <default>\replaceable{default\_value}</default>
   </scrollbar>
 \end{alltt}
+
+If the \xmlstarttag{step} element is not present, the scroll step value
+defaults to 1.
 
 A radiobutton is a set of button widgets that allow the user to select
 one value from a set of values.  Each value in a set is represented
