@@ -1,9 +1,13 @@
 
 Convert directory
 Checkin procedures to update work_lib
-Fix tk border color calculation???
+DONE Fix tk border color calculation???
 
 Linux:
+    OpenGL
+	Direct library
+	16 bit visual
+	double buffer???
     X11
 	Transformations
 	DoubleBuffer
@@ -25,9 +29,24 @@ Finish and FIX:
    Delete modules
    Disconnect
    Salmon:
+DONE      Pick - default to cartesian axes for principal vectors
+DONE      Fix flushViews
+DONE      Fix salmon deadlock for James
+DONE      Fix update delay for James
+DONE      Shared objects - locks.  Use try lock.
+DONE      RWLocks
+DONE      Use RWLocks
+DONE      Use locks in Widget code
+      Torus
       Chase down all bounding box accesses and add if(bb.valid())
       Valid initial states for all Geometry objects - default CTOR
-      Make Geom keep track of parents
+      Cylinder bounding boxes
+      Cone bounding boxes
+      Disc bounding boxes
+      Use waiting queue in redraw loop to defer things that are locked
+      implement read_try_lock for CrowdMonitor
+	
+DONE      Make Geom keep track of parents
       Reset bounding boxes when changed
       Resizable window
       Fix +/- button
