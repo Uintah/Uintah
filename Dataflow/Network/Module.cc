@@ -161,6 +161,7 @@ Module::Module(const clString& name, const clString& id,
     pid_("pid", id, this),
     state(NeedData),
     helper(0),
+    helper_done("Module helper finished flag"),
     have_own_dispatch(0),
     progress(0),
     mailbox("Module execution FIFO", 100),
@@ -248,6 +249,7 @@ Module::~Module()
   // kill the helper thread
   MessageBase msg(MessageTypes::GoAway);
   mailbox.send(&msg);
+  helper_done.receive();
 }
 
 int Module::clone(int)

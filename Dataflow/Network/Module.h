@@ -44,6 +44,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/GuiInterface/TCLstrbuff.h>
 #include <Core/Thread/Mailbox.h>
+#include <Core/Thread/FutureValue.h>
 #include <Core/Geom/Pickable.h>
 #include <map>
 
@@ -120,6 +121,7 @@ public:
     iport_maker dynamic_port_maker;
     clString lastportname;
     ModuleHelper* helper;
+    FutureValue<int> helper_done;
     int have_own_dispatch;
 
     double progress;
