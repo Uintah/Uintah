@@ -26,7 +26,7 @@
  *
  */
 
-#include <CCA/Components/Zlist/ZList.h>
+#include <CCA/Components/ZList/ZList.h>
 
 #include <iostream>
 #include <qapplication.h>
