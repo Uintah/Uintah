@@ -68,6 +68,7 @@ WARNING
      double getThermalConductivity() const;
      double getSpecificHeat() const;
      double getHeatTransferCoefficient() const;
+     bool getIncludeFlowWork() const;
      bool hasName() const {
        return haveName;
      }
@@ -84,6 +85,7 @@ WARNING
       double d_thermalConductivity;
       double d_specificHeat;
       double d_heatTransferCoefficient;
+      bool d_includeFlowWork;
 
    private:
 
