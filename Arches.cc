@@ -192,8 +192,9 @@ Arches::scheduleInitialize(const LevelP& level,
   // if multimaterial, update celltype for mm intrusions
   // require: voidFrac_CC, cellType
   // compute: mmcellType, mmgasVolFrac
-  if (d_MAlab)
-    d_boundaryCondition->sched_mmWallCellTypeInit_first(sched, patches, matls);
+  // temporarily commenting stuff right below for debug, sk, 01/22/02
+  //  if (d_MAlab)
+  //    d_boundaryCondition->sched_mmWallCellTypeInit_first(sched, patches, matls);
 
   // Compute props (output Varlabel have CP appended to them)
   // require : densitySP
