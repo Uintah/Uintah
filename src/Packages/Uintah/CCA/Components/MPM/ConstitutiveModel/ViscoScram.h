@@ -57,6 +57,7 @@ namespace Uintah {
     const VarLabel* pCrackRadiusLabel;
     const VarLabel* pStatedataLabel;
     const VarLabel* pRandLabel;
+    const VarLabel* pStrainRateLabel;
 
     const VarLabel* pVolChangeHeatRateLabel_preReloc;
     const VarLabel* pViscousHeatRateLabel_preReloc;
@@ -64,6 +65,7 @@ namespace Uintah {
     const VarLabel* pCrackRadiusLabel_preReloc;
     const VarLabel* pStatedataLabel_preReloc;
     const VarLabel* pRandLabel_preReloc;
+    const VarLabel* pStrainRateLabel_preReloc;
 
   protected:
 
@@ -72,6 +74,7 @@ namespace Uintah {
 
     // Create datatype for storing model parameters
     bool d_useModifiedEOS;
+    bool d_random;
     double d_bulk;
 
     CMData d_initialData;
@@ -115,7 +118,9 @@ namespace Uintah {
     virtual void addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,
                                         const PatchSet* patches,
-                                        const bool recursion) const;
+                                        const bool recursion) const
+    {
+    }
 
     /*! compute stress at each particle in the patch */
     virtual void computeStressTensor(const PatchSubset* patches,

@@ -489,48 +489,6 @@ ConstitutiveModel::CrackPropagates(const double& Vc, const double& KI,
   return NO;
 }
 
-// Calculate polar decomposition using Simo page 244
-void 
-ConstitutiveModel::polarDecomposition(const Matrix3& F, 
-                                      Matrix3& R,
-                                      Matrix3& U) const
-{
-  Matrix3 C = F.Transpose()*F;
-  double I1 = C.Trace();
-  Matrix3 Csq = C*C;
-  double I2 = .5*(I1*I1 - Csq.Trace());
-  double I3 = C.Determinant();
-  double b = I2 - (I1*I1)/3.0;
-  double c = -(2.0/27.0)*I1*I1*I1 + (I1*I2)/3.0 - I3;
-  double TOL3 = 1e-8;
-  double x[3];
-
-  if(fabs(b) <= TOL3){
-    c = Max(c,0.); x[0] = -pow(c,1./3.); x[1] = x[0]; x[2] = x[0];
-  } else {
-    double m = 2.*sqrt(-b/3.0);
-    double n = (3.*c)/(m*b);
-    if (fabs(n) > 1.0) n = copysign(1.0,n);  // n = cos(theta) 
-                                             // and cannot be greater than 1.0
-    double t = atan2(sqrt(1-n*n),n)/3.0;
-    for(int i=0;i<3;i++){
-      x[i] = m * cos(t + 2.*(((double) i) - 1.)*M_PI/3.);
-    }
-  }
-  double lam[3];
-  for(int i=0;i<3;i++) lam[i] = sqrt(Max(x[i] + I1/3.0, TOL3));
-
-  double i1 = lam[0] + lam[1] + lam[2];
-  double i2 = lam[0]*lam[1] + lam[0]*lam[2] + lam[1]*lam[2];
-  double i3 = lam[0]*lam[1]*lam[2];
-  double D = i1*i2 - i3;
-
-  Matrix3 One; One.Identity();
-  U = (C*(i1*i1-i2) + One*i1*i3 - Csq)*(1./D);
-  Matrix3 Uinv = (C - U*i1 + One*i2)*(1./i3);
-  R = F*Uinv;
-}
-
 double 
 ConstitutiveModel::artificialBulkViscosity(double Dkk, 
                                            double c_bulk, 

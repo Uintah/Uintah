@@ -50,37 +50,34 @@ namespace Uintah {
 
     public:
 
-      double a;  // can be either c or cdot
-      Matrix3 *b_n; // can be either s_n or sdot_n
-      int numElem;
+      int nn;          // number of maxwell elements
+      double a;        // can be either c or cdot
+      Matrix3 b_n[5];  // can be either s_n or sdot_n
       
-      FVector(int nn)
+      FVector()
         {
           Matrix3 zero(0.0);
+          nn = 5;
           a = 0.0;
-          numElem = nn;
-          b_n = scinew Matrix3[numElem];
-          for (int ii = 0; ii < numElem; ++ii) b_n[ii] = zero;
+          for (int ii = 0; ii < nn; ++ii) b_n[ii] = zero;
         }
 
-      FVector(double aa, Matrix3* bb_n, int nn)
+      FVector(double aa, Matrix3* bb_n)
         {
+          nn = 5;
           a = aa;
-          numElem = nn;
-          for (int ii = 0; ii < numElem; ++ii) b_n[ii] = bb_n[ii];
+          for (int ii = 0; ii < nn; ++ii) b_n[ii] = bb_n[ii];
         }
 
       ~FVector()
         {
-          delete[] b_n;
         }
 
       FVector
         operator+(const FVector& fv) const
         {
-          int nn = numElem;
-          FVector fv_new(nn);
-          if (fv.numElem == nn) {
+          FVector fv_new;
+          if (fv.nn == nn) {
             fv_new.a = a + fv.a;
             for (int ii = 0; ii < nn; ++ii) fv_new.b_n[ii] = b_n[ii]+fv.b_n[ii];
           } else {
@@ -93,8 +90,7 @@ namespace Uintah {
       FVector&
         operator+=(const FVector& fv) 
         {
-          int nn = numElem;
-          if (fv.numElem == nn) {
+          if (fv.nn == nn) {
             a += fv.a;
             for (int ii = 0; ii < nn; ++ii) b_n[ii] += fv.b_n[ii];
           }
@@ -104,9 +100,9 @@ namespace Uintah {
       FVector
         operator*(double val) const
         {
-          FVector fv_new(numElem);
+          FVector fv_new;
           fv_new.a = a*val;
-          for (int ii = 0; ii < numElem; ++ii) fv_new.b_n[ii] = b_n[ii]*val;
+          for (int ii = 0; ii < nn; ++ii) fv_new.b_n[ii] = b_n[ii]*val;
           return fv_new;
         }
 
@@ -114,7 +110,7 @@ namespace Uintah {
         operator*=(double val) 
         {
           a *= val;
-          for (int ii = 0; ii < numElem; ++ii) b_n[ii] *= val;
+          for (int ii = 0; ii < nn; ++ii) b_n[ii] *= val;
           return *this;
         }
     };

@@ -218,12 +218,6 @@ namespace Uintah {
                                     constNCVariable<Vector>& gVelocity,
                                     constNCVariable<Vector>& GVelocity);
 
-    /*! 
-      \brief Calculate polar decomposition of the deformation gradient.
-    */
-    void polarDecomposition(const Matrix3& F, 
-                            Matrix3& R,
-                            Matrix3& U) const;
 
     /*!
       \brief Calculate the artificial bulk viscosity (q)

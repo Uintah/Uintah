@@ -561,7 +561,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
   Matrix3 tensorD(0.0); // Rate of deformation
   Matrix3 tensorW(0.0); // Spin 
   Matrix3 tensorF; tensorF.Identity(); // Deformation gradient
-  Matrix3 tensorV; tensorV.Identity(); // Left Cauchy-Green stretch
+  Matrix3 tensorU; tensorU.Identity(); // Right Cauchy-Green stretch
   Matrix3 tensorR; tensorR.Identity(); // Rotation 
   Matrix3 tensorSig(0.0); // The Cauchy stress
   Matrix3 tensorEta(0.0); // Deviatoric part of tensor D
@@ -749,7 +749,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       pVolume_deformed[idx]=pMass[idx]/rho_cur;
 
       // Compute polar decomposition of F (F = RU)
-      polarDecomposition(tensorF_new, tensorR, tensorV);
+      tensorF_new.polarDecomposition(tensorU, tensorR, d_tol, true);
 
       // Calculate rate of deformation tensor (D)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
