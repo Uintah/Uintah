@@ -5,7 +5,7 @@ OBJS = BasicSurfaces.o  Boolean.o  BooleanPort.o  Colormap.o  ColormapPort.o  \
 	ColumnMatrix.o  ColumnMatrixPort.o  ContourSet.o  ContourSetPort.o  \
 	Datatype.o  DenseMatrix.o  \
 	GeometryPort.o  Interval.o IntervalPort.o \
-	Matrix.o  MatrixPort.o  Mesh.o  MeshPort.o  \
+	ManhattanDist.o   Matrix.o  MatrixPort.o  Mesh.o  MeshPort.o  \
 	MultiMesh.o  MultiMeshPort.o  Octree.o  OctreePort.o  ScalarField.o  \
 	ScalarFieldPort.o  ScalarFieldRG.o  ScalarFieldRGBase.o  \
 	ScalarFieldRGchar.o  ScalarFieldRGint.o  ScalarFieldRGfloat.o  \
@@ -23,7 +23,7 @@ SRCS = $(GENSRCS) BasicSurfaces.cc Boolean.cc BooleanPort.cc \
 	ColumnMatrix.cc  ColumnMatrixPort.cc ContourSet.cc ContourSetPort.cc \
 	Datatype.cc DenseMatrix.cc \
 	GeometryPort.cc Interval.cc IntervalPort.cc  \
-	Matrix.cc MatrixPort.cc Mesh.cc MeshPort.cc \
+	ManhattanDist.cc Matrix.cc MatrixPort.cc Mesh.cc MeshPort.cc \
 	MultiMesh.cc MultiMeshPort.cc Octree.cc OctreePort.cc ScalarField.cc \
 	ScalarFieldPort.cc ScalarFieldRG.cc ScalarFieldRGBase.cc \
 	ScalarFieldRGchar.cc ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
