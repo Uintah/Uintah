@@ -288,6 +288,18 @@ DEALINGS IN THE SOFTWARE.
       <li>Tutorial for BioImage PowerApp</li>
       <li>Tutorial for FusionViewer PowerApp</li>
     </ul>
+
+    <h1>Known Bugs</h1>
+    <ul>
+      <li>BioTensor does not save out the glyph normalize value when saving sessions.</li>
+      <li>When loading tensors directly into BioTensor, the viewer does not automatically autoview.</li>
+      <li>When loading large datasets into BioImage, the progress indicator indicates the loading process is complete although it hasn't finished loading the dataset and nothing has appeared in the viewer panes. There are still modules executing underneath, there just aren't hooks to indicate that they are still executing.</li>
+      <li>Help and About menu options not defined for BioImage.</li>
+      <li>Loading a new dataset in BioImage when another dataset has been loaded doesn't load on first try.</li>
+      <li>In BioImage, if there are more than two filters in the history, and the user deletes a filter and then addes another one, a tcl error will appear.</li>
+      <li>In BioImage, when loading a session containing crops or resamples in the history, they are reset when the orientation gets set.</li>
+      <li>BioTensor's help produces an error.</li>
+    </ul>
     
     <script type="text/javascript">new Toc().build();</script>
     <script type="text/javascript">doc.postContent();</script>
