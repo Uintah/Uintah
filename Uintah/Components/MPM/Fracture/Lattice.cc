@@ -8,7 +8,7 @@ namespace MPM {
 
 Lattice::
 Lattice(const Patch* patch,const ParticleVariable<Point>& pX)
-: Array3<Cell>(patch->getLowGhostCellIndex(),patch->getHighGhostCellIndex()),
+: //Array3<Cell>(patch->getLowGhostCellIndex(),patch->getHighGhostCellIndex()),
   d_patch(patch), d_pX(pX)
 {
   ParticleSubset* pset = pX.getParticleSubset();
@@ -46,6 +46,9 @@ const ParticleVariable<Point>& Lattice::getParticlesPosition() const
 } //namespace Uintah
 
 // $Log$
+// Revision 1.6  2000/06/08 17:58:27  tan
+// A small change
+//
 // Revision 1.5  2000/06/06 21:04:47  bigler
 // Added const to Lattice members to get it to compile
 //
