@@ -449,6 +449,12 @@ StreamLines::execute()
     return;
   }
 
+  // TODO:  Fix this for cell walking on surfaces.
+  if (vField->mesh()->dimensionality() != 3)
+  {
+    error("The StreamLines module currently only works for volume fields.");
+    return;
+  }
 
   FieldIPort* sfport = (FieldIPort*)get_iport("Seeds");
   FieldHandle sfHandle;
