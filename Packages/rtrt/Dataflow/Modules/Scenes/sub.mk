@@ -26,3 +26,7 @@ LIBS := $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+ifeq ($(LARGESOS),no)
+RTRT_SCIRUN := $(RTRT_SCIRUN) $(LIBNAME)
+endif
+
