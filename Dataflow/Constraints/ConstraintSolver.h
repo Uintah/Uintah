@@ -41,7 +41,7 @@ using std::stack;
 namespace SCIRun {
 
 
-enum RecurseType { UnInit, RecurseInitial, RecurseNormal, RecurseMax };
+enum RecurseType { UnInit, RecurseInitial, RecurseNormal };
 
 typedef unsigned char uchar;
 struct PSECORESHARE StackItem {

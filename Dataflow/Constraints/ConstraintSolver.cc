@@ -46,7 +46,6 @@ namespace SCIRun {
 
 
 static DebugSwitch cs_debug("ConstraintSolver", "Print");
-//static bool cs_debug = true;
 
 
 ostream& operator<<( ostream& os, const StackItem& i ) {
@@ -60,9 +59,6 @@ ostream& operator<<( ostream& os, const StackItem& i ) {
       break;
    case RecurseNormal:
       os << "RecurseNormal";
-      break;
-   case RecurseMax:
-      os << "RecurseMax";
       break;
    }
    os << " " << (int)i.iter << "/" << i.var->GetNumConstraints();
@@ -150,7 +146,7 @@ ConstraintSolver::Solve(BaseVariable* var,
 
   for (i=0; i < variables.size(); i++)
   {
-    variables[i]->level = variables[i]->levellevel = 0;
+    variables[i]->level = 0;
   }
   itemstack.push_front(StackItem(var));
 
@@ -169,8 +165,8 @@ ConstraintSolver::Solve(BaseVariable* var,
 	{
 	  cout << "Recursion level = " << itemstack.size() << endl;
 	    
-	  cout << v->name << " S(" << v->levellevel << ")*";
-	  for (i=0; i < v->level; i++)
+	  cout << v->name << " S(" << v->level / v->numconstraints << ")*";
+	  for (i=0; i < (v->level % v->numconstraints); i++)
 	    cout << " ";
 	  cout << "*" << endl;
 	    
@@ -178,8 +174,9 @@ ConstraintSolver::Solve(BaseVariable* var,
 	       << " newval (" << newval << ").  Using Epsilon of ("
 	       << Epsilon << ")." << endl;
 	    
-	  cout << "LevelLevel is " << v->levellevel
-	       << " and Level is " << v->level << "." << endl;
+	  cout << "LevelLevel is " << v->level / v->numconstraints
+	       << " and Level is " << v->level % v->numconstraints 
+	       << "." << endl;
 	}
 	 
 	if (notnew)
@@ -190,38 +187,25 @@ ConstraintSolver::Solve(BaseVariable* var,
 	 
 	v->data = newval;
 	v->level++;
-	if (v->level > MaxDepth)
+	if (v->level > v->numconstraints * MaxDepth)
 	{
-	  v->level = 0;
-	  v->levellevel++;
-	  if (v->levellevel < v->numconstraints)
+	  if (cs_debug)
 	  {
-	    if (cs_debug)
+	    cout << v->name << " E(" << v->level / v->numconstraints << ")*";
+	    for (i=0; i < v->level; i++)
 	    {
-	      cerr << "Maximum recursion level reached..." << endl;
+	      cout << " ";
 	    }
-	    item.rtype = RecurseMax;
-	  }
-	  else
-	  {
-	    if (cs_debug)
-	    {
-	      cout << v->name << " E(" << v->levellevel << ")*";
-	      for (i=0; i < v->level; i++)
-	      {
-		cout << " ";
-	      }
-	      cout << "*" << endl;
-		  
-	      cout << "Recursion level = " << itemstack.size()-1 << endl;
-	    }
-	       
-	    cerr << "Maximum level reached for all constraints!" << endl;
-	    cout << "Accepting current approximation." << endl;
+	    cout << "*" << endl;
+	    
 	    cout << "Recursion level = " << itemstack.size()-1 << endl;
-	       
-	    abort_flag = true;	       
 	  }
+	       
+	  cerr << "Maximum level reached for all constraints!" << endl;
+	  cout << "Accepting current approximation." << endl;
+	  cout << "Recursion level = " << itemstack.size()-1 << endl;
+	       
+	  abort_flag = true;	       
 	}
 	else
 	{
@@ -233,71 +217,26 @@ ConstraintSolver::Solve(BaseVariable* var,
     case RecurseNormal:
       if (item.iter < v->numconstraints)
       {
-	if (v->constraints[v->constraint_order[item.iter]]
-	    ->Satisfy(v->constraint_indexs[v->constraint_order[item.iter]],
-		      scheme, Epsilon, v, newval))
+	const unsigned int offset = v->level / v->numconstraints;
+	const unsigned int index = (item.iter + offset) % v->numconstraints;
+	const unsigned int order = v->constraint_order[index];
+	BaseVariable *nextv;
+	if (v->constraints[order]->Satisfy(v->constraint_indices[order],
+					   scheme, Epsilon, nextv, newval))
 	{
-	  StackItem si(v);
-	  itemstack.push_front(si);
+	  itemstack.push_front(StackItem(nextv));
 	}
 	item.iter++;
       }
       else
       {
-	if (v->level == 0)
-	{
-	  v->level = MaxDepth-1;
-	  v->levellevel--;
-	}
-	else
-	{
-	  v->level--;
-	}
-	    
+	v->level--;
+	
 	if (cs_debug)
 	{
-	  cout << v->name << " E(" << v->levellevel << ")*";
-	  for (i = 0; i <v->level; i++)
+	  cout << v->name << " E(" << v->level / v->numconstraints << ")*";
+	  for (i = 0; i <v->level % v->numconstraints; i++)
 	    cout << " ";
-	  cout << "*" << endl;
-	  cout << "Recursion level = " << itemstack.size()-1 << endl;
-	}
-	itemstack.pop_front();
-      }
-      break;
-
-    case RecurseMax:
-      if (item.iter < v->numconstraints)
-      {
-	const int idx = (item.iter + v->levellevel) % v->numconstraints;
-	if (v->constraints[v->constraint_order[idx]]
-	    ->Satisfy(v->constraint_indexs[v->constraint_order[idx]],
-		      scheme, Epsilon, v, newval))
-	{
-	  StackItem si(v);
-	  itemstack.push_front(si);
-	}
-	item.iter++;
-      }
-      else
-      {
-	if (v->level == 0)
-	{
-	  v->level = MaxDepth-1;
-	  v->levellevel--;
-	}
-	else
-	{
-	  v->level--;
-	}
-	    
-	if (cs_debug)
-	{
-	  cout << v->name << " E(" << v->levellevel << ")*";
-	  for (i=0; i<v->level; i++)
-	  {
-	    cout << " ";
-	  }
 	  cout << "*" << endl;
 	  cout << "Recursion level = " << itemstack.size()-1 << endl;
 	}

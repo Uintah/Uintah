@@ -84,7 +84,7 @@ protected:
    
    Index varCount;
    vector<BaseVariable*> vars;
-   vector<Index> var_indexs; // The var's index for this constraint.
+   vector<Index> var_indices; // The var's index for this constraint.
    Array2<Index> var_choices;
    Index whichMethod, callingMethod;
 
