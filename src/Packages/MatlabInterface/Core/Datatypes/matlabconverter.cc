@@ -2334,7 +2334,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
   // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
   
   //>>>>>>>>>> CHANGE NEEDED HERE   
-  if (basis_order == -1) basis_order = 0;
+  // if (basis_order == -1) basis_order = 0;
   //>>>>>>>>>>>>>>  
   
   fs.basis_order = basis_order;
