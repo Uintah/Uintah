@@ -84,6 +84,11 @@ usage( const std::string & message,
       cerr << "-nthreads <#>        : \n";
       cerr << "-scheduler <name>    : Don't specify, use system default!\n";
       cerr << "-loadbalancer <name> : Don't specify, use system default!\n";
+      cerr << "-emit_taskgraphs     : Output taskgraph information\n";
+      cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
+      cerr << "-t <timestep>        : Restart timestep (last checkpoint is default)\n";
+      cerr << "-copy                : Default, copy from old uda when restarting\n";
+      cerr << "-nocopy              : Move directories from old uda when restarting\n";
       cerr << "\n\n";
     }
   quit();
