@@ -22,6 +22,9 @@
 #include <Core/Geom/GeomCone.h>
 #include <Core/Geom/GeomBox.h>
 #include <Core/Geom/GeomTransform.h>
+#ifdef HAVE_TEEM
+#include <teem/ten.h>
+#endif
 
 namespace SCIRun {
 
@@ -273,6 +276,41 @@ RenderTensorFieldBase::add_item(GeomGroup *g,
     gt = scinew GeomTransform(glyph, trans);
     ecolor = e1;
   }
+#ifdef HAVE_TEEM  
+  else
+  {
+    float ten[6];
+
+    ten[0] = t.mat_[0][0];
+    ten[1] = t.mat_[0][1];
+    ten[2] = t.mat_[0][2];
+    ten[3] = t.mat_[1][1];
+    ten[4] = t.mat_[1][2];
+    ten[5] = t.mat_[2][2];
+    float eval[3];
+    float evec[9];
+    tenEigensolve(eval, evec, ten);
+
+    const Vector e1(evec[0], evec[1], evec[2]);
+    const Vector e2(evec[3], evec[4], evec[5]);
+    const Vector e3(evec[6], evec[7], evec[8]);
+
+    const double v1 = eval[0];
+    const double v2 = eval[1];
+    const double v3 = eval[2];
+
+    // Don't render glyphs that are too small.
+    if (v1 + v2 + v3 < 0.001) return;
+
+    static const Point origin(0.0, 0.0, 0.0);
+    Transform trans(origin, e1, e2, e3);
+    trans.post_scale(Vector(fabs(v1), fabs(v2), fabs(v3)) * scale);
+    trans.pre_translate(p.asVector());
+
+    gt = scinew GeomTransform(glyph, trans);
+    ecolor = e1;
+  }
+#else
   else
   {
     const Vector v0 = Vector(t.mat_[0][0], t.mat_[0][1], t.mat_[0][2]) * scale;
@@ -286,7 +324,7 @@ RenderTensorFieldBase::add_item(GeomGroup *g,
     gt = scinew GeomTransform(glyph, trans);
     colorize = false;
   }
-
+#endif
   if (colorize)
   {
     ecolor.normalize();
@@ -332,7 +370,35 @@ RenderTensorFieldBase::add_super_quadric(GeomGroup *g,
 					 double emphasis)
 {
   double v1, v2, v3;
-  t.get_eigenvalues(v1, v2, v3);
+  
+  if (t.have_eigens())
+  {
+    t.get_eigenvalues(v1, v2, v3);
+  }
+#ifdef HAVE_TEEM
+  else
+  {
+    float ten[6];
+    ten[0] = t.mat_[0][0];
+    ten[1] = t.mat_[0][1];
+    ten[2] = t.mat_[0][2];
+    ten[3] = t.mat_[1][1];
+    ten[4] = t.mat_[1][2];
+    ten[5] = t.mat_[2][2];
+    float eval[3];
+    float evec[9];
+    tenEigensolve(eval, evec, ten);
+
+    v1 = eval[0];
+    v2 = eval[1];
+    v3 = eval[2];
+  }
+#else
+  else
+  {
+    return;
+  }
+#endif
 
   const double cl = (v1 - v2) / (v1 + v2 + v3);
   const double cp = 2.0 * (v2 - v3) / (v1 + v2 + v3);
