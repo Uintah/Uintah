@@ -84,7 +84,7 @@ itcl_class MatlabInterface_DataIO_Matlab {
 	bind $w.f.cmd.st <Leave> "$this update_text"
 	$w.f.cmd.st insert end [set $this-cmdTCL]
 
-	button $w.f.cmd.execute -text "Execute" -command $cmmd
+	button $w.f.cmd.execute -text "Execute" -command "$this-c ForceExecute"
 	pack $w.f.cmd.st -padx 10 -pady 10 -fill both -expand yes
 	pack $w.f.cmd.execute -side top
     }
