@@ -12,6 +12,7 @@
  */
 
 #include <ModuleHelper.h>
+#include <Geom.h>
 #include <Module.h>
 #include <MessageTypes.h>
 #include <MUI.h>
@@ -45,6 +46,25 @@ int ModuleHelper::body(int)
 		    MUI_Module_Message* dmsg=(MUI_Module_Message*)msg;
 		    dmsg->do_it();
 		    dmsg->module->mui_callback(dmsg->cbdata, dmsg->flags);
+		}
+		break;
+	    case MessageTypes::GeometryPick:
+		{
+		    GeomPickMessage* gmsg=(GeomPickMessage*)msg;
+		    gmsg->module->geom_pick(gmsg->cbdata);
+		}
+		break;
+	    case MessageTypes::GeometryRelease:
+		{
+		    GeomPickMessage* gmsg=(GeomPickMessage*)msg;
+		    gmsg->module->geom_release(gmsg->cbdata);
+		}
+		break;
+	    case MessageTypes::GeometryMoved:
+		{
+		    GeomPickMessage* gmsg=(GeomPickMessage*)msg;
+		    gmsg->module->geom_moved(gmsg->axis, gmsg->distance,
+					     gmsg->delta, gmsg->cbdata);
 		}
 		break;
 	    default:

@@ -17,6 +17,7 @@
 #include <GL/glu.h>
 #include <Math/Trig.h>
 #include <Math/TrigTable.h>
+#include <Module.h>
 #include <NotFinished.h>
 #include <iostream.h>
 #include <Geometry/BBox.h>
@@ -216,6 +217,7 @@ void Tetra::get_bounds(BBox& bb)
 GeomSphere::GeomSphere(const Point& cen, double rad, int nu, int nv)
 : cen(cen), rad(rad), nu(nu), nv(nv)
 {
+    adjust();
 }
 
 GeomSphere::GeomSphere(const GeomSphere& copy)
@@ -224,6 +226,10 @@ GeomSphere::GeomSphere(const GeomSphere& copy)
 }
 
 GeomSphere::~GeomSphere()
+{
+}
+
+void GeomSphere::adjust()
 {
 }
 
@@ -430,8 +436,8 @@ void DrawInfo::pop_matl()
     }
 }
 
-GeomPick::GeomPick(const Vector& v1)
-: directions(2)
+GeomPick::GeomPick(Module* module, const Vector& v1)
+: module(module), directions(2), mailbox(0), cbdata(0)
 {
     directions[0]=v1;
     directions[1]=-v1;
@@ -446,10 +452,59 @@ void GeomPick::set_highlight(MaterialProp* matl)
     hightlight=matl;
 }
 
+void GeomPick::pick()
+{
+    if(mailbox){
+	// Send a message...
+	mailbox->send(new GeomPickMessage(module, cbdata));
+    } else {
+	// Do it directly..
+	module->geom_pick(cbdata);
+    }
+}
+
+void GeomPick::release()
+{
+    if(mailbox){
+	// Send a message...
+	mailbox->send(new GeomPickMessage(module, cbdata, 0));
+    } else {
+	// Do it directly..
+	module->geom_release(cbdata);
+    }
+}
+
+void GeomPick::moved(int axis, double distance, const Vector& delta)
+{
+    if(mailbox){
+	// Send a message...
+	mailbox->send(new GeomPickMessage(module,
+					  axis, distance, delta, cbdata));
+    } else {
+	module->geom_moved(axis, distance, delta, cbdata);
+    }
+}
+
 GeomCylinder::GeomCylinder(const Point& bottom, const Point& top,
 			   double rad, int nu, int nv)
-: bottom(bottom), top(top), rad(rad), nu(nu), nv(nv), axis(top-bottom)
+: bottom(bottom), top(top), rad(rad), nu(nu), nv(nv)
 {
+}
+
+GeomCylinder::GeomCylinder(const GeomCylinder& copy)
+: bottom(copy.bottom), top(copy.top), rad(copy.rad), nu(copy.nu),
+  nv(copy.nv), axis(copy.axis), v1(copy.v1), v2(copy.v2)
+{
+    adjust();
+}
+
+GeomCylinder::~GeomCylinder()
+{
+}
+
+void GeomCylinder::adjust()
+{
+    axis=top-bottom;
     if(axis.length2() < 1.e-6){
 	cerr << "Degenerate cylinder!\n";
     }
@@ -463,16 +518,6 @@ GeomCylinder::GeomCylinder(const Point& bottom, const Point& top,
     v2=Cross(axis, v1);
     v2.normalize();
     v2*=rad;
-}
-
-GeomCylinder::GeomCylinder(const GeomCylinder& copy)
-: bottom(copy.bottom), top(copy.top), rad(copy.rad), nu(copy.nu),
-  nv(copy.nv), axis(copy.axis), v1(copy.v1), v2(copy.v2)
-{
-}
-
-GeomCylinder::~GeomCylinder()
-{
 }
 
 GeomObj* GeomCylinder::clone()
@@ -588,8 +633,30 @@ void GeomCylinder::draw(DrawInfo* di)
 GeomCone::GeomCone(const Point& bottom, const Point& top,
 		   double bot_rad, double top_rad, int nu, int nv)
 : bottom(bottom), top(top), bot_rad(bot_rad),
-  top_rad(top_rad), nu(nu), nv(nv), axis(top-bottom)
+  top_rad(top_rad), nu(nu), nv(nv)
 {
+}
+
+GeomCone::GeomCone(const GeomCone& copy)
+: bottom(copy.bottom), top(copy.top), top_rad(copy.top_rad),
+  bot_rad(copy.bot_rad), nu(copy.nu), nv(copy.nv),
+  v1(copy.v1), v2(copy.v2), axis(copy.axis)
+{
+    adjust();
+}
+
+GeomCone::~GeomCone()
+{
+}
+
+GeomObj* GeomCone::clone()
+{
+    return new GeomCone(*this);
+}
+
+void GeomCone::adjust()
+{
+    axis=top-bottom;
     if(axis.length2() < 1.e-6){
 	cerr << "Degenerate Cone!\n";
     }
@@ -602,22 +669,6 @@ GeomCone::GeomCone(const Point& bottom, const Point& top,
     v2=Cross(axis, v1);
     v2.normalize();
     tilt=(bot_rad-top_rad)/axis.length2();
-}
-
-GeomCone::GeomCone(const GeomCone& copy)
-: bottom(copy.bottom), top(copy.top), top_rad(copy.top_rad),
-  bot_rad(copy.bot_rad), nu(copy.nu), nv(copy.nv),
-  v1(copy.v1), v2(copy.v2), axis(copy.axis)
-{
-}
-
-GeomCone::~GeomCone()
-{
-}
-
-GeomObj* GeomCone::clone()
-{
-    return new GeomCone(*this);
 }
 
 void GeomCone::get_bounds(BBox& bb)
@@ -737,6 +788,26 @@ GeomDisc::GeomDisc(const Point& cen, const Vector& normal,
 		   double rad, int nu, int nv)
 : cen(cen), normal(normal), rad(rad), nu(nu), nv(nv)
 {
+}
+
+GeomDisc::GeomDisc(const GeomDisc& copy)
+: cen(copy.cen), normal(copy.normal), rad(copy.rad), nu(copy.nu),
+  nv(copy.nv), v1(copy.v1), v2(copy.v2)
+{
+    adjust();
+}
+
+GeomDisc::~GeomDisc()
+{
+}
+
+GeomObj* GeomDisc::clone()
+{
+    return new GeomDisc(*this);
+}
+
+void GeomDisc::adjust()
+{
     if(normal.length2() < 1.e-6){
 	cerr << "Degenerate normal on Disc!\n";
     }
@@ -748,21 +819,6 @@ GeomDisc::GeomDisc(const Point& cen, const Vector& normal,
     v1.normalize();
     v2=Cross(normal, v1);
     v2.normalize();
-}
-
-GeomDisc::GeomDisc(const GeomDisc& copy)
-: cen(copy.cen), normal(copy.normal), rad(copy.rad), nu(copy.nu),
-  nv(copy.nv), v1(copy.v1), v2(copy.v2)
-{
-}
-
-GeomDisc::~GeomDisc()
-{
-}
-
-GeomObj* GeomDisc::clone()
-{
-    return new GeomDisc(*this);
 }
 
 void GeomDisc::get_bounds(BBox& bb)
@@ -825,3 +881,27 @@ void GeomDisc::draw(DrawInfo* di)
     if(matl)
 	di->pop_matl();
 }
+
+GeomPickMessage::GeomPickMessage(Module* module, void* cbdata)
+: MessageBase(MessageTypes::GeometryPick),
+  module(module), cbdata(cbdata)
+{
+}
+
+GeomPickMessage::GeomPickMessage(Module* module, void* cbdata, int)
+: MessageBase(MessageTypes::GeometryRelease),
+  module(module), cbdata(cbdata)
+{
+}
+
+GeomPickMessage::GeomPickMessage(Module* module, int axis, double distance,
+				 const Vector& delta, void* cbdata)
+: MessageBase(MessageTypes::GeometryPick),
+  module(module), axis(axis), distance(distance), delta(delta), cbdata(cbdata)
+{
+}
+
+GeomPickMessage::~GeomPickMessage()
+{
+}
+

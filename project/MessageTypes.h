@@ -31,6 +31,10 @@ public:
 	GeometryDelAll,
 	GeometryFlush,
 
+	GeometryPick,
+	GeometryRelease,
+	GeometryMoved,
+
 	AttachDialbox,
 	DialMoved,
     };

@@ -133,3 +133,18 @@ void Module::get_oport_coords(int which, int& x, int& y)
     y+=height;
 }
 
+void Module::geom_pick(void*)
+{
+    cerr << "Caught stray pick event!\n";
+}
+
+void Module::geom_release(void*)
+{
+    cerr << "Caught stray release event!\n";
+}
+
+void Module::geom_moved(int, double, const Vector&, void*)
+{
+    cerr << "Caught stray moved event!\n";
+}
+

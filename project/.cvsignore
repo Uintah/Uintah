@@ -1,3 +1,4 @@
 Makefile Makefile.bak
 project
 tmpl_cclist
+.~*

@@ -19,9 +19,12 @@
 #include <Geometry/Point.h>
 #include <Geometry/BBox.h>
 #include <Color.h>
+#include <MessageBase.h>
+#include <Multitask/ITC.h>
 
 class BBox;
 class DrawInfo;
+class Module;
 
 class MaterialProp {
 public:
@@ -56,16 +59,39 @@ struct DrawInfo {
 class GeomPick {
     Array1<Vector> directions;
     MaterialProp* hightlight;
-public:
-    GeomPick(const Vector&);
-    GeomPick(const Vector&, const Vector&);
-    GeomPick(const Vector&, const Vector&, const Vector&);
-    GeomPick(const Array1<Vector>&);
-    ~GeomPick();
+    Mailbox<MessageBase*>* mailbox;
+    void* cbdata;
+    Module* module;
     GeomPick(const GeomPick&);
+public:
+    GeomPick(Module* module, const Vector&);
+    GeomPick(Module* module, const Vector&, const Vector&);
+    GeomPick(Module* module, const Vector&, const Vector&, const Vector&);
+    GeomPick(Module* module, const Array1<Vector>&);
+    ~GeomPick();
     int nprincipal();
     Vector principal(int i);
     void set_highlight(MaterialProp* matl);
+    void set_reply(Mailbox<MessageBase*>*);
+    void set_cbdata(void*);
+
+    void pick();
+    void moved(int axis, double distance,
+	       const Vector& delta);
+    void release();
+};
+
+class GeomPickMessage : public MessageBase {
+public:
+    Module* module;
+    int axis;
+    double distance;
+    Vector delta;
+    void* cbdata;
+    GeomPickMessage(Module*, void*);
+    GeomPickMessage(Module*, void*, int);
+    GeomPickMessage(Module*, int, double, const Vector&, void*);
+    virtual ~GeomPickMessage();
 };
 
 class GeomObj {
@@ -146,6 +172,7 @@ public:
     virtual void draw(DrawInfo*);
     virtual GeomObj* clone();
     virtual void get_bounds(BBox&);
+    void adjust();
 };
 
 class GeomCylinder : public GeomObj {
@@ -165,6 +192,7 @@ public:
     virtual void draw(DrawInfo*);
     virtual GeomObj* clone();
     virtual void get_bounds(BBox&);
+    void adjust();
 };
 
 class GeomCone : public GeomObj {
@@ -186,6 +214,7 @@ public:
     virtual void draw(DrawInfo*);
     virtual GeomObj* clone();
     virtual void get_bounds(BBox&);
+    void adjust();
 };
 
 class GeomDisc : public GeomObj {
@@ -204,6 +233,7 @@ public:
     virtual void draw(DrawInfo*);
     virtual GeomObj* clone();
     virtual void get_bounds(BBox&);
+    void adjust();
 };
 
 class GeomPt : public GeomObj {

@@ -24,6 +24,7 @@ class MessageBase;
 class Network;
 class NetworkEditor;
 class OPort;
+class Vector;
 
 class Module {
 public:
@@ -64,6 +65,9 @@ public:
 
     // Callbacks
     virtual void connection(Module::ConnectionMode, int, int);
+    virtual void geom_pick(void*);
+    virtual void geom_release(void*);
+    virtual void geom_moved(int, double, const Vector&, void*);
 
     // Port manipulations
     void add_iport(IPort*);
