@@ -5,6 +5,7 @@ ChemVis
 Category: CFD
 Readtec
 PartToGeom
+cfdGridLines
 
 Category: Contours
 LaceContours
@@ -132,6 +133,8 @@ Category: Visualization
 BB
 BitVisualize
 BoxClipSField
+Chuck
+ColorMapKey
 CuttingPlane
 GenAxes
 GenColorMap
