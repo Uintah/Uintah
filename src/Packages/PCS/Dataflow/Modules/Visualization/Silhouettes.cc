@@ -12,6 +12,7 @@
 
 #include <Dataflow/share/share.h>
 
+#include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Handle.h>
 
@@ -33,6 +34,8 @@ public:
 
 protected:
   FieldHandle fieldout_;
+
+  View view_;
 
   int fGeneration_;
 };
@@ -73,10 +76,24 @@ Silhouettes::execute(){
     return;
   }
 
-  // If no data or a changed recalcute.
+
+  GeometryOPort* ogp = (GeometryOPort *)get_oport("View");
+
+  if (!ogp)
+  {
+    error( "Unable to initialize iport 'View'.");
+    return;
+  }
+
+  GeometryData *geometry = ogp->getData( 0, 0, GEOM_VIEW );
+
+  // If no data or a change recalcute.
   if( !fieldout_.get_rep() ||
-      fGeneration_ != fieldin->generation ) {
+      fGeneration_ != fieldin->generation ||
+      view_ != *(geometry->view) ) {
+
     fGeneration_ = fieldin->generation;
+    view_ = *(geometry->view);
 
     const TypeDescription *ftd = fieldin->get_type_description(0);
     const TypeDescription *ttd = fieldin->get_type_description(1);
@@ -86,7 +103,7 @@ Silhouettes::execute(){
     Handle<SilhouettesAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
-    fieldout_ = algo->execute(fieldin);
+    fieldout_ = algo->execute(fieldin, view_);
   }
 
   // Get a handle to the output field port.
