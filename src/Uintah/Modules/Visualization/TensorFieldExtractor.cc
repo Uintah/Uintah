@@ -137,7 +137,7 @@ void TensorFieldExtractor::setVars()
   }
 
   if( !matches && index != -1 ) {
-    sVar.get(names[index].c_str());
+    sVar.set(names[index].c_str());
     type = types[index];
   }
 
