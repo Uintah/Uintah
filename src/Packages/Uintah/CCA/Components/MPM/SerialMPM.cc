@@ -941,56 +941,34 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 				   DataWarehouse* new_dw)
 {
   particleIndex totalParticles=0;
-  if (d_doErosion) {
-    for(int p=0;p<patches->size();p++){
-      const Patch* patch = patches->get(p);
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
 
-      cout_doing <<"Doing actuallyInitialize on patch " << patch->getID()
-		 <<"\t\t\t MPM"<< endl;
+    cout_doing <<"Doing actuallyInitialize on patch " << patch->getID()
+	       <<"\t\t\t MPM"<< endl;
 
-      CCVariable<short int> cellNAPID;
-      new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
-      cellNAPID.initialize(0);
+    CCVariable<short int> cellNAPID;
+    new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
+    cellNAPID.initialize(0);
 
-      for(int m=0;m<matls->size();m++){
-	//cerrLock.lock();
-	//NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
-	//cerrLock.unlock();
-	MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-	particleIndex numParticles = mpm_matl->countParticles(patch);
-	totalParticles+=numParticles;
+    for(int m=0;m<matls->size();m++){
+      //cerrLock.lock();
+      //NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
+      //cerrLock.unlock();
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      particleIndex numParticles = mpm_matl->countParticles(patch);
+      totalParticles+=numParticles;
 
-	mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
+      mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
 
-	mpm_matl->getConstitutiveModel()->initializeCMDataWithErosion(patch,
-								      mpm_matl,
-                                                                      new_dw);
-      }
-    }
-  } else {
-    for(int p=0;p<patches->size();p++){
-      const Patch* patch = patches->get(p);
-
-      cout_doing <<"Doing actuallyInitialize on patch " << patch->getID()
-		 <<"\t\t\t MPM"<< endl;
-
-      CCVariable<short int> cellNAPID;
-      new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
-      cellNAPID.initialize(0);
-
-      for(int m=0;m<matls->size();m++){
-	//cerrLock.lock();
-	//NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
-	//cerrLock.unlock();
-	MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-	particleIndex numParticles = mpm_matl->countParticles(patch);
-	totalParticles+=numParticles;
-
-	mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
-
-	mpm_matl->getConstitutiveModel()->initializeCMData(patch,
-							   mpm_matl,
-							   new_dw);
+      mpm_matl->getConstitutiveModel()->initializeCMData(patch,
+							 mpm_matl,
+							 new_dw);
+      if (d_doErosion) {
+	int index = mpm_matl->getDWIndex();
+	ParticleSubset* pset = new_dw->getParticleSubset(index, patch);
+	ParticleVariable<double> pErosion;
+	setParticleDefault(pErosion, lb->pErosionLabel, pset, new_dw, 1.0);
       }
     }
   }
@@ -1069,6 +1047,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         old_dw->get(psize,        lb->pSizeLabel,          pset);
       }
 
+
       // Create arrays for the grid data
       NCVariable<double> gmass;
       NCVariable<double> gvolume;
@@ -1104,6 +1083,14 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gnumnearparticles.initialize(0.);
       gSp_vol.initialize(0.);
 
+      // Get the particle erosion information
+      constParticleVariable<double> pErosion;
+      if (d_doErosion) {
+        old_dw->get(pErosion, lb->pErosionLabel, pset);
+      } else {
+        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
+      }
+
       // Interpolate particle data to Grid data.
       // This currently consists of the particle velocity and mass
       // Need to compute the lumped global mass matrix and velocity
@@ -1117,73 +1104,38 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       double S[MAX_BASIS];
       Vector pmom;
 
-      if (d_doErosion) {
-	constParticleVariable<double> pErosion;
-	old_dw->get(pErosion, lb->pErosionLabel, pset);
-       
-	ParticleSubset::iterator iter = pset->begin();
-	for(; iter != pset->end(); iter++){
-	  particleIndex idx = *iter;
+      for (ParticleSubset::iterator iter = pset->begin();
+                                    iter != pset->end(); 
+                                    iter++){
+	particleIndex idx = *iter;
 
-	  // Get the node indices that surround the cell
-	  if(d_8or27==8){
-	    patch->findCellAndWeights(px[idx], ni, S);
-	  }
-	  else if(d_8or27==27){
-	    patch->findCellAndWeights27(px[idx], ni, S, psize[idx]);
-	  }
+	// Get the node indices that surround the cell
+	if(d_8or27==8){
+	  patch->findCellAndWeights(px[idx], ni, S);
+	}
+	else if(d_8or27==27){
+	  patch->findCellAndWeights27(px[idx], ni, S, psize[idx]);
+	}
 
-	  pmom = pvelocity[idx]*pmass[idx];
-	  total_mom += pvelocity[idx]*pmass[idx];
+	pmom = pvelocity[idx]*pmass[idx];
+	total_mom += pvelocity[idx]*pmass[idx];
 
-	  // Add each particles contribution to the local mass & velocity 
-	  // Must use the node indices
-	  for(int k = 0; k < d_8or27; k++) {
-	    if(patch->containsNode(ni[k])) {
-              S[k] *= pErosion[idx];
-	      gmass[ni[k]]          += pmass[idx]                     * S[k];
-	      gvelocity[ni[k]]      += pmom                           * S[k];
-	      gvolume[ni[k]]        += pvolume[idx]                   * S[k];
-	      gexternalforce[ni[k]] += pexternalforce[idx]            * S[k];
-	      gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
-	      //  gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
-	      gnumnearparticles[ni[k]] += 1.0;
-	      gSp_vol[ni[k]]        += pSp_vol[idx]  * pmass[idx]     *S[k];
-	    }
+	// Add each particles contribution to the local mass & velocity 
+	// Must use the node indices
+	for(int k = 0; k < d_8or27; k++) {
+	  if(patch->containsNode(ni[k])) {
+	    S[k] *= pErosion[idx];
+	    gmass[ni[k]]          += pmass[idx]                     * S[k];
+	    gvelocity[ni[k]]      += pmom                           * S[k];
+	    gvolume[ni[k]]        += pvolume[idx]                   * S[k];
+	    gexternalforce[ni[k]] += pexternalforce[idx]            * S[k];
+	    gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
+	    //  gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
+	    gnumnearparticles[ni[k]] += 1.0;
+	    gSp_vol[ni[k]]        += pSp_vol[idx]  * pmass[idx]     *S[k];
 	  }
 	}
-      } else {
-	ParticleSubset::iterator iter = pset->begin();
-	for(; iter != pset->end(); iter++){
-	  particleIndex idx = *iter;
-
-	  // Get the node indices that surround the cell
-	  if(d_8or27==8){
-	    patch->findCellAndWeights(px[idx], ni, S);
-	  }
-	  else if(d_8or27==27){
-	    patch->findCellAndWeights27(px[idx], ni, S, psize[idx]);
-	  }
-
-	  pmom = pvelocity[idx]*pmass[idx];
-	  total_mom += pvelocity[idx]*pmass[idx];
-
-	  // Add each particles contribution to the local mass & velocity 
-	  // Must use the node indices
-	  for(int k = 0; k < d_8or27; k++) {
-	    if(patch->containsNode(ni[k])) {
-	      gmass[ni[k]]          += pmass[idx]                     * S[k];
-	      gvelocity[ni[k]]      += pmom                           * S[k];
-	      gvolume[ni[k]]        += pvolume[idx]                   * S[k];
-	      gexternalforce[ni[k]] += pexternalforce[idx]            * S[k];
-	      gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
-	      //gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
-	      gnumnearparticles[ni[k]] += 1.0;
-	      gSp_vol[ni[k]]        += pSp_vol[idx]  * pmass[idx]     *S[k];
-	    }
-	  }
-	}
-      }
+      } // End of particle loop
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         IntVector c = *iter; 
@@ -1441,6 +1393,13 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 	p_q = p_q_create; // reference created data
       }
 
+      // Get the particle erosion information
+      constParticleVariable<double> pErosion;
+      if (d_doErosion) {
+        old_dw->get(pErosion, lb->pErosionLabel, pset);
+      } else {
+        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
+      }
 
       internalforce.initialize(Vector(0,0,0));
       IntVector ni[MAX_BASIS];
@@ -1449,60 +1408,31 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       Matrix3 stressmass;
       Matrix3 stresspress;
 
-      if (d_doErosion) {
-	constParticleVariable<double> pErosion;
-	old_dw->get(pErosion, lb->pErosionLabel, pset);
-        ParticleSubset::iterator iter = pset->begin();
-	for(; iter != pset->end(); iter++){
-          particleIndex idx = *iter;
+      for (ParticleSubset::iterator iter = pset->begin();
+                                    iter != pset->end(); 
+                                    iter++){
+	particleIndex idx = *iter;
   
-          // Get the node indices that surround the cell
-          if(d_8or27==8){
-            patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,  d_S);
-          }
-          else if(d_8or27==27){
-            patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S,d_S,
-                                                           psize[idx]);
-          }
-
-          stressmass  = pstress[idx]*pmass[idx];
-          stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
-
-          for (int k = 0; k < d_8or27; k++){
-	    if(patch->containsNode(ni[k])){
-	      Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
-			 d_S[k].z()*oodx[2]);
-              div *= pErosion[idx];
-	      internalforce[ni[k]] -= (div * stresspress)  * pvol[idx];
-	      gstress[ni[k]]       += stressmass * S[k];
-	    }
-          }
+	// Get the node indices that surround the cell
+	if(d_8or27==8){
+	  patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,  d_S);
 	}
-      } else {
-        ParticleSubset::iterator iter = pset->begin();
-	for(; iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-  
-          // Get the node indices that surround the cell
-          if(d_8or27==8){
-            patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,  d_S);
-          }
-          else if(d_8or27==27){
-            patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S,d_S,
-                                                           psize[idx]);
-          }
+	else if(d_8or27==27){
+	  patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S,d_S,
+							 psize[idx]);
+	}
 
-          stressmass  = pstress[idx]*pmass[idx];
-          stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
+	stressmass  = pstress[idx]*pmass[idx];
+	stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
 
-          for (int k = 0; k < d_8or27; k++){
-	    if(patch->containsNode(ni[k])){
-	      Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
-			 d_S[k].z()*oodx[2]);
-	      internalforce[ni[k]] -= (div * stresspress)  * pvol[idx];
-	      gstress[ni[k]]       += stressmass * S[k];
-	    }
-          }
+	for (int k = 0; k < d_8or27; k++){
+	  if(patch->containsNode(ni[k])){
+	    Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
+		       d_S[k].z()*oodx[2]);
+	    div *= pErosion[idx];
+	    internalforce[ni[k]] -= (div * stresspress)  * pvol[idx];
+	    gstress[ni[k]]       += stressmass * S[k];
+	  }
 	}
       }
 
@@ -1615,6 +1545,14 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
         old_dw->get(psize,      lb->pSizeLabel,           pset);
       }
 
+      // Get the particle erosion information
+      constParticleVariable<double> pErosion;
+      if (d_doErosion) {
+        old_dw->get(pErosion, lb->pErosionLabel, pset);
+      } else {
+        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
+      }
+
       new_dw->get(gTemperature, lb->gTemperatureLabel,   dwi, patch, gac,2*NGN);
       new_dw->allocateAndPut(internalHeatRate, lb->gInternalHeatRateLabel,
 			     dwi, patch);
@@ -1626,49 +1564,25 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
       IntVector ni[MAX_BASIS];
       Vector d_S[MAX_BASIS];
 
-      if (d_doErosion) {
-	constParticleVariable<double> pErosion;
-	old_dw->get(pErosion, lb->pErosionLabel, pset);
-        ParticleSubset::iterator iter = pset->begin();
-	for(; iter != pset->end(); iter++){
-	  particleIndex idx = *iter;
+      for (ParticleSubset::iterator iter = pset->begin();
+                                    iter != pset->end(); 
+                                    iter++){
+	particleIndex idx = *iter;
 
-	  // Get the node indices that surround the cell
-	  if(d_8or27==8){
-            patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-	  }
-	  else if(d_8or27==27){
-            patch->findCellAndShapeDerivatives27(px[idx], ni, d_S, psize[idx]);
-	  }
-
-	  pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
-	  for (int k = 0; k < d_8or27; k++){
-	    d_S[k] *= pErosion[idx];
-	    for (int j = 0; j<3; j++) {
-	      pTemperatureGradient[idx][j] += 
-		gTemperature[ni[k]] * d_S[k][j] * oodx[j];
-	    }
-	  }
+	// Get the node indices that surround the cell
+	if(d_8or27==8){
+	  patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 	}
-      } else {
-        ParticleSubset::iterator iter = pset->begin();
-	for(; iter != pset->end(); iter++){
-	  particleIndex idx = *iter;
+	else if(d_8or27==27){
+	  patch->findCellAndShapeDerivatives27(px[idx], ni, d_S, psize[idx]);
+	}
 
-	  // Get the node indices that surround the cell
-	  if(d_8or27==8){
-            patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-	  }
-	  else if(d_8or27==27){
-            patch->findCellAndShapeDerivatives27(px[idx], ni, d_S, psize[idx]);
-	  }
-
-	  pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
-	  for (int k = 0; k < d_8or27; k++){
-	    for (int j = 0; j<3; j++) {
-	      pTemperatureGradient[idx][j] += 
-		gTemperature[ni[k]] * d_S[k][j] * oodx[j];
-	    }
+	pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
+	for (int k = 0; k < d_8or27; k++){
+	  d_S[k] *= pErosion[idx];
+	  for (int j = 0; j<3; j++) {
+	    pTemperatureGradient[idx][j] += 
+	      gTemperature[ni[k]] * d_S[k][j] * oodx[j];
 	  }
 	}
       }
@@ -2317,6 +2231,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	massBurnFraction = massBurnFraction_create; // reference created data
       }
 
+      // Get the particle erosion information
+      constParticleVariable<double> pErosion;
+      if (d_doErosion) {
+        old_dw->get(pErosion, lb->pErosionLabel, pset);
+      } else {
+        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
+      }
+
       double Cp=mpm_matl->getSpecificHeat();
       double rho_init=mpm_matl->getInitialDensity();
 
@@ -2330,119 +2252,62 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	rho_frac_min = .1;
       }
 
-      if (d_doErosion) {
-	constParticleVariable<double> pErosion;
-	old_dw->get(pErosion, lb->pErosionLabel, pset);
-        ParticleSubset::iterator iter = pset->begin();
-	for(; iter != pset->end(); iter++){
-	  particleIndex idx = *iter;
+      // Loop over particles
+      for(ParticleSubset::iterator iter = pset->begin();
+	                           iter != pset->end(); 
+	                           iter++){
+	particleIndex idx = *iter;
 
-          // Get the node indices that surround the cell
-          if(d_8or27==8){
-            patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
-          }
-          else if(d_8or27==27){
-            patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S, d_S,
-                                                           psize[idx]);
-          }
-
-          Vector vel(0.0,0.0,0.0);
-          Vector acc(0.0,0.0,0.0);
-          double tempRate = 0;
-          double burnFraction = 0;
-          double sp_vol_dt = 0.0;
-
-          // Accumulate the contribution from each surrounding vertex
-          for (int k = 0; k < d_8or27; k++) {
-	    S[k] *= pErosion[idx];
-	    vel      += gvelocity_star[ni[k]]  * S[k];
-	    acc      += gacceleration[ni[k]]   * S[k];
-	    tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]] +
-			 frictionTempRate[ni[k]])   * S[k];
-	    burnFraction += massBurnFraction[ni[k]] * S[k];
-	    sp_vol_dt += gSp_vol_src[ni[k]]   * S[k];
-          }
-
-          // Update the particle's position and velocity
-          pxnew[idx]           = px[idx] + vel * delT;
-          pvelocitynew[idx]    = pvelocity[idx] + (acc - alpha*vel)*delT;
-          pTempNew[idx]        = pTemperature[idx] + tempRate * delT;
-          pSp_volNew[idx]      = pSp_vol[idx] + sp_vol_dt * delT;
-
-          double rho;
-          if(pvolume[idx] > 0.){
-	    rho = max(pmass[idx]/pvolume[idx],rho_frac_min*rho_init);
-          }
-	  else{
-	    rho = rho_init;
-	  }
-          pmassNew[idx]        = Max(pmass[idx]*(1.    - burnFraction),0.);
-          pvolumeNew[idx]      = pmassNew[idx]/rho;
-          if(pmassNew[idx] <= d_min_part_mass ||
-	     (rho_frac_min < 1.0 && pvelocitynew[idx].length() > d_max_vel)){
-	    delset->addParticle(idx);
-	  }
-	    
-          thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-          ke += .5*pmass[idx]*pvelocitynew[idx].length2();
-	  CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
-	  CMV += pvelocitynew[idx]*pmass[idx];
+	// Get the node indices that surround the cell
+	if(d_8or27==8){
+	  patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
 	}
-      } else {
-        ParticleSubset::iterator iter = pset->begin();
-	for(; iter != pset->end(); iter++){
-	  particleIndex idx = *iter;
-
-          // Get the node indices that surround the cell
-          if(d_8or27==8){
-            patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
-          }
-          else if(d_8or27==27){
-            patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S, d_S,
-                                                           psize[idx]);
-          }
-
-          Vector vel(0.0,0.0,0.0);
-          Vector acc(0.0,0.0,0.0);
-          double tempRate = 0;
-          double burnFraction = 0;
-          double sp_vol_dt = 0.0;
-
-          // Accumulate the contribution from each surrounding vertex
-          for (int k = 0; k < d_8or27; k++) {
-	    vel      += gvelocity_star[ni[k]]  * S[k];
-	    acc      += gacceleration[ni[k]]   * S[k];
-	    tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]] +
-			 frictionTempRate[ni[k]])   * S[k];
-	    burnFraction += massBurnFraction[ni[k]] * S[k];
-	    sp_vol_dt += gSp_vol_src[ni[k]]   * S[k];
-          }
-
-          // Update the particle's position and velocity
-          pxnew[idx]           = px[idx] + vel * delT;
-          pvelocitynew[idx]    = pvelocity[idx] + (acc - alpha*vel)*delT;
-          pTempNew[idx]        = pTemperature[idx] + tempRate * delT;
-          pSp_volNew[idx]      = pSp_vol[idx] + sp_vol_dt * delT;
-
-          double rho;
-          if(pvolume[idx] > 0.){
-	    rho = max(pmass[idx]/pvolume[idx],rho_frac_min*rho_init);
-          }
-	  else{
-	    rho = rho_init;
-	  }
-          pmassNew[idx]        = Max(pmass[idx]*(1.    - burnFraction),0.);
-          pvolumeNew[idx]      = pmassNew[idx]/rho;
-          if(pmassNew[idx] <= d_min_part_mass ||
-	     (rho_frac_min < 1.0 && pvelocitynew[idx].length() > d_max_vel)){
-	    delset->addParticle(idx);
-	  }
-	    
-          thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-          ke += .5*pmass[idx]*pvelocitynew[idx].length2();
-	  CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
-	  CMV += pvelocitynew[idx]*pmass[idx];
+	else if(d_8or27==27){
+	  patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S, d_S,
+							 psize[idx]);
 	}
+
+	Vector vel(0.0,0.0,0.0);
+	Vector acc(0.0,0.0,0.0);
+	double tempRate = 0;
+	double burnFraction = 0;
+	double sp_vol_dt = 0.0;
+
+	// Accumulate the contribution from each surrounding vertex
+	for (int k = 0; k < d_8or27; k++) {
+	  S[k] *= pErosion[idx];
+	  vel      += gvelocity_star[ni[k]]  * S[k];
+	  acc      += gacceleration[ni[k]]   * S[k];
+	  tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]] +
+		       frictionTempRate[ni[k]])   * S[k];
+	  burnFraction += massBurnFraction[ni[k]] * S[k];
+	  sp_vol_dt += gSp_vol_src[ni[k]]   * S[k];
+	}
+
+	// Update the particle's position and velocity
+	pxnew[idx]           = px[idx] + vel * delT;
+	pvelocitynew[idx]    = pvelocity[idx] + (acc - alpha*vel)*delT;
+	pTempNew[idx]        = pTemperature[idx] + tempRate * delT;
+	pSp_volNew[idx]      = pSp_vol[idx] + sp_vol_dt * delT;
+
+	double rho;
+	if(pvolume[idx] > 0.){
+	  rho = max(pmass[idx]/pvolume[idx],rho_frac_min*rho_init);
+	}
+	else{
+	  rho = rho_init;
+	}
+	pmassNew[idx]        = Max(pmass[idx]*(1.    - burnFraction),0.);
+	pvolumeNew[idx]      = pmassNew[idx]/rho;
+	if(pmassNew[idx] <= d_min_part_mass ||
+	   (rho_frac_min < 1.0 && pvelocitynew[idx].length() > d_max_vel)){
+	  delset->addParticle(idx);
+	}
+	    
+	thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
+	ke += .5*pmass[idx]*pvelocitynew[idx].length2();
+	CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
+	CMV += pvelocitynew[idx]*pmass[idx];
       }
 
       new_dw->deleteParticles(delset);      
@@ -2475,6 +2340,35 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // cout << "THERMAL ENERGY " << thermal_energy << endl;
   }
   
+}
+
+void 
+SerialMPM::setParticleDefaultWithTemp(constParticleVariable<double>& pvar,
+				      ParticleSubset* pset,
+				      DataWarehouse* new_dw,
+				      double val)
+{
+  ParticleVariable<double>  temp;
+  new_dw->allocateTemporary(temp,  pset);
+  ParticleSubset::iterator iter = pset->begin();
+  for(;iter != pset->end();iter++){
+    temp[*iter]=val;
+  }
+  pvar = temp; 
+}
+
+void 
+SerialMPM::setParticleDefault(ParticleVariable<double>& pvar,
+			      const VarLabel* label, 
+			      ParticleSubset* pset,
+			      DataWarehouse* new_dw,
+                              double val)
+{
+  new_dw->allocateAndPut(pvar, label, pset);
+  ParticleSubset::iterator iter = pset->begin();
+  for (; iter != pset->end(); iter++) {
+    pvar[*iter] = val;
+  }
 }
 
 void SerialMPM::setSharedState(SimulationStateP& ssp)
