@@ -1,0 +1,98 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+
+interface SparseRowMatrix extends SSIDL.Matrix {
+  //Methods from SSIDL.Matrix
+  bool is_dense();
+  bool is_sparse();
+  bool is_column();
+
+  Matrix transpose();
+  double get_val();
+  int get_row();
+  int get_col();
+
+  double get(in int a, in int b);
+  void put(in int r, in int c, in double val);
+
+  string type_name();
+
+  void zero();
+  int nrows();
+  int ncols();
+
+  /* TODO LATER:
+  void getRowNonzeros(in int r, inout array<int,1> idx, inout array<double,1> v);
+  */
+
+  void mult(inout ColumnMatrix x, inout ColumnMatrix b,
+            inout int flops, inout int memrefs,
+            in int beg, in int end, in int spVec);
+  int cg_solve(inout ColumnMatrix rhs, inout ColumnMatrix lhs,
+               inout double err, inout int niter,
+               inout int flops, inout int memrefs,
+               in double max_error, in int toomany);
+  int cg_solve(inout ColumnMatrix rhs, inout ColumnMatrix lhs);
+
+  int bicg_solve(inout ColumnMatrix rhs, inout ColumnMatrix lhs,
+                 inout double err, inout int niter,
+                 inout int flops, inout int memrefs,
+                 in double max_error, in int toomany);
+  int bicg_solve(inout ColumnMatrix rhs, inout ColumnMatrix lhs);
+
+  void mult_transpose(inout ColumnMatrix x, inout ColumnMatrix b,
+                      inout int flops, inout int memrefs,
+                      in int beg, in int end, in int spVec);
+
+  void print();
+
+  void scalar_multiply(in double s);
+
+  // Separate raw files.
+  void set_raw(in bool v);
+  bool get_raw();
+  void set_raw_filename( inout string f );
+  string get_raw_filename();
+  opaque get_d_object();
+  //EOF SCIRun.Matrix
+
+  /*
+  DenseMatrix dense();
+  ColumnMatrix column();
+  */
+
+  void add(in int row, in int col, in double val);
+
+  int getIdx(in int i, in int j);
+  int get_nnz();
+  
+  void solve(inout ColumnMatrix i);
+
+};
+
