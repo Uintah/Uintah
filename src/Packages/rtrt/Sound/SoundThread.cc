@@ -1,7 +1,10 @@
 #include <Packages/rtrt/Sound/SoundThread.h>
 
+#include <Packages/rtrt/Sound/Sound.h>
+
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Scene.h>
+#include <Packages/rtrt/Core/Gui.h>
 
 #include <Core/Math/MinMax.h>
 
@@ -14,8 +17,6 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include <Packages/rtrt/Sound/Sound.h> //just for testing
-
 using namespace rtrt;
 using namespace std;
 using namespace SCIRun;
@@ -26,8 +27,9 @@ static int portNum = 0;
 // of things will have to be fixed!
 const int SoundThread::numChannels_ = 2;
 
-SoundThread::SoundThread( const Camera * eyepoint, Scene * scene ) :
-  eyepoint_( eyepoint ), scene_( scene )
+SoundThread::SoundThread( const Camera * eyepoint, Scene * scene,
+			  Gui * gui ) :
+  eyepoint_( eyepoint ), scene_( scene ), gui_( gui )
 {
   ALpv  pv;
 
@@ -97,6 +99,8 @@ SoundThread::run()
     {
       soundQueue_[cnt]->activate();
     }
+
+  gui_->soundThreadNowActive();
 
   for(;;)
     {
