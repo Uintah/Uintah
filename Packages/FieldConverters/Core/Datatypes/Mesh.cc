@@ -399,7 +399,7 @@ Node* Node::clone()
   return new Node(*this);
 }
 
-int Mesh::unify(Element* not,
+int Mesh::unify(Element* not_,
 		const Array1<int>& n1, const Array1<int>& n2,
 		const Array1<int>& n3)
 {
@@ -415,7 +415,7 @@ int Mesh::unify(Element* not,
     int d3=n3[i3];
     if(d1==d2){
       if(d2==d3){
-	if(elems[d1] != not){
+	if(elems[d1] != not_){
 	  // Found it...
 	  return d1;
 	} else {
