@@ -2,16 +2,16 @@
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
-  
+
   Software distributed under the License is distributed on an "AS IS"
   basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
   License for the specific language governing rights and limitations under
   the License.
-  
+
   The Original Source Code is SCIRun, released March 12, 2001.
-  
+
   The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
   University of Utah. All Rights Reserved.
 */
 
@@ -42,7 +42,8 @@ namespace SCIRun {
 class Module;
 
 template<class T>
-struct SimplePortComm {
+struct SimplePortComm
+{
   SimplePortComm();
   SimplePortComm(const T&);
 
@@ -50,10 +51,12 @@ struct SimplePortComm {
   int have_data_;
 };
 
+
 template<class T> class SimpleOPort;
 
 template<class T>
-class SimpleIPort : public IPort {
+class SimpleIPort : public IPort
+{
 public:
   friend class SimpleOPort<T>;
   Mailbox<SimplePortComm<T>*> mailbox;
@@ -67,31 +70,36 @@ public:
   virtual void finish();
 
   int get(T&);
+
 private:
   int recvd_;
-  bool execution_started_;
 };
 
+
 template<class T>
-class SimpleOPort : public OPort {
+class SimpleOPort : public OPort
+{
 public:
   SimpleOPort(Module*, const string& name);
   virtual ~SimpleOPort();
 
   virtual void reset();
   virtual void finish();
-  virtual void detach(Connection *conn);
 
   void send(const T&);
   void send_intermediate(const T&);
-  void set_cache( bool cache = true ){
+  void set_cache( bool cache = true )
+  {
     cache_ = cache;
-    if( !cache )
+    if ( !cache )
+    {
       handle_ = 0;
+    }
   }
 
   virtual bool have_data();
   virtual void resend(Connection* conn);
+
 private:
   void do_send(const T&);
   void do_send_intermediate(const T&);
@@ -104,21 +112,22 @@ private:
 
 
 template<class T>
-SimpleIPort<T>::SimpleIPort(Module* module, 
+SimpleIPort<T>::SimpleIPort(Module* module,
 			    const string& portname)
   : IPort(module, port_type_, portname, port_color_),
-    mailbox("Port mailbox (SimpleIPort)", 2),
-    execution_started_(false)
+    mailbox("Port mailbox (SimpleIPort)", 2)
 {
 }
+
 
 template<class T>
 SimpleIPort<T>::~SimpleIPort()
 {
 }
 
+
 template<class T>
-SimpleOPort<T>::SimpleOPort(Module* module, 
+SimpleOPort<T>::SimpleOPort(Module* module,
 			    const string& portname)
   : OPort(module, SimpleIPort<T>::port_type_, portname,
 	  SimpleIPort<T>::port_color_),
@@ -128,70 +137,64 @@ SimpleOPort<T>::SimpleOPort(Module* module,
 {
 }
 
+
 template<class T>
 SimpleOPort<T>::~SimpleOPort()
 {
 }
 
+
 template<class T>
 void SimpleIPort<T>::reset()
 {
-  recvd_=0;
-  execution_started_ = true;
+  recvd_ = 0;
 }
 
+
 template<class T>
-void SimpleIPort<T>::finish()
+void
+SimpleIPort<T>::finish()
 {
-  if(!recvd_ && num_unblocked_connections() > 0) {
-    if (module->show_stats()) turn_on(Finishing);
+  if (!recvd_ && num_unblocked_connections() > 0)
+  {
+    if (module->show_stats()) { turn_on(Finishing); }
     SimplePortComm<T>* msg=mailbox.receive();
     delete msg;
-    execution_started_ = false;
     if (module->show_stats()) { turn_off(); }
   }
 }
 
+
 template<class T>
-void SimpleOPort<T>::reset()
+void
+SimpleOPort<T>::reset()
 {
   sent_something_ = false;
   handle_ = 0;
 }
 
+
 template<class T>
-void SimpleOPort<T>::finish()
+void
+SimpleOPort<T>::finish()
 {
-  if(!sent_something_ && num_unblocked_connections() > 0){
+  if (!sent_something_ && num_unblocked_connections() > 0)
+  {
     // Tell them that we didn't send anything...
     if (module->show_stats()) { turn_on(Finishing); }
-    for(int i=0;i<nconnections();i++) {
+    for (int i=0; i<nconnections(); i++)
+    {
       SimplePortComm<T>* msg = new SimplePortComm<T>();
       Connection* conn = connections[i];
-      if (! conn->is_blocked()) {
+      if (! conn->is_blocked())
+      {
 	((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
       }
     }
-    
-    if (module->show_stats())
-       turn_off();
+
+    if (module->show_stats()) { turn_off(); }
   }
 }
-
-template<class T>
-void SimpleOPort<T>::detach(Connection *conn) {
-  // Add the new message
-  SimplePortComm<T>* msg = new SimplePortComm<T>(0);
-  // Send it only if the connection isn't blocked,
-  // the oport doesn't have data yet,
-  // and the iport is waiting
-  if ((!conn->is_blocked()) && (!have_data()) && ((SimpleIPort<T>*)conn->iport)->execution_started_) {
-    ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
-  }
-  sent_something_ = true;
-  OPort::detach(conn);
-}
-
 
 //! Declare specialization for field ports.
 //! Field ports must only send const fields i.e. frozen fields.
@@ -200,29 +203,31 @@ template<>
 void SimpleOPort<FieldHandle>::send(const FieldHandle& data);
 
 template<class T>
-void SimpleOPort<T>::send(const T& data)
+void
+SimpleOPort<T>::send(const T& data)
 {
   do_send(data);
 }
 
+
 template<class T>
-void SimpleOPort<T>::do_send(const T& data)
+void
+SimpleOPort<T>::do_send(const T& data)
 {
-  if (cache_)
-    handle_ = data;
-  else
-    handle_ = 0;
+  handle_ = cache_ ? data : 0;
 
   if (num_unblocked_connections() == 0) { return; }
 
   // Change oport state and colors on screen.
   if (module->show_stats()) { turn_on(); }
 
-  for (int i = 0; i < nconnections(); i++) {
+  for (int i = 0; i < nconnections(); i++)
+  {
     // Add the new message.
     SimplePortComm<T>* msg = new SimplePortComm<T>(data);
     Connection* conn = connections[i];
-    if (! conn->is_blocked()) {
+    if (! conn->is_blocked())
+    {
       ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
     }
   }
@@ -230,35 +235,38 @@ void SimpleOPort<T>::do_send(const T& data)
 
   if (module->show_stats()) { turn_off(); }
 }
+
 
 template<>
 void SimpleOPort<FieldHandle>::send_intermediate(const FieldHandle& data);
 
 template<class T>
-void SimpleOPort<T>::send_intermediate(const T& data)
+void
+SimpleOPort<T>::send_intermediate(const T& data)
 {
   do_send_intermediate(data);
 }
 
-template<class T>
-void SimpleOPort<T>::do_send_intermediate(const T& data)
-{
-  if (cache_)
-    handle_ = data;
-  else
-    handle_ = 0;
 
-  if(num_unblocked_connections() == 0) { return; }
+template<class T>
+void
+SimpleOPort<T>::do_send_intermediate(const T& data)
+{
+  handle_ = cache_ ? data : 0;
+
+  if (num_unblocked_connections() == 0) { return; }
 
   if (module->show_stats()) { turn_on(); }
 
   module->request_multisend(this);
 
-  for(int i=0;i<nconnections();i++){
+  for (int i=0; i<nconnections(); i++)
+  {
     // Add the new message.
-    SimplePortComm<T>* msg=new SimplePortComm<T>(data);
+    SimplePortComm<T>* msg = new SimplePortComm<T>(data);
     Connection* conn = connections[i];
-    if (! conn->is_blocked()) {
+    if (! conn->is_blocked())
+    {
       ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
     }
   }
@@ -267,47 +275,54 @@ void SimpleOPort<T>::do_send_intermediate(const T& data)
   if (module->show_stats()) { turn_off(); }
 }
 
+
 template<class T>
-int SimpleIPort<T>::get(T& data)
+int
+SimpleIPort<T>::get(T& data)
 {
-  if(num_unblocked_connections()==0) { return 0; }
+  if (num_unblocked_connections()==0) { return 0; }
   if (module->show_stats()) { turn_on(); }
 
   // Wait for the data...
   SimplePortComm<T>* comm=mailbox.receive();
-  recvd_=1;
-  if(comm->have_data_){
-    data=comm->data_;
+  recvd_ = 1;
+  if (comm->have_data_)
+  {
+    data = comm->data_;
     delete comm;
-    if (module->show_stats())
-      turn_off();
+    if (module->show_stats()) { turn_off(); }
     return 1;
-  } else {
+  }
+  else
+  {
     delete comm;
-    if (module->show_stats())
-      turn_off();
+    if (module->show_stats()) { turn_off(); }
     return 0;
   }
 }
 
-template<class T>
-bool SimpleOPort<T>::have_data()
-{
-  if(handle_.get_rep())
-    return true;
-  else 
-    return false;
-}
 
 template<class T>
-void SimpleOPort<T>::resend(Connection* conn)
+bool
+SimpleOPort<T>::have_data()
+{
+  return handle_.get_rep();
+}
+
+
+template<class T>
+void
+SimpleOPort<T>::resend(Connection* conn)
 {
   if (module->show_stats()) { turn_on(); }
-  for(int i=0;i<nconnections();i++){
+  for (int i=0; i<nconnections(); i++)
+  {
     Connection* c = connections[i];
-    if (! c->is_blocked()) {
-      if(c == conn){
-	SimplePortComm<T>* msg=new SimplePortComm<T>(handle_);
+    if (! c->is_blocked())
+    {
+      if (c == conn)
+      {
+	SimplePortComm<T>* msg = new SimplePortComm<T>(handle_);
 	((SimpleIPort<T>*)c->iport)->mailbox.send(msg);
       }
     }
@@ -315,18 +330,21 @@ void SimpleOPort<T>::resend(Connection* conn)
   if (module->show_stats()) { turn_off(); }
 }
 
+
 template<class T>
-SimplePortComm<T>::SimplePortComm() : 
+SimplePortComm<T>::SimplePortComm() :
   have_data_(0)
 {
 }
 
+
 template<class T>
-SimplePortComm<T>::SimplePortComm(const T& data) : 
-  data_(data), 
+SimplePortComm<T>::SimplePortComm(const T& data) :
+  data_(data),
   have_data_(1)
 {
 }
+
 
 } // End namespace SCIRun
 
