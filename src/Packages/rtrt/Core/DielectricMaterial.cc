@@ -289,9 +289,9 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
 //	Color bg;
 //	cx->scene->get_bgcolor( ray.direction(), bg );
 	if(incoming)
-	  result += bg_out*(1-R);
+	  result += bg_out*(1-R)*.2;
 	else
-	  result += bg_in*(1-R);
+	  result += bg_in*(1-R)*.2;
       }
     }
   }
