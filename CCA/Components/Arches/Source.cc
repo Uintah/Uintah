@@ -702,7 +702,7 @@ Source::computeEnthalpyRadThinSrc(const ProcessorGroup*,
   IntVector idxHi = patch->getCellFORTHighIndex();
   double tref = 298; // warning, read it in
   fort_enthalpyradthinsrc(idxLo, idxHi, vars->scalarNonlinearSrc,
-			  constvars->temperature, constvars->absorption,
+			  vars->temperature, constvars->absorption,
 			  cellinfo->sew, cellinfo->sns, cellinfo->stb, tref);
 }
 
