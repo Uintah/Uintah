@@ -37,7 +37,7 @@ GeometryIPort::~GeometryIPort()
 
 GeometryOPort::GeometryOPort(Module* module, const clString& portname, int protocol)
 : OPort(module, Geometry_type, portname, Geometry_color, protocol),
-  outbox(0)
+  save_msgs(0), outbox(0)
 {
 }
 
@@ -77,9 +77,14 @@ void GeometryOPort::reset()
 void GeometryOPort::finish()
 {
     if(dirty){
-	turn_on(Finishing);
-	outbox->send(new GeometryComm(MessageTypes::GeometryFlush, portid));
-	turn_off();
+	GeometryComm* msg=new GeometryComm(MessageTypes::GeometryFlush, portid);
+	if(outbox){
+	    turn_on(Finishing);
+	    outbox->send(msg);
+	    turn_off();
+	} else {
+	    save_msg(msg);
+	}
     }
 }
 
@@ -88,7 +93,11 @@ GeomID GeometryOPort::addObj(GeomObj* obj, const clString& name,
 {
     turn_on();
     GeomID id=serial++;
-    outbox->send(new GeometryComm(portid, id, obj, name, lock));
+    GeometryComm* msg=new GeometryComm(portid, id, obj, name, lock);
+    if(outbox)
+	outbox->send(msg);
+    else
+	save_msg(msg);
     dirty=1;
     turn_off();
     return id;
@@ -97,7 +106,11 @@ GeomID GeometryOPort::addObj(GeomObj* obj, const clString& name,
 void GeometryOPort::delObj(GeomID id)
 {
     turn_on();
-    outbox->send(new GeometryComm(portid, id));
+    GeometryComm* msg=new GeometryComm(portid, id);
+    if(outbox)
+	outbox->send(msg);
+    else
+	save_msg(msg);
     dirty=1;
     turn_off();
 }
@@ -105,7 +118,11 @@ void GeometryOPort::delObj(GeomID id)
 void GeometryOPort::delAll()
 {
     turn_on();
-    outbox->send(new GeometryComm(MessageTypes::GeometryDelAll, portid));
+    GeometryComm* msg=new GeometryComm(MessageTypes::GeometryDelAll, portid);
+    if(outbox)
+	outbox->send(msg);
+    else
+	save_msg(msg);
     dirty=1;
     turn_off();
 }
@@ -113,7 +130,11 @@ void GeometryOPort::delAll()
 void GeometryOPort::flushViews()
 {
     turn_on();
-    outbox->send(new GeometryComm(MessageTypes::GeometryFlushViews, portid));
+    GeometryComm* msg=new GeometryComm(MessageTypes::GeometryFlushViews, portid);
+    if(outbox)
+	outbox->send(msg);
+    else
+	save_msg(msg);
     dirty=0;
     turn_off();
 }
@@ -121,6 +142,34 @@ void GeometryOPort::flushViews()
 int GeometryOPort::busy()
 {
     return *busy_bit;
+}
+
+void GeometryOPort::save_msg(GeometryComm* msg)
+{
+    if(save_msgs){
+	save_msgs_tail->next=msg;
+	save_msgs_tail=msg;
+    } else {
+	save_msgs=save_msgs_tail=msg;
+    }
+    cerr << "saving message: " << msg << endl;
+    msg->next=0;
+}
+
+void GeometryOPort::attach(Connection* c)
+{
+    OPort::attach(c);
+    reset();
+    turn_on();
+    GeometryComm* p=save_msgs;
+    while(p){
+	GeometryComm* next=p->next;
+	cerr << "sending message: " << p << endl;
+	outbox->send(p);
+	p=next;
+    }
+    save_msgs=0;
+    turn_off();
 }
 
 GeometryComm::GeometryComm(Mailbox<GeomReply>* reply)

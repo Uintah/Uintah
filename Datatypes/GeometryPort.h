@@ -20,6 +20,7 @@
 typedef int GeomID;
 class clString;
 class GeomObj;
+class GeometryComm;
 class MessageBase;
 class Mutex;
 
@@ -47,10 +48,15 @@ class GeometryOPort : public OPort {
     int* busy_bit;
     Mutex* lock;
 
+    GeometryComm* save_msgs;
+    GeometryComm* save_msgs_tail;
+    void save_msg(GeometryComm*);
+
     virtual void reset();
     virtual void finish();
 
     Mailbox<MessageBase*>* outbox;
+    virtual void attach(Connection*);
 public:
     GeometryOPort(Module*, const clString& name, int protocol);
     virtual ~GeometryOPort();
