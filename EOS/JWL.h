@@ -10,14 +10,17 @@ namespace Uintah {
 CLASS
    EquationOfState
    
-   Short description...
+   A version of the JWL equation of state, as described in
+   (for example) "Sideways plate push test for Detonating Solid Explosives"
+   Craig M. Tarver, et al, Propellants, Explosives, Pyrotechnics, 21,
+   238-246, 1996.
 
 GENERAL INFORMATION
 
    JWL.h
 
-   Steven G. Parker
-   Department of Computer Science
+   Jim Guilkey
+   Department of Mechanical Engineerng
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
@@ -25,13 +28,12 @@ GENERAL INFORMATION
    Copyright (C) 2000 SCI Group
 
 KEYWORDS
-   Equation_of_State
+   Equation_of_State JWL
 
 DESCRIPTION
    Long description...
   
 WARNING
-  
 ****************************************/
 
       class JWL : public EquationOfState {
