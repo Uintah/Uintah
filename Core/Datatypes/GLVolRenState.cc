@@ -121,6 +121,7 @@ GLVolRenState::loadColorMap(Brick& brick)
 void 
 GLVolRenState::loadTexture(Brick& brick)
 {
+#ifdef __sgi
   if( !brick.texName() || reload ) {
     if( !brick.texName() )
       glGenTextures(1, brick.texNameP());
@@ -158,6 +159,7 @@ GLVolRenState::loadTexture(Brick& brick)
   } else {
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
   }
+#endif
 }
 void 
 GLVolRenState::makeTextureMatrix( const Brick& brick)

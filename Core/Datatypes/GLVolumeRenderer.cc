@@ -122,8 +122,9 @@ GLVolumeRenderer::setup()
 {
 
 
-
+#ifdef __sgi
   glEnable(GL_TEXTURE_3D_EXT);
+#endif
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE); 
 
   if( cmap.get_rep() ) {
@@ -149,8 +150,8 @@ GLVolumeRenderer::cleanup()
 #ifdef __sgi
   if( cmap.get_rep() )
     glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
-#endif
   glDisable(GL_TEXTURE_3D_EXT);
+#endif
   // glEnable(GL_DEPTH_TEST);  
 }  
 
