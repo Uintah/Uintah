@@ -68,19 +68,21 @@ public:
 	 
   virtual void setGrid(const GridP&)=0;
 	 
+  virtual void allocate(ReductionVariableBase&, const VarLabel*) const = 0;
   virtual void get(ReductionVariableBase&, const VarLabel*) const = 0;
   virtual void put(const ReductionVariableBase&, const VarLabel*) = 0;
+  virtual void allocate(ParticleVariableBase&, const VarLabel*,
+			int matlIndex, const Region*, int numGhostCells) const = 0;
   virtual void get(ParticleVariableBase&, const VarLabel*,
 		   int matlIndex, const Region*, int numGhostCells) const = 0;
   virtual void put(const ParticleVariableBase&, const VarLabel*,
 		   int matlIndex, const Region*) = 0;
+  virtual void allocate(NCVariableBase&, const VarLabel*,
+		   int matlIndex, const Region*, int numGhostCells) const = 0;
   virtual void get(NCVariableBase&, const VarLabel*,
 		   int matlIndex, const Region*, int numGhostCells) const = 0;
   virtual void put(const NCVariableBase&, const VarLabel*,
 		   int matlIndex, const Region*) = 0;
-
-  virtual void allocate( NCVariableBase &, const VarLabel*,
-			 int matlIndex, const Region*, int numGhostCells );
 
 
 #if 0
@@ -175,6 +177,9 @@ private:
 
 //
 // $Log$
+// Revision 1.12  2000/04/24 15:17:02  sparker
+// Fixed unresolved symbols
+//
 // Revision 1.11  2000/04/21 20:31:25  dav
 // added some allocates
 //
