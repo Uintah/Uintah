@@ -45,6 +45,9 @@
       </port>
     </outputs>
   </io>
+  <gui>
+    <img>../Modules/Math/doc/LinAlgUnaryUI.jpg</img>
+  </gui>
   <testing>
   </testing>
 </component>

@@ -50,6 +50,9 @@
       </port>
     </outputs>
   </io>
+  <gui>
+    <img>../Modules/Math/doc/ErrorMetricUI.jpg</img>
+  </gui>
   <testing>
   </testing>
 </component>
