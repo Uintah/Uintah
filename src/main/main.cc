@@ -69,8 +69,8 @@ extern env_map scirunrc;             // contents of .scirunrc
 #error You must set SCICORETCL to the Core/Tcl path
 #endif
 
-#ifndef DEF_LOAD_PACK
-#error You must set a DEFAULT_PACKAGE_PATH or life is pretty dull
+#ifndef LOAD_PACKAGE
+#error You must set a LOAD_PACKAGE or life is pretty dull
 #endif
 
 #ifndef ITCL_WIDGETS
