@@ -49,8 +49,6 @@
 
 #include <Core/Datatypes/ImageMesh.h>
 
-#include <Packages/Insight/share/share.h>
-
 #include "itkVector.h"
 #include "itkRGBPixel.h"
 
@@ -58,7 +56,7 @@ namespace Insight {
   
 using namespace SCIRun;
   
-class InsightSHARE ImageToField : public Module {  
+class ImageToField : public Module {  
 public:
   ITKDatatypeIPort* inport1_;
   ITKDatatypeHandle inhandle1_;

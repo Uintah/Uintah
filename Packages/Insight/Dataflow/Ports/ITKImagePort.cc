@@ -40,7 +40,6 @@
  */
 
 #include <Insight/Dataflow/Ports/ITKImagePort.h>
-#include <Insight/share/share.h>
 #include <Core/Malloc/Allocator.h>
 
 namespace Insight {

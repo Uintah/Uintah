@@ -39,7 +39,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/share/share.h>
 
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 
@@ -49,7 +48,7 @@ namespace Insight {
 
 using namespace SCIRun;
 
-class PSECORESHARE ExtractImageFilter : public Module {
+class ExtractImageFilter : public Module {
 public:
   ExtractImageFilter(GuiContext*);
 

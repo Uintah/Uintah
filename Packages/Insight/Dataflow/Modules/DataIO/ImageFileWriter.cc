@@ -39,7 +39,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Packages/Insight/share/share.h>
 
 #include <Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include "itkImageFileWriter.h"
@@ -52,7 +51,7 @@ namespace Insight {
 
 using namespace SCIRun;
 
-class InsightSHARE ImageFileWriter : public Module {
+class ImageFileWriter : public Module {
 public:
 
   //! GUI variables

@@ -39,8 +39,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/share/share.h>
-
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 
 #include <itkVectorCastImageFilter.h>
@@ -52,7 +50,7 @@ namespace Insight {
 
 using namespace SCIRun;
 
-class PSECORESHARE RGBPixelToVector : public Module {
+class RGBPixelToVector : public Module {
 public:
   // Declare Ports
   ITKDatatypeIPort* inport_InputImage_;

@@ -39,7 +39,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/share/share.h>
 #include <Core/Containers/StringUtil.h>
 
 #include <Insight/Dataflow/Ports/ITKDatatypePort.h>
@@ -48,7 +47,7 @@ namespace Insight {
 
 using namespace SCIRun;
 
-class PSECORESHARE ChooseImage : public Module {
+class ChooseImage : public Module {
 private:
   GuiInt port_index_;
   GuiInt usefirstvalid_;
