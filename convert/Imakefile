@@ -1,0 +1,119 @@
+
+#include <config/sci.cf>
+
+SEG_TARGET = SegToCS
+SEG_SRCS = SegToCS.cc
+SEG_OBJS = SegToCS.o
+SEG_LIBS = \
+	$(TOP)/Datatypes/libDatatypes.a \
+	$(TOP)/Geometry/libGeometry.a \
+	$(TOP)/Multitask/libMultitask.a \
+	$(TOP)/Classlib/libClasslib.a \
+	$(TOP)/Malloc/libMalloc.a
+
+SEG_LDFLAGS = SCI_LM
+SCIProgramTarget2($(SEG_TARGET), $(SEG_OBJS), $(SEG_LIBS), $(SEG_LDFLAGS))
+
+JAS_TARGET = SurfToJAS
+JAS_SRCS = SurfToJAS.cc
+JAS_OBJS = SurfToJAS.o
+JAS_LIBS = \
+	$(TOP)/Datatypes/TriSurface.o \
+	$(TOP)/Datatypes/libDatatypes.a \
+	$(TOP)/Geometry/libGeometry.a \
+	$(TOP)/Multitask/libMultitask.a \
+	$(TOP)/Classlib/libClasslib.a \
+	$(TOP)/Malloc/libMalloc.a
+
+JAS_LDFLAGS = SCI_LM
+SCIProgramTarget2($(JAS_TARGET), $(JAS_OBJS), $(JAS_LIBS), $(JAS_LDFLAGS))
+
+SJAS_TARGET = JAStoSurf
+SJAS_SRCS = JAStoSurf.cc
+SJAS_OBJS = JAStoSurf.o
+SJAS_LIBS = \
+	$(TOP)/Datatypes/TriSurface.o \
+	$(TOP)/Datatypes/libDatatypes.a \
+	$(TOP)/Geometry/libGeometry.a \
+	$(TOP)/Multitask/libMultitask.a \
+	$(TOP)/Classlib/libClasslib.a \
+	$(TOP)/Malloc/libMalloc.a
+
+SJAS_LDFLAGS = SCI_LM
+SCIProgramTarget2($(SJAS_TARGET), $(SJAS_OBJS), $(SJAS_LIBS), $(SJAS_LDFLAGS))
+
+IVES_TARGET = ScFldToIves
+IVES_SRCS = ScFldToIves.cc
+IVES_OBJS = ScFldToIves.o
+IVES_LIBS = \
+	$(TOP)/Datatypes/ScalarField.o \
+	$(TOP)/Datatypes/ScalarFieldRG.o \
+	$(TOP)/Datatypes/libDatatypes.a \
+	$(TOP)/Geometry/libGeometry.a \
+	$(TOP)/Multitask/libMultitask.a \
+	$(TOP)/Classlib/libClasslib.a \
+	$(TOP)/Malloc/libMalloc.a
+
+IVES_LDFLAGS = SCI_LM
+SCIProgramTarget2($(IVES_TARGET), $(IVES_OBJS), $(IVES_LIBS), $(IVES_LDFLAGS))
+
+VP_TARGET = VPtoTriSurf
+VP_SRCS = VPtoTriSurf.cc
+VP_OBJS = VPtoTriSurf.o
+VP_LIBS = \
+	$(TOP)/Datatypes/libDatatypes.a \
+	$(TOP)/Geometry/libGeometry.a \
+	$(TOP)/Multitask/libMultitask.a \
+	$(TOP)/Classlib/libClasslib.a \
+	$(TOP)/Math/libMath.a \
+	$(TOP)/Malloc/libMalloc.a
+
+VP_LDFLAGS = SCI_LM
+SCIProgramTarget2($(VP_TARGET), $(VP_OBJS), $(VP_LIBS), $(VP_LDFLAGS))
+
+SC_TARGET = GenScalp
+SC_SRCS = GenScalp.cc
+SC_OBJS = GenScalp.o
+SC_LIBS = \
+	Classlib/libClasslib.a \
+	Multitask/libMultitask.a \
+	Classlib/libClasslib.a \
+	Math/libMath.a
+
+SC_LDFLAGS = SCI_LM
+SCIProgramTarget2($(SC_TARGET), $(SC_OBJS), $(SC_LIBS), $(SC_LDFLAGS))
+
+MESH_TARGET = ConvMesh
+MESH_SRCS = ConvMesh.cc
+MESH_OBJS = ConvMesh.o
+MESH_LIBS = \
+	$(TOP)/Datatypes/libDatatypes.a \
+	$(TOP)/Classlib/libClasslib.a \
+	$(TOP)/Geometry/libGeometry.a \
+	$(TOP)/Multitask/libMultitask.a \
+	$(TOP)/Classlib/libClasslib.a \
+	$(TOP)/Math/libMath.a \
+	$(TOP)/Malloc/libMalloc.a
+
+MESH_LDFLAGS = SCI_LM
+SCIProgramTarget2($(MESH_TARGET), $(MESH_OBJS), $(MESH_LIBS), $(MESH_LDFLAGS))
+
+JASUG_TARGET = JAStoUG
+JASUG_SRCS = JAStoUG.cc
+JASUG_OBJS = JAStoUG.o
+JASUG_LIBS = \
+	$(TOP)/Datatypes/libDatatypes.a \
+	$(TOP)/Classlib/libClasslib.a \
+	$(TOP)/Geometry/libGeometry.a \
+	$(TOP)/Multitask/libMultitask.a \
+	$(TOP)/Classlib/libClasslib.a \
+	$(TOP)/Math/libMath.a \
+	$(TOP)/Malloc/libMalloc.a
+
+JASUG_LDFLAGS = SCI_LM
+SCIProgramTarget2($(JASUG_TARGET), $(JASUG_OBJS), $(JASUG_LIBS), $(JASUG_LDFLAGS))
+
+SRCS = $(SEG_SRCS) $(JAS_SRCS) $(SC_SRCS) $(MESH_SRCS) $(VP_SRCS) \
+	$(IVES_SRCS) $(JASUG_SRCS) $(SJAS_SRCS)
+SCIDependTarget($(SRCS))
+
