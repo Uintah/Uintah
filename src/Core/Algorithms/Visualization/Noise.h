@@ -107,7 +107,7 @@ void Noise<Tesselator>::set_field( Field *f )
     if ( !field->get( "spanspace", space_ ) ) {
       space_ = scinew SpanSpace<value_type, cell_index_type>;
       space_->init( field );
-      field->store( "spanspace", space_ );
+      field->store( "spanspace", space_, true );
     }
   }
 }
