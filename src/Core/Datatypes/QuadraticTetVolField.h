@@ -94,7 +94,7 @@ QuadraticTetVolField<T>::create_from(const TetVolField<T> &tv)
   mesh_handle_type mh(m);
   QuadraticTetVolField<T> *rval = scinew QuadraticTetVolField(mh, 
 							      tv.data_at());
- 
+  rval->fdata()=tv.fdata();
   PropertyManager *pm = rval;
   *pm = tv;
   rval->freeze();
