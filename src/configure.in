@@ -148,7 +148,7 @@ case $host in
            fi
 	   TIME_IMPL=Time_irix.cc
 	   TRACEBACK_LIB=-lexc
-	   IMAGE_LIBS ="-lifl -lcl"
+	   IMAGE_LIBS ="-lifl"
            ;;
   *-linux-gnu)
      AC_PROG_CC
@@ -177,7 +177,7 @@ AC_SUBST(PLATFORM_LDFLAGS)
 AC_SUBST(NEED_SONAME)
 AC_SUBST(SSTREAM_COMPAT)
 AC_SUBST(TRACEBACK_LIB)
-
+AC_SUBST(IMAGE_LIBS)
 ##-- Part II thread configuration --------------------------------------------
 
 if test "$threads" = "unknown"; then
@@ -571,6 +571,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.55  2000/06/08 22:29:51  kuzimmer
+# fixed an error in IMAGE_LIBS
+#
 # Revision 1.54  2000/06/08 20:32:48  kuzimmer
 #  modified so that linux will compile without SGI specific image and compression libraries
 #
