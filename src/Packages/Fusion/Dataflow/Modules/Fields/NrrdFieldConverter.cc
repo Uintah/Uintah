@@ -118,9 +118,11 @@ NrrdFieldConverter::execute(){
 	// Multiple nrrds
 	vector< string > dataset;
 	nHandle->get_tuple_indecies(dataset);
+
+	const unsigned int nrrdDim = nHandle->nrrd->dim;
 	
-	int min[nHandle->nrrd->dim];
-	int max[nHandle->nrrd->dim];
+	int *min = scinew int[nrrdDim];
+	int *max = scinew int[nrrdDim];
 
 	// Keep the same dims except for the tuple axis.
 	for( int j=1; j<nHandle->nrrd->dim; j++) {
@@ -165,6 +167,9 @@ NrrdFieldConverter::execute(){
 
 	  nHandles.push_back( handle );
 	}
+
+	delete min;
+	delete max;
       }
     } else if( pi != range.second ) {
       error( "No handle or representation" );
