@@ -11,6 +11,9 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/VolumeVis.cc \
 	$(SRCDIR)/GridTris.cc \
 	$(SRCDIR)/VolumeVisDpy.cc \
+	$(SRCDIR)/Volvis2DDpy.cc \
+	$(SRCDIR)/shape.cc \
+	$(SRCDIR)/widget.cc \
 	$(SRCDIR)/DpyBase.cc \
 	$(SRCDIR)/Dpy.cc \
 	$(SRCDIR)/Scene.cc \

@@ -64,9 +64,9 @@ int DpyBase::open_display(Window parent, bool needevents) {
   //     : "sb, max rgb" - single buffered, max color depth for rgb
   char* criteria;
   if (window_mode & BufferModeMask == DoubleBuffered)
-    criteria = strdup("db, max rgb");
+    criteria = strdup("db, max rgba");
   else
-    criteria = strdup("sb, max rgb");
+    criteria = strdup("sb, max rgba");
     
   if(!visPixelFormat(criteria)){
     cerr << "Error setting pixel format for visinfo\n";
