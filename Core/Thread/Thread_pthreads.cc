@@ -98,6 +98,8 @@ struct Thread_private {
 };
 }
 
+static const char* bstack_init="Unused block stack entry";
+
 using SCIRun::Thread_private;
 
 static Thread_private* active[MAXTHREADS];
@@ -292,6 +294,8 @@ Thread::os_start(bool stopped)
 			  +strerror(errno));
     priv_->state=STARTUP;
     priv_->bstacksize=0;
+    for(int i=0;i<MAXBSTACK;i++)
+	priv_->blockstack[i]=bstack_init;
     
     priv_->thread=this;
     priv_->threadid=0;
@@ -572,6 +576,8 @@ Thread::initialize()
   mainthread->priv_->thread=mainthread;
   mainthread->priv_->state=RUNNING;
   mainthread->priv_->bstacksize=0;
+  for(int i=0;i<MAXBSTACK;i++)
+      mainthread->priv_->blockstack[i]=bstack_init;
   if(pthread_setspecific(thread_key, mainthread) != 0)
     throw ThreadError(std::string("pthread_setspecific failed")
 		      +strerror(errno));
@@ -638,7 +644,8 @@ Mutex::~Mutex()
 	throw ThreadError(std::string("pthread_mutex_destroy: ")
 			  +strerror(errno));
   }
-    delete priv_;
+  delete priv_;
+  priv_=0;
 }
 
 void
@@ -659,18 +666,18 @@ Mutex::lock()
     int oldstate=-1;
     Thread_private* p=0;
     if(t){
-				p=t->priv_;
-				oldstate=Thread::push_bstack(p, Thread::BLOCK_MUTEX, name_);
+	p=t->priv_;
+	oldstate=Thread::push_bstack(p, Thread::BLOCK_MUTEX, name_);
     }
     int status = pthread_mutex_lock(&priv_->mutex);
     if(status != 0){
-				fprintf(stderr, "lock failed, status=%d (%s)\n", status, strerror(status));
-				throw ThreadError(std::string("pthread_mutex_lock: ")
-													+strerror(status));
-		}
+	fprintf(stderr, "lock failed, status=%d (%s)\n", status, strerror(status));
+	throw ThreadError(std::string("pthread_mutex_lock: ")
+			  +strerror(status));
+    }
 		
     if(t)
-				Thread::pop_bstack(p, oldstate);
+	Thread::pop_bstack(p, oldstate);
 }
 
 bool
@@ -715,10 +722,11 @@ RecursiveMutex::RecursiveMutex(const char* name)
 RecursiveMutex::~RecursiveMutex()
 {
   pthread_mutex_unlock(&priv_->mutex);
-    if(pthread_mutex_destroy(&priv_->mutex) != 0)
-	throw ThreadError(std::string("pthread_mutex_destroy: ")
-			  +strerror(errno));
-    delete priv_;
+  if(pthread_mutex_destroy(&priv_->mutex) != 0)
+      throw ThreadError(std::string("pthread_mutex_destroy: ")
+			+strerror(errno));
+  delete priv_;
+  priv_=0;
 }
 
 void
@@ -770,6 +778,7 @@ Semaphore::~Semaphore()
 		      +strerror(errno));
   
   delete priv_;
+  priv_=0;
 }
 
 void
@@ -830,6 +839,7 @@ ConditionVariable::~ConditionVariable()
     throw ThreadError(std::string("pthread_cond_destroy: ")
 		      +strerror(errno));
   delete priv_;
+  priv_=0;
 }
 
 void

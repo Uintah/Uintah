@@ -99,9 +99,10 @@ Mutex::Mutex(const char* name)
 
 Mutex::~Mutex()
 {
-	CloseHandle(priv_->lock);
-	delete[] (char*)name_;
-	delete priv_;
+    CloseHandle(priv_->lock);
+    delete[] (char*)name_;
+    delete priv_;
+    priv_=0;
 }
 
 void Mutex::lock()
@@ -152,9 +153,10 @@ Semaphore::Semaphore(const char* name,int count)
 
 Semaphore::~Semaphore()
 {
-	CloseHandle(priv_->hSema);
-	delete[] (char*)name_;
-	delete priv_;
+    CloseHandle(priv_->hSema);
+    delete[] (char*)name_;
+    delete priv_;
+    priv_=0;
 }
 
 void Semaphore::down(int dec)

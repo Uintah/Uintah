@@ -958,6 +958,7 @@ Barrier::~Barrier()
     }
   }
   delete priv_;
+  priv_=0;
 }
 
 void
@@ -1052,6 +1053,7 @@ AtomicCounter::~AtomicCounter()
     //	atomic_free_variable(reservoir, (atomic_var_t*)priv_);
   } else {
     delete priv_;
+    priv_=0;
   }
 }
 
@@ -1179,6 +1181,7 @@ ConditionVariable::~ConditionVariable()
       usfreesema(priv_->semaphore, arena);
   }
   delete priv_;
+  priv_=0;
 }
 
 void

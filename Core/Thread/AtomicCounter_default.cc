@@ -67,6 +67,7 @@ AtomicCounter::AtomicCounter(const char* name, int value)
 AtomicCounter::~AtomicCounter()
 {
     delete priv_;
+    priv_=0;
 }
 
 AtomicCounter::operator int() const
