@@ -5,9 +5,12 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Barrier.h>
+#include <Core/Thread/Thread.h>
 
 #include <Packages/rtrt/Core/Scene.h> // for ShadowType
 #include <Packages/rtrt/Core/DynamicInstance.h>
+
+#include <vector>
 
 #include <X11/Xlib.h>
 
@@ -16,6 +19,9 @@ namespace rtrt {
 using SCIRun::Barrier;
 using SCIRun::Mutex;
 using SCIRun::Runnable;
+using SCIRun::Thread;
+
+using std::vector;
 
 //class Barrier;
 //class Mutex;
@@ -57,6 +63,9 @@ class Dpy : public Runnable {
 
   bool       turnOnTransmissionMode_;
 
+  int        numThreadsRequested_;
+  bool       changeNumThreads_;
+
   Camera   * guiCam_;
   Stealth  * objectStealth_;
 
@@ -71,13 +80,18 @@ class Dpy : public Runnable {
   char     * criteria1;
   char     * criteria2;
   Barrier  * barrier;
+  Barrier  * addSubThreads_;
   int        nworkers;
+  int        pp_size_;
+  int        scratchsize_;
   bool       bench;
-  Worker  ** workers;
+
   Stats    * drawstats[2];
   Counters * counters;
   int        ncounters;
   int        c0, c1;
+
+  vector<Worker*> workers_;
 
   PerProcessorContext* ppc;
 
@@ -102,8 +116,9 @@ public:
       float xScale,float yScale, bool display_frames, 
       int pp_size, int scratchsize, int frameless=0);
   virtual ~Dpy();
+
   virtual void run();
-  Barrier* get_barrier();
+          void get_barriers(Barrier *& mainBarrier, Barrier *& addSubThreads);
 
   const Camera * getGuiCam() { return guiCam_; }
 

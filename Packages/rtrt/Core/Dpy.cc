@@ -163,7 +163,9 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
     showLights_( false ), lightsShowing_( false ),
     turnOffAllLights_( false ), turnOnAllLights_( false ),
     turnOnLight_( false ), turnOffLight_( false ),
-    attachedObject_(NULL), turnOnTransmissionMode_(false)
+    attachedObject_(NULL), turnOnTransmissionMode_(false), 
+    numThreadsRequested_(nworkers), changeNumThreads_(false),
+    pp_size_(pp_size), scratchsize_(scratchsize)
 {
   ppc = new PerProcessorContext( pp_size, scratchsize );
 
@@ -174,9 +176,9 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
       else
 	objectRotationMatrix_[i][j] = 0;
 
-  //  barrier=new Barrier("Frame end", nworkers+1);
-  barrier=new Barrier("Frame end");
-  workers=new Worker*[nworkers];
+  barrier        = new Barrier("Frame end");
+  addSubThreads_ = new Barrier("Change Number of Threads");
+
   drawstats[0]=new Stats(1000);
   drawstats[1]=new Stats(1000);
   priv = new DpyPrivate;
@@ -185,6 +187,8 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
   //priv->waitDisplay->lock();
 
   priv->followPath = false;
+
+  workers_.resize( nworkers );
 
   guiCam_ = new Camera;
 
@@ -212,9 +216,11 @@ Dpy::~Dpy()
   delete objectStealth_;
 }
 
-void Dpy::register_worker(int i, Worker* worker)
+void
+Dpy::register_worker(int i, Worker* worker)
 {
-  workers[i]=worker;
+  cout << "registering worker " << i << "-" << worker << "\n";
+  workers_[i] = worker;
 }
 
 int Dpy::get_num_procs() {
@@ -368,6 +374,36 @@ Dpy::checkGuiFlags()
     changed=true;
     priv->exposed=false;
   }
+
+  if( priv->showing_scene == 0 )
+    {
+      // Only create new threads if showing_scene is 0.  This will
+      // create them in sync with the Dpy thread.
+      if( nworkers != numThreadsRequested_ ) {
+
+	changeNumThreads_ = true;
+	for( int cnt = 0; cnt < nworkers; cnt++ ){ // Tell all workers sync up
+	  workers_[cnt]->syncForNumThreadChange( nworkers );
+	}
+
+	if( nworkers > numThreadsRequested_ ) {
+
+	  int numToRemove = nworkers - numThreadsRequested_;
+
+	  for( int cnt = 1; cnt <= numToRemove; cnt++ )
+	    {
+	      Worker * worker = workers_[ nworkers - cnt ];
+	      workers_.pop_back();
+	      cout << "worker " << nworkers - cnt << " told to stop!\n";
+	      // Tell the worker to stop.
+	      workers_[nworkers-cnt]->syncForNumThreadChange( nworkers, true );
+	    }
+	  // remove excess threads
+	  cout << "done removing threads\n";
+	}
+      }
+    } // end if showing_scene == 0 (thread number change code)
+
   return changed;
 }
 
@@ -380,17 +416,50 @@ Dpy::renderFrameless() {
 void
 Dpy::renderFrame() {
 
-  bool  & stereo= priv->stereo;  
-  int   & showing_scene= priv->showing_scene;
-  int     counter = 1;
+  bool  & stereo        = priv->stereo;  
+  int   & showing_scene = priv->showing_scene;
+  int     counter       = 1;
 
   frame++;
     
+  // If we need to change the number of worker threads:
+  if( changeNumThreads_ ) {
+    cout << "changeNumThreads\n";
+    int oldNumWorkers = nworkers;
+    nworkers = numThreadsRequested_;
+
+    if( oldNumWorkers < numThreadsRequested_ ) { // Create more workers
+      int numNeeded     = numThreadsRequested_ - oldNumWorkers;
+      int stopAt        = oldNumWorkers + numNeeded;
+
+      workers_.resize( numThreadsRequested_ );
+      for( int cnt = oldNumWorkers; cnt < stopAt; cnt++ ) {
+	char buf[100];
+	sprintf(buf, "worker %d", cnt);
+	Worker * worker = new Worker(this, scene, cnt,
+				     pp_size_, scratchsize_,
+				     ncounters, c0, c1);
+
+	cout << "created worker: " << cnt << ", " << worker << "\n";
+	Thread * thread = new Thread( worker, buf);
+	thread->detach();
+      }
+
+      //// THIS IS FOR DEBUGGING:
+      //cout << "workers are:\n";
+      //for( int cnt = 0; cnt < numThreadsRequested_; cnt++ )
+      //{
+      //cout << "worker " << cnt << ": " << workers_[cnt] << "\n";
+      //}
+    }
+    cout << "sync with workers for change: " << oldNumWorkers+1 << "\n";
+    addSubThreads_->wait( oldNumWorkers + 1 );
+    changeNumThreads_ = false;
+  }
+
   barrier->wait(nworkers+1);
 
   drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(),Color(1,0,0));
-
-  scene->refill_work(rendering_scene, nworkers);
 
   bool changed = true;
 
@@ -399,6 +468,8 @@ Dpy::renderFrame() {
   if( *cam1 != *guiCam_ ){ *cam1 = *guiCam_; }
 
   changed = checkGuiFlags();
+
+  scene->refill_work(rendering_scene, numThreadsRequested_);
 
   if(!changed && !scene->no_aa){
     double x1, x2, w;
@@ -439,7 +510,7 @@ Dpy::renderFrame() {
   counter--;
 
   // Wait until the Gui (main) thread has displayed this image...
-  //priv->waitDisplay->lock();
+  // priv->waitDisplay->lock();
 
   if( displayedImage->get_xres() != priv->xres ||
       displayedImage->get_yres() != priv->yres ) {
@@ -465,13 +536,13 @@ Dpy::renderFrame() {
   if(ncounters){
     fprintf(stderr, "%2d: %12lld", c0, counters->count0());	
     for(int i=0;i<nworkers;i++){
-      fprintf(stderr, "%12lld", workers[i]->get_counters()->count0());
+      fprintf(stderr, "%12lld", workers_[i]->get_counters()->count0());
     }
     fprintf(stderr, "\n");
     if(ncounters>1){
       fprintf(stderr, "%2d: %12lld", c1, counters->count1());	
       for(int i=0;i<nworkers;i++){
-	fprintf(stderr, "%12lld", workers[i]->get_counters()->count1());
+	fprintf(stderr, "%12lld", workers_[i]->get_counters()->count1());
       }
       fprintf(stderr, "\n\n");
     }
@@ -530,9 +601,10 @@ Dpy::renderFrame() {
   }
 } // end renderFrame()
 
-Barrier*
-Dpy::get_barrier()
+void
+Dpy::get_barriers( Barrier *& mainBarrier, Barrier *& addSubThreads )
 {
-  return barrier;
+  mainBarrier   = barrier;
+  addSubThreads = addSubThreads_;
 }
 
