@@ -802,7 +802,7 @@ HexVolMesh::compute_grid()
   // Cubed root of number of cells to get a subdivision ballpark.
   const double one_third = 1.L/3.L;
   Cell::size_type csize;  size(csize);
-  const int s = (int)ceil(pow((double)csize , one_third));
+  const int s = (int)ceil(pow((double)csize , one_third)) + 2;
   const double cell_epsilon = bb.diagonal().length() * 0.1 / s;
 
   LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
