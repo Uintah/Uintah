@@ -28,43 +28,18 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<!-- The following templates override those found in docbook.xsl and
-     docbook-chunk.xsl --> 
+<!-- Customize generated text for xrefs -->
 
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
-
-  <!-- Include xref gen text customizations. -->
-  <xsl:param name="local.l10n.xml" select="document('srgentext.xml')"/>
-
-  <!-- treetop is relative path to top of sr tree -->
-  <xsl:param name="treetop"/>
-
-  <!-- Include customizations of qandaset -->
-  <xsl:include href="srqandaset.xsl"/>
-
-  <!-- Load javascript tools -->
-  <xsl:template name="user.head.content">
-    <script type="text/javascript">
-      <xsl:attribute name="src">
-	<xsl:value-of select="$treetop"/>/doc/Utilities/HTML/tools.js<xsl:text/>
-      </xsl:attribute>
-    </script>
-    <script type="text/javascript">var doc = new DocBookDocument();</script>
-  </xsl:template>
-
-  <!-- Generate page "pre-content" -->
-  <xsl:template name="user.header.content">
-    <script type="text/javascript">doc.preContent();</script>
-  </xsl:template>
-
-  <!-- Generate page "post-content" -->
-  <xsl:template name="user.footer.content">
-    <script type="text/javascript">doc.postContent(); </script>
-  </xsl:template>
-
-  <!-- Change type from a 'charseq' to a 'monoseq' -->
-  <xsl:template match="type">
-    <xsl:call-template name="inline.monoseq"/>
-  </xsl:template>
-
-</xsl:stylesheet>
+<l:i18n xmlns:l="http://docbook.sourceforge.net/xmlns/l10n/1.0">
+  <l:l10n language="en">
+    <l:context name="xref">
+      <l:template name="sect1" text="&#8220;%t&#8221;"/>
+      <l:template name="sect2" text="&#8220;%t&#8221;"/>
+      <l:template name="sect3" text="&#8220;%t&#8221;"/>
+      <l:template name="sect4" text="&#8220;%t&#8221;"/>
+      <l:template name="sect5" text="&#8220;%t&#8221;"/>
+      <l:template name="section" text="&#8220;%t&#8221;"/>
+      <l:template name="simplesect" text="&#8220;%t&#8221;"/>
+    </l:context>
+  </l:l10n>
+</l:i18n>
