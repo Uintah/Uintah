@@ -27,7 +27,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Math \
 	Core/Exceptions Core/Thread \
 	Core/Geometry Dataflow/XMLUtil \
-	Packages/Uintah/CCA/Components/ICE
+	Packages/Uintah/CCA/Components/HETransformation
 
 
 LIBS := $(XML_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) -lm
