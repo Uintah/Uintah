@@ -139,7 +139,7 @@ void    ICE::printVector(const Patch* patch, int include_GC,
 /* 
  ======================================================================*
  Function:  printData_FC--
- Purpose:  Print right face
+ Purpose:  Print left face
 _______________________________________________________________________ */
 void    ICE::printData_FC(const Patch* patch, int include_GC,
         char    message1[],             /* message1                     */
@@ -160,9 +160,9 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     low   = patch->getInteriorCellLowIndex();
     high  = patch->getInteriorCellHighIndex();
   }
-  
   for(int k = low.z(); k < high.z(); k++)  {
     for(int j = low.y(); j < high.y(); j++) {
+    //for(int j = high.y()-1; j >= low.y(); j--) {
       for(int i = low.x(); i < high.x(); i++) {
 	IntVector idx(i, j, k);
 	fprintf(stderr,"[%d,%d,%d]~ %10.9f  ",
@@ -179,7 +179,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
 /* 
  ======================================================================*
  Function:  printData_FC--
- Purpose:  Print to stderr a cell-centered, single material
+ Purpose:   Prints bottom Face
 _______________________________________________________________________ */
 void    ICE::printData_FC(const Patch* patch, int include_GC,
         char    message1[],             /* message1                     */
@@ -203,6 +203,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
   
   for(int k = low.z(); k < high.z(); k++)  {
     for(int j = low.y(); j < high.y(); j++) {
+    //for(int j = high.y()-1; j >= low.y(); j--) {
       for(int i = low.x(); i < high.x(); i++) {
 	IntVector idx(i, j, k);
 	fprintf(stderr,"[%d,%d,%d]~ %10.9f  ",
@@ -220,7 +221,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
 /* 
  ======================================================================*
  Function:  printData_FC--
- Purpose:  Print to stderr a cell-centered, single material
+ Purpose:  Piints back face
 _______________________________________________________________________ */
 void    ICE::printData_FC(const Patch* patch, int include_GC,
         char    message1[],             /* message1                     */
@@ -241,9 +242,10 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     low   = patch->getInteriorCellLowIndex();
     high  = patch->getInteriorCellHighIndex();
   }
-  
+
   for(int k = low.z(); k < high.z(); k++)  {
     for(int j = low.y(); j < high.y(); j++) {
+    //for(int j = high.y()-1; j >= low.y(); j--) {
       for(int i = low.x(); i < high.x(); i++) {
 	IntVector idx(i, j, k);
 	fprintf(stderr,"[%d,%d,%d]~ %10.9f  ",
