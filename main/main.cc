@@ -246,7 +246,7 @@ main( int argc, char *argv[], char **environment) {
     // wait for the main window to display before continuing the startup.
     // if loading an app, don't wait    
     gui->execute("wm deiconify .");
-    gui->execute("tkwait visibility .");
+    gui->execute("tkwait visibility $minicanvas");
   } else {
     // set that we are loading an app and set the session file if provided
     if((startnetno + 1) < argc) {
