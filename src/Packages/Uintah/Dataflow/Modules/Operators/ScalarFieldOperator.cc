@@ -21,7 +21,8 @@ ScalarFieldOperator::ScalarFieldOperator(GuiContext* ctx)
 {
 }
   
-void ScalarFieldOperator::execute(void) {
+void ScalarFieldOperator::execute(void) 
+{
   //  tcl_status.set("Calling InPlaneEigenEvaluator!"); 
   in = (FieldIPort *) get_iport("Scalar Field");
   sfout =  (FieldOPort *) get_oport("Scalar Field");
@@ -29,7 +30,7 @@ void ScalarFieldOperator::execute(void) {
   FieldHandle hTF;
   
   if(!in->get(hTF)){
-    std::cerr<<"Didn't get a handle\n";
+    std::cerr<<"ScalarFieldOperator::execute(void) Didn't get a handle\n";
     return;
   } else if ( hTF->get_type_name(1) != "double" &&
 	      hTF->get_type_name(1) != "float" &&

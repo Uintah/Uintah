@@ -25,7 +25,8 @@ ScalarFieldAverage::ScalarFieldAverage(GuiContext* ctx)
 {
 }
   
-void ScalarFieldAverage::execute(void) {
+void ScalarFieldAverage::execute(void) 
+{
   //  tcl_status.set("Calling InPlaneEigenEvaluator!"); 
   in = (FieldIPort *) get_iport("Scalar Field");
 
@@ -34,7 +35,7 @@ void ScalarFieldAverage::execute(void) {
   FieldHandle hTF;
   
   if(!in->get(hTF)){
-    error("Didn't get a handle.");
+    error("ScalarFieldAverage::execute(void) Didn't get a handle.");
     return;
   } else if ( hTF->get_type_name(1) != "double" &&
 	      hTF->get_type_name(1) != "float" &&

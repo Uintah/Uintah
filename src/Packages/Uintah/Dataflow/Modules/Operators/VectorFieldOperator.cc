@@ -20,7 +20,8 @@ VectorFieldOperator::VectorFieldOperator(GuiContext* ctx)
 {
 }
   
-void VectorFieldOperator::execute(void) {
+void VectorFieldOperator::execute(void) 
+{
   //  tcl_status.set("Calling InPlaneEigenEvaluator!"); 
   in = (FieldIPort *) get_iport("Vector Field");
   sfout =  (FieldOPort *) get_oport("Scalar Field");
@@ -28,7 +29,7 @@ void VectorFieldOperator::execute(void) {
   FieldHandle hTF;
   
   if(!in->get(hTF)){
-    std::cerr<<"Didn't get a handle\n";
+    std::cerr<<"VectorFieldOperator::execute(void) Didn't get a handle\n";
     return;
   } else if ( hTF->get_type_name(1) != "Vector" ){
     std::cerr<<"Input is not a Vector field\n";

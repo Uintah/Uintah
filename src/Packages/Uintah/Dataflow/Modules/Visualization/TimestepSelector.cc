@@ -53,7 +53,7 @@ void TimestepSelector::execute()
   
   ArchiveHandle handle;
    if(!in->get(handle)){
-     std::cerr<<"Didn't get a handle\n";
+     std::cerr<<"TimestepSelector::execute() Didn't get a handle\n";
      return;
    }
 
