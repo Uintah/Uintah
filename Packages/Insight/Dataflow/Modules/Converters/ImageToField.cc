@@ -31,7 +31,6 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/ImageField.h>
 #include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
-//#include <Core/Datatype/LatVolField.h>
 
 #include <Core/Datatypes/ImageMesh.h>
 
@@ -83,10 +82,92 @@ ImageToField::ImageToField(GuiContext* ctx)
 ImageToField::~ImageToField(){
 }
 
+template<class InputImageType>
+FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &nrd) {
+
+  typedef ImageField<typename InputImageType::PixelType> ImageFieldType;
+  InputImageType *n = dynamic_cast< InputImageType * >( nrd.get_rep()->data_.GetPointer() );
+
+  double spc[2];
+  double data_center = n->GetOrigin()[0];
+  
+  unsigned int size_x = (n->GetLargestPossibleRegion()).GetSize()[0];
+  unsigned int size_y = (n->GetLargestPossibleRegion()).GetSize()[1];
+
+  Point min(0., 0., 0.);
+  Point max(size_x, size_y, 0.);
+
+  //ImageMesh* m = new ImageMesh(size_x+1, size_y+1, min, max);
+  ImageMesh* m = new ImageMesh(size_x, size_y, min, max);
+
+  ImageMeshHandle mh(m);
+
+  FieldHandle fh;
+  int mn_idx, mx_idx;
+  
+  // assume data type is unsigned char
+  fh = new ImageFieldType(mh, Field::NODE); 
+  ImageMesh::Node::iterator iter, end;
+  mh->begin(iter);
+  mh->end(end);
+
+  // fill data
+  typename InputImageType::IndexType pixelIndex;
+  typedef typename ImageFieldType::value_type val_t;
+  val_t tmp;
+  ImageFieldType* fld = (ImageFieldType* )fh.get_rep();
+
+  
+  for(int row=0; row < size_y; row++) {
+    for(int col=0; col < size_x; col++) {
+      if(iter == end) {
+	return fh;
+      }
+      pixelIndex[0] = col;
+      pixelIndex[1] = row;
+
+      tmp = n->GetPixel(pixelIndex);
+      fld->set_value(tmp, *iter);
+      ++iter;
+    }
+  }
+
+  return fh;
+}
+
+template<class InputImageType>
+FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &nrd) {
+ 
+  typedef ITKLatVolField<typename InputImageType::PixelType> LatVolFieldType;
+  InputImageType *n = dynamic_cast< InputImageType * >( nrd.get_rep()->data_.GetPointer() );
+
+  double spc[2];
+  double data_center = n->GetOrigin()[0];
+  
+  unsigned int size_x = (n->GetRequestedRegion()).GetSize()[0];
+  unsigned int size_y = (n->GetRequestedRegion()).GetSize()[1];
+  unsigned int size_z = (n->GetRequestedRegion()).GetSize()[2];
+
+  Point min(0., 0., 0.);
+  Point max(size_x, size_y, size_z);
+
+  LatVolMesh* m = new LatVolMesh(size_x, size_y, size_z, min, max);
+
+  LatVolMeshHandle mh(m);
+
+  FieldHandle fh;
+  int mn_idx, mx_idx;
+  
+  fh = new LatVolFieldType(mh, Field::NODE, n); 
+  // LatVolFieldType* fld = (LatVolFieldType* )fh.get_rep();
+
+  return fh;
+}
+
 template<class InputImageType >
 bool ImageToField::run( itk::Object* obj1) 
 {
-  InputImageType* n = dynamic_cast< InputImageType * >(obj1);
+   InputImageType* n = dynamic_cast< InputImageType * >(obj1);
   if( !n ) {
     return false;
   }
@@ -153,118 +234,7 @@ void ImageToField::tcl_command(GuiArgs& args, void* userdata)
 }
 
 
-template<class InputImageType>
-FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &nrd) {
-  InputImageType::PixelType;
-  typedef ImageField<typename InputImageType::PixelType> ImageFieldType;
-  InputImageType *n = dynamic_cast< InputImageType * >( nrd.get_rep()->data_.GetPointer() );
 
-  double spc[2];
-  double data_center = n->GetOrigin()[0];
-  
-  unsigned int size_x = (n->GetLargestPossibleRegion()).GetSize()[0];
-  unsigned int size_y = (n->GetLargestPossibleRegion()).GetSize()[1];
-
-  Point min(0., 0., 0.);
-  Point max(size_x, size_y, 0.);
-
-  //ImageMesh* m = new ImageMesh(size_x+1, size_y+1, min, max);
-  ImageMesh* m = new ImageMesh(size_x, size_y, min, max);
-
-  ImageMeshHandle mh(m);
-
-  FieldHandle fh;
-  int mn_idx, mx_idx;
-  
-  // assume data type is unsigned char
-  fh = new ImageFieldType(mh, Field::NODE); 
-  ImageMesh::Node::iterator iter, end;
-  mh->begin(iter);
-  mh->end(end);
-
-  // fill data
-  typename InputImageType::IndexType pixelIndex;
-  typedef typename ImageFieldType::value_type val_t;
-  val_t tmp;
-  ImageFieldType* fld = (ImageFieldType* )fh.get_rep();
-
-  
-  for(int row=0; row < size_y; row++) {
-    for(int col=0; col < size_x; col++) {
-      if(iter == end) {
-	return fh;
-      }
-      pixelIndex[0] = col;
-      pixelIndex[1] = row;
-
-      tmp = n->GetPixel(pixelIndex);
-      fld->set_value(tmp, *iter);
-      ++iter;
-    }
-  }
-
-  return fh;
-}
-
-template<class InputImageType>
-FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &nrd) {
-  InputImageType::PixelType;
-  typedef ITKLatVolField<typename InputImageType::PixelType> LatVolFieldType;
-  //typedef LatVolField<typename InputImageType::PixelType> LatVolFieldType;
-  InputImageType *n = dynamic_cast< InputImageType * >( nrd.get_rep()->data_.GetPointer() );
-
-  double spc[2];
-  double data_center = n->GetOrigin()[0];
-  
-  unsigned int size_x = (n->GetRequestedRegion()).GetSize()[0];
-  unsigned int size_y = (n->GetRequestedRegion()).GetSize()[1];
-  unsigned int size_z = (n->GetRequestedRegion()).GetSize()[2];
-
-  Point min(0., 0., 0.);
-  Point max(size_x, size_y, size_z);
-
-  //LatVolMesh* m = new LatVolMesh(size_x+1, size_y+1, size_z+1, min, max);
-  LatVolMesh* m = new LatVolMesh(size_x, size_y, size_z, min, max);
-
-  LatVolMeshHandle mh(m);
-
-  FieldHandle fh;
-  int mn_idx, mx_idx;
-  
-  fh = new LatVolFieldType(mh, Field::NODE, n); 
-  LatVolFieldType* fld = (LatVolFieldType* )fh.get_rep();
-  //fld->SetImage((itk::Object*)n);
-  
-//   LatVolMesh::Node::iterator iter, end;
-
-//   mh->begin(iter);
-//   mh->end(end);
-
-//   // fill data
-//   typename InputImageType::IndexType pixelIndex;
-//   typedef typename LatVolFieldType::value_type val_t;
-//   val_t tmp;
-
-
-//    for(int z=0; z < size_z; z++) {
-//      for(int row=0; row < size_y; row++) {
-//        for(int col=0; col < size_x; col++) {
-//  	if(iter == end) {
-//  	  return fh;
-//  	}
-//  	pixelIndex[0] = col;
-//  	pixelIndex[1] = row;
-//  	pixelIndex[2] = z;
-	
-//  	tmp = n->GetPixel(pixelIndex);
-//  	//fld->set_value(tmp, *iter);
-//  	++iter;
-//        }
-//      }
-//    }
-
-  return fh;
-}
 } // End namespace Insight
 
 
