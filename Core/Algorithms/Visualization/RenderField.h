@@ -55,6 +55,7 @@ public:
 #else
   typedef map<int, MaterialHandle> ind_mat_t;
 #endif
+
   virtual void set_mat_map(ind_mat_t *mm) = 0;
   virtual void render(FieldHandle f, bool nodes, bool edges, 
 		      bool faces, bool data, MaterialHandle def_mat, 
@@ -86,7 +87,19 @@ template <class Fld, class Loc>
 class RenderField : public RenderFieldBase
 {
 public:
-  void set_mat_map(ind_mat_t *mm) { mats_ = mm; }
+  virtual void set_mat_map(ind_mat_t *mm) { mats_ = mm; }
+
+  //! virtual interface. 
+  virtual void render(FieldHandle fh,  
+		      bool nodes, bool edges, bool faces, bool data,
+		      MaterialHandle def_mat,
+		      bool data_at, ColorMapHandle color_handle,
+		      const string &ndt, const string &edt, 
+		      double ns, double es, double vs, bool normalize, 
+		      int res, bool use_normals, bool use_transparency,
+		      bool bidirectional, bool arrow_heads);
+
+private:
   void render_nodes(const Fld *fld, 
 		    const string &node_display_type,
 		    double node_scale);
@@ -110,16 +123,7 @@ public:
 
   void render_materials(const Fld *fld, const string &data_display_type);
 
-  //! virtual interface. 
-  virtual void render(FieldHandle fh,  
-		      bool nodes, bool edges, bool faces, bool data,
-		      MaterialHandle def_mat,
-		      bool data_at, ColorMapHandle color_handle,
-		      const string &ndt, const string &edt, 
-		      double ns, double es, double vs, bool normalize, 
-		      int res, bool use_normals, bool use_transparency,
-		      bool bidirectional, bool arrow_heads);
-    
+public:
 private:
   inline void add_sphere(const Point &p, double scale, GeomGroup *g, 
 			 MaterialHandle m0);
@@ -257,11 +261,6 @@ RenderField<Fld, Loc>::render_materials(const Fld *sfld,
   //cerr << "rendering materials" << endl;
 
   const string dat_mat("data_at_materials");
-#ifdef HAVE_HASH_MAP
-  typedef hash_map<int, MaterialHandle> ind_mat_t;
-#else
-  typedef map<int, MaterialHandle> ind_mat_t;
-#endif
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
 
   if (! mats_) {
