@@ -291,6 +291,9 @@ MPMLabel::MPMLabel()
   KineticEnergyLabel = VarLabel::create( "KineticEnergy",
 			sum_vartype::getTypeDescription() );
 
+  ThermalEnergyLabel = VarLabel::create( "ThermalEnergy",
+			sum_vartype::getTypeDescription() );
+
   TotalMassLabel = VarLabel::create( "TotalMass",
 				 sum_vartype::getTypeDescription() );
 
@@ -625,6 +628,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(AccStrainEnergyLabel);
   VarLabel::destroy(StrainEnergyLabel);
   VarLabel::destroy(KineticEnergyLabel);
+  VarLabel::destroy(ThermalEnergyLabel);
   VarLabel::destroy(TotalMassLabel);
   VarLabel::destroy(NTractionZMinusLabel);
   VarLabel::destroy(integralAreaLabel);
