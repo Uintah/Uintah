@@ -16,6 +16,7 @@
 #include "Cell.h"
 #include "LeastSquare.h"
 #include "CubicSpline.h"
+#include "BoundaryBand.h"
 
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 
@@ -59,10 +60,41 @@ public:
          NormalFracture(ProblemSpecP& ps);
 	~NormalFracture();
 
+  static double connectionRadius(double volume);
+
   //for debugging
   static bool   isDebugParticle(const Point& p);
 
 private:
+  void BoundaryBandConnection(
+       const vector<BoundaryBand>& pBoundaryBand_pg,
+       const Array3<BoundaryBand>& gBoundaryBand,
+       particleIndex pIdx_pg,
+       const Point& part,
+       const IntVector& nodeIdx,
+       const Point& node,
+       int& conn) const;
+
+  void VisibilityConnection(
+       const ParticlesNeighbor& particles,
+       particleIndex pIdx_pg,
+       const Point& node,
+       const ParticleVariable<int>& pIsBroken_pg,
+       const ParticleVariable<Vector>& pCrackNormal_pg,
+       const ParticleVariable<double>& pVolume_pg,
+       const ParticleVariable<Point>& pX_pg,
+       int& conn) const;
+
+  void ContactConnection(
+       const ParticlesNeighbor& particles,
+       particleIndex pIdx_pg,
+       const Point& node,
+       const ParticleVariable<Vector>& pTouchNormal_pg,
+       const ParticleVariable<double>& pVolume_pg,
+       const ParticleVariable<Point>& pX_pg,
+       int& conn,
+       Vector& pContactNormal) const;
+
 };
 
 } // End namespace Uintah
