@@ -162,11 +162,11 @@ int Jacobi_impl::solveHeatEquation(SSIDL::array2<double>& arr, double top, doubl
       arr[i][j] = t[i+1][j];
 
   
-  printf("\nSample Output: RANK =%4d; ITER =%5d\n J/I ",rank, iter);
+  //printf("\nSample Output: RANK =%4d; ITER =%5d\n J/I ",rank, iter);
   for( l=0; l<=9; l++ ){
-    printf("\n%4d ",l);
+    //printf("\n%4d ",l);
     for( k=0; k<=5; k++ ){
-      printf("%7.2f",t[l][k]);
+      //printf("%7.2f",t[l][k]);
     }
   }
   
