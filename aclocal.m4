@@ -189,7 +189,7 @@ AC_DEFUN(SCI_CHECK_VERSION,
     fi
 
     eval "$1 $2 2> conftest.out >> conftest.out"
-    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[[^0-9\.]]*%%g'`"
+    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[[^0-9\. ]]*%%g;s%^[ ]*%%' | cut -f1 -d' ' `"
     _SCI_VER_1_="$_SCI_REPORT_"
 
     _SCI_BIGGER_=yes

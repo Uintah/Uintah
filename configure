@@ -4202,7 +4202,7 @@ echo $ECHO_N "checking for \`basename $CC\` version 7.3.1.1... $ECHO_C" >&6
     fi
 
     eval "$CC -version 2> conftest.out >> conftest.out"
-    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\.]*%%g'`"
+    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\. ]*%%g;s%^ *%%' | cut -f1 -d' ' `"
     _SCI_VER_1_="$_SCI_REPORT_"
 
     _SCI_BIGGER_=yes
@@ -4261,7 +4261,7 @@ echo $ECHO_N "checking for \`basename $CXX\` version 7.3.1.1... $ECHO_C" >&6
     fi
 
     eval "$CXX -version 2> conftest.out >> conftest.out"
-    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\.]*%%g'`"
+    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\. ]*%%g;s%^ *%%' | cut -f1 -d' ' `"
     _SCI_VER_1_="$_SCI_REPORT_"
 
     _SCI_BIGGER_=yes
@@ -4321,7 +4321,7 @@ echo $ECHO_N "checking for \`basename $F77\` version 7.3.1.1... $ECHO_C" >&6
     fi
 
     eval "$F77 -version 2> conftest.out >> conftest.out"
-    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\.]*%%g'`"
+    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\. ]*%%g;s%^ *%%' | cut -f1 -d' ' `"
     _SCI_VER_1_="$_SCI_REPORT_"
 
     _SCI_BIGGER_=yes
@@ -4427,7 +4427,7 @@ echo $ECHO_N "checking for \`basename $AS\` version 7.3.1.1... $ECHO_C" >&6
     fi
 
     eval "$AS -version 2> conftest.out >> conftest.out"
-    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\.]*%%g'`"
+    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\. ]*%%g;s%^ *%%' | cut -f1 -d' ' `"
     _SCI_VER_1_="$_SCI_REPORT_"
 
     _SCI_BIGGER_=yes
@@ -4646,7 +4646,7 @@ echo $ECHO_N "checking for \`basename $CC\` version 3.3... $ECHO_C" >&6
     fi
 
     eval "$CC --version 2> conftest.out >> conftest.out"
-    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\.]*%%g'`"
+    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\. ]*%%g;s%^ *%%' | cut -f1 -d' ' `"
     _SCI_VER_1_="$_SCI_REPORT_"
 
     _SCI_BIGGER_=yes
@@ -4722,7 +4722,7 @@ echo $ECHO_N "checking for \`basename $CC\` version 2.95.3... $ECHO_C" >&6
     fi
 
     eval "$CC --version 2> conftest.out >> conftest.out"
-    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\.]*%%g'`"
+    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\. ]*%%g;s%^ *%%' | cut -f1 -d' ' `"
     _SCI_VER_1_="$_SCI_REPORT_"
 
     _SCI_BIGGER_=yes
@@ -4782,7 +4782,7 @@ echo $ECHO_N "checking for \`basename $F77\` version 0.5.25... $ECHO_C" >&6
     fi
 
     eval "$F77 --version 2> conftest.out >> conftest.out"
-    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\.]*%%g'`"
+    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\. ]*%%g;s%^ *%%' | cut -f1 -d' ' `"
     _SCI_VER_1_="$_SCI_REPORT_"
 
     _SCI_BIGGER_=yes
@@ -4842,7 +4842,7 @@ echo $ECHO_N "checking for \`basename $CXX\` version 2.95.3... $ECHO_C" >&6
     fi
 
     eval "$CXX --version 2> conftest.out >> conftest.out"
-    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\.]*%%g'`"
+    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\. ]*%%g;s%^ *%%' | cut -f1 -d' ' `"
     _SCI_VER_1_="$_SCI_REPORT_"
 
     _SCI_BIGGER_=yes
@@ -5616,7 +5616,7 @@ echo $ECHO_N "checking for \`basename $MAKE\` version 3.78.1... $ECHO_C" >&6
     fi
 
     eval "$MAKE --version 2> conftest.out >> conftest.out"
-    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\.]*%%g'`"
+    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\. ]*%%g;s%^ *%%' | cut -f1 -d' ' `"
     _SCI_VER_1_="$_SCI_REPORT_"
 
     _SCI_BIGGER_=yes
