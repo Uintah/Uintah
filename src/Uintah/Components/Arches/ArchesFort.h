@@ -43,8 +43,9 @@ WARNING
 #define FORT_PROFV profv_
 #define FORT_PROFSCALAR profscalar_
 #define FORT_SMAGMODEL smagmodel_
-#define FORT_INLBCS inlbcs_
 #define FORT_CALPBC calpbc_
+#define FORT_INLBCS inlbcs_
+#define FORT_UVELCOEF uvelcoef_
 #define FORT_BCUVEL bcuvel_
 #define FORT_BCVVEL bcvvel_
 #define FORT_BCWVEL bcwvel_
@@ -133,7 +134,8 @@ extern "C"
 	       double* fac1u, double* fac2u, double* fac3u, double* fac4u,
 	       double* fac1v, double* fac2v, double* fac3v, double* fac4v,
 	       double* fac1w, double* fac2w, double* fac3w, double* fac4w,
-	       double* iesdu, double* iwsdu, double* jnsdv, double* jssdv, double* ktsdw,double*  kbsdw);
+	       int* iesdu, int* iwsdu, int* jnsdv, int* jssdv, int* ktsdw,
+	       int*  kbsdw);
 
 
 
@@ -230,12 +232,60 @@ extern "C"
 		double* pressure, double* density,
 		int* celltype, const int* celltypeval,
 		double* refPressure);
+
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the U-velocity coeffs and convection coeffs
+    //
+    void
+    FORT_UVELCOEF(const int* domLoU, const int* domHiU,
+		  const int* idxLoU, const int* idxHiU,
+		  const double* uVelocity,
+		  double* uVelocityConvectCoeff_AE, 
+		  double* uVelocityConvectCoeff_AW, 
+		  double* uVelocityConvectCoeff_AN, 
+		  double* uVelocityConvectCoeff_AS, 
+		  double* uVelocityConvectCoeff_AT, 
+		  double* uVelocityConvectCoeff_AB, 
+		  double* uVelocityCoeff_AP,
+		  double* uVelocityCoeff_AE,
+		  double* uVelocityCoeff_AW,
+		  double* uVelocityCoeff_AN,
+		  double* uVelocityCoeff_AS,
+		  double* uVelocityCoeff_AT,
+		  double* uVelocityCoeff_AB,
+		  double* variableCalledDU,
+		  const int* domLoV, const int* domHiV,
+		  const double* vVelocity,
+		  const int* domLoW, const int* domHiW,
+		  const double* wVelocity,
+		  const int* domLo, const int* domHi,
+		  const double* density,
+		  const double* viscosity,
+		  const double* deltaT,
+		  const double* ceeu, const double* cweu, const double* cwwu,
+		  const double* cnn, const double* csn, const double* css,
+		  const double* ctt, const double* cbt, const double* cbb,
+		  const double* sewu, const double* sns, const double* stb,
+		  const double* dxepu, const double* dxpwu,
+		  const double* dynp, const double* dyps,
+		  const double* dztp, const double* dzpb,
+		  const double* fac1u, const double* fac2u,
+		  const double* fac3u, const double* fac4u,
+		  const int* iesdu, const int* iwsdu, 
+		  const double* enfac, const double* sfac,
+		  const double* tfac, const double* bfac);
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.11  2000/07/08 08:03:33  bbanerje
+// Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
+// made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
+// to Arches::AE .. doesn't like enums in templates apparently.
+//
 // Revision 1.10  2000/07/07 23:07:44  rawat
 // added inlet bc's
 //

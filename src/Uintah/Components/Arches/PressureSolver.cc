@@ -166,7 +166,7 @@ void PressureSolver::solve(const LevelP& level,
 #endif
 
   // Schedule the pressure solve
-  // require : pressureIN, presCoefPBLM, presNonLinSrcPBLM
+  // require : pressureSPBC, presCoefPBLM, presNonLinSrcPBLM
   // compute : presResidualPS, presCoefPS, presNonLinSrcPS, pressurePS
   //d_linearSolver->sched_pressureSolve(level, sched, new_dw, matrix_dw);
   d_linearSolver->sched_pressureSolve(level, sched, old_dw, new_dw);
@@ -289,18 +289,18 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   }
 
   // Calculate Pressure Coeffs
-  //  inputs : pressureIN, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
+  //  inputs : pressureSPBC, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
   //  outputs: presCoefPBLM 
   d_discretize->calculatePressureCoeff(pc, patch, old_dw, new_dw, delta_t);
 
   // Calculate Pressure Source
-  //  inputs : pressureIN, [u,v,w]VelocitySIVBC, densityCP,
+  //  inputs : pressureSPBC, [u,v,w]VelocitySIVBC, densityCP,
   //           [u,v,w]VelCoefPBLM, [u,v,w]VelNonLinSrcPBLM
   //  outputs: presLinSrcPBLM, presNonLinSrcPBLM
   d_source->calculatePressureSource(pc, patch, old_dw, new_dw, delta_t);
 
   // Calculate Pressure BC
-  //  inputs : pressureIN, presCoefPBLM
+  //  inputs : pressureSPBC, presCoefPBLM
   //  outputs: presCoefPBLM
   d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw);
 
@@ -335,6 +335,11 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.29  2000/07/08 08:03:34  bbanerje
+// Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
+// made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
+// to Arches::AE .. doesn't like enums in templates apparently.
+//
 // Revision 1.28  2000/07/07 23:07:45  rawat
 // added inlet bc's
 //

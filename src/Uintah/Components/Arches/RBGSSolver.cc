@@ -32,7 +32,7 @@ using namespace std;
 RBGSSolver::RBGSSolver()
 {
   // Pressure Solve requires (inputs)
-  d_pressureINLabel = scinew VarLabel("pressureIN",
+  d_pressureSPBCLabel = scinew VarLabel("pressureSPBC",
 				    CCVariable<double>::getTypeDescription() );
   d_presCoefPBLMLabel = scinew VarLabel("presCoefPBLM",
 				    CCVariable<double>::getTypeDescription() );
@@ -163,7 +163,7 @@ RBGSSolver::sched_pressureSolve(const LevelP& level,
       int matlIndex = 0;
 
       // coefficient for the variable for which solve is invoked
-      tsk->requires(old_dw, d_pressureINLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_presCoefPBLMLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
@@ -182,7 +182,7 @@ RBGSSolver::sched_pressureSolve(const LevelP& level,
       int matlIndex = 0;
 
       // coefficient for the variable for which solve is invoked
-      tsk->requires(old_dw, d_pressureINLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_presCoefPBLMLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
@@ -205,7 +205,7 @@ RBGSSolver::sched_pressureSolve(const LevelP& level,
       int matlIndex = 0;
 
       // coefficient for the variable for which solve is invoked
-      tsk->requires(old_dw, d_pressureINLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_presCoefPSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
@@ -494,7 +494,7 @@ RBGSSolver::press_underrelax(const ProcessorGroup*,
 
   // Get the pressure from the old DW and pressure coefficients and non-linear
   // source terms from the new DW
-  old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(pressure, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   for (int ii = 0; ii < nofStencils; ii++) {
      new_dw->get(pressCoeff[ii], d_presCoefPBLMLabel, matlIndex, patch, 
@@ -552,7 +552,7 @@ RBGSSolver::press_lisolve(const ProcessorGroup*,
 
   // Get the pressure from the old DW and pressure coefficients and non-linear
   // source terms from the new DW
-  old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(pressure, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->get(pressCoeff[ii], d_presCoefPSLabel, matlIndex, patch, 
@@ -1054,6 +1054,11 @@ RBGSSolver::scalar_residCalculation(const ProcessorGroup* ,
 
 //
 // $Log$
+// Revision 1.12  2000/07/08 08:03:34  bbanerje
+// Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
+// made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
+// to Arches::AE .. doesn't like enums in templates apparently.
+//
 // Revision 1.11  2000/06/29 22:56:43  bbanerje
 // Changed FCVars to SFC[X,Y,Z]Vars, and added the neceesary getIndex calls.
 //

@@ -163,6 +163,8 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
 				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC", 
 				    SFCZVariable<double>::getTypeDescription() );
+  d_pressureCPBCLabel = scinew VarLabel("pressureCPBC", 
+				    CCVariable<double>::getTypeDescription() );
 
   // 6) The labels used/computed by scalarBC
   d_scalCoefSBLMLabel = scinew VarLabel("scalCoefSBLM", 
@@ -831,9 +833,9 @@ BoundaryCondition::sched_recomputePressureBC(const LevelP& level,
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
     {
-      Task* tsk = scinew Task("BoundaryCondition::calculatePressBC",
+      Task* tsk = scinew Task("BoundaryCondition::recomputePressureBC",
 			      patch, old_dw, new_dw, this,
-			      &BoundaryCondition::calculatePressBC);
+			      &BoundaryCondition::recomputePressureBC);
 
       int numGhostCells = 0;
       int matlIndex = 0;
@@ -854,6 +856,7 @@ BoundaryCondition::sched_recomputePressureBC(const LevelP& level,
       tsk->computes(new_dw, d_uVelocityCPBCLabel, matlIndex, patch);
       tsk->computes(new_dw, d_vVelocityCPBCLabel, matlIndex, patch);
       tsk->computes(new_dw, d_wVelocityCPBCLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_pressureCPBCLabel, matlIndex, patch);
 
       sched->addTask(tsk);
     }
@@ -1346,7 +1349,7 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
   // get cellType, pressure and pressure stencil coeffs
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(pressure, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->get(presCoef[ii], d_presCoefPBLMLabel, ii, patch, Ghost::None,
@@ -1539,7 +1542,7 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
 // Actually calculate the pressure BCs
 //****************************************************************************
 void 
-BoundaryCondition::calculatePressBC(const ProcessorGroup* ,
+BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
 				    const Patch* patch,
 				    DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw) 
@@ -1550,7 +1553,6 @@ BoundaryCondition::calculatePressBC(const ProcessorGroup* ,
   SFCXVariable<double> uVelocity;
   SFCYVariable<double> vVelocity;
   SFCZVariable<double> wVelocity;
-
   int matlIndex = 0;
   int nofGhostCells = 0;
 
@@ -1569,48 +1571,36 @@ BoundaryCondition::calculatePressBC(const ProcessorGroup* ,
 	      nofGhostCells);
 
   // Get the low and high index for the patch and the variables
-  IntVector domLo = density.getFortLowIndex();
-  IntVector domHi = density.getFortHighIndex();
+  IntVector domLoScalar = density.getFortLowIndex();
+  IntVector domHiScalar = density.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   IntVector domLoU = uVelocity.getFortLowIndex();
   IntVector domHiU = uVelocity.getFortHighIndex();
-  IntVector idxLoU = patch->getSFCXFORTLowIndex();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex();
   IntVector domLoV = vVelocity.getFortLowIndex();
   IntVector domHiV = vVelocity.getFortHighIndex();
-  IntVector idxLoV = patch->getSFCYFORTLowIndex();
-  IntVector idxHiV = patch->getSFCYFORTHighIndex();
   IntVector domLoW = wVelocity.getFortLowIndex();
   IntVector domHiW = wVelocity.getFortHighIndex();
-  IntVector idxLoW = patch->getSFCZFORTLowIndex();
-  IntVector idxHiW = patch->getSFCZFORTHighIndex();
 
-#ifdef WONT_COMPILE_YET
   FORT_CALPBC(domLoU.get_pointer(), domHiU.get_pointer(), 
-	      idxLoU.get_pointer(), idxHiU.get_pointer(), 
 	      uVelocity.getPointer(),
 	      domLoV.get_pointer(), domHiV.get_pointer(), 
-	      idxLoV.get_pointer(), idxHiV.get_pointer(), 
 	      vVelocity.getPointer(),
 	      domLoW.get_pointer(), domHiW.get_pointer(), 
-	      idxLoW.get_pointer(), idxHiW.get_pointer(), 
 	      wVelocity.getPointer(),
-	      domLo.get_pointer(), domHi.get_pointer(), 
+	      domLoScalar.get_pointer(), domHiScalar.get_pointer(), 
 	      idxLo.get_pointer(), idxHi.get_pointer(), 
 	      pressure.getPointer(),
 	      density.getPointer(), 
+	      cellType.getPointer(),
 	      &(d_pressureBdry->d_cellTypeID),
-	      &(d_pressureBdry->refPressure), 
-	      &(d_pressureBdry->area),
-	      &(d_pressureBdry->density), 
-	      &(d_pressureBdry->inletType));
-#endif
+	      &(d_pressureBdry->refPressure));
 
   // Put the calculated data into the new DW
   new_dw->put(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch);
   new_dw->put(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch);
   new_dw->put(wVelocity, d_wVelocityCPBCLabel, matlIndex, patch);
+  new_dw->put(pressure, d_pressureCPBCLabel, matlIndex, patch);
 } 
 
 //****************************************************************************
@@ -1973,6 +1963,11 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.37  2000/07/08 08:03:33  bbanerje
+// Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
+// made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
+// to Arches::AE .. doesn't like enums in templates apparently.
+//
 // Revision 1.36  2000/07/07 23:07:44  rawat
 // added inlet bc's
 //

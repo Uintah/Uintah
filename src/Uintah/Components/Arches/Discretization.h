@@ -184,6 +184,7 @@ private:
       const VarLabel* d_wVelocityCPBCLabel;
 
       // used/output by calculateVelocityCoeff
+      const VarLabel* d_DUPBLMLabel;
       const VarLabel* d_uVelCoefPBLMLabel;
       const VarLabel* d_vVelCoefPBLMLabel;
       const VarLabel* d_wVelCoefPBLMLabel;
@@ -198,7 +199,7 @@ private:
       const VarLabel* d_wVelConvCoefMBLMLabel;
 
       // input/output for calculatePressureCoeff
-      const VarLabel* d_pressureINLabel;
+      const VarLabel* d_pressureSPBCLabel;
       const VarLabel* d_presCoefPBLMLabel;
       const VarLabel* d_presLinSrcPBLMLabel;
 
@@ -228,6 +229,11 @@ private:
   
 //
 // $Log$
+// Revision 1.23  2000/07/08 08:03:34  bbanerje
+// Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
+// made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
+// to Arches::AE .. doesn't like enums in templates apparently.
+//
 // Revision 1.22  2000/07/03 05:30:14  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //

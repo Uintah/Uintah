@@ -132,13 +132,13 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     //++d_generation;
 
     //correct inlet velocities to account for change in properties
-    // require : densityCP, [u,v,w]VelocitySP
+    // require : densityCP, [u,v,w]VelocitySPBC
     // compute : [u,v,w]VelocitySIVBC
     d_boundaryCondition->sched_setInletVelocityBC(level, sched, old_dw, 
 						  new_dw);
 
     // linearizes and solves pressure eqn
-    // require : pressureIN, densityCP, viscosityCTS, [u,v,w]VelocitySIVBC
+    // require : pressureSPBC, densityCP, viscosityCTS, [u,v,w]VelocitySIVBC
     // compute : [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM, 
     //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM,
     //           presResidualPS, presCoefPS, presNonLinSrcPS, pressurePS
@@ -149,8 +149,8 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     // if external boundary then recompute velocities using new pressure
     // and puts them in nonlinear_dw
     // require : densityCP, pressurePS, [u,v,w]VelocitySIVBC
-    // compute : [u,v,w]VelocityCPBC
-    d_boundaryCondition->sched_computePressureBC(level, sched, old_dw,
+    // compute : [u,v,w]VelocityCPBC, pressureCPBC
+    d_boundaryCondition->sched_recomputePressureBC(level, sched, old_dw,
 						 new_dw);
 
     // Momentum solver
@@ -379,6 +379,11 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.34  2000/07/08 08:03:34  bbanerje
+// Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
+// made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
+// to Arches::AE .. doesn't like enums in templates apparently.
+//
 // Revision 1.33  2000/07/03 05:30:15  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //

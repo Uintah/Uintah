@@ -154,6 +154,7 @@ public:
 			    SchedulerP& sched,
 			    DataWarehouseP& old_dw,
 			    DataWarehouseP& new_dw);
+
       ////////////////////////////////////////////////////////////////////////
       //
       // Schedule Computation of Velocity boundary conditions terms. 
@@ -196,7 +197,7 @@ public:
       ////////////////////////////////////////////////////////////////////////
       //
       // Schedule Compute Pressure BCS
-      // used for pressure boundary type
+      // used for pressure boundary type (during time advance)
       //
       void sched_recomputePressureBC(const LevelP& level,
 				   SchedulerP& sched,
@@ -336,10 +337,10 @@ private:
       //
       // Actually calculate pressure bcs
       //
-      void calculatePressBC(const ProcessorGroup* pc,
-			    const Patch* patch,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw);
+      void recomputePressureBC(const ProcessorGroup* pc,
+			       const Patch* patch,
+			       DataWarehouseP& old_dw,
+			       DataWarehouseP& new_dw);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -467,11 +468,12 @@ private:
       const VarLabel* d_vVelocitySIVBCLabel;
       const VarLabel* d_wVelocitySIVBCLabel;
 
-      // Labels for data computed by computePressureBC()
+      // Labels for data computed by recomputePressureBC()
       const VarLabel* d_pressurePSLabel;
       const VarLabel* d_uVelocityCPBCLabel;
       const VarLabel* d_vVelocityCPBCLabel;
       const VarLabel* d_wVelocityCPBCLabel;
+      const VarLabel* d_pressureCPBCLabel;
 
       // VelocityBC
       const VarLabel* d_uVelCoefPBLMLabel;
@@ -507,6 +509,11 @@ private:
   
 //
 // $Log$
+// Revision 1.34  2000/07/08 08:03:33  bbanerje
+// Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
+// made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
+// to Arches::AE .. doesn't like enums in templates apparently.
+//
 // Revision 1.33  2000/07/07 23:07:45  rawat
 // added inlet bc's
 //

@@ -221,7 +221,7 @@ private:
 
       // const VarLabel *
       // inputs (Pressure Solve)
-      const VarLabel* d_pressureINLabel;
+      const VarLabel* d_pressureSPBCLabel;
       const VarLabel* d_presCoefPBLMLabel;
       const VarLabel* d_presNonLinSrcPBLMLabel;
 
@@ -276,6 +276,11 @@ private:
   
 //
 // $Log$
+// Revision 1.12  2000/07/08 08:03:34  bbanerje
+// Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
+// made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
+// to Arches::AE .. doesn't like enums in templates apparently.
+//
 // Revision 1.11  2000/06/21 07:51:01  bbanerje
 // Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
 // and made the stuff go through schedule_time_advance.
