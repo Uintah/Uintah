@@ -43,14 +43,14 @@ static Persistent* maker()
   return scinew Colormap2;
 }
 
-PersistentTypeID Colormap2::type_id("Colormap2", "Datatype", maker);
+PersistentTypeID Colormap2::type_id("ColorMap2", "Datatype", maker);
 
 #define COLORMAP2_VERSION 1
 
 void
 Colormap2::io(Piostream &stream)
 {
-  stream.begin_class("Colormap2", COLORMAP2_VERSION);
+  stream.begin_class("ColorMap2", COLORMAP2_VERSION);
   
   SCIRun::Pio(stream, faux_);
   SCIRun::Pio(stream, widgets_);
