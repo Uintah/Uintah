@@ -1598,8 +1598,8 @@ HotBox::makeInjGeometry()
       for(int j = 1; j <= CYLREZ; j++)
       { // make a circle in the X-Y plane
         double pi = 3.14159;
-        double x = cos(2.0 * pi * j/CYLREZ);
-        double y = sin(2.0 * pi * j/CYLREZ);
+        double x = injPtr.rad0 * cos(2.0 * pi * j/CYLREZ);
+        double y = injPtr.rad0 * sin(2.0 * pi * j/CYLREZ);
         // rotate the circle into the plane defined by the cylindrical axis
         double xt = xAxis.x()*x + xAxis.y()*y + injPtr.axisX0;
         double yt = yAxis.x()*x + yAxis.y()*y + injPtr.axisY0;
