@@ -83,6 +83,31 @@ else
   AC_MSG_RESULT(     " $optimize" optimize flags.)
 fi
 
+
+##-- check for user supplied tcl paths --------------------------------------
+
+AC_ARG_WITH(thirdparty,
+	[  --with-thirdparty=<path-to-thirdparty>    <path-to-thirdparty>/{itcltk-8.3.2,xerces-1.3.0,...}],
+	[thirdparty="$withval"],
+	[thirdparty="/res/sci/data1/SCIRun_Thirdparty_32"])
+AC_ARG_WITH(tcl,
+        [  --with-tcl=<path-to-tcl>      <path-to-tcl>/bin/tclsh8.?],
+        [tcl="$withval"],
+        [tcl=""])
+AC_ARG_WITH(tk,
+        [  --with-tk=<path-to-tk>        <path-to-tk>/bin/wish8.?],
+        [tk="$withval"],
+        [tk=""])
+AC_ARG_WITH(itcl,
+        [  --with-itcl=<path-to-itcl>    <path-to-itcl>/bin/itkwish3.?],
+        [itcl="$withval"],
+        [itcl=""])
+AC_ARG_WITH(blt,
+        [  --with-blt=<path-to-btl>      <path-to-blt>/bin/bltwish24],
+        [blt="$withval"],
+        [blt=""])
+
+
 ##-- Host-Specific Defaults --------------------------------------------------
 
 NEED_SONAME=no
@@ -221,30 +246,6 @@ LOAD_PACKAGE="SCIRun"
 for i in $package; do
  LOAD_PACKAGE=$LOAD_PACKAGE,"$i"
 done
-
-##-- check for user supplied tcl paths --------------------------------------
-
-AC_ARG_WITH(thirdparty,
-	[  --with-thirdparty=<path-to-thirdparty>    <path-to-thirdparty>/{itcltk-8.3.2,xerces-1.3.0,...}],
-	[thirdparty="$withval"],
-	[thirdparty="/res/sci/data1/SCIRun_Thirdparty_32"])
-AC_ARG_WITH(tcl,
-        [  --with-tcl=<path-to-tcl>      <path-to-tcl>/bin/tclsh8.?],
-        [tcl="$withval"],
-        [tcl=""])
-AC_ARG_WITH(tk,
-        [  --with-tk=<path-to-tk>        <path-to-tk>/bin/wish8.?],
-        [tk="$withval"],
-        [tk=""])
-AC_ARG_WITH(itcl,
-        [  --with-itcl=<path-to-itcl>    <path-to-itcl>/bin/itkwish3.?],
-        [itcl="$withval"],
-        [itcl=""])
-AC_ARG_WITH(blt,
-        [  --with-blt=<path-to-btl>      <path-to-blt>/bin/bltwish24],
-        [blt="$withval"],
-        [blt=""])
-
 
 if test "$exename" = "default"; then
   EXENAME=scirun
