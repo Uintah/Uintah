@@ -670,7 +670,7 @@ PackageDB::getCategoryName(const string &packName,
       else if (newcatname != catName &&
 	  !(packName == "Teem" && catName == "Unu"))
       {
-	// cerr << "WARNING: Remapping " <<
+	cerr << "WARNING: Remapping " <<
 	  packName << "_" << catName << "_" << modName << " to " <<
 	  packName << "_" << newcatname << "_" << modName << "\n";
       }
