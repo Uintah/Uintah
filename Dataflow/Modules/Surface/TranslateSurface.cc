@@ -45,9 +45,7 @@ class TranslateSurface : public Module {
     int generation;
 public:
     TranslateSurface(const clString& id);
-    TranslateSurface(const TranslateSurface&, int deep);
     virtual ~TranslateSurface();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -79,11 +77,6 @@ TranslateSurface::TranslateSurface(const TranslateSurface& copy, int deep)
 
 TranslateSurface::~TranslateSurface()
 {
-}
-
-Module* TranslateSurface::clone(int deep)
-{
-    return new TranslateSurface(*this, deep);
 }
 
 void TranslateSurface::execute()
@@ -155,6 +148,15 @@ void TranslateSurface::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/18 20:20:00  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.1  1999/07/27 16:58:00  mcq
 // Initial commit
 //

@@ -84,19 +84,10 @@ public:
         //
     GenAxes(const clString& id);
 
-        ///////////////////////////
-        //
-        // Constructor taking
-        //    [in] GenAxes for copying
-        //    [in] deep a copying flag
-        //
-    GenAxes(const GenAxes&, int deep);
-
         // GROUP:  Destructor:
         ///////////////////////////
         // Destructor
     virtual ~GenAxes();
-    virtual Module* clone(int deep);
 
 
         // GROUP:  Access functions:
@@ -139,19 +130,8 @@ GenAxes::GenAxes(const clString& id)
 			  Color(.5,.5,.5), 20);
 }
 
-GenAxes::GenAxes(const GenAxes& copy, int deep)
-: Module(copy, deep), size_changed(1), size("size", id, this)
-{
-   NOT_FINISHED("GenAxes::GenAxes");
-}
-
 GenAxes::~GenAxes()
 {
-}
-
-Module* GenAxes::clone(int deep)
-{
-   return scinew GenAxes(*this, deep);
 }
 
 void GenAxes::execute()
@@ -209,6 +189,15 @@ void GenAxes::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:05  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:48  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

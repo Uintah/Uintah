@@ -65,9 +65,7 @@ class SurfInterpVals : public Module {
     
 public:
     SurfInterpVals(const clString& id);
-    SurfInterpVals(const SurfInterpVals&, int deep);
     virtual ~SurfInterpVals();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -101,11 +99,6 @@ SurfInterpVals::SurfInterpVals(const SurfInterpVals& copy, int deep)
 
 SurfInterpVals::~SurfInterpVals()
 {
-}
-
-Module* SurfInterpVals::clone(int deep)
-{
-    return new SurfInterpVals(*this, deep);
 }
 
 void SurfInterpVals::execute()
@@ -398,6 +391,15 @@ void SurfInterpVals::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:59  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:44  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

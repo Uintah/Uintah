@@ -26,9 +26,7 @@ class GeomPortTest : public Module {
     int portid;
 public:
     GeomPortTest(const clString& id);
-    GeomPortTest(const GeomPortTest&, int deep);
     virtual ~GeomPortTest();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -57,11 +55,6 @@ GeomPortTest::GeomPortTest(const GeomPortTest& copy, int deep)
 
 GeomPortTest::~GeomPortTest()
 {
-}
-
-Module* GeomPortTest::clone(int deep)
-{
-    return new GeomPortTest(*this, deep);
 }
 
 void GeomPortTest::do_execute()

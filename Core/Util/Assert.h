@@ -33,6 +33,12 @@
 
 #include <SCICore/Exceptions/Exceptions.h>
 
+#define ASSERTFAIL(string) \
+       { \
+           SCICore::ExceptionsSpace::AssertionFailed exc(string); \
+           EXCEPTION(exc); \
+       }
+
 #if SCI_ASSERTION_LEVEL >= 1
 #define ASSERTL1(condition) \
 	if(!(condition)){ \

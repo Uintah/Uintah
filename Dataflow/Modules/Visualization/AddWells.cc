@@ -46,9 +46,7 @@ class AddWells : public Module {
     double toms(double depth);
 public:
     AddWells(const clString& id);
-    AddWells(const AddWells&, int deep);
     virtual ~AddWells();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -77,20 +75,8 @@ AddWells::AddWells(const clString& id)
 			 Color(.5,.5,.5), 20);
 }
 
-AddWells::AddWells(const AddWells& copy, int deep)
-: Module(copy, deep),
-  filename("filename", id, this), radius("radius", id, this)
-{
-   NOT_FINISHED("AddWells::AddWells");
-}
-
 AddWells::~AddWells()
 {
-}
-
-Module* AddWells::clone(int deep)
-{
-   return scinew AddWells(*this, deep);
 }
 
 double AddWells::toms(double depth) {
@@ -164,6 +150,15 @@ void AddWells::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:01  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:46  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

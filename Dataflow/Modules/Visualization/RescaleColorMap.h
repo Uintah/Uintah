@@ -56,20 +56,10 @@ public:
         //
   RescaleColorMap(const clString& id);
 
-
-        ///////////////////////////
-        //
-        // Constructor taking
-        //    [in] RescaleColorMap for copying
-        //    [in] deep a copying flag
-        //
-  RescaleColorMap(const RescaleColorMap&, int deep);
-
         // GROUP:  Destructor:
         ///////////////////////////
         // Destructor
   virtual ~RescaleColorMap();
-  virtual Module* clone(int deep);
 
 
         // GROUP:  Access functions:

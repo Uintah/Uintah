@@ -92,7 +92,6 @@ class GenTransferFunc : public Module {
 
 public:
   GenTransferFunc( const clString& id);
-  GenTransferFunc( const GenTransferFunc&, int deep);
 
   void DrawGraphs(int flush=1); // this function just blasts away...
 
@@ -121,7 +120,6 @@ public:
   void Resize(int win);
 
   virtual ~GenTransferFunc();
-  virtual Module* clone( int deep );
   virtual void execute();
   void tcl_command( TCLArgs&, void* );
 
@@ -185,23 +183,9 @@ GenTransferFunc::GenTransferFunc( const clString& id)
   ctxs[0] = ctxs[1] = ctxs[2] = 0;
 }
 
-GenTransferFunc::GenTransferFunc(const GenTransferFunc& copy, int deep)
-: Module(copy,deep),
-  RGBorHSV("rgbhsv",id,this),lineVSspline("linespline",id,this),
-  activeLine(-1),selNode(-1),graphStat(-1),
-  cmap_generation(-1)
-{
-  NOT_FINISHED("GenTransferFunc copy constructor type thing");
-}
-
 GenTransferFunc::~GenTransferFunc()
 {
 
-}
-
-Module* GenTransferFunc::clone(int deep)
-{
-  return scinew GenTransferFunc(*this,deep);
 }
 
 void GenTransferFunc::BuildOther(void)
@@ -894,6 +878,15 @@ int GenTransferFunc::makeCurrent(void)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:06  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:49  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -94,9 +94,7 @@ class TrainSeg2 : public Module {
     int offset;
 public:
     TrainSeg2(const clString& id);
-    TrainSeg2(const TrainSeg2&, int deep);
     virtual ~TrainSeg2();
-    virtual Module* clone(int deep);
     virtual void execute();
     void set_str_vars();
     void tcl_command( TCLArgs&, void * );
@@ -109,7 +107,7 @@ public:
     void unique_add(Array1<int>& a, int v);
 };
 
-static TrainSeg2* current_drawer=0;
+//static TrainSeg2* current_drawer=0;
 
 Module* make_TrainSeg2(const clString& id) {
   return new TrainSeg2(id);
@@ -135,22 +133,8 @@ TrainSeg2::TrainSeg2(const clString& id)
     ctable.add(Color(0, 1, 1));
 }
 
-TrainSeg2::TrainSeg2(const TrainSeg2& copy, int deep)
-: Module(copy, deep), bias("bias", id, this), tcl_execute(0),
-  scale("scale", id, this), tissue("tissue", id, this),
-  tx("tx", id, this), ty("ty", id, this), tz("tz", id, this),
-  sagFld(0), corFld(0), axiFld(0), offset(0)
-{
-    NOT_FINISHED("TrainSeg2::TrainSeg2");
-}
-
 TrainSeg2::~TrainSeg2()
 {
-}
-
-Module* TrainSeg2::clone(int deep)
-{
-    return scinew TrainSeg2(*this, deep);
 }
 
 void TrainSeg2::execute()
@@ -573,10 +557,10 @@ int TrainSeg2::findPixelFromVoxel(clString view, int i, int j, int k,
 				     int &u, int &v, int &du, int &dv) {
 //    cerr << "findPixelFromVoxel("<<view<<", "<<i<<", "<<j<<", "<<k<<")\n";
     int xval, yval, zval;
-    int nnx, nny, nnz;
-    nnx=last_sfrg->nx;
-    nny=last_sfrg->ny;
-    nnz=last_sfrg->nz;
+    //int nnx, nny, nnz;
+    //nnx=last_sfrg->nx;
+    //nny=last_sfrg->ny;
+    //nnz=last_sfrg->nz;
     if (view=="sag") {
 	xval=(256*tx.get()-x_win_min)/x_pixel_size;
 	if (xval!=i) return 0;	
@@ -774,7 +758,7 @@ int TrainSeg2::makeCurrent() {
 	TCLTask::unlock();
 	return 0;
     }
-    current_drawer=this;
+    //current_drawer=this;
     if (!glXMakeCurrent(dpy, win, cx))
 	    cerr << "*glXMakeCurrent failed.\n";
 
@@ -793,6 +777,15 @@ int TrainSeg2::makeCurrent() {
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:43  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:29  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

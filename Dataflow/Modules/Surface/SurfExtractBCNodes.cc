@@ -37,9 +37,7 @@ class SurfExtractBCNodes : public Module {
     SurfaceOPort* osurface;
 public:
     SurfExtractBCNodes(const clString& id);
-    SurfExtractBCNodes(const SurfExtractBCNodes&, int deep);
     virtual ~SurfExtractBCNodes();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -67,11 +65,6 @@ SurfExtractBCNodes::SurfExtractBCNodes(const SurfExtractBCNodes& copy, int deep)
 
 SurfExtractBCNodes::~SurfExtractBCNodes()
 {
-}
-
-Module* SurfExtractBCNodes::clone(int deep)
-{
-    return new SurfExtractBCNodes(*this, deep);
 }
 
 void SurfExtractBCNodes::execute()
@@ -112,6 +105,15 @@ void SurfExtractBCNodes::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/18 20:19:58  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.1  1999/07/27 16:57:58  mcq
 // Initial commit
 //

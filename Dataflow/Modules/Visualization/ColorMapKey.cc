@@ -46,9 +46,7 @@ class ColorMapKey : public Module {
   MaterialHandle white;
 public:
   ColorMapKey(const clString &id);
-  ColorMapKey(const ColorMapKey &copy, int deep);
   virtual ~ColorMapKey();
-  virtual Module* clone(int deep);
   virtual void execute();
 };
 
@@ -71,19 +69,8 @@ ColorMapKey::ColorMapKey(const clString &id)
   add_oport( ogeom );
 }
 
-ColorMapKey::ColorMapKey(const ColorMapKey &copy, int deep)
-  : Module( copy, deep )
-{
-  NOT_FINISHED("ColorMapKey::ColorMapKey");
-}
-
 ColorMapKey::~ColorMapKey()
 {
-}
-
-Module* ColorMapKey::clone(int deep)
-{
-  return new ColorMapKey(*this, deep);
 }
 
 void ColorMapKey::execute() {
@@ -182,6 +169,15 @@ void ColorMapKey::execute() {
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:03  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:47  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

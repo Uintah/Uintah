@@ -32,9 +32,7 @@ public:
     TCLint downsamplex, downsampley, downsamplez;
     int dsx, dsy, dsz;
     Downsample(const clString& id);
-    Downsample(const Downsample&, int deep);
     virtual ~Downsample();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -62,11 +60,6 @@ Downsample::Downsample(const Downsample& copy, int deep)
 
 Downsample::~Downsample()
 {
-}
-
-Module* Downsample::clone(int deep)
-{
-    return new Downsample(*this, deep);
 }
 
 static void do_parallel(void* obj, int proc)

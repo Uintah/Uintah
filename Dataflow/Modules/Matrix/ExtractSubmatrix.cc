@@ -79,9 +79,7 @@ class ExtractSubmatrix : public Module {
     GLXContext cx;
 public:
     ExtractSubmatrix(const clString& id);
-    ExtractSubmatrix(const ExtractSubmatrix&, int deep);
     virtual ~ExtractSubmatrix();
-    virtual Module* clone(int deep);
     virtual void execute();
     void tcl_command( TCLArgs&, void * );
     void plot_matrices();
@@ -91,7 +89,7 @@ public:
     DenseMatrix* buildDense(DenseMatrix* m);
 };
 
-static ExtractSubmatrix* current_drawer=0;
+//static ExtractSubmatrix* current_drawer=0;
 
 Module* make_ExtractSubmatrix(const clString& id) {
   return new ExtractSubmatrix(id);
@@ -112,23 +110,8 @@ ExtractSubmatrix::ExtractSubmatrix(const clString& id)
     add_oport(oport);
 }
 
-ExtractSubmatrix::ExtractSubmatrix(const ExtractSubmatrix& copy, int deep)
-: Module(copy, deep), drawRect(0), eraseRect(0),
-  minRow("minRow", id, this), minCol("minCol", id, this), 
-  maxRow("maxRow", id, this), maxCol("maxCol", id, this), mHO(0),
-  ntrows("ntrows", id, this), ntcols("ntcols", id, this), sendFlag(0),
-  always("always", id, this)
-{
-    NOT_FINISHED("ExtractSubmatrix::ExtractSubmatrix");
-}
-
 ExtractSubmatrix::~ExtractSubmatrix()
 {
-}
-
-Module* ExtractSubmatrix::clone(int deep)
-{
-    return scinew ExtractSubmatrix(*this, deep);
 }
 
 void ExtractSubmatrix::execute()
@@ -369,7 +352,7 @@ int ExtractSubmatrix::makeCurrent(int &xres, int &yres, int &nrows,
 //    cerr << "*xres="<<xres<<"  yres="<<yres<<"\n";
     // Make ourselves current
 //    if(current_drawer != this){
-        current_drawer=this;
+    //    current_drawer=this;
     if (!glXMakeCurrent(dpy, win, cx))
 //	    cerr << "*glXMakeCurrent succeeded.\n";
 //	else
@@ -393,6 +376,15 @@ int ExtractSubmatrix::makeCurrent(int &xres, int &yres, int &nrows,
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:45  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:31  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
