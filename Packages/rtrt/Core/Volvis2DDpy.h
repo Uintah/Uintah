@@ -55,9 +55,10 @@ namespace rtrt {
     virtual void button_pressed( MouseButton button, const int x, const int y );
     virtual void button_released( MouseButton button, const int x, const int y );
     virtual void button_motion(MouseButton button, const int x, const int y);
-    //
+    
   
   public:
+    void adjustMasterAlpha( float dx );
     void lookup( Voxel2D<float> voxel, Color &color, float &alpha );
     void attach( VolumeVis2D* volume );
     void loadUIState( unsigned long key );
@@ -78,7 +79,9 @@ namespace rtrt {
     GLuint bgTextName;
     GLuint transFuncTextName;
     Texture <GLfloat> *bgTextImage;    // clean background texture
-    Texture <GLfloat> *transTexture;   // collection of widget textures painted onto background
+    Texture <GLfloat> *transTexture1;  // collection of widget textures painted onto background
+    Texture <GLfloat> *transTexture2;  // used for texture swapping to remove volume rendering "streaks"
+    int whichTexture;
     vector<VolumeVis2D*> volumes;
     Volvis2DDpy( float t_inc );
   };
