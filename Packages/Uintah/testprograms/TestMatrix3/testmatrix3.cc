@@ -361,13 +361,13 @@ void randomlyMixup(Matrix3& M, Vector& rhs)
       if (i != j) {
 	for (k = 1; k <= 3; k++)
 	  new_M(i, k) += M(j, k) * mult;
-	new_rhs(i-1) += rhs(j-1) * mult;
+	new_rhs[i-1] += rhs[j-1] * mult;
       }
       else {
 	if (fabs(mult) > 1) {
 	  for (k = 1; k <= 3; k++)
 	    new_M(i, k) *= mult;
-	  new_rhs(i-1) *= mult;
+	  new_rhs[i-1] *= mult;
 	}
       }
     }
@@ -381,7 +381,7 @@ void randomlyMixup(Matrix3& M, Vector& rhs)
     for (j = 1; j <= 3; j++) {
       M(i, j) = new_M(row_order[i-1], j);
     }
-    rhs(i-1) = new_rhs(row_order[i-1]-1);
+    rhs[i-1] = new_rhs[row_order[i-1]-1];
   }
 }
 
@@ -407,7 +407,7 @@ bool equal_enough(double x1, double x2, double rel_scale)
 bool equal_enough(Vector v1, Vector v2, double rel_scale)
 {
   for (int i = 0; i < 3; i++) {
-    if (!equal_enough(v1(i), v2(i), rel_scale))
+    if (!equal_enough(v1[i], v2[i], rel_scale))
       return false;
   }
   return true;

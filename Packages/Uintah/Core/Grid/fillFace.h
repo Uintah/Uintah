@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
+#include <typeinfo>
 
 namespace Uintah {
 using namespace SCIRun;
