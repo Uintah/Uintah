@@ -1771,8 +1771,10 @@ getGridVar(VariableBase& var, DWDatabase& db,
       // know what ghost cells will be required of it for the next timestep.
       // (This will be an issue whenever the taskgraph changes to require
       // more ghost cells from the old datawarehouse).
+      static bool warned = false;
       bool ignore = d_isInitializationDW && d_finalized;
-      if (!ignore) {
+      if (!ignore && !warned ) {
+	warned = true;
 	ostringstream errmsg;
 	errmsg << d_myworld->myrank() << " Reallocation Error:" <<
 	  " Reallocation needed for " << label->getName();
