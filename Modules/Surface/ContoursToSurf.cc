@@ -57,10 +57,10 @@ static Module* make_ContoursToSurf(const clString& id)
     return new ContoursToSurf(id);
 }
 
-static RegisterModule db1("Contours", "Contours To Surface", make_ContoursToSurf);
-static RegisterModule db2("Visualization", "Contours To Surface", make_ContoursToSurf);
-static RegisterModule db3("Surfaces", "Contours To Surface", make_ContoursToSurf);
-static RegisterModule db4("Dave", "Contours To Surface", make_ContoursToSurf);
+static RegisterModule db1("Contours", "ContoursToSurf", make_ContoursToSurf);
+static RegisterModule db2("Visualization", "ContoursToSurf", make_ContoursToSurf);
+static RegisterModule db3("Surfaces", "ContoursToSurf", make_ContoursToSurf);
+static RegisterModule db4("Dave", "ContoursToSurf", make_ContoursToSurf);
 
 ContoursToSurf::ContoursToSurf(const clString& id)
 : Module("ContoursToSurf", id, Filter)
