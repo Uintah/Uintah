@@ -29,6 +29,9 @@
 #include <fcntl.h>
 #include <strings.h>
 #include <unistd.h>
+#ifdef __aix
+#include <time.h>
+#endif
 
 #define PADSIZE 1024L
 
@@ -641,6 +644,9 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 //
 // $Log$
+// Revision 1.20  2000/09/28 17:54:29  bigler
+// Added #include <time.h> for aix
+//
 // Revision 1.19  2000/09/25 18:06:55  sparker
 // linux/g++ changes
 //
