@@ -110,8 +110,6 @@ void* operator new(size_t size, Allocator* a, char* tag)
     return a->alloc(size, tag);
 }
 
-// Dd: Assuming _BOOL should be defined...
-//#ifdef _BOOL
 void* operator new[](size_t size, Allocator* a, char* tag)
 {
     if(!a){
@@ -121,17 +119,14 @@ void* operator new[](size_t size, Allocator* a, char* tag)
     }
     return a->alloc(size, tag);
 }
-//#endif
 #else
 
-void* operator new(size_t size, Allocator* a, char* tag)
+void* operator new(size_t size, Allocator*, char*)
 {
     return new char[size];
 }
 
-// Dd: Assuming _BOOL should be defined...
-//#ifdef _BOOL
-void* operator new[](size_t size, Allocator* a, char* tag)
+void* operator new[](size_t size, Allocator*, char*)
 {
     return new char[size];
 }
