@@ -78,6 +78,7 @@ HEADER_FILES := $(patsubst %,%/*.h, $(ALLSUBDIRS))
 ETAGS_FILES := $(wildcard $(HEADER_FILES) $(C_FILES) $(CPP_FILES) )
 TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
 ETAGS := @ETAGS@
+CTAGS := ctags
 
 all:: $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(ALLTARGETS) packmaker
 
@@ -116,6 +117,10 @@ $(LIBDIR):
 sciTAGS:  $(ETAGS_FILES) $(TCL_ETAGS_FILES)
 	$(ETAGS) -o sciTAGS $(ETAGS_FILES)
 	$(ETAGS) -o sciTAGS -a -l none --regex='/itcl_class[ \t]+\([^ \t]+\)/\1/' --regex='/[ \t]+method[ \t]+\([^ \t]+\)/\1/' $(TCL_ETAGS_FILES)
+
+# Make ctags file
+sciCTAGS:  $(ETAGS_FILES)
+	$(CTAGS) -o sciCTAGS $(ETAGS_FILES)
 
 # The sophsticated looking $(...) mess below is just to convert a
 # subdirectory of the form a/b/c into ../../..
