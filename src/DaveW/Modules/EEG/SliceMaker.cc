@@ -173,8 +173,8 @@ void SliceMaker::execute()
     ogeom->delAll();
 	
     MaterialHandle c[6];
-    cerr << (*cm)[0] << " " << (*cm)[1] << " " << (*cm)[2] << "/n";
-    cerr << (*cm)[3] << " " << (*cm)[4] << " " << (*cm)[5] << "/n";
+    cerr << (*cm)[0] << " " << (*cm)[1] << " " << (*cm)[2] << "   ";
+    cerr << (*cm)[3] << " " << (*cm)[4] << " " << (*cm)[5] << "\n";
     for (i = 0; i < 6; i++)
 	c[i]=scinew Material(Color(.2,.2,.2),Color(scaleColor((*cm)[i],0),scaleColor((*cm)[i],1),scaleColor((*cm)[i],2)),Color(.5,.5,.5),20);
 
@@ -201,6 +201,9 @@ void SliceMaker::execute()
 
 //
 // $Log$
+// Revision 1.2  2000/10/29 04:02:46  dmw
+// cleaning up DaveW tree
+//
 // Revision 1.1  2000/09/07 20:43:11  zyp
 // This module creates a disc that represents the real and guessed
 // conductivity values for a cylinder.  It is for use in a demo.  It
