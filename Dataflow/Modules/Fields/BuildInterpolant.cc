@@ -75,35 +75,6 @@ BuildInterpolant::~BuildInterpolant()
 {
 }
 
-#if 0
-template <class Mesh, class Index>
-void
-BuildInterpolant::find_closest(Mesh *mesh, typename Index::index_type &idx,
-			       Point &p)
-{
-  bool first_p = true;
-  double min_dist = 1.0e6;
-  typename Index::iterator itr = mesh->tbegin((typename Index::iterator *)0);
-  typename Index::iterator eitr = mesh->tend((typename Index::iterator *)0);
-  while (itr != eitr)
-  {
-    Point p2;
-
-    mesh->get_center(p2, *itr);
-
-    const double dist = (p - p2).length2();
-    if (dist < min_dist || first_p)
-    {
-      idx = *itr;
-      min_dist = dist;
-      first_p = false;
-    }
-   
-    ++itr;
-  }
-}
-#endif
-
 
 
 void
