@@ -161,15 +161,15 @@ void ParticleCreator::applyForceBC(const Vector& dxpp,
 #ifdef FRACTURE
       const Box bcBox(bc->getLowerRange(), bc->getUpperRange());
 #else
-      const Box bcBox(bc->getLowerRange()-dxpp*0.5, 
-                      bc->getUpperRange()+dxpp*0.5);
+      const Box bcBox(bc->getLowerRange()-dxpp, 
+                      bc->getUpperRange()+dxpp);
 #endif           
       //cout << "BC Box = " << bcBox << " Point = " << pp << endl;
       if(bcBox.contains(pp)) {
         pExtForce = bc->getForceDensity() * pMass;
-        //cout << "External Force on Particle = " << pExtForce 
-        //     << " Force Density = " << bc->getForceDensity() 
-        //     << " Particle Mass = " << pMass << endl;
+        cout << "External Force on Particle = " << pExtForce 
+             << " Force Density = " << bc->getForceDensity() 
+             << " Particle Mass = " << pMass << endl;
       }
     } 
   }
