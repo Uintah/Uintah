@@ -86,17 +86,17 @@ package CIA {
      * and dynamic method invocation.
      */
     class Class {
-	static Class lookupClass(in string class_name)
-	    throws ClassNotFoundException;
+	///static Class lookupClass(in string class_name)
+	///throws ClassNotFoundException;
 	final Object newInstance() throws InstantiationException;
 	final bool isInterface();
 	final bool isArray();
 	final bool isPrimitive();
-	final string getName();
+	///final string getName();
 	final Class getSuperclass();
-	final array<Class,1> getInterfaces();
+	///final array<Class,1> getInterfaces();
 	final Class getComponentType();
-	final array<Method,1> getMethods();
+	///final array<Method,1> getMethods();
 	final Method getMethod() throws NoSuchMethodException;
 	// and so on - see the Java spec for more information
     };
@@ -108,14 +108,14 @@ package CIA {
      */
     class Method {
 	final Class getDeclaringClass();
-	final string getName();
+	///final string getName();
 	final Class getReturnType();
-	final array<Class,1> getParameterTypes();
-	final array<Class,1> getExceptionTypes();
-	final void invokeStatic(in array<Object,1> arguments)
-	    throws IllegalArgumentException;
-	final void invokeMember(in Object this, in array<Object,1> arguments)
-	    throws IllegalArgumentException;
+	///final array<Class,1> getParameterTypes();
+	///final array<Class,1> getExceptionTypes();
+	///final void invokeStatic(in array<Object,1> arguments)
+	///throws IllegalArgumentException;
+	///final void invokeMember(in Object this, in array<Object,1> arguments)
+	///throws IllegalArgumentException;
 	// and so on - see the Java spec for more information
     };
 };

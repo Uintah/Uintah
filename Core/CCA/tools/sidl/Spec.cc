@@ -3,19 +3,22 @@
 #include "SymbolTable.h"
 #include <map>
 #include <pair.h>
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <sstream>
 
-using std::string;
 using std::cerr;
-using std::vector;
+using std::find;
 using std::map;
+using std::string;
+using std::vector;
 
 Definition::Definition(const string& curfile, int lineno, const string& name)
     : curfile(curfile), lineno(lineno), name(name)
 {
     symbols=0;
+    emitted_declaration=false;
 }
 
 Definition::~Definition()
@@ -29,6 +32,23 @@ string Definition::fullname() const
 	exit(1);
     }
     return symbols->fullname();
+}
+
+string CI::cppfullname(SymbolTable* forpackage) const
+{
+    if(!symbols){
+	cerr << "ERROR: Definition symboltable not set!\n";
+	exit(1);
+    }
+    if(forpackage == symbols->getParent())
+	return name;
+    else
+	return symbols->cppfullname();
+}
+
+string CI::cppclassname() const
+{
+    return name;
 }
 
 SymbolTable* Definition::getSymbolTable() const
@@ -66,8 +86,13 @@ string Argument::fullsignature() const
     }
     s+=type->fullname();
     if(id != "")
-	s+=" "+id+"\n";
+	s+=" "+id;
     return s;
+}
+
+Argument::Mode Argument::getMode() const
+{
+    return mode;
 }
 
 ArgumentList::ArgumentList()
@@ -91,6 +116,11 @@ void ArgumentList::add(Argument* arg)
     list.push_back(arg);
 }
 
+std::vector<Argument*>& ArgumentList::getList()
+{
+    return list;
+}
+
 string ArgumentList::fullsignature() const
 {
     std::string s="";
@@ -103,21 +133,32 @@ string ArgumentList::fullsignature() const
     return s;
 }
 
+CI::CI(const string& curfile, int lineno, const string& name,
+       MethodList* methods)
+    : Definition(curfile, lineno, name), mymethods(methods)
+{
+    vtable_base=-1234;
+    parentclass=0;
+}
+
+CI::~CI()
+{
+    if(mymethods)
+	delete mymethods;
+}
+
 Class::Class(const string& curfile, int lineno, const string& name,
 	     ScopedName* class_extends, ScopedNameList* class_implements,
 	     MethodList* methods)
-    : Definition(curfile, lineno, name),
-      class_extends(class_extends), class_implements(class_implements),
-      methods(methods)
+    : CI(curfile, lineno, name, methods),
+      class_extends(class_extends), class_implements(class_implements)
 {
-    parent_class=0;
 }
 
 Class::Class(const string& curfile, int lineno, const string& name)
-    : Definition(curfile, lineno, name),
-      class_extends(0), class_implements(0), methods(0)
+    : CI(curfile, lineno, name, 0),
+      class_extends(0), class_implements(0)
 {
-    parent_class=0;
 }
 
 Class::~Class()
@@ -126,38 +167,67 @@ Class::~Class()
 	delete class_extends;
     if(class_implements)
 	delete class_implements;
-    if(methods)
-	delete methods;
 }
 
-void Class::gatherMethods(vector<Method*>& allmethods) const
+void CI::gatherMethods(vector<Method*>& allmethods) const
 {
-    if(parent_class)
-	parent_class->gatherMethods(allmethods);
-    for(vector<Interface*>::const_iterator iter=parent_interfaces.begin();
-	iter != parent_interfaces.end(); iter++){
+    if(parentclass)
+	parentclass->gatherMethods(allmethods);
+    for(vector<Interface*>::const_iterator iter=parent_ifaces.begin();
+	iter != parent_ifaces.end(); iter++){
 	(*iter)->gatherMethods(allmethods);
     }
-    methods->gatherMethods(allmethods);
+    mymethods->gatherMethods(allmethods);
 }
 
-void Interface::gatherMethods(vector<Method*>& allmethods) const
+void CI::gatherVtable(vector<Method*>& uniquemethods) const
 {
-    for(vector<Interface*>::const_iterator iter=parent_interfaces.begin();
-	iter != parent_interfaces.end(); iter++){
-	(*iter)->gatherMethods(allmethods);
+    if(parentclass)
+	parentclass->gatherVtable(uniquemethods);
+    for(vector<Interface*>::const_iterator iter=parent_ifaces.begin();
+	iter != parent_ifaces.end(); iter++){
+	(*iter)->gatherMethods(uniquemethods);
     }
-    methods->gatherMethods(allmethods);
+    mymethods->gatherVtable(uniquemethods);
 }
 
-MethodList* Class::getMethods() const
+vector<Method*>& CI::myMethods()
 {
-    return methods;
+    return mymethods->getList();
+}
+
+void CI::gatherParents(std::vector<CI*>& folks) const
+{
+    if(parentclass)
+	parentclass->gatherParents(folks);
+    for(vector<Interface*>::const_iterator iter=parent_ifaces.begin();
+	iter != parent_ifaces.end(); iter++){
+	(*iter)->gatherParents(folks);
+    }
+    if(find(folks.begin(), folks.end(), this) == folks.end())
+	folks.push_back(const_cast<CI*>(this));
+}
+
+void CI::gatherParentInterfaces(std::vector<Interface*>& folks) const
+{
+    if(parentclass)
+	parentclass->gatherParentInterfaces(folks);
+    for(vector<Interface*>::const_iterator iter=parent_ifaces.begin();
+	iter != parent_ifaces.end(); iter++){
+	(*iter)->gatherParentInterfaces(folks);
+	if(find(folks.begin(), folks.end(), *iter) == folks.end())
+	    folks.push_back(const_cast<Interface*>(*iter));
+    }
+}
+
+MethodList* CI::getMethods() const
+{
+    return mymethods;
 }
 
 Class* Class::getParentClass() const
 {
-    return parent_class;
+    return parentclass;
 }
 
 Class* Class::findParent(const string& str)
@@ -166,7 +236,7 @@ Class* Class::findParent(const string& str)
     while(p){
 	if(p->fullname() == str)
 	    return p;
-	p=p->parent_class;
+	p=p->parentclass;
     }
     return 0;
 }
@@ -189,13 +259,13 @@ void DefinitionList::add(Definition* def)
 
 Interface::Interface(const string& curfile, int lineno, const string& id,
 		     ScopedNameList* interface_extends, MethodList* methods)
-    : Definition(curfile, lineno, id),
-      interface_extends(interface_extends), methods(methods)
+    : CI(curfile, lineno, id, methods),
+      interface_extends(interface_extends)
 {
 }
 
 Interface::Interface(const string& curfile, int lineno, const string& id)
-    : Definition(curfile, lineno, id), interface_extends(0), methods(0)
+    : CI(curfile, lineno, id, 0), interface_extends(0)
 {
 }
 
@@ -203,12 +273,6 @@ Interface::~Interface()
 {
     if(interface_extends)
 	delete interface_extends;
-    delete methods;
-}
-
-MethodList* Interface::getMethods() const
-{
-    return methods;
 }
 
 Method::Method(const string& curfile, int lineno, Type* return_type,
@@ -221,6 +285,7 @@ Method::Method(const string& curfile, int lineno, Type* return_type,
     myclass=0;
     myinterface=0;
     checked=false;
+    handlerNum=-1;
 }
 
 Method::~Method()
@@ -332,10 +397,29 @@ void MethodList::setInterface(Interface* c)
     }
 }
 
+vector<Method*>& MethodList::getList()
+{
+    return list;
+}
+
 void MethodList::gatherMethods(vector<Method*>& allmethods) const
 {
     for(vector<Method*>::const_iterator iter=list.begin();iter != list.end();iter++){
 	allmethods.push_back(*iter);
+    }
+}
+
+void MethodList::gatherVtable(vector<Method*>& uniquemethods) const
+{
+    // Yuck - O(N^2)
+    for(vector<Method*>::const_iterator iter1=list.begin();iter1 != list.end();iter1++){
+	vector<Method*>::iterator iter2=uniquemethods.begin();;
+	for(;iter2 != uniquemethods.end(); iter2++){
+	    if((*iter1)->matches(*iter2, Method::TypesOnly))
+		break;
+	}
+	if(iter2 == uniquemethods.end())
+	    uniquemethods.push_back(*iter1);
     }
 }
 
@@ -353,6 +437,7 @@ Package::~Package()
 ScopedName::ScopedName()
     : leading_dot(false)
 {
+    sym=0;
 }
 
 ScopedName::ScopedName(const string& s1, const string& s2)
@@ -360,6 +445,7 @@ ScopedName::ScopedName(const string& s1, const string& s2)
     leading_dot=true;
     add(s1);
     add(s2);
+    sym=0;
 }
 
 ScopedName::~ScopedName()
@@ -396,6 +482,11 @@ string ScopedName::getName() const
     return n;
 }
 
+Symbol* ScopedName::getSymbol() const
+{
+    return sym;
+}
+
 bool ScopedName::getLeadingDot() const
 {
     return leading_dot;
@@ -418,6 +509,15 @@ string ScopedName::fullname() const
 	exit(1);
     }
     return sym->fullname();
+}
+
+string ScopedName::cppfullname(SymbolTable* forstab) const
+{
+    if(!sym){
+	cerr << "ERROR: Symbol not bound: " << getName() << " - " << this << "\n";
+	exit(1);
+    }
+    return sym->cppfullname(forstab);
 }
 
 ScopedNameList::ScopedNameList()
@@ -478,7 +578,7 @@ Type* Type::voidtype()
 {
     static Type* t;
     if(!t)
-	t=new BuiltinType("void");
+	t=new BuiltinType("void", "error");
     return t;
 }
 
@@ -486,7 +586,7 @@ Type* Type::booltype()
 {
     static Type* t;
     if(!t)
-	t=new BuiltinType("bool");
+	t=new BuiltinType("bool", "byte");
     return t;
 }
 
@@ -494,7 +594,7 @@ Type* Type::chartype()
 {
     static Type* t;
     if(!t)
-	t=new BuiltinType("char");
+	t=new BuiltinType("char", "char");
     return t;
 }
 
@@ -502,7 +602,7 @@ Type* Type::dcomplextype()
 {
     static Type* t;
     if(!t)
-	t=new BuiltinType("dcomplex");
+	t=new BuiltinType("dcomplex", "special");
     return t;
 }
 
@@ -510,7 +610,7 @@ Type* Type::doubletype()
 {
     static Type* t;
     if(!t)
-	t=new BuiltinType("double");
+	t=new BuiltinType("double", "double");
     return t;
 }
 
@@ -518,7 +618,7 @@ Type* Type::fcomplextype()
 {
     static Type* t;
     if(!t)
-	t=new BuiltinType("fcomplex");
+	t=new BuiltinType("fcomplex", "special");
     return t;
 }
 
@@ -526,7 +626,7 @@ Type* Type::floattype()
 {
     static Type* t;
     if(!t)
-	t=new BuiltinType("float");
+	t=new BuiltinType("float", "float");
     return t;
 }
 
@@ -534,7 +634,7 @@ Type* Type::inttype()
 {
     static Type* t;
     if(!t)
-	t=new BuiltinType("int");
+	t=new BuiltinType("int", "int");
     return t;
 }
 
@@ -542,7 +642,7 @@ Type* Type::stringtype()
 {
     static Type* t;
     if(!t)
-	t=new BuiltinType("string");
+	t=new BuiltinType("string", "special");
     return t;
 }
 
@@ -566,8 +666,8 @@ Type::~Type()
 {
 }
 
-BuiltinType::BuiltinType(const string& cname)
-    : cname(cname)
+BuiltinType::BuiltinType(const string& cname, const string& nexusname)
+    : cname(cname), nexusname(nexusname)
 {
 }
 
@@ -578,6 +678,14 @@ BuiltinType::~BuiltinType()
 std::string BuiltinType::fullname() const
 {
     return cname;
+}
+
+bool BuiltinType::isvoid() const
+{
+    if(cname == "void")
+	return true;
+    else
+	return false;
 }
 
 NamedType::NamedType(const string& curfile, int lineno, ScopedName* name)
@@ -592,6 +700,11 @@ NamedType::~NamedType()
 std::string NamedType::fullname() const
 {
     return name->fullname();
+}
+
+bool NamedType::isvoid() const
+{
+    return false;
 }
 
 ArrayType::ArrayType(Type* t, int dim)
@@ -610,8 +723,17 @@ std::string ArrayType::fullname() const
     return o.str();
 }
 
+bool ArrayType::isvoid() const
+{
+    return false;
+}
+
+
 //
 // $Log$
+// Revision 1.4  1999/09/17 05:07:25  sparker
+// Added nexus code generation capability
+//
 // Revision 1.3  1999/08/30 20:19:29  sparker
 // Updates to compile with -LANG:std on SGI
 // Other linux/irix porting oscillations
