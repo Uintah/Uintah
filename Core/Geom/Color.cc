@@ -49,6 +49,11 @@ Color::Color(const Color& c)
 {
 }
 
+Color::Color(double c[3])
+: _r(c[0]), _g(c[1]), _b(c[2])
+{
+}
+
 Color& Color::operator=(const Color& c)
 {
     _r=c._r;

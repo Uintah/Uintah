@@ -46,6 +46,7 @@ protected:
 public:
     Color();
     Color(double, double, double);
+    Color(double[3]);
     Color(const Color&);
     Color& operator=(const Color&);
     Color(const HSVColor&);
