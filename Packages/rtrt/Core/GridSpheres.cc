@@ -8,18 +8,13 @@
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Material.h>
-#include <Packages/rtrt/visinfo/visinfo.h>
 
-#include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Runnable.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
-
-#include <GL/glx.h>
-#include <GL/glu.h>
-#include <X11/Xlib.h>
+#include <string>
+#include <sgi_stl_warnings_on.h>
 
 #include <stdlib.h>
 
@@ -27,11 +22,6 @@ using namespace rtrt;
 using namespace SCIRun;
 using namespace std;
 
-
-//class Barrier;
-//class Scene;
-//class Stats;
-//class Worker;
 
 namespace rtrt {
   struct MCell {
