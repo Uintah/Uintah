@@ -25,7 +25,10 @@ namespace rtrt {
     Color color;
 
     PathTraceLight(const Point &cen, double radius, const Color &c);
+    Vector random_vector(double r1, double r2, double r3);
     Point random_point(double r1, double r2, double r3);
+    Point point_from_normal(const Vector& dir);
+    Vector normal(const Point &point);
   };
 
   class PathTraceContext {
