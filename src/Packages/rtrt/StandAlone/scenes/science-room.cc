@@ -66,8 +66,8 @@ using SCIRun::Thread;
 //#define ADD_CSAFE_FIRE
 //#define ADD_GEO_DATA
 //#define ADD_SHEEP
-#define ADD_DTIGLYPH
-#define ADD_BOX
+//#define ADD_DTIGLYPH
+//#define ADD_BOX
 #define ADD_SPHERE
 
 #ifdef ADD_DTIGLYPH
@@ -342,6 +342,10 @@ void make_walls_and_posters(Group *g, const Point &center,
   ImageMaterial *stucco = new ImageMaterial("/usr/sci/data/Geometry/textures/science-room/stucco.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0);
+  ImageMaterial *seawalls = new ImageMaterial("/usr/sci/data/Geometry/models/livingroom/livingroom-obj/maps/brick.ppm",
+		      ImageMaterial::Tile, ImageMaterial::Tile,
+		      1, Color(0,0,0), 0);
+					      
   int l;
   for (l=0; l<room_lights.size(); l++)
     stucco->my_lights.add(room_lights[l]);
@@ -555,8 +559,12 @@ void make_walls_and_posters(Group *g, const Point &center,
   Point p1,p2,p3,p4,p5,p6,p7,p8;
   Point p1t,p2t,p3t,p4t,p5t,p6t,p7t,p8t;
   Point p1o,p2o,p3o,p4o,p5o,p6o,p7o,p8o;
+  Point p1to,p2to,p3to,p4to,p5to,p6to,p7to,p8to;
   TexturedTri *tri;
 
+  double rx,ry,rz;
+  rx=ry=8*2;
+  rz=4*2;
   p1=Point(south_ceiling_west_corner);
   p1t=Point(1,1,0);
   p2=Point(south_floor_west_corner);
@@ -574,6 +582,15 @@ void make_walls_and_posters(Group *g, const Point &center,
   p8=Point(p4+door_height*up);
   p8t=Point(p4t.x(),door_height/wall_height,0);
 
+  p1to=Point(p1t.x()*rx,p1t.y()*rz,0);
+  p2to=Point(p2t.x()*rx,p2t.y()*rz,0);
+  p3to=Point(p3t.x()*rx,p3t.y()*rz,0);
+  p4to=Point(p4t.x()*rx,p4t.y()*rz,0);
+  p5to=Point(p5t.x()*rx,p5t.y()*rz,0);
+  p6to=Point(p6t.x()*rx,p6t.y()*rz,0);
+  p7to=Point(p7t.x()*rx,p7t.y()*rz,0);
+  p8to=Point(p8t.x()*rx,p8t.y()*rz,0);
+
   p1o=Point(p1-north*wall_thickness-east*wall_thickness+up*fc_thickness);
   p2o=Point(p2-north*wall_thickness-east*wall_thickness-up*fc_thickness);
   p3o=Point(p3-north*wall_thickness-up*fc_thickness);
@@ -589,43 +606,43 @@ void make_walls_and_posters(Group *g, const Point &center,
   tri = new TexturedTri(stucco, p1, p2, p3);
   tri->set_texcoords(p1t,p2t,p3t);
   south_wall->add(tri);
-  tri = new TexturedTri(stucco, p1o, p2o, p3o);
-  tri->set_texcoords(p1t,p2t,p3t);
+  tri = new TexturedTri(seawalls, p1o, p2o, p3o);
+  tri->set_texcoords(p1to,p2to,p3to);
   south_wall->add(tri);
 
   tri = new TexturedTri(stucco, p1, p3, p7);
   tri->set_texcoords(p1t,p3t,p7t);
   south_wall->add(tri);
-  tri = new TexturedTri(stucco, p1o, p3o, p7o);
-  tri->set_texcoords(p1t,p3t,p7t);
+  tri = new TexturedTri(seawalls, p1o, p3o, p7o);
+  tri->set_texcoords(p1to,p3to,p7to);
   south_wall->add(tri);
 
   tri = new TexturedTri(stucco, p1, p7, p8);
   tri->set_texcoords(p1t,p7t,p8t);
   south_wall->add(tri);
-  tri = new TexturedTri(stucco, p1o, p7o, p8o);
-  tri->set_texcoords(p1t,p7t,p8t);
+  tri = new TexturedTri(seawalls, p1o, p7o, p8o);
+  tri->set_texcoords(p1to,p7to,p8to);
   south_wall->add(tri);
 
   tri = new TexturedTri(stucco, p1, p8, p6);
   tri->set_texcoords(p1t,p8t,p6t);
   south_wall->add(tri);
-  tri = new TexturedTri(stucco, p1o, p8o, p6o);
-  tri->set_texcoords(p1t,p8t,p6t);
+  tri = new TexturedTri(seawalls, p1o, p8o, p6o);
+  tri->set_texcoords(p1to,p8to,p6to);
   south_wall->add(tri);
 
   tri = new TexturedTri(stucco, p5, p8, p6);
   tri->set_texcoords(p5t,p8t,p6t);
   south_wall->add(tri);
-  tri = new TexturedTri(stucco, p5o, p8o, p6o);
-  tri->set_texcoords(p5t,p8t,p6t);
+  tri = new TexturedTri(seawalls, p5o, p8o, p6o);
+  tri->set_texcoords(p5to,p8to,p6to);
   south_wall->add(tri);
 
   tri = new TexturedTri(stucco, p4, p8, p5);
   tri->set_texcoords(p4t,p8t,p5t);
   south_wall->add(tri);
-  tri = new TexturedTri(stucco, p4o, p8o, p5o);
-  tri->set_texcoords(p4t,p8t,p5t);
+  tri = new TexturedTri(seawalls, p4o, p8o, p5o);
+  tri->set_texcoords(p4to,p8to,p5to);
   south_wall->add(tri);
 
   p1=Point(north_ceiling_east_corner);
@@ -645,6 +662,15 @@ void make_walls_and_posters(Group *g, const Point &center,
   p8=Point(p4+door_height*up);
   p8t=Point(p4t.x(),door_height/wall_height,0);
 
+  p1to=Point(p1t.x()*ry,p1t.y()*rz,0);
+  p2to=Point(p2t.x()*ry,p2t.y()*rz,0);
+  p3to=Point(p3t.x()*ry,p3t.y()*rz,0);
+  p4to=Point(p4t.x()*ry,p4t.y()*rz,0);
+  p5to=Point(p5t.x()*ry,p5t.y()*rz,0);
+  p6to=Point(p6t.x()*ry,p6t.y()*rz,0);
+  p7to=Point(p7t.x()*ry,p7t.y()*rz,0);
+  p8to=Point(p8t.x()*ry,p8t.y()*rz,0);
+
   p1o=Point(p1+north*wall_thickness+east*wall_thickness+up*fc_thickness);
   p2o=Point(p2+north*wall_thickness+east*wall_thickness-up*fc_thickness);
   p3o=Point(p3+east*wall_thickness-up*fc_thickness);
@@ -660,43 +686,43 @@ void make_walls_and_posters(Group *g, const Point &center,
   tri = new TexturedTri(stucco, p1, p2, p3);
   tri->set_texcoords(p1t,p2t,p3t);
   east_wall->add(tri);
-  tri = new TexturedTri(stucco, p1o, p2o, p3o);
-  tri->set_texcoords(p1t,p2t,p3t);
+  tri = new TexturedTri(seawalls, p1o, p2o, p3o);
+  tri->set_texcoords(p1to,p2to,p3to);
   east_wall->add(tri);
 
   tri = new TexturedTri(stucco, p1, p3, p7);
   tri->set_texcoords(p1t,p3t,p7t);
   east_wall->add(tri);
-  tri = new TexturedTri(stucco, p1o, p3o, p7o);
-  tri->set_texcoords(p1t,p3t,p7t);
+  tri = new TexturedTri(seawalls, p1o, p3o, p7o);
+  tri->set_texcoords(p1to,p3to,p7to);
   east_wall->add(tri);
 
   tri = new TexturedTri(stucco, p1, p7, p8);
   tri->set_texcoords(p1t,p7t,p8t);
   east_wall->add(tri);
-  tri = new TexturedTri(stucco, p1o, p7o, p8o);
-  tri->set_texcoords(p1t,p7t,p8t);
+  tri = new TexturedTri(seawalls, p1o, p7o, p8o);
+  tri->set_texcoords(p1to,p7to,p8to);
   east_wall->add(tri);
 
   tri = new TexturedTri(stucco, p1, p8, p6);
   tri->set_texcoords(p1t,p8t,p6t);
   east_wall->add(tri);
-  tri = new TexturedTri(stucco, p1o, p8o, p6o);
-  tri->set_texcoords(p1t,p8t,p6t);
+  tri = new TexturedTri(seawalls, p1o, p8o, p6o);
+  tri->set_texcoords(p1to,p8to,p6to);
   east_wall->add(tri);
 
   tri = new TexturedTri(stucco, p5, p8, p6);
   tri->set_texcoords(p5t,p8t,p6t);
   east_wall->add(tri);
-  tri = new TexturedTri(stucco, p5o, p8o, p6o);
-  tri->set_texcoords(p5t,p8t,p6t);
+  tri = new TexturedTri(seawalls, p5o, p8o, p6o);
+  tri->set_texcoords(p5to,p8to,p6to);
   east_wall->add(tri);
 
   tri = new TexturedTri(stucco, p4, p8, p5);
   tri->set_texcoords(p4t,p8t,p5t);
   east_wall->add(tri);
-  tri = new TexturedTri(stucco, p4o, p8o, p5o);
-  tri->set_texcoords(p4t,p8t,p5t);
+  tri = new TexturedTri(seawalls, p4o, p8o, p5o);
+  tri->set_texcoords(p4to,p8to,p5to);
   east_wall->add(tri);
 
   Material* white = new LambertianMaterial(Color(0.8,0.8,0.8));
@@ -1273,10 +1299,8 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
     HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > *vel =
       new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > >
       (temp_color_map, vel_dpy, buf, 3, nworkers);
-    CutGroup *fire_cut = new CutGroup(fcpdpy, true);
-    fire_cut->add(fire_inst);
-    fire_cut->name_ = "CSAFE Fire Cut";
-    fire_inst->addCPDpy(fcpdpy);
+
+
     fire_geom->add(vel);
   }
 
@@ -1373,35 +1397,62 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   SelectableGroup *sg = new SelectableGroup(10);
 
 #ifdef ADD_VIS_FEM
+  BBox vinst_bbox;
+  vinst->compute_bounds(vinst_bbox, 0);
+  cerr << "Visible Female bbox="<<vinst_bbox.min()<<"-"<<vinst_bbox.max()<<"(diag="<<vinst_bbox.diagonal()<<"\n";
   sg->add(vcut);
 #endif
 #ifdef ADD_HEAD
+  BBox hinst_bbox;
+  hinst->compute_bounds(hinst_bbox, 0);
+  cerr << "Head bbox="<<hinst_bbox.min()<<"-"<<hinst_bbox.max()<<"(diag="<<hinst_bbox.diagonal()<<"\n";
   sg->add(hcut);
 #endif
 #ifdef ADD_CSAFE_FIRE
+  BBox fire_inst_bbox;
+  fire_inst->compute_bounds(fire_inst_bbox, 0);
+  cerr << "CSAFE Fire bbox="<<fire_inst_bbox.min()<<"-"<<fire_inst_bbox.max()<<"(diag="<<fire_inst_bbox.diagonal()<<"\n";
   sg->add(fire_inst);
 #endif
 #ifdef ADD_GEO_DATA
+  BBox ginst_bbox;
+  gcut->compute_bounds(ginst_bbox, 0);
+  cerr << "Geoscience bbox="<<ginst_bbox.min()<<"-"<<ginst_bbox.max()<<"(diag="<<ginst_bbox.diagonal()<<"\n";
   sg->add(gcut);
 #endif
 #ifdef ADD_SHEEP
+  BBox sinst_bbox;
+  sinst->compute_bounds(sinst_bbox, 0);
+  cerr << "Sheep Heart bbox="<<sinst_bbox.min()<<"-"<<sinst_bbox.max()<<"(diag="<<sinst_bbox.diagonal()<<"\n";
   sg->add(scut);
 #endif
 #ifdef ADD_DTIGLYPH
+  BBox glyph_bbox;
+  glyphs->compute_bounds(glyph_bbox, 0);
+  cerr << "Glyph bbox="<<glyph_bbox.min()<<"-"<<glyph_bbox.max()<<"(diag="<<glyph_bbox.diagonal()<<"\n";
   sg->add(glyphs);
 #endif
 
 #ifdef ADD_BOX
+  BBox boxg_bbox;
+  boxg->compute_bounds(boxg_bbox, 0);
+  cerr << "Box bbox="<<boxg_bbox.min()<<"-"<<boxg_bbox.max()<<"(diag="<<boxg_bbox.diagonal()<<"\n";
   sg->add(boxg);
 #endif
 
 #ifdef ADD_SPHERE
+  BBox sphereg_bbox;
+  sphereg->compute_bounds(sphereg_bbox, 0);
+  cerr << "Sphere bbox="<<sphereg_bbox.min()<<"-"<<sphereg_bbox.max()<<"(diag="<<sphereg_bbox.diagonal()<<"\n";
   sg->add(sphereg);
-#else
-  g->add(sphereg);
+//#else
+//  g->add(sphereg);
 #endif
 
   sg->set_name("VolVis Selection");
+  BBox sg_bbox;
+  sphereg->compute_bounds(sg_bbox, 0);
+  cerr << "Selectable Group bbox="<<sg_bbox.min()<<"-"<<sg_bbox.max()<<"(diag="<<sg_bbox.diagonal()<<"\n";
   g->add(sg);
 
   Color cdown(0.1, 0.1, 0.1);
