@@ -49,86 +49,101 @@ class Matrix;
 class MatrixRow;
 typedef LockingHandle<Matrix> MatrixHandle;
 
-class SCICORESHARE Matrix : public Datatype {
+class SCICORESHARE Matrix : public Datatype
+{
 protected:
-    enum Sym {
-        non_symmetric,
-        symmetric
-    };
-    enum Representation {
-	sparse,
-	symsparse,
-	dense,
-	tridiagonal,
-	column,
-	other
-    };
+  enum Sym {
+    NON_SYMMETRIC,
+    SYMMETRIC
+  };
+  enum Representation {
+    SPARSE,
+    SYMSPARSE,
+    DENSE,
+    TRIDIAGONAL,
+    COLUMN,
+    OTHER
+  };
 
-    int separate_raw;
-    clString raw_filename;
+  bool     separate_raw_;
+  string   raw_filename_;
+  Sym      sym_;
+  bool     extremaCurrent_;
 
-    Sym sym;
-    Matrix(Sym symmetric, Representation dense);
-    int extremaCurrent;
+  Matrix(Sym symmetric, Representation dense);
+
 private:
-    Representation rep;
+
+  Representation rep_;
+
 public:
 
-  virtual double* get_val(){return 0;}
-  virtual int* get_row(){return 0;}
-  virtual int* get_col() {return 0;}
+  virtual ~Matrix();
+  virtual Matrix* clone();
+
+  virtual double* get_val() { return 0; }
+  virtual int* get_row() { return 0; }
+  virtual int* get_col() { return 0; }
 
   
-    clString getType();
-    SymSparseRowMatrix* getSymSparseRow();
-    SparseRowMatrix* getSparseRow();
-    DenseMatrix* getDense();
-    ColumnMatrix* getColumn();
-    int is_symmetric();
-    void is_symmetric(int symm);
-    virtual ~Matrix();
-    virtual Matrix* clone();
-    virtual double& get(int, int)=0;
-    inline MatrixRow operator[](int r);
+  const string getType() const;
+  SymSparseRowMatrix* getSymSparseRow();
+  SparseRowMatrix* getSparseRow();
+  DenseMatrix* getDense();
+  ColumnMatrix* getColumn();
+  bool is_symmetric();
+  void is_symmetric(bool sym);
 
-    virtual void zero()=0;
-    virtual int nrows() const=0;
-    virtual int ncols() const=0;
-    virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& v)=0;
-    virtual double minValue()=0;
-    virtual double maxValue()=0;
-    virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
-		      int& flops, int& memrefs, int beg=-1, int end=-1, int spVec=0) const=0;
-    virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
-				int& flops, int& memrefs, int beg=-1, int end=-1, int spVec=0)=0;
+  virtual double& get(int, int)=0;
+  inline MatrixRow operator[](int r);
 
-  virtual void print(ostream&) const {};
-  virtual void print() const {};
-    // separate raw files
-    void set_raw(int v) { separate_raw = v; }
-    int get_raw() { return separate_raw; }
-    void set_raw_filename( clString &f ) { raw_filename = f; separate_raw = 1;}
-    clString &get_raw_filename() { return raw_filename; }
+  virtual void zero()=0;
+  virtual int nrows() const=0;
+  virtual int ncols() const=0;
+  virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& v)=0;
+  virtual double minValue()=0;
+  virtual double maxValue()=0;
+  virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
+		    int& flops, int& memrefs,
+		    int beg=-1, int end=-1, int spVec=0) const=0;
+  virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
+			      int& flops, int& memrefs,
+			      int beg=-1, int end=-1, int spVec=0)=0;
 
-    // Persistent representation...
-    virtual void io(Piostream&);
-    static PersistentTypeID type_id;
+  virtual void print(ostream&) const {}
+  virtual void print() const {}
+
+  // Separate raw files.
+  void set_raw(bool v) { separate_raw_ = v; }
+  bool get_raw() { return separate_raw_; }
+  void set_raw_filename( string &f )
+  { raw_filename_ = f; separate_raw_ = true; }
+  const string get_raw_filename() const { return raw_filename_; }
+
+  // Persistent representation.
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
 };
 
-class SCICORESHARE MatrixRow {
-    Matrix* matrix;
-    int row;
-public:
-    inline MatrixRow(Matrix* matrix, int row) : matrix(matrix), row(row) {}
-    inline ~MatrixRow() {}
 
-    inline double& operator[](int col) {return matrix->get(row, col);}
-};
-
-inline MatrixRow Matrix::operator[](int row)
+class SCICORESHARE MatrixRow
 {
-    return MatrixRow(this, row);
+  Matrix* matrix;
+  int row;
+public:
+  inline MatrixRow(Matrix* matrix, int row) : matrix(matrix), row(row) {}
+  inline ~MatrixRow() {}
+
+  inline double& operator[](int col) {return matrix->get(row, col);}
+};
+
+
+inline MatrixRow
+Matrix::operator[](int row)
+{
+  return MatrixRow(this, row);
 }
+
 
 void Mult(ColumnMatrix&, const Matrix&, const ColumnMatrix&);
 

@@ -49,7 +49,7 @@ static Persistent* maker()
 PersistentTypeID SymSparseRowMatrix::type_id("SymSparseRowMatrix", "Matrix", maker);
 
 SymSparseRowMatrix::SymSparseRowMatrix()
-  : Matrix(Matrix::symmetric, Matrix::symsparse),
+  : Matrix(Matrix::SYMMETRIC, Matrix::SYMSPARSE),
     nnrows(0),
     nncols(0),
     rows(0),
@@ -66,7 +66,7 @@ SymSparseRowMatrix::SymSparseRowMatrix()
 SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
 				       Array1<int>& in_rows,
 				       Array1<int>& in_cols)
-: Matrix(Matrix::symmetric, Matrix::symsparse),
+: Matrix(Matrix::SYMMETRIC, Matrix::SYMSPARSE),
   nnrows(nnrows), 
   nncols(nncols)
 {
@@ -87,7 +87,7 @@ SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
 SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
 				       int* rows, int* columns,
 				       int nnz)
-: Matrix(Matrix::symmetric, Matrix::symsparse),
+: Matrix(Matrix::SYMMETRIC, Matrix::SYMSPARSE),
   nnrows(nnrows),
   nncols(nncols),
   rows(rows),
@@ -179,7 +179,7 @@ double SymSparseRowMatrix::density()
 }
 
 double SymSparseRowMatrix::minValue() {
-    if (extremaCurrent)
+    if (extremaCurrent_)
 	return minVal;
     if (nnz == 0) return 0;
     minVal=maxVal=a[0];
@@ -189,12 +189,12 @@ double SymSparseRowMatrix::minValue() {
 	if (a[idx] > maxVal)
 	    maxVal = a[idx];
     }
-    extremaCurrent=1;
+    extremaCurrent_ = true;
     return minVal;
 }
 
 double SymSparseRowMatrix::maxValue() {
-    if (extremaCurrent)
+    if (extremaCurrent_)
 	return maxVal;
     if (nnz == 0) return 0;
     minVal=maxVal=a[0];
@@ -204,7 +204,7 @@ double SymSparseRowMatrix::maxValue() {
 	if (a[idx] > maxVal)
 	    maxVal = a[idx];
     }
-    extremaCurrent=1;
+    extremaCurrent_ = true;
     return maxVal;
 }
 

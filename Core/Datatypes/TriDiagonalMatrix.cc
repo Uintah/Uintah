@@ -37,7 +37,7 @@
 namespace SCIRun {
 
 TriDiagonalMatrix::TriDiagonalMatrix(int rows)
-: Matrix(non_symmetric, tridiagonal), rows(rows)
+: Matrix(NON_SYMMETRIC, TRIDIAGONAL), rows(rows)
 {
     data=new TriRow[rows];
 }

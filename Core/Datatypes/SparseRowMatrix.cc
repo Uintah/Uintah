@@ -55,7 +55,7 @@ SparseRowMatrix* SparseRowMatrix::clone(){
 }
 
 SparseRowMatrix::SparseRowMatrix()
-: Matrix(Matrix::symmetric, Matrix::sparse),
+: Matrix(Matrix::SYMMETRIC, Matrix::SPARSE),
   nnrows(0),
   nncols(0),
   rows(0),
@@ -68,7 +68,7 @@ SparseRowMatrix::SparseRowMatrix()
 SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
 				       Array1<int>& in_rows,
 				       Array1<int>& in_cols)
-: Matrix(Matrix::symmetric, Matrix::sparse),
+: Matrix(Matrix::SYMMETRIC, Matrix::SPARSE),
   nnrows(nnrows), 
   nncols(nncols)
 {
@@ -88,7 +88,7 @@ SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
 SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
 				 int* rows, int* columns,
 				 int nnz, double* a)
-  : Matrix(Matrix::symmetric, Matrix::sparse),
+  : Matrix(Matrix::SYMMETRIC, Matrix::SPARSE),
     nnrows(nnrows),
     nncols(nncols),
     rows(rows),
@@ -100,7 +100,7 @@ SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
 SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
 				 int* rows, int* columns,
 				 int nnz)
-  : Matrix(Matrix::symmetric, Matrix::sparse),
+  : Matrix(Matrix::SYMMETRIC, Matrix::SPARSE),
     nnrows(nnrows),
     nncols(nncols),
     rows(rows),
@@ -252,7 +252,7 @@ double SparseRowMatrix::density()
 }
 
 double SparseRowMatrix::minValue() {
-    if (extremaCurrent)
+    if (extremaCurrent_)
 	return minVal;
     if (nnz == 0) return 0;
     minVal=maxVal=a[0];
@@ -262,12 +262,12 @@ double SparseRowMatrix::minValue() {
 	if (a[idx] > maxVal)
 	    maxVal = a[idx];
     }
-    extremaCurrent=1;
+    extremaCurrent_ = true;
     return minVal;
 }
 
 double SparseRowMatrix::maxValue() {
-    if (extremaCurrent)
+    if (extremaCurrent_)
 	return maxVal;
     if (nnz == 0) return 0;
     minVal=maxVal=a[0];
@@ -277,7 +277,7 @@ double SparseRowMatrix::maxValue() {
 	if (a[idx] > maxVal)
 	    maxVal = a[idx];
     }
-    extremaCurrent=1;
+    extremaCurrent_ = true;
     return maxVal;
 }
 
