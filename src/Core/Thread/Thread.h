@@ -97,8 +97,9 @@ DESCRIPTION
 	    bool isDaemon() const;
 	    
 	    //////////
-	    // If the thread is started in the the NotActivated
-	    // state, use this to activate the thread.
+	    // If the thread is started in the the NotActivated state,
+	    // use this to activate the thread (the argument should be
+	    // false).
 	    void activate(bool stopped);
 	    
 	    //////////
@@ -114,9 +115,10 @@ DESCRIPTION
 	    //////////
 	    // Set the stack size for a particular thread.  In order
 	    // to use this thread, you must create the thread in the
-	    // stopped state, set the stack size, and then start the
-	    // thread.  Setting the stack size for a thread that is
-	    // running or has ever been run, will throw an exception.
+	    // NotActivated state, set the stack size, and then start
+	    // the thread using activate(false).  Setting the stack
+	    // size for a thread that is running or has ever been run,
+	    // will throw an exception.  The units are in bytes.
 	    void setStackSize(unsigned long stackSize);
 	    
 	    //////////
