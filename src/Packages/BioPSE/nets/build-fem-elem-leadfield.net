@@ -133,7 +133,7 @@ the electric field vector in element i.
 }
 set $m5-filename $DATADIR/$DATASET/generated/$DATASET-leadfield.mat
 set $m5-filetype {ASCII}
-set $m5-split 1
+set $m5-split 0
 set $m6-notes {Having solving for the voltages at the nodes of the TetVolMesh, we combine those scalar
 values with the TetVolMesh to produce a TetVolField of scalar double potentials at the
 nodes.
