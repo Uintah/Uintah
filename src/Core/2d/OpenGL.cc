@@ -33,8 +33,10 @@
 #include <Core/2d/OpenGL.h>
 #include <Core/2d/glprintf.h>
 #include <Core/2d/Polyline.h>
+#include <Core/2d/LockedPolyline.h>
 #include <Core/2d/Diagram.h>
 #include <Core/2d/Hairline.h>
+#include <Core/2d/HistObj.h>
 #include <Core/2d/BoxObj.h>
 #include <Core/2d/Zoom.h>
 #include <Core/2d/Axes.h>
@@ -57,6 +59,17 @@ Polyline::draw( bool )
 {
   glColor3f( color_.r(), color_.g(), color_.b() );
   
+  glBegin(GL_LINE_STRIP);
+  for (int i=0; i<data_.size(); i++) 
+    glVertex2f( i, data_[i] );
+  glEnd();
+}
+
+void 
+LockedPolyline::draw( bool )
+{
+  glColor3f( color_.r(), color_.g(), color_.b() );
+  
   read_lock();
 
   glBegin(GL_LINE_STRIP);
@@ -67,6 +80,19 @@ Polyline::draw( bool )
   read_unlock();
 }
   
+void 
+HistObj::draw( bool )
+{
+  glColor3f( color_.r(), color_.g(), color_.b() );
+
+  glBegin(GL_LINE_STRIP);
+  for (int i=0; i<data_.size(); i++) {
+    glVertex2f( i, data_[i] );
+  }
+  glEnd();
+
+}
+
 void 
 Diagram::draw( bool pick)
 {
@@ -83,7 +109,11 @@ Diagram::draw( bool pick)
 	reset_bbox();
 	
 	if ( graphs_bounds_.valid() ) {
-	
+
+// 	  cerr << "Diagram bounds " << name() << " " 
+// 	       << graphs_bounds_.min() << "  "
+// 	       << graphs_bounds_.max() << endl;
+
 	  glPushMatrix();
 	  glOrtho( graphs_bounds_.min().x(),  graphs_bounds_.max().x(),
 		   graphs_bounds_.min().y(),  graphs_bounds_.max().y(),

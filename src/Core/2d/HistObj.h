@@ -17,50 +17,41 @@
 
 
 /*
- *  Polyline.h: Displayable 2D object
+ *  HistObj.h: 
  *
  *  Written by:
  *   Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
- *   July 2001
+ *   Sep 2001
  *
  *  Copyright (C) 2001 SCI Group
  */
 
-#ifndef SCI_Polyline_h
-#define SCI_Polyline_h 
+#ifndef SCI_HistObj_h
+#define SCI_HistObj_h 
 
 #include <Core/Geom/Color.h>
 #include <Core/Containers/Array1.h>
-#include <Core/2d/DrawObj.h>
+#include <Core/2d/Polyline.h>
 
 namespace SCIRun {
   
-class SCICORESHARE Polyline : public DrawObj {
+class SCICORESHARE HistObj : public Polyline {
 protected:
-  Array1<double> data_;
-  double min_, max_;
-  Color color_;
+  Array1<double> ref_;
+  int bins_;
 
 public:
-  Polyline( const string &name="") : DrawObj(name) {} 
-  Polyline( int i );
-  Polyline( const Array1<double> &, const string &name="" );
-  virtual ~Polyline();
+  HistObj( const string &name="");
+  HistObj( const Array1<double> &, const string &name="" );
+  virtual ~HistObj();
+
+  void set_bins( int );
+  void set_data( const Array1<double> &);
 
   virtual double at( double );
-  
-  void compute_minmax();
-  void add( double );
-  void clear() { data_.remove_all(); }
-  string tcl_color();
-
-  void set_color( const Color &);
-  Color get_color() { return color_; }
-
-  virtual void get_bounds(BBox2d&);
-
+public:
   // For OpenGL
 #ifdef SCI_OPENGL
   virtual void draw( bool = false );
@@ -69,10 +60,14 @@ public:
 
   virtual void io(Piostream&);    
 
+private:
+  void compute();
+
+
 };
 
-void Pio(Piostream&, Polyline*&);
+void Pio(Piostream&, HistObj*&);
 
 } // namespace SCIRun
 
-#endif // SCI_Polyline_h
+#endif // SCI_HistObj_h

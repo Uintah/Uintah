@@ -52,13 +52,7 @@ PersistentTypeID Polyline::type_id("polyline", "DrawObj", make_Polyline);
 Polyline::Polyline( const Array1<double> &data, const string &name )
   : DrawObj(name), data_(data) 
 {
-  if ( data_.size() > 0 ) {
-    min_ = max_ = data_[0];
-    for (int i=1; i<data_.size(); i++)
-      if ( data_[i] < min_ ) min_ = data_[i];
-      else if ( max_ < data_[i] ) max_ = data_[i];
-  }
-
+  compute_minmax();
   color_ = Color( 0, 0, 0 );
 }
 
@@ -76,26 +70,17 @@ Polyline::~Polyline()
 {
 }
 
-double
-Polyline::at( double v )
+void
+Polyline::compute_minmax()
 {
-  read_lock();
-  
-  double val;
-
-  if ( v < 0 ) 
-    val = data_[0];
-  else if ( v >= data_.size()-1 ) 
-    val = data_[data_.size()-1];
-  else {
-    int p = int(v);
-    val  = data_[p] + (data_[p+1] - data_[p])*(v-p);
+  if ( data_.size() > 0 ) {
+    min_ = max_ = data_[0];
+    for (int i=1; i<data_.size(); i++)
+      if ( data_[i] < min_ ) min_ = data_[i];
+      else if ( max_ < data_[i] ) max_ = data_[i];
   }
-
-  read_unlock();
-
-  return val;
 }
+
 
 void
 Polyline::set_color( const Color &c )
@@ -122,9 +107,24 @@ Polyline::add( double v )
     if ( v < min_ ) min_ = v;
     else if ( max_ < v ) max_ = v;
 
-  write_lock();
   data_.add(v);
-  write_unlock();
+}
+
+double
+Polyline::at( double v )
+{
+  double val;
+
+  if ( v < 0 ) 
+    val = data_[0];
+  else if ( v >= data_.size()-1 ) 
+    val = data_[data_.size()-1];
+  else {
+    int p = int(v);
+    val  = data_[p] + (data_[p+1] - data_[p])*(v-p);
+  }
+
+  return val;
 }
 
 void

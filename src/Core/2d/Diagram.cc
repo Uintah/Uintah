@@ -325,11 +325,9 @@ Diagram::button_press( int x, int y, int button )
   draw( true );
   
   int n = glRenderMode( GL_RENDER );
-  //  std::cerr << "number hits = " << n << std::endl;
   
   if ( n > 0 ) {
     selected_widget_ = buffer[3];
-    //    std::cerr << "selected widget = " << selected_widget_ << std::endl;
     widget_[ selected_widget_ ]->select( x, y, button );
   }
   

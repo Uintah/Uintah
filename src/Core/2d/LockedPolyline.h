@@ -17,7 +17,7 @@
 
 
 /*
- *  Polyline.h: Displayable 2D object
+ *  LockedPolyline.h: Displayable 2D object
  *
  *  Written by:
  *   Yarden Livnat
@@ -28,38 +28,25 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#ifndef SCI_Polyline_h
-#define SCI_Polyline_h 
+#ifndef SCI_LockedPolyline_h
+#define SCI_LockedPolyline_h 
 
 #include <Core/Geom/Color.h>
 #include <Core/Containers/Array1.h>
-#include <Core/2d/DrawObj.h>
+#include <Core/2d/Polyline.h>
 
 namespace SCIRun {
   
-class SCICORESHARE Polyline : public DrawObj {
-protected:
-  Array1<double> data_;
-  double min_, max_;
-  Color color_;
+class SCICORESHARE LockedPolyline : public Polyline {
 
 public:
-  Polyline( const string &name="") : DrawObj(name) {} 
-  Polyline( int i );
-  Polyline( const Array1<double> &, const string &name="" );
-  virtual ~Polyline();
+  LockedPolyline( const string &name="") : Polyline(name) {} 
+  LockedPolyline( int i );
+  LockedPolyline( const Array1<double> &, const string &name="" );
+  virtual ~LockedPolyline();
 
-  virtual double at( double );
-  
-  void compute_minmax();
-  void add( double );
-  void clear() { data_.remove_all(); }
-  string tcl_color();
-
-  void set_color( const Color &);
-  Color get_color() { return color_; }
-
-  virtual void get_bounds(BBox2d&);
+  double at(double);
+  void add(double);
 
   // For OpenGL
 #ifdef SCI_OPENGL
@@ -71,8 +58,8 @@ public:
 
 };
 
-void Pio(Piostream&, Polyline*&);
+void Pio(Piostream&, LockedPolyline*&);
 
 } // namespace SCIRun
 
-#endif // SCI_Polyline_h
+#endif // SCI_LockedPolyline_h
