@@ -682,6 +682,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     cout << "Doing Compute Stable Timestep on patch " << patch->getID() 
          << "\t\t ICE" << endl;
   #endif
+      double initial_dT = d_initialDt;
+      
       Vector dx = patch->dCell();
       double delt_CFL = 100000, fudge_factor = 1.;
       CCVariable<double> speedSound;
@@ -718,6 +720,12 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
         }
       }
+      //__________________________________
+      // First time through grab delT from input file
+      if (iterNum == 1) {
+        delt_CFL = d_initialDt;
+      }
+      
     new_dw->put(delt_vartype(delt_CFL), lb->delTLabel);
   }  // patch loop
 }
