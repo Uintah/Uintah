@@ -8,7 +8,7 @@
 # corresponding .o file.
 
 if test $# != 1 || test $1 = "-h" || test $1 = "-help" || test $1 = "--help"; then
-  echo "here"
+  echo ""
   echo "Usage: $0 <bad_include>"
   echo ""
   echo "  bad_include - the name of the bad file (or some unique text"
@@ -28,8 +28,10 @@ if test $# != 1 || test $1 = "-h" || test $1 = "-help" || test $1 = "--help"; th
   echo ""
   echo "cd .../SCIRun/<bin>"
   echo "../src/scripts/repair Thirdparty/1.20"
-  echo "gmake"
   echo ""
+  echo "And then run your 'gmake' again."
+  echo ""
+  exit
 fi
 
 bad_inc=$1
@@ -42,10 +44,10 @@ for file in $files; do
    file_found=yes
    base=`echo $file | sed "s%\.d%%"`
    echo "rm -rf $base.o $base.d"
-#   rm -rf $base.o $base.d
+   rm -rf $base.o $base.d
 done
 
-if test $file_found="no"; then
+if test $file_found = "no"; then
    echo ""
    echo "No matching files found. (Perhaps your 'bad_include' was incorrect?)"
    echo "If you continue to have problems with this script, please contact"
