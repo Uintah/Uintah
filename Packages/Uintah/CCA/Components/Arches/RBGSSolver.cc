@@ -985,7 +985,7 @@ RBGSSolver::scalarLisolve(const ProcessorGroup*,
   cerr << "After scalar " << index <<" solve " << scalarIter << " " << scalarResid << endl;
   cerr << "After scalar " << index <<" solve " << nlResid << " " << trunc_conv <<  endl;
 #endif
-    fort_explicit(idxLo, idxHi, vars->scalar, vars->old_scalar,
+    fort_explicit_func(idxLo, idxHi, vars->scalar, vars->old_scalar,
 		  vars->scalarCoeff[Arches::AE], 
 		  vars->scalarCoeff[Arches::AW], 
 		  vars->scalarCoeff[Arches::AN], 
@@ -1077,7 +1077,7 @@ RBGSSolver::enthalpyLisolve(const ProcessorGroup*,
   cerr << "After scalar " << index <<" solve " << scalarIter << " " << scalarResid << endl;
   cerr << "After scalar " << index <<" solve " << nlResid << " " << trunc_conv <<  endl;
 #endif
-    fort_explicit(idxLo, idxHi, vars->enthalpy, vars->old_enthalpy,
+    fort_explicit_func(idxLo, idxHi, vars->enthalpy, vars->old_enthalpy,
 		  vars->scalarCoeff[Arches::AE], 
 		  vars->scalarCoeff[Arches::AW], 
 		  vars->scalarCoeff[Arches::AN], 
