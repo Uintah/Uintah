@@ -3,7 +3,7 @@
 itcl_class SCIRun_Render_Viewer {
     inherit Module
 
-    # List of ViewWindow children of this salmon
+    # List of ViewWindow children of this Viewer
     protected viewwindow
 
     # Id for the Next ViewWindows to be created.  Incremented for each new Viewindow
