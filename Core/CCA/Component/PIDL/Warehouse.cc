@@ -36,16 +36,18 @@
 #include <Core/Exceptions/InternalError.h>
 #include <iostream>
 #include <sstream>
+#include <string>
+using namespace std;
 
 using PIDL::Object_interface;
 using PIDL::Warehouse;
 using std::map;
 
 Warehouse::Warehouse()
-    : mutex("PIDL::Warehouse lock"),
-      condition("PIDL::Warehouse objects>0 condition")
+  : mutex("PIDL::Warehouse lock"),
+    condition("PIDL::Warehouse objects>0 condition")
 {
-    nextID=1;
+  nextID=1;
 }
 
 Warehouse::~Warehouse()
@@ -54,85 +56,85 @@ Warehouse::~Warehouse()
 
 void Warehouse::run()
 {
-    mutex.lock();
-    while(objects.size() > 0)
-	condition.wait(mutex);
-    mutex.unlock();
+  mutex.lock();
+  while(objects.size() > 0)
+    condition.wait(mutex);
+  mutex.unlock();
 }
 
 int Warehouse::registerObject(Object_interface* object)
 {
-    mutex.lock();
-    int id=nextID++;
-    objects[id]=object;
-    mutex.unlock();
-    return id;
+  mutex.lock();
+  int id=nextID++;
+  objects[id]=object;
+  mutex.unlock();
+  return id;
 }
 
 Object_interface* Warehouse::unregisterObject(int id)
 {
-    mutex.lock();
-    map<int, Object_interface*>::iterator iter=objects.find(id);
-    if(iter == objects.end())
-	throw SCIRun::InternalError("Object not in wharehouse");
-    objects.erase(id);
-    if(objects.size() == 0)
-	condition.conditionSignal();
-    mutex.unlock();
-    return iter->second;
+  mutex.lock();
+  map<int, Object_interface*>::iterator iter=objects.find(id);
+  if(iter == objects.end())
+    throw SCIRun::InternalError("Object not in wharehouse");
+  objects.erase(id);
+  if(objects.size() == 0)
+    condition.conditionSignal();
+  mutex.unlock();
+  return iter->second;
 }
 
 Object_interface* Warehouse::lookupObject(int id)
 {
-    mutex.lock();
-    map<int, Object_interface*>::iterator iter=objects.find(id);
-    if(iter == objects.end()){
-	mutex.unlock();
-	return 0;
-    } else {
-	mutex.unlock();
-	return iter->second;
-    }
+  mutex.lock();
+  map<int, Object_interface*>::iterator iter=objects.find(id);
+  if(iter == objects.end()){
+    mutex.unlock();
+    return 0;
+  } else {
+    mutex.unlock();
+    return iter->second;
+  }
 }
 
 Object_interface* Warehouse::lookupObject(const std::string& str)
 {
-    string temp = str;
-    std::istringstream i(temp);
-    int objid;
-    i >> objid;
-    if(!i)
-        throw InvalidReference("Cannot parse object ID ("+str+")");
-    char x;
-    i >> x;
-    if(i) // If there are more characters, we have a problem...
-        throw InvalidReference("Extra characters after object ID ("+str+")");
-    return lookupObject(objid);
+  string temp = str;
+  std::istringstream i(temp);
+  int objid;
+  i >> objid;
+  if(!i)
+    throw InvalidReference("Cannot parse object ID ("+str+")");
+  char x;
+  i >> x;
+  if(i) // If there are more characters, we have a problem...
+    throw InvalidReference("Extra characters after object ID ("+str+")");
+  return lookupObject(objid);
 }
 
 int Warehouse::approval(char* urlstring, globus_nexus_startpoint_t* sp)
 {
-    URL url(urlstring);
-    Object_interface* obj=lookupObject(url.getSpec());
-    if(!obj){
-	std::cerr << "Unable to find object: " << urlstring
-		  << ", rejecting client (code=1002)\n";
-	return 1002;
-    }
-    if(!obj->d_serverContext){
-	std::cerr << "Object is corrupt: " << urlstring
-		  << ", rejecting client (code=1003)\n";
-	return 1003;
-    }
-    if(int gerr=globus_nexus_startpoint_bind(sp, &obj->d_serverContext->d_endpoint)){
-	std::cerr << "Failed to bind startpoint: " << url.getSpec()
-		  << ", rejecting client (code=1004)\n";
-	std::cerr << "Globus error code: " << gerr << '\n';
-	return 1004;
-    }
-    /* Increment the reference count for this object. */
-    obj->_addReference();
-    //std::cerr << "Approved connection to " << urlstring << '\n';
-    return GLOBUS_SUCCESS;
+  URL url(urlstring);
+  Object_interface* obj=lookupObject(url.getSpec());
+  if(!obj){
+    std::cerr << "Unable to find object: " << urlstring
+	      << ", rejecting client (code=1002)\n";
+    return 1002;
+  }
+  if(!obj->d_serverContext){
+    std::cerr << "Object is corrupt: " << urlstring
+	      << ", rejecting client (code=1003)\n";
+    return 1003;
+  }
+  if(int gerr=globus_nexus_startpoint_bind(sp, &obj->d_serverContext->d_endpoint)){
+    std::cerr << "Failed to bind startpoint: " << url.getSpec()
+	      << ", rejecting client (code=1004)\n";
+    std::cerr << "Globus error code: " << gerr << '\n';
+    return 1004;
+  }
+  /* Increment the reference count for this object. */
+  obj->_addReference();
+  //std::cerr << "Approved connection to " << urlstring << '\n';
+  return GLOBUS_SUCCESS;
 }
 

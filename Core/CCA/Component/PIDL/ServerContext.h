@@ -52,38 +52,38 @@ DESCRIPTION
    (Object_interface), and to the most-derived type (a void*).  Endpoints
    are created lazily from the Object_interface class.
 ****************************************/
-	struct ServerContext {
-	    //////////
-	    // A pointer to the type information.
-	    const TypeInfo* d_typeinfo;
+  struct ServerContext {
+    //////////
+    // A pointer to the type information.
+    const TypeInfo* d_typeinfo;
 
-	    //////////
-	    // The endpoint associated with this object.
-	    globus_nexus_endpoint_t d_endpoint;
+    //////////
+    // The endpoint associated with this object.
+    globus_nexus_endpoint_t d_endpoint;
 
-	    //////////
-	    // The ID of this object from the object wharehouse.  This
-	    // id is unique within this process.
-	    int d_objid;
+    //////////
+    // The ID of this object from the object wharehouse.  This
+    // id is unique within this process.
+    int d_objid;
 
-	    //////////
-	    // A pointer to the object base class.
-	    Object_interface* d_objptr;
+    //////////
+    // A pointer to the object base class.
+    Object_interface* d_objptr;
 
-	    //////////
-	    // A pointer to the most derived type.  This is used only by
-	    // sidl generated code.
-	    void* d_ptr;
+    //////////
+    // A pointer to the most derived type.  This is used only by
+    // sidl generated code.
+    void* d_ptr;
 
-	    //////////
-	    // A flag, true if the endpoint has been created for this
-	    // object.
-	    bool d_endpoint_active;
+    //////////
+    // A flag, true if the endpoint has been created for this
+    // object.
+    bool d_endpoint_active;
 
-	    //////////
-	    // Create the endpoint for this object.
-	    void activateEndpoint();
-	};
+    //////////
+    // Create the endpoint for this object.
+    void activateEndpoint();
+  };
 } // End namespace PIDL
 
 #endif
