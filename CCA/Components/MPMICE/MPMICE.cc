@@ -35,7 +35,6 @@ using namespace std;
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
-  cout<<"MPMICE initial"<<endl;
   Mlb  = scinew MPMLabel();
   Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
@@ -56,11 +55,11 @@ MPMICE::~MPMICE()
 void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 			  SimulationStateP& sharedState)
 {
-  cout<<"MPMICE problemSetup"<<endl;
   d_sharedState = sharedState;
   
   d_mpm->setMPMLabel(Mlb);
   d_mpm->setWithICE();
+  if(d_analyze) d_mpm->setAnalyze(d_analyze);
   d_mpm->problemSetup(prob_spec, grid, d_sharedState);
   
   d_ice->setICELabel(Ilb);
@@ -182,15 +181,22 @@ void MPMICE::scheduleTimeAdvance(double, double,
   d_mpm->scheduleExMomIntegrated(                 sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, mpm_matls);
 
-  cout<<"schedule!"<<endl;
   if( d_mpm->withFracture() ) {
-  cout<<"fracture schedule!"<<endl;
     d_mpm->scheduleComputeFracture(               sched, patches, mpm_matls);
     d_mpm->scheduleComputeCrackExtension(         sched, patches, mpm_matls);
   }
 
   d_mpm->scheduleCarryForwardVariables(           sched, patches, mpm_matls);
   d_ice->scheduleAdvectAndAdvanceInTime(          sched, patches, ice_matls);
+
+  //The next line is used for data analyze, please do not move.  --tan
+  if(d_analyze) {
+    cout<<"Do ANALYZE"<<endl;
+    d_analyze->performAnalyze(sched, patches, mpm_matls);
+  }
+  else {
+     cout<<"NOT Do ANALYZE"<<endl;
+ }
 
   sched->scheduleParticleRelocation(level,
 				    Mlb->pXLabel_preReloc, 

@@ -69,7 +69,7 @@ SerialMPM::~SerialMPM()
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 			     SimulationStateP& sharedState)
 {
-   //The next line is used for data analyze, please do not move.  --tan
+   //The next line is used for data analyze
    if(d_analyze) d_analyze->problemSetup(prob_spec, grid, sharedState);
 
    d_sharedState = sharedState;
