@@ -174,7 +174,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
   omesh->set_dim( dim );
    
   // Now after the mesh has been created, create the field.
-  FIELD *ofield = scinew FIELD(omesh, Field::NODE);
+  FIELD *ofield = scinew FIELD(omesh, ifield->data_at());
 
 
   Point p, o, pt;
