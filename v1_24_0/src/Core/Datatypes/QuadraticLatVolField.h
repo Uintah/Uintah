@@ -31,11 +31,10 @@
 #ifndef Datatypes_QuadraticLatVolField_h
 #define Datatypes_QuadraticLatVolField_h
 
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/QuadraticLatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Geometry/Tensor.h>
-#include <Core/Containers/LockingHandle.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
 #include <sgi_stl_warnings_off.h>

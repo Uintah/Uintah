@@ -31,10 +31,9 @@
 #ifndef Datatypes_ImageField_h
 #define Datatypes_ImageField_h
 
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/Tensor.h>
-#include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>

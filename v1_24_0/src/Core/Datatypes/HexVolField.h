@@ -41,10 +41,8 @@
 #ifndef Datatypes_HexVolField_h
 #define Datatypes_HexVolField_h
 
-#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Util/Assert.h>

@@ -41,13 +41,10 @@
 #ifndef Datatypes_TetVolField_h
 #define Datatypes_TetVolField_h
 
-#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
-#include <Core/Util/Assert.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>

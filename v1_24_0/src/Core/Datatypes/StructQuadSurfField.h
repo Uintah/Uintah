@@ -47,12 +47,8 @@
 #ifndef Datatypes_StructQuadSurfField_h
 #define Datatypes_StructQuadSurfField_h
 
-#include <Core/Datatypes/ImageField.h>
 #include <Core/Datatypes/StructQuadSurfMesh.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Persistent/PersistentSTL.h>
-#include <Core/Geometry/Tensor.h>
-#include <Core/Util/Assert.h>
+#include <Core/Datatypes/ImageField.h>
 
 namespace SCIRun {
 
