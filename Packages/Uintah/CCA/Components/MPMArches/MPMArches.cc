@@ -636,9 +636,9 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
 
       // Apply grid boundary conditions to the velocity before storing the data
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,matlindex,"Velocity",gvelocity);
-      bc.setBoundaryCondition(patch,matlindex,"Symmetric",gvelocity);
-      bc.setBoundaryCondition(patch,matlindex,"Temperature",gTemperature);
+      bc.setBoundaryCondition(patch,matlindex,"Velocity",gvelocity,8);
+      bc.setBoundaryCondition(patch,matlindex,"Symmetric",gvelocity,8);
+      bc.setBoundaryCondition(patch,matlindex,"Temperature",gTemperature,8);
 
     }  // End loop over materials
 
