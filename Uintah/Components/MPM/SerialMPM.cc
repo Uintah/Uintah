@@ -6,6 +6,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/MPM/SerialMPM.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Components/MPM/Contact/SingleVelContact.h>
+#include <Uintah/Components/MPM/Contact/Contact.h>
 
 #include <Uintah/Grid/Array3Index.h>
 #include <Uintah/Grid/Grid.h>
@@ -55,6 +56,7 @@ using Uintah::Grid::ReductionVariable;
 using Uintah::Grid::NodeIterator;
 using Uintah::Grid::NCVariable;
 using Uintah::Grid::VarLabel;
+using namespace Uintah::Components;
 
 SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
@@ -110,13 +112,13 @@ SerialMPM::~SerialMPM()
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
-			     SimulationStateP& sharedState)
+			     const SimulationStateP& sharedState)
 {
    d_sharedState = sharedState;
    Problem prob_description;
-   prob_description.preProcessor(prob_spec, grid, sharedState);
+   prob_description.preProcessor(prob_spec, grid, d_sharedState);
 
-   d_contactModel = new SingleVelContact();
+   d_contactModel = new SingleVelContact(sharedState);
    cerr << "SerialMPM::problemSetup not done\n";
 }
 
@@ -188,7 +190,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 
 	 Task* t = new Task("Contact::exMomInterpolated",
 			    region, old_dw, new_dw,
-			    d_contactModel, &Contact::exMomInterpolated);
+			    d_contactModel,
+			    &Contact::exMomInterpolated);
 	 t->requires( new_dw, gMassLabel, region, 0 );
 	 t->requires( new_dw, gVelocityLabel, region, 0 );
 
@@ -399,6 +402,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       new_dw->allocate(gmass,         gMassLabel, vfindex, region, 0);
       new_dw->allocate(gvelocity,     gVelocityLabel, vfindex, region, 0);
       new_dw->allocate(externalforce, gExternalForceLabel, vfindex, region, 0);
+#ifdef WONT_COMPILE_YET
 
       ParticleSubset* pset = px.getParticleSubset();
       ASSERT(pset == pmass.getParticleSubset());
@@ -439,6 +443,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 	}
       }
 
+#endif
       new_dw->put(gmass,         gMassLabel, vfindex, region);
       new_dw->put(gvelocity,     gVelocityLabel, vfindex, region);
       new_dw->put(externalforce, gExternalForceLabel, vfindex, region);
@@ -554,7 +559,6 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 
       // Create variables for the results
       NCVariable<Vector> acceleration;
-
       new_dw->allocate(acceleration, gAccelerationLabel, vfindex, region, 0);
 
       // Do the computation of a = F/m for nodes where m!=0.0
@@ -720,6 +724,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.28  2000/04/25 22:57:29  guilkey
+// Fixed Contact stuff to include VarLabels, SimulationState, etc, and
+// made more of it compile.
+//
 // Revision 1.27  2000/04/25 00:41:19  dav
 // more changes to fix compilations
 //

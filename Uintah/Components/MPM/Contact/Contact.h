@@ -5,6 +5,7 @@
 
 #include <math.h>
 
+class SimulationStateP;
 namespace Uintah {
 
   namespace Grid {
@@ -91,6 +92,10 @@ inline bool compare(double num1, double num2)
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.6  2000/04/25 22:57:30  guilkey
+// Fixed Contact stuff to include VarLabels, SimulationState, etc, and
+// made more of it compile.
+//
 // Revision 1.5  2000/04/12 16:57:27  guilkey
 // Converted the SerialMPM.cc to have multimaterial/multivelocity field
 // capabilities.  Tried to guard all the functions against breaking the

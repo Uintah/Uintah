@@ -4,9 +4,35 @@
 #define __SINGLE_VEL_H__
 
 #include <Uintah/Components/MPM/Contact/Contact.h>
+#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Parallel/UintahParallelComponent.h>
+#include <Uintah/Interface/MPMInterface.h>
+#include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/LevelP.h>
+
+class SimulationStateP;
 
 namespace Uintah {
+
+namespace Grid {
+  class Region;
+  class VarLabel;
+}
+
 namespace Components {
+
+using Uintah::Interface::MPMInterface;
+using Uintah::Interface::DataWarehouseP;
+using Uintah::Interface::SchedulerP;
+using Uintah::Parallel::ProcessorContext;
+using Uintah::Parallel::UintahParallelComponent;
+using Uintah::Grid::Region;
+using Uintah::Grid::LevelP;
+using Uintah::Grid::SimulationStateP;
+using Uintah::Interface::ProblemSpecP;
+using Uintah::Grid::GridP;
+using Uintah::Grid::VarLabel;
 
 /**************************************
 
@@ -31,7 +57,12 @@ KEYWORDS
    Contact_Model_Single_Velocity
 
 DESCRIPTION
-   Long description...
+  One of the derived Contact classes.  This particular
+  class contains methods for recapturing single velocity
+  field behavior from objects belonging to multiple velocity
+  fields.  The main purpose of this type of contact is to
+  ensure that one can get the same answer using prescribed
+  contact as can be gotten using "automatic" contact.
   
 WARNING
   
@@ -45,9 +76,11 @@ class SingleVelContact : public Contact {
   SingleVelContact(const SingleVelContact &con);
   SingleVelContact& operator=(const SingleVelContact &con);
 
+  SimulationStateP d_sharedState;
+
  public:
    // Constructor
-   SingleVelContact();
+   SingleVelContact(const SimulationStateP& d_sS);
 
    // Destructor
    virtual ~SingleVelContact();
@@ -63,6 +96,10 @@ class SingleVelContact : public Contact {
                                 const DataWarehouseP& old_dw,
                                 DataWarehouseP& new_dw);
 
+   const VarLabel* gMassLabel;
+   const VarLabel* gAccelerationLabel;
+   const VarLabel* gVelocityLabel;
+   const VarLabel* gVelocityStarLabel;
 };
 
 } // end namespace Components
@@ -71,6 +108,10 @@ class SingleVelContact : public Contact {
 #endif /* __SINGLE_VEL_H__ */
 
 // $Log$
+// Revision 1.3  2000/04/25 22:57:31  guilkey
+// Fixed Contact stuff to include VarLabels, SimulationState, etc, and
+// made more of it compile.
+//
 // Revision 1.2  2000/04/20 23:21:02  dav
 // updated to match Contact.h
 //
