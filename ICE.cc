@@ -3111,7 +3111,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       // the interior cells.
 /*`==========TESTING==========*/
 #if 0 
-      Jim I don't think we need this anymore since sp_vol_CC is compute elsewhere
+     // Jim I don't think we need this anymore since sp_vol_CC is compute elsewhere
       for(CellIterator iter=patch->getExtraCellIterator();!iter.done(); iter++){
         IntVector c = *iter;
         sp_vol_CC[c] = 1.0/rho_micro[c];
