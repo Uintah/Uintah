@@ -157,12 +157,7 @@ public:
 <xsl:text>, </xsl:text>
 </xsl:if>
 </xsl:for-each><xsl:text> &gt; 
-  bool run( </xsl:text>
-<xsl:for-each select="/filter/filter-itk/inputs/input">
-itk::Object* <xsl:text> </xsl:text>
-<xsl:if test="position() &lt; last()">
-<xsl:text>, </xsl:text>
-</xsl:if></xsl:for-each> );
+  bool run( </xsl:text><xsl:for-each select="/filter/filter-itk/inputs/input">itk::Object* <xsl:text> </xsl:text><xsl:if test="position() &lt; last()"><xsl:text>, </xsl:text></xsl:if></xsl:for-each> );
 };
 
 </xsl:template>
@@ -268,12 +263,9 @@ template&lt;</xsl:text>
 bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 
 <xsl:for-each select="/filter/filter-itk/inputs/input">
-<xsl:variable name="var">obj_<xsl:value-of select="@name"/> </xsl:variable>
-itk::Object<xsl:text> *</xsl:text>
-<xsl:value-of select="$var"/>
+<xsl:variable name="var">obj_<xsl:value-of select="@name"/> </xsl:variable>itk::Object<xsl:text> *</xsl:text><xsl:value-of select="$var"/>
   <xsl:if test="position() &lt; last()"><xsl:text>, </xsl:text>
-  </xsl:if>
-</xsl:for-each>) 
+  </xsl:if></xsl:for-each>) 
 {
 <xsl:for-each select="/filter/filter-itk/inputs/input">
 <xsl:variable name="type"><xsl:value-of select="type"/></xsl:variable>
