@@ -12,15 +12,21 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/TensorFieldExtractor.tcl \
 	$(SRCDIR)/ParticleFieldExtractor.tcl \
 	$(SRCDIR)/RescaleColorMapForParticles.tcl $(SRCDIR)/ParticleVis.tcl \
-	$(SRCDIR)/NodeHedgehog.tcl $(SRCDIR)/ArchiveReader.tcl \
+	$(SRCDIR)/NodeHedgehog.tcl \
+	$(SRCDIR)/ArchiveReader.tcl \
 	$(SRCDIR)/GridVisualizer.tcl\
-	$(SRCDIR)/EigenEvaluator.tcl\
-	$(SRCDIR)/ParticleEigenEvaluator.tcl\
-	$(SRCDIR)/TensorOperator.tcl\
-	$(SRCDIR)/TensorFieldOperator.tcl\
-	$(SRCDIR)/TensorParticlesOperator.tcl\
+	$(SRCDIR)/RescaleColorMap.tcl\
+	$(SRCDIR)/Isosurface.tcl\
+	$(SRCDIR)/GLTextureBuilder.tcl\
 #[INSERT NEW TCL FILE HERE]
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Uintah/Dataflow/GUI
+#	$(SRCDIR)/EigenEvaluator.tcl\
+#	$(SRCDIR)/ParticleEigenEvaluator.tcl\
+#	$(SRCDIR)/TensorOperator.tcl\
+#	$(SRCDIR)/TensorFieldOperator.tcl\
+#	$(SRCDIR)/TensorParticlesOperator.tcl\
+
+
+	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/Uintah/Dataflow/GUI
 
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex

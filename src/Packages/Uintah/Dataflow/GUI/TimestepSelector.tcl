@@ -39,6 +39,7 @@ itcl_class Uintah_Visualization_TimestepSelector {
 	set $this-time 0
 	set $this-timeval 0
 	set $this-animate 0
+	set $this-anisleep 0
     } 
     
     method ui {} { 
@@ -96,6 +97,10 @@ itcl_class Uintah_Visualization_TimestepSelector {
 	    -textvariable $this-tcl_status 
 	pack $w.aframe.abutton -side left
 	pack $w.aframe.status -side right  -padx 2 -pady 2
+	label $w.l -text "Animation Sleep (seconds)" 
+	scale $w.s  -variable $this-anisleep  \
+	    -orient horizontal -from 0 -to 100 -resolution 1
+	pack $w.l $w.s -side top -fill x
 	button $w.b -text "Close" -command "wm withdraw $w"
 	pack $w.b -side top -fill x -padx 2 -pady 2
 
