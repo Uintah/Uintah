@@ -19,7 +19,6 @@
 #include "Spec.h"
 #include "SymbolTable.h"
 #include <map>
-#include <pair.h>
 #include <algorithm>
 #include <iostream>
 #include <string>
@@ -30,6 +29,7 @@ using std::find;
 using std::map;
 using std::string;
 using std::vector;
+using std::pair;
 extern bool foremit;
 
 Definition::Definition(const string& curfile, int lineno, const string& name)
@@ -378,6 +378,7 @@ string Method::fullsignature() const
     s="static ";
     break;
   case Unknown:
+  case NoModifier:
     s="";
     break;
   }

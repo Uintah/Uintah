@@ -623,7 +623,7 @@ long RunLengthEncoder<T, Sequencer>::write(ostream& out) throw(ErrnoException)
   unsigned long index = 0;
 
   // write the header  
-  for (list<Group>::iterator groupIter = groups_.begin();
+  for (typename list<Group>::iterator groupIter = groups_.begin();
        groupIter != groups_.end(); groupIter++) {
     // write each header item (one per group):
     // [start_data_pos][start_index]
@@ -646,7 +646,7 @@ long RunLengthEncoder<T, Sequencer>::write(ostream& out) throw(ErrnoException)
   out.write((char*)&index, sizeof(unsigned long));
   
   // write the data
-  for (list<Group>::iterator groupIter = groups_.begin();
+  for (typename list<Group>::iterator groupIter = groups_.begin();
        groupIter != groups_.end(); groupIter++) {
     Group& group = *groupIter;
     out.write((char*)&group.data_[0],
@@ -712,7 +712,7 @@ long RunLengthEncoder<T, Sequencer>::read(istream& in) throw(InternalError)
 
   // read the data
   i = 0;
-  for (list<Group>::iterator groupIter = groups_.begin();
+  for (typename list<Group>::iterator groupIter = groups_.begin();
        groupIter != groups_.end(); groupIter++, i++) {      
     vector<T>& data = (*groupIter).data_;
     if ((*groupIter).isRun()) {
@@ -823,7 +823,7 @@ void RunLengthEncoder<T, Sequencer>::testPrint(ostream& out)
     out << ", " << getMinRunLength(true) << " for default runs.\n";
   else
     out << "\n";
-  for (list<Group>::iterator groupIter = groups_.begin();
+  for (typename list<Group>::iterator groupIter = groups_.begin();
        groupIter != groups_.end(); groupIter++) {
     Group& group = *groupIter;
     if (group.isRun()) {
@@ -837,7 +837,7 @@ void RunLengthEncoder<T, Sequencer>::testPrint(ostream& out)
     else {
       ASSERT(group.length_ == group.data_.size());
       out << group.length_ << ": ";
-      vector<T>::iterator dataIter = group.data_.begin();
+      typename vector<T>::iterator dataIter = group.data_.begin();
       if (dataIter != group.data_.end())
 	out << *dataIter;
       for (dataIter++; dataIter != group.data_.end(); dataIter++)
@@ -862,7 +862,7 @@ inline T RunLengthEncoder<T, Sequencer>::iterator::operator*()
 }
 
 template <class T, class Sequencer>
-inline RunLengthEncoder<T, Sequencer>::iterator&
+inline typename RunLengthEncoder<T, Sequencer>::iterator&
 RunLengthEncoder<T, Sequencer>::iterator::operator++()
 {
   if (groupIndex_ + 1 >= (*groupIter_).length_) {
@@ -875,7 +875,7 @@ RunLengthEncoder<T, Sequencer>::iterator::operator++()
 }
 
 template <class T, class Sequencer>
-inline RunLengthEncoder<T, Sequencer>::iterator&
+inline typename RunLengthEncoder<T, Sequencer>::iterator&
 RunLengthEncoder<T, Sequencer>::iterator::operator--()
 {
   if (groupIndex_ == 0) {

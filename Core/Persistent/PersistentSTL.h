@@ -67,7 +67,7 @@ Pio(Piostream& stream, map<Key, Data>& data) {
 #else
 #endif
 
-  map<Key, Data>::iterator iter;
+  typename map<Key, Data>::iterator iter;
   int i, n;
   Key k;
   Data d;
@@ -154,7 +154,7 @@ SCICORESHARE void Pio(Piostream& stream, list<T>& data)
     data.resize(size);
   }
   
-  list<T>::iterator ii;
+  typename list<T>::iterator ii;
   for (ii=data.begin(); ii!=data.end(); ii++)
     Pio(stream, *ii);
      
