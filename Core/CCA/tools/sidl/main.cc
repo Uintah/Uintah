@@ -26,7 +26,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-
+#include <vector>
 
 extern int yyparse();
 extern FILE* yyin;
@@ -38,23 +38,30 @@ using std::string;
 bool doing_cia=false;
 bool foremit;
 
-char* find_cpp()
+using std::vector;
+
+const char* find_cpp()
 {
   struct stat s;
-  char * cpp = "/usr/lib/gcc-lib/i586-mandrake-linux/egcs-2.91.66/cpp";
+  vector<const char*> possible_cpps;
 
-  if( stat( cpp, &s ) == -1 )
+  possible_cpps.push_back( "/usr/lib/gcc-lib/i586-mandrake-linux/egcs-2.91.66/cpp" );
+  possible_cpps.push_back( "/usr/lib/gcc-lib/i386-redhat-linux/2.7.2.3/cpp" );
+  possible_cpps.push_back( "/usr/lib/cpp" );
+  possible_cpps.push_back( "/usr/bin/cpp" );
+
+  for( unsigned int cnt = 0; cnt < possible_cpps.size(); cnt++ )
     {
-      cerr << "ERROR in: ./SCIRun/src/Core/CCA/tools/sidl/main.cc:\n";
-      cerr << "Cpp: " << cpp << "doesn't seem to exist... bye.\n";
-      exit( 1 );
+      if( stat( possible_cpps[ cnt ], &s ) != -1 )
+	{
+	  return possible_cpps[ cnt ];
+	}
     }
 
-  return cpp;
-  //    return "/usr/lib/gcc-lib/i586-mandrake-linux/egcs-2.91.66/cpp";
+  cerr << "ERROR in: ./SCIRun/src/Core/CCA/tools/sidl/main.cc:\n";
+  cerr << "Cpp: doesn't seem to exist... bye.\n";
 
-  //    return "/usr/lib/gcc-lib/i386-redhat-linux/2.7.2.3/cpp";
-  //    return "/usr/lib/cpp";
+  exit( 1 );
 }
 
 char* find_builtin()
@@ -72,7 +79,7 @@ int main(int argc, char* argv[])
     bool failed=false;
     int nfiles=0;
 
-    char* cpp=find_cpp();
+    const char* cpp=find_cpp();
     bool done_builtin=false;
 
     std::string outfile;
