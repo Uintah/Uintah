@@ -209,9 +209,17 @@ void addObjMaterial(Array1<Material*> &matl,
 bool
 rtrt::readObjFile(const string geom_fname, const string matl_fname, 
 		  Transform &t, Group *g, int gridsize, Material *m) {
+  Array1<Material *> new_matls;
+  return readObjFile(geom_fname, matl_fname, t, new_matls, g, gridsize, m);
+}
+
+bool
+rtrt::readObjFile(const string geom_fname, const string matl_fname, 
+		  Transform &t, Array1<Material *> &matl, Group *g, 
+		  int gridsize, Material *m) {
    Array1<int> matl_has_tmap;
    Array1<int> matl_has_bmap;
-   Array1<Material *> matl;
+   matl.resize(0);
    char buf[4096];
    double scratch[11];
    Array1<string> names;
@@ -353,7 +361,11 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
    }
    
    Material *curr_matl;
-   if (m) curr_matl=m;
+   if (m) { 
+     curr_matl=m; 
+     matl.resize(0); 
+     matl.add(m); 
+   }
    Array1<Point> pts;
    Array1<Vector> nml;
    Array1<Point> tex;
