@@ -21,7 +21,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Datatypes
 
-SRCS += $(SRCDIR)/BoxClipper.cc		    	\
+SRCS += $(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/ColorMap.cc		    	\
         $(SRCDIR)/ColumnMatrix.cc	    	\
 	$(SRCDIR)/ContourMesh.cc            	\

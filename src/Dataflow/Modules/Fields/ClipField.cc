@@ -37,9 +37,11 @@
 #include <Core/Datatypes/Clipper.h>
 #include <Dataflow/Modules/Fields/ClipField.h>
 #include <iostream>
+#include <stack>
 
 namespace SCIRun {
 
+using std::stack;
 
 class ClipField : public Module
 {
@@ -47,8 +49,11 @@ private:
   ScaledBoxWidget *box_;
   CrowdMonitor widget_lock_;
   BBox last_bounds_;
-  GuiInt mode_;
-  int  last_generation_;
+  GuiInt mode_;  // 1 replace 2 intersect 3 union 4 invert 5 remove 6 undo
+  int  last_input_generation_;
+  int  last_clip_generation_;
+  ClipperHandle clipper_;
+  stack<ClipperHandle> undo_stack_;
 
 public:
   ClipField(const string& id);
@@ -68,7 +73,8 @@ ClipField::ClipField(const string& id)
   : Module("ClipField", id, Source, "Fields", "SCIRun"),
     widget_lock_("ClipField widget lock"),
     mode_("runmode", id, this),
-    last_generation_(0)
+    last_input_generation_(0),
+    last_clip_generation_(0)
 {
   box_ = scinew ScaledBoxWidget(this, &widget_lock_, 1.0, 1);
 }
@@ -99,9 +105,7 @@ ClipField::execute()
     return;
   }
 
-  ClipperHandle clipper;
-
-  int mode = mode_.get();
+  bool do_clip_p = false;
 
   // Get input field.
   FieldIPort *cfp = (FieldIPort *)get_iport("Clip Field");
@@ -110,8 +114,11 @@ ClipField::execute()
     return;
   }
   FieldHandle cfieldhandle;
-  if (cfp->get(cfieldhandle) && cfieldhandle.get_rep())
+  if (cfp->get(cfieldhandle) && cfieldhandle.get_rep() &&
+      cfieldhandle->generation != last_clip_generation_)
   {
+    cfieldhandle->generation = last_clip_generation_;
+
     const TypeDescription *ftd = cfieldhandle->mesh()->get_type_description();
     CompileInfo *ci = ClipFieldMeshAlgo::get_compile_info(ftd);
     DynamicAlgoHandle algo_handle;
@@ -127,7 +134,8 @@ ClipField::execute()
       error("Could not get algorithm.");
       return;
     }
-    clipper = algo->execute(cfieldhandle->mesh());
+    clipper_ = algo->execute(cfieldhandle->mesh());
+    do_clip_p = true;
   }
   else
   {
@@ -167,15 +175,56 @@ ClipField::execute()
       last_bounds_ = obox;
     }
   }
-  
-  if (mode == 1 || ifieldhandle->generation != last_generation_)
-  {
-    last_generation_ = ifieldhandle->generation;
 
-    if (!clipper.get_rep())
+  const int mode = mode_.get();
+  if (mode || !clipper_.get_rep())
+  {
+    ClipperHandle ctmp = box_->get_clipper();
+    if (mode == 6)
     {
-      clipper = box_->get_clipper();
+      if (!undo_stack_.empty())
+      {
+	clipper_ = undo_stack_.top();
+	undo_stack_.pop();
+	do_clip_p = true;
+      }
     }
+    else
+    {
+      if (clipper_.get_rep())
+      {
+	undo_stack_.push(clipper_);
+      }
+      switch (mode)
+      {
+      case 2:
+	clipper_ = scinew IntersectionClipper(ctmp, clipper_);
+	break;
+
+      case 3:
+	clipper_ = scinew UnionClipper(ctmp, clipper_);
+	break;
+
+      case 4:
+	clipper_ = scinew InvertClipper(clipper_);
+	break;
+
+      case 5:
+	ctmp = scinew InvertClipper(ctmp);
+	clipper_ = scinew IntersectionClipper(ctmp, clipper_);
+	break;
+
+      case 1:
+      default:
+	clipper_ = ctmp;
+      }
+      do_clip_p = true;
+    }
+  }
+
+  if (do_clip_p || ifieldhandle->generation != last_input_generation_)
+  {
+    last_input_generation_ = ifieldhandle->generation;
 
     const TypeDescription *ftd = ifieldhandle->get_type_description();
     CompileInfo *ci = ClipFieldAlgo::get_compile_info(ftd);
@@ -192,7 +241,7 @@ ClipField::execute()
       error("Could not get algorithm.");
       return;
     }
-    FieldHandle ofield = algo->execute(ifieldhandle, clipper);
+    FieldHandle ofield = algo->execute(ifieldhandle, clipper_);
 
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
     if (!ofield_port) {

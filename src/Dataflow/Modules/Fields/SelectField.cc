@@ -25,7 +25,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Modules/Fields/SelectField.h>
 #include <Dataflow/Widgets/ScaledBoxWidget.h>
-#include <Core/Datatypes/BoxClipper.h>
+#include <Core/Datatypes/Clipper.h>
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <iostream>

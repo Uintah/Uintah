@@ -24,7 +24,7 @@
 
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
-#include <Core/Datatypes/BoxClipper.h>
+#include <Core/Datatypes/Clipper.h>
 #include <sci_hash_map.h>
 #include <algorithm>
 
@@ -64,6 +64,8 @@ ClipFieldAlgoT<FIELD>::execute(FieldHandle fieldh, ClipperHandle clipper)
 
   hash_type nodemap;
 
+  vector<unsigned int> elemmap;
+
   typename FIELD::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
   while (bi != ei)
@@ -89,6 +91,7 @@ ClipFieldAlgoT<FIELD>::execute(FieldHandle fieldh, ClipperHandle clipper)
       }
 
       clipped->add_elem(nnodes);
+      elemmap.push_back(*bi); // Assumes elements always added to end.
     }
     
     ++bi;
@@ -112,7 +115,23 @@ ClipFieldAlgoT<FIELD>::execute(FieldHandle fieldh, ClipperHandle clipper)
       ++hitr;
     }
   }
-  
+  else if (fieldh->data_at_type_description()->get_name() ==
+	   get_type_description((typename FIELD::mesh_type::Elem *)0)->get_name())
+  {
+    FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
+    for (unsigned int i=0; i < elemmap.size(); i++)
+    {
+      typename FIELD::value_type val;
+      field->value(val,
+		   (typename FIELD::mesh_type::Elem::index_type)elemmap[i]);
+      ofield->set_value(val, (typename FIELD::mesh_type::Elem::index_type)i);
+    }
+  }
+  else
+  {
+    cout << "Unable to copy data at this data locations, use DirectInterp.\n";
+  }
+
   return ofield;
 }
 

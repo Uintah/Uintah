@@ -34,6 +34,31 @@ itcl_class SCIRun_Fields_ClipField {
 	$this-c needexecute
     }
 
+    method intersect {} {
+	set $this-runmode 2
+	$this-c needexecute
+    }
+
+    method union {} {
+	set $this-runmode 3
+	$this-c needexecute
+    }
+
+    method invert {} {
+	set $this-runmode 4
+	$this-c needexecute
+    }
+
+    method remove {} {
+	set $this-runmode 5
+	$this-c needexecute
+    }
+
+    method undo {} {
+	set $this-runmode 6
+	$this-c needexecute
+    }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -46,8 +71,19 @@ itcl_class SCIRun_Fields_ClipField {
 
 	pack $w.row1 -side top -e y -f both -padx 5 -pady 5
 	
-	button $w.row1.execute -text "Execute" -command "$this replace"
-	pack $w.row1.execute -side top -e n -f both
+	button $w.row1.replace -text "Replace" -command "$this replace"
+	button $w.row1.intersect -text "Intersect" -command "$this intersect"
+	button $w.row1.union -text "Union" -command "$this union"
+	button $w.row1.invert -text "Invert" -command "$this invert"
+	button $w.row1.remove -text "Remove" -command "$this remove"
+	button $w.row1.undo -text "Undo" -command "$this undo"
+	pack $w.row1.replace \
+	     $w.row1.union \
+	     $w.row1.remove \
+	     $w.row1.intersect \
+	     $w.row1.invert \
+	     $w.row1.undo \
+	     -side top -e n -f both
     }
 }
 
