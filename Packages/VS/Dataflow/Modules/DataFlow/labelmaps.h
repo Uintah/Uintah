@@ -15,6 +15,7 @@
 #ifndef LABELMAPS_H
 #define LABELMAPS_H
 
+#include <string>
 #include <vector>
 
 using namespace std;

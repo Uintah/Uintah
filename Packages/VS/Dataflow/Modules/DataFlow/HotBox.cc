@@ -120,6 +120,9 @@ private:
   VH_AnatomyBoundingBox *boundBoxList;
   VH_AnatomyBoundingBox *maxSegmentVol;
 
+  // the injured tissue lise
+  vector <VH_injury> injured_tissue;
+
   // the probe widget
   PointWidget *probeWidget_;
   CrowdMonitor probeWidget_lock_;
@@ -138,6 +141,7 @@ private:
 
   // private methods
   void executeProbe();
+  void execAdjacency();
 
 public:
   HotBox(GuiContext*);
@@ -392,7 +396,6 @@ HotBox::execute()
   DOMNodeList *
   injList = injListDoc->getElementsByTagName(to_xml_ch_ptr("region"));
   unsigned long i, num_struQLret, num_injList = injList->getLength();
-  vector <VH_injury> injured_tissue;
 
   if (num_injList == 0) {
     cout << "HotBox.cc: no entities in Injury List" << endl;
@@ -433,8 +436,8 @@ HotBox::execute()
   } // end else (num_injList != 0)
   // we now have the anatomy name corresponding to the label value at the voxel
   char *oqafma_relation[VH_LM_NUM_NAMES];
-  if(0)//dataSource == VS_DATASOURCE_OQAFMA)
-  {
+  if(dataSource == VS_DATASOURCE_OQAFMA)
+  { // get the ontological hierarchy information
     fprintf(stderr, "dataSource = OQAFMA\n");
     ns1__processStruQLResponse resultStruQL;
     ServiceInterfaceSoapBinding ws;
@@ -568,20 +571,19 @@ HotBox::execute()
     // }
 
   } // end if(dataSource == VS_DATASOURCE_OQAFMA)
-  else // dataSource == FILES
+  // dataSource == FILES -- adjacency can only be gotten from FILES
+  fprintf(stderr, "dataSource = FILES[%d]\n", dataSource);
+  // use fixed Adjacency Map files
+  if(!adjacencytable->get_num_names())
+  { // adjacency data has not been read
+    adjacencytable->readFile((char *)adjacencyDataSrc.c_str());
+  }
+  else
   {
-    fprintf(stderr, "dataSource = FILES[%d]\n", dataSource);
-    // use fixed Adjacency Map files
-    if(!adjacencytable->get_num_names())
-    { // adjacency data has not been read
-      adjacencytable->readFile((char *)adjacencyDataSrc.c_str());
-    }
-    else
-    {
-      cout << "Adjacency Map file contains " << adjacencytable->get_num_names();
-      cout << " entries" << endl;
-    }
-  } // end else(use fixed Adjacency Map files)
+    cout << "Adjacency Map file contains " << adjacencytable->get_num_names();
+    cout << " entries" << endl;
+  }
+  // end else(use fixed Adjacency Map files)
 
   // draw HotBox Widget
   GeomGroup *HB_geomGroup = scinew GeomGroup();
@@ -596,6 +598,105 @@ HotBox::execute()
   VS_HotBoxUI->setOutput(lines, texts);
   VS_HotBoxUI->setOutMtl(text_material);
 
+  // get the adjacency info for the current selection
+  // and populate the adjacency UI
+  execAdjacency();
+
+  // clean up
+  if(dataSource == VS_DATASOURCE_OQAFMA)
+  {
+     for (i = 0; i < num_struQLret; i++)
+     {
+       if(oqafma_relation[i] != 0)
+       {
+         free(oqafma_relation[i]);
+         oqafma_relation[i] = 0;
+       }
+     }
+     num_struQLret = 0;
+  } // end if(dataSource == VS_DATASOURCE_OQAFMA)
+
+  injured_tissue.clear();
+  num_injList = 0;
+
+  if(enableDraw == "yes")
+  {
+    VS_HotBoxUI->draw(0, 0, 0.005);
+  
+    HB_geomGroup->add(lines);
+    HB_geomGroup->add(texts);
+  }
+
+  // set output geometry port -- hotbox drawn to viewer
+  GeometryOPort *HBoutGeomPort = (GeometryOPort *)get_oport("HotBox Widget");
+  if(!HBoutGeomPort) {
+    error("Unable to initialize HotBox Widget output geometry port.");
+    return;
+  }
+  GeomSticky *sticky = scinew GeomSticky(HB_geomGroup);
+  HBoutGeomPort->delAll();
+  HBoutGeomPort->addObj( sticky, "HotBox Sticky" );
+  HBoutGeomPort->flushViews();
+
+  // set output geometry port -- Probe Widget
+  if (probeWidgetid_ == -1)
+  {
+    GeomGroup *probeWidget_group = scinew GeomGroup;
+    probeWidget_group->add(probeWidget_->GetWidget());
+    GeometryOPort *
+    probeOutGeomPort = (GeometryOPort *)get_oport("Probe Widget");
+    if(!probeOutGeomPort)
+    {
+      error("Unable to initialize Probe Widget output geometry port.");
+      return;
+    }
+    probeWidgetid_ = probeOutGeomPort->addObj(probeWidget_group,
+                               "Probe Selection Widget",
+                               &probeWidget_lock_);
+    probeOutGeomPort->flushViews();
+  }
+
+  if(selectBox && selectionSource == "fromHotBoxUI")
+  { // set the Probe location to center of selection
+    Point bmax((double)selectBox->get_maxX(),
+    	       (double)selectBox->get_maxY(),
+    	       (double)selectBox->get_maxZ());
+    Point bmin((double)selectBox->get_minX(),
+    	       (double)selectBox->get_minY(),
+    	       (double)selectBox->get_minZ());
+    probeLoc = bmin + Vector(bmax - bmin) * 0.5;
+    // scale the bounding box of the segmented region
+    // to match the bounding box of the labelmap volume
+    probeLoc = Point(probeLoc.x() + boxTran.x(),
+                     probeLoc.y() + boxTran.y(),
+                     probeLoc.z() + boxTran.z());
+    probeLoc = Point(probeLoc.x()*boxScale.x(),
+                     probeLoc.y()*boxScale.y(),
+                     probeLoc.z()*boxScale.z()
+                    );
+    probeWidget_->SetPosition(probeLoc);
+
+    // update probe location in the Tcl GUI
+    gui_probeLocx_.set(probeLoc.x());
+    gui_probeLocy_.set(probeLoc.y());
+    gui_probeLocz_.set(probeLoc.z());
+  } // end if(selectBox && selectionSource == "fromHotBoxUI")
+
+  double probeScale = gui_probe_scale_.get();
+  // cerr << "HotBox: probe scale: " << probeScale;
+  // cerr << " * " << l2norm_ << " * 0.003 = ";
+  // cerr << probeScale * l2norm_ * 0.003;
+  probeWidget_->SetScale(probeScale * l2norm_ * 0.01);
+
+  if(selectionSource == "fromHotBoxUI")
+  { // clear selection source
+    selectionsource_.set("fromProbe");
+  }
+} // end HotBox::execute()
+
+void
+HotBox::execAdjacency()
+{
   // get the adjacency info for the selected entity
   int *adjPtr = adjacencytable->adjacent_to(labelIndexVal);
 
@@ -686,6 +787,7 @@ HotBox::execute()
     VS_HotBoxUI->set_text(1, string(adjacentName, 0, 18));
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 4)
 
+  string selectName = currentselection_.get();
   gui_label5_.set(selectName);
   VS_HotBoxUI->set_text(5, string(selectName, 0, 18));
   currentselection_.set(selectName);
@@ -774,98 +876,7 @@ HotBox::execute()
     // OpenGL UI is indexed 0-7, column-major
     VS_HotBoxUI->set_text(7, string(adjacentName, 0, 18));
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 9)
-
-  // clean up
-  if(dataSource == VS_DATASOURCE_OQAFMA)
-  {
-     for (i = 0; i < num_struQLret; i++)
-     {
-       if(oqafma_relation[i] != 0)
-       {
-         //free(oqafma_relation[i]);
-         oqafma_relation[i] = 0;
-       }
-     }
-     num_struQLret = 0;
-  } // end if(dataSource == VS_DATASOURCE_OQAFMA)
-
-  injured_tissue.clear();
-  num_injList = 0;
-
-  if(enableDraw == "yes")
-  {
-    VS_HotBoxUI->draw(0, 0, 0.005);
-  
-    HB_geomGroup->add(lines);
-    HB_geomGroup->add(texts);
-  }
-
-  // set output geometry port -- hotbox drawn to viewer
-  GeometryOPort *HBoutGeomPort = (GeometryOPort *)get_oport("HotBox Widget");
-  if(!HBoutGeomPort) {
-    error("Unable to initialize HotBox Widget output geometry port.");
-    return;
-  }
-  GeomSticky *sticky = scinew GeomSticky(HB_geomGroup);
-  HBoutGeomPort->delAll();
-  HBoutGeomPort->addObj( sticky, "HotBox Sticky" );
-  HBoutGeomPort->flushViews();
-
-  // set output geometry port -- Probe Widget
-
-  if (probeWidgetid_ == -1) {
-    
-    GeomGroup *probeWidget_group = scinew GeomGroup;
-    probeWidget_group->add(probeWidget_->GetWidget());
-    GeometryOPort *probeOutGeomPort = (GeometryOPort *)get_oport("Probe Widget");
-    if(!probeOutGeomPort)
-    {
-      error("Unable to initialize Probe Widget output geometry port.");
-      return;
-    }
-    probeWidgetid_ = probeOutGeomPort->addObj(probeWidget_group,
-					      "Probe Selection Widget",
-					      &probeWidget_lock_);
-    probeOutGeomPort->flushViews();
-  }
-
-  if(selectBox && selectionSource == "fromHotBoxUI")
-  { // set the Probe location to center of selection
-    Point bmax((double)selectBox->get_maxX(),
-    	       (double)selectBox->get_maxY(),
-    	       (double)selectBox->get_maxZ());
-    Point bmin((double)selectBox->get_minX(),
-    	       (double)selectBox->get_minY(),
-    	       (double)selectBox->get_minZ());
-    probeLoc = bmin + Vector(bmax - bmin) * 0.5;
-    // scale the bounding box of the segmented region
-    // to match the bounding box of the labelmap volume
-    probeLoc = Point(probeLoc.x() + boxTran.x(),
-                     probeLoc.y() + boxTran.y(),
-                     probeLoc.z() + boxTran.z());
-    probeLoc = Point(probeLoc.x()*boxScale.x(),
-                     probeLoc.y()*boxScale.y(),
-                     probeLoc.z()*boxScale.z()
-                    );
-    probeWidget_->SetPosition(probeLoc);
-
-    // update probe location in the Tcl GUI
-    gui_probeLocx_.set(probeLoc.x());
-    gui_probeLocy_.set(probeLoc.y());
-    gui_probeLocz_.set(probeLoc.z());
-  } // end if(selectBox && selectionSource == "fromHotBoxUI")
-
-  double probeScale = gui_probe_scale_.get();
-  // cerr << "HotBox: probe scale: " << probeScale;
-  // cerr << " * " << l2norm_ << " * 0.003 = ";
-  // cerr << probeScale * l2norm_ * 0.003;
-  probeWidget_->SetScale(probeScale * l2norm_ * 0.003);
-
-  if(selectionSource == "fromHotBoxUI")
-  { // clear selection source
-    selectionsource_.set("fromProbe");
-  }
-} // end HotBox::execute()
+} // end HotBox::execAdjacency()
 
 void
 HotBox::widget_moved(bool last, BaseWidget*)
