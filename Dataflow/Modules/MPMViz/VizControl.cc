@@ -36,8 +36,9 @@ LOG
 
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
-#include <iostream.h> 
-#include <strstream.h>
+#include <iostream> 
+#include <sstream>
+using std::ostringstream;
 #include <stdio.h>
 #include <string.h>
 
@@ -84,7 +85,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 
   int i,j;
   clString result;
-  cerr<<"tcl_command arg: "<< args[1]<<endl;
+  std::cerr<<"tcl_command arg: "<< args[1]<<endl;
   
   if( args[1] == "getGridNames"){
     if(args.count() != 2 ) {
@@ -98,7 +99,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
     for(i = 1; i < pgrh->GetNGrids(); i++){
       result += clString(" " + (pgrh->GetGrid( i ))->getName());
     }
-    cerr<<"     result = "<< result<<endl;
+    std::cerr<<"     result = "<< result<<endl;
     args.result( result );
   } else if( args[1] == "getParticleSetNames"){
     if(args.count() != 2 ) {
@@ -119,7 +120,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	}
 	if(i < mppgr->GetNParticleSets()-1) result += clString(" ");
       }
-      cerr<<"     result = "<< result<<endl;
+      std::cerr<<"     result = "<< result<<endl;
       args.result( result );
     } else {
       args.error("VizControl--getParticleSetName: Wrong subclass");
@@ -149,7 +150,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	    for( j = 1; j < vars.size(); j++){
 	      result += clString( " " + vars[j]);
 	    }
-	    cerr<<"     result = "<<result<<endl;
+	    std::cerr<<"     result = "<<result<<endl;
 	    args.result( result );
 	    break;
 	  }
@@ -182,7 +183,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	    for( j = 2; j < vars.size(); j++){
 	      result += clString( " " + vars[j]);
 	    }
-	    cerr<<"     result = "<<result<<endl;
+	    std::cerr<<"     result = "<<result<<endl;
 	    args.result( result );
 	  }
 	}
@@ -214,7 +215,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 
 	  }
 
-	  cerr<<"     result = "<<result<<endl;
+	  std::cerr<<"     result = "<<result<<endl;
 
 	  args.result( result );
 	}
@@ -244,7 +245,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	  for( j = 1; j < vars.size(); j++){
 	    result += clString( " " + vars[j]);
 	  }
-	  cerr<<"     result = "<<result<<endl;
+	  std::cerr<<"     result = "<<result<<endl;
 	  args.result( result );
 	}
 	if( i == pgr->GetNGrids() )
@@ -457,14 +458,14 @@ void VizControl::graph(clString idx, clString var)
     cerr<< "ntimesteps = "<< tpr->GetNTimesteps()<<endl;
     Array1<double> values;
     if( tpr->GetNTimesteps() ){
-      int varId = tpr->GetParticleSet(pName.get())->find_scalar( var ); // psVar.get() );
+	int varId = tpr->GetParticleSet(pName.get())->find_scalar( var ); // psVar.get() );
       tpr->GetParticleData(atoi(idx()), pName.get(), values);
     
       Array1<double> vs;
       for(i = 0; i < values.size(); i++)
 	vs.add( values[i] );
     
-      ostrstream ostr;
+      ostringstream ostr;
       ostr << id << " graph " << idx+var<<" "<<var << " ";
       int j = 0;
       for( i = tpr->GetStartTime(); i <= tpr->GetEndTime();
@@ -472,7 +473,7 @@ void VizControl::graph(clString idx, clString var)
 	{
 	  ostr << i << " " << values[j++] << " ";
 	}
-      TCL::execute( ostr.str() );
+      TCL::execute( ostr.str().c_str() );
     }
   }
 }
@@ -503,7 +504,7 @@ void VizControl::execute()
        getScalarField( gsVar.get() );
      if ( sfh.get_rep() ){
        sfout->send(sfh);
-       cerr<<"Scalarfield name is "<<gsVar.get()<<endl;
+       std::cerr<<"Scalarfield name is "<<gsVar.get()<<endl;
      }
    }
    if( gvVar.get() != ""){
@@ -511,7 +512,7 @@ void VizControl::execute()
        getVectorField( gvVar.get() );
      if( vfh.get_rep() ){
        vfout->send(vfh);
-       cerr<<"Vectorfield name is "<<gvVar.get()<<endl;
+       std::cerr<<"Vectorfield name is "<<gvVar.get()<<endl;
      }
    }
    if(psVar.get() != "" || pvVar.get() != "" ){
@@ -523,7 +524,7 @@ void VizControl::execute()
        mpvps->SetCallback( (void *) this);
      }
      if( psh.get_rep() ){
-       cerr<<"ParticleSet vars are " <<  psVar.get()<<" and  "<<
+	 std::cerr<<"ParticleSet vars are " <<  psVar.get()<<" and  "<<
 	 pvVar.get()<<endl;
        psout->send(psh);
      }
