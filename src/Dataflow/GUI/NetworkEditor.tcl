@@ -748,10 +748,11 @@ proc loadnet {netedit_loadfile } {
     # Cut off the path from the net name and put in on the title bar:
     wm title . "SCIRun ([lindex [split "$netedit_loadfile" / ] end])"
     # Remember the name of this net for future "Saves".
-    global netedit_savefile NetworkChanged
+    global netedit_savefile NetworkChanged Subnet
     set netedit_savefile $netedit_loadfile
     # The '#' below is not a comment...
     uplevel #0 {source $netedit_savefile}
+    set Subnet(Subnet$Subnet(Loading)_filename) $netedit_loadfile
     set NetworkChanged 0
 }
 

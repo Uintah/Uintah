@@ -67,6 +67,7 @@ proc setupMainSubnet {} {
     set Subnet(num) 0
     set Subnet(Subnet0_canvas) $maincanvas
     set Subnet(Subnet0_Name) "Main"
+    set Subnet(Subnet0_Modules) ""
     foreach modid [getCanvasModules $maincanvas] {
 	set Subnet($modid) 0
 	lappend Subnet(Subnet0_Modules) $modid
@@ -420,7 +421,7 @@ proc loadSubnet { subnet filename { x 0 } { y 0 } } {
 
     if { ![file exists $filename] } {
 	tk_messageBox -type ok -parent . -icon warning -message \
-	    "File \"$filename\" does not exist."
+	    "Subnet file \"$filename\" does not exist."
 	return
     }
 
@@ -436,86 +437,134 @@ proc loadSubnet { subnet filename { x 0 } { y 0 } } {
 }
 
 
-proc saveSubnet { subnet { name ""} } {
+proc saveSubnet { subnet } {
     global Subnet SCIRUN_SRCDIR
-    if { $name == "" } {
-	set name [join [file split $Subnet(Subnet${subnet}_Name) "/"] ""].net
-	set home [file dirname ~]
-	if [file writable $SCIRUN_SRCDIR] {
-	    set dir $SCIRUN_SRCDIR/Subnets
-	    file mkdir $dir
-	} elseif [file writable $home] {
-	    set dir $home/Subnets
-	    file mkdir $dir
-	} else {
-	    tk_messageBox -type ok -parent . -icon error -message \
-		"Cannot save $name to $SCIRUN_SRCDIR/Subnets or $home/Subnets" 
-		return
-	}
-	set name $dir/$name
-	set Subnet(Subnet${subnet}_filename) $name
+    set name [join [split $Subnet(Subnet${subnet}_Name) "/"] ""].net
+    set home  ~
+    if [file writable $SCIRUN_SRCDIR/Subnets] {
+	set dir $SCIRUN_SRCDIR/Subnets
+    } elseif [file writable $SCIRUN_SRCDIR] {
+	set dir $SCIRUN_SRCDIR/Subnets
+	file mkdir $dir
+    } elseif [file writable $home/Subnets] {
+	set dir $home/Subnets
+    } elseif [file writable $home] {
+	set dir $home/Subnets
+	file mkdir $dir
     }
+    set name $dir/$name
+    set Subnet(Subnet${subnet}_filename) $name
+    
+    if ![file writable $dir] {
+	tk_messageBox -type ok -parent . -icon error -message \
+	    "Cannot save Sub-Network $Subnet(Subnet${subnet}_Name) with filename $name to $SCIRUN_SRCDIR/Subnets or $home/Subnets" 
+	return
+    }
+    
+    netedit savenetwork $name $subnet
+    return $name
+}
 
-    set out [open $name w]
-    puts $out "\# SCIRun 2.0 Sub-Network\n"
-    puts $out "::netedit dontschedule\n"
+
+proc modVarName { modid } {
+    global modVar
+    if [info exists modVar($modid)] {return $modVar($modid)} else { return "" }
+}
+
+proc writeSubnetModulesAndConnections { filename {subnet 0}} {
+    global Subnet SCIRUN_SRCDIR modVar connVar Disabled Notes
+    set out [open $filename {WRONLY APPEND}]
+    puts $out "\n\# Set the name of our network"
+    puts $out "\# NOTE: \$Subnet(Loading) is the Sub-Network slot \# we are loading into"
     puts -nonewline $out "set Subnet(Subnet\$Subnet(Loading)_Name) \{"
     puts $out "$Subnet(Subnet${subnet}_Name)\}"
     set i 0
     set connections ""
-    set m(Subnet${subnet}) "Subnet\$Subnet(Loading)"
+    set modVar(Subnet${subnet}) "Subnet\$Subnet(Loading)"
+    puts $out "\n\# Create the Modules"
     foreach module $Subnet(Subnet${subnet}_Modules) {
-	puts -nonewline $out "set m${i} \["
 	if { [isaSubnetIcon $module] } {
 	    set iconsubnet $Subnet(${module}_num)
-	    puts -nonewline $out "loadSubnet \$Subnet(Loading) "
-	    if ![info exists Subnet(Subnet${iconsubnet}_filename)] {
-		saveSubnet $iconsubnet
+	    # this will always save subnets and set $Subnet(Subnet${iconsubnet}_filename)
+	    if ![string length [saveSubnet $iconsubnet]] {
+		#dont save this module if we cant save the subnet
+		continue
 	    }
+	    set modVar($module) "\$m$i"
+	    puts -nonewline $out "set m$i \[loadSubnet \$Subnet(Loading) "
 	    set splitname [file split $Subnet(Subnet${iconsubnet}_filename)] 
 	    puts -nonewline $out "\"[lindex $splitname end]\" "
+	    puts $out "[expr int([$module get_x])] [expr int([$module get_y])]\]"
 	} else {
-	    puts -nonewline $out  "addModuleAtPosition "
-	    foreach name [lrange [split $module _] 0 2] {
-		puts -nonewline $out  "\"$name\" "
-	    }
+	    set modVar($module) "\$m$i"
+	    puts -nonewline $out  "set m$i \[addModuleAtPosition "
+	    puts -nonewline $out  "\"[netedit packageName $module]\" "
+	    puts -nonewline $out  "\"[netedit categoryName $module]\" "
+	    puts -nonewline $out  "\"[netedit moduleName $module]\" "
+
 	}
 	puts $out "[expr int([$module get_x])] [expr int([$module get_y])]\]"
 	eval lappend connections $Subnet(${module}_connections)
-	set m($module) "\$m$i"
 	incr i
     }
-    puts $out ""    
+    puts $out "\n\# Set the Module Notes Dispaly Options"
+    foreach module $Subnet(Subnet${subnet}_Modules) {
+	if ![info exists modVar($module)] continue
+	if [info exists Notes($module-Color)] {
+	    puts $out "set Notes($modVar($module)-Color) \{$Notes($module-Color)\}"
+	}
+	if [info exists Notes($module-Position)] {
+	    puts $out "set Notes($modVar($module)-Position) \{$Notes($module-Position)\}"
+	}
+    }
+    
+    puts $out "\n\# Create the Connections between Modules"
     # sort by output port # to handle dynamic ports
-    foreach conn [lsort -integer -index 3 [lsort -unique $connections]] {
-	puts -nonewline $out "addConnection "
-	puts $out \
-	    "$m([oMod conn]) [oNum conn] $m([iMod conn]) [iNum conn]"
-    }
-    set invalidvars [list -msgStream -done_bld_icon]
-    puts $out "\#ui"
+    set connections [lsort -integer -index 3 [lsort -unique $connections]]
     set i 0
-    foreach module $Subnet(Subnet${subnet}_Modules) {
-	foreach var [uplevel \#0 info vars "$module-*"] {
-	    if [uplevel \#0 array exists "\{$var\}"] continue
-	    set varname [string range "$var" [string length $module] end]
-	    if {[lsearch $invalidvars $varname] == -1} {
-		upvar \#0 "$var" value
-		puts $out "set \{$m($module)${varname}\} \{$value\}"
-	    }
-	}
+    foreach conn $connections {
+	if {![info exists modVar([oMod conn])] || ![info exists modVar([iMod conn])]} continue
+	puts -nonewline $out "set c$i \[addConnection "
+	puts $out \
+	    "$modVar([oMod conn]) [oNum conn] $modVar([iMod conn]) [iNum conn]\]"
+	incr i
     }
-    puts $out ""
-    foreach module $Subnet(Subnet${subnet}_Modules) {
-	if [winfo exists .ui$module] {
-	    puts $out "$m($module) initialize_ui"
+    
+    puts $out "\n\# Mark which Connections are Disabled"
+    set i 0
+    foreach conn $connections {
+	if {![info exists modVar([oMod conn])] || ![info exists modVar([iMod conn])]} continue
+	set id [makeConnID $conn]
+	if { [info exists Disabled($id)] && $Disabled($id) } {
+	    puts $out "set Disabled(\$c$i) \{1\}"
 	}
+	incr i
     }
-
-    puts $out "\n::netedit scheduleok"
+    
+    puts $out "\n\# Set the Connection Notes and Dislpay Options"
+    set i 0
+    foreach conn $connections {
+	if {![info exists modVar([oMod conn])] || ![info exists modVar([iMod conn])]} continue
+	set id [makeConnID $conn]
+	if { [info exists Notes($id)] && [string length $Notes($id)] } {
+	    puts $out "set Notes(\$c$i) \{$Notes($id)\}"
+	}
+	if [info exists Notes($id-Color)] {
+	    puts $out "set Notes(\$c$i-Color) \{$Notes($id-Color)\}"
+	}
+	
+	if [info exists Notes($id-Position)] {
+	    puts $out "set Notes(\$c$i-Position) \{$Notes($id-Position)\}"
+	}
+	incr i
+    }
+	
+    puts $out "\n\# Set the GUI variables for each Module"
+	
     close $out
-    return $name
 }		          
+
+
     
 proc showSubnetWindow { subnet { bbox "" } } {
     wm deiconify .subnet${subnet}
@@ -529,7 +578,7 @@ proc showSubnetWindow { subnet { bbox "" } } {
 	    set bbox { 0 0 0 0 }
 	}	
     }
-    set minx 90
+    set minx 200
     set miny 200	
     set wid [expr [lindex $bbox 2]+$minx]
     set hei [expr [lindex $bbox 3]+$miny]

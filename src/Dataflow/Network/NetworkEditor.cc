@@ -50,6 +50,7 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/GuiInterface/GuiCallback.h>
 #include <Core/GuiInterface/GuiInterface.h>
+#include <Core/GuiInterface/TCLstrbuff.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Thread/Thread.h>
 #include <fstream>
@@ -111,12 +112,14 @@ emit_tclstyle_copyright(ostream &out)
 }
 
 
-void NetworkEditor::save_network(const string& filename)
+void NetworkEditor::save_network(const string& filename, 
+				 const string &subnet_num)
 {
     ofstream out(filename.c_str());
+
     if(!out)
       return;
-    out << "# SCI Network 1.0\n";
+    out << "# SCI Network 1.20\n";
     if (getenv("SCI_INSERT_NET_COPYRIGHT")) { emit_tclstyle_copyright(out); }
     out << "\n";
     out << "::netedit dontschedule\n\n";
@@ -149,58 +152,31 @@ void NetworkEditor::save_network(const string& filename)
    
     gui->unlock();
 
-
-    // --------------------------------------------------------------------
+    out.close();
+    gui->execute("writeSubnetModulesAndConnections "+filename+" "+subnet_num);
+    out.open(filename.c_str(), ofstream::out | ofstream::app);
 
     int i;
-    for(i=0;i<net->nmodules();i++){
-        Module* module=net->module(i);
-	int x, y;
-	module->get_position(x,y);
-        out << "set m" << i << " [addModuleAtPosition \""
-            << module->packageName << "\" \""<< module->categoryName
-            <<"\" \""<< module->moduleName<<"\" "
-            << x << " " << y << "]\n";
-
-    }
-    out << "\n";
-    for(i=0;i<net->nconnections();i++){
-        Connection* conn=net->connection(i);
-	out << "addConnection $m";
-	// Find the "from" module...
-	int j;
-	for(j=0;j<net->nmodules();j++){
-	    Module* m=net->module(j);
-	    if(conn->oport->get_module() == m){
-	        out << j << " " << conn->oport->get_which_port();
-		break;
-	    }
-	}
-	out << " $m";
-	for(j=0;j<net->nmodules();j++){
-	    Module* m=net->module(j);
-	    if(conn->iport->get_module() == m){
-	        out << j << " " << conn->iport->get_which_port();
-		break;
-	    }
-	}
-	out << "\n";
-    }
-    out << "\n";
     // Emit variables...
+    string midx;
     for(i=0;i<net->nmodules();i++){
         Module* module=net->module(i);
-	string midx("$m" + to_string(i));
-	module->emit_vars(out, midx);
+	gui->eval("modVarName "+module->id, midx);
+	if (midx.size()) {
+	  module->emit_vars(out, midx);
+	}
     }
 
     for(i=0;i<net->nmodules();i++){
         Module* module=net->module(i);
-        string result;
-	gui->eval("winfo exists .ui" + module->id, result);
-	int res;
-	if(string_to_int(result, res) && (res == 1)) {
-	    out << "$m" << i << " initialize_ui\n";
+	gui->eval("modVarName "+module->id, midx);
+	if (midx.size()) {
+	  string result;
+	  gui->eval("winfo exists .ui" + module->id, result);
+	  int res;
+	  if(string_to_int(result, res) && (res == 1)) {
+	    out << midx << " initialize_ui\n";
+	  }
 	}
     }
     out << "\n";
@@ -428,7 +404,45 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    args.error("savenetwork needs a filename");
 	    return;
 	}
-	save_network(args[2]);
+	if (args.count() >=4) { 
+	  save_network(args[2],args[3]);
+	} else {
+	  save_network(args[2],"0");
+	}
+	  
+    } else if(args[1] == "packageName"){
+        if(args.count() != 3){
+	    args.error("packageName needs a module id");
+	}
+	Module* mod=net->get_module_by_id(args[2]);
+	if(!mod){
+	  args.error("cannot find module "+args[2]);
+	  return;
+	}
+	args.result(mod->packageName);
+	return;
+    } else if(args[1] == "categoryName"){
+        if(args.count() != 3){
+	    args.error("categoryName needs a module id");
+	}
+	Module* mod=net->get_module_by_id(args[2]);
+	if(!mod){
+	  args.error("cannot find module "+args[2]);
+	  return;
+	}
+	args.result(mod->categoryName);
+	return;
+    }  else if(args[1] == "moduleName"){
+        if(args.count() != 3){
+	    args.error("moduleName needs a module id");
+	}
+	Module* mod=net->get_module_by_id(args[2]);
+	if(!mod){
+	  args.error("cannot find module "+args[2]);
+	  return;
+	}
+	args.result(mod->moduleName);
+	return;
     } else if (args[1] == "create_pac_cat_mod"){
       if (args.count()!=7) {
           args.error("create_pac_cat_mod needs 5 arguments");
