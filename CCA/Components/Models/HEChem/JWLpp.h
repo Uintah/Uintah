@@ -74,13 +74,25 @@ WARNING
                                     
    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                       SchedulerP& sched);
+
+   virtual void scheduleCheckNeedAddMaterial(SchedulerP&,
+                                             const LevelP& level,
+                                             const ModelInfo*);
+
   private:    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-		               const MaterialSubset* matls, 
-                             DataWarehouse*, 
-		               DataWarehouse* new_dw, 
+                             const MaterialSubset* matls,
+                             DataWarehouse*,
+                             DataWarehouse* new_dw,
                              const ModelInfo*);
+
+    void checkNeedAddMaterial(const ProcessorGroup*, 
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse*,
+                              DataWarehouse* new_dw,
+                              const ModelInfo*);
 
     JWLpp(const JWLpp&);
     JWLpp& operator=(const JWLpp&);
