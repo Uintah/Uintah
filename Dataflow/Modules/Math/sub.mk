@@ -18,7 +18,7 @@ SRCS     += \
 	$(SRCDIR)/SolveMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 
-CFLAGS   := $(CFLAGS) -DMM_COMP_PATH=\"$(SRCTOP_ABS)/Dataflow/Modules/Math/Manip\"
+CFLAGS   := $(CFLAGS) -DMM_SRC=\"$(SRCTOP_ABS)/Dataflow/Modules/Math/Manip\" -DMM_OBJ=\"$(OBJTOP_ABS)/Dataflow/Modules/Math/Manip\"
 
 PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil \
 	Core/Datatypes Core/Persistent \

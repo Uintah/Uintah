@@ -24,7 +24,7 @@ void execute(const vector<MatrixHandle>& in, vector<MatrixHandle>& out)
       column->operator[]( row ) = in[0]->get( row, col );
     out[ col ] = column;
   }
-  cout << "MatrixManip has been executed" << endl; 
+  cout << "SliceIntoColumns has been executed" << endl; 
 }
 
 }
