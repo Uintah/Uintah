@@ -408,7 +408,7 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	vector<string> oports;
 	for(int i=0;i<net->nmodules();i++){
 	    Module* m=net->module(i);
-	    for(int j=0;j<m->numIPorts();j++){
+	    for(int j=0;j<m->numOPorts();j++){
 		OPort* oport=m->getOPort(j);
 		if(oport->get_typename() == iport->get_typename()){
 		    oports.push_back(args.make_list(m->id, to_string(j)));
