@@ -1774,7 +1774,13 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
   new_dw->put(uVelocity, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch);
   new_dw->put(vVelocity, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch);
   new_dw->put(wVelocity, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch);
-  
+  cerr << "After presssoln" << endl;
+  for(CellIterator iter = patch->getCellIterator();
+      !iter.done(); iter++){
+    cerr.width(10);
+    cerr << "PCELL"<<*iter << ": " << cellType[*iter] << "\n" ; 
+  }
+
 #ifdef ARCHES_BC_DEBUG
   cerr << " After INLBCS : " << endl;
   for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
@@ -2273,6 +2279,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.63  2000/10/07 21:40:49  rawat
+// fixed pressure norm
+//
 // Revision 1.62  2000/10/07 05:37:49  sparker
 // Fixed warnings under g++
 //

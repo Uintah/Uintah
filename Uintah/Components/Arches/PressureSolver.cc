@@ -502,7 +502,6 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				    index,
 				    Arches::PRESSURE, cellinfo, &pressureVars);
 
-#if 0
     // Modify Velocity Mass Source
     //  inputs : [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM, 
     //           [u,v,w]VelConvCoefPBLM, [u,v,w]VelLinSrcPBLM, 
@@ -517,7 +516,6 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_discretize->calculateVelDiagonal(pc, patch, old_dw, new_dw, 
 				       index,
 				       Arches::PRESSURE, &pressureVars);
-#endif
     std::cerr << "Done building matrix for press coeff" << endl;
   }
 
@@ -667,7 +665,7 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
 					 DataWarehouseP& new_dw,
 					 LevelP level, SchedulerP sched)
 {
-   ArchesVariables pressureVars;
+  ArchesVariables pressureVars;
   int me = pg->myrank();
   LoadBalancer* lb = sched->getLoadBalancer();
 
@@ -711,9 +709,12 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
 	  pressRefProc = proc;
 	  if(pressRefProc == me){
 	     pressureVars.press_ref = pressureVars.pressure[d_pressRef];
+	     cerr << "press_ref for norm" << pressureVars.press_ref << " " <<
+	       pressRefProc << endl;
 	  }
        }
     }
+  }
     if(pressRefProc == -1)
        throw InternalError("Patch containing pressure reference point was not found");
 
@@ -723,12 +724,15 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
      const Patch* patch=*iter;
      {
 	 cerr << "After presssoln" << endl;
+       int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
+       //int proc = find_processor_assignment(patch);
+       if(proc == me){
 	 for(CellIterator iter = patch->getCellIterator();
 	     !iter.done(); iter++){
 	   cerr.width(10);
 	   cerr << "press"<<*iter << ": " << pressureVars.pressure[*iter] << "\n" ; 
 	 }
- 
+       }
 	 normPressure(pg, patch, &pressureVars);
 	 cerr << "Done with normPressure for patch: " << patch->getID() << '\n';
 	 // put back the results
@@ -738,7 +742,7 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
 
        }
     }
-  }
+
   // destroy matrix
   d_linearSolver->destroyMatrix();
 }
@@ -891,6 +895,9 @@ PressureSolver::normPressure(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.58  2000/10/07 21:40:49  rawat
+// fixed pressure norm
+//
 // Revision 1.57  2000/10/07 05:38:51  sparker
 // Changed d_pressureVars into a few different local variables so that
 // they will be freed at the end of the task.
