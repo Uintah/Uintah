@@ -76,7 +76,7 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
 	    print "\t*** Warning, test %s failed memory leak test" % (testname)
 	    return 1
 	else:
-	    print "\tMemory leak tests passed (Note: no highwater comparison made).
+	    print "\tMemory leak tests passed (Note: no highwater comparison made)."
 
   return 0
 
