@@ -4,6 +4,7 @@ SRCDIR := Packages/Insight/Core
 
 SUBDIRS := \
         $(SRCDIR)/Datatypes \
+        $(SRCDIR)/CodeGenerator \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

@@ -26,7 +26,7 @@ SRCS := $(SRCDIR)/main.cc \
 
 LIBS := $(XML_LIBRARY) $(XALAN_LIBRARY)
 INCLUDES += $(XALAN_INCLUDE)
-PROGRAM := Packages/Insight/generate
+PROGRAM := Packages/Insight/Core/CodeGenerator/generate
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
