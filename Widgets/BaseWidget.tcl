@@ -49,7 +49,7 @@ itcl_class BaseWidget {
 	set opts $wid.opts
 	button $opts.close -text "Close" -command "destroy .ui$this"
 	button $opts.nextmode -text "NextMode" -command "$this-c nextmode"
-	button $opts.help -text "Help" -command "$this help $wid"
+	button $opts.help -text "Help" -command "$this help"
 	pack $opts.close $opts.nextmode $opts.help -in $opts -side left -padx 2 -pady 2 -anchor e
 	
 	frame $wid.scale
@@ -118,7 +118,7 @@ itcl_class BaseWidget {
 	}
     }
 
-    method help {wid} {
+    method help {} {
 	global sci_root
 	helpPage $sci_root/Widgets/help/$name.html
     }
