@@ -59,6 +59,12 @@ MPMArchesLabel::MPMArchesLabel()
 
   // labels for solid material calculations:
 
+  SumAllForcesCCLabel = scinew VarLabel("SumAllForcesCC",
+				 CCVariable<Vector>::getTypeDescription() );
+
+  SumAllForcesNCLabel = scinew VarLabel("SumAllForcesNC",
+				 NCVariable<Vector>::getTypeDescription() );
+
   // used for temporary computation:
 
   // CC

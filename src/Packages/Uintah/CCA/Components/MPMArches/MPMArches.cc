@@ -95,13 +95,6 @@ void MPMArches::scheduleTimeAdvance(double time, double delt,
 				 const LevelP&   level,
 				 SchedulerP&     sched)
 {
-  // Rajesh/Kumar  Because interpolation from particles to nodes
-  // is the fist thing done in our algorithm, it is, unfortunately,
-  // going to be necessary to put that step of the algorithm in
-  // prior to the NCToCC stuff, and so of course the remaining
-  // MPM steps will follow.  Without doing a heap of other work,
-  // I don't see any way around this, and the only real cost is
-  // to ugly this up a bit.
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* arches_matls = d_sharedState->allArchesMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
@@ -129,11 +122,14 @@ void MPMArches::scheduleTimeAdvance(double time, double delt,
   // compute celltypeinit
 
   d_arches->getBoundaryCondition()->sched_mmWallCellTypeInit(sched,
-							     patches, arches_matls);
+						     patches, arches_matls);
 
   // for explicit calculation, exchange will be at the beginning
 
   scheduleMomExchange(sched, patches, arches_matls, mpm_matls, all_matls);
+
+  schedulePutAllForcesOnCC(sched, patches, mpm_matls);
+  schedulePutAllForcesOnNC(sched, patches, mpm_matls);
 
   // we also need mass and energy exchanges here.  These are
   // not implemented yet.  They will be of the form
@@ -160,8 +156,6 @@ void MPMArches::scheduleTimeAdvance(double time, double delt,
   d_mpm->scheduleIntegrateTemperatureRate(sched, patches, mpm_matls);
   d_mpm->scheduleExMomIntegrated(sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, patches, mpm_matls);
-  // Jim: ???
-  // d_mpm->scheduleComputeMassRate(sched, patches, mpm_matls);
 
   if(d_fracture) {
     d_mpm->scheduleComputeFracture(sched, patches, mpm_matls);
@@ -266,6 +260,51 @@ void MPMArches::scheduleComputeVoidFrac(SchedulerP& sched,
 
 //______________________________________________________________________
 //
+
+void MPMArches::schedulePutAllForcesOnCC(SchedulerP& sched,
+				         const PatchSet* patches,
+				         const MaterialSet* mpm_matls)
+{
+  // Grab all of the forces which Arches wants to give to MPM and
+  // accumulate them on the cell centers
+  Task* t=scinew Task("MPMArches::putAllForcesOnCC",
+		      this, &MPMArches::putAllForcesOnCC);
+
+  t->requires(Task::NewDW, d_MAlb->DragForceX_CCLabel, mpm_matls->getUnion(),
+								Ghost::None, 0);
+  t->requires(Task::NewDW, d_MAlb->DragForceY_CCLabel, mpm_matls->getUnion(),
+								Ghost::None, 0);
+  t->requires(Task::NewDW, d_MAlb->DragForceZ_CCLabel, mpm_matls->getUnion(),
+								Ghost::None, 0);
+	      
+  t->requires(Task::NewDW, d_MAlb->PressureForce_FCXLabel,mpm_matls->getUnion(),
+						Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, d_MAlb->PressureForce_FCYLabel,mpm_matls->getUnion(),
+						Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, d_MAlb->PressureForce_FCZLabel,mpm_matls->getUnion(),
+						Ghost::AroundCells, 1);
+
+  t->computes(d_MAlb->SumAllForcesCCLabel, mpm_matls->getUnion());
+
+  sched->addTask(t, patches, mpm_matls);
+}
+
+void MPMArches::schedulePutAllForcesOnNC(SchedulerP& sched,
+				         const PatchSet* patches,
+				         const MaterialSet* mpm_matls)
+{
+  // Take the cell centered forces from Arches and put them on the
+  // nodes where SerialMPM can grab and use them
+  Task* t=scinew Task("MPMArches::putAllForcesOnNC",
+		      this, &MPMArches::putAllForcesOnNC);
+
+  t->requires(Task::NewDW,d_MAlb->SumAllForcesCCLabel, mpm_matls->getUnion(),
+					Ghost::AroundCells, 1);
+
+  t->computes(d_MAlb->SumAllForcesNCLabel, mpm_matls->getUnion());
+
+  sched->addTask(t, patches, mpm_matls);
+}
 
 void MPMArches::scheduleMomExchange(SchedulerP& sched,
 				    const PatchSet* patches,
@@ -834,7 +873,6 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 			      const MaterialSubset*,
 			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw)
-
 
 {
   for(int p=0;p<patches->size();p++){
@@ -2356,5 +2394,20 @@ void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
     
 }
 
-//______________________________________________________________________
-//
+void MPMArches::putAllForcesOnCC(const ProcessorGroup*,
+				const PatchSubset* patches,
+				const MaterialSubset* ,
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw)
+
+{
+}
+
+void MPMArches::putAllForcesOnNC(const ProcessorGroup*,
+				const PatchSubset* patches,
+				const MaterialSubset* ,
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw)
+
+{
+}
