@@ -30,47 +30,55 @@ namespace Yarden {
    1, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
    0 };
+
+
+    
+    Block LM[9] = {{0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff},
+                  {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff},
+		  {0x7f,0x7f,0x7f,0x7f,0x7f,0x7f,0x7f,0x7f},
+		  {0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f},
+		  {0x1f,0x1f,0x1f,0x1f,0x1f,0x1f,0x1f,0x1f},
+		  {0x0f,0x0f,0x0f,0x0f,0x0f,0x0f,0x0f,0x0f},
+		  {0x07,0x07,0x07,0x07,0x07,0x07,0x07,0x07},
+		  {0x03,0x03,0x03,0x03,0x03,0x03,0x03,0x03},
+		  {0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01}};
+    Word *LeftMask = (Word *) LM;
+
   
-  Word LeftMask[9] = { 0xffffffffffffffff,
-		       0xffffffffffffffff,
-		       0x7f7f7f7f7f7f7f7f,
-		       0x3f3f3f3f3f3f3f3f,
-		       0x1f1f1f1f1f1f1f1f,
-		       0x0f0f0f0f0f0f0f0f,
-		       0x0707070707070707,
-		       0x0303030303030303,
-		       0x0101010101010101};
+  long RM[18]= { 0xffffffff ,0xffffffff,
+		 0x80808080 ,0x80808080,
+		 0xc0c0c0c0 ,0xc0c0c0c0,
+		 0xe0e0e0e0 ,0xe0e0e0e0,
+		 0xf0f0f0f0 ,0xf0f0f0f0,
+		 0xf8f8f8f8 ,0xf8f8f8f8,
+		 0xfcfcfcfc ,0xfcfcfcfc,
+		 0xfefefefe ,0xfefefefe,
+		 0xffffffff ,0xffffffff};
+    
+  Word *RightMask =(Word *)  RM;
+
+  long BM[18]={ 0xffffffff ,0xffffffff,
+		0xffffffff ,0xffffffff,
+		0x00ffffff ,0xffffffff,
+		0x0000ffff ,0xffffffff,
+		0x000000ff ,0xffffffff,
+		0x00000000 ,0xffffffff,
+		0x00000000 ,0x00ffffff,
+		0x00000000 ,0x0000ffff,
+		0x00000000 ,0x000000ff};
   
-  Word RightMask[9]= { 0xffffffffffffffff,
-		       0x8080808080808080,
-		       0xc0c0c0c0c0c0c0c0,
-		       0xe0e0e0e0e0e0e0e0,
-		       0xf0f0f0f0f0f0f0f0,
-		       0xf8f8f8f8f8f8f8f8,
-		       0xfcfcfcfcfcfcfcfc,
-		       0xfefefefefefefefe,
-		       0xffffffffffffffff};
-  
-  Word BottomMask[9]={ 0xffffffffffffffff,
-		       0xffffffffffffffff,
-		       0x00ffffffffffffff,
-		       0x0000ffffffffffff,
-		       0x000000ffffffffff,
-		       0x00000000ffffffff,
-		       0x0000000000ffffff,
-		       0x000000000000ffff,
-		       0x00000000000000ff};
-  
-  Word TopMask[9]  = { 0xffffffffffffffff,
-		       0xff00000000000000,
-		       0xffff000000000000,
-		       0xffffff0000000000,
-		       0xffffffff00000000,
-		       0xffffffffff000000,
-		       0xffffffffffff0000,
-		       0xffffffffffffff00,
-		       0xffffffffffffffff};
-  
+  Word *BottomMask = (Word *) BM;
+  long TM[18]  = { 0xffffffff ,0xffffffff,
+		   0xff000000 ,0x00000000,
+		   0xffff0000 ,0x00000000,
+		   0xffffff00 ,0x00000000,
+		   0xffffffff ,0x00000000,
+		   0xffffffff ,0xff000000,
+		   0xffffffff ,0xffff0000,
+		   0xffffffff ,0xffffff00,
+		   0xffffffff ,0xffffffff};
+  Word *TopMask = (Word *)TM;
+
   struct MapEntry {
     int r;
     int c;
@@ -115,8 +123,8 @@ Screen::add_edge( int from, int to, int depth, ScanEdge *&e, int &ne )
   double y = pt[from].y;
   double y1 = pt[to].y;
   if ( y < y1 ) {
-    ymin = floor(y);
-    ymax = floor(y1);
+    ymin = (int) floor(y);
+    ymax = (int) floor(y1);
     yfrac = 1+ymin-y;
     x = pt[from].x;
     dx = pt[to].x - x;
@@ -131,8 +139,8 @@ Screen::add_edge( int from, int to, int depth, ScanEdge *&e, int &ne )
     }
   }
   else {
-    ymin = floor(y1);
-    ymax = floor(y);
+    ymin = (int) floor(y1);
+    ymax = (int) floor(y);
     yfrac = 1+ymin-y1;
     x = pt[to].x;
     dx = pt[from].x - x;
