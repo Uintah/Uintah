@@ -39,8 +39,10 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PSELIBS := Core/Exceptions Core/Thread
 LIBS := $(TEEM_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
 
+ifeq ($(HAVE_LAPACK),yes)
 PROGRAM := $(SRCDIR)/pca-image
 SRCS := $(SRCDIR)/pca-image.cc
 #Does need teem
-LIBS += -lcomplib.sgimath_mp
+LIBS += $(LAPACK_LIBRARY)
 include $(SCIRUN_SCRIPTS)/program.mk
+endif

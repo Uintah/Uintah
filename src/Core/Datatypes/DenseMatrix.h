@@ -39,6 +39,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
+#include <sci_defs.h>
 
 namespace SCIRun {
 
@@ -134,6 +135,10 @@ public:
   void mult(double s);
   virtual DenseMatrix* clone();
   
+  void svd(DenseMatrix&, SparseRowMatrix&, DenseMatrix&);
+  void eigenvalues(ColumnMatrix&, ColumnMatrix&);
+  void eigenvectors(ColumnMatrix&, ColumnMatrix&, DenseMatrix&);
+
   //! Friend functions
   friend SCICORESHARE void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
   friend SCICORESHARE void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);

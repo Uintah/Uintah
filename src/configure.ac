@@ -2134,13 +2134,67 @@ fi
 
 AC_SUBST(F_LIB_FLAG)
 
+##  --  search for atlas stuff  -------------------------------------------
+
+if test "$with_blas" && test "$with_atlas"; then
+  AC_MSG_ERROR(You cannot use both --with-blas and --with-atlas.)
+fi
+
+if test "$with_atlas"; then
+  _sci_lib="$with_atlas/lib"
+  _sci_inc="$with_atlas/include"
+else
+  _sci_lib="$sci_thirdparty_libs"
+  _sci_inc="$sci_thirdparty_includes"
+fi
+
+case $host in
+  *-darwin*)
+     if test "$with_atlas" && test "$with_atlas" != yes ; then
+       AC_MSG_ERROR(Don't specify a path for atlas when on a Mac (we use vecLib by default.))
+     fi
+     SCI_TRY_LINK(BLAS,atlas version oflibraries and headers,[
+        #include<vecLib/cblas.h>
+        ],,,,-faltivec -framework vecLib,,optional)
+     if test "$HAVE_BLAS" = yes ; then
+        BLAS_LIB_FLAG="-faltivec -framework vecLib"
+     fi
+     ;;
+   *)
+     SCI_TRY_LINK(BLAS,atlas version oflibraries and headers,[
+         #include<cblas.h>
+         ],$_sci_inc,cblas f77blas atlas f2c,$_sci_lib,$F_LIB_FLAG,,optional)
+     ;;
+esac
+
+if test "$HAVE_BLAS" = "yes"; then
+  DEF_BLAS="#define HAVE_BLAS 1"
+  sci_check_blas=no
+  AC_SUBST(HAVE_BLAS)
+  AC_SUBST(INC_BLAS_H)
+  AC_SUBST(BLAS_LIB_FLAG)
+  AC_SUBST(BLAS_LIB_DIR_FLAG)
+  AC_SUBST(DEF_BLAS)
+fi
+
+
 ##  --  search for blas stuff  -------------------------------------------
 
-if test "$sci_check_blas" = "yes"; then
+# if HAVE_BLAS is yes, then atlas has been found
+
+# DAV, FIX ME
+# _sci_optional=optional
+#if test "$sci_check_blas" = "yes" ; then
+#   _sci_optional=not-optional
+#fi
+
+if test "$HAVE_BLAS" != "yes"; then
   if test "$with_blas"; then
-    _sci_lib="$with_blas"
+    _sci_lib="$with_blas/lib"
+    _sci_inc="$with_blas/include"
   else
     _sci_lib="$sci_thirdparty_libs"
+    _sci_inc="$sci_thirdparty_includes"
   fi
   
   case $host in
@@ -2153,11 +2207,11 @@ if test "$sci_check_blas" = "yes"; then
                       cxml,$_sci_lib,$F_LIB_FLAG,,not-optional)
        ;;
     *)
-       SCI_TRY_LINK(BLAS,blas library,,,
+       SCI_TRY_LINK(BLAS,optional blas library,,,
                       blas,$_sci_lib,$F_LIB_FLAG,,optional)
-       if test "$HAVE_BLAS" != "yes"; then
-         SCI_TRY_LINK(BLAS,fblas library,,,
-                      fblas,$_sci_lib,$F_LIB_FLAG,,not-optional)
+       if test "$HAVE_BLAS" = "no"; then
+         SCI_TRY_LINK(BLAS,optional fblas library,,,
+                      fblas,$_sci_lib,$F_LIB_FLAG,,optional)
        fi
        ;;
   esac
@@ -2172,11 +2226,14 @@ if test "$sci_check_blas" = "yes"; then
     echo
   fi
 
-fi # end sci_check_blas
+  # these are set above by atlas check if atlas check succeeded
+  AC_SUBST(HAVE_BLAS)
+  AC_SUBST(INC_BLAS_H)
+  AC_SUBST(BLAS_LIB_FLAG)
+  AC_SUBST(BLAS_LIB_DIR_FLAG)
+  AC_SUBST(DEF_BLAS)
 
-AC_SUBST(BLAS_LIB_FLAG)
-AC_SUBST(BLAS_LIB_DIR_FLAG)
-AC_SUBST(DEF_BLAS)
+fi # end sci_check_blas
 
 
 ##  --  search for ftgl stuff  -------------------------------------------
@@ -2212,40 +2269,56 @@ AC_SUBST(INC_FTGL_H)
 
 ##  --  search for lapack stuff  -----------------------------------------
 
-if test "$sci_check_lapack" = "yes" &&
-   test "$HAVE_F" = "yes" && test "$HAVE_BLAS" = "yes"; then
+# DAV, FIX ME
+# _sci_optional=optional
+#if test "$sci_check_lapack" = "yes" ; then
+#   _sci_optional=not-optional
+#fi
+
+if test "$HAVE_F" = "yes" && test "$HAVE_BLAS" = "yes"; then
   if test "$with_lapack"; then
     _sci_lib="$with_lapack"
   else
     _sci_lib="$LIB_DIR_BLAS $sci_thirdparty_libs"
   fi
-
-
-  SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
-
-  if test "$HAVE_LAPACK" != "yes"; then
-    SCI_TRY_LINK(LAPACK,flapack library,,,flapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
-  fi
-
-  if test "$HAVE_LAPACK" != "yes"; then
-    SCI_TRY_LINK(LAPACK,complib.sgimath library,,,complib.sgimath,$_sci_lib,,,optional)
-    if test "$HAVE_LAPACK" = "yes"; then
-       AC_MSG_WARN(Using complib for lapack)
-    fi
-  fi
-
-  if test "$HAVE_LAPACK" = "yes"; then
-    DEF_LAPACK="#define HAVE_LAPACK 1"
-  fi
-
-  if test "$with_lapack" && test ! "$DEF_LAPACK"; then
-    echo
-    AC_MSG_ERROR(One or more of the LAPACK components is missing.)
-    echo
-  fi
-
 fi
 
+case $host in
+  *-darwin*)
+     SCI_TRY_LINK(LAPACK,lapack version oflibraries and headers,[
+        #include<vecLib/clapack.h>
+        ],,,,-faltivec -framework vecLib,,optional)
+     if test "$HAVE_LAPACK" = yes ; then
+        LAPACK_LIB_FLAG="-faltivec -framework vecLib"
+     fi
+     ;;
+   *)
+     SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+     ;;
+esac
+
+if test "$HAVE_LAPACK" != "yes"; then
+  SCI_TRY_LINK(LAPACK,flapack library,,,flapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+fi
+
+if test "$HAVE_LAPACK" != "yes"; then
+  SCI_TRY_LINK(LAPACK,complib.sgimath library,,,complib.sgimath,$_sci_lib,,,optional)
+  if test "$HAVE_LAPACK" = "yes"; then
+       AC_MSG_WARN(Using complib for lapack)
+  fi
+fi
+
+if test "$HAVE_LAPACK" = "yes"; then
+  DEF_LAPACK="#define HAVE_LAPACK 1"
+fi
+
+if test "$with_lapack" && test ! "$DEF_LAPACK"; then
+  echo
+  AC_MSG_ERROR(One or more of the LAPACK components is missing.)
+  echo
+fi
+
+AC_SUBST(HAVE_LAPACK)
 AC_SUBST(DEF_LAPACK)
 AC_SUBST(LAPACK_LIB_FLAG)
 AC_SUBST(LAPACK_LIB_DIR_FLAG)
@@ -2752,8 +2825,13 @@ if test "$sci_check_glut" = "yes"; then
    libs="$GL_LIB_DIR_FLAG $GL_LIB_FLAG $X_LIB_FLAG $GLU_OTHERS_FLAG"
 
    if test "$with_glut"; then
-     _sci_lib="$with_glut/$BASE_LIB_DIR"
-     _sci_inc="$with_glut/include"
+     if test "$with_opengl"; then
+       _sci_lib="$with_glut/$BASE_LIB_DIR $with_opengl/lib"
+       _sci_inc="$with_glut/include $with_opengl/include"
+     else
+       _sci_lib="$with_glut/$BASE_LIB_DIR /usr/X11R6/lib"
+       _sci_inc="$with_glut/include /usr/X11R6/include"
+     fi
    else
      _sci_lib="$sci_thirdparty_libs"
      _sci_inc="$sci_thirdparty_includes"
@@ -2779,8 +2857,13 @@ AC_SUBST(GLUT_LIB_DIR_FLAG)
 ##  --  search for glui  -----------------------------------------------
 if test "$sci_check_glui" = "yes"; then
    if test "$with_glui"; then
-     _sci_lib="$with_glui/$BASE_LIB_DIR"
-     _sci_inc="$with_glui/include"
+     if test "$with_opengl"; then
+       _sci_lib="$with_glut/$BASE_LIB_DIR $with_glui/$BASE_LIB_DIR $with_opengl/lib"
+       _sci_inc="$with_glut/include $with_glui/include $with_opengl/include"
+     else
+       _sci_lib="$with_glut/$BASE_LIB_DIR $with_glui/$BASE_LIB_DIR /usr/X11R6/lib"
+       _sci_inc="$with_glut/include $with_glui/include /usr/X11R6/include"
+     fi
    else
      _sci_lib="$sci_thirdparty_libs"
      _sci_inc="$sci_thirdparty_includes"
