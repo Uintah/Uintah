@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
-<!-- @version: Updated 1/23/2004-->
+<!-- @version: Updated 3/29/2004-->
 <Uintah_specification>
 
    <Meta>
@@ -8,7 +8,7 @@
    </Meta>
 
    <Time>
-	<maxTime>90.0e-6</maxTime>
+	<maxTime>100.0e-6</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.0</delt_min>
 	<delt_max>2e-6</delt_max>
@@ -23,6 +23,8 @@
         <save label = "p.deformationMeasure"/>
         <save label = "p.velocity"/>
         <save label = "p.externalforce"/>
+        <save_crack_geometry>true</save_crack_geometry>
+
 	<checkpoint cycle = "2" interval = "20e-6"/>
    </DataArchiver>
 
@@ -30,7 +32,7 @@
 	<time_integrator>fracture</time_integrator>
 	<nodes8or27>8</nodes8or27>
         <calculate_fracture_parameters>every_time_step</calculate_fracture_parameters>
-        <useVolumeIntegral>false</useVolumeIntegral>
+        <use_volume_integral>false</use_volume_integral>
         <J_radius>10e-3</J_radius>
         <do_crack_propagation>false</do_crack_propagation>
     </MPM>
@@ -94,6 +96,14 @@
     </MaterialProperties>
 	
     <Grid>
+        <Level>
+            <Box label = "1">
+                <lower>[-240e-3, -240e-3, -160e-3]</lower>
+                <upper>[    0.0,  240e-3,  160e-3]</upper>
+                <resolution>[48,160,64]</resolution>
+                <patches>[4,8,4]</patches>
+            </Box>
+        </Level>
         <BoundaryConditions>
            <Face side = "x-">
                   <BCType id = "all" var = "Dirichlet" label = "Velocity">
@@ -124,14 +134,6 @@
                    </BCType>
            </Face>
         </BoundaryConditions>
-	<Level>
-	    <Box label = "1">
-		<lower>[-240e-3, -240e-3, -160e-3]</lower>
-		<upper>[    0.0,  240e-3,  160e-3]</upper>
-	        <resolution>[48,160,64]</resolution>
-		<patches>[4,8,4]</patches>
-	    </Box>
-	</Level>
     </Grid>
 
     <PhysicalBC>
