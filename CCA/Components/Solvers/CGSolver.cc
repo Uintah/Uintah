@@ -23,12 +23,11 @@
 using namespace Uintah;
 
 static void Mult(Array3<double>& B, const Array3<Stencil7>& A,
-		 const Array3<double>& X, CellIterator iter, long64& flops)
+		 const Array3<double>& X, CellIterator iter,
+		 const IntVector& l, const IntVector& h1, long64& flops)
 {
-  IntVector l(X.getLowIndex());
-  IntVector h1(X.getHighIndex()-IntVector(1,1,1));
   // Center
-#if 1
+#if 0
   ASSERT(B.getWindow()->getOffset() == IntVector(0,0,0));
   ASSERT(A.getWindow()->getOffset() == IntVector(0,0,0));
   ASSERT(X.getWindow()->getOffset() == IntVector(0,0,0));
@@ -93,12 +92,33 @@ static void Sub(Array3<double>& r, const Array3<double>& a,
   flops += diff.x()*diff.y()*diff.z();
 }
 
+static void Mult(Array3<double>& r, const Array3<double>& a,
+		const Array3<double>& b,
+		CellIterator iter, long64& flops)
+{
+  for(; !iter.done(); ++iter)
+    r[*iter] = a[*iter]*b[*iter];
+  IntVector diff = iter.end()-iter.begin();
+  flops += diff.x()*diff.y()*diff.z();
+}
+
+#if 0
 static void DivDiagonal(Array3<double>& r, const Array3<double>& a,
 			const Array3<Stencil7>& A,
 			CellIterator iter, long64& flops)
 {
   for(; !iter.done(); ++iter)
     r[*iter] = a[*iter]/A[*iter].p;
+  IntVector diff = iter.end()-iter.begin();
+  flops += diff.x()*diff.y()*diff.z();
+}
+#endif
+
+static void InverseDiagonal(Array3<double>& r, const Array3<Stencil7>& A,
+			CellIterator iter, long64& flops)
+{
+  for(; !iter.done(); ++iter)
+    r[*iter] = 1./A[*iter].p;
   IntVector diff = iter.end()-iter.begin();
   flops += diff.x()*diff.y()*diff.z();
 }
@@ -239,6 +259,7 @@ public:
     Q_label = VarLabel::create(A->getName()+" Q", sol_type::getTypeDescription());
     d_label = VarLabel::create(A->getName()+" d", sum_vartype::getTypeDescription());
     aden_label = VarLabel::create(A->getName()+" aden", sum_vartype::getTypeDescription());
+    diag_label = VarLabel::create(A->getName()+" inverse diagonal", sol_type::getTypeDescription());
     VarLabel* tmp_flop_label = VarLabel::create(A->getName()+" flops", sumlong_vartype::getTypeDescription());
     tmp_flop_label->allowMultipleComputes();
     flop_label = tmp_flop_label;
@@ -260,6 +281,7 @@ public:
     VarLabel::destroy(D_label);
     VarLabel::destroy(Q_label);
     VarLabel::destroy(d_label);
+    VarLabel::destroy(diag_label);
     VarLabel::destroy(flop_label);
     if(err_label != d_label)
       VarLabel::destroy(err_label);
@@ -288,15 +310,26 @@ public:
 
 	typedef typename Types::sol_type sol_type;
 	Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-	IntVector l = patch->getLowIndex(basis);
-	IntVector h = patch->getHighIndex(basis);
+	IntVector l = patch->getLowIndex(basis, IntVector(0,0,0));
+	IntVector h = patch->getHighIndex(basis, IntVector(0,0,0));
 	CellIterator iter(l, h);
+
+	IntVector ll(l);
+	IntVector hh(h);
+	ll -= IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?1:0,
+			patch->getBCType(Patch::yminus) == Patch::Neighbor?1:0,
+			patch->getBCType(Patch::zminus) == Patch::Neighbor?1:0);
+
+	hh += IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor?1:0,
+			patch->getBCType(Patch::yplus) == Patch::Neighbor?1:0,
+			patch->getBCType(Patch::zplus) == Patch::Neighbor?1:0);
+	hh -= IntVector(1,1,1);
 
 	// Q = A*D
 	long64 flops = 0;
 	// Must be qualified with :: for the IBM xlC compiler.
-	::Mult(Q, A, D, iter, flops);
-	double aden = ::Dot(D, Q, iter, flops);
+	::Mult(Q, A, D, iter, ll, hh, flops);
+	double aden=::Dot(D, Q, iter, flops);
 	new_dw->put(sum_vartype(aden), aden_label);
 
 	new_dw->put(sumlong_vartype(flops), flop_label);
@@ -308,24 +341,24 @@ public:
 	     const MaterialSubset* matls,
 	     DataWarehouse* old_dw, DataWarehouse* new_dw)
   {
-    DataWarehouse* parent_new_dw = new_dw->getOtherDataWarehouse(Task::ParentNewDW);
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       for(int m = 0;m<matls->size();m++){
 	int matl = matls->get(m);
 	typedef typename Types::sol_type sol_type;
 	Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-	IntVector l = patch->getLowIndex(basis);
-	IntVector h = patch->getHighIndex(basis);
+	IntVector l = patch->getLowIndex(basis, IntVector(0,0,0));
+	IntVector h = patch->getHighIndex(basis, IntVector(0,0,0));
 	CellIterator iter(l, h);
 
 	// Step 2 - requires d(old), aden(new) D(old), X(old) R(old)  computes X, R, Q, d
 	typename Types::const_type D;
 	old_dw->get(D, D_label, matl, patch, Ghost::None, 0);
 
-	typename Types::const_type X, R;
+	typename Types::const_type X, R, diagonal;
 	old_dw->get(X, X_label, matl, patch, Ghost::None, 0);
 	old_dw->get(R, R_label, matl, patch, Ghost::None, 0);
+	old_dw->get(diagonal, diag_label, matl, patch, Ghost::None, 0);
 	typename Types::sol_type Xnew, Rnew;
 	new_dw->allocateAndPut(Xnew, X_label, matl, patch, Ghost::None, 0);
 	new_dw->allocateAndPut(Rnew, R_label, matl, patch, Ghost::None, 0);
@@ -338,20 +371,17 @@ public:
 	sum_vartype d;
 	old_dw->get(d, d_label);
 
-	typename Types::matrix_type A;
-	parent_new_dw->get(A, A_label, matl, patch, Ghost::None, 0);
-
 	long64 flops = 0;
 	double a=d/aden;
 
-#if 0
+#if 1
 	// X = a*D+X
 	ScMult_Add(Xnew, a, D, X, iter, flops);
 	// R = -a*Q+R
 	ScMult_Add(Rnew, -a, Q, R, iter, flops);
 
 	// Simple Preconditioning...
-	DivDiagonal(Q, Rnew, A, iter, flops);
+	Mult(Q, Rnew, diagonal, iter, flops);
 
 	// Calculate coefficient bk and direction vectors p and pp
 	double dnew=Dot(Q, Rnew, iter, flops);
@@ -380,8 +410,8 @@ public:
 	double*** pRnew = Rnew.get3DPointer();
 	double*** pR = get3DPointer(R);
 	double*** pQ = Q.get3DPointer();
-	Stencil7*** pA = get3DPointer(A);
 	double*** pX = get3DPointer(X);
+	double*** pdiagonal = get3DPointer(diagonal);
 	IntVector  ll(iter.begin());
 	IntVector hh(iter.end());
 	double dnew = 0;
@@ -395,7 +425,7 @@ public:
 	      double tmp1 = pRnew[z][y][x] = pR[z][y][x]-a*pQ[z][y][x];
 
 	      // Simple Preconditioning...
-	      double tmp2 = pQ[z][y][x] = tmp1/pA[z][y][x].p;
+	      double tmp2 = pQ[z][y][x] = tmp1*pdiagonal[z][y][x];
 
 	      // Calculate coefficient bk and direction vectors p and pp
 	      dnew += tmp1*tmp2;
@@ -412,6 +442,7 @@ public:
 	new_dw->put(sumlong_vartype(flops), flop_label);
       }
     }
+    new_dw->transferFrom(old_dw, diag_label, patches, matls);
   }
 
   void step3(const ProcessorGroup*, const PatchSubset* patches,
@@ -424,8 +455,8 @@ public:
 	int matl = matls->get(m);
 	typedef typename Types::sol_type sol_type;
 	Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-	IntVector l = patch->getLowIndex(basis);
-	IntVector h = patch->getHighIndex(basis);
+	IntVector l = patch->getLowIndex(basis, IntVector(0,0,0));
+	IntVector h = patch->getHighIndex(basis, IntVector(0,0,0));
 	CellIterator iter(l, h);
 
 	sum_vartype dnew, dold;
@@ -462,13 +493,14 @@ public:
 	int matl = matls->get(m);
 	typedef typename Types::sol_type sol_type;
 	Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-	IntVector l = patch->getLowIndex(basis);
-	IntVector h = patch->getHighIndex(basis);
+	IntVector l = patch->getLowIndex(basis, IntVector(0,0,0));
+	IntVector h = patch->getHighIndex(basis, IntVector(0,0,0));
 	CellIterator iter(l, h);
 
-	typename Types::sol_type R, Xnew;
+	typename Types::sol_type R, Xnew, diagonal;
 	new_dw->allocateAndPut(R, R_label, matl, patch);
 	new_dw->allocateAndPut(Xnew, X_label, matl, patch);
+	new_dw->allocateAndPut(diagonal, diag_label, matl, patch);
 	typename Types::const_type B;
 	parent_new_dw->get(B, B_label, matl, patch, Ghost::None, 0);
 
@@ -484,7 +516,18 @@ public:
 	    parent_new_dw->get(X, guess_label, matl, patch, Around, 1);
 
 	  // R = A*X
-	  ::Mult(R, A, X, iter, flops);
+	  IntVector ll(l);
+	  IntVector hh(h);
+	  ll -= IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?1:0,
+			  patch->getBCType(Patch::yminus) == Patch::Neighbor?1:0,
+			  patch->getBCType(Patch::zminus) == Patch::Neighbor?1:0);
+
+	  hh += IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor?1:0,
+			  patch->getBCType(Patch::yplus) == Patch::Neighbor?1:0,
+			  patch->getBCType(Patch::zplus) == Patch::Neighbor?1:0);
+	  hh -= IntVector(1,1,1);
+
+	  ::Mult(R, A, X, iter, ll, hh, flops);
 
 	  // R = B-R
 	  ::Sub(R, B, R, iter, flops);
@@ -497,7 +540,12 @@ public:
 	// D = R/Ap
 	typename Types::sol_type D;
 	new_dw->allocateAndPut(D, D_label, matl, patch);
+#if 0
 	::DivDiagonal(D, R, A, iter, flops);
+#else
+	::InverseDiagonal(diagonal, A, iter, flops);
+	::Mult(D, R, diagonal, iter, flops);
+#endif
 
 	double dnew = ::Dot(R, D, iter, flops);
 	new_dw->put(sum_vartype(dnew), d_label);
@@ -566,6 +614,7 @@ public:
     task->computes(X_label);
     task->computes(D_label);
     task->computes(d_label);
+    task->computes(diag_label);
     if(params->norm != CGSolverParams::L2)
       task->computes(err_label);
     task->computes(flop_label);
@@ -626,6 +675,8 @@ public:
       task->computes(R_label);
       task->modifies(Q_label);
       task->computes(d_label);
+      task->requires(Task::OldDW, diag_label, Ghost::None, 0);
+      task->computes(diag_label);
       if(params->norm != CGSolverParams::L1)
 	task->computes(err_label);
       task->computes(flop_label);
@@ -681,8 +732,8 @@ public:
 	  int matl = matls->get(m);
 	  typedef typename Types::sol_type sol_type;
 	  Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-	  IntVector l = patch->getLowIndex(basis);
-	  IntVector h = patch->getHighIndex(basis);
+	  IntVector l = patch->getLowIndex(basis, IntVector(0,0,0));
+	  IntVector h = patch->getHighIndex(basis, IntVector(0,0,0));
 	  CellIterator iter(l, h);
 
 	  typename Types::sol_type Xnew;
@@ -702,7 +753,8 @@ public:
 
     double dt=Time::currentSeconds()-tstart;
     double mflops = (double(flops)*1.e-6)/dt;
-    cerr << "Solve of " << X_label->getName();
+    cerr << "Solve of " << X_label->getName() 
+	 << " on level " << level->getIndex();
     if(niter < toomany)
       cerr << " completed in ";
     else
@@ -721,6 +773,7 @@ private:
   const VarLabel* B_label;
   const VarLabel* R_label;
   const VarLabel* D_label;
+  const VarLabel* diag_label;
   const VarLabel* Q_label;
   const VarLabel* d_label;
   const VarLabel* err_label;
