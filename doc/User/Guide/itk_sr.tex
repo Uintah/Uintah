@@ -741,13 +741,13 @@ For example:
 Element \xmlstarttag{outputs} is optional.  \xmlstarttag{Outputs}
 lists outputs that are allowed to send \dfn{intermediate} data.
 
-Intermediate data are useful when using, for example, any of the
-LevelSet segmentation filters---the user can visualize the
-segmentation process in real-time.
+Usually data are sent on a port only after a module has finished its
+execution.  When sending intermediate data is allowed, however, a
+module can send data every $n_th$ iteration of a calculation.
 
-Usually data are sent only when a calculation is complete.  When
-allowed, an output port will send data every $n^{th}$ iteration of a
-calculation.
+Intermediate data are useful when using, for example, any of the
+level-set segmentation filters---the user can visualize the
+segmentation region growing or shrinking in real-time.
 
 The \xmlstarttag{outputs} element contains one or more
 \xmlstarttag{output} elements (but no more than are in the
@@ -771,8 +771,8 @@ For example:
 \end{alltt}
 
 Each \xmlstarttag{output} element corresponds to an ITK filter
-description \xmlstarttag{output} element.  The value of the respective
-\xmlattrname{name} attributes must match.  The value of an
+description \xmlstarttag{output} element.  The values of the
+respective \xmlattrname{name} attributes must match.  The value of an
 \xmlstarttag{output} element's \xmlattrname{send_intermediate}
 attribute is set to \xmlattrvalue{yes} if the output is allowed to
 send intermediate data and \xmlattrvalue{no} otherwise.
