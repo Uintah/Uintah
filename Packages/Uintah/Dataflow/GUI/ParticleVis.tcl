@@ -6,6 +6,7 @@ itcl_class Uintah_Visualization_ParticleVis {
     inherit Module
     protected r ""
     protected l_s ""
+    protected changed 0
 
     constructor {config} {
 	set name ParticleVis
@@ -36,6 +37,9 @@ itcl_class Uintah_Visualization_ParticleVis {
 	global $this-width_scale
 	global $this-drawcylinders
 	global $this-drawspheres
+	global $this-isFixed
+	global $this-min_
+	global $this-max_
 	set $this-current_time 0
 	set $this-radius 0.01
 	set $this-polygons 32
@@ -47,6 +51,9 @@ itcl_class Uintah_Visualization_ParticleVis {
 	set $this-width_scale 0.1
 	set $this-drawcylinders 0
 	set $this-drawspheres 0
+	set $this-isFixed 0
+	set $this-min_ 0
+	set $this-max_ 1
     }
 
     method ui {} {
@@ -92,6 +99,22 @@ itcl_class Uintah_Visualization_ParticleVis {
 	
 	pack $w.f1.nth -side top -expand yes -fill x
 
+	frame $w.f3 -relief groove -borderwidth 2
+	pack $w.f3 -side top -expand yes -fill both
+	label $w.f3.l -text "Particle Scale Control"
+	pack $w.f3.l -side top -expand yes -fill x
+	frame $w.f3.sf -relief flat -borderwidth 2
+	pack $w.f3.sf -side top -expand yes -fill x
+	set sf $w.f3.sf
+	checkbutton $sf.cb -text "Fixed Range" -variable $this-isFixed \
+	    -onvalue 1 -offvalue 0 -command "$this fixedScale"
+	label $sf.l1 -text "min: "
+	entry $sf.e1 -textvariable $this-min_
+	label $sf.l2 -text " max: "
+	entry $sf.e2 -textvariable $this-max_
+	pack $sf.cb $sf.l1 $sf.e1 $sf.l2 $sf.e2 -side left \
+	    -expand yes -fill x -padx 2 -pady 2
+
 	frame $w.f2 -relief groove -borderwidth 2
 	pack $w.f2 -side top -expand yes -fill both
 	label $w.f2.l -text "Vector Controls\n"
@@ -133,9 +156,49 @@ itcl_class Uintah_Visualization_ParticleVis {
 
 	button $w.close -text "Close" -command "wm withdraw $w"
 	pack $w.close -side top -expand yes -fill x
-
+	
+	$this scalable 0
     }
 
+    method scalable { truefalse } {
+	set w .ui[modname]
+	puts "scalable is $truefalse"
+	if { $truefalse } {
+	    $w.f3.sf.cb configure -state normal -foreground black
+	    $w.f3.l configure -foreground black
+	} else {
+	    set color "#505050" 
+	    $w.f3.sf.cb configure -state disabled -foreground $color
+	    $w.f3.l configure  -foreground $color
+	}
+	$this fixedScale
+    }
+    
+    method fixedScale { } {
+	global $this-isFixed
+	set w .ui[modname]
+
+	if {[set $this-isFixed] == 1 } {
+	    $w.f3.sf.l1 configure -foreground black
+	    $w.f3.sf.e1 configure -state normal -foreground black
+	    $w.f3.sf.l2 configure -foreground black
+	    $w.f3.sf.e2 configure -state normal -foreground black
+	} else {
+	    set color "#505050"
+	    
+	    $w.f3.sf.l1 configure -foreground $color
+	    $w.f3.sf.e1 configure -state disabled -foreground $color
+	    $w.f3.sf.l2 configure -foreground $color
+	    $w.f3.sf.e2 configure -state disabled -foreground $color
+	}
+
+
+	if { $changed != [set $this-isFixed] } {
+	    set changed [set $this-isFixed]
+	    $this-c needexecute
+	}
+	
+    }
     method close {} {
 	puts "closing ParticleVis Ui"
 	set w .ui[modname]
@@ -145,5 +208,6 @@ itcl_class Uintah_Visualization_ParticleVis {
 	::delete object $l_s
 	destroy $w
     }
+
 }
 
