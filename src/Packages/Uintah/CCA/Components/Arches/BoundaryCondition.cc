@@ -4214,6 +4214,11 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 		throw InvalidValue("Flow comming out of inlet");
 	if ((co2out_inlet > 0.0)&&(doing_carbon_balance))
 		throw InvalidValue("CO2 comming out of inlet");
+
+	// Count CO2 comming trough the air inlet
+	double scalarValue = fi.streamMixturefraction.d_mixVars[0];
+	if (scalarValue == 0.0)
+	  co2IN += co2in_inlet;
       } 
 
       if (d_pressureBoundary) {
