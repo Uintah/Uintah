@@ -9,6 +9,7 @@ TK_LIB_DIR    = @TK_LIB_DIR@
 TK_LIB_FLAG   = @TK_LIB_FLAG@
 ITCL_LIB_DIR  = @ITCL_LIB_DIR@
 ITCL_LIB_FLAG = @ITCL_LIB_FLAG@
+ITCL_WIDGETS  = @ITCL_WIDGETS@
 
 LDRUN_PREFIX  = @LDRUN_PREFIX@
 
@@ -18,6 +19,7 @@ SRCTOP_ABS    = $(shell cd $(SRCTOP) ; pwd)
 SRCS      = main.cc
 CFLAGS   := $(CFLAGS) -DPSECORETCL=\"$(SRCTOP_ABS)/libs/PSECore/TCL\" \
                       -DSCICORETCL=\"$(SRCTOP_ABS)/libs/SCICore/TCL\" \
+                      -DITCL_WIDGETS=\"$(ITCL_WIDGETS)\" \
                       -DDEFAULT_PACKAGE_PATH=\"$(OBJTOP_ABS)/packages/PSECommon/libPSECommon.so\($(SRCTOP_ABS)/packages/PSECommon/TCL\):$(OBJTOP_ABS)/packages/Uintah/libUintah.so\($(SRCTOP_ABS)/packages/Uintah/TCL\)\"
 INCLUDES  = -I$(OBJTOP) -I$(SRCTOP)/libs \
             -I$(SRCTOP)/libs/SCICore -I$(SRCTOP)/libs/PSECore
