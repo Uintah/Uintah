@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <iostream>
 
 using namespace Uintah;
@@ -42,6 +43,19 @@ SmoothCylGeomPiece::SmoothCylGeomPiece(ProblemSpecP& ps)
   ps->get("endcap_thickness", d_capThick);
   if (d_capThick < 0.0)
     SCI_THROW(ProblemSetupException("SmoothCylGeom: Cap Thickness < 0.0"));
+
+  string file_name;
+  file_name = "none";
+  ps->get("output_file", file_name);
+
+  // Create the particles and store in the two vectors
+  createPoints();
+
+  // Write the output if requested
+  if (file_name != "none") {
+    writePoints(file_name, "pts");
+    writePoints(file_name, "vol");
+  }
 }
 
 //////////
@@ -87,8 +101,9 @@ SmoothCylGeomPiece::inside(const Point& p) const
   return isInside;
 }
 
-//////////
-// Find the bounding box for the cylinder
+/////////////////////////////////////////////////////////////////////////////
+/*! Find the bounding box for the cylinder */
+/////////////////////////////////////////////////////////////////////////////
 Box 
 SmoothCylGeomPiece::getBoundingBox() const
 {
@@ -107,62 +122,21 @@ SmoothCylGeomPiece::getBoundingBox() const
 }
 
 //////////////////////////////////////////////////////////////////////////
-/*! Count particles */
+/* Create particles */
 //////////////////////////////////////////////////////////////////////////
 int 
-SmoothCylGeomPiece::returnParticleCount(const Patch* patch)
+SmoothCylGeomPiece::createPoints()
 {
-  bool doCreate = false;
-  ParticleVariable<Point> pos;
-  ParticleVariable<double> vol;
-  ParticleVariable<Vector> psiz;
-  particleIndex start = 0;
   int totCount = 0;
   if (d_capThick > 0.0) {
-    int count = createOrCountEndCapParticles(patch, pos, vol, psiz, start, 
-                                             doCreate);
+    int count = createEndCapPoints();
     totCount += count;
   }
   if (d_thickness < d_radius) {
-    int count = createOrCountHollowCylParticles(patch, pos, vol, psiz, start, 
-						doCreate);
+    int count = createHollowCylPoints();
     totCount += count;
   } else {
-    int count = createOrCountSolidCylParticles(patch, pos, vol, psiz, start, 
-					       doCreate);
-    totCount += count;
-  }
-  cout << "Particle Count = " << totCount << endl;
-  return totCount;
-}
-
-//////////////////////////////////////////////////////////////////////////
-/*! Create particles */
-//////////////////////////////////////////////////////////////////////////
-int 
-SmoothCylGeomPiece::createParticles(const Patch* patch,
-				    ParticleVariable<Point>&  pos,
-				    ParticleVariable<double>& vol,
-				    ParticleVariable<Vector>& psiz,
-				    particleIndex start)
-{
-  bool doCreate = true;
-  int totCount = 0;
-  if (d_capThick > 0.0) {
-    int count = createOrCountEndCapParticles(patch, pos, vol, psiz, start, 
-                                             doCreate);
-    start += count;
-    totCount += count;
-  }
-  if (d_thickness < d_radius) {
-    int count = createOrCountHollowCylParticles(patch, pos, vol, psiz, start, 
-						doCreate);
-    start += count;
-    totCount += count;
-  } else {
-    int count = createOrCountSolidCylParticles(patch, pos, vol, psiz, start, 
-					       doCreate);
-    start += count;
+    int count = createSolidCylPoints();
     totCount += count;
   }
   return totCount;
@@ -170,16 +144,11 @@ SmoothCylGeomPiece::createParticles(const Patch* patch,
 
 //////////////////////////////////////////////////////////////////////////
 /*! Create the particles on a circle on the x-y plane and then
-  rotate them to the correct position and find if they are still
-  in the patch. First particle is located at the center. */
+  rotate them to the correct position. First particle is located 
+  at the center. */
 //////////////////////////////////////////////////////////////////////////
 int 
-SmoothCylGeomPiece::createOrCountEndCapParticles(const Patch* patch,
-						 ParticleVariable<Point>&  pos,
-						 ParticleVariable<double>& vol,
-						 ParticleVariable<Vector>& psiz,
-						 particleIndex start,
-						 bool doCreate)
+SmoothCylGeomPiece::createEndCapPoints()
 {
   cout << "Creating particles for the End Caps" << endl;
 
@@ -187,9 +156,6 @@ SmoothCylGeomPiece::createOrCountEndCapParticles(const Patch* patch,
   Vector axis = d_top - d_bottom;
   double axislen = axis.length();
   axis /= axislen;
-
-  // Get the bounding patch box
-  Box b = patch->getBox();
 
   // Angle of rotation
   Vector n0(0.0, 0.0, 1.0); // The normal to the xy-plane
@@ -236,16 +202,10 @@ SmoothCylGeomPiece::createOrCountEndCapParticles(const Patch* patch,
 	pp = R*pp + currCenter;
 	Point p(pp);
 
-	// If the patch contains the point, increment count
-	if(b.contains(p)) {
-          if (doCreate) {
-	    particleIndex pidx = start+count;
-	    pos[pidx] = p;
-	    vol[pidx] = axisInc*area;
-	    psiz[pidx] = Vector(.5,.5,.5);
-          } 
-	  count++;
-	}
+        d_points.push_back(p);
+        d_volume.push_back(axisInc*area);
+        //cout << "Point["<<count<<"]="<<p<<endl;
+	count++;
       }
     }
     currZ -= axisInc;
@@ -277,16 +237,10 @@ SmoothCylGeomPiece::createOrCountEndCapParticles(const Patch* patch,
 	pp = R*pp + currCenter;
 	Point p(pp);
 
-	// If the patch contains the point, increment count
-	if(b.contains(p)) {
-          if (doCreate) {
-	    particleIndex pidx = start+count;
-	    pos[pidx] = p;
-	    vol[pidx] = axisInc*area;
-	    psiz[pidx] = Vector(.5,.5,.5);
-          } 
-	  count++;
-	}
+        d_points.push_back(p);
+        d_volume.push_back(axisInc*area);
+        //cout << "Point["<<count<<"]="<<p<<endl;
+	count++;
       }
     }
     currZ += axisInc;
@@ -297,16 +251,11 @@ SmoothCylGeomPiece::createOrCountEndCapParticles(const Patch* patch,
 
 //////////////////////////////////////////////////////////////////////////
 /*! Create the particles on a circle on the x-y plane and then
-  rotate them to the correct position and find if they are still
-  in the patch. First particle is located at the center. */
+  rotate them to the correct position.
+  First particle is located at the center. */
 //////////////////////////////////////////////////////////////////////////
 int 
-SmoothCylGeomPiece::createOrCountSolidCylParticles(const Patch* patch,
-						 ParticleVariable<Point>& pos,
-						 ParticleVariable<double>& vol,
-						 ParticleVariable<Vector>& psiz,
-						 particleIndex start,
-						 bool doCreate)
+SmoothCylGeomPiece::createSolidCylPoints()
 {
   cout << "Creating particles for the Solid Cylinder" << endl;
 
@@ -314,9 +263,6 @@ SmoothCylGeomPiece::createOrCountSolidCylParticles(const Patch* patch,
   Vector axis = d_top - d_bottom;
   double length = axis.length();
   axis /= length;
-
-  // Get the bounding patch box
-  Box b = patch->getBox();
 
   // Angle of rotation
   Vector n0(0.0, 0.0, 1.0); // The normal to the xy-plane
@@ -360,18 +306,11 @@ SmoothCylGeomPiece::createOrCountSolidCylParticles(const Patch* patch,
 	// Rotate points to correct orientation and
 	// Translate to correct position
 	pp = R*pp + currCenter;
-
-	// If the patch contains the point, increment count
 	Point p(pp);
-	if(b.contains(p)) {
-          if (doCreate) {
-	    particleIndex pidx = start+count;
-	    pos[pidx] = p;
-	    vol[pidx] = axisInc*area;
-	    psiz[pidx] = Vector(.5,.5,.5);
-          } 
-	  count++;
-	}
+        d_points.push_back(p);
+        d_volume.push_back(axisInc*area);
+        //cout << "Point["<<count<<"]="<<p<<endl;
+	count++;
       }
     }
     currZ += axisInc;
@@ -382,16 +321,10 @@ SmoothCylGeomPiece::createOrCountSolidCylParticles(const Patch* patch,
 
 //////////////////////////////////////////////////////////////////////////
 /*! Create the particles on a circle on the x-y plane and then
-  rotate them to the correct position and find if they are still
-  in the patch. */
+  rotate them to the correct position */
 //////////////////////////////////////////////////////////////////////////
 int 
-SmoothCylGeomPiece::createOrCountHollowCylParticles(const Patch* patch,
-						 ParticleVariable<Point>&  pos,
-						 ParticleVariable<double>& vol,
-						 ParticleVariable<Vector>& psiz,
-						 particleIndex start,
-						 bool doCreate)
+SmoothCylGeomPiece::createHollowCylPoints()
 {
   cout << "Creating particles for the Hollow Cylinder" << endl;
 
@@ -399,9 +332,6 @@ SmoothCylGeomPiece::createOrCountHollowCylParticles(const Patch* patch,
   Vector axis = d_top - d_bottom;
   double length = axis.length();
   axis = axis/length;
-
-  // Get the bounding patch box
-  Box b = patch->getBox();
 
   // Angle of rotation
   Vector n0(0.0, 0.0, 1.0); // The normal to the xy-plane
@@ -450,16 +380,10 @@ SmoothCylGeomPiece::createOrCountHollowCylParticles(const Patch* patch,
 	pp = R*pp + currCenter;
 	Point p(pp);
 
-	// If the patch contains the point, increment count
-	if(b.contains(p)) {
-          if (doCreate) {
-	    particleIndex pidx = start+count;
-	    pos[pidx] = p;
-	    vol[pidx] = axisInc*area;
-	    psiz[pidx] = Vector(.5,.5,.5);
-          } 
-	  count++;
-	}
+        d_points.push_back(p);
+        d_volume.push_back(axisInc*area);
+        //cout << "Point["<<count<<"]="<<p<<endl;
+	count++;
       }
     }
     currZ += axisInc;
