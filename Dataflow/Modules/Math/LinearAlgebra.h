@@ -25,6 +25,9 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/MatrixOperations.h>
 #include <Core/Math/function.h>
 
