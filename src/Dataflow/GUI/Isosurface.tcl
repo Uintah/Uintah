@@ -165,7 +165,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 		-orient horizontal  \
 		-digits 5 \
 		-resolution 0.001 \
-		-command "$this change_isoval"
+	        -command "$this change-isoval"
 
 	bind $w.f.isoval <ButtonRelease> "$this set-isoval"
 	
@@ -197,7 +197,6 @@ itcl_class SCIRun_Visualization_Isosurface {
 	
 	iwidgets::optionmenu $opt.update -labeltext "Update:" \
 		-labelpos w -command "$this update-type $opt.update"
-	
 	$opt.update insert end "on release" Manual Auto
 	$opt.update select [set $this-update_type]
 
@@ -252,11 +251,17 @@ itcl_class SCIRun_Visualization_Isosurface {
 	pack $w.f.meth -side top
     }
 
-    method change_isoval { n } {
+    method change-isoval { n } {
 	global $this-continuous
-	
+
 	if { [set $this-continuous] == 1.0 } {
 	    eval "$this-c needexecute"
+	}
+
+	if { [set $this-update_type] == "Auto" } {
+	    set $this-continuous 1
+	} else {
+	    set $this-continuous 0
 	}
     }
     
@@ -294,11 +299,6 @@ itcl_class SCIRun_Visualization_Isosurface {
     }
 
     method set_update_type { name1 name2 op } {
-#	puts stdout "set update type"
-#	puts stdout $name1
-#	puts stdout $name2
-#	puts stdout $op
-#	puts stdout [set $this-update_type]
 	set window .ui[modname]
 	if {[winfo exists $window]} {
 	    set opt [$window.f.opt childsite]
@@ -312,14 +312,12 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-update_type
 
 	set $this-update_type [$w get]
-#	puts "update to $this-update_type current is [set $this-continuous]"
 	if { [set $this-update_type] == "Auto" } {
 	    set $this-continuous 1
 	} else {
 	    set $this-continuous 0
 	}
     }
-
 
     method set_info { type generation } {
 	global $this-type
