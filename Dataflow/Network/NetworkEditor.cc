@@ -54,6 +54,7 @@
 #include <Core/Thread/Thread.h>
 #include <fstream>
 #include <iostream>
+#include <stdio.h>
 using namespace std;
   
 namespace SCIRun {
