@@ -398,7 +398,6 @@ void EditField::execute()
   FieldHandle ef(algo->execute(fh, dataat, transform_p, scale, translate));
 
   // Transform the mesh if necessary.
-  // TODO: This appears to be broken, does not preserve the transformed mesh.
   if (cbbox_.get())
   {
     BBox old = fh->mesh()->get_bounding_box();
