@@ -46,12 +46,34 @@ public:
   NrrdSetupTexture(SCIRun::GuiContext *ctx);
   virtual ~NrrdSetupTexture();
   virtual void execute();
+
+  GuiDouble minf_;
+  GuiDouble maxf_;
+  GuiInt useinputmin_;
+  GuiInt useinputmax_;
+  GuiDouble realmin_;
+  GuiDouble realmax_;
+  double last_minf_;
+  double last_maxf_;
+  int last_generation_;
+  //NrrdDataHandle last_nrrdH_;
+
 };
 
 DECLARE_MAKER(NrrdSetupTexture)
 
 NrrdSetupTexture::NrrdSetupTexture(SCIRun::GuiContext *ctx) : 
-  Module("NrrdSetupTexture", ctx, Filter, "NrrdData", "Teem")
+  Module("NrrdSetupTexture", ctx, Filter, "NrrdData", "Teem"),
+  minf_(ctx->subVar("minf")),
+  maxf_(ctx->subVar("maxf")),
+  useinputmin_(ctx->subVar("useinputmin")),
+  useinputmax_(ctx->subVar("useinputmax")),
+  realmin_(ctx->subVar("realmin")),
+  realmax_(ctx->subVar("realmax")),
+  last_minf_(0),
+  last_maxf_(0),
+  last_generation_(-1)
+  //last_nrrdH_(0)
 {
 }
 
@@ -158,6 +180,37 @@ NrrdSetupTexture::execute()
     return;
   }
 
+  if (last_generation_ != nin_handle->generation)
+  {
+    // Set default values for min,max
+    NrrdRange *range = nrrdRangeNewSet(nin, nrrdBlind8BitRangeState);
+    realmin_.set(range->min);
+    realmax_.set(range->max);
+    delete range;
+    minf_.reset();
+    maxf_.reset();
+    useinputmin_.reset();
+    useinputmax_.reset();
+  }
+
+  const double minf = useinputmin_.get()?realmin_.get():minf_.get();
+  const double maxf = useinputmax_.get()?realmax_.get():maxf_.get();
+
+#if 0  
+  if (last_generation_ == nin_handle->generation &&
+      last_minf_ == minf &&
+      last_maxf_ == maxf &&
+      last_nrrdH_.get_rep())
+  {
+    onrrd_->send(last_nrrdH_);
+    return;
+  }
+#endif
+
+  last_generation_ = nin_handle->generation;
+  last_minf_ = minf;
+  last_maxf_ = maxf;
+
   Nrrd *nvout = nrrdNew();
   Nrrd *gmout = nrrdNew();
   int nvsize[NRRD_DIM_MAX];
@@ -227,38 +280,33 @@ NrrdSetupTexture::execute()
   // Build the transform here.
   Transform transform;
 
-  NrrdRange *range = nrrdRangeNewSet(nin, nrrdBlind8BitRangeState);
-  const double dmin = range->min;
-  const double dmax = range->max;
-  delete range;
-
   if (nin->type == nrrdTypeUChar)
   {
     compute_data((unsigned char *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmout->data,
                  nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
-                 transform, dmin, dmax);
+                 transform, minf, maxf);
   }
   else if (nin->type == nrrdTypeUShort)
   {
     compute_data((unsigned short *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmout->data,
                  nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
-                 transform, dmin, dmax);
+                 transform, minf, maxf);
   }
   else if (nin->type == nrrdTypeFloat)
   {
     compute_data((float *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmout->data,
                  nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
-                 transform, dmin, dmax);
+                 transform, minf, maxf);
   }
   else if (nin->type == nrrdTypeDouble)
   {
     compute_data((double *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmout->data,
                  nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
-                 transform, dmin, dmax);
+                 transform, minf, maxf);
   }
   else
   {

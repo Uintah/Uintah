@@ -47,6 +47,7 @@ SRCS := \
 	$(SRCDIR)/MRITissueClassifier.tcl\
 	$(SRCDIR)/NrrdInfo.tcl\
 	$(SRCDIR)/NrrdSetProperty.tcl\
+	$(SRCDIR)/NrrdSetupTexture.tcl\
 	$(SRCDIR)/NrrdReader.tcl\
 	$(SRCDIR)/NrrdSelectTime.tcl\
 	$(SRCDIR)/NrrdToField.tcl\
