@@ -96,6 +96,8 @@ MPIScheduler::verifyChecksum()
 void
 MPIScheduler::compile(const ProcessorGroup* pg, bool init_timestep)
 {
+  TAU_PROFILE("MPIScheduler::compile()", " ", TAU_USER); 
+
   dbg << "MPIScheduler starting compile\n";
   if( dts_ )
     delete dts_;
@@ -287,6 +289,8 @@ MPIScheduler::recvMPIData( const ProcessorGroup * pg,
 			   mpi_timing_info_s & mpi_info,
 			   OnDemandDataWarehouse * dws[2] )
 {
+  TAU_PROFILE("MPIScheduler::recvMPIData()", " ", TAU_USER); 
+
   RecvRecord recvs;
   // Receive any of the foreign requires
 
