@@ -43,6 +43,9 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
+//#define Y_ONLY
+#undef Y_ONLY
+
 static DebugStream cout_doing("IMPM", false);
 
 ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
@@ -900,10 +903,11 @@ void ImpMPM::rigidBody(const ProcessorGroup*,
         for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
           IntVector n = *iter;
           if(!compare(mass_rigid[n],0.0)){
-            //Y_ONLY
-//          dispNew[n] = Vector(0.0,vel_rigid[n].y()*dt,0.0);
-            //ALL
-            dispNew[n] = vel_rigid[n]*dt;
+#ifdef Y_ONLY
+            dispNew[n] = Vector(0.0,vel_rigid[n].y()*dt,0.0);
+#else
+            dispNew[n] = vel_rigid[n]*dt;  // ALL Components
+#endif
           }
         }
       }
@@ -1184,10 +1188,11 @@ void ImpMPM::computeContact(const ProcessorGroup*,
         for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
           IntVector c = *iter;
           if(!compare(mass_rigid[c],0.0)){
-            //Y_ONLY
-//          dispNew[n]=Vector(0.0,vel_rigid[n].y()*dt,0.0);
-            //ALL
-            dispNew[c] = vel_rigid[c]*dt;
+#ifdef Y_ONLY
+            dispNew[c]=Vector(0.0,vel_rigid[c].y()*dt,0.0);
+#else
+            dispNew[c] = vel_rigid[c]*dt;  // ALL Components
+#endif
             contact[n][c] = 2;
           }
         }
@@ -1237,10 +1242,13 @@ void ImpMPM::findFixedDOF(const ProcessorGroup*,
             d_solver[m]->d_DOF.insert(dof[2]);
           }
           if (contact[n] > 0) {  // Contact imposed on these nodes
-//         Y_ONLY  (Comment out 0 and 2 to get rigid effect in y-dir only)
+#ifdef Y_ONLY
+            d_solver[m]->d_DOF.insert(dof[1]);
+#else
             d_solver[m]->d_DOF.insert(dof[0]);
             d_solver[m]->d_DOF.insert(dof[1]);
             d_solver[m]->d_DOF.insert(dof[2]);
+#endif
           }
         }
     }
@@ -1609,13 +1617,10 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
         for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
 	  IntVector n = *iter;
           if(contact[n]==2){
-//  Y_ONLY  // Switch the #if 1 to #if 0 and the #if 0 to #if 1 to 
-            // only get rigid effect in the y-direction
-#if 0
+#ifdef Y_ONLY
               dispNew[n] = Vector(dispNew[n].x(),velocity_rig[n].y()*dt,
                                   dispNew[n].z());
-#endif
-#if 1
+#else
             dispNew[n]  = velocity_rig[n]*dt;
 #endif
             velocity[n] = dispNew[n]*(2./dt) - oneifdyn*velocity_old[n];
