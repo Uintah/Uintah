@@ -110,7 +110,8 @@ public:
 
    // CCVariables Variables -- fron Tan... need to be fixed...
    virtual void allocate(CCVariableBase&, const VarLabel*,
-			 int matlIndex, const Patch*);
+			 int matlIndex, const Patch*, 
+			 const IntVector gc = IntVector(0,0,0));
    virtual void get(CCVariableBase&, const VarLabel*, int matlIndex,
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void put(const CCVariableBase&, const VarLabel*,
