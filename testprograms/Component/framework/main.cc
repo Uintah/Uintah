@@ -1,15 +1,12 @@
 
-
-
-
-#include <unistd.h>
-#include <iostream>
-
 #include <testprograms/Component/framework/cca.h>
-#include <testprograms/Component/framework/BuilderImpl.h>
+#include <testprograms/Component/framework/Builder.h>
 #include <testprograms/Component/framework/ConnectionServicesImpl.h>
 #include <testprograms/Component/framework/ComponentImpl.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
+
+#include <unistd.h>
+#include <iostream>
 
 using namespace sci_cca;
 using namespace SCIRun;
@@ -25,7 +22,7 @@ main( int argc, char *argv[] )
 
   cerr << "main cont.\n";
 
-  Component b = new BuilderImpl;
+  Component b = new Builder();
   CCA::init( b );
 
   cerr << "done\n";

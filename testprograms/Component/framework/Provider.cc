@@ -1,6 +1,7 @@
 
+#include <testprograms/Component/framework/Provider.h>
+
 #include <testprograms/Component/framework/TestPortImpl.h>
-#include <testprograms/Component/framework/ProviderImpl.h>
 #include <testprograms/Component/framework/PortInfoImpl.h>
 
 #include <sstream>
@@ -10,18 +11,17 @@ namespace sci_cca {
 
 using std::cerr;
 
-
-ProviderImpl::ProviderImpl()
+Provider::Provider()
 {
   test_port_ = new TestPortImpl;
 }
 
-ProviderImpl::~ProviderImpl()
+Provider::~Provider()
 {
 }
 
 void 
-ProviderImpl::setServices( const Services &svc )
+Provider::setServices( const Services &svc )
 {
   ComponentImpl::setServices( svc );
 

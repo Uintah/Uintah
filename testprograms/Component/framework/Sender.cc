@@ -1,5 +1,5 @@
 
-#include <testprograms/Component/framework/SenderImpl.h>
+#include <testprograms/Component/framework/Sender.h>
 #include <testprograms/Component/framework/PortInfoImpl.h>
 
 #include <sstream>
@@ -9,16 +9,16 @@ namespace sci_cca {
 
 using std::cerr;
 
-SenderImpl::SenderImpl()
+Sender::Sender()
 {
 }
 
-SenderImpl::~SenderImpl()
+Sender::~Sender()
 {
 }
 
 void 
-SenderImpl::setServices( const Services &svc )
+Sender::setServices( const Services &svc )
 {
   ComponentImpl::setServices( svc );
 
@@ -27,7 +27,7 @@ SenderImpl::setServices( const Services &svc )
 }
 
 void
-SenderImpl::go()
+Sender::go()
 {
   TestPort port = pidl_cast<TestPort>(services_->getPort("Uses"));
   if ( !port ) {

@@ -3,6 +3,7 @@
 #include <testprograms/Component/framework/cca_sidl.h>
 #include <testprograms/Component/framework/Registry.h>
 #include <testprograms/Component/framework/FrameworkImpl.h>
+#include <testprograms/Component/framework/ComponentIdImpl.h>
 
 #include <iostream>
 
@@ -33,10 +34,18 @@ RegistryServicesImpl::init( const Framework &f )
 void
 RegistryServicesImpl::getActiveComponentList( array1<string> & components )
 {
-    cerr << "soon this will be a list of all active components\n";
-    components.push_back( "a component" );
-    components.push_back( "b component" );
-    components.push_back( "c component" );
+  registry_->connections_.readLock();
+  
+  Registry::component_iterator iter = registry_->components_.begin();
+
+  for( ; iter != registry_->components_.end(); iter++ )
+    {
+      ComponentRecord * cr = (*iter).second;
+      ComponentID & cid = cr->id_;
+      components.push_back( cid->toString() );
+    }
+
+  registry_->connections_.readUnlock();
 }
 
 } // namespace sci_cca

@@ -7,11 +7,11 @@
 
 namespace sci_cca {
 
-class BuilderImpl : virtual public Builder_interface, virtual public ComponentImpl {
+class Builder : virtual public ComponentImpl {
 
 public:
-  BuilderImpl();
-  ~BuilderImpl();
+  Builder();
+  ~Builder();
 
   virtual void setServices( const Services &);
 
