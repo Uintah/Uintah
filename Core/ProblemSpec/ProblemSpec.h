@@ -266,10 +266,12 @@ WARNING
       }
       inline bool operator == (int a) const {
 	ASSERT(a == 0);
+        a=a;     // This quiets the MIPS compilers
 	return d_node == 0;
       }
       inline bool operator != (int a) const {
 	ASSERT(a == 0);
+        a=a;     // This quiets the MIPS compilers
 	return d_node != 0;
       }
       static const TypeDescription* getTypeDescription();
