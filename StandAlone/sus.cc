@@ -68,9 +68,13 @@ using namespace std;
 
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)
-Mutex cerrLock( "cerr lock" );
-DebugStream mixedDebug( "MixedScheduler Debug Output Stream", false );
-DebugStream fullDebug( "MixedScheduler Full Debug", false );
+// Mutex cerrLock( "cerr lock" );
+// DebugStream mixedDebug( "MixedScheduler Debug Output Stream", false );
+// DebugStream fullDebug( "MixedScheduler Full Debug", false );
+
+extern Mutex cerrLock;
+extern DebugStream mixedDebug;
+extern DebugStream fullDebug;
 
 static
 void
@@ -129,6 +133,9 @@ usage( const std::string & message,
 int
 main(int argc, char** argv)
 {
+//   int pid;
+//   cout << "Input pid:  "<<getpid() <<endl;
+//   cin >> pid;
 
 #ifdef USE_TAU_PROFILING
 
