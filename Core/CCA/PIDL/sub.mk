@@ -40,7 +40,8 @@ SRCS     += \
 	$(SRCDIR)/MxNScheduleEntry.cc \
 	$(SRCDIR)/HandlerStorage.cc \
 	$(SRCDIR)/HandlerGateKeeper.cc \
-	$(SRCDIR)/ReferenceMgr.cc
+	$(SRCDIR)/ReferenceMgr.cc \
+	$(SRCDIR)/XceptionRelay.cc
 
 
 

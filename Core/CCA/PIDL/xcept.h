@@ -14,7 +14,7 @@
 
 
 template <class xceptT, class proxyT>
-void _unmarshal_exception(::SCIRun::Message* message ) {
+xceptT* _unmarshal_exception(::SCIRun::Message* message ) {
 
   int _e_ptr_vtable_base;
   message->unmarshalInt(&_e_ptr_vtable_base);
@@ -28,7 +28,7 @@ void _unmarshal_exception(::SCIRun::Message* message ) {
     _ref->d_vtable_base=_e_ptr_vtable_base;
     message->unmarshalSpChannel(_ref->chan);
     _refM.insertReference(_ref);
-    }
+  }
   ::SCIRun::Message* spmsg = _refM.getIndependentReference()->chan->getMessage();
   void* _ptr;
   if ((_ptr=spmsg->getLocalObj()) != NULL) {
@@ -39,7 +39,7 @@ void _unmarshal_exception(::SCIRun::Message* message ) {
     _e_ptr = new proxyT(_refM);
   }
   message->destroyMessage();
-  throw _e_ptr;
+  return _e_ptr;
 }
 
 
@@ -65,4 +65,20 @@ void _marshal_exception(::SCIRun::Message* message, xceptT* _e_ptr, int _x_flag)
   }
   message->sendMessage(0);
   message->destroyMessage();
+}
+
+template <class xceptT, class proxyT>
+xceptT* _cast_exception(::SCIRun::ReferenceMgr* _refM) {
+
+  xceptT* _e_ptr ;
+  ::SCIRun::Message* spmsg = _refM->getIndependentReference()->chan->getMessage();
+  void* _ptr;
+  if ((_ptr=spmsg->getLocalObj()) != NULL) {
+    ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(_ptr);
+    _e_ptr = dynamic_cast< xceptT*>(_sc->d_objptr);
+  } else {
+    _e_ptr = new proxyT(*_refM);
+    _e_ptr->addReference();
+  }
+  return _e_ptr;
 }

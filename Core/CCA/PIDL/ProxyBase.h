@@ -34,10 +34,13 @@
 #include <Core/CCA/PIDL/Reference.h>
 #include <Core/CCA/PIDL/ReferenceMgr.h>
 #include <Core/CCA/PIDL/MxNScheduler.h>
+#include <Core/CCA/PIDL/XceptionRelay.h>
 #include <vector> 
 #include <string>
 
 namespace SCIRun {
+
+  class XceptionRelay;
 
 /**************************************
  
@@ -53,68 +56,76 @@ DESCRIPTION
    component).  This class should not be used outside of PIDL
    or automatically generated sidl code.
 ****************************************/
-	class ProxyBase {
-	public:
+  class ProxyBase {
+  public:
+    
+    //////////
+    // A MxN Distribution Scheduler in case this proxy needs
+    // to redistribute an array
+    MxNScheduler* d_sched;
+    
+  protected:
+    
+    ProxyBase();
+    
+    ////////////
+    // Create the proxy from the given reference.
+    //remove it later
+    ProxyBase(const Reference&);
+    
+    ////////////
+    // Create the proxy from the given reference pointer.
+    // the pointer is deleted inside the constructor
+    ProxyBase(Reference*);
+    
+    ////////////
+    // Create the proxy from the given reference list.
+    ProxyBase(const ReferenceMgr&);	  
+    
+    ///////////
+    // Destructor which closes connection
+    virtual ~ProxyBase();
+    
+    //////////
+    // Reference manager
+    ReferenceMgr rm; 
+    
+    //////////
+    // Xception relay which provides implementation of imprecise exceptions
+    XceptionRelay* xr;
+    
+    //////////
+    // TypeInfo is a friend so that it can call _proxyGetReference
+    friend class TypeInfo;
+    /////////
+    // Xception is a friend since it needs access to the reference mgr's intracomm
+    friend class XceptionRelay;
+    
+    //////////
+    // Return a the first internal reference or a copy of it.  
+    void _proxyGetReference(Reference& ref, bool copy) const;
+    
+    //////////
+    // Returns the reference manager 
+    ReferenceMgr* _proxyGetReferenceMgr() const;
+    
+    //////////
+    // Returns the unique identifier of this proxy 
+    ::std::string getProxyUUID(); 
 
-	  //////////
-	  // A MxN Distribution Scheduler in case this proxy needs
-	  // to redistribute an array
-	  MxNScheduler* d_sched;
-	  
-	protected:
-	  ProxyBase();
-	
-	  ////////////
-	  // Create the proxy from the given reference.
-	  //remove it later
-	  ProxyBase(const Reference&);
-
-	  ////////////
-	  // Create the proxy from the given reference pointer.
-	  // the pointer is deleted inside the constructor
-	  ProxyBase(Reference*);
-	  
-	  ////////////
-	  // Create the proxy from the given reference list.
-	  ProxyBase(const ReferenceMgr&);	  
-
-	  ///////////
-	  // Destructor which closes connection
-	  virtual ~ProxyBase();
-	  
-	  //////////
-	  // A pointer to thereference manager.
-	  ReferenceMgr rm; 
-
-	  //////////
-	  // TypeInfo is a friend so that it can call _proxyGetReference
-	  friend class TypeInfo;
-	  
-	  //////////
-	  // Return a the first internal reference or a copy of it.  
-	  void _proxyGetReference(Reference& ref, bool copy) const;
-
-          //////////
-	  // Returns the reference manager 
-	  ReferenceMgr* _proxyGetReferenceMgr() const;
-
-	  //////////
-	  // Returns the unique identifier of this proxy 
-          ::std::string getProxyUUID(); 
-
-	  /////////
-	  // Created a subset of processes on the callee to service
+    /////////
+    // Created a subset of processes on the callee to service
 	  // all collective calls.
-	  void _proxycreateSubset(int localsize, int remotesize);
-
-	private:
-
-          ////////
-	  // A unique name representing the entire proxy component
-	  // (Mostly used to represent the same proxy among the proxy's 
-	  // parallel processes) 
-	  ::std::string proxy_uuid; 
-	};
+    void _proxycreateSubset(int localsize, int remotesize);
+    
+  private:
+    
+    ////////
+    // A unique name representing the entire proxy component
+    // (Mostly used to represent the same proxy among the proxy's 
+    // parallel processes) 
+    ::std::string proxy_uuid; 
+  };
 } // End namespace SCIRun
 
 #endif
