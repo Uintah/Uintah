@@ -98,12 +98,7 @@ RescaleColorMap::execute()
 	ScalarFieldInterface *sfi = field->query_scalar_interface();
 	VectorFieldInterface *vfi = field->query_vector_interface();
 	if (sfi) {
-	  // get minmax of the scalar field.
-	  if ( !field->get("minmax", minmax_)) {
-	    sfi->compute_min_max(minmax_.first, minmax_.second);
-	    // cache this potentially expensive to compute value.
-	    field->store("minmax", minmax_);
-	  }
+	  sfi->compute_min_max(minmax_.first, minmax_.second);
 	} else if (vfi) {
 	  // get minmax of the vector field.
 	  static pair<Vector, Vector> minmax;
