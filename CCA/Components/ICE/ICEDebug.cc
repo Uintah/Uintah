@@ -9,8 +9,10 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <iostream>
-#include <stdio.h>
+#include <fstream>
 
+using std::ifstream;
+using std::cerr;
 using namespace SCIRun;
 using namespace Uintah;
 
@@ -20,8 +22,8 @@ using namespace Uintah;
  Purpose:  Print to stderr a cell-centered, single material
 _______________________________________________________________________ */
 void    ICE::printData(const Patch* patch, int include_GC,
-        char    message1[],             /* message1                     */
-        char    message2[],             /* message to user              */
+        const string&    message1,         /* message1                     */
+        const string&    message2,         /* message to user              */
         const CCVariable<double>& q_CC)
 {
  //__________________________________
@@ -34,9 +36,9 @@ void    ICE::printData(const Patch* patch, int include_GC,
     
     IntVector low, high; 
 
-    fprintf(stderr,"______________________________________________\n");
-    fprintf(stderr,"$%s\n",message1);
-    fprintf(stderr,"$%s\n",message2);
+    cerr << "______________________________________________\n";
+    cerr << "$" << message1 << "\n";
+    cerr << "$" << message2 << "\n";
 
     if (include_GC == 1)  { 
       low   = patch->getCellLowIndex();
@@ -47,20 +49,24 @@ void    ICE::printData(const Patch* patch, int include_GC,
       high  = patch->getInteriorCellHighIndex();
     }
 
+    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.setf(ios::uppercase,ios::floatfield);
+    cerr.precision(16);  
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
 	  IntVector idx(i, j, k);
-	  fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
-		  i,j,k, q_CC[idx]);
+	  cerr << "[" << i << "," << j << "," << k << "]~ " 
+	       << q_CC[idx] << "  ";
 
-	  /*  fprintf(stderr,"\n"); */
+	  /*  cerr << "\n"; */
         }
-        fprintf(stderr,"\n");
+	cerr << "\n";
       }
-      fprintf(stderr,"\n");
+      cerr << "\n";
     }
-    fprintf(stderr," ______________________________________________\n");
+    cerr <<" ______________________________________________\n";
+    cerr.setf(0,ios::floatfield);
   }
 }
 
@@ -70,8 +76,8 @@ void    ICE::printData(const Patch* patch, int include_GC,
  Purpose:  Print to stderr a cell-centered, single material
 _______________________________________________________________________ */
 void    ICE::printData(const Patch* patch, int include_GC,
-        char    message1[],             /* message1                     */
-        char    message2[],             /* message to user              */
+        const string&    message1,       /* message1                     */
+        const string&    message2,       /* message to user              */
         const CCVariable<int>& q_CC)
 {
  //__________________________________
@@ -83,9 +89,9 @@ void    ICE::printData(const Patch* patch, int include_GC,
     d_dbgOldTime = d_dbgTime;      
     IntVector low, high; 
 
-    fprintf(stderr,"______________________________________________\n");
-    fprintf(stderr,"$%s\n",message1);
-    fprintf(stderr,"$%s\n",message2);
+    cerr << "______________________________________________\n";
+    cerr << "$" << message1 << "\n";
+    cerr << "$" << message2 << "\n";
 
     if (include_GC == 1)  { 
       low   = patch->getCellLowIndex();
@@ -100,16 +106,16 @@ void    ICE::printData(const Patch* patch, int include_GC,
       for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
 	  IntVector idx(i, j, k);
-	  fprintf(stderr,"[%d,%d,%d]~ %i  ",
-		  i,j,k, q_CC[idx]);
+	  cerr << "[" << i << "," << j << "," << k << "]~ " 
+	       << q_CC[idx] << " ";
 
-	  /*  fprintf(stderr,"\n"); */
+	  /*  cerr << "\n"; */
         }
-        fprintf(stderr,"\n");
+	cerr << "\n";
       }
-      fprintf(stderr,"\n");
+      cerr << "\n";
     }
-    fprintf(stderr," ______________________________________________\n");
+    cerr << " ______________________________________________\n";
   }
 }
 /* 
@@ -118,8 +124,8 @@ void    ICE::printData(const Patch* patch, int include_GC,
  Purpose:  Print to stderr a cell-centered, single material
 _______________________________________________________________________ */
 void    ICE::printVector(const Patch* patch, int include_GC,
-        char    message1[],             /* message1                     */
-        char    message2[],             /* message to user              */
+        const string&    message1,       /* message1                     */
+        const string&    message2,       /* message to user              */
         int     component,              /*  x = 0,y = 1, z = 1          */
         const CCVariable<Vector>& q_CC)
 {
@@ -133,9 +139,9 @@ void    ICE::printVector(const Patch* patch, int include_GC,
     d_dbgOldTime = d_dbgTime;      
     IntVector low, high; 
 
-    fprintf(stderr,"______________________________________________\n");
-    fprintf(stderr,"$%s\n",message1);
-    fprintf(stderr,"$%s\n",message2);
+    cerr << "______________________________________________\n";
+    cerr << "$" << message1 << "\n";
+    cerr << "$" << message2 << "\n";
 
     if (include_GC == 1)  { 
       low   = patch->getCellLowIndex();
@@ -146,20 +152,24 @@ void    ICE::printVector(const Patch* patch, int include_GC,
       high  = patch->getInteriorCellHighIndex();
     }
 
+    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.setf(ios::uppercase,ios::floatfield);
+    cerr.precision(16);  
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
 	  IntVector idx(i, j, k);
-	  fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
-		  i,j,k, q_CC[idx](component));
+	  cerr << "[" << i << "," << j << "," << k << "]~ " 
+	       <<  q_CC[idx](component) << "  ";
 
-	  /*  fprintf(stderr,"\n"); */
+	  /*  cerr << "\n"; */
         }
-        fprintf(stderr,"\n");
+	cerr << "\n";
       }
-      fprintf(stderr,"\n");
+      cerr << "\n";
     }
-    fprintf(stderr," ______________________________________________\n");
+    cerr << " ______________________________________________\n";
+    cerr.setf(0,ios::floatfield);
   }
 }
 
@@ -170,8 +180,8 @@ void    ICE::printVector(const Patch* patch, int include_GC,
  Purpose:  Print left face
 _______________________________________________________________________ */
 void    ICE::printData_FC(const Patch* patch, int include_GC,
-        char    message1[],             /* message1                     */
-        char    message2[],             /* message to user              */
+        const string&    message1,        /* message1                     */
+        const string&    message2,        /* message to user              */
         const SFCXVariable<double>& q_FC)
 {
  //__________________________________
@@ -183,9 +193,9 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     d_dbgOldTime = d_dbgTime;
     IntVector low, high; 
 
-    fprintf(stderr,"______________________________________________\n");
-    fprintf(stderr,"$%s\n",message1);
-    fprintf(stderr,"$%s\n",message2);
+    cerr << "______________________________________________\n";
+    cerr << "$" << message1 << "\n";
+    cerr << "$" << message2 << "\n";
 
     if (include_GC == 1)  { 
       low   = patch->getSFCXLowIndex();
@@ -195,21 +205,26 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
       low   = patch->getInteriorCellLowIndex();
       high  = patch->getInteriorCellHighIndex();
     }
+
+    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.setf(ios::uppercase,ios::floatfield);
+    cerr.precision(16);  
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
       //for(int j = high.y()-1; j >= low.y(); j--) {
         for(int i = low.x(); i < high.x(); i++) {
 	  IntVector idx(i, j, k);
-	  fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
-		  i,j,k, q_FC[idx]);
+	  cerr << "[" << i << "," << j << "," << k << "]~ " <<
+	    q_FC[idx] << "  ";
 
-	  /*  fprintf(stderr,"\n"); */
+	  /* cerr <<"\n"; */
         }
-        fprintf(stderr,"\n");
+        cerr << "\n";
       }
-      fprintf(stderr,"\n");
+      cerr <<"\n";
     }
-    fprintf(stderr," ______________________________________________\n");
+    cerr << " ______________________________________________\n";
+    cerr.setf(0,ios::floatfield);
   }
 }
 /* 
@@ -218,8 +233,8 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
  Purpose:   Prints bottom Face
 _______________________________________________________________________ */
 void    ICE::printData_FC(const Patch* patch, int include_GC,
-        char    message1[],             /* message1                     */
-        char    message2[],             /* message to user              */
+        const string&    message1,         /* message1                     */
+        const string&    message2,         /* message to user              */
         const SFCYVariable<double>& q_FC)
 {
  //__________________________________
@@ -231,9 +246,9 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     d_dbgOldTime = d_dbgTime;      
     IntVector low, high; 
 
-    fprintf(stderr,"______________________________________________\n");
-    fprintf(stderr,"$%s\n",message1);
-    fprintf(stderr,"$%s\n",message2);
+    cerr << "______________________________________________\n";
+    cerr << "$" << message1 << "\n";
+    cerr << "$" << message2 << "\n";
 
     if (include_GC == 1)  { 
       low   = patch->getSFCYLowIndex();
@@ -244,21 +259,25 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
       high  = patch->getInteriorCellHighIndex();
     }
 
+    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.setf(ios::uppercase,ios::floatfield);
+    cerr.precision(16);
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
       //for(int j = high.y()-1; j >= low.y(); j--) {
         for(int i = low.x(); i < high.x(); i++) {
 	  IntVector idx(i, j, k);
-	  fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
-		  i,j,k, q_FC[idx]);
+	  cerr << "[" << i << "," << j << "," << k << "]~ " <<  
+	    q_FC[idx] << "  ";
 
-	  /*  fprintf(stderr,"\n"); */
+	  /*  cerr << "\n"; */
         }
-        fprintf(stderr,"\n");
+        cerr << "\n";
       }
-      fprintf(stderr,"\n");
+      cerr << "\n";
     }
-    fprintf(stderr," ______________________________________________\n");
+    cerr << " ______________________________________________\n";
+    cerr.setf(0,ios::floatfield);
   }
 }
 
@@ -268,8 +287,8 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
  Purpose:  Piints back face
 _______________________________________________________________________ */
 void    ICE::printData_FC(const Patch* patch, int include_GC,
-        char    message1[],             /* message1                     */
-        char    message2[],             /* message to user              */
+        const string&    message1,        /* message1                     */
+        const string&    message2,        /* message to user              */
         const SFCZVariable<double>& q_FC)
 {
 
@@ -282,9 +301,9 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     d_dbgOldTime = d_dbgTime;      
     IntVector low, high; 
 
-    fprintf(stderr,"______________________________________________\n");
-    fprintf(stderr,"$%s\n",message1);
-    fprintf(stderr,"$%s\n",message2);
+    cerr << "______________________________________________\n";
+    cerr << "$" << message1 << "\n";
+    cerr << "$" << message2 << "\n";
 
     if (include_GC == 1)  { 
       low   = patch->getSFCZLowIndex();
@@ -295,21 +314,25 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
       high  = patch->getInteriorCellHighIndex();
     }
 
+    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.setf(ios::uppercase,ios::floatfield);
+    cerr.precision(16);   
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
       //for(int j = high.y()-1; j >= low.y(); j--) {
         for(int i = low.x(); i < high.x(); i++) {
 	  IntVector idx(i, j, k);
-	  fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
-		  i,j,k, q_FC[idx]);
+	  cerr << "[" << i << "," << j << "," << k << "]~ " << 
+	    q_FC[idx] << "  ";
 
-	  /*  fprintf(stderr,"\n"); */
+	  /*  cerr << "\n"; */
         }
-        fprintf(stderr,"\n");
+	cerr << "\n";
       }
-      fprintf(stderr,"\n");
+      cerr << "\n";
     }
-    fprintf(stderr," ______________________________________________\n");
+    cerr << " ______________________________________________\n";
+    cerr.setf(0,ios::floatfield);
   }
 }
 
@@ -319,27 +342,25 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
  Purpose:  Print to stderr a cell-centered, single material
 _______________________________________________________________________ */
 void    ICE::readData(const Patch* patch, int include_GC,
-        char    filename[],             /* message1                     */
-        char    var_name[],             /* var_name              */
+        const string&    filename,        /* message1                     */
+        const string&    var_name,        /* var_name              */
         CCVariable<double>& q_CC)
 {
   int i, j, k,xLo, yLo, zLo, xHi, yHi, zHi;
   IntVector lowIndex, hiIndex; 
-  char text[100];
-  int int_c;
+  string text;
   double number;
-  FILE *fp;
   
-  fp = fopen(filename,"r");
-  if (fp == NULL)
+  ifstream fp(filename.c_str());
+  if (!fp)
     Message(1,"","Couldnt open the file with hardwired variables","");
         
-  fscanf(fp,"______________________________________________\n");
-  fscanf(fp,"$%s\n",text);
-  fscanf(fp,"$%s\n",text);
+  //  fscanf(fp,"______________________________________________\n");
+  fp >> text;  // scan over the "______"
+  fp >> text;
+  fp >> text;
   
-  int test = strcmp(var_name, text);
-  if (test != 0)
+  if (var_name != text)
     Message(1,"Your trying read in apples and oranges ",var_name,text);
   
   if (include_GC == 1)  { 
@@ -363,24 +384,27 @@ void    ICE::readData(const Patch* patch, int include_GC,
       for(i = xLo; i < xHi; i++) {
 	IntVector idx(i, j, k);
        
-       int_c = fgetc(fp);    
-       while ( (char)int_c != '~') {         
-        int_c   = fgetc(fp); 
-       // fprintf(stderr,"%c",(char)int_c);
-       }
+	char c;
+	fp.get(c);
+	while ( c != '~') {         
+	  fp.get(c);
+	  // cerr << c;
+	}
        
-	int num=fscanf(fp," %15lf", &number);
-       if (num != 1)       
-         Message(1,"ERROR","Having problem reading ",var_name);
+	fp >> number;
+	if (!fp.good())       
+	  Message(1,"ERROR","Having problem reading ",var_name);
               
-      // fprintf(stderr,"%16.15E  ",number);
+      // cerr << number;
        q_CC[idx] = number;
       }
-      fscanf(fp,"\n");
+      char c;
+      fp >> c;
     }
-    fscanf(fp,"\n");
+    char c;
+    fp >> c;
   }
-  fscanf(fp," ______________________________________________\n");
+  fp >> text;
 }
 
 /* 
@@ -390,28 +414,30 @@ void    ICE::readData(const Patch* patch, int include_GC,
  _______________________________________________________________________ */
 void    ICE::Message(
         int     abort,          /* =1 then abort                            */
-        char    message1[],   
-        char    message2[],   
-        char    message3[]) 
+        const string&    message1,   
+        const string&    message2,   
+        const string&    message3) 
 {        
-  fprintf(stderr,"\n\n ______________________________________________\n");
-  fprintf(stderr,"%s\n",message1);
-  fprintf(stderr,"%s\n",message2);
-  fprintf(stderr,"%s\n",message3);
-  fprintf(stderr,"\n\n ______________________________________________\n");
+  cerr << "\n\n ______________________________________________\n";
+  cerr << message1 << "\n";
+  cerr << message2 << "\n";
+  cerr << message3 << "\n";
+  cerr << "\n\n ______________________________________________\n";
   char* exitMode = getenv("ICE_DEBUGGER_ON_EXIT");
+
   if(!exitMode)
     exitMode = "no";    //default exit mode
   //______________________________
   // Now aborting program
+  string mode(exitMode);
   if(abort == 1) {
-    if(strcmp(exitMode,"yes")==0) {
-      char c[2];
-      fprintf(stderr,"\n");
-      fprintf(stderr,"<c> = cvd\n");
-      scanf("%s",c);
+    if(mode == "yes") {
+      string c;
+      cerr << "\n";
+      cerr << "<c> = cvd\n";
+      cin >> c;
       system("date");
-      if(strcmp(c, "c") == 0) system("cvd -P sus");
+      if(c == "c") system("cvd -P sus");
     }
     exit(1); 
   }
@@ -562,12 +588,16 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
       n_passes ++;
     } 
     
-    fprintf(stderr, "[%i]Fluid mass %6.5g \n",m, mat_mass[m]);
-    fprintf(stderr, "[%i]Fluid momentum[ %6.5g, %6.5g, %6.5g]\t",
-                    m,mat_mom_xyz[m].x(), mat_mom_xyz[m].y(), mat_mom_xyz[m].z()); 
-    fprintf(stderr, "Components Sum: %6.5g\n",mat_total_mom[m]);
-    fprintf(stderr, "[%i]Fluid eng[internal %6.5g, Kinetic: %6.5g]: %6.5g\n",
-                    m,mat_int_eng[m], mat_KE[m], mat_total_eng[m]);
+    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.precision(4);
+    cerr << m << "Fluid mass " <<  mat_mass[m] << "\n";
+    cerr.setf(ios::fixed,ios::floatfield);
+    cerr << m << "Fluid momentum[ " << mat_mom_xyz[m].x() << ", " << 
+      mat_mom_xyz[m].y() << ", " << mat_mom_xyz[m].z() << "]\t";
+    cerr << "Components Sum: " << mat_total_mom[m] << "\n";
+    cerr.setf(ios::scientific,ios::floatfield);
+    cerr << m << "Fluid eng[internal " << mat_int_eng[m] <<  ", Kinetic: " 
+	 << mat_KE[m] << "]: " << mat_total_eng[m] << "\n";
   }
   double change_total_mom =
               100.0 * (total_momentum - initial_total_mom)/
@@ -576,12 +606,15 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
               100.0 * (total_energy - initial_total_eng)/
               (initial_total_eng + d_SMALL_NUM);
 
-  fprintf(stderr,
-    "Totals: \t mass %5.6g \t\tmomentum %5.6f \t\t energy %5.6g\n",
-                  total_mass, total_momentum, total_energy);
-  fprintf(stderr,
-    "Percent change in total fluid mom.: %4.5f \t fluid total eng: %4.5f\n",
-                  change_total_mom, change_total_eng);
+  cerr.setf(ios::scientific, ios::floatfield);
+  cerr.precision(4);
+  cerr << "Totals: \t mass " << total_mass << " \t\tmomentum " << 
+    total_momentum << " \t\t energy " << total_energy << "\n";
+  cerr.setf(ios::fixed,ios::floatfield);
+  cerr << "Percent change in total fluid mom.: " << change_total_mom <<
+    " \t fluid total eng: " << change_total_eng << "\n";
+  cerr.setf(0,ios::floatfield);
+
   if (flag == 1)  {
     cout<< " D E L P R E S S   >   0   O N   B O U N D A R Y"<<endl;
     cout<< "******* N O   L O N G E R   C O N S E R V I N G *******\n"<<endl;
