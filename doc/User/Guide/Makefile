@@ -181,10 +181,8 @@ ${htmldir}: ${dvifile}
 	latex2html ${latex2htmloptions} ${mainfile}
 
 ${psfile}: ${dvifile}
-	dvips -t letter -o ${psfile} -Pps ${dvifile}
+	dvips -t letter -o ${psfile} ${dvifile}
 	gzip -c <${psfile} >${gzpsfile}
-	dvips -t letter -o ${psfile2} -Ppdf ${dvifile}
-	gzip -c <${psfile2} >${gzpsfile2}
 
 # ########## Targets for making tex version module docs.
 
