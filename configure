@@ -4093,7 +4093,6 @@ done
 ac_given_srcdir=$srcdir
 
 trap 'rm -fr `echo "configVars.mk \
-		Dataflow/Modules/Fields/Manip/Makefile \
 		Makefile \
 		sci_defs.h \
 		 sci_config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
@@ -4262,7 +4261,6 @@ EOF
 cat >> $CONFIG_STATUS <<EOF
 
 CONFIG_FILES=\${CONFIG_FILES-"configVars.mk \
-		Dataflow/Modules/Fields/Manip/Makefile \
 		Makefile \
 		sci_defs.h \
 		"}

@@ -26,17 +26,16 @@ SRCS     += \
 	$(SRCDIR)/TransformField.cc\
 	$(SRCDIR)/TransformMesh.cc\
 	$(SRCDIR)/TransformSurface.cc\
+#[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/Coregister.cc\
 #	$(SRCDIR)/ExtractSepSurfs.cc\
 #	$(SRCDIR)/LaceContours.cc\
 #	$(SRCDIR)/SimpAbs.cc\
 #	$(SRCDIR)/SimpSurface.cc\
 #	$(SRCDIR)/TransformContours.cc\
-#[INSERT NEW CODE FILE HERE]
-
 #	$(SRCDIR)/ClipField.cc\
 
-CFLAGS   := $(CFLAGS) -DFM_COMP_PATH=\"$(SRCTOP_ABS)/Dataflow/Modules/Fields/Manip\"
+CFLAGS   := $(CFLAGS)
 
 PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil \
 	Core/Datatypes Dataflow/Widgets Core/Persistent Core/Exceptions \
