@@ -1438,26 +1438,6 @@ class ForwardFEMApp {
 		set vis_tab2 $page.vis_tabs
             }
 	    
-            ### Variance
-            set vis_tab [$page.vis_tabs add -label "Variance" -command "$this change_vis_tab Variance"]
-	    
-	    if {$case == 0} {
-		set variance_tab1 $vis_tab
-	    } else {
-		set variance_tab2 $vis_tab
-	    }         
-            
-	    
-	    ### Planes
-            set vis_tab [$page.vis_tabs add -label "Planes" -command "$this change_vis_tab Planes"]
-	    
-	    if {$case == 0} {
-		set planes_tab1 $vis_tab
-	    } else {
-		set planes_tab2 $vis_tab
-	    } 
-	    
-	    
 	    ### Isosurface
             set vis_tab [$page.vis_tabs add -label "Isosurface" -command "$this change_vis_tab Isosurface"]
 	    if {$case == 0} {
@@ -1467,18 +1447,8 @@ class ForwardFEMApp {
 	    } 
 	    
 	    
-	    ### Glyphs
-            set vis_tab [$page.vis_tabs add -label "Glyphs" -command "$this change_vis_tab Glyhps"]
-	    
-	    if {$case == 0} {
-		set glyphs_tab1 $vis_tab
-	    } else {
-		set glyphs_tab2 $vis_tab
-	    } 
-	    
-	    
-	    ### Fibers
-            set vis_tab [$page.vis_tabs add -label "Fibers" -command "$this change_vis_tab Fibers"]
+	    ### Streamlines
+            set vis_tab [$page.vis_tabs add -label "Streamlines" -command "$this change_vis_tab Streamlines"]
 	    if {$case == 0} {
 		set fibers_tab1 $vis_tab
 	    } else {
@@ -1486,7 +1456,7 @@ class ForwardFEMApp {
 	    } 
 	    
 	    
-            $page.vis_tabs view "Variance"
+            $page.vis_tabs view "Isosurface"
 	    
 
 	    ### Renderer Options Tab
@@ -5229,26 +5199,14 @@ class ForwardFEMApp {
 	# change vis tab for attached/detached
 
         if {$initialized != 0} {
-	    if {$which == "Variance"} {
-		# Variance
-		$vis_tab1 view "Variance"
-		$vis_tab2 view "Variance"
-	    } elseif {$which == "Planes"} {
-		# Planes
-		$vis_tab1 view "Planes"
-		$vis_tab2 view "Planes"
-	    } elseif {$which == "Isosurface"} {
+	    if {$which == "Isosurface"} {
 		# Isosurface
 		$vis_tab1 view "Isosurface"
 		$vis_tab2 view "Isosurface"
-	    } elseif {$which == "Glyphs"} {
+	    } elseif {$which == "Streamlines"} {
 		# Glyphs
-		$vis_tab1 view "Glyphs"
-		$vis_tab2 view "Glyphs"
-	    } elseif {$which == "Fibers"} {
-		# Fibers
-		$vis_tab1 view "Fibers"
-		$vis_tab2 view "Fibers"
+		$vis_tab1 view "Streamlines"
+		$vis_tab2 view "Streamlines"
 	    }
 	}
     }
