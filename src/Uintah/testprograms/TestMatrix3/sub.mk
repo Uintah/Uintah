@@ -13,7 +13,7 @@ PSELIBS := Uintah/Interface Uintah/Grid Uintah/Parallel \
 	SCICore/Geometry PSECore/XMLUtil Uintah/Math \
 	Uintah/Components/MPM Uintah/testprograms/TestSuite
 
-LIBS := $(XML_LIBRARY) -lmpi
+LIBS := $(XML_LIBRARY) -lmpi -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
