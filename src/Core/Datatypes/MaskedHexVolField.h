@@ -84,13 +84,13 @@ public:
 
   virtual ~MaskedHexVolField() {};
 
-  bool value(T &val, typename HexVolMesh::Node::index_type i) const
+  bool value(T &val, HexVolMesh::Node::index_type i) const
   { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
-  bool value(T &val, typename HexVolMesh::Edge::index_type i) const
+  bool value(T &val, HexVolMesh::Edge::index_type i) const
   { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
-  bool value(T &val, typename HexVolMesh::Face::index_type i) const
+  bool value(T &val, HexVolMesh::Face::index_type i) const
   { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
-  bool value(T &val, typename HexVolMesh::Cell::index_type i) const
+  bool value(T &val, HexVolMesh::Cell::index_type i) const
   { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
 
   void initialize_mask(char masked) {
