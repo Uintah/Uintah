@@ -81,7 +81,6 @@
 #ifndef SCI_project_CleanupManager_h
 #define SCI_project_CleanupManager_h 1
 
-#include <Core/share/share.h>
 #include <Core/Thread/Mutex.h>
 #include <vector>
 
@@ -89,7 +88,7 @@ namespace SCIRun {
 
 typedef void (*CleanupManagerCallback)(void *);
 
-class SCICORESHARE CleanupManager {
+class CleanupManager {
 public:
   
   // Initializes the mutex lock for the cleanup manager.  Initialize

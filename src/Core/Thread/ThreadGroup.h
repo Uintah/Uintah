@@ -43,8 +43,6 @@
 #ifndef Core_Thread_ThreadGroup_h
 #define Core_Thread_ThreadGroup_h
 
-#include <Core/share/share.h>
-
 #include <Core/Thread/Mutex.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -68,7 +66,7 @@ DESCRIPTION
    and alerted simultaneously.
  
 ****************************************/
-	class SCICORESHARE ThreadGroup {
+	class ThreadGroup {
 	public:
 	    
 	    //////////
