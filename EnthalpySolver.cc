@@ -195,21 +195,27 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-  tsk->requires(Task::NewDW, timelabels->enthalpy_in,
+  tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->density_in, 
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->old_enthalpy_in,
+
+  Task::WhichDW old_values_dw;
+  if (timelabels->use_old_values) old_values_dw = Task::OldDW;
+  else old_values_dw = Task::NewDW;
+
+  tsk->requires(old_values_dw, d_lab->d_enthalpySPLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->old_density_in, 
+  tsk->requires(old_values_dw, d_lab->d_densityCPLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->viscosity_in,
+
+  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->uvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->vvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->wvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -412,28 +418,33 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     // from old_dw get PCELL, DENO, FO(index)
     new_dw->get(constEnthalpyVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(constEnthalpyVars.old_density, timelabels->old_density_in, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(constEnthalpyVars.old_enthalpy, timelabels->old_enthalpy_in, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    DataWarehouse* old_values_dw;
+    if (timelabels->use_old_values) old_values_dw = old_dw;
+    else old_values_dw = new_dw;
+    
+    old_values_dw->get(constEnthalpyVars.old_enthalpy, d_lab->d_enthalpySPLabel,
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    old_values_dw->get(constEnthalpyVars.old_density, d_lab->d_densityCPLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     // from new_dw get DEN, VIS, F(index), U, V, W
-    new_dw->get(constEnthalpyVars.density, timelabels->density_in, 
+    new_dw->get(constEnthalpyVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    new_dw->get(constEnthalpyVars.viscosity, timelabels->viscosity_in, 
+    new_dw->get(constEnthalpyVars.viscosity, d_lab->d_viscosityCTSLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(constEnthalpyVars.enthalpy, timelabels->enthalpy_in, 
+    new_dw->get(constEnthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     if (d_conv_scheme > 0) {
-      new_dw->get(constEnthalpyVars.scalar, timelabels->enthalpy_in, 
+      new_dw->get(constEnthalpyVars.scalar, d_lab->d_enthalpySPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     }
     // for explicit get old values
-    new_dw->get(constEnthalpyVars.uVelocity, timelabels->uvelocity_in, 
+    new_dw->get(constEnthalpyVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(constEnthalpyVars.vVelocity, timelabels->vvelocity_in, 
+    new_dw->get(constEnthalpyVars.vVelocity, d_lab->d_vVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(constEnthalpyVars.wVelocity, timelabels->wvelocity_in, 
+    new_dw->get(constEnthalpyVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
     {
@@ -735,20 +746,26 @@ EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-  tsk->requires(Task::NewDW, timelabels->density_in, 
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->enthalpy_in, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+  if (timelabels->number_of_steps > 1)
+    tsk->requires(Task::NewDW, d_lab->d_enthalpyTempLabel, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  else
+    tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
   tsk->requires(Task::NewDW, d_lab->d_enthCoefSBLMLabel, 
 		d_lab->d_stencilMatl, Task::OutOfDomain,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_enthNonLinSrcSBLMLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->uvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->vvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->wvelocity_in,
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -767,7 +784,7 @@ EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   } 
 
-  tsk->computes(timelabels->enthalpy_out);
+  tsk->modifies(d_lab->d_enthalpySPLabel);
   
   sched->addTask(tsk, patches, matls);
 }
@@ -826,22 +843,26 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
     new_dw->get(constEnthalpyVars.cellType, d_lab->d_cellTypeLabel,
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    new_dw->get(constEnthalpyVars.old_density, timelabels->density_in, 
+    new_dw->get(constEnthalpyVars.old_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(constEnthalpyVars.old_enthalpy, timelabels->enthalpy_in, 
+
+    if (timelabels->number_of_steps > 1)
+      new_dw->get(constEnthalpyVars.old_enthalpy, d_lab->d_enthalpyTempLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(constEnthalpyVars.uVelocity, timelabels->uvelocity_in, 
+    else
+      old_dw->get(constEnthalpyVars.old_enthalpy, d_lab->d_enthalpySPLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+    new_dw->get(constEnthalpyVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(constEnthalpyVars.vVelocity, timelabels->vvelocity_in, 
+    new_dw->get(constEnthalpyVars.vVelocity, d_lab->d_vVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(constEnthalpyVars.wVelocity, timelabels->wvelocity_in, 
+    new_dw->get(constEnthalpyVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     // for explicit calculation
-    new_dw->allocateAndPut(enthalpyVars.enthalpy, timelabels->enthalpy_out, 
-                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->copyOut(enthalpyVars.enthalpy, timelabels->enthalpy_in, 
-                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->getModifiable(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
+                matlIndex, patch);
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
       new_dw->get(constEnthalpyVars.scalarCoeff[ii],

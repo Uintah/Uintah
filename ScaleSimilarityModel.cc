@@ -179,9 +179,9 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   // initialize with the value of zero at the physical bc's
   // construct a stress tensor and stored as a array with the following order
   // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-  tsk->requires(Task::NewDW, timelabels->density_out, Ghost::AroundCells,
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells,
 		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->scalar_out, Ghost::AroundCells,
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::AroundCells,
 		Arches::ONEGHOSTCELL);
 
   tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
@@ -250,9 +250,9 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(wVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(den, timelabels->density_out, matlIndex, patch,
+    new_dw->get(den, d_lab->d_densityCPLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(scalar, timelabels->scalar_out, matlIndex, patch,
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     if (d_MAlab)
@@ -962,7 +962,7 @@ ScaleSimilarityModel::sched_computeScalarVariance(SchedulerP& sched,
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
-  tsk->requires(Task::NewDW, timelabels->scalar_out, 
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // Computes
@@ -991,7 +991,7 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
     // Get the velocity, density and viscosity from the old data warehouse
-    new_dw->get(scalar, timelabels->scalar_out, matlIndex, patch,
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -1088,9 +1088,9 @@ ScaleSimilarityModel::sched_computeScalarDissipation(SchedulerP& sched,
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
   // assuming scalar dissipation is computed before turbulent viscosity calculation 
-  tsk->requires(Task::NewDW, timelabels->scalar_out, 
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->viscosity_in,
+  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -1132,9 +1132,9 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
     CCVariable<double> scalarDiss;  // dissipation..chi
     StencilMatrix<constCCVariable<double> > scalarFlux; //3 point stencil
 
-    new_dw->get(scalar, timelabels->scalar_out, matlIndex, patch,
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(viscosity, timelabels->viscosity_in, matlIndex, patch,
+    new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {

@@ -143,6 +143,10 @@ public:
 			      const MaterialSet* matls,
 			      const TimeIntegratorLabel* timelabels);
 
+      void sched_saveTempCopies(SchedulerP&, const PatchSet* patches,
+				const MaterialSet* matls,
+			        const TimeIntegratorLabel* timelabels);
+
   
 protected :
 
@@ -203,6 +207,13 @@ private:
 			DataWarehouse* old_dw,
 			DataWarehouse* new_dw,
 			const TimeIntegratorLabel* timelabels);
+      
+      void saveTempCopies(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw,
+			  const TimeIntegratorLabel* timelabels);
 
 private:
       // const VarLabel*
