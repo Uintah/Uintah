@@ -205,7 +205,6 @@ private:
 				int fontsize,
 				int precision,
 				bool render_locations);
-
   void render_materials(const Fld *fld, const string &data_display_mode);
 };
 
@@ -644,7 +643,7 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 
   GeomLines* lines = NULL;
   GeomColoredCylinders* cylinders = NULL;
-  GeomDL *display_list;
+  GeomHandle display_list;
   if (cyl)
   {
     cylinders = scinew GeomColoredCylinders;
@@ -654,16 +653,17 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
   }
   else
   {
+    lines->setLineWidth(edge_scale);
     if (transparent_p)
     {
       lines = scinew GeomTranspLines;
+      display_list = lines;
     }
     else
     {
       lines = scinew GeomLines;
+      display_list = scinew GeomDL(lines);
     }
-    lines->setLineWidth(edge_scale);
-    display_list = scinew GeomDL(lines);
   }
   GeomSwitch *edge_switch =
     scinew GeomSwitch(scinew GeomColorMap(scinew GeomMaterial(display_list,
