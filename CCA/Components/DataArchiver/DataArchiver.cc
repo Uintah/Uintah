@@ -32,6 +32,7 @@
 #include <fcntl.h>
 #include <strings.h>
 #include <unistd.h>
+#include <math.h>
 #ifdef __aix
 #include <time.h>
 #endif
@@ -1051,18 +1052,23 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
       VarLabel* var = VarLabel::find((*it).labelName);
       if (var == NULL)
          throw ProblemSetupException((*it).labelName +
-				     " variable label not found to save.");
+				     " variable not found to save.");
        
       Scheduler::VarLabelMaterialMap::iterator found =
 	pLabelMatlMap->find(var->getName());
 
       if (found == pLabelMatlMap->end())
          throw ProblemSetupException((*it).labelName +
-				  " variable label not computed for saving.");
+				  " variable not computed for saving.");
       
       saveItem.label = var;
       saveItem.matls = ConsecutiveRangeSet((*found).second);
       saveItem.matls = saveItem.matls.intersected((*it).matls);
+      if (((*it).matls != ConsecutiveRangeSet::all) &&
+	  ((*it).matls != saveItem.matls)) {
+         throw ProblemSetupException((*it).labelName +
+	  " variable not computed for all materials specified to save.");
+      }
       
       if (saveItem.label->typeDescription()->isReductionVariable())
          d_saveReductionLabels.push_back(saveItem);
@@ -1098,7 +1104,7 @@ void  DataArchiver::initCheckpoints(SchedulerP& sched)
       VarLabel* var = VarLabel::find((*mapIter).first);
       if (var == NULL)
          throw ProblemSetupException((*mapIter).first +
-				  " variable label not found to checkpoint.");
+				  " variable not found to checkpoint.");
 
       saveItem.label = var;
       saveItem.matls = ConsecutiveRangeSet((*mapIter).second);
