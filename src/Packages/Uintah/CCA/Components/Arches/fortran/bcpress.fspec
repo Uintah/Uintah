@@ -5,6 +5,7 @@ void bcpress(IntVector domLo, IntVector domHi,
 	CCVariable<double> an, CCVariable<double> as,
 	CCVariable<double> at, CCVariable<double> ab,
 	CCVariable<double> su, CCVariable<double> sp,
-	constCCVariable<int> pcell, int wall, int symtry, int ffield,
+	constCCVariable<int> pcell, int wall, int curr_bc_type,
+        int curr_bc_factor,
 	bool xminus, bool xplus, bool yminus, bool yplus,
 	bool zminus, bool zplus);

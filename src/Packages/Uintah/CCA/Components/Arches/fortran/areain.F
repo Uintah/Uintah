@@ -45,10 +45,14 @@ C--------------------------------------------------------------------
                IF ((PCELL(iBegGhost,J,K).EQ.PFIELD).and.xminus)THEN
 c           write(*,'("i=",i2," j=",i2," k=",i2," sns=",f5.2," stb=",f5.2)')
 c    &        iBegGhost,j,k,sns(j),stb(k) 
-                  AREAT = AREAT + SNS(J)*STB(K)
+                  if (PCELL(iBegGhost+1,J,K).eq.ffield) then
+                    AREAT = AREAT + SNS(J)*STB(K)
+                  end if
                END IF
                IF ((PCELL(iEndGhost,J,K).EQ.PFIELD).and.xplus) THEN
-                  AREAT = AREAT + SNS(J)*STB(K)
+                  if (PCELL(iEndGhost-1,J,K).eq.ffield) then
+                    AREAT = AREAT + SNS(J)*STB(K)
+                  end if
                END IF
  100        CONTINUE
  110     CONTINUE
@@ -57,11 +61,15 @@ c    &        iBegGhost,j,k,sns(j),stb(k)
          DO 140 K = KST,KEND
             DO 130 I = IST,IEND
                IF ((PCELL(I,jBegGhost,K).EQ.PFIELD).and.yminus)THEN
-                AREAT = AREAT + SEW(I)*STB(K)
+                  if (PCELL(I,jBegGhost+1,K).eq.ffield) then
+                    AREAT = AREAT + SEW(I)*STB(K)
 c               IF(LCORD.AND.LPRIN)WRITE(3,*)' ERROR ON INLET CONDITION'
+                  end if
              END IF
              IF ((PCELL(I,jEndGhost,K).EQ.PFIELD).and.yplus) THEN
-                AREAT = AREAT + SEW(I)*STB(K)
+                  if (PCELL(I,jEndGhost-1,K).eq.ffield) then
+                    AREAT = AREAT + SEW(I)*STB(K)
+                  end if
              END IF
  130      CONTINUE
  140   CONTINUE
@@ -71,11 +79,15 @@ c               IF(LCORD.AND.LPRIN)WRITE(3,*)' ERROR ON INLET CONDITION'
          DO 170 J = JST,JEND
             DO 160 I = IST,IEND
                IF ((PCELL(I,J,kBegGhost).EQ.PFIELD).and.zminus)THEN
-                  AREAT = AREAT + SEW(I)*SNS(J)
+                  if (PCELL(I,J,kBegGhost+1).eq.ffield) then
+                    AREAT = AREAT + SEW(I)*SNS(J)
 c     IF(LCORD.AND.LPRIN)WRITE(3,*)' ERROR ON INLET CONDITION'
+                  end if
                END IF
                IF ((PCELL(I,J,kEndGhost).EQ.PFIELD).and.zplus) THEN
-                  AREAT = AREAT + SEW(I)*SNS(J)
+                  if (PCELL(I,J,kEndGhost-1).eq.ffield) then
+                    AREAT = AREAT + SEW(I)*SNS(J)
+                  end if
 c     IF(LCORD.AND.LPRIN)WRITE(3,*)' ERROR ON INLET CONDITION'
                END IF
  160        CONTINUE

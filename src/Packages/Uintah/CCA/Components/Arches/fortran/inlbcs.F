@@ -9,9 +9,6 @@ c*********************************************************************
 c*********************************************************************
 c     Locals :
 c*********************************************************************
-      integer ISTU, IENDU, JSTU, JENDU, KSTU, KENDU
-      integer ISTV, IENDV, JSTV, JENDV, KSTV, KENDV
-      integer ISTW, IENDW, JSTW, JENDW, KSTW, KENDW
       integer IST, IEND, JST, JEND, KST, KEND
 
       integer i, j, k

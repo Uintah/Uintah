@@ -127,7 +127,9 @@ public:
         ////////////////////////////////////////////////////////////////////////
       // Outlet boundary ID
       inline int outletCellType() const { 
-	return d_outletBC->d_cellTypeID; 
+	int outlet_celltypeval = -10;
+	if (d_outletBoundary) outlet_celltypeval=d_outletBC->d_cellTypeID;
+	return outlet_celltypeval; 
       }
         ////////////////////////////////////////////////////////////////////////
       // Pressure boundary ID
@@ -590,6 +592,7 @@ private:
 	int d_cellTypeID;          // define enum for cell type
 	// inputs
 	double flowRate;           
+	double inletVel;           
         InletStream streamMixturefraction; // array [numMixingVars-1]
 	double turb_lengthScale;
 	// calculated values

@@ -334,6 +334,8 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
     d_boundaryCondition->velocityPressureBC(pc, patch, index, cellinfo,
 					    &velocityVars, &constVelocityVars);
+    int out_celltypeval = d_boundaryCondition->outletCellType();
+    if (!(out_celltypeval==-10))
     d_boundaryCondition->addPresGradVelocityOutletBC(pc, patch, index, cellinfo,
 						     delta_t, &velocityVars,
 						     &constVelocityVars);
@@ -1228,14 +1230,16 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 					  &velocityVars, &constVelocityVars);
     d_boundaryCondition->velRhoHatPressureBC(pc, patch, cellinfo,
 					     &velocityVars, &constVelocityVars);
+    int out_celltypeval = d_boundaryCondition->outletCellType();
+    if (!(out_celltypeval==-10))
     d_boundaryCondition->velRhoHatOutletBC(pc, patch, cellinfo, delta_t,
 					   &velocityVars, &constVelocityVars,
 					   maxAbsU, maxAbsV, maxAbsW);
   if (d_pressure_correction) {
+    if (!(out_celltypeval==-10)) {
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-  int out_celltypeval = d_boundaryCondition->outletCellType();
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -1367,6 +1371,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     }
   }
   }
+  }
 
 #ifdef divergenceconstraint    
     // compute divergence constraint to use in pressure equation
@@ -1396,11 +1401,11 @@ MomentumSolver::sched_averageRKHatVelocities(SchedulerP& sched,
 			  &MomentumSolver::averageRKHatVelocities,
 			  timelabels);
 
-  tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,
+  tsk->requires(Task::OldDW, d_lab->d_uVelRhoHatLabel,
                 Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,
+  tsk->requires(Task::OldDW, d_lab->d_vVelRhoHatLabel,
                 Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,
+  tsk->requires(Task::OldDW, d_lab->d_wVelRhoHatLabel,
                 Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1451,11 +1456,11 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(cellType, d_lab->d_cellTypeLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    old_dw->get(old_uvel, d_lab->d_uVelocitySPBCLabel, 
+    old_dw->get(old_uvel, d_lab->d_uVelRhoHatLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    old_dw->get(old_vvel, d_lab->d_vVelocitySPBCLabel, 
+    old_dw->get(old_vvel, d_lab->d_vVelRhoHatLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    old_dw->get(old_wvel, d_lab->d_wVelocitySPBCLabel, 
+    old_dw->get(old_wvel, d_lab->d_wVelRhoHatLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     new_dw->get(temp_density, d_lab->d_densityTempLabel, 
