@@ -18,7 +18,7 @@
 %   
 %   See also SETBOUNDARYCONDITIONS, ADVECTQ.
 
-clear all;
+%clear all;
 close all;
 globalParams;                               % Load global parameters
 
@@ -168,6 +168,29 @@ press_CC    = setBoundaryConditions(press_CC    ,'press_CC');
 
 figure(1);
 set(0,'DefaultFigurePosition',[0,0,1024,768]);
+%================ Plot results ================
+
+subplot(2,2,1), plot(x_CC,rho_CC);
+xlim([boxLower(1) boxUpper(1)]);
+legend('\rho');
+grid on;
+
+subplot(2,2,2), plot(x_CC,xvel_CC);
+xlim([boxLower(1) boxUpper(1)]);
+legend('u_1');
+grid on;
+
+subplot(2,2,3), plot(x_CC,temp_CC);
+xlim([boxLower(1) boxUpper(1)]);
+legend('T');
+grid on;
+
+subplot(2,2,4), plot(x_CC,press_CC);
+xlim([boxLower(1) boxUpper(1)]);
+legend('p');
+grid on;
+
+%M(tstep) = getframe(gcf);
 
 
 %______________________________________________________________________
@@ -216,9 +239,9 @@ for tstep = 1:maxTimeSteps
     
     %_____________________________________________________
     % 4. Compute the face-centered velocities
-    fprintf('Step 5: compute face-centered velocities\n');
+    fprintf('Step 4: compute face-centered velocities\n');
 
-    for j = firstCell+1:lastCell-1                                  % Loop over faces inside the domain
+    for j = firstCell:lastCell-1                                  % Loop over faces inside the domain
         left        = j;
         right       = j+1;
         term1       = (...
@@ -252,7 +275,8 @@ for tstep = 1:maxTimeSteps
         advectRho(volfrac_CC, ofs, rx, xvel_FC, delX, nCells);      % Treat theta advection like a rho advection (van Leer limiter, etc.)
     
     % Advance pressure in time
-    press_CC(firstCell:lastCell) = press_CC(firstCell:lastCell) + q_advected;
+    press_CC(firstCell:lastCell) = press_CC(firstCell:lastCell) ...
+        -delT * (speedSound_CC(firstCell:lastCell).^2 ./ spvol_CC(firstCell:lastCell)) .* q_advected;
 
     % Set boundary conditions on the new pressure
     press_CC =  setBoundaryConditions(press_CC,'press_CC');
@@ -281,7 +305,7 @@ for tstep = 1:maxTimeSteps
     for j = firstCell:lastCell
         del_mom(j)  = -delT * delX * ...
             ((press_FC(j) - press_FC(j-1))/(delX));
-        del_eng(j)  = (delX / (rho_CC(j) * speedSound_CC(j)^2 + d_SMALL_NUM)) * ...
+        del_eng(j)  = -delT * delX * ...
             press_CC(j) * q_advected(j-firstCell+1);                % Shift q to the indices of the rest of the arrays in this formula
     end
 
@@ -295,7 +319,7 @@ for tstep = 1:maxTimeSteps
     eng_L       = mass_L .* cv .* temp_CC + del_eng;          % (me)^L = (me) + del_(me)
 
     % Translate fluxed quantities to primitive variables
-    rho_CC      = mass_L ./ (delX + d_SMALL_NUM);
+    rho_CC      = mass_L ./ delX;
     xvel_CC     = mom_L ./ (mass_L + d_SMALL_NUM);
     temp_CC     = eng_L ./ (cv .* mass_L + d_SMALL_NUM);    
     
@@ -319,8 +343,10 @@ for tstep = 1:maxTimeSteps
     fprintf ('Advecting density\n');
     [q_advected, gradLim, grad_x, rho_slab, rho_vrtx_1, rho_vrtx_2] = ...
         advectRho(mass_L, ofs, rx, xvel_FC, delX, nCells);      
-    mass_CC(firstCell:lastCell)     = mass_L(firstCell:lastCell) + ofs .* q_advected;                       % note: advection of rho * ofs (the advected volume) = adfection correction to the mass
+    mass_CC(firstCell:lastCell)     = mass_L(firstCell:lastCell) - delT * ofs .* q_advected;                      % note: advection of rho * ofs (the advected volume) = advection correction to the mass
+%    mass_CC(firstCell:lastCell)     = mass_L(firstCell:lastCell) - delT * q_advected;                      % note: advection of rho * ofs (the advected volume) = advection correction to the mass
     rho_CC      = mass_CC ./ delX;                                  % Updated density
+    % Need to set B.C. on rho,T,u!!
     
     %__________________________________
     % M O M E N T U M
@@ -328,7 +354,7 @@ for tstep = 1:maxTimeSteps
     fprintf ('Advecting momentum\n');
     [q_advected, gradLim, grad_x] = ...
         advectQ(mom_L, rho_CC, rho_slab, rho_vrtx_1, rho_vrtx_2, ofs, rx, xvel_FC, delX, nCells);
-    xvel_CC(firstCell:lastCell)     = (mom_L(firstCell:lastCell) + q_advected) ./ (mass_CC(firstCell:lastCell) + d_SMALL_NUM);  % Updated velocity
+    xvel_CC(firstCell:lastCell)     = (mom_L(firstCell:lastCell) - delT * q_advected) ./ (mass_CC(firstCell:lastCell) + d_SMALL_NUM);  % Updated velocity
 
     %__________________________________
     % E N E R G Y
@@ -336,7 +362,7 @@ for tstep = 1:maxTimeSteps
     fprintf ('Advecting energy\n');
     [q_advected, gradLim, grad_x] = ...
         advectQ(eng_L, rho_CC, rho_slab, rho_vrtx_1, rho_vrtx_2, ofs, rx, xvel_FC, delX, nCells);
-    temp_CC(firstCell:lastCell)     = (eng_L(firstCell:lastCell) + q_advected)./(cv.*mass_CC(firstCell:lastCell) + d_SMALL_NUM);% Updated temperature
+    temp_CC(firstCell:lastCell)     = (eng_L(firstCell:lastCell) - delT * q_advected)./(cv.*mass_CC(firstCell:lastCell) + d_SMALL_NUM);% Updated temperature
 
     
     %_____________________________________________________
@@ -362,7 +388,7 @@ for tstep = 1:maxTimeSteps
 
     subplot(2,2,2), plot(x_CC,xvel_CC);
     xlim([boxLower(1) boxUpper(1)]);
-    legend('u_x');
+    legend('u_1');
     grid on;
 
     subplot(2,2,3), plot(x_CC,temp_CC);

@@ -6,7 +6,7 @@ clear j;
 fprintf('inside advectSlabs\n');
 q_advected = zeros(1,nCells);
 % Note that the following has to change if the velocity changes sign from face j-1 to j
-for j = 2:nCells-1                          % Does not include boundary effects
+for j = 2:nCells-1                          % Does not include boundary effects; maybe change to firstCell to lastCell-1 later
     if (xvel_FC(j) >= 0)
         influxVol  = ofs(j-1);
         outfluxVol = ofs(j);
