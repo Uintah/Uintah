@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
 
 <!--
    For more information, please see: http://software.sci.utah.edu
@@ -31,18 +33,28 @@
 
 
 
-<component name="TextureBuilder" category="Visualization" optional="true">
+<component name="EditColorMap2D" category="Visualization" optional="true">
   <overview>
     <authors>
-      <author>Kurt Zimmerman</author>
       <author>Milan Ikits</author>
       <author>Michael Callahan</author>
     </authors>
-    <summary> This module builds a 3D Texture for use with an
-              OpenGL volume renderer.
+    <summary>EditColorMap2D is used for interactively creating and editing ColorMap2 transfer functions for use in volume visualization.
     </summary>
     <description>
-      <p>The TextureBuilder module is used to create 3D volume textures for use by the <modref package="SCIRun" name="VolumeVisualizer"/> and <modref package="SCIRun" name="VolumeSlicer"/> modules.  The two inputs are a scalar LatVolField and an optional vector LatVolField that are packed into an appropriate texture.  Both fields must have the same dimensionality.  The Gradient Field input port is used for lighting and ColorMap2 filtering and is only required if those two features are to be used.  It can be computed from the scalar field using the <modref package="SCIRun" name="NodeGradient"/> module if needed.  See also the <modref package="SCIRun" name="NrrdTextureBuilder"/> module.</p>
+
+      <p>EditColorMap2D is used for interactively creating and
+editing ColorMap2 transfer functions for use in volume visualization.
+These are two dimensional colormaps where the horizontal axis
+represents the scalar values of the data and the vertical axis
+represents the gradient magnitude.  For example a narrow vertical bar
+that cuts across the colormap selects all the elements in the data
+with that value and results in an approximate isosurface (it's not
+quite a surface as it has volume depending upon the narrowness of the
+band).  A vertical bar would represent a particular rate of change within the volume and could be used to highlight boundaries between objects or areas of high flow.</p>
+
+      <p>The ColorMap2 is painted by dragging various widgets around to cover the points of interest in the data.  In addition an optional ColorMap2 can be generated elsewhere (See <modref package="SCIRun" name="ColorMap2Reader"/> and <modref package="SCIRun" name="NrrdToColorMap2"/> and passed into the appropriate input port.  The second Histogram port is also optional and should contain a join histogram of the scalar values and gradient magnitudes.  It should be a 512x256 grayscale image (and must contain unsigned character data) that is displayed in the background of the ColorMap2 for reference purposes.</p>
+
     </description>
   </overview>
   <implementation>
@@ -50,18 +62,18 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>Scalar Field</name>
-	<datatype>SCIRun::Field</datatype>
+	<name>Input Colormap</name>
+	<datatype>SCIRun::ColorMap2</datatype>
       </port>
       <port>
-	<name>Gradient Field</name>
-	<datatype>SCIRun::Field</datatype>
+	<name>Histogram</name>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-	<name>Texture</name>
-	<datatype>SCIRun::Texture</datatype>
+        <name>Output Colormap</name>
+        <datatype>SCIRun::ColorMap2</datatype>
       </port>
     </outputs>
   </io>

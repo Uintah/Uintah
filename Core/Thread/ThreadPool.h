@@ -98,7 +98,7 @@ public:
   //////////
   // Another overloaded version of parallel that passes 1 argument
   template<class T, class Arg1>
-  void parallel(T* ptr, void (T::*)(int, Arg1),
+  void parallel(T* ptr, void (T::*pmf)(int, Arg1),
 		int numThreads,
 		Arg1 a1) {
     parallel(Parallel1<T, Arg1>(ptr, pmf, a1),

@@ -1,4 +1,7 @@
-/*
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+
+<!--
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -24,56 +27,45 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
-*/
+-->
 
+<component name="BundleReader" category="DataIO">
+  <overview>
+    <authors>
+    Jeroen Stinstra
+    </authors>
+    <summary>
+      This module reads a bundle from disk.
+    </summary>
+    <description>
+      This module reads a bundle from disk. A bundle file
+      has a .bdl extension and can be written with the BundleWriter
+      module. In a bdl file every component is stored. Hence it can be used
+       to group a lot of different SCIRun objects together
+      and store it as one file.
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+<!--
+    <port>
+        <name>filename</name>
+        <datatype>SCIRun::Nrrd</datatype>
+    </port>
+-->    
+    </inputs>
+    <outputs>
+      <port>
+        <name>bundle</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
 
-
-/*
- *  AssertionFailed.h: Generic exception for internal errors
- *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   July 1999
- *
- *  Copyright (C) 1999 SCI Group
- */
-
-#include <Core/Exceptions/AssertionFailed.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-
-namespace SCIRun {
-
-AssertionFailed::AssertionFailed(const char* message,
-				 const char* file,
-				 int lineno)
-{
-    size_t len = strlen(message)+strlen(file)+strlen(stacktrace_)+100;
-    message_ = (char*)malloc(len);
-    sprintf(message_, "%s (file: %s, line: %d)\n%s", message, file, lineno, stacktrace_);
-}
-
-AssertionFailed::AssertionFailed(const AssertionFailed& copy)
-    : message_(strdup(copy.message_))
-{
-}
-
-AssertionFailed::~AssertionFailed()
-{
-    free(message_);
-}
-
-const char* AssertionFailed::message() const
-{
-    return message_;
-}
-
-const char* AssertionFailed::type() const
-{
-    return "AssertionFailed";
-}
-
-} // End namespace SCIRun
