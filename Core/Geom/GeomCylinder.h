@@ -93,10 +93,10 @@ public:
   virtual GeomObj* clone();
   virtual void get_bounds(BBox&);
 
-  void add(const Point &p0, const Point &p1);
-  void add(const Point &p0, MaterialHandle c0,
+  bool add(const Point &p0, const Point &p1);
+  bool add(const Point &p0, MaterialHandle c0,
 	   const Point &p1, MaterialHandle c1);
-  void add(const Point &p0, float index0,
+  bool add(const Point &p0, float index0,
 	   const Point &p1, float index1);
   void set_radius(double val) { radius_ = val; reset_bbox(); }
   void set_nu_nv(int nu, int nv);
@@ -129,12 +129,19 @@ public:
 
 
 class SCICORESHARE GeomCappedCylinders : public GeomCylinders {
+  vector<double> radii_;
 public:
   GeomCappedCylinders(int nu = 8, double radius = 1.0);
   GeomCappedCylinders(const GeomCappedCylinders &copy);
   virtual ~GeomCappedCylinders();
 
   virtual GeomObj* clone();
+
+  void add_radius(const Point &p0, const Point &p1, double r);
+  void add_radius(const Point &p0, MaterialHandle c0,
+		  const Point &p1, MaterialHandle c1, double r);
+  void add_radius(const Point &p0, float index0,
+		  const Point &p1, float index1, double r);
 
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);

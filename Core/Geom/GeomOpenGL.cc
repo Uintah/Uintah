@@ -1312,6 +1312,7 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
     }
 
     const bool coloring = colors_.size() == points_.size();
+    const bool use_local_radii = radii_.size() == points_.size()/2;
 
     float tabx[40];
     float taby[40];
@@ -1327,8 +1328,16 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       Vector v0(points_[i+1] - points_[i+0]);
       Vector v1, v2;
       v0.find_orthogonal(v1, v2);
-      v1 *= radius_;
-      v2 *= radius_;
+      if (use_local_radii)
+      {
+	v1 *= radii_[i/2];
+	v2 *= radii_[i/2];
+      }
+      else
+      {
+	v1 *= radius_;
+	v2 *= radius_;
+      }
 
       float matrix[16];
       matrix[0] = v1.x();
