@@ -45,6 +45,7 @@
 
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Geom/TkOpenGLContext.h>
+#include <Core/Util/Endian.h>
 #include <stdio.h>
 #include <stack>
 #include <sstream>
@@ -967,6 +968,12 @@ void EditColorMap2D::save_ppm(const string &filename,
   int R = 3;
   int G = 2;
   int B = 1;
+
+  if (isBigEndian()){
+    R = 0;
+    G = 1;
+    B = 2;
+  }
   
 //  int A = 0;
   ofstream output(filename.c_str(), ios::out);
