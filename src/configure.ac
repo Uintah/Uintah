@@ -508,8 +508,19 @@ fi
 # Set the subdir name in the bin tree for matlab engine.
 if test "$pkg_MatlabInterface" = "yes"; then
   MATLAB_ENG=matlab
-  AC_SUBST(MATLAB_ENG)
 fi
+
+AC_SUBST(MATLAB_ENG)
+
+# Set the collaborative vars.
+if test "$pkg_CollabVis" = "yes"; then
+  DEF_COLLAB_VIS="#define HAVE_COLLAB_VIS 1"
+  HAVE_COLLAB_VIS="yes"
+fi
+
+AC_SUBST(DEF_COLLAB_VIS)
+AC_SUBST(HAVE_COLLAB_VIS)
+
 
 # Take care of package dependencies
 if test "$pkg_DataIO" = "yes"; then
@@ -1815,15 +1826,6 @@ SCI_TRY_LINK(BLT,BLT library and headers,[
 AC_SUBST(BLT_LIB_FLAG)
 AC_SUBST(BLT_LIB_DIR_FLAG)
 AC_SUBST(INC_BLT_H)
-
-if test "$pkg_CollabVis" = "yes"; then
-  DEF_COLLAB_VIS="#define HAVE_COLLAB_VIS 1"
-  HAVE_COLLAB_VIS="yes"
-fi
-
-AC_SUBST(DEF_COLLAB_VIS)
-AC_SUBST(HAVE_COLLAB_VIS)
-
 
 CORRECT_TCL_VERSION=no
 CORRECT_TK_VERSION=no
