@@ -142,8 +142,8 @@ Cmjb        correctly for your problem.
 c              IF (LKETM) URFVIS = 0.01
 c              IF (NITER.LT.5 .OR. .NOT.LKETM) THEN
                VIS(I,J,K) = VISCOS + CMLTM*(PMIXL**2)*DEN(I,J,K)
-     &                      *IsI
-c     $                      *GRADVEL
+c     &                      *IsI
+     $                      *GRADVEL
 c              END IF
  200        CONTINUE
  210     CONTINUE

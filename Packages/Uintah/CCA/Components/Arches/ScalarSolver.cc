@@ -547,6 +547,8 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     // Calculate the scalar boundary conditions
     // inputs : scalarSP, scalCoefSBLM
     // outputs: scalCoefSBLM
+
+
     d_boundaryCondition->scalarBC(pc, patch,  index, cellinfo, 
 				  &scalarVars);
   // apply multimaterial intrusion wallbc

@@ -209,8 +209,9 @@ c----------------------------------------------------------------------
                endif
                if (xminus) then
                   if ((pcell(idxLo(1)-1,j,k).eq.outletfield).or.
-     $                 ((pcell(idxLo(1)-1,j,k).eq.presstype).and.
-     $                 (uu(idxLo(1)-1,j,k).lt.0.0))) then
+     $                 ((pcell(idxLo(1)-1,j,k).eq.presstype))) then
+c .and.
+c     $                 (uu(idxLo(1)-1,j,k).lt.0.0))) then
                      if ((loutsf).or.
      $                    (pcell(idxLo(1)-1,j,k).eq.presstype)) then
                         f(idxLo(1)-1,j,k) = f(idxLo(1),j,k)

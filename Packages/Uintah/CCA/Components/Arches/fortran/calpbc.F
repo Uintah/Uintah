@@ -258,7 +258,7 @@ c                        WVEL = 0.0
                   VV(I,J,K) = VV(i,j+1,k)
                   UU(I,J,K) = UVEL
 c     $                        + (vv(i,j+2,k)-vv(i-1,j+2,k))
-                  WW(I,J,K) = WVEL
+                  if (.not.(zminus.and.k.eq.kst))  WW(I,J,K) = WVEL
 c     $                        + (vv(i,j+2,k)-vv(i,j+2,k-1))
                   PP(I,J,K) = PPP
                END IF
@@ -302,7 +302,8 @@ c                        WVEL = 0.0
                   VV(I,J+1,K) = VV(i,j,k)
                   UU(I,J,K) = UVEL
 c     $                        - (vv(i,j-1,k)-vv(i-1,j-1,k))
-                  WW(I,J,K) = WVEL
+                  if (.not.(zminus.and.k.eq.kst))  WW(I,J,K) = WVEL
+c                  WW(I,J,K) = WVEL
 c     $                        - (vv(i,j-1,k)-vv(i,j-1,k-1))
                   PP(I,J,K) = PPP
                END IF
@@ -347,7 +348,7 @@ c                        VVEL = 0.0
                   WW(I,J,K) = WW(i,j,k+1)
                   UU(I,J,K) = UVEL
 c     $                        + (WW(i,j,k+2) - ww(i-1,j,k+2))
-                  VV(I,J,K) = VVEL
+                  if (.not.(yminus.and.j.eq.jst))  vv(I,J,K) = vVEL
 c     $                        + (ww(i,j,k+2) - ww(i,j-1,k+2))
                   PP(I,J,K) = PPP
                END IF
@@ -391,7 +392,8 @@ c                        VVEL = 0.0
                   WW(I,J,K+1) = WW(i,j,k)
                   UU(I,J,K) = UVEL
 c     $                 - (WW(i,j,k-1) - ww(i-1,j,k-1))
-                  VV(I,J,K) = VVEL
+                  if (.not.(yminus.and.j.eq.jst))  vv(I,J,K) = vVEL
+c                  VV(I,J,K) = VVEL
 c     $                 - (WW(i,j,k-1) - ww(i,j-1,k-1))
                   PP(I,J,K) = PPP
                END IF

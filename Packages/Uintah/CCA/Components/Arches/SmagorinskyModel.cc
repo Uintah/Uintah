@@ -335,6 +335,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     int wallID = d_boundaryCondition->wallCellType();
+#if 0
     if (xminus) {
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
 	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -395,7 +396,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 	}
       }
     }
-
+#endif
     if (d_MAlab) {
       IntVector indexLow = patch->getCellLowIndex();
       IntVector indexHigh = patch->getCellHighIndex();
@@ -544,6 +545,7 @@ SmagorinskyModel::computeTurbSubmodelPred(const ProcessorGroup*,
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     int wallID = d_boundaryCondition->wallCellType();
+#if 0
     if (xminus) {
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
 	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -604,7 +606,7 @@ SmagorinskyModel::computeTurbSubmodelPred(const ProcessorGroup*,
 	}
       }
     }
-
+#endif
     if (d_MAlab) {
       IntVector indexLow = patch->getCellLowIndex();
       IntVector indexHigh = patch->getCellHighIndex();
@@ -748,7 +750,7 @@ SmagorinskyModel::computeTurbSubmodelInterm(const ProcessorGroup*,
 		   mol_viscos, CF, d_factorMesh, d_filterl);
 
     // boundary conditions
-   /* 
+
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -756,6 +758,7 @@ SmagorinskyModel::computeTurbSubmodelInterm(const ProcessorGroup*,
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     int wallID = d_boundaryCondition->wallCellType();
+#if 0
     if (xminus) {
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
 	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -816,7 +819,7 @@ SmagorinskyModel::computeTurbSubmodelInterm(const ProcessorGroup*,
 	}
       }
     }
-*/
+#endif
 
     if (d_MAlab) {
       IntVector indexLow = patch->getCellLowIndex();

@@ -150,6 +150,8 @@ ArchesLabel::ArchesLabel()
   // labels for ref density and pressure
   d_refDensity_label = VarLabel::create("refDensityLabel",
 				       sum_vartype::getTypeDescription() );
+  d_refDensity_label = VarLabel::create("refDensityPredLabel",
+				       sum_vartype::getTypeDescription() );
   d_refPressure_label = VarLabel::create("refPressureLabel",
 				       sum_vartype::getTypeDescription() );
 
@@ -370,6 +372,8 @@ ArchesLabel::ArchesLabel()
   // case
 
   d_denRefArrayLabel = VarLabel::create("denRefArray",
+					CCVariable<double>::getTypeDescription() );
+  d_denRefArrayPredLabel = VarLabel::create("denRefArrayPred",
 					CCVariable<double>::getTypeDescription() );
 
   // Microscopic density (i.e., without void fraction) of gas
@@ -870,6 +874,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_reactscalLinSrcSBLMLabel);
   VarLabel::destroy(d_reactscalNonLinSrcSBLMLabel);
   VarLabel::destroy(d_refDensity_label);
+  VarLabel::destroy(d_refDensityPred_label);
   VarLabel::destroy(d_refPressure_label);
   VarLabel::destroy(d_presResidPSLabel);
   VarLabel::destroy(d_presTruncPSLabel);
@@ -910,6 +915,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_tempINLabel);
   VarLabel::destroy(d_co2INLabel);
   VarLabel::destroy(d_denRefArrayLabel);
+  VarLabel::destroy(d_denRefArrayPredLabel);
   VarLabel::destroy(d_densityMicroLabel);
   VarLabel::destroy(d_densityMicroINLabel);
   VarLabel::destroy(d_pressPlusHydroLabel);

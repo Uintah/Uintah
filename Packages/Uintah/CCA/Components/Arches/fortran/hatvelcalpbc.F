@@ -251,14 +251,15 @@ c                        WVEL = 0.0
                      END IF
                      VVEL = URFBC*VVEL + VV(I,J,K)*(1.0-URFBC)
                   endif
-                  VVvel = urfbc*(VVEL 
-     $                 - pp(i,j+1,k)*dynpv(j+1)/vis(i,j+1,k)) +
-     $                   vv(i,j+1,k)*(1-urfbc)
+c                  VVvel = urfbc*(VVEL 
+c     $                 - pp(i,j+1,k)*dynpv(j+1)/vis(i,j+1,k)) +
+c     $                   vv(i,j+1,k)*(1-urfbc)
                   vv(i,j+1,k) = vvel
                   VV(I,J,K) = VV(i,j+1,k)
                   UU(I,J,K) = UVEL
 c     $                        + (vv(i,j+2,k)-vv(i-1,j+2,k))
-                  WW(I,J,K) = WVEL
+                  if (.not.(zminus.and.k.eq.kst))  WW(I,J,K) = WVEL
+c                  WW(I,J,K) = WVEL
 c     $                        + (vv(i,j+2,k)-vv(i,j+2,k-1))
                   PP(I,J,K) = PPP
                END IF
@@ -295,14 +296,15 @@ c                        WVEL = 0.0
                      END IF
                      VVEL = URFBC*VVEL + VV(I,J+1,K)*(1.0-URFBC)
                   endif
-                  VVvel = urfbc*(VVEL
-     $                 + pp(i,j-1,k)*dynpv(j-1)/vis(i,j-1,k)) +
-     $                 (1.0 - urfbc)*vv(i,j,k)
+c                  VVvel = urfbc*(VVEL
+c     $                 + pp(i,j-1,k)*dynpv(j-1)/vis(i,j-1,k)) +
+c     $                 (1.0 - urfbc)*vv(i,j,k)
                   vv(i,j,k) = vvel
                   VV(I,J+1,K) = VV(i,j,k)
                   UU(I,J,K) = UVEL
 c     $                        - (vv(i,j-1,k)-vv(i-1,j-1,k))
-                  WW(I,J,K) = WVEL
+                  if (.not.(zminus.and.k.eq.kst))  WW(I,J,K) = WVEL
+c                  WW(I,J,K) = WVEL
 c     $                        - (vv(i,j-1,k)-vv(i,j-1,k-1))
                   PP(I,J,K) = PPP
                END IF
@@ -340,14 +342,16 @@ c                        VVEL = 0.0
                      END IF
                      WVEL = URFBC*WVEL + WW(I,J,K)*(1.0-URFBC)
                   endif
-                  WWvel = urfbc*(WVEL
-     $                 - pp(i,j,k+1)*dztpw(k+1)/vis(i,j,k+1)) +
-     $                 (1.0-urfbc)*ww(i,j,k+1)
+c                  WWvel = urfbc*(WVEL
+c     $                 - pp(i,j,k+1)*dztpw(k+1)/vis(i,j,k+1)) +
+c     $                 (1.0-urfbc)*ww(i,j,k+1)
                   ww(i,j,k+1) = wvel
                   WW(I,J,K) = WW(i,j,k+1)
                   UU(I,J,K) = UVEL
 c     $                        + (WW(i,j,k+2) - ww(i-1,j,k+2))
-                  VV(I,J,K) = VVEL
+                  if (.not.(yminus.and.j.eq.jst))  vv(I,J,K) = vVEL
+
+c                  VV(I,J,K) = VVEL
 c     $                        + (ww(i,j,k+2) - ww(i,j-1,k+2))
                   PP(I,J,K) = PPP
                END IF
@@ -384,14 +388,15 @@ c                        VVEL = 0.0
                      END IF
                      WVEL = URFBC*WVEL + WW(I,J,K+1)*(1.0-URFBC)
                   endif
-                  WWvel = urfbc*(WVEL
-     $                 + pp(i,j,k-1)*dztpw(k-1)/vis(i,j,k-1)) +
-     $                 (1.0-urfbc)*ww(i,j,k)
+c                  WWvel = urfbc*(WVEL
+c     $                 + pp(i,j,k-1)*dztpw(k-1)/vis(i,j,k-1)) +
+c     $                 (1.0-urfbc)*ww(i,j,k)
                   ww(i,j,k) = wvel
                   WW(I,J,K+1) = WW(i,j,k)
                   UU(I,J,K) = UVEL
 c     $                 - (WW(i,j,k-1) - ww(i-1,j,k-1))
-                  VV(I,J,K) = VVEL
+                  if (.not.(yminus.and.j.eq.jst))  vv(I,J,K) = vVEL
+c                  VV(I,J,K) = VVEL
 c     $                 - (WW(i,j,k-1) - ww(i,j-1,k-1))
                   PP(I,J,K) = PPP
                END IF
