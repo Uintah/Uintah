@@ -320,7 +320,7 @@ void SurfToGeom::execute()
 	    surf->monitor.readUnlock();
 	} else {	// draw triangles! (not nodes)
 	    int nrm=normals.get();
-	    if (nrm) ts->bldNormals(TriSurface::VertexType);
+	    if (nrm) ts->bldNormals(TriSurface::PointType);
 
 //	    int i;
 //	    for (i=0; i<ts->nodeNormals.size(); i+=100) {
@@ -660,6 +660,9 @@ void SurfToGeom::execute()
 
 //
 // $Log$
+// Revision 1.9  2000/03/04 00:20:17  dmw
+// new bc in buildfematrix, fixed normals in surftogeom
+//
 // Revision 1.8  2000/02/02 05:51:56  dmw
 // added new module to index.cc and fixed bugs
 //

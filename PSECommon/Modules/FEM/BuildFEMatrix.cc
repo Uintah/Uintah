@@ -16,7 +16,7 @@
 #include <PSECore/Datatypes/ColumnMatrixPort.h>
 #include <PSECore/Datatypes/MatrixPort.h>
 #include <SCICore/Datatypes/Matrix.h>
-#include <SCICore/Datatypes/SymSparseRowMatrix.h>
+#include <SCICore/Datatypes/SparseRowMatrix.h>
 #include <PSECore/Datatypes/MeshPort.h>
 #include <SCICore/Datatypes/Mesh.h>
 #include <PSECore/Datatypes/SurfacePort.h>
@@ -61,10 +61,11 @@ class BuildFEMatrix : public Module {
     Array1<int> colidx;
     int* allcols;
     Mesh* mesh;
-    SymSparseRowMatrix* gbl_matrix;
+    SparseRowMatrix* gbl_matrix;
     ColumnMatrix* rhs;
     TCLstring BCFlag; // do we want Dirichlet conditions applied or PinZero
     int DirSub;	//  matrix decomposition and local regularization later
+    int AverageGround; // make the last row in the matrix all 1's
     TCLint UseCondTCL;
     int UseCond;
     int PinZero;
@@ -123,6 +124,18 @@ void BuildFEMatrix::parallel(int proc)
 	rows[r++]=mycols.size();
 	if((mesh->nodes[i]->bc && DirSub) || (i==refnode && PinZero)) {
 	    mycols.add(i); // Just a diagonal term
+	} else if (i==refnode && AverageGround) { // 1's all across
+	    for (int ii=0; ii<mesh->nodes.size(); ii++) 
+		mycols.add(ii);
+	} else if (mesh->nodes[i]->pdBC && DirSub) {
+	    int nd=mesh->nodes[i]->pdBC->diffNode;
+	    if (nd > i) {
+		mycols.add(i);
+		mycols.add(nd);
+	    } else {
+		mycols.add(nd);
+		mycols.add(i);
+	    }
 	} else {
 	    mesh->add_node_neighbors(i, mycols, DirSub);
 	}
@@ -161,7 +174,7 @@ void BuildFEMatrix::parallel(int proc)
      rows[nnodes]=st;
      update_progress(3,6);
      cerr << "There are " << st << " non zeros" << endl;
-     gbl_matrix=scinew SymSparseRowMatrix(nnodes, nnodes, rows, allcols, st);
+     gbl_matrix=scinew SparseRowMatrix(nnodes, nnodes, rows, allcols, st);
      rhs=scinew ColumnMatrix(nnodes);
     }
     barrier.wait(np);
@@ -198,6 +211,20 @@ void BuildFEMatrix::parallel(int proc)
 	      (*rhs)[i]=PINVAL;
 	    else
 	      (*rhs)[i]=mesh->nodes[i]->bc->value;
+	} else if (mesh->nodes[i]->pdBC && DirSub) {
+	    int nd=mesh->nodes[i]->pdBC->diffNode;
+	    int id=rows[i];
+	    if (nd > i) {
+		a[id]=1;
+		a[id+1]=-1;
+	    } else {
+		a[id]=-1;
+		a[id+1]=1;
+	    }
+	    (*rhs)[i]=mesh->nodes[i]->pdBC->diffVal;
+	} else if (AverageGround && i==refnode) {
+	    for (int ii=rows[i]; ii<rows[i]+mesh->nodes.size(); ii++)
+		a[ii]=1;
 	}
     }
 }
@@ -234,15 +261,15 @@ void BuildFEMatrix::execute()
      }
 #endif
 
-     DirSub=PinZero=0;
+     DirSub=PinZero=AverageGround=0;
      if (BCFlag.get() == "DirSub") DirSub=1;
-     else if (BCFlag.get() == "PinZero") PinZero=1;
+     else if (BCFlag.get() == "PinZero") { PinZero=1; DirSub=1; }
+     else if (BCFlag.get() == "AverageGround") { AverageGround=1; DirSub=1; }
      else cerr << "WARNING: BCFlag not set: " << BCFlag.get() << "!\n";
      lastBCFlag=BCFlag.get();
      if (PinZero) cerr << "BuildFEM: pinning node "<<refnode<<" to zero.\n";
-
+     if (AverageGround) cerr << "BuildFEM: averaging of all nodes to zero.\n";
      
-
      Thread::parallel(Parallel<BuildFEMatrix>(this, &BuildFEMatrix::parallel),
 		      np, true);
 
@@ -357,7 +384,8 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
      {	  
 	  int ii = mesh->elems[el]->n[i];
 	  NodeHandle& n1=mesh->nodes[ii];
-	  if (!((n1->bc && DirSub) || (ii==refnode && PinZero))) {
+	  if (!((n1->bc && DirSub) || (ii==refnode && PinZero) || 
+		(ii==refnode && AverageGround))) {
 	      for (int j=0; j<4; j++) {
 		  int jj = mesh->elems[el]->n[j];
 		  NodeHandle& n2=mesh->nodes[jj];
@@ -387,7 +415,8 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 	  int ii = mesh->elems[el]->n[i];
 	  if(ii >= s && ii < e){
 	      NodeHandle& n1=mesh->nodes[ii];
-	      if ((!n1->bc || !DirSub) && (ii!=refnode || !PinZero)) {
+	      if (!((n1->bc && DirSub) || (ii==refnode && PinZero) ||
+		    (ii==refnode && AverageGround))) {
 		  for (int j=0; j<4; j++) {
 		      int jj = mesh->elems[el]->n[j];
 		      NodeHandle& n2=mesh->nodes[jj];
@@ -409,6 +438,9 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 
 //
 // $Log$
+// Revision 1.10  2000/03/04 00:20:16  dmw
+// new bc in buildfematrix, fixed normals in surftogeom
+//
 // Revision 1.9  2000/01/19 22:33:29  moulding
 // These two had some bug(s) or other that steve fixed (BCFlag and
 // some parrellel stuff?).  Now the TorsoFE demo (from a fresh checkout) works!
