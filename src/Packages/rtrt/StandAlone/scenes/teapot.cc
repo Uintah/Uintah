@@ -3,15 +3,20 @@
 #include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/Scene.h>
-#include <iostream>
-#include <math.h>
-#include <string.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/Mesh.h>
 #include <Packages/rtrt/Core/Bezier.h>
 #include <Packages/rtrt/Core/BV1.h>
 #include <Packages/rtrt/Core/MetalMaterial.h>
+
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <math.h>
+#include <string.h>
 
 using namespace rtrt;
 using namespace std;

@@ -12,10 +12,17 @@
 #include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/TimeObj.h>
 #include <Packages/rtrt/Core/RegularColorMap.h>
+
 #include <Core/Thread/Time.h>
-#include <fcntl.h>
+
+
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
+#include <vector>
+#include <sgi_stl_warnings_on.h>
+
+#include <fcntl.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,7 +30,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sci_values.h>
-#include <vector.h>
 
 using namespace rtrt;
 using namespace std;
@@ -322,8 +328,8 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
   ifstream in(buf);
   int nspheres;
   double radius=radius_in;
-  float* mins;
-  float* maxs;
+  float* mins = 0;
+  float* maxs = 0;
   vector<float> mins_vec,maxs_vec;
   
   if (in) {

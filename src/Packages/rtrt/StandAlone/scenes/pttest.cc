@@ -318,7 +318,7 @@ int slurpFloatData(char* fname, float* data, int multiplier=1) {
   unsigned long total_dsize=ndata*multiplier*sizeof(float);
   unsigned long num_read;
   num_read=read(in_fd, data, total_dsize);
-  if(num_read==-1 || num_read!=total_dsize) {
+  if(num_read!=total_dsize) {
     cerr<<"did not read "<<total_dsize<<" bytes from "
 	<<fname<<endl;
     return 0;
@@ -350,7 +350,7 @@ int slurpIntegerData(char* fname, int* data, int multiplier=1) {
   unsigned long total_dsize=ndata*multiplier*sizeof(int);
   unsigned long num_read;
   num_read=read(in_fd, data, total_dsize);
-  if(num_read==-1 || num_read!=total_dsize) {
+  if(num_read!=total_dsize) {
     cerr<<"did not read "<<total_dsize<<" bytes from "
 	<<fname<<endl;
     return 0;
@@ -382,7 +382,7 @@ int slurpUCharData(char* fname, unsigned char* data, int multiplier=1) {
   unsigned long total_dsize=ndata*multiplier*sizeof(unsigned char);
   unsigned long num_read;
   num_read=read(in_fd, data, total_dsize);
-  if(num_read==-1 || num_read!=total_dsize) {
+  if(num_read!=total_dsize) {
     cerr<<"did not read "<<total_dsize<<" bytes from "
 	<<fname<<endl;
     return 0;

@@ -15,9 +15,14 @@
 #include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/PhongMaterial.h>
 #include <Packages/rtrt/Core/VolumeDpy.h>
+
 #include <Core/Thread/Thread.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
@@ -38,15 +43,15 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     double upx=-0.5, upy=0, upz=1;
     double foview=5;
     double light_point_x = 50, light_point_y = -30, light_point_z = 30;
-    float isoval;
+    float isoval = 0;
     bool use_iso=false;
     bool use_tri_file=false;
-    char *tri_file;
-    char *pts_file;
-    char *tri1_file;
-    char *pts1_file;
-    char *tri2_file;
-    char *pts2_file;
+    char *tri_file = 0;
+    char *pts_file = 0;
+    char *tri1_file = 0;
+    char *pts1_file = 0;
+    char *tri2_file = 0;
+    char *pts2_file = 0;
 
     for(int i=1;i<argc;i++){
 	if(strcmp(argv[i], "-depth")==0){

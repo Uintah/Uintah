@@ -59,10 +59,6 @@
 
 using namespace rtrt;
 
-//added this line
-static bool realgeom;
-
-
 extern "C"
 Scene* make_scene(int argc, char* argv[], int) //nworkers*/)
 {
@@ -70,8 +66,6 @@ Scene* make_scene(int argc, char* argv[], int) //nworkers*/)
   Point Lookat(-8.07587, 15.7687, 1.56536);
   Vector Up(0, 0, 1);
   double fov=60;
-  //added this line
-  realgeom = false;
   
   Camera cam(Eye,Lookat,Up,fov);
 
@@ -102,21 +96,11 @@ Scene* make_scene(int argc, char* argv[], int) //nworkers*/)
   Grid *tri_grid = NULL;
   //BV1 *tri_grid;
   InstanceWrapperObject *tri_wrap = NULL;
-  //if (!realgeom) {
   tri_grid = new HierarchicalGrid(g,
     			       10,10,10,10,10,1);
-  //  	tri_grid = new HierarchicalGrid(tris,
-  //  					15,10,10,5,10,1);
-  //tri_grid = new HierarchicalGrid(g,
-  //		1,1,1,1,1,1);
-  //tri_grid = new BV1(tris);
   
   tri_wrap = new InstanceWrapperObject(tri_grid);
   printf("Number of tris: %d\n",g->objs.size());
-  
-
-
-  // }
   
   Transform *T =new Transform();
   T->load_identity();

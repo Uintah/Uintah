@@ -10,9 +10,14 @@
  */
 
 #include <Packages/rtrt/Core/PPMImage.h>
+
 #include <Core/Math/Trig.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
+#include <sgi_stl_warnings_on.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 

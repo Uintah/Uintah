@@ -5,13 +5,8 @@
 #include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/Scene.h>
-#include <iostream>
-#include <math.h>
-#include <string.h>
 #include <Packages/rtrt/Core/Point4D.h>
 #include <Packages/rtrt/Core/CrowMarble.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/Mesh.h>
 #include <Packages/rtrt/Core/Bezier.h>
 #include <Packages/rtrt/Core/BV1.h>
@@ -23,12 +18,22 @@
 #include <Packages/rtrt/Core/MetalMaterial.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <Packages/rtrt/Core/Sphere.h>
-#include <Core/Math/MinMax.h>
 #include <Packages/rtrt/Core/Tri.h>
-#include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/Parallelogram.h>
 #include <Packages/rtrt/Core/ObjReader.h>
+
+#include <Core/Math/MinMax.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <math.h>
+#include <string.h>
 
 using namespace rtrt;
 
@@ -42,41 +47,30 @@ void rotate(double /*theta*/, double /*phi*/)
 extern "C"
 Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 {
-      for(int i=1;i<argc;i++) {
-	cerr << "Unknown option: " << argv[i] << '\n';
-	cerr << "Valid options for scene: " << argv[0] << '\n';
-	return 0;
-      }
-
-      //Point Eye(800,1590,360);
-      Point Eye(700,1390,300);
-      Point Lookat(0,0,150);
-      Vector Up(0,0,1);
-      double fov=45;
-
-      Camera cam(Eye,Lookat,Up,fov);
-
-      //double bgscale=0.5;
-      //Color groundcolor(.62, .62, .62);
-      //Color averagelight(1,1,.8);
-      double ambient_scale=.5;
-      int subdivlevel = 4;
-
-
-
-
-      //Material* red_shiny = new Phong( Color(.3,0,0), Color(1,1,1), 25, 0);
-      Material* silver = new MetalMaterial( Color(0.8, 0.8, 0.8) );
-      //Material* green = new CoupledMaterial( Color(0.1, 0.3, 0.2) );
-
-
-       char buf[MAXBUFSIZE];
-       char *name;
-       FILE *fp;
-       double x,y,z;
-       //int minmaxset = 0;
-       //Point max, min;
-      
+  for(int i=1;i<argc;i++) {
+    cerr << "Unknown option: " << argv[i] << '\n';
+    cerr << "Valid options for scene: " << argv[0] << '\n';
+    return 0;
+  }
+  
+  //Point Eye(800,1590,360);
+  Point Eye(700,1390,300);
+  Point Lookat(0,0,150);
+  Vector Up(0,0,1);
+  double fov=45;
+  
+  Camera cam(Eye,Lookat,Up,fov);
+  
+  //double bgscale=0.5;
+  //Color groundcolor(.62, .62, .62);
+  //Color averagelight(1,1,.8);
+  double ambient_scale=.5;
+  
+  //Material* red_shiny = new Phong( Color(.3,0,0), Color(1,1,1), 25, 0);
+  //  Material* silver = new MetalMaterial( Color(0.8, 0.8, 0.8) );
+  //Material* green = new CoupledMaterial( Color(0.1, 0.3, 0.2) );
+  
+  
    Material* bookcoverimg = new ImageMaterial(1,
 					      "/opt/SCIRun/data/Geometry//textures/i3d97.smaller.gamma",
                                               ImageMaterial::Clamp,
@@ -121,7 +115,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
    book->add(bookside2);
    book->add(bookside3);
 
-      Material* glass= new DielectricMaterial(1.5, 1.0, 0.6, 400.0, Color(.80, .93 , .87), Color(1,1,1), true, 0.001);
+   //      Material* glass= new DielectricMaterial(1.5, 1.0, 0.6, 400.0, Color(.80, .93 , .87), Color(1,1,1), true, 0.001);
       Material *silver2 = new MetalMaterial(Color(0.25,0.25,0.25), 12);
 
 //      Object* box=new Box(glass, Point(-500,-100,-10), Point(300,300,0) );
