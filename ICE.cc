@@ -1379,7 +1379,7 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
         printData_FC( patch,1, description, "vvel_FC", vvel_FC);
         printData_FC( patch,1, description, "wvel_FC", wvel_FC);
       }
-    }
+    } // matls loop
   }  // patch loop
 }
 

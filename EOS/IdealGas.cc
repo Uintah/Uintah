@@ -71,6 +71,11 @@ void IdealGas::computePressEOS(double rhoM, double gamma,
   dp_de   = (gamma - 1.0)*rhoM;
 }
 
+//____________________________________________________________________
+double IdealGas::getCompressibility(double press)
+{
+  return  1./press;
+}
 
 //______________________________________________________________________
 // Update temperature boundary conditions due to hydrostatic pressure gradient
