@@ -106,7 +106,9 @@ public:
   static  const string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
 
-  bool test_nodes_range(Cell::index_type ci, int sn, int en);
+  bool test_nodes_range(Cell::index_type ci,
+			unsigned int sn,
+			unsigned int en);
 
   virtual void compute_nodes();
 

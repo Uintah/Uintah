@@ -311,12 +311,12 @@ QuadSurfMesh::get_neighbor(Face::index_type &neighbor,
 {
   ASSERTMSG(synchronized_ & EDGE_NEIGHBORS_E,
 	    "Must call synchronize EDGE_NEIGHBORS_E on QuadSurfMesh first");
-  int n = edge_neighbors_[edges_[edge]];
-  if (n != -1 && (n / 4) == from)
+  unsigned int n = edge_neighbors_[edges_[edge]];
+  if (n != MESH_NO_NEIGHBOR && (n / 4) == from)
   {
     n = edge_neighbors_[n];
   }
-  if (n != -1)
+  if (n != MESH_NO_NEIGHBOR)
   {
     neighbor = n / 4;
     return true;
@@ -892,7 +892,7 @@ QuadSurfMesh::compute_edge_neighbors()
   edge_neighbors_.resize(faces_.size());
   for (unsigned int j = 0; j < edge_neighbors_.size(); j++)
   {
-    edge_neighbors_[j] = -1;
+    edge_neighbors_[j] = MESH_NO_NEIGHBOR;
   }
 
   int i;

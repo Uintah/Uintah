@@ -102,7 +102,7 @@ public:
 class SCICORESHARE TetVolMesh : public Mesh
 {
 public:
-  typedef int under_type;
+  typedef unsigned int under_type;
 
   //! Index and Iterator types required for Mesh Concept.
   struct Node {
@@ -439,14 +439,20 @@ public:
 			    Vector& g2, Vector& g3);
 
   //! function to test if at least one of cell's nodes are in supplied range
-  inline bool test_nodes_range(Cell::index_type ci, int sn, int en){
+  inline bool test_nodes_range(Cell::index_type ci, unsigned int sn,
+			       unsigned int en)
+  {
     if (cells_[ci*4]>=sn && cells_[ci*4]<en
 	|| cells_[ci*4+1]>=sn && cells_[ci*4+1]<en
 	|| cells_[ci*4+2]>=sn && cells_[ci*4+2]<en
 	|| cells_[ci*4+3]>=sn && cells_[ci*4+3]<en)
+    {
       return true;
+    }
     else
+    {
       return false;
+    }
   }
 
   template <class Iter, class Functor>

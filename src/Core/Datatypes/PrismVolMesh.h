@@ -92,7 +92,7 @@ PrismNodeNeighborTable[PRISM_NNODES][3] = { { 1,2,3 },
 class SCICORESHARE PrismVolMesh : public Mesh
 {
 public:
-  typedef int under_type;
+  typedef unsigned int under_type;
 
   //! Index and Iterator types required for Mesh Concept.
   struct Node {
@@ -476,13 +476,17 @@ public:
   { ASSERTFAIL("not implemented") }
 
   //! function to test if at least one of cell's nodes are in supplied range
-  inline bool test_nodes_range(Cell::index_type ci, int sn, int en){
-
-    for( int i=0; i<PRISM_NNODES; i++ ) {
+  inline bool test_nodes_range(Cell::index_type ci,
+			       unsigned int sn,
+			       unsigned int en)
+  {
+    for ( int i=0; i<PRISM_NNODES; i++ )
+    {
       if (sn<=cells_[ci*PRISM_NNODES+i] && cells_[ci*PRISM_NNODES+i]<en )
+      {
 	return true;
+      }
     }
-
     return false;
   }
 

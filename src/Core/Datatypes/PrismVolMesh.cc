@@ -417,8 +417,9 @@ PrismVolMesh::delete_cell_edges(Cell::index_type idx)
   //ASSERT(!is_frozen());
   if (!(synchronized_&EDGES_E) && !(synchronized_&EDGE_NEIGHBORS_E)) return;
   edge_lock_.lock();
-  const int base = idx * PRISM_NEDGES;
-  for ( int i=base; i<base+ PRISM_NEDGES; ++i) {
+  const unsigned int base = idx * PRISM_NEDGES;
+  for ( unsigned int i=base; i<base+ PRISM_NEDGES; ++i)
+  {
     //! If the Shared Edge Set is represented by the particular
     //! cell/edge index that is being recomputed, then
     //! remove it (and insert a non-recomputed edge if any left)
@@ -426,7 +427,8 @@ PrismVolMesh::delete_cell_edges(Cell::index_type idx)
     Edge::iterator shared_edge = edges_.find(i);
     // ASSERT guarantees edges were computed correctly for this cell
     ASSERT(shared_edge != edges_.end());
-    if ((*shared_edge).index_ == i) {
+    if ((*shared_edge).index_ == i)
+    {
       edges_.erase(shared_edge);
       shared_edge_exists = false;
     }
@@ -434,11 +436,14 @@ PrismVolMesh::delete_cell_edges(Cell::index_type idx)
     Edge::HalfEdgeSet::iterator half_edge_to_delete = all_edges_.end();
     pair<Edge::HalfEdgeSet::iterator, Edge::HalfEdgeSet::iterator> range =
       all_edges_.equal_range(i);
-    for (Edge::HalfEdgeSet::iterator e = range.first; e != range.second; ++e) {
-      if ((*e).index_ == i) {
+    for (Edge::HalfEdgeSet::iterator e = range.first; e != range.second; ++e)
+    {
+      if ((*e).index_ == i)
+      {
 	half_edge_to_delete = e;
       }
-      else if (!shared_edge_exists) {
+      else if (!shared_edge_exists)
+      {
 	edges_.insert((*e).index_);
 	shared_edge_exists = true;
       }
@@ -473,15 +478,16 @@ PrismVolMesh::delete_cell_faces(Cell::index_type idx)
   //ASSERT(!is_frozen());
   if (!(synchronized_&FACES_E) && !(synchronized_&FACE_NEIGHBORS_E)) return;
   face_lock_.lock();
-  const int base = idx * PRISM_NFACES;
-  for ( int i=base; i<base+PRISM_NFACES; ++i) {
+  const unsigned int base = idx * PRISM_NFACES;
+  for ( unsigned int i=base; i<base+PRISM_NFACES; ++i) {
     // If the Shared Face Set is represented by the particular
     // cell/face index that is being recomputed, then
     // remove it (and insert a non-recomputed shared face if any exist)
     bool shared_face_exists = true;
     Face::FaceSet::iterator shared_face = faces_.find(i);
     ASSERT(shared_face != faces_.end());
-    if ((*shared_face).index_ == i) {
+    if ((*shared_face).index_ == i)
+    {
       faces_.erase(shared_face);
       shared_face_exists = false;
     }
@@ -490,7 +496,8 @@ PrismVolMesh::delete_cell_faces(Cell::index_type idx)
     pair<Face::HalfFaceSet::iterator, Face::HalfFaceSet::iterator> range =
       all_faces_.equal_range(i);
     for (Face::HalfFaceSet::iterator e = range.first; e != range.second; ++e) {
-      if ((*e).index_ == i) {
+      if ((*e).index_ == i)
+      {
 	half_face_to_delete = e;
       }
       else if (!shared_face_exists) {
@@ -531,10 +538,9 @@ PrismVolMesh::delete_cell_node_neighbors(Cell::index_type idx)
   if (!(synchronized_ & NODE_NEIGHBORS_E)) return;
   node_neighbor_lock_.lock();
 
-  const int base = idx * PRISM_NNODES;
-
-  for ( int i=base; i<base+PRISM_NNODES; ++i) {
-
+  const unsigned int base = idx * PRISM_NNODES;
+  for ( unsigned int i=base; i<base+PRISM_NNODES; ++i)
+  {
     const unsigned int n = cells_[i];
 
     vector<Cell::index_type>::iterator node_cells_end =
@@ -856,7 +862,7 @@ PrismVolMesh::get_neighbor(Face::index_type &neighbor,
   // Cell has no neighbor
   Face::HalfFaceSet::const_iterator second = range.first;
   if (++second == range.second) {
-    neighbor = -1;
+    neighbor = MESH_NO_NEIGHBOR;
     return false;
   }
 
