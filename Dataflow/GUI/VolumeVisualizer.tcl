@@ -54,10 +54,6 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	set $this-render_style 0
 	global $this-interp_mode 
 	set $this-interp_mode 1
-	global $this-contrast
-	set $this-contrast 0.5
-	global $this-contrastfp
-	set $this-contrastfp 0.5
         global $this-shading
         set $this-shading 0
         global $this-ambient
@@ -70,6 +66,12 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
         set $this-shine 30.0
         global $this-light
         set $this-light 0
+
+	# For backwards compatability
+	global $this-contrast
+	global $this-contrastfp
+	global $this-draw_mode
+	global $this-num_slices
     }
     method ui {} {
 	set w .ui[modname]
@@ -173,16 +175,16 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
             -side top -fill x -padx 4
 
 
-# 	frame $w.f3 -relief groove -borderwidth 2
-# 	pack $w.f3 -padx 2 -pady 2 -fill x
-# 	label $w.f3.l -text "Interpolation Mode"
-# 	radiobutton $w.f3.interp -text "Trilinear" -relief flat \
-# 		-variable $this-interp_mode -value 1 \
-# 		-anchor w -command $n
-# 	radiobutton $w.f3.near -text "Nearest" -relief flat \
-# 		-variable $this-interp_mode -value 0 \
-# 		-anchor w -command $n
-# 	pack $w.f3.l $w.f3.interp $w.f3.near -side top -fill x -padx 4
+ 	frame $w.f3 -relief groove -borderwidth 2
+ 	pack $w.f3 -padx 2 -pady 2 -fill x
+ 	label $w.f3.l -text "Interpolation Mode"
+ 	radiobutton $w.f3.interp -text "Trilinear" -relief flat \
+ 		-variable $this-interp_mode -value 1 \
+ 		-anchor w -command $n
+ 	radiobutton $w.f3.near -text "Nearest" -relief flat \
+ 		-variable $this-interp_mode -value 0 \
+ 		-anchor w -command $n
+ 	pack $w.f3.l $w.f3.interp $w.f3.near -side top -fill x -padx 4
 
         #-----------------------------------------------------------
         # Sampling
