@@ -95,7 +95,9 @@ int main(int argc, char **argv) {
   field->store("conductivity_table", conds);
   int cell_counter=0;
   TetVolMesh::Cell::iterator ci;
-  for (ci = tvm->cell_begin(); ci != tvm->cell_end(); ++ci, cell_counter++)
+  TetVolMesh::Cell::iterator cie;
+  tvm->begin(ci); tvm->end(cie);
+  for (; ci != cie; ++ci, cell_counter++)
     field->fdata()[*ci] = mesh->elems[cell_counter]->cond;
 
   // Add any Dirichlet conditions to as a Property of the mesh

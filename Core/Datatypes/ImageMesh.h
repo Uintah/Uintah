@@ -99,6 +99,7 @@ public:
 
   struct EdgeIter : public UnfinishedIter
   {
+    EdgeIter() : UnfinishedIter(0, 0) {}
     EdgeIter(const ImageMesh *m, unsigned i)
       : UnfinishedIter(m, i) {}
 
@@ -118,6 +119,7 @@ public:
 
   struct CellIter : public UnfinishedIter
   {
+    CellIter() : UnfinishedIter(0, 0) {}
     CellIter(const ImageMesh *m, unsigned i)
       : UnfinishedIter(m, i) {}
 
@@ -167,6 +169,7 @@ public:
 
   struct ImageIter : public ImageIndex
   {
+    ImageIter() : ImageIndex(0, 0), mesh_(0) {}
     ImageIter(const ImageMesh *m, unsigned i, unsigned j)
       : ImageIndex(i, j), mesh_(m) {}
 
@@ -188,6 +191,7 @@ public:
 
   struct NodeIter : public ImageIter
   {
+    NodeIter() : ImageIter() {}
     NodeIter(const ImageMesh *m, unsigned i, unsigned j)
       : ImageIter(m, i, j) {}
 
@@ -216,6 +220,7 @@ public:
 
   struct FaceIter : public ImageIter
   {
+    FaceIter() : ImageIter() {}
     FaceIter(const ImageMesh *m, unsigned i, unsigned j)
       : ImageIter(m, i, j) {}
 
@@ -294,26 +299,6 @@ public:
   virtual ImageMesh *clone() { return new ImageMesh(*this); }
   virtual ~ImageMesh() {}
 
-  template <class I> I tbegin(I*) const;
-  template <class I> I tend(I*) const;
-  template <class S> S tsize(S*) const;
-
-  Node::iterator  node_begin() const;
-  Node::iterator  node_end() const;
-  Node::size_type nodes_size() const;
-
-  Edge::iterator  edge_begin() const;
-  Edge::iterator  edge_end() const;
-  Edge::size_type edges_size() const;
-
-  Face::iterator  face_begin() const;
-  Face::iterator  face_end() const;
-  Face::size_type faces_size() const;
-
-  Cell::iterator  cell_begin() const;
-  Cell::iterator  cell_end() const;
-  Cell::size_type cells_size() const;
-
   //! get the mesh statistics
   unsigned get_nx() const { return nx_; }
   unsigned get_ny() const { return ny_; }
@@ -326,6 +311,21 @@ public:
   void set_min_y(unsigned y) {min_y_ = y; }
   void set_nx(unsigned x) { nx_ = x; }
   void set_ny(unsigned y) { ny_ = y; }
+
+  void begin(Node::iterator &) const;
+  void begin(Edge::iterator &) const;
+  void begin(Face::iterator &) const;
+  void begin(Cell::iterator &) const;
+
+  void end(Node::iterator &) const;
+  void end(Edge::iterator &) const;
+  void end(Face::iterator &) const;
+  void end(Cell::iterator &) const;
+
+  void size(Node::size_type &) const;
+  void size(Edge::size_type &) const;
+  void size(Face::size_type &) const;
+  void size(Cell::size_type &) const;
 
   //! get the child elements of the given index
   void get_nodes(Node::array_type &, Edge::index_type) const {}
@@ -398,21 +398,6 @@ private:
 };
 
 typedef LockingHandle<ImageMesh> ImageMeshHandle;
-
-template <> ImageMesh::Node::size_type ImageMesh::tsize(ImageMesh::Node::size_type *) const;
-template <> ImageMesh::Edge::size_type ImageMesh::tsize(ImageMesh::Edge::size_type *) const;
-template <> ImageMesh::Face::size_type ImageMesh::tsize(ImageMesh::Face::size_type *) const;
-template <> ImageMesh::Cell::size_type ImageMesh::tsize(ImageMesh::Cell::size_type *) const;
-				
-template <> ImageMesh::Node::iterator ImageMesh::tbegin(ImageMesh::Node::iterator *) const;
-template <> ImageMesh::Edge::iterator ImageMesh::tbegin(ImageMesh::Edge::iterator *) const;
-template <> ImageMesh::Face::iterator ImageMesh::tbegin(ImageMesh::Face::iterator *) const;
-template <> ImageMesh::Cell::iterator ImageMesh::tbegin(ImageMesh::Cell::iterator *) const;
-				
-template <> ImageMesh::Node::iterator ImageMesh::tend(ImageMesh::Node::iterator *) const;
-template <> ImageMesh::Edge::iterator ImageMesh::tend(ImageMesh::Edge::iterator *) const;
-template <> ImageMesh::Face::iterator ImageMesh::tend(ImageMesh::Face::iterator *) const;
-template <> ImageMesh::Cell::iterator ImageMesh::tend(ImageMesh::Cell::iterator *) const;
 
 const TypeDescription* get_type_description(ImageMesh *);
 const TypeDescription* get_type_description(ImageMesh::Node *);

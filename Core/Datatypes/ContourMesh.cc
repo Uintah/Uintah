@@ -47,11 +47,16 @@ BBox
 ContourMesh::get_bounding_box() const
 {
   BBox result;
+  
+  Node::iterator i, ie;
+  begin(i);
+  end(ie);
 
-  for (Node::iterator i = node_begin();
-       i!=node_end();
-       ++i)
+  while (i != ie)
+  {
     result.extend(nodes_[*i]);
+    ++i;
+  }
 
   return result;
 }
@@ -73,17 +78,24 @@ ContourMesh::transform(Transform &t)
 bool
 ContourMesh::locate(Node::index_type &idx, const Point &p) const
 {
-  Node::iterator ni = node_begin();
-  idx = *node_begin();
+  Node::iterator ni, nie;
+  begin(ni);
+  end(nie);
 
-  if (ni==node_end())
+  idx = *ni;
+
+  if (ni == nie)
+  {
     return false;
+  }
 
   double closest = (p-nodes_[*ni]).length2();
 
   ++ni;
-  for (; ni != node_end(); ++ni) {
-    if ( (p-nodes_[*ni]).length2() < closest ) {
+  for (; ni != nie; ++ni)
+  {
+    if ( (p-nodes_[*ni]).length2() < closest )
+    {
       closest = (p-nodes_[*ni]).length2();
       idx = *ni;
     }
@@ -96,15 +108,21 @@ bool
 ContourMesh::locate(Edge::index_type &idx, const Point &p) const
 {
   Edge::iterator ei;
+  Edge::iterator eie;
   double cosa, closest=DBL_MAX;
   Node::array_type nra;
   double dist1, dist2, dist3, dist4;
   Point n1,n2,q;
 
-  if (ei==edge_end())
-    return false;
+  begin(ei);
+  end(eie);
 
-  for (ei = edge_begin(); ei != edge_end(); ++ei) {
+  if (ei==eie)
+  {
+    return false;
+  }
+  
+  for (; ei != eie; ++ei) {
     get_nodes(nra,*ei);
 
     n1 = nodes_[nra[0]];
@@ -197,118 +215,78 @@ ContourMesh::type_name(int n)
   return name;
 }
 
-template<>
-ContourMesh::Node::iterator
-ContourMesh::tbegin(ContourMesh::Node::iterator *) const
+void
+ContourMesh::begin(ContourMesh::Node::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
-template<>
-ContourMesh::Node::iterator
-ContourMesh::tend(ContourMesh::Node::iterator *) const
+void
+ContourMesh::end(ContourMesh::Node::iterator &itr) const
 {
-  return (unsigned)nodes_.size();
+  itr = nodes_.size();
 }
 
-template<>
-ContourMesh::Edge::iterator
-ContourMesh::tbegin(ContourMesh::Edge::iterator *) const
+void
+ContourMesh::begin(ContourMesh::Edge::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
 
-template<>
-ContourMesh::Edge::iterator
-ContourMesh::tend(ContourMesh::Edge::iterator *) const
+void
+ContourMesh::end(ContourMesh::Edge::iterator &itr) const
 {
-  return (unsigned)edges_.size();
+  itr = (unsigned)edges_.size();
 }
 
-template<>
-ContourMesh::Face::iterator
-ContourMesh::tbegin(ContourMesh::Face::iterator *) const
+void
+ContourMesh::begin(ContourMesh::Face::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
-template<>
-ContourMesh::Face::iterator
-ContourMesh::tend(ContourMesh::Face::iterator *) const
+void
+ContourMesh::end(ContourMesh::Face::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
-template<>
-ContourMesh::Cell::iterator
-ContourMesh::tbegin(ContourMesh::Cell::iterator *) const
+void
+ContourMesh::begin(ContourMesh::Cell::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
-template<>
-ContourMesh::Cell::iterator
-ContourMesh::tend(ContourMesh::Cell::iterator *) const
+void
+ContourMesh::end(ContourMesh::Cell::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
-template<>
-ContourMesh::Node::size_type
-ContourMesh::tsize(ContourMesh::Node::size_type *) const
+void
+ContourMesh::size(ContourMesh::Node::size_type &s) const
 {
-  return (unsigned)nodes_.size();
+  s = (unsigned)nodes_.size();
 }
 
-template<>
-ContourMesh::Edge::size_type
-ContourMesh::tsize(ContourMesh::Edge::size_type *) const
+void
+ContourMesh::size(ContourMesh::Edge::size_type &s) const
 {
-  return (unsigned)edges_.size();
+  s = (unsigned)edges_.size();
 }
 
-template<>
-ContourMesh::Face::size_type
-ContourMesh::tsize(ContourMesh::Face::size_type *) const
+void
+ContourMesh::size(ContourMesh::Face::size_type &s) const
 {
-  return 0;
+  s = 0;
 }
 
-template<>
-ContourMesh::Cell::size_type
-ContourMesh::tsize(ContourMesh::Cell::size_type *) const
+void
+ContourMesh::size(ContourMesh::Cell::size_type &s) const
 {
-  return 0;
+  s = 0;
 }
-
-
-ContourMesh::Node::iterator ContourMesh::node_begin() const
-{ return tbegin((Node::iterator *)0); }
-ContourMesh::Edge::iterator ContourMesh::edge_begin() const
-{ return tbegin((Edge::iterator *)0); }
-ContourMesh::Face::iterator ContourMesh::face_begin() const
-{ return tbegin((Face::iterator *)0); }
-ContourMesh::Cell::iterator ContourMesh::cell_begin() const
-{ return tbegin((Cell::iterator *)0); }
-
-ContourMesh::Node::iterator ContourMesh::node_end() const
-{ return tend((Node::iterator *)0); }
-ContourMesh::Edge::iterator ContourMesh::edge_end() const
-{ return tend((Edge::iterator *)0); }
-ContourMesh::Face::iterator ContourMesh::face_end() const
-{ return tend((Face::iterator *)0); }
-ContourMesh::Cell::iterator ContourMesh::cell_end() const
-{ return tend((Cell::iterator *)0); }
-
-ContourMesh::Node::size_type ContourMesh::nodes_size() const
-{ return tsize((Node::size_type *)0); }
-ContourMesh::Edge::size_type ContourMesh::edges_size() const
-{ return tsize((Edge::size_type *)0); }
-ContourMesh::Face::size_type ContourMesh::faces_size() const
-{ return tsize((Face::size_type *)0); }
-ContourMesh::Cell::size_type ContourMesh::cells_size() const
-{ return tsize((Cell::size_type *)0); }
 
 
 const TypeDescription*

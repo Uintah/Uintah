@@ -100,8 +100,12 @@ void TetVolCellToNode::execute()
   TetVolMesh *mesh = 
     dynamic_cast<TetVolMesh*>(vf_->get_typed_mesh().get_rep());
 
-  int cells_size = mesh->cells_size();
-  int nodes_size = mesh->nodes_size();
+  TetVolMesh::Node::size_type nsize;
+  TetVolMesh::Cell::size_type csize;
+  mesh->size(nsize);
+  mesh->size(csize);
+  const unsigned int nodes_size = csize;
+  const unsigned int cells_size = nsize;
 
   vector_sums.resize(nodes_size,0);
   mag_sums.resize(nodes_size,0);
@@ -109,15 +113,15 @@ void TetVolCellToNode::execute()
 
   TCL::execute(id + " set_state Executing 0");
 
-  TetVolMesh::Cell::iterator ci;
+  TetVolMesh::Cell::iterator ci, cie;
   TetVolMesh::Node::array_type::iterator ni;
   TetVolMesh::Node::array_type na;
   int           index;
   float         count = 0;
 
-  for (ci = mesh->cell_begin();
-       ci != mesh->cell_end();
-       ++ci,++count) {
+  mesh->begin(ci); mesh->end(cie);
+  for (; ci != cie; ++ci,++count)
+  {
     mesh->get_nodes(na,*ci);
     for (ni = na.begin();
 	 ni != na.end();
@@ -139,7 +143,7 @@ void TetVolCellToNode::execute()
   TetVol<Vector>::fdata_type &fdata = newfield->fdata();
 
   Vector curvec;
-  for (int loop=0;loop<nodes_size;++loop) {
+  for (unsigned int loop=0;loop<nodes_size;++loop) {
     curvec = vector_sums[loop];
     double h = 1./(curvec.length2()/(mag_sums[loop]/ref_counts[loop]));
     fdata[loop] = curvec * h;

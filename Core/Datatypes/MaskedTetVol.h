@@ -74,15 +74,33 @@ public:
 
   void resize_fdata() {
     if (data_at() == NODE)
-      mask_.resize(get_typed_mesh()->nodes_size());
+    {
+      typename mesh_type::Node::size_type ssize;
+      get_typed_mesh()->size(ssize);
+      mask_.resize(ssize);
+    }
     else if (data_at() == EDGE)
-      ASSERTFAIL("tetvol doesn't support data at edges (yet)")
+    {
+      typename mesh_type::Edge::size_type ssize;
+      get_typed_mesh()->size(ssize);
+      mask_.resize(ssize);
+    }
     else if (data_at() == FACE)
-      ASSERTFAIL("tetvol doesn't support data at faces (yet)")
+    {
+      typename mesh_type::Face::size_type ssize;
+      get_typed_mesh()->size(ssize);
+      mask_.resize(ssize);
+    }
     else if (data_at() == CELL)
-      mask_.resize(get_typed_mesh()->cells_size());
+    {
+      typename mesh_type::Cell::size_type ssize;
+      get_typed_mesh()->size(ssize);
+      mask_.resize(ssize);
+    }
     else
-      ASSERTFAIL("data at unrecognized location")
+    {
+      ASSERTFAIL("data at unrecognized location");
+    }
     TetVol<T>::resize_fdata();
   }
 

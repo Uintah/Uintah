@@ -106,9 +106,10 @@ int main(int argc, char **argv) {
   // get the storage for the data, and copy base's data into it
   FData3d<Vector> &fdata = lf->fdata();
   fdata.newsize(base->nx,base->ny,base->nz);
-  LatVolMesh::NodeIter iter = mesh->node_begin();
+  LatVolMesh::Node::iterator iter; mesh->begin(iter);
+  LatVolMesh::Node::iterator iter_end; mesh->end(iter_end);
   int i=0,j=0,k=0;
-  while (iter != mesh->node_end()) {
+  while (iter != iter_end) {
     fdata[*iter] = base->grid(i,j,k);
     ++iter;
     ++i;

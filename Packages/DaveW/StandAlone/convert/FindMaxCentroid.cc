@@ -52,11 +52,12 @@ main(int argc, char **argv) {
     return 0;
   }
   TetVolMeshHandle tvm = tv->get_typed_mesh();
-  TetVolMesh::Cell::iterator ci = tvm->cell_begin();
+  TetVolMesh::Cell::iterator ci; tvm->begin(ci);
+  TetVolMesh::Cell::iterator cie; tvm->end(cie);
   double maxVal = tv->fdata()[*ci].length();
   TetVolMesh::Cell::index_type maxIdx = *ci;
   ++ci;
-  for (; ci != tvm->cell_end(); ++ci) {
+  for (; ci != cie; ++ci) {
     double newVal = tv->fdata()[*ci].length();
     if (newVal > maxVal) {
       maxVal = newVal;

@@ -61,9 +61,9 @@ DirectInterpAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
   Fld *fld = fld2->clone();
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
 
-  typedef typename Loc::iterator Itr;
-  Itr itr = mesh->tbegin((Itr *)0);
-  Itr itr_end = mesh->tend((Itr *)0);
+  typename Loc::iterator itr, itr_end;
+  mesh->begin(itr);
+  mesh->end(itr_end);
   while (itr != itr_end)
   {
     Point p;

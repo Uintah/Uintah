@@ -199,10 +199,15 @@ void SetupBEMatrix::execute(){
       return;
     }
     
-    vector<double>& pinn = pIn->fdata(); 
-    if (pinn.size()==(unsigned int)pIn->get_typed_mesh()->nodes_size()){
+    vector<double>& pinn = pIn->fdata();
+    TriSurfMesh::Node::size_type nsizeIn;
+    pIn->get_typed_mesh()->size(nsizeIn);
+    if (pinn.size()==(unsigned int)nsizeIn)
+    {
       ColumnMatrix phiInn(pinn.size());
-      phiOut_.resize(pOut->get_typed_mesh()->nodes_size());
+      TriSurfMesh::Node::size_type nsizeOut;
+      pOut->get_typed_mesh()->size(nsizeOut);
+      phiOut_.resize(nsizeOut);
       
       for (unsigned int i=0; i<pinn.size(); ++i){
 	phiInn[i] = pinn[i];

@@ -349,7 +349,8 @@ void BuildBEMatrix::makePbb(){
  
   TriSurfMeshHandle hsurf = hOuterSurf_->clone();
  
-  int nnodes = hsurf->nodes_size();
+  TriSurfMesh::Node::size_type nsize; hsurf->size(nsize);
+  unsigned int nnodes = nsize;
   DenseMatrix* tmp = new DenseMatrix(nnodes, nnodes);
   hPbb_ = tmp;
   DenseMatrix& Pbb = *tmp;
@@ -363,18 +364,21 @@ void BuildBEMatrix::makePbb(){
   TriSurfMesh::Node::array_type nodes;
   DenseMatrix coef(1, 3);
   DenseMatrix cVector(nsubs_, 3);
-  int i;
 
-  TriSurfMesh::Node::iterator  ni;
-  TriSurfMesh::Face::iterator  fi;
+  TriSurfMesh::Node::iterator ni, nie;
+  TriSurfMesh::Face::iterator fi, fie;
 
   double tt = 0;
 
-  for (ni=hsurf->node_begin(); ni!=hsurf->node_end(); ++ni){ //! for every node
+  unsigned int i;
+
+  hsurf->begin(ni); hsurf->end(nie);
+  for (; ni != nie; ++ni){ //! for every node
     TriSurfMesh::Node::index_type ppi = *ni;
     Point pp = hsurf->point(ppi);
 
-    for (fi=hsurf->face_begin(); fi!=hsurf->face_end(); ++fi){ //! find contributions from every triangle
+    hsurf->begin(fi); hsurf->end(fie);
+    for (; fi != fie; ++fi) { //! find contributions from every triangle
 
       hsurf->get_nodes(nodes, *fi);     
       if (ppi!=nodes[0] && ppi!=nodes[1] && ppi!=nodes[2]){
@@ -406,7 +410,8 @@ void BuildBEMatrix::makePhh(){
   
   TriSurfMeshHandle hsurf = hInnerSurf_->clone();
 
-  int nnodes = hsurf->nodes_size();
+  TriSurfMesh::Node::size_type nsize; hsurf->size(nsize);
+  unsigned int nnodes = nsize;
   DenseMatrix* tmp = new DenseMatrix(nnodes, nnodes);
   hPhh_ = tmp;
   DenseMatrix& Phh = *tmp;
@@ -419,16 +424,19 @@ void BuildBEMatrix::makePhh(){
   TriSurfMesh::Node::array_type nodes;
   DenseMatrix coef(1, 3);
   DenseMatrix cVector(nsubs_, 3);
-  int i;
 
-  TriSurfMesh::Node::iterator  ni;
-  TriSurfMesh::Face::iterator  fi;
+  TriSurfMesh::Node::iterator  ni, nie;
+  TriSurfMesh::Face::iterator  fi, fie;
 
-  for (ni=hsurf->node_begin(); ni!=hsurf->node_end(); ++ni){ //! for every node
+  unsigned int i;
+
+  hsurf->begin(ni); hsurf->end(nie);
+  for (; ni != nie; ++ni){ //! for every node
     TriSurfMesh::Node::index_type ppi = *ni;
     Point pp = hsurf->point(ppi);
 
-    for (fi=hsurf->face_begin(); fi!=hsurf->face_end(); ++fi){ //! find contributions from every triangle
+    hsurf->begin(fi); hsurf->end(fie);
+    for (; fi != fie; ++fi){ //! find contributions from every triangle
 
       hsurf->get_nodes(nodes, *fi);     
       if (ppi!=nodes[0] && ppi!=nodes[1] && ppi!=nodes[2]){
@@ -447,7 +455,8 @@ void BuildBEMatrix::makePhh(){
   }
   
   //! accounting for autosolid angle
-  for (i=0; i<nnodes; ++i){
+  for (i=0; i<nnodes; ++i)
+  {
     Phh[i][i] = -1-Phh.sumOfRow(i);
   }
 }
@@ -457,7 +466,9 @@ void BuildBEMatrix::makePbh(){
   TriSurfMeshHandle hsurf1 = hOuterSurf_->clone();
   TriSurfMeshHandle hsurf2 = hInnerSurf_->clone();
 
-  DenseMatrix* tmp = new DenseMatrix(hsurf1->nodes_size(), hsurf2->nodes_size());
+  TriSurfMesh::Node::size_type nsize1; hsurf1->size(nsize1);
+  TriSurfMesh::Node::size_type nsize2; hsurf2->size(nsize2);
+  DenseMatrix* tmp = new DenseMatrix(nsize1, nsize2);
   hPbh_ = tmp;
   DenseMatrix& Pbh = *tmp;
   Pbh.zero();
@@ -471,14 +482,16 @@ void BuildBEMatrix::makePbh(){
   DenseMatrix cVector(nsubs_, 3);
   int i;
 
-  TriSurfMesh::Node::iterator  ni;
-  TriSurfMesh::Face::iterator  fi;
+  TriSurfMesh::Node::iterator  ni, nie;
+  TriSurfMesh::Face::iterator  fi, fie;
   
-  for (ni=hsurf1->node_begin(); ni!=hsurf1->node_end(); ++ni){ //! for every node
+  hsurf1->begin(ni); hsurf1->end(nie);
+  for (; ni != nie; ++ni){ //! for every node
     TriSurfMesh::Node::index_type ppi = *ni;
     Point pp = hsurf1->point(ppi);
 
-    for (fi=hsurf2->face_begin(); fi!=hsurf2->face_end(); ++fi){ //! find contributions from every triangle
+    hsurf2->begin(fi); hsurf2->end(fie);
+    for (; fi != fie; ++fi){ //! find contributions from every triangle
       
       hsurf2->get_nodes(nodes, *fi);
       Vector v1 = hsurf2->point(nodes[0]) - pp;
@@ -500,7 +513,9 @@ void BuildBEMatrix::makePhb(){
   TriSurfMeshHandle hsurf1 = hInnerSurf_->clone();
   TriSurfMeshHandle hsurf2 = hOuterSurf_->clone();
 
-  DenseMatrix* tmp = new DenseMatrix(hsurf1->nodes_size(), hsurf2->nodes_size());
+  TriSurfMesh::Node::size_type nsize1; hsurf1->size(nsize1);
+  TriSurfMesh::Node::size_type nsize2; hsurf2->size(nsize2);
+  DenseMatrix* tmp = new DenseMatrix(nsize1, nsize2);
   hPhb_ = tmp;
   DenseMatrix& Phb = *tmp;
   Phb.zero();
@@ -514,14 +529,16 @@ void BuildBEMatrix::makePhb(){
   DenseMatrix cVector(nsubs_, 3);
   int i;
 
-  TriSurfMesh::Node::iterator  ni;
-  TriSurfMesh::Face::iterator  fi;
+  TriSurfMesh::Node::iterator  ni, nie;
+  TriSurfMesh::Face::iterator  fi, fie;
   
-  for (ni=hsurf1->node_begin(); ni!=hsurf1->node_end(); ++ni){ //! for every node
+  hsurf1->begin(ni); hsurf1->end(nie);
+  for (; ni != nie; ++ni){ //! for every node
     TriSurfMesh::Node::index_type ppi = *ni;
     Point pp = hsurf1->point(ppi);
 
-    for (fi=hsurf2->face_begin(); fi!=hsurf2->face_end(); ++fi){ //! find contributions from every triangle
+    hsurf2->begin(fi); hsurf2->end(fie);
+    for (; fi != fie; ++fi){ //! find contributions from every triangle
       
       hsurf2->get_nodes(nodes, *fi);
       Vector v1 = hsurf2->point(nodes[0]) - pp;
@@ -542,7 +559,8 @@ void BuildBEMatrix::makeGhh(){
   
   TriSurfMeshHandle hsurf = hInnerSurf_->clone();
 
-  int nnodes = hsurf->nodes_size();
+  TriSurfMesh::Node::size_type nsize; hsurf->size(nsize);
+  unsigned int nnodes = nsize;
   DenseMatrix* tmp = new DenseMatrix(nnodes, nnodes);
   hGhh_ = tmp;
   DenseMatrix& Ghh = *tmp;
@@ -555,16 +573,19 @@ void BuildBEMatrix::makeGhh(){
   TriSurfMesh::Node::array_type nodes;
   DenseMatrix coef(1, 3);
   DenseMatrix cVector(nsubs_, 3);
-  int i;
+  unsigned int i;
 
-  TriSurfMesh::Node::iterator  ni;
-  TriSurfMesh::Face::iterator  fi;
+  TriSurfMesh::Node::iterator ni, nie;
+  TriSurfMesh::Face::iterator fi, fie;
 
-  for (ni=hsurf->node_begin(); ni!=hsurf->node_end(); ++ni){ //! for every node
+  hsurf->begin(ni);
+  hsurf->end(nie);
+  for (; ni != nie; ++ni){ //! for every node
     TriSurfMesh::Node::index_type ppi = *ni;
     Point pp = hsurf->point(ppi);
 
-    for (fi=hsurf->face_begin(); fi!=hsurf->face_end(); ++fi){ //! find contributions from every triangle
+    hsurf->begin(fi); hsurf->end(fie);
+    for (; fi != fie; ++fi){ //! find contributions from every triangle
 
       hsurf->get_nodes(nodes, *fi);     
       
@@ -587,7 +608,9 @@ void BuildBEMatrix::makeGbh(){
   TriSurfMeshHandle hsurf1 = hOuterSurf_->clone();
   TriSurfMeshHandle hsurf2 = hInnerSurf_->clone();
 
-  DenseMatrix* tmp = new DenseMatrix(hsurf1->nodes_size(), hsurf2->nodes_size());
+  TriSurfMesh::Node::size_type nsize1; hsurf1->size(nsize1);
+  TriSurfMesh::Node::size_type nsize2; hsurf2->size(nsize2);
+  DenseMatrix* tmp = new DenseMatrix(nsize1, nsize2);
   hGbh_ = tmp;
   DenseMatrix& Gbh = *tmp;
   Gbh.zero();
@@ -601,14 +624,16 @@ void BuildBEMatrix::makeGbh(){
   DenseMatrix cVector(nsubs_, 3);
   int i;
 
-  TriSurfMesh::Node::iterator  ni;
-  TriSurfMesh::Face::iterator  fi;
+  TriSurfMesh::Node::iterator  ni, nie;
+  TriSurfMesh::Face::iterator  fi, fie;
   
-  for (ni=hsurf1->node_begin(); ni!=hsurf1->node_end(); ++ni){ //! for every node
+  hsurf1->begin(ni); hsurf1->end(nie);
+  for (; ni != nie; ++ni){ //! for every node
     TriSurfMesh::Node::index_type ppi = *ni;
     Point pp = hsurf1->point(ppi);
 
-    for (fi=hsurf2->face_begin(); fi!=hsurf2->face_end(); ++fi){ //! find contributions from every triangle
+    hsurf2->begin(fi); hsurf2->begin(fie);
+    for (; fi != fie; ++fi){ //! find contributions from every triangle
       
       hsurf2->get_nodes(nodes, *fi);
       Vector v1 = hsurf2->point(nodes[0]) - pp;
@@ -628,10 +653,11 @@ void BuildBEMatrix::makeGbh(){
 //! precalculate triangles area
 void BuildBEMatrix::calc_tri_area(TriSurfMeshHandle& hsurf, vector<Vector>& areaV){
  
-  TriSurfMesh::Face::iterator  fi;
+  TriSurfMesh::Face::iterator  fi, fie;
   TriSurfMesh::Node::array_type     nodes;
-
-  for (fi=hsurf->face_begin(); fi!=hsurf->face_end(); ++fi){
+  
+  hsurf->begin(fi); hsurf->end(fie);
+  for (; fi != fie; ++fi) {
     hsurf->get_nodes(nodes, *fi);
     Vector v1 = hsurf->point(nodes[1]) - hsurf->point(nodes[0]);
     Vector v2 = hsurf->point(nodes[2]) - hsurf->point(nodes[1]);

@@ -61,10 +61,11 @@ void GenField::execute()
   mesh->set_max(Point(31.4,30.0,10.0));
   fdata.resize(size);
 
-  LatVolMesh::Node::iterator ni = mesh->node_begin();
+  LatVolMesh::Node::iterator ni; mesh->begin(ni);
+  LatVolMesh::Node::iterator nie; = mesh->end(nie);
   LatVolMesh::Node::index_type i;
   Point p;
-  for (;ni!=mesh->node_end();++ni) {
+  for (;ni!= nie; ++ni) {
     i = *ni;
     mesh->get_point(p,i);
     fdata[i] = Vector(0.05,0.05*sin(.5*p.x()),0);

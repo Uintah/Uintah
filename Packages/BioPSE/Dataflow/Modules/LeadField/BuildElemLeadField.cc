@@ -166,9 +166,12 @@ void BuildElemLeadField::execute() {
   last_mesh_generation_ = mesh_in->generation;
   last_interp_generation_ = interp_in->generation;
 
-  int nelecs=interp_mesh->nodes_size();
-  int nnodes=mesh->nodes_size();
-  int nelems=mesh->cells_size();
+  PointCloudMesh::Node::size_type insize;  interp_mesh->size(insize);
+  TetVolMesh::Node::size_type nsize;  mesh->size(nsize);
+  TetVolMesh::Cell::size_type csize;  mesh->size(csize);
+  int nelecs=insize;
+  int nnodes=nsize;
+  int nelems=csize;
   int counter=0;
   DenseMatrix *leadfield_mat=new DenseMatrix(nelecs, nelems*3);
   leadfield_mat->zero();

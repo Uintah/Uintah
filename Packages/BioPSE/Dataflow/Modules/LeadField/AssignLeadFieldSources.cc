@@ -111,6 +111,8 @@ AssignLeadFieldSources::execute()
   }
   TetVolMeshHandle tvmH(tvm);
 
+  TetVolMesh::Cell::size_type csize;  tvm->size(csize);
+
   // Get input matrix.
   MatrixHandle imatrix;
   if (!(imp->get(imatrix)) || !(imatrix.get_rep())) {
@@ -122,7 +124,7 @@ AssignLeadFieldSources::execute()
     remark("Matrix was supposed to be a ColumnMatrix.");
     return;
   }
-  if (cm->nrows() != tvm->cells_size()*3) {
+  if (cm->nrows() != csize * 3) {
     remark("ColumnMatrix should be 3x as big as the number of mesh cells.");
     return;
   }
@@ -132,12 +134,14 @@ AssignLeadFieldSources::execute()
   TetVol<Vector> *ofield = scinew TetVol<Vector>(tvmH, Field::CELL);
   TetVol<double> *ofield2 = scinew TetVol<double>(tvmH, Field::NODE);
 
-  Array1<int> node_refs(tvm->nodes_size());
-  Array1<double> node_sums(tvm->nodes_size());
+  TetVolMesh::Node::size_type nsize;  tvm->size(nsize);
+
+  Array1<int> node_refs(nsize);
+  Array1<double> node_sums(nsize);
   node_refs.initialize(0);
   node_sums.initialize(0);
 
-  Array1<double> lengths(tvm->cells_size());
+  Array1<double> lengths(csize);
   double maxL=0;
   int i;
   for (i=0; i<cm->nrows()/3; i++) {
@@ -168,7 +172,7 @@ AssignLeadFieldSources::execute()
   }
   cerr << "End of focusing spikes.\n";
 
-  for (i=0; i<tvm->nodes_size(); i++) 
+  for (i=0; i<nsize; i++) 
     ofield2->fdata()[i]=node_sums[i]/node_refs[i]*10000;
 
   ofp->send(FieldHandle(ofield));

@@ -85,8 +85,6 @@ StreamLinesAlgoT<VMESH, SMESH, SLOC>::execute(MeshHandle vmesh_h,
 					      int maxsteps,
 					      ContourMeshHandle cmesh)
 {
-  typedef typename SLOC::iterator  sloc_iterator;
-
   VMESH *vmesh = dynamic_cast<VMESH *>(vmesh_h.get_rep());
   SMESH *smesh = dynamic_cast<SMESH *>(smesh_h.get_rep());
 
@@ -97,8 +95,9 @@ StreamLinesAlgoT<VMESH, SMESH, SLOC>::execute(MeshHandle vmesh_h,
   ContourMesh::Node::index_type n1, n2;
 
   // Try to find the streamline for each seed point.
-  sloc_iterator seed_iter = smesh->tbegin((sloc_iterator *)0);
-  sloc_iterator seed_iter_end = smesh->tend((sloc_iterator *)0);
+  typename SLOC::iterator seed_iter, seed_iter_end;
+  smesh->begin(seed_iter);
+  smesh->end(seed_iter_end);
   while (seed_iter != seed_iter_end)
   {
     smesh->get_point(seed, *seed_iter);

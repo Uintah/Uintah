@@ -58,10 +58,9 @@ ApplyInterpAlgoT<FSRC, FITP, LITP, FOUT>::execute(FieldHandle fsrc_h,
   FOUT *fout = scinew FOUT(fitp->get_typed_mesh(), fitp->data_at());
   FieldHandle fhout(fout);
 
-  typename LITP::iterator iter =
-    fout->get_typed_mesh()->tbegin((typename LITP::iterator *)0);
-  typename LITP::iterator eiter =
-    fout->get_typed_mesh()->tend((typename LITP::iterator *)0);
+  typename LITP::iterator iter, eiter;
+  fout->get_typed_mesh()->begin(iter);
+  fout->get_typed_mesh()->end(eiter);
   while (iter != eiter)
   {
     typename FITP::value_type v;

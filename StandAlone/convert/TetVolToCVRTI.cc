@@ -68,9 +68,12 @@ main(int argc, char **argv) {
   char fname[200];
   sprintf(fname, "%s.pts", argv[2]);
   FILE *fpts = fopen(fname, "wt");
-  TetVolMesh::Node::iterator niter = tvm->node_begin();
-  cerr << "Writing "<<tvm->nodes_size()<<" points to "<<fname<<"\n";
-  while(niter != tvm->node_end()) {
+  TetVolMesh::Node::iterator niter; tvm->begin(niter);
+  TetVolMesh::Node::iterator niter_end; tvm->end(niter_end);
+  TetVolMesh::Node::size_type nsize; tvm->size(nsize);
+  cerr << "Writing "<<((unsigned int)nsize)<<" points to "<<fname<<"\n";
+  while(niter != niter_end)
+  {
     Point p;
     tvm->get_center(p, *niter);
     fprintf(fpts, "%lf %lf %lf\n", p.x(), p.y(), p.z());
@@ -80,11 +83,14 @@ main(int argc, char **argv) {
 
   sprintf(fname, "%s.tet", argv[2]);
   FILE *ftet = fopen(fname, "wt");
-  cerr << "Writing "<<tvm->faces_size()<<" tets to "<<fname<<"\n";
-  TetVolMesh::Cell::iterator citer = tvm->cell_begin();
+  TetVolMesh::Face::size_type fsize; tvm->size(fsize);
+  cerr << "Writing "<<((unsigned int)fsize)<<" tets to "<<fname<<"\n";
+  TetVolMesh::Cell::iterator citer; tvm->begin(citer);
+  TetVolMesh::Cell::iterator citer_end; tvm->end(citer_end);
   TetVolMesh::Node::array_type cell_nodes(4);
 
-  while(citer != tvm->cell_end()) {
+  while(citer != citer_end)
+  {
     tvm->get_nodes(cell_nodes, *citer);
     fprintf(ftet, "%d %d %d %d\n", cell_nodes[0]+1, cell_nodes[1]+1, cell_nodes[2]+1, cell_nodes[3]+1);
     ++citer;
@@ -95,7 +101,7 @@ main(int argc, char **argv) {
     sprintf(fname, "%s.grad", argv[2]);
     FILE *fgrad = fopen(fname, "wt");
     cerr << "Writing "<<fld->fdata().size()<<" vectors to "<<fname<<"\n";
-    for (int i=0; i<fld->fdata().size(); i++) {
+    for (unsigned int i=0; i<fld->fdata().size(); i++) {
       Vector v = fld->fdata()[i];
       fprintf(fgrad, "%lf %lf %lf\n", v.x(), v.y(), v.z());
     }
@@ -104,7 +110,7 @@ main(int argc, char **argv) {
     sprintf(fname, "%s.pot", argv[2]);
     FILE *fpot = fopen(fname, "wt");
     cerr << "Writing "<<fld->fdata().size()<<" scalars to "<<fname<<"\n";
-    for (int i=0; i<fld->fdata().size(); i++) {
+    for (unsigned int i=0; i<fld->fdata().size(); i++) {
       fprintf(fpot, "%lf\n", fld->fdata()[i]);
     }
   } else {

@@ -136,10 +136,11 @@ void DipoleSearch::initialize_search() {
 
   // iterate through the nodes and copy the positions into our 
   //  simplex search matrix (`dipoles')
-  PointCloudMesh::Node::iterator ni = seeds_mesh->node_begin();
+  PointCloudMesh::Node::iterator ni; seeds_mesh->begin(ni);
+  PointCloudMesh::Node::iterator nie; seeds_mesh->end(nie);
   misfit_.resize(NDIPOLES_);
   dipoles_.newsize(NDIPOLES_, NDIM_+3);
-  for (int nc=0; ni != seeds_mesh->node_end(); ++ni, nc++) {
+  for (int nc=0; ni != nie; ++ni, nc++) {
     Point p;
     seeds_mesh->get_center(p, *ni);
     dipoles_(nc,0)=p.x(); dipoles_(nc,1)=p.y(); dipoles_(nc,2)=p.z();
@@ -150,9 +151,11 @@ void DipoleSearch::initialize_search() {
   for (j=0; j<NDIM_+3; j++) 
     dipoles_(NSEEDS_,j)=0;
 
-  cell_visited_.resize(vol_mesh_->cells_size());
-  cell_err_.resize(vol_mesh_->cells_size());
-  cell_dir_.resize(vol_mesh_->cells_size());
+  TetVolMesh::Cell::size_type csize;
+  vol_mesh_->size(csize);
+  cell_visited_.resize(csize);
+  cell_err_.resize(csize);
+  cell_dir_.resize(csize);
   cell_visited_.initialize(0);
   use_cache_=use_cache_gui_.get();
 }
@@ -419,8 +422,9 @@ void DipoleSearch::read_field_ports(int &valid_data, int &new_data) {
     valid_data=0;
   } else {
     PointCloud<double> *d=dynamic_cast<PointCloud<double> *>(seeds.get_rep());
-    if (d->get_typed_mesh()->nodes_size() != (unsigned int)NSEEDS_){
-      cerr << "Got "<<d->get_typed_mesh()->nodes_size()<<" seeds, instead of "<<NSEEDS_<<"\n";
+    PointCloudMesh::Node::size_type nsize; d->get_typed_mesh()->size(nsize);
+    if (nsize != (unsigned int)NSEEDS_){
+      cerr << "Got "<< nsize <<" seeds, instead of "<<NSEEDS_<<"\n";
       valid_data=0;
     } else if (!seedsH_.get_rep() || 
 	       (seedsH_->generation != seeds->generation)) {

@@ -144,8 +144,10 @@ TetVolMesh::get_bounding_box() const
 {
   BBox result;
 
-  Node::iterator ni = node_begin();
-  while (ni != node_end())
+  Node::iterator ni, nie;
+  begin(ni);
+  end(nie);
+  while (ni != nie)
   {
     Point p;
     get_point(p, *ni);
@@ -202,9 +204,11 @@ TetVolMesh::compute_faces()
   if (faces_.size() > 0) {face_table_lock_.unlock(); return;}
   cerr << "TetVolMesh::computing faces...\n";
 
-  Cell::iterator ci = cell_begin();
+  Cell::iterator ci, cie;
+  begin(ci); end(cie);
   Node::array_type arr(4);
-  while (ci != cell_end()) {
+  while (ci != cie)
+  {
     get_nodes(arr, *ci);
     // 4 faces
     hash_face(arr[0], arr[1], arr[2], *ci, face_table_);
@@ -248,9 +252,11 @@ TetVolMesh::compute_edges()
   if (edges_.size() > 0) {edge_table_lock_.unlock(); return;}
   cerr << "TetVolMesh::computing edges...\n";
 
-  Cell::iterator ci = cell_begin();
+  Cell::iterator ci, cie;
+  begin(ci); end(cie);
   Node::array_type arr(4);
-  while (ci != cell_end()) {
+  while (ci != cie)
+  {
     get_nodes(arr, *ci);
     hash_edge(arr[0], arr[1], *ci, edge_table_);
     hash_edge(arr[0], arr[2], *ci, edge_table_);
@@ -281,88 +287,76 @@ TetVolMesh::flush_changes() {
 }
 
 
-template <>
-TetVolMesh::Node::iterator
-TetVolMesh::tbegin(TetVolMesh::Node::iterator *) const
+void
+TetVolMesh::begin(TetVolMesh::Node::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
-template <>
-TetVolMesh::Node::iterator
-TetVolMesh::tend(TetVolMesh::Node::iterator *) const
+void
+TetVolMesh::end(TetVolMesh::Node::iterator &itr) const
 {
-  return points_.size();
+  itr = points_.size();
 }
 
-template <>
-TetVolMesh::Node::size_type
-TetVolMesh::tsize(TetVolMesh::Node::size_type *) const
+void
+TetVolMesh::size(TetVolMesh::Node::size_type &s) const
 {
-  return points_.size();
+  s = points_.size();
 }
 
-template <>
-TetVolMesh::Edge::iterator
-TetVolMesh::tbegin(TetVolMesh::Edge::iterator *) const
+void
+TetVolMesh::begin(TetVolMesh::Edge::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
-template <>
-TetVolMesh::Edge::iterator
-TetVolMesh::tend(TetVolMesh::Edge::iterator *) const
+void
+TetVolMesh::end(TetVolMesh::Edge::iterator &itr) const
 {
-  return edges_.size();
+  itr = edges_.size();
 }
 
-template <>
-TetVolMesh::Edge::size_type
-TetVolMesh::tsize(TetVolMesh::Edge::size_type *) const
+void
+TetVolMesh::size(TetVolMesh::Edge::size_type &s) const
 {
-  return edges_.size();
+  s = edges_.size();
 }
 
-template <>
-TetVolMesh::Face::iterator
-TetVolMesh::tbegin(TetVolMesh::Face::iterator *) const
+void
+TetVolMesh::begin(TetVolMesh::Face::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
-template <>
-TetVolMesh::Face::iterator
-TetVolMesh::tend(TetVolMesh::Face::iterator *) const
+void
+TetVolMesh::end(TetVolMesh::Face::iterator &itr) const
 {
-  return faces_.size();
+  itr = faces_.size();
 }
 
-template <>
-TetVolMesh::Face::size_type
-TetVolMesh::tsize(TetVolMesh::Face::size_type *) const
+void
+TetVolMesh::size(TetVolMesh::Face::size_type &s) const
 {
-  return faces_.size();
+  s = faces_.size();
 }
 
-template <>
-TetVolMesh::Cell::iterator
-TetVolMesh::tbegin(TetVolMesh::Cell::iterator *) const
+void
+TetVolMesh::begin(TetVolMesh::Cell::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
-template <>
-TetVolMesh::Cell::iterator
-TetVolMesh::tend(TetVolMesh::Cell::iterator *) const
+void
+TetVolMesh::end(TetVolMesh::Cell::iterator &itr) const
 {
-  return cells_.size() >> 2;
+  itr = cells_.size() >> 2;
 }
 
-template <>
-TetVolMesh::Cell::size_type
-TetVolMesh::tsize(TetVolMesh::Cell::size_type *) const
+void
+TetVolMesh::size(TetVolMesh::Cell::size_type &s) const
 {
-  return cells_.size() >> 2;
+  s = cells_.size() >> 2;
 }
 
 void
@@ -506,8 +500,9 @@ TetVolMesh::compute_node_neighbors()
   cerr << "TetVolMesh::computing node neighbors...\n";
   node_neighbors_.clear();
   node_neighbors_.resize(points_.size());
-  for_each(edge_begin(), edge_end(), FillNodeNeighbors(node_neighbors_,
-						       *this));
+  Edge::iterator ei, eie;
+  begin(ei); end(eie);
+  for_each(ei, eie, FillNodeNeighbors(node_neighbors_, *this));
   node_nbor_lock_.unlock();
 }
 
@@ -597,17 +592,23 @@ TetVolMesh::locate(Node::index_type &loc, const Point &p)
        loc = nodes[3];
     }
     return true;
-  } else {  // do exhaustive search.
-    Node::iterator ni = node_begin();
-    if (ni == node_end()) { return false; }
+  }
+  else
+  {  // do exhaustive search.
+    Node::iterator ni, nie;
+    begin(ni);
+    end(nie);
+    if (ni == nie) { return false; }
 
     double min_dist = distance2(p, points_[*ni]);
     loc = *ni;
     ++ni;
 
-    while (ni != node_end()) {
+    while (ni != nie)
+    {
       const double dist = distance2(p, points_[*ni]);
-      if (dist < min_dist) {
+      if (dist < min_dist)
+      {
 	loc = *ni;
       }
       ++ni;
@@ -717,7 +718,8 @@ TetVolMesh::compute_grid()
   BBox bb = get_bounding_box();
   // cubed root of number of cells to get a subdivision ballpark
   const double one_third = 1.L/3.L;
-  int s = (int)ceil(pow((double)cells_size() , one_third));
+  Cell::size_type csize;  size(csize);
+  int s = (int)ceil(pow((double)csize , one_third));
   const double cell_epsilon = bb.diagonal().length() * 0.1 / s;
 
   LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
@@ -727,8 +729,10 @@ TetVolMesh::compute_grid()
 
   BBox box;
   Node::array_type nodes;
-  Cell::iterator ci = cell_begin();
-  while(ci != cell_end()) {
+  Cell::iterator ci, cie;
+  begin(ci); end(cie);
+  while(ci != cie)
+  {
     get_nodes(nodes, *ci);
 
     box.reset();
@@ -1021,33 +1025,6 @@ TetVolMesh::io(Piostream &stream)
     flush_changes();
   }
 }
-
-TetVolMesh::Node::iterator TetVolMesh::node_begin() const
-{ return tbegin((Node::iterator *)0); }
-TetVolMesh::Edge::iterator TetVolMesh::edge_begin() const
-{ return tbegin((Edge::iterator *)0); }
-TetVolMesh::Face::iterator TetVolMesh::face_begin() const
-{ return tbegin((Face::iterator *)0); }
-TetVolMesh::Cell::iterator TetVolMesh::cell_begin() const
-{ return tbegin((Cell::iterator *)0); }
-
-TetVolMesh::Node::iterator TetVolMesh::node_end() const
-{ return tend((Node::iterator *)0); }
-TetVolMesh::Edge::iterator TetVolMesh::edge_end() const
-{ return tend((Edge::iterator *)0); }
-TetVolMesh::Face::iterator TetVolMesh::face_end() const
-{ return tend((Face::iterator *)0); }
-TetVolMesh::Cell::iterator TetVolMesh::cell_end() const
-{ return tend((Cell::iterator *)0); }
-
-TetVolMesh::Node::size_type TetVolMesh::nodes_size() const
-{ return tsize((Node::size_type *)0); }
-TetVolMesh::Edge::size_type TetVolMesh::edges_size() const
-{ return tsize((Edge::size_type *)0); }
-TetVolMesh::Face::size_type TetVolMesh::faces_size() const
-{ return tsize((Face::size_type *)0); }
-TetVolMesh::Cell::size_type TetVolMesh::cells_size() const
-{ return tsize((Cell::size_type *)0); }
 
 const TypeDescription*
 TetVolMesh::get_type_description() const

@@ -158,7 +158,8 @@ void BuildMisfitField::execute() {
     return;
   }
   int nr = cm->nrows();
-  int ncells = mesh->cells_size();
+  TetVolMesh::Cell::size_type csize;  mesh->size(csize);
+  int ncells = csize;
 
   if (ncells * 3 != dm->ncols()) {
     cerr << "BuildMisfitField -- error, leadfield has "<<dm->ncols()<<" columns, and the mesh has "<<ncells<<" cells.\n";
@@ -238,9 +239,10 @@ void BuildMisfitField::execute() {
   }
 
   // we only know how to isosurface when the data is at the nodes
-  TetVol<double> *tvd = scinew TetVol<double>(TetVolMeshHandle(mesh), 
-					      Field::NODE);
-  for (int i=0; i<mesh->nodes_size(); i++) 
+  TetVol<double> *tvd =
+    scinew TetVol<double>(TetVolMeshHandle(mesh), Field::NODE);
+  TetVolMesh::Node::size_type nsize;  mesh->size(nsize);
+  for (int i=0; i<nsize; i++) 
     tvd->fdata()[i]=node_sums[i]/node_refs[i];
 
   last_mesh_ = tvd;

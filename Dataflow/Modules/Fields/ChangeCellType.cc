@@ -213,30 +213,26 @@ void ChangeCellType::fill_tet_vol(LatticeVol<Data> *lvol, TetVol<Data> *tvol)
   switch (lvol->data_at()) {
   case Field::NODE :
     {
-      set_data<MeshTet::Node::iterator>(lvol, tvol, 
-				       tmesh->node_begin(),
-				       tmesh->node_end());
+      MeshTet::Node::iterator ib, ie; tmesh->begin(ib); tmesh->end(ie);
+      set_data(lvol, tvol, ib, ie);
     }
   break;
   case Field::EDGE:
     {
-      set_data<MeshTet::Edge::iterator>(lvol, tvol, 
-				       tmesh->edge_begin(),
-				       tmesh->edge_end());
+      MeshTet::Edge::iterator ib, ie; tmesh->begin(ib); tmesh->end(ie);
+      set_data(lvol, tvol, ib, ie);
     }
     break;
   case Field::FACE:
     {
-      set_data<MeshTet::Face::iterator>(lvol, tvol, 
-				       tmesh->face_begin(),
-				       tmesh->face_end());
+      MeshTet::Face::iterator ib, ie; tmesh->begin(ib); tmesh->end(ie);
+      set_data(lvol, tvol, ib, ie);
     }
     break;
   case Field::CELL:
     {
-      set_data<MeshTet::Cell::iterator>(lvol, tvol, 
-				       tmesh->cell_begin(),
-				       tmesh->cell_end());
+      MeshTet::Cell::iterator ib, ie; tmesh->begin(ib); tmesh->end(ie);
+      set_data(lvol, tvol, ib, ie);
     }
     break;
   }   

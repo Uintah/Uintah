@@ -119,19 +119,27 @@ GenericField<Mesh, FData>::resize_fdata()
 {
   if (data_at() == NODE)
   {
-    fdata().resize(get_typed_mesh()->nodes_size());
+    typename mesh_type::Node::size_type ssize;
+    get_typed_mesh()->size(ssize);
+    fdata().resize(ssize);
   }
   else if (data_at() == EDGE)
   {
-    fdata().resize(get_typed_mesh()->edges_size());
+    typename mesh_type::Edge::size_type ssize;
+    get_typed_mesh()->size(ssize);
+    fdata().resize(ssize);
   }
   else if (data_at() == FACE)
   {
-    ASSERTFAIL("fields can't have data at faces (yet)");
+    typename mesh_type::Face::size_type ssize;
+    get_typed_mesh()->size(ssize);
+    fdata().resize(ssize);
   }
   else if (data_at() == CELL)
   {
-    fdata().resize(get_typed_mesh()->cells_size());
+    typename mesh_type::Cell::size_type ssize;
+    get_typed_mesh()->size(ssize);
+    fdata().resize(ssize);
   }
   else if (data_at() == NONE)
   {

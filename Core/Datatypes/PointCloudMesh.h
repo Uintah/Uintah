@@ -88,24 +88,21 @@ public:
   virtual PointCloudMesh *clone() { return new PointCloudMesh(*this); }
   virtual ~PointCloudMesh() {}
 
-  template <class I> I tbegin(I*) const;
-  template <class I> I tend(I*) const;
-  template <class S> S tsize(S*) const;
+  void begin(Node::iterator &) const;
+  void begin(Edge::iterator &) const;
+  void begin(Face::iterator &) const;
+  void begin(Cell::iterator &) const;
 
-  Node::iterator node_begin() const;
-  Node::iterator node_end() const;
-  Edge::iterator edge_begin() const;
-  Edge::iterator edge_end() const;
-  Face::iterator face_begin() const;
-  Face::iterator face_end() const;
-  Cell::iterator cell_begin() const;
-  Cell::iterator cell_end() const;
+  void end(Node::iterator &) const;
+  void end(Edge::iterator &) const;
+  void end(Face::iterator &) const;
+  void end(Cell::iterator &) const;
 
-  //! get the mesh statistics
-  Node::size_type nodes_size() const;
-  Edge::size_type edges_size() const;
-  Face::size_type faces_size() const;
-  Cell::size_type cells_size() const;
+  void size(Node::size_type &) const;
+  void size(Edge::size_type &) const;
+  void size(Face::size_type &) const;
+  void size(Cell::size_type &) const;
+
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
 
@@ -179,21 +176,6 @@ private:
 };
 
 typedef LockingHandle<PointCloudMesh> PointCloudMeshHandle;
-
-template <> PointCloudMesh::Node::size_type PointCloudMesh::tsize(PointCloudMesh::Node::size_type *) const;
-template <> PointCloudMesh::Edge::size_type PointCloudMesh::tsize(PointCloudMesh::Edge::size_type *) const;
-template <> PointCloudMesh::Face::size_type PointCloudMesh::tsize(PointCloudMesh::Face::size_type *) const;
-template <> PointCloudMesh::Cell::size_type PointCloudMesh::tsize(PointCloudMesh::Cell::size_type *) const;
-				
-template <> PointCloudMesh::Node::iterator PointCloudMesh::tbegin(PointCloudMesh::Node::iterator *) const;
-template <> PointCloudMesh::Edge::iterator PointCloudMesh::tbegin(PointCloudMesh::Edge::iterator *) const;
-template <> PointCloudMesh::Face::iterator PointCloudMesh::tbegin(PointCloudMesh::Face::iterator *) const;
-template <> PointCloudMesh::Cell::iterator PointCloudMesh::tbegin(PointCloudMesh::Cell::iterator *) const;
-				
-template <> PointCloudMesh::Node::iterator PointCloudMesh::tend(PointCloudMesh::Node::iterator *) const;
-template <> PointCloudMesh::Edge::iterator PointCloudMesh::tend(PointCloudMesh::Edge::iterator *) const;
-template <> PointCloudMesh::Face::iterator PointCloudMesh::tend(PointCloudMesh::Face::iterator *) const;
-template <> PointCloudMesh::Cell::iterator PointCloudMesh::tend(PointCloudMesh::Cell::iterator *) const;
 
 const TypeDescription* get_type_description(PointCloudMesh *);
 const TypeDescription* get_type_description(PointCloudMesh::Node *);

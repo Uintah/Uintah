@@ -303,32 +303,24 @@ public:
   virtual LevelMesh *clone(){ return scinew LevelMesh(*this); }
   virtual ~LevelMesh() {}
 
-  template <class I> I tbegin(I*) const;
-  template <class I> I tend(I*) const;
-  template <class S> S tsize(S*) const;
 
-  Node::index_type  node(int i, int j, int k) const
-    { return Node::index_type(this, i, j, k); }
-  Node::iterator node_begin() const { return Node::iterator(this, 0, 0, 0); }
-  Node::iterator node_end() const { return Node::iterator(this,0, 0, nz_); }
-  Node::size_type nodes_size() const {
-    return Node::size_type(this, nx_, ny_, nz_);
-  }
-  Edge::iterator edge_begin() const { return Edge::iterator(this, 0); }
-  Edge::iterator edge_end() const  { return Edge::iterator(this, 0); }
-  Edge::size_type edges_size() const { return Edge::size_type(0); }
+  void begin(Node::iterator &itr) const { itr=Node::iterator(this, 0, 0, 0); }
+  void end(Node::iterator &itr) const { itr=Node::iterator(this,0, 0, nz_); }
+  void size(Node::size_type &s) const { s=Node::size_type(this, nx_, ny_, nz_); }
 
-  Face::iterator face_begin() const { return Face::iterator(this,0); }
-  Face::iterator face_end() const { return Face::iterator(this,0); }
-  Face::size_type faces_size() const { return Face::size_type(0); }
+  void begin(Edge::iterator &itr) const { itr = Edge::iterator(this, 0); }
+  void end(Edge::iterator &itr) const  { itr = Edge::iterator(this, 0); }
+  void size(Edge::size_type &s) const { s = Edge::size_type(0); }
 
-  Cell::index_type  cell(int i, int j, int k) const
-    { return Cell::index_type(this, i, j, k); }
-   Cell::iterator cell_begin() const { return Cell::iterator(this, 0, 0, 0); }
-  Cell::iterator cell_end() const { return Cell::iterator(this, 0, 0, nz_-1); }
-  Cell::size_type cells_size() const {
-    cerr<<"in cells_size with "<<nx_-1<<","<< ny_-1<<","<< nz_-1<<endl;
-    return Cell::size_type(this, nx_-1, ny_-1, nz_-1);
+  void begin(Face::iterator &itr) const { itr = Face::iterator(this,0); }
+  void end(Face::iterator &itr) const { itr = Face::iterator(this,0); }
+  void size(Face::size_type &s) const { s = Face::size_type(0); }
+
+  void begin(Cell::iterator &itr) const {itr=Cell::iterator(this, 0, 0, 0); }
+  void end(Cell::iterator &itr) const {itr=Cell::iterator(this, 0, 0, nz_-1); }
+  void size(Cell::size_type &s) const {
+    cerr<<"in size(Cell) with "<<nx_-1<<","<< ny_-1<<","<< nz_-1<<endl;
+    s = Cell::size_type(this, nx_-1, ny_-1, nz_-1);
   }
 
   //! get the mesh statistics
@@ -413,22 +405,6 @@ private:
   // returns a LevelMesh
   static Persistent *maker() { return scinew LevelMesh(); }
 };
-
-template <> LevelMesh::Node::size_type LevelMesh::tsize(LevelMesh::Node::size_type *) const;
-template <> LevelMesh::Edge::size_type LevelMesh::tsize(LevelMesh::Edge::size_type *) const;
-template <> LevelMesh::Face::size_type LevelMesh::tsize(LevelMesh::Face::size_type *) const;
-template <> LevelMesh::Cell::size_type LevelMesh::tsize(LevelMesh::Cell::size_type *) const;
-				
-template <> LevelMesh::Node::iterator LevelMesh::tbegin(LevelMesh::Node::iterator *) const;
-template <> LevelMesh::Edge::iterator LevelMesh::tbegin(LevelMesh::Edge::iterator *) const;
-template <> LevelMesh::Face::iterator LevelMesh::tbegin(LevelMesh::Face::iterator *) const;
-template <> LevelMesh::Cell::iterator LevelMesh::tbegin(LevelMesh::Cell::iterator *) const;
-				
-template <> LevelMesh::Node::iterator LevelMesh::tend(LevelMesh::Node::iterator *) const;
-template <> LevelMesh::Edge::iterator LevelMesh::tend(LevelMesh::Edge::iterator *) const;
-template <> LevelMesh::Face::iterator LevelMesh::tend(LevelMesh::Face::iterator *) const;
-template <> LevelMesh::Cell::iterator LevelMesh::tend(LevelMesh::Cell::iterator *) const;
-
 
 }
 
