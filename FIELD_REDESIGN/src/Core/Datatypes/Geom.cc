@@ -14,40 +14,49 @@
 namespace SCICore{
   namespace Datatypes{
 
-Geom::Geom(): has_bbox(0){
+Geom::Geom()
+{
 }
 
-bool Geom::get_bbox(BBox& ibbox){
-  if(has_bbox){
-    ibbox = bbox;
-    return 1;
-  }
-  else{
-    if(compute_bbox()){
+
+bool
+Geom::get_bbox(BBox& ibbox)
+{
+  if (bbox.valid() || compute_bbox())
+    {
       ibbox = bbox;
-      return 1;
+      return true;
     }
-    else{
-      return 0;
+  else
+    {
+      return false;
     }
-  }
 }
 
-bool Geom::longest_dimension(double& odouble){    
-  if(!has_bbox){
-    compute_bbox();
-  }
-  odouble = Max(diagonal.x(), diagonal.y(), diagonal.z());
+
+bool
+Geom::longest_dimension(double& odouble)
+{
+  if (!bbox.valid())
+    {
+      compute_bbox();
+    }
+  odouble = bbox.longest_edge();
   return true;
 }
 
-bool Geom::get_diagonal(Vector& ovec){
-  if(~has_bbox){
-    compute_bbox();
-  }
-  ovec = diagonal;
+
+bool
+Geom::get_diagonal(Vector& ovec)
+{
+  if(!bbox.valid())
+    {
+      compute_bbox();
+    }
+  ovec = bbox.diagonal();
   return true;
 }
+
 
 }  // end datatypes
 } // end scicore

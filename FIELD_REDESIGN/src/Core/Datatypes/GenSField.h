@@ -83,8 +83,8 @@ public:
   
   //////////
   // Set the bounding box
-  virtual bool set_bbox(const BBox&);
-  virtual bool set_bbox(const Point&, const Point&);
+  //virtual bool set_bbox(const BBox&);
+  //virtual bool set_bbox(const Point&, const Point&);
 
   //////////
   // return the min and max values

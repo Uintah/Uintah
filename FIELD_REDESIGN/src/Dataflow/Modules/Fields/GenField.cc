@@ -262,7 +262,6 @@ GenField::execute()
   
   GenSField<double, Lattice3Geom> *osf =
     new GenSField<double, Lattice3Geom>(geom, attrib);
-  geom->set_bbox(Point(0, 0, 0), Point(x-1, y-1, z-1));
   SFieldHandle *hndl = new SFieldHandle(osf);
   ofield->send(*hndl);
 }
