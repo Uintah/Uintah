@@ -80,9 +80,9 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
       layouthint(realPatch->layouthint)
 {
   // make the id be -1000 * realPatch id - some first come, first serve index
-  if(!ids){
+  //if(!ids){
     d_id = -1000 * realPatch->d_id; // temporary
-   ids_init.lock();    
+    //ids_init.lock();    
     int index = 1;
     while (patches.find(d_id - index) != patches.end()){
       if (++index >= 27) {
@@ -93,8 +93,8 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
     ASSERT(patches.find(d_id) == patches.end());    
     patches[d_id]=this;
     in_database = true;
-   ids_init.unlock();    
-  }      
+    //ids_init.unlock();    
+    //}      
   
   for (int i = 0; i < numFaces; i++)
     d_bctypes[i] = realPatch->d_bctypes[i];
