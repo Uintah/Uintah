@@ -44,6 +44,9 @@ public:
   virtual ScanlineField<Data> *clone() const;
   virtual ~ScanlineField();
 
+  virtual ScalarFieldInterface* query_scalar_interface() const;
+  virtual VectorFieldInterface* query_vector_interface() const;
+
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const;
   static PersistentTypeID type_id;
@@ -89,6 +92,36 @@ ScanlineField<Data>::clone() const
 template <class Data>
 ScanlineField<Data>::~ScanlineField()
 {
+}
+
+template <> ScalarFieldInterface *
+ScanlineField<double>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
+ScanlineField<int>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+ScanlineField<short>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+ScanlineField<unsigned char>::query_scalar_interface() const;
+
+template <class T>
+ScalarFieldInterface*
+ScanlineField<T>::query_scalar_interface() const 
+{
+  return 0;
+}
+
+template <>
+VectorFieldInterface*
+ScanlineField<Vector>::query_vector_interface() const;
+
+template <class T>
+VectorFieldInterface*
+ScanlineField<T>::query_vector_interface() const
+{
+  return 0;
 }
 
 

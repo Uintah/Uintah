@@ -39,9 +39,11 @@ public:
   PointCloud();
   PointCloud(Field::data_location data_at);
   PointCloud(PointCloudMeshHandle mesh, Field::data_location data_at);  
+  virtual PointCloud<Data> *clone() const; 
   virtual ~PointCloud();
 
-  virtual PointCloud<Data> *clone() const; 
+  virtual ScalarFieldInterface* query_scalar_interface() const;
+  virtual VectorFieldInterface* query_vector_interface() const;
  
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const;
@@ -133,6 +135,35 @@ PointCloud<Data>::clone() const
   return new PointCloud<Data>(*this);
 }
  
+template <> ScalarFieldInterface *
+PointCloud<double>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
+PointCloud<int>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+PointCloud<short>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+PointCloud<unsigned char>::query_scalar_interface() const;
+
+template <class T>
+ScalarFieldInterface*
+PointCloud<T>::query_scalar_interface() const 
+{
+  return 0;
+}
+
+template <>
+VectorFieldInterface*
+PointCloud<Vector>::query_vector_interface() const;
+
+template <class T>
+VectorFieldInterface*
+PointCloud<T>::query_vector_interface() const
+{
+  return 0;
+}
 
 template <class Data>
 const string 

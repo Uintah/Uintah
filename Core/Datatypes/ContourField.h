@@ -40,9 +40,11 @@ public:
   ContourField();
   ContourField(Field::data_location data_at);
   ContourField(ContourMeshHandle mesh, Field::data_location data_at);
+  virtual ContourField<Data> *clone() const;
   virtual ~ContourField();
 
-  virtual ContourField<Data> *clone() const;
+  virtual ScalarFieldInterface* query_scalar_interface() const;
+  virtual VectorFieldInterface* query_vector_interface() const;
 
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const;
@@ -131,6 +133,36 @@ ContourField<Data> *
 ContourField<Data>::clone() const
 {
   return new ContourField<Data>(*this);
+}
+
+template <> ScalarFieldInterface *
+ContourField<double>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
+ContourField<int>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+ContourField<short>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface*
+ContourField<unsigned char>::query_scalar_interface() const;
+
+template <class T>
+ScalarFieldInterface*
+ContourField<T>::query_scalar_interface() const 
+{
+  return 0;
+}
+
+template <>
+VectorFieldInterface*
+ContourField<Vector>::query_vector_interface() const;
+
+template <class T>
+VectorFieldInterface*
+ContourField<T>::query_vector_interface() const
+{
+  return 0;
 }
 
 template <class Data>

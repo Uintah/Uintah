@@ -266,32 +266,270 @@ template class Property<pair<char,char> >;
 
 //! Instantiate the specialized query_scalar_interface methods just once.
 template <>
-ScalarFieldInterface*
+ScalarFieldInterface *
 TetVol<double>::query_scalar_interface() const
 {
   return scinew SFInterface<TetVol<double> >(this);
 }
 
 template <>
-ScalarFieldInterface*
+ScalarFieldInterface *
 TetVol<int>::query_scalar_interface() const
 {
   return scinew SFInterface<TetVol<int> >(this);
 }
 
 template <>
-ScalarFieldInterface*
+ScalarFieldInterface *
 TetVol<short>::query_scalar_interface() const
 {
   return scinew SFInterface<TetVol<short> >(this);
 }
 
 template <>
-ScalarFieldInterface*
+ScalarFieldInterface *
 TetVol<unsigned char>::query_scalar_interface() const
 {
   return scinew SFInterface<TetVol<unsigned char> >(this);
 }
+
+
+template <>
+VectorFieldInterface *
+TetVol<Vector>::query_vector_interface() const
+{
+  return scinew VFInterface<TetVol<Vector> >(this);
+}
+
+// ---
+
+template <>
+ScalarFieldInterface *
+LatticeVol<double>::query_scalar_interface() const
+{
+  return scinew SFInterface<LatticeVol<double> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+LatticeVol<int>::query_scalar_interface() const
+{
+  return scinew SFInterface<LatticeVol<int> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+LatticeVol<short>::query_scalar_interface() const
+{
+  return scinew SFInterface<LatticeVol<short> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+LatticeVol<unsigned char>::query_scalar_interface() const
+{
+  return scinew SFInterface<LatticeVol<unsigned char> >(this);
+}
+
+
+template <>
+VectorFieldInterface *
+LatticeVol<Vector>::query_vector_interface() const
+{
+  return scinew VFInterface<LatticeVol<Vector> >(this);
+}
+
+// ---
+
+template <>
+ScalarFieldInterface *
+TriSurf<double>::query_scalar_interface() const
+{
+  return scinew SFInterface<TriSurf<double> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+TriSurf<int>::query_scalar_interface() const
+{
+  return scinew SFInterface<TriSurf<int> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+TriSurf<short>::query_scalar_interface() const
+{
+  return scinew SFInterface<TriSurf<short> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+TriSurf<unsigned char>::query_scalar_interface() const
+{
+  return scinew SFInterface<TriSurf<unsigned char> >(this);
+}
+
+
+template <>
+VectorFieldInterface *
+TriSurf<Vector>::query_vector_interface() const
+{
+  return scinew VFInterface<TriSurf<Vector> >(this);
+}
+
+// ---
+
+template <>
+ScalarFieldInterface *
+ImageField<double>::query_scalar_interface() const
+{
+  return scinew SFInterface<ImageField<double> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+ImageField<int>::query_scalar_interface() const
+{
+  return scinew SFInterface<ImageField<int> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+ImageField<short>::query_scalar_interface() const
+{
+  return scinew SFInterface<ImageField<short> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+ImageField<unsigned char>::query_scalar_interface() const
+{
+  return scinew SFInterface<ImageField<unsigned char> >(this);
+}
+
+
+template <>
+VectorFieldInterface *
+ImageField<Vector>::query_vector_interface() const
+{
+  return scinew VFInterface<ImageField<Vector> >(this);
+}
+
+// ---
+
+template <>
+ScalarFieldInterface *
+ContourField<double>::query_scalar_interface() const
+{
+  return scinew SFInterface<ContourField<double> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+ContourField<int>::query_scalar_interface() const
+{
+  return scinew SFInterface<ContourField<int> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+ContourField<short>::query_scalar_interface() const
+{
+  return scinew SFInterface<ContourField<short> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+ContourField<unsigned char>::query_scalar_interface() const
+{
+  return scinew SFInterface<ContourField<unsigned char> >(this);
+}
+
+
+template <>
+VectorFieldInterface *
+ContourField<Vector>::query_vector_interface() const
+{
+  return scinew VFInterface<ContourField<Vector> >(this);
+}
+
+// ---
+
+template <>
+ScalarFieldInterface *
+ScanlineField<double>::query_scalar_interface() const
+{
+  return scinew SFInterface<ScanlineField<double> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+ScanlineField<int>::query_scalar_interface() const
+{
+  return scinew SFInterface<ScanlineField<int> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+ScanlineField<short>::query_scalar_interface() const
+{
+  return scinew SFInterface<ScanlineField<short> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+ScanlineField<unsigned char>::query_scalar_interface() const
+{
+  return scinew SFInterface<ScanlineField<unsigned char> >(this);
+}
+
+
+template <>
+VectorFieldInterface *
+ScanlineField<Vector>::query_vector_interface() const
+{
+  return scinew VFInterface<ScanlineField<Vector> >(this);
+}
+
+// ---
+
+template <>
+ScalarFieldInterface *
+PointCloud<double>::query_scalar_interface() const
+{
+  return scinew SFInterface<PointCloud<double> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+PointCloud<int>::query_scalar_interface() const
+{
+  return scinew SFInterface<PointCloud<int> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+PointCloud<short>::query_scalar_interface() const
+{
+  return scinew SFInterface<PointCloud<short> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+PointCloud<unsigned char>::query_scalar_interface() const
+{
+  return scinew SFInterface<PointCloud<unsigned char> >(this);
+}
+
+
+template <>
+VectorFieldInterface *
+PointCloud<Vector>::query_vector_interface() const
+{
+  return scinew VFInterface<PointCloud<Vector> >(this);
+}
+
+
 
 //! Compute the gradient g in cell ci.
 template <>
