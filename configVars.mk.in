@@ -101,7 +101,7 @@ BLT_TLINK      := -L$(BLT_LIB_DIR)
 PLPLOT_LIB_DIR    := @LIBPLPLOT@
 PLPLOT_LIB_FLAG   := -lplplotd
 
-ifneq ($PLPLOT_LIB_DIR,)
+ifneq ($(PLPLOT_LIB_DIR),)
   PLPLOT_TLINK      := -L$(PLPLOT_LIB_DIR)
 else
   PLPLOT_TLINK      :=
@@ -122,12 +122,12 @@ PLPLOT_INCLUDE  := @INCPLPLOT_H@
 TEEM_INCLUDE      := @INCTEEM_H@
 TEEM_LIB_DIR      := @LIBTEEM@
 
-ifneq ($TEEM_LIB_DIR,)
+ifneq ($(TEEM_LIB_DIR),)
   TEEM_LIBRARY := $(LDRUN_PREFIX)$(TEEM_LIB_DIR) -L$(TEEM_LIB_DIR)
 endif
 
 MPEG_LIB_DIR      := @LIBMPEGE@
-ifneq ($MPEG_LIB_DIR,)
+ifneq ($(MPEG_LIB_DIR),)
   MPEG_LIBRARY      := -L$(MPEG_LIB_DIR) -lmpege
 else
   MPEG_LIBRARY      := 
