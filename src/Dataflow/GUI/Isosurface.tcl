@@ -40,6 +40,9 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-np
 	global $this-active_tab
 	global $this-update_type
+	global $this-color-r
+	global $this-color-g
+	global $this-color-b
 
 	set $this-isoval-min 0
 	set $this-isoval-max 4095
@@ -52,6 +55,9 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-np 1
 	set $this-active_tab "MC"
 	set $this-update_type "on release"
+	set $this-color-r 0.4
+	set $this-color-g 0.2
+	set $this-color-b 0.9
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-update_type w "$this set_update_type"
 
@@ -74,6 +80,59 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-rebuild 0
 	set $this-min_size 1
 	set $this-poll 0
+
+    }
+
+    method raiseColor {swatch color} {
+	 global $color
+	 set window .ui[modname]
+	 if {[winfo exists $window.color]} {
+	     raise $window.color
+	     return;
+	 } else {
+	     toplevel $window.color
+	     makeColorPicker $window.color $color \
+		     "$this setColor $swatch $color" \
+		     "destroy $window.color"
+	 }
+    }
+
+    method setColor {swatch color} {
+	 global $color
+	 global $color-r
+	 global $color-g
+	 global $color-b
+	 set ir [expr int([set $color-r] * 65535)]
+	 set ig [expr int([set $color-g] * 65535)]
+	 set ib [expr int([set $color-b] * 65535)]
+
+	 set window .ui[modname]
+	 $swatch config -background [format #%04x%04x%04x $ir $ig $ib]
+	 destroy $window.color
+    }
+
+    method addColorSelection {frame color} {
+	 #add node color picking 
+	 global $color
+	 global $color-r
+	 global $color-g
+	 global $color-b
+	 set ir [expr int([set $color-r] * 65535)]
+	 set ig [expr int([set $color-g] * 65535)]
+	 set ib [expr int([set $color-b] * 65535)]
+	 
+	 frame $frame.colorFrame
+	 frame $frame.colorFrame.swatch -relief ridge -borderwidth \
+		 4 -height 0.8c -width 1.0c \
+		 -background [format #%04x%04x%04x $ir $ig $ib]
+	 
+	 set cmmd "$this raiseColor $frame.colorFrame.swatch $color"
+	 button $frame.colorFrame.set_color \
+		 -text "Change Color" -command $cmmd
+	 
+	 #pack the node color frame
+	 pack $frame.colorFrame.set_color $frame.colorFrame.swatch -side left
+	 pack $frame.colorFrame -side left
 
     }
 
@@ -111,6 +170,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	bind $w.f.isoval <ButtonRelease> "$this set-isoval"
 	
 	button $w.f.extract -text "Extract" -command "$this-c needexecute"
+
 	pack $w.f.isoval  -fill x
 	pack $w.f.extract
 
@@ -154,6 +214,13 @@ itcl_class SCIRun_Visualization_Isosurface {
 	pack $opt.update $opt.aefnf $opt.buildsurf -side top -anchor w
 	pack $w.f.opt -side top -anchor w
 
+	# Color
+
+	iwidgets::labeledframe $w.f.color -labelpos nw -labeltext "Default Color"
+	set color [$w.f.color childsite]
+	addColorSelection $color $this-color
+	pack $w.f.color -side top -anchor w
+
 
 	#  Methods
 	iwidgets::labeledframe $w.f.meth -labelpos nw -labeltext "Methods"
@@ -167,9 +234,9 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	set alg [$mf.tabs add -label "MC" -command "$this select-alg 0"]
 	
-        scale $alg.np -label "np:" \
+        scale $alg.np -label "Threads:" \
 		-variable $this-np \
-		-from 1 -to 8 \
+		-from 1 -to 32 \
 		-showvalue true \
 		-orient horizontal
 	

@@ -80,6 +80,9 @@ class Isosurface : public Module {
   GuiInt     np_;          
   GuiString  active_tab_; //! for saving nets state
   GuiString  update_type_; //! for saving nets state
+  GuiDouble  color_r_;
+  GuiDouble  color_g_;
+  GuiDouble  color_b_;
 
   double iso_value;
   FieldHandle field_;
@@ -101,8 +104,6 @@ class Isosurface : public Module {
   DynamicAlgoHandle            mc_alg_;
   DynamicAlgoHandle            noise_alg_;
   DynamicAlgoHandle            sage_alg_;
-
-  MaterialHandle               matl_;
 
 public:
   Isosurface(const string& id);
