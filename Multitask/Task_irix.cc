@@ -30,7 +30,8 @@
 #include <string.h>
 #include <ucontext.h>
 
-#define DEFAULT_STACK_LENGTH 32*1024
+#define DEFAULT_STACK_LENGTH 64*1024
+#define INITIAL_STACK_LENGTH 32*1024
 #define DEFAULT_SIGNAL_STACK_LENGTH 16*1024
 
 static int aborting=0;
@@ -110,7 +111,7 @@ static void makestack(TaskPrivate* priv)
 	exit(-1);
     }
     // Now unmap the bottom part of it...
-    priv->redlen=DEFAULT_STACK_LENGTH-pagesize;
+    priv->redlen=DEFAULT_STACK_LENGTH-INITIAL_STACK_LENGTH;
     priv->sp=(char*)priv->stackbot+priv->stacklen-1;
     if(mprotect(priv->stackbot, priv->redlen, PROT_NONE) == -1){
 	perror("mprotect");
