@@ -52,10 +52,10 @@
 	SCIRun/Fields/FieldBoundary.  Attach the output from a
 	FieldReader (choose the utahtorso-lowres.tvd.fld file again)
 	to the FieldBoundary input port, and pass the contents of the
-	first output port of the FieldBoundary into a ShowField
-	module.  Set the ShowField module to display just edges, turn
-	off the nodes and the faces.  Render the edges as cylinder,
-	with a scale of 1.0.
+	first output port of the FieldBoundary module into the first
+	input port of a ShowField module.  Set the ShowField module to
+	display just edges (turn off the nodes and the faces).  Render
+	the edges as cylinder, with a scale of 1.0.
 
 	<p>Connect the output from the ShowField module into a Viewer.
 	The net you have created should look like the one shown in
@@ -69,11 +69,11 @@
 	section we will read in two datasets, the first will contain
 	the utahtorso volume mesh we looked at in Chapter 1, and the
 	second will contain the electrodes that we looked at in
-	Chapter 2.  The volume mesh has voltage values simulated
+	Chapter 2.  The volume Field contains simulated voltage values
 	through the entire volume.  For each position of the electrode
 	positions, we will look up the corresponding voltage value
-	from the volume mesh.  Then we will output a new Field,
-	containing the geometry of the electrodes and their
+	from the volume mesh, and we will then output a new combined
+	Field containing the geometry of the electrodes and their
 	corresponding interpoltated voltages from the volume.  The
 	module that implements this algorithm is called
 	DirectInterpolate (SCIRun/Fields/DirectInterpolate).
@@ -90,12 +90,12 @@
 	utahtorso-lowres-electrodes.pcd.fld input file.  The resulting
 	image in the ViewWindow should look like Figure XXX.
 
-        <p><b>Section:3C - StreamLines network</b><br>
+        <p><b>Section:3C - StreamLines</b><br>
 
-        <p>The last visualization module we will introduce in this
-        Chapter is the StreamLines module.  This module takes in a
-        vector Field, and a Field of sample points, and outputs a new
-        Field consisting of a sequence of path-integral curves
+        <p>The last visualization tecnique we will explore in this
+        Chapter is streamline advection.  The StreamLine module takes
+        in a vector Field, and a Field of sample points, and outputs a
+        new Field consisting of a sequence of path-integral curves
         generated from advecting (integrating) the sample positions
         through the (derivative) vector Field.
 
