@@ -293,7 +293,7 @@ void SimpleCFD::initialize(const ProcessorGroup*,
 template<class ArrayType>
 bool Interpolate(typename ArrayType::value_type& value, const Vector& v,
 		 const Vector& offset, const Vector& inv_dx,
-		 ArrayType& field)
+		 const ArrayType& field)
 {
   Vector pos(v*inv_dx-offset);
   int ix = RoundDown(pos.x());
