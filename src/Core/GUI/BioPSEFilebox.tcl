@@ -32,6 +32,10 @@
 #      Samsonov Alexei
 #      October 2000
 #      based on standard TCL tkfbox.tcl source
+#
+#	Modified by:
+#	   Elisha Hughes
+#	   December 2004
 
 #
 # NOTE: If you use makeOpenFilebox or makeSaveFilebox and these
@@ -58,7 +62,6 @@
 #               -filevar $this-saveFile \
 #               -setcmd "wm withdraw $w" \ 
 #               -command "$this doSaveImage; wm withdraw $w" \
-#               -commandname "Execute" \  
 #               -cancel "wm withdraw $w" \
 #               -title $title \
 #               -filetypes $types \
@@ -790,7 +793,6 @@ proc biopseFDialog_Config {w type argList} {
 	    {-parent "" "" "."}
 	    {-title "" "" ""}
 	    {-command "" "" ""}
-	    {-commandname "" "" ""}
 	    {-filevar "" "" ""}
 	    {-cancel "" "" ""}
 	    {-setcmd "" "" ""}
@@ -808,7 +810,6 @@ proc biopseFDialog_Config {w type argList} {
 	    {-parent "" "" "."}
 	    {-title "" "" ""}
 	    {-command "" "" ""}
-	    {-commandname "" "" ""}
 	    {-filevar "" "" ""}
 	    {-cancel "" "" ""}
 	    {-setcmd "" "" ""}
@@ -818,6 +819,8 @@ proc biopseFDialog_Config {w type argList} {
 	    {-imgwidth "" "" ""}
 	    {-imgheight "" "" ""}
 	    {-confirmvar "" "" ""}
+		{-incrementvar "" "" ""}
+		{-currentvar "" "" ""}
 	    {-selectedfiletype "" "" ""}
 	}
     }
@@ -969,19 +972,13 @@ static char updir_bits[] = {
 	Tooltip $f7.ok "Set the filename and dimiss\nthe UI without executing"
     }
 
-    set buttonName Execute
-    if { [string length $data(-commandname)] } {
-	set buttonName $data(-commandname)
-    }
-    set data(executeBtn) [button $f7.execute -text $buttonName -under 0 -width 10\
+    set data(executeBtn) [button $f7.execute -text Execute -under 0 -width 10\
 			      -default normal -pady 3]
-    if { $buttonName == "Save"} {
-	Tooltip $f7.execute "Write the file to disk"
-    } elseif {$buttonName == "Load"} {
-	Tooltip $f7.execute "Load the file from disk"
-    } else {
-	Tooltip $f7.execute "Set the filename, execute\nthe module, and dismiss\nthe UI"
-    }
+    # For the viewer Save Image window, have it say Save instead of Execute
+    if {[string first "ViewWindow" $w] != -1} {
+	$data(executeBtn) config -text "Save"
+    } 
+    Tooltip $f7.execute "Set the filename, execute\nthe module, and dismiss\nthe UI"
 
     set data(cancelBtn) [button $f7.cancel -text Cancel -under 0 -width 10\
 				 -default normal -pady 3]
@@ -1040,6 +1037,29 @@ static char updir_bits[] = {
                 biopseFDialog_SetFormat $w $f
             }
         }
+		
+	# creating 'Increment' and 'Current index' widgets
+	if {$data(-incrementvar) != ""} {
+		set f8 [frame $w.f8 -bd 0]
+		label $f8.lab -text "" -width 15 -anchor e
+	#add a current index label and entry
+		label $f8.current_label -text "Current index: " \
+			-foreground grey64
+		entry $f8.entry -text $data(-currentvar) \
+			-foreground grey64
+	# add an increment checkbutton
+		checkbutton $f8.button  -text "Increment " \
+			-variable $data(-incrementvar) \
+			-command "toggle_Current $w"
+	#pack these widgets
+            pack $f8.lab -side left -padx 2
+            pack $f8.button -side left -padx 2
+			pack $f8.current_label -side left -padx 2
+			pack $f8.entry -side left -padx 2 -expand true
+            pack $f8 -side bottom -fill x -pady 4
+			
+			toggle_Current $w
+		}
 
 	# setting flag if the file to be split
 	if  { ![string compare [set data(-splitvar)] ""] } {
@@ -1052,7 +1072,7 @@ static char updir_bits[] = {
             set f6 [frame $w.f6 -bd 0]
             label $f6.lab -text "" -width 15 -anchor e
             checkbutton $f6.button  -text "Confirm Before Overwriting File " \
-              -variable $data(-confirmvar)
+              -variable $data(-confirmvar) 
             pack $f6.lab -side left -padx 2
             pack $f6.button -side left -padx 2
             pack $f6 -side bottom -fill x -pady 4
@@ -1142,6 +1162,21 @@ static char updir_bits[] = {
     tkFocusGroup_Create $w
     tkFocusGroup_BindIn $w  $data(ent) "biopseFDialog_EntFocusIn $w"
     tkFocusGroup_BindOut $w $data(ent) "biopseFDialog_EntFocusOut $w"
+}
+
+# toggle_Current --
+#	Greys out the 'Current index:' label and entry whenever the 'Increment'
+#	button is unchecked.
+proc toggle_Current {w} {
+	upvar #0 $w data
+	global $w.f8
+	if {[set $data(-incrementvar)]} {
+		$w.f8.current_label configure -foreground black
+		$w.f8.entry configure -foreground black
+	} else {
+		$w.f8.current_label configure -foreground grey64
+		$w.f8.entry configure -foreground grey64
+	}
 }
 
 # biopseFDialog_UpdateWhenIdle --
@@ -1636,14 +1671,14 @@ proc biopseFDialog_JoinFile {path file} {
 # Gets called when user presses the "Set" button
 proc biopseFDialog_SetCmd {w {whichBtn execute}} {
     upvar #0 $w data
-
+	
     set text [biopseIconList_Get $data(icons)]
 
     if {[string compare $text ""]} {
 	set file [biopseFDialog_JoinFile $data(selectPath) $text]
 	if {[file isdirectory $file]} {
 	    biopseFDialog_ListInvoke $w $text
-	    return
+	   # return
 	}
     }
 
@@ -1669,7 +1704,6 @@ proc biopseFDialog_RefreshCmd {w} {
      biopseFDialog_Update $w
      focus $data(ent) 
 }
-
 
 # Gets called when user presses the "Find" button
 proc biopseFDialog_FindCmd {w} {
