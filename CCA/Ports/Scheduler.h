@@ -103,9 +103,18 @@ WARNING
 
     // Get the expected extents that may be needed for a particular variable
     // on a particular patch (which should include expected ghost cells.
-    virtual void
-    getExpectedExtents(const VarLabel* label, const Patch* patch,
-		       IntVector& lowIndex, IntVector& highIndex) const = 0;
+    //virtual void
+    //getExpectedExtents(const VarLabel* label, const Patch* patch,
+    //	       IntVector& lowIndex, IntVector& highIndex) const = 0;
+
+    // Get the SuperPatch (set of connected patches making a larger rectangle)
+    // for the given label and patch and find the largest extents encompassing
+    // the expected ghost cells and requested ghost cells for each of the
+    // patches.
+    virtual const vector<const Patch*>*
+    getSuperPatchExtents(const VarLabel* label, const Patch* patch,
+			 Ghost::GhostType gtype, int numGhostCells,
+			 IntVector& lowIndex, IntVector& highIndex) const = 0;
     
     // Makes and returns a map that maps strings to VarLabels of
     // that name and a list of material indices for which that
