@@ -126,6 +126,8 @@ void LinAlgBinary::execute() {
     if (aH->ncols() != bH->nrows())
     {
       error("Matrix multiply requires the number of columns in A to be the same as the number of rows in B.");
+      error("A contains " + to_string(aH->ncols()) +
+            " columns, B contains " + to_string(bH->nrows()) + " rows.");
       return;
     }
     omat_->send(aH * bH);
