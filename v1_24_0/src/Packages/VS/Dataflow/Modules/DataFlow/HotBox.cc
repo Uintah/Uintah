@@ -20,6 +20,9 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomLine.h>
@@ -225,11 +228,17 @@ private:
   void executePhysio();
 
 protected:
+  // output injury icon geometry (sphere, cone, ...)
   FieldHandle injIconFieldHandle_;
   Transform    inputTransform_;
+  // input selected surface geometry -- from field file
   FieldHandle  selectGeomFilehandle_;
+  // input injured surface geometry -- from field files
   FieldHandle  inj0GeomFilehandle_;
   FieldHandle  inj1GeomFilehandle_;
+  // output injured surface geometry -- created from input mesh + data
+  FieldHandle  inj0GeomFieldhandle_;
+  FieldHandle  inj1GeomFieldhandle_;
   string    geomFilename_;
   string    activeBoundBoxSrc_;
   string    activeInjList_;
@@ -368,7 +377,7 @@ HotBox::execute()
   Point bmin = inFieldBBox_.min();
   Point bmax = inFieldBBox_.max();
   Vector inFieldBBextent = bmax - bmin;
-  l2norm_ = inFieldBBextent.length();
+  l2norm_ = inFieldBBextent.length() + 0.001;
 
   if(InputFieldHandle_->query_scalar_interface(this).get_rep() != 0)
   {
@@ -436,7 +445,7 @@ HotBox::execute()
 
       // expect one value in the input timeStep
       currentTime_ = (int)data[0];
-      cerr << " matrix value " << data[0] << endl;
+      cerr << " time matrix value " << data[0] << endl;
       gui_curTime_.set(currentTime_);
     }
   } // end else (data on input matrix port)
@@ -839,8 +848,8 @@ HotBox::execute()
     return;
   }
 
-  if(inj0GeomFilehandle_.get_rep() != 0)
-    inj0highlightOutport->send(inj0GeomFilehandle_);
+  if(inj0GeomFieldhandle_.get_rep() != 0)
+    inj0highlightOutport->send(inj0GeomFieldhandle_);
 
   // get output geometry port -- Injury 1 Highlight
   SimpleOPort<FieldHandle> *
@@ -853,8 +862,8 @@ HotBox::execute()
     return;
   }
 
-  if(inj1GeomFilehandle_.get_rep() != 0)
-    inj1highlightOutport->send(inj1GeomFilehandle_);
+  if(inj1GeomFieldhandle_.get_rep() != 0)
+    inj1highlightOutport->send(inj1GeomFieldhandle_);
 
   if(injured_tissue_.size() > 0)
   {
@@ -1837,6 +1846,7 @@ HotBox::makeInjGeometry()
   int mvindx = 0, numQuads = 0;
   CurveMesh *cm = (CurveMesh *)0;
   QuadSurfMesh *qsm = (QuadSurfMesh *)0;
+  vector<double> injIconData;
 
   CurveField<double> *cf;
   QuadSurfField<double> *qsf;
@@ -1850,6 +1860,7 @@ HotBox::makeInjGeometry()
 
     if(injPtr.geom_type == "line")
     {
+      // if it does not already exist, make the CurveMesh
       if(cm == (CurveMesh *)0)
         cm = new CurveMesh();
 
@@ -1862,10 +1873,7 @@ HotBox::makeInjGeometry()
     else if(injPtr.geom_type == "sphere" ||
             injPtr.geom_type == "hollow_sphere")
     {
-      // get the center of the sphere
-      Point sphCenter = Point(injPtr.axisX0, injPtr.axisY0, injPtr.axisZ0);
-
-      // make the QuadSurfMesh
+      // if it does not already exist, make the QuadSurfMesh
       if(qsm == (QuadSurfMesh *)0)
         qsm = new QuadSurfMesh();
 
@@ -1883,8 +1891,18 @@ HotBox::makeInjGeometry()
           double
           z = injPtr.rad0 * sin(2.0 * pi * j/CYLREZ) * sin(2.0 * pi * k/CYLREZ);
           // rotate the circle into the plane defined by the longitudinal axis
-	  Point p(x, y, z);
+	  Point p(x, y, z, 1.0);
+          // translate to the center of the sphere
+          p += Vector(injPtr.axisX0, injPtr.axisY0, injPtr.axisZ0);
+
           qsm->add_point(p);
+          // add a data value per mesh node
+          if(injPtr.isAblate)
+              injIconData.push_back(1.0);
+          else if(injPtr.isStun)
+              injIconData.push_back(0.5);
+          else
+              injIconData.push_back(0.0);
           if(svindx >= CYLREZ/2)
           {
             qsm->add_quad(mvindx-(CYLREZ/2)-2, mvindx-(CYLREZ/2)-1,
@@ -1922,14 +1940,30 @@ HotBox::makeInjGeometry()
         double x = injPtr.rad0 * cos(2.0 * pi * j/CYLREZ);
         double y = injPtr.rad0 * sin(2.0 * pi * j/CYLREZ);
         // rotate the circle into the plane defined by the cylindrical axis
-        Point p0 = cylXform.project(Point(x, y, 0.0));
+        Point p0 = cylXform.project(Point(x, y, 0.0, 1.0));
         p0 += Vector(injPtr.axisX0, injPtr.axisY0, injPtr.axisZ0);
         qsm->add_point(p0);
         x = injPtr.rad1 * cos(2.0 * pi * j/CYLREZ);
         y = injPtr.rad1 * sin(2.0 * pi * j/CYLREZ);
-        Point p1 = cylXform.project(Point(x, y, 0.0));
+        Point p1 = cylXform.project(Point(x, y, 0.0, 1.0));
         p1 += Vector(injPtr.axisX1, injPtr.axisY1, injPtr.axisZ1);
         qsm->add_point(p1);
+        // add a data value per mesh node
+        if(injPtr.isAblate)
+        {
+            injIconData.push_back(1.0);
+            injIconData.push_back(1.0);
+        }
+        else if(injPtr.isStun)
+        {
+            injIconData.push_back(0.5);
+            injIconData.push_back(0.5);
+        }
+        else
+        {
+            injIconData.push_back(0.0);
+            injIconData.push_back(0.0);
+        }
         if(cvindx > 1)
         {
           qsm->add_quad(mvindx-2, mvindx-1, mvindx+1, mvindx);
@@ -1941,14 +1975,23 @@ HotBox::makeInjGeometry()
   } // end for(int i = 0; i < injured_tissue_.size(); i++)
   if(numLines > 0)
   {
-    cerr << numLines << " lines ";
+    cerr << numLines << " lines " << injIconData.size() << " data vals ";
     cf = scinew CurveField<double>(cm, -1);
   }
   if(numQuads > 0)
   {
-    cerr << numQuads << " quads ";
-    qsf = scinew QuadSurfField<double>(qsm, -1);
+    cerr << numQuads << " quads " << injIconData.size() << " data vals ";
+    qsf = scinew QuadSurfField<double>(qsm, 1);
+    vector<double>::iterator dptr = injIconData.begin();
+    vector<double>::iterator dend = injIconData.end();
+    SCIRun::QuadSurfMesh::Node::index_type index = 0;
+    for(; dptr != dend; dptr++)
+    {
+       qsf->set_value(*dptr, index);
+       index = index + 1;
+    }
     injIconFieldHandle_ = qsf;
+    injIconData.clear();
   }
 
   cerr << " done" << endl;
@@ -2051,7 +2094,7 @@ HotBox::executeHighlight()
     return;
   }
 
-  // Read the file
+  // Read the selected geometry highlight file
   Pio(*selectstream, selectGeomFilehandle_);
   if (!selectGeomFilehandle_.get_rep() || selectstream->error())
   {
@@ -2086,13 +2129,45 @@ HotBox::executeHighlight()
       return;
     }
 
-    // Read the file
+    // Read the injury 0 highlight geometry file
     Pio(*inj0stream, inj0GeomFilehandle_);
     if (!inj0GeomFilehandle_.get_rep() || inj0stream->error())
     {
       error("Error reading data from file '" + inj0GeomFilename +"'.");
       delete inj0stream;
       return;
+    }
+    if(inj0GeomFilehandle_->get_type_description(0)->get_name() !=
+	"TriSurfField")
+    {
+      cerr << "Error -- input field isn't a TriSurfField (typename=";
+      cerr << inj0GeomFilehandle_->get_type_description(0)->get_name();
+    }
+    else
+    {
+      // get the mesh from the input TriSurfField
+      TriSurfMeshHandle
+      inj0GeomMeshH = dynamic_cast<TriSurfMesh*>
+          (inj0GeomFilehandle_->mesh().get_rep());
+      // iterate over the mesh nodes to create the corresponding data
+      TriSurfMesh::Node::iterator iter;
+      TriSurfMesh::Node::iterator eiter;
+      inj0GeomMeshH->begin(iter);
+      inj0GeomMeshH->end(eiter);
+      // make the output TriSurfField
+      TriSurfField<double>
+      *tsf = scinew TriSurfField<double>(inj0GeomMeshH, 1);
+      vector<double> injIconData;
+      injIconData.push_back((double)injPtr.probability);
+      vector<double>::iterator dataIter = injIconData.begin();
+      // set the data in the output TriSurfField
+      TriSurfMesh::Node::index_type index = 0;
+      for(; iter != eiter; ++iter)
+      {
+         tsf->set_value(*dataIter, index);
+         index = index + 1;
+      }
+      inj0GeomFieldhandle_ = tsf;
     }
     delete inj0stream;
   } // end if(injured_tissue_.size() > 0)
@@ -2126,6 +2201,38 @@ HotBox::executeHighlight()
       error("Error reading data from file '" + inj1GeomFilename +"'.");
       delete inj1stream;
       return;
+    }
+    if(inj1GeomFilehandle_->get_type_description(0)->get_name() !=
+	"TriSurfField")
+    {
+      cerr << "Error -- input field isn't a TriSurfField (typename=";
+      cerr << inj1GeomFilehandle_->get_type_description(0)->get_name();
+    }
+    else
+    {
+      // get the mesh from the input TriSurfField
+      TriSurfMeshHandle
+      inj1GeomMeshH = dynamic_cast<TriSurfMesh*>
+          (inj1GeomFilehandle_->mesh().get_rep());
+      // iterate over the mesh nodes to create the corresponding data
+      TriSurfMesh::Node::iterator iter;
+      TriSurfMesh::Node::iterator eiter;
+      inj1GeomMeshH->begin(iter);
+      inj1GeomMeshH->end(eiter);
+      // make the output TriSurfField
+      TriSurfField<double>
+      *tsf = scinew TriSurfField<double>(inj1GeomMeshH, 1);
+      // set the data in the output TriSurfField
+      vector<double> injIconData;
+      injIconData.push_back((double)injPtr.probability);
+      vector<double>::iterator dataIter = injIconData.begin();
+      TriSurfMesh::Node::index_type index = 0;
+      for(; iter != eiter; ++iter)
+      {
+         tsf->set_value(*dataIter, index);
+         index = index + 1;
+      }
+      inj1GeomFieldhandle_ = tsf;
     }
     delete inj1stream;
   } // end if(injured_tissue_.size() > 1)
