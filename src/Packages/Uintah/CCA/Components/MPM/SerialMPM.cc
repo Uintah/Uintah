@@ -716,14 +716,16 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(const Patch* patch,
   *   integrate these to get new particle velocity and position)
   * out(P.VELOCITY, P.X, P.NAT_X) */
 
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMPMMatls = d_sharedState->getNumMPMMatls();
+  int numALLMatls = d_sharedState->getNumMatls();
   Task* t=scinew Task("SerialMPM::interpolateToParticlesAndUpdate",
 		    patch, old_dw, new_dw,
 		    this, &SerialMPM::interpolateToParticlesAndUpdate);
 
+
   t->requires(old_dw, d_sharedState->get_delt_label() );
 
-  for(int m = 0; m < numMatls; m++){
+  for(int m = 0; m < numMPMMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     int idx = mpm_matl->getDWIndex();
     t->requires(new_dw, lb->gMomExedAccelerationLabel,idx, patch,
@@ -741,6 +743,9 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(const Patch* patch,
     t->requires(old_dw, lb->pMassLabel,           idx, patch, Ghost::None);
     t->requires(old_dw, lb->pParticleIDLabel,     idx, patch, Ghost::None);
     t->requires(old_dw, lb->pTemperatureLabel,    idx, patch, Ghost::None);
+    if(numMPMMatls!=numALLMatls){
+      t->requires(new_dw, lb->dTdt_NCLabel, idx, patch, Ghost::AroundCells,1);
+    }
 
     if(mpm_matl->getFractureModel()) 
       t->requires(new_dw, lb->pVelocityAfterBoundaryContactLabel,
@@ -1756,53 +1761,52 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   Vector CMX(0.0,0.0,0.0);
   Vector CMV(0.0,0.0,0.0);
   double ke=0;
-  Vector total_mom(0.0,0.0,0.0);
+  int numMPMMatls=d_sharedState->getNumMPMMatls();
+  int numALLMatls=d_sharedState->getNumMatls();
 
-  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+  for(int m = 0; m < numMPMMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
     int dwindex = mpm_matl->getDWIndex();
     // Get the arrays of particle values to be changed
     ParticleVariable<Point>  px, pxnew;
     ParticleVariable<Vector> pvelocity, pvelocitynew, pexternalForce;
     ParticleVariable<double> pmass;
-
-    ParticleVariable<double> pTemperature, pTemperatureNew, pTemperatureRate; 
-    ParticleVariable<Vector> pTemperatureGradient; 
-    NCVariable<double> gTemperatureRate,gTemperatureStar, gTemperature;
-    NCVariable<double> gmass, gvol;
-
-    ParticleSubset* pset = old_dw->getParticleSubset(dwindex, patch);
-    old_dw->get(px,        lb->pXLabel, pset);
-    new_dw->allocate(pxnew,lb->pXLabel_preReloc, pset);
-    
-    if(mpm_matl->getFractureModel()) 
-    new_dw->get(pvelocity, lb->pVelocityAfterBoundaryContactLabel, pset);
-    else
-    old_dw->get(pvelocity, lb->pVelocityLabel, pset);
-    new_dw->allocate(pvelocitynew, lb->pVelocityLabel, pset);
-    
-    old_dw->get(pmass,     lb->pMassLabel, pset);
-    old_dw->get(pexternalForce, lb->pExternalForceLabel, pset);
-    old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
-    new_dw->allocate(pTemperatureNew, lb->pTemperatureLabel_preReloc, pset);
-    new_dw->allocate(pTemperatureRate,lb->pTemperatureRateLabel, pset);
-    new_dw->allocate(pTemperatureGradient,lb->pTemperatureGradientLabel,
-			 pset);
-
     ParticleVariable<int> pVisibility;
     ParticleVariable<Vector> pCrackSurfaceContactForce;
     ParticleVariable<double> pToughness;
-    if(mpm_matl->getFractureModel()) {
-      new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
-      new_dw->get(pCrackSurfaceContactForce,
-		 lb->pCrackSurfaceContactForceLabel, pset);
-      old_dw->get(pToughness,lb->pToughnessLabel, pset);
-    }
+    ParticleVariable<double> pTemperature, pTemperatureNew, pTemperatureRate; 
+    ParticleVariable<Vector> pTemperatureGradient; 
 
     // Get the arrays of grid data on which the new part. values depend
     NCVariable<Vector> gvelocity_star;
     NCVariable<Vector> gacceleration;
+    NCVariable<double> gTemperatureRate,gTemperatureStar, gTemperature;
+    NCVariable<double> dTdt;
+
     delt_vartype delT;
+
+    ParticleSubset* pset = old_dw->getParticleSubset(dwindex, patch);
+    
+    old_dw->get(px,                       lb->pXLabel, pset);
+    old_dw->get(pmass,                    lb->pMassLabel, pset);
+    old_dw->get(pexternalForce,           lb->pExternalForceLabel, pset);
+    old_dw->get(pTemperature,             lb->pTemperatureLabel, pset);
+    new_dw->allocate(pTemperatureNew,     lb->pTemperatureLabel_preReloc, pset);
+    new_dw->allocate(pTemperatureRate,    lb->pTemperatureRateLabel, pset);
+    new_dw->allocate(pTemperatureGradient,lb->pTemperatureGradientLabel, pset);
+    new_dw->allocate(pvelocitynew,        lb->pVelocityLabel, pset);
+    new_dw->allocate(pxnew,               lb->pXLabel_preReloc, pset);
+
+    if(mpm_matl->getFractureModel()) {
+      new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
+      new_dw->get(pCrackSurfaceContactForce,
+		 lb->pCrackSurfaceContactForceLabel, pset);
+      new_dw->get(pvelocity, lb->pVelocityAfterBoundaryContactLabel, pset);
+      old_dw->get(pToughness,lb->pToughnessLabel, pset);
+    }
+    else{ 
+      old_dw->get(pvelocity,              lb->pVelocityLabel, pset);
+    }
 
     new_dw->get(gvelocity_star,   lb->gMomExedVelocityStarLabel,
 			dwindex, patch, Ghost::AroundCells, 1);
@@ -1814,6 +1818,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 			dwindex, patch, Ghost::AroundCells, 1);
     new_dw->get(gTemperature,     lb->gTemperatureLabel,
 			dwindex, patch, Ghost::AroundCells, 1);
+
+    if(numMPMMatls!=numALLMatls){
+      new_dw->get(dTdt, lb->dTdt_NCLabel, dwindex, patch, Ghost::AroundCells,1);
+    }
+    else{
+      new_dw->allocate(dTdt, lb->dTdt_NCLabel, dwindex, patch);
+      dTdt.initialize(0.);
+    }
 
     old_dw->get(delT, d_sharedState->get_delt_label() );
 
@@ -1929,7 +1941,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	      vel += gvelocity_star[ni[k]]  * S[k];
    	      acc += gacceleration[ni[k]]   * S[k];
 	   
-              tempRate += gTemperatureRate[ni[k]] * S[k];
+              tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]]) * S[k];
               for (int j = 0; j<3; j++) {
                 pTemperatureGradient[idx](j) += 
                    gTemperatureStar[ni[k]] * d_S[k](j) * oodx[j];
@@ -1977,7 +1989,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	      vel += gvelocity_star[ni[k]]  * S[k];
    	      acc += gacceleration[ni[k]]   * S[k];
 	   
-              tempRate += gTemperatureRate[ni[k]] * S[k];
+              tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]]) * S[k];
               for (int j = 0; j<3; j++) {
                 pTemperatureGradient[idx](j) += 
                    gTemperatureStar[ni[k]] * d_S[k](j) * oodx[j];
@@ -1994,7 +2006,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         ke += .5*pmass[idx]*pvelocitynew[idx].length2();
 	CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
 	CMV += pvelocitynew[idx]*pmass[idx];
-        total_mom += pvelocitynew[idx]*pmass[idx];
       }
     }
 
@@ -2020,7 +2031,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
   new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
 
-  //  cout << "Solid momentum after advection = " << total_mom << endl;
+//  cout << "Solid momentum after advection = " << CMV << endl;
 
 //  cout << "THERMAL ENERGY " << thermal_energy << endl;
 }

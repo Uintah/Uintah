@@ -235,14 +235,17 @@ MPMLabel::MPMLabel()
   gStressForSavingLabel   = scinew VarLabel( "g.stressFS",
                    NCVariable<Matrix3>::getTypeDescription() );
 
-  gVolumeLabel = scinew VarLabel("g.volume",
+  gVolumeLabel     = scinew VarLabel("g.volume",
 			NCVariable<double>::getTypeDescription());
 
-  gWeightLabel = scinew VarLabel("g.weight",
+  gWeightLabel     = scinew VarLabel("g.weight",
 			NCVariable<double>::getTypeDescription());
 
   gradPressNCLabel = scinew VarLabel("gradPressNC",
 			NCVariable<Vector>::getTypeDescription());
+
+  dTdt_NCLabel     = scinew VarLabel("dTdt_NC",
+			NCVariable<double>::getTypeDescription());
 
   // Cell centered variables
   cBurnedMassLabel = scinew VarLabel( "c.burnedMass",
@@ -350,6 +353,7 @@ MPMLabel::~MPMLabel()
   delete cBurnedMassLabel;
   delete gWeightLabel;
   delete gradPressNCLabel;
+  delete dTdt_NCLabel;
 
   delete delTLabel;
 
