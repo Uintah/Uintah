@@ -25,14 +25,6 @@ MPMICELabel::MPMICELabel()
 			CCVariable<Vector>::getTypeDescription() );
   velstar_CCLabel  = scinew VarLabel( "velstar_CC",
 			CCVariable<Vector>::getTypeDescription() );
-  mom_L_CCLabel    = scinew VarLabel( "mom_L_CC",
-			CCVariable<Vector>::getTypeDescription() );
-  mom_L_ME_CCLabel = scinew VarLabel("mom_L_ME_CC",
-                     CCVariable<Vector>::getTypeDescription());
-  int_eng_L_CCLabel= scinew VarLabel("int_eng_L_CC",
-                     CCVariable<double>::getTypeDescription());
-  int_eng_L_ME_CCLabel = scinew VarLabel("int_eng_L_ME_CC",
-                     CCVariable<double>::getTypeDescription());
   dvdt_CCLabel     = scinew VarLabel( "dvdt_CC",
 			CCVariable<Vector>::getTypeDescription() );
   dTdt_CCLabel     = scinew VarLabel( "dTdt_CC",
@@ -41,37 +33,12 @@ MPMICELabel::MPMICELabel()
 			CCVariable<double>::getTypeDescription() );
   temp_CC_scratchLabel = scinew VarLabel("temp_CC_scratch",
 			CCVariable<double>::getTypeDescription() );
-  vol_frac_CCLabel = scinew VarLabel("vol_frac_CC",
-			CCVariable<double>::getTypeDescription());
-  cv_CCLabel       = scinew VarLabel("cv_CC",
-			CCVariable<double>::getTypeDescription());
-  rho_CCLabel      = scinew VarLabel("rho_CC",
-			CCVariable<double>::getTypeDescription());
-  rho_micro_CCLabel  = scinew VarLabel("rho_micro_CC",
-			CCVariable<double>::getTypeDescription());
-  speedSound_CCLabel = scinew VarLabel("speedSound_CC",
-			CCVariable<double>::getTypeDescription());
-  mom_source_CCLabel = scinew VarLabel("mom_source_CC",
-			CCVariable<Vector>::getTypeDescription());
   press_NCLabel      = scinew VarLabel("pressureNC",
 			NCVariable<double>::getTypeDescription());
 
-    uvel_FCLabel       =
-     scinew VarLabel("uvel_FC",   SFCXVariable<double>::getTypeDescription() );
-    vvel_FCLabel       =
-     scinew VarLabel("vvel_FC",   SFCYVariable<double>::getTypeDescription() );
-    wvel_FCLabel       =
-     scinew VarLabel("wvel_FC",   SFCZVariable<double>::getTypeDescription() );
-    uvel_FCMELabel       =
-     scinew VarLabel("uvel_FCME", SFCXVariable<double>::getTypeDescription() );
-    vvel_FCMELabel       =
-     scinew VarLabel("vvel_FCME", SFCYVariable<double>::getTypeDescription() );
-    wvel_FCMELabel       =
-     scinew VarLabel("wvel_FCME", SFCZVariable<double>::getTypeDescription() );
-
-  velInc_CCLabel      = scinew VarLabel("velIncCC",
+  velInc_CCLabel     = scinew VarLabel("velIncCC",
 			CCVariable<Vector>::getTypeDescription());
-  velInc_NCLabel      = scinew VarLabel("velIncNC",
+  velInc_NCLabel     = scinew VarLabel("velIncNC",
 			NCVariable<Vector>::getTypeDescription());
 
 } 
@@ -82,29 +49,11 @@ MPMICELabel::~MPMICELabel()
   delete cVolumeLabel;
   delete vel_CCLabel;
   delete velstar_CCLabel;
-  delete mom_L_CCLabel;
-  delete mom_L_ME_CCLabel;
-  delete int_eng_L_CCLabel;
-  delete int_eng_L_ME_CCLabel;
   delete dvdt_CCLabel;
   delete dTdt_CCLabel;
   delete temp_CCLabel;
   delete temp_CC_scratchLabel;
-  delete speedSound_CCLabel;
-  delete cv_CCLabel;
-  delete rho_CCLabel;
-  delete rho_micro_CCLabel;
-  delete vol_frac_CCLabel;
-  delete mom_source_CCLabel;
   delete press_NCLabel;
-
-  delete uvel_FCLabel;
-  delete vvel_FCLabel;
-  delete wvel_FCLabel;
-  delete uvel_FCMELabel;
-  delete vvel_FCMELabel;
-  delete wvel_FCMELabel;
-
   delete velInc_CCLabel;
   delete velInc_NCLabel;
 }
