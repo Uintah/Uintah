@@ -86,8 +86,9 @@ int MFMPParticleGridReader::GetNTimesteps()
 }
 
 void MFMPParticleGridReader::GetParticleData(int particleId,
-			       clString varname,
-			       Array1<double>& values)
+					     clString pSetName,
+					     clString varname,
+					     Array1<double>& values)
 {
   NOT_FINISHED("MFMPParticleGridReader::GetParticleData");
 }
