@@ -29,7 +29,9 @@ itcl_class MIT_Metropolis_Sampler {
 	set name Sampler
     }
 
-    method ui {} {
+    method ui { args } {
+
+	puts "args = $args"
 	set index 0
 	set w .ui[modname]
 	if {[winfo exists $w]} {
