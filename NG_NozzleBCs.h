@@ -122,8 +122,8 @@ void setNGC_Nozzle_BC(const Patch* patch,
                       const string& var_loc,        // variable location FC, CC
                       const vector<IntVector> bound,
                       const string& bc_kind,        //Dirichlet, Neumann, custom
-                         const int mat_id,
-                         const int child,
+                      const int mat_id,
+                      const int child,
                       SimulationStateP& sharedState,
                       NG_BC_vars* ng)
    {
@@ -162,11 +162,13 @@ void setNGC_Nozzle_BC(const Patch* patch,
     if(var_loc == "FC"){   // FC overlaps the diaphram location 
       probeCell = (int)ceil(diaphragm_location/dx_sg);
     }
-   
-    //cout << " inside setNGC_NozzlePressure " << bc_kind 
-    //     << " variable " << var_desc << " variable Loc:" << var_loc<<endl;
-    //cout << " probeCell " << probeCell<< endl;
-
+#if 0   
+    cout << " inside setNGC_NozzlePressure " << bc_kind 
+         << " variable " << var_desc << " variable Loc:" 
+         << var_loc
+         <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1) << endl;
+    cout << " probeCell " << probeCell<< endl;
+#endif
     
     //__________________________________
     // compute the stagnation properties at location 4.
@@ -175,43 +177,64 @@ void setNGC_Nozzle_BC(const Patch* patch,
     u4 = 0.0;
    
     vector<IntVector>::const_iterator iter;
+
+
     for (iter=bound.begin(); iter != bound.end(); iter++) {
       IntVector c = *iter + offset;
-      IntVector adj = *iter + IntVector(1,0,0);
-      
-       // Properties at location 1 
-      double p1   = ng->press_CC[adj];
-      double rho1 = ng->rho_CC[adj];
-      double u1   = ng->vel_CC[adj].x();
-      ng->c = c;     // cell index    
-      
-      double p, Temp, rho, vel;   // probed cell variables
-//      BC_values_using_IsentropicRelations(p4, rho4, T4, p,Temp, rho, vel);
 
-      Uintah::solveRiemannProblemInterface( t_final,Length,ncells,
-                                            u4, p4, rho4,                                   
-                                            u1, p1, rho1,
-                                            diaphragm_location,
-                                            probeCell, ng,
-                                            p, Temp, rho, vel);
-                          
-      if(var_desc == "Pressure"){
-        q_CC[c] = V(p);
-      }
-      if(var_desc == "Temperature"){
-        q_CC[c] = V(Temp);
-      }
-      if(var_desc == "Density"){
-        q_CC[c] = V(rho);
-      }
-      if(var_desc == "Velocity" || var_desc == "Vel_FC"){
-        q_CC[c] = V(vel);
-      }
-      
- //     cout << c << " adj " << adj << var_desc << " " << q_CC[c] 
- //            << "\t\t  p1 " << p1 << "\t rho1 " << rho1 << "\t u1 " << u1 <<endl;
-    }
-  }
+      // restrict where we compute the BCs to only xminus face
+      // without the z ghostcells or yminus ghost cells.
+      if( (c.y() != -1 && c.z() == 0) || var_loc == "FC") {
+        IntVector adj = *iter + IntVector(1,0,0);
+
+        // Properties at location 1 
+        double p1   = ng->press_CC[adj];
+        double rho1 = ng->rho_CC[adj];
+        double u1   = ng->vel_CC[adj].x();
+        ng->c = c;     // cell index    
+
+        if (p1 <=0 || rho1 <= 0 || isnan(p1) != 0 || isnan(rho1) != 0 || 
+            isinf(p1) != 0 || isinf(rho1) != 0 ){
+          cout << " c " << c << " adj " << adj << " p1 " << p1 
+               << " rho1 " << rho1 << endl;
+          throw InternalError(" setNGC_Nozzle_BC: one of initial conditions (p1, rho1) = 0");
+        }
+        
+        //cout << " c " << c << " adj " << adj << " p1 " << p1 << " rho1 " << rho1 << " u1 " << u1 << endl;
+        
+        double p, Temp, rho, vel;   // probed cell variables
+  //      BC_values_using_IsentropicRelations(p4, rho4, T4, p,Temp, rho, vel);
+
+        Uintah::solveRiemannProblemInterface( t_final,Length,ncells,
+                                              u4, p4, rho4,                                   
+                                              u1, p1, rho1,
+                                              diaphragm_location,
+                                              probeCell, ng,
+                                              p, Temp, rho, vel);
+
+        if(var_desc == "Pressure"){
+          q_CC[c] = V(p);
+        }
+        if(var_desc == "Temperature"){
+          q_CC[c] = V(Temp);
+        }
+        if(var_desc == "Density"){
+          q_CC[c] = V(rho);
+        }
+        if(var_desc == "Velocity" || var_desc == "Vel_FC"){
+          q_CC[c] = V(vel);
+        }
+#if 0
+        if (c == IntVector(-1,0,0) || c == IntVector(0,0,0) || c == IntVector(-1,1,0) ){      
+          cout << c << " adj " << adj << var_desc << " " << q_CC[c] << endl;
+          cout << "\t  p1 " << p1 << "\t rho1 " << rho1 << "\t u1 " << u1 << endl;
+          cout << "\t  p4 " << p4 << "\t rho4 " << rho4 << "\t u4 " << u4 << endl;
+          cout << "\t Temp " << Temp<< "\t p " << p << " rho " << rho << " vel " << vel <<endl;
+        }
+#endif
+      }   // only on c.y() == 0 && c.z() == 0
+    } // bound iterator
+  } // if on xminus face and inside nozzle
 }
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1424
