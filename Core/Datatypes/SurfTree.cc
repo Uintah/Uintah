@@ -166,7 +166,7 @@ void SurfTree::buildNormals() {
   // of its nodes.
 
   if (surfI.size() && nodeI.size() && surfI[0].nodeNormals.size()) return;
-  if (nodes.size() && !nodeI.size()) bldNodeInfo();
+  if (nodes.size() && !nodeI.size()) buildNodeInfo();
 
   int i;
   for (i=0; i<surfI.size(); i++) {
@@ -198,7 +198,7 @@ void SurfTree::buildNormals() {
   }
 }
 
-void SurfTree::bldNodeInfo() {
+void SurfTree::buildNodeInfo() {
   if (nodeI.size()) return;
 
   nodeI.resize(nodes.size());
@@ -308,7 +308,7 @@ void SurfTree::bldNodeInfo() {
 
 void SurfTree::compute_bboxes() {
   valid_bboxes=1;
-  bldNodeInfo();
+  buildNodeInfo();
   for (int i=0; i<nodeI.size(); i++)
     for (int j=0; j<nodeI[i].surfs.size(); j++)
       surfI[nodeI[i].surfs[j]].bbox.extend(nodes[i]);
