@@ -24,6 +24,10 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+
+#include <Core/Thread/Time.h>
+
 #include <iostream>
 
 using namespace std;
@@ -1518,6 +1522,7 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     filterWVel.initialize(0.0);
     IntVector indexLow = patch->getCellFORTLowIndex();
     IntVector indexHigh = patch->getCellFORTHighIndex();
+    double start_turbTime = Time::currentSeconds();
 #ifdef PetscFilter
 #if 0
     cerr << "In the Dynamic Procedure print ccuvel" << endl;
@@ -1525,10 +1530,6 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 #endif
 
     d_filter->applyFilter(pc, patch,ccuVel, filterUVel);
-#if 0
-    cerr << "In the Dynamic Procedure after filter" << endl;
-    filterUVel.print(cerr);
-#endif
     d_filter->applyFilter(pc, patch,ccvVel, filterVVel);
     d_filter->applyFilter(pc, patch,ccwVel, filterWVel);
     d_filter->applyFilter(pc, patch,UU, filterUU);
@@ -1541,7 +1542,9 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       d_filter->applyFilter(pc, patch,SIJ[ii], SHATIJ[ii]);
       d_filter->applyFilter(pc, patch,betaIJ[ii], betaHATIJ[ii]);
     }
-
+    if (pc->myrank() == 0)
+      cerr << "Time for the Filter operation in Turbulence Model: " << 
+	Time::currentSeconds()-start_turbTime << " seconds\n";
 #else
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
@@ -2042,7 +2045,9 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       }
     }
 #endif
-    
+    CCVariable<double> tempCs;
+    tempCs.allocate(patch->getLowIndex(), patch->getHighIndex());
+    tempCs.initialize(0.0);
 	  //     calculate the local Smagorinsky coefficient
 	  //     perform "clipping" in case MLij is negative...
     double factor = 1.0;
@@ -2062,22 +2067,39 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	  //     calculate the effective viscosity
 
 	  //     handle the case where we divide by zero
-
-	  if ((MMHatI[currCell] < 1.0e-20)||(MLHatI[currCell]/MMHatI[currCell] > 100.0)) 
-	    {
-	      viscosity[currCell] = viscos;
-	      Cs[currCell] = sqrt(MLHatI[currCell]/MMHatI[currCell]);
-	    }
-	  else {
-	    viscosity[currCell] = factor*factor*
-	                          MLHatI[currCell]/MMHatI[currCell]
-	                          *filter*filter*IsI[currCell]*den[currCell] + viscos;
-	    Cs[currCell] = sqrt(MLHatI[currCell]/MMHatI[currCell]);
-	    Cs[currCell] *= factor;
-	  }
+	  double value = factor*factor*MLHatI[currCell]/MMHatI[currCell];
+	  if (MMHatI[currCell] < 1.0e-20) value = 0.0;
+	  else if (value > 100.0) value = 100.0;
+	  tempCs[currCell] = sqrt(value);
 	}
       }
     }
+#define FILTER_Cs
+#ifdef FILTER_Cs
+#ifdef PetscFilter
+    d_filter->applyFilter(pc, patch, tempCs, Cs);
+#else
+    Cs.copy(tempCs, tempCs.getLowIndex(),
+		      tempCs.getHighIndex());
+#endif
+#else
+    Cs.copy(tempCs, tempCs.getLowIndex(),
+		      tempCs.getHighIndex());
+#endif
+    
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+	  double delta = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+	  double filter = pow(delta, 1.0/3.0);
+	  viscosity[currCell] =  Cs[currCell]* filter * filter *
+				  IsI[currCell] * den[currCell] + viscos;
+	}
+      }
+    }
+
+
     // boundary conditions...make a separate function apply Boundary
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;

@@ -449,7 +449,7 @@ PDFMixingModel::readStaticTable() {
 
   //Look for mixing table input until the end of the file is reached.
   //while(mixfile)
-  for (int nn = 0; nn < numVarDiv; nn++)  	 
+  for (int nn = 0; nn < numMixDiv; nn++)  	 
     { 
       // Read f,dg pair and then subsequent data. Number of entries = 
       // numvarDiv (***need to add h later***)
@@ -476,12 +476,15 @@ PDFMixingModel::readStaticTable() {
       // gf must be normalized so it scales from 0-1; min value of g is 0.0, 
       // need to calculate max value
       double maxg = dg * (numVarDiv-1);
+      //      double maxg = indepVars[0]*(1.0-indepVars[0]);
+      // double maxg = 1.0;
       bool gflag = false;
       double normg;
       int gcount = 0;
       for (int ii = 0; ii < numVarDiv; ii++)
 	{
 	  mixfile>>value;  
+	  //	  value = maxg/(numVarDiv-1)*ii;
 	  if (maxg == 0.0) {
 	    normg = value;
 	    gflag = true;

@@ -53,6 +53,7 @@ class Discretization;
 class Source;
 class BoundaryCondition;
 class LinearSolver;
+ class RadiationModel;
 
 class EnthalpySolver {
 
@@ -67,7 +68,8 @@ public:
       EnthalpySolver(const ArchesLabel* label, const MPMArchesLabel* MAlb, 
 		   TurbulenceModel* turb_model, 
 		   BoundaryCondition* bndry_cond,
-		   PhysicalConstants* physConst);
+		   PhysicalConstants* physConst,
+		     const ProcessorGroup* myworld);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -96,13 +98,14 @@ public:
       void sched_enthalpyLinearSolve(SchedulerP&, const PatchSet* patches,
 				     const MaterialSet* matls);
 
-      void solvePred(SchedulerP& sched,
+      void solvePred(const LevelP& level,
+		     SchedulerP& sched,
 		 const PatchSet* patches,
 		 const MaterialSet* matls);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
-      void sched_buildLinearMatrixPred(SchedulerP&, const PatchSet* patches,
+      void sched_buildLinearMatrixPred(const LevelP& level,SchedulerP&, const PatchSet* patches,
 				       const MaterialSet* matls);
 
       ///////////////////////////////////////////////////////////////////////
@@ -110,13 +113,14 @@ public:
       void sched_enthalpyLinearSolvePred(SchedulerP&, const PatchSet* patches,
 					 const MaterialSet* matls);
   
-      void solveCorr(SchedulerP& sched,
+      void solveCorr(const LevelP& level,
+		     SchedulerP& sched,
 		 const PatchSet* patches,
 		     const MaterialSet* matls);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
-      void sched_buildLinearMatrixCorr(SchedulerP&, const PatchSet* patches,
+      void sched_buildLinearMatrixCorr(const LevelP& level,SchedulerP&, const PatchSet* patches,
 				       const MaterialSet* matls);
 
       ///////////////////////////////////////////////////////////////////////
@@ -124,13 +128,14 @@ public:
       void sched_enthalpyLinearSolveCorr(SchedulerP&, const PatchSet* patches,
 					 const MaterialSet* matls);
 
-      void solveInterm(SchedulerP& sched,
+      void solveInterm(const LevelP& level,
+		       SchedulerP& sched,
 		 const PatchSet* patches,
 		     const MaterialSet* matls);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
-      void sched_buildLinearMatrixInterm(SchedulerP&, const PatchSet* patches,
+      void sched_buildLinearMatrixInterm(const LevelP& level,SchedulerP&, const PatchSet* patches,
 				       const MaterialSet* matls);
 
       ///////////////////////////////////////////////////////////////////////
@@ -234,8 +239,16 @@ private:
       BoundaryCondition* d_boundaryCondition;
       // physical constants
       PhysicalConstants* d_physicalConsts;
+      // radiation model
+      RadiationModel* d_DORadiation;
 
       bool d_radiationCalc;
+      bool d_DORadiationCalc;
+      const Patch* d_pressRefPatch;
+      int d_pressRefProc;
+      const PatchSet* d_perproc_patches;
+
+      const ProcessorGroup* d_myworld;
 
 }; // End class EnthalpySolver
 } // End namespace Uintah

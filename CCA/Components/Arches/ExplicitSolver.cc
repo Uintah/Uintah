@@ -128,7 +128,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
   if (d_enthalpySolve) {
     d_enthalpySolver = scinew EnthalpySolver(d_lab, d_MAlab,
 					     d_turbModel, d_boundaryCondition,
-					     d_physicalConsts);
+					     d_physicalConsts, d_myworld);
     d_enthalpySolver->problemSetup(db);
   }
 }
@@ -222,7 +222,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   }
 
   if (d_enthalpySolve)
-    d_enthalpySolver->solvePred(sched, patches, matls);
+    d_enthalpySolver->solvePred(level, sched, patches, matls);
 
   #ifdef correctorstep
     d_props->sched_computePropsPred(sched, patches, matls);
@@ -301,7 +301,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 			Runge_Kutta_current_step, Runge_Kutta_last_step);
     }
     if (d_enthalpySolve)
-      d_enthalpySolver->solveInterm(sched, patches, matls);
+      d_enthalpySolver->solveInterm(level, sched, patches, matls);
     // same as corrector
     // Underrelaxation for density is done with initial density, not with
     // density from the previous substep
@@ -375,7 +375,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 			Runge_Kutta_current_step, Runge_Kutta_last_step);
     }
     if (d_enthalpySolve)
-      d_enthalpySolver->solveCorr(sched, patches, matls);
+      d_enthalpySolver->solveCorr(level, sched, patches, matls);
     // same as corrector
     // Underrelaxation for density is done with initial density, not with
     // density from the previous substep

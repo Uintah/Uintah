@@ -35,7 +35,9 @@ SRCS +=	$(SRCDIR)/PetscSolver.cc \
 else
 SRCS +=	$(SRCDIR)/FakePetscSolver.cc
 endif
-
+ifneq ($(HYPRE_DIR),)
+SRCS += $(SRCDIR)/HypreSolver.cc
+endif
 # SUBDIRS := $(SRCDIR)/fortran 
 # include $(SCIRUN_SCRIPTS)/recurse.mk
 
@@ -46,6 +48,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/CCA/Components/Arches/fortran \
 	Packages/Uintah/CCA/Components/Arches/Mixing \
+	Packages/Uintah/CCA/Components/Arches/Radiation \
 	Packages/Uintah/CCA/Ports \
 	Packages/Uintah/Core/Parallel \
         Core/Util \
@@ -57,9 +60,15 @@ LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) -lm
 ifneq ($(PETSC_DIR),)
 LIBS := $(LIBS) $(PETSC_LIBS) 
 endif
+ifneq ($(HYPRE_DIR),)
+LIBS := $(LIBS) $(HYPRE_LIB) 
+endif
 LIBS := $(LIBS) $(FLIBS) 
 ifneq ($(PETSC_DIR),)
 CFLAGS +=	-DHAVE_PETSC
+endif
+ifneq ($(HYPRE_DIR),)
+CFLAGS +=	-DHAVE_HYPRE
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
@@ -104,6 +113,8 @@ $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/scalcoef_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/uvelcoef_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/vvelcoef_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/wvelcoef_fort.h
+$(SRCDIR)/HypreSolver.o: $(SRCDIR)/fortran/rescal_fort.h
+$(SRCDIR)/HypreSolver.o: $(SRCDIR)/fortran/underelax_fort.h
 $(SRCDIR)/PetscSolver.o: $(SRCDIR)/fortran/rescal_fort.h
 $(SRCDIR)/PetscSolver.o: $(SRCDIR)/fortran/underelax_fort.h
 $(SRCDIR)/PressureSolver.o: $(SRCDIR)/fortran/add_hydrostatic_term_topressure_fort.h

@@ -137,6 +137,14 @@ namespace Uintah {
       CCVariable<double> qfluxb;
       CCVariable<double> temperature;
       CCVariable<double> absorption;
+      CCVariable<double> sootFV;
+      CCVariable<double> h2o;
+      CCVariable<double> co2;
+      CCVariable<double> ABSKG;
+      CCVariable<double> ESRCG;
+      CCVariable<double> src;
+      CCVariable<double> cenint;
+
       // multimaterial variables
       CCVariable<double> voidFraction;
       SFCXVariable<double> mmuVelSu;
