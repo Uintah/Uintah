@@ -6,9 +6,10 @@ static char *id="@(#) $Id$";
 #include <stdlib.h>
 #include <time.h>
 #include <PSECore/XMLUtil/XMLUtil.h>
+#include <Uintah/Components/Schedulers/TaskGraph.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/Task.h>
-#include <Uintah/Components/Schedulers/TaskGraph.h>
+#include <Uintah/Interface/DataWarehouse.h>
 #include "Scheduler.h"
 
 using namespace Uintah;
@@ -90,6 +91,10 @@ Scheduler::finalizeNodes()
 
 //
 // $Log$
+// Revision 1.5  2000/07/25 17:55:27  jehall
+// - Added include in case the MIPSPro CC decides to use this file to
+//   instantiate Handle<DataWarehouse>.
+//
 // Revision 1.4  2000/07/19 21:41:53  jehall
 // - Added functions for emitting task graph information to reduce redundancy
 //
