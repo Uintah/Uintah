@@ -51,43 +51,37 @@ using std::pair;
 
 namespace SCIRun {
 
-//! magnitudes
-inline double fdata_mag(double v) { return v; }
-inline double fdata_mag(int v) { return (double)v; }
-inline double fdata_mag(Vector v) { return v.length(); }
-
-template <class Field>
+template <class Mesh>
 class DistTable
 {
 public:
-  typedef typename Field::mesh_type            mesh_type;
-  typedef typename mesh_type::Elem::index_type elem_index;
-  typedef pair<long double,elem_index>     table_entry;
+  typedef typename Mesh::Elem::index_type      elem_index_type;
+  typedef pair<long double, elem_index_type>   table_entry_type;
 
-  vector<table_entry> table_;
+  vector<table_entry_type> table_;
 
-  DistTable() {}
-  ~DistTable() {}
+  //DistTable() {}
+  //~DistTable() {}
 
-  void push_back(long double size,elem_index id) 
-  { table_.push_back(table_entry(size,id)); }
-  void push_back(table_entry entry) 
+  void push_back(long double size, elem_index_type id) 
+  { table_.push_back(table_entry_type(size,id)); }
+  void push_back(table_entry_type entry) 
   { table_.push_back(entry); }
 
-  const table_entry& operator[](unsigned idx) const
+  const table_entry_type& operator[](unsigned idx) const
   { return table_[idx]; }
-  table_entry& operator[](unsigned idx)
+  table_entry_type& operator[](unsigned idx)
   { return table_[idx]; }
 
   int size() { return table_.size(); }
   void clear() { table_.clear(); }
 
-  bool search(table_entry&, long double);
+  bool search(table_entry_type&, long double);
 };
 
-template <class Field>
+template <class Mesh>
 bool
-DistTable<Field>::search(table_entry &e, long double d)
+DistTable<Mesh>::search(table_entry_type &e, long double d)
 {
   int min=0,max=table_.size()-1;
   int cur = max/2;
@@ -106,6 +100,7 @@ DistTable<Field>::search(table_entry &e, long double d)
 
   return true;
 }
+
 
 class SeedField : public Module
 {
@@ -130,14 +125,20 @@ class SeedField : public Module
 
   int vf_generation_;
 
-  template <class Field> 
-  bool build_weight_table(Field *, DistTable<Field> &);
-  template <class Field>
-  void generate_random_seeds(Field *);
-  void generate_widget_seeds(Field *);
+  template <class Mesh> 
+  bool build_weight_table_sfi(MeshBaseHandle,
+			      ScalarFieldInterface *,
+			      DistTable<Mesh> &);
 
-  template <class Data, class Field>
-  bool interp(Data &, Point &, Field *);
+  template <class Mesh> 
+  bool build_weight_table_vfi(MeshBaseHandle,
+			      VectorFieldInterface *,
+			      DistTable<Mesh> &);
+
+  template <class Mesh>
+  void generate_random_seeds(FieldHandle, Mesh *);
+
+  void generate_widget_seeds(Field *);
 
   template <class M> 
   void dispatch(M *mesh);
@@ -195,47 +196,28 @@ SeedField::widget_moved(int i)
   }
 }
 
-template <class Data, class Field>
-bool
-SeedField::interp(Data &ret, Point &p, Field *field)
-{
-  // this is supposed to just do an interpolate, 
-  // but iterpolate's not ready yet. FIXME
 
-  typedef typename Field::mesh_type::Node::index_type index_type;
-  typedef typename Field::mesh_type::Node::array_type node_array;
-  typedef typename Field::fdata_type                  fdata_type;
-  typedef typename Field::mesh_type                   mesh_type;
 
-  index_type ni;
-  node_array ra;
-  mesh_type *mesh = field->get_typed_mesh().get_rep();
-  mesh->locate(ni,p);
-  fdata_type fdata = field->fdata();
-  ret = fdata_mag(fdata[ni])>1?fdata[ni]*100:fdata[ni];
-  return true;
-}
-
-template <class Field>
+template <class Mesh>
 bool 
-SeedField::build_weight_table(Field *field, DistTable<Field> &table)
+SeedField::build_weight_table_sfi(MeshBaseHandle mesh_h,
+				  ScalarFieldInterface *sfi,
+				  DistTable<Mesh> &table)
 {
-  typedef typename Field::mesh_type            mesh_type;
-  typedef typename Field::fdata_type           fdata_type;
-  typedef typename fdata_type::value_type      value_type;
-  typedef typename mesh_type::Elem::iterator   elem_iterator;
-  typedef typename mesh_type::Elem::index_type elem_index;
+  typedef typename Mesh::Elem::iterator   elem_iterator;
+  typedef typename Mesh::Elem::index_type elem_index;
   
 //  long double size = 2.e-300;
   long double size = 1;
 
   string dist = randDist_.get();
 
-  mesh_type* mesh = field->get_typed_mesh().get_rep();
+  Mesh *mesh = dynamic_cast<Mesh *>(mesh_h.get_rep());
+  if (mesh == 0) { error("No mesh"); return false; }
 
   elem_iterator ei = mesh->tbegin((elem_iterator *)0);
   elem_iterator endi = mesh->tend((elem_iterator *)0);
-  if (ei==endi) // empty mesh
+  if (ei == endi) // empty mesh
     return false;
 
   // the tables are to be filled with increasing values.
@@ -244,41 +226,41 @@ SeedField::build_weight_table(Field *field, DistTable<Field> &table)
   // bin[n] = b[n-1]+newval;bin[0]=newval
 
   if (dist=="impuni") { // size of element * data at element
-    value_type val;
+    double val;
     Point p;
     for(;;) {
       mesh->get_center(p,*ei);
-      if (!interp(val,p,field)) continue;
-      if ((fdata_mag(val)>0)&&(mesh->get_element_size(*ei)>0)) break;
+      if (!sfi->interpolate(val,p)) continue;
+      if ((val > 0) && (mesh->get_element_size(*ei)>0)) break;
       ++ei;
     }
-    table.push_back(mesh->get_element_size(*ei)*fdata_mag(val),*ei);
+    table.push_back(mesh->get_element_size(*ei) * val,*ei);
     ++ei;
     while (ei != endi) {
       mesh->get_center(p,*ei);
-      if (!interp(val,p,field)) continue;
-      if ( mesh->get_element_size(*ei)>0 && fdata_mag(val)>0) {
-	table.push_back(mesh->get_element_size(*ei)*fdata_mag(val)+
+      if (!sfi->interpolate(val,p)) continue;
+      if ( mesh->get_element_size(*ei)>0 && val > 0) {
+	table.push_back(mesh->get_element_size(*ei) * val +
 			table[table.size()-1].first,*ei);
       }
       ++ei;
     }
-  } else if (dist=="impscat") { // standard size * data at element
-    value_type val;
+  } else if (dist == "impscat") { // standard size * data at element
+    double val;
     Point p;
     for(;;) {
       mesh->get_center(p,*ei);
-      if (!interp(val,p,field)) continue;
-      if (fdata_mag(val)>0) break;
+      if (!sfi->interpolate(val,p)) continue;
+      if (val > 0) break;
       ++ei;
     }
-    table.push_back(size*fdata_mag(val),*ei);
+    table.push_back(size * val, *ei);
     ++ei;
     while (ei != endi) {
       mesh->get_center(p,*ei);
-      if (!interp(val,p,field)) continue;
-      if ( fdata_mag(val)>0) {
-	table.push_back(size*fdata_mag(val)+
+      if (!sfi->interpolate(val,p)) continue;
+      if (val > 0) {
+	table.push_back(size * val +
 			table[table.size()-1].first,*ei);
       }
       ++ei;
@@ -310,26 +292,134 @@ SeedField::build_weight_table(Field *field, DistTable<Field> &table)
   return true;
 }
 
-template <class Field>
-void
-SeedField::generate_random_seeds(Field *field)
+
+template <class Mesh>
+bool 
+SeedField::build_weight_table_vfi(MeshBaseHandle mesh_h,
+				  VectorFieldInterface *vfi,
+				  DistTable<Mesh> &table)
 {
-  typedef typename Field::mesh_type              mesh_type;
-  typedef typename Field::fdata_type             fdata_type;
-  typedef typename DistTable<Field>::table_entry table_entry;
+  typedef typename Mesh::Elem::iterator   elem_iterator;
+  typedef typename Mesh::Elem::index_type elem_index;
+  
+//  long double size = 2.e-300;
+  long double size = 1;
 
-  DistTable<Field> table;
+  string dist = randDist_.get();
 
+  Mesh *mesh = dynamic_cast<Mesh *>(mesh_h.get_rep());
+  if (mesh == 0) { error("No mesh"); return false; }
+
+  elem_iterator ei = mesh->tbegin((elem_iterator *)0);
+  elem_iterator endi = mesh->tend((elem_iterator *)0);
+  if (ei == endi) // empty mesh
+    return false;
+
+  // the tables are to be filled with increasing values.
+  // degenerate elements (size<=0) will not be included in the table.
+  // mag(data) <=0 means ignore the element (don't include in the table).
+  // bin[n] = b[n-1]+newval;bin[0]=newval
+
+  if (dist=="impuni") { // size of element * data at element
+    Vector val;
+    Point p;
+    for(;;) {
+      mesh->get_center(p,*ei);
+      if (!vfi->interpolate(val,p)) continue;
+      if ((val.length()>0)&&(mesh->get_element_size(*ei)>0)) break;
+      ++ei;
+    }
+    table.push_back(mesh->get_element_size(*ei) * val.length(),*ei);
+    ++ei;
+    while (ei != endi) {
+      mesh->get_center(p,*ei);
+      if (!vfi->interpolate(val,p)) continue;
+      if ( mesh->get_element_size(*ei)>0 && val.length() > 0) {
+	table.push_back(mesh->get_element_size(*ei) * val.length() +
+			table[table.size()-1].first,*ei);
+      }
+      ++ei;
+    }
+  } else if (dist == "impscat") { // standard size * data at element
+    Vector val;
+    Point p;
+    for(;;) {
+      mesh->get_center(p,*ei);
+      if (!vfi->interpolate(val,p)) continue;
+      if (val.length() > 0) break;
+      ++ei;
+    }
+    table.push_back(size * val.length(), *ei);
+    ++ei;
+    while (ei != endi) {
+      mesh->get_center(p,*ei);
+      if (!vfi->interpolate(val,p)) continue;
+      if (val.length() > 0) {
+	table.push_back(size * val.length() +
+			table[table.size()-1].first,*ei);
+      }
+      ++ei;
+    }
+  } else if (dist=="uniuni") { // size of element only
+    for(;;) {
+      if (mesh->get_element_size(*ei)>0) break;
+      ++ei;
+    }
+    table.push_back(mesh->get_element_size(*ei),*ei);
+    ++ei;
+    while (ei != endi) {
+      if (mesh->get_element_size(*ei)>0)
+	table.push_back(mesh->get_element_size(*ei)+
+			table[table.size()-1].first,*ei);
+      ++ei;
+    }
+  } else if (dist=="uniscat") { // standard size only
+    table.push_back(size,*ei);
+    ++ei;
+    while (ei != endi) {
+      table.push_back(size+table[table.size()-1].first,*ei);
+      ++ei;
+    }    
+  } else { // unknown distribution type
+    return false;
+  } 
+
+  return true;
+}
+
+
+
+template <class Mesh>
+void
+SeedField::generate_random_seeds(FieldHandle field, Mesh *)
+{
+  DistTable<Mesh> table;
   table.clear();
-  if (!build_weight_table(field,table)) // unknown dist type or empty mesh
-    return;
+
+  ScalarFieldInterface *sfi = field->query_scalar_interface();
+  VectorFieldInterface *vfi = field->query_vector_interface();
+  if (sfi)
+  {
+    if (!build_weight_table_sfi(field->mesh(), sfi, table))
+    {
+      return;
+    }
+  }
+  else if (vfi)
+  {
+    if (!build_weight_table_vfi(field->mesh(), vfi, table))
+    {
+      return;
+    }
+  }
 
   int rngSeed = rngSeed_.get();
   MusilRNG rng(rngSeed);
   rngSeed_.set(rngSeed+1);
 
   long double max = table[table.size()-1].first;
-  mesh_type *mesh = field->get_typed_mesh().get_rep();
+  Mesh *mesh = dynamic_cast<Mesh *>(field->mesh().get_rep());
+
   PointCloudMesh *pcmesh = scinew PointCloudMesh;
 
   unsigned int ns = numSeeds_.get();
@@ -337,10 +427,10 @@ SeedField::generate_random_seeds(Field *field)
   
   for (loop=0;loop<ns;loop++) {
     Point p;
-    table_entry e;
-    table.search(e,rng()*max);             // find random cell
-    mesh->get_random_point(p, e.second,    // find random point in that cell
-			   rngSeed+loop);
+    typename DistTable<Mesh>::table_entry_type e;
+    table.search(e,rng() * max);             // find random cell
+    // Find random point in that cell.
+    mesh->get_random_point(p, e.second, rngSeed+loop);
     pcmesh->add_node(p);
   }
 
@@ -448,19 +538,19 @@ SeedField::execute()
 
   if (tab=="Random") {
     if (vf_->get_type_name(-1)=="LatticeVol<double>") {
-      generate_random_seeds((LatticeVol<double>*)vf_);
-     } else if (vf_->get_type_name(-1)=="TetVol<double>") {
-       generate_random_seeds((TetVol<double>*)vf_);
-     } else if (vf_->get_type_name(-1)=="TriSurf<double>") {
-       generate_random_seeds((TriSurf<double>*)vf_);
-     } else if (vf_->get_type_name(-1)=="LatticeVol<Vector>") {
-       generate_random_seeds((LatticeVol<Vector>*)vf_);
-     } else if (vf_->get_type_name(-1)=="TetVol<Vector>") {
-       generate_random_seeds((TetVol<Vector>*)vf_);
-     } else if (vf_->get_type_name(-1)=="TriSurf<Vector>") {
-       generate_random_seeds((TriSurf<Vector>*)vf_);
-     } else if (vf_->get_type_name(-1)=="TetVol<int>") {
-       generate_random_seeds((TetVol<int>*)vf_);
+      generate_random_seeds(vfhandle_, (LatVolMesh *)0);
+    } else if (vf_->get_type_name(-1)=="TetVol<double>") {
+      generate_random_seeds(vfhandle_, (TetVolMesh *)0);
+    } else if (vf_->get_type_name(-1)=="TriSurf<double>") {
+      generate_random_seeds(vfhandle_, (TriSurfMesh *)0);
+    } else if (vf_->get_type_name(-1)=="LatticeVol<Vector>") {
+      generate_random_seeds(vfhandle_, (LatVolMesh *)0);
+    } else if (vf_->get_type_name(-1)=="TetVol<Vector>") {
+      generate_random_seeds(vfhandle_, (TetVolMesh *)0);
+    } else if (vf_->get_type_name(-1)=="TriSurf<Vector>") {
+      generate_random_seeds(vfhandle_, (TriSurfMesh *)0);
+    } else if (vf_->get_type_name(-1)=="TetVol<int>") {
+      generate_random_seeds(vfhandle_, (TetVolMesh *)0);
     } else {
       // can't do this kind of field
       return;
