@@ -155,7 +155,7 @@ void ApplyFEMCurrentSource::execute()
       p=Point((*mmp)[ii][0], (*mmp)[ii][1], (*mmp)[ii][2]);
       if (mmp->nrows() == 7) loc=(int)((*mmp)[ii][6]);
     }
-    if (mesh->locate(p, loc)) {
+    if (mesh->locate(&loc, p)) {
       //	 cerr << "ApplyFEMCurrentSource: Found Dipole in element "<<loc<<"\n";
       double s1, s2, s3, s4;
       
