@@ -107,12 +107,13 @@ WARNING
          double getThermalConductivity() const;
          double getSpecificHeat() const;
          double getHeatTransferCoefficient() const;
+         double getInitialDensity() const;
 
          // For MPMICE
          double getGamma() const;
 				
       private:
-	 
+
 	 // Specific constitutive model associated with this material
 	 ConstitutiveModel *d_cm;
 
