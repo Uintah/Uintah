@@ -33,14 +33,14 @@ Group *make_geometry( )
   return group;
 }
 
-int main()
+int main(int argc, char** argv)
 {
-  PathTraceLight ptlight(Point(1,1,-10), 0.8, Color(1,1,1)*100000 );
+  PathTraceLight ptlight(Point(1,1,-10), 0.8, 10000.0*Color(1,1,1));
   Group *group = make_geometry();
-  PathTraceContext ptcontext(Color(0.1,0.9,0.6), ptlight, group, 100, 3);  
+  PathTraceContext ptcontext(Color(0.1,0.7,0.2), ptlight, group, 100, 3);  
 
-  PathTraceWorker worker(group, &ptcontext, "stuff");
-  worker.run();
+  PathTraceWorker ptworker(group, &ptcontext, "sphere");
+  ptworker.run();
       
   return 0;
 }
