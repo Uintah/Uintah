@@ -35,8 +35,6 @@ WARNING
   
 ****************************************/
 
-namespace Uintah {
-    namespace Grid {
 template<class T>
 class Handle {
 public:
@@ -151,6 +149,9 @@ void Handle<T>::detach()
 
 //
 // $Log$
+// Revision 1.4  2000/03/17 18:42:03  dav
+// removed extra accidental namespace declaration
+//
 // Revision 1.3  2000/03/17 18:17:17  dav
 // fixed typo
 //
