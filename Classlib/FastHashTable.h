@@ -23,6 +23,35 @@
 
 template<class Key> class FastHashTableIter;
 
+
+/**************************************
+
+CLASS 
+   FastHashTable
+   
+KEYWORDS
+   FastHashTable
+
+DESCRIPTION
+   
+ 
+   FastHashTable.h: Interface to Faster HashTable type
+ 
+   Written by:
+    Steven G. Parker
+    Department of Computer Science
+    University of Utah
+    Feb. 1994
+ 
+   Copyright (C) 1994 SCI Group
+  
+ 
+PATTERNS
+   
+WARNING
+  
+****************************************/
+
 template<class Key> class FastHashTable {
     Key** table;
     int hash_size;
@@ -31,28 +60,45 @@ template<class Key> class FastHashTable {
     void rehash(int newsize);
     friend class FastHashTableIter<Key>;
 public:
+    //////////
+    //Class constructor
     FastHashTable();
+    
+    //////////
+    //Copy Constructor
     FastHashTable(const FastHashTable<Key>&);
+    
+    //////////
+    //Class Destructor
     ~FastHashTable();
+
+    //////////
     // Inserts the key into the FastHash table
     inline void insert(Key* key);
 
+    //////////
     // Looks up key in the FastHashtable.  Returns 0 if not found.
     // Returns 1, and places the data item in data if it is found.
     // If more than one of "key" exist, it is undefined which it
     // will return.
     inline int lookup(const Key* key, Key*& data);
 
+
+    //////////
     // Removes all items with key "key" from the FastHash table.
     // Returns the number actually removed
     inline int remove(const Key* key);
 
+
+    //////////
     // Empties the FastHash table
     void remove_all();
 
+    //////////
     // Returns how many items are stored in the FastHash table
     int size() const;
 
+    //////////
     //Rigorous Tests
     static void test_rigorous(RigorousTest* __test);
 

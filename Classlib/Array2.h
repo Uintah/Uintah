@@ -23,7 +23,29 @@
 #endif
 
 class Piostream;
+/**************************************
 
+CLASS
+   Array2
+   
+KEYWORDS
+   Array2
+
+DESCRIPTION
+    Array2.h: Interface to dynamic 2D array class
+  
+    Written by:
+     Steven G. Parker
+     Department of Computer Science
+     University of Utah
+     March 1994
+  
+    Copyright (C) 1994 SCI Group
+PATTERNS
+   
+WARNING
+  
+****************************************/
 template<class T>
 class Array2 {
     T** objs;

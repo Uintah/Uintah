@@ -1,16 +1,21 @@
 
 #ifndef SCI_Classlib_PQueue_h
 #define SCI_Classlib_PQueue_h 1
+#include <Tester/RigorousTest.h>
 
 /* Provides a priority queue of a fixed maximum size N that holds integers
    in the range 1..N (inclusive) that are weighted with positive integers. */
 
 class PQueue {
 
+
 public:
+  
+    //Rigorous Tests
+    static void test_rigorous(RigorousTest* __test);
 
   /* Constructs an empty priority queue of maximum size N. */
-
+    
   PQueue (unsigned N);
 
   ~PQueue ();                               // Destructor
@@ -51,7 +56,6 @@ public:
   int nuke(int i) { if (replace(i,-0.5)) { return (remove()==i); } return 0;};
 
   int size() { return count; };
-
 private:
 
   int N;
@@ -65,3 +69,12 @@ private:
 };
 
 #endif
+
+
+
+
+
+
+
+
+

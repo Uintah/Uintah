@@ -7,6 +7,7 @@
 #include <Classlib/HashTable.h>
 #include <Classlib/FastHashTable.h>
 #include <Classlib/BitArray1.h>
+#include <Classlib/PQueue.h>
 
 TestTable test_table[] = {
     {"clString", &clString::test_rigorous, &clString::test_performance},
@@ -17,6 +18,7 @@ TestTable test_table[] = {
 //  {"HashTable", HashTable<char*, int>::test_rigorous, 0},
     {"FastHashTable", FastHashTable<int>::test_rigorous, 0},
     {"BitArray1", &BitArray1::test_rigorous, 0},
+    {"PQueue", &PQueue::test_rigorous, 0},
     {0,0,0}
 
 };

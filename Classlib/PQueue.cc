@@ -3,6 +3,7 @@
 #include <iostream.h>
 #include <stdlib.h>
 #include <Malloc/Allocator.h>
+#include <Tester/RigorousTest.h>
 
 PQueue :: PQueue ( unsigned n )
 {
@@ -239,5 +240,118 @@ void main(int argc, char* argv)
   
 
 }
-
 #endif
+
+void PQueue::test_rigorous(RigorousTest* __test)
+{
+    int c;
+    int size;
+
+    PQueue q(100);
+    TEST(q.isEmpty());
+    TEST(q.size()==0);
+    size=q.size();
+    for(int i=1;i<=100;i++){
+	q.replace(i,i);
+	++size;
+	TEST(q.size()==size);
+	TEST(!q.isEmpty());
+    }
+
+    
+    for(i=1;i<=100;i++){
+	TEST(q.remove()==i);
+	--size;
+	TEST(q.size()==size);
+    }
+    
+    c=100;
+    for(i=1;i<=100;i++){
+	q.replace(i,c);
+	++size;
+	--c;
+	TEST(q.size()==size);
+    }
+
+    for(i=100;i>=1;i--){
+	TEST(q.remove()==i);
+	size--;
+	TEST(q.size()==size);
+    }
+
+    for(i=1;i<=100;i++)
+	q.replace(i,i);
+    
+    size=100;
+    for(i=100;i>50;i--){
+	q.nuke(i);
+	size--;
+	TEST(q.size()==size);
+    }
+
+    for(i=1;i<=100;i++){
+	if(i>50)
+	    TEST(q.remove()==0);
+	else
+	    TEST(q.remove()!=0);
+    }
+    
+    PQueue a(1000);
+    
+    size=0;
+    for(i=1;i<=1000;i++){
+	a.replace(i,i);
+	++size;
+	TEST(a.size()==size);
+    }
+    
+    PQueue b = a;
+    
+    for(i=1;i<=1000;i++)
+	TEST(b.remove()==i);
+
+    TEST(b.isEmpty());
+
+    for(i=1;i<=1000;i++)
+	TEST(b.replace(i,i));
+
+    c=1000;
+    for(i=1;i<=1000;i++){
+	TEST(b.replace(i,c));
+	--c;
+    }
+
+    for(i=1000;i>=1;i--)
+	TEST(b.remove()==i);
+
+    
+    TEST(a.size()==1000);
+
+    for(i=1;i<=1000;i+=2)
+	a.nuke(i);
+    
+    c=0;
+    for(i=1;i<=1000;i++){
+	c+=2;
+	if(i<=500)
+	    TEST(a.remove()==c);
+	else
+	    TEST(a.remove()==0);
+
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
