@@ -69,6 +69,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
   lb = scinew MPMLabel();
+  d_fracture = false;
 }
 
 SerialMPM::~SerialMPM()
@@ -679,8 +680,10 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 
    new_dw->pleaseSave(lb->gTemperatureLabel, numMatls);
 
-   new_dw->pleaseSave(lb->pCrackSurfaceNormalLabel, numMatls);
-   new_dw->pleaseSave(lb->pIsBrokenLabel, numMatls);
+   if(d_fracture) {
+     new_dw->pleaseSave(lb->pCrackSurfaceNormalLabel, numMatls);
+     new_dw->pleaseSave(lb->pIsBrokenLabel, numMatls);
+   }
 
    new_dw->pleaseSaveIntegrated(lb->StrainEnergyLabel);
    new_dw->pleaseSaveIntegrated(lb->KineticEnergyLabel);
@@ -876,6 +879,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
        mpm_matl->getBurnModel()->initializeBurnModelData(patch,
 						mpm_matl, new_dw);
        if(mpm_matl->getFractureModel()) {
+         d_fracture = true;
 	 mpm_matl->getFractureModel()->initializeFractureModelData( patch,
 						mpm_matl, new_dw);
        }       
@@ -1755,6 +1759,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.131  2000/09/06 20:41:46  tan
+// Fixed bugs on pleasesave for fracture stuff.
+//
 // Revision 1.130  2000/09/06 20:15:45  tan
 // Fixed bugs in crackGrow.
 //

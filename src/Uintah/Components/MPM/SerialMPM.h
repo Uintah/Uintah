@@ -205,6 +205,7 @@ protected:
   SimulationStateP d_sharedState;
   MPMLabel* lb;
   bool             d_burns;
+  bool             d_fracture;
 };
       
 } // end namespace MPM
@@ -212,6 +213,9 @@ protected:
    
 //
 // $Log$
+// Revision 1.55  2000/09/06 20:41:47  tan
+// Fixed bugs on pleasesave for fracture stuff.
+//
 // Revision 1.54  2000/09/05 19:36:59  tan
 // Fracture starts to run in Uintah/MPM!
 //
