@@ -88,6 +88,7 @@ class ShowField : public Module
   GuiInt                   edges_on_;
   bool                     edges_dirty_;
   //! faces.
+  GuiInt                   use_normals_;
   GuiInt                   faces_on_;
   bool                     faces_dirty_;
   //! data.
@@ -141,6 +142,7 @@ ShowField::ShowField(const string& id) :
   nodes_dirty_(true),
   edges_on_("edges-on", id, this),
   edges_dirty_(true),
+  use_normals_("use-normals", id, this),
   faces_on_("faces-on", id, this),
   faces_dirty_(true),
   vectors_on_("vectors-on", id, this),
@@ -277,7 +279,8 @@ ShowField::execute()
   alg->render(fld_handle, 
 	      nodes_dirty_, edges_dirty_, faces_dirty_, data_dirty_,
 	      def_mat_handle_, use_def_color_, color_handle_,
-	      ndt, edt, ns, es, vs, normalize_vectors_.get(), res_);
+	      ndt, edt, ns, es, vs, normalize_vectors_.get(), res_,
+	      use_normals_.get());
 
   // cleanup...
   if (nodes_dirty_) {
@@ -334,7 +337,10 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
     Material *m = scinew Material(Color(def_color_r_.get(), def_color_g_.get(),
 					def_color_b_.get()));
     def_mat_handle_ = m;
-    if (ogeom_) ogeom_->flushViews();
+    faces_dirty_ = true;
+    edges_dirty_ = true;
+    nodes_dirty_ = true;
+    want_to_execute();
   } else if (args[1] == "node_display_type") {
     nodes_dirty_ = true;
     want_to_execute();
@@ -365,6 +371,14 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
     } else {
       if (ogeom_) ogeom_->flushViews();
     }
+  } else if (args[1] == "rerender_faces"){
+    faces_dirty_ = true;
+    want_to_execute();
+  } else if (args[1] == "rerender_all"){
+    faces_dirty_ = true;
+    edges_dirty_ = true;
+    nodes_dirty_ = true;
+    want_to_execute();    
   } else if (args[1] == "toggle_display_faces"){
     // Toggle the GeomSwitch.
     faces_on_.reset();
