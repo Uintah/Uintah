@@ -940,15 +940,15 @@ proc destroyConnection { conn { undo 0 } { tell_SCIRun 1 } } {
     networkHasChanged
     deleteTraces
     set connid [makeConnID $conn]
-    $Subnet(Subnet$Subnet([oMod conn])_canvas) delete \
-	$connid $connid-notes $connid-notes-shadow
-    $Subnet(Subnet$Subnet([oMod conn])_minicanvas) delete \
-	$connid $connid-notes $connid-notes-shadow
+    set subnet $Subnet([oMod conn])
+    set canvas $Subnet(Subnet${subnet}_canvas)
+    set minicanvas $Subnet(Subnet${subnet}_minicanvas)
+    $canvas delete $connid $connid-notes $connid-notes-shadow
+    $minicanvas delete $connid $connid-notes $connid-notes-shadow
 
     set realConn [findRealConnection $conn]
     listFindAndRemove Subnet([oMod conn]_connections) $conn
     listFindAndRemove Subnet([iMod conn]_connections) $conn
-
 
     array unset Disabled $connid
     array unset Color $connid
@@ -957,24 +957,27 @@ proc destroyConnection { conn { undo 0 } { tell_SCIRun 1 } } {
     array unset Notes $connid-Color
 
     if { [isaSubnetEditor [oMod conn]] } {
-
-	foreach econn $Subnet(SubnetIcon$Subnet([oMod conn])_connections) {
+	foreach econn $Subnet(SubnetIcon${subnet}_connections) {
 	    if { [iNum econn] == [oNum conn] &&
-		 [string equal SubnetIcon$Subnet([oMod conn]) [iMod econn]] } {
+		 [string equal SubnetIcon$subnet [iMod econn]] } {
 		destroyConnection $econn
 	    }
 	}
-	removePort [oPort conn]
+	if { [canvasExists $canvas SubnetIcon$subnet] } {
+	    removePort [oPort conn]
+	}
     }
-
+    
     if { [isaSubnetEditor [iMod conn]] } {
-	foreach econn $Subnet(SubnetIcon$Subnet([iMod conn])_connections) {
+	foreach econn $Subnet(SubnetIcon${subnet}_connections) {
 	    if { [oNum econn] == [iNum conn] &&
-		 [string equal SubnetIcon$Subnet([iMod conn]) [oMod econn]] } {
+		 [string equal SubnetIcon$subnet [oMod econn]] } {
 		destroyConnection $econn
 	    }
 	}
-	removePort [iPort conn]
+	if { [canvasExists $canvas SubnetIcon$subnet] } {
+	    removePort [iPort conn]
+	}
     }
 
     if { $tell_SCIRun } {
@@ -986,11 +989,8 @@ proc destroyConnection { conn { undo 0 } { tell_SCIRun 1 } } {
 	}
     }
 
-
     drawPorts [oMod conn] o
     drawPorts [iMod conn] i
-
-		 
 
     #if we got here from undo, record this action as undoable
     if { $undo } {
@@ -1153,8 +1153,11 @@ proc trackPortConnection { port x y } {
 proc endPortConnection { subnet } {
     global Subnet potential_connection drawXtraPort
     $Subnet(Subnet${subnet}_canvas) delete temp
-    if [info exists drawXtraPort] { unset drawXtraPort }
-    if { $potential_connection == "" } { drawPorts Subnet$subnet ; return }
+    if [info exists drawXtraPort] { 
+	unset drawXtraPort 
+	drawPorts Subnet$subnet
+    }
+    if { $potential_connection == "" } {  return }
     createConnection $potential_connection 1
 }
 
@@ -1231,7 +1234,6 @@ proc computePortCoords { port } {
     global Subnet port_spacing port_width
     set canvas $Subnet(Subnet$Subnet([pMod port])_canvas)
     set isoport [string equal o [pType port]]
-
     if { [string first "Subnet" [pMod port]] == 0 &&
 	 [string first "SubnetIcon" [pMod port]] != 0} {
 	if { !$isoport } { 
