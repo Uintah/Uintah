@@ -214,7 +214,7 @@ SCI_ARG_WITH(unipetsc,
   AC_HELP_STRING(--with-unipetsc=DIR,
                  Use the unipetsc installation in DIR),
   [with_unipetsc="$withval"
-   sci_check_unipetc=yes],
+   sci_check_unipetsc=yes],
   [with_unipetsc=""])
 SCI_ARG_WITH(tau,
   AC_HELP_STRING(--with-tau=<tau-makefile>,
@@ -426,19 +426,24 @@ for i in $package; do
    SCI_SET_PACKAGE_CHECKS($i)
 done
 
-if test "$sci_check_blas" == "yes"; then
+if test "$sci_check_unipetsc" = "yes"; then
+   sci_check_blas=yes
+   sci_check_lapack=yes
+fi
+
+if test "$sci_check_blas" = "yes"; then
    sci_check_fortran=yes
 fi
 
 
 # Set the subdir name in the bin tree for matlab engine.
-if test "$pkg_MatlabInterface" == "yes"; then
+if test "$pkg_MatlabInterface" = "yes"; then
   MATLAB_ENG=matlab
   AC_SUBST(MATLAB_ENG)
 fi
 
 # Take care of package dependencies
-if test "$pkg_Fusion" == "yes"; then
+if test "$pkg_Fusion" = "yes"; then
   # Fusion depends upon Teem Package.  
   if test -z $pkg_Teem; then
     AC_MSG_ERROR([The Fusion Package depends on the Teem Package. Please 
