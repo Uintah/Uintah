@@ -322,6 +322,20 @@ ColorMap::lookup2(double nvalue)
 }
 
 
+double
+ColorMap::getMin()
+{
+  return min_;
+}
+
+
+double
+ColorMap::getMax()
+{
+  return max_;
+}
+
+
 } // End namespace SCIRun
 
 
