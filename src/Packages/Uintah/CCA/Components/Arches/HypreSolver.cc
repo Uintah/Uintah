@@ -74,8 +74,28 @@ HypreSolver::problemSetup(const ProblemSpecP& params)
     d_maxSweeps = 75;
   if (db->findBlock("ksptype"))
     db->require("ksptype",d_kspType);
+  if (d_kspType == "smg")
+    d_kspType = "0";
   else
-    d_kspType = 11;
+    if (d_kspType == "pfmg")
+      d_kspType = "1";
+    else
+      if (d_kspType == "cg")
+	{
+	  db->require("pctype", d_pcType);
+	  if (d_pcType == "smg")
+	    d_kspType = "10";
+	  else
+	    if (d_pcType == "pfmg")
+	      d_kspType = "11";
+	    else
+	      if (d_pcType == "jacobi")
+		d_kspType = "17";
+	      else
+		d_kspType = "19";
+	}
+      else
+	d_kspType = "11";
   if (db->findBlock("underrelax"))
     db->require("underrelax", d_underrelax);
   else
@@ -521,7 +541,7 @@ HypreSolver::pressLinearSolve()
     HYPRE_StructPFMGGetNumIterations(solver, &num_iterations);
     HYPRE_StructPFMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
     HYPRE_StructPFMGDestroy(solver);
-    //cerr << "PFMG Solve time = " << Time::currentSeconds()-start_time << endl;
+    //    cerr << "PFMG Solve time = " << Time::currentSeconds()-start_time << endl;
   }
   else {
     HYPRE_StructPCGCreate(MPI_COMM_WORLD, &solver);
@@ -546,7 +566,7 @@ HypreSolver::pressLinearSolve()
 			   (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSolve,
 			   (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSetup,
 			   (HYPRE_Solver) precond);
-      //cerr << "SMG Precond time = " << Time::currentSeconds()-start_time << endl;
+      //      cerr << "SMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
   
     else if (d_kspType == "11") {  
@@ -566,7 +586,7 @@ HypreSolver::pressLinearSolve()
 			   (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSolve,
 			   (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSetup,
 			   (HYPRE_Solver) precond);
-      //cerr << "PFMG Precond time = " << Time::currentSeconds()-start_time << endl;
+      //      cerr << "PFMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
     else if (d_kspType == "17") {
       /* use two-step Jacobi as preconditioner */
@@ -578,7 +598,7 @@ HypreSolver::pressLinearSolve()
 			   (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSolve,
 			   (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSetup,
 			   (HYPRE_Solver) precond);
-      //cerr << "Jacobi Precond time = " << Time::currentSeconds()-start_time << endl;
+      //      cerr << "Jacobi Precond time = " << Time::currentSeconds()-start_time << endl;
     }
     
     //double dummy_start = Time::currentSeconds();
