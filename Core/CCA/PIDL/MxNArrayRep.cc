@@ -29,7 +29,9 @@
  */
 
 #include <Core/CCA/PIDL/MxNArrayRep.h>
+#include <iostream>
 using namespace SCIRun;
+using namespace std;
 
 int SCIRun::gcd(int a, int b, int &x, int &y) {
   std::vector<int> q;
@@ -103,8 +105,11 @@ int SCIRun::lcm(int m,int n) {
 }
 
 MxNArrayRep::MxNArrayRep(int dimno, Index* dimarr[], Reference* remote_ref) 
-  : mydimarr(dimarr), mydimno(dimno)
+  : mydimno(dimno)
 {
+  for(int i=0; i< mydimno; i++){
+    mydimarr.push_back( *(dimarr[i]) );
+  }
   if (remote_ref != NULL)  this->remoteRef = remote_ref;
   received = false;
 }
@@ -112,9 +117,8 @@ MxNArrayRep::MxNArrayRep(int dimno, Index* dimarr[], Reference* remote_ref)
 MxNArrayRep::MxNArrayRep(SSIDL::array2<int>& arr, Reference* remote_ref) 
 {
   mydimno = arr.size2();
-  mydimarr = new Index* [mydimno];
   for(int i=0; i < mydimno; i++) {
-    mydimarr[i] = new Index(arr[0][i],arr[1][i],arr[2][i]);
+    mydimarr.push_back(Index(arr[0][i],arr[1][i],arr[2][i]) );
   }
   if (remote_ref != NULL)  this->remoteRef = remote_ref;
   received = false;
@@ -122,20 +126,23 @@ MxNArrayRep::MxNArrayRep(SSIDL::array2<int>& arr, Reference* remote_ref)
 
 MxNArrayRep::~MxNArrayRep()
 {
+  //mydimarr is a vector now, thus no need to free memory
+  /*
   //Free the dimension array:
   for(int i=0; i < mydimno ; i++) {
     delete mydimarr[i];
-    mydimarr[i] = 0;
   }
+  delete []mydimarr;
+  */
 }
 
 SSIDL::array2<int> MxNArrayRep::getArray()
 {
   SSIDL::array2<int> dist(3,mydimno);
   for(int i=0; i<mydimno; i++) {
-    dist[0][i] = mydimarr[i]->myfirst;
-    dist[1][i] = mydimarr[i]->mylast;
-    dist[2][i] = mydimarr[i]->mystride;    
+    dist[0][i] = mydimarr[i].myfirst;
+    dist[1][i] = mydimarr[i].mylast;
+    dist[2][i] = mydimarr[i].mystride;    
   }
   return dist;
 }
@@ -148,7 +155,7 @@ unsigned int MxNArrayRep::getDimNum()
 unsigned int MxNArrayRep::getFirst(int dimno)
 {
   if (dimno <= mydimno)
-    return mydimarr[dimno-1]->myfirst;
+    return mydimarr[dimno-1].myfirst;
   else
     return 0;
 }
@@ -156,7 +163,7 @@ unsigned int MxNArrayRep::getFirst(int dimno)
 unsigned int MxNArrayRep::getLast(int dimno)
 {
   if (dimno <= mydimno)
-    return mydimarr[dimno-1]->mylast;
+    return mydimarr[dimno-1].mylast;
   else
     return 0;
 }
@@ -164,7 +171,7 @@ unsigned int MxNArrayRep::getLast(int dimno)
 unsigned int MxNArrayRep::getStride(int dimno)
 {
   if (dimno <= mydimno)
-    return mydimarr[dimno-1]->mystride;
+    return mydimarr[dimno-1].mystride;
   else
     return 1;
 }
@@ -172,7 +179,7 @@ unsigned int MxNArrayRep::getStride(int dimno)
 unsigned int MxNArrayRep::getLocalStride(int dimno)
 {
   if (dimno <= mydimno) {
-    return mydimarr[dimno-1]->localStride;
+    return mydimarr[dimno-1].localStride;
   }
   else
     return 1;
@@ -181,10 +188,10 @@ unsigned int MxNArrayRep::getLocalStride(int dimno)
 unsigned int MxNArrayRep::getSize(int dimno)
 {
   if (dimno <= mydimno) {
-    int fst = mydimarr[dimno-1]->myfirst;
-    int lst = mydimarr[dimno-1]->mylast;
-    int str = mydimarr[dimno-1]->mystride;
-    int localStride = mydimarr[dimno-1]->localStride;
+    int fst = mydimarr[dimno-1].myfirst;
+    int lst = mydimarr[dimno-1].mylast;
+    int str = mydimarr[dimno-1].mystride;
+    int localStride = mydimarr[dimno-1].localStride;
     return ( ((int) ceil((float)(lst - fst) / (float)str) ) * localStride );
   }
   else
@@ -240,9 +247,9 @@ Index* MxNArrayRep::Intersect(MxNArrayRep* arep, int dimno)
       int fst,lst,str;        //The data from the intersecting representation
 
       //Get the representations to be interested:
-      myfst = mydimarr[dimno-1]->myfirst;
-      mylst = mydimarr[dimno-1]->mylast;
-      mystr = mydimarr[dimno-1]->mystride;
+      myfst = mydimarr[dimno-1].myfirst;
+      mylst = mydimarr[dimno-1].mylast;
+      mystr = mydimarr[dimno-1].mystride;
       fst = arep->getFirst(dimno);
       lst = arep->getLast(dimno);
       str = arep->getStride(dimno);
@@ -296,7 +303,7 @@ MxNArrayRep* MxNArrayRep::Intersect(MxNArrayRep* arep)
 void MxNArrayRep::print(std::ostream& dbg)
 {
   for(int i=0; i < mydimno ; i++) {
-    mydimarr[i]->print(dbg);
+    mydimarr[i].print(dbg);
   }  
 }
 
@@ -318,7 +325,7 @@ Index::Index(unsigned int first, unsigned int last, unsigned int stride, int loc
 
 void Index::print(std::ostream& dbg)
 {
-  dbg << "("<<myfirst << ", " << mylast << "] stride=" << mystride << "\n";
+  dbg << "["<<myfirst << ", " << mylast << ") stride=" << mystride << "\n";
 }    
 
     
