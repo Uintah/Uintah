@@ -92,12 +92,12 @@ WARNING
     void timeAdvanceRK4(const ProcessorGroup*,
 		     const PatchSubset* patches,
 		     const MaterialSubset* matls,
-                        DataWarehouse* old_dw, DataWarehouse* new_dw, Step* step, int step, int nsteps);
+                        DataWarehouse* old_dw, DataWarehouse* new_dw, Step* s, int step, int nsteps);
     virtual void addRefineDependencies( Task* /*task*/, const VarLabel* /*label*/,
                                         int /*step*/, int /*nsteps*/ ) {}
-    virtual void refineFaces(const Patch* finePatch, const Level* fineLevel, const Level* coarseLevel, 
-                      CCVariable<double>& finevar, const VarLabel* label, int step, int nsteps,
-                      int matl, DataWarehouse* coarse_old_dw, DataWarehouse* coarse_new_dw) {}
+    virtual void refineFaces(const Patch* /*finePatch*/, const Level* /*fineLevel*/, const Level* /*coarseLevel*/, 
+                             CCVariable<double>& /*finevar*/, const VarLabel* /*label*/, int /*step*/, int /*nsteps*/,
+                             int /*matl*/, DataWarehouse* /*coarse_old_dw*/, DataWarehouse* /*coarse_new_dw*/) {}
 
     const VarLabel* phi_label;
     const VarLabel* pi_label;
