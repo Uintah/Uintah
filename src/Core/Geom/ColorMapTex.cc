@@ -63,7 +63,9 @@ ColorMapTex::ColorMapTex(const Point &p1, const Point &p2,
   : GeomContainer(0)
 {
   GeomFastQuads *quad = scinew GeomFastQuads();
-  quad->add (p1, 0.0, p2, 1.0, p3, 1.0, p4, 0.0);
+  const double min = cmap->getMin();
+  const double max = cmap->getMax();
+  quad->add (p1, min, p2, max, p3, max, p4, min);
   child_ = scinew GeomColorMap(quad, cmap);
 }
 
