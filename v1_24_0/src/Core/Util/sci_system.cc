@@ -360,6 +360,7 @@ sci_system(const char *line)
 {
   // We only need to wrap system on linux builds with linuxthreads
   // enabled and not nptl.
+#ifdef _CS_GNU_LIBPTHREAD_VERSION
   const size_t n = confstr(_CS_GNU_LIBPTHREAD_VERSION, NULL, (size_t) 0);
   if (n > 0)
   {
@@ -372,6 +373,7 @@ sci_system(const char *line)
       return system(line);
     }
   }
+#endif
   return sci_system_linuxthreads(line);
 }
 
