@@ -20,7 +20,7 @@ jp8cyl_8p_ups = modUPS("%s/MPMARCHES" % inputs_root(), \
 
 jp8cyl_40cube_8p_ups = modUPS("%s/MPMARCHES" % inputs_root(), \
                               "jp8cyl.ups", \
-                              ["<patches>[2,2,2]</patches>", "<resolution>[40,40,40]</resolution>" \
+                              ["<patches>[2,2,2]</patches>", "<resolution>[40,40,40]</resolution>", \
                                "<maxTime>0.5</maxTime>"])
 
 UNUSED_TESTS = [("matest_heptwb_cyl", "matest_heptwb_cyl.ups", "", 1.1, "ALL", "chem_hept_westbrook"), \
