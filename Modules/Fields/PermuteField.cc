@@ -190,16 +190,16 @@ void PermuteField::execute()
 		ofc->resize(nx,nz,ny);
 		ofb=ofc;
 	    }
-	    ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-			    Point(max.x(), max.y(), max.z()));
+	    ofb->set_bounds(Point(min.x(), min.z(), min.y()), 
+			    Point(max.x(), max.z(), max.y()));
 	    for (int i=0, ii=basex; i<nx; i++, ii+=incrx)
 		for (int j=0, jj=basey; j<ny; j++, jj+=incry)
 		    for (int k=0, kk=basez; k<nz; k++, kk+=incrz)
-			if (ofd) ofd->grid(i,j,k)=ifd->grid(ii,kk,jj);
-			else if (off) off->grid(i,j,k)=iff->grid(ii,kk,jj);
-			else if (ofi) ofi->grid(i,j,k)=ifi->grid(ii,kk,jj);
-			else if (ofs) ofs->grid(i,j,k)=ifs->grid(ii,kk,jj);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(ii,kk,jj);
+			if (ofd) ofd->grid(i,k,j)=ifd->grid(ii,jj,kk);
+			else if (off) off->grid(i,k,j)=iff->grid(ii,jj,kk);
+			else if (ofi) ofi->grid(i,k,j)=ifi->grid(ii,jj,kk);
+			else if (ofs) ofs->grid(i,k,j)=ifs->grid(ii,jj,kk);
+			else if (ofc) ofc->grid(i,k,j)=ifc->grid(ii,jj,kk);
 	} else if (map=="213") {
 	    if (ifd) {
 		ofd=scinew ScalarFieldRGdouble(); 
@@ -222,16 +222,16 @@ void PermuteField::execute()
 		ofc->resize(ny,nx,nz);
 		ofb=ofc;
 	    }
-	    ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-			    Point(max.x(), max.y(), max.z()));
+	    ofb->set_bounds(Point(min.y(), min.x(), min.z()), 
+			    Point(max.y(), max.x(), max.z()));
 	    for (int i=0, ii=basex; i<nx; i++, ii+=incrx)
 		for (int j=0, jj=basey; j<ny; j++, jj+=incry)
 		    for (int k=0, kk=basez; k<nz; k++, kk+=incrz)
 			if (ofd) ofd->grid(i,j,k)=ifd->grid(jj,ii,kk);
-			else if (off) off->grid(i,j,k)=iff->grid(jj,ii,kk);
-			else if (ofi) ofi->grid(i,j,k)=ifi->grid(jj,ii,kk);
-			else if (ofs) ofs->grid(i,j,k)=ifs->grid(jj,ii,kk);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(jj,ii,kk);
+			else if (off) off->grid(j,i,k)=iff->grid(ii,jj,kk);
+			else if (ofi) ofi->grid(j,i,k)=ifi->grid(ii,jj,kk);
+			else if (ofs) ofs->grid(j,i,k)=ifs->grid(ii,jj,kk);
+			else if (ofc) ofc->grid(j,i,k)=ifc->grid(ii,jj,kk);
 	} else if (map=="231") {
 	    if (ifd) {
 		ofd=scinew ScalarFieldRGdouble(); 
@@ -254,19 +254,19 @@ void PermuteField::execute()
 		ofc->resize(ny,nz,nx);
 		ofb=ofc;
 	    }
-	    ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-			    Point(max.x(), max.y(), max.z()));
+	    ofb->set_bounds(Point(min.y(), min.z(), min.x()), 
+			    Point(max.y(), max.z(), max.x()));
 	    for (int i=0, ii=basex; i<nx; i++, ii+=incrx)
 		for (int j=0, jj=basey; j<ny; j++, jj+=incry)
 		    for (int k=0, kk=basez; k<nz; k++, kk+=incrz)
-			if (ofd) ofd->grid(i,j,k)=ifd->grid(ii,jj,kk);
-			else if (off) off->grid(i,j,k)=iff->grid(jj,kk,ii);
-			else if (ofi) ofi->grid(i,j,k)=ifi->grid(jj,kk,ii);
-			else if (ofs) ofs->grid(i,j,k)=ifs->grid(jj,kk,ii);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(jj,kk,ii);
+			if (ofd) ofd->grid(j,k,i)=ifd->grid(ii,jj,kk);
+			else if (off) off->grid(j,k,i)=iff->grid(ii,jj,kk);
+			else if (ofi) ofi->grid(j,k,i)=ifi->grid(ii,jj,kk);
+			else if (ofs) ofs->grid(j,k,i)=ifs->grid(ii,jj,kk);
+			else if (ofc) ofc->grid(j,k,i)=ifc->grid(ii,jj,kk);
 	} else if (map=="312") {
 	    if (ifd) {
-		ofd=scinew ScalarFieldRGdouble(); 
+		ofd=scinew ScalarFieldRGdouble();
 		ofd->resize(nz,nx,ny);
 		ofb=ofd;
 	    } else if (iff) {
@@ -286,16 +286,16 @@ void PermuteField::execute()
 		ofc->resize(nz,nx,ny);
 		ofb=ofc;
 	    }
-	    ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-			    Point(max.x(), max.y(), max.z()));
+	    ofb->set_bounds(Point(min.z(), min.x(), min.y()), 
+			    Point(max.z(), max.x(), max.y()));
 	    for (int i=0, ii=basex; i<nx; i++, ii+=incrx)
 		for (int j=0, jj=basey; j<ny; j++, jj+=incry)
 		    for (int k=0, kk=basez; k<nz; k++, kk+=incrz)
-			if (ofd) ofd->grid(i,j,k)=ifd->grid(kk,ii,jj);
-			else if (off) off->grid(i,j,k)=iff->grid(kk,ii,jj);
-			else if (ofi) ofi->grid(i,j,k)=ifi->grid(kk,ii,jj);
-			else if (ofs) ofs->grid(i,j,k)=ifs->grid(kk,ii,jj);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(kk,ii,jj);
+			if (ofd) ofd->grid(k,i,j)=ifd->grid(ii,jj,kk);
+			else if (off) off->grid(k,i,j)=iff->grid(ii,jj,kk);
+			else if (ofi) ofi->grid(k,i,j)=ifi->grid(ii,jj,kk);
+			else if (ofs) ofs->grid(k,i,j)=ifs->grid(ii,jj,kk);
+			else if (ofc) ofc->grid(k,i,j)=ifc->grid(ii,jj,kk);
 	} else if (map=="321") {
 	    if (ifd) {
 		ofd=scinew ScalarFieldRGdouble(); 
@@ -318,16 +318,16 @@ void PermuteField::execute()
 		ofc->resize(nz,ny,nx);
 		ofb=ofc;
 	    }
-	    ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-			    Point(max.x(), max.y(), max.z()));
+	    ofb->set_bounds(Point(min.z(), min.y(), min.x()), 
+			    Point(max.z(), max.y(), max.x()));
 	    for (int i=0, ii=basex; i<nx; i++, ii+=incrx)
 		for (int j=0, jj=basey; j<ny; j++, jj+=incry)
 		    for (int k=0, kk=basez; k<nz; k++, kk+=incrz)
-			if (ofd) ofd->grid(i,j,k)=ifd->grid(kk,jj,ii);
-			else if (off) off->grid(i,j,k)=iff->grid(kk,jj,ii);
-			else if (ofi) ofi->grid(i,j,k)=ifi->grid(kk,jj,ii);
-			else if (ofs) ofs->grid(i,j,k)=ifs->grid(kk,jj,ii);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(kk,jj,ii);
+			if (ofd) ofd->grid(k,j,i)=ifd->grid(kk,jj,ii);
+			else if (off) off->grid(k,j,i)=iff->grid(kk,jj,ii);
+			else if (ofi) ofi->grid(k,j,i)=ifi->grid(kk,jj,ii);
+			else if (ofs) ofs->grid(k,j,i)=ifs->grid(kk,jj,ii);
+			else if (ofc) ofc->grid(k,j,i)=ifc->grid(kk,jj,ii);
 
 //	    outFld->resize(nz,ny,nx);
 //	    outFld->grid(i,j,k)=sfrg->grid(kk,jj,ii);
