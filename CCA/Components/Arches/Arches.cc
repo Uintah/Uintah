@@ -308,11 +308,14 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 	}
       }
     }
-    cerr << " Courant condition for time step: " << delta_t2 << endl;
     if (d_variableTimeStep) {
       delta_t = delta_t2;
     }
-    cout << "time step used: " << delta_t << endl;
+    else {
+      cout << " Courant condition for time step: " << delta_t2 << endl;
+    }
+
+    //    cout << "time step used: " << delta_t << endl;
     new_dw->put(delt_vartype(delta_t),  d_sharedState->get_delt_label()); 
   }
 }
