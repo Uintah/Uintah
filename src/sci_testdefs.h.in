@@ -31,6 +31,17 @@
 @MALLOC_DEFINE@
 @UNI_PETSC_DEF@
 @BLAS_DEF@
+@DEF_MPI@
+@DEF_PETSC@
+@DEF_IFL@
+@DEF_CL@
+@DEF_SSL@
+@DEF_GLOBUS@
+@DEF_TEEM@
+@DEF_PERFEX@
+@DEF_CRYPTO@
+@DEF_EXC@
+@DEF_Z@
 
 /* MPI++ on SGI has a bad interaction with <iostream>.  This prevents
    it from  being included.  We don't use it anyway. */

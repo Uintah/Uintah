@@ -1414,6 +1414,7 @@ for i in $mpi $thirdparty $SCI_LAB_TP_DEFAULT; do
      test "$INCBLT_H"; then
     LIBMPI="$i/lib"
     FOUND_ALL_MPI=yes
+    DEF_MPI="#define HAVE_MPI 1"
     break
   else
     HAVE_LIBMPI=''
@@ -1431,6 +1432,7 @@ AC_SUBST(MPI)
 AC_SUBST(HAVE_LIBMPI)
 AC_SUBST(LIBMPI)
 AC_SUBST(INCMPI_H)
+AC_SUBST(DEF_MPI)
 
 ##  --  if building uintah, search for TAU makefile  ---------------------
 
@@ -1498,11 +1500,13 @@ done
 
 if test "$LIBTEEM"; then
   HAVE_LIBTEEM=yes
+  DEF_TEEM="#define HAVE_TEEM 1"
 fi
 
 AC_SUBST(HAVE_LIBTEEM)
 AC_SUBST(LIBTEEM)
 AC_SUBST(INCTEEM_H)
+AC_SUBST(DEF_TEEM)
 
 ##  --  search for mpeg  -------------------------------------------------
 
@@ -1558,23 +1562,35 @@ done
 
 if test "$LIBPERFEX"; then
   PERFEX_LIBRARY=-lperfex
+  DEF_PERFEX="#define HAVE_PERFEX 1"
 fi
 
 AC_SUBST(PERFEX_LIBRARY)
+AC_SUBST(DEF_PERFEX)
 
 ##  --  search for ssl  --------------------------------------------------
 
 SCI_CHECK_LIB($thirdparty/lib,ssl,main)
 
+if test "$HAVE_LIBSSL"; then
+  DEF_SSL="#define HAVE_SSL 1"
+fi
+
 AC_SUBST(HAVE_LIBSSL)
 AC_SUBST(LIBSSL)
+AC_SUBST(DEF_SSL)
 
 ##  --  search for crypto  -----------------------------------------------
 
 SCI_CHECK_LIB($thirdparty/lib,crypto,main)
 
+if test "$HAVE_LIBCRYPTO"; then
+  DEF_CRYPTO="#define HAVE_CRYPTO 1"
+fi
+
 AC_SUBST(HAVE_LIBCRYPTO)
 AC_SUBST(LIBCRYPTO)
+AC_SUBST(DEF_CRYPTO)
 
 ##  --  search for SGI's image format library  ---------------------------
 
@@ -1582,10 +1598,12 @@ SCI_CHECK_LIB($thirdparty/lib,ifl,main)
 
 if test "$LIBIFL"; then
   IMAGE_LIBS=" -lifl"
+  DEF_IFL="#define HAVE_IFL 1"
 fi
 
 AC_SUBST(HAVE_LIBIFL)
 AC_SUBST(LIBIFL)
+AC_SUBST(DEF_IFL)
 
 ##  --  search for SGI's compression library  ----------------------------
 
@@ -1593,11 +1611,13 @@ SCI_CHECK_LIB($thirdparty/lib,cl,main)
 
 if test "$LIBCL"; then
   IMAGE_LIBS="$IMAGE_LIBS -lcl"
+  DEF_CL="#define HAVE_CL 1"
 fi
 
 AC_SUBST(HAVE_LIBCL)
 AC_SUBST(LIBCL)
 AC_SUBST(IMAGE_LIBS)
+AC_SUBST(DEF_CL)
 
 ##  --  search for SGI'S traceback library  ------------------------------ 
 
@@ -1605,10 +1625,12 @@ SCI_CHECK_LIB($thirdparty/lib,exc,main)
 
 if test "$HAVE_LIBEXC"; then
   TRACEBACK_LIB=-lexc
+  DEF_EXC="#define HAVE_EXC 1"
 fi
 
 AC_SUBST(HAVE_LIBEXC)
 AC_SUBST(LIBEXC)
+AC_SUBST(DEF_EXC)
 
 ##  --  globus nexus  ----------------------------------------------------
 
@@ -1644,6 +1666,7 @@ for i in $with_globus $thirdparty $SCI_LAB_TP_DEFAULT; do
      test "$HAVE_LIBGLOBUS_GSS" &&
      test "$HAVE_LIBGLOBUS_GAA"; then
     FOUND_ALL_GLOBUS=yes
+    DEF_GLOBUS="#define HAVE_GLOBUS 1"
     GLOBUS_INCLUDE="-I$i/include"
     GLOBUS_LIB="$LIBGLOBUS_UTP"
     is_linux=`echo $host | sed 's/.*linux.*/linux/'`
@@ -1673,6 +1696,7 @@ AC_SUBST(GLOBUS_INCLUDE)
 AC_SUBST(GLOBUS_LIB)
 AC_SUBST(PARALLEL_DEFINE)
 AC_SUBST(BUILD_PARALLEL)
+AC_SUBST(DEF_GLOBUS)
 
 ##  --  search fo gzopen (and related)  ----------------------------------
 
@@ -1684,11 +1708,13 @@ if test -z "$HAVE_LIBZ" ||
   HAVE_LIBZ=''
 else
   LIBZ_FLAG=-lz
+  DEF_Z="#define HAVE_Z 1"
 fi
 
 AC_SUBST(HAVE_LIBZ)
 AC_SUBST(LIBZ)
 AC_SUBST(LIBZ_FLAG)
+AC_SUBST(DEF_Z)
 
 ##  --  search for blas stuff  -------------------------------------------
 for i in $blas $thirdparty $SCI_LAB_TP_DEFAULT; do
@@ -1737,6 +1763,7 @@ for i in $petsc $thirdparty $SCI_LAB_TP_DEFAULT; do
      test "$INCPETSC_H" &&
      test -x "$i/bin/petscarch"; then 
     FOUND_ALL_PETSC=yes
+    DEF_PETSC="#define HAVE_PETSC 1"
     PETSC_DIR=$i
     if test "$debug" = "yes"; then
       PETSC_SUB=libg
@@ -1767,6 +1794,7 @@ AC_SUBST(PETSC_SUB)
 AC_SUBST(PETSC_ARCH)
 AC_SUBST(LIBPETSC)
 AC_SUBST(INCPETSC_H)
+AC_SUBST(DEF_PETSC)
 
 ##  --  search for uni-petsc  --------------------------------------------
 FOUND_ALL_PETSC=no
@@ -1838,7 +1866,7 @@ esac
 ##  --------------------  configure packages  ---------------------------
 ##  ---------------------------------------------------------------------
 
-
+##  nothing here yet
 
 ##  ---------------------------------------------------------------------
 ##  --------------------  generate output files  ------------------------
