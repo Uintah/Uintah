@@ -48,7 +48,7 @@ itcl_class Uintah_Visualization_ParticleVis {
 	set $this-radius 0.01
 	set $this-auto_radius 1
 	set $this-polygons 32
-	set $this-show_nth 2
+	set $this-show_nth 1
 	set $this-drawVectors 0
 	set $this-length_scale 0.1
 	set $this-auto_length_scale 1
