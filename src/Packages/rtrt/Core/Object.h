@@ -65,6 +65,10 @@ public:
     virtual void compute_bounds(BBox& bbox, double offset)=0;
     virtual void collect_prims(Array1<Object*>& prims);
     virtual void print(ostream& out);
+
+    //added for Cutting Planes, so far only HVolumeBrick returns true and the value at
+    //an interior point.
+    virtual bool interior_value( double&, const Ray &, const double ) { return false; }; 
 };
 
 } // end namespace rtrt

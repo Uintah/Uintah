@@ -141,16 +141,36 @@ void BallData::Draw(void)
     glLoadIdentity();
     glScaled(r,r,r);
     GLUquadricObj *qobj = gluNewQuadric();
-    gluQuadricDrawStyle(qobj, GLU_FILL);      
+    gluQuadricDrawStyle(qobj, GLU_LINE);
     gluQuadricNormals(qobj, GLU_SMOOTH);
     glShadeModel(GL_SMOOTH);
-    glDisable(GL_LIGHTING);
-//    gluSphere(qobj,1.0,30,30);
-//    glDisable(GL_BLEND);
-    glColor4f(0.0,0.0,1.0,1.0);
-    Ball_DrawResultArc(this);
-    Ball_DrawDragArc(this);
-    glDisable(GL_LIGHTING);
+
+    //set point light
+    float light[4] = { 1.0, 1.0, 1.0, 1.0 };
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light);
+    float lightpos[4] = { 2.0, 2.0, 10.0, 1.0 };
+    glLightfv(GL_LIGHT0, GL_POSITION, lightpos);
+    glEnable(GL_LIGHT0);
+    
+    glEnable(GL_LIGHTING);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    //glDisable(GL_BLEND);
+    //glColor4f(0.8,0.0,0.8,1.0);
+    //Ball_DrawResultArc(this);
+    //Ball_DrawDragArc(this);
+
+    //block out the back side of the sphere
+    glColorMask(0,0,0,0);
+    glBegin(GL_POLYGON);
+    glVertex3f(-1.0, -1.0, 0.0);
+    glVertex3f(-1.0,  1.0, 0.0);
+    glVertex3f( 1.0,  1.0, 0.0);
+    glVertex3f( 1.0, -1.0, 0.0);
+    glEnd();
+    glColorMask(-1,-1,-1,-1);
+
 
     // now draw a "rotated" coordinate frame
 
@@ -158,38 +178,25 @@ void BallData::Draw(void)
     (qNow.Conj()).ToMatrix(m);
     glLoadMatrixd(&m[0][0]);
 
+
+    //draw the sphere wire ball controller
+    gluSphere(qobj,1.0,20,20);
+    glDisable(GL_LIGHTING);
+
     glLineWidth(4.0);
     glBegin(GL_LINES);
     glColor4f(1.0,0.0,0.0,1.0);
     glVertex3f(0.0,0.0,0.0);
-    glVertex3f(0.5,0.0,0.0);
+    glVertex3f(1.0,0.0,0.0);
     glColor4f(0.0,1.0,0.0,1.0);
     glVertex3f(0.0,0.0,0.0);
-    glVertex3f(0.0,0.5,0.0);
+    glVertex3f(0.0,1.0,0.0);
     glColor4f(0.0,0.0,1.0,1.0);
     glVertex3f(0.0,0.0,0.0);
-    glVertex3f(0.0,0.0,0.5);
+    glVertex3f(0.0,0.0,1.0);
     glEnd();
+    glDisable(GL_DEPTH_TEST);
     
-#if 0
-    glPushMatrix();
-    glRotatef(10.0,.0,.0,1.0);
-    glColor4f(1.0,0.3,0.0,0.7);
-    gluCylinder(qobj,0.03,0.03,0.5,10,10);
-    glPopMatrix();
-
-    glPushMatrix();
-    glRotatef(90.0,.0,.0,1.0);
-    glColor4f(0.0,1.0,0.0,0.5);
-    gluCylinder(qobj,0.03,0.03,0.5,10,10);
-    glPopMatrix();
-
-    glPushMatrix();
-    glRotatef(90.0,1.,.0,.0);
-    glColor4f(0.0,0.0,1.0,0.5);
-    gluCylinder(qobj,0.03,0.03,0.5,10,10);
-    glPopMatrix();
-#endif
     glPopMatrix();
     gluDeleteQuadric(qobj);
     

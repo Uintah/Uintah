@@ -60,6 +60,8 @@ public:
   inline Counters* get_counters() {
     return counters;
   }
+  PerProcessorContext* get_ppc() {return ppc;}
+
 };
 
 } // end namespace rtrt

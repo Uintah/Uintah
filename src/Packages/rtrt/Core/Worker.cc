@@ -1,4 +1,5 @@
 
+#include <Packages/rtrt/Core/CutGroup.h>
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/Dpy.h>
 #include <Packages/rtrt/Core/Image.h>
@@ -1036,6 +1037,10 @@ bool Worker::lit(const Point& hitpos, Light* light,
   if(hit.was_hit){
 #if 1
     shadow_cache[depth]=hit.hit_obj;
+    //if cut objects are present, disallow shadow_cache, can't trust the hit object
+    //otherwise we will get ztearing like artifacts if you use the obj instead of the cut
+    CutGroup* cutgrp = *((CutGroup **)(hit.scratchpad+CUTGROUPPTR)); 
+    if (cutgrp) shadow_cache[depth]=0; 
 #endif
     return false;
   }

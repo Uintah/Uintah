@@ -853,6 +853,19 @@ void HVolumeBrick16::intersect(const Ray& ray, HitInfo& hit,
     Vector celldir(dir*ihierdiag*cellsize);
     float isoval=dpy->isoval;
 
+    /*
+    if (drand48()<0.0001) {
+      cerr << "I WHERE : " << orig << endl;
+      cerr << "I MIN : " << min << endl;
+      cerr << "I MAX : " << max << endl;
+      cerr << "I cx,cy,cz : " << cx << "," << cy << "," << cz << endl;
+      cerr << "I s : " << s << endl;
+      cerr << "I ix,iy,iz : " << ix << "," << iy << "," << iz << endl;
+      cerr << "I CELLCORNER : " << cellcorner << endl;
+      cerr << "I CELLDIR : " << celldir << endl;
+    }
+    */
+
     isect(depth-1, isoval, t, dtdx, dtdy, dtdz, next_x, next_y, next_z,
 	  ix, iy, iz, dix_dx, diy_dy, diz_dz,
 	  0, 0, 0,
@@ -957,3 +970,226 @@ void HVolumeBrick16::get_minmax(float& min, float& max)
     min=datamin;
     max=datamax;
 }
+
+
+//returns a value from a point (ray+t) in a HVB16, or false if the point is not in it
+bool HVolumeBrick16::interior_value(double& ret_val, const Ray &ray, const double t) {
+
+    const Point where(ray.origin()+(ray.direction()*t));
+    
+    //quick reject for out of bounds
+    Point max(min+hierdiag);
+    if ( 
+	(where.x() < min.x()) ||
+	(where.y() < min.y()) ||
+	(where.z() < min.z()) ||
+	(where.x() > max.x()) ||
+	(where.y() > max.y()) ||
+	(where.z() > max.z())
+	) return false;
+
+    //how many cells in the next depth down?
+    int cx=xsize[depth-1];
+    int cy=ysize[depth-1];
+    int cz=zsize[depth-1];
+    double icx=ixsize[depth-1];
+    double icy=iysize[depth-1];
+    double icz=izsize[depth-1];
+
+    //use the ratio out of the current level's size to
+    //find the cell for the point in the next level down 
+    Vector s((where-min)*ihierdiag); 
+    int ix=(int)(s.x()*cx); 
+    int iy=(int)(s.y()*cy);
+    int iz=(int)(s.z()*cz);
+
+    if(ix>=cx)
+	ix--;
+    if(iy>=cy)
+	iy--;
+    if(iz>=cz)
+	iz--;
+    if(ix<0)
+	ix++;
+    if(iy<0)
+	iy++;
+    if(iz<0)
+	iz++;
+
+    //find the starting position of the containing cell in the next level down
+    double ccx = min.x() + ((double)ix*hierdiag.x()*icx);
+    double ccy = min.y() + ((double)iy*hierdiag.y()*icy);
+    double ccz = min.z() + ((double)iz*hierdiag.z()*icz);
+    Vector cellcorner(ccx, ccy, ccz);
+
+    //how big is each cell, used to make the ratio in the next level down
+    double ixs = ihierdiag.x()*cx;
+    double iys = ihierdiag.y()*cy;
+    double izs = ihierdiag.z()*cz;
+
+    /*
+    bool dbgprint = false;
+    if (drand48()<0.001) {
+      cerr << depth << " WHERE : " << where << endl;
+      cerr << depth << " MIN : " << min << endl;
+      cerr << depth << " MAX : " << max << endl;
+      cerr << depth << " cx,cy,cz : " << cx << "," << cy << "," << cz << endl;
+      cerr << depth << " s : " << s << endl;
+      cerr << depth << " ix,iy,iz : " << ix << "," << iy << "," << iz << endl;
+      cerr << depth << " ixs,iys,izs : " << ixs << "," << iys << "," << izs << endl;
+      cerr << depth << " CELLCORNER : " << cellcorner << endl;
+      dbgprint = true;
+    }
+    */
+
+    //step down to the next level
+    return interior_value_sublevels(ret_val,
+				    where,
+				    depth-1,                //level of the data hierachy tree start at
+				    ix, iy, iz,             //starting cell indexes in hierarchy
+				    cellcorner,
+				    ixs, iys, izs
+				    );    
+    
+}
+
+//helper for interior_value returns a value from a point (ray+t) in a sub level of
+//an HVB16, or false if the point is not in it
+bool HVolumeBrick16::interior_value_sublevels(double &ret_val, //value to be returned
+					      const Point & where, //what point to look for
+					      int depth, //depth in H to look at
+					      int ix, int iy, int iz, //cell to look in 
+					      const Vector & cellcorner, //where is the cell in space
+					      double ixs, double iys, double izs, //how big is the cell in space
+					      bool dbgprint //turn on for prints
+					      ) 
+{
+  if (depth==0) {
+    //at the lowest level, just index into the blockdata and return the value
+
+    /*
+    if (dbgprint) {
+      cerr << depth << " ix,iy,iz: " << ix << "," << iy << "," << iz << endl;
+      cerr << depth << " nx,ny,nz: " << nx << "," << ny << "," << nz << endl;
+      cerr << depth << " ixs,iys,izs: " << ixs << "," << iys << "," << izs << endl;
+      cerr << depth << " cellcorner: " << cellcorner << endl;
+      cerr << depth << " where: " << where << endl;
+    }
+    */
+
+    if (ix<nx-1 && iy<ny-1 && iz<nz-1) {
+      //everything kosher, return it
+
+#define one_div_eight 0.125
+
+      float avg = 0.0;
+      
+      int idx000=xidx[ix]+yidx[iy]+zidx[iz];
+      avg+=blockdata[idx000];
+      int idx001=xidx[ix]+yidx[iy]+zidx[iz+1];
+      avg+=blockdata[idx001];
+      int idx010=xidx[ix]+yidx[iy+1]+zidx[iz];
+      avg+=blockdata[idx010];
+      int idx011=xidx[ix]+yidx[iy+1]+zidx[iz+1];
+      avg+=blockdata[idx011];
+      int idx100=xidx[ix+1]+yidx[iy]+zidx[iz];
+      avg+=blockdata[idx100];
+      int idx101=xidx[ix+1]+yidx[iy]+zidx[iz+1];
+      avg+=blockdata[idx101];
+      int idx110=xidx[ix+1]+yidx[iy+1]+zidx[iz];
+      avg+=blockdata[idx110];
+      int idx111=xidx[ix+1]+yidx[iy+1]+zidx[iz+1];
+      avg+=blockdata[idx111];
+
+      avg *= one_div_eight;
+
+#undef one_div_eight
+
+      //scale and bias to 0..1
+      avg -= datamin;
+      avg /= (datamax - datamin);
+      ret_val = avg;
+
+      return true;
+
+    } else {
+      
+      //boundary problem, (happens in overlapping vfem cells), just return
+      return false;
+
+    }
+
+  } else {
+
+    //there are more levels below, follow the same procedure as in interior_value
+    //but this time, use the smaller grid cells at this level
+    //how many cells at the next level, per one cell in this
+    int new_cx=xsize[depth-1];
+    int new_cy=ysize[depth-1];
+    int new_cz=zsize[depth-1];
+    
+    //find the index of the next levels cell, based on where, the current cell's 
+    //postition, and it's size
+    int new_ix = (int) (((where.x()-cellcorner.x())*ixs)*(double)new_cx);
+    int new_iy = (int) (((where.y()-cellcorner.y())*iys)*(double)new_cy);
+    int new_iz = (int) (((where.z()-cellcorner.z())*izs)*(double)new_cz);
+       
+    if(new_ix<0)
+      new_ix=0;
+    else if(new_ix>=new_cx)
+      new_ix=new_cx-1;
+      
+    if(new_iy<0)
+      new_iy=0;
+    else if(new_iy>=new_cy)
+      new_iy=new_cy-1;
+      
+    if(new_iz<0)
+      new_iz=0;
+    else if(new_iz>=new_cz)
+      new_iz=new_cz-1;
+
+    //use the integer index to find where the next level's containing cell is
+    double new_ccx = cellcorner.x() + ((double)new_ix/(ixs*(double)new_cx));
+    double new_ccy = cellcorner.y() + ((double)new_iy/(iys*(double)new_cy));
+    double new_ccz = cellcorner.z() + ((double)new_iz/(izs*(double)new_cz));
+    Vector new_cellcorner(new_ccx, new_ccy, new_ccz);
+
+    //the next level's cells are 1/xsize[depth-1] fraction of the size of these
+    double next_ixs = ixs*new_cx;
+    double next_iys = iys*new_cy;
+    double next_izs = izs*new_cz;
+
+    /*
+    if (dbgprint) {
+      cerr << depth << " WHERE : " << where << endl;
+      cerr << depth << " CELLCORNER : " << cellcorner << endl;
+      cerr << depth << " new cx,cy,cz : " << new_cx << "," << new_cy << "," << new_cz << endl;
+      cerr << depth << " new ix,iy,iz : " << new_ix << "," << new_iy << "," << new_iz << endl;
+      cerr << depth << " next ix,iy,iz : " << ix*new_cx+new_ix << "," << iy*new_cy+new_iy << "," << iz*new_cz+new_iz << endl;
+      cerr << depth << " next ixs,iys,izs : " << next_ixs << "," << next_iys << "," << next_izs << endl;
+      cerr << depth << " next cellcorner : " << new_cellcorner << endl;
+    }
+    */
+
+    //the ix*new_cx+new_ix accounts for the fact that each cell at this level (ix)
+    //is made up of new_cx cells, and then we want to add new_ix to get to the one
+    //we just found
+    int next_ix = ix*new_cx+new_ix;
+    int next_iy = iy*new_cy+new_iy;
+    int next_iz = iz*new_cz+new_iz;
+
+    //recurse to process the next level down
+    return interior_value_sublevels(ret_val,
+				    where,
+				    depth-1,
+				    next_ix, next_iy, next_iz,
+				    new_cellcorner,
+				    next_ixs, next_iys, next_izs,
+				    dbgprint
+			     );
+    
+  }
+}
+
+
