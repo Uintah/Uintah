@@ -6,6 +6,8 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/ExternalUIInterface.h>
 #include <Packages/rtrt/Core/rtrt.h>
+#include <Packages/rtrt/Core/Scene.h>
+#include <Packages/rtrt/Core/BBox.h>
 
 #include <Core/Thread/Thread.h>
 
@@ -228,6 +230,28 @@ void DpyGui::key_pressed(unsigned long key) {
     else
       rtrt_engine->hotSpotsMode = RTRT::HotSpotsOn;
     break;
+  case XK_v:
+    // Autoview
+    {
+      //if(followPath) { followPath = false; }
+      //stealth->stopAllMovement();
+
+      // Animate lookat point to center of BBox...
+      Object* obj= rtrt_dpy->scene->get_object();
+      BBox bbox;
+      obj->compute_bounds(bbox, 0);
+      if(bbox.valid()) {
+        rtrt_dpy->guiCam_->autoview(bbox);
+      }
+    }
+    break;
+  case XK_p:
+    if (shift_pressed)
+      // Decrease number of threads
+      rtrt_dpy->change_nworkers(-1);
+    else
+      rtrt_dpy->change_nworkers(1);
+    break;
   case XK_Escape:
     Thread::exitAll(0);
     break;
@@ -301,7 +325,7 @@ void DpyGui::button_motion(MouseButton button,
       // Dolly
       
       double xmotion = -double(last_x-mouse_x)/xres;
-      double ymotion = double(last_y-mouse_y)/yres;
+      double ymotion = -double(last_y-mouse_y)/yres;
       double scale;
       // This could be come a prameter later
       double dolly_speed = 5;
