@@ -23,6 +23,25 @@ class MapBlendMaterial : public Material
     : mat1_(one), mat2_(two), map_(s) {}
   virtual ~MapBlendMaterial() {}
 
+  Color interp_color(double u, double v)
+  { 
+    u *= (map_.get_width()-1);
+    v *= (map_.get_height()-1);
+    
+    int iu = (int)u;
+    int iv = (int)v;
+
+    double tu = u-iu;
+    double tv = v-iv;
+
+    Color c = map_(iu,iv)*(1-tu)*(1-tv)+
+	map_(iu+1,iv)*tu*(1-tv)+
+	map_(iu,iv+1)*(1-tu)*tv+
+	map_(iu+1,iv+1)*tu*tv;
+
+    return c;
+  }
+
   virtual void shade(Color& result, const Ray &ray, const HitInfo &hit, 
                      int depth, double atten, const Color &accumcolor,
                      Context *cx)
@@ -43,8 +62,12 @@ class MapBlendMaterial : public Material
     double tu = u-(unsigned)u;
     double tv = v-(unsigned)v;
 
+#if 0
     percent = (map_((unsigned)(tu*width),
                     (unsigned)(tv*height))).red();
+#else
+    percent = (interp_color(tu,tv)).red();
+#endif
 
     mat1_->shade(result,ray,hit,depth,atten,accumcolor,cx);
     final = result*percent;
