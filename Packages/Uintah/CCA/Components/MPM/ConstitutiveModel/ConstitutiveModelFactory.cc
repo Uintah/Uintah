@@ -7,6 +7,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Membrane.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/JohnsonCook.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
@@ -65,6 +66,11 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
    else if (mat_type ==  "membrane")
       return(scinew Membrane(child,lb,n8or27));
    
+   else if (mat_type ==  "johnson_cook")
+      return(scinew JohnsonCook(child,lb,n8or27));
+   
    else 
       throw ProblemSetupException("Unknown Material Type R ("+mat_type+")");
+
+   return 0;
 }
