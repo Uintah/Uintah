@@ -155,7 +155,7 @@ Levoy::DetermineFarthestDistance ( const Point& e )
  *
 **************************************************************************/
 
-Color&
+Color
 Levoy::Four( Point eye, Vector ray, double rayStep )
 {
 
@@ -168,22 +168,19 @@ Levoy::Four( Point eye, Vector ray, double rayStep )
   double epsilon;
 
   // this is the tiny step vector added to the atPoint each time
+  
   Vector step( ray );
 
   // epsilon should be defined globally, outside of this fnc
-  //????
+  // TEMP
+  
   epsilon = 0.01;
   
   contribution = 1.0;
 
-  // THINK a bit more about different background Colors...
-  // background color should be defined globally as well
-  
-  // i don't know what the range of color in sci run is yet
-  //  Color backgroundColor( 0, 0, 0 );
-
   // initially, assign accumulated color to be black
-  Color accumulatedColor( 0., 0., 0. );
+
+  Color accumulatedColor( BLACK );
 
   // find step vector
   
@@ -269,7 +266,7 @@ Levoy::Four( Point eye, Vector ray, double rayStep )
 **************************************************************************/
 
 
-Color&
+Color
 Levoy::Five ( Point eye, Vector step, double rayStep )
 {
 
@@ -407,7 +404,7 @@ Levoy::Five ( Point eye, Vector step, double rayStep )
  *
 **************************************************************************/
 
-Color&
+Color
 Levoy::CastRay ( Point eye, Vector ray, double rayStep )
 {
   Color hmm, imm;
@@ -505,8 +502,6 @@ Levoy::TraceRays ( View myview, int x, int y, int projectionType )
 	    rayToTrace += rayIncrementU * ( pool - x/2 );
 	    rayToTrace += rayIncrementV * ( loop - y/2 );
 
-	    	cerr << ".";
-
 	    pixelColor = CastRay( eye, rayToTrace, rayStep );
 
 	    /*
@@ -522,10 +517,7 @@ Levoy::TraceRays ( View myview, int x, int y, int projectionType )
 	    ((*Image)( loop, pool )).blue = (char)(pixelColor.b()*255);
 
 	  }
-	    cerr << loop << endl;
       }
-      cerr << endl;
-
   }
   else
   {

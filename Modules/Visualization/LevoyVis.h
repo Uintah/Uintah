@@ -48,9 +48,6 @@ private:
 
   Color backgroundColor;
 
-//  double * Opacity;
-//  double * SVArray;
-
   Array1<double> Opacity;
   Array1<double> SVArray;
 
@@ -70,13 +67,11 @@ public:
 
   double DetermineFarthestDistance ( const Point& e );
 
-  Color& CastRay ( Point eye, Vector ray, double rayStep );
+  Color CastRay ( Point eye, Vector ray, double rayStep );
   
-  Color& Three ( Point eye, Vector ray, double rayStep );
+  Color Four ( Point eye, Vector ray, double rayStep );
 
-  Color& Four ( Point eye, Vector ray, double rayStep );
-
-  Color& Five ( Point eye, Vector ray, double rayStep );
+  Color Five ( Point eye, Vector ray, double rayStep );
 
   Array2<CharColor>* TraceRays ( View myview, int x, int y,
 				int projectionType );
