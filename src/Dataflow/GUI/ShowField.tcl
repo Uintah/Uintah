@@ -31,6 +31,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-faces-on
 	global $this-vectors-on
 	global $this-use-normals
+	global $this-use-transparency
 	global $this-normalize_vectors
 	global $this-node_display_type
 	global $this-def-color-r
@@ -60,6 +61,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-has_vec_data 0
 	set $this-active_tab "Nodes"
 	set $this-use-normals 0
+	set $this-use-transparency 0
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-has_vec_data w "$this vec_tab_changed"
 	trace variable $this-nodes-as-disks w "$this disk_render_status_changed"
@@ -206,7 +208,12 @@ itcl_class SCIRun_Visualization_ShowField {
 		-text "Use Face Normals" \
 		-command "$this-c rerender_faces" \
 		-variable $this-use-normals
-	pack $face.show_faces $face.use_normals -side top -fill y -anchor w
+	checkbutton $face.use_transparency \
+		-text "Enable Transparency" \
+		-command "$this-c rerender_faces" \
+		-variable $this-use-transparency
+	pack $face.show_faces $face.use_normals $face.use_transparency \
+		-side top -fill y -anchor w
     }
 
 
