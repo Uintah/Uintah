@@ -25,9 +25,9 @@ using namespace std;
 
 //#define DOING
 #undef DOING
-//#define EOSCM
+#define EOSCM
 //#undef EOSCM
-#define IDEAL_GAS
+//#define IDEAL_GAS
 //#undef IDEAL_GAS
 
 MPMICE::MPMICE(const ProcessorGroup* myworld)
@@ -420,6 +420,7 @@ void MPMICE::scheduleComputeMassBurnRate(SchedulerP& sched,
 
   t->requires(Task::NewDW, MIlb->temp_CCLabel,mpm_matls, Ghost::None);
   t->requires(Task::NewDW, MIlb->cMassLabel,  mpm_matls, Ghost::None);
+  t->requires(Task::NewDW, Mlb->gMassLabel,  mpm_matls, Ghost::AroundCells,1);
   
   t->computes(MIlb->burnedMassCCLabel);
   t->computes(MIlb->releasedHeatCCLabel);
@@ -1722,6 +1723,15 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
+    
+    double surfArea, delX, delY, delZ;
+    Vector dx;
+    dx = patch->dCell();
+    delX      = dx.x();
+    delY      = dx.y();
+    delZ      = dx.z();
+
+    IntVector nodeIdx[8];
 
     //__________________________________
     // M P M  matls
@@ -1735,26 +1745,83 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
         int dwindex = mpm_matl->getDWIndex();
         CCVariable<double> solidTemperature;
         CCVariable<double> solidMass;
+	NCVariable<double> NCsolidMass;  
 
         new_dw->get(solidTemperature, MIlb->temp_CCLabel, dwindex, patch, 
 		    Ghost::None, 0);
         new_dw->get(solidMass, MIlb->cMassLabel, dwindex, patch,Ghost::None, 0);
+	new_dw->get(NCsolidMass, Mlb->gMassLabel, dwindex, patch, 
+		    Ghost::AroundCells, 1);
 
         double delt = delT;
 
         for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
-	  // For clarity, this should be renamed computeBurnRate
-          matl->getBurnModel()->computeBurn(gasTemperature[*iter],
-					    gasPressure[*iter],
-					    solidMass[*iter],
-					    solidTemperature[*iter],
-					    burnedMass[m][*iter],
-					    releasedHeat[m][*iter],
-					    delt);
+	  
+	  // Find if the cell contains surface:
+	  bool containsSurf = 0;
+	  
+	  double gradRhoX, gradRhoY, gradRhoZ;
+	  double normalX,  normalY,  normalZ;
 
-          sumBurnedMass[*iter]    += burnedMass[m][*iter];
-          sumReleasedHeat[*iter]  += releasedHeat[m][*iter];
-        }
+	  patch->findNodesFromCell(*iter,nodeIdx);
+	  
+	  gradRhoX = 0.25 * (( NCsolidMass[nodeIdx[0]]+
+			       NCsolidMass[nodeIdx[1]]+
+			       NCsolidMass[nodeIdx[2]]+
+			       NCsolidMass[nodeIdx[3]] ) -
+			     ( NCsolidMass[nodeIdx[4]]+
+			       NCsolidMass[nodeIdx[5]]+
+			       NCsolidMass[nodeIdx[6]]+
+			       NCsolidMass[nodeIdx[7]] )) / delX;
+	  gradRhoY = 0.25 * (( NCsolidMass[nodeIdx[0]]+
+			       NCsolidMass[nodeIdx[1]]+
+			       NCsolidMass[nodeIdx[4]]+
+			       NCsolidMass[nodeIdx[5]] ) -
+			     ( NCsolidMass[nodeIdx[2]]+
+			       NCsolidMass[nodeIdx[3]]+
+			       NCsolidMass[nodeIdx[6]]+
+			       NCsolidMass[nodeIdx[7]] )) / delY;
+	  gradRhoZ = 0.25 * (( NCsolidMass[nodeIdx[1]]+
+			       NCsolidMass[nodeIdx[3]]+
+			       NCsolidMass[nodeIdx[5]]+
+			       NCsolidMass[nodeIdx[7]] ) -
+			     ( NCsolidMass[nodeIdx[0]]+
+			       NCsolidMass[nodeIdx[2]]+
+			       NCsolidMass[nodeIdx[4]]+
+			       NCsolidMass[nodeIdx[6]] )) / delZ;
+	  
+
+	  double absGradRho = sqrt(gradRhoX*gradRhoX +
+				   gradRhoY*gradRhoY +
+				   gradRhoZ*gradRhoZ );
+
+	  if (absGradRho > 0.01)
+	    {
+	      normalX = gradRhoX/absGradRho;
+	      normalY = gradRhoY/absGradRho;
+	      normalZ = gradRhoZ/absGradRho;
+	      
+	      surfArea = delX*delY*delZ / 
+		(abs(normalX*delX)+abs(normalY*delY)+abs(normalZ*delZ));
+	      	  
+	  // For clarity, this should be renamed computeBurnRate
+	      matl->getBurnModel()->computeBurn(gasTemperature[*iter],
+						gasPressure[*iter],
+						solidMass[*iter],
+						solidTemperature[*iter],
+						burnedMass[m][*iter],
+						releasedHeat[m][*iter],
+						delt, surfArea);
+	      
+	      sumBurnedMass[*iter]    += burnedMass[m][*iter];
+	      sumReleasedHeat[*iter]  += releasedHeat[m][*iter];
+	    }
+	  else
+	    {
+	      burnedMass[m][*iter]=0;
+	      releasedHeat[m][*iter]=0;
+	    }
+	}
       }
     }  
 
