@@ -7,6 +7,7 @@ SRCS     += $(SRCDIR)/EquationOfState.cc \
 	$(SRCDIR)/IdealGas.cc \
 	$(SRCDIR)/JWL.cc      \
 	$(SRCDIR)/JWLC.cc     \
+	$(SRCDIR)/Gruneisen.cc     \
 	$(SRCDIR)/Murnahan.cc
 #	$(SRCDIR)/Harlow.cc \
 #	$(SRCDIR)/StiffGas.cc
