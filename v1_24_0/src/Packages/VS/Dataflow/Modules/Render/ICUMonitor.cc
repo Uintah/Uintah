@@ -184,8 +184,9 @@ private:
   GuiInt			       gui_show_name_;
   GuiInt			       gui_show_date_;
   GuiInt			       gui_show_time_;
-
   GuiInt                               gui_plot_count_;
+  GuiInt                               gui_geom_;
+
   vector<GuiString*>                   gui_nw_label_;
   vector<GuiString*>                   gui_sw_label_;
   vector<GuiString*>                   gui_label_;
@@ -275,7 +276,7 @@ void
 RTDraw::run()
 {
   throttle_.start();
-  const double inc = 1./75.;
+  const double inc = 1./33.;
   double t = throttle_.time();
   double tlast = t;
   while (!dead_) {
@@ -384,6 +385,7 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   gui_show_date_(ctx->subVar("show_date")),
   gui_show_time_(ctx->subVar("show_time")),
   gui_plot_count_(ctx->subVar("plot_count")),
+  gui_geom_(ctx->subVar("geom")),
   ctx_(0),
   dpy_(0),
   win_(0),
@@ -969,12 +971,13 @@ ICUMonitor::draw_plots()
       glEnd();
 
 
-      if (data2_.get_rep() && data2_->nrrd->axis[1].size == data_->nrrd->axis[1].size && g.snd_ == 1) {
+      if (data2_.get_rep() && g.snd_ == 1) {
+
         glBegin(GL_LINE_STRIP);
         for (int i = 0; i < (int)samples; i++) {
           int idx = i + cur_idx_;
-          if (idx > data2_->nrrd->axis[1].size) {
-            idx -= data2_->nrrd->axis[1].size;
+          if (idx > data2_->nrrd->axis[1].size - 1) {
+            idx = 0;
           }
           float *dat = (float*)data2_->nrrd->data;
           int dat_index = idx * data2_->nrrd->axis[0].size + g.index_;
@@ -985,9 +988,9 @@ ICUMonitor::draw_plots()
           }
           //float val = (dat[dat_index] - g.min_) * norm;
           float val = (tmpdata2 - g.min_) * norm;
-          glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, (start_y + val) * sy);
-
-          glColor4f(0.5, 0.5, 0.5, 0.7);
+          glVertex2f((cur_x + (i * pix_per_sample)) * sx, 
+		     (start_y + val) * sy);
+          glColor4f(g.b_, g.r_, g.g_, 0.8);
         }
         glEnd();
       }
@@ -1030,9 +1033,6 @@ ICUMonitor::redraw_all()
 {
   gui->lock();
   if (! make_current()) return;
-
-  glXMakeCurrent(dpy_, win_, ctx_);
-
   init_plots();
 
   glDrawBuffer(GL_BACK);
@@ -1069,8 +1069,6 @@ ICUMonitor::setup_gl_view()
   glScaled(2.0, 2.0, 2.0);
   glTranslated(-.5, -.5, -.5);
 
-  glClearColor(0.0, .25, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT);
   gui->unlock();
 }
 
@@ -1173,7 +1171,7 @@ ICUMonitor::setNameAndDateAndTime()
      stringstream ss(injoff);
      ss >> injury_offset_;
                                                                                 
-     injury_offset_ /= gui_sample_rate_.get();
+     injury_offset_ /= (int)gui_sample_rate_.get();
                                                                                 
      setTimeLabel();
   }
@@ -1216,9 +1214,10 @@ ICUMonitor::execute()
 
   nrrd2_port->get(data2_);
 
-  if (data2_.get_rep() && data2_->nrrd->axis[1].size != data_->nrrd->axis[1].size)
+  if (data2_.get_rep() && data2_->nrrd->axis[1].size != 
+      data_->nrrd->axis[1].size)
   {
-    error ("Axis 1 size for both NRRD files must be identical.");
+    remark ("Axis 1 size for both NRRD files are not identical.");
   } 
   
   if (!runner_) {
@@ -1296,12 +1295,11 @@ ICUMonitor::tcl_command(GuiArgs& args, void* userdata)
                                       Tk_MainWindow(the_interp));
     if(!tkwin) {
       warning("Unable to locate window!");
-      gui->unlock();
+      //gui->unlock();
     } else {
-      //width_ = Tk_Width(tkwin);
+      width_ = Tk_Width(tkwin);
       height_ = Tk_Height(tkwin);
-
-      setup_gl_view();
+      redraw_all();
     }
 
   } else {
