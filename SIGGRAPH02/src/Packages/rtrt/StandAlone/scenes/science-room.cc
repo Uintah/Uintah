@@ -47,6 +47,8 @@
 #include <Packages/rtrt/Core/CutVolumeDpy.h>
 #include <Packages/rtrt/Core/CutPlaneDpy.h>
 #include <Packages/rtrt/Core/ColorMap.h>
+#include <Packages/rtrt/Core/ColorMapDpy.h>
+#include <Packages/rtrt/Core/PhongColorMapMaterial.h>
 #include <Packages/rtrt/Core/CutMaterial.h>
 #include <Packages/rtrt/Core/CutGroup.h>
 #include <Packages/rtrt/Core/Instance.h>
@@ -59,11 +61,11 @@ using namespace std;
 using SCIRun::Thread;
 
 #define ADD_BRICKBRACK
-//#define ADD_VIS_FEM
-//#define ADD_HEAD
-//#define ADD_CSAFE_FIRE
-//#define ADD_GEO_DATA
-//#define ADD_SHEEP
+#define ADD_VIS_FEM
+#define ADD_HEAD
+#define ADD_CSAFE_FIRE
+#define ADD_GEO_DATA
+#define ADD_SHEEP
 #define ADD_DTIGLYPH
 
 #ifdef ADD_DTIGLYPH
@@ -942,7 +944,7 @@ void add_objects(Group *g, Group *s, const Point &center,
 }
 
 extern "C"
-Scene* make_scene(int argc, char* argv[], int nworkers)
+Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 {
 //  for(int i=1;i<argc;i++) {
 //    cerr << "Unknown option: " << argv[i] << '\n';
@@ -1061,7 +1063,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   for (l=0; l<holo_lights.size(); l++)
     vmat->my_lights.add(holo_lights[l]);
 
-  Material *vcutmat = new CutMaterial(vmat, vcmap, cpdpy);
+  Material *vcutmat = new CutMaterial(vmat, vcmap, vcpdpy);
   for (l=0; l<holo_lights.size(); l++)
     vcutmat->my_lights.add(holo_lights[l]);
 
@@ -1131,7 +1133,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   for (l=0; l<holo_lights.size(); l++)
     hmat->my_lights.add(holo_lights[l]);
 
-  Material *hcutmat = new CutMaterial(hmat, hcmap, cpdpy);
+  Material *hcutmat = new CutMaterial(hmat, hcmap, hcpdpy);
   for (l=0; l<holo_lights.size(); l++)
     hcutmat->my_lights.add(holo_lights[l]);
 
@@ -1163,37 +1165,49 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
 #ifdef ADD_CSAFE_FIRE
   //ADD THE CSAFE HEPTAINE POOL FIRE DATA SET
-  CutPlaneDpy* fcpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
+  // Create a default color map.
+  int color_size = 5;
+  Array1<ColorPos> colors(color_size);
+  for(int i = 0; i < color_size; i++) {
+    colors[i].x = (float)i/(color_size-1);
+    colors[i].val = 1;
+  }
+  colors[0].c = Color(1,0,0);
+  colors[1].c = Color(1,1,0);
+  colors[2].c = Color(0,1,0);
+  colors[3].c = Color(0,1,1);
+  colors[4].c = Color(0,0,1);
 
-  Material* fmat=new LambertianMaterial(Color(0.7,0.7,0.7));
-  for (l=0; l<holo_lights.size(); l++)
-    fmat->my_lights.add(holo_lights[l]);
+  ColorMapDpy *fcdpy = new ColorMapDpy(colors);
+  //  dpys.add(fcdpy);
+  Material *temp_matl = new Phong(Color(1, 0.7, 0.8), Color(1,1,1), 100);
+  VolumeDpy *temp_dpy = new VolumeDpy(1000);
+  // Don't add the display unless you plan on rendering the temperature field
+  //  dpys.add(temp_dpy);
+  VolumeDpy *vel_dpy = new VolumeDpy(5.6);
+  //  dpys.add(vel_dpy);
 
-  VolumeDpy* firedpy = new VolumeDpy(1000);
-
-  //  int fstart = 0;
-  //  int fend = 168;
-  int fstart = 0;
-  int fend = 168;
-  //  int finc = 8; // never less than 8, must be a multiple of 8
+  ////////////////////////////////////////////////////////////////
+  //  Load up a group
+  
+  int fstart = 32;
+  int fend = 152;
+  //int fstart = 64;
+  //  int fend = 80;
+  int finc = 8; // never less than 8, must be a multiple of 8
   //  int finc = 16; // 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160
   //  int finc = 24; // 0, 24, 48, 72, 96, 120, 144, 168
-  //  int finc = 32; // 0, 32, 64, 96, 128, 160
-  int finc = 40; // 0, 40, 80, 120, 160
-  SelectableGroup *fire_time = new SelectableGroup(1);
-  fire_time->name_ = "CSAFE Fire Time Step Selector";
-  //  TimeObj *fire_time = new TimeObj(5);
-  for(int f = fstart; f <= fend; f+= finc) {
-    char buf[1000];
-    //    sprintf(buf, "/usr/sci/data/CSAFE/heptane300_3D_NRRD/float/h300_%04df.raw", f);
-    sprintf(buf, "/usr/sci/data/Geometry/volumes2/CSAFE/h300_%04df.raw", f);
-    cout << "Reading "<<buf<<endl;
-    Object *fire=new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > (fmat, firedpy, buf, 3, nworkers);
-    fire_time->add(fire);
-  }
-  
-  InstanceWrapperObject *fire_iw = new InstanceWrapperObject(fire_time);
-
+  //    int finc = 32; // 0, 32, 64, 96, 128, 160
+  //  int finc = 40; // 0, 40, 80, 120, 160
+  SelectableGroup *fire_geom = new SelectableGroup(0.5);
+  fire_geom->set_name("CSAFE Fire Velocity Magnitude Time Step Selector");
+  SelectableGroup *temp_field = new SelectableGroup(0.5);
+  temp_field->set_name("CSAFE Fire Temperture Field Time Step Selector");
+  // Now since we won't be able to compute the bounding box for stuff
+  // that hasn't been loaded yet, we must manually feed it in.
+  BBox f_bb(Point(-1,-1,-1), Point(1,1,1));
+  InstanceWrapperObject *temp_iw = new InstanceWrapperObject(temp_field, f_bb);
+  InstanceWrapperObject *fire_iw = new InstanceWrapperObject(fire_geom, f_bb);
   Transform *fire_trans = new Transform();
   fire_trans->pre_scale(Vector(1.245,1.245,1.245));
   fire_trans->rotate(Vector(1,0,0), Vector(0,0,1));
@@ -1201,14 +1215,60 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   fire_trans->pre_translate(Vector(0,0,-.00305));
   
   SpinningInstance *fire_inst = new SpinningInstance(fire_iw, fire_trans, Point(-8,8,1.75), Vector(0,0,1), 0.1);
-  fire_inst->name_ = "Spinning CSAFE Fire";
+  fire_inst->set_name("Spinning CSAFE Velocity Magnitude Field");
+  SpinningInstance *temp_inst = new SpinningInstance(temp_iw, fire_trans, Point(-8,8,1.75), Vector(0,0,1), 0.1);
+  temp_inst->set_name("Spinning CSAFE Temperature Field");
 
-  CutGroup *fire_cut = new CutGroup(fcpdpy, true);
-  fire_cut->add(fire_inst);
-  fire_cut->name_ = "CSAFE Fire Cut";
+  //  TimeObj *fire_time = new TimeObj(5);
+  for(int f = fstart; f <= fend; f+= finc) {
+    char buf[1000];
+    // load in the temperature field to color by
+    sprintf(buf, "/usr/sci/data/Geometry/volumes2/CSAFE/h300_%04df.raw", f);
+    //    cout << "Reading "<<buf<<endl;
+    // Send 1 for depth since we don't need to render it and preprocess
+    // goes much quickley.
+    HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > *tempt = 
+      new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > >
+      (temp_matl, temp_dpy, buf, 1, nworkers);
+    temp_field->add(tempt);
+    
+    // Get min and max and attach to ColorMapDpy.
+    float min, max;
+    tempt->get_minmax(min, max);
+    cerr << "min = "<<min<<", max = "<<max<<endl;
+    fcdpy->attach(min,max);
 
-  fire_inst->addCPDpy(fcpdpy);
+    // Create the Material.  We need to put a pointer to the SpinningInstance
+    // object, so that the fields will synchronize.
+    Material *temp_color_map = new PhongColorMapMaterial
+      (temp_inst,
+       fcdpy->get_color_transfer_pointer(),
+       fcdpy->get_alpha_transfer_pointer());
+    // add the permaterial lights
+    for (l=0; l<holo_lights.size(); l++)
+      temp_color_map->my_lights.add(holo_lights[l]);
+
+    // Load the velocity field that will be used to isosurface.
+    sprintf(buf, "/usr/sci/data/Geometry/volumes2/CSAFE/heptane300_velmag_%04d.raw", f);
+    HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > *vel =
+      new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > >
+      (temp_color_map, vel_dpy, buf, 3, nworkers);
+
+
+    fire_geom->add(vel);
+  }
+
+#if 0
+  // Can't do cutting plane on time dependant data just yet.  There's a
+  // CycleMaterial that may be able to work, but I haven't checked it out.
+  CutPlaneDpy* pd=new CutPlaneDpy(Vector(0,1,0), Point(0,0,0));
+  dpys.add(pd);
+  //  (new Thread(pd, "Cutting plane display thread"))->detach();
+  Object *obj = new CutPlane(fire_geom, pd);
+  obj->set_matl(hmat);
 #endif
+
+#endif // ifdef ADD_CSAFE_FIRE
   
 #ifdef ADD_GEO_DATA
   //ADD THE GEOLOGY DATA SET
@@ -1219,7 +1279,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   for (l=0; l<holo_lights.size(); l++)
     gmat->my_lights.add(holo_lights[l]);
 
-  Material *gcutmat = new CutMaterial(gmat, gcmap, cpdpy);
+  Material *gcutmat = new CutMaterial(gmat, gcmap, gcpdpy);
   for (l=0; l<holo_lights.size(); l++)
     gcutmat->my_lights.add(holo_lights[l]);
 
@@ -1242,10 +1302,10 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   gtrans->pre_translate(Vector(0,0,0.1)); //place 4 cm above table
 
   SpinningInstance *ginst = new SpinningInstance(giw, gtrans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
-  ginst->name_ = "Spinning Geology";
+  ginst->set_name("Spinning Geology");
 
   CutGroup *gcut = new CutGroup(gcpdpy, true);
-  gcut->name_ = "Geology Cutting Plane";
+  gcut->set_name("Geology Cutting Plane");
   gcut->add(ginst);
 
   ginst->addCPDpy(gcpdpy);
@@ -1260,7 +1320,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   for (l=0; l<holo_lights.size(); l++)
     smat->my_lights.add(holo_lights[l]);
 
-  Material *scutmat = new CutMaterial(smat, scmap, cpdpy);
+  Material *scutmat = new CutMaterial(smat, scmap, scpdpy);
   for (l=0; l<holo_lights.size(); l++)
     scutmat->my_lights.add(holo_lights[l]);
 
@@ -1279,11 +1339,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   SpinningInstance *sinst = new SpinningInstance(siw, strans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
   
-  sinst->name_ = "Spinning Sheep Heart";
+  sinst->set_name("Spinning Sheep Heart");
 
   CutGroup *scut = new CutGroup(scpdpy, true);
   scut->add(sinst);
-  scut->name_ = "Sheep Heart Cutting Plane";
+  scut->set_name("Sheep Heart Cutting Plane");
   sinst->addCPDpy(scpdpy);
 #endif
 
@@ -1297,7 +1357,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   sg->add(hcut);
 #endif
 #ifdef ADD_CSAFE_FIRE
-  sg->add(fire_cut);
+  sg->add(fire_inst);
 #endif
 #ifdef ADD_GEO_DATA
   sg->add(gcut);
@@ -1318,7 +1378,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(0.3, 0.3, 0.3);
 
-  Scene *scene = new Scene(new Grid(g, 64),
+  //  Scene *scene = new Scene(new Grid(g, 64),
+  //			   cam, bgcolor, cdown, cup, groundplane, 0.3);
+  Scene *scene = new Scene(new BV1(g),
 			   cam, bgcolor, cdown, cup, groundplane, 0.3);
   scene->shadowobj = s;
 
@@ -1366,19 +1428,18 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   (new Thread(hcpdpy, "VFEM CutPlane Dpy"))->detach();
 #endif
 #ifdef ADD_CSAFE_FIRE
-  scene->addObjectOfInterest( fire_time, false );
+  scene->addObjectOfInterest( fire_geom, false );
+  scene->addObjectOfInterest( temp_field, true );
   scene->addObjectOfInterest( fire_inst, false );
-  scene->attach_auxiliary_display(firedpy);
-  firedpy->setName("CSAFE Fire Volume");
-  scene->attach_display(firedpy);
-  (new Thread(firedpy, "CSAFE Fire Volume Dpy"))->detach();
-
-  scene->addObjectOfInterest( fire_cut, false );
-  scene->attach_auxiliary_display(fcpdpy);
-  fcpdpy->setName("Fire Cutting Plane");
-  scene->attach_display(fcpdpy);
-  (new Thread(fcpdpy, "CSAFE Fire CutPlane Dpy"))->detach();
-
+  scene->addObjectOfInterest( temp_inst, true );
+  //  scene->attach_auxiliary_display(fcdpy);
+  //  fcdpy->setName("CSAFE Fire Temperature Transfer Function");
+  //  scene->attach_display(fcdpy);
+  //  (new Thread(fcdpy,"CSAFE Fire Temperature Transfer Function Dpy"))->detach();
+  scene->attach_auxiliary_display(vel_dpy);
+  vel_dpy->setName("CSAFE Fire Volume");
+  scene->attach_display(vel_dpy);
+  (new Thread(vel_dpy, "CSAFE Fire Volume Dpy"))->detach();
 #endif
 #ifdef ADD_GEO_DATA
   scene->addObjectOfInterest( ginst, false );
