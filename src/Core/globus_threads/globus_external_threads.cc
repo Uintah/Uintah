@@ -159,6 +159,14 @@ extern "C" int
 globus_i_thread_pre_activate( void )
 {
     globus_mutex_init(&globus_libc_mutex, GLOBUS_NULL);
+    for(int i=0;i<MAXKEYS;i++){
+	if(globus_hashtable_init(&global_keys[i], GLOBUS_L_KEY_HASHTABLE_SIZE,
+				 globus_hashtable_voidp_hash,
+				 globus_hashtable_voidp_keyeq) != GLOBUS_SUCCESS)
+	    return GLOBUS_FAILURE;
+	key_table_destructor_funcs[i]=0;
+    }
+    
     return globus_i_thread_ignore_sigpipe();
 } /* globus_l_thread_pre_activate() */
 
@@ -183,14 +191,6 @@ globus_l_thread_activate()
 
     globus_thread_set_diagnostics_file(GLOBUS_NULL);
 
-    for(int i=0;i<MAXKEYS;i++){
-	if(globus_hashtable_init(&global_keys[i], GLOBUS_L_KEY_HASHTABLE_SIZE,
-				 globus_hashtable_voidp_hash,
-				 globus_hashtable_voidp_keyeq) != GLOBUS_SUCCESS)
-	    return GLOBUS_FAILURE;
-	key_table_destructor_funcs[i]=0;
-    }
-    
     return GLOBUS_SUCCESS;
 } /* globus_l_thread_activate() */
 
