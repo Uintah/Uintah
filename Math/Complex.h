@@ -1,158 +1,55 @@
-
 /*
- *  Complex.h: Complex number support
+ *  Complex.h:  Complex numbers
  *
  *  Written by:
- *   Steven G. Parker
+ *   Leonid Zhukov
  *   Department of Computer Science
  *   University of Utah
- *   March 1994
+ *   August 1997
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef SCI_Math_Complex_h
-#define SCI_Math_Complex_h 1
 
-#include <Math/Expon.h>
-#include <Math/MiscMath.h>
-#include <Math/Trig.h>
 
-class ostream;
+#include<math.h>
 
-class Complex {
-    double r;
-    double i;
+class Complex{
+private:
+  double a;
+  double b;
+  
 public:
-    Complex();
-    Complex(double re, double im);
-    ~Complex();
-
-    double re() const;
-    double im() const;
-
-    Complex operator+(const Complex&) const;
-    Complex operator-(const Complex&) const;
-    Complex operator-() const;
-    Complex operator*(const Complex&) const;
-    Complex operator*(double) const;
-    Complex operator/(const Complex&) const;
-    Complex& operator/=(const Complex&);
-    Complex& operator+=(const Complex&);
-    friend inline Complex Sqrt(const Complex&);
-    friend inline Complex Exp(const Complex&);
-    friend inline ostream& operator<<(ostream&, const Complex&);
+  Complex(): a(0), b(0) {}
+  Complex(double a, double b): a(a), b(b) {}
+  Complex (const Complex &C): a(C.a), b(C.b) {}
+  Complex &operator= (const Complex &C){a = C.a; b=C.b; return(*this);}
+  
+  double abs() {return sqrt(a*a + b*b);}
+  double arg();
+  double &Re(){return a;}
+  double &Im(){return b;}  
+  
+  Complex operator+ (const Complex&) const;
+  Complex operator- (const Complex&) const;
+  Complex operator* (const Complex&) const;
+  Complex operator/ (const Complex&) const;
+  Complex operator* (double) const;
+  Complex operator/ (double) const;
+  friend  Complex operator* (double , const Complex); 
+  friend  Complex operator/ (double , const Complex);
+  
+  friend ostream &operator<<(ostream &output, const Complex);
+  
 };
 
-inline Complex::Complex()
-{
-}
 
-inline Complex::Complex(double r, double i)
-: r(r), i(i)
-{
-}
 
-inline Complex::~Complex()
-{
-}
 
-double Complex::re() const
-{
-    return r;
-}
 
-double Complex::im() const
-{
-    return i;
-}
 
-inline Complex Complex::operator+(const Complex& c) const
-{
-    return Complex(r+c.r, i+c.i);
-}
 
-inline Complex Complex::operator-(const Complex& c) const
-{
-    return Complex(r-c.r, i-c.i);
-}
 
-inline Complex Complex::operator-() const
-{
-    return Complex(-r, -i);
-}
 
-inline Complex Complex::operator*(const Complex& c) const
-{
-    return Complex(r*c.r-i*c.i, r*c.i+i*c.r);
-}
 
-inline Complex Complex::operator*(double d) const
-{
-    return Complex(r*d, i*d);
-}
 
-inline Complex& Complex::operator+=(const Complex& c)
-{
-    r+=c.r; i+=c.i;
-    return *this;
-}
-
-inline Complex Complex::operator/(const Complex& c) const
-{
-    double di=Abs(c.i);
-    double dr=Abs(c.r);
-    double d=di+dr;
-    double rd=r/d;
-    double id=i/d;
-    double crd=c.r/d;
-    double cid=c.i/d;
-    double mag=crd*crd+cid*cid;
-    return Complex((rd*crd+id*cid)/mag,
-		   (id*crd-rd*cid)/mag);
-}
-
-inline Complex& Complex::operator/=(const Complex& c)
-{
-    double di=Abs(c.i);
-    double dr=Abs(c.r);
-    double d=di+dr;
-    double rd=r/d;
-    double id=i/d;
-    double crd=c.r/d;
-    double cid=c.i/d;
-    double mag=crd*crd+cid*cid;
-    r=(rd*crd+id*cid)/mag;
-    i=(id*crd-rd*cid)/mag;
-    return *this;
-}
-
-inline Complex Sqrt(const Complex& c)
-{
-    if(c.r == 0.0 && c.i == 0.0)
-	return Complex(0.0, 0.0);
-    double s=Sqrt((Abs(c.r) + Hypot(c.r, c.i))*0.5);
-    double d=(c.i/s)*0.5;
-    if(c.r>0.0)
-	return Complex(s,d);
-    else if(c.i>= 0.0)
-	return Complex(d,s);
-    else
-	return Complex(-d, -s);
-}
-
-inline Complex Exp(const Complex& c)
-{
-    double er=Exp(c.r);
-    return Complex(er*Cos(c.i), er*Sin(c.i));
-}
-
-#include <iostream.h>
-
-inline ostream& operator<<(ostream& out, const Complex& c)
-{
-    out << "(" << c.r << ", " << c.i << ")";
-    return out;
-}
-
-#endif
