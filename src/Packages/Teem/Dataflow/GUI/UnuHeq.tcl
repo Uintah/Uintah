@@ -13,24 +13,28 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
 #  
-#    File   : UnuDhisto.tcl
+#    File   : UnuHeq.tcl
 #    Author : Martin Cole
 #    Date   : Mon Sep  8 09:46:23 2003
 
-catch {rename Teem_Unu_UnuDhisto ""}
+catch {rename Teem_Unu_UnuHeq ""}
 
-itcl_class Teem_Unu_UnuDhisto {
+itcl_class Teem_Unu_UnuHeq {
     inherit Module
     constructor {config} {
-        set name UnuDhisto
+        set name UnuHeq
         set_defaults
     }
     method set_defaults {} {
-        global $this-height
-        set $this-height 0
+        global $this-bins
+        set $this-bins 0
 
-        global $this-log
-        set $this-log 1
+        global $this-sbins
+        set $this-sbins 0
+
+	global $this-amount
+	set $this-amount {1.0}
+
     }
 
     method ui {} {
@@ -47,12 +51,14 @@ itcl_class Teem_Unu_UnuDhisto {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.height -labeltext "height:" -textvariable $this-height
-        pack $w.f.options.height -side top -expand yes -fill x
+        iwidgets::entryfield $w.f.options.bins -labeltext "Bins:" -textvariable $this-bins
+        pack $w.f.options.bins -side top -expand yes -fill x
 
-        checkbutton $w.f.options.log -text "Show log-scaled histogram:" -variable $this-log
-        pack $w.f.options.log -side top -expand yes -fill x
+        iwidgets::entryfield $w.f.options.sbins -labeltext "SBins:" -textvariable $this-sbins
+        pack $w.f.options.sbins -side top -expand yes -fill x
 
+       iwidgets::entryfield $w.f.options.amount -labeltext "Amount:" -textvariable $this-amount
+        pack $w.f.options.amount -side top -expand yes -fill x
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
@@ -60,3 +66,5 @@ itcl_class Teem_Unu_UnuDhisto {
 	pack $w.f -expand 1 -fill x
     }
 }
+
+
