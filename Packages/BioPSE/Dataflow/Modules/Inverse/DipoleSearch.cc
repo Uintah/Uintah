@@ -168,8 +168,10 @@ void DipoleSearch::initialize_search() {
 void DipoleSearch::send_and_get_data(int which_dipole, 
 				     TetVolMesh::Cell::index_type ci) {
   if (!mylock_.tryLock()) {
+    msgStream_ << "Thread is paused\n";
     mylock_.lock();
     mylock_.unlock();
+    msgStream_ << "Thread is unpaused\n";
   } else {
     mylock_.unlock();
   }
@@ -607,14 +609,14 @@ void DipoleSearch::tcl_command(GuiArgs& args, void* userdata)
 {
   if (args[1] == "pause") {
     if (mylock_.tryLock())
-      msgStream_ << "Pausing..."<<endl;
+      msgStream_ << "TCL initiating pause..."<<endl;
     else 
       msgStream_ << "Can't lock -- already locked"<<endl;
   } else if (args[1] == "unpause") {
     if (mylock_.tryLock())
-      msgStream_ << "Ccan't unlock -- already unlocked"<<endl;
+      msgStream_ << "Can't unlock -- already unlocked"<<endl;
     else
-      msgStream_ << "Unpausing"<<endl;
+      msgStream_ << "TCL initiating unpause..."<<endl;
     mylock_.unlock();
   } else if (args[1] == "stop") {
     stop_search_=1;

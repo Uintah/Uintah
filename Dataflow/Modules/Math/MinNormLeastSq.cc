@@ -143,7 +143,7 @@ MinNormLeastSq::execute()
   double *bprime = new double[size];
   double *x = new double[3];
 
-  min_norm_least_sq_3(A, b, x, bprime, size, 1);
+  min_norm_least_sq_3(A, b, x, bprime, size);
    
   ColumnMatrix* w_vec = new ColumnMatrix(3);
   w_vec->set_data(x);   
