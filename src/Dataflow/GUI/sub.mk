@@ -94,6 +94,7 @@ SRCS := \
 	$(SRCDIR)/SampleField.tcl \
 	$(SRCDIR)/SampleLattice.tcl \
 	$(SRCDIR)/SamplePlane.tcl \
+	$(SRCDIR)/SampleStructHex.tcl \
 	$(SRCDIR)/ScalarFieldStats.tcl \
 	$(SRCDIR)/SelectField.tcl \
 	$(SRCDIR)/SetProperty.tcl \
