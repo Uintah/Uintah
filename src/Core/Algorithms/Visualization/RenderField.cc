@@ -109,8 +109,7 @@ RenderFieldBase::add_disk(const Point &p, const Vector &vin,
 
 
 void 
-RenderFieldBase::add_axis(const Point &p0, double scale, 
-			  GeomLines *lines, MaterialHandle mh) 
+RenderFieldBase::add_axis(const Point &p0, double scale, GeomLines *lines)
 {
   static const Vector x(1., 0., 0.);
   static const Vector y(0., 1., 0.);
@@ -118,36 +117,37 @@ RenderFieldBase::add_axis(const Point &p0, double scale,
 
   Point p1 = p0 + x * scale;
   Point p2 = p0 - x * scale;
-  if (mh.get_rep())
-  {
-    lines->add(p1, mh, p2, mh);
-  }
-  else
-  {
-    lines->add(p1, p2);
-  }
+  lines->add(p1, p2);
 
   p1 = p0 + y * scale;
   p2 = p0 - y * scale;
-  if (mh.get_rep())
-  {
-    lines->add(p1, mh, p2, mh);
-  }
-  else
-  {
-    lines->add(p1, p2);
-  }
+  lines->add(p1, p2);
 
   p1 = p0 + z * scale;
   p2 = p0 - z * scale;
-  if (mh.get_rep())
-  {
-    lines->add(p1, mh, p2, mh);
-  }
-  else
-  {
-    lines->add(p1, p2);
-  }
+  lines->add(p1, p2);
+}
+
+
+void 
+RenderFieldBase::add_axis(const Point &p0, double scale, GeomLines *lines,
+			  double val)
+{
+  static const Vector x(1., 0., 0.);
+  static const Vector y(0., 1., 0.);
+  static const Vector z(0., 0., 1.);
+
+  Point p1 = p0 + x * scale;
+  Point p2 = p0 - x * scale;
+  lines->add(p1, val, p2, val);
+
+  p1 = p0 + y * scale;
+  p2 = p0 - y * scale;
+  lines->add(p1, val, p2, val);
+
+  p1 = p0 + z * scale;
+  p2 = p0 - z * scale;
+  lines->add(p1, val, p2, val);
 }
 
 

@@ -111,8 +111,8 @@ protected:
 		  MaterialHandle m0);
   void add_disk(const Point &p, const Vector& v, double scale, 
 		int resolution, GeomGroup *g, MaterialHandle m0);
-  void add_axis(const Point &p, double scale, GeomLines *lines, 
-		MaterialHandle m0);
+  void add_axis(const Point &p, double scale, GeomLines *lines);
+  void add_axis(const Point &p, double scale, GeomLines *lines, double val);
 
   inline  MaterialHandle choose_mat(bool def, int idx) {  
     if (def) return def_mat_handle_;
@@ -593,11 +593,11 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
     case 2: // Axes
       if (def_color)
       {
-	add_axis(p, node_scale, lines, 0);
+	add_axis(p, node_scale, lines);
       }
       else
       {
-	add_axis(p, node_scale, lines, choose_mat(def_color, *niter));
+	add_axis(p, node_scale, lines, val);
       }
       break;
 
@@ -621,7 +621,8 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
 				   color_handle_));
   }
   else if (mode == 2) { // Axes
-    nodes->add(scinew GeomMaterial(lines, def_mat_handle_));
+    nodes->add(scinew GeomColorMap(scinew GeomMaterial(lines, def_mat_handle_),
+				   color_handle_));
   }
 
   return node_switch;
@@ -637,7 +638,6 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 				    int cylinder_resolution,
 				    bool transparent_p) 
 {
-  //cerr << "rendering edgess" << endl;
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
 
   const bool cyl = edge_display_mode == "Cylinders";
@@ -666,7 +666,8 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
     lines->setLineWidth(edge_scale);
     GeomDL *display_list =
       scinew GeomDL(scinew GeomMaterial(lines, def_mat_handle_));
-    edge_switch = scinew GeomSwitch(display_list);
+    edge_switch = scinew GeomSwitch(scinew GeomColorMap(display_list,
+							color_handle_));
   }
 
   // Second pass: over the edges
@@ -683,28 +684,38 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
     switch (sfld->data_at()) {
     case Field::NODE:
       {
-	MaterialHandle m1 = choose_mat(false, nodes[0]);
-	MaterialHandle m2 = choose_mat(false, nodes[1]);
 	if (cyl)
 	{
+	  MaterialHandle m1 = choose_mat(false, nodes[0]);
+	  MaterialHandle m2 = choose_mat(false, nodes[1]);
 	  cylinders->add(p1, m1, p2, m2);
 	}
 	else
 	{
-	  lines->add(p1, m1, p2, m2);
+	  typename Fld::value_type val0, val1;
+	  sfld->value(val0, nodes[0]);
+	  sfld->value(val1, nodes[1]);
+	  double dval0, dval1;
+	  to_double(val0, dval0);
+	  to_double(val1, dval1);
+	  lines->add(p1, dval0, p2, dval1);
 	}
       }
       break;
     case Field::EDGE:
       {
-	MaterialHandle m1 = choose_mat(false, *eiter);
 	if (cyl)
 	{
+	  MaterialHandle m1 = choose_mat(false, *eiter);
 	  cylinders->add(p1, m1, p2, m1);
 	}
 	else
 	{
-	  lines->add(p1, m1, p2, m1);
+	  typename Fld::value_type val;
+	  sfld->value(val, *eiter);
+	  double dval;
+	  to_double(val, dval);
+	  lines->add(p1, dval, p2, dval);
 	}
       }
       break;
@@ -712,9 +723,9 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
     case Field::CELL:
     case Field::NONE:
       {
-	MaterialHandle m1 = choose_mat(true, 0);
 	if (cyl)
 	{
+	  MaterialHandle m1 = choose_mat(true, 0);
 	  cylinders->add(p1, m1, p2, m1);
 	}
 	else
@@ -1403,8 +1414,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
     }
 
     data_switch =
-      scinew GeomSwitch(scinew GeomDL(scinew GeomMaterial(lines,
-							  default_material)));
+      scinew GeomSwitch(scinew GeomColorMap(scinew GeomDL(scinew GeomMaterial(lines, default_material)), cmap));
   }
 
   MaterialHandle tdefmat = default_material->clone();
@@ -1458,8 +1468,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	{
 	  if (cmap.get_rep())
 	  {
-	    lines->add(p - tmp, cmap->lookup(ctmpd),
-		       p + tmp, cmap->lookup(ctmpd));
+	    lines->add(p - tmp, ctmpd, p + tmp, ctmpd);
 	  }
 	  else
 	  {
@@ -1470,8 +1479,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	{
 	  if (cmap.get_rep())
 	  {
-	    lines->add(p, cmap->lookup(ctmpd),
-		       p + tmp, cmap->lookup(ctmpd));
+	    lines->add(p, ctmpd, p + tmp, ctmpd);
 	  }
 	  else
 	  {
