@@ -28,11 +28,11 @@
 						<p>The above problem is governed mathematically by Poisson's equation:<br>
 						<br>
 						<img src="equation.gif" align="absbottom"></p>
-						<p>Where <img height="16" width="11" src="sigma.gif"> is the local conductivity tensor, <img height="16" width="13" src="phi.gif"> is the voltage over the domain, and <img height="19" width="36" src="i.gif" align="texttop"> is a source term indicating where there are current sources within our domain. In English, this says: the divergence (<img height="16" width="25" src="del_dot.gif" align="absbottom">) of the electric field (<img height="16" width="15" src="del.gif" align="absbottom"><img height="16" width="13" src="phi.gif" align="absbottom">) is zero everywhere there is not a current source Discretizing this onto our tetrahedral domain, we approximate the divergence of the electric field with the stiffness matrix <font size="4"><b>A</b></font>. <img height="16" width="13" src="phi.gif"> is a vector composed of voltages at the nodes. And <font size="4"><b>b</b></font> is a source vector indicating the flux through the nodes -- it is only non-zero for nodes that are corners of elements containing a current source. Given a stiffness matrix, <font size="4"><b>A</b></font>, and a source vector, <font size="4"><b>b</b></font>, we can solve the linear system:<br>
+						<p>where <img height="16" width="11" src="sigma.gif"> is the local conductivity tensor, <img height="16" width="13" src="phi.gif"> is the voltage over the domain, and <img height="19" width="36" src="i.gif" align="texttop"> is a source term indicating where there are current sources within our domain. In English, this says: the divergence (<img height="16" width="25" src="del_dot.gif" align="absbottom">) of the electric field (<img height="16" width="15" src="del.gif" align="absbottom"><img height="16" width="13" src="phi.gif" align="absbottom">) is zero everywhere there is not a current source. Discretizing this onto our tetrahedral domain, we approximate the divergence of the electric field with the stiffness matrix <font size="4"><b>A</b></font>. <img height="16" width="13" src="phi.gif"> is a vector composed of voltages at the nodes. And <font size="4"><b>b</b></font> is a source vector indicating the flux through the nodes -- it is only non-zero for nodes that are corners of elements containing a current source. Given a stiffness matrix, <font size="4"><b>A</b></font>, and a source vector, <font size="4"><b>b</b></font>, we can solve the linear system:<br>
 						</p>
 						<p><img height="15" width="14" src="A.gif"><img height="16" width="13" src="phi.gif"><img height="16" width="20" src="equals.gif"><img height="16" width="10" src="b.gif"><br>
 						</p>
-						<p>To determine the potentials,<img height="16" width="13" src="phi.gif">, through the field. Taking the gradient, <img height="16" width="15" src="del.gif"><img height="16" width="13" src="phi.gif">, we get the electric field through the domain.<br>
+						<p>to determine the potentials,<img height="16" width="13" src="phi.gif">, through the field. Taking the gradient, <img height="16" width="15" src="del.gif"><img height="16" width="13" src="phi.gif">, we get the electric field through the domain.<br>
 						<br>
 						<br>
 						<font size="4" color="#8b0000"><b>Getting Started</b></font><br>
@@ -47,17 +47,15 @@
 						4 - construct the right hand side source vector based on the location and orientation of any dipole sources [<font size="4"><b>b</b></font>]<br>
 						5 - solve the linear system <img height="15" width="14" src="A.gif"><img height="16" width="13" src="phi.gif"><img height="16" width="20" src="equals.gif"><img height="16" width="10" src="b.gif">, to determine the potentials at the nodes [<img height="16" width="13" src="phi.gif" align="absbottom">]<br>
 						6 - attach the solution vector,<img height="16" width="13" src="phi.gif"> , to the mesh in order to give the potentials a spatial location [potential field]<br>
-						7 - take the gradient of the potential field (<img height="16" width="15" src="del.gif" align="absbottom"><img height="16" width="13" src="phi.gif" align="absbottom">) to get the electric field [<img height="16" width="11" src="sigma.gif">]<br>
+						7 - take the gradient of the potential field (<img height="16" width="15" src="del.gif" align="absbottom"><img height="16" width="13" src="phi.gif" align="absbottom">) to get the electric field.<br>
 						<br>
 						For steps 1 and 2, we use FieldReader modules to read in the mesh and a dipole. To access the FieldReader module, first select <a href="figure_1.html" target="display"><b>SCIRun&gt;Data IO&gt;FieldReader</b></a> from the menu bar. The FieldReader module will appear in the upper left corner of the network pane. Note that various modules contain a user interface (UI) button. Clicking these will give you full view of the module's <a href="figure_2.html" target="display">interface</a> as well as the ability to change variables at any point in your computation. For this tutorial we are using the sphere dataset. You can also run it on the cyl3 dataset. Our first FieldReader is reading in the mesh which in this case is a sphere.<br>
-						</p>
-						<p><b>**</b> Note that SCIRun can be installed into any directory, within a user home directory or a system application directory. There is no &quot;make install&quot; step in the build process, so SCIRun will be installed in the chosen directory.<br>
 						<br>
-						The chosen install directory will be referred to as <font color="#228b22"><i><b>DATA_DIR</b></i></font> from now on.<br>
+						The directory in which the SCIRun datasets are located on your system will be referred to as <font color="#228b22"><i><b>DATA_DIR</b></i></font> from now on.<br>
 						<br>
-						For example, if you choose to install SCIRun into user Bob's home directory, then<br>
+						For example, if you chose to place the SCIRun datasets into user Bob's home directory, then<br>
 						<br>
-						<font color="#228b22"><i><b>DATA_DIR</b></i></font> = /home/bob<br>
+						<font color="#228b22"><i><b>DATA_DIR</b></i></font> = /home/bob/SCIRunData<br>
 						</p>
 						<p>In the user interface, set the filename to be: <font color="#228b22"><i><b>DATA_DIR</b></i></font><b>/sphere-mesh.tvt.fld</b>.</p>
 						<p>You can move the module by left-clicking on the module and dragging it to your desired position. Releasing your finger will set the module in place.<br>
@@ -67,8 +65,8 @@
 						<img height="15" width="14" src="A.gif"><img height="16" width="13" src="phi.gif"><img height="16" width="20" src="equals.gif"><img height="16" width="10" src="b.gif"></p>
 						<p><a href="SetupFEMatrix.html" target="display">You can leave all of the default settings</a> which are:</p>
 						<ul>
-							<li>Select the &quot;No Dirichlet&quot; option so you are not specifying any information regarding the boundary conditions.
-							<li>Select &quot;Use Conductivities&quot; assuming this is a nonhomogeneous volume conductor.
+							<li>Select the &quot;No Dirichlet&quot; option so you are not specifying any known voltages in the domain.
+							<li>Select &quot;Use Conductivities&quot; to use the conductivity tensors specified in the mesh.
 						</ul>
 						<p>For Step 4, we use an ApplyFEMCurrentSource module to build the righthand side source vector <font size="4"><b>b</b></font>, based on the location and orientation of the dipoles relative to the mesh. Select: <b>BioPSE&gt;Forward&gt;ApplyFEMCurrentSource</b></p>
 						<p>You should <a href="figure_4.html" target="display">position this module</a> to the right of the SetupFEMatrix.</p>
@@ -96,7 +94,7 @@
 						<p><br>
 						For Step 6, we use a <a href="figure_13.html" target="display">ManageFieldData module</a> (<b>SCIRun&gt;Fields&gt;ManageFieldData</b>) to attach the data values (potentials) to the geometry (finite element mesh) in order to build a potential field. This will be connected to the first input port of the Gradient module (Step 7).<br>
 						<br>
-						For Step 7, we use a Gradient module (<b>SCIRun&gt;Fields&gt;Gradient</b>) to compute the electric field (<img height="16" width="11" src="sigma.gif">), from the potential field. This will eventually connect to the first input port of the SeedField module.<br>
+						For Step 7, we use a Gradient module (<b>SCIRun&gt;Fields&gt;Gradient</b>) to compute the electric field, from the potential field. This will eventually connect to the first input port of the SeedField module.<br>
 						<br>
 						<br>
 						Having solved for the electric and potential fields for a static source, there are two interactions we can now explore: A) moving the dipole within the model; B) visualizing the results of our computations.<br>
@@ -143,10 +141,10 @@
 						<p>To choose the seed positions for the streamlines, we use a <a href="figure_20.html" target="display">SeedField module</a> (<b>SCIRun&gt;Fields&gt;SeedField</b>). SeedField generates a collection of seed points based on either a scene widget (e.g. a &quot;rake&quot;) or by randomly distributing them over the input domain. The electric field and the seed positions are passed into the Streamline module, and the seed positions are integrated through the (gradient) vector field. Variable settings can be left at default.The output from the Streamline module is a collection of Streamlines (represented as contours), which we can then <a href="figure_21.html" target="display">visualize</a> by again using a ShowField module.</p>
 						<p>Variables for the second ShowField module should be:</p>
 						<ul>
-							<li>Show Nodes as Spheres with a Node Scale of 0.03 (all defaults)
-							<li>Do not show Edges
-							<li>Do not show Faces
-							<li>Set the Cylinder and Sphere Resolution to be 10 and leave the default color.<br>
+							<li>Show Nodes as Spheres with a Node Scale of 0.01 (all defaults)
+							<li>Show Edges
+							<li>Show Faces
+							<li>Set the Cylinder and Sphere Resolution to be 5 and leave the default color.<br>
 						</ul>
 						<p>You have now built the forward-fem.net using SCIRun. From an individual module's interface, you can adjust settings and re-execute the net to visualize the results, try different Iso values or move the StreamLines rake by pressing Ctrl-left-mouse and dragging the rake to the desired position. You can do the same with the dipole source.</p>
 						<p>For this tutorial we used a simple sphere geometry in which an analytic solution can be obtained. But this same network can also be applied to more realistic models such as a head or torso mesh in which discretization is necessary.<br>
