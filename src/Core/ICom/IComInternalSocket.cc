@@ -213,6 +213,12 @@ bool    IComInternalSocket::accept(IComSocket& newsock, IComSocketError &err)
 		return(false); 
 	}
 	
+    if (connectionlist_.size() == 0)
+    {
+        // wait for an incoming packet
+        waitconnection_.wait(lock);   
+    }
+    
 	if (connectionlist_.size() > 0)
 	{
 		newsock = connectionlist_.front();
@@ -240,7 +246,7 @@ bool    IComInternalSocket::accept(IComSocket& newsock, IComSocketError &err)
 	{
 		unlock();
 		err.errnr = EWOULDBLOCK;
-		err.error = "No connection is available";
+		err.error = "No connection is available, whereas a signal was given that one should be available";
 		return(false);
 	}
 }

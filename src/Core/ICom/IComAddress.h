@@ -149,7 +149,7 @@ public:
 	// Get all the information out of an address
 	
 	// Get the port number
-	short		getport(int addressnum = 0);
+	unsigned short		getport(int addressnum = 0);
 	
 	// Get the IPaddress as a vector of bytes
 	IPaddress   getipaddress(int addressnum = 0);
@@ -221,7 +221,7 @@ public:
 	bool						isvalid_;				// IS the address valid ?
 	
 	std::vector<IPaddress>		ipaddress_;				// The IP address
-	std::vector<short>			portnum_;				// The port number
+	std::vector<unsigned short> portnum_;				// The port number
 	
   	std::vector<std::string>	inetname_;				// internet name of the address
 	std::vector<std::string>	ipname_;				// ipname of the address (ip number in text)

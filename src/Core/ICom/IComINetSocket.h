@@ -82,7 +82,7 @@ class IComINetSocket : public IComVirtualSocket {
   private:
   
 	int connect_timeout(int sockfd, const sockaddr* sa, socklen_t salen,int nsecs);
-	void connect_alarm(int signo);
+	void* connect_alarm(int signo);
 
 	// error translation functions
 	// The same error numbers can mean a slightly different
