@@ -282,8 +282,17 @@ void Sampler::metropolis()
   if ( !r_port_ ) 
     cerr << " no output port\n";
   else {
-    for (int i=0; i<nparms; i++)
-      results->color_.add(Color( drand48(), drand48(), drand48() ));
+    cerr << "sending results" << endl;
+    vector<unsigned char> color;
+    color.resize(4);
+    for (int i=0; i<nparms; i++) {
+      ((Part*)graph_)->get_property(i,"color",color);
+      if (color[0])
+        results->color_.add(Color( color[1]/255., color[2]/255., 
+				   color[3]/255. ));
+      else
+        results->color_.add(Color( drand48(), drand48(), drand48() ));
+    }
     r_port_->send( results );
   }
 }
