@@ -110,7 +110,7 @@ SRCS := \
 	$(SRCDIR)/Submatrix.tcl \
 	$(SRCDIR)/Subnet.tcl \
 	$(SRCDIR)/SynchronizeGeometry.tcl \
-	$(SRCDIR)/TclStream.tcl \
+	$(SRCDIR)/SciTclStream.tcl \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
 	$(SRCDIR)/TextureVolVis.tcl \
 	$(SRCDIR)/Tooltips.tcl \
