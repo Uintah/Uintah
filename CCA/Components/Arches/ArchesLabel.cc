@@ -416,6 +416,12 @@ ArchesLabel::ArchesLabel()
   d_enthDiffCoefCorrLabel = VarLabel::create("enthDiffCoefCorr",
 				   CCVariable<double>::getTypeDescription() );
 
+  d_reactscalDiffCoefPredLabel = VarLabel::create("reactscalDiffCoefPred",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_reactscalDiffCoefCorrLabel = VarLabel::create("reactscalDiffCoefCorr",
+				   CCVariable<double>::getTypeDescription() );
+
   // Scalar Conv Coef
   d_scalConvCoefPredLabel = VarLabel::create("scalConvCoefPred",
 				   CCVariable<double>::getTypeDescription() );
@@ -681,6 +687,9 @@ ArchesLabel::ArchesLabel()
   // Reactscalar Conv Coef
   d_reactscalConvCoefIntermLabel = VarLabel::create("reactscalConvCoefInterm",
 				   CCVariable<double>::getTypeDescription() );
+  // Reactscalar Diff Coef
+  d_reactscalDiffCoefIntermLabel = VarLabel::create("reactscalDiffCoefInterm",
+				   CCVariable<double>::getTypeDescription() );
   // Reactscalar Linear Src
   d_reactscalLinSrcIntermLabel = VarLabel::create("reactscalLinSrcInterm",
 				   CCVariable<double>::getTypeDescription() );
@@ -914,6 +923,8 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_scalDiffCoefCorrLabel);
   VarLabel::destroy(d_enthDiffCoefPredLabel);
   VarLabel::destroy(d_enthDiffCoefCorrLabel);
+  VarLabel::destroy(d_reactscalDiffCoefPredLabel);
+  VarLabel::destroy(d_reactscalDiffCoefCorrLabel);
   VarLabel::destroy(d_scalConvCoefPredLabel);
   VarLabel::destroy(d_scalLinSrcPredLabel);
   VarLabel::destroy(d_scalNonLinSrcPredLabel);
@@ -1009,6 +1020,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_reactscalNonLinSrcIntermLabel);
   VarLabel::destroy(d_reactscalarIntermLabel);
   VarLabel::destroy(d_reactscalConvCoefIntermLabel);
+  VarLabel::destroy(d_reactscalDiffCoefIntermLabel);
   VarLabel::destroy(d_reactscalLinSrcIntermLabel);
   VarLabel::destroy(d_reactscalarTempLabel);
  // Runge-Kutta 3d order properties labels
