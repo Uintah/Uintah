@@ -160,13 +160,13 @@ specification: version_star import_star package_star
 
 version_star: /* Empty */
 	      {
-		   $$=new VersionList();
+		$$=new VersionList();
 	      }
 	      |
 	      version_star version
 	      {
-	         $$=$1;
-		 $$->add($2);
+		$$=$1;
+		$$->add($2);
 	      }
 	      ;
 
@@ -195,13 +195,13 @@ package_star: /* Empty */
 
 definition_star: /* Empty */
 	       {
-	           $$=new DefinitionList();
+		 $$=new DefinitionList();
 	       }
                |
 	       definition_star definition
 	       {
-	          $$=$1;
-		  $$->add($2);
+		 $$=$1;
+		 $$->add($2);
                }
 	       ;
 
@@ -225,22 +225,22 @@ import: IMPORT scoped_identifier ';'
 
 definition:    class
 	       {
-	          $$=$1;
+		 $$=$1;
 	       }
 	       |
 	       enum
 	       {
-	          $$=$1;
+		 $$=$1;
 	       }
 	       |
 	       interface
 	       {
-	          $$=$1;
+		 $$=$1;
 	       }
 	       |
                package
 	       {
-	          $$=$1;
+		 $$=$1;
 	       }
 	       ;
 
@@ -258,9 +258,9 @@ package:       PACKAGE scoped_identifier '{' definition_star '}' opt_semi
 
 scoped_identifier:   opt_dot IDENTIFIER dot_identifier_star
 	       {
-	           $$=$3;
-		   $$->prepend($2);
-		   $$->set_leading_dot($1);
+		 $$=$3;
+		 $$->prepend($2);
+		 $$->set_leading_dot($1);
 	       }
 	       ;
 
@@ -282,22 +282,22 @@ opt_semi:      /* Empty */
 
 dot_identifier_star: /* Empty */
 		     {
-		         $$=new ScopedName();
+		       $$=new ScopedName();
 	             }
 		     |
 		     dot_identifier_star '.' IDENTIFIER
 		     {
-		         $$=$1;
-			 $$->add($3);
+		       $$=$1;
+		       $$->add($3);
 		     }
 		     ;
 
 
 class:	       class_modifier CLASS IDENTIFIER class_inherit class_methods opt_semi
 	       {
-	           $$=new Class(curfile, lineno, $1, $3,
-				$4.class_extends, $4.class_implementsall,
-				$4.class_implements, $5);
+		 $$=new Class(curfile, lineno, $1, $3,
+			      $4.class_extends, $4.class_implementsall,
+			      $4.class_implements, $5);
 	       }
 	       ;
 
@@ -314,20 +314,20 @@ class_modifier: /* Empty */
 
 class_inherit: class_extends class_implements_all class_implements
 	       {
-	           $$.class_extends=$1;
-		   $$.class_implementsall=$2;
-		   $$.class_implements=$3;
+		 $$.class_extends=$1;
+		 $$.class_implementsall=$2;
+		 $$.class_implements=$3;
 	       }
 	       ;
 
 class_extends: /* Empty */
 	       {
-	           $$=0;
+		 $$=0;
 	       }
 	       |
 	       EXTENDS scoped_identifier
 	       {
-	           $$=$2;
+		 $$=$2;
 	       }
 	       ;
 
@@ -350,20 +350,20 @@ class_implements: /* Empty */
 		  |
 		  IMPLEMENTS scoped_identifier comma_scoped_identifier_star
 		  {
-		     $3->prepend($2);
-		     $$=$3;
+		    $3->prepend($2);
+		    $$=$3;
 		  }
 		  ;
 
 comma_scoped_identifier_star: /* Empty */
 			{
-			    $$=new ScopedNameList();
+			  $$=new ScopedNameList();
 			}
 			|
 			comma_scoped_identifier_star ',' scoped_identifier
 			{
-			    $$=$1;
-			    $$->add($3);
+			  $$=$1;
+			  $$->add($3);
 			}
 			;
 
@@ -405,13 +405,13 @@ enumerator: IDENTIFIER
 
 interface:     INTERFACE IDENTIFIER interface_extends methods opt_semi
 	       {
-	           $$=new Interface(curfile, lineno, $2, $3, $4);
+		 $$=new Interface(curfile, lineno, $2, $3, $4);
 	       }
 	       ;
 
 class_methods: '{' class_method_star '}'
 		{
-		    $$=$2;
+		  $$=$2;
 		}
 		;
 
@@ -429,13 +429,13 @@ class_method_star: /* Empty */
 
 interface_extends: /* Empty */
 		   {
-		       $$=0;
+		     $$=0;
 		   }
 		   |
 		   EXTENDS scoped_identifier comma_scoped_identifier_star
 		   {
-		       $3->prepend($2);
-		       $$=$3;
+		     $3->prepend($2);
+		     $$=$3;
 		   }
 		   ;
 
@@ -469,25 +469,25 @@ method_modifier: /* Empty */
 
 methods: '{' method_star '}'
 	 {
-	     $$=$2;
+	   $$=$2;
 	 }
 	 ;
 
 method_star: /* Empty */
 	     {
-	         $$=new MethodList();
+	       $$=new MethodList();
              }
 	     |
 	     method_star method
 	     {
-	         $$=$1;
-		 $$->add($2);
+	       $$=$1;
+	       $$->add($2);
              }
 	     ;
 
 method: return_type IDENTIFIER arguments method_modifiers2 opt_throws_clause ';'
 	{
-	    $$=new Method(curfile, lineno, $1.copy, $1.type, $2, $3, $4, $5);
+	  $$=new Method(curfile, lineno, $1.copy, $1.type, $2, $3, $4, $5);
 	}
 	;
 
@@ -509,37 +509,37 @@ method_modifiers2: /* Empty */
 
 opt_throws_clause: /* Empty */
 		   {
-		       $$=0;
+		     $$=0;
 		   }
 		   |
 		   throws_clause
 		   {
-		       $$=$1;
+		     $$=$1;
 		   }
 		   ;
 
 return_type: VOID
 	     {
-	         $$.type=Type::voidtype();
-		 $$.copy=false;
+	       $$.type=Type::voidtype();
+	       $$.copy=false;
              }
 	     |
 	     opt_copy type
 	     {
-	         $$.type=$2;
-		 $$.copy=$1;
+	       $$.type=$2;
+	       $$.copy=$1;
 	     }
 	     ;
 
 arguments: '(' ')'
 	   {
-	      $$=new ArgumentList();
+	     $$=new ArgumentList();
 	   }
 	   |
 	   '(' argument comma_argument_star ')'
 	   {
-	      $$=$3;
-              $$->prepend($2);
+	     $$=$3;
+	     $$->prepend($2);
 	   }
 	   ;
 
@@ -556,83 +556,83 @@ opt_copy: /* Empty */
 
 argument: opt_copy mode type
 	  {
-	      $$=new Argument($1, $2, $3);
+	    $$=new Argument($1, $2, $3);
 	  }
 	  |
 	  opt_copy mode type IDENTIFIER
 	  {
-	      $$=new Argument($1, $2, $3, $4);
+	    $$=new Argument($1, $2, $3, $4);
 	  }
 	  ;
 
 mode: IN
       {
-         $$=Argument::In;
+	$$=Argument::In;
       }
       |
       OUT
       {
-         $$=Argument::Out;
+	$$=Argument::Out;
       }
       |
       INOUT
       {
-         $$=Argument::InOut;
+	$$=Argument::InOut;
       }
       ;
 
 comma_argument_star: /* Empty */
 		     {
-		        $$=new ArgumentList();
+		       $$=new ArgumentList();
 	             }
 		     |
 		     comma_argument_star ',' argument
 		     {
-		        $$=$1;
-			$$->add($3);
+		       $$=$1;
+		       $$->add($3);
 		     }
 		     ;
 
 throws_clause: THROWS scoped_identifier comma_scoped_identifier_star
 	       {
-	           $3->prepend($2);
-	           $$=$3;
+		 $3->prepend($2);
+		 $$=$3;
 	       }
 	       ;
 
 type: BOOL
       {
-         $$=Type::booltype();
+	$$=Type::booltype();
       }
       |
       CHAR
       {
-         $$=Type::chartype();
+	$$=Type::chartype();
       }
       |
       DCOMPLEX
       {
-         $$=Type::dcomplextype();
+	$$=Type::dcomplextype();
       }
       |
       DOUBLE
       {
-         $$=Type::doubletype();
+	$$=Type::doubletype();
       }
       |
       FCOMPLEX
       {
-         $$=Type::fcomplextype();
+	$$=Type::fcomplextype();
       }
       |
       FLOAT
       {
-         $$=Type::floattype();
+	$$=Type::floattype();
       }
       |
       INT
       {
-         $$=Type::inttype();
+	$$=Type::inttype();
       }
       |
       LONG
@@ -647,28 +647,28 @@ type: BOOL
       |
       STRING
       {
-         $$=Type::stringtype();
+	$$=Type::stringtype();
       }
       |
       ARRAY '<' type opt_comma_number '>'
       {
-         $$=Type::arraytype($3, $4);
+	$$=Type::arraytype($3, $4);
       }
       |
       scoped_identifier
       {
-         $$=new NamedType(curfile, lineno, $1);
+	$$=new NamedType(curfile, lineno, $1);
       }
       ;
 
 opt_comma_number: /* Empty */
 		  {
-		      $$=0;
+		    $$=0;
 		  }
 		  |
 		  ',' INTEGER
 		  {
-		      $$=$2;
+		    $$=$2;
 		  }
 		  ;
 
