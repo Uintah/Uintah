@@ -195,6 +195,40 @@ using std::vector;
       const VarLabel* GSp_volLabel;      
       const VarLabel* GSp_vol_srcLabel; 
       // ------------------------------
+
+      // Labels for shell materials
+      const VarLabel* pThickTopLabel;
+      const VarLabel* pThickBotLabel;
+      const VarLabel* pInitialThickTopLabel;
+      const VarLabel* pInitialThickBotLabel;
+      const VarLabel* pNormalLabel;
+      const VarLabel* pInitialNormalLabel;
+      const VarLabel* pNormalRotRateLabel; 
+      const VarLabel* pRotationLabel;
+      const VarLabel* pDefGradTopLabel;
+      const VarLabel* pDefGradCenLabel;
+      const VarLabel* pDefGradBotLabel;
+      const VarLabel* pStressTopLabel;
+      const VarLabel* pStressCenLabel;
+      const VarLabel* pStressBotLabel;
+      const VarLabel* pThickTopLabel_preReloc;
+      const VarLabel* pThickBotLabel_preReloc;
+      const VarLabel* pInitialThickTopLabel_preReloc;
+      const VarLabel* pInitialThickBotLabel_preReloc;
+      const VarLabel* pNormalLabel_preReloc;
+      const VarLabel* pInitialNormalLabel_preReloc;
+      const VarLabel* pNormalRotRateLabel_preReloc; 
+      const VarLabel* pRotationLabel_preReloc;
+      const VarLabel* pDefGradTopLabel_preReloc;
+      const VarLabel* pDefGradCenLabel_preReloc;
+      const VarLabel* pDefGradBotLabel_preReloc;
+      const VarLabel* pStressTopLabel_preReloc;
+      const VarLabel* pStressCenLabel_preReloc;
+      const VarLabel* pStressBotLabel_preReloc;
+      const VarLabel* gNormalRotRateLabel; 
+      const VarLabel* gNormalRotMomentLabel; 
+      const VarLabel* gNormalRotMassLabel; 
+      const VarLabel* gNormalRotAccLabel; 
     };
 } // End namespace Uintah
 
