@@ -8,7 +8,7 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-
+#include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <algorithm>
@@ -92,7 +92,7 @@ BCDataArray& BCDataArray::operator=(const BCDataArray& rhs)
 
 BCDataArray* BCDataArray::clone()
 {
-  return new BCDataArray(*this);
+  return scinew BCDataArray(*this);
 
 }
 
