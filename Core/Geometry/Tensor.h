@@ -42,7 +42,6 @@
 #ifndef Geometry_Tensor_h
 #define Geometry_Tensor_h 1
 
-#include <Core/share/share.h>
 #include <Core/Geometry/Vector.h>
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
@@ -52,7 +51,7 @@
 namespace SCIRun {
   template<class T> class Array1;
   class Piostream;
-class SCICORESHARE Tensor {
+class Tensor {
 private:
   Vector e1_, e2_, e3_;  // these are already scaled by the eigenvalues
   double l1_, l2_, l3_;
@@ -104,13 +103,13 @@ public:
   //! support dynamic compilation
   static const string& get_h_file_path();
 
-  friend void SCICORESHARE Pio(Piostream&, Tensor&);
+  friend void Pio(Piostream&, Tensor&);
 };
 
 const TypeDescription* get_type_description(Tensor*);
 
-SCICORESHARE std::ostream& operator<<(std::ostream& os, const Tensor& t);
-SCICORESHARE std::istream& operator>>(std::istream& os, Tensor& t);
+std::ostream& operator<<(std::ostream& os, const Tensor& t);
+std::istream& operator>>(std::istream& os, Tensor& t);
 
 } // End namespace SCIRun
 

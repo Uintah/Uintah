@@ -40,7 +40,6 @@
  */
 
 #include <Core/Geometry/Quaternion.h>
-#include <Core/share/share.h>
 
 #include <Core/Geometry/Transform.h>
 #include <Core/Geometry/Point.h>

@@ -31,7 +31,6 @@
 #define Geometry_Transform_h 1
 
 #include <Core/Persistent/Persistent.h>
-#include <Core/share/share.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
@@ -49,7 +48,7 @@ class TypeDescription;
 void Pio_old(Piostream&, Transform&);
 void Pio(Piostream&, Transform*&);
 
-class SCICORESHARE Transform : public Persistent {
+class Transform : public Persistent {
   double mat[4][4];
   mutable double imat[4][4];
   mutable int inverse_valid;
