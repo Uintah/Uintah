@@ -73,7 +73,6 @@ DirectInterpScalarAlgo<Fld, Loc>::execute(MeshHandle meshhandle,
   else if (at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
   else if (at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
   else if (at == Field::EDGE) mesh->synchronize(Mesh::EDGES_E);
-  mesh->synchronize(Mesh::GRID_E);
 
   typename Loc::iterator itr, itr_end;
   mesh->begin(itr);
@@ -143,7 +142,6 @@ DirectInterpVectorAlgo<Fld, Loc>::execute(MeshHandle meshhandle,
   else if (at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
   else if (at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
   else if (at == Field::EDGE) mesh->synchronize(Mesh::EDGES_E);
-  mesh->synchronize(Mesh::GRID_E);
 
   typename Loc::iterator itr, itr_end;
   mesh->begin(itr);
@@ -213,7 +211,6 @@ DirectInterpTensorAlgo<Fld, Loc>::execute(MeshHandle meshhandle,
   else if (at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
   else if (at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
   else if (at == Field::EDGE) mesh->synchronize(Mesh::EDGES_E);
-  mesh->synchronize(Mesh::GRID_E);
 
   typename Loc::iterator itr, itr_end;
   mesh->begin(itr);
