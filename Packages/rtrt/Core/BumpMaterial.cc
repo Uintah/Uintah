@@ -24,12 +24,13 @@ BumpMaterial::BumpMaterial(Material *m, char *filename, double persist)
     material = new LambertianMaterial(Color(1,0,0));
   if(read_file(filename) == 0)
     {
-      cout << "FILE NOT READ - PROBLEMS IMMINENT" << endl;
+      cout << "FILE " << filename <<  " NOT READ - PROBLEMS IMMINENT" << endl;
       dimension_x = 1;
       dimension_y = 1;
       bumpimage = new int[1];
       bumpimage[0] = 0;
     }
+  
   cout << "Dimx=" << dimension_x << " Dimy=" << dimension_y << endl;
 }
 
@@ -84,20 +85,131 @@ void BumpMaterial::shade(Color& result, const Ray& ray,
     Point hitpos(ray.origin()+ray.direction()*nearest);
     Vector normal(obj->normal(hitpos, hit));
     perturbnormal(normal,ray, hit);
-    Object *o2 = (Object *)(new BumpObject(normal));
+    BumpObject n(normal);
+    BumpObject *n2 = &n;
+    Object *o2 = (Object *)n2;
     //BumpObject o(normal);
     HitInfo h2 = hit;
     h2.hit_obj = o2;
     material->shade(result,ray,h2,depth,a,c,cx);
-    delete o2;
     
 }
 
 
+FILE * BumpMaterial::readcomments(FILE *fin)
+{
+    char q;
+    char buf[1024];
+    fscanf(fin,"%c",&q);
+    while(q == '#' || q == '\n' || q == ' ')
+      {
+        if(q == '#')
+          fgets(buf,256,fin); // read the line - ignore the line
+        q = fgetc(fin);
+      }
+    if(ungetc(q,fin) == EOF)
+      printf("error in putc\n");
+    return fin;
+}
+
 //all of the following content is needed to bump objects from a file
+
+int BumpMaterial::readfromppm6(char *filename)
+{
+
+  FILE *fin;
+  fin = fopen(filename,"r");
+  if(!fin)
+    {printf("Couldn't open file %s\n",filename); return 0;}
+  char buf[256];
+  fscanf(fin,"%s",buf);
+  if(strcmp(buf,"P6") != 0)
+    {
+      printf("File is not a P6 file - rejected!\n");
+      return 0;
+    }
+  int temp;
+  fin = readcomments(fin);
+  fscanf(fin,"%d", &dimension_x);
+  printf("width=%d ",dimension_x);
+  fin = readcomments(fin);
+  fscanf(fin,"%d", &dimension_y);
+  printf("height=%d \n",dimension_y);
+  fin = readcomments(fin);  
+  fscanf(fin,"%d\n",&temp);
+  unsigned char ra,ga,ba;
+  int r,g,b;
+  double max = temp;
+  bumpimage = (int *)malloc(dimension_x*dimension_y*sizeof(int));
+  printf("Converting from 0->%d (x3) to Vector 0->1 by division\n",temp);
+  printf("Reading in File for a Bump Map%s\n",filename);
+  for(int j = dimension_y-1; j >= 0; j--)
+    for(int i = 0; i < dimension_x; i++)
+      { //ramsey
+	fscanf(fin,"%c%c%c",&ra,&ga,&ba);
+	r = (int)ra; g = (int)ga; b = (int)ba; 
+	bumpimage[j*dimension_x+i] = (r+g+b)/3;
+      }
+  evaru = 1.0f/dimension_x;
+  evarv = 1.0f/dimension_y;
+  printf("File read\n");
+  fclose(fin);
+  return 1;
+}
 
 int BumpMaterial::read_file(char *filename)
 {
+
+
+   FILE *fin;
+    fin = fopen(filename,"r");
+    if(!fin)
+      {printf("Couldn't open file %s\n",filename); return 0;}
+    char buf[256];
+    fscanf(fin,"%s",buf);
+    if(strcmp(buf,"P3") != 0)
+      {
+        if(strcmp(buf,"P6") != 0)
+          {
+            printf("Don't have a P3 file nor a P6\n");
+            return 0;
+          }
+        else
+          {
+            fclose(fin);
+	    return readfromppm6(filename);
+          }
+      }
+  
+    int temp;
+    fin = readcomments(fin);
+    fscanf(fin,"%d %d\n", &dimension_x, &dimension_y);
+    fin = readcomments(fin);
+    fscanf(fin,"%d",&temp);
+    double max = temp;
+    int r,g,b;
+    bumpimage = (int *)malloc(dimension_x*dimension_y*sizeof(int));
+    printf("Reading in File for a Bump Map%s\n",filename);
+    for(int j = dimension_y-1; j >= 0; j--)
+      for(int i = 0; i < dimension_x; i++)
+        {
+          fscanf(fin,"%d %d %d",&r,&g,&b);
+	  bumpimage[j*dimension_x+i] = (r+g+b)/3.0f;
+        }   
+    evaru = 1.0f/dimension_x;
+    evarv = 1.0f/dimension_y;
+	
+    printf("File read\n");
+    fclose(fin);
+    return 1;
+
+
+
+
+
+
+
+  /*
   ifstream fin;
   int dimension;
   //char buf[256];
@@ -121,6 +233,7 @@ int BumpMaterial::read_file(char *filename)
       }
   evaru = 1./(double)(dimension);
   evarv = evaru;
+  */
   return 1;
 }
 
