@@ -89,6 +89,6 @@ protected:
 
 } // End namespace SCIRun
 
-#endif OpenGLWindow_h
+#endif /* OpenGLWindow_h */
 
 
