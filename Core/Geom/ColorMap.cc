@@ -94,7 +94,7 @@ ColorMap::ColorMap(int nlevels, double min, double max)
   rawRampAlphaT_.push_back(1.0);
   rawRampAlpha_.push_back(1.0);
   rawRampAlpha_.push_back(1.0);
-  Build1d(nlevels);
+  Build1d(256);
 }
 
 
@@ -141,6 +141,15 @@ ColorMap::set_blend(bool blend)
 }
   
 
+static unsigned char COLOR_FTOB(double c)
+{
+  int tmp = (int)(c * 255.0 + 0.5);
+  if (tmp > 255) tmp = 255;
+  else if (tmp < 0) tmp = 0;
+  return (unsigned char)tmp;
+}
+
+
 void
 ColorMap::Build1d(const int size)
 {
@@ -168,7 +177,11 @@ ColorMap::Build1d(const int size)
   
   colors_.clear();
   colors_.resize(size);
-  for (int i = 0; i < size; i++) {    
+
+  // Blend if 256 colors.
+  set_blend(rawRampColor_.size() == 256);
+
+  for (int i = 0; i < size; i++) {
     colors_[i] = scinew Material();
     
     MaterialHandle &color = colors_[i];
@@ -188,11 +201,10 @@ ColorMap::Build1d(const int size)
     color->ambient = ambient;
     color->specular = specular;
     
-
-    rawRGBA_[i*4+0] = (unsigned char)(color->diffuse.r()*255);
-    rawRGBA_[i*4+1] = (unsigned char)(color->diffuse.g()*255);
-    rawRGBA_[i*4+2] = (unsigned char)(color->diffuse.b()*255);
-    rawRGBA_[i*4+3] = (unsigned char)(color->transparency*255);
+    rawRGBA_[i*4+0] = COLOR_FTOB(color->diffuse.r());
+    rawRGBA_[i*4+1] = COLOR_FTOB(color->diffuse.g());
+    rawRGBA_[i*4+2] = COLOR_FTOB(color->diffuse.b());
+    rawRGBA_[i*4+3] = COLOR_FTOB(color->transparency);
 
     t += dt;
     if (cIdx < cSize && t >= CT1) {
