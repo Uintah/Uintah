@@ -24,7 +24,7 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/scalsrc.F \
 	$(SRCDIR)/rescal.F \
 	$(SRCDIR)/arrl1.F $(SRCDIR)/underelax.F $(SRCDIR)/linegs.F \
-	$(SRCDIR)/normpress.F
+	$(SRCDIR)/normpress.F $(SRCDIR)/explicit.F
 
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
@@ -60,6 +60,9 @@ FFLAGS += -g
 
 #
 # $Log$
+# Revision 1.33  2000/08/15 00:23:38  rawat
+# added explicit solve for momentum and scalar eqns
+#
 # Revision 1.32  2000/08/11 21:26:41  rawat
 # added linear solver for pressure eqn
 #

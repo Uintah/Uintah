@@ -109,7 +109,8 @@ public:
       void sched_velocityLinearSolve(const LevelP& level,
 				     SchedulerP& sched,
 				     DataWarehouseP& old_dw,
-				     DataWarehouseP& new_dw, int index);
+				     DataWarehouseP& new_dw, double delta_t, 
+				     int index);
 
 protected: 
 
@@ -136,7 +137,7 @@ private:
 			       const Patch* patch,
 			       DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw,
-			       int index);
+			       double delta_t, int index);
 
 private:
 
@@ -167,6 +168,9 @@ private:
 
 //
 // $Log$
+// Revision 1.13  2000/08/15 00:23:32  rawat
+// added explicit solve for momentum and scalar eqns
+//
 // Revision 1.12  2000/07/28 02:31:00  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients

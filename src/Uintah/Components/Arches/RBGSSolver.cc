@@ -332,7 +332,6 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
     domHi = vars->uVelocity.getFortHighIndex();
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
-    //fortran call
     FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
 		   vars->uVelocity.getPointer(),
@@ -345,7 +344,6 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
     domHi = vars->vVelocity.getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
-    //fortran call
     FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
 		   vars->vVelocity.getPointer(),
@@ -358,7 +356,6 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
     domHi = vars->wVelocity.getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
-    //fortran call
     FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
 		   vars->uVelocity.getPointer(),
@@ -380,8 +377,9 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    DataWarehouseP& old_dw ,
 			    DataWarehouseP& new_dw, 
-			    int index, 
+			    int index, double delta_t,
 			    ArchesVariables* vars,
+			    CellInformation* cellinfo,
 			    const ArchesLabel* lab)
 {
   // Get the patch bounds and the variable bounds
@@ -389,6 +387,10 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
   IntVector domHi;
   IntVector idxLo;
   IntVector idxHi;
+  // for explicit solver
+  IntVector domLoDen = vars->old_density.getFortLowIndex();
+  IntVector domHiDen = vars->old_density.getFortHighIndex();
+  
   IntVector Size;
 
   Array1<double> e1;
@@ -429,7 +431,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 
     nlResid = resid;
     trunc_conv = trunc*1.0E-7;
-
+#if implicit_defined
     do {
       //fortran call for lineGS solver
       FORT_LINEGS(domLo.get_pointer(), domHi.get_pointer(),
@@ -453,6 +455,25 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 				      (velResid > trunc_conv)));
     cerr << "After u Velocity solve " << velIter << " " << velResid << endl;
     cerr << "After u Velocity solve " << nlResid << " " << trunc_conv <<  endl;
+#endif
+    FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
+		  idxLo.get_pointer(), idxHi.get_pointer(),
+		  vars->uVelocity.getPointer(),
+		  vars->old_uVelocity.getPointer(),
+		  vars->uVelocityCoeff[Arches::AE].getPointer(), 
+		  vars->uVelocityCoeff[Arches::AW].getPointer(), 
+		  vars->uVelocityCoeff[Arches::AN].getPointer(), 
+		  vars->uVelocityCoeff[Arches::AS].getPointer(), 
+		  vars->uVelocityCoeff[Arches::AT].getPointer(), 
+		  vars->uVelocityCoeff[Arches::AB].getPointer(), 
+		  vars->uVelocityCoeff[Arches::AP].getPointer(), 
+		  vars->uVelNonlinearSrc.getPointer(),
+		  domLoDen.get_pointer(), domHiDen.get_pointer(),
+		  vars->old_density.getPointer(), 
+		  cellinfo->sewu.get_objs(), cellinfo->sns.get_objs(),
+		  cellinfo->stb.get_objs(), &delta_t);
+    vars->residUVel = 1.0E-7;
+    vars->truncUVel = 1.0;
     break;
   case Arches::YDIR:
     domLo = vars->vVelocity.getFortLowIndex();
@@ -474,6 +495,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 
     nlResid = resid;
     trunc_conv = trunc*1.0E-7;
+#if implicit_defined
 
     do {
       //fortran call for lineGS solver
@@ -498,6 +520,25 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 				      (velResid > trunc_conv)));
     cerr << "After v Velocity solve " << velIter << " " << velResid << endl;
     cerr << "After v Velocity solve " << nlResid << " " << trunc_conv <<  endl;
+#endif
+    FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
+		  idxLo.get_pointer(), idxHi.get_pointer(),
+		  vars->vVelocity.getPointer(),
+		  vars->old_vVelocity.getPointer(),
+		  vars->vVelocityCoeff[Arches::AE].getPointer(), 
+		  vars->vVelocityCoeff[Arches::AW].getPointer(), 
+		  vars->vVelocityCoeff[Arches::AN].getPointer(), 
+		  vars->vVelocityCoeff[Arches::AS].getPointer(), 
+		  vars->vVelocityCoeff[Arches::AT].getPointer(), 
+		  vars->vVelocityCoeff[Arches::AB].getPointer(), 
+		  vars->vVelocityCoeff[Arches::AP].getPointer(), 
+		  vars->vVelNonlinearSrc.getPointer(),
+		  domLoDen.get_pointer(), domHiDen.get_pointer(),
+		  vars->old_density.getPointer(), 
+		  cellinfo->sew.get_objs(), cellinfo->snsv.get_objs(),
+		  cellinfo->stb.get_objs(), &delta_t);
+    vars->residVVel = 1.0E-7;
+    vars->truncVVel = 1.0;
     break;
   case Arches::ZDIR:
     domLo = vars->wVelocity.getFortLowIndex();
@@ -519,7 +560,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 
     nlResid = resid;
     trunc_conv = trunc*1.0E-7;
-
+#if implicit_defined
     do {
       //fortran call for lineGS solver
       FORT_LINEGS(domLo.get_pointer(), domHi.get_pointer(),
@@ -543,6 +584,25 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 				      (velResid > trunc_conv)));
     cerr << "After w Velocity solve " << velIter << " " << velResid << endl;
     cerr << "After w Velocity solve " << nlResid << " " << trunc_conv <<  endl;
+#endif
+    FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
+		  idxLo.get_pointer(), idxHi.get_pointer(),
+		  vars->wVelocity.getPointer(),
+		  vars->old_wVelocity.getPointer(),
+		  vars->wVelocityCoeff[Arches::AE].getPointer(), 
+		  vars->wVelocityCoeff[Arches::AW].getPointer(), 
+		  vars->wVelocityCoeff[Arches::AN].getPointer(), 
+		  vars->wVelocityCoeff[Arches::AS].getPointer(), 
+		  vars->wVelocityCoeff[Arches::AT].getPointer(), 
+		  vars->wVelocityCoeff[Arches::AB].getPointer(), 
+		  vars->wVelocityCoeff[Arches::AP].getPointer(), 
+		  vars->wVelNonlinearSrc.getPointer(),
+		  domLoDen.get_pointer(), domHiDen.get_pointer(),
+		  vars->old_density.getPointer(), 
+		  cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
+		  cellinfo->stbw.get_objs(), &delta_t);
+    vars->residWVel = 1.0E-7;
+    vars->truncWVel = 1.0;
     break;
   default:
     throw InvalidValue("Invalid index in LinearSolver for velocity");
@@ -632,8 +692,9 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
 			  const Patch* patch,
 			  DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw, 
-			  int index,
+			  int index, double delta_t,
 			  ArchesVariables* vars,
+			  CellInformation* cellinfo,
 			  const ArchesLabel* lab)
 {
   // Get the patch bounds and the variable bounds
@@ -641,6 +702,9 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
   IntVector domHi = vars->scalar.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
+  // for explicit solver
+  IntVector domLoDen = vars->old_density.getFortLowIndex();
+  IntVector domHiDen = vars->old_density.getFortHighIndex();
 
   Array1<double> e1;
   Array1<double> f1;
@@ -669,7 +733,7 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
   double theta = 0.5;
   int scalarIter = 0;
   double scalarResid = 0.0;
-
+#if implict_defined
   do {
     //fortran call for lineGS solver
     FORT_LINEGS(domLo.get_pointer(), domHi.get_pointer(),
@@ -692,11 +756,32 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
 				      (scalarResid > trunc_conv)));
   cerr << "After scalar " << index <<" solve " << scalarIter << " " << scalarResid << endl;
   cerr << "After scalar " << index <<" solve " << nlResid << " " << trunc_conv <<  endl;
-  
+#endif
+     FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
+		   idxLo.get_pointer(), idxHi.get_pointer(),
+		   vars->scalar.getPointer(), vars->old_scalar.getPointer(),
+		   vars->scalarCoeff[Arches::AE].getPointer(), 
+		   vars->scalarCoeff[Arches::AW].getPointer(), 
+		   vars->scalarCoeff[Arches::AN].getPointer(), 
+		   vars->scalarCoeff[Arches::AS].getPointer(), 
+		   vars->scalarCoeff[Arches::AT].getPointer(), 
+		   vars->scalarCoeff[Arches::AB].getPointer(), 
+		   vars->scalarCoeff[Arches::AP].getPointer(), 
+		   vars->scalarNonlinearSrc.getPointer(),
+		   domLoDen.get_pointer(), domHiDen.get_pointer(),
+		   vars->old_density.getPointer(), 
+		   cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
+		   cellinfo->stb.get_objs(), &delta_t);
+    vars->residScalar = 1.0E-7;
+    vars->truncScalar = 1.0;
+   
 }
 
 //
 // $Log$
+// Revision 1.19  2000/08/15 00:23:32  rawat
+// added explicit solve for momentum and scalar eqns
+//
 // Revision 1.18  2000/08/12 23:53:19  bbanerje
 // Added Linegs part to the solver.
 //

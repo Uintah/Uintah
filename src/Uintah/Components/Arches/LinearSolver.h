@@ -49,6 +49,7 @@ class ProcessorGroup;
 namespace ArchesSpace {
 class ArchesVariables;
 class ArchesLabel;
+class CellInformation;
 // class StencilMatrix;
 using namespace SCICore::Containers;
 
@@ -141,7 +142,9 @@ public:
 				   const Patch* patch,
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw, int index,
+				   double delta_t,
 				   ArchesVariables* vars,
+				   CellInformation* cellinfo,
 				   const ArchesLabel* lab) = 0;
 
       ////////////////////////////////////////////////////////////////////////
@@ -182,7 +185,9 @@ public:
 				 const Patch* patch,
 				 DataWarehouseP& old_dw,
 				 DataWarehouseP& new_dw, int index,
+				 double delta_t,
 				 ArchesVariables* vars,
+				 CellInformation* cellinfo,
 				 const ArchesLabel* lab) = 0;
 
       ////////////////////////////////////////////////////////////////////////
@@ -217,6 +222,9 @@ private:
 
 //
 // $Log$
+// Revision 1.13  2000/08/15 00:23:32  rawat
+// added explicit solve for momentum and scalar eqns
+//
 // Revision 1.12  2000/08/12 23:53:18  bbanerje
 // Added Linegs part to the solver.
 //

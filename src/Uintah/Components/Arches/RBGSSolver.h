@@ -137,7 +137,9 @@ public:
 			   const Patch* patch,
 			   DataWarehouseP& old_dw,
 			   DataWarehouseP& new_dw, int index,
+			   double delta_t,
 			   ArchesVariables* vars,
+			   CellInformation* cellinfo,
 			   const ArchesLabel* lab);
 
       ////////////////////////////////////////////////////////////////////////
@@ -198,8 +200,9 @@ public:
 			 const Patch* patch,
 			 DataWarehouseP& old_dw,
 			 DataWarehouseP& new_dw, 
-			 int index,
+			 int index, double delta_t,
 			 ArchesVariables* vars,
+			 CellInformation* cellinfo,
 			 const ArchesLabel* lab);
 
 protected:
@@ -221,6 +224,9 @@ private:
   
 //
 // $Log$
+// Revision 1.18  2000/08/15 00:23:32  rawat
+// added explicit solve for momentum and scalar eqns
+//
 // Revision 1.17  2000/08/12 23:53:19  bbanerje
 // Added Linegs part to the solver.
 //
