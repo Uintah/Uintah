@@ -130,6 +130,40 @@ PROGRAM := Packages/Uintah/StandAlone/timeextract
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
+# partextract
+
+SRCS := $(SRCDIR)/partextract.cc
+PROGRAM := Packages/Uintah/StandAlone/partextract
+
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Datflow Packages/Uintah
+else
+  PSELIBS := \
+        Packages/Uintah/Core/Exceptions    \
+        Packages/Uintah/Core/Grid          \
+        Packages/Uintah/Core/Math          \
+        Packages/Uintah/Core/Parallel      \
+        Packages/Uintah/Core/Disclosure    \
+        Packages/Uintah/Core/ProblemSpec   \
+        Packages/Uintah/Core/Disclosure    \
+        Packages/Uintah/Core/DataArchive   \
+	Packages/Uintah/CCA/Ports          \
+        Packages/Uintah/CCA/Components/ProblemSpecification \
+        Dataflow/XMLUtil \
+        Core/Exceptions  \
+        Core/Persistent  \
+        Core/Geometry    \
+        Core/Thread      \
+        Core/Util        \
+        Core/OS          \
+        Core/Containers
+endif
+
+LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
 # lineextract
                                                                                 
 SRCS := $(SRCDIR)/lineextract.cc
@@ -273,6 +307,7 @@ uintah: sus \
         puda \
         compare_uda \
         restart_merger \
+        partextract \
         gambitFileReader \
         lineextract \
         timeextract \
@@ -319,6 +354,8 @@ puda: prereqs Packages/Uintah/StandAlone/puda
 compare_uda: prereqs Packages/Uintah/StandAlone/compare_uda
 
 restart_merger: prereqs Packages/Uintah/StandAlone/restart_merger
+
+partextract: prereqs Packages/Uintah/StandAlone/partextract
 
 gambitFileReader: prereqs Packages/Uintah/StandAlone/gambitFileReader
 
