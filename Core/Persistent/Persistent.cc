@@ -54,7 +54,7 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
   }
   
   Piostream::MapStringPersistentTypeID::iterator dummy;
-  
+ 
   dummy = table->find(type);
 
   if (dummy != table->end()) {
@@ -73,6 +73,14 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
 PersistentTypeID::~PersistentTypeID()
 {
   Piostream::MapStringPersistentTypeID::iterator iter;
+
+  if( table == NULL )
+    {
+      cerr << "WARNING: Persistent.cc: ~PersistentTypeID(): table is NULL\n";
+      cerr << "         For: " << type << ", " << parent << "\n";
+      return;
+    }
+
   iter = table->find(type);
   if (iter == table->end()) {
     cerr << "WARNING: Could not remove type from Object type database: " << type << endl;
