@@ -34,7 +34,6 @@
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/sci_system.h>
-#include <Core/Util/DynamicLoader.h>
 #include <Core/Util/RCParse.h>
 #include <sci_defs.h>
 
@@ -202,9 +201,6 @@ main(int argc, char *argv[] )
 
   // load the packages
   packageDB->loadPackage();
-
-  // Start up the dynamic loader.
-  DynamicLoader::init_scirun_loader();
 
   // Now activate the TCL event loop
   tcl_task->release_mainloop();

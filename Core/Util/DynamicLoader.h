@@ -91,7 +91,6 @@ public:
 			 ostream &serr = std::cerr);
 
   //! All modules should use this function to get the loader.
-  static void init_scirun_loader();
   static DynamicLoader& scirun_loader();
 
 private:
@@ -115,7 +114,7 @@ private:
   Mutex                 map_lock_;
 
   //! static vars.
-  static DynamicLoader        *scirun_loader_;
+  static DynamicLoader  scirun_loader_;
   static string		otf_dir_;
   static bool		otf_dir_found_;
 };

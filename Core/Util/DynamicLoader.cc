@@ -45,7 +45,7 @@ using namespace std;
 
 env_map scirunrc;
 
-DynamicLoader* DynamicLoader::scirun_loader_ = 0;
+DynamicLoader DynamicLoader::scirun_loader_;
 string DynamicLoader::otf_dir_ = string(SCIRUN_OBJDIR) + "/on-the-fly-libs";
 bool DynamicLoader::otf_dir_found_ = false;
 
@@ -114,23 +114,11 @@ DynamicLoader::~DynamicLoader()
 
 //! DynamicLoader::scirun_loader
 //! 
-//! Create and initialize this before the threads are started,
-//!  for performance reasons.
-void
-DynamicLoader::init_scirun_loader()
-{
-  scirun_loader_ = new DynamicLoader;
-}
-
-
-//! DynamicLoader::scirun_loader
-//! 
 //! How to get at the global loader for scirun.
 DynamicLoader& 
 DynamicLoader::scirun_loader()
 {
-  ASSERT(scirun_loader_);
-  return *scirun_loader_;
+  return scirun_loader_;
 }
 
 //! DynamicLoader::entry_exists
