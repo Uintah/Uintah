@@ -15,7 +15,6 @@
   University of Utah. All Rights Reserved.
 */
 
-
 /*
  *  MDSPlusReader.cc:
  *
@@ -28,8 +27,13 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-/* This is a C++ interface for fetching data from a MDSPlus Server.
-   It also contains many helper functions for fetching the data.
+/*
+  This is a C++ interface for fetching data from a MDSPlus Server.
+
+  Unfortunately, because MDSPlus has several short commings this interface
+  is need is to provide a link between SCIRun and MDSPlus. The two items
+  addressed are making MDSPlus thread safe and allowing seemless access to
+  multiple servers and, or trees.
 */
 
 #include <sci_defs.h>
