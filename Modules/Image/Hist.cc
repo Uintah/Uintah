@@ -33,7 +33,9 @@ class Hist : public Module {
    ScalarFieldRG*  rg;
 
    double min,max;       // Max and min values of the scalarfield
+   TCLint includeval,numbinsval;
 
+   int include,numbins;
 
    int np; // number of proccesors
   
@@ -60,7 +62,8 @@ Module* make_Hist(const clString& id)
 //static clString module_name("Hist");
 
 Hist::Hist(const clString& id)
-: Module("Hist", id, Filter)
+: Module("Hist", id, Filter), includeval("include",id,this),
+  numbinsval("numbins",id,this)
 {
     // Create the input ports
     // Need a scalar field
@@ -77,7 +80,8 @@ Hist::Hist(const clString& id)
 }
 
 Hist::Hist(const Hist& copy, int deep)
-: Module(copy, deep)
+: Module(copy, deep), includeval("include",id,this),
+  numbinsval("numbins",id,this)
 {
    NOT_FINISHED("Hist::Hist");
 }
@@ -93,8 +97,8 @@ Module* Hist::clone(int deep)
 
 void Hist::do_hist(int proc)    
 {
-  int start = (rg->grid.dim2()-1)*proc/np;
-  int end   = (proc+1)*(rg->grid.dim2()-1)/np;
+  int start = (rg->grid.dim2())*proc/np;
+  int end   = (proc+1)*(rg->grid.dim2())/np;
 
   for(int x=start; x<end; x++) {
     for(int y=0; y<rg->grid.dim1(); y++) {
@@ -128,21 +132,38 @@ void Hist::execute()
     gen=rg->generation;
     
     if (gen!=newgrid->generation){
-    //  newgrid=new ScalarFieldRGint;
+      //  newgrid=new ScalarFieldRGint;
       // New input
     }
     newgrid=new ScalarFieldRG;
 
+    rg->compute_minmax();
     rg->get_minmax(min,max);
     
-    newgrid->resize(1,max+1,1);
-
-    np = Task::nprocessors();    
-
+    //    np = Task::nprocessors();    
   
-    cerr << "min/max : " << min << " " << max << "\n";
+    cerr << "Hist min/max : " << min << " " << max << "\n";
+
+    include = includeval.get();
+    numbins = numbinsval.get();
+
+    newgrid->resize(1,numbins,1);
+
+    for (int i=0; i<numbins; i++)
+      newgrid->grid(0,i,0)=0;
+
+    float bindiv = (max/numbins);
+
+    for (int x=0; x<rg->grid.dim1(); x++)
+      for (int y=0; y<rg->grid.dim2(); y++)
+	if (((rg->grid(x,y,0)>=0) && (include)) ||
+	    ((rg->grid(x,y,0)>0) && (!include)))
+	  if (rg->grid(x,y,0)==0)
+	    newgrid->grid(0,0,0)++;
+	  else
+	    newgrid->grid(0,ceil(float((rg->grid(x,y,0))/max)*numbins)-1,0)++;
     
-    Task::multiprocess(np, start_hist, this);
+    //    Task::multiprocess(np, start_hist, this);
 
     outscalarfield->send( newgrid );
 }

@@ -35,6 +35,7 @@ public:
 
 inline double abs(double i) { return i < 0 ? -i: i; }
 inline double max(double i, double j) { return i > j ? i : j; }
+#define pi M_PI
 
 extern "C" {
 Module* make_ImageGen(const clString& id)
@@ -94,16 +95,17 @@ void ImageGen::execute()
   double am=amp.get();
 
   // do max here for vertical and horizontal
+  double d = 4*pi*pi;
   
   for (x=0; x<width; x++)
     for (y=0; y<height; y++) {
       if (horizontal.get())
-	sf->grid(y,x,0) = am*abs(sin(per*(double(y)/height)));
+	sf->grid(y,x,0) = am*abs(sin((d/per)*(double(y)/height)));
       if ((horizontal.get()) && (vertical.get())) 
-	  sf->grid(y,x,0) = max(am*abs(sin(per*(double(x)/width))),
-				am*abs(sin(per*(double(y)/height))));
+	  sf->grid(y,x,0) = max(am*abs(sin((d/per)*(double(x)/width))),
+				am*abs(sin((d/per)*(double(y)/height))));
       else if (vertical.get())
-	sf->grid(y,x,0) = am*abs(sin(per*(double(x)/width)));
+	sf->grid(y,x,0) = am*abs(sin((d/per)*(double(x)/width)));
     }
 	
   cerr << "--ENDImageGen--\n";
