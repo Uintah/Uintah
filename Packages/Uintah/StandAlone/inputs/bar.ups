@@ -44,8 +44,18 @@
 			<min>[0,0,0]</min>
 			<max>[100,50,50]</max>
 		    </box>
-		    <res>[2,2,2]</res>	
+		    <box label="gp1">
+			<min>[0,0,0]</min>
+			<max>[100,50,50]</max>
+		    </box>
+		    <res>[2,2,2]</res>
+		    <velocity>[4,5,6]</velocity>
+		    <BoundaryConditions>
+			<NormalForce>5</NormalForce>
+			<FaceForce face="x+">[1,0,0]</FaceForce>
+		    </BoundaryConditions>
  		</geom_object>
+		<temperature>12</temperature>
 		<velocity_field>1</velocity_field>
 	    </material>
 	</MPM>
