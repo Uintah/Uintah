@@ -189,7 +189,7 @@ SamplePlane::execute()
   ImageMeshHandle imagemesh = scinew ImageMesh(sizex, sizey, minb, maxb);
 
   int basis_order;
-  if (data_at_.get() == "Cells") basis_order = 0;
+  if (data_at_.get() == "Faces") basis_order = 0;
   else basis_order = 1;
 
   // Create Image Field.
