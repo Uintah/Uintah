@@ -455,7 +455,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	pack $frame.f0 -padx 2 -pady 2 -fill x
 	checkbutton $frame.f0.faux -text "Opacity Modulation (Faux Shading)" \
 	    -relief flat -variable $this-faux -onvalue 1 -offvalue 0 \
-	    -anchor w -command "$this-c needexecute; $this-c redraw true"
+	    -anchor w -command "$this-c redraw; $this-c needexecute"
 	pack $frame.f0.faux -side top -fill x -padx 4
 
         iwidgets::scrolledframe $w.widgets -hscrollmode none \
