@@ -23,10 +23,9 @@ PSELIBS := \
 	Packages/Uintah/CCA/Components/Arches/fortran \
 	Core/Exceptions \
 	Core/Thread     \
-	Core/Geometry   \
-	Dataflow/XMLUtil
+	Core/Geometry   
 
-LIBS := $(PETSC_LIBRARY) $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY)
+LIBS := $(PETSC_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

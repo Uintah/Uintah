@@ -23,10 +23,9 @@ PSELIBS := \
 	Packages/Uintah/Core/Math          \
 	Core/Exceptions \
 	Core/Thread     \
-	Core/Geometry   \
-	Dataflow/XMLUtil
+	Core/Geometry   
 
-LIBS := $(PETSC_LIBRARY) $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(FLIBS)
+LIBS := $(PETSC_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(FLIBS)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

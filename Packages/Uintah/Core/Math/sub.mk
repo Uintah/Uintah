@@ -19,7 +19,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Disclosure 
 
 
-LIBS := $(MPI_LIBRARY) $(XML_LIBRARY) $(M_LIBRARY) 
+LIBS := $(MPI_LIBRARY) $(M_LIBRARY) 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
