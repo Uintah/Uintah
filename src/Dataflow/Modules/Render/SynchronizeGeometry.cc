@@ -157,7 +157,10 @@ int SynchronizeGeometry::enforce_barrier(MessageBase* message) {
   return 0;
 }
 
-inline bool SynchronizeGeometry::init_ports() {
+inline 
+bool 
+SynchronizeGeometry::init_ports() 
+{
   if(init_ports_ == 0)
     return true;
 
@@ -167,17 +170,20 @@ inline bool SynchronizeGeometry::init_ports() {
   else
     connection = ogeom_->connection(0);
 
-  if(connection == NULL)
+  if(connection == 0)
     return false;
 
   int i, portno;
   for(i=0; i<init_ports_; i++) {
-    Mailbox<GeomReply> tmp("Temporary GeometryOPort mailbox", 1);
-    ogeom_->forward(scinew GeometryComm(&tmp));
-    GeomReply reply=tmp.receive();
+    Mailbox<GeomReply> *tmp = 
+      new Mailbox<GeomReply>("Temporary GeometryOPort mailbox", 1);
+    
+    ogeom_->forward(scinew GeometryComm(tmp));
+    GeomReply reply = tmp->receive();
     portno=reply.portid;
     portno_map_[max_portno_ - init_ports_ + i] = portno;
   }
+
   init_ports_ = 0;
 
   return true;
