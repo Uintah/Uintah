@@ -103,6 +103,10 @@ PDFMixingModel::problemSetup(const ProblemSpecP& params)
     d_streams[nofstrm].d_cp=chemInterf->getMixSpecificHeat(strmTemp, ymassFrac);
     // store as mass fraction
     //    d_streams[nofstrm].print(cerr);
+#if 0
+    cerr << "Print stream: " << nofstrm << endl;
+    d_streams[nofstrm].print(cerr);
+#endif
     delete[] ymassFrac;
     ++nofstrm;
   }
@@ -220,6 +224,11 @@ PDFMixingModel::computeProps(const InletStream& inStream,
   double *lowFactor = new double[d_tableDimension + 1];
   double *upFactor = new double[d_tableDimension + 1];
   outStream = interpolate(0, lowIndex, upIndex, lowFactor, upFactor);
+#if 0
+  cerr << "Print outstream after integration" << endl;
+  cerr << "Mixture fraction" << mixRxnVar[0] << endl;
+  outStream.print(cerr);
+#endif
   delete[] lowIndex;
   delete[] upIndex;
   delete[] lowFactor;

@@ -84,7 +84,7 @@ c*********************************************************************
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
-      logical LNORM
+      logical LNORM, LTRACTION
       integer IST, JST, KST, IEND, JEND, KEND
       integer i, j, k
       double precision DXPRD, DTPRD, DPMAG, PPP, P0, FACK, URFBC
@@ -113,7 +113,8 @@ c*********************************************************************
 #endif
       FACK = 1.0
       URFBC = 0.5
-      LNORM = .FALSE.
+      LNORM = .TRUE.
+      LTRACTION = .TRUE.
 C     
 C       First define what will be the variables on INLETS
 C
@@ -135,17 +136,19 @@ C
                   UVEL = UU(I+2,J,K)
                   VVEL = VV(I+1,J,K)
                   WVEL = WW(I+1,J,K)
-                  UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                  IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
-                     UVEL = UMAG
-                     VVEL = 0.0
-                     WVEL = 0.0
-                  ELSE
-                     UVEL = UMAG*ABS(UVEL)/UMAGINT
-                     VVEL = VVEL*ABS(UMAG)/UMAGINT
-                     WVEL = WVEL*ABS(UMAG)/UMAGINT
-                  END IF
-                  UVEL = UVEL*URFBC + UU(I,J,K)*(1.0-URFBC)
+                  if (.not.ltraction) then
+                     UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
+                     IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                        UVEL = UMAG
+                        VVEL = 0.0
+                        WVEL = 0.0
+                     ELSE
+                        UVEL = UMAG*ABS(UVEL)/UMAGINT
+                        VVEL = VVEL*ABS(UMAG)/UMAGINT
+                        WVEL = WVEL*ABS(UMAG)/UMAGINT
+                     END IF
+                     UVEL = UVEL*URFBC + UU(I,J,K)*(1.0-URFBC)
+                  endif
                   UU(I+1,J,K) = UVEL
                   UU(I,J,K) = UVEL
                   IF (UVEL.GT.0.0) THEN
@@ -171,10 +174,10 @@ C
                   DELP = PPP - PP(I-1,J,K)
                   UMAG = -SIGN(SQRT(2.0*ABS(DELP)/DENFACE),DELP)
                   UMAG = UMAG/SQRT(FACK)
-                  if (umag.lt.0.0) then
-                     UVEL = UU(I-1,J,K)
-                     VVEL = VV(I-1,J,K)
-                     WVEL = WW(I-1,J,K)
+                  UVEL = UU(I-1,J,K)
+                  VVEL = VV(I-1,J,K)
+                  WVEL = WW(I-1,J,K)
+                  if (.not.ltraction) then
                      UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
                      IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
                         UVEL = UMAG
@@ -186,15 +189,17 @@ C
                         WVEL = WVEL*ABS(UMAG)/UMAGINT
                      END IF
                      UVEL = UVEL*URFBC + UU(I+1,J,K)*(1.0-URFBC)
-                     UU(I,J,K) = UVEL
-                     UU(I+1,J,K) = UVEL
+                  end if
+                  UU(I,J,K) = UVEL
+                  UU(I+1,J,K) = UVEL
+                  if (uvel.lt.0.0) then
                      VV(I,J,K) = VVEL
                      WW(I,J,K) = WVEL
                      PP(I,J,K) = PPP
-                  else
-                     uu(i,j,k) = sqrt(umag*umag+uu(I-1,j,k)*uu(i-1,j,k))
-                     uu(i+1,j,k) = uu(i,j,k)
-                  END IF
+                  endif
+c                     uu(i,j,k) =  sqrt(umag*umag+uu(I-1,j,k)*
+c     $                                 uu(i-1,j,k))
+c                     uu(i+1,j,k) = uu(i,j,k)
                END IF
  180        CONTINUE
  190     CONTINUE
@@ -216,24 +221,26 @@ C
                   UVEL = UU(I,J+1,K)
                   VVEL = VV(I,J+2,K)
                   WVEL = WW(I,J+1,K)
-                  UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                  IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
-                     UVEL = 0.0
-                     VVEL = UMAG
-                     WVEL = 0.0
-                  ELSE
-                     UVEL = UVEL*ABS(UMAG)/UMAGINT
-                     VVEL = ABS(VVEL)*UMAG/UMAGINT
-                     WVEL = WVEL*ABS(UMAG)/UMAGINT
-                  END IF
-                  VVEL = URFBC*VVEL + VV(I,J,K)*(1.0-URFBC)
+                  if (.not.ltraction) then
+                     UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
+                     IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                        UVEL = 0.0
+                        VVEL = UMAG
+                        WVEL = 0.0
+                     ELSE
+                        UVEL = UVEL*ABS(UMAG)/UMAGINT
+                        VVEL = ABS(VVEL)*UMAG/UMAGINT
+                        WVEL = WVEL*ABS(UMAG)/UMAGINT
+                     END IF
+                     VVEL = URFBC*VVEL + VV(I,J,K)*(1.0-URFBC)
+                  endif
                   VV(I,J+1,K) = VVEL
                   VV(I,J,K) = VVEL
-                  IF (VVEL.GT.0.0) THEN
+c                  IF (VVEL.GT.0.0) THEN
                      UU(I,J,K) = UVEL
                      WW(I,J,K) = WVEL
                      PP(I,J,K) = PPP
-                  END IF
+c                  END IF
                END IF
  230        CONTINUE
  240     CONTINUE
@@ -255,24 +262,26 @@ C
                   UVEL = UU(I,J-1,K)
                   VVEL = VV(I,J-1,K)
                   WVEL = WW(I,J-1,K)
-                  UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                  IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
-                     UVEL = 0.0
-                     VVEL = UMAG
-                     WVEL = 0.0
-                  ELSE
-                     UVEL = UVEL*ABS(UMAG)/UMAGINT
-                     VVEL = ABS(VVEL)*UMAG/UMAGINT
-                     WVEL = WVEL*ABS(UMAG)/UMAGINT
-                  END IF
-                  VVEL = URFBC*VVEL + VV(I,J+1,K)*(1.0-URFBC)
+                  if (.not.ltraction) then
+                     UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
+                     IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                        UVEL = 0.0
+                        VVEL = UMAG
+                        WVEL = 0.0
+                     ELSE
+                        UVEL = UVEL*ABS(UMAG)/UMAGINT
+                        VVEL = ABS(VVEL)*UMAG/UMAGINT
+                        WVEL = WVEL*ABS(UMAG)/UMAGINT
+                     END IF
+                     VVEL = URFBC*VVEL + VV(I,J+1,K)*(1.0-URFBC)
+                  endif
                   VV(I,J,K) = VVEL
                   VV(I,J+1,K) = VVEL
-                  IF (VVEL.LT.0.0) THEN
+c                  IF (VVEL.LT.0.0) THEN
                      UU(I,J,K) = UVEL
                      WW(I,J,K) = WVEL
                      PP(I,J,K) = PPP
-                  END IF
+c                  END IF
                END IF
  280        CONTINUE
  290     CONTINUE
@@ -295,24 +304,26 @@ C
                   UVEL = UU(I,J,K+1)
                   VVEL = VV(I,J,K+1)
                   WVEL = WW(I,J,K+2)
-                  UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                  IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
-                     UVEL = 0.0
-                     VVEL = 0.0
-                     WVEL = UMAG
-                  ELSE
-                     UVEL = UVEL*ABS(UMAG)/UMAGINT
-                     VVEL = VVEL*ABS(UMAG)/UMAGINT
-                     WVEL = ABS(WVEL)*UMAG/UMAGINT
-                  END IF
-                  WVEL = URFBC*WVEL + WW(I,J,K)*(1.0-URFBC)
+                  if (.not.ltraction) then
+                     UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
+                     IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                        UVEL = 0.0
+                        VVEL = 0.0
+                        WVEL = UMAG
+                     ELSE
+                        UVEL = UVEL*ABS(UMAG)/UMAGINT
+                        VVEL = VVEL*ABS(UMAG)/UMAGINT
+                        WVEL = ABS(WVEL)*UMAG/UMAGINT
+                     END IF
+                     WVEL = URFBC*WVEL + WW(I,J,K)*(1.0-URFBC)
+                  endif
                   WW(I,J,K+1) = WVEL
                   WW(I,J,K) = WVEL
-                  IF (WVEL.GT.0.0) THEN
+c                  IF (WVEL.GT.0.0) THEN
                      UU(I,J,K) = UVEL
                      VV(I,J,K) = VVEL
                      PP(I,J,K) = PPP
-                  END IF
+c                  END IF
                END IF
  330        CONTINUE
  340     CONTINUE
@@ -334,24 +345,26 @@ C
                   UVEL = UU(I,J,K-1)
                   VVEL = VV(I,J,K-1)
                   WVEL = WW(I,J,K-1)
-                  UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                  IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
-                     UVEL = 0.0
-                     VVEL = 0.0
-                     WVEL = UMAG
-                  ELSE
-                     UVEL = UVEL*ABS(UMAG)/UMAGINT
-                     VVEL = VVEL*ABS(UMAG)/UMAGINT
-                     WVEL = ABS(WVEL)*UMAG/UMAGINT
-                  END IF
-                  WVEL = URFBC*WVEL + WW(I,J,K+1)*(1.0-URFBC)
+                  if (.not.ltraction) then
+                     UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
+                     IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                        UVEL = 0.0
+                        VVEL = 0.0
+                        WVEL = UMAG
+                     ELSE
+                        UVEL = UVEL*ABS(UMAG)/UMAGINT
+                        VVEL = VVEL*ABS(UMAG)/UMAGINT
+                        WVEL = ABS(WVEL)*UMAG/UMAGINT
+                     END IF
+                     WVEL = URFBC*WVEL + WW(I,J,K+1)*(1.0-URFBC)
+                  endif
                   WW(I,J,K) = WVEL
                   WW(I,J,K+1) = WVEL
-                  IF (WVEL.LT.0.0) THEN
+c                  IF (WVEL.LT.0.0) THEN
                      UU(I,J,K) = UVEL
                      VV(I,J,K) = VVEL
                      PP(I,J,K) = PPP
-                  END IF
+c                  END IF
                END IF
  380        CONTINUE
  390     CONTINUE

@@ -652,7 +652,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* /*pc*/,
   // int velIter = 0;
   double velResid = 0.0;
   double theta = 0.5;
-
+  int ioff, joff, koff;
   switch (index) {
   case Arches::XDIR:
     domLo = vars->uVelocity.getFortLowIndex();
@@ -661,7 +661,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* /*pc*/,
     domHing = vars->uVelNonlinearSrc.getFortHighIndex();
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
-
+    ioff = 1; joff = 0; koff = 0;
 #if implicit_defined
     Size = domHi - domLo + IntVector(1,1,1);
 
@@ -701,24 +701,25 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* /*pc*/,
     cerr << "After u Velocity solve " << velIter << " " << velResid << endl;
     cerr << "After u Velocity solve " << nlResid << " " << trunc_conv <<  endl;
 #else
-    FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
-		  domLong.get_pointer(), domHing.get_pointer(),
-		  idxLo.get_pointer(), idxHi.get_pointer(),
-		  vars->uVelocity.getPointer(),
-		  vars->old_uVelocity.getPointer(),
-		  vars->uVelocityCoeff[Arches::AE].getPointer(), 
-		  vars->uVelocityCoeff[Arches::AW].getPointer(), 
-		  vars->uVelocityCoeff[Arches::AN].getPointer(), 
-		  vars->uVelocityCoeff[Arches::AS].getPointer(), 
-		  vars->uVelocityCoeff[Arches::AT].getPointer(), 
-		  vars->uVelocityCoeff[Arches::AB].getPointer(), 
-		  vars->uVelocityCoeff[Arches::AP].getPointer(), 
-		  vars->uVelNonlinearSrc.getPointer(),
-		  domLoDen.get_pointer(), domHiDen.get_pointer(),
-		  domLoDenwg.get_pointer(), domHiDenwg.get_pointer(),
-		  vars->old_density.getPointer(), 
-		  cellinfo->sewu.get_objs(), cellinfo->sns.get_objs(),
-		  cellinfo->stb.get_objs(), &delta_t);
+    FORT_EXPLICIT_VELOCITY(domLo.get_pointer(), domHi.get_pointer(),
+			   domLong.get_pointer(), domHing.get_pointer(),
+			   idxLo.get_pointer(), idxHi.get_pointer(),
+			   vars->uVelocity.getPointer(),
+			   vars->old_uVelocity.getPointer(),
+			   vars->uVelocityCoeff[Arches::AE].getPointer(), 
+			   vars->uVelocityCoeff[Arches::AW].getPointer(), 
+			   vars->uVelocityCoeff[Arches::AN].getPointer(), 
+			   vars->uVelocityCoeff[Arches::AS].getPointer(), 
+			   vars->uVelocityCoeff[Arches::AT].getPointer(), 
+			   vars->uVelocityCoeff[Arches::AB].getPointer(), 
+			   vars->uVelocityCoeff[Arches::AP].getPointer(), 
+			   vars->uVelNonlinearSrc.getPointer(),
+			   domLoDen.get_pointer(), domHiDen.get_pointer(),
+			   domLoDenwg.get_pointer(), domHiDenwg.get_pointer(),
+			   vars->old_density.getPointer(), 
+			   cellinfo->sewu.get_objs(), cellinfo->sns.get_objs(),
+			   cellinfo->stb.get_objs(), &delta_t,
+			   &ioff, &joff, &koff);
 
 #ifdef ARCHES_VEL_DEBUG
     cerr << " After U Vel Explicit solve : " << endl;
@@ -745,7 +746,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* /*pc*/,
     domHing = vars->vVelNonlinearSrc.getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
-
+    ioff = 0; joff = 1; koff = 0;
 #if implicit_defined
     Size = domHi - domLo + IntVector(1,1,1);
 
@@ -786,24 +787,25 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* /*pc*/,
     cerr << "After v Velocity solve " << velIter << " " << velResid << endl;
     cerr << "After v Velocity solve " << nlResid << " " << trunc_conv <<  endl;
 #else
-    FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
-		  domLong.get_pointer(), domHing.get_pointer(),
-		  idxLo.get_pointer(), idxHi.get_pointer(),
-		  vars->vVelocity.getPointer(),
-		  vars->old_vVelocity.getPointer(),
-		  vars->vVelocityCoeff[Arches::AE].getPointer(), 
-		  vars->vVelocityCoeff[Arches::AW].getPointer(), 
-		  vars->vVelocityCoeff[Arches::AN].getPointer(), 
-		  vars->vVelocityCoeff[Arches::AS].getPointer(), 
-		  vars->vVelocityCoeff[Arches::AT].getPointer(), 
-		  vars->vVelocityCoeff[Arches::AB].getPointer(), 
-		  vars->vVelocityCoeff[Arches::AP].getPointer(), 
-		  vars->vVelNonlinearSrc.getPointer(),
-		  domLoDen.get_pointer(), domHiDen.get_pointer(),
-		  domLoDenwg.get_pointer(), domHiDenwg.get_pointer(),
-		  vars->old_density.getPointer(), 
-		  cellinfo->sew.get_objs(), cellinfo->snsv.get_objs(),
-		  cellinfo->stb.get_objs(), &delta_t);
+    FORT_EXPLICIT_VELOCITY(domLo.get_pointer(), domHi.get_pointer(),
+			   domLong.get_pointer(), domHing.get_pointer(),
+			   idxLo.get_pointer(), idxHi.get_pointer(),
+			   vars->vVelocity.getPointer(),
+			   vars->old_vVelocity.getPointer(),
+			   vars->vVelocityCoeff[Arches::AE].getPointer(), 
+			   vars->vVelocityCoeff[Arches::AW].getPointer(), 
+			   vars->vVelocityCoeff[Arches::AN].getPointer(), 
+			   vars->vVelocityCoeff[Arches::AS].getPointer(), 
+			   vars->vVelocityCoeff[Arches::AT].getPointer(), 
+			   vars->vVelocityCoeff[Arches::AB].getPointer(), 
+			   vars->vVelocityCoeff[Arches::AP].getPointer(), 
+			   vars->vVelNonlinearSrc.getPointer(),
+			   domLoDen.get_pointer(), domHiDen.get_pointer(),
+			   domLoDenwg.get_pointer(), domHiDenwg.get_pointer(),
+			   vars->old_density.getPointer(), 
+			   cellinfo->sew.get_objs(), cellinfo->snsv.get_objs(),
+			   cellinfo->stb.get_objs(), &delta_t,
+			   &ioff, &joff, &koff);
 
 #ifdef ARCHES_VEL_DEBUG
     cerr << " After V Vel Explicit solve : " << endl;
@@ -830,7 +832,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* /*pc*/,
     domHing = vars->wVelNonlinearSrc.getFortHighIndex();
     idxLo = patch->getSFCZFORTLowIndex();
     idxHi = patch->getSFCZFORTHighIndex();
-
+    ioff = 0; joff = 0; koff = 1;
 #if implicit_defined
     Size = domHi - domLo + IntVector(1,1,1);
 
@@ -870,24 +872,25 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* /*pc*/,
     cerr << "After w Velocity solve " << velIter << " " << velResid << endl;
     cerr << "After w Velocity solve " << nlResid << " " << trunc_conv <<  endl;
 #else
-    FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
-		  domLong.get_pointer(), domHing.get_pointer(),
-		  idxLo.get_pointer(), idxHi.get_pointer(),
-		  vars->wVelocity.getPointer(),
-		  vars->old_wVelocity.getPointer(),
-		  vars->wVelocityCoeff[Arches::AE].getPointer(), 
-		  vars->wVelocityCoeff[Arches::AW].getPointer(), 
-		  vars->wVelocityCoeff[Arches::AN].getPointer(), 
-		  vars->wVelocityCoeff[Arches::AS].getPointer(), 
-		  vars->wVelocityCoeff[Arches::AT].getPointer(), 
-		  vars->wVelocityCoeff[Arches::AB].getPointer(), 
-		  vars->wVelocityCoeff[Arches::AP].getPointer(), 
-		  vars->wVelNonlinearSrc.getPointer(),
-		  domLoDen.get_pointer(), domHiDen.get_pointer(),
-		  domLoDenwg.get_pointer(), domHiDenwg.get_pointer(),
-		  vars->old_density.getPointer(), 
-		  cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
-		  cellinfo->stbw.get_objs(), &delta_t);
+    FORT_EXPLICIT_VELOCITY(domLo.get_pointer(), domHi.get_pointer(),
+			   domLong.get_pointer(), domHing.get_pointer(),
+			   idxLo.get_pointer(), idxHi.get_pointer(),
+			   vars->wVelocity.getPointer(),
+			   vars->old_wVelocity.getPointer(),
+			   vars->wVelocityCoeff[Arches::AE].getPointer(), 
+			   vars->wVelocityCoeff[Arches::AW].getPointer(), 
+			   vars->wVelocityCoeff[Arches::AN].getPointer(), 
+			   vars->wVelocityCoeff[Arches::AS].getPointer(), 
+			   vars->wVelocityCoeff[Arches::AT].getPointer(), 
+			   vars->wVelocityCoeff[Arches::AB].getPointer(), 
+			   vars->wVelocityCoeff[Arches::AP].getPointer(), 
+			   vars->wVelNonlinearSrc.getPointer(),
+			   domLoDen.get_pointer(), domHiDen.get_pointer(),
+			   domLoDenwg.get_pointer(), domHiDenwg.get_pointer(),
+			   vars->old_density.getPointer(), 
+			   cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
+			   cellinfo->stbw.get_objs(), &delta_t,
+			   &ioff, &joff, &koff);
 
 #ifdef ARCHES_VEL_DEBUG
     cerr << " After W Vel Explicit solve : " << endl;

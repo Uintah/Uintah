@@ -266,15 +266,15 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
 #endif
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
-  CHKERRA(ierr);  
+  CHKERRQ(ierr);  
   /* 
      Create vectors.  Note that we form 1 vector from scratch and
      then duplicate as needed.
   */
-  ierr = VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_x);CHKERRA(ierr);
-  ierr = VecSetFromOptions(d_x);CHKERRA(ierr);
-  ierr = VecDuplicate(d_x,&d_b);CHKERRA(ierr);
-  ierr = VecDuplicate(d_x,&d_u);CHKERRA(ierr);
+  ierr = VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_x);CHKERRQ(ierr);
+  ierr = VecSetFromOptions(d_x);CHKERRQ(ierr);
+  ierr = VecDuplicate(d_x,&d_b);CHKERRQ(ierr);
+  ierr = VecDuplicate(d_x,&d_u);CHKERRQ(ierr);
 }
 
 // ****************************************************************************
@@ -390,8 +390,11 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
   // fill matrix for internal patches
   // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
   // petsc matrix
+  IntVector lowIndex = patch->getGhostCellLowIndex(1);
+  IntVector highIndex = patch->getGhostCellHighIndex(1);
 
-  Array3<int> l2g = d_petscLocalToGlobal[patch];
+  Array3<int> l2g(lowIndex, highIndex);
+  l2g.copy(d_petscLocalToGlobal[patch]);
 
 #if 0
   if ((patchNumber != 0)&&(patchNumber != sizeof(d_petscIndex)-1)) {
@@ -421,7 +424,7 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	     cerr << "A[" << col[3] << "][" << col[i] << "]=" << value[i] << '\n';
 #endif
 	  int row = col[3];
-	  ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);   CHKERRA(ierr);
+	  ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);   CHKERRQ(ierr);
 #ifdef ARCHES_PETSC_DEBUG
 	  cerr << "ierr=" << ierr << '\n';
 #endif
@@ -463,26 +466,27 @@ PetscSolver::pressLinearSolve()
 #ifdef ARCHES_PETSC_DEBUG
   cerr << "Doing mat/vec assembly\n";
 #endif
-  ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRA(ierr);
-  ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRA(ierr);
-  ierr = VecAssemblyBegin(d_b);CHKERRA(ierr);
-  ierr = VecAssemblyEnd(d_b);CHKERRA(ierr);
-  ierr = VecAssemblyBegin(d_x);CHKERRA(ierr);
-  ierr = VecAssemblyEnd(d_x);CHKERRA(ierr);
+  ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+  ierr = VecAssemblyBegin(d_b);CHKERRQ(ierr);
+  ierr = VecAssemblyEnd(d_b);CHKERRQ(ierr);
+  ierr = VecAssemblyBegin(d_x);CHKERRQ(ierr);
+  ierr = VecAssemblyEnd(d_x);CHKERRQ(ierr);
   // compute the initial error
   double neg_one = -1.0;
   double init_norm;
   double sum_b;
   ierr = VecSum(d_b, &sum_b);
   Vec u_tmp;
-  ierr = VecDuplicate(d_x,&u_tmp);CHKERRA(ierr);
-  ierr = MatMult(A, d_x, u_tmp);CHKERRA(ierr);
-  ierr = VecAXPY(&neg_one, d_b, u_tmp); CHKERRA(ierr);
-  ierr  = VecNorm(u_tmp,NORM_2,&init_norm);CHKERRA(ierr);
-  ierr = VecDestroy(u_tmp);CHKERRA(ierr);
+  ierr = VecDuplicate(d_x,&u_tmp);CHKERRQ(ierr);
+  ierr = MatMult(A, d_x, u_tmp);CHKERRQ(ierr);
+  ierr = VecAXPY(&neg_one, d_b, u_tmp); CHKERRQ(ierr);
+  ierr  = VecNorm(u_tmp,NORM_2,&init_norm);CHKERRQ(ierr);
+  ierr = VecDestroy(u_tmp);CHKERRQ(ierr);
   /* debugging - steve */
   double norm;
-#ifdef ARCHES_PETSC_DEBUG
+#if 0
+  // #ifdef ARCHES_PETSC_DEBUG
   ierr = ViewerSetFormat(VIEWER_STDOUT_WORLD, VIEWER_FORMAT_ASCII_DEFAULT, 0); CHKERRQ(ierr);
   ierr = MatNorm(A,NORM_1,&norm);CHKERRQ(ierr);
   ierr = PetscPrintf(PETSC_COMM_WORLD,"matrix A norm = %g\n",norm);CHKERRQ(ierr);
@@ -494,33 +498,37 @@ PetscSolver::pressLinearSolve()
   ierr = PetscPrintf(PETSC_COMM_WORLD,"vector b norm = %g\n",norm);CHKERRQ(ierr);
   ierr = VecView(d_b, VIEWER_STDOUT_WORLD); CHKERRQ(ierr);
 #endif
+
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                 Create the linear solver and set various options
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  ierr = SLESCreate(PETSC_COMM_WORLD,&sles);CHKERRA(ierr);
-  ierr = SLESSetOperators(sles,A,A,DIFFERENT_NONZERO_PATTERN);CHKERRA(ierr);
-  ierr = SLESGetKSP(sles,&ksp);CHKERRA(ierr);
-  ierr = SLESGetPC(sles, &peqnpc); CHKERRA(ierr);
-  ierr = PCSetType(peqnpc, PCJACOBI); CHKERRA(ierr);
+  ierr = SLESCreate(PETSC_COMM_WORLD,&sles);CHKERRQ(ierr);
+  ierr = SLESSetOperators(sles,A,A,DIFFERENT_NONZERO_PATTERN);CHKERRQ(ierr);
+  ierr = SLESGetKSP(sles,&ksp);CHKERRQ(ierr);
+  ierr = SLESGetPC(sles, &peqnpc); CHKERRQ(ierr);
+  ierr = PCSetType(peqnpc, PCJACOBI); CHKERRQ(ierr);
+  ierr = KSPSetTolerances(ksp, 1.e-7, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
+  CHKERRQ(ierr);
+
   // set null space for preconditioner
   // change for a newer version
 #ifdef NULL_MATRIX
   PCNullSpace nullsp;
   ierr = PCNullSpaceCreate(PETSC_COMM_WORLD, 1, 0, PETSC_NULL, &nullsp); 
-  CHKERRA(ierr);
-  ierr = PCNullSpaceAttach(peqnpc, nullsp); CHKERRA(ierr);
-  ierr = PCNullSpaceDestroy(nullsp); CHKERRA(ierr);
+  CHKERRQ(ierr);
+  ierr = PCNullSpaceAttach(peqnpc, nullsp); CHKERRQ(ierr);
+  ierr = PCNullSpaceDestroy(nullsp); CHKERRQ(ierr);
 #endif
-  ierr = KSPSetInitialGuessNonzero(ksp);CHKERRA(ierr);
+  ierr = KSPSetInitialGuessNonzero(ksp);CHKERRQ(ierr);
   
-  ierr = SLESSetFromOptions(sles);CHKERRA(ierr);
+  ierr = SLESSetFromOptions(sles);CHKERRQ(ierr);
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                       Solve the linear system
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   int its;
-  ierr = SLESSolve(sles,d_b,d_x,&its);CHKERRA(ierr);
+  ierr = SLESSolve(sles,d_b,d_x,&its);CHKERRQ(ierr);
   int me = d_myworld->myrank();
 
   ierr = VecNorm(d_x,NORM_1,&norm);CHKERRQ(ierr);
@@ -530,15 +538,15 @@ PetscSolver::pressLinearSolve()
 #endif
 
   // check the error
-  ierr = MatMult(A, d_x, d_u);CHKERRA(ierr);
-  ierr = VecAXPY(&neg_one, d_b, d_u); CHKERRA(ierr);
-  ierr  = VecNorm(d_u,NORM_2,&norm);CHKERRA(ierr);
+  ierr = MatMult(A, d_x, d_u);CHKERRQ(ierr);
+  ierr = VecAXPY(&neg_one, d_b, d_u); CHKERRQ(ierr);
+  ierr  = VecNorm(d_u,NORM_2,&norm);CHKERRQ(ierr);
   if(me == 0) {
      cerr << "SLESSolve: Norm of error: " << norm << ", iterations: " << its << ", time: " << Time::currentSeconds()-solve_start << " seconds\n";
      cerr << "Init Norm: " << init_norm << " Error reduced by: " << norm/init_norm << endl;
      cerr << "Sum of RHS vector: " << sum_b << endl;
   }
-  if (norm/init_norm < 1.0)
+  if ((norm/init_norm < 1.0)&& (norm < 2.0))
     return true;
   else
     return false;
@@ -564,6 +572,10 @@ PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
       }
     }
   }
+#if 0
+  cerr << "Print computed pressure" << endl;
+  vars->pressure.print(cerr);
+#endif
   ierr = VecRestoreArray(d_x, &xvec); CHKERRQ(ierr);
 }
   
@@ -575,11 +587,11 @@ PetscSolver::destroyMatrix()
      are no longer needed.
   */
   int ierr;
-  ierr = SLESDestroy(sles);CHKERRA(ierr); 
-  ierr = VecDestroy(d_u);CHKERRA(ierr);
-  ierr = VecDestroy(d_b);CHKERRA(ierr);
-  ierr = VecDestroy(d_x);CHKERRA(ierr);
-  ierr = MatDestroy(A);CHKERRA(ierr);
+  ierr = SLESDestroy(sles);CHKERRQ(ierr); 
+  ierr = VecDestroy(d_u);CHKERRQ(ierr);
+  ierr = VecDestroy(d_b);CHKERRQ(ierr);
+  ierr = VecDestroy(d_x);CHKERRQ(ierr);
+  ierr = MatDestroy(A);CHKERRQ(ierr);
 }
 
 // ****************************************************************************

@@ -187,7 +187,6 @@ Properties::computeProps(const ProcessorGroup*,
     CCVariable<double> density;
     StaticArray< CCVariable<double> > scalar(d_numMixingVars);
 
-
     new_dw->get(density, d_lab->d_densitySPLabel, 
 		matlIndex, patch, Ghost::None, nofGhostCells);
 
@@ -247,8 +246,9 @@ Properties::computeProps(const ProcessorGroup*,
 	    denMicro[currCell] = local_den;
 
 	  if (cellType[currCell] != d_bc->wallCellType()) 
-	    density[currCell] = d_denUnderrelax*local_den +
-	      (1.0-d_denUnderrelax)*density[currCell];
+	    //	    density[currCell] = d_denUnderrelax*local_den +
+	    //  (1.0-d_denUnderrelax)*density[currCell];
+	    density[currCell] = local_den;
 	}
       }
     }
@@ -288,6 +288,7 @@ Properties::computeProps(const ProcessorGroup*,
     new_dw->put(density,d_lab->d_densityCPLabel, matlIndex, patch);
     if (d_MAlab)
       new_dw->put(denMicro,d_lab->d_densityMicroLabel, matlIndex, patch);
+
   }
 }
   
@@ -313,10 +314,11 @@ Properties::reComputeProps(const ProcessorGroup*,
     CCVariable<double> density;
     CCVariable<double> voidFraction;
     CCVariable<double> temperature;
+    CCVariable<double> new_density;
     //    CCVariable<double> co2;
     new_dw->allocate(temperature, d_lab->d_tempINLabel, matlIndex, patch);
     //    new_dw->allocate(co2, d_lab->d_co2INLabel, matlIndex, patch);
- 
+    new_dw->allocate(new_density, d_lab->d_densityCPLabel, matlIndex, patch);
     StaticArray< CCVariable<double> > scalar(d_numMixingVars);
     CCVariable<double> denMicro;
 
@@ -324,6 +326,8 @@ Properties::reComputeProps(const ProcessorGroup*,
 
     new_dw->get(density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, nofGhostCells);
+    new_density.copy(density);
+
     if (d_MAlab){
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
 		  matlIndex, patch, Ghost::None, nofGhostCells);
@@ -391,7 +395,7 @@ Properties::reComputeProps(const ProcessorGroup*,
 
 	  }
 	  
-	  density[IntVector(colX, colY, colZ)] = d_denUnderrelax*local_den +
+	  new_density[IntVector(colX, colY, colZ)] = d_denUnderrelax*local_den +
 	    (1.0-d_denUnderrelax)*density[IntVector(colX, colY, colZ)];
 	}
       }
@@ -405,14 +409,14 @@ Properties::reComputeProps(const ProcessorGroup*,
     density.print(cerr);
 #endif
     if (patch->containsCell(d_denRef)) {
-      double den_ref = density[d_denRef];
+      double den_ref = new_density[d_denRef];
       cerr << "density_ref " << den_ref << endl;
       new_dw->put(sum_vartype(den_ref),d_lab->d_refDensity_label);
     }
     else
       new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
     
-    new_dw->put(density, d_lab->d_densityCPLabel, matlIndex, patch);
+    new_dw->put(new_density, d_lab->d_densityCPLabel, matlIndex, patch);
     new_dw->put(temperature, d_lab->d_tempINLabel, matlIndex, patch);
     //    new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch);
     if (d_MAlab)
@@ -478,5 +482,150 @@ Properties::computeDenRefArray(const ProcessorGroup*,
     new_dw->put(denRefArray, d_lab->d_denRefArrayLabel,
 		matlIndex, patch);
 
+  }
+}
+
+
+//****************************************************************************
+// Schedule the recomputation of properties
+//****************************************************************************
+void 
+Properties::sched_computePropsPred(SchedulerP& sched, const PatchSet* patches,
+				   const MaterialSet* matls)
+{
+  Task* tsk = scinew Task("Properties::computePropsPred",
+			  this,
+			  &Properties::computePropsPred);
+
+  int numGhostCells = 0;
+  // requires scalars
+  tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
+		Ghost::AroundCells,
+		numGhostCells+2);
+  if (d_MAlab) {
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
+		  Ghost::None, numGhostCells);
+    tsk->requires(Task::NewDW, d_lab->d_densityMicroINLabel, 
+		  Ghost::None, numGhostCells);
+  }
+  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, Ghost::None,
+		numGhostCells);
+
+  tsk->computes(d_lab->d_densityPredLabel);
+  //  tsk->computes(d_lab->d_tempINLabel);
+  //  tsk->computes(d_lab->d_co2INLabel);
+  if (d_MAlab) 
+    tsk->computes(d_lab->d_densityMicroLabel);
+  sched->addTask(tsk, patches, matls);
+}
+
+//****************************************************************************
+// Actually recompute the properties here
+//****************************************************************************
+void 
+Properties::computePropsPred(const ProcessorGroup*,
+			     const PatchSubset* patches,
+			     const MaterialSubset* matls,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->
+                     getArchesMaterial(archIndex)->getDWIndex(); 
+
+    // Get the CCVariable (density) from the old datawarehouse
+    // just write one function for computing properties
+
+    CCVariable<double> density;
+    CCVariable<double> new_density;
+    CCVariable<double> voidFraction;
+    StaticArray< CCVariable<double> > scalar(d_numMixingVars);
+    CCVariable<double> denMicro;
+
+    int nofGhostCells = 0;
+    new_dw->allocate(new_density, d_lab->d_densityPredLabel, 
+		     matlIndex, patch);
+    new_dw->get(density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::None, nofGhostCells);
+    new_density.copyPatch(density);
+    if (d_MAlab){
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
+		  matlIndex, patch, Ghost::None, nofGhostCells);
+      new_dw->get(denMicro, d_lab->d_densityMicroINLabel, 
+		  matlIndex, patch, Ghost::None, nofGhostCells);
+    }
+
+    for (int ii = 0; ii < d_numMixingVars; ii++)
+      new_dw->get(scalar[ii], d_lab->d_scalarPredLabel, 
+		  matlIndex, patch, Ghost::None, nofGhostCells);
+
+
+    IntVector indexLow = patch->getCellLowIndex();
+    IntVector indexHigh = patch->getCellHighIndex();
+
+    //    voidFraction.print(cerr);
+    // set density for the whole domain
+
+    for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+
+	  // for combustion calculations mixingmodel will be called
+	  // this is similar to prcf.f
+	  // construct an InletStream for input to the computeProps of mixingModel
+
+	  IntVector currCell(colX, colY, colZ);
+	  InletStream inStream(d_numMixingVars, 
+			       d_mixingModel->getNumMixStatVars(),
+			       d_mixingModel->getNumRxnVars());
+
+	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
+
+	    inStream.d_mixVars[ii] = (scalar[ii])[currCell];
+
+	  }
+
+	  // after computing variance get that too, for the time being setting the 
+	  // value to zero
+	  //	  inStream.d_mixVarVariance[0] = 0.0;
+	  // currently not using any reaction progress variables
+
+	  if (!d_mixingModel->isAdiabatic())
+	    // get absolute enthalpy from enthalpy eqn
+	    cerr << "No eqn for enthalpy yet" << '/n';
+	  Stream outStream;
+	  d_mixingModel->computeProps(inStream, outStream);
+	  double local_den = outStream.getDensity();
+	  //	  temperature[currCell] = outStream.getTemperature();
+	  //	  co2[currCell] = outStream.getCO2();
+
+
+	  if (d_MAlab) {
+	    denMicro[IntVector(colX, colY, colZ)] = local_den;
+	    if (voidFraction[currCell] > 0.01)
+	      local_den *= voidFraction[currCell];
+
+	  }
+	  
+	  new_density[IntVector(colX, colY, colZ)] = d_denUnderrelax*local_den +
+	    (1.0-d_denUnderrelax)*density[IntVector(colX, colY, colZ)];
+	}
+      }
+    }
+    // Write the computed density to the new data warehouse
+#if 0
+    //#ifdef ARCHES_PRES_DEBUG
+    // Testing if correct values have been put
+    cerr << " AFTER COMPUTE PROPERTIES " << endl;
+    IntVector domLo = density.getFortLowIndex();
+    IntVector domHi = density.getFortHighIndex();
+    density.print(cerr);
+#endif
+    new_dw->put(new_density, d_lab->d_densityPredLabel, matlIndex, patch);
+
+  
   }
 }

@@ -11,6 +11,7 @@ c*********************************************************************
      $     domLo, domHi, PCELL,
      &     PFIELD, deltat,
      $     FLOWIN, FLOWOUT,
+     $     domLoGeom, domHiGeom,
      $     SEW, SNS, STB,
      $     xminus, xplus, yminus, yplus, zminus, zplus,
      &     ierr)
@@ -39,9 +40,10 @@ c*********************************************************************
       integer domLo(3), domHi(3)
       integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
-      double precision SEW(domLo(1):domHi(1))
-      double precision SNS(domLo(2):domHi(2))
-      double precision STB(domLo(3):domHi(3))
+      integer domLoGeom(3), domHiGeom(3)
+      double precision SEW(domLoGeom(1):domHiGeom(1))
+      double precision SNS(domLoGeom(2):domHiGeom(2))
+      double precision STB(domLoGeom(3):domHiGeom(3))
       double precision FLOWIN, FLOWOUT, deltat
       integer PFIELD
       integer xminus, xplus, yminus, yplus, zminus, zplus
