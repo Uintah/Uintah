@@ -89,11 +89,13 @@ main(int argc, char **argv) {
     }
   }
 
-  Array1<Vector> grads(npts);
-  for (ii=0; ii<npts; ii++) {
+  Array1<Vector> grads;
+  while(gradstream) {
     double sx, sy, sz, ex, ey, ez;
-    gradstream >> sx >> sy >> sz >> ex >> ey >> ez;
-    grads[ii]=Point(ex, ey, ez)-Point(sx, sy, sz);
+    gradstream >> sx >> sy >> sz;
+    if (!gradstream) break;
+    gradstream >> ex >> ey >> ez;
+    grads.add(Point(ex, ey, ez)-Point(sx, sy, sz));
   }
 
   TetVolMeshHandle tvmH(tvm);
