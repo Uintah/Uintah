@@ -71,10 +71,6 @@ endif
 
 PROGRAM := sr
 
-CFLAGS_NEWMAIN   := $(CFLAGS) 
-
-$(SRCDIR)/newmain.o:	$(SRCDIR)/newmain.cc Makefile Core/CCA/ccaspec/cca_sidl.h
-	$(CXX) $(CFLAGS_NEWMAIN) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 include $(SCIRUN_SCRIPTS)/program.mk
 
 endif
