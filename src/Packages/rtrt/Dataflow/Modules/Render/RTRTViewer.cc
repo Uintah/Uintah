@@ -65,6 +65,12 @@ private:
   RTRT *rtrt_engine;
   
   GuiInt nworkers;
+  GuiInt xres_gui, yres_gui; 	// default to 400
+  // 0 for frames, 1 for frameless
+  GuiInt render_mode; 		// default to 0
+  // 0 for none, 1 for BV1, 2 for BV2, 3 for grid
+  GuiInt scene_opt_type;	// default to 1
+  GuiInt gridcellsize_gui;	// default to 4
 
   void start_rtrt();
   void stop_rtrt();
@@ -82,7 +88,12 @@ extern "C" Module* make_RTRTViewer(const string& id) {
 RTRTViewer::RTRTViewer(const string& id)
 : Module("RTRTViewer", id, Filter, "Render", "rtrt"),
   current_scene(0), next_scene(0), rtrt_engine(0),
-  nworkers("nworkers",id,this)
+  nworkers("nworkers",id,this),
+  xres_gui("xres_gui", id, this),
+  yres_gui("yres_gui", id, this),
+  render_mode("render_mode", id, this),
+  scene_opt_type("scene_opt_type", id, this),
+  gridcellsize_gui("gridcellsize_gui", id, this)
 {
   //  inColorMap = scinew ColorMapIPort( this, "ColorMap",
   //				     ColorMapIPort::Atomic);
@@ -131,12 +142,11 @@ void RTRTViewer::start_rtrt() {
   }
 
   rtrt_engine = new RTRT();
-  int displayproc=0;
 
-  int xres=128;//360;
-  int yres=128;//360;
-  int use_bv=1;
-  int gridcellsize=4;
+  int xres=xres_gui.get();
+  int yres=yres_gui.get();
+  int use_bv=scene_opt_type.get();
+  int gridcellsize=gridcellsize_gui.get();
   int c0 = 0;
   int c1 = 0;
   int ncounters=0;
@@ -148,7 +158,11 @@ void RTRTViewer::start_rtrt() {
   char* criteria2="db, max rgb, max accumrgb";
   double light_radius=-1;
   
-  bool do_frameless=false;
+  bool do_frameless;
+  if (render_mode.get() == 0)
+    do_frameless = false;
+  else
+    do_frameless = true;
   bool logframes=false;
   bool display_frames=true;
   
@@ -158,6 +172,8 @@ void RTRTViewer::start_rtrt() {
   // extract the parameters from the tcl code
   rtrt_engine->nworkers = nworkers.get();
   rtrt_engine->np = rtrt_engine->nworkers;
+
+  cout << "xres = "<<xres<<", yres = "<<yres<<endl;
 #if 0
   if(strcmp(argv[i], "-nobv")==0){
     use_bv=0;
@@ -321,6 +337,9 @@ void RTRTViewer::start_rtrt() {
     current_scene->set_image(0, image0);
     Image* image1=new Image(xres, yres, false);
     current_scene->set_image(1, image1);
+  } else {
+    current_scene->get_image(0)->resize_image(xres,yres);
+    current_scene->get_image(1)->resize_image(xres,yres);
   }
   if(use_usercamera){
     usercamera.setup();
