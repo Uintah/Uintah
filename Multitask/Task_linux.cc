@@ -422,8 +422,22 @@ void TaskManager::exit_all(int code)
     kill(0, SIGQUIT);
 }
 
+static LibMutex* malloc_lock;
+
+static void locker()
+{
+    malloc_lock->lock();
+}
+
+static void unlocker()
+{
+    malloc_lock->unlock();
+}
+
 void TaskManager::initialize(char* pn)
 {
+    malloc_lock=new LibMutex;
+    MemoryManager::set_locker(locker, unlocker);
     progname=strdup(pn);
     tick=CLK_TCK;
     pagesize=getpagesize();
