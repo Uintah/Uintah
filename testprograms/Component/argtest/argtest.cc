@@ -521,7 +521,7 @@ int main(int argc, char* argv[])
     usage(argv[0]);
 
   try {
-    PIDL::PIDL::initialize(argc,argv);
+    PIDL::initialize(argc,argv);
     sleep( 1 ); // Give threads enough time to come up.
 
     Server::pointer pp;
@@ -670,7 +670,7 @@ int main(int argc, char* argv[])
       double us=dt/reps*1000*1000;
       cerr << "argtest: " << us << " us/rep\n";
     }
-    PIDL::PIDL::serveObjects();
+    PIDL::serveObjects();
     cerr << "Argtest successful\n";
   } catch(const Exception& e) {
     cerr << "argtest caught exception:\n";

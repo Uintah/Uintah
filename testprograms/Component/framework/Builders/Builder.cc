@@ -197,7 +197,7 @@ Builder::ui()
 {
   char command;
 
-  while( 1 )
+  for(;;)
     {
       cout << "Command: "; cout.flush();
       cin >> command;
