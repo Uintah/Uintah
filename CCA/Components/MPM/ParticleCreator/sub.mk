@@ -8,8 +8,7 @@ SRCS     += \
 	$(SRCDIR)/ImplicitParticleCreator.cc	\
 	$(SRCDIR)/FractureParticleCreator.cc	\
 	$(SRCDIR)/MembraneParticleCreator.cc	\
-	$(SRCDIR)/ShellParticleCreator.cc \
-	$(SRCDIR)/GUVParticleCreator.cc 
+	$(SRCDIR)/ShellParticleCreator.cc 
 
 PSELIBS := Packages/Uintah/Core/Grid \
 	Packages/Uintah/CCA/Components/ICE \
