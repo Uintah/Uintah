@@ -16,7 +16,7 @@
 */
 
 
-class x extends CIA.Throwable {
+class x extends SIDL.Throwable {
       void y(in int);
 };
 
