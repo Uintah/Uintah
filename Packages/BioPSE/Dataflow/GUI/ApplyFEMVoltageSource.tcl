@@ -35,7 +35,7 @@ itcl_class BioPSE_Forward_ApplyFEMVoltageSource {
     }
     method set_defaults {} {
         global $this-bcFlag
-        set $this-bcFlag none
+        set $this-bcFlag DirSub
     }
     method ui {} {
         set w .ui[modname]
@@ -50,9 +50,8 @@ itcl_class BioPSE_Forward_ApplyFEMVoltageSource {
         global $this-bcFlag
         make_labeled_radio $w.f.r "Boundary Conditions:" "" \
                 left $this-bcFlag \
-                {{"Apply Dirichlet" DirSub}
-                {"Ground Node Zero" GroundZero}
-                {"No Dirichlet" none}}
+                {{"Apply Dirichlet" DirSub} \
+		{"Ground Node Zero" GroundZero}}
 	pack $w.f.r -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
     }

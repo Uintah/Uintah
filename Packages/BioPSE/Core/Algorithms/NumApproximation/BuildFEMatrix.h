@@ -60,7 +60,8 @@ class BuildFEMatrix: public Datatype {
   Barrier                         barrier_;
   Array1<int>                     colIdx_;
   vector<pair<string, Tensor> >&  tens_;
-  
+  double                          unitsScale_;
+
   //! Private methods
   void parallel(int);
   
@@ -74,10 +75,10 @@ public:
   BuildFEMatrix(TetVolIntHandle,
 		vector<pair<string, Tensor> >&,
 		MatrixHandle&, 
-		int);
+		int, double);
   static bool build_FEMatrix(TetVolIntHandle,
 			     vector<pair<string, Tensor> > &,
-			     MatrixHandle&);
+			     MatrixHandle&, double);
   //! Destuctor
   virtual ~BuildFEMatrix();
   virtual void io(Piostream&);

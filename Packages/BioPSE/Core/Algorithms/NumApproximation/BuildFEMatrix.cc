@@ -41,25 +41,27 @@ using namespace SCIRun;
 BuildFEMatrix::BuildFEMatrix(TetVolIntHandle hField,
 			     vector<pair<string, Tensor> >& tens,
 			     MatrixHandle& hA, 
-			     int np):
+			     int np, double unitsScale):
   // ---------------------------------------------
   hField_(hField),
   hA_(hA),
   np_(np),
   barrier_("BuildFEMatrix barrier"),
   colIdx_(np+1),
-  tens_(tens)
+  tens_(tens),
+  unitsScale_(unitsScale)
 {
   hMesh_=hField->get_typed_mesh();
   TetVolMesh::Node::size_type nsize; hMesh_->size(nsize);
   unsigned int nNodes = nsize;
   rows_ = scinew int[nNodes+1];
+  cerr << "unitsScale_ = "<< unitsScale_ << "\n";
 }
 BuildFEMatrix::~BuildFEMatrix(){}
 
 bool BuildFEMatrix::build_FEMatrix(TetVolIntHandle hField,
 				   vector<pair<string, Tensor> >& tens,
-				   MatrixHandle& hA)
+				   MatrixHandle& hA, double unitsScale)
   //------------------------------------------------
 {
   int np=Thread::numProcessors();
@@ -74,7 +76,7 @@ bool BuildFEMatrix::build_FEMatrix(TetVolIntHandle hField,
   hA = 0;
 
   BuildFEMatrixHandle hMaker =
-    new BuildFEMatrix(hField, tens, hA, np);
+    new BuildFEMatrix(hField, tens, hA, np, unitsScale);
   cerr << "SetupFEMatrix: number of threads being used = " << np << endl;
 
   Thread::parallel(Parallel<BuildFEMatrix>(hMaker.get_rep(), 
@@ -250,7 +252,7 @@ void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::Cell::ind
       for (int k=0; k< 3; k++){
 	for (int l=0; l<3; l++){
 	  lcl_a[i][j] += 
-	    el_cond[k][l]*el_coefs[i][k]*el_coefs[j][l];
+	    (el_cond[k][l]*unitsScale_)*el_coefs[i][k]*el_coefs[j][l];
 	}
       }
 
