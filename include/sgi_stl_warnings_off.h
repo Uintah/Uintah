@@ -26,10 +26,19 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+//
+// This file is used to turn off specific warnings that the SGI CC
+// compiler produces that are irrelevant.
+//
+// The use of this file should be minimized as much as possible.  Turn
+// the warnings back on as soon as possible using '#include
+// <sgi_stl_warnings_on.h>'
+//
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1110
 #pragma set woff 1424
 #pragma set woff 1506
 #pragma set woff 3201
+#pragma set woff 3625
 #endif
