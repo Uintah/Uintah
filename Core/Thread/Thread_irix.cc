@@ -250,13 +250,11 @@ Thread::allow_sgi_OpenGL_page0_sillyness()
 void
 Thread::initialize()
 {
-#if 0
     if(mprotect(0, getpagesize(), PROT_NONE) != -1){
 	//fprintf(stderr, "\007\007!!! WARNING: page 0 protected - talk to Steve if GL programs fail!\n");
     } else if(errno != EINVAL){
 	fprintf(stderr, "\007\007!!! Strange error protecting page 0 - tell Steve this number: %d\n", errno);
     }
-#endif
     usconfig(CONF_ARENATYPE, US_SHAREDONLY);
     usconfig(CONF_INITSIZE, 30*1024*1024);
     usconfig(CONF_INITUSERS, (unsigned int)140);
@@ -1324,6 +1322,9 @@ SCICore::Thread::ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.18  2000/02/24 06:10:17  sparker
+// Re-enabled the page 0 protection call.
+//
 // Revision 1.17  2000/02/22 17:23:25  mmiller
 // Added check for 1 processor to Barrier destructor to prevent destructor from
 // freeing uninitialize barrier data member.  Was causing a SEGV.
