@@ -84,6 +84,7 @@ public:
 
   virtual void io(bool&);
   virtual void io(char&);
+  virtual void io(signed char&);
   virtual void io(unsigned char&);
   virtual void io(short&);
   virtual void io(unsigned short&);
@@ -92,6 +93,7 @@ public:
   virtual void io(long&);
   virtual void io(unsigned long&);
   virtual void io(long long&);
+  virtual void io(unsigned long long&);
   virtual void io(double&);
   virtual void io(float&);
   virtual void io(string& str);
@@ -119,6 +121,7 @@ public:
 
   virtual void io(bool&);
   virtual void io(char&);
+  virtual void io(signed char&);
   virtual void io(unsigned char&);
   virtual void io(short&);
   virtual void io(unsigned short&);
@@ -127,6 +130,7 @@ public:
   virtual void io(long&);
   virtual void io(unsigned long&);
   virtual void io(long long&);
+  virtual void io(unsigned long long&);
   virtual void io(double&);
   virtual void io(float&);
   virtual void io(string& str);
@@ -150,6 +154,7 @@ public:
 
   virtual void io(bool&);
   virtual void io(char&);
+  virtual void io(signed char&);
   virtual void io(unsigned char&);
   virtual void io(short&);
   virtual void io(unsigned short&);
@@ -158,6 +163,7 @@ public:
   virtual void io(long&);
   virtual void io(unsigned long&);
   virtual void io(long long&);
+  virtual void io(unsigned long long&);
   virtual void io(double&);
   virtual void io(float&);
   virtual void io(string& str);
@@ -197,6 +203,7 @@ public:
 
   virtual void io(bool&);
   virtual void io(char&);
+  virtual void io(signed char&);
   virtual void io(unsigned char&);
   virtual void io(short&);
   virtual void io(unsigned short&);
@@ -205,6 +212,7 @@ public:
   virtual void io(long&);
   virtual void io(unsigned long&);
   virtual void io(long long&);
+  virtual void io(unsigned long long&);
   virtual void io(double&);
   virtual void io(float&);
   virtual void io(string& str);
@@ -230,6 +238,7 @@ public:
 
   virtual void io(bool&);
   virtual void io(char&);
+  virtual void io(signed char&);
   virtual void io(unsigned char&);
   virtual void io(short&);
   virtual void io(unsigned short&);
@@ -238,6 +247,7 @@ public:
   virtual void io(long&);
   virtual void io(unsigned long&);
   virtual void io(long long&);
+  virtual void io(unsigned long long&);
   virtual void io(double&);
   virtual void io(float&);
   virtual void io(string& str);
