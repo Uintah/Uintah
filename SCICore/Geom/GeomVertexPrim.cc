@@ -22,7 +22,6 @@ namespace SCICore {
 namespace GeomSpace {
 
 using SCICore::Containers::TrivialAllocator;
-using SCICore::PersistentSpace::Pio;
 
 static TrivialAllocator GeomVertex_alloc(sizeof(GeomVertex));
 static TrivialAllocator GeomNVertex_alloc(sizeof(GeomNVertex));
@@ -361,6 +360,9 @@ void Pio(Piostream& stream, GeomVertex*& obj)
 
 //
 // $Log$
+// Revision 1.5  1999/08/23 07:06:33  sparker
+// Fix IRIX build
+//
 // Revision 1.4  1999/08/17 23:50:30  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

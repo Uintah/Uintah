@@ -21,8 +21,6 @@
 namespace SCICore {
 namespace GeomSpace {
 
-using SCICore::PersistentSpace::Pio;
-
 Persistent *make_GeomSticky() {
   return scinew GeomSticky( 0 );
 }
@@ -72,6 +70,9 @@ bool GeomSticky::saveobj(ostream&, const clString&, GeomSave*) {
 
 //
 // $Log$
+// Revision 1.4  1999/08/23 07:06:33  sparker
+// Fix IRIX build
+//
 // Revision 1.3  1999/08/17 23:50:33  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

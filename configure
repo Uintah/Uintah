@@ -597,8 +597,8 @@ PACKAGE_DIRS=""
 PACKAGE_PATH="\$(OBJTOP_ABS)/PSECommon/libPSECommon.so\(\$(SRCTOP_ABS)/PSECommon/TCL\)"
 
 if test "$scirun" = "yes"; then
-  PACKAGE_DIRS=$PACKAGE_DIRS" SCIRun"
-  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/SCIRun/libSCIRun.so\(\$(SRCTOP_ABS)/SCIRun/TCL\)"
+#  PACKAGE_DIRS=$PACKAGE_DIRS" SCIRun"
+#  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/SCIRun/libSCIRun.so\(\$(SRCTOP_ABS)/SCIRun/TCL\)"
   EXENAME="scirun"
 fi
 if test "$uintah" = "yes"; then
@@ -719,7 +719,7 @@ case $host in
            LDRUN_PREFIX="-Wl,-rpath -Wl,"
 	   TEMPLATE_TAG=
 	   TEMPLATE_BOX=
-	   LOCK_IMPL=lock_mips.o
+	   LOCK_IMPL=lock_mips.s
            if test "$threads" = "unknown"; then
              threads="irix"
            fi
@@ -1671,7 +1671,7 @@ ASSERTION_LEVEL=$enable_assertion_level
 
 
 
-##-- Check for header files --------------------------------------------------
+##-- Check enterleave flag ---------------------------------------------------
 
 # Check whether --enable-enterleave or --disable-enterleave was given.
 if test "${enable_enterleave+set}" = set; then
@@ -2746,6 +2746,9 @@ fi
 
 fi
 
+if test x"$X_LIBS" = x"-L/usr/lib" -o x"$X_LIBS" = x" -L/usr/lib"; then
+  X_LIBS=""
+fi
 
 ##-- Generate Output Files ---------------------------------------------------
 
@@ -3241,27 +3244,3 @@ chmod +x $CONFIG_STATUS
 rm -fr confdefs* $ac_clean_files
 test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
 
-
-#              PSECore/Makefile \
-#                PSECore/Comm/Makefile \
-#                PSECore/CommonDatatypes/Makefile \
-#                PSECore/Constraints/Makefile \
-#                PSECore/Dataflow/Makefile \
-#                PSECore/Distributed/Makefile \
-#                PSECore/Modules/Makefile \
-#                PSECore/Modules/FEM/Makefile \
-#                PSECore/Modules/Fields/Makefile \
-#                PSECore/Modules/Iterators/Makefile \
-#                PSECore/Modules/Matrix/Makefile \
-#                PSECore/Modules/Readers/Makefile \
-#                PSECore/Modules/Salmon/Makefile \
-#                PSECore/Modules/Visualization/Makefile \
-#                PSECore/Modules/Writers/Makefile \
-#                PSECore/Widgets/Makefile \
-#              Uintah/Makefile \
-#                Uintah/Datatypes/Makefile \
-#                Uintah/Datatypes/Particles/Makefile \
-#                Uintah/Modules/Makefile \
-#                Uintah/Modules/MPMViz/Makefile \
-#                Uintah/Modules/Readers/Makefile \
-#         )
