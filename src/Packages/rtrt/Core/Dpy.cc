@@ -905,3 +905,299 @@ void Dpy::change_nworkers(int num) {
   if (numThreadsRequested_new+num >= 1)
     numThreadsRequested_new += num;
 }
+
+#if 0 /////////////////////////////////////////////////////////
+// Looks like this displays the string with a shadow on it...
+void
+GGT::displayShadowText(GLuint fontbase,
+		       double x, double y, char *s, const Color& c)
+{
+  Color b(0,0,0);
+  printString(fontbase, x-1, y-1, s, b);
+  printString(fontbase, x, y, s, c);
+}
+
+int
+calc_width(XFontStruct* font_struct, char* str)
+{
+  XCharStruct overall;
+  int ascent, descent;
+  int dir;
+  XTextExtents(font_struct, str, (int)strlen(str), &dir,
+	       &ascent, &descent, &overall);
+  if (overall.width < 20) return 50;
+  else return overall.width;
+}
+
+#define PS(str) \
+displayShadowText(fontbase, x, y, str, c); y-=dy; \
+width=calc_width(font_struct, str); \
+maxwidth=width>maxwidth?width:maxwidth;
+
+void
+GGT::draw_labels(XFontStruct* font_struct, GLuint fontbase,
+		 int& column, int dy, int top)
+{
+  int x=column;
+  int y=top;
+  int maxwidth=0;
+  int width;
+  Color c(0,1,0);
+  PS("");
+  PS("Number of Rays");
+  PS("Hit background");
+  PS("Reflection rays");
+  PS("Tranparency rays");
+  PS("Shadow rays");
+  PS("Rays in shadow");
+  PS("Shadow cache tries");
+  PS("Shadow cache misses");
+  PS("BV intersections");
+  PS("BV primitive intersections");
+  PS("Light BV intersections");
+  PS("Light BV prim intersections");
+  PS("Sphere intersections");
+  PS("Sphere hits");
+  PS("Sphere light intersections");
+  PS("Sphere light hits");
+  PS("Sphere light hit penumbra");
+  PS("Tri intersections");
+  PS("Tri hits");
+  PS("Tri light intersections");
+  PS("Tri light hits");
+  PS("Tri light hit penumbra");
+  PS("Rect intersections");
+  PS("Rect hits");
+  PS("Rect light intersections");
+  PS("Rect light hits");
+  PS("Rect light hit penumbra");
+  y-=dy;
+  PS("Rays/second");
+  PS("Rays/second/processor");
+  PS("Rays/pixel");
+  column+=maxwidth;
+} // end draw_labels()
+
+#define PN(n) \
+sprintf(buf, "%d", n); \
+width=calc_width(font_struct, buf); \
+displayShadowText(fontbase, x-width-w2, y, buf, c); y-=dy;
+
+#define PD(n) \
+sprintf(buf, "%g", n); \
+width=calc_width(font_struct, buf); \
+displayShadowText(fontbase, x-width-w2, y, buf, c); y-=dy;
+
+#define PP(n, den) \
+if(den==0) \
+percent=0; \
+else \
+percent=100.*n/den; \
+sprintf(buf, "%d", n); \
+width=calc_width(font_struct, buf); \
+displayShadowText(fontbase, x-width-w2, y, buf, c); \
+sprintf(buf, " (%4.1f%%)", percent); \
+displayShadowText(fontbase, x-w2, y, buf, c); \
+y-=dy;
+  
+void
+GGT::draw_column(XFontStruct* font_struct,
+		 GLuint fontbase, char* heading, DepthStats& sum,
+		 int x, int w2, int dy, int top,
+		 bool first/*=false*/, double dt/*=1*/, int nworkers/*=0*/,
+		 int npixels/*=0*/)
+{
+  char buf[100];
+  int y=top;
+  Color c(0,1,0);
+  double percent;
+
+  int width=calc_width(font_struct, heading);
+  displayShadowText(fontbase, x-width-w2, y, heading, Color(1,0,0)); y-=dy;
+  
+  PN(sum.nrays);
+  PP(sum.nbg, sum.nrays);
+  PP(sum.nrefl, sum.nrays);
+  PP(sum.ntrans, sum.nrays);
+  PN(sum.nshadow);
+  PP(sum.inshadow, sum.nshadow);
+  PP(sum.shadow_cache_try, sum.nshadow);
+  PP(sum.shadow_cache_miss, sum.shadow_cache_try);
+  PN(sum.bv_total_isect);
+  PP(sum.bv_prim_isect, sum.bv_total_isect);
+  PN(sum.bv_total_isect_light);
+  PP(sum.bv_prim_isect_light, sum.bv_total_isect_light);
+  
+  PN(sum.sphere_isect);
+  PP(sum.sphere_hit, sum.sphere_isect);
+  PN(sum.sphere_light_isect);
+  PP(sum.sphere_light_hit, sum.sphere_light_isect);
+  PP(sum.sphere_light_penumbra, sum.sphere_light_isect);
+  
+  PN(sum.tri_isect);
+  PP(sum.tri_hit, sum.tri_isect);
+  PN(sum.tri_light_isect);
+  PP(sum.tri_light_hit, sum.tri_light_isect);
+  PP(sum.tri_light_penumbra, sum.tri_light_isect);
+  
+  PN(sum.rect_isect);
+  PP(sum.rect_hit, sum.rect_isect);
+  PN(sum.rect_light_isect);
+  PP(sum.rect_light_hit, sum.rect_light_isect);
+  PP(sum.rect_light_penumbra, sum.rect_light_isect);
+  if(first){
+    y-=dy;
+    double rps=sum.nrays/dt;
+    PD(rps);
+    double rpspp=rps/nworkers;
+    PD(rpspp);
+    double rpp=sum.nrays/(double)npixels;
+    PD(rpp);
+  }
+} // end draw_column()
+
+
+void
+GGT::drawpstats(Stats* mystats, int nworkers, vector<Worker*> & workers,
+		bool draw_framerate, int showing_scene,
+		GLuint fontbase, double& lasttime,
+		double& cum_ttime, double& cum_dt)
+{
+  double thickness=.3;
+  double border=.5;
+
+  double mintime=1.e99;
+  double maxtime=0;
+  for(int i=0;i<nworkers;i++){
+    Stats* stats=workers[i]->get_stats(showing_scene);
+    int nstats=stats->nstats();
+    if(stats->time(0)<mintime)
+      mintime=stats->time(0);
+    if(stats->time(nstats-1)>maxtime)
+      maxtime=stats->time(nstats-1);
+  }
+  double maxworker=maxtime;
+  if(mystats->time(0)<mintime)
+    mintime=mystats->time(0);
+  int nstats=mystats->nstats();
+  if(mystats->time(nstats-1)>maxtime)
+    maxtime=mystats->time(nstats-1);
+    
+  if(draw_framerate){
+    char buf[100];
+    double total_dt=0;
+    for(int i=0;i<nworkers;i++){
+      Stats* stats=workers[i]->get_stats(showing_scene);
+      int nstats=stats->nstats();
+      double dt=maxtime-stats->time(nstats-1);
+      total_dt+=dt;
+    }
+    double ttime=(maxtime-lasttime)*nworkers;
+    double imbalance=total_dt/ttime*100;
+    cum_ttime+=ttime;
+    cum_dt+=total_dt;
+    double cum_imbalance=cum_dt/cum_ttime*100;
+    sprintf(buf, "%5.1fms  %5.1f%% %5.1f%%", (maxtime-maxworker)*1000,
+	    imbalance, cum_imbalance);
+    printString(fontbase, 80, 3, buf, Color(0,1,0));
+    lasttime=maxtime;
+  }
+  //cerr << mintime << " " << maxworker << " " << maxtime << " " << (maxtime-maxworker)*1000 << '\n';
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(mintime, maxtime, -border, nworkers+2+border);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+	    
+  for(int i=0;i<nworkers;i++){
+    Stats* stats=workers[i]->get_stats(showing_scene);
+    int nstats=stats->nstats();
+    double tlast=stats->time(0);
+    for(int j=1;j<nstats;j++){
+      double tnow=stats->time(j);
+      glColor3dv(stats->color(j));
+      glRectd(tlast, i+1, tnow, i+thickness+1);
+      tlast=tnow;
+    }
+  }
+
+  double tlast=mystats->time(0);
+  int i=nworkers+1;
+  for(int j=1;j<nstats;j++){
+    double tnow=mystats->time(j);
+    glColor3dv(mystats->color(j));
+    glRectd(tlast, i, tnow, i+thickness);
+    tlast=tnow;
+  }	
+} // end drawpstats()
+
+void
+GGT::drawrstats(int nworkers, vector<Worker*> & workers,
+		int showing_scene,
+		GLuint fontbase, int xres, int yres,
+		XFontStruct* font_struct,
+		int left, int up,
+		double dt)
+{
+  DepthStats sums[MAXDEPTH];
+  DepthStats sum;
+  bzero(sums, sizeof(sums));
+  bzero(&sum, sizeof(sum));
+  int md=0;
+  for(int i=0;i<nworkers;i++){
+    int depth=md;
+    while(depth<MAXDEPTH){
+      Stats* st=workers[i]->get_stats(showing_scene);
+      if(st->ds[depth].nrays==0)
+	break;
+      depth++;
+    }
+    md=depth;
+  }
+
+  for(int i=0;i<nworkers;i++){
+    for(int depth=0;depth<md;depth++){
+      Stats* st=workers[i]->get_stats(showing_scene);
+      sums[depth].addto(st->ds[depth]);
+    }
+  }
+  for(int depth=0;depth<md;depth++){
+    sum.addto(sums[depth]);
+  }
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(0, xres, 0, yres);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glTranslatef(0.375, 0.375, 0.0);
+
+  XCharStruct overall;
+  int ascent, descent;
+  char* str="123456789 (100%)";
+  int dir;
+  XTextExtents(font_struct, str, (int)strlen(str), &dir, &ascent, &descent, &overall);
+  int dy=ascent+descent;
+  if (dy == 0) dy=15;
+  int dx=overall.width;
+  if (dx == 0) dx=175;
+  int column=3-left;
+  int top=yres-3-dy+up;
+  char* str2="(100%)";
+  XTextExtents(font_struct, str2, (int)strlen(str2), &dir, &ascent, &descent, &overall);
+  int w2=overall.width;
+  draw_labels(font_struct, fontbase, column, dy, top);
+  column+=dx;
+  draw_column(font_struct, fontbase, "Total", sum, column, w2, dy, top,
+  	      true, dt, nworkers, xres*yres);
+  column+=dx;
+  for(int depth=0;depth<md;depth++){
+    char buf[20];
+    sprintf(buf, "%d", depth);
+    draw_column(font_struct, fontbase, buf, sums[depth], column, w2, dy, top);
+    column+=dx;
+  }
+} // end draw_rstats()
+
+#endif ////////////  Block of code from Gui.cc that needs to be here
