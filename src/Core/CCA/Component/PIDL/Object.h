@@ -35,6 +35,7 @@
 #include <Core/CCA/Component/PIDL/URL.h>
 #include <Core/CCA/Component/PIDL/MxNArrayRep.h>
 #include <Core/CCA/Component/PIDL/MxNScheduler.h>
+#include <Core/CCA/Component/PIDL/HandlerStorage.h>
 #include <Core/CCA/Component/Comm/EpChannel.h>
 #include <Core/CCA/SmartPointer.h>
 

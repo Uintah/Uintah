@@ -62,7 +62,7 @@ DESCRIPTION
 
     //////////
     // The Comm Channel associated with this object
-    EpChannel * chan;
+    EpChannel* chan;
 
     //////////
     // The ID of this object from the object wharehouse.  This
@@ -98,7 +98,7 @@ DESCRIPTION
 
     /////////
     // Storage for buffer data between two different handler invocations
-    HandlerStorage storage;
+    HandlerStorage* storage;
 
   };
 } // End namespace SCIRun

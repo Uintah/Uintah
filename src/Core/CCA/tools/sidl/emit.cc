@@ -837,7 +837,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     if (isCollective) {
       e.out << leader2 << "// Clear Storage from previous data\n";
       e.out << leader2 << "if (_flag != 3)\n";
-      e.out << leader2 << "  _sc->storage.clear(" << e.handlerNum << ");\n";
+      e.out << leader2 << "  _sc->storage->clear(" << e.handlerNum << ");\n";
     }
 
     if(return_type){
@@ -1247,10 +1247,12 @@ void CI::emit_proxy(EmitState& e)
     e.out << "  ::SCIRun::refList _refL;\n";
     e.out << "  ::SCIRun::refList::iterator iter;\n";
     e.out << "  _proxyGetReferenceList(_refL,false);\n";
+#ifdef MxNDEBUG
     e.out << "  //Turn on debug to a file\n";
     e.out << "  std::ostringstream fname;\n";
     e.out << "  fname << distname << \"_\" <<  _refL[0].par_rank << \".caller.out\";\n";
     e.out << "  d_sched->dbg.open(fname.str().c_str(), std::ios_base::app);\n";
+#endif
     e.out << "  \n";
     e.out << "  iter = _refL.begin();\n";
     e.out << "  for(unsigned int i=0; i < _refL.size(); i++, iter++) {\n";
@@ -1298,7 +1300,9 @@ void CI::emit_proxy(EmitState& e)
     e.out << "    d_sched->setCalleeRepresentation(distname,arep);\n";
     e.out << "  }\n";
     e.out << "  d_sched->print();\n";
+#ifdef MxNDEBUG
     e.out << "  d_sched->dbg.close();\n";
+#endif
     e.out << "}\n\n";
   }  
 }
@@ -1711,11 +1715,11 @@ void ArrayType::emit_marshal(EmitState& e, const string& arg,
 
   if (bufferStore == doRetreive) {
     if (ctx == ReturnType) {
-      e.out << leader2 << arg << " = *((" << cppfullname(0) << "*)(_sc->storage.get(" << e.handlerNum << ",0"
+      e.out << leader2 << arg << " = *((" << cppfullname(0) << "*)(_sc->storage->get(" << e.handlerNum << ",0"
 	    << ")));\n";
     }
     else {
-      e.out << leader2 << cppfullname(0) << " " << arg << " = *((" << cppfullname(0) << "*)(_sc->storage.get(" 
+      e.out << leader2 << cppfullname(0) << " " << arg << " = *((" << cppfullname(0) << "*)(_sc->storage->get(" 
 	    << e.handlerNum << "," << arg[arg.size()-1] << ")));\n";      
     }
   }
@@ -1766,11 +1770,11 @@ void ArrayType::emit_marshal(EmitState& e, const string& arg,
 
   if (bufferStore == doStore) {
     if (ctx == ReturnType) {
-      e.out << leader2 << "_sc->storage.add(" <<  e.handlerNum  
+      e.out << leader2 << "_sc->storage->add(" <<  e.handlerNum  
 	    <<",0, (void*)(new " << cppfullname(0) << "(" << arg << ")));\n";
     }
     else {
-      e.out << leader2 << "_sc->storage.add(" <<  e.handlerNum  << "," << arg[arg.size()-1] 
+      e.out << leader2 << "_sc->storage->add(" <<  e.handlerNum  << "," << arg[arg.size()-1] 
 	    <<", (void*)(new " << cppfullname(0) << "(" << arg << ")));\n";
     }
   }
@@ -1906,11 +1910,11 @@ void BuiltinType::emit_marshal(EmitState& e, const string& arg,
 
   if (bufferStore == doRetreive) {
     if (ctx == ReturnType) {
-      e.out << leader2 << arg << " = *((" << cname << "*)(_sc->storage.get(" << e.handlerNum << ",0"
+      e.out << leader2 << arg << " = *((" << cname << "*)(_sc->storage->get(" << e.handlerNum << ",0"
 	    << ")));\n";
     }
     else {
-      e.out << leader2 << cname << " " << arg << " = *((" << cname << "*)(_sc->storage.get(" << e.handlerNum 
+      e.out << leader2 << cname << " " << arg << " = *((" << cname << "*)(_sc->storage->get(" << e.handlerNum 
 	    << "," << arg[arg.size()-1] << ")));\n";      
     }
   }
@@ -1974,11 +1978,11 @@ void BuiltinType::emit_marshal(EmitState& e, const string& arg,
 
   if (bufferStore == doStore) {
     if (ctx == ReturnType) {
-      e.out << leader2 << "_sc->storage.add(" <<  e.handlerNum  
+      e.out << leader2 << "_sc->storage->add(" <<  e.handlerNum  
 	    <<",0, (void*)(new " << cname << "(" << arg << ")));\n";
     }
     else {
-      e.out << leader2 << "_sc->storage.add(" <<  e.handlerNum  << "," << arg[arg.size()-1] 
+      e.out << leader2 << "_sc->storage->add(" <<  e.handlerNum  << "," << arg[arg.size()-1] 
 	    <<", (void*)(new " << cname << "(" << arg << ")));\n";
     }
   }
@@ -2330,23 +2334,23 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
     }
     if (bufferStore == doRetreive) {
       if (ctx == ReturnType) {
-	e.out << leader2 << arg << " = *((" << name->cppfullname(0) << "*)(_sc->storage.get(" 
+	e.out << leader2 << arg << " = *((" << name->cppfullname(0) << "*)(_sc->storage->get(" 
 	      << e.handlerNum << ",0" << ")));\n";
       }
       else {
 	e.out << leader2 << name->cppfullname(0) << " " << arg << " = *((" << name->cppfullname(0) 
-	      << "*)(_sc->storage.get(" << e.handlerNum << "," << arg[arg.size()-1] << ")));\n";      
+	      << "*)(_sc->storage->get(" << e.handlerNum << "," << arg[arg.size()-1] << ")));\n";      
       }
     }
     e.out << leader2 << "int " << arg << "_marshal = (int)" << arg << ";\n";
     e.out << leader2 << "message->marshalInt(&" << arg << "_marshal);\n";
     if (bufferStore == doStore) {
       if (ctx == ReturnType) {
-	e.out << leader2 << "_sc->storage.add(" <<  e.handlerNum  << ",0, (void*)(new " 
+	e.out << leader2 << "_sc->storage->add(" <<  e.handlerNum  << ",0, (void*)(new " 
 	      << name->cppfullname(0) << "(" << arg << ")));\n";
       }
       else {      
-	e.out << leader2 << "_sc->storage.add(" <<  e.handlerNum  << "," << arg[arg.size()-1] 
+	e.out << leader2 << "_sc->storage->add(" <<  e.handlerNum  << "," << arg[arg.size()-1] 
 	      << ", (void*)(new " << name->cppfullname(0) << "(" << arg << ")));\n";
       }
     }
@@ -2358,12 +2362,12 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
     }
     if (bufferStore == doRetreive) {
       if (ctx == ReturnType) {
-	e.out << leader2 << arg << " = *((" << name->cppfullname(0) << "::pointer*)(_sc->storage.get(" 
+	e.out << leader2 << arg << " = *((" << name->cppfullname(0) << "::pointer*)(_sc->storage->get(" 
 	      << e.handlerNum << ",0" << ")));\n";
       }
       else {
 	e.out << leader2 << name->cppfullname(0) << "::pointer " << arg << " = *((" << name->cppfullname(0) 
-	      << "::pointer*)(_sc->storage.get(" << e.handlerNum << "," << arg[arg.size()-1] << ")));\n";      
+	      << "::pointer*)(_sc->storage->get(" << e.handlerNum << "," << arg[arg.size()-1] << ")));\n";      
       }
     }
     e.out << leader2 << "if(!" << arg << ".isNull()){\n";
@@ -2382,11 +2386,11 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
     e.out << leader2 << "}\n";
     if (bufferStore == doStore) {
       if (ctx == ReturnType) {
-	e.out << leader2 << "_sc->storage.add(" <<  e.handlerNum  << ",0, (void*)(new " 
+	e.out << leader2 << "_sc->storage->add(" <<  e.handlerNum  << ",0, (void*)(new " 
 	      << name->cppfullname(0) << "::pointer(" << arg << ")));\n";
       }
       else {      
-	e.out << leader2 << "_sc->storage.add(" <<  e.handlerNum  << "," << arg[arg.size()-1] 
+	e.out << leader2 << "_sc->storage->add(" <<  e.handlerNum  << "," << arg[arg.size()-1] 
 	      << ", (void*)(new " << name->cppfullname(0) << "::pointer(" << arg << ")));\n";
       }
     }
