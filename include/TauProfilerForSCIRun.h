@@ -55,7 +55,7 @@
    cd ..
    
    # configure SCIRun with
-   --tau-makefile=/path/to/tau-2.14.2.1/include/Makefile
+   --with-tau=/path/to/tau-2.14.2.1/include/Makefile
    
    # clean and build SCIRun:
    gmake cleanreally
