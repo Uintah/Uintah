@@ -244,7 +244,7 @@ void refineFaces(const Patch* patch,
          //_________________
          //  deterimine the interpolation weights
 	  Vector w;
-	  IntVector cidx = level->mapToCoarser(idx, dir, w);
+	  IntVector cidx = level->interpolateToCoarser(idx, dir, w);
 	  if(cidx.x()+1 >= coarseHigh.x()){
 	    cidx.x(cidx.x()-1);
 	    w.x(1);
@@ -301,7 +301,7 @@ void refineFaces(const Patch* patch,
          //_________________
          //  deterimine the interpolation weights
 	  Vector w;      
-	  IntVector cidx = level->mapToCoarser(idx, dir, w);
+	  IntVector cidx = level->interpolateToCoarser(idx, dir, w);
 	  if(cidx.x()+1 >= coarseHigh.x()){
 	    cidx.x(cidx.x()-1);
 	    w.x(1);
@@ -361,7 +361,7 @@ void refineFaces(const Patch* patch,
          //_________________
          //  deterimine the interpolation weights
 	  Vector w;
-	  IntVector cidx = level->mapToCoarser(idx, dir, w);
+	  IntVector cidx = level->interpolateToCoarser(idx, dir, w);
 	  if(cidx.x()+1 >= coarseHigh.x()){
 	    cidx.x(cidx.x()-1);
 	    w.x(1);
