@@ -11,3 +11,5 @@ SRCS := \
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
+KURT_MODULES := $(KURT_MODULES) $(TCLINDEX)
+
