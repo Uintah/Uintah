@@ -1,0 +1,14 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../../..
+
+ifeq (@BUILD_PARALLEL@,yes)
+PARALLEL_SRCS = 
+
+endif
+
+SRCS     =  VolVis.cc $(PARALLEL_SRCS)
+
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
+
+include $(SRCTOP)/scripts/objs.mk
