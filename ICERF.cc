@@ -185,7 +185,7 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     cout_doing << "Doing computeFCPressDiffRF on patch " << patch->getID()
-         << "\t\t\t\t ICE" << endl;
+         << "\t\t\t ICE" << endl;
 
     int numMatls = d_sharedState->getNumMatls();
 
@@ -504,6 +504,187 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
   }  // patch loop
 }
 
+#if 0
+/*---------------------------------------------------------------------
+ Function~  ICE::computeDelPressAndUpdatePressCCRF--
+ Purpose~
+   This function calculates the change in pressure explicitly. 
+ Note:  Units of delp_Dilatate and delP_MassX are [Pa]
+ Reference:  Multimaterial Formalism eq. 1.5
+ ---------------------------------------------------------------------  */
+void ICE::computeDelPressAndUpdatePressCCRF(const ProcessorGroup*,  
+					  const PatchSubset* patches,
+					  const MaterialSubset* /*matls*/,
+					  DataWarehouse* old_dw, 
+					  DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    
+    cout_doing << "Doing explicit delPress on patch (RF) " << patch->getID() 
+         <<  "\t\t\t ICE" << endl;
+
+    int numMatls  = d_sharedState->getNumMatls();
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label());
+    Vector dx     = patch->dCell();
+
+    double vol    = dx.x()*dx.y()*dx.z();
+    double invvol = 1./vol;
+    double compressibility;
+
+    CCVariable<double> q_CC,      q_advected;
+    Advector* advector = d_advector->clone(new_dw,patch);
+
+    constCCVariable<double> pressure;
+    CCVariable<double> delP_Dilatate;
+    CCVariable<double> delP_MassX;
+    CCVariable<double> press_CC;
+    constCCVariable<double> burnedMass;
+   
+    const IntVector gc(1,1,1);
+
+    new_dw->get(pressure,       lb->press_equil_CCLabel,0,patch,Ghost::None,0);
+    new_dw->allocate(delP_Dilatate,lb->delP_DilatateLabel,0, patch);
+    new_dw->allocate(delP_MassX,lb->delP_MassXLabel,    0, patch);
+    new_dw->allocate(press_CC,  lb->press_CCLabel,      0, patch);
+    new_dw->allocate(q_CC,      lb->q_CCLabel,          0, patch,
+		     Ghost::AroundCells,1);
+    new_dw->allocate(q_advected,lb->q_advectedLabel,    0, patch);
+
+    StaticArray<constCCVariable<double> > rho_micro(numMatls);
+
+    CCVariable<double> term1, term2, term3;
+    new_dw->allocate(term1, lb->term1Label, 0, patch);
+    new_dw->allocate(term2, lb->term2Label, 0, patch);
+    new_dw->allocate(term3, lb->term3Label, 0, patch);
+
+    term1.initialize(0.);
+    term2.initialize(0.);
+    term3.initialize(0.);
+    delP_Dilatate.initialize(0.0);
+    delP_MassX.initialize(0.0);
+
+    for(int m = 0; m < numMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+//      constCCVariable<double>   speedSound;
+      constSFCXVariable<double> uvel_FC;
+      constSFCYVariable<double> vvel_FC;
+      constSFCZVariable<double> wvel_FC;
+      constCCVariable<double> vol_frac;
+      constCCVariable<Vector> vel_CC;
+      constCCVariable<double> rho_CC;
+
+      new_dw->get(uvel_FC, lb->uvel_FCMELabel,   indx,  patch,
+		  Ghost::AroundCells, 2);
+      new_dw->get(vvel_FC, lb->vvel_FCMELabel,   indx,  patch,
+		  Ghost::AroundCells, 2);
+      new_dw->get(wvel_FC, lb->wvel_FCMELabel,   indx,  patch,
+		  Ghost::AroundCells, 2);
+      new_dw->get(vol_frac,lb->vol_frac_CCLabel, indx,  patch,
+		  Ghost::AroundCells,1);
+      new_dw->get(rho_CC,      lb->rho_CCLabel,      indx,patch,Ghost::None,0);
+      new_dw->get(rho_micro[m],lb->rho_micro_CCLabel,indx,patch,Ghost::None,0);
+//      new_dw->get(speedSound, lb->speedSound_CCLabel,indx,patch,Ghost::None,0);
+      new_dw->get(burnedMass, lb->burnedMass_CCLabel,indx,patch,Ghost::None,0);
+      if(ice_matl) {
+        old_dw->get(vel_CC,   lb->vel_CCLabel,       indx,patch,Ghost::None,0);
+      }
+      if(mpm_matl) {
+        new_dw->get(vel_CC,   lb->vel_CCLabel,       indx,patch,Ghost::None,0);
+      }
+
+      //__________________________________
+      // Advection preprocessing
+      // - divide vol_frac_cc/vol
+
+
+      advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch);
+
+      for(CellIterator iter = patch->getCellIterator(gc); !iter.done();
+	  iter++) {
+	IntVector c = *iter;
+        q_CC[c] = vol_frac[c] * invvol;
+      }
+      //__________________________________
+      //   First order advection of q_CC
+      advector->advectQ(q_CC,patch,q_advected);
+
+
+      //---- P R I N T   D A T A ------  
+      if (switchDebug_explicit_press ) {
+        ostringstream description;
+	description << "middle_of_explicit_Pressure_Mat_" << indx << "_patch_"
+		    <<  patch->getID();
+        printData_FC( patch,1, description.str(), "uvel_FC", uvel_FC);
+        printData_FC( patch,1, description.str(), "vvel_FC", vvel_FC);
+        printData_FC( patch,1, description.str(), "wvel_FC", wvel_FC);
+      }
+      
+      if(mpm_matl) {
+           compressibility =
+                mpm_matl->getConstitutiveModel()->getCompressibility();
+      }  
+                    
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+	IntVector c = *iter;
+        //__________________________________
+        //   Contributions from reactions
+        //   to be filled in Be very careful with units
+        term1[c] += (burnedMass[c]/delT)/(rho_micro[m][c] * vol);
+
+        //__________________________________
+        //   Divergence of velocity * face area
+        //   Be very careful with the units
+        //   do the volume integral to check them
+        //   See journal pg 171
+        //   You need to divide by the cell volume
+        //
+        //  Note that sum(div (theta_k U^f_k) 
+        //          =
+        //  Advection(theta_k, U^f_k)
+        //  This subtle point is discussed on pg
+        //  190 of my Journal
+        term2[c] -= q_advected[c];
+
+         if(ice_matl) {
+            compressibility =
+			ice_matl->getEOS()->getCompressibility(pressure[*iter]);
+        }
+
+        // New term3 comes from Kashiwa 4.11
+        term3[*iter] += vol_frac[*iter]*compressibility;
+      }  //iter loop
+    }  //matl loop
+    delete advector;
+    press_CC.initialize(0.);
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
+      IntVector c = *iter;
+      delP_MassX[c]    = (delT * term1[c])/term3[c];
+      delP_Dilatate[c] = -term2[c]/term3[c];
+      press_CC[c]      = pressure[c] + 
+                             delP_MassX[c] + delP_Dilatate[c];    
+    }
+    setBC(press_CC, rho_micro[SURROUND_MAT], "Pressure",patch,0);
+
+    new_dw->put(delP_Dilatate, lb->delP_DilatateLabel, 0, patch);
+    new_dw->put(delP_MassX,    lb->delP_MassXLabel,    0, patch);
+    new_dw->put(press_CC,      lb->press_CCLabel,      0, patch);
+
+   //---- P R I N T   D A T A ------  
+    if (switchDebug_explicit_press) {
+      ostringstream description;
+      description << "Bottom_of_explicit_Pressure_patch_" << patch->getID();
+      printData( patch, 1,description.str(), "delP_Dilatate", delP_Dilatate);
+      //printData( patch, 1,description.str(), "delP_MassX",    delP_MassX);
+      printData( patch, 1,description.str(), "Press_CC",      press_CC);
+    }
+  }  // patch loop
+}
+#endif
 /* ---------------------------------------------------------------------
  Function~  ICE::accumulateMomentumSourceSinksRF--
  Purpose~   This function accumulates all of the sources/sinks of momentum
@@ -699,7 +880,7 @@ void ICE::accumulateEnergySourceSinksRF(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing accumulate_energy_source_sinksRF on patch " 
-         << patch->getID() << "\t\t ICE" << endl;
+         << patch->getID() << "\t ICE" << endl;
 
     int numMatls = d_sharedState->getNumMatls();
 
@@ -768,7 +949,6 @@ void ICE::accumulateEnergySourceSinksRF(const ProcessorGroup*,
 
 /* ---------------------------------------------------------------------
  Function~  ICE::computeLagrangianSpecificVolumeRF--
- Computes 
  ---------------------------------------------------------------------  */
 void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,  
                                           const PatchSubset* patches,
@@ -780,7 +960,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     cout_doing << "Doing computeLagrangianSpecificVolumeRF " <<
-      patch->getID() << "\t ICE" << endl;
+      patch->getID() << "\t\t ICE" << endl;
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
@@ -858,253 +1038,5 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
      new_dw->put(spec_vol_L,     lb->spec_vol_L_CCLabel,     indx,patch);
      new_dw->put(spec_vol_source,lb->spec_vol_source_CCLabel,indx,patch);
     }  // end numALLMatl loop
-  }  // patch loop
-}
-
-/*---------------------------------------------------------------------
- Function~  ICE::addExchangeToMomentumAndEnergyRF--
- Purpose~
-   This function adds the energy exchange contribution to the 
-   existing cell-centered lagrangian temperature
-
- Prerequisites:
-            The face centered velocity for each material without
-            the exchange must be solved prior to this routine.
-            
-                   (A)                              (X)
-| (1+b12 + b13)     -b12          -b23          |   |del_data_CC[1]  |    
-|                                               |   |                |    
-| -b21              (1+b21 + b23) -b32          |   |del_data_CC[2]  |    
-|                                               |   |                | 
-| -b31              -b32          (1+b31 + b32) |   |del_data_CC[2]  |
-
-                        =
-                        
-                        (B)
-| b12( data_CC[2] - data_CC[1] ) + b13 ( data_CC[3] -data_CC[1])    | 
-|                                                                   |
-| b21( data_CC[1] - data_CC[2] ) + b23 ( data_CC[3] -data_CC[2])    | 
-|                                                                   |
-| b31( data_CC[1] - data_CC[3] ) + b32 ( data_CC[2] -data_CC[3])    | 
- 
- - set *_L_ME arrays = *_L arrays
- - convert flux variables
- Steps for each cell;
-    1) Comute the beta coefficients
-    2) Form and A matrix and B vector
-    3) Solve for del_data_CC[*]
-    4) Add del_data_CC[*] to the appropriate Lagrangian data
- - apply Boundary conditions to vel_CC and Temp_CC
- - Stuff fluxes mom_L_ME and int_eng_L_ME back into dw
- 
- References: see "A Cell-Centered ICE method for multiphase flow simulations"
- by Kashiwa, above equation 4.13.
- ---------------------------------------------------------------------  */
-void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,  
-                                         const PatchSubset* patches,
-                                         const MaterialSubset* /*matls*/,
-                                         DataWarehouse* old_dw, 
-                                         DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    cout_doing << "Doing Heat and momentum exchange RF on patch " << 
-      patch->getID() << "\t\t ICE" << endl;
-
-    int     numMatls  = d_sharedState->getNumICEMatls();
-    double  tmp;
-    delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
-    StaticArray<CCVariable<double> > Temp_CC(numMatls);
-    StaticArray<CCVariable<Vector> > vel_CC(numMatls);
-    StaticArray<CCVariable<Vector> > mom_L_ME(numMatls);
-    StaticArray<CCVariable<double> > int_eng_L_ME(numMatls);
-    StaticArray<CCVariable<double> > Tdot(numMatls);
-    StaticArray<constCCVariable<double> > mass_L(numMatls);
-    StaticArray<constCCVariable<double> > int_eng_L(numMatls);
-    StaticArray<constCCVariable<double> > vol_frac_CC(numMatls);
-    StaticArray<constCCVariable<double> > rho_micro_CC(numMatls);
-    StaticArray<constCCVariable<Vector> > mom_L(numMatls);
-    StaticArray<constCCVariable<double> > old_temp(numMatls);
-    
-    vector<double> b(numMatls);
-    vector<double> cv(numMatls);
-    vector<double> X(numMatls);
-    DenseMatrix beta(numMatls,numMatls),acopy(numMatls,numMatls);
-    DenseMatrix a_inverse(numMatls, numMatls);
-    DenseMatrix K(numMatls,numMatls),H(numMatls,numMatls),a(numMatls,numMatls);
-    beta.zero();
-    acopy.zero();
-    K.zero();
-    H.zero();
-    a.zero();
-    getExchangeCoefficients(K, H);
-
-    for(int m = 0; m < numMatls; m++)  {
-      ICEMaterial* matl = d_sharedState->getICEMaterial( m );
-      int indx = matl->getDWIndex();
-      new_dw->get(mass_L[m],   lb->mass_L_CCLabel, indx,patch,Ghost::None,0);
-      new_dw->get(mom_L[m],    lb->mom_L_CCLabel,  indx,patch,Ghost::None,0);
-      new_dw->get(int_eng_L[m],lb->int_eng_L_CCLabel, indx,patch,
-                  Ghost::None,0);
-      new_dw->get(vol_frac_CC[m], lb->vol_frac_CCLabel,indx,patch, 
-                  Ghost::None,0);
-      new_dw->get(rho_micro_CC[m],lb->rho_micro_CCLabel,indx,patch,
-                  Ghost::None,0);
-      old_dw->get(old_temp[m],    lb->temp_CCLabel,    indx,patch,
-                 Ghost::None,0);           
-
-      new_dw->allocate( mom_L_ME[m],   lb->mom_L_ME_CCLabel,    indx, patch);
-      new_dw->allocate(int_eng_L_ME[m],lb->int_eng_L_ME_CCLabel,indx, patch);
-      new_dw->allocate( vel_CC[m],     lb->vel_CCLabel,         indx, patch);
-      new_dw->allocate( Temp_CC[m],    lb->temp_CCLabel,        indx, patch);
-      new_dw->allocate( Tdot[m],       lb->Tdot_CCLabel,        indx, patch);
-      mom_L_ME[m].initialize(Vector(0.0, 0.0, 0.0));
-      int_eng_L_ME[m].initialize(0.0);
-      vel_CC[m].initialize(Vector(0.0, 0.0, 0.0));
-      Temp_CC[m].initialize(0.0);
-      cv[m] = matl->getSpecificHeat();
-    }  
-
-    //__________________________________
-    // Convert vars. flux -> primitive 
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      for (int m = 0; m < numMatls; m++) {
-        Temp_CC[m][c] = int_eng_L[m][c]/(mass_L[m][c]*cv[m]);
-        vel_CC[m][c]  =  mom_L[m][c]/mass_L[m][c];
-      }  
-    }
-
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      //   Form BETA matrix (a), off diagonal terms
-      //  The beta and (a) matrix is common to all momentum exchanges
-      for(int m = 0; m < numMatls; m++)  {
-        tmp    = rho_micro_CC[m][c];
-        for(int n = 0; n < numMatls; n++) {
-          beta[m][n] = delT * vol_frac_CC[n][c] * K[n][m]/tmp;
-          a[m][n] = -beta[m][n];
-        }
-      }
-
-      //   Form matrix (a) diagonal terms
-      for(int m = 0; m < numMatls; m++) {
-        a[m][m] = 1.0;
-        for(int n = 0; n < numMatls; n++) {
-          a[m][m] +=  beta[m][n];
-        }
-      }
-      matrixInverse(numMatls, a, a_inverse);
-      //---------- X - M O M E N T U M
-      // -  F O R M   R H S   (b)
-      // -  push a copy of (a) into the solver
-      // -  Add exchange contribution to orig value
-      for(int m = 0; m < numMatls; m++) {
-        b[m] = 0.0;
-
-        for(int n = 0; n < numMatls; n++) {
-          b[m] += beta[m][n] *
-            (vel_CC[n][c].x() - vel_CC[m][c].x());
-        }
-      }
-  
-      vector<double> X(numMatls);
-      multiplyMatrixAndVector(numMatls,a_inverse,b,X);
-      for(int m = 0; m < numMatls; m++) {
-          vel_CC[m][c].x( vel_CC[m][c].x() + X[m] );
-      }
-
-      //---------- Y - M O M E N T U M
-      // -  F O R M   R H S   (b)
-      // -  push a copy of (a) into the solver
-      // -  Add exchange contribution to orig value
-      for(int m = 0; m < numMatls; m++) {
-        b[m] = 0.0;
-
-        for(int n = 0; n < numMatls; n++) {
-          b[m] += beta[m][n] *
-            (vel_CC[n][c].y() - vel_CC[m][c].y());
-        }
-      }   
-      multiplyMatrixAndVector(numMatls,a_inverse,b,X);
-      for(int m = 0; m < numMatls; m++) {
-          vel_CC[m][c].y( vel_CC[m][c].y() + X[m] );
-      }
-
-      //---------- Z - M O M E N T U M
-      // -  F O R M   R H S   (b)
-      // -  push a copy of (a) into the solver
-      // -  Adde exchange contribution to orig value
-      for(int m = 0; m < numMatls; m++)  {
-        b[m] = 0.0;
-
-        for(int n = 0; n < numMatls; n++) {
-          b[m] += beta[m][n] *
-            (vel_CC[n][c].z() - vel_CC[m][c].z());
-        }
-      } 
-      multiplyMatrixAndVector(numMatls,a_inverse,b,X);
-      for(int m = 0; m < numMatls; m++) {
-          vel_CC[m][c].z( vel_CC[m][c].z() + X[m] );
-      }
-
-      //---------- E N E R G Y   E X C H A N G E
-      //   Form BETA matrix (a) off diagonal terms
-      for(int m = 0; m < numMatls; m++) {
-        tmp = cv[m]*rho_micro_CC[m][c];
-        for(int n = 0; n < numMatls; n++)  {
-          beta[m][n] = delT * vol_frac_CC[n][c] * H[n][m]/tmp;
-          a[m][n] = -beta[m][n];
-        }
-      }
-      //   Form matrix (a) diagonal terms
-      for(int m = 0; m < numMatls; m++) {
-        a[m][m] = 1.;
-        for(int n = 0; n < numMatls; n++)   {
-          a[m][m] +=  beta[m][n];
-        }
-      }
-      // -  F O R M   R H S   (b)
-      for(int m = 0; m < numMatls; m++)  {
-        b[m] = 0.0;
-
-       for(int n = 0; n < numMatls; n++) {
-          b[m] += beta[m][n] *
-            (Temp_CC[n][c] - Temp_CC[m][c]);
-        }
-      }
-      //     S O L V E, Add exchange contribution to orig value
-      matrixSolver(numMatls,a,b,X);
-      for(int m = 0; m < numMatls; m++) {
-        Temp_CC[m][c] = Temp_CC[m][c] + X[m];
-      }
-    }
-    //__________________________________
-    //  Set the Boundary condiitions
-    for (int m = 0; m < numMatls; m++)  {
-      ICEMaterial* matl = d_sharedState->getICEMaterial( m );
-      int indx = matl->getDWIndex();
-      setBC(vel_CC[m],"Velocity",patch,indx);
-      setBC(Temp_CC[m],"Temperature",patch,indx);
-    }
-    //__________________________________
-    // Convert vars. primitive-> flux 
-    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      for (int m = 0; m < numMatls; m++) {
-        int_eng_L_ME[m][c] = Temp_CC[m][c] * cv[m] * mass_L[m][c];
-        mom_L_ME[m][c]     = vel_CC[m][c] * mass_L[m][c];
-        Tdot[m][c]         = (Temp_CC[m][c] - old_temp[m][c])/delT;
-      }  
-    } 
-
-    for(int m = 0; m < numMatls; m++) {
-      ICEMaterial* matl = d_sharedState->getICEMaterial( m );
-      int indx = matl->getDWIndex();
-      new_dw->put(mom_L_ME[m],    lb->mom_L_ME_CCLabel,    indx, patch);
-      new_dw->put(int_eng_L_ME[m],lb->int_eng_L_ME_CCLabel,indx, patch);
-      new_dw->put(Tdot[m],        lb->Tdot_CCLabel,        indx, patch);
-    }
   }  // patch loop
 }
