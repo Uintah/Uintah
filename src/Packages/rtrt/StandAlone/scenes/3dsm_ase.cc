@@ -208,7 +208,7 @@ void SplitTrisX(Group* g, double xval, double tol)
 	    bool lt[3]={false,false,false};
 	    int side[3] = {0,0,0};
 
-	    if (t = dynamic_cast<Tri*>(obj))
+	    if ((t = dynamic_cast<Tri*>(obj)))
 		{
 		    if (t->isbad())
 			continue;
@@ -316,7 +316,7 @@ void SplitTrisY(Group* g, double yval, double tol)
 	    bool lt[3]={false,false,false};
 	    int side[3] = {0,0,0};
 
-	    if (t = dynamic_cast<Tri*>(obj))
+	    if ((t = dynamic_cast<Tri*>(obj)))
 		{
 		    if (t->isbad())
 			continue;
@@ -505,7 +505,7 @@ Group *get_object(ifstream &infile) {
 	  // eat the curley brace
 	  infile >> token;
 	  curley++;
-	  for(unsigned int i = 0; i < verticies.size(); i++) {
+	  for(int i = 0; i < verticies.size(); i++) {
 	    // grab the vertex
 	    int index;
 	    double x, y, z;
@@ -523,7 +523,7 @@ Group *get_object(ifstream &infile) {
 	  // eat the curley brace
 	  infile >> token;
 	  curley++;
-	  for(unsigned int i = 0; i < faces.size(); i++) {
+	  for(int i = 0; i < faces.size(); i++) {
 	    // grab the vertex
 	    int index, p1, p2, p3;
 	    infile >> token >> index >> token >> token >> p1 >> token >> p2

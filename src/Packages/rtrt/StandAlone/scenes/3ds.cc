@@ -319,7 +319,7 @@ void read_camera(Chunk* ch, Group*, State3D& state)
     cerr << "lens=" << lens << '\n';
     Vector up(0,0,1);
     Chunk* chunk;
-    while(chunk=ch->next_chunk()){
+    while((chunk=ch->next_chunk())){
 	switch(chunk->type()){
 	default:
 	    cerr << "read_camera: Unknown chunk type: " << hex << chunk->type() << dec << '\n';
