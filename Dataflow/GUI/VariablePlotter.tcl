@@ -293,10 +293,10 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	}
     }
     method do_nothing {} {
-	puts "l = [set $this-index_l]"
-	puts "x = [set $this-index_x]"
-	puts "y = [set $this-index_y]"
-	puts "z = [set $this-index_z]"
+#	puts "l = [set $this-index_l]"
+#	puts "x = [set $this-index_x]"
+#	puts "y = [set $this-index_y]"
+#	puts "z = [set $this-index_z]"
 #	$this-c "pick"
     }
     method make_entry {w text v c} {
@@ -304,7 +304,7 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	label $w.l -text "$text"
 	pack $w.l -side left
 	entry $w.e -textvariable $v 
-	bind $w.e <Return> "$this do_nothing"
+	bind $w.e <Return> $c
 	pack $w.e -side right
     }
     method ui {} {
@@ -317,6 +317,7 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	toplevel $w
 	wm minsize $w 300 190
 	set n "$this-c needexecute "
+	set pick "$this-c pick "
 
 	#selection stuff
 	frame $w.o
@@ -334,13 +335,13 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	pack $w.o.select.cell -side top -anchor w -pady 2 -ipadx 3
 	
 	# node ID
-	make_entry $w.o.nodel "level index:" $this-index_l $n
+	make_entry $w.o.nodel "level index:" $this-index_l "$this do_nothing"
 	pack $w.o.nodel -side top -fill x -padx 2 -pady 2
-	make_entry $w.o.nodex "x index:" $this-index_x $n
+	make_entry $w.o.nodex "x index:" $this-index_x "$this do_nothing"
 	pack $w.o.nodex -side top -fill x -padx 2 -pady 2
-	make_entry $w.o.nodey "y index:" $this-index_y $n
+	make_entry $w.o.nodey "y index:" $this-index_y "$this do_nothing"
 	pack $w.o.nodey -side top -fill x -padx 2 -pady 2
-	make_entry $w.o.nodez "z index:" $this-index_z $n
+	make_entry $w.o.nodez "z index:" $this-index_z "$this do_nothing"
 	pack $w.o.nodez -side top -fill x -padx 2 -pady 2
 
 	makeFrames $w
