@@ -17,3 +17,4 @@ namespace Uintah {
 } // End namespace Uintah
 
 #endif /* _HEBURNFACTORY_H_ */
+
