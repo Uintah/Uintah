@@ -1116,6 +1116,7 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
     clString lighting(tclID+"-"+"light");
     clString fog(tclID+"-"+"fog");
     clString cull(tclID+"-"+"cull");
+    clString dl(tclID+"-"+"dl");
     clString debug(tclID+"-"+"debug");
     clString psize(tclID+"-"+"psize");
     clString movie(tclID+"-"+"movie");
@@ -1210,6 +1211,16 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
 	else {
 	    cerr << "Error, no culling info\n";
 	    drawinfo->cull = 0;
+	}
+	if (get_tcl_stringvar(id,dl,val)) {
+	    if (val == "0")
+		drawinfo->dl = 0;
+	    else
+		drawinfo->dl = 1;
+	}	
+	else {
+	    cerr << "Error, no display list info\n";
+	    drawinfo->dl = 0;
 	}
 	if (!get_tcl_stringvar(id,lighting,val))
 	    cerr << "Error, no lighting!\n";
@@ -1782,6 +1793,9 @@ ImgReq::ImgReq(const clString& n, const clString& t)
 
 //
 // $Log$
+// Revision 1.27  2000/07/28 21:14:58  yarden
+// handle dl (display list flag) in the draw info
+//
 // Revision 1.26  2000/06/09 17:50:18  kuzimmer
 // Hopefully everything is fixed so that you can use -lifl on SGI's and you can use -lcl on SGI's in32bit mode.
 //
