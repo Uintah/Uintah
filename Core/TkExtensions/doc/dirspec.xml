@@ -1,5 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE dir SYSTEM "../../../doc/UserGuide/dirspec.dtd">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE dir SYSTEM "../../../../doc/dirspec.dtd">
+<?xml-stylesheet href="../../../../doc/dirspec.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
  
 <dir name="Core/TkExtensions">
 
