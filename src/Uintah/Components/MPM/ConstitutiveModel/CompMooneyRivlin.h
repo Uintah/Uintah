@@ -41,7 +41,6 @@ WARNING
 
       class CompMooneyRivlin : public ConstitutiveModel {
       private:
-	 
 	 // Create datatype for storing model parameters
 	 struct CMData {
 	    double C1;
@@ -67,7 +66,6 @@ WARNING
 	 // compute stable timestep for this region
 	 virtual void computeStableTimestep(const Region* region,
 					    const MPMMaterial* matl,
-//					    const DataWarehouseP& old_dw,
 					    DataWarehouseP& new_dw);
 	 
 	 // compute stress at each particle in the region
@@ -89,30 +87,33 @@ WARNING
 	 // class function to read correct number of parameters
 	 // from the input file
 	 static void readParameters(ProblemSpecP ps, double *p_array);
-	 
-	 
+
 	 // class function to read correct number of parameters
 	 // from the input file, and create a new object
 	 static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
-	 
+ 
 	 // member function to read correct number of parameters
 	 // from the input file, and any other particle information
 	 // need to restart the model for this particle 
 	 // and create a new object
 	 static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps);
-	 
+
 	 // class function to create a new object from parameters
 	 static ConstitutiveModel* create(double *p_array);
 	 
 	 const VarLabel* p_cmdata_label;
       };
-      
+
    }
 }
 
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.16  2000/05/04 16:37:30  guilkey
+// Got the CompNeoHookPlas constitutive model up to speed.  It seems
+// to work but hasn't had a rigorous test yet.
+//
 // Revision 1.15  2000/05/02 19:31:23  guilkey
 // Added a put for cmdata.
 //
