@@ -2,7 +2,7 @@
 #define GRID_VOL_REN_H
 
 #include <Packages/Kurt/Core/Geom/BrickGrid.h>
-#include <Core/Datatypes/Polygon.h>
+#include <Core/Geometry/Polygon.h>
 #include <vector>
 using std::vector;
 

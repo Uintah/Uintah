@@ -19,7 +19,6 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/VolumeUtils.h>
-#include <Core/Datatypes/Polygon.h>
 #include <stdlib.h>
 #include <iostream>
 #include <string>

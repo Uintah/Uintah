@@ -21,10 +21,17 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Geometry
 
-SRCS     += $(SRCDIR)/BBox.cc $(SRCDIR)/Grid.cc $(SRCDIR)/IntVector.cc \
-	$(SRCDIR)/Point.cc $(SRCDIR)/Tensor.cc \
-	$(SRCDIR)/Transform.cc $(SRCDIR)/Plane.cc $(SRCDIR)/Vector.cc \
-	$(SRCDIR)/Ray.cc  $(SRCDIR)/Quaternion.cc
+SRCS     += $(SRCDIR)/BBox.cc \
+	    $(SRCDIR)/Grid.cc \
+	    $(SRCDIR)/IntVector.cc \
+	    $(SRCDIR)/Plane.cc \
+	    $(SRCDIR)/Point.cc \
+	    $(SRCDIR)/Polygon.cc \
+	    $(SRCDIR)/Quaternion.cc \
+	    $(SRCDIR)/Ray.cc \
+	    $(SRCDIR)/Tensor.cc \
+	    $(SRCDIR)/Transform.cc \
+	    $(SRCDIR)/Vector.cc
 
 PSELIBS := Core/Persistent Core/Disclosure Core/Containers \
 	   Core/Exceptions Core/Tester

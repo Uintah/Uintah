@@ -15,8 +15,9 @@
   University of Utah. All Rights Reserved.
 */
 
-#include <Core/Datatypes/Polygon.h>
+#include <Core/Geometry/Polygon.h>
 #include <iostream>
+
 using std::cerr;
 using std::ostream;
 

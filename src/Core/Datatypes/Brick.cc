@@ -19,7 +19,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/VolumeUtils.h>
 #include <Core/Datatypes/Brick.h>
-#include <Core/Datatypes/Polygon.h>
 #include <stdlib.h>
 #include <iostream>
 #include <string>

@@ -66,7 +66,6 @@ SRCS += $(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/GLVolumeRenderer.cc 		\
 	$(SRCDIR)/LOS.cc 			\
 	$(SRCDIR)/LOSIterator.cc 		\
-	$(SRCDIR)/Polygon.cc 			\
 	$(SRCDIR)/ROI.cc 			\
 	$(SRCDIR)/ROIIterator.cc 		\
 	$(SRCDIR)/SliceTable.cc 		\

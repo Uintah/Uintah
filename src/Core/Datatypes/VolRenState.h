@@ -18,7 +18,6 @@
 #ifndef GLVOLRENSTATE_H
 #define GLVOLRENSTATE_H
 
-#include <Core/Datatypes/Polygon.h>
 #include <Core/Datatypes/Brick.h>
 #include <vector>
 
