@@ -32,6 +32,12 @@ MPMLabel::MPMLabel()
   
   pXXLabel  = VarLabel::create( "p.xx",
 			ParticleVariable<Point>::getTypeDescription() );
+                     
+  pColorLabel  = VarLabel::create( "p.color",
+			ParticleVariable<double>::getTypeDescription() );
+                     
+  pColorLabel_preReloc  = VarLabel::create( "p.color+",
+			ParticleVariable<double>::getTypeDescription() );
   
   //PermanentParticleState
   pDeformationMeasureLabel = VarLabel::create("p.deformationMeasure",
@@ -524,7 +530,6 @@ MPMLabel::MPMLabel()
   gNormalRotAccLabel = VarLabel::create( "g.normalRotAcc",
 		     NCVariable<Vector>::getTypeDescription());
 
-
 } 
 
 MPMLabel::~MPMLabel()
@@ -722,4 +727,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gNormalRotMomentLabel); 
   VarLabel::destroy(gNormalRotMassLabel); 
   VarLabel::destroy(gNormalRotAccLabel); 
+  
+   // particle Debugging labels
+  VarLabel::destroy(pColorLabel);
+  VarLabel::destroy(pColorLabel_preReloc); 
 }
