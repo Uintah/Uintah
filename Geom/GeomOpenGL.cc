@@ -854,11 +854,16 @@ void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 #ifndef linux
 	  glConvolutionFilter2DEXT(GL_CONVOLUTION_2D_EXT,
-				   GL_INTENSITY_EXT,
+				   GL_INTENSITY,
+				   /* MS 24.2.99:
+				      changed from GL_INTENSITY_EXT, since
+				      this is not in the Mesa header file,
+				      and GL_INTENSITY has the same numerical
+				      value as GL_INTENSITY_EXT (0x8049) */
 				   conv_dim,conv_dim,
 				   GL_FLOAT,GL_RED,conv_data);
 	  
-	  glTexImage2D(GL_TEXTURE_2D,0,GL_INTENSITY_EXT,
+	  glTexImage2D(GL_TEXTURE_2D,0,GL_INTENSITY, /* MS 24.2.99: as above */
 		       tmap_size,tmap_size,
 		       0,GL_RED,GL_UNSIGNED_BYTE,tmapdata);
 #endif
