@@ -211,7 +211,9 @@ endif
 .cc.o: $<
 	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 ifeq ($(CC_DEPEND_REGEN),-MD)
-	mv $(basename $(notdir $@)).d $(basename $@).d
+	echo -n "$(dir $@)" > $(basename $@).d
+	cat $(basename $(notdir $@)).d >> $(basename $@).d
+	rm $(basename $(notdir $@)).d 
 endif
 
 .F.o: $<
@@ -382,8 +384,6 @@ else
 
 endif
 
-#
-# $Log$
 # Revision 1.43  2000/09/14 20:46:22  yarden
 # fix the make dependency for the depend.mk files if we compile on
 # a binary tree. (fix by sparker)
