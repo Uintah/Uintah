@@ -87,7 +87,7 @@ void IPort::update_light()
 	color="blue";
 	break;
     case Finishing:
-	color="dark violet";
+	color="\"dark violet\"";
 	break;
     case On:
 	color="red";

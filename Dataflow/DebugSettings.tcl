@@ -21,8 +21,7 @@ proc showDebugSettings {} {
 	pack .dsw.canvas.frame
 	.dsw.canvas create window 0 0 -window .dsw.canvas.frame -anchor nw
 
-	scrollbar .dsw.scroll -relief sunken -command ".dsw.canvas yview" \
-		-foreground plum2 -activeforeground SteelBlue2
+	scrollbar .dsw.scroll -relief sunken -command ".dsw.canvas yview"
 	pack .dsw.scroll -fill y -side right -padx 2 -pady 2
 
 	set ds [debugsettings]
@@ -56,8 +55,7 @@ proc junk {} {
     canvas .dsw.canvas -yscroll ".dsw.vscroll set" \
 	    -scrollregion {0c 0c 8c 50c} \
 	    -width 8c -height 8c
-    scrollbar .dsw.vscroll -relief sunken -command ".dsw.canvas yview" \
-	    -foreground plum2 -activeforeground SteelBlue2
+    scrollbar .dsw.vscroll -relief sunken -command ".dsw.canvas yview"
     pack .dsw.vscroll -side right -fill y -padx 4 -pady 4
     pack .dsw.canvas -expand yes -fill y -pady 4
     set lineheight [winfo pixels .dsw.canvas 8p]

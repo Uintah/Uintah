@@ -10,8 +10,7 @@ proc showThreadStats {} {
 	canvas .tsw.canvas -yscroll ".tsw.vscroll set" \
 		-scrollregion {0c 0c 8c 50c} \
 		-width 8c -height 8c
-	scrollbar .tsw.vscroll -relief sunken -command ".tsw.canvas yview" \
-		-foreground plum2 -activeforeground SteelBlue2
+	scrollbar .tsw.vscroll -relief sunken -command ".tsw.canvas yview"
 	pack .tsw.vscroll -side right -fill y -padx 4 -pady 4
 	pack .tsw.canvas -expand yes -fill y -pady 4
 	set lineheight [winfo pixels .tsw.canvas 8p]
