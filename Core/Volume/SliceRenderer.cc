@@ -641,7 +641,7 @@ SliceRenderer::multi_level_draw()
   }
 //    for(unsigned int j = 0; j < levels; ++j ){
   bool draw_z = false;
-  double t;
+  //  double t;
   if(draw_cyl_) {
     const double to_rad = M_PI / 180.0;
     BBox bb;
@@ -660,7 +660,7 @@ SliceRenderer::multi_level_draw()
 	glStencilMask(1);
       }
 
-      for(unsigned int j = 0; j < levels; ++j ){
+      for(int j = 0; j < levels; ++j ){
 	if(!draw_level_[j]) continue;
 	vector<TextureBrick*>& bs  = blevels[j];
 	
@@ -706,7 +706,7 @@ SliceRenderer::multi_level_draw()
 	glStencilMask(1);
       }
 
-      for(unsigned int j = 0; j < levels; ++j ){
+      for(int j = 0; j < levels; ++j ){
 	if(!draw_level_[j]) continue;
 	vector<TextureBrick*>& bs  = blevels[j];
 	
@@ -751,7 +751,7 @@ SliceRenderer::multi_level_draw()
 	glStencilMask(1);
       }
 
-      for(unsigned int j = 0; j < levels; ++j ){
+      for(int j = 0; j < levels; ++j ){
 	if(!draw_level_[j]) continue;
 	vector<TextureBrick*>& bs  = blevels[j];
 	    
@@ -793,7 +793,7 @@ SliceRenderer::multi_level_draw()
 	  glStencilMask(1);
 	}
 
-	for(unsigned int j = 0; j < levels; ++j ){
+	for(int j = 0; j < levels; ++j ){
 	  if(!draw_level_[j]) continue;
 	  vector<TextureBrick*>& bs  = blevels[j];
 	  
@@ -843,7 +843,7 @@ SliceRenderer::multi_level_draw()
 	  glStencilMask(1);
 	}
 
-	for(unsigned int j = 0; j < levels; ++j ){
+	for(int j = 0; j < levels; ++j ){
 	  if(!draw_level_[j]) continue;
 	  vector<TextureBrick*>& bs  = blevels[j];
 
@@ -898,7 +898,7 @@ SliceRenderer::multi_level_draw()
       glStencilMask(1);
     }
 
-    for(unsigned int j = 0; j < levels; ++j ){
+    for(int j = 0; j < levels; ++j ){
       if(!draw_level_[j]) continue;
       vector<TextureBrick*>& bs  = blevels[j];
 
