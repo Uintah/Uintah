@@ -542,7 +542,7 @@ void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
 	    if (mag < 0.00001) { // arbitrary ad-hoc threshold
 		inertia_mode = 0;
 		need_redraw = 1;
-		cerr << mag << " " << prev_time[0] - prev_time[index] << endl;
+//		cerr << mag << " " << prev_time[0] - prev_time[index] << endl;
 	    }
 	    else {
 		double c = 1.0/mag;
@@ -1196,6 +1196,9 @@ void Roe::getData(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.10  1999/11/19 05:44:15  dmw
+// commented out performance reporting so we dont get so many printouts from Salmon
+//
 // Revision 1.9  1999/11/16 00:47:26  yarden
 // put "#ifdef __sgi" around code for BAWGL
 //
