@@ -2163,7 +2163,6 @@ case SCIRun2 in
     sci_check_netsolve=yes
   ;;
   rtrt)
-    sci_check_teem=yes
     sci_check_glut=yes
     sci_check_glui=yes
     sci_check_oogl=yes
@@ -2251,7 +2250,6 @@ case $i in
     sci_check_netsolve=yes
   ;;
   rtrt)
-    sci_check_teem=yes
     sci_check_glut=yes
     sci_check_glui=yes
     sci_check_oogl=yes
@@ -3741,7 +3739,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3744:" \
+echo "$as_me:3742:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
