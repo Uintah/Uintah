@@ -154,5 +154,21 @@
       <creationFunction>make_ArchiveReader</creationFunction>
     </implementation>
   </dataflow-component>
+  <dataflow-component name="KurtScalarFieldReader">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs> ScalarField </outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_KurtScalarFieldReader</creationFunction>
+    </implementation>
+  </dataflow-component>
   </scirun-library>
 </package>
