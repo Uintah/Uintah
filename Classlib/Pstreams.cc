@@ -4,6 +4,9 @@
  *
  *  Written by:
  *   Steven G. Parker
+ *  Modified by:
+ *   Michelle Miller 
+ *   Thu Feb 19 17:04:59 MST 1998
  *   Department of Computer Science
  *   University of Utah
  *   April 1994
@@ -51,6 +54,27 @@ TextPiostream::TextPiostream(const clString& filename, Direction dir)
 	}
 	out << "SCI\nASC\n" << PERSISTENT_VERSION << "\n";
 	version=PERSISTENT_VERSION;
+    }
+}
+
+TextPiostream::TextPiostream(int fd, Direction dir)
+: Piostream(dir, -1)
+{
+    if(dir==Read){
+        ostr=0;
+        istr=0;
+        cerr << "TextPiostream CTOR not finished...\n";
+    } else {
+        istr=0;
+        ostr=scinew ofstream(fd);
+        ofstream& out=*ostr;
+        if(!out){
+            cerr << "Error opening file descriptor: " << fd << " for writing\n";
+            err=1;
+            return;
+        }
+        out << "SCI\nASC\n" << PERSISTENT_VERSION << "\n";
+        version=PERSISTENT_VERSION;
     }
 }
 
@@ -534,10 +558,12 @@ BinaryPiostream::BinaryPiostream(ifstream* istr, int version)
     int fd=istr->rdbuf()->fd();
     xdr=scinew XDR;
 #ifdef SCI_NOMMAP_IO
+    mmapped = false;
     fp=fdopen(istr->rdbuf()->fd(), "r");
     rewind(fp);
     xdrstdio_create(xdr, fp, XDR_DECODE);
 #else
+    mmapped = true;
     struct stat buf;
     if(fstat(fd, &buf) != 0){
 	perror("fstat");
@@ -559,27 +585,59 @@ BinaryPiostream::BinaryPiostream(ifstream* istr, int version)
     }
 }
 
+BinaryPiostream::BinaryPiostream (int fd, Direction dir)
+: Piostream (dir, -1), have_peekname(0)
+{
+    char hdr[100];
+    mmapped = false;
+    xdr = scinew XDR;
+    if (dir == Read){
+   	fp = fdopen (fd, "r");
+      	if(!fp){
+           cerr << "Error opening file descriptor: " << fd << " for reading\n";
+           err=1;
+           return;
+  	}
+	xdrstdio_create (xdr, fp, XDR_DECODE);
+    } else {
+    	fp = fdopen (fd, "w");
+        if(!fp){
+       	   cerr << "Error opening file descriptor: " << fd << " for writing\n";
+           err=1;
+           return;
+       	}
+   	xdrstdio_create (xdr, fp, XDR_ENCODE);
+       	version=PERSISTENT_VERSION;
+        sprintf(hdr, "SCI\nBIN\n%03d\n", version);
+    }
+
+    // verify header can be translated 
+    if(!xdr_opaque(xdr, (caddr_t)hdr, 12)){
+        cerr << "xdr_opaque failed\n";
+        err=1;
+        return;
+    }
+}
+
 BinaryPiostream::~BinaryPiostream()
 {
     cancel_timers();
     if(xdr){
 	xdr_destroy(xdr);
 	delete xdr;
-	if(dir==Read){
-#ifdef SCI_NOMMAP_IO
-#else
+	if(dir==Read && mmapped){
 	    if(munmap((caddr_t)addr, len) != 0){
 		perror("munmap");
 		exit(-1);
 	    }
 	}
-#endif
     }
 }
 
 BinaryPiostream::BinaryPiostream(const clString& filename, Direction dir)
 : Piostream(dir, -1), have_peekname(0)
 {
+    mmapped = false;
     if(dir==Read){
 	fp=0;
 	xdr=0;

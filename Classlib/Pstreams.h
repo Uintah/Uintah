@@ -27,12 +27,14 @@ class BinaryPiostream : public Piostream {
     void* addr;
     int len;
     XDR* xdr;
+    bool mmapped;
     virtual void emit_pointer(int&, int&);
     int have_peekname;
     clString peekname;
     virtual double get_percent_done();
 public:
     BinaryPiostream(const clString& filename, Direction dir);
+    BinaryPiostream(int fd, Direction dir);
     BinaryPiostream(ifstream*, int);
 
     virtual ~BinaryPiostream();
@@ -67,6 +69,7 @@ class TextPiostream : public Piostream {
     virtual double get_percent_done();
 public:
     TextPiostream(const clString& filename, Direction dir);
+    TextPiostream(int fd, Direction dir);
     TextPiostream(ifstream*, int);
     virtual ~TextPiostream();
     virtual clString peek_class();

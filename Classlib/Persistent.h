@@ -14,6 +14,8 @@
 #ifndef SCI_project_Persistent_h
 #define SCI_project_Persistent_h 1
 
+#include <fstream.h>
+
 class clString;
 class Persistent;
 #ifdef __GNUG__
@@ -81,6 +83,8 @@ public:
 };
 
 Piostream* auto_istream(const clString& filename);
+Piostream* auto_istream(int fd);
+Piostream* auto_istream(ifstream* inp);
 
 class Persistent {
 public:

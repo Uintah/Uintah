@@ -189,34 +189,45 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 Piostream* auto_istream(const clString& filename)
 {
     ifstream* inp=scinew ifstream(filename());
+    return auto_istream(inp);
+}
+
+Piostream* auto_istream(int fd)
+{
+    ifstream* inp=scinew ifstream(fd);
+    return auto_istream(inp);
+}
+
+Piostream* auto_istream(ifstream* inp)
+{
     ifstream& in=(*inp);
     if(!in){
-	cerr << "file not found: " << filename << endl;
+	cerr << "file not found: " << inp->rdbuf()->fd() << endl;
 	return 0;
     }
     char m1, m2, m3, m4;
     // >> Won't work here - it eats white space...
     in.get(m1); in.get(m2); in.get(m3); in.get(m4);
     if(!in || m1 != 'S' || m2 != 'C' || m3 != 'I' || m4 != '\n'){
-	cerr << filename << " is not a valid SCI file! (magic=" << m1 << m2 << m3 << m4 << ")\n";
+	cerr << inp->rdbuf()->fd() << " is not a valid SCI file! (magic=" << m1 << m2 << m3 << m4 << ")\n";
 	return 0;
     }
     in.get(m1); in.get(m2); in.get(m3); in.get(m4);
     if(!in){
-	cerr << "Error reading file: " << filename << " (while readint type)" << endl;
+	cerr << "Error reading file: " << inp->rdbuf()->fd() << " (while readint type)" << endl;
 	return 0;
     }
     int version;
     in >> version;
     if(!in){
-	cerr << "Error reading file: " << filename << " (while reading version)" << endl;
+	cerr << "Error reading file: " << inp->rdbuf()->fd() << " (while reading version)" << endl;
 	return 0;
     }
     char m;
     do {
 	in.get(m);
 	if(!in){
-	    cerr << "Error reading file: " << filename << " (while reading newline)" << endl;
+	    cerr << "Error reading file: " << inp->rdbuf()->fd() << " (while reading newline)" << endl;
 	    return 0;
 	}
     } while(m != '\n');
@@ -225,7 +236,7 @@ Piostream* auto_istream(const clString& filename)
     } else if(m1 == 'A' && m2 == 'S' && m3 == 'C'){
 	return scinew TextPiostream(inp, version);
     } else {
-	cerr << filename << " is an unknown type!\n";
+	cerr << inp->rdbuf()->fd() << " is an unknown type!\n";
 	return 0;
     }
 }
