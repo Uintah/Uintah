@@ -15,6 +15,7 @@
 #include <Core/Datatypes/TetVolField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Geometry/Plane.h>
 #include <iostream>
 #include <sstream>
 
@@ -25,13 +26,13 @@ using namespace SCIRun;
 class InsertElectrodes : public Module {
   void insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet,
 				TetVolMeshHandle mesh,
-				Array1<Point> &inner,
-				Array1<Point> &outer,
+				const vector<Point> &inner,
+				const vector<Point> &outer,
 				int both_sides_active,
 				double voltage,
 				TetVolMesh* electrodeElements);
   bool point_in_loop(const Point &pt, 
-		     const Array1<Point> &contour, 
+		     const vector<Point> &contour, 
 		     const Plane &pl);
 
 public:
@@ -44,8 +45,8 @@ public:
 DECLARE_MAKER(InsertElectrodes)
 
 
-InsertElectrodes::InsertElectrodes(GuiContext *context)
-: Module("InsertElectrodes", context, Filter, "Forward", "BioPSE")
+  InsertElectrodes::InsertElectrodes(GuiContext *context)
+    : Module("InsertElectrodes", context, Filter, "Forward", "BioPSE")
 {
 }
 
@@ -53,13 +54,19 @@ InsertElectrodes::~InsertElectrodes()
 {
 }
 
-bool InsertElectrodes::point_in_loop(const Point &pt,
-				    const Array1<Point> &contour,
-				    const Plane &pl) {
+
+
+bool
+InsertElectrodes::point_in_loop(const Point &pt,
+				const vector<Point> &contour,
+				const Plane &pl)
+{
   Vector v1, v2, v3;
-  int i;
+  unsigned int i;
   double angle, sum=0;
-  for (i=0; i<contour.size()-1; i++) {
+  if (contour.size() == 0) return false;
+  for (i=0; i<contour.size()-1; i++)
+  {
     v1=pt-contour[i];
     v2=pt-contour[i+1];
     v1.normalize();
@@ -75,27 +82,36 @@ bool InsertElectrodes::point_in_loop(const Point &pt,
   // sum is now between 0 and 1.99999
   if (sum > 0.8 && sum < 1.2) return true;
   else if (sum < 0.2 || sum > 1.8) return false;
-  else {
+  else
+  {
     cerr << "Error -- point in loop was: "<<sum<<"\n";
     return false;
   }
 }
 
-void InsertElectrodes::insertContourIntoTetMesh(
-			        vector<pair<int, double> > &dirichlet,
-				TetVolMeshHandle tet_mesh,
-				Array1<Point> &inner,
-				Array1<Point> &outer,
-				int both_sides_active,
-				double voltage,
-				TetVolMesh* electrodeElements) {
-//  cerr << "entering insertCountourIntoTetMesh\n";
+
+
+void
+InsertElectrodes::insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet,
+					   TetVolMeshHandle tet_mesh,
+					   const vector<Point> &inner,
+					   const vector<Point> &outer,
+					   int both_sides_active,
+					   double voltage,
+					   TetVolMesh* electrodeElements)
+{
+  //  cerr << "entering insertCountourIntoTetMesh\n";
   Plane electrode_plane;
-  if (Cross(inner[1]-inner[0], inner[1]-inner[2]).length2()>1.e-5) {
+  if (Cross(inner[1]-inner[0], inner[1]-inner[2]).length2()>1.e-5)
+  {
     electrode_plane=Plane(inner[1], inner[0], inner[2]);
-  } else if (Cross(inner[1]-inner[0], inner[1]-inner[3]).length2()>1.e-5) {
+  }
+  else if (Cross(inner[1]-inner[0], inner[1]-inner[3]).length2()>1.e-5)
+  {
     electrode_plane=Plane(inner[1], inner[0], inner[3]);
-  } else {
+  }
+  else
+  {
     cerr << "InsertElectrode ERROR - FIRST FOUR INNER NODES OF THE ELEC ARE COLINEAR!\n";
     return;
   }
@@ -106,55 +122,66 @@ void InsertElectrodes::insertContourIntoTetMesh(
   tet_mesh->size(nnodes);
 
   TetVolMesh::Node::array_type tet_nodes;
-  Array1<int> is_electrode_node(nnodes); // -1:unknown, 0:no, 1:outer, 2:inner
-  is_electrode_node.initialize(-1);
-  Array1<TetVolMesh::Node::index_type> electrode_nodes;
-  Array1<TetVolMesh::Node::index_type> electrode_node_split_idx(nnodes);
+  vector<int> is_electrode_node(nnodes, -1); // -1:unknown, 0:no, 1:outer, 2:inner
+  vector<TetVolMesh::Node::index_type> electrode_nodes;
+  vector<TetVolMesh::Node::index_type> electrode_node_split_idx(nnodes);
 
   TetVolMesh::Cell::iterator tet_cell_idx, tet_cell_idx_end;
   tet_mesh->begin(tet_cell_idx); tet_mesh->end(tet_cell_idx_end);
-  while (tet_cell_idx != tet_cell_idx_end) {
+  while (tet_cell_idx != tet_cell_idx_end)
+  {
     tet_mesh->get_nodes(tet_nodes, *tet_cell_idx);
     int all_nodes_above_plane=1, all_nodes_below_plane=1;
-    Array1<Point> tet_node_pts(4);
+    vector<Point> tet_node_pts(4);
     double signed_distance[4];
-    Array1<TetVolMesh::Node::index_type> projections;
-    for (int ii=0; ii<4; ii++) {
+    vector<TetVolMesh::Node::index_type> projections;
+    for (int ii=0; ii<4; ii++)
+    {
       tet_mesh->get_center(tet_node_pts[ii], tet_nodes[ii]);
       signed_distance[ii]=electrode_plane.eval_point(tet_node_pts[ii]);
-      if (signed_distance[ii] > 0) {
+      if (signed_distance[ii] > 0)
+      {
 	all_nodes_above_plane = 0;
-      } else {
+      }
+      else
+      {
 	all_nodes_below_plane = 0;
-	projections.add(tet_nodes[ii]);
+	projections.push_back(tet_nodes[ii]);
       }
     }
     if (!all_nodes_below_plane && 
-	!all_nodes_above_plane) { // cell was intersected by plane...
+	!all_nodes_above_plane)
+    { // cell was intersected by plane...
       
       // check to see if projected nodes are inside the electrode
-      int idx;
-      for (idx=0; idx<projections.size(); idx++) {
+      unsigned int idx;
+      for (idx=0; idx<projections.size(); idx++)
+      {
 	Point p;
 	TetVolMesh::Node::index_type nidx(projections[idx]);
 	tet_mesh->get_center(p, nidx);
 	p = electrode_plane.project(p);
-	if (point_in_loop(p, inner, electrode_plane)) {
-	  if (is_electrode_node[nidx] == -1) {
+	if (point_in_loop(p, inner, electrode_plane))
+	{
+	  if (is_electrode_node[nidx] == -1)
+	  {
 	    is_electrode_node[nidx] = 2;
-	    electrode_nodes.add(nidx);
+	    electrode_nodes.push_back(nidx);
 	  }
 	}
       }
-      for (idx=0; idx<projections.size(); idx++) {
+      for (idx=0; idx<projections.size(); idx++)
+      {
 	Point p;
 	TetVolMesh::Node::index_type nidx(projections[idx]);
 	tet_mesh->get_center(p, nidx);
 	p = electrode_plane.project(p);
-	if (point_in_loop(p, outer, electrode_plane)) {
-	  if (is_electrode_node[nidx] == -1) {
+	if (point_in_loop(p, outer, electrode_plane))
+	{
+	  if (is_electrode_node[nidx] == -1)
+	  {
 	    is_electrode_node[nidx] = 1;
-	    electrode_nodes.add(nidx);
+	    electrode_nodes.push_back(nidx);
 	  }
 	}
       }
@@ -163,17 +190,19 @@ void InsertElectrodes::insertContourIntoTetMesh(
   }
 
   // project electrode nodes to plane, split them, and set Dirichlet
-  int i;
-//  cerr << "Electrode nodes: \n";
-  for (i=0; i<electrode_nodes.size(); i++) {
+  unsigned int i;
+  //  cerr << "Electrode nodes: \n";
+  for (i=0; i<electrode_nodes.size(); i++)
+  {
     Point pt;
     TetVolMesh::Node::index_type ni = electrode_nodes[i];
     tet_mesh->get_center(pt, ni);
     Point proj_pt = electrode_plane.project(pt);
     tet_mesh->set_point(proj_pt, ni);
     electrode_node_split_idx[ni] = tet_mesh->add_point(proj_pt);
-//    cerr << "  "<<i<<" index="<<(int)(ni) <<" (copy index="<<(int)(electrode_node_split_idx[ni])<<"), is_elec_nodes="<<is_electrode_node[electrode_nodes[i]]<<"\n";
-    if (is_electrode_node[electrode_nodes[i]] == 2) {
+    //    cerr << "  "<<i<<" index="<<(int)(ni) <<" (copy index="<<(int)(electrode_node_split_idx[ni])<<"), is_elec_nodes="<<is_electrode_node[electrode_nodes[i]]<<"\n";
+    if (is_electrode_node[electrode_nodes[i]] == 2)
+    {
       dirichlet.push_back(pair<int,double>(electrode_node_split_idx[ni], 
 					   voltage));
       if (both_sides_active)
@@ -184,54 +213,68 @@ void InsertElectrodes::insertContourIntoTetMesh(
   // set elements above the plane to point to new split node
   TetVolMesh::Cell::iterator ci, ce;
   tet_mesh->begin(ci); tet_mesh->end(ce);
-  while (ci != ce) {
+  while (ci != ce)
+  {
     tet_mesh->get_nodes(tet_nodes, *ci);
     int have_any =0 ;
-    for (i=0; i<4; i++) {
+    for (i=0; i<4; i++)
+    {
       if (is_electrode_node[tet_nodes[i]] > 0) have_any = 1;
     }
-    if (have_any) {
-//      cerr << "Touching element ("<<(int)(*ci)<<") ";
+    if (have_any)
+    {
+      //      cerr << "Touching element ("<<(int)(*ci)<<") ";
       Point centroid;
       tet_mesh->get_center(centroid, *ci);
       double centroid_dist = electrode_plane.eval_point(centroid);
-      if (centroid_dist>0) {
-//	cerr << "above plane";
-	if (electrodeElements) {
+      if (centroid_dist>0)
+      {
+	//	cerr << "above plane";
+	if (electrodeElements)
+	{
 	  Point pts[4];
 	  for (i=0; i<4; i++) tet_mesh->get_point(pts[i], tet_nodes[i]);
 	  electrodeElements->add_tet(pts[0], pts[1], pts[2], pts[3]);
 	}
 	int remap=0;
-	for (i=0; i<4; i++) {
-	  if (is_electrode_node[tet_nodes[i]] > 0) {
+	for (i=0; i<4; i++)
+	{
+	  if (is_electrode_node[tet_nodes[i]] > 0)
+	  {
 	    remap++;
 	    tet_nodes[i] = electrode_node_split_idx[tet_nodes[i]];
 	  }
 	}
-//	cerr << " ("<<remap<<")";
+	//	cerr << " ("<<remap<<")";
 	tet_mesh->set_nodes(tet_nodes, *ci);
       }
-//      cerr << "\n";
+      //      cerr << "\n";
     }
     ++ci;
   }
   tet_mesh->recompute_connectivity();
 }
 
-void InsertElectrodes::execute() {
+
+
+void
+InsertElectrodes::execute()
+{
   FieldIPort* imesh = (FieldIPort *) get_iport("TetMesh");
   FieldOPort* omesh = (FieldOPort *) get_oport("TetMesh");
-  if (!imesh) {
+  if (!imesh)
+  {
     postMessage("Unable to initialize "+name+"'s imesh port\n");
     return;
   }
-  if (!omesh) {
+  if (!omesh)
+  {
     postMessage("Unable to initialize "+name+"'s omesh port\n");
     return;
   }
   FieldOPort* oelec = (FieldOPort *) get_oport("ElectrodeElements");
-  if (!oelec) {
+  if (!oelec)
+  {
     postMessage("Unable to initialize "+name+"'s oelec port\n");
     return;
   }
@@ -240,11 +283,13 @@ void InsertElectrodes::execute() {
 
   if (!imesh->get(imeshH))
     return;
-  if (!imeshH.get_rep()) {
+  if (!imeshH.get_rep())
+  {
     cerr << "InsertElectrodes: error - empty input mesh.\n";
     return;
   }
-  if (!(dynamic_cast<TetVolField<int>*>(imeshH.get_rep()))) {
+  if (!(dynamic_cast<TetVolField<int>*>(imeshH.get_rep())))
+  {
     cerr << "InsertElectrodes: error - input FEM wasn't a TetVolField<int>\n";
     return;
   }
@@ -257,57 +302,63 @@ void InsertElectrodes::execute() {
   string units;
   if (imeshH->mesh()->get_property("units", units)) have_units=1;
 
-  for (int ii=0; ii<conds.size(); ii++) {
-//    cerr << "New conds ["<<ii<<"] = "<<(*newConds)[ii].first<<" , "<<(*newConds)[ii].second<<"\n";
+  for (unsigned int ii=0; ii<conds.size(); ii++)
+  {
+    //    cerr << "New conds ["<<ii<<"] = "<<(*newConds)[ii].first<<" , "<<(*newConds)[ii].second<<"\n";
   }
 
   port_range_type range = get_iports("Electrodes");
-  if (range.first != range.second) {
-//    cerr << "Cloning data...\n";
+  if (range.first != range.second)
+  {
+    //    cerr << "Cloning data...\n";
     // get our own local copy of the Field and mesh
 
-//    cerr << "Mesh pointer before = "<<imeshH->mesh().get_rep()<<"\n";
+    //    cerr << "Mesh pointer before = "<<imeshH->mesh().get_rep()<<"\n";
     imeshH.detach();
-//    cerr << "Cloning mesh...\n";
+    //    cerr << "Cloning mesh...\n";
     imeshH->mesh_detach();
-//    cerr << "Done cloning!\n";
-//    cerr << "Mesh pointer after = "<<imeshH->mesh().get_rep()<<"\n";
+    //    cerr << "Done cloning!\n";
+    //    cerr << "Mesh pointer after = "<<imeshH->mesh().get_rep()<<"\n";
 
     TetVolField<int> *field = dynamic_cast<TetVolField<int>*>(imeshH.get_rep());
     TetVolMeshHandle mesh = field->get_typed_mesh();
     TetVolMeshHandle elecElemsH;
     port_map_type::iterator pi = range.first;
-    while (pi != range.second) {
+    while (pi != range.second)
+    {
       FieldIPort *ielec = (FieldIPort *)get_iport(pi->second);
-      if (!ielec->get(ielecH) || !ielecH.get_rep()) {
+      if (!ielec->get(ielecH) || !ielecH.get_rep())
+      {
 	++pi;
 	continue;
       }
 
       CurveField<double> *elecFld = 
 	dynamic_cast<CurveField<double>*>(ielecH.get_rep());
-      if (!elecFld) {
+      if (!elecFld)
+      {
 	cerr << "InsertElectrodes: error - input electrode wasn't a CurveField<double>\n";
 	++pi;
 	continue;
       }
       double voltage = elecFld->fdata()[0];
       CurveMeshHandle elecMesh(elecFld->get_typed_mesh());
-      Array1<Point> outer;
-      Array1<Point> inner;
+      vector<Point> outer;
+      vector<Point> inner;
       CurveMesh::Node::iterator ni, ne;
       elecMesh->begin(ni);
       elecMesh->end(ne);
       for (int i=0; i<6; i++) ++ni; // the first six nodes are the handle
-      while(ni != ne) {
+      while(ni != ne)
+      {
 	Point p;
 	elecMesh->get_center(p, *ni);
-	if (elecFld->fdata()[*ni] == 0) inner.add(p);
-	else outer.add(p);
+	if (elecFld->fdata()[*ni] == 0) inner.push_back(p);
+	else outer.push_back(p);
 	++ni;
       }
-      inner.add(inner[0]);
-      outer.add(outer[0]);
+      inner.push_back(inner[0]);
+      outer.push_back(outer[0]);
 
       TetVolMesh* electrodeElements = 0;
       if (pi == range.first) electrodeElements = scinew TetVolMesh;
@@ -327,14 +378,19 @@ void InsertElectrodes::execute() {
     imeshH->set_property("conductivity_table", conds, false);
     if (have_units) imeshH->mesh()->set_property("units", units, false);
     omesh->send(imeshH);
-    if (elecElemsH.get_rep()) {
+    if (elecElemsH.get_rep())
+    {
       TetVolField<double>* elec = scinew TetVolField<double>(elecElemsH, Field::NODE);
       FieldHandle elecH(elec);
       oelec->send(elecH);
     }
-  } else {
+  }
+  else
+  {
     cerr << "Error - unable to get electrode.\n";
     omesh->send(imeshH);
   }
 }
+
+
 } // End namespace BioPSE
