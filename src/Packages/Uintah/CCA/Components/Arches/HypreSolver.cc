@@ -84,9 +84,13 @@ HypreSolver::problemSetup(const ProblemSpecP& params)
   if (db->findBlock("res_tol"))
     db->require("res_tol", d_residual);
   else
-    d_underrelax = 1.0e-7;;
-
-
+    d_underrelax = 1.0e-7;
+  /*
+  db->getWithDefault("max_iter", d_maxSweeps, 75);
+  db->getWithDefault("ksptype", d_kspType, 11);
+  db->getWithDefault("underrelax", d_underrelax, 1.0);
+  db->getWithDefault("res_tol", d_residual, 1.0e-7);
+  */
 }
 
 
@@ -163,7 +167,7 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   ny = idxHi.y() - idxLo.y() + 1;
   nz = idxHi.z() - idxLo.z() + 1;
      
-  int d_A_num_ghost[6] = {0, 0, 0, 0, 0, 0};
+  //  int d_A_num_ghost[6] = {0, 0, 0, 0, 0, 0};
 
   d_volume  = nx*ny*nz;    //number of nodes per processor
   bx = 1;
@@ -199,13 +203,13 @@ HypreSolver::gridSetup(const ProcessorGroup*,
       d_ilower[i] = hypre_CTAlloc(int, d_dim);
       d_iupper[i] = hypre_CTAlloc(int, d_dim);
     }
-
+  /*
   for (int i = 0; i < d_dim; i++)
     {
      d_A_num_ghost[2*i] = 1;
      d_A_num_ghost[2*i + 1] = 1;
     }
-  
+  */
   /* compute d_ilower and d_iupper from (p,q,r), (bx,by,bz), and (nx,ny,nz) */
   int ib = 0;
   
@@ -340,7 +344,7 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
 
   HYPRE_StructMatrixCreate(MPI_COMM_WORLD, d_grid, d_stencil, &d_A);
   HYPRE_StructMatrixSetSymmetric(d_A, 1);
-  HYPRE_StructMatrixSetNumGhost(d_A, d_A_num_ghost);
+  //  HYPRE_StructMatrixSetNumGhost(d_A, d_A_num_ghost);
   HYPRE_StructMatrixInitialize(d_A); 
 
    /*-----------------------------------------------------------
