@@ -77,6 +77,12 @@ WARNING
       FILTER_BOX
     };
 
+    void Dilate2(const ProcessorGroup*,
+		const PatchSubset* patches,
+		const MaterialSubset* ,
+		DataWarehouse* old_dw,
+		DataWarehouse* new_dw);
+
   protected:
      SimulationStateP d_sharedState; ///< to keep track of timesteps
      bool d_isAdaptive; //!< if true, do not regrid (stick with what you got)
