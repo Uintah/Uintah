@@ -98,11 +98,7 @@ proc makeRoe {salmon rid} {
     button $w.bframe.v.sethome -text "Set Home View" -padx 2 \
 	    -command "$rid sethome"
     pack $w.bframe.v.sethome -fill x -pady 2
-<<<<<<< Salmon.tcl
-    button $w.bframe.v.gohome -text "Go home" -command "$rid goHome"
-=======
     button $w.bframe.v.gohome -text "Go home" -command "$rid gohome"
->>>>>>> 1.5
     pack $w.bframe.v.gohome -fill x -pady 2
 
     button $w.bframe.more -text "+" -padx 3 \
@@ -152,37 +148,17 @@ proc addMFrame {w rid} {
     pack $m.shade -anchor w -padx 2 -side left
     label $m.shade.title -text "Shading:" -anchor w -relief flat 
     pack $m.shade.title -fill x -padx 2
-<<<<<<< Salmon.tcl
-    global shade
-    radiobutton $m.shade.wire -text "Wire" -anchor w -relief flat \
-	    -variable shade($rid)
-=======
     radiobutton $m.shade.wire -text "Wire" -anchor w -relief flat \
 	    -variable shading,$rid -command $r
->>>>>>> 1.5
     pack $m.shade.wire -fill x -padx 2
-<<<<<<< Salmon.tcl
-    radiobutton $m.shade.flat -text "Flat" -anchor w -relief flat \
-	    -variable shade($rid)
-=======
     radiobutton $m.shade.flat -text "Flat" -anchor w -relief flat \
 	    -variable shading,$rid -command $r
->>>>>>> 1.5
     pack $m.shade.flat -fill x -padx 2
     radiobutton $m.shade.gouraud -text "Gouraud" -anchor w -relief flat \
-<<<<<<< Salmon.tcl
-	    -padx 2 -variable shade($rid)
-=======
 	    -padx 2 -variable shading,$rid -command $r
->>>>>>> 1.5
     pack $m.shade.gouraud -fill x -padx 2
-<<<<<<< Salmon.tcl
-    radiobutton $m.shade.phong -text "Phong" -anchor w -relief flat \
-	    -variable shade($rid)
-=======
     radiobutton $m.shade.phong -text "Phong" -anchor w -relief flat \
 	    -variable shading,$rid -command $r
->>>>>>> 1.5
     pack $m.shade.phong -fill x -padx 2
     $m.shade.gouraud select
 

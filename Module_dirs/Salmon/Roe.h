@@ -66,7 +66,8 @@ class Roe : public TCL {
     GeomPick* pick_pick;
     GeomObj* pick_obj;
 
-    void update_mode_string(const clString&);
+    void update_mode_string(const char*);
+    char* modebuf;
 public:
     clString id;
 

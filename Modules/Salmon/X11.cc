@@ -178,8 +178,6 @@ void X11::redraw(Salmon* salmon, Roe* roe)
     double znear;
     double zfar;
     if(compute_depth(roe, view, znear, zfar)){
-	znear=1.0;
-	zfar=2.0;
 	Transform trans;
 	trans.load_identity();
 	trans.perspective(view.eyep, view.lookat,
@@ -194,11 +192,11 @@ void X11::redraw(Salmon* salmon, Roe* roe)
 	AVLTree<double, GeomObj*> objs;
 	for(int i=0;i<free.size();i++){
 	    GeomObj* obj=free[i];
-	    objs.insert(obj->depth(drawinfo), obj);
+	    objs.insert(-obj->depth(drawinfo), obj);
 	}
 	for(i=0;i<dontfree.size();i++){
 	    GeomObj* obj=dontfree[i];
-	    objs.insert(obj->depth(drawinfo), obj);
+	    objs.insert(-obj->depth(drawinfo), obj);
 	}
 
 	AVLTreeIter<double, GeomObj*> iter(&objs);
