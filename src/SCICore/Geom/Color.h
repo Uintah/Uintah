@@ -59,7 +59,18 @@ public:
     inline void g( const float v ) { _g = v; }
     inline void b( const float v ) { _b = v; }
 
-    inline double& operator[](const int i) {   
+    inline double& operator[](int i) {   
+      switch (i) {
+      case 0:
+	return _r;
+      case 1:
+	return _g;
+      default:
+	return _b;
+      }
+    }
+    inline const double& operator[](int i) const
+    {
       switch (i) {
       case 0:
 	return _r;
@@ -156,6 +167,10 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 21:45:26  sparker
+// Array1 const correctness, and subsequent fixes
+// Array1 bug fix courtesy Tom Thompson
+//
 // Revision 1.2  1999/08/17 06:39:04  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
