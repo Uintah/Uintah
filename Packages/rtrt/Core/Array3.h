@@ -46,9 +46,10 @@ public:
     void share(const Array3<T>& copy);
 };
 
+} // end namespace rtrt
+
 #include <Packages/rtrt/Core/Array3.cc>
   
-} // end namespace rtrt
 
 #endif // Packages_rtrt_Core_Array3_h
 
