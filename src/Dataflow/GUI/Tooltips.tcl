@@ -31,21 +31,41 @@ set Font(Tooltip) $time_font
 
 # MS == Miliseconds
 global tooltipDelayMS
-set tooltipDelayMS 2000
+set tooltipDelayMS 1000
+global tooltipID
+set tooltipID 0
+global tooltipsOn
+set tooltipsOn 1
 
 
 proc Tooltip {w msg} {
-    global tooltipDelayMS
-    bind $w <Enter> "after $tooltipDelayMS \"balloon_aux %W %X %Y [list $msg]\""
-    bind $w <Leave> "after cancel \"balloon_aux %W %X %Y [list $msg]\"
-                         after 100 {catch {destroy .balloon_help}}"
+    global tooltipDelayMS tooltipID tooltipsOn
+    bind $w <Enter> "global tooltipID tooltipsOn
+                     if \[set tooltipsOn\] \{
+		        after cancel \[set tooltipID\]
+                        after 100 {catch {destroy .balloon_help}}
+                        set tooltipID \[after $tooltipDelayMS \"balloon_aux %W %X %Y [list $msg]\"\]
+                     \}"
+    bind $w <Leave> "global tooltipID tooltipsOn
+                     if \[set tooltipsOn\] \{
+                        after cancel \[set tooltipID\]
+                        after 100 {catch {destroy .balloon_help}}
+                     \}"
 }
 
 proc canvasTooltip {canvas w msg} {       
-    global tooltipDelayMS
-    $canvas bind $w <Enter> "after $tooltipDelayMS \"balloon_aux %W %X %Y [list $msg]\""
-    $canvas bind $w <Leave> "after cancel \"balloon_aux %W %X %Y [list $msg]\"
-                         after 100 {catch {destroy .balloon_help}}"
+    global tooltipDelayMS tooltipID tooltipsOff
+    $canvas bind $w <Enter> "global tooltipID tooltipsOn
+                             if \[set tooltipsOn\] \{
+		                after cancel \[set tooltipID\]
+                                after 100 {catch {destroy .balloon_help}}
+                                set tooltipID \[after $tooltipDelayMS \"balloon_aux %W %X %Y [list $msg]\"\]
+                             \}"
+    $canvas bind $w <Leave> "global tooltipID tooltipsOn
+                             if \[set tooltipsOn\] \{
+                                after cancel \[set tooltipID\]
+                                after 100 {catch {destroy .balloon_help}}
+                             \}"
 }
 
 
