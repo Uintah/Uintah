@@ -16,6 +16,8 @@
 
 #include <iostream>
 
+#include "Enumeration.h"
+
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -25,24 +27,17 @@ class Translator {
 
 public:
   Translator();
-  Translator(string, string, string);
+  Translator(string xsl);
   ~Translator();
 
 
-  void set_cc_xsl(string);
-  string get_cc_xsl();
-  void set_gui_xsl(string);
-  string get_gui_xsl();
-  void set_xml_xsl(string);
-  string get_xml_xsl();
+  void set_xsl_file(string);
+  string get_xsl_file();
 
+  bool translate(string xml_source, string output, FileFormat format);
 
-  bool translate(string xml_source, string cc_output, string gui_output, string xml_output);
-
-  bool translate(DOMNode* xml_source, string cc_output, string gui_output, string xml_output);
+  bool translate(DOMNode* xml_source, string output, FileFormat format);
 
 private:
-  string cc_xsl_;
-  string gui_xsl_;
-  string xml_xsl_;
+  string xsl_;
 };
