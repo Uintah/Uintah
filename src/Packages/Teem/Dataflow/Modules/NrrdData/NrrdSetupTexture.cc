@@ -56,10 +56,11 @@ public:
   GuiInt valuesonly_;
   double last_minf_;
   double last_maxf_;
+  int last_valuesonly_;
   int last_generation_;
-  //NrrdDataHandle last_nrrdH_;
-
+  //NrrdDataHandle last_nvnrrd_;
 };
+
 
 DECLARE_MAKER(NrrdSetupTexture)
 
@@ -74,8 +75,9 @@ NrrdSetupTexture::NrrdSetupTexture(SCIRun::GuiContext *ctx) :
   valuesonly_(ctx->subVar("valuesonly")),
   last_minf_(0),
   last_maxf_(0),
+  last_valuesonly_(-1),
   last_generation_(-1)
-  //last_nrrdH_(0)
+  //last_nvnrrd_(0)
 {
 }
 
@@ -203,23 +205,20 @@ NrrdSetupTexture::execute()
   const double minf = useinputmin_.get()?realmin_.get():minf_.get();
   const double maxf = useinputmax_.get()?realmax_.get():maxf_.get();
 
-#if 0  
   if (last_generation_ == nin_handle->generation &&
       last_minf_ == minf &&
       last_maxf_ == maxf &&
-      last_nrrdH_.get_rep())
+      last_valuesonly_ == valuesonly_.get())
   {
-    onrrd_->send(last_nrrdH_);
+    // Don't need to do anything.
     return;
   }
-#endif
 
   last_generation_ = nin_handle->generation;
   last_minf_ = minf;
   last_maxf_ = maxf;
+  last_valuesonly_ = valuesonly_.get();
 
-  Nrrd *nvout = nrrdNew();
-  Nrrd *gmout = nrrdNew();
   int nvsize[NRRD_DIM_MAX];
   int gmsize[NRRD_DIM_MAX];
   int dim;
@@ -233,10 +232,8 @@ NrrdSetupTexture::execute()
   nvsize[0] = valuesonly_.get()?1:4;
 
   // Allocate the nrrd's data, set the size of each axis
+  Nrrd *nvout = nrrdNew();
   nrrdAlloc_nva(nvout, nrrdTypeUChar, nin->dim+1, nvsize);
-
-  // Allocate the nrrd's data, set the size of each axis
-  nrrdAlloc_nva(gmout, nrrdTypeFloat, nin->dim, gmsize);
 
   // Set axis info for (new) axis 0
   nvout->axis[0].kind = valuesonly_.get()?nrrdKindScalar:nrrdKind4Vector;
@@ -253,7 +250,15 @@ NrrdSetupTexture::execute()
     nvout->axis[dim+1].spacing = nin->axis[dim].spacing;
     nvout->axis[dim+1].min = nin->axis[dim].min;
     nvout->axis[dim+1].max = nin->axis[dim].max;
+  }
 
+  // Allocate the nrrd's data, set the size of each axis
+  Nrrd *gmout = nrrdNew();
+  nrrdAlloc_nva(gmout, nrrdTypeFloat, nin->dim, gmsize);
+
+  // Copy the other axes' info
+  for (dim=0; dim<nin->dim; dim++)
+  {
     gmout->axis[dim].kind = nin->axis[dim].kind;
     gmout->axis[dim].center = nin->axis[dim].center;
     gmout->axis[dim].spacing = nin->axis[dim].spacing;
@@ -356,7 +361,7 @@ NrrdSetupTexture::execute()
     return;
   }
   
-  // Create SCIRun data structure wrapped around nout
+  // Create SCIRun data structure wrapped around nvout
   NrrdData *nvnd = scinew NrrdData;
   nvnd->nrrd = nvout;
   NrrdDataHandle nvout_handle(nvnd);
@@ -364,16 +369,16 @@ NrrdSetupTexture::execute()
   // Copy the properties
   nvout_handle->copy_properties(nin_handle.get_rep());
 
-  // Create SCIRun data structure wrapped around nout
+  NrrdOPort *onvnrrd = (NrrdOPort *)get_oport("Normal/Value");
+  onvnrrd->send(nvout_handle);
+
+  // Create SCIRun data structure wrapped around gmout
   NrrdData *gmnd = scinew NrrdData;
   gmnd->nrrd = gmout;
   NrrdDataHandle gmout_handle(gmnd);
 
   // Copy the properties
   gmout_handle->copy_properties(nin_handle.get_rep());
-
-  NrrdOPort *onvnrrd = (NrrdOPort *)get_oport("Normal/Value");
-  onvnrrd->send(nvout_handle);
 
   NrrdOPort *ogmnrrd = (NrrdOPort *)get_oport("Gradient Magnitude");
   ogmnrrd->send(gmout_handle);
