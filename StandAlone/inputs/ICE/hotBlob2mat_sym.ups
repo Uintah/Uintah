@@ -81,20 +81,12 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
+      
       <Face side = "z-">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0. </value>
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-      </Face>
+      </Face> 
+      
       <Face side = "z+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
@@ -113,7 +105,7 @@
        <Level>
            <Box label="1">
               <lower>        [0,0,0]         </lower>
-              <upper>        [1.0,1.0,1.0]   </upper>
+              <upper>        [1.0,1.0,0.5]   </upper>
               <extraCells>   [1,1,1]         </extraCells>
               <patches>      [1,1,1]         </patches>
            </Box>
@@ -125,7 +117,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>hotBlob2mat.uda</filebase>
+      <filebase>hotBlob2mat_sym.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label="press_equil_CC"/>
       <save label="vol_frac_CC"/>
@@ -142,7 +134,7 @@
       <save label="vel_CC"/> 
       <save label="rho_CC"/>
       <save label="temp_CC"/>
-     <!-- needed for regression tester dat comparisons  -->       
+     <!-- needed for regression tester dat comparisons      -->      
       <save label="KineticEnergy"/>
       <save label="TotalIntEng"/>
 
@@ -150,15 +142,15 @@
    </DataArchiver>
    
    <Debug>
-     <dbg_timeStart>       0.00       </dbg_timeStart>
-     <dbg_timeStop>        0.1        </dbg_timeStop>
-     <dbg_outputInterval>  1e-9       </dbg_outputInterval>
-     <dbg_BeginIndex>      [-1,-1,4]  </dbg_BeginIndex>
-     <dbg_EndIndex>        [10,10,10] </dbg_EndIndex>
+      <dbg_timeStart>       0.00      </dbg_timeStart>
+      <dbg_timeStop>        0.1       </dbg_timeStop>
+      <dbg_outputInterval>  1e-9      </dbg_outputInterval>
+     <dbg_BeginIndex>      [-1,-1,-1] </dbg_BeginIndex>
+     <dbg_EndIndex>        [10,10,5]  </dbg_EndIndex>
      <dbg_SigFigs>         5          </dbg_SigFigs>
     
-     <!-- need this one for regression tester dat comparisons -->    
-     <debug label = "switchTestConservation"/> 
+     <!-- need this one for regression tester dat comparisons    -->   
+     <debug label = "switchTestConservation"/>
 <!--     
     <debug label = "switchDebugInitialize"/>
     <debug label = "switchDebug_EQ_RF_press"/>  
@@ -214,8 +206,8 @@
                     <max>       [1.1,  1.1, 1.1 ]       </max>
                 </box>
                 <box label="blobInMiddle">
-                    <min>       [0.4,0.4,0.4]          </min>
-                    <max>       [0.6,0.6,0.6]          </max>
+                    <min>       [0.4,0.4,0.0]          </min>
+                    <max>       [0.6,0.6,0.1]          </max>
                 </box>
              </difference>
                <res>                 [2,2,2]                  </res>
@@ -237,8 +229,8 @@
            <gamma>              1.289                   </gamma>
            <geom_object>
                 <box label="blobInMiddle">
-                    <min>       [0.4,0.4,0.4]           </min>
-                    <max>       [0.6,0.6,0.6]           </max>
+                    <min>       [0.4,0.4,0.0]           </min>
+                    <max>       [0.6,0.6,0.1]           </max>
                 </box>
                <res>            [2,2,2]                 </res>
                <velocity>       [0,0,0]                 </velocity>
