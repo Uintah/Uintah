@@ -32,6 +32,7 @@ $(FNSRCDIR)/fnscanner.cc: $(FNSRCDIR)/fnscanner.l $(FNSRCDIR)/fnparser.cc;
 	$(LEX) -Pfn -o$(FNSRCDIR)/fnscanner.cc $(FNSRCDIR)/fnscanner.l
 
 SRCS     += $(SRCDIR)/CubicPWI.cc              \
+            $(SRCDIR)/Gaussian.cc	       \
             $(SRCDIR)/LinAlg.c		       \
             $(SRCDIR)/LinearPWI.cc	       \
             $(SRCDIR)/Mat.c		       \
