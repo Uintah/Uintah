@@ -17,6 +17,8 @@ class ThreadListener;
 #include "Runnable.h"
 
 #include <stdio.h>
+#include <Tester/RigorousTest.h>
+
 
 
 typedef long long SysClock;
@@ -48,6 +50,10 @@ class Thread {
     friend class Barrier;
     friend class PoolMutex;
     friend class WorkQueue;
+    
+   
+       
+
     
     //////////
     //<i>No documentation provided</i>
@@ -105,6 +111,8 @@ class Thread {
 	const ParallelBase* helper;
 	int proc;
     public:
+	
+	
 	ParallelHelper(const ParallelBase* helper, int proc)
 	    : helper(helper), proc(proc) {}
 	virtual ~ParallelHelper() {}
@@ -112,6 +120,11 @@ class Thread {
 	    ParallelBase* cheat=(ParallelBase*)helper;
 	    cheat->run(proc);
 	}
+
+	    
+  
+
+
     };
 
     //////////
@@ -296,6 +309,11 @@ public:
     //////////
     //<i>No documentation provided</i>
     static void roundRobinPlacement( void *mem, size_t len );
+
+    
+    //////////
+    //Rigorous Tests
+    static void test_rigorous(RigorousTest* __Test);
 };
 
 #endif

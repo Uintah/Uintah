@@ -14,14 +14,14 @@ OBJS = AsyncReply.o Parallel.o Thread.o AtomicCounter.o \
 	ThreadEvent.o CrowdMonitor.o RealtimeThread.o ThreadGroup.o \
 	LockUnlock.o RecursiveMutex.o ThreadListener.o Mailbox.o \
 	Reducer.o ThreadTopology.o Runnable.o WorkQueue.o Mutex.o \
-	Semaphore.o THREAD_IMPLEMENTATION_O
+	Semaphore.o THREAD_IMPLEMENTATION_O tests.o TestThreads.o
 SRCS = AsyncReply.cc Parallel.cc Thread.cc AtomicCounter.cc \
 	ParallelBase.cc ThreadAlert.cc Barrier.cc PoolMutex.cc \
 	ThreadError.cc ConditionVariable.cc Profiler.cc \
 	ThreadEvent.cc CrowdMonitor.cc RealtimeThread.cc ThreadGroup.cc \
 	LockUnlock.cc RecursiveMutex.cc ThreadListener.cc Mailbox.cc \
 	Reducer.cc ThreadTopology.cc Runnable.cc WorkQueue.cc Mutex.cc \
-	Semaphore.cc THREAD_IMPLEMENTATION_CC
+	Semaphore.cc THREAD_IMPLEMENTATION_CC tests.cc TestThreads.cc
 
 LIBNAME = Thread
 

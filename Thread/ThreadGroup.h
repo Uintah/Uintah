@@ -47,6 +47,8 @@ class ThreadGroup {
     Thread** threads;
     void addme(ThreadGroup* t) ;
     void addme(Thread* t) ;
+    ThreadGroup(const ThreadGroup&); // Prevent copies
+    ThreadGroup& operator=(const ThreadGroup&); // Prevent =
 protected:
     friend class Thread;
     static ThreadGroup* default_group;

@@ -1,4 +1,3 @@
-
 #include "Thread.h"
 #include "ThreadGroup.h"
 #include "ThreadError.h"
@@ -6,6 +5,7 @@
 #include "Parallel.h"
 #include "ThreadTopology.h"
 #include "ThreadListener.h"
+#include "TestThreads.h"
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -13,14 +13,13 @@
 #include <iostream.h>
 #include <errno.h>
 
-
-
 Thread::~Thread() {
     if(runner){
         runner->mythread=0;
         delete runner;
     }
 }
+
 
 Thread::Thread(ThreadGroup* g, char* name) {
     group=g;
@@ -166,3 +165,11 @@ void Thread::niceAbort() {
     }
 }
 
+
+void Thread::test_rigorous(RigorousTest* __test)
+{
+    TestThreads tester(__test);
+    Thread::parallel(Parallel<TestThreads>(&tester, &TestThreads::test1),
+		     2, true);
+    TEST(tester.threads_seen==2);
+}

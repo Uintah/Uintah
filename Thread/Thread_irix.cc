@@ -1392,7 +1392,7 @@ Barrier::~Barrier()
 {
     if(use_fetchop)
 	fetchop_free(reservoir, priv->pvar);
-    else
+    else if(nprocessors > 1)
 	free_barrier(priv->barrier);
     delete priv;
 }
