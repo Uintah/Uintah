@@ -1,3 +1,5 @@
+<!-- -*- nxml -*- -->
+
 <!--% require("../../Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::HTML) %-->
 
@@ -18,102 +20,79 @@ Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 University of Utah. All Rights Reserved.
 -->
 
-<html>
-<head>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>Index to SCIRun Modules by Package</title>
+    <link href="../../Utilities/HTML/indexcommon.css" type="text/css" rel="stylesheet"/>
+    <style type="text/css">
+      h1.page-title {
+      width: 4in;
+      margin-left: auto;
+      margin-right: auto;
+      padding-top: 0.1in;
+      padding-bottom: 0.1in;
+      border-bottom: thick solid #213341;
+      }
+      div.package-list {
+      width: 4in;
+      margin-left: auto;
+      margin-right: auto;
+      background-color: white;
+      border: 0.5in solid #213341;
+      }
+      h2 {
+      text-align: left;
+      padding-left: 5px;
+      padding-right: 5px;
+      }
+      p {
+      padding-left: 5px;
+      padding-right: 5px;
+      }
+    </style>
+  </head>
 
-<script type="text/javascript">
-var treetop="";
-var path = location.pathname;
-if (path.charAt(path.length-1) == "/") {
-  path += "bogus.html"
-}
-var base = path.substr(path.lastIndexOf("/")+1);
-var roottag = "doc";
-while (base != roottag && base != "") {
-  treetop += "../";
-  path = path.substr(0, path.lastIndexOf("/"));
-  base = path.substr(path.lastIndexOf("/")+1);
-}
-var inDocTree = base == roottag;
-if (inDocTree) {
-document.write("<link href='",treetop,"doc/Utilities/HTML/pkgindex.css' rel='stylesheet' type='text/css'/>")
-}
-</script>
+  <body>
 
-<title>Index to SCIRun Modules by Package</title>
-</head>
-<body>
+    <script type="text/javascript" src="../../Utilities/HTML/tools.js"></script>
+    <script type="text/javascript">preContent();</script>
 
-<script type="text/javascript">
-if (inDocTree) {
-document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
-}
-</script>
+    <h1 class="page-title">Module Descriptions by Package<br/>(v. <!--%= doc.edition %-->)</h1>
 
-<br/>
-<br/>
+    <div class="package-list">
+      <h1>Packages</h1>
+      <h2><a href="SCIRun.html">SCIRun</a></h2>
+      <p>Modules providing a base set of datatypes and algorithms</p>
 
-<table cellspacing="0">
-<thead>
-<tr>
-<th>
-<div class="title">Module Descriptions by Package</div>
-<div class="subtitle">(v. <!--%= doc.edition %-->)</div>
-</th>
-</tr>
-</thead>
-<tfoot />
-<tbody>
-<tr>
-<td>
-<div class="topic_info">
+      <h2><a href="BioPSE.html">BioPSE</a></h2>
+      <p>Modules solving bioelectric field problems</p>
 
-<div class="topic_heading"><a href="SCIRun.html">SCIRun</a></div>
-<p>Modules providing a base set of datatypes and algorithms</p>
+      <h2><a  href="Insight.html">Insight</a></h2>
+      <p>Modules encapsulating <a href="http://www.itk.org">ITK toolkit</a> filters</p>
 
-<div class="topic_heading"><a href="BioPSE.html">BioPSE</a></div>
-<p>Modules solving bioelectric field problems</p>
+      <h2><a href="MatlabInterface.html">MatlabInterface</a></h2>
+      <p>Modules interacting with the Matlab system</p>
 
-<div class="topic_heading"><a  href="Insight.html">Insight</a></div>
-<p>Modules encapsulating <a href="http://www.itk.org">ITK toolkit</a> filters</p>
+      <h2><a href="Teem.html">Teem</a></h2>
+      <p>Modules supporting the supporting of N-dimensional raster
+      data using the <a href="http://teem.sourceforge.net">Teem</a>
+      libary</p>
 
-<div class="topic_heading"><a href="MatlabInterface.html">MatlabInterface</a></div>
-<p>Modules interacting with the Matlab system</p>
+      <h2><a href="DataIO.html">DataIO</a></h2>
+      <p>Modules for reading data stored in non-SCIRun
+      formats. Formats HDF5 and MDSplus are currently supported. The
+      modules convert both geometry and data into Nrrds.  The Teem
+      package must also be installed.
+      </p>
 
-<div class="topic_heading"><a href="Teem.html">Teem</a></div>
-<p>Modules supporting the analysis of N-dimensional raster data using the <a
-href="http://www.cs.utah.edu/~gk/teem/nrrd/index.html">Teem</a>
-libary</p>
+      <h2><a href="Fusion.html">Fusion</a></h2>
+      <p>Modules for transforming Nrrd geometry and data to SCIRun
+      fields. Contains additional modules, e.g., conversion of NIMROD
+      data from cylindrical to cartesian coordinates.  The Teem
+      package must also be installed.
+      </p>
 
-<div class="topic_heading"><a href="DataIO.html">DataIO</a></div>
-<p>Modules for reading MDSplus and HDF5 data.</p>
-
-<div class="topic_heading"><a href="Fusion.html">Fusion</a></div>
-<p>No description</p>
-
-</div>
-</td>
-</tr>
-</tbody>
-</table>
-
-<br/>
-<br/>
-
-<script type="text/javascript">
-if (inDocTree) {
-document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
-}
-</script>
-
-</body>
+    </div>
+    <script type="text/javascript">postContent();</script>
+  </body>
 </html>
-
-<!-- Keep this comment at the end of the file
-Local variables:
-mode: xml
-sgml-default-dtd-file:"../../Utilities/XML/xhtml1-transitional.ced"
-sgml-omittag:nil
-sgml-shorttag:nil
-End:
--->

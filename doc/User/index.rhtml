@@ -1,3 +1,4 @@
+<!-- -*- nxml -*- -->
 <!--% require("../Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::HTML) %-->
 
@@ -18,125 +19,56 @@ Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 University of Utah. All Rights Reserved.
 -->
 
-<html>
-<head>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>User Documentation</title>
+    <link href="../Utilities/HTML/indexcommon.css" type="text/css" rel="stylesheet"/>
+    <style type="text/css">
+      div.content { height: 700px; }
+      div.content-layer1 { height: 600px; }
+    </style>
+  </head>  
 
-<script type="text/javascript">
-var treetop="";
-var path = location.pathname;
-if (path.charAt(path.length-1) == "/") {
-  path += "bogus.html"
-}
-var base = path.substr(path.lastIndexOf("/")+1);
-var roottag = "doc";
-while (base != roottag && base != "") {
-  treetop += "../";
-  path = path.substr(0, path.lastIndexOf("/"));
-  base = path.substr(path.lastIndexOf("/")+1);
-}
-var inDocTree = base == roottag;
-if (inDocTree) {
-document.write("<link href='",treetop,"doc/Utilities/HTML/subindex.css' rel='stylesheet' type='text/css'/>")
-}
-function NewWindow(PageName,wide,tall,scroll){
-window.open(PageName,"","toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=" + scroll + ",resizable=0,width=" + wide + ",height=" + tall + ",left=0,top=0");
-}
-</script>
 
-<title>User Documentation</title>
+  <body>
+    <script type="text/javascript" src="../Utilities/HTML/tools.js"></script>
+    <script type="text/javascript">preContent();</script>
 
-</head>  
-
-<body>
-<script type="text/javascript">
-if (inDocTree) {
-document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
-}
-</script>
-
-<br/><br/>
-
-<table align="center" cellspacing="0" cellpadding="2">
-<thead>
-<tr>
-<th>
-<div class="title">User Documentation</div>
-<div class="subtitle">(for SCIRun v. <!--%= doc.edition %-->)</div>
-</th>
-</tr>
-</thead>
-<tfoot />
-<tbody>
-<tr>
-<td>
-<div class="topic_info">
-<div class="topic_heading"><a href="Guide/usersguide/index.html">Guide</a> <small>[<a
-href="Guide/usersguide.pdf">PDF]</a></small></div>
-<p>A guide to the concepts and use of the SCIRun problem solving
-environment
-</p>
-
-<div class="topic_heading"><a
-href="Tutorials/SCIRun_Intro/index.html">SCIRun Tutorial</a></div>
-<p>An interactive introduction to SCIRun</p>
-
-<div class="topic_heading"><a href="Tutorials/BioTensor/BioTensor.html">BioTensor Tutorial</a></div>
-<p>
-An introduction to the BioTensor application
-</p>
-
-<div class="topic_heading"><a class="heading" href="User/Tutorials/BioFEM/BioFEM.html">BioFEM Tutorial</a></div>
-<p>
-An introduction to the BioFEM application
-</p>
-
-<hr/>
-
-<div class="topic_heading"><a href="../Developer/Modules/index.html">Module Reference</a> <small><a href="Developer/Modules/srmrg.pdf">[PDF]</a></small>
-</div>
-<p>Descriptions of SCIRun modules organized by package (and by
-category and alphabetically)</p>
-
-<div class="topic_heading"><a href="FAQ/faq.html">FAQ</a> <small>[<a
-href="FAQ/faq.pdf">PDF]</a></small></div>
-<p>Common user questions and answers</p>
-
-<hr/>
-
-<div class="topic_heading"><a class="heading"
-href="JavaScript:NewWindow('http://software.sci.utah.edu/scirun_citation.bib',
-'600','400','1')">SCIRun Citation</a></div>
-<p>BibTeX and plain text versions</p>
-
-<div class="topic_heading"><a class="heading"
-href="JavaScript:NewWindow('http://software.sci.utah.edu/biopse_citation.bib',
-'600','400','1')">BioPSE Citation</a></div>
-<p>BibTeX and plain text versions</p>
-
-</div>
-</td>
-</tr>
-</tbody>
-</table>
-
-<br/>
-<br/>
-
-<script type="text/javascript">
-if (inDocTree) {
-document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
-}
-</script>
-
-</body>
+    <h1 class="page-title">User Documentation<br/>(v. <!--%= doc.edition %-->)</h1>
+    <div class="content-layer1">
+      <div class="doc-group">
+	<h1>General</h1>
+	<h2><a href="Guide/usersguide/index.html">Guide</a> <sup><a href="Guide/usersguide.pd">pdf</a></sup></h2>
+	<p>A guide to the concepts and use of the SCIRun problem
+	solving environment.</p>
+	<h2><a href="FAQ/faq.html">FAQ</a> <sup><a href="FAQ/faq.pdf">pdf</a></sup></h2>
+	<p>Common user questions and answers.</p>
+	<h2><a href="Developer/Modules/index.html">Module Reference</a> <sup><a href="../Developer/Modules/srmrg.pdf">pdf</a></sup></h2>
+	<p>Descriptions of SCIRun modules organized by package (and by
+	category and alphabetically)</p>
+      </div>
+      <div class="doc-group">
+	<h1>Tutorials</h1>
+	<h2><a href="Tutorials/SCIRun_Intro/index.html">SCIRun</a></h2>
+	<p>An interactive introduction to SCIRun for new
+	users.</p>
+	<h2><a href="Tutorials/BioFEM/BioFEM.html">BioFEM</a></h2>
+	<p>An introduction to the BioFEM application </p>
+	<h2><a href="Tutorials/BioTensor/BioTensor.html">BioTensor</a></h2>
+	<p> An introduction to the BioTensor application </p>
+      </div>
+      <div class="doc-group">
+	<h1>Publication Refs </h1>
+	<h2><a href="JavaScript:newWindow('http://software.sci.utah.edu/scirun-biopse_citation.bib', '600','400','1')">SCIRun Citation</a></h2>
+	<p>BibTeX and plain text versions for use in publications
+	which reference SCIRun's use.</p>
+	<h2><a href="JavaScript:newWindow('http://software.sci.utah.edu/scirun-biopse_citation.bib', '600','400','1')">BioPSE Citation</a></h2>
+	<p>BibTeX and plain text versions for use in publications
+	which reference BioPSE's use.</p>
+      </div>
+      <div class="clear-left"></div>
+    </div>
+    <script type="text/javascript">postContent();</script>
+  </body>
 
 </html>
-
-<!-- Keep this comment at the end of the file
-Local variables:
-mode: xml
-sgml-default-dtd-file:"../Utilities/XML/xhtml1-transitional.ced"
-sgml-omittag:nil
-sgml-shorttag:nil
-End:
--->

@@ -1,3 +1,4 @@
+<!-- -*- nxml -*- -->
 <!--% require("../Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::HTML) %-->
 
@@ -18,91 +19,34 @@ Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 University of Utah. All Rights Reserved.
 -->
 
-<html>
-<head>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>Installation Documentation</title>
+    <link href="../Utilities/HTML/indexcommon.css" type="text/css" rel="stylesheet"/>
+    <style type="text/css">
+      div.content { height: 5in; }
+      div.content-layer1 { height: 3.5in; }
+    </style>
+  </head>  
 
-<script type="text/javascript">
-var treetop="";
-var path = location.pathname;
-if (path.charAt(path.length-1) == "/") {
-  path += "bogus.html"
-}
-var base = path.substr(path.lastIndexOf("/")+1);
-var roottag = "doc";
-while (base != roottag && base != "") {
-  treetop += "../";
-  path = path.substr(0, path.lastIndexOf("/"));
-  base = path.substr(path.lastIndexOf("/")+1);
-}
-var inDocTree = base == roottag;
-if (inDocTree) {
-document.write("<link href='",treetop,"doc/Utilities/HTML/subindex.css' rel='stylesheet' type='text/css'/>")
-}
-</script>
+  <body>
+    <script type="text/javascript" src="../Utilities/HTML/tools.js"></script>
+    <script type="text/javascript">preContent();</script>
 
-<title>Installation Documentation</title>
-
-</head>  
-
-<body>
-<script type="text/javascript">
-if (inDocTree) {
-document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
-}
-</script>
-
-<br/><br/>
-
-<table align="center" cellspacing="0" cellpadding="2">
-<thead>
-<tr>
-<th>
-<div class="title">Installation Documentation</div>
-<div class="subtitle">(for SCIRun v. <!--%= doc.edition %-->)</div>
-</th>
-</tr>
-</thead>
-<tfoot />
-<tbody>
-<tr>
-<td>
-<div class="topic_info">
-
-<div class="topic_heading"><a class="heading" href="Guide/index.html">Guide</a>  <small><a href="Guide/srig.pdf">[PDF]</a></small>
-</div>
-<p>Installation instructions for SCIRun, third party
-libraries, the optional PETSc library, sample data sets, and
-documentation.</p> 
-
-<div class="topic_heading"><a class="heading" href="FAQ/faq.html">FAQ</a> <small><a href="FAQ/faq.pdf">[PDF]</a></small>
-</div>
-
-<p>Common installation questions and answers.</p>
-
-</div>
-</td>
-</tr>
-</tbody>
-</table>
-
-<br/>
-<br/>
-
-<script type="text/javascript">
-if (inDocTree) {
-document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
-}
-</script>
-
-</body>
+    <h1 class="page-title">Installation Documentation Index<br/>(v. <!--%= doc.edition %-->)</h1>
+    <div class="content-layer1">
+      <div class="doc-group">
+	<h1>General</h1>
+	<h2><a href="Guide/index.html">Guide</a> <sup><a href="Guide/srig.pdf">pdf</a></sup></h2>
+	<p>Installation instructions for SCIRun, third party
+	libraries, the optional PETSc library, sample data sets, and
+	documentation.</p>
+	<h2><a href="FAQ/faq.html">FAQ</a> <sup><a href="FAQ/faq.pdf">pdf</a></sup></h2>
+	<p>Common installation questions and answers.</p>
+      </div>
+      <div class="clear-right"></div>
+    </div>
+    <script type="text/javascript">postContent();</script>
+  </body>
 
 </html>
-
-<!-- Keep this comment at the end of the file
-Local variables:
-mode: xml
-sgml-default-dtd-file:"../Utilities/XML/xhtml1-transitional.ced"
-sgml-omittag:nil
-sgml-shorttag:nil
-End:
--->
