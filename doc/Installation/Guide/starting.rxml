@@ -34,12 +34,11 @@ DEALINGS IN THE SOFTWARE.
 <section id="sec.starting">
   <title>Starting SCIRun</title>
 
-  <para os="linux">
+  <para os="linux;osx">
     If installed from its <phrase os="linux">RPM</phrase><phrase
-    os="osx">disk image</phrase>, SCIRun's installation can be tested
+    os="osx">binary tarball</phrase>, SCIRun's installation can be tested
     by changing the working directory (<command>cd</command>ing) to
-    <filename os="linux">/usr/local/SCIRun/bin/</filename> <filename
-    os="osx">~/SCIRun/bin/</filename> and typing:
+    <filename>/usr/local/SCIRun/bin/</filename> and typing:
     <command>./scirun</command>.
   </para>
 

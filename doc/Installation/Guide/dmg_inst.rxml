@@ -32,47 +32,53 @@ DEALINGS IN THE SOFTWARE.
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
 <section os="osx" id="sec.dmg_inst">
-  <title id="title.dmg_inst">Installation from a Disk Image</title>
+  <title id="title.dmg_inst">Installation from a Binary Tarball</title>
 
   <para>Two SCIRun <firstterm>Problem Solving Environment</firstterm>s
-  (<acronym>PSE</acronym>), BioPSE and Fusion, are available via disk
-  images (DMG).  Customized SCIRun <acronym>PSE</acronym>s can be
-  built from source code; see <xref linkend="sec.source_inst"/> for
-  details.</para>
+  (<acronym>PSE</acronym>), BioPSE and Fusion, are available via
+  binary tarballs.  Binary tarballs contain SCIRun executables.
+  Customized SCIRun <acronym>PSE</acronym>s can be built from source
+  code; see <xref linkend="sec.source_inst"/> for details.</para>
 
-  <para>The BioPSE DMG includes SCIRun packages BioPSE,
-  MatlabInterface, Teem, and Insight.  The BioPSE DMG includes ITK
+  <para>The BioPSE binary tarball includes SCIRun packages BioPSE,
+  MatlabInterface, Teem, and Insight.  The BioPSE tarball includes ITK
   libraries required by the Insight package.  Matlab software must be
   present to use modules of the MatlabInterface package.</para>
 
-  <para>The Fusion DMG includes SCIRun packages Fusion, DataIO, and
-  Teem.  The Fusion DMG includes the HDF5 libraries.  The
-  SCIRun/Fusion DMG has been built to use MDSplus software but MDSplus
+  <para>The Fusion tarball includes SCIRun packages Fusion, DataIO, and
+  Teem.  The Fusion tarball includes the HDF5 libraries.  The
+  SCIRun/Fusion tarball has been built to use MDSplus software but MDSplus
   software must be installed separately.  See <xref
   linkend="sec.mdsplus_inst"/> for MDSplus software installation
   instructions.</para>
 
   <para>
-    Installation from a disk image consists of the following steps:
+    Follow these steps to install SCIRun:
     <orderedlist>
       <listitem>
-	<para>Downloading a disk image, documentation, and sample
-	data sets.</para>
+	<para><link linkend="sec.dmg_download">Download</link> a
+	binary tarball, documentation, and sample data sets.</para>
       </listitem>
       <listitem>
-	<para>Installing SCIRun from a disk image.</para>
+	<para><link linkend="sec.dmg_install">Install</link> SCIRun
+	from a binary tarball.</para>
       </listitem>
       <listitem>
-	<para>Installing SCIRun's sample data sets.</para>
+	<para><link linkend="sec.dmg_data">Install</link> SCIRun's
+	sample data sets.</para>
       </listitem>
       <listitem>
-	<para>Installing SCIRun's documentation.</para>
+	<para><link linkend="sec.dmg_docs">Install</link> SCIRun's
+	documentation.</para>
       </listitem>
     </orderedlist>
   </para>
 
+  <para>Be sure to read <xref linkend="sec.prepare" /> after
+  installing, but before starting, SCIRun.</para>
+
   <section>
-    <title>Downloading</title>
+    <title id="dmg_download">Downloading</title>
     <para>
       From <acronym>SCI</acronym>'s <ulink
       url="http://software.sci.utah.edu/archive_entry.html">software
@@ -81,9 +87,10 @@ DEALINGS IN THE SOFTWARE.
       <itemizedlist>
 	<listitem>
 	  <para>
-	    One of <filename>SCIRun-BioPSE-<!--%= doc.version
-	    %-->.dmg</filename> or <filename>SCIRun-Fusion-<!--%= doc.version
-	    %-->.dmg</filename>
+	    <filename>SCIRun-OSX-bin.<!--%= doc.version
+	    %-->.tar.gz</filename> or
+	    <filename>SCIRunFusion-OSX-bin.<!--%= doc.version
+	    %-->.tar.gz</filename>
 	  </para>
 	</listitem>
 	<listitem>
@@ -104,34 +111,60 @@ DEALINGS IN THE SOFTWARE.
 
   </section>
 
-  <section>
-    <title>Installing</title>
-    <para>Using the <application>Finder</application>, locate and
-    double-click <filename>SCIRun-<!--%= doc.version
-    %-->.dmg</filename>.  The <application>Finder</application> will
-    mount the disk image and display its contents in a
-    <application>Finder</application> window.  Drag the
-    <filename>SCIRun</filename> folder to your home folder.  The
-    <command>scirun</command> and PowerApp commands will be found in
-    <filename>~/SCIRun/bin</filename>.</para>
-  </section>
-
-  <section>
-    <title>SCIRun's Sample Data Sets</title>
-    <para>Using the <application>Finder</application>, locate and
-    double-click SCIRunData.<!--%= doc.version %-->.tar.gz.  This
-    creates folder <filename>SCIRunData</filename>.  Move
-    <filename>SCIRunData</filename> to your home folder.
+  <section id="sec.dmg_install">
+    <title>Installing SCIRun</title>
+    <para>
+      Administrative privileges (must be member of the admin group)
+      are required to install SCIRun.  SCIRun
+      <emphasis>must</emphasis> be installed in
+      <filename>/usr/local</filename>.
+    </para>
+    <para>
+      To install SCIRun, <command>cd</command> to the directory
+      containing the binary tarball and type:
+      <literallayout class="monospaced">
+sudo sh -c 'gunzip -c SCIRun-OSX-bin.<!--%= doc.version %-->.tar.gz \
+ | (cd /usr/local &amp;&amp; tar xf -)'
+      </literallayout>
+      or the following if installing SCIRunFusion:
+      <literallayout class="monospaced">
+sudo sh -c 'gunzip -c SCIRunFusion-OSX-bin.<!--%= doc.version %-->.tar.gz \
+ | (cd /usr/local &amp;&amp; tar xf -)'
+      </literallayout>
+      SCIRun and it's PowerApps are found in
+      <filename>/usr/local/SCIRun/bin</filename>. Read <xref
+      linkend="sec.prepare"/> before <link
+      linkend="sec.starting">starting</link> SCIRun.
     </para>
   </section>
 
-  <section>
+  <section id="sec.dmg_data">
+    <title>SCIRun's Sample Data Sets</title>
+    <para>
+      The following instructions install SCIRun's sample datasets in
+      <filename>/usr/local/SCIRunData</filename> (although they may be installed
+      anywhere).  Administrative privilages are required.  Type:
+      <literallayout class="monospaced">
+sudo sh -c 'gunzip -c SCIRunData.<!--%= doc.version %-->.tar.gz \
+ | (cd /usr/local &amp;&amp; tar xf -)'	
+      </literallayout>
+    </para>
+  </section>
+
+  <section id="sec.dmg_docs">
     <title>SCIRun's Documentation</title>
-    <para>Using the <application>Finder</application>, locate and
-    double-click SCIRunDocs.<!--%= doc.version %-->.tar.gz.  This
-    creates folder <filename>SCIRunDocs</filename>.  Move
-    <filename>SCIRunDocs</filename> to your home folder.  Open
-      <filename>~/SCIRunDocs.<!--%= doc.version
+    <para>
+      The following instructions install SCIRun's documentation in
+      <filename>/usr/local/SCIRunDocs.<!--%= doc.version
+      %--></filename> (although they may be installed anywhere).
+      Administrative privilages are required.  Type:
+      <literallayout class="monospaced">
+sudo sh -c 'gunzip -c SCIRunDataDocs.<!--%= doc.version %-->.tar.gz \
+ | (cd /usr/local &amp;&amp; tar xf -)'	
+      </literallayout>
+    </para>
+    <para>
+      Open <filename>/usr/local/SCIRunDocs.<!--%= doc.version
       %-->/doc/index.html</filename> with a web browser to view
       SCIRun's online documentation.
     </para>

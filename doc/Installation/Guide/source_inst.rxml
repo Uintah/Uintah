@@ -39,7 +39,7 @@ DEALINGS IN THE SOFTWARE.
     <orderedlist>
       <listitem>
 	<para><link linkend="src_download">Download</link> and <link
-	linkend="src_unpack">Unpack</link> SCIRun sources, packages,
+	linkend="src_unpack">unpack</link> SCIRun sources, packages,
 	third party software, sample data sets, and
 	documentation.</para>
       </listitem>
@@ -58,10 +58,10 @@ DEALINGS IN THE SOFTWARE.
 	installed will provide SCIRun with additional capabilities.</para>
 	<para>Other external third party software is required by some
 	SCIRun packages.  For example, <acronym>ITK</acronym> is
-	required by the Insight package</para>
+	required by the Insight package.</para>
       </listitem>
       <listitem>
-	<para><link linkend="sec.build-sr">Build</link> SCIRun</para>
+	<para><link linkend="sec.build-sr">Build</link> SCIRun.</para>
       </listitem>
     </orderedlist>
   </para>
