@@ -86,6 +86,7 @@ namespace Uintah {
     
     //Misc Labels
     const VarLabel* IveBeenHereLabel;
+    const VarLabel* machLabel;
     const VarLabel* scratchLabel;
     const VarLabel* scratch_FCXLabel;
     const VarLabel* scratch_FCYLabel;
