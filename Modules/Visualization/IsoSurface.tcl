@@ -32,7 +32,7 @@ proc uiIsoSurface {modid} {
     global isoval,$modid
     fscale $w.f.isoval -variable isoval,$modid -digits 4 \
 	    -from 0.0 -to 1.0 -label "IsoValue:" \
-	    -resolution .01 -showvalue true \
+	    -resolution 0 -showvalue true \
 	    -orient horizontal \
 	    -command $n -state disabled
     pack $w.f.isoval -side top -fill x
