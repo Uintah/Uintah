@@ -291,20 +291,21 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
   }
   cout_norm << "Pulled out exchange coefficients of the input file" << endl;
 
+  //__________________________________
+  //  pull out mass exchange
   string mass_exch_in;
   ProblemSpecP mass_exch_ps = exch_ps->get("mass_exchange",mass_exch_in);
-
+  d_massExchange = false;
   if (mass_exch_ps) {
-    istringstream in(mass_exch_in);
-    string mass_exch_out;
-    in >> mass_exch_out;
-    if (mass_exch_out == "true" || mass_exch_out == "TRUE" || 
-       mass_exch_out == "1") {
+    if (mass_exch_in == "true" || mass_exch_in == "TRUE" || 
+        mass_exch_in == "1") {
       d_massExchange = true;
-    } else 
-      d_massExchange = false;
-  } else
-    d_massExchange = false;
+      if (d_RateForm) {
+        string warn="ERROR\n RateForm doesn't work with a reaction\n";
+        throw ProblemSetupException(warn);
+      }
+    }
+  }
 
   cout_norm << "Mass exchange = " << d_massExchange << endl;
 
