@@ -474,10 +474,8 @@ Matlab::~Matlab()
 {
     // Again if we registered a module for destruction and we are removing it
     // we need to unregister
-    
-    CleanupManager::remove_callback(Matlab::cleanup_callback,reinterpret_cast<void *>(this));
-	close_matlab_engine();
-	delete_temp_directory();
+    CleanupManager::invoke_remove_callback(Matlab::cleanup_callback,
+					   reinterpret_cast<void *>(this));
 }
 
 
