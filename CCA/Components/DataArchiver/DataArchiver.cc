@@ -43,6 +43,11 @@
 #include <math.h>
 #include <sgi_stl_warnings_on.h>
 
+#ifdef _WIN32
+#define MAXHOSTNAMELEN 256
+#include <winsock2.h>
+#endif
+
 #define PADSIZE 1024L
 
 // RNJ - Leave a define that will turn on and off
@@ -304,8 +309,10 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
      fprintf(tmpout, "\n");
      if(fflush(tmpout) != 0)
        throw ErrnoException("fflush", errno);
+#ifndef _WIN32
      if(fsync(fileno(tmpout)) != 0)
        throw ErrnoException("fsync", errno);
+#endif
      if(fclose(tmpout) != 0)
        throw ErrnoException("fclose", errno);
      MPI_Barrier(d_myworld->getComm());
@@ -340,7 +347,7 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
 #if defined(__APPLE__)
        if(fsync(fileno(tmpout)) != 0)
 	 throw ErrnoException("fsync", errno);
-#else
+#elif !defined(_WIN32)
        if(fdatasync(fileno(tmpout)) != 0)
 	 throw ErrnoException("fdatasync", errno);
 #endif
@@ -1713,7 +1720,7 @@ void DataArchiver::output(const ProcessorGroup*,
 	if(cur%PADSIZE != 0){
 	  long pad = PADSIZE-cur%PADSIZE;
 	  char* zero = scinew char[pad];
-	  bzero(zero, pad);
+	  memset(zero, 0, pad);
 	  int err = (int)write(fd, zero, pad);
           if (err != pad) {
             cerr << "Error writing to file: " << filename << ", errno=" << errno << '\n';
@@ -1882,7 +1889,7 @@ DataArchiver::makeVersionedDir()
     name << d_filebase << "." << setw(3) << setfill('0') << d_udaSuffix;
     dirName = name.str();
     
-    int code = mkdir( dirName.c_str(), 0777 );
+    int code = MKDIR( dirName.c_str(), 0777 );
     if( code == 0 ) { // Created the directory successfully
       dirCreated = true;
     }
@@ -1900,7 +1907,7 @@ DataArchiver::makeVersionedDir()
     name << d_filebase << "." << setw(3) << setfill('0') << dirNum;
     dirName = name.str();
       
-    int code = mkdir( dirName.c_str(), 0777 );
+    int code = MKDIR( dirName.c_str(), 0777 );
     if( code == 0 ) // Created the directory successfully
       {
 	dirMax = dirNum;
@@ -1940,15 +1947,17 @@ DataArchiver::makeVersionedDir()
   // name existed or if it's already a link.
   bool make_link = false;
   struct stat sb;
-  int rc = lstat(d_filebase.c_str(), &sb);
+  int rc = LSTAT(d_filebase.c_str(), &sb);
   if ((rc != 0) && (errno == ENOENT))
     make_link = true;
+#ifndef _WIN32
   else if ((rc == 0) && (S_ISLNK(sb.st_mode))) {
     unlink(d_filebase.c_str());
     make_link = true;
   }
   if (make_link)
     symlink(dirName.c_str(), d_filebase.c_str());
+#endif
 
   cout << "DataArchiver created " << dirName << endl;
   d_dir = Dir(dirName);
