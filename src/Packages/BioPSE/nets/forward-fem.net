@@ -158,6 +158,7 @@ set $m16-field-name {StreamLines}
 set $m17-stepsize [expr 0.004 * ${global-scale}]
 set $m17-tolerance [expr 0.004 * ${global-scale}]
 set $m17-maxsteps {250}
+set $m17-methods {5}
 
 set $m20-def-color-r {0.3}
 set $m20-def-color-g {0.3}
