@@ -151,10 +151,10 @@ static double   lightoff_frame = -1.0;
 
 //////////////////////////////////////////////////////////////////
 
-Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
-	 int nworkers, bool bench, int ncounters, int c0, int c1,
-	 float, float, bool display_frames, 
-	 int pp_size, int scratchsize, int frameless)
+Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
+	  int nworkers, bool bench, int ncounters, int c0, int c1,
+	  float, float, bool display_frames, 
+	  int pp_size, int scratchsize, bool fullscreen, int frameless )
   : scene(scene), criteria1(criteria1), criteria2(criteria2),
     nworkers(nworkers), bench(bench), ncounters(ncounters),
     c0(c0), c1(c1), frameless(frameless),synch_frameless(0),
@@ -166,7 +166,8 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
     attachedObject_(NULL), turnOnTransmissionMode_(false), 
     numThreadsRequested_(nworkers), changeNumThreads_(false),
     pp_size_(pp_size), scratchsize_(scratchsize),
-    toggleRenderWindowSize_(false), renderWindowSize_(0)
+    toggleRenderWindowSize_(false), renderWindowSize_(1),
+    fullScreenMode_( fullscreen )
 {
   ppc = new PerProcessorContext( pp_size, scratchsize );
 

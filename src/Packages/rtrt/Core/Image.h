@@ -94,7 +94,8 @@ public:
   inline int get_yres() const { return yres; }
   inline bool get_stereo() const { return stereo; }
 
-  void draw( int window_size ); // 0 == large, 1 == medium
+  void draw( int  window_size, // 0 == large, 1 == medium
+	     bool fullscreen ); 
 
   void set(const Pixel& value);
   inline Pixel& operator()(int x, int y) {

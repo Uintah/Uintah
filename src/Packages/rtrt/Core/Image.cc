@@ -75,10 +75,10 @@ void Image::resize_image(const int new_xres, const int new_yres) {
   resize_image();
 }
 
-void Image::draw( int window_size )
+void Image::draw( int window_size, bool fullscreen )
 {
-  if( window_size == 0 )
-    {
+  if( fullscreen ) {
+    if( window_size == 0 ) {
       // Because textures must be powers of 2 in size, we have broken
       // the rtrt render window into two textures, one of 512 pixels
       // ans one of 128 pixels.
@@ -94,6 +94,11 @@ void Image::draw( int window_size )
       rtrtMidTopTex->reset( GL_UNSIGNED_BYTE, &image[256][0] );
       rtrtMidTopTexQuad->draw();
     }
+  } else {
+    // Not full screen
+    rtrtMidTopTex->reset( GL_UNSIGNED_BYTE, &image[0][0] );
+    rtrtMidTopTexQuad->draw();
+  }
 
 #if 0
     if(stereo){
