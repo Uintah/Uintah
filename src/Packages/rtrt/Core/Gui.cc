@@ -20,7 +20,9 @@
 #include <Packages/rtrt/Core/SelectableGroup.h>
 #include <Packages/rtrt/Core/SpinningInstance.h>
 #include <Packages/rtrt/Core/CutGroup.h>
+#ifndef linux
 #include <Packages/rtrt/Sound/Sound.h>
+#endif
 
 #include <Core/Math/Trig.h>
 #include <Core/Thread/Time.h>
@@ -1123,6 +1125,7 @@ Gui::createSoundsWindow( GLUI * window )
 
   GLUI_Panel * volumePanel = window->add_panel_to_panel( panel, "Volume" );
 
+#ifndef linux
   const vector<Sound*> & sounds = dpy_->scene->getSounds();
   for( int num = 0; num < sounds.size(); num++ )
     {
@@ -1130,6 +1133,7 @@ Gui::createSoundsWindow( GLUI * window )
       sprintf( name, "%s", sounds[ num ]->getName().c_str() );
       soundList_->add_item( num, name );
     }
+#endif
 
   activeGui->leftVolume_ = window->
     add_edittext_to_panel( volumePanel, "Left:", GLUI_EDITTEXT_FLOAT );
