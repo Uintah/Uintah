@@ -32,9 +32,32 @@ DEALINGS IN THE SOFTWARE.
 <chapter id="getting_started">
   <title>Getting Started</title>
 
-  <para>This chapter shows how to start the BioImage
-  application. Later chapters demonstrate how to load, process, and
-  visualize data.</para>
+  <para>BioImage is a SCIRun PowerApp for visualizing regular, three
+  dimensional scalar volumes from CT and MRI data.  In addition to 2D
+  and 3D visualization tools, BioImage provides a range of
+  pre-visualization processing filters, such as re-sampling and
+  cropping.</para>
+  
+  <para>BioImage offers 2D visualization of three standard planes:
+  axial, sagittal, and coronal.  The 2D views allow the user to
+  quickly investigate a volume slice by slice or via a maximum
+  intensity projection. The 2D views provide standard zooming and
+  translation capabilities as well as the ability to change the
+  brightness and contrast (also known as window and level) of the
+  images. <xref linkend="sec.2dviewers"/> discusses 2D visualization
+  in detail.</para>
+
+  <para>BioImage provides a powerful volume rendering tool that allows
+  the user to interactively visualize an area of interest by assigning
+  a color to a range of values in the volume.</para>
+  
+  <para>In this tutorial the user will: launch BioImage, load a tooth
+  volume dataset, resample the tooth volume using a pre-visualization
+  filter, and visualize tooth planes and the tooth volume.</para>
+
+  <para>This tutorial provides a simple example of a BioImage
+  session. See <xref linkend="part.reference"/> for information on all
+  of BioImage's capabilities.</para>
 
   <section>
     <title>Preparations</title>
