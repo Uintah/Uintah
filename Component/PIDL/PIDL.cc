@@ -58,6 +58,7 @@ void PIDL::initialize(int, char*[])
 	    throw GlobusError("Unable to initialize nexus", gerr);
  	if(int gerr=globus_nexus_allow_attach(&port, &host, approval_fn, 0))
 	    throw GlobusError("globus_nexus_allow_attach failed", gerr);
+	globus_nexus_enable_fault_tolerance(NULL, 0);
     }
 }
 
@@ -72,15 +73,7 @@ Wharehouse* PIDL::getWharehouse()
 Object
 PIDL::objectFrom(const URL& url)
 {
-    Reference ref(url);
-    return new Object_proxy(ref);
-}
-
-Object
-PIDL::objectFrom(const Reference& url)
-{
-    Reference ref(url);
-    return objectFrom(ref);
+    return new Object_proxy(url);
 }
 
 void PIDL::serveObjects()
@@ -98,8 +91,12 @@ std::string PIDL::getBaseURL()
     o << "x-nexus://" << host << ":" << port << "/";
     return o.str();
 }
+
 //
 // $Log$
+// Revision 1.3  1999/09/17 05:08:08  sparker
+// Implemented component model to work with sidl code generator
+//
 // Revision 1.2  1999/08/31 08:59:01  sparker
 // Configuration and other updates for globus
 // First import of beginnings of new component library

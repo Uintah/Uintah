@@ -16,29 +16,31 @@
 #define Component_PIDL_ProxyBase_h
 
 #include <Component/PIDL/Reference.h>
-#include <Component/PIDL/TypeSignature.h>
 
 namespace Component {
     namespace PIDL {
+	class TypeInfo;
+
 	class ProxyBase {
 	public:
-	    bool isa(const TypeSignature& ts) const;
-	    const Reference& getReference() const;
 	protected:
 	    ProxyBase(const Reference&);
 	    virtual ~ProxyBase();
+	    friend class TypeInfo;
 	    Reference d_ref;
 
-	    Startpoint* getStartpoint() const;
+	    void _proxyGetReference(Reference&, bool copy) const;
 	};
     }
 }
 
 #endif
 
-
 //
 // $Log$
+// Revision 1.2  1999/09/17 05:08:09  sparker
+// Implemented component model to work with sidl code generator
+//
 // Revision 1.1  1999/08/30 17:39:47  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

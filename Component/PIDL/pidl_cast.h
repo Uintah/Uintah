@@ -17,29 +17,36 @@
 
 // In global namespace for now...
 #include <Component/PIDL/Object.h>
+#include <Component/PIDL/TypeInfo.h>
+#include <SCICore/Exceptions/InternalError.h>
 
 template<class T>
 T pidl_cast(const Component::PIDL::Object& obj)
 {
     // Try the direct cast before we go remote
-    T::proxytype* proxy=dynamic_cast<T::proxytype*>(obj);
-    if(proxy)
-	return proxy;
+    T::interfacetype* iface=dynamic_cast<T::interfacetype*>(obj);
+    if(iface)
+        return iface;
 
-    Component::PIDL::ProxyBase* p=dynamic_cast<Component::PIDL::ProxyBase*>(obj);
-    if(!p)
+    const Component::PIDL::TypeInfo* typeinfo = T::_getTypeInfo();
+    Component::PIDL::Object_interface* result=typeinfo->pidl_cast(obj);
+    if(result){
+	T p=dynamic_cast<T::interfacetype*>(result);
+	if(!p)
+	    throw SCICore::Exceptions::InternalError("TypeInfo::pidl_cast returned wrong object!");
+	return p;
+    } else {
 	return 0;
-
-    // This is a remote procedure call.
-    if(p->isa(T::type_signature()))
-	return new T::proxytype(p->getReference());
-    else
-	return 0;
+    }
 }
 
 #endif
+
 //
 // $Log$
+// Revision 1.2  1999/09/17 05:08:11  sparker
+// Implemented component model to work with sidl code generator
+//
 // Revision 1.1  1999/08/30 17:39:50  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

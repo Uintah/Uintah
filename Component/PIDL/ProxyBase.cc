@@ -13,11 +13,11 @@
  */
 
 #include <Component/PIDL/ProxyBase.h>
-#include <SCICore/Util/NotFinished.h>
+#include <Component/PIDL/GlobusError.h>
+#include <globus_nexus.h>
 
 using Component::PIDL::ProxyBase;
 using Component::PIDL::Reference;
-using Component::PIDL::Startpoint;
 
 ProxyBase::ProxyBase(const Reference& ref)
     : d_ref(ref)
@@ -28,42 +28,20 @@ ProxyBase::~ProxyBase()
 {
 }
 
-bool ProxyBase::isa(const TypeSignature& ts) const
+void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
 {
-#if 0
-    // Send a message...
-    int size=sizeof(uint32)+ts.length();
-    PCL::SendBuffer* buff=startpoint->requestBuffer(size);
-    char* data=buff->getDataPtr();
-    PCL::put(data, ts.length());
-    PCL::put(data+sizeof(uint32), ts.c_str(), ts.length());
-    startpoint->send(buff);
-
-    // Wait for the result...
-    ???;
-
-    // Look for exceptions...
-
-    bool flag;
-    PCL::get(recvbuf+???, flag);
-    return flag;
-#else
-    NOT_FINISHED("ProxyBase::isa");
-    return true;
-#endif
+    ref=d_ref;
+    if(copy){
+	if(int gerr=globus_nexus_startpoint_copy(&ref.d_sp, const_cast<globus_nexus_startpoint_t*>(&d_ref.d_sp)))
+	    throw GlobusError("startpoint_copy", gerr);
+    }
 }
 
-const Reference& ProxyBase::getReference() const
-{
-    return d_ref;
-}
-
-Startpoint* ProxyBase::getStartpoint() const
-{
-    return d_ref.d_startpoint;
-}
 //
 // $Log$
+// Revision 1.3  1999/09/17 05:08:09  sparker
+// Implemented component model to work with sidl code generator
+//
 // Revision 1.2  1999/08/31 08:59:01  sparker
 // Configuration and other updates for globus
 // First import of beginnings of new component library

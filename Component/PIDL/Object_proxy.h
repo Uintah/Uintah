@@ -25,6 +25,7 @@ namespace Component {
 	protected:
 	    friend class PIDL;
 	    Object_proxy(const Reference&);
+	    Object_proxy(const URL&);
 	    virtual ~Object_proxy();
 	private:
 	};
@@ -32,8 +33,12 @@ namespace Component {
 }
 
 #endif
+
 //
 // $Log$
+// Revision 1.2  1999/09/17 05:08:08  sparker
+// Implemented component model to work with sidl code generator
+//
 // Revision 1.1  1999/08/30 17:39:46  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)
