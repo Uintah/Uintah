@@ -1,5 +1,5 @@
 
-package require Iwidgets 3.0
+#package require Iwidgets 3.0
 
 proc ComponentWizard { {window .componentWizard} } {
     set w $window 
