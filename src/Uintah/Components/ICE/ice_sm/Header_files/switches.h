@@ -66,8 +66,8 @@
 #define switchOveride_Initial_Conditions                1       /* if you want to include a file that       */
                                                                 /* overides the initial conditions specified*/
                                                                 /* by the input file                        */
-#define switch_step1_OnOff                              0       /* Step 1 Evaluate equation of state        */
-#define switch_step2_OnOff                              0       /* Step 2 face-centered vel. and delpress   */
+#define switch_step1_OnOff                              1       /* Step 1 Evaluate equation of state        */
+#define switch_step2_OnOff                              1       /* Step 2 face-centered vel. and delpress   */
 #define switch_step3_OnOff                              1       /* Step 3 face-centered pressure            */
 #define switch_step4_OnOff                              1       /* Step 4 source/sink of momentum and enery */
 #define switch_step4_stress_source_OnOff                0       /*        shear stress terms                */
@@ -82,7 +82,7 @@
 * Switches for printing and plotting debugging information
 *   MAIN CODE ROUTINES
 *_______________________________________________________________________*/
-#define switchDebug_main                                1       /* main program                             */
+#define switchDebug_main                                0       /* main program                             */
                                                                 /* = 1 plot vars. =2 print to stderr        */
 #define switchDebug_main_input                          0       /* visualize the inputs                     */
 
