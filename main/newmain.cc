@@ -38,7 +38,7 @@ using namespace gov::cca;
                         // SCIRun/doc/edition.xml
 #include <sys/stat.h>
 
-//string defaultBuilder("qt"); 
+
 string defaultBuilder("txt"); 
 
 void
@@ -47,7 +47,7 @@ usage()
   cout << "Usage: scirun [args] [net_file]\n";
   cout << "       [-]-v[ersion]          : prints out version information\n";
   cout << "       [-]-h[elp]             : prints usage information\n";
-  cout << "       [-]-b[uilder] qt/txt   : selects qt or text builder\n";
+  cout << "       [-]-b[uilder] qt/txt   : selects QT or Textual builder\n";
   cout << "       net_file               : SCIRun Network Input File\n";
   exit( 0 );
 }
@@ -120,6 +120,9 @@ main(int argc, char *argv[] )
       cerr << "Fatal Error: Cannot find builder service\n";
       Thread::exitAll(1);
     }
+
+    
+    if(!HAVE_QT) defaultBuilder="txt";
 
     if(defaultBuilder=="qt"){
       ComponentID::pointer gui_id=builder->createInstance("QtBuilder", "cca:SCIRun.Builder", gov::cca::TypeMap::pointer(0));
