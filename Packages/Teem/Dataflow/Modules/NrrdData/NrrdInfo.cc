@@ -140,9 +140,10 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
   }
 
   gui->execute(string("set ") + id + "-dimension " + to_string(nh->nrrd->dim));
+
   // Tuple Axis
-  gui->execute(string("set ") + id + "-label0 " + 
-	       string(nh->nrrd->axis[0].label));
+  gui->execute(string("set ") + id + "-label0 {" + 
+	       string(nh->nrrd->axis[0].label) + "}");
 
   gui->execute(id + " fill_tuple_tab");
 
@@ -167,10 +168,11 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
       cntr << "Cell";
       break;
     }
+
     gui->execute(cntr.str());
 
     lab << "set " << id.c_str() << "-label" << i 
-	<< " " << nh->nrrd->axis[i].label;
+	<< " {" << nh->nrrd->axis[i].label << "}";
     gui->execute(lab.str());
 
     spac << "set " << id.c_str() << "-spacing" << i 
@@ -185,6 +187,7 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
 	<< " " << nh->nrrd->axis[i].max;
     gui->execute(max.str());
   }
+
   gui->execute(id + " add_tabs");
 }
 
@@ -216,5 +219,3 @@ NrrdInfo::execute()
 }
 
 } // end SCITeem namespace
-
-
