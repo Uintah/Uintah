@@ -25,6 +25,8 @@ Stanford University) name.
 # define yywrap() (1)
 # include <string.h>
 
+int yylineno;
+
 static char *ReservedWords[] = {
 "ADD",
 "SUB",
