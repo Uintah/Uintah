@@ -73,18 +73,19 @@ GLTextureBuilder::~GLTextureBuilder()
 
 void GLTextureBuilder::execute(void)
 {
-  reset_vars();
 
   FieldHandle sfield;
-  if (!infield_->get(sfield))
-  {
+  if (!infield_->get(sfield)){
+    return;
+  } else if( sfield.get_rep() && sfield->get_type_name(0) == "LatticeVol"){
+    SCIRun::GLTextureBuilder::real_execute(sfield);
     return;
   }
-  else if (!sfield.get_rep() || sfield->get_type_name(0) != "LevelField")
-  {
+  else if (!sfield.get_rep() || sfield->get_type_name(0) != "LevelField") {
     return;
   }
-
+  
+  reset_vars();
   double minV, maxV;
   double min = min_.get();
   double max = max_.get();
