@@ -2,6 +2,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHook.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookImplicit.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/TransIsoHyper.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookPlas.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScramForBinder.h>
@@ -48,16 +49,20 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
    if (mat_type == "comp_mooney_rivlin")
       return(scinew CompMooneyRivlin(child,lb,n8or27));
    
+   if (mat_type == "trans_iso_hyper")
+      return(scinew TransIsoHyper(child,lb,n8or27));
+
+
    else if (mat_type ==  "comp_neo_hook") {
      if (integrator == "explicit" || integrator == "fracture")
       return(scinew CompNeoHook(child,lb,n8or27));
-     else if (integrator == "implicit") 
+     else if (integrator == "implicit")
        return(scinew CompNeoHookImplicit(child,lb,n8or27));
    }
-      
+
    else if (mat_type ==  "ideal_gas")
       return(scinew IdealGasMP(child,lb,n8or27));
-      
+
    else if (mat_type == "comp_neo_hook_plastic")
       return(scinew CompNeoHookPlas(child,lb,n8or27));
    
@@ -79,7 +84,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
    
    else if (mat_type ==  "membrane")
       return(scinew Membrane(child,lb,n8or27));
-   
+
    else if (mat_type ==  "shell_CNH")
       return(scinew ShellMaterial(child,lb,n8or27));
    
