@@ -33,6 +33,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/CastField.tcl \
 	$(SRCDIR)/CastMatrix.tcl \
 	$(SRCDIR)/ChangeCellType.tcl \
+	$(SRCDIR)/ChangeFieldDataAt.tcl \
 	$(SRCDIR)/ChangeFieldDataType.tcl \
 	$(SRCDIR)/ChangeFieldBounds.tcl \
 	$(SRCDIR)/ClipField.tcl \
