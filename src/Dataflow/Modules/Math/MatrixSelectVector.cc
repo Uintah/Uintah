@@ -35,9 +35,9 @@ class MatrixSelectVector : public Module {
   GuiInt    delay_;
   GuiInt    inc_amount_;
   GuiInt    send_amount_;
-  GuiInt    update_function_;
   int       inc_;
   bool      stop_;
+  bool      restart_;
 
   void send_selection(MatrixHandle mh, int which, int ncopy,
 		      bool use_row, bool last_p);
@@ -69,9 +69,9 @@ MatrixSelectVector::MatrixSelectVector(GuiContext* ctx)
     delay_(ctx->subVar("delay")),
     inc_amount_(ctx->subVar("inc-amount")),
     send_amount_(ctx->subVar("send-amount")),
-    update_function_(ctx->subVar("update-function", false)),
     inc_(1),
-    stop_(false)
+    stop_(false),
+    restart_(false)
 {
 }
 
@@ -267,11 +267,11 @@ MatrixSelectVector::execute()
   bool changed_p = false;
   if (use_row)
   {
-    string units;
-    if (!mh->get_property("row_units", units))
-    {
-      units = "Units";
-    }
+    string units("");
+    //    if (!mh->get_property("row_units", units))
+    //{
+    //  units = "Units";
+    //}
     if (units != selectable_units_.get())
     {
       selectable_units_.set(units);
@@ -309,11 +309,11 @@ MatrixSelectVector::execute()
   }
   else
   {
-    string units;
-    if (!mh->get_property("col_units", units))
-    {
-      units = "Units";
-    }
+    string units("");;
+    //    if (!mh->get_property("col_units", units))
+    //{
+    //  units = "Units";
+    // }
     if (units != selectable_units_.get())
     {
       selectable_units_.set(units);
@@ -352,12 +352,11 @@ MatrixSelectVector::execute()
 
   if (changed_p)
   {
-    update_function_.set(1);
+    gui->execute(id + " update_range");
   }
   
   reset_vars();
 
-#if 1
   // Specialized matrix multiply, with Weight Vector given as a sparse
   // matrix.  It's not clear what this has to do with MatrixSelectVector.
   MatrixIPort *ivec = (MatrixIPort *)get_iport("Weight Vector");
@@ -414,7 +413,6 @@ MatrixSelectVector::execute()
     ovec->send(MatrixHandle(cm));
     return;
   }
-#endif
 
   const int maxsize = (use_row?mh->nrows():mh->ncols())-1;
   const int send_amount = Max(1, Min(maxsize, send_amount_.get()));
@@ -460,10 +458,14 @@ MatrixSelectVector::execute()
   }
   else if (execmode == "step")
   {
-    int which = current_.get();
-
-    // TODO: INCREMENT
-    which = increment(which, lower, upper);
+    const int which = increment(current_.get(), lower, upper);
+    send_selection(mh, which, send_amount, use_row, true);
+  }   
+  else if (execmode == "stepb")
+  {
+    inc_ *= -1;
+    const int which = increment(current_.get(), lower, upper);
+    inc_ *= -1;
     send_selection(mh, which, send_amount, use_row, true);
   }
   else if (execmode == "play")
@@ -482,7 +484,7 @@ MatrixSelectVector::execute()
       {
 	next = increment(which, lower, upper);
       }
-      stop = stop_;
+      stop = stop_ || restart_;
       send_selection(mh, which, send_amount, use_row, stop);
       if (!stop && delay > 0)
       {
@@ -505,7 +507,10 @@ MatrixSelectVector::execute()
   {
     send_selection(mh, current_.get(), send_amount, use_row, true);
   }
-  execmode_.set("init");
+  if (!restart_) {
+    execmode_.set("init");
+  }
+  restart_ = false;
 }
 
 
@@ -519,6 +524,10 @@ MatrixSelectVector::tcl_command(GuiArgs& args, void* userdata)
   if (args[1] == "stop")
   {
     stop_ = true;
+  }
+  else if (args[1] == "restart") 
+  {
+    restart_ = true;
   }
   else Module::tcl_command(args, userdata);
 }

@@ -49,6 +49,7 @@ private:
   GuiInt         inc_amount_;
   int            inc_;
   bool           stop_;
+  bool           restart_;
   int            last_input_;
   NrrdDataHandle last_output_;
 
@@ -71,6 +72,7 @@ NrrdSelectTime::NrrdSelectTime(GuiContext* ctx) :
   inc_amount_(ctx->subVar("inc-amount")),
   inc_(1),
   stop_(false),
+  restart_(false),
   last_input_(-1),
   last_output_(0)
 {
@@ -234,9 +236,7 @@ NrrdSelectTime::execute()
     selectable_min_.set(0.0);
     selectable_max_.set(nrrd_handle->nrrd->axis[time_axis].size - 1);
 
-    std::ostringstream str;
-    str << id << " update";
-    gui->execute(str.str().c_str());
+    gui->execute(id + " update_range");
     last_input_ = nrrd_handle->generation;
   }
  
@@ -269,10 +269,14 @@ NrrdSelectTime::execute()
   }
   else if (execmode == "step")
   {
-    int which = current_.get();
-
-    // TODO: INCREMENT
-    which = increment(which, lower, upper);
+    const int which = increment(current_.get(), lower, upper);
+    send_selection(nrrd_handle, which, time_axis, true);
+  }
+  else if (execmode == "stepb")
+  {
+    inc_ *= -1;
+    const int which = increment(current_.get(), lower, upper);
+    inc_ *= -1;
     send_selection(nrrd_handle, which, time_axis, true);
   }
   else if (execmode == "play")
@@ -291,7 +295,7 @@ NrrdSelectTime::execute()
       {
 	next = increment(which, lower, upper);
       }
-      stop = stop_;
+      stop = stop_ || restart_;
       send_selection(nrrd_handle, which, time_axis, stop);
       if (!stop && delay > 0)
       {
@@ -321,7 +325,10 @@ NrrdSelectTime::execute()
       current_.set(which);
     }
   }
-  execmode_.set("init");
+  if (!restart_) {
+    execmode_.set("init");
+  }
+  restart_ = false;
 }
 
 
@@ -336,6 +343,11 @@ NrrdSelectTime::tcl_command(GuiArgs& args, void* userdata)
   {
     stop_ = true;
   }
+  else if (args[1] == "restart") 
+  {
+    restart_ = true;
+  }
+
   else Module::tcl_command(args, userdata);
 }
 
