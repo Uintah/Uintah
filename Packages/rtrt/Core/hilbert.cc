@@ -24,7 +24,6 @@
  * Date:	Thu Feb  7 1991
  * Copyright (c) 1991, University of Michigan
  */
-static char rcsid[] = "$Header$";
 
 /*
  * Lots of tables to simplify calculations.  Notation: p#i means bit i
