@@ -3,10 +3,14 @@
 //
 // David K. McAllister, September 1999.
 
-#include <Remote/Modules/remoteSalmon/Assert.h>
-
+#include <Remote/Tools/Util/Assert.h>
 #include <Remote/Modules/remoteSalmon/HeightSimp.h>
 //int TCnt = 0;
+
+using namespace Remote::Tools;
+
+namespace Remote {
+namespace Modules {
 
 //----------------------------------------------------------------------
 Image *HeightSimp::SimplifyLevel(Image &Prev) {
@@ -307,19 +311,19 @@ void HeightSimp::MakeTri(const int x0, const int y0, const int x1,
   
   Vertex *v0 = VertP[i0]; 
   if(v0 == NULL) v0 = VertP[i0] = 
-		   Me->AddVertex(dVector(x0, y0,
+		   Me->AddVertex(Vector(x0, y0,
 		     //ZBuf[i0] >> 21
 		     Zdbl(x0, y0)
 					));
   Vertex *v1 = VertP[i1]; 
   if(v1 == NULL) v1 = VertP[i1] = 
-		   Me->AddVertex(dVector(x1, y1,
+		   Me->AddVertex(Vector(x1, y1,
 		     //ZBuf[i1] >> 21
 		     Zdbl(x1, y1)
 					));
   Vertex *v2 = VertP[i2]; 
   if(v2 == NULL) v2 = VertP[i2] = 
-		   Me->AddVertex(dVector(x2, y2,
+		   Me->AddVertex(Vector(x2, y2,
 		     //ZBuf[i2] >> 21
 		     Zdbl(x2, y2)
 					));
@@ -453,3 +457,7 @@ SimpMesh *HeightSimp::HFSimp()
   cerr << ", zbuf.size:" << ZBuf.size << endl;
   return Me;
 }
+
+} // namespace Remote {
+} // namespace Tools {
+

@@ -8,9 +8,8 @@ include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
 SRCDIR   := Remote/Modules/remoteSalmon
 
 SRCS     += $(SRCDIR)/remoteSalmon.cc \
-	$(SRCDIR)/Image.cc $(SRCDIR)/Matrix44.cc \
-	$(SRCDIR)/HeightSimp.cc $(SRCDIR)/Object.cc $(SRCDIR)/Utils.cc \
-	$(SRCDIR)/RenderModel.cc $(SRCDIR)/Mesh.cc $(SRCDIR)/Quadric.cc \
+	$(SRCDIR)/HeightSimp.cc \
+	$(SRCDIR)/RenderModel.cc \
 	$(SRCDIR)/SimpMesh.cc $(SRCDIR)/OpenGLServer.cc \
 	$(SRCDIR)/socketServer.cc
 
@@ -19,7 +18,7 @@ PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Comm \
 	SCICore/Geom SCICore/Thread SCICore/Containers \
 	SCICore/TclInterface SCICore/TkExtensions SCICore/Util \
 	SCICore/TkExtensions SCICore/Datatypes \
-	PSECommon/Modules/Salmon SCICore/OS 
+	PSECommon/Modules/Salmon SCICore/OS Remote/Tools
 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
@@ -27,6 +26,9 @@ include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2  2000/07/10 18:10:19  dahart
+# Removing files I put in the wrong place.
+#
 # Revision 1.1  2000/06/06 15:29:31  dahart
 # - Added a new package / directory tree for the remote visualization
 # framework.

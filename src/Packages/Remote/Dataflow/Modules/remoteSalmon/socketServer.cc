@@ -307,6 +307,7 @@ void
 socketServer::receiveView(Socket* sock) {
   View tmpview;
   float vect[3];
+
   
 				// read the position
   sock->Read(vect, 3);
@@ -318,7 +319,7 @@ socketServer::receiveView(Socket* sock) {
 
 				// read the up vector
   sock->Read(vect, 3);
-  tmpview.up(Vector(vect[0], vect[1], vect[2]));
+  tmpview.up(SCICore::Geometry::Vector(vect[0], vect[1], vect[2]));
 
 				// get previous fov
   tmpview.fov(opengl->roe->view.get().fov());
@@ -504,8 +505,8 @@ socketServer::sendZBuffer(Socket* sock) {
   memset(projmat, 0, 16*sizeof(double));
   memset(viewport, 0, 4*sizeof(int));
   
-  dVector newverts;
-  dVector* oldverts;
+  Vector newverts;
+  Vector* oldverts;
   
   opengl->send_mb.send(DO_GETGLSTATE);
   opengl->send_mb.send(GL_MODELVIEW_MATRIX);
@@ -536,7 +537,7 @@ socketServer::sendZBuffer(Socket* sock) {
     for (j = 0; j < Mo->Objs[i].verts.size(); j++) {
       oldverts = &(Mo->Objs[i].verts[j]);
       Mo->Objs[i].texcoords.push_back
-	(dVector(oldverts->x/(double)Img.wid,
+	(Vector(oldverts->x/(double)Img.wid,
 	  oldverts->y/(double)Img.hgt, 0));
       if (gluUnProject(oldverts->x, oldverts->y, oldverts->z,
 	modelmat, projmat, viewport,
@@ -555,7 +556,7 @@ socketServer::sendZBuffer(Socket* sock) {
 
   cerr << "removing triangles" << endl;
   View tmpview(opengl->roe->view.get());
-  dVector pos(tmpview.eyep().x(), tmpview.eyep().y(), tmpview.eyep().z());
+  Vector pos(tmpview.eyep().x(), tmpview.eyep().y(), tmpview.eyep().z());
   Mo->RemoveTriangles(pos, 0.2);
     
   cerr << "sending" << endl;
@@ -592,7 +593,7 @@ socketServer::sendGeom(Socket* sock)
   Object *obj= new Object;
   obj->verts.reserve(t.size()/3);
   for (int i=0; i<t.size(); i+=3)
-    obj->verts.push_back( dVector(t[i], t[i+1], t[i+2]));
+    obj->verts.push_back( Vector(t[i], t[i+1], t[i+2]) );
   Model* Mo = new Model(*obj);
 
   cerr << "sending" << endl;

@@ -13,6 +13,9 @@
 #define VR_PORT 15150
 #define VR_NUMPORTS 5
 
+namespace Remote {
+namespace Modules {
+
 enum vrMessage {
   
 
@@ -93,5 +96,9 @@ enum vrMessage {
   //----------------------------------------------------------------------
   
 };
+
+
+} // namespace Modules {
+} // namespace Remote {
 
 #endif // __MESSAGE_H__

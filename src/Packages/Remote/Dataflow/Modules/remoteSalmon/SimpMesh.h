@@ -8,7 +8,11 @@
 #ifndef _simpmesh_h
 #define _simpmesh_h
 
-#include <Remote/Modules/remoteSalmon/Mesh.h>
+#include <Remote/Tools/Model/Mesh.h>
+using namespace Remote::Tools;
+
+namespace Remote {
+namespace Modules {
 
 class SimpMesh : public Mesh
 {
@@ -129,5 +133,8 @@ public:
   }
 
 };
+
+} //namespace Modules
+} // namespace Remote
 
 #endif
