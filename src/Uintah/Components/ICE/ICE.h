@@ -28,7 +28,7 @@ public:
 				      const DataWarehouseP&,
 				      DataWarehouseP&);
    virtual void scheduleTimeAdvance(double t, double dt, const LevelP&, SchedulerP&,
-				    const DataWarehouseP&, DataWarehouseP&);
+				    DataWarehouseP&, DataWarehouseP&);
    void actuallyTimeStep(const ProcessorContext*,
 			 const Patch* patch,
 			 const DataWarehouseP&,

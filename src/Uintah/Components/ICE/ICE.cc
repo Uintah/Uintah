@@ -274,7 +274,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorContext*,
 
 void ICE::scheduleTimeAdvance(double t, double delT,
 			      const LevelP&, SchedulerP&,
-			      const DataWarehouseP&, DataWarehouseP&)
+			      DataWarehouseP&, DataWarehouseP&)
 {
 #if 0
     for(Level::const_patchIterator iter=level->patchBegin();
