@@ -400,7 +400,6 @@ AC_DEFUN(SCI_CHECK_HEADERS,
     # before we test explicit paths.
 
     _SCI_CHECK_PATHS_="$1 NO_EXPLICIT_PATH"
-
     ########################
     # HEADERS parameter:
 
@@ -443,7 +442,6 @@ AC_DEFUN(SCI_CHECK_HEADERS,
 
        AC_MSG_CHECKING(for all headers at the same time: $_HEADER_LIST_)
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
-
 
           if test "$debugging" = "yes"; then
              echo "Checking all .h files at once in: $_CHECK_PATH_"
@@ -1417,7 +1415,7 @@ fi
 case $host in 
   *-irix*)
     AC_MSG_WARN(Configure script only allows SGI compilers on IRIX.)
-    AC_MSG_WARN(If this is a problem email scirun-develop@cs.utah.edu.)
+    AC_MSG_WARN(If this is a problem email scirun-users@sci.utah.edu.)
 
     ac_objext=o
     SCI_CHECK_VERSION($CC,-version,7.3.1.1,,
@@ -1676,7 +1674,18 @@ SCI_CHECK_VERSION($MAKE,--version,3.78.1,,
   echo configure: error: wrong GNU make version.; exit)
 
 AC_PROG_AWK
-AC_PROG_YACC
+
+## test for bison. yacc is not sufficient as it has no -o option.
+AC_CHECK_PROG(YACC, bison, bison, nobison, $PATH:/usr/bin)
+if test "$YACC" = "nobison"; then
+  echo "configure: error: bison is required, and was not found in your PATH."
+  echo "                  Please add it to your PATH, or set the environment"
+  echo "                  variable YACC to the appropriate bison executable,"
+  echo "                  then run configure again."
+  exit
+fi
+
+##AC_PROG_YACC
 AC_PROG_LEX
 if test "$uintah" = "yes" ; then
   AC_CHECK_PROG(PERL, perl, perl, 
@@ -1757,7 +1766,7 @@ AC_SUBST(NBITS)
 ##  SCI_LAB_TP_DEFAULT is used to add "standard" library search paths
 ##  for those of us who are too lazy to type out all the --with paths
 
-TP_VERSION=1.4.2
+TP_VERSION=1.7.0
 TP_ARCH=`uname -s`
 TP_COMPILER=gcc-3.0.4
 ac_try="$CC -v > /dev/null 2> conftest.out"
@@ -2172,18 +2181,19 @@ esac
 
 FOUND_ALL_XERCESC=no
 dirs="$xercesc/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
-
 SCI_CHECK_LIB($dirs,xerces-c,main,$XML_EXTRA_LIBS,yes,not-optional)
-SCI_CHECK_HEADERS($LIBXERCES_C/../include/xercesc,\
-    dom/DOM_NamedNodeMap.hpp util/PlatformUtils.hpp \
-    parsers/DOMParser.hpp dom/DOM_Node.hpp \
-    util/XMLUni.hpp sax/SAXException.hpp sax/SAXParseException.hpp \
-    sax/ErrorHandler.hpp,,,not-optional)
+
+SCI_CHECK_HEADERS($LIBXERCES_C/../include,\
+    xercesc/dom/DOMNamedNodeMap.hpp xercesc/util/PlatformUtils.hpp \
+    xercesc/parsers/XercesDOMParser.hpp xercesc/dom/DOMNode.hpp \
+    xercesc/util/XMLUni.hpp xercesc/sax/SAXException.hpp \
+    xercesc/sax/SAXParseException.hpp \
+    xercesc/sax/ErrorHandler.hpp,,,not-optional)
     
 AC_SUBST(LIBXERCES_C)
 
 # All xerces includes are equivalent, so...
-INCXERCESC_H=$INCDOM_DOM_NODE_HPP
+INCXERCESC_H=$INCXERCESC_DOM_DOMNODE_HPP
 if test "$INCXERCESC_H" = ""; then
    SCI_MSG_ERROR(xercesc_h not found... something is strange...)
 fi
