@@ -34,7 +34,8 @@ SUBDIRS := \
 	$(SRCDIR)/GeometrySpecification \
 	$(SRCDIR)/PhysicalBC \
 	$(SRCDIR)/ParticleCreator \
-	$(SRCDIR)/Crack			
+	$(SRCDIR)/Crack		\
+	$(SRCDIR)/HeatConduction
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
