@@ -2000,7 +2000,8 @@ ViewSlices::draw_slice(NrrdSlice &slice)
   
   bind_slice(slice, temp_tex_data_);
   draw_slice_quad(slice);
-  if ((painting_ || show_colormap2_) && (window.mode_ == normal_e))
+  if ((painting_ || show_colormap2_) && (window.mode_ == normal_e) &&
+      gradient_.get_rep() && cm2_.get_rep())
   {
     extract_window_paint(window);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
