@@ -4,6 +4,8 @@
 
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/PPMImage.h>
+#include <Packages/rtrt/Core/UVMapping.h>
+#include <Packages/rtrt/Core/UV.h>
 
 namespace rtrt {
 
