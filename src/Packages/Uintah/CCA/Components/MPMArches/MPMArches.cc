@@ -18,6 +18,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/LinearInterpolator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -704,6 +705,13 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
+    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    double* S;
+    S = new double[interpolator->size()];
+
+
     int numMatls = d_sharedState->getNumMPMMatls();
     int numGhostCells = 1;
 
@@ -787,10 +795,8 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
 	particleIndex idx = *iter;
 
 	// Get the node indices that surround the cell
-	IntVector ni[8];
-	double S[8];
 
-	patch->findCellAndWeights(px[idx], ni, S);
+	interpolator->findCellAndWeights(px[idx], ni, S);
 
 	if (!d_stationarySolid)
 	  total_mom += pvelocity[idx]*pmass[idx];
@@ -833,7 +839,12 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
 
 #endif
 
+    
+
     // End loop over patches
+    delete interpolator;
+    delete[] S;
+    delete[] ni;
   }
 }
 
