@@ -308,7 +308,7 @@ static void handle_console_input()
     dataArchive.queryTimesteps(timeindices, times);
     
     cout << "\nTimesteps:\n";
-    for (int i = 0; i < timeindices.size(); i++) {
+    for (int i = 0; i < (int)timeindices.size(); i++) {
       cout << timeindices[i] << endl;
     }
 
