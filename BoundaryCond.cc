@@ -12,25 +12,27 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/fillFace.h>
 #include <typeinfo>
+#include <Core/Util/DebugStream.h>
+#include <Core/Exceptions/InternalError.h>
 
-/*`==========TESTING==========*/
-#define JET_BC 0
-
-#undef ORG_BCS    // original setBC 
-
-// LODI_BCS IS DEFINED IN BOUNDARYCOND.H
-/*==========TESTING==========`*/
-
-
+ // setenv SCI_DEBUG "ICE_BC_DBG:+,ICE_BC_DOING:+"
+static DebugStream BC_dbg(  "ICE_BC_DBG", false);
+static DebugStream BC_doing("ICE_BC_DOING", false);
 using namespace Uintah;
 namespace Uintah {
+
+
+
+//template<class T>void doNothing(T& Temp_CC)
+//{
+//}
 
 /*`==========TESTING==========*/
 /* ---------------------------------------------------------------------
     Add a source at the boundaries
-    Currently hard coded to a jet
+    Currently hard coded for a jet on the x- face
  ---------------------------------------------------------------------*/    
-bool insideOfObject(const int i, 
+bool insideOfObject(const int j, 
                     const int k, 
                     const Patch* patch)
 {
@@ -38,14 +40,13 @@ bool insideOfObject(const int i,
   //__________________________________
   //  Hard coded for a jet 
   Vector origin(0.0, 0.0, 0.0);         // origin of jet
-  double radius = 0.05;                  // radius of jet
-  double x = (double) (i) * dx.x() + dx.x()/2.0;
+  double radius = 0.5;                  // radius of jet
+  double y = (double) (j) * dx.y() + dx.y()/2.0;
   double z = (double) (k) * dx.z() + dx.z()/2.0;
 
-  double delX = origin.x() - x;
+  double delY = origin.y() - y;
   double delZ = origin.z() - z;
-  double h    = sqrt(delX * delX + delZ * delZ);
-  
+  double h    = sqrt(delY * delY + delZ * delZ);
   if (h < radius) {               // if inside the jet then
     return true;
   }
@@ -63,13 +64,16 @@ bool insideOfObject(const int i,
                   IntVector offset = IntVector(0,0,0))                    
 { 
   //__________________________________
-  //  hard coded to only apply on yminus
-  Patch::FaceType faceToApplyBC = Patch::yminus;
+  //  hard coded to only apply on xminus
+  Patch::FaceType faceToApplyBC = Patch::xminus;
+  if( face == faceToApplyBC) {
+   cout << "    AddSourceBC "<< face << " " << value <<endl;
+  }
   
   IntVector low,hi;
   low = var.getLowIndex() + offset;
   hi = var.getHighIndex() - offset;
-  
+ 
   //__________________________________
   // 
   int oneZero = 0;
@@ -95,6 +99,7 @@ bool insideOfObject(const int i,
         for (int k = low.z(); k<hi.z(); k++) {
           if (insideOfObject(j, k,patch)) {
             var[IntVector(low.x() + oneZero,j,k)] = value;
+ //           cout << " I'm applying BC at "<< IntVector(low.x() + oneZero,j,k) << " " << value << endl;
           }
         }
       }
@@ -113,7 +118,6 @@ bool insideOfObject(const int i,
         for (int k = low.z(); k<hi.z(); k++) {
           if (insideOfObject(i, k,patch)) {
             var[IntVector(i,low.y() + oneZero,k)] = value;
-//            cout << " I'm applying BC at "<< IntVector(i,low.y() + oneZero,k) << " " << value << endl;
           }
         }
       }
@@ -153,6 +157,7 @@ void setHydrostaticPressureBC(CCVariable<double>& press,Patch::FaceType face,
                            const CCVariable<double>& rho,
                            const Vector& dx, IntVector offset )
 { 
+  BC_doing << "setHydrostaticPressureBC"<< endl;
   IntVector low,hi;
   low = press.getLowIndex() + offset;
   hi = press.getHighIndex() - offset;
@@ -221,7 +226,8 @@ void setHydrostaticPressureBC(CCVariable<double>& press,Patch::FaceType face,
     break;
   }
 }
-
+//______________________________________________________________________
+//______________________________________________________________________
 
 #ifdef ORG_BCS
 /* --------------------------------------------------------------------- 
@@ -237,7 +243,7 @@ void setBC(CCVariable<double>& press_CC,
               const int mat_id,
               DataWarehouse* new_dw)
 {
-  
+  BC_doing << "ORG setBC (Pressure) "<< kind << endl;
   Vector dx = patch->dCell();
   Vector gravity = sharedState->getGravity();
   IntVector offset(0,0,0);
@@ -298,6 +304,7 @@ void setBC(CCVariable<double>& variable, const string& kind,
               SimulationStateP& sharedState,
               const int mat_id)
 {
+  BC_doing << "ORG setBC (Temp, Density) "<< kind << endl;
   Vector dx = patch->dCell();
   Vector grav = sharedState->getGravity();
   IntVector offset(0,0,0);
@@ -343,10 +350,8 @@ void setBC(CCVariable<double>& variable, const string& kind,
          fillFaceFlux(variable,face,new_bcs->getValue(),dx, 1.0, offset);
         }
 /*`==========TESTING==========*/
-#if JET_BC
-//        cout << " I'm in density "<< face << endl;
+#ifdef JET_BC
         double hardCodedDensity = 1.1792946927* (300.0/1000.0);
-//        double hardCodedDensity = 1.1792946927;
         AddSourceBC<CCVariable<double>,double >(variable, patch, face,
                               hardCodedDensity, offset);  
  #endif 
@@ -378,8 +383,8 @@ void setBC(CCVariable<double>& variable, const string& kind,
           }  // if(gravity)
         }  // if(Neumann)
 /*`==========TESTING==========*/
-#if JET_BC
-//        cout << " I'm in Temperature "<< face << endl;
+#ifdef JET_BC
+        BC_dbg << "ORG AddSourceBC Temperature "<< face << endl;
         double hardCodedTemperature = 1000;
         AddSourceBC<CCVariable<double>, double >(variable, patch, face,
                                hardCodedTemperature, offset);  
@@ -397,6 +402,7 @@ void setBC(CCVariable<double>& variable, const string& kind,
 void setBC(CCVariable<Vector>& variable, const string& kind, 
               const Patch* patch, const int mat_id) 
 {
+  BC_doing << "ORG setBC (Velocity) "<< kind <<endl;
   IntVector  low, hi;
   Vector dx = patch->dCell();
   IntVector offset(0,0,0);
@@ -434,9 +440,9 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
       }
       
 /*`==========TESTING==========*/
-#if JET_BC
-//        cout << " I'm in VelocityBC "<< face <<endl;
-        Vector hardCodedVelocity(0,100.0,0);
+#ifdef JET_BC
+        BC_dbg << "ORG AddSourceBC VelocityBC "<< face <<endl;
+        Vector hardCodedVelocity(10,0,0);
         AddSourceBC<CCVariable<Vector>,Vector >(variable, patch, face, 
                                             hardCodedVelocity, offset);  
  #endif 
@@ -576,6 +582,7 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
 void setBC(SFCXVariable<double>& variable, const  string& kind, 
               const string& comp, const Patch* patch, const int mat_id) 
 {
+  BC_doing << "ORG setBC (SFCXVariable) "<< kind <<endl;
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
     const BoundCondBase *bcs, *sym_bcs;
@@ -620,6 +627,13 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
                                           new_bcs->getValue().x(), dx, offset);
       }
     }
+/*`==========TESTING==========*/
+#ifdef JET_BC
+        double hardCodedVelocity = 10.0;
+        AddSourceBC<SFCXVariable<double>,double >(variable, patch, face, 
+                                            hardCodedVelocity, offset);  
+ #endif 
+/*==========TESTING==========`*/ 
   }
 }
 
@@ -632,6 +646,7 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
 void setBC(SFCYVariable<double>& variable, const  string& kind, 
               const string& comp, const Patch* patch, const int mat_id) 
 {
+  BC_doing << "ORG setBC (SFCYVariable) "<< kind <<endl;
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
     const BoundCondBase *bcs, *sym_bcs;
@@ -677,15 +692,6 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
                                      new_bcs->getValue().y(), dx, offset);
       }
     }
-/*`==========TESTING==========*/
-#if JET_BC
-//        cout << " I'm in SFCYVariable "<< endl;
-        double hardCodedVelocity = 100.0;
-        AddSourceBC<SFCYVariable<double>,double >(variable, patch, face, 
-                                            hardCodedVelocity, offset);  
- #endif 
-/*==========TESTING==========`*/ 
-
   }
 }
 
@@ -698,6 +704,7 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
 void setBC(SFCZVariable<double>& variable, const  string& kind, 
               const string& comp, const Patch* patch, const int mat_id) 
 {
+  BC_doing << "ORG setBC (SFCZVariable) "<< kind <<endl;
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
     const BoundCondBase *bcs, *sym_bcs;
@@ -823,10 +830,15 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
 
 
 
+
+
+
+
+
 //______________________________________________________________________
 //                  J O H N ' S   B C
 
-#ifndef ORG_BCS
+#ifdef JOHNS_BC
 // Takes care of Pressure_CC
 void setBC(CCVariable<double>& press_CC,
               const CCVariable<double>& rho_micro,
@@ -837,7 +849,7 @@ void setBC(CCVariable<double>& press_CC,
               const int mat_id,
               DataWarehouse* new_dw)
 {
-//    cout << " I ' M   U S I N G   J O H N ' S   B C"<< endl;
+  BC_doing << "Johns setBC (press_CC) "<< kind <<" " << which_var<<endl;
   Vector dx = patch->dCell();
   for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
        face=Patch::nextFace(face)) {
@@ -948,6 +960,7 @@ void setBC(CCVariable<double>& variable, const string& kind,
               const Patch* patch,  SimulationStateP& sharedState,
               const int mat_id)
 {
+  BC_doing << "Johns setBC (Temp, Density) "<< kind <<endl;
   Vector dx = patch->dCell();
   for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
        face=Patch::nextFace(face)) {
@@ -1045,6 +1058,7 @@ void setBC(CCVariable<double>& variable, const string& kind,
 void setBC(CCVariable<Vector>& variable, const string& kind, 
               const Patch* patch, const int mat_id) 
 {
+  BC_doing << "Johns setBC (Vector) "<< kind << endl;
   Vector dx = patch->dCell();
   for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
        face=Patch::nextFace(face)) {
@@ -1151,6 +1165,7 @@ void determineSpacingAndSign(Patch::FaceType face, Vector& dx,double& spacing,
 void setBC(SFCXVariable<double>& variable, const  string& kind, 
               const string& comp, const Patch* patch, const int mat_id) 
 {
+  BC_doing << "Johns setBC (SFCXVariable) "<< kind <<endl;
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
@@ -1230,6 +1245,7 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
 void setBC(SFCYVariable<double>& variable, const  string& kind, 
               const string& comp, const Patch* patch, const int mat_id) 
 {
+  BC_doing << "Johns setBC (SFCYVariable) "<< kind <<endl;
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
@@ -1308,6 +1324,7 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
 void setBC(SFCZVariable<double>& variable, const  string& kind, 
               const string& comp, const Patch* patch, const int mat_id) 
 {
+  BC_doing << "Johns setBC (SFCZVariable) "<< kind <<endl;
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
@@ -1378,11 +1395,12 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
 
 
 //______________________________________________________________________
+
 ///______________________________________________________________________
 //
 #ifdef LODI_BCS
 /* --------------------------------------------------------------------- 
- Function~  setBCDensityLODI--
+ Function~  setBCDensityLODI--                      L   O   D   I
  Purpose~   Takes care of Symmetry BC, Dirichelet BC, Characteristic BC
             for Density
  ---------------------------------------------------------------------  */
@@ -1402,9 +1420,9 @@ void setBCDensityLODI(CCVariable<double>& rho_CC,
                 const double R_gas,
                 const Patch* patch, 
                 const int mat_id)
-{ //function setBCDensityLODI: 1
+{ 
+  BC_doing << "LODI setBC (Density) "<< endl;
   Vector dx = patch->dCell();
-//  Vector grav = sharedState->getGravity();
   IntVector offset(0,0,0);  
   
   for(Patch::FaceType face = Patch::startFace;
@@ -1441,29 +1459,21 @@ void setBCDensityLODI(CCVariable<double>& rho_CC,
                        nux, nuy, nuz, rho_tmp, p, vel, c, 
                        face, delT, gamma, R_gas, 
                        mat_id, dx);
-     }  
+    }  
       
-/*`==========TESTING==========
-#if JET_BC
-         //cout << " I'm in density "<< face << endl;
-//       double hardCodedDensity = 1.1792946927* (300.0/1000.0);
-         double hardCodedDensity = 1.1792946927;
-         AddSourceBC<CCVariable<double>,double >(variable, patch, face,
-                                hardCodedDensity, offset);  
+/*`==========TESTING==========*/
+#ifdef JET_BC
+    double hardCodedDensity = 1.1792946927* (300.0/1000.0);
+    AddSourceBC<CCVariable<double>,double >(rho_CC, patch, face,
+                           hardCodedDensity, offset);  
 #endif 
-#if JET_BC
-//      //cout << " I'm in Temperature "<< face << endl;
-        double hardCodedTemperature = 1000;
-        AddSourceBC<CCVariable<double>, double >(variable, patch, face,
-                               hardCodedTemperature, offset);  
-#endif 
-==========TESTING==========`*/ 
-    } // end of loop over faces: 2
-  } //end of function setBCDensityLODI(): 1
+/*==========TESTING==========`*/ 
+  } //faces
+}
 
 
 /* --------------------------------------------------------------------- 
- Function~  setBCVelLODI--
+ Function~  setBCVelLODI--                    L   O   D   I
  Purpose~   Takes care of Symmetry BC, Dirichelet BC, Characteristic BC
             for momentum equations
  ---------------------------------------------------------------------  */
@@ -1489,9 +1499,9 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
             const double R_gas,
             const Patch* patch, 
             const int mat_id)
-{ //function setBCVelLODI: 1
+{ 
+  BC_doing << "LODI setBC (Vel) "<< endl;
   Vector dx = patch->dCell();
-  //Vector grav = sharedState->getGravity();
   IntVector offset(0,0,0);
 
   for(Patch::FaceType face = Patch::startFace;
@@ -1536,27 +1546,18 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
                      face, delT, gamma, R_gas, 
                      mat_id, dx);
       }
-     }
-      
-/*`==========TESTING==========
-#if JET_BC
-         //cout << " I'm in density "<< face << endl;
-//       double hardCodedDensity = 1.1792946927* (300.0/1000.0);
-         double hardCodedDensity = 1.1792946927;
-         AddSourceBC<CCVariable<double>,double >(variable, patch, face,
-                                hardCodedDensity, offset);  
-#endif 
-#if JET_BC
-//      //cout << " I'm in Temperature "<< face << endl;
-        double hardCodedTemperature = 1000;
-        AddSourceBC<CCVariable<double>, double >(variable, patch, face,
-                               hardCodedTemperature, offset);  
-#endif 
-==========TESTING==========`*/ 
-    } 
+/*`==========TESTING==========*/
+#ifdef JET_BC
+        Vector hardCodedVelocity(10.0,0.0,0);
+        AddSourceBC<CCVariable<Vector>,Vector >(vel_CC, patch, face, 
+                                            hardCodedVelocity, offset);  
+ #endif 
+/*==========TESTING==========`*/
+      }  //end velocity
+    } // loop over faces
   } 
 /* --------------------------------------------------------------------- 
- Function~  setBCTempLODI--
+ Function~  setBCTempLODI--                   L   O   D   I
  Purpose~   Takes care of Symmetry BC, Dirichelet BC, Characteristic BC 
             for temperature
  ---------------------------------------------------------------------  */
@@ -1590,9 +1591,9 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
               const double gamma,
               const Patch* patch, 
               const int mat_id)
-{ //function setBCTempLODI: 1
+{ 
+  BC_doing << "LODI setBC (Temp) "<< endl;
   Vector dx = patch->dCell();
-  //Vector grav = sharedState->getGravity();
   IntVector offset(0,0,0);
 
   for(Patch::FaceType face = Patch::startFace;
@@ -1630,26 +1631,18 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
                         e, rho_CC, nux, nuy, nuz, rho_tmp, 
                         p, vel, c, face, delT, cv, gamma,
                         mat_id, dx);
-       }
-/*`==========TESTING==========
-#if JET_BC
-         //cout << " I'm in density "<< face << endl;
-//       double hardCodedDensity = 1.1792946927* (300.0/1000.0);
-         double hardCodedDensity = 1.1792946927;
-         AddSourceBC<CCVariable<double>,double >(variable, patch, face,
-                                hardCodedDensity, offset);  
-#endif 
-#if JET_BC
-//      //cout << " I'm in Temperature "<< face << endl;
+    }
+/*`==========TESTING==========*/
+  #ifdef JET_BC
         double hardCodedTemperature = 1000;
-        AddSourceBC<CCVariable<double>, double >(variable, patch, face,
-                               hardCodedTemperature, offset);  
-#endif 
-==========TESTING==========`*/ 
+        AddSourceBC<CCVariable<double>, double >(temp_CC, patch, face,
+                               hardCodedTemperature, offset); 
+ #endif  
+/*==========TESTING==========`*/ 
     } 
   } 
 /*________________________________________________________________
- Function~ computeDiFirstOrder--
+ Function~ computeDiFirstOrder--                L   O   D   I
  Purpose~  Compute amplitudes of characteristic waves using First-order 
            upwind difference and the di's which are necessary to calculate 
            convection terms at boundary cells in the dircetion 
@@ -1660,65 +1653,66 @@ void computeDiFirstOrder(const double& faceNormal, double& d1, double& d2,
                          const double& rho2, const double& p1, const double& p2, 
                          const double& c, const Vector& vel1, const Vector& vel2, 
                          const double& vel_cross_bound, const double& dx) 
-{       
-        double d_SMALL_NUM = 1.0e-100;
-        //________________________________________________________
-        double drho_dx,dp_dx,du_dx,dv_dx,dw_dx,L1,L2,L3,L4,L5;
-        drho_dx = (rho1 - rho2)/dx;
-        dp_dx   = (  p1 - p2  )/dx;
-        du_dx   = (vel1.x() - vel2.x())/dx;
-        dv_dx   = (vel1.y() - vel2.y())/dx;
-        dw_dx   = (vel1.z() - vel2.z())/dx;
-        
-        //__________________________________
-        // L1 Wave Amplitude
-        double L1_sign;
-        L1_sign = faceNormal * (vel_cross_bound - c)/
-                          (fabs(vel_cross_bound - c) + d_SMALL_NUM);
-          if(L1_sign > 0) {      // outgoing waves
-            L1 = (vel_cross_bound - c) * 
-                 (dp_dx - rho1 * c * du_dx);
-          } else {               // incomming waves
-            L1 = 0.0;
-          }
-        //__________________________________
-        // L2, 3, 4 Wave Amplitude
-        double L234_sign;
-        L234_sign = faceNormal * vel_cross_bound
-                / (fabs(vel_cross_bound) + d_SMALL_NUM);
-          if(L234_sign > 0) {     // outgoing waves
-            L2 = vel_cross_bound * (c * c * drho_dx - dp_dx);
-            L3 = vel_cross_bound * dv_dx;
-            L4 = vel_cross_bound * dw_dx;
-           } else {               // incomming waves
-            L2 = 0.0;
-            L3 = 0.0;
-            L4 = 0.0;
-          }
+{   
+//  BC_doing << "LODI ComputeDIFirstOrder "<< endl;    
+  double d_SMALL_NUM = 1.0e-100;
+  //________________________________________________________
+  double drho_dx,dp_dx,du_dx,dv_dx,dw_dx,L1,L2,L3,L4,L5;
+  drho_dx = (rho1 - rho2)/dx;
+  dp_dx   = (  p1 - p2  )/dx;
+  du_dx   = (vel1.x() - vel2.x())/dx;
+  dv_dx   = (vel1.y() - vel2.y())/dx;
+  dw_dx   = (vel1.z() - vel2.z())/dx;
 
-        //__________________________________
-        // L5 Wave Amplitude
-        double L5_sign;
-        L5_sign = faceNormal * (vel_cross_bound + c)/
-                          (fabs(vel_cross_bound + c) + d_SMALL_NUM);
-          if(L5_sign > 0) {      // outgoing wave
-            L5 = (vel_cross_bound + c) * 
-                 (dp_dx + rho1 * c * du_dx);
-          } else {               // incomming waves
-            L5 = 0.0;
-          }
+  //__________________________________
+  // L1 Wave Amplitude
+  double L1_sign;
+  L1_sign = faceNormal * (vel_cross_bound - c)/
+                    (fabs(vel_cross_bound - c) + d_SMALL_NUM);
+    if(L1_sign > 0) {      // outgoing waves
+      L1 = (vel_cross_bound - c) * 
+           (dp_dx - rho1 * c * du_dx);
+    } else {               // incomming waves
+      L1 = 0.0;
+    }
+  //__________________________________
+  // L2, 3, 4 Wave Amplitude
+  double L234_sign;
+  L234_sign = faceNormal * vel_cross_bound
+          / (fabs(vel_cross_bound) + d_SMALL_NUM);
+    if(L234_sign > 0) {     // outgoing waves
+      L2 = vel_cross_bound * (c * c * drho_dx - dp_dx);
+      L3 = vel_cross_bound * dv_dx;
+      L4 = vel_cross_bound * dw_dx;
+     } else {               // incomming waves
+      L2 = 0.0;
+      L3 = 0.0;
+      L4 = 0.0;
+    }
 
-        //__________________________________
-        // Compute d1-5
-        d1 = (L2 + 0.5 * (L1 + L5))/c/c;
-        d2 = 0.5 * (L5 + L1);
-        d3 = 0.5 * (L5 - L1)/rho1/c;
-        d4 = L3;
-        d5 = L4;
+  //__________________________________
+  // L5 Wave Amplitude
+  double L5_sign;
+  L5_sign = faceNormal * (vel_cross_bound + c)/
+                    (fabs(vel_cross_bound + c) + d_SMALL_NUM);
+    if(L5_sign > 0) {      // outgoing wave
+      L5 = (vel_cross_bound + c) * 
+           (dp_dx + rho1 * c * du_dx);
+    } else {               // incomming waves
+      L5 = 0.0;
+    }
+
+  //__________________________________
+  // Compute d1-5
+  d1 = (L2 + 0.5 * (L1 + L5))/c/c;
+  d2 = 0.5 * (L5 + L1);
+  d3 = 0.5 * (L5 - L1)/rho1/c;
+  d4 = L3;
+  d5 = L4;
 }
 
 /*________________________________________________________________
- Function~ computeDiSecondOrder--
+ Function~ computeDiSecondOrder--           L   O   D   I
  Purpose~  Compute amplitudes of characteristic waves using second-order 
            upwind difference and the di's which are necessary to calculate 
            convection terms at boundary cells in the dircetion 
@@ -1732,65 +1726,65 @@ void computeDiSecondOrder(const double& faceNormal, double& d1, double& d2, doub
                           const double& vel_cross_bound, const double& dx) 
 
 {       
-        double d_SMALL_NUM = 1.0e-100;
-        //________________________________________________________
-        double drho_dx,dp_dx,du_dx,dv_dx,dw_dx,L1,L2,L3,L4,L5;
-        drho_dx = faceNormal * (3.0 * rho1 - 4.0 * rho2 + rho3)/dx;
-        dp_dx   = faceNormal * (3.0 *   p1 - 4.0 *   p2 + p3)/dx;
-        du_dx   = faceNormal * (3.0 * vel1.x() - 4.0 * vel2.x() + vel3.x())/dx;
-        dv_dx   = faceNormal * (3.0 * vel1.y() - 4.0 * vel2.y() + vel3.y())/dx;
-        dw_dx   = faceNormal * (3.0 * vel1.z() - 4.0 * vel2.z() + vel3.z())/dx;
-        
-        //__________________________________
-        // L1 Wave Amplitude
-        double L1_sign;
-        L1_sign = faceNormal * (vel_cross_bound - c)/
-                          (fabs(vel_cross_bound - c) + d_SMALL_NUM);
-          if(L1_sign > 0) {      // outgoing waves
-            L1 = (vel_cross_bound - c) * 
-                 (dp_dx - rho1 * c * du_dx);
-          } else {               // incomming waves
-            L1 = 0.0;
-          }
-        //__________________________________
-        // L2, 3, 4 Wave Amplitude
-        double L234_sign;
-        L234_sign = faceNormal * vel_cross_bound
-                 / (fabs(vel_cross_bound) + d_SMALL_NUM);
-          if(L234_sign > 0) {     // outgoing waves
-            L2 = vel_cross_bound * (c * c * drho_dx - dp_dx);
-            L3 = vel_cross_bound * dv_dx;
-            L4 = vel_cross_bound * dw_dx;
-           } else {               // incomming waves
-            L2 = 0.0;
-            L3 = 0.0;
-            L4 = 0.0;
-          }
+  double d_SMALL_NUM = 1.0e-100;
+  //________________________________________________________
+  double drho_dx,dp_dx,du_dx,dv_dx,dw_dx,L1,L2,L3,L4,L5;
+  drho_dx = faceNormal * (3.0 * rho1 - 4.0 * rho2 + rho3)/dx;
+  dp_dx   = faceNormal * (3.0 *   p1 - 4.0 *   p2 + p3)/dx;
+  du_dx   = faceNormal * (3.0 * vel1.x() - 4.0 * vel2.x() + vel3.x())/dx;
+  dv_dx   = faceNormal * (3.0 * vel1.y() - 4.0 * vel2.y() + vel3.y())/dx;
+  dw_dx   = faceNormal * (3.0 * vel1.z() - 4.0 * vel2.z() + vel3.z())/dx;
 
-        //__________________________________
-        // L5 Wave Amplitude
-        double L5_sign;
-        L5_sign = faceNormal * (vel_cross_bound + c)/
-                          (fabs(vel_cross_bound + c) + d_SMALL_NUM);
-          if(L5_sign > 0) {      // outgoing wave
-            L5 = (vel_cross_bound + c) * 
-                 (dp_dx + rho1 * c * du_dx);
-          } else {               // incomming waves
-            L5 = 0.0;
-          }
+  //__________________________________
+  // L1 Wave Amplitude
+  double L1_sign;
+  L1_sign = faceNormal * (vel_cross_bound - c)/
+                    (fabs(vel_cross_bound - c) + d_SMALL_NUM);
+    if(L1_sign > 0) {      // outgoing waves
+      L1 = (vel_cross_bound - c) * 
+           (dp_dx - rho1 * c * du_dx);
+    } else {               // incomming waves
+      L1 = 0.0;
+    }
+  //__________________________________
+  // L2, 3, 4 Wave Amplitude
+  double L234_sign;
+  L234_sign = faceNormal * vel_cross_bound
+           / (fabs(vel_cross_bound) + d_SMALL_NUM);
+    if(L234_sign > 0) {     // outgoing waves
+      L2 = vel_cross_bound * (c * c * drho_dx - dp_dx);
+      L3 = vel_cross_bound * dv_dx;
+      L4 = vel_cross_bound * dw_dx;
+     } else {               // incomming waves
+      L2 = 0.0;
+      L3 = 0.0;
+      L4 = 0.0;
+    }
 
-        //__________________________________
-        // Compute d1-5
-        d1 = (L2 + 0.5 * (L1 + L5))/c/c;
-        d2 = 0.5 * (L5 + L1);
-        d3 = 0.5 * (L5 - L1)/rho1/c;
-        d4 = L3;
-        d5 = L4;
+  //__________________________________
+  // L5 Wave Amplitude
+  double L5_sign;
+  L5_sign = faceNormal * (vel_cross_bound + c)/
+                    (fabs(vel_cross_bound + c) + d_SMALL_NUM);
+    if(L5_sign > 0) {      // outgoing wave
+      L5 = (vel_cross_bound + c) * 
+           (dp_dx + rho1 * c * du_dx);
+    } else {               // incomming waves
+      L5 = 0.0;
+    }
+
+  //__________________________________
+  // Compute d1-5
+  d1 = (L2 + 0.5 * (L1 + L5))/c/c;
+  d2 = 0.5 * (L5 + L1);
+  d3 = 0.5 * (L5 - L1)/rho1/c;
+  d4 = L3;
+  d5 = L4;
 }
 
 
 /*___________________________________________
- Function~ computeEnergy--
+ Function~ computeEnergy--              L   O   D   I
  Purpose~  compute the total energy at the boundary face
 ____________________________________________________________________*/
 void computeEnergy(CCVariable<double>& e,
@@ -1798,6 +1792,7 @@ void computeEnergy(CCVariable<double>& e,
                    CCVariable<double>& rho,
                    const Patch* patch)
 {
+  BC_doing << "LODI computeEnergy "<< endl;
     IntVector low = e.getLowIndex();
     IntVector hi  = e.getHighIndex();
     int hi_x = hi.x() - 1;
@@ -1834,7 +1829,7 @@ void computeEnergy(CCVariable<double>& e,
 
 
 /*__________________________________________________________________
- Function~ computeLODIFirstOrder--
+ Function~ computeLODIFirstOrder--              L   O   D   I
  Purpose~  compute Di's at the boundary cells using upwind first-order 
            differenceing scheme
 ____________________________________________________________________*/
@@ -1862,6 +1857,7 @@ void computeLODIFirstOrder(CCVariable<double>& d1_x,
                       const int mat_id)
 
 {
+    BC_doing << "LODI computeLODIFirstOrder "<< endl;
     IntVector low = p.getLowIndex();
     IntVector hi  = p.getHighIndex();
     Vector dx = patch->dCell();
@@ -1875,7 +1871,7 @@ void computeLODIFirstOrder(CCVariable<double>& d1_x,
         face=Patch::nextFace(face)){
     switch (face) { // switch:1
       case Patch::xplus:
-        { //case: 2
+        {
           //_____________________________________
           //Compute Di at xplus plane
           for(int j = low.y(); j <= hi_y; j++) {
@@ -1901,174 +1897,33 @@ void computeLODIFirstOrder(CCVariable<double>& d1_x,
               d5_x[r] = d5;
           }//end of k loop
          }//end of j loop
-        }//end of case Patch::xplus:
+       }//end of case Patch::xplus:
       break;
-      /*
-      case Patch::xminus:
-        { //case: 2
-          //_____________________________________
-          //Compute Di at xminus plane
-           for(int j = low.y(); j <= hi_y; j++) {
-            for (int k = low.z(); k <= hi_z; k++) {
-              IntVector r     =  IntVector(low.x()+1,  j, k);
-              IntVector l     =  IntVector(low.x(),j, k);
-              faceNormal      = -1.0;
-              rhoR            =  rho_tmp[r];
-              rhoL            =  rho_tmp[l];
-              pR              =  p[r];
-              pL              =  p[l];
-              cSpeed          =  c[l];
-              velR            =  vel[r];
-              velL            =  vel[l];
-              vel_cross_bound =  velL.x();
-              delta           =  dx.x();
-              computeDiFirstOrder(faceNormal, d1, d2, d3, d4, d5, rhoR, rhoL, 
-                                  pR, pL, cSpeed, velR, velL, vel_cross_bound, delta);
-              //cout << "d1_5, pR, pL" << l << "= " << d1 << "," << d2 << ",";
-              //cout << d3 << "," << d4 << "," << d5 << "," << pR << "," << pL << endl;
-              d1_x[l] = d1;
-              d2_x[l] = d2;
-              d3_x[l] = d3;
-              d4_x[l] = d4;
-              d5_x[l] = d5;
-          }//end of k loop
-         }//end of j loop
-        }//end of case Patch::xplus:
+      case Patch::xminus: 
+          //do nothing
       break;
       case Patch::yplus:
-        { //case: 2
-          //_____________________________________
-          //Compute Di at yplus plane
-           for(int i = low.x(); i<= hi_x; i++) {
-            for (int k = low.z(); k <= hi_z; k++) {
-              IntVector t     = IntVector(i, hi_y,   k);
-              IntVector b     = IntVector(i, hi_y-1, k);
-              faceNormal      = 1.0;
-              rhoT            = rho_tmp[t];
-              rhoB            = rho_tmp[b];
-              pT              = p[t];
-              pB              = p[b];
-              cSpeed          = c[t];
-              velT            = vel[t];
-              velB            = vel[b];
-              vel_cross_bound = velT.y();
-              delta           = dx.y();
-              computeDiFirstOrder(faceNormal, d1, d2, d3, d4, d5, rhoT, rhoB, 
-                                  pT, pB, cSpeed, velT, velB, vel_cross_bound, delta);
-              //cout << "d1_5,pT, pB" << t << "= " << d1 << "," << d2 << ",";
-              //cout << d3 << "," << d4 << "," << d5 << "," << pT << "," << pB << endl;
-              d1_y[t] = d1;
-              d2_y[t] = d2;
-              d3_y[t] = d3;
-              d4_y[t] = d4;
-              d5_y[t] = d5;
-          }//end of k loop
-         }//end of j loop
-        }//end of case Patch::yplus:
+           //do nothing
       break;
       case Patch::yminus:
-        { //case: 2
-          //_____________________________________
-          //Compute Di at yminus plane
-           for(int i = low.x(); i<= hi_x; i++) {
-            for (int k = low.z(); k <= hi_z; k++) {
-              IntVector t = IntVector(i, low.y()+1, k);
-              IntVector b = IntVector(i, low.y(), k);
-              faceNormal = -1.0;
-                    rhoT = rho_tmp[t];
-                    rhoB = rho_tmp[b];
-                      pT = p[t];
-                      pB = p[b];
-                  cSpeed = c[b];
-                    velT = vel[t];
-                    velB = vel[b];
-                  vel_cross_bound = velB.y();
-                  delta = dx.y();
-              computeDiFirstOrder(faceNormal, d1, d2, d3, d4, d5, rhoT, rhoB, 
-                                  pT, pB, cSpeed, velT, velB, vel_cross_bound, delta);
-                //cout << "d1_5, pT, pB" << b << "= " << d1 << "," << d2 << ",";
-                //cout << d3 << "," << d4 << "," << d5 << "," << pT << "," << pB << endl;
-              d1_y[b] = d1;
-              d2_y[b] = d2;
-              d3_y[b] = d3;
-              d4_y[b] = d4;
-              d5_y[b] = d5;
-          }//end of k loop
-         }//end of j loop
-        }//end of case Patch::yminus:
+           //do nothing
         break;
       case Patch::zplus:
-        { //case: 2
-          //_____________________________________
-          //Compute Di at zplus plane
-           for(int i = low.x(); i <= hi_x; i++) {
-            for (int j = low.y(); j <= hi_y; j++) {
-              IntVector f  = IntVector(i, j, hi_z);
-              IntVector bk = IntVector(i, j, hi_z-1);
-              faceNormal = 1.0;
-                    rhoF = rho_tmp[f];
-                   rhoBK = rho_tmp[bk];
-                      pF = p[f];
-                     pBK = p[bk];
-                  cSpeed = c[f];
-                    velF = vel[f];
-                   velBK = vel[bk];
-                 vel_cross_bound = velF.z();
-                 delta = dx.z();
-              computeDiFirstOrder(faceNormal, d1, d2, d3, d4, d5, rhoF, rhoBK, 
-                                  pF, pBK, cSpeed, velF, velBK, vel_cross_bound, delta);
-             //cout << "d1_5, pF, pBK" << f << "= " << d1 << "," << d2 << ",";
-             //cout << d3 << "," << d4 << "," << d5 << "," << pF << "," << pBK << endl;
-              d1_z[f] = d1;
-              d2_z[f] = d2;
-              d3_z[f] = d3;
-              d4_z[f] = d4;
-              d5_z[f] = d5;
-          }//end of k loop
-         }//end of j loop
-        }//end of case Patch::zplus:
+          //do nothing
       break;
       case Patch::zminus:
-        { //case: 2
-          //_____________________________________
-          //Compute Di at zminus plane
-           for(int i = low.x(); i <= hi_x; i++) {
-            for (int j = low.y(); j <= hi_y; j++) {
-              IntVector f  = IntVector(i, j, low.z()+1);
-              IntVector bk = IntVector(i, j, low.z());
-              faceNormal = -1.0;
-                    rhoF = rho_tmp[f];
-                   rhoBK = rho_tmp[bk];
-                      pF = p[f];
-                     pBK = p[bk];
-                  cSpeed = c[bk];
-                    velF = vel[f];
-                   velBK = vel[bk];
-                 vel_cross_bound = velBK.z();
-                 delta = dx.z();
-              computeDiFirstOrder(faceNormal, d1, d2, d3, d4, d5, rhoF, rhoBK, 
-                                  pF, pBK, cSpeed, velF, velBK, vel_cross_bound, delta);
-             //cout << "d1_5, pF, pBK" << bk << "= " << d1 << "," << d2 << ",";
-             //cout << d3 << "," << d4 << "," << d5 << "," << pF << "," << pBK << endl;
-              d1_z[bk] = d1;
-              d2_z[bk] = d2;
-              d3_z[bk] = d3;
-              d4_z[bk] = d4;
-              d5_z[bk] = d5;
-          }//end of k loop
-         }//end of j loop
-        }//end of case Patch::zminus:
+          //do nothing
       break;
-      */
+ 
       default:
       break;
-    }//end of switch
+    }
   } //end of for loop over faces
 }//end of function
 
 
 /*__________________________________________________________________
- Function~ computeLODISecondOrder--
+ Function~ computeLODISecondOrder--                 L   O   D   I
  Purpose~  compute Di's at the boundary cells using upwind second-order 
            differenceing scheme
 ____________________________________________________________________*/
@@ -2095,6 +1950,7 @@ void computeLODISecondOrder(CCVariable<double>& d1_x,
                        const int mat_id)
 
 {
+    BC_doing << "LODI computeLODISecondOrder "<< endl;
     IntVector low = p.getLowIndex();
     IntVector hi  = p.getHighIndex();
     Vector dx = patch->dCell();
@@ -2142,206 +1998,43 @@ void computeLODISecondOrder(CCVariable<double>& d1_x,
       break;
       /*
       case Patch::xminus:
-        { //case: 2
-          //_____________________________________
-          //Compute Di at xminus plane
-           for(int j = low.y(); j <= hi_y; j++) {
-            for (int k = low.z(); k <= hi_z; k++) {
-              IntVector r     =  IntVector(low.x()+2,  j, k);
-              IntVector m     =  IntVector(low.x()+1,  j, k);
-              IntVector l     =  IntVector(low.x(),j, k);
-              faceNormal      = -1.0;
-              rhoR            =  rho_tmp[r];
-              rhoM            =  rho_tmp[m];
-              rhoL            =  rho_tmp[l];
-              pR              =  p[r];
-              pM              =  p[m];
-              pL              =  p[l];
-              cSpeed          =  c[l];
-              velR            =  vel[r];
-              velM            =  vel[m];
-              velL            =  vel[l];
-              vel_cross_bound =  velL.x();
-              delta           =  dx.x();
-              computeDiSecondOrder(faceNormal, d1, d2, d3, d4, d5, rhoL, rhoM, rhoR, 
-                                   pL, pM, pR, cSpeed, velL, velM, velR, vel_cross_bound, delta);
-              //cout << "d1_5, pR, pL" << l << "= " << d1 << "," << d2 << ",";
-              //cout << d3 << "," << d4 << "," << d5 << "," << pR << "," << pL << endl;
-              d1_x[l] = d1;
-              d2_x[l] = d2;
-              d3_x[l] = d3;
-              d4_x[l] = d4;
-              d5_x[l] = d5;
-          }//end of k loop
-         }//end of j loop
-        }//end of case Patch::xplus:
+        //do nothing
       break;
       case Patch::yplus:
-        { //case: 2
-          //_____________________________________
-          //Compute Di at yplus plane
-           for(int i = low.x(); i<= hi_x; i++) {
-            for (int k = low.z(); k <= hi_z; k++) {
-              IntVector t     = IntVector(i, hi_y,   k);
-              IntVector m     = IntVector(i, hi_y-1,   k);
-              IntVector b     = IntVector(i, hi_y-2, k);
-              faceNormal      = 1.0;
-              rhoT            = rho_tmp[t];
-              rhoM            = rho_tmp[m];
-              rhoB            = rho_tmp[b];
-              pT              = p[t];
-              pM              = p[m];
-              pB              = p[b];
-              cSpeed          = c[t];
-              velT            = vel[t];
-              velM            = vel[m];
-              velB            = vel[b];
-              vel_cross_bound = velT.y();
-              delta           = dx.y();
-              computeDiSecondOrder(faceNormal, d1, d2, d3, d4, d5, rhoT, rhoM, rhoB, 
-                                   pT, pM, pB, cSpeed, velT, velM, velB, vel_cross_bound, delta);
-              //cout << "d1_5,pT, pB" << t << "= " << d1 << "," << d2 << ",";
-              //cout << d3 << "," << d4 << "," << d5 << "," << pT << "," << pB << endl;
-              d1_y[t] = d1;
-              d2_y[t] = d2;
-              d3_y[t] = d3;
-              d4_y[t] = d4;
-              d5_y[t] = d5;
-          }//end of k loop
-         }//end of j loop
-        }//end of case Patch::yplus:
+        // do nothing
       break;
       case Patch::yminus:
-        { //case: 2
-          //_____________________________________
-          //Compute Di at yminus plane
-           for(int i = low.x(); i<= hi_x; i++) {
-            for (int k = low.z(); k <= hi_z; k++) {
-              IntVector t = IntVector(i, low.y()+2, k);
-              IntVector m = IntVector(i, low.y()+1, k);
-              IntVector b = IntVector(i, low.y(), k);
-              faceNormal = -1.0;
-                    rhoT = rho_tmp[t];
-                    rhoM = rho_tmp[m];
-                    rhoB = rho_tmp[b];
-                      pT = p[t];
-                      pM = p[m];
-                      pB = p[b];
-                  cSpeed = c[b];
-                    velT = vel[t];
-                    velM = vel[m];
-                    velB = vel[b];
-                  vel_cross_bound = velB.y();
-                  delta = dx.y();
-              computeDiSecondOrder(faceNormal, d1, d2, d3, d4, d5, rhoB, rhoM, rhoT, 
-                                   pB, rhoM, pT, cSpeed, velB, velM, velT, vel_cross_bound, delta);
-                //cout << "d1_5, pT, pB" << b << "= " << d1 << "," << d2 << ",";
-                //cout << d3 << "," << d4 << "," << d5 << "," << pT << "," << pB << endl;
-              d1_y[b] = d1;
-              d2_y[b] = d2;
-              d3_y[b] = d3;
-              d4_y[b] = d4;
-              d5_y[b] = d5;
-          }//end of k loop
-         }//end of j loop
-        }//end of case Patch::yminus:
-        break;
+        // donothing
+      break;
       case Patch::zplus:
-        { //case: 2
-          //_____________________________________
-          //Compute Di at zplus plane
-           for(int i = low.x(); i <= hi_x; i++) {
-            for (int j = low.y(); j <= hi_y; j++) {
-              IntVector f  = IntVector(i, j, hi_z);
-              IntVector m  = IntVector(i, j, hi_z-1);
-              IntVector bk = IntVector(i, j, hi_z-2);
-              faceNormal = 1.0;
-                    rhoF = rho_tmp[f];
-                    rhoM = rho_tmp[m];
-                   rhoBK = rho_tmp[bk];
-                      pF = p[f];
-                      pM = p[m];
-                     pBK = p[bk];
-                  cSpeed = c[f];
-                    velF = vel[f];
-                    velM = vel[m];
-                   velBK = vel[bk];
-                 vel_cross_bound = velF.z();
-                 delta = dx.z();
-              computeDiSecondOrder(faceNormal, d1, d2, d3, d4, d5, rhoF, rhoM, rhoBK, 
-                                   pF, pM, pBK, cSpeed, velF, velM, velBK, vel_cross_bound, delta);
-             //cout << "d1_5, pF, pBK" << f << "= " << d1 << "," << d2 << ",";
-             //cout << d3 << "," << d4 << "," << d5 << "," << pF << "," << pBK << endl;
-              d1_z[f] = d1;
-              d2_z[f] = d2;
-              d3_z[f] = d3;
-              d4_z[f] = d4;
-              d5_z[f] = d5;
-          }//end of k loop
-         }//end of j loop
-        }//end of case Patch::zplus:
+        //do nothing
       break;
       case Patch::zminus:
-        { //case: 2
-          //_____________________________________
-          //Compute Di at zminus plane
-           for(int i = low.x(); i <= hi_x; i++) {
-            for (int j = low.y(); j <= hi_y; j++) {
-              IntVector f  = IntVector(i, j, low.z()+2);
-              IntVector m  = IntVector(i, j, low.z()+1);
-              IntVector bk = IntVector(i, j, low.z());
-              faceNormal = -1.0;
-                    rhoF = rho_tmp[f];
-                    rhoM = rho_tmp[m];
-                   rhoBK = rho_tmp[bk];
-                      pF = p[f];
-                      pM = p[m];
-                     pBK = p[bk];
-                  cSpeed = c[bk];
-                    velF = vel[f];
-                    velM = vel[m];
-                   velBK = vel[bk];
-                 vel_cross_bound = velBK.z();
-                 delta = dx.z();
-              computeDiSecondOrder(faceNormal, d1, d2, d3, d4, d5, rhoBK, rhoM, rhoF, 
-                                   pBK, pM, pF, cSpeed, velBK, velM, velF, vel_cross_bound, delta);
-             //cout << "d1_5, pF, pBK" << bk << "= " << d1 << "," << d2 << ",";
-             //cout << d3 << "," << d4 << "," << d5 << "," << pF << "," << pBK << endl;
-              d1_z[bk] = d1;
-              d2_z[bk] = d2;
-              d3_z[bk] = d3;
-              d4_z[bk] = d4;
-              d5_z[bk] = d5;
-          }//end of k loop
-         }//end of j loop
-        }//end of case Patch::zminus:
+        //do nothing
       break;
       */
       default:
       break;
-    }//end of switch
-  } //end of for loop over faces
-}//end of function
-
-
+    }
+  } 
+}
 
 /*___________________________________________
- Function~ computeNu--
+ Function~ computeNu--                    L   O   D   I
  Purpose~  compute dissipation coefficients 
  __________________________________________*/ 
 
 void computeNu(CCVariable<double>& nux, CCVariable<double>& nuy, CCVariable<double>& nuz,
                CCVariable<double>& p, const Patch* patch)
 {
-    IntVector low = patch->getLowIndex();
-    IntVector hi  = patch->getHighIndex();
-    double d_SMALL_NUM = 1.0e-100;
-    //cout << "beging the computeNU" << endl;
-    for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace; 
-                     face = Patch::nextFace(face))
-    { //loop over faces for a given patch: 1
-
-     switch (face) {// switch:2
+  BC_doing << "LODI computeNu "<< endl;
+  IntVector low = patch->getLowIndex();
+  IntVector hi  = patch->getHighIndex();
+  double d_SMALL_NUM = 1.0e-100;
+  //cout << "beging the computeNU" << endl;
+  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace; 
+                   face = Patch::nextFace(face)){
+     switch (face) {
        case Patch::xplus:
          {//case: 3
           //---------------------------------
@@ -2389,35 +2082,51 @@ void computeNu(CCVariable<double>& nux, CCVariable<double>& nuy, CCVariable<doub
       break;
     }//end of switch: 2
   }//end of loop over faces
-}//end of function
-
+} 
 /* --------------------------------------------------------------------- 
- Function~  setBCPress_LODI--
+ Function~  setBCPress_LODI--                   L   O   D   I
  Purpose~   Takes care Pressure_CC
  ---------------------------------------------------------------------  */
-void setBCPress_LODI(CCVariable<double>& press_CC,
-                     StaticArray<constCCVariable<double> >& sp_vol_CC,
-                     StaticArray<constCCVariable<double> >& Temp_CC,
-                     StaticArray<constCCVariable<double> >& f_theta,
-                     const string& kind, 
-                     const Patch* patch,
-                     SimulationStateP& sharedState, 
-                     const int mat_id,
-                     DataWarehouse* new_dw)
+void  setBCPress_LODI(CCVariable<double>& press_CC,
+                      StaticArray<CCVariable<double> >& var_CC,
+                      StaticArray<constCCVariable<double> >& Temp_CC,
+                      StaticArray<CCVariable<double> >& f_theta,
+                      const string& which_Var,
+                      const string& kind, 
+                      const Patch* patch,
+                      SimulationStateP& sharedState, 
+                      const int mat_id,
+                      DataWarehouse* new_dw)
 {
- 
+  BC_doing << "LODI setBC(Press) "<< endl;
   Vector dx = patch->dCell();
   Vector gravity = sharedState->getGravity();
   IntVector offset(0,0,0);
+  
   int numALLMatls = sharedState->getNumMatls();  
   StaticArray<CCVariable<double> > rho_micro(numALLMatls);
+  //__________________________________
+  // compute rho_micro from var_CC
   for (int m = 0; m < numALLMatls; m++) {
     new_dw->allocateTemporary(rho_micro[m],  patch);
-    for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
-      IntVector c = *iter;
-      rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
+    if (which_Var == "sp_vol") {
+      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
+        IntVector c = *iter;
+        rho_micro[m][c] = 1.0/var_CC[m][c];
+      }
     }
-  }  
+    if (which_Var == "rho_micro") {
+      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
+        IntVector c = *iter;
+        rho_micro[m][c] = var_CC[m][c];
+      }
+    }
+  }  // matls
+
+  if( which_Var !="rho_micro" && which_Var !="sp_vol" ){
+    throw InternalError("setBCPress_LODI: Invalid option for which_var");
+  }
+  
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
     const BoundCondBase *bcs, *sym_bcs;
