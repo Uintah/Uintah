@@ -47,16 +47,16 @@ retval=$?
 if [ $retval = "0" ]; then
     newcount=`grep -c '\0' $TEST_UDADIR/$testdat`
     oldcount=`grep -c '\0' $COMPARE_UDADIR/$testdat`
-fi
 
-if [ $newcount != $oldcount ]; then
-   cat <<EOF
+    if [ $newcount != $oldcount ]; then
+        cat <<EOF
 There is only a discrepancy in the line count of the dat files.
 There are $newcount lines in the new $testdat and
           $oldcount lines in the old $testdat.
 This could simply be a result of a change to the timestep size.
 EOF
+    fi
 fi
 
-exit 0
+exit $retval
 
