@@ -36,12 +36,14 @@
 #include <Core/Util/Assert.h>
 #include <Core/Math/Expon.h>
 
+#include <string>
 #include <iosfwd>
+
+using std::string;
 
 namespace SCIRun {
 
 class Piostream;
-class clString;
 class Point;
 
 class SCICORESHARE Vector {
@@ -125,7 +127,7 @@ public:
   void rotz90(const int);
   inline Point point() const;
     
-  clString string() const;
+  string get_string() const;
     
   friend class Point;
   friend class Transform;

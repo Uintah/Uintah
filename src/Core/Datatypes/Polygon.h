@@ -36,7 +36,7 @@
 #include <Core/Geometry/Point.h>
 #include <iosfwd>
 #include <vector>
-
+#include <string>
 
 namespace SCIRun {
     
@@ -124,9 +124,10 @@ public:
   //////////
   // size method: How long is the vector?
   int size() const { return int(vertices.size()); }
+
   //////////
   // string method:
-  clString string() const;
+  string get_string() const;
 
 private:
   //////////

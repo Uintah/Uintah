@@ -33,15 +33,16 @@
 
 #include <Core/share/share.h>
 #include <Core/Math/MinMax.h>
+#include <string>
 
 #include <iosfwd>
 
+using std::string;
     
 namespace SCIRun {
 
 class RigorousTest;
 class Piostream;
-class clString;
 class Vector;
 
 class SCICORESHARE Point {
@@ -76,7 +77,7 @@ public:
   inline Vector vector() const;
   inline Vector asVector() const;
     
-  clString string() const;
+  string get_string() const;
     
   friend SCICORESHARE class Vector;
   friend SCICORESHARE inline double Dot(const Point&, const Point&);

@@ -32,16 +32,16 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/Assert.h>
 #include <Core/Persistent/Persistent.h>
-#include <Core/Containers/String.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Tester/RigorousTest.h>
 #include <iostream>
+#include <stdio.h>
+
 using std::cerr;
 using std::endl;
 using std::istream;
 using std::ostream;
-#include <stdio.h>
 
 namespace SCIRun {
 
@@ -54,7 +54,7 @@ Point Interpolate(const Point& p1, const Point& p2, double w)
 	Interpolate(p1._z, p2._z, w));
 }
 
-clString Point::string() const
+string Point::get_string() const
 {
 #if 0
     return clString("[")
@@ -64,7 +64,7 @@ clString Point::string() const
 #endif
     char buf[100];
     sprintf(buf, "[%g, %g, %g]", _x, _y, _z);
-    return clString(buf);
+    return buf;
 }
 
 int Point::operator==(const Point& p) const
@@ -118,7 +118,7 @@ Point AffineCombination(const Point& p1, double w1,
 
 ostream& operator<<( ostream& os, const Point& p )
 {
-   os << p.string();
+   os << p.get_string();
    return os;
 }
 

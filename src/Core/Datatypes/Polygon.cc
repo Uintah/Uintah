@@ -16,7 +16,6 @@
 */
 
 #include <Core/Datatypes/Polygon.h>
-#include <Core/Containers/String.h>
 #include <iostream>
 using std::cerr;
 using std::ostream;
@@ -105,14 +104,15 @@ Polygon::getTexCoord(int i) const
 
 
 
-clString
-Polygon::string() const
+string
+Polygon::get_string() const
 {
   vector<Point>::const_iterator i;
-  clString r("");
-  r += "( ";
-  for( i = vertices.begin(); i != vertices.end(); i++ ){
-     r+=  i->string() + ", ";
+  string r = "( ";
+  for( i = vertices.begin(); i != vertices.end(); i++ )
+  {
+    r+= i->get_string();
+    if (i < vertices.end() - 1) { r += ", "; }
   }
   r += ")";
   return r;
@@ -120,7 +120,7 @@ Polygon::string() const
 
 std::ostream& operator<<(std::ostream& os, const Polygon& p)
 {
-  os << p.string();
+  os << p.get_string();
   return os;
 }
 
