@@ -1,4 +1,4 @@
-%define defname SCIRunWithFusion
+%define defname SCIRun
 %define defver	1.20
 %define dotver  2
 %define gccver  3.2
@@ -7,11 +7,11 @@
 %define debug   opt
 %undefine	__check_files
 %define thirdpartydotver 0
-%define thirdpartyversion %{defver}.%{thirdpartydotver}
+%define thirdpartyversion 1.20
 %define hdf5    hdf5-1.6.1
 
 
-Name:		%{defname}
+Name:		%{defname}WithFusion
 Version:	%{defver}.%{dotver}
 Serial:		5
 Release:	%{plat}
