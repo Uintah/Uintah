@@ -164,13 +164,13 @@ using namespace SCIRun;
 		     char message2[], const  CCVariable<double>& q_CC); 
 
       void printVector(const  Patch* patch,int include_GC,char message1[],
-		     char message2[], int component, 
-                   const CCVariable<Vector>& q_CC);
+		       char message2[], int component, 
+		       const CCVariable<Vector>& q_CC);
                    
       void Message(int abort, char message1[],char message2[],char message3[]);
 
-      void readData(const Patch* patch, int include_GC, char    filename[],          
-                 char    var_name[],  const CCVariable<double>& q_CC);
+      void readData(const Patch* patch, int include_GC, char filename[],
+		    char var_name[], const CCVariable<double>& q_CC);
                  
       void  hydrostaticPressureAdjustment(const Patch* patch, 
                 const CCVariable<double>& rho_micro_CC, 
@@ -335,3 +335,5 @@ using namespace SCIRun;
 } // End namespace Uintah
 
 #endif
+
+
