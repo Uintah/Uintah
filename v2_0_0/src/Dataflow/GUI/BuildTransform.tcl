@@ -292,7 +292,6 @@ itcl_class SCIRun_Math_BuildTransform {
 		-label "Uniform Scale"
 	frame $w.f.w.b 
 
-        set $this-ignoring_widget_changes 1
 	set $this-widget_scale 1
 	set $this-widgetShowResizeHandles 0
 
@@ -302,8 +301,7 @@ itcl_class SCIRun_Math_BuildTransform {
 	button $w.f.w.b.reset -text "Reset Widget" \
 		-command "$this-c reset_widget"
 	checkbutton $w.f.w.b.ignore -text "Ignore Changes" \
-		-variable $this-ignoring_widget_changes \
-		-command "$this change_ignore"
+		-variable $this-ignoring_widget_changes
 	pack $w.f.w.b.handles $w.f.w.b.reset $w.f.w.b.ignore -side left \
 		-fill x -expand 1 -pady 3 -padx 12
 	pack $w.f.w.d $w.f.w.b -side top -fill x -expand 1
@@ -317,12 +315,6 @@ itcl_class SCIRun_Math_BuildTransform {
 	global $this-logoutput
 	set x [set $this-loginput]
 	set $this-logoutput [ expr log10($x) ]
-    }
-
-    method change_ignore { } {
-	global $this-ignoring_widget_changes
-	set ignore [set $this-ignoring_widget_changes]
-	$this-c change_ignore $ignore
     }
 
     method change_handles { } {
