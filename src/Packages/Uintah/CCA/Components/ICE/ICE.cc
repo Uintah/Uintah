@@ -401,12 +401,11 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
     t = scinew Task("ICE::actuallyComputeStableTimestepRF",
                       this, &ICE::actuallyComputeStableTimestepRF);
   }
-  Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
   const MaterialSet* all_matls = d_sharedState->allMaterials(); 
   if (d_EqForm){            // EQ
-    t->requires(Task::NewDW, lb->vel_CCLabel,         gn);
-    t->requires(Task::NewDW, lb->speedSound_CCLabel,  gn);
+    t->requires(Task::NewDW, lb->vel_CCLabel,        gac, 1); 
+    t->requires(Task::NewDW, lb->speedSound_CCLabel,  gac,1);
   } else if (d_RateForm){   // RATE FORM
     t->requires(Task::NewDW, lb->vel_CCLabel,        gac, 1);
     t->requires(Task::NewDW, lb->speedSound_CCLabel, gac, 1);
@@ -1000,8 +999,6 @@ void ICE::schedulePrintConservedQuantities(SchedulerP& sched,
 
 /* ---------------------------------------------------------------------
  Function~  ICE::actuallyComputeStableTimestep--
- Purpose~   Compute next time step based on speed of sound and 
-            maximum velocity in the domain
 _____________________________________________________________________*/
 void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,  
                                     const PatchSubset* patches,
@@ -1015,35 +1012,104 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
          << "\t\t ICE" << endl;
       
     Vector dx = patch->dCell();
-    double delt_CFL = 100000, fudge_factor = 1.;
+    double delX = dx.x();
+    double delY = dx.y();
+    double delZ = dx.z();
+    double delt_CFL = 100000;
     constCCVariable<double> speedSound;
-    constCCVariable<Vector> vel;
-    Ghost::GhostType  gn  = Ghost::None;    
-    double one_Zero = 1.0;
-    if(d_impICE) {
-      one_Zero = 0.0;   // ignore the speed of sound when running Implicit
-    }
-    
-    for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
-      Material* matl = d_sharedState->getMaterial(m);
-      int indx= matl->getDWIndex(); 
-      new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gn, 0);
-      new_dw->get(vel,        lb->vel_CCLabel,        indx,patch,gn, 0);
+    constCCVariable<Vector> vel_CC;
+    Ghost::GhostType  gn  = Ghost::None; 
+    Ghost::GhostType  gac = Ghost::AroundCells;
+
+    if (!d_impICE) {     //   E X P L I C I T
+      for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
+        Material* matl = d_sharedState->getMaterial(m);
+        int indx= matl->getDWIndex(); 
+        new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gn, 0);
+        new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gn, 0);
+
+        for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+          IntVector c = *iter;
+          double speed_Sound = speedSound[c];
+          double A = d_CFL*delX/(speed_Sound + 
+                                       fabs(vel_CC[c].x())+d_SMALL_NUM);
+          double B = d_CFL*delY/(speed_Sound + 
+                                       fabs(vel_CC[c].y())+d_SMALL_NUM);
+          double C = d_CFL*delZ/(speed_Sound + 
+                                       fabs(vel_CC[c].z())+d_SMALL_NUM);
+          delt_CFL = std::min(A, delt_CFL);
+          delt_CFL = std::min(B, delt_CFL);
+          delt_CFL = std::min(C, delt_CFL);
+        } 
+      }
+    } 
+    // cout << " delT Based on currant number "<< delt_CFL << endl;;
+
+    if (d_impICE) {    //    I M P L I C I T
+      //__________________________________
+      // Use a characteristic velocity
+      // to compute a sweptvolume. The
+      // swept volume can't exceed the cell volume
+      vector<IntVector> adj_offset(3);                   
+      adj_offset[0] = IntVector(1, 0, 0);    // X 
+      adj_offset[1] = IntVector(0, 1, 0);    // Y 
+      adj_offset[2] = IntVector(0, 0, 1);    // Z   
+
+      Vector faceArea;
+      faceArea[0] = dx.y() * dx.z();        // X
+      faceArea[1] = dx.x() * dx.z();        // Y
+      faceArea[2] = dx.x() * dx.y();        // Z
+
+      double vol = dx.x() * dx.y() * dx.z();  
+/*`==========TESTING==========*/
+      double one_Zero = 0.0;  
+/*==========TESTING==========`*/
       
-      for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        double speed_Sound = one_Zero * speedSound[c];
-        double A = fudge_factor*d_CFL*dx.x()/(speed_Sound + 
-                                      fabs(vel[c].x())+d_SMALL_NUM);
-        double B = fudge_factor*d_CFL*dx.y()/(speed_Sound + 
-                                      fabs(vel[c].y())+d_SMALL_NUM);
-        double C = fudge_factor*d_CFL*dx.z()/(speed_Sound + 
-                                      fabs(vel[c].z())+d_SMALL_NUM);
-        delt_CFL = std::min(A, delt_CFL);
-        delt_CFL = std::min(B, delt_CFL);
-        delt_CFL = std::min(C, delt_CFL);
-      } 
-    }
+      for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
+        Material* matl = d_sharedState->getMaterial(m);
+        int indx= matl->getDWIndex();     
+        new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gac, 1);
+        new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gac, 1);
+
+        delt_CFL = 1000.0; 
+        for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+           double sumSwept_Vol = 0.0;
+           for (int dir = 0; dir <3; dir++) {  //loop over all three directions
+            IntVector c = *iter;
+            IntVector L = c - adj_offset[dir];
+            IntVector R = c + adj_offset[dir];
+           
+            double vel_R = vel_CC[R][dir];
+            double vel_C = vel_CC[c][dir];
+            double vel_L = vel_CC[L][dir];
+
+            double vel_FC_R= 0.5 * vel_R + vel_C;
+            double vel_FC_L= 0.5 * vel_L + vel_C;
+
+            double c_L = speedSound[L];  
+            double c_R = speedSound[R];                    
+            double speedSound = max(c_L,c_R );      
+
+            double relative_vel_R = abs(vel_R - vel_C);
+            double relative_vel_L = abs(vel_L - vel_C);
+
+            double characteristicVel_R = vel_FC_R + one_Zero * speedSound 
+                                       + relative_vel_R; 
+            double characteristicVel_L = vel_FC_L + one_Zero * speedSound 
+                                       + relative_vel_L;
+
+            double sweptVol_R = abs(characteristicVel_R) * faceArea[dir];
+            double sweptVol_L = abs(characteristicVel_L) * faceArea[dir];
+            sumSwept_Vol += sweptVol_R + sweptVol_L;
+          } // dir loop
+          double delt_tmp = d_CFL *vol/(sumSwept_Vol + d_SMALL_NUM);
+          delt_CFL = std::min(delt_CFL, delt_tmp);
+        } 
+      }  //  matl loop
+      //cout << "delT based on swept volumes "<< delt_CFL<<endl; 
+    }  // implicit 
+    
     delt_CFL = std::min(delt_CFL, d_initialDt);
     d_initialDt = 10000.0;
 
@@ -2443,8 +2509,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     IntVector right, left, top, bottom, front, back;
     Vector dx, gravity;
     double pressure_source, mass, vol;
-    double viscous_source;
-    double viscosity;
+    double viscous_source,viscosity;
     double include_term;
 
     delt_vartype delT; 
