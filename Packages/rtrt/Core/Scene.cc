@@ -62,6 +62,7 @@ void Scene::init(const Camera& cam, const Color& bgcolor)
   add_shadowmode("screwy", new ScrewyShadows());
   add_shadowmode("multisample", new MultiSampleSoftShadows());
   add_shadowmode("uncached", new UncachedHardShadows());
+  select_shadow_mode("hard");
 }
 
 void Scene::add_shadowmode(const char* name, ShadowBase* s)
