@@ -44,13 +44,13 @@ ostream& operator<<( ostream& os, StackItem& i ) {
 
 
 ConstraintSolver::ConstraintSolver()
-: NumVariables(0), variables(0), Epsilon(1E-6)
+: stack(200), NumVariables(0), variables(0), Epsilon(1E-6)
 {
 }
 
 
 ConstraintSolver::ConstraintSolver( const Real epsilon )
-: NumVariables(0), variables(0), Epsilon(epsilon)
+: stack(200), NumVariables(0), variables(0), Epsilon(epsilon)
 {
 }
 
