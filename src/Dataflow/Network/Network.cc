@@ -32,42 +32,29 @@
  */
 
 #include <Dataflow/Network/Network.h>
-#include <Core/Util/NotFinished.h>
+#include <Dataflow/Network/Scheduler.h>
+#include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/PackageDB.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/Remote.h>
+#include <Core/Containers/StringUtil.h>
 
 #ifdef _WIN32
 #include <io.h>
 #endif
 #include <stdio.h>
 #include <iostream>
-using std::cerr;
-#include <string.h>
+#include <sstream>
+using namespace SCIRun;
+using namespace std;
 
-//#define DEBUG 1
-
-namespace SCIRun {
-
-
-Network::Network(int first)
-  : the_lock("Network lock"),
-    netedit(0), first(first), nextHandle(0), slave_socket(0)
+Network::Network()
+  : the_lock("Network lock"), sched(0)
 {
 }
 
 Network::~Network()
 {
-    if (slave_socket != 0)
-	close (slave_socket);
-}
-
-int Network::read_file(const string&)
-{
-    NOT_FINISHED("Network::read_file");
-    return 1;
 }
 
 // For now, we just use a simple mutex for both reading and writing
@@ -115,128 +102,31 @@ string Network::connect(Module* m1, int p1, Module* m2, int p2)
 {
 
     Connection* conn=scinew Connection(m1, p1, m2, p2);
-    string id(m1->id+"_p"+to_string(p1)+"_to_"+m2->id+"_p"+to_string(p2));
-    conn->id=id;
+    ostringstream ids;
+    ids << m1->id << "_" << p1 << "_to_" << m2->id << "_p" << p2;
+    conn->id=ids.str();
     conn->connect();
     connections.push_back(conn);
     // Reschedule next time we can...
     reschedule=1;
 
-    // socket already set up
-    Message msg;
-
-    if (!m1->isSkeleton() && !m2->isSkeleton()) {
-    }  	// do nothing - normal case
-    else if (m1->isSkeleton() && m2->isSkeleton()) {
-	// format CreateLocalConnectionMsg control message
-        msg.type        = CREATE_LOC_CONN;
-	msg.u.clc.outModHandle = m1->handle;
-	msg.u.clc.oport = p1;
-	msg.u.clc.inModHandle = m2->handle;
-	msg.u.clc.iport = p2;
-        strcpy (msg.u.clc.connID, id.c_str());
-        msg.u.clc.connHandle = conn->handle = getNextHandle();
-        conn_handles[conn->handle] = conn;
-	
-
-	// send control message
-        char buf[BUFSIZE];
-        bzero (buf, sizeof (buf));
-        bcopy ((char *) &msg, buf, sizeof (msg));
-        write (slave_socket, buf, sizeof(buf));
-    } else {
-	conn->setRemote();
-
-	// format CreateRemoteConnectionMsg control message
-        msg.type        = CREATE_REM_CONN;
-	if (m1->isSkeleton()) {
-	    msg.u.crc.fromRemote = true; 	// connection from slave
-	    m2->handle = getNextHandle();	// assign handle to local mod
-	    mod_handles[m2->handle] = m2;       // take this out - don't need
-	} else {
-	    msg.u.crc.fromRemote = false; 	// connection from master
-	    m1->handle = getNextHandle();	// assign handle to local mod
-	    mod_handles[m1->handle] = m1;       // take this out - don't need
-	}
-	    
-        msg.u.crc.outModHandle = m1->handle;
-        msg.u.crc.oport = p1;
-        msg.u.crc.inModHandle = m2->handle;
-        msg.u.crc.iport = p2;
-        strcpy (msg.u.crc.connID, id.c_str());
-        msg.u.crc.connHandle = conn->handle = getNextHandle();
-        conn_handles[conn->handle] = conn;
-	msg.u.crc.socketPort = conn->socketPort = BASE_PORT + conn->handle;
-
-	// send control message
-        char buf[BUFSIZE];
-        bzero (buf, sizeof (buf));
-        bcopy ((char *) &msg, buf, sizeof (msg));
-        write (slave_socket, buf, sizeof(buf));
-
-	// setup data connection
-#ifndef _WIN32
-	int listen_socket = setupConnect (conn->socketPort);
-	conn->remSocket = acceptConnect (listen_socket);
-	close (listen_socket);
-#endif
-    }
-    return id;
+    return conn->id;
 }
 
 int Network::disconnect(const string& connId)
 {
-    Message msg;
-
-    unsigned int i;
-    for (i = 0; i < connections.size(); i++)
-        if (connections[i]->id == connId)
-		break;
-    if (i == connections.size()) {
-        return 0;
-    }
+  unsigned int i;
+  for (i = 0; i < connections.size(); i++)
+    if (connections[i]->id == connId)
+      break;
+  if (i == connections.size()) {
+    return 0;
+  }
  
-    // endpoints on two different machines - format DeleteRemConnMsg
-    if (connections[i]->isRemote()) {
-        msg.type        = DELETE_REM_CONN;
-        msg.u.drc.connHandle = connections[i]->handle;
-
-    	// send message to slave
-	char buf[BUFSIZE];
-    	bzero (buf, sizeof (buf));
-    	bcopy ((char *) &msg, buf, sizeof (msg));
-    	write (slave_socket, buf, sizeof(buf));
-	
-    	// remove from handle hash table
-    	conn_handles.erase(connections[i]->handle);
-
-    // only distrib connections will have a handle - format DeleteLocConnMsg
-    } else if (connections[i]->handle) {
-	msg.type 	= DELETE_LOC_CONN;
-	msg.u.dlc.connHandle = connections[i]->handle;
-
-    	// send message to slave
-    	char buf[BUFSIZE];
-    	bzero (buf, sizeof (buf));
-    	bcopy ((char *) &msg, buf, sizeof (msg));
-    	write (slave_socket, buf, sizeof(buf));
-
-    	// remove from handle hash table
-    	conn_handles.erase(connections[i]->handle);
-    } 
-    // remove connection ref from iport and oport
-
-    delete connections[i];	//connection destructor,tears down data channel
-    connections.erase(connections.begin() + i);
-    return 1;
+  delete connections[i];	//connection destructor,tears down data channel
+  connections.erase(connections.begin() + i);
+  return 1;
 }
-
-void Network::initialize(NetworkEditor* _netedit)
-{
-    netedit=_netedit;
-    //NOT_FINISHED("Network::initialize"); // Should read a file???
-}
-
 
 static string
 remove_spaces(const string& str)
@@ -249,6 +139,22 @@ remove_spaces(const string& str)
   return result;
 }
 
+
+Module* Network::add_module2(const string& packageName,
+			     const string& categoryName,
+			     const string& moduleName)
+{
+  Module* module = add_module(packageName, categoryName, moduleName);
+
+  GuiInterface* gui = module->gui;
+  // Add a TCL command for this module...
+  gui->add_command(module->id+"-c", module, 0);
+  ostringstream command;
+  command << "addModule2 " << packageName << " " << categoryName << " "
+	 << moduleName << " " << module->id << '\n';
+  gui->execute(command.str());
+  return module;
+}
 
 Module* Network::add_module(const string& packageName,
                             const string& categoryName,
@@ -268,81 +174,22 @@ Module* Network::add_module(const string& packageName,
 
   // Instantiate the module
 
-  Module* mod = packageDB.instantiateModule(packageName, categoryName,
-					    moduleName, instanceName);
+  Module* mod = packageDB->instantiateModule(packageName, categoryName,
+					     moduleName, instanceName);
   if(!mod) {
     cerr << "Error: can't create instance " << instanceName << "\n";
     return 0;
   }
   modules.push_back(mod);
 
-//-----------------------------------------------------------------------------
-// XXX: McQ, 7/19/99.  We need to re-examine things like "if(name(0)=='r')"
-//      with an eye toward robust module naming.
-#if 0
-    Message msg;
+  // Binds NetworkEditor and Network instances to module instance.  
+  // Instantiates ModuleHelper and starts event loop.
+  mod->set_context(sched, this);
 
-#ifdef DEBUG
-    cerr << "Network::add_module created ID\n";
-#endif
-    if (name(0) == 'r') {
-
-#ifdef DEBUG
-    	cerr << "Network::add_module remote module\n";
-#endif
-
-#ifndef _WIN32
-	// open listen socket and startup slave if not done yet
-	if (slave_socket == 0) {
-	    int listen_socket = setupConnect (BASE_PORT);
-
-/* Thread "TCLTask"(pid 8291) caught signal SIGSEGV at address 6146200 (segmentation violation - Unknown code!)
-	    // rsh to startup sr, passing master port number 
-	    system ("rsh burn /a/home/sci/data12/mmiller/o_Dataflow/sr -slave burn 8888");
- */ 	    slave_socket = acceptConnect (listen_socket);
-            close (listen_socket);
-	}
-#endif
-
-	// send message to addModule (pass ID to link 2 instances);
-	msg.type 	= CREATE_MOD;
-	strcpy (msg.u.cm.name, name());
-	strcpy (msg.u.cm.id, id());
-	msg.u.cm.handle = getNextHandle();
-
-	char buf[BUFSIZE];
-	bzero (buf, sizeof (buf));
-	bcopy ((char *) &msg, buf, sizeof (msg));
-   	write (slave_socket, buf, sizeof(buf));
-
-	// pass through to normal code - skeleton module? yes, need to do
-	// this so the NetworkEditor calls for remote will execute.  if I
-	// don't bind a NetworkEditor, how will the calls happen?  the other
-	// side (daemon) should repeat code below also.
-    }
-
-// XXX: McQ: Module instantiated moved from here to above
-
-    if (name(0) == 'r') {		// is this a remote module?
-	mod->skeleton = true;		// tag as skeleton
-    	mod->handle = msg.u.cm.handle;	// skeleton & remote same handle
-    }
-#endif
-//-----------------------------------------------------------------------------
-
-    // Binds NetworkEditor and Network instances to module instance.  
-    // Instantiates ModuleHelper and starts event loop.
-    mod->set_context(netedit, this);   
-
-    // add Module id and ptr to Module to hash table of modules in network
-    module_ids[mod->id] = mod;
-
-    // add to hash table of handles and module ptrs
-    if (mod->handle > 0) {
-      mod_handles[mod->handle] = mod;
-    }
-    
-    return mod;
+  // add Module id and ptr to Module to hash table of modules in network
+  module_ids[mod->id] = mod;
+  
+  return mod;
 }
 
 Module* Network::get_module_by_id(const string& id)
@@ -356,51 +203,12 @@ Module* Network::get_module_by_id(const string& id)
     }
 }
 
-Module* Network::get_module_by_handle (int handle)
-{
-    MapIntModule::iterator mod;
-    mod = mod_handles.find(handle);
-    if (mod != mod_handles.end()) {
-	return (*mod).second;
-    } else {
-	return 0;
-    }
-}
-
-Connection* Network::get_connect_by_handle (int handle)
-{
-    MapIntConnection::iterator conn;
-    conn = conn_handles.find(handle);
-    if (conn != conn_handles.end()) {
-  	return (*conn).second;
-    } else {
-	return 0;
-    }
-}
-
 int Network::delete_module(const string& id)
 {
     Module* mod = get_module_by_id(id);
     if (!mod)
 	return 0;
     
-    if (mod->isSkeleton()) {
-
-	// format deletemodule message
-    	Message msg;
-        msg.type        = DELETE_MOD;
-        msg.u.dm.modHandle = mod->handle;
-
-        // send msg to slave
-        char buf[BUFSIZE];
-        bzero (buf, sizeof (buf));
-        bcopy ((char *) &msg, buf, sizeof (msg));
-        write (slave_socket, buf, sizeof(buf));
-	
-	// remove from handle hash table
-  	mod_handles.erase(mod->handle);
-    }
-
     // traverse array of ptrs to Modules in Network to find this module
     unsigned int i;
     for (i = 0; i < modules.size(); i++)
@@ -411,10 +219,16 @@ int Network::delete_module(const string& id)
 
     // remove array element corresponding to module, remove from hash table
     modules.erase(modules.begin() + i);
-    module_ids.erase(id);
     delete mod;			
     return 1;
 }
 
-} // End namespace SCIRun
+void Network::schedule()
+{
+  sched->do_scheduling();
+}
 
+void Network::attach(Scheduler* _sched)
+{
+  sched=_sched;
+}

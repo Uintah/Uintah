@@ -35,13 +35,13 @@
 #endif
 
 namespace SCIRun {
-
+  class GuiInterface;
 class PackageDBHandler : public ErrorHandler
 {
 public:
   bool foundError;
   
-  PackageDBHandler();
+  PackageDBHandler(GuiInterface* gui);
   ~PackageDBHandler();
   
   void warning(const SAXParseException& e);
@@ -50,6 +50,7 @@ public:
   void resetErrors();
   
 private :
+  GuiInterface* gui;
   PackageDBHandler(const PackageDBHandler&);
   void operator=(const PackageDBHandler&);
 };

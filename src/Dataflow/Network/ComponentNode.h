@@ -131,6 +131,7 @@ typedef struct {
 } component_node;
 
 namespace SCIRun {
+  class GuiInterface;
 
 //////////////////////////
 // CreateComponentNode()
@@ -179,7 +180,8 @@ void PrintComponentNode(component_node* node);
 // Parses "filename", which is in XML format, and then 
 // copies the resulting DOM tree into "node"
 
-int ReadComponentNodeFromFile(component_node* node, const char* filename);
+int ReadComponentNodeFromFile(component_node* node, const char* filename,
+			      GuiInterface* gui);
 
 
 //////////////////////////

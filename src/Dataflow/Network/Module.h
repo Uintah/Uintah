@@ -11,271 +11,263 @@
   The Original Source Code is SCIRun, released March 12, 2001.
   
   The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  Moduleions created by UNIVERSITY are Copyright (C) 2001, 1994 
   University of Utah. All Rights Reserved.
 */
 
 
 /*
- *  Module.h: Base class for modules
+ *  Module.h: Classes for module ports
  *
  *  Written by:
  *   Steven G. Parker
  *   Department of Computer Science
  *   University of Utah
- *   March 1994
+ *   April 2002
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 2002 SCI Group
  */
 
-#ifndef SCI_project_Module_h
-#define SCI_project_Module_h 1
+#ifndef SCIRun_Dataflow_Network_Module_h
+#define SCIRun_Dataflow_Network_Module_h
 
-#ifdef _WIN32
-#pragma warning(disable:4355 4786)
-#endif
-
-#include <Dataflow/share/share.h>
 #include <Dataflow/Network/Port.h>
-#include <Dataflow/Network/NetworkEditor.h>
-#include <Core/Util/Timer.h>
-#include <Core/GuiInterface/TCL.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Util/Assert.h>
 #include <Core/GuiInterface/TCLstrbuff.h>
+#include <Core/GeomInterface/Pickable.h>
 #include <Core/Thread/Mailbox.h>
 #include <Core/Thread/FutureValue.h>
-#include <Core/Geom/Pickable.h>
+#include <Core/GuiInterface/GuiCallback.h>
+#include <Core/GuiInterface/GuiInterface.h>
+#include <Core/Util/Timer.h>
+#include <iosfwd>
+#include <string>
 #include <map>
 
+#define DECLARE_MAKER(name) \
+extern "C" Module* make_##name(GuiContext* ctx) \
+{ \
+  return new name(ctx); \
+}
+
 namespace SCIRun {
+  using namespace std;
+  class IPort;
+  class OPort;
+  class GuiContext;
+  class GuiInterface;
+  class MessageBase;
+  class Module;
+  class ModuleHelper;
+  class Network;
+  class Scheduler;
 
-class Vector;
-class GeomPick;
-class GeomObj;
-class Connection;
-class Network;
-class MessageBase;
-class AI;
-class ViewWindow;
-class Module;
-
-typedef IPort* (*iport_maker)(Module*, const string&);
-typedef OPort* (*oport_maker)(Module*, const string&);
-typedef std::multimap<string,int> port_map_type;
-typedef std::pair<port_map_type::iterator,
-		  port_map_type::iterator> port_range_type;
-
-
-template<class T> 
-class PortManager {
-private:
-  port_map_type namemap_;
-  vector<T> ports_;
-
-public:
-  int size();
-  void add(const T &item);
-  void remove(int item);
-  const T& operator[](int);
-  port_range_type operator[](string);
-};
+  typedef IPort* (*iport_maker)(Module*, const string&);
+  typedef OPort* (*oport_maker)(Module*, const string&);
+  typedef Module* (*ModuleMaker)(GuiContext* ctx);
+  typedef std::multimap<string,int> port_map_type;
+  typedef std::pair<port_map_type::iterator,
+		    port_map_type::iterator> port_range_type;
 
 
-template<class T>
-int
-PortManager<T>::size()
-{ 
-  return ports_.size(); 
-}
-
-template<class T>
-void
-PortManager<T>::add(const T &item)
-{ 
-  namemap_.insert(pair<string, int>(item->get_portname(), ports_.size())); 
-  ports_.push_back(item);
-}
-
-
-template<class T>
-void
-PortManager<T>::remove(int item)
-{
-  string name = ports_[item]->get_portname();
-  port_map_type::iterator erase_me;
-
-  port_range_type p = namemap_.equal_range(name);
-  for (port_map_type::iterator i=p.first;i!=p.second;i++)
-    if ((*i).second>item)
-      (*i).second--;
-    else if ((*i).second==item)
-      erase_me = i;
-
-  ports_.erase(ports_.begin() + item);
-  namemap_.erase(erase_me);
-}
-
-
-template<class T>
-const T&
-PortManager<T>::operator[](int item)
-{
-  ASSERT(size() > item);
-  return ports_[item];
-}
-
-
-template<class T>
-port_range_type
-PortManager<T>::operator[](string item)
-{
-  return port_range_type(namemap_.equal_range(item));
-}
-
-
-
-class PSECORESHARE Module : public TCL, public ModulePickable {
-  /*
-   * This exists to trip people up that still have clone and
-   * copy constructors in the modules - they should be removed.
-   */
-  Module(const Module&);
-  
-  // Added by Mohamed Dekhil for the CSAFE project
-  GuiString  notes ;
-  GuiInt show_status;
-  unsigned long stacksize;
-
-protected:
-  //////////
-  // Log stream for the module
-  TCLstrbuff msgStream_;
-  int pid_;
-public:
-  enum State {
-    NeedData,
-    JustStarted,
-    Executing,
-    Completed
-  };
-public:
-  int show_stat;
-  
-  friend class ModuleHelper;
-  virtual void do_execute();
-  virtual void execute()=0;
-  void setStackSize(unsigned long stackSize);
-
-  State state;
-  PortManager<OPort*> oports;
-  PortManager<IPort*> iports;
-  int first_dynamic_port;
-  char lastportdynamic;
-  iport_maker dynamic_port_maker;
-  string lastportname;
-  ModuleHelper* helper;
-  FutureValue<int> helper_done;
-  int have_own_dispatch;
+  template<class T> 
+  class PortManager {
+  private:
+    port_map_type namemap_;
+    vector<T> ports_;
     
-  double progress;
-  CPUTimer timer;
-
-public:
-  enum ConnectionMode {
-    Connected,
-    Disconnected
+  public:
+    int size();
+    void add(const T &item);
+    void remove(int item);
+    const T& operator[](int);
+    port_range_type operator[](string);
   };
-  enum SchedClass {
-    Sink,
-    Source,
-    Filter,
-    Iterator,
-    ViewerSpecial
+
+  template<class T>
+  int
+  PortManager<T>::size()
+  { 
+    return ports_.size(); 
+  }
+
+  template<class T>
+  void
+  PortManager<T>::add(const T &item)
+  { 
+    namemap_.insert(pair<string, int>(item->get_portname(), ports_.size())); 
+    ports_.push_back(item);
+  }
+
+  template<class T>
+  void
+  PortManager<T>::remove(int item)
+  {
+    string name = ports_[item]->get_portname();
+    port_map_type::iterator erase_me;
+
+    port_range_type p = namemap_.equal_range(name);
+    for (port_map_type::iterator i=p.first;i!=p.second;i++)
+      if ((*i).second>item)
+	(*i).second--;
+      else if ((*i).second==item)
+	erase_me = i;
+    
+    ports_.erase(ports_.begin() + item);
+    namemap_.erase(erase_me);
+  }
+
+  template<class T>
+  const T&
+  PortManager<T>::operator[](int item)
+  {
+    ASSERT(size() > item);
+    return ports_[item];
+  }
+
+  template<class T>
+  port_range_type
+  PortManager<T>::operator[](string item)
+  {
+    return port_range_type(namemap_.equal_range(item));
+  }
+
+  class Module : public ModulePickable, public GuiCallback {
+  public:
+    enum SchedClass {
+      Sink,
+      Source,
+      Filter,
+      Iterator,
+      ViewerSpecial
+    };
+    Module(const std::string& name, GuiContext* ctx, SchedClass,
+	   const string& cat="unknown", const string& pack="unknown");
+    virtual ~Module();
+
+    // Used by SCIRun2
+    Network* getNetwork() {
+      return network;
+    }
+    bool haveUI();
+    void popupUI();
+
+    // Used by Ports
+    bool showStats();
+
+    // Used by modules
+    void error(const std::string&);
+    void warning(const std::string&);
+    void remark(const std::string&);
+    void postMessage(const std::string&);
+
+    port_range_type getIPorts(const string &name);
+    port_range_type getOPorts(const string &name);
+    IPort* getIPort(const string &name);
+    OPort* getOPort(const string &name);
+    OPort* getOPort(int idx);
+    IPort* getIPort(int idx);
+
+    // next 6 are Deprecated
+    port_range_type get_iports(const string &name);
+    port_range_type get_oports(const string &name);
+    IPort* get_iport(const string &name);
+    OPort* get_oport(const string &name);
+    OPort* get_oport(int idx);
+    IPort* get_iport(int idx);
+
+    int numIPorts();
+    int numOPorts();
+
+    // Used by widgets
+    GuiInterface* getGui();
+
+    // Used by ModuleHelper
+    void setPid(int pid);
+    virtual void do_execute();
+    virtual void execute() = 0;
+
+    void request_multisend(OPort*);
+    Mailbox<MessageBase*> mailbox;
+    void set_context(Scheduler* sched, Network* network);
+
+    // Callbacks
+    virtual void connection(Port::ConnectionState, int, bool);
+    virtual void widget_moved(bool last);
+
+  protected:
+    virtual void tcl_command(GuiArgs&, void*);
+
+    GuiInterface* gui;
+    GuiContext* ctx;
+
+    friend class ModuleHelper;
+    friend class NetworkEditor;
+    friend class PackageDB;
+    // name is deprecated
+    string name;
+    string moduleName;
+    string packageName;
+    string categoryName;
+    Scheduler* sched;
+    bool lastportdynamic;
+    int pid_;
+    bool have_own_dispatch;
+    FutureValue<int> helper_done;
+    friend class Network;
+    friend class OPort;
+    friend class IPort;
+    string id;
+    bool abort_flag;
+    void want_to_execute();
+    void update_progress(double);
+    void update_progress(double, Timer &);
+    void update_progress(int, int);
+    void update_progress(int, int, Timer &);
+    enum State {
+      NeedData,
+      JustStarted,
+      Executing,
+      Completed
+    };
+    void update_state(State);
+    CPUTimer timer;
+    TCLstrbuff msgStream_;
+
+    void get_position(int& x, int& y);
+    virtual void emit_vars(std::ostream& out, const std::string& modname);
+    void setStackSize(unsigned long stackSize);
+    void reset_vars();
+
+    // Used by Scheduler
+    friend class Scheduler;
+    bool need_execute;
+    SchedClass sched_class;
+  private:
+    void remove_iport(int);
+    void add_iport(IPort*);
+    void add_oport(OPort*);
+    void reconfigure_iports();
+    void reconfigure_oports();
+    State state;
+    double progress;
+    bool show_stat;
+
+    PortManager<OPort*> oports;
+    PortManager<IPort*> iports;
+    iport_maker dynamic_port_maker;
+    string lastportname;
+    int first_dynamic_port;
+    unsigned long stacksize;
+    ModuleHelper* helper;
+    Network* network;
+
+    GuiString  notes ;
+    GuiInt show_status;
+
+    Module(const Module&);
+    Module& operator=(const Module&);
   };
-  Module(const string& name, const string& id, SchedClass,
-	 const string& cat="unknown", const string& pack="unknown");
-  virtual ~Module();
-
-  /*
-   * This exists to trip people up that still have clone and
-   * copy constructors in the modules - they shoudl be removed.
-   */
-  virtual int clone(int deep);
-
-  Mailbox<MessageBase*> mailbox;
-
-  inline State get_state(){ return state;}
-  inline double get_progress(){ return progress;}
-
-  void get_position(int& x, int& y);
-
-  // Callbacks
-  virtual void connection(Module::ConnectionMode, int, int);
-  virtual void widget_moved(int);
-  virtual void widget_moved2(int last, void *) { widget_moved(last); }
-
-  // Port manipulations
-  void add_iport(IPort*);
-  void add_oport(OPort*);
-  void remove_iport(int);
-  void remove_oport(int);
-  void rename_iport(int, const string&);
-  void rename_oport(int, const string&);
-  virtual void reconfigure_iports();
-  virtual void reconfigure_oports();
-  // return port at position
-  IPort* get_iport(int item) { return iports[item]; }
-  OPort* get_oport(int item) { return oports[item]; }
-  IPort* get_iport(const string &name);
-  OPort* get_oport(const string &name);
-
-  // return port(s) with name
-  port_range_type get_iports(const string &name) { return iports[name]; }
-  port_range_type get_oports(const string &name) { return oports[name]; }
-
-  // Used by Module subclasses
-  void error(const string&);
-  void warning(const string&);
-  void remark(const string&);
-  void update_state(State);
-  void update_progress(double);
-  void update_progress(double, Timer &);
-  void update_progress(int, int);
-  void update_progress(int, int, Timer &);
-  void want_to_execute();
-
-  // User Interface information
-  NetworkEditor* netedit;
-  Network* network;
-  string name;
-  string categoryName;   
-  string packageName;    
-  string moduleName;  
-  int abort_flag;
-public:
-  int niports();
-  int noports();
-  IPort* iport(int);
-  OPort* oport(int);
-  void multisend(OPort*, OPort* =0);
-  void set_context(NetworkEditor*, Network*);
-  int need_execute;
-  SchedClass sched_class;
-  // virtual int should_execute();
-
-  string id;
-  int handle; 	// mm-skeleton and remote share the same handle
-  bool remote;        // mm-is this a remote module?  not used.
-  bool skeleton;	// mm-is this a skeleton module?
-  bool isSkeleton()	{ return skeleton; }
-  void tcl_command(TCLArgs&, void*);
-
-  bool get_abort() { return abort_flag; }
 };
 
-typedef Module* (*ModuleMaker)(const string& id);
-
-
-} // End namespace SCIRun
-
-#endif /* SCI_project_Module_h */
+#endif

@@ -1096,7 +1096,8 @@ void WriteComponentNodeToFile(component_node* n, const char* filename)
   o << endl;
 }
 
-int ReadComponentNodeFromFile(component_node* n, const char* filename)
+int ReadComponentNodeFromFile(component_node* n, const char* filename,
+			      GuiInterface* gui)
 {
   // Initialize the XML4C system
   try {
@@ -1111,7 +1112,7 @@ int ReadComponentNodeFromFile(component_node* n, const char* filename)
   DOMParser parser;
   parser.setDoValidation(false);
   
-  PackageDBHandler handler;
+  PackageDBHandler handler(gui);
   parser.setErrorHandler(&handler);
   
   try {

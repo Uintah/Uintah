@@ -34,13 +34,12 @@
 #include <Dataflow/Comm/MessageTypes.h>
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/NetworkEditor.h>
+#include <Dataflow/Network/Scheduler.h>
 #include <Dataflow/Network/Port.h>
 
 #include <iostream>
 #include <unistd.h>
-using std::cerr;
-using std::endl;
+using namespace std;
 
 #define DEFAULT_MODULE_PRIORITY 90
 
@@ -57,7 +56,7 @@ ModuleHelper::~ModuleHelper()
 
 void ModuleHelper::run()
 {
-  module->pid_ = getpid();
+  module->setPid(getpid());
   if(module->have_own_dispatch)
     module->do_execute();
   else {
@@ -74,20 +73,6 @@ void ModuleHelper::run()
 	{
 	  Scheduler_Module_Message* smsg=(Scheduler_Module_Message*)msg;
 	  smsg->conn->oport->resend(smsg->conn);
-	}
-	break;
-      case MessageTypes::Demand:
-	{
-#if 0
-	  Demand_Message* dmsg=(Demand_Message*)msg;
-	  if(dmsg->conn->oport->have_data()){
-	    dmsg->conn->oport->resend(dmsg->conn);
-	  } else {
-	    dmsg->conn->demand++;
-	    while(dmsg->conn->demand)
-	      module->do_execute();
-	  }
-#endif
 	}
 	break;
       default:

@@ -28,15 +28,14 @@
 #include <Dataflow/XMLUtil/StrX.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/Containers/StringUtil.h>
+#include <Core/GuiInterface/GuiInterface.h>
 #include <stdio.h>
 #include <iostream>
 #include <ctype.h>
-using std::cerr;
-using std::ostream;
-using std::endl;
-using std::cout;
+#include <string>
 #include <vector>
-using std::vector;
+using namespace std;
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #define IRIX
@@ -53,43 +52,43 @@ using std::vector;
 #endif
 
 #include <sys/stat.h>
+static string SCIRUN_SRCTOP = SRCTOP;   // = INSTALL_DIR/SCIRun/src
+static string SCIRUN_OBJTOP = OBJTOP;   // = BUILD_DIR
+static string DEFAULT_LOAD_PACKAGE = DEF_LOAD_PACK;  // configured packages
 
 namespace SCIRun {
-env_map scirunrc;                        // contents of .scirunrc
-// these live here, but are reset in main.cc
-string SCIRUN_SRCTOP("not set");         // = INSTALL_DIR/SCIRun/src
-string SCIRUN_OBJTOP("not set");         // = BUILD_DIR
-string DEFAULT_LOAD_PACKAGE("not set");  // configured packages
+  PackageDB* packageDB = 0;
+  env_map scirunrc;                        // contents of .scirunrc
 
-typedef struct {
-  string name;
-  std::map<string,ModuleInfo*> modules;
-} category;
+  typedef struct {
+    string name;
+    std::map<string,ModuleInfo*> modules;
+  } category;
   
-typedef struct {
-  string name;
-  std::map<string,category*> categories;
-} package;
+  typedef struct {
+    string name;
+    std::map<string,category*> categories;
+  } package;
 
-typedef std::map<int,char*>::iterator char_iter;
-typedef std::map<int,inport_node*>::iterator inport_iter;
-typedef std::map<int,outport_node*>::iterator outport_iter;
-typedef std::map<string,int>::iterator string_iter;
-typedef std::map<string,category*>::iterator category_iter;
-typedef std::map<string,ModuleInfo*>::iterator module_iter;
-typedef std::map<int,package*>::iterator package_iter;
+  typedef std::map<int,char*>::iterator char_iter;
+  typedef std::map<int,inport_node*>::iterator inport_iter;
+  typedef std::map<int,outport_node*>::iterator outport_iter;
+  typedef std::map<string,int>::iterator string_iter;
+  typedef std::map<string,category*>::iterator category_iter;
+  typedef std::map<string,ModuleInfo*>::iterator module_iter;
+  typedef std::map<int,package*>::iterator package_iter;
+}
 
-
-PackageDB packageDB;
-
-PackageDB::PackageDB(void) :
-    db_((void*)new Packages), packageList_(0)
+using namespace SCIRun;
+  
+PackageDB::PackageDB(GuiInterface* gui)
+  : db_(new Packages), packageList_(0), gui(gui)
 {
 }
 
-PackageDB::~PackageDB(void)
+PackageDB::~PackageDB()
 { 
-  delete (Packages*)db_; 
+  delete db_; 
 }
 
 typedef void (*pkgInitter)(const string& tclPath);
@@ -123,7 +122,75 @@ LIBRARY_HANDLE PackageDB::findLibInPath(string lib, string path)
   return handle;
 }
 
-void PackageDB::loadPackage()
+bool PackageDB::findMaker(ModuleInfo* moduleInfo)
+{
+  string cat_bname, pak_bname;
+  if(moduleInfo->packageName == "SCIRun") {
+    cat_bname = "Dataflow_Modules_";
+    pak_bname = "Dataflow";
+  } else {
+    cat_bname = "Packages_" + moduleInfo->packageName + "_Dataflow_Modules_";
+    pak_bname = "Packages_" + moduleInfo->packageName + "_Dataflow";
+  }
+
+  string libpath="";
+  env_iter envi = scirunrc.find("PACKAGE_LIB_PATH");
+  if (envi!=scirunrc.end())
+    libpath=(*envi).second;
+
+  // try the large version of the .so
+  string libname = "lib" + pak_bname + ".so";
+  LIBRARY_HANDLE package_so = findLibInPath(libname,libpath);
+  string package_error;
+  if (!package_so)
+    package_error = SOError();
+
+  // try the small version of the .so 
+  libname = "lib" + cat_bname + moduleInfo->categoryName + ".so";
+  LIBRARY_HANDLE category_so = findLibInPath(libname,libpath);
+  string category_error;
+  if (!category_so)
+    category_error = SOError();
+
+  if (!category_so && !package_so) {
+    if(gui){
+      gui->postMessage("Unable to load all of package '" + moduleInfo->packageName +
+		       "' (category '" + moduleInfo->categoryName + "' failed) :\n - " +
+		       package_error + "\n - " + category_error + "\n");
+      gui->execute("update idletasks");
+    } else {
+      cerr << "Unable to load all of package '" << moduleInfo->packageName
+	   << "' (category '" << moduleInfo->categoryName << "' failed) :\n - "
+	   << package_error << "\n - " << category_error << "\n";
+    }
+    return false;
+  }
+
+  string makename = "make_" + moduleInfo->moduleName;
+  if (category_so)
+    moduleInfo->maker = 
+      (ModuleMaker)GetHandleSymbolAddress(category_so,makename.c_str());
+  if (!moduleInfo->maker && package_so)
+    moduleInfo->maker = 
+      (ModuleMaker)GetHandleSymbolAddress(package_so,makename.c_str());
+  if (!moduleInfo->maker) {
+    if(gui){
+      gui->postMessage("Unable to load module '" + moduleInfo->moduleName +
+		       "' :\n - can't find symbol 'make_" +
+		       moduleInfo->moduleName + "'\n");
+      gui->execute("update idletasks");
+    } else {
+      cerr << "Unable to load module '" << moduleInfo->moduleName
+	   << "' :\n - can't find symbol 'make_" << moduleInfo->moduleName
+	   << "'\n";
+    }
+    return false;
+  }
+  return true;
+}
+
+
+void PackageDB::loadPackage(bool resolve)
 {
   string loadPackage;
   string result;
@@ -140,7 +207,10 @@ void PackageDB::loadPackage()
   string notset(NOT_SET);
   string packagePath;
 
-  postMessage("Loading packages, please wait...\n", false);
+  if(gui)
+    gui->postMessage("Loading packages, please wait...\n", false);
+  else
+    cerr << "Loading packages...\n";
 
   // the format of PACKAGE_PATH is a colon seperated list of paths to the
   // root(s) of package source trees.
@@ -197,15 +267,20 @@ void PackageDB::loadPackage()
     }
 
     if (tmpPath=="") {
-      postMessage("Unable to load package " + packageElt +
-		  ":\n - Can't find " + packageElt + 
-		  " directory in package path\n");
+      if(gui){
+	gui->postMessage("Unable to load package " + packageElt +
+			 ":\n - Can't find " + packageElt + 
+			 " directory in package path\n");
+      } else {
+	cerr << "Unable to load package " << packageElt
+	     << ":\n - Can't find " << packageElt
+	     << " directory in package path\n";
+      }
       continue;
     }
 
-    TCL::execute(string("lappend auto_path ")+pathElt+"/"+packageElt+
-		 "/Dataflow/GUI");
-    
+    do_command("lappend auto_path "+pathElt+"/"+packageElt+"/Dataflow/GUI");
+
     string bname = packageElt;
     string pname = packageElt;
     string xmldir;
@@ -214,21 +289,21 @@ void PackageDB::loadPackage()
       bname = "";
       pname = "SCIRun";
       xmldir = SCIRUN_SRCTOP + "/Dataflow/XML";
-      TCL::execute(string("lappend auto_path ")+SCIRUN_SRCTOP+
-		   "/Dataflow/GUI");
+      do_command(string("lappend auto_path ")+SCIRUN_SRCTOP+
+		 "/Dataflow/GUI");
     } else {
       bname = "Packages_" + bname + "_";
       xmldir = pathElt+"/"+packageElt+"/Dataflow/XML";
-      TCL::execute(string("lappend auto_path ")+pathElt+"/"+packageElt+
-		   "/Dataflow/GUI");
+      do_command(string("lappend auto_path ")+pathElt+"/"+packageElt+
+		 "/Dataflow/GUI");
     }
-
     std::map<int,char*>* files;
     files = GetFilenamesEndingWith((char*)xmldir.c_str(),".xml");
 
     if (!files) {
-      postMessage("Unable to load package " + pname +
-		  ":\n - Couldn't find *.xml in " + xmldir +"\n");
+      if(gui)
+	gui->postMessage("Unable to load package " + pname +
+			 ":\n - Couldn't find *.xml in " + xmldir +"\n");
       continue;
     }
 
@@ -244,7 +319,7 @@ void PackageDB::loadPackage()
 	 i++) {
       if (node) DestroyComponentNode(node);
       node = CreateComponentNode(3);
-      ReadComponentNodeFromFile(node,(xmldir+"/"+(*i).second).c_str());
+      ReadComponentNodeFromFile(node,(xmldir+"/"+(*i).second).c_str(), gui);
 
       if (notset==node->name||notset==node->category) continue;
 
@@ -297,132 +372,96 @@ void PackageDB::loadPackage()
       }
     }
   }
-
-  TCL::execute("toplevel .loading; "
-	       "wm geometry .loading 250x75+275+200; "
-	       "wm title .loading {Loading packages}; "
-	       "update idletasks");
-  TCL::execute("iwidgets::feedback .loading.fb -labeltext "
-	       "{Loading package:                 }"
-	       " -steps " + to_string(mod_count) + ";"
-	       "pack .loading.fb -padx 5 -fill x; update idletasks");
-
-  string libpath="";
-  envi = scirunrc.find("PACKAGE_LIB_PATH");
-  if (envi!=scirunrc.end())
-    libpath=(*envi).second;
-  LIBRARY_HANDLE package_so;
-  LIBRARY_HANDLE category_so;
-  string libname;
-  string cat_bname,pak_bname;
-  string pname,cname,mname;
-  string category_error;
-  string package_error;
-  string makename;
-  string command;
+  if(gui){
+    gui->execute("toplevel .loading; "
+		 "wm geometry .loading 250x75+275+200; "
+		 "wm title .loading {Loading packages}; "
+		 "update idletasks");
+    gui->execute("iwidgets::feedback .loading.fb -labeltext "
+		 "{Loading package:                 }"
+		 " -steps " + to_string(mod_count) + ";"
+		 "pack .loading.fb -padx 5 -fill x; update idletasks");
+  }
   int index = 0;
   int numreg;
   
-  mod_count = 0;
-
   for (pi = packages.begin();
        pi!=packages.end();
        pi++) {
 
     numreg = 0;
     
-    pname = (*pi).second->name;
+    string pname = (*pi).second->name;
 
-    if(pname == "SCIRun") {
-      cat_bname = "Dataflow_Modules_";
-      pak_bname = "Dataflow";
+    if(gui){
+      gui->postMessage("Loading package '" + pname + "'", false);
+      gui->execute(".loading.fb configure -labeltext {Loading package: " +
+		   pname + " }");
+      gui->eval("update idletasks",result);
     } else {
-      cat_bname = "Packages_" + pname + "_Dataflow_Modules_";
-      pak_bname = "Packages_" + pname + "_Dataflow";
+      cerr << "Loading package '" << pname << "'\n";
     }
-
-    postMessage("Loading package '" + pname + "'", false);
-    TCL::execute(".loading.fb configure -labeltext {Loading package: " +
-		 pname + " }");
-    TCL::eval("update idletasks",result);
-
-    // try the large version of the .so
-    libname = "lib" + pak_bname + ".so";
-    package_so = findLibInPath(libname,libpath);
-    //package_so = GetLibraryHandle(libname.c_str());
-    if (!package_so)
-      package_error = SOError();
 
     for (ci = (*pi).second->categories.begin();
 	 ci!=(*pi).second->categories.end();
 	 ci++) {
-
-      cname = (*ci).second->name;
-
-      // try the small version of the .so 
-      libname = "lib" + cat_bname + cname + ".so";
-      category_so = findLibInPath(libname,libpath);
-      //category_so = GetLibraryHandle(libname.c_str());
-      if (!category_so)
-	category_error = SOError();
-
-      if (!category_so && !package_so) {
-	postMessage("Unable to load all of package '" + pname +
-		    "' (category '" + cname + "' failed) :\n - " +
-		    package_error + "\n - " + category_error + "\n");
-	TCL::execute("update idletasks");
-	continue;
-      }
-
       for (mi = (*ci).second->modules.begin();
 	   mi!=(*ci).second->modules.end();
 	   mi++) {
-	mname = (*mi).second->moduleName;
-	makename = "make_" + mname;
-	(*mi).second->maker = 0;
-	if (category_so)
-	  (*mi).second->maker = 
-	    (ModuleMaker)GetHandleSymbolAddress(category_so,makename.c_str());
-	if (!(*mi).second->maker && package_so)
-	  (*mi).second->maker = 
-	    (ModuleMaker)GetHandleSymbolAddress(package_so,makename.c_str());
-	if (!(*mi).second->maker) {
-	  postMessage("Unable to load module '" + mname +
-		      "' :\n - can't find symbol 'make_" + mname + "'\n");
-	  TCL::execute("update idletasks");
-	  //destroy new_module here
-	  continue;
+	if(resolve){
+	  if(findMaker((*mi).second)){
+	    registerModule((*mi).second);
+	    numreg++;
+	  } else {
+	    string mname = (*mi).second->moduleName;
+	    if(gui){
+	      gui->postMessage("Unable to load module '" + mname +
+			       "' :\n - can't find symbol 'make_" + mname + "'\n");
+	      gui->execute("update idletasks");
+	    } else {
+	      cerr << "Unable to load module '" << mname
+		   << "' :\n - can't find symbol 'make_" << mname << "'\n";
+	    }
+	  }
 	} else {
 	  numreg++;
 	  registerModule((*mi).second);
 	}
-
-	TCL::execute("if [winfo exists .loading.fb] "
-		     "{.loading.fb step; update idletasks}");
+	if(gui)
+	  gui->execute("if [winfo exists .loading.fb] "
+		       "{.loading.fb step; update idletasks}");
       }
     }
     
     if (numreg) {
-      command = "createPackageMenu " + to_string(index++);
-      TCL::execute(command);
-      TCL::execute("update idletasks");
-    } else 
-      postMessage("Unable to load package " + pname + ":\n"
-                  " - could not find any valid modules.\n");
+      if(gui){
+	gui->execute("createPackageMenu " + to_string(index++));
+	gui->execute("update idletasks");
+      }
+    } else {
+      if(gui)
+	gui->postMessage("Unable to load package " + pname + ":\n"
+			 " - could not find any valid modules.\n");
+      else
+	cerr << "Unable to load package " << pname
+	     <<":\n - could not find any valid modules.\n";
+    }
   }
 
-  postMessage("\nFinished loading packages.\n",false);
-  TCL::execute("if [winfo exists .loading] {destroy .loading}");
-  TCL::eval("update idletasks",result);
+  if(gui){
+    gui->postMessage("\nFinished loading packages.\n",false);
+    gui->execute("if [winfo exists .loading] {destroy .loading}");
+    gui->eval("update idletasks",result);
+  } else {
+    cerr << "Finished loading packages\n";
+  }
 }
   
 void PackageDB::registerModule(ModuleInfo* info) {
-  Packages* db=(Packages*)db_;
- 
   Package* package;
-  if(!db->lookup(info->packageName,package))
+  if(!db_->lookup(info->packageName,package))
     {
-      db->insert(info->packageName,package=new Package);
+      db_->insert(info->packageName,package=new Package);
       packageList_.push_back( info->packageName );
     }
   
@@ -446,23 +485,21 @@ void PackageDB::createAlias(const string& fromPackageName,
 			    const string&,// toCategoryName,
 			    const string&)// toModuleName)
 {
-  Packages* db=(Packages*)db_;
-  
   Package* package;
-  if(!db->lookup(fromPackageName,package)) {
-    postMessage("Warning: creating an alias from a nonexistant package "+fromPackageName+" (ignored)");
+  if(!db_->lookup(fromPackageName,package)) {
+    gui->postMessage("Warning: creating an alias from a nonexistant package "+fromPackageName+" (ignored)");
     return;
   }
   
   Category* category;
   if(!package->lookup(fromCategoryName,category)) {
-    postMessage("Warning: creating an alias from a nonexistant category "+fromPackageName+"."+fromCategoryName+" (ignored)");
+    gui->postMessage("Warning: creating an alias from a nonexistant category "+fromPackageName+"."+fromCategoryName+" (ignored)");
     return;
   }
   
   ModuleInfo* moduleInfo;
   if(!category->lookup(fromModuleName,moduleInfo)) {
-    postMessage("Warning: creating an alias from a nonexistant module "+fromPackageName+"."+fromCategoryName+"."+fromModuleName+" (ignored)");
+    gui->postMessage("Warning: creating an alias from a nonexistant module "+fromPackageName+"."+fromCategoryName+"."+fromModuleName+" (ignored)");
     return;
   }
   registerModule(moduleInfo);
@@ -471,11 +508,10 @@ void PackageDB::createAlias(const string& fromPackageName,
 Module* PackageDB::instantiateModule(const string& packageName,
 				     const string& categoryName,
 				     const string& moduleName,
-				     const string& instanceName) const {
-  Packages* db=(Packages*)db_;
-
+				     const string& instanceName)
+{
   Package* package;
-  if(!db->lookup(packageName,package)) {
+  if(!db_->lookup(packageName,package)) {
     cerr << "ERROR: Instantiating from nonexistant package " << packageName 
 	 << "\n";
     return 0;
@@ -526,8 +562,19 @@ Module* PackageDB::instantiateModule(const string& packageName,
     moduleInfo->uiFile="";                       // Don't do it again
   }
 #endif
-  
-  Module *module = (moduleInfo->maker)(instanceName);
+
+  if(!moduleInfo->maker){
+    if(!findMaker(moduleInfo)){
+      cerr << "ERROR: Cannot find maker for module: " << packageName 
+	   << "." << categoryName << "." << moduleName << "\n";
+      return 0;
+    }
+  }
+
+  GuiContext* module_context = gui->createContext(instanceName);
+  Module *module = (moduleInfo->maker)(module_context);
+  if(!module)
+    return 0;
   
   // Some modules may already know their package and category.
   // If this module doesn't, then set it's package and category here.
@@ -541,6 +588,25 @@ Module* PackageDB::instantiateModule(const string& packageName,
   module->lastportdynamic = moduleInfo->lastportdynamic;
   
   return module;
+}
+ 
+bool PackageDB::haveModule(const string& packageName,
+			   const string& categoryName,
+			   const string& moduleName) const
+{
+  Package* package;
+  if(!db_->lookup(packageName,package))
+    return false;
+  
+  Category* category;
+  if(!package->lookup(categoryName,category))
+    return false;
+  
+  ModuleInfo* moduleInfo;
+  if(!category->lookup(moduleName,moduleInfo))
+    return false;
+
+  return true;
 }
  
 vector<string>
@@ -557,23 +623,16 @@ PackageDB::packageNames(void) const
 vector<string>
 PackageDB::categoryNames(const string& packageName) const
 {
-  Packages* db=(Packages*)db_;
-  {
-    PackagesIter iter(db);
-    for(iter.first();iter.ok();++iter) if(iter.get_key()==packageName) {
-      Package* package=iter.get_data();
-      vector<string> result(package->size());
-      {
-	PackageIter iter(package);
-	int i=0;
-	for(iter.first();iter.ok();++iter) result[i++]=iter.get_key();
-      }
-      return result;
-    }
+  Package* package;
+  if(!db_->lookup(packageName, package)){
+    cerr << "WARNING: Unknown package " << packageName << "\n";
+    vector<string> result(0);
+    return result;
   }
-  cerr << "WARNING: Unknown package " << packageName << "\n";
-  
-  vector<string> result(0);
+  vector<string> result(package->size());
+  PackageIter iter(package);
+  int i=0;
+  for(iter.first();iter.ok();++iter) result[i++]=iter.get_key();
   return result;
 }
  
@@ -581,35 +640,60 @@ vector<string>
 PackageDB::moduleNames(const string& packageName,
 		       const string& categoryName) const
 {
-  Packages* db=(Packages*)db_;
-  {
-    PackagesIter iter(db);
-    for(iter.first();iter.ok();++iter) 
-      if(iter.get_key()==packageName) {
-	Package* package=iter.get_data();
-	{
-	  PackageIter iter(package);
-	  for(iter.first();iter.ok();++iter) 
-	    if(iter.get_key()==categoryName) {
-	      Category* category=iter.get_data();
-	      vector<string> result(category->size());
-	      {
-		CategoryIter iter(category);
-		int i=0;
-		for(iter.first();iter.ok();++iter) 
-		  result[i++]=iter.get_key();
-	      }
-	      return result;
-	    }
-	  cerr << "WARNING: Unknown category " << packageName << "."
-	       << categoryName << "\n";
-	}
-      }
+  Package* package;
+  if(!db_->lookup(packageName, package)){
+    cerr << "WARNING: Unknown package " << packageName << "\n";
+    vector<string> result(0);
+    return result;
   }
- cerr << "WARNING: Unknown package " << packageName << "\n";
- 
- vector<string> result(0);
- return result;
+
+  Category* category;
+  if(!package->lookup(categoryName, category)){
+    cerr << "WARNING: Unknown category " << packageName << "."
+	 << categoryName << "\n";
+    vector<string> result(0);
+    return result;
+  }
+  vector<string> result(category->size());
+  CategoryIter iter(category);
+  int i=0;
+  for(iter.first();iter.ok();++iter) 
+    result[i++]=iter.get_key();
+  return result;
 }
 
-} // End namespace SCIRun
+void PackageDB::setGui(GuiInterface* gui)
+{
+  this->gui=gui;
+  for(vector<string>::iterator iter = delayed_commands.begin();
+      iter != delayed_commands.end(); ++iter){
+    gui->execute(*iter);
+  }
+  delayed_commands.clear();
+}
+
+void PackageDB::do_command(const string& command)
+{
+  if(gui)
+    gui->execute(command);
+  else
+    delayed_commands.push_back(command);
+}
+
+ModuleInfo* PackageDB::GetModuleInfo(const string& name, const string& catname,
+				     const string& packname)
+{
+  Package* package;
+  if (!db_->lookup(packname,package))
+    return 0;
+
+  Category* category;
+  if (!package->lookup(catname,category))
+    return 0;
+
+  ModuleInfo* info;
+  if (category->lookup(name,info))
+    return info;
+  return 0;
+}
+

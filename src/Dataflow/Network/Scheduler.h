@@ -17,47 +17,73 @@
 
 
 /*
- *  NetworkEditor.h: Interface to Network Editor class from project
+ *  Scheduler.h: 
  *
  *  Written by:
  *   Steven G. Parker
  *   Department of Computer Science
  *   University of Utah
- *   March 1994
+ *   April 2002
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 2002 SCI Group
  */
 
-#ifndef SCI_project_NetworkEditor_h
-#define SCI_project_NetworkEditor_h 1
+#ifndef SCIRun_Dataflow_Network_Scheduler_h
+#define SCIRun_Dataflow_Network_Scheduler_h
 
 #include <Dataflow/share/share.h>
 #include <Dataflow/Comm/MessageBase.h>
 #include <Core/GuiInterface/GuiCallback.h>
+#include <Core/Thread/Mailbox.h>
+#include <Core/Thread/Runnable.h>
 #include <string>
 
 namespace SCIRun {
   using std::string;
-  class GuiInterface;
+
+  class Connection;
   class MessageBase;
   class Module;
   class Network;
   class OPort;
 
-  class PSECORESHARE NetworkEditor : public GuiCallback {
+  class PSECORESHARE Scheduler : public Runnable  {
     Network* net;
     void multisend(OPort*);
     void do_scheduling(Module*);
-    int first_schedule;
-    int schedule;
-    void save_network(const string&);
-    GuiInterface* gui;
+    bool first_schedule;
+    bool schedule;
   public:
-    NetworkEditor(Network*, GuiInterface* gui);
-    ~NetworkEditor();
+    Mailbox<MessageBase*> mailbox;
+
+    Scheduler(Network*);
+    ~Scheduler();
+
+    void do_scheduling();
+    void request_multisend(OPort*);
   private:
-    virtual void tcl_command(GuiArgs&, void*);
+    virtual void run();
+    void main_loop();
+
   };
+
+  class PSECORESHARE Scheduler_Module_Message : public MessageBase {
+  public:
+    Connection* conn;
+    Scheduler_Module_Message();
+    Scheduler_Module_Message(Connection* conn);
+    virtual ~Scheduler_Module_Message();
+  };
+
+  class PSECORESHARE Module_Scheduler_Message : public MessageBase {
+  public:
+    OPort* p1;
+    Module_Scheduler_Message();
+    Module_Scheduler_Message(OPort*);
+    virtual ~Module_Scheduler_Message();
+  };
+
 } // End namespace SCIRun
 
 #endif
+
