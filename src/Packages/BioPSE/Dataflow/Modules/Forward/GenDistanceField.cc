@@ -163,10 +163,17 @@ GenDistanceFieldAlgo::distance_to_line2(const Point &p,
 {
   Vector m = b - a;
   Vector n = p - a;
-  const double t0 = Dot(m, n) / Dot(m, m);
-  if (t0 <= 0) return (n).length2();
-  else if (t0 >= 1.0) return (p - b).length2();
-  else return (n - m * t0).length2();
+  if (m.length2() < 1e-6)
+  {
+    return n.length2();
+  }
+  else
+  {
+    const double t0 = Dot(m, n) / Dot(m, m);
+    if (t0 <= 0) return (n).length2();
+    else if (t0 >= 1.0) return (p - b).length2();
+    else return (n - m * t0).length2();
+  }
 }
 
 
