@@ -53,6 +53,7 @@ MP(SGI_LU)
 MP(SGI_Solve)
 
 // MEG
+MP(EleValuesToMatLabFile)
 MP(MakeCurrentDensityField)
 MP(MagneticScalarField)
 MP(SurfToVectGeom)
@@ -140,6 +141,7 @@ void initPackage(const clString& tcl) {
   RM("ISL",	      "SGI_LU",			 make_SGI_LU,		    tcl+"/SGI_LU.tcl");
 
   // MEG
+   RM("MEG",          "EleValuesToMatLabFile",           make_EleValuesToMatLabFile,         "");
   RM("MEG",	      "MakeCurrentDensityField", make_MakeCurrentDensityField, "");
   RM("MEG",	      "MagneticScalarField",	 make_MagneticScalarField,  "");
   RM("MEG",	      "SurfToVectGeom",		 make_SurfToVectGeom,	    tcl+"/SurfToVectGeom.tcl");

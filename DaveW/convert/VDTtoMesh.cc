@@ -68,18 +68,26 @@ int main(int argc, char **argv)
     sscanf(buf, "%d %d %d %d", &npts, &dum1, &dum2, &ntets);
     cerr << "File has "<<npts<<" points and "<<ntets<<" tets.\n";
 
+    Array1<Node*> allNodes(npts*3);
+    for (i=0; i<npts*3; i++) allNodes[i]=new Node(Point(0,0,0));
+
     // etype edegree
     readLine(&f, buf);
     
     // ! points
     readLine(&f, buf);
 
+    int cnt=0;
     // idx x y z
     for (i=0; i<npts; i++) {
 	readLine(&f, buf);
 	sscanf(buf, "%d %lf %lf %lf", &dum1, &x, &y, &z);
-	while (dum1-1 != mesh->nodes.size()) mesh->nodes.add(NodeHandle(new Node(Point(-347,-348,-349))));
-	mesh->nodes.add(NodeHandle(new Node(Point(x,y,z))));
+	while (dum1-1 != mesh->nodes.size()) {
+	    allNodes[cnt]->p=Point(-347,-348,-349);
+	    mesh->nodes.add(NodeHandle(allNodes[cnt++]));
+	}
+	allNodes[cnt]->p=Point(x,y,z);
+	mesh->nodes.add(NodeHandle(allNodes[cnt++]));
     }
 
     // ! tets

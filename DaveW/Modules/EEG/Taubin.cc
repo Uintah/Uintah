@@ -18,6 +18,7 @@
 #include <SCICore/Datatypes/SparseRowMatrix.h>
 #include <SCICore/Datatypes/SurfTree.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/MiscMath.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
@@ -30,6 +31,7 @@ using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
 using namespace SCICore::Geometry;
+using namespace SCICore::Math;
 
 class Taubin : public Module {
     Array1<Array1<int> > nbrs;
@@ -38,6 +40,7 @@ class Taubin : public Module {
     TCLdouble gamma;
     TCLdouble pb;
     TCLint N;
+    TCLint constrainedTCL;
     SurfaceIPort* isurf;
     SurfaceOPort* osurf;
     int tcl_exec;
@@ -46,6 +49,7 @@ class Taubin : public Module {
     int gen;
     SparseRowMatrix* srm;
     SparseRowMatrix* srg;
+    double dx, dy, dz;
     ColumnMatrix oldX;
     ColumnMatrix oldY;
     ColumnMatrix oldZ;
@@ -63,7 +67,7 @@ public:
     void bldMatrices();
     void bldCols();
     void bldNbrs();
-    void smooth();
+    void smooth(int);
     void Reset();
     virtual void execute();
     virtual void tcl_command(TCLArgs&, void*);
@@ -78,7 +82,8 @@ Module* make_Taubin(const clString& id)
 
 Taubin::Taubin(const clString& id)
 : Module("Taubin", id, Source), gamma("gamma", id, this), pb("pb", id, this),
-  N("N", id, this), tcl_exec(0), reset(0), init(0), gen(-1)
+  N("N", id, this), tcl_exec(0), reset(0), init(0), gen(-1),
+  constrainedTCL("constrainedTCL", id, this)
 {
    // Create the input port
    isurf=scinew SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);
@@ -101,15 +106,21 @@ void Taubin::bldNbrs() {
 //    st->nodeNbrs;
 //    st->printNbrInfo();
     int j,k;
+    dx=dy=dz=0;
     for (i=0; i<st->nodeI.size(); i++) {
 //	cerr << "i="<<i<<"  nbrsSize="<<st->nodeNbrs[i].size();
 	for (j=0, k=0; j<st->nodeI[i].nbrs.size(); j++, k++) {
-	    if ((st->nodeI[i].nbrs[j]>i) && (j==k)) {
+	    int nbr=st->nodeI[i].nbrs[j];
+	    if ((nbr>i) && (j==k)) {
 		nbrs[i][k]=i;
+		Vector v(st->nodes[i]-st->nodes[nbr]);
+		if (Abs(v.x())>dx) dx=v.x();
+		if (Abs(v.y())>dy) dy=v.y();
+		if (Abs(v.z())>dz) dz=v.z();
 //		cerr << " "<<i;
 		k++;
 	    }
-	    nbrs[i][k]=st->nodeI[i].nbrs[j];
+	    nbrs[i][k]=nbr;
 //	    cerr << " "<<st->nodeNbrs[i][j];
 	}
 	if (j==k) {
@@ -118,7 +129,19 @@ void Taubin::bldNbrs() {
 	}
 //	cerr << "\n";
     }
-    // go in and remove neighbors for some non-manifold cases
+    
+    cerr << "Taubin: dx="<<dx<<" dy="<<dy<<" dz="<<dz<<"\n";
+
+
+    // these are the squares of the lengths of the axes of the ellipsoid 
+    //   that the nodes can move within
+    dx*=.49; dx=dx*dx;
+    dy*=.49; dy=dy*dy;
+    dz*=.49; dz=dz*dz;
+
+    // (x-x0)^2 / dx^2 + (y-y0)^2 / dy^2 + (z-z0)^2 / dz^2 < 1.0
+
+// go in and remove neighbors for some non-manifold cases
 
 //    for (i=0; i<nbrs.size(); i++) {
 //	cerr << i << "  ( ";
@@ -189,7 +212,7 @@ void Taubin::bldCols() {
     }
 }
 
-void Taubin::smooth() {
+void Taubin::smooth(int constrained) {
     int flops, memrefs;
     // multiply iteratively
     int iters=N.get();
@@ -204,6 +227,38 @@ void Taubin::smooth() {
 
     // copy the resultant points back into the data
     for (int i=0; i<st->nodes.size(); i++) {
+	if (constrained) {
+	    double tmp, d2;
+	    // (x-x0)^2 / dx^2 + (y-y0)^2 / dy^2 + (z-z0)^2 / dz^2 < 1.0
+	    tmp=oldX[i]-origX[i];
+	    d2=tmp*tmp/dx;
+	    tmp=oldY[i]-origY[i];
+	    d2+=tmp*tmp/dy;
+	    tmp=oldZ[i]-origZ[i];
+	    d2+=tmp*tmp/dz;
+	    if (d2>1) {
+//		cerr << "Out-of-bounds (d2="<<d2<<") orig=("<<origX[i]<<", "<<origY[i]<<", "<<origZ[i]<<")\n\twants=("<<oldX[i]<<", "<<oldY[i]<<", "<<oldZ[i]<<")\n\tgot="; 
+		// interesct the ellipsoid with the line between the 2 pts
+		double t;
+		double p1x, p1y, p1z, p0x, p0y, p0z;
+		p0x=origX[i]; p1x=oldX[i];
+		p0y=origY[i]; p1y=oldY[i];
+		p0z=origZ[i]; p1z=oldZ[i];
+		double denom=
+		    dy*dz*(p1x*p1x+p0x*p0x)-
+		    2*dy*dz*p1x*p0x+
+		    dx*dz*(p1y*p1y+p0y*p0y)-
+		    2*dx*dz*p1y*p0y+
+		    dx*dy*(p1z*p1z+p0z*p0z)-
+		    2*dx*dy*p1z*p0z;
+//		cerr << "[denom="<<denom<<"] ";
+		t=Sqrt(denom*dx*dy*dz)/denom;
+		oldX[i]=origX[i]+t*(oldX[i]-origX[i]);
+		oldY[i]=origY[i]+t*(oldY[i]-origY[i]);
+		oldZ[i]=origZ[i]+t*(oldZ[i]-origZ[i]);
+//		cerr << "("<<oldX[i]<<", "<<oldY[i]<<", "<<oldZ[i]<<")\n";
+	    }
+	}
 	st->nodes[i].x(oldX[i]);
 	st->nodes[i].y(oldY[i]);
 	st->nodes[i].z(oldZ[i]);
@@ -244,12 +299,14 @@ void Taubin::execute()
 	reset=0;
     } else {
 	tcl_exec=0;
+	int constrained=constrainedTCL.get();
+	cerr << "constrained="<<constrained<<"\n";
 	if (lastPb != pb.get() || lastGamma != gamma.get()) {
 	    lastPb=pb.get();
 	    lastGamma=gamma.get();
 	    bldMatrices();
 	}
-	smooth();
+	smooth(constrained);
     }
     SurfaceHandle sh2;
     Array1<int> map, imap;
@@ -298,6 +355,9 @@ void Taubin::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.6  1999/12/07 02:55:56  dmw
+// added constrained surface smoothing for Taubin, fixed ErrorMetric.tcl to work with new bltGraph, and fixed a bug in VDTtoMesh converter
+//
 // Revision 1.5  1999/11/17 00:32:01  dmw
 // fixed a bug in Taubin (nrows has to equal ncols) and added a flag to STreeExtractSurf so the node numbers dont change
 //

@@ -91,8 +91,16 @@ itcl_class DaveW_FEM_ErrorMetric {
             $w.rms.g element configure RMS -data "$iter $rms"
             $w.cc.g element configure 1-CC -data "$iter $cc"
         } else {
-            $w.rms.g element append RMS "$iter $rms"
-            $w.cc.g element append 1-CC "$iter $cc"
+	    set x [$w.rms.g element cget RMS -xdata]
+            set r [$w.rms.g element cget RMS -ydata]
+            set c [$w.cc.g element cget 1-CC -ydata]
+	    lappend x $iter
+	    lappend r $rms
+	    lappend c $cc
+            $w.rms.g element configure RMS -xdata $x
+            $w.rms.g element configure RMS -ydata $r
+            $w.cc.g element configure 1-CC -xdata $x
+            $w.cc.g element configure 1-CC -ydata $c
         }
         incr iter
 	if {$iter > $NITERS} {
