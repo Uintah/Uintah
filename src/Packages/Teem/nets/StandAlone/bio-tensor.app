@@ -1,3 +1,5 @@
+puts "\nLoading BioTensor...\n"
+
 # COLOR SCHEME
 set basecolor grey
 
@@ -41,6 +43,7 @@ global mods
 
 ############# NET ##############
 ::netedit dontschedule
+
 
 set m0 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 14 9]
 set m1 [addModuleAtPosition "Teem" "Unu" "UnuSlice" 603 169]
@@ -178,6 +181,7 @@ set m132 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 218 1294
 set m133 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 540 1161]
 set m134 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 1068 1289]
 set m135 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 1274 1358]
+
 
 # Create the Connections between Modules
 set c0 [addConnection $m119 0 $m40 0]
@@ -1808,8 +1812,8 @@ class BioTensorApp {
 	wm title .standalone "BioTensor"	 
 	set win .standalone
 
-	set viewer_width 512
-	set viewer_height 620
+	set viewer_width 435
+	set viewer_height 585
 	
 	set notebook_width 280
 	set notebook_height [expr $viewer_height - 50]
@@ -2340,7 +2344,7 @@ class BioTensorApp {
 	    # Execute and Next buttons
             frame $step_tab.last
             pack $step_tab.last -side bottom -anchor ne \
-		-padx 5 -pady 5
+		-padx 3 -pady 3
 	    
             button $step_tab.last.ex -text "Execute" \
 		-background $execute_color \
@@ -2388,7 +2392,7 @@ class BioTensorApp {
                 -labeltext "Gradients" \
                 -labelpos nw -foreground grey64
             pack $step_tab.gradients -side top -anchor n \
-		-fill x -padx 3 -pady 2
+		-fill x -padx 3 -pady 0
 	    
 	    set gradients [$step_tab.gradients childsite]
 	    
@@ -2396,13 +2400,13 @@ class BioTensorApp {
                 -labelpos w \
                 -textvariable $mods(NrrdReader-Gradient)-filename \
 	        -state disabled -foreground grey64
-            pack $gradients.file -side top -padx 3 -pady 3 -anchor n \
+            pack $gradients.file -side top -padx 3 -pady 1 -anchor n \
 	        -fill x 
 	    
             button $gradients.load -text "Browse" \
                 -command "$this load_gradient" \
                 -width 12 -state disabled
-            pack $gradients.load -side top -anchor n -padx 3 -pady 0
+            pack $gradients.load -side top -anchor n -padx 3 -pady 1
 	    
 	    
             # Reference Image
@@ -2495,7 +2499,7 @@ class BioTensorApp {
 		-orient horizontal
             pack $blur.labelx $blur.entryx \
                 $blur.labely $blur.entryy \
-                -side left -anchor w -padx 2 -pady 1 \
+                -side left -anchor w -padx 2 -pady 0 \
                 -fill x -expand 1
 	    
 	    
@@ -2530,7 +2534,7 @@ class BioTensorApp {
             entry $thresh.choose.entry -width 10 \
 		-textvariable $mods(TendEpireg)-threshold \
 		-state disabled -foreground grey64
-            pack $thresh.choose.button $thresh.choose.entry -side left -anchor n -padx 2 -pady 3
+            pack $thresh.choose.button $thresh.choose.entry -side left -anchor n -padx 2 -pady 1
 	    
             checkbutton $seg.cc -variable $mods(TendEpireg)-cc_analysis \
 		-text "Use Connected Components"\
@@ -2542,7 +2546,7 @@ class BioTensorApp {
             pack $step_tab.fitl -side top -anchor nw -padx 8 -pady 0
 	    
             frame $step_tab.fit
-            pack $step_tab.fit -side top -anchor n -padx 10 -pady 3
+            pack $step_tab.fit -side top -anchor n -padx 10 -pady 0
 	    
             global $mods(TendEpireg)-fitting
             label $step_tab.fit.f -text "70" -state disabled
@@ -2569,7 +2573,7 @@ class BioTensorApp {
                 -command "$this set_resampling_filter $step_tab.rf"
 	    
             pack $step_tab.rf -side top \
-		-anchor nw -padx 8 -pady 4
+		-anchor nw -padx 8 -pady 0
 	    
             $step_tab.rf insert end Linear Catmull-Rom "Windowed Sinc"
 
@@ -2579,7 +2583,7 @@ class BioTensorApp {
 	    # Execute and Next buttons
             frame $step_tab.last
             pack $step_tab.last -side bottom -anchor ne  \
-		-padx 5 -pady 5
+		-padx 3 -pady 3
             button $step_tab.last.ex -text "Execute" -state disabled -width 8 \
 		-command "$this execute_Registration"
 	    Tooltip $step_tab.last.ex $tips(Execute-Registration)
@@ -2733,7 +2737,7 @@ class BioTensorApp {
 	    # Execute and Next
             frame $step_tab.last
             pack $step_tab.last -side bottom -anchor ne \
-		-padx 5 -pady 5
+		-padx 3 -pady 3
 	    
             button $step_tab.last.ex -text "Execute" \
 		-width 16 -state disabled \
@@ -6657,7 +6661,7 @@ class BioTensorApp {
 		-variable $mods(ShowField-Fibers)-edges-on \
 		-command "$this toggle_show_fibers" -state disabled
 	    
-	    pack $f.show -side top -anchor nw -padx 3 -pady 3
+	    pack $f.show -side top -anchor nw -padx 3 -pady 0
 	    
 	    # Fiber Algorigthm
 	    iwidgets::labeledframe $f.algo \
@@ -6890,10 +6894,10 @@ class BioTensorApp {
 		-command "$this update_fiber_seed_method"
 	    
 	    pack $seed.a.point $seed.a.rake  -side top \
-		-anchor nw -padx 5 -pady 1
+		-anchor nw -padx 5 -pady 0
 	    
 	    pack $seed.b.plane $seed.b.grid -side top \
-		-anchor nw -padx 5 -pady 1
+		-anchor nw -padx 5 -pady 0
 	    
 	    iwidgets::labeledframe $f.rep \
 		-labeltext "Color Fibers Based On" \
@@ -6923,103 +6927,114 @@ class BioTensorApp {
 	    iwidgets::labeledframe $rep.maps \
 		-labeltext "Color Maps" \
 		-labelpos nw -foreground grey64
-	    pack $rep.maps -side top -anchor n -padx 3 -pady 1
+	    pack $rep.maps -side top -anchor n -padx 3 -pady 0
 	    
 	    set maps [$rep.maps childsite]
 	    global $mods(GenStandardColorMaps-Fibers)-mapType
-	    
-	    # Gray
-	    frame $maps.gray
-	    pack $maps.gray -side top -anchor nw -padx 3 -pady 1 \
+
+	    frame $maps.a
+	    pack $maps.a -side left -anchor n -padx 0 -pady 0
+
+	    # Grey
+	    frame $maps.a.gray
+	    pack $maps.a.gray -side top -anchor nw -padx 1 -pady 1 \
 		-fill x -expand 1
-	    radiobutton $maps.gray.b -text "Gray" \
+	    radiobutton $maps.a.gray.b -text "Gray" \
 		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
 		-value 0 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
-	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
+	    pack $maps.a.gray.b -side left -anchor nw -padx 1 -pady 0
 	    
-	    frame $maps.gray.f -relief sunken -borderwidth 2
-	    pack $maps.gray.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.gray.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.gray.f.canvas -anchor e \
+	    frame $maps.a.gray.f -relief sunken -borderwidth 2
+	    pack $maps.a.gray.f -padx 1 -pady 0 -side right -anchor e
+	    canvas $maps.a.gray.f.canvas -bg "#ffffff" -height $colormap_height -width [expr $colormap_width/3]
+	    pack $maps.a.gray.f.canvas -anchor e \
 		-fill both -expand 1
 	    
-	    draw_colormap Gray $maps.gray.f.canvas
+	    draw_mini_colormap Gray $maps.a.gray.f.canvas
+
 	    
 	    # Rainbow
-	    frame $maps.rainbow
-	    pack $maps.rainbow -side top -anchor nw -padx 3 -pady 1 \
+	    frame $maps.a.rainbow
+	    pack $maps.a.rainbow -side top -anchor nw -padx 1 -pady 1 \
 		-fill x -expand 1
-	    radiobutton $maps.rainbow.b -text "Rainbow" \
+	    radiobutton $maps.a.rainbow.b -text "Rainbow" \
 		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
 		-value 2 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
-	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
+	    pack $maps.a.rainbow.b -side left -anchor nw -padx 1 -pady 0
 	    
-	    frame $maps.rainbow.f -relief sunken -borderwidth 2
-	    pack $maps.rainbow.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.rainbow.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.rainbow.f.canvas -anchor e
+	    frame $maps.a.rainbow.f -relief sunken -borderwidth 2
+	    pack $maps.a.rainbow.f -padx 1 -pady 0 -side right -anchor e
+	    canvas $maps.a.rainbow.f.canvas -bg "#ffffff" -height $colormap_height -width [expr $colormap_width/3]
+	    pack $maps.a.rainbow.f.canvas -anchor e
 	    
-	    draw_colormap Rainbow $maps.rainbow.f.canvas
+	    draw_mini_colormap Rainbow $maps.a.rainbow.f.canvas
 	    
 	    # Darkhue
-	    frame $maps.darkhue
-	    pack $maps.darkhue -side top -anchor nw -padx 3 -pady 1 \
+	    frame $maps.a.darkhue
+	    pack $maps.a.darkhue -side top -anchor nw -padx 1 -pady 1 \
 		-fill x -expand 1
-	    radiobutton $maps.darkhue.b -text "Darkhue" \
+	    radiobutton $maps.a.darkhue.b -text "Darkhue" \
 		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
 		-value 5 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
-	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
+	    pack $maps.a.darkhue.b -side left -anchor nw -padx 1 -pady 0
 	    
-	    frame $maps.darkhue.f -relief sunken -borderwidth 2
-	    pack $maps.darkhue.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.darkhue.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.darkhue.f.canvas -anchor e
+	    frame $maps.a.darkhue.f -relief sunken -borderwidth 2
+	    pack $maps.a.darkhue.f -padx 1 -pady 0 -side right -anchor e
+	    canvas $maps.a.darkhue.f.canvas -bg "#ffffff" -height $colormap_height -width [expr $colormap_width/3]
+	    pack $maps.a.darkhue.f.canvas -anchor e
 	    
-	    draw_colormap Darkhue $maps.darkhue.f.canvas
+	    draw_mini_colormap Darkhue $maps.a.darkhue.f.canvas
 	    
+
+
+	    frame $maps.b
+	    pack $maps.b -side right -anchor n -padx 0 -pady 0
+
+
+
 	    
 	    # Blackbody
-	    frame $maps.blackbody
-	    pack $maps.blackbody -side top -anchor nw -padx 3 -pady 1 \
+	    frame $maps.b.blackbody
+	    pack $maps.b.blackbody -side top -anchor nw -padx 1 -pady 1 \
 		-fill x -expand 1
-	    radiobutton $maps.blackbody.b -text "Blackbody" \
+	    radiobutton $maps.b.blackbody.b -text "Blackbody" \
 		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
 		-value 7 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
-	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
+	    pack $maps.b.blackbody.b -side left -anchor nw -padx 1 -pady 0
 	    
-	    frame $maps.blackbody.f -relief sunken -borderwidth 2 
-	    pack $maps.blackbody.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.blackbody.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.blackbody.f.canvas -anchor e
+	    frame $maps.b.blackbody.f -relief sunken -borderwidth 2 
+	    pack $maps.b.blackbody.f -padx 1 -pady 0 -side right -anchor e
+	    canvas $maps.b.blackbody.f.canvas -bg "#ffffff" -height $colormap_height -width [expr $colormap_width/3]
+	    pack $maps.b.blackbody.f.canvas -anchor e
 	    
-	    draw_colormap Blackbody $maps.blackbody.f.canvas
+	    draw_mini_colormap Blackbody $maps.b.blackbody.f.canvas
 	    
 	    
 	    # Red-to-Blue
-	    frame $maps.bpseismic
-	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
+	    frame $maps.b.bpseismic
+	    pack $maps.b.bpseismic -side top -anchor nw -padx 1 -pady 1 \
 		-fill x -expand 1
-	    radiobutton $maps.bpseismic.b -text "Red-to-Blue" \
+	    radiobutton $maps.b.bpseismic.b -text "Red-to-Blue" \
 		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
 		-value 17 \
 		-state disabled \
 		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
-	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
+	    pack $maps.b.bpseismic.b -side left -anchor nw -padx 1 -pady 0
 	    
-	    frame $maps.bpseismic.f -relief sunken -borderwidth 2
-	    pack $maps.bpseismic.f -padx 2 -pady 0 -side left -anchor e
-	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.bpseismic.f.canvas -anchor e
+	    frame $maps.b.bpseismic.f -relief sunken -borderwidth 2
+	    pack $maps.b.bpseismic.f -padx 1 -pady 0 -side left -anchor e
+	    canvas $maps.b.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width [expr $colormap_width/3]
+	    pack $maps.b.bpseismic.f.canvas -anchor e
 	    
-	    draw_colormap "Red-to-Blue" $maps.bpseismic.f.canvas
+	    draw_mini_colormap "Red-to-Blue" $maps.b.bpseismic.f.canvas
 	} 
     }
 
@@ -7322,6 +7337,67 @@ class BioTensorApp {
 
     
 #################### COLORMAPS ###################
+
+
+    method draw_mini_colormap { which canvas } {
+	set color ""
+	if {$which == "Gray"} {
+	    set color { "Gray" { { 0 0 0 } { 255 255 255 } } }
+	} elseif {$which == "Rainbow"} {
+	    set color { "Rainbow" {	
+		{ 255 0 0}  { 255 102 0}
+		{ 255 204 0}  { 255 234 0}
+		{ 204 255 0}  { 102 255 0}
+		{ 0 255 0}    { 0 255 102}
+		{ 0 255 204}  { 0 204 255}
+		{ 0 102 255}  { 0 0 255}}}
+	} elseif {$which == "Blackbody"} {
+	    set color { "Blackbody" {	
+		{0 0 0}   {52 0 0}
+		{102 2 0}   {153 18 0}
+		{200 41 0}   {230 71 0}
+		{255 120 0}   {255 163 20}
+		{255 204 55}   {255 228 80}
+		{255 247 120}   {255 255 180}
+		{255 255 255}}}
+	} elseif {$which == "Darkhue"} {
+	    set color { "Darkhue" {	
+		{ 0  0  0 }  { 0 28 39 }
+		{ 0 30 55 }  { 0 15 74 }
+		{ 1  0 76 }  { 28  0 84 }
+		{ 32  0 85 }  { 57  1 92 }
+		{ 108  0 114 }  { 135  0 105 }
+		{ 158  1 72 }  { 177  1 39 }
+		{ 220  10 10 }  { 229 30  1 }
+		{ 246 72  1 }  { 255 175 36 }
+		{ 255 231 68 }  { 251 255 121 }
+		{ 239 253 174 }}}
+	} elseif {$which == "Red-to-Blue"} {
+	    set color { "Red-to-Blue" { { 0 0 255 } { 255 255 255} { 255 0 0 } } }
+	}
+
+        set colorMap [$this set_color_map $color]
+	
+	set width [expr $colormap_width/3]
+        set height $colormap_height
+	
+	set n [llength $colorMap]
+	$canvas delete map
+	set dx [expr $width/double($n)] 
+	set x 0
+	for {set i 0} {$i < $n} {incr i 1} {
+	    set color [lindex $colorMap $i]
+	    set r [lindex $color 0]
+	    set g [lindex $color 1]
+	    set b [lindex $color 2]
+	    set c [format "#%02x%02x%02x" $r $g $b]
+	    set oldx $x
+	    set x [expr ($i+1)*$dx]
+	    $canvas create rectangle \
+		$oldx 0 $x $height -fill $c -outline $c -tags map
+	}
+    }
+
 
     method draw_colormap { which canvas } {
 	set color ""
