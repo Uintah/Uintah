@@ -133,9 +133,9 @@ class ShowField : public Module
     DATA,
     DATA_AT
   };
-  bit_vector render_state_;
+  bit_vector               render_state_;
   void maybe_execute(toggle_type_e dis_type);
-
+  Vector                  *bounding_vector_;
 public:
   ShowField(const string& id);
   virtual ~ShowField();
@@ -189,7 +189,8 @@ ShowField::ShowField(const string& id) :
   resolution_("resolution", id, this),
   res_(0),
   renderer_(0),
-  render_state_(5)
+  render_state_(5),
+  bounding_vector_(0)
 {
   def_mat_handle_->transparency = 0.5;
   nodes_on_.reset();
@@ -274,6 +275,10 @@ ShowField::determine_dirty(FieldHandle fld_handle)
     if (data_id_) ogeom_->delObj(data_id_);
     data_id_ = 0;
 
+    if (bounding_vector_) delete bounding_vector_;
+    bounding_vector_ = scinew Vector();
+    *bounding_vector_ = fld_handle->mesh()->get_bounding_box().diagonal();
+    
   } else if (!mesh_new && field_new) {
     // same geometry, new data.
     check_for_vector_data(fld_handle);
@@ -312,8 +317,9 @@ ShowField::execute()
     warning("No Data in port 1 field.");
     return;
   } else {
-    // what has changed from last time?
-    determine_dirty(fld_handle);
+    // What has changed from last time?  A false return value means that we 
+    // could not load the algorithm from the dynamic loader.
+    if (! determine_dirty(fld_handle)) { return; }
   }
   
   // if no colormap was attached, the argument doesn't get changed,
@@ -567,6 +573,22 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
     data_dirty_ = true;
     maybe_execute(FACE); // Must redraw the vectors.
   } else if (args[1] == "execute_policy"){
+  } else if (args[1] == "calcdefs") {
+    
+    if (bounding_vector_) {
+      //0.00896657
+      double fact = 0.01 * bounding_vector_->length();
+      node_scale_.set(fact);
+      edge_scale_.set(fact * 0.5);
+      vectors_scale_.set(fact * 10);
+      nodes_dirty_ = true;
+      edges_dirty_ = true;
+      data_dirty_ = true;
+      maybe_execute(DATA_AT);
+    } else {
+      warning("Cannot calculate defaults without a valid field input.");
+    }
+
   } else {
     Module::tcl_command(args, userdata);
   }

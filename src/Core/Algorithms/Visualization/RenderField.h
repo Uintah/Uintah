@@ -270,17 +270,7 @@ RenderField<Fld>::render_materials(const Fld *sfld,
   typedef hash_map<int, MaterialHandle> ind_mat_t;
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
 
-  if (mats_) {
-    // do we have a color map of materials to use?
-    if (color_handle_.get_rep() == 0) {
-      // clean up old colors.
-      ind_mat_t::iterator iter = mats_->begin();
-      while(iter != mats_->end()) {
-	(*iter).second = 0;
-	++iter;
-      }
-    }
-  } else {
+  if (! mats_) {
     ASSERTFAIL("must call set_mat_map first");
   }
 
