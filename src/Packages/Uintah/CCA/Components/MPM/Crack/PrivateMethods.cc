@@ -1091,17 +1091,15 @@ short Crack::CubicSpline(const int& n, const int& m, const int& n1,
 // for visualization during crack propagagtion
 void Crack::OutputCrackGeometry(const int& matIdx, const int& timestepIdx)
 {
-  static double timeOutputCrackGeometry=0.;
-  double time=d_sharedState->getElapsedTime();
-
-  if(time>=timeOutputCrackGeometry) {
+  bool timeToDump = dataArchiver->wasOutputTimestep();
+  if(timeToDump) {
     // Create output files in format:
-    // ce.matXX.timestepYYYY (crack elems)
-    // cx.matXX.timestepYYYY (crack points)
-    // cf.matXX.timestepYYYY (crack front nodes)
+    // ce.matXXX.timestepYYYYY (crack elems)
+    // cx.matXXX.timestepYYYYY (crack points)
+    // cf.matXXX.timestepYYYYY (crack front nodes)
     char matbuf[10], timebuf[10];
     sprintf(matbuf,"%d",matIdx);
-    sprintf(timebuf,"%d",timestepIdx);
+    sprintf(timebuf,"%d",timestepIdx+1);
 
     // Task 1: Create output directories
     string cdDir=udaDir+"/crackGeometryData/";
@@ -1113,6 +1111,7 @@ void Crack::OutputCrackGeometry(const int& matIdx, const int& timestepIdx)
     strcat(ceFileName,"ce.mat");
     if(matIdx<10) strcat(ceFileName,"00");
     else if(matIdx<100) strcat(ceFileName,"0");
+    
     strcat(ceFileName,matbuf);
     strcat(ceFileName,".t");
     if(timestepIdx<10) strcat(ceFileName,"0000");
@@ -1173,7 +1172,5 @@ void Crack::OutputCrackGeometry(const int& matIdx, const int& timestepIdx)
       outputCF << cfSegNodes[matIdx][2*i] << " "
                << cfSegNodes[matIdx][2*i+1] << endl;
     }
-
-    timeOutputCrackGeometry+=d_outputCrackInterval;
   }
 }
