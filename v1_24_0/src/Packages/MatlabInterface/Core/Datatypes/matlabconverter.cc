@@ -563,6 +563,13 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, string &infost
   // three separate Nrrds
 
   infostring = "";
+ 
+  // Support for importing strings into SCIRun
+  if (mclass == matlabarray::mlSTRING)
+  {
+        infostring = mlarray.getinfotext(mlarray.getname());
+        return(1);
+  }
         
   if ((mclass == matlabarray::mlSTRUCT)||(mclass == matlabarray::mlOBJECT))
     {
@@ -716,6 +723,30 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                                         
   switch(mclass)
     {
+    
+    case matlabarray::mlSTRING:
+      {
+        try
+          {
+            // Use the dedicate class called NrrdString
+            // to convert a string into a nrrd
+            NrrdString nrrdstring(mlarray.getstring()); // nrrd is owned by the object
+            scinrrd = nrrdstring.gethandle();
+          }
+        catch (...)
+          {
+            scinrrd = 0;                        
+            throw;
+          }
+      }
+                        
+      if (scinrrd != 0)
+      {
+          string str = mlarray.getname();
+          scinrrd->set_filename(str);
+      }
+      break;
+      
     case matlabarray::mlDENSE:
       {   // new environment so I can create new variables
 
@@ -1137,6 +1168,17 @@ void matlabconverter::sciNrrdDataTOmlMatrix(NrrdDataHandle &scinrrd, matlabarray
         
   nrrdptr = scinrrd->nrrd;
 
+  // FILTER OUT STRINGS
+  if (nrrdptr->dim == 1)
+    if ((nrrdptr->type == nrrdTypeChar)||(nrrdptr->type == nrrdTypeUChar))
+      if ((strcmp(nrrdptr->axis[0].label,"nrrdstring")==0)||(strcmp(nrrdptr->axis[0].label,"string")==0))
+      {
+        NrrdString nrrdstring(scinrrd);
+        mlarray.createstringarray(nrrdstring.getstring());
+        return;
+      }
+
+
   // check if there is any data 
   if (nrrdptr->dim == 0) return;
         
@@ -1173,7 +1215,7 @@ void matlabconverter::sciNrrdDataTOmlMatrix(NrrdDataHandle &scinrrd, matlabarray
     case nrrdTypeUChar   : mlarray.setnumericarray(static_cast<unsigned char *>(nrrdptr->data),totsize,dataformat); break;
     case nrrdTypeShort   : mlarray.setnumericarray(static_cast<signed short *>(nrrdptr->data),totsize,dataformat); break;
     case nrrdTypeUShort  : mlarray.setnumericarray(static_cast<unsigned short *>(nrrdptr->data),totsize,dataformat); break;
-    case nrrdTypeInt   : mlarray.setnumericarray(static_cast<signed long *>(nrrdptr->data),totsize,dataformat); break;
+    case nrrdTypeInt     : mlarray.setnumericarray(static_cast<signed long *>(nrrdptr->data),totsize,dataformat); break;
     case nrrdTypeUInt    : mlarray.setnumericarray(static_cast<unsigned long *>(nrrdptr->data),totsize,dataformat); break;
     case nrrdTypeLLong   : mlarray.setnumericarray(static_cast<int64 *>(nrrdptr->data),totsize,dataformat); break;
     case nrrdTypeULLong  : mlarray.setnumericarray(static_cast<uint64 *>(nrrdptr->data),totsize,dataformat); break;   
@@ -3546,7 +3588,6 @@ long matlabconverter::sciBundleCompatible(matlabarray &mlarray, string &infostri
   matlabarray subarray;
   for (long p = 0; p < nfields; p++)
     {
-      std::cout << "p = " << p << "\n";
       subarray = mlarray.getfield(0,p);
       int score = sciFieldCompatible(subarray,dummyinfo,module);
       if (score > 1)  { numfields++; continue; }
@@ -3574,17 +3615,26 @@ void matlabconverter::mlArrayTOsciBundle(matlabarray &mlarray,BundleHandle &scib
   if (mlarray.getnumelements()==0) throw matlabconverter_error();
   long numfields = mlarray.getnumfields();
   
+  scibundle = new Bundle;
+  if (scibundle.get_rep() == 0)
+  {
+    module->error("Could not allocate bundle");
+    return;
+  }
+  
   std::string dummyinfo;
+  std::string fname;
   matlabarray subarray;
-  for (long p = 0; p < numfields; p ++)
+  for (long p = 0; p < numfields; p++)
     {
       subarray = mlarray.getfield(0,p);
+      fname = mlarray.getfieldname(p);
       int score = sciFieldCompatible(subarray,dummyinfo,module);
       if (score > 1)  
         { 
           FieldHandle field;
           mlArrayTOsciField(subarray,field,module);
-          scibundle->setfield(subarray.getname(),field);
+          scibundle->setField(fname,field);
           continue;
         }
       if (prefer_nrrds) 
@@ -3593,7 +3643,7 @@ void matlabconverter::mlArrayTOsciBundle(matlabarray &mlarray,BundleHandle &scib
             { 
               NrrdDataHandle nrrd;
               mlArrayTOsciNrrdData(subarray,nrrd,module);
-              scibundle->setNrrd(subarray.getname(),nrrd);
+              scibundle->setNrrd(fname,nrrd);
               continue; 
             } 
         }
@@ -3601,7 +3651,7 @@ void matlabconverter::mlArrayTOsciBundle(matlabarray &mlarray,BundleHandle &scib
         {
           MatrixHandle  matrix;
           mlArrayTOsciMatrix(subarray,matrix,module);
-          scibundle->setMatrix(subarray.getname(),matrix);
+          scibundle->setMatrix(fname,matrix);
           continue; 
         }
       if (!prefer_nrrds)
@@ -3610,7 +3660,7 @@ void matlabconverter::mlArrayTOsciBundle(matlabarray &mlarray,BundleHandle &scib
             { 
               NrrdDataHandle nrrd;
               mlArrayTOsciNrrdData(subarray,nrrd,module);
-              scibundle->setNrrd(subarray.getname(),nrrd);
+              scibundle->setNrrd(fname,nrrd);
               continue; 
             } 
         }
@@ -3618,7 +3668,7 @@ void matlabconverter::mlArrayTOsciBundle(matlabarray &mlarray,BundleHandle &scib
         { 
           FieldHandle field;
           mlArrayTOsciField(subarray,field,module);
-          scibundle->setfield(subarray.getname(),field);
+          scibundle->setField(fname,field);
           continue;
         }
     }
