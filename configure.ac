@@ -2668,12 +2668,14 @@ if test "$sci_required_mpi" = "yes"; then
         if test "$HAVE_MPI" != "yes"; then
           # Try without pmpi (and with pthreads) (for the newer version
           # of lam mpi.
+          # Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
+
           SCI_TRY_LINK(MPI,mpi library and header-2,mpi.h,
           $_sci_inc /usr/include/mpi,mpi lam util pthread,$_sci_lib,-DMPIPP_H,,optional)
 
           if test "$HAVE_MPI" != "yes"; then
              SCI_TRY_LINK(MPI,mpi library and header-3,mpi.h,
-             $_sci_inc /usr/include/mpi,mpi,$_sci_lib,,,optional)
+             $_sci_inc /usr/include/mpi,mpi,$_sci_lib,-DMPIPP_H,,optional)
 
              if test "$HAVE_MPI" != "yes"; then
                 SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
@@ -2879,6 +2881,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
   fi
 
 # For Petsc 2.2.0 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+# Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
 
   SCI_TRY_LINK(PETSC,
                petsc libraries and headers,
@@ -2886,7 +2889,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
                $_sci_inc /usr/include/petsc,
                petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
                $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
-               $INC_MPI_H,
+               $INC_MPI_H -DMPIPP_H,
                ,
                optional)
 
@@ -2914,14 +2917,14 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
     fi
 
 # For petsc 2.2.0 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscfortran petscksp,
-
+# Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
     SCI_TRY_LINK(PETSC_UNI,
                  petsc-uni libraries and headers,
                  petsc.h,
                  $_sci_inc /usr/include/petsc,
                  petsc petscvec petscmat petscdm petscsnes petscts petscfortran,
                  $_sci_lib,
-                 $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG,
+                 $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG -DMPIPP_H,
                  ,
                  optional)
 
