@@ -468,74 +468,11 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
 
   task->hasSubScheduler();
 
-  // This is from my test copy of things.
-#if 0
- // Required in computeStressTensor
-  // From ParentOldDW
-  task->requires(Task::OldDW,lb->pXLabel,Ghost::AroundNodes,1);
-  task->requires(Task::OldDW,lb->pVolumeLabel,Ghost::None,0);
-  task->requires(Task::OldDW,lb->pVolumeOldLabel,Ghost::None,0);
-  task->requires(Task::OldDW,lb->pDeformationMeasureLabel,Ghost::None,0);
-  task->requires(Task::OldDW,lb->bElBarLabel,Ghost::None,0);
-  // From NewDW
-#if 1
-  task->requires(Task::NewDW,lb->dispNewLabel,Ghost::AroundCells,1);
-  // Computes
-  task->modifies(lb->pStressLabel_preReloc);
-  task->modifies(lb->pVolumeDeformedLabel);
-#endif
-  // FormStiffnessMatrix
-  // Requires
-  task->requires(Task::NewDW,lb->gMassLabel,Ghost::None,0);
-  task->requires(Task::OldDW,d_sharedState->get_delt_label());
-
-  // ComputeInternalForce
-  // Requires
-#if 0
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
-  task->requires(Task::NewDW,lb->pVolumeDeformedLabel,Ghost::AroundNodes,1);
-#endif
-  task->modifies(lb->gInternalForceLabel);
-
-  // FormQ
-  task->requires(Task::NewDW,lb->gInternalForceLabel,Ghost::None,0);
-  task->requires(Task::OldDW,lb->dispNewLabel,Ghost::None,0);
-  task->requires(Task::NewDW,lb->gExternalForceLabel,Ghost::None,0);
-  task->requires(Task::NewDW,lb->gVelocityOldLabel,Ghost::None,0);
-  task->requires(Task::NewDW,lb->gAccelerationLabel,Ghost::None,0);
-  task->requires(Task::NewDW,lb->gMassLabel,Ghost::None,0);
-
-  // RemoveFixedDOF
-  task->requires(Task::NewDW,lb->gMassLabel,Ghost::None,0);
-
-  // Solvefor DUCG
-  task->modifies(lb->dispIncLabel);
-
-  // UpdateGridKinematics
-  task->requires(Task::OldDW,lb->dispNewLabel,Ghost::None,0);
-  task->requires(Task::NewDW,lb->dispIncLabel,Ghost::None,0);
-  task->requires(Task::NewDW,lb->gVelocityOldLabel,Ghost::None,0);
-  // At the end of the iterate must copy these out to scheduler's new_dw
-  task->modifies(lb->dispNewLabel);
-  task->modifies(lb->gVelocityLabel);
-
-
-  // CheckConvergence
-  task->requires(Task::NewDW,lb->dispIncQNorm0);
-  task->requires(Task::NewDW,lb->dispIncNormMax);
-  task->requires(Task::NewDW,lb->dispIncQNorm);
-  task->requires(Task::NewDW,lb->dispIncNorm);
-#if 0
-  task->modifies(lb->dispIncNormMax);
-  task->modifies(lb->dispIncQNorm0);
-#endif
-
-
-#endif
-
   // Required in computeStressTensor
   //task->requires(Task::NewDW,lb->dispNewLabel,Ghost::None,0);
+#if 0
   task->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::None,0);
+#endif
 
   // Trying out as was done with gVelocityOld
   // We get the parent's old_dw
@@ -2635,15 +2572,10 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup* pg,
     ierr = VecGetArray(d_x,&xPetsc);
     if (ierr)
       cerr << "VecGetArray failed" << endl;
-    cerr << "work after VecGetArray" << endl;
     for (int ii = 0; ii < nlocal; ii++) {
-      // cerr << "Trying to print out the vector . . ." << endl;
       cerr << pg->myrank() <<" xPetsc[" << ii << "]=" << xPetsc[ii] << endl;
-      // PetscPrintf(PETSC_COMM_WORLD,"d_x[%d] = %g\n",ii,xPetsc[ii]);
     }
-      
-    cerr << "work after PetscPrintf" << endl;
-    
+         
 #endif
 
     for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
@@ -2654,8 +2586,6 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup* pg,
       dof[0] = l2g_node_num;
       dof[1] = l2g_node_num+1;
       dof[2] = l2g_node_num+2;
-      cerr << pg->myrank() << " dof = " << dof[0] << " " << dof[1] << " " 
-	   << dof[2] << endl;
       dispInc[n] = Vector(xPetsc[dof[0]],xPetsc[dof[1]],xPetsc[dof[2]]);
 #else
 #ifdef OLD_SPARSE
