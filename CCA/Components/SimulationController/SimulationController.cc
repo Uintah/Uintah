@@ -182,6 +182,10 @@ void SimulationController::run()
       
       output->restartSetup(restartFromDir, d_restartTimestep, t,
 			   d_restartRemoveOldDir);
+
+      // in case restart initialize doesn't put delt
+      delt_vartype delt_var(t);
+      scheduler->get_new_dw()->put(delt_var, sharedState->get_delt_label());
    } else {
       // Initialize the CFD and/or MPM data
       for(int i=0;i<grid->numLevels();i++){
@@ -201,9 +205,9 @@ void SimulationController::run()
    double start_time = Time::currentSeconds();
    if (!d_restarting){
      t = timeinfo.initTime;
+     scheduleComputeStableTimestep(level,scheduler, cfd, mpm, mpmcfd, md);
    }
    
-   scheduleComputeStableTimestep(level,scheduler, cfd, mpm, mpmcfd, md);
    Analyze* analyze = dynamic_cast<Analyze*>(getPort("analyze"));
    if(analyze)
       analyze->problemSetup(ups, grid, sharedState);
