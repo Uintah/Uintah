@@ -1667,15 +1667,9 @@ for i in $with_globus $thirdparty $SCI_LAB_TP_DEFAULT; do
 #  SCI_CHECK_LIB($i/lib,globus_gaa,main,,continue,
 #    -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp \
 #    $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
-  ##
-  ##  which globus headers should be tested for?
-  ##
-#  if test "$HAVE_LIBGLOBUS_UTP" &&
-#     test "$HAVE_LIBGLOBUS_MP" &&
-#     test "$HAVE_LIBGLOBUS_GSS_ASSIST" &&
-#     test "$HAVE_LIBGLOBUS_GSS" &&
-#     test "$HAVE_LIBGLOBUS_GAA"; then
-  if test "$HAVE_LIBGLOBUS_DC"; then
+
+  SCI_CHECK_HEADERS($i/include,globus_nexus.h,FOUND_ALL_GLOBUS=yes)
+  if test "$FOUND_ALL_GLOBUS" = "yes"; then
     FOUND_ALL_GLOBUS=yes
     DEF_GLOBUS="#define HAVE_GLOBUS 1"
     GLOBUS_INCLUDE="$i/include"
@@ -1712,9 +1706,11 @@ AC_MSG_RESULT($have_uuid)
 if test "$have_uuid" != "yes"; then
   # This is typical on linux and ??
   AC_MSG_CHECKING(for uuid_generate in uuid/uuid.h)
-  AC_TRY_COMPILE([#include <uuid/uuid.h>],
-	[char* uuid_str;
-	 uuid_t uuid;
+  AC_TRY_COMPILE([
+extern "C" { // The linux uuid.h doesn't have this, so we need exter C here
+#include <uuid/uuid.h>
+}],
+	[uuid_t uuid;
 	 char uuid_str[64];
 	 uuid_generate(uuid);
 	 uuid_unparse(uuid, uuid_str);],
@@ -1723,12 +1719,13 @@ if test "$have_uuid" != "yes"; then
   AC_MSG_RESULT($have_uuid)
 fi
 
-AC_MSG_CHECKING(for uuid library)
-old_LIBS=$LIBS
-found_uuidlib=no
-for i in "" -luuid; do
-  LIBS="$old_LIBS $i"
-  AC_TRY_LINK([
+if test "$have_uuid" = "yes"; then
+  AC_MSG_CHECKING(for uuid library)
+  old_LIBS=$LIBS
+  found_uuidlib=no
+  for i in "" -luuid; do
+    LIBS="$old_LIBS $i"
+    AC_TRY_LINK([
 #if HAVE_SYS_UUID_H
 #include <sys/types.h>
 extern "C" { // SGI uuid.h doesn't have this, so we need extern C here
@@ -1737,16 +1734,18 @@ extern "C" { // SGI uuid.h doesn't have this, so we need extern C here
 #define UUID_CREATE
 #else
 #if HAVE_UUID_UUID_H
+extern "C" { // The linux uuid.h doesn't have this, so we need exter C here
 #include <uuid/uuid.h>
+}
 #define UUID_GENERATE
 #else
 #error We need either sys/uuid.h or uuid/uuid.h
 #endif
 #endif
 	], [
-  char* uuid_str;
   uuid_t uuid;
 #if defined(UUID_CREATE)
+  char* uuid_str;
   uint_t status;
   uuid_create(&uuid, &status);
   uuid_to_string(&uuid, &uuid_str, &status);
@@ -1762,16 +1761,17 @@ extern "C" { // SGI uuid.h doesn't have this, so we need extern C here
   found_uuidlib=yes
   break
 	])
-done
-if test "$found_uuidlib" = yes; then
-  if test -z "$UUID_LIB"; then
-    AC_MSG_RESULT(none required)
+  done
+  if test "$found_uuidlib" = yes; then
+    if test -z "$UUID_LIB"; then
+      AC_MSG_RESULT(none required)
+    else
+      AC_MSG_RESULT($UUID_LIB)
+    fi
   else
-    AC_MSG_RESULT($UUID_LIB)
+    AC_MSG_RESULT(not found)
+    have_uuid=no
   fi
-else
-  AC_MSG_RESULT(not found)
-  have_uuid=no
 fi
 
 AC_SUBST(UUID_LIB)
