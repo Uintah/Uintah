@@ -63,7 +63,7 @@ WARNING
 
 ****************************************/
 
-class PSECOMMONSHARE GenAxes : public Module {
+class PSECommonSHARE GenAxes : public Module {
     TCLdouble size;
     int size_changed;
     GeometryOPort* ogeom;
@@ -105,7 +105,7 @@ public:
     virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" PSECOMMONSHARE Module* make_GenAxes(const clString& id) {
+extern "C" PSECommonSHARE Module* make_GenAxes(const clString& id) {
   return new GenAxes(id);
 }
 
@@ -190,6 +190,10 @@ void GenAxes::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.8  2000/06/07 00:09:25  moulding
+// changed the PSECOMMONSHARE macro to PSECommonSHARE to conform to the
+// style used by the module maker
+//
 // Revision 1.7  2000/03/17 09:27:30  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
