@@ -70,7 +70,7 @@ LINE: while(<FILE>){
 	    }
 	    print OUT "$tmpltype\* $name\_ptr";
 	} elsif(&othertype($type)){
-	    if($type == "IntVector"){
+	    if($type eq "IntVector"){
 		print OUT "int* $name";
 	    }
 	}
@@ -182,7 +182,7 @@ LINE: while(<FILE>){
 	    }
 	    $s.="$name";
 	} elsif(&othertype($type)){
-	    if($type == "IntVector"){
+	    if($type eq "IntVector"){
 		$s.="$name";
 	    }
 	}
@@ -241,7 +241,7 @@ LINE: while(<FILE>){
 		print OUT "      $ftype $name($name\_size)\n";
 	    }
 	} elsif(&othertype($type)){
-	    if($type == "IntVector"){
+	    if($type eq "IntVector"){
 		print OUT "      integer $name(3)\n";
 	    }
 	}
@@ -355,14 +355,19 @@ sub ftype {
 sub cname {
     my($name);
     $name =$_[0];
-    if($fortran_underscore && $name =~ /_/){
-	$name.="_";
+
+    if($fortran_underscore eq "linux") {
+        # Add one _ normally, but add __ if _ already in name.
+	if( $name =~ /_/ ) {
+	   $name.="_";
+        }
+        $name.="_";
+    } elsif($fortran_underscore eq "end") {
+        # Always add single _ to end of name.
+        $name.="_";
     }
-    if($fortran_underscore){
-      $name.="_";
-    } else {
-      $name.="";
-    }
+
+    return $name
 }
 
 print OUT "#ifndef PASS1\n";
