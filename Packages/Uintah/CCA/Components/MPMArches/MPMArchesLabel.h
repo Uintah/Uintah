@@ -31,6 +31,12 @@ namespace Uintah {
       const VarLabel* d_vVel_mmNonlinSrcLabel;
       const VarLabel* d_wVel_mmLinSrcLabel;
       const VarLabel* d_wVel_mmNonlinSrcLabel;
+      // produced by scheduleInterpolateCCToFC
+      // if these are duplicates of some of the above, feel free to
+      // straighten this out
+      const VarLabel* d_xMomFCLabel;
+      const VarLabel* d_yMomFCLabel;
+      const VarLabel* d_zMomFCLabel;
     };
 
 } // end namespace Uintah
