@@ -2013,7 +2013,10 @@ void Patch::finalizePatch()
   IntVector patchNeighborLow  = neighborsLow();
   IntVector patchNeighborHigh = neighborsHigh();
 
-  for (FaceType face = startFace; face <= endFace; face = nextFace(face)) {
+  vector<FaceType>::const_iterator iter;
+  for (iter  = getBoundaryFaces()->begin(); 
+       iter != getBoundaryFaces()->end(); ++iter){
+    FaceType face = *iter;  
  
     IntVector axes = faceAxes(face);
     int P_dir = axes[0];  // principal direction
