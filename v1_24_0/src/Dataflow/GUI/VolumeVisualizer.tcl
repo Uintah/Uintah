@@ -35,68 +35,30 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	set name VolumeVisualizer
 	set_defaults
     }
+
     method set_defaults {} {
-	global $this-use_stencil
-	set $this-use_stencil 0
-	global $this-invert_opacity
-	set $this-invert_opacity 0
-	global $this-multi_level
-	set $this-multi_level 1
-        global $this-blend_res
-        set $this-blend_res 8
-	global $this-sampling_rate_lo
-	set $this-sampling_rate_lo 1.0
-	global $this-sampling_rate_hi
-	set $this-sampling_rate_hi 4.0
-        global $this-adaptive
-        set $this-adaptive 1
-        global $this-cmap_size
-        set $this-cmap_size 7
-        global $this-sw_raster
-        set $this-sw_raster 0
-	global $this-alpha_scale
-	set $this-alpha_scale 0
-	global $this-render_style
-	set $this-render_style 0
-	global $this-interp_mode 
-	set $this-interp_mode 1
-        global $this-shading
-        set $this-shading 0
-        global $this-ambient
-        set $this-ambient 0.5
-        global $this-diffuse
-        set $this-diffuse 0.5
-        global $this-specular
-        set $this-specular 0.0
-        global $this-shine
-        set $this-shine 30.0
-        global $this-light
-        set $this-light 0
-	global $this-shading_tab
-	global $this-sampling_tab
-	global $this-multires_tab
-
-	# For backwards compatability
-	global $this-contrast
-	global $this-contrastfp
-	global $this-draw_mode
-	global $this-num_slices
-	set $this-num_slices -1
-
-        global $this-shading-button-state
-        set $this-shading-button-state 1
+	setGlobal $this-use_stencil 0
+	setGlobal $this-invert_opacity 0
+	setGlobal $this-multi_level 1
+        setGlobal $this-blend_res 8
+	setGlobal $this-sampling_rate_lo 1.0
+	setGlobal $this-sampling_rate_hi 4.0
+        setGlobal $this-adaptive 1
+        setGlobal $this-cmap_size 7
+        setGlobal $this-sw_raster 0
+	setGlobal $this-alpha_scale 0
+	setGlobal $this-render_style 0
+	setGlobal $this-interp_mode 1
+        setGlobal $this-shading 0
+        setGlobal $this-ambient 0.5
+        setGlobal $this-diffuse 0.5
+        setGlobal $this-specular 0.0
+        setGlobal $this-shine 30.0
+        setGlobal $this-light 0
+	setGlobal $this-num_slices -1
+        setGlobal $this-shading-button-state 1
     }
 
-#      method ui {} {
-#  	set w .ui[modname]
-#  	if {[winfo exists $w]} {
-#  	    return
-#  	}
-#  	toplevel $w
-#  	build_ui
-
-#      }
-    
 
     method ui {} { 
         set w .ui[modname] 
