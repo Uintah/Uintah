@@ -3851,14 +3851,14 @@ void ICE::transportModelVariables(const ProcessorGroup*,
 	int matl = tvar->matls->get(m);
 	constCCVariable<double> q;
 	old_dw->get(q, tvar->var, matl, patch, Ghost::None, 0);
-	constCCVariable<double> m;
-	new_dw->get(m, lb->mass_L_CCLabel, matl, patch, Ghost::None, 0);
+	constCCVariable<double> mass;
+	new_dw->get(mass, lb->mass_L_CCLabel, matl, patch, Ghost::None, 0);
 	CCVariable<double> qm;
 	new_dw->allocateAndPut(qm, tvar->Lvar, matl, patch);
 	for(CellIterator iter = patch->getExtraCellIterator();
 	    !iter.done(); iter++){
-	  qm[*iter] = q[*iter]*m[*iter];
-	  cerr << "qm" << *iter << "=" << qm[*iter] << ", q=" << q[*iter] << ", m=" << m[*iter] << '\n';
+	  qm[*iter] = q[*iter]*mass[*iter];
+	  cerr << "qm" << *iter << "=" << qm[*iter] << ", q=" << q[*iter] << ", mass=" << mass[*iter] << '\n';
 	}
 	//  Set Neumann = 0 if symmetric Boundary conditions
 	setBC(qm, "set_if_sym_BC",patch, d_sharedState, matl);
