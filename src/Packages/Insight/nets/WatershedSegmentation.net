@@ -40,7 +40,7 @@ set m5 [addModuleAtPosition "Insight" "Converters" "ImageToField" 10 477]
 set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 633]
 set m7 [addModuleAtPosition "SCIRun" "Render" "Viewer" 10 702]
 set m8 [addModuleAtPosition "Insight" "Converters" "RGBPixelToVector" 10 400]
-set m9 [addModuleAtPosition "SCIRun" "FieldsData" "TransformVectorData" 10 558]
+set m9 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 10 558]
 
 # Set the Module Notes Dispaly Options
 
@@ -224,11 +224,7 @@ set $m7-ViewWindow_0-unused {1}
 set $m7-ViewWindow_0-unused {1}
 set $m8-notes {}
 set $m9-notes {}
-set $m9-functionx {x/255}
-set $m9-functiony {y/255}
-set $m9-functionz {z/255}
-set $m9-pre_normalize {0}
-set $m9-post_normalize {0}
+set $m9-function {result = Vector(v.x()/255.0, v.y()/255.0, v.z()/255.0);}
 $m3 initialize_ui
 
 ::netedit scheduleok
