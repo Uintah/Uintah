@@ -57,7 +57,7 @@ public:
   virtual void execute();
         ///////////////////////////
 
-  virtual void connection(ConnectionMode mode, int which_port, int);
+  //  virtual void connection(ConnectionMode mode, int which_port, int);
 
 protected:
   bool success_;
