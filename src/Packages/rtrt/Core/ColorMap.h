@@ -26,16 +26,20 @@ class ColorCell {
   Color c;
   float v;
   inline ColorCell( Color c, float v) : c(c), v(v) {}
+  inline ColorCell() {}
   inline ~ColorCell(){}
 };
 
 class ColorMap {
   char filename[80];
 public:
-  ScalarTransform1D<float, Color> slices;
-  Array1<ColorCell*> ColorCells;
   ColorMap(const int num_bins = 256);
-  ColorMap(char* filebase, const int num_bins = 256);
+  ColorMap(Array1<ColorCell> &color_in, const int num_bins = 255);
+  ColorMap(char* filebase, const int num_bins = 256, bool valuelast = true);
+  ~ColorMap();
+  
+  ScalarTransform1D<float, Color> slices;
+  Array1<ColorCell> ColorCells;
 
   Color indexColorMap(float v);
 
