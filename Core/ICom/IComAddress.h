@@ -43,16 +43,23 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Containers/LockingHandle.h>
+
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/utsname.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include <sgi_stl_warnings_on.h>
+
+
+
+
 
 #ifndef INET6_ADDRSTRLEN
 #define INET6_ADDRSTRLEN 46
@@ -62,6 +69,22 @@
 #define INET_ADDRSTRLEN 16
 #endif
 
+#if defined(__sgi)||(defined(__APPLE))
+    // No simulation of getaddrinfo needed
+    // On OSX and IRIX the function in the clib
+    // works just fine
+#else
+    // Some LINUX Systems have buggy versions of this
+    // function. If so we use a simulation of that function
+    // whose functionality is pretty limitted.
+#define HAVE_BAD_GETADDRINFO    1
+
+struct ga_search {
+  const char	*host;	/* hostname or address string */
+  int			family;	/* AF_xxx */
+};
+
+#endif
 
 namespace SCIRun {
 
@@ -203,22 +226,31 @@ public:
 	//	The LockingHandle class uses clono to create a new copy
 	IComAddress	*clone();
 	
-  public:
-	// NOTE: Currenly the object is not thread-safe, meaning that calls
-	// are NOT surrounded by locks!! Hence changing and using an address
-	// at the same time is not a good idea. Hence often addresses are 
-	// created and not changed anymore. In this case the object can be
-	// used without endangering the underlying thread mode. If used between
-	// different threads, use a handle to make sure it is being destroyed,
-	// or copy the object as a whole. The latter strategy is used in most
-	// of the ICom functions.
+
+#if HAVE_BAD_GETADDRINFO
+  private:
+    // Simulation of getaddrinfo
+    // Adapted from jenny's library
+    // I removed a few functions to make it depend on less
+    // functions that might not exist on every Linux distribution
+    int  ga_getaddrinfo(const char *hostname, const char *servname,
+			const struct addrinfo *hintsp, struct addrinfo **result);
+    int  ga_echeck(const char *hostname, const char *servname,int flags, int family, int socktype, int protocol);
+    int  ga_nsearch(const char *hostname, const struct addrinfo *hintsp,struct ga_search *search);
+    void ga_freeaddrinfo(struct addrinfo *aihead);
+    int  ga_aistruct(struct addrinfo ***paipnext, const struct addrinfo *hintsp,const void *addr, int family);
+    int  ga_serv(struct addrinfo *aihead, const struct addrinfo *hintsp, const char *serv);
+    int  ga_port(struct addrinfo *aihead, int port, int socktype);
+    struct addrinfo* ga_clone(struct addrinfo *ai);
+#endif
   
   private:
 
 	std::string					protocol_;				// Which protocol is to be used
 
-	bool						isinternal_;			// Is the address internal ?
 	bool						isvalid_;				// IS the address valid ?
+	bool						isinternal_;			// Is the address internal ?
+
 	
 	std::vector<IPaddress>		ipaddress_;				// The IP address
 	std::vector<unsigned short> portnum_;				// The port number

@@ -36,8 +36,8 @@ namespace SCIRun {
 ServiceManager::ServiceManager(ServiceDBHandle db, IComAddress address,
                                ServiceLogHandle log) :
   Runnable(true),
-  db_(db),
   address_(address),
+  db_(db),
   log_(log)
 {
 }

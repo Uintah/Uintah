@@ -44,11 +44,16 @@
 #include <Core/ICom/IComVirtualSocket.h>
 #include <Core/ICom/IComSocket.h>
 #include <Core/Thread/Mutex.h>
+
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
 #include <sys/signal.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 
 namespace SCIRun {
@@ -102,12 +107,12 @@ class IComINetSocket : public IComVirtualSocket {
   
 	int		bytesinbuffer_;
 	char	buffer_[32];
-	int		secs_;
-	int		microsecs_;
 	
 	int		socketfd_;
 	bool	hassocket_;
 	bool	isconnected_;
+	int		secs_;
+	int		microsecs_;
 	
 	IComAddress localaddress_;
 	IComAddress remoteaddress_;

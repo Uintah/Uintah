@@ -31,11 +31,17 @@
  * AUTH: Jeroen Stinstra
  */
  
+
  
 #include <Core/ICom/IComAddress.h> 
 
 #define JGS_SCIRUNS_DEFAULT_PORT "9554"
 #define JGS_SCIRUN_DEFAULT_PORT "9553"
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#pragma reset woff 1209 
+#endif 
 
 // Functions for addressing
 
@@ -106,6 +112,7 @@ IPaddress IComAddress::getipaddress(int addressnum)
 std::string IComAddress::getinternalname()
 {
     if (isinternal_) return(inetname_[0]);
+    return(std::string(""));
 }
 
 void IComAddress::clear()
@@ -158,13 +165,13 @@ int IComAddress::getnumaddresses()
 
 bool IComAddress::isipv4(int addressnum)
 {
-    if ((isvalid_)&&(!isinternal_)) if (addressnum < ipaddress_.size()) if(ipaddress_[addressnum].size() == 4) return(true);
+    if ((isvalid_)&&(!isinternal_)) if (addressnum < static_cast<int>(ipaddress_.size())) if(ipaddress_[addressnum].size() == 4) return(true);
     return(false);
 }
 
 bool IComAddress::isipv6(int addressnum)
 {
-    if ((isvalid_)&&(!isinternal_)) if (addressnum < ipaddress_.size()) if(ipaddress_[addressnum].size() == 16) return(true);
+    if ((isvalid_)&&(!isinternal_)) if (addressnum < static_cast<int>(ipaddress_.size())) if(ipaddress_[addressnum].size() == 16) return(true);
     return(false);
 }
 
@@ -211,14 +218,15 @@ bool IComAddress::setaddress(std::string protocol,std::string name,std::string s
     // ipv6 or ipv4 server. The following settings overrule the default setting
     if (iptype == "ipv4") socktype = AF_INET;
     if (iptype == "ipv6") socktype = AF_INET6;
-    
-    
+
     addrinfo *results, *res;
     addrinfo hints;
 
     // Lock all DNS functions
     DNSLock.lock();
     
+    
+    memset(&hints,0,sizeof(addrinfo));
     // Give some hints on what we are looking for
     hints.ai_flags = AI_CANONNAME;
     hints.ai_family = socktype;
@@ -236,20 +244,33 @@ bool IComAddress::setaddress(std::string protocol,std::string name,std::string s
         if (name == "")
         {    // no name supplied, so we only want an any address template
             hints.ai_flags |= AI_PASSIVE;
-            if ( ::getaddrinfo(0,servname.c_str(),&hints,&(results))) throw could_not_resolve_address();
+            #ifndef HAVE_BAD_GETADDRINFO
+                if ( ::getaddrinfo(0,servname.c_str(),&hints,&(results))) throw could_not_resolve_address();
+            #else
+                // On linux this function fails in some distributions....
+                // Hopefully newer  releases will have better implementations
+                if ( ga_getaddrinfo(0,servname.c_str(),&hints,&(results))) throw could_not_resolve_address();
+            #endif
         }
         else
         {
             if (servname == "any")
             {
-                if ( ::getaddrinfo(name.c_str(),0,&hints,&(results))) throw could_not_resolve_address();            
+            #ifndef HAVE_BAD_GETADDRINFO
+                if ( ::getaddrinfo(name.c_str(),0,&hints,&(results))) throw could_not_resolve_address();                        
+            #else
+                if ( ga_getaddrinfo(name.c_str(),0,&hints,&(results))) throw could_not_resolve_address();            
+            #endif    
             }
             else
             {
-                if ( ::getaddrinfo(name.c_str(),servname.c_str(),&hints,&(results))) throw could_not_resolve_address();
+            #ifndef HAVE_BAD_GETADDRINFO
+                if ( ::getaddrinfo(name.c_str(),servname.c_str(),&hints,&(results))) throw could_not_resolve_address();                        
+            #else
+                if ( ga_getaddrinfo(name.c_str(),servname.c_str(),&hints,&(results))) throw could_not_resolve_address();            
+            #endif    
             }
         }    
-        
         
         if (results)
         {
@@ -298,7 +319,7 @@ bool IComAddress::setaddress(std::string protocol,std::string name,std::string s
             int sincnt = 0;    // count howmany ipv4 addresses we encountered sofar
             int sin6cnt = 0; // idem for ipv6
             res = results;
-            for (size_t p=0;p<numaddresses;p++)
+            for (size_t p=0;p<static_cast<size_t>(numaddresses);p++)
             {
                 if (res->ai_family == AF_INET)
                 {    // IPv4
@@ -340,7 +361,11 @@ bool IComAddress::setaddress(std::string protocol,std::string name,std::string s
             if (numaddresses == 0) throw could_not_resolve_address();
             
             // free the results as it was memory that was allocated for us
-            if (results) freeaddrinfo(results); results = 0;
+            #ifndef HAVE_BAD_GETADDRINFO
+                if (results) ::freeaddrinfo(results); results = 0;
+            #else
+                if (results) ga_freeaddrinfo(results); results = 0;
+            #endif
         }
         DNSLock.unlock();    // unlock the DNS
         isvalid_ = true;
@@ -350,7 +375,11 @@ bool IComAddress::setaddress(std::string protocol,std::string name,std::string s
     catch (...)
     {    // Make sure we do unlock the DNS and deallocate the memory used
         DNSLock.unlock();
-        if (results) freeaddrinfo(results);
+        #ifndef HAVE_BAD_GETADDRINFO
+            if (results) ::freeaddrinfo(results);
+        #else
+            if (results) ga_freeaddrinfo(results);
+        #endif
         clear();
         return(false);
     }
@@ -517,6 +546,7 @@ bool IComAddress::setaddress(std::string protocol, sockaddr *sa)
         // ::getnameinfo(reinterpret_cast<sockaddr*>(&(sin_[0])),sizeof(sin_[0]),host,NI_MAXHOST,0,0,0);
         hostent *hst = ::gethostbyaddr(addr,4,AF_INET);
         if (hst) inetname_[0] = hst->h_name;
+        ::endhostent();
         DNSLock.unlock();
         
         // Retrieve the ipname as text
@@ -585,10 +615,10 @@ sockaddr* IComAddress::getsockaddr(int numaddress)
     // ordering of socket addresses: first the ipv4 and then the ipv6
     // addresses
     // use getsockaddrlen() to get the appropriate length of the socket
-    if (numaddress+1 > sin_.size() )
+    if (numaddress+1 > static_cast<int>(sin_.size()))
     {    // ipv6
         numaddress -= sin_.size();
-        if (numaddress < sin6_.size())
+        if (numaddress < static_cast<int>(sin6_.size()))
         {
             return(reinterpret_cast<sockaddr *>(&(sin6_[numaddress])));
         }
@@ -608,9 +638,9 @@ socklen_t    IComAddress::getsockaddrlen(int numaddress)
     if (!isvalid_) return(0);
     // ordering of socket addresses: first the ipv4 and then the ipv6
     // addresses
-    if (numaddress+1 > sin_.size())
+    if (numaddress+1 > static_cast<int>(sin_.size()))
     {    // it has to be an ipv6 address
-        if (numaddress < sin6_.size()) return(sizeof(sockaddr_in6));
+        if (numaddress < static_cast<int>(sin6_.size())) return(sizeof(sockaddr_in6));
         return(0);
     }
     else
@@ -622,21 +652,21 @@ socklen_t    IComAddress::getsockaddrlen(int numaddress)
 std::string IComAddress::getinetname(int numaddress)
 {
     if ((!isvalid_)||(isinternal_)) return(std::string(""));
-    if (inetname_.size() > numaddress)     return(inetname_[numaddress]);
+    if (static_cast<int>(inetname_.size()) > numaddress)     return(inetname_[numaddress]);
     return(std::string(""));
 }
 
 std::string IComAddress::getipname(int numaddress)
 {
     if ((!isvalid_)||(isinternal_)) return(std::string(""));
-    if (ipname_.size() > numaddress)     return(ipname_[numaddress]);
+    if (static_cast<int>(ipname_.size()) > numaddress)     return(ipname_[numaddress]);
     return(std::string(""));
 }
 
 std::string IComAddress::getservname(int numaddress)
 {
     if ((!isvalid_)||(isinternal_)) return(std::string(""));
-    if (servname_.size() > numaddress)     return(servname_[numaddress]);
+    if (static_cast<int>(servname_.size()) > numaddress)     return(servname_[numaddress]);
     return(std::string(""));
 }
 
@@ -645,7 +675,7 @@ std::string    IComAddress::geturl(int addressnum)
 {
     std::string str("");    // initiate return string
     if (!isvalid_) return(str);    // invalid .....
-    if (addressnum > inetname_.size()) return(str); // out of range
+    if (addressnum > static_cast<int>(inetname_.size())) return(str); // out of range
     
     if (isinternal_)    
     {    // an internal address is denoted as following
@@ -678,7 +708,7 @@ std::string IComAddress::getprotocol()
 bool IComAddress::selectaddress(int addressnum)
 {
     if (!isvalid_) return(false);    // In case it is not valid do nothing
-    if (addressnum >= inetname_.size()) return(false);    // See if number is too big
+    if (addressnum >= static_cast<int>(inetname_.size())) return(false);    // See if number is too big
     if (isinternal_) return(true);    // internal address is always unique and hence will only have one entry
     
     // Get the data out of the structure, so we can resize the fields without losing
@@ -704,7 +734,7 @@ bool IComAddress::selectaddress(int addressnum)
     
     // The socket address needs to be treated seperately as we sorted the data with first
     // the ipv4 addresses and the ipv6 addresses
-    if (addressnum < sin_.size())
+    if (addressnum < static_cast<int>(sin_.size()))
     {    // in case the selected one is an ipv4 address
         sockaddr_in sin = sin_[addressnum];
         sin_.resize(1);
@@ -750,7 +780,7 @@ std::string IComAddress::printaddress()
         for (size_t p=0; p < portnum_.size(); p++)
         {
             oss << "IPaddress[" << p << "] =" ;
-            for (int q=0; q < ipaddress_[p].size(); q++) oss << static_cast<unsigned short>(ipaddress_[p][q]) << ".";
+            for (size_t q=0; q < ipaddress_[p].size(); q++) oss << static_cast<unsigned short>(ipaddress_[p][q]) << ".";
             oss << "\n";
             oss << "Portnumber[" << p << "] = " << portnum_[p] << ".\n";
             oss << "DNSName[" << p << "] = " << inetname_[p] << ".\n";
@@ -784,5 +814,456 @@ IComAddress    *IComAddress::clone()
     return(address);
 }
 
+
+
+#ifdef HAVE_BAD_GETADDRINFO
+    // simulation of the getaddrinfo
+
+int IComAddress::ga_getaddrinfo(const char *hostname, const char *servname,
+			const struct addrinfo *hintsp, struct addrinfo **result)
+{
+	int					rc, error, nsearch;
+	char				**ap, *canon;
+	struct hostent		*hptr;
+	struct ga_search    search[3], *sptr;
+	struct addrinfo		hints, *aihead, **aipnext;
+
+	aihead = 0;		/* initialize automatic variables */
+	aipnext = &aihead;
+	canon = 0;
+    error = 0;
+
+	if (hintsp == 0) 
+    {
+		bzero(&hints, sizeof(hints));
+		hints.ai_family = AF_UNSPEC;
+	} 
+    else
+    {
+		hints = *hintsp;		/* struct copy */
+    }
+    
+	error = ga_echeck(hostname, servname, hints.ai_flags, hints.ai_family,
+						 hints.ai_socktype, hints.ai_protocol);
+    if (error) goto bad;                        
+
+	nsearch = ga_nsearch(hostname, &hints, &search[0]);
+    
+	for (sptr = &search[0]; sptr < &search[nsearch]; sptr++) 
+    {
+
+        if (isdigit(sptr->host[0])) 
+        {
+			struct in_addr	inaddr;
+
+			if (::inet_pton(AF_INET, sptr->host, &inaddr) == 1) 
+            {
+				if (hints.ai_family != AF_UNSPEC && hints.ai_family != AF_INET)
+					{ error = EAI_ADDRFAMILY; goto bad; }
+				if (sptr->family != AF_INET)
+					continue;		/* ignore */
+				error = ga_aistruct(&aipnext, &hints, &inaddr, AF_INET);
+				if (error) goto bad;
+			}
+		}
+
+		if ((isxdigit(sptr->host[0]) || sptr->host[0] == ':') && (strchr(sptr->host, ':') != 0)) 
+        {
+
+			struct in6_addr	in6addr;
+
+			if (::inet_pton(AF_INET6, sptr->host, &in6addr) == 1) {
+				if (hints.ai_family != AF_UNSPEC && hints.ai_family != AF_INET6)
+					{ error = EAI_ADDRFAMILY; goto bad; }
+				if (sptr->family != AF_INET6)
+					continue;		/* ignore */
+				error = ga_aistruct(&aipnext, &hints, &in6addr, AF_INET6);
+				if (error) goto bad;
+				continue;
+			}
+		}
+
+        hptr = ::gethostbyname(sptr->host);
+
+        // hptr = ::gethostbyname2(sptr->host, sptr->family);
+		if (hptr == NULL) {
+			if (nsearch == 2)
+				continue;	/* failure OK if multiple searches */
+            error = EAI_NONAME;
+            goto bad;
+		}
+	
+			/* 4check for address family mismatch if one specified */
+		if (hints.ai_family != AF_UNSPEC && hints.ai_family != hptr->h_addrtype)
+		{
+            error = EAI_ADDRFAMILY; goto bad;
+        }
+
+			/* 4save canonical name first time */
+		if (hostname != NULL && hostname[0] != '\0' &&
+			(hints.ai_flags & AI_CANONNAME) && canon == NULL) 
+        {
+			if ( (canon = strdup(hptr->h_name)) == NULL)	
+			{
+            	error = EAI_MEMORY; goto bad;
+            }
+		}
+	
+		for (ap = hptr->h_addr_list; *ap != NULL; ap++) 
+        {
+			error = ga_aistruct(&aipnext, &hints, *ap, hptr->h_addrtype);
+			if (error) goto bad;
+		}
+	}
+	if (aihead == NULL)
+    {
+		error = EAI_NONAME; goto bad;
+    }
+    
+	if (hostname != NULL && hostname[0] != '\0' &&
+		hints.ai_flags & AI_CANONNAME) 
+    {
+		if (canon != NULL)
+        {
+			aihead->ai_canonname = canon;	/* strdup'ed earlier */
+        }
+		else 
+        {
+			if ( (aihead->ai_canonname = ::strdup(search[0].host)) == NULL)
+            {
+				error = EAI_MEMORY; goto bad;
+            }
+		}
+	}
+
+	if (servname != NULL && servname[0] != '\0') {
+		if ( (rc = ga_serv(aihead, &hints, servname)) != 0)
+        {
+			error = rc; goto bad;
+        }
+	}
+
+	*result = aihead;	/* pointer to first structure in linked list */
+	return(0);
+
+bad:
+	ga_freeaddrinfo(aihead);	/* free any alloc'ed memory */
+	return(error);
 }
 
+
+int IComAddress::ga_echeck(const char *hostname, const char *servname,int flags, int family, int socktype, int protocol)
+{
+	if (flags & ~(AI_PASSIVE | AI_CANONNAME))
+		return(EAI_BADFLAGS);	/* unknown flag bits */
+
+	if (hostname == NULL || hostname[0] == '\0') 
+    {
+		if (servname == NULL || servname[0] == '\0')
+			return(EAI_NONAME);	/* host or service must be specified */
+	}
+
+	switch(family) 
+    {
+		case AF_UNSPEC:
+			break;
+		case AF_INET:
+			if (socktype != 0 &&
+				(socktype != SOCK_STREAM &&
+				 socktype != SOCK_DGRAM &&
+				 socktype != SOCK_RAW))
+				return(EAI_SOCKTYPE);	/* invalid socket type */
+			break;
+		case AF_INET6:
+			if (socktype != 0 &&
+				(socktype != SOCK_STREAM &&
+				 socktype != SOCK_DGRAM &&
+				 socktype != SOCK_RAW))
+				return(EAI_SOCKTYPE);	/* invalid socket type */
+			break;
+		default:
+			return(EAI_FAMILY);		/* unknown protocol family */
+	}
+	return(0);
+}
+
+
+int IComAddress::ga_nsearch(const char *hostname, const struct addrinfo *hintsp,struct ga_search *search)
+{
+	int		nsearch = 0;
+
+	if (hostname == NULL || hostname[0] == '\0') 
+    {
+		if (hintsp->ai_flags & AI_PASSIVE) 
+        {
+				/* 4no hostname and AI_PASSIVE: implies wildcard bind */
+			switch (hintsp->ai_family) 
+            {
+			case AF_INET:
+				search[nsearch].host = "0.0.0.0";
+				search[nsearch].family = AF_INET;
+				nsearch++;
+				break;
+			case AF_INET6:
+				search[nsearch].host = "0::0";
+				search[nsearch].family = AF_INET6;
+				nsearch++;
+				break;
+			case AF_UNSPEC:
+				search[nsearch].host = "0::0";	/* IPv6 first, then IPv4 */
+				search[nsearch].family = AF_INET6;
+				nsearch++;
+				search[nsearch].host = "0.0.0.0";
+				search[nsearch].family = AF_INET;
+				nsearch++;
+				break;
+			}
+		} 
+        else 
+        {
+				/* 4no host and not AI_PASSIVE: connect to local host */
+			switch (hintsp->ai_family) 
+            {
+			case AF_INET:
+				search[nsearch].host = "localhost";	/* 127.0.0.1 */
+				search[nsearch].family = AF_INET;
+				nsearch++;
+				break;
+			case AF_INET6:
+				search[nsearch].host = "0::1";
+				search[nsearch].family = AF_INET6;
+				nsearch++;
+				break;
+			case AF_UNSPEC:
+				search[nsearch].host = "0::1";	/* IPv6 first, then IPv4 */
+				search[nsearch].family = AF_INET6;
+				nsearch++;
+				search[nsearch].host = "localhost";
+				search[nsearch].family = AF_INET;
+				nsearch++;
+				break;
+			}
+		}
+	} 
+    else 
+    {	/* host is specified */
+		switch (hintsp->ai_family) 
+        {
+		case AF_INET:
+			search[nsearch].host = hostname;
+			search[nsearch].family = AF_INET;
+			nsearch++;
+			break;
+		case AF_INET6:
+			search[nsearch].host = hostname;
+			search[nsearch].family = AF_INET6;
+			nsearch++;
+			break;
+		case AF_UNSPEC:
+			search[nsearch].host = hostname;
+			search[nsearch].family = AF_INET6;	/* IPv6 first */
+			nsearch++;
+			search[nsearch].host = hostname;
+			search[nsearch].family = AF_INET;	/* then IPv4 */
+			nsearch++;
+			break;
+		}
+	}
+	return(nsearch);
+}
+
+void IComAddress::ga_freeaddrinfo(struct addrinfo *aihead)
+{
+	struct addrinfo	*ai, *ainext;
+
+	for (ai = aihead; ai != NULL; ai = ainext) {
+		if (ai->ai_addr != NULL)
+			free(ai->ai_addr);		/* socket address structure */
+
+		if (ai->ai_canonname != NULL)
+			free(ai->ai_canonname);
+
+		ainext = ai->ai_next;	/* can't fetch ai_next after free() */
+		free(ai);				/* the addrinfo{} itself */
+	}
+}
+
+int IComAddress::ga_aistruct(struct addrinfo ***paipnext, const struct addrinfo *hintsp,const void *addr, int family)
+{
+	struct addrinfo	*ai;
+
+	if ( (ai = reinterpret_cast<struct addrinfo *>(calloc(1, sizeof(struct addrinfo)))) == 0)
+		return(EAI_MEMORY);
+    
+	ai->ai_next = 0;
+	ai->ai_canonname = 0;
+	**paipnext = ai;
+	*paipnext = &ai->ai_next;
+
+	if ( (ai->ai_socktype = hintsp->ai_socktype) == 0) ai->ai_flags |= 4;
+
+	ai->ai_protocol = hintsp->ai_protocol;
+
+	switch ((ai->ai_family = family)) 
+    {
+		case AF_INET: 
+        {
+			struct sockaddr_in	*sinptr;
+			if ( (sinptr = reinterpret_cast<struct sockaddr_in *>(calloc(1, sizeof(struct sockaddr_in)))) == 0) return(EAI_MEMORY);
+			sinptr->sin_family = AF_INET;
+            //    sinptr->sin_len = sizeof(struct sockaddr_in);
+			memcpy(&sinptr->sin_addr, addr, sizeof(struct in_addr));
+			ai->ai_addr = (struct sockaddr *) sinptr;
+			ai->ai_addrlen = sizeof(struct sockaddr_in);
+			break;
+		}
+		case AF_INET6: 
+        {
+			struct sockaddr_in6	*sin6ptr;
+			if ( (sin6ptr = reinterpret_cast<struct sockaddr_in6 *>(calloc(1, sizeof(struct sockaddr_in6)))) == 0) return(EAI_MEMORY);
+		
+			sin6ptr->sin6_family = AF_INET6;
+            // sin6ptr->sin6_len = sizeof(struct sockaddr_in6);
+			memcpy(&sin6ptr->sin6_addr, addr, sizeof(struct in6_addr));
+			ai->ai_addr = (struct sockaddr *) sin6ptr;
+			ai->ai_addrlen = sizeof(struct sockaddr_in6);
+			break;
+		}
+	}
+	return(0);
+}
+
+int IComAddress::ga_serv(struct addrinfo *aihead, const struct addrinfo *hintsp, const char *serv)
+{
+	int				port, rc, nfound;
+	struct servent	*sptr;
+
+	nfound = 0;
+	if (isdigit(serv[0])) 
+    {		/* check for port number string first */
+		port = htons(atoi(serv));
+		if (hintsp->ai_socktype) 
+        {
+				/* 4caller specifies socket type */
+			if ( (rc = ga_port(aihead, port, hintsp->ai_socktype)) < 0)
+				return(EAI_MEMORY);
+			nfound += rc;
+		} 
+        else 
+        {
+				/* 4caller does not specify socket type */
+			if ( (rc = ga_port(aihead, port, SOCK_STREAM)) < 0)
+				return(EAI_MEMORY);
+			nfound += rc;
+			if ( (rc = ga_port(aihead, port, SOCK_DGRAM)) < 0)
+				return(EAI_MEMORY);
+			nfound += rc;
+		}
+	} 
+    else 
+    {
+			/* 4try service name, TCP then UDP */
+		if (hintsp->ai_socktype == 0 || hintsp->ai_socktype == SOCK_STREAM) 
+        {
+			if ( (sptr = ::getservbyname(serv, "tcp")) != NULL) 
+            {
+				if ( (rc = ga_port(aihead, sptr->s_port, SOCK_STREAM)) < 0)
+					return(EAI_MEMORY);
+				nfound += rc;
+			}
+		}
+		if (hintsp->ai_socktype == 0 || hintsp->ai_socktype == SOCK_DGRAM) 
+        {
+			if ( (sptr = ::getservbyname(serv, "udp")) != NULL) 
+            {
+				if ( (rc = ga_port(aihead, sptr->s_port, SOCK_DGRAM)) < 0)
+					return(EAI_MEMORY);
+				nfound += rc;
+			}
+		}
+	}
+
+	if (nfound == 0) 
+    {
+		if (hintsp->ai_socktype == 0)
+        {
+			return(EAI_NONAME);	/* all calls to getservbyname() failed */
+        }
+		else
+        {
+			return(EAI_SERVICE);/* service not supported for socket type */
+        }
+	}
+	return(0);
+}
+
+int IComAddress::ga_port(struct addrinfo *aihead, int port, int socktype)
+{
+	int				nfound = 0;
+	struct addrinfo	*ai;
+
+	for (ai = aihead; ai != NULL; ai = ai->ai_next) 
+    {
+		if (ai->ai_flags & 4) 
+        {
+			if (ai->ai_socktype != 0) 
+            {
+				if ( (ai = ga_clone(ai)) == NULL)
+					return(-1);		/* memory allocation error */
+			}
+		} 
+        else if (ai->ai_socktype != socktype)
+		{
+            	continue;		/* ignore if mismatch on socket type */
+        }
+        
+		ai->ai_socktype = socktype;
+
+		switch (ai->ai_family) 
+        {
+			case AF_INET:
+				((struct sockaddr_in *) ai->ai_addr)->sin_port = port;
+				nfound++;
+				break;
+			case AF_INET6:
+				((struct sockaddr_in6 *) ai->ai_addr)->sin6_port = port;
+				nfound++;
+				break;
+		}
+	}
+	return(nfound);
+}
+
+struct addrinfo* IComAddress::ga_clone(struct addrinfo *ai)
+{
+	struct addrinfo	*nai;
+
+	if ( (nai = reinterpret_cast<struct addrinfo *>(calloc(1, sizeof(struct addrinfo)))) == NULL) return(NULL);
+        
+	nai->ai_next = ai->ai_next;
+	ai->ai_next = nai;
+
+	nai->ai_flags = 0;				
+	nai->ai_family = ai->ai_family;
+	nai->ai_socktype = ai->ai_socktype;
+	nai->ai_protocol = ai->ai_protocol;
+	nai->ai_canonname = NULL;
+	nai->ai_addrlen = ai->ai_addrlen;
+	if ( (nai->ai_addr = reinterpret_cast<struct sockaddr *>(calloc(1,ai->ai_addrlen))) == NULL)
+		return(NULL);
+	::memcpy(nai->ai_addr, ai->ai_addr, ai->ai_addrlen);
+
+	return(nai);
+}
+
+#endif
+
+
+
+}
+
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#pragma reset woff 1209 
+#endif

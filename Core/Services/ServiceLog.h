@@ -37,8 +37,11 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Containers/LockingHandle.h>
-#include <string>
+
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
+#include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 	

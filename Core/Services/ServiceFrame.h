@@ -45,10 +45,15 @@
 #include <Dataflow/share/share.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
 #include <map>
 #include <sstream>
+#include <sgi_stl_warnings_on.h>
+
+
 
 namespace SCIRun {
 

@@ -30,11 +30,18 @@
 
 #include <Core/Services/ServiceClient.h>
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424
+#pragma set woff 1209 
+#endif
+
 namespace SCIRun {
 
 ServiceClient::ServiceClient() :
   lock("service client lock"),
   ref_cnt(0),
+  session_(0),
+  errno_(0),
   need_send_end_stream_(false)
 {
 }
@@ -235,4 +242,9 @@ bool ServiceClient::close()
 }
 
 }
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#pragma reset woff 1209 
+#endif
 

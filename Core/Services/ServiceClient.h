@@ -39,8 +39,10 @@
 #include <Core/Services/Service.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Containers/LockingHandle.h>
-#include <string>
 
+#include <sgi_stl_warnings_off.h>
+#include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 
@@ -54,24 +56,23 @@ class ServiceClient: public ServiceBase {
     bool  open(IComAddress address, std::string servicename, int session, std::string passwd);
     bool  close();
   
+    ServiceClient* clone();
 
     ////////////////////////////////////////
   
-    IComSocket  getsocket();
+    inline IComSocket  getsocket();
     
-    std::string geterror();
-    std::string getremoteaddress();
-    std::string getversion();
-    std::string getsession();
-    void        setsession(int session);
-    
-    ServiceClient*  clone();
+    inline std::string geterror();
+    inline std::string getremoteaddress();
+    inline std::string getversion();
+    inline std::string getsession();
+    inline void        setsession(int session);
 
-    bool    send(IComPacketHandle &packet);
-    bool    recv(IComPacketHandle &packet);
-    bool    poll(IComPacketHandle &packet);
-    void    seterror(std::string);
-    void    clearerror();
+    inline bool    send(IComPacketHandle &packet);
+    inline bool    recv(IComPacketHandle &packet);
+    inline bool    poll(IComPacketHandle &packet);
+    inline void    seterror(std::string);
+    inline void    clearerror();
   
   public:
     Mutex    lock;

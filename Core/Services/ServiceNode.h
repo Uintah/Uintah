@@ -36,11 +36,14 @@
 #ifndef JGS_CORE_SERVICES_SERVICENODE_H
 #define JGS_CORE_SERVICES_SERVICENODE_H 1
 
+#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <string>
+#include <iostream>
+#include <fstream>
+#include <sgi_stl_warnings_on.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#define IRIX
 #pragma set woff 1375
 #pragma set woff 3303
 #endif

@@ -85,10 +85,10 @@ class FileTransferClient : public ServiceClient
     // To generate filenames on both systems, local_file() will take the filename and
     // put the local_directory in front of it and remote_file() will put the remote
     // directory path in front of the filename. 
-    bool set_local_dir(std::string dir);
-    bool set_remote_dir(std::string dir);
-    std::string local_file(std::string filename);
-    std::string remote_file(std::string filename);
+    inline bool set_local_dir(std::string dir);
+    inline bool set_remote_dir(std::string dir);
+    inline std::string local_file(std::string filename);
+    inline std::string remote_file(std::string filename);
     
   private:
     std::string tempdir_;

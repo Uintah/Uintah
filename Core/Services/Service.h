@@ -96,19 +96,19 @@ class Service : public ServiceBase {
 	void			putmsg(std::string line);
 	// Communication functions
 	
-	bool			send(IComPacketHandle &packet);
-	bool			recv(IComPacketHandle &packet);
-	bool			poll(IComPacketHandle &packet);
+	inline bool			send(IComPacketHandle &packet);
+	inline bool			recv(IComPacketHandle &packet);
+	inline bool			poll(IComPacketHandle &packet);
 	
-	bool			getlocaladdress(IComAddress &address);
-	bool			getremoteaddress(IComAddress &address);
-	bool			isconnected();
+	inline bool			getlocaladdress(IComAddress &address);
+	inline bool			getremoteaddress(IComAddress &address);
+	inline bool			isconnected();
 	
 	// Error retrieval mechanisms for communication errors
 	
-	std::string		geterror();
-	int				geterrno();
-	bool			haserror();
+	inline std::string		geterror();
+	inline int				geterrno();
+	inline bool			haserror();
 	
 	// Error reporting, services log file
 	
@@ -119,8 +119,8 @@ class Service : public ServiceBase {
 	Mutex			lock;
 	int				ref_cnt;
 	
-	void			dolock();   // Locking Handle needs Mutex to be called lock so we cannot reuse that name
-	void			unlock();
+	inline void			dolock();   // Locking Handle needs Mutex to be called lock so we cannot reuse that name
+	inline void			unlock();
 	
  private:
 	

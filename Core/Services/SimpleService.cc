@@ -37,11 +37,11 @@ namespace SCIRun {
 SimpleServiceOutputInfo::SimpleServiceOutputInfo(IComSocket socket,ServiceLogHandle log) :
   lock("SimpleServiceOutputThread Lock"),
   ref_cnt(0),
-  socket_(socket),
+  packet_list_(0),
   wait_("SimpleServiceOutputThread Condition Variable"),
+  socket_(socket),
   exit_(false),
-  log_(log),
-  packet_list_(0)
+  log_(log)
 {
 }
 

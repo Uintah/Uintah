@@ -74,7 +74,8 @@ namespace SCIRun {
 
 // Constructor fo this class
 ServiceDB::ServiceDB() :
-  lock("service database lock"), ref_cnt(0)
+  lock("service database lock"), 
+  ref_cnt(0)
 {
 }
 

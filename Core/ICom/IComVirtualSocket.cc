@@ -35,13 +35,17 @@
  *
  */
  
- #include <Core/ICom/IComVirtualSocket.h>
- #include <iostream>
+#include <Core/ICom/IComVirtualSocket.h>
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 3201
+#endif
  
  namespace SCIRun {
  
 IComVirtualSocket::IComVirtualSocket() :
-ref_cnt(0), lock("virtual_socket_lock")
+    lock("virtual_socket_lock"),
+    ref_cnt(0)
 {
 }
 
@@ -118,5 +122,8 @@ bool	IComVirtualSocket::isconnected(IComSocketError &err)
 } 
 
  
-}
+} // namespace
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 3201
+#endif

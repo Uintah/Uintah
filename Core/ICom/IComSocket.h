@@ -43,7 +43,10 @@
 #include <Core/ICom/IComPacket.h>
 #include <Core/ICom/IComAddress.h>
 #include <Core/ICom/IComVirtualSocket.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 // This class functions like a handle, but is more complicated
 // Since errors are stored in unix in errno and this one is cleared
@@ -143,8 +146,8 @@ private:
 	void clear();
 	bool nosocketerror();
 
-	std::string			protocol_;
 	IComVirtualSocket*	socket_;
+	std::string			protocol_;
 
 	// These are kept here separately, so each thread can use a different IComSocket
 	// structure with its own error report functionality and still share the descriptor
