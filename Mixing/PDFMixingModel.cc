@@ -153,7 +153,7 @@ PDFMixingModel::speciesStateSpace(const vector<double>& mixVar)
     ++count;
   }
   --count; // nummixvars = numstreams -1
-  assert(count==d_numMixingVars);
+  ASSERT(count==d_numMixingVars);
   delete[] sumMixVarFrac;
   
   return mixedStream;
@@ -197,7 +197,7 @@ PDFMixingModel::computeProps(const InletStream& inStream,
   }
   // count and d_tableDimension should be equal
   //cout<<"PDF::count= "<<count<<endl;
-  assert(count==d_tableDimension);
+  ASSERT(count==d_tableDimension);
   // Normalize enthalpy
   if (!(d_adiabatic)) {
     Stream normStream = getProps(normVar);
@@ -302,7 +302,6 @@ PDFMixingModel::tableLookUp(int* tableKeyIndex) {
   }
 
   return stateSpaceVars;
-  
 }
 
 
