@@ -47,7 +47,7 @@
 
 namespace SCIRun {
   
-class SCICORESHARE XAxisObj :  public HairObj {
+class XAxisObj :  public HairObj {
 protected:
     int num_tics_;
 
@@ -74,7 +74,7 @@ public:
   
 };
 
-class SCICORESHARE YAxisObj :  public HairObj {
+class YAxisObj :  public HairObj {
 protected:
   int num_tics_;
 

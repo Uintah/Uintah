@@ -49,7 +49,7 @@
 
 namespace SCIRun {
   
-class SCICORESHARE HistObj : public Polyline {
+class HistObj : public Polyline {
 protected:
   Array1<double> ref_;
   int bins_;

@@ -35,7 +35,7 @@
 #include <math.h>
 
 #ifdef _WIN32
-#  include <afxwin.h>
+#  include <windows.h>
 #  define vsnprintf _vsnprintf
 #endif
 

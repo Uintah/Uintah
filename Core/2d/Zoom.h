@@ -51,7 +51,7 @@ namespace SCIRun {
 
 class Diagram;  
 
-class SCICORESHARE Zoom :  public TclObj, public BoxObj {
+class Zoom :  public TclObj, public BoxObj {
 private:
   Diagram *parent_;
 
