@@ -104,7 +104,6 @@ void DenseMatrix::solve(ColumnMatrix& sol)
 
     // Gauss-Jordan with partial pivoting
     for(int i=0;i<nr;i++){
-#if 0
 	double max=Abs(data[i][i]);
 	int row=i;
 	for(int j=i+1;j<nr;j++){
@@ -123,8 +122,6 @@ void DenseMatrix::solve(ColumnMatrix& sol)
 	    sol[i]=sol[row];
 	    sol[row]=dtmp;
 	}
-#endif
-	int j;
 	double denom=1./data[i][i];
 	double* r1=data[i];
 	double s1=sol[i];

@@ -85,7 +85,7 @@ public:
 		  Vector& g2, Vector& g3, Vector& g4);
     void get_bounds(Point& min, Point& max);
     int unify(Element*, const Array1<int>&, const Array1<int>&,
-			  const Array1<int>&);
+	      const Array1<int>&);
 
     // Persistent representation...
     virtual void io(Piostream&);
