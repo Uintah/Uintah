@@ -413,7 +413,7 @@ Thread::os_start(bool stopped)
 	d_priv=new Thread_private;
 	d_priv->stacklen=d_stacksize;
 	d_priv->stackbot=(caddr_t)mmap(0, d_priv->stacklen, PROT_READ|PROT_WRITE,
-				     MAP_SHARED, devzero_fd, 0);
+				     MAP_PRIVATE, devzero_fd, 0);
 	d_priv->sp=d_priv->stackbot+d_priv->stacklen-1;
 	if((long)d_priv->sp == -1)
 	    throw ThreadError(std::string("Not enough memory for thread stack")
@@ -546,10 +546,10 @@ Thread::print_threads()
     }
     for(int i=0;i<nidle;i++){
 	Thread_private* p=idle[i];
-	fprintf(fp, "%d: Idle worker\n", p->pid);
+	fprintf(fp, " %d: Idle worker\n", p->pid);
     }
     if(idle_main){
-	fprintf(fp, "%d: Completed main thread\n", idle_main->pid);
+	fprintf(fp, " %d: Completed main thread\n", idle_main->pid);
     }
 }
 
@@ -1092,6 +1092,9 @@ AtomicCounter::set(int v)
 
 //
 // $Log$
+// Revision 1.9  1999/09/01 22:31:11  sparker
+// Changed mmap of thread stacks so that fork will work.
+//
 // Revision 1.8  1999/08/31 08:59:05  sparker
 // Configuration and other updates for globus
 // First import of beginnings of new component library
