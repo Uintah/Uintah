@@ -94,6 +94,35 @@ Mult(ColumnMatrix& result, const Matrix& mat, const ColumnMatrix& v)
   mat.mult(v, result, flops, memrefs);
 }
 
+DenseMatrix *
+Matrix::direct_inverse()
+{
+  if (nrows() != ncols()) return 0;
+  int n=nrows();
+  DenseMatrix *A;
+  if (is_dense()) {
+    A = scinew DenseMatrix(*A);
+  } else {
+    A = dense();
+  }
+  A->invert();
+  return A;
+}
+
+DenseMatrix *
+Matrix::iterative_inverse()
+{
+  if (nrows() != ncols()) return 0;
+  int n=nrows();
+  SparseRowMatrix* B(SparseRowMatrix::identity(n));
+  DenseMatrix *D = B->dense();
+  DenseMatrix *X = scinew DenseMatrix(n,n);
+  bicg_solve(*D, *X);
+  delete D;
+  delete B;
+  return X;
+}
+
 int 
 Matrix::cg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs) const
 {
@@ -140,7 +169,7 @@ Matrix::cg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
   flops=0;
   memrefs=0;
 
-  if(toomany == 0) toomany=2*size;
+  if(toomany == 0) toomany=100*size;
 
   if (rhs.vector_norm(flops, memrefs) < 0.0000001) {
     lhs=rhs;
@@ -252,7 +281,7 @@ Matrix::bicg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
   flops=0;
   memrefs=0;
 
-  if(toomany == 0) toomany=2*size;
+  if(toomany == 0) toomany=100*size;
 
   if (rhs.vector_norm(flops, memrefs) < 0.0000001) {
     lhs=rhs;

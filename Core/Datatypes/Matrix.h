@@ -109,6 +109,8 @@ public:
   virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
 		    int& flops, int& memrefs,
 		    int beg=-1, int end=-1, int spVec=0) const=0;
+  DenseMatrix *direct_inverse();
+  DenseMatrix *iterative_inverse();
   int cg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
 	       double &err, int &niter,
 	       int& flops, int& memrefs, 
