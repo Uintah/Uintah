@@ -32,9 +32,11 @@
 #include <Core/Volume/Pbuffer.h>
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Util/Environment.h>
-#include <iostream>
 
+#include <iostream>
 #include <string>
+
+#include <stdio.h>
 
 #include <sci_glu.h>
 #include <sci_glx.h>
