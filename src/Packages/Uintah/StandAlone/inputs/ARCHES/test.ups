@@ -34,7 +34,7 @@
     <PhysicalConstants>
 	<gravity>[-9.8,0,0]</gravity>
 	<ideal_gas_constant>1.0</ideal_gas_constant>
-	<pressure>101325.2</pressure>
+	<pressure>0.0</pressure>
     </PhysicalConstants>
 
     <Grid>
@@ -67,12 +67,12 @@
 	    <Properties>
 		<denUnderrelax>0.9</denUnderrelax>
 		<Stream>
-		    <density>0.162059</density>
+		    <density>1.184344</density>
 		    <temperature>298</temperature>
 		    <enthalpyLoss>0</enthalpyLoss>
 		</Stream>
 		<Stream>
-		    <density>1.184344</density>
+		    <density>0.162059</density>
 		    <temperature>298</temperature>
 		    <enthalpyLoss>0</enthalpyLoss>
 		</Stream>
@@ -96,8 +96,8 @@
 		<WallBC>
 		    <geom_object>
 		      <box label="gp4">
-			<min>[-5,0,0]</min>
-			<max>[0,1,1]</max>
+			<min>[-5,-1,-1]</min>
+			<max>[0,2,2]</max>
 		      </box>
 		    </geom_object>
 		</WallBC>
@@ -107,45 +107,35 @@
 			<Mixfrac>0.0</Mixfrac>
 	            </MixtureFraction>
 		    <TurblengthScale>0.04</TurblengthScale>
-		    <RefPressure>101325.</RefPressure>
+		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
 		      <box label="gp21">
-			<min>[0,0,-5]</min>
-			<max>[1,1,0]</max>
+			<min>[-1,-1,-5]</min>
+			<max>[2,2,0]</max>
 		      </box>
 		      <box label="gp22">
-			<min>[0,0,1]</min>
-			<max>[1,1,5]</max>
+			<min>[-1,-1,1]</min>
+			<max>[2,2,5]</max>
 		      </box>
 		      <box label="gp23">
-			<min>[0,-5,0]</min>
-			<max>[1,0,1]</max>
+			<min>[-1,-5,-1]</min>
+			<max>[2,0,2]</max>
 		      </box>
 		      <box label="gp24">
-			<min>[0,1,0]</min>
-			<max>[1,5,1]</max>
+			<min>[-1,1,-1]</min>
+			<max>[2,5,2]</max>
+		      </box>
+                      <box label="gp25">	
+			<min>[1,-1,-1]</min>
+			<max>[5,2,2]</max>
 		      </box>
 		    </geom_object>
 		</PressureBC>
-		<outletBC>
-		    <flowRate>0</flowRate>
-		    <MixtureFraction>
-			<Mixfrac>0.</Mixfrac>
-	            </MixtureFraction>
-		    <TurblengthScale>0.04</TurblengthScale>
-		    <outletType>pressure</outletType>
-		    <geom_object>
-		      <box label="gp3">
-			<min>[1,0,0]</min>
-			<max>[5,1,1]</max>
-		      </box>
-		    </geom_object>
-		</outletBC>
 	    </BoundaryConditions>
 
 	    <PhysicalConstants>
 		<gravity>[-9.8,0,0]</gravity>
-		<pressure>101325.</pressure>
+		<pressure>0.0</pressure>
 		<viscosity>0.000020</viscosity>
 		<schmidtNo>0.7</schmidtNo>
 	    </PhysicalConstants>
