@@ -4,6 +4,7 @@ include $(OBJTOP_ABS)/scripts/largeso_prologue.mk
 
 SRCDIR := Packages/Yarden/Core
 SUBDIRS := \
+	$(SRCDIR)/Algorithms \
 	$(SRCDIR)/Datatypes \
 
 include $(OBJTOP_ABS)/scripts/recurse.mk

@@ -19,17 +19,17 @@ using namespace SCIRun;
     using namespace DaveW::Datatypes;
     
     extern "C" {
-      Packages/YardenSHARE IPort* make_MatrixIPort(Module* module,
+      YardenSHARE IPort* make_MatrixIPort(Module* module,
 					   const clString& name) {
 	return scinew SimpleIPort<MatrixHandle>(module,name);
       }
-      Packages/YardenSHARE OPort* make_MatrixOPort(Module* module,
+      YardenSHARE OPort* make_MatrixOPort(Module* module,
 					   const clString& name) {
 	return scinew SimpleOPort<MatrixHandle>(module,name);
       }
     }
 
     template<> clString SimpleIPort<TensorFieldHandle>::port_type("TensorField");
-} // End namespace Yarden
     template<> clString SimpleIPort<TensorFieldHandle>::port_color("green3");
+} // End namespace Yarden
 

@@ -6,6 +6,7 @@ SRCDIR := Packages/Yarden/Dataflow
 SUBDIRS := \
 	$(SRCDIR)/GUI \
 	$(SRCDIR)/Modules \
+	$(SRCDIR)/Ports \
 
 include $(OBJTOP_ABS)/scripts/recurse.mk
 

@@ -16,18 +16,20 @@
 #include <Core/Datatypes/ScalarField.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Geometry/BBox.h>
-#include <Dataflow/Ports/SpanPort.h>
+#include <Packages/Yarden/Dataflow/Ports/SpanPort.h>
+#include <Packages/Yarden/share/share.h>
 #include <Core/Malloc/Allocator.h>
 
-namespace SCIRun {
+namespace Yarden {
 
+using namespace SCIRun;
 
 extern "C" {
-PSECORESHARE IPort* make_SpanUniverseIPort(Module* module,
+  YardenSHARE IPort* make_SpanUniverseIPort(Module* module,
 					   const clString& name) {
   return scinew SimpleIPort<SpanUniverseHandle>(module,name);
 }
-PSECORESHARE OPort* make_SpanUniverseOPort(Module* module,
+  YardenSHARE OPort* make_SpanUniverseOPort(Module* module,
 					   const clString& name) {
   return scinew SimpleOPort<SpanUniverseHandle>(module,name);
 }
@@ -36,7 +38,4 @@ PSECORESHARE OPort* make_SpanUniverseOPort(Module* module,
 template<> clString SimpleIPort<SpanUniverseHandle>::port_type("SpanUniverse");
 template<> clString SimpleIPort<SpanUniverseHandle>::port_color("SteelBlue4");
 
-} // End namespace SCIRun
-
-
-
+} // End namespace Yarden

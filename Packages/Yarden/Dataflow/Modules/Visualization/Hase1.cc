@@ -59,15 +59,13 @@
 #include <sstream>
 #include <values.h>
 
-#include <Packages/Yarden/Core/Algorithms/mcube_scan.h>
+#include <Packages/Yarden/Core/Algorithms/Visualization/mcube_scan.h>
 #include <Packages/Yarden/Core/Datatypes/Screen.h>
 #include <Packages/Yarden/Core/Datatypes/Clock.h>
 #include <Packages/Yarden/Core/Datatypes/BonTree.h>
 
 namespace Yarden {
 using namespace SCIRun;
-using namespace Yarden::Datatypes;
-using namespace Yarden::Modules;
 
 //#define DOUBLE
 //#define VIS_WOMAN
