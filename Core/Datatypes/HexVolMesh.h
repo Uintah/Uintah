@@ -533,6 +533,7 @@ private:
 
   LockingHandle<SearchGrid>   grid_;
   Mutex                       grid_lock_; // Bad traffic!
+  Cell::index_type            locate_cache_;
 
   unsigned int			synchronized_;
 };

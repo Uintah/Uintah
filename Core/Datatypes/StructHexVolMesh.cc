@@ -59,7 +59,9 @@ PersistentTypeID StructHexVolMesh::type_id("StructHexVolMesh", "Mesh", maker);
 
 
 StructHexVolMesh::StructHexVolMesh():
-  grid_lock_("StructHexVolMesh grid lock")
+  grid_(0),
+  grid_lock_("StructHexVolMesh grid lock"),
+  locate_cache_(this, 0, 0, 0)
 {}
 
 StructHexVolMesh::StructHexVolMesh(unsigned int i,
@@ -67,12 +69,16 @@ StructHexVolMesh::StructHexVolMesh(unsigned int i,
 				   unsigned int k) :
   LatVolMesh(i, j, k, Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0)),
   points_(i, j, k),
-  grid_lock_("StructHexVolMesh grid lock")
+  grid_(0),
+  grid_lock_("StructHexVolMesh grid lock"),
+  locate_cache_(this, 0, 0, 0)
 {}
 
 StructHexVolMesh::StructHexVolMesh(const StructHexVolMesh &copy) :
   LatVolMesh(copy),
-  grid_lock_("StructHexVolMesh grid lock")
+  grid_(copy.grid_),
+  grid_lock_("StructHexVolMesh grid lock"),
+  locate_cache_(this, 0, 0, 0)
 {
   points_.copy( copy.points_ );
 }
@@ -123,7 +129,10 @@ StructHexVolMesh::transform(const Transform &t)
     ++i;
   }
 
-  grid_ = 0;
+  grid_lock_.lock();
+  if (grid_.get_rep()) { grid_->transform(t); }
+  grid_lock_.unlock();
+
 }
 
 void
@@ -260,26 +269,41 @@ StructHexVolMesh::inside8_p(Cell::index_type idx, const Point &p) const
 bool
 StructHexVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
+  // Check last cell found first.  Copy cache to cell first so that we
+  // don't care about thread safeness, such that worst case on
+  // context switch is that cache is not found.
+  cell = locate_cache_;
+  if (cell > Cell::index_type(this, 0, 0, 0) &&
+      cell < Cell::index_type(this, ni_-1, nj_-1, nk_-1) &&
+      inside8_p(cell, p))
+  {
+      return true;
+  }
+  
   if (grid_.get_rep() == 0)
   {
     compute_grid();
   }
   cell.mesh_ = this;
-  LatVolMeshHandle mesh = grid_->get_typed_mesh();
-  LatVolMesh::Cell::index_type ci;
-  if (!mesh->locate(ci, p)) { return false; }
-  const vector<Cell::index_type> &v = grid_->value(ci);
-  vector<Cell::index_type>::const_iterator iter = v.begin();
+
+  unsigned int *iter, *end;
   double mindist = -1.0;
-  while (iter != v.end()) {
-    const double tmp = inside8_p(*iter, p);
-    if (tmp > mindist)
+  if (grid_->lookup(&iter, &end, p))
+  {
+    while (iter != end)
     {
-      cell = *iter;
-      mindist = tmp;
+      Cell::index_type idx;
+      to_index(idx, *iter);
+      const double tmp = inside8_p(idx, p);
+      if (tmp > mindist)
+      {
+	cell = idx;
+	mindist = tmp;
+      }
+      ++iter;
     }
-    ++iter;
   }
+
   if (mindist > -1.0e-12)
   {
     return true;
@@ -631,53 +655,43 @@ StructHexVolMesh::compute_grid()
   if (grid_.get_rep() != 0) {grid_lock_.unlock(); return;} // only create once.
 
   BBox bb = get_bounding_box();
-  if (!bb.valid()) { grid_lock_.unlock(); return; }
-
-  // Cubed root of number of cells to get a subdivision ballpark.
-  const double one_third = 1.L/3.L;
-  Cell::size_type csize;
-  size(csize);
-  const double dsize = csize.i_ * csize.j_ * csize.k_;
-  const int s = ((int)ceil(pow(dsize , one_third))) / 2 + 2;
-  const Vector cell_epsilon = bb.diagonal() * (0.01 / s);
-  bb.extend(bb.min() - cell_epsilon*2);
-  bb.extend(bb.max() + cell_epsilon*2);
-
-  LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
-  grid_ = scinew LatVolField<vector<Cell::index_type> >(mesh, Field::CELL);
-  LatVolField<vector<Cell::index_type> >::fdata_type &fd = grid_->fdata();
-
-  BBox box;
-  Node::array_type nodes;
-  Cell::iterator ci, cie;
-  begin(ci); end(cie);
-  while(ci != cie)
+  if (bb.valid())
   {
-    get_nodes(nodes, *ci);
+    // Cubed root of number of cells to get a subdivision ballpark.
+    Cell::size_type csize;  size(csize);
+    const int s = (int)(ceil(pow((double)csize , (1.0/3.0)))) / 2 + 1;
+    const Vector cell_epsilon = bb.diagonal() * (1.0e-4 / s);
+    bb.extend(bb.min() - cell_epsilon*2);
+    bb.extend(bb.max() + cell_epsilon*2);
 
-    box.reset();
-    for (unsigned int i = 0; i < nodes.size(); i++)
+    SearchGridConstructor sgc(s, s, s, bb.min(), bb.max());
+
+    BBox box;
+    Node::array_type nodes;
+    Cell::iterator ci, cie;
+    begin(ci); end(cie);
+    while(ci != cie)
     {
-      box.extend(points_(nodes[i].i_, nodes[i].j_, nodes[i].k_));
-    }
-    const Point padmin(box.min() - cell_epsilon);
-    const Point padmax(box.max() + cell_epsilon);
-    box.extend(padmin);
-    box.extend(padmax);
+      get_nodes(nodes, *ci);
 
-    // add this cell index to all overlapping cells in grid_
-    LatVolMesh::Cell::array_type carr;
-    mesh->get_cells(carr, box);
-    LatVolMesh::Cell::array_type::iterator giter = carr.begin();
-    while (giter != carr.end()) {
-      // Would like to just get a reference to the vector at the cell
-      // but can't from value. Bypass the interface.
-      vector<Cell::index_type> &v = fd[*giter];
-      v.push_back(*ci);
-      ++giter;
+      box.reset();
+      for (unsigned int i = 0; i < nodes.size(); i++)
+      {
+	box.extend(points_(nodes[i].i_, nodes[i].j_, nodes[i].k_));
+      }
+      const Point padmin(box.min() - cell_epsilon);
+      const Point padmax(box.max() + cell_epsilon);
+      box.extend(padmin);
+      box.extend(padmax);
+
+      sgc.insert(*ci, box);
+
+      ++ci;
     }
-    ++ci;
+
+    grid_ = scinew SearchGrid(sgc);
   }
+  
   grid_lock_.unlock();
 }
 

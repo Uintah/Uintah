@@ -110,6 +110,7 @@ PrismVolMesh::PrismVolMesh() :
   node_neighbor_lock_("PrismVolMesh node_neighbors_ fill lock"),
   grid_(0),
   grid_lock_("PrismVolMesh grid_ fill lock"),
+  locate_cache_(0),
   synchronized_(CELLS_E | NODES_E)
 {
 }
@@ -147,6 +148,7 @@ PrismVolMesh::PrismVolMesh(const PrismVolMesh &copy):
   node_neighbor_lock_("PrismVolMesh node_neighbors_ fill lock"),
   grid_(copy.grid_),
   grid_lock_("PrismVolMesh grid_ fill lock"),
+  locate_cache_(0),
   synchronized_(copy.synchronized_)
 {
   synchronized_ &= ~EDGES_E;
@@ -227,8 +229,9 @@ PrismVolMesh::transform(const Transform &t)
     ++itr;
   }
   
-  // Recompute grid.
-  synchronized_ &= ~LOCATE_E;
+  grid_lock_.lock();
+  if (grid_.get_rep()) { grid_->transform(t); }
+  grid_lock_.unlock();
 }
 
 
@@ -1056,21 +1059,33 @@ PrismVolMesh::locate(Face::index_type &face, const Point &p)
 bool
 PrismVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
+  // Check last cell found first.  Copy cache to cell first so that we
+  // don't care about thread safeness, such that worst case on
+  // context switch is that cache is not found.
+  cell = locate_cache_;
+  if (cell > Cell::index_type(0) &&
+      cell < Cell::index_type(cells_.size()/PRISM_NNODES) &&
+      inside(cell, p))
+  {
+      return true;
+  }
+  
   if (!(synchronized_ & LOCATE_E))
     synchronize(LOCATE_E);
   ASSERT(grid_.get_rep());
 
-  LatVolMeshHandle mesh = grid_->get_typed_mesh();
-  LatVolMesh::Cell::index_type ci;
-  if (!mesh->locate(ci, p)) { return false; }
-  const vector<Cell::index_type> &v = grid_->value(ci);
-  vector<Cell::index_type>::const_iterator iter = v.begin();
-  while (iter != v.end()) {
-    if (inside(*iter, p)) {
-      cell = *iter;
-      return true;
+  unsigned int *iter, *end;
+  if (grid_->lookup(&iter, &end, p))
+  {
+    while (iter != end)
+    {
+      if (inside(Cell::index_type(*iter), p))
+      {
+	cell = Cell::index_type(*iter);
+	return true;
+      }
+      ++iter;
     }
-    ++iter;
   }
   return false;
 }
@@ -1314,55 +1329,47 @@ PrismVolMesh::compute_grid()
     grid_lock_.unlock();
     return;
   }
-//if (grid_.get_rep() != 0) {grid_lock_.unlock(); return;} // only create once.
 
   BBox bb = get_bounding_box();
-  if (!bb.valid()) { grid_lock_.unlock(); return; }
-  // cubed root of number of cells to get a subdivision ballpark
-  const double one_third = 1.L/6.L;
-  Cell::size_type csize;  size(csize);
-  const int s = ((int)ceil(pow((double)csize , one_third))) / 2 + 2;
-  const Vector cell_epsilon = bb.diagonal() * (0.01 / s);
-  bb.extend(bb.min() - cell_epsilon*2);
-  bb.extend(bb.max() + cell_epsilon*2);
+  if (bb.valid())
+  {
+    // Cubed root of number of cells to get a subdivision ballpark.
+    Cell::size_type csize;  size(csize);
+    const int s = (int)(ceil(pow((double)csize , (1.0/3.0)))) / 2 + 1;
+    const Vector cell_epsilon = bb.diagonal() * (1.0e-4 / s);
+    bb.extend(bb.min() - cell_epsilon*2);
+    bb.extend(bb.max() + cell_epsilon*2);
 
-  LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
-  grid_ = scinew LatVolField<vector<Cell::index_type> >(mesh, Field::CELL);
-  grid_->resize_fdata();
-  LatVolField<vector<Cell::index_type> >::fdata_type &fd = grid_->fdata();
+    SearchGridConstructor sgc(s, s, s, bb.min(), bb.max());
 
-  BBox box;
-  Node::array_type nodes;
-  Cell::iterator ci, cie;
-  begin(ci); end(cie);
-  while(ci != cie) {
-    get_nodes(nodes, *ci);
+    BBox box;
+    Node::array_type nodes;
+    Cell::iterator ci, cie;
+    begin(ci); end(cie);
+    while(ci != cie)
+    {
+      get_nodes(nodes, *ci);
 
-    box.reset();
-    box.extend(points_[nodes[0]]);
-    box.extend(points_[nodes[1]]);
-    box.extend(points_[nodes[2]]);
-    box.extend(points_[nodes[3]]);
-    box.extend(points_[nodes[4]]);
-    box.extend(points_[nodes[5]]);
-    const Point padmin(box.min() - cell_epsilon);
-    const Point padmax(box.max() + cell_epsilon);
-    box.extend(padmin);
-    box.extend(padmax);
+      box.reset();
+      box.extend(points_[nodes[0]]);
+      box.extend(points_[nodes[1]]);
+      box.extend(points_[nodes[2]]);
+      box.extend(points_[nodes[3]]);
+      box.extend(points_[nodes[4]]);
+      box.extend(points_[nodes[5]]);
+      const Point padmin(box.min() - cell_epsilon);
+      const Point padmax(box.max() + cell_epsilon);
+      box.extend(padmin);
+      box.extend(padmax);
 
-    // add this cell index to all overlapping cells in grid_
-    LatVolMesh::Cell::array_type carr;
-    mesh->get_cells(carr, box);
-    LatVolMesh::Cell::array_type::iterator giter = carr.begin();
-    while (giter != carr.end()) {
-      // Would like to just get a reference to the vector at the cell
-      // but can't from value. Bypass the interface.
-      vector<Cell::index_type> &v = fd[*giter];
-      v.push_back(*ci);
-      ++giter;
+      sgc.insert(*ci, box);
+
+      ++ci;
     }
-    ++ci;
+
+    grid_ = scinew SearchGrid(sgc);
   }
+  
   synchronized_ |= LOCATE_E;
   grid_lock_.unlock();
 }

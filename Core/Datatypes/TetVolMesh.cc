@@ -109,6 +109,7 @@ TetVolMesh::TetVolMesh() :
   node_neighbor_lock_("TetVolMesh node_neighbors_ fill lock"),
   grid_(0),
   grid_lock_("TetVolMesh grid_ fill lock"),
+  locate_cache_(0),
   synchronized_(CELLS_E | NODES_E)
 {
 }
@@ -146,6 +147,7 @@ TetVolMesh::TetVolMesh(const TetVolMesh &copy):
   node_neighbor_lock_("TetVolMesh node_neighbors_ fill lock"),
   grid_(copy.grid_),
   grid_lock_("TetVolMesh grid_ fill lock"),
+  locate_cache_(0),
   synchronized_(copy.synchronized_)
 {
   synchronized_ &= ~EDGES_E;
@@ -227,9 +229,10 @@ TetVolMesh::transform(const Transform &t)
     *itr = t.project(*itr);
     ++itr;
   }
-  
-  // Recompute grid.
-  synchronized_ &= ~LOCATE_E;
+
+  grid_lock_.lock();
+  if (grid_.get_rep()) { grid_->transform(t); }
+  grid_lock_.unlock();
 }
 
 
@@ -1291,8 +1294,7 @@ TetVolMesh::locate(Cell::index_type &cell, const Point &p)
   // Check last cell found first.  Copy cache to cell first so that we
   // don't care about thread safeness, such that worst case on
   // context switch is that cache is not found.
-  static Cell::index_type cache(0);
-  cell = cache;
+  cell = locate_cache_;
   if (cell > Cell::index_type(0) &&
       cell < Cell::index_type(cells_.size()/4) &&
       inside(cell, p))
@@ -1312,7 +1314,7 @@ TetVolMesh::locate(Cell::index_type &cell, const Point &p)
       if (inside(Cell::index_type(*iter), p))
       {
 	cell = Cell::index_type(*iter);
-	cache = cell;
+	locate_cache_ = cell;
 	return true;
       }
       ++iter;

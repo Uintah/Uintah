@@ -91,6 +91,7 @@ HexVolMesh::HexVolMesh() :
   node_nbor_lock_("HexVolMesh node_neighbors_ fill lock"),
   grid_(0),
   grid_lock_("HexVolMesh grid_ fill lock"),
+  locate_cache_(0),
   synchronized_(NODES_E | CELLS_E)
 {
 }
@@ -111,6 +112,7 @@ HexVolMesh::HexVolMesh(const HexVolMesh &copy):
   node_nbor_lock_("HexVolMesh node_neighbors_ fill lock"),
   grid_(copy.grid_),
   grid_lock_("HexVolMesh grid_ fill lock"),
+  locate_cache_(0),
   synchronized_(copy.synchronized_)
 {
 }
@@ -157,8 +159,10 @@ HexVolMesh::transform(const Transform &t)
     *itr = t.project(*itr);
     ++itr;
   }
-  synchronized_ &= ~LOCATE_E;
-  grid_ = 0;
+
+  grid_lock_.lock();
+  if (grid_.get_rep()) { grid_->transform(t); }
+  grid_lock_.unlock();
 }
 
 
@@ -772,14 +776,14 @@ HexVolMesh::locate(Cell::index_type &cell, const Point &p)
   // Check last cell found first.  Copy cache to cell first so that we
   // don't care about thread safeness, such that worst case on
   // context switch is that cache is not found.
-  static Cell::index_type cache(0);
-  cell = cache;
+  cell = locate_cache_;
   if (cell > Cell::index_type(0) &&
       cell < Cell::index_type(cells_.size()/8) &&
       inside8_p(cell, p))
   {
-    return true;
+      return true;
   }
+  
 
   if (!(synchronized_ & LOCATE_E))
     synchronize(LOCATE_E);
@@ -793,7 +797,7 @@ HexVolMesh::locate(Cell::index_type &cell, const Point &p)
       if (inside8_p(Cell::index_type(*iter), p))
       {
 	cell = Cell::index_type(*iter);
-	cache = cell;
+	locate_cache_ = cell;
 	return true;
       }
       ++iter;
