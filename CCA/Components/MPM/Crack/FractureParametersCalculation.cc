@@ -403,11 +403,11 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   Point crossPt;
                   while(!FindIntersectionOfJPathAndCrackPlane(m,d_rJ,A,crossPt))
                     d_rJ*=0.7;
-                  if(fabs(d_rJ-rJ)/rJ>1.e-6) {
-                    cout << "   ! Radius of J-contour decreased from " << rJ
-                         << " to " << d_rJ << " for seg "<< i << " of mat "
-                         << m << "." << endl;
-                  }
+                  //if(fabs(d_rJ-rJ)/rJ>1.e-6) {
+                  //  cout << "   ! Radius of J-contour decreased from " << rJ
+                  //       << " to " << d_rJ << " for seg "<< i << " of mat "
+                  //       << m << "." << endl;
+                  //}
 
                   // Get coordinates of intersection in local system (xcprime,ycprime)
                   double xc,yc,zc,xcprime,ycprime,scprime;
