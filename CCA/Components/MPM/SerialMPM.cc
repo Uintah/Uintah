@@ -3027,9 +3027,9 @@ void SerialMPM::refine(const ProcessorGroup*,
         new_dw->allocateAndPut(pstress,        lb->pStressLabel,        pset);
         if (flags->d_useLoadCurves)
           new_dw->allocateAndPut(pLoadCurve,   lb->pLoadCurveIDLabel,   pset);
-        if(flags->d_8or27==27){
-          new_dw->allocateAndPut(psize,        lb->pSizeLabel,          pset);
-        }
+        //if(flags->d_8or27==27){
+        new_dw->allocateAndPut(psize,        lb->pSizeLabel,          pset);
+        //}
         new_dw->allocateAndPut(pErosion,       lb->pErosionLabel,       pset);
 
       }
