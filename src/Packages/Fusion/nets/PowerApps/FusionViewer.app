@@ -975,8 +975,8 @@ class FusionViewerApp {
 	wm title .standalone "FusionViewer"	 
 	set win .standalone
 	
-	set viewer_width 800
-	set viewer_height 800
+	set viewer_width 700
+	set viewer_height 775
 	
 	set notebook_width 290
 	set notebook_height [expr $viewer_height - 160]
@@ -3801,18 +3801,87 @@ class FusionViewerApp {
 	}
 
  	puts $fileid "global mods"
-	
- 	set searchID [array startsearch mods]
- 	set i 0
  	set script "\n"
- 	while {[array anymore mods $searchID]} {
- 	    set m [array nextelement mods $searchID]
+	
+	global mods
+
+	$mods(HDF5-Points)      writeStateToScript script "\$mods(HDF5-Points)" ""
+	$mods(HDF5-Connections) writeStateToScript script "\$mods(HDF5-Connections)" ""
+	$mods(HDF5-Scalar)      writeStateToScript script "\$mods(HDF5-Scalar)" ""
+	$mods(HDF5-Vector)      writeStateToScript script "\$mods(HDF5-Vector)" ""
+
+	$mods(MDSPlus-Points)      writeStateToScript script "\$mods(MDSPlus-Points)" ""
+	$mods(MDSPlus-Connections) writeStateToScript script "\$mods(MDSPlus-Connections)" ""
+	$mods(MDSPlus-Scalar)      writeStateToScript script "\$mods(MDSPlus-Scalar)" ""
+	$mods(MDSPlus-Vector)      writeStateToScript script "\$mods(MDSPlus-Vector)" ""
+
+	$mods(ChooseNrrd-Points)      writeStateToScript script "\$mods(ChooseNrrd-Points)" ""
+	$mods(ChooseNrrd-Connections) writeStateToScript script "\$mods(ChooseNrrd-Connections)" ""
+	$mods(ChooseNrrd-Scalar)      writeStateToScript script "\$mods(ChooseNrrd-Scalar)" ""
+	$mods(ChooseNrrd-Vector)      writeStateToScript script "\$mods(ChooseNrrd-Vector)" ""
+
+	$mods(NrrdToField-Scalar) writeStateToScript script "\$mods(NrrdToField-Scalar)" ""
+	$mods(NrrdToField-Vector) writeStateToScript script "\$mods(NrrdToField-Vector)" ""
+
+	$mods(Probe-Scalar) writeStateToScript script "\$mods(Probe-Scalar)" ""
+	$mods(Probe-Vector) writeStateToScript script "\$mods(Probe-Scalar)" ""
+
+	$mods(FieldInfo-Scalar) writeStateToScript script "\$mods(FieldInfo-Scalar)" ""
+	$mods(FieldInfo-Vector) writeStateToScript script "\$mods(FieldInfo-Vector)" ""
+	$mods(ChooseField-Isosurface-Surface) writeStateToScript script "\$mods(ChooseField-Isosurface-Surface)" ""
+
+
+	$mods(SubSample)   writeStateToScript script "\$mods(SubSample)" ""
+	$mods(Slicer-Low)  writeStateToScript script "\$mods(Slicer-Low)" ""
+	$mods(Slicer-High) writeStateToScript script "\$mods(Slicer-High)" ""
+
+	$mods(Isosurface-Surface)       writeStateToScript script "\$mods(Isosurface-Surface)" ""
+	$mods(Isosurface-Contour-Low)   writeStateToScript script "\$mods(Isosurface-Contour-Low)" ""
+	$mods(Isosurface-Contour-High)  writeStateToScript script "\$mods(Isosurface-Contour-High)" ""
+
+	$mods(ShowField-Isosurface-Surface)  writeStateToScript script "\$mods(ShowField-Isosurface-Surface)" ""
+	$mods(ShowField-Isosurface-Contour)  writeStateToScript script "\$mods(ShowField-Isosurface-Contour)" ""
+
+	$mods(TransformData-Scalar-Slice)           writeStateToScript script "\$mods(TransformData-Scalar-Slice)" ""
+	$mods(Isosurface-Scalar-Slice)              writeStateToScript script "\$mods(Isosurface-Scalar-Slice)" ""
+	$mods(ApplyInterpMatrix-Scalar-Slice-Iso)   writeStateToScript script "\$mods(ApplyInterpMatrix-Scalar-Slice-Iso)" ""
+	$mods(ApplyInterpMatrix-Scalar-Slice-Clip)  writeStateToScript script "\$mods(ApplyInterpMatrix-Scalar-Slice-Clip)" ""
+	$mods(ClipField-Scalar-Slice)               writeStateToScript script "\$mods(ClipField-Scalar-Slice)" ""
+	$mods(Isosurface-Slice-Contours)            writeStateToScript script "\$mods(Isosurface-Slice-Contours)" ""
+	$mods(ShowField-Scalar-Slice-Face)          writeStateToScript script "\$mods(ShowField-Scalar-Slice-Face)" ""
+	$mods(ShowField-Scalar-Slice-Edge)          writeStateToScript script "\$mods(ShowField-Scalar-Slice-Edge)" ""
+
+	$mods(StreamLines-rake)  writeStateToScript script "\$mods(StreamLines-rake)" ""
+	$mods(StreamLines)  writeStateToScript script "\$mods(StreamLines)" ""
+
+	$mods(DirectInterpolate-StreamLines-Vector)  writeStateToScript script "\$mods(DirectInterpolate-StreamLines-Vector)" ""
+	$mods(ShowField-StreamLines-Vector)  writeStateToScript script "\$mods(ShowField-StreamLines-Vector)" ""
+	$mods(ShowField-StreamLines-Scalar)  writeStateToScript script "\$mods(ShowField-StreamLines-Scalar)" ""
+
+	$mods(ChooseField-Interpolate)  writeStateToScript script "\$mods(ChooseField-Interpolate)" ""
+
+
+	$mods(ColorMap-Isosurfaces) writeStateToScript script "\$mods(ColorMap-Isosurfaces)" ""
+	$mods(ColorMap-Streamlines) writeStateToScript script "\$mods(ColorMap-Streamlines)" ""
+	$mods(ColorMap-Other)       writeStateToScript script "\$mods(ColorMap-Other)" ""
+
+	$mods(RescaleColorMap-Isosurfaces) writeStateToScript script "\$mods(RescaleColorMap-Isosurfaces)" ""
+	$mods(RescaleColorMap-Streamlines) writeStateToScript script "\$mods(RescaleColorMap-Streamlines)" ""
+	$mods(RescaleColorMap-Other)       writeStateToScript script "\$mods(RescaleColorMap-Other)" ""
+
+	$mods(Synchronize) writeStateToScript script "\$mods(Synchronize)" ""
+	$mods(Viewer)      writeStateToScript script "\$mods(Viewer)" ""
+
+
+# 	set searchID [array startsearch mods]
+# 	while {[array anymore mods $searchID]} {
+# 	    set m [array nextelement mods $searchID]
 	    # Call same method called for writing networks
 	    # which writes them out in consistent order and
 	    # only if they differ from the default.
- 	    $mods($m) writeStateToScript script "\$mods($m)" ""
- 	}
- 	array donesearch mods $searchID
+# 	    $mods($m) writeStateToScript script "\$mods($m)" ""
+# 	}
+# 	array donesearch mods $searchID
 	
  	puts $fileid "$script"
 	puts $fileid "::netedit scheduleok"
