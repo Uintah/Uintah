@@ -566,7 +566,7 @@ QuadSurfMesh::add_find_point(const Point &p, double err)
 }
 
 
-void
+QuadSurfMesh::Elem::index_type
 QuadSurfMesh::add_quad(Node::index_type a, Node::index_type b,
 		       Node::index_type c, Node::index_type d)
 {
@@ -576,6 +576,7 @@ QuadSurfMesh::add_quad(Node::index_type a, Node::index_type b,
   faces_.push_back(d);
   synchronized_ &= ~NORMALS_E;
   synchronized_ &= ~EDGE_NEIGHBORS_E;
+  return static_cast<Elem::index_type>((faces_.size() - 1) >> 2);
 }
 
 
@@ -734,12 +735,12 @@ QuadSurfMesh::add_point(const Point &p)
 
 
 
-void
+QuadSurfMesh::Elem::index_type
 QuadSurfMesh::add_quad(const Point &p0, const Point &p1,
 		       const Point &p2, const Point &p3)
 {
-  add_quad(add_find_point(p0), add_find_point(p1),
-	   add_find_point(p2), add_find_point(p3));
+  return add_quad(add_find_point(p0), add_find_point(p1),
+		  add_find_point(p2), add_find_point(p3));
 }
 
 
