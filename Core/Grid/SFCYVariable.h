@@ -425,6 +425,12 @@ WARNING
   SFCYVariable<T>::SFCYVariable()
   {
   }
+
+  template<class T>
+  SFCYVariable<T>::SFCYVariable(const SFCYVariable<T>& copy)
+    : Array3<T>(copy)
+  {
+  }
    
   template<class T>
   void

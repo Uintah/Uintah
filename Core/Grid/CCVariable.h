@@ -498,6 +498,12 @@ WARNING
   {
     //	 std::cerr << "CCVariable ctor not done!\n";
   }
+
+  template<class T>
+  CCVariable<T>::CCVariable(const CCVariable<T>& copy)
+    : Array3<T>(copy)
+  {
+  }
    
   template<class T>
   void CCVariable<T>::allocate(const IntVector& lowIndex,
