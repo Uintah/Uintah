@@ -1296,18 +1296,21 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
+
 #ifdef correctorstep
+#ifndef Runge_Kutta_2nd
+#ifndef Runge_Kutta_3d
+#ifndef Runge_Kutta_3d_ssp
   delta_t /= 2.0;
 #endif
-#ifdef Runge_Kutta_2nd
-  delta_t *= 2.0;
 #endif
+#endif
+#endif
+
 #ifdef Runge_Kutta_3d
+#ifndef Runge_Kutta_3d_ssp
   double gamma_1 = 8.0/15.0;
-  delta_t *= 2.0; // since correctorstep is also defined for Runge-Kutta
   delta_t *= gamma_1; 
-#ifdef Runge_Kutta_3d_ssp
-  delta_t /= gamma_1; 
 #endif
 #endif
   
@@ -1778,20 +1781,24 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
+
 #ifdef correctorstep
+#ifndef Runge_Kutta_2nd
+#ifndef Runge_Kutta_3d
+#ifndef Runge_Kutta_3d_ssp
   delta_t /= 2.0;
 #endif
-#ifdef Runge_Kutta_2nd
-  delta_t *= 2.0;
 #endif
+#endif
+#endif
+
 #ifdef Runge_Kutta_3d
+#ifndef Runge_Kutta_3d_ssp
   double gamma_1 = 8.0/15.0;
-  delta_t *= 2.0; // since correctorstep is also defined for Runge-Kutta
   delta_t *= gamma_1; 
-#ifdef Runge_Kutta_3d_ssp
-  delta_t /= gamma_1; 
 #endif
 #endif
+  
   
   // Get the pressure, velocity, scalars, density and viscosity from the
   // old datawarehouse
@@ -2062,7 +2069,7 @@ void
 PressureSolver::pressureLinearSolvePred (const ProcessorGroup* pc,
 					 const Patch* patch,
 					 const int matlIndex,
-					 DataWarehouse* old_dw,
+					 DataWarehouse* /*old_dw*/,
 					 DataWarehouse* new_dw,
 					 ArchesVariables& pressureVars)
 {
@@ -2315,7 +2322,7 @@ PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
     tsk->requires(Task::NewDW, d_lab->d_pressureIntermLabel,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  Ghost::AroundCells, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::NewDW, d_lab->d_viscosityIntermLabel,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
   #else
@@ -2334,7 +2341,7 @@ PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
   #endif
     // from new_dw
     tsk->requires(Task::NewDW, d_lab->d_pressurePredLabel,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  Ghost::AroundCells, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
   #endif
@@ -2377,12 +2384,12 @@ PressureSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
+
 #ifdef Runge_Kutta_3d
+#ifndef Runge_Kutta_3d_ssp
   double gamma_3 = 3.0/4.0;
   double zeta_2 = -5.0/12.0;
   delta_t *= gamma_3;
-#ifdef Runge_Kutta_3d_ssp
-  delta_t /= gamma_3;
 #endif
 #endif
   
@@ -2829,12 +2836,11 @@ PressureSolver::buildLinearMatrixPressCorr(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
+
 #ifdef Runge_Kutta_3d
+#ifndef Runge_Kutta_3d_ssp
   double gamma_3 = 3.0/4.0;
-  double zeta_2 = -5.0/12.0;
-  delta_t *= (gamma_3+zeta_2);
-#ifdef Runge_Kutta_3d_ssp
-  delta_t /= (gamma_3+zeta_2);
+  delta_t *= gamma_3;
 #endif
 #endif
   
@@ -3307,7 +3313,7 @@ PressureSolver::sched_buildLinearMatrixInterm(SchedulerP& sched,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
     tsk->requires(Task::NewDW, d_lab->d_pressurePredLabel,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  Ghost::AroundCells, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
@@ -3348,11 +3354,11 @@ PressureSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
+
+#ifndef Runge_Kutta_3d_ssp
   double gamma_2 = 5.0/12.0;
   double zeta_1 = -17.0/60.0;
   delta_t *= gamma_2; 
-#ifdef Runge_Kutta_3d_ssp
-  delta_t /= gamma_2; 
 #endif
   
   for (int p = 0; p < patches->size(); p++) {
@@ -3767,11 +3773,10 @@ PressureSolver::buildLinearMatrixPressInterm(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
+
+#ifndef Runge_Kutta_3d_ssp
   double gamma_2 = 5.0/12.0;
-  double zeta_1 = -17.0/60.0;
-  delta_t *= (gamma_2+zeta_1); 
-#ifdef Runge_Kutta_3d_ssp
-  delta_t /= (gamma_2+zeta_1); 
+  delta_t *= gamma_2; 
 #endif
   
   // Get the pressure, velocity, scalars, density and viscosity from the

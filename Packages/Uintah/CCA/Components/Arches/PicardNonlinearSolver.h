@@ -154,6 +154,11 @@ private:
 
 private:
 
+      // const VarLabel*
+      const ArchesLabel* d_lab;
+      const MPMArchesLabel* d_MAlab;
+      // generation variable for DataWarehouse creation
+  
       // Total number of nonlinear iterates
       int d_nonlinear_its;
       // for probing data for debuging or plotting
@@ -161,6 +166,14 @@ private:
       vector<IntVector> d_probePoints;
       // nonlinear residual tolerance
       double d_resTol;
+
+      // properties...solves density, temperature and specie concentrations
+      Properties* d_props;
+      // Boundary conditions
+      BoundaryCondition* d_boundaryCondition;
+      // Turbulence Model
+      TurbulenceModel* d_turbModel;
+
       bool d_enthalpySolve;
       // Pressure Eqn Solver
       PressureSolver* d_pressSolver;
@@ -169,21 +182,9 @@ private:
       // Scalar solver
       ScalarSolver* d_scalarSolver;
       EnthalpySolver* d_enthalpySolver;
-
       // physcial constatns
       PhysicalConstants* d_physicalConsts;
-      // properties...solves density, temperature and specie concentrations
-      Properties* d_props;
-      // Turbulence Model
-      TurbulenceModel* d_turbModel;
-      // Boundary conditions
-      BoundaryCondition* d_boundaryCondition;
 
-      // const VarLabel*
-      const ArchesLabel* d_lab;
-      const MPMArchesLabel* d_MAlab;
-      // generation variable for DataWarehouse creation
-  
 }; // End class PicardNonlinearSolver
 } // End namespace Uintah
 

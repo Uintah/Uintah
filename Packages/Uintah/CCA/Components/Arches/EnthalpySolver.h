@@ -217,6 +217,10 @@ private:
 				   DataWarehouse* new_dw);
   
 private:
+      // const VarLabel* (required)
+      const ArchesLabel* d_lab;
+      const MPMArchesLabel* d_MAlab;
+
       ArchesVariables* d_enthalpyVars;
       // computes coefficients
       Discretization* d_discretize;
@@ -230,10 +234,6 @@ private:
       BoundaryCondition* d_boundaryCondition;
       // physical constants
       PhysicalConstants* d_physicalConsts;
-
-      // const VarLabel* (required)
-      const ArchesLabel* d_lab;
-      const MPMArchesLabel* d_MAlab;
 
       bool d_radiationCalc;
 
