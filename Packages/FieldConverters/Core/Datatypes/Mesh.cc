@@ -1524,7 +1524,7 @@ OMesh::insert_delaunay( int node )
       // If the face is in the list, remove it.
       // Otherwise, add it.
       DFace* dummy;
-      if(face_table.lookup(f, dummy)){
+      if(dummy = face_table.lookup(f)){
 	face_table.remove(f);
 	delete f;
       } else {
@@ -1587,8 +1587,7 @@ OMesh::insert_delaunay( int node )
 	// Add these faces to the list of exposed faces...
 	DFace* f=new DFace(ne->n[(j+1)%4], ne->n[(j+2)%4], ne->n[(j+3)%4]);
 
-	DFace* ef;
-	if(new_faces.lookup(f, ef)){
+	if(ef = new_faces.lookup(f)){
 	  // We have this face...
 	  if(ef->face_idx==-1){
 	    ne->faces[j]=-1; // Boundary
