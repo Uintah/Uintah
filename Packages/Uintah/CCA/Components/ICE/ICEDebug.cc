@@ -30,7 +30,7 @@ void    ICE::printData( int matl,
                         const CCVariable<int>& q_CC)
 {
   printData_driver<CCVariable<int> >
-        (matl, patch, include_EC, message1, message2, q_CC);
+        (matl, patch, include_EC, message1, message2, "CC",q_CC);
 }
 void    ICE::printData( int matl,
                         const Patch* patch, 
@@ -40,7 +40,7 @@ void    ICE::printData( int matl,
                         const CCVariable<double>& q_CC)
 {
   printData_driver<CCVariable<double> >
-        (matl, patch, include_EC, message1, message2, q_CC);
+        (matl, patch, include_EC, message1, message2, "CC", q_CC);
 }
 void    ICE::printData_FC(int matl,
                           const Patch* patch, 
@@ -50,7 +50,7 @@ void    ICE::printData_FC(int matl,
                           const SFCXVariable<double>& q_FC)
 {
   printData_driver< SFCXVariable<double> >
-          (matl, patch, include_EC, message1, message2, q_FC);
+          (matl, patch, include_EC, message1, message2, "FC", q_FC);
 }
 void    ICE::printData_FC(int matl,
                           const Patch* patch, 
@@ -60,7 +60,7 @@ void    ICE::printData_FC(int matl,
                           const SFCYVariable<double>& q_FC)
 {
   printData_driver< SFCYVariable<double> >
-          (matl, patch, include_EC, message1, message2, q_FC);
+          (matl, patch, include_EC, message1, message2, "FC", q_FC);
 }
 void    ICE::printData_FC(int matl,
                           const Patch* patch, 
@@ -70,7 +70,7 @@ void    ICE::printData_FC(int matl,
                           const SFCZVariable<double>& q_FC)
 {
   printData_driver< SFCZVariable<double> >
-          (matl, patch, include_EC, message1, message2, q_FC);
+          (matl, patch, include_EC, message1, message2, "FC", q_FC);
 }
 
 
@@ -81,8 +81,9 @@ template<class T>
 void    ICE::printData_driver( int matl,
                                const Patch* patch, 
                                int include_EC,
-                               const string&    message1,        
-                               const string&    message2,       
+                               const string& message1,        
+                               const string& message2,
+                               const string& variableType,       
                                const T& q_CC)
 {
   //__________________________________
@@ -156,13 +157,14 @@ void    ICE::printData_driver( int matl,
       fp = fopen(filename.c_str(), "w");
 
       double x, dx;
-      find_gnuplot_origin_And_dx(patch, low, high, &dx, &x);   
- 
+      find_gnuplot_origin_And_dx(variableType, patch, low, high, &dx, &x);   
+
       for(int k = low.z(); k < high.z(); k++)  {
         for(int j = low.y(); j < high.y(); j++) {
           for(int i = low.x(); i < high.x(); i++) {
             IntVector idx(i, j, k);
-            fprintf(fp, "%16.15E %16.15E\n", x+=dx, q_CC[idx]);
+            fprintf(fp, "%16.15E %16.15E\n", x, q_CC[idx]);
+            x+=dx;
           }
         }
       }
@@ -272,13 +274,15 @@ void    ICE::printVector(int matl,
         string filename = path + "/" + var_name;
         fp = fopen(filename.c_str(), "w");
         double x, dx;
-        find_gnuplot_origin_And_dx(patch, low, high, &dx, &x);
-
+       
+        find_gnuplot_origin_And_dx("Vector", patch, low, high, &dx, &x);
+      
         for(int k = low.z(); k < high.z(); k++)  {
           for(int j = low.y(); j < high.y(); j++) {
             for(int i = low.x(); i < high.x(); i++) {
               IntVector idx(i, j, k);
-              fprintf(fp, "%16.15E %16.15E\n", x+=dx, q_CC[idx][dir]);
+              fprintf(fp, "%16.15E %16.15E\n", x, q_CC[idx][dir]);
+              x+=dx;
             }
           }
         }
@@ -580,7 +584,8 @@ void ICE::createDirs( const Patch* patch,
  Function~  find_gnuplot_origin_And_dx:
  Purpose~   Find principle direction the associated dx and the origin
  _______________________________________________________________________ */
-void ICE::find_gnuplot_origin_And_dx(const Patch* patch, 
+void ICE::find_gnuplot_origin_And_dx(const string variableType,
+                                     const Patch* patch,
                                      IntVector& low, 
                                      IntVector& high,
                                      double *dx,
@@ -588,13 +593,13 @@ void ICE::find_gnuplot_origin_And_dx(const Patch* patch,
 {
    //__________________________________
   //  for multilevel problems adjust the user input
-  // Just a 1 to low on all non-principal dirs.
+  // Just a 1 to low on all non-principal dirs.2
   const Level* level = patch->getLevel();
   int levelIndx = level->getIndex();
   IntVector refineRatio(level->getRefinementRatio());
   IntVector numLevels(levelIndx,levelIndx,levelIndx);
   IntVector numCells(numLevels * refineRatio );
-
+ 
   if ( levelIndx > 0 ) {
     if (high.x() - low.x() == numCells.x() ) {
       high.x(low.x() + 1);
@@ -608,12 +613,22 @@ void ICE::find_gnuplot_origin_And_dx(const Patch* patch,
   } 
   
   int test=0;
+  int principalDir = 0;
   Vector  dx_org = patch->dCell();
   //__________________________________
   // bullet proofing
-  if (high.x() - low.x() > 1) {test +=1;}
-  if (high.y() - low.y() > 1) {test +=1;}
-  if (high.z() - low.z() > 1) {test +=1;}
+  if (high.x() - low.x() > 1) {
+    test +=1;
+    principalDir = 0;
+  }
+  if (high.y() - low.y() > 1) {
+    test +=1;
+     principalDir = 1;
+  }
+  if (high.z() - low.z() > 1) {
+    test +=1;
+    principalDir = 2;
+  }
   
   if (test !=1) {
     ostringstream desc;
@@ -623,21 +638,17 @@ void ICE::find_gnuplot_origin_And_dx(const Patch* patch,
          "low "<< low << "high " << high <<endl;
     Message(1, desc.str(),"","");
   }
-  //__________________________________
-  //  along the principal dir find dx and
-  //  the origin             
-  if (high.x() - low.x() > 1) {
-    *dx = dx_org.x();
-    *origin = *dx * low.x();
-  } 
-  if (high.y() - low.y() > 1) {
-    *dx = dx_org.y();
-    *origin = *dx * low.y();
+  // For face centered variables subtract dx/2 off the CC position
+  double offset = 0.0;
+  if (variableType == "FC") {
+    offset = dx_org[principalDir]/2.0;
   }
-  if (high.z() - low.z() > 1){
-    *dx = dx_org.z();
-    *origin = *dx * low.z();
-  }
+  
+  //  along the principal dir find dx and the origin 
+  *dx = dx_org[principalDir];
+  Vector pos = patch->cellPosition(low).asVector();
+  *origin = pos[principalDir] - offset;
+  // cout << " dx " << *dx  << " *origin " << *origin << " offset " << offset << endl;
 }
 
 /* 
