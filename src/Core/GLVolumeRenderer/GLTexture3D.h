@@ -216,7 +216,11 @@ private:
   
   // friend needed by gcc-2.95.3 compiler
   template <class T>
-  friend class run_make_brick_data : public Runnable {
+#if defined(__GNUC__) && (__GNUC__ == 3) && \
+    defined(__GNUC_MINOR__) && (__GNUC_MINOR__ < 96)
+  friend 
+#endif
+  class run_make_brick_data : public Runnable {
   public:
     run_make_brick_data(GLTexture3D* tex3D,
 		      Semaphore *thread,
