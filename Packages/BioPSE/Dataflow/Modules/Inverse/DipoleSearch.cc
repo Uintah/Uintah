@@ -197,7 +197,7 @@ void DipoleSearch::send_and_get_data(int which_dipole,
   pcm = scinew PointCloudMesh;
   pcm->add_point(Point(dipoles_(which_dipole, 0), dipoles_(which_dipole, 1),
 		       dipoles_(which_dipole, 2)));
-  PointCloudField<double> *pcd = scinew PointCloudField<double>(pcm, Field::NODE);
+  PointCloudField<Vector> *pcd = scinew PointCloudField<Vector>(pcm, Field::NODE);
   
   // send out data
   leadfield_selectH_ = leadfield_select_out;
@@ -500,7 +500,8 @@ void DipoleSearch::organize_last_send() {
   leadfield_selectH_ = leadfield_select_out;
   PointCloudMeshHandle pcm = scinew PointCloudMesh;
   pcm->add_point(best_pt);
-  PointCloudField<double> *pcd = scinew PointCloudField<double>(pcm, Field::NODE);
+  PointCloudField<Vector> *pcd = scinew PointCloudField<Vector>(pcm, Field::NODE);
+  pcd->fdata()[0]=Vector(dipoles_(bestIdx,3), dipoles_(bestIdx,4), dipoles_(bestIdx,5));
   dipoleH_ = pcd;
 }
 
