@@ -61,7 +61,7 @@ double JWL::computeRhoMicro(double press, double,
       // at the time the above code failed to converge.  Start over with this
       // copy and print more out.
       delta = 1.;
-      rhoM = press/(om*cv*Temp);
+      rhoM = min(10000.,press/(om*cv*Temp));
       cout <<  rhoM << endl;;
       while(fabs(delta/rhoM)>epsilon){
        f = (A*exp(-R1*rho0/rhoM) +
@@ -143,8 +143,8 @@ void JWL::computePressEOS(double rhoM, double,
   press   = A*exp(-R1*rho0/rhoM) +
             B*exp(-R2*rho0/rhoM) + om*rhoM*cv*Temp;
 
-  dp_drho = A*(exp(-R1*rho0/rhoM))
-          + B*(exp(-R2*rho0/rhoM)) + om*cv*Temp;
+  dp_drho = (A*R1*rho0/(rhoM*rhoM))*(exp(-R1*rho0/rhoM))
+          + (B*R2*rho0/(rhoM*rhoM))*(exp(-R2*rho0/rhoM)) + om*cv*Temp;
 
   dp_de   = om*rhoM;
 }
