@@ -33,7 +33,6 @@ itcl_class SCIRun_Fields_ManipFields {
 	set $this-mlibpath {}
 	set $this-minc {}
 	set $this-name-list {}
-	$this-c needexecute
     }
     # update the libs information 
     method libDone {arg} {

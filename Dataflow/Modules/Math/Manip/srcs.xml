@@ -3,12 +3,13 @@
 
 <srcs>
   <src name="">
-    <description></description>
+    <description>(null string)</description>
   </src>
   <src name="MinimumNormLeastSquared">
-    <description></description>
-    <lib name="m"/>
-    <lib name="Datatypes"/>
-    <libpath name="Core/Datatypes"/>
+    <description>(null string)</description>
+    <lib name="Core_Datatypes"/>
+    <lib name="Core_Thread"/>
+    <lib name="Core_Exceptions"/>
+    <lib name="Core_Math"/>
   </src>
 </srcs>
