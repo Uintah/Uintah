@@ -43,22 +43,21 @@
 #include <SCIRun/Vtk/VtkUIPort.h>
 #include <SCIRun/Vtk/Component.h>
 #include <SCIRun/CCA/CCAPortInstance.h>
-using namespace std;
-using namespace SCIRun;
-using namespace vtk;
+
+namespace SCIRun {
 
 VtkComponentInstance::VtkComponentInstance(SCIRunFramework* framework,
-						 const string& instanceName,
-						 const string& className,
-						 vtk::Component* component)
+                                           const std::string& instanceName,
+                                           const std::string& className,
+                                           vtk::Component* component)
   : ComponentInstance(framework, instanceName, className), component(component)
 {
   // See if we have a user-interface...
   if(component->haveUI()){
-    specialPorts.push_back(new CCAPortInstance("ui", "sci.cca.ports.UIPort",
-					       sci::cca::TypeMap::pointer(0),
-					       sci::cca::Port::pointer(new VtkUIPort(this)),
-					       CCAPortInstance::Provides));
+  specialPorts.push_back(new CCAPortInstance("ui", "sci.cca.ports.UIPort",
+                                             sci::cca::TypeMap::pointer(0),
+                                             sci::cca::Port::pointer(new VtkUIPort(this)),
+                                             CCAPortInstance::Provides));
   }
 }
 
@@ -66,20 +65,20 @@ VtkComponentInstance::~VtkComponentInstance()
 {
 }
 
-PortInstance* VtkComponentInstance::getPortInstance(const string& name)
+PortInstance* VtkComponentInstance::getPortInstance(const std::string& name)
 {
   //if the port is CCA port, find it from the specialPorts
   if(name=="ui" || name=="go"){
-    for(unsigned int i=0;i<specialPorts.size();i++)
-      if(specialPorts[i]->getName() == name)
-	return specialPorts[i];
-    return 0;
+  for(unsigned int i=0;i<specialPorts.size();i++)
+    if(specialPorts[i]->getName() == name)
+      return specialPorts[i];
+  return 0;
   }
 
   //otherwise it is vtk port
   vtk::Port* port = component->getPort(name);
   if(!port){
-    return 0;
+  return 0;
   }
   //TODO: check memory leak
   return new VtkPortInstance(this, port, port->isInput()?VtkPortInstance::Input:VtkPortInstance::Output);
@@ -113,21 +112,23 @@ bool VtkComponentInstance::Iterator::done()
 
 PortInstance* VtkComponentInstance::Iterator::get()
 {
-
-  Component* component = ci->component;
+  
+  vtk::Component* component = ci->component;
   int spsize = static_cast<int>(ci->specialPorts.size());
   if(index < spsize)
     return ci->specialPorts[index];
   else if(index < spsize+component->numOPorts())
     //TODO: check memory leak
     return new VtkPortInstance(ci,
-			       component->getOPort(index-spsize),
-			       VtkPortInstance::Output);
+                               component->getOPort(index-spsize),
+                               VtkPortInstance::Output);
   else if(index < spsize+component->numOPorts()
-	  +component->numIPorts())
+          +component->numIPorts())
     return new VtkPortInstance(ci,
-			       component->getIPort(index-spsize-component->numOPorts()),
-			       VtkPortInstance::Input);
+                               component->getIPort(index-spsize-component->numOPorts()),
+                               VtkPortInstance::Input);
   else
     return 0; // Illegal
 }
+
+} // end namespace SCIRun

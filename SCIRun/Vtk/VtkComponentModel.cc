@@ -38,7 +38,6 @@
  *
  */
 
-
 #include <SCIRun/Vtk/VtkComponentModel.h>
 #include <SCIRun/Vtk/VtkComponentDescription.h>
 #include <SCIRun/Vtk/VtkComponentInstance.h>
@@ -74,7 +73,7 @@ extern "C" {
 #include <string.h>
 }
 
-using namespace SCIRun;
+namespace SCIRun {
 
 VtkComponentModel::VtkComponentModel(SCIRunFramework* framework)
   : ComponentModel("vtk"), framework(framework)
@@ -335,3 +334,4 @@ void VtkComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>
   }
 }
 
+} // end namespace SCIRun

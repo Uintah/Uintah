@@ -44,23 +44,29 @@
 #include <SCIRun/Vtk/Port.h>
 
 namespace SCIRun {
-  namespace vtk {
-    class OutPort;
-    class InPort: public Port{
-    public:
-      //constructor
-      InPort();
+namespace vtk {
+class OutPort;
+/**
+ * \class InPort
+ *
+ * A virtual class that defines the interface for a SCIRun::vtk input port. An
+ * input port is a component port that uses, or accepts, data.
+ */
+class InPort: public Port
+{
+public:
+  InPort();
+  virtual ~InPort();
+  
+  /** Creates a connection to an output port.  Must be defined by a subclass. */
+  virtual void connect(OutPort* port)=NULL;
+  
+  /** Returns \em true if a connection can be made with the output port \em
+      port.  Must be defined by a subclass. */
+  virtual bool accept(OutPort* port)=NULL;
+};
 
-      //virtual destructor
-      virtual ~InPort();
-
-      //user should define how to connect to an output port
-      virtual void connect(OutPort* port)=NULL;
-
-      //user should define if an output port is compatible to this input port
-      virtual bool accept(OutPort* port)=NULL;
-    };
-  }
+}
 }
 
 #endif

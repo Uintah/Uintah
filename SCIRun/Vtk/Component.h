@@ -48,75 +48,86 @@
 #include <SCIRun/Vtk/InPort.h>
 #include <SCIRun/Vtk/OutPort.h>
 
-namespace SCIRun{
-  namespace vtk{
-    class Port;
-    class InPort;
-    class OutPort;
+namespace SCIRun
+{
+namespace vtk
+{
+class Port;
+class InPort;
+class OutPort;
 
-    class Component{
-    public:
-      // default constructor
-      Component();
+/**
+ * \class Component
+ *
+ * 
+ *
+ */
+class Component{
+public:
+  Component();
+  virtual ~Component();
+  
+  /** Enable the user interface by setting the \em have_ui to true. The
+      argument \em new_thread indicates whether or not the interface is
+      rendered in a separate thread(?) */
+  void enableUI(bool new_thread=false);
+  
+  /** Disables the user interface by setting the \em have_ui to false. */
+  void disableUI();
+  
+  /** Returns the value of \em have_ui, which indicates whether or not the
+      component defines a user interface. */
+  bool haveUI();
+  
+  /** Returns the port with name \em name */
+  Port* getPort(const std::string &name);
+  
+  /** Add a port to the list of ports available in this component */
+  void addPort(Port *port);
+  
+  /** Remove a port from the list of ports available in this component */
+  void removePort(Port *port);
+  
+  /** Remove a port, using the port name. */
+  void removePort(const std::string &name);
+  
+  /** Returns the number of component ports that are input ports. */
+  int numIPorts();
+  
+  /** Returns the number of component ports that are output ports. */
+  int numOPorts(); 
+  
+  /** Returns \em true if the UI is expected to be threaded and \em false
+      otherwise. */
+  bool isThreadedUI();
+  
+  /** Returns the input port indexed by \em index. */
+  InPort* getIPort(unsigned int index);
+  
+  /** Returns the output port indexed by \em index. */
+  OutPort* getOPort(unsigned int index);
+  
+  /** Implements the UI.  Each component type must reimplement this method if
+      it provides a user interface. */
+  virtual int popupUI();
+  
+private:
+  /** A list of all the input ports. */
+  std::vector<vtk::InPort*> iports;
+  
+  /** A list of all the output ports */
+  std::vector<vtk::OutPort*> oports;
+  
+  /** Flag indicating if this component provides a user interface */
+  bool have_ui;
+  
+  /** Flag indicating if this component uses a new thread for its interface */
+  bool new_ui_thread;
+  
+};
 
-      // virtual destructor
-      virtual ~Component();
+} // end namespace SCIRun::vtk
 
-      // enable UI
-      void enableUI(bool new_thread=false);
-
-      // disable UI
-      void disableUI();
-
-      // Check if UI is defined
-      bool haveUI();
-
-      // Find a port with the given name
-      Port* getPort(const std::string &name);
-
-      // add a port
-      void addPort(Port *port);
-
-      // remove a port 
-      void removePort(Port *port);
-
-      // remove a port by name
-      void removePort(const std::string &name);
-
-      // Get number of input ports
-      int numIPorts();
-
-      // Get number of output ports
-      int numOPorts(); 
-
-      // check if a new thread is requested for UI
-      bool isThreadedUI();
-
-      // Get the index-th input port
-      InPort* getIPort(unsigned int index);
-
-      // Get the index-th output port
-      OutPort* getOPort(unsigned int index);
-
-      // Define the UI action.
-      // Component should re-implement this method if UI presents.
-      virtual int popupUI();
-
-    private:
-      // List of input ports
-      std::vector<vtk::InPort*> iports;
-
-      // List of ouput ports
-      std::vector<vtk::OutPort*> oports;
-
-      // Flag indicating if having UI
-      bool have_ui;
-
-      // Flag indicating if UI uses a new thread
-      bool new_ui_thread;
-      
-    };
-  }
-}
+} // end namespace SCIRun
 
 #endif

@@ -44,29 +44,46 @@
 #include <SCIRun/ComponentDescription.h>
 #include <string>
 
-namespace SCIRun{
-  class ComponentModel;
-  class VtkComponentModel;
-  class VtkComponentDescription : public ComponentDescription {
-  public:
-    VtkComponentDescription(VtkComponentModel* model, const std::string& type);
-    virtual ~VtkComponentDescription();
-    virtual std::string getType() const;
-    virtual const ComponentModel* getModel() const;
-    std::string type;
+namespace SCIRun
+{
+class ComponentModel;
+class VtkComponentModel;
 
-    /** Get/Set the name of the DLL for this component.  The loader will search
-     *    the SIDL_DLL_PATH for a matching library name. */
-    std::string getLibrary() const
-    { return library; }
-    void setLibrary(const std::string &l)
-    { library = l; }
-    
-  private:
-    VtkComponentModel* model;
-    std::string library;
+/**
+ * \class VtkComponentDescription
+ *
+ * A container for information necessary to locate and instantiate a specific
+ * Vtk component type in the SCIRun framework.  This class holds the type name of
+ * the component and the VtkComponentModel instance to which it belongs.  The
+ * name of the DLL containing the executable code for this component type is
+ * also stored in this class.
+ *
+ */
+class VtkComponentDescription : public ComponentDescription
+{
+public:
+  VtkComponentDescription(VtkComponentModel* model, const std::string& type);
+  virtual ~VtkComponentDescription();
 
-    VtkComponentDescription(const VtkComponentDescription&);
+  /** Returns the type name (a string) described by this class. */
+  virtual std::string getType() const;
+  /** Returns a pointer to the VtkComponentModel that holds this VtkComponentDescription.*/
+  virtual const ComponentModel* getModel() const;
+
+  std::string type;
+  
+  /** Get/Set the name of the DLL for this component.  The loader will search
+   *    the SIDL_DLL_PATH for a matching library name. */
+  std::string getLibrary() const
+  { return library; }
+  void setLibrary(const std::string &l)
+  { library = l; }
+  
+private:
+  VtkComponentModel* model;
+  std::string library;
+  
+  VtkComponentDescription(const VtkComponentDescription&);
     VtkComponentDescription& operator=(const VtkComponentDescription&);
   };
 }

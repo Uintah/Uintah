@@ -40,9 +40,8 @@
 
 #include <SCIRun/Vtk/Port.h>
 
-using namespace SCIRun;
-using namespace vtk;
-using namespace std;
+namespace SCIRun {
+namespace vtk {
 
 Port::Port(){
 }
@@ -51,11 +50,11 @@ Port::~Port(){
 };
 
 void
-Port::setName(const string &name){
+Port::setName(const std::string &name){
   this->name=name;
 }
 
-string 
+std::string 
 Port::getName(){
   return name;
 }
@@ -65,4 +64,5 @@ Port::isInput(){
   return is_input;
 }
 
-
+}
+}

@@ -47,35 +47,48 @@
 #include <vector>
 #include <SCIRun/Vtk/Port.h>
 
-namespace SCIRun {
-  class vtk::Port;
-  class VtkComponentInstance;
-  class VtkPortInstance : public PortInstance {
-  public:
-    enum PortType {
-      Output, Input
-    };
-    VtkPortInstance(VtkComponentInstance* ci, vtk::Port* port, PortType type);
-    ~VtkPortInstance();
+namespace SCIRun
+{
+class vtk::Port;
+class VtkComponentInstance;
 
-    virtual bool connect(PortInstance*);
-    virtual PortInstance::PortType portType();
-    virtual std::string getUniqueName();
-    virtual std::string getModel();
-    virtual bool disconnect(PortInstance*);
-    virtual bool canConnectTo(PortInstance *);
-
-  private:
-    friend class BridgeComponentInstance;
-    
-    VtkPortInstance(const VtkPortInstance&);
-    VtkPortInstance& operator=(const VtkPortInstance&);
-
-    VtkComponentInstance* ci;
-    vtk::Port* port;
-    PortType porttype;
-    int nConnections;
+/**
+ * \class VtkPortInstance
+ *
+ */
+class VtkPortInstance : public PortInstance {
+public:
+  enum PortType {
+    Output, Input
   };
-}
+  VtkPortInstance(VtkComponentInstance* ci, vtk::Port* port, PortType type);
+  ~VtkPortInstance();
+
+  /**? */
+  virtual bool connect(PortInstance*);
+  /** ? */
+  virtual PortInstance::PortType portType();
+  /** ? */
+  virtual std::string getUniqueName();
+  /** ? */
+  virtual std::string getModel();
+  /** ? */
+  virtual bool disconnect(PortInstance*);
+  /** ? */
+  virtual bool canConnectTo(PortInstance *);
+  
+private:
+  friend class BridgeComponentInstance;
+  
+  VtkPortInstance(const VtkPortInstance&);
+  VtkPortInstance& operator=(const VtkPortInstance&);
+  
+  VtkComponentInstance* ci;
+  vtk::Port* port;
+  PortType porttype;
+  int nConnections;
+};
+
+} // end namespace SCIRun
 
 #endif

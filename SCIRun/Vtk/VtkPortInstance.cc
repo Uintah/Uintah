@@ -43,12 +43,12 @@
 #include <SCIRun/Vtk/InPort.h>
 #include <SCIRun/Vtk/OutPort.h>
 #include <iostream>
-using namespace SCIRun;
-using namespace vtk;
-using namespace std;
+
+namespace SCIRun {
+namespace vtk {
 
 VtkPortInstance::VtkPortInstance(VtkComponentInstance* ci,
-				       Port* port, PortType porttype)
+                                 vtk::Port* port, PortType porttype)
   : ci(ci), port(port), porttype(porttype)
 {
   nConnections=0;
@@ -63,7 +63,7 @@ VtkPortInstance::getModel(){
   return "vtk";
 }
 
-string VtkPortInstance::getUniqueName()
+std::string VtkPortInstance::getUniqueName()
 {
   return port->getName();
 }
@@ -89,9 +89,9 @@ bool VtkPortInstance::connect(PortInstance* to)
   
   //  Network* net = port->get_module()->getNetwork();
   if(porttype == Output){
-    ((InPort*)peer->port)->connect((OutPort*)port);
+    ((vtk::InPort*)peer->port)->connect((vtk::OutPort*)port);
   } else {
-    ((InPort*)port)->connect((OutPort*)port);
+    ((vtk::InPort*)port)->connect((vtk::OutPort*)port);
   }
   return true;
 }
@@ -110,17 +110,20 @@ bool VtkPortInstance::canConnectTo(PortInstance *to)
   if(porttype == Input){
     if(((VtkPortInstance*)to)->porttype ==Input) return false;
     // Input port does not allow multiple connections.
-    InPort* inport = (InPort*)port;
-    OutPort* outport =(OutPort*)(((VtkPortInstance*)to)->port);
+    vtk::InPort* inport = (vtk::InPort*)port;
+    vtk::OutPort* outport =(vtk::OutPort*)(((VtkPortInstance*)to)->port);
     if(nConnections>1) return false; 
     if(inport->accept(outport)) return true;
   }else{
     if(((VtkPortInstance*)to)->porttype ==Output) return false;
     // Input port does not allow multiple connections.
-    OutPort* outport = (OutPort*)port;
-    InPort* inport =(InPort*)(((VtkPortInstance*)to)->port);
+    vtk::OutPort* outport = (vtk::OutPort*)port;
+    vtk::InPort* inport =(vtk::InPort*)(((VtkPortInstance*)to)->port);
     if(((VtkPortInstance*)to)->nConnections>1) return false; 
     if(inport->accept(outport)) return true;
   }
   return false;
 }
+
+} // end namespace vtk
+} // end namespace SCIRun

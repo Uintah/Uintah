@@ -43,31 +43,38 @@
 #include <string>
 class vtkObject;
 
-namespace SCIRun {
-  namespace vtk {
-    class Component;
-    class Port{
-    public:
-      //constructor
-      Port();
-
-      //destructor
-      ~Port();
-
-      //set the name for the port
-      void setName(const std::string &name);
-
-      //get the name of the port
-      std::string getName();
-
-      //check if this port is an input port
-      bool isInput();
-
-    protected:
-      std::string name;
-      bool is_input;
-    };
-  }
+namespace SCIRun
+{
+namespace vtk
+{
+class Component;
+/**
+ * \class Port
+ *
+ * Defines the generic interface for a SCIRun::vtk port.  A port is either an
+ * input port (see InPort) or an output port (see OutPort).
+ *
+ */
+class Port
+{
+public:
+  Port();
+  ~Port();
+  
+  /** Sets the name of this port. */
+  void setName(const std::string &name);
+  
+  /** Returns the name of this port */
+  std::string getName();
+  
+  /** Returns \em true if this port is an input port and \em false otherwise. */
+  bool isInput();
+  
+protected:
+  std::string name;
+  bool is_input;
+};
+}
 }
 
 #endif
