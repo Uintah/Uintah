@@ -137,6 +137,13 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,GridP&,
         }
     }
   }
+
+  if(flags->d_canAddMPMMaterial){
+    cout << "Addition of new material for particle failure is possible"<< endl; 
+    if(!flags->d_addNewMaterial){
+      throw ProblemSetupException("To use material addition, one must specify manual_add_material==true in the input file.");
+    }
+  }
   
   if(flags->d_8or27==8){
     NGP=1;
@@ -413,10 +420,10 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleConvertLocalizedParticles(      sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
 
-  if(d_canAddMPMMaterial){
+  if(flags->d_canAddMPMMaterial){
     //  This checks to see if the model on THIS patch says that it's
     //  time to add a new material
-    scheduleCheckNeedAddMaterial(           sched, level,   matls);
+    scheduleCheckNeedAddMPMMaterial(         sched, patches, matls);
                                                                                 
     //  This one checks to see if the model on ANY patch says that it's
     //  time to add a new material
@@ -920,7 +927,6 @@ void SerialMPM::scheduleConvertLocalizedParticles(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 }
-
 
 void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                                                         const PatchSet* patches,
@@ -3231,9 +3237,7 @@ SerialMPM::refine(const ProcessorGroup*,
         new_dw->allocateAndPut(pstress,        lb->pStressLabel,        pset);
         if (flags->d_useLoadCurves)
           new_dw->allocateAndPut(pLoadCurve,   lb->pLoadCurveIDLabel,   pset);
-        //if(flags->d_8or27==27){
-        new_dw->allocateAndPut(psize,        lb->pSizeLabel,          pset);
-        //}
+        new_dw->allocateAndPut(psize,          lb->pSizeLabel,          pset);
         new_dw->allocateAndPut(pErosion,       lb->pErosionLabel,       pset);
 
       }
@@ -3242,16 +3246,36 @@ SerialMPM::refine(const ProcessorGroup*,
 
 } // end refine()
 
-void SerialMPM::scheduleCheckNeedAddMaterial(SchedulerP& sched,
-                                       const LevelP& level,
-                                       const MaterialSet* )
+void SerialMPM::scheduleCheckNeedAddMPMMaterial(SchedulerP& sched,
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls)
 {
   cout_doing << "SerialMPM::scheduleCheckNeedAddMaterial" << endl;
-//  for(vector<ModelInterface*>::iterator iter = d_models.begin();
-//     iter != d_models.end(); iter++){
-//    ModelInterface* model = *iter;
-//    model->scheduleCheckNeedAddMaterial(sched, level, d_modelInfo);
-//  }
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task("MPM::checkNeedAddMPMMaterial",
+                        this, &SerialMPM::checkNeedAddMPMMaterial);
+  for(int m = 0; m < numMatls; m++){
+    cout << "schedulingCheckNeedAdd" << endl;
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cm->scheduleCheckNeedAddMPMMaterial(t, mpm_matl, patches);
+  }
+
+  sched->addTask(t, patches, matls);
+}
+
+void SerialMPM::checkNeedAddMPMMaterial(const ProcessorGroup*,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* ,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw)
+{
+  cout_doing <<"Doing checkNeedAddMPMMaterial:MPM: \n" ;
+  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cm->checkNeedAddMPMMaterial(patches, mpm_matl, old_dw, new_dw);
+  }
 }
 
 void SerialMPM::scheduleSetNeedAddMaterialFlag(SchedulerP& sched,
@@ -3264,7 +3288,7 @@ void SerialMPM::scheduleSetNeedAddMaterialFlag(SchedulerP& sched,
   t->requires(Task::NewDW, lb->NeedAddMPMMaterialLabel);
   sched->addTask(t, level->eachPatch(), all_matls);
 }
-                                                                                
+
 void SerialMPM::setNeedAddMaterialFlag(const ProcessorGroup*,
                                        const PatchSubset* ,
                                        const MaterialSubset* ,

@@ -45,6 +45,7 @@ namespace Uintah {
     double      d_artificialViscCoeff1; // Artificial viscosity coefficient 1
     double      d_artificialViscCoeff2; // Artificial viscosity coefficient 2
     double      d_forceIncrementFactor;
+    bool        d_canAddMPMMaterial;
 
     MPMFlags();
 

@@ -96,6 +96,16 @@ namespace Uintah {
                                         const PatchSet* patches,
                                         const bool recursion) const;
 
+    virtual void scheduleCheckNeedAddMPMMaterial(Task* task,
+                                                 const MPMMaterial* matl,
+                                                 const PatchSet* patches) const;
+
+    // Determine if addition of an acceptor material is needed
+    virtual void checkNeedAddMPMMaterial(const PatchSubset* patches,
+                                         const MPMMaterial* matl,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw);
+
     /////////////////////////////////////////////////////////////////
     /*! Add particle conversion related requires to the task graph */
     /////////////////////////////////////////////////////////////////
