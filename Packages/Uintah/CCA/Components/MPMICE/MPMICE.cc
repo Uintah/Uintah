@@ -1641,11 +1641,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     //   Don't set Lodi bcs, we already compute Press
     //   in all the extra cells.
     // - make copy of press for implicit calc.
-    Lodi_vars_pressBC* lv = 0;
-    if(d_ice->d_usingLODI) {
-      lv = new Lodi_vars_pressBC(0);
-      lv->setLodiBcs = false;
-    }
+    Lodi_vars_pressBC* lv = new Lodi_vars_pressBC(0);
+    lv->setLodiBcs = false;
+    
     setBC(press_new,   rho_micro, placeHolder,
           "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, lv);
     delete lv;
