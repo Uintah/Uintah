@@ -34,6 +34,7 @@
 #include <Core/share/share.h>
 
 #include <Core/Datatypes/Matrix.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/Math/MiscMath.h>
 #include <vector>
 
@@ -57,6 +58,7 @@ public:
   DenseMatrix();
   DenseMatrix(int, int);
   DenseMatrix(const DenseMatrix&);
+  DenseMatrix(const Transform &t);
 
   virtual DenseMatrix *dense();
   virtual SparseRowMatrix *sparse();
