@@ -162,12 +162,12 @@ void* operator new[](size_t size, Allocator* a, char* tag, int linenum)
 }
 #else
 
-void* operator new(size_t size, Allocator*, char*, unsigned int)
+void* operator new(size_t size, Allocator*, char*, int)
 {
     return new char[size];
 }
 
-void* operator new[](size_t size, Allocator*, char*, unsigned int)
+void* operator new[](size_t size, Allocator*, char*, int)
 {
     return new char[size];
 }
