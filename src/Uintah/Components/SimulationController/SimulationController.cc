@@ -182,10 +182,14 @@ void SimulationController::run()
 					bytes_overhead, bytes_free,
 					bytes_fragmented, bytes_inuse,
 					bytes_inhunks);
-	cout << "Time=" << t << ", delT=" << delt 
-	     << ", elap T = " << wallTime 
-	     << ", DW: " << old_dw->getID() << ", Mem Use = " 
-	     << sizealloc - sizefree << "\n";
+
+	if( analyze ) analyze->showStepInformation();
+	else {
+          cout << "Time=" << t << ", delT=" << delt 
+	       << ", elap T = " << wallTime 
+	       << ", DW: " << old_dw->getID() << ", Mem Use = " 
+	       << sizealloc - sizefree << "\n";
+	}
       }
 
       scheduler->initialize();
@@ -471,6 +475,10 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.44  2000/09/04 23:21:10  tan
+// Control the information showing at each step in SimulationController by
+// Analyze module.
+//
 // Revision 1.43  2000/09/04 00:38:32  tan
 // Modified Analyze interface for scientific debugging under both
 // sigle processor and mpi environment.
