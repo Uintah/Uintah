@@ -11,6 +11,7 @@ SRCS += $(SRCDIR)/BasicSurfaces.cc	    \
         $(SRCDIR)/ContourGeom.cc	    \
         $(SRCDIR)/Datatype.cc		    \
         $(SRCDIR)/DenseMatrix.cc	    \
+        $(SRCDIR)/FData.cc		    \
         $(SRCDIR)/Field.cc		    \
         $(SRCDIR)/GenFunction.cc	    \
         $(SRCDIR)/Geom.cc		    \
@@ -20,8 +21,10 @@ SRCS += $(SRCDIR)/BasicSurfaces.cc	    \
         $(SRCDIR)/Matrix.cc		    \
         $(SRCDIR)/Mesh.cc		    \
         $(SRCDIR)/MeshGeom.cc		    \
+        $(SRCDIR)/MeshRG.cc		    \
         $(SRCDIR)/Path.cc		    \
         $(SRCDIR)/PointCloudGeom.cc	    \
+        $(SRCDIR)/PropertyManager.cc	    \
         $(SRCDIR)/ScalarField.cc	    \
         $(SRCDIR)/ScalarFieldHUG.cc	    \
         $(SRCDIR)/ScalarFieldRG.cc          \
