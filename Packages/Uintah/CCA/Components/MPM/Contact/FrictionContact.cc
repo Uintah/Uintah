@@ -698,7 +698,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
       double c_v = mpm_matl->getSpecificHeat();
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
-        frictionWork[m][c] /= (c_v * gmass[m][c]);
+        frictionWork[m][c] /= (c_v * gmass[m][c] * delT);
         if(frictionWork[m][c]<0.0){
           cout << "dT/dt is negative: " << frictionWork[m][c] << endl;
         }
