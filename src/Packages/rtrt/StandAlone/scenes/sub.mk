@@ -58,6 +58,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/david.mo \
 	$(SRCDIR)/davidhead.mo  \
 	$(SRCDIR)/pttest.mo \
+	$(SRCDIR)/pt_particle.mo \
 
 #	$(SRCDIR)/vthorax.mo \
 #	$(SRCDIR)/multihvb.mo \
