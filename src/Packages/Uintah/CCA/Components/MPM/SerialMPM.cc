@@ -65,11 +65,15 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   d_SMALL_NUM_MPM=1e-200;
   d_with_ice    = false;
   d_with_arches = false;
+  contactModel = 0;
+  thermalContactModel = 0;
 }
 
 SerialMPM::~SerialMPM()
 {
   delete lb;
+  delete contactModel;
+  delete thermalContactModel;
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
