@@ -1,6 +1,5 @@
 #ifndef Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
 #define Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
-
 #include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
@@ -10,8 +9,6 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 
 namespace Uintah {
-
-    ICELabel* lb;
 
     void setBC(CCVariable<double>& variable,const std::string& type, 
              const Patch* p,  SimulationStateP& sharedState,

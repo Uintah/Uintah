@@ -12,6 +12,7 @@
 
 using namespace Uintah;
 namespace Uintah {
+
 /* --------------------------------------------------------------------- 
  Function~  setBC--
  Purpose~   Takes care Pressure_CC
@@ -28,7 +29,7 @@ void setBC(CCVariable<double>& press_CC,
   
   Vector dx = patch->dCell();
   Vector gravity = sharedState->getGravity();
-
+  IntVector offset(0,0,0);
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
     BoundCondBase *bcs, *sym_bcs;
@@ -41,7 +42,7 @@ void setBC(CCVariable<double>& press_CC,
       continue;
  
     if (sym_bcs != 0) { 
-      press_CC.fillFaceFlux(face,0.0,dx);
+      press_CC.fillFaceFlux(face,0.0,dx, 1.0, offset);
     }
 
     if (new_bcs != 0) {
@@ -49,7 +50,7 @@ void setBC(CCVariable<double>& press_CC,
        press_CC.fillFace(face,new_bcs->getValue());
 
       if (new_bcs->getKind() == "Neumann") 
-       press_CC.fillFaceFlux(face,new_bcs->getValue(),dx);
+        press_CC.fillFaceFlux(face,new_bcs->getValue(),dx, 1.0, offset);
        
       //__________________________________
       //  When gravity is on 
@@ -57,6 +58,8 @@ void setBC(CCVariable<double>& press_CC,
            fabs(gravity.y()) > 0.0  || 
            fabs(gravity.z()) > 0.0) {
         CCVariable<double> rho_micro_tmp;
+        ICELabel* lb;
+        lb = scinew ICELabel();
         new_dw->allocate(rho_micro_tmp, lb->scratchLabel, 0, patch);
         if (which_Var == "sp_vol") {
           for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
@@ -70,7 +73,7 @@ void setBC(CCVariable<double>& press_CC,
             rho_micro_tmp[c] = rho_micro[c];
           }
         }
-        press_CC.setHydrostaticPressureBC(face, gravity, rho_micro, dx);
+       press_CC.setHydrostaticPressureBC(face, gravity, rho_micro, dx, offset);
       }
     }
   }
@@ -87,6 +90,7 @@ void setBC(CCVariable<double>& variable, const string& kind,
 {
   Vector dx = patch->dCell();
   Vector grav = sharedState->getGravity();
+  IntVector offset(0,0,0);
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
     BoundCondBase *bcs, *sym_bcs;
@@ -100,7 +104,7 @@ void setBC(CCVariable<double>& variable, const string& kind,
  
     if (sym_bcs != 0) { 
       if (kind == "Density" || kind == "Temperature" || kind == "set_if_sym_BC") {
-        variable.fillFaceFlux(face,0.0,dx);
+        variable.fillFaceFlux(face,0.0,dx, 1.0, offset);
       }
     }   
     
@@ -108,23 +112,26 @@ void setBC(CCVariable<double>& variable, const string& kind,
       //__________________________________
       //  Density_CC
       if (kind == "Density") {
-        if (new_bcs->getKind() == "Dirichlet") 
-         variable.fillFace(face,new_bcs->getValue());
+        if (new_bcs->getKind() == "Dirichlet") { 
+         variable.fillFace(face,new_bcs->getValue(), offset);
+        }
 
-        if (new_bcs->getKind() == "Neumann") 
-         variable.fillFaceFlux(face,new_bcs->getValue(),dx);
+        if (new_bcs->getKind() == "Neumann") {
+         variable.fillFaceFlux(face,new_bcs->getValue(),dx, 1.0, offset);
+        }
       }
  
       //__________________________________
       // Temperature_CC
       if (kind == "Temperature" ){ 
-        if (new_bcs->getKind() == "Dirichlet") 
-           variable.fillFace(face,new_bcs->getValue());
+        if (new_bcs->getKind() == "Dirichlet") { 
+           variable.fillFace(face,new_bcs->getValue(), offset);
+        }
            
          // Neumann && gravity                 
         if (new_bcs->getKind() == "Neumann" ) {  
 
-          variable.fillFaceFlux(face,new_bcs->getValue(),dx);
+          variable.fillFaceFlux(face,new_bcs->getValue(),dx,1.0, offset);
             
           if(fabs(grav.x()) >0.0 ||fabs(grav.y()) >0.0 ||fabs(grav.z()) >0.0) {
             Material *matl = sharedState->getMaterial(mat_id);
@@ -156,6 +163,7 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
 {
   IntVector  low, hi;
   Vector dx = patch->dCell();
+  IntVector offset(0,0,0);
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
     BoundCondBase *bcs,*sym_bcs;
@@ -173,28 +181,29 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
     //  plane of symetry
     if (sym_bcs != 0 && (kind == "Velocity" || kind =="set_if_sym_BC") ) {
     
-      variable.fillFaceFlux(face,Vector(0.,0.,0.),dx);
+      variable.fillFaceFlux(face,Vector(0.,0.,0.),dx, 1.0, offset);
 
       variable.fillFaceNormal(face);
     }
       
     if (new_bcs != 0 && kind == "Velocity") {
       if (new_bcs->getKind() == "Dirichlet") 
-       variable.fillFace(face,new_bcs->getValue());
+       variable.fillFace(face,new_bcs->getValue(), offset);
 
       if (new_bcs->getKind() == "Neumann") {
-        variable.fillFaceFlux(face,new_bcs->getValue(),dx);
+        variable.fillFaceFlux(face,new_bcs->getValue(),dx, 1.0, offset);
       }      
       if (new_bcs->getKind() == "NegInterior") {
-         variable.fillFaceFlux(face,Vector(0.0,0.0,0.0),dx, -1.0);
+         variable.fillFaceFlux(face,Vector(0.0,0.0,0.0),dx, -1.0, offset);
       }
       if (new_bcs->getKind() == "Neumann_CkValve") {
-        variable.fillFaceFlux(face,new_bcs->getValue(),dx);
+        variable.fillFaceFlux(face,new_bcs->getValue(),dx, 1.0, offset);
         checkValveBC( variable, patch, face); 
       }
     }  // end velocity loop
   }  // end face loop
 }
+
 /*---------------------------------------------------------------------
  Function~  Neuman_SFC--
  Purpose~   Set neumann BC conditions for SFC(*)Variable<double>
