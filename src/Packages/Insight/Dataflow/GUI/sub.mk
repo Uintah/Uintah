@@ -55,6 +55,7 @@ Packages/Insight/Dataflow/GUI/%.tcl:  Packages/Insight/Dataflow/Modules/Filters/
 
 SRCS := \
 	$(INSIGHT_TCL_GEN) \
+	$(SRCDIR)/BuildSeedVolume.tcl \
 	$(SRCDIR)/ImageFileWriter.tcl \
 	$(SRCDIR)/ImageReaderFloat2D.tcl \
 	$(SRCDIR)/ImageReaderFloat3D.tcl \
@@ -69,6 +70,8 @@ SRCS := \
 	$(SRCDIR)/ColorImageReaderFloat3D.tcl\
 	$(SRCDIR)/ChooseImage.tcl\
 	$(SRCDIR)/ExtractImageFilter.tcl\
+	$(SRCDIR)/PasteImageFilter.tcl\
+	$(SRCDIR)/ThresholdSegmentationLevelSetImageFilter.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
