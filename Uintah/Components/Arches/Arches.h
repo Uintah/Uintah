@@ -19,6 +19,7 @@ namespace Components {
   using Uintah::Grid::GridP;
   using Uintah::Grid::LevelP;
   using Uintah::Grid::Region;
+  using Uintah::Grid::VarLabel;
   using Uintah::Interface::DataWarehouseP;
   using Uintah::Interface::SchedulerP;
   using Uintah::Parallel::ProcessorContext;
@@ -36,14 +37,19 @@ public:
     Arches();
     virtual ~Arches();
 
-    virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			      DataWarehouseP&);
+    virtual void problemSetup(const ProblemSpecP& params, GridP& grid);
 
     virtual void problemInit(const LevelP& level,
 			     SchedulerP& sched, DataWarehouseP& dw,
 			     bool restrt);
-    virtual void scheduleStableTimestep(const LevelP& level,
-				       SchedulerP&, DataWarehouseP&);
+   virtual void scheduleInitialize(const LevelP& level,
+				   SchedulerP&,
+				   DataWarehouseP&);
+	 
+    virtual void scheduleComputeStableTimestep(const LevelP& level,
+					       SchedulerP&,
+					       const VarLabel*,
+					       DataWarehouseP&);
     virtual void scheduleTimeAdvance(double t, double dt,
 				     const LevelP& level, SchedulerP&,
 				     const DataWarehouseP&, DataWarehouseP&);
@@ -73,6 +79,11 @@ private:
 
 //
 // $Log$
+// Revision 1.13  2000/04/19 05:25:56  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.12  2000/04/13 06:50:50  sparker
 // More implementation to get this to work
 //

@@ -7,13 +7,13 @@
 //     
 
 #include "CompMooneyRivlin.h"
-
-#ifdef WONT_COMPILE_YET
-
-using Uintah::Components::CompMooneyRivlin;
+#include <iostream>
+using std::cerr;
+using namespace Uintah::Components;
+using SCICore::Geometry::Vector;
 
 CompMooneyRivlin::CompMooneyRivlin(const Region* region,
-				   MPMMaterial* matl,
+				   const MPMMaterial* matl,
 				   const DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw)
 {
@@ -21,10 +21,12 @@ CompMooneyRivlin::CompMooneyRivlin(const Region* region,
   // Create storage in datawarehouse for data fields
   // needed for model parameters
 
-  matlindex = matl->getDWIndex();
+#ifdef WONT_COMPILE_YET
+  int matlindex = matl->getDWIndex();
 
   ParticleVariable<CMData> cmdata;
   dw->get(cmdata,"p.cmdata", matlindex, region, 0);
+#endif
 }
 
 CompMooneyRivlin::~CompMooneyRivlin()
@@ -32,10 +34,9 @@ CompMooneyRivlin::~CompMooneyRivlin()
   // Destructor
 }
 
-void CompMooneyRivlin::intializeCMData(const Region* region,
-                                       MPMMaterial* matl,
-                                       const DataWarehouseP& old_dw,
-                                       DataWarehouseP& new_dw);
+void CompMooneyRivlin::initializeCMData(const Region* region,
+					const MPMMaterial* matl,
+					DataWarehouseP& new_dw)
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
@@ -43,11 +44,11 @@ void CompMooneyRivlin::intializeCMData(const Region* region,
 }
 
 void CompMooneyRivlin::computeStressTensor(const Region* region,
-                                           MPMMaterial* matl,
+                                           const MPMMaterial* matl,
                                            const DataWarehouseP& old_dw,
                                            DataWarehouseP& new_dw)
 {
-
+#ifdef WONT_COMPILE_YET
   Matrix3 Identity,deformationGradientInc,B,velGrad;
   double invar1,invar3,J,w1,w2,w3,i3w3,w1pi1w2;
   Identity.Identity();
@@ -158,13 +159,16 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
     new_dw->put(stress, "p.stress", matlindex, region, 0);
     new_dw->put(deformationGradient, "p.deformationMeasure",
 						matlindex, region, 0);
+#else
+    cerr << "CompMooneyRivlin::computeStressTensor not finished\n";
+#endif
 }
 
 double CompMooneyRivlin::computeStrainEnergy(const Region* region,
-                                             MPMMaterial* matl,
-                                             const DataWarehouseP& old_dw,
-                                             DataWarehouseP& new_dw)
+                                             const MPMMaterial* matl,
+                                             const DataWarehouseP& new_dw)
 {
+#ifdef WONT_COMPILE_YET
   double invar1,invar2,invar3,J,se=0.0;
   Matrix3 B,BSQ;
 
@@ -203,8 +207,12 @@ double CompMooneyRivlin::computeStrainEnergy(const Region* region,
            C3*(1.0/(invar3*invar3) - 1.0) +
            C4*(invar3-1.0)*(invar3-1.0);
   }
-
   return se;
+#else
+  cerr << "CompMooneyRivlin::computeStrainEnergy not finished\n";
+  return 0;
+#endif
+
 }
 
 void CompMooneyRivlin::readParameters(ProblemSpecP ps, double *p_array)
@@ -216,6 +224,7 @@ void CompMooneyRivlin::readParameters(ProblemSpecP ps, double *p_array)
  
 }
 
+#ifdef WONT_COMPILE_YET
 ConstitutiveModel* CompMooneyRivlin::readParametersAndCreate(ProblemSpecP ps)
 {
 
@@ -244,15 +253,23 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 
 #endif
 }
+#endif
 
 ConstitutiveModel* CompMooneyRivlin::create(double *p_array)
 {
+#ifdef WONT_COMPILE_YET
   return(new CompMooneyRivlin(p_array[0], p_array[1], p_array[2], p_array[3]));
+#else
+  return 0;
+#endif
 }
 
-#endif
-
 // $Log$
+// Revision 1.7  2000/04/19 05:26:03  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.6  2000/04/14 17:34:41  jas
 // Added ProblemSpecP capabilities.
 //

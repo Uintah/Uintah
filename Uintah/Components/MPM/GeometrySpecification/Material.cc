@@ -1,7 +1,7 @@
 #include "Material.h"
 #include <Uintah/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 
-class ConstitutiveModelFactory;
+using namespace Uintah::Components;
 
 Material::Material(){}
 Material::~Material(){}
@@ -57,6 +57,11 @@ void Material::getMatProps(double matprop[10]) const
 
 
 // $Log$
+// Revision 1.4  2000/04/19 05:26:08  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.3  2000/04/14 02:05:46  jas
 // Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
 // Tri.  This made the GeometryObject class simpler since many of the

@@ -41,7 +41,6 @@ using std::cerr;
 using std::string;
 using std::ofstream;
 using Uintah::Grid::Level;
-using Uintah::Grid::ParticleSet;
 using Uintah::Grid::ParticleSubset;
 using Uintah::Grid::ParticleVariable;
 using Uintah::Grid::Task;
@@ -59,8 +58,7 @@ SerialMPM::~SerialMPM()
 {
 }
 
-void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
-			     DataWarehouseP& dw)
+void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid)
 {
 
   Problem prob_description;
@@ -92,8 +90,17 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     cerr << "SerialMPM::problemSetup not done\n";
 }
 
-void SerialMPM::scheduleStableTimestep(const LevelP& level,
-				      SchedulerP& sched, DataWarehouseP& dw)
+void SerialMPM::scheduleInitialize(const LevelP& level,
+				   SchedulerP& sched,
+				   DataWarehouseP& dw)
+{
+   cerr << "SerialMPM::scheduleInitialize not done\n";
+}
+
+void SerialMPM::scheduleComputeStableTimestep(const LevelP& level,
+					      SchedulerP& sched,
+					      const VarLabel*,
+					      DataWarehouseP& dw)
 {
     for(Level::const_regionIterator iter=level->regionsBegin();
 	iter != level->regionsEnd(); iter++){
@@ -326,6 +333,7 @@ void SerialMPM::actuallyComputeStableTimestep(const ProcessorContext*,
 					      const DataWarehouseP& old_dw,
 					      DataWarehouseP& new_dw)
 {
+#ifdef WONT_COMPILE_YET
     using SCICore::Math::Min;
 
     SoleVariable<double> MaxWaveSpeed;
@@ -334,6 +342,9 @@ void SerialMPM::actuallyComputeStableTimestep(const ProcessorContext*,
     Vector dCell = region->dCell();
     double width = Min(dCell.x(), dCell.y(), dCell.z());
     double delt = 0.5*width/MaxWaveSpeed;
+#else
+    cerr << "actuallyComputeStableTimestep not done\n";
+#endif
 /*
  DataWarehouse needs a Min function implemented
     new_dw->put(SoleVariable<double>(delt), "delt", DataWarehouse::Min);
@@ -681,6 +692,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.17  2000/04/19 05:26:01  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.16  2000/04/14 02:16:33  jas
 // Added variable to the problemSetup declaration.
 //

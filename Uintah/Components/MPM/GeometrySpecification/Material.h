@@ -5,6 +5,8 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/ProblemSpec.h>
 
+namespace Uintah {
+namespace Components {
 using Uintah::Interface::ProblemSpec;
 using Uintah::Interface::ProblemSpecP;
 
@@ -32,7 +34,15 @@ class Material {
 
 };
 
+} // end namespace Components
+} // end namespace Uintah
+
 // $Log$
+// Revision 1.3  2000/04/19 05:26:08  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.2  2000/04/14 02:05:46  jas
 // Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
 // Tri.  This made the GeometryObject class simpler since many of the

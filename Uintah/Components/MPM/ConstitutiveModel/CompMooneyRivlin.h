@@ -80,7 +80,7 @@ class CompMooneyRivlin : public ConstitutiveModel {
                                      const DataWarehouseP& new_dw);
 
   // initialize  each particle's constitutive model data
-  virtual void intitializeCMData(const Region* region,
+  virtual void initializeCMData(const Region* region,
                             const MPMMaterial* matl,
                             DataWarehouseP& new_dw);
 
@@ -110,6 +110,11 @@ class CompMooneyRivlin : public ConstitutiveModel {
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.8  2000/04/19 05:26:03  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.7  2000/04/14 17:34:41  jas
 // Added ProblemSpecP capabilities.
 //

@@ -15,16 +15,22 @@ using Uintah::Interface::SchedulerP;
 using Uintah::Interface::ProblemSpecP;
 using Uintah::Grid::LevelP;
 using Uintah::Grid::GridP;
+using Uintah::Grid::VarLabel;
 
 class ICE : public CFDInterface {
 public:
     ICE();
     virtual ~ICE();
 
-    virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			      DataWarehouseP&);
-    virtual void scheduleStableTimestep(const LevelP&, SchedulerP&,
-				       DataWarehouseP&);
+    virtual void problemSetup(const ProblemSpecP& params, GridP& grid);
+   virtual void scheduleInitialize(const LevelP& level,
+				   SchedulerP&,
+				   DataWarehouseP&);
+	 
+    virtual void scheduleComputeStableTimestep(const LevelP&,
+					       SchedulerP&,
+					       const VarLabel*,
+					       DataWarehouseP&);
     void actuallyComputeStableTimestep(const ProcessorContext*,
 				       const Region* region,
 				       const DataWarehouseP&,

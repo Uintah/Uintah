@@ -18,6 +18,8 @@
 using Uintah::Interface::ProblemSpec;
 using Uintah::Interface::ProblemSpecP;
 
+namespace Uintah {
+namespace Components {
 class ConstitutiveModel;
 
 class ConstitutiveModelFactory
@@ -56,6 +58,8 @@ public:
   
 };
 
+} // end namespace Components
+} // end namespace Uintah
 
 
 #endif /* _CONSTITUTIVEMODELFACTORY_H_ */

@@ -180,9 +180,13 @@ BrainDamagedScheduler::execute(const ProcessorContext* pc)
 }
 
 void
-BrainDamagedScheduler::addTarget(const std::string& target)
+BrainDamagedScheduler::addTarget(const VarLabel* target)
 {
+#if 0
     d_targets.push_back(target);
+#else
+    cerr << "BrainDamagedScheduler::addTarget not done!\n";
+#endif
 }
 
 void
@@ -233,6 +237,11 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.5  2000/04/19 05:26:10  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.4  2000/04/11 07:10:40  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications

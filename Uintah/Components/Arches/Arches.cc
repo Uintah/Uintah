@@ -34,8 +34,7 @@ Arches::~Arches()
 
 }
 
-void Arches::problemSetup(const ProblemSpecP& params, GridP&,
-			  DataWarehouseP& dw)
+void Arches::problemSetup(const ProblemSpecP& params, GridP&)
 {
   ProblemSpecP db = params->findBlock("CFD")->findBlock("Arches");
 
@@ -45,7 +44,7 @@ void Arches::problemSetup(const ProblemSpecP& params, GridP&,
   d_physicalConsts->problemSetup(params);
   // read properties, boundary and turbulence model
   d_props = new Properties();
-  d_props->problemSetup(db, dw);
+  d_props->problemSetup(db);
   string turbModel;
   db->require("turbulence_model", turbModel);
   if (turbModel == "Smagorinsky") 
@@ -54,7 +53,7 @@ void Arches::problemSetup(const ProblemSpecP& params, GridP&,
     throw InvalidValue("Turbulence Model not supported" + turbModel);
   d_turbModel->problemSetup(db);
   d_boundaryCondition = new BoundaryCondition(d_turbModel);
-  d_boundaryCondition->problemSetup(db, dw);
+  d_boundaryCondition->problemSetup(db);
   string nlSolver;
   db->require("nonlinear_solver", nlSolver);
   if(nlSolver == "picard")
@@ -84,10 +83,21 @@ void Arches::problemInit(const LevelP& level,
 #endif
 }
 
-void Arches::scheduleStableTimestep(const LevelP& level,
-				   SchedulerP& sched, DataWarehouseP& dw)
+void Arches::scheduleInitialize(const LevelP& level,
+				   SchedulerP& sched,
+				   DataWarehouseP& dw)
 {
+   cerr << "SerialMPM::scheduleInitialize not done\n";
+}
+
+void Arches::scheduleComputeStableTimestep(const LevelP& level,
+					   SchedulerP& sched,
+					   const VarLabel*,
+					   DataWarehouseP& dw)
+{
+#ifdef WONT_COMPILE_YET
   dw->put(SoleVariable<double>(d_deltaT), "delt"); 
+#endif
 }
 
 void Arches::scheduleTimeAdvance(double time, double dt,
@@ -172,6 +182,11 @@ void Arches::paramInit(const ProcessorContext*,
 
 //
 // $Log$
+// Revision 1.19  2000/04/19 05:25:56  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.18  2000/04/13 06:50:50  sparker
 // More implementation to get this to work
 //

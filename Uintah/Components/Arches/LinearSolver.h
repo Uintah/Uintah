@@ -75,8 +75,7 @@ public:
   // Virtual Destructor
    virtual ~LinearSolver();
 
-   virtual void problemSetup(const ProblemSpecP& params,
-			     DataWarehouseP& dw) = 0;
+   virtual void problemSetup(const ProblemSpecP& params) = 0;
    // GROUP:  Methods
    ////////////////////////////////////////////////////////////////////////
    // assigns schedules for linear solve

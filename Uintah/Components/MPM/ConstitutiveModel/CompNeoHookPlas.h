@@ -21,8 +21,8 @@
 #include <math.h>
 #include "ConstitutiveModel.h"	
 
-#ifdef WONT_COMPILE_YET
-
+namespace Uintah {
+namespace Components {
 class CompNeoHookPlas : public ConstitutiveModel {
  private:
   // data areas
@@ -70,17 +70,25 @@ class CompNeoHookPlas : public ConstitutiveModel {
  
   virtual Matrix3 getDeformationMeasure() const;
   // access the mechanical properties
+#ifdef WONT_COMPILE_YET
   virtual BoundedArray<double> getMechProps() const;
+#endif
 
   // get bElBar
   Matrix3 getbElBar();
   
-  // Compute the various quantities of interest
+  //////////
+  // Basic constitutive model calculations
+  virtual void computeStressTensor(const Region* region,
+				   const MPMMaterial* matl,
+				   const DataWarehouseP& new_dw,
+				   DataWarehouseP& old_dw);
 
-  virtual void computeStressTensor(Matrix3 vg, double time_step);
-
-  // compute strain energy
-  virtual double computeStrainEnergy();
+  //////////
+  // Computation of strain energy.  Useful for tracking energy balance.
+  virtual double computeStrainEnergy(const Region* region,
+				   const MPMMaterial* matl,
+                                   const DataWarehouseP& new_dw);
 
   // Return the Lame constants
   virtual double getMu() const;
@@ -127,11 +135,17 @@ class CompNeoHookPlas : public ConstitutiveModel {
   virtual int getSize() const;
 };
 
-#endif
+} // end namespace Components
+} // end namespace Uintah
 
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.4  2000/04/19 05:26:04  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.3  2000/04/14 17:34:42  jas
 // Added ProblemSpecP capabilities.
 //

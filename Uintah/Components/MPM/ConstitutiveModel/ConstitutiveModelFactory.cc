@@ -1,4 +1,10 @@
 #include "ConstitutiveModelFactory.h"
+#include "ElasticConstitutiveModel.h"
+#include "CompMooneyRivlin.h"
+#include "CompNeoHook.h"
+#include "CompNeoHookPlas.h"
+#include "HyperElasticDamage.h"
+#include "ViscoElasticDamage.h"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -6,13 +12,7 @@ using std::cerr;
 using std::ifstream;
 using std::ofstream;
 
-#ifdef WONT_COMPILE_YET     
-
-class CompMooneyRivlin;
-class CompNeoHook;
-class CompNeoHookPlas;
-class HyperElasticDamage;
-class ViscoElasticDamage;
+using namespace Uintah::Components;
 
 void ConstitutiveModelFactory::readParameters(ProblemSpecP ps, 
 					      std::string mat_type,
@@ -46,7 +46,7 @@ void ConstitutiveModelFactory::readParameters(ProblemSpecP ps,
 
 ConstitutiveModel* ConstitutiveModelFactory::readParametersAndCreate(
 					     ProblemSpecP ps,
-					     std::stringmat_type)
+					     std::string mat_type)
 {
   if (mat_type == "elastic")
     return(ElasticConstitutiveModel::readParametersAndCreate(ps));
@@ -99,7 +99,6 @@ ConstitutiveModel* ConstitutiveModelFactory::readRestartParametersAndCreate(
   else {
       cerr << "Unknown Material Type (" << mat_type << ") aborting\n";
       exit(1);
-      break;
   }
   return(0);
 }
@@ -133,6 +132,5 @@ ConstitutiveModel* ConstitutiveModelFactory::create(std::string mat_type,
 }
 
 
-#endif
 
 

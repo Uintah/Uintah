@@ -34,6 +34,11 @@ OnDemandDataWarehouse::~OnDemandDataWarehouse()
     }
 }
 
+void OnDemandDataWarehouse::get(ReductionVariableBase&, const VarLabel*) const
+{
+   cerr << "OnDemandDataWarehouse::get not finished\n";
+}
+#if 0
 void
 OnDemandDataWarehouse::getBroadcastData(DataItem& result,
 					const std::string& name,
@@ -194,6 +199,7 @@ void OnDemandDataWarehouse::putBroadcastData(const DataItem& result,
 	throw TypeMismatchException("Type mismatch");
     result.get(*dr->di);
 }
+#endif
 
 OnDemandDataWarehouse::DataRecord::DataRecord(DataItem* di,
 					      const TypeDescription* td,
@@ -204,6 +210,11 @@ OnDemandDataWarehouse::DataRecord::DataRecord(DataItem* di,
 
 //
 // $Log$
+// Revision 1.6  2000/04/19 05:26:11  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.5  2000/04/13 06:50:57  sparker
 // More implementation to get this to work
 //

@@ -11,11 +11,6 @@
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
-using Uintah::Interface::ProblemSpec;
-using Uintah::Interface::ProblemSpecP;
-
 namespace Uintah {
     namespace Grid {
 	class Region;
@@ -23,6 +18,13 @@ namespace Uintah {
 }
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/GridP.h>
+
+namespace Uintah {
+namespace Components {
+using SCICore::Geometry::Vector;
+using SCICore::Geometry::Point;
+using Uintah::Interface::ProblemSpec;
+using Uintah::Interface::ProblemSpecP;
 
 class Problem {
   
@@ -51,9 +53,17 @@ class Problem {
 
 };
 
+} // end namespace Components
+} // end namespace Uintah
+
 #endif // __PROBLEM_H__
 
 // $Log$
+// Revision 1.6  2000/04/19 05:26:08  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.5  2000/04/14 03:29:13  jas
 // Fixed routines to use SCICore's point and vector stuff.
 //

@@ -45,7 +45,8 @@
 #include <math.h>
 #include "ConstitutiveModel.h"	
 
-#ifdef WONT_COMPILE_YET
+namespace Uintah {
+namespace Components {
 
 class ViscoElasticDamage : public ConstitutiveModel {
  private:
@@ -111,16 +112,26 @@ class ViscoElasticDamage : public ConstitutiveModel {
  
   virtual Matrix3 getDeformationMeasure() const;
   // access the mechanical properties
+#ifdef WONT_COMPILE_YET
   virtual BoundedArray<double> getMechProps() const;
+#endif
 
   
   // Compute the various quantities of interest
 
   void computeDeformationGradient();
-  virtual void computeStressTensor(Matrix3 vg, double time_step);
+  //////////
+  // Basic constitutive model calculations
+  virtual void computeStressTensor(const Region* region,
+				   const MPMMaterial* matl,
+				   const DataWarehouseP& new_dw,
+				   DataWarehouseP& old_dw);
 
-  // compute strain energy
-  virtual double computeStrainEnergy();
+  //////////
+  // Computation of strain energy.  Useful for tracking energy balance.
+  virtual double computeStrainEnergy(const Region* region,
+				   const MPMMaterial* matl,
+                                   const DataWarehouseP& new_dw);
 
   // Return the Lame constants
   virtual double getMu() const;
@@ -167,7 +178,8 @@ class ViscoElasticDamage : public ConstitutiveModel {
   virtual int getSize() const;
 };
 
-#endif
+} // end namespace Components
+} // end namespace Uintah
 
 #endif // __VISCOELASTIC_DAMAGE_CONSTITUTIVE_MODEL_H__ 
 

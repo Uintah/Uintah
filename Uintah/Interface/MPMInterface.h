@@ -10,11 +10,15 @@
 #include <Uintah/Interface/SchedulerP.h>
 
 namespace Uintah {
+   namespace Grid {
+      class VarLabel;
+   }
 namespace Interface {
 
 using Uintah::Parallel::UintahParallelPort;
 using Uintah::Grid::LevelP;
 using Uintah::Grid::GridP;
+using Uintah::Grid::VarLabel;
 
 /**************************************
 
@@ -52,13 +56,20 @@ public:
 
     //////////
     // Insert Documentation Here:
-    virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			      DataWarehouseP&)=0;
-
+    virtual void problemSetup(const ProblemSpecP& params, GridP& grid) = 0;
+   
+   //////////
+   // Insert Documentation Here:
+   virtual void scheduleInitialize(const LevelP& level,
+				   SchedulerP&,
+				   DataWarehouseP&) = 0;
+	 
     //////////
     // Insert Documentation Here:
-    virtual void scheduleStableTimestep(const LevelP& level,
-				       SchedulerP&, DataWarehouseP&) = 0;
+    virtual void scheduleComputeStableTimestep(const LevelP& level,
+					       SchedulerP&,
+					       const VarLabel*,
+					       DataWarehouseP&) = 0;
 
     //////////
     // Insert Documentation Here:
@@ -75,6 +86,11 @@ private:
 
 //
 // $Log$
+// Revision 1.9  2000/04/19 05:26:18  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.8  2000/04/13 06:51:05  sparker
 // More implementation to get this to work
 //

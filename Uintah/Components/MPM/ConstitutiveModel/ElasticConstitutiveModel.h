@@ -20,8 +20,9 @@
 
 #include "ConstitutiveModel.h"	
 #include <Uintah/Components/MPM/Util/Matrix3.h>
-#ifdef WONT_COMPILE_YET     
 
+namespace Uintah {
+namespace Components {
 class ElasticConstitutiveModel : public ConstitutiveModel {
  private:
   // data areas
@@ -82,7 +83,9 @@ class ElasticConstitutiveModel : public ConstitutiveModel {
   // access the Symmetric strain tensor
   virtual Matrix3 getDeformationMeasure() const;
   // access the mechanical properties
+#ifdef WONT_COMPILE_YET
   virtual BoundedArray<double> getMechProps() const;
+#endif
   // access the strain increment tensor
   Matrix3 getStrainIncrement() const;
   // access the stress increment tensor
@@ -100,10 +103,18 @@ class ElasticConstitutiveModel : public ConstitutiveModel {
   Matrix3 deformationIncrement(double time_step);
   void computeStressIncrement();
   void computeRotationIncrement(Matrix3 defInc);
-  virtual void computeStressTensor(Matrix3 vg, double time_step);
+  //////////
+  // Basic constitutive model calculations
+  virtual void computeStressTensor(const Region* region,
+				   const MPMMaterial* matl,
+				   const DataWarehouseP& new_dw,
+				   DataWarehouseP& old_dw);
 
-  // compute strain energy
-  virtual double computeStrainEnergy();
+  //////////
+  // Computation of strain energy.  Useful for tracking energy balance.
+  virtual double computeStrainEnergy(const Region* region,
+				   const MPMMaterial* matl,
+                                   const DataWarehouseP& new_dw);
 
   // class function to read correct number of parameters
   // from the input file
@@ -148,11 +159,17 @@ class ElasticConstitutiveModel : public ConstitutiveModel {
   virtual int getSize() const;
 };
 
-#endif
+} // end namespace Components
+} // end namespace Uintah
 
 #endif  // __ELASTIC_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.4  2000/04/19 05:26:04  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.3  2000/04/14 02:19:42  jas
 // Now using the ProblemSpec for input.
 //
