@@ -74,7 +74,7 @@ void NrrdReader::execute()
 
   // Read the status of this file so we can compare modification timestamps
   struct stat buf;
-  if (stat(fn(), &buf)) {
+  if (stat(fn.c_str(), &buf)) {
     error(string("FieldReader error - file not found ")+fn);
     return;
   }
@@ -94,7 +94,7 @@ void NrrdReader::execute()
     old_filename_=fn;
 
     FILE *f;
-    if (!(f = fopen(fn(), "rt"))) {
+    if (!(f = fopen(fn.c_str(), "rt"))) {
       cerr << "Error opening file "<<fn<<"\n";
       return;
     }

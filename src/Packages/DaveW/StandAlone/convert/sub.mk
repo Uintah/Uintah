@@ -13,11 +13,11 @@ PROGRAM := $(SRCDIR)/JAStoMesh
 SRCS := $(SRCDIR)/JAStoMesh.cc
 include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/MeshToJAS
-SRCS := $(SRCDIR)/MeshToJAS.cc
-include $(SRCTOP)/scripts/program.mk
+#PROGRAM := $(SRCDIR)/MeshToJAS
+#SRCS := $(SRCDIR)/MeshToJAS.cc
+#include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/RawToSurface
-SRCS := $(SRCDIR)/RawToSurface.cc
-include $(SRCTOP)/scripts/program.mk
+#PROGRAM := $(SRCDIR)/RawToSurface
+#SRCS := $(SRCDIR)/RawToSurface.cc
+#include $(SRCTOP)/scripts/program.mk
 
