@@ -46,10 +46,10 @@
 #include <sci_defs/config_defs.h>
 
 #if HAVE_INTTYPES_H
-#include <inttypes.h>
+#  include <inttypes.h>
 #endif
 #if HAVE_STDINT_H
-#include <stdint.h>
+#  include <stdint.h>
 #endif
 
 namespace SCIRun{
