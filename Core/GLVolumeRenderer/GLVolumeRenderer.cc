@@ -259,8 +259,8 @@ GLVolumeRenderer::BuildTransferFunctions( )
       defaultSamples/(double(slices_)/pow(2.0, tex_->depth() - i));
     for ( int j = 0; j < tSize; j++ )
     {
-      const Color c = cmap_->FindColor(j*mul);
-      const double alpha = cmap_->FindAlpha(j*mul);
+      const Color c = cmap_->getColor(j*mul);
+      const double alpha = cmap_->getAlpha(j*mul);
 
       const double alpha1 = pow(alpha, bp);
       const double alpha2 = 1.0 - pow((1.0 - alpha1), sliceRatio);

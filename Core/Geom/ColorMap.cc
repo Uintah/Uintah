@@ -50,165 +50,166 @@ PersistentTypeID ColorMap::type_id("ColorMap", "Datatype", make_ColorMap);
 
 
 ColorMap::ColorMap()
-  : raw1d(0),
+  : rawRampAlpha_(),
+    rawRampAlphaT_(),
+    rawRampColor_(),
+    rawRampColorT_(),
+    rawRGBA_(0),
+    units(),
     min_(-1),
     max_(1),
-    colors_(50),
-    pre_mult_alpha_p_(false),
-    scaled_p_(false)
+    colors_(),
+    scaled_p_(false),
+    blend_p_(false)
 {
-  build_default();
+  ColorMap(256,-1.0, 1.0);
 }
 
 
-ColorMap::ColorMap(int nlevels, double min, double max, int /*shortrange */)
-  : raw1d(0),
+ColorMap::ColorMap(int nlevels, double min, double max)
+  : rawRampAlpha_(),
+    rawRampAlphaT_(),
+    rawRampColor_(),
+    rawRampColorT_(),
+    rawRGBA_(0),
+    units(),
     min_(min),
     max_(max),
     colors_(nlevels),
-    pre_mult_alpha_p_(false),
-    scaled_p_(false)
+    scaled_p_(false),
+    blend_p_(false)
 {
+  // Build Default Colormap
+  const unsigned int num=50;
+  const double hue_min=0, hue_max=300;
+  const double hue_dt = (hue_max - hue_min)/(num-1);
+
+  for(unsigned int i=0;i<num;i++)
+  {
+    const double hue = i*hue_dt+hue_min;
+    rawRampColor_.push_back(HSVColor(hue, 1,1));
+    rawRampColorT_.push_back(i /(num-1.0));
+  }
+  rawRampAlphaT_.push_back(0.0);
+  rawRampAlphaT_.push_back(1.0);
+  rawRampAlpha_.push_back(1.0);
+  rawRampAlpha_.push_back(1.0);
+  Build1d(nlevels);
 }
 
 
 ColorMap::ColorMap(const ColorMap& copy)
-  : rawRampAlpha(copy.rawRampAlpha),
-    rawRampAlphaT(copy.rawRampAlphaT),
-    rawRampColor(copy.rawRampColor),
-    rawRampColorT(copy.rawRampColorT),
-    raw1d(copy.raw1d),
+  : rawRampAlpha_(copy.rawRampAlpha_),
+    rawRampAlphaT_(copy.rawRampAlphaT_),
+    rawRampColor_(copy.rawRampColor_),
+    rawRampColorT_(copy.rawRampColorT_),
+    rawRGBA_(0),
     min_(copy.min_),
     max_(copy.max_),
     colors_(copy.colors_),
-    rcolors_(copy.rcolors_),
-    alphas_(copy.alphas_),
-    pre_mult_alpha_p_(copy.pre_mult_alpha_p_),
-    scaled_p_(copy.scaled_p_)
+    scaled_p_(copy.scaled_p_),
+    blend_p_(copy.blend_p_)
 {
-  Build1d();
+  Build1d(256);
 }
 
 
 ColorMap::ColorMap(const vector<Color>& rgb,
 		   const vector<float>& rgbT,
 		   const vector<float>& ialpha,
-		   const vector<float>& alphaT,
-		   const int size)
-  : raw1d(0),
-    min_(-1),
-    max_(1),
-    colors_(size),
-    rcolors_(size),
-    pre_mult_alpha_p_(false),
-    scaled_p_(false)
+		   const vector<float>& alphaT) 
+ : rawRampAlpha_(ialpha),
+   rawRampAlphaT_(alphaT),
+   rawRampColor_(rgb),
+   rawRampColorT_(rgbT),
+   rawRGBA_(0),
+   min_(-1),
+   max_(1),
+   colors_(rgb.size()),
+   scaled_p_(false),
+   blend_p_(false)
 {
-  SetRaw(rgb,rgbT,ialpha,alphaT,size);
+  Build1d(256);
+}
+
+void
+ColorMap::set_blend(bool blend)
+{
+  if (blend_p_ == blend) return;
+  blend_p_ = blend;
+  Build1d(256);
+}
   
-  Color ambient(0,0,0),specular(0.7,0.7,0.7);
-  //  cerr << "Constructor for ColorMap: " << size << endl;
-  for(int i=0;i<size;i++)
-  {
-    colors_[i] = scinew Material(ambient,rcolors_[i],specular, 10);
-    colors_[i]->transparency = alphas_[i];
-  }
-}
-
-
-Color
-ColorMap::FindColor(double t)
-{
-  vector<float>::iterator location = 
-    std::lower_bound(rawRampColorT.begin(), rawRampColorT.end(), t);
-  if (location == rawRampColorT.begin())
-  {
-    return rawRampColor[0];
-  }
-  else if (location == rawRampColorT.end())
-  {
-    return rawRampColor[rawRampColor.size()-1];
-  }
-  else
-  {
-    unsigned int j = location - rawRampColorT.begin();
-    const double slop =
-      (rawRampColorT[j] - t)/(rawRampColorT[j]-rawRampColorT[j-1]);
-
-    return rawRampColor[j-1]*slop + rawRampColor[j]*(1.0-slop);
-  }
-}
-
-
-double
-ColorMap::FindAlpha(double t)
-{
-  vector<float>::iterator location = 
-    std::lower_bound(rawRampAlphaT.begin(), rawRampAlphaT.end(), t);
-  if (location == rawRampAlphaT.begin())
-  {
-    return rawRampAlpha[0];
-  }
-  else if (location == rawRampAlphaT.end())
-  {
-    return rawRampAlpha[rawRampAlpha.size()-1];
-  }
-  else
-  {
-    unsigned int j = location - rawRampAlphaT.begin();
-    const double slop =
-      (rawRampAlphaT[j] - t)/(rawRampAlphaT[j]-rawRampAlphaT[j-1]);
-
-    return rawRampAlpha[j-1]*slop + rawRampAlpha[j]*(1.0-slop);
-  }
-}
-
 
 void
 ColorMap::Build1d(const int size)
 {
-  int i;
-  float mul = 1.0/(size-1);
+  double t = 0;
+  double dt = 1.0 / (size-1);
 
-  rcolors_.resize(size);
-  alphas_.resize(size);
-  for(i=0;i<size;i++)
-  {
-    rcolors_[i] = FindColor(i*mul);
-    alphas_[i] = FindAlpha(i*mul);
-  }
+  int cIdx = 0;
+  double CT0 = rawRampColorT_[cIdx];
+  double CT1 = rawRampColorT_[cIdx+1];
+  Color C0 = rawRampColor_[cIdx];
+  Color C1 = rawRampColor_[cIdx+1];
+  const int cSize = rawRampColor_.size()-1;
+
   
-  const int TEX1D_SIZE=256;
-  if (!raw1d)
-  {
-    raw1d = scinew unsigned char[4*TEX1D_SIZE];
-  }
+  int aIdx = 0;
+  double AT0 = rawRampAlphaT_[aIdx];
+  double AT1 = rawRampAlphaT_[aIdx+1];
+  double A0 = rawRampAlpha_[aIdx];
+  double A1 = rawRampAlpha_[aIdx+1];
+  const int aSize = rawRampAlpha_.size()-1;
+  Color ambient(0,0,0),specular(0.7,0.7,0.7);
 
-  mul = 1.0/(TEX1D_SIZE-1);
+  if (rawRGBA_) { delete rawRGBA_; rawRGBA_ = 0; }
+  if (!rawRGBA_) rawRGBA_ = scinew unsigned char[4*size];
+  
+  colors_.clear();
+  colors_.resize(size);
+  for (int i = 0; i < size; i++) {    
+    colors_[i] = scinew Material();
+    
+    MaterialHandle &color = colors_[i];
+    
+    if (!blend_p_) {
+      color->diffuse = C0;      
+      color->transparency = A0;
+    } else {
+      color->diffuse = C1 * (t - CT0) / (CT1 - CT0) + 
+	C0 * (CT1 - t) / (CT1 - CT0);
+    //cerr << "cIdx " << cIdx << "  rCsz " << rawRampColor_.size() << " rCTsz " << rawRampColorT_.size() << "  CT0 " << CT0 << "  CT1 " << CT1 << "  R: " << color->diffuse.r() << "  G: " << color->diffuse.g() << "  B: " << color->diffuse.g() << std::endl;
 
-  if (pre_mult_alpha_p_)
-  {
+      color->transparency = A1 * (t - AT0) / (AT1 - AT0) + 
+	A0 * (AT1 - t) / (AT1 - CT0);
+    }
 
-    for (i=0;i<TEX1D_SIZE;i++)
-    {
-      const Color c = FindColor(i*mul);
-      const double al = FindAlpha(i*mul);
-      raw1d[i*4 + 0] = (unsigned char)(c.r()*al*255);
-      raw1d[i*4 + 1] = (unsigned char)(c.g()*al*255);
-      raw1d[i*4 + 2] = (unsigned char)(c.b()*al*255);
-      raw1d[i*4 + 3] = (unsigned char)(al*255);
-    }  
-  }
-  else
-  { // don't pre-multiply the alpha value...
-    for(i=0;i<TEX1D_SIZE;i++)
-    {
-      const Color c = FindColor(i*mul);
-      const double al = FindAlpha(i*mul);
-      raw1d[i*4 + 0] = (unsigned char)(c.r()*255);
-      raw1d[i*4 + 1] = (unsigned char)(c.g()*255);
-      raw1d[i*4 + 2] = (unsigned char)(c.b()*255);
-      raw1d[i*4 + 3] = (unsigned char)(al*255);
-    }  
+    color->ambient = ambient;
+    color->specular = specular;
+    
+
+    rawRGBA_[i*4+0] = (unsigned char)(color->diffuse.r()*255);
+    rawRGBA_[i*4+1] = (unsigned char)(color->diffuse.g()*255);
+    rawRGBA_[i*4+2] = (unsigned char)(color->diffuse.b()*255);
+    rawRGBA_[i*4+3] = (unsigned char)(color->transparency*255);
+
+    t += dt;
+    if (cIdx < cSize && t >= CT1) {
+      cIdx++;
+      CT0 = rawRampColorT_[cIdx];
+      CT1 = rawRampColorT_[cIdx+1];
+      C0 = rawRampColor_[cIdx];
+      C1 = rawRampColor_[cIdx+1];
+    }
+    
+    if (aIdx < aSize && t >= AT1) { 
+      aIdx++;
+      AT0 = rawRampAlphaT_[aIdx];
+      AT1 = rawRampAlphaT_[aIdx+1];
+      A0 = rawRampAlpha_[aIdx];
+      A1 = rawRampAlpha_[aIdx+1];
+    }
   }
 }
 
@@ -218,20 +219,13 @@ void
 ColorMap::SetRaw(const vector<Color>& rgb,
 		 const vector<float>& rgbT,
 		 const vector<float>& ialpha,
-		 const vector<float>& alphaT,
-		 const int size)
+		 const vector<float>& alphaT)
 {
-  // this time i want the ramp information
-  rawRampAlpha = ialpha;
-
-  rawRampAlphaT = alphaT;
-  
-  // convert float scalar values to ints
-  rawRampColorT = rgbT;
-  
-  rawRampColor = rgb;
-
-  Build1d(size);
+  rawRampColor_ = rgb;
+  rawRampColorT_= rgbT;
+  rawRampAlpha_ = ialpha;
+  rawRampAlphaT_= alphaT;
+  Build1d(256);
 }
 
 
@@ -246,26 +240,17 @@ ColorMap* ColorMap::clone()
 }
 
 
-void
-ColorMap::build_default()
+Color
+ColorMap::getColor(double t)
 {
-  double hue_min=0;
-  double hue_max=300;
-  double hue_range=hue_max-hue_min;
-  double sat=1;
-  double val=1;
-  const unsigned int nl=colors_.size();
-  for(unsigned int i=0;i<nl;i++)
-  {
-    const double hue = double(i)/double(nl-1)*hue_range+hue_min;
-    Color base(HSVColor(hue, sat, val));
-    Color ambient(base*.1);
-    Color diffuse(base);
-    Color specular(1,1,1);
-    colors_[i]=scinew Material(ambient, diffuse, specular, 10);
-  }
-}    
+  return colors_[int(t*(colors_.size()-1))]->diffuse;
+}
 
+double
+ColorMap::getAlpha(double t)
+{
+  return colors_[int(t*(colors_.size()-1))]->transparency;
+}
 
 #define COLORMAP_VERSION 4
 
@@ -280,10 +265,10 @@ ColorMap::io(Piostream& stream)
     Pio(stream, units);
   if ( version > 1 )
   {
-    Pio(stream,rawRampAlpha);
-    Pio(stream,rawRampAlphaT);
-    Pio(stream,rawRampColor);
-    Pio(stream,rawRampColorT);
+    Pio(stream,rawRampAlpha_);
+    Pio(stream,rawRampAlphaT_);
+    Pio(stream,rawRampColor_);
+    Pio(stream,rawRampColorT_);
       
     if ( stream.reading() )
     {

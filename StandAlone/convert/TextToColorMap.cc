@@ -127,7 +127,7 @@ main(int argc, char **argv) {
   }
   cerr << "Done building colormap.\n";
 
-  ColorMap *cm = new ColorMap(rgb, rgbT, alphas, alphaT, ncolors);
+  ColorMap *cm = new ColorMap(rgb, rgbT, alphas, alphaT);
   ColorMapHandle cmH(cm);
   
   if (binOutput) {
