@@ -15,6 +15,8 @@
 #define SCI_Classlib_Array1_h 1
 
 #include <Classlib/Assert.h>
+#include <Tester/RigorousTest.h>
+
 
 class Piostream;
 
@@ -132,6 +134,11 @@ public:
     T* get_objs();
 
 
+    //////////
+    //Rigorous Tests
+    static void test_rigorous(RigorousTest* __test);
+    
+
     friend void Pio(Piostream&, Array1<T>&);
     friend void Pio(Piostream&, Array1<T>*&);
 };
@@ -140,3 +147,32 @@ template<class T> void Pio(Piostream&, Array1<T>&);
 template<class T> void Pio(Piostream&, Array1<T>*&);
 
 #endif /* SCI_Classlib_Array1_h */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
