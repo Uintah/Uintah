@@ -81,10 +81,20 @@ public:
   void post_translate(const Vector&);
 
   Point unproject(const Point& p);
+  void unproject(const Point& p, Point& res) const;
+  void unproject_inplace(Point& p) const;
   Vector unproject(const Vector& p);
+  void unproject(const Vector& v, Vector& res) const;
+  void unproject_inplace(Vector& v) const;
   Point project(const Point& p) const;
+  void project(const Point& p, Point& res) const;
+  void project_inplace(Point& p) const;
   Vector project(const Vector& p) const;
+  void project(const Vector& p, Vector& res) const;
+  void project_inplace(Vector& p) const;
   Vector project_normal(const Vector&) const;
+  void project_normal(const Vector&, Vector& res) const;
+  void project_normal_inplace(Vector&) const;
   void get(double*) const;
   void get_trans(double*) const;
   void set(double*);
@@ -95,7 +105,11 @@ public:
 		   int xres, int yres);
   void compute_imat();
   void invert();
-  
+  bool inv_valid()
+    {
+      return inverse_valid;
+    }
+
   //! support dynamic compilation
   static const string& get_h_file_path();
 
