@@ -42,10 +42,6 @@
 #include <Core/Util/sci_system.h>
 #include <Core/Util/RCParse.h>
 
-#ifdef SCI_PARALLEL
-#include <Core/CCA/Component/PIDL/PIDL.h>
-#endif
-
 #include <iostream>
 using std::cerr;
 using std::cout;
@@ -143,20 +139,6 @@ main(int argc, char *argv[] )
   SCIRUN_SRCTOP = SRCTOP;
   SCIRUN_OBJTOP = OBJTOP;
   DEFAULT_LOAD_PACKAGE = DEF_LOAD_PACK;
-
-#if 0
- ifdef SCI_PARALLEL
-  try {
-    PIDL::PIDL::initialize(argc, argv);
-  } catch(const Exception& e) {
-    cerr << "Caught exception:\n";
-    cerr << e.message() << '\n';
-    abort();
-  } catch(...) {
-    cerr << "Caught unexpected exception!\n";
-    abort();
-  } 
-#endif
 
   // Start up TCL...
   TCLTask* tcl_task = new TCLTask(argc, argv);
