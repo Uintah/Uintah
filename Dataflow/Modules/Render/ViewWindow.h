@@ -72,22 +72,20 @@
 
 // define 'the_time()' function for UniCam
 #ifdef WIN32
-#include <windows.h>
-#include <winbase.h>
+#  include <windows.h>
+#  include <winbase.h>
 
-
-
-inline double the_time() {
-    return double(GetTickCount())/1000.0;
-}
+   inline double the_time() {
+      return double(GetTickCount())/1000.0;
+   }
 #else
-#include <sys/time.h>
+#  include <sys/time.h>
 
-inline double the_time() {
-    struct timeval ts; struct timezone tz;
-    gettimeofday(&ts, &tz);
-    return (double)(ts.tv_sec + (double)ts.tv_usec/1e6);
-}
+   inline double the_time() {
+      struct timeval ts; struct timezone tz;
+      gettimeofday(&ts, &tz);
+      return (double)(ts.tv_sec + (double)ts.tv_usec/1e6);
+   }
 #endif
 
 template <class Type>
@@ -352,20 +350,20 @@ public:
 
   void autoview(const BBox&);
 
-				// sets up the state (OGL) for a tool/viewwindow
+  // sets up the state (OGL) for a tool/viewwindow
   void setState(DrawInfoOpenGL*, const string&);
-				// sets up DI for this drawinfo
+  // sets up DI for this drawinfo
   void setDI(DrawInfoOpenGL*,string);
-				// sets up OGL clipping planes...
+  // sets up OGL clipping planes...
   void setClip(DrawInfoOpenGL*); 
 
-				// Which of the objects do we draw?
+  // Which of the objects do we draw?
   MapStringObjTag visible;
 
-				// Which of the lights are on?
+  // Which of the lights are on?
   //map<string, int> light_on;
     
-				// The Camera
+  // The Camera
   GuiView view;
   View homeview;
 
@@ -438,7 +436,6 @@ private:
   GuiString gui_global_type_;
   GuiInt gui_ortho_view_;
   GuiInt gui_current_time_;
-
 };
 
 class ViewWindowMouseMessage : public MessageBase {
@@ -451,10 +448,9 @@ public:
   int btn;
   int time;
   
-  
   ViewWindowMouseMessage(const string& rid, MouseHandler handler,
-		  int action, int x, int y, int state, int btn,
-		  int time);
+                         int action, int x, int y, int state, int btn,
+                         int time);
   virtual ~ViewWindowMouseMessage();
 };
 
