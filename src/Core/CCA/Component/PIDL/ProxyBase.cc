@@ -62,7 +62,7 @@ void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
       delete (ref.chan);
       ref.chan = NULL;
     }
-
+    ref = (rm.d_ref[0]);
     ref.chan = (rm.d_ref[0].chan)->SPFactory(true);
   }
   else {
