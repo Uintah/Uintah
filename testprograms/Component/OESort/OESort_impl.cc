@@ -50,7 +50,7 @@ OESort_impl::~OESort_impl()
 {
 }
 
-int OESort_impl::sort(const SIDL::array1<int>& arr, SIDL::array1<int>& odds, SIDL::array1<int>& evens)
+int OESort_impl::sort(const SSIDL::array1<int>& arr, SSIDL::array1<int>& odds, SSIDL::array1<int>& evens)
 {
   odds = arr;
   std::sort(odds.begin(), odds.end());
@@ -66,10 +66,10 @@ OESplit_impl::~OESplit_impl()
 {
 }
 
-int OESplit_impl::split(const SIDL::array1<int>& arr, SIDL::array1<int>& result_arr)
+int OESplit_impl::split(const SSIDL::array1<int>& arr, SSIDL::array1<int>& result_arr)
 {
-  SIDL::array1<int> odds;
-  SIDL::array1<int> evens;
+  SSIDL::array1<int> odds;
+  SSIDL::array1<int> evens;
 std::cerr << "BEFORE THE CALL\n";
   ss->sort(arr,odds,evens);
 std::cerr << "I JUST CALLED TO SAY...\n";
