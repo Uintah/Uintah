@@ -197,10 +197,10 @@ $(SRCDIR)/comp_dynamic_1loop.o: $(SRCDIR)/comp_dynamic_1loop_fort.h
 $(SRCDIR)/comp_dynamic_2loop.o: $(SRCDIR)/comp_dynamic_2loop_fort.h
 $(SRCDIR)/comp_dynamic_3loop.o: $(SRCDIR)/comp_dynamic_3loop_fort.h
 $(SRCDIR)/comp_dynamic_4loop.o: $(SRCDIR)/comp_dynamic_4loop_fort.h
-$(SRCDIR)/comp_dynamic_4loop.o: $(SRCDIR)/comp_dynamic_5loop_fort.h
-$(SRCDIR)/comp_dynamic_4loop.o: $(SRCDIR)/comp_dynamic_6loop_fort.h
-$(SRCDIR)/comp_dynamic_4loop.o: $(SRCDIR)/comp_dynamic_7loop_fort.h
-$(SRCDIR)/comp_dynamic_4loop.o: $(SRCDIR)/comp_dynamic_8loop_fort.h
+$(SRCDIR)/comp_dynamic_5loop.o: $(SRCDIR)/comp_dynamic_5loop_fort.h
+$(SRCDIR)/comp_dynamic_6loop.o: $(SRCDIR)/comp_dynamic_6loop_fort.h
+$(SRCDIR)/comp_dynamic_7loop.o: $(SRCDIR)/comp_dynamic_7loop_fort.h
+$(SRCDIR)/comp_dynamic_8loop.o: $(SRCDIR)/comp_dynamic_8loop_fort.h
 $(SRCDIR)/intrusion_computevel.o: $(SRCDIR)/intrusion_computevel_fort.h
 $(SRCDIR)/mmbcvelocity_momex.o: $(SRCDIR)/mmbcvelocity_momex_fort.h
 $(SRCDIR)/mmbcenthalpy_energyex.o: $(SRCDIR)/mmbcenthalpy_energyex_fort.h
