@@ -186,9 +186,12 @@ ICELabel::~ICELabel()
     VarLabel::destroy(int_eng_L_ME_CCLabel);
     VarLabel::destroy(q_CCLabel);
     VarLabel::destroy(q_advectedLabel);
+    VarLabel::destroy(qV_CCLabel);
+    VarLabel::destroy(qV_advectedLabel);
     VarLabel::destroy(term1Label);
     VarLabel::destroy(term2Label);
     VarLabel::destroy(term3Label);
+    VarLabel::destroy(f_theta_CCLabel);
 
     // Face centered variables
     VarLabel::destroy(uvel_FCLabel);
@@ -210,7 +213,10 @@ ICELabel::~ICELabel()
     VarLabel::destroy(IveBeenHereLabel);
     VarLabel::destroy(scratchLabel);
     VarLabel::destroy(scratch_FCVectorLabel);
-    
+    VarLabel::destroy(scratch_FCXLabel);
+    VarLabel::destroy(scratch_FCYLabel);
+    VarLabel::destroy(scratch_FCZLabel);
+
     // Reduction Variables
     VarLabel::destroy(delTLabel);
     VarLabel::destroy(TotalMassLabel);
