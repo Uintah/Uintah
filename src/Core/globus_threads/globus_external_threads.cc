@@ -93,30 +93,30 @@ GlobusThread::~GlobusThread()
 
 void GlobusThread::run()
 {
-    for(;;){
-	wait.down();
-	(*user_func)(user_arg);
-	if(npoolthreads >= MAXPOOLTHREADS)
-	    break;
-	thread_pool_mutex.lock();
-	if(npoolthreads >= MAXPOOLTHREADS){
-	    thread_pool_mutex.unlock();
-	    break;
-	} else {
-	    thread_pool[npoolthreads++]=this;
-	    thread_pool_mutex.unlock();
-	    /* Call the thread specific data destructors */
-	    for (int i = 0; i < MAXKEYS; i++){
-		globus_thread_key_destructor_func_t func = 
-		                              key_table_destructor_funcs[i];
-		void* value = threadSpecific[i];
-		if (func && value){
-		    (*func)(value);
-		}
-		threadSpecific[i]=0;
-	    }
+  for(;;){
+    wait.down();
+    (*user_func)(user_arg);
+    if(npoolthreads >= MAXPOOLTHREADS)
+      break;
+    thread_pool_mutex.lock();
+    if(npoolthreads >= MAXPOOLTHREADS){
+      thread_pool_mutex.unlock();
+      break;
+    } else {
+      thread_pool[npoolthreads++]=this;
+      thread_pool_mutex.unlock();
+      /* Call the thread specific data destructors */
+      for (int i = 0; i < MAXKEYS; i++){
+	globus_thread_key_destructor_func_t func = 
+	  key_table_destructor_funcs[i];
+	void* value = threadSpecific[i];
+	if (func && value){
+	  (*func)(value);
 	}
+	threadSpecific[i]=0;
+      }
     }
+  }
 }
 
 /*
@@ -231,22 +231,22 @@ extern "C" void globus_thread_exit( void *status )
 
 static GlobusThread* get_thread()
 {
+  if(npoolthreads){
+    thread_pool_mutex.lock();
     if(npoolthreads){
-	thread_pool_mutex.lock();
-	if(npoolthreads){
-	    GlobusThread* t=thread_pool[--npoolthreads];
-	    thread_pool_mutex.unlock();
-	    return t;
-	} else {
-	    thread_pool_mutex.unlock();
-	}
+      GlobusThread* t=thread_pool[--npoolthreads];
+      thread_pool_mutex.unlock();
+      return t;
+    } else {
+      thread_pool_mutex.unlock();
     }
-    GlobusThread* thread=new GlobusThread();
-    Thread* t=new Thread(thread, "Globus Thread");
-    t->detach();
-    t->setDaemon(true);
-    thread->thread=t;
-    return thread;
+  }
+  GlobusThread* thread=new GlobusThread();
+  Thread* t=new Thread(thread, "Globus Thread");
+  t->detach();
+  t->setDaemon(true);
+  thread->thread=t;
+  return thread;
 }
 
 /*
@@ -258,27 +258,23 @@ globus_thread_create(globus_thread_t *user_thread,
 		     globus_thread_func_t func,
 		     void *user_arg )
 {
-    size_t stacksize;
-    GlobusThread* thread=get_thread();
-    thread->user_func = func;
-    thread->user_arg = user_arg;
+  size_t stacksize;
+  GlobusThread* thread=get_thread();
+  thread->user_func = func;
+  thread->user_arg = user_arg;
 
-    if (attr)
-    {
-	globus_threadattr_getstacksize(attr, &stacksize);
-    }
-    else
-    {
-	stacksize = ::stack_size;
-    }
-    thread->wait.up();
+  if (attr) {
+    globus_threadattr_getstacksize(attr, &stacksize);
+  } else{
+    stacksize = ::stack_size;
+  }
+  thread->wait.up();
 
-    if(user_thread)
-    {
-	*user_thread = (Core_Thread_Thread*)thread->thread;
-    }
+  if(user_thread){
+    *user_thread = (Core_Thread_Thread*)thread->thread;
+  }
 
-    return (0);
+  return (0);
 } /* globus_thread_create() */
 
 
@@ -290,7 +286,7 @@ globus_thread_create(globus_thread_t *user_thread,
 extern "C" globus_bool_t
 globus_preemptive_threads(void)
 {
-    return GLOBUS_TRUE;
+  return GLOBUS_TRUE;
 } /* globus_preemptive_threads() */
 
 
@@ -301,8 +297,8 @@ globus_preemptive_threads(void)
 extern "C" int
 globus_threadattr_init(globus_threadattr_t *attr)
 {
-    attr->stacksize=stack_size;
-    return GLOBUS_SUCCESS;
+  attr->stacksize=stack_size;
+  return GLOBUS_SUCCESS;
 }
 
 /*
@@ -312,7 +308,7 @@ globus_threadattr_init(globus_threadattr_t *attr)
 extern "C" int
 globus_thread_destroy(globus_threadattr_t */*attr*/)
 {
-    return GLOBUS_SUCCESS;
+  return GLOBUS_SUCCESS;
 }
 
 /*
@@ -323,8 +319,8 @@ extern "C" int
 globus_threadattr_setstacksize(globus_threadattr_t *attr, 
 			       size_t stacksize)
 {
-    attr->stacksize=stacksize;
-    return GLOBUS_SUCCESS;
+  attr->stacksize=stacksize;
+  return GLOBUS_SUCCESS;
 }
 
 /*
@@ -335,8 +331,8 @@ extern "C" int
 globus_threadattr_getstacksize(globus_threadattr_t *attr,
 			       size_t *stacksize)
 {
-    *stacksize=attr->stacksize;
-    return GLOBUS_SUCCESS;
+  *stacksize=attr->stacksize;
+  return GLOBUS_SUCCESS;
 }
 
 /*
@@ -347,18 +343,18 @@ extern "C" int
 globus_thread_key_create(globus_thread_key_t *key,
 			 globus_thread_key_destructor_func_t func)
 {
-    thread_key_mutex.lock();
-    int k = next_key++;
-    if(next_key >= MAXKEYS){
-	thread_key_mutex.unlock();
-	int rc= GLOBUS_FAILURE;
-	globus_i_thread_test_rc( rc, "GLOBUS_THREAD: keycreate failed\n" );
-	return rc;
-    }
-    key_table_destructor_funcs[k]=func;
-    *key=k;
+  thread_key_mutex.lock();
+  int k = next_key++;
+  if(next_key >= MAXKEYS){
     thread_key_mutex.unlock();
-    return GLOBUS_SUCCESS;
+    int rc= GLOBUS_FAILURE;
+    globus_i_thread_test_rc( rc, "GLOBUS_THREAD: keycreate failed\n" );
+    return rc;
+  }
+  key_table_destructor_funcs[k]=func;
+  *key=k;
+  thread_key_mutex.unlock();
+  return GLOBUS_SUCCESS;
 } /* globus_thrad_key_create() */
 
 
@@ -370,33 +366,39 @@ extern "C" int
 globus_thread_setspecific(globus_thread_key_t key,
 			  void *value)
 {
-    int rc=0;
-    if ( key < 0 || key >= MAXKEYS) {
-	rc=GLOBUS_FAILURE;
-    } else {
-	Thread* t=Thread::self();
-	//fprintf(stderr, "setspecific: key=%d, thread=%x, value=%x\n", key, t, value);
-	Runnable* runnable = t->getRunnable();
-	GlobusThread* gt=dynamic_cast<GlobusThread*>(runnable);
-	if(!gt) {
-	    thread_key_mutex.lock();
+  int rc=0;
+  if ( key < 0 || key >= MAXKEYS) {
+    rc=GLOBUS_FAILURE;
+  } else {
+    Thread* t=Thread::self();
+    if(t){
+      //fprintf(stderr, "setspecific: key=%d, thread=%x, value=%x\n", key, t, value);
+      Runnable* runnable = t->getRunnable();
+      GlobusThread* gt=dynamic_cast<GlobusThread*>(runnable);
+      if(!gt) {
+	thread_key_mutex.lock();
+	if(globus_hashtable_insert(&global_keys[key], t, value) != GLOBUS_SUCCESS){
+	  if(globus_hashtable_remove(&global_keys[key], t) == 0){
+	    rc=GLOBUS_FAILURE;
+	  } else {
 	    if(globus_hashtable_insert(&global_keys[key], t, value) != GLOBUS_SUCCESS){
-		if(globus_hashtable_remove(&global_keys[key], t) == 0){
-		    rc=GLOBUS_FAILURE;
-		} else {
-		    if(globus_hashtable_insert(&global_keys[key], t, value) != GLOBUS_SUCCESS){
-			rc=GLOBUS_FAILURE;
-		    }
-		}
-	    } else {
+	      rc=GLOBUS_FAILURE;
 	    }
-	    thread_key_mutex.unlock();
+	  }
 	} else {
-	    gt->threadSpecific[key]=value;
+	  // Success..
 	}
+	thread_key_mutex.unlock();
+      } else {
+	gt->threadSpecific[key]=value;
+      }
+    } else {
+      fprintf(stderr, "t=0?\n");
+      rc=GLOBUS_FAILURE;
     }
-    globus_i_thread_test_rc(rc, "GLOBUS_THREAD: set specific failed\n");
-    return rc;
+  }
+  globus_i_thread_test_rc(rc, "GLOBUS_THREAD: set specific failed\n");
+  return rc;
 } /* globus_thread_setspecific() */
 	
 /*
@@ -406,26 +408,26 @@ globus_thread_setspecific(globus_thread_key_t key,
 extern "C" void *
 globus_thread_getspecific(globus_thread_key_t key)
 {
-    int rc=0;
-    if ( key < 0 || key >= MAXKEYS) {
-	rc=GLOBUS_FAILURE;
+  int rc=0;
+  if ( key < 0 || key >= MAXKEYS) {
+    rc=GLOBUS_FAILURE;
+  } else {
+    Thread* t=Thread::self();
+    Runnable* runnable = t->getRunnable();
+    GlobusThread* gt=dynamic_cast<GlobusThread*>(runnable);
+    if(!gt) {
+      thread_key_mutex.lock();
+      void* data=globus_hashtable_lookup(&global_keys[key], t);
+      thread_key_mutex.unlock();
+      //fprintf(stderr, "1. getspecific: key=%d, thread=%x, value=%x\n", key, t, data);
+      return data;
     } else {
-	Thread* t=Thread::self();
-	Runnable* runnable = t->getRunnable();
-	GlobusThread* gt=dynamic_cast<GlobusThread*>(runnable);
-	if(!gt) {
-	    thread_key_mutex.lock();
-	    void* data=globus_hashtable_lookup(&global_keys[key], t);
-	    thread_key_mutex.unlock();
-	    //fprintf(stderr, "1. getspecific: key=%d, thread=%x, value=%x\n", key, t, data);
-	    return data;
-	} else {
-	    //fprintf(stderr, "2. getspecific: key=%d, thread=%x, value=%x\n", key, t, gt->threadSpecific[key]);
-	    return gt->threadSpecific[key];
-	}
+      //fprintf(stderr, "2. getspecific: key=%d, thread=%x, value=%x\n", key, t, gt->threadSpecific[key]);
+      return gt->threadSpecific[key];
     }
-    globus_i_thread_test_rc(rc, "GLOBUS_THREAD: set specific failed\n");
-    return (void*)-1;
+  }
+  globus_i_thread_test_rc(rc, "GLOBUS_THREAD: set specific failed\n");
+  return (void*)-1;
 } /* globus_thread_getspecific() */
 
 /*
@@ -435,7 +437,7 @@ globus_thread_getspecific(globus_thread_key_t key)
 extern "C" globus_thread_t
 globus_thread_self( void )
 {
-    return (globus_thread_t)Thread::self();
+  return (globus_thread_t)Thread::self();
 }
 
 /*
@@ -446,7 +448,7 @@ extern "C" int
 globus_thread_equal(globus_thread_t t1,
 		    globus_thread_t t2)
 {
-    return t1 == t2;
+  return t1 == t2;
 } /* globus_thread_equal() */
 
 /*
@@ -456,7 +458,7 @@ globus_thread_equal(globus_thread_t t1,
 extern "C" void
 globus_thread_yield( void )
 {
-    Thread::yield();
+  Thread::yield();
 }
 
 /*
@@ -466,7 +468,7 @@ globus_thread_yield( void )
 extern "C" globus_bool_t
 globus_i_am_only_thread(void)
 {
-    return GLOBUS_FALSE;
+  return GLOBUS_FALSE;
 }
 
 #undef globus_mutex_init
@@ -474,12 +476,12 @@ extern "C" int
 globus_mutex_init(globus_mutex_t *mut,
 		  globus_mutexattr_t */*attr*/ )
 {
-    try {
-	*mut=(globus_mutex_t)new Mutex("Globus mutex");
-    } catch (...) {
-	return GLOBUS_FAILURE;
-    }
-    return GLOBUS_SUCCESS;
+  try {
+    *mut=(globus_mutex_t)new Mutex("Globus mutex");
+  } catch (...) {
+    return GLOBUS_FAILURE;
+  }
+  return GLOBUS_SUCCESS;
 }
 
 /*
@@ -489,8 +491,8 @@ globus_mutex_init(globus_mutex_t *mut,
 extern "C" int
 globus_mutex_destroy( globus_mutex_t *mut )
 {
-    delete *(Mutex**)mut;
-    return GLOBUS_SUCCESS;
+  delete *(Mutex**)mut;
+  return GLOBUS_SUCCESS;
 }
 
 /*
@@ -501,8 +503,8 @@ extern "C" int
 globus_cond_init(globus_cond_t *cv,
 		 globus_condattr_t */*attr*/ )
 {
-    *cv=(globus_cond_t)new ConditionVariable("Globus Condition Variable");
-    return GLOBUS_SUCCESS;
+  *cv=(globus_cond_t)new ConditionVariable("Globus Condition Variable");
+  return GLOBUS_SUCCESS;
 }
 
 /*
@@ -512,8 +514,8 @@ globus_cond_init(globus_cond_t *cv,
 extern "C" int
 globus_cond_destroy(globus_cond_t *cv)
 {
-    delete *(ConditionVariable**)cv;
-    return GLOBUS_SUCCESS;
+  delete *(ConditionVariable**)cv;
+  return GLOBUS_SUCCESS;
 }
 
 /* 
@@ -523,8 +525,8 @@ globus_cond_destroy(globus_cond_t *cv)
 extern "C" int
 globus_mutex_lock( globus_mutex_t *mut )
 {
-    (*(Mutex**)mut)->lock();
-    return GLOBUS_SUCCESS;
+  (*(Mutex**)mut)->lock();
+  return GLOBUS_SUCCESS;
 }
 
 
@@ -535,10 +537,10 @@ globus_mutex_lock( globus_mutex_t *mut )
 extern "C" int
 globus_mutex_trylock(globus_mutex_t *mut)
 {
-    if((*(Mutex**)mut)->tryLock())
-	return GLOBUS_SUCCESS;
-    else
-	return GLOBUS_FAILURE;
+  if((*(Mutex**)mut)->tryLock())
+    return GLOBUS_SUCCESS;
+  else
+    return GLOBUS_FAILURE;
 } /* globus_mutex_trylock() */
 
 
@@ -549,8 +551,8 @@ globus_mutex_trylock(globus_mutex_t *mut)
 extern "C" int
 globus_mutex_unlock( globus_mutex_t *mut )
 {
-    (*(Mutex**)mut)->unlock();
-    return GLOBUS_SUCCESS;
+  (*(Mutex**)mut)->unlock();
+  return GLOBUS_SUCCESS;
 }
 
 /*
@@ -561,9 +563,9 @@ extern "C" int
 globus_cond_wait(globus_cond_t *cv,
 		 globus_mutex_t *mut )
 {
-    globus_thread_blocking_will_block();
-    (*(ConditionVariable**)cv)->wait(**(Mutex**)mut);
-    return GLOBUS_SUCCESS;
+  globus_thread_blocking_will_block();
+  (*(ConditionVariable**)cv)->wait(**(Mutex**)mut);
+  return GLOBUS_SUCCESS;
 }
 
 /*
@@ -575,15 +577,15 @@ globus_cond_timedwait(globus_cond_t *cv,
 		      globus_mutex_t *mut,
 		      globus_abstime_t *time)
 {
-    globus_thread_blocking_will_block();
+  globus_thread_blocking_will_block();
 
-    struct timespec at;
-    at.tv_sec = time->tv_sec;
-    at.tv_nsec = time->tv_nsec;
-    if((*(ConditionVariable**)cv)->timedWait(**(Mutex**)mut, &at))
-	return GLOBUS_SUCCESS;
-    else
-	return ETIMEDOUT;
+  struct timespec at;
+  at.tv_sec = time->tv_sec;
+  at.tv_nsec = time->tv_nsec;
+  if((*(ConditionVariable**)cv)->timedWait(**(Mutex**)mut, &at))
+    return GLOBUS_SUCCESS;
+  else
+    return ETIMEDOUT;
 }
 
 /*
@@ -593,8 +595,8 @@ globus_cond_timedwait(globus_cond_t *cv,
 extern "C" int
 globus_cond_signal( globus_cond_t *cv )
 {
-    (*(ConditionVariable**)cv)->conditionSignal();
-    return GLOBUS_SUCCESS;
+  (*(ConditionVariable**)cv)->conditionSignal();
+  return GLOBUS_SUCCESS;
 }
 
 /*
@@ -604,8 +606,8 @@ globus_cond_signal( globus_cond_t *cv )
 extern "C" int
 globus_cond_broadcast( globus_cond_t *cv )
 {
-    (*(ConditionVariable**)cv)->conditionBroadcast();
-    return GLOBUS_SUCCESS;
+  (*(ConditionVariable**)cv)->conditionBroadcast();
+  return GLOBUS_SUCCESS;
 }
 
 
@@ -616,22 +618,19 @@ extern "C" int
 globus_i_thread_actual_thread_once(globus_thread_once_t *once_control,
 				       void (*init_routine)(void))
 {
-    int rc;
-    globus_l_thread_once_mutex.lock();
-    if (*once_control)
-    {
-	/* Someone beat us to it.  */
-	rc = 0;
-    }
-    else
-    {
-	/* We're the first one here */
-	(*init_routine)();
-	*once_control = 1;
-	rc = 0;
-    }
-    globus_l_thread_once_mutex.unlock();
-    return (rc);
+  int rc;
+  globus_l_thread_once_mutex.lock();
+  if (*once_control){
+    /* Someone beat us to it.  */
+    rc = 0;
+  } else {
+    /* We're the first one here */
+    (*init_routine)();
+    *once_control = 1;
+    rc = 0;
+  }
+  globus_l_thread_once_mutex.unlock();
+  return (rc);
 } /* globus_i_thread_actual_thread_once() */
 
 #undef globus_thread_once
@@ -639,7 +638,7 @@ extern "C" int
 globus_thread_once(globus_thread_once_t *once_control,
 		   void (*init_routine)(void))
 {
-    return (globus_i_thread_actual_thread_once(once_control, init_routine));
+  return (globus_i_thread_actual_thread_once(once_control, init_routine));
 }
 
 extern "C" void
@@ -661,50 +660,42 @@ void
 globus_i_thread_report_bad_rc(int rc,
 			      char *message )
 {
-    char achMessHead[] = "[Thread System]";
-    char achDesc[GLOBUS_L_LIBC_MAX_ERR_SIZE];
+  char achMessHead[] = "[Thread System]";
+  char achDesc[GLOBUS_L_LIBC_MAX_ERR_SIZE];
     
-    if(rc != GLOBUS_SUCCESS)
-    {
-	switch( rc )
-	{
-	case EAGAIN:
-	    strcpy(achDesc, "system out of resources (EAGAIN)");
-	    break;
-	case ENOMEM:
-	    strcpy(achDesc, "insufficient memory (ENOMEM)");
-	    break;
-	case EINVAL:
-	    strcpy(achDesc, "invalid value passed to thread interface (EINVAL)");
-	    break;
-	case EPERM:
-	    strcpy(achDesc, "user does not have adequate permission (EPERM)");
-	    break;
-	case ERANGE:
-	    strcpy(achDesc, "a parameter has an invalid value (ERANGE)");
-	    break;
-	case EBUSY:
-	    strcpy(achDesc, "mutex is locked (EBUSY)");
-	    break;
-	case EDEADLK:
-	    strcpy(achDesc, "deadlock detected (EDEADLK)");
-	    break;
-	case ESRCH:
-	    strcpy(achDesc, "could not find specified thread (ESRCH)");
-	    break;
-	default:
-	    globus_fatal("%s %s\n%s unknown error number: %d\n",
-				  achMessHead,
-				  message,
-				  achMessHead,
-				  rc);
-	    break;
-	}
-	globus_fatal("%s %s\n%s %s",
-			      achMessHead,
-			      message,
-			      achMessHead,
-			      achDesc);
+  if(rc != GLOBUS_SUCCESS) {
+    switch( rc ) {
+    case EAGAIN:
+      strcpy(achDesc, "system out of resources (EAGAIN)");
+      break;
+    case ENOMEM:
+      strcpy(achDesc, "insufficient memory (ENOMEM)");
+      break;
+    case EINVAL:
+      strcpy(achDesc, "invalid value passed to thread interface (EINVAL)");
+      break;
+    case EPERM:
+      strcpy(achDesc, "user does not have adequate permission (EPERM)");
+      break;
+    case ERANGE:
+      strcpy(achDesc, "a parameter has an invalid value (ERANGE)");
+      break;
+    case EBUSY:
+      strcpy(achDesc, "mutex is locked (EBUSY)");
+      break;
+    case EDEADLK:
+      strcpy(achDesc, "deadlock detected (EDEADLK)");
+      break;
+    case ESRCH:
+      strcpy(achDesc, "could not find specified thread (ESRCH)");
+      break;
+    default:
+      globus_fatal("%s %s\n%s unknown error number: %d\n",
+		   achMessHead, message, achMessHead, rc);
+      break;
     }
+    globus_fatal("%s %s\n%s %s",
+		 achMessHead, message, achMessHead, achDesc);
+  }
 } /* globus_i_thread_report_bad_rc() */
 
