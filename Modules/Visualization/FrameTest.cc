@@ -21,12 +21,11 @@
 
 #include <Widgets/ArrowWidget.h>
 #include <Widgets/FrameWidget.h>
-#include <Widgets/GuageWidget.h>
 
 #include <iostream.h>
 
-const Index NumWidgetTypes = 3;
-enum WidgetTypes {Arrow, Frame, Guage};
+const Index NumWidgetTypes = 2;
+enum WidgetTypes {Arrow, Frame};
 
 class FrameTest : public Module {
     GeometryOPort* ogeom;
@@ -68,7 +67,6 @@ FrameTest::FrameTest(const clString& id)
 
     widgets[Arrow]=new ArrowWidget(this, .1);
     widgets[Frame]=new FrameWidget(this, .1);
-    widgets[Frame]=new GuageWidget(this, .1);
     widget_scale.set(.1);
     init = 1;
 
@@ -98,7 +96,6 @@ void FrameTest::execute()
         init = 0;
         widget_id=ogeom->addObj(widgets[0]->GetWidget(), widget_name);
         widget_id=ogeom->addObj(widgets[1]->GetWidget(), widget_name+"2");
-        widget_id=ogeom->addObj(widgets[1]->GetWidget(), widget_name+"3");
     }
 
     widgets[widget_type.get()]->SetScale(widget_scale.get());
