@@ -124,7 +124,11 @@ HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
     if( (*((PropertyManager *) h1.get_rep()) !=
 	 *((PropertyManager *) h2.get_rep())) ) return false;
   
-  if( h1->concat_tuple_types() != h2->concat_tuple_types() ) return false;
+  // FIX ME
+  //cerr << "Tuple strings: " << h1->concat_tuple_types() << " " << h2->concat_tuple_types() << "\n";
+  //if( h1->concat_tuple_types() != h2->concat_tuple_types() ) {
+  //return false;
+  //}
 
   Nrrd* n1 = h1->nrrd;
   Nrrd* n2 = h2->nrrd;
@@ -132,8 +136,19 @@ HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
   if (n1->type != n2->type) return false;
   if (n1->dim  != n2->dim)  return false;
 
-  for (int i=1; i<n1->dim; i++)
-    if (n1->axis[i].size != n2->axis[i].size) return false;
+  // FIX ME
+  //for (int i=1; i<n1->dim; i++) {
+  int start = 0;
+  if (n1->dim >= n2->dim)
+    start = n2->dim;
+  else
+    start = n1->dim;
+  // compare the last dimensions (in case scalar and vector)
+  for (int i=start-1; i>=0; i--) {
+    if (n1->axis[i].size != n2->axis[i].size) {
+      return false;
+    }
+  }
 
   return true;
 }
@@ -381,7 +396,6 @@ void HDF5DataReader::ReadandSendData( string& filename,
 
       if (mergedata_ == MERGE_TIME || vec.size() > 1) {
 	  
-	NrrdData* onrrd = new NrrdData(true);
 	string new_label("");
 	string axis_label("");
 
@@ -392,72 +406,101 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	NrrdDataHandle n = *niter;
 	++niter;
 	join_me.push_back(n->nrrd);
+	// FIX ME
 	new_label = n->nrrd->axis[0].label;
 
 	while (niter != vec.end()) {
 	  NrrdDataHandle n = *niter;
 	  ++niter;
 	  join_me.push_back(n->nrrd);
+	  // FIX ME
 	  new_label += string(",") + n->nrrd->axis[0].label;
 	}	  
 
-	int axis,  incr;
-
-	if (mergedata_ == MERGE_LIKE) {
-	  axis = 0; // tuple
-	  incr = 0; // tuple case.
-	} else if (mergedata_ == 2) {
-	  axis = join_me[0]->dim; // time
-	  incr = 1;               // time
-	}
-
-	onrrd->nrrd = nrrdNew();
-	if (nrrdJoin(onrrd->nrrd, &join_me[0], join_me.size(), axis, incr)) {
-	  char *err = biffGetDone(NRRD);
-	  error(string("Join Error: ") +  err);
-	  free(err);
-	  error_ = true;
-	  return;
-	}
-
-	if (mergedata_ == MERGE_TIME) {
-	  onrrd->nrrd->axis[axis].label = "Time";
-	  // remove all numbers from name
-	  string s(join_me[0]->axis[0].label);
-	  new_label.clear();
-
-	  const string nums("0123456789");
-	      
-	  //cout << "checking in_name " << s << endl;
-	  // test against valid char set.
-
-	  for(string::size_type i = 0; i < s.size(); i++) {
-	    bool in_set = false;
-	    for (unsigned int c = 0; c < nums.size(); c++) {
-	      if (s[i] == nums[c]) {
-		in_set = true;
-		break;
-	      }
+	if (join_me.size() == 3 || join_me.size() == 6) {
+	  NrrdData* onrrd = new NrrdData(true);
+	  
+	  int axis = 0,  incr = 0;
+	  
+	  if (mergedata_ == MERGE_LIKE) {
+	    axis = 0; // tuple
+	    incr = 0; // tuple case.
+	    
+	    // if all scalars being merged, need to increment axis
+	    bool same_size = true;
+	    for (int n=0; n<(int)join_me.size()-1; n++) {
+	      if (join_me[n]->dim != join_me[n+1]->dim) 
+		same_size = false;
 	    }
-
-	    if (in_set) { new_label.push_back('X' ); }
-	    else        { new_label.push_back(s[i]); }
-
+	    if (same_size)
+	      incr = 1; // tuple case.
+	  } else if (mergedata_ == 2) {
+	    axis = join_me[0]->dim; // time
+	    incr = 1;               // time
 	  }
+	  
+	  onrrd->nrrd = nrrdNew();
+	  if (nrrdJoin(onrrd->nrrd, &join_me[0], join_me.size(), axis, incr)) {
+	    char *err = biffGetDone(NRRD);
+	    error(string("Join Error: ") +  err);
+	    free(err);
+	    error_ = true;
+	    return;
+	  }
+	  
+	  // set new kinds for joined nrrds
+	  if (join_me.size() == 3)
+	    onrrd->nrrd->axis[0].kind = nrrdKind3Vector;
+	  else if (join_me.size() == 6)
+	    onrrd->nrrd->axis[0].kind = nrrdKind3DSymTensor;
+	  else 
+	    onrrd->nrrd->axis[0].kind = nrrdKindDomain;
+	  for(int i=1; i<onrrd->nrrd->dim; i++) 
+	    onrrd->nrrd->axis[i].kind = nrrdKindDomain;
+	  
+	  
+	  if (mergedata_ == MERGE_TIME) {
+	    onrrd->nrrd->axis[axis].label = "Time";
+	    // remove all numbers from name
+	    // FIX ME
+	    string s(join_me[0]->axis[0].label);
+	    new_label.clear();
+	    
+	    const string nums("0123456789");
+	    
+	    //cout << "checking in_name " << s << endl;
+	    // test against valid char set.
+	    
+	    // FIX ME
+	    for(string::size_type i = 0; i < s.size(); i++) {
+	      bool in_set = false;
+	      for (unsigned int c = 0; c < nums.size(); c++) {
+		if (s[i] == nums[c]) {
+		  in_set = true;
+		  break;
+		}
+	      }
+	      
+	      if (in_set) { new_label.push_back('X' ); }
+	      else        { new_label.push_back(s[i]); }
+	      
+	    }
+	  }
+	  
+	  // Take care of tuple axis label.
+	  // FIX ME
+	  onrrd->nrrd->axis[0].label = strdup(new_label.c_str());
+	  
+	  // Copy the properties.
+	  NrrdDataHandle handle = NrrdDataHandle(onrrd);
+	  
+	  *((PropertyManager *) handle.get_rep()) =
+	    *((PropertyManager *) n.get_rep());
+	  
+	  // clear the nrrds;
+	  vec.clear();
+	  vec.push_back(handle);
 	}
-	   
-	// Take care of tuple axis label.
-	onrrd->nrrd->axis[0].label = strdup(new_label.c_str());
-
-	// Copy the properties.
-	NrrdDataHandle handle = NrrdDataHandle(onrrd);
-
-	*((PropertyManager *) handle.get_rep()) =
-	  *((PropertyManager *) n.get_rep());
-
-	// clear the nrrds;
-	vec.clear();
-	vec.push_back(handle);
       }
     }
   }
@@ -1099,8 +1142,8 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   /* Get the rank (number of dims) in the space. */
   int ndims = H5Sget_simple_extent_ndims(file_space_id);
 
-  hsize_t *count;
-  hsize_t *dims;
+  hsize_t *count = 0;
+  hsize_t *dims = 0;
 
   if (H5Sis_simple(file_space_id)) {
     if (ndims == 0) {
@@ -1217,23 +1260,24 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
     }
   }
 
+  // FIX ME !!!!!!
   string tuple_type_str(":Scalar");
-  int sink_size = 1;
   NrrdData *nout = scinew NrrdData(true);
 
 
   switch(ndims) {
   case 1: 
     nrrdWrap(nout->nrrd, data,
-	     nrrd_type, ndims+1, sink_size, (unsigned int) count[0]);
-    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		    nrrdCenterNode);
+	     nrrd_type, ndims, (unsigned int) count[0]);
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode);
+    nout->nrrd->axis[0].kind = nrrdKindDomain;
     break;
 
   case 2: 
     {
       // If the user asks us to assume vector or tensor data, the
-      // assumption is based on the size of the last dimension.
+      // assumption is based on the size of the last dimension of the hdf5 data
+      // amd will be in the first dimension of the nrrd
       int sz_last_dim = 1;
       if (assumesvt_) { sz_last_dim = count[1];} 
       
@@ -1242,25 +1286,29 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 3, 
 		 (unsigned int) count[0], (unsigned int) count[1]);
 	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode);
+			nrrdCenterNode);
 	tuple_type_str = ":Vector";
+	nout->nrrd->axis[0].kind = nrrdKind3Vector;
 	break;
 	
       case 6: // Tensor data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 6, 
 		 (unsigned int) count[0], (unsigned int) count[1]);
 	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode);	
+			nrrdCenterNode);	
 	tuple_type_str = ":Tensor";
+	nout->nrrd->axis[0].kind = nrrdKind3DSymTensor;
 	break;
 
       default: // treat the rest as Scalar data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 
 		 (unsigned int) count[0], (unsigned int) count[1]);
 	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode);	
+			nrrdCenterNode);
+	nout->nrrd->axis[0].kind = nrrdKindDomain;
 	break;
       };
+      nout->nrrd->axis[1].kind = nrrdKindDomain;
     }
     break;
 
@@ -1277,8 +1325,9 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2]);
 	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+			nrrdCenterNode, nrrdCenterNode);
 	tuple_type_str = ":Vector";
+	nout->nrrd->axis[0].kind = nrrdKind3Vector;
 	break;
 	
       case 6: // Tensor data
@@ -1286,18 +1335,22 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2]);
 	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);	
+			nrrdCenterNode, nrrdCenterNode);	
 	tuple_type_str = ":Tensor";
+	nout->nrrd->axis[0].kind = nrrdKind3DSymTensor;
 	break;
 
       default: // treat the rest as Scalar data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2]);
 	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+			nrrdCenterNode, nrrdCenterNode);
+	nout->nrrd->axis[0].kind = nrrdKindDomain;
 	break;
       };
+      nout->nrrd->axis[1].kind = nrrdKindDomain;
+      nout->nrrd->axis[2].kind = nrrdKindDomain;
     }
     break;
 
@@ -1317,6 +1370,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode,
 			nrrdCenterNode);
 	tuple_type_str = ":Vector";
+	nout->nrrd->axis[0].kind = nrrdKind3Vector;
 	break;
 	
       case 6: // Tensor data
@@ -1325,20 +1379,24 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 		 (unsigned int) count[2], (unsigned int) count[3]);
 	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode,
-			nrrdCenterNode);
-	
+			nrrdCenterNode);       
 	tuple_type_str = ":Tensor";
+	nout->nrrd->axis[0].kind = nrrdKind3DSymTensor;
 	break;
 
       default: // treat the rest as Scalar data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2], (unsigned int) count[3]);
 	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 			nrrdCenterNode, nrrdCenterNode, nrrdCenterNode,
 			nrrdCenterNode);
+	nout->nrrd->axis[0].kind = nrrdKindDomain;
 	break;
       };
+      nout->nrrd->axis[1].kind = nrrdKindDomain;
+      nout->nrrd->axis[2].kind = nrrdKindDomain;
+      nout->nrrd->axis[3].kind = nrrdKindDomain;
     }
     break;
 
@@ -1357,8 +1415,9 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 		 (unsigned int) count[4]);
 	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode);
+		    nrrdCenterNode);
 	tuple_type_str = ":Vector";
+	nout->nrrd->axis[0].kind = nrrdKind3Vector;
 	break;
 	
       case 6: // Tensor data
@@ -1368,20 +1427,26 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 		 (unsigned int) count[4]);
 	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode);	
+		    nrrdCenterNode);	
 	tuple_type_str = ":Tensor";
+	nout->nrrd->axis[0].kind = nrrdKind3DSymTensor;
 	break;
 
       default: // treat the rest as Scalar data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2], (unsigned int) count[3], 
 		 (unsigned int) count[4]);
 	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode);
+		    nrrdCenterNode);
+	nout->nrrd->axis[0].kind = nrrdKindDomain;
 	break;
       };
+      nout->nrrd->axis[1].kind = nrrdKindDomain;
+      nout->nrrd->axis[2].kind = nrrdKindDomain;
+      nout->nrrd->axis[3].kind = nrrdKindDomain;
+      nout->nrrd->axis[4].kind = nrrdKindDomain;
     }
 
     break;
@@ -1401,8 +1466,9 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 		 (unsigned int) count[4], dims[5]);
 	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+		    nrrdCenterNode, nrrdCenterNode);
 	tuple_type_str = ":Vector";
+	nout->nrrd->axis[0].kind = nrrdKind3Vector;
 	break;
 	
       case 6: // Tensor data
@@ -1412,24 +1478,32 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 		 (unsigned int) count[4], dims[5]);
 	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);	
+		    nrrdCenterNode, nrrdCenterNode);	
 	tuple_type_str = ":Tensor";
+	nout->nrrd->axis[0].kind = nrrdKind3DSymTensor;
 	break;
 
       default: // treat the rest as Scalar data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, sink_size, 
+	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 
 		 (unsigned int) count[0], (unsigned int) count[1], 
 		 (unsigned int) count[2], (unsigned int) count[3], 
 		 (unsigned int) count[4], dims[5]);
 	nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+		    nrrdCenterNode, nrrdCenterNode);
+	nout->nrrd->axis[0].kind = nrrdKindDomain;
 	break;
       };
+      nout->nrrd->axis[1].kind = nrrdKindDomain;
+      nout->nrrd->axis[2].kind = nrrdKindDomain;
+      nout->nrrd->axis[3].kind = nrrdKindDomain;
+      nout->nrrd->axis[4].kind = nrrdKindDomain;
+      nout->nrrd->axis[5].kind = nrrdKindDomain;
     }
     break;
   }
 
+  // FIX ME
   string sink_label = group + "-" + dataset + tuple_type_str;
 
   // Remove all of the tcl special characters.
@@ -1451,7 +1525,6 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
     sprintf( tmpstr, "%d", (int) (count[ic]) );
     nout->nrrd->axis[ic+1].label = strdup(tmpstr);
   }
-
 
   delete dims;
   delete count;
