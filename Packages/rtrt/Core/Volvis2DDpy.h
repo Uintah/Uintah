@@ -36,7 +36,7 @@ namespace rtrt {
     // retrieves information about picked widgets, determines which widget was picked
     virtual void processHits( GLint hits, GLuint buffer[] );
     // determines which widget the user picked
-    virtual void pickShape( MouseButton button, int x, int y );
+    virtual void pickShape( int x, int y );
 
 
     // Called at the start of run.
@@ -45,24 +45,29 @@ namespace rtrt {
     virtual void display();
     // Called when the window is resized.  Note: xres and yres will not be
     // updated by the event handler.  That's what this function is for.
-    virtual void resize(const int width, const int height);
+    virtual void resize( const int width, const int height );
     // Key is pressed/released.  Use the XK_xxx constants to determine
     // which key was pressed/released
-    virtual void key_pressed(unsigned long key);
+    virtual void key_pressed( unsigned long key );
     // These handle mouse button events.  button indicates which button.
     // x and y are the location measured from the upper left corner of the
     // window.
-    virtual void button_pressed(MouseButton button, const int x, const int y);
-    virtual void button_released(MouseButton button, const int x, const int y);
+    virtual void button_pressed( MouseButton button, const int x, const int y );
+    virtual void button_released( MouseButton button, const int x, const int y );
     virtual void button_motion(MouseButton button, const int x, const int y);
     //
   
   public:
     void lookup( Voxel2D<float> voxel, Color &color, float &alpha );
     void attach( VolumeVis2D* volume );
+    void loadUIState( unsigned long key );
+    void saveUIState( unsigned long key );
+    void adjustRaySize( unsigned long key );
     virtual void animate(bool &changed);
 
+    float original_t_inc;
     float t_inc;
+    float master_alpha;
     vector<Widget*> widgets;           // collection of widgets to be controlled in any function
     int pickedIndex;                   // index of currently selected widget by frame
     int old_x;                         // saved most recent x-coordinate
