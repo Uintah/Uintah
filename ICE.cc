@@ -580,10 +580,12 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
   task->requires(Task::NewDW,lb->burnedMass_CCLabel,      Ghost::None);
   task->requires(Task::NewDW,lb->releasedHeat_CCLabel,    Ghost::None);
   task->requires(Task::NewDW,lb->int_eng_source_CCLabel,  Ghost::None);
+  if (switchDebugLagrangianValues ) {
   task->requires(Task::NewDW,lb->mom_L_CCLabel,     mpm_matls,
                                                           Ghost::None);
   task->requires(Task::NewDW,lb->int_eng_L_CCLabel, mpm_matls,
                                                           Ghost::None);
+  }
 
   task->computes(lb->mom_L_CCLabel);
   task->computes(lb->int_eng_L_CCLabel);
