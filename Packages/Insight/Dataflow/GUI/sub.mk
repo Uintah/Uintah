@@ -21,11 +21,11 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ImageReaderFloat2D.tcl\
 	$(SRCDIR)/ImageReaderFloat3D.tcl\
 	$(SRCDIR)/GradientAnisotropicDiffusionImageFilter.tcl\
-	$(SRCDIR)/WatershedImageFilter.tcl\
 	$(SRCDIR)/CannySegmentationLevelSetImageFilter.tcl\
 	$(SRCDIR)/WatershedSegmenter.tcl\
 	$(SRCDIR)/WatershedSegmentTreeGenerator.tcl\
 	$(SRCDIR)/WatershedRelabeler.tcl\
+	$(SRCDIR)/ImageReaderUShort2D.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Insight/Dataflow/GUI
 
