@@ -8,29 +8,17 @@
  *    Sept 1997
  */
 
-#include <Core/Containers/Array1.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Datatypes/ScalarFieldRG.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Core/Geom/GeomGrid.h>
-#include <Core/Geom/GeomGroup.h>
-#include <Core/Geom/GeomLine.h>
-#include <Core/Geom/Material.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/TclInterface/TCLvar.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
 #include <iostream>
 using std::cerr;
-#include <math.h>
 
 
 namespace SCIRun {
-
 
 
 class Sharpen : public Module
@@ -174,7 +162,7 @@ Sharpen::execute()
   if (newgrid) { delete newgrid; }
   newgrid = new ScalarFieldRG(nx, ny, nz);
     
-  // TODO:  Maybe this should automatically resample?
+  // TODO:  Maybe this should automatically resample?  Needs cross-module
   if ((nx != blur->grid.dim1()) || (ny != blur->grid.dim2()))
   {
     cerr << "Blurred image must be the same size as input image.\n";
