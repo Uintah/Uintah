@@ -2049,11 +2049,12 @@ EOF
 fi
  
 if test "$HAVE_PNG" = "no"; then
-  # Try looking in a sci specific location
-  BASE_LIB_PATH(png_lib_dir,/usr/sci/local)
-
-  SCI_TRY_LINK(PNG,png library and headers (SCI),png.h,/usr/sci/local/include,png,
-               $png_lib_dir,$Z_LIB_DIR_FLAG $Z_LIB_FLAG,,optional)
+  # Try looking in a sci specific location (but only if it exists)
+  if test -d /usr/sci/local; then
+    BASE_LIB_PATH(png_lib_dir,/usr/sci/local)
+    SCI_TRY_LINK(PNG,png library and headers (SCI),png.h,/usr/sci/local/include,png,
+                 $png_lib_dir,$Z_LIB_DIR_FLAG $Z_LIB_FLAG,,optional)
+  fi
 else
   if test "$_sci_optional" = "specific"; then
        # verify that it was found in the location requested.
@@ -2173,7 +2174,6 @@ AC_SUBST(DEF_MAGICK)
 
 sci_defs_files="$sci_defs_files include/sci_defs/image_testdefs.h"
 
-#
 ##  --  search for scisock --------------------------------------
 
 AC_SUBST(SCISOCK_LIB_FLAG)
@@ -2183,7 +2183,6 @@ AC_SUBST(INC_SCISOCK_H)
 
 sci_defs_files="$sci_defs_files include/sci_defs/scisock_testdefs.h"
 
-#
 ##  --  search for unp --------------------------------------
 
 if test "$with_unp" = "yes"; then
@@ -3243,17 +3242,15 @@ _sci_lib="$sci_thirdparty_lib"
 _sci_inc="$sci_thirdparty_include"
 
 if test "$with_teem"; then
-  if test "$with_teem" != "yes"; then
+  if test "$with_teem" = "yes"; then
+    AC_MSG_WARN(Teem is already required - you do not need to specify --with-teem.)
+  else
     # If --with-teem has a parameter, then use it
     _sci_lib="$with_teem"
     _sci_inc="$with_teem/include"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_optional=specific
   fi 
-else
-  if test "$pkg_rtrt" = "yes" && test "$pkg_BioPSE" != "yes" && test "$pkg_teem" != "yes" && test "$pkg_MatlabInterface" != "yes" && test "$pkg_Uintah" != "yes"; then
-     _sci_optional=optional
-  fi
 fi
 
 # Determine if teem is using png.  Assume teem is either in the 3rd Party
@@ -3334,17 +3331,21 @@ sci_defs_files="$sci_defs_files include/sci_defs/mdsplus_testdefs.h"
 # with_hdf5 agument or from a package in the aclocal.m4 it.
 # These are the only two locations that the sci_required_* should be set.
 
+_sci_lib="/usr/local/lib"			# default directory
+_sci_inc="/usr/local/include"
+
 if test "$sci_required_hdf5" = "yes"; then 
+
+  _sci_optional=required
   if test "$with_hdf5"; then
-    _sci_lib="$with_hdf5/lib"			# user defined directory
-    _sci_inc="$with_hdf5/include"
-  else
-    _sci_lib="/usr/local/lib"			# default directory
-    _sci_inc="/usr/local/include"
+    if test "$with_hdf5" != "yes"; then
+      _sci_lib="$with_hdf5/lib"			# user defined directory
+      _sci_inc="$with_hdf5/include"
+      _sci_optional=specific
+    fi
   fi
 
-  # Basic check for the header file.
-  SCI_TRY_LINK(HDF5,hdf5 library and headers,hdf5.h,$_sci_inc,hdf5,$_sci_lib,,,optional)
+  SCI_TRY_LINK(HDF5,hdf5 library and headers,hdf5.h,$_sci_inc,hdf5,$_sci_lib,,,$_sci_optional)
 
   # Set the DEF_HDF5 var which is placed in the hdf5_testdefs.h.in
   # Incude hdf5_defs.h in your code to optionally use the library.
@@ -3352,14 +3353,6 @@ if test "$sci_required_hdf5" = "yes"; then
      DEF_HDF5="#define HAVE_HDF5 1"
   fi
   
-  # Since the library was searched for as "optional" in the SCI_TRY_LINK
-  # there will not be an error if it failed. As such, if the with_hdf5
-  # variable was used then a test for failure must be done.
-  if test "$with_hdf5" && test ! "$DEF_HDF5"; then
-    echo
-    AC_MSG_ERROR(One or more of the HDF5 components is missing.)
-    echo
-  fi
 fi #end sci_required_hdf5
 
 AC_SUBST(DEF_HDF5)		# Place this var in the hdf5_testdefs.h.in
