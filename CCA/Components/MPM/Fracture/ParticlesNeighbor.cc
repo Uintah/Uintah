@@ -30,7 +30,7 @@ void ParticlesNeighbor::buildIn(const IntVector& cellIndex,const Lattice& lattic
     iter_cell != cellsNeighbor.end();
     ++iter_cell )
   {
-    std::vector<particleIndex>& parts = lattice[*iter_cell].particles;
+    const std::vector<particleIndex>& parts = lattice[*iter_cell].particles;
     for( std::vector<particleIndex>::const_iterator iter_p = parts.begin();
          iter_p != parts.end();
          ++iter_p )
