@@ -15,6 +15,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Patch.h>
+#include <Uintah/Grid/ScatterGatherBase.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Parallel/ProcessorGroup.h>
@@ -58,7 +59,6 @@ OnDemandDataWarehouse::~OnDemandDataWarehouse()
     delete iter->second->var;
     delete iter->second;
   }
-  d_reductionDB.clear();
 
   for (dataLocationDBtype::const_iterator iter = d_dataLocation.begin();
        iter != d_dataLocation.end(); iter++) {
@@ -66,18 +66,12 @@ OnDemandDataWarehouse::~OnDemandDataWarehouse()
       delete &(iter->second[i]);
     delete iter->second;
   }
-  d_dataLocation.clear();
 
-  for (std::map<pair<const Patch*, const Patch*>, ScatterGatherBase* >::const_iterator iter = d_sgDB.begin(); iter != d_sgDB.end(); iter++) 
-    delete iter->second;
-  d_sgDB.clear();
-#if 0
   for (psetDBType::const_iterator iter = d_psetDB.begin();
-       iter != d_psetDB.end(); iter++) 
-    delete iter->second;
-  d_psetDB.clear();
-#endif
-
+       iter != d_psetDB.end(); iter++) {
+     if(iter->second->removeReference())
+	delete iter->second;
+  }
 }
 
 bool OnDemandDataWarehouse::isFinalized() const
@@ -276,8 +270,10 @@ OnDemandDataWarehouse::override(const ReductionVariableBase& var,
 				const VarLabel* label)
 {
    reductionDBtype::const_iterator iter = d_reductionDB.find(label);
-   if(iter != d_reductionDB.end())
-      delete d_reductionDB[label];
+   if(iter != d_reductionDB.end()){
+      delete iter->second->var;
+      delete iter->second;
+   }
    d_reductionDB[label]=scinew ReductionRecord(var.clone());
 }
 
@@ -364,6 +360,7 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
    if(d_psetDB.find(key) != d_psetDB.end())
       throw InternalError("createParticleSubset called twice for patch");
    d_psetDB[key]=psubset;
+   psubset->addReference();
 
    return psubset;
 }
@@ -452,14 +449,6 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
 						     matlIndex, patch,
 						     gtype, numGhostCells,
 						     neighbors, subsets);
-//  These 3 lines have been causing multiple patch problems to
-//  not work.
-
-//   for (int i = 0; i<subsets.size(); i++ ) {
-//     delete subsets[i];
-//   }
-
-
    return newsubset;
 }
 
@@ -1413,6 +1402,9 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.45  2000/08/22 20:54:48  sparker
+// Fixed memory leaks
+//
 // Revision 1.44  2000/08/18 22:57:39  guilkey
 // Commented out the code which was causing multipatch MPM runs to fail.
 // See lines 458 - 461.
