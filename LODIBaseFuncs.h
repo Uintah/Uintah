@@ -47,11 +47,13 @@ double computeConvection(const double& nuFrt,     const double& nuMid,
 	       +  eminus * qLast)/deltaX; 
    return  0.5 * (qConFrt - qConLast)/deltaX - dissipation;
 }
+
 /*_________________________________________________________________
- Function~ xPlusDensityLODI--
+ Function~ xFaceDensityLODI--
  Purpose~  Compute density in boundary cells on x_plus face
 ___________________________________________________________________*/
-void xPlusDensityLODI(CCVariable<double>& rho_CC,
+void xFaceDensityLODI(const Patch::FaceType face,
+                CCVariable<double>& rho_CC,
                 const CCVariable<double>& d1_x, 
                 const CCVariable<double>& d1_y, 
                 const CCVariable<double>& d1_z, 
@@ -62,264 +64,134 @@ void xPlusDensityLODI(CCVariable<double>& rho_CC,
                 const CCVariable<Vector>& vel,
                 const double delT,
                 const Vector& dx)
-
 {
-  cout_doing << " I am in xPlusDensityLODI" << endl;
-  IntVector low,hi,r,l,t,b,f,bk;
-
+  cout_doing << "I am in xFaceDensityLODI on face " << face<<endl;
+  IntVector low,hi,l,t,b,f,bk,c;
+  int xFaceCell;
+  double y_conv, z_conv;
+  double qConFrt,qConLast;
   low = vel.getLowIndex();
   hi  = vel.getHighIndex();
   int hi_x = hi.x() - 1;
   int hi_y = hi.y() - 1;
   int hi_z = hi.z() - 1;
-  double y_conv, z_conv;
-  double qConFrt,qConLast;
-  //___________________________________________________________________
-  // Compute the density on the area of i = hi_x, low.y() < j < hi_y
-  // and low.z() < k < hi_z 
+  
+  if(face == Patch::xplus ){
+    xFaceCell = hi_x;  
+  } else {
+    xFaceCell = low.x();
+  }
   for(int j = low.y()+1; j < hi_y; j++) {
     for(int k = low.z()+1; k < hi_z; k++) {
-      r  =  IntVector(hi_x,  j,   k);
-      t  =  IntVector(hi_x,  j+1, k);
-      b  =  IntVector(hi_x,  j-1, k);
-      f  =  IntVector(hi_x,  j,   k+1);
-      bk =  IntVector(hi_x,  j,   k-1);       
+      c  =  IntVector(xFaceCell,  j,   k);
+      t  =  IntVector(xFaceCell,  j+1, k);
+      b  =  IntVector(xFaceCell,  j-1, k);
+      f  =  IntVector(xFaceCell,  j,   k+1);
+      bk =  IntVector(xFaceCell,  j,   k-1);       
 
       qConFrt  = rho_tmp[t] * vel[t].y();
       qConLast = rho_tmp[b] * vel[b].y();
-      y_conv = computeConvection(nuy[t], nuy[r], nuy[b], 
-                                 rho_tmp[t], rho_tmp[r], rho_tmp[b], qConFrt, 
+      y_conv = computeConvection(nuy[t], nuy[c], nuy[b], 
+                                 rho_tmp[t], rho_tmp[c], rho_tmp[b], qConFrt, 
                                  qConLast, delT, dx.y());
 
       qConFrt  = rho_tmp[f] * vel[f].z();
       qConLast = rho_tmp[bk] * vel[bk].z();
-      z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
-                                 rho_tmp[f], rho_tmp[r], rho_tmp[bk], 
+      z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+                                 rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                                  qConFrt, qConLast, delT, dx.z());
 
-      rho_CC[r] = rho_tmp[r] - delT * (d1_x[r] + y_conv + z_conv);
+      rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + y_conv + z_conv);
 
-     // rho_CC[r] = rho_tmp[r] - delT * d1_x[r] ;
+     // rho_CC[c] = rho_tmp[c] - delT * d1_x[c] ;
  #if ON
        cout.setf(ios::scientific,ios::floatfield);
        cout.precision(16);
-       cout << "rho_CC,rho_tmp, d1_x, dt, y_conv" << r << "= " << rho_CC[r] << ",";
-       cout << rho_tmp[r] << "," << d1_x[r] << "," << delT << y_conv << endl;  
+       cout << "rho_CC,rho_tmp, d1_x, dt, y_conv" << r << "= " << rho_CC[c] << ",";
+       cout << rho_tmp[c] << "," << d1_x[c] << "," << delT << y_conv << endl;  
  #endif    
     } // end of j loop
   } //end of k loop
 
   //__________________________________
-  //  E D G E    right-bottom
+  //  E D G E    right/left-bottom
   for(int k = low.z()+1; k < hi_z; k++) {
-    r  =  IntVector(hi_x,   low.y(),   k);
-    f  =  IntVector(hi_x,   low.y(),   k+1);
-    bk =  IntVector(hi_x,   low.y(),   k-1);
+    c  =  IntVector(xFaceCell,   low.y(),   k);
+    f  =  IntVector(xFaceCell,   low.y(),   k+1);
+    bk =  IntVector(xFaceCell,   low.y(),   k-1);
     qConFrt  = rho_tmp[f]  * vel[f].z();
     qConLast = rho_tmp[bk] * vel[bk].z();
-    z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
-                               rho_tmp[f], rho_tmp[r], rho_tmp[bk], 
+    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+                               rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                                qConFrt, qConLast, delT, dx.z());
 
-    rho_CC[r] = rho_tmp[r] - delT * (d1_x[r] + d1_y[r] + z_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + z_conv);
   }
 
   //__________________________________
-  //    E D G E   right-top
+  //    E D G E   right/left-top
   for(int k = low.z()+1; k < hi_z; k++) {
-    r  =  IntVector(hi_x,   hi_y,   k);
-    f  =  IntVector(hi_x,   hi_y,   k+1);
-    bk =  IntVector(hi_x,   hi_y,   k-1);
+    c  =  IntVector(xFaceCell,   hi_y,   k);
+    f  =  IntVector(xFaceCell,   hi_y,   k+1);
+    bk =  IntVector(xFaceCell,   hi_y,   k-1);
 
     qConFrt  = rho_tmp[f]  * vel[f].z();
     qConLast = rho_tmp[bk] * vel[bk].z();
-    z_conv   = computeConvection(nuz[f], nuz[r], nuz[bk],
-                              rho_tmp[f], rho_tmp[r], rho_tmp[bk], 
+    z_conv   = computeConvection(nuz[f], nuz[c], nuz[bk],
+                              rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                               qConFrt, qConLast, delT, dx.z());
-    rho_CC[r] = rho_tmp[r] - delT * (d1_x[r] + d1_y[r] + z_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + z_conv);
   }
 
   //_____________________________________________________
-  //    E D G E   right--back
+  //    E D G E   right/left--back
   for(int j = low.y()+1; j < hi_y; j++) {
-    r  =  IntVector(hi_x,   j,   low.z());
-    t  =  IntVector(hi_x,   j+1, low.z());
-    b  =  IntVector(hi_x,   j-1, low.z());
+    c  =  IntVector(xFaceCell,   j,   low.z());
+    t  =  IntVector(xFaceCell,   j+1, low.z());
+    b  =  IntVector(xFaceCell,   j-1, low.z());
     qConFrt  = rho_tmp[t] * vel[t].y();
     qConLast = rho_tmp[b] * vel[b].y();
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
-                           rho_tmp[t], rho_tmp[r], rho_tmp[b], 
+    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+                           rho_tmp[t], rho_tmp[c], rho_tmp[b], 
                            qConFrt, qConLast, delT, dx.y());
-    rho_CC[r] = rho_tmp[r] - delT * (d1_x[r] + d1_z[r] + y_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_z[c] + y_conv);
   } 
 
   //_________________________________________________
-  // E D G E    right--front
+  // E D G E    right/left--front
   for(int j = low.y()+1; j < hi_y; j++) {
-    r  =  IntVector(hi_x,   j,   hi_z);
-    t  =  IntVector(hi_x,   j+1, hi_z);
-    b  =  IntVector(hi_x,   j-1, hi_z);
+    c  =  IntVector(xFaceCell,   j,   hi_z);
+    t  =  IntVector(xFaceCell,   j+1, hi_z);
+    b  =  IntVector(xFaceCell,   j-1, hi_z);
 
     qConFrt  = rho_tmp[t] * vel[t].y();
     qConLast = rho_tmp[b] * vel[b].y();
-    y_conv   = computeConvection(nuy[t], nuy[r], nuy[b],
-                              rho_tmp[t], rho_tmp[r], rho_tmp[b], 
+    y_conv   = computeConvection(nuy[t], nuy[c], nuy[b],
+                              rho_tmp[t], rho_tmp[c], rho_tmp[b], 
                               qConFrt, qConLast, delT, dx.y());
-    rho_CC[r] = rho_tmp[r] - delT * (d1_x[r] + d1_z[r] + y_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_z[c] + y_conv);
   } 
 
   //________________________________________________________
   // C O R N E R S    
   vector<IntVector> crn(4);
-  crn[0] = IntVector(hi_x, low.y(), hi_z);         // right-bottom-front
-  crn[1] = IntVector(hi_x, hi_y,    hi_z);         // right-top-front    
-  crn[2] = IntVector(hi_x, hi_y,    low.z());      // right-top-back    
-  crn[3] = IntVector(hi_x, low.y(), low.z());      // right-bottom-back 
+  crn[0] = IntVector(xFaceCell, low.y(), hi_z);   // right/left-bottom-front      
+  crn[1] = IntVector(xFaceCell, hi_y,    hi_z);   // right/left-top-front              
+  crn[2] = IntVector(xFaceCell, hi_y,    low.z());// right/left-top-back               
+  crn[3] = IntVector(xFaceCell, low.y(), low.z());// right/left-bottom-back            
 
   for(int corner = 0; corner <4; corner ++ ) {
-    IntVector c = crn[corner];
+    c = crn[corner];
     rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + d1_z[c]);
   }                     
-}
+} 
 
 /*_________________________________________________________________
- Function~ xMinusDensityLODI--
- Purpose~  Compute density in boundary cells on x_minus face
-           using Characteristic Boundary Condition
-___________________________________________________________________*/
-void xMinusDensityLODI(CCVariable<double>& rho_CC,
-                 const CCVariable<double>& d1_x, 
-                 const CCVariable<double>& d1_y, 
-                 const CCVariable<double>& d1_z, 
-                 const CCVariable<double>& nux,
-                 const CCVariable<double>& nuy,
-                 const CCVariable<double>& nuz,
-                 const CCVariable<double>& rho_tmp,
-                 const CCVariable<Vector>& vel,
-                 const double delT,
-                 const Vector& dx)
-{
-  cout_doing << " I am in xMinusDensityLODI" << endl;    
-  IntVector low,hi,r,l,t,b,f,bk;
-
-  low = vel.getLowIndex();
-  hi  = vel.getHighIndex();
-
-  int hi_y = hi.y() - 1;
-  int hi_z = hi.z() - 1;
-  double y_conv, z_conv;
-  double qConFrt,qConLast;
-  
-  for(int j = low.y()+1; j < hi_y; j++) {
-    for(int k = low.z()+1; k < hi_z; k++) {
-      l  =  IntVector(low.x(),  j,   k);
-      t  =  IntVector(low.x(),  j+1, k);
-      b  =  IntVector(low.x(),  j-1, k);
-      f  =  IntVector(low.x(),  j,   k+1);
-      bk =  IntVector(low.x(),  j,   k-1);       
-
-      qConFrt  = rho_tmp[t] * vel[t].y();
-      qConLast = rho_tmp[b] * vel[b].y();
-      y_conv = computeConvection(nuy[t], nuy[l], nuy[b], 
-                                 rho_tmp[t], rho_tmp[l], rho_tmp[b], qConFrt, 
-                                 qConLast, delT, dx.y());
-
-      qConFrt  = rho_tmp[f] * vel[f].z();
-      qConLast = rho_tmp[bk] * vel[bk].z();
-      z_conv = computeConvection(nuz[f], nuz[l], nuz[bk],
-                                 rho_tmp[f], rho_tmp[l], rho_tmp[bk], 
-                                 qConFrt, qConLast, delT, dx.z());
-
-      rho_CC[l] = rho_tmp[l] - delT * (d1_x[l] + y_conv + z_conv);
-
-       // rho_CC[l] = rho_tmp[l] - delT * d1_x[l] ;
-#if ON
-       cout.setf(ios::scientific,ios::floatfield);
-       cout.precision(16);
-       cout << "rho_CC,rho_tmp, d1_x, dt, y_conv" << l << "= " << rho_CC[l] << ",";
-       cout << rho_tmp[l] << "," << d1_x[l] << "," << delT << y_conv << endl;  
-#endif    
-    } // end of j loop
-  } //end of k loop
-  
-  //__________________________________________________________
-  //  E D G E   left -bottom
-  for(int k = low.z()+1; k < hi_z; k++) {
-     l  =  IntVector(low.x(),   low.y(),   k);
-     f  =  IntVector(low.x(),   low.y(),   k+1);
-     bk =  IntVector(low.x(),   low.y(),   k-1);
-
-     qConFrt  = rho_tmp[f]  * vel[f].z();
-     qConLast = rho_tmp[bk] * vel[bk].z();
-     z_conv = computeConvection(nuz[f], nuz[l], nuz[bk],
-                                rho_tmp[f], rho_tmp[l], rho_tmp[bk], 
-                                qConFrt, qConLast, delT, dx.z());
-
-     rho_CC[l] = rho_tmp[l] - delT * (d1_x[l] + d1_y[l] + z_conv);
-  }
-
-  //_______________________________________________________
-  //    E D G E    left- top
-  for(int k = low.z()+1; k < hi_z; k++) {
-    l  =  IntVector(low.x(),   hi_y,   k);
-    f  =  IntVector(low.x(),   hi_y,   k+1);
-    bk =  IntVector(low.x(),   hi_y,   k-1);
-
-    qConFrt  = rho_tmp[f]  * vel[f].z();
-    qConLast = rho_tmp[bk] * vel[bk].z();
-    z_conv = computeConvection(nuz[f], nuz[l], nuz[bk],
-                              rho_tmp[f], rho_tmp[l], rho_tmp[bk], 
-                              qConFrt, qConLast, delT, dx.z());
-    rho_CC[l] = rho_tmp[l] - delT * (d1_x[l] + d1_y[l] + z_conv);
-  } 
-  //_____________________________________________________
-  //    E D G E     left-back
-  for(int j = low.y()+1; j < hi_y; j++) {
-    l  =  IntVector(low.x(),   j,   low.z());
-    t  =  IntVector(low.x(),   j+1, low.z());
-    b  =  IntVector(low.x(),   j-1, low.z());
-
-    qConFrt  = rho_tmp[t] * vel[t].y();
-    qConLast = rho_tmp[b] * vel[b].y();
-    y_conv = computeConvection(nuy[t], nuy[l], nuy[b],
-                              rho_tmp[t], rho_tmp[l], rho_tmp[b], 
-                              qConFrt, qConLast, delT, dx.y());
-    rho_CC[l] = rho_tmp[l] - delT * (d1_x[l] + d1_z[l] + y_conv);
-  }
-
-  //_________________________________________________
-  // E D G E        left-front
-  for(int j = low.y()+1; j < hi_y; j++) {
-    l  =  IntVector(low.x(),   j,   hi_z);
-    t  =  IntVector(low.x(),   j+1, hi_z);
-    b  =  IntVector(low.x(),   j-1, hi_z);
-
-    qConFrt  = rho_tmp[t] * vel[t].y();
-    qConLast = rho_tmp[b] * vel[b].y();
-    y_conv   = computeConvection(nuy[t], nuy[l], nuy[b],
-                              rho_tmp[t], rho_tmp[l], rho_tmp[b], 
-                              qConFrt, qConLast, delT, dx.y());
-    rho_CC[l] = rho_tmp[l] - delT * (d1_x[l] + d1_z[l] + y_conv);
-  } 
-  //________________________________________________________
-  // C O R N E R S    
-  vector<IntVector> crn(4);
-  crn[0] = IntVector(low.x(), low.y(), hi_z);         // left-bottom-front
-  crn[1] = IntVector(low.x(), hi_y,    hi_z);         // left-top-front    
-  crn[2] = IntVector(low.x(), hi_y,    low.z());      // left-top-back    
-  crn[3] = IntVector(low.x(), low.y(), low.z());      // left-bottom-back 
-
-  for( int corner = 0; corner < 4; corner ++ ) {
-    IntVector c = crn[corner];
-    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + d1_z[c]);
-  }
-}
-
-/*_________________________________________________________________
- Function~ yPlusDensityLODI--
+ Function~ yFaceDensityLODI--
  Purpose~  Compute density in boundary cells on y_plus face 
 ___________________________________________________________________*/
-void yPlusDensityLODI(CCVariable<double>& rho_CC,
+void yFaceDensityLODI(const Patch::FaceType face,
+                CCVariable<double>& rho_CC,
                 const CCVariable<double>& d1_x, 
                 const CCVariable<double>& d1_y, 
                 const CCVariable<double>& d1_z, 
@@ -332,9 +204,9 @@ void yPlusDensityLODI(CCVariable<double>& rho_CC,
                 const Vector& dx)
 
 {
-  cout_doing << " I am in yPlusDensityLODI" << endl;    
-  IntVector low,hi,r,l,t,b,f,bk;
-
+  cout_doing << "I am in yFaceDensityLODI on face " <<face << endl;    
+  IntVector low,hi,r,l,c,b,f,bk;
+  int yFaceCell;
   low = vel.getLowIndex();
   hi  = vel.getHighIndex();
   int hi_x = hi.x() - 1;
@@ -342,253 +214,119 @@ void yPlusDensityLODI(CCVariable<double>& rho_CC,
   int hi_z = hi.z() - 1;
   double x_conv, z_conv;
   double qConFrt,qConLast;
-  //___________________________________________________________________
-  // Compute the density on the area of i = hi_x, low.y() < j < hi_y
-  // and low.z() < k < hi_z 
+
+  if(face == Patch::yplus ){
+    yFaceCell = hi_y;  
+  } else {
+    yFaceCell = low.y();
+  }
+
   for(int i = low.x()+1; i < hi_x; i++) {
     for(int k = low.z()+1; k < hi_z; k++) {
-      r  =  IntVector(i+1,  hi_y,   k);
-      l  =  IntVector(i-1,  hi_y,   k);
-      t  =  IntVector(i,    hi_y,   k);
-      f  =  IntVector(i,    hi_y,   k+1);
-      bk =  IntVector(i,    hi_y,   k-1);       
+      r  =  IntVector(i+1,  yFaceCell,   k);
+      l  =  IntVector(i-1,  yFaceCell,   k);
+      c  =  IntVector(i,    yFaceCell,   k);
+      f  =  IntVector(i,    yFaceCell,   k+1);
+      bk =  IntVector(i,    yFaceCell,   k-1);       
 
-      //__________________________________________
-      // mass conservation law, computing density
       qConFrt  = rho_tmp[r] * vel[r].x();
       qConLast = rho_tmp[l] * vel[l].x();
-      x_conv = computeConvection(nux[r], nux[t], nux[l], 
-                                 rho_tmp[r], rho_tmp[t], rho_tmp[l], qConFrt, 
+      x_conv = computeConvection(nux[r], nux[c], nux[l], 
+                                 rho_tmp[r], rho_tmp[c], rho_tmp[l], qConFrt, 
                                  qConLast, delT, dx.x());
 
       qConFrt  = rho_tmp[f] * vel[f].z();
       qConLast = rho_tmp[bk] * vel[bk].z();
-      z_conv = computeConvection(nuz[f], nuz[t], nuz[bk],
-                                 rho_tmp[f], rho_tmp[t], rho_tmp[bk], 
+      z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+                                 rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                                  qConFrt, qConLast, delT, dx.z());
 
-      rho_CC[t] = rho_tmp[t] - delT * (d1_y[t] + x_conv + z_conv);
-     // rho_CC[t] = rho_tmp[t] - delT * d1_y[t] ;
+      rho_CC[c] = rho_tmp[c] - delT * (d1_y[c] + x_conv + z_conv);
+     // rho_CC[c] = rho_tmp[c] - delT * d1_y[c] ;
   #if ON
       cout.setf(ios::scientific,ios::floatfield);
       cout.precision(16);
-      cout << "rho_CC,rho_tmp, d1_y, dt, x,z_conv" << t << "= " << rho_CC[t] << ",";
-      cout << rho_tmp[t] << "," << d1_y[t] << "," << delT << x_conv << "," << z_conv << endl;  
+      cout << "rho_CC,rho_tmp, d1_y, dt, x,z_conv" << t << "= " << rho_CC[c] << ",";
+      cout << rho_tmp[c] << "," << d1_y[c] << "," << delT << x_conv << "," << z_conv << endl;  
   #endif    
     } 
   } 
 
   //__________________________________________________________
-  //  E D G E    right- top
+  //  E D G E    right-top/bottom
   for(int k = low.z()+1; k < hi_z; k++) {
-    t  =  IntVector(hi_x,   hi_y,   k);
-    f  =  IntVector(hi_x,   hi_y,   k+1);
-    bk =  IntVector(hi_x,   hi_y,   k-1);
+    c  =  IntVector(hi_x,   yFaceCell,   k);
+    f  =  IntVector(hi_x,   yFaceCell,   k+1);
+    bk =  IntVector(hi_x,   yFaceCell,   k-1);
     qConFrt  = rho_tmp[f]  * vel[f].z();
     qConLast = rho_tmp[bk] * vel[bk].z();
-    z_conv = computeConvection(nuz[f], nuz[t], nuz[bk],
-                               rho_tmp[f], rho_tmp[t], rho_tmp[bk], 
+    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+                               rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                                qConFrt, qConLast, delT, dx.z());
 
-    rho_CC[t] = rho_tmp[t] - delT * (d1_x[t] + d1_y[t] + z_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + z_conv);
   }
-
   //_______________________________________________________
-  //    E D G E    top-front
+  //    E D G E    top/bottom-front
   for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, hi_y,  hi_z);
-    l  =  IntVector(i-1, hi_y,  hi_z);
-    t  =  IntVector(i,   hi_y,  hi_z);
+    r  =  IntVector(i+1, yFaceCell,  hi_z);
+    l  =  IntVector(i-1, yFaceCell,  hi_z);
+    c  =  IntVector(i,   yFaceCell,  hi_z);
     qConFrt  = rho_tmp[r] * vel[r].x();
     qConLast = rho_tmp[l] * vel[l].x();
-    x_conv   = computeConvection(nux[r], nux[t], nux[l],
-                              rho_tmp[r], rho_tmp[t], rho_tmp[l], 
+    x_conv   = computeConvection(nux[r], nux[c], nux[l],
+                              rho_tmp[r], rho_tmp[c], rho_tmp[l], 
                               qConFrt, qConLast, delT, dx.x());
-    rho_CC[t] = rho_tmp[t] - delT * (d1_y[t] + d1_z[t] + x_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d1_y[c] + d1_z[c] + x_conv);
   }
          
   //_____________________________________________________
-  //    E D G E    left-top
+  //    E D G E    left-top/bottom
   for(int k = low.z()+1; k < hi_z; k++) {
-     t  = IntVector(low.x(),   hi_y,   k);
-     f  = IntVector(low.x(),   hi_y,   k+1);
-     bk = IntVector(low.x(),   hi_y,   k-1);
+     c  = IntVector(low.x(),   yFaceCell,   k);
+     f  = IntVector(low.x(),   yFaceCell,   k+1);
+     bk = IntVector(low.x(),   yFaceCell,   k-1);
      qConFrt  = rho_tmp[f] * vel[f].z();
      qConLast = rho_tmp[bk] * vel[bk].z();
-     z_conv   = computeConvection(nuz[f], nuz[t], nuz[bk],
-                               rho_tmp[f], rho_tmp[t], rho_tmp[bk], 
+     z_conv   = computeConvection(nuz[f], nuz[c], nuz[bk],
+                               rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                                qConFrt, qConLast, delT, dx.z());
-     rho_CC[t] = rho_tmp[t] - delT * (d1_x[t] + d1_y[t] + z_conv);
+     rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + z_conv);
    }
 
   //_________________________________________________
-  // E D G E    top-back
+  // E D G E    top/bottom-back
   for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, hi_y,   low.z());
-    l  =  IntVector(i-1, hi_y,   low.z());
-    t  =  IntVector(i,   hi_y,   low.z());
+    r  =  IntVector(i+1, yFaceCell,   low.z());
+    l  =  IntVector(i-1, yFaceCell,   low.z());
+    c  =  IntVector(i,   yFaceCell,   low.z());
 
     qConFrt  = rho_tmp[r] * vel[r].x();
     qConLast = rho_tmp[l] * vel[l].x();
-    x_conv   = computeConvection(nux[r], nux[t], nux[l],
-                              rho_tmp[r], rho_tmp[t], rho_tmp[l], 
+    x_conv   = computeConvection(nux[r], nux[c], nux[l],
+                              rho_tmp[r], rho_tmp[c], rho_tmp[l], 
                               qConFrt, qConLast, delT, dx.x());
-    rho_CC[t] = rho_tmp[t] - delT * (d1_y[t] + d1_z[t] + x_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d1_y[c] + d1_z[c] + x_conv);
   }
   //________________________________________________________
   // C O R N E R S    
   vector<IntVector> crn(4);
-  crn[0] = IntVector(hi_x,    hi_y, hi_z);         // right-top-front
-  crn[1] = IntVector(low.x(), hi_y, hi_z);         // left-top-front    
-  crn[2] = IntVector(low.x(), hi_y, low.z());      // left-top-back    
-  crn[3] = IntVector(hi_x,    hi_y, low.z());      // right-top-back 
+  crn[0] = IntVector(hi_x,    yFaceCell, hi_z);     // right-top/bottom-front    
+  crn[1] = IntVector(low.x(), yFaceCell, hi_z);     // left-top/bottom-front        
+  crn[2] = IntVector(low.x(), yFaceCell, low.z());  // left-top/bottom-back        
+  crn[3] = IntVector(hi_x,    yFaceCell, low.z());  // right-top/bottom-back     
 
   for( int corner = 0; corner <4; corner ++ ) {
-    IntVector c = crn[corner];
+    c = crn[corner];
     rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + d1_z[c]);
   }
-} //end of the function yPlusDensityLODI()
-
+}
 /*_________________________________________________________________
- Function~ yMinusDensityLODI--
- Purpose~  Compute density in boundary cells on yMinus face
-___________________________________________________________________*/
-void yMinusDensityLODI(CCVariable<double>& rho_CC,
-                 const CCVariable<double>& d1_x, 
-                 const CCVariable<double>& d1_y, 
-                 const CCVariable<double>& d1_z, 
-                 const CCVariable<double>& nux,
-                 const CCVariable<double>& nuy,
-                 const CCVariable<double>& nuz,
-                 const CCVariable<double>& rho_tmp,
-                 const CCVariable<Vector>& vel,
-                 const double delT,
-                 const Vector& dx)
-
-{
-     cout << " I am in yMinusDensityLODI" << endl;    
-     IntVector low,hi,r,l,t,b,f,bk;
-
-     low = vel.getLowIndex();
-     hi  = vel.getHighIndex();
-     int hi_x = hi.x() - 1;
-     int hi_z = hi.z() - 1;
-     double x_conv,  z_conv;
-     double qConFrt,qConLast;
-     //___________________________________________________________________
-     // Compute the density on the area of low.x() < i < hi_x, j = hi_y
-     // and low.z() < k < hi_z 
-     for(int i = low.x()+1; i < hi_x; i++) {
-       for(int k = low.z()+1; k < hi_z; k++) {
-         r  =  IntVector(i+1,  low.y(),   k);
-         l  =  IntVector(i-1,  low.y(),   k);
-         b  =  IntVector(i,    low.y(),   k);
-         f  =  IntVector(i,    low.y(),   k+1);
-         bk =  IntVector(i,    low.y(),   k-1);     
-         qConFrt  = rho_tmp[r] * vel[r].x();
-         qConLast = rho_tmp[l] * vel[l].x();
-         x_conv = computeConvection(nux[r], nux[b], nux[l], 
-                                    rho_tmp[r], rho_tmp[b], rho_tmp[l], qConFrt, 
-                                    qConLast, delT, dx.x());
-
-         qConFrt  = rho_tmp[f] * vel[f].z();
-         qConLast = rho_tmp[bk] * vel[bk].z();
-         z_conv = computeConvection(nuz[f], nuz[b], nuz[bk],
-                                    rho_tmp[f], rho_tmp[b], rho_tmp[bk], 
-                                    qConFrt, qConLast, delT, dx.z());
-
-         rho_CC[b] = rho_tmp[b] - delT * (d1_y[b] + x_conv + z_conv);
-         // rho_CC[b] = rho_tmp[b] - delT * d1_y[b] ;
- #if ON
-         cout.setf(ios::scientific,ios::floatfield);
-         cout.precision(16);
-         cout << "rho_CC,rho_tmp, d1_y, dt, x,z_conv" << b << "= " << rho_CC[b] << ",";
-         cout << rho_tmp[b] << "," << d1_y[b] << "," << delT << "," <<  x_conv << "," << z_conv << endl;  
- #endif    
-       } // end of i loop
-     } //end of k loop 
-     //__________________________________________________________
-     //  E D G E      right-bottom
-     for(int k = low.z()+1; k < hi_z; k++) {
-
-       b  =  IntVector(hi_x,   low.y(),   k);
-       f  =  IntVector(hi_x,   low.y(),   k+1);
-       bk =  IntVector(hi_x,   low.y(),   k-1);
-
-      //__________________________________________
-      // mass conservation law, computing density
-        qConFrt  = rho_tmp[f]  * vel[f].z();
-        qConLast = rho_tmp[bk] * vel[bk].z();
-        z_conv = computeConvection(nuz[f], nuz[b], nuz[bk],
-                                   rho_tmp[f], rho_tmp[b], rho_tmp[bk], 
-                                   qConFrt, qConLast, delT, dx.z());
-
-        rho_CC[b] = rho_tmp[b] - delT * (d1_x[b] + d1_y[b] + z_conv);
-     } //end of k loop 
-
-     //_______________________________________________________
-     //    E D G E     bottom-front
-       for(int i = low.x()+1; i < hi_x; i++) {
-         r  =  IntVector(i+1, low.y(),    hi_z);
-         l  =  IntVector(i-1, low.y(),    hi_z);
-         b  =  IntVector(i,   low.y(),    hi_z);
-
-          qConFrt  = rho_tmp[r] * vel[r].x();
-          qConLast = rho_tmp[l] * vel[l].x();
-          x_conv = computeConvection(nux[r], nux[b], nux[l],
-                                  rho_tmp[r], rho_tmp[b], rho_tmp[l], 
-                                  qConFrt, qConLast, delT, dx.x());
-         rho_CC[b] = rho_tmp[b] - delT * (d1_y[b] + d1_z[b] + x_conv);  
-      } 
-      //_____________________________________________________
-      //    E D G E   left-bottom
-      for(int k = low.z()+1; k < hi_z; k++) {
-        b  = IntVector(low.x(),   low.y(),   k);
-        f  = IntVector(low.x(),   low.y(),   k+1);
-        bk = IntVector(low.x(),   low.y(),   k-1);
-        qConFrt  = rho_tmp[f] * vel[f].z();
-        qConLast = rho_tmp[bk] * vel[bk].z();
-        z_conv = computeConvection(nuz[f], nuz[b], nuz[bk],
-                                rho_tmp[f], rho_tmp[b], rho_tmp[bk], 
-                                qConFrt, qConLast, delT, dx.z());
-        rho_CC[b] = rho_tmp[b] - delT * (d1_x[b] + d1_y[b] + z_conv);
-      }
-
-      //_________________________________________________
-      // E D G E    bottom-back
-      for(int i = low.x()+1; i < hi_x; i++) {
-        r  =  IntVector(i+1, low.y(),   low.z());
-        l  =  IntVector(i-1, low.y(),   low.z());
-        b  =  IntVector(i,   low.y(),   low.z());
-
-        qConFrt  = rho_tmp[r] * vel[r].x();
-        qConLast = rho_tmp[l] * vel[l].x();
-        x_conv   = computeConvection(nux[r], nux[b], nux[l],
-                                  rho_tmp[r], rho_tmp[b], rho_tmp[l], 
-                                  qConFrt, qConLast, delT, dx.x());
-        rho_CC[b] = rho_tmp[b] - delT * (d1_y[b] + d1_z[b] + x_conv);
-      }
-        
-      //________________________________________________________
-      // C O R N E R S    
-      vector<IntVector> crn(4);
-      crn[0] = IntVector(hi_x,    low.y(), hi_z);         // right-bottom-front
-      crn[1] = IntVector(low.x(), low.y(), hi_z);         // left-bottom-front    
-      crn[2] = IntVector(low.x(), low.y(), low.z());      // left-bottom-back    
-      crn[3] = IntVector(hi_x,    low.y(), low.z());      // right-bottom-back 
-
-      for( int corner = 0; corner <4; corner ++ ) {
-        IntVector c = crn[corner];
-        rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + d1_z[c]);
-      }         
-} //end of the function yMinusDensityLODI()
-
-
-/*_________________________________________________________________
- Function~ zPlusDensityLODI--
+ Function~ zFaceDensityLODI--
  Purpose~  Compute density in boundary cells on the z_plus face
 ___________________________________________________________________*/
-void zPlusDensityLODI(CCVariable<double>& rho_CC,
+void zFaceDensityLODI( const Patch::FaceType face,
+                CCVariable<double>& rho_CC,
                 const CCVariable<double>& d1_x, 
                 const CCVariable<double>& d1_y, 
                 const CCVariable<double>& d1_z, 
@@ -601,9 +339,9 @@ void zPlusDensityLODI(CCVariable<double>& rho_CC,
                 const Vector& dx)
 
 {
-  cout << " I am in zPlusDensityLODI" << endl;    
-  IntVector low,hi,r,l,t,b,f,bk;
-
+  cout << "I am in zFaceDensityLODI on face " <<face<< endl;    
+  IntVector low,hi,r,l,t,b,c,bk;
+  int zFaceCell;
   low = vel.getLowIndex();
   hi  = vel.getHighIndex();
   int hi_x = hi.x() - 1;
@@ -612,36 +350,40 @@ void zPlusDensityLODI(CCVariable<double>& rho_CC,
 
   double x_conv, y_conv;
   double qConFrt,qConLast;
-  //___________________________________________________________________
-  // Compute the density on the area of low.x() < i < hi_x, low.y() < j < hi_y
-  // and  k = hi_z 
+  
+  if(face == Patch::zplus ){
+    zFaceCell = hi_z;  
+  } else {
+    zFaceCell = low.z();
+  }  
+
   for(int i = low.x()+1; i < hi_x; i++) {
     for(int j = low.y()+1; j < hi_y; j++) {
-      r  =  IntVector(i+1, j,   hi_z);
-      l  =  IntVector(i-1, j,   hi_z);
-      t  =  IntVector(i,   j+1, hi_z);
-      b  =  IntVector(i,   j-1, hi_z);
-      f  =  IntVector(i,   j,   hi_z);
+      r  =  IntVector(i+1, j,   zFaceCell);
+      l  =  IntVector(i-1, j,   zFaceCell);
+      t  =  IntVector(i,   j+1, zFaceCell);
+      b  =  IntVector(i,   j-1, zFaceCell);
+      c  =  IntVector(i,   j,   zFaceCell);
 
       qConFrt  = rho_tmp[r] * vel[r].x();
       qConLast = rho_tmp[l] * vel[l].x();
-      x_conv = computeConvection(nux[r], nux[f], nux[l], 
-                                 rho_tmp[r], rho_tmp[f], rho_tmp[l], qConFrt, 
+      x_conv = computeConvection(nux[r], nux[c], nux[l], 
+                                 rho_tmp[r], rho_tmp[c], rho_tmp[l], qConFrt, 
                                  qConLast, delT, dx.x());
 
       qConFrt  = rho_tmp[t] * vel[t].y();
       qConLast = rho_tmp[b] * vel[b].y();
-      y_conv = computeConvection(nuy[t], nuy[f], nuy[b],
-                                 rho_tmp[t], rho_tmp[f], rho_tmp[b], 
+      y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+                                 rho_tmp[t], rho_tmp[c], rho_tmp[b], 
                                  qConFrt, qConLast, delT, dx.y());
 
-      rho_CC[f] = rho_tmp[f] - delT * (d1_z[f] + x_conv + y_conv);
-     // rho_CC[f] = rho_tmp[f] - delT * d1_x[f] ;
+      rho_CC[c] = rho_tmp[c] - delT * (d1_z[c] + x_conv + y_conv);
+     // rho_CC[c] = rho_tmp[c] - delT * d1_x[c] ;
   #if ON
         cout.setf(ios::scientific,ios::floatfield);
         cout.precision(16);
-        cout << "rho_CC,rho_tmp, d1_z, dt, y_conv" << f << "= " << rho_CC[f] << ",";
-        cout << rho_tmp[f] << "," << d1_z[f] << "," << delT << y_conv << endl;  
+        cout << "rho_CC,rho_tmp, d1_z, dt, y_conv" << f << "= " << rho_CC[c] << ",";
+        cout << rho_tmp[c] << "," << d1_z[c] << "," << delT << y_conv << endl;  
   #endif    
      } // end of j loop
   } //end of i loop
@@ -649,52 +391,52 @@ void zPlusDensityLODI(CCVariable<double>& rho_CC,
   //__________________________________________________________
   //  E D G E      right-front
   for(int j = low.y()+1; j < hi_y; j++) {
-    r  =  IntVector(hi_x,   j,   hi_z);
-    t  =  IntVector(hi_x,   j+1, hi_z);
-    b  =  IntVector(hi_x,   j-1, hi_z);
+    c  =  IntVector(hi_x,   j,   zFaceCell);
+    t  =  IntVector(hi_x,   j+1, zFaceCell);
+    b  =  IntVector(hi_x,   j-1, zFaceCell);
     qConFrt  = rho_tmp[t] * vel[t].y();
     qConLast = rho_tmp[b] * vel[b].y();
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
-                               rho_tmp[t], rho_tmp[r], rho_tmp[b], 
+    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+                               rho_tmp[t], rho_tmp[c], rho_tmp[b], 
                                qConFrt, qConLast, delT, dx.y());
 
-    rho_CC[r] = rho_tmp[r] - delT * (d1_x[r] + d1_z[r] + y_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_z[c] + y_conv);
   } 
   //__________________________________________________________
   //  E D G E      left-front
   for(int j = low.y()+1; j < hi_y; j++) {
-    l  =  IntVector(low.x(),   j,   hi_z);
-    t  =  IntVector(low.x(),   j+1, hi_z);
-    b  =  IntVector(low.x(),   j-1, hi_z);
+    c  =  IntVector(low.x(),   j,   zFaceCell);
+    t  =  IntVector(low.x(),   j+1, zFaceCell);
+    b  =  IntVector(low.x(),   j-1, zFaceCell);
     qConFrt  = rho_tmp[t] * vel[t].y();
     qConLast = rho_tmp[b] * vel[b].y();
-    y_conv = computeConvection(nuy[t], nuy[l], nuy[b],
-                               rho_tmp[t], rho_tmp[l], rho_tmp[b], 
+    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+                               rho_tmp[t], rho_tmp[c], rho_tmp[b], 
                                qConFrt, qConLast, delT, dx.y());
 
-    rho_CC[l] = rho_tmp[l] - delT * (d1_x[l] + d1_z[l] + y_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_z[c] + y_conv);
 
   } //end of j loop
 
   //_______________________________________________________
   //    E D G E   top-front
   for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, hi_y,   hi_z);
-    l  =  IntVector(i-1, hi_y,   hi_z);
-    t  =  IntVector(i,   hi_y,   hi_z);
+    r  =  IntVector(i+1, hi_y,   zFaceCell);
+    l  =  IntVector(i-1, hi_y,   zFaceCell);
+    c  =  IntVector(i,   hi_y,   zFaceCell);
     qConFrt  = rho_tmp[r] * vel[r].x();
     qConLast = rho_tmp[l] * vel[l].x();
-    x_conv = computeConvection(nux[r], nux[t], nux[l],
-                           rho_tmp[r], rho_tmp[t], rho_tmp[l], 
+    x_conv = computeConvection(nux[r], nux[c], nux[l],
+                           rho_tmp[r], rho_tmp[c], rho_tmp[l], 
                             qConFrt, qConLast, delT, dx.x());
-    rho_CC[t] = rho_tmp[t] - delT * (d1_y[t] + d1_z[t] + x_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d1_y[c] + d1_z[c] + x_conv);
   }   
   //_______________________________________________________
   //    E D G E    bottom-front
   for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, low.y(), hi_z);
-    l  =  IntVector(i-1, low.y(), hi_z);
-    b  =  IntVector(i,   low.y(), hi_z);
+    r  =  IntVector(i+1, low.y(), zFaceCell);
+    l  =  IntVector(i-1, low.y(), zFaceCell);
+    b  =  IntVector(i,   low.y(), zFaceCell);
 
     qConFrt  = rho_tmp[r] * vel[r].x();
     qConLast = rho_tmp[l] * vel[l].x();
@@ -707,150 +449,16 @@ void zPlusDensityLODI(CCVariable<double>& rho_CC,
    //________________________________________________________
    // C O R N E R S    
    vector<IntVector> crn(4);
-   crn[0] = IntVector(hi_x,    low.y(), hi_z);      // right-bottom-front
-   crn[1] = IntVector(hi_x,    hi_y,    hi_z);      // right-top-front    
-   crn[2] = IntVector(low.x(), hi_y,    hi_z);      // left-top-front   
-   crn[3] = IntVector(low.x(), low.y(), hi_z);      // left-bottom-front 
+   crn[0] = IntVector(hi_x,    low.y(), zFaceCell);      // right-bottom-front
+   crn[1] = IntVector(hi_x,    hi_y,    zFaceCell);      // right-top-front    
+   crn[2] = IntVector(low.x(), hi_y,    zFaceCell);      // left-top-front   
+   crn[3] = IntVector(low.x(), low.y(), zFaceCell);      // left-bottom-front 
 
    for( int corner = 0; corner < 4; corner ++ ) {
      IntVector c = crn[corner];
      rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + d1_z[c]);
    }                
-} 
-
-/*_________________________________________________________________
- Function~ zMinusDensityLODI--
- Purpose~  Compute density in boundary cells on the z_minus face
-___________________________________________________________________*/
-void zMinusDensityLODI(CCVariable<double>& rho_CC,
-                 const CCVariable<double>& d1_x, 
-                 const CCVariable<double>& d1_y, 
-                 const CCVariable<double>& d1_z, 
-                 const CCVariable<double>& nux,
-                 const CCVariable<double>& nuy,
-                 const CCVariable<double>& nuz,
-                 const CCVariable<double>& rho_tmp,
-                 const CCVariable<Vector>& vel,
-                 const double delT,
-                 const Vector& dx)
-
-{
-  //cout << " I am in zMinusDensityLODI" << endl;    
-  IntVector low,hi,r,l,t,b,f,bk;
-
-  low = vel.getLowIndex();
-  hi  = vel.getHighIndex();
-  int hi_x = hi.x() - 1;
-  int hi_y = hi.y() - 1;
-
-  double x_conv, y_conv;
-  double qConFrt,qConLast;
-  //___________________________________________________________________
-  // Compute the density on the area of low.x() < i < hi_x, low.y() < j < hi_y
-  // and  k = low.z() 
-  for(int i = low.x()+1; i < hi_x; i++) {
-    for(int j = low.y()+1; j < hi_y; j++) {
-      r  =  IntVector(i+1, j,   low.z());
-      l  =  IntVector(i-1, j,   low.z());
-      t  =  IntVector(i,   j+1, low.z());
-      b  =  IntVector(i,   j-1, low.z());
-      f  =  IntVector(i,   j,   low.z());
-
-      qConFrt  = rho_tmp[r] * vel[r].x();
-      qConLast = rho_tmp[l] * vel[l].x();
-      x_conv = computeConvection(nux[r], nux[f], nux[l], 
-                                 rho_tmp[r], rho_tmp[f], rho_tmp[l], qConFrt, 
-                                 qConLast, delT, dx.x());
-
-      qConFrt  = rho_tmp[t] * vel[t].y();
-      qConLast = rho_tmp[b] * vel[b].y();
-      y_conv = computeConvection(nuy[t], nuy[f], nuy[b],
-                                 rho_tmp[t], rho_tmp[f], rho_tmp[b], 
-                                 qConFrt, qConLast, delT, dx.y());
-
-      rho_CC[f] = rho_tmp[f] - delT * (d1_z[f] + x_conv + y_conv);
-     // rho_CC[f] = rho_tmp[f] - delT * d1_x[f] ;
-#if ON
-      cout.setf(ios::scientific,ios::floatfield);
-      cout.precision(16);
-      cout << "rho_CC,rho_tmp, d1_z, dt, x,y_conv" << f << "= " << rho_CC[f] << ",";
-      cout << rho_tmp[f] << "," << d1_z[f] << "," << delT << x_conv << "," << y_conv << endl;
-#endif    
-    } 
-  } 
-  //__________________________________________________________
-  //  E D G E     right- back
-  for(int j = low.y()+1; j < hi_y; j++) {
-    r  =  IntVector(hi_x,   j,   low.z());
-    t  =  IntVector(hi_x,   j+1, low.z());
-    b  =  IntVector(hi_x,   j-1, low.z());
-
-    qConFrt  = rho_tmp[t] * vel[t].y();
-    qConLast = rho_tmp[b] * vel[b].y();
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
-                               rho_tmp[t], rho_tmp[r], rho_tmp[b], 
-                               qConFrt, qConLast, delT, dx.y());
-
-    rho_CC[r] = rho_tmp[r] - delT * (d1_x[r] + d1_z[r] + y_conv);
-  }
-  //__________________________________________________________
-  //  E D G E       left- back
-  for(int j = low.y()+1; j < hi_y; j++) {
-     l  =  IntVector(low.x(), j,   low.z());  
-     t  =  IntVector(low.x(), j+1, low.z());  
-     b  =  IntVector(low.x(), j-1, low.z());  
-
-     qConFrt  = rho_tmp[t] * vel[t].y();
-     qConLast = rho_tmp[b] * vel[b].y();
-     y_conv = computeConvection(nuy[t], nuy[l], nuy[b],
-                                rho_tmp[t], rho_tmp[l], rho_tmp[b], 
-                                qConFrt, qConLast, delT, dx.y());
-
-     rho_CC[l] = rho_tmp[l] - delT * (d1_x[l] + d1_z[l] + y_conv);
-  } 
-  //_______________________________________________________
-  //    E D G E     top-back
-  for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, hi_y,   low.z());
-    l  =  IntVector(i-1, hi_y,   low.z());
-    t  =  IntVector(i,   hi_y,   low.z());
-
-    qConFrt  = rho_tmp[r] * vel[r].x();
-    qConLast = rho_tmp[l] * vel[l].x();
-    x_conv = computeConvection(nux[r], nux[t], nux[l],
-                             rho_tmp[r], rho_tmp[t], rho_tmp[l], 
-                              qConFrt, qConLast, delT, dx.x());
-    rho_CC[t] = rho_tmp[t] - delT * (d1_y[t] + d1_z[t] + x_conv);
-  } 
-
-  //_______________________________________________________
-  //    E D G E     bottom-back
-  for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, low.y(), low.z());
-    l  =  IntVector(i-1, low.y(), low.z());
-    b  =  IntVector(i,   low.y(), low.z());
-    
-    qConFrt  = rho_tmp[r] * vel[r].x();
-    qConLast = rho_tmp[l] * vel[l].x();
-    x_conv = computeConvection(nux[r], nux[b], nux[l],
-                              rho_tmp[r], rho_tmp[b], rho_tmp[l], 
-                              qConFrt, qConLast, delT, dx.x());
-    rho_CC[b] = rho_tmp[b] - delT * (d1_y[b] + d1_z[b] + x_conv);
-  } 
-  //________________________________________________________
-  // C O R N E R S    
-  vector<IntVector> crn(4);
-  crn[0] = IntVector(hi_x,    low.y(), low.z());     // right-bottom-back
-  crn[1] = IntVector(hi_x,    hi_y,    low.z());     // right-top-back   
-  crn[2] = IntVector(low.x(), hi_y,    low.z());     // left-top-back   
-  crn[3] = IntVector(low.x(), low.y(), low.z());     // left-bottom-back 
-
-  for( int corner = 0; corner < 4; corner ++ ) {
-    IntVector c = crn[corner];
-    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + d1_z[c]);
-  }          
 }
-
 /*_________________________________________________________________
  Function~ fillFaceDensityLODI--
  Purpose~  
@@ -868,49 +476,18 @@ void fillFaceDensityLODI(CCVariable<double>& rho_CC,
                    const double delT,
                    const Vector& dx)
 
-{
-  cout_doing << " I am in fillFaceDensityLODI" << endl;    
-  switch(face) { 
-    case Patch::xplus:
-    { 
-     xPlusDensityLODI(rho_CC,d1_x,d1_y,d1_z,nux,nuy,nuz,rho_tmp,vel,delT,dx);
-    } 
-    break;
+{   
+  if (face == Patch::xplus || face == Patch::xminus ) {
+    xFaceDensityLODI(face,rho_CC,d1_x,d1_y,d1_z,nux,nuy,nuz,rho_tmp,vel,delT,dx);
+  } 
 
-    case Patch::xminus:
-    { 
-     xMinusDensityLODI(rho_CC,d1_x,d1_y,d1_z,nux,nuy,nuz,rho_tmp,vel,delT,dx);
-    } 
-    break;
+  if (face == Patch::yplus || face == Patch::yminus ) {
+    yFaceDensityLODI(face,rho_CC,d1_x,d1_y,d1_z,nux,nuy,nuz,rho_tmp,vel,delT,dx);
+  } 
 
-    case Patch::yplus:
-    { 
-     yPlusDensityLODI(rho_CC,d1_x,d1_y,d1_z,nux,nuy,nuz,rho_tmp,vel,delT,dx);
-    } 
-    break;
-
-    case Patch::yminus:
-    { 
-     yMinusDensityLODI(rho_CC,d1_x,d1_y,d1_z,nux,nuy,nuz,rho_tmp,vel,delT,dx);
-    } 
-    break;
-
-    case Patch::zplus:
-    { 
-     zPlusDensityLODI(rho_CC,d1_x,d1_y,d1_z,nux,nuy,nuz,rho_tmp,vel,delT,dx);
-    } 
-    break;
-
-    case Patch::zminus:
-    {
-     zMinusDensityLODI(rho_CC,d1_x,d1_y,d1_z,nux,nuy,nuz,rho_tmp,vel,delT,dx);
-    } 
-    break;
-
-    default:
-    break;
-   }
-   cout_doing << " I finished fillFaceDensityLODI" << endl; 
+  if (face == Patch::zplus || face == Patch::zminus ) { 
+    zFaceDensityLODI(face,rho_CC,d1_x,d1_y,d1_z,nux,nuy,nuz,rho_tmp,vel,delT,dx);
+  } 
 }
 
 /*_________________________________________________________________
