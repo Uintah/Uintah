@@ -30,8 +30,8 @@ init_DATADIR_and_DATASET
 
 set name {Main}
 set bbox {65 42 696 498}
-set creationDate {Thu Jul 08 2004}
-set creationTime {19:45:57}
+set creationDate {Mon Jul 12 2004}
+set creationTime {22:04:51}
 set runDate {}
 set runTime {}
 set notes {}
@@ -72,28 +72,34 @@ set c6 [addConnection $m8 0 $m2 2]
 set $m1-filename "$DATADIR/volume/tooth-vg-histo.pnm"
 
 # Set GUI variables for the Volume->Visualization->VolumeVisualizer Module
-set $m2-shine {30}
+set $m2-alpha_scale {-0.554}
+set $m2-shading {1}
+set $m2-specular {0.388}
+set $m2-shine {24}
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
 set $m3-filename "$DATADIR/volume/tooth-nv-uc.nrrd"
 
+# Set GUI variables for the Volume->Visualization->NrrdTextureBuilder Module
+set $m4-card_mem {128}
+
 $m5 addViewer
-set $m5-ViewWindow_0-geometry 654x648+909+491
+set $m5-ViewWindow_0-geometry 654x648+221+8
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m5-ViewWindow_0-pos {}
 set $m5-ViewWindow_0-caxes {0}
 set $m5-ViewWindow_0-raxes {1}
 set $m5-ViewWindow_0-have_collab_vis {0}
-set $m5-ViewWindow_0-view-eyep-x {0.894696831678}
-set $m5-ViewWindow_0-view-eyep-y {6.39325755105}
-set $m5-ViewWindow_0-view-eyep-z {7.40378875292}
-set $m5-ViewWindow_0-view-lookat-x {0.0}
-set $m5-ViewWindow_0-view-lookat-y {0.0}
-set $m5-ViewWindow_0-view-lookat-z {0.0}
-set $m5-ViewWindow_0-view-up-x {-0.319474923982}
-set $m5-ViewWindow_0-view-up-y {-0.697767518554}
-set $m5-ViewWindow_0-view-up-z {0.641136696031}
+set $m5-ViewWindow_0-view-eyep-x {-87.6807300367}
+set $m5-ViewWindow_0-view-eyep-y {563.995707959}
+set $m5-ViewWindow_0-view-eyep-z {329.303529403}
+set $m5-ViewWindow_0-view-lookat-x {51.0}
+set $m5-ViewWindow_0-view-lookat-y {46.5}
+set $m5-ViewWindow_0-view-lookat-z {80.0}
+set $m5-ViewWindow_0-view-up-x {0.0649226053232}
+set $m5-ViewWindow_0-view-up-y {-0.418921892308}
+set $m5-ViewWindow_0-view-up-z {0.905698351253}
 set $m5-ViewWindow_0-view-fov {20.0}
 set $m5-ViewWindow_0-global-light0 {1}
 set $m5-ViewWindow_0-global-light1 {0}
@@ -125,9 +131,33 @@ set $m5-ViewWindow_0-global-cull {0}
 set $m5-ViewWindow_0-global-dl {0}
 set $m5-ViewWindow_0-global-type {Gouraud}
 set $m5-ViewWindow_0-ortho-view {0}
+set "$m5-ViewWindow_0-VolumeRenderer TransParent (1)" {1}
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
 set $m6-filename "$DATADIR/volume/tooth-gm-uc.nrrd"
+
+# Set GUI variables for the Volume->Visualization->EditTransferFunc2 Module
+set $m8-histo {0.5}
+set $m8-num-entries {3}
+set $m8-name-0 {Generic}
+set $m8-0-color-r {0.95}
+set $m8-0-color-g {0.71}
+set $m8-0-color-b {0.77}
+set $m8-0-color-a {1.0}
+set $m8-state-0 {r 4 0.0117188 0.332031 0.427734 0.453125 0.427807}
+set $m8-name-1 {Generic}
+set $m8-1-color-r {0.6}
+set $m8-1-color-g {0.66}
+set $m8-1-color-b {1.0}
+set $m8-1-color-a {0.600000023842}
+set $m8-state-1 {t 0.480469 0.0308594 0.550781 0.293749 0.304965}
+set $m8-name-2 {Generic}
+set $m8-2-color-r {1.0}
+set $m8-2-color-g {1.0}
+set $m8-2-color-b {0.72}
+set $m8-2-color-a {0.639999985695}
+set $m8-state-2 {r 4 0.701172 0.238281 0.285156 0.28125 0.465753}
+set $m8-marker {end}
 
 # Open the Volume->Visualization->EditTransferFunc2 UI
 $m8 initialize_ui

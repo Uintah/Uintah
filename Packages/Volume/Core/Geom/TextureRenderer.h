@@ -72,6 +72,7 @@ public:
   void set_colormap_size(int size);
   void set_slice_alpha(double alpha);
   void set_sw_raster(bool b);
+  void set_comp_bits(int b);
   inline void set_interp(bool i) { interp_ = i; }
   
   enum RenderMode { MODE_NONE, MODE_OVER, MODE_MIP, MODE_SLICE };
@@ -122,7 +123,9 @@ protected:
   CM2ShaderFactory* shader_factory_;
   Pbuffer* cmap2_buffer_;
   FragmentProgramARB* cmap2_shader_;
-
+  Pbuffer* comp_buffer_;
+  int comp_bits_;
+  
   void compute_view(Ray& ray);
   void load_brick(Brick& b);
   void draw_polys(vector<Polygon *> polys, bool z);

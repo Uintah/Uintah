@@ -46,227 +46,6 @@ using Volume::Brick;
 
 namespace Volume {
 
-static const string ShaderString1 =
-"!!ARBfp1.0 \n"
-"TEMP v; \n"
-"ATTRIB t = fragment.texcoord[0]; \n"
-"TEX v, t, texture[0], 3D; \n"
-"TEX result.color, v, texture[2], 1D; \n"
-"END";
-
-static const string ShaderString4 =
-"!!ARBfp1.0 \n"
-"TEMP v; \n"
-"ATTRIB t = fragment.texcoord[0]; \n"
-"TEX v, t, texture[0], 3D; \n"
-"TEX result.color, v.w, texture[2], 1D; \n"
-"END";
-
-static const string ShaderString1_2 =
-"!!ARBfp1.0 \n"
-"TEMP v, c; \n"
-"ATTRIB t = fragment.texcoord[0]; \n"
-"TEX v.x, t, texture[0], 3D; \n"
-"TEX v.y, t, texture[1], 3D; \n"
-"TEX result.color, v, texture[2], 2D; \n"
-"END";
-
-static const string ShaderString4_2 =
-"!!ARBfp1.0 \n"
-"TEMP v, c; \n"
-"ATTRIB t = fragment.texcoord[0]; \n"
-"TEX v.w, t, texture[0], 3D; \n"
-"TEX v.x, t, texture[1], 3D; \n"
-"#MUL c.xyz, v.x, 0.1; \n"
-"#MOV c.w, 0.1; \n"
-"#MOV result.color, c; \n"
-"TEX result.color, v.wxyz, texture[2], 2D; \n"
-"END";
-
-//fogParam = {density, start, end, 1/(end-start) 
-//fogCoord.x = z
-//f = (end - fogCoord)/(end-start)
-static const string FogShaderString1 =
-"!!ARBfp1.0 \n"
-"TEMP c0, c, fogFactor, finalColor; \n"
-"PARAM fogColor = state.fog.color; \n"
-"PARAM fogParam = state.fog.params; \n"
-"ATTRIB fogCoord = fragment.texcoord[1];\n"
-"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
-"ATTRIB tf = fragment.texcoord[0]; \n"
-"SUB c, fogParam.z, fogCoord.x; \n"
-"MUL_SAT fogFactor.x, c, fogParam.w; \n"
-"TEX c0, tf, texture[0], 3D; \n"
-"TEX finalColor, c0, texture[2], 1D; \n"
-"LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
-"MOV result.color, finalColor; \n"
-"END";
-
-static const string FogShaderString1_2 =
-"!!ARBfp1.0 \n"
-"TEMP v, c, fogFactor, finalColor; \n"
-"PARAM fogColor = state.fog.color; \n"
-"PARAM fogParam = state.fog.params; \n"
-"ATTRIB fogCoord = fragment.texcoord[1];\n"
-"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
-"ATTRIB tf = fragment.texcoord[0]; \n"
-"SUB c, fogParam.z, fogCoord.x; \n"
-"MUL_SAT fogFactor.x, c, fogParam.w; \n"
-"TEX v.x, tf, texture[0], 3D; \n"
-"TEX v.y, tf, texture[1], 3D; \n"
-"TEX finalColor, v, texture[2], 2D; \n"
-"LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
-"MOV result.color, finalColor; \n"
-"END";
-
-static const string FogShaderString4 =
-"!!ARBfp1.0 \n"
-"TEMP c0, c, fogFactor, finalColor; \n"
-"PARAM fogColor = state.fog.color; \n"
-"PARAM fogParam = state.fog.params; \n"
-"ATTRIB fogCoord = fragment.texcoord[1];\n"
-"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
-"ATTRIB tf = fragment.texcoord[0]; \n"
-"SUB c, fogParam.z, fogCoord.x; \n"
-"MUL_SAT fogFactor.x, c, fogParam.w; \n"
-"TEX c0, tf, texture[0], 3D; \n"
-"TEX finalColor, c0.w, texture[2], 1D; \n"
-"LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
-"MOV result.color, finalColor; \n"
-"END";
-
-static const string FogShaderString4_2 =
-"!!ARBfp1.0 \n"
-"TEMP v, c, fogFactor, finalColor; \n"
-"PARAM fogColor = state.fog.color; \n"
-"PARAM fogParam = state.fog.params; \n"
-"ATTRIB fogCoord = fragment.texcoord[1];\n"
-"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
-"ATTRIB tf = fragment.texcoord[0]; \n"
-"SUB c, fogParam.z, fogCoord.x; \n"
-"MUL_SAT fogFactor.x, c, fogParam.w; \n"
-"TEX v.w, tf, texture[0], 3D; \n"
-"TEX v.x, tf, texture[1], 3D; \n"
-"TEX finalColor, v.wxyz, texture[2], 2D; \n"
-"LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
-"MOV result.color, finalColor; \n"
-"END";
-
-static const string LitVolShaderString =
-"!!ARBfp1.0 \n"
-"ATTRIB t = fragment.texcoord[0];\n"
-"PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
-"PARAM k = program.local[1]; # {ka, kd, ks, ns} \n"
-"TEMP v, n, c, d, s; \n"
-"TEX v, t, texture[0], 3D; \n"
-"MAD n, v, 2.0, -1.0; \n"
-"DP3 n.w, n, n; \n"
-"RSQ n.w, n.w; \n"
-"MUL n, n, n.w; \n"
-"DP3 d.w, l, n; \n"
-"ABS_SAT d.w, d.w; # two-sided lighting \n"
-"POW s.w, d.w, k.w; \n"
-"MAD d.w, d.w, k.y, k.x; \n"
-"MAD d.w, s.w, k.z, d.w; \n"
-"TEX c, v.w, texture[2], 1D; \n"
-"MUL c.xyz, c.xyzz, d.w; \n"
-"MOV result.color, c; \n"
-"END";
-
-static const string LitVolShaderString_2 =
-"!!ARBfp1.0 \n"
-"ATTRIB t = fragment.texcoord[0];\n"
-"PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
-"PARAM k = program.local[1]; # {ka, kd, ks, ns} \n"
-"TEMP v, n, c, d, s; \n"
-"TEX v, t, texture[0], 3D; \n"
-"MAD n, v, 2.0, -1.0; \n"
-"DP3 n.w, n, n; \n"
-"RSQ n.w, n.w; \n"
-"MUL n, n, n.w; \n"
-"DP3 d.w, l, n; \n"
-"ABS_SAT d.w, d.w; # two-sided lighting \n"
-"POW s.w, d.w, k.w; \n"
-"MAD d.w, d.w, k.y, k.x; \n"
-"MAD d.w, s.w, k.z, d.w; \n"
-"TEX v.x, t, texture[1], 3D; \n"
-"TEX c, v.wxyz, texture[2], 2D; \n"
-"MUL c.xyz, c.xyzz, d.w; \n"
-"MOV result.color, c; \n"
-"END";
-
-static const string LitFogVolShaderString =
-"!!ARBfp1.0 \n"
-"ATTRIB t = fragment.texcoord[0];\n"
-"PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
-"PARAM k = program.local[1]; # {ka, kd, ks, ns} \n"
-"PARAM fc = state.fog.color; \n"
-"PARAM fp = state.fog.params; \n"
-"ATTRIB f = fragment.texcoord[1];\n"
-"TEMP v, n, c, d, s; \n"
-"TEX v, t, texture[0], 3D; \n"
-"MAD n, v, 2.0, -1.0; \n"
-"DP3 n.w, n, n; \n"
-"RSQ n.w, n.w; \n"
-"MUL n, n, n.w; \n"
-"DP3 d.w, l, n; \n"
-"ABS_SAT d.w, d.w; # two-sided lighting \n"
-"POW s.w, d.w, k.w; \n"
-"MAD d.w, d.w, k.y, k.x; \n"
-"MAD d.w, s.w, k.z, d.w; \n"
-"TEX c, v.w, texture[2], 1D; \n"
-"MUL c.xyz, c.xyzz, d.w; \n"
-"SUB d.x, fp.z, f.x; \n"
-"MUL_SAT d.x, d.x, fp.w; \n"
-"LRP c.xyz, d.x, c.xyzz, fc.xyzz; \n"
-"MOV result.color, c; \n"
-"END";
-
-static const string LitFogVolShaderString_2 =
-"!!ARBfp1.0 \n"
-"ATTRIB t = fragment.texcoord[0];\n"
-"PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
-"PARAM k = program.local[1]; # {ka, kd, ks, ns} \n"
-"PARAM fc = state.fog.color; \n"
-"PARAM fp = state.fog.params; \n"
-"ATTRIB f = fragment.texcoord[1];\n"
-"TEMP v, n, c, d, s; \n"
-"TEX v, t, texture[0], 3D; \n"
-"MAD n, v, 2.0, -1.0; \n"
-"DP3 n.w, n, n; \n"
-"RSQ n.w, n.w; \n"
-"MUL n, n, n.w; \n"
-"DP3 d.w, l, n; \n"
-"ABS_SAT d.w, d.w; # two-sided lighting \n"
-"POW s.w, d.w, k.w; \n"
-"MAD d.w, d.w, k.y, k.x; \n"
-"MAD d.w, s.w, k.z, d.w; \n"
-"TEX v.x, t, texture[1], 3D; \n"
-"TEX c, v.wxyz, texture[2], 2D; \n"
-"MUL c.xyz, c.xyzz, d.w; \n"
-"SUB d.x, fp.z, f.x; \n"
-"MUL_SAT d.x, d.x, fp.w; \n"
-"LRP c.xyz, d.x, c.xyzz, fc.xyzz; \n"
-"MOV result.color, c; \n"
-"END";
-
-static const string FogVertexShaderString =
-"!!ARBvp1.0 \n"
-"ATTRIB iPos = vertex.position; \n"
-"ATTRIB iTex0 = vertex.texcoord[0]; \n"
-"OUTPUT oPos = result.position; \n"
-"OUTPUT oTex0 = result.texcoord[0]; \n"
-"OUTPUT oTex1 = result.texcoord[1]; \n"
-"PARAM mvp[4] = { state.matrix.mvp }; \n"
-"PARAM mv[4] = { state.matrix.modelview }; \n"
-"MOV oTex0, iTex0; \n"
-"DP4 oTex1.x, -mv[2], iPos; \n"
-"DP4 oPos.x, mvp[0], iPos; \n"
-"DP4 oPos.y, mvp[1], iPos; \n"
-"DP4 oPos.z, mvp[2], iPos; \n"
-"DP4 oPos.w, mvp[3], iPos; \n"
-"END";
-
 static const string Cmap2ShaderString =
 "!!ARBfp1.0 \n"
 "TEMP c, z; \n"
@@ -305,7 +84,9 @@ TextureRenderer::TextureRenderer(TextureHandle tex,
   raster_buffer_(0),
   shader_factory_(0),
   cmap2_buffer_(0),
-  cmap2_shader_(new FragmentProgramARB(Cmap2ShaderString))
+  cmap2_shader_(new FragmentProgramARB(Cmap2ShaderString)),
+  comp_buffer_(0),
+  comp_bits_(8)
 {}
 
 TextureRenderer::TextureRenderer(const TextureRenderer& copy) :
@@ -331,7 +112,9 @@ TextureRenderer::TextureRenderer(const TextureRenderer& copy) :
   raster_buffer_(copy.raster_buffer_),
   shader_factory_(copy.shader_factory_),
   cmap2_buffer_(copy.cmap2_buffer_),
-  cmap2_shader_(copy.cmap2_shader_)
+  cmap2_shader_(copy.cmap2_shader_),
+  comp_buffer_(copy.comp_buffer_),
+  comp_bits_(copy.comp_bits_)
 {}
 
 TextureRenderer::~TextureRenderer()
@@ -396,6 +179,15 @@ TextureRenderer::set_sw_raster(bool b)
     cmap2_dirty_ = true;
     mutex_.unlock();
   }
+}
+
+
+void
+TextureRenderer::set_comp_bits(int b)
+{
+  mutex_.lock();
+  comp_bits_ = b;
+  mutex_.unlock();
 }
 
 #define TEXTURERENDERER_VERSION 1

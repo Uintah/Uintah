@@ -30,6 +30,7 @@
 //    Date   : Thu Jul  8 00:04:15 2004
 
 #include <string>
+#include <sstream>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Packages/Volume/Core/Geom/VolumeRenderer.h>
 #include <Packages/Volume/Core/Util/ShaderProgramARB.h>
@@ -39,228 +40,256 @@
 #include <Core/Util/DebugStream.h>
 
 using std::string;
+using std::ostringstream;
 
 namespace Volume {
 
 static SCIRun::DebugStream dbg("VolumeRenderer", false);
 
-static const string ShaderString1 =
+#define VOL_HEAD \
 "!!ARBfp1.0 \n"
+
+#define VOL_TAIL \
+"END"
+
+#define VOL_VLUP_HEAD \
+"ATTRIB t = fragment.texcoord[0]; \n" \
 "TEMP v; \n"
-"ATTRIB t = fragment.texcoord[0]; \n"
+#define VOL_VLUP_1_1 \
 "TEX v, t, texture[0], 3D; \n"
-"TEX result.color, v, texture[2], 1D; \n"
-"END";
-
-static const string ShaderString4 =
-"!!ARBfp1.0 \n"
-"TEMP v; \n"
-"ATTRIB t = fragment.texcoord[0]; \n"
-"TEX v, t, texture[0], 3D; \n"
-"TEX result.color, v.w, texture[2], 1D; \n"
-"END";
-
-static const string ShaderString1_2 =
-"!!ARBfp1.0 \n"
-"TEMP v, c; \n"
-"ATTRIB t = fragment.texcoord[0]; \n"
-"TEX v.x, t, texture[0], 3D; \n"
-"TEX v.y, t, texture[1], 3D; \n"
-"TEX result.color, v, texture[2], 2D; \n"
-"END";
-
-static const string ShaderString4_2 =
-"!!ARBfp1.0 \n"
-"TEMP v, c; \n"
-"ATTRIB t = fragment.texcoord[0]; \n"
+#define VOL_VLUP_1_4 \
 "TEX v.w, t, texture[0], 3D; \n"
+#define VOL_VLUP_2_1 VOL_VLUP_1_1
+#define VOL_VLUP_2_4 VOL_VLUP_1_4
+#define VOL_GLUP_2_1 \
+"TEX v.y, t, texture[1], 3D; \n"
+#define VOL_GLUP_2_4 \
 "TEX v.x, t, texture[1], 3D; \n"
-"TEX result.color, v.wxyz, texture[2], 2D; \n"
-"END";
 
-//fogParam = {density, start, end, 1/(end-start) 
-//fogCoord.x = z
-//f = (end - fogCoord)/(end-start)
-static const string FogShaderString1 =
-"!!ARBfp1.0 \n"
-"TEMP c0, c, fogFactor, finalColor; \n"
-"PARAM fogColor = state.fog.color; \n"
-"PARAM fogParam = state.fog.params; \n"
-"ATTRIB fogCoord = fragment.texcoord[1];\n"
-"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
-"ATTRIB tf = fragment.texcoord[0]; \n"
-"SUB c, fogParam.z, fogCoord.x; \n"
-"MUL_SAT fogFactor.x, c, fogParam.w; \n"
-"TEX c0, tf, texture[0], 3D; \n"
-"TEX finalColor, c0, texture[2], 1D; \n"
-"LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
-"MOV result.color, finalColor; \n"
-"END";
-
-static const string FogShaderString1_2 =
-"!!ARBfp1.0 \n"
-"TEMP v, c, fogFactor, finalColor; \n"
-"PARAM fogColor = state.fog.color; \n"
-"PARAM fogParam = state.fog.params; \n"
-"ATTRIB fogCoord = fragment.texcoord[1];\n"
-"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
-"ATTRIB tf = fragment.texcoord[0]; \n"
-"SUB c, fogParam.z, fogCoord.x; \n"
-"MUL_SAT fogFactor.x, c, fogParam.w; \n"
-"TEX v.x, tf, texture[0], 3D; \n"
-"TEX v.y, tf, texture[1], 3D; \n"
-"TEX finalColor, v, texture[2], 2D; \n"
-"LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
-"MOV result.color, finalColor; \n"
-"END";
-
-static const string FogShaderString4 =
-"!!ARBfp1.0 \n"
-"TEMP c0, c, fogFactor, finalColor; \n"
-"PARAM fogColor = state.fog.color; \n"
-"PARAM fogParam = state.fog.params; \n"
-"ATTRIB fogCoord = fragment.texcoord[1];\n"
-"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
-"ATTRIB tf = fragment.texcoord[0]; \n"
-"SUB c, fogParam.z, fogCoord.x; \n"
-"MUL_SAT fogFactor.x, c, fogParam.w; \n"
-"TEX c0, tf, texture[0], 3D; \n"
-"TEX finalColor, c0.w, texture[2], 1D; \n"
-"LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
-"MOV result.color, finalColor; \n"
-"END";
-
-static const string FogShaderString4_2 =
-"!!ARBfp1.0 \n"
-"TEMP v, c, fogFactor, finalColor; \n"
-"PARAM fogColor = state.fog.color; \n"
-"PARAM fogParam = state.fog.params; \n"
-"ATTRIB fogCoord = fragment.texcoord[1];\n"
-"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
-"ATTRIB tf = fragment.texcoord[0]; \n"
-"SUB c, fogParam.z, fogCoord.x; \n"
-"MUL_SAT fogFactor.x, c, fogParam.w; \n"
-"TEX v.w, tf, texture[0], 3D; \n"
-"TEX v.x, tf, texture[1], 3D; \n"
-"TEX finalColor, v.wxyz, texture[2], 2D; \n"
-"LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
-"MOV result.color, finalColor; \n"
-"END";
-
-static const string LitVolShaderString =
-"!!ARBfp1.0 \n"
-"ATTRIB t = fragment.texcoord[0];\n"
-"PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
-"PARAM k = program.local[1]; # {ka, kd, ks, ns} \n"
-"TEMP v, n, c, d, s; \n"
-"TEX v, t, texture[0], 3D; \n"
-"MAD n, v, 2.0, -1.0; \n"
-"DP3 n.w, n, n; \n"
-"RSQ n.w, n.w; \n"
-"MUL n, n, n.w; \n"
-"DP3 d.w, l, n; \n"
-"ABS_SAT d.w, d.w; # two-sided lighting \n"
-"POW s.w, d.w, k.w; \n"
-"MAD d.w, d.w, k.y, k.x; \n"
-"MAD d.w, s.w, k.z, d.w; \n"
+#define VOL_TFLUP_HEAD \
+"TEMP c; \n"
+#define VOL_TFLUP_1_1 \
+"TEX c, v.x, texture[2], 1D; \n"
+#define VOL_TFLUP_1_4 \
 "TEX c, v.w, texture[2], 1D; \n"
-"MUL c.xyz, c.xyzz, d.w; \n"
-"MOV result.color, c; \n"
-"END";
-
-static const string LitVolShaderString_2 =
-"!!ARBfp1.0 \n"
-"ATTRIB t = fragment.texcoord[0];\n"
-"PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
-"PARAM k = program.local[1]; # {ka, kd, ks, ns} \n"
-"TEMP v, n, c, d, s; \n"
-"TEX v, t, texture[0], 3D; \n"
-"MAD n, v, 2.0, -1.0; \n"
-"DP3 n.w, n, n; \n"
-"RSQ n.w, n.w; \n"
-"MUL n, n, n.w; \n"
-"DP3 d.w, l, n; \n"
-"ABS_SAT d.w, d.w; # two-sided lighting \n"
-"POW s.w, d.w, k.w; \n"
-"MAD d.w, d.w, k.y, k.x; \n"
-"MAD d.w, s.w, k.z, d.w; \n"
-"TEX v.x, t, texture[1], 3D; \n"
+#define VOL_TFLUP_2_1 \
+"TEX c, v, texture[2], 2D; \n"
+#define VOL_TFLUP_2_4 \
 "TEX c, v.wxyz, texture[2], 2D; \n"
-"MUL c.xyz, c.xyzz, d.w; \n"
-"MOV result.color, c; \n"
-"END";
 
-static const string LitFogVolShaderString =
-"!!ARBfp1.0 \n"
-"ATTRIB t = fragment.texcoord[0];\n"
-"PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
-"PARAM k = program.local[1]; # {ka, kd, ks, ns} \n"
-"PARAM fc = state.fog.color; \n"
-"PARAM fp = state.fog.params; \n"
-"ATTRIB f = fragment.texcoord[1];\n"
-"TEMP v, n, c, d, s; \n"
-"TEX v, t, texture[0], 3D; \n"
-"MAD n, v, 2.0, -1.0; \n"
-"DP3 n.w, n, n; \n"
-"RSQ n.w, n.w; \n"
-"MUL n, n, n.w; \n"
-"DP3 d.w, l, n; \n"
-"ABS_SAT d.w, d.w; # two-sided lighting \n"
-"POW s.w, d.w, k.w; \n"
-"MAD d.w, d.w, k.y, k.x; \n"
-"MAD d.w, s.w, k.z, d.w; \n"
-"TEX c, v.w, texture[2], 1D; \n"
-"MUL c.xyz, c.xyzz, d.w; \n"
-"SUB d.x, fp.z, f.x; \n"
-"MUL_SAT d.x, d.x, fp.w; \n"
-"LRP c.xyz, d.x, c.xyzz, fc.xyzz; \n"
-"MOV result.color, c; \n"
-"END";
+#define VOL_FOG_HEAD \
+"PARAM fc = state.fog.color; \n" \
+"PARAM fp = state.fog.params; \n" \
+"ATTRIB tf = fragment.texcoord[1];\n"
+#define VOL_FOG_BODY \
+"SUB v.x, fp.z, tf.x; \n" \
+"MUL_SAT v.x, v.x, fp.w; \n" \
+"LRP c.xyz, v.x, c.xyzz, fc.xyzz; \n"
 
-static const string LitFogVolShaderString_2 =
-"!!ARBfp1.0 \n"
-"ATTRIB t = fragment.texcoord[0];\n"
-"PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
-"PARAM k = program.local[1]; # {ka, kd, ks, ns} \n"
-"PARAM fc = state.fog.color; \n"
-"PARAM fp = state.fog.params; \n"
-"ATTRIB f = fragment.texcoord[1];\n"
-"TEMP v, n, c, d, s; \n"
-"TEX v, t, texture[0], 3D; \n"
-"MAD n, v, 2.0, -1.0; \n"
-"DP3 n.w, n, n; \n"
-"RSQ n.w, n.w; \n"
-"MUL n, n, n.w; \n"
-"DP3 d.w, l, n; \n"
-"ABS_SAT d.w, d.w; # two-sided lighting \n"
-"POW s.w, d.w, k.w; \n"
-"MAD d.w, d.w, k.y, k.x; \n"
-"MAD d.w, s.w, k.z, d.w; \n"
-"TEX v.x, t, texture[1], 3D; \n"
-"TEX c, v.wxyz, texture[2], 2D; \n"
-"MUL c.xyz, c.xyzz, d.w; \n"
-"SUB d.x, fp.z, f.x; \n"
-"MUL_SAT d.x, d.x, fp.w; \n"
-"LRP c.xyz, d.x, c.xyzz, fc.xyzz; \n"
-"MOV result.color, c; \n"
-"END";
+#define VOL_LIT_HEAD \
+"PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n" \
+"PARAM k = program.local[1]; # {ka, kd, ks, ns} \n" \
+"TEMP n; \n"
+#define VOL_LIT_BODY \
+"MAD n, v, 2.0, -1.0; \n" \
+"DP3 n.w, n, n; \n" \
+"RSQ n.w, n.w; \n" \
+"MUL n, n, n.w; \n" \
+"DP3 n.w, l, n; \n" \
+"ABS_SAT n.w, n.w; # two-sided lighting \n" \
+"POW n.z, n.w, k.w; \n" \
+"MAD n.w, n.w, k.y, k.x; \n" \
+"MAD n.w, n.z, k.z, n.w; \n"
+#define VOL_LIT_END \
+"MUL c.xyz, c.xyzz, n.w; \n"
 
-static const string FogVertexShaderString =
-"!!ARBvp1.0 \n"
-"ATTRIB iPos = vertex.position; \n"
-"ATTRIB iTex0 = vertex.texcoord[0]; \n"
-"OUTPUT oPos = result.position; \n"
-"OUTPUT oTex0 = result.texcoord[0]; \n"
-"OUTPUT oTex1 = result.texcoord[1]; \n"
-"PARAM mvp[4] = { state.matrix.mvp }; \n"
-"PARAM mv[4] = { state.matrix.modelview }; \n"
-"MOV oTex0, iTex0; \n"
-"DP4 oTex1.x, -mv[2], iPos; \n"
-"DP4 oPos.x, mvp[0], iPos; \n"
-"DP4 oPos.y, mvp[1], iPos; \n"
-"DP4 oPos.z, mvp[2], iPos; \n"
-"DP4 oPos.w, mvp[3], iPos; \n"
-"END";
+#define VOL_FRAGMENT_BLEND_HEAD \
+"TEMP n;"
+
+#define VOL_FRAGMENT_BLEND_OVER \
+"TEX v, fragment.position.xyyy, texture[3], RECT; \n" \
+"SUB n.w, 1.0, c.w; \n" \
+"MAD result.color, v, n.w, c; \n"
+
+#define VOL_FRAGMENT_BLEND_MIP \
+"TEX v, fragment.position.xyyy, texture[3], RECT; \n" \
+"MAX result.color, v, c; \n"
+
+#define VOL_RASTER_BLEND \
+"MOV result.color, c; \n"
+
+class VolShader
+{
+public:
+  VolShader(int dim, int vsize, bool shading, bool fog, int blend);
+  ~VolShader();
+
+  bool create();
+  
+  inline int dim() { return dim_; }
+  inline int vsize() { return vsize_; }
+  inline bool shading() { return shading_; }
+  inline bool fog() { return fog_; }
+  inline bool blend() { return blend_; }
+
+  inline bool match(int dim, int vsize, bool shading, bool fog, int blend)
+  { return dim_ == dim && vsize_ == vsize && shading_ == shading
+      && fog_ == fog && blend_ == blend; }
+
+  inline FragmentProgramARB* program() { return program_; }
+  
+protected:
+  bool emit(string& s);
+
+  int dim_;
+  int vsize_;
+  bool shading_;
+  bool fog_;
+  int blend_;
+  FragmentProgramARB* program_;
+};
+
+VolShader::VolShader(int dim, int vsize, bool shading, bool fog, int blend)
+  : dim_(dim), vsize_(vsize), shading_(shading), fog_(fog), blend_(blend),
+    program_(0)
+{}
+
+VolShader::~VolShader()
+{
+  delete program_;
+}
+
+bool
+VolShader::create()
+{
+  string s;
+  if(emit(s)) return true;
+  program_ = new FragmentProgramARB(s);
+  return false;
+}
+
+bool
+VolShader::emit(string& s)
+{
+  if(dim_!=1 && dim_!=2) return true;
+  if(vsize_!=1 && vsize_!=4) return true;
+  if(blend_!=0 && blend_!=1 && blend_!=2) return true;
+  ostringstream z;
+  z << VOL_HEAD;
+  z << VOL_VLUP_HEAD;
+  z << VOL_TFLUP_HEAD;
+  // dim, vsize, and shading
+  if(shading_) {
+    z << VOL_LIT_HEAD;
+  }
+  if(fog_) {
+    z << VOL_FOG_HEAD;
+  }
+  if(dim_ == 1) {
+    if(shading_) {
+      z << VOL_VLUP_1_1;
+      z << VOL_LIT_BODY;
+      z << VOL_TFLUP_1_4;
+      z << VOL_LIT_END;
+    } else { // !shading_
+      if(blend_) {
+        z << VOL_FRAGMENT_BLEND_HEAD;
+      }
+      if(vsize_ == 1) {
+        z << VOL_VLUP_1_1;
+        z << VOL_TFLUP_1_1;
+      } else { // vsize_ == 4
+        z << VOL_VLUP_1_4;
+        z << VOL_TFLUP_1_4;
+      }
+    }
+  } else { // dim_ == 2
+    if(shading_) {
+      z << VOL_VLUP_2_1;
+      z << VOL_LIT_BODY;
+      z << VOL_GLUP_2_4;
+      z << VOL_TFLUP_2_4;
+      z << VOL_LIT_END;
+    } else { // !shading_
+      if(blend_) {
+        z << VOL_FRAGMENT_BLEND_HEAD;
+      }
+      if(vsize_ == 1) {
+        z << VOL_VLUP_2_1;
+        z << VOL_GLUP_2_1;
+        z << VOL_TFLUP_2_1;
+      } else { // vsize_ == 4
+        z << VOL_VLUP_2_4;
+        z << VOL_GLUP_2_4;
+        z << VOL_TFLUP_2_4;
+      }
+    }
+  }
+  // fog
+  if(fog_) {
+    z << VOL_FOG_BODY;
+  }
+  // blend
+  if(blend_ == 0) {
+    z << VOL_RASTER_BLEND;
+  } else if(blend_ == 1) {
+    z << VOL_FRAGMENT_BLEND_OVER;
+  } else if(blend_ == 2) {
+    z << VOL_FRAGMENT_BLEND_MIP;
+  }
+  z << VOL_TAIL;
+
+  s = z.str();
+  return false;
+}
+
+class VolShaderFactory
+{
+public:
+  VolShaderFactory();
+  ~VolShaderFactory();
+  
+  FragmentProgramARB* shader(int dim, int vsize, bool shading, bool fog, bool blend);
+
+protected:
+  vector<VolShader*> shader_;
+  int prev_shader_;
+};
+
+VolShaderFactory::VolShaderFactory()
+  : prev_shader_(-1)
+{}
+
+VolShaderFactory::~VolShaderFactory()
+{
+  for(unsigned int i=0; i<shader_.size(); i++) {
+    delete shader_[i];
+  }
+}
+
+FragmentProgramARB*
+VolShaderFactory::shader(int dim, int vsize, bool shading, bool fog, bool blend)
+{
+  if(prev_shader_ >= 0) {
+    if(shader_[prev_shader_]->match(dim, vsize, shading, fog, blend)) {
+      return shader_[prev_shader_]->program();
+    }
+  }
+  for(unsigned int i=0; i<shader_.size(); i++) {
+    if(shader_[i]->match(dim, vsize, shading, fog, blend)) {
+      prev_shader_ = i;
+      return shader_[i]->program();
+    }
+  }
+  VolShader* s = new VolShader(dim, vsize, shading, fog, blend);
+  if(s->create()) {
+    delete s;
+    return 0;
+  }
+  shader_.push_back(s);
+  prev_shader_ = shader_.size()-1;
+  return s->program();
+}
 
 using namespace Volume;
 using SCIRun::DrawInfoOpenGL;
@@ -274,21 +303,10 @@ VolumeRenderer::VolumeRenderer(TextureHandle tex,
   specular_(0.0),
   shine_(30.0),
   light_(0),
-  adaptive_(true)
+  adaptive_(true),
+  shader_factory_(new VolShaderFactory())
 {
   mode_ = MODE_OVER;
-  vol_shader1_ = new FragmentProgramARB(ShaderString1);
-  vol_shader4_ = new FragmentProgramARB(ShaderString4);
-  fog_vol_shader1_ = new FragmentProgramARB(FogShaderString1);
-  fog_vol_shader4_ = new FragmentProgramARB(FogShaderString4);
-  lit_vol_shader_ = new FragmentProgramARB(LitVolShaderString);
-  lit_fog_vol_shader_ = new FragmentProgramARB(LitFogVolShaderString);
-  vol_shader1_2_ = new FragmentProgramARB(ShaderString1_2);
-  vol_shader4_2_ = new FragmentProgramARB(ShaderString4_2);
-  fog_vol_shader1_2_ = new FragmentProgramARB(FogShaderString1_2);
-  fog_vol_shader4_2_ = new FragmentProgramARB(FogShaderString4_2);
-  lit_vol_shader_2_ = new FragmentProgramARB(LitVolShaderString_2);
-  lit_fog_vol_shader_2_ = new FragmentProgramARB(LitFogVolShaderString_2);
 }
 
 VolumeRenderer::VolumeRenderer(const VolumeRenderer& copy):
@@ -299,21 +317,9 @@ VolumeRenderer::VolumeRenderer(const VolumeRenderer& copy):
   specular_(copy.specular_),
   shine_(copy.shine_),
   light_(copy.light_),
-  adaptive_(copy.adaptive_)
-{
-  vol_shader1_ = copy.vol_shader1_;
-  vol_shader4_ = copy.vol_shader4_;
-  fog_vol_shader1_ = copy.fog_vol_shader1_;
-  fog_vol_shader4_ = copy.fog_vol_shader4_;
-  lit_vol_shader_ = copy.lit_vol_shader_;
-  lit_fog_vol_shader_ = copy.lit_fog_vol_shader_;
-  vol_shader1_2_ = copy.vol_shader1_2_;
-  vol_shader4_2_ = copy.vol_shader4_2_;
-  fog_vol_shader1_2_ = copy.fog_vol_shader1_2_;
-  fog_vol_shader4_2_ = copy.fog_vol_shader4_2_;
-  lit_vol_shader_2_ = copy.lit_vol_shader_2_;
-  lit_fog_vol_shader_2_ = copy.lit_fog_vol_shader_2_;
-}
+  adaptive_(copy.adaptive_),
+  shader_factory_(copy.shader_factory_)
+{}
 
 VolumeRenderer::~VolumeRenderer()
 {}
@@ -436,112 +442,64 @@ VolumeRenderer::draw()
 
   //--------------------------------------------------------------------------
   // now set up blending
-  glEnable(GL_BLEND);
-  switch(mode_) {
-  case MODE_OVER:
-    glBlendEquation(GL_FUNC_ADD);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    break;
-  case MODE_MIP:
-    glBlendEquation(GL_MAX);
-    glBlendFunc(GL_ONE, GL_ONE);
-    break;
-  default:
-    break;
-  }
+
+  int vp[4];
+  glGetIntegerv(GL_VIEWPORT, vp);
+  int psize[2];
+  psize[0] = isPowerOf2(vp[2]) ? vp[2] : nextPowerOf2(vp[2]);
+  psize[1] = isPowerOf2(vp[3]) ? vp[3] : nextPowerOf2(vp[3]);
+    
+//   if(num_bits_ != 8) {
+//     if(!comp_buffer_ || num_bits_ != comp_buffer_->num_color_bits()
+//        || psize[0] != comp_buffer_->width()
+//        || psize[1] != comp_buffer_->height()) {
+//       comp_buffer_ = new Pbuffer(psize[0], psize[1], GL_FLOAT, num_bits_, true,
+//                                  GL_FALSE, GL_DONT_CARE, 24);
+//       if(comp_buffer_->create()) {
+//         comp_buffer_->destroy();
+//         delete comp_buffer_;
+//         comp_buffer_ = 0;
+//         num_bits = 8;
+//       }
+//     }
+//   }
+  
+//   if(num_bits_ == 8) {
+    glEnable(GL_BLEND);
+    switch(mode_) {
+    case MODE_OVER:
+      glBlendEquation(GL_FUNC_ADD);
+      glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+      break;
+    case MODE_MIP:
+      glBlendEquation(GL_MAX);
+      glBlendFunc(GL_ONE, GL_ONE);
+      break;
+    default:
+      break;
+    }
+//   } else {
+//     glActiveTexture(GL_TEXTURE3);
+//     //glTexEnvi();
+    
+//     glActiveTexture(GL_TEXTURE0);
+//   }
   
   glColor4f(1.0, 1.0, 1.0, 1.0);
   glDepthMask(GL_FALSE);
 
   //--------------------------------------------------------------------------
   // set up shaders
-  FragmentProgramARB* fragment_shader = 0;
-
-  if(mode_ == MODE_OVER) {
-    if(use_cmap2) {
-      if(use_shading) {
-        if(use_fog) {
-          fragment_shader = lit_fog_vol_shader_2_;
-        } else {
-          fragment_shader = lit_vol_shader_2_;
-        }
-      } else { // !use_shading
-        if(use_fog) {
-          switch(nb0) {
-          case 1:
-            fragment_shader = fog_vol_shader1_2_;
-            break;
-          case 4:
-            fragment_shader = fog_vol_shader4_2_;
-            break;
-          }
-        } else { // !use_fog
-          switch(nb0) {
-          case 1:
-            fragment_shader = vol_shader1_2_;
-            break;
-          case 4:
-            fragment_shader = vol_shader4_2_;
-            break;
-          }
-        }
-      }
-    } else { // nc == 1
-      if(use_shading) {
-        if(use_fog) {
-          fragment_shader = lit_fog_vol_shader_;
-        } else {
-          fragment_shader = lit_vol_shader_;
-        }
-      } else { // !use_shading
-        if(use_fog) {
-          switch (nb0) {
-          case 1:
-            fragment_shader = fog_vol_shader1_;
-            break;
-          case 4:
-            fragment_shader = fog_vol_shader4_;
-            break;
-          }
-        } else { // !use_fog
-          switch(nb0) {
-          case 1:
-            fragment_shader = vol_shader1_;
-            break;
-          case 4:
-            fragment_shader = vol_shader4_;
-            break;
-          }
-        }
-      }
+  FragmentProgramARB* shader = 0;
+  //int blend_mode = (num_bits == 8) ? 0 : (mode_ == MODE_OVER ? 1 : 2);
+  int blend_mode = 0;
+  shader = shader_factory_->shader(use_cmap2 ? 2 : 1, nb0, use_shading,
+                                   use_fog, blend_mode);
+  if(shader) {
+    if(!shader->valid()) {
+      shader->create();
     }
-  } else if(mode_ == MODE_MIP) {
-    if(use_cmap2) {
-      switch(nb0) {
-      case 1:
-        fragment_shader = vol_shader1_2_;
-        break;
-      case 4:
-        fragment_shader = vol_shader4_2_;
-        break;
-      }
-    } else { // !use_cmap2
-      switch(nb0) {
-      case 1:
-        fragment_shader = vol_shader1_;
-        break;
-      case 4:
-        fragment_shader = vol_shader4_;
-        break;
-      }
-    }
-  }
-
-  if(fragment_shader) {
-    if(!fragment_shader->valid()) {
-      fragment_shader->create();
-    }
-    fragment_shader->bind();
+    shader->bind();
   }
   
   if(use_shading) {
@@ -560,8 +518,8 @@ VolumeRenderer::draw()
     Transform t = tex_->get_field_transform();
     l = mv.unproject(l);
     l = t.unproject(l);
-    fragment_shader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
-    fragment_shader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
+    shader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
+    shader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
   }
   
   //--------------------------------------------------------------------------
@@ -584,10 +542,10 @@ VolumeRenderer::draw()
   }
 
   //--------------------------------------------------------------------------
-  // release shaders
+  // release shader
 
-  if(fragment_shader && fragment_shader->valid())
-    fragment_shader->release();
+  if(shader && shader->valid())
+    shader->release();
   
   //--------------------------------------------------------------------------
 

@@ -246,6 +246,8 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
     }
   } else if (args[1] == "undowidget") {
     undo();
+  } else if (args[1] == "reset_gui") {
+    
   } else {
     Module::tcl_command(args, userdata);
   }

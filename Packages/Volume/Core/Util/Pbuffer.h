@@ -66,6 +66,8 @@ public:
   bool need_shader();
   void set_use_default_shader(bool b);
   void set_use_texture_matrix(bool b);
+
+  inline int num_bits() const { return mNumColorBits; }
   
 protected:
   int mWidth, mHeight;
