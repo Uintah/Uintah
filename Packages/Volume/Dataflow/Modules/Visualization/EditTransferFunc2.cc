@@ -241,6 +241,7 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
       undo_stack_.push(UndoItem(UndoItem::UNDO_CHANGE, n,
 				widgets_[n]->clone()));
       update_from_gui();
+      want_to_execute();
     }
   } else if (args[1] == "unpickle") {
     tcl_unpickle();
@@ -427,7 +428,6 @@ EditTransferFunc2::update_from_gui()
   }
   cmap_dirty_ = true;
   redraw();
-  want_to_execute();
 }
 
 
