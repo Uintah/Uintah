@@ -11,6 +11,9 @@
 #include <Uintah/Grid/ParticleVariableBase.h>
 #include <Uintah/Grid/NCVariableBase.h>
 #include <Uintah/Grid/FCVariableBase.h>
+#include <Uintah/Grid/SFCXVariableBase.h>
+#include <Uintah/Grid/SFCYVariableBase.h>
+#include <Uintah/Grid/SFCZVariableBase.h>
 #include <Uintah/Grid/ReductionVariableBase.h>
 #include <Uintah/Grid/PerPatchBase.h>
 #include <Uintah/Interface/DataWarehouseP.h>
@@ -116,6 +119,28 @@ WARNING
       virtual void put(const FCVariableBase&, const VarLabel*,
 		       int matlIndex, const Patch*) = 0;
 
+      // Staggered Variables in all three directions (SFCX, SFCY, SFCZ)
+      virtual void allocate(SFCXVariableBase&, const VarLabel*,
+			    int matlIndex, const Patch*) = 0;
+      virtual void get(SFCXVariableBase&, const VarLabel*, int matlIndex,
+		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
+      virtual void put(const SFCXVariableBase&, const VarLabel*,
+		       int matlIndex, const Patch*) = 0;
+
+      virtual void allocate(SFCYVariableBase&, const VarLabel*,
+			    int matlIndex, const Patch*) = 0;
+      virtual void get(SFCYVariableBase&, const VarLabel*, int matlIndex,
+		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
+      virtual void put(const SFCYVariableBase&, const VarLabel*,
+		       int matlIndex, const Patch*) = 0;
+
+      virtual void allocate(SFCZVariableBase&, const VarLabel*,
+			    int matlIndex, const Patch*) = 0;
+      virtual void get(SFCZVariableBase&, const VarLabel*, int matlIndex,
+		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
+      virtual void put(const SFCZVariableBase&, const VarLabel*,
+		       int matlIndex, const Patch*) = 0;
+
       // PerPatch Variables
       virtual void get(PerPatchBase&, const VarLabel*,
 				int matlIndex, const Patch*) = 0;
@@ -193,6 +218,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.34  2000/06/27 23:20:52  rawat
+// added staggered variables
+//
 // Revision 1.33  2000/06/21 20:47:58  guilkey
 // Added deleteParticles, a currently empty function that
 // will remove irrelevant particles from the simulation.
