@@ -229,7 +229,7 @@ void LinAlgBinary::execute() {
     }
     ColumnMatrix *bc = dynamic_cast<ColumnMatrix *>(bH.get_rep());
     if (!bc) {
-      error("Second input must be a ColumnMatrix for SelectRows.";
+      error("Second input must be a ColumnMatrix for SelectRows.");
       return;
     }
     DenseMatrix *cd = scinew DenseMatrix(bc->nrows(), aH->ncols());
