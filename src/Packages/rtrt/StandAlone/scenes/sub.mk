@@ -28,12 +28,10 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/hvolumebrick16.mo \
 	$(SRCDIR)/hvolumebrickfloat.mo \
 	$(SRCDIR)/hvolume_uchar.mo \
-	$(SRCDIR)/hvolumevg.mo \
 	$(SRCDIR)/flux.mo \
 	$(SRCDIR)/i3d.mo \
 	$(SRCDIR)/miphvb16.mo \
 	$(SRCDIR)/mipvfem.mo \
-	$(SRCDIR)/multihvb.mo \
 	$(SRCDIR)/oldvfem.mo \
 	$(SRCDIR)/original.mo \
 	$(SRCDIR)/spherefile.mo \
@@ -44,7 +42,6 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/uintahdata.mo \
 	$(SRCDIR)/vfem.mo \
 	$(SRCDIR)/volume_color.mo \
-	$(SRCDIR)/vthorax.mo \
 	$(SRCDIR)/ASE-RTRT.mo\
 	$(SRCDIR)/simple_tri.mo \
 	$(SRCDIR)/terrain.mo \
@@ -60,6 +57,11 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/FordField.mo \
 	$(SRCDIR)/david.mo \
 	$(SRCDIR)/davidhead.mo  \
+
+#	$(SRCDIR)/vthorax.mo \
+#	$(SRCDIR)/multihvb.mo \
+#	$(SRCDIR)/hvolumevg.mo \
+
 #	$(SRCDIR)/figure1.mo \
 #	$(SRCDIR)/david_old.mo \
 #	$(SRCDIR)/ramsey.mo \
@@ -92,7 +94,7 @@ SCENES += \
 	$(SRCDIR)/VolumeVisMod.mo \
 	$(SRCDIR)/VolumeVis2DMod.mo \
 	$(SRCDIR)/VolumeVisRGBAMod.mo \
-	$(SRCDIR)/sketch.mo \
+#	$(SRCDIR)/sketch.mo \
 #	$(SRCDIR)/dtiglyph.mo \
 #	$(SRCDIR)/science-room.mo \
 #	$(SRCDIR)/science-room-full.mo \
@@ -125,37 +127,38 @@ ALLTARGETS := $(ALLTARGETS) $(SCENES)
 
 RTRT_ULIBS = -lPackages_rtrt_Core -lPackages_Uintah_Core_DataArchive -lPackages_Uintah_Core_Grid -lCore_Persistent -lCore_Geometry -lCore_Containers -lCore_Exceptions -lDataflow_Comm -lDataflow_XMLUtil $(XML_LIBRARY) $(MPI_LIBRARY) -lCore_Malloc -lCore_Thread
 
+
 $(SRCDIR)/VolumeVisMod.mo: $(SRCDIR)/VolumeVisMod.o
-	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread $(TEEM_LIBRARY) $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
+	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread $(TEEM_LIBRARY) $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 $(SRCDIR)/VolumeVis2DMod.mo: $(SRCDIR)/VolumeVis2DMod.o
-	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread $(TEEM_LIBRARY) $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
+	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread $(TEEM_LIBRARY) $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 $(SRCDIR)/VolumeVisRGBAMod.mo: $(SRCDIR)/VolumeVisRGBAMod.o
-	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread $(TEEM_LIBRARY) $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
+	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread $(TEEM_LIBRARY) $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 $(SRCDIR)/sketch.mo: $(SRCDIR)/sketch.o
 	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread $(TEEM_LIBRARY) $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 $(SRCDIR)/dtiglyph.mo: $(SRCDIR)/dtiglyph.o
-	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lten -ldye $(TEEM_LIBRARY) -lhest $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) -lm
+	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lten -ldye $(TEEM_LIBRARY) -lhest $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) -lm
 
 $(SRCDIR)/science-room.mo: $(SRCDIR)/science-room.o
-	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lten -ldye $(TEEM_LIBRARY) -lhest $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) -lm
+	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lten -ldye $(TEEM_LIBRARY) -lhest $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) -lm
 
 $(SRCDIR)/uintahparticle2.mo: $(SRCDIR)/uintahparticle2.o
-	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
+	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 $(SRCDIR)/uintahisosurface.mo: $(SRCDIR)/uintahisosurface.o
-	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
+	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 #$(SRCDIR)/uintahparticle.o: $(SRCDIR)/uintahparticle.cc
 #	$(CXX) -c $(CCFLAGS) $<
 
-$(SCENES): lib/libPackages_rtrt_Core.so lib/libCore_Persistent.so lib/libCore_Geometry.so lib/libCore_Malloc.so lib/libCore_Thread.so lib/libCore_Math.so
+$(SCENES): lib/libPackages_rtrt_Core.$(SO_OR_A_FILE) lib/libCore_Persistent.$(SO_OR_A_FILE) lib/libCore_Geometry.$(SO_OR_A_FILE) lib/libCore_Malloc.$(SO_OR_A_FILE) lib/libCore_Thread.$(SO_OR_A_FILE) lib/libCore_Math.$(SO_OR_A_FILE)
 %.mo: %.o
 	rm -f $@
-	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lCore_Math $(XML_LIBRARY) $(M_LIBRARY) $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
+	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lCore_Math $(XML_LIBRARY) $(M_LIBRARY) $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 CLEANPROGS := $(CLEANPROGS) $(SCENES) 
 

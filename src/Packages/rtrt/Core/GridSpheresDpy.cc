@@ -10,7 +10,7 @@
 #include <Core/Thread/Time.h>
 
 #if defined(__GNUG__) || defined(__ECC)
-#  include <values.h>
+#  include <sci_values.h>
 #endif
 
 #include <sgi_stl_warnings_off.h>

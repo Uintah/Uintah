@@ -3,7 +3,7 @@
 
 #include <Core/Thread/Runnable.h>
 
-#if !defined( linux )
+#if !defined( linux ) && !defined(__APPLE__)
 #include <dmedia/audiofile.h>
 #include <dmedia/audio.h>
 #endif
@@ -36,7 +36,7 @@ public:
   void goToSleep( double seconds ) { sleepTime_ = seconds; }
 
 private:
-#if !defined(linux)
+#if !defined(linux) && !defined(__APPLE__)
   ALconfig        config_;
   ALport          audioPort_;
 #endif

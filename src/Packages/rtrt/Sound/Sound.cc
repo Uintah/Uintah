@@ -110,7 +110,7 @@ Sound::volume( const Point & location )
 void
 Sound::load()
 {
-#if !defined(linux)
+#if !defined(linux) && !defined(__APPLE__)
   if( loaded_ ) return;
   loaded_ = true;
 

@@ -1,4 +1,4 @@
-#if !defined(linux)
+#if !defined(linux) && !defined(__APPLE__)
 #include <Packages/rtrt/Sound/SoundThread.h>
 
 #include <Packages/rtrt/Sound/Sound.h>

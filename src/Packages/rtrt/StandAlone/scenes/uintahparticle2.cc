@@ -68,7 +68,7 @@ using namespace SCIRun;
 #include <vector>
 #include <sstream>
 #include <iomanip>
-#include <values.h>
+#include <sci_values.h>
 
 using namespace std;
 using namespace Uintah;

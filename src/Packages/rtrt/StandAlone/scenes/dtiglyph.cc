@@ -35,7 +35,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <values.h>
+#include <sci_values.h>
 #include <vector.h>
 
 #include <teem/nrrd.h>

@@ -27,6 +27,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#ifdef __APPLE__
+#include <sys/stat.h>
+#endif
+
 namespace rtrt {
 
 using SCIRun::Mutex;
@@ -234,7 +238,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
     delete work;
     
     int bout_fd;
-#ifdef __sgi
+#if defined(__sgi) || defined(__APPLE__)
     ///////////////////////////////////////////////////////////////
     // write the bricked data to a file, so that we don't have to rebrick it
     //    ofstream bout(buf);
@@ -256,7 +260,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
     cerr << "done (" << (double)(blockdata.get_datasize())/dt/1024/1024 << " MB/sec)\n";
     indata.resize(0,0,0);
   } else {
-#ifndef __sgi
+#if !defined(__sgi) && !defined(__APPLE__)
     ASSERTFAIL("Can't do direct io on non-sgi machines.");
 #else
 #if 0

@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <X11/keysym.h>
 #if defined(__GNUG__) || defined(__ECC)
-#  include <values.h>
+#  include <sci_values.h>
 #endif
 
 using namespace rtrt;

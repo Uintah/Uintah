@@ -9,7 +9,7 @@
 #include <Packages/rtrt/visinfo/visinfo.h>
 #include <iostream>
 #include <stdlib.h>
-#include <values.h>
+#include <sci_values.h>
 #include <stdio.h>
 #include "FontString.h"
 

@@ -1,6 +1,6 @@
 
 #include <Packages/rtrt/Core/BBox.h>
-#include <values.h>
+#include <sci_values.h>
 
 using namespace rtrt;
 using namespace SCIRun;

@@ -17,7 +17,7 @@
 #include <GL/glx.h>
 #include <GL/glu.h>
 #include <stdlib.h>
-#include <values.h>
+#include <sci_values.h>
 #include <limits.h>
 
 using namespace rtrt;

@@ -106,8 +106,13 @@ int main()
       perror("accept");
       Thread::exitAll(1);
     }
+#ifdef __APPLE__
+    struct hostent* hent = gethostbyaddr(((struct sockaddr *)&in_sa)->sa_data, sizeof(in_sa.sin_addr),
+ 					 AF_INET);
+#else
     struct hostent* hent = gethostbyaddr(&in_sa.sin_addr, sizeof(in_sa.sin_addr),
-					 AF_INET);
+ 					 AF_INET);
+#endif
     if(!hent){
       unsigned long a = ntohl(in_sa.sin_addr.s_addr);
       cerr << "accepted connection from unknown host, ip addr=" << (a>>24) << "." << ((a>>16)&0xff) << "." << ((a>>8)&0xff) << "." << (a&0xff) << '\n';

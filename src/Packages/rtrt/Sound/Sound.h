@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#if !defined( linux )
+#if !defined( linux ) && !defined(__APPLE__)
 #include <dmedia/audiofile.h>
 #include <dmedia/audio.h>
 #endif
