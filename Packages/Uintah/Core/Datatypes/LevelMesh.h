@@ -337,8 +337,9 @@ public:
   Point get_min() const { return min_; }
   Point get_max() const { return max_; }
   // Unsafe due to non-constness of unproject.
-  Transform &get_transform() { return transform_; }
-  Transform &set_transform(const Transform &trans) { transform_ = trans; }
+  Transform &get_transform(){ return transform_;}
+  Transform &set_transform(const Transform &trans) {
+    transform_ = trans; return transform_;}
   
   Vector diagonal() const { return max_ - min_; }
   virtual BBox get_bounding_box() const;
