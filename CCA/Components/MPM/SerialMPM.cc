@@ -330,7 +330,6 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(const Patch* patch,
    *             using P.NAT_X and some shape function evaluations)
    *   out(G.MASS, G.VELOCITY) */
 
-  cout << "scheduleInterpolateParticlesToGrid" << endl;
 
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("SerialMPM::interpolateParticlesToGrid",
@@ -366,6 +365,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(const Patch* patch,
     }
   }
      
+  t->computes(new_dw, lb->gMassLabel,            numMatls, patch);
   t->computes(new_dw, lb->TotalMassLabel);
   sched->addTask(t);
 }
@@ -382,7 +382,6 @@ void SerialMPM::scheduleComputeHeatExchange(const Patch* patch,
   *   the temperature differences)
   *   out(G.EXTERNAL_HEAT_RATE) */
 
-  cout << "scheduleComputeHeatExchange" << endl;
 
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("ThermalContact::computeHeatExchange",
@@ -403,7 +402,6 @@ void SerialMPM::scheduleExMomInterpolated(const Patch* patch,
 					  DataWarehouseP& old_dw,
 					  DataWarehouseP& new_dw)
 {
-  cout << "scheduleExMomInterpolated" << endl;
   Task* t = scinew Task("Contact::exMomInterpolated",
 		    patch, old_dw, new_dw,
 		    MPMPhysicalModules::contactModel,
@@ -423,7 +421,6 @@ void SerialMPM::scheduleComputeStressTensor(const Patch* patch,
 					    DataWarehouseP& old_dw,
 					    DataWarehouseP& new_dw)
 {
-  cout << "scheduleComputeStressTensor" << endl;
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("SerialMPM::computeStressTensor",
 		    patch, old_dw, new_dw,
@@ -445,7 +442,6 @@ void SerialMPM::scheduleComputeInternalForce(const Patch* patch,
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw)
 {
-  cout << "scheduleComputeInternalForce" << endl;
  /*
   * computeInternalForce
   *   in(P.CONMOD, P.NAT_X, P.VOLUME)
@@ -460,6 +456,8 @@ void SerialMPM::scheduleComputeInternalForce(const Patch* patch,
   Task* t = scinew Task("SerialMPM::computeInternalForce",
 		    patch, old_dw, new_dw,
 		    this, &SerialMPM::computeInternalForce);
+
+  t->requires( new_dw, lb->gMassLabel, numMPMMatls, patch, Ghost::None);
   for(int m = 0; m < numMPMMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     int idx = mpm_matl->getDWIndex();
@@ -485,6 +483,7 @@ void SerialMPM::scheduleComputeInternalForce(const Patch* patch,
     t->computes(new_dw, lb->gStressForSavingLabel, idx, patch);
   }
   t->computes(new_dw, lb->NTractionZMinusLabel);
+  t->computes(new_dw, lb->gStressForSavingLabel, numMPMMatls, patch);
 
   sched->addTask(t);
 }
@@ -1025,6 +1024,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 {
   int numMatls = d_sharedState->getNumMPMMatls();
 
+  NCVariable<double> totalgmass;
+  new_dw->allocate(totalgmass,          lb->gMassLabel,        numMatls, patch);
+  totalgmass.initialize(0);
+
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
@@ -1111,6 +1114,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	 // Must use the node indices
 	 for(int k = 0; k < 8; k++) {
 	    if(patch->containsNode(ni[k]) && vis.visible(k) ) {
+	       totalgmass[ni[k]]     += pmass[idx]          * S[k];
 	       gmass[ni[k]]          += pmass[idx]          * S[k];
 	       gvolume[ni[k]]        += pvolume[idx]        * S[k];
 	       gexternalforce[ni[k]] += pexternalforce[idx] * S[k];
@@ -1139,6 +1143,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	 // Must use the node indices
 	 for(int k = 0; k < 8; k++) {
 	    if(patch->containsNode(ni[k])) {
+	       totalgmass[ni[k]]     += pmass[idx]          * S[k];
 	       gmass[ni[k]]          += pmass[idx]          * S[k];
 	       gvolume[ni[k]]        += pvolume[idx]        * S[k];
 	       gexternalforce[ni[k]] += pexternalforce[idx] * S[k];
@@ -1207,6 +1212,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         new_dw->put(gTensileStrength, lb->gTensileStrengthLabel, matlindex, patch);
       }
   }
+  new_dw->put(totalgmass,         lb->gMassLabel,          numMatls, patch);
 }
 
 void SerialMPM::computeStressTensor(const ProcessorGroup*,
@@ -1342,6 +1348,11 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
   double integralTraction = 0.;
   double integralArea = 0.;
 
+  NCVariable<Matrix3>       gstressglobal;
+  NCVariable<double>        gmassglobal;
+  new_dw->get(gmassglobal,  lb->gMassLabel, numMPMMatls, patch, Ghost::None, 0);
+  new_dw->allocate(gstressglobal,lb->gStressForSavingLabel, numMPMMatls, patch);
+
   for(int m = 0; m < numMPMMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
@@ -1411,6 +1422,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 	     internalforce[ni[k]] -=
 			(div * (pstress[idx] - Id*p_pressure[idx]) * pvol[idx]);
              gstress[ni[k]] += pstress[idx] * pmass[idx] * S[k];
+             gstressglobal[ni[k]] += pstress[idx] * pmass[idx] * S[k];
 	   }
          }
       }
@@ -1436,6 +1448,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 	     internalforce[ni[k]] -=
 			(div * (pstress[idx] - Id*p_pressure[idx]) * pvol[idx]);
              gstress[ni[k]] += pstress[idx] * pmass[idx] * S[k];
+             gstressglobal[ni[k]] += pstress[idx] * pmass[idx] * S[k];
 	   }
          }
       }
@@ -1486,6 +1499,14 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     integralTraction=0.;
   }
   new_dw->put(sum_vartype(integralTraction), lb->NTractionZMinusLabel);
+
+  for(NodeIterator iter = patch->getNodeIterator();
+      !iter.done(); iter++) {
+    if(gmassglobal[*iter] >= 1.e-10){
+      gstressglobal[*iter] /= gmassglobal[*iter];
+    }
+  }
+  new_dw->put(gstressglobal,       lb->gStressForSavingLabel, numMPMMatls, patch);
 }
 
 void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
