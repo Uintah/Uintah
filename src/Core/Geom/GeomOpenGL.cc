@@ -2064,24 +2064,8 @@ void GeomLine::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
-void GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
-{
-    if(!pre_draw(di, matl, 0)) return;
-    di->polycount+=pts.size()/2;
-    double lwr[2], lw[1];
-    glGetDoublev(GL_LINE_WIDTH_RANGE, lwr);
-    glGetDoublev(GL_LINE_WIDTH, lw);
-    glBegin(GL_LINES);
-    for(int i=0;i<pts.size();i++){
-      Point& pt=pts[i];
-      glVertex3d(pt.x(), pt.y(), pt.z());
-    }
-    glEnd();
-    post_draw(di);
-}
-
 void
-GeomCLines::draw(DrawInfoOpenGL* di, Material* matl, double)
+GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if(!pre_draw(di, matl, 0)) return;
 
@@ -2102,33 +2086,27 @@ GeomCLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
+  if (indices_.size() == points_.size() / 3)
+  {
+    glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glColor4d(1.0, 1.0, 1.0, 1.0);
+
+    glEnable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+  }
+  else
+  {
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  }
+
   glDrawArrays(GL_LINES, 0, points_.size()/3);
 
   glLineWidth(di->line_width_);
 
-  post_draw(di);
-}
-
-
-void
-GeomCLineStrips::draw(DrawInfoOpenGL* di, Material* matl, double)
-{
-  if(!pre_draw(di, matl, 0)) return;
-
-  glLineWidth(line_width_);
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_COLOR_ARRAY);
-
-  const int n_strips = points_.size();
-  for (int i = 0; i < n_strips; i++) {
-    const int n_points = points_[i].size()/3;
-    di->polycount += n_points-1;
-    glVertexPointer(3, GL_FLOAT, 0, &(points_[i].front()));
-    glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_[i].front()));
-    glDrawArrays(GL_LINE_STRIP, 0, n_points);
-  }
-
-  glLineWidth(di->line_width_);
+  glDisable(GL_TEXTURE_1D);
 
   post_draw(di);
 }
@@ -2192,6 +2170,22 @@ GeomTranspLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
+  if (indices_.size() == points_.size() / 3)
+  {
+    glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glColor4d(1.0, 1.0, 1.0, 1.0);
+
+    glEnable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+  }
+  else
+  {
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  }
+
   if (di->dir == 1 && reverse ||
       di->dir == -1 && !reverse)
   {
@@ -2207,6 +2201,31 @@ GeomTranspLines::draw(DrawInfoOpenGL* di, Material* matl, double)
   glLineWidth(di->line_width_);
 
   glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_1D);
+
+  post_draw(di);
+}
+
+
+void
+GeomCLineStrips::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if(!pre_draw(di, matl, 0)) return;
+
+  glLineWidth(line_width_);
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_COLOR_ARRAY);
+
+  const int n_strips = points_.size();
+  for (int i = 0; i < n_strips; i++) {
+    const int n_points = points_[i].size()/3;
+    di->polycount += n_points-1;
+    glVertexPointer(3, GL_FLOAT, 0, &(points_[i].front()));
+    glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_[i].front()));
+    glDrawArrays(GL_LINE_STRIP, 0, n_points);
+  }
+
+  glLineWidth(di->line_width_);
 
   post_draw(di);
 }

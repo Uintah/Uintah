@@ -66,12 +66,23 @@ public:
 };
 
 class SCICORESHARE GeomLines : public GeomObj {
+protected:
+  double line_width_;
+  vector<float> points_;
+  vector<unsigned char> colors_;
+  vector<float> indices_;
+
 public:
-  Array1<Point> pts;
   GeomLines();
   GeomLines(const GeomLines&);
 
-  void add(const Point&, const Point&);
+  void add(const Point &p0, const Point &p1);
+  void add(const Point &p0, MaterialHandle c0,
+	   const Point &p1, MaterialHandle c1);
+  void add(const Point &p0, double cindex0,
+	   const Point &p1, double cindex1);
+  void setLineWidth(float val) { line_width_ = val; }
+
   virtual ~GeomLines();
   virtual GeomObj* clone();
   virtual void get_bounds(BBox&);
@@ -85,35 +96,7 @@ public:
 };
 
 
-class SCICORESHARE GeomCLines : public GeomObj {
-protected:
-  double line_width_;
-  vector<float> points_;
-  vector<unsigned char> colors_;
-
-public:
-  GeomCLines();
-  GeomCLines(const GeomCLines&);
-
-  void add(const Point &p0, const Point &p1);
-  void add(const Point &p0, MaterialHandle c0,
-	   const Point &p1, MaterialHandle c1);
-  void setLineWidth(float val) { line_width_ = val; }
-
-  virtual ~GeomCLines();
-  virtual GeomObj* clone();
-  virtual void get_bounds(BBox&);
-
-#ifdef SCI_OPENGL
-  virtual void draw(DrawInfoOpenGL*, Material*, double time);
-#endif
-  
-  virtual void io(Piostream&);
-  static PersistentTypeID type_id;
-};
-
-
-class SCICORESHARE GeomTranspLines : public GeomCLines {
+class SCICORESHARE GeomTranspLines : public GeomLines {
 protected:
   vector<unsigned int> xindices_;
   vector<unsigned int> yindices_;

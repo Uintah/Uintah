@@ -123,11 +123,15 @@ Persistent* make_GeomLines()
 PersistentTypeID GeomLines::type_id("GeomLines", "GeomObj", make_GeomLines);
 
 GeomLines::GeomLines()
+  : line_width_(1.0)
 {
 }
 
 GeomLines::GeomLines(const GeomLines& copy)
-  : pts(copy.pts)
+  : line_width_(copy.line_width_),
+    points_(copy.points_),
+    colors_(copy.colors_),
+    indices_(copy.indices_)
 {
 }
 
@@ -142,8 +146,10 @@ GeomObj* GeomLines::clone()
 
 void GeomLines::get_bounds(BBox& bb)
 {
-  for(int i=0;i<pts.size();i++)
-    bb.extend(pts[i]);
+  for(unsigned int i=0;i<points_.size();i+=3)
+  {
+    bb.extend(Point(points_[i+0], points_[i+1], points_[i+2]));
+  }
 }
 
 #define GEOMLINES_VERSION 1
@@ -153,63 +159,10 @@ void GeomLines::io(Piostream& stream)
 
   stream.begin_class("GeomLines", GEOMLINES_VERSION);
   GeomObj::io(stream);
-  Pio(stream, pts);
-  stream.end_class();
-}
-
-void GeomLines::add(const Point& p1, const Point& p2)
-{
-  pts.add(p1);
-  pts.add(p2);
-}
-
-
-Persistent* make_GeomCLines()
-{
-  return new GeomCLines();
-}
-
-PersistentTypeID GeomCLines::type_id("GeomCLines", "GeomObj", make_GeomCLines);
-
-GeomCLines::GeomCLines()
-  : line_width_(1.0)
-{
-}
-
-GeomCLines::GeomCLines(const GeomCLines& copy)
-  : line_width_(copy.line_width_),
-    points_(copy.points_),
-    colors_(copy.colors_)
-{
-}
-
-GeomCLines::~GeomCLines()
-{
-}
-
-GeomObj* GeomCLines::clone()
-{
-  return new GeomCLines(*this);
-}
-
-void GeomCLines::get_bounds(BBox& bb)
-{
-  for(unsigned int i=0;i<points_.size();i+=3)
-  {
-    bb.extend(Point(points_[i+0], points_[i+1], points_[i+2]));
-  }
-}
-
-#define GEOMLINES_VERSION 1
-
-void GeomCLines::io(Piostream& stream)
-{
-
-  stream.begin_class("GeomCLines", GEOMLINES_VERSION);
-  GeomObj::io(stream);
   Pio(stream, line_width_);
   Pio(stream, points_);
   Pio(stream, colors_);
+  Pio(stream, indices_);
   stream.end_class();
 }
 
@@ -224,7 +177,7 @@ COLOR_FTOB(double v)
 
 
 void
-GeomCLines::add(const Point& p1, const Point& p2)
+GeomLines::add(const Point& p1, const Point& p2)
 {
   points_.push_back(p1.x());
   points_.push_back(p1.y());
@@ -236,8 +189,8 @@ GeomCLines::add(const Point& p1, const Point& p2)
 
 
 void
-GeomCLines::add(const Point& p1, MaterialHandle c1,
-		const Point& p2, MaterialHandle c2)
+GeomLines::add(const Point& p1, MaterialHandle c1,
+	       const Point& p2, MaterialHandle c2)
 {
   add(p1, p2);
 
@@ -263,17 +216,27 @@ GeomCLines::add(const Point& p1, MaterialHandle c1,
 }
 
 
+void
+GeomLines::add(const Point& p0, double cindex0,
+	       const Point& p1, double cindex1)
+{
+  add(p0, p1);
+  
+  indices_.push_back(cindex0);
+  indices_.push_back(cindex1);
+}
+
 
 Persistent* make_GeomTranspLines()
 {
   return new GeomTranspLines();
 }
 
-PersistentTypeID GeomTranspLines::type_id("GeomTranspLines", "GeomCLines",
+PersistentTypeID GeomTranspLines::type_id("GeomTranspLines", "GeomLines",
 					  make_GeomTranspLines);
 
 GeomTranspLines::GeomTranspLines()
-  : GeomCLines(),
+  : GeomLines(),
     xreverse_(false),
     yreverse_(false),
     zreverse_(false)
@@ -281,7 +244,7 @@ GeomTranspLines::GeomTranspLines()
 }
 
 GeomTranspLines::GeomTranspLines(const GeomTranspLines& copy)
-  : GeomCLines(copy),
+  : GeomLines(copy),
     xindices_(copy.xindices_),
     yindices_(copy.yindices_),
     zindices_(copy.zindices_),
@@ -305,7 +268,7 @@ GeomObj* GeomTranspLines::clone()
 void GeomTranspLines::io(Piostream& stream)
 {
   stream.begin_class("GeomTranspLines", GEOMLINES_VERSION);
-  GeomCLines::io(stream);
+  GeomLines::io(stream);
   stream.end_class();
 }
 
