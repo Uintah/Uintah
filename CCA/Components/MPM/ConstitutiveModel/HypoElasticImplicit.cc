@@ -55,8 +55,6 @@ void HypoElasticImplicit::initializeCMData(const Patch* patch,
      deformationGradient[*iter] = Identity;
      pstress[*iter] = zero;
   }
-
-//  computeStableTimestep(patch, matl, new_dw);
 }
 
 void HypoElasticImplicit::addParticleState(std::vector<const VarLabel*>& from,
@@ -68,40 +66,11 @@ void HypoElasticImplicit::addParticleState(std::vector<const VarLabel*>& from,
    to.push_back(lb->pStressLabel_preReloc);
 }
 
-void HypoElasticImplicit::computeStableTimestep(const Patch* patch,
-                                           const MPMMaterial* matl,
-                                           DataWarehouse* new_dw)
+void HypoElasticImplicit::computeStableTimestep(const Patch*,
+                                           const MPMMaterial*,
+                                           DataWarehouse*)
 {
-  // This is only called for the initial timestep - all other timesteps
-  // are computed as a side-effect of cSTensor
-  Vector dx = patch->dCell();
-  int dwi = matl->getDWIndex();
-  // Retrieve the array of constitutive parameters
-  ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
-  constParticleVariable<double> pmass, pvolume;
-  constParticleVariable<Vector> pvelocity;
-
-  new_dw->get(pmass,     lb->pMassLabel, pset);
-  new_dw->get(pvolume,   lb->pVolumeLabel, pset);
-  new_dw->get(pvelocity, lb->pVelocityLabel, pset);
-
-  double c_dil = 0.0;
-  Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-
-  double G = d_initialData.G;
-  double bulk = d_initialData.K;
-  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
-     particleIndex idx = *iter;
-
-     // Compute wave speed at each particle, store the maximum
-     c_dil = sqrt((bulk + 4.*G/3.)*pvolume[idx]/pmass[idx]);
-     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-		      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-		      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
-    }
-    WaveSpeed = dx/WaveSpeed;
-    double delT_new = WaveSpeed.minComponent();
-    new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+  // Not used in the implicit models
 }
 
 void 
@@ -459,9 +428,6 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
       se += e;
     }
-
-    double delT_new = delT;
-    new_dw->put(delt_vartype(delT_new),lb->delTLabel);
     new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
   }
  }
@@ -512,8 +478,6 @@ void HypoElasticImplicit::addComputesAndRequires(Task* task,
   task->computes(lb->pStressLabel_preReloc,                matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc,    matlset);
   task->computes(lb->pVolumeDeformedLabel,                 matlset);
-  task->computes(lb->delTLabel);
-
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
