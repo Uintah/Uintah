@@ -16,6 +16,7 @@ static char *id="$Id$";
 
 
 #include <SCICore/Thread/Time.h>
+#include <SCICore/Thread/Mutex.h>
 #include <SCICore/Thread/ThreadError.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -34,14 +35,15 @@ volatile unsigned int* iotimer_addr32;
 volatile unsigned int* iotimer_addr;
 #define TIMERTYPE unsigned int
 #else
-volatile Time::SysClock *iotimer_addr;
-#define TIMERTYPE SysClock
+volatile unsigned long *iotimer_addr;
+#define TIMERTYPE unsigned long
 #endif
 static Time::SysClock orig_timer;
 static double ticks_to_seconds;
 static double seconds_to_ticks;
 static int hittimer;
 static bool initialized=false;
+static SCICore::Thread::Mutex initlock("Time initialization lock");
 
 #define TOPBIT ((unsigned int)0x80000000)
 
@@ -65,8 +67,11 @@ handle_alrm(int, int, sigcontext_t*)
 void
 SCICore::Thread::Time::initialize()
 {
-    initialized=true;
-
+    initlock.lock();
+    if(initialized){
+	initlock.unlock();
+	return;
+    }
     int poffmask = getpagesize() - 1;
     unsigned int cycleval;
     __psunsigned_t phys_addr = syssgi(SGI_QUERY_CYCLECNTR, &cycleval);
@@ -122,6 +127,8 @@ SCICore::Thread::Time::initialize()
 	while(!hittimer)
 	    sigsuspend(0);
     }
+    initialized=true;
+    initlock.unlock();
 }
 
 Time::SysClock
@@ -227,6 +234,9 @@ SCICore::Thread::Time::waitFor(SysClock time)
 
 //
 // $Log$
+// Revision 1.2  1999/08/25 22:53:42  sparker
+// Fixed Time initialization race condition
+//
 // Revision 1.1  1999/08/25 22:36:55  sparker
 // Broke out generic signal naming function into Thread_unix.{h,cc}
 // Added irix hardware counter version of Time class in Time_irix.cc
