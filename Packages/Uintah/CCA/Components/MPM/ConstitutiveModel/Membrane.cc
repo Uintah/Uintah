@@ -1,4 +1,4 @@
-
+#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Membrane.h>
 #include <Core/Malloc/Allocator.h>
@@ -27,9 +27,6 @@
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
-
-#define FRACTURE
-#undef FRACTURE
 
 Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
 {

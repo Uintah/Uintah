@@ -6,7 +6,7 @@
 // fields.  The main purpose of this type of contact is to
 // ensure that one can get the same answer using prescribed
 // contact as can be gotten using "automatic" contact.
-
+#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/SingleVelContact.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
@@ -33,9 +33,6 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 using std::vector;
-
-#define FRACTURE
-#undef FRACTURE
 
 SingleVelContact::SingleVelContact(ProblemSpecP& ps, 
 				    SimulationStateP& d_sS, MPMLabel* Mlb)
