@@ -269,6 +269,9 @@ MPMLabel::MPMLabel()
   massBurnFractionLabel  = scinew VarLabel("massBurnFraction",
 			NCVariable<double>::getTypeDescription());
 
+  AccArchesNCLabel = scinew VarLabel("AccArchesNC",
+			NCVariable<Vector>::getTypeDescription() );
+
   // Reduction variables
   partCountLabel = scinew VarLabel("particleCount",
 				   sumlong_vartype::getTypeDescription());
@@ -387,6 +390,7 @@ MPMLabel::~MPMLabel()
   delete gradPressNCLabel;
   delete dTdt_NCLabel;
   delete massBurnFractionLabel;
+  delete AccArchesNCLabel;
 
   delete partCountLabel;
   delete delTLabel;
