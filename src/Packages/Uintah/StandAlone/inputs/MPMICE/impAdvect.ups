@@ -19,6 +19,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
+       <max_delt_increase>  2.0        </max_delt_increase>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -171,15 +172,15 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>1.0</cfl>
+         <cfl>0.75</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "FirstOrderCE" />
         <solution technique = "EqForm" />
        
         <TimeStepControl>
-          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
-          <knob_for_speedSound>  0.5            </knob_for_speedSound>
+          <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.0            </knob_for_speedSound>
         </TimeStepControl>
         
         <ImplicitSolver>
@@ -233,7 +234,7 @@
                         <max>           [1.5,1.5,1.5]   </max>
                     </box>
                     <res>               [2,2,2]         </res>
-                    <velocity>          [1.0,0.0,0.0]   </velocity>
+                    <velocity>          [1.0,1.0,0.0]   </velocity>
                     <temperature>       300             </temperature>
                 </geom_object>
          </material>

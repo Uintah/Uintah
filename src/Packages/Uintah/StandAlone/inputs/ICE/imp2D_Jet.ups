@@ -18,7 +18,8 @@
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
-       <delt_init>          1.0e-6      </delt_init>
+       <delt_init>          1.0e-3      </delt_init>
+       <max_delt_increase>  2.0        </max_delt_increase>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -156,7 +157,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-       <cfl>0.5</cfl>
+       <cfl>0.75</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "FirstOrderCE" />
