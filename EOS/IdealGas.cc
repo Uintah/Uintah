@@ -23,7 +23,6 @@ double IdealGas::getGasConstant() const
   return d_gas_constant;
 }
 
-
 //__________________________________
 //
 double IdealGas::computeRhoMicro(double& press, double& gamma,

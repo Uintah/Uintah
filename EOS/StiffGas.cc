@@ -17,12 +17,10 @@ StiffGas::~StiffGas()
   delete lb;
 }
 
-
 double StiffGas::getGasConstant() const
 {
   return d_gas_constant;
 }
-
 
 //__________________________________
 //
