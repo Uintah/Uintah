@@ -25,9 +25,9 @@ echo "?">>.meanTime  # mean time data isn't collect the first 4 timestps
 echo "?">>.meanTime
 echo "?">>.meanTime
 
-grep elap $out | cut -d"=" -f4 | cut -d "," -f1 >& .elapsedTime
-grep mean $out | cut -d" " -f 3 >> .meanTime
-grep elap $out | cut -d"=" -f2 | cut -d"," -f1 >& .physicalTime
+grep elap $out | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTime
+grep mean $out | cut -d":" -f2 | cut -d" " -f2 >> .meanTime
+grep elap $out | cut -d"=" -f2 | cut -d" " -f1 >& .physicalTime
 grep delT $out | cut -d"=" -f3 | cut -d"," -f1 >& .delT
 #grep delT $out | cut -d"=" -f5 | cut -d" " -f1 >& .memUse
 grep delT $out | cut -d"=" -f5 | cut -d" " -f2 | cut -d"/" -f1 > .memUse1
@@ -44,8 +44,8 @@ set multiplot
 set size 1.0,0.33 # for three plots
 set origin 0.0,0.33
 set autoscale
-set xdata time
-set timefmt "%s"
+#set xdata time
+#set timefmt "%s"             ------- try turning these on
 set grid xtics ytics
 
 set y2tics
