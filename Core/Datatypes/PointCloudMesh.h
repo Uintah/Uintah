@@ -117,6 +117,11 @@ public:
   void size(Face::size_type &) const;
   void size(Cell::size_type &) const;
 
+  void to_index(Node::index_type &index, unsigned int i) const { index = i; }
+  void to_index(Edge::index_type &index, unsigned int i) const { index = i; }
+  void to_index(Face::index_type &index, unsigned int i) const { index = i; }
+  void to_index(Cell::index_type &index, unsigned int i) const { index = i; }
+
   virtual BBox get_bounding_box() const;
   virtual void transform(const Transform &t);
 

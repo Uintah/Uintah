@@ -998,6 +998,16 @@ LatVolMesh::size(LatVolMesh::Node::size_type &s) const
 }
 
 void
+LatVolMesh::to_index(LatVolMesh::Node::index_type &idx, unsigned int a)
+{
+  const unsigned int i = a % ni_;
+  const unsigned int jk = a / ni_;
+  const unsigned int j = jk % nj_;
+  const unsigned int k = jk / nj_;
+  idx = Node::index_type(this, i, j, k);
+}
+
+void
 LatVolMesh::begin(LatVolMesh::Edge::iterator &itr) const
 {
   itr = Edge::iterator(0);
@@ -1054,6 +1064,20 @@ LatVolMesh::size(LatVolMesh::Cell::size_type &s) const
 {
   s = Cell::size_type(ni_-1, nj_-1,nk_-1);
 }
+
+
+void
+LatVolMesh::to_index(LatVolMesh::Cell::index_type &idx, unsigned int a)
+{
+  const unsigned int i = a % (ni_-1);
+  const unsigned int jk = a / (ni_-1);
+  const unsigned int j = jk % (nj_-1);
+  const unsigned int k = jk / (nj_-1);
+  cout << "cell a=" << a << ", i=" << i << ", j=" << j << ", k=" << k <<
+    ", ni_=" << ni_ << ", nj_=" << nj_ << ", nk_=" << nk_ << "\n";
+  idx = Cell::index_type(this, i, j, k);
+}
+
 
 int
 LatVolMesh::get_valence(const Node::index_type &i) const

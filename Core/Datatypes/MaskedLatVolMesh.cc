@@ -117,6 +117,17 @@ MaskedLatVolMesh::size(MaskedLatVolMesh::Node::size_type &s) const
 }
 
 void
+MaskedLatVolMesh::to_index(MaskedLatVolMesh::Node::index_type &idx,
+			   unsigned int a)
+{
+  const unsigned int i = a % ni_;
+  const unsigned int jk = a / ni_;
+  const unsigned int j = jk % nj_;
+  const unsigned int k = jk / nj_;
+  idx = Node::index_type(this, i, j, k);
+}
+
+void
 MaskedLatVolMesh::begin(MaskedLatVolMesh::Cell::iterator &itr) const
 {
   itr = Cell::iterator(this,  min_i_, min_j_, min_k_);
@@ -136,6 +147,18 @@ MaskedLatVolMesh::size(MaskedLatVolMesh::Cell::size_type &s) const
   s = Cell::size_type(this,ni_-1, nj_-1,nk_-1);
 }
 
+
+
+void
+MaskedLatVolMesh::to_index(MaskedLatVolMesh::Cell::index_type &idx,
+			   unsigned int a)
+{
+  const unsigned int i = a % (ni_-1);
+  const unsigned int jk = a / (ni_-1);
+  const unsigned int j = jk % (nj_-1);
+  const unsigned int k = jk / (nj_-1);
+  idx = Cell::index_type(this, i, j, k);
+}
 
 
 void
@@ -159,6 +182,14 @@ MaskedLatVolMesh::size(MaskedLatVolMesh::Edge::size_type &s) const
 }
 
 void
+MaskedLatVolMesh::to_index(MaskedLatVolMesh::Edge::index_type &idx,
+			   unsigned int a)
+{
+  // TODO: Implement inverse of unsigned() function in EdgeIndex.
+  ASSERTFAIL("NOT IMPLEMENTED YET!");
+}
+
+void
 MaskedLatVolMesh::begin(MaskedLatVolMesh::Face::iterator &itr) const
 {
   itr = Face::iterator(this,min_i_,min_j_,min_k_,0);
@@ -176,6 +207,14 @@ void
 MaskedLatVolMesh::size(MaskedLatVolMesh::Face::size_type &s) const
 {
   s = Face::size_type(this,ni_,nj_,nk_);
+}
+
+void
+MaskedLatVolMesh::to_index(MaskedLatVolMesh::Face::index_type &idx,
+			   unsigned int a)
+{
+  // TODO: Implement inverse of unsigned() function in FaceIndex.
+  ASSERTFAIL("NOT IMPLEMENTED YET!");
 }
 
 //! get the child elements of the given index

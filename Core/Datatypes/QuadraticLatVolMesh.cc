@@ -155,6 +155,25 @@ QuadraticLatVolMesh::size(Node::size_type &s) const
 }
 
 void
+QuadraticLatVolMesh::to_index(Node::index_type &idx, unsigned int a)
+{
+  // TODO: Implement this.
+  ASSERTFAIL("UNIMPLEMENTED!");
+#if 0
+  Node::size_type s;
+  size(s);
+  if (a < (unsigned int)s)
+  {
+    const unsigned int i = a % ni_;
+    const unsigned int jk = a / ni_;
+    const unsigned int j = jk % nj_;
+    const unsigned int k = jk / nj_;
+    idx = Node::index_type(this, i, j, k);
+#endif
+}
+
+
+void
 QuadraticLatVolMesh::begin(LatVolMesh::Edge::iterator &itr) const
 {
   LatVolMesh::begin(itr);
@@ -206,6 +225,17 @@ void
 QuadraticLatVolMesh::size(LatVolMesh::Cell::size_type &s) const
 {
   LatVolMesh::size(s);
+}
+
+void
+QuadraticLatVolMesh::to_index(LatVolMesh::Cell::index_type &idx,
+			      unsigned int a)
+{
+  const unsigned int i = a % (ni_-1);
+  const unsigned int jk = a / (ni_-1);
+  const unsigned int j = jk % (nj_-1);
+  const unsigned int k = jk / (nj_-1);
+  idx = Cell::index_type(this, i, j, k);
 }
 
 void 

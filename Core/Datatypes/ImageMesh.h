@@ -287,6 +287,11 @@ public:
   void size(Face::size_type &) const;
   void size(Cell::size_type &) const;
 
+  void to_index(Node::index_type &index, unsigned int i);
+  void to_index(Edge::index_type &index, unsigned int i) { index = i; }
+  void to_index(Face::index_type &index, unsigned int i);
+  void to_index(Cell::index_type &index, unsigned int i) { index = i; }
+
   //! get the child elements of the given index
   void get_nodes(Node::array_type &, Edge::index_type) const;
   void get_nodes(Node::array_type &, Face::index_type) const;
