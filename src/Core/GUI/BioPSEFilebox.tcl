@@ -929,6 +929,7 @@ static char updir_bits[] = {
    # the okBtn is created after the typeMenu so that the keyboard traversal
     # is in the right order
     # Ok, Execute, Cancel, Refresh, and Find at bottom
+    global ToolTipText
     set f7 [frame $w.f7]
     set data(okBtn)     [button $f7.ok     -text Set     -under 0 -width 6 \
 	-default active -pady 3]
@@ -1542,10 +1543,9 @@ proc biopseFDialog_CancelCmd {w} {
 #       Refresh the files and directories in the IconList.  If a 
 #       current filename is present, leave focus on that.
 proc biopseFDialog_RefreshCmd {w} {
-#     upvar #0 $w data
-#     biopseFDialog_Update $w
-#     focus $data(ent) 
-    
+     upvar #0 $w data
+     biopseFDialog_Update $w
+     focus $data(ent) 
 }
 
 
