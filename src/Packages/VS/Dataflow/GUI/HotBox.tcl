@@ -37,10 +37,12 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_is_injured(9)
     global $this-gui_parent(1)
     global $this-gui_parent(2)
+    global $this-gui_parent_list
     global $this-gui_sibling(1)
     global $this-gui_sibling(2)
     global $this-gui_sibling(3)
     global $this-gui_sibling(4)
+    global $this-gui_sibling_list
     global $this-gui_child(1)
     global $this-gui_child(2)
     global $this-gui_child(3)
@@ -49,6 +51,7 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_child(6)
     global $this-gui_child(7)
     global $this-gui_child(8)
+    global $this-gui_child_list
     global $this-FME_on
     global $this-Files_on
     global $this-enableDraw
@@ -91,10 +94,16 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_is_injured(9) "0"
     set $this-gui_parent(1) ""
     set $this-gui_parent(2) ""
+    set $this-gui_parent_list [list [set $this-gui_parent(1)] \
+                                    [set $this-gui_parent(2)]]
     set $this-gui_sibling(1) ""
     set $this-gui_sibling(2) ""
     set $this-gui_sibling(3) ""
     set $this-gui_sibling(4) ""
+    set $this-gui_sibling_list [list [set $this-gui_sibling(1)] \
+                                     [set $this-gui_sibling(2)] \
+                                     [set $this-gui_sibling(3)] \
+                                     [set $this-gui_sibling(4)]]
     set $this-gui_child(1) ""
     set $this-gui_child(2) ""
     set $this-gui_child(3) ""
@@ -103,6 +112,14 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_child(6) ""
     set $this-gui_child(7) ""
     set $this-gui_child(8) ""
+    set $this-gui_child_list [list [set $this-gui_child(1)] \
+                                   [set $this-gui_child(2)] \
+                                   [set $this-gui_child(3)] \
+                                   [set $this-gui_child(4)] \
+                                   [set $this-gui_child(5)] \
+                                   [set $this-gui_child(6)] \
+                                   [set $this-gui_child(7)] \
+                                   [set $this-gui_child(8)]]
     set $this-FME_on "no"
     set $this-Files_on "no"
     set $this-enableDraw "no"
@@ -114,7 +131,7 @@ itcl_class VS_DataFlow_HotBox {
     set $this-boundingboxdatasource ""
     set $this-injurylistdatasource ""
     set $this-geometrypath ""
-    set $this-querytype "1"
+    set $this-querytype "2"
     set $this-gui_probeLocx "0"
     set $this-gui_probeLocy "0"
     set $this-gui_probeLocz "0"
@@ -418,13 +435,13 @@ itcl_class VS_DataFlow_HotBox {
     frame $w.hier.multi
     canvas $w.hier.titles.l1 -width 150 -height 20
     $w.hier.titles.l1 create text 20 10 -text "Parent"
-    listbox $w.hier.multi.l1
+    listbox $w.hier.multi.l1 -listvariable $this-gui_parent_list
     canvas $w.hier.titles.l2 -width 150 -height 20
     $w.hier.titles.l2 create text 20 10 -text "Sibling"
-    listbox $w.hier.multi.l2
+    listbox $w.hier.multi.l2 -listvariable $this-gui_sibling_list
     canvas $w.hier.titles.l3 -width 100 -height 20
     $w.hier.titles.l3 create text 20 10 -text "Child"
-    listbox $w.hier.multi.l3
+    listbox $w.hier.multi.l3 -listvariable $this-gui_child_list
     scrollbar $w.hier.vs
     grid $w.hier.titles -column 0 -row 0 -sticky nsew
     grid $w.hier.multi -column 0 -row 1 -sticky nsew
@@ -443,13 +460,26 @@ itcl_class VS_DataFlow_HotBox {
     grid columnconfigure $w.hier.multi 2 -weight 1
     # pack $w.hier -fill both -expand 1
 
+    set $this-gui_parent_list [list [set $this-gui_parent(1)] \
+                                    [set $this-gui_parent(2)]]
+    set $this-gui_sibling_list [list [set $this-gui_sibling(1)] \
+                                     [set $this-gui_sibling(2)] \
+                                     [set $this-gui_sibling(3)] \
+                                     [set $this-gui_sibling(4)]]
+    set $this-gui_child_list [list [set $this-gui_child(1)] \
+                                   [set $this-gui_child(2)] \
+                                   [set $this-gui_child(3)] \
+                                   [set $this-gui_child(4)] \
+                                   [set $this-gui_child(5)] \
+                                   [set $this-gui_child(6)] \
+                                   [set $this-gui_child(7)] \
+                                   [set $this-gui_child(8)]]
     ######################################
     # Query UI
     ######################################
     frame $w.controls
-    set ::datasource "2"
-    radiobutton $w.controls.adjOQAFMA -value 1 -text "OQAFMA" -variable datasource -command "$this set_data_source 1"
-    radiobutton $w.controls.adjFILES -value 2 -text "Files" -variable datasource -command "$this set_data_source 2"
+    radiobutton $w.controls.adjOQAFMA -value 1 -text "OQAFMA" -variable $this-datasource -command "$this set_data_source 1"
+    radiobutton $w.controls.adjFILES -value 2 -text "Files" -variable $this-datasource -command "$this set_data_source 2"
 
     checkbutton $w.controls.togFME -text "Connect to FME" -command "$this toggle_FME_on"
 
@@ -464,12 +494,10 @@ itcl_class VS_DataFlow_HotBox {
 
     frame $w.controls2
     label $w.controls2.querytypelabel -text "Query Type: "
-    set ::querytype "1"
-    radiobutton $w.controls2.adjacenttobutton -value 1 -text "Adjacent to" -variable querytype -command "$this set_querytype 1"
-    radiobutton $w.controls2.containsbutton -value 2 -text "Contains" -variable querytype -command "$this set_querytype 2"
-    radiobutton $w.controls2.partsbutton -value 3 -text "Parts" -variable querytype -command "$this set_querytype 3"
-    radiobutton $w.controls2.partcontainsbutton -value 4 -text "Part Contains" -variable querytype -command "$this set_querytype 4"
-    pack $w.controls2.querytypelabel $w.controls2.adjacenttobutton $w.controls2.containsbutton $w.controls2.partsbutton $w.controls2.partcontainsbutton -side left -expand yes -fill x
+    radiobutton $w.controls2.containsbutton -value 2 -text "Contains" -variable $this-querytype -command "$this set_querytype 2"
+    radiobutton $w.controls2.partsbutton -value 3 -text "Parts" -variable $this-querytype -command "$this set_querytype 3"
+    radiobutton $w.controls2.partcontainsbutton -value 4 -text "Part Contains" -variable $this-querytype -command "$this set_querytype 4"
+    pack $w.controls2.querytypelabel $w.controls2.containsbutton $w.controls2.partsbutton $w.controls2.partcontainsbutton -side left -expand yes -fill x
 
     if { [set $this-Files_on] == "yes" } {
     pack $w.togFilesUI $w.files $w.f $w.probeUI $w.hier $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
