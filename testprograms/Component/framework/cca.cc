@@ -23,7 +23,7 @@ class Server : public Runnable {
 public:
   Server() {}
 
-  void run() { PIDL::PIDL::serveObjects(); }
+  void run() { PIDL::PIDL::serveObjects(); CCA::semaphore_.up(); }
 };
 
 
@@ -36,6 +36,7 @@ Component CCA::local_framework_;
 string CCA::framework_url_;
 string CCA::hostname_;
 string CCA::program_;
+Semaphore CCA::semaphore_("CCA", 0 );
 
 CCA::CCA() 
 {
@@ -120,6 +121,13 @@ CCA::init( Component &component )
 
   // user's component
   return framework_->registerComponent( hostname_, program_, component );
+}
+
+void
+CCA::done()
+{
+  if ( is_server_ )
+    semaphore_.down();
 }
 
 } // namespace sci_cca

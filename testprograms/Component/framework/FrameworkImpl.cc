@@ -13,6 +13,7 @@ namespace sci_cca {
 
 
 FrameworkImpl::FrameworkImpl() 
+  : ports_lock_("Framework Ports lock")
 {
   // get hostname
   struct utsname rec;
@@ -50,54 +51,89 @@ FrameworkImpl::~FrameworkImpl()
 Port
 FrameworkImpl::getPort( const ComponentID &id, const string &name )
 {
+  ports_lock_.readLock();
+
   // framework port ?
   port_iterator pi = ports_.find(name);
-  if ( pi != ports_.end() )
-    return pi->second;
+  if ( pi != ports_.end() ) {
+    Port port = pi->second;
+    ports_lock_.readUnlock();
+    return port;
+  }
+
+  ports_lock_.readUnlock();
 
   // find in component record
+  registry_->connections_.readLock();
+
   ComponentRecord *c = registry_->components_[id];
-  return c->getPort( name );
+  Port port =  c->getPort( name );
+
+  registry_->connections_.readUnlock();
+
+  return port;
 }
     
 void 
 FrameworkImpl::registerUsesPort( const ComponentID &id, const PortInfo &info) 
 {
+  registry_->connections_.writeLock();
+
   ComponentRecord *c = registry_->components_[id];
   c->registerUsesPort( info );
+  
+  registry_->connections_.writeUnlock();
 }
 
 
 void 
 FrameworkImpl::unregisterUsesPort( const ComponentID &id, const string &name )
 {
+  registry_->connections_.writeLock();
+  
   ComponentRecord *c = registry_->components_[id];
   c->unregisterUsesPort( name );
+  
+  registry_->connections_.writeUnlock();
 }
 
 void 
 FrameworkImpl::addProvidesPort( const ComponentID &id, const Port &port,
 				const PortInfo& info) 
 {
+  registry_->connections_.writeLock();
+  
   ComponentRecord *c = registry_->components_[id];
   c->addProvidesPort( port, info );
+  
+  registry_->connections_.writeUnlock();
 }
 
 void 
 FrameworkImpl::removeProvidesPort( const ComponentID &id, const string &name)
 {
+  registry_->connections_.writeLock();
+  
   ComponentRecord *c = registry_->components_[id];
   c->removeProvidesPort( name );
+  
+  registry_->connections_.writeUnlock();
 }
 
 void 
 FrameworkImpl::releasePort( const ComponentID &id, const string &name)
 {
-  if ( ports_.find(name) != ports_.end() ) {
-    // nothing to do for framework ports
-  } else {
+  ports_lock_.readLock();
+  bool found = ports_.find(name) != ports_.end();
+  ports_lock_.readUnlock();
+
+  if ( !found ) {
+    registry_->connections_.writeLock();
+
     ComponentRecord *c = registry_->components_[id];
     c->releasePort( name );
+
+    registry_->connections_.writeUnlock();
   }
 }
 
@@ -119,7 +155,10 @@ FrameworkImpl::registerComponent( const string &hostname,
   ComponentRecord *cr = new ComponentRecord( id );
   cr->component_ = c;
   cr->services_ = svc;
+
+  registry_->connections_.writeLock();
   registry_->components_[id] = cr;
+  registry_->connections_.writeUnlock();
 
   // initialized component
   c->setServices( svc );
@@ -132,14 +171,20 @@ FrameworkImpl::unregisterComponent( const ComponentID &id )
 {
   cerr << "framework::unregister \n";
 
+  registry_->connections_.writeLock();
+
   // find the record
   ComponentRecord *cr = registry_->components_[id];
 
-  // explicitly erase it
-  delete cr;
-
   // erase the entry
   registry_->components_.erase( id );
+
+  registry_->connections_.writeUnlock();
+
+
+  // explicitly erase the record
+  delete cr;
+
 }
 
 

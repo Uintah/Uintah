@@ -3,6 +3,7 @@
 #ifndef CCA_h
 #define CCA_h
 
+#include <Core/Thread/Thread.h>
 #include <testprograms/Component/framework/cca_sidl.h>
 #include <testprograms/Component/framework/FrameworkImpl.h>
 
@@ -14,6 +15,8 @@ namespace sci_cca {
 
 using namespace SCIRun;
 
+class Server;
+
 class CCA {
 
   static bool initialized_;
@@ -24,13 +27,17 @@ class CCA {
   static Component local_framework_;
   static string hostname_;
   static string program_;
+  static Semaphore semaphore_;
 
 private:
   CCA(); // you can not allocate a CCA
 
 public:
-  static bool init( int &argc, char *argv[]);
+  static bool init( int &argc, char *argv[] );
   static bool init ( Component &);
+  static void done();
+
+  friend Server;
 };
 
 

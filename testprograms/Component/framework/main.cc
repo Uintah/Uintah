@@ -4,7 +4,6 @@
 
 #include <unistd.h>
 #include <iostream>
-#include <Core/Thread/Thread.h>
 #include <testprograms/Component/framework/cca.h>
 #include <testprograms/Component/framework/BuilderImpl.h>
 #include <testprograms/Component/framework/ComponentImpl.h>
@@ -16,8 +15,6 @@ using namespace SCIRun;
 int
 main( int argc, char *argv[] )
 {
-  bool server = argc== 1;
-
   if ( ! CCA::init( argc, argv ) ) {
     cerr << "cca init error\n";
     return 1;
@@ -25,20 +22,11 @@ main( int argc, char *argv[] )
 
   cerr << "main cont.\n";
 
-  Component b;
-  if ( !server ) {
-    b = new BuilderImpl;
-    CCA::init( b );
-    cerr << "CCA::init done\n";
-  } 
-  else {
-    Semaphore wait("main wait",0);
-    wait.down();
-  }
+  Component b = new BuilderImpl;
+  CCA::init( b );
 
-  cerr << "main continue\n";
 
-  //  b->setServices(0);
+  CCA::done();
 
   cerr << "main done\n";
 

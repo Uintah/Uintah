@@ -4,10 +4,13 @@
 #define FrameworkImpl_h
 
 #include <map>
+#include <Core/Thread/CrowdMonitor.h>
 #include <testprograms/Component/framework/cca_sidl.h>
 
 
 namespace sci_cca {
+
+using SCIRun::CrowdMonitor;
 
 class ComponentRecord;
 class UsePortRecord;
@@ -22,6 +25,8 @@ private:
   ComponentID id_;
   Registry *registry_;
   map<string, Port> ports_;
+  
+  CrowdMonitor ports_lock_;
 
   typedef map<string, Port>::iterator port_iterator;
 
