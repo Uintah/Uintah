@@ -29,7 +29,7 @@
 int __WritePPM( char *f, char *ptr, int width, int height, int mode )
 {
   time_t thetime;
-  int x, y, i;
+  int x, y, i = 0;
   unsigned char r, g, b, bw=0;
   FILE *out;
 
