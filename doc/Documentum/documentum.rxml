@@ -82,16 +82,17 @@ needed to do this).</para>
 <para><xref linkend="tbl.doc-tree"/> shows the organization of the
 doc tree.  It  shows only those directories and files that are part of CVS.
 Generated files (aka products) are 
-discussed in a <link linkend="sec.srcsprds">later</link> section.
+discussed in <link endterm="sec.builddocs.title"
+linkend="sec.builddocs"/>.
 </para>
 
 <table frame="none" id="tbl.doc-tree">
 <title>Doc Tree Organization</title>
 <tgroup cols="4">
-<colspec colname="doc"/>
-<colspec colname="docsub" />
-<colspec colname="docsubsub" />
-<colspec colname="descrip"/>
+<colspec colname="doc" colwidth="1*"/>
+<colspec colname="docsub" colwidth="1*"/>
+<colspec colname="docsubsub" colwidth="1*"/>
+<colspec colname="descrip" colwidth="4*"/>
 <spanspec spanname="dirhead" namest="doc" nameend="docsubsub"/>
 <spanspec spanname="deschead" namest="descrip" nameend="descrip"/>
 <spanspec spanname="docspan" namest="doc" nameend="docsubsub"/>
@@ -252,7 +253,7 @@ FAQ.</para>
 </section>
 
 <section id="sec.builddocs">
-<title>Building Docs</title>
+<title id="sec.builddocs.title">Building Docs</title>
 
 <para>
 &sr; documents are written in number of <firstterm><link
@@ -261,9 +262,43 @@ and HTML (plus their <firstterm>eruby</firstterm>
 equivalents&mdash;see <xref endterm="sec.docmls.title"
 linkend="sec.docmls"/> for more information).  XML and &ltx; document
 sources must be <quote>built</quote> or transformed into other forms
-(e.g. HTML) for presentation.  This section shows how to use build
-system.
+(e.g. HTML) for presentation.  This section briefly describes the
+build system and its use.
 </para>
+
+<para>The term <firstterm>sources</firstterm> refers to files that are
+created and edited manually.  The term <firstterm>products</firstterm>
+refers to files that are generated from sources by a tool of some
+sort.  Sources are always part of the CVS repository and products
+never are.</para>
+
+<para>Makefiles are responsible for generating products from sources.
+The doc tree uses a conventional recursive makefile approach to
+building documentation.  Some Makefiles generate products while others
+(<filename>doc/Developer/Makefile</filename>,
+<filename>doc/Installation/Makefile</filename>,
+<filename>doc/User/Makefile</filename>) merely invoke sub-make
+processes.  The topmost Makefile (<filename>doc/Makefile</filename>
+initiates the build of the entire documentation set.  Its other
+important function is to make a documentation tarball</para>
+
+<para>The doc tree and its build system were designed so that anyone with
+the proper <link linkend="sec.tools">tools</link> can build documentation.
+This facilitates the edit/compile/test/debug cycle.  The doc developer need
+not wait for the doc tree to be published on the internal web site before
+discovering bugs and errors.  The doc developer can edit sources, invoke
+make to build products, test and debug the docs with his web browser, and
+correct problems all before committing his changes to the CVS
+repository.</para>
+
+<para>Note that Makefiles are written in the GNU make dialect.</para>
+
+<para>You will find source files with extensions
+<filename>.rxml</filename>, <filename>.rhtml</filename>, and
+<filename>.rtex</filename>.  These are <firstterm>eruby</firstterm>
+sources.  Information on these type of files can be found in <xref
+endterm="sec.docmls.title" linkend="sec.docmls"/>.</para>
+
 <para>
 Before using the build system:
 <itemizedlist>
@@ -274,10 +309,11 @@ Install the required tools.  See
 </para>
 </listitem>
 <listitem>
-<para>Prepare <firstterm>catalog</firstterm> files.</para>
+<para><link linkend="sec.catalog">Prepare
+<firstterm>catalog</firstterm> files</link>.</para>
 </listitem>
 <listitem>
-<para>Setup environment variables.</para>
+<para><link linkend="sec.bld-vars">Setup environment variables</link>.</para>
 </listitem>
 </itemizedlist>
 The build system can be invoked from the <link
@@ -300,7 +336,7 @@ Two catalog files must be prepared.  The first maps ISO entity set
 <firstterm>public identifiers</firstterm> (abstract names) to
 corresponding <firstterm>system identifiers</firstterm> (file names).
 The second catalog lists system identifiers of other catalog files
-including the ISO entity set catalog.
+(including the ISO entity set catalog) needed by OpenJade.
 </para>
 
 <para>The ISO entity set catalog is named
@@ -314,7 +350,8 @@ including the ISO entity set catalog.
   PUBLIC "ISO 8879:1986//ENTITIES Added Latin 2//EN" "ISOlat2"
   PUBLIC "ISO 8879:1986//ENTITIES Greek Letters//EN" "ISOgrk1"
   PUBLIC "ISO 8879:1986//ENTITIES Monotoniko Greek//EN" "ISOgrk2"
-  PUBLIC "ISO 8879:1986//ENTITIES Greek Symbols//EN" "ISOgrk3" PUBLIC "ISO 8879:1986//ENTITIES Alternative Greek Symbols//EN" "ISOgrk4"
+  PUBLIC "ISO 8879:1986//ENTITIES Greek Symbols//EN" "ISOgrk3"
+  PUBLIC "ISO 8879:1986//ENTITIES Alternative Greek Symbols//EN" "ISOgrk4"
   PUBLIC "ISO 8879:1986//ENTITIES Added Math Symbols: Arrow Relations//EN" "ISOamsa"
   PUBLIC "ISO 8879:1986//ENTITIES Added Math Symbols: Binary Operators//EN" "ISOamsb"
   PUBLIC "ISO 8879:1986//ENTITIES Added Math Symbols: Delimiters//EN" "ISOamsc"
@@ -331,10 +368,10 @@ then the system identifiers above (e.g. <quote>ISOdia</quote>) must be
 changed (e.g. <quote>/path/to/ISOdia</quote>) appropriately.
 </para>
 
-<para>
-The second catalog lists system identifiers of other catalog files
-including the ISO entity set catalog. This catalog file may be located
-anywhere.  It has the following content:
+<para>The second catalog (call it the <quote>OpenJade</quote> catalog)
+lists system identifiers of other catalog files (including the ISO
+entity set catalog) needed by OpenJade.  This catalog file may be
+located anywhere.  It has the following content:
 <literallayout class="monospaced">
   CATALOG /path/to/openjade/dsssl/catalog
   CATALOG /path/to/isoent.cat
@@ -380,7 +417,8 @@ file <filename>saxon.jar</filename> within the Saxon distribution.
 </listitem>
 <listitem>
 <para>
-<envar>CATALOG</envar> is the path to a catalog file.
+<envar>CATALOG</envar> is the path to the <quote>OpenJade</quote>
+catalog file.
 </para>
 </listitem>
 <listitem>
@@ -442,179 +480,36 @@ no products) from a directory (and its sub-directories) type:
 </section>
 
 <section id="sec.using-publish-rb">
-<title>Publish.rb</title>
-<para> </para>
-</section>
+<title>Publish.rb</title> <para>The script
+<filename>doc/Utilities/Publish/publish.rb</filename> is used for
+building &sr; documentation.  It can also deliver &sr; documentation
+to a local or remote site.  Driven by configuration files the script
+can build the entire documentation tree or selected parts of
+it.</para>
 
-</section>
-
-<section id="sec.srcsprds">
-<title>Sources, Makefiles, and Products</title>
-
-<para>The term <firstterm>sources</firstterm> refers to
-files that are created and edited manually.  The term
-<firstterm>products</firstterm> refers to files that are generated from sources by a
-tool of some sort.  Sources are always part of the CVS repository and
-products never are.</para>
-
-<para>
-Makefiles are responsible for generating products from sources.
-<xref linkend="tbl.srcprd"/> shows sources, corresponding Makefiles, and
-the products they generate.  Products that are not explicit targets of
-<filename>Makefile</filename> are not shown.</para>
-
-<para>The doc tree uses a conventional recursive makefile 
-approach to building documentation.  Some Makefiles generate products (see
-<xref linkend="tbl.srcprd"/>) while others
-(<filename>doc/Developer/Makefile</filename>,
-<filename>doc/Installation/Makefile</filename>,
-<filename>doc/User/Makefile</filename>) merely invoke sub-make processes.
-The topmost Makefile (<filename>doc/Makefile</filename> initiates the build
-of the entire documentation set.  Its other important function is to make
-a documentation tarball</para>
-
-<para>The doc tree and its build system were designed so that anyone with
-the proper <link linkend="sec.tools">tools</link> can build documentation.
-This facilitates the edit/compile/test/debug cycle.  The doc developer need
-not wait for the doc tree to be published on the internal web site before
-discovering bugs and errors.  The doc developer can edit sources, invoke
-make to build products, test and debug the docs with his web browser, and
-correct problems all before committing his changes to the CVS
-repository.</para>
-
-<para>Note that Makefiles are written in the GNU make dialect.</para>
-
-<para>Below you will notice files with extensions
-<filename>.rxml</filename>, <filename>.rhtml</filename>, and
-<filename>.rtex</filename>.  These are <firstterm>eruby</firstterm>
-sources.  Information on these type of files can be found in <xref
-endterm="sec.docmls.title" linkend="sec.docmls"/>.</para>
-
-<para>
-<table id="tbl.srcprd">
-<title>Sources, Makefiles, and Products</title>
-<tgroup cols="3">
-<thead>
-<row>
-<entry>Source(s)</entry>
-<entry>Makefile</entry>
-<entry>Product(s)</entry>
-</row>
-</thead>
-<tbody>
-<row>
-<entry><para><filename>doc/index.rhtml</filename></para></entry>
-<entry><para><filename>doc/Makefile</filename></para></entry>
-<entry><para><filename>doc/index.html</filename></para></entry>
-</row>
-<row>
-<entry><para><filename>doc/Developer/index.rhtml</filename></para></entry>
-<entry><para><filename>doc/Developer/Makefile</filename></para></entry>
-<entry><para><filename>doc/Developer/index.html</filename></para></entry>
-</row>
-<row>
-<entry><para><filename>doc/Developer/CodeViews/Doxyconfig.r</filename>
-and C++ sources in the src side of the tree</para></entry>
-<entry><para><filename>doc/Developer/CodeViews/Makefile</filename></para></entry>
-<entry><para><filename>doc/Developer/CodeViews/Doxyconfig</filename>
-and
-<filename>doc/Developer/CodeViews/html/*.html</filename></para></entry>
-</row>
-<row>
-<entry>
-<para><filename>doc/Developer/Guide/main.rxml</filename>,
-<filename>doc/Developer/Guide/dev/*.xml</filename>, and
-<filename>doc/Developer/Guide/src/*.xml</filename></para>
-</entry>
-<entry><para><filename>doc/Developer/Guide/Makefile</filename></para></entry>
-<entry><para><filename>doc/Developer/Guide/main.xml</filename><filename>doc/Developer/Guide/*.html</filename></para></entry>
-</row>
-<row>
-<entry>
-<para><filename>doc/Developer/FAQ/faq.rxml</filename></para> </entry>
-<entry><para><filename>doc/Developer/FAQ/Makefile</filename></para></entry>
-<entry><para><filename>doc/Developer/FAQ/faq.xml</filename> and
-<filename>doc/Developer/FAQ/faq.html</filename></para></entry>
-</row>
-<row>
-<entry>
-<para><filename>src/Dataflow/XML/*.xml</filename> and
-<filename>src/Packages/*/Dataflow/XML/*.xml</filename></para>
-</entry>
-<entry><para><filename>doc/Developer/Modules/Makefile</filename></para></entry>
-<entry>
-<para><filename>src/Dataflow/XML/*.html</filename> and
-<filename>src/Packages/*/Dataflow/XML/*.html</filename></para>
-</entry>
-</row>
-<row>
-<entry><para><filename>doc/Installation/index.rhtml</filename></para></entry>
-<entry><para><filename>doc/Installation/Makefile</filename></para></entry>
-<entry><para><filename>doc/Installation/index.html</filename></para></entry>
-</row>
-<row>
-<entry><para><filename>doc/Installation/Guide/*.[r]xml</filename></para></entry>
-<entry><para><filename>doc/Installation/Guide/Makefile</filename></para></entry>
-<entry><para><filename>doc/Installation/Guide/*.html</filename></para></entry>
-</row>
-<row>
-<entry>
-<para> <filename>doc/Installation/FAQ/faq.rxml</filename></para>
-</entry>
-<entry><para><filename>doc/Installation/FAQ/Makefile</filename></para></entry>
-<entry><para><filename>doc/Installation/FAQ/faq.xml</filename> and
-<filename>doc/Installation/FAQ/faq.html</filename></para></entry>
-</row>
-<row>
-<entry><para><filename>doc/User/index.rhtml</filename></para></entry>
-<entry><para><filename>doc/User/Makefile</filename></para></entry>
-<entry><para><filename>doc/User/index.html</filename></para></entry>
-</row>
-<row>
-<entry>
-<para><filename>doc/User/Guide/*.[r]tex</filename>,
-<filename>src/Dataflow/XML/*.xml</filename>,
-<filename>src/Dataflow/Modules/*/doc/*.jpg</filename>,
-<filename>src/Dataflow/Modules/*/doc/*.gif</filename>,
-<filename>src/Dataflow/TeX/*/*.tex</filename>,
-<filename>src/Dataflow/TeX/*/*.jpg</filename>,
-<filename>src/Dataflow/TeX/*/*.gif</filename>,
-<filename>src/Packages/*/Dataflow/XML/*.xml</filename>,
-<filename>src/Packages/*/Dataflow/Modules/*/doc/*.jpg</filename>,
-<filename>src/Packages/*/Dataflow/Modules/*/doc/*.gif</filename>,
-<filename>src/Packages/*/Dataflow/TeX/*.tex</filename>,
-<filename>src/Packages/*/Dataflow/TeX/*/*.jpg</filename>,
-<filename>src/Packages/*/Dataflow/TeX/*/*.gif</filename>.</para>
-</entry>
-<entry><para><filename>doc/User/Guide/Makefile</filename></para></entry>
-<entry>
-<para>
-<filename>doc/User/Guide/usersguide.ps</filename> and
-<filename>doc/User/Guide/usersguide/</filename>.  
-</para> 
-<para>Intermediate products
-<filename>doc/User/Guide/userguide.dvi</filename>, <filename>*_modules.tex</filename> and
-<filename>srugmacros.sty</filename> are generated.
-</para>
-<para>EPS files on
-the <filename>src</filename> side of the tree generated from JPEG
-and GIF files.</para>
-</entry>
-</row>
-<row>
-<entry>
-<para><filename>doc/User/FAQ/faq.rxml</filename></para> </entry>
-<entry><para><filename>doc/User/FAQ/Makefile</filename></para></entry>
-<entry><para><filename>doc/User/FAQ/faq.xml</filename> and
-<filename>doc/User/FAQ/faq.html</filename></para></entry>
-</row>
-</tbody>
-</tgroup>
-</table>
+<para>The script is used as follows:
+<literallayout class="monospaced">
+publish.rb <replaceable>config-file</replaceable>
+</literallayout>
+where <replaceable>config-file</replaceable> is the name of a
+configuration file.
 </para>
 
+<para>Two configuration files can be found in
+<filename>doc/Utilities/Publish</filename>.  One,
+<filename>template.conf</filename> builds all documentation.  The
+other, <filename>pwd.conf</filename>, builds documentation in the
+current working directory.  These should be copied elsewhere and
+edited appropriately.  Read the comments in each configuration file
+for editing instructions.</para>
 </section>
 
+<section>
+<title>Diagnosing Errors</title>
+<para>Coming soon&hellip;</para>
+</section>
+
+</section>
 
 <section id="sec.docmls">
 <title id="sec.docmls.title">Documents and Their Markup Languages</title> 
@@ -1372,10 +1267,9 @@ creating/editing &ltx; based module descriptions.</para>
 
 <section id="sec.edithtmldocs">
 <title>Editing HTML and XHTML Documents</title> 
-<para>First of all you
-should try to avoid HTML/XHTML altogether.  Try using a higher-level markup
+<para>Avoid HTML/XHTML altogether.  Use a higher-level markup
 language like &dbk; or &ltx;.</para> 
-<para>Secondly, if you must use HTML
+<para>If you must use HTML
 consider using XHTML instead.  XHTML is an XML formulation of HTML. It is
 not yet possible or practical to write pure XHTML but as much as possible
 we should be implementing our HTML-type documents using XHTML.  The
@@ -1433,6 +1327,11 @@ in the <filename>src</filename> side of the tree should be based on
 <para>Some day I need to put something here.</para>
 <para>&vellip;</para>
  </section>
+
+<section id="sec.eruby">
+<title id="sec.eruby.title">Using Embedded Ruby</title>
+<para>Coming soon&hellip;</para>
+</section>
 
 </section>
 
