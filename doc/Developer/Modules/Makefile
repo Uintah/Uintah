@@ -69,9 +69,10 @@ define texdir
 ${treetop}/src/${if ${1},Packages/${1}/}Dataflow/TeX
 endef
 
-# Make package index.html
+# Make package index files.
 define makepkgindex
 ruby ${pkgindexgenscript} ${1} ${2} ${3}
+ruby ${pkgbycatgenscript} ${1} ${2} ${3}
 endef 
 
 # Remove list of directories
@@ -103,6 +104,7 @@ edition:=../../edition.xml
 
 # Script that generates package index files
 pkgindexgenscript:=${treetop}/doc/Utilities/HTML/makepkgindex.rb
+pkgbycatgenscript:=${treetop}/doc/Utilities/HTML/mkpkgidxbycat.rb
 
 # Phony targets.
 .PHONY: default SCIRun BioPSE Teem Fusion VDT MatlabInterface clean veryclean
@@ -149,7 +151,7 @@ SCIRun_tex_html_dirs:=${call texhtmldirs,${SCIRun_tex_dir}}
 SCIRun : SCIRun.html
 
 SCIRun.html : ${edition} ${SCIRun_xml_html_files} ${SCIRun_tex_html_dirs} \
-		${pkgindexgenscript}
+		${pkgindexgenscript} ${pkgbycatgenscript}
 	${call makepkgindex,SCIRun,${SCIRun_xml_dir},${SCIRun_tex_dir}}
 
 ${SCIRun_xml_html_files}: %.html: %.xml ${stylesheet}
@@ -175,7 +177,7 @@ BioPSE_tex_html_dirs:=${call texhtmldirs,${BioPSE_tex_dir}}
 BioPSE : BioPSE.html
 
 BioPSE.html : ${edition} ${BioPSE_xml_html_files} ${BioPSE_tex_html_dirs} \
-		${pkgindexgenscript}
+		${pkgindexgenscript} ${pkgbycatgenscript}
 	${call makepkgindex,BioPSE,${BioPSE_xml_dir},${BioPSE_tex_dir}}
 
 ${BioPSE_xml_html_files}: %.html: %.xml ${stylesheet}
@@ -201,7 +203,7 @@ Teem_tex_html_dirs:=${call texhtmldirs,${Teem_tex_dir}}
 Teem : Teem.html
 
 Teem.html : ${edition} ${Teem_xml_html_files} ${Teem_tex_html_dirs} \
-		${pkgindexgenscript}
+		${pkgindexgenscript} ${pkgbycatgenscript}
 	${call makepkgindex,Teem,${Teem_xml_dir},${Teem_tex_dir}}
 
 ${Teem_xml_html_files}: %.html: %.xml ${stylesheet}
@@ -227,7 +229,7 @@ VDT_tex_html_dirs:=${call texhtmldirs,${VDT_tex_dir}}
 VDT : VDT.html
 
 VDT.html : ${edition} ${VDT_xml_html_files} ${VDT_tex_html_dirs} \
-		${pkgindexgenscript}
+		${pkgindexgenscript} ${pkgbycatgenscript}
 	${call makepkgindex,VDT,${VDT_xml_dir},${VDT_tex_dir}}
 
 ${VDT_xml_html_files}: %.html: %.xml ${stylesheet}
@@ -253,7 +255,7 @@ MatlabInterface_tex_html_dirs:=${call texhtmldirs,${MatlabInterface_tex_dir}}
 MatlabInterface : MatlabInterface.html
 
 MatlabInterface.html : ${edition} ${MatlabInterface_xml_html_files} \
-		${MatlabInterface_tex_html_dirs} ${pkgindexgenscript}
+		${MatlabInterface_tex_html_dirs} ${pkgindexgenscript} ${pkgbycatgenscript}
 	${call makepkgindex,MatlabInterface,${MatlabInterface_xml_dir},${MatlabInterface_tex_dir}}
 
 ${MatlabInterface_xml_html_files}: %.html: %.xml ${stylesheet}
@@ -279,7 +281,7 @@ Fusion_tex_html_dirs:=${call texhtmldirs,${Fusion_tex_dir}}
 Fusion : Fusion.html
 
 Fusion.html : ${edition} ${Fusion_xml_html_files} ${Fusion_tex_html_dirs} \
-		${pkgindexgenscript}
+		${pkgindexgenscript} ${pkgbycatgenscript}
 	${call makepkgindex,Fusion,${Fusion_xml_dir},${Fusion_tex_dir}}
 
 ${Fusion_xml_html_files}: %.html: %.xml ${stylesheet}
