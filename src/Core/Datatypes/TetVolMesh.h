@@ -29,17 +29,86 @@ class SCICORESHARE TetVolMesh : public MeshBase
 {
 public:
   typedef int index_type;
+
   //! Index and Iterator types required for Mesh Concept.
   typedef NodeIndex<index_type>       node_index;
-  typedef NodeIterator<index_type>    node_iterator;
-
   typedef EdgeIndex<index_type>       edge_index;
-  typedef EdgeIterator<index_type>    edge_iterator;
-
   typedef FaceIndex<index_type>       face_index;
-  typedef FaceIterator<index_type>    face_iterator;
-
   typedef CellIndex<index_type>       cell_index;
+
+
+  //! Face information.
+  struct Face {
+    node_index         nodes_[3];   //! 3 nodes makes a face.
+    cell_index         cells_[2];   //! 2 cells may have this face is in.
+    
+    Face();
+    // nodes_ must be sorted. See Hash Function below.
+    Face(node_index n1, node_index n2, node_index n3);
+
+    inline
+    bool shared() const { return ((cells_[0] != -1) && (cells_[1] != -1)); }
+    
+    //! true if both have the same nodes (order does not matter)
+    inline
+    bool operator==(const Face &f) const {
+      return ((nodes_[0] == f.nodes_[0]) && (nodes_[1] == f.nodes_[1]) && 
+	      (nodes_[2] == f.nodes_[2]));
+    }
+  };
+
+  /*! hash the face's node_indecies such that faces with the same nodes 
+   *  hash to the same value. nodes are sorted on face construction. */
+  static const int sz_int = sizeof(int) * 8; // in bits
+  struct FaceHash {
+    static const int sz_third_int = (int)(sz_int * .333333); // in bits
+    static const int up3_mask = ((~((int)0)) << sz_third_int << sz_third_int);
+    static const int mid3_mask =  up3_mask ^ (~((int)0) << sz_third_int);
+    static const int low3_mask = ~(up3_mask | mid3_mask);
+
+    size_t operator()(const Face &f) const {
+      return ((f.nodes_[0] << sz_third_int << sz_third_int) | 
+	      (mid3_mask & (f.nodes_[1] << sz_third_int)) | 
+	      (low3_mask & f.nodes_[2]));
+    }
+  };
+
+
+  typedef hash_set<Face, FaceHash> face_table;
+
+  struct HashedFIter : public FaceIterator<index_type> {
+    face_table::iterator hiter_;
+
+    HashedFIter() :
+      FaceIterator<index_type>() {}
+    
+    HashedFIter(face_table::iterator h) :
+      FaceIterator<index_type>(),
+      hiter_(h)
+    {}
+
+    bool operator==(const HashedFIter &i) const {
+      return (i.hiter_ == hiter_);
+    }
+
+    HashedFIter operator ++() { 
+      ++hiter_;
+      FaceIterator<index_type>::operator++();
+      return *this; 
+    }
+  private:
+    //! Hide this in private to prevent it from being called.
+    HashedFIter operator ++(int) { 
+      HashedFIter tmp = *this; 
+      hiter_++; 
+      FaceIterator<index_type>::operator++();
+      return tmp;
+    }
+  };
+
+  typedef NodeIterator<index_type>    node_iterator;
+  typedef EdgeIterator<index_type>    edge_iterator;
+  typedef HashedFIter                 face_iterator;
   typedef CellIterator<index_type>    cell_iterator;
 
   typedef vector<node_index> node_array;
@@ -118,69 +187,16 @@ private:
   bool inside4_p(int, const Point &p) const;
 
   //! all the nodes.
-  vector<Point>        points_;
+  vector<Point>            points_;
   //! each 4 indecies make up a tet
-  vector<index_type>   cells_;
+  vector<index_type>       cells_;
   //! face neighbors index to tet opposite the corresponding node in cells_
-  vector<index_type>   neighbors_;
+  vector<index_type>       neighbors_;
 
-  //! Face information.
-  struct Face {
-    node_index         nodes_[3];   //! 3 nodes makes a face.
-    cell_index         cells_[2];   //! 2 cells may have this face is in.
-    
-    Face() {
-      nodes_[0] = -1;
-      nodes_[1] = -1;
-      cells_[0] = -1;
-      cells_[1] = -1;
-    }
-    // nodes_ must be sorted. See Hash Function below.
-    Face(node_index n1, node_index n2, node_index n3) {
-      cells_[0] = -1;
-      cells_[1] = -1;
-      if ((n1 < n2) && (n1 < n3)) {
-	nodes_[0] = n1;
-	if (n2 < n3) {
-	  nodes_[1] = n2; 
-	  nodes_[2] = n3;
-	} else {
-	  nodes_[1] = n3;
-	  nodes_[2] = n2;
-	} 
-      } else if ((n2 < n1) && (n2 < n3)) {
-	nodes_[0] = n2;
-	if (n1 < n3) {
-	  nodes_[1] = n1; 
-	  nodes_[2] = n3;
-	} else {
-	  nodes_[1] = n3;
-	  nodes_[2] = n1;
-	} 
-      } else {
-	nodes_[0] = n3;
-	if (n1 < n2) {
-	  nodes_[1] = n1; 
-	  nodes_[2] = n2;
-	} else {
-	  nodes_[1] = n2;
-	  nodes_[2] = n1;
-	} 
-      }
-    }
-
-    bool shared() const { return ((cells_[0] != -1) && (cells_[1] != -1)); }
-    
-    //! true if both have the same nodes (order does not matter)
-    bool operator==(const Face &f) const {
-      return ((nodes_[0] == f.nodes_[0]) && (nodes_[1] == f.nodes_[1]) && 
-	      (nodes_[2] == f.nodes_[2]));
-    }
-  };
   /*! container for face storage. Must be computed each time 
     nodes or cells change. */
-  vector<Face>         faces_;
-
+  face_table                faces_;
+  
   //! Edge information.
   struct Edge {
     node_index         nodes_[2];   //! 2 nodes makes an edge.
@@ -212,23 +228,6 @@ private:
   /*! container for edge storage. Must be computed each time 
     nodes or cells change. */
   vector<Edge>         edges_; 
-
-  /*! hash the egde's node_indecies such that edges with the same nodes 
-   *  hash to the same value. nodes are sorted on edge construction. */
-  static const int sz_int = sizeof(int) * 8; // in bits
-  struct FaceHash {
-    static const int sz_third_int = (int)(sz_int * .333333); // in bits
-    static const int up3_mask = ((~((int)0)) << sz_third_int << sz_third_int);
-    static const int mid3_mask =  up3_mask ^ (~((int)0) << sz_third_int);
-    static const int low3_mask = ~(up3_mask | mid3_mask);
-
-    size_t operator()(const Face &f) const {
-      return ((f.nodes_[0] << sz_third_int << sz_third_int) | 
-	      (mid3_mask & (f.nodes_[1] << sz_third_int)) | 
-	      (low3_mask & f.nodes_[2]));
-    }
-  };
-
   /*! hash the egde's node_indecies such that edges with the same nodes 
    *  hash to the same value. nodes are sorted on edge construction. */
   struct EdgeHash {
@@ -241,6 +240,7 @@ private:
       return (e.nodes_[0] << sz_half_int) | (low_mask & e.nodes_[1]);
     }
   };
+
 
   inline
   void hash_edge(node_index n1, node_index n2, 
