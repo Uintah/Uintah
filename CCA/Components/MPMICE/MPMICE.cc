@@ -155,6 +155,7 @@ void MPMICE::scheduleTimeAdvance(double, double,
   d_ice->scheduleComputePressFC(                  sched, patches, press_matl,
                                                                   all_matls);
   d_ice->scheduleAccumulateMomentumSourceSinks(   sched, patches, press_matl,
+                                                                  ice_matls_sub,
                                                                   all_matls);
   d_ice->scheduleAccumulateEnergySourceSinks(     sched, patches, press_matl,
                                                                   all_matls);
