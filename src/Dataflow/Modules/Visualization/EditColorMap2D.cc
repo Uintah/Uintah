@@ -112,6 +112,7 @@ private:
   void				set_window_cursor(int x, int y);
   void				select_widget(int, int);
   void				screen_val(int &x, int &y);
+  pair<double, double>		normalized_val(int x, int y);
   //! functions for panning.
   void				translate_start(int x, int y);
   void				translate_motion(int x, int y);
@@ -150,6 +151,7 @@ private:
 
   int				mouse_widget_;
   int				mouse_object_;
+  PaintCM2Widget *		paint_widget_;
   // Push on undo when motion occurs, not on select.
   bool				first_motion_;
   bool				save_ppm_;
@@ -218,6 +220,7 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     colormap_texture_id_(0),
     mouse_widget_(-1),
     mouse_object_(0),
+    paint_widget_(0),
     first_motion_(true),
     save_ppm_(false),
     mouse_last_x_(0),
@@ -332,6 +335,17 @@ EditColorMap2D::screen_val(int &x, int &y)
   x = do_round((x - cx) * sf_inv + cx + (pan_x_.get() * width_));
   y = do_round((y - cy) * sf_inv + cy - (pan_y_.get() * height_));
 }
+
+
+pair<double, double>
+EditColorMap2D::normalized_val(int x, int y)
+{
+  double xx = x/double(width_);
+  y = height_ - y - 1;
+  double yy = y/double(height_);
+  return make_pair(xx, yy);
+}
+
 
 void
 EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
@@ -833,8 +847,24 @@ EditColorMap2D::push(int x, int y, int button)
 {
   button_ = button;
   first_motion_ = true;
+  paint_widget_ = 0;
+  int old_widget = gui_selected_widget_.get();
+  int old_object = mouse_object_;
   mouse_pick(x,y,button);
+  if (mouse_widget_ == -1 && old_widget != -1) {
+      mouse_widget_ = old_widget;
+      mouse_object_ = old_object;
+  }
   select_widget(mouse_widget_, mouse_object_);
+
+  // If the currently selected widget is a paint layer, start a new stroke
+  paint_widget_ = 
+    dynamic_cast<PaintCM2Widget *>(widgets_[mouse_widget_].get_rep());
+  if (paint_widget_) {
+    paint_widget_->add_stroke();
+    paint_widget_->add_coordinate(normalized_val(x,y));
+  }
+
   redraw();
 }
 
@@ -877,22 +907,25 @@ EditColorMap2D::motion(int x, int y)
     set_window_cursor(x,y);
     return;
   }
-  
-  const int selected = gui_selected_widget_.get();
-  if (selected != -1)
-  {
-    if (first_motion_)
-    {
-      undo_stack_.push(UndoItem(UndoItem::UNDO_CHANGE, selected,
-				widgets_[selected]->clone()));
-      first_motion_ = false;
-    }
 
-    widgets_[selected]->move(x, height_-1-y, width_, height_);
-    cmap_dirty_ = true;
-    updating_ = true;
-    want_to_execute();
+  if (button_ == 1 && paint_widget_) {
+    paint_widget_->add_coordinate(normalized_val(x,y));
+  } else {
+    const int selected = gui_selected_widget_.get();
+    if (selected != -1)
+    {
+      if (first_motion_)
+      {
+	undo_stack_.push(UndoItem(UndoItem::UNDO_CHANGE, selected,
+				  widgets_[selected]->clone()));
+	first_motion_ = false;
+      }
+      widgets_[selected]->move(x, height_-1-y, width_, height_);
+    }
   }
+  cmap_dirty_ = true;
+  updating_ = true;
+  want_to_execute();
 }
 
 
@@ -901,6 +934,7 @@ void
 EditColorMap2D::release(int x, int y)
 {
   button_ = 0;
+  paint_widget_ = 0;
   set_window_cursor(x,y);
   const int selected = gui_selected_widget_.get();
   if (selected != -1)
