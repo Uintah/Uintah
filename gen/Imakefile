@@ -1,0 +1,6 @@
+
+#include <config/sci.cf>
+
+SUBDIRS = MakeVectorField
+
+SCISubdirs($(SUBDIRS))
