@@ -109,10 +109,9 @@ void ParticleFieldExtractor::add_type(string &type_list,
   }
 }  
 
-bool ParticleFieldExtractor::setVars(ArchiveHandle ar)
+bool ParticleFieldExtractor::setVars(DataArchive& archive)
 {
   string command;
-  DataArchive& archive = *((*(ar.get_rep()))());
 
   names.clear();
   types.clear();
@@ -370,6 +369,7 @@ void ParticleFieldExtractor::execute()
      return;
    }
    
+   DataArchive& archive = *((*(handle.get_rep()))());
 
    if ( handle.get_rep() != archiveH.get_rep() ) {
      // we have a different archive
@@ -383,8 +383,10 @@ void ParticleFieldExtractor::execute()
        if( visible == "0" ){
 	 gui->execute(id + " buildTopLevel");
        }
-     }     
-     if( !setVars( handle )){
+
+     }
+     
+     if( !setVars( archive )){
        warning("Cannot read any ParticleVariables, no action.");
        return;
       }
@@ -393,7 +395,6 @@ void ParticleFieldExtractor::execute()
     }
    showVarsForMatls();
      
-   DataArchive& archive = *((*(handle.get_rep()))());
    ScalarParticles* sp = 0;
    VectorParticles* vp = 0;
    TensorParticles* tp = 0;
@@ -425,6 +426,7 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
   LevelP level = grid->getLevel( 0 );
   
   PSet* pset = new PSet();
+  pset->SetLevel( level );
   pset->SetCallbackClass( this );
   
 
@@ -454,11 +456,11 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
     update_progress(count++/size, my_timer);
     sema->down();
     Thread *thrd =
-      new Thread( scinew PFEThread( this, archive, level,
-			     *patch,  sp, vp, tp, pset,
-			     scalar_type, have_sp, have_vp,
-			     have_tp, have_ids, sema,
-			     &smutex, &vmutex, &tmutex, &imutex, gui),
+      new Thread( scinew PFEThread( this, archive,
+				    *patch,  sp, vp, tp, pset,
+				    scalar_type, have_sp, have_vp,
+				    have_tp, have_ids, sema,
+				    &smutex, &vmutex, &tmutex, &imutex, gui),
 		  "Particle Field Extractor Thread");
     thrd->detach();
 //     PFEThread *thrd = scinew PFEThread( this, archive, *patch,
@@ -551,6 +553,7 @@ void PFEThread::run(){
       sema->up();
       return;
     }
+
     string elems;
     //unsigned long totsize;
     //void* mem_start;
@@ -614,7 +617,6 @@ void PFEThread::run(){
     if( sp == 0 ){
       sp = scinew ScalarParticles();
       sp->Set( PSetHandle(pset) );
-      sp->Set( level );
     }
     sp->AddVar( scalars );
     smutex->unlock();
@@ -625,7 +627,6 @@ void PFEThread::run(){
     if( vp == 0 ){
       vp = scinew VectorParticles();
       vp->Set( PSetHandle(pset));
-      vp->Set( level );
     }
     vp->AddVar( vectors );
     vmutex->unlock();
@@ -637,7 +638,6 @@ void PFEThread::run(){
     if( tp == 0 ){
       tp = scinew TensorParticles();
       tp->Set( PSetHandle(pset) );
-      tp->Set( level );
     }
     tp->AddVar( tensors);
     tmutex->unlock();

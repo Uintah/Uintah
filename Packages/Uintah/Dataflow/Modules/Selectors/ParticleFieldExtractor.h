@@ -130,7 +130,7 @@ private:
 
   ArchiveHandle archiveH;
   void add_type(string &type_list, const TypeDescription *subtype);
-  bool setVars(ArchiveHandle ar);
+  bool setVars(DataArchive& archive);
   void showVarsForMatls();
   std::string getVarsForMaterials(std::list<VarInfo>& vars,
 				  const ConsecutiveRangeSet& matls,
@@ -177,7 +177,7 @@ private:
     {
     public:
       PFEThread( ParticleFieldExtractor *pfe, DataArchive& archive,
-		 LevelP level, Patch *patch,
+		 Patch *patch,
 		 ScalarParticles*& sp, VectorParticles*& vp,
 		 TensorParticles*& tp, PSet* pset,
 		 int scalar_type, bool have_sp,
@@ -185,7 +185,7 @@ private:
 		 Semaphore *sema, Mutex *smutex,
 		 Mutex *vmutex, Mutex *tmutex, Mutex *imutex,
 		 GuiInterface* gui):
-	pfe(pfe), archive(archive), level(level), patch(patch),
+	pfe(pfe), archive(archive), patch(patch), 
 	sp(sp), vp(vp), tp(tp),
 	pset(pset), scalar_type(scalar_type), have_sp(have_sp),
 	have_vp(have_vp), have_tp(have_tp), have_ids(have_ids), sema(sema),
