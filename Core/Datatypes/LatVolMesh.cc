@@ -555,9 +555,9 @@ LatVolMesh::locate(Cell::index_type &cell, const Point &p)
   // Rounds down, so catches intervals.  Might lose numerical precision on
   // upper edge (ie nodes on upper edges are not in any cell).
   // Nodes over 2 billion might suffer roundoff error.
-  cell.i_ = (unsigned int)((r.x()-0.5) * (ni_/(ni_-1.0)));
-  cell.j_ = (unsigned int)((r.y()-0.5) * (nj_/(nj_-1.0)));
-  cell.k_ = (unsigned int)((r.z()-0.5) * (nk_/(nk_-1.0)));
+  cell.i_ = (unsigned int)floor(r.x());
+  cell.j_ = (unsigned int)floor(r.y());
+  cell.k_ = (unsigned int)floor(r.z());
 
   if (cell.i_ >= (ni_-1) ||
       cell.j_ >= (nj_-1) ||
@@ -579,9 +579,9 @@ LatVolMesh::locate(Node::index_type &node, const Point &p)
   const Point r = transform_.unproject(p);
 
   // Nodes over 2 billion might suffer roundoff error.
-  node.i_ = (unsigned int)(r.x() + 0.5);
-  node.j_ = (unsigned int)(r.y() + 0.5);
-  node.k_ = (unsigned int)(r.z() + 0.5);
+  node.i_ = (unsigned int)floor(r.x() + 0.5);
+  node.j_ = (unsigned int)floor(r.y() + 0.5);
+  node.k_ = (unsigned int)floor(r.z() + 0.5);
 
   if (node.i_ >= ni_ ||
       node.j_ >= nj_ ||
@@ -610,32 +610,49 @@ LatVolMesh::get_weights(const Point &p,
 
 void
 LatVolMesh::get_weights(const Point &p,
-			Node::array_type &l, vector<double> &w)
+			Node::array_type &locs, vector<double> &w)
 {
-  Cell::index_type idx;
-  if (locate(idx, p))
+  const Point r = transform_.unproject(p);
+  const double ii = r.x();
+  const double jj = r.y();
+  const double kk = r.z();
+
+  const unsigned int i = (unsigned int)floor(ii);
+  const unsigned int j = (unsigned int)floor(jj);
+  const unsigned int k = (unsigned int)floor(kk);
+
+  if (i >= (ni_-1) ||
+      j >= (nj_-1) ||
+      k >= (nk_-1))
   {
-    get_nodes( l, idx );
-    w.resize(l.size());
-    vector<double>::iterator wit = w.begin();
-    Node::array_type::iterator it = l.begin();
-
-    Point np, pmin, pmax;
-    get_point(pmin, l[0]);
-    get_point(pmax, l[6]);
-
-    Vector diag(pmax - pmin);
-
-    while( it != l.end()) {
-      Node::index_type ni = *it;
-      ++it;
-      get_point(np, ni);
-      *wit = ( 1 - fabs(p.x() - np.x())/diag.x() ) *
-	( 1 - fabs(p.y() - np.y())/diag.y() ) *
-	( 1 - fabs(p.z() - np.z())/diag.z() );
-      ++wit;
-    }
+    locs.clear();
+    w.clear();
+    return;
   }
+
+  locs.resize(8);
+  locs[0].i_ = i;   locs[0].j_ = j;   locs[0].k_ = k;
+  locs[1].i_ = i+1; locs[1].j_ = j;   locs[1].k_ = k;
+  locs[2].i_ = i+1; locs[2].j_ = j+1; locs[2].k_ = k;
+  locs[3].i_ = i;   locs[3].j_ = j+1; locs[3].k_ = k;
+  locs[4].i_ = i;   locs[4].j_ = j;   locs[4].k_ = k+1;
+  locs[5].i_ = i+1; locs[5].j_ = j;   locs[5].k_ = k+1;
+  locs[6].i_ = i+1; locs[6].j_ = j+1; locs[6].k_ = k+1;
+  locs[7].i_ = i;   locs[7].j_ = j+1; locs[7].k_ = k+1;
+
+  const double di = ii - (double)i;
+  const double dj = jj - (double)j;
+  const double dk = kk - (double)k;
+
+  w.resize(8);
+  w[0] = (1.0 - di) * (1.0 - dj) * (1.0 - dk);
+  w[1] = di         * (1.0 - dj) * (1.0 - dk);
+  w[2] = di         * dj         * (1.0 - dk);
+  w[3] = (1.0 - di) * dj         * (1.0 - dk);
+  w[4] = (1.0 - di) * (1.0 - dj) * dk;
+  w[5] = di         * (1.0 - dj) * dk;
+  w[6] = di         * dj         * dk;
+  w[7] = (1.0 - di) * dj         * dk;
 }
 
 const TypeDescription* get_type_description(LatVolMesh::NodeIndex *)
