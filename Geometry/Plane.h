@@ -20,6 +20,7 @@ class Plane {
    Vector n;
    double d;
 public:
+   Plane();
     Plane(const Plane &copy);
     Plane(const Point &p1, const Point &p2, const Point &p3);
     ~Plane();
@@ -27,6 +28,15 @@ public:
     void flip();
     Point project(const Point& p);
    Vector normal();
+
+   // changes the plane ( n and d )
+   
+   void ChangePlane( const Point &p1, const Point &p2, const Point &p3 );
+
+   // returns true if the line  v*t+s  for -inf < t < inf intersects
+   // the plane.  if so, hit contains the point of intersection.
+
+   int Intersect( Point s, Vector v, Point& hit );
 };
 
 #endif
