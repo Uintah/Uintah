@@ -29,17 +29,11 @@
 <!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
-<appendix id="appendix">
+<appendix id="app.opt_inst">
 <title>Optional Thirdparty Installation Instructions</title>
-<!--%= doc.ifNotP(Doc::OSX) {%Q{-->
-&blas_lapack_inst;
-<!--}} %-->
+<!--%= doc.ifNotP(Doc::OSX) {%Q{--> &blas_lapack_inst; <!--}} %-->
 &petsc_inst;
-<!--%= doc.ifNotP(Doc::Irix) {%Q{-->
-&itk_inst;
-<!--}} %-->
+<!--%= doc.ifNotP(Doc::Irix) {%Q{--> &itk_inst; <!--}} %-->
 &hdf5_inst;
-<!--%= doc.ifNotP(Doc::Irix) {%Q{-->
 &mdsplus_inst;
-<!--}} %-->
 </appendix>

@@ -139,9 +139,8 @@ cd &sr;/<replaceable>build-dir</replaceable>
 --with-insight=/usr/local/lib/InsightToolkit <!--%= extraOptions %-->
 	</literallayout>
 	Use option <option>--with-hdf5</option> to add HDF5 support.
-	<!--%= doc.ifNotP(Doc::Irix) {%Q{-->Use option
-	<option>--with-mdplus</option> to add MDSplus support<!--}} %-->.
-	Also enable packages Teem and DataIO.  For example:
+	Use option <option>--with-mdplus</option> to add MDSplus
+	support.  Also enable packages Teem and DataIO.  For example:
 	<literallayout class="monospaced">
 ../src/configure \
 <!--%= withThirdParty %--> \
@@ -180,11 +179,6 @@ make -j <replaceable>N</replaceable>
 	available for use by make.  Using this option on a multiprocessor
 	machine can significantly reduce the time to build &sr;.
       </para>
-      <para>
-	Be sure to read <xref
-	linkend="sec.prepare"/> before
-	<link linkend="sec.starting">starting</link> &sr;.
-      </para>
     </listitem>
   </orderedlist>
 
@@ -199,5 +193,8 @@ make -j <replaceable>N</replaceable>
     architectures within the same source code directory.  See <xref
     linkend="app.multi_builds"/> for details.</para>
   </tip>
+
+  <para>Read <xref linkend="sec.prepare"/> before <link
+  linkend="sec.starting">starting</link> &sr;.</para>
 
 </section>
