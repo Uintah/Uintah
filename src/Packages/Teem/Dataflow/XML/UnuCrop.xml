@@ -43,7 +43,7 @@ original.</summary>
       <p>Crop preserves dimension.  After first execution, the user interface has
 correct values, and will perform a crop that produces the identical
 nrrd as was input. The min and max pairs per axis in the user
-interface are the sample indecies that you wish to crop.</p>
+interface are the sample indecies that you wish to crop. In the case that the min or max are out of bounds, the min and max will reset to the bounding box and the input nrrd will be output.</p>
     </description>
     <examplesr>Teem/nets/test/crop_set.net</examplesr>
   </overview>
