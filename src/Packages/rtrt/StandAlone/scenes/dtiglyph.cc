@@ -11,8 +11,6 @@
 
 #include <Packages/rtrt/Core/Camera.h>
 //#include <Packages/rtrt/Core/CatmullRomSpline.h>
-//#include <Packages/rtrt/Core/GridSpheres.h>
-//#include <Packages/rtrt/Core/GridSpheresDpy.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Phong.h>
