@@ -83,6 +83,34 @@ Properties::sched_computeProps(const LevelP& level,
 }
 
 //****************************************************************************
+// Schedule the recomputation of properties
+//****************************************************************************
+void 
+Properties::sched_reComputeProps(const LevelP& level,
+			       SchedulerP& sched, 
+			       DataWarehouseP& old_dw,
+			       DataWarehouseP& new_dw)
+{
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
+    {
+      Task* tsk = scinew Task("Properties::ReComputeProps",
+			      patch, old_dw, new_dw, this,
+			      &Properties::reComputeProps);
+
+      int numGhostCells = 0;
+      int matlIndex = 0;
+      // requires scalars
+      tsk->requires(old_dw, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->computes(new_dw, d_densityRCPLabel, matlIndex, patch);
+      sched->addTask(tsk);
+    }
+  }
+}
+
+//****************************************************************************
 // Actually compute the properties here
 //****************************************************************************
 void 
@@ -120,6 +148,43 @@ Properties::computeProps(const ProcessorGroup*,
 }
 
 //****************************************************************************
+// Actually recompute the properties here
+//****************************************************************************
+void 
+Properties::reComputeProps(const ProcessorGroup*,
+			   const Patch* patch,
+			   DataWarehouseP& old_dw,
+			   DataWarehouseP& new_dw)
+{
+  // Get the CCVariable (density) from the old datawarehouse
+  CCVariable<double> density;
+  int matlIndex = 0;
+  int nofGhostCells = 0;
+  old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+
+  // Create the CCVariable for storing the computed density
+  CCVariable<double> new_density;
+  new_dw->allocate(new_density, d_densityRCPLabel, matlIndex, patch);
+
+#ifdef WONT_COMPILE_YET
+  // Get the low and high index for the patch
+  IntVector lowIndex = patch->getCellLowIndex();
+  IntVector highIndex = patch->getCellHighIndex();
+
+  // Calculate the properties
+  // this calculation will be done by MixingModel class
+  // for more complicated cases...this will only work for
+  // helium plume
+  FORT_COLDPROPS(new_density, density,
+		 lowIndex, highIndex, d_denUnderrelax);
+#endif
+
+  // Write the computed density to the new data warehouse
+  new_dw->put(new_density, d_densityRCPLabel, matlIndex, patch);
+}
+
+//****************************************************************************
 // Default constructor for Properties::Stream
 //****************************************************************************
 Properties::Stream::Stream()
@@ -138,6 +203,10 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.16  2000/06/18 01:20:16  bbanerje
+// Changed names of varlabels in source to reflect the sequence of tasks.
+// Result : Seg Violation in addTask in MomentumSolver
+//
 // Revision 1.15  2000/06/17 07:06:25  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

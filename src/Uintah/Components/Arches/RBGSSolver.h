@@ -220,10 +220,52 @@ private:
       double d_residual;
 
       // const VarLabel *
-      const VarLabel* d_pressureLabel;
-      const VarLabel* d_presCoefLabel;
-      const VarLabel* d_presNonLinSrcLabel;
-      const VarLabel* d_presResidualLabel;
+      // inputs (Pressure Solve)
+      const VarLabel* d_pressureINLabel;
+      const VarLabel* d_presCoefPBLMLabel;
+      const VarLabel* d_presNonLinSrcPBLMLabel;
+
+      // computes (Pressure Solve)
+      const VarLabel* d_presResidualPSLabel;
+      const VarLabel* d_presCoefPSLabel;
+      const VarLabel* d_presNonLinSrcPSLabel;
+      const VarLabel* d_pressurePSLabel;
+
+      // inputs (Momentum Solve)
+      const VarLabel* d_uVelocityCPBCLabel;
+      const VarLabel* d_uVelCoefMBLMLabel;
+      const VarLabel* d_uVelNonLinSrcMBLMLabel;
+      const VarLabel* d_vVelocityCPBCLabel;
+      const VarLabel* d_vVelCoefMBLMLabel;
+      const VarLabel* d_vVelNonLinSrcMBLMLabel;
+      const VarLabel* d_wVelocityCPBCLabel;
+      const VarLabel* d_wVelCoefMBLMLabel;
+      const VarLabel* d_wVelNonLinSrcMBLMLabel;
+
+      // computes (Momentum Solve)
+      const VarLabel* d_uVelResidualMSLabel;
+      const VarLabel* d_uVelCoefMSLabel;
+      const VarLabel* d_uVelNonLinSrcMSLabel;
+      const VarLabel* d_uVelocityMSLabel;
+      const VarLabel* d_vVelResidualMSLabel;
+      const VarLabel* d_vVelCoefMSLabel;
+      const VarLabel* d_vVelNonLinSrcMSLabel;
+      const VarLabel* d_vVelocityMSLabel;
+      const VarLabel* d_wVelResidualMSLabel;
+      const VarLabel* d_wVelCoefMSLabel;
+      const VarLabel* d_wVelNonLinSrcMSLabel;
+      const VarLabel* d_wVelocityMSLabel;
+
+      // inputs (Scalar Solve)
+      const VarLabel* d_scalarINLabel;
+      const VarLabel* d_scalCoefSBLMLabel;
+      const VarLabel* d_scalNonLinSrcSBLMLabel;
+
+      // computes (Scalar Solve)
+      const VarLabel* d_scalResidualSSLabel;
+      const VarLabel* d_scalCoefSSLabel;
+      const VarLabel* d_scalNonLinSrcSSLabel;
+      const VarLabel* d_scalarSSLabel;
 
 }; // End class RBGSSolver.h
 
@@ -234,6 +276,10 @@ private:
   
 //
 // $Log$
+// Revision 1.10  2000/06/18 01:20:16  bbanerje
+// Changed names of varlabels in source to reflect the sequence of tasks.
+// Result : Seg Violation in addTask in MomentumSolver
+//
 // Revision 1.9  2000/06/17 07:06:26  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

@@ -59,6 +59,15 @@ class Discretization {
 
 public:
 
+      // GROUP: Constants:
+      ////////////////////////////////////////////////////////////////////////
+      //
+      enum d_eqnType {
+	PRESSURE,
+        MOMENTUM,
+        SCALAR
+      };
+
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
       //
@@ -91,7 +100,8 @@ public:
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw,
 				  double delta_t,
-				  int index);
+				  int index,
+				  int eqnType);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -126,7 +136,8 @@ public:
 				const Patch* patch,
 				DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw,
-				int Index);
+				int index,
+				int eqnType);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -160,26 +171,53 @@ private:
       StencilMatrix<CCVariable<double> >* d_scalar_stencil_matrix;
 
       // const VarLabel*
-      const VarLabel* d_uVelocityLabel;
-      const VarLabel* d_vVelocityLabel;
-      const VarLabel* d_wVelocityLabel;
-      const VarLabel* d_scalarLabel;
-      const VarLabel* d_pressureLabel;
-      const VarLabel* d_densityLabel;
-      const VarLabel* d_viscosityLabel;
-      const VarLabel* d_uVelCoefLabel;
-      const VarLabel* d_vVelCoefLabel;
-      const VarLabel* d_wVelCoefLabel;
-      const VarLabel* d_uVelConvCoefLabel;
-      const VarLabel* d_vVelConvCoefLabel;
-      const VarLabel* d_wVelConvCoefLabel;
-      const VarLabel* d_presCoefLabel;
-      const VarLabel* d_scalCoefLabel;
-      const VarLabel* d_uVelLinSrcLabel;
-      const VarLabel* d_vVelLinSrcLabel;
-      const VarLabel* d_wVelLinSrcLabel;
-      const VarLabel* d_presLinSrcLabel;
-      const VarLabel* d_scalLinSrcLabel;
+
+      // inputs
+      const VarLabel* d_uVelocitySIVBCLabel;
+      const VarLabel* d_vVelocitySIVBCLabel;
+      const VarLabel* d_wVelocitySIVBCLabel;
+      const VarLabel* d_densitySIVBCLabel;
+      const VarLabel* d_viscosityCTSLabel;
+      const VarLabel* d_uVelocityCPBCLabel;
+      const VarLabel* d_vVelocityCPBCLabel;
+      const VarLabel* d_wVelocityCPBCLabel;
+
+      // used/output by calculateVelocityCoeff
+      const VarLabel* d_uVelCoefPBLMLabel;
+      const VarLabel* d_vVelCoefPBLMLabel;
+      const VarLabel* d_wVelCoefPBLMLabel;
+      const VarLabel* d_uVelConvCoefPBLMLabel;
+      const VarLabel* d_vVelConvCoefPBLMLabel;
+      const VarLabel* d_wVelConvCoefPBLMLabel;
+      const VarLabel* d_uVelCoefMBLMLabel;
+      const VarLabel* d_vVelCoefMBLMLabel;
+      const VarLabel* d_wVelCoefMBLMLabel;
+      const VarLabel* d_uVelConvCoefMBLMLabel;
+      const VarLabel* d_vVelConvCoefMBLMLabel;
+      const VarLabel* d_wVelConvCoefMBLMLabel;
+
+      // input/output for calculatePressureCoeff
+      const VarLabel* d_pressureINLabel;
+      const VarLabel* d_presCoefPBLMLabel;
+      const VarLabel* d_presLinSrcPBLMLabel;
+
+      // Input/output for calculateVelDiagonal
+      const VarLabel* d_uVelLinSrcPBLMLabel;
+      const VarLabel* d_vVelLinSrcPBLMLabel;
+      const VarLabel* d_wVelLinSrcPBLMLabel;
+      const VarLabel* d_uVelLinSrcMBLMLabel;
+      const VarLabel* d_vVelLinSrcMBLMLabel;
+      const VarLabel* d_wVelLinSrcMBLMLabel;
+
+      // Input/output for calculateScalarCoeff
+      const VarLabel* d_scalarINLabel;
+      const VarLabel* d_uVelocityMSLabel;
+      const VarLabel* d_vVelocityMSLabel;
+      const VarLabel* d_wVelocityMSLabel;
+      const VarLabel* d_scalCoefSBLMLabel;
+
+      // Input/output for calculateScalarDiagonal
+      const VarLabel* d_scalLinSrcSBLMLabel;
 
 }; // end class Discretization
 } // end namespace ArchesSpace
@@ -189,6 +227,10 @@ private:
   
 //
 // $Log$
+// Revision 1.17  2000/06/18 01:20:15  bbanerje
+// Changed names of varlabels in source to reflect the sequence of tasks.
+// Result : Seg Violation in addTask in MomentumSolver
+//
 // Revision 1.16  2000/06/17 07:06:23  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

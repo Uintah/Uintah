@@ -77,6 +77,17 @@ public:
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) = 0;
 
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Interface for Schedule the recomputation of Turbulence Model data
+      //    [in] 
+      //        data User data needed for solve 
+      //
+      virtual void sched_reComputeTurbSubmodel(const LevelP&, 
+					     SchedulerP& sched,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) = 0;
+
       // GROUP: Action Computations :
       ///////////////////////////////////////////////////////////////////////
       //
@@ -88,7 +99,8 @@ public:
 				      const Patch* patch,
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw, 
-				      int index) = 0;
+				      int index,
+				      int eqnType) = 0;
 
       ///////////////////////////////////////////////////////////////////////
       //

@@ -30,46 +30,89 @@ using SCICore::Geometry::Vector;
 //****************************************************************************
 Discretization::Discretization()
 {
-  // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_uVelocityLabel = scinew VarLabel("uVelocity",
+  // ** WARNING ** velocity is set as CCVariable (should be FCVariable)
+  // Change all velocity related variables and then delete this comment.
+
+  // inputs
+  d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
 				    CCVariable<double>::getTypeDescription() );
-  d_vVelocityLabel = scinew VarLabel("vVelocity",
+  d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
 				    CCVariable<double>::getTypeDescription() );
-  d_wVelocityLabel = scinew VarLabel("wVelocity",
+  d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC",
 				    CCVariable<double>::getTypeDescription() );
-  d_densityLabel = scinew VarLabel("density",
+  d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
 				   CCVariable<double>::getTypeDescription() );
-  d_viscosityLabel = scinew VarLabel("viscosity",
+  d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
 				   CCVariable<double>::getTypeDescription() );
-  d_scalarLabel = scinew VarLabel("scalar",
+  d_uVelocityCPBCLabel = scinew VarLabel("uVelocityCPBC",
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelocityCPBCLabel = scinew VarLabel("vVelocityCPBC",
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC",
+				    CCVariable<double>::getTypeDescription() );
+
+  // computes (calculateVelocityCoeff)
+  d_uVelCoefPBLMLabel = scinew VarLabel("uVelCoefPBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_pressureLabel = scinew VarLabel("pressure",
+  d_vVelCoefPBLMLabel = scinew VarLabel("vVelCoefPBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_uVelCoefLabel = scinew VarLabel("uVelCoef",
+  d_wVelCoefPBLMLabel = scinew VarLabel("wVelCoefPBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_vVelCoefLabel = scinew VarLabel("vVelCoef",
+  d_uVelConvCoefPBLMLabel = scinew VarLabel("uVelConvCoefPBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_wVelCoefLabel = scinew VarLabel("wVelCoef",
+  d_vVelConvCoefPBLMLabel = scinew VarLabel("vVelConvCoefPBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_uVelConvCoefLabel = scinew VarLabel("uVelConvCoef",
+  d_wVelConvCoefPBLMLabel = scinew VarLabel("wVelConvCoefPBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_vVelConvCoefLabel = scinew VarLabel("vVelConvCoef",
+  d_uVelCoefMBLMLabel = scinew VarLabel("uVelCoefMBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_wVelConvCoefLabel = scinew VarLabel("wVelConvCoef",
+  d_vVelCoefMBLMLabel = scinew VarLabel("vVelCoefMBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_presCoefLabel = scinew VarLabel("presCoef",
+  d_wVelCoefMBLMLabel = scinew VarLabel("wVelCoefMBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_scalCoefLabel = scinew VarLabel("scalCoef",
+  d_uVelConvCoefMBLMLabel = scinew VarLabel("uVelConvCoefMBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_uVelLinSrcLabel = scinew VarLabel("uVelLinSrc",
+  d_vVelConvCoefMBLMLabel = scinew VarLabel("vVelConvCoefMBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_vVelLinSrcLabel = scinew VarLabel("vVelLinSrc",
+  d_wVelConvCoefMBLMLabel = scinew VarLabel("wVelConvCoefMBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_wVelLinSrcLabel = scinew VarLabel("wVelLinSrc",
+  // calculateVelDiagonal
+  d_uVelLinSrcPBLMLabel = scinew VarLabel("uVelLinSrcPBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_presLinSrcLabel = scinew VarLabel("presLinSrc",
+  d_vVelLinSrcPBLMLabel = scinew VarLabel("vVelLinSrcPBLM",
 				   CCVariable<double>::getTypeDescription() );
-  d_scalLinSrcLabel = scinew VarLabel("scalLinSrc",
+  d_wVelLinSrcPBLMLabel = scinew VarLabel("wVelLinSrcPBLM",
+				   CCVariable<double>::getTypeDescription() );
+  d_uVelLinSrcMBLMLabel = scinew VarLabel("uVelLinSrcMBLM",
+				   CCVariable<double>::getTypeDescription() );
+  d_vVelLinSrcMBLMLabel = scinew VarLabel("vVelLinSrcMBLM",
+				   CCVariable<double>::getTypeDescription() );
+  d_wVelLinSrcMBLMLabel = scinew VarLabel("wVelLinSrcMBLM",
+				   CCVariable<double>::getTypeDescription() );
+  // calculatePressureCoeff
+  d_pressureINLabel = scinew VarLabel("pressureIN",
+				   CCVariable<double>::getTypeDescription() );
+  d_presCoefPBLMLabel = scinew VarLabel("presCoefPBLM",
+				   CCVariable<double>::getTypeDescription() );
+
+  // calculatePressDiagonal
+  d_presLinSrcPBLMLabel = scinew VarLabel("presLinSrcPBLM",
+				   CCVariable<double>::getTypeDescription() );
+
+  // calculateScalarCoeff
+  d_scalarINLabel = scinew VarLabel("scalarIN",
+				   CCVariable<double>::getTypeDescription() );
+  d_uVelocityMSLabel = scinew VarLabel("uVelocityMS",
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelocityMSLabel = scinew VarLabel("vVelocityMS",
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelocityMSLabel = scinew VarLabel("wVelocityMS",
+				    CCVariable<double>::getTypeDescription() );
+  d_scalCoefSBLMLabel = scinew VarLabel("scalCoefSBLM",
+				   CCVariable<double>::getTypeDescription() );
+
+  // calculateScalarDiagonal
+  d_scalLinSrcSBLMLabel = scinew VarLabel("scalLinSrcSBLM",
 				   CCVariable<double>::getTypeDescription() );
 }
 
@@ -89,32 +132,56 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 				       DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw,
 				       double delta_t,
-				       int index)
+				       int index,
+				       int eqnType)
 {
   int matlIndex = 0;
   int numGhostCells = 0;
   int nofStencils = 7;
 
   // (** WARNING **) velocity is a FC variable
+  // Change all velocity related labels and delete this comment.
   CCVariable<double> uVelocity;
-  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  // (** WARNING **) velocity is a FC variable
   CCVariable<double> vVelocity;
-  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  // (** WARNING **) velocity is a FC variable
   CCVariable<double> wVelocity;
-  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-
   CCVariable<double> density;
-  old_dw->get(density, d_densityLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-
   CCVariable<double> viscosity;
-  old_dw->get(viscosity, d_viscosityLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
+  StencilMatrix<CCVariable<double> > uVelocityCoeff;
+  StencilMatrix<CCVariable<double> > vVelocityCoeff;
+  StencilMatrix<CCVariable<double> > wVelocityCoeff;
+  StencilMatrix<CCVariable<double> > uVelocityConvectCoeff;
+  StencilMatrix<CCVariable<double> > vVelocityConvectCoeff;
+  StencilMatrix<CCVariable<double> > wVelocityConvectCoeff;
+
+  // Get the required data
+  switch(eqnType) {
+  case PRESSURE:
+    old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    old_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    old_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    break;
+  case MOMENTUM:
+    old_dw->get(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    old_dw->get(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    old_dw->get(wVelocity, d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    break;
+  default:
+    throw InvalidValue("Equation type should be PRESSURE or MOMENTUM");
+  }
 
 #ifdef WONT_COMPILE_YET
   // using chain of responsibility pattern for getting cell information
@@ -132,29 +199,34 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   IntVector lowIndex = patch->getCellLowIndex();
   IntVector highIndex = patch->getCellHighIndex();
 
-  //7pt stencil declaration
-  // (** WARNING **) velocity is a FC variable
-  StencilMatrix<CCVariable<double> > uVelocityCoeff;
-  // (** WARNING **) velocity is a FC variable
-  StencilMatrix<CCVariable<double> > vVelocityCoeff;
-  // (** WARNING **) velocity is a FC variable
-  StencilMatrix<CCVariable<double> > wVelocityCoeff;
-  // convection coeffs
-  // (** WARNING **) velocity is a FC variable
-  StencilMatrix<CCVariable<double> > uVelocityConvectCoeff;
-  // (** WARNING **) velocity is a FC variable
-  StencilMatrix<CCVariable<double> > vVelocityConvectCoeff;
-  // (** WARNING **) velocity is a FC variable
-  StencilMatrix<CCVariable<double> > wVelocityConvectCoeff;
-
   // Allocate space in new datawarehouse
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->allocate(uVelocityCoeff[ii], d_uVelCoefLabel, ii, patch);
-    new_dw->allocate(vVelocityCoeff[ii], d_vVelCoefLabel, ii, patch);
-    new_dw->allocate(wVelocityCoeff[ii], d_wVelCoefLabel, ii, patch);
-    new_dw->allocate(uVelocityConvectCoeff[ii], d_uVelConvCoefLabel, ii, patch);
-    new_dw->allocate(vVelocityConvectCoeff[ii], d_vVelConvCoefLabel, ii, patch);
-    new_dw->allocate(wVelocityConvectCoeff[ii], d_wVelConvCoefLabel, ii, patch);
+    switch(eqnType) {
+    case PRESSURE:
+      new_dw->allocate(uVelocityCoeff[ii], d_uVelCoefPBLMLabel, ii, patch);
+      new_dw->allocate(vVelocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch);
+      new_dw->allocate(wVelocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch);
+      new_dw->allocate(uVelocityConvectCoeff[ii], d_uVelConvCoefPBLMLabel, ii, 
+		       patch);
+      new_dw->allocate(vVelocityConvectCoeff[ii], d_vVelConvCoefPBLMLabel, ii, 
+		       patch);
+      new_dw->allocate(wVelocityConvectCoeff[ii], d_wVelConvCoefPBLMLabel, ii, 
+		       patch);
+      break;
+    case MOMENTUM:
+      new_dw->allocate(uVelocityCoeff[ii], d_uVelCoefMBLMLabel, ii, patch);
+      new_dw->allocate(vVelocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch);
+      new_dw->allocate(wVelocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch);
+      new_dw->allocate(uVelocityConvectCoeff[ii], d_uVelConvCoefMBLMLabel, ii, 
+		       patch);
+      new_dw->allocate(vVelocityConvectCoeff[ii], d_vVelConvCoefMBLMLabel, ii, 
+		       patch);
+      new_dw->allocate(wVelocityConvectCoeff[ii], d_wVelConvCoefMBLMLabel, ii, 
+		       patch);
+      break;
+    default:
+      throw InvalidValue("EqnType in calcVelCoef should be 0 or 1");
+    }
   }
 
 #ifdef WONT_COMPILE_YET
@@ -180,12 +252,32 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 #endif
 
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(uVelocityCoeff[ii], d_uVelCoefLabel, ii, patch);
-    new_dw->put(vVelocityCoeff[ii], d_vVelCoefLabel, ii, patch);
-    new_dw->put(wVelocityCoeff[ii], d_wVelCoefLabel, ii, patch);
-    new_dw->put(uVelocityConvectCoeff[ii], d_uVelConvCoefLabel, ii, patch);
-    new_dw->put(vVelocityConvectCoeff[ii], d_vVelConvCoefLabel, ii, patch);
-    new_dw->put(wVelocityConvectCoeff[ii], d_wVelConvCoefLabel, ii, patch);
+    switch(eqnType) {
+    case PRESSURE:
+      new_dw->put(uVelocityCoeff[ii], d_uVelCoefPBLMLabel, ii, patch);
+      new_dw->put(vVelocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch);
+      new_dw->put(wVelocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch);
+      new_dw->put(uVelocityConvectCoeff[ii], d_uVelConvCoefPBLMLabel, ii, 
+		  patch);
+      new_dw->put(vVelocityConvectCoeff[ii], d_vVelConvCoefPBLMLabel, ii, 
+		  patch);
+      new_dw->put(wVelocityConvectCoeff[ii], d_wVelConvCoefPBLMLabel, ii,
+		   patch);
+      break;
+    case MOMENTUM:
+      new_dw->put(uVelocityCoeff[ii], d_uVelCoefMBLMLabel, ii, patch);
+      new_dw->put(vVelocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch);
+      new_dw->put(wVelocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch);
+      new_dw->put(uVelocityConvectCoeff[ii], d_uVelConvCoefMBLMLabel, ii, 
+		  patch);
+      new_dw->put(vVelocityConvectCoeff[ii], d_vVelConvCoefMBLMLabel, ii, 
+		  patch);
+      new_dw->put(wVelocityConvectCoeff[ii], d_wVelConvCoefMBLMLabel, ii, 
+		  patch);
+      break;
+    default:
+      throw InvalidValue("EqnType in calcVelCoef should be 0 or 1");
+    }
   }
   //new_dw->put(uVelocityCoeff, "VelocityCoeff", patch, index);
   //new_dw->put(uVelocityConvectCoeff, "VelocityConvectCoeff", patch, index);
@@ -208,24 +300,24 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
   int nofStencils = 0;
 
   CCVariable<double> pressure;
-  old_dw->get(pressure, d_pressureLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   // (** WARNING **) velocity is a FC variable
   CCVariable<double> uVelocity;
-  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   // (** WARNING **) velocity is a FC variable
   CCVariable<double> vVelocity;
-  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   // (** WARNING **) velocity is a FC variable
   CCVariable<double> wVelocity;
-  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   CCVariable<double> viscosity;
-  old_dw->get(viscosity, d_viscosityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   // (** WARNING **) velocity is a FC variable
@@ -233,11 +325,11 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
   StencilMatrix<CCVariable<double> > vVelCoeff;
   StencilMatrix<CCVariable<double> > wVelCoeff;
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->get(uVelCoeff[ii], d_uVelCoefLabel, ii, patch, Ghost::None,
+    new_dw->get(uVelCoeff[ii], d_uVelCoefPBLMLabel, ii, patch, Ghost::None,
 		numGhostCells);
-    new_dw->get(vVelCoeff[ii], d_vVelCoefLabel, ii, patch, Ghost::None,
+    new_dw->get(vVelCoeff[ii], d_vVelCoefPBLMLabel, ii, patch, Ghost::None,
 		numGhostCells);
-    new_dw->get(wVelCoeff[ii], d_wVelCoefLabel, ii, patch, Ghost::None,
+    new_dw->get(wVelCoeff[ii], d_wVelCoefPBLMLabel, ii, patch, Ghost::None,
 		numGhostCells);
   }
   //int index = 1;
@@ -268,7 +360,7 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
   // Create vars for new_dw
   StencilMatrix<CCVariable<double> > pressCoeff; //7 point stencil
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->allocate(pressCoeff[ii], d_presCoefLabel, ii, patch);
+    new_dw->allocate(pressCoeff[ii], d_presCoefPBLMLabel, ii, patch);
   }
   //new_dw->allocate(pressCoeff,"pressureCoeff",patch, 0);
 
@@ -282,7 +374,7 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
 #endif
 
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(pressCoeff[ii], d_presCoefLabel, ii, patch);
+    new_dw->put(pressCoeff[ii], d_presCoefPBLMLabel, ii, patch);
   }
   //new_dw->put(pressCoeff, "pressureCoeff", patch, 0);
 }
@@ -304,26 +396,26 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
 
   // (** WARNING **) velocity is a FC variable
   CCVariable<double> uVelocity;
-  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   CCVariable<double> vVelocity;
-  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   CCVariable<double> wVelocity;
-  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   CCVariable<double> density;
-  old_dw->get(density, d_densityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   CCVariable<double> viscosity;
-  old_dw->get(viscosity, d_viscosityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   // ithe componenet of scalar vector
   CCVariable<double> scalar;
-  old_dw->get(scalar, d_scalarLabel, index, patch, Ghost::None,
+  old_dw->get(scalar, d_scalarINLabel, index, patch, Ghost::None,
 	      numGhostCells);
 
 #ifdef WONT_COMPILE_YET
@@ -346,7 +438,7 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
   StencilMatrix<CCVariable<double> > scalarCoeff;
 
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->allocate(scalarCoeff[ii], d_scalCoefLabel, ii, patch);
+    new_dw->allocate(scalarCoeff[ii], d_scalCoefSBLMLabel, ii, patch);
   }
 
 #ifdef WONT_COMPILE_YET
@@ -366,7 +458,7 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
 #endif
 
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(scalarCoeff[ii], d_scalCoefLabel, ii, patch);
+    new_dw->put(scalarCoeff[ii], d_scalCoefSBLMLabel, ii, patch);
   }
   //new_dw->put(scalarCoeff, "ScalarCoeff", patch, index);
 }
@@ -379,7 +471,8 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 				     const Patch* patch,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw,
-				     int index)
+				     int index,
+				     int eqnType)
 {
   
   int matlIndex = 0;
@@ -393,40 +486,69 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
   StencilMatrix<CCVariable<double> > uVelCoeff;
   StencilMatrix<CCVariable<double> > vVelCoeff;
   StencilMatrix<CCVariable<double> > wVelCoeff;
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->get(uVelCoeff[ii], d_uVelCoefLabel, ii, patch, Ghost::None,
-		numGhostCells);
-    new_dw->get(vVelCoeff[ii], d_vVelCoefLabel, ii, patch, Ghost::None,
-		numGhostCells);
-    new_dw->get(wVelCoeff[ii], d_wVelCoefLabel, ii, patch, Ghost::None,
-		numGhostCells);
-  }
-  //CCVariable<double> uVelCoeff;
-  //new_dw->get(uVelCoeff, "VelocityCoeff", patch, index, 0);
-
-  // (** WARNING **) velocity is a FC variable
   CCVariable<double> uVelLinearSrc;
   CCVariable<double> vVelLinearSrc;
   CCVariable<double> wVelLinearSrc;
-  new_dw->get(uVelLinearSrc, d_uVelLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  new_dw->get(vVelLinearSrc, d_vVelLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  new_dw->get(wVelLinearSrc, d_wVelLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
 
-  //FCVariable<double> uVelLinearSrc;
-  //new_dw->get(uVelLinearSrc, "VelLinearSrc", patch, index, 0);
+  switch(eqnType) {
+  case PRESSURE:
+    for (int ii = 0; ii < nofStencils; ii++) {
+      new_dw->get(uVelCoeff[ii], d_uVelCoefPBLMLabel, ii, patch, Ghost::None,
+		  numGhostCells);
+      new_dw->get(vVelCoeff[ii], d_vVelCoefPBLMLabel, ii, patch, Ghost::None,
+		  numGhostCells);
+      new_dw->get(wVelCoeff[ii], d_wVelCoefPBLMLabel, ii, patch, Ghost::None,
+		  numGhostCells);
+    }
+    new_dw->get(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
+    new_dw->get(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
+    new_dw->get(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
+    break;
+  case MOMENTUM:
+    for (int ii = 0; ii < nofStencils; ii++) {
+      new_dw->get(uVelCoeff[ii], d_uVelCoefMBLMLabel, ii, patch, Ghost::None,
+		  numGhostCells);
+      new_dw->get(vVelCoeff[ii], d_vVelCoefMBLMLabel, ii, patch, Ghost::None,
+		  numGhostCells);
+      new_dw->get(wVelCoeff[ii], d_wVelCoefMBLMLabel, ii, patch, Ghost::None,
+		  numGhostCells);
+    }
+    new_dw->get(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
+    new_dw->get(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
+    new_dw->get(wVelLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
+    break;
+  default:
+    break;
+  }
+
 #ifdef WONT_COMPILE_YET
   FORT_APCAL(uVelCoeffvelocity, uVelLinearSrc, lowIndex, highIndex);
 #endif
 
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(uVelCoeff[ii], d_uVelCoefLabel, ii, patch);
-    new_dw->put(vVelCoeff[ii], d_vVelCoefLabel, ii, patch);
-    new_dw->put(wVelCoeff[ii], d_wVelCoefLabel, ii, patch);
+  switch(eqnType) {
+  case PRESSURE:
+    for (int ii = 0; ii < nofStencils; ii++) {
+      new_dw->put(uVelCoeff[ii], d_uVelCoefPBLMLabel, ii, patch);
+      new_dw->put(vVelCoeff[ii], d_vVelCoefPBLMLabel, ii, patch);
+      new_dw->put(wVelCoeff[ii], d_wVelCoefPBLMLabel, ii, patch);
+    }
+    break;
+  case MOMENTUM:
+    for (int ii = 0; ii < nofStencils; ii++) {
+      new_dw->put(uVelCoeff[ii], d_uVelCoefMBLMLabel, ii, patch);
+      new_dw->put(vVelCoeff[ii], d_vVelCoefMBLMLabel, ii, patch);
+      new_dw->put(wVelCoeff[ii], d_wVelCoefMBLMLabel, ii, patch);
+    }
+    break;
+  default:
+    break;
   }
-  //new_dw->put(uVelCoeff, "VelocityCoeff", patch, index, 0);
 
 }
 
@@ -449,24 +571,24 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
 
   StencilMatrix<CCVariable<double> > pressCoeff;
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->get(pressCoeff[ii], d_presCoefLabel, ii, patch, Ghost::None,
+    new_dw->get(pressCoeff[ii], d_presCoefPBLMLabel, ii, patch, Ghost::None,
 		numGhostCells);
   }
   //Stencil<double> pressCoeff;
   //new_dw->get(pressCoeff, "PressureCoCoeff", patch, 0);
 
   CCVariable<double> presLinearSrc;
-  new_dw->get(presLinearSrc, d_presLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
+  new_dw->get(presLinearSrc, d_presLinSrcPBLMLabel, matlIndex, patch, 
+	      Ghost::None, numGhostCells);
   //FCVariable<double> pressLinearSrc;
   //new_dw->get(pressLinearSrc, "pressureLinearSource", patch, 0);
 
 #ifdef WONT_COMPILE_YET
-  FORT_APCAL(pressCoeff, pressLinearSrc, lowIndex, highIndex);
+  FORT_APCAL(pressCoeff, presLinearSrc, lowIndex, highIndex);
 #endif
 
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(pressCoeff[ii], d_presCoefLabel, ii, patch);
+    new_dw->put(pressCoeff[ii], d_presCoefPBLMLabel, ii, patch);
   }
   //new_dw->put(pressCoeff, "pressureLinearSource", patch, 0);
 }
@@ -489,17 +611,20 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
   IntVector lowIndex = patch->getCellLowIndex();
   IntVector highIndex = patch->getCellHighIndex();
 
+  // **WARNING** Don't know how to get the stencil data yet for scalars
+  //             Currently overwriting scalarCoeff[ii] with the same data
+  //             for the current scalar
   StencilMatrix<CCVariable<double> > scalarCoeff;
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->get(scalarCoeff[ii], d_scalCoefLabel, ii, patch, Ghost::None,
-		numGhostCells);
+    new_dw->get(scalarCoeff[ii], d_scalCoefSBLMLabel, index, patch, 
+		Ghost::None, numGhostCells);
   }
   //Stencil<double> scalarCoeff;
   //new_dw->get(scalarCoeff, "ScalarCoeff", patch, index, 0);
 
   CCVariable<double> scalarLinearSrc;
-  new_dw->get(scalarLinearSrc, d_scalLinSrcLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
+  new_dw->get(scalarLinearSrc, d_scalLinSrcSBLMLabel, matlIndex, patch, 
+	      Ghost::None, numGhostCells);
   //FCVariable<double> scalarLinearSrc;
   //new_dw->get(scalarLinearSrc, "ScalarLinearSource", patch, index, 0);
 
@@ -507,14 +632,21 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
   FORT_APCAL(scalarCoeff, scalarLinearSrc, lowIndex, highIndex);
 #endif
 
+  // **WARNING** Don't know how to get the stencil data yet for scalars
+  //             Currently overwriting scalarCoeff[ii] with the same data
+  //             for the current scalar
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(scalarCoeff[ii], d_scalCoefLabel, ii, patch);
+    new_dw->put(scalarCoeff[ii], d_scalCoefSBLMLabel, index, patch);
   }
   //new_dw->put(scalarCoeff, "ScalarCoeff", patch, index, 0);
 }
 
 //
 // $Log$
+// Revision 1.16  2000/06/18 01:20:15  bbanerje
+// Changed names of varlabels in source to reflect the sequence of tasks.
+// Result : Seg Violation in addTask in MomentumSolver
+//
 // Revision 1.15  2000/06/17 07:06:23  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

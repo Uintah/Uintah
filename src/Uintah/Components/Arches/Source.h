@@ -106,7 +106,8 @@ public:
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw,
 				   double delta_t, 
-				   int index);
+				   int index,
+				   int eqnType);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -161,25 +162,46 @@ private:
       PhysicalConstants* d_physicalConsts;
 
       // const VarLabel*
-      const VarLabel* d_densityLabel ;
-      const VarLabel* d_viscosityLabel ;
-      const VarLabel* d_pressureLabel ;
-      const VarLabel* d_presLinearSrcLabel ;
-      const VarLabel* d_presNonlinearSrcLabel ;
-      const VarLabel* d_uVelocityLabel ;
-      const VarLabel* d_vVelocityLabel ;
-      const VarLabel* d_wVelocityLabel ;
-      const VarLabel* d_velLinearSrcLabel ;
-      const VarLabel* d_velNonlinearSrcLabel ;
-      const VarLabel* d_uVelCoeffLabel ;
-      const VarLabel* d_uNonlinearSrcLabel ;
-      const VarLabel* d_vVelCoeffLabel ;
-      const VarLabel* d_vNonlinearSrcLabel ;
-      const VarLabel* d_wVelCoeffLabel ;
-      const VarLabel* d_wNonlinearSrcLabel ;
-      const VarLabel* d_scalarLabel ;
-      const VarLabel* d_scalarLinearSrcLabel ;
-      const VarLabel* d_scalarNonlinearSrcLabel ;
+
+      // inputs for CalculateVelocitySource 
+      const VarLabel* d_uVelocitySIVBCLabel ;
+      const VarLabel* d_vVelocitySIVBCLabel ;
+      const VarLabel* d_wVelocitySIVBCLabel ;
+      const VarLabel* d_densitySIVBCLabel ;
+      const VarLabel* d_viscosityCTSLabel ;
+      const VarLabel* d_uVelocityCPBCLabel ;
+      const VarLabel* d_vVelocityCPBCLabel ;
+      const VarLabel* d_wVelocityCPBCLabel ;
+
+      // outputs for CalculateVelocitySource
+      const VarLabel* d_uVelLinSrcPBLMLabel ;
+      const VarLabel* d_uVelNonLinSrcPBLMLabel ;
+      const VarLabel* d_vVelLinSrcPBLMLabel ;
+      const VarLabel* d_vVelNonLinSrcPBLMLabel ;
+      const VarLabel* d_wVelLinSrcPBLMLabel ;
+      const VarLabel* d_wVelNonLinSrcPBLMLabel ;
+      const VarLabel* d_uVelLinSrcMBLMLabel ;
+      const VarLabel* d_uVelNonLinSrcMBLMLabel ;
+      const VarLabel* d_vVelLinSrcMBLMLabel ;
+      const VarLabel* d_vVelNonLinSrcMBLMLabel ;
+      const VarLabel* d_wVelLinSrcMBLMLabel ;
+      const VarLabel* d_wVelNonLinSrcMBLMLabel ;
+
+      // inputs/outputs for CalculatePressureSource 
+      const VarLabel* d_uVelCoefPBLMLabel ;
+      const VarLabel* d_vVelCoefPBLMLabel ;
+      const VarLabel* d_wVelCoefPBLMLabel ;
+      const VarLabel* d_pressureINLabel ;
+      const VarLabel* d_presLinSrcPBLMLabel ;
+      const VarLabel* d_presNonLinSrcPBLMLabel ;
+
+      // inputs/outputs for CalculateScalarSource 
+      const VarLabel* d_uVelocityMSLabel ;
+      const VarLabel* d_vVelocityMSLabel ;
+      const VarLabel* d_wVelocityMSLabel ;
+      const VarLabel* d_scalarINLabel ;
+      const VarLabel* d_scalLinSrcSBLMLabel ;
+      const VarLabel* d_scalNonLinSrcSBLMLabel ;
 
 }; // end Class Source
 
@@ -189,6 +211,10 @@ private:
   
 //
 // $Log$
+// Revision 1.13  2000/06/18 01:20:17  bbanerje
+// Changed names of varlabels in source to reflect the sequence of tasks.
+// Result : Seg Violation in addTask in MomentumSolver
+//
 // Revision 1.12  2000/06/17 07:06:27  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

@@ -146,17 +146,17 @@ private:
       PhysicalConstants* d_physicalConsts;
 
       // const VarLabel* (required)
-      const VarLabel* d_scalarLabel;
-      const VarLabel* d_uVelocityLabel;
-      const VarLabel* d_vVelocityLabel;
-      const VarLabel* d_wVelocityLabel;
-      const VarLabel* d_densityLabel;
-      const VarLabel* d_viscosityLabel;
+      const VarLabel* d_scalarINLabel;
+      const VarLabel* d_uVelocityMSLabel;
+      const VarLabel* d_vVelocityMSLabel;
+      const VarLabel* d_wVelocityMSLabel;
+      const VarLabel* d_densitySIVBCLabel;
+      const VarLabel* d_viscosityCTSLabel;
 
       // const VarLabel* (computed)
-      const VarLabel* d_scalarCoefLabel;
-      const VarLabel* d_scalarLinSrcLabel;
-      const VarLabel* d_scalarNonLinSrcLabel;
+      const VarLabel* d_scalCoefSBLMLabel;
+      const VarLabel* d_scalLinSrcSBLMLabel;
+      const VarLabel* d_scalNonLinSrcSBLMLabel;
 
       // DataWarehouse generation
       int d_generation;
@@ -170,6 +170,10 @@ private:
 
 //
 // $Log$
+// Revision 1.9  2000/06/18 01:20:17  bbanerje
+// Changed names of varlabels in source to reflect the sequence of tasks.
+// Result : Seg Violation in addTask in MomentumSolver
+//
 // Revision 1.8  2000/06/17 07:06:26  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

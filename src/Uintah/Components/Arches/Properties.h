@@ -79,6 +79,15 @@ public:
 			      DataWarehouseP& old_dw,
 			      DataWarehouseP& new_dw);
 
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Schedule the recomputation of proprties
+      //
+      void sched_reComputeProps(const LevelP& level,
+				SchedulerP&, 
+				DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw);
+
       // GROUP: Get Methods :
       ///////////////////////////////////////////////////////////////////////
       //
@@ -96,6 +105,15 @@ private:
       // Carry out actual computation of properties
       //
       void computeProps(const ProcessorGroup*,
+			const Patch* patch,
+			DataWarehouseP& old_dw,
+			DataWarehouseP& new_dw);
+
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Carry out actual recomputation of properties
+      //
+      void reComputeProps(const ProcessorGroup*,
 			const Patch* patch,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw);
@@ -134,6 +152,8 @@ private:
       // Variable labels used by simulation controller
       const VarLabel* d_densitySPLabel;   // Input density
       const VarLabel* d_densityCPLabel;   // Output density
+      const VarLabel* d_densitySIVBCLabel;   // Input density
+      const VarLabel* d_densityRCPLabel;   // Output density
 
 }; // end class Properties
 
@@ -144,6 +164,10 @@ private:
 
 //
 // $Log$
+// Revision 1.11  2000/06/18 01:20:16  bbanerje
+// Changed names of varlabels in source to reflect the sequence of tasks.
+// Result : Seg Violation in addTask in MomentumSolver
+//
 // Revision 1.10  2000/06/17 07:06:25  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

@@ -163,13 +163,13 @@ private:
       BoundaryCondition* d_boundaryCondition;
 
       // const VarLabel*
-      const VarLabel* d_pressureLabel;
-      const VarLabel* d_uVelocityLabel;
-      const VarLabel* d_vVelocityLabel;
-      const VarLabel* d_wVelocityLabel;
-      const VarLabel* d_scalarLabel;
-      const VarLabel* d_densityLabel;
-      const VarLabel* d_viscosityLabel;
+      const VarLabel* d_pressureINLabel;
+      const VarLabel* d_uVelocitySPLabel;
+      const VarLabel* d_vVelocitySPLabel;
+      const VarLabel* d_wVelocitySPLabel;
+      const VarLabel* d_scalarINLabel;
+      const VarLabel* d_densityCPLabel;
+      const VarLabel* d_viscosityCTSLabel;
 
       // generation variable for DataWarehouse creation
       int d_generation;
@@ -183,6 +183,10 @@ private:
 
 //
 // $Log$
+// Revision 1.15  2000/06/18 01:20:15  bbanerje
+// Changed names of varlabels in source to reflect the sequence of tasks.
+// Result : Seg Violation in addTask in MomentumSolver
+//
 // Revision 1.14  2000/06/17 07:06:25  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

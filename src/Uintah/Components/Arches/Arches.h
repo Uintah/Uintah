@@ -176,13 +176,13 @@ private:
       // Variable labels that are used by the simulation controller
       // 
       //    const VarLabel* d_deltLabel;
-      const VarLabel* d_densityLabel;
-      const VarLabel* d_pressureLabel;
-      const VarLabel* d_scalarLabel;
-      const VarLabel* d_uVelocityLabel;
-      const VarLabel* d_vVelocityLabel;
-      const VarLabel* d_wVelocityLabel;
-      const VarLabel* d_viscosityLabel;
+      const VarLabel* d_densityINLabel;
+      const VarLabel* d_pressureINLabel;
+      const VarLabel* d_scalarINLabel;
+      const VarLabel* d_uVelocityINLabel;
+      const VarLabel* d_vVelocityINLabel;
+      const VarLabel* d_wVelocityINLabel;
+      const VarLabel* d_viscosityINLabel;
       const VarLabel* d_cellTypeLabel;
 
 }; // end class Arches
@@ -192,6 +192,10 @@ private:
 
 //
 // $Log$
+// Revision 1.29  2000/06/18 01:20:14  bbanerje
+// Changed names of varlabels in source to reflect the sequence of tasks.
+// Result : Seg Violation in addTask in MomentumSolver
+//
 // Revision 1.28  2000/06/17 07:06:22  sparker
 // Changed ProcessorContext to ProcessorGroup
 //
