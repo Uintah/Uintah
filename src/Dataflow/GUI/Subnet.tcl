@@ -384,8 +384,9 @@ proc restoreLoadVars { key } {
 }
 
 
-proc loadSubnet { subnet filename { x 0 } { y 0 } } {
-    global Subnet SCIRUN_SRCDIR
+proc loadSubnet { filename { x 0 } { y 0 } } {
+    global Subnet SCIRUN_SRCDIR Name
+    set subnet $Subnet(Loading)
     if {!$x && !$y} {
 	global mouseX mouseY
 	set x [expr $mouseX+[$Subnet(Subnet${subnet}_canvas) canvasx 0]]
@@ -407,20 +408,23 @@ proc loadSubnet { subnet filename { x 0 } { y 0 } } {
     }
 
     set subnetNumber [makeSubnet $subnet $x $y]
-    set oldLoadingLevel $Subnet(Loading)
     set Subnet(Loading) $subnetNumber
     backupLoadVars $filename
     uplevel \#0 source \{$filename\}
     restoreLoadVars $filename
     set Subnet(Subnet$Subnet(Loading)_filename) "$filename"
-    set Subnet(Loading) $oldLoadingLevel
+    if [info exists Name] {
+	set Subnet(Subnet$Subnet(Loading)_Name) $Name
+    } else {
+	set Subnet(Subnet$Subnet(Loading)_Name) [lindex [file split $filename] end]
+    }
+    set Subnet(Loading) $subnet
     return SubnetIcon$subnetNumber
 }
 
 
 proc saveSubnet { subnet } {
     global Subnet SCIRUN_SRCDIR
-    puts "Saving subnet $subnet $Subnet(Subnet${subnet}_Name)"
     set name [join [split $Subnet(Subnet${subnet}_Name) "/"] ""].net
     set home  ~
     if [file writable $SCIRUN_SRCDIR/Subnets] {
@@ -446,23 +450,22 @@ proc saveSubnet { subnet } {
 }
 
 
-proc modVarName { modid } {
+proc modVarName { filename modid } {
     global modVar
-    if [info exists modVar($modid)] {return $modVar($modid)} else { return "" }
+    set token "$filename-$modid"
+    if [info exists modVar($token)] {return $modVar($token)} else { return "" }
 }
 
 proc writeSubnetModulesAndConnections { filename {subnet 0}} {
-    global Subnet SCIRUN_SRCDIR modVar connVar Disabled Notes
+    global Subnet SCIRUN_SRCDIR modVar Disabled Notes
     set out [open $filename {WRONLY APPEND}]
 
     puts $out "set bbox \{[subnet_bbox $subnet]\}"
-    puts $out "\n\# Set the name of our network"
-    puts $out "\# NOTE: \$Subnet(Loading) is the Sub-Network slot \# we are loading into"
-    puts -nonewline $out "set Subnet(Subnet\$Subnet(Loading)_Name) \{"
+    puts -nonewline $out "set Name \{"
     puts $out "$Subnet(Subnet${subnet}_Name)\}"
     set i 0
     set connections ""
-    set modVar(Subnet${subnet}) "Subnet\$Subnet(Loading)"
+    set modVar($filename-Subnet${subnet}) "Subnet"
     puts $out "\n\# Create the Modules"
     foreach module $Subnet(Subnet${subnet}_Modules) {
 	if { [isaSubnetIcon $module] } {
@@ -474,12 +477,12 @@ proc writeSubnetModulesAndConnections { filename {subnet 0}} {
 		#dont save this module if we cant save the subnet
 		continue
 	    }
-	    set modVar($module) "\$m$i"
-	    puts -nonewline $out "set m$i \[loadSubnet \$Subnet(Loading) "
+	    set modVar($filename-$module) "\$m$i"
+	    puts -nonewline $out "set m$i \[loadSubnet "
 	    set splitname [file split $Subnet(Subnet${iconsubnet}_filename)] 
 	    puts -nonewline $out "\"[lindex $splitname end]\" "
 	} else {
-	    set modVar($module) "\$m$i"
+	    set modVar($filename-$module) "\$m$i"
 	    puts -nonewline $out  "set m$i \[addModuleAtPosition "
 	    puts -nonewline $out  "\"[netedit packageName $module]\" "
 	    puts -nonewline $out  "\"[netedit categoryName $module]\" "
@@ -491,12 +494,12 @@ proc writeSubnetModulesAndConnections { filename {subnet 0}} {
     }
     puts $out "\n\# Set the Module Notes Dispaly Options"
     foreach module $Subnet(Subnet${subnet}_Modules) {
-	if ![info exists modVar($module)] continue
+	if ![info exists modVar($filename-$module)] continue
 	if [info exists Notes($module-Color)] {
-	    puts $out "set Notes($modVar($module)-Color) \{$Notes($module-Color)\}"
+	    puts $out "set Notes($modVar($filename-$module)-Color) \{$Notes($module-Color)\}"
 	}
 	if [info exists Notes($module-Position)] {
-	    puts $out "set Notes($modVar($module)-Position) \{$Notes($module-Position)\}"
+	    puts $out "set Notes($modVar($filename-$module)-Position) \{$Notes($module-Position)\}"
 	}
     }
     
@@ -505,17 +508,18 @@ proc writeSubnetModulesAndConnections { filename {subnet 0}} {
     set connections [lsort -integer -index 3 [lsort -unique $connections]]
     set i 0
     foreach conn $connections {
-	if {![info exists modVar([oMod conn])] || ![info exists modVar([iMod conn])]} continue
+	if {![info exists modVar($filename-[oMod conn])] || 
+	    ![info exists modVar($filename-[iMod conn])]} continue
 	puts -nonewline $out "set c$i \[addConnection "
 	puts $out \
-	    "$modVar([oMod conn]) [oNum conn] $modVar([iMod conn]) [iNum conn]\]"
+	    "$modVar($filename-[oMod conn]) [oNum conn] $modVar($filename-[iMod conn]) [iNum conn]\]"
 	incr i
     }
     
     puts $out "\n\# Mark which Connections are Disabled"
     set i 0
     foreach conn $connections {
-	if {![info exists modVar([oMod conn])] || ![info exists modVar([iMod conn])]} continue
+	if {![info exists modVar($filename-[oMod conn])] || ![info exists modVar($filename-[iMod conn])]} continue
 	set id [makeConnID $conn]
 	if { [info exists Disabled($id)] && $Disabled($id) } {
 	    puts $out "set Disabled(\$c$i) \{1\}"
@@ -526,7 +530,7 @@ proc writeSubnetModulesAndConnections { filename {subnet 0}} {
     puts $out "\n\# Set the Connection Notes and Dislpay Options"
     set i 0
     foreach conn $connections {
-	if {![info exists modVar([oMod conn])] || ![info exists modVar([iMod conn])]} continue
+	if {![info exists modVar($filename-[oMod conn])] || ![info exists modVar($filename-[iMod conn])]} continue
 	set id [makeConnID $conn]
 	if { [info exists Notes($id)] && [string length $Notes($id)] } {
 	    puts $out "set Notes(\$c$i) \{$Notes($id)\}"
