@@ -1,3 +1,6 @@
+#ifndef __BoundedArray_cc__
+#define __BoundedArray_cc__
+
 //
 //  class BoundedArray 
 //    array with explicit upper and lower bounds -- 
@@ -154,9 +157,12 @@ template<class T> BoundedArray<T> operator * (const BoundedArray<T> &left,
 }
 */
 
-
+#endif
 
 // $Log$
+// Revision 1.2  2000/05/26 22:28:28  tan
+// include the template implementations into the head file.
+//
 // Revision 1.1  2000/03/14 22:12:42  jas
 // Initial creation of the utility directory that has old matrix routines
 // that will eventually be replaced by the PSE library.

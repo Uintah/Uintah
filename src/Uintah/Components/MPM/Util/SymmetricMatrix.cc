@@ -1,3 +1,6 @@
+#ifndef __SymmetricMatrix_cc__
+#define __SymmetricMatrix_cc__
+
 //  SymmetricMatrix.cc 
 //  
 //  class SymmetricMatrix
@@ -534,9 +537,13 @@ template<class T> SymmetricMatrix<T>  operator - (const SymmetricMatrix<T> &left
 }
 
 
+#endif //__SymmetricMatrix_cc__
   
  
 // $Log$
+// Revision 1.2  2000/05/26 22:29:00  tan
+// include the template implementations into the head file.
+//
 // Revision 1.1  2000/03/14 22:12:44  jas
 // Initial creation of the utility directory that has old matrix routines
 // that will eventually be replaced by the PSE library.
