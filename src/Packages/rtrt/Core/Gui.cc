@@ -2969,8 +2969,7 @@ Gui::deleteCurrentMarkerCB( int /*id*/ )
 void
 Gui::addToRouteCB( int /*id*/ )
 {
-  activeGui->stealth_->addToMiddleOfPath( activeGui->camera_->get_eye(),
-					  activeGui->camera_->get_lookat() );
+  activeGui->stealth_->addToMiddleOfPath( activeGui->camera_ );
 }
 
 void
@@ -2992,14 +2991,9 @@ Gui::traverseRouteCB( int /*id*/ )
 void
 Gui::goToNextMarkerCB( int /*id*/ )
 {
-  Point pos, look_at;
-  int index = activeGui->stealth_->getNextMarker( pos, look_at );  
+  int index = activeGui->stealth_->getNextMarker( activeGui->camera_ );  
 
   if( index == -1 ) return;
-
-  activeGui->camera_->set_eye( pos );
-  activeGui->camera_->set_lookat( look_at );
-  activeGui->camera_->setup();
 
   Point origin;
   Vector lookdir;
@@ -3027,14 +3021,9 @@ Gui::goToNextMarkerCB( int /*id*/ )
 void
 Gui::goToPrevMarkerCB( int /*id*/ )
 {
-  Point pos, look_at;
-  int index = activeGui->stealth_->getPrevMarker( pos, look_at );  
+  int index = activeGui->stealth_->getPrevMarker( activeGui->camera_ );  
 
   if( index == -1 ) return;
-
-  activeGui->camera_->set_eye( pos );
-  activeGui->camera_->set_lookat( look_at );
-  activeGui->camera_->setup();
 
   Point origin;
   Vector lookdir;
@@ -3061,14 +3050,9 @@ Gui::goToPrevMarkerCB( int /*id*/ )
 void
 Gui::goToRouteBeginningCB( int /*id*/ )
 {
-  Point pos, look_at;
-  int   index = activeGui->stealth_->goToBeginning( pos, look_at );  
+  int index = activeGui->stealth_->goToBeginning( activeGui->camera_ );  
 
   if( index == -1 ) return;
-
-  activeGui->camera_->set_eye( pos );
-  activeGui->camera_->set_lookat( look_at );
-  activeGui->camera_->setup();
 
   Point origin;
   Vector lookdir;
