@@ -28,6 +28,9 @@
 #else
 #include <unistd.h>
 #endif
+#ifdef __sgi
+#include <libexc.h>
+#endif
 
 #define THREAD_DEFAULT_STACKSIZE 64*1024
 
@@ -82,11 +85,11 @@ Thread::run_body()
 	d_runner->run();
     } catch(const ThreadError& e){
 	fprintf(stderr, "Caught unhandled Thread error:\n%s\n",
-		e.message().c_str());
+		e.message());
 	Thread::niceAbort();
     } catch(const SCICore::Exceptions::Exception& e){
 	fprintf(stderr, "Caught unhandled exception:\n%s\n",
-		e.message().c_str());
+		e.message());
 	Thread::niceAbort();
     } catch(...){
 	fprintf(stderr, "Caught unhandled exception of unknown type\n");
@@ -208,6 +211,24 @@ Thread::niceAbort()
 #ifndef _WIN32
     for(;;){
         char action;
+#ifdef __sgi
+	// Use -lexc to print out a stack trace
+	static const int MAXSTACK = 100;
+	static const int MAXNAMELEN = 1000;
+	__uint64_t addrs[MAXSTACK];
+	char* cnames_str = new char[MAXSTACK*MAXNAMELEN];
+	char* names[MAXSTACK];
+	for(int i=0;i<MAXSTACK;i++)
+	    names[i]=cnames_str+i*MAXNAMELEN;
+	int nframes = trace_back_stack(0, addrs, names, MAXSTACK, MAXNAMELEN);
+	if(nframes == 0){
+	    fprintf(stderr, "Backtrace not available!\n");
+	} else {
+	    fprintf(stderr, "Backtrace:\n");
+	    for(int i=0;i<nframes;i++)
+		fprintf(stderr, "0x%p: %s\n", (void*)addrs[i], names[i]);
+	}
+#endif
         Thread* s=Thread::self();
 	print_threads();
 	fprintf(stderr, "\n");
@@ -313,6 +334,11 @@ Thread::getStateString(ThreadState state)
 
 //
 // $Log$
+// Revision 1.16  2000/03/23 10:21:26  sparker
+// Use libexc to print out stack straces on the SGI
+// Added "name" method to ThreadError to match exception base class
+// Fixed a compiler warning in Thread_irix.cc
+//
 // Revision 1.15  2000/02/15 00:23:50  sparker
 // Added:
 //  - new Thread::parallel method using member template syntax
