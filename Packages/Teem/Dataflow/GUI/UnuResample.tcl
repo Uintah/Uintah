@@ -104,8 +104,7 @@ itcl_class Teem_Unu_UnuResample {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -138,8 +137,10 @@ itcl_class Teem_Unu_UnuResample {
 	}
 
 	pack $w.f.f.l $w.f.f.axesf -side top -expand 1 -fill x
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.t $w.f.s $w.f.e $w.f.f $w.f.b -side top -expand 1 -fill x
+	pack $w.f.t $w.f.s $w.f.e $w.f.f -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
