@@ -28,6 +28,7 @@
 #include <string>
 #include <fstream>
 #include <sys/stat.h>
+#include <stdio.h>
 
 namespace BioPSE {
 
