@@ -461,6 +461,32 @@ void NetworkEditor::draw_module(Module* mod)
     NOT_FINISHED("Draw Ports and buttons");
 
     // Draw buttons
+    int ybtop=MOD_EDGE_WIDTH+MOD_PORT_SIZE+MOD_PORT_SPACE;
+    int ybbot=ybtop+MOD_BUTTON_BORDER+MOD_BUTTON_EDGE+MOD_BUTTON_SIZE
+	+MOD_BUTTON_EDGE;
+    int xbleft=MOD_EDGE_WIDTH+MOD_SIDE_BORDER;
+    int xbsize=MOD_BUTTON_BORDER+MOD_BUTTON_SIZE
+	+2*MOD_BUTTON_EDGE;
+    int xbright=xbleft+MOD_BUTTON_BORDER+MOD_NBUTTONS*xbsize;
+    // Draw border..
+    XSetForeground(dpy, gc, fg_color);
+    XDrawLine(dpy, win, gc, xbleft, ybtop, xbright-1, ybtop);
+    XDrawLine(dpy, win, gc, xbleft, ybbot, xbright-1, ybbot);
+    int x=xbleft;
+    ybtop+=MOD_BUTTON_BORDER;
+    ybbot-=MOD_BUTTON_BORDER;
+    xbleft+=MOD_BUTTON_BORDER;
+    for(int i=0;i<MOD_NBUTTONS+1;i++){
+	XDrawLine(dpy, win, gc, x, ybtop, x, ybbot);
+	x+=xbsize;
+    }
+    x=xbleft;
+    int xbsize2=xbsize-MOD_BUTTON_BORDER;
+    for(i=0;i<MOD_NBUTTONS;i++){
+	draw_shadow(dpy, win, gc, x, ybtop, x+xbsize2-1, ybbot,
+		    MOD_BUTTON_EDGE, top_shadow, bottom_shadow);
+	x+=xbsize;
+    }
 
     // Draw title
     clString name(mod->get_name());
