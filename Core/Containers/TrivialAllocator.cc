@@ -21,9 +21,11 @@ namespace Containers {
 
 const int PAGESIZE = 64*1024-64;  // Leave some room for malloc's overhead
 
-TrivialAllocator::TrivialAllocator(unsigned int size)
-: freelist(0), chunklist(0), size(size), lock("TrivialAllocator lock")
+TrivialAllocator::TrivialAllocator(unsigned int _size)
+: freelist(0), chunklist(0), lock("TrivialAllocator lock")
 {
+    int word_size=sizeof(void*);
+    size=word_size*((_size+(word_size-1))/word_size);
     nalloc=(PAGESIZE-sizeof(List))/size;
     alloc_size=nalloc*size+sizeof(List);
     if(getenv("SCI_TA_DISABLE"))
@@ -46,6 +48,13 @@ TrivialAllocator::~TrivialAllocator()
 
 //
 // $Log$
+// Revision 1.4  2000/02/02 22:07:07  dmw
+// Handle - added detach and Pio
+// TrivialAllocator - fixed mis-allignment problem in alloc()
+// Mesh - changed Nodes from LockingHandle to Handle so we won't run out
+// 	of locks for semaphores when building big meshes
+// Surface - just had to change the forward declaration of node
+//
 // Revision 1.3  1999/08/28 17:54:35  sparker
 // Integrated new Thread library
 //

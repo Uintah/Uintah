@@ -15,9 +15,12 @@
 #define SCI_Containers_Handle_h 1
 
 #include <SCICore/Util/Assert.h>
+#include <SCICore/Persistent/Persistent.h>
 
 namespace SCICore {
 namespace Containers {
+
+using SCICore::PersistentSpace::Piostream;
 
 /**************************************
 
@@ -44,6 +47,11 @@ PATTERNS
 WARNING
   
 ****************************************/
+
+template<class T>
+class Handle;
+template<class T>
+void Pio(Piostream& stream, Handle<T>& data);
 
 template<class T>
 class Handle {
@@ -73,8 +81,19 @@ public:
     //Destroy the handle
     ~Handle();
 
-    T* operator->() const;
-    T* get_rep() const;
+    void detach();
+
+    inline T* operator->() const {
+	ASSERT(rep != 0);
+	return rep;
+    }
+
+    inline T* get_rep() const {
+	return rep;
+    }
+
+    friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream& stream, Handle<T>& data);
+
 };
 
 } // End namespace Containers
@@ -138,16 +157,30 @@ Handle<T>::~Handle()
 }
 
 template<class T>
-T* Handle<T>::operator->() const
+void Handle<T>::detach()
 {
     ASSERT(rep != 0);
-    return rep;
+    if(rep->ref_cnt==1){
+	return; // We have the only copy
+    }
+    T* oldrep=rep;
+    rep=oldrep->clone();
+    oldrep->ref_cnt--;
+    rep->ref_cnt++;
 }
 
 template<class T>
-T* Handle<T>::get_rep() const
+void Pio(Piostream& stream, Handle<T>& data)
 {
-    return rep;
+    stream.begin_cheap_delim();
+    PersistentSpace::Persistent* trep=data.rep;
+    stream.io(trep, T::type_id);
+    if(stream.reading()){
+	data.rep=(T*)trep;
+	if(data.rep)
+	    data.rep->ref_cnt++;
+    }
+    stream.end_cheap_delim();
 }
 
 } // End namespace Containers
@@ -155,6 +188,13 @@ T* Handle<T>::get_rep() const
 
 //
 // $Log$
+// Revision 1.3  2000/02/02 22:07:06  dmw
+// Handle - added detach and Pio
+// TrivialAllocator - fixed mis-allignment problem in alloc()
+// Mesh - changed Nodes from LockingHandle to Handle so we won't run out
+// 	of locks for semaphores when building big meshes
+// Surface - just had to change the forward declaration of node
+//
 // Revision 1.2  1999/08/17 06:38:36  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

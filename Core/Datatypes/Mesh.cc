@@ -99,7 +99,7 @@ static Persistent* make_Node()
 }
 
 PersistentTypeID Mesh::type_id("Mesh", "Datatype", make_Mesh);
-PersistentTypeID Node::type_id("Node", "Datatype", make_Node);
+PersistentTypeID Node::type_id("Node", "0", make_Node);
 
 Mesh::Mesh()
 : have_all_neighbors(0), current_generation(2)
@@ -331,13 +331,13 @@ Element::Element(const Element& copy, Mesh* mesh)
 }
 
 Node::Node(const Point& p)
-: p(p), elems(0, 4), bc(0), fluxBC(0)
+: p(p), elems(0, 4), bc(0), fluxBC(0), ref_cnt(0)
 {
 }
 
 Node::Node(const Node& copy)
 : p(copy.p), elems(copy.elems), bc(copy.bc?new DirichletBC(*copy.bc):0),
-  fluxBC(0)
+  fluxBC(0), ref_cnt(0)
 {
 }
 
@@ -1865,6 +1865,13 @@ void Pio(Piostream& stream, SCICore::Datatypes::ElementVersion1& elem)
 
 //
 // $Log$
+// Revision 1.11  2000/02/02 22:07:10  dmw
+// Handle - added detach and Pio
+// TrivialAllocator - fixed mis-allignment problem in alloc()
+// Mesh - changed Nodes from LockingHandle to Handle so we won't run out
+// 	of locks for semaphores when building big meshes
+// Surface - just had to change the forward declaration of node
+//
 // Revision 1.10  1999/11/02 06:06:13  moulding
 // added a #ifdef for win32 to quiet the C++ compiler.  This change
 // relates to bug # 61 in csafe's bugzilla.
