@@ -63,12 +63,20 @@ main(int argc, char **argv) {
 	cerr << "  cond value "<<i<<":  "<<cond_table[i].mat_[0][0]<<"\n";
       }
     }
-    cerr << "Number of nodes: "<<tvm->nodes_size()<<"\n";
-    cerr << "Number of edges: "<<tvm->edges_size()<<"\n";
-    cerr << "Number of faces: "<<tvm->faces_size()<<"\n";
-    cerr << "Number of cells: "<<tvm->cells_size()<<"\n";
+    TetVolMesh::Node::size_type nsize;
+    TetVolMesh::Edge::size_type esize;
+    TetVolMesh::Face::size_type fsize;
+    TetVolMesh::Cell::size_type csize;
+    tvm->size(nsize);
+    tvm->size(esize);
+    tvm->size(fsize);
+    tvm->size(csize);
+    cerr << "Number of nodes: "<<nsize<<"\n";
+    cerr << "Number of edges: "<<esize<<"\n";
+    cerr << "Number of faces: "<<fsize<<"\n";
+    cerr << "Number of cells: "<<csize<<"\n";
     BBox b;
-    for (int i=0; i<tvm->nodes_size(); i++) b.extend(tvm->point(i));
+    for (int i=0; i<nsize; i++) b.extend(tvm->point(i));
     Point min, max;
     cerr << "Bounding box: "<<b.min()<<" -- "<<b.max()<<"\n";
   }
