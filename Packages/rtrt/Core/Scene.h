@@ -153,6 +153,7 @@ public:
   void renderLights( bool on ); 
   // Remove lights from active light list.
   void turnOffAllLights( Light * exceptThisLight = NULL ); 
+  void turnOffAllLights( double elapsed ); 
   // Put all lights back in the active light list.
   void turnOnAllLights();
   void turnOffLight( Light * light );

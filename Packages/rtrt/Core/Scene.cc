@@ -232,6 +232,25 @@ Scene::turnOffAllLights( Light * exceptThisLight )
       lights.remove( cnt );
     }
 }
+void
+Scene::turnOffAllLights( double elapsed )
+{
+  int numLights = lights.size();
+
+  for( int cnt = numLights-1; cnt >= 0; cnt-- )
+    {
+      Light * light = lights[cnt];
+
+      if (elapsed>0.0) {
+	light->updateIntensity(elapsed);
+      } else {
+	light->updateIntensity(1.0);
+	light->turnOff();
+	nonActiveLights_.add( light );
+	lights.remove( cnt );
+      }
+    }
+}
 
 void
 Scene::turnOnAllLights()

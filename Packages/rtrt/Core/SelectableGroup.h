@@ -41,7 +41,14 @@ public:
 
 
   inline void Child(int i) { if (i<objs.size()) child = i; /*neg means none*/ };
+  inline void nextChild() { 
+    autoswitch = false; 
+    child = child + 1; 
+    child = child % objs.size();
+  };
   inline void Autoswitch(bool b) {autoswitch = b;};
+  inline int Autoswitch() {if (autoswitch) return 1; else return 0;};
+  inline void toggleAutoswitch() {autoswitch = !autoswitch;};
 };
 
 } // end namespace rtrt

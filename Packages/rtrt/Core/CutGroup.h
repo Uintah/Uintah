@@ -31,11 +31,11 @@ namespace rtrt {
 //conflicts.
 
 class CutGroup : public Group, public Material {
-    Vector n;
     double d;
     CutPlaneDpy* dpy;
     bool on;
 public:
+    Vector n;
     CutGroup(const Vector& n, const Point& cen);
     CutGroup(CutPlaneDpy *dpy);
 
@@ -57,6 +57,14 @@ public:
 				       DepthStats* st, PerProcessorContext* ppc);
     virtual void animate(double t, bool& changed);
     virtual void collect_prims(Array1<Object*>& prims);
+    virtual void toggleOn() { 
+      on = !on; 
+      if (dpy) {
+	dpy->on = on; 
+	dpy->redisplay();
+      }
+    };
+
     bool interior_value(double& ret_val, const Ray &ref, const double t);
 
 

@@ -68,7 +68,7 @@ void CutPlaneDpy::init() {
 }
 
 void CutPlaneDpy::display() {
-  if(redraw){
+  if(redraw){ 
     int textheight=fontInfo->descent+fontInfo->ascent;
     
     glViewport(0, 0, xres, yres);

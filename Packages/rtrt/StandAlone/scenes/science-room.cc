@@ -34,13 +34,29 @@
 #include <Packages/rtrt/Core/Parallelogram.h>
 #include <Packages/rtrt/Core/Cylinder.h>
 
+
+#include <Core/Thread/Thread.h>
+#include <Packages/rtrt/Core/SelectableGroup.h>
+#include <Packages/rtrt/Core/HVolumeBrick16.h>
+#include <Packages/rtrt/Core/MIPHVB16.h>
+#include <Packages/rtrt/Core/CutVolumeDpy.h>
+#include <Packages/rtrt/Core/CutPlaneDpy.h>
+#include <Packages/rtrt/Core/ColorMap.h>
+#include <Packages/rtrt/Core/CutMaterial.h>
+#include <Packages/rtrt/Core/CutGroup.h>
+#include <Packages/rtrt/Core/Instance.h>
+#include <Packages/rtrt/Core/InstanceWrapperObject.h>
+#include <Packages/rtrt/Core/SpinningInstance.h>
+#include <Packages/rtrt/Core/DynamicInstance.h>
+
 using namespace rtrt;
+using SCIRun::Thread;
 
 #define MAXBUFSIZE 256
 #define SCALE 950
 
 extern "C"
-Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
+Scene* make_scene(int argc, char* argv[], int nworkers)
 {
   for(int i=1;i<argc;i++) {
     cerr << "Unknown option: " << argv[i] << '\n';
@@ -141,7 +157,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   north_wall->add(pic2);
 
   Material *silver = new MetalMaterial(Color(0.7,0.73,0.8), 12);
-  Material *air_to_glass = new DielectricMaterial(1.5, 0.66, 0.04, 400.0, Color(.87, .80, .93), Color(1,1,1), false);
+  //Material *air_to_glass = new DielectricMaterial(1.5, 0.66, 0.04, 400.0, Color(.87, .80, .93), Color(1,1,1), false);
   
   // top of the table is at 32 inches
   double i2m = 1./36.;             // convert inches to meters
@@ -215,17 +231,138 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       exit(0);
   }
 
+
+
+  //PER MATERIAL LIGHTS FOR THE HOLOGRAMS
+  Light *holo_light0 = new Light(Point(-10, 10, 3), Color(0.1,0.1,0.1), 0);
+  Light *holo_light1 = new Light(Point(-10, 6, 3), Color(0.1,0.1,0.1), 0);
+  Light *holo_light2 = new Light(Point(-8, 8, 2), Color(0.1,0.1,0.1), 0);
+
+
+  //ADD THE VISIBLE FEMALE DATASET
+  Material* vmat=new LambertianMaterial(Color(0.7,0.7,0.7));
+  vmat->my_lights.add(holo_light0);
+  vmat->my_lights.add(holo_light1);
+  vmat->my_lights.add(holo_light2);
+  VolumeDpy* vdpy = new VolumeDpy(1650);
+
+
+  HVolumeBrick16* slc0=new HVolumeBrick16(vmat, vdpy,
+					  "/usr/sci/data/Geometry/volumes/vfem16_0",
+					  3, nworkers);
+  
+  HVolumeBrick16* slc1=new HVolumeBrick16(vmat, vdpy,
+					  "/usr/sci/data/Geometry/volumes/vfem16_1",
+					  3, nworkers);
+  
+  HVolumeBrick16* slc2=new HVolumeBrick16(vmat, vdpy,
+					  "/usr/sci/data/Geometry/volumes/vfem16_2",
+					  3, nworkers);
+
+  HVolumeBrick16* slc3=new HVolumeBrick16(vmat, vdpy,
+					  "/usr/sci/data/Geometry/volumes/vfem16_3",
+					  3, nworkers);
+  
+  HVolumeBrick16* slc4=new HVolumeBrick16(vmat, vdpy,
+					  "/usr/sci/data/Geometry/volumes/vfem16_4",
+					  3, nworkers);
+  
+  HVolumeBrick16* slc5=new HVolumeBrick16(vmat, vdpy,
+					  "/usr/sci/data/Geometry/volumes/vfem16_5",
+					  3, nworkers);
+
+  HVolumeBrick16* slc6=new HVolumeBrick16(vmat, vdpy,
+					  "/usr/sci/data/Geometry/volumes/vfem16_6",
+					  3, nworkers);
+
+  Group *vig = new Group();
+  vig->add(slc0);
+  vig->add(slc1);
+  vig->add(slc2);
+  vig->add(slc3);
+  vig->add(slc4);
+  vig->add(slc5);
+  vig->add(slc6);
+  InstanceWrapperObject *viw = new InstanceWrapperObject(vig);
+  Transform *vtrans = new Transform();
+
+  vtrans->pre_translate(Vector(8, -8, -2));
+  vtrans->pre_rotate(3.14/2.0, Vector(0,1,0));
+  vtrans->pre_translate(Vector(-8, 8, 2));
+
+  SpinningInstance *vinst = new SpinningInstance(viw, vtrans, Point(-8,8,2), Vector(0,0,1), 0.5);
+  vinst->name_ = "Spinning Visible Woman";
+
+
+  //ADD THE DAVE HEAD DATA SET
+  Material* hmat=new LambertianMaterial(Color(0.7,0.7,0.7));
+  hmat->my_lights.add(holo_light0);
+  hmat->my_lights.add(holo_light1);
+  hmat->my_lights.add(holo_light2);
+
+  CutPlaneDpy* cpdpy=new CutPlaneDpy(Vector(.45,-.45,-.76), Point(-8,8,2));
+  ColorMap *cmap = new ColorMap("/usr/sci/data/Geometry/volumes/vol_cmap");
+  Material *cutmat = new CutMaterial(hmat, cmap, cpdpy);
+  cutmat->my_lights.add(holo_light0);
+  cutmat->my_lights.add(holo_light1);
+  cutmat->my_lights.add(holo_light2);
+
+  CutGroup *cut = new CutGroup(cpdpy);
+  CutVolumeDpy* cvdpy = new CutVolumeDpy(82.5, cmap);
+
+  HVolumeBrick16* davehead=new HVolumeBrick16(cutmat, cvdpy,
+					      "/usr/sci/data/Geometry/volumes/dave",
+					      3, nworkers);
+  InstanceWrapperObject *diw = new InstanceWrapperObject(davehead);
+  Transform *dtrans = new Transform();
+
+  dtrans->pre_translate(Vector(8, -8, -2)); 
+  dtrans->rotate(Vector(1,0,0), Vector(0,0,1));
+
+  dtrans->pre_translate(Vector(-8, 8, 2));
+
+  SpinningInstance *dinst = new SpinningInstance(diw, dtrans, Point(-8,8,2), Vector(0,0,1), 0.1);
+  dinst->name_ = "Spinning Head";
+
+  cut->add(dinst);
+  cut->name_ = "Head Cut Plane";
+
+  
+  SelectableGroup *sg = new SelectableGroup(10);
+  sg->add(vinst);
+  sg->add(cut);
+  sg->name_ = "VolVis Switching Items";
+  g->add(sg);
+
+
   Color cdown(0.1, 0.1, 0.1);
   Color cup(0.1, 0.1, 0.1);
 
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(0.3, 0.3, 0.3);
+
+  
   Scene *scene = new Scene(new HierarchicalGrid(g, 8, 8, 8, 20, 20, 5),
 			   cam, bgcolor, cdown, cup, groundplane, 0.3);
 
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
-  scene->add_light(new Light(Point(-8, 8, 3.9), Color(.7,.7,.7), 0));
-  scene->animate=false;
+  Light *science_room_light0 = new Light(Point(-8, 8, 3.9), Color(.7,.7,.7), 0);
+  science_room_light0->name_ = "science room overhead";
+  scene->add_light(science_room_light0);
+  scene->animate=true;
+
+  scene->addObjectOfInterest( sg, true );
+  scene->addObjectOfInterest( vinst, false );
+  scene->addObjectOfInterest( dinst, false );
+  scene->addObjectOfInterest( cut, false );
+
+  scene->attach_display(vdpy);
+  (new Thread(vdpy, "Volume Dpy"))->detach();
+  scene->attach_display(cpdpy);
+  scene->attach_display(cvdpy);
+  (new Thread(cpdpy, "CutPlane Dpy"))->detach();
+  (new Thread(cvdpy, "Cut Volume Dpy"))->detach();
+
   return scene;
 }
