@@ -42,7 +42,7 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
 	$(SRCDIR)/MeshGeom.cc $(SRCDIR)/PointCloudGeom.cc \
 	$(SRCDIR)/ContourGeom.cc $(SRCDIR)/TetMeshGeom.cc \
 	$(SRCDIR)/SurfaceGeom.cc $(SRCDIR)/TriSurfaceGeom.cc \
-	$(SRCDIR)/Path.cc $(SRCDIR)/CameraView.cc
+	$(SRCDIR)/Path.cc $(SRCDIR)/CameraView.cc $(SRCDIR)/GenFunction.cc
 
 
 $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
@@ -109,6 +109,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.3.2.11  2000/09/29 22:45:25  samsonov
+# added GenFunction.cc into build
+#
 # Revision 1.3.2.10  2000/09/28 03:13:32  mcole
 # merge trunk into FIELD_REDESIGN branch
 #
