@@ -64,6 +64,16 @@ itcl_class Roe {
 	#
 	set r [$salmon-c listrenderers]
 	
+	#
+	# Need to initialize the background color
+	#
+	global $this-bgcolor-r
+	set $this-bgcolor-r 0
+	global $this-bgcolor-g
+	set $this-bgcolor-g 0
+	global $this-bgcolor-b
+	set $this-bgcolor-b 0
+
 	# OpenGL is the preferred renderer, X11 the next best.
 	# Otherwise just pick the first one for the default
 	global $this-renderer
@@ -415,6 +425,7 @@ itcl_class Roe {
 	update idletasks
 	set width [winfo width $m.objlist.canvas.frame]
 	set height [winfo height $m.objlist.canvas.frame]
+	incr height 100
 	$m.objlist.canvas configure -scrollregion "0 0 $width $height"
 	set view [$m.objlist.canvas yview]
 	$m.objlist.scroll set [lindex $view 0] [lindex $view 1]
