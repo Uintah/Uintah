@@ -44,13 +44,17 @@ KEYWORDS
    
 DESCRIPTION
    A remote reference.  This class is internal to PIDL and should not
-   be used outside of PIDL or sidl generated code.  It contains a nexus
-   startpoint and the vtable base offset.
+   be used outside of PIDL or sidl generated code.  It contains a 
+   spchannel and the vtable base offset.
 ****************************************/
   struct Reference {
     //////////
-    // Empty constructor.  Initalizes the startpoint to nil
+    // Empty constructor.  Initalizes the channel to nil
     Reference();
+
+    //////////
+    // Constructor which accepts a channel.
+    Reference(SpChannel* n_chan);
 
     //////////
     // Copy the reference. 
@@ -70,7 +74,7 @@ DESCRIPTION
 
     //////////
     // Proxy's communication class. 
-    SpChannel * chan;
+    SpChannel* chan;
 
     //////////
     // The vtable base offset
