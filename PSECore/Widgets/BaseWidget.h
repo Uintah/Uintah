@@ -133,14 +133,17 @@ public:
    inline Real GetRealVar( const Index vindex ) const;
    
    virtual void geom_pick(GeomPick*, Roe*, int, const BState& bs);
-   virtual void geom_pick(GeomPick*, void*, int);
+  //   virtual void geom_pick(GeomPick*, void*, int);
+   virtual void geom_pick(GeomPick*, void*, GeomObj*);
    virtual void geom_pick(GeomPick*, void*);
    virtual void geom_release(GeomPick*, int, const BState& bs);
-   virtual void geom_release(GeomPick*, void*, int);
+  //   virtual void geom_release(GeomPick*, void*, int);
+   virtual void geom_release(GeomPick*, void*, GeomObj*);
    virtual void geom_release(GeomPick*, void*);
 
    virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
-   virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, int);
+  //virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, int);
+   virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, GeomObj*);
    virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState& bs);
    virtual void geom_moved(GeomPick*, int, double, const Vector&, const BState&, int);
 
@@ -230,6 +233,9 @@ std::ostream& operator<<( std::ostream& os, BaseWidget& w );
 
 //
 // $Log$
+// Revision 1.7  2000/08/11 15:44:44  bigler
+// Changed geom_* functions that took an int index to take a GeomObj* picked_obj.
+//
 // Revision 1.6  1999/10/07 02:07:24  sparker
 // use standard iostreams and complex type
 //
