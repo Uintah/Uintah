@@ -42,7 +42,9 @@ using namespace SCIRun;
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/HexVol.h>
 #include <Core/Datatypes/MaskedTetVol.h>
+#include <Core/Datatypes/MaskedHexVol.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/MaskedLatticeVol.h>
 #include <Core/Datatypes/MaskedTriSurf.h>
@@ -73,6 +75,20 @@ const TypeDescription* get_type_description(MaskedTetVol<double>*);
 const TypeDescription* get_type_description(MaskedTetVol<int>*);
 const TypeDescription* get_type_description(MaskedTetVol<short>*);
 const TypeDescription* get_type_description(MaskedTetVol<unsigned char>*);
+
+template class MaskedHexVol<Tensor>;
+template class MaskedHexVol<Vector>;
+template class MaskedHexVol<double>;
+template class MaskedHexVol<int>;
+template class MaskedHexVol<short>;
+template class MaskedHexVol<unsigned char>;
+
+const TypeDescription* get_type_description(MaskedHexVol<Tensor>*);
+const TypeDescription* get_type_description(MaskedHexVol<Vector>*);
+const TypeDescription* get_type_description(MaskedHexVol<double>*);
+const TypeDescription* get_type_description(MaskedHexVol<int>*);
+const TypeDescription* get_type_description(MaskedHexVol<short>*);
+const TypeDescription* get_type_description(MaskedHexVol<unsigned char>*);
 
 template class MaskedTriSurf<Tensor>;
 template class MaskedTriSurf<Vector>;
@@ -107,6 +123,26 @@ const TypeDescription* get_type_description(TetVol<double>*);
 const TypeDescription* get_type_description(TetVol<int>*);
 const TypeDescription* get_type_description(TetVol<short>*);
 const TypeDescription* get_type_description(TetVol<unsigned char>*);
+
+template class HexVol<Tensor>;
+template class HexVol<Vector>;
+template class HexVol<double>;
+template class HexVol<int>;
+template class HexVol<short>;
+template class HexVol<unsigned char>;
+template class GenericField<HexVolMesh, vector<Tensor> >;
+template class GenericField<HexVolMesh, vector<Vector> >;
+template class GenericField<HexVolMesh, vector<double> >;
+template class GenericField<HexVolMesh, vector<int> >;
+template class GenericField<HexVolMesh, vector<short> >;
+template class GenericField<HexVolMesh, vector<unsigned char> >;
+
+const TypeDescription* get_type_description(HexVol<Tensor>*);
+const TypeDescription* get_type_description(HexVol<Vector>*);
+const TypeDescription* get_type_description(HexVol<double>*);
+const TypeDescription* get_type_description(HexVol<int>*);
+const TypeDescription* get_type_description(HexVol<short>*);
+const TypeDescription* get_type_description(HexVol<unsigned char>*);
 
 //Index types
 const TypeDescription* get_type_description(NodeIndex<int>*);
@@ -332,6 +368,59 @@ TetVol<Tensor>::query_tensor_interface() const
 
 
 // ---
+
+template <>
+ScalarFieldInterface *
+HexVol<double>::query_scalar_interface() const
+{
+  return scinew SFInterface<HexVol<double> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+HexVol<float>::query_scalar_interface() const
+{
+  return scinew SFInterface<HexVol<float> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+HexVol<int>::query_scalar_interface() const
+{
+  return scinew SFInterface<HexVol<int> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+HexVol<short>::query_scalar_interface() const
+{
+  return scinew SFInterface<HexVol<short> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+HexVol<unsigned char>::query_scalar_interface() const
+{
+  return scinew SFInterface<HexVol<unsigned char> >(this);
+}
+
+
+template <>
+VectorFieldInterface *
+HexVol<Vector>::query_vector_interface() const
+{
+  return scinew VFInterface<HexVol<Vector> >(this);
+}
+
+template <>
+TensorFieldInterface *
+HexVol<Tensor>::query_tensor_interface() const
+{
+  return scinew TFInterface<HexVol<Tensor> >(this);
+}
+
+
+// --
 
 template <>
 ScalarFieldInterface *
@@ -632,6 +721,21 @@ Vector TetVol<Vector>::cell_gradient(TetVolMesh::Cell::index_type /*ci*/)
 
 template <>
 Vector TetVol<Tensor>::cell_gradient(TetVolMesh::Cell::index_type /*ci*/)
+{
+  ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
+  return Vector(0, 0, 0);
+}
+
+template <>
+Vector HexVol<Vector>::cell_gradient(HexVolMesh::Cell::index_type /*ci*/)
+{
+  ASSERT(type_name(1) != "Vector");  // redundant, useful error message
+  return Vector(0, 0, 0);
+}
+
+
+template <>
+Vector HexVol<Tensor>::cell_gradient(HexVolMesh::Cell::index_type /*ci*/)
 {
   ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
   return Vector(0, 0, 0);
