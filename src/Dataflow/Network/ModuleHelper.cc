@@ -83,7 +83,11 @@ void ModuleHelper::run()
 	break;
 
       case MessageTypes::ExecuteModule:
-	module->do_execute();
+        {
+          module->do_execute();
+          Scheduler_Module_Message *sm_msg = (Scheduler_Module_Message *)msg;
+          module->sched->report_execution_finished(sm_msg->serial);
+        }
 	break;
 
       case MessageTypes::TriggerPort:
