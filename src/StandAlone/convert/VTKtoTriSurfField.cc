@@ -61,6 +61,8 @@ void setDefaults() {
   swap_endian=false;
 }
 
+#define check_error(str)   if (str.fail()) { cerr << "fail state on stream @ line: " << __LINE__<< endl; return 69;}  
+
 int parseArgs(int argc, char *argv[]) {
   int currArg = 3;
   while (currArg < argc) {
@@ -144,7 +146,7 @@ read_n_polys(TriSurfMesh *tsm, int n, ifstream &str) {
     str.read((char*)&val, sizeof(T));
     if (str.fail()) { cerr << "fail state on stream " << i << endl; return;}
     swap_endianess_4(&val);
-
+    //cout << n << " POLYGONS with " << val << "verticies." << endl;
     if (val != 3) {
       cout << "ERROR: can only handle triangle polys atm..." << endl;
       exit(1);
@@ -287,71 +289,74 @@ main(int argc, char **argv) {
 
   vtk.get(); // eat a newline
   read_n_polys<unsigned>(tsm, n, vtk);
-  
+  check_error(vtk)
+
   string dat;
   vtk >> dat; 
   vtk >> n;
+  check_error(vtk);
   //cout << dat << " " << n << endl;
-  TriSurfField<float> *ts;
+
+  TriSurfField<float> *ts = 0;
   string data, name;
-  vtk >> data >> name >> type;
-  
-  if (!vtk.fail() && data == "COLOR_SCALARS") {
+  if (dat == "CELL_DATA") {
+    vtk >> data;
+    check_error(vtk);
+    //cout << data << endl;
+    if (data == "POINT_DATA") {
+      vtk >> n;
+      int count = 0;
+      while (!vtk.eof()) {
+	vtk.get();
+	count++;
+      }
+//       if (count) { 
+// 	cerr << "Warning: Ate " << count 
+// 	     << " bytes until end." << endl;
+//       }
+    } else {
+      vtk >> name >> n;
+      check_error(vtk);
+    }
+  }
+
+  if (data == "COLOR_SCALARS") {
     unsigned char r, g, b;
     for (int i = 0; i < n; i++) {
       vtk >> r >> g >> b;
     }
   }
-  vtk >> dat >> n;
-  cout << dat << " " << n << endl;
-  vtk >> data >> name >> type;
-  cout << data << " " << name << " " << type << endl;
-  if (vtk.fail()) { cerr << "fail state on stream" << endl; return 66;}
-
-  if (dat == "CELL_DATA") {
-    if (type != "float") {
-      cerr << "supporting float only. got " << type << endl;
-      return 1;
+  if (! vtk.eof()) {
+    check_error(vtk);
+    if (dat == "CELL_DATA") {
+      if (type != "float") {
+	cerr << "supporting float only. got " << type << endl;
+	return 1;
+      }
+      ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), 0);
+      //cout << "putting data at faces" << endl;
+    } else {
+      // node centered data ...
+      if (type != "float") {
+	cerr << "supporting float only. got " << type << endl;
+	return 1;
+      }
+      ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), 1);
     }
-    ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), 0);
-    //cout << "putting data at faces" << endl;
-  } else {
-    // node centered data ...
-    if (type != "float") {
-      cerr << "supporting float only. got " << type << endl;
-      return 1;
+    ts->resize_fdata();
+
+    if (data == "NORMALS") {
+      vtk.get(); // eat a newline
+      read_vector_lookup(ts, n, vtk);
+    }  
+    while (!vtk.eof()) {
+      vtk.get();
     }
-    ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), 1);
-  }
-  ts->resize_fdata();
+  }  
 
-  if (data == "NORMALS") {
-    vtk.get(); // eat a newline
-    read_vector_lookup(ts, n, vtk);
+  if (ts == 0) {
+    ts = scinew TriSurfField<float>(TriSurfMeshHandle(tsm), -1);
   }
-//   vtk.get(); // eat a newline
-//   if (vtk.fail()) { cerr << "fail state on stream" << endl; return 66;}
-//   vtk >> dat >> n;
-//   cout << dat << " " << n << endl;
-//   if (vtk.fail()) { cerr << "fail state on stream" << endl; return 66;}
-//   vtk >> data >> name >> type;
-//   cout << data << " " << name << " " << type << endl;
-//   if (vtk.fail()) { cerr << "fail state on stream" << endl; return 66;}
-//   string table, tname;
-//   vtk >> table >> tname;
-//   //cout << table << " " << tname << endl;
-//   vtk.get(); // eat a newline
-//   read_scalar_lookup(ts, n, vtk);
-
-//   vtk >> dat; 
-//   vtk >> n;
-//   //cout << dat << " " << n << endl;
-//   if (vtk.fail()) { cerr << "fail state on stream" << endl; return 66;}
-  
-  while (!vtk.eof()) {
-    vtk.get();
-  }
-
   FieldHandle ts_handle(ts);
   
   if (bin_out) {
@@ -361,6 +366,6 @@ main(int argc, char **argv) {
     TextPiostream out_stream(out, Piostream::Write);
     Pio(out_stream, ts_handle);
   }
-
+  
   return status;  
 }    
