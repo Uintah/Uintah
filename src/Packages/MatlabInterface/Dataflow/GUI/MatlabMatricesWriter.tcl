@@ -196,17 +196,21 @@ itcl_class MatlabInterface_DataIO_MatlabMatricesWriter {
 		}
 	
 	
-		makeOpenFilebox \
+	set $this-formatvar ""
+		
+		makeSaveFilebox \
 			-parent $w \
 			-filevar $this-filename-set \
-			-setcmd "wm withdraw $w;  $this OpenNewMatfile" \
 			-command "wm withdraw $w;  $this OpenNewMatfile" \
+			-commandname "Save" \
 			-cancel "wm withdraw $w" \
 			-title "SELECT MATLAB FILE" \
-			-filetypes {{ "Matlab files" "*.mat" } { "All files"  "*" } }\
+			-filetypes {{ "Matlab files" "*.mat" } }\
 			-initialdir $initdir \
 			-defaultextension "*.mat" \
-			-selectedfiletype 0
+			-selectedfiletype 0 \
+			-formatvar $this-formatvar \
+	        -formats {None} \
 
 # CODE WAITING FOR BETTER DAYS WHEN THIS WIDGET WORKS FINE
 #		iwidgets::labeledframe	$w.frame -labeltext "SELECT MATLAB FILE" 

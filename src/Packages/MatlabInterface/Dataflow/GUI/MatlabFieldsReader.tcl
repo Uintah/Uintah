@@ -214,8 +214,8 @@ itcl_class MatlabInterface_DataIO_MatlabFieldsReader {
 		makeOpenFilebox \
 			-parent $w \
 			-filevar $this-filename-set \
-			-setcmd "wm withdraw $w;  $this OpenNewMatfile" \
 			-command "wm withdraw $w;  $this OpenNewMatfile" \
+			-commandname "Open" \
 			-cancel "wm withdraw $w" \
 			-title "SELECT MATLAB FILE" \
 			-filetypes {{ "Matlab files" "*.mat" } { "All files"  "*" } }\
