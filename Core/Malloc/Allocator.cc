@@ -394,7 +394,29 @@ void UnLockAllocator(Allocator *a)
 }
 
 #else
-#error "No lock implementation for this architecture"
+#ifdef SCI_NOTHREAD
+void Allocator::initlock()
+{
+}
+
+
+inline void Allocator::lock()
+{
+}
+
+inline void Allocator::unlock()
+{
+}
+
+
+void LockAllocator(Allocator *a)
+{
+}
+
+void UnLockAllocator(Allocator *a)
+{
+}
+#endif
 #endif
 #endif
 
@@ -533,10 +555,10 @@ Allocator* MakeAllocator()
 
 void* Allocator::alloc(size_t size, const char* tag)
 {
-   if(size > MEDIUM_THRESHOLD)
-	return alloc_big(size, tag);
+    if(size > MEDIUM_THRESHOLD)
+      return alloc_big(size, tag);
     if(size == 0)
-	return 0;
+      return 0;
 
     // Find a block that this will fit in...
     AllocBin* obj_bin=get_bin(size);

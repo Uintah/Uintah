@@ -37,7 +37,9 @@
 #ifdef __sgi
 #include <abi_mutex.h>
 #else
+#ifndef SCI_NOTHREAD
 #error "No lock implementation for this architecture"
+#endif
 #endif
 #endif
 
@@ -80,8 +82,6 @@ struct Allocator {
 #else
 #ifdef __sgi
    abilock_t the_lock;
-#else
-#error "No lock implementation for this architecture"
 #endif
 #endif
     void initlock();
