@@ -21,6 +21,7 @@
 #define Datatypes_QuadraticTetVolField_h
 
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/QuadraticTetVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/LockingHandle.h>
@@ -37,7 +38,10 @@ class QuadraticTetVolField : public GenericField<QuadraticTetVolMesh, vector<T> 
 public:
   QuadraticTetVolField();
   QuadraticTetVolField(Field::data_location data_at);
-  QuadraticTetVolField(QuadraticTetVolMeshHandle mesh, Field::data_location data_at);
+  QuadraticTetVolField(QuadraticTetVolMeshHandle mesh, 
+		       Field::data_location data_at);
+
+  static QuadraticTetVolField<T>* create_from(const TetVolField<T> &);
   virtual QuadraticTetVolField<T> *clone() const;
   virtual ~QuadraticTetVolField();
 
@@ -61,21 +65,34 @@ private:
 };
 
 template <class T>
-QuadraticTetVolField<T>::QuadraticTetVolField()
-  : GenericField<QuadraticTetVolMesh, vector<T> >()
+QuadraticTetVolField<T>::QuadraticTetVolField() : 
+  GenericField<QuadraticTetVolMesh, vector<T> >()
 {
 }
 
 template <class T>
-QuadraticTetVolField<T>::QuadraticTetVolField(Field::data_location data_at)
-  : GenericField<QuadraticTetVolMesh, vector<T> >(data_at)
+QuadraticTetVolField<T>::QuadraticTetVolField(Field::data_location data_at) : 
+  GenericField<QuadraticTetVolMesh, vector<T> >(data_at)
 {
 }
 
 template <class T>
-QuadraticTetVolField<T>::QuadraticTetVolField(QuadraticTetVolMeshHandle mesh, Field::data_location data_at)
-  : GenericField<QuadraticTetVolMesh, vector<T> >(mesh, data_at)
+QuadraticTetVolField<T>::QuadraticTetVolField(QuadraticTetVolMeshHandle mesh, 
+					      Field::data_location data_at) : 
+  GenericField<QuadraticTetVolMesh, vector<T> >(mesh, data_at)
 {
+}
+
+// will end up with no data...
+template <class T>
+QuadraticTetVolField<T> *
+QuadraticTetVolField<T>::create_from(const TetVolField<T> &tv) 
+{
+  QuadraticTetVolMesh *m = 
+    scinew QuadraticTetVolMesh(*tv.get_typed_mesh().get_rep());
+
+  mesh_handle_type mh(m);
+  return scinew QuadraticTetVolField(mh, tv.data_at());
 }
 
 template <class T>
