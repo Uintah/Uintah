@@ -44,7 +44,7 @@ if test -z "$gmake_version"; then
     echo "Cannot tell which version of gmake you are using!"
     echo ""
     echo "You must be using gmake version 3.78.1!"
-    exit
+    exit 1
 else
 
     gmake_too_old="false"
@@ -65,7 +65,7 @@ else
 
     if test "$gmake_too_old" = "true"; then
         echo "gmake version ($gmake_version) is too old.  Need at least 3.78.1"
-        exit
+        exit 1
     fi
 fi
 
