@@ -25,7 +25,7 @@ static char *id="@(#) $Id$";
 
 using namespace Uintah::MPM;
 
-NullHEBurn::NullHEBurn(ProblemSpecP& ps)
+NullHEBurn::NullHEBurn(ProblemSpecP& /*ps*/)
 {
   // Constructor
  
@@ -52,6 +52,9 @@ void NullHEBurn::updatedParticleMassAndVolume()
 }
 
 // $Log$
+// Revision 1.2  2000/06/03 05:22:06  sparker
+// Added .cvsignore
+//
 // Revision 1.1  2000/06/02 22:48:26  jas
 // Added infrastructure for Burn models.
 //
