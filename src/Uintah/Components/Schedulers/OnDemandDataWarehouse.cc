@@ -1044,12 +1044,9 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
 	    totalCells+=dcells.x()*dcells.y()*dcells.z();
 	 }
       }
-#if 1
-      cerr << "lowIndex=" << lowIndex << ", highIndex=" << highIndex << '\n';
       IntVector dn = highIndex-lowIndex;
       long wantcells = dn.x()*dn.y()*dn.z();
       ASSERTEQ(wantcells, totalCells);
-#endif
    }
   d_lock.readUnlock();
 }
@@ -1249,11 +1246,9 @@ OnDemandDataWarehouse::get(SFCXVariableBase& var, const VarLabel* label,
 	    totalCells+=dcells.x()*dcells.y()*dcells.z();
 	 }
       }
-#if 1
       IntVector dn = highIndex-lowIndex;
       long wantcells = dn.x()*dn.y()*dn.z();
       ASSERTEQ(wantcells, totalCells);
-#endif
    }
   d_lock.readUnlock();
 }
@@ -1373,11 +1368,9 @@ OnDemandDataWarehouse::get(SFCYVariableBase& var, const VarLabel* label,
 	    totalCells+=dcells.x()*dcells.y()*dcells.z();
 	 }
       }
-#if 1
       IntVector dn = highIndex-lowIndex;
       long wantcells = dn.x()*dn.y()*dn.z();
       ASSERTEQ(wantcells, totalCells);
-#endif
    }
   d_lock.readUnlock();
 }
@@ -1497,11 +1490,9 @@ OnDemandDataWarehouse::get(SFCZVariableBase& var, const VarLabel* label,
 	    totalCells+=dcells.x()*dcells.y()*dcells.z();
 	 }
       }
-#if 1
       IntVector dn = highIndex-lowIndex;
       long wantcells = dn.x()*dn.y()*dn.z();
       ASSERTEQ(wantcells, totalCells);
-#endif
    }
   d_lock.readUnlock();
 }
@@ -1717,6 +1708,9 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* /*delset*/)
 
 //
 // $Log$
+// Revision 1.52.4.7  2000/10/20 04:40:10  sparker
+// Commented out print statements and general cleanup
+//
 // Revision 1.52.4.6  2000/10/20 02:08:30  rawat
 // modified sendMPI and recvMPI for staggered and cell centered variables
 //
