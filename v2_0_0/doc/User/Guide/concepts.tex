@@ -409,11 +409,22 @@ interface.
 The following Power Apps are available:
 
 \begin{description}
-  \descitem{BioTensor} See the \htmladdnormallinkfoot{BioTensor
+  \descitem{BioTensor} An application for computing and visualizing
+  diffusion tensor data.  See the \htmladdnormallinkfoot{BioTensor
     tutorial}{\latexhtml{http://software.sci.utah.edu/doc/User/BioTensorTutorial}{../../BioTensorTutorial}}
   for more information.
+  
+  \descitem{BioFem} A finite element simulation application. It is
+  used, for example, to compute electric and potential fields from a
+  discretized volume conductor and a current source.
 \end{description}
 
+Commands \command{BioTensor} and \command{BioFem} invoke these
+applications.  If \sr{} is installed from source code, commands
+\command{BioTensor} and \command{BioFem} are located in \sr{}'s build
+directory (alongside the \command{scirun} command).  If \sr{} is
+installed from RPMs these commands are located in
+\directory{/usr/local/SCIRun/bin}.
 
 \section{\sr{} Objects}
 \label{sec:sr-objects}
