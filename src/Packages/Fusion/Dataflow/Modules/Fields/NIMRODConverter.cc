@@ -385,8 +385,7 @@ NIMRODConverter::execute(){
       return;
     }
   } else if ( conversion_ & PERTURBED ) {
-
-    if( mesh_[2] == -1 || mesh_[3] == -1 || i != data_.size() ) {
+    if( mesh_[PHI] == -1 || mesh_[K] == -1 || i != data_.size() ) {
       error( "Not enough data for the perturbed conversion." );
       error_ = true;
       return;
@@ -410,7 +409,7 @@ NIMRODConverter::execute(){
   if( (conversion_ & PERTURBED) &&
       nHandles[mesh_[K]]->get_property( "Coordinate System", property ) &&
       property.find("Cylindrical - NIMROD") != string::npos )
-    nmodes_ = nHandles[mesh_[K]]->nrrd->axis[1].size; // Modes
+    nmodes_ = nHandles[mesh_[K]]->nrrd->axis[0].size; // Modes
   else
     nmodes_ = 0;
 
@@ -501,7 +500,7 @@ NIMRODConverter::execute(){
 	  nHandles[mesh_[Z]]->nrrd->axis[0].size ||
 	  nHandles[mesh_[R]]->nrrd->axis[1].size != 
 	  nHandles[mesh_[Z]]->nrrd->axis[1].size ) {
-	error( "Mesh dimension mismatch." );
+	error( "R-Z Mesh dimension mismatch." );
 	error_ = true;
 	return;
       }
@@ -525,7 +524,7 @@ NIMRODConverter::execute(){
 	if(  data_.size() == 1 ) {
 	  if( nHandles[mesh_[PHI]]->nrrd->axis[0].size !=
 	      nHandles[data_[  0]]->nrrd->axis[3].size ) {
-	    error( "Mesh dimension mismatch." );
+	    error( "Phi Mesh - Data dimension mismatch." );
 	    error_ = true;
 	    return;
 	  }
@@ -534,7 +533,7 @@ NIMRODConverter::execute(){
 	  if( property.find("Cylindrical - NIMROD") != string::npos ) {
 	    if( nHandles[mesh_[PHI]]->nrrd->axis[0].size !=
 		nHandles[data_[  0]]->nrrd->axis[3].size ) {
-	      error( "Mesh dimension mismatch." );
+	      error( "Phi Mesh - Data dimension mismatch." );
 	      error_ = true;
 	      return;
 	    }
@@ -561,15 +560,18 @@ NIMRODConverter::execute(){
       nHandles[mesh_[PHI]]->get_property( "Coordinate System", property );
 
       if( property.find("Cylindrical - NIMROD") != string::npos ) {
-	if( nHandles[mesh_[PHI]]->nrrd->axis[0].size !=
-	    nHandles[data_[  0]]->nrrd->axis[3].size ) {
-	  error( "Mesh dimension mismatch." );
+
+	int cc = nHandles[data_[0]]->nrrd->dim;
+
+	if( nHandles[mesh_[K]]->nrrd->axis[0].size !=
+	    nHandles[data_[0]]->nrrd->axis[cc-1].size ) {
+	  error( "Perturbed Mode Mesh - Data dimension mismatch." );
 	  error_ = true;
 	  return;
 	}
 
 	for( unsigned int ic=1; ic<data_.size(); ic++ ) {
-	  for( int jc=0; jc<nHandles[data_[0]]->nrrd->dim; jc++ ) {
+	  for( int jc=0; jc<cc; jc++ ) {
 	    
 	    if( nHandles[data_[ 0]]->nrrd->axis[jc].size !=
 		nHandles[data_[ic]]->nrrd->axis[jc].size ) {
