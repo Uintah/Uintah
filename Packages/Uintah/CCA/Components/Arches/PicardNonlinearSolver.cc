@@ -558,7 +558,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       
       max_vartype nm;
       subsched->get_dw(3)->get(nm, d_lab->d_InitNormLabel);
-      norm = nm;
+      norm = nm+d_u_norm+d_v_norm+d_w_norm;
 
       ++nlIterations;
     
@@ -900,6 +900,9 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   tsk->computes(d_lab->d_velocityDivergenceLabel);
   tsk->computes(d_lab->d_velDivResidualLabel);
   tsk->computes(d_lab->d_continuityResidualLabel);
+  tsk->computes(d_lab->d_uVelNormLabel);
+  tsk->computes(d_lab->d_vVelNormLabel);
+  tsk->computes(d_lab->d_wVelNormLabel);
   }
   else {
   tsk->modifies(d_lab->d_newCCVelocityLabel);
@@ -1277,6 +1280,9 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 
 
     double total_kin_energy = 0.0;
+    double u_norm = 0.0;
+    double v_norm = 0.0;
+    double w_norm = 0.0;
 
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
@@ -1301,6 +1307,9 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	  total_kin_energy += kineticEnergy[idx];
+	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
+	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
+	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
 	}
       }
     }
@@ -1328,6 +1337,9 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	  total_kin_energy += kineticEnergy[idx];
+	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
+	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
+	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
 	}
       }
     }
@@ -1354,6 +1366,9 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	  total_kin_energy += kineticEnergy[idx];
+	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
+	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
+	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
 	}
       }
     }
@@ -1380,6 +1395,9 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	  total_kin_energy += kineticEnergy[idx];
+	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
+	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
+	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
 	}
       }
     }
@@ -1406,6 +1424,9 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	  total_kin_energy += kineticEnergy[idx];
+	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
+	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
+	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
 	}
       }
     }
@@ -1432,6 +1453,9 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	  total_kin_energy += kineticEnergy[idx];
+	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
+	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
+	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
 	}
       }
     }
@@ -1458,6 +1482,9 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	  total_kin_energy += kineticEnergy[idx];
+	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
+	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
+	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
 	}
       }
     }
@@ -1492,6 +1519,11 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
       }
     }
     new_dw->put(sum_vartype(total_kin_energy), timelabels->tke_out); 
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+      new_dw->put(sum_vartype(u_norm), d_lab->d_uVelNormLabel); 
+      new_dw->put(sum_vartype(v_norm), d_lab->d_vVelNormLabel); 
+      new_dw->put(sum_vartype(w_norm), d_lab->d_wVelNormLabel); 
+    }
   }
 }
 
@@ -1986,6 +2018,11 @@ PicardNonlinearSolver::sched_printTotalKE(SchedulerP& sched, const PatchSet* pat
 			  timelabels);
   
   tsk->requires(Task::NewDW, timelabels->tke_out);
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+    tsk->requires(Task::NewDW, d_lab->d_uVelNormLabel);
+    tsk->requires(Task::NewDW, d_lab->d_vVelNormLabel);
+    tsk->requires(Task::NewDW, d_lab->d_wVelNormLabel);
+  }
 
   sched->addTask(tsk, patches, matls);
   
@@ -2001,11 +2038,26 @@ PicardNonlinearSolver::printTotalKE(const ProcessorGroup* ,
 
   sum_vartype tke;
   new_dw->get(tke, timelabels->tke_out);
+  sum_vartype un,vn,wn;
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+    new_dw->get(un, d_lab->d_uVelNormLabel);
+    new_dw->get(vn, d_lab->d_vVelNormLabel);
+    new_dw->get(wn, d_lab->d_wVelNormLabel);
+  }
   double total_kin_energy = tke;
   int me = d_myworld->myrank();
   if (me == 0)
      cerr << "Total kinetic energy " <<  total_kin_energy << endl;
-
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+    d_u_norm=sqrt(un);
+    d_v_norm=sqrt(vn);
+    d_w_norm=sqrt(wn);
+    if (me == 0) {
+      cerr << "U norm " <<  d_u_norm << endl;
+      cerr << "V norm " <<  d_v_norm << endl;
+      cerr << "W norm " <<  d_w_norm << endl;
+    }
+  }
 }
 void 
 PicardNonlinearSolver::sched_updatePressure(SchedulerP& sched, const PatchSet* patches,
