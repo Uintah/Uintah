@@ -32,7 +32,9 @@
       Probed.  Bounding box information, obtained from another file,
       corresponding to the volume segmentation, for the selected structure
       is output from the Hotbox matrix port to enable highlighted recoloring
-      of the selected structure in the Viewer.
+      of the selected structure in the Viewer.  Note: Bounding box information
+      refers to voxels in the original segmented volume -- may not correspond
+      if the volume in SCIRun has been re-sized.
       </p>
     </description>
   </overview>
@@ -56,7 +58,7 @@
       </port>
       <port>
 	<name>Bounding Box</name>
-        <datatype>SCIRun:::Matrix</datatype>
+        <datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
   </io>
