@@ -21,7 +21,7 @@
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array3.h>
-//#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Datatypes/LatticeVol.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Datatypes/Octree.h>
@@ -75,7 +75,7 @@ public:
   // GROUP: Constructors:
   //////////
   // Constructor
-  GLTexture3D(void /*ScalarFieldRGBase*/ *tex);
+  GLTexture3D(FieldHandle texfld);
   //////////
   // Constructor
   GLTexture3D();
@@ -87,31 +87,31 @@ public:
   // GROUP: Modify
   //////////  
   // Set a new scalarField
-  void SetField(void /*ScalarFieldRGBase*/ *tex);
+  void set_field(FieldHandle tex);
   //////////
   // Change the BrickSize
-  bool SetBrickSize( int brickSize );
+  bool set_brick_size( int brickSize );
   
 
   // GROUP: Access
   //////////
   // get min point
-  const Point& min() const { return minP;}
+  const Point& min() const { return minP_;}
   //////////
   // get max point
-  const Point& max() const { return maxP;}
+  const Point& max() const { return maxP_;}
   /////////
   // the depth of the bontree
-  int depth() const { return levels; }
+  int depth() const { return levels_; }
   /////////
   // the depth of the bontree
-  void get_bounds(BBox& b) const { b.extend(minP); b.extend(maxP);}
+  void get_bounds(BBox& b) const { b.extend(minP_); b.extend(maxP_);}
   /////////
   // Get the brick
-  int getBrickSize(){ return xmax; }
+  int get_brick_size(){ return xmax_; }
   /////////
   // Get field size
-  void /*ScalarFieldRGBase*/ *getField(){ return _tex; }
+  FieldHandle get_field(){ return texfld_; }
 
   // GROUP: io
   /////////
@@ -119,55 +119,56 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
-  bool CC() const {return isCC;}
-  void get_minmax( double& min, double& max) const { min = _min, max = _max;}
+  bool CC() const {return isCC_;}
+  void getminmax( double& min, double& max) const { min = min_, max = max_;}
 
 private:
 
 
-  Octree<Brick*>* bontree;
-  void /*ScalarFieldRGBase*/ *_tex;
-  int levels;
-  Point minP;
-  Point maxP;
-  double _min, _max;
-  int X, Y, Z;
+  Octree<Brick*>* bontree_;
+  FieldHandle texfld_;
+  LatVolMeshHandle mesh_;
+  int levels_;
+  Point minP_;
+  Point maxP_;
+  double min_, max_;
+  int X_, Y_, Z_;
   //  int maxBrick;  // max brick dimension
-  int xmax, ymax, zmax;
-  double dx,dy,dz;
-  bool isCC;
+  int xmax_, ymax_, zmax_;
+  double dx_, dy_, dz_;
+  bool isCC_;
   double SETVAL(double);
-  void SetBounds();
-  void computeTreeDepth();
-  void BuildTexture();
-  bool SetMaxBrickSize(int maxBrick);
+  void set_bounds();
+  void compute_tree_depth();
+  void build_texture();
+  bool set_max_brick_size(int maxBrick);
 
   template <class T>
-    Octree<Brick*>* buildBonTree(Point min, Point max,
-				 int xoff, int yoff, int zoff,
+    Octree<Brick*>* build_bon_tree(Point min, Point max,
+				   int xoff, int yoff, int zoff,
+				   int xsize, int ysize, int zsize,
+				   int level, T *tex,
+				   Octree<Brick*>* parent);
+  template <class T>
+    void build_child(int i, Point min, Point mid, Point max,
+		     int xoff, int yoff, int zoff,
+		     int xsize, int ysize, int zsize,
+		     int X2, int Y2, int Z2,
+		     int level,  T* tex, Octree<Brick*>* node);
+  
+  template <class T>
+    void make_brick_data(int newx, int newy, int newz,
+			 int xsize, int ysize, int zsize,
+			 int xoff, int yoff, int zoff,
+			 T* tex, Array3<unsigned char>*& bd);
+  
+  template <class T>
+    void make_low_res_brick_data(int xmax, int ymax, int zmax,
 				 int xsize, int ysize, int zsize,
-				 int level, T *tex,
-				 Octree<Brick*>* parent);
-  template <class T>
-    void BuildChild(int i, Point min, Point mid, Point max,
-		    int xoff, int yoff, int zoff,
-		    int xsize, int ysize, int zsize,
-		    int X2, int Y2, int Z2,
-		    int level,  T* tex, Octree<Brick*>* node);
-  
-  template <class T>
-    void makeBrickData(int newx, int newy, int newz,
-		       int xsize, int ysize, int zsize,
-		       int xoff, int yoff, int zoff,
-		       T* tex, Array3<unsigned char>*& bd);
-  
-  template <class T>
-    void makeLowResBrickData(int xmax, int ymax, int zmax,
-			     int xsize, int ysize, int zsize,
-			     int xoff, int yoff, int zoff,
-			     int level, int& padx, int& pady,
-			     int& padz, T* tex,
-			     Array3<unsigned char>*& bd);
+				 int xoff, int yoff, int zoff,
+				 int level, int& padx, int& pady,
+				 int& padz, T* tex,
+				 Array3<unsigned char>*& bd);
   
 };
 

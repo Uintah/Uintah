@@ -30,7 +30,7 @@ ROIIterator::ROIIterator(const GLTexture3D* tex, Ray view,
 			 Point control):
     GLTextureIterator( tex, view, control )
 {
-  const Octree< Brick* >* node = (tex->bontree);
+  const Octree< Brick* >* node = (tex->bontree_);
   if ( tex->depth() == 0 ){
     next = (*node)();
   } else {
