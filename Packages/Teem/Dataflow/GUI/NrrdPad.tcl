@@ -16,7 +16,7 @@
 #
 
 ##
- #  NrrdSubvolume.tcl: The NrrdSubvolume UI
+ #  NrrdPad.tcl: The NrrdPad UI
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
@@ -25,12 +25,12 @@
  #  Copyright (C) 2000 SCI Group
  ##
 
-catch {rename Teem_Filters_NrrdSubvolume ""}
+catch {rename Teem_Filters_NrrdPad ""}
 
-itcl_class Teem_Filters_NrrdSubvolume {
+itcl_class Teem_Filters_NrrdPad {
     inherit Module
     constructor {config} {
-        set name NrrdSubvolume
+        set name NrrdPad
         set_defaults
     }
     method set_defaults {} {

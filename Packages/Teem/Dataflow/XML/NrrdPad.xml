@@ -19,7 +19,7 @@
 -->
 
 
-<component name="NrrdSubvolume" category="Filters">
+<component name="NrrdPad" category="Filters">
   <overview>
     <authors>
       <author>David Weinstein</author>

@@ -65,7 +65,28 @@ FieldToNrrd::FieldToNrrd(const string& id):Module("FieldToNrrd", id, Filter, "Da
 FieldToNrrd::~FieldToNrrd()
 {
 }
-  
+
+#define COPY_INTO_NRRD_FROM_FIELD(type, Type) \
+    LatticeVol<type> *f = \
+      dynamic_cast<LatticeVol<type>*>(field); \
+    lvm = f->get_typed_mesh(); \
+    nx = f->fdata().dim3(); \
+    ny = f->fdata().dim2(); \
+    nz = f->fdata().dim1(); \
+    type *data=new type[nx*ny*nz]; \
+    type *p=&(data[0]); \
+    for (int k=0; k<nz; k++) \
+      for (int j=0; j<ny; j++) \
+	for (int i=0; i<nx; i++) \
+	  *p++=f->fdata()(k,j,i); \
+    nrrdWrap(nout->nrrd, data, nrrdType##Type, 3, nx, ny, nz); \
+    if (f->data_at() == Field::NODE) \
+      nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, \
+                  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode); \
+    else // if (f->data_at() == Field::CELL) \
+      nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, \
+                  nrrdCenterCell, nrrdCenterCell, nrrdCenterCell)
+
 void FieldToNrrd::execute()
 {
   ifield = (FieldIPort *)get_iport("Field");
@@ -93,155 +114,31 @@ void FieldToNrrd::execute()
   Field *field = fieldH.get_rep();
   const string data = field->get_type_name(1);
 
-
-
-
-
-  LatVolMeshHandle lvm;
   nout->nrrd = nrrdNew();
+  LatVolMeshHandle lvm;
 
-  if ( data == "double" && field->data_at() == Field::CELL) {
-    LatticeVol<double> *f =
-      dynamic_cast<LatticeVol<double>*>(field);
-    lvm = f->get_typed_mesh();
-    nx = lvm->get_nx()-1;
-    ny = lvm->get_ny()-1;
-    nz = lvm->get_nz()-1;
-    double *data=new double[nx*ny*nz];
-    double *p=&(data[0]);
-    for (int k=0; k<nz; k++)
-      for (int j=0; j<ny; j++)
-	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(k,j,i);
-    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeDouble, 3);
-  } else   if (field->data_at() != Field::NODE) {
-    cerr << "Error - can only build a nrrd from data at nodes.\n";
-    return;
-  } else if (data == "double") { 
-    LatticeVol<double> *f = 
-      dynamic_cast<LatticeVol<double>*>(field);
-    lvm = f->get_typed_mesh();
-    nx = lvm->get_nx();
-    ny = lvm->get_ny();
-    nz = lvm->get_nz();
-    double *data=new double[nx*ny*nz];
-    double *p=&(data[0]);
-    for (int k=0; k<nz; k++)
-      for (int j=0; j<ny; j++)
-	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(k,j,i);
-    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeDouble, 3);
+  if (data =="double") {
+    COPY_INTO_NRRD_FROM_FIELD(double, Double);
   } else if (data == "float") { 
-    LatticeVol<float> *f = 
-      dynamic_cast<LatticeVol<float>*>(field);
-    lvm = f->get_typed_mesh();
-    nx = lvm->get_nx();
-    ny = lvm->get_ny();
-    nz = lvm->get_nz();
-    float *data=new float[nx*ny*nz];
-    float *p=&(data[0]);
-    for (int k=0; k<nz; k++)
-      for (int j=0; j<ny; j++)
-	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(k,j,i);
-    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeFloat, 3);
-#if 0
+    COPY_INTO_NRRD_FROM_FIELD(float, Float);
   } else if (data == "unsigned_int") {
-    LatticeVol<unsigned int> *f = 
-      dynamic_cast<LatticeVol<unsigned int>*>(field);
-    lvm = f->get_typed_mesh();
-    nx = lvm->get_nx();
-    ny = lvm->get_ny();
-    nz = lvm->get_nz();
-    unsigned int *data=new unsigned int[nx*ny*nz];
-    unsigned int *p=&(data[0]);
-    for (int k=0; k<nz; k++)
-      for (int j=0; j<ny; j++)
-	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(k,j,i);
-    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeUInt, 3);
-#endif
+    COPY_INTO_NRRD_FROM_FIELD(unsigned int, UInt);
   } else if (data == "int") {
-    LatticeVol<int> *f = 
-      dynamic_cast<LatticeVol<int>*>(field);
-    lvm = f->get_typed_mesh();
-    nx = lvm->get_nx();
-    ny = lvm->get_ny();
-    nz = lvm->get_nz();
-    int *data=new int[nx*ny*nz];
-    int *p=&(data[0]);
-    for (int k=0; k<nz; k++)
-      for (int j=0; j<ny; j++)
-	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(k,j,i);
-    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeInt, 3);
-#if 0
+    COPY_INTO_NRRD_FROM_FIELD(int, Int);
   } else if (data == "unsigned_short") {
-    LatticeVol<unsigned short> *f = 
-      dynamic_cast<LatticeVol<unsigned short>*>(field);
-    lvm = f->get_typed_mesh();
-    nx = lvm->get_nx();
-    ny = lvm->get_ny();
-    nz = lvm->get_nz();
-    unsigned short *data=new unsigned short[nx*ny*nz];
-    unsigned short *p=&(data[0]);
-    for (int k=0; k<nz; k++)
-      for (int j=0; j<ny; j++)
-	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(k,j,i);
-    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeUShort, 3);
-#endif
+    COPY_INTO_NRRD_FROM_FIELD(unsigned short, UShort);
   } else if (data == "short") {
-    LatticeVol<short> *f = 
-      dynamic_cast<LatticeVol<short>*>(field);
-    lvm = f->get_typed_mesh();
-    nx = lvm->get_nx();
-    ny = lvm->get_ny();
-    nz = lvm->get_nz();
-    short *data=new short[nx*ny*nz];
-    short *p=&(data[0]);
-    for (int k=0; k<nz; k++)
-      for (int j=0; j<ny; j++)
-	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(k,j,i);
-    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeShort, 3);
+    COPY_INTO_NRRD_FROM_FIELD(short, Short);
   } else if (data == "unsigned_char") {
-    LatticeVol<unsigned char> *f = 
-      dynamic_cast<LatticeVol<unsigned char>*>(field);
-    lvm = f->get_typed_mesh();
-    nx = lvm->get_nx();
-    ny = lvm->get_ny();
-    nz = lvm->get_nz();
-    unsigned char *data=new unsigned char[nx*ny*nz];
-    unsigned char *p=&(data[0]);
-    for (int k=0; k<nz; k++)
-      for (int j=0; j<ny; j++)
-	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(k,j,i);
-    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeUChar, 3);
-#if 0
+    COPY_INTO_NRRD_FROM_FIELD(unsigned char, UChar);
   } else if (data == "char") {
-    LatticeVol<char> *f = 
-      dynamic_cast<LatticeVol<char>*>(field);
-    lvm = f->get_typed_mesh();
-    nx = lvm->get_nx();
-    ny = lvm->get_ny();
-    nz = lvm->get_nz();
-    char *data=new char[nx*ny*nz];
-    char *p=&(data[0]);
-    for (int k=0; k<nz; k++)
-      for (int j=0; j<ny; j++)
-	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(k,j,i);
-    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeChar, 3);
-#endif
+    COPY_INTO_NRRD_FROM_FIELD(char, Char);
   } else if (data == "Vector") {
     LatticeVol<Vector> *f = 
       dynamic_cast<LatticeVol<Vector>*>(field);
-    lvm = f->get_typed_mesh();
-    nx = lvm->get_nx();
-    ny = lvm->get_ny();
-    nz = lvm->get_nz();
+    nx = f->fdata().dim3();
+    ny = f->fdata().dim2();
+    nz = f->fdata().dim1();
     double *data=new double[nx*ny*nz*3];
     double *p=&(data[0]);
     for (int k=0; k<nz; k++)
@@ -251,14 +148,19 @@ void FieldToNrrd::execute()
 	  *p++=f->fdata()(k,j,i).y();
 	  *p++=f->fdata()(k,j,i).z();
 	}
-    nrrdWrap(nout->nrrd, data, nx*ny*nz*3, nrrdTypeDouble, 4);
+    nrrdWrap(nout->nrrd, data, nrrdTypeDouble, 4, 3, nx, ny, nz);
+    if (f->data_at() == Field::NODE)
+      nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+    else // if (f->data_at() == Field::CELL)
+      nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterCell, 
+		  nrrdCenterCell, nrrdCenterCell, nrrdCenterCell);
   } else if (data == "Tensor") {
     LatticeVol<Tensor> *f = 
       dynamic_cast<LatticeVol<Tensor>*>(field);
-    lvm = f->get_typed_mesh();
-    nx = lvm->get_nx();
-    ny = lvm->get_ny();
-    nz = lvm->get_nz();
+    nx = f->fdata().dim3();
+    ny = f->fdata().dim2();
+    nz = f->fdata().dim1();
     double *data=new double[nx*ny*nz*7];
     double *p=&(data[0]);
     for (int k=0; k<nz; k++)
@@ -272,7 +174,13 @@ void FieldToNrrd::execute()
 	  *p++=f->fdata()(k,j,i).mat_[1][2];
 	  *p++=f->fdata()(k,j,i).mat_[2][2];
 	}
-    nrrdWrap(nout->nrrd, data, nx*ny*nz*7, nrrdTypeDouble, 7);
+    nrrdWrap(nout->nrrd, data, nrrdTypeDouble, 4, 7, nx, ny, nz);
+    if (f->data_at() == Field::NODE)
+      nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+    else // if (f->data_at() == Field::CELL)
+      nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterCell, 
+		  nrrdCenterCell, nrrdCenterCell, nrrdCenterCell);
   } else {
     cerr << "Error - unknown LatticeVol data type " << data << endl;
     free(nout);
@@ -302,34 +210,27 @@ void FieldToNrrd::execute()
     nout->nrrd->max = maxv;
   }
   Vector v(maxP-minP);
-  nout->nrrd->axis[0].size=nx;
-  nout->nrrd->axis[1].size=ny;
-  nout->nrrd->axis[2].size=nz;
   v.x(v.x()/(nx-1));
   v.y(v.y()/(ny-1));
   v.z(v.z()/(nz-1));
-  nout->nrrd->axis[0].min=minP.x();
-  nout->nrrd->axis[1].min=minP.y();
-  nout->nrrd->axis[2].min=minP.z();
-  nout->nrrd->axis[0].max=maxP.x();
-  nout->nrrd->axis[1].max=maxP.y();
-  nout->nrrd->axis[2].max=maxP.z();
-  nout->nrrd->axis[0].spacing=v.x();
-  nout->nrrd->axis[1].spacing=v.y();
-  nout->nrrd->axis[2].spacing=v.z();
-  nout->nrrd->axis[0].label = strdup("x");
-  nout->nrrd->axis[1].label = strdup("y");
-  nout->nrrd->axis[2].label = strdup("z");
+  int offset=0;
+  if (data == "Vector" || data == "Tensor") offset=1;
+  nout->nrrd->axis[0+offset].min=minP.x();
+  nout->nrrd->axis[1+offset].min=minP.y();
+  nout->nrrd->axis[2+offset].min=minP.z();
+  nout->nrrd->axis[0+offset].max=maxP.x();
+  nout->nrrd->axis[1+offset].max=maxP.y();
+  nout->nrrd->axis[2+offset].max=maxP.z();
+  nout->nrrd->axis[0+offset].spacing=v.x();
+  nout->nrrd->axis[1+offset].spacing=v.y();
+  nout->nrrd->axis[2+offset].spacing=v.z();
+  nout->nrrd->axis[0+offset].label = strdup("x");
+  nout->nrrd->axis[1+offset].label = strdup("y");
+  nout->nrrd->axis[2+offset].label = strdup("z");
   if (data == "Vector") {
-    nout->nrrd->axis[3].size=3;
-    nout->nrrd->axis[3].min=0;
-    nout->nrrd->axis[3].max=3;
-    nout->nrrd->axis[3].label = strdup("v");
+    nout->nrrd->axis[0].label = strdup("v");
   } else if (data == "Tensor") {
-    nout->nrrd->axis[3].size=6;
-    nout->nrrd->axis[3].min=0;
-    nout->nrrd->axis[3].max=6;
-    nout->nrrd->axis[3].label = strdup("t");
+    nout->nrrd->axis[0].label = strdup("t");
   }
 
   NrrdDataHandle noutH(nout);

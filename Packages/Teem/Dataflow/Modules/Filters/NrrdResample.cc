@@ -47,6 +47,8 @@ class NrrdResample : public Module {
   GuiString resampAxis0_;
   GuiString resampAxis1_;
   GuiString resampAxis2_;
+  GuiDouble sigma_;
+  GuiDouble extent_;
   string last_filtertype_;
   string last_resampAxis0_;
   string last_resampAxis1_;
@@ -71,6 +73,8 @@ NrrdResample::NrrdResample(const string& id)
     resampAxis0_("resampAxis0", id, this), 
     resampAxis1_("resampAxis1", id, this), 
     resampAxis2_("resampAxis2", id, this), 
+    sigma_("sigma", id, this),
+    extent_("extent", id, this),
     last_filtertype_(""), last_resampAxis0_(""), last_resampAxis1_(""),
     last_resampAxis2_(""), last_generation_(-1), last_nrrdH_(0)
 {
@@ -85,7 +89,7 @@ int NrrdResample::getint(const char *str, int *n, int *none) {
     if (strlen(str) > 1) {
       double ratio;
       if (sscanf(str+1, "%lf", &ratio) != 1) return 1;
-      *n *= ratio;
+      *n = (int)(*n * ratio);
     }
   } else if (str[0] == '=') {
     *none = 1;
@@ -161,19 +165,22 @@ NrrdResample::execute()
   Nrrd *nin = nrrdH->nrrd;
   cerr << "Resampling with a "<<ftype<<" filter."<<endl;
   nrrdKernel *kern;
-  float p[NRRD_KERNEL_PARAMS_MAX];
-  memset(p, 0, NRRD_KERNEL_PARAMS_MAX*sizeof(float));
+  double p[NRRD_KERNEL_PARAMS_MAX];
+  memset(p, 0, NRRD_KERNEL_PARAMS_MAX*sizeof(double));
   p[0]=1.0;
   if (ftype == "box") kern=nrrdKernelBox;
   else if (ftype == "tent") kern=nrrdKernelTent;
+  else if (ftype == "gaussian") { kern=nrrdKernelGaussian; p[1]=sigma_.get(); p[2]=extent_.get(); }
   else if (ftype == "cubicCR") { kern=nrrdKernelBCCubic; p[1]=0; p[2]=0.5; }
   else if (ftype == "cubicBS") { kern=nrrdKernelBCCubic; p[1]=1; p[2]=0; }
   else /* if (ftype == "quartic") */ { kern=nrrdKernelAQuartic; p[1]=0.0834; }
   for (int a=0; a<3; a++) {
     info->kernel[a] = kern;
-    memcpy(info->param[a], p, NRRD_KERNEL_PARAMS_MAX*sizeof(float));
-    info->min[a] = 0;
-    info->max[a] = nin->axis[a].size-1;
+    memcpy(info->param[a], p, NRRD_KERNEL_PARAMS_MAX*sizeof(double));
+    if (!(AIR_EXISTS(nin->axis[a].min) && AIR_EXISTS(nin->axis[a].max)))
+      nrrdAxisSetMinMax(nrrdH->nrrd, a);
+    info->min[a] = nrrdH->nrrd->axis[a].min;
+    info->max[a] = nrrdH->nrrd->axis[a].max;
   }    
   info->boundary = nrrdBoundaryBleed;
   info->type = nin->type;
@@ -189,7 +196,8 @@ NrrdResample::execute()
 
   NrrdData *nrrd = scinew NrrdData;
   if (nrrdSpatialResample(nrrd->nrrd=nrrdNew(), nin, info)) {
-    char *err = biffGet(NRRD);
+//  if (nrrdSimpleResample(nrrd->nrrd=nrrdNew(), nin, info)) {
+    char *err = biffGetDone(NRRD);
     fprintf(stderr, "NrrdResample: trouble resampling:\n%s\n", err);
     cerr << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
     free(err);

@@ -38,10 +38,14 @@ itcl_class Teem_Filters_NrrdResample {
         global $this-resampAxis0
         global $this-resampAxis1
         global $this-resampAxis2
-        set $this-filtertype tent
+	global $this-sigma
+	global $this-extent
+        set $this-filtertype gaussian
         set $this-resampAxis0 x1
         set $this-resampAxis1 x1
         set $this-resampAxis2 x1
+	set $this-sigma 1
+	set $this-extent 6
     }
     method make_entry {w text v c} {
         frame $w
@@ -70,7 +74,12 @@ itcl_class Teem_Filters_NrrdResample {
 		{"Tent" tent} \
 		{"Cubic (Catmull-Rom)" cubicCR} \
 		{"Cubic (B-spline)" cubicBS} \
-		{"Quartic" quartic}}
+		{"Quartic" quartic} \
+		{"Gaussian" gaussian}}
+	global $this-sigma
+	make_entry $w.f.s "   Guassian sigma:" $this-sigma "$this-c needexecute"
+	global $this-extent
+	make_entry $w.f.e "   Guassian extent:" $this-extent "$this-c needexecute"
 	frame $w.f.f
 	label $w.f.f.l -text "Number of samples (e.g. `128')\nor, if preceded by an x,\nthe resampling ratio\n(e.g. `x0.5' -> half as many samples)"
 	global $this-resampAxis0
@@ -81,7 +90,7 @@ itcl_class Teem_Filters_NrrdResample {
 	make_entry $w.f.f.fk "Axis2:" $this-resampAxis2 "$this-c needexecute"
 	pack $w.f.f.l $w.f.f.fi $w.f.f.fj $w.f.f.fk -side top -expand 1 -fill x
 	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.t $w.f.f $w.f.b -side top -expand 1 -fill x
+	pack $w.f.t $w.f.s $w.f.e $w.f.f $w.f.b -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
     }
 }

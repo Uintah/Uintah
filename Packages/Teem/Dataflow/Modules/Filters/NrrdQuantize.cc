@@ -112,10 +112,9 @@ NrrdQuantize::execute()
   nin->max = maxf;
 
   cerr << "Quantizing -- min="<<minf<<" max="<<maxf<<" nbits="<<nbits<<endl;
-  cerr << "nrrdMinMaxUse = "<<nrrdMinMaxUse<<"\n";
   NrrdData *nrrd = scinew NrrdData;
-  if (nrrdQuantize(nrrd->nrrd = nrrdNew(), nin, nbits, nrrdMinMaxUse)) {
-    char *err = biffGet(NRRD);
+  if (nrrdQuantize(nrrd->nrrd = nrrdNew(), nin, nbits)) {
+    char *err = biffGetDone(NRRD);
     fprintf(stderr, "NrrdQuantize: trouble quantizing:\n%s\n", err);
     free(err);
     return;

@@ -64,6 +64,16 @@ NrrdToField::~NrrdToField()
 {
 }
 
+#define COPY_INTO_FIELD_FROM_NRRD(type, dataat) \
+    LatticeVol<type> *f = \
+      scinew LatticeVol<type>(lvm, dataat); \
+    type *p=(type *)n->data; \
+    for (k=0; k<nz; k++) \
+      for (j=0; j<ny; j++) \
+	for(i=0; i<nx; i++) \
+	  f->fdata()(k,j,i) = *p++; \
+    fieldH = f
+
 void NrrdToField::execute()
 {
   NrrdDataHandle ninH;
@@ -138,84 +148,34 @@ void NrrdToField::execute()
   int ny = n->axis[1].size;
   int nz = n->axis[2].size;
   
-  Point minP(0,0,0), maxP((nx-1)*n->axis[0].spacing,
-			  (ny-1)*n->axis[1].spacing,
-			  (nz-1)*n->axis[2].spacing);
+  for (i=0; i<3; i++)
+    if (!(AIR_EXISTS(n->axis[i].min) && AIR_EXISTS(n->axis[i].max)))
+      nrrdAxisSetMinMax(n, i);
+
+  Point minP(n->axis[0].min, n->axis[1].min, n->axis[2].min);
+  Point maxP(n->axis[0].max, n->axis[1].max, n->axis[2].max);
+
   LatVolMesh *lvm = scinew LatVolMesh(nx, ny, nz, minP, maxP);
   LatVolMeshHandle lvmH(lvm);
- 
+  SCIRun::Field::data_location dataat = Field::NODE;
+  if (n->axis[0].center == nrrdCenterCell) dataat = Field::CELL;
+
   if (n->type == nrrdTypeChar) {
-    LatticeVol<char> *f = 
-      scinew LatticeVol<char>(lvm, Field::NODE);
-    char *p=(char *)n->data;
-    for (k=0; k<nz; k++)
-      for (j=0; j<ny; j++)
-	for(i=0; i<nx; i++)
-	  f->fdata()(k,j,i) = *p++;
-    fieldH = f;
+    COPY_INTO_FIELD_FROM_NRRD(char, dataat);
   } else if (n->type == nrrdTypeUChar) {
-    LatticeVol<unsigned char> *f = 
-      scinew LatticeVol<unsigned char>(lvm, Field::NODE);
-    unsigned char *p=(unsigned char *)n->data;
-    for (k=0; k<nz; k++)
-      for (j=0; j<ny; j++)
-	for(i=0; i<nx; i++)
-	  f->fdata()(k,j,i) = *p++;
-    fieldH = f;
+    COPY_INTO_FIELD_FROM_NRRD(unsigned char, dataat);
   } else if (n->type == nrrdTypeShort) {
-    LatticeVol<short> *f = 
-      scinew LatticeVol<short>(lvm, Field::NODE);
-    short *p=(short *)n->data;
-    for (k=0; k<nz; k++)
-      for (j=0; j<ny; j++)
-	for(i=0; i<nx; i++)
-	  f->fdata()(k,j,i) = *p++;
-    fieldH = f;
+    COPY_INTO_FIELD_FROM_NRRD(short, dataat);
   } else if (n->type == nrrdTypeUShort) {
-    LatticeVol<unsigned short> *f = 
-      scinew LatticeVol<unsigned short>(lvm, Field::NODE);
-    unsigned short *p=(unsigned short *)n->data;
-    for (k=0; k<nz; k++)
-      for (j=0; j<ny; j++)
-	for(i=0; i<nx; i++)
-	  f->fdata()(k,j,i) = *p++;
-    fieldH = f;
+    COPY_INTO_FIELD_FROM_NRRD(unsigned short, dataat);
   } else if (n->type == nrrdTypeInt) {
-    LatticeVol<int> *f = 
-      scinew LatticeVol<int>(lvm, Field::NODE);
-    int *p=(int *)n->data;
-    for (k=0; k<nz; k++)
-      for (j=0; j<ny; j++)
-	for(i=0; i<nx; i++)
-	  f->fdata()(k,j,i) = *p++;
-    fieldH = f;
+    COPY_INTO_FIELD_FROM_NRRD(int, dataat);
   } else if (n->type == nrrdTypeUInt) {
-    LatticeVol<unsigned int> *f = 
-      scinew LatticeVol<unsigned int>(lvm, Field::NODE);
-    unsigned int *p=(unsigned int *)n->data;
-    for (k=0; k<nz; k++)
-      for (j=0; j<ny; j++)
-	for(i=0; i<nx; i++)
-	  f->fdata()(k,j,i) = *p++;
-    fieldH = f;
+    COPY_INTO_FIELD_FROM_NRRD(unsigned int, dataat);
   } else if (n->type == nrrdTypeFloat) {
-    LatticeVol<float> *f = 
-      scinew LatticeVol<float>(lvm, Field::NODE);
-    float *p=(float *)n->data;
-    for (k=0; k<nz; k++)
-      for (j=0; j<ny; j++)
-	for(i=0; i<nx; i++)
-	  f->fdata()(k,j,i) = *p++;
-    fieldH = f;
+    COPY_INTO_FIELD_FROM_NRRD(float, dataat);
   } else if (n->type == nrrdTypeDouble) {
-    LatticeVol<double> *f = 
-      scinew LatticeVol<double>(lvm, Field::NODE);
-    double *p=(double *)n->data;
-    for (k=0; k<nz; k++)
-      for (j=0; j<ny; j++)
-	for(i=0; i<nx; i++)
-	  f->fdata()(k,j,i) = *p++;
-    fieldH = f;
+    COPY_INTO_FIELD_FROM_NRRD(double, dataat);
   } else {
     cerr << "NrrdToField error - Unrecognized nrrd type.\n";
     return;

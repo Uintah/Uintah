@@ -16,7 +16,7 @@
 */
 
 /*
- *  NrrdSubvolume
+ *  NrrdCrop
  *
  *  Written by:
  *   David Weinstein
@@ -39,7 +39,7 @@ using std::endl;
 
 namespace SCITeem {
 
-class NrrdSubvolume : public Module {
+class NrrdCrop : public Module {
   NrrdIPort* inrrd_;
   NrrdOPort* onrrd_;
   GuiString minAxis0_;
@@ -59,18 +59,18 @@ class NrrdSubvolume : public Module {
 public:
   int valid_data(string *minS, string *maxS, int *min, int *max, Nrrd *nrrd);
   int getint(const char *str, int *n);
-  NrrdSubvolume(const string& id);
-  virtual ~NrrdSubvolume();
+  NrrdCrop(const string& id);
+  virtual ~NrrdCrop();
   virtual void execute();
 };
 
-extern "C" Module* make_NrrdSubvolume(const string& id)
+extern "C" Module* make_NrrdCrop(const string& id)
 {
-    return new NrrdSubvolume(id);
+    return new NrrdCrop(id);
 }
 
-NrrdSubvolume::NrrdSubvolume(const string& id)
-  : Module("NrrdSubvolume", id, Filter, "Filters", "Teem"), minAxis0_("minAxis0", id, this),
+NrrdCrop::NrrdCrop(const string& id)
+  : Module("NrrdCrop", id, Filter, "Filters", "Teem"), minAxis0_("minAxis0", id, this),
     maxAxis0_("maxAxis0", id, this), minAxis1_("minAxis1", id, this),
     maxAxis1_("maxAxis1", id, this), minAxis2_("minAxis2", id, this),
     maxAxis2_("maxAxis2", id, this), last_minAxis0_(""), last_maxAxis0_(""),
@@ -80,13 +80,13 @@ NrrdSubvolume::NrrdSubvolume(const string& id)
 {
 }
 
-NrrdSubvolume::~NrrdSubvolume() {
+NrrdCrop::~NrrdCrop() {
 }
 
 // edited from the Teem package: src/unrrdu/crop.c
 // we initialize n with the axis size - 1
 int
-NrrdSubvolume::getint(const char *str, int *n) {
+NrrdCrop::getint(const char *str, int *n) {
   if (!strlen(str)) return 1;
   if ('M' == str[0]) {
     if (1 < strlen(str)) {
@@ -116,9 +116,9 @@ NrrdSubvolume::getint(const char *str, int *n) {
 
 // look for M[+/-a] strings, as well just numbers
 // set the actual indices in the min/max arrays
-int NrrdSubvolume::valid_data(string *minS, string *maxS, 
+int NrrdCrop::valid_data(string *minS, string *maxS, 
 			      int *min, int *max, Nrrd *nrrd) {
-  string errstr("Error in NrrdSubvolume - bad subvolume range.");
+  string errstr("Error in NrrdCrop - bad subvolume range.");
   for (int a=0; a<3; a++) {
     const char *mins = minS[a].c_str();
     const char *maxs = maxS[a].c_str();
@@ -131,7 +131,7 @@ int NrrdSubvolume::valid_data(string *minS, string *maxS,
 }
 
 void 
-NrrdSubvolume::execute()
+NrrdCrop::execute()
 {
   NrrdDataHandle nrrdH;
   update_state(NeedData);
@@ -185,10 +185,15 @@ NrrdSubvolume::execute()
 
   Nrrd *nin = nrrdH->nrrd;
   Nrrd *nout = nrrdNew();
-  cerr << "Subvolume: ("<<min[0]<<","<<min[1]<<","<<min[2]<<") -> (";
+  cerr << "Crop: ("<<min[0]<<","<<min[1]<<","<<min[2]<<") -> (";
   cerr << max[0]<<","<<max[1]<<","<<max[2]<<")"<<endl;
 
-  nrrdSubvolume(nout, nin, min, max, 1);
+  if (nrrdCrop(nout, nin, min, max)) {
+    char *err = biffGetDone(NRRD);
+    fprintf(stderr, "NrrdResample: trouble resampling:\n%s\n", err);
+    cerr << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+    free(err);
+  }
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
   last_nrrdH_ = nrrd;
