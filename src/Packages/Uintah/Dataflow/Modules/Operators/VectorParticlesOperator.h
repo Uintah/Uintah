@@ -41,6 +41,7 @@ void VectorParticlesOperator::computeScalars(VectorParticles* pTP,
 					       converting vectors scalars */ )
 {
   pSP->Set(pTP->getParticleSet());
+  pSP->Set(pTP->getLevel());
   ShareAssignParticleVariable<double> scalarSet;
  
   vector< ShareAssignParticleVariable<Vector> >& vectors = pTP->get();
