@@ -49,6 +49,7 @@ private:
   GuiInt       reference_;
   GuiDouble    blur_x_;
   GuiDouble    blur_y_;
+  GuiDouble    use_default_threshold_;
   GuiDouble    threshold_;
   GuiInt       cc_analysis_;
   GuiDouble    fitting_;
@@ -65,6 +66,7 @@ TendEpireg::TendEpireg(SCIRun::GuiContext *ctx) :
   reference_(ctx->subVar("reference")),
   blur_x_(ctx->subVar("blur_x")),
   blur_y_(ctx->subVar("blur_y")),
+  use_default_threshold_(ctx->subVar("use-default-threshold")),
   threshold_(ctx->subVar("threshold")),
   cc_analysis_(ctx->subVar("cc_analysis")),
   fitting_(ctx->subVar("fitting")),
@@ -180,9 +182,13 @@ TendEpireg::execute()
   }
 
   Nrrd *nout = nrrdNew();
+  float threshold;
+  if (use_default_threshold_.get()) threshold = AIR_NAN;
+  else threshold = threshold_.get();
+//  cerr << "threshold = "<<threshold<<"\n";
   if (tenEpiRegister4D(nout, nin, ngrad, reference_.get(),
 		       blur_x_.get(), blur_y_.get(), fitting_.get(), 
-		       threshold_.get(), cc_analysis_.get(),
+		       threshold, cc_analysis_.get(),
 		       kern, p, 0, 0)) {
     char *err = biffGetDone(TEN);
     error(string("Error in epireg: ") + err);

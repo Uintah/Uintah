@@ -38,6 +38,9 @@ itcl_class Teem_Tend_TendEpireg {
         global $this-blur_y
         set $this-blur_y 2.0
 
+	global $this-use-default-threshold
+	set $this-use-default-threshold 1
+
         global $this-threshold
         set $this-threshold 0.0
 
@@ -99,6 +102,9 @@ itcl_class Teem_Tend_TendEpireg {
         iwidgets::entryfield $w.f.options.blur_y -labeltext "blur_y:" \
 	    -textvariable $this-blur_y
         pack $w.f.options.blur_y -side top -expand yes -fill x
+	checkbutton $w.f.options.usedefaultthreshold -text \
+	    "Use Default Threshold" -variable $this-use-default-threshold
+	pack $w.f.options.usedefaultthreshold -side top -expand yes -fill x
         iwidgets::entryfield $w.f.options.threshold -labeltext "threshold:" \
 	    -textvariable $this-threshold
         pack $w.f.options.threshold -side top -expand yes -fill x
