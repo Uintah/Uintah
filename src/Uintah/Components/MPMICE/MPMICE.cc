@@ -2,16 +2,18 @@
 // $Id$
 //
 #include <Uintah/Components/MPMICE/MPMICE.h>
+#include <Uintah/Components/MPMICE/MPMICELabel.h>
+
 #include <Uintah/Components/MPM/SerialMPM.h>
+#include <Uintah/Components/MPM/Burn/HEBurn.h>
+#include <Uintah/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Uintah/Components/MPM/MPMPhysicalModules.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+
 #include <Uintah/Components/ICE/ICE.h>
 #include <Uintah/Components/ICE/ICEMaterial.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Interface/Scheduler.h>
-
-#include <Uintah/Components/MPM/Burn/HEBurn.h>
-#include <Uintah/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Uintah/Components/MPM/MPMPhysicalModules.h>
 
 using namespace Uintah;
 using namespace Uintah::MPM;
@@ -28,8 +30,9 @@ using namespace std;
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
-  Mlb = scinew MPMLabel();
-  Ilb = scinew ICELabel();
+  Mlb  = scinew MPMLabel();
+  Ilb  = scinew ICELabel();
+  MIlb = scinew MPMICELabel();
   d_fracture = false;
   d_mpm      = scinew SerialMPM(myworld);
   d_ice      = scinew ICE(myworld);
@@ -39,6 +42,7 @@ MPMICE::~MPMICE()
 {
   delete Mlb;
   delete Ilb;
+  delete MIlb;
   delete d_mpm;
   delete d_ice;
 }
@@ -103,6 +107,9 @@ void MPMICE::scheduleTimeAdvance(double t, double dt,
     d_mpm->scheduleSolveHeatEquations(patch,sched,old_dw,new_dw);
     d_mpm->scheduleIntegrateAcceleration(patch,sched,old_dw,new_dw);
     d_mpm->scheduleIntegrateTemperatureRate(patch,sched,old_dw,new_dw);
+
+    scheduleInterpolateNCToCC(patch,sched,old_dw,new_dw);
+
     d_mpm->scheduleExMomIntegrated(patch,sched,old_dw,new_dw);
     d_mpm->scheduleInterpolateToParticlesAndUpdate(patch,sched,old_dw,new_dw);
     d_mpm->scheduleComputeMassRate(patch,sched,old_dw,new_dw);
@@ -138,26 +145,6 @@ void MPMICE::scheduleTimeAdvance(double t, double dt,
 
 #if 0
       {
-	/* interpolateNCToCC */
-
-	 Task* t=scinew Task("MPMICE::interpolateNCToCC",
-		    patch, old_dw, new_dw,
-		    this, &MPMICE::interpolateNCToCC);
-
-	 for(int m = 0; m < numMPMMatls; m++){
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-	    int idx = mpm_matl->getDWIndex();
-	    t->requires(new_dw, Mlb->gMomExedVelocityStarLabel, idx, patch,
-			Ghost::AroundCells, 1);
-	    t->requires(new_dw, Mlb->gMassLabel,                idx, patch,
-			Ghost::AroundCells, 1);
-	    t->computes(new_dw, Mlb->cVelocityLabel, idx, patch);
-	 }
-
-	sched->addTask(t);
-      }
-
-      {
 	/* interpolateCCToNC */
 
 	 Task* t=scinew Task("MPMICE::interpolateCCToNC",
@@ -189,10 +176,37 @@ void MPMICE::scheduleTimeAdvance(double t, double dt,
 				     numMPMMatls);
 }
 
+void MPMICE::scheduleInterpolateNCToCC(const Patch* patch,
+                                       SchedulerP& sched,
+                                       DataWarehouseP& old_dw,
+                                       DataWarehouseP& new_dw)
+{
+   /* interpolateNCToCC */
+
+   int numMPMMatls = d_sharedState->getNumMPMMatls();
+   Task* t=scinew Task("MPMICE::interpolateNCToCC",
+		        patch, old_dw, new_dw,
+		        this, &MPMICE::interpolateNCToCC);
+
+   for(int m = 0; m < numMPMMatls; m++){
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+     int idx = mpm_matl->getDWIndex();
+     t->requires(new_dw, Mlb->gMomExedVelocityStarLabel, idx, patch,
+		Ghost::AroundCells, 1);
+     t->requires(new_dw, Mlb->gMassLabel,                idx, patch,
+		Ghost::AroundCells, 1);
+     t->computes(new_dw, MIlb->cVelocityLabel, idx, patch);
+     t->computes(new_dw, MIlb->cMassLabel,     idx, patch);
+   }
+
+   sched->addTask(t);
+
+}
+
 void MPMICE::interpolateNCToCC(const ProcessorGroup*,
-                                     const Patch* patch,
-                                     DataWarehouseP&,
-                                     DataWarehouseP& new_dw)
+                               const Patch* patch,
+                               DataWarehouseP&,
+                               DataWarehouseP& new_dw)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
   Vector zero(0.,0.,0.);
@@ -211,8 +225,8 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 					   Ghost::AroundCells, 1);
      new_dw->get(gvelocity, Mlb->gMomExedVelocityStarLabel, matlindex, patch,
 					   Ghost::AroundCells, 1);
-     new_dw->allocate(cmass,     Mlb->cMassLabel,     matlindex, patch);
-     new_dw->allocate(cvelocity, Mlb->cVelocityLabel, matlindex, patch);
+     new_dw->allocate(cmass,     MIlb->cMassLabel,     matlindex, patch);
+     new_dw->allocate(cvelocity, MIlb->cVelocityLabel, matlindex, patch);
  
      IntVector nodeIdx[8];
 
@@ -229,11 +243,16 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
 	cvelocity[*iter] = cvelocity[*iter]/cmass[*iter];
      }
-     new_dw->put(cvelocity, Mlb->cVelocityLabel, matlindex, patch);
+
+     new_dw->put(cvelocity, MIlb->cVelocityLabel, matlindex, patch);
+     new_dw->put(cmass,     MIlb->cMassLabel,     matlindex, patch);
   }
 }
 
 // $Log$
+// Revision 1.5  2000/12/28 20:26:36  guilkey
+// More work on coupling MPM and ICE
+//
 // Revision 1.4  2000/12/27 23:31:13  guilkey
 // Fixed some minor problems in MPMICE.
 //
