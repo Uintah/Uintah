@@ -21,7 +21,7 @@
 #
 # Generated html is stored alongside its source xml.
 #
-# The variable GROUP is expected to be set to one of biopse, scirun, or
+# The variable SRGROUP is expected to be set to one of biopse, scirun, or
 #  unitah. If its not set or is empty then biopse is assumed.
 #
 # This file uses xalan-java 2.3.1 or higher to process the xml files.
@@ -79,13 +79,13 @@ xmlpkgtreetop:= ../../../../../
 .PHONY: default scirun biopse uintah clean veryclean
 
 # Default target
-ifndef GROUP
-GROUP = biopse
+ifndef SRGROUP
+SRGROUP = biopse
 endif
-ifeq (${strip ${GROUP}},)
-GROUP = biopse
+ifeq (${strip ${SRGROUP}},)
+SRGROUP = biopse
 endif
-default: ${GROUP}
+default: ${SRGROUP}
 
 # Other possibilities
 scirun : SCIRun
