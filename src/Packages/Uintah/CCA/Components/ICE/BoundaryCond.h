@@ -16,41 +16,68 @@ namespace Uintah {
 				const CCVariable<double>& rho,
 				const Vector& dx,
 				IntVector offset = IntVector(0,0,0));
+  
+  void setBCJohn(CCVariable<double>& press_CC, const CCVariable<double>& rho,
+		 const std::string& whichVar, const std::string& type, 
+		 const Patch* p, SimulationStateP& sharedState,
+		 const int mat_id, DataWarehouse*);
+  
+  void setBCJohn(CCVariable<double>& variable,const std::string& type, 
+		 const Patch* p,  SimulationStateP& sharedState,
+		 const int mat_id);
 
+  void setBCJohn(CCVariable<Vector>& variable,const std::string& type,
+		 const Patch* p, const int mat_id);
+  
+  void determineSpacingAndGravity(Patch::FaceType face, Vector& dx,
+				  SimulationStateP& sharedState,
+				  double& spacing, double& gravity);
 
- void setBC(CCVariable<double>& variable,const std::string& type, 
-	    const Patch* p,  SimulationStateP& sharedState,
-	    const int mat_id);
-
-    void setBC(CCVariable<double>& press_CC, const CCVariable<double>& rho,
+  void setBC(CCVariable<double>& variable,const std::string& type, 
+	     const Patch* p,  SimulationStateP& sharedState,
+	     const int mat_id);
+  
+  void setBC(CCVariable<double>& press_CC, const CCVariable<double>& rho,
              const std::string& whichVar, const std::string& type, 
              const Patch* p, SimulationStateP& sharedState,
              const int mat_id, DataWarehouse*);
-
-    void setBC(CCVariable<Vector>& variable,const std::string& type,
+  
+  void setBC(CCVariable<Vector>& variable,const std::string& type,
              const Patch* p, const int mat_id);
+  
+  template<class T> void Neuman_SFC(T& var, const Patch* patch,
+				    Patch::FaceType face,
+				    const double value, const Vector& dx,
+				    IntVector offset = IntVector(0,0,0));
 
-    template<class T> void Neuman_SFC(T& var, const Patch* patch,
-				      Patch::FaceType face,
-				      const double value, const Vector& dx,
-				      IntVector offset = IntVector(0,0,0));
+  void determineSpacingAndSign(Patch::FaceType face, Vector& dx,
+			       double& spacing, double& sign);  
 
-    void setBC(SFCXVariable<double>& variable,const std::string& type,
+  void setBCJohn(SFCXVariable<double>& variable,const std::string& type,
+		 const std::string& comp, const Patch* p, const int mat_id);
+
+  void setBC(SFCXVariable<double>& variable,const std::string& type,
              const std::string& comp, const Patch* p, const int mat_id);
+  
+  void setBCJohn(SFCYVariable<double>& variable,const std::string& type,
+		 const std::string& comp, const Patch* p, const int mat_id);
 
-    void setBC(SFCYVariable<double>& variable,const std::string& type,
+  void setBC(SFCYVariable<double>& variable,const std::string& type,
              const std::string& comp, const Patch* p, const int mat_id);
+  
+  void setBCJohn(SFCZVariable<double>& variable,const std::string& type,
+		 const std::string& comp, const Patch* p, const int mat_id);   
 
-    void setBC(SFCZVariable<double>& variable,const std::string& type,
+  void setBC(SFCZVariable<double>& variable,const std::string& type,
              const std::string& comp, const Patch* p, const int mat_id);   
-
-    void setBC(SFCXVariable<Vector>& variable,const std::string& type,
+  
+  void setBC(SFCXVariable<Vector>& variable,const std::string& type,
              const Patch* p, const int mat_id);
-             
-    void checkValveBC( CCVariable<Vector>& var, const Patch* patch,
-                    Patch::FaceType face); 
-
-    void ImplicitMatrixBC( CCVariable<Stencil7>& var, const Patch* patch);
-
+  
+  void checkValveBC(CCVariable<Vector>& var, const Patch* patch,
+		    Patch::FaceType face); 
+  
+  void ImplicitMatrixBC(CCVariable<Stencil7>& var, const Patch* patch);
+  
 } // End namespace Uintah
 #endif
