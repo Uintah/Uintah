@@ -399,6 +399,7 @@ main(int argc, char* argv[])
     sh = scene;
     SCIRun::Piostream *str;
     str = new SCIRun::FastPiostream (pioscenefile, SCIRun::Piostream::Read);
+    //str = new SCIRun::TextPiostream (pioscenefile, SCIRun::Piostream::Read);
     SCIRun::Pio(*str, sh);
     scene = sh.get_rep();
   } else {
@@ -436,6 +437,7 @@ main(int argc, char* argv[])
     // test for pio'd version
     sprintf(scnfile, "./%s.scn", scenename);
     str = new SCIRun::FastPiostream (scnfile,SCIRun::Piostream::Write);
+    //str = new SCIRun::TextPiostream (scnfile,SCIRun::Piostream::Write);
 
     // Write it out.
     sh = scene;

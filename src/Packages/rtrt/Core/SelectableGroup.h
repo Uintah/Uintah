@@ -23,6 +23,10 @@ public:
 
   SelectableGroup(float secs=1.0);
   virtual ~SelectableGroup();
+
+  virtual void io(SCIRun::Piostream &stream) 
+  { ASSERTFAIL("Pio not supported"); }
+
   virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
   virtual void softshadow_intersect(Light* light, Ray& ray, HitInfo& hit,

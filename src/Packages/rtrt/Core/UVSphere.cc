@@ -22,7 +22,7 @@ Persistent* uvs_maker() {
 }
 
 // initialize the static member type_id
-PersistentTypeID UVSphere::type_id("UVSphere", "UVMapping", uvs_maker);
+PersistentTypeID UVSphere::type_id("UVSphere", "Object", uvs_maker);
 
 
 UVSphere::UVSphere(Material *matl, Point c, double r, const Vector &up,

@@ -11,6 +11,28 @@
 #include <Core/Geometry/Transform.h>
 
 using namespace rtrt;
+using namespace SCIRun;
+
+SCIRun::Persistent* tvi_maker() {
+  return new TimeVaryingInstance();
+}
+SCIRun::Persistent* f1_maker() {
+  return new FishInstance1();
+}
+SCIRun::Persistent* f2_maker() {
+  return new FishInstance2();
+}
+
+// initialize the static member type_id
+SCIRun::PersistentTypeID TimeVaryingInstance::type_id("TimeVaryingInstance", 
+						      "Instance", tvi_maker);
+SCIRun::PersistentTypeID FishInstance1::type_id("FishInstance1", 
+						"TimeVaryingInstance", 
+						f1_maker);
+SCIRun::PersistentTypeID FishInstance2::type_id("FishInstance2", 
+						"TimeVaryingInstance", 
+						f2_maker);
+
 
 /*******************************************************************************/
 TimeVaryingInstance::TimeVaryingInstance (InstanceWrapperObject* obj)
@@ -159,7 +181,84 @@ FishInstance2::computeTransform(double t)
 
 }
 
+const int TimeVaryingInstance_VERSION = 1;
+const int FishInstance1_VERSION = 1;
+const int FishInstance2_VERSION = 1;
 
+void 
+TimeVaryingInstance::io(SCIRun::Piostream &str)
+{
+  str.begin_class("TimeVaryingInstance", TimeVaryingInstance_VERSION);
+  Instance::io(str);
+  SCIRun::Pio(str, center);
+  SCIRun::Pio(str, ocenter);
+  SCIRun::Pio(str, axis);
+  SCIRun::Pio(str, rate);
+  SCIRun::Pio(str, bbox_orig);
+  SCIRun::Pio(str, originToCenter);
+  str.end_class();
+}
+
+void 
+FishInstance1::io(SCIRun::Piostream &str)
+{
+  str.begin_class("FishInstance1", FishInstance1_VERSION);
+  TimeVaryingInstance::io(str);
+  SCIRun::Pio(str, vertHeightScale);
+  SCIRun::Pio(str, vertPerScale);
+  SCIRun::Pio(str, horizHeightScale);
+  SCIRun::Pio(str, horizPerScale);
+  SCIRun::Pio(str, rotPerSec);
+  SCIRun::Pio(str, startTime);
+  SCIRun::Pio(str, vertShift);
+  str.end_class();
+}
+
+void 
+FishInstance2::io(SCIRun::Piostream &str)
+{
+  str.begin_class("FishInstance2", FishInstance2_VERSION);
+  TimeVaryingInstance::io(str);
+  SCIRun::Pio(str, vertHeightScale);
+  SCIRun::Pio(str, vertPerScale);
+  SCIRun::Pio(str, horizHeightScale);
+  SCIRun::Pio(str, horizPerScale);
+  SCIRun::Pio(str, rotPerSec);
+  SCIRun::Pio(str, startTime);
+  SCIRun::Pio(str, vertShift);
+  str.end_class();
+}
+
+namespace SCIRun {
+
+void Pio( Piostream& stream, rtrt::TimeVaryingInstance*& obj )
+{
+  Persistent* pobj=obj;
+  stream.io(pobj, rtrt::TimeVaryingInstance::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::TimeVaryingInstance*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+void Pio( Piostream& stream, rtrt::FishInstance1*& obj )
+{
+  Persistent* pobj=obj;
+  stream.io(pobj, rtrt::FishInstance1::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::FishInstance1*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+void Pio( Piostream& stream, rtrt::FishInstance2*& obj )
+{
+  Persistent* pobj=obj;
+  stream.io(pobj, rtrt::FishInstance2::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::FishInstance2*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun
 
 
 

@@ -13,13 +13,17 @@
 
 #ifndef SCI_Classlib_BrickArray2_h
 #define SCI_Classlib_BrickArray2_h
-
+#include <Core/Persistent/Pstreams.h>
 #include <Core/Util/Assert.h>
+#include <sci_config.h>
 
 #include <math.h>
 #include <iostream>
 
 namespace rtrt {
+template<class T> class BrickArray2;
+template<class T> void Pio(SCIRun::Piostream& stream, BrickArray2<T>& data);
+template<class T> void Pio(SCIRun::Piostream& stream, BrickArray2<T>*& data);
 
 template<class T>
 class BrickArray2 {
@@ -55,6 +59,10 @@ public:
     return totaldm1*totaldm2*sizeof(T);
   }
   void share(const BrickArray2<T>& copy);
+
+  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (SCIRun::Piostream&, BrickArray2<T>&);
+  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (SCIRun::Piostream&, BrickArray2<T>*&);
+
 };
 
 template<class T>
@@ -193,6 +201,39 @@ void BrickArray2<T>::share(const BrickArray2<T>& copy)
   L1=copy.L1;
   L2=copy.L2;
   (*refcnt)++;
+}
+
+#define BrickArray2_VERSION 1
+
+template<class T>
+void Pio(SCIRun::Piostream& stream, BrickArray2<T>& data)
+{
+  stream.begin_class("rtrtBrickArray2", BrickArray2_VERSION);
+  if(stream.reading()){
+    // Allocate the array...
+    int d1, d2;
+    SCIRun::Pio(stream, d1);
+    SCIRun::Pio(stream, d2);
+    data.resize(d1, d2);
+  } else {
+    SCIRun::Pio(stream, data.dm1);
+    SCIRun::Pio(stream, data.dm2);
+  }
+  for(int i=0;i<data.dm1;i++){
+    for(int j=0;j<data.dm2;j++){
+      float &f = data(i, j);
+      SCIRun::Pio(stream, f);
+    }
+  }
+  stream.end_class();
+}
+
+template<class T>
+void Pio(SCIRun::Piostream& stream, BrickArray2<T>*& data) {
+  if (stream.reading()) {
+    data=new BrickArray2<T>;
+  }
+  Pio(stream, *data);
 }
 
 } // end namespace rtrt
