@@ -91,8 +91,6 @@ Stats* Worker::get_stats(int idx)
 //int clusterSize=1;
 //int shuffleClusters=1;
 
-//int np=4;
-
 extern float Galpha;
 
 //int framelessMode = 1; // default is the other mode...
@@ -123,9 +121,6 @@ void Worker::run()
   
   if (!dpy->doing_frameless()) {
 
-    // Convience alias
-    int np = scene->get_rtrt_engine()->np;
-    
     int showing_scene=1;
     
     // jittered masks for this stuff...
@@ -476,6 +471,8 @@ void Worker::run()
 
   } else { // FRAMELES RENDERING...
     renderFrameless();
+    // Force the return if we exit from this function
+    return;
   }
 } // end run()
 
