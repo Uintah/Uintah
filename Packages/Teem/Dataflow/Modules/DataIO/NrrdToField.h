@@ -64,10 +64,12 @@
 
 #include <teem/ten.h>
 
+#include <iostream>
+
 namespace SCITeem {
 
 using namespace SCIRun;
-
+using std::cerr;
 class NrrdToFieldMeshAlgo : public DynamicAlgoBase
 {
 public:
@@ -362,11 +364,14 @@ execute(MeshHandle& mHandle,
       if (dataH->nrrd->axis[a].center != nrrdCenterUnknown)
 	data_center = dataH->nrrd->axis[a].center;
     }
-    if (data_center == nrrdCenterCell)
+    if (data_center == nrrdCenterCell){
       ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
-    else
+      cerr<<"nrrdtofield thinks ccfield\n";
+    }
+    else{
       ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
-
+      cerr<<"nrrdtofield thinks ncfield\n";
+    }
     typename FIELD::mesh_type::Node::iterator inodeItr;
     
     imesh->begin( inodeItr );

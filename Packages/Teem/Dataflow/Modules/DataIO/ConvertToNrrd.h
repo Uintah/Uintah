@@ -525,7 +525,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 		     dims[0] - 1, dims[1] - 1, dims[2] - 1);
 	  }
 	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter,
-			  nrrdCenterNode, nrrdCenterCell, 
+			  nrrdCenterCell, nrrdCenterCell, 
 			  nrrdCenterCell, nrrdCenterCell);
 	} else  {
 	  ASSERTFAIL("no support for edge or face centers");
@@ -594,7 +594,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 		   dims[0] - 1, dims[1] - 1, dims[2]-1);
 	
 	  nrrdAxisInfoSet(ndata->nrrd, nrrdAxisInfoCenter,
-			  nrrdCenterNode, nrrdCenterCell, 
+			  nrrdCenterCell, nrrdCenterCell, 
 			  nrrdCenterCell, nrrdCenterCell);
 	} else  {
 	  ASSERTFAIL("no support for edge or face centers");
