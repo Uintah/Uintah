@@ -1,6 +1,6 @@
-#include "Vampir.h"
-
 #ifdef USE_VAMPIR
+
+#include "Vampir.h"
 
 void VTsetup()
 {
@@ -17,3 +17,10 @@ void VTsetup()
 }
 
 #endif
+
+
+
+
+
+
+
