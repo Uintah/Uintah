@@ -75,6 +75,7 @@ SRCS     += \
 	$(SRCDIR)/ManageFieldMesh.cc\
 	$(SRCDIR)/MapDataToMeshCoord.cc\
 	$(SRCDIR)/MaskLattice.cc\
+	$(SRCDIR)/MaskLatVolWithTriSurf.cc\
 	$(SRCDIR)/MoveElemToNode.cc\
 	$(SRCDIR)/MoveNodeToElem.cc\
 	$(SRCDIR)/NodeGradient.cc\
