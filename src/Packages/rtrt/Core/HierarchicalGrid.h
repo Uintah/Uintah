@@ -29,21 +29,27 @@ public:
     HierarchicalGrid( Object* obj, 
 		      int nside,
 		      int nSideLevel2, int nSideLevel3,
-		      int minObjects1, int minObjects2,
-		      int level );
+		      int minObjects1, int minObjects2 );
+
+    HierarchicalGrid( Object* obj, 
+		      int nside,
+		      int nSideLevel2, int nSideLevel3,
+		      int minObjects1, int minObjects2, const BBox &b );
 
     virtual ~HierarchicalGrid( void );
 
     virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
+    virtual void subpreprocess(double maxradius, int& pp_offset, int& scratchsize, int level);
     // All other methods are the same as in parent grid class
 
 private:
 
     int _nSidesLevel2, _nSidesLevel3;
     int _minObjects1, _minObjects2;
-    int _level;
 
-    static int L1counter, L2counter, L3counter;
+    static int L1Cells, L2Cells;
+    static int L1CellsWithChildren, L2CellsWithChildren;
+    static int LeafCells, TotalLeafPrims;
 
 };
 
