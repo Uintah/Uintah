@@ -101,7 +101,7 @@
                 <lower>[-240e-3, -240e-3, -160e-3]</lower>
                 <upper>[    0.0,  240e-3,  160e-3]</upper>
                 <resolution>[48,160,64]</resolution>
-                <patches>[4,8,4]</patches>
+                <patches>[4,4,4]</patches>
             </Box>
         </Level>
         <BoundaryConditions>
