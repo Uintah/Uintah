@@ -24,7 +24,7 @@ OctreeChildIterator::defaultOrder = {0,1,2,3,4,5,6,7};
 
 OctreeChildIterator::OctreeChildIterator( Octree<T> *tree,
 					  const int *order) :
-  tree(tree), current(0), order(order), isDone(false), start(0);
+  tree(tree), current(0), order(order), isDone(false), start(0)
 {
   if( tree->type() == Octree< T >::LEAF )
     {
