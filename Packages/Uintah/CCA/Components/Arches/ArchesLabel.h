@@ -79,6 +79,8 @@ namespace Uintah {
       // for old_dw in computeProps
       const VarLabel* d_densityCPLabel;
 
+      // filtered drhodt
+      const VarLabel* d_filterdrhodtLabel;
       // for computing divergence constraint
       const VarLabel* d_drhodfCPLabel;
       const VarLabel* d_drhodfPredLabel;
