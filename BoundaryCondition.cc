@@ -204,11 +204,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_intrusionBoundary = false;
   }
 
+  d_mmWallID = -10; // invalid cell type
   // if multimaterial then add an id for multimaterial wall
   if (d_MAlab) 
     d_mmWallID = total_cellTypes;
-  else
-    d_mmWallID = -9; // invalid cell type
 
 }
 
