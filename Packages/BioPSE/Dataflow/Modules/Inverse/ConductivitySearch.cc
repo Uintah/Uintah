@@ -131,15 +131,12 @@ ConductivitySearch::~ConductivitySearch(){}
 void ConductivitySearch::build_basis_matrices() {
   TetVolIntHandle tvH;
   tvH = dynamic_cast<TetVol<int> *>(mesh_in_.get_rep());
-  vector<pair<int, double> > dirBC;
-  dirBC.push_back(pair<int, double>(0, 0.0));
   Tensor zero(0);
   Tensor identity(1);
 
   MatrixHandle aH;
-  MatrixHandle bH;
   vector<pair<string, Tensor> > tens(NDIM_, pair<string, Tensor>("", zero));
-  BuildFEMatrix::build_FEMatrix(tvH, dirBC, tens, aH, bH);
+  BuildFEMatrix::build_FEMatrix(tvH, tens, aH);
   AmatH_ = aH;
   AmatH_.detach(); // this will be our global "shape" information
   
@@ -147,7 +144,7 @@ void ConductivitySearch::build_basis_matrices() {
   for (int i=0; i<NDIM_; i++) {
     tens[i].first=to_string(i);
     tens[i].second=identity;
-    BuildFEMatrix::build_FEMatrix(tvH, dirBC, tens, aH, bH);
+    BuildFEMatrix::build_FEMatrix(tvH, tens, aH);
     SparseRowMatrix *m = dynamic_cast<SparseRowMatrix*>(aH.get_rep());
     data_basis_[i].resize(m->nnz);
     for (int j=0; j<m->nnz; j++)

@@ -16,41 +16,51 @@
 #
 
 ##
- #  SetupFEMatrix.tcl
+ #  InsertVoltageSource.tcl: Set theta and phi for the dipole
+ #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
- #   Aug 1996, March 2001
- #  Copyright (C) 1996 SCI Group
+ #   June 1999
+ #
+ #  Copyright (C) 1999 SCI Group
+ # 
+ #  Log Information:
+ #
  ##
 
-catch {rename BioPSE_Forward_SetupFEMatrix ""}
+catch {rename BioPSE_Forward_InsertVoltageSource ""}
 
-itcl_class BioPSE_Forward_SetupFEMatrix {
+itcl_class BioPSE_Forward_InsertVoltageSource {
     inherit Module
     constructor {config} {
-        set name SetupFEMatrix
+        set name InsertVoltageSource
         set_defaults
     }
     method set_defaults {} {
-	global $this-UseCondTCL
-	set $this-UseCondTCL 1
+	global $this-outside
+	set $this-outside 1
+	global $this-average
+	set $this-average 1
     }
     method ui {} {
-        set w .ui[modname]
+        set w .ui$[modname]
         if {[winfo exists $w]} {
             raise $w
             return;
         }
 
         toplevel $w
-        wm minsize $w 150 20
+        wm minsize $w 150 30
         frame $w.f
-        pack $w.f -padx 2 -pady 2 -side top -expand yes
-	global $this-UseCondTCL
-	checkbutton $w.f.b -text "Use Conductivities" -variable $this-UseCondTCL -onvalue 1 -offvalue 0
-	pack $w.f.b -side top -expand 1 -fill x
-	pack $w.f -expand 1 -fill x
+	global $this-outside
+	checkbutton $w.f.o -text "Interpolate outside mesh" \
+		-variable $this-outside
+	global $this-average
+	checkbutton $w.f.a -text "Average interpolated values" \
+		-variable $this-outside
+	pack $w.f.o $w.f.a -side top -fill x -expand yes -padx 5 -pady 5
+        pack $w.f -side top -fill x -expand yes
     }
 }

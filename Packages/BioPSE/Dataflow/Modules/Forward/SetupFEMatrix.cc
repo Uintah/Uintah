@@ -59,25 +59,18 @@ namespace BioPSE {
 
 using namespace SCIRun;
 typedef LockingHandle<TetVol<int> >    CondMeshHandle;
-typedef LockingHandle<TetVol<double> > DirBCMeshHandle;
 
 class SetupFEMatrix : public Module {
   
   //! Private data
   FieldIPort*        iportField_;
-  FieldIPort*        iportInterp_;
-  MatrixOPort*       oportRhs_;
   MatrixOPort*       oportMtrx_;
  
   GuiInt             uiUseCond_;
   int                lastUseCond_;
   
-  GuiString          uiBCFlag_;
-  string             lastBCFlag_;
   MatrixHandle       hGblMtrx_;
-  MatrixHandle       hRhs_;
   int                gen_;
-  int                refNode_;
 
 public:
   
@@ -96,9 +89,7 @@ extern "C" Module* make_SetupFEMatrix(const string& id) {
 SetupFEMatrix::SetupFEMatrix(const string& id): 
   Module("SetupFEMatrix", id, Filter, "Forward", "BioPSE"), 
   uiUseCond_("UseCondTCL", id, this),
-  lastUseCond_(1),
-  uiBCFlag_("BCFlag", id, this),
-  refNode_(0)
+  lastUseCond_(1)
 {
   gen_=-1;
   uiUseCond_.set(1);
@@ -110,23 +101,13 @@ SetupFEMatrix::~SetupFEMatrix(){
 void SetupFEMatrix::execute(){
   
   iportField_ = (FieldIPort *)get_iport("Mesh");
-  iportInterp_ = (FieldIPort *)get_iport("Interpolant");
-  oportMtrx_ = (MatrixOPort *)get_oport("FEM Matrix");
-  oportRhs_ = (MatrixOPort *)get_oport("RHS");
+  oportMtrx_ = (MatrixOPort *)get_oport("Stiffness Matrix");
 
   if (!iportField_) {
     postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
-  if (!iportInterp_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
-    return;
-  }
   if (!oportMtrx_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
-    return;
-  }
-  if (!oportRhs_) {
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;
   }
@@ -137,16 +118,10 @@ void SetupFEMatrix::execute(){
     return;
   }
 
-  FieldHandle hInterp;
-  iportInterp_->get(hInterp);
-
   if (hField->generation == gen_ 
       && hGblMtrx_.get_rep() 
-      && hRhs_.get_rep()
-      && lastUseCond_==uiUseCond_.get()
-      && lastBCFlag_==uiBCFlag_.get()) {
+      && lastUseCond_==uiUseCond_.get()) {
     oportMtrx_->send(hGblMtrx_);
-    oportRhs_->send(hRhs_);
     return;
   }
   
@@ -166,30 +141,6 @@ void SetupFEMatrix::execute(){
     return;
   }
   
-  //-- polling Field for Dirichlet BC
-  vector<pair<int, double> > dirBC;
-
-  string bcFlag = uiBCFlag_.get();
-  if (bcFlag != "none") {
-    if (bcFlag=="GroundZero"){
-      refNode_=0;
-      if (hInterp.get_rep()) {
-	PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > >* interp = dynamic_cast<PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > > *>(hInterp.get_rep());
-	if (!interp) {
-	  cerr << "Input field wasn't interp'ing PointCloud from a TetVolMesh::Node\n";
-	} else {
-	  refNode_=interp->fdata()[0].begin()->first;
-	}
-      }
-      msgStream_ << "Grounding node "<<refNode_<< endl;
-      dirBC.erase(dirBC.begin(), dirBC.end());
-      dirBC.push_back(pair<int, double>(refNode_, 0.0));
-    } else { // bcFlag == DirSub
-      if (!hField->get("dirichlet", dirBC)){
-	msgStream_ << "The Field Set doesn't contain Dirichlet boundary conditions" << endl;
-      }
-    }
-  }
 
   //! finding conductivity tensor lookup table
   vector<pair<string, Tensor> > tens;
@@ -214,15 +165,13 @@ void SetupFEMatrix::execute(){
   }
   
   lastUseCond_ = uiUseCond_.get();
-  lastBCFlag_ = bcFlag;
-  if(BuildFEMatrix::build_FEMatrix(hCondMesh, dirBC, tens, hGblMtrx_, hRhs_)){
+  if(BuildFEMatrix::build_FEMatrix(hCondMesh, tens, hGblMtrx_)){
     msgStream_ << "Matrix is ready" << endl;
     msgStream_ << "Size: " << hGblMtrx_->nrows() << "-by-" << hGblMtrx_->ncols() << endl;
   };
   
   //! outputing
   oportMtrx_->send(hGblMtrx_);
-  oportRhs_->send(hRhs_);
 }
 
 } // End namespace BioPSE
