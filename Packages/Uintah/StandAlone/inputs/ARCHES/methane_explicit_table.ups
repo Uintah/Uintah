@@ -82,7 +82,7 @@
 
 	    <Properties>
 		<denUnderrelax>0.9</denUnderrelax>
-	        <ref_point>[3,3,3]</ref_point>
+	        <ref_point>[-1,-1,-1]</ref_point>
 	        <radiation>true</radiation>
 	        <mixing_model>meanMixingModel</mixing_model>
 	        <MeanMixingModel>
