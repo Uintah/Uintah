@@ -246,18 +246,18 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 
   Task* t = scinew Task("SerialMPM::interpolateParticlesToGrid",
 			this,&SerialMPM::interpolateParticlesToGrid);
-  t->requires(Task::OldDW, lb->pMassLabel,           Ghost::AroundNodes,1);
-  t->requires(Task::OldDW, lb->pVolumeLabel,       Ghost::AroundNodes,1);
+  Ghost::GhostType  gan = Ghost::AroundNodes;
+  t->requires(Task::OldDW, lb->pMassLabel,         gan,1);
+  t->requires(Task::OldDW, lb->pVolumeLabel,       gan,1);
   
-  t->requires(Task::OldDW, lb->pVelocityLabel,     Ghost::AroundNodes,1);
-  t->requires(Task::OldDW, lb->pXLabel,            Ghost::AroundNodes,1);
-  t->requires(Task::OldDW, lb->pExternalForceLabel,Ghost::AroundNodes,1);
-  t->requires(Task::OldDW, lb->pTemperatureLabel,  Ghost::AroundNodes,1);
+  t->requires(Task::OldDW, lb->pVelocityLabel,     gan,1);
+  t->requires(Task::OldDW, lb->pXLabel,            gan,1);
+  t->requires(Task::OldDW, lb->pExternalForceLabel,gan,1);
+  t->requires(Task::OldDW, lb->pTemperatureLabel,  gan,1);
   if(d_8or27==27){
-   t->requires(Task::OldDW, lb->pSizeLabel,         Ghost::AroundNodes,1);
+   t->requires(Task::OldDW,lb->pSizeLabel,         gan,1);
   }
-//    t->requires(Task::OldDW, lb->pExternalHeatRateLabel,
-//						Ghost::AroundNodes,1);
+//t->requires(Task::OldDW, lb->pExternalHeatRateLabel, gan,1);
 
   t->computes(lb->gMassLabel);
   t->computes(lb->gMassLabel,        d_sharedState->getAllInOneMatl(),
@@ -342,19 +342,21 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   Task* t = scinew Task("SerialMPM::computeInternalForce",
 		    this, &SerialMPM::computeInternalForce);
 
-  t->requires(Task::NewDW,lb->gMassLabel, Ghost::None);
+  Ghost::GhostType  gan = Ghost::AroundNodes;
+  Ghost::GhostType  gnone = Ghost::None;
+  t->requires(Task::NewDW,lb->gMassLabel, gnone);
   t->requires(Task::NewDW,lb->gMassLabel, d_sharedState->getAllInOneMatl(),
-						Task::OutOfDomain, Ghost::None);
-  t->requires(Task::NewDW,lb->pStressLabel_preReloc,      Ghost::AroundNodes,1);
-  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,       Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,lb->pXLabel,                    Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,lb->pMassLabel,                 Ghost::AroundNodes,1);
+						Task::OutOfDomain, gnone);
+  t->requires(Task::NewDW,lb->pStressLabel_preReloc,      gan,1);
+  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,       gan,1);
+  t->requires(Task::OldDW,lb->pXLabel,                    gan,1);
+  t->requires(Task::OldDW,lb->pMassLabel,                 gan,1);
   if(d_8or27==27){
-   t->requires(Task::OldDW, lb->pSizeLabel,               Ghost::AroundNodes,1);
+   t->requires(Task::OldDW, lb->pSizeLabel,               gan,1);
   }
 
   if(d_with_ice){
-    t->requires(Task::NewDW, lb->pPressureLabel,          Ghost::AroundNodes,1);
+    t->requires(Task::NewDW, lb->pPressureLabel,          gan,1);
   }
 
   t->computes(lb->gInternalForceLabel);
@@ -377,12 +379,14 @@ void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
   Task* t = scinew Task("SerialMPM::computeInternalHeatRate",
 			this, &SerialMPM::computeInternalHeatRate);
 
-  t->requires(Task::OldDW, lb->pXLabel,              Ghost::AroundNodes, 1);
+  Ghost::GhostType  gan = Ghost::AroundNodes;
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  t->requires(Task::OldDW, lb->pXLabel,              gan, 1);
   if(d_8or27==27){
-   t->requires(Task::OldDW, lb->pSizeLabel,          Ghost::AroundNodes,1);
+   t->requires(Task::OldDW, lb->pSizeLabel,          gan, 1);
   }
-  t->requires(Task::NewDW, lb->pVolumeDeformedLabel, Ghost::AroundNodes, 1);
-  t->requires(Task::NewDW, lb->gTemperatureLabel,    Ghost::AroundCells, 2);
+  t->requires(Task::NewDW, lb->pVolumeDeformedLabel, gan, 1);
+  t->requires(Task::NewDW, lb->gTemperatureLabel,    gac, 2);
 
   t->computes(lb->gInternalHeatRateLabel);
   sched->addTask(t, patches, matls);
@@ -431,18 +435,13 @@ void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
   Task* t = scinew Task("SerialMPM::solveHeatEquations",
 			    this, &SerialMPM::solveHeatEquations);
 
-  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
-  t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
-  t->requires(Task::NewDW, lb->gExternalHeatRateLabel, Ghost::None);
-
-  t->requires(Task::NewDW, lb->gThermalContactHeatExchangeRateLabel,
-						       Ghost::None);
+  Ghost::GhostType  gnone = Ghost::None;
+  t->requires(Task::NewDW, lb->gMassLabel,                           gnone);
+  t->requires(Task::NewDW, lb->gVolumeLabel,                         gnone);
+  t->requires(Task::NewDW, lb->gExternalHeatRateLabel,               gnone);
+  t->requires(Task::NewDW, lb->gInternalHeatRateLabel,               gnone);
+  t->requires(Task::NewDW, lb->gThermalContactHeatExchangeRateLabel, gnone);
 		
-  // It isn't really modifying for anybody, but it is more efficient
-  // to modify than to copy to a temporary variable.
-  //t->modifies(lb->gInternalHeatRateLabel);
-  t->requires(Task::NewDW, lb->gInternalHeatRateLabel, Ghost::None);
-
   t->computes(lb->gTemperatureRateLabel);
 
   sched->addTask(t, patches, matls);
@@ -460,11 +459,8 @@ void SerialMPM::scheduleIntegrateAcceleration(SchedulerP& sched,
   Task* t = scinew Task("SerialMPM::integrateAcceleration",
 			    this, &SerialMPM::integrateAcceleration);
 
-  //const MaterialSubset* mss = matls->getUnion();
-
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  //t->modifies(             lb->gAccelerationLabel, mss);
   t->requires(Task::NewDW, lb->gAccelerationLabel,      Ghost::None);
   t->requires(Task::NewDW, lb->gVelocityLabel,          Ghost::None);
 
@@ -550,12 +546,13 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  t->requires(Task::NewDW, lb->gAccelerationLabel,     Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->gVelocityStarLabel,     Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->gTemperatureRateLabel,  Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->gTemperatureLabel,      Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,  Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->frictionalWorkLabel,    Ghost::AroundCells,1);
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  t->requires(Task::NewDW, lb->gAccelerationLabel,     gac,1);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel,     gac,1);
+  t->requires(Task::NewDW, lb->gTemperatureRateLabel,  gac,1);
+  t->requires(Task::NewDW, lb->gTemperatureLabel,      gac,1);
+  t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,  gac,1);
+  t->requires(Task::NewDW, lb->frictionalWorkLabel,    gac,1);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
@@ -569,8 +566,8 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
 
   if(d_with_ice){
-    t->requires(Task::NewDW, lb->dTdt_NCLabel,            Ghost::AroundCells,1);
-    t->requires(Task::NewDW, lb->massBurnFractionLabel,   Ghost::AroundCells,1);
+    t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,1);
+    t->requires(Task::NewDW, lb->massBurnFractionLabel,gac,1);
   }
 
   t->computes(lb->pVelocityLabel_preReloc);
@@ -680,6 +677,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     gmassglobal.initialize(d_SMALL_NUM_MPM);
     gtempglobal.initialize(0.0);
 
+    Ghost::GhostType  gan = Ghost::AroundNodes;
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -690,15 +688,14 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       ParticleVariable<double> pexternalheatrate;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
-					       Ghost::AroundNodes, 1,
-					       lb->pXLabel);
+                                                       gan, 1, lb->pXLabel);
 
       old_dw->get(px,             lb->pXLabel,             pset);
       old_dw->get(pmass,          lb->pMassLabel,          pset);
       old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
-      old_dw->get(pexternalforce, lb->pExternalForceLabel, pset);
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
+      old_dw->get(pexternalforce, lb->pExternalForceLabel, pset);
       if(d_8or27==27){
         old_dw->get(psize,        lb->pSizeLabel,          pset);
       }
@@ -781,25 +778,24 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	  // Must use the node indices
 	  for(int k = 0; k < d_8or27; k++) {
 	    if(patch->containsNode(ni[k])) {
-	       gmassglobal[ni[k]]    += pmass[idx]          * S[k];
-	       gmass[ni[k]]          += pmass[idx]          * S[k];
-	       gvolume[ni[k]]        += pvolume[idx]        * S[k];
-	       gexternalforce[ni[k]] += pexternalforce[idx] * S[k];
+	       gmass[ni[k]]          += pmass[idx]                     * S[k];
+	       gvolume[ni[k]]        += pvolume[idx]                   * S[k];
+	       gexternalforce[ni[k]] += pexternalforce[idx]            * S[k];
 	       gvelocity[ni[k]]      += pvelocity[idx]    * pmass[idx] * S[k];
 	       gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
 	       gtempglobal[ni[k]]    += pTemperature[idx] * pmass[idx] * S[k];
                gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
                gnumnearparticles[ni[k]] += 1.0;
-
-	       totalmass += pmass[idx] * S[k];
 	    }
 	  }
         }
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-	gvelocity[*iter] /= gmass[*iter];
-        gTemperatureNoBC[*iter] = gTemperature[*iter]/gmass[*iter];
+        totalmass           += gmass[*iter];
+        gmassglobal[*iter]  += gmass[*iter];
+	gvelocity[*iter]    /= gmass[*iter];
         gTemperature[*iter] /= gmass[*iter];
+        gTemperatureNoBC[*iter] = gTemperature[*iter];
       }
 
       // Apply grid boundary conditions to the velocity before storing the data
@@ -895,7 +891,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int matlindex = mpm_matl->getDWIndex();
+      int dwi = mpm_matl->getDWIndex();
       // Create arrays for the particle position, volume
       // and the constitutive model
       constParticleVariable<Point>   px;
@@ -907,7 +903,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       NCVariable<Matrix3>       gstress;
       constNCVariable<double>   gmass;
 
-      ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch,
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
 					       Ghost::AroundNodes, 1,
 					       lb->pXLabel);
 
@@ -918,10 +914,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       if(d_8or27==27){
         old_dw->get(psize, lb->pSizeLabel,                   pset);
       }
-      new_dw->get(gmass,   lb->gMassLabel, matlindex, patch, Ghost::None, 0);
+      new_dw->get(gmass,   lb->gMassLabel, dwi, patch, Ghost::None, 0);
 
-      new_dw->allocateAndPut(gstress, lb->gStressForSavingLabel,matlindex,patch);
-      new_dw->allocateAndPut(internalforce, lb->gInternalForceLabel,  matlindex,patch);
+      new_dw->allocateAndPut(gstress,      lb->gStressForSavingLabel,dwi,patch);
+      new_dw->allocateAndPut(internalforce,lb->gInternalForceLabel,  dwi,patch);
 
       if(d_with_ice){
         new_dw->get(p_pressure,lb->pPressureLabel, pset);
@@ -1002,7 +998,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 	  face <= Patch::endFace; face=Patch::nextFace(face)){
       const BoundCondBase *sym_bcs;
       if (patch->getBCType(face) == Patch::None) {
-        sym_bcs  = patch->getBCValues(matlindex,"Symmetric",face);
+        sym_bcs  = patch->getBCValues(dwi,"Symmetric",face);
       } else
         continue;
       if (sym_bcs != 0) {
@@ -1043,9 +1039,10 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
     oodx[1] = 1.0/dx.y();
     oodx[2] = 1.0/dx.z();
 
+    Ghost::GhostType  gac = Ghost::AroundCells;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int matlindex = mpm_matl->getDWIndex();
+      int dwi = mpm_matl->getDWIndex();
       double thermalConductivity = mpm_matl->getThermalConductivity();
       
       constParticleVariable<Point>  px;
@@ -1055,7 +1052,7 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
       constNCVariable<double>  gTemperature;
       NCVariable<double>       internalHeatRate;
 
-      ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch,
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
 					       Ghost::AroundNodes, 1,
 					       lb->pXLabel);
 
@@ -1065,10 +1062,9 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
         old_dw->get(psize,      lb->pSizeLabel,           pset);
       }
 
-      new_dw->get(gTemperature, lb->gTemperatureLabel,    matlindex, patch,
-						Ghost::AroundCells, 2);
+      new_dw->get(gTemperature, lb->gTemperatureLabel,    dwi, patch, gac, 2);
       new_dw->allocateAndPut(internalHeatRate, lb->gInternalHeatRateLabel,
-			matlindex, patch);
+                                                                    dwi, patch);
       new_dw->allocateTemporary(pTemperatureGradient, pset);
   
       internalHeatRate.initialize(0.);
@@ -1144,6 +1140,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
     delt_vartype doMechOld;
     old_dw->get(doMechOld, lb->doMechLabel);
 
+    Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -1152,21 +1149,13 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       constNCVariable<Vector> externalforce;
       constNCVariable<Vector> gradPAccNC;  // for MPMICE
       constNCVariable<Vector> AccArchesNC;  // for MPMArches
-      constNCVariable<Vector> velocity;
-
-      new_dw->get(internalforce, lb->gInternalForceLabel, dwi, patch,
-							   Ghost::None, 0);
-      new_dw->get(externalforce, lb->gExternalForceLabel, dwi, patch,
-							   Ghost::None, 0);
-
       constNCVariable<double> mass;
-      new_dw->get(mass, lb->gMassLabel,       dwi,patch, Ghost::None,0);
-
-      new_dw->get(velocity,      lb->gVelocityLabel,      dwi, patch,
-                                                           Ghost::None, 0);
+ 
+      new_dw->get(internalforce, lb->gInternalForceLabel, dwi, patch, gnone, 0);
+      new_dw->get(externalforce, lb->gExternalForceLabel, dwi, patch, gnone, 0);
+      new_dw->get(mass,          lb->gMassLabel,          dwi, patch, gnone, 0);
       if(d_with_ice){
-         new_dw->get(gradPAccNC,lb->gradPAccNCLabel,    dwi, patch,
-							   Ghost::None, 0);
+         new_dw->get(gradPAccNC, lb->gradPAccNCLabel,     dwi, patch, gnone, 0);
       }
       else{
   	 NCVariable<Vector> gradPAccNC_create;
@@ -1175,8 +1164,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
 	 gradPAccNC = gradPAccNC_create; // reference created data
       }
       if(d_with_arches){
-         new_dw->get(AccArchesNC,lb->AccArchesNCLabel,    dwi, patch,
-							   Ghost::None, 0);
+         new_dw->get(AccArchesNC,lb->AccArchesNCLabel,    dwi, patch, gnone, 0);
       }
       else{
   	 NCVariable<Vector> AccArchesNC_create;
@@ -1184,6 +1172,10 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
 	 AccArchesNC_create.initialize(Vector(0.,0.,0.));
 	 AccArchesNC = AccArchesNC_create; // reference created data	 
       }
+
+//    Uncomment to use damping
+//    constNCVariable<Vector> velocity;
+//    new_dw->get(velocity,      lb->gVelocityLabel,      dwi, patch, gnone, 0);
 
       // Create variables for the results
       NCVariable<Vector> acceleration;
@@ -1221,7 +1213,7 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
 
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwindex = mpm_matl->getDWIndex();
+      int dwi = mpm_matl->getDWIndex();
       double specificHeat = mpm_matl->getSpecificHeat();
      
       // Get required variables for this patch
@@ -1229,23 +1221,23 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
       constNCVariable<double> thermalContactHeatExchangeRate;
       NCVariable<double> internalHeatRate;
       
-      new_dw->get(mass, lb->gMassLabel,       dwindex, patch, Ghost::None, 0);
-      new_dw->get(gvolume, lb->gVolumeLabel,    dwindex, patch, Ghost::None, 0);
+      new_dw->get(mass,    lb->gMassLabel,      dwi, patch, Ghost::None, 0);
+      new_dw->get(gvolume, lb->gVolumeLabel,    dwi, patch, Ghost::None, 0);
       new_dw->getCopy(internalHeatRate, lb->gInternalHeatRateLabel,
-		      dwindex, patch, Ghost::None, 0);
-      new_dw->get(externalHeatRate, lb->gExternalHeatRateLabel,
-		  dwindex, patch, Ghost::None, 0);
+                                                dwi, patch, Ghost::None, 0);
+      new_dw->get(externalHeatRate,     lb->gExternalHeatRateLabel,
+                                                dwi, patch, Ghost::None, 0);
 
       new_dw->get(thermalContactHeatExchangeRate,
                   lb->gThermalContactHeatExchangeRateLabel,
-                  dwindex, patch, Ghost::None, 0);
+                                                dwi, patch, Ghost::None, 0);
 
       Vector dx = patch->dCell();
       for(Patch::FaceType face = Patch::startFace;
 	  face <= Patch::endFace; face=Patch::nextFace(face)){
 	const BoundCondBase* temp_bcs;
         if (patch->getBCType(face) == Patch::None) {
-	   temp_bcs = patch->getBCValues(dwindex,"Temperature",face);
+	   temp_bcs = patch->getBCValues(dwi,"Temperature",face);
         } else
           continue;
 
@@ -1296,16 +1288,15 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
       }
 
       // Create variables for the results
-      NCVariable<double> temperatureRate;
-      new_dw->allocateAndPut(temperatureRate, lb->gTemperatureRateLabel,dwindex,
-                                                                         patch);
-      temperatureRate.initialize(0.0);
+      NCVariable<double> tempRate;
+      new_dw->allocateAndPut(tempRate, lb->gTemperatureRateLabel, dwi, patch);
+      tempRate.initialize(0.0);
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-	  temperatureRate[*iter] = (internalHeatRate[*iter]
-		                 +  externalHeatRate[*iter]) /
-				  (mass[*iter] * specificHeat);
-            temperatureRate[*iter]+=thermalContactHeatExchangeRate[*iter];
+	  tempRate[*iter] = (internalHeatRate[*iter]
+		          +  externalHeatRate[*iter]) /
+                            (mass[*iter] * specificHeat) + 
+                             thermalContactHeatExchangeRate[*iter];
       }
     }
   }
@@ -1327,9 +1318,7 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-      // Get required variables for this patch
-      constNCVariable<Vector>        acceleration;
-      constNCVariable<Vector>        velocity;
+      constNCVariable<Vector>  acceleration, velocity;
       delt_vartype delT;
 
       new_dw->get(acceleration,lb->gAccelerationLabel,dwi, patch,Ghost::None,0);
@@ -1361,28 +1350,26 @@ void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
     cout_doing <<"Doing integrateTemperatureRate on patch " << patch->getID()
 	       << "\t\t MPM"<< endl;
 
+    Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
       constNCVariable<double> temperature;
       constNCVariable<double> temperatureRate;
+      NCVariable<double> tempStar;
       delt_vartype delT;
  
-      new_dw->get(temperature, lb->gTemperatureLabel, dwi, patch,Ghost::None,0);
-      new_dw->get(temperatureRate, lb->gTemperatureRateLabel,
-                                                      dwi, patch,Ghost::None,0);
+      new_dw->get(temperature,     lb->gTemperatureLabel,    dwi,patch,gnone,0);
+      new_dw->get(temperatureRate, lb->gTemperatureRateLabel,dwi,patch,gnone,0);
 
       old_dw->get(delT, d_sharedState->get_delt_label() );
 
-      NCVariable<double> temperatureStar;
-      new_dw->allocateAndPut(temperatureStar, lb->gTemperatureStarLabel,
-                                                                     dwi,patch);
-      temperatureStar.initialize(0.0);
+      new_dw->allocateAndPut(tempStar, lb->gTemperatureStarLabel, dwi,patch);
+      tempStar.initialize(0.0);
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-        temperatureStar[*iter] = temperature[*iter] +
-				 temperatureRate[*iter] * delT;
+        tempStar[*iter] = temperature[*iter] + temperatureRate[*iter] * delT;
       }
     }
   }
@@ -1407,29 +1394,26 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
                       
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwindex = mpm_matl->getDWIndex();
+      int dwi = mpm_matl->getDWIndex();
       NCVariable<Vector> gvelocity_star, gacceleration;
-      NCVariable<double> gTemperatureRate;
+      NCVariable<double> gTempRate;
       constNCVariable<double> gTemperatureNoBC;
       
-      new_dw->getModifiable(gacceleration,    lb->gAccelerationLabel,
-			    dwindex, patch);
-      new_dw->getModifiable(gvelocity_star,   lb->gVelocityStarLabel,
-			    dwindex, patch);
-      new_dw->getModifiable(gTemperatureRate, lb->gTemperatureRateLabel,
-			    dwindex, patch);
+      new_dw->getModifiable(gacceleration, lb->gAccelerationLabel,   dwi,patch);
+      new_dw->getModifiable(gvelocity_star,lb->gVelocityStarLabel,   dwi,patch);
+      new_dw->getModifiable(gTempRate,     lb->gTemperatureRateLabel,dwi,patch);
       new_dw->get(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
-			dwindex, patch, Ghost::None, 0);
-     // Apply grid boundary conditions to the velocity_star and
+                                                    dwi, patch, Ghost::None, 0);
+      // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
       IntVector offset(0,0,0);
       for(Patch::FaceType face = Patch::startFace;
 	  face <= Patch::endFace; face=Patch::nextFace(face)){
         const BoundCondBase *vel_bcs, *temp_bcs, *sym_bcs;
         if (patch->getBCType(face) == Patch::None) {
-	   vel_bcs  = patch->getBCValues(dwindex,"Velocity",face);
-	   temp_bcs = patch->getBCValues(dwindex,"Temperature",face);
-	   sym_bcs  = patch->getBCValues(dwindex,"Symmetric",face);
+	   vel_bcs  = patch->getBCValues(dwi,"Velocity",face);
+	   temp_bcs = patch->getBCValues(dwi,"Temperature",face);
+	   sym_bcs  = patch->getBCValues(dwi,"Symmetric",face);
         } else
           continue;
          //__________________________________
@@ -1464,7 +1448,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
 		if(face==Patch::xplus){  I=hi.x()-1; }
 		for (int j = low.y(); j<hi.y(); j++) { 
 		  for (int k = low.z(); k<hi.z(); k++) {
-		    gTemperatureRate[IntVector(I,j,k)] +=
+		    gTempRate[IntVector(I,j,k)] +=
 		      (boundTemp - gTemperatureNoBC[IntVector(I,j,k)])/delT;
 		  }
 		}
@@ -1475,7 +1459,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
 	       if(face==Patch::yplus){  J=hi.y()-1; }
 	       for (int i = low.x(); i<hi.x(); i++) {
 		  for (int k = low.z(); k<hi.z(); k++) {
-		    gTemperatureRate[IntVector(i,J,k)] +=
+		    gTempRate[IntVector(i,J,k)] +=
 		      (boundTemp - gTemperatureNoBC[IntVector(i,J,k)])/delT;
 		  }
 	       }
@@ -1486,7 +1470,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
 	       if(face==Patch::zplus){  K=hi.z()-1; }
 	       for (int i = low.x(); i<hi.x(); i++) {
 		  for (int j = low.y(); j<hi.y(); j++) {
-		    gTemperatureRate[IntVector(i,j,K)] +=
+		    gTempRate[IntVector(i,j,K)] +=
 		      (boundTemp - gTemperatureNoBC[IntVector(i,j,K)])/delT;
 		  }
 	       }
@@ -1532,14 +1516,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwindex = mpm_matl->getDWIndex();
+      int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       ParticleVariable<Point> pxnew;
       constParticleVariable<Vector> pvelocity, pexternalForce,psize;
-      ParticleVariable<Vector> pvelocitynew, pexternalForceNew,psizeNew;
+      ParticleVariable<Vector> pvelocitynew, pextForceNew,psizeNew;
       constParticleVariable<double> pmass, pvolume, pTemperature;
-      ParticleVariable<double> pmassNew,pvolumeNew,pTemperatureNew;
+      ParticleVariable<double> pmassNew,pvolumeNew,pTempNew;
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;
       ParticleVariable<int> keep_delete;
@@ -1551,7 +1535,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       delt_vartype delT;
 
-      ParticleSubset* pset = old_dw->getParticleSubset(dwindex, patch);
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
       old_dw->get(px,                    lb->pXLabel,                    pset);
       old_dw->get(pmass,                 lb->pMassLabel,                 pset);
@@ -1567,40 +1551,33 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pvolumeNew,   lb->pVolumeLabel_preReloc,     pset);
       new_dw->allocateAndPut(pids_new,     lb->pParticleIDLabel_preReloc, pset);
       new_dw->allocateAndPut(keep_delete,  lb->pKeepDeleteLabel,          pset);
-      new_dw->allocateAndPut(pexternalForceNew,lb->pExternalForceLabel_preReloc,
-                                                                          pset);
-      new_dw->allocateAndPut(pTemperatureNew,  lb->pTemperatureLabel_preReloc,
+      new_dw->allocateAndPut(pTempNew,     lb->pTemperatureLabel_preReloc,pset);
+      new_dw->allocateAndPut(pextForceNew, lb->pExternalForceLabel_preReloc,
                                                                           pset);
       pids_new.copyData(pids);
-      pexternalForceNew.copyData(pexternalForce);
+      pextForceNew.copyData(pexternalForce);
       if(d_8or27==27){
         old_dw->get(psize,               lb->pSizeLabel,                 pset);
         new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
         psizeNew.copyData(psize);
       }
 
-      new_dw->get(gvelocity_star,     lb->gVelocityStarLabel,
-			dwindex, patch, Ghost::AroundCells, 1);
-      new_dw->get(gacceleration,      lb->gAccelerationLabel,
-			dwindex, patch, Ghost::AroundCells, 1);
-      new_dw->get(gTemperatureRate,   lb->gTemperatureRateLabel,
-			dwindex, patch, Ghost::AroundCells, 1);
-      new_dw->get(gTemperature,       lb->gTemperatureLabel,
-			dwindex, patch, Ghost::AroundCells, 1);
-      new_dw->get(gTemperatureNoBC,   lb->gTemperatureNoBCLabel,
-			dwindex, patch, Ghost::AroundCells, 1);
-      new_dw->get(frictionalTempRate, lb->frictionalWorkLabel,
-			dwindex, patch, Ghost::AroundCells, 1);
+      Ghost::GhostType  gac = Ghost::AroundCells;
+      new_dw->get(gvelocity_star,    lb->gVelocityStarLabel,   dwi,patch,gac,1);
+      new_dw->get(gacceleration,     lb->gAccelerationLabel,   dwi,patch,gac,1);
+      new_dw->get(gTemperatureRate,  lb->gTemperatureRateLabel,dwi,patch,gac,1);
+      new_dw->get(gTemperature,      lb->gTemperatureLabel,    dwi,patch,gac,1);
+      new_dw->get(gTemperatureNoBC,  lb->gTemperatureNoBCLabel,dwi,patch,gac,1);
+      new_dw->get(frictionalTempRate,lb->frictionalWorkLabel,  dwi,patch,gac,1);
 
       if(d_with_ice){
-        new_dw->get(dTdt, lb->dTdt_NCLabel,dwindex,patch,Ghost::AroundCells,1);
-        new_dw->get(massBurnFraction, lb->massBurnFractionLabel,
-		    dwindex,patch,Ghost::AroundCells,1);
+        new_dw->get(dTdt,            lb->dTdt_NCLabel,         dwi,patch,gac,1);
+        new_dw->get(massBurnFraction,lb->massBurnFractionLabel,dwi,patch,gac,1);
       }
       else{
 	NCVariable<double> dTdt_create, massBurnFraction_create;	
-        new_dw->allocateTemporary(dTdt_create, patch,Ghost::AroundCells,1);
-        new_dw->allocateTemporary(massBurnFraction_create, patch,Ghost::AroundCells,1);
+        new_dw->allocateTemporary(dTdt_create,             patch,gac,1);
+        new_dw->allocateTemporary(massBurnFraction_create, patch,gac,1);
         dTdt_create.initialize(0.);
         massBurnFraction_create.initialize(0.);
 	dTdt = dTdt_create; // reference created data
@@ -1646,7 +1623,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           // Update the particle's position and velocity
           pxnew[idx]           = px[idx] + vel * delT;
           pvelocitynew[idx]    = pvelocity[idx] + acc * delT;
-          pTemperatureNew[idx] = pTemperature[idx] + tempRate * delT;
+          pTempNew[idx]        = pTemperature[idx] + tempRate * delT;
     
           double rho;
 	  if(pvolume[idx] > 0.){
