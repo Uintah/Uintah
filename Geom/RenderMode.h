@@ -16,6 +16,7 @@
 
 #include <Geom/Container.h>
 #include <Geometry/Point.h>
+#include <Classlib/Boolean.h>
 
 class GeomRenderMode : public GeomContainer {
 public:

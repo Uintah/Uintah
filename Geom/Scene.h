@@ -6,6 +6,8 @@
 #include <Classlib/Persistent.h>
 #include <Geom/Color.h>
 #include <Geom/View.h>
+#include <Classlib/Boolean.h>
+
 class Lighting;
 class GeomObj;
 class ostream;

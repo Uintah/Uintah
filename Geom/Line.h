@@ -16,6 +16,7 @@
 
 #include <Geom/Geom.h>
 #include <Geometry/Point.h>
+#include <Classlib/Boolean.h>
 
 #include <stdlib.h>	// For size_t
 

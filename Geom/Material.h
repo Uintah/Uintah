@@ -19,6 +19,7 @@
 #include <Geom/Color.h>
 #include <Geom/Container.h>
 #include <Multitask/ITC.h>
+#include <Classlib/Boolean.h>
 
 class Material : public Persistent {
 public:

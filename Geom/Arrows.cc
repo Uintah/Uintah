@@ -19,6 +19,8 @@
 #include <Geometry/BSphere.h>
 #include <Malloc/Allocator.h>
 
+#define true 1
+
 Persistent* make_GeomArrows()
 {
     return scinew GeomArrows(0,0);
@@ -137,7 +139,7 @@ void GeomArrows::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomArrows::saveobj(ostream& out, const clString& format, GeomSave* saveinfo)
+int GeomArrows::saveobj(ostream& out, const clString& format, GeomSave* saveinfo)
 {
   int n=positions.size();
 

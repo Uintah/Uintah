@@ -17,6 +17,7 @@
 #include <Geom/Geom.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
+#include <Classlib/Boolean.h>
 
 class GeomDisc : public GeomObj {
     Vector v1;

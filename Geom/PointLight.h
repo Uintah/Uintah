@@ -17,6 +17,7 @@
 #include <Geom/Light.h>
 #include <Geom/Color.h>
 #include <Geometry/Point.h>
+#include <Classlib/Boolean.h>
 
 class PointLight : public Light {
     Point p;

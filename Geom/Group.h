@@ -17,6 +17,7 @@
 #include <Geom/Geom.h>
 #include <Geometry/BSphere.h>
 #include <Geometry/BBox.h>
+#include <Classlib/Boolean.h>
 
 struct ITree;
 
