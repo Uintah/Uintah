@@ -22,7 +22,7 @@ class PCAGridSpheres : public TextureGridSpheres {
   // unsigned char *tex_data; // size = nbases * tex_res * tex_res;
   // size_t ntextures; // not used directly
 
-  float getPixel(int x, int y, int channel_index);
+  float get_pixel(int x, int y, int channel_index);
   float interp_luminance(double u, double v, int index);
 public:
   PCAGridSpheres(float* spheres, size_t nspheres, int ndata,

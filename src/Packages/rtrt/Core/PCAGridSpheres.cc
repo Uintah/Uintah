@@ -38,7 +38,6 @@ PCAGridSpheres::PCAGridSpheres(float* spheres, size_t nspheres, int ndata,
 {
   tex_diff = (tex_max - tex_min)*one_over_255;
   coeff_diff = (coeff_max - coeff_min)*one_over_255;
-  cout << "PCAGridSpheres::tex_diff = "<<tex_diff<<"\n";
 }
 
 PCAGridSpheres::~PCAGridSpheres()
@@ -94,15 +93,15 @@ void PCAGridSpheres::shade(Color& result, const Ray& ray,
 
   // Do the uv lookup stuff.  Here we are only clamping
   double u=uv.u()*uscale;
-  if(u>1)
+  if (u>1)
     u=1;
-  else if(u<0)
+  else if (u<0)
     u=0;
 
   double v=uv.v()*vscale;
-  if(v>1)
+  if (v>1)
     v=1;
-  else if(v<0)
+  else if (v<0)
     v=0;
 
   float luminance = interp_luminance(u, v, tex_index);
@@ -120,7 +119,7 @@ void PCAGridSpheres::shade(Color& result, const Ray& ray,
 }
 
 // Given the pixel and texture index compute the pixel's luminance
-float PCAGridSpheres::getPixel(int x, int y, int tex_index) {
+float PCAGridSpheres::get_pixel(int x, int y, int tex_index) {
   float outdata = 0;
   unsigned char* btdata = tex_data + (y*tex_res+x);
   unsigned char* coeff_data = coeff + (tex_index*nbases);
@@ -149,7 +148,7 @@ float PCAGridSpheres::interp_luminance(double u, double v, int index)
   if (iv == tex_res)
     iv = tex_res - 1;
   
-  float lum = getPixel(iu, iv, index));
+  float lum = get_pixel(iu, iv, index);
 
   return lum*one_over_255;
 #else
@@ -170,10 +169,10 @@ float PCAGridSpheres::interp_luminance(double u, double v, int index)
     iv = tex_res - 2;
   double v_weight_high = v-iv;
 
-  float lum00 = getPixel(iu,      iv,   index);
-  float lum01 = getPixel(iu_high, iv,   index);
-  float lum10 = getPixel(iu,      iv+1, index);
-  float lum11 = getPixel(iu_high, iv+1, index);
+  float lum00 = get_pixel(iu,      iv,   index);
+  float lum01 = get_pixel(iu_high, iv,   index);
+  float lum10 = get_pixel(iu,      iv+1, index);
+  float lum11 = get_pixel(iu_high, iv+1, index);
   
   float lum = 
     lum00*(1-u_weight_high)*(1-v_weight_high)+
