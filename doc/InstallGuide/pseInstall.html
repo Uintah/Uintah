@@ -20,16 +20,28 @@
 <head>
  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
  <meta name="Author" content="Erik Jorgensen">
- <link rel=stylesheet type="text/css" href="http://www.sci.utah.edu/scirun_docs/doc/doc_styles.css">
+ <link rel=stylesheet type="text/css" href="../doc_styles.css">
  <title>SCIRun inst and build instructions - Unix version</title>
 </head>
 
 <body>
-<a href="http://www.sci.utah.edu"><img style="margin-left:-2em"
-src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height="66" width="150"></a>
+<!-- *************************************************************** -->
+<!-- *************** STANDARD SCI RESEARCH HEADER ****************** -->
+<!-- *************************************************************** -->
+<center><img SRC="../images/research_menuheader.gif" usemap="#head-links" height="71" width="600" border="0"></center>
+<map name="head-links">
+        <area shape="rect" coords="491,15,567,32" href="http://www.sci.utah.edu/research/research.html">
+        <area shape="rect" coords="31,9,95,36" href="http://www.sci.utah.edu">
+        <area href="../InstallGuide/pseInstall.html" coords="0,45,150,70">
+        <area href="../UserGuide/userguide.html" coords="150,45,300,70">
+        <area href="../DeveloperGuide/devguide.html" coords="300,45,450,70">
+        <area href="../ReferenceGuide/refguide.html" coords="450,45,600,70">
+</map>
+<!-- *************************************************************** -->
+<!-- *************************************************************** -->
 
 <p class="title">Installation and Build Instructions for the SCIRun PSE</p>
-<p class="subtitle">(Unix version - Updated March 21, 2001)</p>
+<p class="subtitle">(Unix version - Updated March 25, 2001)</p>
 
 <p class="head">Table of contents</p>
 <ol class="toc">
@@ -44,7 +56,6 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
       <LI><A HREF="#Appendix">Appendix</A></LI>
 </ol>
 
-<br><br><br>
 <p class="head"><a name="Prerequisites">Prerequisites</a></p>
     <p class="firstpara">
       Use of this document requires experience with the SGI
@@ -57,7 +68,7 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
       be warranted.
     </p>
 
-<br><br><br><p class="head"><a name="Requirements">Minimum System Software Requirements</a></p>
+<p class="head"><a name="Requirements">Minimum System Software Requirements</a></p>
     <p class="firstpara">
       Two platforms are officially supported: SGI and Linux.
     </p>
@@ -77,10 +88,11 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
     <p class="firstpara">
       Refer to the <a href="ThirdpartyInfo.html">Third Party Software
       Installation</a> page for information on installing the
-      required software.
+      required software listed below.
     </p>
 
-    <p><center>
+    <p>
+    <center>
     <TABLE border=1>
       <TR>
         <TH>Platform</TH>
@@ -152,7 +164,7 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
       </TR>
 
       <TR>
-	<TH colspan=3>Required software</TH>
+	<TH colspan=3>Required thirdparty software</TH>
       </TR>
 
       <TR>
@@ -221,10 +233,10 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
         </TD>
       </TR>
       <TR>
-	<TH colspan=3>Optional software</TH>
+	<TH colspan=3>Optional thirdparty software</TH>
       </TR>
       <TR>
-        <TD rowspan=5> SGI and Linux </TD>
+        <TD rowspan=3> SGI </TD>
         <TD>
           <A HREF="http://bloodyeck.com/mpegelib/">
             MPEGe Lib
@@ -250,18 +262,6 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
       </TR>
       <TR>
         <TD>
-          <A HREF="http://www.cs.utah.edu/~gk">
-            Teem
-          </A>
-        </TD>
-        <TD>
-          <A HREF="http://www.cs.utah.edu/~gk">
-            1.0
-          </A>
-        </TD>
-      </TR>
-      <TR>
-        <TD>
           <A HREF="http://oss.sgi.com/cgi-bin/cvsweb.cgi/inventor/libimage/">
             libimage
           </A>
@@ -272,58 +272,132 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
           </A>
         </TD>
       </TR>
+      <TR>
+        <TD> SGI and Linux </TD>
+        <TD>
+            Teem
+        </TD>
+        <TD>
+            1.0
+        </TD>
+      </TR>
      </TABLE>
     </center>
     </p>
     
-<br><br><br><br><p class="subhead"><a name="Recommend">Minimum System Recommendations</a></p>
+<p class="head"><a name="Recommend">Minimum System Recommendations</a></p>
+
     <p class="firstpara">
-      For SGI machines:
+    <center>
+    <table border=1>
+      <th></th>
+      <th>Processor(s)</th>
+      <th>Main Memory</th>
+      <th>Additional hardware/software</th>
+      <tr>
+        <td>SGI</td>
+        <td>250 MHz R10K</td>
+        <td>256 MB</td>
+        <td>Texture mapping hardware/memory</td>
+      <tr>
+        <td>Linux</td>
+        <td>500 MHz Pentium III</td>
+        <td>256 MB</td>
+        <td>NVIDIA GeForce or Quadro series graphics card with 0-9.6 drivers
+            <br>
+            XFree86 4.0.2</td>
+    </table>
+    </center>
     </p>
-    <pre class="example">R10K 250MHz processor(s)
-256MB main memory
-Texture mapping hardware
+
+<p class="head"><a name="Installing">Installing SCIRun</a></p>
+    <p class="firstpara">
+      <a name = "Obtain"><b>1. Obtain a copy of the SCIRun source tree.</b></a>
+    </p>
+
+    <p class="firstpara">
+      If you have access to the SCIRun CVS repository (i.e. you are
+      a student or staff member of the SCI Institute), then contact a
+      member of the senior staff for information regarding CVS access.
+    </p>
+
+    <p class="firstpara">
+      Otherwise, go to the SCIRun <a href="http://ampano.cs.utah.edu/research/software/software_down.html">download page</a>. 
+    </p>
+
+    <p class="firstpara">
+      <a name="Installdir"><b>2. Install the source tree into a directory
+      of your choosing.</b></a>
+    </p>
+
+    <p class="firstpara">
+      SCIRun can be installed into any directory, whether within a user
+      home directory or a system application directory.  There is no "make
+      install" step in the build process, so which ever directory is chosen
+      is where SCIRun will be installed.
+    </p>
+
+    <p class="firstpara">
+      For example, if you choose to install SCIRun into user Bob's home
+      directory, then 
+    </p>
+
+    <pre class="example"><b><i><font 
+    color=green>INSTALL_DIR</font></i></b> = /home/bob</pre>
+
+    <p class="firstpara">
+      Change directories to the <b><i><font color=green>INSTALL_DIR</font>
+      </i></b> directory.  Depending on how SCIRun was obtained, either 
+    </p>
+
+    <p class="firstpara">
+      a) unzip and untar the SCIRun source tree:
+    </p>
+    
+    <pre class="example"><font color=blue>cd /home/bob
+gunzip SCIRun.tar.gz
+tar xvf SCIRun.tar</font>
     </pre>
 
+    <p class="firstpara">
+      or
+    </p>
 
     <p class="firstpara">
-      For Linux machines:
+      b) checkout the SCIRun source tree from the CVS repository:
     </p>
-    <pre class="example">PIII 500MHz processor(s)
-256MB main memory
-XFree86 4.0.2
-NVIDIA Geforce or Quadro graphics card with 0-9.6 drivers
-Mandrake 7.2
+
+    <pre class="example"><font color=blue>cd /home/bob
+cvs checkout SCIRun</font>
     </pre>
 
-<br><br><br><p class="head"><a name="Installing">Installing SCIRun</a></p>
     <p class="firstpara">
-      <b>1. Obtain a copy of the SCIRun source tree.</b>  <a href="#Obtain">more...</a>
+      After installing, the <b><i><font color=green>INSTALL_DIR</font>
+      </i></b> directory will have a sub directory named SCIRun:
     </p>
 
-    <p class="firstpara">
-      <b>2. Install the source tree into a directory
-      of your choosing.</b>  <a href="#Installdir">more...</a>  
-    </p>
+    <pre class="example">/home/bob/SCIRun</pre>
 
     <p class="firstpara">
       The chosen install directory will be referred to as <b><i><font
       color=green>INSTALL_DIR</font></i></b> from now on.
     </p>
       
-<br><br><br><p class="head"><a name="Building">Building SCIRun</a></p>
+<p class="head"><a name="Building">Building SCIRun</a></p>
   <p class="firstpara">
     <b>1. Ensure that the target install machine
       matches the above system requirements.</b>
-        <a href="ThirdpartyInfo.html">more...</a>
   </p>
 
   <p class="firstpara">
-    <b>2. Run configure from a directory of your choosing:</b>
-      <a href="#Configure">more...</a>
+    See the <a href="ThirdpartyInfo.html">Thirdparty Software Installation and Build Instructions</a> for more information.
+
+  <p class="firstpara">
+    <a name="Configure">
+    <b>2. Run configure from a directory of your choosing.</b></a>
   </p>
 
-  <p class="firstpara">	
+  <p class="firstpara"> 
     The chosen configure directory will be referred to as <b><i><font
     color=green>BUILD_DIR</font></i></b> from now on.
   </p>
@@ -336,13 +410,101 @@ Mandrake 7.2
       color=green>INSTALL_DIR</font></i></b><font color=blue>/SCIRun/src/configure --with-thirdparty=/usr/local/SCIRun_Thirdparty_32</font>
   </pre>
 
-  <p class="firstpara">   
-    <b>3. Run GNU make in the <i><font
-    color=green>BUILD_DIR</font></i> directory</b>.
-      <a href="#Make">more...</a>
-  </p>
+    <p class="firstpara">
+      There are many options for configuring SCIRun.  Chief among them
+      is the configure location.  SCIRun can be configured from within the
+      <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src 
+      directory, as is commonly done:
+    </p>
 
-<br><br><br><p class="head"><a name="RunningSCIRun">Running SCIRun</a></p>
+    <pre class="example"><font color=blue>cd <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src
+./configure <b><i><font color=green>CONFIGURE_OPTIONS</font></font></i></b>
+    </pre>
+
+    <p class="firstpara">
+      Configuring in the source directory yields:
+    </p>
+
+    <pre class="example"><b><i><font color=green>BUILD_DIR</font></i></b> = <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src
+    </pre>
+
+    <p class="firstpara">
+      However, SCIRun can also be configured from locations other than
+      the source directory, which allows for having builds for multiple
+      platforms or for multiple ABI's (Applications Binary Interface)
+      while sharing a single source directory:
+    </p>
+
+    <pre class="example"><font color=blue>cd <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun
+mkdir linux
+mkdir sgi32
+mkdir sgi64
+cd linux
+../src/configure <b><i><font color=green>CONFIGURE_OPTIONS</font></i></b>
+cd ../sgi32
+../src/configure <b><i><font color=green>CONFIGURE_OPTIONS</font></i></b>
+cd ../sgi64
+../src/configure --enable-64bit <b><i><font color=green>CONFIGURE_OPTIONS</font></i></b></font>
+    </pre>
+
+    <p class="firstpara">
+      The <b><i><font color=green>BUILD_DIR</font></i></b>'s for the above, in order, would be:
+    </p>
+
+    <pre class="example"><b><i><font color=green>BUILD_DIR</font></i></b> = <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/linux
+<b><i><font color=green>BUILD_DIR</font></i></b> = <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/sgi32
+<b><i><font color=green>BUILD_DIR</font></i></b> = <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/sgi64
+    </pre>
+
+    <p class="firstpara">
+      In addition to the configure location, there are several options that
+      may be invoked at configure time by supplying configure with arguments.
+      The available <b><i><font color=green>CONFIGURE_OPTIONS</font></i></b>
+      can be found in the <a href="#conftable">appendix</a> below.
+    </p>
+
+    <p class="firstpara">   
+      <a name="Make"><b>3. Run GNU make in the <i><font
+      color=green>BUILD_DIR</font></i> directory</b>.</a>
+    </p>
+
+    <p class="firstpara">
+      To run GNU make, simply type:
+    </p>
+
+    <pre class="example"><font color=blue>make</font></pre>
+
+    <p class="firstpara">
+      or
+    </p>
+
+    <pre class="example"><font color=blue>gmake</font></pre>
+      
+    <p class="firstpara">
+      Depending on how the command for GNU make is spelled on the target
+      install machine.
+    </p>
+
+    <p class="firstpara">
+      Just like configure, GNU make has some useful options.  The most commonly
+      used option for building SCIRun is the "number of jobs" option:
+    </p>
+
+    <pre class="example"><font color=blue>gmake -j <b><i><font color=green>NUM_JOBS</font></i></b></font></pre>
+
+    <p class="firstpara">
+      Where <b><i><font color=green>NUM_JOBS</font></i></b> is an integer.
+      If the target install machine has multiple processors, setting
+      <b><i><font color=green>NUM_JOBS</font></i></b> to the number of
+      processors available will use all the processors to build SCIRun in
+      parallel, often significantly speeding up the time to build SCIRun.
+    </p>
+
+    <p class="firstpara">
+      additional options for GNU make can be found <a href=http://www.gnu.org/manual/make/html_mono/make.html#SEC92>here</a>.
+    </p>
+
+<p class="head"><a name="RunningSCIRun">Running SCIRun</a></p>
     <P class="firstpara">
       After a successful build, there will be an executable in
       the <i><b><font color=green>BUILD_DIR</font></b></i> directory named:
@@ -364,7 +526,7 @@ Mandrake 7.2
       hiding behind other windows on the desktop!
     </p>
 
-<br><br><br><p class="head"><a name="AdditionalDocs">Additional Documentation</a></p>
+<p class="head"><a name="AdditionalDocs">Additional Documentation</a></p>
     <p class="firstpara">
       Additional Documentation about SCIRun can be obtained on
       the web at:
@@ -374,7 +536,7 @@ Mandrake 7.2
 http://www.cs.utah.edu/scirun_docs/doc</A>
     </pre>
 
-<br><br><br><p class="head"><a name="GettingHelp">Getting Help</a></p>
+<p class="head"><a name="GettingHelp">Getting Help</a></p>
     <p class="firstpara">
       There is a mailing list available for asking questions about
       using or installing SCIRun or to get help with resolving a problem.
@@ -401,10 +563,9 @@ http://www.cs.utah.edu/scirun_docs/doc</A>
       To aid in problem resolution, include a verbatim (cut and paste) copy of
       the error(s) displayed (if any).  Also include a short description of
       what you we're doing (running a network, building the tree, etc.) and
-      which version of SCIRun you have (SCIRun 1.0.0 alpha).
+      which version of SCIRun you have (SCIRun 1.0.0).
     </P>
 
-<br><br><br>
 <p class="head"><a name="Gotchas">Known Issues</a></p>
   <p class="firstpara">
     This section describes known issues with installing and building SCIRun.
@@ -475,125 +636,9 @@ cards</p>
     using the 0-9.6 drivers, on both Intel and AMD machines.
   </p>
 
-<br><br><br>
 <p class="head"><a name="Appendix">Appendix</a></p>
 
-<p class="subhead"><a name="Obtain">Obtaining a copy of the SCIRun source
-tree</a></p>
-    <p class="firstpara">
-      If you have access to the SCIRun CVS repository (i.e. you are
-      a student or staff member of the SCI Institute), then contact a
-      member of the senior staff for information regarding CVS access.
-    </p>
-
-    <p class="firstpara">
-      Otherwise, go to the SCIRun <a href="http://ampano.cs.utah.edu/research/software/scirun_down.html">download page</a>. 
-    </p>
-
-<br><br><br><p class="subhead"><a name="Installdir">Installing SCIRun into a directory of
-your choosing</a></p>
-    <p class="firstpara">
-      SCIRun can be installed into any directory, whether within a user
-      home directory or a system application directory.  There is no "make
-      install" step in the build process, so which ever directory is chosen
-      is where SCIRun will be installed.
-    </p>
-
-    <p class="firstpara">
-      For example, if you choose to install SCIRun into user Bob's home
-      directory, then 
-    </p>
-
-    <pre class="example"><b><i><font 
-    color=green>INSTALL_DIR</font></i></b> = /home/bob</pre>
-
-    <p class="firstpara">
-      Change directories to the <b><i><font color=green>INSTALL_DIR</font>
-      </i></b> directory.  Depending on how SCIRun was obtained, either 
-    </p>
-
-    <p class="firstpara">
-      a) unzip and untar the SCIRun source tree:
-    </p>
-    
-    <pre class="example"><font color=blue>cd /home/bob
-gunzip SCIRun.tar.gz
-tar xvf SCIRun.tar</font>
-    </pre>
-
-    <p class="firstpara">
-      or
-    </p>
-
-    <p class="firstpara">
-      b) checkout the SCIRun source tree from the CVS repository:
-    </p>
-
-    <pre class="example"><font color=blue>cd /home/bob
-cvs checkout SCIRun</font>
-    </pre>
-
-    <p class="firstpara">
-      After installing, the <b><i><font color=green>INSTALL_DIR</font>
-      </i></b> directory will have a sub directory named SCIRun:
-    </p>
-
-    <pre class="example">/home/bob/SCIRun</pre>
-
-<br><br><br><br>
-<p class="subhead"><a name="Configure">Configuring SCIRun</a></p>
-    <p class="firstpara">
-      There are many options for configuring SCIRun.  Chief among them
-      is the configure location.  SCIRun can be configured from within the
-      <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src 
-      directory, as is commonly done:
-    </p>
-
-    <pre class="example"><font color=blue>cd <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src
-./configure <b><i><font color=green>CONFIGURE_OPTIONS</font></font></i></b>
-    </pre>
-
-    <p class="firstpara">
-      Configuring in the source directory yields:
-    </p>
-
-    <pre class="example"><b><i><font color=green>BUILD_DIR</font></i></b> = <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src
-    </pre>
-
-    <p class="firstpara">
-      However, SCIRun can also be configured from locations other than
-      the source directory, which allows for having builds for multiple
-      platforms or for multiple ABI's (Applications Binary Interface)
-      while sharing a single source directory:
-    </p>
-
-    <pre class="example"><font color=blue>cd <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun
-mkdir linux
-mkdir sgi32
-mkdir sgi64
-cd linux
-../src/configure <b><i><font color=green>CONFIGURE_OPTIONS</font></i></b>
-cd ../sgi32
-../src/configure <b><i><font color=green>CONFIGURE_OPTIONS</font></i></b>
-cd ../sgi64
-../src/configure --enable-64bit <b><i><font color=green>CONFIGURE_OPTIONS</font></i></b></font>
-    </pre>
-
-    <p class="firstpara">
-      The <b><i><font color=green>BUILD_DIR</font></i></b>'s for the above, in order, would be:
-    </p>
-
-    <pre class="example"><b><i><font color=green>BUILD_DIR</font></i></b> = <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/linux
-<b><i><font color=green>BUILD_DIR</font></i></b> = <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/sgi32
-<b><i><font color=green>BUILD_DIR</font></i></b> = <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/sgi64
-    </pre>
-
-    <p class="firstpara">
-      In addition to the configure location, there are several options that
-      may be invoked at configure time by supplying configure with arguments.
-      The available <b><i><font color=green>CONFIGURE_OPTIONS</font></i></b>
-      are:
-    </p>
+<p class="subhead"><a name="conftable">Configure options for SCIRun</a></p>
 
     <p class="firstpara">
       <table border="2" cellspacing="2" cellpadding="4">
@@ -673,135 +718,16 @@ cd ../sgi64
       </table>
     </p>
 
-<br><br><br><br><p class="subhead"><a name="Make">Running GNU make</a></p>
-    <p class="firstpara">
-      To run GNU make, simply type:
-    </p>
+<!-- ******************************************************************* -->
+<!-- *********************** STANDARD SCI FOOTER *********************** -->
+<!-- ******************************************************************* -->
+<center>
+<hr size="1" width="600">
+<font size="-1"><a href="http://www.sci.utah.edu">Scientific Computing and Imaging Institute</a> &#149; <a href="http://www.utah.edu">University of Utah</a> &#149; 
+(801) 585-1867</font>
+</center>
+<!-- ********************* END STANDARD SCI FOOTER ********************* -->
+<!-- ******************************************************************* -->
 
-    <pre class="example"><font color=blue>make</font></pre>
-
-    <p class="firstpara">
-      or
-    </p>
-
-    <pre class="example"><font color=blue>gmake</font></pre>
-      
-    <p class="firstpara">
-      Depending on how the command for GNU make is spelled on the target
-      install machine.
-    </p>
-
-    <p class="firstpara">
-      Just like configure, GNU make has some useful options.  The most commonly
-      used option for building SCIRun is the "number of jobs" option:
-    </p>
-
-    <pre class="example"><font color=blue>gmake -j <b><i><font color=green>NUM_JOBS</font></i></b></font></pre>
-
-    <p class="firstpara">
-      Where <b><i><font color=green>NUM_JOBS</font></i></b> is an integer.
-      If the target install machine has multiple processors, setting
-      <b><i><font color=green>NUM_JOBS</font></i></b> to the number of
-      processors available will use all the processors to build SCIRun in
-      parallel, often significantly speeding up the time to build SCIRun.
-    </p>
-
-    <p class="firstpara">
-      additional options for GNU make can be found <a href=http://www.gnu.org/manual/make/html_mono/make.html#SEC92>here</a>.
-
-<br><br><br><hr>
-    <pre class="example">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    </pre>
 </body>
-
-
 
