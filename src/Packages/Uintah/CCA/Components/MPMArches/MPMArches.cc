@@ -101,6 +101,8 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    db->require("fluidHeatCapacity",cpfluid);
    db->require("IfCutCell",d_useCutCell);
    db->require("StationarySolid",d_stationarySolid);
+   db->require("inviscid",d_inviscid);
+   db->require("restart",d_restart);
 
    //   cout << "Done with MPMArches problemsetup requires" << endl;
 
@@ -117,9 +119,6 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    }
    else 
      d_DORad = false;
-
-   //   cerr << "Done with problemSetup \t\t\t MPMArches" <<endl;
-   //   cerr << "--------------------------------\n"<<endl;
 }
 
 // ****************************************************************************
@@ -174,8 +173,6 @@ void MPMArches::scheduleInitializeKStability(SchedulerP& sched,
   if (d_useCutCell) {
 
     t->computes(d_MAlb->cutCellLabel);
-    t->computes(d_MAlb->void_frac_CCLabel);
-
     t->computes(d_MAlb->d_normal1Label);
     t->computes(d_MAlb->d_normal2Label);
     t->computes(d_MAlb->d_normal3Label);
@@ -200,6 +197,7 @@ void MPMArches::scheduleInitializeKStability(SchedulerP& sched,
     t->computes(d_MAlb->d_nextCutCellKLabel);
 
   }
+  t->computes(d_MAlb->void_frac_CCLabel);
 
   sched->addTask(t, patches, arches_matls);
 }
@@ -214,8 +212,8 @@ void MPMArches::initializeKStability(const ProcessorGroup*,
 				     DataWarehouse* new_dw)
 
 {
+
   for(int p=0;p<patches->size();p++){
-    //    cout << "Patch Number " << p << endl;
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
@@ -240,6 +238,11 @@ void MPMArches::initializeKStability(const ProcessorGroup*,
     // Cutcell stuff ... need to move these into a different
     // file (maybe directory?); but this is okay for now.
     // Seshadri Kumar, August 30, 2003
+
+    CCVariable<double> epsg;
+    new_dw->allocateAndPut(epsg, d_MAlb->void_frac_CCLabel,
+			   matlindex, patch);
+    epsg.initialize(1.0);
 
     if (d_useCutCell) {
 
@@ -311,11 +314,6 @@ void MPMArches::initializeKStability(const ProcessorGroup*,
 	  }
 	}
       }
-
-      CCVariable<double> epsg;
-      new_dw->allocateAndPut(epsg, d_MAlb->void_frac_CCLabel,
-			     matlindex, patch); 
-      epsg.initialize(1.0);
 
       /*
 	stuff below should be removed if we wish to 
@@ -724,9 +722,11 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   double time = d_Alab->d_sharedState->getElapsedTime();
 
   nofTimeSteps++ ;
-  //  if (nofTimeSteps < 2) {
+  // note: this counter will only get incremented each
+  // time the taskgraph is recompiled
+
+  //  if (nofTimeSteps < 2 && !d_restart) {
   if (time < 1.0E-10) {
-    cout << "Performing MPMArches calculations for time step " << nofTimeSteps << endl;
     d_recompile = true;
   }
   else
@@ -1201,15 +1201,18 @@ void MPMArches::scheduleComputeVoidFrac(SchedulerP& sched,
 		      this, &MPMArches::computeVoidFrac);
 
   int zeroGhostCells = 0;
+
   int numMPMMatls = d_sharedState->getNumMPMMatls();
 
+  t->requires(Task::OldDW, d_MAlb->void_frac_CCLabel, 
+	      arches_matls->getUnion(), Ghost::None, zeroGhostCells);
   if (!d_useCutCell) {
     t->requires(Task::NewDW, d_MAlb->cVolumeLabel,   
 		mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
+    if (nofTimeSteps < 3 && !d_restart)
+      d_recompile = true;
   }
   else {
-    t->requires(Task::OldDW, d_MAlb->void_frac_CCLabel, 
-    		arches_matls->getUnion(), Ghost::None, zeroGhostCells);
     if (numMPMMatls > 1)
       t->requires(Task::NewDW, d_MAlb->cVolumeLabel,   
 		  mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
@@ -1243,6 +1246,9 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
 
   // get and allocate
 
+    constCCVariable<double> voidFracOld;
+    old_dw->get(voidFracOld, d_MAlb->void_frac_CCLabel,
+    		matlindex, patch, Ghost::None, zeroGhostCells);
     for (int m = 0; m < numMPMMatls; m++) {
 	
       Material* matl = d_sharedState->getMPMMaterial( m );
@@ -1268,53 +1274,73 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
 
     // actual computation
 
+    bool recalculateVoidFrac = false;
+    if (nofTimeSteps < 3 && !d_restart) 
+      recalculateVoidFrac = true;
+
     if (!d_useCutCell) {
 
-      void_frac.initialize(1.0);
-      for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
+      if (recalculateVoidFrac) {
 
-	double total_vol = patch->dCell().x()*patch->dCell().y()*patch->dCell().z();
-	double solid_frac_sum = 0.0;
-	for (int m = 0; m < numMPMMatls; m++) {
-	  solid_fraction_cc[m][*iter] = mat_vol[m][*iter]/total_vol;
-	  solid_frac_sum += solid_fraction_cc[m][*iter];
-	}
-	if (solid_frac_sum > 1.0) 
-	  solid_frac_sum = 1.0;
+	void_frac.initialize(1.0);
+	for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
 
-	// for stairstep
-
-	double mm_cutoff = 0.5;
-	if (solid_frac_sum > mm_cutoff) {
+	  double total_vol = patch->dCell().x()*patch->dCell().y()*patch->dCell().z();
+	  double solid_frac_sum = 0.0;
 	  for (int m = 0; m < numMPMMatls; m++) {
-	    solid_fraction_cc[m][*iter] = solid_fraction_cc[m][*iter]/solid_frac_sum;
+	    solid_fraction_cc[m][*iter] = mat_vol[m][*iter]/total_vol;
+	    solid_frac_sum += solid_fraction_cc[m][*iter];
 	  }
-	  solid_frac_sum = 1.0;
-	}
-	else {
-	  for (int m = 0; m < numMPMMatls; m++) {
-	    solid_fraction_cc[m][*iter] = 0.0;
+	  if (solid_frac_sum > 1.0) 
+	    solid_frac_sum = 1.0;
+
+	  // for stairstep
+
+	  double mm_cutoff = 0.5;
+	  if (solid_frac_sum > mm_cutoff) {
+	    for (int m = 0; m < numMPMMatls; m++) {
+	      solid_fraction_cc[m][*iter] = solid_fraction_cc[m][*iter]/solid_frac_sum;
+	    }
+	    solid_frac_sum = 1.0;
 	  }
-	  solid_frac_sum = 0.0;
+	  else {
+	    for (int m = 0; m < numMPMMatls; m++) {
+	      solid_fraction_cc[m][*iter] = 0.0;
+	    }
+	    solid_frac_sum = 0.0;
+	  }
+
+	  // end stairstep
+
+	  void_frac[*iter] = 1.0 - solid_frac_sum;
+	  if (void_frac[*iter] < 0.0)
+	    void_frac[*iter] = 0.0;
 	}
-	void_frac[*iter] = 1.0 - solid_frac_sum;
-	if (void_frac[*iter] < 0.0)
-	  void_frac[*iter] = 0.0;
+	// end CellIterator
+      }
+      // else for recalculateVoidFrac
+      else {
+	old_dw->get(voidFracOld, d_MAlb->void_frac_CCLabel, 
+		    matlindex, patch, Ghost::None, zeroGhostCells); 
+	void_frac.copyData(voidFracOld);	
       }
     }
+    // else if d_useCutCell
+
     else {
-      constCCVariable<double> void_frac_old;
-      old_dw->get(void_frac_old, d_MAlb->void_frac_CCLabel, 
-		  matlindex, patch, Ghost::None, zeroGhostCells); 
-      void_frac.copyData(void_frac_old);
-      void_frac.initialize(0.0);
+      void_frac.copyData(voidFracOld);
       if (numMPMMatls < 2) {
+	// if only one solid material, set relative solid fraction
+	// to 1.0
+
 	for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
 	  for (int m = 0; m < numMPMMatls; m++)
 	    solid_fraction_cc[m][*iter] = 1.0;
 	}
       }
       else {
+      // if numMPMMatls > 1, calculate relative solid fractions
+	
 	void_frac.initialize(1.0);
 	for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
 
@@ -1328,9 +1354,13 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
 	    solid_fraction_cc[m][*iter] = solid_fraction_cc[m][*iter]/solid_frac_sum;
 	  }
 	}
+	// end iter over CellIterator
       }
+      // end if numMPMMatls < 2
     }
+    // end if !d_useCutCell
   }
+  // end loop over patches
 }
   
 //______________________________________________________________________
@@ -2373,6 +2403,31 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 			  cellinfo->stb, valid_lo, valid_hi, cellType,
 			  mmwallid, ffieldid);
 
+      // debug for testing inviscid option
+      // September 18, 2003, SK
+
+      if (d_inviscid) {
+
+	uVelLinearSrc_cc.initialize(0.);
+	uVelLinearSrc_fcy.initialize(0.);
+	uVelLinearSrc_fcz.initialize(0.);
+	uVelNonlinearSrc_cc.initialize(0.);
+	uVelNonlinearSrc_fcy.initialize(0.);
+	uVelNonlinearSrc_fcz.initialize(0.);
+	vVelLinearSrc_cc.initialize(0.);
+	vVelLinearSrc_fcz.initialize(0.);
+	vVelLinearSrc_fcx.initialize(0.);
+	vVelNonlinearSrc_cc.initialize(0.);
+	vVelNonlinearSrc_fcz.initialize(0.);
+	vVelNonlinearSrc_fcx.initialize(0.);
+	wVelLinearSrc_cc.initialize(0.);
+	wVelLinearSrc_fcx.initialize(0.);
+	wVelLinearSrc_fcy.initialize(0.);
+	wVelNonlinearSrc_cc.initialize(0.);
+	wVelNonlinearSrc_fcx.initialize(0.);
+	wVelNonlinearSrc_fcy.initialize(0.);
+
+      }
     }
   }
 }
