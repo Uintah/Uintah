@@ -14,7 +14,7 @@
 
 #ifdef HAVE_PETSC
 extern "C" {
-#include "sles.h"
+#include "petscsles.h"
 }
 #endif
 
@@ -195,7 +195,9 @@ protected:
 
 private:
       string d_pcType;
+      string d_kspType;
       int d_overlap;
+      int d_fill;
       int d_maxSweeps;
       double d_convgTol; // convergence tolerence
       double d_underrelax;
