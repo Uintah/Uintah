@@ -84,8 +84,7 @@ RescaleColorMap::execute()
   if(!imap->get(cmap)) {
     return;
   }
-  //cout << "Detaching cmap\n";
-  //cmap.detach(); // = new ColorMap(*cmap.get_rep());
+  cmap.detach();
   if( isFixed.get() ){
     cmap->Scale(min.get(), max.get());
     port_range_type range = get_iports("Field");
