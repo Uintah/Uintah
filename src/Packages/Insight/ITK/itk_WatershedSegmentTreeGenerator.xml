@@ -5,6 +5,9 @@ This filter is a process object class that implements a step in the N-d watershe
   <templated>
     <base>itk::Object</base>
     <template>ScalarType</template>
+    <defaults>
+      <default>float</default>
+    </defaults>
   </templated>
 
   <inputs>

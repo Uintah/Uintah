@@ -6,6 +6,10 @@ This filter implements the final step in the watershed segmentation algorithm.  
     <base>itk::Object</base>
     <template>ScalarType</template>
     <template type="unsigned int">ImageDimension</template>
+    <defaults>
+      <default>float</default>
+      <default>2</default>
+    </defaults>
   </templated>
 
   <inputs>

@@ -7,6 +7,8 @@
   <templated>
     <base>itk::Object</base>
     <template>InputImageType</template>
+    <defaults>
+      <default>itk::Image&lt;float, 2&gt;</default>
   </templated>
 
   <inputs>
