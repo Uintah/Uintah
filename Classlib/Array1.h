@@ -49,6 +49,10 @@ public:
     //  array[array.size()-1]=data;
     void add(const T&);
 
+    // Insert one element into the array.  This is very inefficient
+    // if you insert anything besides the (new) last element.
+    void insert(int, const T&);
+
     // Remove one element from the array.  This is very inefficient
     // if you remove anything besides the last element.
     void remove(int);

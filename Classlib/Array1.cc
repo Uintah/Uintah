@@ -107,6 +107,14 @@ void Array1<T>::add(const T& obj)
 }
 
 template<class T>
+void Array1<T>::insert(int idx, const T& obj)
+{
+    grow(1, default_grow_size);
+    for(int i=idx;i<_size-1;i++)objs[i+1]=objs[i];
+    objs[idx]=obj;
+}
+
+template<class T>
 void Array1<T>::remove(int idx)
 {
     _size--;
