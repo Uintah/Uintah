@@ -121,9 +121,9 @@ itcl_class SCIRun_Fields_EditField {
 		   "[possible_typenames [set $this-typename2]]" \
                    $this-typename2 $this-ctypename
 	labelentry3 $edit.l3 "BBox min" $this-minx2 $this-miny2 \
-		    $this-minz2 $this-cbbox
+		    $this-minz2 $this-cbbox "$this-c update_widget"
 	labelentry3 $edit.l4 "BBox max" $this-maxx2 $this-maxy2 $this-maxz2 \
-		    $this-cbbox
+		    $this-cbbox "$this-c update_widget"
 	labelentry2 $edit.l5 "Data min,max" $this-datamin2 $this-datamax2 \
 		    $this-cdataminmax
 	labelcombo $edit.l9 "Data at" {Field::CELL 
@@ -198,7 +198,7 @@ itcl_class SCIRun_Fields_EditField {
 	pack $win.l2 $win.l3 $win.l4 -padx 5 -side left
     }
 
-    method labelentry3 { win text1 text2 text3 text4 var } {
+    method labelentry3 { win text1 text2 text3 text4 var func} {
 	frame $win 
 	pack $win -side top -padx 5
 	checkbutton $win.b -var $var
@@ -214,6 +214,10 @@ itcl_class SCIRun_Fields_EditField {
 	label $win.l5 -width 40
 	pack $win.b $win.l1 $win.colon -side left
 	pack $win.l2 $win.l3 $win.l4 $win.l5 -padx 5 -side left
+	
+	bind $win.l2 <Return> $func
+	bind $win.l3 <Return> $func
+	bind $win.l4 <Return> $func
     }
 
     method labelcombo { win text1 arglist var var2} {
