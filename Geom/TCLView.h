@@ -33,6 +33,7 @@ public:
 
     View get();
     void set(const View&);
+    virtual void emit(ostream& out);
 };
 
 #endif

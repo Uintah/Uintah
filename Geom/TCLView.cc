@@ -54,3 +54,13 @@ TCLView::set(const View& view)
     fov.set(view.fov());
     TCLTask::unlock();
 }
+
+
+void
+TCLView::emit(ostream& out)
+{
+    eyep.emit(out);
+    lookat.emit(out);
+    up.emit(out);
+    fov.emit(out);
+}
