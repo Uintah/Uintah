@@ -106,6 +106,40 @@ string makeFileName(string raydatadir, string variable_file, string time_file,
   return raydatafile;
 }
 
+void usage(const std::string& badarg, const std::string& progname)
+{
+    if(badarg != "")
+	cerr << "Error parsing argument: " << badarg << endl;
+    cerr << "Usage: " << progname << " [options] <archive file>\n\n";
+    cerr << "Valid options are:\n";
+    cerr << "  -h[elp]\n";
+    cerr << "  -timesteps\n";
+    cerr << "  -gridstats\n";
+    cerr << "  -listvariables\n";
+    cerr << "  -varsummary\n";
+    cerr << "  -partvar <variable name>\n";
+    cerr << "  -asci\n";
+    cerr << "  -cell_stresses\n";
+    cerr << "  -part_stress [avg or equiv or all]\n";
+    cerr << "  -part_strain [avg or true or all]\n";
+    cerr << "  -rtdata [output directory]\n";
+    cerr << "  -PTvar\n";
+    cerr << "  -ptonly (prints out only the point location\n";
+    cerr << "  -patch (outputs patch id with data)\n";
+    cerr << "  -material (outputs material number with data)\n";
+    cerr << "  -NCvar [double or point or vector]\n";
+    cerr << "  -CCvar [double or point or vector]\n";
+    cerr << "  -verbose (prints status of output)\n";
+    cerr << "  -timesteplow [int] (only outputs timestep from int)\n";
+    cerr << "  -timestephigh [int] (only outputs timesteps upto int)\n";
+    cerr << "*NOTE* to use -PTvar or -NVvar -rtdata must be used\n";
+    cerr << "*NOTE* ptonly, patch, material, timesteplow, timestephigh \
+are used in conjuntion with -PTvar.\n\n";
+    
+    cerr << "USAGE IS NOT FINISHED\n\n";
+    exit(1);
+}
+
 // Get particle strains (avg, true or all)
 void 
 getParticleStrains(DataArchive* da, string flag) {
@@ -406,40 +440,159 @@ getParticleStresses(DataArchive* da, string flag) {
   } // end of time step loop
 }
 
+void printParticleVariable(DataArchive* da, 
+                           string particleVariable,
+                           unsigned long time_step_lower,
+                           unsigned long time_step_upper){
 
-void usage(const std::string& badarg, const std::string& progname)
-{
-    if(badarg != "")
-	cerr << "Error parsing argument: " << badarg << endl;
-    cerr << "Usage: " << progname << " [options] <archive file>\n\n";
-    cerr << "Valid options are:\n";
-    cerr << "  -h[elp]\n";
-    cerr << "  -timesteps\n";
-    cerr << "  -gridstats\n";
-    cerr << "  -listvariables\n";
-    cerr << "  -varsummary\n";
-    cerr << "  -asci\n";
-    cerr << "  -cell_stresses\n";
-    cerr << "  -part_stress [avg or equiv or all]\n";
-    cerr << "  -part_strain [avg or true or all]\n";
-    cerr << "  -rtdata [output directory]\n";
-    cerr << "  -PTvar\n";
-    cerr << "  -ptonly (prints out only the point location\n";
-    cerr << "  -patch (outputs patch id with data)\n";
-    cerr << "  -material (outputs material number with data)\n";
-    cerr << "  -NCvar [double or point or vector]\n";
-    cerr << "  -CCvar [double or point or vector]\n";
-    cerr << "  -verbose (prints status of output)\n";
-    cerr << "  -timesteplow [int] (only outputs timestep from int)\n";
-    cerr << "  -timestephigh [int] (only outputs timesteps upto int)\n";
-    cerr << "*NOTE* to use -PTvar or -NVvar -rtdata must be used\n";
-    cerr << "*NOTE* ptonly, patch, material, timesteplow, timestephigh \
-are used in conjuntion with -PTvar.\n\n";
-    
-    cerr << "USAGE IS NOT FINISHED\n\n";
+  // Check if the particle variable is available
+  vector<string> vars;
+  vector<const Uintah::TypeDescription*> types;
+  da->queryVariables(vars, types);
+  ASSERTEQ(vars.size(), types.size());
+  bool variableFound = false;
+  for(unsigned int v=0;v<vars.size();v++){
+    std::string var = vars[v];
+    if (var == particleVariable) variableFound = true;
+  }
+  if (!variableFound) {
+    cerr << "Variable " << particleVariable << " not found\n"; 
     exit(1);
-}
+  }
 
+  // Now that the variable has been found, get the data for all available time steps 
+  // from the data archive
+  vector<int> index;
+  vector<double> times;
+  da->queryTimesteps(index, times);
+  ASSERTEQ(index.size(), times.size());
+  cout << "There are " << index.size() << " timesteps:\n";
+      
+  // Loop thru all time steps and store the volume and variable (stress/strain)
+  for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
+    double time = times[t];
+    cout << "Time = " << time << endl;
+    GridP grid = da->queryGrid(time);
+
+    // Loop thru all the levels
+    for(int l=0;l<grid->numLevels();l++){
+      LevelP level = grid->getLevel(l);
+
+      // Loop thru all the patches
+      Level::const_patchIterator iter = level->patchesBegin(); 
+      for(; iter != level->patchesEnd(); iter++){
+	const Patch* patch = *iter;
+
+	// Loop thru all the variables 
+	for(int v=0;v<(int)vars.size();v++){
+	  std::string var = vars[v];
+	  const Uintah::TypeDescription* td = types[v];
+	  const Uintah::TypeDescription* subtype = td->getSubType();
+
+	  // Check if the variable is a ParticleVariable
+	  if(td->getType() == Uintah::TypeDescription::ParticleVariable) { 
+
+	    // loop thru all the materials
+	    ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
+	    ConsecutiveRangeSet::iterator matlIter = matls.begin(); 
+	    for(; matlIter != matls.end(); matlIter++){
+	      int matl = *matlIter;
+
+	      // Find the name of the variable
+	      if (var == particleVariable) {
+	        cout << "Material: " << matl << endl;
+		switch(subtype->getType()){
+		case Uintah::TypeDescription::double_type:
+		  {
+		    ParticleVariable<double> value;
+		    da->query(value, var, matl, patch, time);
+		    ParticleSubset* pset = value.getParticleSubset();
+		    if(pset->numParticles() > 0){
+		      ParticleSubset::iterator iter = pset->begin();
+		      for(;iter != pset->end(); iter++){
+                        cout << value[*iter] << endl;
+                      }
+		    }
+                  }
+		  break;
+		case Uintah::TypeDescription::int_type:
+		  {
+		    ParticleVariable<int> value;
+		    da->query(value, var, matl, patch, time);
+		    ParticleSubset* pset = value.getParticleSubset();
+		    if(pset->numParticles() > 0){
+		      ParticleSubset::iterator iter = pset->begin();
+		      for(;iter != pset->end(); iter++){
+                        cout << value[*iter] << endl;
+                      }
+		    }
+                  }
+		  break;
+		case Uintah::TypeDescription::Point:
+		  {
+		    ParticleVariable<Point> value;
+		    da->query(value, var, matl, patch, time);
+		    ParticleSubset* pset = value.getParticleSubset();
+		    if(pset->numParticles() > 0){
+		      ParticleSubset::iterator iter = pset->begin();
+		      for(;iter != pset->end(); iter++){
+                        cout << value[*iter] << endl;
+                      }
+		    }
+                  }
+		  break;
+		case Uintah::TypeDescription::Vector:
+		  {
+		    ParticleVariable<Vector> value;
+		    da->query(value, var, matl, patch, time);
+		    ParticleSubset* pset = value.getParticleSubset();
+		    if(pset->numParticles() > 0){
+		      ParticleSubset::iterator iter = pset->begin();
+		      for(;iter != pset->end(); iter++){
+                        cout << value[*iter] << endl;
+                      }
+		    }
+                  }
+		  break;
+		case Uintah::TypeDescription::Matrix3:
+		  {
+		    ParticleVariable<Matrix3> value;
+		    da->query(value, var, matl, patch, time);
+		    ParticleSubset* pset = value.getParticleSubset();
+		    if(pset->numParticles() > 0){
+		      ParticleSubset::iterator iter = pset->begin();
+		      for(;iter != pset->end(); iter++){
+                        cout << value[*iter] << endl;
+                      }
+		    }
+                  }
+		  break;
+		case Uintah::TypeDescription::long64_type:
+		  {
+		    ParticleVariable<long64> value;
+		    da->query(value, var, matl, patch, time);
+		    ParticleSubset* pset = value.getParticleSubset();
+		    if(pset->numParticles() > 0){
+		      ParticleSubset::iterator iter = pset->begin();
+		      for(;iter != pset->end(); iter++){
+                        cout << value[*iter] << endl;
+                      }
+		    }
+                  }
+		  break;
+		default:
+		  cerr << "Particle Variable of unknown type: " 
+		       << subtype->getType() << endl;
+		  break;
+		}
+	      } // end of var compare if
+	    } // end of material loop
+	  } // end of ParticleVariable if
+	} // end of variable loop
+      } // end of patch loop
+    } // end of level loop
+  } // end of time step loop
+}
 
 int main(int argc, char** argv)
 {
@@ -450,6 +603,7 @@ int main(int argc, char** argv)
   bool do_gridstats=false;
   bool do_listvars=false;
   bool do_varsummary=false;
+  bool do_partvar=false;
   bool do_asci=false;
   bool do_cell_stresses=false;
   bool do_part_stress = false;
@@ -478,6 +632,7 @@ int main(int argc, char** argv)
   bool tsup_set = false;
   string filebase;
   string raydatadir;
+  string particleVariable;
   // set defaults for cout
   cout.setf(ios::scientific,ios::floatfield);
   cout.precision(8);
@@ -494,6 +649,11 @@ int main(int argc, char** argv)
       do_listvars=true;
     } else if(s == "-varsummary"){
       do_varsummary=true;
+    } else if(s == "-partvar"){
+      do_partvar=true;
+      particleVariable = argv[++i]; 
+      if (particleVariable[0] == '-') 
+        usage("-partvar <particle variable name>", argv[0]);
     } else if(s == "-asci"){
       do_asci=true;
     } else if(s == "-cell_stresses"){
@@ -647,6 +807,27 @@ int main(int argc, char** argv)
 	getParticleStrains(da, "all");
       }
     } 
+
+    // Print a particular particle variable
+    if (do_partvar) {
+      vector<int> index;
+      vector<double> times;
+      da->queryTimesteps(index, times);
+      ASSERTEQ(index.size(), times.size());
+      if (!tslow_set)
+	time_step_lower =0;
+      else if (time_step_lower >= times.size()) {
+	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
+	abort();
+      }
+      if (!tsup_set)
+	time_step_upper = times.size()-1;
+      else if (time_step_upper >= times.size()) {
+	cerr << "timestephigh must be between 0 and " << times.size()-1 << endl;
+	abort();
+      }
+      printParticleVariable(da, particleVariable, time_step_lower, time_step_upper);
+    }
 
     //______________________________________________________________________
     //              V A R S U M M A R Y   O P T I O N
