@@ -6,6 +6,8 @@
  */
 
 #include "GLTextureBuilder.h"
+#include <sys/types.h>
+#include <unistd.h>
 
 
 
@@ -29,6 +31,8 @@
 //#include <tcl.h>
 //#include <tk.h>
 #include <iostream>
+using std::cerr;
+using std::endl;
 
 // extern Tcl_Interp* the_interp;
 // extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
@@ -52,8 +56,6 @@ using PSECore::Datatypes::ScalarFieldOPort;
 
 using Kurt::Datatypes::GLTexture3D;
 using Kurt::Datatypes::GLTexture3DHandle;
-using std::cerr;
-
 
 static clString widget_name("GLTextureBuilderLocatorWidget");
 static clString res_name("Resolution Widget");
@@ -145,8 +147,13 @@ void GLTextureBuilder::execute(void)
   }
   
   if( isFixed.get() ){
-      sfield->set_minmax(min.get(), max.get());
-    } else {
+    double min;
+    double max;
+    sfield->get_minmax(min, max);
+    if (min != this->min.get() || max != this->max.get())
+      sfrg = 0;
+    sfield->set_minmax(this->min.get(), this->max.get());
+  } else {
       double min;
       double max;
       sfield->get_minmax(min, max);
