@@ -267,7 +267,13 @@ private:
 				const MaterialSubset* matls,
 				DataWarehouse* old_dw,
 				DataWarehouse* new_dw);
-
+  //////////
+  // Insert Documentation Here:                            
+  void setGridBoundaryConditions(const ProcessorGroup*,
+				 const PatchSubset* patches,
+				 const MaterialSubset* ,
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw);
   //////////
   // Insert Documentation Here:
   void interpolateToParticlesAndUpdate(const ProcessorGroup*,
@@ -342,6 +348,10 @@ private:
   void scheduleExMomIntegrated(SchedulerP&, const PatchSet*,
 			       const MaterialSet*);
 
+  void scheduleSetGridBoundaryConditions(SchedulerP& sched,
+						       const PatchSet* patches,
+						       const MaterialSet* matls);
+                                                 
   void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, const PatchSet*,
 					       const MaterialSet*);
 
