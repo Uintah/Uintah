@@ -16,8 +16,8 @@
 %  University of Utah. All Rights Reserved.
 %
 
-\section{Importing and Exporting \sr{} Data}
-\label{sec:import_export} 
+\chapter{Importing and Exporting \sr{} Data}
+\label{ch:import_export} 
 \index{importing}
 \index{exporting}
 \index{converter}
@@ -35,7 +35,7 @@ foreign data files, converter command line options, and converter
 synopses are discussed in the following sections.
 
 
-\subsection{\sr{} Persistent (File-based) Objects}
+\section{\sr{} Persistent (File-based) Objects}
 \label{sec:sr_file_object}
 
 The objects (fields, matrices, color maps, \etc) \sr{} creates at runtime
@@ -65,7 +65,7 @@ for information.
 There are two converters for each supported \sr{} type, an import
 converter and an export converter.
 
-\subsection{Exporting a Field}
+\section{Exporting a Field}
 \label{sec:export_field}
 
 To export a field, a simple \sci{} network and two converters are used.
@@ -92,7 +92,7 @@ produces two files: a node location file (called a ``pts'' file) and a
 node connectivity file (``tri'', ``tet'', ``quad'', or ``hex'' files).
 A matrix converter produces a file of data values (``txt'' files).
 
-\subsection{Importing a Field}
+\section{Importing a Field}
 \label{sec:import_field}
 
 To import a field, two converters and a simple \sr{} network are used.
@@ -118,7 +118,7 @@ A \datatype{FieldReader} module reads the incomplete field object.
 matrix output port is unconnected).  \datatype{FieldWriter} will write
 the complete field object to a file.
 
-\subsection{Foreign (Text) File Formats}
+\section{Foreign (Text) File Formats}
 
 Converters export/import \dfn{node location files}, \dfn{connectivity
   files}, \dfn{structured mesh files}, \dfn{column matrix}, \dfn{dense
@@ -127,7 +127,7 @@ Converters export/import \dfn{node location files}, \dfn{connectivity
 imported and exported by \sr{}'s converters are discussed in following
 sections.
 
-\subsubsection{Node Location File}
+\subsection{Node Location File}
 \label{sec:node_loc_fmt}
 
 Node location files are called \dfn{pts} files (the file extension is
@@ -159,7 +159,7 @@ If \verb|N| is omitted from a file on import, option
 \option{-noPtsHeader} must be passed to the import converter.
 
 
-\subsubsection{Connectivity Files}
+\subsection{Connectivity Files}
 \label{sec:node_conn_fmt}
 
 Five types of node connectivity files exist corresponding to the
@@ -228,7 +228,7 @@ iN jN kN
 \end{verbatim}
 
 %% Needs work!
-\subsubsection{Structured Meshes}
+\subsection{Structured Meshes}
 
 Structured meshes are imported/exported by the converters as node
 location (\filename{pts}) files.  Node locations are specified explicitly in a
@@ -297,7 +297,7 @@ converter (\command{TextToStructCurveField},
 \option{-noHeader} is followed by the appropriate mesh index count
 values.
 
-\subsubsection{Column Matrix}
+\subsection{Column Matrix}
 
 The column matrix file format is:
 
@@ -326,7 +326,7 @@ values in the matrix.
 
 \verb|N| is followed by a list of data values.
 
-\subsubsection{Dense Matrix}
+\subsection{Dense Matrix}
 
 The dense matrix file format is:
 
@@ -358,7 +358,7 @@ Following \verb|N| and \verb|M| is a list of data values given in row
 major order.
 
 
-\subsubsection{Sparse Row Matrix}
+\subsection{Sparse Row Matrix}
 
 The sparse row matrix file format is:
 
@@ -390,7 +390,7 @@ import, option \option{-noHeader \ptext{nrows} \ptext{ncols}
 Matrix entries must have ascending row indices. Column indices must be
 in ascending order for rows with multiple entries.
 
-\subsubsection{Color Map}
+\subsection{Color Map}
 \label{sec:colormap_fmt}
 
 The color map file format is:
@@ -421,7 +421,7 @@ Each line following \verb|N| is a color map entry consisting of an RGB
 color entry, an alpha value, and a data value.  All RGB, alpha, and
 data values are in the range 0.0 to 1.0 inclusive.
 
-\subsection{Converter Synopses}
+\section{Converter Synopses}
 \label{sec:converter_synopses}
 
 Converter synopses for unstructured fields, structured fields, matrices,
@@ -437,7 +437,7 @@ from source code, converter commands are installed in
 the directory where \sr{}'s \command{configure} and \command{make}
 commands were run.
 
-\subsubsection{Converter Synopses for Unstructured Fields}
+\subsection{Converter Synopses for Unstructured Fields}
 \label{sec:unstruct_field_synopses}
 
 In the following synopses, \ptext{field} is the name of a \sr{}
@@ -491,7 +491,7 @@ TextToTriSurfField pts tris field [-noPtsCount] [-noElementsCount] [-oneBasedInd
 \end{verbatim}
 
 
-\subsubsection{Converter Synopses for Structured Fields}
+\subsection{Converter Synopses for Structured Fields}
 \label{sec:struct_field_synopses}
 
 In the following synopses, \ptext{field} is the name of a \sr{}
@@ -520,7 +520,7 @@ TextToStructHexVolField pts field [-noHeader ni nj nk]
 
 \end{verbatim}
 
-\subsubsection{Converter Synopses for Matrices}
+\subsection{Converter Synopses for Matrices}
 
 In the following synopses, \ptext{matrix-in} and \ptext{matrix-out}
 are the names of \sr{} file-based matrix objects or the names
@@ -547,7 +547,7 @@ SparseRowMatrixToText matrix-in matrix-out [-noHeader]
 TextToSparseRowMatrix matrix-in matrix-out [-noHeader nrows ncols nnz]
 \end{verbatim}
 
-\subsubsection{Converter Synopses for Color maps}
+\subsection{Converter Synopses for Color maps}
 
 In the synopses that follow, \ptext{colormap-in} and
 \ptext{colormap-out } are the names of either a \sr{} file-based
@@ -566,7 +566,7 @@ ColorMapToText  colormap-in colormap-out [-noHeader]
 TextToColorMap  colormap-in colormap-out [-noHeader]
 \end{verbatim}
 
-\subsection{Examples}
+\section{Examples}
 \label{sec:converter_ex}
 
 If \sr{}'s sample data have been installed, data import/export

@@ -92,8 +92,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand{\graphics}{\emph{Graphics}}
 
-\section{Visualization}
-\label{sec:viewer}
+\chapter{Visualization}
+\label{ch:viewer}
 \index{Viewer@\viewer{}}
 
 This section describes the most frequently used \sr{} module,
@@ -106,7 +106,7 @@ iterations of  simulation steps, which is important for computational steering (
 This section begins with an overview of the \viewer{} window and its
 controls, then describes the options and variations.
 
-\subsection{Anatomy of the \viewer{} Window}
+\section{Anatomy of the \viewer{} Window}
 \label{sec:viewer-anatomy} 
 \index{Viewer@\viewer{}!anatomy}
 
@@ -159,7 +159,7 @@ the \viewer{} window (see \secref{Extended Control Window}
 {sec:view-control} for a description of extended controls).
 
 
-\subsubsection{Menus}
+\subsection{Menus}
 \index{Viewer@\viewer{}!menus}
 
 The \viewer{} window's menu bar contains the \menu{File}, \menu{Edit},
@@ -205,7 +205,7 @@ and \menu{Visual} menus.
   The list is ordered heuristically from most to least useful.
 \end{description}
 
-\subsection{Mouse Control in the \viewer{} Window}
+\section{Mouse Control in the \viewer{} Window}
 \label{sec:view-mouse} 
 \index{Viewer@\viewer{}!mouse controls}
 
@@ -273,7 +273,7 @@ Control & Left & Translate in the Z-direction, \ie{} zoom in and out of the
 
 
 
-\subsection{Extended Control Window}
+\section{Extended Control Window}
 \label{sec:view-control} 
 \index{Viewer@\viewer{}!extended controls}
 
@@ -297,7 +297,7 @@ window.
 \end{figure}
 
 
-\subsubsection{Object Selector}
+\subsection{Object Selector}
 
 The lower portion of the extended \viewer{} window is divided into three
 columns. The middle column contains a list of all objects in the
@@ -326,7 +326,7 @@ the following controls, reading from left to right:
 \end{itemize}
 
 
-\subsubsection{Rendering Controls}
+\subsection{Rendering Controls}
 \label{sec:view-rendering} 
 \index{Viewer@\viewer{}!rendering}
 
@@ -379,7 +379,7 @@ display of the appropriate view.  The ``Fusion Scale'' control provides a
 means of setting the eye separation and thus setting the view that is most
 suited to facial anatomy and distance from the screen.
 
-\subsubsection{Making Movies}
+\subsection{Making Movies}
 \label{sec:view-movies} 
 \index{movies}
 
@@ -398,7 +398,7 @@ change).  If the MPEG package is available, then an option will be available for
 There is also a button that forces the size of the graphical window to be
 352x240 pixels in size, which is a standard format well suited to MPEG.
 
-\subsection{Control Widgets}
+\section{Control Widgets}
 \label{sec:view-widgets} 
 
 \SR{} supports powerful display widgets.  Examples of widget
@@ -418,7 +418,7 @@ module.
 
 This section describes the widgets available within \SR{} and \BIOPSE{}.
  
-\subsubsection{Gauge Widget}
+\subsection{Gauge Widget}
 \label{sec:view-gaugewidget} 
 
 \begin{figure}[htb]
@@ -448,7 +448,7 @@ the main cylinder moves the whole widget without any change in orientation.
 Dragging the slider collar changes the associated value, typically the
 density of seed points for a streamline source.
 
-\subsubsection{Frame Widget}
+\subsection{Frame Widget}
 \label{sec:view-framewidget} 
 
 \begin{figure}[htb]
@@ -475,7 +475,7 @@ the Ring Widget described in \secref{Ring Widget}{sec:view-ringwidget}.
 Dragging any cylinder drags the entire widget through space.
 
 
-\subsubsection{Box Widget}
+\subsection{Box Widget}
 \label{sec:view-boxwidget} 
 
 \begin{figure}[htb]
@@ -506,7 +506,7 @@ causes the associated face to extend without changing its orientation.
 Dragging a cylinder causes the entire widget to move without changing its
 orientation.
 
-\subsubsection{Ring Widget}
+\subsection{Ring Widget}
 \label{sec:view-ringwidget} 
 
 \begin{figure}[htb]

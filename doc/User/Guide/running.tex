@@ -20,10 +20,10 @@
 %
 % This is the `Running SCIRun' main section.
 
-\section{Starting \sr{}}
-\label{sec:startingup}
+\chapter{Starting \sr{}}
+\label{ch:startingup}
 
-\subsection{The \command{scirun} Command}
+\section{The \command{scirun} Command}
 \label{sec:sciruncmd}
 
 %begin{latexonly}
@@ -71,7 +71,7 @@ should be \htmladdnormallink{reported}{\bugsurl} to the \sr{} development
 team (See \secref{Reporting Bugs}{sec:bugs} for information on
 reporting bugs).
 
-\subsection{Anatomy of the Main Window}
+\section{Anatomy of the Main Window}
 \label{sec:windowanatomy}
 
 The \sr{} main window consists of the Menu Bar, the Global View Frame,
@@ -153,20 +153,20 @@ Figure~\ref{fig:srwindow}):
   (\secref{Navigating a Network}{sec:navnetwork} describes the use of the Global View Frame).
   
   \descitem{Error Frame} Errors during program startup are displayed
-  in the Error Frame.  The Error Frame is located in the upper right corner of the
-  main window(see Figure~\ref{fig:srwindow}).  Errors on startup may
-  mean that \sr{} has been installed incorrectly or has been installed
-  from a buggy distribution.  Please report these errors (\hyperref{report}{see
-    Section~}{)}{sec:bugs}).
+  in the Error Frame.  The Error Frame is located in the upper right
+  corner of the main window(see Figure~\ref{fig:srwindow}).  Errors on
+  startup may mean that \sr{} has been installed incorrectly or has
+  been installed from a buggy distribution.  Please report these
+  errors (\hyperref{report}{see Section~}{)}{sec:bugs}).
   
   \descitem{NetEdit Frame} The NetEdit Frame occupies the bottom of
   the main window(see Figure~\ref{fig:srwindow}).  It is used to build
-  and execute networks (\secref{Building Networks}{sec:workwithnets}
+  and execute networks (\secref{Working with  Networks}{ch:workwithnets}
   discusses the use of this frame).
 
 \end{description}
 
-\subsection{The Terminal Window}
+\section{The Terminal Window}
 \label{sec:termwinapp}
 
 After starting, \sr{} runs a shell-like application in the
@@ -176,7 +176,7 @@ prompt \screen{scirun\ra}.  This program is  a modified \dfna{Tool
 \acronym{TCL}'ish \sr{} commands at the prompt ( \hyperref{a later section}{Section~}{}{sec:termapp} describes use of this shell).
 
 
-\subsection{Environment Variables}
+\section{Environment Variables}
 \label{sec:environ} 
 \index{Environment Variables}
 
@@ -280,7 +280,7 @@ for a csh-style shell
   
 \end{description}
 
-\subsection{\sr{}'s Initialization File---\filename{.scirunrc}}
+\section{\sr{}'s Initialization File---\filename{.scirunrc}}
 \label{sec:scirunrc}
 
 When \sr{} starts up, it looks for and
@@ -315,7 +315,7 @@ of \envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR}.  See \hyperref{the
   previous section}{Section~}{}{sec:environ}
 for the meanings of  other variables).
 
-\subsection{Dynamic Compilation}
+\section{Dynamic Compilation}
 \label{sec:dyncomp}
 
 Before executing \sr{},  be aware of the
@@ -383,7 +383,7 @@ Dynamic compilation will cause a delay the first time a module is
 executed.  The module will change color while it is being
 compiled.
 
-\subsection{Exiting \sr{}}
+\section{Exiting \sr{}}
 \label{sec:stopping}
 
 Exit \sr{} by selecting the \menuitem{Quit} item from the \menu{File} menu

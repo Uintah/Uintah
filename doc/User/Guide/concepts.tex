@@ -16,15 +16,15 @@
 %  University of Utah. All Rights Reserved.
 %
 
-\section{Concepts}
-\label{sec:concepts} 
+\chapter{Concepts}
+\label{ch:concepts} 
 \index{concepts}
 
 This section describes the general design philosophy and goals of
 integrated problem solving environments \index{problem solving
   environment} and how \BIOPSE{} embodies some of these ideas.
 
-\subsection{Traditional Problem Solving Methods}
+\section{Traditional Problem Solving Methods}
 
 Traditional methods for solving bioelectric field problems use
 multiple, non-integrated computer programs.  For example, using
@@ -81,7 +81,7 @@ impossible to run multiple computational jobs automatically, leaving
 the user with the task of manually initiating and controlling each
 step of the process.
 
-\subsection{Integrated Problem Solving and Computational Steering} 
+\section{Integrated Problem Solving and Computational Steering} 
 \label{sec:con-steering} 
 
 The goal of integrated problem solving environments, specifically
@@ -140,7 +140,7 @@ Progress\cite{MM:Vet95}, \index{Progress} and Magellan\cite{MM:Vet97a}
 
 
 
-\subsubsection{\SR{} and its Packages}
+\subsection{\SR{} and its Packages}
 \label{sec:srversuspse}
 
 %begin{latexonly}
@@ -222,7 +222,7 @@ refer to specific elements of the bioelectric field problem solving
 environment.
 
 
-\subsection{\SR{} Modules and Networks}
+\section{\SR{} Modules and Networks}
 \label{sec:con-modules} 
 
 %begin{latexonly}
@@ -263,11 +263,11 @@ visualization is its ``output''.
 
 It is important to appreciate the concepts of modules, connections
 between modules, and the data-flow through a network (see
-\secref{Working with Networks}{sec:workwithnets} for more information
+\chref{Working with Networks}{ch:workwithnets} for more information
 on modules, ports, connections, and networks).
 
 
-\subsection{\sr{}'s Use of Third Party Software}
+\section{\sr{}'s Use of Third Party Software}
 \label{sec:con-links} 
 
 \SR{} works with software from third party sources in several
@@ -284,7 +284,7 @@ One goal of the \BIOPSE{} project is to provide
 support for such external code, including FORTRAN, C, Matlab, and
 IDL\@.
 
-\subsubsection{Matlab}
+\subsection{Matlab}
 \label{sec:concept-matlab} 
 
 The interface (based on Berkeley sockets) between \SR{} and Matlab provides
@@ -312,7 +312,22 @@ further calculations and displays the results.
 %For examples of this interface, see \secref{Matlab
 %Examples}{sec:examples-matlab}.
 
-\subsubsection{GENESIS (via SQL)}
+\section{Inside Tool Kit}
+
+Inside Tool Kit (ITK) is an open source software library for
+performing segmentation and registration. 
+
+When ITK is present and SCIRun is appropriately configured, ITK filters
+incapulate in SCIRun modules for use in SCIRun networks.
+
+SCIRun incaptulates ITK filters using xml based filter description
+files. Users can incapulate additional filters by writing xml
+descriptions of the filters.
+
+The process of incapsulating ITK filters and SCIRun modules is
+described ????
+
+\subsection{GENESIS (via SQL)}
 
 \htmladdnormallink{GENESIS}{http://www.bbb.caltech.edu/GENESIS/genesis.html}
 (short for GEneral NEural SImulation System) is a general purpose
@@ -333,7 +348,7 @@ information from the same database.   Contact Chris Butson
 for details about the implementation of the GENESIS module.
 
 
-\subsubsection{PETSc}
+\subsection{PETSc}
 
 \htmladdnormallinkfoot{The Portable, Extensible, Toolkit for
   Scientific Computation
@@ -348,7 +363,7 @@ Installation of PETSc is optional.  SolveMatrix provides built-in
 solvers if PETSc is not installed.
 
 
-\subsection{Extensibility}
+\section{Extensibility}
 \label{sec:con-extend} 
 
 \SR{} is an extensible \index{extensible} problem solving environment.
@@ -369,7 +384,7 @@ of \sr{}.  To maximize intellectual investment in legacy code future
 releases of \sr{} will include more extensive tools for building
 modules and wrapping existing codes within \SR{} module wrappers.
 
-\subsection{\sr{} Objects}
+\section{\sr{} Objects}
 \label{sec:sr-objects}
 
 
@@ -377,14 +392,14 @@ modules and wrapping existing codes within \SR{} module wrappers.
 \datatype{ColorMap} objects are used frequently in networks.  These
 objects are described in following sections.
 
-\subsubsection{Field}
+\subsection{Field}
 
 A \sr{} \datatype{Field} consists of a geometric \datatype{Mesh} and a
 set of data values.  Data values can be located at the nodes, edges,
 faces, or cells of a mesh.  A \datatype{Field} can consist of a
 \datatype{Mesh} component only (no associated data).
 
-\subsubsection{Field Data}
+\subsection{Field Data}
 
 The following C++/SCI data types can be associated with a \datatype{Field}:
 
@@ -401,7 +416,7 @@ C++ data types are \datatype{double}, \datatype{float},
 \datatype{unsigned short}, \datatype{char}, and \datatype{unsigned
   char}.  \sr{} data types are \datatype{Tensor} and \datatype{Vector}.
 
-\subsubsection{Meshes}
+\subsection{Meshes}
 
 \sr{} meshes are classified as \dfn{unstructured}, \dfn{structured}, or
 \dfn{regular}.  In general, a mesh consists of nodes (data value location
@@ -462,7 +477,7 @@ Below are figures of some mesh types:
 
 \meshdoc{84}{hexvol}{Hex Vol Mesh}{A Hex Volume mesh is a subdivision of space into hexagonal elements.}
 
-\subsubsection{Matrices}
+\subsection{Matrices}
 
 \sr{} supports three matrix types: 
 
@@ -481,7 +496,7 @@ elements.
 \datatype{ColumnMatrix},
 \datatype{DenseMatrix}, and \datatype{SparseRowMatrix}.
 
-\subsubsection{Color Map}
+\subsection{Color Map}
 
 \sr{} \datatype{ColorMap} type is a mapping of color values to data values.
 

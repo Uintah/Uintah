@@ -19,24 +19,24 @@
 % network.tex
 %
 
-\section{Working with Networks}
-\label{sec:workwithnets}
+\chapter{Working with Networks}
+\label{ch:workwithnets}
 
 This section describes how to create, save, load, execute, and edit
 networks.
 
-When started with no arguments the \command{scirun} command will create a
-main window with a blank NetEdit frame. The user creates and
-connects modules to form a network.
+When started with no arguments, the \command{scirun} command creates a
+main window with a blank NetEdit frame. The user can create and
+connect modules to form a network.
 
 
-\subsection{Creating a Module}
+\section{Creating a Module}
 \label{sec:creatingmodules}
 
 To create a module, select its name from one of the package (\eg{} \sr)
-menus' category sub-menus.  The package menus may be accessed from the
+menus' category sub-menus. Access the package menus from the
 main window's menu bar and from the NetEdit frame's pop-up menu. 
- The NetEdit frame's pop-up menu is activated by clicking mouse button
+ Activate The NetEdit frame's pop-up menu by clicking mouse button
 3 while the mouse pointer is in the NetEdit frame (but not over a
 module or connection).  The pop-up menu contains a list of category
 sub-menus from the \sr{} package and other installed packages. 
@@ -46,7 +46,7 @@ category.
 After creating a module, its graphic representation is 
 placed in the NetEdit frame.
 
-\subsection{Anatomy of a Module}
+\section{Anatomy of a Module}
 \label{sec:modanatomy}
 
 %begin{latexonly}
@@ -60,7 +60,7 @@ placed in the NetEdit frame.
   {../Figures/modgraphic-1.gif}}
 \end{htmlonly}
 
-All modules are represented similarly by a graphic within the NetEdit frame
+All modules are similarly represented by a graphic within the NetEdit frame
 (see Figure~\ref{fig:modgraphic}). This graphical ``front end'' is the same
 for all modules and consists of the following elements:
 
@@ -102,7 +102,7 @@ for all modules and consists of the following elements:
   
   \descitem{Output ports} Zero or more output ports located on the
   bottom of the module.  Output ports connect to other modules' input
-  ports.  Every module has  at least 1 input or 1 output
+  ports.  Every module has  at least one input or one output
   port.
   
   \descitem{UI button} Pressing the \button{UI} button displays the
@@ -120,24 +120,25 @@ for all modules and consists of the following elements:
   consumed.  Located to the left of the progress bar.
   
   \descitem{Message Indicator} Shows the presence of messages in a
-  module's log.  Colors represent message types.  Blue is for
-  ``remarks'' (informational messages) and yellow is for ``warnings''
+  module's log.  Colors represent message types.  Blue represents
+  ``remarks'' (informational messages) and yellow represents ``warnings''
   (your attention is needed).  Click the indicator to display the
   module's log.
 
-\descitem{Pop-up Menu} Pressing mouse button 3 while the mouse
+\descitem{Pop-up Menu} Pressing mouse button three while the mouse
   pointer is over a module gives access to the module's pop-up menu.  The
   pop-up menu gives access to the following items:
   \begin{description}
     \menuitemdesc{::Package\_Category\_Name\_Instance} This item is a
     label (not a selectable item).  It provides the module's name and
-    the category and package to which the module belongs.  The
-    ``Instance'' part is a unique number that distinguishes multiple
+    the category and package to which the module belongs. 
+    ``Instance'' is a unique number that distinguishes multiple
     instances of the same module.
 
     \menuitemdesc{Execute} Tells the module to
     execute (or re-execute).  This may cause other modules in the
-    network to ``fire'' (execute).
+    network to execute or``fire''
+    (see \secref{Executing a Network}{sec:executenet}).
 
     \menuitemdesc{Help} Displays the module's help window.
     
@@ -145,11 +146,12 @@ for all modules and consists of the following elements:
     The user can use the note pad to document the purpose of the module in
     the current network.
 
-    \menuitemdesc{Destroy} Destroys the module.
+    \menuitemdesc{Destroy} Destroys the module (see \secref{Destroying
+    Module(s)}{sec:destroymod}).
     
     \menuitemdesc{Show Log} Displays the module's message log.  Most
-    modules will write messages to their log during the course of
-    their execution.
+    modules write messages to their log during the course of
+    their execution (see \secref{Viewing a Module's Log}{sec:viewmodslog}).
     
     \menuitemdesc{Show Status} This item is a toggle button which
     turns off/on the display of the progress indicator.  Turning off
@@ -158,32 +160,7 @@ for all modules and consists of the following elements:
   \end{description}
 \end{description}
 
-
-\subsection{Creating a Connection}
-\label{sec:connectmods}
-
-Mouse button 2 (the middle mouse button) is used to connect the output
-(input) port of one module to the input (output) port of another
-module.
-
-To make a connection, position the mouse pointer over a module's input
-(output) port.  Then press button 2 and drag the the mouse pointer towards
-another module's output (input) port.
-
-When button 2 is pressed, the program shows all valid connections as
-black lines.  It also draws one red colored connection, which is the
-connection made if  the drag is stopped by releasing 
-button 2.
-
-Make the connection by releasing button 2 when the pointer is over
-the desired destination port or when the red colored connection is the
-desired connection.  The connection will be drawn using the color
-corresponding to the connection's data type.
-
-Users may connect a module's output port to the input ports of 1 or more
-modules by repeating the procedure just described.
-
-\subsection{Setting Module Properties}
+section{Setting Module Properties}
 \label{sec:setmodprops}
 
 %begin{latexonly}
@@ -198,7 +175,7 @@ modules by repeating the procedure just described.
 \end{htmlonly}
 
 To change a module's properties click its \button{UI} button.  This 
-displays the module's control dialog.  Use this dialog to change the
+displays the module's control dialog.  Use the dialog to change the
 module's properties.  Each module's reference documentation explains the
 use of its control dialog.  Figure~\ref{fig:moddialog} shows the control
 dialog for the \module{Show Field} module.
@@ -211,53 +188,198 @@ dialog for the \module{Show Field} module.
     (User Interface).}
 \end{figure}
 
-\subsection{Executing a Network}
+\section{Selecting Modules}
+\label{sec:selectmods}
+
+A few operations act on a group of
+modules (see \secref{Moving Module(s)}{sec:movemod} and
+\secref{Destroying Module(s)}{sec:destroymod}).  A group of modules
+can be created in two ways:
+
+\begin{enumerate}
+\item Press mouse button two while the pointer is in the NetEdit frame,
+  but not over a module or a connection.  Then drag the mouse.  This
+  will draw a box outline.  Modules intersecting the box will be part
+  of the group.  Release button two to complete the selection.
+\item Select the first module by clicking mouse button two while the
+  pointer is over a module.  Then add modules to the group by pressing
+  and holding down the \keyboard{control} key while clicking on
+  modules with button two.
+\end{enumerate}
+
+Selected modules will be drawn in a darker shade of grey.
+
+Users can mix selection methods and  add modules to the group by
+pressing the control key while making selections using the above methods.
+If  the control key is not pressed, the previous group will be
+forgotten and a new group will be created.
+
+\section{Moving Module(s)}
+\label{sec:movemod}
+
+Modules can be moved in the NetEdit frame.  To move a module,
+press mouse button one while the pointer is over a module and drag the
+module to its new location.
+
+Multiple modules can be moved at one time
+(see \secref{Selecting Modules}{sec:movemod}).
+Select one or more modules, then press mouse button one while the pointer is
+over any one of the modules in the selected group,
+and drag the modules to their new location.
+
+\section{Destroying Module(s)}
+\label{sec:destroymod}
+
+Delete a module by selecting the \menuitem{Destroy} menu item from the
+module's pop-up menu.
+
+Multiple modules can be deleted at one time (see \secref{Selecting
+  Modules}{sec:movemod}).  Select one or more modules, then choose
+\menuitem{Destroy Selected} from the module's pop-up menu.
+
+\section{Documenting a Module's Use}
+\label{sec:docmodule}
+
+It is useful to document the purpose of a module within a network.
+Each module maintains a note pad for this purpose. Select
+\menuitem{Notes} from the module's pop-up menu to display the module's
+note pad editor.The editor allows the user to write notes on the use
+of the module within the context of its network.
+
+
+\section{Annotating a Module}
+\label{sec:annomodule}
+
+
+
+\section{Viewing a Module's Log}
+\label{sec:viewmodslog}
+
+Each module supports a message log.  The module writes error messages
+or other types of messages to its log.  To view this log, select the
+\menuitem{Show Log} item from the module's pop-up menu.
+
+\section{Creating a Macro Module}
+\label{sec:macromods}
+
+Select more than one module using Module Selection. Right click
+anywhere in the canvas. Select \menuitem{Create Macro Module}. 
+
+\section{Setting Macro Module Properties}
+
+The UI button opens all UIs opened when a Macro Module was created. The
+menu has an option to ``Microify'', undoing the Macro Module. The
+Macro Module is saved in network file.
+
+\section{Module Blocking}
+\label{sec:modblocking}
+
+Module blocking is port blocking in code. All modules blocked together
+become a `` blocked module block''. Unblocking one module unblocks all
+modules in `` blocked module block''. There is an option to turn blocked
+module block into Macro Module.
+
+\section{Creating a Connection}
+\label{sec:connectmods}
+
+Mouse button two (the middle mouse button) is used to connect the output
+(input) port of one module to the input (output) port of another
+module. Right clicking on a connection gives access to a pop-up
+menu. Use the pop-up menu to disable, delete, or annotate a connection.
+
+To make a connection, position the mouse pointer over a module's input
+(output) port.  Then press button two and drag the mouse pointer towards
+another module's output (input) port.
+
+When button two is pressed, the program shows all valid connections as
+black lines.  It also draws one red colored connection, which is the
+connection made if  the drag is stopped by releasing 
+button two.
+
+Make the connection by releasing button two when the pointer is over
+the desired destination port or when the red colored connection is the
+desired connection.  The connection is drawn using the color
+corresponding to the connection's data type.
+
+Users can connect a module's output port to the input ports of one or more
+modules by repeating the procedure just described.
+
+\section{Accessing a Connection's Pop-up Menu}
+\label{sec:connectionmenu}
+
+\section{Annotating a Connection}
+\label{sec:annotatemods}
+
+To annotate a connection, right click on a connection to bring up the pop-up 
+menu and select \menuitem{Edit Annotaion}. Edit the text as any annotation.
+
+\section{Disabling a Connection}
+\label{sec:disablemods}
+
+To disable a connection, right click on connection to bring up pop-up
+menu and select disable.The connection will appear grey and no data
+will pass through.
+
+\section{Undoing a Connection}
+\label{sec:undomod}
+
+Undo only on connection deletion/addition. Undo is infinite. Undo
+saves per session only, not in network
+
+\section{Deleting a Connection}
+\label{sec:deleteconnections}
+
+Delete a connection by pressing mouse button three while the pointer is
+over a connection.
+
+\section{Executing a Network}
 \label{sec:executenet}
 
-``Network Execution'' means that 1 or more modules must be executed in a
-coordinated fashion. The coordinated execution of modules is managed by
-\sr{}'s \dfn{scheduler}.
+``Network Execution'' means one or more modules must be executed in a
+coordinated fashion. 
+\sr{}'s \dfn{scheduler} manages the coordinated execution of modules.
 
 Note that some modules need to be compiled before they are
 executed (see \secref{Dynamic Compilation}{sec:dyncomp}).  Compilation
-will delay execution of the network.  This delay occurs only one time
+delays execution of the network.  This delay occurs only one time
 (per module).  After a module is compiled, it does not need to be
 compiled again.  Modules change color during compilation.
 
+\subsection{The Basics}
 
-\subsubsection{The Basics}
-
-The scheduler is invoked when an event occurs that \dfn{triggers} a
+The scheduler is invoked when an event \dfn{triggers} a
 module's execution.  The scheduler creates a list of all modules that
-must be executed in coordination with the triggered module. Modules
+must execute in coordination with the triggered module. Modules
 \dfn{upstream} (directly or indirectly) from the triggered module are 
 put on the execution list if they have not previously executed.
 All modules \dfn{downstream} from the triggered module are put
-on the list.  Once the scheduler determines which modules must be
+on the execution list.  Once the scheduler determines which modules must be
 executed, it executes them (in parallel where possible).
 
-Network execution is mostly transparent.  That is, the events that trigger
-module execution will usually be generated automatically. Sometimes, however, the user must manually
+Network execution is mostly transparent.  That is, events that trigger
+module execution usually generate automatically. Sometimes,
+however, the user must manually
 generate a triggering event by choosing the \menuitem{Execute} item from a
 module's pop-up menu.
 
-\subsubsection{Details}
+\subsection{Details}
 
-Each module executes in its own thread and blocks (waits) until its upstream
-modules can supply it with data.  After a module completes its computation,
-it sends its results to its downstream modules.  This completes a module's
-execution cycle.  The module's next chance to receive data from its input ports
-and send data to its output ports will not arise until some event
-causes it to be put on the scheduler's execution list again.  
+Each module executes in its own thread and blocks (waits) until its
+upstream modules can supply it with data.  After a module completes
+its computation, it sends the results to its downstream modules.  This
+completes a module's execution cycle.  The module will not have
+another chance to receive data from its input ports and send data to
+its output ports until some event puts the module back on the
+scheduler's execution list.
 
 This behavior prevents modules from computing in an iterative fashion,
-sending intermediate results to their downstream modules.  This is because
-downstream modules cannot receive these results until they are in their
-execution cycle.   Downstream modules would need to be executed each time the
+sending intermediate results to their downstream modules, because
+downstream modules cannot receive results until they are in their
+execution cycle. Downstream modules would need to be executed each time the
 upstream module posts an intermediate result.
 
 
-\subsubsection{Intermediate Results}
+\subsection{Intermediate Results}
 
 Some modules are designed to be used in an iterative fashion.  They send
 data to their output ports in a special way.  They use a method called
@@ -271,9 +393,10 @@ Modules \module{SolveMatrix} and \module{MatrixSelectVector} (from the
 \package{\sr} package and \category{Math} category) are examples of modules
 that compute iteratively using the \icode{send\_intermediate} method.
 
-\subsubsection{Feedback Loops}
+\subsection{Feedback Loops}
 
-Some modules are designed to be used exclusively in feedback loops. Their output ports may be connected
+Some modules are designed to be used exclusively in feedback
+loops. Their output ports can be connected
 directly or indirectly to their input ports.  These modules also use the
 \icode{send\_intermediate} method.
 
@@ -282,80 +405,7 @@ Examples of feedback modules are \module{DipoleSearch} and
 \package{BioPSE} package and \module{BuildElemLeadField} from the
 \category{LeadField} category of the \package{BioPSE} package.
 
-\subsection{Deleting a Connection}
-\label{sec:deleteconnections}
-
-Delete a connection by pressing button 3 while the pointer is
-over a connection.
-
-\subsection{Selecting Modules}
-\label{sec:selectmods}
-
-A few operations (see \secref{Moving Module(s)}{sec:movemod} and
-\secref{Destroying Module(s)}{sec:destroymod}) act on a group of
-modules.  A group of modules can be created in two ways:
-
-\begin{enumerate}
-\item Press mouse button 2 while the pointer is in the NetEdit frame,
-  but not over a module or a connection.  Then drag the mouse.  This
-  will draw a box outline.  Modules intersecting the box will be part
-  of the group.  Release button 2 to complete the selection.
-\item Select the first module by clicking mouse button 2 while the
-  pointer is over a module.  Then add modules to the group by pressing
-  (and holding down) the \keyboard{control} key while clicking on
-  modules with button 2.
-\end{enumerate}
-
-Selected modules will be drawn in a darker shade of grey.
-
-Users can mix selection methods and  add modules to the group by
-pressing the control key while making selections using the above methods.
-If  the control key is not pressed, then the previous group will be
-forgotten and a new one will be created.
-
-\subsection{Moving Module(s)}
-\label{sec:movemod}
-
-Modules can be moved in the NetEdit frame.  To move a module,
-press button 1 while the pointer is over a module and drag the module to
-its new location.
-
-Multiple modules can be moved at one time.  To do this,
-\hyperref{select}{select (see Section~}{)}{sec:selectmods} 1 or more
-modules. Then press button 1 while the pointer is over any one of the
-modules in the selected group and drag the modules to their new location.
-
-
-\subsection{Destroying Module(s)}
-\label{sec:destroymod}
-
-Delete a module by selecting the \menuitem{Destroy} menu item from the
-module's pop-up menu.
-
-Multiple modules can be deleted at one time.  To do this,
-\hyperref{select}{select (see Section~}{)}{sec:selectmods} 1 or more
-modules. Then choose  \menuitem{Destroy Selected} from the module's pop-up menu.
- 
-
-
-\subsection{Documenting a Module's Use}
-\label{sec:docmodule}
-
-It is useful to document the purpose of a module within a network.
-Each module maintains a note pad for this purpose.  Edit the
-module's note pad by selecting \menuitem{Notes} from the module's
-pop-up menu.  This displays the module's note pad editor.  The 
-editor allows the user to write notes on the use of the
-module within the context of its network.
-
-\subsection{Viewing a Module's Log}
-\label{sec:viewmodslog}
-
-Each module supports a message log.  The module writes error messages or
-other types of messages to its log.  To view this log, select the
-\menuitem{Show Log} item from the module's pop-up menu.
-
-\subsection{Documenting a Network}
+\section{Documenting a Network}
 \label{sec:docnetwork}
 
 It is useful to document the function of a network.  A network's note
@@ -364,31 +414,30 @@ select the \menuitem{Add Info} item from the main window's \menu{File}
 menu.  This will display the network's note pad editor.  The editor
 allows the user to write notes on the purpose and use of the network.
 
-
-\subsection{Saving a Network}
+\section{Saving a Network}
 \label{sec:savenet}
 
 \sr{} can save networks to files.  Network files have an extension of
-\filename{.net} (in the past they have also had .sr and .uin
+\filename{.net} (in the past they also had .sr and .uin
 extensions).  
 
-To save a network, select the \menuitem{Save} item from the main window's
-\menu{File} menu.  A file browser dialog will prompt for the
+To save a network, select \menuitem{Save} item from the main window's
+\menu{File} menu.  A file browser dialog will prompts for the
 name and location of the network file.
 
-If  changes are made to an existing network,  \menuitem{Save} will
-save changes made to an existing net file.
+If  changes are made to an existing network,  \menuitem{Save} 
+saves changes made to an existing net file.
 
-An existing network can be saved under a new name using the
-\menuitem{Save As...} menu item.  A file browser dialog will prompt
+Save an existing network under a new name using the
+\menuitem{Save As...} menu item.  A file browser dialog prompts
 for the new name of the network file.  Subsequent uses of
-\menuitem{Save} will save changes to the newly created file.
+\menuitem{Save} saves changes to the newly created file.
 
 Network files are  \dfna{Tool Command Language}{TCL} scripts.
 These files can be edited, however the reasons for doing so are beyond
 the scope of this guide.
 
-\subsection{Loading a Network}
+\section{Loading a Network}
 \label{sec:opennet}
 
 To load a network file, select the \menuitem{Load} item from the main
@@ -398,7 +447,7 @@ name and location of the network file.
 Note that loading a network file adds the network to an existing network in
 the NetEdit frame, possibly overlapping the networks.
 
-\subsection{Inserting a Network}
+\section{Inserting a Network}
 \label{sec:insertnetwork}
 
 To avoid merging networks, select the
@@ -410,34 +459,34 @@ location of the network file.
 The new network is inserted into the upper left corner of the
 NetEdit frame.  If a network of modules already exists in the NetEdit
 frame, the \menuitem{Insert} command places a new network to the
-immediate right of that existing network.
+immediate right of the existing network.
 
-\subsection{Clearing a Network}
+\section{Clearing a Network}
 \label{sec:clearnetwork}
 
-Select the \menuitem{Clear} item from the main window's \menu{File}
-menu in order to remove all modules and connections from the entire
-NetEdit frame.  A text box appears, confirming whether the user wishes
-to proceed with or cancel the clearing operation.
+To remove all modules and connections from the 
+NetEdit frame, select the \menuitem{Clear} item from the main window's
+\menu{File} menu in order.  A text box appears, confirming whether the
+user wants to proceed with or cancel the clearing operation.
 
-\subsection{Navigating a Network}
+\section{Navigating a Network}
 \label{sec:navnetwork}
 
 A complex network may not be entirely visible in the NetEdit frame.
-The NetEdit frame's scroll bars can be used to bring other parts of a network into
-view.  Or use the network view tool to view complex networks.
+Use the NetEdit frame's scroll bars or the network view tool to view
+complex networks.
 
 The Global View Frame shows the entire ``network world.''  The small
-rectangular region (outlined in black) within the Global View Frame is the
-network view tool and is a window on the network world. The
+rectangular region (outlined in black) in the Global View Frame is the
+network view tool and a window on the network world. The
 position of the view tool determines the part of the network 
 visible in the NetEdit frame.  To view other parts of the network, press
-button 1 while the pointer is anywhere in the Global View Frame -- this 
+button one while the pointer is anywhere in the Global View Frame -- this 
 moves the tool to the location of the pointer --  then drag the tool to the
 new location.
 
 
-\subsection{The \sr{} Shell}
+\section{The \sr{} Shell}
 \label{sec:termapp}
 
 After starting, \sr{} runs a shell-like application in the terminal
