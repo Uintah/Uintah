@@ -51,6 +51,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/envmap-sphere.mo  \
 	$(SRCDIR)/single-sphere.mo  \
 	$(SRCDIR)/ramsey.mo \
+	$(SRCDIR)/cbox.mo 
 #	$(SRCDIR)/dtiglyph.mo \
 
 ifeq ($(findstring Uintah, $(LOAD_PACKAGE)),Uintah)
