@@ -95,6 +95,16 @@ public:
 			    DataWarehouse* old_dw,
 			    DataWarehouse* new_dw);
 
+  void scheduleInterpolateToParticlesAndUpdate(SchedulerP&,
+                                                       const PatchSet*,
+                                                       const MaterialSet*);
+
+  void interpolateToParticlesAndUpdate(const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
 private:
   RigidMPM(const RigidMPM&);
   RigidMPM& operator=(const RigidMPM&);
