@@ -236,14 +236,17 @@ public:
   //! Compute the array of subsimplices and the interpolant weights
   //! around a given point.
   /*! These are used to compute the interpolation weights for a given
-   *  point within the mesh.  Currently only the Node::array_type and
-   *  the Elem::array_type specializations are implemented, the others
-   *  do nothing for most meshes.
+   *  point within the mesh.  The weights will be returned in w, and
+   *  there will be at most MESH_WEIGHT_MAXSIZE of them (w should be of
+   *  type double[MESH_WEIGHT_MAXSIZE].  The number of weights computed is
+   *  returned by the function.  Currently only the Node::array_type
+   *  and the Elem::array_type specializations are implemented, the
+   *  others do nothing for most meshes.
    */
-  void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
-  void get_weights(const Point &p, Edge::array_type &l, vector<double> &w);
-  void get_weights(const Point &p, Face::array_type &l, vector<double> &w);
-  void get_weights(const Point &p, Cell::array_type &l, vector<double> &w);
+  int get_weights(const Point &p, Node::array_type &l, double *w);
+  int get_weights(const Point &p, Edge::array_type &l, double *w);
+  int get_weights(const Point &p, Face::array_type &l, double *w);
+  int get_weights(const Point &p, Cell::array_type &l, double *w);
   //@}
 
   //! Return true if the mesh is editable.

@@ -339,9 +339,8 @@ ImageMesh::locate(Node::index_type &node, const Point &p)
 }
 
 
-void
-ImageMesh::get_weights(const Point &p,
-		       Node::array_type &locs, vector<double> &weights)
+int
+ImageMesh::get_weights(const Point &p, Node::array_type &locs, double *w)
 {
   const Point r = transform_.unproject(p);
   double ii = r.x();
@@ -367,39 +366,41 @@ ImageMesh::get_weights(const Point &p,
     const double dy1 = jj - node0.j_;
     const double dx0 = 1.0 - dx1;
     const double dy0 = 1.0 - dy1;
+
+    locs.resize(4);
+    locs[0] = node0;
     
-    node1.i_ = node0.i_ + 1;
-    node1.j_ = node0.j_ + 0;
+    locs[1].i_ = node0.i_ + 1;
+    locs[1].j_ = node0.j_ + 0;
     
-    node2.i_ = node0.i_ + 1;
-    node2.j_ = node0.j_ + 1;
+    locs[2].i_ = node0.i_ + 1;
+    locs[2].j_ = node0.j_ + 1;
     
-    node3.i_ = node0.i_ + 0;
-    node3.j_ = node0.j_ + 1;
+    locs[3].i_ = node0.i_ + 0;
+    locs[3].j_ = node0.j_ + 1;
     
-    locs.push_back(node0);
-    locs.push_back(node1);
-    locs.push_back(node2);
-    locs.push_back(node3);
-    
-    weights.push_back(dx0 * dy0);
-    weights.push_back(dx1 * dy0);
-    weights.push_back(dx1 * dy1);
-    weights.push_back(dx0 * dy1);
+    w[0] = dx0 * dy0;
+    w[1] = dx1 * dy0;
+    w[2] = dx1 * dy1;
+    w[3] = dx0 * dy1;
+    return 4;
   }
+  return 0;
 }
 
 
-void
-ImageMesh::get_weights(const Point &p,
-		       Face::array_type &l, vector<double> &w)
+int
+ImageMesh::get_weights(const Point &p, Face::array_type &l, double *w)
 {
   Face::index_type idx;
   if (locate(idx, p))
   {
-    l.push_back(idx);
-    w.push_back(1.0);
+    l.resize(1);
+    l[0] = idx;
+    w[0] = 1.0;
+    return 1;
   }
+  return 0;
 }
 
 

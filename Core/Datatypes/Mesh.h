@@ -22,12 +22,16 @@
 #include <Core/Containers/LockingHandle.h>
 
 namespace SCIRun {
-  class BBox;
-  class Mesh;
-  class Transform;
-  class TypeDescription;
-  typedef LockingHandle<Mesh> MeshHandle;
 
+class BBox;
+class Mesh;
+class Transform;
+class TypeDescription;
+typedef LockingHandle<Mesh> MeshHandle;
+
+// Maximum number of weights get_weights will return.
+// Currently at 15 for QuadraticLatVolMesh.
+#define MESH_WEIGHT_MAXSIZE 15
 
 class Mesh : public PropertyManager {
 public:

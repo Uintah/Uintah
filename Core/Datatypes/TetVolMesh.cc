@@ -1303,16 +1303,18 @@ TetVolMesh::locate(Cell::index_type &cell, const Point &p)
 }
 
 
-void
-TetVolMesh::get_weights(const Point &p,
-			Cell::array_type &l, vector<double> &w)
+int
+TetVolMesh::get_weights(const Point &p, Cell::array_type &l, double *w)
 {
   Cell::index_type idx;
   if (locate(idx, p))
   {
-    l.push_back(idx);
-    w.push_back(1.0);
+    l.resize(1);
+    l[0] = idx;
+    w[0] = 1.0;
+    return 1;
   }
+  return 0;
 }
 
 
@@ -1323,9 +1325,8 @@ tet_vol6(const Point &p1, const Point &p2, const Point &p3, const Point &p4)
   return fabs( Dot(Cross(p2-p1,p3-p1),p4-p1) );
 }
 
-void
-TetVolMesh::get_weights(const Point &p,
-			Node::array_type &l, vector<double> &w)
+int
+TetVolMesh::get_weights(const Point &p, Node::array_type &l, double *w)
 {
   Cell::index_type idx;
   if (locate(idx, p))
@@ -1336,7 +1337,6 @@ TetVolMesh::get_weights(const Point &p,
     const Point &p2 = point(l[2]);
     const Point &p3 = point(l[3]);
 
-    w.resize(4);
     w[0] = tet_vol6(p, p1, p2, p3);
     w[1] = tet_vol6(p, p0, p2, p3);
     w[2] = tet_vol6(p, p1, p0, p3);
@@ -1346,7 +1346,9 @@ TetVolMesh::get_weights(const Point &p,
     w[1] *= vol_sum_inv;
     w[2] *= vol_sum_inv;
     w[3] *= vol_sum_inv;
+    return 4;
   }
+  return 0;
 }
 
 

@@ -784,21 +784,23 @@ LatVolMesh::locate(Node::index_type &node, const Point &p)
 }
 
 
-void
-LatVolMesh::get_weights(const Point &p,
-			Cell::array_type &l, vector<double> &w)
+int
+LatVolMesh::get_weights(const Point &p, Cell::array_type &l, double *w)
 {
   Cell::index_type idx;
   if (locate(idx, p))
   {
-    l.push_back(idx);
-    w.push_back(1.0);
+    l.resize(1);
+    l[0] = idx;
+    w[0] = 1.0;
+    return 1;
   }
+  return 0;
 }
 
-void
-LatVolMesh::get_weights(const Point &p,
-			Node::array_type &locs, vector<double> &w)
+
+int
+LatVolMesh::get_weights(const Point &p, Node::array_type &locs, double *w)
 {
   const Point r = transform_.unproject(p);
   double ii = r.x();
@@ -834,7 +836,6 @@ LatVolMesh::get_weights(const Point &p,
     const double dj = jj - (double)j;
     const double dk = kk - (double)k;
     
-    w.resize(8);
     w[0] = (1.0 - di) * (1.0 - dj) * (1.0 - dk);
     w[1] = di         * (1.0 - dj) * (1.0 - dk);
     w[2] = di         * dj         * (1.0 - dk);
@@ -843,7 +844,9 @@ LatVolMesh::get_weights(const Point &p,
     w[5] = di         * (1.0 - dj) * dk;
     w[6] = di         * dj         * dk;
     w[7] = (1.0 - di) * dj         * dk;
+    return 8;
   }
+  return 0;
 }
 
 const TypeDescription* get_type_description(LatVolMesh::NodeIndex *)

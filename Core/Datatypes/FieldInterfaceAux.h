@@ -104,11 +104,11 @@ SFInterface<F, L>::finterpolate(double &result, const Point &p) const
   typename F::mesh_handle_type mesh = field_->get_typed_mesh();
 
   typename L::array_type locs;
-  vector<double> weights;
-  mesh->get_weights(p, locs, weights);
+  double weights[MESH_WEIGHT_MAXSIZE];
+  const int n = mesh->get_weights(p, locs, weights);
 
   // Weights is empty if point not found.
-  if (weights.size() <= 0) return false;
+  if (n == 0) return false;
 
   result = 0.0;
   for (unsigned int i = 0; i < locs.size(); i++)
@@ -305,11 +305,11 @@ VFInterface<F, L>::finterpolate(Vector &result, const Point &p) const
   typename F::mesh_handle_type mesh = field_->get_typed_mesh();
 
   typename L::array_type locs;
-  vector<double> weights;
-  mesh->get_weights(p, locs, weights);
+  double weights[MESH_WEIGHT_MAXSIZE];
+  const int n = mesh->get_weights(p, locs, weights);
 
   // Weights is empty if point not found.
-  if (weights.size() <= 0) return false;
+  if (n == 0) return false;
 
   result = Vector(0.0, 0.0, 0.0);
   for (unsigned int i = 0; i < locs.size(); i++)
@@ -508,11 +508,11 @@ TFInterface<F, L>::finterpolate(Tensor &result, const Point &p) const
   typename F::mesh_handle_type mesh = field_->get_typed_mesh();
 
   typename L::array_type locs;
-  vector<double> weights;
-  mesh->get_weights(p, locs, weights);
+  double weights[MESH_WEIGHT_MAXSIZE];
+  const int n = mesh->get_weights(p, locs, weights);
 
   // Weights is empty if point not found.
-  if (weights.size() <= 0) return false;
+  if (n == 0) return false;
 
   result = Tensor(0);
   for (unsigned int i = 0; i < locs.size(); i++)

@@ -238,12 +238,12 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::parallel_execute(int proc,
 	continue;
       }
       typename LDST::array_type locs;
-      vector<double> weights;
+      double weights[MESH_WEIGHT_MAXSIZE];
       Point p;
       src_mesh->get_center(p, *itr);
       bool failed = true;
-      dst_mesh->get_weights(p, locs, weights);
-      if (weights.size() > 0) {
+      const int nw = dst_mesh->get_weights(p, locs, weights);
+      if (nw > 0) {
 	failed = false;
 	double max_weight=weights[0];
 	int max_idx=0;
@@ -317,13 +317,13 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::parallel_execute(int proc,
 	continue;
       }
       typename LSRC::array_type locs;
-      vector<double> weights;
+      double weights[MESH_WEIGHT_MAXSIZE];
       Point p;
       dst_mesh->get_center(p, *itr);
       vector<pair<typename LSRC::index_type, double> > v;
       bool failed = true;
-      src_mesh->get_weights(p, locs, weights);
-      if (weights.size() > 0)	{
+      const int nw = src_mesh->get_weights(p, locs, weights);
+      if (nw > 0)	{
 	failed = false;
 	if (linear) {
 	  for (unsigned int i = 0; i < locs.size(); i++) {

@@ -552,17 +552,20 @@ TriSurfMesh::get_gradient_basis(Face::index_type fi, Vector& g0, Vector& g1,
   return(area);
 }
 
-void
-TriSurfMesh::get_weights(const Point &p,
-			 Face::array_type &l, vector<double> &w)
+int
+TriSurfMesh::get_weights(const Point &p, Face::array_type &l, double *w)
 {
   Face::index_type idx;
   if (locate(idx, p))
   {
-    l.push_back(idx);
-    w.push_back(1.0);
+    l.resize(1);
+    l[0] = idx;
+    w[0] = 1.0;
+    return 1;
   }
+  return 0;
 }
+
 
 bool 
 TriSurfMesh::inside3_p(int i, const Point &p) const
@@ -584,9 +587,8 @@ TriSurfMesh::inside3_p(int i, const Point &p) const
 }
 
 
-void
-TriSurfMesh::get_weights(const Point &p,
-			 Node::array_type &l, vector<double> &w)
+int
+TriSurfMesh::get_weights(const Point &p, Node::array_type &l, double *w)
 {
   Face::index_type idx;
   if (locate(idx, p))
@@ -596,7 +598,7 @@ TriSurfMesh::get_weights(const Point &p,
     get_point(p0,l[0]);
     get_point(p1,l[1]);
     get_point(p2,l[2]);
-    w.resize(3);
+
     w[0] = (Cross(p1-p,p2-p)).length();
     w[1] = (Cross(p0-p,p2-p)).length();
     w[2] = (Cross(p0-p,p1-p)).length();
@@ -604,7 +606,9 @@ TriSurfMesh::get_weights(const Point &p,
     w[0] *= area_sum_inv;
     w[1] *= area_sum_inv;
     w[2] *= area_sum_inv;
+    return 3;
   }
+  return 0;
 }
 
 

@@ -135,12 +135,18 @@ public:
   bool locate(Face::index_type &, const Point &) const;
   bool locate(Cell::index_type &, const Point &) const;
 
-  void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
-  void get_weights(const Point &p, Edge::array_type &l, vector<double> &w)
-  {ASSERTFAIL("StructQuadSurfMesh::get_weights for edges isn't supported");}
-  void get_weights(const Point &p, Face::array_type &l, vector<double> &w);
-  void get_weights(const Point &p, Cell::array_type &l, vector<double> &w)
-  {ASSERTFAIL("StructQuadSurfMesh::get_weights for cells isn't supported");}
+  int get_weights(const Point &p, Node::array_type &l, double *w);
+  int get_weights(const Point & , Edge::array_type & , double * )
+  {
+    ASSERTFAIL("StructQuadSurfMesh::get_weights for edges isn't supported");
+    return 0;
+  }
+  int get_weights(const Point &p, Face::array_type &l, double *w);
+  int get_weights(const Point & , Cell::array_type & , double * )
+  {
+    ASSERTFAIL("StructQuadSurfMesh::get_weights for cells isn't supported");
+    return 0;
+  }
 
   void get_point(Point &point, const Node::index_type &index) const
   { get_center(point, index); }

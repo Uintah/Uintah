@@ -105,16 +105,18 @@ PointCloudMesh::locate(Node::index_type &idx, const Point &p) const
 }
 
 
-void
-PointCloudMesh::get_weights(const Point &p,
-			    Node::array_type &l, vector<double> &w)
+int
+PointCloudMesh::get_weights(const Point &p, Node::array_type &l, double *w)
 {
   Node::index_type idx;
   if (locate(idx, p))
   {
-    l.push_back(idx);
-    w.push_back(1.0);
+    l.resize(1);
+    l[0] = idx;
+    w[0] = 1.0;
+    return 1;
   }
+  return 0;
 }
 
 
