@@ -220,6 +220,10 @@ itcl_class ViewWindow {
 	if {![info exists $this-global-light2]} { set $this-global-light2 0 }
 	global $this-global-light3 
 	if {![info exists $this-global-light3]} { set $this-global-light3 0 }
+	trace variable $this-global-light0 w "$this traceLight 0"
+	trace variable $this-global-light1 w "$this traceLight 1"
+	trace variable $this-global-light2 w "$this traceLight 2"
+	trace variable $this-global-light3 w "$this traceLight 3"
 # 	global $this-global-light4 
 # 	if {![info exists $this-global-light4]} { set $this-global-light4 0 }
 # 	global $this-global-light5 
@@ -1670,6 +1674,7 @@ itcl_class ViewWindow {
 	pack $w.l $w.o $w.breset $w.bclose -side top -expand yes -fill x
 
 	moveToCursor $w "leave_up"
+	wm deiconify $w
     }
 	
     method makeLightControl { w i } {
@@ -1818,7 +1823,14 @@ itcl_class ViewWindow {
 	    [lindex [set $this-lightVectors] $i] \
 	    [lindex [set $this-lightColors] $i]
     }
-	
+
+    method traceLight {which name1 name2 op } {
+	set w .ui[modname]-lightSources
+	if {![winfo exists $w]} {
+	    $this lightSwitch $which
+	}
+    }
+
     method makeSaveImagePopup {} {
 	global $this-saveFile
 	global $this-saveType
