@@ -19,6 +19,7 @@
 #include <Field3D.h>
 class Field3DIPort;
 class GeometryOPort;
+class ObjGroup;
 
 class IsoSurface : public UserModule {
     Field3DIPort* infield;
@@ -29,13 +30,13 @@ class IsoSurface : public UserModule {
     Point seed_point;
     double isoval;
 
-    void iso_cube(int, int, int, double);
-    void iso_tetra(int, double);
+    void iso_cube(int, int, int, double, ObjGroup*);
+    void iso_tetra(int, double, ObjGroup*);
 
-    void iso_reg_grid(const Field3DHandle&, const Point&);
-    void iso_reg_grid(const Field3DHandle&, double);
-    void iso_tetrahedra(const Field3DHandle&, const Point&);
-    void iso_tetrahedra(const Field3DHandle&, double);
+    void iso_reg_grid(const Field3DHandle&, const Point&, ObjGroup*);
+    void iso_reg_grid(const Field3DHandle&, double, ObjGroup*);
+    void iso_tetrahedra(const Field3DHandle&, const Point&, ObjGroup*);
+    void iso_tetrahedra(const Field3DHandle&, double, ObjGroup*);
 public:
     IsoSurface();
     IsoSurface(const IsoSurface&, int deep);
