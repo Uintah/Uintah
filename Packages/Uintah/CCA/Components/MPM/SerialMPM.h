@@ -279,57 +279,53 @@ private:
 				       DataWarehouse* new_dw);
 
 
-  void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
-					  const MaterialSet*);
+  void scheduleInterpolateParticlesToGrid(     SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
-  void scheduleComputeHeatExchange(SchedulerP&, const PatchSet*,
-				   const MaterialSet*);
+  void scheduleComputeHeatExchange(            SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
-  void scheduleExMomInterpolated(SchedulerP&, const PatchSet*,
-				 const MaterialSet*);
+  void scheduleExMomInterpolated(              SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
-  void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
-				   const MaterialSet*);
+  void scheduleComputeStressTensor(            SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
-  void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
-				    const MaterialSet*);
+  void scheduleComputeInternalForce(           SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
-  void scheduleComputeArtificialViscosity(SchedulerP&, const PatchSet*,
-				    const MaterialSet*);
+  void scheduleComputeArtificialViscosity(     SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
-  void scheduleComputeInternalHeatRate(SchedulerP&, const PatchSet*,
-				       const MaterialSet*);
+  void scheduleComputeInternalHeatRate(        SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
-  void scheduleSolveEquationsMotion(SchedulerP&, const PatchSet*,
-				    const MaterialSet*);
+  void scheduleSolveEquationsMotion(           SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
-  void scheduleSolveHeatEquations(SchedulerP&, const PatchSet*,
-				  const MaterialSet*);
+  void scheduleSolveHeatEquations(             SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
-  void scheduleIntegrateAcceleration(SchedulerP&, const PatchSet*,
-				     const MaterialSet*);
+  void scheduleIntegrateAcceleration(          SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
-  void scheduleIntegrateTemperatureRate(SchedulerP&, const PatchSet*,
-					const MaterialSet*);
+  void scheduleIntegrateTemperatureRate(       SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
-  void scheduleExMomIntegrated(SchedulerP&, const PatchSet*,
-			       const MaterialSet*);
+  void scheduleExMomIntegrated(                SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
-  void scheduleSetGridBoundaryConditions(SchedulerP& sched,
-                                         const PatchSet* patches,
-                                         const MaterialSet* matls);
+  void scheduleSetGridBoundaryConditions(      SchedulerP&, const PatchSet*,
+                                               const MaterialSet* matls);
                                                  
-  void scheduleApplyExternalLoads(SchedulerP&, const PatchSet*,
-		                               const MaterialSet*);
+  void scheduleApplyExternalLoads(             SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
   void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, const PatchSet*,
-					       const MaterialSet*);
+                                               const MaterialSet*);
 
-  void scheduleInterpolateParticlesForSaving(SchedulerP&, const PatchSet*,
-					     const MaterialSet*);
-
-  void scheduleCalculateDampingRate(SchedulerP&, const PatchSet*,
-				    const MaterialSet*);
+  void scheduleCalculateDampingRate(           SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
   SerialMPM(const SerialMPM&);
   SerialMPM& operator=(const SerialMPM&);

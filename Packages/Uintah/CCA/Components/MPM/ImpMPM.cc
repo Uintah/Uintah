@@ -237,6 +237,7 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
   scheduleComputeStressTensor(            sched, d_perproc_patches,matls);
   scheduleComputeAcceleration(            sched, d_perproc_patches,matls);
   scheduleInterpolateToParticlesAndUpdate(sched, d_perproc_patches,matls);
+  scheduleInterpolateStressToGrid(        sched, d_perproc_patches,matls);
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, 
 				    lb->d_particleState_preReloc,
@@ -409,13 +410,11 @@ void ImpMPM::scheduleComputeInternalForce(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::computeInternalForce",
                          this, &ImpMPM::computeInternalForce);
 
-  t->requires(Task::ParentOldDW,lb->pXLabel,        Ghost::AroundNodes,1);
-  t->requires(Task::ParentOldDW,lb->pMassLabel,     Ghost::AroundNodes,1);
-  t->requires(Task::ParentNewDW,lb->gMassLabel,     Ghost::None);
-  t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
-  t->requires(Task::NewDW,lb->pVolumeDeformedLabel, Ghost::AroundNodes,1);
+  t->requires(Task::ParentOldDW,lb->pXLabel,              Ghost::AroundNodes,1);
+  t->requires(Task::NewDW,      lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
+  t->requires(Task::NewDW,      lb->pVolumeDeformedLabel, Ghost::AroundNodes,1);
+
   t->computes(lb->gInternalForceLabel);
-  t->computes(lb->gStressForSavingLabel);
 
   sched->addTask(t, patches, matls);
 }
@@ -600,6 +599,23 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
   t->computes(lb->CenterOfMassVelocityLabel);
+  sched->addTask(t, patches, matls);
+}
+void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls)
+{
+  Task* t=scinew Task("ImpMPM::interpolateStressToGrid",
+		    this, &ImpMPM::interpolateStressToGrid);
+
+  // This task is done for visualization only
+
+  t->requires(Task::OldDW,lb->pXLabel,              Ghost::AroundNodes,1);
+  t->requires(Task::OldDW,lb->pMassLabel,           Ghost::AroundNodes,1);
+  t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
+  t->requires(Task::NewDW,lb->gMassLabel,           Ghost::None);
+
+  t->computes(lb->gStressForSavingLabel);
   sched->addTask(t, patches, matls);
 }
 
@@ -1362,57 +1378,41 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
+
       constParticleVariable<Point>   px;
       constParticleVariable<double>  pvol;
-      constParticleVariable<double>  pmass;
       constParticleVariable<Matrix3> pstress;
-      NCVariable<Vector>        int_force;
-      NCVariable<Matrix3>       gstress;
-      constNCVariable<double>   gmass;
-      ParticleSubset* pset;
+      NCVariable<Vector>             int_force;
       
       DataWarehouse* parent_old_dw = 
         new_dw->getOtherDataWarehouse(Task::ParentOldDW);
-      DataWarehouse* parent_new_dw = 
-        new_dw->getOtherDataWarehouse(Task::ParentNewDW);
-      pset = parent_old_dw->getParticleSubset(dwi, patch,
+
+      ParticleSubset* pset = parent_old_dw->getParticleSubset(dwi, patch,
                                               Ghost::AroundNodes,1,lb->pXLabel);
+
       parent_old_dw->get(px,   lb->pXLabel,    pset);
-      parent_old_dw->get(pmass,lb->pMassLabel, pset);
-      parent_new_dw->get(gmass,lb->gMassLabel, dwi, patch,Ghost::None,0);
       new_dw->allocateAndPut(int_force,lb->gInternalForceLabel,  dwi, patch);
-      new_dw->allocateAndPut(gstress,  lb->gStressForSavingLabel,dwi, patch);
 
       new_dw->get(pvol,    lb->pVolumeDeformedLabel,  pset);
       new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
 
       int_force.initialize(Vector(0,0,0));
-      gstress.initialize(Matrix3(0.));
       IntVector ni[8];
       Vector d_S[8];
-      double S[8];
-      Matrix3 stressmass;
 
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
 	particleIndex idx = *iter;
 	
 	// Get the node indices that surround the cell
-	patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
+	patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 	
-        stressmass  = pstress[idx]*pmass[idx];              
-
 	for (int k = 0; k < 8; k++){
 	  if(patch->containsNode(ni[k])){
 	   Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
            int_force[ni[k]] -= (div * pstress[idx])  * pvol[idx];    
-           gstress[ni[k]]       += stressmass * S[k];
 	  }
 	}
-      }
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
-        IntVector c = *iter;                                  
-        gstress[c] /= (gmass[c]+1.e-200);                               
       }
     }
   }
@@ -1938,6 +1938,67 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
     new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
     new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
+  }
+}
+
+void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* ,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing <<"Doing interpolateStressToGrid on patch " << patch->getID()
+	       <<"\t\t IMPM"<< "\n" << "\n";
+
+    // This task is done for visualization only
+
+    int numMatls = d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+
+      constParticleVariable<Point>   px;
+      constParticleVariable<double>  pmass;
+      constParticleVariable<Matrix3> pstress;
+      NCVariable<Matrix3>            gstress;
+      constNCVariable<double>        gmass;
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                              Ghost::AroundNodes,1,lb->pXLabel);
+      old_dw->get(px,   lb->pXLabel,    pset);
+      old_dw->get(pmass,lb->pMassLabel, pset);
+      new_dw->get(gmass,lb->gMassLabel, dwi, patch,Ghost::None,0);
+      new_dw->allocateAndPut(gstress,  lb->gStressForSavingLabel,dwi, patch);
+
+      new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
+
+      gstress.initialize(Matrix3(0.));
+      IntVector ni[8];
+      double S[8];
+      Matrix3 stressmass;
+
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        // Get the node indices that surround the cell
+        patch->findCellAndWeights(px[idx], ni, S);
+
+        stressmass  = pstress[idx]*pmass[idx];
+
+        for (int k = 0; k < 8; k++){
+          if(patch->containsNode(ni[k])){
+           gstress[ni[k]]       += stressmass * S[k];
+          }
+        }
+      }
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+        IntVector c = *iter;
+        gstress[c] /= (gmass[c]+1.e-200);
+      }
+    }
   }
 }
 

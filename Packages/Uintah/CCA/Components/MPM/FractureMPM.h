@@ -328,13 +328,10 @@ private:
   void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, const PatchSet*,
 					       const MaterialSet*);
 
-  void scheduleInterpolateParticlesForSaving(SchedulerP&, const PatchSet*,
-					     const MaterialSet*);
-
   void scheduleCalculateDampingRate(SchedulerP&, const PatchSet*,
 				    const MaterialSet*);
 
-  // for Farcture ----------------------------------
+  // for Fracture ----------------------------------
   void scheduleParticleVelocityField(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* matls);
