@@ -25,7 +25,7 @@ void MPMPetscSolver::initialize()
 {
 #ifdef HAVE_PETSC
 #ifdef LOG
-  int argc = 3;
+  int argc = 9;
 #else
   int argc = 2;
 #endif
@@ -36,10 +36,14 @@ void MPMPetscSolver::initialize()
   //argv[1] = "-start_in_debugger";
   argv[1] = "-no_signal_handler";
 #ifdef LOG
-  //argv[2] = "-log_exclude_actions";
-  //argv[3] = "-log_exclude_objects";
-  //argv[4] = "-log_info";
-  argv[2] = "-log_summary";
+  argv[2] = "-log_exclude_actions";
+  argv[3] = "-log_exclude_objects";
+  argv[4] = "-log_info";
+  argv[5] = "-trmalloc";
+  argv[6] = "-trdump";
+  argv[7] = "-trmalloc_log";
+  argv[8] = "-log_summary";
+  //argv[2] = "-log_summary";
 #endif
 
   PetscInitialize(&argc,&argv, PETSC_NULL, PETSC_NULL);
@@ -90,12 +94,10 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     level->selectPatches(lowIndex, highIndex, neighbors);
     for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
-      
       IntVector plow = neighbor->getNodeLowIndex();
       IntVector phigh = neighbor->getNodeHighIndex();
       IntVector low = Max(lowIndex, plow);
       IntVector high= Min(highIndex, phigh);
-      
       if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
 	  || ( high.z() < low.z() ) )
 	throw InternalError("Patch doesn't overlap?");
