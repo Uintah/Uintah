@@ -31,7 +31,6 @@ HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb)
 
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
-  d_se=0;
 }
 
 HypoElastic::~HypoElastic()
@@ -48,7 +47,6 @@ void HypoElastic::initializeCMData(const Patch* patch,
    // constitutive model parameters and deformationMeasure
    Matrix3 Identity, zero(0.);
    Identity.Identity();
-   d_se=0;
 
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
@@ -119,6 +117,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
                                         DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
+    double se = 0.0;
     const Patch* patch = patches->get(p);
     //
     //  FIX  To do:  Read in table for vres
@@ -267,7 +266,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 
       if(matl->getFractureModel()) pStrainEnergy[idx] = e;
       		   
-      d_se += e;		   
+      se += e;		   
 
       // Compute wave speed at each particle, store the maximum
 
@@ -289,7 +288,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     new_dw->put(delt_vartype(delT_new),lb->delTLabel);
     new_dw->put(pstress_new,            lb->pStressLabel_afterStrainRate);
     new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc);
-    new_dw->put(sum_vartype(d_se),     lb->StrainEnergyLabel);
+    new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
     new_dw->put(pvolume_deformed,      lb->pVolumeDeformedLabel);
 
     if( matl->getFractureModel() ) {
