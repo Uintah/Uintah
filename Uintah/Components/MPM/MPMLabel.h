@@ -81,6 +81,7 @@ namespace Uintah {
       const VarLabel* gNormTractionLabel;
       const VarLabel* gSurfNormLabel;
       const VarLabel* gStressLabel;
+      const VarLabel* gStressForSavingLabel;
       const VarLabel* gVolumeLabel; //for heat conduction
       const VarLabel* gWeightLabel; //for who knows what?
       
@@ -102,6 +103,12 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.26  2000/09/08 17:31:29  guilkey
+// Added interpolateParticlesForSaving task which interpolates particle
+// data, interpolates it to the grid using another particle scalar variable
+// for weighting, and saves it to the grid data to the uda.  Note that these
+// interpolations only get done when it's time to save data to the uda.
+//
 // Revision 1.25  2000/09/08 01:47:22  tan
 // Added pDilatationalWaveSpeedLabel for fracture and is saved as a
 // side-effect of computeStressTensor in each constitutive model class.
