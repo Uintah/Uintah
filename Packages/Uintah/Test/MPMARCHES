@@ -11,7 +11,7 @@ matest_heptwb_cyl_8p_ups = modUPS("%s/MPMARCHES" % inputs_root(), \
 
 matest_heptwb_cyl_8patch_ups = modUPS("%s/MPMARCHES" % inputs_root(), \
                            "matest_heptwb_cyl.ups", \
-                           ["<patches>[2,2,2]</patches>", "<resolution>[40,40,40]</resolution>" \
+                           ["<patches>[2,2,2]</patches>", "<resolution>[20,20,20]</resolution>" \
                             "<maxTime>0.5</maxTime>"])
 
 UNUSED_TESTS = [  
