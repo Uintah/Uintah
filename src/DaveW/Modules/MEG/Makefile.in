@@ -2,7 +2,7 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
-SRCS     = FieldCurl.cc MakeCurrentDensityField.cc MagneticScalarField.cc \
+SRCS     = EleValuesToMatLabFile.cc FieldCurl.cc MakeCurrentDensityField.cc MagneticScalarField.cc \
 	   SurfToVectGeom.cc 
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
