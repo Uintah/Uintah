@@ -2,6 +2,9 @@
 
 ::netedit dontschedule
 
+global notes
+set notes ""
+
 set m0 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 28 203]
 set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 354]
 set m2 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 10 271]
@@ -199,5 +202,6 @@ set $m8-show_status {1}
 set $m9-notes {}
 set $m9-show_status {1}
 $m5 initialize_ui
+$m7 initialize_ui
 
 ::netedit scheduleok

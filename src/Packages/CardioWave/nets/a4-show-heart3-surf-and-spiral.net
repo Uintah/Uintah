@@ -2,6 +2,9 @@
 
 ::netedit dontschedule
 
+global notes
+set notes ""
+
 set m0 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 28 203]
 set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 354]
 set m2 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 10 271]
@@ -30,12 +33,12 @@ addConnection $m6 1 $m3 2
 set $m0-notes {}
 set $m0-show_status {1}
 set $m0-endpoints {1}
-set $m0-endpoint0x {          77.0833}
-set $m0-endpoint0y {          81.2955}
-set $m0-endpoint0z {          64.7735}
-set $m0-endpoint1x {          58.0159}
-set $m0-endpoint1y {          85.3415}
-set $m0-endpoint1z {          66.7909}
+set $m0-endpoint0x {          71.9989}
+set $m0-endpoint0y {          89.9323}
+set $m0-endpoint0z {          73.0777}
+set $m0-endpoint1x {          73.0161}
+set $m0-endpoint1y {          111.666}
+set $m0-endpoint1z {          73.9022}
 set $m0-widgetscale {          3.29956}
 set $m0-maxseeds {50}
 set $m0-numseeds {10}
@@ -108,16 +111,16 @@ set $m3-ViewWindow_0-caxes {0}
 set $m3-ViewWindow_0-raxes {1}
 set $m3-ViewWindow_0-iaxes {}
 set $m3-ViewWindow_0-have_collab_vis {0}
-set $m3-ViewWindow_0-view-eyep-x {          209.107}
-set $m3-ViewWindow_0-view-eyep-y {         -335.424}
-set $m3-ViewWindow_0-view-eyep-z {          179.477}
-set $m3-ViewWindow_0-view-lookat-x {          47.2856}
-set $m3-ViewWindow_0-view-lookat-y {          86.8982}
-set $m3-ViewWindow_0-view-lookat-z {          77.8037}
-set $m3-ViewWindow_0-view-up-x {       -0.0460803}
-set $m3-ViewWindow_0-view-up-y {         0.217088}
-set $m3-ViewWindow_0-view-up-z {         0.975064}
-set $m3-ViewWindow_0-view-fov {          18.1591}
+set $m3-ViewWindow_0-view-eyep-x {         -270.053}
+set $m3-ViewWindow_0-view-eyep-y {            452.1}
+set $m3-ViewWindow_0-view-eyep-z {          -10.534}
+set $m3-ViewWindow_0-view-lookat-x {          69.6862}
+set $m3-ViewWindow_0-view-lookat-y {          78.3899}
+set $m3-ViewWindow_0-view-lookat-z {          62.1236}
+set $m3-ViewWindow_0-view-up-x {       -0.0807185}
+set $m3-ViewWindow_0-view-up-y {         0.119021}
+set $m3-ViewWindow_0-view-up-z {         0.989605}
+set $m3-ViewWindow_0-view-fov {               20}
 set $m3-ViewWindow_0-view-eyep_offset-x {}
 set $m3-ViewWindow_0-view-eyep_offset-y {}
 set $m3-ViewWindow_0-view-eyep_offset-z {}
@@ -199,5 +202,6 @@ set $m8-show_status {1}
 set $m9-notes {}
 set $m9-show_status {1}
 $m5 initialize_ui
+$m7 initialize_ui
 
 ::netedit scheduleok
