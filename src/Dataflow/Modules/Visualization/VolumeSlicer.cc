@@ -169,7 +169,7 @@ void VolumeSlicer::execute()
   }
   
   ColorMapHandle cmap1;
-  Colormap2Handle cmap2;
+  ColorMap2Handle cmap2;
   if(!icmap1_->get(cmap1) && !icmap2_->get(cmap2)) {
     return;
   }

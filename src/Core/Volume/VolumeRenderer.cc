@@ -48,7 +48,7 @@ namespace SCIRun {
 //static SCIRun::DebugStream dbg("VolumeRenderer", false);
 
 VolumeRenderer::VolumeRenderer(TextureHandle tex,
-                               ColorMapHandle cmap1, Colormap2Handle cmap2,
+                               ColorMapHandle cmap1, ColorMap2Handle cmap2,
                                int tex_mem):
   TextureRenderer(tex, cmap1, cmap2, tex_mem),
   shading_(false),

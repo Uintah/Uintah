@@ -76,7 +76,7 @@ static const string Cmap2ShaderStringATI =
 "END";
 
 TextureRenderer::TextureRenderer(TextureHandle tex,
-                                 ColorMapHandle cmap1, Colormap2Handle cmap2,
+                                 ColorMapHandle cmap1, ColorMap2Handle cmap2,
                                  int tex_mem) :
   GeomObj(),
   tex_(tex),
@@ -166,7 +166,7 @@ TextureRenderer::set_colormap1(ColorMapHandle cmap1)
 }
 
 void
-TextureRenderer::set_colormap2(Colormap2Handle cmap2)
+TextureRenderer::set_colormap2(ColorMap2Handle cmap2)
 {
   mutex_.lock();
   cmap2_ = cmap2;

@@ -52,7 +52,7 @@ namespace SCIRun {
 class SliceRenderer : public TextureRenderer
 {
 public:
-  SliceRenderer(TextureHandle tex, ColorMapHandle cmap1, Colormap2Handle cmap2,
+  SliceRenderer(TextureHandle tex, ColorMapHandle cmap1, ColorMap2Handle cmap2,
                 int tex_mem);
   SliceRenderer(const SliceRenderer&);
   ~SliceRenderer();

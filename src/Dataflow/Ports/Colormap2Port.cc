@@ -39,18 +39,18 @@ extern "C" {
 
 PSECORESHARE SCIRun::IPort* make_ColorMap2IPort(SCIRun::Module* module,
                                                 const std::string& name) {
-  return scinew SCIRun::SimpleIPort<Colormap2Handle>(module,name);
+  return scinew SCIRun::SimpleIPort<ColorMap2Handle>(module,name);
 }
   
 PSECORESHARE SCIRun::OPort* make_ColorMap2OPort(SCIRun::Module* module,
                                                 const std::string& name) {
-  return scinew SCIRun::SimpleOPort<Colormap2Handle>(module,name);
+  return scinew SCIRun::SimpleOPort<ColorMap2Handle>(module,name);
 }
 
 }
 
-template<> std::string SCIRun::SimpleIPort<Colormap2Handle>::port_type_("ColorMap2");
-template<> std::string SCIRun::SimpleIPort<Colormap2Handle>::port_color_("darkseagreen");
+template<> std::string SCIRun::SimpleIPort<ColorMap2Handle>::port_type_("ColorMap2");
+template<> std::string SCIRun::SimpleIPort<ColorMap2Handle>::port_color_("darkseagreen");
 
 } // End namespace SCIRun
 
