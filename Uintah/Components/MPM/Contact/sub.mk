@@ -7,10 +7,13 @@ SRCDIR   := Uintah/Components/MPM/Contact
 
 SRCS     += $(SRCDIR)/NullContact.cc $(SRCDIR)/SingleVelContact.cc \
             $(SRCDIR)/FrictionContact.cc $(SRCDIR)/ContactFactory.cc \
-	    $(SRCDIR)/Contact.cc
+	    $(SRCDIR)/Contact.cc $(SRCDIR)/RigidBodyContact.cc
 
 #
 # $Log$
+# Revision 1.6  2001/01/11 03:31:31  guilkey
+# Created new contact model for rigid bodies.
+#
 # Revision 1.5  2000/05/30 20:19:10  sparker
 # Changed new to scinew to help track down memory leaks
 # Changed region to patch
