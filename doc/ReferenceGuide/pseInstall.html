@@ -149,7 +149,7 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
       <TR>
         <TD>
           <A HREF=http://www.tcltk.com/itcl>
-            [incr Tcl] and [incr Tk]
+            [incr Tcl/Tk]
           </A>
         </TD>
         <TD>
@@ -440,12 +440,12 @@ cvs checkout SCIRun
       following structure:
     </p>
 
-    <pre class="example">/usr/local/contrib/scirun_stuff/src/tcl8.3.2
-/usr/local/contrib/scirun_stuff/src/tk8.3.2
-/usr/local/contrib/scirun_stuff/src/itcl3.1.0
-/usr/local/contrib/scirun_stuff/src/blt2.4u
-/usr/local/contrib/scirun_stuff/src/xerces-c1_3
-/usr/local/contrib/scirun_stuff/src/make-3.79.1
+    <pre class="example">/usr/local/contrib/scirun_stuff/tcl8.3.2
+/usr/local/contrib/scirun_stuff/tk8.3.2
+/usr/local/contrib/scirun_stuff/itcl3.1.0
+/usr/local/contrib/scirun_stuff/blt2.4u
+/usr/local/contrib/scirun_stuff/xerces-c-src1_3_0
+/usr/local/contrib/scirun_stuff/make-3.79.1
 /usr/local/contrib/scirun_stuff/man
 /usr/local/contrib/scirun_stuff/lib
 /usr/local/contrib/scirun_stuff/bin
@@ -474,64 +474,31 @@ cvs checkout SCIRun
     </p>
 
     <p class="firstpara">
-      <b>Tcl distributions</b>
+      <b>For Tcl, Tk, [incr Tcl/Tk], BLT and GNU make</b>
     </p>
 
-    <p class="firstpara">
-      For Tcl:
-    </p>
-    <pre class="example">configure --enable-shared \
-          --prefix=<i><b><font
+    <pre class="example">configure --prefix=<i><b><font
 	  color=green>INST_DIR</font></b></i>
     </pre>
 
     <p class="firstpara">
-      For Tk:
-    </p>
-    <pre class="example">configure --enable-shared \
-	  --prefix=<i><b><font color=green>INST_DIR</font></b></i>
-    </pre>
-
-    <p class="firstpara">
-      For [incr Tcl] and [incr Tk]:
-    </p>
-    <pre class="example">configure --enable-shared \
-	  --prefix=<i><b><font color=green>INST_DIR</font></b></i> \
-    </pre>
-      
-    <p class="firstpara">
-      For BLT:
-    </p>
-    <pre class="example">configure --enable-shared \
-	  --prefix=<i><b><font color=green>INST_DIR</font></b></i> \
-	  --with-cc=cc
-    </pre>
-
-    <p class="firstpara">
-      <b>GNU make</b>
-    </p>
-
-    <pre class="example">configure --prefix=<i><b><font
-		 color=green>INST_DIR</font></b></i>
-    </pre>
-    
-
-    <p class="firstpara">
-      <b>Xerces-C</b>
+      <b>For Xerces-C</b>
     </p>
 
     <p class="firstpara">
       On SGI machines:
     <p>
-    <pre class="example">runConfigure -pirix -ccc -xCC \
-             -minmem -nfileonly -tnative -rpthread
+    <pre class="example">runConfigure -nfileonly -tnative -minmem \
+             -pirix -ccc -xCC -z-DAPP_NO_THREADS -P<i><b><font
+		 color=green>INST_DIR</font></b></i>
     </pre>
 
     <p class="firstpara">
       On Linux machines:
     </p>
-    <pre class="example">runConfigure -plinux -cgcc -xg++ \
-             -minmem -nfileonly -tnative -rpthread
+    <pre class="example">runConfigure -nfileonly -tnative -minmem \
+             -plinux -cgcc -xg++ -P<i><b><font
+		 color=green>INST_DIR</font></b></i>
     </pre>
 
 <p class="subhead">Environment Variables</p>
