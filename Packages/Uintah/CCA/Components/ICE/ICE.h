@@ -48,12 +48,11 @@ using namespace SCIRun;
                                    const MaterialSubset*,
                                    const MaterialSet*);
                                    
-      void scheduleComputeFCPressDiffRF(SchedulerP& sched,
-                                        const PatchSet*,
-                                        const MaterialSubset*,
-                                        const MaterialSubset*,
-                                        const MaterialSubset*,
-                                        const MaterialSet*);
+      void schedulecomputeDivThetaVel_CC(SchedulerP& sched,
+                                         const PatchSet* patches,         
+                                         const MaterialSubset* ice_matls, 
+                                         const MaterialSubset* mpm_matls, 
+                                         const MaterialSet* all_matls);    
                                               
       void scheduleComputeFaceCenteredVelocities(SchedulerP&, 
                                                 const PatchSet*,
@@ -86,6 +85,8 @@ using namespace SCIRun;
       
       void scheduleAccumulateEnergySourceSinks(SchedulerP&, 
                                             const PatchSet*,
+                                            const MaterialSubset*,
+                                            const MaterialSubset*,
                                             const MaterialSubset*,
                                             const MaterialSet*);
       
@@ -223,35 +224,46 @@ using namespace SCIRun;
                                   
 //__________________________________
 //   RF TASKS                             
-     void computeRateFormPressure(const ProcessorGroup*,
+      void computeRateFormPressure(const ProcessorGroup*,
                                    const PatchSubset* patch,
                                    const MaterialSubset* matls,
                                    DataWarehouse*, 
                                    DataWarehouse*);
                                    
-     void computeFCPressDiffRF(const ProcessorGroup*,
-                             const PatchSubset* patch,
-                             const MaterialSubset* matls,
-                             DataWarehouse*,
-                             DataWarehouse*);
-                             
-      template<class T> void computeVelFaceRF(int dir, CellIterator it,
+      void computeDivThetaVel_CC(const ProcessorGroup*,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* ,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
+
+      template<class T> void vel_PressDiff_FC(
+                                       int dir, 
+                                       CellIterator it,
                                        IntVector adj_offset,double dx,
                                        double delT, double gravity,
                                        constCCVariable<double>& sp_vol_CC,
                                        constCCVariable<Vector>& vel_CC,
                                        constCCVariable<double>& vol_frac,
+                                       constCCVariable<double>& rho_CC,
+                                       constCCVariable<Vector>& D,
+                                       constCCVariable<double>& speedSound,
                                        constCCVariable<double>& matl_press_CC,
                                        constCCVariable<double>& press_CC,
-                                       const T& sig_bar_FC,
-                                       T& vel_FC);
+                                       T& vel_FC,
+                                       T& pressDiff_FC);
                                                                     
       void computeFaceCenteredVelocitiesRF(const ProcessorGroup*, 
                                          const PatchSubset* patch,
                                          const MaterialSubset* matls,
                                          DataWarehouse*,
                                          DataWarehouse*);
-                   
+
+      void accumulateEnergySourceSinks_RF(const ProcessorGroup*,  
+                                          const PatchSubset* patches,
+                                          const MaterialSubset*,
+                                          DataWarehouse* old_dw, 
+                                          DataWarehouse* new_dw);   
+                 
       void computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
                                            const PatchSubset* patches,
                                            const MaterialSubset* matls,
@@ -310,6 +322,18 @@ using namespace SCIRun;
 
       bool areAllValuesPositive( CCVariable<double> & src, 
                                  IntVector& neg_cell );
+                                 
+      IntVector upwindCell_X(const IntVector& c, 
+                             const double& var,              
+                             double is_logical_R_face );    
+
+      IntVector upwindCell_Y(const IntVector& c, 
+                             const double& var,              
+                             double is_logical_R_face );    
+                                 
+      IntVector upwindCell_Z(const IntVector& c, 
+                             const double& var,              
+                             double is_logical_R_face );    
      
       // Debugging switches
       bool switchDebugInitialize;
