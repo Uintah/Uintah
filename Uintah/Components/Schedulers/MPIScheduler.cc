@@ -529,7 +529,6 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 
       ParticleSubset* relocset = scinew ParticleSubset(pset->getParticleSet(),
 						    false, -1, 0);
-      relocset->addReference();
 
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
@@ -575,10 +574,7 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 	    }
 	 }
       } else {
-	 if(relocset->removeReference())
 	    delete relocset;
-	 else
-	    throw InternalError("relocset should have no other references");
       }
    }
 
@@ -786,6 +782,9 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.13  2000/08/23 21:34:33  jas
+// Removed addReference for particle subsets in scatterParticles.
+//
 // Revision 1.12  2000/08/23 20:56:15  jas
 // Fixed memory leaks.
 //
