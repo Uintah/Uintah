@@ -93,7 +93,7 @@ set $m5-k-start {0}
 set $m5-i-stop {384}
 set $m5-j-stop {0}
 set $m5-k-stop {0}
-set $m5-i-skip {5}
+set $m5-i-skip {10}
 set $m5-j-skip {5}
 set $m5-k-skip {1}
 set $m5-i-wrap {0}
