@@ -9,6 +9,7 @@ SUBDIRS := \
 	$(SRCDIR)/MPM \
 	$(SRCDIR)/ICE \
 	$(SRCDIR)/MPMICE \
+	$(SRCDIR)/MPMArches \
 	$(SRCDIR)/Arches \
 	$(SRCDIR)/ProblemSpecification
 
