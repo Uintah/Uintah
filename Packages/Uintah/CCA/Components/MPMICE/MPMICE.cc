@@ -544,7 +544,7 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   t->requires(Task::NewDW, Ilb->int_eng_L_CCLabel,      gac,1);  
   t->requires(Task::NewDW, Ilb->mom_L_ME_CCLabel,       gac,1);
   t->requires(Task::NewDW, Ilb->eng_L_ME_CCLabel,       gac,1);
-  t->requires(Task::NewDW, Ilb->spec_vol_source_CCLabel,gac,1); 
+  t->requires(Task::NewDW, Ilb->sp_vol_src_CCLabel,     gac,1); 
   
   t->modifies(Mlb->gVelocityStarLabel, mss);             
   t->modifies(Mlb->gAccelerationLabel, mss);             
@@ -1232,8 +1232,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       new_dw->get(mass_L_CC,       Ilb->mass_L_CCLabel,      indx,patch,gac,1);
       new_dw->get(mom_L_ME_CC,     Ilb->mom_L_ME_CCLabel,    indx,patch,gac,1);
       new_dw->get(eng_L_ME_CC,     Ilb->eng_L_ME_CCLabel,    indx,patch,gac,1);
-      new_dw->get(sp_vol_src,      Ilb->spec_vol_source_CCLabel,    
-                                                             indx,patch,gac,1);
+      new_dw->get(sp_vol_src,      Ilb->sp_vol_src_CCLabel,  indx,patch,gac,1);
                                                              
       double cv = mpm_matl->getSpecificHeat();     
 

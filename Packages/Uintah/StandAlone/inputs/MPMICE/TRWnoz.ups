@@ -137,7 +137,7 @@
       <save label = "press_equil_CC"/>
       <save label = "vol_frac_CC"/>
       <save label = "sp_vol_CC"/>
-      <save label = "spVol_source_CC"/>
+      <save label = "sp_vol_src_CC"/>
       <save label = "speedSound_CC"/>
       <save label = "delP_Dilatate"/>
       <save label = "vel_CC"/>
