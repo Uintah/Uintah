@@ -72,6 +72,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set $this-execmode           "init"
 	set $this-delay              0
 	set $this-inc-amount         1
+	trace variable $this-current w "update idletasks;\#"
 
 
 	global $this-mergeData
@@ -329,7 +330,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	frame $dm.merge
 
 	frame $dm.merge.none
-
 	radiobutton $dm.merge.none.button -variable $this-mergeData -value 0
 	label $dm.merge.none.label -text "No Merging" -width 20 \
 	    -anchor w -just left
@@ -338,7 +338,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 
 	frame $dm.merge.like
-
 	radiobutton $dm.merge.like.button -variable $this-mergeData -value 1
 	label $dm.merge.like.label -text "Merge like data" -width 20 \
 	    -anchor w -just left
@@ -346,18 +345,16 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	pack $dm.merge.like.button $dm.merge.like.label -side left
 
 
-	frame $dm.merge.time
 
+	frame $dm.merge.time
 	radiobutton $dm.merge.time.button -variable $this-mergeData -value 2
 	label $dm.merge.time.label -text "Merge time data" -width 20 \
 	    -anchor w -just left
 	
 	pack $dm.merge.time.button $dm.merge.time.label -side left
 
+	pack $dm.merge.none $dm.merge.like $dm.merge.time -side top
 
-	pack $dm.merge.none -side top
-	pack $dm.merge.like -side top
-	pack $dm.merge.time -side bottom
 
 	frame $dm.svt
 
@@ -367,19 +364,15 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	
 	pack $dm.svt.button $dm.svt.label  -side left
 
+
 	frame $dm.animate
 
-	frame $dm.animate.select
-
-	checkbutton $dm.animate.select.button -variable $this-animate \
+	checkbutton $dm.animate.button -variable $this-animate \
 	    -command "$this animate"
-	label $dm.animate.select.label -text "Animate selected data" \
+	label $dm.animate.label -text "Animate selected data" \
 	    -width 22 -anchor w -just left
 	
-	pack $dm.animate.select.button \
-	    $dm.animate.select.label -side left
-
-	pack $dm.animate.select -fill x -side top
+	pack $dm.animate.button $dm.animate.label -side left
 
 
 	pack $dm.merge $dm.svt $dm.animate -side left
@@ -1303,14 +1296,17 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	# Create the various range sliders
         scale $w.min -variable $this-range_min \
-	    -showvalue true -orient horizontal -relief groove -length 200
+	    -showvalue true -orient horizontal -relief groove -length 200 \
+	    -command "$this maybeRestart"
         scale $w.cur -variable $this-current \
 	    -showvalue true -orient horizontal -relief groove -length 200 \
-	    -command "set $this-execmode current; $this-c needexecute"
+	    -command "$this maybeRestart"
         scale $w.max -variable $this-range_max \
-	    -showvalue true -orient horizontal -relief groove -length 200
+	    -showvalue true -orient horizontal -relief groove -length 200 \
+	    -command "$this maybeRestart"
         scale $w.inc -variable $this-inc-amount \
-	    -showvalue true -orient horizontal -relief groove -length 200
+	    -showvalue true -orient horizontal -relief groove -length 200 \
+	    -command "$this maybeRestart"
 
 	update_range
 
@@ -1335,6 +1331,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    -variable $this-playmode -value inc_w_exec
 
 	iwidgets::spinint $playmode.delay -labeltext {Step Delay (ms)} -range {0 86400000} -justify right -width 5 -step 10 -textvariable $this-delay -repeatdelay 300 -repeatinterval 10
+	trace variable $this-delay w "$this maybeRestart;\#"
 
 	pack $w.playmode.label -side top -expand yes -fill both
 	pack $w.playmode.once $w.playmode.loop \
