@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="SphereModel" category="Forward">
+  <overview>
+
+    <authors>
+      <author>Sascha Moehrs</author>
+    </authors>
+
+    <description>
+      <p>Date: January 2003; Version: 1.0</p>
+	  <p> selects those elements from the unit volume which belong to the unit sphere
+          and creates a new mesh containing only those elements</p>
+    </description>
+
+  </overview>
+
+  <io>
+
+    <inputs lastportdynamic="no">
+      <port>
+        <name>HexVolField</name>
+		<description> unit volume</description>
+		<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+
+    <outputs>
+      <port>
+        <name>HexVolField</name>
+		<description> unit sphere </description>
+		<datatype>SCIRun::Field</datatype>
+      </port>
+	  
+    </outputs>
+  </io>
+
+  <gui>
+	
+  </gui>
+  
+</component>
