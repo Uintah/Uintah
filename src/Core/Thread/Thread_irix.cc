@@ -1001,6 +1001,7 @@ AtomicCounter::AtomicCounter(const char* name)
 					  +strerror(errno));
     } else {
 	d_priv=new AtomicCounter_private;
+	d_priv->value=0;
     }
 }
 
@@ -1324,6 +1325,9 @@ SCICore::Thread::ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.23  2000/06/22 21:38:59  sparker
+// Initialize AtomicCounter to zero for non-fetchop implementation
+//
 // Revision 1.22  2000/04/11 06:47:44  sparker
 // Commented out print statement for fetchop_alloc calls
 //
