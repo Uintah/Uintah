@@ -304,6 +304,7 @@ void GuiInt::set(int val)
 
 void GuiInt::emit(ostream& out, clString& midx)
 {
+  if (format_varname() == "pid") return;
   out << "set " << midx << "-" << format_varname() << " " << get() << endl;
 }
 
