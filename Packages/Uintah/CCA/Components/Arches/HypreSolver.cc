@@ -1,5 +1,7 @@
 //----- HypreSolver.cc ----------------------------------------------
 
+#include <fstream> // work around compiler bug with RHEL 3
+
 #include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/HypreSolver.h>
 #include <Core/Containers/Array1.h>
