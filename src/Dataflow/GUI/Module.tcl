@@ -254,6 +254,9 @@ itcl_class Module {
 	if {$make_progress_graph} {
 	    bindtags $p.inset [linsert [bindtags $p.inset] 1 $modframe]
 	}
+
+	# If we are NOT currently running a script... ie, not loading the net
+	# from a file
 	if ![string length [info script]] {
 	    unselectAll
 	    global CurrentlySelectedModules
@@ -2211,4 +2214,15 @@ proc iNum { connection_varname } {
 proc iPort { connection_varname } {
     upvar $connection_varname connection
     return "[lrange $connection 2 3] i"
+}
+
+# Returns 1 if the window is mapped.  Use this function if you don't
+# know whether the window exists yet.
+proc windowIsMapped { w } {
+    if {[winfo exists $w]} {
+	if {[winfo ismapped $w]} {
+	    return 1
+	}
+    }
+    return 0
 }
