@@ -99,7 +99,13 @@ public:
 			   const MaterialSet* mpm_matls,
 			   const MaterialSet* all_matls);
 
+  void schedulePutAllForcesOnCC(SchedulerP& sched,
+			        const PatchSet* patches,
+			        const MaterialSet* mpm_matls);
 
+  void schedulePutAllForcesOnNC(SchedulerP& sched,
+			        const PatchSet* patches,
+			        const MaterialSet* mpm_matls);
 
  protected:
 
@@ -127,6 +133,18 @@ public:
 		     const MaterialSubset*,
 		     DataWarehouse* old_dw,
 		     DataWarehouse* new_dw);
+
+  void putAllForcesOnCC(const ProcessorGroup*,
+		        const PatchSubset* patches,
+		        const MaterialSubset*,
+		        DataWarehouse* old_dw,
+		        DataWarehouse* new_dw);
+
+  void putAllForcesOnNC(const ProcessorGroup*,
+		        const PatchSubset* patches,
+		        const MaterialSubset*,
+		        DataWarehouse* old_dw,
+		        DataWarehouse* new_dw);
 
   void collectToCCGasMomExchSrcs(const ProcessorGroup*,
 				 const PatchSubset* patches,
