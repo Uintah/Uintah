@@ -10,13 +10,6 @@ TK_LIB_FLAG   = @TK_LIB_FLAG@
 ITCL_LIB_DIR  = @ITCL_LIB_DIR@
 ITCL_LIB_FLAG = @ITCL_LIB_FLAG@
 
-SUBDIRS  = Euler
-SRCS     = index.cc
-
-INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
-
-include $(SRCTOP)/scripts/objs.mk
-
 SOLIB    = libMcQ.so
 
 SOLIBRARIES = -L$(OBJTOP)/PSECore -lPSECore \
@@ -27,3 +20,10 @@ SOLIBRARIES = -L$(OBJTOP)/PSECore -lPSECore \
               -lGLU -lGL -lXext -lX11 -lm
 
 include $(SRCTOP)/scripts/solib.mk
+
+SUBDIRS  = Euler
+SRCS     = index.cc
+
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
+
+include $(SRCTOP)/scripts/objs.mk
