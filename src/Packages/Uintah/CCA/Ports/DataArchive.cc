@@ -88,13 +88,13 @@ string DataArchive::queryEndianness()
   DOM_Node endian_node = findNode("endianness", meta);
   if( endian_node == 0 ){
     cout<<"\nXML Warning: endianness node not found.\n"<<
-      "Assuming data was created on a big endian machine.\n"<<
+      "Assuming data was created on a " << SCIRun::endianness() << " machine.\n"<<
       "To eliminate this message and express the correct\n"<<
       "endianess, please add either\n"<<
       "\t<endianness>little_endian</endianness>\n"<<
       "or\n\t<endianness>big_endian</endianness>\n"<<
       "to the <Meta> section of the index.xml file.\n\n";
-    ret = string("big_endian");
+    ret = string(SCIRun::endianness());
     d_lock.unlock();
     return ret;
   }
