@@ -122,6 +122,8 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
     StaticArray<NCVariable<double> > gmass(numMatls);
     StaticArray<NCVariable<Vector> > gvelocity_star(numMatls);
     StaticArray<NCVariable<Vector> > gacceleration(numMatls);
+    StaticArray<NCVariable<double> > frictionalWork(numMatls);
+
     for(int m=0;m<matls->size();m++){
       int dwindex = matls->get(m);
       new_dw->get(gmass[m],lb->gMassLabel, dwindex, patch, Ghost::None, 0);
@@ -129,6 +131,9 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
 		  patch, Ghost::None, 0);
       new_dw->get(gacceleration[m], lb->gAccelerationLabel, dwindex,
 		  patch, Ghost::None, 0);
+      new_dw->allocate(frictionalWork[m], lb->frictionalWorkLabel,
+                                                            dwindex, patch);
+      frictionalWork[m].initialize(0.);
     }
 
     delt_vartype delT;
@@ -157,6 +162,7 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
       int dwindex = matls->get(m);
       new_dw->modify(gvelocity_star[m], lb->gVelocityStarLabel, dwindex,patch);
       new_dw->modify(gacceleration[m],  lb->gAccelerationLabel, dwindex,patch);
+      new_dw->put(frictionalWork[m],    lb->frictionalWorkLabel,dwindex,patch);
     }
   }
 }
@@ -180,5 +186,5 @@ void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
 
   t->modifies(             lb->gVelocityStarLabel, mss);
   t->modifies(             lb->gAccelerationLabel, mss);
+  t->computes(             lb->frictionalWorkLabel);
 }
-
