@@ -43,7 +43,7 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-static DebugStream cout_doing("IMPM_DOING_COUT", false);
+static DebugStream cout_doing("IMPM", false);
 
 ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
@@ -228,9 +228,9 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
 
   scheduleInterpolateParticlesToGrid(     sched, d_perproc_patches,matls);
 
-  scheduleDestroyMatrix(                  sched, d_perproc_patches,matls,false);
+  scheduleDestroyMatrix(sched, d_perproc_patches,matls,false);
 
-  scheduleCreateMatrix(                   sched, d_perproc_patches,matls,false);
+  scheduleCreateMatrix(sched, d_perproc_patches,matls,false);
 
   scheduleApplyBoundaryConditions(        sched, d_perproc_patches,matls);
 
@@ -244,19 +244,21 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
 
   scheduleComputeInternalForce(           sched, d_perproc_patches,matls,false);
 
-  scheduleFormQ(                          sched, d_perproc_patches,matls,false);
+  scheduleFormQ(                         sched, d_perproc_patches,matls,false);
 
   scheduleSolveForDuCG(                   sched, d_perproc_patches,matls);
 
-  scheduleUpdateGridKinematics(           sched, d_perproc_patches,matls,false);
+  scheduleGetDisplacementIncrement(sched, d_perproc_patches, matls);
 
-  scheduleCheckConvergence(sched,level,          d_perproc_patches,matls,false);
+  scheduleUpdateGridKinematics(sched, d_perproc_patches,matls,false);
 
-  scheduleIterate(         sched,level,          d_perproc_patches,matls);
+  scheduleCheckConvergence(sched,level,d_perproc_patches,matls,false);
+
+  scheduleIterate(sched,level,          d_perproc_patches,matls);
 
   scheduleComputeStressTensor(            sched, d_perproc_patches,matls);
 
-  scheduleComputeInternalForce(           sched, d_perproc_patches,matls,false);
+  scheduleComputeInternalForce(sched, d_perproc_patches,matls,false);
 
   scheduleComputeAcceleration(            sched, d_perproc_patches,matls);
 
@@ -338,10 +340,11 @@ void ImpMPM::scheduleCreateMatrix(SchedulerP& sched,
                                   const bool recursion)
 {
   Task* t = scinew Task("ImpMPM::createMatrix",this,&ImpMPM::createMatrix,
-                         recursion);
-
-  if(!recursion)
-    t->requires(Task::OldDW, lb->pXLabel,Ghost::None);
+			recursion);
+  if(recursion)
+    t->requires(Task::ParentOldDW, lb->pXLabel,Ghost::AroundNodes,1);
+  else
+    t->requires(Task::OldDW, lb->pXLabel,Ghost::AroundNodes,1);
 
   sched->addTask(t, patches, matls);
 }
@@ -491,11 +494,22 @@ void ImpMPM::scheduleFormQ(SchedulerP& sched,const PatchSet* patches,
 }
 
 void ImpMPM::scheduleSolveForDuCG(SchedulerP& sched,
-				   const PatchSet* patches,
-				   const MaterialSet* matls)
+				  const PatchSet* patches,
+				  const MaterialSet* matls)
 {
   Task* t = scinew Task("ImpMPM::solveForDuCG", this, 
 			&ImpMPM::solveForDuCG);
+
+  sched->addTask(t, patches, matls);
+}
+
+
+void ImpMPM::scheduleGetDisplacementIncrement(SchedulerP& sched,
+					      const PatchSet* patches,
+					      const MaterialSet* matls)
+{
+  Task* t = scinew Task("ImpMPM::getDisplacementIncrement", this, 
+			&ImpMPM::getDisplacementIncrement);
 
   t->computes(lb->dispIncLabel);
 
@@ -680,7 +694,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
 
   // Create the tasks
 
-  scheduleDestroyMatrix(          subsched,level->eachPatch(), matls,true);
+  scheduleDestroyMatrix(subsched,level->eachPatch(), matls,true);
 
   scheduleCreateMatrix(           subsched,level->eachPatch(), matls,true);
   
@@ -692,12 +706,14 @@ void ImpMPM::iterate(const ProcessorGroup*,
 
   scheduleFormQ(                  subsched,level->eachPatch(), matls,true);
 
-  scheduleSolveForDuCG(           subsched,level->eachPatch(), matls);
+  scheduleSolveForDuCG(           subsched,d_perproc_patches, matls);
+
+  scheduleGetDisplacementIncrement(subsched,level->eachPatch(), matls);
 
   scheduleUpdateGridKinematics(   subsched,level->eachPatch(), matls,true);
 
-  scheduleCheckConvergence(       subsched,level,level->eachPatch(),matls,true);
- 
+  scheduleCheckConvergence(subsched,level,level->eachPatch(),matls,true);
+
   subsched->compile(d_myworld);
 
   sum_vartype dispIncNorm,dispIncNormMax,dispIncQNorm,dispIncQNorm0;
@@ -814,7 +830,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
   for (int p = 0; p < patches->size();p++) {
     const Patch* patch = patches->get(p);
     cout_doing <<"Getting the recursive data on patch " << patch->getID()
-	       <<"\t\t\t\t IMPM"<< "\n" << "\n";
+	       <<"\t\t\t IMPM"<< "\n" << "\n";
     Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1037,54 +1053,67 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
       cout_doing <<"Doing createMatrix on patch " << patch->getID() 
 		 << "\t\t\t\t IMPM"    << "\n" << "\n";
       d_solver[m]->createLocalToGlobalMapping(d_myworld,d_perproc_patches,
-						patches);
+					      patches);
       
       IntVector lowIndex = patch->getNodeLowIndex();
       IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+
       Array3<int> l2g(lowIndex,highIndex);
       d_solver[m]->copyL2G(l2g,patch);
 
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();    
       constParticleVariable<Point> px;
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch,
-						       Ghost::None,0,
-						       lb->pXLabel);
-      old_dw->get(px,lb->pXLabel,pset);
+      ParticleSubset* pset;
+
+      if (recursion) {
+	DataWarehouse* parent_old_dw = 
+	  new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+	pset = parent_old_dw->getParticleSubset(dwi,patch, Ghost::AroundNodes,
+						1,lb->pXLabel);
+	parent_old_dw->get(px,lb->pXLabel,pset);
+	
+      } else {
+	pset = old_dw->getParticleSubset(dwi,patch, Ghost::AroundNodes,1,
+					 lb->pXLabel);
+	old_dw->get(px,lb->pXLabel,pset);
+      }
       
       CCVariable<int> visited;
-      new_dw->allocateTemporary(visited,patch,Ghost::None,0);
+      new_dw->allocateTemporary(visited,patch,Ghost::AroundCells,1);
       visited.initialize(0);
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
 	particleIndex idx = *iter;
 	IntVector cell,ni[8];
-	bool foundit = patch->findCell(px[idx],cell);
-	if (foundit && visited[cell] == 0 ) {
+	patch->findCell(px[idx],cell);
+	if (visited[cell] == 0 ) {
 	  visited[cell] = 1;
 	  patch->findNodesFromCell(cell,ni);
 	  vector<int> dof(0);
 	  int l2g_node_num;
 	  for (int k = 0; k < 8; k++) {
-	    l2g_node_num = l2g[ni[k]];
-	    dof.push_back(l2g_node_num);
-	    dof.push_back(l2g_node_num+1);
-	    dof.push_back(l2g_node_num+2);
+	    if (patch->containsNode(ni[k])) {
+	      l2g_node_num = l2g[ni[k]] - l2g[lowIndex];
+	      dof.push_back(l2g_node_num);
+	      dof.push_back(l2g_node_num+1);
+	      dof.push_back(l2g_node_num+2);
+	    }
 	  }
-	  
 	  for (int I = 0; I < (int) dof.size(); I++) {
 	    int dofi = dof[I];
 	    for (int J = 0; J < (int) dof.size(); J++) {
 	      dof_diag[dofi] += 1;
 	    }
 	  }
+	  
 	}
       }
-
+      
     }
     d_solver[m]->createMatrix(d_myworld,dof_diag);
   }
-
+  
 }
 
 void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
@@ -1200,7 +1229,7 @@ void ImpMPM::computeContact(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     cout_doing <<"Doing computeContact on patch " << patch->getID()
-	       <<"\t\t\t IMPM"<< "\n" << "\n";
+	       <<"\t\t\t\t IMPM"<< "\n" << "\n";
 
     delt_vartype dt;
 
@@ -1589,10 +1618,10 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 }
 
 void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
-			       const PatchSubset* patches,
-			       const MaterialSubset* ,
-			       DataWarehouse*,
-			       DataWarehouse* new_dw)
+			  const PatchSubset* patches,
+			  const MaterialSubset* ,
+			  DataWarehouse*,
+			  DataWarehouse* new_dw)
 
 {
   int num_nodes = 0;
@@ -1604,7 +1633,33 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
 
     IntVector nodes = patch->getNNodes();
     num_nodes += (nodes.x())*(nodes.y())*(nodes.z())*3;
+  }
     
+  int numMatls = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    if(!mpm_matl->getIsRigid()){  // i.e. Leave dispInc zero for Rigd Bodies
+      // remove fixed degrees of freedom and solve K*du = Q
+      d_solver[m]->removeFixedDOF(num_nodes);
+      d_solver[m]->solve();   
+    }
+  }
+  
+}
+
+void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
+				      const PatchSubset* patches,
+				      const MaterialSubset* ,
+				      DataWarehouse*,
+				      DataWarehouse* new_dw)
+
+{
+  for(int p = 0; p<patches->size();p++) {
+    const Patch* patch = patches->get(p);
+    
+    cout_doing <<"Doing getDisplacementIncrement on patch " << patch->getID()
+	       <<"\t\t\t\t IMPM"<< "\n" << "\n";
+
     int numMatls = d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1616,8 +1671,6 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
 
       if(!mpm_matl->getIsRigid()){  // i.e. Leave dispInc zero for Rigd Bodies
 	// remove fixed degrees of freedom and solve K*du = Q
-        d_solver[m]->removeFixedDOF(num_nodes);
-        d_solver[m]->solve();
 
         IntVector lowIndex = patch->getNodeLowIndex();
         IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
