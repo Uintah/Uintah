@@ -2477,7 +2477,7 @@ ViewSlices::execute()
       nrrd_iports.push_back(nrrd_iport);
     }
     ++n;
-  } while (nrrd_iport && n<3);
+  } while (nrrd_iport);
 
 
   update_state(Module::NeedData);
