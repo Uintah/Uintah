@@ -397,7 +397,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
       else
 #endif
 #ifndef __sgi
-#ifdef GL_EXT_shared_texture_palette
+#if defined(GL_EXT_shared_texture_palette) && !defined(__APPLE__)
       {
 	if (reuse)
 	{
@@ -851,7 +851,7 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
   else
 #endif
 #ifndef __sgi
-#ifdef GL_EXT_shared_texture_palette
+#if defined(GL_EXT_shared_texture_palette) && !defined(__APPLE__)
   {
     glEnable(GL_SHARED_TEXTURE_PALETTE_EXT);
     glColorTable(GL_SHARED_TEXTURE_PALETTE_EXT,
@@ -863,7 +863,11 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
   }
 #else
   {
-    std::cerr << "No volume colormaps available." << std::endl;
+    static bool warned = false;
+    if( !warned ) {
+      std::cerr << "No volume colormaps available." << std::endl;
+      warned = true;
+    }
   }
 #endif
 #endif
@@ -918,7 +922,7 @@ TextureRenderer::release_colormap1()
   else
 #endif
 #ifndef __sgi
-#ifdef GL_EXT_shared_texture_palette
+#if defined(GL_EXT_shared_texture_palette) && !defined(__APPLE__)
   {
     glDisable(GL_SHARED_TEXTURE_PALETTE_EXT);
   }
