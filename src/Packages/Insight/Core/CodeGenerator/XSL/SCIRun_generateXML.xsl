@@ -18,9 +18,6 @@
 <xsl:variable name="category">
   <xsl:value-of select="/filter/filter-sci/category"/>
 </xsl:variable>
-<xsl:variable name="base">
-  <xsl:value-of select="/filter/filter-itk/templated/base"/>
-</xsl:variable>
 
 <!-- ============== FILTER-ITK ============== -->
 <xsl:template match="filter-itk">
@@ -76,7 +73,7 @@
 <xsl:text>  
       </xsl:text>
  <xsl:element name="port"><xsl:text>
-        </xsl:text><xsl:element name="name"><xsl:value-of select="name"/></xsl:element><xsl:text>
+        </xsl:text><xsl:element name="name"><xsl:value-of select="@name"/></xsl:element><xsl:text>
         </xsl:text><xsl:element name="datatype"><!-- hard coded datatype -->Insight::ITKDatatype</xsl:element><xsl:text>
       </xsl:text>
     </xsl:element>
@@ -95,7 +92,7 @@
 <xsl:text>  
       </xsl:text>
  <xsl:element name="port"><xsl:text>
-        </xsl:text><xsl:element name="name"><xsl:value-of select="name"/></xsl:element><xsl:text>
+        </xsl:text><xsl:element name="name"><xsl:value-of select="@name"/></xsl:element><xsl:text>
         </xsl:text><xsl:element name="datatype"><!-- hard coded datatype -->Insight::ITKDatatype</xsl:element><xsl:text>
       </xsl:text>
     </xsl:element>
