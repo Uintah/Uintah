@@ -71,12 +71,12 @@ void Pio(Piostream& stream, NodeInfo& node);
 class SCICORESHARE SurfTree : public Surface {
   friend class TriSurface;
 private:
-  Array1<TSElement*> faces;		// array of all faces/elements
-  Array1<TSEdge*> edges;		// array of all edges
+  Array1<TSElement> faces_;		// array of all faces/elements
+  Array1<TSEdge*>   edges_;		// array of all edges
 
-  Array1<SurfInfo> surfI;
-  Array1<FaceInfo> faceI;
-  Array1<EdgeInfo> edgeI;
+  Array1<SurfInfo> surfI_;
+  Array1<FaceInfo> faceI_;
+  Array1<EdgeInfo> edgeI_;
 
 protected:
   enum Type {
@@ -85,15 +85,12 @@ protected:
     FaceValuesAll,			// we have values at all faces
     FaceValuesSome			// we have values at some faces
   };
-  Type typ;
-  int valid_bboxes;
-
-  Array1<double> data;		// optional data at nodes/faces
-  Array1<int> idx;		// optional indices - when "some" data
+  Type value_type_;
+  bool valid_bboxes_;
 
 public:
-  Array1<Point> nodes;		        // array of all nodes
-  Array1<NodeInfo> nodeI;
+  Array1<Point>    points_;
+  Array1<NodeInfo> nodeI_;   // associated with point indices
 
   SurfTree();
   SurfTree(const SurfTree& copy);

@@ -185,6 +185,8 @@ int ManipFields::GenFiles(clString path, clString name)
              path+"/src/Dataflow/Modules/ManipFields/sub.mk ";
   
   sci_system(fullpath());
+
+  return 1;
 }
 
 } // End namespace SCIRun

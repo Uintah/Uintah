@@ -31,90 +31,81 @@ using std::cerr;
 namespace SCIRun {
 
 
-class AddAttribute : public Module {
-    SurfaceIPort* isurf;
-    ColumnMatrixIPort* imat;
-    SurfaceOPort* osurf;
-    TCLstring surfid;
+class AddAttribute : public Module
+{
+  SurfaceIPort      *isurf_;
+  ColumnMatrixIPort *imat_;
+  TCLstring          surfid_;
+
+  SurfaceOPort      *osurf_;
+
 public:
-    AddAttribute(const clString& id);
-    virtual ~AddAttribute();
-    virtual void execute();
+  AddAttribute(const clString& id);
+  virtual ~AddAttribute();
+  virtual void execute();
 };
 
-extern "C" Module* make_AddAttribute(const clString& id) {
+
+extern "C" Module* make_AddAttribute(const clString& id)
+{
   return new AddAttribute(id);
 }
 
 AddAttribute::AddAttribute(const clString& id)
-: Module("AddAttribute", id, Filter), surfid("surfid", id, this)
+  : Module("AddAttribute", id, Filter), surfid_("surfid", id, this)
 {
-    isurf=new SurfaceIPort(this, "SurfIn", SurfaceIPort::Atomic);
-    add_iport(isurf);
-    imat=new ColumnMatrixIPort(this, "MatIn", ColumnMatrixIPort::Atomic);
-    add_iport(imat);
-    // Create the output port
-    osurf=new SurfaceOPort(this, "SurfOut", SurfaceIPort::Atomic);
-    add_oport(osurf);
+  isurf_ = new SurfaceIPort(this, "SurfIn", SurfaceIPort::Atomic);
+  add_iport(isurf_);
+  imat_ = new ColumnMatrixIPort(this, "MatIn", ColumnMatrixIPort::Atomic);
+  add_iport(imat_);
+
+  // Create the output port
+  osurf_ = new SurfaceOPort(this, "SurfOut", SurfaceIPort::Atomic);
+  add_oport(osurf_);
 }
 
 AddAttribute::~AddAttribute()
 {
 }
 
-void AddAttribute::execute() {
+void
+AddAttribute::execute()
+{
+  update_state(NeedData);
 
-    update_state(NeedData);
+  SurfaceHandle sh;
+  if (!isurf_->get(sh))
+    return;
+  if (!sh.get_rep())
+  {
+    cerr << "Error: empty surface\n";
+    return;
+  }
+  TriSurface *ts = sh->getTriSurface();
+  if (!ts)
+  {
+    cerr << "Error: surface isn't a trisurface\n";
+    return;
+  }
 
-    SurfaceHandle sh;
-    if (!isurf->get(sh))
-	return;
-    if (!sh.get_rep()) {
-	cerr << "Error: empty surface\n";
-	return;
-    }
-    TriSurface *ts=sh->getTriSurface();
-    if (!ts) {
-	cerr << "Error: surface isn't a trisurface\n";
-	return;
-    }
+  update_state(JustStarted);
 
-    update_state(JustStarted);
-    
-    ColumnMatrixHandle cmh;
-    if (!imat->get(cmh)) return;
-    if (!cmh.get_rep()) {
-	cerr << "Error: empty columnmatrix\n";
-	return;
-    }
+  ColumnMatrixHandle cmh;
+  if (!imat_->get(cmh)) return;
+  if (!cmh.get_rep())
+  {
+    cerr << "Error: empty columnmatrix\n";
+    return;
+  }
 
-#if 1
-    TriSurface *nts = new TriSurface;
-    int i;
-    nts->points=ts->points;
-    nts->normals=ts->normals;
-    nts->normType=ts->normType;
-    for (i=0; i<ts->points.size(); i++) {
-	nts->bcVal.add((*(cmh.get_rep()))[i]);
-	nts->bcIdx.add(i);
-    }
-    nts->elements.resize(ts->elements.size());
-    for (i=0; i<ts->elements.size(); i++) {
-	nts->elements[i]=new TSElement(*(ts->elements[i]));
-    }
-#else
-    TriSurface *nts=new TriSurface(*ts);
-    nts->bcIdx.resize(0);
-    nts->bcVal.resize(0);
-    for (int i=0; i<cmh->nrows(); i++) {
-	nts->bcIdx.add(i);
-	nts->bcVal.add((*(cmh.get_rep()))[i]);
-    }
-#endif
+  // TODO
+  // convert imat_ into an indexed attribute.
+  // Make new field with same geometry, imat_ indexed data set.
 
-    nts->name = nts->name + "Fwd";
-    SurfaceHandle sh2(nts);
-    osurf->send(sh2);
+
+  osurf_->send(sh);
 }
+
+
 } // End namespace SCIRun
 

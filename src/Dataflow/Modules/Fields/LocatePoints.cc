@@ -100,32 +100,32 @@ void MeshFindSurfNodes::execute()
       return;
     }
 
-    int *rows=new int[ts->points.size()+1];
-    int *cols=new int[ts->points.size()*4];
-    double *a=new double[ts->points.size()*4];
-    SparseRowMatrix *mm=scinew SparseRowMatrix(ts->points.size(),
+    int *rows=new int[ts->points_.size()+1];
+    int *cols=new int[ts->points_.size()*4];
+    double *a=new double[ts->points_.size()*4];
+    SparseRowMatrix *mm=scinew SparseRowMatrix(ts->points_.size(),
 					       meshH->nodesize(),
 					       rows, cols,
-					       ts->points.size()*4, a);
+					       ts->points_.size()*4, a);
     matH=mm;
     int i,j;
     int ix;
     int nodes[4];
     double dist[4];
     double sum;
-    for (i=0; i<ts->points.size(); i++) {
+    for (i=0; i<ts->points_.size(); i++) {
       rows[i]=i*4;
-      if (!meshH->locate(&ix, ts->points[i], 1.e-4, 1.e-4)) {
+      if (!meshH->locate(&ix, ts->points_[i], 1.e-4, 1.e-4)) {
 	int foundIt=0;
 	for (j=0; j<meshH->nodesize(); j++) {
-	  if ((meshH->point(j) - ts->points[i]).length2() < 0.001) {
+	  if ((meshH->point(j) - ts->points_[i]).length2() < 0.001) {
 	    ix=meshH->node(j).elems[0];
 	    foundIt=1;
 	    break;
 	  }
 	}
 	if (!foundIt) {
-	  cerr << "Error - couldn't find point "<<ts->points[i]<<" in mesh.\n";
+	  cerr << "Error - couldn't find point "<<ts->points_[i]<<" in mesh.\n";
 	  delete rows;
 	  delete cols;
 	  delete a;
@@ -135,7 +135,7 @@ void MeshFindSurfNodes::execute()
       Element *e=meshH->element(ix);
       for (sum=0,j=0; j<4; j++) {
 	nodes[j]=e->n[j];
-	dist[j]=(ts->points[i] - meshH->point(nodes[j])).length();
+	dist[j]=(ts->points_[i] - meshH->point(nodes[j])).length();
 	sum+=dist[j];
       }
       sortpts(dist, nodes);
@@ -143,7 +143,7 @@ void MeshFindSurfNodes::execute()
 	cols[i*4+j]=nodes[j];
 	a[i*4+j]=dist[j]/sum;
       }
-      if (i==ts->points.size()-1 || i==0 || (!(i%(ts->points.size()/10)))) {
+      if (i==ts->points_.size()-1 || i==0 || (!(i%(ts->points_.size()/10)))) {
 	cerr << "i="<<i<<"\n";
 	for (j=0; j<4; j++) {
 	  cerr << "a["<<i*4+j<<"]="<<a[i*4+j]<<" ";
