@@ -41,6 +41,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/RoundRobinLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SimpleLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Solvers/CGSolver.h>
+#include <Packages/Uintah/CCA/Components/Solvers/DirectSolve.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -261,23 +262,29 @@ main( int argc, char** argv )
 	    do_AMR=true;
 	} else if(s == "-nthreads"){
 	  cerr << "reading number of threads\n";
-	    if(++i == argc){
-		usage("You must provide a number of threads for -nthreads",
-		      s, argv[0]);
-	    }
-	    numThreads = atoi(argv[i]);
+	  if(++i == argc){
+	    usage("You must provide a number of threads for -nthreads",
+		  s, argv[0]);
+	  }
+	  numThreads = atoi(argv[i]);
 	} else if(s == "-scheduler"){
-	   if(++i == argc){
-	      usage("You must provide a scheduler name for -scheduler",
-		    s, argv[0]);
-	   }
-	   scheduler = argv[i]; 
+	  if(++i == argc){
+	    usage("You must provide a scheduler name for -scheduler",
+		  s, argv[0]);
+	  }
+	  scheduler = argv[i]; 
 	} else if(s == "-loadbalancer"){
-	   if(++i == argc){
-	      usage("You must provide a load balancer name for -loadbalancer",
-		    s, argv[0]);
-	   }
-	   loadbalancer = argv[i];
+	  if(++i == argc){
+	    usage("You must provide a load balancer name for -loadbalancer",
+		  s, argv[0]);
+	  }
+	  loadbalancer = argv[i];
+	} else if(s == "-solver") {
+	  if(++i == argc){
+	    usage("You must provide a solver name for -solver",
+		  s, argv[0]);
+	  }
+	  solver = argv[i];
 	} else if(s == "-mpi") {
 	  Uintah::Parallel::forceMPI();
 	} else if(s == "-nompi") {
@@ -401,6 +408,8 @@ main( int argc, char** argv )
 	SolverInterface* solve = 0;
 	if(solver == "CGSolver") {
 	  solve = new CGSolver(world);
+	} else if(solver == "DirectSolve") {
+	  solve = new DirectSolve(world);
 	} else {
 	  cerr << "Unknown solver: " << solver << '\n';
 	  exit(1);
