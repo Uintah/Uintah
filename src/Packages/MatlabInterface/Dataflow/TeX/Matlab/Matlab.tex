@@ -7,29 +7,29 @@
 
 %begin{latexonly}
   \newcommand{\tstone}%
-  {\centerline{\includegraphics[width=4.5in]{figs/tst1.ps}}}
+  {\centerline{\includegraphics[width=4.5in]{\ModuleRefFigName{tst1.eps}}}}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\tstone}{%
-  \htmladdimg[]{../figs/tst1.jpg}}
+  \htmladdimg[]{\ModuleRefFigName{tst1.jpg}}}
 \end{htmlonly}
 
 %begin{latexonly}
   \newcommand{\tsttwo}%
-  {\centerline{\includegraphics[width=4.5in]{figs/tst2.ps}}}
+  {\centerline{\includegraphics[width=4.5in]{\ModuleRefFigName{tst2.eps}}}}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\tsttwo}{%
-  \htmladdimg[]{../figs/tst2.jpg}}
+  \htmladdimg[]{\ModuleRefFigName{tst2.jpg}}}
 \end{htmlonly}
 
 %begin{latexonly}
   \newcommand{\tstthree}%
-  {\centerline{\includegraphics[width=4.5in]{figs/tst3.ps}}}
+  {\centerline{\includegraphics[width=4.5in]{\ModuleRefFigName{tst3.eps}}}}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\tstthree}{%
-  \htmladdimg[]{../figs/tst3.jpg}}
+  \htmladdimg[]{\ModuleRefFigName{tst3.jpg}}}
 \end{htmlonly}
 
 \ModuleRef{\Module{Matlab}}{\Category{DataIO}}{\Package{MatlabInterface}}
@@ -441,7 +441,7 @@ In order to run focusing:
 The resulting file, \filename{res.mat}, should contain a vector of
 900 values that is the solution to the inversion.
 
-\subsection{Details}
+\ModuleRefDetails
 
 We have already demonstrated that \sr{} communicates with \m{} via network
 sockets.  Communication overhead is minimal when both packages reside on
