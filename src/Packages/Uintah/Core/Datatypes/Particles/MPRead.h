@@ -95,6 +95,7 @@ class MPRead {
   int ReadData();
   
   int virtual GetParticleVariableValue(int particleId,
+				      clString pSetName,
 			       clString varname,
 			       double& value);
 //   int GetParticleVariableValue(int particleId,

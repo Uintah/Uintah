@@ -75,6 +75,7 @@ int MPParticleGridReader::GetNTimesteps()
 }
 
 void MPParticleGridReader::GetParticleData(int particleId,
+			       clString pSetName,
 			       clString varname,
 			       Array1<double>& values)
 {
@@ -110,8 +111,9 @@ void MPParticleGridReader::GetParticleData(int particleId,
     ostr << path << "/"<< root<< setw(4)<<ii;
     
     MPRead read( ostr.str().c_str() );
+    cerr<< "filename is "<< ostr.str().c_str() << endl;
     double value;
-    read.GetParticleVariableValue( particleId, varname, value );
+    read.GetParticleVariableValue( particleId, pSetName, varname, value );
     values.add( value );
   }
 
@@ -219,7 +221,7 @@ void MPParticleGridReader::readGrid( MPRead& reader)
   reader.GetGridInfo( name, type, x,y,z, sVars, vVars);
   MPVizGrid *grid = new MPVizGrid(name);
 
-  if( type == "NC" ){
+  if( type == "NC" || type == "CC" ){
     reader.GetGridPoints(o_x, o_y, o_z, dx, dy, dz);
     reader.getScalarVars( sVars );
     for(i = 0; i < sVars.size(); i++){
@@ -292,6 +294,9 @@ void MPParticleGridReader::readParticles(MPRead& reader)
 
 //
 // $Log$
+// Revision 1.4  1999/12/28 21:09:08  kuzimmer
+// modified file readers so that we can read multiple files for parallel output
+//
 // Revision 1.3  1999/11/18 22:13:43  jsday
 // fixed Uintah and DaveW stuff to use STL iostream
 //
