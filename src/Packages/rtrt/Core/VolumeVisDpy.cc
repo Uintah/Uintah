@@ -2,6 +2,8 @@
 
 #include <Packages/rtrt/Core/VolumeVisDpy.h>
 #include <Packages/rtrt/Core/VolumeVis.h>
+#include <Packages/rtrt/Core/DpyBase.h>
+#include <Packages/rtrt/Core/Scene.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>
@@ -16,7 +18,6 @@
 #ifdef __GNUG__
 #include <values.h>
 #endif
-#include "FontString.h"
 
 using namespace rtrt;
 using SCIRun::Mutex;
@@ -27,19 +28,17 @@ namespace rtrt {
   extern Mutex xlock;
 } // end namespace rtrt
 
-static void printString(GLuint fontbase, double x, double y,
-			const char *s, const Color& c);
-static int calc_width(XFontStruct* font_struct, const char* str);
 static void draw_circle(int radius, int x_center, int y_center);
 static void circle_points(int x, int y, int x_center, int y_center);
 
 VolumeVisDpy::VolumeVisDpy(Array1<Color> &matls, Array1<AlphaPos> &alphas,
 			   int ncolors, float t_inc, char *in_file):
-  hist(0), xres(500), yres(500), colors_index(matls), alpha_list(alphas),
+  DpyBase("VolumeVis GUI"), hist(0), colors_index(matls), alpha_list(alphas),
   ncolors(ncolors), nalphas(ncolors),
   original_t_inc(0.01), current_t_inc(t_inc), t_inc(t_inc),
   in_file(in_file), data_min(MAXFLOAT), data_max(-MAXFLOAT)
 {
+  set_resolution(500,500);
   // need to allocate memory for alpha_transform and color_transform
   Array1<Color*> *c = new Array1<Color*>(ncolors);
   for(unsigned int i = 0; i < ncolors; i++)
@@ -79,63 +78,16 @@ void VolumeVisDpy::setup_vars() {
   //  cerr << "VolumeVisDpy::setup_vars:start\n";
 }
 
+#if 0
+void VolumeVis::display() {
+}
+#endif
+
 void VolumeVisDpy::run() {
-  //cerr << "VolumeVisDpy:run\n";
-  xlock.lock();
-  // Open an OpenGL window
-  Display* dpy=XOpenDisplay(NULL);
-  if(!dpy){
-    cerr << "Cannot open display\n";
-    Thread::exitAll(1);
-  }
-  int error, event;
-  if ( !glXQueryExtension( dpy, &error, &event) ) {
-    cerr << "GL extension NOT available!\n";
-    XCloseDisplay(dpy);
-    dpy=0;
-    Thread::exitAll(1);
-  }
-  int screen=DefaultScreen(dpy);
-  
-  // sb - single buffered
-  // db - double buffered
-  char* criteria="db, max rgb";
-  if(!visPixelFormat(criteria)){
-    cerr << "Error setting pixel format for visinfo\n";
-    cerr << "Syntax error in criteria: " << criteria << '\n';
-    Thread::exitAll(1);
-  }
-  int nvinfo;
-  XVisualInfo* vi=visGetGLXVisualInfo(dpy, screen, &nvinfo);
-  if(!vi || nvinfo == 0){
-    cerr << "Error matching OpenGL Visual: " << criteria << '\n';
-    Thread::exitAll(1);
-  }
-  Colormap cmap = XCreateColormap(dpy, RootWindow(dpy, screen),
-				  vi->visual, AllocNone);
-  XSetWindowAttributes atts;
-  int flags=CWColormap|CWEventMask|CWBackPixmap|CWBorderPixel;
-  atts.background_pixmap = None;
-  atts.border_pixmap = None;
-  atts.border_pixel = 0;
-  atts.colormap=cmap;
-  atts.event_mask=StructureNotifyMask|ExposureMask|ButtonPressMask|ButtonReleaseMask|ButtonMotionMask|KeyPressMask|KeyReleaseMask;
-  Window win=XCreateWindow(dpy, RootWindow(dpy, screen),
-			   0, 0, xres, yres, 0, vi->depth,
-			   InputOutput, vi->visual, flags, &atts);
-  char* p="VolumeVis GUI";
-  XTextProperty tp;
-  XStringListToTextProperty(&p, 1, &tp);
-  XSizeHints sh;
-  sh.flags = USSize;
-  XSetWMProperties(dpy, win, &tp, &tp, 0, 0, &sh, 0, 0);
-  
-  XMapWindow(dpy, win);
-  
-  GLXContext cx=glXCreateContext(dpy, vi, NULL, True);
-  if(!glXMakeCurrent(dpy, win, cx)){
-    cerr << "glXMakeCurrent failed!\n";
-  }
+  open_window();
+
+  init();
+
   glShadeModel(GL_FLAT);
   for(;;){
     XEvent e;
@@ -143,36 +95,22 @@ void VolumeVisDpy::run() {
     if(e.type == MapNotify)
       break;
   }
-  XFontStruct* fontInfo = XLoadQueryFont(dpy, __FONTSTRING__);
-
-  if (fontInfo == NULL) {
-    cerr << "no font found\n";
-    Thread::exitAll(1);
-  }
-
-  Font id = fontInfo->fid;
-  unsigned int first = fontInfo->min_char_or_byte2;
-  unsigned int last = fontInfo->max_char_or_byte2;
-  GLuint fontbase = glGenLists((GLuint) last+1);
-  if (fontbase == 0) {
-    printf ("out of display lists\n");
-    exit (0);
-  }
-  glXUseXFont(id, first, last-first+1, fontbase+first);
-  xlock.unlock();
-  
 
   setup_vars();
   bool need_hist=true;
-  bool redraw=true;
-  bool control_pressed=false;
-  bool shift_pressed=false;
 
   int selected_point = -1;
   // these are used to keep the points from moving too much
   
   for(;;){
     //cerr << "VolumeVisDpy:run:eventloop\n";
+
+    // Now we need to test to see if we should die
+    if (scene->get_rtrt_engine()->stop_execution()) {
+      destroy_window();
+      return;
+    }
+
     if(need_hist){
       need_hist=false;
       compute_hist(fontbase);
@@ -631,28 +569,6 @@ void VolumeVisDpy::animate(bool& changed) {
     t_inc = current_t_inc;
     cout << "t_inc now equals "<< t_inc<<endl;
   }
-}
-
-static void printString(GLuint fontbase, double x, double y,
-			const char *s, const Color& c)
-{
-  glColor3f(c.red(), c.green(), c.blue());
-  
-  glRasterPos2d(x,y);
-  /*glBitmap(0, 0, x, y, 1, 1, 0);*/
-  glPushAttrib (GL_LIST_BIT);
-  glListBase(fontbase);
-  glCallLists((int)strlen(s), GL_UNSIGNED_BYTE, (GLubyte *)s);
-  glPopAttrib ();
-}
-
-static int calc_width(XFontStruct* font_struct, const char* str)
-{
-  XCharStruct overall;
-  int ascent, descent;
-  int dir;
-  XTextExtents(font_struct, str, (int)strlen(str), &dir, &ascent, &descent, &overall);
-  return overall.width;
 }
 
 /*
