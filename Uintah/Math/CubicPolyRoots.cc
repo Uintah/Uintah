@@ -19,8 +19,6 @@ int cubic_poly_roots(double b, double c, double d,
   // y^3 + [-(b^2)/3 + c] * y = [-2*(b^3)/27 + b*c/3 - d]
   // m = c - (b^2)/3, n = -2*(b^3)/27 + b*c/3 - d
 
-  if (d == 0) return 0; // if d == 0, 0 is a root automatically
-  
   double b2 = b*b;
   double b3 = b*b2;
 
