@@ -101,9 +101,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
     cout<<"dataArhiver in ICE is null now exiting; "<<endl;
     exit(1);
   }
-/*`==========TESTING==========*/
-cout<<" SUSPECT  "<<endl; 
-/*==========TESTING==========`*/
+
   //__________________________________
   // Find the switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
