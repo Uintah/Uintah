@@ -44,7 +44,6 @@
 
 namespace SCIRun {
 
-
 class GenField : public Module {
 private:
   FieldOPort* ofield;
@@ -337,6 +336,7 @@ GenField::send_scalar_field()
 	new GenSField<double, LatticeGeom>(geom, attrib);
 
       FieldHandle hndl(osf);
+     
       ofield->send(hndl);
     }
 }
@@ -480,7 +480,8 @@ GenField::send_tensor_field()
   GenVField<Tensor, LatticeGeom> *osf =
     new GenVField<Tensor, LatticeGeom>(geom, attrib);
 
-  FieldHandle hndl(osf);
+  FieldHandle hndl(static_cast<Field*>(osf));
+  
   ofield->send(hndl);
 #endif
 }
