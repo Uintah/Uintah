@@ -210,7 +210,6 @@ bool	IComINetSocket::bind(IComAddress& address, IComSocketError &err)
 			
 			if(::bind(socketfd_,address.getsockaddr(addressnum),address.getsockaddrlen(addressnum)) < 0)
 			{
-				std::cout << "socketfd_ = " << socketfd_ << "\n";
 				err.errnr = errno;
 				err.error = getbinderror(err.errnr);				
 				::close(socketfd_);
@@ -274,8 +273,8 @@ int		IComINetSocket::connect_timeout(int sockfd, const sockaddr* sa, socklen_t s
 // By default Unix will timeout after 75 secs anyway.
 // So there is no major problem if this function is not included
 
-#ifdef JGS_USE_CONNECT_TIMEOUT
-	Sigfunc	*sigfunc;
+#ifdef _JGS_USE_CONNECT_TIMEOUT 
+	sig_t	sigfunc;
 	int		ret;
 	
 	sigfunc = ::signal(SIGALRM,connect_alarm);
@@ -298,9 +297,9 @@ int		IComINetSocket::connect_timeout(int sockfd, const sockaddr* sa, socklen_t s
 #endif
 }
 
-void	IComINetSocket::connect_alarm(int signo)
+void*	IComINetSocket::connect_alarm(int signo)
 {
-	return;
+	return(0);
 }
 
 bool	IComINetSocket::connect(IComAddress& address, conntype conn, IComSocketError &err)
@@ -322,7 +321,6 @@ bool	IComINetSocket::connect(IComAddress& address, conntype conn, IComSocketErro
 	
 	bool success = false;	// Condition variable indicating that creating the socket was a success
 	int	 addressnum = 0;	// The next loop goes through all addresses that qualify the user input
-	int  ret_value = 0;
 	int  tries = 0;
 	
 	// When an address does not work, we skip to the next one until we find an address that works.
@@ -361,7 +359,7 @@ bool	IComINetSocket::connect(IComAddress& address, conntype conn, IComSocketErro
 			int retvalue;
 			if (secs_ > 0)
 			{
-				ret_value = connect_timeout(socketfd_,address.getsockaddr(addressnum),address.getsockaddrlen(addressnum),secs_);
+				retvalue = connect_timeout(socketfd_,address.getsockaddr(addressnum),address.getsockaddrlen(addressnum),secs_);
 			}
 			else
 			{
@@ -372,6 +370,7 @@ bool	IComINetSocket::connect(IComAddress& address, conntype conn, IComSocketErro
 			{
 				// Find out what went wrong in connecting to the server
 				err.errnr = errno;
+                
 				err.error = getconnecterror(errno);
 				::close(socketfd_);
 				hassocket_ = false;
@@ -420,7 +419,7 @@ bool	IComINetSocket::connect(IComAddress& address, conntype conn, IComSocketErro
 			int retvalue;
 			if (secs_ > 0)
 			{
-				ret_value = connect_timeout(socketfd_,address.getsockaddr(addressnum),address.getsockaddrlen(addressnum),secs_);
+				retvalue = connect_timeout(socketfd_,address.getsockaddr(addressnum),address.getsockaddrlen(addressnum),secs_);
 			}
 			else
 			{
@@ -469,8 +468,6 @@ bool	IComINetSocket::connect(IComAddress& address, conntype conn, IComSocketErro
 	// Reset the error, as we did not encouter one
 	err.error = "";
 	err.errnr = 0;
-	
-	if ((secs_ > 0)||(microsecs_ > 0)) return(settimeout(secs_,microsecs_,err));
 	
 	return(true);	
 }
@@ -616,10 +613,11 @@ bool    IComINetSocket::accept(IComSocket& newsock, IComSocketError &err)
 	int newfd = -1;			// Socket created by the system on which the accepted connection can be found
 	IComAddress newaddress; // The address of this new connection
 	
+    
 	if (localaddress_.isipv4())
 	{ 
 		sockaddr_in sa;
-		socklen_t salen;
+		socklen_t salen = sizeof(sockaddr_in);
 		// Try to get the file descriptor of the socket that th system connected for use
 		while (1)
 		{
@@ -629,11 +627,12 @@ bool    IComINetSocket::accept(IComSocket& newsock, IComSocketError &err)
 				// If some process interupted our call to accept, we have to call the
 				// accept function again. 
 				// On some systems io calls are interupted when a software interrupt occurs
-				// Hence we have to restart such a call manually
+				// Hence we have to restart such a call
 				if (errno == EINTR) continue;
 			}
 			break;
 		}
+        
 		if (newfd < 0)
 		{
 			// An error occured, so we need to deal with that
@@ -642,13 +641,14 @@ bool    IComINetSocket::accept(IComSocket& newsock, IComSocketError &err)
 			unlock();
 			return(false);
 		}
-		newaddress.setaddress("scirun",reinterpret_cast<sockaddr *>(&sa));
+        
+		if (salen == sizeof(sockaddr_in)) newaddress.setaddress("scirun",reinterpret_cast<sockaddr *>(&sa));
 	}
 
 	if (localaddress_.isipv6())
 	{ 
 		sockaddr_in6 sa;
-		socklen_t salen;
+		socklen_t salen = sizeof(sockaddr_in6);
 		while (1)
 		{
 			newfd = ::accept(socketfd_,reinterpret_cast<sockaddr *>(&sa),&salen);
@@ -670,7 +670,7 @@ bool    IComINetSocket::accept(IComSocket& newsock, IComSocketError &err)
 			unlock();
 			return(false);
 		}
-		newaddress.setaddress("scirun",reinterpret_cast<sockaddr *>(&sa));
+		if (salen == sizeof(sockaddr_in6)) newaddress.setaddress("scirun",reinterpret_cast<sockaddr *>(&sa));
 	}
 
 	// Make sure there are no connections from this socket
@@ -678,6 +678,7 @@ bool    IComINetSocket::accept(IComSocket& newsock, IComSocketError &err)
 	// a handle to a socket structure. Hence normally it is shared with
 	// another handle, hence closing it will only detach this socket
 	// from the real socket structure.
+
 	newsock.close();
 
 	if(!(newsock.create("scirun")))
@@ -754,7 +755,7 @@ bool	IComINetSocket::poll(IComPacketHandle &packet, IComSocketError &err)
 
 bool	IComINetSocket::send(IComPacketHandle &packet, IComSocketError &err)
 {
-	long header[8];
+	int header[8];
 	int	len;
 	int bytessend = 0;
 	int bytestosend = 0;
@@ -771,7 +772,7 @@ bool	IComINetSocket::send(IComPacketHandle &packet, IComSocketError &err)
 	dolock();
 	bytessend = 0;
 	bytestosend = 32;
-	buf = static_cast<char *>(buf);
+	buf = reinterpret_cast<char *>(&header[0]);
 	while (bytessend < bytestosend)
 	{
 		len = ::send(socketfd_,&(buf[bytessend]),bytestosend-bytessend,0);
@@ -779,7 +780,7 @@ bool	IComINetSocket::send(IComPacketHandle &packet, IComSocketError &err)
 		{
 			if ((errno == EINTR)||(errno == EAGAIN)) continue;
 		}
-		break;
+		bytessend += len;
 	}
 	
 	if (len < 0)
@@ -790,15 +791,15 @@ bool	IComINetSocket::send(IComPacketHandle &packet, IComSocketError &err)
 		return(false);
 	}
 	
-	if (len != 32) 
+	if (bytessend != bytestosend) 
 	{
 		err.errnr = EMSGSIZE;
-		err.error = "Could not read the complete packet";
+		err.error = "Could not send the complete packet";
 		unlock();
 		return(false);
 	}
 
-	bytessend = 0;
+  	bytessend = 0;
 	bytestosend = header[2]*header[3];
 	buf = static_cast<char *>(packet->getbuffer());
 	while (bytessend < bytestosend)
@@ -808,7 +809,7 @@ bool	IComINetSocket::send(IComPacketHandle &packet, IComSocketError &err)
 		{
 			if ((errno == EINTR)||(errno == EAGAIN)) continue;
 		}
-		break;
+		bytessend += len;
 	}
 
 	
@@ -821,10 +822,10 @@ bool	IComINetSocket::send(IComPacketHandle &packet, IComSocketError &err)
 	}
 	
 	
-	if (len != header[2]*header[3]) 
+	if (bytessend != bytestosend) 
 	{
 		err.errnr = EMSGSIZE;
-		err.error = "Could not read the complete packet";
+		err.error = "Could not send the complete packet";
 		unlock();
 		return(false);
 	}
@@ -849,6 +850,7 @@ bool	IComINetSocket::recv(IComPacketHandle &packet, IComSocketError &err)
 
 	buffer[8] = 0;
 	
+    len = 0;
 	bytesread   = 0;  
 	bytestoread = 8;
 	while (bytesread < bytestoread)
@@ -869,11 +871,11 @@ bool	IComINetSocket::recv(IComPacketHandle &packet, IComSocketError &err)
 		err.error = getrecverror(errno);
 		return(false);
 	}
-	if (bytesread == bytestoread)
+	if (bytesread != bytestoread)
 	{
 		err.errnr = EMSGSIZE;
 		err.error = std::string("Could not read enough bytes from stream");
-		
+		return(false);
 	}
 	if (::strncmp("icpacket",buffer,8) != 0) 
 	{
@@ -882,6 +884,7 @@ bool	IComINetSocket::recv(IComPacketHandle &packet, IComSocketError &err)
 		return(false);
 	}
 	
+    len = 0;
 	bytesread = 0;
 	bytestoread = 24;
 	
@@ -903,7 +906,12 @@ bool	IComINetSocket::recv(IComPacketHandle &packet, IComSocketError &err)
 		err.error = getrecverror(errno);
 		return(false);
 	}
-	
+	if (bytesread != bytestoread)
+	{
+		err.errnr = EMSGSIZE;
+		err.error = std::string("Could not read enough bytes from stream");
+		return(false);		
+	}	
 	long* header = reinterpret_cast<long *>(buffer);
 
 	
@@ -921,41 +929,51 @@ bool	IComINetSocket::recv(IComPacketHandle &packet, IComSocketError &err)
 	packet->setparam2(header[5]);
 	
 	int bytesize = header[0]*header[1];
-	packet->newbuffer(bytesize);
-	char *buf = static_cast<char *>(packet->getbuffer());
-	if (buf == 0)
-	{
-		// Can report a proper message, but that will be to no avail
-		// we did run out of memory
-		std::cerr << "Did run out of memory\n";
-		return(false);
+    if (bytesize > 0)
+    {
+        packet->newbuffer(bytesize);
+        char *buf = static_cast<char *>(packet->getbuffer());
+        if (buf == 0)
+        {
+            // Can report a proper message, but that will be to no avail
+            // we did run out of memory
+            std::cerr << "Did run out of memory\n";
+            return(false);
+        }
+        
+        len = 0;
+        bytesread = 0;
+        bytestoread = bytesize;
+        while(bytesread <bytestoread)
+        {
+            len = ::recv(socketfd_,&(buf[bytesread]),(bytesize-bytesread),0);
+            if (len < 0)
+            {
+                if ((errno == EINTR)||(errno == EAGAIN)) continue;
+                break;
+            }
+            bytesread += len; 
+        }
+        
+        
+        if (len < 0)
+        {
+            if (errno == ENOTCONN) isconnected_ = false;
+            err.errnr = errno;
+            err.error = getrecverror(errno);
+            packet->clear();
+            return(false);
+        }
+        if (bytesread != bytestoread)
+        {
+            err.errnr = EMSGSIZE;
+            err.error = std::string("Could not read enough bytes from stream");
+            return(false);		
+        }	
+        
+        if (byteswap) packet->swap_bytes(buf,header[1],header[0]);
 	}
-	
-	bytesread = 0;
-	bytestoread = bytesize;
-	while(bytesread <bytestoread)
-	{
-		len = ::recv(socketfd_,&(buf[bytesread]),(bytesize-bytesread),0);
-		if (len < 0)
-		{
-			if ((errno == EINTR)||(errno == EAGAIN)) continue;
-			break;
-		}
-		bytesread += len; 
-	}
-	
-	
-	if (len < 0)
-	{
-		if (errno == ENOTCONN) isconnected_ = false;
-		err.errnr = errno;
-		err.error = getrecverror(errno);
-		packet->clear();
-		return(false);
-	}
-		
-	if (byteswap) packet->swap_bytes(buf,header[1],header[0]);
-	
+    
 	err.errnr = 0;
 	err.error = "";				
 	return(true);

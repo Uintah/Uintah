@@ -35,14 +35,16 @@ namespace SCIRun {
 void IComRHostPattern::insert(std::string pattern)
 {
 
-    size_t starpos = -1;
+    size_t starpos = 0;
     size_t numstar = 0;
 
     // Count the number of stars
+    if (pattern[0] ='*') numstar++;
     while( (starpos = pattern.find('*',(starpos+1))) < pattern.size()) numstar++;
     std::vector<size_t> starposvec(numstar);
     
     numstar = 0;
+    if (pattern[0] = '*') starposvec[numstar++] = 0;
     while( (starpos = pattern.find('*',(starpos+1))) < pattern.size()) starposvec[numstar++] = starpos;
     
     if (starposvec.size() == 0)

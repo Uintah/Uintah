@@ -85,7 +85,7 @@ bool IComAddress::isvalid()
     return(isvalid_);
 }
 
-short IComAddress::getport(int addressnum)
+unsigned short IComAddress::getport(int addressnum)
 {
     if ((isvalid_)&&(!isinternal_)) return(portnum_[addressnum]);
     return(0);
@@ -206,7 +206,7 @@ bool IComAddress::setaddress(std::string protocol,std::string name,std::string s
     isvalid_ = false;
 
     // Assume we do not specify what kind of address we want
-    sa_family_t    socktype = AF_UNSPEC;
+    sa_family_t    socktype = AF_INET;
     // in case of a server you want to be able to specify whether you have a
     // ipv6 or ipv4 server. The following settings overrule the default setting
     if (iptype == "ipv4") socktype = AF_INET;
@@ -493,8 +493,8 @@ bool IComAddress::setaddress(std::string protocol, sockaddr *sa)
     
     if (sa->sa_family == AF_INET)
     {    // for ipv4 addresses
-    
-        // We only expect to have one unique address for this one
+  
+         // We only expect to have one unique address for this one
         inetname_.resize(1);
         servname_.resize(1);
         ipname_.resize(1);
@@ -504,30 +504,31 @@ bool IComAddress::setaddress(std::string protocol, sockaddr *sa)
         
         // Unix design requires us to use a reinterpret_cast here
         sockaddr_in *saddr = reinterpret_cast<sockaddr_in *>(sa);
-        sin_[0] = *saddr;    // store the full datastructure in the IComAddress object
-
-        char    *addr = reinterpret_cast<char *>(&(saddr->sin_addr));    // this is in network order
+       
+        sin_[0] = *saddr;
+        char    *addr = reinterpret_cast<char *>(&(sin_[0].sin_addr));    // this is in network order
         ipaddress_[0].resize(4);
         for (int p=0;p<4;p++) ipaddress_[0][p] = addr[p]; // copy the ipaddress byte by byte
 
         portnum_[0] = ntohs(saddr->sin_port);    // translate the portnumber from network order into local byte order
         
-        char host[NI_MAXHOST];
-        char serv[NI_MAXSERV];
-    
         DNSLock.lock();    // getnameinfo is not thread safe hence use a mutex to gain exclusive access to the function
-        ::getnameinfo(reinterpret_cast<sockaddr *>(&(sin_[0])),sizeof(sockaddr_in),host,NI_MAXHOST,serv,NI_MAXSERV,0);
+        // This function crashes on FreeBSD, hence do not use it
+        // ::getnameinfo(reinterpret_cast<sockaddr*>(&(sin_[0])),sizeof(sin_[0]),host,NI_MAXHOST,0,0,0);
+        hostent *hst = ::gethostbyaddr(addr,4,AF_INET);
+        if (hst) inetname_[0] = hst->h_name;
         DNSLock.unlock();
         
         // Retrieve the ipname as text
         char    str[46];    // maximum for both ipv4 and ipv6
         // The next function needs better error management
-        if (!(::inet_ntop(AF_INET, &(ipaddress_[0][0]), str, sizeof(str)))) str[0] = '\0';
+        if (!(::inet_ntop(AF_INET, &(ipaddress_[0][0]), str, 46))) str[0] = '\0';
         ipname_[0] = std::string(str);
         
         // Set the DNS names
-        inetname_[0] = std::string(host);
-        servname_[0] = std::string(serv);
+        std::ostringstream oss;
+        oss << portnum_[0];
+        servname_[0] = oss.str();
     
         // we are done, so declare the address as valid
         isvalid_ = true;
@@ -553,20 +554,20 @@ bool IComAddress::setaddress(std::string protocol, sockaddr *sa)
         for (int p=0;p<16;p++) ipaddress_[0][p] = addr[p];
 
         portnum_[0] = ntohs(saddr->sin6_port);
-        
-        char host[NI_MAXHOST];
-        char serv[NI_MAXSERV];
     
         DNSLock.lock();
-        ::getnameinfo(reinterpret_cast<sockaddr *>(&(sin6_[0])),sizeof(sockaddr_in6),host,NI_MAXHOST,serv,NI_MAXSERV,0);
+        //::getnameinfo(reinterpret_cast<sockaddr *>(&(sin6_[0])),sizeof(sockaddr_in6),host,NI_MAXHOST,0,0,0);
+        hostent *hst = ::gethostbyaddr(addr,16,AF_INET);
+        if (hst) inetname_[0] = hst->h_name;
         DNSLock.unlock();
         
         char    str[46];
-        if (!(::inet_ntop(AF_INET6, &(ipaddress_[0][0]), str, sizeof(str)))) str[0] = '\0';
+        if (!(::inet_ntop(AF_INET6, &(ipaddress_[0][0]), str, 46))) str[0] = '\0';
         ipname_[0] = std::string(str);
         
-        inetname_[0] = std::string(host);
-        servname_[0] = std::string(serv);
+        std::ostringstream oss;
+        oss << portnum_[0];
+        servname_[0] = oss.str();
         
         isvalid_ = true;
         isinternal_ = false;
@@ -686,7 +687,7 @@ bool IComAddress::selectaddress(int addressnum)
     std::string ipname = ipname_[addressnum];
     std::string servname = servname_[addressnum];
     IPaddress    ipaddress = ipaddress_[addressnum];
-    short        portnum    = portnum_[addressnum];
+    unsigned short portnum    = portnum_[addressnum];
 
     // resize the fields and put the selected field at the first place
     inetname_.resize(1);
