@@ -476,7 +476,16 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	  level->addPatch(lowCell, highCell, lowCell+extraCells, highCell-extraCells);
 	}
       }
-      level->finalizeLevel();
+
+      IntVector periodicBoundaries;
+      if(level_ps->get("periodic", periodicBoundaries)){
+	level->finalizeLevel(periodicBoundaries.x() != 0,
+			     periodicBoundaries.y() != 0,
+			     periodicBoundaries.z() != 0);
+      }
+      else {
+	level->finalizeLevel();
+      }
       level->assignBCS(grid_ps);
       grid->addLevel(level);
    }
