@@ -58,13 +58,13 @@ LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(MPEG_LIBRARY) $(MAGICK_LIBRARY) $(M_LIBRAR
 
 # CollabVis code begin
 ifeq ($(HAVE_COLLAB_VIS),yes)
-  SRCS += $(SRCDIR)/ViewServer.cc
+  SRCS += $(SRCTOP)/Packages/CollabVis/Standalone/Server/ViewServer.cc
 
   # SUBDIRS += $(SRCDIR)/SV_Server
 
-  INCLUDES += -I$(SRCTOP)/$(SRCDIR)/SV_Server
+  INCLUDES += -I$(SRCTOP)/Packages/CollabVis/Standalone/Server
 
-  REMOTELIBS := -L$(SRCTOP)/$(SRCDIR)/SV_Server/lib -L$(SRCTOP)/$(SRCDIR)/SV_Server/Network/RMF/rmf2.0/RAMP/usr/local/lib/ -L$(SRCTOP)/$(SRCDIR)/SV_Server/Network/RMF/rmf2.0/RMF/usr/local/lib/\
+  REMOTELIBS := -L$(SRCTOP)/Packages/CollabVis/Standalone/Server/lib \
 	-lXML \
 	-lCompression\
 	-lExceptions \
@@ -73,9 +73,7 @@ ifeq ($(HAVE_COLLAB_VIS),yes)
 	-lNetwork \
 	-lProperties \
 	-lRendering \
-	-lThread \
-        -lRAMP \
-        -lRMF
+	-lThread 
 
   LIBS += $(XML_LIBRARY) $(REMOTELIBS) -lm
 endif

@@ -51,7 +51,7 @@
 
 // CollabVis code begin
 #ifdef HAVE_COLLAB_VIS
-#include <Dataflow/Modules/Render/ViewServer.h>
+#include <Packages/CollabVis/Standalone/Server/ViewServer.h>
 #undef ASIP_SHORT_NAMES
 #endif
 // CollabVis code end
