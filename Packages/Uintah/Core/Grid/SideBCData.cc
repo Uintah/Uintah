@@ -79,6 +79,5 @@ bool SideBCData::inside(const Point &p) const
 
 void SideBCData::print()
 {
-
-
+  d_bc.print();
 }
