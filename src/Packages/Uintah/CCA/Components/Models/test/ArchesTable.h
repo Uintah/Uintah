@@ -48,6 +48,7 @@ WARNING
     virtual void interpolate(int index, CCVariable<double>& result,
 			     const CellIterator&,
 			     vector<constCCVariable<double> >& independents);
+    virtual double interpolate(int index, vector<double>& independents);
   private:
 
     struct Ind {
