@@ -1176,6 +1176,7 @@ void CI::emit_interface(EmitState& e)
   e.out << "// subsetting method\n";
   e.out << "void " << fn << "::createSubset(int ssize)\n"; 
   e.out << "{\n";
+  e.out << "  Object::createSubset(ssize);\n";
   e.out << "}\n\n";
 
   e.out << fn << "::" << cn << "(bool initServer)\n";
@@ -1368,9 +1369,11 @@ void Method::emit_proxy(EmitState& e, const string& fn,
   e.out << "\n{\n";
   string oldleader=e.out.push_leader();  
   e.out << leader2 << "::SCIRun::ReferenceMgr* _rm = _proxyGetReferenceMgr();\n";
-  e.out << leader2 << "::std::vector< ::SCIRun::Reference*> _ref;\n";
-  e.out << leader2 << "::SCIRun::callType _flag;\n";
-  e.out << leader2 << "::SCIRun::Message* save_callonly_msg = NULL;\n";
+  if(isCollective) { 
+    e.out << leader2 << "::std::vector< ::SCIRun::Reference*> _ref;\n";
+    e.out << leader2 << "::SCIRun::callType _flag;\n";
+    e.out << leader2 << "::SCIRun::Message* save_callonly_msg = NULL;\n";
+  }
 
   if(reply_required()){
     if(return_type) {
@@ -1419,7 +1422,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "message->marshalInt((int*)&_flag);\n";
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
-e.out << leader2 << "::std::cout << \" NOCALLRET sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
+e.out << leader2 << "//::std::cout << \" NOCALLRET sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
     e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
     e.out << leader2 << "int _numCalls = (_rm->localSize / remoteSize);\n";
     e.out << leader2 << "((_rm->localSize % remoteSize) > _rm->localRank) ?_numCalls++ :0;\n";
@@ -1458,6 +1461,7 @@ e.out << leader2 << "::std::cout << \" NOCALLRET sending _sessionID = '\" << _se
       }
       
       e.out << leader2 << "message->destroyMessage();\n";
+      e.out << leader2 << "delete message;\n";
     }
     
     e.out.pop_leader(nocallret_ldr);
@@ -1487,7 +1491,7 @@ e.out << leader2 << "::std::cout << \" NOCALLRET sending _sessionID = '\" << _se
     e.out << leader2 << "message->marshalInt((int*)&_flag);\n";
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
-e.out << leader2 << "::std::cout << \"CALLNORET sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
+e.out << leader2 << "//::std::cout << \"CALLNORET sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
     e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
     e.out << leader2 << "//CALLNORET always sends 1 call per callee proc.\n";
     e.out << leader2 << "int _numCalls = 1;\n";
@@ -1510,7 +1514,8 @@ e.out << leader2 << "::std::cout << \"CALLNORET sending _sessionID = '\" << _ses
     e.out << leader2 << "int _handler=(*iter)->getVtableBase()+" << handlerOff << ";\n";
     e.out << leader2 << "message->sendMessage(_handler);\n";
     e.out << leader2 << "message->destroyMessage();\n";
-    
+    e.out << leader2 << "delete message;\n";
+
     e.out.pop_leader(loop_leader1);
     e.out << leader2 << "}\n\n";
 
@@ -1540,7 +1545,7 @@ e.out << leader2 << "::std::cout << \"CALLNORET sending _sessionID = '\" << _ses
     e.out << leader2 << "message->marshalInt((int*)&_flag);\n";
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
-e.out << leader2 << "::std::cout << \"CALLONLY sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
+e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
     e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
     e.out << leader2 << "int _numCalls = (_rm->localSize / remoteSize);\n";
     e.out << leader2 << "((_rm->localSize % remoteSize) > _rm->localRank) ?_numCalls++ :0;\n";
@@ -1568,7 +1573,8 @@ e.out << leader2 << "::std::cout << \"CALLONLY sending _sessionID = '\" << _sess
     e.out << leader2 << "int _handler=_i_ref->getVtableBase()+" << handlerOff << ";\n";
   }
   e.out << leader2 << "message->sendMessage(_handler);\n";
-  e.out << leader2 << "save_callonly_msg = message;\n";
+  if(isCollective)
+    e.out << leader2 << "save_callonly_msg = message;\n";
   e.out << leader2 << "// CALLONLY reply to be continued...\n";
 
   if (isCollective) {
@@ -1626,6 +1632,8 @@ e.out << leader2 << "::std::cout << \"CALLONLY sending _sessionID = '\" << _sess
       }
     }
     e.out << leader2 << "message->destroyMessage();\n";
+    e.out << leader2 << "delete message;\n";
+
     if (isCollective) {
       e.out.pop_leader(call_ldr);
       e.out << leader2 << "}\n";
@@ -2570,6 +2578,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  int _handler=rl[i]->getReference()->getVtableBase()+" << handler << ";\n";
 	e.out << leader2 << "  message->sendMessage(_handler);\n";
 	e.out << leader2 << "  message->destroyMessage();\n";
+        e.out << leader2 << "  delete message;\n";
 	e.out << leader2 << "}\n";
 	e.out.pop_leader(ifone);
 	e.out << leader2 << "}\n"; //if (1) ...
