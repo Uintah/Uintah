@@ -28,7 +28,8 @@ SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 	$(SRCDIR)/prec.F $(SRCDIR)/profv.F $(SRCDIR)/props.F \
 	$(SRCDIR)/reade.F $(SRCDIR)/rescal.F $(SRCDIR)/resid1.F \
 	$(SRCDIR)/rite0.F $(SRCDIR)/root.F $(SRCDIR)/scale_factors.F \
-	$(SRCDIR)/solve.F $(SRCDIR)/symbcs.F $(SRCDIR)/wallbc.F
+	$(SRCDIR)/solve.F $(SRCDIR)/symbcs.F $(SRCDIR)/wallbc.F \
+	$(SRCDIR)/cputim_sun.F
 PSELIBS :=
 #LIBS := -lftn -lm -lblas
 
@@ -39,6 +40,9 @@ f_conversion=false -LNO:pf2=0 -avoid_gp_overflow -mp -I$(SRCDIR)
 
 #
 # $Log$
+# Revision 1.4  2000/05/17 21:51:18  bbanerje
+# Added the file containing _cputim.
+#
 # Revision 1.3  2000/05/17 21:36:44  bbanerje
 # Changed .f to .F in SRCS and added FFLAGS specfic to these .f files.
 #
