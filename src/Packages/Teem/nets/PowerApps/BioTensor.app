@@ -5077,7 +5077,7 @@ class BioTensorApp {
 	if { $exec_iso(global-clip) == "on"} {
 	    set $mods(Viewer)-ViewWindow_0-global-clip 1
 	} else {
-	    set $mods(Viewer)-ViewWindow_0-global-clip 1
+	    set $mods(Viewer)-ViewWindow_0-global-clip 0
 	}
 
 	global exec_planes
@@ -7311,7 +7311,7 @@ class BioTensorApp {
 	    $glyphs_tab2.seed.childsite.a.pointf.w configure -state disabled
 	}
 	
-	if {[set $mods(ShowField-Glyphs)-tensors-on] == 0} {
+	if {[set $mods(ShowField-Glyphs)-tensors-on] == 0 || !$vis_activated} {
 	    foreach w [winfo children $glyphs_tab1] {
 		grey_widget $w
 	    }
