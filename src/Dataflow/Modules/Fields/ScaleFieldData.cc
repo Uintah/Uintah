@@ -34,6 +34,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/ScaleFieldData.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Containers/Handle.h>
 
 #include <iostream>
 #include <stdio.h>
@@ -93,19 +94,9 @@ ScaleFieldData::execute()
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   const TypeDescription *ltd = ifieldhandle->data_at_type_description();
   CompileInfo *ci = ScaleFieldDataAlgo::get_compile_info(ftd, ltd);
-  DynamicAlgoHandle algo_handle;
-  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-  {
-    error("Could not compile algorithm.");
-    return;
-  }
-  ScaleFieldDataAlgo *algo =
-    dynamic_cast<ScaleFieldDataAlgo *>(algo_handle.get_rep());
-  if (algo == 0)
-  {
-    error("Could not get algorithm.");
-    return;
-  }
+  Handle<ScaleFieldDataAlgo> algo;
+  if (!module_dynamic_compile(*ci, algo)) return;
+
   FieldHandle ofieldhandle(algo->execute(ifieldhandle, imatrix));
 
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");

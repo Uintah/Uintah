@@ -30,6 +30,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Core/Containers/Handle.h>
 
 #include <Dataflow/Modules/Fields/Gradient.h>
 
@@ -97,19 +98,8 @@ Gradient::execute()
     const TypeDescription *ttd = fieldin->get_type_description(1);
 
     CompileInfo *ci = GradientAlgo::get_compile_info(ftd,ttd);
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      error( "Could not compile algorithm." );
-      return;
-    }
-    GradientAlgo *algo =
-      dynamic_cast<GradientAlgo *>(algo_handle.get_rep());
-    if (algo == 0)
-    {
-      error( "Could not get algorithm." );
-      return;
-    }
+    Handle<GradientAlgo> algo;
+    if (!module_dynamic_compile(*ci, algo)) return;
 
     fieldout_ = algo->execute(fieldin);
   }

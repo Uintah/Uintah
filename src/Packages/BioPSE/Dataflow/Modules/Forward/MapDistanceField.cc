@@ -35,6 +35,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Packages/BioPSE/Dataflow/Modules/Forward/MapDistanceField.h>
+#include <Core/Containers/Handle.h>
 #include <iostream>
 #include <stdio.h>
 
@@ -108,19 +109,8 @@ MapDistanceField::execute()
 					   fdst_h->mesh()->get_type_description(),
 					   fdst_h->data_at_type_description(),
 					   fdst_h->get_type_description());
-  DynamicAlgoHandle algo_handle;
-  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-  {
-    error("Could not compile algorithm.");
-    return;
-  }
-  MapDistanceFieldAlgo *algo =
-    dynamic_cast<MapDistanceFieldAlgo *>(algo_handle.get_rep());
-  if (algo == 0)
-  {
-    error("Could not get algorithm.");
-    return;
-  }
+  Handle<MapDistanceFieldAlgo> algo;
+  if (!module_dynamic_compile(*ci, algo)) return;
 
   pair<FieldHandle, FieldHandle> result;
   result = algo->execute(fsrc_h, fdst_h->mesh(), fdst_h->data_at());

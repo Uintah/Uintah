@@ -35,6 +35,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Modules/Fields/BuildInterpolant.h>
+#include <Core/Containers/Handle.h>
 #include <iostream>
 #include <stdio.h>
 
@@ -109,19 +110,8 @@ BuildInterpolant::execute()
 				      fdst_h->mesh()->get_type_description(),
 				      fdst_h->data_at_type_description(),
 				      fdst_h->get_type_description());
-  DynamicAlgoHandle algo_handle;
-  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-  {
-    error("Could not compile algorithm.");
-    return;
-  }
-  BuildInterpAlgo *algo =
-    dynamic_cast<BuildInterpAlgo *>(algo_handle.get_rep());
-  if (algo == 0)
-  {
-    error("Could not get algorithm.");
-    return;
-  }
+  Handle<BuildInterpAlgo> algo;
+  if (!module_dynamic_compile(*ci, algo)) return;
 
   ofp = (FieldOPort *)get_oport("Interpolant");
   if(!ofp) {

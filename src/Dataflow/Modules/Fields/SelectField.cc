@@ -96,18 +96,8 @@ SelectField::execute()
     const TypeDescription *ftd = ifieldhandle->get_type_description();
     CompileInfo *ci = SelectFieldCreateAlgo::get_compile_info(mtd, ftd);
     DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      error("Could not compile algorithm.");
-      return;
-    }
-    SelectFieldCreateAlgo *algo =
-      dynamic_cast<SelectFieldCreateAlgo *>(algo_handle.get_rep());
-    if (algo == 0)
-    {
-      error("Could not get algorithm.");
-      return;
-    }
+    Handle<SelectFieldCreateAlgo> algo;
+    if (!module_dynamic_compile(*ci, algo)) return;    
     output_field_ =
       algo->execute(ifieldhandle->mesh(), ifieldhandle->data_at());
 
@@ -162,19 +152,9 @@ SelectField::execute()
     const TypeDescription *oftd = output_field_->get_type_description();
     const TypeDescription *oltd = output_field_->data_at_type_description();
     CompileInfo *ci = SelectFieldFillAlgo::get_compile_info(oftd, oltd);
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      error("Could not compile algorithm.");
-      return;
-    }
-    SelectFieldFillAlgo *algo =
-      dynamic_cast<SelectFieldFillAlgo *>(algo_handle.get_rep());
-    if (algo == 0)
-    {
-      error("Could not get algorithm.");
-      return;
-    }
+    Handle<SelectFieldFillAlgo> algo;
+    if (!module_dynamic_compile(*ci, algo)) return;    
+
     bool replace_p = false;
     if (mode_.get() == 2) { replace_p = true; }
 

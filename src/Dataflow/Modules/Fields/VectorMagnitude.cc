@@ -30,6 +30,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Core/Containers/Handle.h>
 
 #include <Dataflow/Modules/Fields/VectorMagnitude.h>
 
@@ -99,17 +100,8 @@ VectorMagnitude::execute()
     CompileInfo *ci = VectorMagnitudeAlgo::get_compile_info(ftd);
 #endif
 
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle)) {
-      error( "Could not compile algorithm." );
-      return;
-    }
-    VectorMagnitudeAlgo *algo =
-      dynamic_cast<VectorMagnitudeAlgo *>(algo_handle.get_rep());
-    if (algo == 0) {
-      error( "Could not get algorithm." );
-      return;
-    }
+    Handle<VectorMagnitudeAlgo> algo;
+    if (!module_dynamic_compile(*ci, algo)) return;
 
     fieldout_ = algo->execute(fieldin);
   }

@@ -165,19 +165,9 @@ ClipField::execute()
 
     const TypeDescription *ftd = cfieldhandle->mesh()->get_type_description();
     CompileInfo *ci = ClipFieldMeshAlgo::get_compile_info(ftd);
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      error("Could not compile algorithm.");
-      return;
-    }
-    ClipFieldMeshAlgo *algo =
-      dynamic_cast<ClipFieldMeshAlgo *>(algo_handle.get_rep());
-    if (algo == 0)
-    {
-      error("Could not get algorithm.");
-      return;
-    }
+    Handle<ClipFieldMeshAlgo> algo;
+    if (!module_dynamic_compile(*ci, algo)) return;
+
     clipper_ = algo->execute(cfieldhandle->mesh());
     do_clip_p = true;
   }
@@ -290,19 +280,10 @@ ClipField::execute()
 
     const TypeDescription *ftd = ifieldhandle->get_type_description();
     CompileInfo *ci = ClipFieldAlgo::get_compile_info(ftd);
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      error("Could not compile algorithm.");
-      return;
-    }
-    ClipFieldAlgo *algo =
-      dynamic_cast<ClipFieldAlgo *>(algo_handle.get_rep());
-    if (algo == 0)
-    {
-      error("Could not get algorithm.");
-      return;
-    }
+    Handle<ClipFieldAlgo> algo;
+    if (!module_dynamic_compile(*ci, algo)) return;
+
+
 
     // Maybe invert the clipper again.
     ClipperHandle clipper(clipper_);

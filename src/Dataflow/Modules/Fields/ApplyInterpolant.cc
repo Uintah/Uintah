@@ -33,6 +33,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Modules/Fields/ApplyInterpolant.h>
+#include <Core/Containers/Handle.h>
 #include <iostream>
 #include <stdio.h>
 
@@ -101,19 +102,8 @@ ApplyInterpolant::execute()
     ApplyInterpAlgo::get_compile_info(fsrc_h->get_type_description(),
 				      fitp_h->get_type_description(),
 				      fitp_h->data_at_type_description());
-  DynamicAlgoHandle algo_handle;
-  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-  {
-    error("Could not compile algorithm.");
-    return;
-  }
-  ApplyInterpAlgo *algo =
-    dynamic_cast<ApplyInterpAlgo *>(algo_handle.get_rep());
-  if (algo == 0)
-  {
-    error("Could not get algorithm.");
-    return;
-  }
+  Handle<ApplyInterpAlgo> algo;
+  if (!module_dynamic_compile(*ci, algo)) return;
 
   ofp = (FieldOPort *)getOPort("Output");
   if (!ofp) {

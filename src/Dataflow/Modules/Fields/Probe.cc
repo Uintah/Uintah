@@ -251,19 +251,9 @@ Probe::execute()
   {
     const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
     CompileInfo *ci = ProbeCenterAlgo::get_compile_info(mtd);
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      error("Could not compile algorithm.");
-      return;
-    }
-    ProbeCenterAlgo *algo =
-      dynamic_cast<ProbeCenterAlgo *>(algo_handle.get_rep());
-    if (algo == 0)
-    {
-      error("Could not get algorithm.");
-      return;
-    }
+    Handle<ProbeCenterAlgo> algo;
+    if (!module_dynamic_compile(*ci, algo)) return;
+
     if (moveto == "node")
     {
       Point newloc = widget_->GetPosition();
@@ -367,19 +357,9 @@ Probe::execute()
 
   const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
   CompileInfo *ci = ProbeLocateAlgo::get_compile_info(mtd);
-  DynamicAlgoHandle algo_handle;
-  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-  {
-    error("Could not compile algorithm.");
-    return;
-  }
-  ProbeLocateAlgo *algo =
-    dynamic_cast<ProbeLocateAlgo *>(algo_handle.get_rep());
-  if (algo == 0)
-  {
-    error("Could not get algorithm.");
-    return;
-  }
+  Handle<ProbeLocateAlgo> algo;
+  if (!module_dynamic_compile(*ci, algo)) return;
+
   string nodestr, edgestr, facestr, cellstr;
   algo->execute(ifieldhandle->mesh(), location,
 		nodestr, edgestr, facestr, cellstr);

@@ -127,7 +127,7 @@ class ShowField : public Module
   //! Refinement resolution for cylinders and spheres
   GuiInt                   resolution_;
   int                      res_;
-  DynamicAlgoHandle        renderer_;
+  LockingHandle<RenderFieldBase>  renderer_;
 
   enum toggle_type_e {
     NODE = 0,
@@ -225,6 +225,7 @@ ShowField::check_for_vector_data(FieldHandle fld_handle) {
   }
 }
 
+
 bool
 ShowField::fetch_typed_algorithm(FieldHandle fld_handle) 
 {
@@ -233,15 +234,10 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle)
 
   // Get the Algorithm.
   CompileInfo *ci = RenderFieldBase::get_compile_info(ftd, ltd);
-  if (! DynamicLoader::scirun_loader().get(*ci, renderer_)) {
+  if (!module_dynamic_compile(*ci, renderer_))
+  {
     fld_gen_ = -1;
     mesh_gen_ = -1;
-    error("Could not compile algorithm for ShowField -" + ftd->get_name());
-    return false;
-  }
-    
-  if (renderer_.get_rep() == 0) {
-    error("ShowField could not get algorithm!!");
     return false;
   }
   return true;
@@ -396,45 +392,46 @@ ShowField::execute()
     render_state_[DATA] = vectors_on_.get();
   }  
 
-  RenderFieldBase* alg = dynamic_cast<RenderFieldBase*>(renderer_.get_rep());
-
   normalize_vectors_.reset();
-  alg->set_mat_map(&idx_mats_);
-  alg->render(fld_handle, 
-	      do_nodes, do_edges, do_faces, do_data,
-	      def_mat_handle_, data_at_dirty_, color_handle_,
-	      ndt, edt, ns, es, vs, normalize_vectors_.get(), res_,
-	      use_normals_.get(), use_transparency_.get());
+  if (renderer_.get_rep())
+  {
+    renderer_->set_mat_map(&idx_mats_);
+    renderer_->render(fld_handle, 
+		      do_nodes, do_edges, do_faces, do_data,
+		      def_mat_handle_, data_at_dirty_, color_handle_,
+		      ndt, edt, ns, es, vs, normalize_vectors_.get(), res_,
+		      use_normals_.get(), use_transparency_.get());
+  }
 
   // cleanup...
   if (do_nodes) {
     nodes_dirty_ = false;
-    if (alg && nodes_on_.get()) {
+    if (renderer_.get_rep() && nodes_on_.get()) {
       if (node_id_) ogeom_->delObj(node_id_);
-      node_id_ = ogeom_->addObj(alg->node_switch_, "Nodes");
+      node_id_ = ogeom_->addObj(renderer_->node_switch_, "Nodes");
     }
   }
   if (do_edges) {
     edges_dirty_ = false;
-    if (alg && edges_on_.get()) {
+    if (renderer_.get_rep() && edges_on_.get()) {
       if (edge_id_) ogeom_->delObj(edge_id_);
-      edge_id_ = ogeom_->addObj(alg->edge_switch_, "Edges");
+      edge_id_ = ogeom_->addObj(renderer_->edge_switch_, "Edges");
     }
   }
   if (do_faces) {
     faces_dirty_ = false;
-    if (alg && faces_on_.get()) 
+    if (renderer_.get_rep() && faces_on_.get()) 
     {
       const char *name = use_transparency_.get()?"TransParent Faces":"Faces";
       if (face_id_) ogeom_->delObj(face_id_);
-      face_id_ = ogeom_->addObj(alg->face_switch_, name);
+      face_id_ = ogeom_->addObj(renderer_->face_switch_, name);
     }
   }  
   if (do_data) {
     data_dirty_ = false;
-    if (alg && vectors_on_.get()) {
+    if (renderer_.get_rep() && vectors_on_.get()) {
       if (data_id_) ogeom_->delObj(data_id_);
-      data_id_ = ogeom_->addObj(alg->data_switch_, "Vector Data");
+      data_id_ = ogeom_->addObj(renderer_->data_switch_, "Vector Data");
     }
   }
   if (data_at_dirty_) { data_at_dirty_ = false; }
@@ -479,7 +476,6 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
   bool now = false;
   interactive_mode_.reset();
   if (interactive_mode_.get() == "Interactive") now = true;
-  RenderFieldBase* alg = dynamic_cast<RenderFieldBase*>(renderer_.get_rep());
   if (args[1] == "node_scale") {
     if (node_display_type_.get() == "Points") { return; }
     nodes_dirty_ = true;
@@ -518,8 +514,8 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
   } else if (args[1] == "toggle_display_nodes"){
     // Toggle the GeomSwitches.
     nodes_on_.reset();
-    if (alg && alg->node_switch_ && now) 
-      alg->node_switch_->set_state(nodes_on_.get());
+    if (renderer_.get_rep() && renderer_->node_switch_ && now) 
+      renderer_->node_switch_->set_state(nodes_on_.get());
 
     if ((nodes_on_.get()) && (node_id_ == 0)) {
       nodes_dirty_ = true;
@@ -530,8 +526,8 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
   } else if (args[1] == "toggle_display_edges"){
     // Toggle the GeomSwitch.
     edges_on_.reset();
-    if (alg && alg->edge_switch_ && now) 
-      alg->edge_switch_->set_state(edges_on_.get());
+    if (renderer_.get_rep() && renderer_->edge_switch_ && now) 
+      renderer_->edge_switch_->set_state(edges_on_.get());
     
     if ((edges_on_.get()) && (edge_id_ == 0)) {
       edges_dirty_ = true;
@@ -549,8 +545,8 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
   } else if (args[1] == "toggle_display_faces"){
     // Toggle the GeomSwitch.
     faces_on_.reset();
-    if (alg && alg->face_switch_ && now) 
-      alg->face_switch_->set_state(faces_on_.get());
+    if (renderer_.get_rep() && renderer_->face_switch_ && now) 
+      renderer_->face_switch_->set_state(faces_on_.get());
 
     if ((faces_on_.get()) && (face_id_ == 0)) {
       faces_dirty_ = true;
@@ -561,8 +557,8 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
   } else if (args[1] == "toggle_display_vectors"){
     // Toggle the GeomSwitch.
     vectors_on_.reset();
-    if (alg && alg->data_switch_ && now) 
-      alg->data_switch_->set_state(vectors_on_.get());
+    if (renderer_.get_rep() && renderer_->data_switch_ && now) 
+      renderer_->data_switch_->set_state(vectors_on_.get());
 
     if ((vectors_on_.get()) && (data_id_ == 0)) {
       data_dirty_ = true;

@@ -212,19 +212,9 @@ void EditField::update_input_attributes(FieldHandle f)
   // Do this last, sometimes takes a while.
   const TypeDescription *meshtd = f->mesh()->get_type_description();
   CompileInfo *ci = EditFieldAlgoCount::get_compile_info(meshtd);
-  DynamicAlgoHandle algo_handle;
-  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-  {
-    error("Could not compile algorithm.");
-    return;
-  }
-  EditFieldAlgoCount *algo =
-    dynamic_cast<EditFieldAlgoCount *>(algo_handle.get_rep());
-  if (algo == 0)
-  {
-    error("Could not get algorithm.");
-    return;
-  }
+  Handle<EditFieldAlgoCount> algo;
+  if (!module_dynamic_compile(*ci, algo)) return;
+
   int num_nodes;
   int num_elems;
   int dimension;
@@ -397,7 +387,7 @@ EditField::execute()
     Point down(center + sizey/2.);
     Point in(center +sizez/2.);
 
-    double l2norm(size.length());
+    //double l2norm(size.length());
     Transform r;
     Point unused;
     field_initial_transform_.load_identity();
@@ -476,19 +466,9 @@ EditField::execute()
   const TypeDescription *fsrc_td = fh->get_type_description();
   CompileInfo *ci =
     EditFieldAlgoCreate::get_compile_info(fsrc_td, typename_.get());
-  DynamicAlgoHandle algo_handle;
-  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-  {
-    error("Could not compile algorithm.");
-    return;
-  }
-  EditFieldAlgoCreate *algo =
-    dynamic_cast<EditFieldAlgoCreate *>(algo_handle.get_rep());
-  if (algo == 0)
-  {
-    error("Could not get algorithm.");
-    return;
-  }
+  Handle<EditFieldAlgoCreate> algo;
+  if (!module_dynamic_compile(*ci, algo)) return;
+
   gui->execute(id + " set_state Executing 0");
   bool same_value_type_p = false;
   FieldHandle ef(algo->execute(fh, dataat, same_value_type_p));
@@ -502,19 +482,9 @@ EditField::execute()
     CompileInfo *ci =
       EditFieldAlgoCopy::get_compile_info(fsrc_td, fdst_td,
 					  both_scalar_p && transform_p);
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      error("Could not compile algorithm.");
-      return;
-    }
-    EditFieldAlgoCopy *algo =
-      dynamic_cast<EditFieldAlgoCopy *>(algo_handle.get_rep());
-    if (algo == 0)
-    {
-      error("Could not get algorithm.");
-      return;
-    }
+    Handle<EditFieldAlgoCopy> algo;
+    if (!module_dynamic_compile(*ci, algo)) return;
+
     gui->execute(id + " set_state Executing 0");
     algo->execute(fh, ef, scale, translate);
   }

@@ -100,19 +100,9 @@ void InsertVoltageSource::execute() {
     // just need to know the position of the first point of the mesh
     const TypeDescription *meshtd = isourceH->mesh()->get_type_description();
     CompileInfo *ci = InsertVoltageSourceGetPtBase::get_compile_info(meshtd);
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      error("Could not compile algorithm.");
-      return;
-    }
-    InsertVoltageSourceGetPtBase *algo =
-      dynamic_cast<InsertVoltageSourceGetPtBase *>(algo_handle.get_rep());
-    if (algo == 0)
-    {
-      error("Could not get algorithm.");
-      return;
-    }
+    Handle<InsertVoltageSourceGetPtBase> algo;
+    if (!module_dynamic_compile(*ci, algo)) return;
+
     Point pt = algo->execute(isourceH->mesh());
     sources.push_back(pt);
     vals.push_back(0);
@@ -122,20 +112,9 @@ void InsertVoltageSource::execute() {
     CompileInfo *ci = 
       InsertVoltageSourceGetPtsAndValsBase::get_compile_info(field_td, 
 							     loc_td);
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      error("Could not compile algorithm.");
-      return;
-    }
-    
-    InsertVoltageSourceGetPtsAndValsBase *algo = 
-      dynamic_cast<InsertVoltageSourceGetPtsAndValsBase *>(algo_handle.get_rep());
-    if (algo == 0) 
-    {
-      error("Could not get algorithm.");
-      return;
-    }
+    Handle<InsertVoltageSourceGetPtsAndValsBase> algo;
+    if (!module_dynamic_compile(*ci, algo)) return;
+
     algo->execute(isourceH, sources, vals);
   }
 

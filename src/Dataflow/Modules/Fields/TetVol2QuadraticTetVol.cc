@@ -24,6 +24,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/ConvertTet.h>
+#include <Core/Containers/Handle.h>
+
 
 namespace SCIRun {
 
@@ -72,21 +74,10 @@ void TetVol2QuadraticTetVol::execute()
   }
   const TypeDescription *td = fld_handle->get_type_description();
   CompileInfo *ci = ConvertTetBase::get_compile_info(td);
-  DynamicAlgoHandle  converter;
-  if (! DynamicLoader::scirun_loader().get(*ci, converter)) {
-    error("Could not compile algorithm for TetVol2QuadraticTetVol -");
-    error(td->get_name().c_str());
-    return;
-  }
+  Handle<ConvertTetBase> algo;
+  if (!module_dynamic_compile(*ci, algo)) return;  
 
-  if (converter.get_rep() == 0) {
-    error("TetVol2QuadraticTetVol could not get algorithm!!");
-    return;
-  }
-  ConvertTetBase *conv = (ConvertTetBase*)converter.get_rep();
-
-
-  FieldHandle ofld_handle = conv->convert_quadratic(fld_handle);
+  FieldHandle ofld_handle = algo->convert_quadratic(fld_handle);
 
   // debug_tets(((TetVolField<double>*)fld_handle.get_rep())->get_typed_mesh(), 
   //   ((QuadraticTetVolField<double>*)ofld_handle.get_rep())->get_typed_mesh());

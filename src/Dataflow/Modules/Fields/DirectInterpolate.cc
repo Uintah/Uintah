@@ -34,6 +34,7 @@
 #include <Dataflow/Modules/Fields/DirectInterpolate.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Containers/Handle.h>
 #include <iostream>
 #include <stdio.h>
 
@@ -109,20 +110,8 @@ DirectInterpolate::execute()
     const TypeDescription *td0 = dfieldhandle->get_type_description();
     const TypeDescription *td1 = dfieldhandle->data_at_type_description();
     CompileInfo *ci = DirectInterpScalarAlgoBase::get_compile_info(td0, td1);
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      error("Could not compile algorithm.");
-      return;
-    }
-
-    DirectInterpScalarAlgoBase *algo = 
-      dynamic_cast<DirectInterpScalarAlgoBase *>(algo_handle.get_rep());
-    if (algo == 0) 
-    {
-      error("Could not get algorithm.");
-      return;
-    }
+    Handle<DirectInterpScalarAlgoBase> algo;
+    if (!module_dynamic_compile(*ci, algo)) return;
     ofieldhandle = algo->execute(dfieldhandle, sfi,
 				 use_interp_.get(),
 				 use_closest_.get(),
@@ -133,20 +122,8 @@ DirectInterpolate::execute()
     const TypeDescription *td0 = dfieldhandle->get_type_description();
     const TypeDescription *td1 = dfieldhandle->data_at_type_description();
     CompileInfo *ci = DirectInterpVectorAlgoBase::get_compile_info(td0, td1);
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      error("Could not compile algorithm.");
-      return;
-    }
-
-    DirectInterpVectorAlgoBase *algo = 
-      dynamic_cast<DirectInterpVectorAlgoBase *>(algo_handle.get_rep());
-    if (algo == 0) 
-    {
-      error("Could not get algorithm.");
-      return;
-    }
+    Handle<DirectInterpVectorAlgoBase> algo;
+    if (!module_dynamic_compile(*ci, algo)) return;
     ofieldhandle = algo->execute(dfieldhandle, vfi,
 				 use_interp_.get(),
 				 use_closest_.get(),
@@ -157,20 +134,9 @@ DirectInterpolate::execute()
     const TypeDescription *td0 = dfieldhandle->get_type_description();
     const TypeDescription *td1 = dfieldhandle->data_at_type_description();
     CompileInfo *ci = DirectInterpTensorAlgoBase::get_compile_info(td0, td1);
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-    {
-      error("Could not compile algorithm.");
-      return;
-    }
+    Handle<DirectInterpTensorAlgoBase> algo;
+    if (!module_dynamic_compile(*ci, algo)) return;
 
-    DirectInterpTensorAlgoBase *algo = 
-      dynamic_cast<DirectInterpTensorAlgoBase *>(algo_handle.get_rep());
-    if (algo == 0) 
-    {
-      error("Could not get algorithm.");
-      return;
-    }
     ofieldhandle = algo->execute(dfieldhandle, tfi,
 				 use_interp_.get(),
 				 use_closest_.get(),
