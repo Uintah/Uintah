@@ -88,6 +88,13 @@ class Patch;
       private:
       };
 
+     bool equals(const VarLabel* v2) const
+     {
+       if(this == v2)
+	 return true;
+       return getName() == v2->getName();
+     }
+
       void setCompressionMode(string compressionMode)
       { d_compressionMode = compressionMode; }
 
