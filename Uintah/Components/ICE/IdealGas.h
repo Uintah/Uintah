@@ -55,12 +55,29 @@ WARNING
 				       const ICEMaterial* matl,
 				       DataWarehouseP& new_dw);
 
-	 virtual void addComputesAndRequires(Task* task,
-					     const ICEMaterial* matl,
-					     const Patch* patch,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw) const;
+	 // C&R for sound speed calc.
+	 virtual void addComputesAndRequiresSS(Task* task,
+					       const ICEMaterial* matl,
+					       const Patch* patch,
+					       DataWarehouseP& old_dw,
+					       DataWarehouseP& new_dw) const;
 
+	 // C&R for compute equilibration pressure
+	 virtual void addComputesAndRequiresCEB(Task* task,
+					       const ICEMaterial* matl,
+					       const Patch* patch,
+					       DataWarehouseP& old_dw,
+					       DataWarehouseP& new_dw) const;
+
+         virtual void computeSpeedSound(const Patch* patch,
+                                        const ICEMaterial* matl,
+                                        DataWarehouseP& old_dw,
+                                        DataWarehouseP& new_dw);
+
+         virtual void computeEquilibrationPressure(const Patch* patch,
+                                                   const ICEMaterial* matl,
+                                                   DataWarehouseP& old_dw,
+                                                   DataWarehouseP& new_dw);
 
         protected:
 
@@ -72,6 +89,9 @@ WARNING
 #endif  // __IDEAL_GAS_H__
 
 // $Log$
+// Revision 1.2  2000/10/05 04:26:48  guilkey
+// Added code for part of the EOS evaluation.
+//
 // Revision 1.1  2000/10/04 23:40:12  jas
 // The skeleton framework for an EOS model.  Does nothing.
 //

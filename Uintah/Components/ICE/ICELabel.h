@@ -27,6 +27,8 @@ namespace Uintah {
     const VarLabel* press_CCLabel_5;
     const VarLabel* press_CCLabel_6_7;
 
+    const VarLabel* rho_micro_CCLabel;
+
     const VarLabel* rho_CCLabel;
     const VarLabel* rho_CCLabel_0;
     const VarLabel* rho_CCLabel_1;
@@ -54,6 +56,8 @@ namespace Uintah {
     const VarLabel* vel_CCLabel_5;
     const VarLabel* vel_CCLabel_6_7;
 
+    const VarLabel* speedSound_CCLabel;
+
     const VarLabel* cv_CCLabel;
     const VarLabel* div_velfc_CCLabel;
 
@@ -68,6 +72,9 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.3  2000/10/05 04:26:48  guilkey
+// Added code for part of the EOS evaluation.
+//
 // Revision 1.2  2000/10/04 20:17:52  jas
 // Change namespace ICE to ICESpace.
 //
