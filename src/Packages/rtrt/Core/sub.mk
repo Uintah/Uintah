@@ -86,6 +86,8 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Parallelogram.cc \
 	$(SRCDIR)/Speckle.cc \
 	$(SRCDIR)/Cylinder.cc \
+	$(SRCDIR)/UVCylinder.cc \
+	$(SRCDIR)/UVCylinderArc.cc \
 	$(SRCDIR)/hilbert.cc \
 	$(SRCDIR)/Wood.cc \
 	$(SRCDIR)/HTVolumeBrick.cc  \
@@ -104,8 +106,8 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/TimeCycleMaterial.cc \
 	$(SRCDIR)/pcube.c \
 	$(SRCDIR)/fpcube.c \
+	$(SRCDIR)/BrickArray2.cc \
 	$(SRCDIR)/templates.cc \
-	$(SRCDIR)/BrickArray2.cc
 
 SUBDIRS := $(SRCDIR)/Shadows
 include $(SRCTOP)/scripts/recurse.mk
