@@ -135,11 +135,13 @@ class Crack
      // private methods  
      // Calculate normal of a triangle
      Vector TriangleNormal(const Point&,const Point&,const Point&);
-     // Detect if two points are in same side of a plane
-     short NotSameSide(const Point&,const Point&,
+     // Detect if particle and node in same side of a plane
+     short Location(const Point&,const Point&,
                        const Point&,const Point&,const Point&);
      //compute signed volume of a tetrahedron
      double Volume(const Point&,const Point&,const Point&,const Point&);
+     // a private function
+     IntVector CellOffset(const Point&, const Point&, Vector);
 
  protected:
      
