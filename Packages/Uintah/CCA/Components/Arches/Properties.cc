@@ -1623,7 +1623,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
   if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
   else parent_old_dw = old_dw;
 
-  int drhodt_1st_order = 10000000;
+  int drhodt_1st_order = 1;
   int current_step = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
   if (d_MAlab) drhodt_1st_order = 2;
   delt_vartype delT, old_delT;
