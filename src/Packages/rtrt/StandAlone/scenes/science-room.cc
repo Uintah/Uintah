@@ -62,9 +62,9 @@ using SCIRun::Thread;
 //#define ADD_VIS_FEM
 //#define ADD_HEAD
 //#define ADD_CSAFE_FIRE
-#define ADD_GEO_DATA
+//#define ADD_GEO_DATA
 //#define ADD_SHEEP
-//#define ADD_DTIGLYPH
+#define ADD_DTIGLYPH
 
 #ifdef ADD_DTIGLYPH
 
@@ -158,7 +158,7 @@ namespace rtrt {
   extern float glyph_threshold;
 }
 
-void make_brain_glyphs(Group *g, int argc, char *argv[]) {
+void make_brain_glyphs(Group *g, const Array1<Light *> &pml, int argc, char *argv[]) {
   airArray *mop;
   hestOpt *opt = NULL;
   int anisoType;
@@ -271,6 +271,9 @@ void make_brain_glyphs(Group *g, int argc, char *argv[]) {
 	Color rgb;
 	dtiRgbGen(rgb, evec, c[anisoType]);
 	Phong *matl = new Phong(rgb, Color(1,1,1), 100);
+	for (int l=0; l<pml.size(); l++)
+	  matl->my_lights.add(pml[l]);
+
 	// These are cool transparent/reflective glyphs
 	//PhongMaterial *matl = new PhongMaterial(rgb, 0.3, 0.4, 100, true);
 	// all glyphs start at the origin
@@ -280,6 +283,7 @@ void make_brain_glyphs(Group *g, int argc, char *argv[]) {
 
 	double tmat[9], A[16], B[16], C[16];
 	// C = composition of tensor matrix and translation
+
 	TEN_LIST2MAT(tmat, tdata);
 	ELL_43M_INSET(A, tmat);
 	ELL_4M_SET_SCALE(B, as, as, as);
@@ -288,7 +292,7 @@ void make_brain_glyphs(Group *g, int argc, char *argv[]) {
 	ELL_4M_SET_TRANSLATE(A,
 			     x - xs*(sx-1)/2,
 			     y - ys*(sy-1)/2,
-			     z);
+			     zs*(sz-1) - z);
 	// B = composition of translation and C
 	ELL_4M_MUL(B, A, C);
 	ELL_4M_TRANSPOSE_IP(B, tmp);
@@ -298,8 +302,8 @@ void make_brain_glyphs(Group *g, int argc, char *argv[]) {
 	Transform *tr = new Transform();
 	tr->set(B);
 
-	tr->post_scale(Vector(.01,.01,.01));
-	tr->post_translate(Vector(-8, 8, 0.55));
+	tr->pre_scale(Vector(.015,.015,.015));
+	tr->pre_translate(Vector(-8, 8, 0.55));
 	glyphs.add(new Glyph(new Instance(new InstanceWrapperObject(obj),tr),
 		 c[anisoType]));
       }
@@ -916,8 +920,23 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   Point center(-8, 8, 0);
   Group *g=new Group;
 
+  //PER MATERIAL LIGHTS FOR THE HOLOGRAMS
+//  Light *holo_light1 = new Light(Point(-8, 10, 0.2), Color(0.5,0.3,0.3),0,1,true);
+//  Light *holo_light2 = new Light(Point(-9.41, 6.58, 2.2),Color(0.3,0.5,0.3),0,1,true);
+//  Light *holo_light3 = new Light(Point(-6.58, 6.58, 3.2),Color(0.3,0.3,0.5),0,1,true);
+  Light *holo_light1 = new Light(Point(-8, 10, 0.2), Color(0.9,0.9,0.9),0,1,true);
+  Light *holo_light2 = new Light(Point(-9.41, 6.58, 2.2),Color(0.9,0.9,0.9),0,1,true);
+  Light *holo_light3 = new Light(Point(-6.58, 6.58, 3.2),Color(0.9,0.9,0.9),0,1,true);
+  holo_light1->name_ = "hololight1";
+  holo_light2->name_ = "hololight2";
+  holo_light3->name_ = "hololight3";
+
 #ifdef ADD_DTIGLYPH
-  make_brain_glyphs(g, argc, argv);
+  Array1<Light *> pml;
+  pml.add(holo_light1);
+  pml.add(holo_light2);
+  pml.add(holo_light3);
+  make_brain_glyphs(g, pml, argc, argv);
 #endif
 
 #ifdef ADD_BRICKBRACK
@@ -943,14 +962,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 #ifdef ADD_BRICKBRACK
   SpinningInstance *smw = make_dna(g);
 #endif
-
-  //PER MATERIAL LIGHTS FOR THE HOLOGRAMS
-  Light *holo_light1 = new Light(Point(-8, 10, 0.2), Color(0.5,0.3,0.3),0,1,true);
-  Light *holo_light2 = new Light(Point(-9.41, 6.58, 2.2),Color(0.3,0.5,0.3),0,1,true);
-  Light *holo_light3 = new Light(Point(-6.58, 6.58, 3.2),Color(0.3,0.3,0.5),0,1,true);
-  holo_light1->name_ = "hololight1";
-  holo_light2->name_ = "hololight2";
-  holo_light3->name_ = "hololight3";
 
   //CUTTING PLANE FOR THE HOLOGRAMS
   CutPlaneDpy* cpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
@@ -1179,8 +1190,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scut->name_ = "Sheep Heart Cutting Plane";
 #endif
 
+#if 0
   //PUT THE VOLUMES INTO A SWITCHING GROUP  
   SelectableGroup *sg = new SelectableGroup(60);
+#endif
+
 #ifdef ADD_VIS_FEM
   sg->add(vcut);
 #endif
@@ -1196,9 +1210,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 #ifdef ADD_SHEEP
   sg->add(scut);
 #endif
-  sg->name_ = "VolVis Selection";
 
+#if 0
+  sg->name_ = "VolVis Selection";
   g->add(sg);
+#endif
 
   Color cdown(0.1, 0.1, 0.1);
   Color cup(0.1, 0.1, 0.1);
@@ -1219,15 +1235,24 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
-  Light *science_room_light0 = new Light(Point(-8, 8, 3.9), Color(.5,.5,.5), 0);
+  Light *science_room_light0 = new Light(Point(-8, 8, 3.9), Color(.5,.5,.5), 0, .3);
   science_room_light0->name_ = "science room overhead";
   scene->add_light(science_room_light0);
-  Light *science_room_light1 = new Light(Point(-11, 11, 3), Color(.5,.5,.5), 0);
-  science_room_light1->name_ = "science room corner";
+//  Light *science_room_light1 = new Light(Point(-5, 11, 3), Color(.5,.5,.5), 0);
+//  science_room_light1->name_ = "science room corner";
+//  scene->add_light(science_room_light1);
+  Light *science_room_light1 = new Light(Point(-5, 8, 3), Color(.5,.5,.5), 0, .3);
+  science_room_light1->name_ = "science room corner1";
   scene->add_light(science_room_light1);
+  Light *science_room_light2 = new Light(Point(-8, 5, 3), Color(.5,.5,.5), 0, .3);
+  science_room_light2->name_ = "science room corner2";
+  scene->add_light(science_room_light2);
   scene->animate=true;
 
+#if 0
   scene->addObjectOfInterest( sg, true );
+#endif
+
 #ifdef ADD_HEAD
   scene->addObjectOfInterest( hcut, false );
 #endif
@@ -1278,3 +1303,10 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   return scene;
 }
+
+/*
+
+./rtrt -np 10 -scene scenes/science-room.mo /usr/sci/data/Geometry/volumes2/gk/gk2-rcc-b06-mask-s070.nhdr fa 1 0.7 -gridcellsize 50 -nl 5
+
+*/
+

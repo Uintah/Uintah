@@ -102,7 +102,10 @@ void Glyph::preprocess(double maxradius, int& pp_offset, int& scratchsize) {
 // to put an externed global variable in the header.  Whatever!
 
 int GlyphGroup::get_index(const float val) const {
-  return (int)(val*num_levels);
+  int idx=(int)(val*num_levels);
+  if (idx>=num_levels) return idx-1;
+  else if (idx<0) return 0;
+  else return idx;
 }
 
 GlyphGroup::GlyphGroup(Array1<Glyph *> &glyphs, int gridcellsize,
@@ -198,6 +201,7 @@ void GlyphGroup::preprocess(double maxradius, int& pp_offset,
 void GlyphGroup::compute_bounds(BBox& b, double offset) {
   for(int i =0; i < num_levels; i++)
     grids[i]->compute_bounds(b, offset);
+  cerr << "MY BOUNDING BOX IS: " << b.min() <<" -- "<< b.max() <<"\n";
 }
 
 void GlyphGroup::print(ostream& out) {

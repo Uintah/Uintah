@@ -46,9 +46,9 @@ class PPMImage
  public:
   PPMImage() {} // for Pio.
   PPMImage(const string& s, bool flip=false) 
-    : valid_(false), flipped_(flip) 
+    : flipped_(flip) 
   { 
-    read_image(s.c_str()); 
+    valid_ = read_image(s.c_str());
   }
   PPMImage(int nu, int nv, bool flip=false) 
     : u_(nu), v_(nv), valid_(false), flipped_(flip) 
