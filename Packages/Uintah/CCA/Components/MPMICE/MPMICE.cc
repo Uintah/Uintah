@@ -1337,6 +1337,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
     //__________________________________
     // Compute rho_micro, speedSound, volfrac, rho_CC
+    // see Docs/MPMICE.txt for explaination of why we ONlY
+    // use eos evaulations for rho_micro_mpm
 
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       IntVector c = *iter;
@@ -1362,13 +1364,17 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
         if(mpm_matl){                //  M P M
   #ifdef EOSCM
-          rho_micro[m][c] = mass_CC[m][c]/mat_vol[m][c];
+          rho_micro[m][c] =  
+            mpm_matl->getConstitutiveModel()->
+            computeRhoMicroCM(press_new[c],press_ref, mpm_matl);
+            
+          mat_volume[m] = mass_CC[m][c]/rho_micro[m][c]; 
 
           mpm_matl->getConstitutiveModel()->
             computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
                               dp_drho[m], tmp,mpm_matl);
   #endif
-          mat_volume[m] = mat_vol[m][c];
+          
 
   //    This is the IDEAL GAS stuff
   #ifdef IDEAL_GAS
