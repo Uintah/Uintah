@@ -80,6 +80,7 @@ namespace SCIRun {
     void *msg;
     int capacity;
     int msg_size;
+    int msg_length;
     static const int INIT_SIZE=1024;
     SocketSpChannel *spchan;
     DTMessage *dtmsg;
