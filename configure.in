@@ -520,6 +520,8 @@ if test "$enable_parallel" = "yes"; then
 	        Component/PIDL/Makefile \
 	        tools/sidl/Makefile 
 		testprograms/Component/Makefile \
+		  testprograms/Component/argtest/Makefile \
+		  testprograms/Component/memstress/Makefile \
 		  testprograms/Component/mitest/Makefile \
 		  testprograms/Component/objects/Makefile \
 		  testprograms/Component/pingpong/Makefile \
