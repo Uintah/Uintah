@@ -51,7 +51,6 @@ extern "C" Display *__glutDisplay;
 
 double ORBIT_SPEED  = 1;
 double ROTATE_SPEED = 1;
-bool   HOLO_ON      = false;
 
 using namespace rtrt;
 using namespace SCIRun;
@@ -536,7 +535,8 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   case 13: // Enter
     if (activeGui->shiftDown_) {
       // toggle holo room on/off
-      HOLO_ON = !HOLO_ON;
+      activeGui->dpy_->holoToggle_ = !activeGui->dpy_->holoToggle_;
+      cout << "holo room is now " << activeGui->dpy_->holoToggle_ << endl;
     } else {
       activeGui->camera_->flatten(); // Right yourself (0 pitch, 0 roll)
     }

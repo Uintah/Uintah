@@ -147,6 +147,8 @@ static Object * obj;
 
 static double   lightoff_frame = -1.0;
 
+double _HOLO_STATE_=1;
+
 //static float float_identity[4][4] = { {1,0,0,0}, {0,1,0,0},
 //	 			        {0,0,1,0}, {0,0,0,1} };
 
@@ -168,7 +170,7 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
     numThreadsRequested_(nworkers), changeNumThreads_(false),
     pp_size_(pp_size), scratchsize_(scratchsize),
     toggleRenderWindowSize_(false), renderWindowSize_(1),
-    fullScreenMode_( fullscreen )
+    fullScreenMode_( fullscreen ), holoToggle_(false)
 {
   ppc = new PerProcessorContext( pp_size, scratchsize );
 
@@ -319,6 +321,14 @@ Dpy::checkGuiFlags()
   } else if( !showLights_ && lightsShowing_ ){
     scene->renderLights( false );
     lightsShowing_ = false;
+  }
+
+  if ( _HOLO_STATE_<1 && !holoToggle_) {
+    _HOLO_STATE_ += .1;
+    if (_HOLO_STATE_>1) _HOLO_STATE_=1;
+  } else if ( _HOLO_STATE_>0 && holoToggle_ ) {
+    _HOLO_STATE_ -= .1;
+    if (_HOLO_STATE_<0) _HOLO_STATE_=0;
   }
 
   if( turnOffAllLights_ ){
