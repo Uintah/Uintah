@@ -30,32 +30,20 @@ itcl_class Teem_DataIO_NrrdReader {
 
     method set_defaults {} {
 	global $this-filename
-	global $this-label
-	global $this-type
-	global $this-axis
-	global $this-sel
 
 	set $this-filename ""
-	set $this-label unknown
-	set $this-type Scalar
-	set $this-axis ""
-	set $this-sel ""
     }
 
-    method make_file_open_box {} {
+    method ui {} {
+	global env
 	global $this-filename
-
-	set w [format "%s-fb" .ui[modname]]
-
+	
+	set w .ui[modname]
+	
 	if {[winfo exists $w]} {
-	    if { [winfo ismapped $w] == 1} {
-		raise $w
-	    } else {
-		wm deiconify $w
-	    }
-	    return $w
+	    return
 	}
-
+	
 	toplevel $w -class TkFDialog
 	
 	# place to put preferred data directory
@@ -64,9 +52,9 @@ itcl_class Teem_DataIO_NrrdReader {
 	
 	#######################################################
 	# to be modified for particular reader
-
+	
 	# extansion to append if no extension supplied by user
-	set defext ".fld"
+	set defext ".nrrd"
 	set title "Open nrrd file"
 	
 	# file types to appers in filter box
@@ -77,11 +65,12 @@ itcl_class Teem_DataIO_NrrdReader {
 	}
 	
 	######################################################
-
+	
 	makeOpenFilebox \
 	    -parent $w \
 	    -filevar $this-filename \
-	    -command "set $this-axis \"\";$this-c read_nrrd; wm withdraw $w" \
+	    -setcmd "wm withdraw $w" \
+	    -command "$this-c needexecute; wm withdraw $w" \
 	    -cancel "wm withdraw $w" \
 	    -title $title \
 	    -filetypes $types \
@@ -89,100 +78,5 @@ itcl_class Teem_DataIO_NrrdReader {
 	    -defaultextension $defext
 
 	moveToCursor $w
-	wm deiconify $w
-
-	return $w
-    }
-
-    method update_type {om} {
-	global $this-type
-	set $this-type [$om get]
-    }
-
-
-    # set the axis variable
-    method set_axis {w} {
-	if {[get_selection $w] != ""} {
-	    set $this-axis [get_selection $w]
-	}
-    }
-
-    method clear_axis_info {} {
-	set w .ui[modname]
-	if {[winfo exists $w]} {
-	    delete_all_axes $w.rb
-	}
-    }
-
-    method add_axis_info {id label center size spacing min max} {
-	set w .ui[modname]
-	if {[winfo exists $w]} {
-	    add_axis $w.rb "axis$id" "Axis $id\nLabel: $label\nCenter: $center\nSize $size\nSpacing: $spacing\nMin: $min\nMax: $max"
-	}
-	# set the saved axis...
-	if {[set $this-axis] == "axis$id"} {
-	    if {[winfo exists $w.rb]} {
-		select_axis $w.rb "axis$id"
-	    }
-	    set $this-axis "axis$id"
-	}
-    }
-
-    method ui {} {
-	set w .ui[modname]
-
-	if {[winfo exists $w]} {
-	    set child [lindex [winfo children $w] 0]
-
-	    # $w withdrawn by $child's procedures
-	    raise $child
-	    return
-	}
-
-	toplevel $w
-
-	# read a nrrd
-	iwidgets::labeledframe $w.f \
-		-labeltext "Nrrd Reader Info"
-	set f [$w.f childsite]
-
-	iwidgets::entryfield $f.fname -labeltext "File:" \
-	    -textvariable $this-filename
-
-	button $f.sel -text "Browse" \
-	    -command "$this make_file_open_box" -width 50
-
-	pack $f.fname $f.sel -side top -fill x -expand yes -padx 4 -pady 4
-	pack $w.f -fill x -expand yes -side top
-
-	# axis info and selection
-	make_axis_info_sel_box $w.rb "$this set_axis $w.rb"
-
-
-	# set axis label and type
-	iwidgets::labeledframe $w.f1 \
-		-labelpos nw -labeltext "Set Tuple Axis Info"
-
-	set f1 [$w.f1 childsite]
-
-	iwidgets::entryfield $f1.lab -labeltext "Label:" \
-	    -textvariable $this-label
-
-	iwidgets::optionmenu $f1.type -labeltext "Type:" \
-		-labelpos w -command "$this update_type $f1.type"
-	$f1.type insert end Scalar Vector Tensor
-	$f1.type select [set $this-type]
-
-	pack $f1.lab $f1.type -fill x -expand yes -side top -padx 4 -pady 2
-
-	pack $w.f1 -fill x -expand yes -side top
-
-	makeSciButtonPanel $w $w $this
-	moveToCursor $w
-
-	if {[set $this-filename] != ""} {
-	    $this-c read_nrrd
-	}
-
     }
 }

@@ -52,8 +52,7 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w

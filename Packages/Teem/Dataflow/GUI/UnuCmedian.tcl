@@ -30,6 +30,7 @@ itcl_class Teem_Unu_UnuCmedian {
 	global $this-weight
 	global $this-bins
 	global $this-pad
+	
 
 	set $this-radius 1
 	set $this-weight 1.0
@@ -55,8 +56,7 @@ itcl_class Teem_Unu_UnuCmedian {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -91,8 +91,9 @@ itcl_class Teem_Unu_UnuCmedian {
 	pack $w.f.options.modelabel $w.f.options.mode -side left -anchor w 
 	pack $w.f.options.padlabel $w.f.options.pad -side left -anchor w 
 	
-
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
+
+	pack $w.f -expand 1 -fill x
     }
 }

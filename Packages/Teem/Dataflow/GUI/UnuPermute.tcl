@@ -39,7 +39,6 @@ itcl_class Teem_Unu_UnuPermute {
         set $this-dim 0
     }
 
-    # never permute the tuple axis (axis 0) so no interface for axis 0
     method make_axes {} {
 	set w .ui[modname]
         if {[winfo exists $w]} {
@@ -47,7 +46,7 @@ itcl_class Teem_Unu_UnuPermute {
 	    if {[winfo exists $w.f.t]} {
 		destroy $w.f.t
 	    }
-	    for {set i 1} {$i < [set $this-dim]} {incr i} {
+	    for {set i 0} {$i < [set $this-dim]} {incr i} {
 		#puts $i
 		if {! [winfo exists $w.f.a$i]} {
 		    make_entry $w.f.a$i "Axis $i <- " $this-axis$i
@@ -57,7 +56,6 @@ itcl_class Teem_Unu_UnuPermute {
 	}
     }
     
-    # never permute the tuple axis (axis 0)
     method init_axes {} {
 	for {set i 0} {$i < [set $this-dim]} {incr i} {
 	    #puts "init_axes----$i"
@@ -76,7 +74,7 @@ itcl_class Teem_Unu_UnuPermute {
 	    if {[winfo exists $w.f.t]} {
 		destroy $w.f.t
 	    }
-	    for {set i 1} {$i < [set $this-dim]} {incr i} {
+	    for {set i 0} {$i < [set $this-dim]} {incr i} {
 		#puts $i
 		if {[winfo exists $w.f.a$i]} {
 		    destroy $w.f.a$i
@@ -98,8 +96,7 @@ itcl_class Teem_Unu_UnuPermute {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -107,15 +104,15 @@ itcl_class Teem_Unu_UnuPermute {
         frame $w.f
 
 	if {[set $this-dim] == 0} {
-	    label $w.f.t -text "Need Execute to know the number of Axes."
-	    pack $w.f.t
+	    label $w.f.axisf.t -text "Need to Execute to know the number of Axes."
+	    pack $w.f.axisf.t
 	} else {
 	    init_axes 
 	}
 
-	pack $w.f
+	pack $w.f.axisf -side top -expand 1 -fill x
 
-	makeSciButtonPanel $w $w $this
+        makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
 }

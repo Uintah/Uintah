@@ -30,16 +30,13 @@ itcl_class Teem_Unu_UnuDhisto {
         set $this-height 0
 
         global $this-log
-        set $this-log 0
-
-
+        set $this-log 1
     }
 
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -52,11 +49,13 @@ itcl_class Teem_Unu_UnuDhisto {
 
         iwidgets::entryfield $w.f.options.height -labeltext "height:" -textvariable $this-height
         pack $w.f.options.height -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.log -labeltext "log:" -textvariable $this-log
+
+        checkbutton $w.f.options.log -text "Show log-scaled histogram:" -variable $this-log
         pack $w.f.options.log -side top -expand yes -fill x
 
-
-	makeSciButtonPanel $w $w $this
+	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
+
+	pack $w.f -expand 1 -fill x
     }
 }

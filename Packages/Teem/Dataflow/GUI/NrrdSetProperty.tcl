@@ -54,7 +54,6 @@ itcl_class Teem_NrrdData_NrrdSetProperty {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
 

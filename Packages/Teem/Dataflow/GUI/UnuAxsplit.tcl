@@ -34,15 +34,12 @@ itcl_class Teem_Unu_UnuAxsplit {
 
         global $this-slowsize
         set $this-slowsize 0
-
-
     }
 
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -53,15 +50,21 @@ itcl_class Teem_Unu_UnuAxsplit {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.axis -labeltext "axis:" -textvariable $this-axis
+        iwidgets::entryfield $w.f.options.axis -labeltext "Axis:" \
+	    -textvariable $this-axis
         pack $w.f.options.axis -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.fastsize -labeltext "fastsize:" -textvariable $this-fastsize
-        pack $w.f.options.fastsize -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.slowsize -labeltext "slowsize:" -textvariable $this-slowsize
-        pack $w.f.options.slowsize -side top -expand yes -fill x
 
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.b -side top -expand 1 -fill x
+        iwidgets::entryfield $w.f.options.fast -labeltext "Fast Axis Size:" \
+	    -textvariable $this-fastsize
+        pack $w.f.options.fast -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.slow -labeltext "Slow Axis Size:" \
+	    -textvariable $this-slowsize
+        pack $w.f.options.slow -side top -expand yes -fill x
+
+	makeSciButtonPanel $w.f $w $this
+	moveToCursor $w
+
 	pack $w.f -expand 1 -fill x
     }
 }

@@ -30,13 +30,13 @@ itcl_class Teem_Unu_UnuHisto {
         set $this-bins 0
 
         global $this-min
-        set $this-min 0.0
+        set $this-min 1.0
 
         global $this-max
-        set $this-max 0.0
+        set $this-max 1.0
 
         global $this-type
-        set $this-type ""
+        set $this-type "nrrdTypeUInt"
 
 
     }
@@ -44,8 +44,7 @@ itcl_class Teem_Unu_UnuHisto {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -65,8 +64,9 @@ itcl_class Teem_Unu_UnuHisto {
         iwidgets::entryfield $w.f.options.type -labeltext "type:" -textvariable $this-type
         pack $w.f.options.type -side top -expand yes -fill x
 
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.b -side top -expand 1 -fill x
+	makeSciButtonPanel $w.f $w $this
+	moveToCursor $w
+
 	pack $w.f -expand 1 -fill x
     }
 }

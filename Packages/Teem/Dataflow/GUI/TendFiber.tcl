@@ -191,8 +191,9 @@ itcl_class Teem_Tend_TendFiber {
 	pack $w.f.options.stop.a.thresh -side top -fill x
 	pack $w.f.options.stop.a -side top -fill x -expand 1
 
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.b -side top -expand 1 -fill x
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
+
 	pack $w.f -expand 1 -fill x
     }
 }

@@ -13,35 +13,32 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
 #  
-#    File   : EditTupleAxis.tcl
-#    Author : David Weinstein
-#    Date   : Mon Sep 22 09:46:23 2003
+#    File   : UnuUnquantize.tcl
+#    Author : Darby Van Uitert
+#    Date   : April 2004
 
-catch {rename Teem_NrrdData_EditTupleAxis ""}
-
-itcl_class Teem_NrrdData_EditTupleAxis {
+itcl_class Teem_Unu_UnuUnquantize {
     inherit Module
     constructor {config} {
-        set name EditTupleAxis
+        set name UnuUnquantize
         set_defaults
     }
+
     method set_defaults {} {
-        global $this-input-label
-        set $this-input-label ""
+	global $this-min
+	global $this-max
+	global $this-double
 
-        global $this-output-label
-        set $this-output-label ""
-
-
+	set $this-min {-1}
+	set $this-max {-1}
+	set $this-double 0
     }
 
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
-
         toplevel $w
 
         frame $w.f
@@ -50,13 +47,19 @@ itcl_class Teem_NrrdData_EditTupleAxis {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.input -labeltext "input tuple string:" -textvariable $this-input-label
-        pack $w.f.options.input -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.output -labeltext "output tuple string:" -textvariable $this-output-label
-        pack $w.f.options.output -side top -expand yes -fill x
+        iwidgets::entryfield $w.f.options.min -labeltext "Min:" -textvariable $this-min
+        pack $w.f.options.min -side top -expand yes -fill x
+        iwidgets::entryfield $w.f.options.max -labeltext "Max:" -textvariable $this-max
+        pack $w.f.options.max -side top -expand yes -fill x
+	checkbutton $w.f.options.double -text "Use double for output type" \
+	    -variable $this-double
+	pack $w.f.options.double -side top -expand yes -fill x
 
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.b -side top -expand 1 -fill x
+	makeSciButtonPanel $w.f $w $this
+	moveToCursor $w
+
 	pack $w.f -expand 1 -fill x
     }
 }
+
+

@@ -28,14 +28,11 @@ itcl_class Teem_Unu_UnuFlip {
     method set_defaults {} {
         global $this-axis
         set $this-axis 0
-
-
     }
 
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return;
         }
 
@@ -47,11 +44,12 @@ itcl_class Teem_Unu_UnuFlip {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.axis -labeltext "axis:" -textvariable $this-axis
+        iwidgets::entryfield $w.f.options.axis -labeltext "Axis to flip along:" -textvariable $this-axis
         pack $w.f.options.axis -side top -expand yes -fill x
-
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
+
+	pack $w.f -expand 1 -fill x
     }
 }

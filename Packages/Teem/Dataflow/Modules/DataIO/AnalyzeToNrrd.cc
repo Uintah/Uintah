@@ -360,7 +360,7 @@ int AnalyzeToNrrd::build_nrrds( vector<Nrrd*> & array )
     if( dim == 3 ) 
     {
       if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeUShort, 
-               image.get_dimension(), image.get_size(0), 
+               3, image.get_size(0), 
                image.get_size(1), image.get_size(2)) ) 
       {
         error( "(AnalyzeToNrrd::execute) Error creating nrrd." );
@@ -375,24 +375,23 @@ int AnalyzeToNrrd::build_nrrds( vector<Nrrd*> & array )
 	    	       nrrdCenterNode, nrrdCenterNode, 
 		       nrrdCenterNode, nrrdCenterNode );
 
-      nrrd->axis[0].label = "Unknown:Scalar";
-      nrrd->axis[1].label = strdup("x");
-      nrrd->axis[2].label = strdup("y");
-      nrrd->axis[3].label = strdup("z");
-      nrrd->axis[1].spacing = image.get_spacing(0);
-      nrrd->axis[2].spacing = image.get_spacing(1);
-      nrrd->axis[3].spacing = image.get_spacing(2);
+      //nrrd->axis[0].label = "Unknown:Scalar";
+      nrrd->axis[0].label = strdup("x");
+      nrrd->axis[1].label = strdup("y");
+      nrrd->axis[2].label = strdup("z");
+      nrrd->axis[0].spacing = image.get_spacing(0);
+      nrrd->axis[1].spacing = image.get_spacing(1);
+      nrrd->axis[2].spacing = image.get_spacing(2);
 
-      nrrdAxisMinMaxSet(nrrd, 0, nrrdCenterNode);
-      nrrdAxisMinMaxSet(nrrd, 1, nrrdCenterNode);
-      nrrdAxisMinMaxSet(nrrd, 2, nrrdCenterNode);
-      nrrdAxisMinMaxSet(nrrd, 3, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(nrrd, 0, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(nrrd, 1, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(nrrd, 2, nrrdCenterNode);
+      //nrrdAxisInfoMinMaxSet(nrrd, 3, nrrdCenterNode);
     }
     else if( dim == 2 ) 
     {
       if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeUShort, 
-               image.get_dimension(), image.get_size(0), 
-               image.get_size(1)) ) 
+               2, image.get_size(0), image.get_size(1)) ) 
       {
         error( "(AnalyzeToNrrd::execute) Error creating nrrd." );
         err = biffGetDone(NRRD);
@@ -406,15 +405,15 @@ int AnalyzeToNrrd::build_nrrds( vector<Nrrd*> & array )
 	    	       nrrdCenterNode, nrrdCenterNode, 
 		       nrrdCenterNode, nrrdCenterNode );
 
-      nrrd->axis[0].label = "Unknown:Scalar";
-      nrrd->axis[1].label = strdup("x");
-      nrrd->axis[2].label = strdup("y");
-      nrrd->axis[1].spacing = image.get_spacing(0);
-      nrrd->axis[2].spacing = image.get_spacing(1);
+      //nrrd->axis[0].label = "Unknown:Scalar";
+      nrrd->axis[0].label = strdup("x");
+      nrrd->axis[1].label = strdup("y");
+      nrrd->axis[0].spacing = image.get_spacing(0);
+      nrrd->axis[1].spacing = image.get_spacing(1);
 
-      nrrdAxisMinMaxSet(nrrd, 0, nrrdCenterNode);
-      nrrdAxisMinMaxSet(nrrd, 1, nrrdCenterNode);
-      nrrdAxisMinMaxSet(nrrd, 2, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(nrrd, 0, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(nrrd, 1, nrrdCenterNode);
+      //nrrdAxisInfoMinMaxSet(nrrd, 2, nrrdCenterNode);
     }
     else
     {
@@ -457,8 +456,11 @@ NrrdData * AnalyzeToNrrd::join_nrrds( vector<Nrrd*> arr )
   // Join all nrrds together into one 4D nrrd object
   NrrdData *sciNrrd = scinew NrrdData();
   sciNrrd->nrrd = nrrdNew();
-
-  if( nrrdJoin(sciNrrd->nrrd, &arr[0], num_nrrds, 0, true) ) 
+  
+  bool incr = true;
+  if (num_nrrds == 1) { incr = false; }
+  
+  if( nrrdJoin(sciNrrd->nrrd, &arr[0], num_nrrds, 0, incr) ) 
   {
     char *err = biffGetDone(NRRD);
     error( string("(AnalyzeToNrrd::join_nrrds) Join Error: ") +  err );
@@ -482,19 +484,62 @@ NrrdData * AnalyzeToNrrd::join_nrrds( vector<Nrrd*> arr )
       new_label += string(",") + string(arr[i]->axis[0].label);
     }
   }
+  switch (sciNrrd->nrrd->dim) {
+  case 4:
+    if (incr) {
+      sciNrrd->nrrd->axis[0].label = strdup( new_label.c_str() );
+      sciNrrd->nrrd->axis[1].label = strdup( "x" );
+      sciNrrd->nrrd->axis[2].label = strdup( "y" );
+      sciNrrd->nrrd->axis[3].label = strdup( "z" );
+      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[0].spacing;
+      sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[1].spacing;
+      sciNrrd->nrrd->axis[3].spacing = arr[0]->axis[2].spacing; 
 
-  sciNrrd->nrrd->axis[0].label = strdup( new_label.c_str() );
-  sciNrrd->nrrd->axis[1].label = strdup( "x" );
-  sciNrrd->nrrd->axis[2].label = strdup( "y" );
-  sciNrrd->nrrd->axis[3].label = strdup( "z" );
-  sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[1].spacing;
-  sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[2].spacing;
-  sciNrrd->nrrd->axis[3].spacing = arr[0]->axis[3].spacing; 
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 3, nrrdCenterNode);
+    } else {
+      return 0;
+    }
 
-  nrrdAxisMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
-  nrrdAxisMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
-  nrrdAxisMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
-  nrrdAxisMinMaxSet(sciNrrd->nrrd, 3, nrrdCenterNode);
+    break;
+  case 3:
+    if (incr) {
+      sciNrrd->nrrd->axis[0].label = strdup( new_label.c_str() );
+      sciNrrd->nrrd->axis[1].label = strdup( "x" );
+      sciNrrd->nrrd->axis[2].label = strdup( "y" );
+      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[0].spacing;
+      sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[1].spacing;
+    } else {
+      sciNrrd->nrrd->axis[0].label = strdup( "x" );
+      sciNrrd->nrrd->axis[1].label = strdup( "y" );
+      sciNrrd->nrrd->axis[2].label = strdup( "z" );
+      sciNrrd->nrrd->axis[0].spacing = arr[0]->axis[0].spacing; 
+      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[1].spacing;
+      sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[2].spacing;
+    }
+    
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
+    nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
+    break;
+  case 2:
+    if (incr) {
+      return 0;
+    } else {
+      sciNrrd->nrrd->axis[0].label = strdup( "x" );
+      sciNrrd->nrrd->axis[1].label = strdup( "y" );
+      sciNrrd->nrrd->axis[0].spacing = arr[0]->axis[0].spacing; 
+      sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[1].spacing;
+
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
+      nrrdAxisInfoMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
+    }
+    break;
+  default:
+    return 0;
+  }
 
   return sciNrrd;
 }

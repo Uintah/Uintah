@@ -54,12 +54,8 @@ itcl_class Teem_Unu_UnuJoin {
 	    set choices [list]
 
 	    for {set i 0} {$i < [set $this-dim]} {incr i} {
-		if {$i == 0} {
-		    lappend choices [list "Tuple Axis" $i]
-		} else {
-		    set lab "Axis $i"
-		    lappend choices [list $lab $i]
-		}
+		set lab "Axis $i"
+		lappend choices [list $lab $i]
 	    }
 
 	    make_labeled_radio $w.f.rfr.radio \
@@ -71,7 +67,6 @@ itcl_class Teem_Unu_UnuJoin {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -90,8 +85,11 @@ itcl_class Teem_Unu_UnuJoin {
 	
 	pack $w.f.rfr $w.f.incrdim -fill both -expand 1 -side top
 
-	button $w.execute -text "Ok" -command "destroy $w"
-	pack $w.execute -side top -e n -f both
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
+
+	# button $w.execute -text "Ok" -command "destroy $w"
+	# pack $w.execute -side top -e n -f both
     }
 }
 

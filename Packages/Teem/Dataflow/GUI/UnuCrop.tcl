@@ -41,7 +41,15 @@ itcl_class Teem_Unu_UnuCrop {
 
 		set ax $this-absmaxAxis$i
 		set_scale_max_value $w.f.mmf.a$i [set $ax]
-		if {[set $this-maxAxis$i] == -1 || [set $this-reset]} {
+		if {[set $this-maxAxis$i] == 0 || [set $this-reset]} {
+		    set $this-maxAxis$i [set $this-absmaxAxis$i]
+		}
+	    }
+	    set $this-reset 0
+	} else {
+	    for {set i 0} {$i < [set $this-num-axes]} {incr i} {
+
+		if {[set $this-maxAxis$i] == 0 || [set $this-reset]} {
 		    set $this-maxAxis$i [set $this-absmaxAxis$i]
 		}
 	    }
@@ -58,7 +66,7 @@ itcl_class Teem_Unu_UnuCrop {
 		#puts "made minAxis$i"
 	    }
 	    if { [catch { set t [set $this-maxAxis$i]}] } {
-		set $this-maxAxis$i -1
+		set $this-maxAxis$i 0
 		#puts "made maxAxis$i   [set $this-maxAxis$i]"
 	    }
 	    if { [catch { set t [set $this-absmaxAxis$i]}] } {
@@ -89,7 +97,6 @@ itcl_class Teem_Unu_UnuCrop {
    method clear_axes {} {
 	set w .ui[modname]
         if {[winfo exists $w]} {
-  
 	    if {[winfo exists $w.f.mmf.t]} {
 		destroy $w.f.mmf.t
 	    }
@@ -109,8 +116,7 @@ itcl_class Teem_Unu_UnuCrop {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -122,14 +128,15 @@ itcl_class Teem_Unu_UnuCrop {
 	pack $w.f.mmf -padx 2 -pady 2 -side top -expand yes
 	
 	if {[set $this-num-axes] == 0} {
-	    label $w.f.mmf.t -text "Need Execute to know the number of Axes."
+	    label $w.f.mmf.t -text "Need to Execute to know the number of Axes."
 	    pack $w.f.mmf.t
 	} else {
 	    init_axes 
 	}
 
-
-	makeSciButtonPanel $w $w $this
+        makeSciButtonPanel $w $w $this
 	moveToCursor $w
+
+	pack $w.f -expand 1 -fill x
     }
 }
