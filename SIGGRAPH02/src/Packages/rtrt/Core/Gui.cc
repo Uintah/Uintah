@@ -39,6 +39,12 @@
 
 #include <vector>
 
+// From Glyph.cc
+namespace rtrt {
+  extern float glyph_threshold;
+}
+  
+
 ////////////////////////////////////////////
 // OOGL stuff
 extern BasicTexture * blendTex;
@@ -1781,6 +1787,15 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
 	}
     }
 #endif
+  
+  activeGui->glyphThresholdSpinner_ = activeGui->mainWindow->
+    add_spinner_to_panel( otherControls, "Glyph Threshold",
+			  GLUI_SPINNER_FLOAT, 
+			  &glyph_threshold,
+			  -1);
+  activeGui->glyphThresholdSpinner_->set_speed( 0.1 );
+  activeGui->glyphThresholdSpinner_->set_float_limits( 0, 1 );
+  
   // 
   activeGui->depthValue_ = activeGui->priv->maxdepth;
   GLUI_Spinner * depthSpinner = activeGui->mainWindow->
