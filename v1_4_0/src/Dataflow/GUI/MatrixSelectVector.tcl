@@ -34,6 +34,7 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 
         set_defaults
     }
+
     method set_defaults {} {    
         set $this-row_or_col         row
         set $this-selectable_min     0
@@ -44,7 +45,7 @@ itcl_class SCIRun_Math_MatrixSelectVector {
         set $this-range_max          0
 	set $this-playmode           once
 	set $this-current            0
-	set $this-execmode           "play"
+	set $this-execmode           "step"
     }
 
     method run_update {} {
