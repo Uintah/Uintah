@@ -33,8 +33,17 @@
 #include <sys/param.h>
 
 #include <GL/glut.h>
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1430
+#pragma set woff 3201
+#pragma set woff 1375
+#endif
 #include <glui.h>
-
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1430
+#pragma reset woff 3201
+#pragma reset woff 1375
+#endif
 
 
 #include "oogl/vec2.h"
@@ -73,6 +82,47 @@ using namespace std;
 
 using SCIRun::Thread;
 using SCIRun::ThreadGroup;
+
+bool use_pm = false;
+#ifdef __sgi
+#include <sys/types.h>
+#include <sys/pmo.h>
+#include <sys/attributes.h>
+#include <sys/conf.h>
+#include <sys/hwgraph.h>
+#include <sys/stat.h>
+#include <invent.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+static void mld_alloc(unsigned long size, int nmld, 
+		      pmo_handle_t*& mlds, pmo_handle_t& mldset)
+{
+  mlds = new pmo_handle_t[nmld];
+
+  for(int i=0; i<nmld; i++) {
+    mlds[i] = mld_create( 0, size );
+    if ((long)mlds[i] < 0) {
+      perror("mld_create()");
+      exit(1);
+    }
+  }
+  mldset = mldset_create( mlds, nmld );
+  if ((long) mldset < 0) {
+    perror("mldset_create");
+    exit(1);
+  }
+
+  if ( mldset_place( mldset, TOPOLOGY_FREE, 0, 0, RQMODE_ADVISORY ) < 0) {
+    perror("mldset_place");
+    fprintf( stderr, "set: %p nmld: %d ( ", (void *)mldset, nmld );
+    for(int i=0; i<nmld; i++)
+      fprintf( stderr, "%d ", mlds[i] );
+    fprintf( stderr, ")\n" );
+    exit(1);
+  }
+}
+#endif
 
 Trigger * loadBottomGraphic();
 Trigger * loadLeftGraphic();
@@ -231,6 +281,8 @@ main(int argc, char* argv[])
       i++;
       rtrt_engine->nworkers=atoi(argv[i]);
       rtrt_engine->np = rtrt_engine->nworkers;
+    } else if(strcmp(argv[i], "-mempolicy") == 0){
+      use_pm=true;
     } else if(strcmp(argv[i], "-nobv")==0){
       use_bv=0;
     } else if(strcmp(argv[i], "-bv")==0){
@@ -398,6 +450,31 @@ main(int argc, char* argv[])
     usage(argv[0]);
     exit(1);
   }
+
+#ifdef __sgi
+  if(use_pm){
+    unsigned long mempernode = 300*1024*1024;
+    // How can we tell if it should be 2 or 4 processors per node?
+    unsigned long numnodes = Thread::numProcessors()/4;
+    pmo_handle_t *mlds=0;
+    pmo_handle_t mldset=0;
+    mld_alloc(mempernode, numnodes, mlds, mldset);
+    policy_set_t ps;
+    pm_filldefault(&ps);
+    ps.placement_policy_name = "PlacementRoundRobin";
+    ps.placement_policy_args = (void*)mldset;
+    pmo_handle_t policy = pm_create(&ps);
+    if(policy == -1){
+      perror("pm_create");
+      exit(1);
+    }
+    pmo_handle_t old1=pm_setdefault(policy, MEM_DATA);
+    cerr << "old1=" << old1 << '\n';
+    pmo_handle_t old2=pm_setdefault(policy, MEM_TEXT);
+    cerr << "old2=" << old2 << '\n';
+    // STACK is left as first touch...
+  }
+#endif
   char scenefile[MAXPATHLEN];
   char pioscenefile[MAXPATHLEN];
   SceneHandle sh;
