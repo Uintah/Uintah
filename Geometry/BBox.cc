@@ -50,10 +50,20 @@ void BBox::extend(const Point& p, double radius)
     }
 }
 
-void BBox::extend(BBox b)
+void BBox::extend(const BBox& b)
 {
     extend(b.min());
     extend(b.max());
+}
+
+void BBox::extend_cyl(const Point& cen, const Vector& normal, double r)
+{
+    Vector n(normal.normal());
+    double x=Sqrt(1-n.x())*r;
+    double y=Sqrt(1-n.y())*r;
+    double z=Sqrt(1-n.z())*r;
+    extend(cen+Vector(x,y,z));
+    extend(cen-Vector(x,y,z));
 }
 
 Point BBox::center()

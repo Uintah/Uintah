@@ -19,7 +19,8 @@ public:
     void reset();
     void extend(const Point& p);
     void extend(const Point& p, double radius);
-    void extend(BBox b);
+    void extend(const BBox& b);
+    void extend_cyl(const Point& cen, const Vector& normal, double r);
     Point center();
     double longest_edge();
     void translate(const Vector &v);
