@@ -84,17 +84,14 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 
     vector<Point>::const_iterator itr;
     geompoints::key_type key(patch,*obj);
-    for (itr=d_object_points[key].begin();itr!=d_object_points[key].end(); 
-	 ++itr) {
-      
+    for(itr=d_object_points[key].begin();itr!=d_object_points[key].end();++itr){
       IntVector cell_idx;
       if (!patch->findCell(*itr,cell_idx)) continue;
       
       particleIndex pidx = start+count;      
       //cerr << "Point["<<pidx<<"]="<<*itr<<" Cell = "<<cell_idx<<endl;
  
-      initializeParticle(patch,obj,matl,*itr,cell_idx,pidx,
-			 cellNAPID);
+      initializeParticle(patch,obj,matl,*itr,cell_idx,pidx,cellNAPID);
       
       if (volumes) {
         if (!volumes->empty()) {
@@ -103,7 +100,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
           ++voliter;
         }
       }
-      
+
       // If the particle is on the surface and if there is
       // a physical BC attached to it then mark with the 
       // physical BC pointer
@@ -125,8 +122,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 // Get the LoadCurveID applicable for this material point
 // WARNING : Should be called only once per particle during a simulation 
 // because it updates the number of particles to which a BC is applied.
-int
-ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp)
+int ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp)
 {
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
@@ -144,8 +140,7 @@ ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp)
 }
 
 // Print MPM physical boundary condition information
-void
-ParticleCreator::printPhysicalBCs()
+void ParticleCreator::printPhysicalBCs()
 {
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
@@ -424,7 +419,11 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   // If the object is a SmoothGeomPiece (e.g. FileGeometryPiece or
   // SmoothCylGeomPiece) then use the particle creators in that 
   // class to do the counting
-  SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece);
+  SmoothGeomPiece   *sgp = dynamic_cast<SmoothGeomPiece*>(piece);
+  FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece);
+  if(fgp){
+      fgp->readPoints(patch->getID());
+  }
   if (sgp) {
     int numPts = sgp->returnPointCount();
     vector<Point>* points = sgp->getPoints();
