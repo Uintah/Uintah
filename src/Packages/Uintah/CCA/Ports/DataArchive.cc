@@ -308,7 +308,7 @@ DataArchive::queryVariables( vector<string>& names,
 	if(!unknown_type)
 	  unknown_type = scinew TypeDescription(TypeDescription::Unknown,
 						"-- unknown type --",
-						false, -1);
+						false, MPI_Datatype(-1));
 	td = unknown_type;
       }
       types.push_back(td);
