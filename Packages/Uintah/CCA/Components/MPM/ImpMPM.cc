@@ -484,6 +484,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
   new_dw->get(dispIncQNorm,  lb->dispIncQNorm); 
   new_dw->get(dispIncNormMax,lb->dispIncNormMax);
   new_dw->get(dispIncQNorm0, lb->dispIncQNorm0);
+
   cerr << "dispIncNorm/dispIncNormMax = "
        << dispIncNorm/(dispIncNormMax + 1.e-100) << "\n";
   cerr << "dispIncQNorm/dispIncQNorm0 = "
@@ -532,8 +533,12 @@ void ImpMPM::iterate(const ProcessorGroup*,
       delt_vartype dt;
       old_dw->get(dt,d_sharedState->get_delt_label());
       sum_vartype dispIncQNorm0,dispIncNormMax;
-      new_dw->get(dispIncQNorm0,lb->dispIncQNorm);
-      new_dw->get(dispIncNormMax,lb->dispIncNormMax);
+      if(m==0){
+        new_dw->get(dispIncQNorm0, lb->dispIncQNorm);
+        new_dw->get(dispIncNormMax,lb->dispIncNormMax);
+        subsched->get_dw(3)->put(dispIncQNorm0, lb->dispIncQNorm0);
+        subsched->get_dw(3)->put(dispIncNormMax,lb->dispIncNormMax);
+      }
 
       // New data to be stored in the subscheduler
       NCVariable<Vector> newdisp,new_int_force,	new_vel,new_disp_inc;
@@ -559,9 +564,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       // old datawarehouse after the advancement of the data warehouse.
       subsched->get_dw(3)->put(delt_vartype(new_dt),
 				  d_sharedState->get_delt_label());
-      subsched->get_dw(3)->put(dispIncQNorm0,lb->dispIncQNorm0);
-      subsched->get_dw(3)->put(dispIncNormMax,lb->dispIncNormMax);
-      
+
     }
   }
 
@@ -577,6 +580,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
     subsched->get_dw(3)->get(dispIncQNorm,  lb->dispIncQNorm); 
     subsched->get_dw(3)->get(dispIncNormMax,lb->dispIncNormMax);
     subsched->get_dw(3)->get(dispIncQNorm0, lb->dispIncQNorm0);
+
     cerr << "dispIncNorm/dispIncNormMax = "
          << dispIncNorm/(dispIncNormMax + 1.e-100) << "\n";
     cerr << "dispIncQNorm/dispIncQNorm0 = "
@@ -1635,8 +1639,10 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
 	       <<"\t\t\t IMPM"<< "\n" << "\n";
 
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int matlindex = mpm_matl->getDWIndex();
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+     int matlindex = mpm_matl->getDWIndex();
+
+     if(matlindex==0){
       
       constNCVariable<Vector> dispInc;
       new_dw->get(dispInc,lb->dispIncLabel,matlindex,patch,Ghost::None,0);
@@ -1668,24 +1674,29 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
       dispIncNormMax = dispIncNormMax_var;
 
       // Reset the dispIncNormMax on the first iteration
-      if (!recursion)
+      if (!recursion){
         dispIncNormMax = 0.;
+      }
 
-      if (!recursion || dispIncQNorm0 == 0.)
+      if (!recursion || dispIncQNorm0 == 0.){
 	dispIncQNorm0 = dispIncQNorm;
+      }
 
-      if (dispIncNorm > dispIncNormMax)
+      if (dispIncNorm > dispIncNormMax){
 	dispIncNormMax = dispIncNorm;
+      }
 
-      cerr << "dispIncQNorm0 = " << dispIncQNorm0 << "\n";
+      cerr << "dispIncNorm = " << dispIncNorm << "\n";
       cerr << "dispIncQNorm = " << dispIncQNorm << "\n";
       cerr << "dispIncNormMax = " << dispIncNormMax << "\n";
-      cerr << "dispIncNorm = " << dispIncNorm << "\n";
+      cerr << "dispIncQNorm0 = " << dispIncQNorm0 << "\n";
 
       new_dw->put(sum_vartype(dispIncNormMax),lb->dispIncNormMax);
       new_dw->put(sum_vartype(dispIncQNorm0), lb->dispIncQNorm0);
       new_dw->put(sum_vartype(dispIncNorm),   lb->dispIncNorm);
       new_dw->put(sum_vartype(dispIncQNorm),  lb->dispIncQNorm);
+
+     }  // matlindex == 0
 
     }  // End of loop over materials
   }  // End of loop over patches
