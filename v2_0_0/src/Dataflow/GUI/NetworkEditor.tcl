@@ -1083,6 +1083,7 @@ proc licenseDialog { {firsttime 0} } {
 
 proc licenseAccept { } {
     set ouremail "scirun-register@sci.utah.edu"
+    set majordomo "majordomo@sci.utah.edu"
     global licenseResult userData SCIRun_version
     if { [string length $userData(first)] &&
 	 [string length $userData(last)] &&
@@ -1140,11 +1141,20 @@ proc licenseAccept { } {
 	    puts $out "E-Mail:  $userData(email)"
 	    puts $out "Affiliation:  $userData(aff)"
 	    catch "close $out"
-#	    netedit sci_system /usr/bin/Mail -n -s SCIRun_Registration_Notice $ouremail < $name
+	    netedit sci_system /usr/bin/Mail -n -s SCIRun_Registration_Notice $ouremail < $name
 	    catch [file delete $name]
 
 	    if { $check } {
-#		netedit sci_system /usr/bin/Mail -n scirun-users-on@sci.utah.edu
+		set name [file join / tmp SCIRun.Register.email.txt]
+		catch "set out \[open $name w\]"
+		if { ![info exists out] } {
+		    puts "Cannot open $name for writing.  Giving up."
+		    return
+		}
+		puts $out "subscribe scirun-users $userData(email)\n"
+		catch "close $out"
+		netedit sci_system /usr/bin/Mail -n $majordomo < $name
+		catch [file delete $name]
 	    }
 
 	}
