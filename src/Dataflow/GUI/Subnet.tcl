@@ -130,10 +130,12 @@ itcl_class SubnetModule {
 	# Make the Subnet Button
 	if {$isSubnetModule} {
 	    global smallIcon
-	    button $p.subnet -image $smallIcon -borderwidth 0 \
+	    button $p.subnet -image $smallIcon -borderwidth 2 \
 		-font $ui_font -anchor center -padx 0 -pady  0\
+		-width [expr [image width $smallIcon]-2] \
+		-height [expr [image height $smallIcon]-5] \
 		-command "showSubnetWindow $subnetNumber"
-	    pack $p.subnet -side left -ipadx 3 -ipady 0 -anchor w
+	    pack $p.subnet -side left -padx 3 -ipady 0 -anchor w
 #	    place $p.subnet -in $p -x 5 -y 50 -anchor nw
 
 	    Tooltip $p.ui $ToolTipText(ModuleSubnetBtn)
@@ -161,8 +163,6 @@ itcl_class SubnetModule {
 	bind $p.type <Map> "$this setDone"
 
 	update_msg_state
-	update_progress
-	update_time
 
 	# compute the placement of the module icon
 	if { !$ignore_placement } {
@@ -192,12 +192,6 @@ itcl_class SubnetModule {
 
 	bindtags $p [linsert [bindtags $p] 1 $modframe]
 	bindtags $p.title [linsert [bindtags $p.title] 1 $modframe]
-	if {$make_time} {
-	    bindtags $p.time [linsert [bindtags $p.time] 1 $modframe]
-	}
-	if {$make_progress_graph} {
-	    bindtags $p.inset [linsert [bindtags $p.inset] 1 $modframe]
-	}
 
 	# If we are NOT currently running a script... ie, not loading the net
 	# from a file
@@ -239,8 +233,10 @@ proc updateSubnetState { subnet_number name1 name2 op } {
     if { [string equal embedded $Subnet(Subnet${subnet_number}_State)] } {
 	set Subnet(Subnet${subnet_number}_Instance) [generateInstanceName $name]
     } else {
-	set pos [lsearch $InstanceNames($name) $Subnet(Subnet${subnet_number}_Instance)]
-	set InstanceNames($name) [lreplace $InstanceNames($name) $pos $pos]
+	if { [info exists InstanceNames($name)] } {
+	    set pos [lsearch $InstanceNames($name) $Subnet(Subnet${subnet_number}_Instance)]
+	    set InstanceNames($name) [lreplace $InstanceNames($name) $pos $pos]
+	}
 	set Subnet(Subnet${subnet_number}_Instance) "On Disk"
     }
     SubnetIcon$subnet_number setColorAndTitle
@@ -260,8 +256,8 @@ proc makeSubnetEditorWindow { from_subnet x y { bbox "0 0 0 0" } } {
     incr Subnet(num)
     set subnet_id				$Subnet(num)
     set Subnet(Subnet${subnet_id})		${subnet_id}
-    set Subnet(Subnet${subnet_id}_Name)		"                           "
-    set Subnet(Subnet${subnet_id}_Instance)	""
+    set Subnet(Subnet${subnet_id}_Name)	"Sub-Network \#$subnet_id"
+    set Subnet(Subnet${subnet_id}_Instance) [generateInstanceName $Subnet(Subnet${subnet_id}_Name)]
     set Subnet(Subnet${subnet_id}_Modules)	""
     set Subnet(Subnet${subnet_id}_connections)	""
     set Subnet(Subnet${subnet_id}_State)	"embedded"
@@ -301,24 +297,25 @@ proc makeSubnetEditorWindow { from_subnet x y { bbox "0 0 0 0" } } {
 	-underline 0 -command "saveSubnet ${subnet_id} 1"
     $w.main_menu.file.menu add command -label "Save Template..." \
 	-underline 0 -command "saveSubnet ${subnet_id} 0"
-
+    $w.main_menu.file.menu add command -label "Network Info..." \
+	-underline 0 -command "popupInfoMenu ${subnet_id}"
     pack $w.main_menu.file -side left
 
     # Make the Edit menu item
-    menubutton $w.main_menu.edit -text "Edit" -underline 0 \
-	-menu $w.main_menu.edit.menu
-    menu $w.main_menu.edit.menu -tearoff false
-    $w.main_menu.edit.menu add command -label "Network Info..." \
-	-underline 0 -command "popupInfoMenu ${subnet_id}"
-    $w.main_menu.edit.menu add command -label "Cut" \
+    if 0 {
+	menubutton $w.main_menu.edit -text "Edit" -underline 0 \
+	    -menu $w.main_menu.edit.menu
+	menu $w.main_menu.edit.menu -tearoff false
+	
+	$w.main_menu.edit.menu add command -label "Cut" \
 	-underline 0 -command "" -state disabled
-    $w.main_menu.edit.menu add command -label "Copy" \
-	-underline 0 -command "" -state disabled
-    $w.main_menu.edit.menu add command -label "Paste" \
-	-underline 0 -command "" -state disabled
-
-
-    pack $w.main_menu.edit -side left
+	$w.main_menu.edit.menu add command -label "Copy" \
+	    -underline 0 -command "" -state disabled
+	$w.main_menu.edit.menu add command -label "Paste" \
+	    -underline 0 -command "" -state disabled
+	
+	pack $w.main_menu.edit -side left
+    }
 
     # Make the Packages menu item
     menubutton $w.main_menu.packages -text "Packages" -underline 0 \
@@ -697,6 +694,10 @@ proc restoreLoadVars { key } {
     array unset loadVars "$key-*"
 }
 
+proc loadSubnetFromDisk { name { x 0 } { y 0 } } {
+    return [loadSubnet ${name}.net $x $y]
+}
+
 proc loadSubnet { filename { x 0 } { y 0 } } {
     global Subnet Name
     set subnet $Subnet(Loading)
@@ -717,7 +718,7 @@ proc loadSubnet { filename { x 0 } { y 0 } } {
     if { ![file exists $filename] } {
 	tk_messageBox -type ok -parent . -icon warning -message \
 	    "Subnet file \"$filename\" does not exist."
-	return
+	return doNothing
     }
 
     set subnetNumber [makeSubnetEditorWindow $subnet $x $y]
@@ -726,9 +727,12 @@ proc loadSubnet { filename { x 0 } { y 0 } } {
     uplevel \#0 source \{$filename\}
     restoreLoadVars $filename
     set Subnet(Subnet$Subnet(Loading)_filename) "$filename"
+    set Subnet(Subnet$Subnet(Loading)_State) ondisk
     set Subnet(Subnet$Subnet(Loading)_Name) \
 	[join [lrange [split [lindex [file split $filename] end] "."] 0 end-1] "."]
+
     set Subnet(Loading) $subnet
+
     return SubnetIcon$subnetNumber
 }
 
@@ -803,26 +807,41 @@ proc isaDefaultValue { module varname classname } {
     return [string equal $default_value $val]
 }
 
+proc writeSubnetOnDisk { id } {
+    global Subnet
+    set name $Subnet(Subnet${id}_Name)	    
+    writeNetwork ~/SCIRun/Subnets/${name}.net $id
+}
+
 
 
 proc writeSubnets { file subnet_ids } {
     global Subnet SubnetScripts
-    set alreadyWritten ""
+    set alreadyWrittenToScript ""
+    set alreadyWrittenToDisk ""
     while { [llength $subnet_ids] } {
 	set id [popFront subnet_ids]
 	foreach module $Subnet(Subnet${id}_Modules) {
 	    if { ![isaSubnetIcon $module] } continue
 	    set sub_id $Subnet(${module}_num)
-	    set subname $Subnet(Subnet${sub_id}_Name)	    
-	    if { [lsearch $alreadyWritten $subname] != -1 } continue
-	    
-	    lappend subnet_ids $sub_id
-	    lappend alreadyWritten $subname
+	    set subname $Subnet(Subnet${sub_id}_Name)
+	    if { [string equal $Subnet(Subnet${sub_id}_State) "ondisk"] } {
+		if { ($sub_id != 0) && \
+		     ([lsearch $alreadyWrittenToDisk $subname] == -1) } {
+		    lappend alreadyWrittenToDisk $subname
+		    lappend subnet_ids $sub_id
+		    
+		    writeSubnetOnDisk $sub_id
+		}
+	    } elseif { [lsearch $alreadyWrittenToScript $subname] == -1 } {
+		lappend subnet_ids $sub_id
+		lappend alreadyWrittenToScript $subname
 
-	    set SubnetScripts($subname) [genSubnetScript $sub_id]
-	    puts -nonewline $file "addSubnetToDatabase \{"
-	    puts -nonewline $file $SubnetScripts($subname)
-	    puts $file "\}\n"
+		set SubnetScripts($subname) [genSubnetScript $sub_id]
+		puts -nonewline $file "addSubnetToDatabase \{"
+		puts -nonewline $file $SubnetScripts($subname)
+		puts $file "\}\n"
+	    }
 	}
     }
 }
@@ -857,9 +876,16 @@ proc counting_set { args } {
 
 proc counting_instanceSubnet { args } {
     global scriptCount
-    incr scriptCount(Total)
+    incr scriptCount(Total) 10
     return doNothing
 }
+
+proc counting_loadSubnetFromDisk { args } {
+    global scriptCount
+    incr scriptCount(Total) 10
+    return doNothing
+}
+
 
 proc counting_addSubnetToDatabase { args } {
     global scriptCount
@@ -901,7 +927,7 @@ proc loading_set { args } {
 }
 
 proc loading_instanceSubnet { args } {    
-    incrProgress
+    incrProgress 10
     global progressMeter scriptCount
     setProgressText "Creating [lindex $args 0] Sub-Network"
     setIfExists scriptCount(progressMeter) progressMeter
@@ -911,6 +937,20 @@ proc loading_instanceSubnet { args } {
     
     return $retval
 }
+
+
+proc loading_loadSubnetFromDisk { args } {    
+    incrProgress 10
+    global progressMeter scriptCount
+    setProgressText "Creating [lindex $args 0] Sub-Network"
+    setIfExists scriptCount(progressMeter) progressMeter
+    unsetIfExists progressMeter
+    set retval [uplevel 1 real_loadSubnetFromDisk $args]
+    setIfExists progressMeter scriptCount(progressMeter)
+    
+    return $retval
+}
+
 
 proc loading_addSubnetToDatabase { args } {
     incrProgress
@@ -925,6 +965,7 @@ proc renameNetworkCommands { prefix } {
     lappend commands addConnection
     lappend commands instanceSubnet
     lappend commands addSubnetToDatabase
+    lappend commands loadSubnetFromDisk
 
     foreach command $commands {
 	set exists [expr [llength [info commands ${prefix}${command}]] == 1]
@@ -1025,8 +1066,14 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 	if { [isaSubnetIcon $module] } {
 	    set number $Subnet(${module}_num)
 	    set name $Subnet(Subnet${number}_Name)
-	    append script "${tab}\# Create an instance of a $name Sub-Network\n"
-	    append script "${tab}set m$i \[instanceSubnet \"${name}\" "
+	    if { $Subnet(Subnet${number}_Instance) == "On Disk" } {
+		append script "${tab}\# Load $name Sub-Network from disk\n"
+		append script "${tab}set m$i \[loadSubnetFromDisk \"${name}\" "
+
+	    } else {
+		append script "${tab}\# Create an instance of a $name Sub-Network\n"
+		append script "${tab}set m$i \[instanceSubnet \"${name}\" "
+	    }
 	} else {
 	    set modpath [modulePath $module]	    
 	    append script "${tab}\# Create a [join $modpath ->] Module\n"
