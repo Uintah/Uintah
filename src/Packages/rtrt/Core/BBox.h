@@ -94,26 +94,124 @@ public:
     inline BBox transform(Transform* t) const
       {
 	BBox tbbox;
-	
-	tbbox.cmin = t->project(cmin);
-	tbbox.cmax = t->project(cmax);
-	
-	tbbox.have_some = have_some;
-	
+
+	//necessary for arbitrary rotations, can't just use min and max
+	double x0 = cmin.x();
+	double y0 = cmin.y();
+	double z0 = cmin.z();
+	double z1 = cmax.z();
+	double y1 = cmax.y();
+	double x1 = cmax.x();
+
+	Point b000(x0,y0,z0);
+	Point b001(x0,y0,z1);
+	Point b010(x0,y1,z0);
+	Point b011(x0,y1,z1);
+	Point b100(x1,y0,z0);
+	Point b101(x1,y0,z1);
+	Point b110(x1,y1,z0);
+	Point b111(x1,y1,z1);
+
+
+	t->project_inplace(b000);
+	t->project_inplace(b001);
+	t->project_inplace(b010);
+	t->project_inplace(b011);
+	t->project_inplace(b100);
+	t->project_inplace(b101);
+	t->project_inplace(b110);
+	t->project_inplace(b111);
+
+	tbbox.have_some = false;
+	tbbox.extend(b000);
+	tbbox.extend(b001);
+	tbbox.extend(b010);
+	tbbox.extend(b011);
+	tbbox.extend(b100);
+	tbbox.extend(b101);
+	tbbox.extend(b110);
+	tbbox.extend(b111);
+		
 	return tbbox;
       }
     
     inline void transform(Transform* t, BBox& tbbox) const
       {
-	t->project(cmin,tbbox.cmin);
-	t->project(cmax,tbbox.cmax);
-	
-	tbbox.have_some = have_some;
+	//necessary for arbitrary rotations, can't just use min and max
+	double x0 = cmin.x();
+	double y0 = cmin.y();
+	double z0 = cmin.z();
+	double z1 = cmax.z();
+	double y1 = cmax.y();
+	double x1 = cmax.x();
+
+	Point b000(x0,y0,z0);
+	Point b001(x0,y0,z1);
+	Point b010(x0,y1,z0);
+	Point b011(x0,y1,z1);
+	Point b100(x1,y0,z0);
+	Point b101(x1,y0,z1);
+	Point b110(x1,y1,z0);
+	Point b111(x1,y1,z1);
+
+
+	t->project_inplace(b000);
+	t->project_inplace(b001);
+	t->project_inplace(b010);
+	t->project_inplace(b011);
+	t->project_inplace(b100);
+	t->project_inplace(b101);
+	t->project_inplace(b110);
+	t->project_inplace(b111);
+
+	tbbox.have_some = false;
+	tbbox.extend(b000);
+	tbbox.extend(b001);
+	tbbox.extend(b010);
+	tbbox.extend(b011);
+	tbbox.extend(b100);
+	tbbox.extend(b101);
+	tbbox.extend(b110);
+	tbbox.extend(b111);
       }
+
     inline void transform_inplace(Transform* t)
       {
-	t->project_inplace(cmin);
-	t->project_inplace(cmax);
+	double x0 = cmin.x();
+	double y0 = cmin.y();
+	double z0 = cmin.z();
+	double z1 = cmax.z();
+	double y1 = cmax.y();
+	double x1 = cmax.x();
+
+	Point b000(x0,y0,z0);
+	Point b001(x0,y0,z1);
+	Point b010(x0,y1,z0);
+	Point b011(x0,y1,z1);
+	Point b100(x1,y0,z0);
+	Point b101(x1,y0,z1);
+	Point b110(x1,y1,z0);
+	Point b111(x1,y1,z1);
+
+
+	t->project_inplace(b000);
+	t->project_inplace(b001);
+	t->project_inplace(b010);
+	t->project_inplace(b011);
+	t->project_inplace(b100);
+	t->project_inplace(b101);
+	t->project_inplace(b110);
+	t->project_inplace(b111);
+
+	have_some = false;
+	extend(b000);
+	extend(b001);
+	extend(b010);
+	extend(b011);
+	extend(b100);
+	extend(b101);
+	extend(b110);
+	extend(b111);
       }
     
 };
