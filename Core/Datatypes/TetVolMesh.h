@@ -455,6 +455,14 @@ public:
   bool                  combine_3_to_2(Cell::index_type &removed,
 				       Edge::index_type shared_edge);
 
+  bool                  combine_4_to_1_cell(Cell::array_type &split_tets, 
+					    set<int> &removed_tets,
+					    set<int> &removed_nodes);
+
+  void                  nbors_from_2_to_3_split(Cell::index_type ci, 
+						Cell::array_type &split_tets);
+  void                  nbors_from_center_split(Cell::index_type ci, 
+						Cell::array_type &split_tets);
     
   bool                  insert_node_in_cell(Cell::array_type &tets, 
 					    Cell::index_type ci, 
@@ -468,6 +476,7 @@ public:
 
 
   void			delete_cells(set<int> &to_delete);
+  void			delete_nodes(set<int> &to_delete);
   
   bool			is_edge(Node::index_type n0,
 				Node::index_type n1,
