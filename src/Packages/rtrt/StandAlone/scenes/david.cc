@@ -75,7 +75,9 @@ Scene* make_scene(int argc, char* argv[])
                                  newfileS);
   Point dav_ped_top(-14,-20,1);
 
+  cerr << "reading ply\n";
   read_ply(file,david);
+  cerr << "done reading ply\n";
   BBox david_bbox;
 
   david->compute_bounds(david_bbox,0);
@@ -125,11 +127,14 @@ Scene* make_scene(int argc, char* argv[])
 						  Vector(0,0,1)) );
   
   scene->select_shadow_mode(Hard_Shadows);
-  Light *david_light = new Light(Point(3,-40,10), Color(1,1,1), 0);
 
+  Light *david_light = new Light(Point(3,-10,10), Color(1,1,1), 0);
   david_light->name_ = "david_light";
-
   scene->add_light(david_light);
-  return scene;
 
+  Light *david_light_back = new Light(Point(3,10,10), Color(1,1,1), 0);
+  david_light_back->name_ = "david_light_back";
+  scene->add_light(david_light_back);
+
+  return scene;
 }
