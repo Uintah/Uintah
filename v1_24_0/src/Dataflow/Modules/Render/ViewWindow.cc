@@ -119,7 +119,7 @@ ViewWindow::ViewWindow(Viewer* viewer, GuiInterface* gui, GuiContext* ctx)
     gui_fog_start_(ctx->subVar("fog-start")), 
     gui_fog_end_(ctx->subVar("fog-end")),
     gui_fog_visibleonly_(ctx->subVar("fog-visibleonly")),
-
+    gui_total_frames_(ctx->subVar("total_frames"), 0),
     // Private Variables
     viewer_(viewer),
     renderer_(new OpenGL(gui, viewer, this)),
