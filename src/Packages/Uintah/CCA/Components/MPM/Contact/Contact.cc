@@ -1,4 +1,3 @@
-
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -13,6 +12,3 @@ Contact::~Contact()
 {
   delete lb;
 }
-
-
-
