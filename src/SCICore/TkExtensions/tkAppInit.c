@@ -55,7 +55,15 @@ extern int Tk_RangeCmd _ANSI_ARGS_((ClientData clientData,
 extern int Tk_CursorCmd _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, int argc, char **argv));
 extern int BLineInit _ANSI_ARGS_((void));
-/* extern int Blt_Init _ANSI_ARGS_((Tcl_Interp* interp)); */
+
+#ifdef WIN32 
+#define EXPORT  __declspec(dllexport)
+#else
+#define EXPORT
+#endif
+
+extern EXPORT int Blt_SafeInit _ANSI_ARGS_((Tcl_Interp *interp));
+extern EXPORT int Blt_Init _ANSI_ARGS_((Tcl_Interp *interp));
 extern int Table_Init _ANSI_ARGS_((Tcl_Interp* interp));
 
 /* include tclInt.h for access to namespace API */
@@ -221,8 +229,13 @@ printf("main = %p\n", main);
     if (Itk_Init(interp) == TCL_ERROR) {
         return TCL_ERROR;
     }
+    if (Blt_Init(interp) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+
     Tcl_StaticPackage(interp, "Itcl", Itcl_Init, Itcl_SafeInit);
     Tcl_StaticPackage(interp, "Itk", Itk_Init, (Tcl_PackageInitProc *) NULL);
+    Tcl_StaticPackage(interp, "BLT", Blt_Init, Blt_SafeInit);
 
     /*
      *  This is itkwish, so import all [incr Tcl] commands by
@@ -248,14 +261,6 @@ printf("main = %p\n", main);
      * they weren't already created by the init procedures called above.
      */
 
-    /*
-     * Add BLT....
-     */
-/*
-    if (Blt_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-*/
 
 #if 0
     /*
