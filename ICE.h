@@ -179,10 +179,10 @@ using namespace SCIRun;
                           DataWarehouse*,
                           DataWarehouse*);
 
-      template<class T> void computePressFace(int& numMatls,CellIterator it, 
+      template<class T> void computePressFace(CellIterator it, 
                                          IntVector adj_offset,
-                                        constCCVariable<double>& sum_rho,
-                                        constCCVariable<double>& press_CC,
+                                         constCCVariable<double>& sum_rho,
+                                         constCCVariable<double>& press_CC,
                                          T& press_FC);
                    
       void accumulateMomentumSourceSinks(const ProcessorGroup*,
@@ -375,23 +375,29 @@ using namespace SCIRun;
     private:
       friend class MPMICE;
       
-      void computeTauX_Components( const Patch* patch,
-                          const CCVariable<Vector>& vel_CC,
-                          const double viscosity,
-                          const Vector dx,
-                          SFCXVariable<Vector>& tau_X_FC);
+      void computeTauX( const Patch* patch,
+                        const CCVariable<double>& rho_CC,     
+                        const CCVariable<double>& sp_vol_CC,  
+                        const CCVariable<Vector>& vel_CC,     
+                        const double viscosity,               
+                        const Vector dx,                      
+                        SFCXVariable<Vector>& tau_X_FC);      
                           
-      void computeTauY_Components( const Patch* patch,
-                          const CCVariable<Vector>& vel_CC,
-                          const double viscosity,
-                          const Vector dx,
-                          SFCYVariable<Vector>& tau_Y_FC);
+      void computeTauY( const Patch* patch,
+                        const CCVariable<double>& rho_CC,     
+                        const CCVariable<double>& sp_vol_CC,  
+                        const CCVariable<Vector>& vel_CC,     
+                        const double viscosity,               
+                        const Vector dx,                      
+                        SFCYVariable<Vector>& tau_Y_FC);      
                           
-      void computeTauZ_Components( const Patch* patch,
-                          const CCVariable<Vector>& vel_CC,
-                          const double viscosity,
-                          const Vector dx,
-                          SFCZVariable<Vector>& tau_Z_FC);
+      void computeTauZ( const Patch* patch,
+                        const CCVariable<double>& rho_CC,     
+                        const CCVariable<double>& sp_vol_CC,  
+                        const CCVariable<Vector>& vel_CC,     
+                        const double viscosity,               
+                        const Vector dx,                      
+                        SFCZVariable<Vector>& tau_Z_FC);      
                    
        void printData_FC(const  Patch* patch,int include_GC,
                       const string& message1,
