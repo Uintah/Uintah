@@ -315,7 +315,7 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
 
     // ********** THIS DOESNT BELONG HERE ***************
     var_iter_t pos = vars_.find(base+"range-first");
-    GuiDouble *var;
+    GuiDouble *var = NULL;
     if (pos != vars_.end() && (var = dynamic_cast<GuiDouble *>((*pos).second))) {
       var->set(bbox_.min().asVector()[axisleft]);
     }
