@@ -60,6 +60,7 @@ WARNING
       { return getPatchwiseProcessorAssignment(patch); }
     virtual bool needRecompile(double, double, const GridP&)
       { return false; }
+    virtual bool isDynamic() { return false; }
     virtual void problemSetup(ProblemSpecP&, SimulationStateP& state) = 0;
     virtual void createNeighborhood(const GridP& grid) = 0;
     virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*) = 0;
