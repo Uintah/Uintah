@@ -45,6 +45,8 @@ $(SRCDIR)/tclIndex: \
 			$(SRCDIR)/defaults.tcl \
 			$(SRCDIR)/devices.tcl \
 			$(SRCDIR)/platformSpecific.tcl \
+			$(SRCDIR)/ReadField.tcl \
+			$(SRCDIR)/WriteField.tcl \
 #[INSERT NEW TCL FILE HERE]
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Dataflow/GUI
 
