@@ -387,9 +387,14 @@ void PackageDB::loadPackage(bool resolve)
   }
   if(gui){
     gui->execute("toplevel .loading; "
-		 "wm geometry .loading 250x75+275+200; "
-		 "wm title .loading {Loading packages}; "
+		 //"wm geometry .loading 250x75+275+200; "
+		 "wm geometry .loading +135+200; "
+		 "wm title .loading {SCIRun Splash Screen}; "
 		 "update idletasks");
+    gui->execute("image create photo ::img::splash -file \"" +
+		 string(SCIRUN_SRCTOP) + "/main/scisplash.gif\"; "
+		 "label .loading.splash -image ::img::splash; "
+		 "pack .loading.splash");
     gui->execute("iwidgets::feedback .loading.fb -labeltext "
 		 "{Loading package:                 }"
 		 " -steps " + to_string(mod_count) + ";"
@@ -441,8 +446,10 @@ void PackageDB::loadPackage(bool resolve)
 	  registerModule((*mi).second);
 	}
 	if(gui)
+	{
 	  gui->execute("if [winfo exists .loading.fb] "
 		       "{.loading.fb step; update idletasks}");
+	}
       }
     }
     
@@ -464,6 +471,7 @@ void PackageDB::loadPackage(bool resolve)
   if(gui){
     gui->postMessage("\nFinished loading packages.",false);
     gui->execute("if [winfo exists .loading] {destroy .loading}");
+    gui->execute("image delete ::img::splash");
     gui->eval("update idletasks",result);
   } else {
     cerr << "Finished loading packages\n";
