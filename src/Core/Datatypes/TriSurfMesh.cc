@@ -476,8 +476,17 @@ TriSurfMesh::compute_normals()
     const vector<Face::index_type> &v = *nif_iter;
     vector<Face::index_type>::const_iterator fiter = v.begin();
     Vector ave(0.L,0.L,0.L);
+    Vector sum(0.L,0.L,0.L);
     while(fiter != v.end()) {
-      ave += face_normals[*fiter];
+      sum += face_normals[*fiter];
+      ++fiter;
+    }
+    fiter = v.begin();
+    while(fiter != v.end()) {
+      if (Dot(face_normals[*fiter],sum)>0)
+	ave += face_normals[*fiter];
+      else
+	ave -= face_normals[*fiter];
       ++fiter;
     }
     if (ave.length2()) {
