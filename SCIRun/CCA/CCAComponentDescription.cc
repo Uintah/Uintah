@@ -40,8 +40,8 @@
 
 #include <SCIRun/CCA/CCAComponentDescription.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
-using namespace SCIRun;
-using namespace std;
+
+namespace SCIRun {
 
 CCAComponentDescription::CCAComponentDescription(CCAComponentModel* model)
   : model(model)
@@ -52,7 +52,7 @@ CCAComponentDescription::~CCAComponentDescription()
 {
 }
 
-string CCAComponentDescription::getType() const
+std::string CCAComponentDescription::getType() const
 {
   return type;
 }
@@ -71,3 +71,5 @@ void CCAComponentDescription::setLoaderName(const std::string& loaderName)
 {
   this->loaderName=loaderName;
 }
+
+} // end namespace SCIRun
