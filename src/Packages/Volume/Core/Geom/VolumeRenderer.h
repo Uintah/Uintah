@@ -103,6 +103,9 @@ protected:
   Pbuffer* texbuffer_;
   FragmentProgramARB* texshader_;
   bool use_pbuffer_;
+  Array3<float> array_;
+  Array3<unsigned char> cmap_array_;
+  unsigned int cmap_tex_;
 };
 
 } // End namespace SCIRun

@@ -351,7 +351,7 @@ EditTransferFunc2::update()
       if(shader_factory_->create()) {
         use_pbuffer_ = false;
         use_back_buffer_ = false;
-        cerr << "Shaders not supported; switching to software rasterization" << endl;
+        cerr << "[EditTransferFunction2] Shaders not supported; switching to software rasterization" << endl;
       }
     }
   }
@@ -368,7 +368,10 @@ EditTransferFunc2::update()
       delete pbuffer_;
       pbuffer_ = 0;
       use_pbuffer_ = false;
-      cerr << "Pbuffers not supported; switching to back buffer rasterization" << endl;
+      cerr << "[EditTransferFunction2] Pbuffers not supported; switching to back buffer rasterization" << endl;
+    } else {
+      use_back_buffer_ = false;
+      cerr << "[EditTransferFunction2] Using Pbuffer rasterization" << endl;
     }
   }
 
