@@ -447,6 +447,8 @@ DynamicLoader::create_empty_cc(const CompileInfo &info, ostream &serr)
 
   fstr << "extern \"C\" {"  << endl
        << info.base_class_name_ << "* maker() {" << endl
+       << "//  return scinew "<< info.template_class_name_ << "<" 
+       << info.template_arg_ << ">;" << endl
        << "  return 0;" << endl
        << "}" << endl << "}" << endl;
 
