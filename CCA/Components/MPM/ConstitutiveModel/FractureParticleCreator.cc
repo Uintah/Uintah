@@ -11,17 +11,21 @@ FractureParticleCreator::~FractureParticleCreator()
 {
 }
 
-void FractureParticleCreator::createParticles(MPMMaterial* matl,
+ParticleSubset* FractureParticleCreator::createParticles(MPMMaterial* matl,
 					      particleIndex numParticles,
 					      CCVariable<short int>& cellNAPID,
-					      const Patch*,
+					      const Patch* patch,
 					      DataWarehouse* new_dw,
 					      MPMLabel* lb,
 					      vector<GeometryObject*>& d_geom_objs)
 {
 
-  //ParticleCreator::applyForceBC(start,pexternalforce,pmass,position);
+ ParticleSubset* subset = ParticleCreator::createParticles(matl,numParticles,
+							    cellNAPID,patch,
+							    new_dw,lb,
+							    d_geom_objs);
 
+  return subset;
 }
 
 particleIndex FractureParticleCreator::countParticles(const Patch* patch,
