@@ -15,8 +15,6 @@
 #  University of Utah. All Rights Reserved.
 #
 
-#puts "NetworkEditor.tcl start"
-
 source $DataflowTCL/defaults.tcl
 source $DataflowTCL/devices.tcl
 
@@ -65,10 +63,9 @@ global modules
 set modules ""
 
 proc makeNetworkEditor {} {
-
+    wm protocol . WM_DELETE_WINDOW { puts ""; netedit quit }
     wm minsize . 100 100
     wm geometry . 800x800+0+0
-
     wm title . "SCIRun"
 
     frame .main_menu -relief raised -borderwidth 3
@@ -99,7 +96,7 @@ proc makeNetworkEditor {} {
     .main_menu.file.menu add cascade -label "New" -underline 0\
         -menu .main_menu.file.menu.new -state disabled
 
-# This was added by Mohamed Dekhil to add some infor to the net
+    # This was added by Mohamed Dekhil to add some infor to the net
     .main_menu.file.menu add command -label "Add Info..." -underline 0 \
 	-command "popupInfoMenu"
 
