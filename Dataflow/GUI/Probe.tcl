@@ -32,6 +32,8 @@ itcl_class SCIRun_Fields_Probe {
 	global $this-face
 	global $this-cell
 	global $this-moveto
+	global $this-probe_scale
+	
 
 	set $this-value ""
 	set $this-locx ""
@@ -42,6 +44,7 @@ itcl_class SCIRun_Fields_Probe {
 	set $this-face ""
 	set $this-cell ""
 	set $this-moveto ""
+	set $this-probe_scale 5.0
     }
 
     method move_location {} {
@@ -83,59 +86,70 @@ itcl_class SCIRun_Fields_Probe {
         toplevel $w
 
 	frame $w.f
-	frame $w.f.labels
-	frame $w.f.entries
-	frame $w.f.entries.loc
+	frame $w.f.g
+	frame $w.f.g.labels
+	frame $w.f.g.entries
+	frame $w.f.g.entries.loc
 
 
-	label $w.f.labels.location -text "Location" -just left
-	entry $w.f.entries.loc.locx -width 10 -textvariable $this-locx
-	entry $w.f.entries.loc.locy -width 10 -textvariable $this-locy
-	entry $w.f.entries.loc.locz -width 10 -textvariable $this-locz
+	label $w.f.g.labels.location -text "Location" -just left
+	entry $w.f.g.entries.loc.locx -width 10 -textvariable $this-locx
+	entry $w.f.g.entries.loc.locy -width 10 -textvariable $this-locy
+	entry $w.f.g.entries.loc.locz -width 10 -textvariable $this-locz
 
-	label $w.f.labels.value -text "Value" -just left
-	entry $w.f.entries.value -width 40 -state disabled -textvariable $this-value
+	label $w.f.g.labels.value -text "Value" -just left
+	entry $w.f.g.entries.value -width 40 -state disabled -textvariable $this-value
 
-	label $w.f.labels.node -text "Node" -just left
-	entry $w.f.entries.node -width 10 -textvariable $this-node
+	label $w.f.g.labels.node -text "Node" -just left
+	entry $w.f.g.entries.node -width 10 -textvariable $this-node
 
-	label $w.f.labels.edge -text "Edge" -just left
-	entry $w.f.entries.edge -width 10 -textvariable $this-edge
+	label $w.f.g.labels.edge -text "Edge" -just left
+	entry $w.f.g.entries.edge -width 10 -textvariable $this-edge
 
-	label $w.f.labels.face -text "Face" -just left
-	entry $w.f.entries.face -width 10 -textvariable $this-face
+	label $w.f.g.labels.face -text "Face" -just left
+	entry $w.f.g.entries.face -width 10 -textvariable $this-face
 
-	label $w.f.labels.cell -text "Cell" -just left
-	entry $w.f.entries.cell -width 10 -textvariable $this-cell
+	label $w.f.g.labels.cell -text "Cell" -just left
+	entry $w.f.g.entries.cell -width 10 -textvariable $this-cell
 
-	pack $w.f.labels.location $w.f.labels.value \
-		$w.f.labels.node $w.f.labels.edge \
-		$w.f.labels.face $w.f.labels.cell \
+     	pack  $w.f.g.labels.location $w.f.g.labels.value \
+	        $w.f.g.labels.node $w.f.g.labels.edge \
+		$w.f.g.labels.face $w.f.g.labels.cell\
 		-side top -anchor w
 
-	pack $w.f.entries.loc.locx $w.f.entries.loc.locy $w.f.entries.loc.locz \
+	pack $w.f.g.entries.loc.locx $w.f.g.entries.loc.locy $w.f.g.entries.loc.locz \
 		-side left -anchor n -expand yes -fill x
 
-	pack $w.f.entries.loc -side top -expand yes -fill x
-	pack $w.f.entries.value \
-		$w.f.entries.node $w.f.entries.edge \
-		$w.f.entries.face $w.f.entries.cell \
+	pack $w.f.g.entries.loc -side top -expand yes -fill x
+	pack $w.f.g.entries.value $w.f.g.entries.node $w.f.g.entries.edge \
+		$w.f.g.entries.face $w.f.g.entries.cell \
 		-side top -anchor w
 
-	pack $w.f.labels $w.f.entries -side left
+	pack $w.f.g.labels $w.f.g.entries -side left
 
-	bind $w.f.entries.loc.locx <KeyPress-Return> "$this move_location"
-	bind $w.f.entries.loc.locy <KeyPress-Return> "$this move_location"
-	bind $w.f.entries.loc.locz <KeyPress-Return> "$this move_location"
-	bind $w.f.entries.node <KeyPress-Return> "$this move_node"
-	bind $w.f.entries.edge <KeyPress-Return> "$this move_edge"
-	bind $w.f.entries.face <KeyPress-Return> "$this move_face"
-	bind $w.f.entries.cell <KeyPress-Return> "$this move_cell"
+
+	scale $w.f.slide -orient horizontal -label "Probe Size" -from 0 -to 100 -showvalue true \
+	     -variable $this-probe_scale -resolution 0.25 -tickinterval 25
+	set $w.f.slide $this-probe_scale
+
+	bind $w.f.slide <ButtonRelease> "$this-c needexecute"
+	bind $w.f.slide <B1-Motion> "$this-c needexecute"
+
+	pack $w.f.slide $w.f.g -side bottom -expand yes -fill x
+
+	bind $w.f.g.entries.loc.locx <KeyPress-Return> "$this move_location"
+	bind $w.f.g.entries.loc.locy <KeyPress-Return> "$this move_location"
+	bind $w.f.g.entries.loc.locz <KeyPress-Return> "$this move_location"
+	bind $w.f.g.entries.node <KeyPress-Return> "$this move_node"
+	bind $w.f.g.entries.edge <KeyPress-Return> "$this move_edge"
+	bind $w.f.g.entries.face <KeyPress-Return> "$this move_face"
+	bind $w.f.g.entries.cell <KeyPress-Return> "$this move_cell"
 
 	frame $w.controls
 	button $w.controls.reset -text "Reset" -command "$this move_center"
 	button $w.controls.close -text "Close" -command "destroy $w"
 	pack $w.controls.reset $w.controls.close -side left -expand yes -fill x
+
 
 	pack $w.f $w.controls -side top -expand yes -fill both -padx 5 -pady 5
     }
