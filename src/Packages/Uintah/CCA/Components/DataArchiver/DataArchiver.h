@@ -62,33 +62,36 @@ using std::pair;
       //////////
       // Insert Documentation Here:
       virtual void finalizeTimestep(double t, double delt, const LevelP&,
-				    SchedulerP&,
-				    DataWarehouseP&);
+				    SchedulerP&);
       //////////
       // Insert Documentation Here:
       virtual const string getOutputLocation() const;
 
+     virtual bool need_recompile(double time, double dt,
+				 const LevelP& level);
+
       //////////
       // Insert Documentation Here:
       void output(const ProcessorGroup*,
-		  const Patch* patch,
-		  DataWarehouseP& old_dw,
-		  DataWarehouseP& new_dw,
+		  const PatchSubset* patch,
+		  const MaterialSubset* matls,
+		  DataWarehouse* old_dw,
+		  DataWarehouse* new_dw,
 		  Dir* p_dir, int timestep,
-		  const VarLabel*, int material);
+		  const VarLabel*);
 
       // Method to output reduction variables to a single file
       void outputReduction(const ProcessorGroup*,
-			   DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw,
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw,
 			   double time);
 
       // This calls output for all of the checkpoint reduction variables
       // which will end up in globals.xml / globals.data -- in this way,
       // all this data will be output by one process avoiding conflicts.
       void outputCheckpointReduction(const ProcessorGroup* world,
-				     DataWarehouseP& old_dw,
-				     DataWarehouseP& new_dw,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw,
 				     int timestep);
       //////////
       // Get the current time step
@@ -123,7 +126,6 @@ using std::pair;
       void outputTimestep(Dir& dir, vector<SaveItem>& saveLabels,
 			  double time, double delt,
 			  const LevelP& level, SchedulerP& sched,
-			  DataWarehouseP& new_dw,
 			  string* pTimestepDir /* passed back */,
 			  bool hasGlobals = false);
 
@@ -147,6 +149,7 @@ using std::pair;
       bool d_writeMeta;
       string d_lastTimestepLocation;
       bool d_wasOutputTimestep;
+      bool d_wasCheckpointTimestep;
 
       bool d_wereSavesAndCheckpointsInitialized;      
       // d_saveLabelNames is a temporary list containing VarLabel
