@@ -177,7 +177,8 @@ void SimulationController::run()
       DataArchive archive(checkpointRestartDir.getName(),
 			  d_myworld->myrank(), d_myworld->size());
       
-      archive.restartInitialize(d_restartTimestep, grid, &t);
+      archive.restartInitialize(d_restartTimestep, grid,
+				scheduler->get_new_dw(), &t);
       
       output->restartSetup(restartFromDir, d_restartTimestep, t,
 			   d_restartRemoveOldDir);
@@ -209,7 +210,9 @@ void SimulationController::run()
    
    if(output)
       output->finalizeTimestep(t, 0, level, scheduler);
+
    scheduler->compile(d_myworld, true);
+   
    double dt=Time::currentSeconds()-start;
    if(d_myworld->myrank() == 0)
      cout << "done (" << dt << " seconds)\n";
