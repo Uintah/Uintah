@@ -65,6 +65,9 @@ namespace SCIRun {
 
     // Methods from ComponentInstance
     PortInstance* getPortInstance(const std::string& name);
+    std::vector<std::string> getProvidesPortNames();
+    std::vector<std::string> getUsesPortNames();
+    gov::cca::Port::pointer getUIPort();	
   private:
     std::map<std::string, CCAPortInstance*> ports;
     gov::cca::Component::pointer component;

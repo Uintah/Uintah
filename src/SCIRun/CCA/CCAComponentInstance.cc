@@ -144,3 +144,45 @@ gov::cca::ComponentID::pointer CCAComponentInstance::getComponentID()
   return gov::cca::ComponentID::pointer(new ComponentID(framework, instanceName));
 }
 
+std::vector<std::string> CCAComponentInstance::getProvidesPortNames()
+{
+   std::map<std::string, CCAPortInstance*>::iterator portiter=ports.begin();
+   std::vector<std::string> v; 
+   while(portiter!=ports.end())
+   {
+      std::string name=portiter->first;  
+      if(portiter->second->porttype==CCAPortInstance::Provides)
+	 v.push_back(name);
+      portiter++; 
+   }
+   return v; 
+}
+
+std::vector<std::string> CCAComponentInstance::getUsesPortNames()
+{
+   std::map<std::string, CCAPortInstance*>::iterator portiter=ports.begin();
+   std::vector<std::string> v;
+   while(portiter!=ports.end())
+   {
+      std::string name=portiter->first;
+      if(portiter->second->porttype==CCAPortInstance::Uses)
+         v.push_back(name);
+      portiter++;
+   }
+   return v;
+}
+
+
+gov::cca::Port::pointer CCAComponentInstance::getUIPort()
+{
+   std::map<std::string, CCAPortInstance*>::iterator portiter=ports.begin();
+   while(portiter!=ports.end())
+   {
+      std::string key=portiter->first;
+      if(portiter->first=="ui")
+	return portiter->second->port;
+      portiter++; 
+   }
+   return gov::cca::Port::pointer(0);	 
+}
+
