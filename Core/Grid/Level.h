@@ -186,6 +186,9 @@ WARNING
      inline IntVector getRefinementRatio() const {
        return refinementRatio;
      }
+     inline void setRefinementRatio(const IntVector& ratio) {
+       refinementRatio = ratio;
+     }
    private:
       Level(const Level&);
       Level& operator=(const Level&);
