@@ -17,8 +17,7 @@
 #include <values.h>
 #include <iostream>
 
-#include <Uintah/Components/MPM/Fracture/Lattice.h>
-#include <Uintah/Components/MPM/Fracture/BrokenCellShapeFunction.h>
+#include <Uintah/Components/MPM/Fracture/Visibility.h>
 
 using std::cerr;
 using namespace Uintah::MPM;
@@ -172,19 +171,9 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
 
-  ParticleVariable<Vector> pCrackSurfaceNormal;
-  ParticleVariable<double> pMicrocrackSize;
-  ParticleVariable<int> pIsBroken;
-  Lattice* lattice;
-  BrokenCellShapeFunction* brokenCellShapeFunction;
+  ParticleVariable<int> pVisibility;
   if(matl->getFractureModel()) {
-    old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
-    old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
-    old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
-	
-    lattice = scinew Lattice(px);
-    brokenCellShapeFunction = scinew BrokenCellShapeFunction(*lattice,
-	   pvolume,pIsBroken,pCrackSurfaceNormal,pMicrocrackSize);
+    new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
   }
 
   for(ParticleSubset::iterator iter = pset->begin();
@@ -195,27 +184,21 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
      // Get the node indices that surround the cell
      IntVector ni[8];
      Vector d_S[8];
-     bool visiable[8];
           
-     if(matl->getFractureModel()) {
-       if(!brokenCellShapeFunction->findCellAndShapeDerivatives(idx, ni, 
-	   visiable, d_S)) {
+     if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S)){
 	  cerr << "p=" << px[idx] << '\n';
           cerr << "patch=" << patch << '\n';
 	  throw InternalError("Particle not in this patch?");
-       }
      }
-     else {
-       if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S)){
-	  cerr << "p=" << px[idx] << '\n';
-          cerr << "patch=" << patch << '\n';
-	  throw InternalError("Particle not in this patch?");
-       }
-       for(int i=0;i<8;++i) visiable[i] = true;
+     
+     Visibility vis;
+     if(matl->getFractureModel()) {
+  	vis = pVisibility[idx];
+      	vis.modifyShapeDerivatives(d_S);
      }
 
-      for(int k = 0; k < 8; k++) {
-         if(visiable[k]) {
+     for(int k = 0; k < 8; k++) {
+	 if(vis.visible(k) ) {
 	    Vector& gvel = gvelocity[ni[k]];
 	    for (int j = 0; j<3; j++){
 	       for (int i = 0; i<3; i++) {
@@ -223,7 +206,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 	       }
 	    }
 	 }
-      }
+     }
 
 
       // Compute the deformation gradient increment using the time_step
@@ -294,11 +277,6 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     new_dw->put(pvolume, lb->pVolumeDeformedLabel);
 
     new_dw->put(pDilationalWaveSpeed, lb->pDilationalWaveSpeedLabel);
-
-    if(matl->getFractureModel()) {
-        delete lattice;
-	delete brokenCellShapeFunction;
-    }
 }
 
 void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
@@ -330,11 +308,7 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
    task->requires(old_dw, lb->delTLabel);
 
    if(matl->getFractureModel()) {
-      task->requires(old_dw, lb->pIsBrokenLabel, matl->getDWIndex(), patch,
-			Ghost::AroundNodes, 1 );
-      task->requires(old_dw, lb->pCrackSurfaceNormalLabel, matl->getDWIndex(), patch,
-			Ghost::AroundNodes, 1 );
-      task->requires(old_dw, lb->pMicrocrackSizeLabel, matl->getDWIndex(), patch,
+      task->requires(new_dw, lb->pVisibilityLabel, matl->getDWIndex(), patch,
 			Ghost::AroundNodes, 1 );
    }
 
@@ -382,6 +356,10 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.60  2000/09/09 20:23:20  tan
+// Replace BrokenCellShapeFunction with particle visibility information in shape
+// function computation.
+//
 // Revision 1.59  2000/09/08 18:23:19  tan
 // Added visibility calculation to fracture broken cell shape function
 // interpolation.

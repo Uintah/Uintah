@@ -31,7 +31,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/MPM/Burn/HEBurn.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 
-#include <Uintah/Components/MPM/Fracture/BrokenCellShapeFunction.h>
+#include <Uintah/Components/MPM/Fracture/Visibility.h>
 
 #include <iostream>
 #include <fstream>
@@ -255,13 +255,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
              */
 
 	    if(mpm_matl->getFractureModel()) {
-	       t->requires(old_dw, lb->pIsBrokenLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-   	       t->requires(old_dw, lb->pCrackSurfaceNormalLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-   	       t->requires(old_dw, lb->pMicrocrackSizeLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-   	       t->requires(old_dw, lb->pVolumeLabel, idx, patch,
+	       t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
    	    }
 
@@ -576,14 +570,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			Ghost::None);
 
 	    if(mpm_matl->getFractureModel()) {
-	       t->requires(old_dw, lb->pIsBrokenLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-   	       t->requires(old_dw, lb->pCrackSurfaceNormalLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-   	       t->requires(old_dw, lb->pMicrocrackSizeLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-   	       t->requires(old_dw, lb->pVolumeLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
+	       t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
+			Ghost::None);
    	    }
 						
 	    t->requires(old_dw, lb->pMassLabel, idx, patch, Ghost::None);
@@ -1014,22 +1002,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pexternalforce, lb->pExternalForceLabel, pset);
       old_dw->get(pTemperature,   lb->pTemperatureLabel, pset);
       
-      Lattice* lattice;
-      BrokenCellShapeFunction* brokenCellShapeFunction;
+      ParticleVariable<int> pVisibility;
       if(mpm_matl->getFractureModel()) {
-        ParticleVariable<Vector> pCrackSurfaceNormal;
-        ParticleVariable<double> pMicrocrackSize;
-        ParticleVariable<int> pIsBroken;
-	ParticleVariable<double> pVolume;
-	
-        old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
-	old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
-	old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
-	old_dw->get(pVolume, lb->pVolumeLabel, pset);
-	
-        lattice = scinew Lattice(px);
-	brokenCellShapeFunction = scinew BrokenCellShapeFunction(*lattice,
-	   pVolume,pIsBroken,pCrackSurfaceNormal,pMicrocrackSize);
+        new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
       }
 
       // Create arrays for the grid data
@@ -1063,22 +1038,20 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	 // Get the node indices that surround the cell
 	 IntVector ni[8];
 	 double S[8];
-	 bool visiable[8];
-	 
-	 for(int i=0;i<8;++i) visiable[i] = true;
 
-         if(mpm_matl->getFractureModel()) {
-      	   brokenCellShapeFunction->findCellAndWeights(idx, ni, visiable, S);
-	 }
-	 else {
-  	   if(!patch->findCellAndWeights(px[idx], ni, S))
+  	 if(!patch->findCellAndWeights(px[idx], ni, S))
 	      throw InternalError("Particle not in patch");
-	 }
+
+         Visibility vis;
+         if(mpm_matl->getFractureModel()) {
+  	   vis = pVisibility[idx];
+      	   vis.modifyWeights(S);
+   	 }
 
 	 // Add each particles contribution to the local mass & velocity 
 	 // Must use the node indices
 	 for(int k = 0; k < 8; k++) {
-	    if(patch->containsNode(ni[k]) && visiable[k] ) {
+	    if(patch->containsNode(ni[k]) && vis.visible(k) ) {
 	       gmass[ni[k]] += pmass[idx] * S[k];
 	       gvelocity[ni[k]] += pvelocity[idx] * pmass[idx] * S[k];
 	       gexternalforce[ni[k]] += pexternalforce[idx] * S[k];
@@ -1137,11 +1110,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->put(gvelocity,     lb->gVelocityLabel, vfindex, patch);
       new_dw->put(gexternalforce, lb->gExternalForceLabel, vfindex, patch);
       new_dw->put(gTemperature, lb->gTemperatureLabel, vfindex, patch);
-
-      if(mpm_matl->getFractureModel()) {
-        delete lattice;
-	delete brokenCellShapeFunction;
-      }
     }
   }
 }
@@ -1585,23 +1553,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pmass,     lb->pMassLabel, pset);
       old_dw->get(pexternalForce, lb->pExternalForceLabel, pset);
 
-      Lattice* lattice;
-      BrokenCellShapeFunction* brokenCellShapeFunction;
+      ParticleVariable<int> pVisibility;
       if(mpm_matl->getFractureModel()) {
-
-        ParticleVariable<Vector> pCrackSurfaceNormal;
-        ParticleVariable<double> pMicrocrackSize;
-        ParticleVariable<int> pIsBroken;
-	ParticleVariable<double> pVolume;
-      
-        old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
-	old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
-	old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
-	old_dw->get(pVolume, lb->pVolumeLabel, pset);
-	
-        lattice = scinew Lattice(px);
-	brokenCellShapeFunction = scinew BrokenCellShapeFunction(*lattice,
-	   pVolume,pIsBroken,pCrackSurfaceNormal,pMicrocrackSize);
+        new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
       }
 
       // Get the arrays of grid data on which the new particle values depend
@@ -1714,20 +1668,18 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	IntVector ni[8];
         double S[8];
         Vector d_S[8];
-        bool visiable[8];
 
-	for(int i=0;i<8;++i) visiable[i] = true;
-        if(mpm_matl->getFractureModel()) {
-      	   if( !brokenCellShapeFunction->findCellAndWeightsAndShapeDerivatives(
-	       idx, ni, visiable, S, d_S) )
-	     continue;
-	}
-	else {
-          if(!patch->findCellAndWeights(px[idx], ni, S))
+        if(!patch->findCellAndWeights(px[idx], ni, S))
 	    continue;
-          if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
+        if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
             continue;
-	}
+
+        Visibility vis;
+        if(mpm_matl->getFractureModel()) {
+  	   vis = pVisibility[idx];
+	   vis.modifyWeights(S);
+	   vis.modifyShapeDerivatives(d_S);
+        }
 
         vel = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
@@ -1737,7 +1689,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < 8; k++) {
-	   if( visiable[k] ) {
+ 	   if(vis.visible(k) ) {
 	      vel += gvelocity_star[ni[k]]  * S[k];
    	      acc += gacceleration[ni[k]]   * S[k];
 	   
@@ -1773,11 +1725,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->put(pTemperatureRate, lb->pTemperatureRateLabel_preReloc);
       new_dw->put(pTemperature, lb->pTemperatureLabel_preReloc);
       new_dw->put(pTemperatureGradient, lb->pTemperatureGradientLabel_preReloc);
-
-      if(mpm_matl->getFractureModel()) {
-        delete lattice;
-	delete brokenCellShapeFunction;
-      }
     }
   }
   // DON'T MOVE THESE!!!
@@ -1847,6 +1794,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.138  2000/09/09 20:23:19  tan
+// Replace BrokenCellShapeFunction with particle visibility information in shape
+// function computation.
+//
 // Revision 1.137  2000/09/09 19:34:11  tan
 // Added MPMLabel::pVisibilityLabel and SerialMPM::computerNodesVisibility().
 //
