@@ -420,7 +420,7 @@ private:
   GuiString gui_global_type_;
   GuiInt gui_ortho_view_;
   GuiInt gui_current_time_;
-
+  GuiString gui_currentvisual_;
 };
 
 class ViewWindowMouseMessage : public MessageBase {

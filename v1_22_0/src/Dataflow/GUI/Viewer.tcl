@@ -272,6 +272,9 @@ itcl_class ViewWindow {
 	global $this-ortho-view
 	if {![info exists $this-ortho-view]} { set $this-ortho-view 0 }
 	
+	global $this-currentvisual
+	if {![info exists $this-currentvisual]} { set $this-currentvisual 0 }
+
 	initGlobal $this-trackViewWindow0 1
 
 	initGlobal $this-geometry [wm geometry .ui[modname]]
@@ -356,14 +359,11 @@ itcl_class ViewWindow {
 	menu $w.menu.visual.menu
 	set i 0
 	global $this-currentvisual
-	set $this-currentvisual 0
+
 	foreach t [$this-c listvisuals $w] {
 	    $w.menu.visual.menu add radiobutton -value $i -label $t \
 		-variable $this-currentvisual \
-		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*" \
-		-command "$this switchvisual $i"
-#        -command { puts "switchvisual doesn't work on NT" }
-#puts "$i: $t"
+		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*"
 	    incr i
 	}
 
@@ -504,12 +504,15 @@ itcl_class ViewWindow {
 
 # AS: end initialization of attachment
 
-	switchvisual 0
+	switchvisual [set $this-currentvisual]
+	trace variable $this-currentvisual w "$this currentvisualtrace"
+
 	$this-c startup
 	
 #	puts [pack slaves $w]
 	pack slaves $w
     }
+
     method bindEvents {w} {
 	bind $w <Expose> "$this-c redraw"
 	bind $w <Configure> "$this-c redraw"
@@ -678,6 +681,8 @@ itcl_class ViewWindow {
 	global $this-sr
 	global $this-do_bawgl
 	global $this-tracker_state
+	global $this-currentvisual
+	global $this-currentvisualhelper
 	
 	set "$this-global-light" 1
 	set "$this-global-fog" 0
@@ -694,7 +699,9 @@ itcl_class ViewWindow {
 	set "$this-y-resize" 512
 	set $this-do_bawgl 0
 	set $this-tracker_state 0
-	
+	set $this-currentvisual 0
+	global $this-currentvisualhelper 0
+
 	set r "$this-c redraw"
 	bind $m <Double-ButtonPress-1> "$this switch_frames"
 
@@ -936,6 +943,13 @@ itcl_class ViewWindow {
 	$bsframe.pf.perf3 configure -text $p3
     }
 
+    method currentvisualtrace {a b c} {
+	global $this-currentvisual
+	if {[set $this-currentvisual] != [set $this-currentvisualhelper]} {
+	    switchvisual [set $this-currentvisual]
+	}
+    }
+
     method switchvisual {idx} {
 	set w .ui[modname]
 	if {[winfo exists $w.wframe.draw]} {
@@ -946,6 +960,7 @@ itcl_class ViewWindow {
 	    bindEvents $w.wframe.draw
 	    pack $w.wframe.draw -expand yes -fill both
 	}
+	set $this-currentvisualhelper [set $this-currentvisual]
     }	
 
     method bench {bench} {

@@ -2147,6 +2147,12 @@ OpenGL::listvisuals(GuiArgs& args)
 void
 OpenGL::setvisual(const string& wname, int which, int width, int height)
 {
+  if (which >= visuals.size())
+  {
+    cerr << "Invalid OpenGL visual, using default.\n";
+    which = 0;
+  }
+
   tkwin=0;
   current_drawer=0;
 
