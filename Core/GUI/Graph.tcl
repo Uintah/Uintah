@@ -17,6 +17,7 @@ class Graph {
 
     variable graph
     variable parent-window
+    variable status
 
     constructor {} {
 	global $this-gl-window 
@@ -25,7 +26,6 @@ class Graph {
     method ui { w } {
 	global $this-gl-window
 
-	puts "Graph ui $w"
 	set parent-window $w
 
 	# menubar
@@ -33,31 +33,49 @@ class Graph {
 	$w.menu add menubutton .opt -text "Opt"
 
 
-	# Options
-	frame $w.opt
+	# UIs
+	frame $w.ui
 
+	# toolbar
+	label $w.status -textvariable status 
+
+	frame $w.f
+	iwidgets::toolbar $w.f.tb -helpvariable status -orient vertical
+	
+	$w.f.tb add button select \
+	    -helpstr "Select" -command {puts "select"}
+
+	$w.f.tb add button zoom \
+	    -helpstr "Zoom" \
+	    -image [image create photo -file "/local/home/yarden/mag_glass_3d.ppm"] \
+	    -command {puts "zoom"}
+
+	$w.f.tb add button sub \
+	    -helpstr "SubWindow" -command {puts "sub window"}
 	#
 	# Graph
 	#
-	iwidgets::scrolledframe $w.graph -width 450 -height 350 \
+	iwidgets::scrolledframe $w.f.graph -width 450 -height 350 \
 	    -hscrollmode dynamic -vscrollmode dynamic 
+
+	pack $w.f.tb  -fill y -side left
+	pack $w.f.graph -expand yes  -fill both
 
 	#
 	#
 	# OpenGL window of Graph
 	#  
-	set $this-gl-window [$w.graph childsite].gl
-	#OpenGLWindow ogl
-	#ogl ui $graph.gl $this
+	set $this-gl-window [$w.f.graph childsite].gl
 
-	
 	# Info winfow
 	#iwidgets::Labeledframe $w.info -labelpos nw -labeltext "Info"
 	
 	# pack $w.info 
-	pack $w.menu -fill x -expand yes
-	pack $w.opt -anchor w 
-	pack $w.graph -expand yes  -fill both
+	pack $w.menu -fill x 
+	pack $w.ui -anchor w 
+	pack $w.f -expand yes -fill both
+	pack $w.status  -fill x
+	
     }
 
 }
