@@ -106,6 +106,26 @@ LIBS := $(GL_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_L
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+# tclgui
+SRCS := $(SRCDIR)/tclgui.cc
+
+PROGRAM := Packages/rtrt/StandAlone/tclgui
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Core
+else
+  PSELIBS := \
+	Core/GuiInterface \
+	Core/Util \
+	Core/Thread \
+	Core/Persistent \
+	Core/Exceptions
+endif
+
+LIBS := $(LIBS) $(TK_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##################################################
 
 SUBDIRS := \
 	$(SRCDIR)/tex-utils \
