@@ -112,6 +112,7 @@ namespace Uintah {
     bool   d_evolveDamage;
     bool   d_computeSpecificHeat;
     bool   d_checkTeplaFailureCriterion;
+    bool   d_doMelting;
 
     // Erosion algorithms
     bool   d_setStressToZero;

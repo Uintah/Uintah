@@ -31,14 +31,14 @@ using namespace SCIRun;
 // _________________transversely isotropic hyperelastic material [Jeff Weiss's]
 
 TransIsoHyper::TransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb, 
-                                                MPMFlags* Mflag)
-//______________________CONSTRUCTOR (READS INPUT, INITIALIZES SOME MODULI)
+                             MPMFlags* Mflag)
+  //______________________CONSTRUCTOR (READS INPUT, INITIALIZES SOME MODULI)
 {
   lb = Mlb;
   flag = Mflag;
   d_useModifiedEOS = false;
 
-//______________________material properties
+  //______________________material properties
   ps->require("bulk_modulus", d_initialData.Bulk);
   ps->require("c1", d_initialData.c1);//Mooney Rivlin constant 1
   ps->require("c2", d_initialData.c2);//Mooney Rivlin constant 2
@@ -52,7 +52,7 @@ TransIsoHyper::TransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb,
   ps->require("max_matrix_strain",d_initialData.crit_shear);
   ps->get("useModifiedEOS",d_useModifiedEOS);//no negative pressure for solids
 
-//______________________interpolation
+  //______________________interpolation
   d_8or27 = flag->d_8or27;
   if(d_8or27==8){
     NGN=1;
@@ -61,15 +61,15 @@ TransIsoHyper::TransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb,
   }
 
   pStretchLabel = VarLabel::create("p.stretch",
-        ParticleVariable<double>::getTypeDescription());
+     ParticleVariable<double>::getTypeDescription());
 
   pStretchLabel_preReloc = VarLabel::create("p.stretch+",
-        ParticleVariable<double>::getTypeDescription());
+     ParticleVariable<double>::getTypeDescription());
   //_________________________________________________________________fail_labels
   pFailureLabel = VarLabel::create("p.fail",
-        ParticleVariable<double>::getTypeDescription());
+     ParticleVariable<double>::getTypeDescription());
   pFailureLabel_preReloc = VarLabel::create("p.fail+",
-        ParticleVariable<double>::getTypeDescription());
+     ParticleVariable<double>::getTypeDescription());
 }
 
 TransIsoHyper::TransIsoHyper(const TransIsoHyper* cm)
@@ -95,7 +95,7 @@ TransIsoHyper::TransIsoHyper(const TransIsoHyper* cm)
 }
 
 TransIsoHyper::~TransIsoHyper()
-// _______________________DESTRUCTOR
+  // _______________________DESTRUCTOR
 {
   VarLabel::destroy(pStretchLabel);
   VarLabel::destroy(pStretchLabel_preReloc);
@@ -105,37 +105,37 @@ TransIsoHyper::~TransIsoHyper()
 }
 
 void TransIsoHyper::initializeCMData(const Patch* patch,
-                                        const MPMMaterial* matl,
-                                        DataWarehouse* new_dw)
-// _____________________STRESS FREE REFERENCE CONFIG
+                                     const MPMMaterial* matl,
+                                     DataWarehouse* new_dw)
+  // _____________________STRESS FREE REFERENCE CONFIG
 {
-   // Put stuff in here to initialize each particle's
-   // constitutive model parameters and deformationMeasure
-   Matrix3 Identity, zero(0.);
-   Identity.Identity();
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+  Matrix3 Identity, zero(0.);
+  Identity.Identity();
 
-   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-   ParticleVariable<Matrix3> deformationGradient, pstress;
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+  ParticleVariable<Matrix3> deformationGradient, pstress;
 
-   new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,
-                          pset);
-   new_dw->allocateAndPut(pstress, lb->pStressLabel,pset);
+  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,
+                         pset);
+  new_dw->allocateAndPut(pstress, lb->pStressLabel,pset);
 
-   for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++) {
-          deformationGradient[*iter] = Identity;
-          pstress[*iter] = zero;
-   }
+  for(ParticleSubset::iterator iter = pset->begin();
+      iter != pset->end(); iter++) {
+    deformationGradient[*iter] = Identity;
+    pstress[*iter] = zero;
+  }
 
-   computeStableTimestep(patch, matl, new_dw);
+  computeStableTimestep(patch, matl, new_dw);
 }
 
 
 void TransIsoHyper::allocateCMDataAddRequires(Task* task,
-                                            const MPMMaterial* matl ,
-                                            const PatchSet* ,
-                                            MPMLabel* lb) const
-// _________________________________________STILL EXPERIMENTAL
+                                              const MPMMaterial* matl ,
+                                              const PatchSet* ,
+                                              MPMLabel* lb) const
+  // _________________________________________STILL EXPERIMENTAL
 {
   const MaterialSubset* matlset = matl->thisMaterial(); 
   task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
@@ -146,11 +146,11 @@ void TransIsoHyper::allocateCMDataAddRequires(Task* task,
 
 
 void TransIsoHyper::allocateCMDataAdd(DataWarehouse* new_dw,
-                                    ParticleSubset* addset,
-                                    map<const VarLabel*, ParticleVariableBase*>* newState,
-                                    ParticleSubset* delset,
-                                    DataWarehouse* )
-// _________________________________________STILL EXPERIMENTAL
+                                      ParticleSubset* addset,
+                                      map<const VarLabel*, ParticleVariableBase*>* newState,
+                                      ParticleSubset* delset,
+                                      DataWarehouse* )
+  // _________________________________________STILL EXPERIMENTAL
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
@@ -176,33 +176,33 @@ void TransIsoHyper::allocateCMDataAdd(DataWarehouse* new_dw,
 }
 
 void TransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
-                                   std::vector<const VarLabel*>& to)
-//______________________________KEEPS TRACK OF THE PARTICLES AND THE RELATED VARIABLES
-//______________________________(EACH CM ADD ITS OWN STATE VARS)
-//______________________________AS PARTICLES MOVE FROM PATCH TO PATCH
+                                     std::vector<const VarLabel*>& to)
+  //______________________________KEEPS TRACK OF THE PARTICLES AND THE RELATED VARIABLES
+  //______________________________(EACH CM ADD ITS OWN STATE VARS)
+  //______________________________AS PARTICLES MOVE FROM PATCH TO PATCH
 {
-   from.push_back(lb->pDeformationMeasureLabel);
-   from.push_back(lb->pStressLabel);
-   from.push_back(lb->pFiberDirLabel);
-   from.push_back(pStretchLabel);
-   //______________________________________________________________fail_labels
-   from.push_back(pFailureLabel);
+  from.push_back(lb->pDeformationMeasureLabel);
+  from.push_back(lb->pStressLabel);
+  from.push_back(lb->pFiberDirLabel);
+  from.push_back(pStretchLabel);
+  //______________________________________________________________fail_labels
+  from.push_back(pFailureLabel);
 
-   to.push_back(lb->pDeformationMeasureLabel_preReloc);
-   to.push_back(lb->pStressLabel_preReloc);
-   to.push_back(lb->pFiberDirLabel_preReloc);
-   to.push_back(pStretchLabel_preReloc);
-   //______________________________________________________________fail_labels
-   to.push_back(pFailureLabel_preReloc);
+  to.push_back(lb->pDeformationMeasureLabel_preReloc);
+  to.push_back(lb->pStressLabel_preReloc);
+  to.push_back(lb->pFiberDirLabel_preReloc);
+  to.push_back(pStretchLabel_preReloc);
+  //______________________________________________________________fail_labels
+  to.push_back(pFailureLabel_preReloc);
 }
 
 void TransIsoHyper::computeStableTimestep(const Patch* patch,
-                                        const MPMMaterial* matl,
-                                        DataWarehouse* new_dw)
-//__________________________TIME STEP DEPENDS ON:
-//__________________________CELL SPACING, VEL OF PARTICLE, MATERIAL WAVE SPEED @ EACH PARTICLE
-//__________________________REDUCTION OVER ALL dT'S FROM EVERY PATCH PERFORMED
-//__________________________(USE THE SMALLEST dT)
+                                          const MPMMaterial* matl,
+                                          DataWarehouse* new_dw)
+  //__________________________TIME STEP DEPENDS ON:
+  //__________________________CELL SPACING, VEL OF PARTICLE, MATERIAL WAVE SPEED @ EACH PARTICLE
+  //__________________________REDUCTION OVER ALL dT'S FROM EVERY PATCH PERFORMED
+  //__________________________(USE THE SMALLEST dT)
 {
   // This is only called for the initial timestep - all other timesteps
   // are computed as a side-effect of computeStressTensor
@@ -226,14 +226,14 @@ void TransIsoHyper::computeStableTimestep(const Patch* patch,
   double c1 = d_initialData.c1;
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
-     particleIndex idx = *iter;
+    particleIndex idx = *iter;
 
-     // this is valid only for F=Identity
-     c_dil = sqrt((Bulk+2./3.*c1)*pvolume[idx]/pmass[idx]);
+    // this is valid only for F=Identity
+    c_dil = sqrt((Bulk+2./3.*c1)*pvolume[idx]/pmass[idx]);
 
-     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
@@ -246,17 +246,17 @@ Vector TransIsoHyper::getInitialFiberDir()
 }
 
 void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
-                                      const MPMMaterial* matl,
-                                      DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw)
-//___________________________________COMPUTES THE STRESS ON ALL THE PARTICLES IN A GIVEN PATCH FOR A GIVEN MATERIAL
-//___________________________________CALLED ONCE PER TIME STEP
-//___________________________________CONTAINS A COPY OF computeStableTimestep
+                                        const MPMMaterial* matl,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw)
+  //___________________________________COMPUTES THE STRESS ON ALL THE PARTICLES IN A GIVEN PATCH FOR A GIVEN MATERIAL
+  //___________________________________CALLED ONCE PER TIME STEP
+  //___________________________________CONTAINS A COPY OF computeStableTimestep
 {
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 
-//
+    //
     Matrix3 velGrad,deformationGradientInc;
     double J,p;
     double U,W,se=0.;
@@ -274,6 +274,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -284,8 +285,8 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pmass,pvolume;
     ParticleVariable<double> pvolume_deformed;
     ParticleVariable<double> stretch;
-//_______________________________________________________________________________fail_labels
-     ParticleVariable<double> fail;
+    //_______________________________________________________________________________fail_labels
+    ParticleVariable<double> fail;
 
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Vector> pfiberdir;
@@ -308,16 +309,16 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
     new_dw->allocateAndPut(pfiberdir_carry,  lb->pFiberDirLabel_preReloc,pset);
     new_dw->allocateAndPut(deformationGradient_new,
-                                  lb->pDeformationMeasureLabel_preReloc, pset);
+                           lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(stretch,          pStretchLabel_preReloc,     pset);
 
     new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
     old_dw->get(delT, lb->delTLabel);
 
-     //______________________________________________________________________fail_labels
-     new_dw->allocateAndPut(fail,    pFailureLabel_preReloc,     pset);
+    //______________________________________________________________________fail_labels
+    new_dw->allocateAndPut(fail,    pFailureLabel_preReloc,     pset);
 
-//_____________________________________________material parameters
+    //_____________________________________________material parameters
     double Bulk  = d_initialData.Bulk;
     double c1 = d_initialData.c1;
     double c2 = d_initialData.c2;
@@ -350,13 +351,13 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
       Vector gvel;
       velGrad.set(0.0);
       for(int k = 0; k < d_8or27; k++) {
-         gvel = gvelocity[ni[k]];
-         for (int j = 0; j<3; j++){
-            double d_SXoodx = d_S[k][j] * oodx[j];
-            for (int i = 0; i<3; i++) {
-               velGrad(i,j) += gvel[i] * d_SXoodx;
-            }
-         }
+        gvel = gvelocity[ni[k]];
+        for (int j = 0; j<3; j++){
+          double d_SXoodx = d_S[k][j] * oodx[j];
+          for (int i = 0; i<3; i++) {
+            velGrad(i,j) += gvel[i] * d_SXoodx;
+          }
+        }
       }
       
       // Compute the deformation gradient increment using the time_step
@@ -366,7 +367,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient_new[idx] = deformationGradientInc *
-                                     deformationGradient[idx];
+        deformationGradient[idx];
 
       // get the volumetric part of the deformation
       J = deformationGradient_new[idx].Determinant();
@@ -381,13 +382,13 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
       //_______________________right Cauchy Green (C) tilde and invariants
       rightCauchyGreentilde_new = deformationGradient_new[idx].Transpose()
-                                * deformationGradient_new[idx]*pow(J,-(2./3.));
+        * deformationGradient_new[idx]*pow(J,-(2./3.));
 
       I1tilde = rightCauchyGreentilde_new.Trace();
       I2tilde = .5*(I1tilde*I1tilde -
-                (rightCauchyGreentilde_new*rightCauchyGreentilde_new).Trace());
+                 (rightCauchyGreentilde_new*rightCauchyGreentilde_new).Trace());
       I4tilde = Dot(deformed_fiber_vector,
-                   (rightCauchyGreentilde_new*deformed_fiber_vector));
+                    (rightCauchyGreentilde_new*deformed_fiber_vector));
       lambda_tilde = sqrt(I4tilde);
 
       // For diagnostics only
@@ -395,154 +396,169 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
       stretch[idx] = sqrt(I4);
 
       deformed_fiber_vector = deformationGradient_new[idx]*deformed_fiber_vector
-      				*(1./lambda_tilde*pow(J,-(1./3.)));
+        *(1./lambda_tilde*pow(J,-(1./3.)));
 
       Matrix3 DY(deformed_fiber_vector,deformed_fiber_vector);
 
       //________________________________left Cauchy Green (B) tilde
       leftCauchyGreentilde_new = deformationGradient_new[idx]
-                     * deformationGradient_new[idx].Transpose()*pow(J,-(2./3.));
+        * deformationGradient_new[idx].Transpose()*pow(J,-(2./3.));
 
       //________________________________strain energy derivatives
       if (lambda_tilde < 1.)
-       {dWdI4tilde = 0.;
-       d2WdI4tilde2 = 0.;
-       shear = 2.*c1+c2;
+        {dWdI4tilde = 0.;
+        d2WdI4tilde2 = 0.;
+        shear = 2.*c1+c2;
         }
       else
-      if (lambda_tilde < lambda_star)
-       {
-       dWdI4tilde = 0.5*c3*(exp(c4*(lambda_tilde-1.))-1.)
-                           /lambda_tilde/lambda_tilde;
-       d2WdI4tilde2 = 0.25*c3*(c4*exp(c4*(lambda_tilde-1.))
-                     -1./lambda_tilde*(exp(c4*(lambda_tilde-1.))-1.))
-                      /(lambda_tilde*lambda_tilde*lambda_tilde);
+        if (lambda_tilde < lambda_star)
+          {
+            dWdI4tilde = 0.5*c3*(exp(c4*(lambda_tilde-1.))-1.)
+              /lambda_tilde/lambda_tilde;
+            d2WdI4tilde2 = 0.25*c3*(c4*exp(c4*(lambda_tilde-1.))
+               -1./lambda_tilde*(exp(c4*(lambda_tilde-1.))-1.))
+              /(lambda_tilde*lambda_tilde*lambda_tilde);
 
-       shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
-                                   -2.*dWdI4tilde*lambda_tilde);
-        }
-      else
-       {
-       dWdI4tilde = 0.5*(c5+c6/lambda_tilde)/lambda_tilde;
-       d2WdI4tilde2 = -0.25*c6
-                     /(lambda_tilde*lambda_tilde*lambda_tilde*lambda_tilde);
-       shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
-                                -2.*dWdI4tilde*lambda_tilde);
-       }
-//cout <<"************************************************************************" << endl;
-	//________________________________Failure and stress terms
-	fail[idx] = 0.;
-      if (failure == 1)
-	{double matrix_failed = 0.;
-	 double fiber_failed = 0.;
-	//________________________________Mooney Rivlin deviatoric term +failure of matrix
-	 Matrix3 RCG;
-         RCG = deformationGradient_new[idx].Transpose()*deformationGradient_new[idx];
-         double e1,e2,e3;//eigenvalues of C=symm.+pos.def.->Dis<=0
-	 double Q,R,Dis;
-         double pi = 3.1415926535897932384;
-	 double I1 = RCG.Trace();
-	 double I2 = .5*(I1*I1 -(RCG*RCG).Trace());
-	 double I3 = RCG.Determinant();
-	 Q = (1./9.)*(3.*I2-pow(I1,2));
-	 R = (1./54.)*(-9.*I1*I2+27.*I3+2.*pow(I1,3));
-	 Dis = pow(Q,3)+pow(R,2);
-	 if (Dis <= 1.e-5 && Dis >= 0.)
-	   {if (R >= -1.e-5 && R<= 1.e-5)
-	      e1 = e2 = e3 = I1/3.;
-	    else
-	      {
-	      e1 = 2.*pow(R,1./3.)+I1/3.;
-	      e3 = -pow(R,1./3.)+I1/3.;
-	      if (e1 < e3) swap(e1,e3);
-	      e2=e3;
-	      }
-	    }
-	 else
-	   {double theta = acos(R/pow(-Q,3./2.));
-	   e1 = 2.*pow(-Q,1./2.)*cos(theta/3.)+I1/3.;
-	   e2 = 2.*pow(-Q,1./2.)*cos(theta/3.+2.*pi/3.)+I1/3.;
-	   e3 = 2.*pow(-Q,1./2.)*cos(theta/3.+4.*pi/3.)+I1/3.;
-	   if (e1 < e2) swap(e1,e2);
-	   if (e1 < e3) swap(e1,e3);
-	   if (e2 < e3) swap(e2,e3);
-	   };
-//cout <<"e1=" << e1 << " e2=" << e2 << " e3=" << e3 << endl;
-        double max_shear_strain = (e1-e3)/2.;
-//cout <<"max_shear_strain=" << max_shear_strain << endl;
-        if (max_shear_strain<= crit_shear)
-      	  {deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
-			   - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
-			   - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
-	  }
+            shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
+                                      -2.*dWdI4tilde*lambda_tilde);
+          }
         else
-	  {deviatoric_stress = Identity*0.;
-	  fail[idx] = 1.;
-	  matrix_failed = 1.;
-	  }
-//cout << "dev_stress=" << endl;
-//cout << deviatoric_stress << endl;
+          {
+            dWdI4tilde = 0.5*(c5+c6/lambda_tilde)/lambda_tilde;
+            d2WdI4tilde2 = -0.25*c6
+              /(lambda_tilde*lambda_tilde*lambda_tilde*lambda_tilde);
+            shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
+                                      -2.*dWdI4tilde*lambda_tilde);
+          }
+
+      // Compute deformed volume and local wave speed
+      double rho_cur = rho_orig/J;
+      pvolume_deformed[idx]=pmass[idx]/rho_cur;
+      c_dil = sqrt((Bulk+1./3.*shear)/rho_cur);
+
+      // Compute bulk viscosity
+      /*
+      double qVisco = 0.0;
+      if (flag->d_artificial_viscosity) {
+        Matrix3 tensorD = (velGrad + velGrad.Transpose())*0.5;
+        double Dkk = tensorD.Trace();
+        double c_bulk = sqrt(Bulk/rho_cur);
+        qVisco = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
+      }
+      */
+
+      //cout <<"************************************************************************" << endl;
+      //________________________________Failure and stress terms
+      fail[idx] = 0.;
+      if (failure == 1)
+        {double matrix_failed = 0.;
+        double fiber_failed = 0.;
+        //________________________________Mooney Rivlin deviatoric term +failure of matrix
+        Matrix3 RCG;
+        RCG = deformationGradient_new[idx].Transpose()*deformationGradient_new[idx];
+        double e1,e2,e3;//eigenvalues of C=symm.+pos.def.->Dis<=0
+        double Q,R,Dis;
+        double pi = 3.1415926535897932384;
+        double I1 = RCG.Trace();
+        double I2 = .5*(I1*I1 -(RCG*RCG).Trace());
+        double I3 = RCG.Determinant();
+        Q = (1./9.)*(3.*I2-pow(I1,2));
+        R = (1./54.)*(-9.*I1*I2+27.*I3+2.*pow(I1,3));
+        Dis = pow(Q,3)+pow(R,2);
+        if (Dis <= 1.e-5 && Dis >= 0.)
+          {if (R >= -1.e-5 && R<= 1.e-5)
+            e1 = e2 = e3 = I1/3.;
+          else
+            {
+              e1 = 2.*pow(R,1./3.)+I1/3.;
+              e3 = -pow(R,1./3.)+I1/3.;
+              if (e1 < e3) swap(e1,e3);
+              e2=e3;
+            }
+          }
+        else
+          {double theta = acos(R/pow(-Q,3./2.));
+          e1 = 2.*pow(-Q,1./2.)*cos(theta/3.)+I1/3.;
+          e2 = 2.*pow(-Q,1./2.)*cos(theta/3.+2.*pi/3.)+I1/3.;
+          e3 = 2.*pow(-Q,1./2.)*cos(theta/3.+4.*pi/3.)+I1/3.;
+          if (e1 < e2) swap(e1,e2);
+          if (e1 < e3) swap(e1,e3);
+          if (e2 < e3) swap(e2,e3);
+          };
+        //cout <<"e1=" << e1 << " e2=" << e2 << " e3=" << e3 << endl;
+        double max_shear_strain = (e1-e3)/2.;
+        //cout <<"max_shear_strain=" << max_shear_strain << endl;
+        if (max_shear_strain<= crit_shear)
+          {deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
+               - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
+               - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
+          }
+        else
+          {deviatoric_stress = Identity*0.;
+          fail[idx] = 1.;
+          matrix_failed = 1.;
+          }
+        //cout << "dev_stress=" << endl;
+        //cout << deviatoric_stress << endl;
         //________________________________fiber stress term + failure of fibers
         if (stretch[idx] <= crit_stretch)
           {fiber_stress = (DY*dWdI4tilde*I4tilde
-      				- Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
-	  }
+                           - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
+          }
         else
           {fiber_stress = Identity*0.;
-	   fail[idx] = 2.;
-	   fiber_failed =1.;
-	  }
-//cout << "fiber stretch =" << stretch[idx] << endl;
-//cout << "fiber stress=" << endl;
-//cout << fiber_stress << endl;
-	if ( (matrix_failed + fiber_failed) == 2.)
-	 fail[idx] = 3.;
-	 //________________________________hydrostatic pressure term
-	if (fail[idx] == 1.0 ||fail[idx] == 3.0)
-	pressure = Identity*0.;
-	else
-	{
-         p = Bulk*log(J)/J;
-	if (p >= -1.e-5 && p <= 1.e-5)
-	 p = 0.;
-         pressure = Identity*p;
-	}
-//cout << "J=" << J <<endl;
-//cout << "log J=" << log(J) <<endl;
-//cout << "bulk=" << Bulk << endl;
-//cout <<"pressure="<< endl;
-//cout << pressure << endl;
+          fail[idx] = 2.;
+          fiber_failed =1.;
+          }
+        //cout << "fiber stretch =" << stretch[idx] << endl;
+        //cout << "fiber stress=" << endl;
+        //cout << fiber_stress << endl;
+        if ( (matrix_failed + fiber_failed) == 2.)
+          fail[idx] = 3.;
+        //________________________________hydrostatic pressure term
+        if (fail[idx] == 1.0 ||fail[idx] == 3.0)
+          pressure = Identity*0.;
+        else
+          {
+            p = Bulk*log(J)/J; // p -= qVisco;
+            if (p >= -1.e-5 && p <= 1.e-5)
+              p = 0.;
+            pressure = Identity*p;
+          }
+        //cout << "J=" << J <<endl;
+        //cout << "log J=" << log(J) <<endl;
+        //cout << "bulk=" << Bulk << endl;
+        //cout <<"pressure="<< endl;
+        //cout << pressure << endl;
         //_______________________________Cauchy stress
         pstress[idx] = pressure + deviatoric_stress + fiber_stress;
-	}
-    else
-       {
-        deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
-			   - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
-			   - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
-	fiber_stress = (DY*dWdI4tilde*I4tilde
-      				- Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
-	p = Bulk*log(J)/J;
-	if (p >= -1.e-5 && p <= 1.e-5)
-	 p = 0.;
-         pressure = Identity*p;
-        //Cauchy stress
-        pstress[idx] = pressure + deviatoric_stress + fiber_stress;
-       }
+        }
+      else
+        {
+          deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
+               - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
+               - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
+          fiber_stress = (DY*dWdI4tilde*I4tilde
+                          - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
+          p = Bulk*log(J)/J; // p -= qVisco;
+          if (p >= -1.e-5 && p <= 1.e-5)
+            p = 0.;
+          pressure = Identity*p;
+          //Cauchy stress
+          pstress[idx] = pressure + deviatoric_stress + fiber_stress;
+        }
       //________________________________end stress
-//cout <<"stress=" << endl;
-//cout << pstress[idx] << endl;
-//cout << "corresponding def gradient =" << endl;
-//cout << deformationGradient_new[idx] <<endl;
+      //cout <<"stress=" << endl;
+      //cout << pstress[idx] << endl;
+      //cout << "corresponding def gradient =" << endl;
+      //cout << deformationGradient_new[idx] <<endl;
 
       // Compute the strain energy for all the particles
       U = .5*log(J)*log(J)*Bulk;
       if (lambda_tilde < lambda_star)
-       W = c1*(I1tilde-3.)+c2*(I2tilde-3.)+(exp(c4*(lambda_tilde-1.)-1.))*c3;
+        W = c1*(I1tilde-3.)+c2*(I2tilde-3.)+(exp(c4*(lambda_tilde-1.)-1.))*c3;
       else
-       W = c1*(I1tilde-3.)+c2*(I2tilde-3.)+c5*lambda_tilde+c6*log(lambda_tilde);
-
-      pvolume_deformed[idx]=(pmass[idx]/rho_orig)*J;
+        W = c1*(I1tilde-3.)+c2*(I2tilde-3.)+c5*lambda_tilde+c6*log(lambda_tilde);
 
       double e = (U + W)*pvolume_deformed[idx]/J;
 
@@ -550,7 +566,6 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
       Vector pvelocity_idx = pvelocity[idx];
 
-      c_dil = sqrt((Bulk+1./3.*shear)*pvolume_deformed[idx]/pmass[idx]);
 
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
@@ -569,7 +584,7 @@ void TransIsoHyper::carryForward(const PatchSubset* patches,
                                  const MPMMaterial* matl,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw)
-//___________________________________________________________used with RigidMPM
+  //___________________________________________________________used with RigidMPM
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -589,7 +604,7 @@ void TransIsoHyper::carryForward(const PatchSubset* patches,
     old_dw->get(pfibdir,         lb->pFiberDirLabel,                   pset);
 
     new_dw->allocateAndPut(pdefm_new,lb->pDeformationMeasureLabel_preReloc,
-                                                                          pset);
+                           pset);
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
     new_dw->allocateAndPut(pfibdir_new,      lb->pFiberDirLabel_preReloc, pset);
@@ -616,48 +631,48 @@ void TransIsoHyper::carryForward(const PatchSubset* patches,
 }
 
 void TransIsoHyper::addComputesAndRequires(Task* task,
-                                          const MPMMaterial* matl,
-                                          const PatchSet*) const
-//___________TELLS THE SCHEDULER WHAT DATA
-//___________NEEDS TO BE AVAILABLE AT THE TIME computeStressTensor IS CALLED
+                                           const MPMMaterial* matl,
+                                           const PatchSet*) const
+  //___________TELLS THE SCHEDULER WHAT DATA
+  //___________NEEDS TO BE AVAILABLE AT THE TIME computeStressTensor IS CALLED
 {
-    const MaterialSubset* matlset = matl->thisMaterial();
-    Ghost::GhostType  gac   = Ghost::AroundCells;
-    task->requires(Task::OldDW, lb->pXLabel,        matlset, Ghost::None);
-    task->requires(Task::OldDW, lb->pMassLabel,     matlset, Ghost::None);
-    task->requires(Task::OldDW, lb->pVelocityLabel, matlset, Ghost::None);
-    task->requires(Task::OldDW, lb->pFiberDirLabel, matlset, Ghost::None);
-    task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
-                                                    matlset, Ghost::None);
-    if(d_8or27==27){
-      task->requires(Task::OldDW,lb->pSizeLabel,    matlset, Ghost::None);
-    }
-    task->requires(Task::NewDW,lb->gVelocityLabel,  matlset, gac, NGN);
+  const MaterialSubset* matlset = matl->thisMaterial();
+  Ghost::GhostType  gac   = Ghost::AroundCells;
+  task->requires(Task::OldDW, lb->pXLabel,        matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pMassLabel,     matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pVelocityLabel, matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pFiberDirLabel, matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
+                 matlset, Ghost::None);
+  if(d_8or27==27){
+    task->requires(Task::OldDW,lb->pSizeLabel,    matlset, Ghost::None);
+  }
+  task->requires(Task::NewDW,lb->gVelocityLabel,  matlset, gac, NGN);
 
-    task->requires(Task::OldDW, lb->delTLabel);
+  task->requires(Task::OldDW, lb->delTLabel);
 
-    task->computes(lb->pStressLabel_preReloc,             matlset);
-    task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-    task->computes(lb->pVolumeDeformedLabel,              matlset);
-    task->computes(lb->pFiberDirLabel_preReloc,           matlset);
-    task->computes(pStretchLabel_preReloc,                matlset);
-    //_______________________________________________________________________fail_labels
-    task->computes(pFailureLabel_preReloc,          matlset);
+  task->computes(lb->pStressLabel_preReloc,             matlset);
+  task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
+  task->computes(lb->pVolumeDeformedLabel,              matlset);
+  task->computes(lb->pFiberDirLabel_preReloc,           matlset);
+  task->computes(pStretchLabel_preReloc,                matlset);
+  //_______________________________________________________________________fail_labels
+  task->computes(pFailureLabel_preReloc,          matlset);
 }
 
 void TransIsoHyper::addComputesAndRequires(Task* ,
-                                   const MPMMaterial* ,
-                                   const PatchSet* ,
-                                   const bool ) const
-//_________________________________________here this one's empty
+                                           const MPMMaterial* ,
+                                           const PatchSet* ,
+                                           const bool ) const
+  //_________________________________________here this one's empty
 {
 }
 
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double TransIsoHyper::computeRhoMicroCM(double pressure, 
-                                      const double p_ref,
-                                      const MPMMaterial* matl)
+                                        const double p_ref,
+                                        const MPMMaterial* matl)
 {
   double rho_orig = matl->getInitialDensity();
   double Bulk = d_initialData.Bulk;
@@ -676,9 +691,9 @@ double TransIsoHyper::computeRhoMicroCM(double pressure,
 }
 
 void TransIsoHyper::computePressEOSCM(const double rho_cur,double& pressure, 
-                                    const double p_ref,
-                                    double& dp_drho, double& tmp,
-                                    const MPMMaterial* matl)
+                                      const double p_ref,
+                                      double& dp_drho, double& tmp,
+                                      const MPMMaterial* matl)
 {
   double Bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();

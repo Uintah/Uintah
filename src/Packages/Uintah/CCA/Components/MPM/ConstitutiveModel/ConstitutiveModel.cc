@@ -385,6 +385,22 @@ ConstitutiveModel::polarDecomposition(const Matrix3& F,
   R = F*Uinv;
 }
 
+double 
+ConstitutiveModel::artificialBulkViscosity(double Dkk, 
+                                           double c_bulk, 
+                                           double rho,
+                                           double dx) const 
+{
+  double q = 0.0;
+  if (Dkk < 0.0) {
+    double A1 = flag->d_artificialViscCoeff1;
+    double A2 = flag->d_artificialViscCoeff2;
+    //double c_bulk = sqrt(K/rho);
+    q = (A1*fabs(c_bulk*Dkk*dx) + A2*(Dkk*Dkk*dx*dx))*rho;
+  }
+  return q;
+}
+
 void
 ConstitutiveModel::BtDB(double B[6][24], 
                         double D[6][6],

@@ -224,6 +224,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
 
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
     int matlindex = matl->getDWIndex();
 
@@ -348,6 +349,17 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       
       // Update particle volumes
       pvolume_deform[idx]=(pmass[idx]/rho_orig)*J;
+
+      // Add bulk viscosity
+      /*
+      if (flag->d_artificial_viscosity) {
+        Matrix3 tensorD = (velGrad + velGrad.Transpose())*0.5;
+        double Dkk = tensorD.Trace();
+        double rho_cur = rho_orig/J;
+        double q = artificialBulkViscosity(Dkk, c_dil, rho_cur, dx_ave);
+        pstress[idx] = pstress[idx] - Identity*q;
+      }
+      */
 
       // Compute wave speed + particle velocity at each particle, 
       // store the maximum

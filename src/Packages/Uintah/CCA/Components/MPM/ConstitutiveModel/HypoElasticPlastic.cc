@@ -598,6 +598,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     // Get grid size
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
     // Get the set of particles
     int dwi = matl->getDWIndex();
@@ -855,6 +856,9 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->shearModulus = mu_cur ;
       state->meltingTemp = Tm_cur ;
 
+      // compute the local wave speed
+      double c_dil = sqrt((bulk + 4.0*mu_cur/3.0)/rho_cur);
+
       // Integrate the stress rate equation to get a trial deviatoric stress
       Matrix3 trialS = tensorS + tensorEta*(2.0*mu_cur*delT);
 
@@ -875,6 +879,17 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       double Phi = d_yield->evalYieldCondition(equivStress, flowStress,
                                                traceOfTrialStress, 
                                                porosity, sig);
+      
+      // Compute bulk viscosity
+      /*
+      double qVisco = 0.0;
+      if (flag->d_artificial_viscosity) {
+        double Dkk = tensorD.Trace();
+        double c_bulk = sqrt(bulk/rho_cur);
+        qVisco = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
+      }
+      */
+
       // Compute the deviatoric stress
       if (Phi <= 0.0 || flowStress <= 0.0) {
 
@@ -882,6 +897,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         // Calculate the updated hydrostatic stress
         double p = d_eos->computePressure(matl, state, tensorF_new, tensorD, 
                                         delT);
+        //p -= qVisco;
+
         Matrix3 tensorHy = one*p;
 
         // Get the elastic stress
@@ -1042,6 +1059,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         // Calculate the updated hydrostatic stress
         double p = d_eos->computePressure(matl, state, tensorF_new, tensorD, 
                                         delT);
+        //p -= qVisco;
         Matrix3 tensorHy = one*p;
 
         // Calculate total stress
@@ -1203,8 +1221,6 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
-      double c_dil = sqrt((bulk + 4.0*mu_cur/3.0)*
-                          pVolume_deformed[idx]/pMass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));

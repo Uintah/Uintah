@@ -14,6 +14,7 @@
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 
 #define MAX_BASIS 27
 
@@ -220,6 +221,27 @@ namespace Uintah {
     void polarDecomposition(const Matrix3& F, 
                             Matrix3& R,
                             Matrix3& U) const;
+
+    /*!
+      \brief Calculate the artificial bulk viscosity (q)
+
+      \f[
+         q = \rho (A_1 | c D_{kk} dx | + A_2 D_{kk}^2 dx^2) 
+            ~~\text{if}~~ D_{kk} < 0
+      \f]
+      \f[
+         q = 0 ~~\text{if}~~ D_{kk} >= 0
+      \f]
+
+      where \f$ \rho \f$ = current density \n
+            \f$ dx \f$ = characteristic length = (dx+dy+dz)/3 \n
+            \f$ A_1 \f$ = Coeff1 (default = 0.2) \n
+            \f$ A_2 \f$ = Coeff2 (default = 2.0) \n
+            \f$ c \f$ = Local bulk sound speed = \f$ \sqrt{K/\rho} \f$ \n
+            \f$ D_{kk} \f$ = Trace of rate of deformation tensor \n
+    */
+    double artificialBulkViscosity(double Dkk, double c, double rho,
+                                   double dx) const;
 
     void BtDB(double B[6][24], double D[6][6], double Km[24][24]) const;
     void BnltDBnl(double Bnl[3][24], double sig[3][3], double Kg[24][24]) const;
