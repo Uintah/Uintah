@@ -312,6 +312,25 @@ ContourMesh::Cell::size_type ContourMesh::cells_size() const
 
 
 const TypeDescription*
+ContourMesh::get_type_description() const
+{
+  return SCIRun::get_type_description((ContourMesh *)0);
+}
+
+const TypeDescription*
+get_type_description(ContourMesh *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("ContourMesh",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
 get_type_description(ContourMesh::Node *)
 {
   static TypeDescription *td = 0;

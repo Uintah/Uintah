@@ -202,6 +202,8 @@ public:
   static  const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
+  virtual const TypeDescription *get_type_description() const;
+
 private:
 
   //! the nodes
@@ -231,6 +233,7 @@ template <> ContourMesh::Edge::iterator ContourMesh::tend(ContourMesh::Edge::ite
 template <> ContourMesh::Face::iterator ContourMesh::tend(ContourMesh::Face::iterator *) const;
 template <> ContourMesh::Cell::iterator ContourMesh::tend(ContourMesh::Cell::iterator *) const;
 
+const TypeDescription* get_type_description(ContourMesh *);
 const TypeDescription* get_type_description(ContourMesh::Node *);
 const TypeDescription* get_type_description(ContourMesh::Edge *);
 const TypeDescription* get_type_description(ContourMesh::Face *);

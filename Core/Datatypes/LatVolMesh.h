@@ -411,6 +411,8 @@ public:
   static  const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
+  virtual const TypeDescription *get_type_description() const;
+
 private:
 
   //! the min_Node::index_type ( incase this is a subLattice )
@@ -446,6 +448,7 @@ template <> LatVolMesh::Edge::iterator LatVolMesh::tend(LatVolMesh::Edge::iterat
 template <> LatVolMesh::Face::iterator LatVolMesh::tend(LatVolMesh::Face::iterator *) const;
 template <> LatVolMesh::Cell::iterator LatVolMesh::tend(LatVolMesh::Cell::iterator *) const;
 
+const TypeDescription* get_type_description(LatVolMesh *);
 const TypeDescription* get_type_description(LatVolMesh::Node *);
 const TypeDescription* get_type_description(LatVolMesh::Edge *);
 const TypeDescription* get_type_description(LatVolMesh::Face *);

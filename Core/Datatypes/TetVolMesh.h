@@ -193,10 +193,10 @@ public:
   //! Persistent IO
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-
-  //! Convenience function to query types. Returns "TetVolMesh" always.
   static  const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
+
+  virtual const TypeDescription *get_type_description() const;
 
   // Extra functionality needed by this specific geometry.
 
@@ -472,6 +472,7 @@ template <> TetVolMesh::Edge::iterator TetVolMesh::tend(TetVolMesh::Edge::iterat
 template <> TetVolMesh::Face::iterator TetVolMesh::tend(TetVolMesh::Face::iterator *) const;
 template <> TetVolMesh::Cell::iterator TetVolMesh::tend(TetVolMesh::Cell::iterator *) const;
 
+const TypeDescription* get_type_description(TetVolMesh *);
 const TypeDescription* get_type_description(TetVolMesh::Node *);
 const TypeDescription* get_type_description(TetVolMesh::Edge *);
 const TypeDescription* get_type_description(TetVolMesh::Face *);

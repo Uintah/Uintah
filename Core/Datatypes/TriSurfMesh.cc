@@ -697,6 +697,25 @@ TriSurfMesh::Cell::size_type TriSurfMesh::cells_size() const
 { return tsize((Cell::size_type *)0); }
 
 const TypeDescription*
+TriSurfMesh::get_type_description() const
+{
+  return SCIRun::get_type_description((TriSurfMesh *)0);
+}
+
+const TypeDescription*
+get_type_description(TriSurfMesh *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("TriSurfMesh",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
 get_type_description(TriSurfMesh::Node *)
 {
   static TypeDescription *td = 0;

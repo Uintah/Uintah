@@ -328,6 +328,25 @@ ScanlineMesh::Cell::size_type ScanlineMesh::cells_size() const
 { return tsize((Cell::size_type *)0); }
 
 const TypeDescription*
+ScanlineMesh::get_type_description() const
+{
+  return SCIRun::get_type_description((ScanlineMesh *)0);
+}
+
+const TypeDescription*
+get_type_description(ScanlineMesh *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("ScanlineMesh",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
 get_type_description(ScanlineMesh::Node *)
 {
   static TypeDescription *td = 0;

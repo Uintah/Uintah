@@ -181,6 +181,8 @@ public:
   static  const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
+  virtual const TypeDescription *get_type_description() const;
+
 private:
 
   //! the min Node::index_type ( incase this is a subLattice )
@@ -214,6 +216,7 @@ template <> ScanlineMesh::Edge::iterator ScanlineMesh::tend(ScanlineMesh::Edge::
 template <> ScanlineMesh::Face::iterator ScanlineMesh::tend(ScanlineMesh::Face::iterator *) const;
 template <> ScanlineMesh::Cell::iterator ScanlineMesh::tend(ScanlineMesh::Cell::iterator *) const;
 
+const TypeDescription* get_type_description(ScanlineMesh *);
 const TypeDescription* get_type_description(ScanlineMesh::Node *);
 const TypeDescription* get_type_description(ScanlineMesh::Edge *);
 const TypeDescription* get_type_description(ScanlineMesh::Face *);

@@ -464,12 +464,31 @@ ImageMesh::Cell::size_type ImageMesh::cells_size() const
 { return tsize((Cell::size_type *)0); }
 
 const TypeDescription*
+ImageMesh::get_type_description() const
+{
+  return SCIRun::get_type_description((ImageMesh *)0);
+}
+
+const TypeDescription*
 get_type_description(ImageMesh::Node *)
 {
   static TypeDescription *td = 0;
   if (!td)
   {
     td = scinew TypeDescription("ImageMesh::Node",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
+get_type_description(ImageMesh *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("ImageMesh",
 				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
   }

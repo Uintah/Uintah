@@ -21,6 +21,7 @@
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Transform.h>
+#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Containers/LockingHandle.h>
 
 namespace SCIRun {
@@ -48,6 +49,8 @@ public:
   static  const string type_name(int n = -1);
   //! All instantiable classes need to define this.
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
+
+  virtual const TypeDescription *get_type_description() const = 0;
 };
 
 typedef LockingHandle<MeshBase> MeshBaseHandle;
