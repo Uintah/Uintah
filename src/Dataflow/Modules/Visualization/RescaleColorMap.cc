@@ -83,16 +83,15 @@ RescaleColorMap::RescaleColorMap(const clString& id)
     max("max", id, this)
 {
     // Create the output port
-  omap=scinew ColorMapOPort(this, "ColorMap", ColorMapIPort::Atomic);
-  add_oport(omap);
+  //omap=scinew ColorMapOPort(this, "ColorMap", ColorMapIPort::Atomic);
+  //add_oport(omap);
 
     // Create the input ports
-  imap=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
-  add_iport(imap);
-  FieldIPort* ifield=scinew FieldIPort(this, "ScalarField",
-                                                     FieldIPort::Atomic);
-  add_iport(ifield);
-  fieldports.add(ifield);
+  //imap=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
+  //add_iport(imap);
+  //FieldIPort* ifield=scinew FieldIPort(this, "ScalarField",FieldIPort::Atomic);
+  //add_iport(ifield);
+  //fieldports.add(ifield);
 }
 
 RescaleColorMap::~RescaleColorMap()
@@ -142,6 +141,7 @@ RescaleColorMap::execute()
   omap->send(cmap);
 }
 
+/*
 void 
 RescaleColorMap::connection(ConnectionMode mode, int which_port, int)
 {
@@ -157,6 +157,6 @@ RescaleColorMap::connection(ConnectionMode mode, int which_port, int)
         }
     }
 }
-
+*/
 } // End namespace SCIRun
 
