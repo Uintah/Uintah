@@ -28,7 +28,7 @@ proc makeSciButtonPanel { parent close_window this args } {
   set outside_pad 4
 
   frame $parent.separator -height 2 -relief sunken -borderwidth 2
-  pack  $parent.separator -fill x
+  pack  $parent.separator -fill x -pady 5
 
   frame $parent.btnBox
   pack  $parent.btnBox -anchor e

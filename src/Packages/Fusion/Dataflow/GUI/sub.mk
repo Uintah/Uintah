@@ -11,7 +11,6 @@
 SRCDIR := Packages/Fusion/Dataflow/GUI
 
 SRCS := \
-	$(SRCDIR)/FusionSlicePlot.tcl\
 	$(SRCDIR)/NIMRODConverter.tcl\
 	$(SRCDIR)/NrrdFieldConverter.tcl\
 #[INSERT NEW TCL FILE HERE]

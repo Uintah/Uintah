@@ -1669,7 +1669,7 @@ proc moduleDestroy {modid} {
     }
 
     # Delete Icon from canvases
-    $Subnet(Subnet$Subnet($modid)_canvas) delete $modid $modid-notes
+    $Subnet(Subnet$Subnet($modid)_canvas) delete $modid $modid-notes $modid-notes-shadow
     destroy $Subnet(Subnet$Subnet($modid)_canvas).module$modid
     $Subnet(Subnet$Subnet($modid)_minicanvas) delete $modid
     
@@ -1682,7 +1682,7 @@ proc moduleDestroy {modid} {
 
     $modid delete
     if { ![isaSubnetIcon $modid] } {
-	netedit deletemodule $modid
+	after 500 "netedit deletemodule $modid"
     }
     
     # Kill the modules UI if it exists

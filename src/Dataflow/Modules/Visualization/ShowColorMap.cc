@@ -40,6 +40,8 @@ class ShowColorMap : public Module {
   GuiDouble gui_scale_;
   GuiString gui_units_;
   GuiInt gui_text_color_;
+  GuiInt gui_text_fontsize_;
+  GuiInt gui_extra_padding_;
 
 public:
   ShowColorMap(GuiContext*);
@@ -56,7 +58,9 @@ ShowColorMap::ShowColorMap(GuiContext* ctx)
     gui_numlabels_(ctx->subVar("numlabels")),
     gui_scale_(ctx->subVar("scale")),
     gui_units_(ctx->subVar("units")),
-    gui_text_color_(ctx->subVar("text_color"))
+    gui_text_color_(ctx->subVar("text_color")),
+    gui_text_fontsize_(ctx->subVar("text-fontsize")),
+    gui_extra_padding_(ctx->subVar("extra-padding"))
 {
 }
 
@@ -90,12 +94,20 @@ ShowColorMap::execute()
   }else{
     text_color = Color(1,1,1);
   }
+  MaterialHandle text_material = scinew Material(text_color);
   if (gui_side_.get() == "left")
   {
     out = Vector(-0.05, 0.0, 0.0);
     if (gui_length_.get() == "full" || gui_length_.get() == "half2")
     {
-      ref1 = Point(-1.0, -15.0/16.0, 0.0);
+      if (gui_extra_padding_.get())
+      {
+	ref1 = Point(-1.0, -14.0/16.0, 0.0);
+      }
+      else
+      {
+	ref1 = Point(-1.0, -15.0/16.0, 0.0);
+      }
     }
     else
     {
@@ -103,7 +115,14 @@ ShowColorMap::execute()
     }
     if (gui_length_.get() == "full")
     {
-      along = Vector(0.0, 30.0/16.0, 0.0);
+      if (gui_extra_padding_.get())
+      {
+	along = Vector(0.0, 29.0/16.0, 0.0);
+      }
+      else
+      {
+	along = Vector(0.0, 30.0/16.0, 0.0);
+      }
     }
     else
     {
@@ -123,11 +142,25 @@ ShowColorMap::execute()
     }
     if (gui_length_.get() == "full")
     {
-      along = Vector(30.0/16.0, 0.0, 0.0);
+      if (gui_extra_padding_.get())
+      {
+	along = Vector(29.0/16.0, 0.0, 0.0);
+      }
+      else
+      {
+	along = Vector(30.0/16.0, 0.0, 0.0);
+      }
     }
     else
     {
-      along = Vector(14.0/16.0, 0.0, 0.0);
+      if (gui_extra_padding_.get())
+      {
+	along = Vector(13.0/16.0, 0.0, 0.0);
+      }
+      else
+      {
+	along = Vector(14.0/16.0, 0.0, 0.0);
+      }
     }
   }
 
@@ -151,17 +184,19 @@ ShowColorMap::execute()
 
     Point p0  = ref0 - out * 0.02; 
     char value[80];
-    GeomGroup *labels = scinew GeomGroup();
+    GeomLines *lines = scinew GeomLines();
+    GeomTexts *texts = scinew GeomTexts();
+    texts->set_font_index(gui_text_fontsize_.get());
     for(int i = 0; i < numlabels; i++ )
     {
       sprintf(value, "%.2g %s", minval + (maxval-minval)*(i/(numlabels-1.0)),
 	      str.c_str());
-      labels->add(scinew GeomText(value, p0 + along * (i/(numlabels-1.0)),
-				  text_color));
-      labels->add(new GeomLine(p0 + along * (i/(numlabels-1.0)),
-			       p0 + along * (i/(numlabels-1.0)) + out * 0.5));
+      const Point loc = p0 + along * (i/(numlabels-1.0));
+      texts->add(value, loc, text_color);
+      lines->add(loc, text_material, loc + out * 0.5, text_material);
     }    
-    all->add(scinew GeomMaterial(labels, new Material(text_color)));
+    all->add(texts);
+    all->add(lines);
   }
 
   GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");

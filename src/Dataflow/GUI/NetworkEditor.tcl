@@ -60,6 +60,10 @@ set netedit_savefile ""
 global NetworkChanged
 set NetworkChanged 0
 
+# Make sure version stays in sync with main/main.cc
+global SCIRun_version
+set SCIRun_version v1.20.2
+
 # TCL has some trace on the env array that makes it impossible
 # to set it in neteditGetenv wihtout causing an error
 # Here, we just back it up, unset it, then restore it
@@ -788,8 +792,14 @@ proc ClearCanvas { {confirm 1} {subnet 0} } {
     if {!$confirm || [string compare "yes" $result] == 0} {
 	global Subnet netedit_savefile CurrentlySelectedModules
 	foreach module $Subnet(Subnet${subnet}_Modules) {
+	    if { [string first Render_Viewer $module] != -1 } {
+		moduleDestroy $module
+	    }
+	}
+	foreach module $Subnet(Subnet${subnet}_Modules) {
 	    moduleDestroy $module
 	}
+
 	wm title . "SCIRun" ;# Reset Main Window Title
 	set netedit_savefile ""
 	set CurrentlySelectedModules ""
@@ -933,6 +943,9 @@ proc loadnet { netedit_loadfile } {
 	    "File \"$netedit_loadfile\" does not exist."
 	return
     }
+    global netedit_loadfile_global
+    set netedit_loadfile_global $netedit_loadfile
+
     global netedit_loadfile_global
     set netedit_loadfile_global $netedit_loadfile
 
