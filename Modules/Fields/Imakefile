@@ -2,11 +2,11 @@
 #include <config/sci.cf>
 
 #ifdef SCI_OPENGL
-OPENGLOBJS = TrainSegment.o
-OPENGLSRCS = TrainSegment.cc
+OPENGLOBJS = OpenGL_Ex.o  TrainSegment.o
+OPENGLSRCS = OpenGL_Ex.cc TrainSegment.cc
 
 #ifdef SCI_MESA
-OPENGLINCS = -I$(TOP)/Mesa/include
+OPENGLINCS = -I$(TOP)/Mesa/include -I/usr/openwin/include
 OPENGLLIBS = -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
 #else
 OPENGLINCS =
@@ -17,10 +17,11 @@ OPENGLOBJS =
 OPENGLSRCS = 
 #endif
 
-OBJS = ClipField.o  Downsample.o  FieldFilter.o  GenSigmaSet.o  Gradient.o  Magnitude.o \
-	MMeshToSFUG.o  TransformField.o  $(OPENGLOBJS)
-SRCS = ClipField.cc Downsample.cc FieldFilter.cc GenSigmaSet.cc Gradient.cc Magnitude.cc \
-	MMeshToSFUG.cc TransformField.cc $(OPENGLSRCS)
+OBJS = ClipField.o  ExtractSurfs.o  FieldFilter.o  GenSigmaSet.o  \
+	Gradient.o  MMeshToSFUG.o  TransformField.o  $(OPENGLOBJS)
+SRCS = ClipField.cc ExtractSurfs.cc FieldFilter.cc GenSigmaSet.cc \
+	Gradient.cc MMeshToSFUG.cc \
+	TransformField.cc $(OPENGLSRCS)
 
 LIBNAME = Fields
 
