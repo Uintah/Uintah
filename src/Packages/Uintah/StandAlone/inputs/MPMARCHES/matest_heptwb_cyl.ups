@@ -200,7 +200,7 @@
 	        <ref_point>[3,3,3]</ref_point>
 	        <radiation>true</radiation>
 	        <opl>3.0</opl>
-                <discrete_ordinates>false</discrete_ordinates>
+                <discrete_ordinates>true</discrete_ordinates>
 	        <mixing_model>pdfMixingModel</mixing_model>
 
 	        <ColdflowMixingModel>
@@ -434,7 +434,7 @@
 		<cal_enthalpy>true</cal_enthalpy>
 		<EnthalpySolver>
                     <radiation>true</radiation>
-                    <discrete_ordinates>false</discrete_ordinates>
+                    <discrete_ordinates>true</discrete_ordinates>
                     <DORadiationModel>
 	            <opl>3.0</opl>
                     </DORadiationModel>
