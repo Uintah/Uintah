@@ -371,7 +371,7 @@ DEALINGS IN THE SOFTWARE.
 	Visualization Settings pane's <guilabel>Planes</guilabel> tab.
 	Then select a color range by clicking one of the
 	<guilabel>Color Planes By</guilabel> radio buttons&#x2014;see
-	<xref linkend="fig.planesTab"/>, item 8.
+	<xref linkend="fig.planesTab"/>, item 9.
 	
 	<figure id="fig.planesTab">
 	  <title>Options for controlling planes</title>
