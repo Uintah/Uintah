@@ -80,6 +80,7 @@ private:
   bool                     reset_;
   double                   last_scale_;
   string                   last_scale_mode_;
+  GuiInt                   force_field_reset_;
 };
 
 
@@ -99,7 +100,8 @@ ShowDipoles::ShowDipoles(GuiContext *context) :
   been_executed_(false),
   reset_(false),
   last_scale_(0.0),
-  last_scale_mode_("fixed")
+  last_scale_mode_("fixed"),
+  force_field_reset_(context->subVar("force-field-reset", false))
 {
   lastGen_=-1;
   greenMatl_ = new Material(Color(0.2, 0.8, 0.2));
@@ -150,10 +152,16 @@ ShowDipoles::execute()
   reset_vars();
   if (reset_ || (gen != lastGen_))
   {
-    // Assume I input a new dipole field because I actually wanted to use it.
     lastGen_ = gen;
-    new_input_data(field_pcv);
-    output_dirty_ = true;
+    if (reset_ || 
+	(field_pcv->fdata().size() != (unsigned)num_dipoles_.get())) {
+      new_input_data(field_pcv);
+    }
+    if (force_field_reset_.get())
+    {
+      new_input_data(field_pcv);
+      output_dirty_ = true;
+    }
   }
 
   //widget_moved(true);
