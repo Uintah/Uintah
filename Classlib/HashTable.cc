@@ -85,6 +85,7 @@ int HashTable<Key, Data>::remove(const Key& k)
 	HashKey<Key, Data>* prev=0;
 	HashKey<Key, Data>* p=table[h];
 	while(p){
+	    HashKey<Key, Data>* next=p->next;
 	    if(p->key == k){
 		count++;
 		nelems--;
@@ -97,7 +98,7 @@ int HashTable<Key, Data>::remove(const Key& k)
 	    } else {
 		prev=p;
 	    }
-	    p=p->next;
+	    p=next;
 	}
     }
     return count;
