@@ -293,8 +293,8 @@ void Hedgehog::execute()
 			} else {
 			  if(vv.length2()*lenscale > 1.e-3)
 			    arrows->add(p, vv*lenscale);
-			  else
-			      cerr << "vv.length2()="<<vv.length2()<<"\n";
+			  //	  else
+			  //	      cerr << "vv.length2()="<<vv.length2()<<"\n";
 			}
 		    }
 		}
