@@ -680,7 +680,7 @@ DataArchive::initVariable(const Patch* patch,
   if ((particles = dynamic_cast<ParticleVariableBase*>(var))) {
     if (!dw->haveParticleSubset(matl, patch)) {
       cerr << "Saved ParticleSubset on matl " << matl << " patch " << patch << endl;
-      dw->saveParticleSubset(matl, patch, particles->getParticleSubset());
+      dw->saveParticleSubset(particles->getParticleSubset(), matl, patch);
     }
     else {
       ASSERTEQ(dw->getParticleSubset(matl, patch),
