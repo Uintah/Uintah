@@ -23,31 +23,42 @@ namespace Uintah {
 
 
     virtual void inFluxOutFluxVolume(const SFCXVariable<double>& uvel_FC,
-                                 const SFCYVariable<double>& vvel_FC,
-                                 const SFCZVariable<double>& wvel_FC,
-                                 const double& delT, 
-                                 const Patch* patch,
-                                 const int& indx,
-                                 const bool& bulletProofing_test,
-                                 DataWarehouse* new_dw) = 0;
+                                     const SFCYVariable<double>& vvel_FC,
+                                     const SFCZVariable<double>& wvel_FC,
+                                     const double& delT, 
+                                     const Patch* patch,
+                                     const int& indx,
+                                     const bool& bulletProofing_test,
+                                     DataWarehouse* new_dw) = 0;
 
     virtual void  advectQ(const CCVariable<double>& q_CC,
-                             const Patch* patch,
-                             CCVariable<double>& q_advected,
-                             SFCXVariable<double>& q_XFC,
-                             SFCYVariable<double>& q_YFC,
-                             SFCZVariable<double>& q_ZFC,
-				 DataWarehouse* /*new_dw*/) = 0;
+                          const Patch* patch,
+                          CCVariable<double>& q_advected,
+                          SFCXVariable<double>& q_XFC,
+                          SFCYVariable<double>& q_YFC,
+                          SFCZVariable<double>& q_ZFC,
+			     DataWarehouse* /*new_dw*/)=0;
 
-    virtual void advectQ(const CCVariable<double>& q_CC,
-                      const Patch* patch,
-                      CCVariable<double>& q_advected,
-			 DataWarehouse* new_dw) = 0;
-
-    virtual void advectQ(const CCVariable<Vector>& q_CC,
-                      const Patch* patch,
-                      CCVariable<Vector>& q_advected,
-			 DataWarehouse* new_dw) = 0;
+    virtual void advectQ(const bool useCompatibleFluxes,
+                         const bool is_Q_massSpecific,
+                         const CCVariable<double>& q_CC,
+                         const CCVariable<double>& mass,
+                         const Patch* patch,
+                         CCVariable<double>& q_advected,
+                         DataWarehouse* new_dw)=0;
+    
+    virtual void advectQ(const bool useCompatibleFluxes,
+                         const bool is_Q_massSpecific,
+                         const CCVariable<Vector>& q_CC,
+                         const CCVariable<double>& mass,
+                         const Patch* patch,
+                         CCVariable<Vector>& q_advected,
+                         DataWarehouse* new_dw)=0; 
+                         
+    virtual void advectMass(const CCVariable<double>& mass,
+                           const Patch* patch,
+                           CCVariable<double>& q_advected,
+			      DataWarehouse* new_dw)=0;
 
                         
     int OF_slab[6];          // outflux slab
@@ -65,6 +76,7 @@ namespace Uintah {
     SFCXVariable<double> d_notUsedX;
     SFCYVariable<double> d_notUsedY; 
     SFCZVariable<double> d_notUsedZ;
+    CCVariable<double> d_notUsed_D;
   }; 
   
   //__________________________________
@@ -148,16 +160,18 @@ namespace Uintah {
       q_ZFC[c] = tmp_ZFC;    
     }
   };
-
-  
-
-  template <class T> struct facedata {
-    T d_data[6];
-  };
+ /*______________________________________________________________________
+ *   different data types 
+ *______________________________________________________________________*/ 
   struct fflux { double d_fflux[6]; };          //face flux
   struct eflux { double d_eflux[12]; };         //edge flux
   struct cflux { double d_cflux[8]; };          //corner flux
 
+  //__________________________________
+  // face data
+  template <class T> struct facedata {
+    T d_data[6];
+  };
   
   template<class T>
   MPI_Datatype makeMPI_facedata()
@@ -169,7 +183,7 @@ namespace Uintah {
     MPI_Type_commit(&mpitype);
     return mpitype;
   }
-
+  
   template<class T>
   const TypeDescription* fun_getTypeDescription(facedata<T>*)
   {
@@ -182,6 +196,35 @@ namespace Uintah {
     return td;
   }
   
+  //__________________________________
+  // vertex data
+  template <class T> struct vertex {
+    T d_vrtx[8];
+  };
+  
+  template<class T>
+  MPI_Datatype makeMPI_vertex()
+  {
+    ASSERTEQ(sizeof(vertex<T>), sizeof(T)*8);
+    const TypeDescription* td = fun_getTypeDescription((T*)0);
+    MPI_Datatype mpitype;
+    MPI_Type_vector(1, 8, 8, td->getMPIType(), &mpitype);
+    MPI_Type_commit(&mpitype);
+    return mpitype;
+  }
+  
+  template<class T>
+  const TypeDescription* fun_getTypeDescription(vertex<T>*)
+  {
+    static TypeDescription* td = 0;
+    if(!td){
+      td = scinew TypeDescription(TypeDescription::Other,
+				  "vertex", true, 
+				  &makeMPI_vertex<T>);
+    }
+    return td;
+  }  
+  
   const TypeDescription* fun_getTypeDescription(fflux*);    
   const TypeDescription* fun_getTypeDescription(eflux*);
   const TypeDescription* fun_getTypeDescription(cflux*); 
@@ -189,6 +232,7 @@ namespace Uintah {
 }  // Uintah namespace
 
 
+//__________________________________
 namespace SCIRun {
 
   template<class T>
@@ -196,6 +240,13 @@ namespace SCIRun {
     for(int i=0;i<6;i++)
       swapbytes(f.d_data[i]);
   }
+  
+  template<class T>
+  void swapbytes( Uintah::vertex<T>& v) {
+    for(int i=0;i<8;i++)
+      swapbytes(v.d_vrtx[i]);
+  }
+  
   void swapbytes( Uintah::fflux& ); 
   void swapbytes( Uintah::eflux& );
   void swapbytes( Uintah::cflux& );
