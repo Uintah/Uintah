@@ -52,8 +52,6 @@ using namespace SCIRun;
 
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/StructQuadSurfMesh.h>
-#include <Core/Datatypes/StructHexVolMesh.h>
 #include <Core/Datatypes/StructCurveField.h>
 #include <Core/Datatypes/StructQuadSurfField.h>
 #include <Core/Datatypes/StructHexVolField.h>

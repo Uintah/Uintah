@@ -29,7 +29,6 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/ImageField.h>
 #include <Core/Datatypes/QuadSurfField.h>
 
