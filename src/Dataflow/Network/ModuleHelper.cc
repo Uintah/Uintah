@@ -40,10 +40,11 @@ ModuleHelper::~ModuleHelper()
 
 void ModuleHelper::run()
 {
-  module->pid_.set(getpid());
   if(module->have_own_dispatch){
     module->do_execute();
+    module->pid_.set(getpid());
   } else {
+    module->pid_.set(getpid());
     for(;;){
       MessageBase* msg=module->mailbox.receive();
       switch(msg->type){
