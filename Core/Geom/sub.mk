@@ -27,7 +27,8 @@ SRCS     += $(SRCDIR)/GeomObj.cc $(SRCDIR)/GeomOpenGL.cc \
 	$(SRCDIR)/GeomTexSlices.cc $(SRCDIR)/View.cc \
 	$(SRCDIR)/GeomPolyline.cc $(SRCDIR)/TexSquare.cc \
 	$(SRCDIR)/tGrid.cc $(SRCDIR)/GeomPick.cc $(SRCDIR)/Pickable.cc \
-	$(SRCDIR)/TCLGeom.cc $(SRCDIR)/TCLView.cc
+	$(SRCDIR)/TCLGeom.cc $(SRCDIR)/TCLView.cc \
+	$(SRCDIR)/templates.cc
 
 PSELIBS := SCICore/Persistent SCICore/Geometry SCICore/Exceptions \
 	SCICore/Math SCICore/Containers SCICore/Thread \
@@ -38,6 +39,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/03/21 03:01:32  sparker
+# Partially fixed special_get method in SimplePort
+# Pre-instantiated a few key template types, in an attempt to reduce
+#   initial compile time and reduce code bloat.
+# Manually instantiated templates are in */*/templates.cc
+#
 # Revision 1.2  2000/03/20 19:37:40  sparker
 # Added VPATH support
 #

@@ -30,7 +30,7 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
 	$(SRCDIR)/VoidStar.cc $(SRCDIR)/cDMatrix.cc \
 	$(SRCDIR)/cMatrix.cc $(SRCDIR)/cSMatrix.cc $(SRCDIR)/cVector.cc \
 	$(SRCDIR)/SurfTree.cc $(SRCDIR)/ScalarFieldRGCC.cc \
-	$(SRCDIR)/VectorFieldRGCC.cc
+	$(SRCDIR)/VectorFieldRGCC.cc $(SRCDIR)/templates.cc
 
 $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 	sed -e 's/RGTYPE/RG/g' -e 's/TYPE/double/g' < $< > $@
@@ -90,6 +90,12 @@ clean::
 
 #
 # $Log$
+# Revision 1.3  2000/03/21 03:01:28  sparker
+# Partially fixed special_get method in SimplePort
+# Pre-instantiated a few key template types, in an attempt to reduce
+#   initial compile time and reduce code bloat.
+# Manually instantiated templates are in */*/templates.cc
+#
 # Revision 1.2  2000/03/20 19:37:35  sparker
 # Added VPATH support
 #
