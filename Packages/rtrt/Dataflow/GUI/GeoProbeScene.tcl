@@ -35,6 +35,20 @@ itcl_class rtrt_Scenes_GeoProbeScene {
 	set $this-zb 0.9
 	global $this-gpfilename
 	set $this-gpfilename "/usr/sci/data/Seismic/BP/k12bvox.vol"
+
+	global $this-color-r
+	global $this-color-g
+	global $this-color-b
+	set $this-color-r 0.4
+	set $this-color-g 0.2
+	set $this-color-b 0.9
+
+	global $this-iso_min
+	global $this-iso_max
+	global $this-iso_val
+	set $this-iso_min 0
+	set $this-iso_max 1
+	set $this-iso_val 0.5
     }
 
     method raiseColor {swatch color msg} {
@@ -125,11 +139,19 @@ itcl_class rtrt_Scenes_GeoProbeScene {
 #	pack $w.buttons.update $w.buttons.dismiss \
 #		-side left -padx 15
 
-	frame $w.c
-	addColorSelection $w.c "Sphere Color" $this-color \
-	    "update_sphere_material"
+	frame $w.isocolor
+	addColorSelection $w.isocolor "Isosurface Color" $this-color \
+	    "update_isosurface_material"
+
+	frame $w.isoval
+	scale $w.isoval.slider -variable $this-iso_val \
+	    -label "Isovalue" -showvalue true -orient horizontal \
+	    -relief groove -length 200 -from 0 -to 255 \
+	    -tickinterval 64 -resolution 0.01 \
+	    -command "$this-c update_isosurface_value"
+	pack $w.isoval.slider -side top -expand 1 -fill x
 
 	pack $w.options -side top -expand yes -fill x -pady 5
-	pack $w.buttons $w.c -side top -pady 5
+	pack $w.buttons $w.isocolor $w.isoval -side top -pady 5
     }
 }
