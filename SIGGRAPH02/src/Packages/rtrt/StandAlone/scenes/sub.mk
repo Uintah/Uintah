@@ -56,6 +56,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/single-sphere.mo  \
 	$(SRCDIR)/ramsey.mo \
 	$(SRCDIR)/spinning_instance_demo.mo \
+	$(SRCDIR)/dtiglyph.mo
 # 	$(SRCDIR)/cbox.mo \
 # 	$(SRCDIR)/david.mo \
 # 	$(SRCDIR)/davidhead.mo \
@@ -63,8 +64,9 @@ SCENES := $(SRCDIR)/0.mo \
 # 	$(SRCDIR)/venus.mo \
 # 	$(SRCDIR)/lucy.mo \
 # 	$(SRCDIR)/mus_barrier.mo \
-# 	$(SRCDIR)/buddha.mo 
-#	$(SRCDIR)/dtiglyph.mo \
+# 	$(SRCDIR)/buddha.mo \
+
+
 
 ifeq ($(findstring Uintah, $(LOAD_PACKAGE)),Uintah)
 SCENES += \
@@ -105,7 +107,7 @@ $(SRCDIR)/VolumeVisMod.mo: $(SRCDIR)/VolumeVisMod.o
 	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS) -lnrrd -lair -lbiff -lnrrd -lm $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 $(SRCDIR)/dtiglyph.mo: $(SRCDIR)/dtiglyph.o
-	$(CXX) -o $@ -L$(TEEM_LIB_DIR) $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS) -lten -ldye -lell -lnrrd -lhest -lbiff -lair -lm $(GLUI_LIBRARY) $(GLUT_LIBRARY)
+	$(CXX) -o $@ -L$(TEEM_LIB_DIR) $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lten -ldye -lell -lnrrd -lhest -lbiff -lair -lm $(GLUI_LIBRARY) $(GLUT_LIBRARY) -m
 
 $(SRCDIR)/uintahparticle2.mo: $(SRCDIR)/uintahparticle2.o
 	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
