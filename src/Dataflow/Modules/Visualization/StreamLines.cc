@@ -99,6 +99,9 @@ private:
   GuiDouble                     tolerance_;
   GuiInt                        maxsteps_;
 
+  //! interpolate using the generic linear interpolator
+  bool interpolate(const Point &p, Vector &v);
+
   //! loop through the nodes in the seed field
   template <class VectorField, class SeedField>
   void TemplatedExecute(VectorField *, SeedField *);
@@ -136,6 +139,12 @@ StreamLines::~StreamLines()
 {
 }
 
+bool StreamLines::interpolate(const Point &p, Vector &v)
+{
+  return interp_->interpolate(p,v);
+  v /= v.length2(); // try not to skip cells - needs help from stepsize
+}
+
 template <class VectorField>
 int
 StreamLines::ComputeRKFTerms(vector<Vector> &v /* storage for terms */,
@@ -147,54 +156,31 @@ StreamLines::ComputeRKFTerms(vector<Vector> &v /* storage for terms */,
   typedef typename vf_mesh_type::cell_index cell_index;
   int check = 0;
   int c;
-  cell_index ci;
-  
-  vf_mesh_type *mesh = 
-    dynamic_cast<vf_mesh_type*>(vf->get_typed_mesh().get_rep());
 
-  if (!mesh) {
-    cerr << "StreamLines: ERROR: unable to get mesh from field.  Exiting."
-	 << endl;
-  }
-
-  if (vf->data_at() == Field::NODE) {
-    check |= c = interp_->interpolate(p,v[0]);
-    if (!c) return 0;
-    check &= c = interp_->interpolate(p+v[0]*d[1][0],v[1]);
-    if (!c) v[1] = v[0];
-    check |= c = interp_->interpolate(p+v[0]*d[2][0]+v[1]*d[2][1],v[2]);
-    if (!c) v[2] = v[1];
-    check |= c = interp_->interpolate(p+v[0]*d[3][0]+v[1]*d[3][1]+v[2]*d[3][2],
-				      v[3]);
-    if (!c) v[3] = v[2];
-    check |= c = interp_->interpolate(p+v[0]*d[4][0]+v[1]*d[4][1]+v[2]*d[4][2]+
-				  v[3]*d[4][3],v[4]);
-    if (!c) v[4] = v[3];
-    check |= c = interp_->interpolate(p+v[0]*d[5][0]+v[1]*d[5][1]+v[2]*d[5][2]+
-				  v[3]*d[5][3]+v[4]*d[5][4],v[5]);
-    if (!c) v[5] = v[4];
-  } else if (vf->data_at() == Field::CELL) {
-    check |= c = mesh->locate(ci,p); 
-    if (c) vf->value(v[0],ci); else return 0;
-    check |= c = mesh->locate(ci,p+v[0]*d[1][0]); 
-    if (c) vf->value(v[1],ci); else v[1] = v[0];
-    check |= c = mesh->locate(ci,p+v[0]*d[2][0]+v[1]*d[2][1]); 
-    if (c) vf->value(v[2],ci); else v[2] = v[1];
-    check |= c = mesh->locate(ci,p+v[0]*d[3][0]+v[1]*d[3][1]+v[2]*d[3][2]);
-    if (c) vf->value(v[3],ci); else v[3] = v[2];
-    check |= c = mesh->locate(ci,p+v[0]*d[4][0]+v[1]*d[4][1]+v[2]*d[4][2]+
-			  v[3]*d[4][3]); 
-    if (c) vf->value(v[4],ci); else v[4] = v[3];
-    check |= c = mesh->locate(ci,p+v[0]*d[5][0]+v[1]*d[5][1]+v[2]*d[5][2]+
-			  v[3]*d[5][3]+v[4]*d[5][4]); 
-    if (c) vf->value(v[5],ci); else v[5] = v[4];
-  }
-
+  check |= c = interpolate(p,v[0]);
+  if (!c) return 0;
   v[0]*=s;
+  
+  check |= c = interpolate(p+v[0]*d[1][0],v[1]);
+  if (!c) return 0;
   v[1]*=s;
+  
+  check |= c = interpolate(p+v[0]*d[2][0]+v[1]*d[2][1],v[2]);
+  if (!c) return 0;
   v[2]*=s;
+  
+  check |= c = interpolate(p+v[0]*d[3][0]+v[1]*d[3][1]+v[2]*d[3][2],v[3]);
+  if (!c) return 0;
   v[3]*=s;
+  
+  check |= c = interpolate(p+v[0]*d[4][0]+v[1]*d[4][1]+v[2]*d[4][2]+
+			   v[3]*d[4][3],v[4]);
+  if (!c) return 0;
   v[4]*=s;
+  
+  check |= c = interpolate(p+v[0]*d[5][0]+v[1]*d[5][1]+v[2]*d[5][2]+
+			   v[3]*d[5][3]+v[4]*d[5][4],v[5]);
+  if (!c) return 0;
   v[5]*=s;
 
   return check;
@@ -215,12 +201,6 @@ StreamLines::FindStreamLineNodes(vector<Point> &v /* storage for points */,
   double err;
   Vector xv;
 
-  typedef typename VectorField::mesh_type     mesh_type;
-  typedef typename mesh_type::cell_index      cell_index;
-
-  mesh_type *mesh = 
-    dynamic_cast<mesh_type*>(vf->get_typed_mesh().get_rep());
-
   terms.resize(6,0);
 
   // add the initial point to the list of points found.
@@ -236,13 +216,13 @@ StreamLines::FindStreamLineNodes(vector<Point> &v /* storage for points */,
     error = terms[0]*ab[0]+terms[1]*ab[1]+terms[2]*ab[2]+
             terms[3]*ab[3]+terms[4]*ab[4]+terms[5]*ab[5];
     err = sqrt(error(0)*error(0)+error(1)*error(1)+error(2)*error(2));
-
+    
     // is the error tolerable?  Adjust the step size accordingly.
     if (err<t/128.0)
       s*=2;
     else if (err>t) {
       s/=2;
-      loop--;         // re-do this step.
+      //loop--;         // re-do this step.
       continue;
     }
 
@@ -251,18 +231,10 @@ StreamLines::FindStreamLineNodes(vector<Point> &v /* storage for points */,
             terms[3]*a[3]+terms[4]*a[4]+terms[5]*a[5];
 
     // if the new point is inside the field, add it.  Otherwise stop.
-    if (vf->data_at() == Field::NODE) {
-      if (interp_->interpolate(x,xv))
-	v.push_back(x);
-      else
-	break;
-    } else if (vf->data_at() == Field::CELL) {
-      cell_index ci;
-      if (mesh->locate(ci,x))
-	v.push_back(x);
-      else
-	break;
-    }
+    if (interpolate(x,xv))
+      v.push_back(x);
+    else
+      break;
   }
 }
 
@@ -310,15 +282,7 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
 
     // Is the seed point inside the field?
     if (vf->data_at() == Field::NODE) {
-      if (!interp_->interpolate(seed,test)) {
-	postMessage("StreamLines: WARNING: seed point "
-		    "was not inside the field.");
-	++seed_iter;
-	continue;
-      }
-    } else if (vf->data_at() == Field::CELL) {
-      cell_index ci;
-      if (!vmesh->locate(ci,seed)) {
+      if (!interpolate(seed,test)) {
 	postMessage("StreamLines: WARNING: seed point "
 		    "was not inside the field.");
 	++seed_iter;
