@@ -6,6 +6,7 @@
 #include <GL/glu.h>
 #include "Array1.h"
 #include <Core/Thread/Runnable.h>
+#include <string>
 
 namespace rtrt {
 
@@ -20,6 +21,7 @@ class GridSpheresDpy : public Runnable {
   int xres, yres;
   friend class GridSpheres;
   Array1<GridSpheres*> grids;
+  std::string *var_names;
   float* scales;
   float* min;
   float* max;

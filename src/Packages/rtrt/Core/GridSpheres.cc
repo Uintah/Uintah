@@ -39,11 +39,12 @@ namespace rtrt {
 
 GridSpheres::GridSpheres(float* spheres, float* inmin, float* inmax,
 			 int nspheres, int ndata, int cellsize, int depth,
-			 float radius, int nmatls, Material** matls)
+			 float radius, int nmatls, Material** matls,
+			 string *var_names)
   : Object(this),
     spheres(spheres),
     nspheres(nspheres), ndata(ndata), cellsize(cellsize), depth(depth),
-    radius(radius), nmatls(nmatls)
+    radius(radius), nmatls(nmatls), var_names(var_names)
 {
   counts=0;
   cells=0;
@@ -76,6 +77,11 @@ GridSpheres::GridSpheres(float* spheres, float* inmin, float* inmax,
   this->matls=new Material*[nmatls];
   for(int i=0;i<nmatls;i++)
     this->matls[i]=matls[i];
+  if (var_names != 0) {
+    this->var_names=new string[ndata+3];
+    for(int i=0;i<(ndata+3);i++)
+      this->var_names[i]=var_names[i];
+  }
 }
 
 GridSpheres::~GridSpheres()
@@ -1361,7 +1367,7 @@ void GridSpheres::light_intersect(Light*, const Ray&,
 				  HitInfo&, double, Color&,
 				  DepthStats*, PerProcessorContext*)
 {
-  cerr << "GridSpheres::light_intersect not finished\n";
+  //  cerr << "GridSpheres::light_intersect not finished\n";
 }
 
 void GridSpheres::animate(double, bool& changed)
