@@ -28,10 +28,9 @@ public:
   GuiDouble gui_Variance_;
   GuiDouble gui_MaximumError_;
 
-  itk::Object::Pointer filter_;
-
   ITKDatatypeIPort* inport_;
   ITKDatatypeHandle inhandle_;
+
   ITKDatatypeOPort* outport_;
   ITKDatatypeHandle outhandle_;
 
@@ -43,10 +42,46 @@ public:
 
   virtual void tcl_command(GuiArgs&, void*);
   
+  template<class T> bool run(itk::Object* );
 };
+
+template<class T>
+bool DiscreteGaussianImageFilter::run( itk::Object *obj )
+{
+  T *data = dynamic_cast<T * >(obj);
+  if ( !data ) {
+    return false;
+  }
+
+  typedef T ImageType;
+  typedef itk::DiscreteGaussianImageFilter<ImageType, ImageType> FilterType;
+
+  // create a new filter
+  FilterType::Pointer filter =  FilterType::New();
+
+  // set filter
+  filter->SetVariance( gui_Variance_.get() );
+  filter->SetMaximumError( gui_MaximumError_.get() );
+
+  filter->SetInput( data ); 
+
+  // run the filter
+  filter->Update();
+
+  // get filter output
+  if(!outhandle_.get_rep())
+  {
+    ITKDatatype* im = scinew ITKDatatype;
+    im->data_ = filter->GetOutput();
+    outhandle_ = im;
+  }
+
+  return true;
+}
 
 
 DECLARE_MAKER(DiscreteGaussianImageFilter)
+
 DiscreteGaussianImageFilter::DiscreteGaussianImageFilter(GuiContext* ctx)
   : Module("DiscreteGaussianImageFilter", ctx, Source, "Filters", "Insight"),
     gui_Variance_(ctx->subVar("Variance")), 
@@ -77,86 +112,22 @@ void DiscreteGaussianImageFilter::execute(){
     return;
   }
 
-  // determine filter type
+  // get input
+  itk::Object * data = inhandle_.get_rep()->data_.GetPointer();
 
-  /////////////////////////////
-  // <float, 2>
-  ////////////////////////////
-  if(dynamic_cast<itk::Image<float,2>* >(inhandle_.get_rep()->data_.GetPointer())) {
-    typedef itk::Image<float, 2> ImageType;
-    typedef itk::DiscreteGaussianImageFilter<ImageType, ImageType> FilterType;
-    
-    filter_ =  FilterType::New();
-    
-    dynamic_cast<FilterType*>(filter_.GetPointer())->SetVariance( gui_Variance_.get() );
-    
-    dynamic_cast<FilterType*>(filter_.GetPointer())->SetMaximumError( gui_MaximumError_.get() );
-    
-    
-    itk::Object *object = inhandle_.get_rep()->data_.GetPointer();
-    ImageType *img = dynamic_cast<ImageType *>(object);
-    
-    if ( !img ) {
-      // error
-      return;
-    }
-    
-    dynamic_cast<FilterType*>(filter_.GetPointer())->SetInput( img ); 
-    
-    dynamic_cast<FilterType*>(filter_.GetPointer())->Update();
-    
-    if(!outhandle_.get_rep())
-    {
-      ITKDatatype* im = scinew ITKDatatype;
-      im->data_ = dynamic_cast<FilterType*>(filter_.GetPointer())->GetOutput();
-      outhandle_ = im;
-    }
-    
-    // Send the data downstream
-    outport_->send(outhandle_);
-    
-  }
-  /////////////////////////////
-  // <float, 3>
-  ////////////////////////////
-  else if(dynamic_cast<itk::Image<float,3>* >(inhandle_.get_rep()->data_.GetPointer())) {
-    typedef itk::Image<float, 3> ImageType;
-    typedef itk::DiscreteGaussianImageFilter<ImageType, ImageType> FilterType;
-    
-    filter_ =  FilterType::New();
-    
-    dynamic_cast<FilterType*>(filter_.GetPointer())->SetVariance( gui_Variance_.get() );
-    
-    dynamic_cast<FilterType*>(filter_.GetPointer())->SetMaximumError( gui_MaximumError_.get() );
-    
-    itk::Object *object = inhandle_.get_rep()->data_.GetPointer();
-    ImageType *img = dynamic_cast<ImageType *>(object);
-
-    if ( !img ) {
-      // error
-      return;
-    }
-
-    dynamic_cast<FilterType*>(filter_.GetPointer())->SetInput( img ); 
-    
-    dynamic_cast<FilterType*>(filter_.GetPointer())->Update();
-
-    if(!outhandle_.get_rep())
-    {
-      ITKDatatype* im = scinew ITKDatatype;
-      im->data_ = dynamic_cast<FilterType*>(filter_.GetPointer())->GetOutput();
-      outhandle_ = im;
-    }
-    
-    // Send the data downstream
-    outport_->send(outhandle_);
-    
-  }
-  else {
-    // unknown type
+  // can we operate on it ?
+  if ( !run<itk::Image<float,2> >( data )
+        && 
+       !run<itk::Image<float,3> >( data )
+       )
+  {
+    // error 
     error("Unknown type");
     return;
   }
+
+  // Send the data downstream
+  outport_->send(outhandle_);
 }
 
 void
