@@ -223,7 +223,7 @@ class ViewSlices : public Module
     UIint		mouse_y_;
     UIint		show_guidelines_;
     bool		mouse_in_window_;
-
+    bool		cursor_moved_;
     UIdouble		fusion_;
     
     int			cursor_pixmap_;
@@ -273,6 +273,10 @@ class ViewSlices : public Module
   int			colormap_generation_;
 
   SliceWindow *		current_window_;
+  SliceWindow *		zooming_;
+  SliceWindow *		panning_;
+  double		original_zoom_;
+  pair<double,double>	original_pan_;
 
   Point			cursor_;
   Point			last_cursor_;
@@ -595,6 +599,7 @@ ViewSlices::SliceWindow::SliceWindow(GuiContext *ctx) :
   mouse_y_(ctx->subVar("mouse_y"),0),
   show_guidelines_(ctx->subVar("show_guidelines"),1),
   mouse_in_window_(false),
+  cursor_moved_(true),
   fusion_(ctx->subVar("fusion"), 1.0),
   cursor_pixmap_(-1)
 {
@@ -636,6 +641,8 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   colormap_(0),
   colormap_generation_(-1),
   current_window_(0),
+  zooming_(0),
+  panning_(0),
   cursor_(0.0, 0.0, 0.0),
   last_cursor_(0.0, 0.0, 0.0),
   window_level_(0),
@@ -808,14 +815,22 @@ ViewSlices::real_draw_all()
       window.viewport_->make_current();
       window.viewport_->clear();
       GL_ERROR();
-      for (unsigned int s = 0; s < window.slices_.size(); ++s) {
-	if (!window.slices_[s]) continue;
-	draw_slice(window, *window.slices_[s]);
+      setup_gl_view(window);
+
+      if (window.cursor_moved_)
+      {
+	last_cursor_ = cursor_;
+	cursor_ = screen_to_world(window, window.mouse_x_, window.mouse_y_);
+	window.cursor_moved_ = false;
       }
-      
-      if (bool(window.show_guidelines_()) && mouse_in_window(window))
-	draw_guide_lines(window, cursor_.x(), cursor_.y(), cursor_.z());
+	
+
+      for (unsigned int s = 0; s < window.slices_.size(); ++s)
+	if (window.slices_[s])
+	  draw_slice(window, *window.slices_[s]);
+      draw_guide_lines(window, cursor_.x(), cursor_.y(), cursor_.z());
       draw_slice_lines(window);
+      
       if (crop_) {
 	draw_crop_bbox(window, crop_draw_bbox_);
 	crop_pick_boxes_ = compute_crop_pick_boxes(window,crop_draw_bbox_);
@@ -927,10 +942,12 @@ ViewSlices::redraw_window(SliceWindow &window) {
 void
 ViewSlices::draw_guide_lines(SliceWindow &window, float x, float y, float z, 
 			   bool cursor) {
+  if (!window.show_guidelines_()) return;
+  if (!mouse_in_window(window)) return;
   if (cursor && !current_window_) return;
   if (cursor && !current_window_->show_guidelines_()) return;
 
-  setup_gl_view(window);
+  //  setup_gl_view(window);
   GL_ERROR();
   const bool inside = mouse_in_window(window);
 
@@ -1061,7 +1078,7 @@ ViewSlices::draw_guide_lines(SliceWindow &window, float x, float y, float z,
 void
 ViewSlices::draw_slice_lines(SliceWindow &window)
 {
-  setup_gl_view(window);
+  //  setup_gl_view(window);
   GL_ERROR();
 
   Vector tmp = screen_to_world(window, 1, 0) - screen_to_world(window, 0, 0);
@@ -1116,7 +1133,7 @@ ViewSlices::draw_slice_lines(SliceWindow &window)
 
 void
 ViewSlices::draw_crop_bbox(SliceWindow &window, BBox &bbox) {
-  setup_gl_view(window);
+  //  setup_gl_view(window);
   GL_ERROR();
   float unscaled_one = 1.0;
   Vector tmp = screen_to_world(window, 1, 0) - screen_to_world(window, 0, 0);
@@ -2004,7 +2021,7 @@ ViewSlices::draw_slice(SliceWindow &window, NrrdSlice &slice)
   slice.do_lock();
 
   GL_ERROR();
-  setup_gl_view(window);
+  //  setup_gl_view(window);
 
   glRasterPos2d(0.0, 0.0);
 
@@ -2106,10 +2123,10 @@ ViewSlices::draw_slice(SliceWindow &window, NrrdSlice &slice)
   glFlush();
   slice.do_unlock();
 
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
+  //  glMatrixMode(GL_PROJECTION);
+  //  glLoadIdentity();
+  //  glMatrixMode(GL_MODELVIEW);
+  //  glLoadIdentity();
   glDisable(GL_TEXTURE_2D);
   glDisable(GL_BLEND);
     
@@ -2521,8 +2538,7 @@ ViewSlices::prev_slice(SliceWindow &window)
     window.slice_num_ = 0;
   else 
     window.slice_num_--;
-  cursor_ = screen_to_world(window, window.mouse_x_, window.mouse_y_);
-  last_cursor_ = cursor_;
+  window.cursor_moved_ = true;
   extract_window_slices(window);
   if (painting_()) 
     fill_paint_slices(window);
@@ -2539,8 +2555,7 @@ ViewSlices::next_slice(SliceWindow &window)
     window.slice_num_ = max_slice_[window.axis_];
   else
     window.slice_num_++;
-  cursor_ = screen_to_world(window, window.mouse_x_, window.mouse_y_);
-  last_cursor_ = cursor_;
+  window.cursor_moved_ = true;
   extract_window_slices(window);
   if (painting_()) 
     fill_paint_slices(window);
@@ -2797,71 +2812,75 @@ ViewSlices::handle_gui_motion(GuiArgs &args) {
     error ("Cannot handle motion on "+args[2]);
     return;
   }
-
-  SliceWindow *inside_window = 0;
-
   WindowLayout &layout = *layouts_[args[2]];
-  int x, y;
+
+  int x, y, X, Y;
   string_to_int(args[3], x);
   string_to_int(args[4], y);
+  string_to_int(args[7], X);
+  string_to_int(args[8], Y);
   y = layout.opengl_->height() - 1 - y;
+
+  // Take care of zooming/panning first because it can affect cursor position
+  if (zooming_) {
+    const double diff = pick_y_ - Y;
+    zooming_->zoom_ = Clamp(original_zoom_+diff*2.0*zooming_->zoom_/1000.0, 1.0, 3200.0);
+  } else if (panning_) {
+    panning_->x_ = original_pan_.first + (pick_x_ - X)/(panning_->zoom_/100.0);
+    panning_->y_ = original_pan_.second + (Y - pick_y_)/(panning_->zoom_/100.0);
+  }
+
+  SliceWindow *inside_window = 0;
   for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
     SliceWindow &window = *layout.windows_[w];
     window.mouse_x_ = x;
     window.mouse_y_ = y;
     if (mouse_in_window(window)) {
       inside_window = &window;
-      last_cursor_ = cursor_;
-      cursor_ = screen_to_world(window, window.mouse_x_, window.mouse_y_);
+      window.cursor_moved_ = true;
     }
   }
 
-  int X, Y;
-  string_to_int(args[7], X);
-  string_to_int(args[8], Y);
+  if (!panning_ && !zooming_) 
+  {
+    if (state & BUTTON_1_E && painting_ && inside_window) { 
+      do_paint(*inside_window);
+    } else if ((state & BUTTON_1_E) && crop_ && inside_window && pick_) {
+      crop_draw_bbox_ = update_crop_bbox(*inside_window, pick_, X, Y);
+      crop_pick_boxes_ = compute_crop_pick_boxes(*inside_window, crop_draw_bbox_);
+      update_crop_bbox_to_gui();
+    } else if (inside_window && probe_()) {
+      inside_window->viewport_->make_current();
+      setup_gl_view(*inside_window);
+      cursor_ = screen_to_world(*inside_window, x, y);
+      inside_window->viewport_->release();
 
-  if (state & BUTTON_1_E && painting_ && inside_window) { 
-    do_paint(*inside_window);
-  } else if ((state & BUTTON_1_E) && crop_ && inside_window && pick_) {
-    crop_draw_bbox_ = update_crop_bbox(*inside_window, pick_, X, Y);
-    crop_pick_boxes_ = compute_crop_pick_boxes(*inside_window, crop_draw_bbox_);
-    update_crop_bbox_to_gui();
-  } else if (inside_window && probe_()) {
-    WindowLayouts::iterator liter = layouts_.begin();
-    while (liter != layouts_.end()) {
-      for (unsigned int v = 0; v < (*liter).second->windows_.size(); ++v) {
-	SliceWindow &window = *(*liter).second->windows_[v];
-	const int axis = window.axis_();
-	window.slice_num_ = Floor(cursor_(axis)/scale_[axis]);
-	if (window.slice_num_ < 0) 
-	  window.slice_num_ = 0;
-	if (window.slice_num_ > max_slice_[axis]) 
-	  window.slice_num_ = max_slice_[axis];
-	
-	extract_window_slices(window);
+      WindowLayouts::iterator liter = layouts_.begin();
+      while (liter != layouts_.end()) {
+	for (unsigned int v = 0; v < (*liter).second->windows_.size(); ++v) {
+	  SliceWindow &window = *(*liter).second->windows_[v];
+	  const int axis = window.axis_();
+	  window.slice_num_ = Floor(cursor_(axis)/scale_[axis]);
+	  if (window.slice_num_ < 0) 
+	    window.slice_num_ = 0;
+	  if (window.slice_num_ > max_slice_[axis]) 
+	    window.slice_num_ = max_slice_[axis];
+	  
+	  extract_window_slices(window);
+	}
+	++liter;
       }
-      ++liter;
-    }
-    extract_all_slices();
-  } else if (window_level_) {
-    for (int axis = 0; axis < 3; ++axis)
-    {
-      if (!mip_slices_[axis]) continue;
-      NrrdSlice &slice = *mip_slices_[axis];
-      slice.do_lock();
-      slice.tex_dirty_ = true;
-      slice.do_unlock();
-    }
-
-    if (state & SHIFT_E) {
-      SliceWindow &window = *window_level_;
-      window.clut_ww_ = window_level_ww_ + (X - pick_x_)*2;
-      if (window.clut_ww_ < 1) window.clut_ww_ = 1;
-      window.clut_wl_ = window_level_wl_ + (pick_y_ - Y)*2;
-      window.clut_dirty_ = true;
-      for (unsigned int s = 0; s < window.slices_.size(); ++s)
-	window.slices_[s]->tex_dirty_ = true;
-    } else {
+      extract_all_slices();
+    } else if (window_level_) {
+      for (int axis = 0; axis < 3; ++axis)
+      {
+	if (!mip_slices_[axis]) continue;
+	NrrdSlice &slice = *mip_slices_[axis];
+	slice.do_lock();
+	slice.tex_dirty_ = true;
+	slice.do_unlock();
+      }
+      
       WindowLayouts::iterator liter = layouts_.begin();
       while (liter != layouts_.end()) {
 	for (unsigned int v = 0; v < (*liter).second->windows_.size(); ++v) {
@@ -2979,20 +2998,25 @@ ViewSlices::handle_gui_button_release(GuiArgs &args) {
     return;
   }
 
+
+  window_level_ = 0;
+  probe_ = 0;
+  zooming_ = 0;
+  panning_ = 0;
+
   switch (button) {
   case 1:
-    window_level_ = 0;
-    if (pick_) crop_bbox_ = crop_draw_bbox_;
+    if (pick_) {
+      crop_bbox_ = crop_draw_bbox_;
+      pick_ = 0;
+    }
     if (painting_) { 
       painting_ = 2;
       want_to_execute();
     }
-    
-    pick_ = 0;
     break;
   case 2:
-    probe_ = 0;
-    break;
+  case 3:
   default:
     break;
   }
@@ -3038,29 +3062,28 @@ ViewSlices::handle_gui_button(GuiArgs &args) {
 
   WindowLayout &layout = *layouts_[args[2]];
   
+  pick_x_ = x;
+  pick_y_ = y;
+
   for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
     SliceWindow &window = *layout.windows_[w];
     if (!mouse_in_window(window)) continue;
     switch (button) {
     case 1:
+      if (state & SHIFT_E == SHIFT_E) {
+	panning_ = &window;
+	original_pan_ = make_pair(double(window.x_),double(window.y_));
+	continue;
+      }
+
       if (painting_) { 
-#if 0
-	if (cm2_->selected() == -1) {
-	  paint_widget_ = 
-	    dynamic_cast<SCIRun::PaintCM2Widget*>(cm2_->widgets().back().get_rep());
-	} else if (cm2_->selected() < int(cm2_->widgets().size())) {
-	  paint_widget_ = 
-	    dynamic_cast<SCIRun::PaintCM2Widget*>(cm2_->widgets()[cm2_->selected()].get_rep());
-	}
-#endif
 	last_cursor_ = cursor_;
 	do_paint(window); 
 	continue;
       }
+
       crop_pick_boxes_ = compute_crop_pick_boxes(window, crop_draw_bbox_);
       pick_ = mouse_in_pick_boxes(window, crop_pick_boxes_);
-      pick_x_ = x;
-      pick_y_ = y;
       if (!pick_) {
 	window_level_ = layout.windows_[w];
 	window_level_ww_ = window.clut_ww_();
@@ -3068,7 +3091,21 @@ ViewSlices::handle_gui_button(GuiArgs &args) {
       }
       break;
     case 2:
-      probe_ = 1;
+      if (state & SHIFT_E == SHIFT_E) {
+	window.zoom_ = 100.0;
+	window.x_ = 0.0;
+	window.y_ = 0.0;
+	redraw_window(window);
+      } else {
+	probe_ = 1;
+      }
+
+      break;
+    case 3:
+      if (state & SHIFT_E == SHIFT_E) {
+	zooming_ = &window;
+	original_zoom_ = window.zoom_;
+      }
       break;
     case 4:
       if (state & CONTROL_E == CONTROL_E) 
