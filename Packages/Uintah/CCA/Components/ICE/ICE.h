@@ -19,6 +19,7 @@
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Core/Containers/StaticArray.h>
 #include <vector>
+#include <string>
 
 
 namespace Uintah { 
@@ -472,7 +473,8 @@ using namespace SCIRun;
                                  
       IntVector upwindCell_Z(const IntVector& c, 
                              const double& var,              
-                             double is_logical_R_face );    
+                             double is_logical_R_face );   
+                              
      
       // Debugging switches
       bool switchDebugInitialize;
@@ -492,7 +494,6 @@ using namespace SCIRun;
       bool switchDebugMomentumExchange_CC;
       bool switchDebugSource_Sink;
       bool switchDebug_advance_advect;
-      bool switchDebug_advectQFirst;
       bool switchTestConservation; 
       
       bool d_massExchange;
@@ -581,16 +582,16 @@ using namespace SCIRun;
       int d_dbgSigFigs;
       
       Advector* d_advector;
+      std::string d_advect_type;
       
      // exchange coefficients -- off diagonal terms
       vector<double> d_K_mom, d_K_heat;
 
       ICE(const ICE&);
       ICE& operator=(const ICE&);
-/*`==========TESTING==========*/
+      
       SolverInterface* solver;
-      SolverParameters* solver_parameters; 
-/*==========TESTING==========`*/    
+      SolverParameters* solver_parameters;    
       
     };
 
