@@ -20,6 +20,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>
+#include <Core/Thread/Mutex.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <iostream>
 #include <string>
@@ -31,7 +32,7 @@
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)
 // NECESSARY FOR LINKING BUT NOT REALLY USED.
-Mutex cerrLock( "cerr lock" );
+SCIRun::Mutex cerrLock( "cerr lock" );
 
 using namespace SCIRun;
 using namespace std;
