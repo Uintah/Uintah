@@ -56,14 +56,29 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
     Group* group=new Group();
     group->add(obj1);
-    group->add(new BouncingSphere(matl4, Point(0,0,.4), .5, Vector(0,0,1)));
-    group->add(new BouncingSphere(matl2, Point(0,0,1.4), .5, Vector(0,0,1.2)));
-    group->add(new BouncingSphere(matl3, Point(0,0,2.4), .5, Vector(0,0,1.4)));
-    group->add(new BouncingSphere(matl2, Point(0,0,3.4), .5, Vector(0,0,1.6)));
+
+    BouncingSphere * bs1, * bs2, *bs3, *bs4, *bs5, *bs6;
+
+    bs1 = new BouncingSphere(matl4, Point(0,0,.4), .5, Vector(0,0,1));
+    group->add(bs1);
+
+    bs2 = new BouncingSphere(matl2, Point(0,0,1.4), .5, Vector(0,0,1.2));
+    group->add(bs2);
+
+    bs3 = new BouncingSphere(matl3, Point(0,0,2.4), .5, Vector(0,0,1.4));
+    group->add(bs3);
+
+    bs4 = new BouncingSphere(matl2, Point(0,0,3.4), .5, Vector(0,0,1.6));
+    group->add(bs4);
+
     double thickness=0.05;
-    group->add(new BouncingSphere(matl20, Point(0,0,1.4), .5-thickness, Vector(0,0,1.2)));
+    bs5 = new BouncingSphere(matl20, Point(0,0,1.4), .5-thickness, Vector(0,0,1.2));
+    group->add(bs5);
+
     double thickness2=0.0005;
-    group->add(new BouncingSphere(matl30, Point(0,0,2.4), .5-thickness2, Vector(0,0,1.4)));
+    bs6 = new BouncingSphere(matl30, Point(0,0,2.4), .5-thickness2, Vector(0,0,1.4));
+    group->add(bs6);
+
 
     Plane groundplane ( Point(0, 0, 0), Vector(0, 0, 4) );
     Color cdown(0.82, 0.62, 0.62);
@@ -78,5 +93,13 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                                Vector(0,0,1)) );
 
     scene->select_shadow_mode(Hard_Shadows);
+
+    scene->addObjectOfInterest( bs1, true );
+    scene->addObjectOfInterest( bs2, true );
+    scene->addObjectOfInterest( bs3, true );
+    scene->addObjectOfInterest( bs4, true );
+    scene->addObjectOfInterest( bs5, true );
+    scene->addObjectOfInterest( bs6, true );
+
     return scene;
 }
