@@ -56,6 +56,9 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/IsoSurfaceSAGE.tcl $(SRCDIR)/IsoSurfaceNOISE.tcl \
 	$(SRCDIR)/SearchNOISE.tcl \
 	$(SRCDIR)/GenVectorField.tcl $(SRCDIR)/GenScalarField.tcl\
+        $(SRCDIR)/TextureVolVis.tcl \
+        $(SRCDIR)/GLTextureBuilder.tcl \
+        $(SRCDIR)/TexCuttingPlanes.tcl \
 #[INSERT NEW TCL FILE HERE]
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/PSECommon/GUI
 
@@ -63,6 +66,9 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.9  2000/12/09 17:30:54  moulding
+# Port Kurt's volume rendering stuff to linux and move it to PSECommon.
+#
 # Revision 1.8  2000/11/02 21:43:01  dmw
 # added VecVec GUI and fixed some bugs in GenTransferFunc
 #
