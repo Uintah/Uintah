@@ -145,7 +145,7 @@ public:
     get_point(p2,ra[2]);
     return (Cross(p0-p1,p2-p0)).length()*0.5;
   }
-  double get_size(Cell::index_type idx) const { return 0.0; };;
+  double get_size(Cell::index_type idx) const { return 0.0; };
   double get_length(Edge::index_type idx) const { return get_size(idx); };
   double get_area(Face::index_type idx) const { return get_size(idx); };
   double get_volume(Cell::index_type idx) const { return get_size(idx); };
