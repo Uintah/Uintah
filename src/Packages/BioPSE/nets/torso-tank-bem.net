@@ -129,14 +129,14 @@ set c42 [addConnection $m8 0 $m9 5]
 # Set the Connection Notes and Dislpay Options
 
 # Set the GUI variables for each Module
-set $m0-notes {  Read the time-dependent
-    known (inner surface)
-            potentials}
+set $m0-notes {Read the time-dependent
+known (inner surface)
+potentials}
 set $m0-filename {/usr/sci/data/SCIRunData/1.20.0/time-dependent/Ucager.mat}
-set $m1-notes {Choose which time-step     
-from the computed output  
-potentials (outer                
-surface) to visualize          }
+set $m1-notes {Choose which time-step
+from the computed output
+potentials (outer
+surface) to visualize}
 set $m1-row_or_col {col}
 set $m1-selectable_min {0}
 set $m1-selectable_max {              509}
@@ -152,12 +152,12 @@ set $m1-delay {0}
 set $m1-inc-amount {1}
 set $m1-send-amount {1}
 set $m1-update-function {1}
-set $m2-notes { Read the time-dependent
-  outer surface potentials
-           (measured)}
+set $m2-notes {Read the time-dependent
+outer surface potentials
+(measured)}
 set $m2-filename {/usr/sci/data/SCIRunData/1.20.0/time-dependent/Utankr.mat}
-set $m3-notes {     Choose the same time
-   instant as the other data}
+set $m3-notes {Choose the same time
+instant as the other data}
 set $m3-row_or_col {col}
 set $m3-selectable_min {0}
 set $m3-selectable_max {              509}
@@ -173,12 +173,12 @@ set $m3-delay {0}
 set $m3-inc-amount {1}
 set $m3-send-amount {1}
 set $m3-update-function {1}
-set $m4-notes {    Merge outer surface
-            geometry with
-      selected time-step
+set $m4-notes {Merge outer surface
+geometry with
+ selected time-step
 of computed potentials}
-set $m5-notes {        Show computed
-          outer surface}
+set $m5-notes {Show computed
+outer surface}
 set $m5-nodes-on {0}
 set $m5-nodes-transparency {0}
 set $m5-nodes-as-disks {0}
@@ -249,10 +249,10 @@ set $m6-minRes {19}
 set $m6-resolution {255}
 set $m6-realres {255}
 set $m6-gamma {0}
-set $m7-notes {   Merge outer surface
-       geometry with
-   measured potentials}
-set $m8-notes {   Show measurement sites}
+set $m7-notes {Merge outer surface
+geometry with
+measured potentials}
+set $m8-notes {Show measurement sites}
 set $m8-nodes-on {1}
 set $m8-nodes-transparency {0}
 set $m8-nodes-as-disks {0}
@@ -419,7 +419,7 @@ set $m9-ViewWindow_0-unused {1}
 set $m9-ViewWindow_0-unused {1}
 set $m9-ViewWindow_0-unused {1}
 set $m9-ViewWindow_0-unused {1}
-set $m10-notes {    Legend for inner surface}
+set $m10-notes {Legend for inner surface}
 set $m10-length {half1}
 set $m10-side {left}
 set $m10-numlabels {5}
@@ -427,19 +427,19 @@ set $m10-scale {1.0}
 set $m10-units {mV}
 set $m10-text_color {1}
 set $m11-notes {Compute the time-dependent
-output (outer surface)         
-potentials                            }
+output (outer surface)
+potentials}
 set $m11-op {Mult}
 set $m11-function {x+y}
 set $m12-notes {Read the inner surface (heart)}
 set $m12-filename {/usr/sci/data/SCIRunData/1.20.0/time-dependent/cage.fld}
 set $m13-notes {Read the outer surface (torso)}
 set $m13-filename {/usr/sci/data/SCIRunData/1.20.0/time-dependent/tank.fld}
-set $m14-notes {       Read geometry for
-        measurment sites
-         on outer surface}
+set $m14-notes {Read geometry for
+measurment sites
+on outer surface}
 set $m14-filename {/usr/sci/data/SCIRunData/1.20.0/time-dependent/tank_measured_only.fld}
-set $m15-notes {     Show inner surface}
+set $m15-notes {Show inner surface}
 set $m15-nodes-on {0}
 set $m15-nodes-transparency {0}
 set $m15-nodes-as-disks {0}
@@ -501,8 +501,8 @@ set $m15-edge-resolution {6}
 set $m15-data-resolution {6}
 set $m16-notes {Choose the same
 time instant from
-the input data     
-(inner surface)   }
+the input data
+(inner surface)}
 set $m16-row_or_col {col}
 set $m16-selectable_min {0}
 set $m16-selectable_max {              509}
@@ -518,11 +518,11 @@ set $m16-delay {0}
 set $m16-inc-amount {1}
 set $m16-send-amount {1}
 set $m16-update-function {1}
-set $m17-notes {  Merge inner surface
-      geometry with
-  computed potentials            }
+set $m17-notes {Merge inner surface
+geometry with
+computed potentials}
 set $m18-notes {Move inner surface via widget
- (translate, rotate, scale)       }
+(translate, rotate, scale)}
 set $m18-outputcenterx {-15.17}
 set $m18-outputcentery {44.325}
 set $m18-outputcenterz {287.85}
@@ -545,8 +545,8 @@ set $m18-box-in-x {}
 set $m18-box-in-y {}
 set $m18-box-in-z {}
 set $m18-resetting {0}
-set $m19-notes {     Interpolate computed
-     potentials from outer
+set $m19-notes {Interpolate computed
+potentials from outer
 surface to electrode sites}
 set $m19-interpolation_basis {constant}
 set $m19-map_source_to_single_dest {0}
@@ -554,8 +554,8 @@ set $m19-exhaustive_search {1}
 set $m19-exhaustive_search_max_dist {-1}
 set $m19-np {1}
 set $m20-notes {Compare the computed
-       potentials and the
-    measured potentials}
+potentials and the
+measured potentials}
 set $m20-haveUI {1}
 set $m20-methodTCL {CCinv}
 set $m20-pTCL {1}
@@ -570,7 +570,7 @@ set $m23-isFixed {0}
 set $m23-min {-0.19427569802265432}
 set $m23-max {0.071471147946599908}
 set $m23-makeSymmetric {0}
-set $m24-notes {    Legend for outer surface}
+set $m24-notes {Legend for outer surface}
 set $m24-length {half1}
 set $m24-side {bottom}
 set $m24-numlabels {4}
@@ -578,30 +578,30 @@ set $m24-scale {1.0}
 set $m24-units {mV}
 set $m24-text_color {1}
 set $m25-notes {Compute the transfer
-matrix between the  
-inner and outer         
-surfaces                  }
-set $m26-notes {Set this as the  
-outer surface    
+matrix between the
+inner and outer
+surfaces}
+set $m26-notes {Set this as the
+outer surface
 (sought values)}
 set $m26-prop {in/out}
 set $m26-val {out}
 set $m26-meshprop {0}
-set $m27-notes { Set this as the
-  inside surface
+set $m27-notes {Set this as the
+inside surface
 (known values)}
 set $m27-prop {in/out}
 set $m27-val {in}
 set $m27-meshprop {0}
 set $m28-notes {Set the conductivity
- of the region within
-            this surface}
+of the region within
+this surface}
 set $m28-prop {Inside Conductivity}
 set $m28-val {1}
 set $m28-meshprop {0}
 set $m29-notes {Set the conductivity
-of the region within 
-this surface            }
+of the region within
+this surface}
 set $m29-prop {Inside Conductivity}
 set $m29-val {2}
 set $m29-meshprop {0}
