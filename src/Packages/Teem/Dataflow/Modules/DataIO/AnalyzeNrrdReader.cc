@@ -56,6 +56,8 @@
 #include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 
+#include <sci_defs/insight_defs.h>
+
 #ifdef HAVE_INSIGHT
 #include <Core/Algorithms/DataIO/AnalyzeReader.h>
 #include <Core/Algorithms/DataIO/AnalyzeImage.h>
