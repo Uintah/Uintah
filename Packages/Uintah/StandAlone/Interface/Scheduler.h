@@ -8,6 +8,8 @@
 #include <Uintah/Interface/Output.h>
 #include <string>
 #include <vector>
+#include <list>
+#include <map>
 
 class DOM_Document;
 class DOM_Element;
@@ -20,6 +22,8 @@ class ProcessorGroup;
 
 using std::vector;
 using std::string;
+using std::list;
+using std::map;
 
 class LoadBalancer;
 class Task;
@@ -97,11 +101,17 @@ WARNING
 					       const vector<vector<const VarLabel*> >& new_labels,
 					       int numMatls) = 0;
 
+       // Makes and returns a map that maps strings to VarLabels of
+       // that name and a list of material indices for which that
+       // variable is valid (at least according to d_allcomps).
+       typedef map< string, pair< const VarLabel*, list<int> > >
+               VarLabelMaterialMap;
+       virtual VarLabelMaterialMap* makeVarLabelMaterialMap() = 0;
     protected:
-    	void makeTaskGraphDoc(const vector<Task*>& tasks,
+       void makeTaskGraphDoc(const vector<Task*>& tasks,
 			      bool emit_edges = true);
-    	void emitNode(const Task* name, time_t start, double duration);
-    	void finalizeNodes(int process=0);
+       void emitNode(const Task* name, time_t start, double duration);
+       void finalizeNodes(int process=0);
     
     private:
        Scheduler(const Scheduler&);
@@ -117,6 +127,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.22  2000/12/07 00:03:09  witzel
+// Added makeVarLabelMaterialMap method
+//
 // Revision 1.21  2000/09/27 00:14:33  witzel
 // Changed emitEdges to makeTaskGraphDoc with an option to emit
 // the actual edges (only process 0 in the MPI version since all
