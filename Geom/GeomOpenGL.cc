@@ -88,7 +88,11 @@ void GeomObj::draw(DrawInfoOpenGL* di)
 	di->currently_lit=0;
 	glDisable(GL_LIGHTING);
     }
+    if(di->pickmode && pick)
+	glPushName((GLuint)pick);
     objdraw(di);
+    if(di->pickmode && pick)
+	glPopName();
     if(matl.get_rep())
 	di->pop_matl();
 }
