@@ -63,10 +63,6 @@ WARNING
 				      DataWarehouse* old_dw,
 				      DataWarehouse* new_dw) = 0;
 
-	 virtual void initializeContact(const Patch* patch,
-					int vfindex,
-					DataWarehouse* new_dw) = 0;
-
          virtual void addComputesAndRequiresInterpolated(Task* task,
 					   const PatchSet* patches,
 					   const MaterialSet* matls) const = 0;

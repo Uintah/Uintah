@@ -49,30 +49,13 @@ FrictionContact::~FrictionContact()
   // Destructor
 }
 
-void FrictionContact::initializeContact(const Patch* patch,
-                                        int matlindex,
-                                        DataWarehouse* new_dw)
-{
-  NCVariable<double> normtraction;
-  NCVariable<Vector> surfnorm;
-
-  new_dw->allocate(normtraction,lb->gNormTractionLabel, matlindex, patch);
-  new_dw->allocate(surfnorm,    lb->gSurfNormLabel,     matlindex, patch);
-
-  normtraction.initialize(0.0);
-  surfnorm.initialize(Vector(0.0,0.0,0.0));
-
-  new_dw->put(normtraction,lb->gNormTractionLabel,matlindex, patch);
-  new_dw->put(surfnorm,    lb->gSurfNormLabel,    matlindex, patch);
-
-}
-
 void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 					const PatchSubset* patches,
 					const MaterialSubset* matls,
 					DataWarehouse* old_dw,
 					DataWarehouse* new_dw)
-{
+{ 
+  typedef IntVector IV;
   int numMatls = d_sharedState->getNumMPMMatls();
   ASSERTEQ(numMatls, matls->size());
   for(int p=0;p<patches->size();p++){
@@ -80,143 +63,15 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     Vector dx = patch->dCell();
 
     // Need access to all velocity fields at once
-    StaticArray<constNCVariable<double> > gmass(numMatls);
-    StaticArray<NCVariable<Vector> > gvelocity(numMatls);
-    StaticArray<constNCVariable<double> > normtraction(numMatls);
-    StaticArray<constNCVariable<Vector> > surfnorm(numMatls);
-    StaticArray<NCVariable<double> > frictionalWork(numMatls);
-  
-    // Retrieve necessary data from DataWarehouse
-    for(int m=0;m<matls->size();m++){
-      int dwindex = matls->get(m);
-        new_dw->get(gmass[m],       lb->gMassLabel,         dwindex, patch,
-		  Ghost::None, 0);
-        new_dw->getModifiable(gvelocity[m], lb->gVelocityLabel, dwindex,
-			      patch);
-        old_dw->get(normtraction[m],lb->gNormTractionLabel,dwindex, patch,
-		Ghost::None, 0);
-        old_dw->get(surfnorm[m],    lb->gSurfNormLabel,     dwindex, patch,
-		  Ghost::None, 0);
-        new_dw->allocate(frictionalWork[m], lb->frictionalWorkLabel,
-							    dwindex, patch);
-	frictionalWork[m].initialize(0.);
-    }
+    StaticArray<constNCVariable<double> >  gmass(numMatls);
+    StaticArray<NCVariable<Vector> >       gvelocity(numMatls);
+    StaticArray<NCVariable<Vector> >       gsurfnorm(numMatls);
+    StaticArray<NCVariable<double> >       frictionalWork(numMatls);
+    StaticArray<NCVariable<Matrix3> >      gstress(numMatls);
+    StaticArray<NCVariable<double> >       gnormtraction(numMatls);
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel);
-
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-      Vector centerOfMassMom(0.,0.,0.);
-      double centerOfMassMass=0.0; 
-      for(int n = 0; n < numMatls; n++){
-        centerOfMassMom+=gvelocity[n][*iter] * gmass[n][*iter];
-        centerOfMassMass+=gmass[n][*iter]; 
-      }
-
-      // Apply Coulomb friction contact
-      // For grid points with mass calculate velocity
-      if(!compare(centerOfMassMass,0.0)){
-        Vector centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
-
-        // Loop over velocity fields.  Only proceed if velocity field mass
-        // is nonzero (not numerical noise) and the difference from
-        // the centerOfMassVelocity is nonzero (More than one velocity
-        // field is contributing to grid vertex).
-        for(int n = 0; n < numMatls; n++){
-          Vector deltaVelocity=gvelocity[n][*iter]-centerOfMassVelocity;
-          if(!compare(gmass[n][*iter]/centerOfMassMass,0.0)
-	     //           && !compare(deltaVelocity.length(),0.0)){
-             && !compare(gmass[n][*iter]-centerOfMassMass,0.0)){
-
-            // Apply frictional contact if the surface is in compression
-            // or the surface is stress free and surface is approaching.
-            // Otherwise apply free surface conditions (do nothing).
-            double normalDeltaVel=Dot(deltaVelocity,surfnorm[n][*iter]);
-	    Vector Dvdt(0.,0.,0.);
-            if((normtraction[n][*iter] < 0.0) ||
-               (compare(fabs(normtraction[n][*iter]),0.0) &&
-                normalDeltaVel>0.0)){
-
-                // Specialize algorithm in case where approach velocity
-                // is in direction of surface normal.
-                if(compare( (deltaVelocity
-                        -surfnorm[n][*iter]*normalDeltaVel).length(),0.0)){
-                  Dvdt=-surfnorm[n][*iter]*normalDeltaVel;
-		  frictionalWork[n][*iter] = 0.;
-                }
-	        else if(!compare(fabs(normalDeltaVel),0.0)){
-                  Vector surfaceTangent=
-		  (deltaVelocity-surfnorm[n][*iter]*normalDeltaVel)/
-                  (deltaVelocity-surfnorm[n][*iter]*normalDeltaVel).length();
-                  double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
-                  double frictionCoefficient=
-                    Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
-                  Dvdt=
-                    -surfnorm[n][*iter]*normalDeltaVel
-		    -surfaceTangent*frictionCoefficient*fabs(normalDeltaVel);
-
-		  frictionalWork[n][*iter] = gmass[n][*iter]*
-					frictionCoefficient*normalDeltaVel*
-		    (tangentDeltaVelocity - normalDeltaVel*frictionCoefficient);
-
-		  frictionalWork[n][*iter] = gmass[n][*iter]*frictionCoefficient
-					  * (normalDeltaVel*normalDeltaVel) *
-		                 (tangentDeltaVelocity/fabs(normalDeltaVel)-
-							   frictionCoefficient);
-
-	        }
-	        Vector epsilon=(Dvdt/dx)*delT;
-	        double epsilon_max=
-		  Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
-	        if(!compare(epsilon_max,0.0)){
-		  epsilon_max=epsilon_max*Max(1.0,
-			    gmass[n][*iter]/(centerOfMassMass-gmass[n][*iter]));
-		  double ff=Min(epsilon_max,.5)/epsilon_max;
-		  Dvdt=Dvdt*ff;
-	        }
-	        gvelocity[n][*iter]+=Dvdt;
-            }
-	  }
-        }
-      }
-    }
-
-    for(int m=0;m<matls->size();m++){
-      int dwindex = matls->get(m);
-      new_dw->put(frictionalWork[m], lb->frictionalWorkLabel, dwindex, patch);
-    }
-  }
-}
-
-void FrictionContact::exMomIntegrated(const ProcessorGroup*,
-				      const PatchSubset* patches,
-				      const MaterialSubset* matls,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw)
-{
-  IntVector onex(1,0,0), oney(0,1,0), onez(0,0,1);
-  typedef IntVector IV;
-
-  int numMatls = d_sharedState->getNumMPMMatls();
-  ASSERTEQ(numMatls, matls->size());
-
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    Vector dx = patch->dCell();
-
-    // This model requires getting the normal component of the
-    // surface traction.  The first step is to calculate the
-    // surface normals of each object.  Next, interpolate the
-    // stress to the grid.  The quantity we want is n^T*stress*n
-    // at each node.
-
-    // Need access to all velocity fields at once, so store in
-    // vectors of NCVariables
-    StaticArray<constNCVariable<double> > gmass(numMatls);
-    StaticArray<NCVariable<Vector> > gvelocity_star(numMatls);
-    StaticArray<NCVariable<Vector> > gacceleration(numMatls);
-    StaticArray<constNCVariable<double> > normtraction(numMatls);
-    StaticArray<NCVariable<double> > frictionalWork(numMatls);
-
+  
     Vector surnor;
 
     // First, calculate the gradient of the mass everywhere
@@ -224,14 +79,16 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
 
-      NCVariable<Vector> gsurfnorm;
+      new_dw->getModifiable(gvelocity[m], lb->gVelocityLabel,      dwi, patch);
       new_dw->get(gmass[m],lb->gMassLabel, dwi, patch, Ghost::AroundNodes, 1);
-      new_dw->allocate(gsurfnorm,lb->gSurfNormLabel, dwi, patch);
+      new_dw->allocate(gsurfnorm[m],      lb->gSurfNormLabel,      dwi, patch);
+      new_dw->allocate(frictionalWork[m], lb->frictionalWorkLabel, dwi, patch);
 
-      gsurfnorm.initialize(Vector(0.0,0.0,0.0));
+      gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
+      frictionalWork[m].initialize(0.);
 
-      IntVector low(gsurfnorm.getLowIndex());
-      IntVector high(gsurfnorm.getHighIndex());
+      IntVector low(gsurfnorm[m].getLowIndex());
+      IntVector high(gsurfnorm[m].getHighIndex());
 
       int ILOW,IHIGH,JLOW,JHIGH,KLOW,KHIGH;
       // First, figure out some ranges for for loops
@@ -275,11 +132,12 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 	        -(gmass[m][IV(i,j,k+1)] - gmass[m][IV(i,j,k-1)])/dx.z()); 
 	     double length = surnor.length();
 	     if(length>0.0){
-	    	 gsurfnorm[IntVector(i,j,k)] = surnor/length;;
+	    	 gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
 	     }
           }
         }
       }
+
 
       // Fix the normals on the surface nodes
       for(Patch::FaceType face = Patch::startFace;
@@ -302,7 +160,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
                        -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
                 double length = surnor.length();
                 if(length>0.0){
-                   gsurfnorm[IntVector(I,j,k)] = surnor/length;;
+                   gsurfnorm[m][IntVector(I,j,k)] = surnor/length;;
                 }
               }
             }
@@ -320,7 +178,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 		       -(gmass[m][IV(i,J,k+1)] - gmass[m][IV(i,J,k-1)])/dx.z());
 		double length = surnor.length();
 		if(length>0.0){
-		  gsurfnorm[IntVector(i,J,k)] = surnor/length;;
+		  gsurfnorm[m][IntVector(i,J,k)] = surnor/length;;
 		}
               }
             }
@@ -338,7 +196,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 	               0.0);
 		double length = surnor.length();
 		if(length>0.0){
-		  gsurfnorm[IntVector(i,j,K)] = surnor/length;;
+		  gsurfnorm[m][IntVector(i,j,K)] = surnor/length;;
 		}
               }
             }
@@ -347,24 +205,19 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 	}
       }
 
-      new_dw->put(gsurfnorm,lb->gSurfNormLabel, dwi, patch);
-    }
-
-    // Next, interpolate the stress to the grid
-    for(int m=0;m<matls->size();m++){
-      int matlindex = matls->get(m);
       // Create arrays for the particle stress and grid stress
-      ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch,
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                Ghost::AroundNodes, 1,
                                                lb->pXLabel);
       constParticleVariable<Matrix3> pstress;
       constParticleVariable<Point> px;
-      NCVariable<Matrix3>       gstress;
-      new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
-      old_dw->get(px, lb->pXLabel, pset);
-      new_dw->allocate(gstress, lb->gStressLabel, matlindex, patch);
-      gstress.initialize(Matrix3(0.0));
+      old_dw->get(pstress, lb->pStressLabel, pset);
+      old_dw->get(px,      lb->pXLabel,      pset);
+      new_dw->allocate(gstress[m],      lb->gStressLabel,      dwi,patch);
+      new_dw->allocate(gnormtraction[m],lb->gNormTractionLabel,dwi,patch);
+      gstress[m].initialize(Matrix3(0.0));
       
+      // Next, interpolate the stress to the grid
       if(d_8or27==MAX_BASIS){
         constParticleVariable<Vector> psize;
         old_dw->get(psize, lb->pSizeLabel, pset);
@@ -387,49 +240,143 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
          // Must use the node indices
          for(int k = 0; k < d_8or27; k++) {
 	   if (patch->containsNode(ni[k]))
-	     gstress[ni[k]] += pstress[idx] * S[k];
+	     gstress[m][ni[k]] += pstress[idx] * S[k];
          }
       }
-      new_dw->put(gstress, lb->gStressLabel, matlindex, patch);
-    }
-
-    // Compute the normal component of the traction
-    for(int m=0;m<matls->size();m++){
-      int matlindex = matls->get(m);
-      constNCVariable<Matrix3>      gstress;
-      NCVariable<double>       gnormtraction;
-      constNCVariable<Vector>       surfnorm;
-      new_dw->get(gstress, lb->gStressLabel,  matlindex, patch, Ghost::None, 0);
-      new_dw->get(surfnorm,lb->gSurfNormLabel,matlindex, patch, Ghost::None, 0);
-      new_dw->allocate(gnormtraction,lb->gNormTractionLabel, matlindex, patch);
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-	gnormtraction[*iter]=
-			Dot(surfnorm[*iter]*gstress[*iter],surfnorm[*iter]);
+	gnormtraction[m][*iter]=
+		Dot(gsurfnorm[m][*iter]*gstress[m][*iter],gsurfnorm[m][*iter]);
       }
 
-      new_dw->put(gnormtraction,lb->gNormTractionLabel, matlindex, patch);
+      new_dw->put(gsurfnorm[m],    lb->gSurfNormLabel,     dwi, patch);
+      new_dw->put(gstress[m],      lb->gStressLabel,       dwi, patch);
+      new_dw->put(gnormtraction[m],lb->gNormTractionLabel, dwi, patch);
     }
 
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+      Vector centerOfMassMom(0.,0.,0.);
+      double centerOfMassMass=0.0; 
+      for(int n = 0; n < numMatls; n++){
+        centerOfMassMom+=gvelocity[n][*iter] * gmass[n][*iter];
+        centerOfMassMass+=gmass[n][*iter]; 
+      }
 
-    // FINALLY, we have all the pieces in place, compute the proper interaction
+      // Apply Coulomb friction contact
+      // For grid points with mass calculate velocity
+      if(!compare(centerOfMassMass,0.0)){
+        Vector centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
+
+        // Loop over velocity fields.  Only proceed if velocity field mass
+        // is nonzero (not numerical noise) and the difference from
+        // the centerOfMassVelocity is nonzero (More than one velocity
+        // field is contributing to grid vertex).
+        for(int n = 0; n < numMatls; n++){
+          Vector deltaVelocity=gvelocity[n][*iter]-centerOfMassVelocity;
+          if(!compare(gmass[n][*iter]/centerOfMassMass,0.0)
+             && !compare(gmass[n][*iter]-centerOfMassMass,0.0)){
+
+            // Apply frictional contact if the surface is in compression
+            // or the surface is stress free and surface is approaching.
+            // Otherwise apply free surface conditions (do nothing).
+            double normalDeltaVel=Dot(deltaVelocity,gsurfnorm[n][*iter]);
+	    Vector Dvdt(0.,0.,0.);
+            if((gnormtraction[n][*iter] < 0.0) ||
+               (compare(fabs(gnormtraction[n][*iter]),0.0) &&
+                normalDeltaVel>0.0)){
+
+                // Specialize algorithm in case where approach velocity
+                // is in direction of surface normal.
+                if(compare( (deltaVelocity
+                        -gsurfnorm[n][*iter]*normalDeltaVel).length(),0.0)){
+                  Dvdt=-gsurfnorm[n][*iter]*normalDeltaVel;
+		  frictionalWork[n][*iter] = 0.;
+                }
+	        else if(!compare(fabs(normalDeltaVel),0.0)){
+                  Vector surfaceTangent=
+		  (deltaVelocity-gsurfnorm[n][*iter]*normalDeltaVel)/
+                  (deltaVelocity-gsurfnorm[n][*iter]*normalDeltaVel).length();
+                  double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
+                  double frictionCoefficient=
+                    Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
+                  Dvdt=
+                    -gsurfnorm[n][*iter]*normalDeltaVel
+		    -surfaceTangent*frictionCoefficient*fabs(normalDeltaVel);
+
+		  frictionalWork[n][*iter] = gmass[n][*iter]*
+					frictionCoefficient*normalDeltaVel*
+		    (tangentDeltaVelocity - normalDeltaVel*frictionCoefficient);
+
+		  frictionalWork[n][*iter] = gmass[n][*iter]*frictionCoefficient
+					  * (normalDeltaVel*normalDeltaVel) *
+		                 (tangentDeltaVelocity/fabs(normalDeltaVel)-
+							   frictionCoefficient);
+
+	        }
+	        Vector epsilon=(Dvdt/dx)*delT;
+	        double epsilon_max=
+		  Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
+	        if(!compare(epsilon_max,0.0)){
+		  epsilon_max=epsilon_max*Max(1.0,
+			    gmass[n][*iter]/(centerOfMassMass-gmass[n][*iter]));
+		  double ff=Min(epsilon_max,.5)/epsilon_max;
+		  Dvdt=Dvdt*ff;
+	        }
+	        gvelocity[n][*iter]+=Dvdt;
+            }  // if traction
+	  }    // if
+        }      // matls
+      }        // if(!compare(centerOfMassMass,0.0))
+    }          // NodeIterator
+
+    for(int m=0;m<matls->size();m++){
+      int dwindex = matls->get(m);
+      new_dw->put(frictionalWork[m], lb->frictionalWorkLabel, dwindex, patch);
+    }  // matls
+  }  // patches
+  
+}
+
+void FrictionContact::exMomIntegrated(const ProcessorGroup*,
+				      const PatchSubset* patches,
+				      const MaterialSubset* matls,
+				      DataWarehouse* old_dw,
+				      DataWarehouse* new_dw)
+{
+  IntVector onex(1,0,0), oney(0,1,0), onez(0,0,1);
+  typedef IntVector IV;
+
+  int numMatls = d_sharedState->getNumMPMMatls();
+  ASSERTEQ(numMatls, matls->size());
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    Vector dx = patch->dCell();
+
+    // Need access to all velocity fields at once, so store in
+    // vectors of NCVariables
+    StaticArray<constNCVariable<double> > gmass(numMatls);
+    StaticArray<NCVariable<Vector> > gvelocity_star(numMatls);
+    StaticArray<NCVariable<Vector> > gacceleration(numMatls);
+    StaticArray<constNCVariable<double> > normtraction(numMatls);
+    StaticArray<NCVariable<double> > frictionalWork(numMatls);
 
     // Retrieve necessary data from DataWarehouse
     StaticArray<constNCVariable<Vector> > gsurfnorm(numMatls);    
     for(int m=0;m<matls->size();m++){
       int matlindex = matls->get(m);
-      new_dw->get(gmass[m],          lb->gMassLabel,matlindex,
-					patch,Ghost::None, 0);
-      new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel,
-			    matlindex, patch);
-      new_dw->getModifiable(gacceleration[m],lb->gAccelerationLabel,matlindex,
-			    patch);
+      new_dw->get(gmass[m],       lb->gMassLabel,        matlindex,
+                                                         patch, Ghost::None, 0);
       new_dw->get(normtraction[m],lb->gNormTractionLabel,matlindex,
-					patch, Ghost::None, 0);
-      new_dw->get(gsurfnorm[m],lb->gSurfNormLabel,matlindex,
-					patch, Ghost::None, 0);
+                                                         patch, Ghost::None, 0);
+      new_dw->get(gsurfnorm[m],   lb->gSurfNormLabel,    matlindex,
+                                                         patch, Ghost::None, 0);
+      new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel,
+                                                         matlindex, patch);
+      new_dw->getModifiable(gacceleration[m],lb->gAccelerationLabel,
+                                                         matlindex, patch);
       new_dw->getModifiable(frictionalWork[m], lb->frictionalWorkLabel,
-			    matlindex, patch);
+                                                         matlindex, patch);
     }
 
     delt_vartype delT;
@@ -537,12 +484,18 @@ void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
 					     const MaterialSet* ms) const
 {
   const MaterialSubset* mss = ms->getUnion();
-  t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::OldDW, lb->gNormTractionLabel,  Ghost::None);
-  t->requires(Task::OldDW, lb->gSurfNormLabel,      Ghost::None);
-  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
-  t->computes(             lb->frictionalWorkLabel);
-  t->modifies(             lb->gVelocityLabel, mss);
+  t->requires(Task::OldDW,   lb->delTLabel);
+  t->requires(Task::OldDW,   lb->pXLabel,           Ghost::AroundNodes, 1);
+  t->requires(Task::OldDW,   lb->pStressLabel,      Ghost::AroundNodes, 1);
+  if(d_8or27==27){
+    t->requires(Task::OldDW, lb->pSizeLabel,        Ghost::AroundNodes, 1);
+  }
+  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::AroundNodes, 1);
+  t->computes(lb->gNormTractionLabel);
+  t->computes(lb->gSurfNormLabel);
+  t->computes(lb->gStressLabel);
+  t->computes(lb->frictionalWorkLabel);
+  t->modifies(lb->gVelocityLabel, mss);
 }
 
 void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
@@ -551,17 +504,11 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 {
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::OldDW, lb->pXLabel,              Ghost::AroundNodes, 1);
-  t->requires(Task::NewDW,lb->pStressLabel_preReloc, Ghost::AroundNodes, 1);
-  if(d_8or27==27){
-    t->requires(Task::OldDW, lb->pSizeLabel,         Ghost::AroundNodes, 1);
-  }
-  t->requires(Task::NewDW, lb->gMassLabel,           Ghost::AroundNodes, 1);
+  t->requires(Task::NewDW, lb->gNormTractionLabel,  Ghost::None);
+  t->requires(Task::NewDW, lb->gSurfNormLabel,      Ghost::None);
+  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
   t->modifies(             lb->gVelocityStarLabel,  mss);
   t->modifies(             lb->gAccelerationLabel,  mss);
   t->modifies(             lb->frictionalWorkLabel, mss);
 
-  t->computes(lb->gNormTractionLabel);
-  t->computes(lb->gSurfNormLabel);
-  t->computes(lb->gStressLabel);
 }

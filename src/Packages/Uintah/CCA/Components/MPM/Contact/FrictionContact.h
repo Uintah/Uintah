@@ -66,11 +66,6 @@ WARNING
 	 // Destructor
 	 virtual ~FrictionContact();
 
-         // Initialiation function create storage for traction and surf. norm.
-         virtual void initializeContact(const Patch* patch,
-                                        int vfindex,
-                                        DataWarehouse* new_dw);
-	 
 	 // Basic contact methods
 	 virtual void exMomInterpolated(const ProcessorGroup*,
 					const PatchSubset* patches,
