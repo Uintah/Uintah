@@ -70,10 +70,10 @@ class TeemSHARE DicomToNrrd : public Module
 
 public:
 
-  // Constructor
+  //! Constructor
   DicomToNrrd(GuiContext*);
 
-  // Destructor
+  //! Destructor
   virtual ~DicomToNrrd();
 
   virtual void execute();
@@ -92,7 +92,6 @@ private:
 
   //! GUI variables
   GuiString dir_;
-  GuiString prefix_;
   GuiInt start_index_;
   GuiInt end_index_;
   GuiString series_uid_;
@@ -124,7 +123,6 @@ DECLARE_MAKER(DicomToNrrd)
 DicomToNrrd::DicomToNrrd(GuiContext* ctx)
   : Module("DicomToNrrd", ctx, Source, "DataIO", "Teem"),
     dir_(ctx->subVar("dir")),
-    prefix_(ctx->subVar("prefix")),
     start_index_(ctx->subVar("start-index")),
     end_index_(ctx->subVar("end-index")),
     series_uid_(ctx->subVar("series-uid")),    
@@ -219,10 +217,13 @@ void DicomToNrrd::execute(){
 // 
 // split_string
 //
-// Description :
+// Description : Splits a string into vector of strings based on a separator.
 //
 // Arguments   :
 //
+// const T &src - String to be split.
+// C &container - Vector of strings to contain result.
+// typename T::value_type splitter - Separator string.
 // 
 template < class T, class C >
 void split_string(const T &src, C &container, typename T::value_type splitter)
@@ -449,7 +450,7 @@ int DicomToNrrd::build_nrrds( vector<Nrrd*> & array )
     int ret;
     if( (ret = reader.read(image)) == -1 )
     {
-      error("(DicomToNrrd::build_nrrds) DICOM read failed.");
+      error("(DicomToNrrd::build_nrrds) DICOM read failed.  Check command line output for details.");
       return -1;
     }
 

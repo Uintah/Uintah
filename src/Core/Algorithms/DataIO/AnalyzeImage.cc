@@ -19,18 +19,18 @@
 /*
  * C++ (CC) FILE : AnalyzeImage.cc
  *
- * DESCRIPTION   : 
- *                     
+ * DESCRIPTION   : A AnalyzeImage object contains all of the data and 
+ *                 information relevant to a single set of Analyze files.  
+ *                 This includes the pixel buffer, dimension, size along 
+ *                 each axis, origin, pixel spacing, and index. This object 
+ *                 is typically initialized using the AnalyzeReader.
+ *                      
  * AUTHOR(S)     : Jenny Simpson
  *                 SCI Institute
  *                 University of Utah
  *                 
- *                 Darby J. Van Uitert
- *                 SCI Institute
- *                 University of Utah
- *
  * CREATED       : 9/19/2003
- * MODIFIED      : 9/19/2003
+ * MODIFIED      : 10/4/2003
  * DOCUMENTATION :
  * NOTES         : 
  *
@@ -54,14 +54,13 @@ namespace SCIRun {
 //
 AnalyzeImage::AnalyzeImage()
 {
-  pixel_buffer = 0;
-  size = 0;
-  origin = 0;
-  spacing = 0;
-  index = 0;
-  
+  pixel_buffer_ = 0;
+  size_ = 0;
+  origin_ = 0;
+  spacing_ = 0;
+  index_ = 0;
+  id_ = "";  
 }
-
 /*===========================================================================*/
 // 
 // AnalyzeImage
@@ -70,40 +69,49 @@ AnalyzeImage::AnalyzeImage()
 //
 // Arguments   : none
 //
-/*
+
 AnalyzeImage::AnalyzeImage( itk::AnalyzeImageIO::Pointer io, 
-                        ImageNDType::Pointer image )
+                        ImageNDType::Pointer image, string id )
 {
   ImageNDType::RegionType region = image->GetLargestPossibleRegion();
 
   // Initialize all member variables
-  num_pixels = region.GetNumberOfPixels();
-  pixel_buffer = scinew PixelType[num_pixels];
+  id_ = id;
+  num_pixels_ = region.GetNumberOfPixels();
+  pixel_buffer_ = scinew PixelType[num_pixels_];
   PixelType * data = image->GetPixelContainer()->GetBufferPointer();
-  for(unsigned int i=0; i < num_pixels; i++ )
+  for(unsigned int i=0; i < num_pixels_; i++ )
   {
-    pixel_buffer[i] = *data++;
+    pixel_buffer_[i] = *data++;
   }
 
   // ??? data_type;
 
-  dim = region.GetImageDimension();
+  dim_ = region.GetImageDimension();
 
-  size = scinew int[dim];
-  origin = scinew double[dim];
-  spacing = scinew double[dim];
-  index = scinew int[dim];
-
-  for( int j = 0; j < dim; j++ )
+  // Make sure single files have dimension 2, not 3
+  if( dim_ == 3 ) 
   {
-    size[j] = region.GetSize(j);
-    origin[j] = image->GetOrigin()[j];
-    spacing[j] = image->GetSpacing()[j];
-    index[j] =  region.GetIndex(j); 
+    if( region.GetSize(2) == 1)
+    {
+      dim_ = 2;
+    }
+  }
+
+  size_ = scinew int[dim_];
+  origin_ = scinew double[dim_];
+  spacing_ = scinew double[dim_];
+  index_ = scinew int[dim_];
+
+  for( int j = 0; j < dim_; j++ )
+  {
+    size_[j] = region.GetSize(j);
+    origin_[j] = image->GetOrigin()[j];
+    spacing_[j] = image->GetSpacing()[j];
+    index_[j] =  region.GetIndex(j); 
   }
 
 }
-*/
 
 /*===========================================================================*/
 // 
@@ -117,29 +125,29 @@ AnalyzeImage::AnalyzeImage( itk::AnalyzeImageIO::Pointer io,
 //
 AnalyzeImage::AnalyzeImage(const AnalyzeImage& d)
 {
-  num_pixels = d.num_pixels;
-  pixel_buffer = scinew PixelType[num_pixels];
-  PixelType * dpb = d.pixel_buffer;
-  for( unsigned long i = 0; i < num_pixels; i++ )
+  num_pixels_ = d.num_pixels_;
+  pixel_buffer_ = scinew PixelType[num_pixels_];
+  PixelType * dpb = d.pixel_buffer_;
+  for( unsigned long i = 0; i < num_pixels_; i++ )
   {
-    pixel_buffer[i] = dpb[i];
+    pixel_buffer_[i] = dpb[i];
   }
 
   // ??? data_type;
 
-  dim = d.dim;
+  dim_ = d.dim_;
 
-  size = scinew int[dim];
-  origin = scinew double[dim];
-  spacing = scinew double[dim];
-  index = scinew int[dim];
+  size_ = scinew int[dim_];
+  origin_ = scinew double[dim_];
+  spacing_ = scinew double[dim_];
+  index_ = scinew int[dim_];
 
-  for( int j = 0; j < dim; j++ )
+  for( int j = 0; j < dim_; j++ )
   {
-    size[j] = d.size[j];
-    origin[j] = d.origin[j];
-    spacing[j] = d.spacing[j];
-    index[j] =  d.index[j]; 
+    size_[j] = d.size_[j];
+    origin_[j] = d.origin_[j];
+    spacing_[j] = d.spacing_[j];
+    index_[j] =  d.index_[j]; 
   }
 }
 
@@ -159,6 +167,19 @@ AnalyzeImage::~AnalyzeImage()
 
 /*===========================================================================*/
 // 
+// get_id
+//
+// Description : Returns the string id of this Dicom image
+//
+// Arguments   : none
+//
+string AnalyzeImage::get_id()
+{
+  return id_;
+}
+
+/*===========================================================================*/
+// 
 // get_num_pixels
 //
 // Description : Returns the number of pixels in the pixel buffer.
@@ -167,7 +188,7 @@ AnalyzeImage::~AnalyzeImage()
 //
 int AnalyzeImage::get_num_pixels()
 {
-  return num_pixels;
+  return num_pixels_;
 }
 
 /*===========================================================================*/
@@ -180,7 +201,7 @@ int AnalyzeImage::get_num_pixels()
 //
 PixelType * AnalyzeImage::get_pixel_buffer()
 {
-  return pixel_buffer;
+  return pixel_buffer_;
 }
 
 /*===========================================================================*/
@@ -193,13 +214,13 @@ PixelType * AnalyzeImage::get_pixel_buffer()
 //
 // Arguments   : none
 //
-void AnalyzeImage::get_data_type()
-{
+//void AnalyzeImage::get_data_type()
+//{
   // TODO: Fix this
   //std::type_info type = io_->GetPixelType();
   //io_->GetPixelType();
   //cerr << "Pixel Type: " << io_->GetPixelType();
-}
+//}
 
 /*===========================================================================*/
 // 
@@ -214,7 +235,7 @@ void AnalyzeImage::get_data_type()
 //
 int AnalyzeImage::get_dimension()
 {
-  return dim;
+  return dim_;
 }
 
 /*===========================================================================*/
@@ -233,8 +254,8 @@ int AnalyzeImage::get_dimension()
 //
 int AnalyzeImage::get_size( int i )
 {
-  assert( i >= 0 && i < dim );
-  return size[i];
+  assert( i >= 0 && i < dim_ );
+  return size_[i];
 }
 
 /*===========================================================================*/
@@ -254,9 +275,8 @@ int AnalyzeImage::get_size( int i )
 //
 double AnalyzeImage::get_origin( int i )
 {
-  //return image_->GetOrigin()[i]; 
-  assert( i >= 0 && i < dim );
-  return origin[i];
+  assert( i >= 0 && i < dim_ );
+  return origin_[i];
 }
 
 /*===========================================================================*/
@@ -274,8 +294,8 @@ double AnalyzeImage::get_origin( int i )
 //
 double AnalyzeImage::get_spacing( int i )
 {
-  assert( i >= 0 && i < dim );
-  return spacing[i];
+  assert( i >= 0 && i < dim_ );
+  return spacing_[i];
 }
 
 /*===========================================================================*/
@@ -293,8 +313,80 @@ double AnalyzeImage::get_spacing( int i )
 //
 int AnalyzeImage::get_index( int i )
 {
-  assert( i >= 0 && i < dim );
-  return index[i];
+  assert( i >= 0 && i < dim_ );
+  return index_[i];
+}
+
+/*===========================================================================*/
+// 
+// print_image_info
+//
+// Description : Prints image info for this Analyze image.  This is
+//               useful for debugging.
+//
+// Arguments   : none
+//
+void AnalyzeImage::print_image_info()
+{
+
+  // Get data from ANALYZE files
+
+  // Get id
+  string id = get_id();
+  cout << "(AnalyzeImage::print_image_info) ID: " << id << "\n";
+
+  // Get number of pixels
+  int num_pixels = get_num_pixels();
+  cout << "(AnalyzeImage::print_image_info) Num Pixels: " << num_pixels << "\n";
+
+  // Get pixel buffer data (array)
+  //PixelType * pixel_data = get_pixel_buffer();
+  //for( int i = 0; i < num_pixels; i++ )
+  // {
+  //  cout << "(AnalyzeImage) Pixel value " << i << ": " << pixel_data[i] 
+  //      << "\n"; 
+  //}
+
+  // Get pixel type
+  //get_data_type();
+
+  // Get image dimension
+  int image_dim = get_dimension();
+  cout << "(AnalyzeImage::print_image_info) Dimension: " << image_dim << "\n";
+
+  // Get the size of each axis
+  cout << "(AnalyzeImage::print_image_info) Size: [ ";
+  for( int j = 0; j < image_dim; j++ )
+  {
+    cout << get_size(j) << " "; 
+  }
+  cout << "]\n";
+
+  // Get the origin  
+  cout << "(AnalyzeImage::print_image_info) Origin: [ ";
+  for( int k = 0; k < image_dim; k++ )
+  {
+    cout << get_origin(k) << " "; 
+  }
+  cout << "]\n";
+
+  // Get the pixel spacing
+  cout << "(AnalyzeImage::print_image_info) Spacing: [ ";
+  for( int m = 0; m < image_dim; m++ )
+  {
+    cout << get_spacing(m) << " "; 
+  }
+  cout << "]\n";
+
+  // Get the indices
+  cout << "(AnalyzeImage::print_image_info) Index: [ ";
+  for( int n = 0; n < image_dim; n++ )
+  { 
+    cout << get_index(n) << " "; 
+  }
+  cout << "]\n";
+ 
+
 }
 
 } // End namespace SCIRun

@@ -24,7 +24,6 @@ itcl_class Teem_DataIO_DicomToNrrd {
 
     method set_defaults {} {
 	global $this-dir
-	global $this-prefix
 	global $this-start-index
 	global $this-end-index
         global $this-browse
@@ -35,7 +34,6 @@ itcl_class Teem_DataIO_DicomToNrrd {
         global $this-series-del
         global $this-dir-tmp
 	set $this-dir [pwd]
-	set $this-prefix ""
 	set $this-start-index 0
 	set $this-end-index 0
 	set $this-browse 0
@@ -106,7 +104,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
 
 	set selected [Scrolled_Listbox $sd.selected -width 100 -height 10 -selectmode single]
 
-	button $sd.delete -text "Delete Data" \
+	button $sd.delete -text "Remove Data" \
 	    -command "$this DeleteData"
 
 	pack $sd.selected $sd.delete -side top -fill x -expand yes
@@ -287,7 +285,6 @@ itcl_class Teem_DataIO_DicomToNrrd {
 
  
     method DeleteData { } {
-        # Now entry from selected data
 	set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {

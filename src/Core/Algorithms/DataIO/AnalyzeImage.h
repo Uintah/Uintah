@@ -19,18 +19,18 @@
 /*
  * HEADER (H) FILE : AnalyzeImage.h
  *
- * DESCRIPTION     : 
+ * DESCRIPTION     : A AnalyzeImage object contains all of the data and 
+ *                   information relevant to a single set of Analyze files.  
+ *                   This includes the pixel buffer, dimension, size along 
+ *                   each axis, origin, pixel spacing, and index. This object 
+ *                   is typically initialized using the AnalyzeReader.
  *                     
  * AUTHOR(S)       : Jenny Simpson
  *                   SCI Institute
  *                   University of Utah
  *                 
- *                   Darby J. Van Uitert
- *                   SCI Institute
- *                   University of Utah
- *
  * CREATED         : 9/19/2003
- * MODIFIED        : 9/19/2003
+ * MODIFIED        : 10/4/2003
  * DOCUMENTATION   :
  * NOTES           : 
  *
@@ -44,6 +44,8 @@
 #include <Core/Malloc/Allocator.h>
 
 // Itk includes
+#include "itkAnalyzeImageIOFactory.h"
+#include "itkAnalyzeImageIO.h"
 #include "itkImageSeriesReader.h"
 
 // Standard lib includes
@@ -53,7 +55,7 @@
 namespace SCIRun {
 
 // ****************************************************************************
-// *************************** Class: AnalyzeImage ****************************
+// **************************** Class: AnalyzeImage ***************************
 // ****************************************************************************
 
 typedef unsigned short PixelType;
@@ -65,7 +67,8 @@ class AnalyzeImage
 public:
   // !Constructors
   AnalyzeImage();
-  //AnalyzeImage( itk::AnalyzeImageIO::Pointer io, ImageNDType::Pointer image );
+  AnalyzeImage( itk::AnalyzeImageIO::Pointer io, ImageNDType::Pointer image,
+                std::string id );
 
   // !Copy constructor
   AnalyzeImage(const AnalyzeImage& d);
@@ -73,27 +76,28 @@ public:
   // !Destructor
   ~AnalyzeImage();
 
-  // TODO: Implement copy constructor
-
   //! Utility functions
+  std::string get_id();
   int get_num_pixels();
   PixelType * get_pixel_buffer();
-  void get_data_type();
+  //void get_data_type();
   int get_dimension();
   int get_size( int i );
   double get_origin( int i );
   double get_spacing( int i );
   int get_index( int i );
+  void print_image_info();
 
 private:
-  unsigned long num_pixels;
-  PixelType * pixel_buffer;
+  unsigned long num_pixels_;
+  PixelType * pixel_buffer_;
   // ??? data_type;
-  int dim;
-  int * size;
-  double * origin;
-  double * spacing;
-  int * index;
+  int dim_;
+  int * size_;
+  double * origin_;
+  double * spacing_;
+  int * index_;
+  std::string id_;
 
 protected:
 

@@ -14,23 +14,27 @@
   Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
   University of Utah. All Rights Reserved.
 */
- 
+  
 
 /*
  * C++ (CC) FILE : AnalyzeReader.cc
  *
- * DESCRIPTION   : 
+ * DESCRIPTION   : Provides ability to read and get information about
+ *                 a set of Analyze files.  The read function can read
+ *                 one valid Analyze series at a time.  The other functions
+ *                 return information about what Analyze series' are in a 
+ *                 directory and what files are in each series.  The user
+ *                 can use that information to decide which directory/files
+ *                 to read from.  The read function stores each Analyze series
+ *                 as a AnalyzeImage object, which in turn contains information
+ *                 about the series (dimensions, pixel spacing, etc.).
  *                     
  * AUTHOR(S)     : Jenny Simpson
  *                 SCI Institute
  *                 University of Utah
- *                 
- *                 Darby J. Van Uitert
- *                 SCI Institute
- *                 University of Utah
  *
  * CREATED       : 9/19/2003
- * MODIFIED      : 9/19/2003
+ * MODIFIED      : 10/4/2003
  * DOCUMENTATION :
  * NOTES         : 
  *
@@ -54,6 +58,7 @@ namespace SCIRun {
 //
 AnalyzeReader::AnalyzeReader()
 {
+  file_ = "";
 }
 
 /*===========================================================================*/
@@ -70,57 +75,87 @@ AnalyzeReader::~AnalyzeReader()
 
 /*===========================================================================*/
 // 
-// read_series
+// set_file 
 //
-// Description : Read in a series of ANALYZE files and construct a AnalyzeImage
-//               object.  Returns the AnalyzeImage object.
+// Description : Set the Analyze .hdr file to read from.
+//
+// Arguments   : 
+//
+// std::string file - Analyze .hdr file to read from.  The full path to the 
+//                    file should be included.  The reader assumes that the
+//                    image file with the same prefix exists in the same 
+//                    directory.  If this is not the case, there will be an
+//                    error.
+//
+//                    Ex: /home/sci/simpson/sci_io/analyze/Brain.hdr
+//
+void AnalyzeReader::set_file( std::string file )
+{
+  file_ = file;
+}
+
+/*===========================================================================*/
+// 
+// get_file
+//
+// Description : Returns the file that was set.
 //
 // Arguments   : none
 //
-AnalyzeImage AnalyzeReader::read_series( char * dir )
+std::string AnalyzeReader::get_file()
 {
-  /*
-  itk::DicomImageIO::Pointer io = itk::DicomImageIO::New();
+  return file_;
+}
 
-  // Get the DICOM filenames from the directory
-  itk::AnalyzeFileNames::Pointer names = itk::AnalyzeFileNames::New();
+/*===========================================================================*/
+// 
+// read
+//
+// Description : Read in a set (1 .hdr + 1 .img) of Analyze files and 
+//               construct a AnalyzeImage object.  Returns 0 on success, -1 on 
+//               failure.
+//
+// Arguments   : 
+//
+// AnalyzeImage & di - AnalyzeImage object that is initialized in this function
+//                     and returned by reference.  This is set to contain all 
+//                     the information relevant to this Analyze image (i.e. 
+//                     dimensions, pixel spacing, etc.).
+//
+int AnalyzeReader::read( AnalyzeImage & di )
+{
+  if( file_ == "" ) 
+  {
+    cerr << "(AnalyzeReader::read) Error: No file selected.\n";
+    return -1;
+  } 
 
-  // Hard code directory for now
-  names->SetDirectory(dir);
+  itk::AnalyzeImageIO::Pointer io = itk::AnalyzeImageIO::New();
 
   // Create a new reader
+  typedef itk::ImageFileReader<ImageNDType> ReaderType;
   ReaderType::Pointer reader = ReaderType::New();
 
-  // Set reader file names
-  reader->SetFileNames(names->GetFileNames());
-  reader->SetImageIO(io);
-  std::cout << names;
+  // Set reader file name
+  reader->SetFileName( const_cast<char*>(file_.c_str()) );
 
-  FilterWatcher watcher(reader);
+  reader->SetImageIO( io );
 
-  // Check for the ordering specified
-  // Hard-code the ordering for now
-  int reverse = 1;
   try
   {
-    if (reverse)
-      {
-      reader->ReverseOrderOn();
-      }
     reader->Update();
-    reader->GetOutput()->Print(std::cout);
   }
   catch (itk::ExceptionObject &ex)
   {
-    std::cout << ex;
+    std::cerr << ex;
+    return -1;
   }
 
   ImageNDType::Pointer image = reader->GetOutput();
 
-  return DicomImage( io, image );
-  */
-  return AnalyzeImage();
+  di = AnalyzeImage( io, image, file_ );
 
+  return 0;
 }
 
 } // End namespace SCIRun
