@@ -14,7 +14,6 @@
 
 #include <Component/PIDL/Object.h>
 
-#include <Component/Exceptions/InternalError.h>
 #include <Component/PIDL/Dispatch.h>
 #include <Component/PIDL/GlobusError.h>
 #include <Component/PIDL/InvalidReference.h>
@@ -22,10 +21,13 @@
 #include <Component/PIDL/ServerContext.h>
 #include <Component/PIDL/URL.h>
 #include <Component/PIDL/Wharehouse.h>
-#include <Component/Util/NotFinished.h>
+#include <SCICore/Exceptions/InternalError.h>
+#include <SCICore/Util/NotFinished.h>
 #include <sstream>
 
-using Component::Exceptions::InternalError;
+using Component::PIDL::Object_interface;
+using Component::PIDL::URL;
+using SCICore::Exceptions::InternalError;
 
 static void unknown_handler(globus_nexus_endpoint_t* endpoint,
 			    globus_nexus_buffer_t* buffer,
@@ -91,8 +93,15 @@ URL Object_interface::getURL() const
 	NOT_FINISHED("Object::getURL");
     }
 }
+
 //
 // $Log$
+// Revision 1.2  1999/08/31 08:59:01  sparker
+// Configuration and other updates for globus
+// First import of beginnings of new component library
+// Added yield to Thread_irix.cc
+// Added getRunnable to Thread.{h,cc}
+//
 // Revision 1.1  1999/08/30 17:39:46  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

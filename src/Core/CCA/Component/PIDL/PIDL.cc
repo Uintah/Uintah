@@ -16,12 +16,17 @@
 #include <Component/PIDL/GlobusError.h>
 #include <Component/PIDL/Object_proxy.h>
 #include <Component/PIDL/Wharehouse.h>
-#include <Component/Exceptions/InternalError.h>
+#include <SCICore/Exceptions/InternalError.h>
 #include <globus_nexus.h>
 #include <iostream>
 #include <sstream>
 
-using Component::Exceptions::InternalError;
+using SCICore::Exceptions::InternalError;
+using Component::PIDL::GlobusError;
+using Component::PIDL::Object;
+using Component::PIDL::PIDL;
+using Component::PIDL::Reference;
+using Component::PIDL::Wharehouse;
 
 static unsigned short port;
 static char* host;
@@ -34,7 +39,7 @@ static int approval_fn(void*, char* urlstring, globus_nexus_startpoint_t* sp)
     try {
 	Wharehouse* wh=PIDL::getWharehouse();
 	return wh->approval(urlstring, sp);
-    } catch(const Component::Exceptions::Exception& e) {
+    } catch(const SCICore::Exceptions::Exception& e) {
 	std::cerr << "Caught exception (" << e.message() << "): " << urlstring
 		  << ", rejecting client (code=1005)\n";
 	return 1005;
@@ -95,6 +100,12 @@ std::string PIDL::getBaseURL()
 }
 //
 // $Log$
+// Revision 1.2  1999/08/31 08:59:01  sparker
+// Configuration and other updates for globus
+// First import of beginnings of new component library
+// Added yield to Thread_irix.cc
+// Added getRunnable to Thread.{h,cc}
+//
 // Revision 1.1  1999/08/30 17:39:46  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

@@ -15,11 +15,11 @@
 #ifndef Component_PIDL_PIDLException_h
 #define Component_PIDL_PIDLException_h
 
-#include <Component/Exceptions/Exception.h>
+#include <SCICore/Exceptions/Exception.h>
 
 namespace Component {
     namespace PIDL {
-	class PIDLException : public Component::Exceptions::Exception {
+	class PIDLException : public SCICore::Exceptions::Exception {
 	public:
 	protected:
 	private:
@@ -30,6 +30,12 @@ namespace Component {
 #endif
 //
 // $Log$
+// Revision 1.2  1999/08/31 08:59:01  sparker
+// Configuration and other updates for globus
+// First import of beginnings of new component library
+// Added yield to Thread_irix.cc
+// Added getRunnable to Thread.{h,cc}
+//
 // Revision 1.1  1999/08/30 17:39:47  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

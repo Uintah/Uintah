@@ -16,6 +16,8 @@
 #include <Component/PIDL/MalformedURL.h>
 #include <sstream>
 
+using Component::PIDL::URL;
+
 URL::URL(const std::string& protocol,
 		       const std::string& hostname,
 		       int portno, const std::string& spec)
@@ -97,6 +99,12 @@ std::string URL::getSpec() const
 
 //
 // $Log$
+// Revision 1.2  1999/08/31 08:59:02  sparker
+// Configuration and other updates for globus
+// First import of beginnings of new component library
+// Added yield to Thread_irix.cc
+// Added getRunnable to Thread.{h,cc}
+//
 // Revision 1.1  1999/08/30 17:39:49  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)
