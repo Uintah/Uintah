@@ -30,8 +30,10 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Grid/ReductionVariable.h>
 #include <SCICore/Containers/Array1.h>
+#include <SCICore/Thread/Time.h>
 using namespace Uintah::ArchesSpace;
 using namespace std;
+using SCICore::Thread::Time;
 
 // ****************************************************************************
 // Default constructor for PetscSolver
@@ -627,6 +629,7 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 void
 PetscSolver::pressLinearSolve()
 {
+  double solve_start = Time::currentSeconds();
   KSP ksp;
   int ierr;
 #ifdef ARCHES_PETSC_DEBUG
@@ -667,9 +670,10 @@ PetscSolver::pressLinearSolve()
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   int its;
   ierr = SLESSolve(sles,d_b,d_x,&its);CHKERRA(ierr);
+  int me = d_myworld->myrank();
 
   ierr = VecNorm(d_x,NORM_1,&norm);CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"AFTER SOLVE vector x norm = %g\n",norm);CHKERRQ(ierr);
+  double tsolve = Time::currentSeconds()-solve_start;
 #ifdef ARCHES_PETSC_DEBUG
   ierr = VecView(d_x, VIEWER_STDOUT_WORLD); CHKERRQ(ierr);
 #endif
@@ -679,7 +683,8 @@ PetscSolver::pressLinearSolve()
   ierr = MatMult(A, d_x, d_u);CHKERRA(ierr);
   ierr = VecAXPY(&neg_one, d_b, d_u); CHKERRA(ierr);
   ierr  = VecNorm(d_u,NORM_2,&norm);CHKERRA(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"Norm of error %A, Iterations %d\n",norm,its);CHKERRA(ierr);
+  if(me == 0)
+     cerr << "SLESSolve: Norm of error: " << norm << ", iterations: " << its << ", time: " << Time::currentSeconds()-solve_start << " seconds\n";
 }
 
 
@@ -1894,6 +1899,9 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.19  2000/10/13 19:48:45  sparker
+// Cleaned up petsc printouts, added timing information for petsc solve
+//
 // Revision 1.18  2000/10/12 20:09:10  sparker
 // Don't print out matrix norms
 //
