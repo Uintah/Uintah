@@ -11,7 +11,7 @@
 #  Copyright (C) 2001 SCI Group
 #
 
-package require Iwidgets 3.1
+package require Iwidgets 3.0
 
 itcl::class PartManager {
 

@@ -19,7 +19,7 @@
 catch {rename Metropolis ""}
 
 #package require SCIRun_Graph 1.0
-package require Iwidgets 3.1
+package require Iwidgets 3.0
 
 itcl_class MIT_Bayer_Metropolis {
     inherit Module

@@ -16,7 +16,7 @@
 #
 
 
-package require Iwidgets 3.1
+package require Iwidgets 3.0
 
 itcl::class PPexampleGui {
 
