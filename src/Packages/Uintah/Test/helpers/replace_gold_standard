@@ -43,6 +43,19 @@ if [ $yesno == "y" -o $yesno == "yes" ]; then
     echo "failed"
     exit 1
   fi
+  echo "/bin/chgrp -Rh csafe $replacement_dir/$testname"
+  /bin/chgrp -Rh csafe "$replacement_dir/$testname"
+  if [ $? != "0" ]; then
+    echo "failed"
+    exit 1
+  fi
+  echo "/bin/chmod -R g+ws $replacement_dir/$testname"
+  /bin/chmod -R g+ws "$replacement_dir/$testname"
+  if [ $? != "0" ]; then
+    echo "failed"
+    exit 1
+  fi
+
   echo
   echo "Gold Standard successfully replaced!"
 else
