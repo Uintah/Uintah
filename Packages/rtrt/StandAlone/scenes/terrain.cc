@@ -17,6 +17,7 @@
 #include <Packages/rtrt/Core/Heightfield.h>
 #include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/Grid.h>
+#include <Packages/rtrt/Core/HierarchicalGrid.h>
 
 #include <iostream>
 #include <string>
@@ -178,8 +179,12 @@ void GetFace(char *buf, Group* tris,
 //  	    points[fis[s1]].x(),points[fis[s1]].y(),points[fis[s1]].z(),
 //  	    points[fis[s2]].x(),points[fis[s2]].y(),points[fis[s2]].z());
 
-    tris->add(new Tri(mat,points[fis[s0]],points[fis[s1]],points[fis[s2]],
-		      vn[nrmis[s0]],vn[nrmis[s1]],vn[nrmis[s2]]));
+    Tri *tri = new Tri(mat,points[fis[s0]],points[fis[s1]],points[fis[s2]],
+		       vn[nrmis[s0]],vn[nrmis[s1]],vn[nrmis[s2]]);
+
+    if (!tri->isbad())
+      tris->add(new Tri(mat,points[fis[s0]],points[fis[s1]],points[fis[s2]],
+			vn[nrmis[s0]],vn[nrmis[s1]],vn[nrmis[s2]]));
 
   }
 
@@ -305,9 +310,18 @@ read_geom(Group *g, char *geomfile, char *locfile)
     tris->compute_bounds(tris_bbox,0);
 
     Grid *tri_grid;
-    
-    if (!realgeom)
-	tri_grid = new Grid(tris,(int)pow(tris->objs.size(),1./3.));
+    InstanceWrapperObject *tri_wrap;
+    if (!realgeom) {
+	tri_grid = new HierarchicalGrid(tris,
+					10,10,10,20,20,1);
+	tri_wrap = new InstanceWrapperObject(tri_grid);
+    }
+    printf("Number of tris: %d\n",tris->objs.size());
+
+//      HierarchicalGrid *tri_grid;
+
+//      if (!realgeom)
+//  	tri_grid = new HierarchicalGrid(tris,20,10,10,10,10);
 
     fclose(geomfp);
     
@@ -344,7 +358,7 @@ read_geom(Group *g, char *geomfile, char *locfile)
 	    T->pre_scale(scale);
 	    T->pre_translate(trans);
 
-	    geomgrp->add(new Instance(tri_grid,T,tris_bbox));
+	    geomgrp->add(new Instance(tri_wrap, T,tris_bbox));
 	    
 	}
     }
@@ -353,7 +367,8 @@ read_geom(Group *g, char *geomfile, char *locfile)
 	g->add(new Grid(geomgrp,25));
     } else 
     {
-	g->add(geomgrp);
+	g->add(new HierarchicalGrid(geomgrp,10,10,10,20,20,1));
+//  	g->add(geomgrp);
     }
 
     fclose(locfp);
