@@ -541,7 +541,7 @@ BaseWidget::geom_pick(GeomPick*, void*)
 }
 
 void
-BaseWidget::geom_pick( GeomPick* pick, Roe* /*roe*/, int /* cbdata */, const BState& state )
+BaseWidget::geom_pick( GeomPick* pick, ViewWindow* /*roe*/, int /* cbdata */, const BState& state )
 {
    cerr << "btn=" << state.btn << endl;
    cerr << "alt=" << state.alt << endl;
@@ -552,7 +552,7 @@ BaseWidget::geom_pick( GeomPick* pick, Roe* /*roe*/, int /* cbdata */, const BSt
    } else if (state.btn == 1 && !state.alt && state.control) {
       BBox bbox;
       widget->get_bounds(bbox);
-//SGP      roe->autoview(bbox);
+//SGP      viewwindow->autoview(bbox);
       pick->ignore_until_release();
    } else if (state.btn == 2 && !state.alt && !state.control) {
       NextMode();

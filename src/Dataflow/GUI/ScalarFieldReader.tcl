@@ -1,7 +1,7 @@
 
 catch {rename ScalarFieldReader ""}
 
-itcl_class SCIRun_Readers_ScalarFieldReader {
+itcl_class SCIRun_DataIO_ScalarFieldReader {
     inherit Module
     constructor {config} {
 	set name ScalarFieldReader

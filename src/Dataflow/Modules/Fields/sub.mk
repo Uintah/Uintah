@@ -12,28 +12,26 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Fields
 
 SRCS     += \
-	$(SRCDIR)/Downsample.cc\
-	$(SRCDIR)/ExtractSurfs.cc\
-        $(SRCDIR)/FieldFilter.cc\
-	$(SRCDIR)/FieldGainCorrect.cc\
-	$(SRCDIR)/FieldMedianFilter.cc\
-	$(SRCDIR)/FieldRGAug.cc\
-	$(SRCDIR)/FieldSeed.cc\
-	$(SRCDIR)/GenField.cc\
-	$(SRCDIR)/Gradient.cc\
-	$(SRCDIR)/GradientMagnitude.cc\
-	$(SRCDIR)/LocalMinMax.cc\
-	$(SRCDIR)/MergeTensor.cc\
-	$(SRCDIR)/OpenGL_Ex.cc\
-	$(SRCDIR)/SFRGfile.cc\
-	$(SRCDIR)/ShowGeometry.cc\
-	$(SRCDIR)/TracePath.cc\
-	$(SRCDIR)/TrainSeg2.cc\
-	$(SRCDIR)/TrainSegment.cc\
-	$(SRCDIR)/TransformField.cc\
-	$(SRCDIR)/ScalarFieldProbe.cc\
-	$(SRCDIR)/GenVectorField.cc\
+	$(SRCDIR)/AddAttribute.cc\
+	$(SRCDIR)/CastField.cc\
+	$(SRCDIR)/ChangeCellType.cc\
+        $(SRCDIR)/GenField.cc\
 	$(SRCDIR)/GenScalarField.cc\
+	$(SRCDIR)/GenVectorField.cc\
+	$(SRCDIR)/LocateNbrhd.cc\
+	$(SRCDIR)/LocatePoints.cc\
+	$(SRCDIR)/MeshBoundary.cc\
+	$(SRCDIR)/SeedField.cc\
+	$(SRCDIR)/Smooth.cc\
+	$(SRCDIR)/TransformField.cc\
+	$(SRCDIR)/TransformMesh.cc\
+	$(SRCDIR)/TransformSurface.cc\
+#	$(SRCDIR)/Coregister.cc\
+#	$(SRCDIR)/ExtractSepSurfs.cc\
+#	$(SRCDIR)/LaceContours.cc\
+#	$(SRCDIR)/SimpAbs.cc\
+#	$(SRCDIR)/SimpSurface.cc\
+#	$(SRCDIR)/TransformContours.cc\
 #[INSERT NEW CODE FILE HERE]
 
 #	$(SRCDIR)/ClipField.cc\

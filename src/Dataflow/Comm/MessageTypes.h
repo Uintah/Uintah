@@ -40,17 +40,17 @@ public:
 	GeometryFlush,
 	GeometryFlushViews,
 	GeometryGetData,
-	GeometryGetNRoe,
+	GeometryGetNViewWindows,
 	GeometrySetView,
 
 	GeometryPick,
 	GeometryRelease,
 	GeometryMoved,
 
-	RoeRedraw,
-	RoeMouse,
-	RoeDumpImage,
-	RoeDumpObjects,
+	ViewWindowRedraw,
+	ViewWindowMouse,
+	ViewWindowDumpImage,
+	ViewWindowDumpObjects,
 
 	AttachDialbox,
 	DialMoved,

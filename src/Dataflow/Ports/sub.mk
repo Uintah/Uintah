@@ -17,23 +17,10 @@ SRCS     += $(SRCDIR)/ColorMapPort.cc             \
             $(SRCDIR)/MeshPort.cc                 \
             $(SRCDIR)/PathPort.cc                 \
             $(SRCDIR)/ScalarFieldPort.cc          \
-            $(SRCDIR)/SpanPort.cc                 \
-            $(SRCDIR)/SpanSpace.cc                \
-            $(SRCDIR)/SpanTree.cc                 \
             $(SRCDIR)/SurfacePort.cc              \
             $(SRCDIR)/VectorFieldPort.cc          \
             $(SRCDIR)/VoidStarPort.cc             \
             $(SRCDIR)/templates.cc
-#            $(SRCDIR)/SoundPort.cc                \
-#            $(SRCDIR)/AttribPort.cc               \
-#            $(SRCDIR)/BooleanPort.cc              \
-#            $(SRCDIR)/CameraViewPort.cc           \
-#            $(SRCDIR)/DomainPort.cc               \
-#            $(SRCDIR)/cMatrixPort.cc              \
-#            $(SRCDIR)/cVectorPort.cc              \
-#            $(SRCDIR)/ScaledBoxWidgetData.cc      \
-#            $(SRCDIR)/ScaledBoxWidgetDataPort.cc  \
-#            $(SRCDIR)/IntervalPort.cc             \
 
 
 PSELIBS := Dataflow/Network Dataflow/Comm Core/Containers \

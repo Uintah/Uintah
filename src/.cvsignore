@@ -5,6 +5,8 @@ sci_config.h
 sci_defs.h
 config.log
 pse
+scirun
+uintah
 stamp-h
 y.output
 *.sr

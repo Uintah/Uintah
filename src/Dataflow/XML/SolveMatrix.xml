@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../doc/ReferenceGuide/component.dtd">
 
-<component name="SolveMatrix" category="Matrix">
+<component name="SolveMatrix" category="Math">
   <overview>
     <authors>
       <author>Steven G. Parker</author>

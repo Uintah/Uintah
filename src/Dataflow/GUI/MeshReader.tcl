@@ -1,7 +1,7 @@
 
 catch {rename MeshReader ""}
 
-itcl_class SCIRun_Readers_MeshReader {
+itcl_class SCIRun_DataIO_MeshReader {
     inherit Module
     constructor {config} {
 	set name MeshReader

@@ -10,7 +10,7 @@ SRCS     += $(SRCDIR)/ContourSet.cc $(SRCDIR)/ContourSetPort.cc \
 	$(SRCDIR)/SegFld.cc $(SRCDIR)/SegFldPort.cc \
 	$(SRCDIR)/SigmaSet.cc $(SRCDIR)/SigmaSetPort.cc \
         $(SRCDIR)/TopoSurfTree.cc \
-	$(SRCDIR)/VectorFieldMI.cc
+#	$(SRCDIR)/VectorFieldMI.cc \
 #	$(SRCDIR)/TensorField.cc $(SRCDIR)/TensorFieldBase.cc \
 #	$(SRCDIR)/TensorFieldPort.cc \
 

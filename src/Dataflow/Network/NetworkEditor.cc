@@ -235,7 +235,7 @@ void NetworkEditor::do_scheduling(Module* exclude)
 		Module* m=oport->get_module();
 		if(!m->need_execute){
 		    if(m != exclude){
-			if(module->sched_class != Module::SalmonSpecial){
+			if(module->sched_class != Module::ViewerSpecial){
 			    // If this oport already has the data, add it
 			    // to the to_trigger list...
 			    if(oport->have_data()){

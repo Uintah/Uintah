@@ -89,7 +89,7 @@ void PackageDB::loadPackage(const clString& packPath)
     postMessage(clString("Loading package '")+packageElt+"'", false);
     TCL::eval("update idletasks",result);
 
-    // The GUI path is hard-wired to be "PACKAGENAME/GUI""
+    // The GUI path is hard-wired to be "PACKAGENAME/GUI"
     TCL::execute(clString("lappend auto_path ")+packageElt+"/Dataflow/GUI");
 
     // get *.xml in the PACKAGENAME/XML directory.
@@ -97,15 +97,22 @@ void PackageDB::loadPackage(const clString& packPath)
     std::map<int,char*>* files = 
       GetFilenamesEndingWith((char*)xmldir(),".xml");
 
+    // first package
     if ( !loading ) {
       TCL::execute(clString("toplevel .loading; "
 			    "wm geometry .loading 250x75+275+200;"));
       loading = true;
     }
-    TCL::execute(clString("iwidgets::feedback .loading.fb -labeltext "
-			  + packageElt +
-			  " -steps " + to_string(int(files->size())) + ";"
-			  "pack .loading.fb; update idletasks"));
+    
+    // if the user closed the progress bar, don't open it for future packages
+    TCL::eval("winfo exists .loading", result);
+    if ( result == "1" ) {
+      TCL::execute(clString("iwidgets::feedback .loading.fb -labeltext "
+			    + packageElt +
+			    " -steps " + to_string(int(files->size())) + ";"
+			    "pack .loading.fb; update idletasks"));
+    }
+
     component_node* node = 0;
     for (char_iter i=files->begin();
 	 i!=files->end();
@@ -189,15 +196,20 @@ void PackageDB::loadPackage(const clString& packPath)
 					    opinfo));
 	}
 	registerModule(info);
-	TCL::execute(clString(".loading.fb step"));
-	//postMessageNoCRLF(".",false);
+	TCL::eval("winfo exists .loading.fb", result);
+	if (result == "1")
+	  TCL::execute(clString(".loading.fb step"));
+	else
+	  postMessageNoCRLF(".",false);
 	TCL::eval("update idletasks",result);
       }
     }
     TCL::eval("update idletasks",result);
     sprintf(string,"createPackageMenu %d",index++);
     TCL::execute(string);
-    TCL::execute(clString("destroy .loading.fb"));
+    TCL::eval("winfo exists .loading.fb", result);
+    if (result == "1")
+      TCL::execute(clString("destroy .loading.fb"));
   }
   
   postMessage("\nFinished loading packages.\n",false);

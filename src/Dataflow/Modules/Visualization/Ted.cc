@@ -1,6 +1,6 @@
 
 /*
- *  TeD.cc:  2D OpenGL Viewer
+ *  Ted.cc:  2D OpenGL Viewer
  *
  *  Written by:
  *    Scott Morris

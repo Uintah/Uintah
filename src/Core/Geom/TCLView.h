@@ -7,7 +7,7 @@
  *   Department of Computer Science
  *   University of Utah
  *
- *   separated from the Salmon code by me (Aleksandra)
+ *   separated from the Viewer code by me (Aleksandra)
  *   in May 1996
  *
  *  Copyright (C) 1996 SCI Group

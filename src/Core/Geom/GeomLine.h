@@ -72,7 +72,7 @@ public:
 
 class SCICORESHARE TexGeomLines : public GeomObj {
 protected:
-  Array1<unsigned char>  tmap1d; // 1D texture - should be in Salmon?
+  Array1<unsigned char>  tmap1d; // 1D texture - should be in Viewer?
   int tmapid;                    // id for this texture map
   int tex_per_seg;               // 0 if batched...
 

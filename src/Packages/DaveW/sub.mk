@@ -6,7 +6,7 @@ SRCDIR := Packages/DaveW
 SUBDIRS := \
 	$(SRCDIR)/Core \
 	$(SRCDIR)/Dataflow \
-	$(SRCDIR)/ThirdParty \
+#	$(SRCDIR)/StandAlone \
 
 include $(OBJTOP_ABS)/scripts/recurse.mk
 

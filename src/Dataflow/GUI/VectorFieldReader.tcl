@@ -1,7 +1,7 @@
 
 catch {rename VectorFieldReader ""}
 
-itcl_class SCIRun_Readers_VectorFieldReader {
+itcl_class SCIRun_DataIO_VectorFieldReader {
     inherit Module
     constructor {config} {
 	set name VectorFieldReader

@@ -38,7 +38,7 @@ namespace SCIRun {
   class MessageBase;
 }
 namespace SCIRun {
-  class Roe;
+  class ViewWindow;
 }
 
 namespace SCIRun {
@@ -111,7 +111,7 @@ public:
 	Source,
 	Filter,
 	Iterator,
-	SalmonSpecial
+	ViewerSpecial
     };
     Module(const clString& name, const clString& id, SchedClass,
 	   const clString& cat="unknown", const clString& pack="unknown");
@@ -135,7 +135,7 @@ public:
     virtual void geom_pick(GeomPick*, void*, GeomObj*);
   //virtual void geom_pick(GeomPick*, void*, int);
     virtual void geom_pick(GeomPick*, void*);
-    virtual void geom_pick(GeomPick*, Roe*, int, const BState& bs);
+    virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
     virtual void geom_release(GeomPick*, int, const BState& bs);
     virtual void geom_release(GeomPick*, void*, GeomObj*);
   //virtual void geom_release(GeomPick*, void*, int);

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../doc/ReferenceGuide/component.dtd">
 
-<component name="BldTransform" category="Matrix">
+<component name="BldTransform" category="Math">
   <overview>
     <authors>
       <author>David Weinstein</author>

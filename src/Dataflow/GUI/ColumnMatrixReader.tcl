@@ -1,7 +1,7 @@
 
 catch {rename ColumnMatrixReader ""}
 
-itcl_class SCIRun_Readers_ColumnMatrixReader {
+itcl_class SCIRun_DataIO_ColumnMatrixReader {
     inherit Module
     constructor {config} {
 	set name ColumnMatrixReader
