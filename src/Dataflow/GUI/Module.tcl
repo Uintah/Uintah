@@ -48,7 +48,7 @@ set redoList ""
 
 global HelpText
 set HelpText(Module) "L - Select\nR - Menu"
-set HelpText(Connection) "L - Highlight\nM - Connect"
+set HelpText(Connection) "L - Highlight\nCTRL-M - Delete\nR - Menu"
 set HelpText(Notes) "L - Edit\nM - Hide"
 
 itcl_class Module {
@@ -667,10 +667,8 @@ proc regenConnectionMenu { menu_id args } {
     $menu_id add command -command "eval block_pipe $args" \
 	-label [expr $Disabled([lindex $args 0])?"Enable":"Disable"]
     set id [lindex $args 0]
-    $menu_id add command -label "Annotate" -command \
+    $menu_id add command -label "Notes" -command \
 	"notesWindow $id notesDoneConnection"
-#annotateConnection [lindex $args 0]"
-#    $menu_id add command -label "Insert" -command \
 }
 
 
@@ -795,7 +793,7 @@ proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
     $maincanvas bind $connid <ButtonRelease> \
 	"+deleteTrace $omodid $owhich $imodid $iwhich"
    
-    canvasTooltip $connid $HelpText(Module)
+    canvasTooltip $connid $HelpText(Connection)
 }
 
 # Deletes red connections on canvas and turns port lights black
@@ -1361,7 +1359,7 @@ proc do_moduleDrag {maincanvas minicanvas modid x y} {
 
 
 proc drawNotes { args } {
-    global Color Notes Font modname_font maincanvas NotesPos
+    global Color Notes Font modname_font maincanvas NotesPos HelpText
     set Font(Notes) $modname_font
     foreach id $args {
 	if { ![info exists NotesPos($id)] } {
@@ -1372,12 +1370,11 @@ proc drawNotes { args } {
 
 	if {$NotesPos($id) == "tooltip"} {
 	    if { $isModuleNotes } {
-		Tooltip $$maincanvas.module$id $Notes($id) 
+		Tooltip $maincanvas.module$id $Notes($id) 
 	    } else {
 		canvasTooltip $id $Notes($id)
 	    }
 	} else {
-	    global HelpText
 	    if { $isModuleNotes } {
 		Tooltip $maincanvas.module$id $HelpText(Module)
 	    } else {
@@ -1436,15 +1433,13 @@ proc drawNotes { args } {
 		    "notesWindow $id notesDoneConnection"
 		$maincanvas bind $id-notes <ButtonPress-2> \
 		    "global NotesPos; set NotesPos($id) none; drawNotes $id"
-		canvasTooltip $id-notes "L - Edit\nM - Hide"
 	    } else {
 		$maincanvas bind $id-notes <ButtonPress-1> \
 		    "notesWindow $id notesDoneModule"
 		$maincanvas bind $id-notes <ButtonPress-2> \
 		    "global NotesPos; set NotesPos($id) none; drawNotes $id"
-		canvasTooltip $id-notes "L - Edit\nM - Hide"
 	    }
-		
+	    canvasTooltip $id-notes $HelpText(Notes)		
 	}
     }
     $maincanvas raise shadow
