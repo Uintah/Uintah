@@ -12,7 +12,7 @@
 using std::vector;
 
 namespace Uintah {
-  struct SendRecord;
+  //struct SendRecord;
   class SendState;
   class DetailedTasks;
   class Task;

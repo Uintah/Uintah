@@ -7,6 +7,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Grid/BufferInfo.h>
+#include <Packages/Uintah/Core/Grid/PackBufferInfo.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
@@ -17,6 +18,11 @@
 #include <map>
 #include <Packages/Uintah/Core/Parallel/Vampir.h>
 
+// Pack data into a buffer before sending -- testing to see if this
+// works better and avoids certain problems possible when you allow
+// tasks to modify data that may have a pending send.
+#define USE_PACKING
+
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
@@ -25,22 +31,78 @@ static DebugStream dbg("MPIScheduler", false);
 static DebugStream timeout("MPIScheduler.timings", false);
 
 namespace Uintah {
-struct SendRecord {
-  void testsome(int me);
-  void waitall(int me);
-  vector<MPI_Request> ids;
-  vector<MPI_Status> statii;
-  vector<int> indices;
-  vector<Sendlist*> sendlists;
-  void add(MPI_Request id) {
-    ids.push_back(id);
-    sendlists.push_back(0);
+  // An MPI_CommunicationRecord keeps track of MPI_Requests and a
+  // AfterCommunicationHandler for each of these requests.  By calling
+  // testsome or waitall, it will call finishedCommunication(MPI_Comm)
+  // on the handlers of all finish requests and then delete these handlers.
+  template <class AfterCommunicationHandler>
+  struct MPI_CommunicationRecord {
+    // returns true while there are more tests to wait for.
+    bool testsome(MPI_Comm comm, int me);
+    void waitall(MPI_Comm comm, int me);
+    void add(MPI_Request id, AfterCommunicationHandler* handler) {
+      ids.push_back(id);
+      handlers.push_back(handler);
+    }
+    vector<MPI_Request> ids;
+    vector<MPI_Status> statii;
+    vector<int> indices;
+    vector<AfterCommunicationHandler*> handlers;
+  };
+  typedef MPI_CommunicationRecord<Sendlist> SendRecord;
+  typedef MPI_CommunicationRecord<PackBufferInfo> RecvRecord;
+
+template <class AfterCommunicationHandler>
+bool MPI_CommunicationRecord<AfterCommunicationHandler>::
+testsome(MPI_Comm comm, int me)
+{
+  if(ids.size() == 0)
+    return false; // no more to test
+  statii.resize(ids.size());
+  indices.resize(ids.size());
+  dbg << me << " Calling testsome with " << ids.size() << " waiters\n";
+  int donecount;
+  MPI_Testsome((int)ids.size(), &ids[0], &donecount,
+	       &indices[0], &statii[0]);
+  dbg << me << " Done calling testsome with " << ids.size() 
+      << " waiters and got " << donecount << " done\n";
+  for(int i=0;i<donecount;i++){
+    int idx=indices[i];
+    if(handlers[idx]){
+      handlers[idx]->finishedCommunication(comm);
+      delete handlers[idx];
+      handlers[idx]=0;
+    }
   }
-  void add(MPI_Request id, Sendlist* sendlist) {
-    ids.push_back(id);
-    sendlists.push_back(sendlist);
+  if(donecount == (int)ids.size() || donecount == MPI_UNDEFINED){
+    ids.clear();
+    handlers.clear();
+    return false; // no more to test
   }
-};
+  return true; // more to test
+}
+
+template <class AfterCommunicationHandler>
+void MPI_CommunicationRecord<AfterCommunicationHandler>::
+waitall(MPI_Comm comm, int me)
+{
+  if(ids.size() == 0)
+    return;
+  statii.resize(ids.size());
+  dbg << me << " Calling waitall with " << ids.size() << " waiters\n";
+  MPI_Waitall((int)ids.size(), &ids[0], &statii[0]);
+  dbg << me << " Done calling waitall with " 
+      << ids.size() << " waiters\n";
+  for(int i=0;i<ids.size();i++){
+    if(handlers[i]) {
+      handlers[i]->finishedCommunication(comm);
+      delete handlers[i];
+    }
+  }
+  ids.clear();
+  handlers.clear();
+}
+
 }
 
 static void printTask(ostream& out, DetailedTask* task)
@@ -57,47 +119,6 @@ static void printTask(ostream& out, DetailedTask* task)
   }
 }
 
-void SendRecord::testsome(int me)
-{
-  if(ids.size() == 0)
-    return;
-  statii.resize(ids.size());
-  indices.resize(ids.size());
-  dbg << me << " Calling send Testsome with " << ids.size() << " waiters\n";
-  int donecount;
-  MPI_Testsome((int)ids.size(), &ids[0], &donecount,
-	       &indices[0], &statii[0]);
-  dbg << me << " Done calling send Testsome with " << ids.size() 
-      << " waiters and got " << donecount << " done\n";
-  for(int i=0;i<donecount;i++){
-    int idx=indices[i];
-    if(sendlists[idx]){
-      delete sendlists[idx];
-      sendlists[idx]=0;
-    }
-  }
-  if(donecount == (int)ids.size() || donecount == MPI_UNDEFINED){
-    ids.clear();
-    sendlists.clear();
-  }
-}
-
-void SendRecord::waitall(int me)
-{
-  if(ids.size() == 0)
-    return;
-  statii.resize(ids.size());
-  dbg << me << " Calling recv waitall with " << ids.size() << " waiters\n";
-  MPI_Waitall((int)ids.size(), &ids[0], &statii[0]);
-  dbg << me << " Done calling recv waitall with " 
-      << ids.size() << " waiters\n";
-  for(int i=0;i<ids.size();i++){
-    if(sendlists[i])
-      delete sendlists[i];
-  }
-  ids.clear();
-  sendlists.clear();
-}
 
 MPIScheduler::MPIScheduler(const ProcessorGroup* myworld, Output* oport)
    : SchedulerCommon(myworld, oport), log(myworld, oport)
@@ -272,13 +293,17 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 	double recvstart = Time::currentSeconds();
 	{
 	  VT_begin(VT_RECV_DEPENDENCIES);
-	  SendRecord recvs;
+	  RecvRecord recvs;
 	  // Receive any of the foreign requires
 	  for(DependencyBatch* batch = task->getRequires();
 	      batch != 0; batch = batch->req_next){
 	    // Prepare to receive a message
+#ifdef USE_PACKING
+	    PackBufferInfo* p_mpibuff = scinew PackBufferInfo();
+	    PackBufferInfo& mpibuff = *p_mpibuff;
+#else
 	    BufferInfo mpibuff;
-
+#endif
 	    // Create the MPI type
 	    for(DetailedDep* req = batch->head; req != 0; req = req->next){
 	      OnDemandDataWarehouse* dw = this->dw[req->req->dw];
@@ -292,18 +317,40 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 	      void* buf;
 	      int count;
 	      MPI_Datatype datatype;
+#ifdef USE_PACKING
+	      mpibuff.get_type(buf, count, datatype, pg->getComm());
+#else
 	      mpibuff.get_type(buf, count, datatype);
+#endif
 	      int from = batch->fromTask->getAssignedResourceIndex();
 	      MPI_Request requestid;
 	      MPI_Irecv(buf, count, datatype, from, batch->messageTag,
 			pg->getComm(), &requestid);
-	      recvs.add(requestid);
+#ifdef USE_PACKING
+	      recvs.add(requestid, p_mpibuff);
+#else
+	      recvs.add(requestid, 0);
+#endif	      
 	      totalrecvmpi+=Time::currentSeconds()-start;
 	    }
+#ifdef USE_PACKING
+	    else {
+	      // otherwise, it will be deleted after it recieves and unpacks
+	      // the data.
+	      delete p_mpibuff;
+	    }
+#endif	        
 	  }
 
 	  double start = Time::currentSeconds();
-	  recvs.waitall(me);
+#ifdef USE_PACKING
+	  // This will allow some recieves to start unpacking while
+	  // waiting for other receives.
+	  while (recvs.testsome(pg->getComm(), me))
+		 ;
+#else
+	  recvs.waitall(pg->getComm(), me);
+#endif
 	  totalwaitmpi+=Time::currentSeconds()-start;
 	}
 	
@@ -342,8 +389,11 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 	for(DependencyBatch* batch = task->getComputes();
 	    batch != 0; batch = batch->comp_next){
 	  // Prepare to send a message
+#ifdef USE_PACKING
+	  PackBufferInfo mpibuff;
+#else
 	  BufferInfo mpibuff;
-
+#endif
 	  // Create the MPI type
 	  int to = batch->toTask->getAssignedResourceIndex();
 	  for(DetailedDep* req = batch->head; req != 0; req = req->next){
@@ -359,7 +409,12 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 	    void* buf;
 	    int count;
 	    MPI_Datatype datatype;
+#ifdef USE_PACKING
+	    mpibuff.get_type(buf, count, datatype, pg->getComm());
+	    mpibuff.pack(pg->getComm(), count);
+#else
 	    mpibuff.get_type(buf, count, datatype);
+#endif
 	    dbg << "Sending message number " << batch->messageTag 
 		<< " to " << to << "\n";
 	    MPI_Request requestid;
@@ -373,7 +428,7 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 	scrub(task);
 
 	double start = Time::currentSeconds();
-	sends.testsome(me);
+	sends.testsome(pg->getComm(), me);
 	totaltestmpi += Time::currentSeconds()-start;
 	VT_end(VT_SEND_COMPUTES);
 
@@ -408,7 +463,7 @@ MPIScheduler::execute(const ProcessorGroup * pg )
   emitTime("Other excution time",
 	   totalexec-totalsend-totalrecv-totaltask-totalreduce);
 
-  sends.waitall(me);
+  sends.waitall(pg->getComm(), me);
   emitTime("final wait");
 
   dw[1]->finalize();
