@@ -111,6 +111,10 @@ public:
   inline void set_background_ptr( Background* ptr ) {
     orig_background = background = ptr;
   }
+
+  Background* get_background_ptr() {
+    return background;
+  }
   
   inline void set_ambient_environment_map ( EnvironmentMapBackground *ptr ) {
     ambient_environment_map = ptr;
