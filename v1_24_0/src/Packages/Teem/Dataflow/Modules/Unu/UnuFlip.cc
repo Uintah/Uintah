@@ -94,6 +94,10 @@ UnuFlip::execute()
     free(err);
   }
 
+  // set min/max of flipped axis to be what input nrrd's was
+  nout->axis[axis_.get()].min = nin->axis[axis_.get()].min;
+  nout->axis[axis_.get()].max = nin->axis[axis_.get()].max;
+
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
 
