@@ -251,7 +251,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 	Box b = geomBox.intersect(patchBox);
 	// check for another geometry
 	if (!(b.degenerate())) {
-	  CellIterator iter = patch->getCellIterator(b);
+	  CellIterator iter = patch->getCellCenterIterator(b);
 	  IntVector idxLo = iter.begin();
 	  IntVector idxHi = iter.end() - IntVector(1,1,1);
 	  celltypeval = d_wallBdry->d_cellTypeID;
@@ -269,7 +269,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 	  Box b = geomBox.intersect(patchBox);
 	  // check for another geometry
 	  if (!(b.degenerate())) {
-	    CellIterator iter = patch->getCellIterator(b);
+	    CellIterator iter = patch->getCellCenterIterator(b);
 	    IntVector idxLo = iter.begin();
 	    IntVector idxHi = iter.end() - IntVector(1,1,1);
 	    celltypeval = d_pressureBdry->d_cellTypeID;
@@ -288,7 +288,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 	  Box b = geomBox.intersect(patchBox);
 	  // check for another geometry
 	  if (!(b.degenerate())) {
-	    CellIterator iter = patch->getCellIterator(b);
+	    CellIterator iter = patch->getCellCenterIterator(b);
 	    IntVector idxLo = iter.begin();
 	    IntVector idxHi = iter.end() - IntVector(1,1,1);
 	    celltypeval = d_outletBC->d_cellTypeID;
@@ -310,13 +310,13 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 	// iterates thru box b, converts from geometry space to index space
 	// make sure this works
 #if 0
-	CellIterator iter = patch->getCellIterator(b);
+	CellIterator iter = patch->getCellCenterIterator(b);
 	IntVector idxLo = iter.begin();
 	IntVector idxHi = iter.end() - IntVector(1,1,1);
 	celltypeval = d_flowInlets[ii].d_cellTypeID;
 	fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
 #endif
-	for (CellIterator iter = patch->getCellIterator(b); !iter.done(); iter++) {
+	for (CellIterator iter = patch->getCellCenterIterator(b); !iter.done(); iter++) {
 	  Point p = patch->cellPosition(*iter);
 	  if (piece->inside(p)) 
 	    cellType[*iter] = d_flowInlets[ii].d_cellTypeID;
@@ -332,7 +332,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 	  Box geomBox = piece->getBoundingBox();
 	  Box b = geomBox.intersect(patchBox);
 	  if (!(b.degenerate())) {
-	    CellIterator iter = patch->getCellIterator(b);
+	    CellIterator iter = patch->getCellCenterIterator(b);
 	    IntVector idxLo = iter.begin();
 	    IntVector idxHi = iter.end() - IntVector(1,1,1);
 	    celltypeval = d_intrusionBC->d_cellTypeID;
@@ -550,7 +550,7 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 	
 	// iterates thru box b, converts from geometry space to index space
 	// make sure this works
-	CellIterator iter = patch->getCellIterator(b);
+	CellIterator iter = patch->getCellCenterIterator(b);
 	IntVector idxLo = iter.begin();
 	IntVector idxHi = iter.end() - IntVector(1,1,1);
 	
