@@ -21,11 +21,6 @@
         <save label = "p.volume"/>
         <save label = "g.mass"/>
         <save label = "G.mass"/>
-        <!--<save label = "p.stress"/>-->
-        <!--<save label = "p.deformationMeasure"/>-->
-        <!--<save label = "p.velocity"/>-->
-        <!--<save label = "p.loadCurveID"/>-->
-        <!--<save label = "p.externalforce"/>-->
         <save_crack_geometry>true</save_crack_geometry>
 
 	<checkpoint cycle = "2" interval = "15e-6"/>
@@ -36,7 +31,7 @@
 	<nodes8or27>8</nodes8or27>
         <calculate_fracture_parameters>every_time_step</calculate_fracture_parameters>
         <do_crack_propagation>every_time_step</do_crack_propagation>
-        <dadx>1.0</dadx>
+        <dadx>0.5</dadx>
     </MPM>
 
     <PhysicalConstants>
@@ -68,8 +63,8 @@
                         <max>[ 200e-3,  200e-3,  200e-3]</max>
                      </box>
                      <box label = "inner box">
-                        <min>[-200e-3, -120e-3, -120e-3]</min>
-                        <max>[ 200e-3,  120e-3,  120e-3]</max>
+                        <min>[-200e-3, -180e-3, -180e-3]</min>
+                        <max>[ 200e-3,  180e-3,  180e-3]</max>
                      </box>
                   </difference>
                   <res>                 [2,2,2]         </res>
@@ -82,13 +77,15 @@
                    <type>frictional</type>
                    <mu>0.</mu>
                    <crack_segments>
-                      <partial_ellipse>
-                        <center>     [   0.0, 200.1e-3, 0.0] </center>
-                        <point_axis1>[-43.30127e-3, 200.1e-3, -25e-3] </point_axis1>
-                        <point_axis2>[   0.0, 170.1e-3, 0.0] </point_axis2>
-                        <extent>half</extent>
-                        <resolution_circumference>16</resolution_circumference>
-                      </partial_ellipse>
+                      <quadrilateral>
+                        <p1> [-43.30127e-3, 200.1e-3, -25.0e-3] </p1>
+                        <p2> [-43.30127e-3, 179.9e-3, -25.0e-3] </p2>
+                        <p3> [ 43.30127e-3, 179.9e-3,  25.0e-3] </p3>
+                        <p4> [ 43.30127e-3, 200.1e-3,  25.0e-3] </p4>
+                        <resolution_p1_p2> 1 </resolution_p1_p2>
+                        <resolution_p2_p3> 5 </resolution_p2_p3>
+                        <crack_front_sides>YNYN</crack_front_sides>
+                      </quadrilateral>
                    </crack_segments>
                 </crack>
 	    </material>
@@ -106,8 +103,8 @@
             <Box label = "1">
                 <lower>[-220e-3, -220e-3, -220e-3]</lower>
                 <upper>[ 220e-3,  220e-3,  220e-3]</upper>
-                <resolution>[88,88,88]</resolution>
-                <patches>[2,4,4]</patches>
+                <resolution>[44,44,44]</resolution>
+                <patches>[2,2,4]</patches>
             </Box>
         </Level>
         <BoundaryConditions>
@@ -147,14 +144,14 @@
     <PhysicalBC>
       <MPM>
         <force>
-          <lower>[-200e-3, -200e-3, 197.5e-3]</lower>
-          <upper>[ 200e-3,  200e-3,   200e-3]</upper>
-          <force_density>[0.0, 0.0, 20.2532e6]</force_density>
+          <lower>[-200e-3, -200e-3, 195e-3]</lower>
+          <upper>[ 200e-3,  200e-3, 200e-3]</upper>
+          <force_density>[0.0, 0.0, 10.1266e6]</force_density>
         </force>
         <force>
-          <lower>[-200e-3, -200e-3,   -200e-3]</lower>
-          <upper>[ 200e-3,  200e-3, -197.5e-3]</upper>
-          <force_density>[0.0, 0.0, -20.2532e6]</force_density>
+          <lower>[-200e-3, -200e-3, -200e-3]</lower>
+          <upper>[ 200e-3,  200e-3, -195e-3]</upper>
+          <force_density>[0.0, 0.0, -10.1266e6]</force_density>
         </force>
       </MPM>
     </PhysicalBC>
