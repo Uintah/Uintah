@@ -251,6 +251,16 @@ void MPMArches::scheduleTimeAdvance(const LevelP&   level,
 //______________________________________________________________________
 //
 
+void
+MPMArches::scheduleTimeAdvance(const LevelP&, SchedulerP&, int , int )
+{
+  cout << "MPMArches component does not support ARM yet.\n";
+  throw InternalError("MPMArches component does not support AMR yet.");
+}
+
+//______________________________________________________________________
+//
+
 void MPMArches::scheduleInterpolateNCToCC(SchedulerP& sched,
 					  const PatchSet* patches,
 					  const MaterialSet* matls)
