@@ -145,14 +145,10 @@ namespace Uintah {
     virtual void ConvertJToK(const MPMMaterial* matl,const Vector& J,
                              const double& C,const Vector& V,Vector& SIF);
 
-    //////////
-    // Detremine crack-propagating direction (for FRACTURE)
-    virtual double GetPropagationDirection(const double& KI,const double& KII);
-                                     
     //////////                       
-    // Detect if crack propagates (for FRACTURE)
-    virtual short CrackSegmentPropagates(const double& Vc,
-		                         const double& KI,const double& KII);
+    // Detect if crack propagates and the direction (for FRACTURE)
+    virtual short CrackPropagates(const double& Vc,const double& KI,
+		                  const double& KII,double& theta);
 
 
     virtual void addRequiresDamageParameter(Task* task,
