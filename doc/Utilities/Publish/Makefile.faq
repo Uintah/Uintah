@@ -23,6 +23,7 @@ stylesheet_html := ${STYLESHEET_XSL_HTML}/srdocbook.xsl
 stylesheet_print := ${STYLESHEET_DSSSL_PRINT}/docbook.dsl
 params_print := -V %footnote-ulinks% -V %section-autolabel% \
   -V "(define %default-quadding% 'justify)"
+treetop := ../../..
 
 .PHONY: clean veryclean
 
@@ -37,7 +38,7 @@ html: faq.html
 faq.html: faq.rxml ${edition}
 	OUTPUT_MODE=html eruby --delimiters xml faq.rxml > faq.hxml
 	java com.icl.saxon.StyleSheet -w2 \
-	  faq.hxml ${stylesheet_html} >$@
+	  faq.hxml ${stylesheet_html} treetop=${treetop} >$@
 
 # Rules for print output.
 

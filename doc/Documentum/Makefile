@@ -15,8 +15,8 @@
 #  University of Utah. All Rights Reserved.
 #
 
-# Build print and online versions of the documentum, module-xml, and
-# module-latex documents.
+# Build print and online versions of the documentum and module
+# specification reference.
 
 chunk_root := documentum.chunk
 parms_chunk=chunk.section.depth=1 use.id.as.filename=1 \
@@ -26,6 +26,8 @@ stylesheet_nochunk=${STYLESHEET_XSL_HTML}/srdocbook.xsl
 stylesheet_print=${STYLESHEET_DSSSL_PRINT}/docbook.dsl
 params_print := -V %footnote-ulinks% -V %section-autolabel% \
   -V "(define %default-quadding% 'justify)"
+treetop := ../..
+
 latex:=latex -interaction=nonstopmode
 latex2htmloptions:= -info 0 -split 0 -no_white -link 1 -no_navigation \
 -html_version 4.0,math -show_section_numbers -local_icons \
@@ -77,9 +79,9 @@ documentum-html : documentum.html
 documentum.html : documentum.rxml ${edition}
 	${call rxml_to_hxml,$<}
 	java com.icl.saxon.StyleSheet -w2 documentum.hxml \
-         ${stylesheet_chunk} ${parms_chunk}
+         ${stylesheet_chunk} ${parms_chunk} treetop=${treetop} 
 	java com.icl.saxon.StyleSheet -w2 documentum.hxml \
-         ${stylesheet_nochunk} ${parms_nochunk} >$@
+         ${stylesheet_nochunk} ${parms_nochunk} treetop=${treetop} >$@
 
 documentum-print : documentum.pdf
 
@@ -96,18 +98,20 @@ mod-spec-ref : mod-spec-ref-html mod-spec-ref-print
 
 mod-spec-ref-html : mod-spec-ref.html
 
-mod-spec-ref.html : mod-spec-ref.rxml mod-spec-ref-partII.rxml ${edition}
+mod-spec-ref.html : mod-spec-ref.rxml mod-spec-ref-partI.rxml mod-spec-ref-partII.rxml ${edition}
 	${call rxml_to_hxml,mod-spec-ref.rxml}
+	${call rxml_to_hxml,mod-spec-ref-partI.rxml}
 	${call rxml_to_hxml,mod-spec-ref-partII.rxml}
 	java com.icl.saxon.StyleSheet -w2 mod-spec-ref.hxml \
-         ${stylesheet_chunk} ${parms_chunk}
+         ${stylesheet_chunk} ${parms_chunk} treetop=${treetop} 
 	java com.icl.saxon.StyleSheet -w2 mod-spec-ref.hxml \
-         ${stylesheet_nochunk} ${parms_nochunk} >$@
+         ${stylesheet_nochunk} ${parms_nochunk} treetop=${treetop} >$@
 
 mod-spec-ref-print : mod-spec-ref.pdf
 
 mod-spec-ref.pdf : mod-spec-ref.rxml ${edition}
 	${call rxml_to_pxml,mod-spec-ref.rxml}
+	${call rxml_to_pxml,mod-spec-ref-partI.rxml}
 	${call rxml_to_pxml,mod-spec-ref-partII.rxml}
 	openjade -t tex -V tex-backend -c ${CATALOG} -o mod-spec-ref.tex \
 -d ${stylesheet_print}  ${params_print} ${XML_DCL} mod-spec-ref.pxml 

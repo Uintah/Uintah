@@ -20,51 +20,36 @@ University of Utah. All Rights Reserved.
 <!-- The following templates override those found in docbook.xsl and
      docbook-chunk.xsl --> 
 
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-version="1.0">
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+
+  <!-- treetop is relative path to top of sr tree -->
+  <xsl:param name="treetop"/>
 
   <!-- Include customizations of qandaset -->
   <xsl:include href="srqandaset.xsl"/>
 
   <!-- Generate java script code that locates root of doc tree -->
   <xsl:template name="user.head.content">
-    <script type="text/javascript">
-      var treetop="";
-      var path = location.pathname;
-      if (path.charAt(path.length-1) == "/") {
-        path += "bogus.html"
-      }
-      var base = path.substr(path.lastIndexOf("/")+1)
-      var roottag = "doc"
-      while (base != roottag &amp;&amp; base != "") {
-      treetop += "../";
-      path = path.substr(0, path.lastIndexOf("/"));
-      base = path.substr(path.lastIndexOf("/")+1)
-      }
-      var inDocTree = base == roottag
-      if (inDocTree) {
-      document.write("&lt;link href='",treetop,"doc/Utilities/HTML/srdocbook.css' rel='stylesheet' type='text/css'/&gt;")
-      }
-    </script>
+    <link rel="stylesheet" type="text/css">
+      <xsl:attribute name="href">
+	<xsl:value-of select="$treetop"/>/doc/Utilities/HTML/srdocbook.css<xsl:text/>
+      </xsl:attribute>
+    </link>
   </xsl:template>
 
   <!-- Generate page "pre-content" -->
   <xsl:template name="user.header.content">
     <script type="text/javascript">
-      if (inDocTree) {
-        document.write('&lt;script type="text/javascript" src="',treetop,'doc/Utilities/HTML/tools.js"&gt;&lt;\/script&gt;');
-	document.write('&lt;script type="text/javascript"&gt;preDBContent();&lt;\/script&gt;');
-      }
+      <xsl:attribute name="src">
+	<xsl:value-of select="$treetop"/>/doc/Utilities/HTML/tools.js<xsl:text/>
+      </xsl:attribute>
     </script>
+    <script type="text/javascript">preDBContent();</script>
   </xsl:template>
 
   <!-- Generate page "post-content" -->
   <xsl:template name="user.footer.content">
-    <script type="text/javascript">
-      if (inDocTree) {
-	document.write('&lt;script type="text/javascript"&gt;postDBContent();&lt;\/script&gt;');
-      }
-    </script>
+    <script type="text/javascript">postDBContent(); </script>
   </xsl:template>
 
   <!-- Change type from a 'charseq' to a 'monoseq' -->

@@ -25,6 +25,7 @@ params_print := -V %footnote-ulinks% -V %section-autolabel% \
   -V "(define %default-quadding% 'justify)"
 rxmlsrcs := ${wildcard *.rxml}
 edition := ../../edition.xml
+treetop := ../../..
 
 .PHONY: all html print clean veryclean
 
@@ -41,9 +42,9 @@ srig.html: ${rxmlsrcs} ${edition}
 	   OUTPUT_MODE=html eruby --delimiters xml $$f > $${f%.rxml}.hxml ; \
 	done
 	java com.icl.saxon.StyleSheet -w2 \
-          main.hxml ${stylesheet_nochunk} >$@
+          main.hxml ${stylesheet_nochunk} treetop=${treetop} >$@
 	java com.icl.saxon.StyleSheet -w2 \
-          main.hxml ${stylesheet_chunk} ${parms_chunk}
+          main.hxml ${stylesheet_chunk} ${parms_chunk} treetop=${treetop}
 
 # Print version
 print: srig.pdf
