@@ -77,3 +77,12 @@ Point View::eyespace_to_objspace(const Point& ep, double aspect)
     Point p(eyep+x*ep.x()+y*ep.y()+z*ep.z());
     return p;
 }
+
+double View::depth(const Point& p)
+{
+    Vector dir(lookat-eyep);
+    dir.normalize();
+    double d=-Dot(eyep, dir);
+    double dist=Dot(p, dir)+d;
+    return dist;
+}

@@ -31,6 +31,7 @@ struct DrawInfoOpenGL {
 
     int lighting;
     int currently_lit;
+    int pickmode;
 
     Material* current_matl;
     Stack<Material*> stack;

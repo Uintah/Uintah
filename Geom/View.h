@@ -31,6 +31,7 @@ struct View {
     void get_viewplane(double aspect, double zdist,
 		       Vector& u, Vector& v);
     Point eyespace_to_objspace(const Point& p, double aspect);
+    double depth(const Point& p);
 };
 
 #endif /* SCI_Geom_View_h */
