@@ -613,7 +613,10 @@ static string
 parse_description(const string &in)
 {
   std::stack<int> state;
-  string::size_type tagstart = 0;
+  // Initialization of 999999999 is to remove compiler warning and
+  // to hopefully make this code trip up in a way that it can be 
+  // debugged more easily if the input (in) is incorrect.
+  string::size_type tagstart = 999999999;
   string out;
   state.push(0);
   state.push(2); // start by eating spaces.
