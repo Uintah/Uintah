@@ -306,11 +306,12 @@ void Roe::initCB(CallbackData*, void*) {
 	glGetDoublev(GL_MODELVIEW_MATRIX, inheritMat);
     }
 
-    GLfloat light_position[] = {3,3,100,1};
+    GLfloat light_position[] = { 3,3,-100,1};
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+    glEnable(GL_NORMALIZE);
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
-//    glDepthFunc(GL_ALWAYS);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_DEPTH_TEST);
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
