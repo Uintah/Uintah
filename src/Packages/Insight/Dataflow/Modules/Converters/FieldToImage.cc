@@ -146,9 +146,10 @@ bool FieldToImage::run( const FieldHandle &fh)
     }
     
     double origin[ ImageType::ImageDimension ];
-    origin[0] = mesh_center.x();
-    origin[1] = mesh_center.y();
-    origin[2] = mesh_center.z();
+    Point bbox_min = bbox.min();
+    origin[0] = bbox_min.x();
+    origin[1] = bbox_min.y();
+    origin[2] = bbox_min.z();
     
     img->SetOrigin( origin );
     
@@ -201,8 +202,9 @@ bool FieldToImage::run( const FieldHandle &fh)
     }
     
     double origin[ ImageType::ImageDimension ];
-    origin[0] = mesh_center.x();
-    origin[1] = mesh_center.y();
+    Point bbox_min = bbox.min();
+    origin[0] = bbox_min.x();
+    origin[1] = bbox_min.y();
     
     img->SetOrigin( origin );
     
@@ -291,9 +293,10 @@ bool FieldToImage::run_vector( const FieldHandle &fh)
     }
     
     double origin[ ImageType::ImageDimension ];
-    origin[0] = mesh_center.x();
-    origin[1] = mesh_center.y();
-    origin[2] = mesh_center.z();
+    Point bbox_min = bbox.min();
+    origin[0] = bbox_min.x();
+    origin[1] = bbox_min.y();
+    origin[2] = bbox_min.z();
     
     img->SetOrigin( origin );
     
@@ -381,8 +384,9 @@ bool FieldToImage::run_vector( const FieldHandle &fh)
     }
     
     double origin[ ImageType::ImageDimension ];
-    origin[0] = mesh_center.x();
-    origin[1] = mesh_center.y();
+    Point bbox_min = bbox.min();
+    origin[0] = bbox_min.x();
+    origin[1] = bbox_min.y();
     
     img->SetOrigin( origin );
     
