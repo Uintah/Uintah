@@ -55,11 +55,14 @@
 
 #include "mdsPlusAPI.h"
 
+
 /* If an MDSPlus call is successful the first bit is set. */
 #define status_ok( status ) ((status & 1) == 1)
 
+
 /* Simple interface to interface bewteen the C++ and C calls. */
-int MDS_Connect( const char *server )
+int
+MDS_Connect( const char *server )
 {
   /* Connect to MDSplus */
   int retVal = MdsConnect((char*)server);
@@ -67,8 +70,10 @@ int MDS_Connect( const char *server )
   return retVal;
 }
 
+
 /* Simple interface to interface bewteen the C++ and C calls. */
-int MDS_Open( const char *tree, int shot )
+int
+MDS_Open( const char *tree, unsigned int shot )
 {
   /* Open tree */
   int retVal = status_ok( MdsOpen((char*)tree,&shot) ) ? 0 : -1;
@@ -76,22 +81,28 @@ int MDS_Open( const char *tree, int shot )
   return retVal;
 }
 
+
 /* Simple interface to interface bewteen the C++ and C calls. */
-void MDS_Disconnect()
+void
+MDS_Disconnect()
 {
   /* Disconnect to MDSplus */
   MdsDisconnect();
 }
 
+
 /* Simple interface to interface bewteen the C++ and C calls. */
-void MDS_SetSocket( int socket )
+void
+MDS_SetSocket( int socket )
 {
   /* Disconnect to MDSplus */
   MdsSetSocket( &socket );
 }
 
+
 /*  Query to see if the node is valid - does it really exist. */
-int is_valid( const char *signal) {
+unsigned int
+is_valid( const char *signal) {
 
   /* local vars */
   char buf[1024];                     /* Buffer for MDS+ exp */
@@ -114,8 +125,10 @@ int is_valid( const char *signal) {
   return (nid && len) ? (*len>1) : 0;
 }
 
+
 /*  Query the type of the node - as in the data type. */
-int get_type( const char *signal ) {
+int
+get_type( const char *signal ) {
 
   /* Local vars */
   char buf[1024];                     /* Buffer for MDS+ exp */
@@ -131,8 +144,10 @@ int get_type( const char *signal ) {
   return type ? *type : -1;
 }
 
+
 /*  Query the size of the node  - as in the number of elements. */
-int get_size( const char *signal) {
+int
+get_size( const char *signal) {
 
   /* local vars */
   char buf[1024];                     /* Buffer for MDS+ exp */
@@ -148,8 +163,10 @@ int get_size( const char *signal) {
   return size ? *size : -1;
 }
 
+
 /*  Query the rank of the node - as in the number of dimensions. */
-int get_rank( const char *signal ) {
+int
+get_rank( const char *signal ) {
 
   /* Local vars */
   char buf[1024];                     /* Buffer for MDS+ exp */
@@ -165,8 +182,10 @@ int get_rank( const char *signal ) {
   return rank ? *rank : -1;
 }
 
+
 /* Get the rank and number of dimensions for a particular signal. */
-int get_dims( const char *signal, int **dims )
+int
+get_dims( const char *signal, unsigned int **dims )
 {
   char buf[1024];                 /* buffer for MDS+ exp */
   int i;
@@ -189,8 +208,86 @@ int get_dims( const char *signal, int **dims )
 }
 
 
+/*  Query the server for the slice name. */
+char * 
+get_name( const unsigned int nid )
+{
+  char buf[1024];                 // buffer for MDS+ exp     
+
+  /* Query the name of the slice node, that nids[slice] refers to. */
+  memset(buf,0,sizeof(buf));
+  sprintf( buf, "GETNCI(%i,\"NODE_NAME\")", nid );
+
+  return (char*) get_value( buf, DTYPE_CSTRING );
+}
+
+
+/*  Query the server for the child names of a signal. */
+unsigned int 
+get_names( const char *signal, 
+	   char **names, char recurse, char absolute, char type )
+{
+  char buf[1024];                 /* buffer for MDS+ exp */
+
+  char wildcard[8];
+  char path[12];
+  char item[12];
+
+  if( recurse ) strcpy( wildcard, "***" );
+  else          strcpy( wildcard, ":*" );
+
+  if( absolute ) strcpy( path, "fullpath" );
+  else           strcpy( path, "node_name" );
+
+  if( type ) strcpy( item, "text" );
+  else       strcpy( item, "signal" );
+
+  sprintf( buf, "GETNCI(\"\\%s%s\", \"%s\", \"%s\")",
+	   signal, wildcard, path, item );
+
+  unsigned int *dims;
+  int rank = get_dims( buf, &dims );
+
+  if( rank > 0 ) {
+    int i, nnames = 1;
+
+    for( i=0; i<rank; i++ )
+      nnames *= dims[i];
+
+    *names = (char*) get_values( buf, DTYPE_CSTRING );
+
+    return nnames;
+  } else {
+    return 0;
+  }
+}
+
+
+/*  Query the server for the nids of a signal. */
+unsigned int
+get_nids( const char *signal, unsigned int **nids )
+{
+  char buf[1024];                 /* buffer for MDS+ exp */
+
+  int *nSlices = NULL;
+
+  /* Query the server for the number of slices in the tree. */
+  sprintf( buf, "GETNCI(\"\\%s\",\"NUMBER_OF_CHILDREN\")", signal );
+  
+  nSlices = (int*) get_value( buf, DTYPE_LONG );
+
+  /* Query the nid numbers of the slices. */
+  sprintf( buf, "GETNCI(\"\\%s.*\",\"NID_NUMBER\")", signal );
+
+  *nids = (int*) get_values( buf, DTYPE_LONG );
+
+  return nSlices ? *nSlices : 0;
+}
+
+
 /*  Query the long value of the node - as in the number of slices. */
-void* get_value( const char *signal, int dtype ) {
+void *
+get_value( const char *signal, int dtype ) {
 
   /* Local vars */
   char buf[1024];                     /* Buffer for MDS+ exp */   
@@ -281,17 +378,19 @@ void* get_value( const char *signal, int dtype ) {
   }
 }
 
+
 /*  Query the long values of the node - as in the nids the of slices. */
-void* get_values( const char *signal, int dtype ) {
+void *
+get_values( const char *signal, int dtype ) {
 
   int max_str = 1024;
 
   /* Local vars */
   char buf[1024];                     /* buffer for MDS+ exp */  
   int len, dsc;                       /* Used in MDS+ calls  */
-  int null = 0;
-  int *dims;
-  int i, size = 1;
+  unsigned int null = 0;
+  unsigned int *dims;
+  unsigned int i, size = 1;
 
   void* values;
 
@@ -394,153 +493,6 @@ void* get_values( const char *signal, int dtype ) {
     free( values );
     return NULL;
   }
-}
-
-
-/*  Query the server for the slice name. */
-char* get_name( const int nid )
-{
-  char buf[1024];                 // buffer for MDS+ exp     
-
-  /* Query the name of the slice node, that nids[slice] refers to. */
-  memset(buf,0,sizeof(buf));
-  sprintf( buf, "GETNCI(%i,\"NODE_NAME\")", nid );
-
-  return (char*) get_value( buf, DTYPE_CSTRING );
-}
-
-
-/*  Query the server for the components of the grid. */
-double* get_grid( const char *axis, int **dims )
-{
-  char *gridStr = "\\NIMROD::TOP.OUTPUTS.CODE.GRID";
-  char buf[1024];                 /* buffer for MDS+ exp */
-
-  /* Fetch the Grid data from the node. */
-  sprintf( buf, "%s:%s", gridStr, axis );
-
-  get_dims( buf, dims );
-
-  /* Get the data for the axis. */
-  sprintf( buf, "%s:%s", gridStr, axis );
-  
-  return (double*) get_values( buf, DTYPE_DOUBLE );
-}
-
-/*  Query the server for the slice nids for the shot. */
-int get_slice_ids( int **nids )
-{
-  char *sliceStr = "\\NIMROD::TOP.OUTPUTS.CODE.SLICES";
-  char buf[1024];                 /* buffer for MDS+ exp */
-
-  int *nSlices = NULL;
-
-  /* Query the server for the number of slices in the tree. */
-  sprintf( buf, "GETNCI(%s,\"NUMBER_OF_CHILDREN\")", sliceStr );
-  
-  nSlices = (int*) get_value( buf, DTYPE_LONG );
-
-  /* Query the nid numbers of the slices. */
-  sprintf( buf, "GETNCI(\"\\%s.*\",\"NID_NUMBER\")", sliceStr );
-
-  *nids = (int*) get_values( buf, DTYPE_LONG );
-
-  return nSlices ? *nSlices : 0;
-}
-
-/*  Query the server for the slice time. */
-double get_slice_time( const char *name )
-{
-  char *sliceStr = "\\NIMROD::TOP.OUTPUTS.CODE.SLICES";
-  char buf[1024];                 /* buffer for MDS+ exp */
-
-  double *time;
-
-  // Get the time of the slice.
-  sprintf(buf,"%s.%s:TIME", sliceStr, name );
-
-  time = (double*) get_value( buf, DTYPE_DOUBLE );
-
-  return time ? *time : 0.0;
-}
-
-
-/*  Query the server for the slice real space data. */
-double *get_slice_data( const char *name,
-			const char *space,
-			const char *node,
-			int **dims )
-{
-  char *sliceStr = "\\NIMROD::TOP.OUTPUTS.CODE.SLICES";
-
-  char buf[1024];                 /* buffer for MDS+ exp */
-
-  /* Fetch the data from the node */
-  sprintf(buf, "%s.%s.%s.%s", sliceStr, name, space, node);
-
-  get_dims( buf, dims );
-  
-  return (double*) get_values( buf, DTYPE_DOUBLE );
-}
-
-/*  Query the server for the child names of a signal. */
-unsigned int 
-get_names( const char *signal, char **names, char recurse, char absolute, char type )
-{
-  char buf[1024];                 /* buffer for MDS+ exp */
-
-  char wildcard[8];
-  char path[12];
-  char item[12];
-
-  if( recurse ) strcpy( wildcard, "***" );
-  else          strcpy( wildcard, ":*" );
-
-  if( absolute ) strcpy( path, "fullpath" );
-  else           strcpy( path, "node_name" );
-
-  if( type ) strcpy( item, "text" );
-  else       strcpy( item, "signal" );
-
-  sprintf( buf, "GETNCI(\"\\%s%s\", \"%s\", \"%s\")",
-	   signal, wildcard, path, item );
-
-  int *dims;
-  int rank = get_dims( buf, &dims );
-
-  if( rank > 0 ) {
-    int i, nnames = 1;
-
-    for( i=0; i<rank; i++ )
-      nnames *= dims[i];
-
-    *names = (char*) get_values( buf, DTYPE_CSTRING );
-
-    return nnames;
-  } else {
-    return 0;
-  }
-}
-
-/*  Query the server for the nids of a signal. */
-unsigned int
-get_nids( const char *signal, int **nids )
-{
-  char buf[1024];                 /* buffer for MDS+ exp */
-
-  int *nSlices = NULL;
-
-  /* Query the server for the number of slices in the tree. */
-  sprintf( buf, "GETNCI(\"\\%s\",\"NUMBER_OF_CHILDREN\")", signal );
-  
-  nSlices = (int*) get_value( buf, DTYPE_LONG );
-
-  /* Query the nid numbers of the slices. */
-  sprintf( buf, "GETNCI(\"\\%s.*\",\"NID_NUMBER\")", signal );
-
-  *nids = (int*) get_values( buf, DTYPE_LONG );
-
-  return nSlices ? *nSlices : 0;
 }
 
 #endif  // HAVE_MDSPLUS

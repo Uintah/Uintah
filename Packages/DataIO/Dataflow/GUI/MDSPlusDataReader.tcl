@@ -551,11 +551,13 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 		    set message "Can not find "
 		    append message $filename
 		    $this-c error $message
+		    reset_cursor
 		    return
 		} else {
 		    set message "Can not open "
 		    append message $filename
 		    $this-c error $message
+		    reset_cursor
 		    return
 		}
 	    } elseif {[gets $fileId line] >= 0 &&
@@ -564,6 +566,7 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 
 	    } else {
 		$this-c error "Not an MDSPlus file."
+		reset_cursor
 		return
 	    }
 
@@ -578,8 +581,7 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 		$treeview open $id
 	    }
 
-	    global current_cursor
-	    $w config -cursor $current_cursor
+	    reset_cursor
 	}
     }
 
@@ -1117,4 +1119,15 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	grid columnconfigure $f 0 -weight 1
 	return $f.tree
     }
+
+    method reset_cursor {} {
+	set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+	    global current_cursor
+	    $w config -cursor $current_cursor
+	    update idletasks
+	}
+    }
+
 }
