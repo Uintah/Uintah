@@ -29,8 +29,8 @@ static char rcsid[] = "$Header$ SPRITE (Berkeley)";
 #endif
 
 #include <stdio.h>
-#include "tkInt.h"
 #include "tkPort.h"
+#include "tkInt.h"
 #include "tcl.h"
 
 /*

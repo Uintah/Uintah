@@ -28,9 +28,8 @@
 static char rcsid[] = "$Header$ SPRITE (Berkeley)";
 #endif
 
-#include "tk.h"
+#include "tkPort.h"
 #include "tkInt.h"
-#include "tcl.h"
 
 /*
  * A data structure of the following type is kept for each Bevel
