@@ -188,8 +188,6 @@ void Streamline::execute()
     if(need_p1){
 	Point min, max;
 	field->get_bounds(min, max);
-	cerr << "min=" << min.string() << endl;
-	cerr << "max=" << max.string() << endl;
 	p1=Interpolate(min, max, 0.5);
 	double s=field->longest_dimension();
 	p2=p1+Vector(1,0,0)*(s/10);
@@ -200,10 +198,8 @@ void Streamline::execute()
 	need_p1=0;
     }
     widget_scale=0.01*field->longest_dimension();
-    cerr << "longest_dimension=" << field->longest_dimension() << endl;
     if(widgettype.get() != oldwidgettype){
 	oldwidgettype=widgettype.get();
-	cerr << "Rebuilding widget" << endl;
 	if(widget_id)
 	    ogeom->delObj(widget_id);
 	widget=new GeomGroup;
@@ -312,7 +308,6 @@ void Streamline::execute()
     int n=0;
     int groupid=0;
     int alg=(algorithm.get()=="RK4");
-    cerr << "maxsteps=" << maxsteps.get() << endl;
     for(int i=0;i<maxsteps.get();i++){
 	int oldn=n;
 	double ss=stepsize.get();
@@ -343,7 +338,6 @@ void Streamline::execute()
 void Streamline::geom_moved(int axis, double dist, const Vector& delta,
 			    void* cbdata)
 {
-    cerr << "Moved called, widgettype = " << widgettype.get() << endl;
     if(widgettype.get() == "Point"){
 	p1+=delta;
     } else if(widgettype.get() == "Line"){
@@ -381,7 +375,6 @@ void Streamline::geom_moved(int axis, double dist, const Vector& delta,
     }
     if(!abort_flag){
 	abort_flag=1;
-	cerr << "Asking to execute!!!\n";
 	want_to_execute();
     }
 }
