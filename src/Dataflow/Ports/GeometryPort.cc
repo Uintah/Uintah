@@ -100,13 +100,6 @@ GeometryOPort::~GeometryOPort()
 void
 GeometryOPort::reset()
 {
-  list<GeometryComm *>::iterator itr = saved_msgs_.begin();
-  while (itr != saved_msgs_.end())
-  {
-    delete *itr;
-    ++itr;
-  }
-  saved_msgs_.clear();
   dirty_ = false;
 }
 
