@@ -43,13 +43,20 @@
 #ifndef SCI_project_TCLTask_h
 #define SCI_project_TCLTask_h 1
 
-#include <Core/share/share.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Semaphore.h>
+#include <tcl.h>
 
 namespace SCIRun {
 
-class SCICORESHARE TCLTask : public Runnable {
+#if (TCL_MINOR_VERSION >= 4)
+#define TCLCONST const
+#else
+#define TCLCONST
+#endif
+
+
+class TCLTask : public Runnable {
     int argc;
     char** argv;
     Semaphore cont;

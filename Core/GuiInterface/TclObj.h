@@ -48,7 +48,7 @@
 
 namespace SCIRun {
   class GuiInterface;
-class SCICORESHARE TclObj : public GuiCallback {
+class TclObj : public GuiCallback {
 public:
   std::ostringstream tcl_;
 private:
