@@ -110,7 +110,6 @@ DECLARE_MAKER(GenStandardColorMaps)
 //--------------------------------------------------------------- 
 GenStandardColorMaps::GenStandardColorMaps(GuiContext* ctx) 
   : Module("GenStandardColorMaps", ctx, Filter, "Visualization", "SCIRun"),
-    tcl_status(ctx->subVar("tcl_status")),
     positionList(ctx->subVar("positionList")),
     nodeList(ctx->subVar("nodeList")),
     width(ctx->subVar("width")),
@@ -134,8 +133,6 @@ GenStandardColorMaps::~GenStandardColorMaps()
 
 void GenStandardColorMaps::execute() 
 {
-   tcl_status.set("Calling GenStandardColorMaps!"); 
-
    string tclRes;
    gui->eval(id+" getColorMapString", tclRes);
 
