@@ -33,8 +33,9 @@
 # the generic "sourceSettingsFile" call...  So we just print out the
 # error message.  This will need to be fixed at some point.
 
-global SCIRUN_DATA
-if {$SCIRUN_DATA == ""} {
+set DATADIR [netedit getenv SCIRUN_DATA]
+
+if {$DATADIR == ""} {
 
    displayErrorWarningOrInfo "" error
    displayErrorWarningOrInfo "*** Error: This net depends on the SCIRUN_DATA enviroment variable." error
@@ -45,7 +46,6 @@ if {$SCIRUN_DATA == ""} {
    return
 }
 
-set DATADIR $SCIRUN_DATA
 
 if {![file isfile $DATADIR/radial/radial.settings]} {
    displayErrorWarningOrInfo "" error
