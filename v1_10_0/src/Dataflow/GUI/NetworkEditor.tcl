@@ -1332,8 +1332,11 @@ proc sourceSettingsFile {} {
    set DATADIR [lindex [array get env SCIRUN_DATA] 1]
    set DATASET [lindex [array get env SCIRUN_DATASET] 1]
 
+   if { [string compare "$DATASET" ""] == 0 } {
+       set DATASET "sphere"
+   }
+
    if { [string compare "$DATADIR" ""] != 0 && \
-        [string compare "$DATASET" ""] != 0 && \
         [verifyFile $DATADIR/$DATASET/$DATASET.settings] == "true" } {
       displayErrorWarningOrInfo "*** Using SCIRUN_DATA $DATADIR" "info"
       displayErrorWarningOrInfo "*** Using DATASET $DATASET" "info"
