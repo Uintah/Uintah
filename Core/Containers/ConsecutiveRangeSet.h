@@ -168,7 +168,8 @@ public:
   { rangeSet_ = set2.rangeSet_; size_ = set2.size_; return *this; }
 
   // Add to the range set, asserting that value is greater or equal
-  // to anything already in the set.
+  // to anything already in the set (if it is equal to something already
+  // in teh set then the value is simply discarded).
   void addInOrder(int value) throw(ConsecutiveRangeSetException);
   
   template <class AnyIterator>
@@ -210,7 +211,7 @@ public:
 
   static const ConsecutiveRangeSet empty;
   static const ConsecutiveRangeSet all;  
-   friend class ConsecutiveRangeSet::iterator;
+  friend class ConsecutiveRangeSet::iterator;
 private:
   template <class InputIterator>
   ConsecutiveRangeSet(InputIterator begin, InputIterator end)
