@@ -95,7 +95,7 @@ void MPMICE::scheduleComputeStableTimestep(const LevelP& level,
 
 //______________________________________________________________________
 //
-void MPMICE::scheduleTimeAdvance(double t, double dt,
+void MPMICE::scheduleTimeAdvance(double, double,
 				 const LevelP&   level,
 				 SchedulerP&     sched,
 				 DataWarehouseP& old_dw, 
@@ -181,7 +181,6 @@ void MPMICE::scheduleInterpolatePressureToParticles(const Patch* patch,
      int idx = mpm_matl->getDWIndex();
      t->requires(old_dw, Mlb->pXLabel,        idx, patch, Ghost::None);
      t->computes(new_dw, Mlb->pPressureLabel, idx, patch);
-	// cout << "matlindex computes = " << idx << endl;
    }
 
    sched->addTask(t);
@@ -368,8 +367,7 @@ void MPMICE::scheduleComputeEquilibrationPressure(const Patch* patch,
  Purpose~   Grab the exchange coefficients from the uda file  
 _____________________________________________________________________*/ 
 void MPMICE::finishMPMICEproblemSetup(const ProblemSpecP& prob_spec, 
-                            GridP& grid,
-				SimulationStateP&)    
+                            GridP&, SimulationStateP&)    
 {
 #if 1
   ProblemSpecP mat_ps       =  prob_spec->findBlock("MaterialProperties");
@@ -390,8 +388,8 @@ void MPMICE::finishMPMICEproblemSetup(const ProblemSpecP& prob_spec,
  Function~  MPMICE::finishMPMICEinitialize--
  Purpose~   Make necessary adjustments
 _____________________________________________________________________*/ 
-void MPMICE::finishMPMICEinitialize(const ProcessorGroup*, const Patch* patch,
-			     DataWarehouseP& old_dw, DataWarehouseP& new_dw)    
+void MPMICE::finishMPMICEinitialize(const ProcessorGroup*, const Patch*,
+			     DataWarehouseP& , DataWarehouseP& )    
 {
 
 }
@@ -529,10 +527,10 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 //      don't then the Malloc lib initializes it as a NAN.
     if(timestep==0){
     cout<<"I've hardwired the initial CC Vars for mpm matl"<<endl;
-      Vector initialVel_CC(0.,0.,0.);
+//      Vector initialVel_CC(0.,0.,0.);
       double initialTemp_CC = 300.0;
       double initialCv_CC   = 716.0;
-      vel_CC.initialize(initialVel_CC);
+//      vel_CC.initialize(initialVel_CC);
       Temp_CC.initialize(initialTemp_CC);
       cv_CC.initialize(initialCv_CC);
     }
@@ -961,7 +959,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 				       DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw)
 {
-  double    converg_coeff = 10;          
+  double    converg_coeff = 10;
   double    convergence_crit = converg_coeff * DBL_EPSILON;
   double    sum, tmp;
 //  static int timestep=0;            EXTRA
@@ -1089,6 +1087,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     //__________________________________
     //  Hardwire for ideal gas 
           double gamma   = 1.4; 
+
           rho_micro[m][*iter] =  
             mpm_matl->getEOSModel()->computeRhoMicro(
                                             press_new[*iter],gamma,
