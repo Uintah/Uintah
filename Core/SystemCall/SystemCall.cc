@@ -768,13 +768,7 @@ void SystemCall::add_stdout_handler(SystemCallHandlerHandle handle, bool front)
 void SystemCall::rem_stdout_handler(SystemCallHandlerHandle handle)
 {
 	dolock();
-	
-	std::list<SystemCallHandlerHandle>::iterator it = stdouthandler_.begin();
-	for (; it != stdouthandler_.end(); it++)
-	{
-		if ((*it) == handle) { if(!(handle->end_)) { handle->end(); handle->end_ = true; } stdouthandler_.erase(it); break; }
-	}
-	
+    stdouthandler_.remove(handle);
 	unlock();
 }
 
@@ -791,7 +785,6 @@ void SystemCall::add_stderr_handler(SystemCallHandlerHandle handle, bool front)
 		stderrhandler_.push_back(handle);
 	}
 	handle->start(stderrbuffer_);
-
 	if (isexit_) { handle->end(); handle->end_ = true; }
 	
 	unlock();
@@ -800,13 +793,7 @@ void SystemCall::add_stderr_handler(SystemCallHandlerHandle handle, bool front)
 void SystemCall::rem_stderr_handler(SystemCallHandlerHandle handle)
 {
 	dolock();
-	
-	std::list<SystemCallHandlerHandle>::iterator it = stderrhandler_.begin();
-	for (; it != stderrhandler_.end(); it++)
-	{
-		if ((*it) == handle) { if(!(handle->end_)) { handle->end(); handle->end_ = true; } stderrhandler_.erase(it); break; }
-	}
-	
+    stderrhandler_.remove(handle);
 	unlock();
 }
 
@@ -823,13 +810,7 @@ void SystemCall::add_exit_handler(SystemCallHandlerHandle handle)
 void SystemCall::rem_exit_handler(SystemCallHandlerHandle handle)
 {
 	dolock();
-	
-	std::list<SystemCallHandlerHandle>::iterator it = exithandler_.begin();
-	for (; it != exithandler_.end(); it++)
-	{
-		if ((*it) == handle) { if(!(handle->end_)) { handle->end(); handle->end_ = true; } exithandler_.erase(it); break; }
-	}
-	
+    exithandler_.remove(handle);
 	unlock();
 }
 
