@@ -211,7 +211,11 @@ Exec_writer(ProgressReporter *pr,
 
 // ColumnMatrix
 
-static MatrixHandle
+///// NOTE: These procedures are not static because I need to
+/////       reference them in FieldIEPlugin.cc to force the Mac OSX to 
+/////       instantiate static libraries.
+
+MatrixHandle
 TextColumnMatrix_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
@@ -220,7 +224,7 @@ TextColumnMatrix_reader(ProgressReporter *pr, const char *filename)
   return Exec_reader(pr, filename, command);
 }
 
-static bool
+bool
 TextColumnMatrix_writer(ProgressReporter *pr,
 			MatrixHandle matrix, const char *filename)
 {
@@ -230,11 +234,13 @@ TextColumnMatrix_writer(ProgressReporter *pr,
   return Exec_writer(pr, matrix, filename, command);
 }
 
+#ifndef __APPLE__
 static MatrixIEPlugin
 TextColumnMatrix_plugin("TextColumnMatrix",
 			"", "",
 			TextColumnMatrix_reader,
 			TextColumnMatrix_writer);
+#endif
 
 
 // DenseMatrix
