@@ -101,6 +101,7 @@ WARNING
 	--(*this);
 	return oldit;
       }
+      IntVector getIndex() { return d_index; }
     private:
       IntVector d_index;
       const Array3<T>* d_array3;
@@ -191,7 +192,7 @@ WARNING
       }
       else {
 	// will have to re-allocate and copy
-	//cerr << "RE-ALLOCATION NEEDED\n";
+	cerr << "RE-ALLOCATION NEEDED\n";
 	//cerr << relLowIndex << " to " << relHighIndex << " in " << size << endl;
 	//cerr << oldWindow->getData() << endl;
 	//ASSERT(false);
@@ -204,8 +205,17 @@ WARNING
 				   oldWindow->getLowIndex(),
 				   oldWindow->getHighIndex());
 	tempWindow.copy(oldWindow); // copies into newData
-	d_window=scinew Array3Window<T>(newData, encompassingLow,
+	
+	Array3Window<T>* new_window=scinew Array3Window<T>(newData, encompassingLow,
 					lowIndex, highIndex);
+
+	iterator iter = begin();
+	while (iter != end()) {
+	  ASSERT(*iter == new_window->get(iter.getIndex()));
+	  iter++;
+	}
+
+	d_window = new_window;
       }
       d_window->addReference();      
       if(oldWindow->removeReference())
@@ -309,9 +319,10 @@ WARNING
     }
 
 	 
-  private:
+  protected:
     Array3& operator=(const Array3& copy);
-    
+
+  private:
     Array3Window<T>* d_window;
   };
    
