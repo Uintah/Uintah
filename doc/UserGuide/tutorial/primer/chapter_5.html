@@ -34,20 +34,17 @@
 	
         <p><b>Chapter Overview</b><br>
 
-        <p>In Chapters 1-4[, we worked with dataflow programming,
-        and constructed visualization networks for exploring datasets.|we
-	built networks to visualize existing datasets.]
-        [But where did the Field voltage datavalues come from?|]  In this
+        <p>In Chapters 1-4, we worked with dataflow programming,we
+	built networks to visualize existing datasets.In this
         chapter, we will construct a simulation network that <em>computes</em>
         simulated voltages for a realistic volume conductor problem.
 
-	<p>[In preceeding chapters,|So far] we have used modules from the [central|]
-        SCIRun <dfn>package</dfn> [|(Packages are logically
-	grouped sets of modules. New packages can be added to SCIRun)].
+	<p>So far, we have used modules from the
+        SCIRun <dfn>package</dfn> (packages are logically
+	grouped sets of modules. New packages can be added to SCIRun).
 	Those modules are general purpose
-        tools--not targeted towards any specific application.  [By
-        contrast, i|I]n this chapter we [begin using|will use] modules from the
-        BioPSE package, a set of tools specifically written for the
+        tools--not targeted towards any specific application. In this chapter we will use 
+	modules from the BioPSE package, a set of tools specifically written for the
         modeling, simulation, and visualization of bioelectric field
         problems.
 
@@ -72,13 +69,13 @@
 	<div align="left">
 	<p><br>
 
-        <p><b><A name="section 1">Volume conductor problem</b><br></A>
+        <p><b><A name="section 1">Volume conductor problem</b></A>
 
 	<p>Given a volume conductor model and an equivalent dipole
 	source, we would like to compute the potentials and electric
 	field induced by the source through the domain. An analytic
 	solution exists for problems of some very specific geometric
-	models (<i>e.g.</i>, [analytic|] cylinders or spheres). 
+	models (<i>e.g.</i>, cylinders or spheres). 
 	
 	<p>However, for most real-world problems, we can only obtain the solution
 	through discretization.  For this application, we will
@@ -86,7 +83,7 @@
 	each element contains a conductivity tensor that defines how
 	electricity travels through its region of the domain.  Within
 	each element, we assume a piece-wise linear potential field
-	([|<i>i.e.</i>] piece-wise constant electric field).
+	(piece-wise constant electric field).
 
 	<p>The above problem is governed mathematically by Poisson's
 	equation:<br>
@@ -132,11 +129,11 @@
 
 	<p>To compute the electric and potential fields given a finite
 	element volume conductor mesh and a dipolar current source, we
-	follow these steps:<br>
+	follow these steps:
 	<ol>
-	<li value="1.">[Read in|Load] the finite element mesh (tet elements, with a
+	<li value="1.">Load the finite element mesh (tet elements, with a
 	conductivity tensors for each cell).
-	<li value="2.">[Read in any|Load] dipole sources.
+	<li value="2.">Load dipole sources.
 	<li>Construct the finite element stiffness matrix based on
 	the conductivity mesh.
 	<li>Construct the right hand side source vector based on
@@ -170,8 +167,7 @@
         <p><b><A name="section 3">FEM user interface settings</b><br></A>
 
 	<p>The SetupFEMatrix module constructs a finite element
-	stiffness matrix from a tetrahedral volume mesh.  [On the UI
-	(<b>Figure 5.3</b>)w|W]e can choose [|(<b>Figure 5.3</b>)] whether
+	stiffness matrix from a tetrahedral volume mesh. We can choose (<b>Figure 5.3</b>) whether
 	to incorporate the
 	local conductivity tensors into the stiffness matrix, or
 	whether to use a uniform conductivity.  For this application,
@@ -202,9 +198,9 @@
 	<p><br>
 
 	<p>The SolveMatrix module solves a linear system using one of
-	[several linear algebra|] methods.  
-	<ol><li value=1.">Choose [the|] "Conjugate
-	Gradient" solver [on the UI|] (<b>Figure 5.5</b>), and set the
+	several methods.  
+	<ol><li value=1.">Choose "Conjugate
+	Gradient" solver (<b>Figure 5.5</b>), and set the
 	Target Error to 0.0001.
 	<li>Set the Maximum Iterations to 200.</ol>
 	
@@ -222,29 +218,25 @@
 	<div align="left">
 	<p><br>
 
-	[<p>Lastly, for this simulation:
+	<p>Lastly, for this simulation:
 	<ol><li value="1.">Choose the utahtorso-lowres-mesh.tvt.fld Field 
 	for the FieldReader on the left. 
 	<li>Choose the utahtorso-lowres-dipole.pcv.fld Field for the
         FieldReader on the right.  
-	</ol>|
-	<p>Now load the mesh and dipole sources:
-	<ol><li value="1.">Load the mesh (utahtorso-lowres-mesh.tvt.fld) with the left-most FieldReader.
+	<li>Load the mesh and dipole sources:
+	<li>Load the mesh (utahtorso-lowres-mesh.tvt.fld) with the left-most FieldReader.
 	<li>Load the dipole sources (utahtorso-lowres-dipole.pcv.fld) with
-	  the right-most FieldReader.
-	</ol>]
+	  the right-most FieldReader.</ol>
 
-	<p>The mesh Field contains the tetrahedral finite element mesh 
-	[of the Utah Torso model|,] with conductivity indices stored at each 
-	element of the model.  The dipole Field contains a single dipole vector, positioned
+	<p>The mesh Field contains the tetrahedral finite element mesh with conductivity 
+	indices stored at each element of the model.  The dipole Field contains a single dipole vector, positioned
         within the torso volume.
 
         <p><b><A name="section 4">Running the simulation</b><br></A>
 		
-	<p>[With all of the modules connected and the UI state
-	configured, you are ready to run the simulation.|To run the simulation:]
-	<ol>
-	<li value="1.">Select the "Execute" item from one of the modules' 
+	<p>To run the simulation:
+	
+	<ol><li value="1.">Select the "Execute" item from one of the modules' 
 	icon dropdown menus, or:
 	<li>Press the "Execute" button on a module's user interface.</ol>
   
