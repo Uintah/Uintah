@@ -1834,6 +1834,10 @@ getGridVar(VariableBase& var, DWDatabase& db,
 
   // The data should have been put in the database,
   // windowed with this low and high.
+  cout << "RANDY: OnDemandDataWarehouse::getGridVar(): var.getLow()  = " << var.getLow() << endl;;
+  cout << "RANDY: OnDemandDataWarehouse::getGridVar(): var.getHigh() = " << var.getHigh() << endl;
+  cout << "RANDY: OnDemandDataWarehouse::getGridVar(): low  = " << low << endl;
+  cout << "RANDY: OnDemandDataWarehouse::getGridVar(): high = " << high << endl;
   ASSERTEQ(var.getLow(), low);
   ASSERTEQ(var.getHigh(), high);
   

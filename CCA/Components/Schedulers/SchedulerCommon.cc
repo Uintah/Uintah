@@ -244,6 +244,12 @@ SchedulerCommon::get_dw(int idx)
   return dws[idx].get_rep();
 }
 
+DataWarehouse*
+SchedulerCommon::getLastDW(void)
+{
+  return get_dw(static_cast<int>(dws.size()) - 1);
+}
+
 void 
 SchedulerCommon::advanceDataWarehouse(const GridP& grid)
 {
@@ -372,6 +378,7 @@ void SchedulerCommon::doEmitTaskGraphDocs()
 
 void SchedulerCommon::compile()
 {
+  cerr << "RANDY: SchedulerCommon::compile() BGN" << endl;
   actuallyCompile();
   m_locallyComputedPatchVarMap.reset();
 
@@ -393,6 +400,7 @@ void SchedulerCommon::compile()
     }
   }
   m_locallyComputedPatchVarMap.makeGroups();
+  cerr << "RANDY: SchedulerCommon::compile() END" << endl;
 }
 
 bool SchedulerCommon::isOldDW(int idx) const
