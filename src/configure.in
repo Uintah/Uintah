@@ -612,11 +612,8 @@ fi
 
 XML_INCLUDE_DIR=$XML_LIB_DIR/../include
 
-if test -e $XML_LIB_DIR/libxerces-c1_1.so; then
-  XML_LIB_FLAG="-lxerces-c1_1"
-elif test -e $XML_LIB_DIR/libxerces-c1_2.so; then
-  XML_LIB_FLAG="-lxerces-c1_2"
-fi
+XML_LIB_FLAG="-l`basename $XML_LIB_DIR/libxerces-c1_?.so |\
+	      sed -e's,lib,,g' -e 's,.so,,g'`"
 
 echo "-L$XML_LIB_DIR $XML_LIB_FLAG"
 
@@ -835,6 +832,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.73  2000/11/06 18:50:44  moulding
+# Allow any 1.x version of Xerces (used to only allow 1.1 and 1.2)
+#
 # Revision 1.72  2000/11/03 19:11:47  witzel
 # Added enable/disable output-avg-walltime option
 #
