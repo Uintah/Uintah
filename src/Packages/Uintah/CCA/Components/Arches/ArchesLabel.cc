@@ -785,6 +785,28 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_absorpINLabel);
   VarLabel::destroy(d_sootFVINLabel);
   VarLabel::destroy(d_reactscalarSRCINLabel);
+  VarLabel::destroy(d_absorpINPredLabel);
+  VarLabel::destroy(d_co2INPredLabel);
+  VarLabel::destroy(d_enthalpyRXNPredLabel);
+  VarLabel::destroy(d_pressureCorrSPBCLabel);
+  VarLabel::destroy(d_reactscalarSRCINPredLabel);
+  VarLabel::destroy(d_sootFVINPredLabel);
+  VarLabel::destroy(d_tempINPredLabel);
+  VarLabel::destroy(d_uVelCoefPBLMCorrLabel);
+  VarLabel::destroy(d_uVelConvCoefPBLMCorrLabel);
+  VarLabel::destroy(d_uVelLinSrcPBLMCorrLabel);
+  VarLabel::destroy(d_uVelNonLinSrcPBLMCorrLabel);
+  VarLabel::destroy(d_uVelRhoHatCorrLabel);
+  VarLabel::destroy(d_vVelCoefPBLMCorrLabel);
+  VarLabel::destroy(d_vVelConvCoefPBLMCorrLabel);
+  VarLabel::destroy(d_vVelLinSrcPBLMCorrLabel);
+  VarLabel::destroy(d_vVelNonLinSrcPBLMCorrLabel);
+  VarLabel::destroy(d_vVelRhoHatCorrLabel);
+  VarLabel::destroy(d_wVelCoefPBLMCorrLabel);
+  VarLabel::destroy(d_wVelConvCoefPBLMCorrLabel);
+  VarLabel::destroy(d_wVelLinSrcPBLMCorrLabel);
+  VarLabel::destroy(d_wVelNonLinSrcPBLMCorrLabel);
+  VarLabel::destroy(d_wVelRhoHatCorrLabel);
 }
 
 void ArchesLabel::setSharedState(SimulationStateP& sharedState)
