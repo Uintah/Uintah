@@ -39,6 +39,8 @@
 
 #include <Packages/Insight/share/share.h>
 
+#include "itkRGBPixel.h"
+
 namespace Insight {
 
 using namespace SCIRun;
@@ -89,21 +91,30 @@ ImageToField::~ImageToField(){
 }
 
 template<class InputImageType>
-FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &nrd) {
+FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &img) {
+  InputImageType *n = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
 
   typedef ITKImageField<typename InputImageType::PixelType> ITKImageFieldType;
   typedef ImageField<typename InputImageType::PixelType> ImageFieldType;
 
-  InputImageType *n = dynamic_cast< InputImageType * >( nrd.get_rep()->data_.GetPointer() );
+  double origin_x = n->GetOrigin()[0];
+  double origin_y = n->GetOrigin()[1];
 
-  double spc[2];
-  double data_center = n->GetOrigin()[0];
-  
+  // get number of data points
   unsigned int size_x = (n->GetLargestPossibleRegion()).GetSize()[0];
   unsigned int size_y = (n->GetLargestPossibleRegion()).GetSize()[1];
 
-  Point min(0., 0., 0.);
-  Point max(size_x, size_y, 0.);
+  // get spacing between data points
+  double space_x = n->GetSpacing()[0];
+  double  space_y = n->GetSpacing()[1];
+
+  // the origin specified by the itk image should remain the same
+  // so we must make the min and max points accordingly
+  double spread_x = (space_x * size_x)/2;
+  double spread_y = (space_y * size_y)/2;
+  
+  Point min(origin_x - spread_x, origin_y - spread_y, 0.0);
+  Point max(origin_x + spread_x, origin_y + spread_y, 0.0);
 
   ImageMesh* m = new ImageMesh(size_x, size_y, min, max);
 
@@ -125,7 +136,7 @@ FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &nrd) {
     
     // fill data
     typename InputImageType::IndexType pixelIndex;
-    typedef ImageFieldType::value_type val_t;
+    typedef typename ImageFieldType::value_type val_t;
     val_t tmp;
     ImageFieldType* fld = (ImageFieldType* )fh.get_rep();
     
@@ -150,12 +161,12 @@ FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &nrd) {
 }
 
 template<class InputImageType>
-FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &nrd) {
+FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &img) {
   
   typedef ITKLatVolField<typename InputImageType::PixelType> ITKLatVolFieldType;
   typedef LatVolField<typename InputImageType::PixelType> LatVolFieldType;
 
-  InputImageType *n = dynamic_cast< InputImageType * >( nrd.get_rep()->data_.GetPointer() );
+  InputImageType *n = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
 
   // get number of data points
   unsigned int size_x = (n->GetRequestedRegion()).GetSize()[0];
@@ -202,7 +213,7 @@ FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &nrd) {
     
     // fill data
     typename InputImageType::IndexType pixelIndex;
-    typedef LatVolFieldType::value_type val_t;
+    typedef typename LatVolFieldType::value_type val_t;
     val_t tmp;
     LatVolFieldType* fld = (LatVolFieldType* )fh.get_rep();
     
@@ -286,6 +297,7 @@ void ImageToField::execute(){
   else if(run< itk::Image<double, 3> >(n)) { }
   else if(run< itk::Image<unsigned char, 2> >(n)) { }
   else if(run< itk::Image<unsigned short, 2> >(n)) { }
+  //else if(run< itk::Image<itk::RGBPixel<unsigned char>, 2> >(n)) { }
   else {
     // error
     error("Incorrect input type");
