@@ -229,6 +229,7 @@ void build_field(QueryInfo &qinfo,
       IntVector max_i(hi.x(), hi.y(), Min(z+z_step, z_max));
       
 #ifndef _AIX
+      thread_sema->down();
       Thread *thrd = scinew Thread( 
         (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,// low, hi,
 				      thread_sema, lock)),
@@ -269,9 +270,9 @@ Nrrd* wrap_nrrd(LatVolField<T> *source, bool &delete_data) {
   int dim = 3;
   int size[3];
   
-  size[0] = source->fdata().dim1();
+  size[0] = source->fdata().dim3();
   size[1] = source->fdata().dim2();
-  size[2] = source->fdata().dim3();
+  size[2] = source->fdata().dim1();
   if (verbose) for(int i = 0; i < dim; i++) cout << "size["<<i<<"] = "<<size[i]<<endl;
   // We don't need to copy data, so just get the pointer to the data
   delete_data = false;
@@ -302,9 +303,9 @@ Nrrd* wrap_nrrd(LatVolField<Vector> *source, bool &delete_data) {
   int size[4];
 
   size[0] = 3;
-  size[1] = source->fdata().dim1();
+  size[1] = source->fdata().dim3();
   size[2] = source->fdata().dim2();
-  size[3] = source->fdata().dim3();
+  size[3] = source->fdata().dim1();
   if (verbose) for(int i = 0; i < dim; i++) cout << "size["<<i<<"] = "<<size[i]<<endl;
   unsigned int num_vec = source->fdata().size();
   double *data = new double[num_vec*3];
@@ -463,9 +464,9 @@ int main(int argc, char** argv)
   unsigned long time_step_upper = (unsigned long)-1;
 
   string input_uda_name;
-  string output_file_name("data");
+  string output_file_name("");
   IntVector var_id(0,0,0);
-  string variable_name;
+  string variable_name("");
   // It will use the first material found unless other indicated.
   int material = -1;
   int level_index = 0;
@@ -547,6 +548,14 @@ int main(int argc, char** argv)
       //      var = vars[0];
     }
 
+    if (output_file_name == "") {
+      // Then use the variable name for the output name
+      output_file_name = variable_name;
+      if (!quiet)
+	cout << "Using variable name ("<<output_file_name<<
+	  ") as output file base name.\n";
+    }
+    
     if (!quiet) cout << "Extracing data for "<<vars[var_index] << ": " << types[var_index]->getName() <<endl;
 
     ////////////////////////////////////////////////////////
