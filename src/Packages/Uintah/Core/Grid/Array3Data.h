@@ -132,9 +132,9 @@ WARNING
 	 T* src = &from->d_data3[from_lowIndex.z()][from_lowIndex.y()][from_lowIndex.x()];
 
 	 IntVector s = from_highIndex-from_lowIndex;
-	 IntVector s_check = to_highIndex-to_lowIndex;
+	 //IntVector s_check = to_highIndex-to_lowIndex;
 	 // Check to make sure that the two window sizes are the same
-	 ASSERT(s == s_check);
+	 ASSERT(s == to_highIndex-to_lowIndex);
 	 for(int i=0;i<s.z();i++){
 	    T* dd=dst;
 	    T* ss=src;
