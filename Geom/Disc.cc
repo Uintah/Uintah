@@ -13,8 +13,11 @@
 
 #include <Geom/Disc.h>
 #include <Classlib/NotFinished.h>
+#include <Geom/GeomRaytracer.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
+#include <Geometry/BSphere.h>
+#include <Geometry/Ray.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 
@@ -23,18 +26,18 @@ GeomDisc::GeomDisc(int nu, int nv)
 {
 }
 
-GeomDisc::GeomDisc(const Point& cen, const Vector& normal,
+GeomDisc::GeomDisc(const Point& cen, const Vector& n,
 		   double rad, int nu, int nv)
-: GeomObj(1), cen(cen), normal(normal), rad(rad), nu(nu), nv(nv)
+: GeomObj(1), cen(cen), n(n), rad(rad), nu(nu), nv(nv)
 {
     adjust();
 }
 
-void GeomDisc::move(const Point& _cen, const Vector& _normal,
+void GeomDisc::move(const Point& _cen, const Vector& _n,
 		    double _rad, int _nu, int _nv)
 {
     cen=_cen;
-    normal=_normal;
+    n=_n;
     rad=_rad;
     nu=_nu;
     nv=_nv;
@@ -42,7 +45,7 @@ void GeomDisc::move(const Point& _cen, const Vector& _normal,
 }
 
 GeomDisc::GeomDisc(const GeomDisc& copy)
-: GeomObj(1), v1(copy.v1), v2(copy.v2), cen(copy.cen), normal(copy.normal),
+: GeomObj(1), v1(copy.v1), v2(copy.v2), cen(copy.cen), n(copy.n),
   rad(copy.rad), nu(copy.nu), nv(copy.nv)
 {
     adjust();
@@ -59,21 +62,21 @@ GeomObj* GeomDisc::clone()
 
 void GeomDisc::adjust()
 {
-    if(normal.length2() < 1.e-6){
+    if(n.length2() < 1.e-6){
 	cerr << "Degenerate normal on Disc!\n";
     } else {
-	normal.find_orthogonal(v1, v2);
+	n.find_orthogonal(v1, v2);
     }
-    normal.normalize();
+    n.normalize();
     Vector z(0,0,1);
-    if(Abs(normal.y()) < 1.e-5){
+    if(Abs(n.y()) < 1.e-5){
 	// Only in x-z plane...
 	zrotaxis=Vector(0,-1,0);
     } else {
-	zrotaxis=Cross(normal, z);
+	zrotaxis=Cross(n, z);
 	zrotaxis.normalize();
     }
-    double cangle=Dot(z, normal);
+    double cangle=Dot(z, n);
     zrotangle=-Acos(cangle);
 }
 
@@ -81,6 +84,11 @@ void GeomDisc::get_bounds(BBox& bb)
 {
     NOT_FINISHED("GeomDisc::get_bounds");
     bb.extend(cen, rad);
+}
+
+void GeomDisc::get_bounds(BSphere& bs)
+{
+    bs.extend(cen, rad*1.000001);
 }
 
 void GeomDisc::make_prims(Array1<GeomObj*>& free,
@@ -118,8 +126,29 @@ void GeomDisc::make_prims(Array1<GeomObj*>& free,
     }
 }
 
-void GeomDisc::intersect(const Ray&, Material*,
-			 Hit&)
+void GeomDisc::preprocess()
 {
-    NOT_FINISHED("GeomDisc::intersect");
+    // Nothing to do...
+}
+
+void GeomDisc::intersect(const Ray& ray, Material* matl,
+			 Hit& hit)
+{
+    double tmp=Dot(n, ray.direction());
+    if(tmp > -1.e-6 && tmp < 1.e-6)return; // Parallel to plane
+    Vector v=cen-ray.origin();
+    double t=Dot(n, v)/tmp;
+    if(t<1.e-6)return;
+    if(hit.hit() && t > hit.t())return;
+    Point p(ray.origin()+ray.direction()*t);
+    Vector vr(p-cen);
+    if(vr.length2() < rad*rad){
+	// Hit...
+	hit.hit(t, this, matl);
+    }
+}
+
+Vector GeomDisc::normal(const Point&, const Hit&)
+{
+    return n;
 }

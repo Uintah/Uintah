@@ -24,6 +24,7 @@ public:
     GeomContainer(const GeomContainer&);
     virtual ~GeomContainer();
     virtual void get_bounds(BBox&);
+    virtual void get_bounds(BSphere&);
 
     // For OpenGL
 #ifdef SCI_OPENGL
@@ -35,6 +36,7 @@ public:
 			    Array1<GeomObj*>& dontfree);
 
     // For Raytracing
+    virtual void preprocess();
     virtual void intersect(const Ray& ray, Material* matl,
 			   Hit& hit);
 };    

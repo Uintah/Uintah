@@ -88,6 +88,11 @@ void GeomCone::get_bounds(BBox& bb)
     bb.extend(top, top_rad);
 }
 
+void GeomCone::get_bounds(BSphere&)
+{
+    NOT_FINISHED("GeomCone::get_bounds");
+}
+
 void GeomCone::make_prims(Array1<GeomObj*>& free,
 			  Array1<GeomObj*>&)
 {
@@ -127,8 +132,14 @@ void GeomCone::make_prims(Array1<GeomObj*>& free,
     }
 }
 
+void GeomCone::preprocess()
+{
+    NOT_FINISHED("GeomCone::preprocess");
+}
+
 void GeomCone::intersect(const Ray&, Material*,
 			 Hit&)
 {
     NOT_FINISHED("GeomCone::intersect");
 }
+

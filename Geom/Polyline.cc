@@ -40,6 +40,11 @@ void GeomPolyline::get_bounds(BBox& bb)
 	bb.extend(pts[i]);
 }
 
+void GeomPolyline::get_bounds(BSphere&)
+{
+    NOT_FINISHED("GeomPolyline::get_bounds");
+}
+
 void GeomPolyline::make_prims(Array1<GeomObj*>& free,
 			      Array1<GeomObj*>&)
 {
@@ -53,6 +58,10 @@ void GeomPolyline::make_prims(Array1<GeomObj*>& free,
     }
 }
 
+void GeomPolyline::preprocess()
+{
+    NOT_FINISHED("GeomPolyline::preprocess");
+}
 
 void GeomPolyline::intersect(const Ray&, Material*, Hit&)
 {

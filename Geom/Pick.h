@@ -51,6 +51,11 @@ public:
     void moved(int axis, double distance,
 	       const Vector& delta);
     void release();
+
+    // For OpenGL
+#ifdef SCI_OPENGL
+    virtual void objdraw(DrawInfoOpenGL*, Material*);
+#endif
 };
 
 #endif /* SCI_Geom_Pick_h */

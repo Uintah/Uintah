@@ -34,15 +34,17 @@ public:
 
     virtual GeomObj* clone();
     virtual void get_bounds(BBox&);
+    virtual void get_bounds(BSphere&);
 
 #ifdef SCI_OPENGL
     virtual void objdraw(DrawInfoOpenGL*, Material*);
 #endif
     virtual void make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>& dontfree);
-     virtual void intersect(const Ray& ray, Material*,
-			    Hit& hit);
-    virtual Vector normal(const Point& p);
+    virtual void preprocess();
+    virtual void intersect(const Ray& ray, Material*,
+			   Hit& hit);
+    virtual Vector normal(const Point& p, const Hit&);
 };
 
 #endif /* SCI_Geom_Sphere_h */

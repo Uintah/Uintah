@@ -15,14 +15,14 @@
 #include <Classlib/NotFinished.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
+#include <Geometry/BSphere.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 #include <Classlib/String.h>
 
 GeomCylinder::GeomCylinder(int nu, int nv)
 : GeomObj(1), nu(nu), nv(nv)
-{
-}
+{}
 
 GeomCylinder::GeomCylinder(const Point& bottom, const Point& top,
 			   double rad, int nu, int nv)
@@ -92,6 +92,14 @@ void GeomCylinder::get_bounds(BBox& bb)
     bb.extend(top, rad);
 }
 
+void GeomCylinder::get_bounds(BSphere& bs)
+{
+    Point cen(Interpolate(bottom, top, 0.5));
+    double h2=height/2.;
+    double r=Sqrt(h2*h2+rad*rad);
+    bs.extend(cen, r);
+}
+
 void GeomCylinder::make_prims(Array1<GeomObj*>& free,
 			      Array1<GeomObj*>&)
 {
@@ -121,6 +129,12 @@ void GeomCylinder::make_prims(Array1<GeomObj*>& free,
 	}
     }
 }
+
+void GeomCylinder::preprocess()
+{
+    NOT_FINISHED("GeomCylidner::preprocess");
+}
+
 void GeomCylinder::intersect(const Ray&, Material*,
 			     Hit&)
 {

@@ -14,10 +14,10 @@
 #ifndef SCI_Geom_RenderMode_h
 #define SCI_Geom_RenderMode_h 1
 
-#include <Geom/Geom.h>
+#include <Geom/Container.h>
 #include <Geometry/Point.h>
 
-class GeomRenderMode : public GeomObj {
+class GeomRenderMode : public GeomContainer {
 public:
     enum DrawType {
         WireFrame,
@@ -27,14 +27,12 @@ public:
     };
 private:
     DrawType drawtype;
-    GeomObj* child;
 public:
     GeomRenderMode(DrawType, GeomObj* child);
     GeomRenderMode(const GeomRenderMode&);
     virtual ~GeomRenderMode();
 
     virtual GeomObj* clone();
-    virtual void get_bounds(BBox&);
 
 #ifdef SCI_OPENGL
     virtual void objdraw(DrawInfoOpenGL*, Material*);

@@ -12,6 +12,7 @@
  */
 
 #include <Geom/Tri.h>
+#include <Classlib/NotFinished.h>
 #include <Geom/GeomRaytracer.h>
 #include <Geometry/BBox.h>
 #include <Geometry/Ray.h>
@@ -49,11 +50,24 @@ void GeomTri::get_bounds(BBox& bb)
     bb.extend(p3);
 }
 
+void GeomTri::get_bounds(BSphere&)
+{
+    double e1l2=(p2-p1).length2();
+    double e2l2=(p3-p2).length2();
+    double e3l2=(p1-p3).length2();
+    NOT_FINISHED("GeomTri::get_bounds");
+}
+
 void GeomTri::make_prims(Array1<GeomObj*>&,
 			  Array1<GeomObj*>& dontfree)
 {
     GeomTri* tri=this;
     dontfree.add(tri);
+}
+
+void GeomTri::preprocess()
+{
+    // Nothing to be done...
 }
 
 void GeomTri::intersect(const Ray& ray, Material* matl, Hit& hit)
@@ -66,12 +80,15 @@ void GeomTri::intersect(const Ray& ray, Material* matl, Hit& hit)
     if(hit.hit() && t > hit.t())return;
     Point p=ray.origin()+ray.direction()*t;
     double pp1[2], pp2[2], pp3[2] , pt[2];
-    if(n.x() > n.y() && n.x() > n.z()){
+    double nx=Abs(n.x());
+    double ny=Abs(n.y());
+    double nz=Abs(n.z());
+    if(nx > ny && nx > nz){
 	pp1[0]=p1.y(); pp1[1]=p1.z();
 	pp2[0]=p2.y(); pp2[1]=p2.z();
 	pp3[0]=p3.y(); pp3[1]=p3.z();
 	pt[0]=p.y(); pt[1]=p.z();
-    } else if(n.y() > n.z() && n.y() > n.z()){
+    } else if(ny > nz && ny > nx){
 	pp1[0]=p1.z(); pp1[1]=p1.x();
 	pp2[0]=p2.z(); pp2[1]=p2.x();
 	pp3[0]=p3.z(); pp3[1]=p3.x();
@@ -109,7 +126,7 @@ int GeomTri::x_cross(double p1[2], double p2[2], double p[2])
 	return 1;
     // General case...
     double delta=p2[1]-p1[1];
-    if(delta < 1.e-6)
+    if(delta < 1.e-6 && delta > -1.e-6)
 	return 0;
     double yt=p[1]-p1[1];
     double x=yt/delta*(p2[0]-p1[0])+p1[0];
@@ -119,7 +136,7 @@ int GeomTri::x_cross(double p1[2], double p2[2], double p[2])
 	return 1; // p is right of edge
 }
 
-Vector GeomTri::normal(const Point&)
+Vector GeomTri::normal(const Point&, const Hit&)
 {
     return n;
 }

@@ -34,7 +34,7 @@ void GeomObj::reset_bbox()
     // Nothing to do, by default.
 }
 
-Vector GeomObj::normal(const Point&)
+Vector GeomObj::normal(const Point&, const Hit&)
 {
     cerr << "ERROR: GeomObj::normal() shouldn't get called!!!\n";
     return Vector(0,0,1);

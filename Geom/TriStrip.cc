@@ -53,13 +53,27 @@ void GeomTriStrip::get_bounds(BBox& bb)
 	bb.extend(pts[i]);
 }
 
+void GeomTriStrip::get_bounds(BSphere&)
+{
+    NOT_FINISHED("GeomTriStrip::get_bounds");
+}
+
 void GeomTriStrip::add(const Point& pt, const Vector& norm)
 {
     pts.add(pt);
     norms.add(norm);
 }
 
-void GeomTriStrip::intersect(const Ray&, Material*, Hit&)
+void GeomTriStrip::preprocess()
 {
-    NOT_FINISHED("GeomTriStrip::intersect");
+    NOT_FINISHED("GeomTriStrip::preprocess");
+}
+
+void GeomTriStrip::intersect(const Ray& ray, Material* matl, Hit& hit)
+{
+    int n=pts.size()-2;
+    for(int i=0;i<n;i++){
+	GeomTri tri(pts[i], pts[i+1], pts[i+2]);
+	tri.intersect(ray, matl, hit);
+    }
 }

@@ -22,6 +22,7 @@
 #include <Geom/Light.h>
 #include <Geom/Line.h>
 #include <Geom/Material.h>
+#include <Geom/Pick.h>
 #include <Geom/PointLight.h>
 #include <Geom/Polyline.h>
 #include <Geom/RenderMode.h>
@@ -163,6 +164,15 @@ void GeomLine::objdraw(DrawInfoOpenGL* di, Material* matl) {
 void GeomMaterial::objdraw(DrawInfoOpenGL* di, Material* /* old_matl */)
 {
     child->draw(di, matl.get_rep());
+}
+
+void GeomPick::objdraw(DrawInfoOpenGL* di, Material* matl)
+{
+    if(di->pickmode)
+	glPushName((GLuint)this);
+    child->draw(di, matl);
+    if(di->pickmode)
+	glPopName();
 }
 
 void GeomPolyline::objdraw(DrawInfoOpenGL* di, Material* matl) {

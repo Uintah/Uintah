@@ -35,13 +35,18 @@ GeomTube::~GeomTube()
 
 GeomObj* GeomTube::clone() 
 {
-  return new GeomTube(*this); 
+    return new GeomTube(*this); 
 }
 
 void  GeomTube::get_bounds(BBox& bb)
 {
     for(int i=0;i<pts.size();i++)
 	bb.extend(pts[i]);
+}
+
+void GeomTube::get_bounds(BSphere&)
+{
+    NOT_FINISHED("GeomTube::get_bounds");
 }
 
 // the function to extend the length of the tube geometry
@@ -96,7 +101,12 @@ return(cir);
 void GeomTube::make_prims(Array1<GeomObj*>&,
 			  Array1<GeomObj*>&)
 {
-  NOT_FINISHED("GeomTube::make_prims");
+    NOT_FINISHED("GeomTube::make_prims");
+}
+
+void GeomTube::preprocess()
+{
+    NOT_FINISHED("GeomTube::preprocess");
 }
 
 void GeomTube::intersect(const Ray&, Material*, Hit&)
