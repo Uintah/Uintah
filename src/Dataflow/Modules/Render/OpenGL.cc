@@ -2601,10 +2601,14 @@ OpenGL::render_rotation_axis(const View &view,
   gluLookAt(eyep.x(), eyep.y(), eyep.z(),
 	    lookat.x(), lookat.y(), lookat.z(),
 	    up.x(), up.y(), up.z());
-  //if(do_hi_res)
-  //  {
-  //    setFrustumToWindowPortion();
-  //  }
+  if(do_hi_res)
+  {
+    // Draw in upper right hand corner of total image, not viewport image.
+    const int xysize = Min(hi_res.resx, hi_res.resy) / 4;
+    const int xoff = hi_res.resx - hi_res.col * viewport[2];
+    const int yoff = hi_res.resy - hi_res.row * viewport[3];
+    glViewport(xoff - xysize, yoff - xysize, xysize, xysize);
+  }
 
   // Disable fog for the orientation axis.
   const bool fog = drawinfo->fog;
