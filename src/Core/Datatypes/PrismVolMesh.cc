@@ -920,7 +920,7 @@ PrismVolMesh::get_neighbors(Cell::array_type &array,
 }
 
 void
-PrismVolMesh::get_neighbors(Node::array_type &array,
+PrismVolMesh::get_neighbors(vector<Node::index_type> &array,
 			    Node::index_type idx) const
 {
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E, 

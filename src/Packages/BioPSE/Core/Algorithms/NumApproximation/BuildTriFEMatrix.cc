@@ -141,7 +141,7 @@ void BuildTriFEMatrix::parallel(int proc)
 
   barrier_.wait(np_);
   
-  TriSurfMesh::Node::array_type neib_nodes;
+  vector<TriSurfMesh::Node::index_type> neib_nodes;
 
   for(i=start_node;i<end_node;i++){
     rows_[r++]=mycols.size();
