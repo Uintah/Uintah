@@ -3,7 +3,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Variables/PSPatchMatlGhost.h>
+//#include <Packages/Uintah/Core/Variables/PSPatchMatlGhost.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
