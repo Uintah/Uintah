@@ -3,26 +3,20 @@
 <Uintah_specification>
 
    <Meta>
-	<title>BlastWave using MPM and ICE material</title>
+       <title>BlastWave using MPM and ICE material</title>
    </Meta>
     
     
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
-    <!--   maxTime          = ending time for simulation                    -->
-    <!--   initTime         = ????????/                                     -->
-    <!--   delt_min         = minimum allowable delta time                  -->
-    <!--   delt_max         = maximum allowable delta time                  -->
-    <!--   delt_init        = initial value for delta time                  -->
-    <!--   timestep_mulipler= used by MPM                                   -->
     <!--____________________________________________________________________-->
    <Time>
-	<maxTime>            3.0        </maxTime>
-	<initTime>           0.0         </initTime>
-	<delt_min>           0.0         </delt_min>
-	<delt_max>           1.0         </delt_max>
-	<delt_init>          0.00001     </delt_init>
-	<timestep_multiplier>0.8         </timestep_multiplier>
+       <maxTime>            3.0        </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          0.00001     </delt_init>
+       <timestep_multiplier>0.8         </timestep_multiplier>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -33,131 +27,128 @@
     <!--   patches          = Number of patches in each direction           -->
     <!--____________________________________________________________________-->
     <Grid>
-		<BoundaryConditions>
-		 <Face side = "x-">
-                     <BCType id = "0" var = "Neumann" label = "Pressure">
-                           <value> 0.0  </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label = "Velocity">
-                           <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label= "Temperature">
-                           <value> 0.0  </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label = "Density">
-                           <value> 0.0  </value>
-                        </BCType>
-                </Face>
-                <Face side = "x+">
-			<BCType id = "0" var = "Neumann" label = "Pressure">
-                           <value>  0.0 </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label = "Velocity">
-                           <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label= "Temperature">
-                           <value> 0.0  </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label = "Density">
-                           <value> 0.0  </value>
-                        </BCType>
-                </Face>
-                <Face side = "y-">
-			<BCType id = "0" var = "Neumann" label = "Pressure">
-                           <value>  0.0  </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label = "Velocity">
-                           <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label= "Temperature">
-                           <value> 0.0  </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label = "Density">
-                           <value> 0.0  </value>
-                        </BCType>
-                </Face>                  
-		<Face side = "y+">
-			<BCType id = "0" var = "Neumann" label = "Pressure">
-                           <value> 0.0   </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label = "Velocity">
-                           <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label= "Temperature">
-                           <value> 0.0  </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label = "Density">
-                           <value> 0.0  </value>
-                        </BCType>
-		</Face>
-                <Face side = "z-">
-			<BCType id = "0" var = "Neumann" label = "Pressure">
-                           <value>  0.0   </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label = "Velocity">
-                           <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label= "Temperature">
-                           <value> 0.0  </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label = "Density">
-                           <value> 0.0  </value>
-                        </BCType>
-                </Face>                  
-		<Face side = "z+">
-			<BCType id = "0" var = "Neumann" label = "Pressure">
-                           <value>  0.0   </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label = "Velocity">
-                           <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label= "Temperature">
-                           <value> 0.0  </value>
-                        </BCType>
-			<BCType id = "all" var = "Neumann" label = "Density">
-                           <value> 0.0  </value>
-                        </BCType>
-		</Face>
-	</BoundaryConditions>
-	<Level>
-	    <Box label = "1">
-	    	<lower>       [-0.06,-0.06,-0.06]    </lower>
-	    	<upper>       [ 0.06, 0.06, 0.06]    </upper>
-                <extraCells>  [1,1,1]             </extraCells>
-		<patches>     [1,2,2]             </patches>
-	        <resolution>  [24,24,24]          </resolution>
-	    </Box>
-	</Level>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label= "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value>  0.0 </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label= "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value>  0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label= "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label= "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value>  0.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label= "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value>  0.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label= "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>        [-0.06,-0.06,-0.06]    </lower>
+              <upper>        [ 0.06, 0.06, 0.06]    </upper>
+                <extraCells>   [1,1,1]    </extraCells>
+              <patches>      [1,2,2]    </patches>
+               <resolution>  [24,24,24]          </resolution>
+           </Box>
+       </Level>
     </Grid>
    
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
-    <!--   filebase         = output file basenme                           -->
-    <!--   outputInterval   = Time between filedumps                        -->
-    <!--   switchDebug      = various debugging output                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-        <filebase>Confined599Kheatx.vs.uda</filebase>
+      <filebase>Confined599Kheatx.vs.uda</filebase>
         <outputTimestepInterval> 10 </outputTimestepInterval>
-        <save label = "vel_CC"/>
-        <save label = "press_CC"/>
-        <save label = "rho_CC"/>
-        <save label = "rho_micro_CC"/>
-        <save label = "vol_frac_CC"/>
-        <save label = "temp_CC"/>
-        <save label = "int_eng_L_CC"/>
-        <save label = "g.velocity"/>
-        <save label = "g.velocity_star"/>
-        <save label = "g.acceleration"/>
-        <save label = "p.x"/>
-        <save label = "p.mass"/>
-        <save label = "p.volume"/>
-        <save label = "p.velocity"/>
-	<save label = "p.temperature"/>
-	<save label = "p.CrackRadius"/>
-	<save label = "p.stress"/>
+      <save label = "vel_CC"/>
+      <save label = "press_CC"/>
+      <save label = "rho_CC"/>
+      <save label = "rho_micro_CC"/>
+      <save label = "vol_frac_CC"/>
+      <save label = "temp_CC"/>
+      <save label = "int_eng_L_CC"/>
+      <save label = "g.velocity"/>
+      <save label = "g.velocity_star"/>
+      <save label = "g.acceleration"/>
+      <save label = "p.x"/>
+      <save label = "p.mass"/>
+      <save label = "p.volume"/>
+      <save label = "p.velocity"/>
+      <save label = "p.temperature"/>
+      <save label = "p.CrackRadius"/>
+      <save label = "p.stress"/>
 
-	<checkpoint cycle = "2" timestepInterval = "400"/>
+       <checkpoint cycle = "2" timestepInterval = "400"/>
    </DataArchiver>
 
    <Debug>
@@ -178,19 +169,18 @@
    </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
-    <!--    Need to comment                                                 -->
     <!--____________________________________________________________________-->
-   <CFD>
-  	<cfl>0.5</cfl>
-	<ICE>
-	    <max_iteration_equilibration> 100 </max_iteration_equilibration>
-	    <advection type = "FirstOrder" />
-	</ICE>	 
+    <CFD>
+         <cfl>0.5</cfl>
+       <ICE>
+        <max_iteration_equilibration> 100 </max_iteration_equilibration>
+        <advection type = "FirstOrder" />
+        <solution technique = "EqForm" />
+      </ICE>        
     </CFD>
 
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
-    <!--    gravity         = (x, y, z dirs)                                -->
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
       <gravity>                         [0,0,0]         </gravity>
@@ -201,15 +191,15 @@
     <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
     <!--____________________________________________________________________-->
     <MaterialProperties>
-        <MPM>
-            <material Rx = "reactant" name = "HMX">
+       <MPM>
+         <material Rx = "reactant" name = "HMX">
                 <burn type = "simple">
                   <ThresholdTemp>       599.01          </ThresholdTemp>
                   <ThresholdPressure>   50000           </ThresholdPressure>
                   <Enthalpy>            2000000.0       </Enthalpy>
                   <BurnCoeff>           9.60e-5         </BurnCoeff>
-		  <activationEnergy>    17900           </activationEnergy>
-		  <preExponent>		0.2e11          </preExponent>
+                <activationEnergy>    17900           </activationEnergy>
+                <preExponent>              0.2e11          </preExponent>
                 </burn>
                 <EOS type = "ideal_gas">
                     <gas_constant>       188.92         </gas_constant>
@@ -242,9 +232,9 @@
                 <toughness>             10.e6           </toughness>
                 <thermal_conductivity>  300.0           </thermal_conductivity>
                 <specific_heat>         716.0           </specific_heat>
-	        <gamma>                  1.289           </gamma>	    
+               <gamma>                  1.289           </gamma>           
                 <geom_object>
-	            <box label = "box">
+                   <box label = "box">
                         <min>           [-0.03,-0.03,-0.03]   </min>
                         <max>           [ 0.03, 0.03, 0.03]   </max>
                     </box>
@@ -252,28 +242,26 @@
                     <velocity>          [0.0,0.0,0.0]   </velocity>
                     <temperature>       599             </temperature>
                 </geom_object>
-            </material>
-
-
-	    <material name = "container">
+         </material>
+         <material name = "container">
                 <burn type = "null"/>
                 <density>       8900.0  </density>
                 <constitutive_model type = "comp_neo_hook_plastic">
                     <bulk_modulus>      117.0e9        </bulk_modulus>
                     <shear_modulus>      43.8e9        </shear_modulus>
-		    <yield_stress>       70.0e6        </yield_stress>
-		    <hardening_modulus>   0.0          </hardening_modulus>
-		    <alpha>               0.0          </alpha>
+                  <yield_stress>       70.0e6        </yield_stress>
+                  <hardening_modulus>   0.0          </hardening_modulus>
+                  <alpha>               0.0          </alpha>
                 </constitutive_model>
                 <toughness>             10.e6           </toughness>
                 <thermal_conductivity>  300.0           </thermal_conductivity>
                 <specific_heat>         716.0           </specific_heat>
-	        <gamma>                  1.289           </gamma>	    
+               <gamma>                  1.289           </gamma>           
                 <geom_object>
                 <difference>
                      <box label = "wholedomain">
-                  	<min>             [-0.05,-0.05,-0.05]    </min>
-                  	<max>             [ 0.05, 0.05, 0.05]    </max>
+                         <min>             [-0.05,-0.05,-0.05]    </min>
+                         <max>             [ 0.05, 0.05, 0.05]    </max>
                      </box>
                      <box label = "gpicehole">
                         <min>           [-0.03,-0.03,-0.03]   </min>
@@ -284,53 +272,50 @@
                     <velocity>          [0.0,0.0,0.0]   </velocity>
                     <temperature>       800             </temperature>
                 </geom_object>
-            </material>
+         </material>
 
             <contact>
               <type>friction</type>
               <vel_fields>              [0,1,0]         </vel_fields>
-	      <mu> .0 </mu>
+             <mu> .0 </mu>
             </contact>
-
-        </MPM>
-      
-
-	<ICE>
-	  <material Rx = "product" name = "gas">
+      </MPM>
+       <ICE>
+         <material Rx = "product" name = "gas">
             <burn type = "null"/>
             <EOS type = "ideal_gas">
                  <gas_constant>         287             </gas_constant>
             </EOS>
-	    <viscosity>                  0.0             </viscosity>
-	    <thermal_conductivity>       0.0             </thermal_conductivity>
-	    <specific_heat>              716.0           </specific_heat>
-	    <speed_of_sound>             376             </speed_of_sound>
-	    <gamma>                      1.4             </gamma>	    
-	    <geom_object>
+           <viscosity>                  0.0             </viscosity>
+           <thermal_conductivity>       0.0             </thermal_conductivity>
+           <specific_heat>              716.0           </specific_heat>
+           <speed_of_sound>             376             </speed_of_sound>
+           <gamma>                      1.4             </gamma>           
+           <geom_object>
                 <difference>
                      <box label = "wholedomain+extracells">
-                  	<min>             [-0.1,-0.1,-0.1]    </min>
-                  	<max>             [ 0.1, 0.1, 0.1]    </max>
+                         <min>             [-0.1,-0.1,-0.1]    </min>
+                         <max>             [ 0.1, 0.1, 0.1]    </max>
                      </box>
-	             <box label = "containerspace">
-                  	<min>             [-0.05,-0.05,-0.05]    </min>
-                  	<max>             [ 0.05, 0.05, 0.05]    </max>
+                    <box label = "containerspace">
+                         <min>             [-0.05,-0.05,-0.05]    </min>
+                         <max>             [ 0.05, 0.05, 0.05]    </max>
                      </box>
                 </difference>
-	        <res>		        [2,2,2]        </res>
-	        <velocity>           [0.0,0.0,0.0]     </velocity>
-	        <temperature>        599.0             </temperature>
-		<density>            5.9063173         </density>
+               <res>                      [2,2,2]        </res>
+               <velocity>           [0.0,0.0,0.0]     </velocity>
+               <temperature>        599.0             </temperature>
+              <density>            5.9063173         </density>
                <pressure>           1013250.0          </pressure>
-	    </geom_object>
-	  </material>
-	</ICE>	
+           </geom_object>
+         </material>
+      </ICE>       
 
        <exchange_properties>
          <exchange_coefficients>
-	       <momentum>	[  0, 1e15, 1e15]     </momentum>
-	       <heat>           [1e15,   0,    0]     </heat>
-	   </exchange_coefficients>
+              <momentum>       [  0, 1e15, 1e15]     </momentum>
+              <heat>           [1e15,   0,    0]     </heat>
+          </exchange_coefficients>
            <mass_exchange>         true                 </mass_exchange>
        </exchange_properties>
 
@@ -338,9 +323,9 @@
             
 
     <PhysicalBC>
-        <MPM>
-        </MPM>
+       <MPM>
+      </MPM>
     </PhysicalBC>
-	
+       
 </Uintah_specification>
 
