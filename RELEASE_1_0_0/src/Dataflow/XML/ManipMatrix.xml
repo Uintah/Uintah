@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/ReferenceGuide/component.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="ManipMatrix" category="Math">
+  <overview>
+    <authors>
+      <author>Dimitri Yatsenko</author>
+    </authors>
+    <summary>
+      General framework for matrix manipulation
+    </summary>
+    <description>
+      <p>Version Date: Fri Nov 17 12:03:26 MST 2000</p><p>Version: 1.0</p>
+
+      <p>We will store all of the Manip info in GuiStrings: 
+      mlibs_gui, mlibpath_gui, mincludes_gui, and mnames_gui.  
+      Each will actually contain a list of strings (one for each manip).
+      And we will have one GuiString, mcurr_name_gui, that stores the name of
+      the currently selected manip.</p>
+
+      <p>The values that appear on the Gui will initially be the
+      defaults that are in ManipMatrix.tcl or that are set by a .net file
+      The Gui has a button for loading the .xml file, which when pressed will
+      send a tcl_command to parse the .xml file and overwrite these variables;
+      the Gui then reconfigures itself with these values.  Because the Gui has
+      to wait for the variables to be read/set, the work has to be done through
+      tcl_command, rather than through execute.  So we have to have locks
+      around those sets to ensure thread safety.</p>
+
+      <p>If the user tries to change a value without sourcing the .xml file, it
+      will automatically be sourced and the new values will be compared to
+      the old.  If the name of the manip being edited has changed, no changes
+      will be made.  On the Gui side, all variables must be reloaded after
+      every request to change a value.</p>
+
+      <p>If the user requests a "compile", then the current .o and .so
+      files will be removed and rebuilt.</p>
+
+      <p>There should not be any static variables in this module -- state
+      should now be independent for each instantiation.</p>
+
+      <p>All of the info about all of the manips is stored in the
+      GuiString -- we don't try to replicate it in a real struct since
+      we'd have to worry about keeping them in sync.  Rather, we have
+      a helper function to index into tcl lists (called "lindex" -- just
+      like in tcl).</p>
+
+    </description>
+  </overview>
+  <implementation>
+    <!-- one of (ffile cfile ccfile) -->
+  </implementation>
+  <io>
+    <inputs lastportdynamic="yes">
+      <port>
+        <name>ManipMatrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <!-- one of (device port file) -->
+    </inputs>
+    <outputs>
+      <port>
+        <name>Output Matrix</name>
+        <description>
+          <p>
+            The matrix that results from applying the indicated manipulation
+            to the input matrices.
+          </p>
+        </description>
+        <datatype>SCIRun::Matrix</datatype>
+        <componentname>Render3D</componentname>
+        <componentname>WriteGeometry</componentname>
+      </port>
+    </outputs>
+  </io>
+
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

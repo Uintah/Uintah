@@ -1,0 +1,46 @@
+#set term iris4d # "Times-Roman" 12 
+set noclip points
+set clip one
+set noclip two
+set dummy x
+set format x "%g"
+set format y "%g"
+set nogrid
+set key
+show label
+set noarrow 
+set nologscale x
+set nologscale y 
+set zero 1e-40
+set offsets 0,0,0,0
+set nopolar
+set samples 5000
+set size 1,1
+set data style points
+set function style points
+set tics in
+set xtics
+set ytics
+set notime
+set title "These Should All Be Identical"
+set xlabel "Time"
+set ylabel "Kinetic Energy"
+plot [0:.2] [0:60] 'disks.uda.000/KineticEnergy.dat' u 1:2 title "disks" w l,'disks2mat.uda.000/KineticEnergy.dat' u 1:2 title "disks2mat" w l,'disks2mat4patch.uda.000/KineticEnergy.dat' u 1:2 title "disks2mat4patch" w l
+pause -1
+set ylabel "Strain Energy"
+plot [0:.2] [:] 'disks.uda.000/StrainEnergy.dat' u 1:2 title "disks" w l,'disks2mat.uda.000/StrainEnergy.dat' u 1:2 title "disks2mat" w l,'disks2mat4patch.uda.000/StrainEnergy.dat' u 1:2 title "disks2mat4patch" w l
+pause -1
+set ylabel "Total Mass"
+plot [0:.2] [0:16] 'disks.uda.000/TotalMass.dat' u 1:2 title "disks" w l,'disks2mat.uda.000/TotalMass.dat' u 1:2 title "disks2mat" w l,'disks2mat4patch.uda.000/TotalMass.dat' u 1:2 title "disks2mat4patch" w l
+pause -1
+set title "Effect of Fracture, Frictional Contact"
+set xlabel "Time"
+set ylabel "Kinetic Energy"
+plot [0:.2] [0:60] 'disks.uda.000/KineticEnergy.dat' u 1:2 title "disks" w l,'disks_fracture.uda.000/KineticEnergy.dat' u 1:2 title "disks_fracture" w l,'disks2mat_fc.uda.000/KineticEnergy.dat' u 1:2 title "disks2mat_fc" w l
+pause -1
+set ylabel "Strain Energy"
+plot [0:.2] [:] 'disks.uda.000/StrainEnergy.dat' u 1:2 title "disks" w l,'disks_fracture.uda.000/StrainEnergy.dat' u 1:2 title "disks_fracture" w l,'disks2mat_fc.uda.000/StrainEnergy.dat' u 1:2 title "disks2mat_fc" w l
+pause -1
+set ylabel "Total Mass"
+plot [0:.2] [0:16] 'disks.uda.000/TotalMass.dat' u 1:2 title "disks" w l,'disks_fracture.uda.000/TotalMass.dat' u 1:2 title "disks_fracture" w l,'disks2mat_fc.uda.000/TotalMass.dat' u 1:2 title "disks2mat_fc" w l
+pause -1

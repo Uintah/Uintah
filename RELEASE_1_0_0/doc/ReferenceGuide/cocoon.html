@@ -1,0 +1,160 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<HTML>
+<HEAD>
+  <TITLE>Cocoon Documentation</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="FFFFFF" TEXT="#000000" LINK=#CC0000 
+      VLINK=#6666CC ALINK=#FF0000 >
+
+<H2><CENTER>Cocoon Web Page Creation System</CENTER></H2>
+
+This page describes the use of Cocoon in SCIRun source code
+documentation.  Cocoon generates web pages that contain browsable
+source code.  Official Cocoon documentation is NOT
+<A HREF="docs/cocoon.htm">here</A> YET.
+
+<H3>Cocoon Vs XML</H3>
+
+Documentation of source code in SCIRun is divided into several
+different files.  Each file contains different types of information
+(there may be some small overlap).
+
+Note:  The following information is to be put in the associated
+&lt;spec&gt.xml file:  Author, Creation Date, Project.
+
+<P>
+
+<TABLE BORDER=1>
+  <TR>
+    <TH> File Name </TH>
+    <TH> Information Type </TH>
+  </TR>
+  <TR>
+    <TD> Module.h </TD>
+    <TD> Cocoon documentation on class functions and variables. </TD>
+  </TR>
+  <TR>
+    <TD> Module.xml </TD>
+    <TD>
+       Any information that a user might want during a run of the
+       program.  This includes module author, a list of interfaces, a
+       long description of the module and its algorithms, known bugs,
+       etc.
+    </TD>
+  </TR>
+  <TR>
+    <TD> Other Files (.jpg, .ps, etc) </TD>
+    <TD> Other information, perhaps in much greater depth, about the
+    file.  Eg: Copies of papers that describe the algorithm in detail,
+    images of the user interface, images of the output, etc. </TD>
+  </TR>
+</TABLE>
+
+<P>
+
+<H3>Cocoon Class Comment Syntax</H3>
+
+<P>
+
+The following is the general syntax we employ for commenting
+Class files using Cocoon:
+
+<P>
+
+<PRE>
+/**************************************
+CLASS
+   MyClass
+   Provide a sort description of MyClass here.  Also include a <B><U>link</U></B>
+      to the .html file that is generated from the MyClass.xml file (which
+      includes the long description, among other things.)
+
+GENERAL INFORMATION
+   MyClass.h
+   (c) 2000
+   Other general info you want to include that is not found in other files.
+
+KEYWORDS [Note: appears in .xml file also]
+&nbsp;&nbsp; &lt;any keywords for cross referencing&gt;
+
+# DESCRIPTION    <- Deprecated.  Now appears in the .xml file.
+# &nbsp;&nbsp; &lt;complete description&gt;
+
+# WARNING        <- Deprecated. Now appears in the .xml file.
+# &nbsp;&nbsp; &lt;anything users should be aware of&gt;
+
+[OTHER SECTIONS]
+&nbsp;&nbsp; &lt;Any other information you feel is important to reference.&gt;
+****************************************/</PRE>
+
+<P>CLASS is a Cocoon keyword that tells Cocoon to begin looking
+at the this Class specification. KEYWORDS tells Cocoon to use
+the provided list as a hypertext index to find this class. (<B>Though
+more than one keyword is allowed, each keyword must be a single
+word. If you want to use a keyword that consists of more than
+one word, use an underscore between each of the words.</B>) Other
+sections (consisting of all CAPITAL letters) are user defined.</P>
+
+<P>Within the class declaration special comment strings are needed
+to notify Cocoon of the existence of functions. This comment string
+is <TT>//////////</TT> and must appear on the line above each
+member function. It also should appear one line above any variable,
+typedefs, or enumerated types that might be in the <B>.H</B> file.
+A comment in the form <TT>// GROUP: &lt;group name&gt;</TT> can
+be used to group related functions together.</P>
+
+<H3>C-SAFE Cocoon Example<!--SELECTION--><!--/SELECTION--></H3>
+
+<P>Here is an example, <A HREF="Halton.html">the Halton Class</A>,
+that was created for the C-SAFE project. The .h file that was
+used to create the browsable page is <A HREF="Halton.h">Halton.h</A>.
+Take a look at it as a beginning example of how to 'instrument'
+a .h file. A version of Halton.h with <B>Coding Standards</B>
+and <B>Cocoon Keywords</B> explicitly labeled is <A HREF="commented_Halton.h">here</A>.
+(If the &quot;//FYI:&quot; comments where stripped from this file,
+it would match the Halton.h above.)</P>
+
+<H3>How To Use Cocoon</H3>
+
+At regular intervals, a automated script will run Cocoon on the entire
+source tree and copy the generated files to the SCIRun Documentation web
+site.  However, individual developers can (and should) keep their copy
+of the documentation up to date by periodically running the following
+command in their source repository:
+<P>
+<B>&gt; gmake cocoon</B> <FONT COLOR=red># THIS DOES NOT WORK YET!</FONT>
+<P>
+This will run Cocoon on their local copy of the source tree and
+generate up to date .html files.
+
+<P>
+
+<!----- Generic Page Trailer -------------------------------------------></P>
+
+<HR ALIGN=LEFT>
+
+<P><FONT COLOR="#ff0000" SIZE="-1">Copyright &COPY; 2000 University
+of Utah. All rights reserved. <BR>
+<BR>
+Last modified on </FONT><SCRIPT LANGUAGE="JavaScript">document.write(document.lastModified)
+</SCRIPT><BR>
+
+</BODY>
+</HTML>

@@ -1,0 +1,171 @@
+<html>
+<title>TBONUG module</title>
+<body>
+
+<h1>TBONUG</h1>
+
+<b>Description:</b><p>
+
+<a href="template.html">Template class</a> (Please read!)<p>
+
+<i>OK, sit down.  Using this module can be a very complicated,
+time-consuming process.  The preprocessing you need to do
+is very complex.  I've tried to lay it out as best I can
+below.  Don't say you weren't warned.</i><p>
+
+Implementation of the Temporal Branch-on-Need Octree (T-BON) for 
+unstructured scalar fields (see the thesis for more details).
+My definition of "unstructured" is purely tetrahedral elements, 
+where the grid does NOT change over time.<p>
+
+First I'll walk through the preprocessing.<p>
+
+<h3>First step</h3>
+
+First you need to get your data into the HTvol format that
+rtrt uses.  That format looks like:<br>
+
+<pre>
+HTVolumeBrick file    (in ASCII text)
+#points #tets         (in ASCII text)
+p0x p0y p0z data0     (in binary - vertex locations + data value at vertex)
+p1x p1y p1z data1 
+...
+t0_0 t0_1 t0_2 t0_3   (in binary - vertex connectivity info)
+t1_0 t1_1 t1_2 t1_3
+...
+</pre>
+
+Then you can use rtrt to get an idea for how many rectilinear cells
+you should divide the volume into.  Use one of the commands from
+htvol_command_lines and substitute the name of your htvol file.
+For example:<p>
+
+rtrt -np 16 -res 300x300 -scene htvolumebrick -camera -1055.23 254.832 190.605 -lookat 32.8377 -0.803524 305.187 -up 0.0889134 0.697259 0.711284 -fov 25.8258 -iso 27.6 -light -1055.23 254.832 190.605 torso_ug.htvol
+<p>
+
+You don't have to let this run, it'll spit out the nx, ny and nz you
+need pretty early.  You then want to feed this into the HTlists
+program (found in the rtrt directory).  This isn't very well documented
+(I think it was written by Mike Parker map@cs.utah.edu).  The usage is:<p>
+
+<pre>
+HTlists &lt name.htvol &gt &lt nx &gt &lt ny &gt &lt nz &gt
+</pre>
+<p>
+
+This will create a file called <i>name.lists</i> that you'll need in
+the next step.  You only have to do this once for a data set, since
+I assume the mesh doesn't change over time.
+<p>
+
+
+<h3>Separation</h3>
+
+This step solves (or at least relieves) the replication problem.
+You start with an htvol file for each time step, but since the 
+grid doesn't change over time, much of that file (all the connectivity
+information) is replicated, once per time step.<p>
+
+The "separate" directory contains some code that you should
+compile to an executable ("separate").  That executable
+takes all your timestep htvol files and the lists file and munges
+them into something that the TBONUG module can deal with more easily.
+The usage is:<p>
+
+<pre>
+separate &lt htvol_files* &gt &lt lists_file (name.lists above) &gt 
+   &lt geometry_file &gt &lt data_files** &gt &lt nx &gt &lt ny &gt &lt nz &gt
+</pre>
+<p>
+
+* This file lists the htvol files you have, e.g.
+<pre>
+./file0.htvol
+./file1.htvol
+...
+./file10.htvol
+</pre>
+<p>
+
+** This file lists the destination filenames for each data file, e.g.
+<pre>
+./data0
+./data1
+...
+./data10
+</pre>
+
+The <i>geometry file</i> will be created, containing the vertex and
+connectivity information.  All the files in <i>data_files</i> will
+be created, containing the data values at each vertex.<p>
+
+<b>Warning!</b> This process will probably take a <b>long</b>
+time!  In fact, I've seen data sets where it doesn't work at all.
+I don't understand this (I think it chokes if the data set gets too
+big).
+
+<h3>Module Preprocessing</h3>
+
+Almost done!  The last step resembles the preprocessing done in
+the <a href="tboncl.html">TBONCL</a> module.  The metafile looks like:<p>
+
+PREPROCESS<br>
+<i>filename for data file list*<br>
+geometry file name</i><br>
+nx ny nz<br>
+<i>filename for common tree data<br>
+per-tree file base<br>
+new geometry file (condensed)**</i><br>
+<p>
+
+* As before, format this as follows: <p>
+data file 0 (from separate step)<br>
+data file 1<br>
+...<br>
+<p>
+
+** The "separate" step evenly subdivides space and places copies of
+tetrahedra in each subvolume they inhabit.  This means some subvolumes
+may be empty.  You can collpase those subvolumes by specifying a 
+threshold in the TBONUG GUI during preprocessing.  See the thesis for
+more details.  If you do set a positive threshold, the geometry of
+the mesh doesn't change, but it needs to be reordered to accomodate
+the new tree structure.  If the threshold is zero, then the old
+geometry file just gets copied into this file.<p>
+
+
+<h2>Module Execution</h2>
+
+Now things can work like they did in the other T-BON modules.
+Here's the TBONUG execution metafile format:<p>
+
+EXECUTE<br>
+<i>filename for common tree data<br>
+geometry file (condensed)<br>
+filename for per-tree data file list*</i><br>
+miniso maxiso slider_resolution<br>
+num_timesteps<br>
+<p>
+
+* As before, format this as:<p>
+
+<pre>
+per-tree file 0      data file 0
+per-tree file 1      data file 1
+...
+</pre>
+
+<hr>
+
+So that's it.  If you have problems, let me know, but I may not 
+know how to solve anything.
+
+
+<hr>
+Packages/Philip Sutton (psutton@cs.utah.edu)<br>
+Last modified: 1 February 2000
+
+
+</body>
+</html>

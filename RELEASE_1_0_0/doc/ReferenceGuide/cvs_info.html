@@ -1,0 +1,143 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.7 [en] (WinNT; U) [Netscape]">
+</head>
+<body text="#000000" bgcolor="#FFFFFF" link="#CC0000" vlink="#6666CC" alink="#FF0000">
+
+<center><b><font color="#000099"><font size=+2>CVS Repository Information</font></font></b></center>
+&nbsp;
+<p><b><u><font color="#000099"><font size=+1>The Basics</font></font></u></b><b><font color="#000099"></font></b>
+<p><font color="#000099">Before you can use CVS, you have to let it know
+which server to use, what your login name is for that machine, what the
+path is to the repository you want, and finally what shell to use to access
+the server.</font><font color="#000099"></font>
+<p><font color="#000099">The server used for SCIRun is:</font><font face="Courier New,Courier"><font color="#000000"></font></font>
+<p><font face="Courier New,Courier"><font color="#000000">&nbsp; <b>csf.cs.utah.edu</b></font></font><font face="Courier New,Courier"><font color="#000000"></font></font>
+<p><font color="#000099">and the repository is located in the following
+path:</font><font face="Courier New,Courier"><font color="#000000"></font></font>
+<p><font face="Courier New,Courier"><font color="#000000">&nbsp; <b>/csafe_noexport/cvs/cvsroot</b></font></font><font face="Courier New,Courier"><font color="#000000"></font></font>
+<p><font color="#000099">To let CVS know which server and path to use,
+set the following environment variable:</font><font face="Courier New,Courier"><font color="#000000"></font></font>
+<p><font face="Courier New,Courier"><font color="#000000">&nbsp; <b>setenv
+CVSROOT USERNAME@SERVER:PATH</b></font></font><font face="Courier New,Courier"><font color="#000000"></font></font>
+<p><font color="#000099">Which, for SCIRun (and username guest),
+would look like:</font><font face="Courier New,Courier"><font color="#000000"></font></font>
+<p><font face="Courier New,Courier"><font color="#000000">&nbsp; <b>setenv
+CVSROOT guest@csf.cs.utah.edu:/csafe_noexport/cvs/cvsroot</b></font></font><font face="Courier New,Courier"><font color="#000000"></font></font>
+<p><font color="#000099">Now that CVS knows where to go, you need to let
+it know how to log on.&nbsp; The SCIRun CVS server only allows secure shell
+access.&nbsp; Set the following environment variable:</font><font face="Courier New,Courier"><font color="#000000"></font></font>
+<p><font face="Courier New,Courier"><font color="#000000">&nbsp; <b>setenv
+CVS_RSH COMMAND</b></font></font><font face="Courier New,Courier"><font color="#000000"></font></font>
+<p><font color="#000099">Which, for SCIRun, would look like this:</font><font face="Courier New,Courier"><font color="#000000"></font></font>
+<p><font face="Courier New,Courier"><font color="#000000">&nbsp; <b>setenv
+CVS_RSH ssh</b></font></font><font face="Courier New,Courier"><font color="#000000"></font></font>
+<p><font color="#000099">You should also set the following environment
+variable, to let the server know which file permissions should be assigned
+to files you add or modify:</font><font face="Courier New,Courier"><font color="#000000"></font></font>
+<p><font face="Courier New,Courier"><font color="#000000">&nbsp; <b>setenv
+CVSUMASK 000</b></font></font>
+<p><font color="#000099">Once you have all the environment variables set,
+you can use CVS to check-out code, add or modify code, and commit (or check-in)
+code.</font><font color="#000099"></font>
+<p><b><u><font color="#000099"><font size=+1>Checking Out Code From the
+Repository</font></font></u></b><b><u><font color="#000099"><font size=+1></font></font></u></b>
+<p><font color="#000099">Checking out code more or less means downloading
+the whole source tree for the latest version of a software project.&nbsp;
+To initiate the download you should type the following:</font><font color="#000099"></font>
+<p><b><font face="Courier New,Courier"><font color="#000000">&nbsp; cd
+PATH</font></font></b>
+<br><b><font face="Courier New,Courier"><font color="#000000">&nbsp; cvs
+checkout PROJECT</font></font></b><b><font face="Courier New,Courier"><font color="#000000"></font></font></b>
+<p><font color="#000099">where PATH is the path to where you would like
+the root of the new source tree to be located, and PROJECT is the name
+of the project you wish to get.&nbsp; For SCIRun the cvs command
+would look like:</font><font color="#000099"></font>
+<p><b><font face="Courier New,Courier"><font color="#000000">&nbsp; cvs
+checkout SCIRun</font></font></b>
+<br><b><font face="Courier New,Courier"><font color="#000000"></font></font></b>&nbsp;<b><u><font color="#000099"><font size=+1></font></font></u></b>
+<p><b><u><font color="#000099"><font size=+1>Adding a New File or Directory
+To the Repository</font></font></u></b>
+<p><font color="#000099">To add a new directory to the repository, type
+the following:</font><font color="#000099"></font>
+<p><font color="#000099">&nbsp;&nbsp;&nbsp;&nbsp; </font><b><font face="Courier New,Courier"><font color="#000000">cd
+PATH</font></font></b>
+<br><b><font face="Courier New,Courier"><font color="#000000">&nbsp; cvs
+add NEW_DIR</font></font></b><b><font face="Courier New,Courier"><font color="#000000"></font></font></b>
+<p><font color="#000099">Where PATH is the path to the directory you want
+to add, and NEW_DIR is the name of the new directory.</font>
+<p><font color="#000099">To add a new non-directory file to the repository,
+type the following:</font>
+<p><font face="Courier New,Courier">&nbsp; <b>cd PATH</b></font>
+<br><font face="Courier New,Courier">&nbsp; <b>cvs add NEW_FILE</b></font>
+<br><b><font face="Courier New,Courier">&nbsp; cvs commit -m "initial commit
+of NEW_FILE"</font></b><b><font face="Courier New,Courier"></font></b>
+<p><font color="#000099">Where PATH is the path to the file you want to
+add, and NEW_FILE is the name of the new file.&nbsp; Note that to add a
+new file, it must already exist in the PATH that you've indicated.</font>
+<br><font color="#000099"></font>&nbsp;<font color="#000099"></font>
+<p><b><u><font color="#000099"><font size=+1>Commiting Changes</font></font></u></b><b><font color="#000099"></font></b>
+<p><font color="#000099">Committing changes means that you have somehow
+modified code that you checked-out,&nbsp; and (since it's way better now
+than it was) you want the changes to be made to the version in the repository.&nbsp;
+Great care must be taken when committing changes to the repository.&nbsp;
+If the code you commit is somehow dependent on a particular machine, environment,
+or platform, you will likely be responsible for what is known as "breaking
+the build" - a very bad thing.&nbsp; A broken build occurs when code is
+committed to the repository without first verifying that the code _at least_
+compiles and links on all the platforms that are required for that project.&nbsp;
+If you commit code that doesn't compile and link on the automatic build
+machines, then you will be stripped naked, flogged in the center of the
+lab and hung upside down by your pinky toes for no less than a three week
+period - during which time people may freely fling undesirable things at
+your feeble nude body.</font><font color="#000099"></font>
+<p><font color="#000099">Once you have made changes to some files and you
+want to commit those changes, type the following:</font><font face="Courier New,Courier"><font color="#000099"></font></font>
+<p><font face="Courier New,Courier"><font color="#000000">&nbsp; <b>cd
+ROOT_PATH</b></font></font>
+<br><b><font face="Courier New,Courier"><font color="#000000">&nbsp; cvs
+update</font></font></b>
+<br><b><font face="Courier New,Courier"><font color="#000000">&nbsp; cvs
+commit -m "explain your changes"</font></font></b>
+<p><font color="#000099">Where ROOT_PATH is the root of the project's directory
+tree.&nbsp; The above instructions will insure that ALL of the changes
+in your tree will also be made to the repository.&nbsp; If you have some
+changes in your tree that you do not yet wish to commit, then you should
+commit on a file-by-file basis:</font><font color="#000099"></font>
+<p><b><font face="Courier New,Courier"><font color="#000000">&nbsp; cd
+PATH</font></font></b>
+<br><b><font face="Courier New,Courier"><font color="#000000">&nbsp; cvs
+update</font></font></b>
+<br><b><font face="Courier New,Courier"><font color="#000000">&nbsp; cvs
+commit -m "explain your changes" FILE_LIST</font></font></b><b><font face="Courier New,Courier"><font color="#000000"></font></font></b>
+<p><font color="#000099">Where PATH is location and FILE_LIST is a list
+of the files you wish to commit.&nbsp; Committing on a file-by-file basis
+needs to be done with caution.&nbsp; If the code you commit relies on code
+that you chose not (or forgot) to commit, then you will "break the build"!</font><font color="#000099"></font>
+<p><font color="#000099">Access to the repository is password-protected.
+Your password is the same as your</font>
+<br><font color="#000099">Unix password.&nbsp; If you get any errors, first
+double check your environment settings,</font>
+<br><font color="#000099">then send mail to scirun-develop@cs.</font>
+<br>&nbsp;
+</body>
+</html>
