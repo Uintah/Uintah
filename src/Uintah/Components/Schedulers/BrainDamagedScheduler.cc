@@ -1,3 +1,5 @@
+/* REFERENCED */
+static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Schedulers/BrainDamagedScheduler.h>
 #include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
@@ -5,15 +7,19 @@
 #include <Uintah/Exceptions/SchedulerException.h>
 #include <Uintah/Grid/Task.h>
 #include <SCICore/Thread/SimpleReducer.h>
-using SCICore::Thread::SimpleReducer;
 #include <SCICore/Thread/Thread.h>
-using SCICore::Thread::Thread;
 #include <SCICore/Thread/Time.h>
-using SCICore::Thread::Time;
 #include <SCICore/Thread/ThreadPool.h>
-using SCICore::Thread::ThreadPool;
 #include <iostream>
 #include <set>
+
+namespace Uintah {
+namespace Components {
+
+using SCICore::Thread::SimpleReducer;
+using SCICore::Thread::Thread;
+using SCICore::Thread::Time;
+using SCICore::Thread::ThreadPool;
 using std::cerr;
 using std::cout;
 using std::find;
@@ -22,46 +28,49 @@ using std::vector;
 
 BrainDamagedScheduler::BrainDamagedScheduler()
 {
-    numThreads=0;
-    reducer = new SimpleReducer("BrainDamagedScheduler only barrier/reducer");
-    pool = new ThreadPool("BrainDamagedScheduler worker threads");
-}
-
-void BrainDamagedScheduler::setNumThreads(int nt)
-{
-    numThreads = nt;
-}
-
-BrainDamagedScheduler::TaskRecord::~TaskRecord()
-{
-    delete task;
+    d_numThreads=0;
+    d_reducer = 
+        new SimpleReducer("BrainDamagedScheduler only barrier/reducer");
+    d_pool = new ThreadPool("BrainDamagedScheduler worker threads");
 }
 
 BrainDamagedScheduler::~BrainDamagedScheduler()
 {
-    for(vector<TaskRecord*>::iterator iter=tasks.begin();
-	iter != tasks.end(); iter++)
+    vector<TaskRecord*>::iterator iter;
+
+    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ )
 	delete *iter;
-    delete reducer;
-    delete pool;
+
+    delete d_reducer;
+    delete d_pool;
 }
 
-void BrainDamagedScheduler::initialize()
+void
+BrainDamagedScheduler::setNumThreads(int nt)
 {
-    for(vector<TaskRecord*>::iterator iter=tasks.begin();
-	iter != tasks.end(); iter++)
-	delete *iter;
-
-    tasks.clear();
-    targets.clear();
+    d_numThreads = nt;
 }
 
-void BrainDamagedScheduler::setupTaskConnections()
+void
+BrainDamagedScheduler::initialize()
+{
+    vector<TaskRecord*>::iterator iter;
+
+    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ )
+	delete *iter;
+
+    d_tasks.clear();
+    d_targets.clear();
+}
+
+void
+BrainDamagedScheduler::setupTaskConnections()
 {
     // Gather all comps...
-    vector<Task::Dependency*> allcomps;
-    for(vector<TaskRecord*>::iterator iter=tasks.begin();
-	iter != tasks.end(); iter++){
+    vector<Task::Dependency*>      allcomps;
+    vector<TaskRecord*>::iterator  iter;
+
+    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ){
 	TaskRecord* task = *iter;
 	task->task->addComps(allcomps);
     }
@@ -83,8 +92,7 @@ void BrainDamagedScheduler::setupTaskConnections()
     }
 
     // For each of the reqs, find the comp(s)
-    for(vector<TaskRecord*>::iterator iter=tasks.begin();
-	iter != tasks.end(); iter++){
+    for( iter=d_tasks.begin(); iter != tasks.end(); iter++){
 	TaskRecord* task = *iter;
 	vector<Task::Dependency*> reqs;
 	task->task->addReqs(reqs);
@@ -108,13 +116,11 @@ void BrainDamagedScheduler::setupTaskConnections()
     }
 
     // Set up reverse dependencies
-    for(vector<TaskRecord*>::iterator iter=tasks.begin();
-	iter != tasks.end(); iter++){
+    for( iter=d_tasks.begin(); iter != tasks.end(); iter++ ){
 	TaskRecord* task = *iter;
 	task->reverseDeps.clear();
     }
-    for(vector<TaskRecord*>::iterator iter=tasks.begin();
-	iter != tasks.end(); iter++){
+    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ){
 	TaskRecord* task = *iter;
 	for(vector<TaskRecord*>::iterator iter=task->deps.begin();
 	    iter != task->deps.end(); iter++){
@@ -131,9 +137,10 @@ void BrainDamagedScheduler::setupTaskConnections()
 
 }
 
-void BrainDamagedScheduler::execute(const ProcessorContext* pc)
+void
+BrainDamagedScheduler::execute(const ProcessorContext* pc)
 {
-    if(tasks.size() == 0){
+    if(d_tasks.size() == 0){
 	cerr << "WARNING: Scheduler executed, but no tasks\n";
 	return;
     }
@@ -142,17 +149,17 @@ void BrainDamagedScheduler::execute(const ProcessorContext* pc)
     int numThreads = pc->numThreads();
     for(;;){
 	int ncompleted=0;
-	for(vector<TaskRecord*>::iterator iter=tasks.begin();
-	    iter != tasks.end(); iter++){
+	vector<TaskRecord*>::iterator iter;
+	for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ){
 	    
 	    TaskRecord* task=*iter;
 	    double start = Time::currentSeconds();
 	    if(!task->task->isCompleted() && allDependenciesCompleted(task)){
 		if(task->task->usesThreads()){
 		    //cerr << "Performing task with " << numThreads << " threads: " << task->task->getName() << '\n';
-                    pool->parallel(this, &BrainDamagedScheduler::runThreadedTask,
+                    d_pool->parallel(this, &BrainDamagedScheduler::runThreadedTask,
 				   numThreads,
-				   task, pc, reducer);
+				   task, pc, d_reducer);
 //task->task->doit(threadpc);
 		} else {
 		    //cerr << "Performing task: " << task->task->getName() << '\n';
@@ -166,42 +173,66 @@ void BrainDamagedScheduler::execute(const ProcessorContext* pc)
 	if(ncompleted == 0)
 	    throw SchedulerException("BrainDamagedScheduler stalled");
 	totalcompleted += ncompleted;
-	if(totalcompleted == tasks.size())
+	if(totalcompleted == d_tasks.size())
 	    break;
     }
 }
 
-void BrainDamagedScheduler::addTarget(const std::string& target)
+void
+BrainDamagedScheduler::addTarget(const std::string& target)
 {
-    targets.push_back(target);
+    d_targets.push_back(target);
 }
 
-void BrainDamagedScheduler::addTask(Task* t)
+void
+BrainDamagedScheduler::addTask(Task* t)
 {
-    tasks.push_back(new TaskRecord(t));
+    d_tasks.push_back(new TaskRecord(t));
 }
 
-bool BrainDamagedScheduler::allDependenciesCompleted(TaskRecord* task) const
+bool
+BrainDamagedScheduler::allDependenciesCompleted(TaskRecord* task) const
 {
     //cerr << "BrainDamagedScheduler::allDependenciesCompleted broken!\n";
     return true;
 }
 
-BrainDamagedScheduler::TaskRecord::TaskRecord(Task* t)
-    : task(t)
-{
-}
-
-DataWarehouseP BrainDamagedScheduler::createDataWarehouse()
+DataWarehouseP
+BrainDamagedScheduler::createDataWarehouse()
 {
     return new OnDemandDataWarehouse();
 }
 
-void BrainDamagedScheduler::runThreadedTask(int threadNumber, TaskRecord* task,
-					    const ProcessorContext* pc,
-					    SimpleReducer* barrier)
+void
+BrainDamagedScheduler::runThreadedTask(int threadNumber, TaskRecord* task,
+				       const ProcessorContext* pc,
+				       SimpleReducer* barrier)
 {
-    ProcessorContext* subpc = pc->createContext(threadNumber, pc->numThreads(), barrier);
+    ProcessorContext* subpc = 
+               pc->createContext(threadNumber, pc->numThreads(), barrier);
     task->task->doit(subpc);
     delete subpc;
 }
+
+BrainDamagedScheduler::
+TaskRecord::~TaskRecord()
+{
+    delete task;
+}
+
+BrainDamagedScheduler::
+TaskRecord::TaskRecord(Task* t)
+    : task(t)
+{
+}
+
+
+} // end namespace Components
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.3  2000/03/17 01:03:16  dav
+// Added some cocoon stuff, fixed some namespace stuff, etc
+//
+//

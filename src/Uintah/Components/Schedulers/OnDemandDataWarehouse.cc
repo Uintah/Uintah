@@ -1,33 +1,40 @@
+/* REFERENCED */
+static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Uintah/Exceptions/DataWarehouseException.h>
 #include <SCICore/Thread/Guard.h>
-using SCICore::Thread::Guard;
 #include <iostream>
+
+namespace Uintah {
+namespace Components {
+
+using Uintah::Exceptions::DataWarehouseException;
+using SCICore::Thread::Guard;
 using std::cerr;
 
 OnDemandDataWarehouse::OnDemandDataWarehouse()
-    : lock("DataWarehouse lock")
+    : d_lock("DataWarehouse lock")
 {
     d_allowCreation = true;
 }
 
 OnDemandDataWarehouse::~OnDemandDataWarehouse()
 {
-    for(dbType::iterator iter = data.begin();
-	iter != data.end(); iter++){
+    for(dbType::iterator iter = d_data.begin(); iter != d_data.end(); iter++){
 	delete iter->second->di;
     }
 }
 
-void OnDemandDataWarehouse::getBroadcastData(DataItem& result,
-					     const std::string& name,
-					     const TypeDescription* td) const
+void
+OnDemandDataWarehouse::getBroadcastData(DataItem& result,
+					const std::string& name,
+					const TypeDescription* td) const
 {
     /* REFERENCED */
     //    Guard locker(&lock, Guard::Read);
-    dbType::const_iterator iter = data.find(name);
-    if(iter == data.end())
+    dbType::const_iterator iter = d_data.find(name);
+    if(iter == d_data.end())
 	throw DataWarehouseException("Variable not found: "+name);
     DataRecord* dr = iter->second;
     if(dr->region != 0)
@@ -37,18 +44,19 @@ void OnDemandDataWarehouse::getBroadcastData(DataItem& result,
     dr->di->get(result);
 }
 
-void OnDemandDataWarehouse::getRegionData(DataItem& result, 
-					  const std::string& name,
-					  const TypeDescription* td,
-					  const Region* region,
-					  int numGhostCells) const
+void
+OnDemandDataWarehouse::getRegionData(DataItem& result, 
+				     const std::string& name,
+				     const TypeDescription* td,
+				     const Region* region,
+				     int numGhostCells) const
 {
     if(numGhostCells != 0)
 	throw DataWarehouseException("ghostcells not implemented");
     /* REFERENCED */
     //    Guard locker(&lock, Guard::Read);
-    dbType::const_iterator iter = data.find(name);
-    if(iter == data.end())
+    dbType::const_iterator iter = d_data.find(name);
+    if(iter == d_data.end())
 	throw DataWarehouseException("Variable not found: "+name);
     DataRecord* dr = iter->second;
     if(dr->region != region)
@@ -58,23 +66,24 @@ void OnDemandDataWarehouse::getRegionData(DataItem& result,
     dr->di->get(result);
 }
 
-void OnDemandDataWarehouse::putRegionData(const DataItem& result, 
-					  const std::string& name,
-					  const TypeDescription* td,
-					  const Region* region,
-					  int numGhostCells)
+void
+OnDemandDataWarehouse::putRegionData(const DataItem& result, 
+				     const std::string& name,
+				     const TypeDescription* td,
+				     const Region* region,
+				     int numGhostCells)
 {
     if(numGhostCells != 0)
 	throw DataWarehouseException("ghostcells not implemented");
     /* REFERENCED */
     //Guard locker(&lock, Guard::Write);
-    dbType::iterator iter = data.find(name);
-    if(iter == data.end()){
+    dbType::iterator iter = d_data.find(name);
+    if(iter == d_data.end()){
 	if(d_allowCreation){
 	    //cerr << "Creating variable: " << name << '\n';
-	    data[name]=new DataRecord(result.clone(), td, region);
+	    d_data[name]=new DataRecord(result.clone(), td, region);
 	}
-	iter = data.find(name);
+	iter = d_data.find(name);
     }
     DataRecord* dr = iter->second;
     if(dr->region != region)
@@ -95,11 +104,11 @@ void OnDemandDataWarehouse::allocateRegionData(DataItem& result,
     /* REFERENCED */
     //    Guard locker(&lock, Guard::Write);
     //    lock.writeLock();
-    dbType::iterator iter = data.find(name);
-    if(iter == data.end()){
+    dbType::iterator iter = d_data.find(name);
+    if(iter == d_data.end()){
 	//cerr << "Creating variable: " << name << '\n';
 	DataItem* di = result.clone();
-	data[name]=new DataRecord(di, td, region);
+	d_data[name]=new DataRecord(di, td, region);
 	di->allocate(region);
 	di->get(result);
     } else {
@@ -119,13 +128,13 @@ void OnDemandDataWarehouse::putBroadcastData(const DataItem& result,
 {
     /* REFERENCED */
     //Guard locker(&lock, Guard::Write);
-    dbType::iterator iter = data.find(name);
-    if(iter == data.end()){
+    dbType::iterator iter = d_data.find(name);
+    if(iter == d_data.end()){
 	if(d_allowCreation){
 	    //cerr << "Creating variable: " << name << '\n';
-	    data[name]=new DataRecord(result.clone(), td, 0);
+	    d_data[name]=new DataRecord(result.clone(), td, 0);
 	}
-	iter = data.find(name);
+	iter = d_data.find(name);
     }
     DataRecord* dr = iter->second;
     if(dr->region != 0)
@@ -141,3 +150,13 @@ OnDemandDataWarehouse::DataRecord::DataRecord(DataItem* di,
     : di(di), td(td), region(region)
 {
 }
+
+} // end namespace Components
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.3  2000/03/17 01:03:17  dav
+// Added some cocoon stuff, fixed some namespace stuff, etc
+//
+//

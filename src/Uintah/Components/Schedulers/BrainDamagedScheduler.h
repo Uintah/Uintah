@@ -1,6 +1,5 @@
-
-#ifndef UINTAH_HOMEBREW_BRAINDAMAGEDScheduler_H
-#define UINTAH_HOMEBREW_BRAINDAMAGEDScheduler_H
+#ifndef UINTAH_HOMEBREW_BRAINDAMAGEDSCHEDULER_H
+#define UINTAH_HOMEBREW_BRAINDAMAGEDSCHEDULER_H
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/Scheduler.h>
@@ -13,40 +12,125 @@ namespace SCICore {
     }
 }
 
+namespace Uintah {
+
+namespace Grid {
+  class Task;
+}
+
+namespace Parallel {
+  class ProcessorContext;
+}
+
+namespace Components {
+
+using Uintah::Parallel::UintahParallelComponent;
+using Uintah::Parallel::ProcessorContext;
+using Uintah::Interface::Scheduler;
+using Uintah::Interface::DataWarehouseP;
+using Uintah::Grid::Task;
+
+/**************************************
+
+CLASS
+   BrainDamagedScheduler
+   
+   Short description...
+
+GENERAL INFORMATION
+
+   BrainDamagedScheduler.h
+
+   Steven G. Parker
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2000 SCI Group
+
+KEYWORDS
+   Scheduler_Brain_Damaged
+
+DESCRIPTION
+   Long description...
+  
+WARNING
+  
+****************************************/
+
 class BrainDamagedScheduler : public UintahParallelComponent, public Scheduler {
 public:
     BrainDamagedScheduler();
     virtual ~BrainDamagedScheduler();
 
+    //////////
+    // Insert Documentation Here:
     virtual void initialize();
+
+    //////////
+    // Insert Documentation Here:
     virtual void execute(const ProcessorContext*);
+
+    //////////
+    // Insert Documentation Here:
     virtual void addTarget(const std::string&);
+
+    //////////
+    // Insert Documentation Here:
     virtual void addTask(Task* t);
+
+    //////////
+    // Insert Documentation Here:
     virtual DataWarehouseP createDataWarehouse();
+
+    //////////
+    // Insert Documentation Here:
     void setNumThreads(int numThreads);
+
 private:
-    SCICore::Thread::SimpleReducer* reducer;
+    BrainDamagedScheduler(const BrainDamagedScheduler&);
+    BrainDamagedScheduler& operator=(const BrainDamagedScheduler&);
+
     struct TaskRecord {
-	Task* task;
-	std::vector<TaskRecord*> deps;
-	std::vector<TaskRecord*> reverseDeps;
 	TaskRecord(Task*);
 	~TaskRecord();
+
+	Task*                    task;
+	std::vector<TaskRecord*> deps;
+	std::vector<TaskRecord*> reverseDeps;
     };
+
+    //////////
+    // Insert Documentation Here:
     bool allDependenciesCompleted(TaskRecord* task) const;
+
+    //////////
+    // Insert Documentation Here:
     void setupTaskConnections();
 
+    //////////
+    // Insert Documentation Here:
     void runThreadedTask(int, TaskRecord*, const ProcessorContext*,
 			 SCICore::Thread::SimpleReducer*);
 
-    std::vector<TaskRecord*> tasks;
-    std::vector<std::string> targets;
+    SCICore::Thread::SimpleReducer* d_reducer;
 
-    SCICore::Thread::ThreadPool* pool;
-    int numThreads;
+    std::vector<TaskRecord*>        d_tasks;
+    std::vector<std::string>        d_targets;
 
-    BrainDamagedScheduler(const BrainDamagedScheduler&);
-    BrainDamagedScheduler& operator=(const BrainDamagedScheduler&);
+    SCICore::Thread::ThreadPool*    d_pool;
+    int                             d_numThreads;
 };
+
+} // end namespace Components
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.3  2000/03/17 01:03:16  dav
+// Added some cocoon stuff, fixed some namespace stuff, etc
+//
+//
 
 #endif
