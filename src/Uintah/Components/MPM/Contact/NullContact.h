@@ -5,7 +5,37 @@
 
 #include "Contact.h"
 
-#ifdef WONT_COMPILE_YET
+namespace Uintah {
+namespace Components {
+
+/**************************************
+
+CLASS
+   NullContact
+   
+   Short description...
+
+GENERAL INFORMATION
+
+   NullContact.h
+
+   Steven G. Parker
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2000 SCI Group
+
+KEYWORDS
+   Contact_Model_Null
+
+DESCRIPTION
+   Long description...
+  
+WARNING
+  
+****************************************/
 
 class NullContact : public Contact {
  private:
@@ -33,11 +63,13 @@ class NullContact : public Contact {
 
 };
 
-#endif
-
-#endif /* __NULL_CONTACT_H__ */
+} // end namespace Components
+} // end namespace Uintah
 
 // $Log$
+// Revision 1.3  2000/03/20 23:50:44  dav
+// renames SingleVel to SingleVelContact
+//
 // Revision 1.2  2000/03/20 17:17:12  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //
@@ -46,3 +78,6 @@ class NullContact : public Contact {
 // class and SingleVel, a class which reclaims the single velocity
 // field result from a multiple velocity field problem.
 //
+
+#endif /* __NULL_CONTACT_H__ */
+
