@@ -29,7 +29,6 @@
 #include <PSECore/Dataflow/Network.h>
 #include <PSECore/Dataflow/PackageDB.h>
 #include <PSECore/Dataflow/Port.h>
-#include <PSECore/Dataflow/CreatePacCatMod.h>
 #include <PSECore/Dataflow/ComponentNode.h>
 #include <PSECore/Dataflow/GenFiles.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -58,7 +57,6 @@ using std::endl;
 using SCICore::Thread::Thread;
 
 //#define DEBUG 1
-#define NEW_MODULE_MAKER 0
 #include <tcl.h>
   
 #ifdef _WIN32
@@ -693,16 +691,10 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
           args.error("create_pac_cat_mod needs 5 arguments");
           return;
         }
-#if NEW_MODULE_MAKER
 	GenPackage((char*)args[3](),(char*)args[2]());
 	GenCategory((char*)args[4](),(char*)args[3](),(char*)args[2]());
 	GenComponent((component_node*)atol(args[6]()),
 		     (char*)args[3](),(char*)args[2]());
-#else
-        check &= CreatePac(args[2]());
-	check &= CreateCat(args[2](),args[3]());
-	check &= CreateMod(args[2](),args[3](),args[4]());
-#endif
         if (!check) {
           args.error("create_pac_cat_mod failed.");
           return;
@@ -713,14 +705,9 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
           args.error("create_cat_mod needs 3 arguments");
           return;
         }
-#if NEW_MODULE_MAKER
 	GenCategory((char*)args[4](),(char*)args[3](),(char*)args[2]());
 	GenComponent((component_node*)atol(args[6]()),
 		     (char*)args[3](),(char*)args[2]());
-#else
-	check &= CreateCat(args[2](),args[3]());
-	check &= CreateMod(args[2](),args[3](),args[4]());
-#endif
 	if (!check) {
 	  args.error("create_cat_mod failed.");
 	  return;
@@ -731,12 +718,8 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
           args.error("create_mod needs 3 arguments");
           return;
         }
-#if NEW_MODULE_MAKER
 	GenComponent((component_node*)atol(args[6]()),
 		     (char*)args[3](),(char*)args[2]());
-#else
-	check &= CreateMod(args[2](),args[3](),args[4]());
-#endif
 	if (!check) {
 	  args.error("create_mod failed.");
 	  return;
@@ -771,6 +754,12 @@ void postMessage(const clString& errmsg, bool err)
 
 //
 // $Log$
+// Revision 1.18  2000/10/24 05:57:41  moulding
+// new module maker Phase 2: new module maker goes online
+//
+// These changes clean out the last remnants of the old module maker and
+// bring the new module maker online.
+//
 // Revision 1.17  2000/10/23 09:19:47  moulding
 // some changes to the new module maker.
 //
