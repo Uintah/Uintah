@@ -160,63 +160,63 @@ class Crack
      short doCrackPropagation;      // Flag if doing crack propagation at this step
 
      // Data members of cracks
-     string crackType[MNM];                //crack contact type
-     double c_mu[MNM];                     //Frcition coefficients
-     double separateVol[MNM];              //critical separate volume
-     double contactVol[MNM];               //critical contact volume
+     string crackType[MNM];                // Crack contact type
+     double c_mu[MNM];                     // Frcition coefficients
+     double separateVol[MNM];              // Critical separate volume
+     double contactVol[MNM];               // Critical contact volume
 
-     //crack geometry
-       //quadrilateral segments of cracks
+     // Crack geometry
+       // Quadrilateral segments of cracks
      vector<vector<Point> > rectangles[MNM];
-       //resolution of quadrilateral cracks in 1-2 & 2-3 directions 
+       // Resolution of quadrilateral cracks in 1-2 & 2-3 directions 
      vector<int>  rectN12[MNM],rectN23[MNM];       
-       //sides at crack front
+       // Sides at crack front
      vector<vector<short> > rectCrackSidesAtFront[MNM];
      
-       //trianglular segements of cracks 
+       // Trianglular segements of cracks 
      vector<vector<Point> > triangles[MNM];
-       //resolution of triangular cracks in all sides 
+       // Resolution of triangular cracks in all sides 
      vector<int>  triNCells[MNM];
-       //sides at crack front
+       // Sides at crack front
      vector<vector<short> > triCrackSidesAtFront[MNM];
 
-       //arc segements of cracks
+       // Arc segements of cracks
      vector<vector<Point> > arcs[MNM];
-       //resolution of arc cracks on circumference
+       // Resolution of arc cracks on circumference
      vector<int>  arcNCells[MNM];
-       // crack front segment ID
+       // Crack front segment ID
      vector<int> arcCrkFrtSegID[MNM];
 
-       //elliptical segments of cracks
+       // Elliptical segments of cracks
      vector<vector<Point> > ellipses[MNM];
-       //resolution of arc cracks on circumference
+       // Resolution of arc cracks on circumference
      vector<int>  ellipseNCells[MNM];
-       // crack front segment ID
+       // Crack front segment ID
      vector<int> ellipseCrkFrtSegID[MNM];
 
-       //partial elliptical segments of cracks
+       // Partial elliptical segments of cracks
      vector<vector<Point> > pellipses[MNM];
-       //resolution of partial elliptic cracks on circumference 
+       // Resolution of partial elliptic cracks on circumference 
      vector<int>  pellipseNCells[MNM];
-       // crack front segment ID
+       // Crack front segment ID
      vector<int> pellipseCrkFrtSegID[MNM];
-       // extent of partial elliptic cracks
+       // Extent of partial elliptic cracks
      vector<string> pellipseExtent[MNM];
 
-       //crack extent
+       // Crack extent
      Point cmin[MNM],cmax[MNM];  
 
-     // crack data after mesh  
-     int               cnumElems[MNM];      //number of carck elements
-     int               cnumNodes[MNM];      //number of crack points
-     int               cnumFrontSegs[MNM];  //number of segments at crack front
-     vector<Point>     cx[MNM];             //crack node position
-     vector<IntVector> cElemNodes[MNM];     //nodes of crack elements
-     vector<Vector>    cElemNorm[MNM];      //crack element normals
-     vector<Point>     cFrontSegPts[MNM];   //crack front segments
-     vector<Vector>    cFrontSegNorm[MNM];  //crack front segment normals
-     vector<Vector>    cFrontSegJ[MNM];     //J integral of crack front segments
-     vector<Vector>    cFrontSegK[MNM];     //SIF of crack front segments
+     // Crack data after mesh  
+     int               cnumElems[MNM];      // Number of carck elements
+     int               cnumNodes[MNM];      // Number of crack points
+     int               cnumFrontSegs[MNM];  // Number of segments at crack front
+     vector<Point>     cx[MNM];             // Crack node position
+     vector<IntVector> cElemNodes[MNM];     // Nodes of crack elements
+     vector<Vector>    cElemNorm[MNM];      // Crack element normals
+     vector<Point>     cFrontSegPts[MNM];   // Crack front segments
+     vector<Vector>    cFrontSegNorm[MNM];  // Crack front segment normals
+     vector<Vector>    cFrontSegJ[MNM];     // J integral of crack front segments
+     vector<Vector>    cFrontSegK[MNM];     // SIF of crack front segments
      vector<int>       cpset[128][MNM];     //crack point sunset, 128=64nodes*2procs/node
 
      // private methods  
@@ -227,25 +227,25 @@ class Crack
      // Detect if particle and node in same side of a plane
      short Location(const Point&,const Point&,
                        const Point&,const Point&,const Point&);
-     //compute signed volume of a tetrahedron
+     // Compute signed volume of a tetrahedron
      double Volume(const Point&,const Point&,const Point&,const Point&);
-     // a private function
+     // A private function
      IntVector CellOffset(const Point&, const Point&, Vector);
-     // detect if a line is in another line
+     // Detect if a line is in another line
      short TwoLinesDuplicate(const Point&,const Point&,const Point&,
                                                        const Point&);
-     // direction consines of two points
+     // Direction consines of two points
      Vector TwoPtsDirCos(const Point&,const Point&);
-     // find plane equation by three points
+     // Find plane equation by three points
      void FindPlaneEquation(const Point&,const Point&,const Point&,
                             double&,double&,double&,double&);
-     // detect if a point is within a triangle
+     // Detect if a point is within a triangle
      short PointInTriangle(const Point&,const Point&, 
                           const Point&,const Point&); 
-     // find parameters of J-patch circle
+     // Find parameters of J-patch circle
      void FindJPathCircle(const Point&,const Vector&,
               const Vector&,const Vector&,double []);
-     // find intersection between J-patch and crack plane
+     // Find intersection between J-patch and crack plane
      void FindIntersectionOfJPathAndCrackPlane(const int&,
                    const double& r,const double [],Point&); 
     // Detect if doing fracture analysis 
