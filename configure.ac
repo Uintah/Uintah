@@ -1702,6 +1702,8 @@ $_sci_inc, GL, $_sci_lib,,
   int r = 5;
 ],optional)
 
+DEF_OGL_EXT_HDRS=""
+
 if test "$HAVE_EXT_HDRS" = "yes"; then
 
   DEF_OGL_EXT_HDRS="#define CORRECT_OGLEXT_HDRS 1"
