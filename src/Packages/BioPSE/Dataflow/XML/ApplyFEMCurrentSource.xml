@@ -52,7 +52,7 @@
 	<listitem>
 	  <p>We assume the mesh to be a TetVolField(int) type,
 	  containing indices to the conductivity tensor lookup table.
-	  The documentation for BioPSE::Forward::SetupFEMatrix module provides further documentation about this mesh.</p>
+	  The documentation for the <modref package="BioPSE" name="SetupFEMatrix"/> module provides further documentation about this mesh.</p>
 	</listitem>
 	<listitem>
 	  <p>Dipoles are represented as nodes in TetVolMesh. The
