@@ -328,7 +328,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
       double icp   = ref_gamma[c] * ref_cv[c];
       eReleased[c] = temp[c] * cp - ref_temp[c] * icp;
     }
-    setBC(f,"cumulativeEnergyReleased", patch, sharedState,indx, new_dw); 
+    setBC(eReleased,"cumulativeEnergyReleased", patch, sharedState,indx, new_dw); 
 
     //__________________________________
     //  Dump out a header for the probe point files
