@@ -485,11 +485,11 @@ void DenseMatrix::io(Piostream& stream)
     split = separate_raw_;
     if (split) {
       if (filename == "") {
-	if (stream.file_name()) {
-	  char *tmp=strdup(stream.file_name());
+	if (stream.file_name.c_str()) {
+	  char *tmp=strdup(stream.file_name.c_str());
 	  char *dot = strrchr( tmp, '.' );
 	  if (!dot ) dot = strrchr( tmp, 0);
-	  filename = string(stream.file_name.substr(0,dot-tmp)()) + ".raw";
+	  filename = stream.file_name.substr(0,dot-tmp) + ".raw";
 	  delete tmp;
 	} else split=0;
       }

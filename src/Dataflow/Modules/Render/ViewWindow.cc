@@ -2287,9 +2287,9 @@ void ViewWindow::dump_objects(const clString& filename, const clString& format)
   if(format == "scirun_binary" || format == "scirun_ascii"){
     Piostream* stream;
     if(format == "scirun_binary")
-      stream=new BinaryPiostream(filename, Piostream::Write);
+      stream=new BinaryPiostream(filename(), Piostream::Write);
     else
-      stream=new TextPiostream(filename, Piostream::Write);
+      stream=new TextPiostream(filename(), Piostream::Write);
     if(stream->error()){
       delete stream;
       return;

@@ -146,7 +146,7 @@ public:
     
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<T>&);
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<T>&, 
-					     const clString &);
+					     const string &);
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<T>*&);
 
 };
@@ -311,7 +311,7 @@ void Pio(Piostream& stream, Array3<T>*& data) {
 
 template<class T>
 void Pio(Piostream& stream, Array3<T>& data, 
-         const clString& filename)
+         const string& filename)
 {
 #ifdef __GNUG__
 #else

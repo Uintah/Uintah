@@ -57,7 +57,7 @@ PersistentTypeID::PersistentTypeID(const char* typeName,
     table = scinew Piostream::MapClStringPersistentTypeID;
   }
   
-  clString typestring(type.c_str());
+  string typestring(type.c_str());
   
   Piostream::MapClStringPersistentTypeID::iterator dummy;
 
@@ -86,7 +86,7 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
     table = scinew Piostream::MapClStringPersistentTypeID;
   }
   
-  clString typestring(type.c_str());
+  string typestring(type.c_str());
   
   Piostream::MapClStringPersistentTypeID::iterator dummy;
   
@@ -127,7 +127,7 @@ Persistent::~Persistent()
 //
 
 //----------------------------------------------------------------------
-Piostream::Piostream(Direction dir, int version, const clString &name)
+Piostream::Piostream(Direction dir, int version, const string &name)
 : dir(dir), version(version), err(0), outpointers(0), inpointers(0),
   current_pointer_id(1), file_name(name)
 {
@@ -157,8 +157,8 @@ int Piostream::error()
 }
 
 //----------------------------------------------------------------------
-static PersistentTypeID* find_derived(const clString& classname,
-				      const clString& basename)
+static PersistentTypeID* find_derived(const string& classname,
+				      const string& basename)
 {
   if (!table) return 0;
   PersistentTypeID* pid;
@@ -196,8 +196,8 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 				// stream.  If it Is a type derived
 				// from pid->type, then read it in
 				// Otherwise, it is an error...
-      clString in_name(peek_class());
-      clString want_name(pid.type.c_str());
+      string in_name(peek_class());
+      string want_name(pid.type.c_str());
       
       Persistent* (*maker)() = 0;
       if (in_name == want_name) {
@@ -283,9 +283,9 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 }
 
 //----------------------------------------------------------------------
-Piostream* auto_istream(const clString& filename)
+Piostream* auto_istream(const string& filename)
 {
-  std::ifstream in(filename());
+  std::ifstream in(filename.c_str());
   if (!in) {
     cerr << "file not found: " << filename << endl;
     return 0;
@@ -321,7 +321,7 @@ Piostream* auto_istream(const clString& filename)
 }
 
 //----------------------------------------------------------------------
-bool Piostream::readHeader(const clString& filename, char* hdr,
+bool Piostream::readHeader(const string& filename, char* hdr,
   const char* filetype, int& version)
 {
   char m1=hdr[0];
@@ -357,18 +357,18 @@ bool Piostream::readHeader(const clString& filename, char* hdr,
 //----------------------------------------------------------------------
 int Piostream::begin_class(const char* classname, int current_version)
 {
-  return begin_class(clString(classname), current_version);
+  return begin_class(classname, current_version);
 }
 
 //----------------------------------------------------------------------
-void Pio(Piostream& stream, string& data) { 
+void Pio(Piostream& stream, clString& data) { 
   if (stream.reading()){
-    clString tmp;
+    string tmp;
     stream.io(tmp);
-    data=tmp();
+    data=tmp.c_str();
   }
   else {
-    clString tmp(data.c_str());
+    string tmp(data());
     stream.io(tmp);
   }
 }

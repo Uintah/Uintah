@@ -89,7 +89,7 @@ void MatrixReader::execute()
   {
     old_filemodification_ = new_filemodification;
     old_filename_=fn;
-    Piostream* stream=auto_istream(fn);
+    Piostream* stream=auto_istream(fn());
     if(!stream){
       error(clString("Error reading file: ")+filename_.get());
       return;
