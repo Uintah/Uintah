@@ -101,18 +101,66 @@ EditFieldAlgoCountT<MESH>::execute(MeshHandle mesh_h,
 
 
 
-class EditFieldAlgoCopy : public DynamicAlgoBase
+class EditFieldAlgoCreate : public DynamicAlgoBase
 {
 public:
 
   virtual FieldHandle execute(FieldHandle fsrc_h,
 			      Field::data_location fout_at,
-			      bool transform_p, double scale,
-			      double translate) = 0;
+			      bool &same_value_type_p) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *fsrc,
 				       const string &fdstname);
+};
+
+
+template <class FSRC, class FOUT>
+class EditFieldAlgoCreateT : public EditFieldAlgoCreate
+{
+public:
+
+  virtual FieldHandle execute(FieldHandle fsrc_h,
+			      Field::data_location fout_at,
+			      bool &same_value_type_p);
+};
+
+
+template <class FSRC, class FOUT>
+FieldHandle
+EditFieldAlgoCreateT<FSRC, FOUT>::execute(FieldHandle fsrc_h,
+					  Field::data_location at,
+					  bool &same_value_type_p)
+{
+  FSRC *fsrc = dynamic_cast<FSRC *>(fsrc_h.get_rep());
+
+  // Create the field with the new mesh and data location.
+  FOUT *fout = scinew FOUT(fsrc->get_typed_mesh(), at);
+
+  // Copy the (possibly transformed) data to the new field.
+  fout->resize_fdata();
+
+  same_value_type_p =
+    (get_type_description((typename FSRC::value_type *)0)->get_name() ==
+     get_type_description((typename FOUT::value_type *)0)->get_name());
+
+  return fout;
+}
+
+
+
+
+class EditFieldAlgoCopy : public DynamicAlgoBase
+{
+public:
+
+  virtual void execute(FieldHandle fsrc_h, FieldHandle fout_h,
+		       double scale, double translate) = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
+				       const TypeDescription *fdst,
+				       bool transform_p);
 };
 
 
@@ -122,49 +170,70 @@ class EditFieldAlgoCopyT : public EditFieldAlgoCopy
 public:
 
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle fsrc_h,
-			      Field::data_location fout_at,
-			      bool transform_p, double scale,
-			      double translate);
+  virtual void execute(FieldHandle fsrc_h, FieldHandle fout_h,
+		       double scale, double translate);
 };
 
 
 template <class FSRC, class FOUT>
-FieldHandle
+void
 EditFieldAlgoCopyT<FSRC, FOUT>::execute(FieldHandle fsrc_h,
-					Field::data_location fout_at,
-					bool transform_p, double scale,
+					FieldHandle fout_h,
+					double scale,
 					double translate)
 {
   FSRC *fsrc = dynamic_cast<FSRC *>(fsrc_h.get_rep());
+  FOUT *fout = dynamic_cast<FOUT *>(fout_h.get_rep());
 
-  // Create the field with the new mesh and data location.
-  FOUT *fout = scinew FOUT(fsrc->get_typed_mesh(), fout_at);
-
-  // Copy the (possibly transformed) data to the new field.
-  fout->resize_fdata();
   typename FSRC::fdata_type::iterator in = fsrc->fdata().begin();
   typename FOUT::fdata_type::iterator out = fout->fdata().begin();
   typename FSRC::fdata_type::iterator end = fsrc->fdata().end();
-  if (fout_at == fsrc->data_at())
+  if (fout->data_at() == fsrc->data_at())
   {
     while (in != end)
     {
-      if (transform_p)
-      {
-	// Linearly transform the data.
-	*out = (typename FOUT::value_type)(*in * scale + translate);
-      }
-      else
-      {
-	*out = (typename FOUT::value_type)(*in);
-      }
+      *out = (typename FOUT::value_type)(*in);
       ++in; ++out;
     }
   }
-
-  return fout;
 }
+
+
+
+template <class FSRC, class FOUT>
+class EditFieldAlgoCopyTT : public EditFieldAlgoCopy
+{
+public:
+
+  //! virtual interface. 
+  virtual void execute(FieldHandle fsrc_h, FieldHandle fout_h,
+		       double scale, double translate);
+};
+
+
+template <class FSRC, class FOUT>
+void
+EditFieldAlgoCopyTT<FSRC, FOUT>::execute(FieldHandle fsrc_h,
+					 FieldHandle fout_h,
+					 double scale,
+					 double translate)
+{
+  FSRC *fsrc = dynamic_cast<FSRC *>(fsrc_h.get_rep());
+  FOUT *fout = dynamic_cast<FOUT *>(fout_h.get_rep());
+
+  typename FSRC::fdata_type::iterator in = fsrc->fdata().begin();
+  typename FOUT::fdata_type::iterator out = fout->fdata().begin();
+  typename FSRC::fdata_type::iterator end = fsrc->fdata().end();
+  if (fout->data_at() == fsrc->data_at())
+  {
+    while (in != end)
+    {
+      *out = (typename FOUT::value_type)(*in * scale + translate);
+      ++in; ++out;
+    }
+  }
+}
+
 
 
 } // end namespace SCIRun
