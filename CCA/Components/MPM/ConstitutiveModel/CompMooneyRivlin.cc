@@ -178,6 +178,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       IntVector ni[8];
       Vector d_S[8];
 
+      ASSERT(patch->getBox().contains(px[idx]));
       patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
      
       if(matl->getFractureModel()) {
