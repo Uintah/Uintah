@@ -140,6 +140,7 @@ void SimulationController::run()
 	 delt = timeinfo.delt_max;
       }
       
+      old_ds->put(delt_vartype(delt), sharedState->get_delt_label());
       cout << "Time=" << t << ", delt=" << delt 
 	   << ", elapsed time = " << wallTime << '\n';
 
@@ -365,6 +366,10 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.14  2000/05/04 18:38:32  jas
+// Now the max_dt is used in the simulation if it is smaller than the
+// stable dt computed in the constitutive model.
+//
 // Revision 1.13  2000/05/02 17:54:30  sparker
 // Implemented more of SerialMPM
 //
