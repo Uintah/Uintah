@@ -113,7 +113,33 @@ PPMImage::read_image(const char* filename)
 
 const int PPMIMAGE_VERSION = 1;
 
+
 namespace SCIRun {
+
+template <> 
+void Pio(Piostream& stream, std::vector<rtrt::Color>& data)
+{ 
+  stream.begin_class("STLVector", STLVECTOR_VERSION);
+  
+  int size=(int)data.size();
+  stream.io(size);
+  
+  if(stream.reading()){
+    data.resize(size);
+  }
+
+  if (stream.supports_block_io()) {
+    rtrt::Color &c = *data.begin();
+    stream.block_io(&c, sizeof(rtrt::Color), size);
+  } else {
+    for (int i = 0; i < size; i++)
+      {
+        Pio(stream, data[i]);
+      }
+  }
+  stream.end_class();  
+}
+
 void Pio(SCIRun::Piostream &str, rtrt::PPMImage& obj)
 {
   str.begin_class("PPMImage", PPMIMAGE_VERSION);

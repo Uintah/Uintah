@@ -4,8 +4,9 @@
 
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array2.h>
-
 #include <vector>
+#include <Core/Persistent/PersistentSTL.h>
+
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -19,6 +20,8 @@ class PPMImage;
 
 namespace SCIRun {
 void Pio(Piostream&, rtrt::PPMImage&);
+template <>
+void Pio(Piostream& stream, std::vector<rtrt::Color>& data);
 }
 
 namespace rtrt {
