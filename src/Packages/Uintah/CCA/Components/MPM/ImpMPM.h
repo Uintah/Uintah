@@ -413,7 +413,7 @@ private:
 
 #ifdef HAVE_PETSC
    Mat A;
-   Vec petscQ,petscTemp2, diagonal, d_x, d_b, d_u;
+   Vec petscQ, diagonal, d_x, d_b, d_u;
    SLES sles;
 #endif
 
