@@ -93,9 +93,11 @@ public:
   void add(const Point &center);
   void add(const Point &center, const MaterialHandle &mat);
   void add(const Point &center, float index);
-  void add_radius(const Point &cen, double radius);
-  void add_radius(const Point &cen, double radius, const MaterialHandle &mat);
-  void add_radius(const Point &cen, double radius, float index);
+
+  // If radius is too small, the sphere is not added and false is returned.
+  bool add_radius(const Point &cen, double radius);
+  bool add_radius(const Point &cen, double radius, const MaterialHandle &mat);
+  bool add_radius(const Point &cen, double radius, float index);
 
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
