@@ -42,6 +42,6 @@ PSELIBS := Packages/Teem/Core/Datatypes Core/Datatypes \
         Core/TkExtensions Packages/Teem/Core/Datatypes \
 	Packages/Teem/Dataflow/Ports
 
-LIBS := $(NRRD_LIBRARY) -lnrrd -lbiff -lair
+LIBS := $(TEEM_LIBRARY) -lnrrd -lbiff -lair
 
 include $(SRCTOP_ABS)/scripts/smallso_epilogue.mk
