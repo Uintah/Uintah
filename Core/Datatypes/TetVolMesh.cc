@@ -86,7 +86,8 @@ TetVolMesh::hash_face(node_index n1, node_index n2, node_index n3,
 void 
 TetVolMesh::compute_faces()
 {
-  
+  if (faces_.size() > 0) return;
+
   cell_iterator ci = cell_begin();
   while (ci != cell_end()) {
     node_array arr;
@@ -127,6 +128,8 @@ TetVolMesh::hash_edge(node_index n1, node_index n2,
 void 
 TetVolMesh::compute_edges()
 {
+  if (edges_.size() > 0) return;
+
   cell_iterator ci = cell_begin();
   while (ci != cell_end()) {
     node_array arr;
@@ -154,6 +157,7 @@ void
 TetVolMesh::finish() {
   compute_edges();
   compute_faces();
+  compute_node_neighbors();
 }
 
 
@@ -293,6 +297,22 @@ TetVolMesh::get_neighbor(cell_index &neighbor, cell_index from,
   }
   if (neighbor == -1) return false;
   return true;
+}
+
+void 
+TetVolMesh::get_neighbors(node_array &array, node_index idx) const
+{
+  array.clear();
+  array.insert(array.end(), node_neighbors_[idx].begin(), 
+	       node_neighbors_[idx].end());
+}
+
+void 
+TetVolMesh::compute_node_neighbors()
+{
+  node_neighbors_.resize(points_.size());
+  for_each(edge_begin(), edge_end(), FillNodeNeighbors(node_neighbors_, 
+						       *this));
 }
 
 void 

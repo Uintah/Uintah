@@ -76,6 +76,8 @@ public:
   void get_faces(face_array &array, cell_index idx) const;
   bool get_neighbor(cell_index &neighbor, cell_index from, 
 		   face_index idx) const;
+  //! must call compute_node_neighbors before calling get_neighbors.
+  void get_neighbors(node_array &array, node_index idx) const;
   void get_center(Point &result, node_index idx) const;
   void get_center(Point &result, edge_index idx) const;
   void get_center(Point &result, face_index idx) const;
@@ -109,6 +111,7 @@ public:
   void finish();
   void compute_edges();
   void compute_faces();
+  void compute_node_neighbors();
   
   //! Persistent IO
   virtual void io(Piostream&);
@@ -258,6 +261,25 @@ private:
   inline
   void hash_face(node_index n1, node_index n2, node_index n3,
 		 cell_index ci, hash_set<Face, FaceHash> &table) const;
+
+  //! useful functors
+  struct FillNodeNeighbors {
+    FillNodeNeighbors(vector<vector<node_index> > &n, const TetVolMesh &m) :
+      nbor_vec_(n),
+      mesh_(m)
+    {}
+    
+    void operator()(edge_index e) {
+      mesh_.get_nodes(nodes_, e);
+      nbor_vec_[nodes_[0]].push_back(nodes_[1]);
+      nbor_vec_[nodes_[1]].push_back(nodes_[0]);
+    }
+   
+    vector<vector<node_index> > &nbor_vec_;
+    const TetVolMesh            &mesh_;
+    node_array                   nodes_;
+  };
+  vector<vector<node_index> > node_neighbors_;
 };
 
 // Handle type for TetVolMesh mesh.
