@@ -30,7 +30,7 @@ namespace Uintah {
    
    class NodeIterator;
    class CellIterator;
-
+   class BoundCond;
    
 /**************************************
       
@@ -161,6 +161,9 @@ WARNING
      
      BCType getBCType(FaceType face) const;
      void setBCType(FaceType face, BCType newbc);
+     void setBCValues(FaceType face, vector<BoundCond* >& bc);
+     vector<BoundCond* > getBCValues(FaceType face) const;
+
      bool atEdge(FaceType face) const;
      static FaceType nextFace(FaceType face) {
        return (FaceType)((int)face+1);
@@ -226,6 +229,7 @@ WARNING
      
      int d_id;
      BCType d_bctypes[numFaces];
+     vector<vector<BoundCond* > > d_bcs;
      friend class NodeIterator;
    };
    
@@ -235,6 +239,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch* r);
 
 //
 // $Log$
+// Revision 1.12  2000/06/27 22:49:04  jas
+// Added grid boundary condition support.
+//
 // Revision 1.11  2000/06/26 17:09:01  bigler
 // Added getNodeIterator which takes a Box and returns the iterator
 // that will loop over the nodes that lie withing the Box.

@@ -29,17 +29,26 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/UnionGeometryPiece.cc \
 	$(SRCDIR)/DifferenceGeometryPiece.cc \
 	$(SRCDIR)/IntersectionGeometryPiece.cc \
-	$(SRCDIR)/GeometryPieceFactory.cc 
+	$(SRCDIR)/GeometryPieceFactory.cc \
+	$(SRCDIR)/KinematicBoundCond.cc \
+	$(SRCDIR)/TempThermalBoundCond.cc \
+	$(SRCDIR)/FluxThermalBoundCond.cc \
+	$(SRCDIR)/BoundCondFactory.cc 
+	
+
 
 
 PSELIBS := Uintah/Math Uintah/Exceptions SCICore/Thread SCICore/Exceptions \
-	SCICore/Geometry PSECore/XMLUtil
+	SCICore/Geometry PSECore/XMLUtil 
 LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.20  2000/06/27 22:49:04  jas
+# Added grid boundary condition support.
+#
 # Revision 1.19  2000/06/14 21:59:36  jas
 # Copied CCVariable stuff to make FCVariables.  Implementation is not
 # correct for the actual data storage and iteration scheme.

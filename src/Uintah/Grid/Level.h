@@ -112,6 +112,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.16  2000/06/27 22:49:03  jas
+// Added grid boundary condition support.
+//
 // Revision 1.15  2000/06/23 19:20:19  jas
 // Added in the early makings of Grid bcs.
 //
@@ -169,3 +172,7 @@ WARNING
 //
 
 #endif
+
+
+
+

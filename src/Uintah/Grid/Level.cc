@@ -14,6 +14,11 @@ using namespace SCICore::Geometry;
 using namespace std;
 using namespace PSECore::XMLUtil;
 #include <map>
+#include <Uintah/Grid/BoundCondFactory.h>
+#include <Uintah/Grid/KinematicBoundCond.h>
+#include <Uintah/Grid/FluxThermalBoundCond.h>
+#include <Uintah/Grid/TempThermalBoundCond.h>
+#include <Uintah/Grid/SymmetryBoundCond.h>
 
 Level::Level(Grid* grid, const Point& anchor, const Vector& dcell)
    : grid(grid), d_anchor(anchor), d_dcell(dcell)
@@ -201,16 +206,56 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
   
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");
        face_ps != 0; face_ps=face_ps->findNextBlock("Face")) {
+    // 
     map<string,string> values;
     face_ps->getAttributes(values);
     //    std::cerr << "face side = " << values["side"] << std::endl;
-    Vector vel;
-    double temp,h_f;
-    bool symm_test = false;
-    bool vel_test = false;
-    bool temp_test = false;
-    bool heat_fl_test = false;
 
+    Patch::FaceType face_side;
+    std::string fc = values["side"];
+    if (fc == "x-")
+      face_side = Patch::xminus;
+    if (fc ==  "x+")
+      face_side = Patch::xplus;
+    if (fc ==  "y-")
+      face_side = Patch::yminus;
+    if (fc ==  "y+")
+      face_side = Patch::yplus;
+    if (fc ==  "z-")
+      face_side = Patch::zminus;
+    if (fc == "z+")
+      face_side = Patch::zplus;
+
+    
+    //    std::cerr << "face_side = " << face_side << std::endl;
+    vector<BoundCond *> bcs;
+    BoundCondFactory::create(face_ps,bcs);
+
+    for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); 
+	iter++){
+      Patch* patch = *iter;
+      Patch::BCType bc_type = patch->getBCType(face_side);
+      if (bc_type != Patch::None || bc_type != Patch::Neighbor ||
+	  bc_type != Patch::Symmetry) {
+	patch->setBCValues(face_side,bcs);
+      }
+      vector<BoundCond* > new_bcs;
+      new_bcs = patch->getBCValues(face_side);
+      //cout << "number of bcs on face " << face_side << " = " 
+      //   << new_bcs.size() << endl;
+    }  // end of patch iterator
+  } // end of face_ps
+
+#if 0
+  Vector vel;
+  double temp,h_f;
+  bool symm_test = false;
+  bool vel_test = false;
+  bool temp_test = false;
+  bool heat_fl_test = false;
+#endif
+
+#if 0
     for (ProblemSpecP bc_ps = face_ps->findBlock("BCType");
 	 bc_ps != 0; bc_ps = bc_ps->findNextBlock("BCType")) {
       map<string,string> bc_attr;
@@ -243,9 +288,11 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
       }
     }  // end of looping through the bcs for a given face
     
+#endif
     // Now loop through all the patches and store the bcs for a given
     // face
 
+#if 0
     // Do the x- (xminus) face
   
     if (values["side"] == "x-" ) {
@@ -256,14 +303,27 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 	if ( patch->getBCType(f) == Patch::None) {
 	  // Assign it to the value given in the prob spec
 	  //	  std::cerr << "xminus is none" << std::endl;
-	  if (vel_test == true)
+	  if (vel_test == true) {
 	    patch->setBCType(f,Patch::Fixed);
-	  else if (temp_test == true)
+	    KinematicBoundCond* bc = new KinematicBoundCond(vel);
+	    // patch->setBCValue(f,bc);
+	  }
+	  else if (temp_test == true ) {
 	    patch->setBCType(f,Patch::Fixed);
-	  else if (heat_fl_test == true)
+	    TempThermalBoundCond* bc = new TempThermalBoundCond(temp);
+	    //patch->setBCValue(f,bc);
+	  }
+	  else if (heat_fl_test == true) {
 	    patch->setBCType(f,Patch::Fixed);
-	  else if (symm_test == true)
+	    FluxThermalBoundCond* bc = new FluxThermalBoundCond(h_f);
+	    //patch->setBCValue(f,bc);
+	  }
+	  else if (symm_test == true) {
 	    patch->setBCType(f,Patch::Symmetry);
+	    SymmetryBoundCond* bc = new SymmetryBoundCond();
+	    //patch->setBCValue(f,bc);
+	  }
+	  
 	}
       }
     }
@@ -373,11 +433,14 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
       }
     }
   } // End of looping through the face_ps
-  
+ #endif
 }
 
 //
 // $Log$
+// Revision 1.13  2000/06/27 22:49:03  jas
+// Added grid boundary condition support.
+//
 // Revision 1.12  2000/06/23 19:20:19  jas
 // Added in the early makings of Grid bcs.
 //
