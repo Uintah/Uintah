@@ -63,6 +63,17 @@ itcl_class SCIRun_Render_Viewer {
 
 	lappend viewwindow $rid
     }
+
+    method ui_embedded {{rid -1}} {
+	if {$rid == -1} {
+	    set rid [makeViewWindowID]
+	}
+        
+        set result [EmbeddedViewWindow $rid -viewer $this]
+
+	lappend viewwindow $rid
+	return $result
+    }
 }
 
 catch {rename ViewWindow ""}
@@ -1740,3 +1751,492 @@ itcl_class ViewWindow {
 	$this-c redraw
     }
 }
+
+
+catch {rename EmbeddedViewWindow ""}
+
+
+itcl_class EmbeddedViewWindow {
+    public viewer
+    
+    method modname {} {
+	set n $this
+	if {[string first "::" "$n"] == 0} {
+	    set n "[string range $n 2 end]"
+	}
+	return $n
+    }
+
+    method set_defaults {} {
+
+	# set defaults values for parameters that weren't set in a script
+
+        # CollabVis code begin 
+        global $this-have_collab_vis 
+        # CollabVis code end
+
+	global $this-saveFile
+	global $this-saveType
+	if {![info exists $this-File]} {set $this-saveFile "out.raw"}
+	if {![info exists $this-saveType]} {set $this-saveType "raw"}
+
+	# Animation parameters
+	global $this-current_time
+	if {![info exists $this-current_time]} {set $this-current_time 0}
+	global $this-tbeg
+	if {![info exists $this-tbeg]} {set $this-tbeg 0}
+	global $this-tend
+	if {![info exists $this-tend]} {set $this-tend 1}
+	global $this-framerate
+	if {![info exists $this-framerate]} {set $this-framerate 15}
+	global $this-totframes
+	if {![info exists $this-totframes]} {set $this-totframes 30}
+	global $this-caxes
+        if {![info exists $this-caxes]} {set $this-caxes 0}
+	global $this-raxes
+        if {![info exists $this-raxes]} {set $this-raxes 1}
+
+	# Need to initialize the background color
+	global $this-bgcolor-r
+	if {![info exists $this-bgcolor-r]} {set $this-bgcolor-r 0}
+	global $this-bgcolor-g
+	if {![info exists $this-bgcolor-g]} {set $this-bgcolor-g 0}
+	global $this-bgcolor-b
+	if {![info exists $this-bgcolor-b]} {set $this-bgcolor-b 0}
+
+	# Need to initialize the scene material scales
+	global $this-ambient-scale
+	if {![info exists $this-ambient-scale]} {set $this-ambient-scale 1.0}
+	global $this-diffuse-scale
+	if {![info exists $this-diffuse-scale]} {set $this-diffuse-scale 1.0}
+	global $this-specular-scale
+	if {![info exists $this-specular-scale]} {set $this-specular-scale 0.4}
+	global $this-emission-scale
+	if {![info exists $this-emission-scale]} {set $this-emission-scale 1.0}
+	global $this-shininess-scale
+	if {![info exists $this-shininess-scale]} {set $this-shininess-scale 1.0}
+	# Initialize point size, line width, and polygon offset
+	global $this-point-size
+	if {![info exists $this-point-size]} {set $this-point-size 1.0}
+	global $this-line-width
+	if {![info exists $this-line-width]} {set $this-line-width 1.0}
+	global $this-polygon-offset-factor
+ 	if {![info exists $this-polygon-offset-factor]} \
+	    {set $this-polygon-offset-factor 1.0}
+	global $this-polygon-offset-units
+	if {![info exists $this-polygon-offset-units]} \
+	    {set $this-polygon-offset-units 0.0}
+
+	# Set up lights
+	global $this-global-light0 # light 0 is the head light
+	if {![info exists $this-global-light0]} { set $this-global-light0 1 }
+	global $this-global-light1 
+	if {![info exists $this-global-light1]} { set $this-global-light1 0 }
+	global $this-global-light2 
+	if {![info exists $this-global-light2]} { set $this-global-light2 0 }
+	global $this-global-light3 
+	if {![info exists $this-global-light3]} { set $this-global-light3 0 }
+# 	global $this-global-light4 
+# 	if {![info exists $this-global-light4]} { set $this-global-light4 0 }
+# 	global $this-global-light5 
+# 	if {![info exists $this-global-light5]} { set $this-global-light5 0 }
+# 	global $this-global-light6
+# 	if {![info exists $this-global-light6]} { set $this-global-light6 0 }
+# 	global $this-global-light7 
+# 	if {![info exists $this-global-light7]} { set $this-global-light7 0 }
+	global $this-lightVectors
+	if {![info exists $this-lightVectors]} { 
+	    set $this-lightVectors \
+		[list { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }]
+# 		     { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }]
+	}
+	if {![info exists $this-lightColors]} {
+	    set $this-lightColors \
+		[list {1.0 1.0 1.0} {1.0 1.0 1.0} \
+		     {1.0 1.0 1.0} {1.0 1.0 1.0} ]
+# 		     {1.0 1.0 1.0} {1.0 1.0 1.0} \
+# 		     {1.0 1.0 1.0} {1.0 1.0 1.0} ]
+	}
+
+	global $this-sbase
+	if {![info exists $this-sbase]} {set $this-sbase 0.4}
+	global $this-sr
+	if {![info exists $this-sr]} {set $this-sr 1}
+	global $this-do_stereo
+	if {![info exists $this-do_stereo]} {set $this-do_stereo 0}
+
+	global $this-def-color-r
+	global $this-def-color-g
+	global $this-def-color-b
+	set $this-def-color-r 1.0
+	set $this-def-color-g 1.0
+	set $this-def-color-b 1.0
+
+        # CollabVis code begin
+        if {[set $this-have_collab_vis]} {
+	    global $this-view_server
+	    if {![info exists $this-view_server]} {set $this-view_server 0}
+        }
+        # CollabVis code end
+
+	global $this-ortho-view
+	if {![info exists $this-ortho-view]} { set $this-ortho-view 0 }
+    }
+
+    destructor {
+    }
+
+    constructor {config} {
+	$viewer-c addviewwindow $this
+	set_defaults
+	init_frame
+    }
+
+    method setWindow {w} {
+	$this-c listvisuals .standalone
+
+	if {[winfo exists $w]} {
+	    destroy $w
+	}
+	$this-c switchvisual $w 0 640 512
+	if {[winfo exists $w]} {
+	    bindEvents $w
+	}
+	$this-c startup
+    }
+
+    method bindEvents {w} {
+	bind $w <Expose> "$this-c redraw"
+	bind $w <Configure> "$this-c redraw"
+
+	bind $w <ButtonPress-1> "$this-c mtranslate start %x %y"
+	bind $w <Button1-Motion> "$this-c mtranslate move %x %y"
+	bind $w <ButtonRelease-1> "$this-c mtranslate end %x %y"
+	bind $w <ButtonPress-2> "$this-c mrotate start %x %y %t"
+	bind $w <Button2-Motion> "$this-c mrotate move %x %y %t"
+	bind $w <ButtonRelease-2> "$this-c mrotate end %x %y %t"
+	bind $w <ButtonPress-3> "$this-c mscale start %x %y"
+	bind $w <Button3-Motion> "$this-c mscale move %x %y"
+	bind $w <ButtonRelease-3> "$this-c mscale end %x %y"
+
+	bind $w <Control-ButtonPress-1> "$this-c mdolly start %x %y"
+	bind $w <Control-Button1-Motion> "$this-c mdolly move %x %y"
+	bind $w <Control-ButtonRelease-1> "$this-c mdolly end %x %y"
+	bind $w <Control-ButtonPress-2> "$this-c mrotate_eyep start %x %y %t"
+	bind $w <Control-Button2-Motion> "$this-c mrotate_eyep move %x %y %t"
+	bind $w <Control-ButtonRelease-2> "$this-c mrotate_eyep end %x %y %t"
+	bind $w <Control-ButtonPress-3> "$this-c municam start %x %y %t"
+	bind $w <Control-Button3-Motion> "$this-c municam move %x %y %t"
+	bind $w <Control-ButtonRelease-3> "$this-c municam end %x %y %t"
+
+	bind $w <Shift-ButtonPress-1> "$this-c mpick start %x %y %s %b"
+	bind $w <Shift-ButtonPress-2> "$this-c mpick start %x %y %s %b"
+	bind $w <Shift-ButtonPress-3> "$this-c mpick start %x %y %s %b"
+	bind $w <Shift-Button1-Motion> "$this-c mpick move %x %y %s 1"
+	bind $w <Shift-Button2-Motion> "$this-c mpick move %x %y %s 2"
+	bind $w <Shift-Button3-Motion> "$this-c mpick move %x %y %s 3"
+	bind $w <Shift-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
+	bind $w <Shift-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
+	bind $w <Shift-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
+	bind $w <Lock-ButtonPress-1> "$this-c mpick start %x %y %s %b"
+	bind $w <Lock-ButtonPress-2> "$this-c mpick start %x %y %s %b"
+	bind $w <Lock-ButtonPress-3> "$this-c mpick start %x %y %s %b"
+	bind $w <Lock-Button1-Motion> "$this-c mpick move %x %y %s 1"
+	bind $w <Lock-Button2-Motion> "$this-c mpick move %x %y %s 2"
+	bind $w <Lock-Button3-Motion> "$this-c mpick move %x %y %s 3"
+	bind $w <Lock-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
+	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
+	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
+    }
+
+    method killWindow { vw } {
+        set w .ui[modname]
+	if {"$vw"=="$w"} {
+	    $this-c killwindow
+	}
+    }
+
+    method removeMFrame {w} {
+	puts EVW:removeMFrame
+    }
+    
+    method addMFrame {w} {
+	puts EVW:addMFrame
+    }
+
+    method init_frame {} {
+	global $this-global-light
+	global $this-global-fog
+	global $this-global-type
+	global $this-global-debug
+	global $this-global-clip
+	global $this-global-cull
+	global $this-global-dl
+	global $this-global-movie
+	global $this-global-movieName
+	global $this-global-movieFrame
+	global $this-global-resize
+	global $this-x-resize
+	global $this-y-resize
+	global $this-do_stereo
+	global $this-sbase
+	global $this-sr
+	global $this-do_bawgl
+	global $this-tracker_state
+	
+	set $this-global-light 1
+	set $this-global-fog 0
+	set $this-global-type Gouraud
+	set $this-global-debug 0
+	set $this-global-clip 0
+	set $this-global-cull 0
+	set $this-global-dl 0
+	set $this-global-movie 0
+	set $this-global-movieName "movie"
+	set $this-global-movieFrame 0
+	set $this-global-resize 0
+	set $this-x-resize 700
+	set $this-y-resize 512
+	set $this-do_bawgl 0
+	set $this-tracker_state 0
+    }
+
+    method resize { } {
+	puts EVW:resize
+    }
+
+    method switch_frames {} {
+	puts EVW:switch_frames
+    }
+
+    method updatePerf {p1 p2 p3} {
+    }
+
+    method switchvisual {idx} {
+	set w .ui[modname]
+	if {[winfo exists $w.wframe.draw]} {
+	    destroy $w.wframe.draw
+	}
+	$this-c switchvisual $w.wframe.draw $idx 640 512
+	if {[winfo exists $w.wframe.draw]} {
+	    bindEvents $w.wframe.draw
+	    pack $w.wframe.draw -expand yes -fill both
+	}
+    }	
+
+    method bench {bench} {
+	puts EVW:bench
+    }
+
+    method makeViewPopup {} {
+	puts EVW:makeViewPopup
+    }
+
+    method makeSceneMaterialsPopup {} {
+	puts EVW:makeSceneMaterialsPopup
+    }
+
+    method makeBackgroundPopup {} {
+	puts EVW:makeBackgroundPopup
+    }
+
+    method updateMode {msg} {
+    }   
+
+    method addObject {objid name} {
+	global "$this-$objid-light"
+	global "$this-$objid-fog"
+	global "$this-$objid-type"
+	global "$this-$objid-debug"
+	global "$this-$objid-clip"
+	global "$this-$objid-cull"
+	global "$this-$objid-dl"
+
+	set "$this-$objid-type" Default
+	set "$this-$objid-light" 1
+	set "$this-$objid-fog" 0
+	set "$this-$objid-debug" 0
+	set "$this-$objid-clip" 0
+	set "$this-$objid-cull" 0
+	set "$this-$objid-dl" 0
+
+	$this-c autoview
+    }
+
+    method addObjectToFrame {objid name frame} {
+	puts EVW:addObjectToFrame
+    }
+
+    method addObject2 {objid} {
+	$this-c autoview
+    }
+    
+    method addObjectToFrame_2 {objid frame} {
+	puts EVW:addObjectToFrame_2
+    }
+    
+
+    method removeObject {objid} {
+	puts EVW:removeObject
+    }
+
+    method removeObjectFromFrame {objid frame} {
+	puts EVW:removeObjectFromFrame
+    }
+
+    method makeLineWidthPopup {} {
+	puts EVW:makeLineWidthPopup
+    }	
+
+    method makePolygonOffsetPopup {} {
+	puts EVW:makePolygonOffsetPopup
+    }	
+
+    method makePointSizePopup {} {
+	puts makePointSizePopup
+    }	
+
+    method makeClipPopup {} {
+	puts makeClipPopup
+    }
+
+    method useClip {} {
+	puts useClip
+    }
+
+    method setClip {} {
+	puts setClip
+    }
+
+    method invertClip {} {
+	puts invertClip
+    }
+
+    method makeAnimationPopup {} {
+	puts makeAnimationPopup
+    }
+
+    method setFrameRate {rate} {
+    }
+
+    method frametime {} {
+	puts frametime
+    }
+
+    method rstep {} {
+	puts rstep
+    }
+
+    method rew {} {
+	puts rew
+    }
+
+    method rplay {} {
+	puts rplay
+    }
+
+    method play {} {
+	puts play
+    }
+
+    method step {} {
+	puts step
+    }
+
+    method ff {} {
+	puts ff
+    }
+
+    method crap {} {
+	puts crap
+    }
+
+    method translate {axis amt} {
+	puts translate
+    }
+
+    method rotate {axis amt} {
+	puts rotate
+    }
+
+    method rscale {amt} {
+	puts rscale
+    }
+
+    method zoom {amt} {
+	puts zoom
+    }
+
+    method pan {amt} {
+	puts pan
+    }
+
+    method tilt {amt} {
+	puts tilt
+    }
+
+    method fov {amt} {
+	puts fov
+    }
+
+    method makeSaveObjectsPopup {} {
+	puts makeSaveObjectsPopup
+    }
+
+    method doSaveObjects {} {
+	puts doSaveObjects
+    }
+
+    method do_validate_x {path} {
+	puts do_validate_x
+    }
+
+    method do_validate_y {path} {
+	puts do_validate_y
+    }
+
+    method do_aspect {t} {
+	puts do_aspect
+    }
+
+    method makeLightSources {} {
+	puts makeLightSources
+    }
+	
+    method makeLightControl { w i } {
+	puts makeLightControl
+    }
+
+    method lightColor { w c i } {
+	puts lightColor
+    }
+
+    method setColor { w c  i color} {
+	puts setColor
+    }
+
+    method resetLights { w } {
+	puts resetLights
+    }
+
+    method moveLight { c i x y } {
+	puts moveLight
+    }
+
+    method lightSwitch {i} {
+	puts lightSwitch
+    }
+	
+    method makeSaveImagePopup {} {
+	puts makeSaveImagePopup
+    }
+    
+    method changeName { w type} {
+	puts changeName
+    }
+
+    method doSaveImage {} {
+	puts doSaveImage
+    }
+}
+
