@@ -32,7 +32,6 @@ SRCS     += \
 	$(SRCDIR)/CreateSimpleMesh.cc\
 	$(SRCDIR)/FloodFillNewValue.cc\
 	$(SRCDIR)/HexIntMask.cc\
-	$(SRCDIR)/HexToTet.cc\
 	$(SRCDIR)/HexMeshCuthillMcKee.cc\
 	$(SRCDIR)/ReclassifyInteriorTets.cc\
 	$(SRCDIR)/RemoveInteriorTets.cc\

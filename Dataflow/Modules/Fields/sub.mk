@@ -49,6 +49,7 @@ SRCS     += \
 	$(SRCDIR)/FieldSlicer.cc\
 	$(SRCDIR)/GatherPoints.cc\
 	$(SRCDIR)/Gradient.cc\
+	$(SRCDIR)/HexToTet.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/MapDataToMeshCoord.cc\
 	$(SRCDIR)/Probe.cc\
