@@ -128,11 +128,10 @@ public:
   //! set the mesh statistics
   void resize_nodes(Node::size_type n) { points_.resize(n); }
 
-  //! TODO: This doesnt make sense to me (McKay), can someone explain?
-  //! get the child elements of the given index
-  // this first one is so get_node(Node::array_type &, Cell::index_type)
-  //   will compile.  For PointCloudMesh, Cell==Node.  This is needed
-  //   in ClipField, for example.
+  // This is actually get_nodes(Node::array_type &, Elem::index_type)
+  // for compilation purposes.  IE It is redundant unless we are
+  // templated by Elem type and we don't know that Elem is Node.
+  // This is needed in ClipField, for example.
   void get_nodes(Node::array_type &a, Node::index_type i) const
     { a.resize(1); a[0] = i; }
 
