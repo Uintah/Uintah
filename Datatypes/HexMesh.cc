@@ -247,7 +247,11 @@ void HexFace::calc_face (HexMesh * m)
   
   d = Dot (my_normal, m->find_element (my_contains_index)->centroid()) + my_d;
   if (d < 0)
-    my_normal *= -1.0;  
+  {
+    my_normal *= -1.0; 
+    d *= -1.0;
+  } 
+        
 }
 
 
