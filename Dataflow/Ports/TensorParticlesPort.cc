@@ -19,11 +19,11 @@ UINTAHSHARE OPort* make_TensorParticlesOPort(Module* module,
 
 template<>
 string
-SimpleIPort<TensorParticlesHandle>::port_type("TensorParticles");
+SimpleIPort<TensorParticlesHandle>::port_type_("TensorParticles");
 
 template<>
 string
-SimpleIPort<TensorParticlesHandle>::port_color("chartreuse4");
+SimpleIPort<TensorParticlesHandle>::port_color_("chartreuse4");
 
 
 

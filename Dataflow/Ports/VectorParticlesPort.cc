@@ -17,7 +17,7 @@ extern "C" {
   }
 }
 
-template<> string SimpleIPort<VectorParticlesHandle>::port_type("VectorParticles");
-template<> string SimpleIPort<VectorParticlesHandle>::port_color("chartreuse3");
+template<> string SimpleIPort<VectorParticlesHandle>::port_type_("VectorParticles");
+template<> string SimpleIPort<VectorParticlesHandle>::port_color_("chartreuse3");
 
 
