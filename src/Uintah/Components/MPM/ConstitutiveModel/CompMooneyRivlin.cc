@@ -278,8 +278,8 @@ double CompMooneyRivlin::computeStrainEnergy(const Region* region,
   new_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None, 0);
 
   ParticleSubset* pset = pvolume.getParticleSubset();
-  ASSERT(pset == deformationMeasure.getParticleSubset());
-  ASSERT(pset == p_cmdata.getParticleSubset());
+  ASSERT(pset == deformationGradient.getParticleSubset());
+  ASSERT(pset == cmdata.getParticleSubset());
 
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
@@ -346,6 +346,9 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 #endif
 
 // $Log$
+// Revision 1.30  2000/05/18 19:45:57  guilkey
+// Fixed (really this time) the statements inside the ASSERTS.
+//
 // Revision 1.29  2000/05/18 19:32:05  guilkey
 // Fixed an error inside of an ASSERT statement that I wasn't getting
 // at compile time.
