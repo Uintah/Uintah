@@ -1,4 +1,11 @@
 
+Category: ASCI
+ChemVis
+
+Category: CFD
+Readtec
+PartToGeom
+
 Category: Contours
 LaceContours
 LaceContoursTemp
@@ -90,6 +97,7 @@ ImageReader
 MatrixReader
 MeshReader
 MultimeshReader
+ParticleSetReader
 PointsReader
 ScalarFieldReader
 SigmaSetReader
@@ -152,6 +160,7 @@ ContourSetWriter
 MatrixWriter
 MeshWriter
 MultiMeshWriter
+ParticleSetWriter
 ScalarFieldWriter
 SigmaSetWriter
 SurfaceWriter
