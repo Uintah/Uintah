@@ -161,8 +161,9 @@ using std::vector;
       const VarLabel* pStrainEnergyDensityLabel;
       const VarLabel* pStrainEnergyDensityLabel_preReloc;
 
-      const VarLabel* pKineticEnergyDensityLabel;
       const VarLabel* pgCodeLabel;
+      const VarLabel* pKineticEnergyDensityLabel;
+      const VarLabel* pVelGradsLabel;
 
       const VarLabel* gNumPatlsLabel;
       const VarLabel* GNumPatlsLabel;
@@ -172,6 +173,8 @@ using std::vector;
       const VarLabel* GGridStressLabel;
       const VarLabel* gDispGradsLabel;
       const VarLabel* GDispGradsLabel;
+      const VarLabel* gVelGradsLabel;
+      const VarLabel* GVelGradsLabel;
       const VarLabel* gStrainEnergyDensityLabel;
       const VarLabel* GStrainEnergyDensityLabel;
       const VarLabel* gKineticEnergyDensityLabel;
