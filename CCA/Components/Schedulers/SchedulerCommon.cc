@@ -49,6 +49,7 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   dts_ = 0;
   emit_taskgraph = false;
   memlogfile = 0;
+  restartable = false;
   for(int i=0;i<Task::TotalDWs;i++)
     dwmap[i]=Task::InvalidDW;
   // Default mapping...
@@ -298,7 +299,7 @@ getSuperPatchExtents(const VarLabel* label, int matlIndex, const Patch* patch,
     m_locallyComputedPatchVarMap.getConnectedPatchGroup(label, patch);
   if (connectedPatchGroup == 0)
     return 0;
-  
+
   SuperPatch::Region requestedExtents = connectedPatchGroup->getRegion();
   SuperPatch::Region requiredExtents = connectedPatchGroup->getRegion();  
   
