@@ -17,6 +17,7 @@
 
 #include <Core/GLVolumeRenderer/GLTextureIterator.h>
 #include <Core/GLVolumeRenderer/Brick.h>
+#include <Core/Geometry/Transform.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -60,6 +61,8 @@ GLTextureIterator::GLTextureIterator(const GLTexture3D* tex,
     tex(tex),
     done(false)
 {
+  Transform t = tex->get_field_transform();
+  control =  t.unproject(c);
 }
 
 

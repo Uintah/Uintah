@@ -145,7 +145,7 @@ public:
   /////////
   // Get field size
   FieldHandle get_field(){ return texfld_; }
-  Transform get_field_transform() { return transform_; }
+  Transform get_field_transform() const { return transform_; }
 
   // GROUP: io
   /////////
