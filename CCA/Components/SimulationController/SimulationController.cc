@@ -209,7 +209,7 @@ void SimulationController::run()
    
    if(output)
       output->finalizeTimestep(t, 0, level, scheduler);
-   scheduler->compile(d_myworld);
+   scheduler->compile(d_myworld, true);
    double dt=Time::currentSeconds()-start;
    if(d_myworld->myrank() == 0)
      cout << "done (" << dt << " seconds)\n";
@@ -255,18 +255,30 @@ void SimulationController::run()
 		     nfillbin, nmmap, sizemmap, nmunmap,
 		     sizemunmap, highwater_alloc, highwater_mmap);
       unsigned long memuse = sizealloc - sizefree;
+      unsigned long highwater = highwater_mmap;
 #else
       unsigned long memuse = (char*)sbrk(0)-start_addr;
+      unsigned long highwater = 0;
 #endif
 
       unsigned long avg_memuse = memuse;
       unsigned long max_memuse = memuse;
+      unsigned long avg_highwater = highwater;
+      unsigned long max_highwater = highwater;
       if (d_myworld->size() > 1) {
 	MPI_Reduce(&memuse, &avg_memuse, 1, MPI_UNSIGNED_LONG, MPI_SUM, 0,
 		   d_myworld->getComm());
+	if(highwater){
+	  MPI_Reduce(&highwater, &avg_highwater, 1, MPI_UNSIGNED_LONG,
+		     MPI_SUM, 0, d_myworld->getComm());
+	}
 	avg_memuse /= d_myworld->size(); // only to be used by processor 0
 	MPI_Reduce(&memuse, &max_memuse, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0,
 		   d_myworld->getComm());
+	if(highwater){
+	  MPI_Reduce(&highwater, &max_highwater, 1, MPI_UNSIGNED_LONG,
+		     MPI_MAX, 0, d_myworld->getComm());
+	}
       }
       
       
@@ -275,10 +287,20 @@ void SimulationController::run()
 	cout << "Time=" << t << ", delT=" << delt 
 	     << ", elap T = " << wallTime 
 	     << ", DW: " << scheduler->get_new_dw()->getID() << ", Mem Use = ";
-	if (avg_memuse == max_memuse)
-	  cout << avg_memuse << endl;
-	else
-	  cout << avg_memuse << " (avg), " << max_memuse << " (max)\n";
+	if (avg_memuse == max_memuse && avg_highwater == max_highwater){
+	  cout << avg_memuse;
+	  if(avg_highwater)
+	    cout << "/" << avg_highwater;
+	} else {
+	  cout << avg_memuse;
+	  if(avg_highwater)
+	    cout << "/" << avg_highwater;
+	  cout << " (avg), " << max_memuse;
+	  if(max_highwater)
+	    cout << "/" << max_highwater;
+	  cout << " (max)";
+	}
+	cout << endl;
 
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
 	if (n > 1) // ignore first set of elapsed times
@@ -318,7 +340,7 @@ void SimulationController::run()
       
 	// Begin next time step...
 	scheduleComputeStableTimestep(level, scheduler, cfd, mpm, mpmcfd, md);
-	scheduler->compile(d_myworld);
+	scheduler->compile(d_myworld, false);
 
 	double dt=Time::currentSeconds()-start;
 	if(d_myworld->myrank() == 0)
@@ -537,4 +559,3 @@ SimulationController::need_recompile(double time, double delt,
     return true;
   return false;
 }
-
