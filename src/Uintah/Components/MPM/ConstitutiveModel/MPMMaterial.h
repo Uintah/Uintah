@@ -95,11 +95,14 @@ WARNING
 	 
 	 double d_density;
 	 double d_toughness;
-	 double d_thermal_cond;
-	 double d_spec_heat;
 	 double d_temp;
 	 std::vector<GeometryObject*> d_geom_objs;
-	 
+
+	 //tan: material constants for heat conduction
+	 double d_thermal_cond;
+	 double d_spec_heat;
+         double d_heatTransferCoefficient;
+         
 	 // Prevent copying of this class
 	 // copy constructor
 	 MPMMaterial(const MPMMaterial &mpmm);
@@ -122,6 +125,9 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.18  2000/05/31 22:01:46  tan
+// Added d_heatTransferCoefficient for heat exchange on thermal contact.
+//
 // Revision 1.17  2000/05/31 21:01:22  tan
 // Added getHeatTransferCoefficient() to retrieve the material
 // constants for heat exchange.
