@@ -46,7 +46,7 @@ public:
   
  
   data_location data_at() const { return data_at_; }
-  virtual const TypeDescription *data_at_type_description() = 0;
+  virtual const TypeDescription *data_at_type_description() const = 0;
 
   //! Required virtual functions
   virtual MeshHandle mesh() const = 0;
