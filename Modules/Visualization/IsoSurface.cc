@@ -16,7 +16,6 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/Queue.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/ColormapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/Mesh.h>
@@ -111,13 +110,12 @@ struct MCubeTable {
 
 #include "mcube.h"
 
-static Module* make_IsoSurface(const clString& id)
+extern "C" {
+Module* make_IsoSurface(const clString& id)
 {
     return scinew IsoSurface(id);
 }
-
-static RegisterModule db1("Fields", "IsoSurface", make_IsoSurface);
-static RegisterModule db2("Visualization", "IsoSurface", make_IsoSurface);
+};
 
 static clString module_name("IsoSurface");
 static clString surface_name("IsoSurface");
@@ -323,7 +321,7 @@ void IsoSurface::execute()
     } else {
 	isosurface_id=ogeom->addObj(topobj, surface_name);
 	if (emit_surface.get()) {
-	    osurf->send(surf);
+	    osurf->send(SurfaceHandle(surf));
 	}
     }
 }

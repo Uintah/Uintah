@@ -19,7 +19,6 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/Queue.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/Mesh.h>
 #include <Datatypes/ScalarField.h>
@@ -92,13 +91,12 @@ struct MCubeTable {
 
 #include "mcube.h"
 
-static Module* make_BitVisualize(const clString& id)
+extern "C" {
+Module* make_BitVisualize(const clString& id)
 {
     return scinew BitVisualize(id);
 }
-
-static RegisterModule db1("Fields", "BitVisualize", make_BitVisualize);
-static RegisterModule db2("Visualization", "BitVisualize", make_BitVisualize);
+};
 
 BitVisualize::BitVisualize(const clString& id)
 : Module("BitVisualize", id, Filter), emit_surface("emit_surface", id, this),

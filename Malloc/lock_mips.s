@@ -1,4 +1,3 @@
-	.verstamp	3 19
 	.option	pic2
 	.text	
 	.align	2

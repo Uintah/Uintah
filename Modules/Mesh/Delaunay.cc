@@ -12,16 +12,18 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
+#include <Datatypes/GeometryPort.h>
 #include <Datatypes/MeshPort.h>
 #include <Geometry/BBox.h>
 #include <Geometry/Point.h>
 #include <Malloc/Allocator.h>
+#include <Math/MusilRNG.h>
 #include <TCL/TCLvar.h>
 
 class Delaunay : public Module {
     MeshIPort* iport;
     MeshOPort* oport;
+    GeometryOPort* ogeom;
     TCLint nnodes;
     TCLint cleanup;
 public:
@@ -32,12 +34,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_Delaunay(const clString& id)
+extern "C" {
+Module* make_Delaunay(const clString& id)
 {
     return scinew Delaunay(id);
 }
-
-static RegisterModule db1("Mesh", "Delaunay", make_Delaunay);
+};
 
 Delaunay::Delaunay(const clString& id)
 : Module("Delaunay", id, Filter), nnodes("nnodes", id, this),
@@ -48,6 +50,8 @@ Delaunay::Delaunay(const clString& id)
     // Create the output port
     oport=scinew MeshOPort(this, "Delaunay Mesh", MeshIPort::Atomic);
     add_oport(oport);
+    ogeom=scinew GeometryOPort(this, "Animation", GeometryIPort::Atomic);
+    add_oport(ogeom);
 }
 
 Delaunay::Delaunay(const Delaunay& copy, int deep)
@@ -71,6 +75,7 @@ void Delaunay::execute()
     MeshHandle mesh_handle;
     if(!iport->get(mesh_handle))
 	return;
+    ogeom->delAll();
 
     // Get our own copy of the mesh...
     mesh_handle.detach();
@@ -117,13 +122,29 @@ void Delaunay::execute()
     el->faces[0]=el->faces[1]=el->faces[2]=el->faces[3]=-1;
     mesh->elems.add(el);
 
-//    nn=nnodes.get();
-//    if(nn==0 || nn > onn)nn=onn;
-    for(int node=0;node<nn;node++){
+    nn=nnodes.get();
+    if(nn==0 || nn > onn)nn=onn;
+    GeometryOPort* aport=ogeom;
+    if(ogeom->nconnections() == 0)
+	aport=0;
+    Array1<int> map(nn);
+    MusilRNG rng;
+    for(int node=0;node<nn;node++)
+	map[node]=node;
+#if 0
+    for(node=0;node<nn;node++){
+	int n1=(int)(nn*rng());
+	int n2=(int)(nn*rng());
+	int tmp=map[n1];
+	map[n1]=map[n2];
+	map[n2]=tmp;
+    }
+#endif
+    for(node=0;node<nn;node++){
 	// Add this node...
 	update_progress(node, nn);
 
-	if(!mesh->insert_delaunay(node)){
+	if(!mesh->insert_delaunay(map[node], aport)){
 	    error("Mesher upset - point outside of domain...");
 	    return;
 	}

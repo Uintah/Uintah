@@ -17,6 +17,11 @@
 #include <Classlib/String.h>
 #include <Classlib/TrivialAllocator.h>
 #include <Datatypes/ColumnMatrix.h>
+#include <Geom/Group.h>
+#include <Geom/Material.h>
+#include <Geom/Sphere.h>
+#include <Geom/Polyline.h>
+#include <Geom/Tri.h>
 #include <Malloc/Allocator.h>
 #include <Math/Mat.h>
 #include <iostream.h>
@@ -747,24 +752,83 @@ int face_idx2(Mesh* mesh, const Array1<int>& to_remove, int nr, int p, int f)
 }
 #endif
 
-int Mesh::insert_delaunay(const Point& p)
+int Mesh::insert_delaunay(const Point& p, GeometryOPort* ogeom)
 {
     int idx=nodes.size();
     nodes.add(new Node(p));
-    return insert_delaunay(idx);
+    return insert_delaunay(idx, ogeom);
 }
 
-int Mesh::insert_delaunay(int node)
+MaterialHandle ptmatl(scinew Material(Color(0,0,0), Color(1,1,0), Color(.6,.6,.6), 10));
+MaterialHandle inmatl(ptmatl);
+MaterialHandle remmatl(scinew Material(Color(0,0,0), Color(1,0,0), Color(.6, .6, .6), 10));
+MaterialHandle facematl(scinew Material(Color(0,0,0), Color(1,0,1), Color(.6, .6, .6), 10));
+
+void Mesh::draw_element(Element* e, GeomGroup* group)
 {
+    Point p1(nodes[e->n[0]]->p);
+    Point p2(nodes[e->n[1]]->p);
+    Point p3(nodes[e->n[2]]->p);
+    Point p4(nodes[e->n[3]]->p);
+    GeomPolyline* poly=new GeomPolyline;
+    poly->add(p1);
+    poly->add(p2);
+    poly->add(p3);
+    poly->add(p4);
+    poly->add(p1);
+    poly->add(p3);
+    poly->add(p2);
+    poly->add(p4);
+    group->add(poly);
+}
+
+void Mesh::draw_element(int in_element, GeomGroup* group)
+{
+    Element* e=elems[in_element];
+    draw_element(e, group);
+}
+
+int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
+{
+    if(ogeom){
+	for(int i=0;i<ids.size();i++){
+	    cerr << "removing " << ids[i] << endl;
+	    ogeom->delObj(ids[i]);
+	}
+	ids.remove_all();
+    }
     if(!have_all_neighbors)
 	compute_face_neighbors();
     Point p(nodes[node]->p);
 //    cerr << "Adding node: " << node << " at point " << p << endl;
     // Find which element this node is in
+    double scale=1;
+#if 0
+    if(ogeom){
+	Point min, max;
+	get_bounds(min, max);
+	Vector diag(max-min);
+	scale=diag.length()/1000;
+	double radius=scale;
+	GeomSphere* pt=scinew GeomSphere(p, radius);
+	GeomMaterial* pt_matl=scinew GeomMaterial(pt, ptmatl);
+	ids.add(ogeom->addObj(pt_matl, "delaunay - insert point"));
+    }
+#endif
     int in_element;
     if(!locate(p, in_element)){
 	return 0;
     }
+
+#if 0
+    if(ogeom){
+	GeomGroup* group=new GeomGroup;
+	GeomMaterial* matl=new GeomMaterial(group, inmatl);
+	draw_element(in_element, group);
+	ids.add(ogeom->addObj(group, "delaunay - inside element"));
+	ogeom->flushViewsAndWait();
+    }
+#endif
 
     Array1<int> to_remove;
     to_remove.add(in_element);
@@ -904,11 +968,25 @@ int Mesh::insert_delaunay(int node)
 	i++;
     }
     // Remove the to_remove elements...
+    GeomGroup* group=ogeom?new GeomGroup:0;
+    GeomMaterial* matl=ogeom?new GeomMaterial(group, remmatl):0;
+// Debug only...
+    Array1<Element*> removed(to_remove.size());
     for(i=0;i<to_remove.size();i++){
 	int idx=to_remove[i];
-	delete elems[idx];
+	if(ogeom){
+	    draw_element(idx, group);
+	}
+	//debug only... delete elems[idx];
+	removed[i]=elems[idx];
 	elems[idx]=0;
     }
+#if 0
+    if(ogeom){
+	ids.add(ogeom->addObj(matl, "delaunay - remove elements"));
+	ogeom->flushViewsAndWait();
+    }
+#endif
 
     // Add the new elements from the faces...
     HashTableIter<Face, int> fiter(&face_table);
@@ -916,8 +994,16 @@ int Mesh::insert_delaunay(int node)
     // Make a copy of the face table.  We use the faces in there
     // To compute the new neighborhood information
     HashTable<Face, int> new_faces(face_table);
+    group=ogeom?new GeomGroup:0;
+    matl=ogeom?new GeomMaterial(group, facematl):0;
     for(fiter.first();fiter.ok();++fiter){
 	Face f(fiter.get_key());
+	if(ogeom){
+	    Point p1(nodes[f.n[0]]->p);
+	    Point p2(nodes[f.n[1]]->p);
+	    Point p3(nodes[f.n[2]]->p);
+	    group->add(new GeomTri(p1, p2, p3));
+	}
 #ifdef PRINTOUT
 	cerr << endl << endl;
 	cerr << "New node is " << node << endl;
@@ -1042,10 +1128,38 @@ int Mesh::insert_delaunay(int node)
 	    }
 	    elems.add(ne);
 	} else {
+	    elems.add(ne);
+	    GeomGroup* de=new GeomGroup;
+	    GeomMaterial* dematl=new GeomMaterial(de, facematl);
+	    draw_element(elems.size()-1, de);
+	    ids.add(ogeom->addObj(dematl, "delaunay - degenerate element"));
+
+	    Point min, max;
+	    get_bounds(min, max);
+	    Vector diag(max-min);
+	    scale=diag.length()/1000;
+	    double radius=scale;
+	    GeomSphere* pt=scinew GeomSphere(p, radius);
+	    GeomMaterial* pt_matl=scinew GeomMaterial(pt, ptmatl);
+	    ids.add(ogeom->addObj(pt_matl, "delaunay - insert point"));
+
+	    GeomGroup* re=new GeomGroup;
+	    GeomMaterial* rematl=new GeomMaterial(re, remmatl);
+	    for(int i=0;i<removed.size();i++)
+		draw_element(removed[i], re);
+	    ids.add(ogeom->addObj(rematl, "delaunay - remove elements"));
+	    
 	    cerr << "Degenerate element (node=" << node << ")\n";
 	    return 0;
 	}
     }
+#if 0
+    if(ogeom){
+	ids.add(ogeom->addObj(matl, "delaunay - void faces"));
+	ogeom->flushViewsAndWait();
+    }
+#endif
+
     // Check the consistency of the mesh....
 #ifdef CHECKER
     HashTable<Face, int> facetab;

@@ -16,7 +16,9 @@
 #include <Classlib/Array1.h>
 #include <Classlib/HashTable.h>
 #include <Comm/MessageBase.h>
+#include <Devices/Tracker.h>
 #include <Geom/Color.h>
+#include <Geom/TCLGeom.h>
 #include <Geom/View.h>
 #include <Geometry/BBox.h>
 #include <TCL/TCL.h>
@@ -25,6 +27,7 @@
 class DBContext;
 class GeomObj;
 class GeomPick;
+class GeomSphere;
 class Light;
 class Renderer;
 class Salmon;
@@ -41,6 +44,7 @@ class TCLView : public TCLvar {
     TCLPoint lookat;
     TCLVector up;
     TCLdouble fov;
+    TCLVector eyep_offset;
 public:
     TCLView(const clString& name, const clString& id, TCL* tcl);
     ~TCLView();
@@ -78,6 +82,21 @@ protected:
     char* modecommand;
 
     int maxtag;
+
+    Tracker* tracker;
+    TCLint tracker_state;
+    void head_moved(const TrackerPosition&);
+    void flyingmouse_moved(const TrackerPosition&);
+    TrackerPosition old_mouse_pos;
+    TrackerPosition old_head_pos;
+    Point orig_eye;
+    Vector frame_up;
+    Vector frame_right;
+    Vector frame_front;
+    int have_trackerdata;
+    Point mousep;
+    GeomSphere* mouse_obj;
+    Array1<GeomObj*> roe_objs;
 
     void animate_to_view(const View& v, double time);
     void redraw();
@@ -130,6 +149,9 @@ public:
 
     // Shading parameters, etc.
     TCLstring shading;
+
+    // Stereo
+    TCLint do_stereo;
 
     // Object processing utility routines
     void do_for_visible(Renderer*, RoeVisPMF);

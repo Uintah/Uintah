@@ -32,12 +32,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_TetraWriter(const clString& id)
+extern "C" {
+Module* make_TetraWriter(const clString& id)
 {
     return new TetraWriter(id);
 }
-
-#include "TetraRegister.h"
+};
 
 TetraWriter::TetraWriter(const clString& id)
 : Module("TetraWriter", id, Source), filename("filename", id, this)

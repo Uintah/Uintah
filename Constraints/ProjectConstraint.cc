@@ -86,17 +86,19 @@ ProjectConstraint::Satisfy( const Index index, const Scheme scheme, const Real E
       var = vars[0];
       return 1;
    case 1:
-      Point proj;
-      norm = (Point)p2 - p1;
-      if (norm.length2() < Epsilon) {
-	 proj = (Point)p2;
-      } else {
-	 norm.normalize();
-	 Real t(Dot((Point)point - p1, norm));
-	 proj = (Point)p1 + (norm * t);
+      {
+	  Point proj;
+	  norm = (Point)p2 - p1;
+	  if (norm.length2() < Epsilon) {
+	      proj = (Point)p2;
+	  } else {
+	      norm.normalize();
+	      Real t(Dot((Point)point - p1, norm));
+	      proj = (Point)p1 + (norm * t);
+	  }
+	  c = (Point)projection + ((Point)point-proj);
+	  var = vars[1];
       }
-      c = (Point)projection + ((Point)point-proj);
-      var = vars[1];
       return 1;
    case 2:
       ASSERT(!"ProjectConstraint:  Can only satisfy projection");

@@ -23,6 +23,7 @@
 #include <Geom/Material.h>
 #include <Geom/Pick.h>
 #include <Geom/Switch.h>
+#include <Geom/TCLGeom.h>
 #include <TCL/TCL.h>
 #include <TCL/TCLvar.h>
 

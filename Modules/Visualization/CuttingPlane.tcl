@@ -25,6 +25,8 @@ itcl_class CuttingPlane {
 	set $this-scale 1.0
 	global $this-offset
 	set $this-offset 0
+	global $this-num_contours
+	set $this-num_contours 2
 	$this-c needexecute
 
     }
@@ -61,6 +63,13 @@ itcl_class CuttingPlane {
 	pack $w.scale -fill x -pady 2
 	expscale $w.offset -orient horizontal -label "Offset:" \
 		-variable $this-offset -command $n
-	pack $w.offset -fill x -pady 2 
+	pack $w.offset -fill x -pady 2
+	scale $w.num_contours -orient horizontal -label "Contours:" \
+		-from 2 -to 500 -length 5c \
+                -showvalue true \
+                -resolution 1 \
+		-variable $this-num_contours -command $n 
+	pack $w.num_contours -fill x -pady 2
+		
     }
 }

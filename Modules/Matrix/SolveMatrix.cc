@@ -12,12 +12,12 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/ColumnMatrixPort.h>
 #include <Datatypes/MatrixPort.h>
 #include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
 #include <Malloc/Allocator.h>
+#include <strstream.h>
 
 class SolveMatrix : public Module {
     MatrixIPort* matrixport;
@@ -32,12 +32,18 @@ public:
     virtual void execute();
 };
 
-static Module* make_SolveMatrix(const clString& id)
+class SolveMatrixUpdater : public MatrixUpdater {
+public:
+    clString solverid;
+    virtual void update(int, double, double, double);
+};
+
+extern "C" {
+Module* make_SolveMatrix(const clString& id)
 {
     return scinew SolveMatrix(id);
 }
-
-static RegisterModule db1("Unfinished", "SolveMatrix", make_SolveMatrix);
+};
 
 SolveMatrix::SolveMatrix(const clString& id)
 : Module("SolveMatrix", id, Filter)
@@ -80,6 +86,18 @@ void SolveMatrix::execute()
     } else {
 	solution.detach();
     }
-    matrix->isolve(*solution.get_rep(), *rhs.get_rep(), 1.e-4);
+    SolveMatrixUpdater updater;
+    updater.solverid=id;
+    matrix->isolve(*solution.get_rep(), *rhs.get_rep(), .25, //1.e-4,
+		   &updater);
     solport->send(solution);
+}
+
+void SolveMatrixUpdater::update(int iter, double first_error,
+				double current_error, double final_error)
+{
+    char buf[1000];
+    ostrstream str(buf, 1000);
+    str << solverid << " update_iter " << iter << " " << first_error << " " << current_error << " " << final_error << '\0';
+    TCL::execute(str.str());
 }

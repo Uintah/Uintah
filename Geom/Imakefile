@@ -6,6 +6,7 @@
 #ifdef SCI_OPENGL
 OPENGLOBJS = GeomOpenGL.o
 OPENGLSRCS = GeomOpenGL.cc
+OPENGLLIBS = -lGLU -lGL -lX11
 #else
 OPENGLOBJS =
 OPENGLSRCS =
@@ -30,13 +31,8 @@ SRCS = Arrows.cc Color.cc Cone.cc Container.cc Cylinder.cc Disc.cc \
 	Tetra.cc Torus.cc Tri.cc Triangles.cc TriStrip.cc Tube.cc \
 	VertexPrim.cc View.cc \
 	TCLGeom.cc $(OPENGLSRCS) $(X11SRCS)
-SO_LIBS = ../Geometry/libGeometry.a \
-	../Multitask/libMultitask.a ../Malloc/libMalloc.a \
-	../Math/libMath.a ../TCL/libTCL.a ../Classlib/libClasslib.a \
-	../Dataflow/libDataflow.a ../Classlib/libClasslib.a \
-	../tcl/sci/libscitk.a ../tcl/itcl/src/libitcl.a \
-	../tcl/tcl/libtcl.a ../tcl/tk/libtk.a 
-SO_LDFLAGS = -lGLU -lGL -lX11 -lC -lm -;c
+SO_LIBS = 
+SO_LDFLAGS = -L$(TOP)/lib -lTCL -lGeometry -lClasslib -lMalloc $(OPENGLLIBS)
 
 LIBNAME = Geom
 

@@ -30,6 +30,7 @@ RegisterRenderer::RegisterRenderer(const clString& name,
 				   make_Renderer maker)
 : name(name), query(query), maker(maker)
 {
+    cerr << "Register: " << name << endl;
     RegisterRenderer* tmp;
     if(!known_renderers)
 	known_renderers=scinew AVLTree<clString, RegisterRenderer*>;
@@ -84,8 +85,8 @@ int Renderer::compute_depth(Roe* roe, const View& view,
 	// We have something to draw...
 	Point min(bb.min());
 	Point max(bb.max());
-	Point eyep(view.eyep);
-	Vector dir(view.lookat-eyep);
+	Point eyep(view.eyep());
+	Vector dir(view.lookat()-eyep);
 	dir.normalize();
 	double d=-Dot(eyep, dir);
 	for(int ix=0;ix<2;ix++){

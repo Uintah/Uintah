@@ -43,6 +43,8 @@ public:
 
 	AttachDialbox,
 	DialMoved,
+
+	TrackerMoved,
     };
 };
 

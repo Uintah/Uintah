@@ -32,7 +32,6 @@ hook up user interface buttons
 #include <Classlib/NotFinished.h>
 #include <Math/Trig.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/ColormapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/ScalarField.h>
@@ -236,13 +235,12 @@ public:
     virtual void tcl_command(TCLArgs& args, void* userdata);
 };
 
-static Module* make_Streamline(const clString& id)
+extern "C" {
+Module* make_Streamline(const clString& id)
 {
     return scinew Streamline(id);
 }
-
-static RegisterModule db1("Fields", "Streamline", make_Streamline);
-static RegisterModule db2("Visualization", "Streamline", make_Streamline);
+};
 
 static clString widget_name("Streamline Widget");
 static clString module_name("Streamline");

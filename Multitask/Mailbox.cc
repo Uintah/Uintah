@@ -35,7 +35,7 @@ template<class Item>
 Mailbox<Item>::Mailbox(int max)
 {
     priv=scinew Mailbox_private<Item>;
-    priv->ring_buffer=scinew Item[max];
+    priv->ring_buffer=new Item[max];
     priv->head=0;
     priv->len=0;
     priv->send_wait=0;

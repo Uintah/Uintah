@@ -13,7 +13,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/TYPEPort.h>
 #include <Datatypes/TYPE.h>
 #include <Malloc/Allocator.h>
@@ -33,12 +32,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_TYPEReader(const clString& id)
+extern "C" {
+Module* make_TYPEReader(const clString& id)
 {
     return scinew TYPEReader(id);
 }
-
-#include "TYPERegister.h"
+};
 
 TYPEReader::TYPEReader(const clString& id)
 : Module("TYPEReader", id, Source), filename("filename", id, this)

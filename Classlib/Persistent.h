@@ -92,7 +92,7 @@ typedef Persistent* PersistentPointer;
 
 inline int Hash(const PersistentPointer& k, int hash_size)
 {
-   return ((int)k^(3*hash_size+1))%hash_size;
+   return (int)(((long)k^(3*hash_size+1))%hash_size);
 }
 
 inline void Pio(Piostream& stream, char& data) { stream.io(data); }

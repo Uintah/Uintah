@@ -207,11 +207,13 @@ GaugeWidget::geom_moved( GeomPick*, int axis, double dist,
       variables[PointRVar]->SetDelta(delta, Scheme3);
       break;
    case PickSlider:
-      if (axis==1) dist*=-1.0;
-      Real sdist(variables[SDistVar]->real()+dist);
-      if (sdist<0.0) sdist=0.0;
-      else if (sdist>variables[DistVar]->real()) sdist=variables[DistVar]->real();
-      variables[SDistVar]->Set(sdist);
+      {
+	  if (axis==1) dist*=-1.0;
+	  Real sdist(variables[SDistVar]->real()+dist);
+	  if (sdist<0.0) sdist=0.0;
+	  else if (sdist>variables[DistVar]->real()) sdist=variables[DistVar]->real();
+	  variables[SDistVar]->Set(sdist);
+      }
       break;
    case PickCyl:
       MoveDelta(delta);

@@ -165,14 +165,15 @@ itcl_class Roe {
 	pack $m.shade -anchor w -padx 2 -side left
 	global $this-shading
 	set $this-shading Phong
-	
+
+
 	frame $m.objlist -relief groove -borderwidth 2
 	pack $m.objlist -side left -padx 2 -pady 2 -fill y
 	label $m.objlist.title -text "Objects:"
 	pack $m.objlist.title -side top
 	canvas $m.objlist.canvas -width 400 -height 100 \
 		-yscrollcommand "$m.objlist.scroll set" -borderwidth 0
-	pack $m.objlist.canvas -side left -padx 2 -pady 2 -fill y
+	pack $m.objlist.canvas -side right -padx 2 -pady 2 -fill y
 	
 	frame $m.objlist.canvas.frame -relief sunken -borderwidth 2
 	pack $m.objlist.canvas.frame
@@ -183,6 +184,21 @@ itcl_class Roe {
 		-command "$m.objlist.canvas yview"
 	pack $m.objlist.scroll -fill y -side right -padx 2 -pady 2
 	
+	global $this-do_stereo
+	set $this-do_stereo 0
+	checkbutton $m.stereo -text "Stereo" -variable $this-do_stereo
+	pack $m.stereo -side top
+
+	global $this-tracker_state
+	set $this-tracker_state 0
+	checkbutton $m.tracker -text "Tracker" -variable $this-tracker_state \
+		-command "$this-c tracker"
+	pack $m.tracker -side top
+
+	button $m.tracker_reset -text "Reset tracker" \
+		-command "$this-c reset_tracker"
+	pack $m.tracker_reset -side top
+	
 	frame $w.wframe -borderwidth 3 -relief sunken
 	pack $w.wframe -expand yes -fill both -padx 4 -pady 4
 	
@@ -192,7 +208,7 @@ itcl_class Roe {
 	eval $wcommand
 	bindEvents $w.wframe.draw
 	pack $w.wframe.draw -expand yes -fill both
-	
+
 	$this-c startup
     }
     method bindEvents {w} {

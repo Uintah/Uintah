@@ -12,7 +12,6 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldPort.h>
@@ -52,13 +51,12 @@ public:
     virtual void tcl_command(TCLArgs&, void*);
 };
 
-static Module* make_BuildOctree(const clString& id)
+extern "C" {
+Module* make_BuildOctree(const clString& id)
 {
     return scinew BuildOctree(id);
 }
-
-static RegisterModule db1("Mesh", "BuildOctree", make_BuildOctree);
-static RegisterModule db2("Dave", "BuildOctree", make_BuildOctree);
+};
 
 BuildOctree::BuildOctree(const clString& id)
 : Module("BuildOctree", id, Filter), same_input("same_input", id, this)

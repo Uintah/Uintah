@@ -27,10 +27,12 @@ SRCS = BasicSurfaces.cc Colormap.cc ColormapPort.cc ColumnMatrix.cc \
 	VectorFieldPort.cc VectorFieldRG.cc VectorFieldUG.cc
 
 LIBNAME = Datatypes
+SO_LIBS =
+SO_LDFLAGS = -L$(TOP)/lib -lDataflow -lGeom -lGeometry -lComm -lMath \
+	-lClasslib -lMultitask -lMalloc -lm
 
 SCIDependTarget($(SRCS))
-SCIObjLibraryTarget($(LIBNAME),$(OBJS))
-SCINormalLibraryTarget($(LIBNAME),$(OBJS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS), $(SO_LIBS), $(SO_LDFLAGS))
 
 #else
 all:

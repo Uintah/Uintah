@@ -3,17 +3,19 @@
 
 #ifdef SCI_DIR_Dataflow
 
-OBJS = Connection.o  DebugSettings.o HelpUI.o  MemStats.o  Module.o  \
-	ModuleHelper.o  ModuleList.o  Network.o  NetworkEditor.o  \
-	Port.o  ThreadStats.o
-SRCS = Connection.cc DebugSettings.cc HelpUI.cc MemStats.cc Module.cc \
-	ModuleHelper.cc ModuleList.cc Network.cc NetworkEditor.cc \
-	Port.cc ThreadStats.cc
+OBJS = Connection.o  Module.o  ModuleHelper.o  ModuleList.o  \
+	Network.o  NetworkEditor.o  Port.o 
+SRCS = Connection.cc Module.cc ModuleHelper.cc ModuleList.cc \
+	Network.cc NetworkEditor.cc Port.cc
 
 LIBNAME = Dataflow
 
+SO_LIBS =
+SO_LDFLAGS = -L$(TOP)/lib -lComm -lTCL -lClasslib -lMultitask \
+	-lMalloc -lC -lc
+
 SCIDependTarget($(SRCS))
-SCINormalLibraryTarget($(LIBNAME),$(OBJS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS), $(SO_LDFLAGS))
 
 #else
 all:

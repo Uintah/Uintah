@@ -12,7 +12,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/SurfacePort.h>
 #include <Datatypes/ScalarFieldUG.h>
@@ -31,12 +30,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_Gradient(const clString& id)
+extern "C" {
+Module* make_Gradient(const clString& id)
 {
     return new Gradient(id);
 }
-
-static RegisterModule db1("Unfinished", "Gradient", make_Gradient);
+};
 
 Gradient::Gradient(const clString& id)
 : Module("Gradient", id, Filter)
@@ -101,5 +100,5 @@ void Gradient::execute()
 	NodeHandle& n=mesh->nodes[i];
 	gradients[i]*=1./(n->elems.size());
     }
-    outfield->send(vfield);
+    outfield->send(VectorFieldHandle(vfield));
 }

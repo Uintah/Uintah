@@ -15,7 +15,6 @@
 #include <Classlib/Assert.h>
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/ContourSet.h>
 #include <Datatypes/ContourSetPort.h>
 #include <Datatypes/Surface.h>
@@ -40,14 +39,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_LaceContoursTemp(const clString& id)
+extern "C" {
+Module* make_LaceContoursTemp(const clString& id)
 {
     return new LaceContoursTemp(id);
 }
-
-static RegisterModule db1("Contours", "LaceContoursTemp", make_LaceContoursTemp);
-static RegisterModule db2("Visualization", "LaceContoursTemp", make_LaceContoursTemp);
-static RegisterModule db3("Dave", "LaceContoursTemp", make_LaceContoursTemp);
+};
 
 LaceContoursTemp::LaceContoursTemp(const clString& id)
 : Module("LaceContoursTemp", id, Filter)
@@ -82,7 +79,7 @@ void LaceContoursTemp::execute()
     if (!incontour->get(contours)) return;
     TriSurface* surf=new TriSurface;
     lace_contours_temp(contours, surf);
-    osurface->send(surf);
+    osurface->send(SurfaceHandle(surf));
 }
 
 void LaceContoursTemp::lace_contours_temp(const ContourSetHandle& contour, 

@@ -49,7 +49,7 @@ typedef void* HashVoid;
 
 inline int Hash(const HashVoid& k, int hash_size)
 {
-    return ((int)k^(3*hash_size+1))%hash_size;
+    return (int)(((long)k^(3*hash_size+1))%hash_size);
 }
 #endif
 

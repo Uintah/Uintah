@@ -19,8 +19,6 @@ TK =
 #endif
 TCLSUBDIRS = $(TCL) $(TK) $(ITCL)
 
-SCISubdirs($(SUBDIRS))
-
 #if defined(SCI_DIR_tcl_tcl) || defined(SCI_DIR_tcl_itcl) || defined(SCI_DIR_tcl_tk)
 SCISubdirs3($(TCLSUBDIRS))
 Makefiles::
@@ -29,3 +27,6 @@ Makefiles::
 	 ./configure ); \
 	done
 #endif
+
+SCISubdirs($(SUBDIRS))
+

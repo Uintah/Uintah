@@ -116,35 +116,4 @@ public:
     void set(const Vector&);
 };
 
-class Color;
-class TCLColor : public TCLvar {
-    TCLdouble r;
-    TCLdouble g;
-    TCLdouble b;
-public:
-    TCLColor(const clString& name, const clString& id, TCL* tcl);
-    ~TCLColor();
-
-    Color get();
-    void set(const Color&);
-};
-
-class Material;
-class TCLMaterial : public TCLvar {
-    TCLColor ambient;
-    TCLColor diffuse;
-    TCLColor specular;
-    TCLdouble shininess;
-    TCLColor emission;
-    TCLdouble reflectivity;
-    TCLdouble transparency;
-    TCLdouble refraction_index;
- public:
-    TCLMaterial(const clString& name, const clString& id, TCL* tcl);
-    ~TCLMaterial();
-   
-    Material get();
-    void set(const Material&);
-};
-
 #endif

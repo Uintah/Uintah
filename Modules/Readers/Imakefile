@@ -7,25 +7,29 @@ OBJS = ContourSetReader.o   MeshReader.o   \
 	MultiMeshReader.o   ScalarFieldReader.o   \
 	SurfaceReader.o   VectorFieldReader.o \
 PointsReader.o
-SRCS = ContourSetReader.cc  MeshReader.cc  \
+GENSRCS = ContourSetReader.cc  MeshReader.cc  \
 	MultiMeshReader.cc  ScalarFieldReader.cc  \
-	SurfaceReader.cc  VectorFieldReader.cc \
-PointsReader.cc
-TCLS = ContourSetReader.tcl MeshReader.tcl \
+	SurfaceReader.cc  VectorFieldReader.cc
+SRCS = $(GENSRCS) PointsReader.cc
+GENTCLS = ContourSetReader.tcl MeshReader.tcl \
 	MultiMeshReader.tcl ScalarFieldReader.tcl \
-	SurfaceReader.tcl VectorFieldReader.tcl \
-PointsReader.tcl
+	SurfaceReader.tcl VectorFieldReader.tcl
+TCLS = $(GENTCLS) PointsReader.tcl
 
 LIBNAME = Readers
 
-depend:: $(SRCS)
+SO_LIBS =
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lTCL -lClasslib \
+	-lMultitask -lMalloc -lgnupt
+
+depend:: $(GENSRCS)
 
 clean::
-	$(RM) $(SRCS)
+	$(RM) $(GENSRCS) $(GENTCLS)
 
 SCIDependTarget($(SRCS))
-SCIObjLibraryTarget($(LIBNAME), $(OBJS))
-AllTarget($(TCLS))
+SCIObjLibraryTarget($(LIBNAME), $(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
+AllTarget($(GENTCLS))
 
 ContourSetReader.cc: Reader.cc
 	sed 's/TYPE/ContourSet/g' < Reader.cc > ContourSetReader.cc

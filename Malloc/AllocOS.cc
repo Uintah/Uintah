@@ -20,7 +20,7 @@ OSHunk* OSHunk::alloc(size_t size)
 	}
     }
     void* ptr=mmap(0, asize, PROT_READ|PROT_WRITE, MAP_SHARED, devzero_fd, 0);
-    if(ptr == (void*)-1){
+    if((long)ptr == -1){
 	fprintf(stderr, "Error allocating memory\nmmap: errno=%d\n", errno);
 	abort();
     }

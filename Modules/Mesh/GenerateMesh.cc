@@ -12,7 +12,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
@@ -27,12 +26,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_GenerateMesh(const clString& id)
+extern "C" {
+Module* make_GenerateMesh(const clString& id)
 {
     return scinew GenerateMesh(id);
 }
-
-static RegisterModule db1("Unfinished", "GenerateMesh", make_GenerateMesh);
+};
 
 GenerateMesh::GenerateMesh(const clString& id)
 : Module("GenerateMesh", id, Filter)

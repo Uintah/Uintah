@@ -490,25 +490,31 @@ ScaledBoxWidget::geom_moved( GeomPick*, int axis, double dist,
       variables[CenterVar]->SetDelta(delta/2.0, Scheme6);
       break;
    case PickSliderR:
-      if (axis==1) dist*=-1.0;
-      Real sdist(variables[SDistRVar]->real()+dist/2.0);
-      if (sdist<0.0) sdist=0.0;
-      else if (sdist>variables[DistRVar]->real()) sdist=variables[DistRVar]->real();
-      variables[SDistRVar]->Set(sdist);
+      {
+	  if (axis==1) dist*=-1.0;
+	  Real sdist(variables[SDistRVar]->real()+dist/2.0);
+	  if (sdist<0.0) sdist=0.0;
+	  else if (sdist>variables[DistRVar]->real()) sdist=variables[DistRVar]->real();
+	  variables[SDistRVar]->Set(sdist);
+      }
       break;
    case PickSliderD:
-      if (axis==1) dist*=-1.0;
-      sdist = variables[SDistDVar]->real()+dist/2.0;
-      if (sdist<0.0) sdist=0.0;
-      else if (sdist>variables[DistDVar]->real()) sdist=variables[DistDVar]->real();
-      variables[SDistDVar]->Set(sdist);
+      {
+	  if (axis==1) dist*=-1.0;
+	  Real sdist = variables[SDistDVar]->real()+dist/2.0;
+	  if (sdist<0.0) sdist=0.0;
+	  else if (sdist>variables[DistDVar]->real()) sdist=variables[DistDVar]->real();
+	  variables[SDistDVar]->Set(sdist);
+      }
       break;
    case PickSliderI:
-      if (axis==1) dist*=-1.0;
-      sdist = variables[SDistIVar]->real()+dist/2.0;
-      if (sdist<0.0) sdist=0.0;
-      else if (sdist>variables[DistIVar]->real()) sdist=variables[DistIVar]->real();
-      variables[SDistIVar]->Set(sdist);
+      {
+	  if (axis==1) dist*=-1.0;
+	  Real sdist = variables[SDistIVar]->real()+dist/2.0;
+	  if (sdist<0.0) sdist=0.0;
+	  else if (sdist>variables[DistIVar]->real()) sdist=variables[DistIVar]->real();
+	  variables[SDistIVar]->Set(sdist);
+      }
       break;
    case PickCyls:
       MoveDelta(delta);

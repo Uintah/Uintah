@@ -16,7 +16,7 @@
 #include <iostream.h>
 
 // Task constructure
-Task::Task(const clString& name, int detached, int priority)
+Task::Task(char* name, int detached, int priority)
 : name(name), priority(priority), detached(detached), timers(0),
   timer_id(100), ntimers(0)
 {
@@ -27,7 +27,7 @@ Task::~Task()
 {
 }
 
-clString Task::get_name()
+char* Task::get_name()
 {
     return name;
 }

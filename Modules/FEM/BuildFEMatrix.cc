@@ -12,11 +12,9 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/ColumnMatrixPort.h>
 #include <Datatypes/MatrixPort.h>
 #include <Datatypes/Matrix.h>
-#include <Datatypes/DenseMatrix.h>
 #include <Datatypes/SymSparseRowMatrix.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/Mesh.h>
@@ -28,8 +26,10 @@ class BuildFEMatrix : public Module {
     MeshIPort* inmesh;
     MatrixOPort * outmatrix;
     ColumnMatrixOPort* rhsoport;
-    void build_local_matrix(Element*,Matrix&, const MeshHandle&);
-    void add_lcl_gbl(Matrix&, Matrix&, ColumnMatrix&, int, const MeshHandle&);
+    void build_local_matrix(Element*, double lcl[4][4],
+			    const MeshHandle&);
+    void add_lcl_gbl(Matrix&, double lcl[4][4],
+		     ColumnMatrix&, int, const MeshHandle&);
 public:
     BuildFEMatrix(const clString& id);
     BuildFEMatrix(const BuildFEMatrix&, int deep);
@@ -38,12 +38,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_BuildFEMatrix(const clString& id)
+extern "C" {
+Module* make_BuildFEMatrix(const clString& id)
 {
     return scinew BuildFEMatrix(id);
 }
-
-static RegisterModule db1("Matrix", "BuildFEMatrix", make_BuildFEMatrix);
+};
 
 BuildFEMatrix::BuildFEMatrix(const clString& id)
 : Module("BuildFEMatrix", id, Filter)
@@ -115,11 +115,12 @@ void BuildFEMatrix::execute()
      gbl_matrix->zero();
      ColumnMatrix* rhs=scinew ColumnMatrix(ndof);
      rhs->zero();
-     DenseMatrix lcl_matrix(4, 4);
+     double lcl_matrix[4][4];
 
      int nelems=mesh->elems.size();
      for (i=0; i<nelems; i++){
-	 update_progress(i, nelems);
+	 if(i%200 == 0)
+	     update_progress(i, nelems);
 	 build_local_matrix(mesh->elems[i],lcl_matrix,mesh);
 	 add_lcl_gbl(*gbl_matrix,lcl_matrix,*rhs,i,mesh);
      }
@@ -130,19 +131,20 @@ void BuildFEMatrix::execute()
 	 }
      }
 
-     outmatrix->send(gbl_matrix);
-     rhsoport->send(rhs);
+     outmatrix->send(MatrixHandle(gbl_matrix));
+     rhsoport->send(ColumnMatrixHandle(rhs));
 }
 
 void BuildFEMatrix::build_local_matrix(Element *elem, 
-				       Matrix& lcl_a,
+				       double lcl_a[4][4],
 				       const MeshHandle& mesh)
 {
      Point pt;
      Vector grad1,grad2,grad3,grad4;
      double vol = mesh->get_grad(elem,pt,grad1,grad2,grad3,grad4);
 
-     DenseMatrix el_coefs(4,3);
+
+     double el_coefs[4][3];
      // this 4x3 array holds the 3 gradients to be used 
      // as coefficients for each of the four nodes of the 
      // element
@@ -172,7 +174,7 @@ void BuildFEMatrix::build_local_matrix(Element *elem,
      //  [4] => sigma yz and sigma zy
      //  [5] => sigma zz
 
-     DenseMatrix el_cond(3,3);
+     double el_cond[3][3];
      // in el_cond, the indices tell you the directions
      // the value is refering to. i.e. 0=x, 1=y, and 2=z
      // so el_cond[1][2] is the same as sigma yz
@@ -205,7 +207,7 @@ void BuildFEMatrix::build_local_matrix(Element *elem,
 }
 
 
-void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, Matrix& lcl_a,
+void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 				ColumnMatrix& rhs,
 				int el, const MeshHandle& mesh)
 {

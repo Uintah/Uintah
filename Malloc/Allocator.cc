@@ -57,7 +57,7 @@ inline AllocBin* Allocator::get_bin(size_t size)
 
 #ifdef __sgi
 
-extern "C" int Allocator_try_lock(unsigned long*);
+extern "C" int Allocator_try_lock(unsigned int*);
 
 #include <unistd.h>
 
@@ -238,7 +238,7 @@ void* Allocator::alloc(size_t size, char* tag)
     // Fill in the region between the end of the allocation and the
     // end of the chunk.
     if(strict){
-	char i=(char)(int)d;
+	char i=(char)(long)d;
 	for(char* p=d+obj->reqsize;p<(char*)sent2;p++)
 	    *p++=i++;
     }
@@ -372,7 +372,7 @@ void* Allocator::alloc_big(size_t size, char* tag)
     // Fill in the region between the end of the allocation and the
     // end of the chunk.
     if(strict){
-	char i=(char)(int)d;
+	char i=(char)(long)d;
 	for(char* p=d+obj->reqsize;p<(char*)sent2;p++)
 	    *p++=i++;
     }
@@ -410,7 +410,7 @@ void* Allocator::realloc(void* dobj, size_t newsize)
 	// Fill in the region between the end of the allocation and the
 	// end of the chunk.
 	if(strict){
-	    char i=(char)(int)d;
+	    char i=(char)(long)d;
 	    for(char* p=d+oldobj->reqsize;p<(char*)sent2;p++)
 		*p++=i++;
 	}
@@ -624,7 +624,7 @@ void Allocator::audit(Tag* obj, int what)
 
     // Check the space between the end of the allocation and the sentinel...
     if(strict && (what == OBJFREEING || what == OBJINUSE)){
-	char i=(char)(int)d;
+	char i=(char)(long)d;
 	for(char* p=d+obj->reqsize;p<(char*)sent2;p++){
 	    char p1=*p++;
 	    char p2=i++;

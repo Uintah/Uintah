@@ -12,7 +12,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/ContourSet.h>
 #include <Datatypes/ContourSetPort.h>
 // #include <Devices/Dialbox.h>
@@ -41,13 +40,12 @@ public:
     virtual void ui_button();
 };
 
-static Module* make_TransformCS(const clString& id)
+extern "C" {
+Module* make_TransformCS(const clString& id)
 {
     return new TransformCS(id);
 }
-
-static RegisterModule db1("Contours", "Transform Contour Set", make_TransformCS);
-static RegisterModule db2("Visualization", "Transform Contour Set", make_TransformCS);
+};
 
 TransformCS::TransformCS(const clString& id)
 : Module("TransformCS", id, Filter)

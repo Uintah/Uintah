@@ -11,10 +11,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Classlib/ArgProcessor.h>
 #include <Dataflow/ModuleList.h>
 #include <Dataflow/Network.h>
 #include <Dataflow/NetworkEditor.h>
+#include <Devices/Tracker.h>
 #include <Multitask/Task.h>
 #include <TCL/TCLTask.h>
 
@@ -22,19 +22,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <dlfcn.h>
 
 int main(int argc, char** argv)
 {
-    // The possible arguments are registered with the ArgProcessor
-    // class.  This hands that class the list of arguments, and
-    // the rest is handled "automagically".
-    ArgProcessor::process_args(argc, argv);
-
     // Initialize the multithreader
     Task::initialize(argv[0]);
 
     // Start up TCL...
     TCLTask* tcl_task = new TCLTask(argc, argv);
+
+    // Start up the server thread for the head tracker
+    TrackerThread* tracker=new TrackerThread;
+    //tracker->activate(0);
 
     // Create initial network
     // We build the Network with a 1, indicating that this is the

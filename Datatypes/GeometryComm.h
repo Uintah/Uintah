@@ -32,6 +32,7 @@ public:
     GeometryComm(int, GeomID, GeomObj*, const clString&, CrowdMonitor* lock);
     GeometryComm(int, GeomID);
     GeometryComm(MessageTypes::MessageType, int);
+    GeometryComm(MessageTypes::MessageType, int, Semaphore* wait);
     virtual ~GeometryComm();
 
     Mailbox<GeomReply>* reply;
@@ -40,6 +41,7 @@ public:
     GeomObj* obj;
     clString name;
     CrowdMonitor* lock;
+    Semaphore* wait;
 
     GeometryComm* next;
 };

@@ -127,17 +127,21 @@ CenterConstraint::Satisfy( const Index index, const Scheme scheme, const Real,
 	 c = AffineCombination(p1, 0.5, p2, 0.5);
 	 break;
       case 4:
-	 PointVariable& p3 = *vars[3];
-	 var = vars[0];
-	 c = AffineCombination(p1, 1.0/3.0, p2, 1.0/3.0,
-			       p3, 1.0/3.0);
+	 {
+	     PointVariable& p3 = *vars[3];
+	     var = vars[0];
+	     c = AffineCombination(p1, 1.0/3.0, p2, 1.0/3.0,
+				   p3, 1.0/3.0);
+	 }
 	 break;
       case 5:
-	 PointVariable& pthree = *vars[3];
-	 PointVariable& p4 = *vars[4];
-	 var = vars[0];
-	 c = AffineCombination(p1, 0.25, p2, 0.25,
-			       pthree, 0.25, p4, 0.25);
+	 {
+	     PointVariable& pthree = *vars[3];
+	     PointVariable& p4 = *vars[4];
+	     var = vars[0];
+	     c = AffineCombination(p1, 0.25, p2, 0.25,
+				   pthree, 0.25, p4, 0.25);
+	 }
 	 break;
       default:
 	 break;

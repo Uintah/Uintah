@@ -26,6 +26,7 @@
 #include <Geom/Geom.h>
 #include <Geom/Pick.h>
 #include <Geom/PointLight.h>
+#include <Geom/Sphere.h>
 #include <Malloc/Allocator.h>
 #include <Math/Trig.h>
 #include <TCL/TCLTask.h>
@@ -45,7 +46,8 @@ Roe::Roe(Salmon* s, const clString& id)
 : manager(s), id(id),
   view("view", id, this),
   homeview(Point(.55, .5, 0), Point(.55, .5, .5), Vector(0,1,0), 25),
-  bgcolor("bgcolor", id, this), shading("shading", id, this)
+  bgcolor("bgcolor", id, this), shading("shading", id, this),
+  do_stereo("do_stereo", id, this), tracker_state("tracker_state", id, this)
 {
     bgcolor.set(Color(0,0,0));
     view.set(homeview);
@@ -54,43 +56,9 @@ Roe::Roe(Salmon* s, const clString& id)
     modebuf=scinew char[MODEBUFSIZE];
     modecommand=scinew char[MODEBUFSIZE];
     maxtag=0;
+    tracker=0;
+    mouse_obj=0;
 }
-
-#ifdef OLDUI
-void Roe::orthoCB(CallbackData*, void*) {
-    evl->lock();
-    make_current();
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-8, 8, -6, 6, -100, 100);
-    // determine the bounding box so we can scale the view
-    get_bounds(bb);
-    if (bb.valid()) {
-	Point cen(bb.center());
-	double cx=cen.x();
-	double cy=cen.y();
-	double xw=cx-bb.min().x();
-	double yw=cy-bb.min().y();
-	double scl=4/Max(xw,yw);
-	glScaled(scl,scl,scl);
-    }
-    glMatrixMode(GL_MODELVIEW);
-    evl->unlock();
-    need_redraw=1;
-}
-
-void Roe::perspCB(CallbackData*, void*) {
-    evl->lock();
-    make_current();
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(90, 1.33, 1, 100);
-    glMatrixMode(GL_MODELVIEW);
-    evl->unlock();
-    need_redraw=1;
-}
-
-#endif
 
 void Roe::itemAdded(SceneItem* si)
 {
@@ -160,58 +128,6 @@ Roe::~Roe()
     delete[] modecommand;
 }
 
-#ifdef OLDUI
-void Roe::fogCB(CallbackData*, void*) {
-    evl->lock();
-    make_current();
-    if (!glIsEnabled(GL_FOG)) {
-	glEnable(GL_FOG);
-    } else {
-	glDisable(GL_FOG);
-    }
-    evl->unlock();
-    need_redraw=1;
-}
-
-void Roe::point1CB(CallbackData*, void*)
-{
-    evl->lock();
-    make_current();
-    if (!glIsEnabled(GL_LIGHT0)) {
-	glEnable(GL_LIGHT0);
-    } else {
-	glDisable(GL_LIGHT0);
-    }
-    evl->unlock();
-    need_redraw=1;
-}
-
-void Roe::point2CB(CallbackData*, void*)
-{
-    evl->lock();
-    make_current();
-    if (!glIsEnabled(GL_LIGHT1)) {
-	glEnable(GL_LIGHT1);
-    } else {
-	glDisable(GL_LIGHT1);
-    }
-    evl->unlock();
-    need_redraw=1;
-}
-
-void Roe::head1CB(CallbackData*, void*)
-{
-    evl->lock();
-    make_current();
-    if (!glIsEnabled(GL_LIGHT2)) {
-	glEnable(GL_LIGHT2);
-    } else {
-	glDisable(GL_LIGHT2);
-    }
-    evl->unlock();
-    need_redraw=1;
-}
-#endif
 
 void Roe::get_bounds(BBox& bbox)
 {
@@ -352,8 +268,8 @@ void Roe::mouse_translate(int action, int x, int y, int, int)
 	    total_y+=vl*ymtn;
 
 	    // Translate the view...
-	    tmpview.eyep+=trans;
-	    tmpview.lookat+=trans;
+	    tmpview.eyep(tmpview.eyep()+trans);
+	    tmpview.lookat(tmpview.lookat()+trans);
 
 	    // Put the view back...
 	    view.set(tmpview);
@@ -395,7 +311,7 @@ void Roe::mouse_scale(int action, int x, int y, int, int)
 	    total_scale*=scl;
 
 	    View tmpview(view.get());
-	    tmpview.fov=RtoD(2*Atan(scl*Tan(DtoR(tmpview.fov/2.))));
+	    tmpview.fov(RtoD(2*Atan(scl*Tan(DtoR(tmpview.fov()/2.)))));
 	    view.set(tmpview);
 	    need_redraw=1;
 	    ostrstream str(modebuf, MODEBUFSIZE);
@@ -461,11 +377,11 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
 	    transform.pre_rotate(DtoR(xrot), v);
 	    transform.pre_translate(-transl);
 
-	    Point top(tmpview.eyep+tmpview.up);
+	    Point top(tmpview.eyep()+tmpview.up());
 	    top=transform.project(top);
-	    tmpview.eyep=transform.project(tmpview.eyep);
-	    tmpview.lookat=transform.project(tmpview.lookat);
-	    tmpview.up=top-tmpview.eyep;
+	    tmpview.eyep(transform.project(tmpview.eyep()));
+	    tmpview.lookat(transform.project(tmpview.lookat()));
+	    tmpview.up(top-tmpview.eyep());
 
 	    view.set(tmpview);
 
@@ -570,77 +486,6 @@ void Roe::mouse_pick(int action, int x, int y, int state, int btn)
     }
 }
 
-#ifdef OLDUI
-void Roe::attach_dials(CallbackData*, void* ud)
-{
-    int which=(int)ud;
-    switch(which){
-    case 0:
-	Dialbox::attach_dials(dbcontext_st);
-	break;
-    }
-}
-
-void Roe::DBscale(DBContext*, int, double value, double delta, void*)
-{
-    double oldvalue=value-delta;
-    double f=Exp10(value)/Exp10(oldvalue);
-    BBox bb;
-    get_bounds(bb);
-    Point p(0,0,0);
-    if(bb.valid())
-	p=bb.center();
-    mtnScl*=f;
-    scale(Vector(f, f, f), p);
-    need_redraw=1;
-}
-
-void Roe::DBtranslate(DBContext*, int, double, double delta,
-		      void* cbdata)
-{
-    int which=(int)cbdata;
-    Vector v(0,0,0);
-    switch(which){
-    case 0:
-	v.x(delta);
-	break;
-    case 1:
-	v.y(delta);
-	break;
-    case 2:
-	v.z(delta);
-	break;
-    }
-    translate(v);
-    need_redraw=1;
-}
-
-void Roe::DBrotate(DBContext*, int, double, double delta,
-		      void* cbdata)
-{
-    int which=(int)cbdata;
-    Vector v(0,0,0);
-    switch(which){
-    case 0:
-	v=Vector(1,0,0);
-	break;
-    case 1:
-	v=Vector(0,1,0);
-	break;
-    case 2:
-	v=Vector(0,0,1);
-	break;
-    }
-    BBox bb;
-    get_bounds(bb);
-    Point p(0,0,0);
-    if(bb.valid())
-	p=bb.center();
-    rotate_obj(delta, v, p);
-    need_redraw=1;
-}
-#endif
-
 void Roe::redraw_if_needed()
 {
     if(need_redraw){
@@ -648,23 +493,6 @@ void Roe::redraw_if_needed()
 	redraw();
     }
 }
-
-#ifdef OLDUI
-void Roe::redraw_perf(CallbackData*, void*)
-{
-    evl->lock();
-    Window w=XtWindow(*perf);
-    Display* dpy=XtDisplay(*buttons);
-    XClearWindow(dpy, w);
-    XSetForeground(dpy, gc, fgcolor->pixel());
-    XSetFont(dpy, gc, perffont->font->fid);
-    int ascent=perffont->font->ascent;
-    int height=ascent+perffont->font->descent;
-    XDrawString(dpy, w, gc, 0, ascent, perf_string1(), perf_string1.len());
-    XDrawString(dpy, w, gc, 0, height+ascent, perf_string2(), perf_string2.len());
-    evl->unlock();
-}
-#endif
 
 void Roe::tcl_command(TCLArgs& args, void*)
 {
@@ -781,10 +609,26 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	    return;
 	}
 	View cv(view.get());
-	Vector lookdir(cv.eyep-cv.lookat);
+	Vector lookdir(cv.eyep()-cv.lookat());
 	lookdir*=amount;
-	cv.eyep=cv.lookat+lookdir;
+	cv.eyep(cv.lookat()+lookdir);
 	animate_to_view(cv, 1.0);
+    } else if(args[1] == "tracker"){
+	if(tracker_state.get()){
+	    // Turn the tracker on...
+	    if(!tracker){
+		tracker=new Tracker(&manager->mailbox, (void*)this);
+	    }
+	    have_trackerdata=0;
+	} else {
+	    // Turn the tracker off...
+	    if(tracker){
+		delete tracker;
+		tracker=0;
+	    }
+	}
+    } else if(args[1] == "reset_tracker"){
+	have_trackerdata=0;
     } else {
 	args.error("Unknown minor command for Roe");
     }
@@ -843,22 +687,22 @@ void Roe::autoview(const BBox& bbox)
     if(bbox.valid()){
         View cv(view.get());
         // Animate lookat point to center of BBox...
-        cv.lookat=bbox.center();
+        cv.lookat(bbox.center());
         animate_to_view(cv, 2.0);
         
         // Move forward/backwards until entire view is in scene...
-        Vector lookdir(cv.lookat-cv.eyep);
+        Vector lookdir(cv.lookat()-cv.eyep());
         double old_dist=lookdir.length();
         PRINTVAR(autoview_sw, old_dist);
-        double old_w=2*Tan(DtoR(cv.fov/2.))*old_dist;
+        double old_w=2*Tan(DtoR(cv.fov()/2.))*old_dist;
         PRINTVAR(autoview_sw, old_w);
         Vector diag(bbox.diagonal());
         double w=diag.length();
         PRINTVAR(autoview_sw, w);
         double dist=old_dist*w/old_w;
         PRINTVAR(autoview_sw, dist);
-        cv.eyep=cv.lookat-lookdir*dist/old_dist;
-        PRINTVAR(autoview_sw, cv.eyep);
+        cv.eyep(cv.lookat()-lookdir*dist/old_dist);
+        PRINTVAR(autoview_sw, cv.eyep());
         animate_to_view(cv, 2.0);
     }
 }
@@ -896,7 +740,7 @@ void Roe::update_mode_string(const char* msg)
 TCLView::TCLView(const clString& name, const clString& id, TCL* tcl)
 : TCLvar(name, id, tcl), eyep("eyep", str(), tcl),
   lookat("lookat", str(), tcl), up("up", str(), tcl),
-  fov("fov", str(), tcl)
+  fov("fov", str(), tcl), eyep_offset("eyep_offset", str(), tcl)
 {
 }
 
@@ -915,10 +759,10 @@ View TCLView::get()
 void TCLView::set(const View& view)
 {
     TCLTask::lock();
-    eyep.set(view.eyep);
-    lookat.set(view.lookat);
-    up.set(view.up);
-    fov.set(view.fov);
+    eyep.set(view.eyep());
+    lookat.set(view.lookat());
+    up.set(view.up());
+    fov.set(view.fov());
     TCLTask::unlock();
 }
 
@@ -960,6 +804,11 @@ void Roe::force_redraw()
 
 void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
 {
+    // Do internal objects first...
+    for(int i=0;i<roe_objs.size();i++){
+	(r->*pmf)(manager, this, roe_objs[i]);
+    }
+
     HashTableIter<int, PortInfo*> iter(&manager->portHash);
     for (iter.first(); iter.ok(); ++iter) {
 	HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
@@ -986,4 +835,71 @@ void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
 void Roe::set_current_time(double time)
 {
     set_tclvar(id, "current_time", to_string(time));
+}
+
+// The tracker gives us measurements in 1/1000th of an inch
+#define TRACKER_RESOLUTION 0.001
+#define TRACKER_DIST 6
+
+void Roe::flyingmouse_moved(const TrackerPosition& pos)
+{
+    if(pos.out)
+	return;
+    if(!have_trackerdata)
+	return;
+    double xdist=(pos.x-old_head_pos.x)*TRACKER_RESOLUTION/TRACKER_DIST;
+    double ydist=(pos.y-old_head_pos.y)*TRACKER_RESOLUTION/TRACKER_DIST;
+    double zdist=(pos.z-old_head_pos.z)*TRACKER_RESOLUTION/TRACKER_DIST;
+    cerr << "MOUSE: xdist=" << xdist << ", ydist=" << ydist << ", zdist=" << zdist << endl;
+    mousep=(orig_eye-frame_right*xdist-frame_up*ydist-frame_front*zdist);
+    if(!mouse_obj){
+	mouse_obj=new GeomSphere(mousep, .1);
+	roe_objs.add(mouse_obj);
+    } else {
+	mouse_obj->move(mousep, .1);
+    }
+    need_redraw=1;
+}
+
+
+void Roe::head_moved(const TrackerPosition& pos)
+{
+    if(pos.out)
+	return;
+    if(!have_trackerdata){
+	old_head_pos=pos;
+	if(pos.x == 0 && pos.y == 0 && pos.z == 0)
+	    return;
+	have_trackerdata=1;
+	View old_view(view.get());
+
+	Renderer* r=current_renderer;
+	double znear;
+	double zfar;
+	View tview(view.get());
+	if(!r->compute_depth(this, tview, znear, zfar))
+	    return;
+	double zmid=(znear+zfar)/2.;
+	double aspect=double(r->xres)/double(r->yres);
+	old_view.get_viewplane(aspect, zmid, frame_right, frame_up);
+	frame_front=old_view.lookat()-old_view.eyep();
+	frame_front.normalize();
+	frame_front*=zmid;
+	orig_eye=old_view.eyep();
+	cerr << "x=" << pos.x << ", y=" << pos.y << ", z=" << pos.z << endl;
+	return;
+    }
+    
+    double xdist=(pos.x-old_head_pos.x)*TRACKER_RESOLUTION/TRACKER_DIST;
+    double ydist=(pos.y-old_head_pos.y)*TRACKER_RESOLUTION/TRACKER_DIST;
+    double zdist=(pos.z-old_head_pos.z)*TRACKER_RESOLUTION/TRACKER_DIST;
+    cerr << "HEAD: xdist=" << xdist << ", ydist=" << ydist << ", zdist=" << zdist << endl;
+    View tview(view.get());
+    Point eyep(orig_eye-frame_right*xdist-frame_up*ydist-frame_front*zdist);
+    Point lookat(eyep+frame_front);
+    tview.eyep(eyep);
+    tview.lookat(lookat);
+    tview.up(frame_up);
+    view.set(tview);
+    need_redraw=1;
 }

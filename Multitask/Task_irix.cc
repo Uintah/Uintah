@@ -13,8 +13,6 @@
 
 #include <Multitask/Task.h>
 #include <Multitask/ITC.h>
-#include <Classlib/Args.h>
-#include <Classlib/NotFinished.h>
 #include <iostream.h>
 #include <stdlib.h>
 #include <ulocks.h>
@@ -33,6 +31,8 @@
 #define DEFAULT_STACK_LENGTH 64*1024
 #define INITIAL_STACK_LENGTH 16*1024
 #define DEFAULT_SIGNAL_STACK_LENGTH 16*1024
+
+#define NOT_FINISHED(what) cerr << what << ": Not Finished " << __FILE__ << " (line " << __LINE__ << ") " << endl
 
 extern "C" int Task_try_lock(unsigned long*);
 
@@ -64,14 +64,6 @@ struct TaskArgs {
 #define MAXTASKS 1000
 static int ntasks=0;
 static Task* tasks[MAXTASKS];
-
-// Register arguments
-static Arg_flag single_threaded("singlethreaded", "Turn off multithreading");
-static Arg_alias stalias(&single_threaded, "st");
-static Arg_intval concurrency("concurrency", -1,
-			      "Set concurrency level for multithreading");
-static Arg_intval nproc_arg("nprocessors", -1,
-			    "Set the number of processors\n\t\t\tDefault is actal number of processors");
 
 // Global locks...
 static usema_t* main_sema;
@@ -110,7 +102,7 @@ static void makestack(TaskPrivate* priv)
     priv->stacklen=DEFAULT_STACK_LENGTH+pagesize;
     priv->stackbot=(caddr_t)mmap(0, priv->stacklen, PROT_READ|PROT_WRITE,
 				 MAP_SHARED, devzero_fd, 0);
-    if((int)priv->stackbot == -1){
+    if((long)priv->stackbot == -1){
 	perror("mmap");
 	Task::exit_all(-1);
     }
@@ -175,36 +167,32 @@ void Task::activate(int task_arg)
     }
     activated=1;
     priv=scinew TaskPrivate;
-    if(single_threaded.is_set()){
-	priv->retval=body(task_arg);
-    } else {
-	TaskArgs* args=scinew TaskArgs;
-	args->arg=task_arg;
-	args->t=this;
-	priv->running=usnewsema(arena, 0);
-	if(!priv->running){
-	    perror("usnewsema");
-	    Task::exit_all(-1);
-	}
-	makestack(priv);
+    TaskArgs* args=scinew TaskArgs;
+    args->arg=task_arg;
+    args->t=this;
+    priv->running=usnewsema(arena, 0);
+    if(!priv->running){
+	perror("usnewsema");
+	Task::exit_all(-1);
+    }
+    makestack(priv);
 
-	if(uspsema(sched_lock) == -1){
-	    perror("uspsema");
-	    Task::exit_all(-1);
-	}
-	nsched++;
-	priv->tid=sprocsp((void (*)(void*, size_t))runbody,
-			  PR_SADDR|PR_SDIR|PR_SUMASK|PR_SULIMIT|PR_SID,
-			  (void*)args, priv->sp, priv->stacklen);
-	if(priv->tid==-1){
-	    perror("sprocsp");
-	    Task::exit_all(-1);
-	}
-	tasks[ntasks++]=this;
-	if(usvsema(sched_lock) == -1){
-	    perror("usvsema");
-	    Task::exit_all(-1);
-	}
+    if(uspsema(sched_lock) == -1){
+	perror("uspsema");
+	Task::exit_all(-1);
+    }
+    nsched++;
+    priv->tid=sprocsp((void (*)(void*, size_t))runbody,
+		      PR_SADDR|PR_SDIR|PR_SUMASK|PR_SULIMIT|PR_SID,
+		      (void*)args, priv->sp, priv->stacklen);
+    if(priv->tid==	-1){
+	perror("sprocsp");
+	Task::exit_all(-1);
+    }
+    tasks[ntasks++]=this;
+    if(usvsema(sched_lock) == -1){
+	perror("usvsema");
+	Task::exit_all(-1);
     }
 }
 
@@ -335,7 +323,7 @@ static char* signal_name(int sig, int code, caddr_t addr)
 static void handle_halt_signals(int sig, int code, sigcontext_t* context)
 {
     Task* self=Task::self();
-    char* tname=self?self->get_name()():"main";
+    char* tname=self?self->get_name():"main";
     if(exiting && sig==SIGQUIT){
 	fprintf(stderr, "Thread \"%s\"(pid %d) exiting...\n", tname, getpid());
 	exit(exit_code);
@@ -357,7 +345,7 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
     if(aborting)
 	exit(0);
     Task* self=Task::self();
-    char* tname=self?self->get_name()():"main";
+    char* tname=self?self->get_name():"main";
 #if defined(_LONGLONG)
     caddr_t addr=(caddr_t)context->sc_badvaddr;
 #else
@@ -435,95 +423,93 @@ void Task::initialize(char* pn)
 	perror("open");
 	exit(-1);
     }
-    if(!single_threaded.is_set()){
-	make_arena();
-	sched_lock=usnewsema(arena, 1);
-	if(!sched_lock){
-	    perror("usnewsema");
-	    exit(-1);
-	}
-	main_sema=usnewsema(arena, 0);
-	if(!main_sema){
-	    perror("main_sema");
-	    exit(-1);
-	}
-
-	// Set up the task local memory...
-	int fd=open("/dev/zero", O_RDWR);
-	if(fd==-1){
-	    cerr << "Error opening /dev/zero!\n";
-	    exit(-1);
-	}
-#if 0
-	task_local=(TaskLocalMemory*)mmap(0, sizeof(TaskLocalMemory),
-					  PROT_READ|PROT_WRITE,
-					  MAP_PRIVATE|MAP_LOCAL,
-					  fd, 0);
-#endif
+    make_arena();
+    sched_lock=usnewsema(arena, 1);
+    if(!sched_lock){
+	perror("usnewsema");
+	exit(-1);
+    }
+    main_sema=usnewsema(arena, 0);
+    if(!main_sema){
+	perror("main_sema");
+	exit(-1);
+    }
+    
+    // Set up the task local memory...
+    int fd=open("/dev/zero", O_RDWR);
+    if(fd==-1){
+	cerr << "Error opening /dev/zero!\n";
+	exit(-1);
+    }
 #if 1
-	task_local=(TaskLocalMemory*)mmap((void*)0x50000000, sizeof(TaskLocalMemory),
-					  PROT_READ|PROT_WRITE,
-					  MAP_PRIVATE|MAP_LOCAL|MAP_FIXED,
-					  fd, 0);
+    task_local=(TaskLocalMemory*)mmap(0, sizeof(TaskLocalMemory),
+				      PROT_READ|PROT_WRITE,
+				      MAP_PRIVATE|MAP_LOCAL,
+				      fd, 0);
 #endif
-	if(!task_local){
-	    cerr << "Error mapping /dev/zero!\n";
-	    exit(-1);
-	}
-	close(fd);
+#if 0
+    task_local=(TaskLocalMemory*)mmap((void*)0x50000000, sizeof(TaskLocalMemory),
+				      PROT_READ|PROT_WRITE,
+				      MAP_PRIVATE|MAP_LOCAL|MAP_FIXED,
+				      fd, 0);
+#endif
+    if(!task_local){
+	cerr << "Error mapping /dev/zero!\n";
+	exit(-1);
+    }
+    close(fd);
 
-	// Set up the signal stack so that we will be able to 
-	// Catch the SEGV's that need to grow the stacks...
-	int stacklen=DEFAULT_SIGNAL_STACK_LENGTH;
-	caddr_t stackbot=(caddr_t)mmap(0, stacklen, PROT_READ|PROT_WRITE,
-				       MAP_SHARED, devzero_fd, 0);
-	if((int)stackbot == -1){
-	    perror("mmap");
-	    exit(-1);
-	}
-	stack_t ss;
-	ss.ss_sp=stackbot;
-	ss.ss_sp+=stacklen-1;
-	ss.ss_size=stacklen;
-	ss.ss_flags=0;
-	if(sigaltstack(&ss, NULL) == -1){
-	    perror("sigstack");
-	    exit(-1);
-	}
+    // Set up the signal stack so that we will be able to 
+    // Catch the SEGV's that need to grow the stacks...
+    int stacklen=DEFAULT_SIGNAL_STACK_LENGTH;
+    caddr_t stackbot=(caddr_t)mmap(0, stacklen, PROT_READ|PROT_WRITE,
+				   MAP_SHARED, devzero_fd, 0);
+    if((long)stackbot == -1){
+	perror("mmap");
+	exit(-1);
+    }
+    stack_t ss;
+    ss.ss_sp=stackbot;
+    ss.ss_sp+=stacklen-1;
+    ss.ss_size=stacklen;
+    ss.ss_flags=0;
+    if(sigaltstack(&ss, NULL) == -1){
+	perror("sigstack");
+	exit(-1);
+    }
+    
+    // Setup the seg fault handler...
+    // For SIGQUIT
+    // halt all threads
+    // signal(SIGINT, (SIG_PF)handle_halt_signals);
+    struct sigaction action;
+    action.sa_flags=SA_ONSTACK;
+    sigemptyset(&action.sa_mask);
+    
+    action.sa_handler=(SIG_PF)handle_halt_signals;
+    if(sigaction(SIGQUIT, &action, NULL) == -1){
+	perror("sigaction");
+	exit(-1);
+    }
 
-	// Setup the seg fault handler...
-	// For SIGQUIT
-	// halt all threads
-	// signal(SIGINT, (SIG_PF)handle_halt_signals);
-	struct sigaction action;
-	action.sa_flags=SA_ONSTACK;
-	sigemptyset(&action.sa_mask);
-
-	action.sa_handler=(SIG_PF)handle_halt_signals;
-	if(sigaction(SIGQUIT, &action, NULL) == -1){
-	    perror("sigaction");
-	    exit(-1);
-	}
-
-	// For SIGILL, SIGABRT, SIGBUS, SIGSEGV, 
-	// prompt the user for a core dump...
-	action.sa_handler=(SIG_PF)handle_abort_signals;
-	if(sigaction(SIGILL, &action, NULL) == -1){
-	    perror("sigaction");
-	    exit(-1);
-	}
-	if(sigaction(SIGABRT, &action, NULL) == -1){
-	    perror("sigaction");
-	    exit(-1);
-	}
-	if(sigaction(SIGBUS, &action, NULL) == -1){
-	    perror("sigaction");
-	    exit(-1);
-	}
-	if(sigaction(SIGSEGV, &action, NULL) == -1){
-	    perror("sigaction");
-	    exit(-1);
-	}
+    // For SIGILL, SIGABRT, SIGBUS, SIGSEGV, 
+    // prompt the user for a core dump...
+    action.sa_handler=(SIG_PF)handle_abort_signals;
+    if(sigaction(SIGILL, &action, NULL) == -1){
+	perror("sigaction");
+	exit(-1);
+    }
+    if(sigaction(SIGABRT, &action, NULL) == -1){
+	perror("sigaction");
+	exit(-1);
+    }
+    if(sigaction(SIGBUS, &action, NULL) == -1){
+	perror("sigaction");
+	exit(-1);
+    }
+    if(sigaction(SIGSEGV, &action, NULL) == -1){
+	perror("sigaction");
+	exit(-1);
     }
 }
 
@@ -531,46 +517,32 @@ int Task::nprocessors()
 {
     static int nproc=-1;
     if(nproc==-1){
-	if(!single_threaded.is_set()){
-	    if(nproc_arg.is_set()){
-		nproc=nproc_arg.value();
-	    } else {
-		nproc = sysmp(MP_NAPROCS);
-	    }
-	} else {
-	    nproc=1;
-	}
+	nproc = sysmp(MP_NAPROCS);
     }
     return nproc;
 }
 
 void Task::main_exit()
 {
-    if(!single_threaded.is_set()){
-	uspsema(main_sema);
-    }
+    uspsema(main_sema);
     exit(0);
 }
 
 void Task::yield()
 {
-    if(!single_threaded.is_set()){
-	sginap(0);
-    }
+    sginap(0);
 }
 
 
 int Task::wait_for_task(Task* task)
 {
-    if(!single_threaded.is_set()){
-	if(uspsema(task->priv->running) == -1){
-	    perror("usvsema");
-	    Task::exit_all(-1);
-	}
-	if(usvsema(task->priv->running) == -1){
-	    perror("usvsema");
-	    Task::exit_all(-1);
-	}
+    if(uspsema(task->priv->running) == -1){
+	perror("usvsema");
+	Task::exit_all(-1);
+    }
+    if(usvsema(task->priv->running) == -1){
+	perror("usvsema");
+	Task::exit_all(-1);
     }
     return task->priv->retval;
 }
@@ -584,16 +556,12 @@ struct Semaphore_private {
 
 Semaphore::Semaphore(int count)
 {
-    if(!single_threaded.is_set()){
-	priv=scinew Semaphore_private;
-	make_arena();
-	priv->semaphore=usnewsema(arena, count);
-	if(!priv->semaphore){
-	    perror("usnewsema");
-	    Task::exit_all(-1);
-	}
-    } else {
-	priv=0;
+    priv=scinew Semaphore_private;
+    make_arena();
+    priv->semaphore=usnewsema(arena, count);
+    if(!priv->semaphore){
+	perror("usnewsema");
+	Task::exit_all(-1);
     }
 }
 
@@ -607,21 +575,17 @@ Semaphore::~Semaphore()
 
 void Semaphore::down()
 {
-    if(!single_threaded.is_set()){
-	if(uspsema(priv->semaphore) == -1){
-	    perror("upsema");
-	    Task::exit_all(-1);
-	}
+    if(uspsema(priv->semaphore) == -1){
+	perror("upsema");
+	Task::exit_all(-1);
     }
 }
 
 void Semaphore::up()
 {
-    if(!single_threaded.is_set()){
-	if(usvsema(priv->semaphore) == -1){
-	    perror("usvsema");
-	    Task::exit_all(-1);
-	}
+    if(usvsema(priv->semaphore) == -1){
+	perror("usvsema");
+	Task::exit_all(-1);
     }
 }
 
@@ -639,7 +603,7 @@ void Mutex::lock()
     // Simple try first...
     if(Task_try_lock((unsigned long*)&priv) == 0)
 	return;
-    int rt=10000;
+    int rt=100000;
     int cnt=0;
     while(rt){
 	// Try the lock...
@@ -655,7 +619,7 @@ void Mutex::lock()
 
 	rt--;
     }
-    fprintf(stderr, "Possible deadlock after 10000 retries\n");
+    fprintf(stderr, "Possible deadlock after 100000 retries\n");
     Task::exit_all(-1);
 }
 
@@ -689,11 +653,7 @@ ConditionVariable_private::ConditionVariable_private()
 
 ConditionVariable::ConditionVariable()
 {
-    if(!single_threaded.is_set()){
-	priv=scinew ConditionVariable_private;
-    } else {
-	priv=0;
-    }
+    priv=scinew ConditionVariable_private;
 }
 
 ConditionVariable::~ConditionVariable()
@@ -705,39 +665,33 @@ ConditionVariable::~ConditionVariable()
 
 void ConditionVariable::wait(Mutex& mutex)
 {
-    if(!single_threaded.is_set()){
-	priv->mutex.lock();
-	priv->nwaiters++;
-	priv->mutex.unlock();
-	mutex.unlock();
-	// Block until woken up by signal or broadcast
-	priv->semaphore.down();
-	mutex.lock();
-    }
+    priv->mutex.lock();
+    priv->nwaiters++;
+    priv->mutex.unlock();
+    mutex.unlock();
+    // Block until woken up by signal or broadcast
+    priv->semaphore.down();
+    mutex.lock();
 }
 
 void ConditionVariable::cond_signal()
 {
-    if(!single_threaded.is_set()){
-	priv->mutex.lock();
-	if(priv->nwaiters > 0){
-	    priv->nwaiters--;
-	    priv->semaphore.up();
-	}
-	priv->mutex.unlock();
+    priv->mutex.lock();
+    if(priv->nwaiters > 0){
+	priv->nwaiters--;
+	priv->semaphore.up();
     }
+    priv->mutex.unlock();
 }
 
 void ConditionVariable::broadcast()
 {
-    if(!single_threaded.is_set()){
-	priv->mutex.lock();
-	while(priv->nwaiters > 0){
-	    priv->nwaiters--;
-	    priv->semaphore.up();
-	}
-	priv->mutex.unlock();
+    priv->mutex.lock();
+    while(priv->nwaiters > 0){
+	priv->nwaiters--;
+	priv->semaphore.up();
     }
+    priv->mutex.unlock();
 }
 
 void Task::sleep(const TaskTime& time)

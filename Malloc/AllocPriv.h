@@ -4,8 +4,8 @@
 struct OSHunk;
 
 struct Sentinel {
-    unsigned long first_word;
-    unsigned long second_word;
+    unsigned int first_word;
+    unsigned int second_word;
 };
 
 struct AllocBin;
@@ -33,7 +33,7 @@ struct AllocBin {
 };
 
 struct Allocator {
-    unsigned long the_lock;
+    unsigned int the_lock;
     void initlock();
     inline void lock();
     void longlock();

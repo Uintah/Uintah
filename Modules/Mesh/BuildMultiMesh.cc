@@ -14,7 +14,6 @@
 #include <Classlib/Pstreams.h>		// for writing temp meshes out
 #include <Classlib/String.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/Colormap.h>
 #include <Datatypes/ColormapPort.h>
 #include <Datatypes/GeometryPort.h>
@@ -94,13 +93,12 @@ public:
     virtual void tcl_command(TCLArgs&, void*);
 };
 
-static Module* make_BuildMultiMesh(const clString& id)
+extern "C" {
+Module* make_BuildMultiMesh(const clString& id)
 {
     return scinew BuildMultiMesh(id);
 }
-
-static RegisterModule db1("Mesh", "BuildMultiMesh", make_BuildMultiMesh);
-static RegisterModule db2("Dave", "BuildMultiMesh", make_BuildMultiMesh);
+};
 
 BuildMultiMesh::BuildMultiMesh(const clString& id)
 : Module("BuildMultiMesh", id, Filter), numSources("numSources", id, this),

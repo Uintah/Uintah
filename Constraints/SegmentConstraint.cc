@@ -91,20 +91,22 @@ SegmentConstraint::Satisfy( const Index index, const Scheme scheme, const Real E
       }
       break;
    case 2:
-      Vector norm((Point)end2 - end1);
-      if (norm.length2() < Epsilon) {
-	 c = (Point)end2;
-      } else {
-	 Real length = norm.normalize();
-	 Real t = Dot((Point)p - end1, norm);
-	 // Check if new point is outside segment.
-	 if (t < 0)
-	    t = 0;
-	 else if (t > length)
-	    t = length;
-	 c = (Point)end1 + (norm * t);
+      {
+	  Vector norm((Point)end2 - end1);
+	  if (norm.length2() < Epsilon) {
+	      c = (Point)end2;
+	  } else {
+	      Real length = norm.normalize();
+	      Real t = Dot((Point)p - end1, norm);
+	      // Check if new point is outside segment.
+	      if (t < 0)
+		  t = 0;
+	      else if (t > length)
+		  t = length;
+	      c = (Point)end1 + (norm * t);
+	  }
+	  var = vars[2];
       }
-      var = vars[2];
       return 1;
    default:
       cerr << "Unknown variable in Segment Constraint!" << endl;

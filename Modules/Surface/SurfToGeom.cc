@@ -13,7 +13,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/Colormap.h>
 #include <Datatypes/ColormapPort.h>
 #include <Datatypes/GeometryPort.h>
@@ -50,15 +49,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_SurfToGeom(const clString& id)
+extern "C" {
+Module* make_SurfToGeom(const clString& id)
 {
     return scinew SurfToGeom(id);
 }
-
-static RegisterModule db1("Surfaces", "SurfToGeom", make_SurfToGeom);
-static RegisterModule db2("Visualization", "SurfToGeom",
-			  make_SurfToGeom);
-static RegisterModule db3("Dave", "SurfToGeom", make_SurfToGeom);
+};
 
 SurfToGeom::SurfToGeom(const clString& id)
 : Module("SurfToGeom", id, Filter), range_min("range_min", id, this),

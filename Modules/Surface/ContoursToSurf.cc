@@ -15,7 +15,6 @@
 #include <Classlib/Assert.h>
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/ContourSet.h>
 #include <Datatypes/ContourSetPort.h>
 #include <Datatypes/Surface.h>
@@ -49,15 +48,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_ContoursToSurf(const clString& id)
+extern "C" {
+Module* make_ContoursToSurf(const clString& id)
 {
     return scinew ContoursToSurf(id);
 }
-
-static RegisterModule db1("Contours", "ContoursToSurf", make_ContoursToSurf);
-static RegisterModule db2("Visualization", "ContoursToSurf", make_ContoursToSurf);
-static RegisterModule db3("Surfaces", "ContoursToSurf", make_ContoursToSurf);
-static RegisterModule db4("Dave", "ContoursToSurf", make_ContoursToSurf);
+};
 
 ContoursToSurf::ContoursToSurf(const clString& id)
 : Module("ContoursToSurf", id, Filter)
@@ -112,7 +108,7 @@ void ContoursToSurf::execute()
     TriSurface* surf=scinew TriSurface;
     contours_to_surf(contours, surf);
     surf->remove_empty_index();		// just in case
-    osurface->send(surf);
+    osurface->send(SurfaceHandle(surf));
 }
 
 

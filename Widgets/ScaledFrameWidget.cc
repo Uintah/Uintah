@@ -349,16 +349,20 @@ ScaledFrameWidget::geom_moved( GeomPick*, int axis, double dist,
       variables[CenterVar]->SetDelta(delt/2.0, Scheme3);
       break;
    case PickSliderR:
-      Real sdist(variables[SDistRVar]->real()+dist/2.0);
-      if (sdist<0.0) sdist=0.0;
-      else if (sdist>variables[DistRVar]->real()) sdist=variables[DistRVar]->real();
-      variables[SDistRVar]->Set(sdist);
+      {
+	  Real sdist(variables[SDistRVar]->real()+dist/2.0);
+	  if (sdist<0.0) sdist=0.0;
+	  else if (sdist>variables[DistRVar]->real()) sdist=variables[DistRVar]->real();
+	  variables[SDistRVar]->Set(sdist);
+      }
       break;
    case PickSliderD:
-      sdist = variables[SDistDVar]->real()+dist/2.0;
-      if (sdist<0.0) sdist=0.0;
-      else if (sdist>variables[DistDVar]->real()) sdist=variables[DistDVar]->real();
-      variables[SDistDVar]->Set(sdist);
+      {
+	  Real sdist = variables[SDistDVar]->real()+dist/2.0;
+	  if (sdist<0.0) sdist=0.0;
+	  else if (sdist>variables[DistDVar]->real()) sdist=variables[DistDVar]->real();
+	  variables[SDistDVar]->Set(sdist);
+      }
       break;
    case PickCyls:
       MoveDelta(delta);

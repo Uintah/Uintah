@@ -28,7 +28,7 @@ HeadLight::~HeadLight()
 void HeadLight::compute_lighting(const View& view, const Point& at,
 				  Color& color, Vector& to)
 {
-    to=at-view.eyep;
+    to=at-view.eyep();
     to.normalize();
     color=c;
 }
@@ -44,12 +44,12 @@ void HeadLight::lintens(const OcclusionData& od, const Point& p,
     if(od.level == 0){
 	// No need to do intersection test - we won't hit anything.
 	light=c;
-	light_dir=od.view->eyep-p;
+	light_dir=od.view->eyep()-p;
 	light_dir.normalize();
     } else {
-	light_dir=od.view->eyep-p;
+	light_dir=od.view->eyep()-p;
 	double light_dist=light_dir.normalize();
-	double atten=od.raytracer->light_ray(p, od.view->eyep, light_dir, light_dist);
+	double atten=od.raytracer->light_ray(p, od.view->eyep(), light_dir, light_dist);
 	light=c*atten;
     }
 }

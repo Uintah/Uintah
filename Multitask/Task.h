@@ -20,7 +20,6 @@ class Task;
 typedef int TaskKey;
 class TaskPrivate;
 
-#include <Classlib/String.h>
 #include <unistd.h>
 
 struct TaskTime {
@@ -36,7 +35,7 @@ struct TaskInfo
 {
     int ntasks;
     struct Info {
-	clString name;
+	char* name;
 	int pid;
 	int stacksize;
 	int stackused;
@@ -51,7 +50,7 @@ struct TaskInfo
 class Task {
 protected:
     friend class TaskManager;
-    clString name;
+    char* name;
     int activated;
     int priority;
     int detached;
@@ -77,7 +76,7 @@ public:
     enum {DEFAULT_PRIORITY=100};
 
     // Creation and destruction of tasks
-    Task(const clString& name, int detached=1, int priority=DEFAULT_PRIORITY);
+    Task(char* name, int detached=1, int priority=DEFAULT_PRIORITY);
     virtual ~Task();
 
     // Overload this to make the task do something
@@ -91,7 +90,7 @@ public:
 
     // To get the Task pointer
     static Task* self();
-    clString get_name();
+    char* get_name();
 
     // Priority control
     int set_priority(int);

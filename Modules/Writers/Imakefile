@@ -7,25 +7,29 @@ OBJS = ContourSetWriter.o   MeshWriter.o   \
 	MultiMeshWriter.o   ScalarFieldWriter.o   \
 	SurfaceWriter.o   VectorFieldWriter.o \
 	TetraWriter.o
-SRCS = ContourSetWriter.cc  MeshWriter.cc  \
+GENSRCS = ContourSetWriter.cc  MeshWriter.cc  \
 	MultiMeshWriter.cc  ScalarFieldWriter.cc  \
-	SurfaceWriter.cc  VectorFieldWriter.cc \
-	TetraWriter.cc
-TCLS = ContourSetWriter.tcl MeshWriter.tcl \
+	SurfaceWriter.cc  VectorFieldWriter.cc
+SRCS = $(GENSRCS) TetraWriter.cc
+GENTCLS = ContourSetWriter.tcl MeshWriter.tcl \
 	MultiMeshWriter.tcl ScalarFieldWriter.tcl \
-	SurfaceWriter.tcl VectorFieldWriter.tcl \
-	TetraWriter.tcl
+	SurfaceWriter.tcl VectorFieldWriter.tcl
+TCLS = $(GENTCLS) TetraWriter.tcl
 
 LIBNAME = Writers
 
-depend:: $(SRCS)
+SO_LIBS =
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lTCL \
+	-lClasslib -lMultitask -lMalloc
+
+depend:: $(GENSRCS)
 
 clean::
-	$(RM) $(SRCS)
+	$(RM) $(GENSRCS) $(GENTCLS)
 
 SCIDependTarget($(SRCS))
-SCIObjLibraryTarget($(LIBNAME), $(OBJS))
-AllTarget($(TCLS))
+SCIObjLibraryTarget($(LIBNAME), $(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
+AllTarget($(GENTCLS))
 
 ContourSetWriter.cc: Writer.cc
 	sed 's/TYPE/ContourSet/g' < Writer.cc > ContourSetWriter.cc

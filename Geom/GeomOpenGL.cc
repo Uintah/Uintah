@@ -568,8 +568,17 @@ void GeomMaterial::draw(DrawInfoOpenGL* di, Material* /* old_matl */, double tim
 
 void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
-    if(di->pickmode)
-	glPushName((GLuint)this);
+    if(di->pickmode){
+#if (_MIPS_SZPTR == 64)
+	unsigned long o=(unsigned long)this;
+	unsigned int o1=(o>>32)&0xffffffff;
+	unsigned int o2=o&0xffffffff;
+	glLoadName(o1);
+	glLoadName(o2);
+#else
+	glLoadName((GLuint)this);
+#endif
+    }
     if(selected && highlight.get_rep()){
 	di->set_matl(highlight.get_rep());
 	int old_ignore=di->ignore_matl;
@@ -1018,56 +1027,58 @@ void GeomTorusArc::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 	
     case DrawInfoOpenGL::WireFrame:
-	double srx=tab1.sin(0);
-	double sry=tab1.cos(0);
-	glBegin(GL_LINE_LOOP);
-	for(v=1;v<nv;v++){
-	    double sz=tab2.cos(v);
-	    double srad=rad1+tab2.sin(v);
-	    double sx=srx*srad;
-	    double sy=sry*srad;
-	    glVertex3d(sx, sy, sz);
-	    glVertex3d(srx*rad1, sry*rad1, 0);
-	}
-	glEnd();
-
-	srx=tab1.sin(nu-1);
-	sry=tab1.cos(nu-1);
-	glBegin(GL_LINE_LOOP);
-	for(v=1;v<nv;v++){
-	    double sz=tab2.cos(v);
-	    double srad=rad1+tab2.sin(v);
-	    double sx=srx*srad;
-	    double sy=sry*srad;
-	    glVertex3d(sx, sy, sz);
-	    glVertex3d(srx*rad1, sry*rad1, 0);
-	}
-	glEnd();
-	
-	for(u=0;u<nu;u++){
-	    double rx=tab1.sin(u);
-	    double ry=tab1.cos(u);
+	{
+	    double srx=tab1.sin(0);
+	    double sry=tab1.cos(0);
 	    glBegin(GL_LINE_LOOP);
 	    for(v=1;v<nv;v++){
-		double z=tab2.cos(v);
-		double rad=rad1+tab2.sin(v);
-		double x=rx*rad;
-		double y=ry*rad;
-		glVertex3d(x, y, z);
+		double sz=tab2.cos(v);
+		double srad=rad1+tab2.sin(v);
+		double sx=srx*srad;
+		double sy=sry*srad;
+		glVertex3d(sx, sy, sz);
+		glVertex3d(srx*rad1, sry*rad1, 0);
 	    }
 	    glEnd();
-	}
-	for(v=1;v<nv;v++){
-	    double z=tab2.cos(v);
-	    double rr=tab2.sin(v);
+
+	    srx=tab1.sin(nu-1);
+	    sry=tab1.cos(nu-1);
 	    glBegin(GL_LINE_LOOP);
-	    for(u=1;u<nu;u++){
-		double rad=rad1+rr;
-		double x=tab1.sin(u)*rad;
-		double y=tab1.cos(u)*rad;
-		glVertex3d(x, y, z);
+	    for(v=1;v<nv;v++){
+		double sz=tab2.cos(v);
+		double srad=rad1+tab2.sin(v);
+		double sx=srx*srad;
+		double sy=sry*srad;
+		glVertex3d(sx, sy, sz);
+		glVertex3d(srx*rad1, sry*rad1, 0);
 	    }
 	    glEnd();
+	
+	    for(u=0;u<nu;u++){
+		double rx=tab1.sin(u);
+		double ry=tab1.cos(u);
+		glBegin(GL_LINE_LOOP);
+		for(v=1;v<nv;v++){
+		    double z=tab2.cos(v);
+		    double rad=rad1+tab2.sin(v);
+		    double x=rx*rad;
+		    double y=ry*rad;
+		    glVertex3d(x, y, z);
+		}
+		glEnd();
+	    }
+	    for(v=1;v<nv;v++){
+		double z=tab2.cos(v);
+		double rr=tab2.sin(v);
+		glBegin(GL_LINE_LOOP);
+		for(u=1;u<nu;u++){
+		    double rad=rad1+rr;
+		    double x=tab1.sin(u)*rad;
+		    double y=tab1.cos(u)*rad;
+		    glVertex3d(x, y, z);
+		}
+		glEnd();
+	    }
 	}
 	break;
     case DrawInfoOpenGL::Flat:

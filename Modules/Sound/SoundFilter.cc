@@ -13,7 +13,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
 #include <Math/Complex.h>
 #include <Math/Expon.h>
@@ -35,12 +34,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_SoundFilter(const clString& id)
+extern "C" {
+Module* make_SoundFilter(const clString& id)
 {
     return new SoundFilter(id);
 }
-
-static RegisterModule db1("Sound", "SoundFilter", make_SoundFilter);
+};
 
 SoundFilter::SoundFilter(const clString& id)
 : Module("SoundFilter", id, Filter)

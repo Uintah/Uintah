@@ -14,7 +14,6 @@
 
 #include <Multitask/Task.h>
 #include <Multitask/ITC.h>
-#include <Lib/Args.h>
 #include <iostream.h>
 #include <stdlib.h>
 #include <synch.h>
@@ -30,11 +29,6 @@ struct TaskArgs {
     int arg;
     Task* t;
 };
-
-// Register arguments
-static Arg_flag multi_threaded("multithreaded", "mt");
-static Arg_name concurrency("concurrency", "-1");
-static Arg_name nproc_arg("nprocessors", "-1");
 
 void* runbody(void* vargs)
 {

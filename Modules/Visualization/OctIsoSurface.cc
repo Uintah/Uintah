@@ -14,7 +14,6 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/ColormapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/Mesh.h>
@@ -78,13 +77,12 @@ struct MCubeTable {
 
 #include "mcube.h"
 
-static Module* make_OctIsoSurface(const clString& id)
+extern "C" {
+Module* make_OctIsoSurface(const clString& id)
 {
     return scinew OctIsoSurface(id);
 }
-
-static RegisterModule db1("Fields", "OctIsoSurface", make_OctIsoSurface);
-static RegisterModule db2("Visualization", "OctIsoSurface", make_OctIsoSurface);
+};
 
 static clString widget_name("OctIsoSurface Widget");
 static clString surface_name("OctIsoSurface");

@@ -391,11 +391,11 @@ ViewWidget::GetFOV() const
 void
 ViewWidget::SetView( const View& view )
 {
-   variables[EyeVar]->Move(view.eyep);
-   variables[LookAtVar]->Move(view.lookat);
-   variables[ForeVar]->Move(view.eyep+(view.eyep-view.lookat)/2.0);
-   variables[EyeDistVar]->Move((view.lookat-view.eyep).length()/2.0);
-   variables[FOVVar]->Set(tan(view.fov/2.0)); // Should Set UpVar/UpDistVar...
+   variables[EyeVar]->Move(view.eyep());
+   variables[LookAtVar]->Move(view.lookat());
+   variables[ForeVar]->Move(view.eyep()+(view.eyep()-view.lookat())/2.0);
+   variables[EyeDistVar]->Move((view.lookat()-view.eyep()).length()/2.0);
+   variables[FOVVar]->Set(tan(view.fov()/2.0)); // Should Set UpVar/UpDistVar...
    
    execute(0);
 }

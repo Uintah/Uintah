@@ -546,7 +546,7 @@ BinaryPiostream::BinaryPiostream(ifstream* istr, int version)
     }
     len=buf.st_size;
     addr=mmap(0, len, PROT_READ, MAP_PRIVATE, fd, 0);
-    if(addr == (void*)-1){
+    if((long)addr == -1){
 	perror("mmap");
 	exit(-1);
     }

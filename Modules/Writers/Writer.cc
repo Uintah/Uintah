@@ -14,7 +14,6 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/Pstreams.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/TYPEPort.h>
 #include <Datatypes/TYPE.h>
 #include <Malloc/Allocator.h>
@@ -32,12 +31,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_TYPEWriter(const clString& id)
+extern "C" {
+Module* make_TYPEWriter(const clString& id)
 {
     return scinew TYPEWriter(id);
 }
-
-#include "TYPERegister.h"
+};
 
 TYPEWriter::TYPEWriter(const clString& id)
 : Module("TYPEWriter", id, Source), filename("filename", id, this),

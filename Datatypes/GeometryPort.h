@@ -65,6 +65,7 @@ public:
     void delObj(GeomID);
     void delAll();
     void flushViews();
+    void flushViewsAndWait();
 
     int busy();
 };

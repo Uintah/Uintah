@@ -432,5 +432,6 @@ GLXContext OpenGLGetContext(interp, name)
 	    return 0;
 	}
     }
+    fprintf(stderr, "cx=%p\n", OpenGLPtr->cx);
     return OpenGLPtr->cx;
 }

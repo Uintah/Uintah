@@ -12,7 +12,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/SurfacePort.h>
 #include <Datatypes/ScalarField.h>
@@ -48,12 +47,12 @@ public:
     ScalarFieldRG* osf;
 };
 
-static Module* make_ClipField(const clString& id)
+extern "C" {
+Module* make_ClipField(const clString& id)
 {
     return new ClipField(id);
 }
-
-static RegisterModule db1("Dave", "ClipField", make_ClipField);
+};
 
 ClipField::ClipField(const clString& id)
 : Module("ClipField", id, Filter), 

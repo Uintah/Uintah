@@ -13,7 +13,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/GeometryPort.h>
 #include <Geom/Color.h>
 #include <Geom/Geom.h>
@@ -37,16 +36,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_MeshToGeom(const clString& id)
+extern "C" {
+Module* make_MeshToGeom(const clString& id)
 {
     return scinew MeshToGeom(id);
 }
-
-static RegisterModule db1("Mesh", "MeshToGeom", make_MeshToGeom);
-static RegisterModule db2("Visualization", "MeshToGeom",
-			  make_MeshToGeom);
-static RegisterModule db3("Dave", "MeshToGeom", make_MeshToGeom);
-
+};
 MeshToGeom::MeshToGeom(const clString& id)
 : Module("MeshToGeom", id, Filter)
 {

@@ -12,13 +12,13 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/BasicSurfaces.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/SurfacePort.h>
 #include <Geom/Material.h>
 #include <Geom/Pick.h>
 #include <Geom/Sphere.h>
+#include <Geom/TCLGeom.h>
 #include <Geometry/Point.h>
 #include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
@@ -53,12 +53,12 @@ public:
     virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
 };
 
-static Module* make_GenSurface(const clString& id)
+extern "C" {
+Module* make_GenSurface(const clString& id)
 {
     return scinew GenSurface(id);
 }
-
-static RegisterModule db1("Unfinished", "GenSurface", make_GenSurface);
+};
 
 GenSurface::GenSurface(const clString& id)
 : Module("GenSurface", id, Source), surfacetype("surfacetype", id, this),

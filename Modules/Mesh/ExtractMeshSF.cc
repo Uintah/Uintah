@@ -12,7 +12,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/ScalarFieldUG.h>
@@ -30,12 +29,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_ExtractMeshSF(const clString& id)
+extern "C" {
+Module* make_ExtractMeshSF(const clString& id)
 {
     return scinew ExtractMeshSF(id);
 }
-
-static RegisterModule db1("Unfinished", "ExtractMeshSF", make_ExtractMeshSF);
+};
 
 ExtractMeshSF::ExtractMeshSF(const clString& id)
 : Module("ExtractMeshSF", id, Filter)

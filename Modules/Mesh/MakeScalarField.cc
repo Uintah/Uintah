@@ -12,7 +12,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/ColumnMatrixPort.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/ScalarFieldPort.h>
@@ -32,12 +31,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_MakeScalarField(const clString& id)
+extern "C" {
+Module* make_MakeScalarField(const clString& id)
 {
     return scinew MakeScalarField(id);
 }
-
-static RegisterModule db1("Unfinished", "MakeScalarField", make_MakeScalarField);
+};
 
 MakeScalarField::MakeScalarField(const clString& id)
 : Module("MakeScalarField", id, Filter)
@@ -84,5 +83,5 @@ void MakeScalarField::execute()
 	else
 	    sf->data[i]=mesh->nodes[i]->value;
     }
-    ofield->send(sf);
+    ofield->send(ScalarFieldHandle(sf));
 }

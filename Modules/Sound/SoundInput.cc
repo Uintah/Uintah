@@ -13,7 +13,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
 #include <TCL/TCLvar.h>
@@ -36,12 +35,12 @@ public:
     virtual int should_execute();
 };
 
-static Module* make_SoundInput(const clString& id)
+extern "C" {
+Module* make_SoundInput(const clString& id)
 {
     return new SoundInput(id);
 }
-
-static RegisterModule db1("Sound", "SoundInput", make_SoundInput);
+};
 
 SoundInput::SoundInput(const clString& id)
 : Module("SoundInput", id, Source), onoff("onoff", id, this)

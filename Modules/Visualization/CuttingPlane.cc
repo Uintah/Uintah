@@ -10,14 +10,18 @@
  *  Copyright (C) 1995 SCI Group
  */
 
+#include <Classlib/Array1.h>
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/ColormapPort.h>
 #include <Geom/Grid.h>
+#include <Geom/Group.h>
+#include <Geom/Line.h>
+#include <Geom/Material.h>
 #include <Geometry/Point.h>
+#include <Math/MinMax.h>
 #include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 
@@ -38,8 +42,9 @@ class CuttingPlane : public Module {
    ScaledFrameWidget *widget;
    virtual void widget_moved(int last);
    TCLint cutting_plane_type;
-   TCLdouble scale;
+   TCLint num_contours;   
    TCLdouble offset;
+   TCLdouble scale;
    MaterialHandle outcolor;
    int grid_id;
    int need_find;
@@ -54,20 +59,20 @@ public:
    virtual void tcl_command(TCLArgs&, void*);
 };
 
-static Module* make_CuttingPlane(const clString& id)
+extern "C" {
+Module* make_CuttingPlane(const clString& id)
 {
    return scinew CuttingPlane(id);
 }
-
-static RegisterModule db1("Fields", "CuttingPlane", make_CuttingPlane);
-static RegisterModule db2("Visualization", "CuttingPlane", make_CuttingPlane);
+};
 
 static clString module_name("CuttingPlane");
 
 CuttingPlane::CuttingPlane(const clString& id)
 : Module("CuttingPlane", id, Filter), 
   cutting_plane_type("cutting_plane_type",id, this),
-  scale("scale", id, this), offset("offset", id, this)
+  scale("scale", id, this), offset("offset", id, this),
+  num_contours("num_contours", id, this)
 {
     // Create the input ports
     // Need a scalar field and a colormap
@@ -95,7 +100,8 @@ CuttingPlane::CuttingPlane(const clString& id)
 
 CuttingPlane::CuttingPlane(const CuttingPlane& copy, int deep)
 : Module(copy, deep), cutting_plane_type("cutting_plane_type",id, this),
-  scale("scale", id, this), offset("offset", id, this)
+  scale("scale", id, this), offset("offset", id, this),
+   num_contours("num_contours", id, this)
 {
    NOT_FINISHED("CuttingPlane::CuttingPlane");
 }
@@ -188,51 +194,159 @@ void CuttingPlane::execute()
         v_num = (int) (v_fac * 100);
 
     cout << "u fac = " << u_fac << "\nv fac = " << v_fac << endl;
-    GeomGrid* grid = scinew GeomGrid( u_num, v_num, corner, u, v);
 
     // Get the scalar values and corresponding
     // colors to put in the cutting plane
-    Vector unorm=u.normal();
-    Vector vnorm=v.normal();
-    Vector N(Cross(unorm, vnorm));
-    for (int i = 0; i < u_num; i++)
-	for (int j = 0; j < v_num; j++)
+    if (cptype != CP_CONTOUR)
+    {
+	GeomGrid* grid = new GeomGrid( u_num, v_num, corner, u, v);
+        Vector unorm=u.normal();
+        Vector vnorm=v.normal();
+        Vector N(Cross(unorm, vnorm));
+	for (int i = 0; i < u_num; i++)
+	    for (int j = 0; j < v_num; j++)
+	    {
+		Point p = corner + u * ((double) i/(u_num-1)) + 
+		                   v * ((double) j/(v_num-1));
+		double sval;
+
+		// get the color from cmap for p 	    
+		MaterialHandle matl;
+		if (sfield->interpolate( p, sval))
+		    matl = cmap->lookup( sval);
+		else
+		{
+		    matl = outcolor;
+		    sval = 0;
+		}
+
+		// put the color into the cutting plane (grid) at i, j
+		if (cptype == CP_SURFACE)
+		{
+		    double h = sval;
+		    Vector G(sfield->gradient(p));
+		    double umag=Dot(unorm, G)*scale_fac;
+		    double vmag=Dot(vnorm, G)*scale_fac;
+		    Vector normal(N-unorm*umag-vnorm*vmag);
+		    grid->set(i, j, ((h*scale_fac) + offset_fac), normal, matl);
+		}
+		else  			// if (cptype == CP_PLANE)
+		    grid->set(i, j, 0, matl);
+	    }
+
+	grid_id = ogeom->addObj(grid, "Cutting Plane");
+    }
+
+    else
+    {
+	// get the min and max values from the field
+	double min, max;
+	sfield->get_minmax( min, max );
+
+	// get the number of contours
+	int contours = num_contours.get();
+	if (contours >= 2)
 	{
-	    Point p = corner + u * ((double) i/(u_num-1)) + 
-		               v * ((double) j/(v_num-1));
-	    double sval;
+	    GeomGroup *cs = new GeomGroup;
+	    Array1<GeomGroup *> col_group( contours);
+	    Array1<GeomMaterial *> colrs( contours);
+	    Array1<double> values( contours);
 
-	    // get the color from cmap for p 	    
-	    MaterialHandle matl;
-	    if (sfield->interpolate( p, sval))
-		matl = cmap->lookup( sval);
-	    else
+	    // get the "contour" number of values from 
+	    // the field, find corresponding colors,	
+	    // and add a Material and it's group to the tree
+	    for (int i = 0; i < contours; i++)
 	    {
-		matl = outcolor;
-		sval = 0;
+		values[i] = ((double)i/(contours - 1)) * (max - min) + min;
+		MaterialHandle matl;
+		matl = cmap->lookup( values[i] );
+		col_group[i] = new GeomGroup;
+		colrs[i] = new GeomMaterial( col_group[i], matl );
+		cs->add( colrs[i] );
 	    }
 
-	    // put the color into the cutting plane (grid) at i, j
-	    if (cptype == CP_SURFACE)
-	    {
-		double h = sval;
-		Vector G(sfield->gradient(p));
-		double umag=Dot(unorm, G)*scale_fac;
-		double vmag=Dot(vnorm, G)*scale_fac;
-		Vector normal(N-unorm*umag-vnorm*vmag);
-		grid->set(i, j, ((h*scale_fac) + offset_fac), normal, matl);
-	    }
-	    else if (cptype == CP_PLANE)
-	    {	
-		grid->set(i, j, 0, matl);
-	    }	
-	    else
-	    {
-		grid->set( i, j, 0, matl);
-	    }
+	    // look at areas in the plane to find the contours
+	    for (i = 0; i < u_num-1; i++)
+		for (int j = 0; j < v_num-1; j++)
+		{
+		    Point p1 = corner + u * ((double) i/(u_num-1)) + 
+			                v * ((double) j/(v_num-1));
+		    Point p2 = corner + u * ((double) (i+1)/(u_num-1)) + 
+			                v * ((double) j/(v_num-1));
+		    Point p3 = corner + u * ((double) (i+1)/(u_num-1)) + 
+			                v * ((double) (j+1)/(v_num-1));
+		    Point p4 = corner + u * ((double) i/(u_num-1)) + 
+			                v * ((double) (j+1)/(v_num-1));
+		    double sval1;
+		    double sval2;
+		    double sval3;
+		    double sval4;
+
+		    // get the value from the field for each point	    
+		    if ( sfield->interpolate( p1, sval1) && 
+			 sfield->interpolate( p2, sval2) && 
+			 sfield->interpolate( p3, sval3) && 
+			 sfield->interpolate( p4, sval4))
+		    {
+			// find the indices of the values array between smin & smax
+			double smin = Min( Min( sval1, sval2), Min( sval3, sval4)),
+			       smax = Max( Max( sval1, sval2), Max( sval3, sval4));
+			int i1 = RoundUp( (smin - min)*(contours - 1)/(max - min)),
+			    i2 = RoundDown( (smax - min)*(contours - 1)/(max - min));
+
+			if(smin < min || smax > max)
+			{
+			    cerr << "OOPS: " << endl;
+			    cerr << "smin, smax=" << smin << " " << smax << endl;
+			    cerr << "min, max=" << min << " " << max << endl;
+			    continue;
+			}
+			
+			// find and add the contour lines if they exist in this area
+			for (int k = i1; k <= i2; k++)
+			{
+			    int found = 0;
+			    Point x1, x2;
+
+			    if ((sval1 <= values[k] && values[k] < sval2) ||
+				(sval2 < values[k] && values[k] <= sval1))
+			    {
+				x1 = Interpolate( p1, p2, (values[k]-sval1)/(sval2-sval1));
+				++found;
+			    }
+			    if ((sval2 <= values[k] && values[k] < sval3) ||
+				(sval3 < values[k] && values[k] <= sval2))
+			    {
+				x2 = Interpolate( p2, p3, (values[k]-sval2)/(sval3-sval2));
+				if (!found)
+				    x1 = x2;
+				++found;
+			    }
+			    if (((sval3 <= values[k] && values[k] < sval4) ||
+				 (sval4 < values[k] && values[k] <= sval3)) && found < 2)
+			    {
+				x2 = Interpolate( p3, p4, (values[k]-sval3)/(sval4-sval3));
+				if (!found)
+				    x1 = x2;
+				++found;
+			    }
+			    if (((sval1 < values[k] && values[k] <= sval4) ||
+				 (sval4 <= values[k] && values[k] < sval1)) && found < 2)
+			    {
+				x2 = Interpolate( p1, p4, (values[k]-sval1)/(sval4-sval1));
+				++found;
+			    }
+			    // did we find two points to draw a line with?
+			    if (found == 2)
+				col_group[k]->add(new GeomLine(x1, x2));
+			}
+		    }
+		}
+	    grid_id = ogeom->addObj( cs, "Contour Plane");
 	}
-    grid_id = ogeom->addObj(grid, "Cutting Plane");
-    
+	
+    }
+
     // delete the old grid/cutting plane
     if (old_grid_id != 0)
 	ogeom->delObj( old_grid_id );

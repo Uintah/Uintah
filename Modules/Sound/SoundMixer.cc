@@ -13,7 +13,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
 #include <TCL/TCLvar.h>
@@ -36,12 +35,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_SoundMixer(const clString& id)
+extern "C" {
+Module* make_SoundMixer(const clString& id)
 {
     return new SoundMixer(id);
 }
-
-static RegisterModule db1("Sound", "SoundMixer", make_SoundMixer);
+};
 
 SoundMixer::SoundMixer(const clString& id)
 : Module("SoundMixer", id, Filter), overall_gain("overall_gain", id, this)

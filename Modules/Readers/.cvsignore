@@ -1,5 +1,15 @@
 Makefile Makefile.bak
-*?Reader.h
-*?Reader.cc
-*?Reader.tcl
 .~*
+so_locations
+ContourSetReader.cc
+ContourSetReader.tcl
+MeshReader.cc
+MeshReader.tcl
+MultiMeshReader.cc
+MultiMeshReader.tcl
+ScalarFieldReader.cc
+ScalarFieldReader.tcl
+SurfaceReader.cc
+SurfaceReader.tcl
+VectorFieldReader.cc
+VectorFieldReader.tcl

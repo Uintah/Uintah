@@ -1,5 +1,15 @@
 Makefile Makefile.bak
-*?Writer.h
-*?Writer.cc
-*?Writer.tcl
 .~*
+so_locations
+ContourSetWriter.cc
+ContourSetWriter.tcl
+MeshWriter.cc
+MeshWriter.tcl
+MultiMeshWriter.cc
+MultiMeshWriter.tcl
+ScalarFieldWriter.cc
+ScalarFieldWriter.tcl
+SurfaceWriter.cc
+SurfaceWriter.tcl
+VectorFieldWriter.cc
+VectorFieldWriter.tcl

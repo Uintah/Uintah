@@ -36,16 +36,16 @@ public:
     virtual void execute();
 };
 
-static Module* make_PointsReader(const clString& id)
+extern "C" {
+Module* make_PointsReader(const clString& id)
 {
     return new PointsReader(id);
 }
-
-#include "PointsRegister.h"
+};
 
 PointsReader::PointsReader(const clString& id)
 : Module("PointsReader", id, Source), ptsname("ptsname", id, this),
-tetname("tetname", id, this)
+  tetname("tetname", id, this)
 {
     // Create the output data handle and port
     outport=new MeshOPort(this, "Output Data", MeshIPort::Atomic);
@@ -111,7 +111,7 @@ void PointsReader::execute()
 	    ptsfile >> x >> y >> z;
 	    if (ptsfile)
 	    {
-		mesh->nodes.add(new Node(Point(x, y, z)));
+		mesh->nodes.add(NodeHandle(new Node(Point(x, y, z))));
 	    }
 	}
 	cerr << "nnodes=" << mesh->nodes.size() << endl;

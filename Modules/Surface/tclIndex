@@ -7,3 +7,4 @@
 # a script that loads the command.
 
 set auto_index(SurfToGeom) "source $dir/SurfToGeom.tcl"
+set auto_index(GenSurface) "source $dir/GenSurface.tcl"

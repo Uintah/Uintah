@@ -33,6 +33,8 @@
 #include <strstream.h>
 #include <fstream.h>
 
+#include <X11/extensions/SGIStereo.h>
+
 const int STRINGSIZE=200;
 
 class OpenGL : public Renderer {
@@ -46,6 +48,8 @@ class OpenGL : public Renderer {
     DrawInfoOpenGL* drawinfo;
     WallClockTimer fpstimer;
     double current_time;
+
+    int old_stereo;
 
     void redraw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
     void pick_draw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
@@ -146,6 +150,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 		return;
 	    }
 	}
+	fprintf(stderr, "dpy=%p, win=%p, cx=%p\n", dpy, win, cx);
 	glXMakeCurrent(dpy, win, cx);
 	current_drawer=this;
 	GLint data[1];
@@ -176,7 +181,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
     // Setup the view...
     View view(roe->view.get());
     double aspect=double(xres)/double(yres);
-    double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov/2.))));
+    double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov()/2.))));
 
     drawinfo->reset();
 
@@ -184,19 +189,6 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
     double znear;
     double zfar;
     if(compute_depth(roe, view, znear, zfar)){
-	glViewport(0, 0, xres, yres);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(fovy, aspect, znear, zfar);
-	
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	Point eyep(view.eyep);
-	Point lookat(view.lookat);
-	Vector up(view.up);
-	gluLookAt(eyep.x(), eyep.y(), eyep.z(),
-		  lookat.x(), lookat.y(), lookat.z(),
-		  up.x(), up.y(), up.z());
 
 	// Set up Lighting
 	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
@@ -253,14 +245,103 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 	double frametime=framerate==0?0:1./framerate;
 	TimeThrottle throttle;
 	throttle.start();
+	int do_stereo=roe->do_stereo.get();
+	if(do_stereo && !old_stereo){
+	    int first_event, first_error;
+	    if(!XSGIStereoQueryExtension(dpy, &first_event, &first_error)){
+		do_stereo=0;
+		cerr << "Stereo not supported!\n";
+	    }
+	    old_stereo=do_stereo;
+	    int height=492; // Magic numbers from the man pages
+	    int offset=532;
+	    int mode=STEREO_TOP;
+	    if(!XSGISetStereoMode(dpy, win, height, offset, mode)){
+		cerr << "Cannot set stereo mode!\n";
+		do_stereo=0;
+	    }
+	}
+	if(old_stereo && !do_stereo){
+	    if(!XSGISetStereoMode(dpy, win, 0, 0, STEREO_OFF)){
+		cerr << "Cannot set stereo mode!\n";
+		do_stereo=0;
+	    }
+	    old_stereo=do_stereo;
+	}
+	Vector eyesep(0,0,0);
+	if(do_stereo){
+	    aspect/=2;	
+	    double eye_sep_dist=0.025/2;
+	    Vector u, v;
+	    view.get_viewplane(aspect, 1.0, u, v);
+	    u.normalize();
+	    double zmid=(znear+zfar)/2.;
+	    eyesep=u*eye_sep_dist*zmid;
+	}
 	for(int t=0;t<nframes;t++){
+	    if(do_stereo){
+		XSGISetStereoBuffer(dpy, win, STEREO_BUFFER_LEFT);
+		glXWaitX();
+	    }
 	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	    double modeltime=t*dt+tbeg;
 	    roe->set_current_time(modeltime);
 
+	    // Setup view...
+	    glViewport(0, 0, xres, yres);
+	    glMatrixMode(GL_PROJECTION);
+	    glLoadIdentity();
+	    gluPerspective(fovy, aspect, znear, zfar);
+	
+	    glMatrixMode(GL_MODELVIEW);
+	    glLoadIdentity();
+	    Point eyep(view.eyep());
+	    Point lookat(view.lookat());
+	    if(do_stereo){
+		eyep-=eyesep;
+		lookat-=eyesep;
+	    }
+	    Vector up(view.up());
+	    gluLookAt(eyep.x(), eyep.y(), eyep.z(),
+		      lookat.x(), lookat.y(), lookat.z(),
+		      up.x(), up.y(), up.z());
+
 	    // Draw it all...
 	    current_time=modeltime;
+#ifdef REAL_STEREO
+	    if(do_stereo){
+		glDrawBuffer(GL_BACK_LEFT);
+	    } else {
+		glDrawBuffer(GL_BACK);
+	    }
+#endif
 	    roe->do_for_visible(this, (RoeVisPMF)&OpenGL::redraw_obj);
+	    if(do_stereo){
+		glXWaitGL();
+		XSGISetStereoBuffer(dpy, win, STEREO_BUFFER_RIGHT);
+		glXWaitX();
+//		glDrawBuffer(GL_BACK_RIGHT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// Setup view...
+		glViewport(0, 0, xres, yres);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluPerspective(fovy, aspect, znear, zfar);
+	
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		Point eyep(view.eyep());
+		Point lookat(view.lookat());
+		Vector up(view.up());
+		eyep+=eyesep;
+		lookat+=eyesep;
+		gluLookAt(eyep.x(), eyep.y(), eyep.z(),
+			  lookat.x(), lookat.y(), lookat.z(),
+			  up.x(), up.y(), up.z());
+
+		roe->do_for_visible(this, (RoeVisPMF)&OpenGL::redraw_obj);
+	    }
 
 	    // Wait for the right time before swapping buffers
 	    TCLTask::unlock();
@@ -336,7 +417,7 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
     // Setup the view...
     View view(roe->view.get());
     double aspect=double(xres)/double(yres);
-    double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov/2.))));
+    double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov()/2.))));
 
     drawinfo->reset();
 
@@ -362,9 +443,9 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 	
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	Point eyep(view.eyep);
-	Point lookat(view.lookat);
-	Vector up(view.up);
+	Point eyep(view.eyep());
+	Point lookat(view.lookat());
+	Vector up(view.up());
 	gluLookAt(eyep.x(), eyep.y(), eyep.z(),
 		  lookat.x(), lookat.y(), lookat.z(),
 		  up.x(), up.y(), up.z());
@@ -384,22 +465,35 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 	}
 	TCLTask::unlock();
 	GLuint min_z;
+#if (_MIPS_SZPTR == 64)
+	unsigned long hit_obj=0;
+	unsigned long hit_pick=0;
+#else
 	GLuint hit_obj=0;
 	GLuint hit_pick=0;
+#endif
 	if(hits >= 1){
 	    int idx=0;
 	    min_z=0;
-	    hit_obj=0;
-	    hit_pick=0;
 	    for (int h=0; h<hits; h++) {
 		int nnames=pick_buffer[idx++];
 		GLuint z=pick_buffer[idx++];
 		if (nnames > 1 && (h==0 || z < min_z)) {
 		    min_z=z;
 		    idx++; // Skip Max Z
+#if (_MIPS_SZPTR == 64)
+		    unsigned int ho1=pick_buffer[idx++];
+		    unsigned int ho2=pick_buffer[idx++];
+		    hit_obj=((long)ho1<<32)|ho2;
+		    idx+=nnames-3; // Skip to the last one...
+		    unsigned int hp1=pick_buffer[idx++];
+		    unsigned int hp2=pick_buffer[idx++];
+		    hit_pick=((long)hp1<<32)|hp2;
+#else
 		    hit_obj=pick_buffer[idx++];
 		    idx+=nnames-2; // Skip to the last one...
 		    hit_pick=pick_buffer[idx++];
+#endif
 		} else {
 		    idx+=nnames+1;
 		}
@@ -456,7 +550,15 @@ void OpenGL::put_scanline(int y, int width, Color* scanline, int repeat)
 
 void OpenGL::pick_draw_obj(Salmon* salmon, Roe*, GeomObj* obj)
 {
+#if (_MIPS_SZPTR == 64)
+    unsigned long o=(unsigned long)obj;
+    unsigned int o1=(o>>32)&0xffffffff;
+    unsigned int o2=o&0xffffffff;
+    glLoadName(o1);
+    glLoadName(o2);
+#else
     glLoadName((GLuint)obj);
+#endif
     obj->draw(drawinfo, salmon->default_matl.get_rep(), current_time);
 }
 

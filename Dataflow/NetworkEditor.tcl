@@ -224,9 +224,9 @@ proc itemDrag {c x y} {
     set lastY $y
 }
 
-source $sci_root/Dataflow/MemStats.tcl
-source $sci_root/Dataflow/DebugSettings.tcl
-source $sci_root/Dataflow/ThreadStats.tcl
+source $sci_root/TCL/MemStats.tcl
+source $sci_root/TCL/DebugSettings.tcl
+source $sci_root/TCL/ThreadStats.tcl
 source $sci_root/Dataflow/Module.tcl
 
 source $sci_root/TCL/HelpPage.tcl

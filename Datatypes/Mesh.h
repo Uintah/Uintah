@@ -18,10 +18,12 @@
 
 #include <Classlib/Array1.h>
 #include <Classlib/LockingHandle.h>
+#include <Datatypes/GeometryPort.h>
 #include <Geometry/Point.h>
 
 #include <stdlib.h> // For size_t
 
+class GeomGroup;
 class Mesh;
 
 struct Element {
@@ -93,6 +95,7 @@ typedef LockingHandle<Mesh> MeshHandle;
 
 class Mesh : public Datatype {
 public:
+    Array1<int> ids;
     Array1<NodeHandle> nodes;
     Array1<Element*> elems;
     Array1<Array1<double> > cond_tensors;
@@ -116,8 +119,8 @@ public:
     int unify(Element*, const Array1<int>&, const Array1<int>&,
 	      const Array1<int>&);
 
-    int insert_delaunay(int node);
-    int insert_delaunay(const Point& p);
+    int insert_delaunay(int node, GeometryOPort* ogeom=0);
+    int insert_delaunay(const Point&, GeometryOPort* ogeom=0);
     void remove_delaunay(int node, int fill);
     void pack_nodes();
     void pack_elems();
@@ -125,6 +128,9 @@ public:
     int face_idx(int, int);
     void add_node_neighbors(int node, Array1<int>& idx);
     void new_element(Element* ne, HashTable<Face, int> *new_faces);
+
+    void draw_element(int, GeomGroup*);
+    void draw_element(Element* e, GeomGroup*);
 
     // Persistent representation...
     virtual void io(Piostream&);

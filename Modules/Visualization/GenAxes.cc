@@ -12,7 +12,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/GeometryPort.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Cone.h>
@@ -40,12 +39,12 @@ public:
     virtual void tcl_command(TCLArgs&, void*);
 };
 
-static Module* make_GenAxes(const clString& id)
+extern "C" {
+Module* make_GenAxes(const clString& id)
 {
    return scinew GenAxes(id);
 }
-
-static RegisterModule db1("Visualization", "GenAxes", make_GenAxes);
+};
 
 static clString module_name("GenAxes");
 

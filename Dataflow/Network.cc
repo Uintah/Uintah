@@ -13,7 +13,6 @@
 
 #include <Dataflow/Network.h>
 
-#include <Classlib/Args.h>
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Connection.h>
 #include <Dataflow/Module.h>
@@ -22,8 +21,6 @@
 
 #include <iostream.h>
 #include <stdlib.h>
-
-static Arg_stringval initial_net("net", "", "specify initial network to load");
 
 Network::Network(int first)
 : netedit(0), first(first)
@@ -96,36 +93,7 @@ clString Network::connect(Module* m1, int p1, Module* m2, int p2)
 void Network::initialize(NetworkEditor* _netedit)
 {
     netedit=_netedit;
-    if(first && initial_net.is_set()){
-	if(!read_file(initial_net.value())){
-	    cerr << "Can't read initial map\n";
-	    exit(-1);
-	}
-    }
-#if 0
-    modules.add((*ModuleList::lookup("SoundReader"))());
-    modules[0]->set_context(netedit, this);
-    modules.add((*ModuleList::lookup("SoundFilter"))());
-    modules[1]->ypos=110;
-    modules[1]->set_context(netedit, this);
-    modules.add((*ModuleList::lookup("SoundOutput"))());
-    modules[2]->ypos=210;
-    modules[2]->set_context(netedit, this);
-    connect(modules[0], 0, modules[1], 0);
-    connect(modules[1], 0, modules[2], 0);
-#endif
-#if 0
-    add_module("ScalarFieldReader");
-    add_module("IsoSurface");
-    add_module("Salmon");
-    connect(modules[0], 0, modules[1], 0);
-    connect(modules[1], 0, modules[2], 0);
-#endif
-#if 0
-    add_module("MeshView");
-    add_module("Salmon");
-    connect(modules[0], 0, modules[1], 0);
-#endif
+    NOT_FINISHED("Network::initialize"); // Should read a file???
 }
 
 Module* Network::add_module(const clString& name)

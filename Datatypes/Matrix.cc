@@ -37,7 +37,8 @@ Matrix* Matrix::clone()
     return 0;
 }
 
-int Matrix::isolve(ColumnMatrix& lhs, ColumnMatrix& rhs, double max_error)
+int Matrix::isolve(ColumnMatrix& lhs, ColumnMatrix& rhs, double max_error,
+		   MatrixUpdater* updater)
 {
     int size=nrows();
     ASSERT(ncols() == size);
@@ -64,6 +65,9 @@ int Matrix::isolve(ColumnMatrix& lhs, ColumnMatrix& rhs, double max_error)
     ColumnMatrix P(size);
     double bkden=0;
     double err=2*max_error;
+    double orig_err=err;
+    if(updater)
+	updater->update(niter, orig_err, err, max_error);
     while(niter < toomany && err > max_error){
 	niter++;
 	// Ugly preconditioning...
@@ -95,6 +99,8 @@ int Matrix::isolve(ColumnMatrix& lhs, ColumnMatrix& rhs, double max_error)
 	    R[i]-=ak*Z[i];
 	}
 	err=R.vector_norm()/bnorm;
+	if(updater && niter%10 == 0)
+	    updater->update(niter, orig_err, err, max_error);
     }
     return niter;
 }

@@ -156,55 +156,57 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 
       switch (item.rtype) {
       case RecurseInitial:
-	 int reallynew = !(v->data.epsilonequal(Epsilon, newval));
-	 if (!reallynew) {
-	    stack.pop();
-	    break;
-	 }
+	  {
+	      int reallynew = !(v->data.epsilonequal(Epsilon, newval));
+	      if (!reallynew) {
+		  stack.pop();
+		  break;
+	      }
 	 
-	 if (cs_debug) {
-	    cout << "Recursion level = " << stack.size() << endl;
+	      if (cs_debug) {
+		  cout << "Recursion level = " << stack.size() << endl;
 	    
-	    cout << v->name << " S(" << v->levellevel << ")*";
-	    for (index=0; index<v->level; index++)
-	       cout << " ";
-	    cout << "*" << endl;
-	    
-	    cout << "Old value (" << v->data << ") " << (reallynew?"!=":"==")
-		 << " newval (" << newval << ").  Using Epsilon of ("
-		 << Epsilon << ")." << endl;
-	    
-	    cout << "LevelLevel is " << v->levellevel
-		 << " and Level is " << v->level << "." << endl;
-	 }
-	 
-	 v->data = newval;
-
-	 if (v->level++ == MaxDepth) {
-	    v->level = 0;
-	    if (++(v->levellevel) < v->numconstraints) {
-	       if (cs_debug)
-		   cerr << "Maximum recursion level reached..." << endl;
-	       item.rtype = RecurseMax;
-	    } else {
-	       if (cs_debug) {
-		  cout << v->name << " E(" << v->levellevel << ")*";
+		  cout << v->name << " S(" << v->levellevel << ")*";
 		  for (index=0; index<v->level; index++)
-		     cout << " ";
+		      cout << " ";
 		  cout << "*" << endl;
+	    
+		  cout << "Old value (" << v->data << ") " << (reallynew?"!=":"==")
+		      << " newval (" << newval << ").  Using Epsilon of ("
+			  << Epsilon << ")." << endl;
+	    
+		  cout << "LevelLevel is " << v->levellevel
+		      << " and Level is " << v->level << "." << endl;
+	      }
+	 
+	      v->data = newval;
+
+	      if (v->level++ == MaxDepth) {
+		  v->level = 0;
+		  if (++(v->levellevel) < v->numconstraints) {
+		      if (cs_debug)
+			  cerr << "Maximum recursion level reached..." << endl;
+		      item.rtype = RecurseMax;
+		  } else {
+		      if (cs_debug) {
+			  cout << v->name << " E(" << v->levellevel << ")*";
+			  for (index=0; index<v->level; index++)
+			      cout << " ";
+			  cout << "*" << endl;
 		  
-		  cout << "Recursion level = " << stack.size()-1 << endl;
-	       }
+			  cout << "Recursion level = " << stack.size()-1 << endl;
+		      }
 	       
-	       cerr << "Maximum level reached for all constraints!" << endl;
-	       cout << "Accepting current approximation." << endl;
-	       cout << "Recursion level = " << stack.size()-1 << endl;
+		      cerr << "Maximum level reached for all constraints!" << endl;
+		      cout << "Accepting current approximation." << endl;
+		      cout << "Recursion level = " << stack.size()-1 << endl;
 	       
-	       abort = 1;	       
-	    }
-	 } else {
-	    item.rtype = RecurseNormal;
-	 }
+		      abort = 1;	       
+		  }
+	      } else {
+		  item.rtype = RecurseNormal;
+	      }
+	  }
 	 break;
       case RecurseNormal:
 	 if (item.iter < v->numconstraints) {

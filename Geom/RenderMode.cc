@@ -12,6 +12,7 @@
  */
 
 #include <Geom/RenderMode.h>
+#include <Classlib/NotFinished.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
 #include <Malloc/Allocator.h>
@@ -44,4 +45,10 @@ void GeomRenderMode::make_prims(Array1<GeomObj*>& free,
 {
     if(child)
 	child->make_prims(free, dontfree);
+}
+
+void GeomRenderMode::intersect(const Ray&, Material*,
+			       Hit&)
+{
+    NOT_FINISHED("GeomRenderMode::intersect");
 }

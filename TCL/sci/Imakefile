@@ -6,6 +6,7 @@
 #ifdef SCI_OPENGL
 OPENGL_OBJS = tkOpenGL.o
 OPENGL_SRCS = tkOpenGL.c
+OPENGL_LIBS = -lGL
 #else
 OPENGL_OBJS =
 OPENGL_SRCS =
@@ -17,10 +18,13 @@ SRCS = tk3d2.c  tkAppInit.c  tkBevel.c  tkCanvBLine.c  \
 	tkMain.c  $(OPENGL_SRCS)
 LOCALINCLUDES = -I../tcl -I../tk -I../itcl/src
 
+SO_LIBS =
+SO_LDFLAGS = -L$(TOP)/lib -ltk -litcl -ltcl $(OPENGL_LIBS) -lX11 -lc -lm
+
 LIBNAME = scitk
 
 SCIDependTarget($(SRCS))
-NormalLibraryTarget($(LIBNAME),$(OBJS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS), $(SO_LDFLAGS))
 
 #else
 all:

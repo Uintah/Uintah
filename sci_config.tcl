@@ -12,6 +12,7 @@ ConfigChoice .compiler -choices {CFront Delta GNU} -text "Compiler: " \
 ConfigChoice .assertions -choices {0 1 2 3 4} -text "Assertion level: " \
 	-name "ASSERTION_LEVEL" -file ch
 ConfigBool .opengl -text "OpenGL? " -name OPENGL
+ConfigBool .quarks -text "Quarks? " -name QUARKS
 
 frame .bottom -borderwidth 10
 pack .bottom -side bottom

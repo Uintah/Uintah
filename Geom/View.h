@@ -17,11 +17,13 @@
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 
-struct View {
-    Point eyep;
-    Point lookat;
-    Vector up;
-    double fov;
+class View {
+    Point eyep_;
+    Point lookat_;
+    Vector up_;
+    double fov_;
+
+public:
     View();
     View(const Point&, const Point&, const Vector&, double);
     View(const View&);
@@ -32,6 +34,15 @@ struct View {
 		       Vector& u, Vector& v);
     Point eyespace_to_objspace(const Point& p, double aspect);
     double depth(const Point& p);
+
+    Point eyep() const;
+    void eyep(const Point&);
+    Point lookat() const;
+    void lookat(const Point&);
+    Vector up() const;
+    void up(const Vector&);
+    double fov() const;	
+    void fov(double);
 };
 
 #endif /* SCI_Geom_View_h */

@@ -86,9 +86,9 @@ void Raytracer::redraw(Salmon* _salmon, Roe* _roe)
     // Compute viewing parameters...
     View view(roe->view.get());
     current_view=&view;
-    Vector direction=view.lookat-view.eyep;
+    Vector direction=view.lookat()-view.eyep();
     double dist=direction.length();
-    Vector v(Cross(direction, view.up));
+    Vector v(Cross(direction, view.up()));
     if(v.length2() == 0.0){
 	// Ambiguous up direction...
 	cerr << "Error: ambiguous up direction\n";
@@ -98,7 +98,7 @@ void Raytracer::redraw(Salmon* _salmon, Roe* _roe)
     Vector u(Cross(v, direction));
     u.normalize();
     double aspect=double(xres)/double(yres);
-    double width=aspect*2.0*dist*Tan(DtoR(view.fov*0.5))/yres;
+    double width=aspect*2.0*dist*Tan(DtoR(view.fov()*0.5))/yres;
     u*=width;
     v*=width;
 
@@ -127,7 +127,7 @@ void Raytracer::redraw(Salmon* _salmon, Roe* _roe)
 	    Vector su(u*screeny);
 	    Vector raydir(su+sv+direction);
 	    raydir.normalize();
-	    Ray ray(view.eyep, raydir);
+	    Ray ray(view.eyep(), raydir);
 	    scanline[x]=trace_ray(ray, 0, 1.0, 1.0);
 	}
 	rend->put_scanline(y, xres, scanline);

@@ -13,7 +13,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/Surface.h>
 #include <Datatypes/SurfacePort.h>
 #include <Datatypes/Mesh.h>
@@ -87,14 +86,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_MorphMesher3d(const clString& id)
+extern "C" {
+Module* make_MorphMesher3d(const clString& id)
 {
     return scinew MorphMesher3d(id);
 }
-
-static RegisterModule db1("Surfaces", "MorphMesher3d", make_MorphMesher3d);
-static RegisterModule db2("Mesh", "MorphMesher3d", make_MorphMesher3d);
-static RegisterModule db3("Dave", "MorphMesher3d", make_MorphMesher3d);
+};
 
 MorphMesher3d::MorphMesher3d(const clString& id)
 : Module("MorphMesher3d", id, Filter), num_layers("num_layers", id, this)
@@ -157,7 +154,7 @@ void MorphMesher3d::execute()
 //    field=scinew ScalarFieldRG();
 ///
     morph_mesher_3d(surfs, mesh);
-    omesh->send(mesh);
+    omesh->send(MeshHandle(mesh));
 ///
 //    ofield->send(field);
 ///
@@ -175,7 +172,7 @@ void MorphMesher3d::find_a_crossing(Point *s, TriSurface *ts, const Point &p,
 void MorphMesher3d::find_a_crossing(Point *s, TriSurface *outer,
 				    TriSurface *inner, double t) {
     Point pout;
-    double dist;
+//    double dist;
     Array1<int> res;
 
 // This way might be too slow...
@@ -192,7 +189,7 @@ void MorphMesher3d::find_a_crossing(Point *s, TriSurface *outer,
 //    *s=AffineCombination(inner.points[i],t,*s,(1-t));
 
 // But this way isn't always correct -- ie it fails for some concave inner ts.
-    dist=outer->distance(inner->points[0],res,&pout);
+    outer->distance(inner->points[0],res,&pout);
     *s=AffineCombination(inner->points[0],t,pout,(1-t));
 }
 
@@ -909,7 +906,7 @@ void MorphMesher3d::lace_surfaces(const SurfaceHandle &outHand, TriSurface* in,
     mesh->cond_tensors.add(*cond);
 
     for (int i=0; i<out->points.size(); i++)
-	mesh->nodes.add(new Node(out->points[i]));
+	mesh->nodes.add(NodeHandle(new Node(out->points[i])));
 
     for (i=0; i<out->elements.size(); i++) {
 	mesh->elems.add(new Element(mesh, out->elements[i]->i1,
@@ -930,7 +927,7 @@ void MorphMesher3d::lace_surfaces(const Point &mid, Mesh *mesh) {
     in_elem_base=mesh->elems.size();
     int ptid=in_node_base;
 
-    mesh->nodes.add(new Node(mid));
+    mesh->nodes.add(NodeHandle(new Node(mid)));
     for (int i=out_elem_base; i<in_elem_base; i++)
 	mesh->elems[i]->n[3]=ptid;
 }
@@ -953,7 +950,7 @@ void MorphMesher3d::lace_surfaces(TriSurface *out, TriSurface *in, Mesh* mesh){
 
     // first add all of the new points and triangles from the inner surface
     for (int i=0; i<in->points.size(); i++)
-	mesh->nodes.add(new Node(in->points[i]));
+	mesh->nodes.add(NodeHandle(new Node(in->points[i])));
     for (i=0; i<in->elements.size(); i++) {
 	mesh->elems.add(new Element(mesh, in->elements[i]->i1+in_node_base,
 				    in->elements[i]->i2+in_node_base,

@@ -21,7 +21,6 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldUG.h>
 #include <Datatypes/ScalarFieldPort.h>
@@ -60,13 +59,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_VectorSeg(const clString& id)
+extern "C" {
+Module* make_VectorSeg(const clString& id)
 {
     return scinew VectorSeg(id);
 }
-
-static RegisterModule db2("Visualization", "VectorSeg", make_VectorSeg);
-static RegisterModule db4("Dave", "VectorSeg", make_VectorSeg);
+};
 
 VectorSeg::VectorSeg(const clString& id)
 : Module("VectorSeg", id, Filter), numFields("numFields", id, this),

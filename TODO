@@ -1,4 +1,17 @@
 
+Shared libraries:
+1) Fix initialization/locking problems
+2) General configuration file
+3) Renderers in config file
+4) Get rid of dependencies in Widgets and Geom
+5) Tune for R8000
+6) Readers broken
+7) Salmon broken
+
+Home:
+1) Slackware/elf
+2) gcc 2.7.0
+
 DONE 1) Fix allocator - use doubly linked list???
 Tag malloc - put in TK/TCL
 DONE Use scinew everywhere...

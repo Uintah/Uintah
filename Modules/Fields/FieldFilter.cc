@@ -12,7 +12,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/ScalarField.h>
 #include <Datatypes/ScalarFieldRG.h>
@@ -33,12 +32,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_FieldFilter(const clString& id)
+extern "C" {
+Module* make_FieldFilter(const clString& id)
 {
     return new FieldFilter(id);
 }
-
-static RegisterModule db1("Dave", "FieldFilter", make_FieldFilter);
+};
 
 FieldFilter::FieldFilter(const clString& id)
 : Module("FieldFilter", id, Filter)

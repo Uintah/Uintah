@@ -6,6 +6,7 @@
 #ifdef SCI_OPENGL
 OPENGLOBJS = OpenGL.o
 OPENGLSRCS = OpenGL.cc
+OPENGLLIBS = -lGLU -lGL -lXext -lX11
 #else
 OPENGLOBJS =
 OPENGLSRCS = 
@@ -16,10 +17,14 @@ OBJS = Postscript.o  Raytracer.o  Salmon.o  Renderer.o  Roe.o  X11.o  \
 SRCS = Postscript.cc Raytracer.cc Salmon.cc Renderer.cc Roe.cc X11.cc \
 	$(OPENGLSRCS)
 
+SO_LIBS =
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lDevices -lGeom \
+	-lGeometry -lTCL -lClasslib $(OPENGLLIBS)
+
 LIBNAME = Salmon
 
 SCIDependTarget($(SRCS))
-SCIObjLibraryTarget($(LIBNAME),$(OBJS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
 
 #else
 all:

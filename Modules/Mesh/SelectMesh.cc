@@ -13,7 +13,6 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/Mesh.h>
 #include <Datatypes/MultiMesh.h>
@@ -36,13 +35,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_SelectMesh(const clString& id)
+extern "C" {
+Module* make_SelectMesh(const clString& id)
 {
     return scinew SelectMesh(id);
 }
-
-static RegisterModule db1("Mesh", "SelectMesh", make_SelectMesh);
-static RegisterModule db2("Dave", "SelectMesh", make_SelectMesh);
+};
 
 SelectMesh::SelectMesh(const clString& id)
 : Module("SelectMesh", id, Filter), 

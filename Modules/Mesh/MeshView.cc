@@ -16,7 +16,6 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/Queue.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/Colormap.h>
@@ -151,13 +150,13 @@ public:
     int findNode(const MeshHandle& mesh);
 };
 
-static Module* make_MeshView(const clString& id)
+extern "C" {
+Module* make_MeshView(const clString& id)
 {
     return new MeshView(id);
 }
+};
 
-static RegisterModule db1("Fields", "MeshView", make_MeshView);
-static RegisterModule db2("Mesh", "MeshView", make_MeshView);
 static clString mesh_name("Mesh");
 static clString widget_name("Crosshair Widget");
 

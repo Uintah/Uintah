@@ -3,9 +3,18 @@
 
 #ifdef SCI_DIR_Multitask
 
+#ifdef SCI_QUARKS
+#define TASK_IMPLEMENTATION_O  Task_Quarks.o
+#define TASK_IMPLEMENTATION_CC Task_Quarks.cc
+#else
+
 #ifdef SCI_MACHINE_SGI
 #define TASK_IMPLEMENTATION_O  Task_irix.o
 #define TASK_IMPLEMENTATION_CC Task_irix.cc
+LOCKS = lock.o
+
+lock.o: lock_mips.s
+	as -o lock.o lock_mips.s -mips4
 #endif
 
 #ifdef SCI_MACHINE_SOLARIS
@@ -18,6 +27,8 @@
 #define TASK_IMPLEMENTATION_CC Task_linux.cc
 #endif
 
+#endif
+
 #ifndef TASK_IMPLEMENTATION_O
 #error "This machine does not have a Task library port..."
 #endif
@@ -25,22 +36,16 @@
 #error "This machine does not have a Task library port..."
 #endif
 
-#ifdef SCI_MACHINE_SGI
-LOCKS = lock.o
-#endif
-
 OBJS = ITC.o  Task.o  TASK_IMPLEMENTATION_O  $(LOCKS)
 SRCS = ITC.cc Task.cc TASK_IMPLEMENTATION_CC
 
-#ifdef SCI_MACHINE_SGI
-lock.o: lock_mips.s
-	as -o lock.o lock_mips.s -mips2
-#endif
-
 LIBNAME = Multitask
 
+SO_LIBS =
+SO_LDFLAGS = -L$(TOP)/lib -lMalloc -lC -lc
+
 SCIDependTarget($(SRCS))
-SCINormalLibraryTarget($(LIBNAME),$(OBJS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
 
 #else
 all:

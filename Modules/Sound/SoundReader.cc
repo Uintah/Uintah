@@ -13,7 +13,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
 #include <TCL/TCLvar.h>
@@ -32,12 +31,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_SoundReader(const clString& id)
+extern "C" {
+Module* make_SoundReader(const clString& id)
 {
     return new SoundReader(id);
 }
-
-static RegisterModule db1("Sound", "SoundReader", make_SoundReader);
+};
 
 SoundReader::SoundReader(const clString& id)
 : Module("SoundReader", id, Source), filename("filename", id, this)

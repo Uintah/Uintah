@@ -132,11 +132,25 @@ void GeometryOPort::delAll()
 void GeometryOPort::flushViews()
 {
     turn_on();
-    GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryFlushViews, portid);
+    GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryFlushViews, portid, 0);
     if(outbox)
 	outbox->send(msg);
     else
 	save_msg(msg);
+    dirty=0;
+    turn_off();
+}
+
+void GeometryOPort::flushViewsAndWait()
+{
+    turn_on();
+    Semaphore waiter(0);
+    GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometryFlushViews, portid, &waiter);
+    if(outbox)
+	outbox->send(msg);
+    else
+	save_msg(msg);
+    waiter.down();
     dirty=0;
     turn_off();
 }
@@ -148,7 +162,6 @@ int GeometryOPort::busy()
 
 void GeometryOPort::save_msg(GeometryComm* msg)
 {
-//    cerr << "Saving message...\n";
     if(save_msgs){
 	save_msgs_tail->next=msg;
 	save_msgs_tail=msg;
@@ -189,6 +202,11 @@ GeometryComm::GeometryComm(int portno, GeomID serial, GeomObj* obj,
 GeometryComm::GeometryComm(int portno, GeomID serial)
 : MessageBase(MessageTypes::GeometryDelObj),
   portno(portno), serial(serial)
+{
+}
+
+GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno, Semaphore* wait)
+: MessageBase(type), portno(portno), wait(wait)
 {
 }
 

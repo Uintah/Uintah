@@ -14,7 +14,6 @@
 #include <Classlib/HashTable.h>
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/GeometryPort.h>
 #include <Geom/Color.h>
 #include <Geom/Geom.h>
@@ -38,14 +37,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_MeshRender(const clString& id)
+extern "C" {
+Module* make_MeshRender(const clString& id)
 {
     return new MeshRender(id);
 }
-
-static RegisterModule db1("Mesh", "MeshRender", make_MeshRender);
-static RegisterModule db2("Visualization", "MeshRender",
-			  make_MeshRender);
+};
 
 MeshRender::MeshRender(const clString& id)
 : Module("MeshRender", id, Filter)

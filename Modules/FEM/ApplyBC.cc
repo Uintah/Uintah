@@ -12,7 +12,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
 #include <Malloc/Allocator.h>
@@ -28,12 +27,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_ApplyBC(const clString& id)
+extern "C" {
+Module* make_ApplyBC(const clString& id)
 {
     return scinew ApplyBC(id);
 }
-
-static RegisterModule db1("Unfinished", "ApplyBC", make_ApplyBC);
+};
 
 ApplyBC::ApplyBC(const clString& id)
 : Module("ApplyBC", id, Filter)

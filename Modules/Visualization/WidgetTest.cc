@@ -12,7 +12,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/GeometryPort.h>
 #include <Geometry/Point.h>
 #include <Malloc/Allocator.h>
@@ -62,13 +61,12 @@ public:
    virtual void tcl_command(TCLArgs&, void*);
 };
 
-static Module* make_WidgetTest(const clString& id)
+extern "C" {
+Module* make_WidgetTest(const clString& id)
 {
    return scinew WidgetTest(id);
 }
-
-static RegisterModule db1("Fields", "WidgetTest", make_WidgetTest);
-static RegisterModule db2("Visualization", "WidgetTest", make_WidgetTest);
+};
 
 static clString module_name("WidgetTest");
 

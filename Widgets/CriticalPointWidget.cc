@@ -212,23 +212,25 @@ CriticalPointWidget::redraw()
       cylinder3end2 = center-v2*extent;
       break;
    case AttractingFocus:
-      Real weird(3.14159-2.2);
-      torus1center = center+v2*cenoff;
-      torus1start = 0+weird;
-      torus2center = center+v1*cenoff;
-      torus2start = 3.14159*0.5+weird;
-      torus3center = center-v2*cenoff;
-      torus3start = 3.14159+weird;
-      torus4center = center-v1*cenoff;
-      torus4start = 3.14159*1.5+weird;
-      cone1end2 = center+v2*sphererad;
-      cone1end1 = cone1end2+(v2+v1*1.4)/2.4*conelen;
-      cone2end2 = center+v1*sphererad;
-      cone2end1 = cone2end2+(v1-v2*1.4)/2.4*conelen;
-      cone3end2 = center-v2*sphererad;
-      cone3end1 = cone3end2-(v2+v1*1.4)/2.4*conelen;
-      cone4end2 = center-v1*sphererad;
-      cone4end1 = cone4end2-(v1-v2*1.4)/2.4*conelen;
+      {
+	  Real weird(3.14159-2.2);
+	  torus1center = center+v2*cenoff;
+	  torus1start = 0+weird;
+	  torus2center = center+v1*cenoff;
+	  torus2start = 3.14159*0.5+weird;
+	  torus3center = center-v2*cenoff;
+	  torus3start = 3.14159+weird;
+	  torus4center = center-v1*cenoff;
+	  torus4start = 3.14159*1.5+weird;
+	  cone1end2 = center+v2*sphererad;
+	  cone1end1 = cone1end2+(v2+v1*1.4)/2.4*conelen;
+	  cone2end2 = center+v1*sphererad;
+	  cone2end1 = cone2end2+(v1-v2*1.4)/2.4*conelen;
+	  cone3end2 = center-v2*sphererad;
+	  cone3end1 = cone3end2-(v2+v1*1.4)/2.4*conelen;
+	  cone4end2 = center-v1*sphererad;
+	  cone4end1 = cone4end2-(v1-v2*1.4)/2.4*conelen;
+      }
       break;
    case RepellingFocus:
       torus1center = center+v2*cenoff;
@@ -249,23 +251,25 @@ CriticalPointWidget::redraw()
       cone4end2 = cone4end1+v2*conelen;
       break;
    case SpiralSaddle:
-      weird = 3.14159-2.2;
-      torus1center = center+v2*cenoff;
-      torus1start = 0+weird;
-      torus2center = center+v1*cenoff;
-      torus2start = 3.14159*0.5;
-      torus3center = center-v2*cenoff;
-      torus3start = 3.14159+weird;
-      torus4center = center-v1*cenoff;
-      torus4start = 3.14159*1.5;
-      cone1end1 = center+v1*twocenoff;
-      cone1end2 = cone1end1-v2*conelen;
-      cone2end2 = center+v1*sphererad;
-      cone2end1 = cone2end2+(v1-v2*1.4)/2.4*conelen;
-      cone3end1 = center-v1*twocenoff;
-      cone3end2 = cone3end1+v2*conelen;
-      cone4end2 = center-v1*sphererad;
-      cone4end1 = cone4end2-(v1-v2*1.4)/2.4*conelen;
+      {
+	  Real weird = 3.14159-2.2;
+	  torus1center = center+v2*cenoff;
+	  torus1start = 0+weird;
+	  torus2center = center+v1*cenoff;
+	  torus2start = 3.14159*0.5;
+	  torus3center = center-v2*cenoff;
+	  torus3start = 3.14159+weird;
+	  torus4center = center-v1*cenoff;
+	  torus4start = 3.14159*1.5;
+	  cone1end1 = center+v1*twocenoff;
+	  cone1end2 = cone1end1-v2*conelen;
+	  cone2end2 = center+v1*sphererad;
+	  cone2end1 = cone2end2+(v1-v2*1.4)/2.4*conelen;
+	  cone3end1 = center-v1*twocenoff;
+	  cone3end2 = cone3end1+v2*conelen;
+	  cone4end2 = center-v1*sphererad;
+	  cone4end1 = cone4end2-(v1-v2*1.4)/2.4*conelen;
+      }
       break;
    default:
       break;

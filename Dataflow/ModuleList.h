@@ -22,17 +22,10 @@ typedef Module* (*makeModule)(const clString&);
 
 typedef AVLTree<clString, makeModule> ModuleCategory;
 typedef AVLTreeIter<clString, makeModule> ModuleCategoryIter;
-#ifdef __GNUG_OLD__
-typedef AVLTree<clString, void*> ModuleDB;
-typedef AVLTreeIter<clString, void*> ModuleDBIter;
-#else
 typedef AVLTree<clString, ModuleCategory*> ModuleDB;
 typedef AVLTreeIter<clString, ModuleCategory*> ModuleDBIter;
-#endif
 
 class ModuleList {
-    static void insert(ModuleCategory* cat, const clString& name,
-		       makeModule maker);
     static ModuleCategory* make_category(const clString& cat_name);
 protected:
     ModuleList();
@@ -43,13 +36,7 @@ public:
     static makeModule lookup(const clString& name);
     static ModuleDB* get_db();
     static ModuleCategory* get_all();
-};
-
-class RegisterModule {
-public:
-    RegisterModule(const clString& category,
-		   const clString& name, makeModule maker);
-    ~RegisterModule();
+    static void parse_db();
 };
 
 #endif /* SCI_project_ModuleList_h */

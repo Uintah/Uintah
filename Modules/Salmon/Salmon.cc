@@ -17,22 +17,19 @@
 #include <Classlib/NotFinished.h>
 #include <Comm/MessageTypes.h>
 #include <Dataflow/Connection.h>
-#include <Dataflow/HelpUI.h>
 #include <Dataflow/ModuleHelper.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/GeometryComm.h>
 #include <Geom/Geom.h>
 #include <Geom/HeadLight.h>
 #include <Malloc/Allocator.h>
 #include <iostream.h>
 
-static Module* make_Salmon(const clString& id)
+extern "C" {
+Module* make_Salmon(const clString& id)
 {
     return scinew Salmon(id);
 }
-
-static RegisterModule db1("Geometry", "Salmon", make_Salmon);
-static RegisterModule db2("Dave", "Salmon", make_Salmon);
+};
 
 Salmon::Salmon(const clString& id)
 : Module("Salmon", id, Sink), max_portno(0)
@@ -100,15 +97,6 @@ int Salmon::process_event(int block)
     busy_bit=1;
     GeometryComm* gmsg=(GeometryComm*)msg;
     switch(msg->type){
-#ifdef OLDUI
-    case MessageTypes::DoDBCallback:
-	{
-	    DBCallback_Message* cmsg=(DBCallback_Message*)msg;
-	    cmsg->mcb->perform(cmsg->context, cmsg->which,
-			       cmsg->value, cmsg->delta, cmsg->cbdata);
-	    }	
-	break;
-#endif
     case MessageTypes::ExecuteModule:
 	// We ignore these messages...
 	break;
@@ -171,7 +159,23 @@ int Salmon::process_event(int block)
 	break;
     case MessageTypes::GeometryFlushViews:
 	flushPort(gmsg->portno);
-	flushViews();
+	flushViews();	
+	if(gmsg->wait){
+	    // Synchronized redraw - do it now and signal them...
+	    for(int i=0;i<roe.size();i++)
+		roe[i]->redraw_if_needed();
+	    gmsg->wait->up();
+	}
+	break;
+    case MessageTypes::TrackerMoved:
+	{
+	    TrackerMessage* tmsg=(TrackerMessage*)msg;
+	    Roe* roe=(Roe*)tmsg->clientdata;
+	    if(tmsg->data.head_moved)
+		roe->head_moved(tmsg->data.head_pos);
+	    if(tmsg->data.mouse_moved)
+		roe->flyingmouse_moved(tmsg->data.mouse_pos);
+	}
 	break;
     default:
 	cerr << "Salmon: Illegal Message type: " << msg->type << endl;
@@ -294,6 +298,7 @@ void Salmon::connection(ConnectionMode mode, int which_port, int)
     } else {
 	add_iport(scinew GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
     }
+    cerr << "Salmon::connection done...\n";
 }
 
 void Salmon::tcl_command(TCLArgs& args, void* userdata)
@@ -363,7 +368,7 @@ void Salmon::append_port_msg(GeometryComm* gmsg)
     // Look up the right port number
     PortInfo* pi;
     if(!portHash.lookup(gmsg->portno, pi)){
-	cerr << "Geometry message sent to bad port!!!\n";
+	cerr << "Geometry message sent to bad port!!!: " << gmsg->portno << "\n";
 	return;
     }
 

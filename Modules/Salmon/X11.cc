@@ -213,8 +213,8 @@ void X11::redraw(Salmon* salmon, Roe* roe)
 	cerr << "znear=" << znear << ", zfar=" << zfar << endl;
 	Transform trans;
 	trans.load_identity();
-	trans.perspective(view.eyep, view.lookat,
-			  view.up, view.fov,
+	trans.perspective(view.eyep(), view.lookat(),
+			  view.up(), view.fov(),
 			  znear, zfar, xres, yres);
 	drawinfo->transform=&trans;
 	drawinfo->current_matl=salmon->default_matl.get_rep();

@@ -13,7 +13,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
 
@@ -31,12 +30,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_CrossFader(const clString& id)
+extern "C" {
+Module* make_CrossFader(const clString& id)
 {
     return new CrossFader(id);
 }
-
-static RegisterModule db1("Sound", "CrossFader", make_CrossFader);
+};
 
 CrossFader::CrossFader(const clString& id)
 : Module("CrossFader", id, Sink)

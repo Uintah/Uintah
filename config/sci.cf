@@ -19,6 +19,7 @@ DEFINES =
 LOADER = SCI_Linker
 SIZE = SCI_Size
 LDR = ld -r
+LDSHARED = CC -shared -Wl,-no_unresolved
 #ifdef SCI_LinkerNeedsCppFlags
 #define ldflags2 SCI_CppFlags $(INCLUDES)
 #else
@@ -54,7 +55,6 @@ program: objs libs SCI_LinkerLib				@@\
 	RemoveTargetProgram($@)					@@\
 	SCI_TemplateCommand(objs, libs)\
 $(LOADER) -o $@ $(LDOPTIONS) SCI_TemplateLib objs libs SCI_LinkerLib ldflags @@\
-	$(SIZE) $@						@@\
 								@@\
 InstallProgram(program, $(BINDIR))				@@\
 								@@\
@@ -67,7 +67,6 @@ AllTarget(program)						@@\
 program: objs libs SCI_LinkerLib				@@\
 	SCI_TemplateCommand(objs, libs)\
 $(LOADER) -o $@ $(LDOPTIONS) objs libs SCI_LinkerLib ldflags @@\
-	$(SIZE) $@						@@\
 								@@\
 InstallProgram(program, $(BINDIR))				@@\
 								@@\
@@ -123,13 +122,13 @@ lib:	objs
 #define PreLink(objs)@ XCOMM no prelink
 #endif
 
-#define SCIObjLibraryTarget(libname,objlist)                            @@\
-AllTarget(Concat(lib,libname.o))                                        @@\
+#define SCIObjLibraryTarget(libname,objlist,othersos,libsos)            @@\
+AllTarget(Concat(lib,libname.so))                                       @@\
                                                                         @@\
-Concat(lib,libname.o): objlist                                          @@\
+Concat(lib,libname.so): objlist othersos                                @@\
 	$(RM) $@                                                        @@\
 	PreLink(objlist)						@@\
-	$(LDR) -o $@ objlist
+	$(LDSHARED) -o $@ objlist othersos libsos || $(RM) $@
 
 #endif
 

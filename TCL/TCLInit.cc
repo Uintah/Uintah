@@ -11,10 +11,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/MemStats.h>
-#include <Dataflow/DebugSettings.h>
-#include <Dataflow/NetworkEditor.h>
-#include <Dataflow/ThreadStats.h>
+#include <TCL/MemStats.h>
+#include <TCL/DebugSettings.h>
+#include <TCL/ThreadStats.h>
 #include <Malloc/Allocator.h>
 #include <TCL/TCL.h>
 

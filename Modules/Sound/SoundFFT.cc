@@ -19,7 +19,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
 #include <Math/Trig.h>
@@ -36,12 +35,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_SoundFFT(const clString& id)
+extern "C" {
+Module* make_SoundFFT(const clString& id)
 {
     return new SoundFFT(id);
 }
-
-static RegisterModule db1("Sound", "SoundFFT", make_SoundFFT);
+};
 
 SoundFFT::SoundFFT(const clString& id)
 : Module("SoundFFT", id, Filter)

@@ -22,6 +22,11 @@ class Matrix;
 class MatrixRow;
 typedef LockingHandle<Matrix> MatrixHandle;
 
+class MatrixUpdater {
+public:
+    virtual void update(int, double, double, double)=0;
+};
+
 class Matrix : public Datatype {
 protected:
     enum Sym {
@@ -39,7 +44,7 @@ public:
 
     virtual void zero()=0;
     int isolve(ColumnMatrix& lhs, ColumnMatrix& rhs,
-	       double error);
+	       double error, MatrixUpdater* updater=0);
     virtual int nrows()=0;
     virtual int ncols()=0;
     virtual void mult(ColumnMatrix& product, ColumnMatrix& multiplier,

@@ -13,7 +13,6 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
 
 class VoiceRemover : public Module {
@@ -27,12 +26,12 @@ public:
     virtual void execute();
 };
 
-static Module* make_VoiceRemover(const clString& id)
+extern "C" {
+Module* make_VoiceRemover(const clString& id)
 {
     return new VoiceRemover(id);
 }
-
-static RegisterModule db1("Sound", "VoiceRemover", make_VoiceRemover);
+};
 
 VoiceRemover::VoiceRemover(const clString& id)
 : Module("VoiceRemover", id, Sink)

@@ -13,7 +13,6 @@
 #include <Classlib/HashTable.h>
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/SurfacePort.h>
 #include <Datatypes/TriSurface.h>
@@ -33,28 +32,23 @@ public:
     virtual ~InsertDelaunay();
     virtual Module* clone(int deep);
     virtual void execute();
+    virtual void connection(ConnectionMode mode, int which_port, int);
 };
 
-static Module* make_InsertDelaunay(const clString& id)
+extern "C" {
+Module* make_InsertDelaunay(const clString& id)
 {
     return scinew InsertDelaunay(id);
 }
-
-static RegisterModule db1("Mesh", "InsertDelaunay", make_InsertDelaunay);
+};
 
 InsertDelaunay::InsertDelaunay(const clString& id)
-: Module("InsertDelaunay", id, Filter), surfports(4)
+: Module("InsertDelaunay", id, Filter)
 {
     iport=scinew MeshIPort(this, "Input Mesh", MeshIPort::Atomic);
     add_iport(iport);
-    surfports[0]=scinew SurfaceIPort(this, "Added Surface", SurfaceIPort::Atomic);
+    surfports.add(scinew SurfaceIPort(this, "Added Surface", SurfaceIPort::Atomic));
     add_iport(surfports[0]);
-    surfports[1]=scinew SurfaceIPort(this, "Added Surface", SurfaceIPort::Atomic);
-    add_iport(surfports[1]);
-    surfports[2]=scinew SurfaceIPort(this, "Added Surface", SurfaceIPort::Atomic);
-    add_iport(surfports[2]);
-    surfports[3]=scinew SurfaceIPort(this, "Added Surface", SurfaceIPort::Atomic);
-    add_iport(surfports[3]);
 
     // Create the output port
     oport=scinew MeshOPort(this, "InsertDelaunay Mesh", MeshIPort::Atomic);
@@ -81,8 +75,8 @@ void InsertDelaunay::execute()
     MeshHandle mesh_handle;
     if(!iport->get(mesh_handle))
 	return;
-    Array1<SurfaceHandle> surfs(surfports.size());
-    for(int i=0;i<surfports.size();i++){
+    Array1<SurfaceHandle> surfs(surfports.size()-1);
+    for(int i=0;i<surfs.size();i++){
 	if(!surfports[i]->get(surfs[i]))
 	   return;
     }
@@ -94,7 +88,7 @@ void InsertDelaunay::execute()
     mesh->compute_neighbors();
 
     // Insert the points...
-    int nsurfs=surfports.size();
+    int nsurfs=surfs.size();
     Array1<Point> points;
     for(int isurf=0;isurf<nsurfs;isurf++){
 	points.remove_all();
@@ -131,3 +125,18 @@ void InsertDelaunay::execute()
     mesh->pack_all();
     oport->send(mesh);
 }
+
+void InsertDelaunay::connection(ConnectionMode mode, int which_port, int)
+{
+    if(which_port > 0){
+	if(mode==Disconnected){
+	    remove_iport(which_port);
+	    surfports.remove(which_port-1);
+	} else {
+	    SurfaceIPort* p=scinew SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);
+	    surfports.add(p);
+	    add_iport(p);
+	}
+    }
+}
+

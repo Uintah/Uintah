@@ -6,14 +6,15 @@
 # element name is the name of a command and the value is
 # a script that loads the command.
 
-set auto_index(BitVisualize) "source $dir/BitVisualize.tcl"
+set auto_index(Streamline) "source $dir/Streamline.tcl"
+set auto_index(IsoSurface) "source $dir/IsoSurface.tcl"
 set auto_index(GenAxes) "source $dir/GenAxes.tcl"
+set auto_index(Hedgehog) "source $dir/Hedgehog.tcl"
+set auto_index(BitVisualize) "source $dir/BitVisualize.tcl"
+set auto_index(OctIsoSurface) "source $dir/OctIsoSurface.tcl"
+set auto_index(VectorSeg) "source $dir/VectorSeg.tcl"
 set auto_index(GenColormap) "source $dir/GenColormap.tcl"
 set auto_index(initColor) "source $dir/GenColormap.tcl"
 set auto_index(initMaterial) "source $dir/GenColormap.tcl"
-set auto_index(IsoSurface) "source $dir/IsoSurface.tcl"
-set auto_index(OctIsoSurface) "source $dir/OctIsoSurface.tcl"
-set auto_index(Streamline) "source $dir/Streamline.tcl"
-set auto_index(VectorSeg) "source $dir/VectorSeg.tcl"
 set auto_index(WidgetTest) "source $dir/WidgetTest.tcl"
 set auto_index(CuttingPlane) "source $dir/CuttingPlane.tcl"
