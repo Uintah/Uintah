@@ -13,7 +13,7 @@
 namespace Uintah {
 
    class VarLabel;
-   class ProcessorContext;
+   class ProcessorGroup;
 
 namespace MPM {
 
@@ -35,31 +35,31 @@ public:
                            DataWarehouseP& new_dw);
   
   void   updateSurfaceNormalOfBoundaryParticle(
-           const ProcessorContext*,
+           const ProcessorGroup*,
            const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
   
   void   labelSelfContactNodesAndCells (
-           const ProcessorContext*,
+           const ProcessorGroup*,
            const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
   void   updateParticleInformationInContactCells (
-           const ProcessorContext*,
+           const ProcessorGroup*,
            const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
   void   updateNodeInformationInContactCells (
-           const ProcessorContext*,
+           const ProcessorGroup*,
            const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
   void   crackGrow(
-           const ProcessorContext*,
+           const ProcessorGroup*,
            const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
@@ -113,6 +113,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.17  2000/06/17 07:06:40  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.16  2000/06/05 02:07:39  tan
 // Finished labelSelfContactNodesAndCells(...).
 //

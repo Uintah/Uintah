@@ -194,7 +194,7 @@ particleIndex MPMMaterial::countParticles(GeometryObject* obj,
 	 }
       }
    }
-   cerr << "Created " << count << " particles on patch: " << patch->getID() << '\n';
+   cerr << "Creating " << count << " particles on patch: " << patch->getID() << '\n';
    return count;
 }
 
@@ -309,6 +309,9 @@ double  MPMMaterial::getHeatTransferCoefficient() const
 }
 
 // $Log$
+// Revision 1.33  2000/06/17 07:06:36  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.32  2000/06/15 21:57:06  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

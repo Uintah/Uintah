@@ -7,7 +7,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Parallel
 
-SRCS     += $(SRCDIR)/Parallel.cc $(SRCDIR)/ProcessorContext.cc \
+SRCS     += $(SRCDIR)/Parallel.cc $(SRCDIR)/ProcessorGroup.cc \
 	$(SRCDIR)/UintahParallelComponent.cc $(SRCDIR)/UintahParallelPort.cc
 
 PSELIBS := Uintah/Grid SCICore/Thread SCICore/Exceptions
@@ -17,6 +17,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/06/17 07:06:50  sparker
+# Changed ProcessorContext to ProcessorGroup
+#
 # Revision 1.3  2000/04/19 21:20:05  dav
 # more MPI stuff
 #

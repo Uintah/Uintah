@@ -206,7 +206,7 @@ MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
 //****************************************************************************
 // Actual build of the linear matrix
 //****************************************************************************
-void MomentumSolver::buildLinearMatrix(const ProcessorContext* pc,
+void MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				       const Patch* patch,
 				       DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw,
@@ -230,6 +230,9 @@ void MomentumSolver::buildLinearMatrix(const ProcessorContext* pc,
 
 //
 // $Log$
+// Revision 1.8  2000/06/17 07:06:24  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.7  2000/06/16 04:25:40  bbanerje
 // Uncommented BoundaryCondition related stuff.
 //

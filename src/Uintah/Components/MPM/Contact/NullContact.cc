@@ -53,7 +53,7 @@ void NullContact::initializeContact(const Patch* /*patch*/,
 
 }
 
-void NullContact::exMomInterpolated(const ProcessorContext*,
+void NullContact::exMomInterpolated(const ProcessorGroup*,
 				    const Patch* patch,
 				    DataWarehouseP& /*old_dw*/,
 				    DataWarehouseP& new_dw)
@@ -86,7 +86,7 @@ void NullContact::exMomInterpolated(const ProcessorContext*,
 
 }
 
-void NullContact::exMomIntegrated(const ProcessorContext*,
+void NullContact::exMomIntegrated(const ProcessorGroup*,
 				  const Patch* patch,
                                   DataWarehouseP& /*old_dw*/,
                                   DataWarehouseP& new_dw)
@@ -158,6 +158,9 @@ void NullContact::addComputesAndRequiresIntegrated( Task* t,
 
 
 // $Log$
+// Revision 1.14  2000/06/17 07:06:38  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.13  2000/06/03 05:25:46  sparker
 // Added a new for pSurfLabel (was uninitialized)
 // Uncommented pleaseSaveIntegrated

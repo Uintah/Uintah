@@ -15,7 +15,7 @@ ThermalContact::ThermalContact()
 {
 }
 
-void ThermalContact::computeHeatExchange(const ProcessorContext*,
+void ThermalContact::computeHeatExchange(const ProcessorGroup*,
 					const Patch* patch,
 					DataWarehouseP& /*old_dw*/,
 					DataWarehouseP& new_dw)
@@ -105,6 +105,9 @@ void ThermalContact::addComputesAndRequires(Task* t,
 
 //
 // $Log$
+// Revision 1.5  2000/06/17 07:06:41  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.4  2000/06/03 05:22:37  sparker
 // Adding .cvsignore
 //

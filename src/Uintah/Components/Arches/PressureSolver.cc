@@ -223,7 +223,7 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
 // Actually build of linear matrix
 //****************************************************************************
 void 
-PressureSolver::buildLinearMatrix(const ProcessorContext* pc,
+PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  const Patch* patch,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw,
@@ -273,6 +273,9 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.20  2000/06/17 07:06:25  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.19  2000/06/16 04:25:40  bbanerje
 // Uncommented BoundaryCondition related stuff.
 //

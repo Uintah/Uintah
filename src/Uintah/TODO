@@ -1,3 +1,10 @@
+Update MPIScheduler like SPScheduler
+WorkAssigner?
+Change MpiProcess to ProcessorContext or similar
+My malloc with MPI??? or configure my malloc
+Simplify/decompose DataWarehouse?
+different schedulers in sus
+
 Classes:
  - DataWarehouse/scheduler in detail
  - Peformance analysis

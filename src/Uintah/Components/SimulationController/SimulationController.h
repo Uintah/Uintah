@@ -46,7 +46,7 @@ namespace Uintah {
     
    class SimulationController : public UintahParallelComponent {
    public:
-      SimulationController( int MpiRank, int MpiProcesses);
+      SimulationController(const ProcessorGroup* myworld);
       virtual ~SimulationController();
       
       void run();
@@ -79,6 +79,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.12  2000/06/17 07:06:43  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.11  2000/06/09 17:06:17  tan
 // Added MD(molecular dynamics) module to SimulationController.
 //

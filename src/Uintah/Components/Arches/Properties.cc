@@ -86,7 +86,7 @@ Properties::sched_computeProps(const LevelP& level,
 // Actually compute the properties here
 //****************************************************************************
 void 
-Properties::computeProps(const ProcessorContext*,
+Properties::computeProps(const ProcessorGroup*,
 			 const Patch* patch,
 			 DataWarehouseP& old_dw,
 			 DataWarehouseP& new_dw)
@@ -138,6 +138,9 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.15  2000/06/17 07:06:25  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.14  2000/06/16 21:50:48  bbanerje
 // Changed the Varlabels so that sequence in understood in init stage.
 // First cycle detected in task graph.

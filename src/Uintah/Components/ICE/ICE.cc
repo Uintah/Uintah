@@ -344,7 +344,7 @@ void ICE::scheduleInitialize(const LevelP& level,
   cerr << "ICE::scheduleInitialize not done\n";
 }
 
-void ICE::actuallyInitialize(const ProcessorContext*,
+void ICE::actuallyInitialize(const ProcessorGroup*,
 			     const Patch* patch,
 			     DataWarehouseP& /* old_dw */,
 			     DataWarehouseP& new_dw)
@@ -415,7 +415,8 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
     }
 
 }
-void ICE::actuallyComputeStableTimestep(const ProcessorContext*,
+
+void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 					const Patch* patch,
 					DataWarehouseP& fromDW,
 					DataWarehouseP& toDW)
@@ -661,7 +662,7 @@ void ICE::scheduleTimeAdvance(double /*t*/,
 
 
 }
-void ICE::actuallyStep0(const ProcessorContext*,
+void ICE::actuallyStep0(const ProcessorGroup*,
 			const Patch* patch,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw)
@@ -733,7 +734,7 @@ void ICE::actuallyStep0(const ProcessorContext*,
 
 }
 
-void ICE::actuallyStep1(const ProcessorContext*,
+void ICE::actuallyStep1(const ProcessorGroup*,
 			const Patch* patch,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw)
@@ -791,7 +792,7 @@ void ICE::actuallyStep1(const ProcessorContext*,
 
 }
 
-void ICE::actuallyStep2(const ProcessorContext*,
+void ICE::actuallyStep2(const ProcessorGroup*,
 			const Patch* patch,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw)
@@ -873,7 +874,7 @@ void ICE::actuallyStep2(const ProcessorContext*,
 
 }
 
-void ICE::actuallyStep3(const ProcessorContext*,
+void ICE::actuallyStep3(const ProcessorGroup*,
 			const Patch* patch,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw)
@@ -898,7 +899,7 @@ void ICE::actuallyStep3(const ProcessorContext*,
 #endif
 }
 
-void ICE::actuallyStep4(const ProcessorContext*,
+void ICE::actuallyStep4(const ProcessorGroup*,
 			const Patch* patch,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw)
@@ -953,7 +954,7 @@ void ICE::actuallyStep4(const ProcessorContext*,
 
 }
 
-void ICE::actuallyStep5(const ProcessorContext*,
+void ICE::actuallyStep5(const ProcessorGroup*,
 			const Patch* patch,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw)
@@ -1001,7 +1002,7 @@ void ICE::actuallyStep5(const ProcessorContext*,
 
 }
 
-void ICE::actuallyStep6(const ProcessorContext*,
+void ICE::actuallyStep6(const ProcessorGroup*,
 			const Patch* patch,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw)
@@ -1052,7 +1053,7 @@ void ICE::actuallyStep6(const ProcessorContext*,
 
 }
 
-void ICE::actuallyStep7(const ProcessorContext*,
+void ICE::actuallyStep7(const ProcessorGroup*,
 			const Patch* patch,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw)
@@ -1063,7 +1064,7 @@ void ICE::actuallyStep7(const ProcessorContext*,
 
 
 
-void ICE::actuallyTimeStep(const ProcessorContext*,
+void ICE::actuallyTimeStep(const ProcessorGroup*,
 			   const Patch* patch,
 			   DataWarehouseP& old_dw,
 			   DataWarehouseP& new_dw)

@@ -179,7 +179,7 @@ ScalarSolver::sched_buildLinearMatrix(const LevelP& level,
 //****************************************************************************
 // Actually build of linear matrix
 //****************************************************************************
-void ScalarSolver::buildLinearMatrix(const ProcessorContext* pc,
+void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				     const Patch* patch,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw,
@@ -200,6 +200,9 @@ void ScalarSolver::buildLinearMatrix(const ProcessorContext* pc,
 
 //
 // $Log$
+// Revision 1.8  2000/06/17 07:06:26  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.7  2000/06/16 04:25:40  bbanerje
 // Uncommented BoundaryCondition related stuff.
 //

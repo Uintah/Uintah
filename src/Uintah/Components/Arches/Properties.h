@@ -36,7 +36,6 @@ POSSIBLE REVISIONS
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/CFDInterface.h>
 #include <Uintah/Grid/Patch.h>
-#include <Uintah/Parallel/ProcessorContext.h>
 #include <Uintah/Grid/VarLabel.h>
 
 #include <vector>
@@ -96,7 +95,7 @@ private:
       //
       // Carry out actual computation of properties
       //
-      void computeProps(const ProcessorContext*,
+      void computeProps(const ProcessorGroup*,
 			const Patch* patch,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw);
@@ -145,6 +144,9 @@ private:
 
 //
 // $Log$
+// Revision 1.10  2000/06/17 07:06:25  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.9  2000/06/16 21:50:48  bbanerje
 // Changed the Varlabels so that sequence in understood in init stage.
 // First cycle detected in task graph.

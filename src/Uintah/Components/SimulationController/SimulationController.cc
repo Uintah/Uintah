@@ -25,7 +25,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/ProblemSpecInterface.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/Scheduler.h>
-#include <Uintah/Parallel/ProcessorContext.h>
+#include <Uintah/Parallel/ProcessorGroup.h>
 #include <Uintah/Grid/VarTypes.h>
 #include <iostream>
 #include <values.h>
@@ -41,8 +41,8 @@ using SCICore::Thread::Time;
 using namespace Uintah;
 using SCICore::Containers::Array3;
 
-SimulationController::SimulationController( int MpiRank, int MpiProcesses ) :
-  UintahParallelComponent( MpiRank, MpiProcesses )
+SimulationController::SimulationController(const ProcessorGroup* myworld) :
+  UintahParallelComponent(myworld)
 {
    d_restarting = false;
    d_generation = 0;
@@ -115,7 +115,7 @@ void SimulationController::run()
    // around all the d_dwMpiHandler calls to test for this, or just
    // let it do the single assignment operation that will actually
    // have no effect?
-   if( d_MpiProcesses > 1 ) {
+   if( d_myworld->size() > 1 ) {
      d_MpiThread = scinew Thread( d_dwMpiHandler, "DWMpiHandler" );
    }
 
@@ -149,9 +149,7 @@ void SimulationController::run()
    if(output)
       output->finalizeTimestep(t, 0, level, scheduler, old_dw);
 
-   ProcessorContext* pc = ProcessorContext::getRootContext();
-
-   scheduler->execute(pc, old_dw);
+   scheduler->execute(d_myworld, old_dw);
    
    while(t < timeinfo.maxTime) {
       double wallTime = Time::currentSeconds() - start_time;
@@ -190,13 +188,13 @@ void SimulationController::run()
       
       // Begin next time step...
       scheduleComputeStableTimestep(level, scheduler, new_dw, cfd, mpm, md);
-      scheduler->execute(pc, new_dw);
+      scheduler->execute(d_myworld, new_dw);
       
       old_dw = new_dw;
    }
 
-   if( d_MpiRank == 0 && d_MpiProcesses > 1 ) {
-     d_dwMpiHandler->shutdown( d_MpiProcesses );
+   if( d_myworld->myrank() == 0 && d_myworld->size() > 1 ) {
+     d_dwMpiHandler->shutdown( d_myworld->size() );
    }
 }
 
@@ -457,6 +455,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.36  2000/06/17 07:06:42  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.35  2000/06/16 19:47:52  sparker
 // Changed _ds to _dw for data warehouse variables
 // Use new output interface

@@ -11,7 +11,7 @@
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/ProblemSpec.h>
-#include <Uintah/Parallel/ProcessorContext.h>
+#include <Uintah/Parallel/ProcessorGroup.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Grid/SoleVariable.h>
@@ -333,7 +333,7 @@ static string s_gvelocity_star("g.velocity_star");
 static string s_pconmod("p.conmod");
 static string s_delT("delT");
 
-void ThreadedMPM::actuallyComputeStableTimestep(const ProcessorContext* pc,
+void ThreadedMPM::actuallyComputeStableTimestep(const ProcessorGroup* pc,
 					      const Patch* patch,
 					      const DataWarehouseP& old_dw,
 					      DataWarehouseP& new_dw)
@@ -522,7 +522,7 @@ static int findOwners(const Patch* patch,
     return total;
 }
 
-void ThreadedMPM::findOwners(const ProcessorContext* pc,
+void ThreadedMPM::findOwners(const ProcessorGroup* pc,
 			     const Patch* patch,
 			     const DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw)
@@ -660,7 +660,7 @@ void ThreadedMPM::findOwners(const ProcessorContext* pc,
 #endif
 }
 
-void ThreadedMPM::interpolateParticlesToGrid(const ProcessorContext* pc,
+void ThreadedMPM::interpolateParticlesToGrid(const ProcessorGroup* pc,
 					   const Patch* patch,
 					   const DataWarehouseP& old_dw,
 					   DataWarehouseP& new_dw)
@@ -746,7 +746,7 @@ void ThreadedMPM::interpolateParticlesToGrid(const ProcessorContext* pc,
     }
 }
 
-void ThreadedMPM::computeStressTensor(const ProcessorContext* pc,
+void ThreadedMPM::computeStressTensor(const ProcessorGroup* pc,
 				      const Patch* patch,
 				      const DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw)
@@ -831,7 +831,7 @@ void ThreadedMPM::computeStressTensor(const ProcessorContext* pc,
 
 }
 
-void ThreadedMPM::computeInternalForce(const ProcessorContext* pc,
+void ThreadedMPM::computeInternalForce(const ProcessorGroup* pc,
 				     const Patch* patch,
 				     const DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw)
@@ -900,7 +900,7 @@ void ThreadedMPM::computeInternalForce(const ProcessorContext* pc,
 	new_dw->put(internalforce, s_ginternalforce, patch, 0);
 }
 
-void ThreadedMPM::solveEquationsMotion(const ProcessorContext* pc,
+void ThreadedMPM::solveEquationsMotion(const ProcessorGroup* pc,
 				     const Patch* patch,
 				     const DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw)
@@ -937,7 +937,7 @@ void ThreadedMPM::solveEquationsMotion(const ProcessorContext* pc,
 
 }
 
-void ThreadedMPM::integrateAcceleration(const ProcessorContext* pc,
+void ThreadedMPM::integrateAcceleration(const ProcessorGroup* pc,
 				      const Patch* patch,
 				      const DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw)
@@ -969,7 +969,7 @@ void ThreadedMPM::integrateAcceleration(const ProcessorContext* pc,
 	new_dw->put(velocity_star, s_gvelocity_star, patch, 0);
 }
 
-void ThreadedMPM::interpolateToParticlesAndUpdate(const ProcessorContext* pc,
+void ThreadedMPM::interpolateToParticlesAndUpdate(const ProcessorGroup* pc,
 						const Patch* patch,
 						const DataWarehouseP& old_dw,
 						DataWarehouseP& new_dw)

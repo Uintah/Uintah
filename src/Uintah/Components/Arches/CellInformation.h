@@ -34,7 +34,6 @@ WARNING
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Patch.h>
-#include <Uintah/Parallel/ProcessorContext.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/DataWarehouseP.h>

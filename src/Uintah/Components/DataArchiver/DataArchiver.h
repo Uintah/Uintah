@@ -40,7 +40,7 @@ namespace Uintah {
     
    class DataArchiver : public Output, public UintahParallelComponent {
    public:
-      DataArchiver(int MpiRank, int MpiProcess);
+      DataArchiver(const ProcessorGroup* myworld);
       virtual ~DataArchiver();
 
       //////////
@@ -55,7 +55,7 @@ namespace Uintah {
 
       //////////
       // Insert Documentation Here:
-      void output(const ProcessorContext*,
+      void output(const ProcessorGroup*,
 		  const Patch* patch,
 		  DataWarehouseP& old_dw,
 		  DataWarehouseP& new_dw,
@@ -64,7 +64,7 @@ namespace Uintah {
 		  int matlindex);
 
       // Method to output reduction variables to a single file
-      void outputReduction(const ProcessorContext*,
+      void outputReduction(const ProcessorGroup*,
 			   DataWarehouseP& old_dw,
 			   DataWarehouseP& new_dw,
 			   double time);
@@ -84,6 +84,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.8  2000/06/17 07:06:30  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.7  2000/06/16 19:48:19  sparker
 // Use updated output interface
 //

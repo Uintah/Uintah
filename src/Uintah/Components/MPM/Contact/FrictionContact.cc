@@ -79,7 +79,7 @@ void FrictionContact::initializeContact(const Patch* patch,
 
 }
 
-void FrictionContact::exMomInterpolated(const ProcessorContext*,
+void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 					const Patch* patch,
 					DataWarehouseP& old_dw,
 					DataWarehouseP& new_dw)
@@ -178,7 +178,7 @@ void FrictionContact::exMomInterpolated(const ProcessorContext*,
   }
 }
 
-void FrictionContact::exMomIntegrated(const ProcessorContext*,
+void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 				  const Patch* patch,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw)
@@ -597,6 +597,9 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.25  2000/06/17 07:06:37  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.24  2000/06/15 21:57:08  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

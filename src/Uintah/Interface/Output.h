@@ -10,7 +10,7 @@
 #include <Uintah/Interface/SchedulerP.h>
 
 namespace Uintah {
-   class ProcessorContext;
+   class ProcessorGroup;
    class Patch;
 
 /**************************************
@@ -66,6 +66,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.10  2000/06/17 07:06:46  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.9  2000/06/16 19:46:46  sparker
 // Output interface doesn't need old_dw
 // DataWarehouse no longer needs carryForward

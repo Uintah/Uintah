@@ -38,7 +38,6 @@ none
 ****************************************/
 
 #include <Uintah/Components/Arches/LinearSolver.h>
-#include <Uintah/Parallel/ProcessorContext.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/LevelP.h>
@@ -48,6 +47,7 @@ none
 #include <SCICore/Containers/Array1.h>
 
 namespace Uintah {
+class ProcessorGroup;
 namespace ArchesSpace {
   //class LinearSolver;
 using namespace SCICore::Containers;
@@ -130,7 +130,7 @@ private:
       //
       // Pressure Underrelaxation
       //
-      void press_underrelax(const ProcessorContext* pc,
+      void press_underrelax(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    DataWarehouseP& old_dw,
 			    DataWarehouseP& new_dw);
@@ -139,7 +139,7 @@ private:
       //
       // Pressure Solve
       //
-      void press_lisolve(const ProcessorContext* pc,
+      void press_lisolve(const ProcessorGroup* pc,
 			 const Patch* patch,
 			 DataWarehouseP& old_dw,
 			 DataWarehouseP& new_dw);
@@ -148,7 +148,7 @@ private:
       //
       // Calculate pressure residuals
       //
-      void press_residCalculation(const ProcessorContext* pc,
+      void press_residCalculation(const ProcessorGroup* pc,
 				  const Patch* patch,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw);
@@ -157,7 +157,7 @@ private:
       //
       // Velocity Underrelaxation
       //
-      void vel_underrelax(const ProcessorContext* pc,
+      void vel_underrelax(const ProcessorGroup* pc,
 			  const Patch* patch,
 			  DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw, 
@@ -167,7 +167,7 @@ private:
       //
       // Velocity Solve
       //
-      void vel_lisolve(const ProcessorContext* pc,
+      void vel_lisolve(const ProcessorGroup* pc,
 		       const Patch* patch,
 		       DataWarehouseP& old_dw,
 		       DataWarehouseP& new_dw, 
@@ -177,7 +177,7 @@ private:
       //
       // Calculate Velocity residuals
       //
-      void vel_residCalculation(const ProcessorContext* pc,
+      void vel_residCalculation(const ProcessorGroup* pc,
 				const Patch* patch,
 				DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw, 
@@ -187,7 +187,7 @@ private:
       //
       // Scalar Underrelaxation
       //
-      void scalar_underrelax(const ProcessorContext* pc,
+      void scalar_underrelax(const ProcessorGroup* pc,
 			     const Patch* patch,
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw, 
@@ -197,7 +197,7 @@ private:
       //
       // Scalar Solve
       //
-      void scalar_lisolve(const ProcessorContext* pc,
+      void scalar_lisolve(const ProcessorGroup* pc,
 			  const Patch* patch,
 			  DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw, 
@@ -207,7 +207,7 @@ private:
       //
       // Calculate Scalar residuals
       //
-      void scalar_residCalculation(const ProcessorContext* pc,
+      void scalar_residCalculation(const ProcessorGroup* pc,
 				   const Patch* patch,
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw, 
@@ -234,6 +234,9 @@ private:
   
 //
 // $Log$
+// Revision 1.9  2000/06/17 07:06:26  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.8  2000/06/12 21:29:59  bbanerje
 // Added first Fortran routines, added Stencil Matrix where needed,
 // removed unnecessary CCVariables (e.g., sources etc.)

@@ -84,7 +84,7 @@ Discretization::~Discretization()
 // Velocity stencil weights
 //****************************************************************************
 void 
-Discretization::calculateVelocityCoeff(const ProcessorContext* pc,
+Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 				       const Patch* patch,
 				       DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw,
@@ -197,7 +197,7 @@ Discretization::calculateVelocityCoeff(const ProcessorContext* pc,
 // Pressure stencil weights
 //****************************************************************************
 void 
-Discretization::calculatePressureCoeff(const ProcessorContext*,
+Discretization::calculatePressureCoeff(const ProcessorGroup*,
 				       const Patch* patch,
 				       DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw,
@@ -291,7 +291,7 @@ Discretization::calculatePressureCoeff(const ProcessorContext*,
 // Scalar stencil weights
 //****************************************************************************
 void 
-Discretization::calculateScalarCoeff(const ProcessorContext* pc,
+Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
 				     const Patch* patch,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw,
@@ -375,7 +375,7 @@ Discretization::calculateScalarCoeff(const ProcessorContext* pc,
 // Calculate the diagonal terms (velocity)
 //****************************************************************************
 void 
-Discretization::calculateVelDiagonal(const ProcessorContext*,
+Discretization::calculateVelDiagonal(const ProcessorGroup*,
 				     const Patch* patch,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw,
@@ -434,7 +434,7 @@ Discretization::calculateVelDiagonal(const ProcessorContext*,
 // Pressure diagonal
 //****************************************************************************
 void 
-Discretization::calculatePressDiagonal(const ProcessorContext*,
+Discretization::calculatePressDiagonal(const ProcessorGroup*,
 				       const Patch* patch,
 				       DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw) 
@@ -475,7 +475,7 @@ Discretization::calculatePressDiagonal(const ProcessorContext*,
 // Scalar diagonal
 //****************************************************************************
 void 
-Discretization::calculateScalarDiagonal(const ProcessorContext*,
+Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 					const Patch* patch,
 					DataWarehouseP& old_dw,
 					DataWarehouseP& new_dw,
@@ -515,6 +515,9 @@ Discretization::calculateScalarDiagonal(const ProcessorContext*,
 
 //
 // $Log$
+// Revision 1.15  2000/06/17 07:06:23  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.14  2000/06/14 20:40:48  rawat
 // modified boundarycondition for physical boundaries and
 // added CellInformation class

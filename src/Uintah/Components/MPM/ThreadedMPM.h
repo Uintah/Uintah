@@ -4,7 +4,7 @@
 #include <Uintah/Interface/MPMInterface.h>
 
 namespace Uintah {
-   class ProcessorContext;
+   class ProcessorGroup;
    class Patch;
    namespace MPM {
 /**************************************
@@ -55,35 +55,35 @@ public:
 			  const LevelP& level, SchedulerP&,
 			  const DataWarehouseP&, DataWarehouseP&);
 private:
-    void actuallyComputeStableTimestep(const ProcessorContext*,
+    void actuallyComputeStableTimestep(const ProcessorGroup*,
 				       const Patch* patch,
 				       const DataWarehouseP&,
 				       DataWarehouseP&);
-    void findOwners(const ProcessorContext*,
+    void findOwners(const ProcessorGroup*,
 		    const Patch* patch,
 		    const DataWarehouseP&,
 		    DataWarehouseP&);
-    void interpolateParticlesToGrid(const ProcessorContext*,
+    void interpolateParticlesToGrid(const ProcessorGroup*,
 				    const Patch* patch,
 				    const DataWarehouseP&,
 				    DataWarehouseP&);
-    void computeStressTensor(const ProcessorContext*,
+    void computeStressTensor(const ProcessorGroup*,
 			     const Patch* patch,
 			     const DataWarehouseP&,
 			     DataWarehouseP&);
-    void computeInternalForce(const ProcessorContext*,
+    void computeInternalForce(const ProcessorGroup*,
 			      const Patch* patch,
 			      const DataWarehouseP&,
 			      DataWarehouseP&);
-    void solveEquationsMotion(const ProcessorContext*,
+    void solveEquationsMotion(const ProcessorGroup*,
 			      const Patch* patch,
 			      const DataWarehouseP&,
 			      DataWarehouseP&);
-    void integrateAcceleration(const ProcessorContext*,
+    void integrateAcceleration(const ProcessorGroup*,
 			       const Patch* patch,
 			       const DataWarehouseP&,
 			       DataWarehouseP&);
-    void interpolateToParticlesAndUpdate(const ProcessorContext*,
+    void interpolateToParticlesAndUpdate(const ProcessorGroup*,
 					 const Patch* patch,
 					 const DataWarehouseP&,
 					 DataWarehouseP&);
@@ -97,6 +97,9 @@ private:
 
 //
 // $Log$
+// Revision 1.8  2000/06/17 07:06:33  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.7  2000/05/30 20:18:59  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

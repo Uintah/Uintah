@@ -50,8 +50,8 @@ using SCICore::Math::Max;
 using namespace std;
 
 
-SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
-  UintahParallelComponent( MpiRank, MpiProcesses )
+SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
+  UintahParallelComponent(myworld)
 {
    d_heatConductionInvolved = false;
 }
@@ -750,7 +750,7 @@ void SerialMPM::pleaseSaveParticlesToGrid(const VarLabel* var,
    new_dw->pleaseSave(var, number);
 }
 
-void SerialMPM::actuallyInitialize(const ProcessorContext*,
+void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 				   const Patch* patch,
 				   DataWarehouseP& /* old_dw */,
 				   DataWarehouseP& new_dw)
@@ -789,14 +789,14 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
 }
 
 
-void SerialMPM::actuallyComputeStableTimestep(const ProcessorContext*,
+void SerialMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 					      const Patch*,
 					      DataWarehouseP&,
 					      DataWarehouseP&)
 {
 }
 
-void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
+void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 					   const Patch* patch,
 					   DataWarehouseP& old_dw,
 					   DataWarehouseP& new_dw)
@@ -933,7 +933,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
   }
 }
 
-void SerialMPM::computeStressTensor(const ProcessorContext*,
+void SerialMPM::computeStressTensor(const ProcessorGroup*,
 				    const Patch* patch,
 				    DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
@@ -951,7 +951,7 @@ void SerialMPM::computeStressTensor(const ProcessorContext*,
    }
 }
 
-void SerialMPM::checkIfIgnited( const ProcessorContext*,
+void SerialMPM::checkIfIgnited( const ProcessorGroup*,
 				const Patch* patch,
 				DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw)
@@ -969,7 +969,7 @@ void SerialMPM::checkIfIgnited( const ProcessorContext*,
    }
 }
 
-void SerialMPM::computeMassRate(const ProcessorContext*,
+void SerialMPM::computeMassRate(const ProcessorGroup*,
 			 	const Patch* patch,
 				DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw)
@@ -987,7 +987,7 @@ void SerialMPM::computeMassRate(const ProcessorContext*,
    }
 }
 
-void SerialMPM::updateSurfaceNormalOfBoundaryParticle(const ProcessorContext*,
+void SerialMPM::updateSurfaceNormalOfBoundaryParticle(const ProcessorGroup*,
 				    const Patch* /*patch*/,
 				    DataWarehouseP& /*old_dw*/,
 				    DataWarehouseP& /*new_dw*/)
@@ -995,7 +995,7 @@ void SerialMPM::updateSurfaceNormalOfBoundaryParticle(const ProcessorContext*,
   //Tan: not finished yet. 
 }
 
-void SerialMPM::computeInternalForce(const ProcessorContext*,
+void SerialMPM::computeInternalForce(const ProcessorGroup*,
 				     const Patch* patch,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw)
@@ -1062,7 +1062,7 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
 
 
 void SerialMPM::computeInternalHeatRate(
-                                     const ProcessorContext*,
+                                     const ProcessorGroup*,
 				     const Patch* patch,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw)
@@ -1125,7 +1125,7 @@ void SerialMPM::computeInternalHeatRate(
 }
 
 
-void SerialMPM::solveEquationsMotion(const ProcessorContext*,
+void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
 				     const Patch* patch,
 				     DataWarehouseP& /*old_dw*/,
 				     DataWarehouseP& new_dw)
@@ -1180,7 +1180,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
   }
 }
 
-void SerialMPM::solveHeatEquations(const ProcessorContext*,
+void SerialMPM::solveHeatEquations(const ProcessorGroup*,
 				     const Patch* patch,
 				     DataWarehouseP& /*old_dw*/,
 				     DataWarehouseP& new_dw)
@@ -1230,7 +1230,7 @@ void SerialMPM::solveHeatEquations(const ProcessorContext*,
 }
 
 
-void SerialMPM::integrateAcceleration(const ProcessorContext*,
+void SerialMPM::integrateAcceleration(const ProcessorGroup*,
 				      const Patch* patch,
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw)
@@ -1275,7 +1275,7 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
   }
 }
 
-void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
+void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 						const Patch* patch,
 						DataWarehouseP& old_dw,
 						DataWarehouseP& new_dw)
@@ -1510,7 +1510,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 #endif
 }
 
-void SerialMPM::crackGrow(const ProcessorContext*,
+void SerialMPM::crackGrow(const ProcessorGroup*,
                           const Patch* /*patch*/,
                           DataWarehouseP& /*old_dw*/,
                           DataWarehouseP& /*new_dw*/)
@@ -1518,6 +1518,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.86  2000/06/17 07:06:33  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.85  2000/06/16 23:23:35  guilkey
 // Got rid of pVolumeDeformedLabel_preReloc to fix some confusion
 // the scheduler was having.

@@ -47,7 +47,6 @@ none
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
-#include <Uintah/Parallel/ProcessorContext.h>
 #include <Uintah/Grid/Array3.h>
 #include <SCICore/Containers/Array1.h>
 #include <vector>
@@ -127,7 +126,7 @@ public:
       // Initialize celltyping
       // Details here
       //
-      void cellTypeInit(const ProcessorContext*,
+      void cellTypeInit(const ProcessorGroup*,
 			const Patch* patch,
 			DataWarehouseP& old_dw,  
 			DataWarehouseP&);
@@ -136,7 +135,7 @@ public:
       // computing inlet areas
       // Details here
       //
-      void computeInletFlowArea(const ProcessorContext*,
+      void computeInletFlowArea(const ProcessorGroup*,
 			const Patch* patch,
 			DataWarehouseP& old_dw,  
 			DataWarehouseP&);
@@ -209,7 +208,7 @@ public:
       //
       // Actually compute velocity BC terms
       //
-      void velocityBC(const ProcessorContext* pc,
+      void velocityBC(const ProcessorGroup* pc,
 		      const Patch* patch,
 		      DataWarehouseP& old_dw,
 		      DataWarehouseP& new_dw,
@@ -219,7 +218,7 @@ public:
       //
       // Actually compute pressure BC terms
       //
-      void pressureBC(const ProcessorContext*,
+      void pressureBC(const ProcessorGroup*,
 		      const Patch* patch,
 		      DataWarehouseP& old_dw,
 		      DataWarehouseP& new_dw);
@@ -228,7 +227,7 @@ public:
       //
       // Actually compute scalar BC terms
       //
-      void scalarBC(const ProcessorContext* pc,
+      void scalarBC(const ProcessorGroup* pc,
 		    const Patch* patch,
 		    DataWarehouseP& old_dw,
 		    DataWarehouseP& new_dw,
@@ -289,7 +288,7 @@ private:
       //
       // Actually set inlet velocity bcs
       //
-      void setInletVelocityBC(const ProcessorContext* pc,
+      void setInletVelocityBC(const ProcessorGroup* pc,
 			      const Patch* patch,
 			      DataWarehouseP& old_dw,
 			      DataWarehouseP& new_dw);
@@ -298,7 +297,7 @@ private:
       //
       // Actually calculate pressure bcs
       //
-      void calculatePressBC(const ProcessorContext* pc,
+      void calculatePressBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    DataWarehouseP& old_dw,
 			    DataWarehouseP& new_dw);
@@ -307,7 +306,7 @@ private:
       //
       // Actually set the velocity, density and props flat profile
       //
-      void setFlatProfile(const ProcessorContext* pc,
+      void setFlatProfile(const ProcessorGroup* pc,
 			  const Patch* patch,
 			  DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw);
@@ -443,6 +442,9 @@ private:
   
 //
 // $Log$
+// Revision 1.24  2000/06/17 07:06:23  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.23  2000/06/16 21:50:47  bbanerje
 // Changed the Varlabels so that sequence in understood in init stage.
 // First cycle detected in task graph.

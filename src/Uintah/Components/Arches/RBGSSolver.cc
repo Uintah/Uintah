@@ -177,7 +177,7 @@ RBGSSolver::sched_scalarSolve(const LevelP& level,
 // Actual compute of pressure underrelaxation
 //****************************************************************************
 void 
-RBGSSolver::press_underrelax(const ProcessorContext*,
+RBGSSolver::press_underrelax(const ProcessorGroup*,
 			     const Patch* patch,
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw)
@@ -222,7 +222,7 @@ RBGSSolver::press_underrelax(const ProcessorContext*,
 // Actual linear solve
 //****************************************************************************
 void 
-RBGSSolver::press_lisolve(const ProcessorContext*,
+RBGSSolver::press_lisolve(const ProcessorGroup*,
 			  const Patch* patch,
 			  DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw)
@@ -263,7 +263,7 @@ RBGSSolver::press_lisolve(const ProcessorContext*,
 // Calculate pressure residuals
 //****************************************************************************
 void 
-RBGSSolver::press_residCalculation(const ProcessorContext* ,
+RBGSSolver::press_residCalculation(const ProcessorGroup* ,
 				   const Patch* ,
 				   DataWarehouseP& ,
 				   DataWarehouseP& )
@@ -274,7 +274,7 @@ RBGSSolver::press_residCalculation(const ProcessorContext* ,
 // Velocity Underrelaxation
 //****************************************************************************
 void 
-RBGSSolver::vel_underrelax(const ProcessorContext* ,
+RBGSSolver::vel_underrelax(const ProcessorGroup* ,
 			   const Patch* ,
 			   DataWarehouseP& ,
 			   DataWarehouseP& , 
@@ -287,7 +287,7 @@ RBGSSolver::vel_underrelax(const ProcessorContext* ,
 // Velocity Solve
 //****************************************************************************
 void 
-RBGSSolver::vel_lisolve(const ProcessorContext* ,
+RBGSSolver::vel_lisolve(const ProcessorGroup* ,
 			const Patch* ,
 			DataWarehouseP& ,
 			DataWarehouseP& , 
@@ -300,7 +300,7 @@ RBGSSolver::vel_lisolve(const ProcessorContext* ,
 // Calculate Velocity residuals
 //****************************************************************************
 void 
-RBGSSolver::vel_residCalculation(const ProcessorContext* ,
+RBGSSolver::vel_residCalculation(const ProcessorGroup* ,
 				 const Patch* ,
 				 DataWarehouseP& ,
 				 DataWarehouseP& , 
@@ -313,7 +313,7 @@ RBGSSolver::vel_residCalculation(const ProcessorContext* ,
 // Scalar Underrelaxation
 //****************************************************************************
 void 
-RBGSSolver::scalar_underrelax(const ProcessorContext* ,
+RBGSSolver::scalar_underrelax(const ProcessorGroup* ,
 			      const Patch* ,
 			      DataWarehouseP& ,
 			      DataWarehouseP& , 
@@ -326,7 +326,7 @@ RBGSSolver::scalar_underrelax(const ProcessorContext* ,
 // Scalar Solve
 //****************************************************************************
 void 
-RBGSSolver::scalar_lisolve(const ProcessorContext* ,
+RBGSSolver::scalar_lisolve(const ProcessorGroup* ,
 			   const Patch* ,
 			   DataWarehouseP& ,
 			   DataWarehouseP& , 
@@ -339,7 +339,7 @@ RBGSSolver::scalar_lisolve(const ProcessorContext* ,
 // Calculate Scalar residuals
 //****************************************************************************
 void 
-RBGSSolver::scalar_residCalculation(const ProcessorContext* ,
+RBGSSolver::scalar_residCalculation(const ProcessorGroup* ,
 				    const Patch* ,
 				    DataWarehouseP& ,
 				    DataWarehouseP& , 
@@ -350,6 +350,9 @@ RBGSSolver::scalar_residCalculation(const ProcessorContext* ,
 
 //
 // $Log$
+// Revision 1.7  2000/06/17 07:06:26  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.6  2000/06/12 21:29:59  bbanerje
 // Added first Fortran routines, added Stencil Matrix where needed,
 // removed unnecessary CCVariables (e.g., sources etc.)
