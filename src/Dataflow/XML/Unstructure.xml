@@ -31,8 +31,8 @@
     </summary>
     <description>
       <p>
-        This converts a LatticeVol into a HexVol, an ImageField into a
-        QuadSurf, or a ScanlineField into a ContourField.  The
+        This converts a LatVolField into a HexVolField, an ImageField into a
+        QuadSurfField, or a ScanlineField into a CurveField.  The
         structured meshes are not editable, as that operation does not
         preserve structure.  Data values and locations are preserved
         in the transformation.

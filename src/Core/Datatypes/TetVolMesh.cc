@@ -785,9 +785,9 @@ TetVolMesh::compute_grid()
   const double cell_epsilon = bb.diagonal().length() * 0.1 / s;
 
   LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
-  grid_ = scinew LatticeVol<vector<Cell::index_type> >(mesh, Field::CELL);
+  grid_ = scinew LatVolField<vector<Cell::index_type> >(mesh, Field::CELL);
   grid_->resize_fdata();
-  LatticeVol<vector<Cell::index_type> >::fdata_type &fd = grid_->fdata();
+  LatVolField<vector<Cell::index_type> >::fdata_type &fd = grid_->fdata();
 
   BBox box;
   Node::array_type nodes;

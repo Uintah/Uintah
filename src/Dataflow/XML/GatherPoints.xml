@@ -29,13 +29,13 @@
     <summary>
       <p>
         GatherPoints is used to collect nodes from many fields into
-        one PointCloud field.
+        one PointCloudField field.
       </p>
     </summary>
     <description>
       <p>
         GatherPoints takes in an arbitrary number of input fields, and
-        groups all of their nodes together into a single PointCloud
+        groups all of their nodes together into a single PointCloudField
         field.
       </p>
     </description>

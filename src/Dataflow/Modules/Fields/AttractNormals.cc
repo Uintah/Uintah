@@ -32,7 +32,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/AttractNormals.h>
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <iostream>
@@ -119,7 +119,7 @@ AttractNormals::execute()
     dynamic_cast<PointCloudMesh *>(ipointhandle->mesh().get_rep());
   if (!ipcm)
   {
-    error("Input point not in a PointCloud format.");
+    error("Input point not in a PointCloudField format.");
     return;
   }
   
@@ -128,15 +128,15 @@ AttractNormals::execute()
   ipcm->end(eitr);
   if (itr == eitr)
   {
-    error("Empty PointCloud in Input Point Port.");
+    error("Empty PointCloudField in Input Point Port.");
     return;
   }
   Point attract_point;
   ipcm->get_center(attract_point, *itr);
 
   AttractorHandle attractor = 0;
-  PointCloud<Vector> *vpc =
-    dynamic_cast<PointCloud<Vector> *>(ipointhandle.get_rep());
+  PointCloudField<Vector> *vpc =
+    dynamic_cast<PointCloudField<Vector> *>(ipointhandle.get_rep());
   if (vpc)
   {
     Vector dir;

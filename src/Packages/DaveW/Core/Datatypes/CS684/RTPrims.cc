@@ -866,7 +866,7 @@ RTObject* RTTris::clone()
 }
 
 Vector RTTris::normal(const Point&, int side, Vector, int face) {
-    TriSurface* ts=surf->getTriSurface();
+    TriSurfFieldace* ts=surf->getTriSurfFieldace();
     TSElement* e=ts->elements[face];
     Vector n(Cross(ts->points[e->i2]-ts->points[e->i1],
 		   ts->points[e->i3]-ts->points[e->i1]));
@@ -874,7 +874,7 @@ Vector RTTris::normal(const Point&, int side, Vector, int face) {
 }
 
 int RTTris::intersect(const RTRay& ray, RTHit &hit) {
-    TriSurface* ts=surf->getTriSurface();
+    TriSurfFieldace* ts=surf->getTriSurfFieldace();
     if (!bb.valid()) {
 	for (int i=0; i<ts->points.size(); i++) {
 	    bb.extend(ts->points[i]);
@@ -896,7 +896,7 @@ int RTTris::intersect(const RTRay& ray, RTHit &hit, int face) {
     double V[3][3];
     int inter;
 
-    TriSurface *ts=surf->getTriSurface();
+    TriSurfFieldace *ts=surf->getTriSurfFieldace();
     TSElement* e=ts->elements[face];
     Point p1(ts->points[e->i1]);
     Point p2(ts->points[e->i2]);
@@ -1000,7 +1000,7 @@ Vector RTTrin::normal(const Point& p, int side, Vector, int face) {
     double V[3][3];
     int inter;
 
-    TriSurface *ts=surf->getTriSurface();
+    TriSurfFieldace *ts=surf->getTriSurfFieldace();
     TSElement* e=ts->elements[face];
     Point p1(ts->points[e->i1]);
     Point p2(ts->points[e->i2]);
@@ -1050,7 +1050,7 @@ Vector RTTrin::normal(const Point& p, int side, Vector, int face) {
 }
 
 int RTTrin::intersect(const RTRay& ray, RTHit &hit) {
-    TriSurface* ts=surf->getTriSurface();
+    TriSurfFieldace* ts=surf->getTriSurfFieldace();
     if (!bb.valid()) {
 	for (int i=0; i<ts->points.size(); i++) {
 	    bb.extend(ts->points[i]);
@@ -1072,7 +1072,7 @@ int RTTrin::intersect(const RTRay& ray, RTHit &hit, int face) {
     double V[3][3];
     int inter;
 
-    TriSurface *ts=surf->getTriSurface();
+    TriSurfFieldace *ts=surf->getTriSurfFieldace();
     TSElement* e=ts->elements[face];
     Point p1(ts->points[e->i1]);
     Point p2(ts->points[e->i2]);

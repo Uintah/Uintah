@@ -16,7 +16,7 @@
 */
 
 /*
- *  CVRTItoTetVolGrad.cc
+ *  CVRTItoTetVolFieldGrad.cc
  *
  *  Written by:
  *   David Weinstein
@@ -27,7 +27,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <fstream>
@@ -99,7 +99,7 @@ main(int argc, char **argv) {
   }
 
   TetVolMeshHandle tvmH(tvm);
-  TetVol<Vector> *tv = scinew TetVol<Vector>(tvmH, Field::NODE);
+  TetVolField<Vector> *tv = scinew TetVolField<Vector>(tvmH, Field::NODE);
 
   for (ii=0; ii<npts; ii++)
     tv->fdata()[ii]=grads[channels[ii]];

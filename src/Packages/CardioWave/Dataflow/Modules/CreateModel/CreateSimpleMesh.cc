@@ -11,7 +11,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Dataflow/Ports/FieldPort.h>
 
 #include <Packages/CardioWave/share/share.h>
@@ -85,7 +85,7 @@ void CreateSimpleMesh::execute(){
   LatVolMesh *mesh = scinew LatVolMesh(xdim, ydim, zdim, Point(0,0,0),
 				       Point((xdim-1)*dx, (ydim-1)*dy,
 					     (zdim-1)*dz));
-  LatticeVol<int> *fld = scinew LatticeVol<int>(mesh, Field::NODE);
+  LatVolField<int> *fld = scinew LatVolField<int>(mesh, Field::NODE);
   Vector v1(fib1x, fib1y, fib1z);
   if (!v1.length()) {
     cerr << "Error -- fib1 was zero length\n";
@@ -119,7 +119,7 @@ void CreateSimpleMesh::execute(){
   Array1<Array1<Vector> > fibers;
   fibers.resize(1);
   fibers[0].add(v1); fibers[0].add(v2); fibers[0].add(v3);
-  fld->store("eigenvectors", fibers, false);
+  fld->set_property("eigenvectors", fibers, false);
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Mesh");
   if (!ofield_port) {
     postMessage("Unable to initialize "+name+"'s oport\n");

@@ -3,7 +3,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Geometry/BBox.h>
 
 //#include <SCICore/Math/Mat.h>
@@ -41,25 +41,25 @@ void ScalarFieldOperator::execute(void) {
   }
 
   FieldHandle fh = 0;
-  if( LatticeVol<double> *scalarField1 =
-      dynamic_cast<LatticeVol<double>*>(hTF.get_rep())) {
-    LatticeVol<double>  *scalarField2 = 0;  
+  if( LatVolField<double> *scalarField1 =
+      dynamic_cast<LatVolField<double>*>(hTF.get_rep())) {
+    LatVolField<double>  *scalarField2 = 0;  
 
-    scalarField2 = scinew LatticeVol<double>(hTF->data_at());
+    scalarField2 = scinew LatVolField<double>(hTF->data_at());
     performOperation( scalarField1, scalarField2 );
     fh = scalarField2;
-  } else if( LatticeVol<float> *scalarField1 =
-	     dynamic_cast<LatticeVol<float>*>(hTF.get_rep())) {
-    LatticeVol<float>  *scalarField2 = 0;  
+  } else if( LatVolField<float> *scalarField1 =
+	     dynamic_cast<LatVolField<float>*>(hTF.get_rep())) {
+    LatVolField<float>  *scalarField2 = 0;  
 
-    scalarField2 = scinew LatticeVol<float>(hTF->data_at());
+    scalarField2 = scinew LatVolField<float>(hTF->data_at());
     performOperation( scalarField1, scalarField2 );
     fh = scalarField2;
-  } else if( LatticeVol<long64> *scalarField1 =
-	     dynamic_cast<LatticeVol<long64>*>(hTF.get_rep())) {
-    LatticeVol<long64>  *scalarField2 = 0;  
+  } else if( LatVolField<long64> *scalarField1 =
+	     dynamic_cast<LatVolField<long64>*>(hTF.get_rep())) {
+    LatVolField<long64>  *scalarField2 = 0;  
 
-    scalarField2 = scinew LatticeVol<long64>(hTF->data_at());
+    scalarField2 = scinew LatVolField<long64>(hTF->data_at());
     performOperation( scalarField1, scalarField2 );
     fh = scalarField2;
   }

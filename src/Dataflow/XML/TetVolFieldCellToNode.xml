@@ -3,14 +3,14 @@
 <?xml-stylesheet href="../../../doc/component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
-<component name="TetVolCellToNode" category="Fields">
+<component name="TetVolFieldCellToNode" category="Fields">
   <overview>
     <authors>
       <author>Chris Moulding</author>
     </authors>
     <summary>
       <p>
-       Convert a cell centered TetVol to a Node centered TetVol
+       Convert a cell centered TetVolField to a Node centered TetVolField
       </p>
     </summary>
   </overview>

@@ -33,7 +33,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/PointWidget.h>
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/Clipper.h>
 #include <Dataflow/Modules/Fields/Probe.h>
 #include <iostream>
@@ -330,7 +330,7 @@ Probe::execute()
     }
     valstr << result;
 
-    PointCloud<double> *field = scinew PointCloud<double>(mesh, Field::NODE);
+    PointCloudField<double> *field = scinew PointCloudField<double>(mesh, Field::NODE);
     field->set_value(result, pcindex);
     ofield = field;
   }
@@ -343,7 +343,7 @@ Probe::execute()
     }
     valstr << result;
 
-    PointCloud<Vector> *field = scinew PointCloud<Vector>(mesh, Field::NODE);
+    PointCloudField<Vector> *field = scinew PointCloudField<Vector>(mesh, Field::NODE);
     field->set_value(result, pcindex);
     ofield = field;
   }
@@ -356,7 +356,7 @@ Probe::execute()
     }
     valstr << result;
 
-    PointCloud<Tensor> *field = scinew PointCloud<Tensor>(mesh, Field::NODE);
+    PointCloudField<Tensor> *field = scinew PointCloudField<Tensor>(mesh, Field::NODE);
     field->set_value(result, pcindex);
     ofield = field;
   }

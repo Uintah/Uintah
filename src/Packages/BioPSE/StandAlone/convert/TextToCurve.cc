@@ -27,7 +27,7 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/CurveField.h>
 #include <Core/Persistent/Pstreams.h>
 
 #include <iostream>
@@ -104,12 +104,12 @@ int getNumNonEmptyLines(char *fname) {
 int
 main(int argc, char **argv) {
   if (argc < 4 || argc > 7) {
-    cerr << "Usage: "<<argv[0]<<" pts segments ContourFieldOut [-noPtsCount] [-noTetsCount] [-oneBasedIndexing] [-binOutput] [-debug]\n";
+    cerr << "Usage: "<<argv[0]<<" pts segments CurveFieldOut [-noPtsCount] [-noTetsCount] [-oneBasedIndexing] [-binOutput] [-debug]\n";
     return 0;
   }
   setDefaults();
 
-  ContourMesh *mesh = new ContourMesh();
+  CurveMesh *mesh = new CurveMesh();
 
   char *nodes_name = argv[1];
   char *edges_name = argv[2];
@@ -154,9 +154,9 @@ main(int argc, char **argv) {
     }
   }
 
-  ContourField<double> *field = scinew ContourField<double>(mesh, Field::EDGE);
+  CurveField<double> *field = scinew CurveField<double>(mesh, Field::EDGE);
 
-  ContourMesh::Edge::iterator bi, ei;
+  CurveMesh::Edge::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
 
   while (bi != ei)

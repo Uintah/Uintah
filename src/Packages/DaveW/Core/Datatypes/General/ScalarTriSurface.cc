@@ -1,6 +1,6 @@
 
 /*
- *  ScalarTriSurface.cc: Triangulated Surface Data type
+ *  ScalarTriSurfFieldace.cc: Triangulated Surface Data type
  *
  *  Written by:
  *   David Weinstein
@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Packages/DaveW/Core/Datatypes/General/ScalarTriSurface.h>
+#include <Packages/DaveW/Core/Datatypes/General/ScalarTriSurfFieldace.h>
 #include <Core/Util/Assert.h>
 #include <Core/Containers/TrivialAllocator.h>
 #include <Core/Geometry/BBox.h>
@@ -21,56 +21,56 @@
 #include <Core/Util/NotFinished.h>
 
 namespace DaveW {
-static Persistent* make_ScalarTriSurface()
+static Persistent* make_ScalarTriSurfFieldace()
 {
-    return scinew ScalarTriSurface;
+    return scinew ScalarTriSurfFieldace;
 }
 
-PersistentTypeID ScalarTriSurface::type_id("ScalarTriSurface", "Surface", make_ScalarTriSurface);
+PersistentTypeID ScalarTriSurfFieldace::type_id("ScalarTriSurfFieldace", "Surface", make_ScalarTriSurfFieldace);
 
-ScalarTriSurface::ScalarTriSurface()
-: TriSurface(Unused)
-{
-}
-
-ScalarTriSurface::ScalarTriSurface(const TriSurface& ts, const Array1<double>& d)
-: TriSurface(ts, Unused), data(d)
+ScalarTriSurfFieldace::ScalarTriSurfFieldace()
+: TriSurfFieldace(Unused)
 {
 }
 
-ScalarTriSurface::ScalarTriSurface(const TriSurface& ts)
-: TriSurface(ts, Unused)
+ScalarTriSurfFieldace::ScalarTriSurfFieldace(const TriSurfFieldace& ts, const Array1<double>& d)
+: TriSurfFieldace(ts, Unused), data(d)
 {
 }
 
-ScalarTriSurface::ScalarTriSurface(const ScalarTriSurface& copy)
-: TriSurface(copy, Unused), data(copy.data)
+ScalarTriSurfFieldace::ScalarTriSurfFieldace(const TriSurfFieldace& ts)
+: TriSurfFieldace(ts, Unused)
 {
-    NOT_FINISHED("ScalarTriSurface::ScalarTriSurface");
 }
 
-ScalarTriSurface::~ScalarTriSurface() {
+ScalarTriSurfFieldace::ScalarTriSurfFieldace(const ScalarTriSurfFieldace& copy)
+: TriSurfFieldace(copy, Unused), data(copy.data)
+{
+    NOT_FINISHED("ScalarTriSurfFieldace::ScalarTriSurfFieldace");
 }
-#define ScalarTriSurface_VERSION 1
 
-void ScalarTriSurface::io(Piostream& stream) {
+ScalarTriSurfFieldace::~ScalarTriSurfFieldace() {
+}
+#define ScalarTriSurfFieldace_VERSION 1
+
+void ScalarTriSurfFieldace::io(Piostream& stream) {
 using namespace SCIRun;
 
     /*int version=*/
-    stream.begin_class("ScalarTriSurface", ScalarTriSurface_VERSION);
-    TriSurface::io(stream);
+    stream.begin_class("ScalarTriSurfFieldace", ScalarTriSurfFieldace_VERSION);
+    TriSurfFieldace::io(stream);
     Pio(stream, data);
     stream.end_class();
 }
 
-Surface* ScalarTriSurface::clone()
+Surface* ScalarTriSurfFieldace::clone()
 {
-    return scinew ScalarTriSurface(*this);
+    return scinew ScalarTriSurfFieldace(*this);
 }
 
-GeomObj* ScalarTriSurface::get_obj(const ColorMapHandle&)
+GeomObj* ScalarTriSurfFieldace::get_obj(const ColorMapHandle&)
 {
-    NOT_FINISHED("ScalarTriSurface::get_obj");
+    NOT_FINISHED("ScalarTriSurfFieldace::get_obj");
     return 0;
 }
 } // End namespace DaveW

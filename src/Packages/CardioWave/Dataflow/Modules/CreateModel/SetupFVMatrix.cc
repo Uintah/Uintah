@@ -12,7 +12,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/HexVol.h>
+#include <Core/Datatypes/HexVolField.h>
 
 extern "C" {
 #include <Packages/CardioWave/Core/Algorithms/Vulcan.h>
@@ -129,20 +129,20 @@ void SetupFVMatrix::execute(){
   }
 #endif
 
-  HexVol<Vector> *fo1 = dynamic_cast<HexVol<Vector> *>(primFiberOrientH.get_rep());
-  HexVol<Vector> *fo2 = dynamic_cast<HexVol<Vector> *>(secFiberOrientH.get_rep());
-  HexVol<int> *ct = dynamic_cast<HexVol<int> *>(cellTypeH.get_rep());
+  HexVolField<Vector> *fo1 = dynamic_cast<HexVolField<Vector> *>(primFiberOrientH.get_rep());
+  HexVolField<Vector> *fo2 = dynamic_cast<HexVolField<Vector> *>(secFiberOrientH.get_rep());
+  HexVolField<int> *ct = dynamic_cast<HexVolField<int> *>(cellTypeH.get_rep());
 
   if (!fo1) {
-    cerr << "SetupFVMatrix Error -- PrimFiberOrientation field wasn't a HexVol<Vector>\n";
+    cerr << "SetupFVMatrix Error -- PrimFiberOrientation field wasn't a HexVolField<Vector>\n";
     return;
   }
   if (!fo2) {
-    cerr << "SetupFVMatrix Error -- SecFiberOrientation field wasn't a HexVol<Vector>\n";
+    cerr << "SetupFVMatrix Error -- SecFiberOrientation field wasn't a HexVolField<Vector>\n";
     return;
   }
   if (!ct) {
-    cerr << "SetupFVMatrix Error -- CellType field wasn't a HexVol<int>\n";
+    cerr << "SetupFVMatrix Error -- CellType field wasn't a HexVolField<int>\n";
     return;
   }
 
@@ -267,7 +267,7 @@ void SetupFVMatrix::execute(){
 		   (HexVolMesh::Node::index_type) map[nodes[6]],
 		   (HexVolMesh::Node::index_type) map[nodes[7]]);
     }
-    HexVol<int> *hv = scinew HexVol<int>(hvm, Field::NODE);
+    HexVolField<int> *hv = scinew HexVolField<int>(hvm, Field::NODE);
     for (i=0; i<nnodes; i++) {
       hv->fdata()[i] = ct->fdata()[map[i]];
     }

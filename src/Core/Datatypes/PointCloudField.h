@@ -16,8 +16,8 @@
 */
 
 
-#ifndef Datatypes_PointCloud_h
-#define Datatypes_PointCloud_h
+#ifndef Datatypes_PointCloudField_h
+#define Datatypes_PointCloudField_h
 
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/PointCloudMesh.h>
@@ -32,15 +32,15 @@ namespace SCIRun {
 using std::string;
 
 template <class Data>
-class PointCloud: public GenericField< PointCloudMesh, vector<Data> >
+class PointCloudField: public GenericField< PointCloudMesh, vector<Data> >
 { 
 public:
 
-  PointCloud();
-  PointCloud(Field::data_location data_at);
-  PointCloud(PointCloudMeshHandle mesh, Field::data_location data_at);  
-  virtual PointCloud<Data> *clone() const; 
-  virtual ~PointCloud();
+  PointCloudField();
+  PointCloudField(Field::data_location data_at);
+  PointCloudField(PointCloudMeshHandle mesh, Field::data_location data_at);  
+  virtual PointCloudField<Data> *clone() const; 
+  virtual ~PointCloudField();
 
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
@@ -56,26 +56,26 @@ private:
   static Persistent* maker();
 };
 
-#define PointCloud_VERSION 1
+const int POINT_CLOUD_FIELD_VERSION = 1;
 
 template <class Data>
 Persistent* 
-PointCloud<Data>::maker()
+PointCloudField<Data>::maker()
 {
-  return scinew PointCloud<Data>;
+  return scinew PointCloudField<Data>;
 }
 
 template <class Data>
 PersistentTypeID
-PointCloud<Data>::type_id(type_name(-1),
+PointCloudField<Data>::type_id(type_name(-1),
 		GenericField<PointCloudMesh, vector<Data> >::type_name(-1),
                 maker); 
 
 template <class Data>
 void
-PointCloud<Data>::io(Piostream &stream)
+PointCloudField<Data>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), PointCloud_VERSION);
+  /*int version=*/stream.begin_class(type_name(-1), POINT_CLOUD_FIELD_VERSION);
   GenericField<PointCloudMesh, vector<Data> >::io(stream);
   stream.end_class();                                                         
 }
@@ -83,7 +83,7 @@ PointCloud<Data>::io(Piostream &stream)
 
 template <class Data>
 const string
-PointCloud<Data>::type_name(int n)
+PointCloudField<Data>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
@@ -94,7 +94,7 @@ PointCloud<Data>::type_name(int n)
   }
   else if (n == 0)
   {
-    return "PointCloud";
+    return "PointCloudField";
   }
   else
   {
@@ -103,21 +103,21 @@ PointCloud<Data>::type_name(int n)
 } 
 
 template <class Data>
-PointCloud<Data>::PointCloud()
+PointCloudField<Data>::PointCloudField()
   :  GenericField<PointCloudMesh, vector<Data> >()
 {
 }
 
 
 template <class Data>
-PointCloud<Data>::PointCloud(Field::data_location data_at)
+PointCloudField<Data>::PointCloudField(Field::data_location data_at)
   : GenericField<PointCloudMesh, vector<Data> >(data_at)
 {
 }
 
 
 template <class Data>
-PointCloud<Data>::PointCloud(PointCloudMeshHandle mesh,
+PointCloudField<Data>::PointCloudField(PointCloudMeshHandle mesh,
 			     Field::data_location data_at)
   : GenericField<PointCloudMesh, vector<Data> >(mesh, data_at)
 {
@@ -125,84 +125,84 @@ PointCloud<Data>::PointCloud(PointCloudMeshHandle mesh,
   
 
 template <class Data>
-PointCloud<Data>::~PointCloud()
+PointCloudField<Data>::~PointCloudField()
 {
 }
 
 
 template <class Data>
-PointCloud<Data> *
-PointCloud<Data>::clone() const 
+PointCloudField<Data> *
+PointCloudField<Data>::clone() const 
 {
-  return new PointCloud<Data>(*this);
+  return new PointCloudField<Data>(*this);
 }
  
 template <> ScalarFieldInterface *
-PointCloud<double>::query_scalar_interface() const;
+PointCloudField<double>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-PointCloud<float>::query_scalar_interface() const;
+PointCloudField<float>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-PointCloud<int>::query_scalar_interface() const;
+PointCloudField<int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-PointCloud<short>::query_scalar_interface() const;
+PointCloudField<short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-PointCloud<char>::query_scalar_interface() const;
+PointCloudField<char>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-PointCloud<unsigned int>::query_scalar_interface() const;
+PointCloudField<unsigned int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-PointCloud<unsigned short>::query_scalar_interface() const;
+PointCloudField<unsigned short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-PointCloud<unsigned char>::query_scalar_interface() const;
+PointCloudField<unsigned char>::query_scalar_interface() const;
 
 template <class T>
 ScalarFieldInterface*
-PointCloud<T>::query_scalar_interface() const 
+PointCloudField<T>::query_scalar_interface() const 
 {
   return 0;
 }
 
 template <>
 VectorFieldInterface*
-PointCloud<Vector>::query_vector_interface() const;
+PointCloudField<Vector>::query_vector_interface() const;
 
 template <class T>
 VectorFieldInterface*
-PointCloud<T>::query_vector_interface() const
+PointCloudField<T>::query_vector_interface() const
 {
   return 0;
 }
 
 template <>
 TensorFieldInterface*
-PointCloud<Tensor>::query_tensor_interface() const;
+PointCloudField<Tensor>::query_tensor_interface() const;
 
 template <class T>
 TensorFieldInterface*
-PointCloud<T>::query_tensor_interface() const
+PointCloudField<T>::query_tensor_interface() const
 {
   return 0;
 }
 
 template <class Data>
 const string 
-PointCloud<Data>::get_type_name(int n = -1) const
+PointCloudField<Data>::get_type_name(int n = -1) const
 {
   return type_name(n);
 }
 
 template <class T>
 const TypeDescription* 
-get_type_description(PointCloud<T>*)
+get_type_description(PointCloudField<T>*)
 {
   static TypeDescription* td = 0;
-  static string name("PointCloud");
+  static string name("PointCloudField");
   static string namesp("SCIRun");
   static string path(__FILE__);
   if(!td){
@@ -216,11 +216,11 @@ get_type_description(PointCloud<T>*)
 
 template <class T>
 const TypeDescription* 
-PointCloud<T>::get_type_description() const 
+PointCloudField<T>::get_type_description() const 
 {
-  return SCIRun::get_type_description((PointCloud<T>*)0);
+  return SCIRun::get_type_description((PointCloudField<T>*)0);
 }
 
 } // end namespace SCIRun
 
-#endif // Datatypes_PointCloud_h
+#endif // Datatypes_PointCloudField_h

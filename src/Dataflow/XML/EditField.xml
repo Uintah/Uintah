@@ -124,7 +124,7 @@
       <description>
         <p>
           The field's datatype.  Includes information about the type
-          of mesh (TetVol, LatticeVol, TriSurf, etc.) as well as the
+          of mesh (TetVolField, LatVolField, TriSurfField, etc.) as well as the
           type of the data (unsigned char, double, Vector, Tensor, etc.).
         </p>
       </description>

@@ -394,7 +394,7 @@ cerr << "Radius="<<rts->radius<<"\n";
     }
     if (rtt) {
 	GeomTriangles* t=scinew GeomTriangles();
-	TriSurface *ts=rtt->surf->getTriSurface();
+	TriSurfFieldace *ts=rtt->surf->getTriSurfFieldace();
 	for (int j=0; j<ts->elements.size(); j++) {
 	    TSElement* e=ts->elements[j];
 	    t->add(ts->points[e->i1], ts->points[e->i2],
@@ -472,7 +472,7 @@ void BldScene::buildGeom() {
 	    Vector trans(c-rtt->bb.center());
 //cerr << "widget center is: "<<c<<"  obj scenter is: "<<rtt->bb.center()<<"  translating all obj points by: "<<trans<<"\n";
 	    rtt->bb.translate(trans);
-	    TriSurface *ts=rtt->surf->getTriSurface();
+	    TriSurfFieldace *ts=rtt->surf->getTriSurfFieldace();
 	    for (int i=0; i<ts->points.size(); i++) {
 		ts->points[i] = ts->points[i]+trans;
 	    }

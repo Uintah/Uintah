@@ -1,6 +1,6 @@
 
 /*
- *  ScalarTriSurface.h: Triangulated Surface Data type
+ *  ScalarTriSurfFieldace.h: Triangulated Surface Data type
  *
  *  Written by:
  *   David Weinstein
@@ -11,10 +11,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_Packages_DaveW_Datatypes_ScalarTriSurface_h
-#define SCI_Packages_DaveW_Datatypes_ScalarTriSurface_h 1
+#ifndef SCI_Packages_DaveW_Datatypes_ScalarTriSurfFieldace_h
+#define SCI_Packages_DaveW_Datatypes_ScalarTriSurfFieldace_h 1
 
-#include <Core/Datatypes/TriSurface.h>
+#include <Core/Datatypes/TriSurfFieldace.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
 #include <stdlib.h> // For size_t
@@ -23,15 +23,15 @@ namespace DaveW {
 using namespace SCIRun;
 
 
-class ScalarTriSurface : public TriSurface {
+class ScalarTriSurfFieldace : public TriSurfFieldace {
 public:
     Array1<double> data;
 public:
-    ScalarTriSurface();
-    ScalarTriSurface(const ScalarTriSurface& copy);
-    ScalarTriSurface(const TriSurface& ts, const Array1<double>& d);
-    ScalarTriSurface(const TriSurface& ts);
-    virtual ~ScalarTriSurface();
+    ScalarTriSurfFieldace();
+    ScalarTriSurfFieldace(const ScalarTriSurfFieldace& copy);
+    ScalarTriSurfFieldace(const TriSurfFieldace& ts, const Array1<double>& d);
+    ScalarTriSurfFieldace(const TriSurfFieldace& ts);
+    virtual ~ScalarTriSurfFieldace();
     virtual Surface* clone();
     virtual GeomObj* get_obj(const ColorMapHandle&);
 

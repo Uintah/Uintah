@@ -6,7 +6,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
@@ -23,7 +23,7 @@ using SCIRun::Point;
 using SCIRun::IntVector;
 using SCIRun::Vector;
 using SCIRun::Min;
-using SCIRun::LatticeVol;
+using SCIRun::LatVolField;
 using SCIRun::field_minmax;
 using SCIRun::Field;
 using Uintah::LevelField;
@@ -42,34 +42,34 @@ BrickGrid::BrickGrid(FieldHandle tex, int bricksize, bool fixed,
 void BrickGrid::init() 
 {
   const string field_type = tex_->get_type_name(0);
-  if( field_type != "LatticeVol" && field_type != "LevelField"){
+  if( field_type != "LatVolField" && field_type != "LevelField"){
     cerr<<"BrickGrid not compatible with field type "<<field_type<<endl;
     return;
   }
   const string data_type = tex_->get_type_name(1);
   
-  if( field_type == "LatticeVol" ) {
+  if( field_type == "LatVolField" ) {
     if( data_type == "double" ) {
-      LatticeVol<double> *fld =
-	dynamic_cast<LatticeVol<double>*>(tex_.get_rep());
+      LatVolField<double> *fld =
+	dynamic_cast<LatVolField<double>*>(tex_.get_rep());
       if( !is_fixed_ )
 	field_minmax(*fld, minmax_);
       lat_vol_init(*fld);
     } else if (data_type == "int" ) {
-      LatticeVol<int> *fld =
-	dynamic_cast<LatticeVol<int>*>(tex_.get_rep());
+      LatVolField<int> *fld =
+	dynamic_cast<LatVolField<int>*>(tex_.get_rep());
       if( !is_fixed_ )
 	field_minmax(*fld, minmax_);
       lat_vol_init(*fld);
     } else if (data_type == "short" ) {
-      LatticeVol<short> *fld =
-	dynamic_cast<LatticeVol<short>*>(tex_.get_rep());
+      LatVolField<short> *fld =
+	dynamic_cast<LatVolField<short>*>(tex_.get_rep());
       if( !is_fixed_ )
 	field_minmax(*fld, minmax_);
       lat_vol_init(*fld);
     } else if (data_type == "unsigned_char" ) {
-      LatticeVol<unsigned char> *fld =
-	dynamic_cast<LatticeVol<unsigned char>*>(tex_.get_rep());
+      LatVolField<unsigned char> *fld =
+	dynamic_cast<LatVolField<unsigned char>*>(tex_.get_rep());
       if( !is_fixed_ )
 	field_minmax(*fld, minmax_);
       lat_vol_init(*fld);
@@ -211,12 +211,12 @@ void BrickGrid::level_field_init(LevelField<Data>& tex)
 }
 
 template<class Data> 
-void BrickGrid::lat_vol_init( LatticeVol<Data>& tex )
+void BrickGrid::lat_vol_init( LatVolField<Data>& tex )
 {
   int nx,ny,nz;
   int bx,by,bz;
 
-  typename LatticeVol<Data>::mesh_type *m = tex.get_typed_mesh().get_rep();
+  typename LatVolField<Data>::mesh_type *m = tex.get_typed_mesh().get_rep();
   BBox bb = m->get_bounding_box();
   min_ = bb.min();
   max_ = bb.max();

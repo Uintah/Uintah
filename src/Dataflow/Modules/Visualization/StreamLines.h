@@ -25,7 +25,7 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/ContourMesh.h>
+#include <Core/Datatypes/CurveMesh.h>
 
 namespace SCIRun {
 
@@ -37,7 +37,7 @@ public:
 		       double tolerance,
 		       double stepsize,
 		       int maxsteps,
-		       ContourMeshHandle cmesh) = 0;
+		       CurveMeshHandle cmesh) = 0;
 
 
   //! support the dynamically compiled algorithm concept
@@ -67,7 +67,7 @@ public:
 		       double tolerance,
 		       double stepsize,
 		       int maxsteps,
-		       ContourMeshHandle cmesh);
+		       CurveMeshHandle cmesh);
 };
 
 
@@ -79,7 +79,7 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle smesh_h,
 				       double tolerance,
 				       double stepsize,
 				       int maxsteps,
-				       ContourMeshHandle cmesh)
+				       CurveMeshHandle cmesh)
 {
   SMESH *smesh = dynamic_cast<SMESH *>(smesh_h.get_rep());
 
@@ -89,7 +89,7 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle smesh_h,
   Vector test;
   vector<Point> nodes;
   vector<Point>::iterator node_iter;
-  ContourMesh::Node::index_type n1, n2;
+  CurveMesh::Node::index_type n1, n2;
 
   // Try to find the streamline for each seed point.
   typename SLOC::iterator seed_iter, seed_iter_end;

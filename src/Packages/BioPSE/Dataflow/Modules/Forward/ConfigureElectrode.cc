@@ -10,8 +10,8 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <Core/Datatypes/ContourField.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/CurveField.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -66,15 +66,15 @@ void ConfigureElectrode::execute() {
     cerr << "ConfigureElectrode: error - empty input electrode.\n";
     return;
   }
-  ContourField<double> *elecFld = dynamic_cast<ContourField<double>*>(ielecH.get_rep());
+  CurveField<double> *elecFld = dynamic_cast<CurveField<double>*>(ielecH.get_rep());
   if (!elecFld) {
-    cerr << "ConfigureElectrode: error - input electrode wasn't a ContourField<double>\n";
+    cerr << "ConfigureElectrode: error - input electrode wasn't a CurveField<double>\n";
     return;
   }
 
   double voltage = voltage_.get();
   int flip = flip_.get();
-  ContourMesh::Node::iterator ni, ne;
+  CurveMesh::Node::iterator ni, ne;
   elecFld->get_typed_mesh()->begin(ni);
   elecFld->fdata()[*ni]=voltage;
 
@@ -83,8 +83,8 @@ void ConfigureElectrode::execute() {
     return;
   }
 
-  ContourMeshHandle elecMesh(scinew ContourMesh(*(elecFld->get_typed_mesh().get_rep())));
-  ContourField<double>* elecFldFlip = scinew ContourField<double>(elecMesh, Field::NODE);
+  CurveMeshHandle elecMesh(scinew CurveMesh(*(elecFld->get_typed_mesh().get_rep())));
+  CurveField<double>* elecFldFlip = scinew CurveField<double>(elecMesh, Field::NODE);
 
   elecMesh->begin(ni);
   elecMesh->end(ne);

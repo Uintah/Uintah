@@ -13,7 +13,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Widgets/ArrowWidget.h>
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/Switch.h>
 #include <Core/Geometry/Point.h>
@@ -102,9 +102,9 @@ void ShowDipoles::execute(){
   
   
   FieldHandle fieldH;
-  PointCloud<Vector> *field_pcv;
+  PointCloudField<Vector> *field_pcv;
   if (!ifield_->get(fieldH) || 
-      !(field_pcv=dynamic_cast<PointCloud<Vector>*>(fieldH.get_rep()))) {
+      !(field_pcv=dynamic_cast<PointCloudField<Vector>*>(fieldH.get_rep()))) {
     cerr << "No vald input in ShowDipoles Field port.\n";
     return;
   }

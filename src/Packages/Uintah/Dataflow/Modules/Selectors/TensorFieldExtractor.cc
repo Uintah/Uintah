@@ -162,8 +162,8 @@ void TensorFieldExtractor::execute()
 	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
 					     range.z(), box.min(),
 					     box.max());
-	  LatticeVol<Matrix3> *tfd =
-	    scinew LatticeVol<Matrix3>( lvm, Field::NODE );
+	  LatVolField<Matrix3> *tfd =
+	    scinew LatVolField<Matrix3>( lvm, Field::NODE );
 	  // set the generation and timestep in the field
 	  build_field2( archive, level, low, var, mat, time, gridVar,
 			tfd, need_byte_swap);
@@ -186,8 +186,8 @@ void TensorFieldExtractor::execute()
 	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
 					     range.z(), box.min(),
 					     box.max());
-	  LatticeVol<Matrix3> *tfd =
-	    scinew LatticeVol<Matrix3>( lvm, Field::CELL );
+	  LatVolField<Matrix3> *tfd =
+	    scinew LatVolField<Matrix3>( lvm, Field::CELL );
 	  // set the generation and timestep in the field
 	  build_field2( archive, level, low, var, mat, time, gridVar,
 			tfd, need_byte_swap);

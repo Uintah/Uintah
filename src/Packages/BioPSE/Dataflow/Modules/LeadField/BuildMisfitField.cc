@@ -31,8 +31,8 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/PointCloud.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/TetVolField.h>
 
 #include <iostream>
 #include <stdio.h>
@@ -125,8 +125,8 @@ void BuildMisfitField::execute() {
     cerr << "BuildMisfitField -- couldn't get mesh.  Returning.\n";
     return;
   }
-  if (!mesh_in.get_rep() || mesh_in->get_type_name(0)!="TetVol") {
-    cerr << "Error - BuildMisfitField didn't get a TetVol for the mesh" << "\n";
+  if (!mesh_in.get_rep() || mesh_in->get_type_name(0)!="TetVolField") {
+    cerr << "Error - BuildMisfitField didn't get a TetVolField for the mesh" << "\n";
     return;
   }
   TetVolMesh* mesh = 
@@ -192,7 +192,7 @@ void BuildMisfitField::execute() {
   double best_val;
   int best_idx;
 
-//  TetVol<double> *tvd = scinew TetVol<double>(TetVolMeshHandle(mesh), 
+//  TetVolField<double> *tvd = scinew TetVolField<double>(TetVolMeshHandle(mesh), 
 //					      Field::CELL);
   Array1<int> node_refs(ncells);
   Array1<double> node_sums(ncells);
@@ -239,8 +239,8 @@ void BuildMisfitField::execute() {
   }
 
   // we only know how to isosurface when the data is at the nodes
-  TetVol<double> *tvd =
-    scinew TetVol<double>(TetVolMeshHandle(mesh), Field::NODE);
+  TetVolField<double> *tvd =
+    scinew TetVolField<double>(TetVolMeshHandle(mesh), Field::NODE);
   TetVolMesh::Node::size_type nsize;  mesh->size(nsize);
   for (int i=0; i<nsize; i++) 
     tvd->fdata()[i]=node_sums[i]/node_refs[i];

@@ -33,7 +33,7 @@
 */
 
 /*
- *  OldMeshtoNewTetVol.cc: Converter
+ *  OldMeshtoNewTetVolField.cc: Converter
  *
  *  Written by:
  *   Martin Cole
@@ -45,7 +45,7 @@
  */
 
 #include <FieldConverters/Core/Datatypes/Mesh.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Persistent/Pstreams.h>
 
 #include <iostream>
@@ -67,9 +67,9 @@ int
 main(int argc, char **argv) {
   
   if (argc !=3) {
-    cerr << "Usage: " << argv[0] << " Old Mesh to New TetVol"<< endl;
+    cerr << "Usage: " << argv[0] << " Old Mesh to New TetVolField"<< endl;
     cerr << "       " << "argv[1] Input File (Old Mesh)" << endl;
-    cerr << "       " << "argv[2] Output File (TetVol)" << endl;
+    cerr << "       " << "argv[2] Output File (TetVolField)" << endl;
     exit(0);
   }
 
@@ -99,8 +99,8 @@ main(int argc, char **argv) {
   mesh->compute_face_neighbors();
 
 
-  // A Mesh is Geometry only, so attach no data to the new TetVol.
-  TetVol<double> *field = new TetVol<double>(Field::NODE);
+  // A Mesh is Geometry only, so attach no data to the new TetVolField.
+  TetVolField<double> *field = new TetVolField<double>(Field::NODE);
   FieldHandle fH(field); 
 
   TetVolMeshHandle tvm = field->get_typed_mesh();

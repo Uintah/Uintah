@@ -14,7 +14,7 @@
 #include <Core/Containers/String.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Persistent/Pstreams.h>
-#include <Core/Datatypes/TriSurface.h>
+#include <Core/Datatypes/TriSurfFieldace.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <iostream>
@@ -45,7 +45,7 @@ main(int argc, char **argv) {
 	exit(0);
     }
     Surface *su=handle.get_rep();
-    TriSurface *ts=su->getTriSurface();
+    TriSurfFieldace *ts=su->getTriSurfFieldace();
     if(!ts){
        printf("Error getting ts\n");
        exit(-1);
@@ -76,7 +76,7 @@ main(int argc, char **argv) {
     }
     fclose(fout);
 
-    if (ts->normType != TriSurface::NrmlsNone) {
+    if (ts->normType != TriSurfFieldace::NrmlsNone) {
 	sprintf(name, "%s.nrm", argv[1]);
 	fout=fopen(name, "wt");
 	fprintf(fout, "%d\n", ts->normals.size());

@@ -9,7 +9,7 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
 
@@ -24,7 +24,7 @@ using SCIRun::BBox;
 using SCIRun::LockingHandle;
 using SCIRun::Datatype;
 using SCIRun::FieldHandle;
-using SCIRun::LatticeVol;
+using SCIRun::LatVolField;
 using SCIRun::Piostream;
 using Uintah::ShareAssignArray3;
 using Uintah::LevelField;
@@ -166,7 +166,7 @@ public:
     
 private:
   template <class Data>
-    void lat_vol_init( LatticeVol<Data>& tex );
+    void lat_vol_init( LatVolField<Data>& tex );
 
   template <class Data>
     void level_field_init( LevelField<Data>& tex );

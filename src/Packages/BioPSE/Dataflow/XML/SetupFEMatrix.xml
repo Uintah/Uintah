@@ -42,7 +42,7 @@
       
       <orderedlist>
 	<listitem>
-	  <p>Field containing mesh should be of type TetVol(char),
+	  <p>Field containing mesh should be of type TetVolField(char),
 	  containing indices to the property 'table', that contains
 	  actual values of the conductivity tensors. In this way the
 	  storage is optimized</p>

@@ -78,7 +78,7 @@ public:
     virtual void execute();
     void removeGeom();
     void removeLinkGeom();
-    void buildTriSurfs();
+    void buildTriSurfFields();
 
     void createObjLinks(RadObj* so, RadObj* ro);
     void createInitialLinks();
@@ -235,7 +235,7 @@ void Radiosity::buildLinkGeom() {
     }
 }
 
-void Radiosity::buildTriSurfs() {
+void Radiosity::buildTriSurfFields() {
     int NL=nl.get();
     rt->scene.mesh.resize(rt->scene.obj.size());
     for (int i=0; i<rt->scene.obj.size(); i++) {
@@ -518,7 +518,7 @@ void Radiosity::execute()
 
     if (rtGen != rt->generation) {
 	rt->preRayTrace();
-	buildTriSurfs();
+	buildTriSurfFields();
 	triSurfsToRadObjs();
 
 	cerr << "Creating initial links...\n";

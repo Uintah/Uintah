@@ -39,7 +39,7 @@
 	  fills it in correspondence with supplied mesh and dipole parameters</p>
 	</listitem>
 	<listitem>
-	  <p>The supplied mesh is assumed to be of type TetVol(int)
+	  <p>The supplied mesh is assumed to be of type TetVolField(int)
 	  containing indices to conductivity tensor lookup
 	  table. Further requirements to the supplied mesh are
 	  described in documentation to BioPSE::Forward::SetupFEMatrix module</p>
@@ -47,7 +47,7 @@
 	<listitem>
 	  <p>Dipoles are represented as nodes in TetVolMesh. The
 	  corresponding value are vectors representing dipole
-	  moments. So the module expects dipoles as TetVol(Vector) field</p>
+	  moments. So the module expects dipoles as TetVolField(Vector) field</p>
 	</listitem>
       </orderedlist>
     </description>

@@ -14,8 +14,8 @@
 // check for same meshes as last time -- if so, reuse contrib array
 // fix have_some -- just need to know which TVM indices we've visited
 
-#include <Core/Datatypes/TetVol.h>
-#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/TriSurfField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -51,7 +51,7 @@ InsertVoltageSource::~InsertVoltageSource()
 
 void InsertVoltageSource::execute() {
   FieldIPort* imesh = (FieldIPort *) get_iport("TetMesh");
-  FieldIPort* isource = (FieldIPort *) get_iport("TriSurfSource");
+  FieldIPort* isource = (FieldIPort *) get_iport("TriSurfFieldSource");
   FieldOPort* omesh = (FieldOPort *) get_oport("TetMesh");
   if (!imesh) {
     postMessage("Unable to initialize "+name+"'s imesh port\n");
@@ -77,7 +77,7 @@ void InsertVoltageSource::execute() {
   MeshHandle tetVolH = imeshH->mesh();
   TetVolMesh *tvm = dynamic_cast<TetVolMesh *>(tetVolH.get_rep());
   if (!tvm) {
-    cerr << "InsertVoltageSource: error - input FEM wasn't a TetVol\n";
+    cerr << "InsertVoltageSource: error - input FEM wasn't a TetVolField\n";
     return;
   }
 
@@ -88,7 +88,7 @@ void InsertVoltageSource::execute() {
     cerr << "InsertVoltageSource: error - empty input source.\n";
     return;
   }
-  TriSurf<double> *triSurf =dynamic_cast<TriSurf<double>*>(isourceH.get_rep());
+  TriSurfField<double> *triSurf =dynamic_cast<TriSurfField<double>*>(isourceH.get_rep());
   if (!triSurf) {
     cerr << "InsertVoltageSource: error - input source wasn't a TtriSurf<double>\n";
     return;

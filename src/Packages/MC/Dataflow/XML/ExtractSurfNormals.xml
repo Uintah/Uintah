@@ -8,7 +8,7 @@
     </authors>
     <summary>
       Extract surface normals from field with normals, 
-             and output a PointCloud<Vector> 
+             and output a PointCloudField<Vector> 
     </Vector>
     </summary>
   </overview>

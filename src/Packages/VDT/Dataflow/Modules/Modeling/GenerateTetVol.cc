@@ -16,7 +16,7 @@
 */
 
 /*
- *  GenerateTetVol.cc:
+ *  GenerateTetVolField.cc:
  *
  *  Written by:
  *   mcole
@@ -36,30 +36,30 @@ extern "C" {
 
 using namespace SCIRun;
 
-class VDTSHARE GenerateTetVol : public Module {
+class VDTSHARE GenerateTetVolField : public Module {
 public:
-  GenerateTetVol(const string& id);
+  GenerateTetVolField(const string& id);
 
-  virtual ~GenerateTetVol();
+  virtual ~GenerateTetVolField();
 
   virtual void execute();
 
   virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" VDTSHARE Module* make_GenerateTetVol(const string& id) {
-  return scinew GenerateTetVol(id);
+extern "C" VDTSHARE Module* make_GenerateTetVolField(const string& id) {
+  return scinew GenerateTetVolField(id);
 }
 
-GenerateTetVol::GenerateTetVol(const string& id)
-  : Module("GenerateTetVol", id, Source, "Modeling", "VDT")
+GenerateTetVolField::GenerateTetVolField(const string& id)
+  : Module("GenerateTetVolField", id, Source, "Modeling", "VDT")
 {
 }
 
-GenerateTetVol::~GenerateTetVol(){
+GenerateTetVolField::~GenerateTetVolField(){
 }
 
-void GenerateTetVol::execute()
+void GenerateTetVolField::execute()
 {
   // just test that the lib is loaded and we can make a call into it for now.
   VDT gentv_vdt = VDT_new_mesher();
@@ -67,7 +67,7 @@ void GenerateTetVol::execute()
 
 }
 
-void GenerateTetVol::tcl_command(TCLArgs& args, void* userdata)
+void GenerateTetVolField::tcl_command(TCLArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }

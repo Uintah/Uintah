@@ -33,13 +33,13 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>TetVol</name>
+	<name>TetVolField</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-	<name>PointCloud</name>
+	<name>PointCloudField</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </outputs>

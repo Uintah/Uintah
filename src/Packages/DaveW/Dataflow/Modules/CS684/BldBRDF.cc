@@ -18,7 +18,7 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Containers/String.h>
-#include <Core/Datatypes/TriSurface.h>
+#include <Core/Datatypes/TriSurfFieldace.h>
 #include <Core/Geom/Color.h>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Geom/GeomGroup.h>

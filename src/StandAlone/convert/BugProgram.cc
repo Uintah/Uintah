@@ -16,7 +16,7 @@
 */
 
 /*
- *  RawToLatticeVol.cc
+ *  RawToLatVolField.cc
  *
  *  Written by:
  *   David Weinstein

@@ -50,7 +50,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/TriSurfField.h>
 #include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildBEMatrix.h>
 
 #include <Core/Geometry/Vector.h>
@@ -170,25 +170,25 @@ void SetupBEMatrix::execute(){
 
     TriSurfMeshHandle  hSurfInn;
     TriSurfMeshHandle  hSurfOut;
-    TriSurf<double>* pIn;
-    TriSurf<double>* pOut;
+    TriSurfField<double>* pIn;
+    TriSurfField<double>* pOut;
 
     //! checking type consistency
-    if (hFieldInn->get_type_name(0)=="TriSurf" && hFieldInn->get_type_name(1)=="double" ){
-      pIn = dynamic_cast<TriSurf<double>*>(hFieldInn.get_rep());
+    if (hFieldInn->get_type_name(0)=="TriSurfField" && hFieldInn->get_type_name(1)=="double" ){
+      pIn = dynamic_cast<TriSurfField<double>*>(hFieldInn.get_rep());
       hSurfInn = pIn->get_typed_mesh();
     }
     else {
-      msgStream_ << "Inner Surf is not of type TriSurf<double>" << endl;
+      msgStream_ << "Inner Surf is not of type TriSurfField<double>" << endl;
       return;
     }
     
-    if (hFieldOut->get_type_name(0)=="TriSurf" && hFieldInn->get_type_name(1)=="double"  ){
-      pOut = dynamic_cast<TriSurf<double>*>(hFieldOut.get_rep());
+    if (hFieldOut->get_type_name(0)=="TriSurfField" && hFieldInn->get_type_name(1)=="double"  ){
+      pOut = dynamic_cast<TriSurfField<double>*>(hFieldOut.get_rep());
       hSurfOut = pOut->get_typed_mesh();
     }
     else {
-      msgStream_ << "Outer Surf is not of type TriSurf<double>" << endl;
+      msgStream_ << "Outer Surf is not of type TriSurfField<double>" << endl;
       return;
     }
     
@@ -220,7 +220,7 @@ void SetupBEMatrix::execute(){
     msgStream_ << "Field inputs are old. Resending stored matrix..." << endl;
   }
 
-  TriSurf<double>* pOut2 = dynamic_cast<TriSurf<double>*>(hFieldOut.get_rep());
+  TriSurfField<double>* pOut2 = dynamic_cast<TriSurfField<double>*>(hFieldOut.get_rep());
   
   if (pOut2){
     vector<double>& pout = pOut2->fdata();

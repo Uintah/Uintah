@@ -13,7 +13,7 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>QuadTetVol</name>
+        <name>QuadTetVolField</name>
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>

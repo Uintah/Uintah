@@ -2,7 +2,7 @@
 #include <math.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Geometry/BBox.h>
 
 //#include <SCICore/Math/Mat.h>
@@ -37,11 +37,11 @@ void VectorFieldOperator::execute(void) {
     return;
   }
 
-  LatticeVol<double>  *scalarField = 0;  
-  if( LatticeVol<Vector> *vectorField =
-      dynamic_cast<LatticeVol<Vector>*>(hTF.get_rep())) {
+  LatVolField<double>  *scalarField = 0;  
+  if( LatVolField<Vector> *vectorField =
+      dynamic_cast<LatVolField<Vector>*>(hTF.get_rep())) {
 
-    scalarField = scinew LatticeVol<double>(hTF->data_at());
+    scalarField = scinew LatVolField<double>(hTF->data_at());
 
     performOperation( vectorField, scalarField );
   }

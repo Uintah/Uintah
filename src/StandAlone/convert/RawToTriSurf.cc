@@ -16,7 +16,7 @@
 */
 
 /*
- *  FlatToTriSurf.cc
+ *  FlatToTriSurfField.cc
  *
  *  Written by:
  *   David Weinstein
@@ -27,7 +27,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/TriSurfField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 
@@ -160,7 +160,7 @@ main(int argc, char **argv) {
   cerr << "done adding elements.\n";
 
   tsm->flush_changes();
-  TriSurf<int> *ts = scinew TriSurf<int>(tsm, Field::NODE);
+  TriSurfField<int> *ts = scinew TriSurfField<int>(tsm, Field::NODE);
   FieldHandle tsH(ts);
   
   if (binOutput) {

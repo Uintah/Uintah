@@ -186,8 +186,8 @@ SampleField::generate_widget_seeds(Field *field)
   }
 
   mesh->freeze();
-  PointCloud<double> *seeds = scinew PointCloud<double>(mesh, Field::NODE);
-  PointCloud<double>::fdata_type &fdata = seeds->fdata();
+  PointCloudField<double> *seeds = scinew PointCloudField<double>(mesh, Field::NODE);
+  PointCloudField<double>::fdata_type &fdata = seeds->fdata();
   
   for (loop=0;loop<num_seeds;++loop)
   {

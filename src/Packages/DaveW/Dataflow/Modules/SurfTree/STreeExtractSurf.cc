@@ -76,7 +76,7 @@ void STreeExtractSurf::execute() {
 	return;
     }
 
-    TriSurface *ts=0;
+    TriSurfFieldace *ts=0;
     Array1<int> map;	// not used
     Array1<int> imap;	// not used
 
@@ -102,8 +102,8 @@ void STreeExtractSurf::execute() {
 //    for (int i=0; i<st->bcIdx.size(); i++)
 //	 cerr <<"  "<<i<<"  "<<st->bcVal[i]<<"  "<<st->points[st->bcIdx[i]]<<"\n";
 
-    ts = new TriSurface;
-    if (!st->extractTriSurface(ts, map, imap, comp, remapTCL.get())) {
+    ts = new TriSurfFieldace;
+    if (!st->extractTriSurfFieldace(ts, map, imap, comp, remapTCL.get())) {
 	cerr << "Error, couldn't extract triSurface.\n";
 	return;
     }

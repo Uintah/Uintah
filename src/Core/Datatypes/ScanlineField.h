@@ -157,7 +157,7 @@ ScanlineField<Data>::get_type_name(int n) const
 }
 
 
-#define SCANLINEFIELD_VERSION 1
+#define SCANLINE_FIELD_VERSION 1
 
 template <class Data>
 Persistent* 
@@ -176,7 +176,7 @@ template <class Data>
 void
 ScanlineField<Data>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), SCANLINEFIELD_VERSION);
+  /*int version=*/stream.begin_class(type_name(-1), SCANLINE_FIELD_VERSION);
   GenericField<ScanlineMesh, vector<Data> >::io(stream);
   stream.end_class();                                                         
 }

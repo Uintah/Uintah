@@ -25,7 +25,7 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
 //#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/TriSurfField.h>
 
 namespace SCIRun {
 
@@ -134,9 +134,9 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
       }
     }
   }
-  TriSurf<double> *ts = scinew TriSurf<double>(tmesh, Field::NODE);
-  TriSurf<vector<pair<typename Msh::Node::index_type, double> > >* interp =
-    scinew TriSurf<vector<pair<typename Msh::Node::index_type, double> > >(tmesh, Field::NODE);
+  TriSurfField<double> *ts = scinew TriSurfField<double>(tmesh, Field::NODE);
+  TriSurfField<vector<pair<typename Msh::Node::index_type, double> > >* interp =
+    scinew TriSurfField<vector<pair<typename Msh::Node::index_type, double> > >(tmesh, Field::NODE);
   for (int i=0; i<reverse_map.size(); i++)
     interp->fdata()[i].push_back(pair<typename Msh::Node::index_type, double>(reverse_map[i], 1.0));
 

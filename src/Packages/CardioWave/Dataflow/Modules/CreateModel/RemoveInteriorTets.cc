@@ -12,7 +12,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 
 extern "C" {
 #include <Packages/CardioWave/Core/Algorithms/Vulcan.h>
@@ -67,9 +67,9 @@ void RemoveInteriorTets::execute(){
       !meshH.get_rep())
     return;
 
-  TetVol<Vector> *tv_old = dynamic_cast<TetVol<Vector> *>(meshH.get_rep());
+  TetVolField<Vector> *tv_old = dynamic_cast<TetVolField<Vector> *>(meshH.get_rep());
   if (!tv_old) {
-    cerr << "Error -- input field wasn't a TetVol<Vector>\n";
+    cerr << "Error -- input field wasn't a TetVolField<Vector>\n";
     return;
   }
   
@@ -157,7 +157,7 @@ void RemoveInteriorTets::execute(){
   cerr << "\n\nRemoveInteriorTets: ncells="<<count<<"\n\n\n";
 
   // copy the fdata for valid nodes
-  TetVol<Vector> *tv_new = scinew TetVol<Vector>(new_mesh, Field::NODE);
+  TetVolField<Vector> *tv_new = scinew TetVolField<Vector>(new_mesh, Field::NODE);
   count=0;
   old_mesh->begin(nb);
   while(nb!=ne) {

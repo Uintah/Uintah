@@ -31,7 +31,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/MaskedLatticeVol.h>
+#include <Core/Datatypes/MaskedLatVolField.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
@@ -65,8 +65,8 @@ NrrdToField::~NrrdToField()
 }
 
 #define COPY_INTO_FIELD_FROM_NRRD(type, dataat) \
-    LatticeVol<type> *f = \
-      scinew LatticeVol<type>(lvm, dataat); \
+    LatVolField<type> *f = \
+      scinew LatVolField<type>(lvm, dataat); \
     type *p=(type *)n->data; \
     for (k=0; k<nz; k++) \
       for (j=0; j<ny; j++) \
@@ -119,8 +119,8 @@ void NrrdToField::execute()
       int ny = n->axis[2].size;
       int nz = n->axis[3].size;
       LatVolMesh *lvm = scinew LatVolMesh(nx+1, ny+1, nz+1, minP, maxP);
-      MaskedLatticeVol<Tensor> *f =
-	scinew MaskedLatticeVol<Tensor>(lvm, Field::CELL);
+      MaskedLatVolField<Tensor> *f =
+	scinew MaskedLatVolField<Tensor>(lvm, Field::CELL);
       float *p=(float *)n->data;
       Array1<double> tens(6);
       for (k=0; k<nz; k++)

@@ -16,7 +16,7 @@
 */
 
 /*
- *  OldSurfaceToNewTriSurf.cc
+ *  OldSurfaceToNewTriSurfField.cc
  *
  *  Written by:
  *   David Weinstein and Michae Callahan
@@ -27,8 +27,8 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Packages/FieldConverters/Core/Datatypes/TriSurface.h>
-#include <Core/Datatypes/TriSurf.h>
+#include <Packages/FieldConverters/Core/Datatypes/TriSurfFieldace.h>
+#include <Core/Datatypes/TriSurfField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <Core/Datatypes/FieldSet.h>
@@ -49,9 +49,9 @@ int
 main(int argc, char **argv) {
   SurfaceHandle handle;
   
-  // Read in a TriSurface
+  // Read in a TriSurfFieldace
   if (argc !=3) {
-    cerr << "Usage: "<<argv[0]<<" OldSurf NewTriSurf\n";
+    cerr << "Usage: "<<argv[0]<<" OldSurf NewTriSurfField\n";
     exit(0);
   }
   Piostream* stream=auto_istream(argv[1]);
@@ -64,9 +64,9 @@ main(int argc, char **argv) {
     cerr << "Error reading Surface from file "<<argv[1]<<".  Exiting...\n";
     exit(0);
   }
-  TriSurface *ts = dynamic_cast<TriSurface*>(handle.get_rep());
+  TriSurfFieldace *ts = dynamic_cast<TriSurfFieldace*>(handle.get_rep());
   if (!ts) {
-    cerr << "Error - surface wasn't a TriSurface.\n";
+    cerr << "Error - surface wasn't a TriSurfFieldace.\n";
   }
 
   
@@ -85,7 +85,7 @@ main(int argc, char **argv) {
     tsm->add_triangle(ele->i1, ele->i2, ele->i3);
   }
 
-  TriSurf<double> *tsd = scinew TriSurf<double>(tsmh, Field::NODE);
+  TriSurfField<double> *tsd = scinew TriSurfField<double>(tsmh, Field::NODE);
   FieldHandle tsdh(tsd);
 
   for (i=0; i<ts->points.size(); i++) {

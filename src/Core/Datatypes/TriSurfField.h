@@ -16,7 +16,7 @@
 */
 
 /*
- *  TriSurf.h
+ *  TriSurfField.h
  *
  *  Written by:
  *   Martin Cole
@@ -26,8 +26,8 @@
  *  Copyright (C) 2001 SCI Institute
  */
 
-#ifndef Datatypes_TriSurf_h
-#define Datatypes_TriSurf_h
+#ifndef Datatypes_TriSurfField_h
+#define Datatypes_TriSurfField_h
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TriSurfMesh.h>
@@ -41,14 +41,14 @@
 namespace SCIRun {
 
 template <class T> 
-class TriSurf : public GenericField<TriSurfMesh, vector<T> >
+class TriSurfField : public GenericField<TriSurfMesh, vector<T> >
 {
 public:
-  TriSurf();
-  TriSurf(Field::data_location data_at);
-  TriSurf(TriSurfMeshHandle mesh, Field::data_location data_at);
-  virtual TriSurf<T> *clone() const;
-  virtual ~TriSurf();
+  TriSurfField();
+  TriSurfField(Field::data_location data_at);
+  TriSurfField(TriSurfMeshHandle mesh, Field::data_location data_at);
+  virtual TriSurfField<T> *clone() const;
+  virtual ~TriSurfField();
   
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
@@ -65,27 +65,27 @@ private:
 };
 
 // Pio defs.
-const int TRI_SURF_VERSION = 1;
+const int TRI_SURF_FIELD_VERSION = 1;
 
 template <class T>
 Persistent *
-TriSurf<T>::maker()
+TriSurfField<T>::maker()
 {
-  return scinew TriSurf<T>;
+  return scinew TriSurfField<T>;
 }
 
 template <class T>
 PersistentTypeID 
-TriSurf<T>::type_id(type_name(-1), 
+TriSurfField<T>::type_id(type_name(-1), 
 		    GenericField<TriSurfMesh, vector<T> >::type_name(-1),
 		    maker);
 
 
 template <class T>
 void 
-TriSurf<T>::io(Piostream& stream)
+TriSurfField<T>::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1), TRI_SURF_VERSION);
+  /*int version=*/stream.begin_class(type_name(-1), TRI_SURF_FIELD_VERSION);
   GenericField<TriSurfMesh, vector<T> >::io(stream);
   stream.end_class();
 }
@@ -93,7 +93,7 @@ TriSurf<T>::io(Piostream& stream)
 
 template <class T> 
 const string 
-TriSurf<T>::type_name(int n)
+TriSurfField<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
@@ -103,7 +103,7 @@ TriSurf<T>::type_name(int n)
   }
   else if (n == 0)
   {
-    return "TriSurf";
+    return "TriSurfField";
   }
   else
   {
@@ -112,84 +112,84 @@ TriSurf<T>::type_name(int n)
 }
 
 template <class T>
-TriSurf<T>::TriSurf()
+TriSurfField<T>::TriSurfField()
   : GenericField<TriSurfMesh, vector<T> >()
 {
 }
 
 template <class T>
-TriSurf<T>::TriSurf(Field::data_location data_at) :
+TriSurfField<T>::TriSurfField(Field::data_location data_at) :
   GenericField<TriSurfMesh, vector<T> >(data_at)
 {
 }
 
 template <class T>
-TriSurf<T>::TriSurf(TriSurfMeshHandle mesh, Field::data_location data_at)
+TriSurfField<T>::TriSurfField(TriSurfMeshHandle mesh, Field::data_location data_at)
   : GenericField<TriSurfMesh, vector<T> >(mesh, data_at)
 {
 } 
 
 template <class T>
-TriSurf<T> *
-TriSurf<T>::clone() const
+TriSurfField<T> *
+TriSurfField<T>::clone() const
 {
-  return new TriSurf(*this);
+  return new TriSurfField(*this);
 }
 
 template <class T>
-TriSurf<T>::~TriSurf()
+TriSurfField<T>::~TriSurfField()
 {
 }
 
 template <> ScalarFieldInterface *
-TriSurf<double>::query_scalar_interface() const;
+TriSurfField<double>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-TriSurf<float>::query_scalar_interface() const;
+TriSurfField<float>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-TriSurf<int>::query_scalar_interface() const;
+TriSurfField<int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-TriSurf<short>::query_scalar_interface() const;
+TriSurfField<short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-TriSurf<char>::query_scalar_interface() const;
+TriSurfField<char>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-TriSurf<unsigned int>::query_scalar_interface() const;
+TriSurfField<unsigned int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-TriSurf<unsigned short>::query_scalar_interface() const;
+TriSurfField<unsigned short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-TriSurf<unsigned char>::query_scalar_interface() const;
+TriSurfField<unsigned char>::query_scalar_interface() const;
 
 template <class T>
 ScalarFieldInterface*
-TriSurf<T>::query_scalar_interface() const 
+TriSurfField<T>::query_scalar_interface() const 
 {
   return 0;
 }
 
 template <>
 VectorFieldInterface*
-TriSurf<Vector>::query_vector_interface() const;
+TriSurfField<Vector>::query_vector_interface() const;
 
 template <class T>
 VectorFieldInterface*
-TriSurf<T>::query_vector_interface() const
+TriSurfField<T>::query_vector_interface() const
 {
   return 0;
 }
 
 template <>
 TensorFieldInterface*
-TriSurf<Tensor>::query_tensor_interface() const;
+TriSurfField<Tensor>::query_tensor_interface() const;
 
 template <class T>
 TensorFieldInterface*
-TriSurf<T>::query_tensor_interface() const
+TriSurfField<T>::query_tensor_interface() const
 {
   return 0;
 }
@@ -197,17 +197,17 @@ TriSurf<T>::query_tensor_interface() const
 
 template <class T>
 const string 
-TriSurf<T>::get_type_name(int n = -1) const
+TriSurfField<T>::get_type_name(int n = -1) const
 {
   return type_name(n);
 }
 
 template <class T>
 const TypeDescription* 
-get_type_description(TriSurf<T>*)
+get_type_description(TriSurfField<T>*)
 {
   static TypeDescription* td = 0;
-  static string name("TriSurf");
+  static string name("TriSurfField");
   static string namesp("SCIRun");
   static string path(__FILE__);
   if(!td){
@@ -221,14 +221,14 @@ get_type_description(TriSurf<T>*)
 
 template <class T>
 const TypeDescription* 
-TriSurf<T>::get_type_description() const 
+TriSurfField<T>::get_type_description() const 
 {
-  return SCIRun::get_type_description((TriSurf<T>*)0);
+  return SCIRun::get_type_description((TriSurfField<T>*)0);
 }
 
 } // end namespace SCIRun
 
-#endif // Datatypes_TriSurf_h
+#endif // Datatypes_TriSurfField_h
 
 
 

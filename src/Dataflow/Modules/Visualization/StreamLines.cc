@@ -27,7 +27,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/CurveField.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Modules/Visualization/StreamLines.h>
 
@@ -262,8 +262,8 @@ void StreamLines::execute()
     return;
 
   // might have to get Field::NODE
-  ContourField<double> *cf = scinew ContourField<double>(Field::NODE);
-  ContourMeshHandle cmesh = cf->get_typed_mesh();
+  CurveField<double> *cf = scinew CurveField<double>(Field::NODE);
+  CurveMeshHandle cmesh = cf->get_typed_mesh();
 
   double tolerance;
   double stepsize;

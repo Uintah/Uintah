@@ -28,8 +28,8 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/MaskedLatticeVol.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/MaskedLatVolField.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Dataflow/Ports/FieldPort.h>
 
 #include <iostream>
@@ -100,8 +100,8 @@ void FDMtoFEM::execute() {
     return;
   }
  
-  if (ifdmH->get_type_name(0) != "LatticeVol" &&
-      ifdmH->get_type_name(0) != "MaskedLatticeVol") {
+  if (ifdmH->get_type_name(0) != "LatVolField" &&
+      ifdmH->get_type_name(0) != "MaskedLatVolField") {
     msgStream_ << "Error: need a lattice vol as input" << endl;
     return;
   }
@@ -139,15 +139,15 @@ void FDMtoFEM::execute() {
     FData3d<char> mask;
 
     // if the input Field was a Masked Lattice Vol, copy the mask
-    if (ifdmH->get_type_name(0) == "MaskedLatticeVol") {
+    if (ifdmH->get_type_name(0) == "MaskedLatVolField") {
       valid_nodes.initialize(0);
       if (ifdmH->get_type_name(1) == "unsigned_char") {
-	MaskedLatticeVol<unsigned char> *mlv =
-	  dynamic_cast<MaskedLatticeVol<unsigned char> *>(ifdmH.get_rep());
+	MaskedLatVolField<unsigned char> *mlv =
+	  dynamic_cast<MaskedLatVolField<unsigned char> *>(ifdmH.get_rep());
 	mask.copy(mlv->mask());
       } else { // Tensor
-	MaskedLatticeVol<Tensor> *mlv =
-	  dynamic_cast<MaskedLatticeVol<Tensor> *>(ifdmH.get_rep());
+	MaskedLatVolField<Tensor> *mlv =
+	  dynamic_cast<MaskedLatVolField<Tensor> *>(ifdmH.get_rep());
 	mask.copy(mlv->mask());
       }
       LatVolMesh::Node::array_type lat_nodes(8);
@@ -211,14 +211,14 @@ void FDMtoFEM::execute() {
     }
 
     // now that the mesh has been built, we have to set conductivities (fdata)
-    TetVol<int> *tv;
+    TetVolField<int> *tv;
     if (ifdmH->get_type_name(1) == "Tensor") {
       // we have tensors, no need to get sigmas out of the property manager.
       // allocate the new finite element mesh so the node indices remain
       //   consistent with the finite difference nodes
-      LatticeVol<Tensor> *lv = 
-	dynamic_cast<LatticeVol<Tensor> *>(ifdmH.get_rep());
-      tv = scinew TetVol<int>(tvm, Field::CELL);
+      LatVolField<Tensor> *lv = 
+	dynamic_cast<LatVolField<Tensor> *>(ifdmH.get_rep());
+      tv = scinew TetVolField<int>(tvm, Field::CELL);
       LatVolMesh::Cell::iterator ci;
       lvm->begin(ci);
       TetVolMesh::Cell::iterator ci_tet; tvm->begin(ci_tet);
@@ -235,9 +235,9 @@ void FDMtoFEM::execute() {
       }
     } else {
       // we have unsigned_char's -- the "conds" array has the tensors
-      LatticeVol<unsigned char> *lv = 
-	dynamic_cast<LatticeVol<unsigned char> *>(ifdmH.get_rep());
-      tv = scinew TetVol<int>(tvm, Field::CELL);
+      LatVolField<unsigned char> *lv = 
+	dynamic_cast<LatVolField<unsigned char> *>(ifdmH.get_rep());
+      tv = scinew TetVolField<int>(tvm, Field::CELL);
       LatVolMesh::Cell::iterator ci;
       lvm->begin(ci);
       TetVolMesh::Cell::iterator ci_tet; tvm->begin(ci_tet);

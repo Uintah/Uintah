@@ -24,7 +24,7 @@ SRCDIR   := Core/Datatypes
 SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/ColorMap.cc		    	\
 	$(SRCDIR)/ColumnMatrix.cc	    	\
-	$(SRCDIR)/ContourMesh.cc            	\
+	$(SRCDIR)/CurveMesh.cc            	\
 	$(SRCDIR)/Datatype.cc		    	\
 	$(SRCDIR)/DenseMatrix.cc	    	\
 	$(SRCDIR)/Field.cc		    	\

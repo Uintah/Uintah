@@ -10,7 +10,7 @@
     </authors>
     <summary>
       <p>
-      Convert a LatticeVol to a HexVol
+      Convert a LatVolField to a HexVolField
       </p>
     </summary>
   </overview>
@@ -19,7 +19,7 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>TetVolMask</name>
+        <name>TetVolFieldMask</name>
         <description>
           <p>
             The volume to be converted
@@ -33,7 +33,7 @@
     </inputs>
     <outputs>
       <port>
-        <name>LatticeVol</name>
+        <name>LatVolField</name>
         <description>
           <p>
             The converted volume

@@ -27,20 +27,21 @@ from sys import argv
 
 
 
-ufields = ["LatticeVol",
-           "TetVol",
-           "HexVol",
-           "TriSurf",
+ufields = ["LatVolField",
+           "TetVolField",
+           "HexVolField",
+           "TriSurfField",
            "ImageField",
-           "ContourField",
+           "CurveField",
            "ScanlineField",
-           "PointCloud"
+           "PointCloudField"
+           "QuadraticTetVolField"
            ]
 
-mfields = ["MaskedTetVol",
-           "MaskedHexVol",
-           "MaskedLatticeVol",
-           "MaskedTriSurf"
+mfields = ["MaskedTetVolField",
+           "MaskedHexVolField",
+           "MaskedLatVolField",
+           "MaskedTriSurfField"
            ]
 
 fields = ufields + mfields
@@ -50,9 +51,10 @@ meshes = [("LatVolMesh", "FData3d"),
           ("HexVolMesh", "vector"),
           ("TriSurfMesh", "vector"),
           ("ImageMesh", "FData2d"),
-          ("ContourMesh", "vector"),
+          ("CurveMesh", "vector"),
           ("ScanlineMesh", "vector"),
           ("PointCloudMesh", "vector")
+          ("QuadraticTetVolMesh", "vector")
           ]
 
 containers = ["vector", "FData3d", "FData2d"]

@@ -16,7 +16,7 @@
 */
 
 /*
- *  TriSurface.h: Triangulated Surface Data type
+ *  TriSurfFieldace.h: Triangulated Surface Data type
  *
  *  Written by:
  *   David Weinstein
@@ -27,8 +27,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_FieldConverters_TriSurface_h
-#define SCI_FieldConverters_TriSurface_h 1
+#ifndef SCI_FieldConverters_TriSurfFieldace_h
+#define SCI_FieldConverters_TriSurfFieldace_h 1
 
 #include <FieldConverters/share/share.h>
 #include <FieldConverters/Core/Datatypes/Surface.h>
@@ -57,7 +57,7 @@ struct TSEdge {
   void operator delete(void*, size_t);
 };
 
-class FieldConvertersSHARE TriSurface : public Surface {
+class FieldConvertersSHARE TriSurfFieldace : public Surface {
   friend class SurfTree;
 
 public:
@@ -96,10 +96,10 @@ private:
   //void add_node(Array1<NodeHandle>& nodes,
   //		char* id, const Point& p, int n);
 public:
-  TriSurface(Representation r=TriSurf);
-  TriSurface(const TriSurface& copy, Representation r=TriSurf);
-  TriSurface& operator=(const TriSurface&);
-  virtual ~TriSurface();
+  TriSurfFieldace(Representation r=TriSurfField);
+  TriSurfFieldace(const TriSurfFieldace& copy, Representation r=TriSurfField);
+  TriSurfFieldace& operator=(const TriSurfFieldace&);
+  virtual ~TriSurfFieldace();
   virtual Surface *clone();
 
   // these two were implemented for isosurfacing btwn two surfaces
@@ -133,10 +133,10 @@ public:
 protected:
   // pass in allocated surfaces for conn and d_conn. NOTE: contents will be
   // overwritten
-  void separate(int idx, TriSurface* conn, TriSurface* d_conn, int updateConnIndices=1, int updateDConnIndices=1);
+  void separate(int idx, TriSurfFieldace* conn, TriSurfFieldace* d_conn, int updateConnIndices=1, int updateDConnIndices=1);
 
   // NOTE: if elements have been added or removed from the surface
-  // remove_empty_index() MUST be called before passing a TriSurface
+  // remove_empty_index() MUST be called before passing a TriSurfFieldace
   // to another module!  
   void remove_empty_index();
   void order_faces();
@@ -163,4 +163,4 @@ void Pio (Piostream& stream, FieldConverters::TSElement*& data);
 void Pio (Piostream& stream, FieldConverters::TSEdge*& data);
 } // end namespace SCIRun
 
-#endif /* SCI_Datatytpes_TriSurface_h */
+#endif /* SCI_Datatytpes_TriSurfFieldace_h */

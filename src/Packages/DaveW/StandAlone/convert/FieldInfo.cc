@@ -13,7 +13,7 @@
 
 #include <Core/Containers/Array1.h>
 #include <Core/Persistent/Pstreams.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/BBox.h>
 #include <iostream>
@@ -53,7 +53,7 @@ main(int argc, char **argv) {
   else if (handle->data_at() == Field::CELL) cerr << "CELL";
   else if (handle->data_at() == Field::NONE) cerr << "NONE";
   cerr << "\n";
-  if (handle->get_type_name(0) == "TetVol") {
+  if (handle->get_type_name(0) == "TetVolField") {
     MeshHandle mbH = handle->mesh();
     TetVolMesh *tvm = dynamic_cast<TetVolMesh *>(mbH.get_rep());
     vector<pair<string, Tensor> > cond_table;

@@ -11,7 +11,7 @@
 
 #include <Core/Containers/Array1.h>
 #include <Core/Persistent/Pstreams.h>
-#include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/CurveField.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -26,7 +26,7 @@ using namespace SCIRun;
 int
 main(int argc, char **argv) {
   if (argc != 3) {
-    printf("Usage: %s ElectrodeToContour electrod ContourField\n", argv[0]);
+    printf("Usage: %s ElectrodeToContour electrod CurveField\n", argv[0]);
     exit(0);
   }
   FILE *fin = fopen(argv[1], "rt");
@@ -42,7 +42,7 @@ main(int argc, char **argv) {
     exit(0);
   }
   
-  ContourMeshHandle cm(scinew ContourMesh);
+  CurveMeshHandle cm(scinew CurveMesh);
   double x,y;
   if (fscanf(fin, "%lf %lf\n", &x, &y) != 2) {
     printf("Error reading input file.\n");
@@ -76,7 +76,7 @@ main(int argc, char **argv) {
   }
   cm->add_edge(i-1,(ninner+6));
 
-  ContourField<double> *cf = scinew ContourField<double>(cm, Field::NODE);
+  CurveField<double> *cf = scinew CurveField<double>(cm, Field::NODE);
   for (i=0; i<(nnodes+6); i++) {
     if (i<6) {
       cf->fdata()[i]=1;

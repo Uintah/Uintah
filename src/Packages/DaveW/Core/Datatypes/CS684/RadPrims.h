@@ -5,7 +5,7 @@
 #include <Core/Containers/Array2.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Datatypes/TriSurface.h>
+#include <Core/Datatypes/TriSurfFieldace.h>
 #include <Core/Geom/Color.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geometry/BBox.h>
@@ -85,7 +85,7 @@ public:
     int emitting;
     Array1<Point> pts;
 //    Array1<Point> inset;
-    TriSurface ts;
+    TriSurfFieldace ts;
     Array1<RadObj*> patches;
     RTObjectHandle obj;
     int dl;

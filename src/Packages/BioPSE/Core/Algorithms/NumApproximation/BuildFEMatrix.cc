@@ -38,7 +38,7 @@ using namespace SCIRun;
 
 //! Constructor
 // -- it's private, no occasional object creation
-BuildFEMatrix::BuildFEMatrix(TetVolIntHandle hField,
+BuildFEMatrix::BuildFEMatrix(TetVolFieldIntHandle hField,
 			     vector<pair<string, Tensor> >& tens,
 			     MatrixHandle& hA, 
 			     int np, double unitsScale):
@@ -59,7 +59,7 @@ BuildFEMatrix::BuildFEMatrix(TetVolIntHandle hField,
 }
 BuildFEMatrix::~BuildFEMatrix(){}
 
-bool BuildFEMatrix::build_FEMatrix(TetVolIntHandle hField,
+bool BuildFEMatrix::build_FEMatrix(TetVolFieldIntHandle hField,
 				   vector<pair<string, Tensor> >& tens,
 				   MatrixHandle& hA, double unitsScale)
   //------------------------------------------------

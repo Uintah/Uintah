@@ -47,7 +47,7 @@ namespace FieldConverters {
 using namespace SCIRun;
 
 class Surface;
-class TriSurface;
+class TriSurfFieldace;
 class PointsSurface;
 class SurfTree;
 
@@ -61,7 +61,7 @@ public:
 
 protected:
   enum Representation {
-    TriSurf,
+    TriSurfField,
     PointsSurf,
     Unused,
     STree,
@@ -98,7 +98,7 @@ public:
   virtual Surface *clone() = 0;
 
   SurfTree* getSurfTree();
-  TriSurface* getTriSurface();
+  TriSurfFieldace* getTriSurfFieldace();
   PointsSurface* getPointsSurface();
 
   void set_bc(const string& expr);

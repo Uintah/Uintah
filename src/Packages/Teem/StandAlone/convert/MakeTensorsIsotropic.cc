@@ -29,7 +29,7 @@
 
 #include <ell.h>
 
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
@@ -63,7 +63,7 @@ main(int argc, char **argv) {
   }
 
   vector<pair<string, Tensor> > *conds = scinew vector<pair<string, Tensor> >;
-  if (!handle->get("conductivity_table", *conds)) {
+  if (!handle->get_property("conductivity_table", *conds)) {
     cerr << "Error - didn't have a conductivity_table in the PropertyManager.\n";
     return 0;
   }
@@ -86,7 +86,7 @@ main(int argc, char **argv) {
     if (cbrt_vol<0.1) {small_vals++; cbrt_vol=0.1; }
     for (j=0; j<3; j++) (*conds)[i].second.mat_[j][j]=cbrt_vol;
   }
-  handle->store("conductivity_table", *conds, true);
+  handle->set_property("conductivity_table", *conds, true);
   cerr << "  # of negative volumes = "<<neg_vals<<"\n";
   cerr << "  # of small volumes = "<<small_vals<<"\n";
   TextPiostream stream2(argv[2], Piostream::Write);

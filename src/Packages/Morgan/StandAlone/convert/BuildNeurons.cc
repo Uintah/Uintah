@@ -16,7 +16,7 @@
 */
 
 /*
- *  RawToContourField.cc
+ *  RawToCurveField.cc
  *
  *  Written by:
  *   David Weinstein
@@ -27,8 +27,8 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/PointCloud.h>
-#include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/CurveField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 
@@ -65,7 +65,7 @@ int getNumNonEmptyLines(char *fname) {
 
 int
 main(int argc, char **argv) {
-  ContourMesh *cm = new ContourMesh();
+  CurveMesh *cm = new CurveMesh();
   PointCloudMesh *pcm = new PointCloudMesh();
   if (argc != 5) {
     cerr << "Usage: "<<argv[0]<<" nodes connections Contours Dipoles\n";
@@ -114,9 +114,9 @@ main(int argc, char **argv) {
   cerr << "done adding edges.\n";
 
   cm->flush_changes();
-  ContourField<double> *cfd = scinew ContourField<double>(cm, Field::EDGE);
+  CurveField<double> *cfd = scinew CurveField<double>(cm, Field::EDGE);
   FieldHandle cfdH(cfd);
-  PointCloud<Vector> *pcv = scinew PointCloud<Vector>(pcm, Field::NODE);
+  PointCloudField<Vector> *pcv = scinew PointCloudField<Vector>(pcm, Field::NODE);
   for (i=0; i<nedges; i++) pcv->fdata()[i]=edges[i];
   FieldHandle pcvH(pcv);
 

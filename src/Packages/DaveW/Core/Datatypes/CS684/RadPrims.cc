@@ -429,7 +429,7 @@ RadMesh::RadMesh(const RadMesh& copy)
 {
 }
 
-void bldQuadTree(TriSurface& ts, Point nw, Point ne, Point se, 
+void bldQuadTree(TriSurfFieldace& ts, Point nw, Point ne, Point se, 
 		 Point sw, int n) {
     if (n<1) {
 	cerr << "ERROR - can't build a quadTree less than one across!\n";
@@ -483,8 +483,8 @@ RadMesh::RadMesh(RTObjectHandle& rto, DRaytracer* rt, int dl) : dl(dl) {
     RTTris *rtt=rto->getTris();
     RTRect *rtr=rto->getRect();
     if (rtt) {
-	//	ts=(*rtt->surf->getTriSurface());
-	ASSERTFAIL("You need to implement operator= for TriSurface and Surface before this will work");
+	//	ts=(*rtt->surf->getTriSurfFieldace());
+	ASSERTFAIL("You need to implement operator= for TriSurfFieldace and Surface before this will work");
 // HACK -- need to fix this at some points...
 	nrml=Vector(1,0,0);
     } else if (rtr) {

@@ -16,7 +16,7 @@
 */
 
 /*
- *  CVRTItoTriSurfPot.cc
+ *  CVRTItoTriSurfFieldPot.cc
  *
  *  Written by:
  *   David Weinstein
@@ -27,7 +27,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/TriSurfField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <fstream>
@@ -97,7 +97,7 @@ main(int argc, char **argv) {
   }
 
   TriSurfMeshHandle tsmH(tsm);
-  TriSurf<double> *ts = scinew TriSurf<double>(tsmH, Field::NODE);
+  TriSurfField<double> *ts = scinew TriSurfField<double>(tsmH, Field::NODE);
 
   for (ii=0; ii<npts; ii++)
     ts->fdata()[ii]=pots[channels[ii]];

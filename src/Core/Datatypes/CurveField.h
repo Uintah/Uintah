@@ -16,11 +16,11 @@
 */
 
 
-#ifndef Datatypes_ContourField_h
-#define Datatypes_ContourField_h
+#ifndef Datatypes_CurveField_h
+#define Datatypes_CurveField_h
 
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/ContourMesh.h>
+#include <Core/Datatypes/CurveMesh.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Malloc/Allocator.h>
@@ -33,15 +33,15 @@ namespace SCIRun {
 using std::string;
 
 template <class Data>
-class ContourField: public GenericField< ContourMesh, vector<Data> >
+class CurveField: public GenericField< CurveMesh, vector<Data> >
 {
 public:
 
-  ContourField();
-  ContourField(Field::data_location data_at);
-  ContourField(ContourMeshHandle mesh, Field::data_location data_at);
-  virtual ContourField<Data> *clone() const;
-  virtual ~ContourField();
+  CurveField();
+  CurveField(Field::data_location data_at);
+  CurveField(CurveMeshHandle mesh, Field::data_location data_at);
+  virtual CurveField<Data> *clone() const;
+  virtual ~CurveField();
 
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
@@ -57,34 +57,34 @@ private:
   static Persistent* maker();
 };
 
-#define CONTOURFIELD_VERSION 1
+#define CURVE_FIELD_VERSION 1
 
 template <class Data>
 Persistent*
-ContourField<Data>::maker()
+CurveField<Data>::maker()
 {
-  return scinew ContourField<Data>;
+  return scinew CurveField<Data>;
 }
 
 template <class Data>
 PersistentTypeID
-ContourField<Data>::type_id(type_name(-1),
-		GenericField<ContourMesh, vector<Data> >::type_name(-1),
+CurveField<Data>::type_id(type_name(-1),
+		GenericField<CurveMesh, vector<Data> >::type_name(-1),
                 maker);
 
 template <class Data>
 void
-ContourField<Data>::io(Piostream &stream)
+CurveField<Data>::io(Piostream &stream)
 {
-  stream.begin_class(type_name(-1), CONTOURFIELD_VERSION);
-  GenericField<ContourMesh, vector<Data> >::io(stream);
+  /*int version=*/stream.begin_class(type_name(-1), CURVE_FIELD_VERSION);
+  GenericField<CurveMesh, vector<Data> >::io(stream);
   stream.end_class();
 }
 
 
 template <class Data>
 const string
-ContourField<Data>::type_name(int n)
+CurveField<Data>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
@@ -95,7 +95,7 @@ ContourField<Data>::type_name(int n)
   }
   else if (n == 0)
   {
-    return "ContourField";
+    return "CurveField";
   }
   else
   {
@@ -105,119 +105,119 @@ ContourField<Data>::type_name(int n)
 
 
 template <class Data>
-ContourField<Data>::ContourField()
-  : GenericField<ContourMesh, vector<Data> >()
+CurveField<Data>::CurveField()
+  : GenericField<CurveMesh, vector<Data> >()
 {
 }
 
 
 template <class Data>
-ContourField<Data>::ContourField(Field::data_location data_at)
-  : GenericField<ContourMesh, vector<Data> >(data_at)
+CurveField<Data>::CurveField(Field::data_location data_at)
+  : GenericField<CurveMesh, vector<Data> >(data_at)
 {
 }
 
 
 template <class Data>
-ContourField<Data>::ContourField(ContourMeshHandle mesh,
+CurveField<Data>::CurveField(CurveMeshHandle mesh,
 				 Field::data_location data_at)
-  : GenericField<ContourMesh, vector<Data> >(mesh, data_at)
+  : GenericField<CurveMesh, vector<Data> >(mesh, data_at)
 {
 }
 
 template <class Data>
-ContourField<Data>::~ContourField()
+CurveField<Data>::~CurveField()
 {
 }
 
 template <class Data>
-ContourField<Data> *
-ContourField<Data>::clone() const
+CurveField<Data> *
+CurveField<Data>::clone() const
 {
-  return new ContourField<Data>(*this);
+  return new CurveField<Data>(*this);
 }
 
 template <> ScalarFieldInterface *
-ContourField<double>::query_scalar_interface() const;
+CurveField<double>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-ContourField<float>::query_scalar_interface() const;
+CurveField<float>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-ContourField<int>::query_scalar_interface() const;
+CurveField<int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-ContourField<short>::query_scalar_interface() const;
+CurveField<short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-ContourField<char>::query_scalar_interface() const;
+CurveField<char>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-ContourField<unsigned int>::query_scalar_interface() const;
+CurveField<unsigned int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-ContourField<unsigned short>::query_scalar_interface() const;
+CurveField<unsigned short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-ContourField<unsigned char>::query_scalar_interface() const;
+CurveField<unsigned char>::query_scalar_interface() const;
 
 template <class T>
 ScalarFieldInterface*
-ContourField<T>::query_scalar_interface() const 
+CurveField<T>::query_scalar_interface() const 
 {
   return 0;
 }
 
 template <>
 VectorFieldInterface*
-ContourField<Vector>::query_vector_interface() const;
+CurveField<Vector>::query_vector_interface() const;
 
 template <class T>
 VectorFieldInterface*
-ContourField<T>::query_vector_interface() const
+CurveField<T>::query_vector_interface() const
 {
   return 0;
 }
 
 template <>
 TensorFieldInterface*
-ContourField<Tensor>::query_tensor_interface() const;
+CurveField<Tensor>::query_tensor_interface() const;
 
 template <class T>
 TensorFieldInterface*
-ContourField<T>::query_tensor_interface() const
+CurveField<T>::query_tensor_interface() const
 {
   return 0;
 }
 
 template <class Data>
 const string
-ContourField<Data>::get_type_name(int n = -1) const
+CurveField<Data>::get_type_name(int n = -1) const
 {
   return type_name(n);
 }
 
 template <class T>
 const TypeDescription* 
-get_type_description(ContourField<T>*)
+get_type_description(CurveField<T>*)
 {
   static TypeDescription* td = 0;
   if(!td){
     const TypeDescription *sub = SCIRun::get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew TypeDescription("ContourField", subs, __FILE__, "SCIRun");
+    td = scinew TypeDescription("CurveField", subs, __FILE__, "SCIRun");
   }
   return td;
 }
 
 template <class T>
 const TypeDescription* 
-ContourField<T>::get_type_description() const 
+CurveField<T>::get_type_description() const 
 {
-  return SCIRun::get_type_description((ContourField<T>*)0);
+  return SCIRun::get_type_description((CurveField<T>*)0);
 }
 
 } // end namespace SCIRun
 
-#endif // Datatypes_ContourField_h
+#endif // Datatypes_CurveField_h

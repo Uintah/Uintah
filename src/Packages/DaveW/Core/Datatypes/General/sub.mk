@@ -6,7 +6,7 @@ SRCDIR   := Packages/DaveW/Core/Datatypes/General
 
 SRCS     += $(SRCDIR)/ContourSet.cc $(SRCDIR)/ContourSetPort.cc \
 	$(SRCDIR)/ManhattanDist.cc \
-	$(SRCDIR)/ScalarTriSurface.cc \
+	$(SRCDIR)/ScalarTriSurfFieldace.cc \
 	$(SRCDIR)/SegFld.cc $(SRCDIR)/SegFldPort.cc \
 	$(SRCDIR)/SigmaSet.cc $(SRCDIR)/SigmaSetPort.cc \
         $(SRCDIR)/TopoSurfTree.cc \

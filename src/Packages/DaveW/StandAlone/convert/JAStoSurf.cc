@@ -1,6 +1,6 @@
 
 /*
- *  JAStoSurf.cc: Read in John's .pts and .tri files and output a TriSurf
+ *  JAStoSurf.cc: Read in John's .pts and .tri files and output a TriSurfField
  *
  *  Written by:
  *   David Weinstein
@@ -14,7 +14,7 @@
 #include <Core/Containers/String.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Persistent/Pstreams.h>
-#include <Core/Datatypes/TriSurface.h>
+#include <Core/Datatypes/TriSurfFieldace.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <iostream>
@@ -29,7 +29,7 @@ using std::endl;
 using namespace SCIRun;
 
 main(int argc, char **argv) {
-    TriSurface *surf=new TriSurface;
+    TriSurfFieldace *surf=new TriSurfFieldace;
     char ptsname[100];
     char triname[100];
 //    char nrmname[100];
@@ -65,7 +65,7 @@ main(int argc, char **argv) {
     }
 
 //    while (nrmstream) {
-    surf->normType=TriSurface::PointType;
+    surf->normType=TriSurfFieldace::PointType;
     for (i=0; i<surf->points.size(); i++) {
 //	double x, y, z;
 //	nrmstream >> x >> y >> z;

@@ -28,13 +28,13 @@
  */
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/TetVol.h>
-#include <Core/Datatypes/LatticeVol.h>
-#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/CurveField.h>
 #include <Core/Datatypes/ScanlineField.h>
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>

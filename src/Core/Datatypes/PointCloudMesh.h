@@ -144,9 +144,9 @@ public:
   bool locate(Cell::index_type &, const Point &) const { return false; }
 
   void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
-  void get_weights(const Point &, Edge::array_type &, vector<double> &) {ASSERTFAIL("PointCloud::get_weights for edges isn't supported");}
-  void get_weights(const Point &, Face::array_type &, vector<double> &) {ASSERTFAIL("PointCloud::get_weights for faces isn't supported");}
-  void get_weights(const Point &, Cell::array_type &, vector<double> &) {ASSERTFAIL("PointCloud::get_weights for cells isn't supported");}
+  void get_weights(const Point &, Edge::array_type &, vector<double> &) {ASSERTFAIL("PointCloudField::get_weights for edges isn't supported");}
+  void get_weights(const Point &, Face::array_type &, vector<double> &) {ASSERTFAIL("PointCloudField::get_weights for faces isn't supported");}
+  void get_weights(const Point &, Cell::array_type &, vector<double> &) {ASSERTFAIL("PointCloudField::get_weights for cells isn't supported");}
 
   void get_point(Point &result, Node::index_type idx) const
   { get_center(result,idx); }
@@ -155,7 +155,7 @@ public:
   void set_point(const Point &point, Node::index_type index)
   { points_[index] = point; }
 
-  //! use these to build up a new PointCloud mesh
+  //! use these to build up a new PointCloudField mesh
   Node::index_type add_node(const Point &p) { return add_point(p); }
   Node::index_type add_point(const Point &p);
 

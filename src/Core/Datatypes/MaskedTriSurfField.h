@@ -16,7 +16,7 @@
 */
 
 /*
- *  MaskedHexVol.h
+ *  MaskedTriSurfField.h
  *
  *  Written by:
  *   Martin Cole
@@ -26,11 +26,11 @@
  *  Copyright (C) 2001 SCI Institute
  */
 
-#ifndef Datatypes_MaskedHexVol_h
-#define Datatypes_MaskedHexVol_h
+#ifndef Datatypes_MaskedTriSurfField_h
+#define Datatypes_MaskedTriSurfField_h
 
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/HexVol.h>
+#include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/PersistentSTL.h>
@@ -39,48 +39,43 @@
 namespace SCIRun {
 
 template <class T> 
-class MaskedHexVol : public HexVol<T> {
+class MaskedTriSurfField : public TriSurfField<T> {
 private:
   vector<char> mask_;  // since Pio isn't implemented for bool's
 public:
   vector<char>& mask() { return mask_; }
 
-  MaskedHexVol() :
-    HexVol<T>() {};
-  MaskedHexVol(Field::data_location data_at) : 
-    HexVol<T>(data_at) {};
-  MaskedHexVol(HexVolMeshHandle mesh, Field::data_location data_at) : 
-    HexVol<T>(mesh, data_at) 
+  MaskedTriSurfField() :
+    TriSurfField<T>() {};
+  MaskedTriSurfField(Field::data_location data_at) : 
+    TriSurfField<T>(data_at) {};
+  MaskedTriSurfField(TriSurfMeshHandle mesh, Field::data_location data_at) : 
+    TriSurfField<T>(mesh, data_at) 
   {
     resize_fdata();
   };
 
-  bool get_valid_nodes_and_data(vector<pair<HexVolMesh::Node::index_type, T> > &data) {
-    data.erase(data.begin(), data.end());
+  bool get_valid_nodes_and_data(vector<TriSurfMesh::Node::index_type> &nodes,
+				vector<T> &data) {
+    nodes.resize(0);
+    data.resize(0);
     if (data_at() != NODE) return false;
-    HexVolMesh::Node::iterator ni, nie;
+    TriSurfMesh::Node::iterator ni, nie;
     get_typed_mesh()->begin(ni);
     get_typed_mesh()->end(nie);
     for (; ni != nie; ++ni) { 
-      if (mask_[*ni]) { 
-	pair<HexVolMesh::Node::index_type, T> p;
-	p.first=*ni; 
-	p.second=fdata()[*ni];
-	data.push_back(p);
-      }
+      if (mask_[*ni]) { nodes.push_back(*ni); data.push_back(fdata()[*ni]); }
     }
     return true;
   }
 
-  virtual ~MaskedHexVol() {};
+  virtual ~MaskedTriSurfField() {};
 
-  bool value(T &val, typename HexVolMesh::Node::index_type i) const
+  bool value(T &val, typename TriSurfMesh::Node::index_type i) const
   { if (!mask_[i]) return false; val = fdata()[i]; return true; }
-  bool value(T &val, typename HexVolMesh::Edge::index_type i) const
+  bool value(T &val, typename TriSurfMesh::Edge::index_type i) const
   { if (!mask_[i]) return false; val = fdata()[i]; return true; }
-  bool value(T &val, typename HexVolMesh::Face::index_type i) const
-  { if (!mask_[i]) return false; val = fdata()[i]; return true; }
-  bool value(T &val, typename HexVolMesh::Cell::index_type i) const
+  bool value(T &val, typename TriSurfMesh::Cell::index_type i) const
   { if (!mask_[i]) return false; val = fdata()[i]; return true; }
 
   void    io(Piostream &stream);
@@ -118,7 +113,7 @@ public:
     {
       ASSERTFAIL("data at unrecognized location");
     }
-    HexVol<T>::resize_fdata();
+    TriSurfField<T>::resize_fdata();
   }
 
   static  PersistentTypeID type_id;
@@ -130,35 +125,36 @@ private:
 };
 
 // Pio defs.
-const int MASKED_HEX_VOL_VERSION = 1;
+const int MASKED_TRI_SURF_FIELD_VERSION = 1;
 
 template <class T>
 Persistent*
-MaskedHexVol<T>::maker()
+MaskedTriSurfField<T>::maker()
 {
-  return scinew MaskedHexVol<T>;
+  return scinew MaskedTriSurfField<T>;
 }
 
 template <class T>
 PersistentTypeID 
-MaskedHexVol<T>::type_id(type_name(-1), 
-			 HexVol<T>::type_name(-1),
+MaskedTriSurfField<T>::type_id(type_name(-1), 
+			 TriSurfField<T>::type_name(-1),
 			 maker);
 
 
 template <class T>
 void 
-MaskedHexVol<T>::io(Piostream& stream)
+MaskedTriSurfField<T>::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1), MASKED_HEX_VOL_VERSION);
-  HexVol<T>::io(stream);
+  /*int version=*/stream.begin_class(type_name(-1), 
+				     MASKED_TRI_SURF_FIELD_VERSION);
+  TriSurfField<T>::io(stream);
   Pio(stream, mask_);
   stream.end_class();
 }
 
 template <class T> 
 const string 
-MaskedHexVol<T>::type_name(int n)
+MaskedTriSurfField<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
@@ -169,7 +165,7 @@ MaskedHexVol<T>::type_name(int n)
   }
   else if (n == 0)
   {
-    return "MaskedHexVol";
+    return "MaskedTriSurfField";
   }
   else
   {
@@ -180,25 +176,25 @@ MaskedHexVol<T>::type_name(int n)
 
 template <class T>
 const TypeDescription* 
-get_type_description(MaskedHexVol<T>*)
+get_type_description(MaskedTriSurfField<T>*)
 {
   static TypeDescription* td = 0;
   if(!td){
     const TypeDescription *sub = SCIRun::get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew TypeDescription("MaskedHexVol", subs, __FILE__, "SCIRun");
+    td = scinew TypeDescription("MaskedTriSurfField", subs, __FILE__, "SCIRun");
   }
   return td;
 }
 
 template <class T>
 const TypeDescription* 
-MaskedHexVol<T>::get_type_description() const 
+MaskedTriSurfField<T>::get_type_description() const 
 {
-  return SCIRun::get_type_description((MaskedHexVol<T>*)0);
+  return SCIRun::get_type_description((MaskedTriSurfField<T>*)0);
 }
 
 } // end namespace SCIRun
 
-#endif // Datatypes_MaskedHexVol_h
+#endif // Datatypes_MaskedTriSurfField_h

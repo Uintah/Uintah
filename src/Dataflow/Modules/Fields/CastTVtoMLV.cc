@@ -9,8 +9,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/TetVol.h>
-#include <Core/Datatypes/MaskedLatticeVol.h>
+#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/MaskedLatVolField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geometry/BBox.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -53,14 +53,14 @@ CastTVtoMLV::~CastTVtoMLV(){
 void CastTVtoMLV::execute()
 {
   // must find ports and have valid data on inputs
-  FieldIPort *iport_ = (FieldIPort*)get_iport("TetVolMask");
+  FieldIPort *iport_ = (FieldIPort*)get_iport("TetVolFieldMask");
 
   if (!iport_) {
     postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
   
-  FieldOPort *oport_ = (FieldOPort*)get_oport("LatticeVol");
+  FieldOPort *oport_ = (FieldOPort*)get_oport("LatVolField");
   if (!oport_) {
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;
@@ -71,16 +71,16 @@ void CastTVtoMLV::execute()
       !ifieldH.get_rep())
     return;
   
-  // we expect that the input field is a TetVol<Vector>
+  // we expect that the input field is a TetVolField<Vector>
   cout << "typename = " << ifieldH->get_type_description()->get_name() << '\n';
   if (ifieldH->get_type_description()->get_name() !=
-      get_type_description((TetVol<Vector> *)0)->get_name())
+      get_type_description((TetVolField<Vector> *)0)->get_name())
   {
-    postMessage("CastTVtoMLV: ERROR: input volume is not a TetVol<Vector>.  Exiting.");
+    postMessage("CastTVtoMLV: ERROR: input volume is not a TetVolField<Vector>.  Exiting.");
     return;
   }                     
 
-  TetVol<Vector> *tv = dynamic_cast<TetVol<Vector> *>(ifieldH.get_rep());
+  TetVolField<Vector> *tv = dynamic_cast<TetVolField<Vector> *>(ifieldH.get_rep());
   TetVolMesh *tvm = tv->get_typed_mesh().get_rep();
   BBox b = tvm->get_bounding_box();
 
@@ -90,8 +90,8 @@ void CastTVtoMLV::execute()
   int nz = nz_.get();
 
   LatVolMesh *lvm = scinew LatVolMesh(nx, ny, nz, b.min(), b.max());
-  MaskedLatticeVol<Vector> *lv = 
-    scinew MaskedLatticeVol<Vector>(lvm, Field::NODE);
+  MaskedLatVolField<Vector> *lv = 
+    scinew MaskedLatVolField<Vector>(lvm, Field::NODE);
   lv->initialize_mask(1);
 
   // for each node in the LatVol, check to see if it's inside the TetMesh

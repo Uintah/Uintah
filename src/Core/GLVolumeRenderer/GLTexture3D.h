@@ -24,7 +24,7 @@
 #include <Core/GLVolumeRenderer/VolumeUtils.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array3.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Containers/Octree.h>

@@ -38,7 +38,7 @@
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Dataflow/Widgets/FrameWidget.h>
@@ -729,7 +729,7 @@ NodeHedgehog::interpolate(FieldHandle vfld, const Point& p, Vector& val)
       return false;
     }
   } else {
-    if( field_type == "LatticeVol"){
+    if( field_type == "LatVolField"){
    // use virtual field interpolation
       VectorFieldInterface *vfi;
       if(( vfi = vfld->query_vector_interface())){
@@ -775,7 +775,7 @@ NodeHedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
       cerr << "Uintah::NodeHedgehog::interpolate:: error - unimplemented Field type: " << type << endl;
       return false;
     }
-  } else if( sfld->get_type_name(0) == "LatticeVol" ){
+  } else if( sfld->get_type_name(0) == "LatVolField" ){
     // use virtual field interpolation
     ScalarFieldInterface *sfi;
     if(( sfi = sfld->query_scalar_interface())){

@@ -40,7 +40,7 @@
 	  with the supplied mesh and dipole parameters</p>
 	</listitem>
 	<listitem>
-	  <p>The supplied mesh is assumed to be of type TetVol(int)
+	  <p>The supplied mesh is assumed to be of type TetVolField(int)
 	  containing indices to conductivity tensor lookup
 	  table. Further requirements to the supplied mesh are
 	  described in documentation to BioPSE::Forward::SetupFEMatrix 

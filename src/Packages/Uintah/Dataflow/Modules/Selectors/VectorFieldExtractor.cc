@@ -196,8 +196,8 @@ void VectorFieldExtractor::execute()
 	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
 					     range.z(), box.min(),
 					     box.max());
-	  LatticeVol<Vector> *vfd =
-	    scinew LatticeVol<Vector>( lvm, Field::CELL );
+	  LatVolField<Vector> *vfd =
+	    scinew LatVolField<Vector>( lvm, Field::CELL );
 	  // set the generation and timestep in the field
 	  vfd->store("varname",string(var), true);
 	  vfd->store("generation",generation, true);

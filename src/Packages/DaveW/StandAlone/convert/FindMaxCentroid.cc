@@ -1,5 +1,5 @@
 /*
- *  ExtractCC.cc: Split the connected components of a TriSurf into
+ *  ExtractCC.cc: Split the connected components of a TriSurfField into
  *                separate files
  *
  *  Written by:
@@ -11,7 +11,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <fstream>
@@ -28,7 +28,7 @@ main(int argc, char **argv) {
 
   // check for correct usage and valid input
   if (argc != 2) {
-    cerr << "Usage: "<<argv[0]<<" CellCenteredTetVolOfVectors\n";
+    cerr << "Usage: "<<argv[0]<<" CellCenteredTetVolFieldOfVectors\n";
     return 0;
   }
   FieldHandle handle;
@@ -42,9 +42,9 @@ main(int argc, char **argv) {
     cerr << "Error - input file "<<argv[1]<<" didn't contant a field.\n";
     return 0;
   }
-  TetVol<Vector> *tv = dynamic_cast<TetVol<Vector> *>(handle.get_rep());
+  TetVolField<Vector> *tv = dynamic_cast<TetVolField<Vector> *>(handle.get_rep());
   if (!tv) {
-    cerr << "Error - input field wasn't a TetVol<Vector>, it was a "<<handle->get_type_name();
+    cerr << "Error - input field wasn't a TetVolField<Vector>, it was a "<<handle->get_type_name();
     return 0;
   }
   if (tv->data_at() != Field::CELL) {

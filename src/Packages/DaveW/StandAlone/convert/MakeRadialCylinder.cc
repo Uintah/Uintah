@@ -15,7 +15,7 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Persistent/Pstreams.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
@@ -187,7 +187,7 @@ int main(int argc, char *argv[]) {
   conds[2].second = Tensor(0.4518);
 
   TetVolMeshHandle tvmH(mesh);
-  TetVol<int> *tv = scinew TetVol<int>(tvmH, Field::CELL);
+  TetVolField<int> *tv = scinew TetVolField<int>(tvmH, Field::CELL);
 
   for (i=0; i<data.size(); i++)
     tv->fdata()[i]=data[i];

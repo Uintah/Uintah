@@ -54,7 +54,7 @@ SRCS     += \
 	$(SRCDIR)/SelectField.cc\
 	$(SRCDIR)/SetProperty.cc\
 	$(SRCDIR)/TransformField.cc\
-	$(SRCDIR)/TetVolCellToNode.cc\
+	$(SRCDIR)/TetVolFieldCellToNode.cc\
 	$(SRCDIR)/Unstructure.cc\
 #[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/CastField.cc\

@@ -16,7 +16,7 @@
 */
 
 /*
- *  QuadSurf.h
+ *  QuadSurfField.h
  *
  *  Written by:
  *   Michael Callahan
@@ -26,8 +26,8 @@
  *  Copyright (C) 2001 SCI Institute
  */
 
-#ifndef Datatypes_QuadSurf_h
-#define Datatypes_QuadSurf_h
+#ifndef Datatypes_QuadSurfField_h
+#define Datatypes_QuadSurfField_h
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
@@ -41,14 +41,14 @@
 namespace SCIRun {
 
 template <class T> 
-class QuadSurf : public GenericField<QuadSurfMesh, vector<T> >
+class QuadSurfField : public GenericField<QuadSurfMesh, vector<T> >
 {
 public:
-  QuadSurf();
-  QuadSurf(Field::data_location data_at);
-  QuadSurf(QuadSurfMeshHandle mesh, Field::data_location data_at);
-  virtual QuadSurf<T> *clone() const;
-  virtual ~QuadSurf();
+  QuadSurfField();
+  QuadSurfField(Field::data_location data_at);
+  QuadSurfField(QuadSurfMeshHandle mesh, Field::data_location data_at);
+  virtual QuadSurfField<T> *clone() const;
+  virtual ~QuadSurfField();
   
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
@@ -65,27 +65,27 @@ private:
 };
 
 // Pio defs.
-const int QUAD_SURF_VERSION = 1;
+const int QUAD_SURF_FIELD_VERSION = 1;
 
 template <class T>
 Persistent *
-QuadSurf<T>::maker()
+QuadSurfField<T>::maker()
 {
-  return scinew QuadSurf<T>;
+  return scinew QuadSurfField<T>;
 }
 
 template <class T>
 PersistentTypeID 
-QuadSurf<T>::type_id(type_name(-1), 
+QuadSurfField<T>::type_id(type_name(-1), 
 		    GenericField<QuadSurfMesh, vector<T> >::type_name(-1),
 		    maker);
 
 
 template <class T>
 void 
-QuadSurf<T>::io(Piostream& stream)
+QuadSurfField<T>::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1), QUAD_SURF_VERSION);
+  /*int version=*/stream.begin_class(type_name(-1), QUAD_SURF_FIELD_VERSION);
   GenericField<QuadSurfMesh, vector<T> >::io(stream);
   stream.end_class();
 }
@@ -93,7 +93,7 @@ QuadSurf<T>::io(Piostream& stream)
 
 template <class T> 
 const string 
-QuadSurf<T>::type_name(int n)
+QuadSurfField<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
@@ -103,7 +103,7 @@ QuadSurf<T>::type_name(int n)
   }
   else if (n == 0)
   {
-    return "QuadSurf";
+    return "QuadSurfField";
   }
   else
   {
@@ -112,84 +112,84 @@ QuadSurf<T>::type_name(int n)
 }
 
 template <class T>
-QuadSurf<T>::QuadSurf()
+QuadSurfField<T>::QuadSurfField()
   : GenericField<QuadSurfMesh, vector<T> >()
 {
 }
 
 template <class T>
-QuadSurf<T>::QuadSurf(Field::data_location data_at) :
+QuadSurfField<T>::QuadSurfField(Field::data_location data_at) :
   GenericField<QuadSurfMesh, vector<T> >(data_at)
 {
 }
 
 template <class T>
-QuadSurf<T>::QuadSurf(QuadSurfMeshHandle mesh, Field::data_location data_at)
+QuadSurfField<T>::QuadSurfField(QuadSurfMeshHandle mesh, Field::data_location data_at)
   : GenericField<QuadSurfMesh, vector<T> >(mesh, data_at)
 {
 } 
 
 template <class T>
-QuadSurf<T> *
-QuadSurf<T>::clone() const
+QuadSurfField<T> *
+QuadSurfField<T>::clone() const
 {
-  return new QuadSurf(*this);
+  return new QuadSurfField(*this);
 }
 
 template <class T>
-QuadSurf<T>::~QuadSurf()
+QuadSurfField<T>::~QuadSurfField()
 {
 }
 
 template <> ScalarFieldInterface *
-QuadSurf<double>::query_scalar_interface() const;
+QuadSurfField<double>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-QuadSurf<float>::query_scalar_interface() const;
+QuadSurfField<float>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-QuadSurf<int>::query_scalar_interface() const;
+QuadSurfField<int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-QuadSurf<short>::query_scalar_interface() const;
+QuadSurfField<short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-QuadSurf<char>::query_scalar_interface() const;
+QuadSurfField<char>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-QuadSurf<unsigned int>::query_scalar_interface() const;
+QuadSurfField<unsigned int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-QuadSurf<unsigned short>::query_scalar_interface() const;
+QuadSurfField<unsigned short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-QuadSurf<unsigned char>::query_scalar_interface() const;
+QuadSurfField<unsigned char>::query_scalar_interface() const;
 
 template <class T>
 ScalarFieldInterface*
-QuadSurf<T>::query_scalar_interface() const 
+QuadSurfField<T>::query_scalar_interface() const 
 {
   return 0;
 }
 
 template <>
 VectorFieldInterface*
-QuadSurf<Vector>::query_vector_interface() const;
+QuadSurfField<Vector>::query_vector_interface() const;
 
 template <class T>
 VectorFieldInterface*
-QuadSurf<T>::query_vector_interface() const
+QuadSurfField<T>::query_vector_interface() const
 {
   return 0;
 }
 
 template <>
 TensorFieldInterface*
-QuadSurf<Tensor>::query_tensor_interface() const;
+QuadSurfField<Tensor>::query_tensor_interface() const;
 
 template <class T>
 TensorFieldInterface*
-QuadSurf<T>::query_tensor_interface() const
+QuadSurfField<T>::query_tensor_interface() const
 {
   return 0;
 }
@@ -197,17 +197,17 @@ QuadSurf<T>::query_tensor_interface() const
 
 template <class T>
 const string 
-QuadSurf<T>::get_type_name(int n = -1) const
+QuadSurfField<T>::get_type_name(int n = -1) const
 {
   return type_name(n);
 }
 
 template <class T>
 const TypeDescription* 
-get_type_description(QuadSurf<T>*)
+get_type_description(QuadSurfField<T>*)
 {
   static TypeDescription* td = 0;
-  static string name("QuadSurf");
+  static string name("QuadSurfField");
   static string namesp("SCIRun");
   static string path(__FILE__);
   if(!td){
@@ -221,14 +221,14 @@ get_type_description(QuadSurf<T>*)
 
 template <class T>
 const TypeDescription* 
-QuadSurf<T>::get_type_description() const 
+QuadSurfField<T>::get_type_description() const 
 {
-  return SCIRun::get_type_description((QuadSurf<T>*)0);
+  return SCIRun::get_type_description((QuadSurfField<T>*)0);
 }
 
 } // end namespace SCIRun
 
-#endif // Datatypes_QuadSurf_h
+#endif // Datatypes_QuadSurfField_h
 
 
 

@@ -6,7 +6,7 @@
 #include <Core/Containers/Array2.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Datatypes/TriSurface.h>
+#include <Core/Datatypes/TriSurfFieldace.h>
 #include <Core/Geom/Color.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/View.h>

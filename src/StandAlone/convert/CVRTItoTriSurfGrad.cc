@@ -16,7 +16,7 @@
 */
 
 /*
- *  CVRTItoTriSurfGrad.cc
+ *  CVRTItoTriSurfFieldGrad.cc
  *
  *  Written by:
  *   David Weinstein
@@ -27,7 +27,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/TriSurfField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <fstream>
@@ -99,7 +99,7 @@ main(int argc, char **argv) {
   }
 
   TriSurfMeshHandle tsmH(tsm);
-  TriSurf<Vector> *ts = scinew TriSurf<Vector>(tsmH, Field::NODE);
+  TriSurfField<Vector> *ts = scinew TriSurfField<Vector>(tsmH, Field::NODE);
 
   for (ii=0; ii<npts; ii++)
     ts->fdata()[ii]=grads[channels[ii]];

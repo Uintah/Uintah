@@ -36,8 +36,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/TriSurf.h>
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
@@ -54,7 +54,7 @@ using std::cerr;
 namespace BioPSE {
 using namespace SCIRun;
 
-typedef LockingHandle<TriSurf<double> > TriSurfHandle;
+typedef LockingHandle<TriSurfField<double> > TriSurfFieldHandle;
 typedef LockingHandle<TriSurfMesh > TriSurfMeshHandle;
 
 class DipoleInSphere : public Module {
@@ -70,7 +70,7 @@ class DipoleInSphere : public Module {
 
   //! Private Methods
   // -- fills in the surface with potentials for single sphere uniform model
-  void fillOneSpherePotentials(DenseMatrix&, TriSurfHandle);
+  void fillOneSpherePotentials(DenseMatrix&, TriSurfFieldHandle);
 
 public:
   
@@ -125,20 +125,20 @@ void DipoleInSphere::execute() {
     return;
   }
  
-  if (field_handle->get_type_name(0) == "TriSurf" && field_handle->get_type_name(1) == "double"){
+  if (field_handle->get_type_name(0) == "TriSurfField" && field_handle->get_type_name(1) == "double"){
     
-    TriSurf<double>* pSurf = dynamic_cast<TriSurf<double>*>(field_handle.get_rep());
+    TriSurfField<double>* pSurf = dynamic_cast<TriSurfField<double>*>(field_handle.get_rep());
     TriSurfMeshHandle hMesh = new TriSurfMesh(*(pSurf->get_typed_mesh().get_rep()));
-    TriSurfHandle hNewSurf = new TriSurf<double>(hMesh, Field::NODE);
+    TriSurfFieldHandle hNewSurf = new TriSurfField<double>(hMesh, Field::NODE);
     
     FieldHandle dip_handle;
     
     if (iportDip_->get(dip_handle) 
 	&& dip_handle.get_rep() &&
-	dip_handle->get_type_name(0) == "PointCloud" 
+	dip_handle->get_type_name(0) == "PointCloudField" 
 	&& dip_handle->get_type_name(1) == "Vector"){
       
-      PointCloud<Vector>*  pDips = dynamic_cast<PointCloud<Vector>*>(dip_handle.get_rep());
+      PointCloudField<Vector>*  pDips = dynamic_cast<PointCloudField<Vector>*>(dip_handle.get_rep());
       PointCloudMeshHandle hMesh = pDips->get_typed_mesh();
       
       PointCloudMesh::Node::iterator ii;
@@ -173,17 +173,17 @@ void DipoleInSphere::execute() {
       oportPot_->send(FieldHandle(hNewSurf.get_rep()));
     }
     else {
-      msgStream_ << "No dipole info found in the mesh supplied or supplied field is not of type PointCloud<Vector>" << endl;
+      msgStream_ << "No dipole info found in the mesh supplied or supplied field is not of type PointCloudField<Vector>" << endl;
     }
    
   }
   else {
-    msgStream_ << "Error: the supplied field is not of type TriSurf<double>" << endl;
+    msgStream_ << "Error: the supplied field is not of type TriSurfField<double>" << endl;
     return;
   }
 }
 
-void DipoleInSphere::fillOneSpherePotentials(DenseMatrix& dips, TriSurfHandle hSurf) {
+void DipoleInSphere::fillOneSpherePotentials(DenseMatrix& dips, TriSurfFieldHandle hSurf) {
   
   TriSurfMeshHandle hMesh = hSurf->get_typed_mesh();
   vector<double>& data = hSurf->fdata();

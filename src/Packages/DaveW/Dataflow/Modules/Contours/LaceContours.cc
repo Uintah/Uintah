@@ -19,7 +19,7 @@
 #include <Dataflow/Datatypes/ContourSetPort.h>
 #include <Dataflow/Datatypes/Surface.h>
 #include <Dataflow/Datatypes/SurfacePort.h>
-#include <Dataflow/Datatypes/TriSurface.h>
+#include <Dataflow/Datatypes/TriSurfFieldace.h>
 #include <Core/Geometry/Grid.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
@@ -32,7 +32,7 @@ using namespace SCIRun;
 class LaceContours : public Module {
     ContourSetIPort* incontour;
     SurfaceOPort* osurface;
-    void lace_contours(const ContourSetHandle& contour, TriSurface* surf);
+    void lace_contours(const ContourSetHandle& contour, TriSurfFieldace* surf);
 public:
     LaceContours(const clString&);
     LaceContours(const LaceContours&, int deep);
@@ -79,13 +79,13 @@ void LaceContours::execute()
 {
     ContourSetHandle contours;
     if (!incontour->get(contours)) return;
-    TriSurface* surf=new TriSurface;
+    TriSurfFieldace* surf=new TriSurfFieldace;
     lace_contours(contours, surf);
     osurface->send(SurfaceHandle(surf));
 }
 
 void LaceContours::lace_contours(const ContourSetHandle& contour, 
-				   TriSurface* surf) {
+				   TriSurfFieldace* surf) {
     surf->name=contour->name;
     Array1<int> row;	
     int i;

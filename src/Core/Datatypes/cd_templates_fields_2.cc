@@ -3,7 +3,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/ScanlineField.h>
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/PointCloudField.h>
 
 
 using namespace SCIRun;
@@ -52,27 +52,27 @@ const TypeDescription* get_type_description(ScanlineField<unsigned int> *);
 const TypeDescription* get_type_description(ScanlineField<unsigned short> *);
 const TypeDescription* get_type_description(ScanlineField<unsigned char> *);
 
-template class PointCloud<Tensor>;
-template class PointCloud<Vector>;
-template class PointCloud<double>;
-template class PointCloud<float>;
-template class PointCloud<int>;
-template class PointCloud<short>;
-template class PointCloud<char>;
-template class PointCloud<unsigned int>;
-template class PointCloud<unsigned short>;
-template class PointCloud<unsigned char>;
+template class PointCloudField<Tensor>;
+template class PointCloudField<Vector>;
+template class PointCloudField<double>;
+template class PointCloudField<float>;
+template class PointCloudField<int>;
+template class PointCloudField<short>;
+template class PointCloudField<char>;
+template class PointCloudField<unsigned int>;
+template class PointCloudField<unsigned short>;
+template class PointCloudField<unsigned char>;
 
-const TypeDescription* get_type_description(PointCloud<Tensor> *);
-const TypeDescription* get_type_description(PointCloud<Vector> *);
-const TypeDescription* get_type_description(PointCloud<double> *);
-const TypeDescription* get_type_description(PointCloud<float> *);
-const TypeDescription* get_type_description(PointCloud<int> *);
-const TypeDescription* get_type_description(PointCloud<short> *);
-const TypeDescription* get_type_description(PointCloud<char> *);
-const TypeDescription* get_type_description(PointCloud<unsigned int> *);
-const TypeDescription* get_type_description(PointCloud<unsigned short> *);
-const TypeDescription* get_type_description(PointCloud<unsigned char> *);
+const TypeDescription* get_type_description(PointCloudField<Tensor> *);
+const TypeDescription* get_type_description(PointCloudField<Vector> *);
+const TypeDescription* get_type_description(PointCloudField<double> *);
+const TypeDescription* get_type_description(PointCloudField<float> *);
+const TypeDescription* get_type_description(PointCloudField<int> *);
+const TypeDescription* get_type_description(PointCloudField<short> *);
+const TypeDescription* get_type_description(PointCloudField<char> *);
+const TypeDescription* get_type_description(PointCloudField<unsigned int> *);
+const TypeDescription* get_type_description(PointCloudField<unsigned short> *);
+const TypeDescription* get_type_description(PointCloudField<unsigned char> *);
 
 
 template <>
@@ -150,72 +150,72 @@ ScanlineField<unsigned char>::query_scalar_interface() const
 
 template <>
 TensorFieldInterface *
-PointCloud<Tensor>::query_tensor_interface() const
+PointCloudField<Tensor>::query_tensor_interface() const
 {
-  return scinew TFInterface<PointCloud<Tensor> >(this);
+  return scinew TFInterface<PointCloudField<Tensor> >(this);
 }
 
 
 template <>
 VectorFieldInterface *
-PointCloud<Vector>::query_vector_interface() const
+PointCloudField<Vector>::query_vector_interface() const
 {
-  return scinew VFInterface<PointCloud<Vector> >(this);
+  return scinew VFInterface<PointCloudField<Vector> >(this);
 }
 
 
 template <>
 ScalarFieldInterface *
-PointCloud<double>::query_scalar_interface() const
+PointCloudField<double>::query_scalar_interface() const
 {
-  return scinew SFInterface<PointCloud<double> >(this);
+  return scinew SFInterface<PointCloudField<double> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-PointCloud<float>::query_scalar_interface() const
+PointCloudField<float>::query_scalar_interface() const
 {
-  return scinew SFInterface<PointCloud<float> >(this);
+  return scinew SFInterface<PointCloudField<float> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-PointCloud<int>::query_scalar_interface() const
+PointCloudField<int>::query_scalar_interface() const
 {
-  return scinew SFInterface<PointCloud<int> >(this);
+  return scinew SFInterface<PointCloudField<int> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-PointCloud<short>::query_scalar_interface() const
+PointCloudField<short>::query_scalar_interface() const
 {
-  return scinew SFInterface<PointCloud<short> >(this);
+  return scinew SFInterface<PointCloudField<short> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-PointCloud<char>::query_scalar_interface() const
+PointCloudField<char>::query_scalar_interface() const
 {
-  return scinew SFInterface<PointCloud<char> >(this);
+  return scinew SFInterface<PointCloudField<char> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-PointCloud<unsigned int>::query_scalar_interface() const
+PointCloudField<unsigned int>::query_scalar_interface() const
 {
-  return scinew SFInterface<PointCloud<unsigned int> >(this);
+  return scinew SFInterface<PointCloudField<unsigned int> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-PointCloud<unsigned short>::query_scalar_interface() const
+PointCloudField<unsigned short>::query_scalar_interface() const
 {
-  return scinew SFInterface<PointCloud<unsigned short> >(this);
+  return scinew SFInterface<PointCloudField<unsigned short> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-PointCloud<unsigned char>::query_scalar_interface() const
+PointCloudField<unsigned char>::query_scalar_interface() const
 {
-  return scinew SFInterface<PointCloud<unsigned char> >(this);
+  return scinew SFInterface<PointCloudField<unsigned char> >(this);
 }

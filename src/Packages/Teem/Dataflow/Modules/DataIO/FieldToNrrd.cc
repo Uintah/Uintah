@@ -31,7 +31,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 #include <pair.h>
@@ -67,8 +67,8 @@ FieldToNrrd::~FieldToNrrd()
 }
 
 #define COPY_INTO_NRRD_FROM_FIELD(type, Type) \
-    LatticeVol<type> *f = \
-      dynamic_cast<LatticeVol<type>*>(field); \
+    LatVolField<type> *f = \
+      dynamic_cast<LatVolField<type>*>(field); \
     lvm = f->get_typed_mesh(); \
     nx = f->fdata().dim3(); \
     ny = f->fdata().dim2(); \
@@ -104,8 +104,8 @@ void FieldToNrrd::execute()
   FieldHandle fieldH;
   if (!ifield->get(fieldH))
     return;
-  if (fieldH->get_type_name(0) != "LatticeVol") {
-    cerr << "Error FieldToNrrd only works with LatticeVol's" << endl;
+  if (fieldH->get_type_name(0) != "LatVolField") {
+    cerr << "Error FieldToNrrd only works with LatVolField's" << endl;
     return;
   }
 
@@ -134,8 +134,8 @@ void FieldToNrrd::execute()
   } else if (data == "char") {
     COPY_INTO_NRRD_FROM_FIELD(char, Char);
   } else if (data == "Vector") {
-    LatticeVol<Vector> *f = 
-      dynamic_cast<LatticeVol<Vector>*>(field);
+    LatVolField<Vector> *f = 
+      dynamic_cast<LatVolField<Vector>*>(field);
     nx = f->fdata().dim3();
     ny = f->fdata().dim2();
     nz = f->fdata().dim1();
@@ -156,8 +156,8 @@ void FieldToNrrd::execute()
       nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterCell, 
 		  nrrdCenterCell, nrrdCenterCell, nrrdCenterCell);
   } else if (data == "Tensor") {
-    LatticeVol<Tensor> *f = 
-      dynamic_cast<LatticeVol<Tensor>*>(field);
+    LatVolField<Tensor> *f = 
+      dynamic_cast<LatVolField<Tensor>*>(field);
     nx = f->fdata().dim3();
     ny = f->fdata().dim2();
     nz = f->fdata().dim1();
@@ -182,7 +182,7 @@ void FieldToNrrd::execute()
       nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterCell, 
 		  nrrdCenterCell, nrrdCenterCell, nrrdCenterCell);
   } else {
-    cerr << "Error - unknown LatticeVol data type " << data << endl;
+    cerr << "Error - unknown LatVolField data type " << data << endl;
     free(nout);
     return;
   }

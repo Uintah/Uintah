@@ -16,7 +16,7 @@
 */
 
 /*
- *  MaskedTetVol.h
+ *  MaskedTetVolField.h
  *
  *  Written by:
  *   Martin Cole
@@ -26,11 +26,11 @@
  *  Copyright (C) 2001 SCI Institute
  */
 
-#ifndef Datatypes_MaskedTetVol_h
-#define Datatypes_MaskedTetVol_h
+#ifndef Datatypes_MaskedTetVolField_h
+#define Datatypes_MaskedTetVolField_h
 
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/PersistentSTL.h>
@@ -39,18 +39,18 @@
 namespace SCIRun {
 
 template <class T> 
-class MaskedTetVol : public TetVol<T> {
+class MaskedTetVolField : public TetVolField<T> {
 private:
   vector<char> mask_;  // since Pio isn't implemented for bool's
 public:
   vector<char>& mask() { return mask_; }
 
-  MaskedTetVol() :
-    TetVol<T>() {};
-  MaskedTetVol(Field::data_location data_at) : 
-    TetVol<T>(data_at) {};
-  MaskedTetVol(TetVolMeshHandle mesh, Field::data_location data_at) : 
-    TetVol<T>(mesh, data_at) 
+  MaskedTetVolField() :
+    TetVolField<T>() {};
+  MaskedTetVolField(Field::data_location data_at) : 
+    TetVolField<T>(data_at) {};
+  MaskedTetVolField(TetVolMeshHandle mesh, Field::data_location data_at) : 
+    TetVolField<T>(mesh, data_at) 
   {
     resize_fdata();
   };
@@ -73,7 +73,7 @@ public:
   }
 
 
-  virtual ~MaskedTetVol() {};
+  virtual ~MaskedTetVolField() {};
 
   bool value(T &val, typename TetVolMesh::Node::index_type i) const
   { if (!mask_[i]) return false; val = fdata()[i]; return true; }
@@ -119,7 +119,7 @@ public:
     {
       ASSERTFAIL("data at unrecognized location");
     }
-    TetVol<T>::resize_fdata();
+    TetVolField<T>::resize_fdata();
   }
 
   static  PersistentTypeID type_id;
@@ -131,35 +131,36 @@ private:
 };
 
 // Pio defs.
-const int MASKED_TET_VOL_VERSION = 1;
+const int MASKED_TET_VOL_FIELD_VERSION = 1;
 
 template <class T>
 Persistent*
-MaskedTetVol<T>::maker()
+MaskedTetVolField<T>::maker()
 {
-  return scinew MaskedTetVol<T>;
+  return scinew MaskedTetVolField<T>;
 }
 
 template <class T>
 PersistentTypeID 
-MaskedTetVol<T>::type_id(type_name(-1), 
-			 TetVol<T>::type_name(-1),
+MaskedTetVolField<T>::type_id(type_name(-1), 
+			 TetVolField<T>::type_name(-1),
 			 maker);
 
 
 template <class T>
 void 
-MaskedTetVol<T>::io(Piostream& stream)
+MaskedTetVolField<T>::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1), MASKED_TET_VOL_VERSION);
-  TetVol<T>::io(stream);
+  /*int version=*/stream.begin_class(type_name(-1), 
+				     MASKED_TET_VOL_FIELD_VERSION);
+  TetVolField<T>::io(stream);
   Pio(stream, mask_);
   stream.end_class();
 }
 
 template <class T> 
 const string 
-MaskedTetVol<T>::type_name(int n)
+MaskedTetVolField<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
@@ -170,7 +171,7 @@ MaskedTetVol<T>::type_name(int n)
   }
   else if (n == 0)
   {
-    return "MaskedTetVol";
+    return "MaskedTetVolField";
   }
   else
   {
@@ -181,25 +182,25 @@ MaskedTetVol<T>::type_name(int n)
 
 template <class T>
 const TypeDescription* 
-get_type_description(MaskedTetVol<T>*)
+get_type_description(MaskedTetVolField<T>*)
 {
   static TypeDescription* mtv_td = 0;
   if(!mtv_td){
     const TypeDescription *sub = SCIRun::get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    mtv_td = scinew TypeDescription("MaskedTetVol", subs, __FILE__, "SCIRun");
+    mtv_td = scinew TypeDescription("MaskedTetVolField", subs, __FILE__, "SCIRun");
   }
   return mtv_td;
 }
 
 template <class T>
 const TypeDescription* 
-MaskedTetVol<T>::get_type_description() const 
+MaskedTetVolField<T>::get_type_description() const 
 {
-  return SCIRun::get_type_description((MaskedTetVol<T>*)0);
+  return SCIRun::get_type_description((MaskedTetVolField<T>*)0);
 }
 
 } // end namespace SCIRun
 
-#endif // Datatypes_MaskedTetVol_h
+#endif // Datatypes_MaskedTetVolField_h

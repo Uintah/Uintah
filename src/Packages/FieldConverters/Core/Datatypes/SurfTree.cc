@@ -115,7 +115,7 @@ void SurfTree::printNbrInfo() {
 
 // map will be the mapping from a tree idx to a tri index --
 // imap will be a mapping from a tri index to a tree index.
-int SurfTree::extractTriSurface(TriSurface* ts, Array1<int>& map, 
+int SurfTree::extractTriSurfFieldace(TriSurfFieldace* ts, Array1<int>& map, 
 				Array1<int>& imap, int comp, int remapPoints) {
   map.resize(0);
   imap.resize(0);
@@ -159,7 +159,7 @@ int SurfTree::extractTriSurface(TriSurface* ts, Array1<int>& map,
 
   ts->name = surfI[comp].name;
   if (typ == FaceValuesAll || typ == FaceValuesSome) {
-    cerr << "can't map face values of SurfTree to nodes of TriSurface!\n";
+    cerr << "can't map face values of SurfTree to nodes of TriSurfFieldace!\n";
   } else if (typ == NodeValuesAll) {
     ts->bcVal = data;
     for (i=0; i<data.size(); i++) ts->bcIdx.add(i);

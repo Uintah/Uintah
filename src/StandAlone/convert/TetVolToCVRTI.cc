@@ -16,7 +16,7 @@
 */
 
 /*
- *  TetVolToCVRTI.cc
+ *  TetVolFieldToCVRTI.cc
  *
  *  Written by:
  *   David Weinstein
@@ -27,7 +27,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
@@ -57,8 +57,8 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<argv[1]<<".  Exiting...\n";
     exit(0);
   }
-  if (handle->get_type_name(0) != "TetVol") {
-    cerr << "Error -- input field wasn't a TetVol (type_name="<<handle->get_type_name(0)<<"\n";
+  if (handle->get_type_name(0) != "TetVolField") {
+    cerr << "Error -- input field wasn't a TetVolField (type_name="<<handle->get_type_name(0)<<"\n";
     exit(0);
   }
 
@@ -97,7 +97,7 @@ main(int argc, char **argv) {
   }
 
   if (handle->get_type_name(1) == "Vector") {
-    TetVol<Vector> *fld = dynamic_cast<TetVol<Vector> *>(handle.get_rep());
+    TetVolField<Vector> *fld = dynamic_cast<TetVolField<Vector> *>(handle.get_rep());
     sprintf(fname, "%s.grad", argv[2]);
     FILE *fgrad = fopen(fname, "wt");
     cerr << "Writing "<<fld->fdata().size()<<" vectors to "<<fname<<"\n";
@@ -106,7 +106,7 @@ main(int argc, char **argv) {
       fprintf(fgrad, "%lf %lf %lf\n", v.x(), v.y(), v.z());
     }
   } else if (handle->get_type_name(1) == "double") {
-    TetVol<double> *fld = dynamic_cast<TetVol<double> *>(handle.get_rep());
+    TetVolField<double> *fld = dynamic_cast<TetVolField<double> *>(handle.get_rep());
     sprintf(fname, "%s.pot", argv[2]);
     FILE *fpot = fopen(fname, "wt");
     cerr << "Writing "<<fld->fdata().size()<<" scalars to "<<fname<<"\n";

@@ -97,10 +97,10 @@ SurfTree* Surface::getSurfTree() {
 	return 0;
 }
 
-TriSurface* Surface::getTriSurface()
+TriSurfFieldace* Surface::getTriSurfFieldace()
 {
-    if(rep==TriSurf)
-	return (TriSurface*)this;
+    if(rep==TriSurfField)
+	return (TriSurfFieldace*)this;
     else
 	return 0;
 }

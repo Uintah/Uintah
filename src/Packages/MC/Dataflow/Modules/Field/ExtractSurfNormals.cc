@@ -10,7 +10,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/TriSurfMesh.h>
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Packages/MC/share/share.h>
 
 namespace MC {
@@ -19,7 +19,7 @@ using namespace SCIRun;
 
 class MCSHARE ExtractSurfNormals : public Module {
 public:
-  typedef   LockingHandle<PointCloud<Vector> > pcv_t;
+  typedef   LockingHandle<PointCloudField<Vector> > pcv_t;
   ExtractSurfNormals(const string& id);
 
   virtual ~ExtractSurfNormals();
@@ -42,16 +42,16 @@ extern "C" MCSHARE Module* make_ExtractSurfNormals(const string& id) {
 
 ExtractSurfNormals::ExtractSurfNormals(const string& id) : 
   Module("ExtractSurfNormals", id, Source, "Field", "MC"),
-  out1_(scinew PointCloud<Vector>)
+  out1_(scinew PointCloudField<Vector>)
 {
   // Create the input port
-  ifld_=scinew FieldIPort(this, "Field with normals (TriSurface)", 
+  ifld_=scinew FieldIPort(this, "Field with normals (TriSurfFieldace)", 
 			  FieldIPort::Atomic);
   add_iport(ifld_);
 
   // Create the output ports
   ofld1_=scinew FieldOPort(this, 
-			  "vertex normals as vector field (PointCloud)", 
+			  "vertex normals as vector field (PointCloudField)", 
 			  FieldIPort::Atomic);
   add_oport(ofld1_);
 }

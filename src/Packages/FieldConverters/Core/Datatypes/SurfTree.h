@@ -33,7 +33,7 @@
 #include <FieldConverters/share/share.h>
 #include <FieldConverters/Core/Datatypes/Surface.h>
 #include <FieldConverters/Core/Datatypes/Mesh.h>
-#include <FieldConverters/Core/Datatypes/TriSurface.h>
+#include <FieldConverters/Core/Datatypes/TriSurfFieldace.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
@@ -76,7 +76,7 @@ typedef struct NodeInfo {
 
 
 class SCICORESHARE SurfTree : public Surface {
-  friend class TriSurface;
+  friend class TriSurfFieldace;
 public:
   Array1<Point> nodes;		// array of all nodes
   Array1<TSElement*> faces;		// array of all faces/elements
@@ -122,7 +122,7 @@ public:
 
   virtual GeomObj* get_obj(const ColorMapHandle&);
 
-  int extractTriSurface(TriSurface*, Array1<int>&, Array1<int>&, int, 
+  int extractTriSurfFieldace(TriSurfFieldace*, Array1<int>&, Array1<int>&, int, 
 			int RemapPoints=1);
 
 protected:

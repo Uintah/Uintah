@@ -1,5 +1,5 @@
 /*
- *  ExtractCC.cc: Split the connected components of a TriSurf into
+ *  ExtractCC.cc: Split the connected components of a TriSurfField into
  *                separate files
  *
  *  Written by:
@@ -11,7 +11,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/TriSurfField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <fstream>
@@ -42,9 +42,9 @@ main(int argc, char **argv) {
     cerr << "Error - input file "<<argv[1]<<" didn't contant a field.\n";
     return 0;
   }
-  TriSurf<double> *ts = dynamic_cast<TriSurf<double> *>(handle.get_rep());
+  TriSurfField<double> *ts = dynamic_cast<TriSurfField<double> *>(handle.get_rep());
   if (!ts) {
-    cerr << "Error - input field wasn't a TriSurf<double>, it was a "<<handle->get_type_name();
+    cerr << "Error - input field wasn't a TriSurfField<double>, it was a "<<handle->get_type_name();
     return 0;
   }
   TriSurfMeshHandle tsm = ts->get_typed_mesh();

@@ -2,8 +2,8 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/HexVol.h>
-#include <Core/Datatypes/MaskedHexVol.h>
+#include <Core/Datatypes/HexVolField.h>
+#include <Core/Datatypes/MaskedHexVolField.h>
 
 
 using namespace SCIRun;
@@ -20,50 +20,50 @@ template class GenericField<HexVolMesh, vector<unsigned int> >;
 template class GenericField<HexVolMesh, vector<unsigned short> >;
 template class GenericField<HexVolMesh, vector<unsigned char> >;
 
-template class HexVol<Tensor>;
-template class HexVol<Vector>;
-template class HexVol<double>;
-template class HexVol<float>;
-template class HexVol<int>;
-template class HexVol<short>;
-template class HexVol<char>;
-template class HexVol<unsigned int>;
-template class HexVol<unsigned short>;
-template class HexVol<unsigned char>;
+template class HexVolField<Tensor>;
+template class HexVolField<Vector>;
+template class HexVolField<double>;
+template class HexVolField<float>;
+template class HexVolField<int>;
+template class HexVolField<short>;
+template class HexVolField<char>;
+template class HexVolField<unsigned int>;
+template class HexVolField<unsigned short>;
+template class HexVolField<unsigned char>;
 
-const TypeDescription* get_type_description(HexVol<Tensor> *);
-const TypeDescription* get_type_description(HexVol<Vector> *);
-const TypeDescription* get_type_description(HexVol<double> *);
-const TypeDescription* get_type_description(HexVol<float> *);
-const TypeDescription* get_type_description(HexVol<int> *);
-const TypeDescription* get_type_description(HexVol<short> *);
-const TypeDescription* get_type_description(HexVol<char> *);
-const TypeDescription* get_type_description(HexVol<unsigned int> *);
-const TypeDescription* get_type_description(HexVol<unsigned short> *);
-const TypeDescription* get_type_description(HexVol<unsigned char> *);
+const TypeDescription* get_type_description(HexVolField<Tensor> *);
+const TypeDescription* get_type_description(HexVolField<Vector> *);
+const TypeDescription* get_type_description(HexVolField<double> *);
+const TypeDescription* get_type_description(HexVolField<float> *);
+const TypeDescription* get_type_description(HexVolField<int> *);
+const TypeDescription* get_type_description(HexVolField<short> *);
+const TypeDescription* get_type_description(HexVolField<char> *);
+const TypeDescription* get_type_description(HexVolField<unsigned int> *);
+const TypeDescription* get_type_description(HexVolField<unsigned short> *);
+const TypeDescription* get_type_description(HexVolField<unsigned char> *);
 
 
-template class MaskedHexVol<Tensor>;
-template class MaskedHexVol<Vector>;
-template class MaskedHexVol<double>;
-template class MaskedHexVol<float>;
-template class MaskedHexVol<int>;
-template class MaskedHexVol<short>;
-template class MaskedHexVol<char>;
-template class MaskedHexVol<unsigned int>;
-template class MaskedHexVol<unsigned short>;
-template class MaskedHexVol<unsigned char>;
+template class MaskedHexVolField<Tensor>;
+template class MaskedHexVolField<Vector>;
+template class MaskedHexVolField<double>;
+template class MaskedHexVolField<float>;
+template class MaskedHexVolField<int>;
+template class MaskedHexVolField<short>;
+template class MaskedHexVolField<char>;
+template class MaskedHexVolField<unsigned int>;
+template class MaskedHexVolField<unsigned short>;
+template class MaskedHexVolField<unsigned char>;
 
-const TypeDescription* get_type_description(MaskedHexVol<Tensor> *);
-const TypeDescription* get_type_description(MaskedHexVol<Vector> *);
-const TypeDescription* get_type_description(MaskedHexVol<double> *);
-const TypeDescription* get_type_description(MaskedHexVol<float> *);
-const TypeDescription* get_type_description(MaskedHexVol<int> *);
-const TypeDescription* get_type_description(MaskedHexVol<short> *);
-const TypeDescription* get_type_description(MaskedHexVol<char> *);
-const TypeDescription* get_type_description(MaskedHexVol<unsigned int> *);
-const TypeDescription* get_type_description(MaskedHexVol<unsigned short> *);
-const TypeDescription* get_type_description(MaskedHexVol<unsigned char> *);
+const TypeDescription* get_type_description(MaskedHexVolField<Tensor> *);
+const TypeDescription* get_type_description(MaskedHexVolField<Vector> *);
+const TypeDescription* get_type_description(MaskedHexVolField<double> *);
+const TypeDescription* get_type_description(MaskedHexVolField<float> *);
+const TypeDescription* get_type_description(MaskedHexVolField<int> *);
+const TypeDescription* get_type_description(MaskedHexVolField<short> *);
+const TypeDescription* get_type_description(MaskedHexVolField<char> *);
+const TypeDescription* get_type_description(MaskedHexVolField<unsigned int> *);
+const TypeDescription* get_type_description(MaskedHexVolField<unsigned short> *);
+const TypeDescription* get_type_description(MaskedHexVolField<unsigned char> *);
 
 
 
@@ -74,72 +74,72 @@ const TypeDescription* get_type_description(MaskedHexVol<unsigned char> *);
 
 template <>
 TensorFieldInterface *
-HexVol<Tensor>::query_tensor_interface() const
+HexVolField<Tensor>::query_tensor_interface() const
 {
-  return scinew TFInterface<HexVol<Tensor> >(this);
+  return scinew TFInterface<HexVolField<Tensor> >(this);
 }
 
 
 template <>
 VectorFieldInterface *
-HexVol<Vector>::query_vector_interface() const
+HexVolField<Vector>::query_vector_interface() const
 {
-  return scinew VFInterface<HexVol<Vector> >(this);
+  return scinew VFInterface<HexVolField<Vector> >(this);
 }
 
 
 template <>
 ScalarFieldInterface *
-HexVol<double>::query_scalar_interface() const
+HexVolField<double>::query_scalar_interface() const
 {
-  return scinew SFInterface<HexVol<double> >(this);
+  return scinew SFInterface<HexVolField<double> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-HexVol<float>::query_scalar_interface() const
+HexVolField<float>::query_scalar_interface() const
 {
-  return scinew SFInterface<HexVol<float> >(this);
+  return scinew SFInterface<HexVolField<float> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-HexVol<int>::query_scalar_interface() const
+HexVolField<int>::query_scalar_interface() const
 {
-  return scinew SFInterface<HexVol<int> >(this);
+  return scinew SFInterface<HexVolField<int> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-HexVol<short>::query_scalar_interface() const
+HexVolField<short>::query_scalar_interface() const
 {
-  return scinew SFInterface<HexVol<short> >(this);
+  return scinew SFInterface<HexVolField<short> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-HexVol<char>::query_scalar_interface() const
+HexVolField<char>::query_scalar_interface() const
 {
-  return scinew SFInterface<HexVol<char> >(this);
+  return scinew SFInterface<HexVolField<char> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-HexVol<unsigned int>::query_scalar_interface() const
+HexVolField<unsigned int>::query_scalar_interface() const
 {
-  return scinew SFInterface<HexVol<unsigned int> >(this);
+  return scinew SFInterface<HexVolField<unsigned int> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-HexVol<unsigned short>::query_scalar_interface() const
+HexVolField<unsigned short>::query_scalar_interface() const
 {
-  return scinew SFInterface<HexVol<unsigned short> >(this);
+  return scinew SFInterface<HexVolField<unsigned short> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-HexVol<unsigned char>::query_scalar_interface() const
+HexVolField<unsigned char>::query_scalar_interface() const
 {
-  return scinew SFInterface<HexVol<unsigned char> >(this);
+  return scinew SFInterface<HexVolField<unsigned char> >(this);
 }

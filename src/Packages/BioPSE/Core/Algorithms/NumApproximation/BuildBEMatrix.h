@@ -28,7 +28,7 @@
 
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/TriSurfField.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Barrier.h>
 #include <Core/Thread/Parallel.h>

@@ -31,8 +31,8 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/PointCloud.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/TetVolField.h>
 
 #include <iostream>
 #include <stdio.h>
@@ -126,8 +126,8 @@ void BuildElemLeadField::execute() {
     cerr << "BuildElemLeadField -- couldn't get mesh.  Returning.\n";
     return;
   }
-  if (!mesh_in.get_rep() || mesh_in->get_type_name(0)!="TetVol") {
-    cerr << "Error - BuildElemLeadField didn't get a TetVol for the mesh" << "\n";
+  if (!mesh_in.get_rep() || mesh_in->get_type_name(0)!="TetVolField") {
+    cerr << "Error - BuildElemLeadField didn't get a TetVolField for the mesh" << "\n";
     return;
   }
   TetVolMesh* mesh = 
@@ -138,20 +138,20 @@ void BuildElemLeadField::execute() {
     cerr << "BuildElemLeadField -- couldn't get interp.  Returning.\n";
     return;
   }
-  if (!interp_in.get_rep() || interp_in->get_type_name(0)!="PointCloud") {
-    cerr << "Error - BuildElemLeadField didn't get a PointCloud for interp" << "\n";
+  if (!interp_in.get_rep() || interp_in->get_type_name(0)!="PointCloudField") {
+    cerr << "Error - BuildElemLeadField didn't get a PointCloudField for interp" << "\n";
     return;
   }
   PointCloudMesh* interp_mesh = 
     (PointCloudMesh*)dynamic_cast<PointCloudMesh*>(interp_in->mesh().get_rep());
-  //  PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > >* interp = 
-  //    dynamic_cast<PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > > *>(interp_in.get_rep());
+  //  PointCloudField<vector<pair<TetVolMesh::Node::index_type, double> > >* interp = 
+  //    dynamic_cast<PointCloudField<vector<pair<TetVolMesh::Node::index_type, double> > > *>(interp_in.get_rep());
 
-  PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > >* interp = 
-    (PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > > *)(interp_in.get_rep());
+  PointCloudField<vector<pair<TetVolMesh::Node::index_type, double> > >* interp = 
+    (PointCloudField<vector<pair<TetVolMesh::Node::index_type, double> > > *)(interp_in.get_rep());
 
   if (!interp) {
-    cerr << "Error - Interp Field wasn't a PointCloud<vector<pair<TetVolMesh::Node::index_type,double>>>\n";
+    cerr << "Error - Interp Field wasn't a PointCloudField<vector<pair<TetVolMesh::Node::index_type,double>>>\n";
 
     cout << "It's a '" + interp_in->get_type_description()->get_name() + "'\n";
     return;
