@@ -63,6 +63,8 @@ itcl_class SCIRun_Fields_FieldSubSample {
 	    set $this-$index-stride2  "1"
 	    set $this-$index-wrap    0
 	}
+
+	trace variable $this-dims w "$this set_size"
     }
 
     method ui {} {
@@ -281,18 +283,12 @@ itcl_class SCIRun_Fields_FieldSubSample {
 	updateSliderEntry4 $index 0
     }
 
-    method set_size {dims idim jdim kdim wrap} {
+    method set_size {name element op} {
 	global $this-wrap
 	global $this-dims
 	global $this-i-dim
 	global $this-j-dim
 	global $this-k-dim
-
-	set $this-wrap $wrap
-	set $this-dims $dims
-	set $this-i-dim $idim
-	set $this-j-dim $jdim
-	set $this-k-dim $kdim
 
 	set w .ui[modname]
 

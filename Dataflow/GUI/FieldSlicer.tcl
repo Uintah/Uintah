@@ -55,6 +55,8 @@ itcl_class SCIRun_Fields_FieldSlicer {
 	    set $this-$index-index 1
 	    set $this-$index-index2 "0"
 	}
+
+	trace variable $this-dims w "$this set_size"
     }
 
     method ui {} {
@@ -150,7 +152,7 @@ itcl_class SCIRun_Fields_FieldSlicer {
 	set $var1 [set $var2]
     }
 
-    method set_size {dims idim jdim kdim} {
+    method set_size {name element op} {
 	set w .ui[modname]
 
 	global $this-axis
@@ -160,15 +162,9 @@ itcl_class SCIRun_Fields_FieldSlicer {
 	global $this-j-dim
 	global $this-k-dim
 
-	set $this-dims $dims
-
-	if { [set $this-axis] >= $dims } {
+	if { [set $this-axis] >= [set $this-dims] } {
 	    set $this-axis [expr [set $this-dims]-1]
 	}
-
-	set $this-i-dim $idim
-	set $this-j-dim $jdim
-	set $this-k-dim $kdim
 
 	if {[winfo exists $w]} {
 	    pack forget $w.i

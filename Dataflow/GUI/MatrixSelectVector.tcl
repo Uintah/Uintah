@@ -34,7 +34,7 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 	global $this-delay
 	global $this-inc-amount
 	global $this-send-amount
-
+	global $this-update-function
 
         set_defaults
     }
@@ -53,6 +53,8 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 	set $this-delay              0
 	set $this-inc-amount        1
 	set $this-send-amount       1
+	set $this-update-function   1
+	trace variable $this-update-function w "$this update_wrapper"
     }
 
     method run_update {} {
@@ -176,5 +178,9 @@ itcl_class SCIRun_Math_MatrixSelectVector {
             $w.loc.max config -to   [set $this-selectable_max]
             $w.loc.max config -label [concat "End " [set $this-selectable_units]]
         }
+    }
+
+    method update_wrapper {name element op} {
+	update
     }
 }
