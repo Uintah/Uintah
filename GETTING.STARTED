@@ -35,11 +35,11 @@ Things You Need To Know About How To Build the PSE
   If you hate typing your password all the time, you may optionally add a
   line like:
 
-    rapture.cs.utah.edu mcq
+    pico.cs.utah.edu mcq
 
   to your ".shosts" file in your home directory, where you substitute the
   name of the machine on which you're going to be running the CVS command for
-  "rapture.cs.utah.edu" and your username for "mcq".  Doing this tells csf
+  "pico.cs.utah.edu" and your username for "mcq".  Doing this tells csf
   (and all other machines on which your home directory is accessible) to
   allow the named user to have ssh access from the named machine without typing
   a password.
@@ -98,7 +98,7 @@ Things You Need To Know About How To Build the PSE
   Previous versions of SCIrun and continuing cultural intertia cause some
   troublesome settings to persist in people's environments.  To put this
   issue to rest, you should make sure that the following are **NOT** set
-  by and of your shell's rc files, nor should you run any form of "setup"
+  by any of your shell's rc files, nor should you run any form of "setup"
   scripts unless you Really Know What You're Doing.
 
   The PSE is intended to run correctly without such enviromental
