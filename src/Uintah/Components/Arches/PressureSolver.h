@@ -177,6 +177,7 @@ private:
       Vector d_pressRef;
 
       // const VarLabel* (required)
+      const VarLabel* d_cellTypeLabel;
       const VarLabel* d_pressureINLabel;
       const VarLabel* d_pressureSPBCLabel;
       const VarLabel* d_uVelocitySIVBCLabel;
@@ -214,6 +215,9 @@ private:
 
 //
 // $Log$
+// Revision 1.23  2000/07/12 23:59:21  rawat
+// added wall bc for u-velocity
+//
 // Revision 1.22  2000/07/11 15:46:28  rawat
 // added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
 //

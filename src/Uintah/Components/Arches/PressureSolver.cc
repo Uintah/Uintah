@@ -45,6 +45,8 @@ PressureSolver::PressureSolver(int nDim,
 				     d_physicalConsts(physConst),
 				     d_generation(0)
 {
+  d_cellTypeLabel = scinew VarLabel("cellType", 
+				    CCVariable<int>::getTypeDescription() );
   // Inputs
   d_pressureSPBCLabel = scinew VarLabel("pressureSPBC",
 			     CCVariable<double>::getTypeDescription() );
@@ -204,6 +206,8 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
 
       // Requires
       // from old_dw
+      tsk->requires(old_dw, d_cellTypeLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
       tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(old_dw, d_uVelocitySIVBCLabel, matlIndex, patch, 
@@ -350,6 +354,9 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.34  2000/07/12 23:59:21  rawat
+// added wall bc for u-velocity
+//
 // Revision 1.33  2000/07/12 22:15:02  bbanerje
 // Added pressure Coef .. will do until Kumar's code is up and running
 //

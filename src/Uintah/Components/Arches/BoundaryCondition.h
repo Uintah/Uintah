@@ -278,9 +278,6 @@ private:
 		       const Patch* patch,
 		       CCVariable<int>* cellType,
 		       SFCXVariable<double>* uVelocity, 
-		       SFCYVariable<double>* vVelocity, 
-		       SFCZVariable<double>* wVelocity, 
-		       CCVariable<double>* density,
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
 		       int eqnType);
@@ -438,6 +435,7 @@ private:
       PressureInlet* d_pressureBdry;
       bool d_outletBoundary;
       FlowOutlet* d_outletBC;
+      int d_flowfieldCellTypeVal;
 
       // const VarLabel* inputs
       const VarLabel* d_cellInfoLabel;
@@ -509,6 +507,9 @@ private:
   
 //
 // $Log$
+// Revision 1.35  2000/07/12 23:59:21  rawat
+// added wall bc for u-velocity
+//
 // Revision 1.34  2000/07/08 08:03:33  bbanerje
 // Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
 // made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc

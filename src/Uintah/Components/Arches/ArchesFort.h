@@ -477,6 +477,32 @@ extern "C"
 
     ////////////////////////////////////////////////////////////////////////
     //
+    // Calculate the U-velocity bc
+    //
+    void
+    FORT_BCUVEL(const int* domLoU, const int* domHiU,
+		const int* idxLoU, const int* idxHiU,
+		const double* uVelocity,
+		double* uVelocityCoeff_AP,
+		double* uVelocityCoeff_AE,
+		double* uVelocityCoeff_AW,
+		double* uVelocityCoeff_AN,
+		double* uVelocityCoeff_AS,
+		double* uVelocityCoeff_AT,
+		double* uVelocityCoeff_AB,
+		double* nlsource, double* linsource,
+		const int* domLo, const int* domHi,
+		const int* pcell,
+		const int* wall, const int* ffield,
+		const double* viscosity,
+		const double* sewu, const double* sns, const double* stb,
+		const double* yy, const double* yv,
+		const double* zz, const double* zw);
+
+
+
+    ////////////////////////////////////////////////////////////////////////
+    //
     // Calculate the velocity diagonal
     //
     void
@@ -565,6 +591,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.19  2000/07/12 23:59:20  rawat
+// added wall bc for u-velocity
+//
 // Revision 1.18  2000/07/12 23:23:23  bbanerje
 // Added pressure source .. modified Kumar's version a bit.
 //
