@@ -26,12 +26,14 @@ TCLvar::TCLvar(const clString& name, const clString& id,
 	       TCL* tcl)
 : varname(name+","+id), is_reset(1), tcl(tcl)
 {
-    tcl->register_var(this);
+    if(tcl)
+	tcl->register_var(this);
 }
 
 TCLvar::~TCLvar()
 {
-    tcl->unregister_var(this);
+    if(tcl)
+	tcl->unregister_var(this);
 }
 
 void TCLvar::reset()
