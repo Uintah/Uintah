@@ -18,7 +18,7 @@ SRCTOP_ABS    = $(shell cd $(SRCTOP) ; pwd)
 SRCS      = main.cc
 CFLAGS   := $(CFLAGS) -DPSECORETCL=\"$(SRCTOP_ABS)/PSECore/GUI\" \
                       -DSCICORETCL=\"$(SRCTOP_ABS)/SCICore/GUI\" \
-                      -DDEFAULT_PACKAGE_PATH=\"@PACKAGE_PATH@2\"
+                      -DDEFAULT_PACKAGE_PATH=\"@PACKAGE_PATH@\"
 INCLUDES  = -I$(SRCTOP) -I$(OBJTOP)
             
 PROGRAM   = @EXENAME@
