@@ -7,7 +7,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Math
 
-SRCS     += $(SRCDIR)/Primes.cc
+SRCS     += $(SRCDIR)/Primes.cc	$(SRCDIR)/CubicPolyRoots.cc
 
 PSELIBS := SCICore/Exceptions
 LIBS :=
@@ -16,6 +16,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/08/15 19:09:56  witzel
+# Included CubicPolyRoots stuff.
+#
 # Revision 1.2  2000/03/20 19:38:39  sparker
 # Added VPATH support
 #
