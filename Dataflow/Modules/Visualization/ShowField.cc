@@ -687,9 +687,20 @@ ShowField::execute()
   tensors_on_.reset();
   scalars_on_.reset();
   text_on_.reset();
+  const int dim = fld_handle->mesh()->dimensionality();
   bool do_nodes = nodes_on_.get() && nodes_dirty_;
   bool do_edges = edges_on_.get() && edges_dirty_;
+  if (do_edges && dim < 1)
+  {
+    remark("Field type contains no edges, not drawing them.");
+    do_edges = false;
+  }
   bool do_faces = faces_on_.get() && faces_dirty_;
+  if (do_faces && dim < 2)
+  {
+    remark("Field type contains no faces, not drawing them.");
+    do_faces = false;
+  }
   bool do_data  = (vectors_on_.get() || tensors_on_.get() || scalars_on_.get()) && data_dirty_;
   bool do_text  = text_on_.get() && text_dirty_;
 
