@@ -86,6 +86,7 @@ VP_LIBS = \
 	Geometry/libGeometry.a \
 	Multitask/libMultitask.a \
 	Classlib/libClasslib.a \
+	Math/libMath.a \
 	Malloc/libMalloc.a
 
 VP_LDFLAGS = SCI_LM
@@ -112,6 +113,7 @@ MESH_LIBS = \
 	Geometry/libGeometry.a \
 	Multitask/libMultitask.a \
 	Classlib/libClasslib.a \
+	Math/libMath.a \
 	Malloc/libMalloc.a
 
 MESH_LDFLAGS = SCI_LM
