@@ -134,11 +134,13 @@ void SimulationController::run()
    double t = timeinfo.initTime;
    
    scheduleComputeStableTimestep(level, scheduler, old_dw, cfd, mpm, md);
+
+   Analyze* analyze = dynamic_cast<Analyze*>(getPort("analyze"));
+   if(analyze)
+      analyze->problemSetup(ups, grid, sharedState);
    
    if(output)
       output->finalizeTimestep(t, 0, level, scheduler, old_dw);
-
-   Analyze* analyze = dynamic_cast<Analyze*>(getPort("analyze"));
 
    scheduler->execute(d_myworld, old_dw, old_dw);
 
@@ -193,6 +195,12 @@ void SimulationController::run()
 
       scheduleTimeAdvance(t, delt, level, scheduler, old_dw, new_dw,
 			  cfd, mpm, md);
+
+      //data analyze in each step
+      if(analyze) {
+        analyze->performAnalyze(t, delt, level, scheduler, old_dw, new_dw);
+      }
+      
       t += delt;
       if(output)
 	 output->finalizeTimestep(t, delt, level, scheduler, new_dw);
@@ -200,12 +208,6 @@ void SimulationController::run()
       // Begin next time step...
       scheduleComputeStableTimestep(level, scheduler, new_dw, cfd, mpm, md);
       scheduler->execute(d_myworld, old_dw, new_dw);
-      
-      //data analyze in each step
-      if(analyze) {
-        analyze->setup(*grid.get_rep(),*sharedState.get_rep(),new_dw);
-        analyze->performAnalyze();
-      }
       
       old_dw = new_dw;
    }
@@ -469,6 +471,10 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.43  2000/09/04 00:38:32  tan
+// Modified Analyze interface for scientific debugging under both
+// sigle processor and mpi environment.
+//
 // Revision 1.42  2000/08/24 22:17:15  dav
 // Modified output messages
 //
