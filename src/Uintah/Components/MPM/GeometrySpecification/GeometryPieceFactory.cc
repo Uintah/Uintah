@@ -46,7 +46,8 @@ void GeometryPieceFactory::create(const ProblemSpecP& ps,
 	 objs.push_back(new IntersectionGeometryPiece(child));
       
       else {
-	cerr << "Unknown Geometry Piece Type " << go_type << endl;
+	cerr << "Unknown Geometry Piece Type " << "(" << go_type << ")" 
+	     << endl;
 	//	exit(1);
       }
    }

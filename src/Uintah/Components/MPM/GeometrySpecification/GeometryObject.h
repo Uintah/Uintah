@@ -55,7 +55,7 @@ WARNING
 
       private:
 	 GeometryPiece* d_piece;
-	 IntVector d_num_par_per_cell;
+	 IntVector d_resolution;
       };
       
    } // end namespace Components
@@ -65,6 +65,9 @@ WARNING
 
 
 // $Log$
+// Revision 1.14  2000/04/25 18:43:30  jas
+// Changed variable name of d_num_par_per_cell to d_resolution.
+//
 // Revision 1.13  2000/04/24 21:04:30  sparker
 // Working on MPM problem setup and object creation
 //
