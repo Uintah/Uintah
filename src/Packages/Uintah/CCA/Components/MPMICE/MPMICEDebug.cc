@@ -22,14 +22,11 @@ void    MPMICE::printData(const Patch* patch, int include_EC,
 {
  //__________________________________
  // Limit when we dump
-  d_dbgTime= dataArchiver->getCurrentTime();
-#if 0    
+  d_dbgTime= dataArchiver->getCurrentTime();   
   if ( d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
-    d_dbgOldTime = d_dbgTime;      
-#endif
-{    
+    d_dbgOldTime = d_dbgTime;        
     IntVector low, high; 
 
     fprintf(stderr,"______________________________________________\n");
@@ -78,14 +75,11 @@ void    MPMICE::printNCVector(const Patch* patch, int include_EC,
 
  //__________________________________
  // Limit when we dump
-  d_dbgTime= dataArchiver->getCurrentTime();
-#if 0    
+  d_dbgTime= dataArchiver->getCurrentTime();   
   if ( d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
-    d_dbgOldTime = d_dbgTime;      
-#endif
-{       
+    d_dbgOldTime = d_dbgTime;             
     IntVector low, high; 
 
     fprintf(stderr,"______________________________________________\n");
