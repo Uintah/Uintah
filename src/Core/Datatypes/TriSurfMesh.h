@@ -78,8 +78,10 @@ public:
     typedef vector<index_type>          array_type;
   };
 
-  typedef Face::index_type                  elem_index;
-  typedef Face::iterator               elem_iterator;
+  typedef Face Elem;
+
+  //typedef Face::index_type                  elem_index;
+  //typedef Face::iterator               elem_iterator;
   
   typedef vector<double>     weight_array;
 
@@ -98,13 +100,14 @@ public:
   Face::iterator face_end() const;
   Cell::iterator cell_begin() const;
   Cell::iterator cell_end() const;
-  elem_iterator elem_begin() const;
-  elem_iterator elem_end() const;
+  Elem::iterator elem_begin() const;
+  Elem::iterator elem_end() const;
 
   Node::size_type nodes_size() { return *node_end(); }
   Edge::size_type edges_size() { return *edge_end(); }
   Face::size_type faces_size() { return *face_end(); }
   Cell::size_type cells_size() { return *cell_end(); }
+  Elem::size_type elems_size() { return *face_end(); }
 
   void get_nodes(Node::array_type &array, Edge::index_type idx) const;
   void get_nodes(Node::array_type &array, Face::index_type idx) const;
@@ -132,33 +135,16 @@ public:
   void set_point(const Point &point, Node::index_type index)
   { points_[index] = point; }
 
-  double get_volume(Cell::index_type &) { return 0; }
-  double get_area(Face::index_type &fi) {
+  double get_volume(const Cell::index_type &) { return 0; }
+  double get_area(const Face::index_type &fi) {
     Node::array_type ra; 
     get_nodes(ra,fi);
     return (Cross(ra[1]-ra[0],ra[2]-ra[0])).length2()*0.5;
   }
 
-  void get_random_point(Point &p, const elem_index &ei) const {
-    static MusilRNG rng(1249);
-    Node::array_type ra;
-    get_nodes(ra,ei);
-    Point p0,p1,p2;
-    get_point(p0,ra[0]);
-    get_point(p1,ra[1]);
-    get_point(p2,ra[2]);
-    Vector v0 = ra[1]-ra[0];
-    Vector v1 = ra[2]-ra[0];
-    double t = rng()*v0.length2();
-    double u = rng()*v1.length2();
-    if ( (t+u)>1 ) {
-      t = 1.-t;
-      u = 1.-u;
-    }
-    p = p0+(v0*t)+(v1*u);
-  }
+  void get_random_point(Point &p, const Face::index_type &ei) const;
   
-  double get_element_size(Face::index_type &fi) { return get_area(fi); }
+  double get_element_size(const Face::index_type &fi) { return get_area(fi); }
 
   virtual void finish_mesh(); // to get normals calculated.
   void compute_normals();
