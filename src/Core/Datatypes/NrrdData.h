@@ -69,9 +69,7 @@ public:
   // Separate raw files.
   void set_embed_object(bool v) { embed_object_ = v; }
   bool get_embed_object() { return embed_object_; }
-  void set_filename( string &f )
-  { nrrd_fname_ = f; embed_object_ = false; }
-  const string get_filename() const { return nrrd_fname_; }
+
 
 protected:
   bool    embed_object_;
@@ -80,9 +78,6 @@ protected:
 
   //! Either the NrrdData owns the data or it wraps this external object.
   LockingHandle<Datatype> data_owner_;
-
-  // To help with pio
-  string                nrrd_fname_;
 
   static Persistent *maker();
 };
