@@ -61,5 +61,28 @@ LIBS 	:= $(XML_LIBRARY) $(MPI_LIBRARY)
 
 include $(SRCTOP)/scripts/program.mk
 
+SRCS := $(SRCDIR)/compare_uda.cc
+PROGRAM := Packages/Uintah/StandAlone/compare_uda
+ifeq ($(LARGESOS),yes)
+PSELIBS := Datflow Packages/Uintah
+else
+PSELIBS := \
+	Packages/Uintah/Core/Exceptions \
+	Packages/Uintah/Core/Grid \
+	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/CCA/Ports \
+	Packages/Uintah/CCA/Components/MPM \
+	Dataflow/XMLUtil \
+	Core/Exceptions \
+	Core/Geometry \
+	Core/Thread \
+	Core/Util \
+	Core/OS \
+	Core/Containers
+endif
+LIBS 	:= $(XML_LIBRARY) $(MPI_LIBRARY)
+
+include $(SRCTOP)/scripts/program.mk
+
 # A convenience target (use make sus)
 sus: Packages/Uintah/StandAlone/sus
