@@ -41,7 +41,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Util/Timer.h>
-#include <Core/Util/GlobalData.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/GuiInterface/UIvar.h>
 #include <Core/Geom/Material.h>
@@ -396,9 +395,6 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   cur_idx_(0),
   plots_dirty_(true),
   frame_count_(0),
-  last_global_time_(0.0L),
-  elapsed_since_global_change_(0.0L),
-  time_sf_(0.0L),
   name_label(0),
   name_text(" "),
   date_label(0),
@@ -446,9 +442,6 @@ ICUMonitor::~ICUMonitor()
     runner_thread_ = 0;
   }
 }
-
-#define time_slave 1
-//! elapsed has time since last redraw.
 void 
 ICUMonitor::inc_time(double elapsed)
 {
@@ -456,33 +449,13 @@ ICUMonitor::inc_time(double elapsed)
   gui_play_mode_.reset();
   gui_time_markers_mode_.reset();
 
-  if (time_slave) {
-    GlobalData &gd = GlobalData::scirun_global_data();
-    double cur = gd.cur_time();
-
-    double dt = cur - last_global_time_;
-    if (dt < 0.0) last_global_time_ = cur;
-    if (dt > 0.0001) { // don't do if negative or small
-      time_sf_ = elapsed_since_global_change_ / dt; 
-      std::cout << "time scale factor: " << time_sf_ << std::endl;
-      elapsed_since_global_change_ = 0.0L;
-      last_global_time_ = cur;
-      int tot_samp = data_->nrrd->axis[1].size;
-      cur_idx_ = (int)(tot_samp * cur);   
-    } else {
-      elapsed_since_global_change_ += elapsed;
-    }
-  } 
-  if (fabs(time_sf_) < 0.001) time_sf_ = 1.0; 
-  float samp_rate = gui_sample_rate_.get() * time_sf_;  // samples per second.
+  float samp_rate = gui_sample_rate_.get();  // samples per second.
   if (! data_.get_rep() || ! gui_play_mode_.get()) return;
-  
   int samples = (int)round(samp_rate * elapsed);
   cur_idx_ += samples;
   if (cur_idx_ > data_->nrrd->axis[1].size) {
-    cur_idx_ = data_->nrrd->axis[1].size;
+    cur_idx_ = 0;
   }
-
 
   gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
   gui_time_.reset();
