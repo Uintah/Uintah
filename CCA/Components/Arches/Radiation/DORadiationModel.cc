@@ -122,7 +122,8 @@ void
 DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 					 const Patch* patch,
 					 CellInformation* cellinfo, 
-					ArchesVariables* vars)
+					 ArchesVariables* vars,
+					 ArchesConstVariables* constvars)
 
 {
     IntVector idxLo = patch->getCellFORTLowIndex();
@@ -133,9 +134,10 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 
     
 
-    fort_radcoef(idxLo, idxHi, vars->temperature, 
-		 vars->co2, vars->h2o, vars->cellType, ffield, d_opl,
-		 vars->sootFV, vars->ABSKG, vars->ESRCG,
+    fort_radcoef(idxLo, idxHi, constvars->temperature, 
+		 constvars->co2, constvars->h2o, constvars->cellType,
+		 ffield, d_opl,
+		 constvars->sootFV, vars->ABSKG, vars->ESRCG,
 		 cellinfo->xx, cellinfo->yy, cellinfo->zz);
 }
 
@@ -147,7 +149,8 @@ void
 DORadiationModel::boundarycondition(const ProcessorGroup*,
 					 const Patch* patch,
 					 CellInformation* cellinfo,
-					ArchesVariables* vars)
+					ArchesVariables* vars,
+					ArchesConstVariables* constvars)
 {
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
@@ -160,7 +163,7 @@ DORadiationModel::boundarycondition(const ProcessorGroup*,
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     
 
-  fort_rdombc(idxLo, idxHi, vars->cellType, ffield, vars->temperature,
+  fort_rdombc(idxLo, idxHi, constvars->cellType, ffield, constvars->temperature,
 	      vars->ABSKG,
 	      xminus, xplus, yminus, yplus, zminus, zplus);
 }
@@ -171,7 +174,8 @@ void
 DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 					 const Patch* patch,
 					 CellInformation* cellinfo,
-					ArchesVariables* vars)
+					ArchesVariables* vars,
+					ArchesConstVariables* constvars)
 {
   double solve_start = Time::currentSeconds();
 
@@ -221,10 +225,10 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       ab.initialize(0.0);
       ap.initialize(0.0);
       bool plusX, plusY, plusZ;
-      fort_rdomsolve(idxLo, idxHi, vars->cellType, wall, ffield, cellinfo->sew,
+      fort_rdomsolve(idxLo, idxHi, constvars->cellType, wall, ffield, cellinfo->sew,
 		     cellinfo->sns, cellinfo->stb, vars->ESRCG, direcn, oxi, omu,
 		     oeta, wt, 
-		     vars->temperature, vars->ABSKG, vars->cenint, volume,
+		     constvars->temperature, vars->ABSKG, vars->cenint, volume,
 		     su, aw, as, ab, ap,
 		     areaew, arean, areatb, volq, vars->src, plusX, plusY, plusZ);
       //      double timeSetMat = Time::currentSeconds();

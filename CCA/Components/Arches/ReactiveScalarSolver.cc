@@ -75,16 +75,17 @@ ReactiveScalarSolver::problemSetup(const ProblemSpecP& params)
     //throw InvalidValue("Finite Differencing scheme "
 	//	       "not supported: " + finite_diff, db);
   }
-  if (db->findBlock("convection_scheme")) {
-    string conv_scheme;
-    db->require("convection_scheme",conv_scheme);
+  string conv_scheme;
+  db->getWithDefault("convection_scheme",conv_scheme,"l2up");
+//  if (db->findBlock("convection_scheme")) {
+//    db->require("convection_scheme",conv_scheme);
     if (conv_scheme == "l2up") d_conv_scheme = 0;
     else if (conv_scheme == "eno") d_conv_scheme = 1;
          else if (conv_scheme == "weno") d_conv_scheme = 2;
 	      else throw InvalidValue("Convection scheme "
 		       "not supported: " + conv_scheme);
-  } else
-    d_conv_scheme = 0;
+//  } else
+//    d_conv_scheme = 0;
   // make source and boundary_condition objects
   d_source = scinew Source(d_turbModel, d_physicalConsts);
   string linear_sol;
@@ -231,6 +232,7 @@ void ReactiveScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     int matlIndex = d_lab->d_sharedState->
 		    getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables reactscalarVars;
+    ArchesConstVariables constReactscalarVars;
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -246,32 +248,32 @@ void ReactiveScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // from old_dw get PCELL, DENO, FO(index)
-    new_dw->getCopy(reactscalarVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->get(constReactscalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(reactscalarVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->get(constReactscalarVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     //    new_dw->get(reactscalarVars.old_scalar, d_lab->d_reactscalarINLabel, 
     //		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.old_scalar, d_lab->d_reactscalarOUTBCLabel, 
+    new_dw->get(constReactscalarVars.old_scalar, d_lab->d_reactscalarOUTBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     // from new_dw get DEN, VIS, F(index), U, V, W
-    new_dw->getCopy(reactscalarVars.density, d_lab->d_densityINLabel, 
+    new_dw->get(constReactscalarVars.density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.viscosity, d_lab->d_viscosityINLabel, 
+    new_dw->get(constReactscalarVars.viscosity, d_lab->d_viscosityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(reactscalarVars.scalar, d_lab->d_reactscalarOUTBCLabel, 
+    new_dw->get(constReactscalarVars.scalar, d_lab->d_reactscalarOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     // for explicit get old values
-    new_dw->getCopy(reactscalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+    new_dw->get(constReactscalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(reactscalarVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+    new_dw->get(constReactscalarVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(reactscalarVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+    new_dw->get(constReactscalarVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
     // computes reaction scalar source term in properties
-    old_dw->getCopy(reactscalarVars.reactscalarSRC,
+    old_dw->get(constReactscalarVars.reactscalarSRC,
                     d_lab->d_reactscalarSRCINLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -289,60 +291,57 @@ void ReactiveScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
   // outputs: reactscalCoefSBLM
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
-				       &reactscalarVars, d_conv_scheme);
+				       &reactscalarVars, &constReactscalarVars,
+				       d_conv_scheme);
 
     // Calculate reactscalar source terms
     // inputs : [u,v,w]VelocityMS, reactscalarSP, densityCP, viscosityCTS
     // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM
     d_source->calculateScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
-				    &reactscalarVars );
+				    &reactscalarVars, &constReactscalarVars);
     d_source->addReactiveScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
-				    &reactscalarVars );
+				    &reactscalarVars, &constReactscalarVars);
     if (d_conv_scheme > 0) {
       int wallID = d_boundaryCondition->wallCellType();
       if (d_conv_scheme == 2)
         d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
 					        maxAbsU, maxAbsV, maxAbsW, 
-				  	        &reactscalarVars, wallID);
+				  	        &reactscalarVars,
+						&constReactscalarVars, wallID);
       else
         d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
 					       maxAbsU, maxAbsV, maxAbsW, 
-				  	       &reactscalarVars, wallID);
+				  	       &reactscalarVars,
+					       &constReactscalarVars, wallID);
     }
     // Calculate the scalar boundary conditions
     // inputs : scalarSP, reactscalCoefSBLM
     // outputs: reactscalCoefSBLM
     d_boundaryCondition->scalarBC(pc, patch,  index, cellinfo, 
-				  &reactscalarVars);
+				  &reactscalarVars, &constReactscalarVars);
   // apply multimaterial intrusion wallbc
     if (d_MAlab)
       d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
-					  &reactscalarVars);
+				&reactscalarVars, &constReactscalarVars);
 
     // similar to mascal
     // inputs :
     // outputs:
     d_source->modifyScalarMassSource(pc, patch, delta_t, index,
-				     &reactscalarVars, d_conv_scheme);
+				     &reactscalarVars, &constReactscalarVars,
+				     d_conv_scheme);
     
     // Calculate the reactscalar diagonal terms
     // inputs : reactscalCoefSBLM, scalLinSrcSBLM
     // outputs: reactscalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &reactscalarVars);
 
-    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      // allocateAndPut instead:
-      /* new_dw->put(reactscalarVars.scalarCoeff[ii], 
-		  d_lab->d_reactscalCoefPredLabel, ii, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(reactscalarVars.scalarDiffusionCoeff[ii], 
-		  d_lab->d_reactscalDiffCoefPredLabel, ii, patch); */;
-    }
-    // allocateAndPut instead:
-    /* new_dw->put(reactscalarVars.scalarNonlinearSrc, 
-		d_lab->d_reactscalNonLinSrcPredLabel, matlIndex, patch); */;
+    // apply underelax to eqn
+    d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
+					    &reactscalarVars,
+					    &constReactscalarVars);
 
   }
 }
@@ -434,6 +433,7 @@ ReactiveScalarSolver::reactscalarLinearSolvePred(const ProcessorGroup* pc,
     int matlIndex = d_lab->d_sharedState->
                     getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables reactscalarVars;
+    ArchesConstVariables constReactscalarVars;
     //DataWarehouseP old_dw = new_dw->getTop();
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -449,10 +449,11 @@ ReactiveScalarSolver::reactscalarLinearSolvePred(const ProcessorGroup* pc,
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    new_dw->getCopy(reactscalarVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->get(constReactscalarVars.old_density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(constReactscalarVars.old_scalar,d_lab->d_reactscalarOUTBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     // for explicit calculation
-    {
 #ifdef correctorstep
     new_dw->allocateAndPut(reactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
                 matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -462,27 +463,21 @@ ReactiveScalarSolver::reactscalarLinearSolvePred(const ProcessorGroup* pc,
 #endif
     new_dw->copyOut(reactscalarVars.scalar, d_lab->d_reactscalarOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    }
-    reactscalarVars.old_scalar.allocate(reactscalarVars.scalar.getLowIndex(),
-				   reactscalarVars.scalar.getHighIndex());
-    reactscalarVars.old_scalar.copy(reactscalarVars.scalar);
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-      new_dw->getCopy(reactscalarVars.scalarCoeff[ii], d_lab->d_reactscalCoefPredLabel, 
+      new_dw->get(constReactscalarVars.scalarCoeff[ii], d_lab->d_reactscalCoefPredLabel, 
 		  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.scalarNonlinearSrc, d_lab->d_reactscalNonLinSrcPredLabel,
+    new_dw->get(constReactscalarVars.scalarNonlinearSrc, d_lab->d_reactscalNonLinSrcPredLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->allocateTemporary(reactscalarVars.residualReactivescalar,  patch);
 
-    new_dw->getCopy(reactscalarVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->get(constReactscalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-  // apply underelax to eqn
-    d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
-					    &reactscalarVars);
     // make it a separate task later
     d_linearSolver->scalarLisolve(pc, patch, index, delta_t, 
-    &reactscalarVars, cellinfo, d_lab);
+                                  &reactscalarVars, &constReactscalarVars,
+				  cellinfo, d_lab);
 				  // put back the results
 #if 0
     cerr << "print reactscalar solve after predict" << endl;
@@ -520,17 +515,18 @@ ReactiveScalarSolver::reactscalarLinearSolvePred(const ProcessorGroup* pc,
 #endif
 
 // Outlet bc is done here not to change old scalar
-    new_dw->getCopy(reactscalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+    new_dw->get(constReactscalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+    new_dw->get(constReactscalarVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+    new_dw->get(constReactscalarVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     d_boundaryCondition->scalarOutletBC(pc, patch,  index, cellinfo, 
-				  &reactscalarVars, delta_t);
+				        &reactscalarVars, &constReactscalarVars,
+					delta_t);
 
     d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
-				  &reactscalarVars);
+				        &reactscalarVars,&constReactscalarVars);
 #ifdef correctorstep
     // allocateAndPut instead:
     /* new_dw->put(reactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
@@ -706,6 +702,7 @@ void ReactiveScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     int matlIndex = d_lab->d_sharedState->
                     getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables reactscalarVars;
+    ArchesConstVariables constReactscalarVars;
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -721,66 +718,66 @@ void ReactiveScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // from old_dw get PCELL, DENO, FO(index)
-    new_dw->getCopy(reactscalarVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->get(constReactscalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     // from new_dw get DEN, VIS, F(index), U, V, W
   #ifdef Runge_Kutta_3d
     // old_density and old_reactscalar for Runge-Kutta are NOT from initial timestep
     // but from previous (Interm) time step
-    new_dw->getCopy(reactscalarVars.old_density, d_lab->d_densityIntermLabel, 
+    new_dw->get(constReactscalarVars.old_density, d_lab->d_densityIntermLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.old_scalar, d_lab->d_reactscalarIntermLabel, 
+    new_dw->get(constReactscalarVars.old_scalar, d_lab->d_reactscalarIntermLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.density, d_lab->d_densityIntermLabel, 
+    new_dw->get(constReactscalarVars.density, d_lab->d_densityIntermLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.viscosity, d_lab->d_viscosityIntermLabel, 
+    new_dw->get(constReactscalarVars.viscosity, d_lab->d_viscosityIntermLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(reactscalarVars.scalar, d_lab->d_reactscalarIntermLabel, 
+    new_dw->get(constReactscalarVars.scalar, d_lab->d_reactscalarIntermLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   #else
   #ifdef Runge_Kutta_2nd
-    new_dw->getCopy(reactscalarVars.old_density, d_lab->d_densityPredLabel, 
+    new_dw->get(constReactscalarVars.old_density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.old_scalar, d_lab->d_reactscalarPredLabel, 
+    new_dw->get(constReactscalarVars.old_scalar, d_lab->d_reactscalarPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   #else
     // ***warning* 21st July changed from IN to Pred
-    new_dw->getCopy(reactscalarVars.old_density, d_lab->d_densityINLabel, 
+    new_dw->get(constReactscalarVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.old_scalar, d_lab->d_reactscalarOUTBCLabel, 
+    new_dw->get(constReactscalarVars.old_scalar, d_lab->d_reactscalarOUTBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
-    new_dw->getCopy(reactscalarVars.density, d_lab->d_densityPredLabel, 
+    new_dw->get(constReactscalarVars.density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.viscosity, d_lab->d_viscosityPredLabel, 
+    new_dw->get(constReactscalarVars.viscosity, d_lab->d_viscosityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(reactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
+    new_dw->get(constReactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   #endif
     // for explicit get old values
   #ifdef Runge_Kutta_3d
-    new_dw->getCopy(reactscalarVars.uVelocity, d_lab->d_uVelocityIntermLabel, 
+    new_dw->get(constReactscalarVars.uVelocity, d_lab->d_uVelocityIntermLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(reactscalarVars.vVelocity, d_lab->d_vVelocityIntermLabel, 
+    new_dw->get(constReactscalarVars.vVelocity, d_lab->d_vVelocityIntermLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(reactscalarVars.wVelocity, d_lab->d_wVelocityIntermLabel, 
+    new_dw->get(constReactscalarVars.wVelocity, d_lab->d_wVelocityIntermLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
     // computes reaction scalar source term in properties
-    new_dw->getCopy(reactscalarVars.reactscalarSRC,
+    new_dw->get(constReactscalarVars.reactscalarSRC,
                     d_lab->d_reactscalarSRCINIntermLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   #else
-    new_dw->getCopy(reactscalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
+    new_dw->get(constReactscalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(reactscalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
+    new_dw->get(constReactscalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(reactscalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
+    new_dw->get(constReactscalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
     // computes reaction scalar source term in properties
-    new_dw->getCopy(reactscalarVars.reactscalarSRC,
+    new_dw->get(constReactscalarVars.reactscalarSRC,
                     d_lab->d_reactscalarSRCINPredLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
@@ -800,62 +797,58 @@ void ReactiveScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
   // outputs: scalCoefSBLM
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
-				       &reactscalarVars, d_conv_scheme);
+				       &reactscalarVars, &constReactscalarVars,
+				       d_conv_scheme);
 
     // Calculate scalar source terms
     // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
     // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM
     d_source->calculateScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
-				    &reactscalarVars );
+				    &reactscalarVars, &constReactscalarVars);
     d_source->addReactiveScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
-				    &reactscalarVars );
+				    &reactscalarVars, &constReactscalarVars);
     if (d_conv_scheme > 0) {
       int wallID = d_boundaryCondition->wallCellType();
       if (d_conv_scheme == 2)
         d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
 					        maxAbsU, maxAbsV, maxAbsW, 
-				  	        &reactscalarVars, wallID);
+				  	        &reactscalarVars,
+						&constReactscalarVars, wallID);
       else
         d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
 					       maxAbsU, maxAbsV, maxAbsW, 
-				  	       &reactscalarVars, wallID);
+				  	       &reactscalarVars,
+					       &constReactscalarVars, wallID);
     }
 
     // Calculate the scalar boundary conditions
     // inputs : scalarSP, scalCoefSBLM
     // outputs: scalCoefSBLM
     d_boundaryCondition->scalarBC(pc, patch,  index, cellinfo, 
-				  &reactscalarVars);
+				  &reactscalarVars, &constReactscalarVars);
   // apply multimaterial intrusion wallbc
     if (d_MAlab)
       d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
-					  &reactscalarVars);
+				&reactscalarVars, &constReactscalarVars);
 
     // similar to mascal
     // inputs :
     // outputs:
     d_source->modifyScalarMassSource(pc, patch, delta_t, index,
-				     &reactscalarVars, d_conv_scheme);
+				     &reactscalarVars, &constReactscalarVars,
+				     d_conv_scheme);
     
     // Calculate the scalar diagonal terms
     // inputs : scalCoefSBLM, scalLinSrcSBLM
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &reactscalarVars);
 
-    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      // allocateAndPut instead:
-      /* new_dw->put(reactscalarVars.scalarCoeff[ii], 
-		  d_lab->d_reactscalCoefCorrLabel, ii, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(reactscalarVars.scalarDiffusionCoeff[ii],
-		  d_lab->d_reactscalDiffCoefCorrLabel, ii, patch); */;
-
-    }
-    // allocateAndPut instead:
-    /* new_dw->put(reactscalarVars.scalarNonlinearSrc, 
-		d_lab->d_reactscalNonLinSrcCorrLabel, matlIndex, patch); */;
+    // apply underelax to eqn
+    d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
+					    &reactscalarVars,
+					    &constReactscalarVars);
 
   }
 }
@@ -946,6 +939,7 @@ ReactiveScalarSolver::reactscalarLinearSolveCorr(const ProcessorGroup* pc,
     int matlIndex = d_lab->d_sharedState->
                     getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables reactscalarVars;
+    ArchesConstVariables constReactscalarVars;
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
     // get old_dw from getTop function
@@ -962,14 +956,17 @@ ReactiveScalarSolver::reactscalarLinearSolveCorr(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     // ***warning* 21st July changed from IN to Pred
   #ifdef Runge_Kutta_3d
-    new_dw->getCopy(reactscalarVars.old_density, d_lab->d_densityIntermLabel, 
+    new_dw->get(constReactscalarVars.old_density, d_lab->d_densityIntermLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(constReactscalarVars.old_scalar,d_lab->d_reactscalarIntermLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   #else
-    new_dw->getCopy(reactscalarVars.old_density, d_lab->d_densityPredLabel, 
+    new_dw->get(constReactscalarVars.old_density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(constReactscalarVars.old_scalar, d_lab->d_reactscalarPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
     // for explicit calculation
-    {
     new_dw->allocateAndPut(reactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
   #ifdef Runge_Kutta_3d
@@ -979,28 +976,21 @@ ReactiveScalarSolver::reactscalarLinearSolveCorr(const ProcessorGroup* pc,
     new_dw->copyOut(reactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
   #endif
-    }
-    reactscalarVars.old_scalar.allocate(
-				   reactscalarVars.scalar.getLowIndex(),
-				   reactscalarVars.scalar.getHighIndex());
-    reactscalarVars.old_scalar.copy(reactscalarVars.scalar);
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-      new_dw->getCopy(reactscalarVars.scalarCoeff[ii], d_lab->d_reactscalCoefCorrLabel, 
+      new_dw->get(constReactscalarVars.scalarCoeff[ii], d_lab->d_reactscalCoefCorrLabel, 
 		  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.scalarNonlinearSrc, d_lab->d_reactscalNonLinSrcCorrLabel,
+    new_dw->get(constReactscalarVars.scalarNonlinearSrc, d_lab->d_reactscalNonLinSrcCorrLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->allocateTemporary(reactscalarVars.residualReactivescalar,  patch);
 
-    new_dw->getCopy(reactscalarVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->get(constReactscalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-  // apply underelax to eqn
-    d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
-					    &reactscalarVars);
     // make it a separate task later
     d_linearSolver->scalarLisolve(pc, patch, index, delta_t, 
-				  &reactscalarVars, cellinfo, d_lab);
+                                  &reactscalarVars, &constReactscalarVars,
+				  cellinfo, d_lab);
   #ifdef Runge_Kutta_3d
   #ifndef Runge_Kutta_3d_ssp
     constCCVariable<double> temp_reactscalar;
@@ -1035,25 +1025,26 @@ ReactiveScalarSolver::reactscalarLinearSolveCorr(const ProcessorGroup* pc,
 
 // Outlet bc is done here not to change old scalar
   #ifdef Runge_Kutta_3d
-    new_dw->getCopy(reactscalarVars.uVelocity, d_lab->d_uVelocityIntermLabel, 
+    new_dw->get(constReactscalarVars.uVelocity, d_lab->d_uVelocityIntermLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.vVelocity, d_lab->d_vVelocityIntermLabel, 
+    new_dw->get(constReactscalarVars.vVelocity, d_lab->d_vVelocityIntermLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.wVelocity, d_lab->d_wVelocityIntermLabel, 
+    new_dw->get(constReactscalarVars.wVelocity, d_lab->d_wVelocityIntermLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   #else
-    new_dw->getCopy(reactscalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
+    new_dw->get(constReactscalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
+    new_dw->get(constReactscalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
+    new_dw->get(constReactscalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
     d_boundaryCondition->scalarOutletBC(pc, patch,  index, cellinfo, 
-				  &reactscalarVars, delta_t);
+				        &reactscalarVars, &constReactscalarVars,
+					delta_t);
 
     d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
-				  &reactscalarVars);
+				        &reactscalarVars,&constReactscalarVars);
   // put back the results
     // allocateAndPut instead:
     /* new_dw->put(reactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 
@@ -1181,6 +1172,7 @@ void ReactiveScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     int matlIndex = d_lab->d_sharedState->
                     getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables reactscalarVars;
+    ArchesConstVariables constReactscalarVars;
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -1196,31 +1188,31 @@ void ReactiveScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // from old_dw get PCELL, DENO, FO(index)
-    new_dw->getCopy(reactscalarVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->get(constReactscalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     // ***warning* 21st July changed from IN to Pred
-    new_dw->getCopy(reactscalarVars.old_density, d_lab->d_densityPredLabel, 
+    new_dw->get(constReactscalarVars.old_density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.old_scalar, d_lab->d_reactscalarPredLabel, 
+    new_dw->get(constReactscalarVars.old_scalar, d_lab->d_reactscalarPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     // from new_dw get DEN, VIS, F(index), U, V, W
-    new_dw->getCopy(reactscalarVars.density, d_lab->d_densityPredLabel, 
+    new_dw->get(constReactscalarVars.density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.viscosity, d_lab->d_viscosityPredLabel, 
+    new_dw->get(constReactscalarVars.viscosity, d_lab->d_viscosityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(reactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
+    new_dw->get(constReactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     // for explicit get old values
-    new_dw->getCopy(reactscalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
+    new_dw->get(constReactscalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(reactscalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
+    new_dw->get(constReactscalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(reactscalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
+    new_dw->get(constReactscalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
     // computes reaction scalar source term in properties
-    new_dw->getCopy(reactscalarVars.reactscalarSRC,
+    new_dw->get(constReactscalarVars.reactscalarSRC,
                     d_lab->d_reactscalarSRCINPredLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -1238,61 +1230,58 @@ void ReactiveScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
   // outputs: scalCoefSBLM
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
-				       &reactscalarVars, d_conv_scheme);
+				       &reactscalarVars, &constReactscalarVars,
+				       d_conv_scheme);
 
     // Calculate scalar source terms
     // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
     // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM
     d_source->calculateScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
-				    &reactscalarVars );
+				    &reactscalarVars, &constReactscalarVars);
     d_source->addReactiveScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
-				    &reactscalarVars );
+				    &reactscalarVars, &constReactscalarVars);
     if (d_conv_scheme > 0) {
       int wallID = d_boundaryCondition->wallCellType();
       if (d_conv_scheme == 2)
         d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
 					        maxAbsU, maxAbsV, maxAbsW, 
-				  	        &reactscalarVars, wallID);
+				  	        &reactscalarVars,
+						&constReactscalarVars, wallID);
       else
         d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
 					       maxAbsU, maxAbsV, maxAbsW, 
-				  	       &reactscalarVars, wallID);
+				  	       &reactscalarVars,
+					       &constReactscalarVars, wallID);
     }
 
     // Calculate the scalar boundary conditions
     // inputs : scalarSP, scalCoefSBLM
     // outputs: scalCoefSBLM
     d_boundaryCondition->scalarBC(pc, patch,  index, cellinfo, 
-				  &reactscalarVars);
+				  &reactscalarVars, &constReactscalarVars);
   // apply multimaterial intrusion wallbc
     if (d_MAlab)
       d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
-					  &reactscalarVars);
+				&reactscalarVars, &constReactscalarVars);
 
     // similar to mascal
     // inputs :
     // outputs:
     d_source->modifyScalarMassSource(pc, patch, delta_t, index,
-				     &reactscalarVars, d_conv_scheme);
+				     &reactscalarVars, &constReactscalarVars,
+				     d_conv_scheme);
     
     // Calculate the scalar diagonal terms
     // inputs : scalCoefSBLM, scalLinSrcSBLM
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &reactscalarVars);
 
-    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      // allocateAndPut instead:
-      /* new_dw->put(reactscalarVars.scalarCoeff[ii], 
-		  d_lab->d_reactscalCoefIntermLabel, ii, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(reactscalarVars.scalarDiffusionCoeff[ii],
-		  d_lab->d_reactscalDiffCoefIntermLabel, ii, patch); */;
-    }
-    // allocateAndPut instead:
-    /* new_dw->put(reactscalarVars.scalarNonlinearSrc, 
-		d_lab->d_reactscalNonLinSrcIntermLabel, matlIndex, patch); */;
+    // apply underelax to eqn
+    d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
+					    &reactscalarVars,
+					    &constReactscalarVars);
 
   }
 }
@@ -1367,6 +1356,7 @@ ReactiveScalarSolver::reactscalarLinearSolveInterm(const ProcessorGroup* pc,
     int matlIndex = d_lab->d_sharedState->
                     getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables reactscalarVars;
+    ArchesConstVariables constReactscalarVars;
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
     // get old_dw from getTop function
@@ -1382,35 +1372,30 @@ ReactiveScalarSolver::reactscalarLinearSolveInterm(const ProcessorGroup* pc,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     // ***warning* 21st July changed from IN to Pred
-    new_dw->getCopy(reactscalarVars.old_density, d_lab->d_densityPredLabel, 
+    new_dw->get(constReactscalarVars.old_density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(constReactscalarVars.old_scalar, d_lab->d_reactscalarPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     // for explicit calculation
-    {
     new_dw->allocateAndPut(reactscalarVars.scalar, d_lab->d_reactscalarIntermLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->copyOut(reactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    }
-    reactscalarVars.old_scalar.allocate(reactscalarVars.scalar.getLowIndex(),
-				   reactscalarVars.scalar.getHighIndex());
-    reactscalarVars.old_scalar.copy(reactscalarVars.scalar);
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-      new_dw->getCopy(reactscalarVars.scalarCoeff[ii], d_lab->d_reactscalCoefIntermLabel, 
+      new_dw->get(constReactscalarVars.scalarCoeff[ii], d_lab->d_reactscalCoefIntermLabel, 
 		  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.scalarNonlinearSrc, d_lab->d_reactscalNonLinSrcIntermLabel,
+    new_dw->get(constReactscalarVars.scalarNonlinearSrc, d_lab->d_reactscalNonLinSrcIntermLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->allocateTemporary(reactscalarVars.residualScalar,  patch);
 
-    new_dw->getCopy(reactscalarVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->get(constReactscalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-  // apply underelax to eqn
-    d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
-					    &reactscalarVars);
     // make it a separate task later
     d_linearSolver->scalarLisolve(pc, patch, index, delta_t, 
-				  &reactscalarVars, cellinfo, d_lab);
+                                  &reactscalarVars, &constReactscalarVars,
+				  cellinfo, d_lab);
 
   #ifndef Runge_Kutta_3d_ssp
     CCVariable<double> temp_reactscalar;
@@ -1448,17 +1433,18 @@ ReactiveScalarSolver::reactscalarLinearSolveInterm(const ProcessorGroup* pc,
   #endif
   
 // Outlet bc is done here not to change old scalar
-    new_dw->getCopy(reactscalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
+    new_dw->get(constReactscalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
+    new_dw->get(constReactscalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getCopy(reactscalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
+    new_dw->get(constReactscalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     d_boundaryCondition->scalarOutletBC(pc, patch,  index, cellinfo, 
-				  &reactscalarVars, delta_t);
+				        &reactscalarVars, &constReactscalarVars,
+					delta_t);
 
     d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
-				  &reactscalarVars);
+				        &reactscalarVars,&constReactscalarVars);
     // put back the results
     // allocateAndPut instead:
     /* new_dw->put(reactscalarVars.scalar, d_lab->d_reactscalarIntermLabel, 

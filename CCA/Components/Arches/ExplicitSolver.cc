@@ -200,6 +200,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     if (!d_turbModel->getFilter()->isInitialized()) 
       d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
     d_props->setFilter(d_turbModel->getFilter());
+#ifdef divergenceconstraint
+    d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
+#endif
   }
 #endif
   for (int index = 0;index < nofScalars; index ++) {

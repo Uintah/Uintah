@@ -1,5 +1,5 @@
 void mascal(IntVector valid_lo, IntVector valid_hi,
-     Array3<double> phi, Array3<double> ae,
+     const Array3<double> phi, Array3<double> ae,
      Array3<double> aw, Array3<double> an,
      Array3<double> as, Array3<double> at,
      Array3<double> ab, Array3<double> su,

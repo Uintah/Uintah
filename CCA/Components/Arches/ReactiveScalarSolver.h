@@ -42,6 +42,7 @@ WARNING
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
 
 namespace Uintah {
   class ArchesLabel;

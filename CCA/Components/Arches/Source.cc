@@ -82,7 +82,8 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 				double delta_t,
 				int index,
 				CellInformation* cellinfo,
-				ArchesVariables* vars)
+				ArchesVariables* vars,
+				ArchesConstVariables* constvars)
 {
   
   //get index component of gravity
@@ -125,10 +126,11 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
-    fort_uvelsrc(idxLoU, idxHiU, vars->uVelocity, vars->old_uVelocity,
+    fort_uvelsrc(idxLoU, idxHiU, constvars->uVelocity, constvars->old_uVelocity,
 		 vars->uVelNonlinearSrc, vars->uVelLinearSrc,
-		 vars->vVelocity, vars->wVelocity, vars->density,
-		 vars->viscosity, vars->old_density, vars->denRefArray,
+		 constvars->vVelocity, constvars->wVelocity, constvars->density,
+		 constvars->viscosity, constvars->old_density,
+		 constvars->denRefArray,
 		 gravity, delta_t,  cellinfo->ceeu, cellinfo->cweu, 
 		 cellinfo->cwwu, cellinfo->cnn, cellinfo->csn, cellinfo->css,
 		 cellinfo->ctt, cellinfo->cbt, cellinfo->cbb, cellinfo->sewu,
@@ -172,10 +174,11 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
-    fort_vvelsrc(idxLoV, idxHiV, vars->vVelocity, vars->old_vVelocity,
+    fort_vvelsrc(idxLoV, idxHiV, constvars->vVelocity, constvars->old_vVelocity,
 		 vars->vVelNonlinearSrc, vars->vVelLinearSrc,
-		 vars->uVelocity, vars->wVelocity, vars->density,
-		 vars->viscosity, vars->old_density, vars->denRefArray,
+		 constvars->uVelocity, constvars->wVelocity, constvars->density,
+		 constvars->viscosity, constvars->old_density,
+		 constvars->denRefArray,
 		 gravity, delta_t,
 		 cellinfo->cee, cellinfo->cwe, cellinfo->cww,
 		 cellinfo->cnnv, cellinfo->csnv, cellinfo->cssv,
@@ -217,10 +220,11 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
     domHiWng = vars->wVelLinearSrc.getFortHighIndex();
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
-    fort_wvelsrc(idxLoW, idxHiW, vars->wVelocity, vars->old_wVelocity,
+    fort_wvelsrc(idxLoW, idxHiW, constvars->wVelocity, constvars->old_wVelocity,
 		 vars->wVelNonlinearSrc, vars->wVelLinearSrc,
-		 vars->uVelocity, vars->vVelocity, vars->density,
-		 vars->viscosity, vars->old_density, vars->denRefArray,
+		 constvars->uVelocity, constvars->vVelocity, constvars->density,
+		 constvars->viscosity, constvars->old_density,
+		 constvars->denRefArray,
 		 gravity, delta_t,
 		 cellinfo->cee, cellinfo->cwe, cellinfo->cww,
 		 cellinfo->cnn, cellinfo->csn, cellinfo->css,
@@ -318,27 +322,28 @@ Source::calculatePressureSourcePred(const ProcessorGroup* pc,
 				    const Patch* patch,
 				    double delta_t,
 				    CellInformation* cellinfo,
-				    ArchesVariables* vars)
+				    ArchesVariables* vars,
+				    ArchesConstVariables* constvars)
 {
 
   // Get the patch and variable indices
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 #ifdef divergenceconstraint
-  fort_pressrcpred_var(idxLo, idxHi, vars->pressNonlinearSrc, vars->divergence,
-		       vars->uVelRhoHat,
-		       vars->vVelRhoHat, vars->wVelRhoHat, delta_t,
+  fort_pressrcpred_var(idxLo, idxHi, vars->pressNonlinearSrc,
+		       constvars->divergence, constvars->uVelRhoHat,
+		       constvars->vVelRhoHat, constvars->wVelRhoHat, delta_t,
 		       cellinfo->sew, cellinfo->sns, cellinfo->stb);
 #else
-  fort_pressrcpred(idxLo, idxHi, vars->pressNonlinearSrc, vars->density,
-		   vars->old_density, vars->old_old_density, vars->uVelRhoHat,
-                   vars->vVelRhoHat, vars->wVelRhoHat, delta_t,
+  fort_pressrcpred(idxLo, idxHi, vars->pressNonlinearSrc,
+		   constvars->density, constvars->uVelRhoHat,
+                   constvars->vVelRhoHat, constvars->wVelRhoHat, delta_t,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb);
   for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
     for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
       for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
 	IntVector currcell(ii,jj,kk);
-	vars->pressNonlinearSrc[currcell] -= vars->filterdrhodt[currcell];
+	vars->pressNonlinearSrc[currcell] -= constvars->filterdrhodt[currcell];
       }
     }
   }
@@ -463,7 +468,8 @@ Source::calculateScalarSource(const ProcessorGroup*,
 			      double delta_t,
 			      int, 
 			      CellInformation* cellinfo,
-			      ArchesVariables* vars) 
+			      ArchesVariables* vars,
+			      ArchesConstVariables* constvars) 
 {
 
   // Get the patch and variable indices
@@ -475,7 +481,7 @@ Source::calculateScalarSource(const ProcessorGroup*,
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
   fort_scalsrc(idxLo, idxHi, vars->scalarLinearSrc, vars->scalarNonlinearSrc,
-	       vars->old_density, vars->old_scalar,
+	       constvars->old_density, constvars->old_scalar,
 	       cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
 
 #ifdef ARCHES_SRC_DEBUG
@@ -514,7 +520,8 @@ Source::addReactiveScalarSource(const ProcessorGroup*,
 				double,
 				int, 
 				CellInformation* cellinfo,
-				ArchesVariables* vars) 
+				ArchesVariables* vars,
+				ArchesConstVariables* constvars) 
 {
 
   // Get the patch and variable indices
@@ -525,8 +532,9 @@ Source::addReactiveScalarSource(const ProcessorGroup*,
       for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	IntVector currCell(colX, colY, colZ);
 	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-	vars->scalarNonlinearSrc[currCell] += vol*vars->reactscalarSRC[currCell]*
-	                                      vars->density[currCell];
+	vars->scalarNonlinearSrc[currCell] += vol*
+					constvars->reactscalarSRC[currCell]*
+	                                constvars->density[currCell];
       }
     }
   }
@@ -542,7 +550,8 @@ Source::calculateEnthalpySource(const ProcessorGroup*,
 			      const Patch* patch,
 			      double delta_t,
 			      CellInformation* cellinfo,
-			      ArchesVariables* vars) 
+			      ArchesVariables* vars,
+			      ArchesConstVariables* constvars) 
 {
 
   // Get the patch and variable indices
@@ -554,7 +563,7 @@ Source::calculateEnthalpySource(const ProcessorGroup*,
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
   fort_scalsrc(idxLo, idxHi, vars->scalarLinearSrc, vars->scalarNonlinearSrc,
-	       vars->old_density, vars->old_enthalpy,
+	       constvars->old_density, constvars->old_enthalpy,
 	       cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
 
 #ifdef ARCHES_SRC_DEBUG
@@ -655,7 +664,8 @@ void
 Source::computeEnthalpyRadThinSrc(const ProcessorGroup*,
 				  const Patch* patch,
 				  CellInformation* cellinfo,
-				  ArchesVariables* vars) 
+				  ArchesVariables* vars,
+				  ArchesConstVariables* constvars) 
 {
 
   // Get the patch and variable indices
@@ -663,7 +673,7 @@ Source::computeEnthalpyRadThinSrc(const ProcessorGroup*,
   IntVector idxHi = patch->getCellFORTHighIndex();
   double tref = 298; // warning, read it in
   fort_enthalpyradthinsrc(idxLo, idxHi, vars->scalarNonlinearSrc,
-			  vars->temperature, vars->absorption,
+			  constvars->temperature, constvars->absorption,
 			  cellinfo->sew, cellinfo->sns, cellinfo->stb, tref);
 }
 
@@ -675,25 +685,19 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 			    const Patch* patch,
 			    double,
 			    int index,
-			    ArchesVariables* vars)
+			    ArchesVariables* vars,
+			    ArchesConstVariables* constvars)
 {
   // Get the patch and variable indices
   // And call the fortran routine (MASCAL)
-  IntVector domLo;
-  IntVector domHi;
   IntVector idxLo;
   IntVector idxHi;
-  IntVector domLong;
-  IntVector domHing;
+  IntVector domLo;
+  IntVector domHi;
   switch(index) {
   case Arches::XDIR:
-    domLo = vars->uVelocity.getFortLowIndex();
-    domHi = vars->uVelocity.getFortHighIndex();
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
-    // no ghost cell
-    domLong = vars->uVelLinearSrc.getFortLowIndex();
-    domHing = vars->uVelLinearSrc.getFortHighIndex();
 #if 0
     fort_uvelcoeffupdate(idxLo, idxHi, vars->uVelocity,
 			 vars->uVelocityCoeff[Arches::AP],
@@ -711,7 +715,7 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 			 vars->uVelocityConvectCoeff[Arches::AT],
 			 vars->uVelocityConvectCoeff[Arches::AB]);
 #endif
-    fort_mascal(idxLo, idxHi, vars->uVelocity,
+    fort_mascal(idxLo, idxHi, constvars->uVelocity,
 		vars->uVelocityCoeff[Arches::AE],
 		vars->uVelocityCoeff[Arches::AW],
 		vars->uVelocityCoeff[Arches::AN],
@@ -727,6 +731,8 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 		vars->uVelocityConvectCoeff[Arches::AB]);
 
 #ifdef ARCHES_SRC_DEBUG
+    domLo = constvars->uVelocity.getFortLowIndex();
+    domHi = constvars->uVelocity.getFortHighIndex();
     cerr << "AFTER Modify Velocity Mass Source" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "SU for U velocity for ii = " << ii << endl;
@@ -752,13 +758,8 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 #endif
     break;
   case Arches::YDIR:
-    domLo = vars->vVelocity.getFortLowIndex();
-    domHi = vars->vVelocity.getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
-    // no ghost cell
-    domLong = vars->vVelLinearSrc.getFortLowIndex();
-    domHing = vars->vVelLinearSrc.getFortHighIndex();
 #if 0
     fort_uvelcoeffupdate(idxLo, idxHi, vars->vVelocity,
 			 vars->vVelocityCoeff[Arches::AP],
@@ -776,7 +777,7 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 		vars->vVelocityConvectCoeff[Arches::AT],
 		vars->vVelocityConvectCoeff[Arches::AB]);
 #endif
-    fort_mascal(idxLo, idxHi, vars->vVelocity,
+    fort_mascal(idxLo, idxHi, constvars->vVelocity,
 		vars->vVelocityCoeff[Arches::AE],
 		vars->vVelocityCoeff[Arches::AW],
 		vars->vVelocityCoeff[Arches::AN],
@@ -792,6 +793,8 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 		vars->vVelocityConvectCoeff[Arches::AB]);
 
 #ifdef ARCHES_SRC_DEBUG
+    domLo = constvars->vVelocity.getFortLowIndex();
+    domHi = constvars->vVelocity.getFortHighIndex();
     cerr << "AFTER Modify Velocity Mass Source" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "SU for V velocity for ii = " << ii << endl;
@@ -817,13 +820,8 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 #endif
     break;
   case Arches::ZDIR:
-    domLo = vars->wVelocity.getFortLowIndex();
-    domHi = vars->wVelocity.getFortHighIndex();
     idxLo = patch->getSFCZFORTLowIndex();
     idxHi = patch->getSFCZFORTHighIndex();
-    // no ghost cell
-    domLong = vars->wVelLinearSrc.getFortLowIndex();
-    domHing = vars->wVelLinearSrc.getFortHighIndex();
 #if 0
     fort_uvelcoeffupdate(idxLo, idxHi, vars->wVelocity,
 			 vars->wVelocityCoeff[Arches::AP],
@@ -841,7 +839,7 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 		vars->wVelocityConvectCoeff[Arches::AT],
 		vars->wVelocityConvectCoeff[Arches::AB]);
 #endif
-    fort_mascal(idxLo, idxHi, vars->wVelocity,
+    fort_mascal(idxLo, idxHi, constvars->wVelocity,
 		vars->wVelocityCoeff[Arches::AE],
 		vars->wVelocityCoeff[Arches::AW],
 		vars->wVelocityCoeff[Arches::AN],
@@ -857,6 +855,8 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 		vars->wVelocityConvectCoeff[Arches::AB]);
 
 #ifdef ARCHES_SRC_DEBUG
+    domLo = constvars->wVelocity.getFortLowIndex();
+    domHi = constvars->wVelocity.getFortHighIndex();
     cerr << "AFTER Modify Velocity Mass Source" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "SU for W velocity for ii = " << ii << endl;
@@ -896,13 +896,14 @@ Source::modifyScalarMassSource(const ProcessorGroup* ,
 			       const Patch* patch,
 			       double,
 			       int, ArchesVariables* vars,
+			       ArchesConstVariables* constvars,
 			       int conv_scheme)
 {
   // Get the patch and variable indices
   // And call the fortran routine (MASCAL)
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  fort_mascalscalar(idxLo, idxHi, vars->scalar,
+  fort_mascalscalar(idxLo, idxHi, constvars->scalar,
 		    vars->scalarCoeff[Arches::AE],
 		    vars->scalarCoeff[Arches::AW],
 		    vars->scalarCoeff[Arches::AN],
@@ -924,13 +925,14 @@ Source::modifyEnthalpyMassSource(const ProcessorGroup* ,
 			       const Patch* patch,
 			       double,
 			       ArchesVariables* vars,
+			       ArchesConstVariables* constvars,
 			       int conv_scheme)
 {
   // Get the patch and variable indices
   // And call the fortran routine (MASCAL)
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  fort_mascalscalar(idxLo, idxHi, vars->enthalpy,
+  fort_mascalscalar(idxLo, idxHi, constvars->enthalpy,
 		    vars->scalarCoeff[Arches::AE],
 		    vars->scalarCoeff[Arches::AW],
 		    vars->scalarCoeff[Arches::AN],
@@ -1263,7 +1265,9 @@ Source::computemmMomentumSource(const ProcessorGroup*,
 				const Patch* patch,
 				int index,
 				CellInformation*,
-				ArchesVariables* vars) {
+				ArchesVariables* vars,
+				ArchesConstVariables* constvars)
+{
   IntVector idxLoU;
   IntVector idxHiU;
   // for no ghost cells
@@ -1280,12 +1284,12 @@ Source::computemmMomentumSource(const ProcessorGroup*,
   // for no ghost cells
   domLoUng = vars->uVelLinearSrc.getFortLowIndex();
   domHiUng = vars->uVelLinearSrc.getFortHighIndex();
-  domLo = vars->mmuVelSu.getFortLowIndex();
-  domHi = vars->mmuVelSu.getFortHighIndex();
+  domLo = constvars->mmuVelSu.getFortLowIndex();
+  domHi = constvars->mmuVelSu.getFortHighIndex();
   
 
   fort_mmmomsrc(idxLoU, idxHiU, vars->uVelNonlinearSrc, vars->uVelLinearSrc,
-		vars->mmuVelSu, vars->mmuVelSp);
+		constvars->mmuVelSu, constvars->mmuVelSp);
   break;
   case 2:
   // Get the low and high index for the patch and the variables
@@ -1294,11 +1298,11 @@ Source::computemmMomentumSource(const ProcessorGroup*,
   // for no ghost cells
     domLoUng = vars->vVelLinearSrc.getFortLowIndex();
     domHiUng = vars->vVelLinearSrc.getFortHighIndex();
-    domLo = vars->mmvVelSu.getFortLowIndex();
-    domHi = vars->mmvVelSu.getFortHighIndex();
+    domLo = constvars->mmvVelSu.getFortLowIndex();
+    domHi = constvars->mmvVelSu.getFortHighIndex();
 
     fort_mmmomsrc(idxLoU, idxHiU, vars->vVelNonlinearSrc, vars->vVelLinearSrc,
-		  vars->mmvVelSu, vars->mmvVelSp);
+		  constvars->mmvVelSu, constvars->mmvVelSp);
     break;
   case 3:
   // Get the low and high index for the patch and the variables
@@ -1307,11 +1311,11 @@ Source::computemmMomentumSource(const ProcessorGroup*,
   // for no ghost cells
     domLoUng = vars->wVelLinearSrc.getFortLowIndex();
     domHiUng = vars->wVelLinearSrc.getFortHighIndex();
-    domLo = vars->mmwVelSu.getFortLowIndex();
-    domHi = vars->mmwVelSu.getFortHighIndex();
+    domLo = constvars->mmwVelSu.getFortLowIndex();
+    domHi = constvars->mmwVelSu.getFortHighIndex();
   
     fort_mmmomsrc(idxLoU, idxHiU, vars->wVelNonlinearSrc, vars->wVelLinearSrc,
-		  vars->mmwVelSu, vars->mmwVelSp);
+		  constvars->mmwVelSu, constvars->mmwVelSp);
     break;
   default:
     cerr << "Invalid Index value" << endl;
@@ -1329,7 +1333,8 @@ void
 Source::addMMEnthalpySource(const ProcessorGroup* ,
 			    const Patch* patch,
 			    CellInformation* ,
-			    ArchesVariables* vars)
+			    ArchesVariables* vars,
+			    ArchesConstVariables* constvars)
 {
 
   // Get the low and high index for the patch
@@ -1339,8 +1344,8 @@ Source::addMMEnthalpySource(const ProcessorGroup* ,
 
   fort_add_mm_enth_src(vars->scalarNonlinearSrc,
 		       vars->scalarLinearSrc,
-		       vars->mmEnthSu,
-		       vars->mmEnthSp,
+		       constvars->mmEnthSu,
+		       constvars->mmEnthSp,
 		       valid_lo,
 		       valid_hi);
 
@@ -1356,7 +1361,8 @@ Source::calculateVelocityPred(const ProcessorGroup* ,
 			      double delta_t,
 			      int index,
 			      CellInformation* cellinfo,
-			      ArchesVariables* vars)
+			      ArchesVariables* vars,
+			      ArchesConstVariables* constvars)
 {
   
   int ioff, joff, koff;
@@ -1366,12 +1372,12 @@ Source::calculateVelocityPred(const ProcessorGroup* ,
   IntVector domHiU;
   switch(index) {
   case Arches::XDIR:
-    domLoU = vars->uVelRhoHat.getFortLowIndex();
-    domHiU = vars->uVelRhoHat.getFortHighIndex();
     idxLoU = patch->getSFCXFORTLowIndex();
     idxHiU = patch->getSFCXFORTHighIndex();
     ioff = 1; joff = 0; koff = 0;
 #if 0
+    domLoU = vars->uVelRhoHat.getFortLowIndex();
+    domHiU = vars->uVelRhoHat.getFortHighIndex();
     cerr << "print before uhat compute" << endl;
     cerr << "print domLoU: " << domLoU << endl;
     cerr << "print domHiU: " << domHiU << endl;
@@ -1386,8 +1392,8 @@ Source::calculateVelocityPred(const ProcessorGroup* ,
 #endif
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
-    fort_computevel(idxLoU, idxHiU, vars->uVelRhoHat, vars->pressure,
-		    vars->density, vars->old_density, delta_t,
+    fort_computevel(idxLoU, idxHiU, vars->uVelRhoHat, constvars->pressure,
+		    constvars->density, constvars->old_density, delta_t,
 		    ioff, joff, koff, cellinfo->dxpw);
 #if 0
     cerr << "print uvelRhoHat after solve: " << endl;
@@ -1395,12 +1401,12 @@ Source::calculateVelocityPred(const ProcessorGroup* ,
 #endif
     break;
   case Arches::YDIR:
-    domLoU = vars->vVelRhoHat.getFortLowIndex();
-    domHiU = vars->vVelRhoHat.getFortHighIndex();
     idxLoU = patch->getSFCYFORTLowIndex();
     idxHiU = patch->getSFCYFORTHighIndex();
     ioff = 0; joff = 1; koff = 0;
 #if 0
+    domLoU = vars->vVelRhoHat.getFortLowIndex();
+    domHiU = vars->vVelRhoHat.getFortHighIndex();
     cerr << "print before vhat compute" << endl;
     cerr << "print domLoU: " << domLoU << endl;
     cerr << "print domHiU: " << domHiU << endl;
@@ -1415,8 +1421,8 @@ Source::calculateVelocityPred(const ProcessorGroup* ,
 #endif
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
-    fort_computevel(idxLoU, idxHiU, vars->vVelRhoHat, vars->pressure,
-		    vars->density, vars->old_density, delta_t,
+    fort_computevel(idxLoU, idxHiU, vars->vVelRhoHat, constvars->pressure,
+		    constvars->density, constvars->old_density, delta_t,
 		    ioff, joff, koff, cellinfo->dyps);
 
 #if 0
@@ -1425,11 +1431,11 @@ Source::calculateVelocityPred(const ProcessorGroup* ,
 #endif
     break;
   case Arches::ZDIR:
-    domLoU = vars->wVelRhoHat.getFortLowIndex();
-    domHiU = vars->wVelRhoHat.getFortHighIndex();
     idxLoU = patch->getSFCZFORTLowIndex();
     idxHiU = patch->getSFCZFORTHighIndex();
 #if 0 
+    domLoU = vars->wVelRhoHat.getFortLowIndex();
+    domHiU = vars->wVelRhoHat.getFortHighIndex();
    cerr << "print domLoU: " << domLoU << endl;
     cerr << "print domHiU: " << domHiU << endl;
     cerr << "print idxLoU: " << idxLoU << endl;
@@ -1438,8 +1444,8 @@ Source::calculateVelocityPred(const ProcessorGroup* ,
     ioff = 0; joff = 0; koff = 1;
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
-    fort_computevel(idxLoU, idxHiU, vars->wVelRhoHat, vars->pressure,
-		    vars->density, vars->old_density, delta_t,
+    fort_computevel(idxLoU, idxHiU, vars->wVelRhoHat, constvars->pressure,
+		    constvars->density, constvars->old_density, delta_t,
 		    ioff, joff, koff, cellinfo->dzpb);
 
     break;

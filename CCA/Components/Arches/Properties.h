@@ -274,6 +274,7 @@ private:
       bool d_reactingFlow;
       bool d_enthalpySolve;
       bool d_radiationCalc;
+      bool d_DORadiationCalc;
       bool d_flamelet;
       int d_numMixingVars;
       int d_numMixStatVars;

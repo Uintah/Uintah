@@ -6,6 +6,7 @@
 
 #include <Packages/Uintah/CCA/Components/Arches/LinearSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
@@ -78,7 +79,8 @@ public:
       // Pressure Underrelaxation
       void computePressUnderrelax(const ProcessorGroup* pc,
 				  const Patch* patch,
-				  ArchesVariables* vars);
+				  ArchesVariables* vars,
+				  ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Pressure Solve
@@ -110,7 +112,8 @@ public:
       void computeVelUnderrelax(const ProcessorGroup* pc,
 				const Patch* patch,
 				int index,
-				ArchesVariables* vars);
+				ArchesVariables* vars,
+				ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Velocity Solve
@@ -158,7 +161,8 @@ public:
       void computeScalarUnderrelax(const ProcessorGroup* pc,
 				   const Patch* patch,
 				   int index,
-				   ArchesVariables* vars);
+				   ArchesVariables* vars,
+				   ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Scalar Solve
@@ -166,11 +170,13 @@ public:
 			 const Patch* patch,
 			 int index, double delta_t,
 			 ArchesVariables* vars,
+			 ArchesConstVariables* constvars,
 			 CellInformation* cellinfo,
 			 const ArchesLabel* lab);
       void computeEnthalpyUnderrelax(const ProcessorGroup* pc,
 				     const Patch* patch,
-				     ArchesVariables* vars);
+				     ArchesVariables* vars,
+				     ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Scalar Solve
@@ -178,6 +184,7 @@ public:
 			   const Patch* patch,
 			   double delta_t,
 			   ArchesVariables* vars,
+			   ArchesConstVariables* constvars,
 			   CellInformation* cellinfo,
 			   const ArchesLabel* lab);
        // to close petsc 
@@ -187,6 +194,7 @@ public:
 			     const PatchSubset* mypatches);
    virtual void setPressMatrix(const ProcessorGroup* pc, const Patch* patch,
 			       ArchesVariables* vars,
+			       ArchesConstVariables* constvars,
 			       const ArchesLabel* lab);
    
 

@@ -91,7 +91,7 @@ C$DIR SCALAR
 C$DIR SCALAR
                I = ist -1
                if (pcell(I,J,K).eq.wall) then
-                  uu(i,j,k) = 0.0D0
+c                  uu(i,j,k) = 0.0D0
 C--------------------------------------------------------------------
 C             East FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
@@ -118,7 +118,7 @@ c              UU(iEndGhost+1,J,K) = UU(iEndGhost,J,K)
 c              AE(iend,J,K) = 2.0D0*TINY
           END IF
           IF (PCELL(iBegGhost,J,K).EQ.PBCFLD) THEN
-             UU(iBegGhost,J,K) = UU(ist,J,K)
+c             UU(iBegGhost,J,K) = UU(ist,J,K)
           END IF
   300   CONTINUE
   310 CONTINUE
