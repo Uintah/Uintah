@@ -70,7 +70,7 @@ private:
   GLTexture3DHandle       old_tex_;
   ColorMapHandle          old_cmap_;
   Point                   old_min_, old_max_;
-  GeomID                  geom_id_;
+  CrowdMonitor            geom_lock_;
   GLVolumeRenderer       *volren_;
   Point                   dmin_;
   Vector                  ddx_;

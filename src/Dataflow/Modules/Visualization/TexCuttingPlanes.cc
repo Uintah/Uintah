@@ -73,7 +73,7 @@ TexCuttingPlanes::TexCuttingPlanes(GuiContext* ctx) :
   old_cmap_(0),
   old_min_(Point(0,0,0)),
   old_max_(Point(0,0,0)),
-  geom_id_( -1 ),
+  geom_lock_("TexCuttingPlanes geometry lock"),
   volren_(0)
 {
 }
@@ -196,16 +196,18 @@ void TexCuttingPlanes::execute(void)
     volren_ = scinew GLVolumeRenderer(tex_, cmap);
     
     volren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
-    geom_id_ = ogeom_->addObj( volren_, "Volume Slicer");
-    volren_->set_tex_ren_state(GLVolumeRenderer::TRS_GLPlanes);
-    volren_->DrawPlanes();
+    ogeom_->addObj( volren_, "Volume Slicer", &geom_lock_);
     cyl_active_.reset();
     draw_phi0_.reset();
     phi0_.reset();
     draw_phi1_.reset();
     phi1_.reset();
+    geom_lock_.writeLock();
+    volren_->set_tex_ren_state(GLVolumeRenderer::TRS_GLPlanes);
+    volren_->DrawPlanes();
     volren_->set_cylindrical(cyl_active_.get(), draw_phi0_.get(), phi0_.get(), 
 			     draw_phi1_.get(), phi1_.get());
+    geom_lock_.writeUnlock();
     old_tex_ = tex_;
     old_cmap_ = cmap;
     BBox b;
@@ -222,10 +224,7 @@ void TexCuttingPlanes::execute(void)
       old_tex_ = tex_;
       old_min_ = b.min();
       old_max_ = b.max();
-      if( geom_id_ != -1 ){
-	ogeom_->delObj( geom_id_ );
-	geom_id_ = ogeom_->addObj( volren_, "Volume Slicer");
-      }
+
       Vector dv(b.diagonal());
       int nx, ny, nz;
       Transform t(tex_->get_field_transform());
@@ -239,17 +238,23 @@ void TexCuttingPlanes::execute(void)
 	control_widget_->SetPosition(Interpolate(b.min(), b.max(), 0.5));
       }
       control_widget_->SetScale(dv.length()/80.0);
+      geom_lock_.writeLock();
       volren_->SetVol( tex_.get_rep() );
       volren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
+      geom_lock_.writeUnlock();
     }
     
     if( cmap != old_cmap_ ){
+      geom_lock_.writeLock();
       volren_->SetColorMap( cmap.get_rep() );
+      geom_lock_.writeUnlock();
       old_cmap_ = cmap;
     }
   }
  
+  geom_lock_.writeLock();
   volren_->SetInterp( bool(interp_mode_.get()));
+  geom_lock_.writeUnlock();
   //AuditAllocator(default_allocator);
   if(drawX_.get() || drawY_.get() || drawZ_.get()){
     if( control_id_ == -1 ){
@@ -263,17 +268,20 @@ void TexCuttingPlanes::execute(void)
     }
   }  
 
-  volren_->SetX(drawX_.get());
-  volren_->SetY(drawY_.get());
-  volren_->SetZ(drawZ_.get());
-  volren_->SetView(drawView_.get());
   cyl_active_.reset();
   draw_phi0_.reset();
   phi0_.reset();
   draw_phi1_.reset();
   phi1_.reset();
+
+  geom_lock_.writeLock();
+  volren_->SetX(drawX_.get());
+  volren_->SetY(drawY_.get());
+  volren_->SetZ(drawZ_.get());
+  volren_->SetView(drawView_.get());
   volren_->set_cylindrical(cyl_active_.get(), draw_phi0_.get(), phi0_.get(), 
 			   draw_phi1_.get(), phi1_.get());
+  geom_lock_.writeUnlock();
   //AuditAllocator(default_allocator);
 
   ogeom_->flushViews();				  
