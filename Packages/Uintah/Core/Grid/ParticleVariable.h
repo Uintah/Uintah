@@ -22,7 +22,10 @@
 #include <Packages/Uintah/Core/Grid/SpecializedRunLengthEncoder.h>
 
 #include <unistd.h>
+#include <iostream>
 
+using std::cout;
+using std::endl;
 namespace Uintah {
 
 using namespace SCIRun;
@@ -113,7 +116,7 @@ public:
   virtual void copyPointer(ParticleVariable<T>&);
   virtual void copyPointer(ParticleVariableBase&);
   virtual void allocate(ParticleSubset*);
-  virtual void allocate(const Patch*)
+  virtual void allocate(const Patch*, const IntVector& boundary)
   { SCI_THROW(InternalError("Should not call ParticleVariable<T>::allocate(const Patch*), use allocate(ParticleSubset*) instead.")); }
 
   // specialized for T=Point
@@ -277,7 +280,7 @@ private:
   }
 
   template<class T>
-  void ParticleVariable<T>::copyData(const ParticleVariable<T>& src)
+    void ParticleVariable<T>::copyData(const ParticleVariable<T>& src)
   {
     ASSERT(d_pset == src.d_pset);
     *d_pdata = *src.d_pdata;

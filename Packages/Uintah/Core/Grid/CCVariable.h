@@ -101,8 +101,13 @@ WARNING
     virtual void allocate(const IntVector& lowIndex,
 			  const IntVector& highIndex);
       
-    virtual void allocate(const Patch* patch)
-    { allocate(patch->getCellLowIndex(), patch->getCellHighIndex()); }
+    virtual void allocate(const Patch* patch, const IntVector& boundary)
+    {      
+      IntVector l,h;
+      patch->computeVariableExtents(Patch::CellBased, boundary, 
+                                    Ghost::None, 0, l, h);
+      allocate(l, h);
+    }
     virtual void allocate(const CCVariable<T>& src)
     { allocate(src.getLowIndex(), src.getHighIndex()); }
     virtual void allocate(const CCVariableBase* src)

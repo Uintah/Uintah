@@ -73,7 +73,7 @@ WARNING
       virtual NCVariableBase* makePlaceHolder(const IntVector & low,
 					      const IntVector & high) const = 0;     
 
-      virtual void allocate(const Patch* patch) = 0;
+      virtual void allocate(const Patch* patch, const IntVector& boundary) = 0;
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex) = 0;
       virtual void allocate(const NCVariableBase* src) = 0;

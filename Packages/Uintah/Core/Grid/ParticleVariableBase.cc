@@ -85,3 +85,11 @@ void ParticleVariableBase::getMPIBuffer(BufferInfo& buffer,
   } 
 }
 
+void ParticleVariableBase::setParticleSubset(ParticleSubset* subset)
+{
+  if(d_pset && d_pset->removeReference())
+    delete d_pset;
+  d_pset = subset;
+  if(d_pset)
+    d_pset->addReference();
+}

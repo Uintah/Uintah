@@ -90,7 +90,7 @@ WARNING
       if (swapBytes) swapbytes(value);
     }
      
-    virtual void allocate(const Patch*)
+    virtual void allocate(const Patch*, const IntVector& boundary)
     {
       SCI_THROW(InternalError("Should not call ReductionVariable<T, Op>"
 			  "::allocate(const Patch*)")); 

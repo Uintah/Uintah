@@ -71,7 +71,7 @@ WARNING
       virtual SFCYVariableBase* makePlaceHolder(const IntVector & low,
 						const IntVector & high) const = 0;
      
-      virtual void allocate(const Patch*) = 0;
+      virtual void allocate(const Patch*, const IntVector& boundary) = 0;
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex) = 0;
       virtual void allocate(const SFCYVariableBase* src) = 0;
