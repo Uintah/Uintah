@@ -13,9 +13,8 @@ using namespace SCIRun;
 
 
 
-BumpObject::BumpObject(Vector &vector)
-  : Object(NULL)
-{
+BumpObject::BumpObject(Vector &vector, UVMapping* uv)
+  : Object(NULL, uv) {
   norm = vector;
 }
 
@@ -25,8 +24,7 @@ BumpObject::~BumpObject()
 }
 
 void BumpObject::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
-		       PerProcessorContext*)
-{
+		       PerProcessorContext*) {
   cout << "If you're interesecting this object - stop it. This is the Bump Object and should only be used for its normal." << endl;
 }
 
@@ -46,12 +44,6 @@ void BumpObject::multi_light_intersect(Light*, const Point& orig,
 				   const Array1<Vector>& dirs,
 				   const Array1<Color>& attens,
 				   double,
-				   DepthStats*, PerProcessorContext*)
-{
+				   DepthStats*, PerProcessorContext*) {
   cout << "If you're multi light interesecting this object - stop it. This is the Bump Object and should only be used for its normal." << endl;
-
 }
-
-
-
-

@@ -12,7 +12,7 @@ class BumpObject : public Object {
 protected:
   Vector norm;
 public:
-  BumpObject(Vector &v);
+  BumpObject(Vector &v, UVMapping *uv);
   ~BumpObject(); 
     virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext*);
