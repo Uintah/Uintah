@@ -104,7 +104,7 @@ void FloodFillNewValue::execute(){
       ovol->send(volH);
       return;
     }
-    int new_val = pcf->fdata()[0];
+    int new_val = (int)pcf->fdata()[0];
     int old_val;
     if (!hvf->value(old_val, loc)) {
       error("There's no datavalue in the HexVol at this Node location, even though the call to locate() succeeded.");
@@ -158,9 +158,9 @@ void FloodFillNewValue::execute(){
     while (!Q.empty()) {
       HexVolMesh::Node::index_type curr = Q.front();
       Q.pop_front();
-      HexVolMesh::Node::array_type nbrs;
+      vector<HexVolMesh::Node::index_type> nbrs;
       hvf->get_typed_mesh()->get_neighbors(nbrs, curr);
-      HexVolMesh::Node::array_type::iterator iter = nbrs.begin();
+      vector<HexVolMesh::Node::index_type>::iterator iter = nbrs.begin();
       while (iter != nbrs.end()) {
 	char nbr_val;
 	if (mask_vol->value(nbr_val, *iter) && nbr_val == 1) {
@@ -179,7 +179,7 @@ void FloodFillNewValue::execute(){
       ovol->send(volH);
       return;
     }
-    int new_val = pcf->fdata()[0];
+    int new_val = (int)pcf->fdata()[0];
     int old_val;
     if (!hvf->value(old_val, loc)) {
       error("There's no datavalue in the HexVol at this Cell location, even though the call to locate() succeeded.");
