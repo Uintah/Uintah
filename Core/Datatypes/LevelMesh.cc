@@ -4,7 +4,9 @@
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Core/Util/NotFinished.h>
+
 #include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/BBox.h>
 #include <Core/Datatypes/FieldAlgo.h>
 
 namespace Uintah {
@@ -31,19 +33,19 @@ void
 LevelMesh::init()
 {
   LevelP l = grid_->getLevel( level_ );
-  
+  BBox bb;
   IntVector low, high;
   
   l->findIndexRange( low, high );
-
+  l->getSpatialRange( bb );
   idxLow_ = low;
 
   nx_ = high.x() - low.x();
   ny_ = high.y() - low.y();
   nz_ = high.z() - low.z();
 
-  min_ = grid_->getLevel( level_ )->getNodePosition( low );
-  max_ = grid_->getLevel( level_)->getNodePosition( high );
+  min_ = bb.min();
+  max_ = bb.max();
 
   cerr<<"in LevelMesh constructor \n";
   cerr<<"level = "<<level_<<",\nidxLow = "<<idxLow_<<","
