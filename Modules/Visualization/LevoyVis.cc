@@ -40,107 +40,42 @@ double  EpsilonAlpha = log( 0.01 );
 
 
 inline double
-Levoy::AssociateValue ( double scalarValue,
-		       const Array1<double>& SVA, const Array1<double>& OA,
-		       const Array1<double>& Sl )
+Levoy::AssociateValue ( double scalarValue, int arrayIndex )
 {
-  double newOV;
-#if 0
-
-  if ( scalarValue < sv_min )
-    {
-      cerr << "why did interpolate return true? " << scalarValue << "  sv_min: " <<
-	sv_min << endl;
-      ASSERT( 0 );
-      return( SVOpacity[0][0] );
-    }
-  
-  if ( ( scalarValue - sv_min ) * SVMultiplier >= SVOpacity[0].size() )
-    cerr << "NOT GOOD " << scalarValue << "  " << SVMultiplier << "  " << SVOpacity[0].size() << "  " << sv_min << endl;
-#endif
-  
-  newOV = SVOpacity[0][( scalarValue - sv_min ) * SVMultiplier ];
-  return newOV;
-
-#if 0  
-  double opacity = -1;
-  int i;
-  
-  for ( i = 1; i < SVA.size(); i++ )
-    if ( scalarValue <= SVA[i] )
-      {
-	opacity = Sl[i] * ( scalarValue - SVA[i-1] ) + OA[i-1];
-	break;
-      }
-
-#if 0  
-  if ( Abs( Abs(newOV) - Abs(opacity) ) >= 0.01 )
-    cerr << "SOMETHING's wrong" << newOV << "  " << opacity << endl;
-#endif
-
-  ASSERT ( opacity != -1 );
-
-  return opacity;
-#endif  
-
+  return(SVOpacity[arrayIndex][ int( (scalarValue - SVmin) * SVMultiplier) ] );
 }
 
-/**************************************************************************
- *
- * Constructor
- *
- **************************************************************************/
 
-Levoy::Levoy ( ScalarFieldRG * grid,
-	      Color& bg, Array1<double> * Xarr, Array1<double> * Yarr )
+void
+Levoy::PrepareAssociateValue( double sv_max, Array1<double> * ScalarVals,
+	      Array1<double> * AssociatedVals )
 {
   int i, j, k;
+  int beg, end;
+  int counter;
+  Array1<double> Slopes[4];
 
-  homeSFRGrid = grid;
-
-  // set up the bounding box for the image
-
-  homeSFRGrid->get_bounds( gmin, gmax );
+  // calculate slopes between consecutive opacity values
   
-  box.extend( gmin );
-  box.extend( gmax );
-
-  backgroundColor = bg;
-
-  ScalarVals     = Xarr;
-  AssociatedVals = Yarr;
-
-  // do some processing on the array because AssociateValue
-  // function takes a lot of time
-  
-  Slopes = new Array1<double> [4];
-  
-  // add a dummy at position 0
-
-  Slopes[0].add( 0. );
-  Slopes[1].add( 0. );
-  Slopes[2].add( 0. );
-  Slopes[3].add( 0. );
-
-  // NEWEXP!!!
-  
-  double sv_max;
-  grid->get_minmax( sv_min, sv_max );
+  for ( i = 0; i < 4; i++ )
+    Slopes[i].add( 0. );
 
   for ( i = 0; i < 4; i++ )
     for ( j = 1; j < ScalarVals[i].size(); j++ )
       Slopes[i].add( ( AssociatedVals[i][j] - AssociatedVals[i][j-1] ) /
 		    ( ScalarVals[i][j] - ScalarVals[i][j-1] ) );
 
-  // NEWEXP!!!!
-  
-  SVMultiplier = ( TABLE_SIZE - 1 ) / ( sv_max - sv_min );
-  
-  int beg, end;
-  
+  // scalar value multiplier which scales the SV appropriately
+  // for array access
+
+  SVMultiplier = ( TABLE_SIZE - 1 ) / ( sv_max - SVmin );
+
   for ( j = 0; j < 4; j++ )
     {
-      SVOpacity[j].add( AssociatedVals[j][0] );
+      counter = 0;
+      SVOpacity[j] = new double[TABLE_SIZE];
+      
+      SVOpacity[j][counter++] = AssociatedVals[j][0];
       
       for ( i = 0; i < ScalarVals[j].size() - 1; i++ )
 	{
@@ -148,9 +83,15 @@ Levoy::Levoy ( ScalarFieldRG * grid,
 	  end = int( ScalarVals[j][i+1] * SVMultiplier );
 	  
 	  for( k = beg; k <= end; k++ )
-	    SVOpacity[j].add( Slopes[j][i+1] * ( k - beg ) / SVMultiplier
-			     + AssociatedVals[j][i] );
+	    SVOpacity[j][counter++] = ( Slopes[j][i+1] * ( k - beg ) /
+				       SVMultiplier + AssociatedVals[j][i] );
 	}
+    }
+
+  if ( counter > TABLE_SIZE )
+    {
+      cerr << "NOT GOOD AT ALL\n";
+      ASSERT( counter == TABLE_SIZE );
     }
 
 #if 0  
@@ -191,15 +132,50 @@ Levoy::Levoy ( ScalarFieldRG * grid,
 	  break;
 	}
     }
+}
+
+
+/**************************************************************************
+ *
+ * Constructor
+ *
+ **************************************************************************/
+
+Levoy::Levoy ( ScalarFieldRG * grid, Array1<double> * ScalarVals,
+	      Array1<double> * AssociatedVals )
+{
+  Point bmin, bmax;
+  double sv_max;
+  
+  homeSFRGrid = grid;
+  homeSFRGrid->get_bounds( bmin, bmax );
+  homeSFRGrid->get_minmax( SVmin, sv_max );
+
+  Vector diagonal=bmax-bmin;
+  diagx=diagonal.x();
+  diagy=diagonal.y();
+  diagz=diagonal.z();
+
+  nx=homeSFRGrid->nx;
+  ny=homeSFRGrid->ny;
+  nz=homeSFRGrid->nz;
+  
+  // set up the bounding box for the image
+  box.extend( bmin );
+  box.extend( bmax );
+
+  PrepareAssociateValue( sv_max, ScalarVals, AssociatedVals );
   
   Image = new Array2<CharColor>;
 
+#ifdef LIGHTING
   // setup the lighting coefficients
 
   ambient_coeff = 0.3;
   diffuse_coeff = 0.4;
   specular_coeff = 0.2;
   specular_iter = 30;
+#endif
 }
 
 
@@ -231,9 +207,9 @@ Levoy::DetermineRayStepSize ( int steps )
   
   // calculate a step size that is about the length of one voxel
 
-  small[0] = ( gmax.x() - gmin.x() ) / ( homeSFRGrid->nx  );
-  small[1] = ( gmax.y() - gmin.y() ) / ( homeSFRGrid->ny  );
-  small[2] = ( gmax.z() - gmin.z() ) / ( homeSFRGrid->nz  );
+  small[0] = ( box.max().x() - box.min().x() ) / nx;
+  small[1] = ( box.max().y() - box.min().y() ) / ny;
+  small[2] = ( box.max().z() - box.min().z() ) / nz;
 
   // set rayStep to the smallest of the step sizes
   
@@ -259,53 +235,18 @@ Levoy::DetermineRayStepSize ( int steps )
  **************************************************************************/
 
 void
-Levoy::CalculateRayIncrements ( View myview,
-			       Vector& rayIncrementU, Vector& rayIncrementV,
-			       const int& rasterX, const int& rasterY )
+Levoy::CalculateRayIncrements ( ExtendedView myview,
+			       Vector& rayIncrementU, Vector& rayIncrementV )
 {
   myview.get_normalized_viewplane( rayIncrementU, rayIncrementV );
 
-  double aspect = double(rasterX) / double(rasterY);
+  double aspect = double( myview.xres() ) / double( myview.yres() );
   double fovy=RtoD(2*Atan(aspect*Tan(DtoR(myview.fov()/2.))));
   
   double lengthY = 2 * tan( DtoR( fovy / 2 ) );
 
-  rayIncrementV *= lengthY / rasterY;
-  rayIncrementU *= lengthY / rasterY;
-}
-
-
-
-/**************************************************************************
- *
- * determine the longest ray possible.  necessary for loop termination
- * during calculation of pixel color.
- *
- **************************************************************************/
-
-double
-Levoy::DetermineFarthestDistance ( const Point& e )
-{
-  Point p;
-
-  // compare distances
-
-  if ( Abs( gmin.x() - e.x() ) > Abs( gmax.x() - e.x() ) )
-    p.x( gmin.x() );
-  else
-    p.x( gmax.x() );
-  
-  if ( Abs( gmin.y() - e.y() ) > Abs( gmax.y() - e.y() ) )
-    p.y( gmin.y() );
-  else
-    p.y( gmax.y() );
-  
-  if ( Abs( gmin.z() - e.z() ) > Abs( gmax.z() - e.z() ) )
-    p.z( gmin.z() );
-  else
-    p.z( gmax.z() );
-  
-  return (p-e).length();
+  rayIncrementV *= lengthY / myview.yres();
+  rayIncrementU *= lengthY / myview.yres();
 }
 
 
@@ -322,6 +263,13 @@ Levoy::SetUp ( const ExtendedView& myview, int stepsize )
   // temporary storage for eye position
 
   eye = myview.eyep();
+
+  // assign background color
+
+  backgroundColor = myview.bg();
+
+  xres = myview.xres();
+  yres = myview.yres();
   
   // useful for ray-bbox intersection
   box.PrepareIntersect( eye );
@@ -337,50 +285,29 @@ Levoy::SetUp ( const ExtendedView& myview, int stepsize )
 
   rayStep = DetermineRayStepSize ( stepsize );
 
-  // the length of longest possible ray
-
-  dmax = DetermineFarthestDistance ( eye );
-
-  // make sure that the raster sizes do not exceed the OpenGL window
-  // size
-
-#if 0  
-  if ( myview.xres() > VIEW_PORT_SIZE )
-    myview.xres( VIEW_PORT_SIZE );
-  
-  if ( myview.yres() > VIEW_PORT_SIZE )
-    myview.yres( VIEW_PORT_SIZE );
-#endif  
-
-  // create and initialize the array containing the image
-
-  this->x = myview.xres();
-  this->y = myview.yres();
-  
-//  CharColor temp;
 
   // deallocate old array and allocate enough space
 
   Image->newsize( myview.yres(), myview.xres() );
 
+  
   // initialize to the default (black) color
 
   Image->initialize( myview.bg() );
 
   // calculate the increments to be added in the u,v directions
 
-  CalculateRayIncrements( myview, rayIncrementU, rayIncrementV, myview.xres(),
-			 myview.yres() );
+  CalculateRayIncrements( myview, rayIncrementU, rayIncrementV );
 
+#ifdef LIGHTING
+  
   // calculate the vector, L, which points toward the sun ( a point
   // light source which is very far away
 
 //  Lvector = homeRay + rayIncrementU * 3 + rayIncrementV * 3;
   Lvector = homeRay;
   Lvector.normalize();
-  
-  // TEMP!!!!  2 different logic statements, interchanged,
-  // in order to compare speed
+#endif
   
   // determine the function to use
 
@@ -400,10 +327,6 @@ Levoy::SetUp ( const ExtendedView& myview, int stepsize )
  *
  **************************************************************************/
 
-void
-Levoy::SetUp ( GeometryData * g, int stepsize )
-{
-}
 
 /**************************************************************************
  *
@@ -419,7 +342,7 @@ Levoy::SetUp ( GeometryData * g, int stepsize )
  **************************************************************************/
 
 Color
-Levoy::Eight ( const Point& eye, Vector& step, const Point& beg )
+Levoy::Eight ( Vector& step, const Point& beg )
 {
   // the color for rendering
 
@@ -467,64 +390,39 @@ Levoy::Eight ( const Point& eye, Vector& step, const Point& beg )
 
   scalarValue = 0;
 
-#ifdef OLD
-  if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
-    {
-      opacity = AssociateValue( scalarValue, ScalarVals[0],
-			       AssociatedVals[0], Slopes[0] );
-      
-      Alpha += - opacity * rayStep / 0.1;
-    }
+  double x00, x01, x10, x11;
+  double y0, y1, inside;
   
-  while ( Alpha >= EpsilonAlpha   &&   Flag )
-    {
-      atPoint += step;
-      scalarValue = 0;
+  Vector pn=atPoint-box.min();
+  
+  double dx=step.x()*(nx-1)/diagx;
+  double dy=step.y()*(ny-1)/diagy;
+  double dz=step.z()*(nz-1)/diagz;
 
-      if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
-	{
-	  opacity = AssociateValue( scalarValue, ScalarVals[0],
-				   AssociatedVals[0], Slopes[0] );
+  double x=pn.x()*(nx-1)/diagx;
+  double y=pn.y()*(ny-1)/diagy;
+  double z=pn.z()*(nz-1)/diagz;
+  
+  int ix=(int)(x+10000)-10000;
+  int iy=(int)(y+10000)-10000;
+  int iz=(int)(z+10000)-10000;
+  
+  double fx=x-ix;
+  double fy=y-iy;
+  double fz=z-iz;
+  
+  inside = 1;
+  
+  if(ix<0 || ix+1>=nx)inside=0;
+  if(iy<0 || iy+1>=ny)inside=0;
+  if(iz<0 || iz+1>=nz)inside=0;
+  
+  // will not perform bounds checking
+  double*** grid=homeSFRGrid->grid.get_dataptr();
 
-	  Alpha += - opacity * rayStep / 0.1;
-	}
-      else
-	Flag = 0;
-    }
-#endif
-    Point bmin, bmax;
-    homeSFRGrid->get_bounds(bmin, bmax);
-    Vector diagonal=bmax-bmin;
-    Vector pn=atPoint-bmin;
-    double diagx=diagonal.x();
-    double diagy=diagonal.y();
-    double diagz=diagonal.z();
-    int nx=homeSFRGrid->nx;
-    int ny=homeSFRGrid->ny;
-    int nz=homeSFRGrid->nz;
-    double x=pn.x()*(nx-1)/diagx;
-    double y=pn.y()*(ny-1)/diagy;
-    double z=pn.z()*(nz-1)/diagz;
-    int ix=(int)(x+10000)-10000;
-    int iy=(int)(y+10000)-10000;
-    int iz=(int)(z+10000)-10000;
-    double fx=x-ix;
-    double fy=y-iy;
-    double fz=z-iz;
-    int inside=1;
-    if(ix<0 || ix+1>=nx)inside=0;
-    if(iy<0 || iy+1>=ny)inside=0;
-    if(iz<0 || iz+1>=nz)inside=0;
-    double dx=step.x()*(nx-1)/diagx;
-    double dy=step.y()*(ny-1)/diagy;
-    double dz=step.z()*(nz-1)/diagz;
+  // the first atPoint may be outside the volume due to roundoff error
 
-    double*** grid=homeSFRGrid->grid.get_dataptr();
-
-
-    double x00, x01, x10, x11;
-    double y0, y1;
-    if(inside)
+  if(inside)
     {
       x00=Interpolate(grid[ix][iy][iz], grid[ix+1][iy][iz], fx);
       x01=Interpolate(grid[ix][iy][iz+1], grid[ix+1][iy][iz+1], fx);
@@ -533,16 +431,17 @@ Levoy::Eight ( const Point& eye, Vector& step, const Point& beg )
       y0=Interpolate(x00, x10, fy);
       y1=Interpolate(x01, x11, fy);
       scalarValue=Interpolate(y0, y1, fz);
-      opacity = AssociateValue( scalarValue, ScalarVals[0],
-			       AssociatedVals[0], Slopes[0] );
+      opacity = AssociateValue( scalarValue, 0 );
       
       Alpha += - opacity * rayStep / 0.1;
     }
-  inside=1;
+
+  // even if initially we were slightly outside, add step and
+  // then determine if we're inside the bbox
+  inside = 1;
+  
   while ( Alpha >= EpsilonAlpha   &&   inside )
     { 
-      //atPoint += step;
-
       fx+=dx;
       if(fx<0){
 	int i=(int)(-fx)+1;
@@ -557,6 +456,7 @@ Levoy::Eight ( const Point& eye, Vector& step, const Point& beg )
 	if(ix+1 >= nx)
 	  inside=0;
       }
+      
       fy+=dy;
       if(fy<0){
 	int i=(int)(-fy)+1;
@@ -571,6 +471,7 @@ Levoy::Eight ( const Point& eye, Vector& step, const Point& beg )
 	if(iy+1 >= ny)
 	  inside=0;
       }
+      
       fz+=dz;
       if(fz<0){
 	int i=(int)(-fz)+1;
@@ -595,20 +496,17 @@ Levoy::Eight ( const Point& eye, Vector& step, const Point& beg )
 	  y0=Interpolate(x00, x10, fy);
 	  y1=Interpolate(x01, x11, fy);
 	  scalarValue=Interpolate(y0, y1, fz);
-	  opacity = AssociateValue( scalarValue, ScalarVals[0],
-				   AssociatedVals[0], Slopes[0] );
+	  opacity = AssociateValue( scalarValue, 0 );
 
 	  Alpha += - opacity * rayStep / 0.1;
 	}
     }
 
+  
   Alpha = exp( Alpha );
-//  cerr << Alpha << endl;
   
   // background color should contribute to the final color of
-  // the pixel.  if contribution is minute, the background
-  // is not visible therefore don't add the background color
-  // to the accumulated one.
+  // the pixel.
   
   accumulatedColor = WHITE * ( 1 - Alpha ) + backgroundColor * Alpha;
 
@@ -631,7 +529,7 @@ Levoy::Eight ( const Point& eye, Vector& step, const Point& beg )
 
 
 Color
-Levoy::Nine ( const Point& eye, Vector& step, const Point& beg )
+Levoy::Nine ( Vector& step, const Point& beg )
 {
   // the color for rendering
 
@@ -684,20 +582,13 @@ Levoy::Nine ( const Point& eye, Vector& step, const Point& beg )
   
   if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
     {
-      Color tempcolr( AssociateValue( scalarValue,
-				     ScalarVals[1], AssociatedVals[1],
-				     Slopes[1] ),
-		     AssociateValue( scalarValue,
-				    ScalarVals[2], AssociatedVals[2],
-				    Slopes[2] ),
-		     AssociateValue( scalarValue,
-				    ScalarVals[3], AssociatedVals[3],
-				    Slopes[3] ) );
+      Color tempcolr( AssociateValue( scalarValue, 1 ),
+		     AssociateValue( scalarValue, 2 ),
+		     AssociateValue( scalarValue, 3 ) );
 
       colr = tempcolr;
 
-      opacity = AssociateValue( scalarValue, ScalarVals[0],
-			       AssociatedVals[0], Slopes[0] );
+      opacity = AssociateValue( scalarValue, 0 );
 
 //      accumulatedColor += colr * ( contribution * opacity );
 //      contribution = contribution * ( 1.0 - opacity );
@@ -718,20 +609,13 @@ Levoy::Nine ( const Point& eye, Vector& step, const Point& beg )
 
       if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
 	{
-	  Color tempcolr( AssociateValue( scalarValue,
-					 ScalarVals[1], AssociatedVals[1],
-					 Slopes[1] ),
-			 AssociateValue( scalarValue,
-					ScalarVals[2], AssociatedVals[2],
-					Slopes[2] ),
-			 AssociateValue( scalarValue,
-					ScalarVals[3], AssociatedVals[3],
-					Slopes[3] ) );
+	  Color tempcolr( AssociateValue( scalarValue, 1 ),
+			 AssociateValue( scalarValue, 2 ),
+			 AssociateValue( scalarValue, 3 ) );
 
 	  colr = tempcolr;
 
-	  opacity = AssociateValue( scalarValue, ScalarVals[0],
-				   AssociatedVals[0], Slopes[0] );
+	  opacity = AssociateValue( scalarValue, 0 );
 
 	  Alpha.r( Alpha.r() - opacity * rayStep / 0.1 * colr.r() );
 	  Alpha.g( Alpha.g() - opacity * rayStep / 0.1 * colr.g() );
@@ -759,7 +643,7 @@ Levoy::Nine ( const Point& eye, Vector& step, const Point& beg )
 }
 
 
-
+#ifdef LIGHTING
 /**************************************************************************
  *
  *
@@ -774,6 +658,7 @@ Levoy::LightingComponent( const Vector& normal )
 
   return i;
 }
+#endif
 
 
 /**************************************************************************
@@ -792,16 +677,16 @@ Levoy::PerspectiveTrace( int from, int till )
 
   for ( pool = from; pool < till; pool++ )
     {
-      for ( loop = 0; loop < y; loop++ )
+      for ( loop = 0; loop < yres; loop++ )
 	{
 	  // assign ray direction depending on the pixel
 	  rayToTrace = homeRay;
-	  rayToTrace += rayIncrementU * ( pool - x/2 );
-	  rayToTrace += rayIncrementV * ( loop - y/2 );
+	  rayToTrace += rayIncrementU * ( pool - xres/2 );
+	  rayToTrace += rayIncrementV * ( loop - yres/2 );
 	  rayToTrace.normalize();
 	  
 	  if ( box.Intersect( eye, rayToTrace, newbeg ) )
-	    pixelColor = (this->*CastRay)( eye, rayToTrace, newbeg );
+	    pixelColor = (this->*CastRay)( rayToTrace, newbeg );
 	  else
 	    pixelColor = backgroundColor;
 
@@ -832,8 +717,8 @@ Levoy::PerspectiveTrace( int from, int till )
  **************************************************************************/
 
 LevoyS::LevoyS ( ScalarFieldRG * grid,
-	      Color& bg, Array1<double> * Xarr, Array1<double> * Yarr )
-: Levoy( grid, bg, Xarr, Yarr )
+	      Array1<double> * Xarr, Array1<double> * Yarr )
+: Levoy( grid, Xarr, Yarr )
 {
 }
 
@@ -886,10 +771,6 @@ LevoyS::SetUp ( GeometryData * g, int stepsize )
 
   rayStep = DetermineRayStepSize ( stepsize );
 
-  // the length of longest possible ray
-
-  dmax = DetermineFarthestDistance ( eye );
-
   // make sure that raster sizes do not exceed the raster size
   // of the OpenGL window.
 
@@ -908,9 +789,6 @@ LevoyS::SetUp ( GeometryData * g, int stepsize )
 
   // create and initialize the array containing the image
 
-  this->x = g->xres;
-  this->y = g->yres;
-  
   CharColor temp;
 
 
@@ -922,22 +800,16 @@ LevoyS::SetUp ( GeometryData * g, int stepsize )
 
   // calculate the increments to be added in the u,v directions
 
-//  CalculateRayIncrements( myview, rayIncrementU, rayIncrementV, x, y );
+  ExtendedView joy ( *(g->view), xres, yres, BLACK );
 
-  CalculateRayIncrements( *(g->view), rayIncrementU, rayIncrementV,
-			 g->xres, g->yres );
+  CalculateRayIncrements( joy, rayIncrementU, rayIncrementV );
 
-//  cerr << "with new res's: " << rayIncrementU << " " << rayIncrementV << endl;
-
-  CalculateRayIncrements( *(g->view), rayIncrementU, rayIncrementV,
-			 rx, ry );
-
-//  cerr << "keeping the true res's " << rayIncrementU << " " << rayIncrementV << endl;
-  
+#ifdef LIGHTING
   // calculate the vector, L, which points toward the sun ( a point
   // light source which is very far away
 
   Lvector = homeRay + rayIncrementU * 3 + rayIncrementV * 3;
+#endif
   
   // determine the function to use
 
@@ -998,7 +870,8 @@ LevoyS::Eleven ( const Point& eye, Vector& step,
 
   // the length of the ray to be cast
 
-  double mylength;
+  double whatever = 1;
+  double mylength  = whatever;
 
   // the length of ray stepped through so far
 
@@ -1050,18 +923,6 @@ LevoyS::Eleven ( const Point& eye, Vector& step,
 
   traversed = - stepLength;
 
-  // yet another check for whether i calculated the dmax correctly...
-  // actually, i probably didn't calculate it correctly...
-
-  if ( mylength + ( eye - beg ).length() + 1.e-5 > dmax )
-    {
-      cerr << "HELP!!!!\n\n\n\n\n\n\n\n\n\n\n\nHELP!";
-      cerr << "DMAX not calculated correctly: " << dmax << " vs " << mylength + ( eye - beg ).length() + 1.e-5 << endl;
-      cerr << beg <<"   " << end << endl;
-      cerr << "HELP!!!!\n\n\n\n\n\n\n\n\n\n\n\nHELP!";
-      ASSERT( NULL );
-    }
-
   // begin traversing through the volume at the first point of
   // intersection of the ray with the bbox.  keep going through
   // the volume until the contribution of the voxel color
@@ -1076,8 +937,7 @@ LevoyS::Eleven ( const Point& eye, Vector& step,
 
       if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
 	{
-	  opacity = AssociateValue( scalarValue, ScalarVals[0],
-				   AssociatedVals[0], Slopes[0] );
+	  opacity = AssociateValue( scalarValue, 0 );
 
 	  accumulatedColor += colr * ( contribution * opacity );
 	  contribution = contribution * ( 1.0 - opacity );
@@ -1144,7 +1004,8 @@ LevoyS::Twelve ( const Point& eye, Vector& step,
 
   // the length of the ray to be cast
 
-  double mylength;
+  double whatever = 1;
+  double mylength = whatever;
 
   // the length of ray stepped through so far
 
@@ -1218,20 +1079,13 @@ LevoyS::Twelve ( const Point& eye, Vector& step,
       if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
 	{
 	  
-	  Color tempcolr( AssociateValue( scalarValue,
-					 ScalarVals[1], AssociatedVals[1],
-					 Slopes[1] ),
-			 AssociateValue( scalarValue,
-					ScalarVals[2], AssociatedVals[2],
-					Slopes[2] ),
-			 AssociateValue( scalarValue,
-					ScalarVals[3], AssociatedVals[3],
-					Slopes[3] ) );
+	  Color tempcolr( AssociateValue( scalarValue, 1 ),
+			 AssociateValue( scalarValue, 2 ),
+			 AssociateValue( scalarValue, 3 ) );
 
 	  colr = tempcolr;
 
-	  opacity = AssociateValue( scalarValue, ScalarVals[0],
-				   AssociatedVals[0], Slopes[0] );
+	  opacity = AssociateValue( scalarValue, 0 );
 	  
 	  accumulatedColor += colr * ( contribution * opacity );
 	  contribution = contribution * ( 1.0 - opacity );
@@ -1267,13 +1121,13 @@ LevoyS::PerspectiveTrace( int from, int till )
 
   for ( pool = from; pool < till; pool++ )
     {
-      for ( loop = 0; loop < y; loop++ )
+      for ( loop = 0; loop < yres; loop++ )
 	{
 	  // slightly alter the direction of ray
 	  
 	  rayToTrace = homeRay;
-	  rayToTrace += rayIncrementU * ( pool - x/2 );
-	  rayToTrace += rayIncrementV * ( loop - y/2 );
+	  rayToTrace += rayIncrementU * ( pool - xres/2 );
+	  rayToTrace += rayIncrementV * ( loop - yres/2 );
 
 	  if ( box.Intersect( eye, rayToTrace, beg ) )
 	    {
@@ -1323,7 +1177,7 @@ Levoy::TraceRays ( int projectionType )
 
   if ( projectionType )
     {
-      PerspectiveTrace( 0, x );
+      PerspectiveTrace( 0, xres );
     }
 
   return Image;

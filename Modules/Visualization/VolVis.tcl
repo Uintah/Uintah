@@ -56,7 +56,7 @@ itcl_class VolVis {
 	global CanvasWidth CanvasHeight
 
 	global $this-minSV $this-maxSV
-	global $this-project $this-centerit $this-processors
+	global $this-project $this-processors
 
 	global $this-intervalCount
 	global $this-uiopen
@@ -88,7 +88,6 @@ itcl_class VolVis {
 	set $this-minSV 0
 
 	set $this-project 1
-        set $this-centerit 1
         set $this-processors 0
 
 	# set protected variables and globals
@@ -213,13 +212,6 @@ itcl_class VolVis {
 		-value 0
 
 	
-	frame $w.f.allign
-	
-	radiobutton $w.f.allign.left -text Left -variable $this-centerit \
-		-value 0
-	radiobutton $w.f.allign.cent -text Center -variable $this-centerit \
-		-value 1
-
 	frame $w.f.proc
 
 	radiobutton $w.f.proc.single -text Single   -variable $this-processors\
@@ -271,8 +263,6 @@ itcl_class VolVis {
 #
 #	pack $w.f.proj.per $w.f.proj.ort -side left -fill x
 
-	pack $w.f.allign.left $w.f.allign.cent -side left -fill x
-	
 	pack $w.f.proc.single $w.f.proc.multi -side left -fill x
 
 	pack $w.f.salmon_interaction.none $w.f.salmon_interaction.view  \
@@ -288,8 +278,8 @@ itcl_class VolVis {
 #		-expand yes -fill x -pady 2 -padx 2
 
         pack $w.f.viewstuff $w.f.rastersize $w.f.background                 \
-		$w.f.allign $w.f.proc $w.f.salmon_interaction $w.f.methods  \
-		$w.f.graph  $w.f.f $w.f.b  $w.f.execbutton              \
+		$w.f.proc $w.f.salmon_interaction $w.f.methods              \
+		$w.f.graph  $w.f.f $w.f.b  $w.f.execbutton                  \
 		-expand yes -fill x -pady 2 -padx 2
 	pack $w.f
 

@@ -46,7 +46,7 @@ class LevoyS;
 
 // the type of fnc corresponding to the various cast ray fncs
 
-typedef Color (Levoy::*CRF) ( const Point&, Vector&, const Point& );
+typedef Color (Levoy::*CRF) ( Vector&, const Point& );
 
 typedef Color (LevoyS::*CRFS) ( const Point&, Vector&,
 			     const Point&, const Point&, const int&,
@@ -55,35 +55,69 @@ typedef Color (LevoyS::*CRFS) ( const Point&, Vector&,
 class Levoy
 {
 protected:
-  
+
+  // the scalar field
   ScalarFieldRG *homeSFRGrid;
 
-  Color backgroundColor;
+  // the original ray from the eye point to the lookat point
+  Vector homeRay;
 
-  Array1<double> * AssociatedVals;
-  Array1<double> * ScalarVals;
+  // original eye position
+  Point eye;
 
-  Array1<double> SVOpacity[4];
+  // Transfer map: the 4 SV-{opacity, r,g,b} arrays
+  double *SVOpacity[4];
+
+  // appropriately scales the SV for array access
   double SVMultiplier;
-  double sv_min;
+  
+  // minimum SValue
+  double SVmin;
 
-  Array1<double> * Slopes;
-
+  // the length of a single step along the ray
   double rayStep;
-  double dmax, dmin;
 
-  int debug_flag;
+  // diagonal x,y,z components
+  double diagx, diagy, diagz;
 
+  // number of voxels in x,y,z directions
+  int nx, ny, nz;
+
+  // flag set to true when r,g,b = 0,0,0 throughout the SValues
   int whiteFlag;
 
+  // the bounding box
   BBox box;
-  Point gmin, gmax;
 
   // the ray increments in the u,v direction that are added
   // to the original home ray or the original eye point.
-  
   Vector rayIncrementU, rayIncrementV;
 
+  // raster size
+  double xres, yres;
+
+  // background color
+  Color backgroundColor;
+  
+  // the volume rendering routine to be used
+  CRF CastRay;
+
+
+
+  
+  double DetermineRayStepSize ( int steps );
+
+  void CalculateRayIncrements ( ExtendedView myview,
+			       Vector& rayIncrementU, Vector& rayIncrementV );
+  
+  // associates an opacity or color value (0-1 range) given
+  // a scalar value
+  inline double AssociateValue( double scalarValue, int arrayIndex );
+
+  void PrepareAssociateValue( double sv_min, Array1<double> * ScalarVals,
+	      Array1<double> * AssociatedVals );
+
+#ifdef LIGHTING   
   // L vector is the vector pointing toward the sun
 
   Vector Lvector;
@@ -92,74 +126,27 @@ protected:
 
   double ambient_coeff, diffuse_coeff, specular_coeff, specular_iter;
 
-  // original eye position
-
-  Point eye;
-  
-  // the original ray from the eye point to the lookat point
-
-  Vector homeRay;
-
-  // pointer to the array of char colors
-
-  CRF CastRay;
-
-  // the size of the image
-
-  int x, y;
-
-  // flag for centering
-
-  int centerFlag;
-
-  // offsets from the center
-  
-  int centerOffsetU, centerOffsetV;
-
-  double DetermineRayStepSize ( int steps );
-
-  void CalculateRayIncrements ( View myview, Vector& rayIncrementU,
-			       Vector& rayIncrementV, const int& rasterX,
-			       const int& rasterY );
-  
-  double DetermineFarthestDistance ( const Point& e );
-
-  // associates an opacity or color value (0-1 range) given
-  // a scalar value
-
-  inline double AssociateValue( double scalarValue,
-			const Array1<double>& SVA, const Array1<double>& OA,
-			const Array1<double>& Sl );
-  
   double LightingComponent( const Vector& normal );
+#endif
+  
 public:
 
   Array2<CharColor> * Image;
 
   // constructor
-  
-  Levoy( ScalarFieldRG * grid,
-	Color& bg, Array1<double> * Xarr, Array1<double> * Yarr );
+  Levoy( ScalarFieldRG * grid, Array1<double> * Xarr, Array1<double> * Yarr );
 
   // destructor
-  
   ~Levoy();
 
-  // no depth buffer or color buffer info; therefore, Salmon view
-  // is not applicable
-
+  // set up variables given view info and the stepsize
   void SetUp ( const ExtendedView& myview, int stepsize );
 
-  virtual void SetUp ( GeometryData * g, int stepsize );
-  
-  
   // uses the new transfer map and ray-bbox intersections
 
-  Color Eight ( const Point& eye, Vector& step,
-	      const Point& beg  );
+  Color Eight ( Vector& step, const Point& beg  );
 
-  Color Nine ( const Point& eye, Vector& step,
-	      const Point& beg );
+  Color Nine ( Vector& step, const Point& beg );
 
   // traces all the rays
   
@@ -170,14 +157,6 @@ public:
   
   virtual void PerspectiveTrace( int from, int till );
   
-#if 0  
-  void ParallelTrace( int from, int till );
-
-  // traces rays repeat number of times, and takes the time it took
-  
-  Array2<CharColor>* BatchTrace ( int projectionType, int repeat );
-  
-#endif
 };
 
 /**************************************************************************
@@ -214,7 +193,7 @@ public:
   // constructor
   
   LevoyS( ScalarFieldRG * grid,
-	Color& bg, Array1<double> * Xarr, Array1<double> * Yarr );
+	 Array1<double> * Xarr, Array1<double> * Yarr );
 
   // destructor
 

@@ -137,10 +137,6 @@ class VolVis : public Module {
 
   TCLint projection;
 
-  // allignment
-
-  TCLint iCenter;
-
   // parallel or single processor
 
   TCLint iProc;
@@ -314,7 +310,6 @@ VolVis::VolVis(const clString& id)
   minSV("minSV", id, this),
   maxSV("maxSV", id, this),
   projection("project", id, this),
-  iCenter("centerit", id, this),
   iProc("processors", id, this),
   intervalCount("intervalCount", id, this),
   Rsv("Rsv", id, this),
@@ -381,7 +376,6 @@ VolVis::VolVis(const VolVis& copy, int deep)
   maxSV("maxSV", id, this),
   minSV("minSV", id, this),
   projection("project", id, this),
-  iCenter("centerit", id, this),
   iProc("processors", id, this),
   intervalCount("intervalCount", id, this),
   Rsv("Rsv", id, this),
@@ -775,24 +769,10 @@ VolVis::redraw_all()
 
   glPixelZoom(x_pixel_size, y_pixel_size);
 
-//  cerr << "Displaying an image of dimensions: " << Image.dim1() << " " <<
-//    Image.dim2() << endl;
-  
   printf("%lf %lf : %lf : %d\n",x_pixel_size,y_pixel_size,zoom,scale_int);
   
-  if ( iCenter.get() )
-    {
-#if 0      
-      glRasterPos2i( x_pixel_size + ( VIEW_PORT_SIZE - Image.dim2() ) / 2 ,
-		    y_pixel_size * ( ( VIEW_PORT_SIZE / 2 + Image.dim1() / 2 + 1 ) ) );
-#else
-      glRasterPos2i( 0, 599 );
-#endif      
-    }
-  else
-    {
-      glRasterPos2i( x_pixel_size, y_pixel_size * (Image.dim1()+1) );
-    }
+  glRasterPos2i( 0, 599 );
+  //      glRasterPos2i( x_pixel_size, y_pixel_size * (Image.dim1()+1) );
   
 
   Color c(1, 0, 1);
@@ -881,16 +861,12 @@ VolVis::execute()
 
   if ( data != NULL )
     {
-      calc = new LevoyS( homeSFRGrid,
-			myview.bg(), ScalarVal, Opacity );
-
-      calc->SetUp( data, stepSize.get() );
+      calc = new LevoyS( homeSFRGrid, ScalarVal, Opacity );
+      ((LevoyS*)calc)->SetUp( data, stepSize.get() );
     }
   else
     {
-      calc = new Levoy ( homeSFRGrid,
-			myview.bg(), ScalarVal, Opacity );
-
+      calc = new Levoy ( homeSFRGrid, ScalarVal, Opacity );
       calc->SetUp( myview, stepSize.get() );
     }      
 
@@ -919,6 +895,7 @@ VolVis::execute()
 
   imagelock.lock();
 
+//  Image = calc->Image;
   Image = *(calc->Image);
 
   /* THE MOST AWESOME DEBUGGING TECHNIQUE */
