@@ -149,6 +149,13 @@ void TensorFieldExtractor::execute()
   range = hi - low;
   BBox box;
   level->getSpatialRange(box);
+
+  if( mesh_handle_.get_rep() == 0 ){
+    mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
+				    range.z(), box.min(),
+				    box.max());
+  }
+
   const TypeDescription* subtype = type->getSubType();
   string var(sVar.get());
   int mat = sMatNum.get();
@@ -159,11 +166,8 @@ void TensorFieldExtractor::execute()
       case TypeDescription::Matrix3:
 	{	
 	  NCVariable<Matrix3> gridVar;
-	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
-					     range.z(), box.min(),
-					     box.max());
-	  LatVolField<Matrix3> *tfd =
-	    scinew LatVolField<Matrix3>( lvm, Field::NODE );
+		  LatVolField<Matrix3> *tfd =
+	    scinew LatVolField<Matrix3>( mesh_handle_, Field::NODE );
 	  // set the generation and timestep in the field
 	  build_field2( archive, level, low, var, mat, time, gridVar,
 			tfd, need_byte_swap);
@@ -183,11 +187,8 @@ void TensorFieldExtractor::execute()
       case TypeDescription::Matrix3:
 	{
 	  CCVariable<Matrix3> gridVar;
-	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
-					     range.z(), box.min(),
-					     box.max());
 	  LatVolField<Matrix3> *tfd =
-	    scinew LatVolField<Matrix3>( lvm, Field::CELL );
+	    scinew LatVolField<Matrix3>( mesh_handle_, Field::CELL );
 	  // set the generation and timestep in the field
 	  build_field2( archive, level, low, var, mat, time, gridVar,
 			tfd, need_byte_swap);

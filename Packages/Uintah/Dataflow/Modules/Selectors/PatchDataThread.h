@@ -12,6 +12,7 @@
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
+#include <Core/Util/Timer.h>
 
 namespace SCIRun {
   void swapbytes( Uintah::Matrix3& m);
@@ -104,8 +105,12 @@ public:
   void run() 
     {
       Var v; 
+      WallClockTimer TIMER;
+      TIMER.start();
+      cerr<<"Start time = "<<TIMER.time()<<endl;
       archive_.query( v, name_, mat_, patch_, time_);
-      
+      cerr<<"Done Reading Data\n";
+      cerr<<"Time = "<<TIMER.time()<<endl;
       LatVolMesh *m = fld_->get_typed_mesh().get_rep();
       
 
@@ -126,6 +131,8 @@ public:
 
 	const Array3<Data> &vals = v;
 	Array3<Data>::const_iterator vit = vals.begin();
+	cerr<<"Done with setup\n";
+	cerr<<"Time = "<<TIMER.time()<<endl;
 	if(swapbytes_){
 	  for(;it != it_end; ++it){
 	    IntVector idx = vit.getIndex() - offset_;
@@ -159,19 +166,21 @@ public:
 	Array3<Data>::const_iterator vit = vals.begin();
 	if(swapbytes_){
 	  for(;it != it_end; ++it){
-	    IntVector idx = vit.getIndex() - offset_;
+	    //	    IntVector idx = vit.getIndex() - offset_;
 	    fld_->fdata()[*it] = *vit;
 	    swapbytes( fld_->fdata()[*it]);
 	    ++vit;
 	  }
 	} else {
 	  for(;it != it_end; ++it){
-	    IntVector idx = vit.getIndex() - offset_;
+	    //	    IntVector idx = vit.getIndex() - offset_;
 	    fld_->fdata()[*it] = *vit;
 	    ++vit;
 	  }
 	}
       }
+      cerr<<"Finished:  Time = "<<TIMER.time()<<endl;
+      TIMER.stop();
       sema_->up();
     }
   
