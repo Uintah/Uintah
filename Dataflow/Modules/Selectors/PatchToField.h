@@ -48,31 +48,45 @@ public:
   }
   void run()
     {
-      LatVolMesh *m = fld_->get_typed_mesh().get_rep();
+      LatVolMesh *mesh = fld_->get_typed_mesh().get_rep();
       
       if( fld_->data_at() == Field::CELL){
         IntVector lo(min_ - offset_);
         IntVector hi(max_ - offset_);
+#if 1
         // Get an iterator over a subgrid of the mesh
-        LatVolMesh::Cell::range_iter it(m, lo.x(), lo.y(), lo.z(),
+        LatVolMesh::Cell::range_iter it(mesh,
+					lo.x(), lo.y(), lo.z(),
                                         hi.x(), hi.y(), hi.z());
         // The end iterator is just a cell iterator
         LatVolMesh::Cell::iterator it_end; it.end(it_end);
 
         typename Array3<Data>::iterator vit(&var_, min_);
 
-// 	IntVector fi(it.i_, it.j_, it.k_);
-// 	IntVector ai(vit.getIndex());
 	for(;it != it_end; ++it){
 	  fld_->fdata()[*it] = *vit;
 	  ++vit;
 	}
+#else
+        typename Array3<Data>::iterator vit(&var_, min_);
+
+	for (int k = lo.k_; k <= hi.k_; k++)
+	  for (int j = lo.j_; j <= hi.j_; j++)
+	    for (int i = lo.i_; i <= hi.i_; i++)
+	      {
+		LatVolMesh::Cell::index_type  idx(m, i, j, k); 
+		
+		fld_->fdata()[idx] = *vit;
+		++vit;
+	      }
+#endif
       } else {
 
         IntVector lo(min_ - offset_);
         IntVector hi(max_ - offset_);
         // Get an iterator over a subgrid of the mesh
-        LatVolMesh::Node::range_iter it(m, lo.x(), lo.y(), lo.z(),
+        LatVolMesh::Node::range_iter it(mesh,
+					lo.x(), lo.y(), lo.z(),
                                         hi.x(), hi.y(), hi.z());
         // The end iterator is just a node iterator
         LatVolMesh::Node::iterator it_end; it.end(it_end);
