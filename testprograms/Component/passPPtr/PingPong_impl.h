@@ -34,7 +34,7 @@
 #include <testprograms/Component/passPPtr/PingPong_sidl.h>
 
 namespace PingPong_ns {
-  class Port_impl : public Port{
+  class Port_impl : public UIPort{
   public:
     Port_impl(){};
     void ui();
@@ -43,7 +43,7 @@ namespace PingPong_ns {
   class Service_impl : public Service{
   public:
     Service_impl(){};
-    void testPort(const Port::pointer &port);
+    void testPort(const Port::pointer &obj);
   };
   
   class PingPong_impl : public PingPong {

@@ -54,7 +54,7 @@ PingPong_impl::setService(const Service::pointer &svc)
 
   typedef char urlString[100] ;
   urlString s;
-  Port::pointer port = Port::pointer(new Port_impl);
+  UIPort::pointer port = UIPort::pointer(new Port_impl);
   strcpy(s, port->getURL().getString().c_str());
   
   urlString *buf;
@@ -77,6 +77,7 @@ PingPong_impl::setService(const Service::pointer &svc)
     svc->testPort(port);
     delete buf;
   }
+  MPI_Barrier(MPI_COMM_WORLD);
 }
 
 
@@ -91,6 +92,9 @@ Port_impl::ui(){
 }
 
 void 
-Service_impl::testPort(const Port::pointer &port){
-  port->ui();
+Service_impl::testPort(const Port::pointer &obj){
+  cerr<<"Running pidl_cast in testPort...\n";
+  UIPort::pointer port1=pidl_cast<UIPort::pointer>(obj);
+  cerr<<"Done...\n";
+  port1->ui();
 }
