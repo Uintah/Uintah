@@ -14,14 +14,19 @@ SRCDIR   := Dataflow/Modules/Math
 SRCS     += \
 	$(SRCDIR)/BuildTransform.cc\
 	$(SRCDIR)/ErrorMetric.cc\
+	$(SRCDIR)/ManipMatrix.cc\
 	$(SRCDIR)/SolveMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Core/Persistent \
+
+CFLAGS   := $(CFLAGS) -DMM_COMP_PATH=\"$(SRCTOP_ABS)/Dataflow/Modules/Math/Manip\"
+
+PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil \
+	Core/Datatypes Core/Persistent \
 	Core/Exceptions Core/Thread Core/Containers \
 	Core/GuiInterface Core/Geometry Core/Datatypes \
 	Core/Util Core/Geom Core/TkExtensions \
 	Dataflow/Widgets
-LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm $(XML_LIBRARY) 
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

@@ -18,12 +18,13 @@ SRCS     += \
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldSet.cc\
+	$(SRCDIR)/ManipFields.cc\
 	$(SRCDIR)/SeedField.cc\
 	$(SRCDIR)/TransformField.cc\
 #[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/ChangeCellType.cc\
 #	$(SRCDIR)/Gradient.cc\
-#	$(SRCDIR)/ManipFields.cc\
+
 
 CFLAGS   := $(CFLAGS) -DFM_COMP_PATH=\"$(SRCTOP_ABS)/Dataflow/Modules/Fields/Manip\"
 
