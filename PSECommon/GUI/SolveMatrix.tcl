@@ -107,11 +107,10 @@ itcl_class PSECommon_Matrix_SolveMatrix {
 	pack $w.precond -side top -fill x -pady 2
 	
 	global $this-target_error
-	set $this-target_error -236
+	set $this-target_error 0.001
 	expscale $w.target_error -orient horizontal -label "Target error:" \
 		-variable $this-target_error -command ""
 	pack $w.target_error -side top -fill x -pady 2
-#	set $this-target_error 0.001
 
 	scale $w.maxiter -orient horizontal -label "Maximum Iterations:" \
 		-variable $this-maxiter -from 0 -to 400
