@@ -15,16 +15,14 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/ModuleList.h>
-#include <Datatypes/ContourSet.h>
-#include <Datatypes/ContourSetPort.h>
 #include <Datatypes/Surface.h>
-#include <Datatypes/SurfacePort.h>
+#include <Datatypes/TriSurface.h>
+#include <Math/Expon.h>
 #include <Math/MiscMath.h>
 
 #include <iostream.h>
 #include <fstream.h>
 
-#define Sqr(x) ((x)*(x))
 static Module* make_LaceContours(const clString& id)
 {
     return new LaceContours(id);
