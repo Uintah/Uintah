@@ -12,26 +12,52 @@
 #ifndef Datatypes_FieldAlgo_h
 #define Datatypes_FieldAlgo_h
 
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 namespace SCIRun {
 
+//! Instead of calling this with a node_index just call get_point yourself.
+template <class Mesh, class Index, class WeightArray>
+void
+calc_weights(const Mesh *mesh, Index i, const Point &p, 
+	     WeightArray &weights) {
   
+  typename Mesh::node_array nodes;
+  mesh->get_nodes(nodes, i);
+
+  weights.resize(nodes.size()); //clear and size correctly.
+  typename WeightArray::iterator witer = weights.begin();
+
+  Point np;
+
+  typename Mesh::node_array::iterator iter = nodes.begin();
+  while (iter != nodes.end()) {
+    Mesh::node_index ni = *iter;
+    ++iter;
+    mesh->get_point(np, ni);
+    // Calculate the weight, and store it.
+    *witer = (p - np).length();
+    ++witer;
+  }
+}
+
 template <class Field, class Functor>
-void 
-interpolate_vol(const Field &fld, const Point &p, Functor &f) {
+bool
+interpolate(const Field &fld, const Point &p, Functor &f) {
   typedef typename Field::mesh_type Mesh;
   
-  if (f.wieghts_ == 0) //FIX_ME get weights....
-    f.wieghts_ = new double[4]; // four nodes in tets
-
   typename Mesh::cell_index ci;
-  fld.locate(ci, p, f.weights_);
+  Field::mesh_handle_type mesh = fld.get_typed_mesh();
+  if (! mesh->locate(ci, p)) return false;
+
+  calc_weights(mesh.get_rep(), ci, p, f.weights_);
 
   switch (fld.data_at()) {
   case Field::NODE :
     {
       int i = 0;
       typename Mesh::node_array nodes;
-      get_nodes(nodes, ci);
+      mesh->get_nodes(nodes, ci);
       typename Mesh::node_array::iterator iter = nodes.begin();
       while (iter != nodes.end()) {
 	f(fld, *iter, i);
@@ -52,41 +78,34 @@ interpolate_vol(const Field &fld, const Point &p, Functor &f) {
     }
     break;
   } 
+  return true;
 } 
 
 
-template <class Data>
+template <class Field>
 struct InterpFunctor {
-  typedef Data data_type;
-  typedef typename Data::value_type value_type;
+  typedef Field field_type;
+  typedef typename Field::value_type value_type;
+  typedef typename Field::mesh_type::weight_array weight_array;
+  InterpFunctor() :
+    result_(0) {}
 
-  InterpFunctor(int num_weights = 0) :
-    result_(0),
-    weights_(0) 
-  {
-    if (num_weights > 0) {
-      weights_ = new double[num_weights];
-    }
-  }
+  virtual ~InterpFunctor() {}
 
-  virtual ~InterpFunctor() {
-    if (weights_) { delete[] weights; }
-  }
-
-  double         *weights_;
+  weight_array    weights_;
   value_type      result_;
 };
 
-// sample interp functor.
-template <class Data, class Index>
-struct LinearInterp : public InterpFunctor<Data> {
+//! Linear Interpolation functor.
+template <class Field, class Index>
+struct LinearInterp : public InterpFunctor<Field> {
   
-  LinearInterp(int num_weights) :
-    InterpFunctor<Data>(num_weights) {}
+  LinearInterp() :
+    InterpFunctor<Field>() {}
 
   void 
-  operator()(const Data &data, Index idx, int widx) {
-      result_ += data[idx] * weights_[widx];
+  operator()(const Field &field, Index idx, int widx) {
+      result_ += field.value(idx) * weights_[widx];
       cout << "linear interping :)" << endl;
     }
 };

@@ -43,6 +43,8 @@ public:
   typedef vector<node_index> node_array;
   typedef vector<edge_index> edge_array;
   typedef vector<face_index> face_array;
+  //! type for weights used by locate.
+  typedef vector<double>     weight_array;
 
   TetVolMesh();
   TetVolMesh(const TetVolMesh &copy);
@@ -72,10 +74,11 @@ public:
   void get_center(Point &result, face_index idx) const;
   void get_center(Point &result, cell_index idx) const;
 
-  void locate(node_iterator &loc, const Point &p);
-  void locate(edge_iterator &loc, const Point &p);
-  void locate(face_iterator &loc, const Point &p);
-  void locate(cell_iterator &loc, const Point &p);
+  //! return false if point is out of range.
+  bool locate(node_index &loc, const Point &p);
+  bool locate(edge_index &loc, const Point &p);
+  bool locate(face_index &loc, const Point &p);
+  bool locate(cell_index &loc, const Point &p);
 
   void unlocate(Point &result, const Point &p);
 

@@ -282,61 +282,58 @@ distance2(const Point &p0, const Point &p1)
 }
 
 
-void
-TetVolMesh::locate(node_iterator &loc, const Point &p)
+bool
+TetVolMesh::locate(node_index &loc, const Point &p)
 {
   node_iterator ni = node_begin();
-  loc = ni;
-  if (ni == node_end())
-  {
-    return;
-  }
+  if (ni == node_end()) { return false; }
 
   double min_dist = distance2(p, points_[*ni]);
-  loc = ni;
+  loc = *ni;
   ++ni;
 
-  while (ni != node_end())
-  {
+  while (ni != node_end()) {
     const double dist = distance2(p, points_[*ni]);
-    if (dist < min_dist)
-    {
-      loc = ni;
+    if (dist < min_dist) {
+      loc = *ni;
     }
     ++ni;
   }
+  return true;
 }
 
 
-void
-TetVolMesh::locate(edge_iterator &edge, const Point & /* p */)
+bool
+TetVolMesh::locate(edge_index &edge, const Point & /* p */)
 {
-  edge = edge_end();
+  //FIX_ME
+  return false;
 }
 
 
-void
-TetVolMesh::locate(face_iterator &face, const Point & /* p */)
+bool
+TetVolMesh::locate(face_index &face, const Point & /* p */)
 {
-  face = face_end();
+  //FIX_ME
+  return false;
 }
 
 
-void
-TetVolMesh::locate(cell_iterator &cell, const Point &p)
+bool
+TetVolMesh::locate(cell_index &cell, const Point &p)
 {
+  bool found_p = false;
   cell_iterator ci = cell_begin();
-  while (ci != cell_end())
-  {
-    if (inside4_p((*ci) * 4, p))
-    {
+  while (ci != cell_end()) {
+    if (inside4_p((*ci) * 4, p)) {
+      found_p = true;
       break;
+      
     }
   }
-  cell = ci;
+  cell = *ci;
+  return found_p;
 }
-
-
 
 void
 TetVolMesh::unlocate(Point &result, const Point &p)

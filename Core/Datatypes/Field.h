@@ -25,6 +25,7 @@ public:
   Field(data_location at = NONE);
   virtual ~Field();
 
+  data_location data_at() const { return data_at_; }
   //! Required virtual functions
   virtual MeshBaseHandle get_mesh() const = 0;
 
