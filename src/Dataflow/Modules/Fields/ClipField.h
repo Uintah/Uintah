@@ -115,7 +115,7 @@ ClipFieldAlgoT<FIELD>::execute_cell(ModuleReporter *mod,
   }
 
   FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
-  *(PropertyManager *)ofield = *(PropertyManager *)fieldh;
+  *(PropertyManager *)ofield = *(PropertyManager *)(fieldh.get_rep());
 
   if (fieldh->data_at() == Field::NODE)
   {
@@ -232,7 +232,7 @@ ClipFieldAlgoT<FIELD>::execute_node(ModuleReporter *mod,
   }
 
   FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
-  *(PropertyManager *)ofield = *(PropertyManager *)fieldh;
+  *(PropertyManager *)ofield = *(PropertyManager *)(fieldh.get_rep());
 
   if (fieldh->data_at() == Field::NODE)
   {
