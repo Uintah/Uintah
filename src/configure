@@ -2535,8 +2535,8 @@ else
 fi
 
 if test "$nrrd" = "yes" ; then
+  echo -n "checking for Nrrd... "
   if test -z "${NRRD_PREFIX}" ; then
-    echo -n "checking for Nrrd... "
     if test -d "$thirdparty/Nrrd" ; then
       NRRD_PREFIX="$thirdparty/Nrrd"
     elif test -d "$thirdparty/teem" ; then
@@ -2545,11 +2545,7 @@ if test "$nrrd" = "yes" ; then
   fi
   if test "$NRRD_PREFIX" ; then
     NRRD_INCLUDE="${NRRD_PREFIX}/include"
-    if test "$is_64bit" = "yes" ; then
-      NRRD_LIBRARY="${NRRD_PREFIX}/lib64"
-    else
-      NRRD_LIBRARY="${NRRD_PREFIX}/lib32"
-    fi
+    NRRD_LIBRARY="${NRRD_PREFIX}/lib"
     echo "${NRRD_PREFIX}"
   else
     echo "no"
