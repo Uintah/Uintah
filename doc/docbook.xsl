@@ -369,6 +369,7 @@ University of Utah. All Rights Reserved.
 
 <head>
 <title><xsl:value-of select="./bookinfo/title" /></title>
+<!-- Changed by: Ted Dustman, 25-Feb-2002 -->
 <link rel="stylesheet" type="text/css">
 <xsl:attribute name="href">
 <xsl:value-of select="concat($swidk,'/doc/doc_styles.css')" />
@@ -399,9 +400,25 @@ University of Utah. All Rights Reserved.
 <map name="banner">
 <area href="http://www.sci.utah.edu" alt="Home" coords="92,62,186,83" />
 <area href="http://software.sci.utah.edu" alt="Software" coords="193,61,289,83" />
-<area href="http://software.sci.utah.edu/doc/" alt="Documentation" coords="296,62,437,83" />
-<area href="http://software.sci.utah.edu/doc/UserGuide/" alt="User Guide" coords="449,62,544,83" />
-<area href="http://software.sci.utah.edu/doc/" alt="Technical Guide" coords="550,62,692,83" />
+
+<area coords="296,62,437,83">
+<xsl:attribute name="href">
+<xsl:value-of select="concat($swidk,'/doc/')" />
+</xsl:attribute>
+</area>
+
+<area coords="449,62,544,83">
+<xsl:attribute name="href">
+  <xsl:value-of select="concat($swidk,'/doc/UserGuide/usersguide')" />
+</xsl:attribute>
+</area>
+
+<area coords="550,62,692,83">
+<xsl:attribute name="href">
+  <xsl:value-of select="concat($swidk,'/doc/TechnicalGuide/TOC.html')" />
+</xsl:attribute>
+</area>
+
 </map>
 </tr>
 </table>
