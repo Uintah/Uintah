@@ -49,9 +49,9 @@ class BuildInterpolant : public Module
   FieldIPort *src_port;
   FieldIPort *dst_port;
   FieldOPort *ofp; 
-  GuiString  interp_op_gui_;
-  GuiInt     interp_nearest_;
-  GuiInt     use_closest_outside_;
+  GuiInt     use_interp_;
+  GuiInt     use_closest_;
+  GuiDouble  closeness_distance_;
 
 public:
   BuildInterpolant(const string& id);
@@ -69,9 +69,9 @@ extern "C" Module* make_BuildInterpolant(const string& id)
 
 BuildInterpolant::BuildInterpolant(const string& id) : 
   Module("BuildInterpolant", id, Filter, "Fields", "SCIRun"),
-  interp_op_gui_("interp_op_gui", id, this),
-  interp_nearest_("interp_nearest", id, this),
-  use_closest_outside_("use_closest_outside", id, this)
+  use_interp_("use_interp", id, this),
+  use_closest_("use_closest", id, this),
+  closeness_distance_("closeness_distance", id, this)
 {
 }
 
@@ -133,7 +133,8 @@ BuildInterpolant::execute()
     return;
   }
   ofp->send(algo->execute(fsrc_h->mesh(), fdst_h->mesh(), fdst_h->data_at(),
-			  use_closest_outside_.get(), interp_nearest_.get()));
+			  use_interp_.get(),
+			  use_closest_.get(), closeness_distance_.get()));
 }
 
 

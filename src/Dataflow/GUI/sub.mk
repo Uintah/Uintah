@@ -41,6 +41,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Coregister.tcl \
 	$(SRCDIR)/CriticalPointWidget.tcl \
 	$(SRCDIR)/CrosshairWidget.tcl \
+	$(SRCDIR)/DirectInterpolate.tcl \
 	$(SRCDIR)/EditField.tcl\
 	$(SRCDIR)/EditPath.tcl \
 	$(SRCDIR)/ErrorMetric.tcl \

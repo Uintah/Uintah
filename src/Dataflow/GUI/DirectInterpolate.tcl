@@ -15,10 +15,10 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_BuildInterpolant {
+itcl_class SCIRun_Fields_DirectInterpolate {
     inherit Module
     constructor {config} {
-        set name BuildInterpolant
+        set name DirectInterpolate
 
 	global $this-use_interp
 	global $this-use_closest

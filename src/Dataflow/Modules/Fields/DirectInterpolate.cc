@@ -48,7 +48,9 @@ class DirectInterpolate : public Module
   FieldIPort *src_port_;
   FieldIPort *dst_port_;
   FieldOPort *ofp_; 
-  GuiString   interp_op_gui_;
+  GuiInt     use_interp_;
+  GuiInt     use_closest_;
+  GuiDouble  closeness_distance_;
 
 public:
   DirectInterpolate(const string& id);
@@ -66,7 +68,9 @@ extern "C" Module* make_DirectInterpolate(const string& id)
 
 DirectInterpolate::DirectInterpolate(const string& id) : 
   Module("DirectInterpolate", id, Filter, "Fields", "SCIRun"),
-  interp_op_gui_("interp_op_gui", id, this)
+  use_interp_("use_interp", id, this),
+  use_closest_("use_closest", id, this),
+  closeness_distance_("closeness_distance", id, this)
 {
 }
 
@@ -123,7 +127,10 @@ DirectInterpolate::execute()
       error("Could not get algorithm.");
       return;
     }
-    ofieldhandle = algo->execute(dfieldhandle, sfi);
+    ofieldhandle = algo->execute(dfieldhandle, sfi,
+				 use_interp_.get(),
+				 use_closest_.get(),
+				 closeness_distance_.get());
   }
   else if (vfi)
   {
@@ -144,7 +151,10 @@ DirectInterpolate::execute()
       error("Could not get algorithm.");
       return;
     }
-    ofieldhandle = algo->execute(dfieldhandle, vfi);
+    ofieldhandle = algo->execute(dfieldhandle, vfi,
+				 use_interp_.get(),
+				 use_closest_.get(),
+				 closeness_distance_.get());
   }
   else if (tfi)
   {
@@ -165,7 +175,10 @@ DirectInterpolate::execute()
       error("Could not get algorithm.");
       return;
     }
-    ofieldhandle = algo->execute(dfieldhandle, tfi);
+    ofieldhandle = algo->execute(dfieldhandle, tfi,
+				 use_interp_.get(),
+				 use_closest_.get(),
+				 closeness_distance_.get());
   }
   else
   {
