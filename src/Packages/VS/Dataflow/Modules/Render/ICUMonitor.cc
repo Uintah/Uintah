@@ -130,6 +130,7 @@ private:
       label_(0),
       aux_data_(0),
       aux_data_label_(0),
+      previous_(0),
       index_(-1),
       snd_(0),
       lines_(0),
@@ -149,6 +150,7 @@ private:
     LabelTex *label_;
     LabelTex *aux_data_;
     LabelTex *aux_data_label_;
+    int       previous_;
     int       index_;
     int       snd_;
     int       lines_;
@@ -764,12 +766,22 @@ ICUMonitor::draw_plots()
          float *dat = (float *)data_->nrrd->data;
          int dat_index = idx * data_->nrrd->axis[0].size + g.auxindex_;
          
+         int val = (int)dat[dat_index];
+
          ostringstream auxstr;
-         auxstr << (int)dat[dat_index];
+         auxstr << val;
+         ostringstream prevstr;
+         prevstr << g.previous_;
 
          FreeTypeFace *font = fonts_["anatomical"];
          font->set_points(50.0);
+	 if (val == -1)
+         g.aux_data_->set(prevstr.str());
+	 else {
          g.aux_data_->set(auxstr.str());
+         g.previous_ = val;
+	 }
+
          g.aux_data_->bind(font);
 
          g.aux_data_->draw(cur_x + w * 0.70 + 70, cur_y - 50, sx, sy);
@@ -979,6 +991,10 @@ ICUMonitor::execute()
     error ("Unable to get input data.");
     return;
   } 
+
+  double rt = data_->nrrd->axis[0].spacing;
+  if (rt == rt)
+    gui_sample_rate_.set(1/data_->nrrd->axis[0].spacing);
 
   addMarkersToMenu();
 
