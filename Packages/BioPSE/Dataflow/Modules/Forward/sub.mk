@@ -35,6 +35,7 @@ SRCS     += $(SRCDIR)/ApplyFEMCurrentSource.cc\
 	    $(SRCDIR)/DipoleInSphere.cc\
 	    $(SRCDIR)/DipoleMatrixSourceRHSQuadratic.cc\
 	    $(SRCDIR)/FDMtoFEM.cc\
+	    $(SRCDIR)/IndicesToTensors.cc\
 	    $(SRCDIR)/InsertElectrodes.cc\
 	    $(SRCDIR)/InsertVoltageSource.cc\
 	    $(SRCDIR)/ModifyConductivities.cc\
