@@ -1,9 +1,9 @@
 #ifndef SCI_project_NCVectorField_h
 #define SCI_project_NCVectorField_h 1
 
-#include <Packages/Uintah/Grid/NCVariable.h>
-#include <Packages/Uintah/Grid/GridP.h>
-#include <Packages/Uintah/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/NCVariable.h>
+#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Datatypes/VectorFieldRG.h>

@@ -2,12 +2,12 @@
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Math
+SRCDIR   := Packages/Uintah/Core/Math
 
 SRCS     += $(SRCDIR)/Primes.cc	$(SRCDIR)/CubeRoot.cc
 
 PSELIBS := Core/Exceptions
-LIBS :=
+LIBS := -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 

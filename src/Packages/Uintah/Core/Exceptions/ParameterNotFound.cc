@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/Exceptions/ParameterNotFound.h>
+#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 
 using namespace Uintah;
 
@@ -19,5 +19,5 @@ ParameterNotFound::~ParameterNotFound()
 
 const char* ParameterNotFound::type() const
 {
-    return "Packages/Uintah::Exceptions::ParameterNotFound";
+    return "Uintah::Exceptions::ParameterNotFound";
 }

@@ -1,5 +1,5 @@
 
-#include <Packages/Uinath/Exceptions/TypeMismatchException.h>
+#include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
 
 using namespace Uintah;
 
@@ -24,5 +24,5 @@ const char* TypeMismatchException::message() const
 
 const char* TypeMismatchException::type() const
 {
-    return "Packages/Uintah::Exceptions::TypeMismatchException";
+    return "Uintah::Exceptions::TypeMismatchException";
 }

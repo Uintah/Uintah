@@ -1,10 +1,10 @@
 #ifndef  UINTAH_DATATYPES_PSet_H
 #define  UINTAH_DATATYPES_PSet_H
 
-#include <Packages/Uintah/Grid/ParticleVariable.h>
-#include <Packages/Uintah/Grid/Grid.h>
-#include <Packages/Uintah/Grid/LevelP.h>
-#include <Packages/Uintah/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
 
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Datatype.h>
