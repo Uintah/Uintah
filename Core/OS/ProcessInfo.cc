@@ -46,7 +46,7 @@
 #if defined( __APPLE__ ) && (__GNUC__ >= 3) && (__GNUC_MINOR__ > 1)
 #  define MAC_SUPPORTED 1
 #  include <mach/mach_init.h>
-#  include <mach/ppc/task.h>
+#  include <mach/task.h>
 #endif
 
 
