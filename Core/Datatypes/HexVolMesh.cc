@@ -28,6 +28,7 @@
  *
  */
 
+#include <Core/Datatypes/FieldIndex.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Transform.h>
@@ -76,6 +77,8 @@ HexVolMesh::HexVolMesh() :
   points_lock_("HexVolMesh points_ fill lock"),
   cells_(0),
   cells_lock_("HexVolMesh cells_ fill lock"),
+  neighbors_(0),
+  nbors_lock_("HexVolMesh neighbors_ fill lock"),
   faces_(0),
   face_table_(),
   face_table_lock_("HexVolMesh faces_ fill lock"),
@@ -94,6 +97,8 @@ HexVolMesh::HexVolMesh(const HexVolMesh &copy):
   points_lock_("HexVolMesh points_ fill lock"),
   cells_(copy.cells_),
   cells_lock_("HexVolMesh cells_ fill lock"),
+  neighbors_(copy.neighbors_),
+  nbors_lock_("HexVolMesh neighbors_ fill lock"),
   faces_(copy.faces_),
   face_table_(copy.face_table_),
   face_table_lock_("HexVolMesh faces_ fill lock"),
