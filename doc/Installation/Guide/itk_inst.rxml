@@ -106,7 +106,7 @@ setenv PATH $JAVA_HOME/bin:$PATH
     <para>The Insight toolkit must be installed before building &sr;.  The
     Insight toolkit and its installation instructions are available on the
     <ulink url="http://www.itk.org"><acronym>ITK</acronym> web
-    site</ulink>.  &sr; supports <acronym>ITK</acronym> versions 1.4 and 1.6.
+    site</ulink>.  &sr; supports <acronym>ITK</acronym> version 1.6.
     <acronym>ITK</acronym> installation requires CMake, an open-source,
     cross-platform build tool.  CMake can be obtained from the <ulink
     url="http://www.cmake.org">CMake web site</ulink>.</para>
