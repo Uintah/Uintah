@@ -51,7 +51,7 @@ public:
     UnfinishedIndex() : i_(0) {}
     UnfinishedIndex(unsigned i) : i_(i) {}
 
-    operator const unsigned() const { return i_; }
+    operator unsigned() const { return i_; }
 
     unsigned i_;
   };
@@ -132,7 +132,7 @@ public:
     LatIndex() : i_(0), j_(0), k_(0) {}
     LatIndex(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k) {}
     
-    operator const unsigned() const { return i_*j_*k_; }
+    operator unsigned() const { return i_*j_*k_; }
 
     unsigned i_, j_, k_;
   };
