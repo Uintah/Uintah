@@ -29,7 +29,7 @@
 #ifndef SCIRun_Framework_Builder_h
 #define SCIRun_Framework_Builder_h
 
-#include <Core/CCA/ccaspec/cca_sidl.h>
+#include <Core/CCA/spec/cca_sidl.h>
 
 namespace SCIRun {
   class BuilderWindow;

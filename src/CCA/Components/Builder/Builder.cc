@@ -55,9 +55,13 @@ void Builder::setServices(const gov::cca::Services& svc)
   services=svc;
 
   QApplication* app = QtUtils::getApplication();
+#ifdef QT_THREAD_SUPPORT
   app->lock();
+#endif
   builder = new BuilderWindow(services);
   builder->_addReference();
   builder->show();
+#ifdef QT_THREAD_SUPPORT
   app->unlock();
+#endif
 }

@@ -27,7 +27,8 @@ SRCS     += \
 	$(SRCDIR)/ModuleCanvasItem.cc \
 	$(SRCDIR)/moc_BuilderWindow.cc $(SRCDIR)/moc_NetworkCanvasView.cc
 
-PSELIBS := 
+PSELIBS := Core/CCA/Component/CIA Core/CCA/Component/PIDL \
+	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
 LIBS := $(QT_LIBS)
 
@@ -35,11 +36,10 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 PROGRAM := builder
 SRCS := $(SRCDIR)/builder.cc
-PSELIBS := CCA/Components/Builder Core/CCA/Component/CIA Core/Thread \
-	Core/Exceptions Core/globus_threads Core/CCA/ccaspec \
-	Core/Containers
-LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common -lglobus_io
+PSELIBS := CCA/Components/Builder Core/CCA/Component/CIA \
+	Core/CCA/Component/PIDL Core/Exceptions Core/CCA/spec
+LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common -lglobus_io $(QT_LIBS)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
-$(SRCDIR)/Builder.o: Core/CCA/ccaspec/cca_sidl.h
+$(SRCDIR)/Builder.o: Core/CCA/spec/cca_sidl.h
