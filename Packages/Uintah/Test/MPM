@@ -10,7 +10,7 @@ TESTS = [   ("disks", "disks.ups", 1),  \
     	    ("disks2mat_fc", "disks2mat_fc.ups", 1), \
     	    ("disks_complex", "disks_complex.ups", 1), \
 	    ("disks_fracture", "disks_fracture.ups", 1), \
-	    ("periodic_disks", "periodic_disks.ups", 4),	\
+	    ("periodic_disks", "periodic_disks.ups", 6),	\
 	    ("heatcond", "heatcond.ups", 1), \
 	    ("heatcond2mat", "heatcond2mat.ups", 1), \
     	    ("inclined_plane_sphere", "inclined_plane_sphere.ups", 1), \
