@@ -30,6 +30,7 @@
 
 #include <CCA/Components/Builder/NetworkCanvasView.h>
 #include <qwmatrix.h>
+#include <Core/CCA/spec/cca_sidl.h>
 
 //using namespace SCIRun;
 
@@ -46,32 +47,38 @@ NetworkCanvasView::~NetworkCanvasView()
 
 void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
 {
+	if(moving || connecting) return;
 	//IMPORTANT NOTES: e->pos() returns the mouse point in the canvas coordinates	
-	//cerr<<"MousePress e->pos()="<<e->pos().x()<<endl;
 	QPoint p = contentsToViewport(e->pos());
 	QWidget *who=childAt(p);
-
+	
         if(e->button()==Qt::RightButton){
           QCanvasItemList lst=canvas()->collisions(e->pos());
           cerr<<"lst.size="<<lst.size()<<endl;
           if(lst.size()>0) removeConnection(lst[0]);
         }
 
-  for(std::vector<Module*>::iterator it=modules.begin(); it!=modules.end(); it++) {
-     if( (QWidget*)(*it)==who ){
-	if(e->button()==Qt::MidButton && !moving){
-		connecting= *it;
-		return;
+	else if(e->button()==Qt::MidButton){
+		  for(std::vector<Module*>::iterator it=modules.begin(); it!=modules.end(); it++) {
+		     if( (QWidget*)(*it)==who ){
+			QPoint localpos=e->pos()-QPoint(childX(who), childY(who));
+		        cerr<<"local point="<<localpos.x()<<" "<<localpos.y()<<endl;	
+			if((*it)->clickedPort(localpos, porttype, portnum)){
+				connecting= *it;
+				return;
+			}
+		     }
+		}
 	}
-        else if(e->button()==Qt::LeftButton && !connecting){
-                moving = *it;
-                moving_start = p;
-                return;
-        }
-     }	
-  }
-  connecting=0;	
-  moving = 0;
+        else if(e->button()==Qt::LeftButton){
+		  for(std::vector<Module*>::iterator it=modules.begin(); it!=modules.end(); it++) {
+		     if( (QWidget*)(*it)==who ){
+             		   moving = *it;
+               		 moving_start = p;
+           	          return;
+		     }	
+		}
+	    }	
 }
 
 void NetworkCanvasView::contentsMouseReleaseEvent(QMouseEvent* e)
@@ -80,12 +87,26 @@ void NetworkCanvasView::contentsMouseReleaseEvent(QMouseEvent* e)
         //cerr<<"MousePress e->pos()="<<e->pos().x()<<endl;
         QPoint p = contentsToViewport(e->pos());
         QWidget *who=childAt(p);
-	if(!connecting) return;
   if(connecting)
   for(std::vector<Module*>::iterator it=modules.begin(); it!=modules.end(); it++) {
      if( (QWidget*)(*it)==who ){
-                addConnection(connecting, *it); 
-                break;
+             if( (QWidget*)(*it)==who ){
+                        QPoint localpos=e->pos()-QPoint(childX(who), childY(who));
+                        cerr<<"local point="<<localpos.x()<<" "<<localpos.y()<<endl;
+                       	int portnum1=0;
+			Module::PortType porttype1=Module::USES;
+			 if((*it)->clickedPort(localpos, porttype1, portnum1)){
+				if(connecting!=(*it) && porttype!=porttype1){ 
+					if(porttype==Module::USES)
+						addConnection(connecting, portnum, *it, portnum1); 
+		                	else
+						addConnection(*it, portnum1, connecting, portnum); 
+
+			 cerr<<"Connection added"<<endl;
+				}
+                        }
+		   break;		
+             }
      }
   }
   connecting=0;
@@ -167,21 +188,33 @@ void NetworkCanvasView::contentsMouseMoveEvent(QMouseEvent* e)
   }
 }
 
-void NetworkCanvasView::addModule(const char *name, gov::cca::ports::UIPort::pointer &uip,CIA::array1<std::string> & up, CIA::array1<std::string> &pp )
+void NetworkCanvasView::addModule(const char *name, gov::cca::ports::UIPort::pointer &uip,CIA::array1<std::string> & up, CIA::array1<std::string> &pp , const gov::cca::ComponentID::pointer &cid)
 {
 	
-	Module *module=new Module(this,name,uip,up,pp);
+	Module *module=new Module(this,name,uip,up,pp, cid);
         addChild(module,20, 20);
 	modules.push_back(module);
 	module->show();		
 }
 
-void NetworkCanvasView::addConnection(Module *m1, Module *m2)
+void NetworkCanvasView::addConnection(Module *m1,int portnum1,  Module *m2, int portnum2)
 {
-	Connection *con=new Connection(m1, m2,this);
+
+gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.builderService"));
+  if(bs.isNull()){
+    cerr << "Fatal Error: Cannot find builder service\n";
+  }
+  bs->connect(m1->cid, m1->usesPortName(portnum1), m2->cid, m2->providesPortName(portnum2));
+
+  services->releasePort("cca.builderService");
+
+	Connection *con=new Connection(m1,portnum1, m2,portnum2, this);
+
+
 	con->show();
 	connections.push_back(con);
 	canvas()->update();
+
 }
 
 void NetworkCanvasView::removeConnection(QCanvasItem *c)
@@ -206,4 +239,7 @@ void NetworkCanvasView::removeConnection(QCanvasItem *c)
 
 
 
-
+void NetworkCanvasView::setServices(const gov::cca::Services::pointer &services)
+{
+	this->services=services;
+}

@@ -26,10 +26,17 @@
 class Module:public QFrame
 {
 	Q_OBJECT
+
 public:
-  Module(QWidget *parent, const char *name, gov::cca::ports::UIPort::pointer uip, CIA::array1<std::string> & up, CIA::array1<std::string> &pp);
-	QPoint usePortPoint();
-	QPoint providePortPoint();
+  enum PortType{USES, PROVIDES}; 
+  Module(QWidget *parent, const char *name, gov::cca::ports::UIPort::pointer uip, CIA::array1<std::string> & up, CIA::array1<std::string> &pp, const gov::cca::ComponentID::pointer &cid);
+	QPoint usePortPoint(int num);
+	QPoint providePortPoint(int num);
+        std::string providesPortName(int num);
+        std::string usesPortName(int num);	
+	QRect portRect(int portnum, PortType porttype);
+	bool clickedPort(QPoint localpos, PortType &porttype, int &portnum);
+
 public slots:
   void execute();
 	void stop();
@@ -43,6 +50,11 @@ protected:
 private:
 	QPopupMenu *menu;
 	gov::cca::ports::UIPort::pointer uiPort;
+	int pd; //distance between two ports
+	int pw; //port width
+	int ph; //prot height
+public:
+		gov::cca::ComponentID::pointer cid;
 };
 
 #endif

@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Form interface generated from reading ui file 'ListForm.ui'
 **
-** Created: Wed Apr 10 21:23:17 2002
+** Created: Fri Apr 12 19:53:10 2002
 **      by:  The User Interface Compiler (uic)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -18,13 +18,13 @@ class QLineEdit;
 class QListBox;
 class QListBoxItem;
 class QPushButton;
-
+class ZList;
 class ListForm : public QDialog
 { 
     Q_OBJECT
 
 public:
-    ListForm( QWidget* parent = 0, const char* name = 0, bool modal = FALSE, WFlags fl = 0 );
+    ListForm(ZList *com, QWidget* parent = 0, const char* name = 0, bool modal = FALSE, WFlags fl = 0 );
     ~ListForm();
 
     QLineEdit* numLineEdit;
@@ -48,6 +48,8 @@ protected:
     QHBoxLayout* Layout2;
     QHBoxLayout* Layout7;
     QVBoxLayout* Layout6;
+private:
+    ZList *com;	
 };
 
 #endif // LISTFORM_H

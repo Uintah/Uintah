@@ -42,7 +42,7 @@ extern "C" gov::cca::Component::pointer make_SCIRun_ListPlotter()
 
 ListPlotter::ListPlotter()
 {
-
+	
 }
 
 ListPlotter::~ListPlotter()
@@ -51,33 +51,37 @@ ListPlotter::~ListPlotter()
 
 void ListPlotter::setServices(const gov::cca::Services::pointer& svc)
 {
-  //cerr<<"ListPlotter::serService is  called#################\n";
-
   services=svc;
+  ui.setServices(svc);	
   //register provides ports here ...  
 
   gov::cca::TypeMap::pointer props = svc->createTypeMap();
   ImUIPort::pointer uip(&ui);
 	ImUIPort::pointer gop(&ui);
   svc->addProvidesPort(uip,"ui","UIPort", props);
-  svc->addProvidesPort(gop,"go","GoPort", props);
-  // Remember that if the PortInfo is created but not used in a call to the svc object
-  // then it must be freed.
+  svc->registerUsesPort("listport","ZListPort", props);
+}
+
+void ImUIPort::setServices(const gov::cca::Services::pointer& svc)
+{
+	services=svc;
 }
 
 void ImUIPort::ui()
 {
-  ListPlotterForm *w = new ListPlotterForm;
-		
-  const int size=8;
-  double val[size]={1,2,5,3,7,4,3,2};
+  //QMessageBox::warning(0, "ListPlotter", "This is ListPlotter!");
+  ListPlotterForm *w = new ListPlotterForm; 
+  gov::cca::Port::pointer pp=services->getPort("listport");	
+  gov::cca::ports::ZListPort::pointer lport=pidl_cast<gov::cca::ports::ZListPort::pointer>(pp);
+  CIA::array1<double> data=lport->getList();	
+
+  int size=data.size();
+  double *val=new double[size]; 	
+  for(int i=0; i<size; i++){
+	val[i]=data[i];	
+  }
   w->setData(val, size);
   w->show();
-  //delete w;	
+  delete val;
 }
 
-int ImGoPort::go()
-{
-  QMessageBox::warning(0, "ImGoPort", "go!");
-  return 0;	
-}

@@ -30,27 +30,45 @@
 #define SCIRun_Framework_ZList_h
 
 #include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
 #include "ListForm.h"
+
+
+
 //namespace SCIRun {
 
-  class ImUIPort : public virtual gov::cca::ports::UIPort {
+
+//#define ImUIPort1 
+//ImUIPort
+
+class ZList;
+
+  class ImUIPort1 : public virtual gov::cca::ports::UIPort {
 
   public:
-    virtual ~ImUIPort(){}
+    virtual ~ImUIPort1(){}
     virtual void ui();
+    void setParent(ZList *com){this->com=com;}
+  private:
+    ZList *com;	   	
   };
 
-  class ImGoPort : public virtual gov::cca::ports::GoPort {
+  class ImZListPort : public virtual gov::cca::ports::ZListPort {
 
   public:
-    virtual ~ImGoPort(){}
-    virtual int go();
+    ImZListPort(){};	
+    virtual ~ImZListPort(){};
+    virtual CIA::array1<double> getList();
+    void setParent(ZList *com){this->com=com;}
+  private:
+    ZList *com;	   	
   };
 
 
 class ZList : public gov::cca::Component{
 
   public:
+    std::vector<double> datalist; 	
     ZList();
     virtual ~ZList();
 
@@ -59,7 +77,8 @@ class ZList : public gov::cca::Component{
 
     ZList(const ZList&);
     ZList& operator=(const ZList&);
-    ImUIPort ui, go;
+    ImUIPort1 uiport;
+    ImZListPort listport;
     gov::cca::Services::pointer services;
   };
 //}

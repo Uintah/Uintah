@@ -27,7 +27,6 @@
  */
 
 #include <iostream>
-#include <CCA/Components/Builder/QtUtils.h>
 #include <qapplication.h>
 #include <qpushbutton.h>
 #include <qmessagebox.h>
@@ -42,7 +41,8 @@ extern "C" gov::cca::Component::pointer make_SCIRun_ZList()
 
 ZList::ZList()
 {
-
+	uiport.setParent(this);
+	listport.setParent(this);
 }
 
 ZList::~ZList()
@@ -51,33 +51,26 @@ ZList::~ZList()
 
 void ZList::setServices(const gov::cca::Services::pointer& svc)
 {
-  //cerr<<"ZList::serService is  called#################\n";
-
   services=svc;
   //register provides ports here ...
 
   gov::cca::TypeMap::pointer props = svc->createTypeMap();
-  ImUIPort::pointer uip(&ui);
-	ImUIPort::pointer gop(&ui);
+  ImUIPort1::pointer uip(&uiport);
+  ImZListPort::pointer zlp(&listport);
   svc->addProvidesPort(uip,"ui","UIPort", props);
-  svc->addProvidesPort(gop,"go","GoPort", props);
-  // Remember that if the PortInfo is created but not used in a call to the svc object
-  // then it must be freed.
+  svc->addProvidesPort(zlp,"listport","ZListPort", props);
 }
 
-void ImUIPort::ui()
+void ImUIPort1::ui()
 {
-  ListForm *w = new ListForm;
-		
-  const int size=8;
-  double val[size]={1,2,5,3,7,4,3,2};
-  //w->setData(val, size);
+ // QMessageBox::warning(0, "ZList", "This is ZList!");
+  ListForm *w = new ListForm(com);
   w->show();
-  //delete w;	
 }
 
-int ImGoPort::go()
+CIA::array1<double> ImZListPort::getList()
 {
-  QMessageBox::warning(0, "ImGoPort", "go!");
-  return 0;	
+ // CIA::array1<double> data;
+  
+  return com->datalist;
 }

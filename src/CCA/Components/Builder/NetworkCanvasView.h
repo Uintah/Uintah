@@ -35,15 +35,17 @@
 #include "Module.h"
 #include "Connection.h"
 #include "Core/CCA/Component/PIDL/PIDL.h"
+#include "Core/CCA/spec/cca_sidl.h"
 //namespace SCIRun {
 
 class NetworkCanvasView:public QCanvasView
 {
 public:
   NetworkCanvasView(QCanvas* canvas, QWidget* parent=0);
+  void setServices(const gov::cca::Services::pointer &services);
   virtual ~NetworkCanvasView();
-  void addModule(const char *name, gov::cca::ports::UIPort::pointer &uip, CIA::array1<std::string> & up, CIA::array1<std::string> &pp);
-  void addConnection(Module *m1, Module *m2);	
+  void addModule(const char *name, gov::cca::ports::UIPort::pointer &uip, CIA::array1<std::string> & up, CIA::array1<std::string> &pp, const gov::cca::ComponentID::pointer &cid);
+  void addConnection(Module *m1, int portnum1, Module *m2, int portnum2);	
   void removeConnection(QCanvasItem *c);
 protected:
   void contentsMousePressEvent(QMouseEvent*);
@@ -53,14 +55,16 @@ protected:
 private:
   Module* moving;
   Module* connecting;
+  Module::PortType porttype;
+  int portnum;	
   QPoint moving_start;
   std::vector<Module*> modules;
   std::vector<Connection*> connections;
   NetworkCanvasView(const NetworkCanvasView&);
   NetworkCanvasView& operator=(const NetworkCanvasView&);
-
+  
+  gov::cca::Services::pointer services;
 };
-
 //}
 #endif
 

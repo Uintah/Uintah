@@ -7,6 +7,8 @@
 *****************************************************************************/
 
 #include <iostream.h>
+#include "ZList.h"
+
 void ListForm::enableDelete(int i)
 {
     deletePushButton->setEnabled(i>=0);
@@ -35,6 +37,13 @@ void ListForm::insert()
 void ListForm::refresh()
 {
 
+   std::vector<double> v;
+   double size=numListBox->count();
+   for(int i=0;i<size;i++){
+        v.push_back(numListBox->text(i).toDouble());
+   }
+   com->datalist=v;
+   cerr<<"datalist is refreshed with size="<<size<<endl;
 }
 
 void ListForm::del()
@@ -42,3 +51,4 @@ void ListForm::del()
     int index=numListBox->currentItem();
     numListBox->removeItem(index);
 }
+
