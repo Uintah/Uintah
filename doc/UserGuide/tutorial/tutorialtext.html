@@ -64,8 +64,8 @@
         </p>
         <p>The above problem is governed mathematically by Poisson's equation:<br>
           <br>
-          <img src="equation.gif" align="absbottom"></p>
-        <p>Where <img height="16" width="11" src="sigma.gif"> is the local conductivity 
+          <img src="equation.gif" align="absbottom">,</p>
+        <p>where <img height="16" width="11" src="sigma.gif"> is the local conductivity 
           tensor, <img height="16" width="13" src="phi.gif"> is the voltage over 
           the domain, and <img height="19" width="36" src="i.gif" align="texttop"> 
           is a source term indicating where current sources within our domain. 
@@ -94,9 +94,10 @@
       </div>
       <p>Computing the electric and potential fields given a finite element volume 
         conductor mesh, and a dipolar current source, we follow these steps: 
-      <p>1)Read in the finite element mesh (tet elements, with a conductivity 
-        tensors for each cell) [mesh]</p>
+      <p>
       <div align="left"> 
+	    <p>1)Read in the finite element mesh (tet elements, with a conductivity 
+          tensors for each cell) [mesh]<br>
         <p>2) Read in a set of dipole sources [source]<br>
           3) Construct the finite element stiffness matrix based on the conductivity 
           mesh [<font size="4"><b>A</b></font>]<br>
@@ -121,7 +122,8 @@
           on the cyl3 dataset. Our first FieldReader reads in the mesh which, 
           in this case, is a sphere.<br>
         </p>
-      </div>
+     
+        </div>
       <div align="left"> 
         <p><b>**</b> Note that SCIRun can be installed into any directory, within 
           a user home directory or a system application directory. There is no 
