@@ -195,6 +195,10 @@ void ImpMPM::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
 
   scheduleIterate(sched,level,patches,matls);
 
+#if 0
+  scheduleMoveData(sched,level,patches,matls);
+#endif
+
   scheduleComputeStressTensorOnly(sched,patches,matls,false);
 
   scheduleComputeInternalForceII(sched,patches,matls,false);
@@ -411,8 +415,9 @@ void ImpMPM::scheduleMoveData(SchedulerP& sched,const LevelP& level,
 			     const PatchSet* patches, const MaterialSet* matls)
 {
 
- Task* task = scinew Task("moveData",this,&ImpMPM::moveData);
-
+  Task* task = scinew Task("moveData",this,&ImpMPM::moveData);
+ 
+  //  task->requires(Task::OldDW,lb->dispNewLabel,Ghost::AroundNodes,1);
   task->requires(Task::OldDW,lb->pXLabel,Ghost::None,0);
   task->requires(Task::OldDW,lb->pVolumeLabel,Ghost::None,0);
   task->requires(Task::OldDW,lb->pDeformationMeasureLabel,Ghost::None,0);
@@ -421,15 +426,16 @@ void ImpMPM::scheduleMoveData(SchedulerP& sched,const LevelP& level,
   task->requires(Task::OldDW,lb->gExternalForceLabel,Ghost::None,0);
   task->requires(Task::OldDW,lb->gAccelerationLabel,Ghost::None,0);
   //task->requires(Task::OldDW,lb->gInternalForceLabel,Ghost::None,0);
-  //  task->requires(Task::OldDW,lb->dispIncLabel,Ghost::None,0);
+  //task->requires(Task::OldDW,lb->dispIncLabel,Ghost::None,0);
   task->requires(Task::OldDW,d_sharedState->get_delt_label());
+  //task->computes(lb->dispNewLabel);
   task->computes(lb->pXLabel);
   task->computes(lb->pVolumeLabel);
   task->computes(lb->pDeformationMeasureLabel);
   task->computes(lb->bElBarLabel);
   task->computes(lb->gMassLabel);
   task->computes(lb->gExternalForceLabel);
-  // task->computes(lb->gInternalForceLabel);
+  //task->computes(lb->gInternalForceLabel);
   task->computes(lb->gAccelerationLabel);
   task->computes(d_sharedState->get_delt_label());
   //task->computes(lb->dispIncLabel);
@@ -466,7 +472,7 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   task->requires(Task::NewDW,lb->dispIncQNorm);
   task->requires(Task::NewDW,lb->dispIncNorm);
 
-  //task->computes(lb->pXLabel);
+  task->computes(lb->pXLabel);
 
   LoadBalancer* lb = sched->getLoadBalancer();
   const PatchSet* perproc_patches = lb->createPerProcessorPatchSet(level, 
@@ -634,10 +640,10 @@ void ImpMPM::iterate(const ProcessorGroup*,
 
   scheduleCheckConvergenceR(subsched,level,level->eachPatch(),
 			       d_sharedState->allMPMMaterials(), true);
-
+#if 1
   scheduleMoveData(subsched,level,level->eachPatch(),
 		   d_sharedState->allMPMMaterials());
-
+#endif
  
 
   subsched->compile(d_myworld,false);
@@ -666,135 +672,105 @@ void ImpMPM::iterate(const ProcessorGroup*,
     subsched->get_new_dw()->get(dispIncQNorm,lb->dispIncQNorm); 
     subsched->get_new_dw()->get(dispIncNormMax,lb->dispIncNormMax);
     subsched->get_new_dw()->get(dispIncQNorm0,lb->dispIncQNorm0);
+    cout << "dispIncNorm/dispIncNormMax = " << dispIncNorm/dispIncNormMax 
+	 << endl;
+    cout << "dispIncQNorm/dispIncQNorm0 = " << dispIncQNorm/dispIncQNorm0 
+	 << endl;
     if (dispIncNorm/dispIncNormMax <= 1.e-8)
       dispInc = true;
     if (dispIncQNorm/dispIncQNorm0 <= 1.e-8)
       dispIncQ = true;
-#if 0
-    // Get all of the required data and put it in the subscheduler's new_dw
-    for (int p=0;p<patches->size();p++) {
-      const Patch* patch = patches->get(p);
-      for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-	MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-	int matlindex = mpm_matl->getDWIndex();
-	ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
-	cout << "number of particles = " << pset->numParticles() << endl;
-	constNCVariable<Vector> dispNew,internal_force,external_force,velocity,
-	  acc,dispInc;
-	constNCVariable<double> gmass;
-	new_dw->get(dispNew,lb->dispNewLabel,matlindex,patch,Ghost::None,0);
-	new_dw->get(dispInc,lb->dispIncLabel,matlindex,patch,Ghost::None,0);
-	new_dw->get(internal_force,lb->gInternalForceLabel,matlindex,patch,
-		    Ghost::None,0);
-	new_dw->get(external_force,lb->gExternalForceLabel,matlindex,patch,
-		    Ghost::None,0);
-	new_dw->get(velocity,lb->gVelocityLabel,matlindex,patch, Ghost::None,0);
-	new_dw->get(acc,lb->gAccelerationLabel,matlindex,patch, Ghost::None,0);
-	new_dw->get(gmass,lb->gMassLabel,matlindex,patch,Ghost::None,0);
-	delt_vartype dt;
-	old_dw->get(dt,d_sharedState->get_delt_label());
-	constParticleVariable<Matrix3> pstress,deformationGradient,bElBar;
-	new_dw->get(pstress,lb->pStressLabel_preReloc,pset);
-	old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-	old_dw->get(bElBar, lb->bElBarLabel, pset);
-	constParticleVariable<Point> px;
-	old_dw->get(px,lb->pXLabel,pset);
-	constParticleVariable<double> pvolume;
-	old_dw->get(pvolume,lb->pVolumeLabel,pset);
-	// New data to be stored in the subscheduler
-	NCVariable<Vector> newdisp,new_int_force,new_ext_force,new_vel,new_acc,
-	  new_disp_inc;
-	NCVariable<double> newgmass;
-	ParticleVariable<Matrix3> newpstress,newdefGrad,newbElBar;
-	ParticleVariable<Point> newpx;
-	ParticleVariable<double> newpvolume;
-	double new_dt;
-	//subsched->get_new_dw()->allocate(newdisp,lb->dispNewLabel,matlindex,
-	//				 patch);
-	//subsched->get_new_dw()->allocate(new_disp_inc,lb->dispIncLabel,
-	//				 matlindex, patch);
-	//subsched->get_new_dw()->allocate(new_int_force,
-	//				 lb->gInternalForceLabel,matlindex,
-	//				 patch);
-	//subsched->get_new_dw()->allocate(new_ext_force,
-	//				 lb->gExternalForceLabel,
-	//				 matlindex,patch);
-	//subsched->get_new_dw()->allocate(new_vel,lb->gVelocityLabel,
-	//				 matlindex,patch);
-	//subsched->get_new_dw()->allocate(new_acc,lb->gAccelerationLabel,
-	//				 matlindex,patch);
-	//subsched->get_new_dw()->allocate(newgmass,lb->gMassLabel,matlindex,
-	//				 patch);
-	//subsched->get_new_dw()->allocate(newpstress,
-	//				 lb->pStressLabel_preReloc,pset);
-	//subsched->get_new_dw()->allocate(newdefGrad,
-	//				 lb->pDeformationMeasureLabel,pset);
-	//subsched->get_new_dw()->allocate(newbElBar,lb->bElBarLabel,pset);
-	new_dw->allocate(newpx,lb->pXLabel, pset);
-	new_dw->allocate(newpvolume,lb->pVolumeLabel, pset);
-	new_dw->saveParticleSubset(matlindex, patch, pset);
-	//newdisp.copyData(dispNew);
-	//new_disp_inc.copyData(dispInc);
-	//new_int_force.copyData(internal_force);
-	//new_ext_force.copyData(external_force);
-	//new_vel.copyData(velocity);
-	//new_acc.copyData(acc);
-	//newgmass.copyData(gmass);
-	//newpstress.copyData(pstress);
-	//newdefGrad.copyData(deformationGradient);
-	//newbElBar.copyData(bElBar);
-	newpx.copyData(px);
-	newpvolume.copyData(pvolume);
-	new_dt = dt;
-	//subsched->get_new_dw()->put(newdisp,lb->dispNewLabel,matlindex, patch);
-	//subsched->get_new_dw()->put(new_disp_inc,lb->dispIncLabel,matlindex,
-	//			    patch);
-	//subsched->get_new_dw()->put(new_int_force,lb->gInternalForceLabel,
-	//			    matlindex,patch);
-	//subsched->get_new_dw()->put(new_ext_force,lb->gExternalForceLabel,
-	//			    matlindex,patch);
-	//subsched->get_new_dw()->put(new_vel,lb->gVelocityLabel, matlindex,
-	//			    patch);
-	//subsched->get_new_dw()->put(new_acc,lb->gAccelerationLabel,matlindex,
-	//			    patch);
-	//subsched->get_new_dw()->put(newgmass,lb->gMassLabel,matlindex,patch);
-	//subsched->get_new_dw()->put(newpstress,lb->pStressLabel_preReloc);
-	//subsched->get_new_dw()->put(newdefGrad,lb->pDeformationMeasureLabel);
-	//subsched->get_new_dw()->put(newbElBar,lb->bElBarLabel);
-	new_dw->put(newpx,lb->pXLabel);
-	new_dw->put(newpvolume,lb->pVolumeLabel);
-	new_dw->put(delt_vartype(new_dt), d_sharedState->get_delt_label());
-      }
-    }
-#endif
     subsched->advanceDataWarehouse(grid);
   }
 
-  // Probably have to get the final data here. 
-  // See Poisson2.cc for an example
-
 #if 0
   // Get the final data
-  for (int p = 0; p < patches->size();p++){
+ for (int p = 0; p < patches->size();p++){
     const Patch* patch = patches->get(p);
+    cout_doing <<"Doing moveData on patch " << patch->getID()
+	       <<"\t\t\t\t IMPM"<< endl << endl;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
       ParticleSubset* pset = 
 	subsched->get_old_dw()->getParticleSubset(matlindex, patch);
-      constParticleVariable<Point> px;
-      subsched->get_old_dw()->get(px,lb->pXLabel,pset);
-      ParticleVariable<Point> newpx;
-      new_dw->allocate(newpx,lb->pXLabel,pset);
-      newpx.copyData(px);
-      new_dw->put(newpx,lb->pXLabel);
-      new_dw->saveParticleSubset(matlindex,patch,pset);
+      cout << "number of particles = " << pset->numParticles() << endl;
       
-    }
-
-  }
-
+      constParticleVariable<Point> px_old;
+      subsched->get_old_dw()->get(px_old,lb->pXLabel,pset);
+      constParticleVariable<double> pvol_old;
+      subsched->get_old_dw()->get(pvol_old,lb->pVolumeLabel,pset);
+      constParticleVariable<Matrix3> deformationGradient,bElBar;
+      subsched->get_old_dw()->get(deformationGradient, 
+				  lb->pDeformationMeasureLabel, pset);
+      subsched->get_old_dw()->get(bElBar, lb->bElBarLabel, pset);
+#if 0
+      constNCVariable<double> gmass;
+      subsched->get_old_dw()->get(gmass,lb->gMassLabel,matlindex,patch,
+				  Ghost::None,0);
 #endif
+      delt_vartype dt;
+      subsched->get_old_dw()->get(dt,d_sharedState->get_delt_label());
+#if 0
+      constNCVariable<Vector> ext_force,int_force,acc,dispInc;
+      subsched->get_old_dw()->get(ext_force,lb->gExternalForceLabel,
+				  matlindex,patch, Ghost::None,0);
+      subsched->get_old_dw()->get(int_force,lb->gInternalForceLabel,
+				  matlindex,patch, Ghost::None,0);
+      subsched->get_old_dw()->get(acc,lb->gAccelerationLabel,matlindex
+				  ,patch,Ghost::None,0);
+      subsched->get_old_dw()->get(dispInc,lb->dispIncLabel,matlindex,
+				  patch,Ghost::None,0);
+#endif
+      
+      ParticleVariable<Point> newpx;
+      ParticleVariable<double> newpvol;
+      ParticleVariable<Matrix3> newdefGrad,newbElBar;
+#if 0
+      NCVariable<double> newgmass;
+      NCVariable<Vector> newext_force,newacc,newdispInc;
+#endif      
+      double newdt = dt;
+      new_dw->allocate(newpx,lb->pXLabel,pset);
+      new_dw->allocate(newpvol,lb->pVolumeLabel,pset);
+      new_dw->allocate(newdefGrad,lb->pDeformationMeasureLabel,pset);
+      new_dw->allocate(newbElBar,lb->bElBarLabel,pset);
+#if 0
+      new_dw->allocate(newgmass,lb->gMassLabel,matlindex,patch);
+      new_dw->allocate(newext_force,lb->gExternalForceLabel,matlindex,
+		       patch);
+      new_dw->allocate(newint_force,lb->gInternalForceLabel,matlindex,patch);
+      new_dw->allocate(newacc,lb->gAccelerationLabel,matlindex,patch);
+      new_dw->allocate(newdispInc,lb->dispIncLabel,matlindex,patch);
+#endif
+      newpx.copyData(px_old);
+      newpvol.copyData(pvol_old);
+      newdefGrad.copyData(deformationGradient);
+      newbElBar.copyData(bElBar);
+#if 0
+      newgmass.copyData(gmass);
+      newext_force.copyData(ext_force);
+      newint_force.copyData(int_force);
+      newacc.copyData(acc);
+      newdispInc.copyData(dispInc);
+#endif
+      new_dw->put(newpx,lb->pXLabel);
+      new_dw->put(newpvol,lb->pVolumeLabel);
+      new_dw->put(newdefGrad,lb->pDeformationMeasureLabel);
+      new_dw->put(newbElBar,lb->bElBarLabel);
+#if 0
+      new_dw->put(newgmass,lb->gMassLabel,matlindex,patch);
+      new_dw->put(newext_force,lb->gExternalForceLabel,matlindex,patch);
+      new_dw->put(newint_force,lb->gInternalForceLabel,matlindex,patch);
+      new_dw->put(newacc,lb->gAccelerationLabel,matlindex,patch);
+      new_dw->put(newdispInc,lb->dispIncLabel,matlindex,patch);
+#endif
+      new_dw->saveParticleSubset(matlindex,patch,pset);
+      new_dw->put(delt_vartype(newdt), d_sharedState->get_delt_label());
+    }
+ }
+#endif
+
 }
 
 void ImpMPM::moveData(const ProcessorGroup*,
@@ -826,20 +802,24 @@ void ImpMPM::moveData(const ProcessorGroup*,
       old_dw->get(gmass,lb->gMassLabel,matlindex,patch,Ghost::None,0);
       delt_vartype dt;
       old_dw->get(dt,d_sharedState->get_delt_label());
-      constNCVariable<Vector> ext_force,acc,dispInc;
+      constNCVariable<Vector> dispNew,ext_force,int_force,acc,dispInc;
+      //old_dw->get(dispNew,lb->dispNewLabel,matlindex,patch, Ghost::None,0);
       old_dw->get(ext_force,lb->gExternalForceLabel,matlindex,patch,
 		  Ghost::None,0);
-      //    old_dw->get(int_force,lb->gInternalForceLabel,matlindex,patch,
-      //	  Ghost::None,0);
       old_dw->get(acc,lb->gAccelerationLabel,matlindex,patch,Ghost::None,0);
-      //old_dw->get(dispInc,lb->dispIncLabel,matlindex,patch,Ghost::None,0);
-      
+#if 0
+      old_dw->get(int_force,lb->gInternalForceLabel,matlindex,patch,
+		  Ghost::None,0);
+      old_dw->get(dispInc,lb->dispIncLabel,matlindex,patch,Ghost::None,0);
+#endif
       ParticleVariable<Point> newpx;
       ParticleVariable<double> newpvol;
       ParticleVariable<Matrix3> newdefGrad,newbElBar;
+
       NCVariable<double> newgmass;
-      NCVariable<Vector> newext_force,newacc,newdispInc;
-      
+
+      NCVariable<Vector> newdisp,newext_force,newint_force,newacc,newdispInc;
+
       double newdt = dt;
       new_dw->allocateAndPut(newpx, lb->pXLabel,pset);
       new_dw->allocateAndPut(newpvol, lb->pVolumeLabel,pset);
@@ -850,15 +830,18 @@ void ImpMPM::moveData(const ProcessorGroup*,
       //new_dw->allocate(newint_force,lb->gInternalForceLabel,matlindex,patch);
       new_dw->allocateAndPut(newacc, lb->gAccelerationLabel,matlindex,patch);
       //new_dw->allocate(newdispInc,lb->dispIncLabel,matlindex,patch);
+
       newpx.copyData(px_old);
       newpvol.copyData(pvol_old);
       newdefGrad.copyData(deformationGradient);
       newbElBar.copyData(bElBar);
       newgmass.copyData(gmass);
+      //newdisp.copyData(dispNew);
       newext_force.copyData(ext_force);
       //newint_force.copyData(int_force);
       newacc.copyData(acc);
       //newdispInc.copyData(dispInc);
+
       // allocateAndPut instead:
       /* new_dw->put(newpx,lb->pXLabel); */;
       // allocateAndPut instead:
@@ -875,6 +858,7 @@ void ImpMPM::moveData(const ProcessorGroup*,
       // allocateAndPut instead:
       /* new_dw->put(newacc,lb->gAccelerationLabel,matlindex,patch); */;
       // new_dw->put(newdispInc,lb->dispIncLabel,matlindex,patch);
+
       new_dw->saveParticleSubset(matlindex,patch,pset);
       new_dw->put(delt_vartype(newdt), d_sharedState->get_delt_label());
     }
@@ -1676,7 +1660,9 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
       new_dw->get(mass,lb->gMassLabel,matlindex,patch,Ghost::None,0);
     }
     
-    
+    for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+      cout << "dispNew = " << dispNew[*iter] << endl;
+    }
     for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
       IntVector n = *iter;
       int dof[3];
