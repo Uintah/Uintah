@@ -49,6 +49,7 @@ class Hedgehog : public Module {
    TCLdouble width_scale;
    TCLdouble head_length;
    TCLstring type;
+   TCLint exhaustive_flag;
    TCLint drawcylinders;
    TCLdouble shaft_rad;
    MaterialHandle outcolor;
@@ -83,7 +84,8 @@ Hedgehog::Hedgehog(const clString& id)
   head_length("head_length", id, this),
   type("type", id, this),
   drawcylinders("drawcylinders", id, this),
-  shaft_rad("shaft_rad", id, this)
+  shaft_rad("shaft_rad", id, this),
+  exhaustive_flag("exhaustive_flag", id, this)
 {
     // Create the input ports
     // Need a scalar field and a ColorMap
@@ -121,7 +123,8 @@ Hedgehog::Hedgehog(const Hedgehog& copy, int deep)
   head_length("head_length", id, this),
   type("type", id, this),
   drawcylinders("drawcylinders", id, this),
-  shaft_rad("shaft_rad", id, this)
+  shaft_rad("shaft_rad", id, this),
+  exhaustive_flag("exhaustive_flag", id, this)
 {
    NOT_FINISHED("Hedgehog::Hedgehog");
 }
@@ -245,6 +248,9 @@ void Hedgehog::execute()
     v2 = D - center,
     v3 = I - center;
     
+    cerr << "unum = "<<u_num<<"  vnum="<<v_num<<"  wnum="<<w_num<<"\n";
+//    u_num=v_num=w_num=4;
+
     // calculate the corner and the
     // u and v vectors of the cutting plane
     Point corner = center - v1 - v2 - v3;
@@ -256,7 +262,7 @@ void Hedgehog::execute()
     double lenscale = length_scale.get(),
     widscale = width_scale.get(),
     headlen = head_length.get();
-    
+    int exhaustive = exhaustive_flag.get();
     GeomArrows* arrows = new GeomArrows(widscale, 1.0-headlen, drawcylinders.get(), shaft_rad.get() );
     for (int i = 0; i < u_num; i++)
 	for (int j = 0; j < v_num; j++)
@@ -268,12 +274,14 @@ void Hedgehog::execute()
 		    
 		    // Query the vector field...
 		    Vector vv;
-		    if (vfield->interpolate( p, vv)){
+		    int ii=0;
+		    if (vfield->interpolate( p, vv, ii, exhaustive)){
 			if(have_sfield){
 			    // get the color from cmap for p 	    
 			    MaterialHandle matl;
 			    double sval;
-			    if (ssfield->interpolate( p, sval))
+//			    ii=0;
+			    if (ssfield->interpolate( p, sval, ii, exhaustive))
 				matl = cmap->lookup( sval);
 			    else
 				{
@@ -285,6 +293,8 @@ void Hedgehog::execute()
 			} else {
 			  if(vv.length2()*lenscale > 1.e-3)
 			    arrows->add(p, vv*lenscale);
+			  else
+			      cerr << "vv.length2()="<<vv.length2()<<"\n";
 			}
 		    }
 		}

@@ -20,12 +20,14 @@
 #include <Geometry/Point.h>
 #include <stdlib.h> // For size_t
 
+class TopoSurfTree;
 class SurfTree : public Surface {
 public:
     Array1<clString> surfNames;		// names of surfaces
     Array1<Array1<int> > surfEls;	// indices of elements in each surface
     Array1<Array1<int> > surfOrient;	// is each element properly oriented
     Array1<TSElement*> elements;	// array of all elements
+    Array1<TSEdge*> edges;		// array of all edges
     Array1<Point> points;		// array of all points
     Array1<int> bcIdx;			// which nodes have boundary conditions
     Array1<double> bcVal;		// values at those nodes
@@ -41,8 +43,15 @@ public:
     int haveNormals;
     Array1<Array1<int> > nodeSurfs;	// which surfaces is a node part of
     Array1<Array1<int> > nodeElems;	// which elements is a node part of
+    Array1<Array1<int> > nodeEdges;	// which edges is a node part of
     Array1<Array1<int> > nodeNbrs;	// which nodes are one neighbors
     Array1<Array1<Vector> > nodeNormals;
+
+    int haveEdgeInfo;			// has edge info (below) been built?
+    Array1<Array1<int> > edgeSurfs;	// which surfaces is an edge part of
+    Array1<Array1<int> > edgeElems;	// which elements is an edge part of
+    Array1<Array1<int> > edgeNodes;	// which nodes is an edge part of
+    Array1<Array1<int> > edgeNbrs;	// which edges are one neighbors
 
     Array1<BBox> bboxes;
     int valid_bboxes;
@@ -68,6 +77,7 @@ public:
     void set_surfnodes(const Array1<sci::NodeHandle>&, clString name);
     void bldNormals();
     void bldNodeInfo();
+    void bldEdgeInfo();
     void printNbrInfo();
     int extractTriSurface(TriSurface*, Array1<int>&, Array1<int>&, int);
 
@@ -75,6 +85,7 @@ public:
     virtual void construct_hash(int, int, const Point &, double);
 
     virtual GeomObj* get_obj(const ColorMapHandle&);
+    TopoSurfTree* toTopoSurfTree();
     
     // Persistent representation...
     virtual void io(Piostream&);

@@ -65,7 +65,6 @@ itcl_class SurfToGeom {
 	global $this-ntype
 	global $this-rad
 	global $this-named
-	global $this-clr
 	global $this-clr-r
 	global $this-clr-g
 	global $this-clr-b

@@ -54,7 +54,7 @@ public:
     void get_bounds(Point&, Point&);
     double longest_dimension();
     virtual int interpolate(const Point&, Vector&)=0;
-    virtual int interpolate(const Point&, Vector&, int& cache)=0;
+    virtual int interpolate(const Point&, Vector&, int& cache, int exhaustive=0)=0;
     virtual void get_boundary_lines(Array1<Point>& lines)=0;
 
     // Persistent representation...

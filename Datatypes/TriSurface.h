@@ -32,6 +32,17 @@ struct TSElement {
 
 void Pio(Piostream&, TSElement*&);
 
+struct TSEdge {
+    int i1;
+    int i2;
+    inline TSEdge(int i1, int i2):i1(i1), i2(i2){}
+    inline TSEdge(const TSEdge& e):i1(e.i1), i2(e.i2){}
+    void* operator new(size_t);
+    void operator delete(void*, size_t);
+};
+
+void Pio(Piostream&, TSEdge*&);
+
 class TriSurface : public Surface {
 public:
     Array1<Point> points;

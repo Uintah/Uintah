@@ -24,8 +24,9 @@ itcl_class Hedgehog {
 	global $this-width_scale
 	set $this-width_scale 0.1
 	global $this-type
-	set $this-type 2D
-	$this-c needexecute
+	set $this-type 3D
+	global $this-exhaustive_flag
+	set $this-exhaustive_flag 0
     }
     method ui {} {
 	set w .ui$this
@@ -57,6 +58,11 @@ itcl_class Hedgehog {
 	
 	button $w.f.findxz -text "Find XZ" -command "$this-c findxz"
 	pack $w.f.findxz -pady 2 -side top -ipadx 3 -anchor e
+
+	global $this-exhaustive_flag
+	checkbutton $w.f.exh -text "Exhaustive search?" -variable \
+		$this-exhaustive_flag
+	pack $w.f.exh -pady 2 -side top -ipadx 3 -anchor e
 
 	expscale $w.length_scale -orient horizontal -label "Length scale:" \
 		-variable $this-length_scale -command $n

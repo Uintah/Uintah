@@ -60,10 +60,10 @@ int VectorFieldZone::interpolate(const Point& p, Vector& v)
     return 0;
 }
 
-int VectorFieldZone::interpolate(const Point& p, Vector& v, int& cache)
+int VectorFieldZone::interpolate(const Point& p, Vector& v, int& cache, int ex)
 {
     for(int i=0;i<zones.size();i++){
-	if(zones[i]->interpolate(p, v, cache))
+	if(zones[i]->interpolate(p, v, cache, ex))
 	    return 1;
     }
     return 0;

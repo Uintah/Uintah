@@ -90,37 +90,28 @@ void ColorMapKey::execute() {
 
   GeomGroup *all = new GeomGroup();
 
-  int i, j;
-  int n = map->colors.size() / 10;
-  int N;
-  for( j = 1; pow(2,j) < n; j++ );
-  N = pow(2,j);
+  // this looks all general and everything, but when you look closely
+  // at the TexSquare data structure, it turns out this is hard-coded
+  // to have 64x64 entries.  So, we should make this TexSquare accordingly...
 
-  double xsize = 15. * 1.0/16.0;
-  double ysize = 15. * 1.0/(double)N;
+  double skip = (map->colors.size()+0.00001)/(64*64);
+  double curr=0;
+
+  double xsize = 15./16.0;
+  double ysize = 0.1;
   TexSquare *sq = new TexSquare( Point( 0, -1, 0),
 				 Point( xsize, -1, 0),
 				 Point( xsize, -1 + ysize, 0 ),
 				 Point( 0, -1 + ysize, 0 ) );
 
-  unsigned char tex[ N * 16 * 3 ];
-  for( i = 0; i < n-1; i++ ) {
-    for( j = 0; j < 16; j++ ) {
-      tex[ 3*(i*16 + j) ] = 255*map->colors[i*10]->diffuse.r();
-      tex[ 3*(i*16 + j) + 1 ] = 255*map->colors[i*10]->diffuse.g();
-      tex[ 3*(i*16 + j) + 2 ] = 255*map->colors[i*10]->diffuse.b();
-    }
+  unsigned char tex[ 64 * 64 * 3 ];
+  for( int i = 0; curr < map->colors.size(); i++, curr+=skip ) {
+      tex[ 3*i ] = 255*map->colors[(int)curr]->diffuse.r();
+      tex[ 3*i + 1 ] = 255*map->colors[(int)curr]->diffuse.g();
+      tex[ 3*i + 2 ] = 255*map->colors[(int)curr]->diffuse.b();
   }
 
-  for( i = n-1; i < N; i++ ) {
-    for( j = 0; j < 16; j++ ) {
-      tex[ 3*(i*16 + j) ] = 0;
-      tex[ 3*(i*16 + j) + 1 ] = 0;
-      tex[ 3*(i*16 + j) + 2 ] = 0;
-    }
-  }
-
-  sq->set_texture( tex, N, 16 );
+  sq->set_texture( tex, 64, 64 );
   all->add( sq );
   
   // if the scalar field is present, we can add numbers and place the
@@ -149,7 +140,7 @@ void ColorMapKey::execute() {
     }
 
     // some bases for positioning text
-    double xloc = ((double)n / (double)N) * xsize;
+    double xloc = xsize;
     double yloc = -1 + 1.5 * ysize;
 
     // create min and max numbers at the ends

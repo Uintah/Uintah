@@ -140,7 +140,7 @@ void VectorFieldOcean::compute_bounds()
     // Nothing to do - we store the bounds in the base class...
 }
 
-int VectorFieldOcean::interpolate(const Point& p, Vector& value, int&)
+int VectorFieldOcean::interpolate(const Point& p, Vector& value, int&, int)
 {
     return interpolate(p, value);
 }

@@ -15,6 +15,7 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/TrivialAllocator.h>
 #include <Datatypes/SurfTree.h>
+#include <Datatypes/TopoSurfTree.h>
 #include <Geometry/BBox.h>
 #include <Geometry/Grid.h>
 #include <Math/Expon.h>
@@ -191,129 +192,26 @@ void SurfTree::bldNormals() {
     }
 }
 
+void SurfTree::bldEdgeInfo() {
+    if (haveEdgeInfo) return;
+    if (!haveNodeInfo) bldNodeInfo();
+    haveEdgeInfo=1;
+}
+
 void SurfTree::bldNodeInfo() {
     if (haveNodeInfo) return;
     haveNodeInfo=1;
 
-#if 0
-    for (int a=0; a<surfEls.size(); a++) {
-	Array1<Array1<int> > nodeE;
-	Array1<Array1<int> > nodeN;
-	nodeN.resize(points.size());
-	nodeE.resize(points.size());
-	for (int b=0; b<surfEls[a].size(); b+=2) {
-	    int s,t,u,v,w,x;
-	    TSElement *e1, *e2;
-	    w=surfEls[a][b];
-	    e1=elements[w];
-	    x=surfEls[a][b+1];
-	    e2=elements[x];
-	    s=e1->i1;
-	    t=e1->i2;
-	    u=e1->i3;
-	    v=e2->i2;
-	    int kk;
-	    int found1, found2, found3;
-	    found1=found2=found3=0;
-	    for (kk=0; kk<nodeN[s].size(); kk++)
-		if (nodeN[s][kk] == t) found1=1; 
-		else if (nodeN[s][kk] == u) found2=1;
-		else if (nodeN[s][kk] == v) found3=1;
-	    if (!found1) nodeN[s].add(t);
-	    if (!found2) nodeN[s].add(u);
-	    if (!found3) nodeN[s].add(v);
-
-	    found1=found2=found3=0;
-	    for (kk=0; kk<nodeN[t].size(); kk++)
-		if (nodeN[t][kk] == s) found1=1; 
-		else if (nodeN[t][kk] == u) found2=1;
-		else if (nodeN[t][kk] == v) found3=1;
-	    if (!found1) nodeN[t].add(s);
-	    if (!found2) nodeN[t].add(u);
-	    if (!found3) nodeN[t].add(v);
-
-	    found1=found2=found3=0;
-	    for (kk=0; kk<nodeN[u].size(); kk++)
-		if (nodeN[u][kk] == s) found1=1; 
-		else if (nodeN[u][kk] == t) found2=1;
-		else if (nodeN[u][kk] == v) found3=1;
-	    if (!found1) nodeN[u].add(s);
-	    if (!found2) nodeN[u].add(t);
-	    if (!found3) nodeN[u].add(v);
-
-	    found1=found2=found3=0;
-	    for (kk=0; kk<nodeN[v].size(); kk++)
-		if (nodeN[v][kk] == s) found1=1; 
-		else if (nodeN[v][kk] == t) found2=1;
-		else if (nodeN[v][kk] == u) found3=1;
-	    if (!found1) nodeN[v].add(s);
-	    if (!found2) nodeN[v].add(t);
-	    if (!found3) nodeN[v].add(u);
-
-	    found1=found2=0;
-	    for (kk=0; kk<nodeE[s].size(); kk++)
-		if (nodeE[s][kk] == w) found1=1; 
-		else if (nodeE[s][kk] == x) found2=1;
-	    if (!found1) nodeE[s].add(w);
-	    if (!found2) nodeE[s].add(x);
-
-	    found1=0;
-	    for (kk=0; kk<nodeE[t].size(); kk++)
-		if (nodeE[t][kk] == w) found1=1; 
-	    if (!found1) nodeE[t].add(w);
-
-	    found1=found2;
-	    for (kk=0; kk<nodeE[u].size(); kk++)
-		if (nodeE[u][kk] == w) found1=1; 
-		else if (nodeE[u][kk] == x) found2=1;
-	    if (!found1) nodeE[u].add(w);
-	    if (!found2) nodeE[u].add(x);
-
-	    found1=0;
-	    for (kk=0; kk<nodeE[v].size(); kk++)
-		if (nodeE[v][kk] == x) found1=1; 
-	    if (!found1) nodeE[v].add(x);
- 	}
-	Array1<int> punctures;
-	Array1<int> cracks;
-	Array1<int> elevens;
-	Array1<int> thirteens;
-	Array1<int> fifteens;
-	int flag=0;
-	for (b=0; b<points.size(); b++) {
-	    if (nodeN[b].size()>10) {
-		flag=1;
-		if (nodeN[b].size() == 12) punctures.add(b);
-		else if (nodeN[b].size() == 11) elevens.add(b);
-		else if (nodeN[b].size() == 14) cracks.add(b);
-		else if (nodeN[b].size() == 13) thirteens.add(b);
-		else if (nodeN[b].size() == 15) fifteens.add(b);
-	    }
-	}
-	if (flag)
-	    cerr << "Surface "<<a<<": found "<<elevens.size()<<" (11's), "<<punctures.size()<<" (12's), "<<thirteens.size()<<" (13's), "<<cracks.size()<<" (14's), and "<<fifteens.size()<<" (15's).\n";
-
-	if (fifteens.size()) {
-	}
-
-    }
-
-    // go through all the elements for each surface -- bld nbr info
-    // if a node is connected to more than 4 nbrs, it's a join point
-    // find the subsets of nbrs who don't have each other as nbrs --
-    // add a copy of this point at the end of the node list.  now,
-    // bld new elements for one of the sets, with the old node idx
-    // replaced with the new idx (the last one in the node list).
-
-#endif
-
     nodeSurfs.resize(points.size());
     nodeElems.resize(points.size());
     nodeNbrs.resize(points.size());
+    nodeEdges.resize(points.size());
+
     for (int i=0; i<points.size(); i++) {
 	nodeSurfs[i].resize(0);
 	nodeElems[i].resize(0);
 	nodeNbrs[i].resize(0);
+	nodeEdges[i].resize(0);
     }
 
     TSElement *e;
@@ -698,6 +596,29 @@ void SurfTree::get_surfnodes(Array1<NodeHandle>&n, clString name) {
 	if (member[i]) n.add(new Node(points[i]));
 	else n.add((Node*)0);
     }
+}
+
+TopoSurfTree* SurfTree::toTopoSurfTree() {
+    TopoSurfTree* tst=new TopoSurfTree;
+    tst->surfNames=surfNames;
+    tst->surfEls=surfEls;
+    tst->surfOrient=surfOrient;
+    tst->elements=elements;
+    tst->edges=edges;
+    tst->points=points;
+    tst->bcIdx=bcIdx;
+    tst->bcVal=bcVal;
+    tst->matl=matl;
+    tst->outer=outer;
+    tst->inner=inner;
+    tst->haveNodeInfo=haveNodeInfo;
+    tst->haveNormals=haveNormals;
+    tst->nodeSurfs=nodeSurfs;
+    tst->nodeNbrs=nodeNbrs;
+    tst->nodeNormals=nodeNormals;
+    tst->bboxes=bboxes;
+    tst->valid_bboxes=valid_bboxes;
+    return tst;
 }
 
 void SurfTree::set_surfnodes(const Array1<NodeHandle>&n, clString name) {

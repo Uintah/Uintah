@@ -37,7 +37,7 @@ public:
 
     virtual void compute_bounds();
     virtual int interpolate(const Point&, Vector&);
-    virtual int interpolate(const Point&, Vector&, int&);
+    virtual int interpolate(const Point&, Vector&, int&, int exhaustive=0);
     virtual void get_boundary_lines(Array1<Point>& lines);
 
     virtual void io(Piostream&);

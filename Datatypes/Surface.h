@@ -39,6 +39,7 @@ protected:
 	PointsSurf,
 	ScalarTriSurf,
 	STree,
+	TSTree,
 	Other
     };
     Surface(Representation, int closed);

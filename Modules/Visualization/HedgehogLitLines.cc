@@ -54,6 +54,7 @@ class HedgehogLitLines : public Module {
    TCLstring type;
    TCLint locus_size;
    TCLint use_locus;
+   TCLint exhaustive_flag;
    Colorub outcolorub, graycolorub, defaultcolorub;
    int line_id1;
    int line_id2;
@@ -92,7 +93,8 @@ HedgehogLitLines::HedgehogLitLines(const clString& id)
   head_length("head_length", id, this),
   locus_size("locus_size", id, this),
   use_locus("use_locus", id, this),
-  type("type", id, this), haveXYZ(0)
+  type("type", id, this), haveXYZ(0),
+  exhaustive_flag("exhaustive_flag", id, this)
 {
     // Create the input ports
     // Need a scalar field and a ColorMap
@@ -155,7 +157,8 @@ HedgehogLitLines::HedgehogLitLines(const HedgehogLitLines& copy, int deep)
   head_length("head_length", id, this),
   use_locus("use_locus", id, this),
   locus_size("locus_size", id, this),
-  type("type", id, this), haveXYZ(0)
+  type("type", id, this), haveXYZ(0),
+  exhaustive_flag("exhaustive_flag", id, this)
 {
    NOT_FINISHED("HedgehogLitLines::HedgehogLitLines");
 }
@@ -316,6 +319,7 @@ void HedgehogLitLines::execute()
 	double lenscale = length_scale.get();
 	double widscale = width_scale.get();
 	double headlen = head_length.get();
+	int exhaustive = exhaustive_flag.get();
 	clString typeStr = type.get();
 	if (locMode) {
 	    // look at xyz point value,
@@ -381,7 +385,8 @@ void HedgehogLitLines::execute()
 			
 			// display only those vectors around that locus
 			Vector vv;
-			if (vfield->interpolate( p, vv)){
+			int ii=0;
+			if (vfield->interpolate( p, vv, ii, exhaustive)){
 			    if (locMode && (p-locP).vector().length()>dist ) {
 				if(vv.length2()*lenscale > 1.e-3) {
 				    lines3->mutex.lock();
@@ -394,7 +399,8 @@ void HedgehogLitLines::execute()
 				    // get the color from cmap for p 	    
 				    Colorub clrub;
 				    double sval;
-				    if (ssfield->interpolate( p, sval))
+				    ii=0;
+				    if (ssfield->interpolate( p, sval, ii, exhaustive))
 					clrub = cmap->lookup(sval)->diffuse;
 				    else
 					{
@@ -417,12 +423,14 @@ void HedgehogLitLines::execute()
 			}
 		    }
 	Vector vv;
-	if (locMode && vfield->interpolate( locP.point(), vv)){
+	int ii=0;
+	if (locMode && vfield->interpolate( locP.point(), vv, ii, exhaustive)){
 	    if (have_sfield) {
 		// get the color from cmap for p 	    
 		Colorub clrub;
 		double sval;
-		if (ssfield->interpolate( locP.point(), sval))
+		ii=0;
+		if (ssfield->interpolate( locP.point(), sval, ii, exhaustive))
 		    clrub = cmap->lookup(sval)->diffuse;
 		else
 		    {

@@ -48,7 +48,7 @@ class VectorFieldHUG : public VectorField
     
     virtual Vector gradient(const Point&);
     virtual int interpolate(const Point&, Vector&);
-    virtual int interpolate(const Point&, Vector&, int& ix);
+    virtual int interpolate(const Point&, Vector&, int& ix, int exh=0);
     virtual void get_boundary_lines(Array1<Point>& lines);
 
     virtual void io(Piostream&);

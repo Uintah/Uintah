@@ -120,10 +120,9 @@ int VectorFieldHUG::interpolate(const Point& p, Vector& value)
   return ix < 1 ? 0 : 1;
 }
 
-int VectorFieldHUG::interpolate(const Point& p, Vector& value, int& ix)
+int VectorFieldHUG::interpolate(const Point& p, Vector& value, int& ix, int ex)
 {
   mesh->interpolate (p, data, value, ix);
-  
   return ix < 1 ? 0 : 1;
 }
 

@@ -107,6 +107,7 @@ void ColorMap::Build1d(const int size)
   int i;
   float mul = 1.0/(size-1);
 
+  rcolors.resize(size);
   for(i=0;i<size;i++) {
     rcolors[i] = FindColor(rawRampColor,rawRampColorT,i*mul);
   }

@@ -37,6 +37,18 @@ void TSElement::operator delete(void* rp, size_t)
     TSElement_alloc.free(rp);
 }
 
+static TrivialAllocator TSEdge_alloc(sizeof(TSEdge));
+
+void* TSEdge::operator new(size_t)
+{
+    return TSEdge_alloc.alloc();
+}
+
+void TSEdge::operator delete(void* rp, size_t)
+{
+    TSEdge_alloc.free(rp);
+}
+
 static Persistent* make_TriSurface()
 {
     return scinew TriSurface;
@@ -931,6 +943,16 @@ void Pio(Piostream& stream, TSElement*& data)
     stream.end_cheap_delim();
 }
 
+void Pio(Piostream& stream, TSEdge*& data)
+{
+    if(stream.reading())
+	data=new TSEdge(0,0);
+    stream.begin_cheap_delim();
+    Pio(stream, data->i1);
+    Pio(stream, data->i2);
+    stream.end_cheap_delim();
+}
+
 SurfTree* TriSurface::toSurfTree() {
     SurfTree* st=new SurfTree;
     st->elements=elements;
@@ -1061,6 +1083,8 @@ void TriSurface::distribute_samples()
 #include <Classlib/Array1.cc>
 template class Array1<TSElement*>;
 template void Pio(Piostream&, Array1<TSElement*>&);
+template class Array1<TSEdge*>;
+template void Pio(Piostream&, Array1<TSEdge*>&);
 
 #include <Classlib/HashTable.cc>
 template class HashTable<int, int>;
@@ -1073,6 +1097,10 @@ template class HashKey<int, int>;
 #include <Classlib/Array1.cc>
 
 static void _dummy_(Piostream& p1, Array1<TSElement*>& p2)
+{
+    Pio(p1, p2);
+}
+static void _dummy_(Piostream& p1, Array1<TSEdge*>& p2)
 {
     Pio(p1, p2);
 }

@@ -111,16 +111,16 @@ void MeshToGeom::execute()
 				   mesh->nodes[mesh->elems[i]->n[3]]->p));
 
 #else
-	    groups[cond]->add(mesh->nodes[mesh->elems[i]->n[0]]->p,
+	    groups[cond%7]->add(mesh->nodes[mesh->elems[i]->n[0]]->p,
 			      mesh->nodes[mesh->elems[i]->n[1]]->p,
 			      mesh->nodes[mesh->elems[i]->n[2]]->p);
-	    groups[cond]->add(mesh->nodes[mesh->elems[i]->n[1]]->p,
+	    groups[cond%7]->add(mesh->nodes[mesh->elems[i]->n[1]]->p,
 			      mesh->nodes[mesh->elems[i]->n[2]]->p,
 			      mesh->nodes[mesh->elems[i]->n[3]]->p);
-	    groups[cond]->add(mesh->nodes[mesh->elems[i]->n[0]]->p,
+	    groups[cond%7]->add(mesh->nodes[mesh->elems[i]->n[0]]->p,
 			      mesh->nodes[mesh->elems[i]->n[1]]->p,
 			      mesh->nodes[mesh->elems[i]->n[3]]->p);
-	    groups[cond]->add(mesh->nodes[mesh->elems[i]->n[0]]->p,
+	    groups[cond%7]->add(mesh->nodes[mesh->elems[i]->n[0]]->p,
 			      mesh->nodes[mesh->elems[i]->n[2]]->p,
 			      mesh->nodes[mesh->elems[i]->n[3]]->p);
 #endif
@@ -129,7 +129,6 @@ void MeshToGeom::execute()
 	    cerr << "Elements should have been packed!\n";
 	}
     }
-    
     GeomPts *pts[7];
 
     for(i=0;i<7;i++)
@@ -137,7 +136,7 @@ void MeshToGeom::execute()
 
     for (i=0; i<mesh->elems.size(); i++) {
 	if (mesh->elems[i]) {
-	    pts[mesh->elems[i]->cond]->add(mesh->elems[i]->centroid());
+	    pts[mesh->elems[i]->cond%7]->add(mesh->elems[i]->centroid());
 	}
     }
 
@@ -179,7 +178,8 @@ void MeshToGeom::execute()
 					   scinew Material(Color(0,0,0),
 							   Color(0,.6,0), 
 							   Color(.5,.5,.5), 
-#endif							   20));
+							   20));
+#endif
 //    ogeom->addObj(matl, "Mesh1");
 
 }
