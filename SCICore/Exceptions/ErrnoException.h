@@ -23,7 +23,7 @@ namespace SCICore {
    namespace Exceptions {
       class ErrnoException : public Exception {
       public:
-	 ErrnoException(const std::string&, int errno);
+	 ErrnoException(const std::string&, int err);
 	 ErrnoException(const ErrnoException&);
 	 virtual ~ErrnoException();
 	 virtual const char* message() const;
@@ -44,6 +44,10 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.2  2000/09/25 17:58:57  sparker
+// Do not call variables errno due to #defines on some systems (linux)
+// Correctly implemented copy CTORs
+//
 // Revision 1.1  2000/05/15 19:25:57  sparker
 // Exception class for system calls (ones that use the errno variable)
 //
