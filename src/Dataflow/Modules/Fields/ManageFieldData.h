@@ -367,9 +367,9 @@ ManageFieldDataAlgoMeshVector<FOUT>::execute(ModuleReporter *mod,
     typename FOUT::mesh_type::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
-      Vector v(matrix->get(index, 0),
-	       matrix->get(index, 1),
-	       matrix->get(index, 2));
+      Vector v(matrix->get(0, index),
+	       matrix->get(1, index),
+	       matrix->get(2, index));
       ofield->set_value(v, *iter);
       index++;
       ++iter;
