@@ -169,6 +169,7 @@ public:
     void itemAdded(GeomObj*, char*);
     void itemDeleted(GeomObj*);
     void rotate(double angle, Vector v, Point p);
+    void rotate_obj(double angle, const Vector& v, const Point& p);
     void translate(Vector v);
     void scale(Vector v, Point p);
     void addChild(Roe *r);

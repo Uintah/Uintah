@@ -908,6 +908,17 @@ void Roe::rotate(double angle, Vector v, Point c)
     need_redraw=1;
 }
 
+void Roe::rotate_obj(double angle, const Vector& v, const Point& c)
+{
+    make_current();
+    glTranslated(c.x(), c.y(), c.z());
+    glRotated(angle, v.x(), v.y(), v.z());
+    glTranslated(-c.x(), -c.y(), -c.z());
+    for(int i=0; i<kids.size(); i++)
+	kids[i]->rotate(angle, v, c);
+    need_redraw=1;
+}
+
 static void mmult(double *m, double *p1, double *p2) {
     for (int i=0; i<4; i++) {
 	p2[i]=0;
@@ -1406,7 +1417,7 @@ void Roe::DBrotate(DBContext*, int, double, double delta,
     Point p(0,0,0);
     if(bb.valid())
 	p=bb.center();
-    rotate(delta, v, p);
+    rotate_obj(delta, v, p);
     need_redraw=1;
 }
 
