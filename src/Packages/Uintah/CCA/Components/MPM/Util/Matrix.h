@@ -205,8 +205,11 @@ template<class T> BoundedArray<T> operator * (const Matrix<T> &left,
 template<class T> BoundedArray<T> operator * (const BoundedArray<T> &left,
 						const Matrix<T> &right);
 
+#if 0
+// Not need anymore?  -Steve
 template<class T> BoundedArray<Vector> operator * (const Matrix<T> &left,
                                         const BoundedArray<Vector> &right);
+#endif
 
 template<class T> T operator * (const BoundedArray<T> &left,
 				  const BoundedArray<T> &right);
