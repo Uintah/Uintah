@@ -432,7 +432,7 @@ public:
 
   //! get the child elements of the given index
   void get_nodes(Node::array_type &, Edge::index_type) const;
-  void get_nodes(Node::array_type &, Face::index_type) const {}
+  void get_nodes(Node::array_type &, Face::index_type) const;
   void get_nodes(Node::array_type &, Cell::index_type) const;
   void get_edges(Edge::array_type &, Face::index_type) const {}
   void get_edges(Edge::array_type &, Cell::index_type) const {}
