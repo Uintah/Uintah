@@ -1,5 +1,6 @@
 
 #include <Packages/Uintah/CCA/Components/Examples/ExamplesLabel.h>
+#include <Packages/Uintah/Core/Variables/Stencil7.h>
 #include <Packages/Uintah/Core/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Variables/PerPatch.h>
@@ -7,7 +8,6 @@
 #include <Packages/Uintah/Core/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Variables/Stencil7.h>
 #include <Packages/Uintah/Core/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>

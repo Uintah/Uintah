@@ -51,30 +51,30 @@ WARNING
       : constVariable<VariableBase, Variable, T, const IntVector&>(copy) {}
 
     IntVector getLowIndex() const
-    { return rep_.getLowIndex(); }
+    { return this->rep_.getLowIndex(); }
 
     IntVector getHighIndex() const
-    { return rep_.getHighIndex(); }
+    { return this->rep_.getHighIndex(); }
 
     IntVector getFortLowIndex() const
-    { return rep_.getFortLowIndex(); }
+    { return this->rep_.getFortLowIndex(); }
 
     IntVector getFortHighIndex() const
-    { return rep_.getFortHighIndex(); }
+    { return this->rep_.getFortHighIndex(); }
 
     inline const Array3Window<T>* getWindow() const {
-      return rep_.getWindow();
+      return this->rep_.getWindow();
     }
     
     inline const T* getPointer() const {
-      return rep_.getPointer();
+      return this->rep_.getPointer();
     }
 
     operator const Array3<T>&() const
-    { return rep_; }
+    { return this->rep_; }
 
     void print(std::ostream& out) const
-    { rep_.print(out); }
+    { this->rep_.print(out); }
   };
 
 } // end namespace Uintah

@@ -5,6 +5,13 @@
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Util/Handle.h>
+
+#ifdef max
+// some uintah 3p utilities define max, so undefine it before BBox chokes on it.
+#undef max
+#endif
+
+#include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
@@ -16,10 +23,6 @@
 #include <sgi_stl_warnings_on.h>
 
 #define SELECT_RANGETREE
-
-namespace SCIRun {
-  class BBox;
-}
 
 namespace Uintah {
 

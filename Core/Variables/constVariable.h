@@ -79,34 +79,34 @@ WARNING
     // let us know why and we will see if we can come up with a better
     // solution.  So the answer to how/where is never/nowhere.
     Variable& castOffConst() {
-      return rep_;
+      return this->rep_;
     }
    
     virtual ~constVariable() {}
 
     operator const Variable&() const
-    { return rep_; }
+    { return this->rep_; }
     virtual const VariableBase& getBaseRep()
-    { return rep_; }
+    { return this->rep_; }
 
     // It's ok for a constVariable to copyPointer of a const variable
     // (even though a non-const variable can't).
     inline void copyPointer(const Variable& copy)
-    { rep_.copyPointer(const_cast<Variable&>(copy)); }
+    { this->rep_.copyPointer(const_cast<Variable&>(copy)); }
     virtual void copyPointer(const VariableBase& copy)
-    { rep_.copyPointer(const_cast<VariableBase&>(copy)); }
+    { this->rep_.copyPointer(const_cast<VariableBase&>(copy)); }
 
     virtual const VariableBase* clone() const
-    { return rep_.clone(); }
+    { return this->rep_.clone(); }
 
     virtual VariableBase* cloneType() const
-    { return rep_.cloneType(); }
+    { return this->rep_.cloneType(); }
 
     inline const T& operator[](Index idx) const
-    { return rep_[idx]; }
+    { return this->rep_[idx]; }
      
     virtual const TypeDescription* virtualGetTypeDescription() const
-    { return rep_.virtualGetTypeDescription(); }
+    { return this->rep_.virtualGetTypeDescription(); }
 
   protected:
     Variable rep_;

@@ -648,6 +648,7 @@ main( int argc, char** argv )
            lb = plb;
            bal = plb;
 	} else {
+           lb = 0;
 	   bal = 0;
 	   quit( "Unknown load balancer: " + loadbalancer );
 	}

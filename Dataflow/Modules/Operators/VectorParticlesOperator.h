@@ -50,7 +50,10 @@ void VectorParticlesOperator::computeScalars(VectorParticles* pTP,
   vector< ShareAssignParticleVariable<Vector> >::const_iterator iter;
   for (iter = vectors.begin(); iter != vectors.end(); iter++) {
     ParticleSubset* subset = (*iter).getParticleSubset();
-    scalarSet = ParticleVariable<double>(subset);
+
+    // gcc 3.4 needs to instantiate a tmp
+    ParticleVariable<double> tmp(subset);
+    scalarSet = tmp;
     for (ParticleSubset::iterator sub_iter = subset->begin();
 	 sub_iter != subset->end(); sub_iter++) {
       scalarSet[*sub_iter] = op((*iter)[*sub_iter]);

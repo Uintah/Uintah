@@ -203,7 +203,7 @@ void i_refvec<T>::destroy()
 template<class T>
 int i_refvec<T>::is_null() const
 {
-	return (data == NULL ? 1 : 0);
+	return (data_ == NULL ? 1 : 0);
 }
 
 /*

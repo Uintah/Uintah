@@ -3,8 +3,6 @@
 #include <string.h>
 #include <fstream>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/CutCellInfo.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/CutCellInfoP.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
@@ -22,6 +20,8 @@
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/CutCellInfo.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/CutCellInfoP.h>
 #include <Packages/Uintah/Core/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Variables/CellIterator.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>

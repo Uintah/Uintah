@@ -97,6 +97,8 @@ namespace Uintah {
       cout << "SimpleSimulationController::run() psi dynamic_cast failed...\n";
       throw InternalError("psi dynamic_cast failed");
     }
+
+    cout  << "  UPS:drep: " << d_ups.get_rep() << endl;
     
     // Get the problem specification
     d_ups = psi->readInputFile();

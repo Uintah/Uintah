@@ -96,10 +96,10 @@ template <class T>
 inline StaticNumberArray<T>& 
 StaticNumberArray<T>::operator+=(const StaticNumberArray& array)
 {
-  ASSERT(size() != array.size());
-  T* pthis = pointer();
+  ASSERT(this->size() != array.size());
+  T* pthis = this->pointer();
   T* parray = array.pointer();
-  for (int i = 0; i < size(); i++) *pthis++ += *parray++;
+  for (int i = 0; i < this->size(); i++) *pthis++ += *parray++;
   return *this ;
 }
 
@@ -108,10 +108,10 @@ template <class T>
 inline StaticNumberArray<T>& 
 StaticNumberArray<T>::operator-=(const StaticNumberArray& array)
 {
-  ASSERT(size() != array.size());
-  T* pthis = pointer();
+  ASSERT(this->size() != array.size());
+  T* pthis = this->pointer();
   T* parray = array.pointer();
-  for (int i = 0; i < size(); i++) *pthis++ -= *parray++;
+  for (int i = 0; i < this->size(); i++) *pthis++ -= *parray++;
   return *this ;
 }
 
@@ -120,10 +120,10 @@ template <class T>
 inline StaticNumberArray<T>& 
 StaticNumberArray<T>::operator*=(const StaticNumberArray& array)
 {
-  ASSERT(size() != array.size());
-  T* pthis = pointer();
+  ASSERT(this->size() != array.size());
+  T* pthis = this->pointer();
   T* parray = array.pointer();
-  for (int i = 0; i < size(); i++) *pthis++ *= *parray++;
+  for (int i = 0; i < this->size(); i++) *pthis++ *= *parray++;
   return *this ;
 }
 
@@ -132,10 +132,10 @@ template <class T>
 inline StaticNumberArray<T>& 
 StaticNumberArray<T>::operator/=(const StaticNumberArray& array)
 {
-  ASSERT(size() != array.size());
-  T* pthis = pointer();
+  ASSERT(this->size() != array.size());
+  T* pthis = this->pointer();
   T* parray = array.pointer();
-  for (int i = 0; i < size(); i++) *pthis++ *= *parray++;
+  for (int i = 0; i < this->size(); i++) *pthis++ *= *parray++;
   return *this;
 }
 

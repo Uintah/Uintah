@@ -67,7 +67,8 @@ void TensorParticlesOperator::computeScalars(TensorParticles* pTP,
   vector< ShareAssignParticleVariable<Matrix3> >::const_iterator iter;
   for (iter = tensors.begin(); iter != tensors.end(); iter++) {
     ParticleSubset* subset = (*iter).getParticleSubset();
-    scalarSet = ParticleVariable<double>(subset);
+    ParticleVariable<double> tmp(subset);
+    scalarSet = tmp;
     for (ParticleSubset::iterator sub_iter = subset->begin();
 	 sub_iter != subset->end(); sub_iter++) {
       scalarSet[*sub_iter] = op((*iter)[*sub_iter]);
