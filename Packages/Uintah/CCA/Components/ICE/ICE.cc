@@ -37,8 +37,8 @@ static bool computeDt = false;
 #define GAS 0
  /*==========TESTING==========`*/
  
-#define DOING
-//#undef DOING
+//#define DOING
+#undef DOING
 
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
@@ -1848,9 +1848,9 @@ void ICE::computePressFC(const ProcessorGroup*,   const Patch* patch,
  Function~  ICE::massExchange--
  ---------------------------------------------------------------------  */
 void ICE::massExchange(const ProcessorGroup*,  
-					const Patch* patch,
-					DataWarehouseP& old_dw, 
-					DataWarehouseP& new_dw)
+					const Patch*,
+					DataWarehouseP& , 
+					DataWarehouseP& )
 {
 #if 0
 #ifdef DOING
@@ -2559,7 +2559,12 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
     //__________________________________
     // Advection of specific volume.  Advected quantity is a volume fraction
     if (numICEmatls != numALLmatls)  {
-      sp_vol_CC.initialize(1.0);  // Do this so extra cells work out
+      // I am doing this so that we get a reasonable answer for sp_vol
+      // in the extra cells.  This calculation will get overwritten in
+      // the interior cells.
+      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
+        sp_vol_CC[*iter] = 1.0/rho_micro[*iter];
+      }
       for(CellIterator iter=patch->getCellIterator(gc); !iter.done();iter++){
         q_CC[*iter] = (mass_L[*iter]/rho_micro[*iter])*invvol;
       }
@@ -2571,12 +2576,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
       }
      // Divide by the new rho_CC.  This must be done in the extraCells
      // for now, because I don't know how to set the BCs for sp_vol.
-     for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){        
-       if(rho_CC[*iter] > 1000.*d_SMALL_NUM){
+     for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
+       if(rho_CC[*iter] > 100.*d_SMALL_NUM){
                 sp_vol_CC[*iter] /= rho_CC[*iter];
-        }
-        else{
-                sp_vol_CC[*iter] = 1./rho_micro[*iter];
         }
      }
     }
