@@ -57,6 +57,9 @@ TransIsoHyperImplicit::TransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, i
   pStretchLabel = VarLabel::create("p.stretch",
         ParticleVariable<double>::getTypeDescription());
 
+  pStretchLabel_preReloc = VarLabel::create("p.stretch+",
+        ParticleVariable<double>::getTypeDescription());
+
 }
 
 TransIsoHyperImplicit::TransIsoHyperImplicit(const TransIsoHyperImplicit* cm)
@@ -75,15 +78,13 @@ TransIsoHyperImplicit::TransIsoHyperImplicit(const TransIsoHyperImplicit* cm)
   d_initialData.c5 = cm->d_initialData.c5;
   d_initialData.lambda_star = cm->d_initialData.lambda_star;
   d_initialData.a0 = cm->d_initialData.a0;
-
-  pStretchLabel = VarLabel::create("p.stretch",
-        ParticleVariable<double>::getTypeDescription());
 }
 
 TransIsoHyperImplicit::~TransIsoHyperImplicit()
 // _______________________DESTRUCTOR
 {
   VarLabel::destroy(pStretchLabel);
+  VarLabel::destroy(pStretchLabel_preReloc);
 }
 
 void TransIsoHyperImplicit::initializeCMData(const Patch* patch,
@@ -160,19 +161,21 @@ void TransIsoHyperImplicit::addParticleState(std::vector<const VarLabel*>& from,
    from.push_back(lb->pDeformationMeasureLabel);
    from.push_back(lb->pStressLabel);
    from.push_back(lb->pFiberDirLabel);
+   from.push_back(pStretchLabel);
 
    to.push_back(lb->pDeformationMeasureLabel_preReloc);
    to.push_back(lb->pStressLabel_preReloc);
    to.push_back(lb->pFiberDirLabel_preReloc);
+   to.push_back(pStretchLabel_preReloc);
 }
 
 void TransIsoHyperImplicit::computeStableTimestep(const Patch*,
-                                           const MPMMaterial*,
-                                           DataWarehouse*)
+                                                  const MPMMaterial*,
+                                                  DataWarehouse*)
 {
   // Not used for the implicit models.
 }
-//
+
 Vector TransIsoHyperImplicit::getInitialFiberDir()
 {
   return d_initialData.a0;
@@ -655,7 +658,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
      // fiber dir and stretch are only for LV appl.
      new_dw->allocateAndPut(pfiberdir_carry  ,lb->pFiberDirLabel_preReloc,pset);
-     new_dw->allocateAndPut(stretch          ,pStretchLabel,          pset);
+     new_dw->allocateAndPut(stretch          ,pStretchLabel_preReloc,     pset);
 
      //_____________________________________________material parameters
      double Bulk  = d_initialData.Bulk;
@@ -838,8 +841,8 @@ void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
   task->computes(lb->pStressLabel_preReloc,             matlset);
-  task->computes(lb->pFiberDirLabel_preReloc,matlset);
-  task->computes(pStretchLabel,matlset);
+  task->computes(lb->pFiberDirLabel_preReloc,           matlset);
+  task->computes(pStretchLabel_preReloc,                matlset);
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
