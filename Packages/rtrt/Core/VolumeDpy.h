@@ -40,6 +40,12 @@ public:
   void attach(VolumeBase*);
   virtual ~VolumeDpy();
   virtual void animate(bool& changed);
+
+  // This will set new_isoval to new_val if it lies within the range
+  // [datamin, datamax].
+  void change_isoval(float new_val);
+  // This changes what datamin and datamax are
+  void set_minmax(float min, float max);
 };
 
 } // end namespace rtrt
