@@ -17,6 +17,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Parallel/ProcessorGroup.h>
 #include <SCICore/Malloc/Allocator.h>
 
 #include <iostream>
@@ -35,11 +36,10 @@ static const TypeDescription* specialType;
 
 namespace Uintah {
 
-OnDemandDataWarehouse::OnDemandDataWarehouse( int MpiRank, 
-					      int MpiProcesses,
+OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
 					      int generation ) :
   d_lock("DataWarehouse lock"),
-  DataWarehouse( MpiRank, MpiProcesses, generation ),
+  DataWarehouse( myworld, generation ),
   d_responseTag( 0 )
 {
   d_finalized = false;
@@ -65,6 +65,16 @@ OnDemandDataWarehouse::setGrid(const GridP& grid)
 
 OnDemandDataWarehouse::~OnDemandDataWarehouse()
 {
+}
+
+bool OnDemandDataWarehouse::isFinalized() const
+{
+   return d_finalized;
+}
+
+void OnDemandDataWarehouse::finalize()
+{
+   d_finalized=true;
 }
 
 void
@@ -135,7 +145,7 @@ OnDemandDataWarehouse::sendMpiDataRequest( const string & /*varName*/,
 					         Patch * /*patch*/,
 					         int      /*numGhostCells*/ )
 {
-  if( d_MpiProcesses == 1 ) {
+  if( d_myworld->size() == 1 ) {
       throw InternalError( "sendMpiDataRequest should not be called if"
 			   " there is only one process" );
   }
@@ -163,8 +173,8 @@ OnDemandDataWarehouse::sendMpiDataRequest( const string & /*varName*/,
   int                           currentTag;
   DWMpiHandler::MpiDataRequest  request;
 
-  request.fromMpiRank = d_MpiRank;
-  request.toMpiRank = !d_MpiRank; // Just a testing hack...
+  request.fromMpiRank = d_myworld->myrank();
+  request.toMpiRank = !d_myworld->myrank(); // Just a testing hack...
 
   d_lock.writeLock();
   request.tag = d_responseTag;
@@ -177,7 +187,7 @@ OnDemandDataWarehouse::sendMpiDataRequest( const string & /*varName*/,
   request.patch = 0;
   request.generation = d_generation;
 
-  cerr << "OnDemandDataWarehouse " << d_MpiRank << ": sending data request\n";
+  cerr << "OnDemandDataWarehouse " << d_myworld->myrank() << ": sending data request\n";
 
   MPI_Bsend( (void*)&request, sizeof( request ), MPI_BYTE, request.toMpiRank,
 	     DWMpiHandler::DATA_REQUEST_TAG, MPI_COMM_WORLD );
@@ -874,7 +884,7 @@ struct ScatterRecord {
 };
 
 void
-OnDemandDataWarehouse::scatterParticles(const ProcessorContext*,
+OnDemandDataWarehouse::scatterParticles(const ProcessorGroup*,
 					const Patch* patch,
 					DataWarehouseP& old_dw,
 					DataWarehouseP& new_dw)
@@ -962,7 +972,7 @@ OnDemandDataWarehouse::scatterParticles(const ProcessorContext*,
 }
 
 void
-OnDemandDataWarehouse::gatherParticles(const ProcessorContext*,
+OnDemandDataWarehouse::gatherParticles(const ProcessorGroup*,
 				       const Patch* patch,
 				       DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw)
@@ -1108,6 +1118,11 @@ OnDemandDataWarehouse::scheduleParticleRelocation(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.36  2000/06/17 07:04:54  sparker
+// Implemented initial load balancer modules
+// Use ProcessorGroup
+// Implemented TaskGraph - to contain the common scheduling stuff
+//
 // Revision 1.35  2000/06/16 19:48:55  sparker
 // Eliminated carryForward
 //

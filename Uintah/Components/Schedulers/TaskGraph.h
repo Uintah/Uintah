@@ -1,10 +1,6 @@
-#ifndef UINTAH_HOMEBREW_MPISCHEDULER_H
-#define UINTAH_HOMEBREW_MPISCHEDULER_H
+#ifndef UINTAH_HOMEBREW_TaskGraph_H
+#define UINTAH_HOMEBREW_TaskGraph_H
 
-#include <Uintah/Parallel/UintahParallelComponent.h>
-#include <Uintah/Components/Schedulers/TaskGraph.h>
-#include <Uintah/Interface/Scheduler.h>
-#include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/TaskProduct.h>
 #include <Uintah/Grid/Task.h>
 #include <vector>
@@ -15,13 +11,13 @@ namespace Uintah {
 /**************************************
 
 CLASS
-   MPIScheduler
+   TaskGraph
    
    Short description...
 
 GENERAL INFORMATION
 
-   MPIScheduler.h
+   TaskGraph.h
 
    Steven G. Parker
    Department of Computer Science
@@ -41,10 +37,10 @@ WARNING
   
 ****************************************/
 
-   class MPIScheduler : public UintahParallelComponent, public Scheduler {
+   class TaskGraph {
    public:
-      MPIScheduler(const ProcessorGroup* myworld);
-      virtual ~MPIScheduler();
+      TaskGraph();
+      virtual ~TaskGraph();
       
       //////////
       // Insert Documentation Here:
@@ -52,37 +48,46 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      virtual void execute( const ProcessorGroup * pc,
-			          DataWarehouseP   & dwp );
-      
-      //////////
-      // Insert Documentation Here:
       virtual void addTask(Task* t);
+
+      //////////
+      // Insert Documentation Here:
+      virtual void topologicalSort(vector<Task*>& tasks);
       
       //////////
       // Insert Documentation Here:
-      virtual DataWarehouseP createDataWarehouse( int generation );
-      
-   private:
-      MPIScheduler(const MPIScheduler&);
-      MPIScheduler& operator=(const MPIScheduler&);
+      bool allDependenciesCompleted(Task* task) const;
 
-      TaskGraph graph;
+      //////////
+      // Insert Documentation Here:
+      void dumpDependencies();
+
+      int getNumTasks() const;
+      Task* getTask(int i);
+
+   private:
+      TaskGraph(const TaskGraph&);
+      TaskGraph& operator=(const TaskGraph&);
+
+      //////////
+      // Insert Documentation Here:
+      void setupTaskConnections();
+
+      void processTask(Task* task, vector<Task*>& sortedTasks) const;
+      
+      std::vector<Task*>        d_tasks;
+
+      std::map<TaskProduct, Task*>   d_allcomps;
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
-// Revision 1.2  2000/06/17 07:04:54  sparker
+// Revision 1.1  2000/06/17 07:04:56  sparker
 // Implemented initial load balancer modules
 // Use ProcessorGroup
 // Implemented TaskGraph - to contain the common scheduling stuff
-//
-// Revision 1.1  2000/06/15 23:14:07  sparker
-// Cleaned up scheduler code
-// Renamed BrainDamagedScheduler to SingleProcessorScheduler
-// Created MPIScheduler to (eventually) do the MPI work
 //
 //
 

@@ -2,6 +2,7 @@
 #define UINTAH_HOMEBREW_SinglePROCESSORSCHEDULER_H
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
+#include <Uintah/Components/Schedulers/TaskGraph.h>
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/TaskProduct.h>
@@ -11,7 +12,6 @@
 
 namespace Uintah {
    class Task;
-   class ProcessorContext;
 /**************************************
 
 CLASS
@@ -43,7 +43,7 @@ WARNING
 
    class SingleProcessorScheduler : public UintahParallelComponent, public Scheduler {
    public:
-      SingleProcessorScheduler( int MpiRank, int MpiProcesses );
+      SingleProcessorScheduler(const ProcessorGroup* myworld);
       virtual ~SingleProcessorScheduler();
       
       //////////
@@ -52,7 +52,7 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      virtual void execute( const ProcessorContext * pc,
+      virtual void execute( const ProcessorGroup * pc,
 			          DataWarehouseP   & dwp );
       
       //////////
@@ -67,37 +67,18 @@ WARNING
       SingleProcessorScheduler(const SingleProcessorScheduler&);
       SingleProcessorScheduler& operator=(const SingleProcessorScheduler&);
 
-      struct TaskRecord {
-	 TaskRecord(Task*);
-	 ~TaskRecord();
-
-	 Task*                    task;
-	 bool visited;
-      };
-
-      //////////
-      // Insert Documentation Here:
-      bool allDependenciesCompleted(TaskRecord* task) const;
-
-      void performTask(TaskRecord* task, const ProcessorContext * pc) const;
-
-      //////////
-      // Insert Documentation Here:
-      void setupTaskConnections();
-      
-      //////////
-      // Insert Documentation Here:
-      void dumpDependencies();
-
-      std::vector<TaskRecord*>        d_tasks;
-
-      std::map<TaskProduct, TaskRecord*>   d_allcomps;
+      TaskGraph graph;
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.2  2000/06/17 07:04:55  sparker
+// Implemented initial load balancer modules
+// Use ProcessorGroup
+// Implemented TaskGraph - to contain the common scheduling stuff
+//
 // Revision 1.1  2000/06/15 23:14:07  sparker
 // Cleaned up scheduler code
 // Renamed BrainDamagedScheduler to SingleProcessorScheduler

@@ -1,299 +1,84 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+
+// $Id$
 
 #include <Uintah/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <Uintah/Exceptions/TypeMismatchException.h>
+#include <Uintah/Interface/LoadBalancer.h>
 #include <Uintah/Grid/Patch.h>
-#include <Uintah/Grid/Task.h>
-#include <Uintah/Grid/TypeDescription.h>
-#include <Uintah/Parallel/ProcessorContext.h>
-
-#include <SCICore/Exceptions/InternalError.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Util/DebugStream.h>
 #include <SCICore/Thread/Time.h>
-
-#include <algorithm>
-#include <fstream>
-#include <iostream>
-#include <strstream>
-#include <unistd.h>
+#include <SCICore/Util/DebugStream.h>
 
 using namespace Uintah;
-
-using SCICore::Exceptions::InternalError;
-using SCICore::Util::DebugStream;
 using namespace std;
-using namespace SCICore::Thread;
+using SCICore::Thread::Time;
 
-static DebugStream dbg("SingleProcessorScheduler", false);
+static SCICore::Util::DebugStream dbg("SingleProcessorScheduler", false);
 
-SingleProcessorScheduler::SingleProcessorScheduler( int MpiRank, int MpiProcesses ) :
-  UintahParallelComponent( MpiRank, MpiProcesses )
+SingleProcessorScheduler::SingleProcessorScheduler(const ProcessorGroup* myworld)
+   : UintahParallelComponent(myworld)
 {
 }
 
 SingleProcessorScheduler::~SingleProcessorScheduler()
 {
-    vector<TaskRecord*>::iterator iter;
-
-    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ )
-	delete *iter;
 }
 
 void
 SingleProcessorScheduler::initialize()
 {
-    vector<TaskRecord*>::iterator iter;
-
-    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ )
-	delete *iter;
-
-    d_tasks.clear();
-    d_allcomps.clear();
+   graph.initialize();
 }
 
 void
-SingleProcessorScheduler::setupTaskConnections()
+SingleProcessorScheduler::execute(const ProcessorGroup * pc,
+			             DataWarehouseP   & dw )
 {
-   // Look for all of the reduction variables - we must treat those
-   // special.  Create a fake task that performs the reduction
-   // While we are at it, ensure that we aren't producing anything
-   // into a frozen data warehouse
-   vector<TaskRecord*>::iterator iter;
-   map<const VarLabel*, Task*, VarLabel::Compare> reductionTasks;
-   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
-      TaskRecord* task = *iter;
-      const vector<Task::Dependency*>& comps = task->task->getComputes();
-      for(vector<Task::Dependency*>::const_iterator iter = comps.begin();
-	  iter != comps.end(); iter++){
-	 Task::Dependency* dep = *iter;
-	 OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());;
-	 if(dw->isFinalized()){
-	    throw InternalError("Variable produced in old datawarehouse: "+dep->d_var->getName());
-	 } else if(dep->d_var->typeDescription()->isReductionVariable()){
-	    // Look up this variable in the reductionTasks map
-	    const VarLabel* var = dep->d_var;
-	    map<const VarLabel*, Task*, VarLabel::Compare>::iterator it=reductionTasks.find(var);
-	    if(it == reductionTasks.end()){
-	       reductionTasks[var]=new Task(var->getName()+" reduction");
-	       it = reductionTasks.find(var);
-	       it->second->computes(dep->d_dw, var, -1, 0);
-	    }
-	    it->second->requires(dep->d_dw, var, -1, task->task->getPatch(),
-				 Ghost::None);
-	 }
-      }
+   UintahParallelPort* lbp = getPort("load balancer");
+   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+   lb->assignResources(graph, d_myworld);
+   releasePort("load balancer");
+
+   vector<Task*> tasks;
+   graph.topologicalSort(tasks);
+
+   int ntasks = (int)tasks.size();
+   if(ntasks == 0){
+      cerr << "WARNING: Scheduler executed, but no tasks\n";
+   }
+   dbg << "Executing " << ntasks << " tasks\n";
+   graph.dumpDependencies();
+   for(int i=0;i<ntasks;i++){
+      double start = Time::currentSeconds();
+      tasks[i]->doit(pc);
+      double dt = Time::currentSeconds()-start;
+      dbg << "Completed task: " << tasks[i]->getName();
+      if(tasks[i]->getPatch())
+	 dbg << " on patch " << tasks[i]->getPatch()->getID();
+      dbg << " (" << dt << " seconds)\n";
    }
 
-   // Add the new reduction tasks to the list of tasks
-   for(map<const VarLabel*, Task*, VarLabel::Compare>::iterator it = reductionTasks.begin();
-       it != reductionTasks.end(); it++){
-      addTask(it->second);
-   }
-
-   // Connect the tasks together using the computes/requires info
-   // Also do a type check
-   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
-      TaskRecord* task = *iter;
-      const vector<Task::Dependency*>& reqs = task->task->getRequires();
-      for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
-	  iter != reqs.end(); iter++){
-	 Task::Dependency* dep = *iter;
-	 OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());;
-	 if(dw->isFinalized()){
-	    if(!dw->exists(dep->d_var, dep->d_patch))
-	       throw InternalError("Variable required from old datawarehouse, but it does not exist: "+dep->d_var->getName());
-	 } else {
-	    TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
-	    map<TaskProduct, TaskRecord*>::iterator aciter = d_allcomps.find(p);
-	    if(aciter == d_allcomps.end())
-	       throw InternalError("Scheduler could not find production for variable: "+dep->d_var->getName()+", required for task: "+task->task->getName());
-	    if(dep->d_var->typeDescription() != aciter->first.getLabel()->typeDescription())
-	       throw TypeMismatchException("Type mismatch for variable: "+dep->d_var->getName());
-	 }
-      }
-   }
-}
-
-void
-SingleProcessorScheduler::performTask(TaskRecord* task,
-				   const ProcessorContext * pc) const
-{
-   dbg << "Looking at task: " << task->task->getName();
-   if(task->task->getPatch())
-      dbg << " on patch " << task->task->getPatch()->getID();
-   dbg << '\n';
-   if(task->visited){
-      ostrstream error;
-      error << "Cycle detected in task graph: already did\n\t"
-            << task->task->getName() << " on patch "
-            << task->task->getPatch()->getID() << "\n";
-      throw InternalError(error.str());
-   }
-
-   task->visited=true;
-   const vector<Task::Dependency*>& reqs = task->task->getRequires();
-   for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
-       iter != reqs.end(); iter++){
-      Task::Dependency* dep = *iter;
-      OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
-      if(!dw->isFinalized()){
-	 TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
-	 map<TaskProduct, TaskRecord*>::const_iterator aciter = d_allcomps.find(p);
-	 if(!aciter->second->task->isCompleted()){
-	   if(aciter->second->visited){
-	     ostrstream error;
-	     error << "Cycle detected in task graph: trying to do\n\t"
-		   << task->task->getName() << " on patch "
-		   << task->task->getPatch()->getID()
-		   << "\nbut already did:\n\t"
-		   << aciter->second->task->getName() << " on patch "
-		   << aciter->second->task->getPatch()->getID()
-		   << ",\nwhile looking for variable: \n\t" 
-		   << dep->d_var->getName() << ", material " 
-		   << dep->d_matlIndex << ", patch " << dep->d_patch->getID()
-		   << "\n";
-	     throw InternalError(error.str());
-	   }
-	   performTask(aciter->second, pc);
-	 }
-      }
-   }
-
-   double start = Time::currentSeconds();
-   task->task->doit(pc);
-   double dt = Time::currentSeconds()-start;
-   dbg << "Completed task: " << task->task->getName();
-   if(task->task->getPatch())
-      dbg << " on patch " << task->task->getPatch()->getID();
-   dbg << " (" << dt << " seconds)\n";
-}
-
-void
-SingleProcessorScheduler::execute(const ProcessorContext * pc,
-			             DataWarehouseP   & dwp )
-{
-    if(d_tasks.size() == 0){
-	cerr << "WARNING: Scheduler executed, but no tasks\n";
-	return;
-    }
-    dbg << "Executing " << d_tasks.size() << " tasks\n";
-    setupTaskConnections();
-    dbg << "After setup, there are " << d_tasks.size() << " tasks\n";
-
-    dumpDependencies();
-
-    vector<TaskRecord*>::iterator iter;
-    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
-       TaskRecord* task = *iter;
-       if(!task->task->isCompleted()){
-	 performTask(task, pc);
-       }
-    }
-    OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dwp.get_rep());;
-    dw->finalize();
+   dw->finalize();
 }
 
 void
 SingleProcessorScheduler::addTask(Task* task)
 {
-   TaskRecord* tr = scinew TaskRecord(task);
-   d_tasks.push_back(tr);
- 
-   const vector<Task::Dependency*>& comps = task->getComputes();
-   for(vector<Task::Dependency*>::const_iterator iter = comps.begin();
-       iter != comps.end(); iter++){
-      Task::Dependency* dep = *iter;
-      TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
-      map<TaskProduct,TaskRecord*>::iterator aciter = d_allcomps.find(p);
-      if(aciter != d_allcomps.end()) 
-	 throw InternalError("Two tasks compute the same result: "+dep->d_var->getName()+" (tasks: "+task->getName()+" and "+aciter->second->task->getName()+")");
-      d_allcomps[p] = tr;
-   }
-}
-
-bool
-SingleProcessorScheduler::allDependenciesCompleted(TaskRecord*) const
-{
-    //cerr << "SingleProcessorScheduler::allDependenciesCompleted broken!\n";
-    return true;
+   graph.addTask(task);
 }
 
 DataWarehouseP
 SingleProcessorScheduler::createDataWarehouse( int generation )
 {
-    return scinew OnDemandDataWarehouse( d_MpiRank, d_MpiProcesses, generation );
-}
-
-void
-SingleProcessorScheduler::dumpDependencies()
-{
-    static int call_nr = 0;
-    
-    // the first call is just some initialization tasks. All subsequent calls
-    // will have the same dependency graph, modulo an output task. The first
-    // non-initialization call will have the output task, so we'll just output
-    // that one.
-    if (call_nr++ != 1)
-    	return;
-	
-    ofstream depfile("dependencies");
-    if (!depfile) {
-	cerr << "SingleProcessorScheduler::dumpDependencies: unable to open output file!\n";
-	return;	// dependency dump failure shouldn't be fatal to anything else
-    }
-
-    vector<TaskRecord*>::const_iterator iter;
-    for (iter = d_tasks.begin(); iter != d_tasks.end(); iter++) {
-    	const TaskRecord* taskrec = *iter;
-
-	const vector<Task::Dependency*>& deps = taskrec->task->getRequires();
-	vector<Task::Dependency*>::const_iterator dep_iter;
-	for (dep_iter = deps.begin(); dep_iter != deps.end(); dep_iter++) {
-	    const Task::Dependency* dep = *dep_iter;
-
-	    OnDemandDataWarehouse* dw =
-	    	dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
-	    if (!dw->isFinalized()) {
-
-		TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
-		map<TaskProduct, TaskRecord*>::const_iterator deptask =
-	    	    d_allcomps.find(p);
-
-		const Task* task1 = taskrec->task;
-		const Task* task2 = deptask->second->task;
-
-		depfile << "\"" << task1->getName();
-		if(task1->getPatch())
-		   depfile << "\\nPatch" << task1->getPatch()->getID();
-		depfile << "\" \""  << task2->getName();
-		if(task2->getPatch())
-		   depfile << "\\nPatch" << task2->getPatch()->getID();
-		depfile << "\"" << endl;
-	    }
-	}
-    }
-
-    depfile.close();
-}
-
-SingleProcessorScheduler::
-TaskRecord::~TaskRecord()
-{
-    delete task;
-}
-
-SingleProcessorScheduler::
-TaskRecord::TaskRecord(Task* t)
-    : task(t)
-{
-   visited=false;
+    return scinew OnDemandDataWarehouse(d_myworld, generation );
 }
 
 //
 // $Log$
+// Revision 1.3  2000/06/17 07:04:55  sparker
+// Implemented initial load balancer modules
+// Use ProcessorGroup
+// Implemented TaskGraph - to contain the common scheduling stuff
+//
 // Revision 1.2  2000/06/16 22:59:39  guilkey
 // Expanded "cycle detected" print statement
 //
