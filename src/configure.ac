@@ -1407,9 +1407,13 @@ sci_thirdparty_include="$sci_thirdparty_dir/include"
 SCI_THIRDPARTY_LIB_DIR="$sci_thirdparty_lib"
 SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_lib -L$sci_thirdparty_lib"
 INC_SCI_THIRDPARTY_H=-I"$sci_thirdparty_include"
+SCI_THIRDPARTY_DIR="$sci_thirdparty_dir"
 
 AC_MSG_RESULT(Thirdparty library directory $SCI_THIRDPARTY_LIB_DIR)
 
+SCI_SUBST_THIRDPARTY_DIR(INC_SCI_THIRDPARTY_H)
+SCI_SUBST_THIRDPARTY_DIR(SCI_THIRDPARTY_LIB_DIR_FLAG)
+AC_SUBST(SCI_THIRDPARTY_DIR)
 AC_SUBST(INC_SCI_THIRDPARTY_H)
 AC_SUBST(SCI_THIRDPARTY_LIB_DIR)
 AC_SUBST(SCI_THIRDPARTY_LIB_DIR_FLAG)
@@ -1777,6 +1781,10 @@ fi
 SCI_TRY_LINK(TCL,tcl library and headers,tcl.h tclPort.h tclMath.h tclInt.h,
              $_sci_tcl_inc,tcl,$_sci_lib,,,$_sci_optional)
 
+SCI_SUBST_THIRDPARTY_DIR(LIB_DIR_TCL)
+SCI_SUBST_THIRDPARTY_DIR(TCL_LIB_DIR_FLAG)
+SCI_SUBST_THIRDPARTY_DIR(INC_TCL_H)
+
 AC_SUBST(LIB_DIR_TCL)
 AC_SUBST(TCL_LIB_FLAG)
 AC_SUBST(TCL_LIB_DIR_FLAG)
@@ -1788,19 +1796,24 @@ if test -f "$_sci_lib/tkConfig.sh"; then
   _sci_tk_inc="$_sci_inc $TK_SRC_DIR/generic"
 fi
 
-#
 # Note: TK_DEFS (used below to help resolve tk issues) comes from tkConfig.sh
-#
 SCI_TRY_LINK(TK,tk library and headers, tk.h tk3d.h tkPort.h,
       $_x_inc_dir $_sci_tk_inc,tk $TCL_LIB_FLAG,$_sci_lib,$TK_DEFS $TCL_LIB_DIR_FLAG,,required)
 
+SCI_SUBST_THIRDPARTY_DIR(TK_LIB_DIR_FLAG)
+SCI_SUBST_THIRDPARTY_DIR(INC_TK_H)
 
 AC_SUBST(TK_LIB_FLAG)
 AC_SUBST(TK_LIB_DIR_FLAG)
 AC_SUBST(INC_TK_H)
 
+# -- itcl --
 SCI_TRY_LINK(ITCL,itcl library and headers, itcl.h,
              $_sci_inc,itcl,$_sci_lib,$TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,required)
+
+SCI_SUBST_THIRDPARTY_DIR(LIB_DIR_ITCL)
+SCI_SUBST_THIRDPARTY_DIR(ITCL_LIB_DIR_FLAG_H)
+SCI_SUBST_THIRDPARTY_DIR(INC_ITCL_H)
 
 AC_SUBST(LIB_DIR_ITCL)
 AC_SUBST(ITCL_LIB_FLAG)
@@ -1810,17 +1823,24 @@ AC_SUBST(INC_ITCL_H)
 # -- itk --
 SCI_TRY_LINK(ITK,itk library and headers, itk.h, $_x_inc_dir $_sci_inc,itk,$_sci_lib,$ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,required)
 
+SCI_SUBST_THIRDPARTY_DIR(ITK_LIB_DIR_FLAG_H)
+SCI_SUBST_THIRDPARTY_DIR(INC_ITK_H)
+
 AC_SUBST(ITK_LIB_FLAG)
 AC_SUBST(ITK_LIB_DIR_FLAG)
 AC_SUBST(INC_ITK_H)
 
 # -- blt --
-SCI_TRY_LINK(BLT,BLT library and headers, blt.h,$_sci_inc,BLT,$_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,required)
+SCI_TRY_LINK(BLT,BLT library and headers, blt.h,$_sci_inc,BLT,$_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,required) 
+
+SCI_SUBST_THIRDPARTY_DIR(BLT_LIB_DIR_FLAG)
+SCI_SUBST_THIRDPARTY_DIR(INC_BLT_H)
 
 AC_SUBST(BLT_LIB_FLAG)
 AC_SUBST(BLT_LIB_DIR_FLAG)
 AC_SUBST(INC_BLT_H)
 
+# -- check TCL version == 8.3.2 and TK version == 8.3.2
 CORRECT_TCL_VERSION=no
 CORRECT_TK_VERSION=no
 CORRECT_ITCL_VERSION=no
@@ -1859,6 +1879,9 @@ SCI_TRY_LINK(XERCES_C,xerces library and headers, xercesc/dom/DOMNamedNodeMap.hp
   DOMNode *node = 0;
   node->getNodeName();
 ],$_sci_optional)
+  
+SCI_SUBST_THIRDPARTY_DIR(XERCES_C_LIB_DIR_FLAG)
+SCI_SUBST_THIRDPARTY_DIR(INC_XERCES_C_H)
 
 AC_SUBST(XERCES_C_LIB_FLAG)
 AC_SUBST(XERCES_C_LIB_DIR_FLAG)
@@ -2100,6 +2123,8 @@ if test "$with_mpeg" && test ! "$DEF_MPEG"; then
   echo
 fi
 
+SCI_SUBST_THIRDPARTY_DIR(MPEGE_LIB_DIR_FLAG)
+
 AC_SUBST(MPEGE_LIB_FLAG)
 AC_SUBST(MPEGE_LIB_DIR_FLAG)
 AC_SUBST(DEF_MPEG)
@@ -2166,6 +2191,9 @@ if test "$with_magick" && test ! "$DEF_MAGICK"; then
   echo
   AC_MSG_ERROR(One or more of the ImageMagick components is missing.)
 fi
+
+SCI_SUBST_THIRDPARTY_DIR(MAGICK_LIB_DIR_FLAG)
+SCI_SUBST_THIRDPARTY_DIR(INC_MAGICK_H)
 
 AC_SUBST(MAGICK_LIB_FLAG)
 AC_SUBST(MAGICK_LIB_DIR_FLAG)
@@ -3276,6 +3304,9 @@ if test "$with_teem" && test ! "$DEF_TEEM"; then
   echo
   AC_MSG_ERROR(One or more of the TEEM components is missing.)
 fi
+
+SCI_SUBST_THIRDPARTY_DIR(TEEM_LIB_DIR_FLAG)
+SCI_SUBST_THIRDPARTY_DIR(INC_TEEM_H)
 
 AC_SUBST(HAVE_TEEM)
 AC_SUBST(DEF_TEEM)
