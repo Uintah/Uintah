@@ -189,7 +189,7 @@ void ParticleVis::execute()
     alphaT.push_back(1.0);
     alphaT.push_back(1.0);
     
-    cmap = scinew ColorMap(rgb,rgbT,alphas,alphaT,16);
+    cmap = scinew ColorMap(rgb,rgbT,alphas,alphaT);
   }
   double max = -1e30;
   double min = 1e30;

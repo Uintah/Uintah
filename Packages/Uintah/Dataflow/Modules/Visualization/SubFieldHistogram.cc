@@ -181,7 +181,7 @@ void SubFieldHistogram::execute(void)
 					     Point( xsize, -0.92 + ysize, 0 ),
 					     Point( 0, -0.92 + ysize, 0 ));
 	histo->set_buckets( count_, 256, min_i, max_i );
-	histo->set_texture(cmap->raw1d);
+	histo->set_texture(cmap->rawRGBA_ );
 	all->add(histo);
   
     
