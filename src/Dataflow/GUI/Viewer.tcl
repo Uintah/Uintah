@@ -1371,7 +1371,8 @@ itcl_class ViewWindow {
 
     method moveLight { c i x y } {
 	if { $i == 0 } return
-	upvar $this-global-light$i light lCol $this-lightVectors lVec
+	upvar $this-global-light$i light 
+	upvar $this-lightColors lCol $this-lightVectors lVec
 	set cw [winfo width $c]
 	set ch [winfo height $c]
 	set selected [$c find withtag current]
@@ -1396,7 +1397,7 @@ itcl_class ViewWindow {
 	# normalize the vector
 	set len3 [expr sqrt($newx*$newx + $newy*$newy + $newz*$newz)]
 	set vec "[expr $newx/$len3] [expr -$newy/$len3] [expr $newz/$len3]"
-	set lVec [lreplace [set $this-lVec] $i $i $vec]
+	set lVec [lreplace [set $this-lightVectors] $i $i $vec]
 	if { $light } {
 	    $this lightSwitch $i
 	}
