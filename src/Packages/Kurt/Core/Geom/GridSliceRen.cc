@@ -24,6 +24,11 @@ GridSliceRen::GridSliceRen(){}
 
 void GridSliceRen::draw(const BrickGrid& bg, int)
 {
+  if( newbricks_ ){
+    glDeleteTextures( textureNames.size(), &(textureNames[0]));
+    textureNames.clear();
+    newbricks_ = false;
+  }
   Ray viewRay;
   computeView(viewRay);
 

@@ -217,8 +217,9 @@ void BrickGrid::lat_vol_init( LatticeVol<Data>& tex )
   int bx,by,bz;
 
   typename LatticeVol<Data>::mesh_type *m = tex.get_typed_mesh().get_rep();
-  min_ = m->get_min();
-  max_ = m->get_max();
+  BBox bb = m->get_bounding_box();
+  min_ = bb.min();
+  max_ = bb.max();
   
   if( tex.data_at() == Field::CELL ){
     nx = m->get_nx()-1;
