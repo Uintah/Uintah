@@ -84,6 +84,7 @@ public:
   void command( const string & );
   void eval( const string &, string & );
 
+  GuiVar *find_var( const string &name ); 
   template <class T> T *find_var( const string &name ) 
   {
     map<string,GuiVar *>::iterator i = vars_.find( name );
