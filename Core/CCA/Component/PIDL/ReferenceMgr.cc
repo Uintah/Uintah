@@ -26,7 +26,8 @@
  *  Copyright (C) 2003 SCI Group
  */
 
-#include "ReferenceMgr.h"
+#include <Core/CCA/Component/PIDL/ReferenceMgr.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
 #include <iostream>
 using namespace SCIRun;
 
@@ -53,8 +54,9 @@ ReferenceMgr& ReferenceMgr::operator=(const ReferenceMgr& copy)
 
 ReferenceMgr::ReferenceMgr(const ReferenceMgr& copy)
   :localSize(copy.localSize),localRank(copy.localRank),
-   s_lSize(copy.s_lSize), s_refSize(copy.s_refSize),intracomm(copy.intracomm)  
+   s_lSize(copy.s_lSize), s_refSize(copy.s_refSize)
 {
+  intracomm = PIDL::getIntraComm();
   for(unsigned int i=0; i < copy.d_ref.size(); i++) {
     d_ref.push_back(copy.d_ref[i]->clone());
   }

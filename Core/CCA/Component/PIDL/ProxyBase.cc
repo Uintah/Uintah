@@ -69,8 +69,10 @@ ProxyBase::~ProxyBase()
     (*iter)->chan->closeConnection();
   }
   /*Delete intercommunicator*/
-  if((rm.localSize > 1)&&(rm.intracomm != NULL))
+  if((rm.localSize > 1)&&(rm.intracomm != NULL)) {
     delete (rm.intracomm);
+    rm.intracomm = NULL; 
+  }  
 }
 
 void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
