@@ -101,23 +101,30 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
     double cosine = -Dot(normal, ray.direction());
     bool incoming = true;
 
+#if 0
     Color filter;
+#endif
     if(cosine<0){
 	cosine=-cosine;
 	normal=-normal;
         incoming = false;
+#if 0
         filter = Color ( exp( extinction_constant_in.red() ), 
                          exp( extinction_constant_in.green() ), 
                          exp( extinction_constant_in.blue() ) );
+#endif
     }
     else {
+#if 0
         filter = Color ( exp( extinction_constant_out.red() ),
                          exp( extinction_constant_out.green() ),
                          exp( extinction_constant_out.blue() ) );
-
+#endif
     }
 
+#if 0
     atten *= filter.max_component();
+#endif
     
 
     // compute Phong highlights
@@ -190,6 +197,7 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
 		   cx->worker->traceRay(rcolor, rray, depth+1, atten,
 					accumcolor, cx, dist);
 	       }
+#if 0
 	       if (dist == MAXDOUBLE) {
 		 if (incoming) filter=bg_in;
 		 else filter=bg_in;
@@ -206,6 +214,9 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
 		 }		 
 	       }
 	       result+= filter*rcolor;
+#else
+	       result += rcolor;
+#endif
 	       cx->stats->ds[depth].nrefl++;
                return;
             }
@@ -228,6 +239,7 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
 					 accumcolor, cx, dist);
 		}
 		double scaled_t = dist * extinction_scale;
+#if 0
 		if (incoming) {
 		  filter = Color(exp(extinction_constant_out.red()*scaled_t),
 			 exp(extinction_constant_out.green()*scaled_t),
@@ -237,8 +249,11 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
 				 exp(extinction_constant_in.green()*scaled_t),
 				 exp(extinction_constant_in.blue()*scaled_t));
 		}		 
-		cx->stats->ds[depth].nrefl++;
 		result+= R*(filter*rcolor);
+#else
+		result += R*rcolor;
+#endif
+		cx->stats->ds[depth].nrefl++;
             }
             if((1-R)*atten > 0.02) {
 		if(incoming && nothing_inside){
@@ -249,6 +264,7 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
 					 accumcolor, cx, dist);
 		}
 		double scaled_t = dist * extinction_scale;
+#if 0
 		if (incoming) {
 		  filter = Color(exp(extinction_constant_out.red()*scaled_t),
 			 exp(extinction_constant_out.green()*scaled_t),
@@ -258,8 +274,11 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
 				 exp(extinction_constant_in.green()*scaled_t),
 				 exp(extinction_constant_in.blue()*scaled_t));
 		}		 
-		cx->stats->ds[depth].ntrans++;
 		result+= (1-R)*(filter*tcolor);
+#else
+		result+= (1-R)*tcolor;
+#endif
+		cx->stats->ds[depth].ntrans++;
             }
     }
 }
