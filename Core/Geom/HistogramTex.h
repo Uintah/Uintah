@@ -51,7 +51,7 @@ class SCICORESHARE HistogramTex : public GeomObj {
   Point a, b, c, d;
   const int *buckets;
   int nbuckets, min, max;
-  const unsigned char *texture;
+  const float *texture;
   int numcolors, width;
   
 public:
@@ -60,7 +60,10 @@ public:
   HistogramTex(const HistogramTex&);
   virtual ~HistogramTex();
 
-  void set_texture( unsigned char *tex, int w = 256){
+  void set_texture( float *tex, int w = 256){
+    // This is unsave. Colormap deletion before draw could result in a
+    // crash.  However the texture is copied to OpenGL and then not used,
+    // so problems would be rare.
     texture = tex; width = w; }
   void set_buckets( const int *b, int nb, int mn, int mx) {
     buckets = b; nbuckets = nb; min = mn; max = mx; }

@@ -1028,7 +1028,7 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
     }
 
     // Send Cmap
-    glTexImage1D(GL_TEXTURE_1D, 0, 4, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+    glTexImage1D(GL_TEXTURE_1D, 0, 4, 256, 0, GL_RGBA, GL_FLOAT,
 		 cmap_->rawRGBA_);
     glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
 
@@ -6143,7 +6143,7 @@ void ColorMapTex::draw(DrawInfoOpenGL* di, Material* matl, double)
   glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
   glTexImage1D( GL_TEXTURE_1D, 0, GL_RGB, numcolors_, 0,
-		GL_RGBA, GL_UNSIGNED_BYTE, texture_ );
+		GL_RGBA, GL_FLOAT, texture_ );
 
   if (GL_NO_ERROR == glGetError()){
     glEnable(GL_TEXTURE_1D);
@@ -6181,7 +6181,7 @@ void HistogramTex::draw(DrawInfoOpenGL* di, Material* matl, double)
     glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
     glTexImage1D( GL_TEXTURE_1D, 0, GL_RGB, 256, 0,
-		  GL_RGBA, GL_UNSIGNED_BYTE,texture );
+		  GL_RGBA, GL_FLOAT, texture );
   } else {
     glBindTexture(GL_TEXTURE_1D, texName);
   }

@@ -112,14 +112,8 @@ ColorMapToNrrd::execute()
     nd->nrrd->axis[0].kind = nrrdKind4Color;
 
     float *val = (float *)nd->nrrd->data;
-    unsigned char *data = cmapH->rawRGBA_;
-
-    for(int i=0; i < size * 4; i++)
-    {
-      *val = (*data) / 255.0;
-      ++data;
-      ++val;
-    }
+    float *data = cmapH->rawRGBA_;
+    memcpy(val, data, sizeof(float) * size * 4);
 
     // Send the data nrrd.
     nd->nrrd->axis[0].label = "Colors";
