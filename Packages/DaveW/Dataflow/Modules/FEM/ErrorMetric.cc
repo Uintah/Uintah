@@ -80,7 +80,7 @@ public:
   virtual ~ErrorMetric();
 
   //////////////////////////////////////////////////////////
-  // method to calculate root mean square error between two vectors
+  // method to calculate and plot error between two vectors
   virtual void execute();
 
 private:
@@ -88,9 +88,9 @@ private:
   ColumnMatrixIPort* d_ivec1P;
   ColumnMatrixIPort* d_ivec2P;
   ColumnMatrixOPort* d_errorP;
+  TCLint d_haveUI;
   TCLstring d_methodTCL;
   TCLstring d_pTCL;
-
 }; 
 
 
@@ -99,10 +99,9 @@ extern "C" Module* make_ErrorMetric(const clString& id)
     return scinew ErrorMetric(id);
 }
 
-
 ErrorMetric::ErrorMetric(const clString& id)
-: Module("ErrorMetric", id, Filter), d_methodTCL("d_methodTCL", id, this),
-    d_pTCL("d_pTCL", id, this)
+: Module("ErrorMetric", id, Filter), d_methodTCL("methodTCL", id, this),
+    d_pTCL("pTCL", id, this), d_haveUI("haveUI", id, this)
 {
     // Create the input port
     d_ivec1P=scinew ColumnMatrixIPort(this, "Vec1",ColumnMatrixIPort::Atomic);
@@ -115,12 +114,9 @@ ErrorMetric::ErrorMetric(const clString& id)
     add_oport(d_errorP);
 }
 
-
 ErrorMetric::~ErrorMetric()
 {
 }
-
-
 
 void ErrorMetric::execute()
 {
@@ -132,7 +128,6 @@ void ErrorMetric::execute()
      ColumnMatrix *ivec2;
      if (!d_ivec2P->get(ivec2H) || !(ivec2=ivec2H.get_rep())) return;
      
-     // make sure the vectors have the same number of elements -l
      if (ivec1->nrows() != ivec2->nrows()) {
          cerr << "Error - can't compute error on vectors of different lengths!\n";
          cerr << "vec1 length="<<ivec1->nrows();
@@ -148,49 +143,65 @@ void ErrorMetric::execute()
 
      // compute CC
      
+     double avg1=0, avg2=0;
+     int iterate;
+     for (iterate=0; iterate<ne; iterate++) {
+	 avg1+=(*ivec1)[iterate];
+	 avg2+=(*ivec2)[iterate];
+     }
+     avg1/=ne;
+     avg2/=ne;
+
      double ccNum=0;
      double ccDenom1=0;
      double ccDenom2=0;
      double rms=0;
-     int iterate;
      double pp;
      d_pTCL.get().get_double(pp);
      for (iterate=0; iterate<ne; iterate++) {
-         ccNum+=(*ivec1)[iterate]*(*ivec2)[iterate];
-         ccDenom1+=(*ivec1)[iterate]*(*ivec1)[iterate];
-         ccDenom2+=(*ivec2)[iterate]*(*ivec2)[iterate];
-         double tmp=fabs((*ivec1)[iterate]-(*ivec2)[iterate]);
+	 double shift1=((*ivec1)[iterate]-avg1);
+	 double shift2=((*ivec2)[iterate]-avg2);
+
+         ccNum+=shift1*shift2;
+         ccDenom1+=shift1*shift1;
+         ccDenom2+=shift2*shift2;
+//         double tmp=fabs((*ivec1)[iterate]-(*ivec2)[iterate]);
+         double tmp=fabs(shift1-shift2);
 	 if (pp==1) rms+=tmp; 
 	 else if (pp==2) rms+=tmp*tmp; 
 	 else rms+=pow(tmp,pp);
      }
-     rms = pow(rms, 1/pp);
+     rms = pow(rms/ne,1/pp);
      double ccDenom=Sqrt(ccDenom1*ccDenom2);
      double cc=Min(ccNum/ccDenom, 1000000.);
-     double ccInv=Min(1.0/(Abs(ccNum)/ccDenom), 1000000.);
+     double ccInv=Min(1.0-ccNum/ccDenom, 1000000.);
      double rmsRel=Min(rms/ccDenom1, 1000000.);
 
-     ostringstream str;
-     str << id << " append_graph " << 1-cc << " " << rmsRel << " \"";
-     for (iterate=0; iterate<ne; iterate++)
-         str << iterate << " " << (*ivec1)[iterate] << " ";
-     str << "\" \"";
-     for (iterate=0; iterate<ne; iterate++)
-         str << iterate << " " << (*ivec2)[iterate] << " ";
-     str << "\" ; update idletasks";
-//     cerr << "str="<<str.str()<<"\n";
-     TCL::execute(str.str().c_str());
 
-     if (d_methodTCL.get() == "CC") {
+     if (d_haveUI.get()) {
+	 ostringstream str;
+	 str << id << " append_graph " << ccInv << " " << rmsRel << " \"";
+	 for (iterate=0; iterate<ne; iterate++)
+	     str << iterate << " " << (*ivec1)[iterate] << " ";
+	 str << "\" \"";
+	 for (iterate=0; iterate<ne; iterate++)
+	     str << iterate << " " << (*ivec2)[iterate] << " ";
+	 str << "\" ; update idletasks";
+	 //     cerr << "str="<<str.str()<<"\n";
+	 TCL::execute(str.str().c_str());
+     }
+
+     clString meth=d_methodTCL.get();
+     if (meth == "CC") {
          *val=cc;
-     } else if (d_methodTCL.get() == "CCinv") {
+     } else if (meth == "CCinv") {
          *val=ccInv;
-     } else if (d_methodTCL.get() == "rms") {
+     } else if (meth == "RMS") {
          *val=rms;
-     } else if (d_methodTCL.get() == "RMSrel") {
+     } else if (meth == "RMSrel") {
          *val=rmsRel;
      } else {
-         cerr << "Unknown ErrorMetric::d_methodTCL - "<<d_methodTCL.get()<<"\n";
+         cerr << "Unknown ErrorMetric::d_methodTCL - "<<meth<<"\n";
          *val=0;
      }
 //     cerr << "Error="<<*val<<"\n";
@@ -202,8 +213,8 @@ void ErrorMetric::execute()
 
 //
 // $Log$
-// Revision 1.9  2000/08/01 16:25:53  mcole
-// fix broken build
+// Revision 1.10  2000/08/01 18:03:03  dmw
+// fixed errors
 //
 // Revision 1.8  2000/07/12 16:42:47  lfox
 // Enhanced cocoon style comments
@@ -238,13 +249,3 @@ void ErrorMetric::execute()
 // more of Dave's modules
 //
 //
-
-
-
-
-
-
-
-
-
-
