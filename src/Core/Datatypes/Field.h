@@ -12,17 +12,37 @@ namespace SCIRun {
 class  SCICORESHARE Field: public PropertyManager {
 
 public:
+  //! Possible data associations.
+  enum data_location {
+    NODE,
+    EDGE,
+    FACE,
+    CELL,
+    NONE
+  };
 
-  // GROUP: Constructors/Destructor
-  //////////
-  //
+
+  Field();
   virtual ~Field();
 
-  // Required virtual functions
-  virtual const MeshBase& get_mesh() const = 0;
+  //! Required virtual functions
+  virtual MeshBaseHandle get_mesh() const = 0;
 
-  // Required interfaces
+  //! Required interfaces
   virtual InterpolateToScalar* query_interpolate_to_scalar() const = 0;
+
+
+  //! Persistent I/O.
+  void    io(Piostream &stream);
+  static  PersistentTypeID type_id;
+  static  const string type_name(int);
+  //! All instantiable classes need to define this.
+  virtual const string get_type_name(int n) const = 0;
+  
+protected:
+
+  //! Where data is associated.
+  data_location           data_at_;
 
 };
 
