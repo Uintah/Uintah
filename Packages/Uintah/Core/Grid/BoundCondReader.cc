@@ -179,13 +179,13 @@ BCReader::read(ProblemSpecP& bc_ps)
       d_BCReaderData[face_side].print();
 #endif
 
-      //delete bcGeom;
+      delete bcGeom;
 
       // Delete stuff in bctype_data
       multimap<int, BoundCondBase*>::const_iterator m_itr;
       for (m_itr = bctype_data.begin(); m_itr != bctype_data.end(); ++m_itr) 
 	delete m_itr->second;
-    }
+  }
 
   // Find the mat_id = "all" (-1) information and store it in each 
   // materials boundary condition section.
@@ -370,8 +370,21 @@ void BCReader::combineBCS()
 		   rearranged.d_BCDataArray[mat_id].end(),
 		   Uintah::print);
 #endif
+	  delete side_bc;
+	  delete union_bc;
+	  delete difference_bc;
 	}
       }
+      // Delete the bcdata_bcgeom stuff
+      for (bcd_itr = bcdata_bcgeom.begin(); bcd_itr != bcdata_bcgeom.end();
+	   ++bcd_itr) {
+	for (vec_itr=bcd_itr->second.begin();vec_itr != bcd_itr->second.end();
+	     ++vec_itr)
+	  delete *vec_itr;
+	bcd_itr->second.clear();
+      }
+      bcdata_bcgeom.clear();
+      
     }
 
 #ifdef PRINT
@@ -385,6 +398,7 @@ void BCReader::combineBCS()
     cout << endl << "Printing out rearranged from d_BCReaderData list" << endl;
     d_BCReaderData[face].print();
 #endif
+
   }
 
 #ifdef PRINT
