@@ -10,9 +10,7 @@
 
 SRCDIR := Packages/MIT/Dataflow/GUI
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
-$(SRCDIR)/tclIndex: \
+SRCS := \
 	$(SRCDIR)/BayerAnalysis.tcl\
 	$(SRCDIR)/DistributionReader.tcl\
 	$(SRCDIR)/ItPDSimPartGui.tcl\
@@ -29,8 +27,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Sampler.tcl\
 	$(SRCDIR)/SamplerGui.tcl\
 #[INSERT NEW TCL FILE HERE]
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/MIT/Dataflow/GUI
 
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
+
 
 

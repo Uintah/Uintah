@@ -19,9 +19,7 @@
 
 SRCDIR := Core/GUI
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
-$(SRCDIR)/tclIndex: \
+SRCS := \
 	$(SRCDIR)/BaseDial.tcl $(SRCDIR)/ColorPicker.tcl \
 	$(SRCDIR)/Dial.tcl \
 	$(SRCDIR)/Dialbox.tcl $(SRCDIR)/Doublefile.tcl \
@@ -41,7 +39,8 @@ $(SRCDIR)/tclIndex: \
 #	$(SRCDIR)/GuiFilename.tcl\
 #	$(SRCDIR)/Slider.tcl\
 #[INSERT NEW TCL FILE HERE]
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Core/GUI
 
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
+
+
 

@@ -25,9 +25,7 @@
 
 SRCDIR := Dataflow/GUI
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
-$(SRCDIR)/tclIndex: \
+SRCS := \
 	$(SRCDIR)/AddLight.tcl \
 	$(SRCDIR)/AppendMatrix.tcl \
 	$(SRCDIR)/ArrowWidget.tcl \
@@ -112,6 +110,5 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/TclStream.tcl \
 #[INSERT NEW TCL FILE HERE]
 
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Dataflow/GUI
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex

@@ -26,16 +26,14 @@
 
 SRCDIR := Packages/CardioWave/Dataflow/GUI
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
-$(SRCDIR)/tclIndex: \
+SRCS := \
 	$(SRCDIR)/CreateSimpleMesh.tcl \
 	$(SRCDIR)/HexIntMask.tcl \
 	$(SRCDIR)/ReclassifyInteriorTets.tcl \
 	$(SRCDIR)/RemoveInteriorTets.tcl \
 	$(SRCDIR)/SetupFVMatrix.tcl \
 	$(SRCDIR)/SetupFVM2.tcl \
+#[INSERT NEW TCL FILE HERE]
 
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/CardioWave/Dataflow/GUI
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex

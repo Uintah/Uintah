@@ -48,12 +48,11 @@ XMLS :=  \
 
 INSIGHT_TCL_GEN := $(patsubst sci_%.xml, $(SRCDIR)/%.tcl, $(XMLS))
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
 Packages/Insight/Dataflow/GUI/%.tcl:  Packages/Insight/Dataflow/Modules/Filters/XML/sci_%.xml
 	java $(CODEGEN) $(PATH_TO_PACKAGE) $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/XML/sci_$*.xml $(PATH_TO_PACKAGE)/Core/CodeGenerator/XSL/SCIRun_generateTCL.xsl $(PATH_TO_PACKAGE)/Dataflow/GUI/$*.tcl
 
-$(SRCDIR)/tclIndex: $(INSIGHT_TCL_GEN) \
+SRCS := \
+	$(INSIGHT_TCL_GEN) \
 	$(SRCDIR)/ImageFileWriter.tcl \
 	$(SRCDIR)/ImageReaderFloat2D.tcl \
 	$(SRCDIR)/ImageReaderFloat3D.tcl \
@@ -64,8 +63,8 @@ $(SRCDIR)/tclIndex: $(INSIGHT_TCL_GEN) \
 	$(SRCDIR)/ImageToField.tcl \
 	$(SRCDIR)/Switch.tcl \
 #[INSERT NEW TCL FILE HERE]
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Insight/Dataflow/GUI
 
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
+
 
 

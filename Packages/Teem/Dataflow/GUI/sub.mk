@@ -24,9 +24,7 @@
 
 SRCDIR := Packages/Teem/Dataflow/GUI
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
-$(SRCDIR)/tclIndex: \
+SRCS := \
 	$(SRCDIR)/axis_info_sel_box.tcl\
 	$(SRCDIR)/FieldToNrrd.tcl\
 	$(SRCDIR)/NrrdCmedian.tcl\
@@ -44,6 +42,5 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/HDF5DataReader.tcl\
 #[INSERT NEW TCL FILE HERE]
 
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Teem/Dataflow/GUI
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex

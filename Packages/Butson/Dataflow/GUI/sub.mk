@@ -2,12 +2,10 @@
 
 SRCDIR := Packages/Butson/Dataflow/GUI
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
-$(SRCDIR)/tclIndex: \
+SRCS := \
 	$(SRCDIR)/AppendSparse.tcl \
 #[INSERT NEW TCL FILE HERE]
 
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Butson/Dataflow/GUI
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
+

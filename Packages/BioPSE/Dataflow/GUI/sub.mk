@@ -23,9 +23,7 @@
 
 SRCDIR := Packages/BioPSE/Dataflow/GUI
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
-$(SRCDIR)/tclIndex: \
+SRCS := \
 	$(SRCDIR)/AnisoSphereModel.tcl\
 	$(SRCDIR)/ApplyFEMCurrentSource.tcl\
 	$(SRCDIR)/ApplyFEMVoltageSource.tcl\
@@ -52,8 +50,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/TikhonovSVD.tcl\
 #[INSERT NEW TCL FILE HERE]
 
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/BioPSE/Dataflow/GUI
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
+
 
 
