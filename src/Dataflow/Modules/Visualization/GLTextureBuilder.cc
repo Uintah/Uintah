@@ -34,17 +34,17 @@
  * Simple interface to volume rendering stuff
  */
 
-#include "GLTextureBuilder.h"
-#include <sys/types.h>
-#include <unistd.h>
+#include <Dataflow/Modules/Visualization/GLTextureBuilder.h>
+#include <Dataflow/Network/Module.h>
 
+#include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/LatVolField.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/GLVolumeRenderer/VolumeUtils.h>
-#include <Dataflow/Network/Module.h>
-#include <Core/Containers/StringUtil.h>
+#include <Core/Malloc/Allocator.h>
 
+#include <sys/types.h>
+#include <unistd.h>
 #include <iostream>
 
 namespace SCIRun {

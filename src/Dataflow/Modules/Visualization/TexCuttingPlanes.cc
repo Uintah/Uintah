@@ -34,25 +34,24 @@
  * Simple interface to volume rendering stuff
  */
 
-#include "TexCuttingPlanes.h"
+#include <Dataflow/Modules/Visualization/TexCuttingPlanes.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Geom/ColorMap.h>
-#include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ColorMapPort.h>
 
+#include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Geom/View.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/GLVolumeRenderer/VolumeUtils.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Thread/CrowdMonitor.h>
 
 #include <Dataflow/Widgets/PointWidget.h>
+
 #include <iostream>
 #include <algorithm>
-#include <Core/GLVolumeRenderer/VolumeUtils.h>
-
-
 
 namespace SCIRun {
 

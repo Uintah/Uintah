@@ -34,26 +34,27 @@
  * Simple interface to volume rendering stuff
  */
 
-#include "TextureVolVis.h"
+#include <Dataflow/Modules/Visualization/TextureVolVis.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Geom/ColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Geom/GeomTriangles.h>
+#include <Dataflow/Widgets/PointWidget.h>
 
-#include <Core/Malloc/Allocator.h>
+#include <Core/Geom/ColorMap.h>
+#include <Core/Geom/GeomTriangles.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/GLVolumeRenderer/VolumeUtils.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Thread/CrowdMonitor.h>
 
-#include <Dataflow/Widgets/PointWidget.h>
 #include <iostream>
+
 #ifdef __sgi
-#include <ios>
+#  include <ios>
 #endif
 #include <algorithm>
-#include <Core/GLVolumeRenderer/VolumeUtils.h>
 
 using std::hex;
 using std::dec;
