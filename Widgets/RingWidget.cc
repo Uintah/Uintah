@@ -182,7 +182,7 @@ RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
    picks[RingW_PickCyls]->set_cbdata((void*)RingW_PickCyls);
    GeomMaterial* cylsm = new GeomMaterial(picks[RingW_PickCyls], materials[RingW_EdgeMatl]);
 
-   geometries[RingW_SliderCyl] = new GeomCylinder;
+   geometries[RingW_SliderCyl] = new GeomCappedCylinder;
    picks[RingW_PickSlider] = new GeomPick(geometries[RingW_SliderCyl], module);
    picks[RingW_PickSlider]->set_highlight(materials[RingW_HighMatl]);
    picks[RingW_PickSlider]->set_cbdata((void*)RingW_PickSlider);
@@ -229,7 +229,7 @@ RingWidget::widget_execute()
 
    ((GeomTorus*)geometries[RingW_Ring])->move(cen, normal,
 					      rad, 0.5*widget_scale);
-   ((GeomCylinder*)geometries[RingW_SliderCyl])->move(variables[RingW_Slider]->Get()
+   ((GeomCappedCylinder*)geometries[RingW_SliderCyl])->move(variables[RingW_Slider]->Get()
 							- (GetAxis() * 0.3 * widget_scale),
 							variables[RingW_Slider]->Get()
 							+ (GetAxis() * 0.3 * widget_scale),
