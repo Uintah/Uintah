@@ -42,6 +42,9 @@
       </port>
     </outputs>
   </io>
+  <gui>
+    <img>../Modules/DataIO/doc/OpenFileUI.jpg</img>
+  </gui>
   <testing>
   </testing>
 </component>
