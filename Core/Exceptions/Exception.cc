@@ -215,10 +215,6 @@ void Exception::sci_throw(const Exception& exc)
       // directly call the thread library here or it would create
       // a circular dependency
       abort();
-    } else if(strcasecmp(emode, "segfault") == 0){
-      // this will create a seg fault and stop right here!
-      int* x = 0;
-      *x = *x;
     } else {
       cerr << "Unknown exception mode: " << emode << ", aborting\n";
       abort();
