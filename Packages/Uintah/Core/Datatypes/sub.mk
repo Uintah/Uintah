@@ -14,6 +14,7 @@ SRCS     += \
 	$(SRCDIR)/LevelMesh.cc \
 	$(SRCDIR)/GLTexture3D.cc \
 	$(SRCDIR)/GLAnimatedStreams.cc \
+	$(SRCDIR)/VariableCache.cc \
 	$(SRCDIR)/cd_templates.cc \
 
 PSELIBS := \
