@@ -52,7 +52,9 @@ class MDInterface;
       void doRestart(std::string restartFromDir, int timestep,
 		     bool removeOldDir);
       void run();
-      
+
+      // for calculating memory usage when sci-malloc is disabled.
+      static char* start_addr;
    private:
       void problemSetup(const ProblemSpecP&, GridP&);
       void scheduleInitialize(LevelP&, SchedulerP&,
