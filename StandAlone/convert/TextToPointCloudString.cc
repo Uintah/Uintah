@@ -45,8 +45,8 @@
 #include <stdlib.h>
 
 namespace SCIRun {
-extern FieldHandle TextPointCloudString_reader(ProgressReporter *pr,
-					       const char *file);
+extern FieldHandle
+TextPointCloudString_reader(ProgressReporter *pr, const char *file);
 }
 
 using std::cerr;
