@@ -139,6 +139,15 @@ public:
   inline void z(int z) {
     value_[2]=z;
   }
+  inline int& modifiable_x() {
+    return value_[0];
+  }
+  inline int& modifiable_y() {
+    return value_[1];
+  }
+  inline int& modifiable_z() {
+    return value_[2];
+  }
   // get the array pointer
   inline int* get_pointer() {
     return value_;
