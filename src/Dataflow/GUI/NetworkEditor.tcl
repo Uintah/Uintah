@@ -1054,9 +1054,12 @@ proc loadMacroModules {group_info} {
 # SCIRUN_DATA was not set.)
 #
 proc getDataDirectory { dataset } {
-    tk_messageBox -type ok -parent . -message \
-         "The '$dataset' dataset was specified (either by the enviroment variable SCIRUN_DATASET or by the network loaded).  However, the location of this dataset was not specified (with the SCIRUN_DATA env var).  Please select a directory (eg: /usr/sci/data/SCIRunData/1.10.0).  Note, this directory must have the '$dataset' subdirectory in it." 
-   return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.10.0]
+   set answer [tk_messageBox -type okcancel -parent . -message \
+         "The '$dataset' dataset was specified (either by the enviroment variable SCIRUN_DATASET or by the network loaded).  However, the location of this dataset was not specified (with the SCIRUN_DATA env var).  Please select a directory (eg: /usr/sci/data/SCIRunData/1.10.0).  Note, this directory must have the '$dataset' subdirectory in it." ]
+   case $answer {
+       ok "return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.10.0]"
+       cancel "netedit quit"
+   }
 }
 
 #
@@ -1068,8 +1071,12 @@ proc getDataDirectory { dataset } {
 proc getSettingsDirectory { warn_user } {
 
    if { "$warn_user" == "true" } {
-      tk_messageBox -type ok -parent . -message \
-         "The enviroment variables SCIRUN_DATA and/or SCIRUN_DATASET are not set (or are invalid).  You must specify a valid data set directory in order to use this net!  You will now be asked to select the directory of the dataset you are interested in.  (eg: /usr/sci/data/SCIRunData/1.10.0/sphere) (FYI, if you set these environment variables, you will not need to select a directory manually when you load this network.)" 
+      set answer [tk_messageBox -type okcancel -parent . -message \
+         "The enviroment variables SCIRUN_DATA and/or SCIRUN_DATASET are not set (or are invalid).  You must specify a valid data set directory in order to use this net!  You will now be asked to select the directory of the dataset you are interested in.  (eg: /usr/sci/data/SCIRunData/1.10.0/sphere) (FYI, if you set these environment variables, you will not need to select a directory manually when you load this network.)" ]
+       case $answer {
+	   ok "return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.10.0]"
+	   cancel "netedit quit"
+       }
    }
    return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.10.0]
 }
