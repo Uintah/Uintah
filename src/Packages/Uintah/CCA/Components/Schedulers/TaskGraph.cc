@@ -51,7 +51,8 @@ TaskGraph::initialize()
     delete *iter;
 
   d_tasks.clear();
-  d_initreqs.clear();
+  d_initRequires.clear();
+  d_initRequiredVars.clear();
   edges.clear();
 }
 
@@ -218,16 +219,20 @@ TaskGraph::setupTaskConnections()
    NOT_FINISHED("new task stuff (addTask - skip)");
 #endif
 
+#if 0 // moved to addTask
   // Gather a list of requirements
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
     Task* task = *iter;
     for(Task::Dependency* req = task->getRequires();
 	req != 0; req=req->next){
-      if(req->dw == Task::OldDW)
-	d_initreqs.insert(req->var);
+      if(req->dw == Task::OldDW) {
+	d_initRequires.push_back(req);
+	d_initRequiredVars.insert(req->var);
+      }
     }
   }
-
+#endif
+  
   // Connect the tasks together using the computes/requires info
   // Also do a type check
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
@@ -422,6 +427,14 @@ TaskGraph::addTask(Task* task, const PatchSet* patchset,
     d_tasks.push_back(task);
     if(dbg.active())
       dbg << "Adding task: " << *task << "\n";
+  }
+
+  //  maintain d_initRequires and d_initRequiredVars
+  for(Task::Dependency* req = task->getRequires(); req != 0; req=req->next){
+    if(req->dw == Task::OldDW) {
+      d_initRequires.push_back(req);
+      d_initRequiredVars.insert(req->var);
+    }
   }
 }
 
