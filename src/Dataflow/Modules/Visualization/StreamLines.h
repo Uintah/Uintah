@@ -26,6 +26,7 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/CurveField.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <algorithm>
 
 namespace SCIRun {
