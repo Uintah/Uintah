@@ -44,7 +44,6 @@ Applies an averaging filter to an image.  Computes an image where a given pixel 
       <name>radius</name>
       <type>FilterType::InputSizeType</type>
       <call>SetRadius</call>
-      <default>2</default>
     </param>
   </parameters>
 
