@@ -2,15 +2,17 @@
 #include <config/sci.cf>
 
 OBJS = AugmentSurf.o  ContoursToSurf.o  GenSurface.o  LabelSurface.o \
-	RescaleSurface.o  SurfToGeom.o 
+	RescaleSurface.o  SurfToGeom.o  SurfGen.o mySimpSurface.o \
+	SurfBust.o
 SRCS = AugmentSurf.cc ContoursToSurf.cc GenSurface.cc LabelSurface.cc \
-	RescaleSurface.cc SurfToGeom.cc
+	RescaleSurface.cc SurfToGeom.cc SurfGen.cc mySimpSurface.cc \
+	SurfBust.cc
 
 LIBNAME = Surface
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lWidgets -lDatatypes -lDataflow -lGeom -lGeometry \
-	-lTCL -lClasslib -lMultitask -lMalloc -lm -lC -lc
+SO_LDFLAGS = -L$(TOP)/lib -lSimplify -lWidgets -lDatatypes -lDataflow \
+	-lGeom -lGeometry -lTCL -lClasslib -lMultitask -lMalloc -lm -lC -lc
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
