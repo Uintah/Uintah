@@ -240,7 +240,7 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
 	break;
       case nrrdKind3DMaskedSymTensor:
 	kind << "set " << id.c_str() << "-kind" << i 
-	    << " {nrrdKind3MaskedSymTensor}";
+	    << " {nrrdKind3DMaskedSymTensor}";
 	gui->execute(kind.str());
 	break;
       case nrrdKind3DTensor:
