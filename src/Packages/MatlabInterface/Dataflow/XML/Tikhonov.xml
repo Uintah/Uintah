@@ -18,21 +18,21 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Matrix1</name>
+        <name>Lead Field (Sensitivity) Matrix</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
-        <name>Matrix2</name>
+        <name>RHS (data)</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>Matrix1</name>
+        <name>Resulting Model (Sources)</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
-        <name>Matrix2</name>
+        <name>Residual</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
