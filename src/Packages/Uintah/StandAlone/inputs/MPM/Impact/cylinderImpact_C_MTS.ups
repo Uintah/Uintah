@@ -14,7 +14,7 @@
 	<maxTime>2</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>1.0e-16</delt_min>
-	<delt_max>1.0e-8</delt_max>
+	<delt_max>1.0e-6</delt_max>
 	<timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
@@ -31,7 +31,6 @@
 	<save label = "p.volume"/>
 	<save label = "p.stress"/>
 	<save label = "p.deformationMeasure"/>
-	<save label = "p.plasticStrain"/>
 	<save label = "p.damage"/>
 	<save label = "g.mass"/>
 	<save label = "g.volume"/>
@@ -75,7 +74,7 @@
                 <burn type = "null" />
                 <include href="inputs/MPM/MaterialData/MaterialConstAnnCopper.xml"/>
 		<constitutive_model type="hyperelastic_plastic">
-                   <tolerance>1.0e-10</tolerance>
+                   <tolerance>5.0e-10</tolerance>
                    <include href="inputs/MPM/MaterialData/IsotropicElasticAnnCopper.xml"/>
                    <include href="inputs/MPM/MaterialData/MTSPlasticAnnCopper.xml"/>
                    <include href="inputs/MPM/MaterialData/JohnsonCookDamageAnnCopper.xml"/>
