@@ -45,6 +45,7 @@
 #include <sci_glu.h>
 #include <sci_glx.h>
 
+
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/logo.h>
 #include <Core/Containers/StringUtil.h>
@@ -90,7 +91,6 @@ int CAPTURE_Z_DATA_HACK = 0;
 static OpenGL* current_drawer=0;
 static const int pick_buffer_size = 512;
 static const double pick_window = 10.0;
-
 
 
 bool
@@ -553,7 +553,9 @@ OpenGL::render_and_save_image(int x, int y,
     for (hi_res.col = 0; hi_res.col < ncols; hi_res.col++)
     {
       // render the col and row in the hi_res struct
+      viewwindow->doingImage = true; // forces pbuffer if available
       redraw_frame();
+      viewwindow->doingImage = false;
       gui->lock();
 	
       // Tell OpenGL where to put the data in our pixel buffer
@@ -571,7 +573,6 @@ OpenGL::render_and_save_image(int x, int y,
 		   (num_channels == 3) ? GL_RGB : GL_BGRA,
 		   (channel_bytes == 1) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
 		   pixels);
-
       gui->unlock();
     }
     // OpenGL renders upside-down to image_file writing
@@ -737,7 +738,6 @@ OpenGL::redraw_frame()
     glXMakeCurrent(dpy, win, cx);
     gui->unlock();
   }
-
   // Set up a pbuffer associated with dpy
   // Get a lock on the geometry database...
   // Do this now to prevent a hold and wait condition with TCLTask
@@ -747,7 +747,7 @@ OpenGL::redraw_frame()
 #if defined(HAVE_PBUFFER)
   int screen = Tk_ScreenNumber(tkwin);
   if( xres != pbuffer.width() || yres != pbuffer.height() ){
-    //    cerr<<"width = "<<xres<<", height == "<<yres<<"\n";
+//     cerr<<"creating new pbuffer: width = "<<xres<<", height == "<<yres<<"\n";
     pbuffer.destroy();
     if( !pbuffer.create( dpy, screen, xres, yres, 8, 8 ) ) {
       printf( "Pbuffer create failed.  PBuffering will not be used.\n" );
@@ -756,13 +756,13 @@ OpenGL::redraw_frame()
     }
   }
 
-  if(viewwindow->doingMovie && pbuffer.is_valid()){
+  if((viewwindow->doingMovie || viewwindow->doingImage) && pbuffer.is_valid()){
     pbuffer.makeCurrent();
     glDrawBuffer( GL_FRONT );
-
   } else if( have_pbuffer_ && pbuffer.is_current() ) {
     glXMakeCurrent(dpy, win, cx);
   }
+
 #endif
 
   // Clear the screen...
@@ -824,7 +824,8 @@ OpenGL::redraw_frame()
     }
 
 #if defined(HAVE_PBUFFER)
-    if( pbuffer.is_current() && !viewwindow->doingMovie ){
+    if( pbuffer.is_current() &&
+	(!viewwindow->doingMovie && !viewwindow->doingImage) ){
       glXMakeCurrent(dpy, win, cx);
     }
 #endif
@@ -890,7 +891,7 @@ OpenGL::redraw_frame()
 	{
 #if defined(HAVE_PBUFFER)
 	  if(have_pbuffer_){
-	    if(!viewwindow->doingMovie){
+	    if(!viewwindow->doingMovie && !viewwindow->doingImage){
 	      if( pbuffer.is_current() )
 		cerr<<"pbuffer is current while not doing Movie\n";
 #endif
@@ -1195,7 +1196,8 @@ OpenGL::redraw_frame()
 
       // Show the pretty picture
 #if defined(HAVE_PBUFFER)
-      if( !have_pbuffer_ || !viewwindow->doingMovie )
+      if( !have_pbuffer_ ||
+	  (!viewwindow->doingMovie && !viewwindow->doingImage) )
 #endif
       glXSwapBuffers(dpy, win);
 
@@ -1315,7 +1317,8 @@ OpenGL::redraw_frame()
 #endif
     }
 #if defined(HAVE_PBUFFER)
-      if( !have_pbuffer_ || !viewwindow->doingMovie )
+      if( !have_pbuffer_ ||
+	  (!viewwindow->doingMovie && !viewwindow->doingImage ) )
 #endif
     glXSwapBuffers(dpy, win);
   }
