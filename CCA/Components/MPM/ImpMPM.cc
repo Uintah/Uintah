@@ -274,10 +274,6 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gExternalForceLabel);
   t->computes(lb->gInternalForceLabel);
   t->computes(lb->TotalMassLabel);
-  t->computes(lb->dispIncQNorm0);
-  t->computes(lb->dispIncNormMax);
-  t->computes(lb->dispIncNorm);
-  t->computes(lb->dispIncQNorm);
 
   sched->addTask(t, patches, matls);
 }
@@ -519,8 +515,6 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   task->requires(Task::NewDW,lb->gContactLabel,        Ghost::None,0);
 
   task->requires(Task::OldDW,d_sharedState->get_delt_label());
-  task->requires(Task::NewDW,lb->dispIncQNorm0);
-  task->requires(Task::NewDW,lb->dispIncNormMax);
 
   sched->addTask(task,d_perproc_patches,d_sharedState->allMaterials());
 }
@@ -767,11 +761,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     new_dw->allocateAndPut(gmassglobal,lb->gMassLabel,
 		     d_sharedState->getAllInOneMatl()->get(0), patch);
     gmassglobal.initialize(d_SMALL_NUM_MPM);
-
-    new_dw->put(sum_vartype(0.),lb->dispIncQNorm0);
-    new_dw->put(sum_vartype(0.),lb->dispIncNormMax);
-    new_dw->put(sum_vartype(0.),lb->dispIncQNorm);
-    new_dw->put(sum_vartype(0.),lb->dispIncNorm);
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
