@@ -54,6 +54,8 @@ hook up user interface buttons
 #include <Geom/Tube.h>
 #include <Geometry/Point.h>
 #include <Malloc/Allocator.h>
+#include <Math/MinMax.h>
+#include <Multitask/Task.h>
 #include <Widgets/GaugeWidget.h>
 #include <Widgets/PointWidget.h>
 #include <Widgets/RingWidget.h>
@@ -86,12 +88,14 @@ struct SLEulerTracer : public SLTracer {
     virtual int advance(const VectorFieldHandle&, double stepsize, int skip);
 };    
 
+#if 0
 struct SLExactTracer : public SLTracer {
     SLExactTracer(const Point&, double s, double t,
 		  const VectorFieldHandle& vfield, double sign);
     virtual ~SLExactTracer();
     virtual int advance(const VectorFieldHandle&, double stepsize, int skip);
-};    
+};   
+#endif 
 
 struct SLRK4Tracer : public SLTracer {
     int stagnate;
@@ -153,6 +157,18 @@ public:
 				    const VectorFieldHandle& vfield);
 };
 
+struct SLSquareSource : public SLSource {
+    ScaledFrameWidget* fw;
+public:
+    SLSquareSource(Streamline* sl);
+    virtual ~SLSquareSource();
+    virtual void find(const Point&, const Vector& axis, double scale);
+    virtual Point trace_start(double s, double t);
+    virtual void get_n(int& s, int& t);
+    virtual Vector ribbon_direction(double s, double t, const Point& p,
+				    const VectorFieldHandle& vfield);
+};
+
 struct SLSourceInfo {
     int sid;
     GeomGroup* widget_group;
@@ -204,24 +220,31 @@ class Streamline : public Module {
 			  double s, double t,
 			  const VectorFieldHandle& vfield,
 			  ALGS alg_enum, double sign);
-    void do_streamline(SLSourceInfo* si, const VectorFieldHandle&,
-		       double stepsize, int maxsteps, int skip,
-		       const ScalarFieldHandle& sfield,
-		       const ColormapHandle& cmap, ALGS alg_enum);
-    void do_streamtube(SLSourceInfo* si, const VectorFieldHandle&,
-		       double stepsize, int maxsteps, int skip,
-		       const ScalarFieldHandle& sfield,
-		       const ColormapHandle& cmap, ALGS alg_enum,
-		       double tubesize);
-    void do_streamribbon(SLSourceInfo* si, const VectorFieldHandle&,
-			 double stepsize, int maxsteps, int skip,
-			 const ScalarFieldHandle& sfield,
-			 const ColormapHandle& cmap, ALGS alg_enum,
+    Array1<SLTracer*> tracers;
+    int np;
+    double stepsize;
+    int maxsteps;
+    int skip;
+    Array1<GeomPolyline*> lines;
+    Array1<GeomTube*> tubes;
+    double tubesize;
+    Mutex grouplock;
+    VectorFieldHandle field;
+    ScalarFieldHandle sfield;
+    ColormapHandle cmap;
+    SLSourceInfo* si;
+
+    int upstream, downstream;
+
+public:
+    void do_streamline(SLSourceInfo* si, ALGS alg_enum);
+    void parallel_streamline(int proc);
+    void do_streamtube(SLSourceInfo* si, ALGS alg_enum);
+    void parallel_streamtube(int proc);
+    void do_streamribbon(SLSourceInfo* si, ALGS alg_enum,
 			 double ribbonsize);
-    void do_streamsurface(SLSourceInfo* si, const VectorFieldHandle&,
-			  double stepsize, int maxsteps, int skip,
-			  const ScalarFieldHandle& sfield,
-			  const ColormapHandle& cmap, ALGS alg_enum,
+    void parallel_streamribbon(int proc);
+    void do_streamsurface(SLSourceInfo* si,ALGS alg_enum,
 			  double maxbend);
     inline SLTracer* left_tracer(const Array1<SLTracer*> tracers, int i){
 	return tracers[i*2];
@@ -299,12 +322,9 @@ Module* Streamline::clone(int deep)
 void Streamline::execute()
 {
     // Get the data from the ports...
-    VectorFieldHandle vfield;
-    if(!infield->get(vfield))
+    if(!infield->get(field))
 	return;
-    ScalarFieldHandle sfield;
     incolorfield->get(sfield);
-    ColormapHandle cmap;
     int have_cmap=incolormap->get(cmap);
     if(!have_cmap)
 	sfield=0;
@@ -312,7 +332,7 @@ void Streamline::execute()
     HashTableIter<int, SLSourceInfo*> iter(&source_info);
     for(iter.first();iter.ok();++iter){
 	// Find the current source...
-	SLSourceInfo* si=iter.get_data();
+        si=iter.get_data();
 	clString sidstr(id+"-"+to_string(si->sid));
 	cerr << "Processing source: " << si->sid << endl;
 
@@ -323,23 +343,37 @@ void Streamline::execute()
 	    return;
 	}
 
-	si->pick_source(sname, vfield, this);
+	si->pick_source(sname, field, this);
 
 	// Calculate Streamlines
-	double stepsize;
 	if(!get_tcl_doublevar(sidstr, "stepsize", stepsize)){
 	    error("Error reading stepsize variable");
 	    return;
 	}
-	int maxsteps;
 	if(!get_tcl_intvar(sidstr, "maxsteps", maxsteps)){
 	    error("Error reading maxsteps variable");
 	    return;
 	}
-	int skip;
 	if(!get_tcl_intvar(sidstr, "skip", skip)){
 	    error("Error reading skip variable");
 	    return;
+	}
+	clString dir;
+	if(!get_tcl_stringvar(sidstr, "direction", dir)){
+	    error("Error reading direction variable");
+	    return;
+	}
+	if(dir == "Upstream"){
+	  upstream=1;
+	  downstream=0;
+	} else if(dir == "Downstream"){
+	  downstream=1;
+	  upstream=0;
+	} else if(dir == "Both"){
+	  upstream=downstream=1;
+	} else {
+	  error("Bad value in direction variable");
+	  return;
 	}
 	maxsteps/=skip;
 
@@ -384,32 +418,27 @@ void Streamline::execute()
 
 	// Do it...
 	if(markertype == "Line"){
-	    do_streamline(si, vfield, stepsize, maxsteps, skip,
-			  sfield, cmap, alg_enum);
+	    do_streamline(si, alg_enum);
 	} else if(markertype == "Tube"){
-	    double tubesize;
 	    if(!get_tcl_doublevar(sidstr, "tubesize", tubesize)){
 		error("Error reading tubesize variable");
 		return;
 	    }
-	    do_streamtube(si, vfield, stepsize, maxsteps, skip,
-			  sfield, cmap, alg_enum, tubesize);
+	    do_streamtube(si, alg_enum);
 	} else if(markertype == "Ribbon"){
 	    double ribbonsize;
 	    if(!get_tcl_doublevar(sidstr, "ribbonsize", ribbonsize)){
 		error("Error reading ribbonsize variable");
 		return;
 	    }
-	    do_streamribbon(si, vfield, stepsize, maxsteps, skip,
-			    sfield, cmap, alg_enum, ribbonsize);
+	    do_streamribbon(si, alg_enum, ribbonsize);
 	} else if(markertype == "Surface"){
 	    double maxbend;
 	    if(!get_tcl_doublevar(sidstr, "maxbend", maxbend)){
 		error("Error reading ribbonsize variable");
 		return;
 	    }
-	    do_streamsurface(si, vfield, stepsize, maxsteps, skip,
-			     sfield, cmap, alg_enum, maxbend);
+	    do_streamsurface(si, alg_enum, maxbend);
 	} else {
 	    error("Unknown marketype");
 	    return;
@@ -422,6 +451,9 @@ void Streamline::execute()
     }
     // Flush it all out..
     ogeom->flushViews();
+    field=0;
+    sfield=0;
+    cmap=0;
 }
 
 SLTracer* Streamline::make_tracer(SLSource* source, double s, double t,
@@ -438,8 +470,10 @@ SLTracer* Streamline::make_tracer(const Point& start,
 				  ALGS alg_enum, double sign)
 {
     switch(alg_enum){
+#if 0
     case Exact:
 	return scinew SLExactTracer(start, s, t, vfield, sign);
+#endif
     case Euler:
 	return scinew SLEulerTracer(start, s, t, vfield, sign);
     case RK4:
@@ -459,15 +493,21 @@ void Streamline::make_tracers(SLSource* source, Array1<SLTracer*>& tracers,
 	for(int t=0;t<nt;t++){
 	    Point start(source->trace_start(s, t));
 	    if(ribbonsize == 0){
+	      if(downstream)
 		tracers.add(make_tracer(start, s, t, vfield, alg_enum, 1));
+	      if(upstream)
 		tracers.add(make_tracer(start, s, t, vfield, alg_enum, -1));
 	    } else {
 		Vector v(source->ribbon_direction(s, t, start, vfield)
 			 *(ribbonsize/2));
-		tracers.add(make_tracer(start-v, s, t, vfield, alg_enum, 1));
-		tracers.add(make_tracer(start+v, s, t, vfield, alg_enum, 1));
-		tracers.add(make_tracer(start-v, s, t, vfield, alg_enum, -1));
-		tracers.add(make_tracer(start+v, s, t, vfield, alg_enum, -1));
+		if(downstream){
+		  tracers.add(make_tracer(start-v, s, t, vfield, alg_enum, 1));
+		  tracers.add(make_tracer(start+v, s, t, vfield, alg_enum, 1));
+		}
+		if(upstream){
+		  tracers.add(make_tracer(start-v, s, t, vfield, alg_enum, -1));
+		  tracers.add(make_tracer(start+v, s, t, vfield, alg_enum, -1));
+		}
 	    }
 	}
     }
@@ -528,10 +568,10 @@ GeomVertex* Streamline::get_vertex(const Point& p,
 	double sval;
 	if(sfield->interpolate(p, sval)){
 	    MaterialHandle matl(cmap->lookup(sval));
-	    return scinew GeomCVertex(p, matl->diffuse);
+	    return new GeomCVertex(p, matl->diffuse);
 	}
     }
-    return scinew GeomVertex(p);
+    return new GeomVertex(p);
 }
 
 GeomVertex* Streamline::get_vertex(const Point& p,
@@ -552,10 +592,10 @@ GeomVertex* Streamline::get_vertex(const Point& p,
 	double sval;
 	if(sfield->interpolate(p, sval)){
 	    MaterialHandle matl(cmap->lookup(sval));
-	    return scinew GeomNMVertex(p, n, matl);
+	    return new GeomNMVertex(p, n, matl);
 	}
     }
-    return scinew GeomNVertex(p, n);
+    return new GeomNVertex(p, n);
 }
 
 GeomVertex* Streamline::get_vertex(const Point& p,
@@ -571,74 +611,77 @@ GeomVertex* Streamline::get_vertex(const Point& p,
 	double sval;
 	if(sfield->interpolate(p, sval, ix)){
 	    MaterialHandle matl(cmap->lookup(sval));
-	    return scinew GeomNMVertex(p, n, matl);
+	    return new GeomNMVertex(p, n, matl);
 	}
     }
-    return scinew GeomNVertex(p, n);
+    return new GeomNVertex(p, n);
+}
+
+void Streamline::parallel_streamline(int proc)
+{
+  double t=0;
+  GeomGroup* group=0;
+  int step=0;
+  int ninside=1;
+  int st=proc*tracers.size()/np;
+  int et=(proc+1)*tracers.size()/np;
+  while(step< maxsteps && ninside){
+    step++;
+    // If the group is discontinued, we have to start new polylines
+    GeomGroup* newgroup=si->get_group(t);
+    if(newgroup != group){
+      group=newgroup;
+      for(int i=st;i<et;i++){
+	if(tracers[i]->inside){
+	  lines[i]=scinew GeomPolyline;
+	  grouplock.lock();
+	  group->add(lines[i]);
+	  grouplock.unlock();
+	  GeomVertex* vtx=get_vertex(tracers[i]->p, sfield, cmap);
+	  lines[i]->add(vtx);
+	} else {
+	    lines[i]=0;
+	}
+      }
+    }
+    t+=stepsize;
+      
+    // Advance the tracers
+    ninside=0;
+    for(int i=st;i<et;i++){
+      int inside=tracers[i]->advance(field, stepsize, skip);
+      if(inside){
+	GeomVertex* vtx=get_vertex(tracers[i]->p, sfield, cmap);
+	lines[i]->add(vtx);
+      }
+      ninside+=inside;
+    }
+  }
+  for(int i=st;i<et;i++){
+    delete tracers[i];
+  }
+}
+
+static void do_parallel_streamline(void* obj, int proc)
+{
+  Streamline* module=(Streamline*)obj;
+  module->parallel_streamline(proc);
 }
 
 void Streamline::do_streamline(SLSourceInfo* si,
-			       const VectorFieldHandle& field,
-			       double stepsize, int maxsteps, int skip,
-			       const ScalarFieldHandle& sfield,
-			       const ColormapHandle& cmap,
 			       ALGS alg_enum)
 {
-    SLSource* source=si->source;
-    Array1<SLTracer*> tracers;
-    make_tracers(source, tracers, field, alg_enum);
-    Array1<GeomPolyline*> lines(tracers.size());
-    double t=0;
-    GeomGroup* group=0;
-    int step=0;
-    int ninside=1;
-    while(step< maxsteps && ninside){
-	step++;
-	// If the group is discontinued, we have to start new polylines
-	GeomGroup* newgroup=si->get_group(t);
-	if(newgroup != group){
-	    group=newgroup;
-	    for(int i=0;i<lines.size();i++){
-		if(tracers[i]->inside){
-		    lines[i]=scinew GeomPolyline;
-		    group->add(lines[i]);
-		    GeomVertex* vtx=get_vertex(tracers[i]->p, sfield, cmap);
-		    lines[i]->add(vtx);
-		} else {
-		    lines[i]=0;
-		}
-	    }
-	}
-	t+=stepsize;
-
-	// Advance the tracers
-	ninside=0;
-	for(int i=0;i<tracers.size();i++){
-	    int inside=tracers[i]->advance(field, stepsize, skip);
-	    if(inside){
-		GeomVertex* vtx=get_vertex(tracers[i]->p, sfield, cmap);
-		lines[i]->add(vtx);
-	    }
-	    ninside+=inside;
-	}
-    }
-    for(int i=0;i<tracers.size();i++){
-	delete tracers[i];
-    }
+    tracers.remove_all();
+    make_tracers(si->source, tracers, field, alg_enum);
+    lines.resize(tracers.size());
+    np=Min(tracers.size(), Task::nprocessors());
+    Task::multiprocess(np, do_parallel_streamline, this);
 }
 
-void Streamline::do_streamtube(SLSourceInfo* si,
-			       const VectorFieldHandle& field,
-			       double stepsize, int maxsteps, int skip,
-			       const ScalarFieldHandle& sfield,
-			       const ColormapHandle& cmap,
-			       ALGS alg_enum,
-			       double tubesize)
+void Streamline::parallel_streamtube(int proc)
 {
-    Array1<SLTracer*> tracers;
-    SLSource* source=si->source;
-    make_tracers(source, tracers, field, alg_enum);
-    Array1<GeomTube*> tubes(tracers.size());
+    int st=proc*tracers.size()/np;
+    int et=(proc+1)*tracers.size()/np;
     double t=0;
     GeomGroup* group=0;
     int step=0;
@@ -649,7 +692,7 @@ void Streamline::do_streamtube(SLSourceInfo* si,
 	GeomGroup* newgroup=si->get_group(t);
 	if(newgroup != group){
 	    group=newgroup;
-	    for(int i=0;i<tubes.size();i++){
+	    for(int i=st;i<et;i++){
 		if(tracers[i]->inside){
 		    tubes[i]=scinew GeomTube;
 		    group->add(tubes[i]);
@@ -667,7 +710,7 @@ void Streamline::do_streamtube(SLSourceInfo* si,
 
 	// Advance the tracers
 	ninside=0;
-	for(int i=0;i<tracers.size();i++){
+	for(int i=st;i<et;i++){
 	    int inside=tracers[i]->advance(field, stepsize, skip);
 	    if(inside){
 		Vector grad=tracers[i]->grad;
@@ -679,21 +722,35 @@ void Streamline::do_streamtube(SLSourceInfo* si,
 	    ninside+=inside;
 	}
     }
-    for(int i=0;i<tracers.size();i++){
+    for(int i=st;i<et;i++){
 	delete tracers[i];
     }
 }
 
+static void do_parallel_streamtube(void* obj, int proc)
+{
+  Streamline* module=(Streamline*)obj;
+  module->parallel_streamtube(proc);
+}
+
+
+void Streamline::do_streamtube(SLSourceInfo* si,
+			       ALGS alg_enum)
+{
+    SLSource* source=si->source;
+    tracers.remove_all();
+    make_tracers(source, tracers, field, alg_enum);
+    tubes.resize(tracers.size());
+    np=Min(tracers.size(), Task::nprocessors());
+    Task::multiprocess(np, do_parallel_streamtube, this);
+}
+
 void Streamline::do_streamribbon(SLSourceInfo* si,
-				 const VectorFieldHandle& field,
-				 double stepsize, int maxsteps, int skip,
-				 const ScalarFieldHandle& sfield,
-				 const ColormapHandle& cmap,
 				 ALGS alg_enum,
 				 double ribbonsize)
 
 {
-    Array1<SLTracer*> tracers;
+    tracers.remove_all();
     SLSource* source=si->source;
     make_tracers(source, tracers, field, alg_enum, ribbonsize);
     Array1<GeomTriStrip*> ribbons(tracers.size()/2);
@@ -799,14 +856,10 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 }
 
 void Streamline::do_streamsurface(SLSourceInfo* si,
-				  const VectorFieldHandle& field,
-				  double stepsize, int maxsteps, int skip,
-				  const ScalarFieldHandle& sfield,
-				  const ColormapHandle& cmap,
 				  ALGS alg_enum,
 				  double maxbend)
 {
-    Array1<SLTracer*> tracers;
+    tracers.remove_all();
     SLSource* source=si->source;
     make_tracers(source, tracers, field, alg_enum);
     if(tracers.size() <= 1){
@@ -1176,6 +1229,63 @@ Vector SLRingSource::ribbon_direction(double s, double,
     return v1*Sin(angle)+v2*Cos(angle);
 }
 
+SLSquareSource::SLSquareSource(Streamline* sl)
+: SLSource(sl, "Square")
+{
+    widget=fw=scinew ScaledFrameWidget(sl, &sl->widget_lock, 1);
+    fw->SetRatioR(0.2);
+    fw->SetRatioD(0.2);
+}
+
+SLSquareSource::~SLSquareSource()
+{
+}
+
+void SLSquareSource::find(const Point& start, const Vector& downstream,
+			double scale)
+{
+    Vector v1, v2;
+    downstream.find_orthogonal(v1, v2);
+    fw->SetPosition(start, start+v1*(scale*0.3), start+v2*(scale*0.3));
+    fw->SetScale(scale/50);
+}
+
+Point SLSquareSource::trace_start(double s, double t)
+{
+    Point 	corner, center, R, D;
+    fw->GetPosition( center, R, D);
+    Vector v1 = R - center,
+           v2 = D - center;
+         
+    // calculate the corner and the
+    // u and v vectors of the cutting plane
+    corner = (center - v1) - v2;
+    int ns, nt;
+    get_n(ns, nt);
+    Vector u = v1 * (2.0/ns),
+           v = v2 * (2.0/nt);
+
+    Point p(corner+u*s+v*t);
+    return p;
+}
+
+void SLSquareSource::get_n(int& ns, int& nt)
+{
+    ns=fw->GetRatioR()*100;
+    nt=fw->GetRatioD()*100;
+}
+
+Vector SLSquareSource::ribbon_direction(double, double,
+				      const Point&,
+				      const VectorFieldHandle&)
+{
+    Point 	corner, center, R, D;
+    fw->GetPosition( center, R, D);
+    Vector v1 = R - center,
+           v2 = D - center;
+    return v1;
+}
+
 SLTracer::SLTracer(const Point& p, double s, double t,
 		   const VectorFieldHandle& vfield, double sign)
 : p(p), s(s), t(t), inside(1), sign(sign)
@@ -1188,6 +1298,8 @@ SLTracer::SLTracer(const Point& p, double s, double t,
 SLTracer::~SLTracer()
 {
 }
+
+#if 0
 
 SLExactTracer::SLExactTracer(const Point& p, double s, double t,
 			     const VectorFieldHandle& vfield, double sign)
@@ -1286,6 +1398,7 @@ int SLExactTracer::advance(const VectorFieldHandle& vfield, double stepsize, int
     }
     return 1;
 }
+#endif
 
 SLEulerTracer::SLEulerTracer(const Point& p, double s, double t,
 			     const VectorFieldHandle& vfield,
@@ -1483,6 +1596,7 @@ SLSourceInfo::SLSourceInfo(int sid, Streamline* module, GeometryOPort* ogeom)
     sources.add(scinew SLPointSource(module));
     sources.add(scinew SLLineSource(module));
     sources.add(scinew SLRingSource(module));
+    sources.add(scinew SLSquareSource(module));
     // Make the group;
     widget_group=scinew GeomGroup;
     for(int i=0;i<sources.size();i++)
