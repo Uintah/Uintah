@@ -392,9 +392,9 @@ int main(int argc, char* argv[])
 			  ncounters, c0, c1), buf);
 #endif
 #if 1
-    new Thread(new Worker(dpy, scene, i,
+    (new Thread(new Worker(dpy, scene, i,
 			  pp_size, scratchsize,
-			  ncounters, c0, c1), buf);
+			  ncounters, c0, c1), buf))->detach();
     //			     ncounters, c0, c1), buf, group);
 #endif
   }
