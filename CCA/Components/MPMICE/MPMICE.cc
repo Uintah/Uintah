@@ -1423,7 +1423,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       new_dw->allocateAndPut(sp_vol_new[m], Ilb->sp_vol_CCLabel,    indx,patch);
       speedSound[m].initialize(0.0);
     }
-    
+
     press_new.copyData(press);
 
     //__________________________________
@@ -1441,31 +1441,18 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
         if(ice_matl){                // I C E
          rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
-
-         ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m][c],
-                                         cv[m][c],Temp[m][c],
-                                         press_eos[m],dp_drho[m],dp_de[m]);
-         c_2 = dp_drho[m] + dp_de[m] * 
-           (press_eos[m]/(rho_micro[m][c]*rho_micro[m][c]));
         } 
 
         if(mpm_matl){                //  M P M
 /*`==========TESTING==========*/
-// This might be wrong.  Try 1/sp_vol -- Todd 11/22
+// This might be wrong.  Try 1/sp_vol -- Todd 11/22/199?
            rho_micro[m][c] =  
             mpm_matl->getConstitutiveModel()->
             computeRhoMicroCM(press_new[c],press_ref, mpm_matl); 
             
 //            rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
 /*==========TESTING==========`*/
-          mpm_matl->getConstitutiveModel()->
-            computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
-                              dp_drho[m], c_2,mpm_matl);
-            
         }
-    //  speedSound[m][c] = sqrt(c_2)/gamma[m];  // Isothermal speed of sound
-        speedSound[m][c] = sqrt(c_2);           // Isentropic speed of sound
-        
         mat_volume[m] = (rho_CC_old[m][c]*cell_vol)/rho_micro[m][c];
         total_mat_vol += mat_volume[m];
       }  // numAllMatls loop
@@ -1488,7 +1475,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           desc<<"TOP_equilibration_Mat_"<< indx<<"_patch_"<<patch->getID();
           d_ice->printData( indx,patch,1,desc.str(),"rho_CC_new",rho_CC_new[m]);
           d_ice->printData( indx,patch,1,desc.str(),"rho_micro", rho_micro[m]);
-      //  d_ice->printData( indx,patch,0,desc.str(),"speedSound",speedSound[m]);
           d_ice->printData( indx,patch,1,desc.str(),"Temp_CC",   Temp[m]);     
           d_ice->printData( indx,patch,1,desc.str(),"vol_frac_CC",vol_frac[m]);
         }
@@ -1590,39 +1576,36 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          vol_frac[m][c]   = rho_CC_new[m][c]/rho_micro[m][c];
        }
        //__________________________________
-       // Find the speed of sound
-       // needed by eos and the explicit
-       // del pressure function
-       for (int m = 0; m < numALLMatls; m++)  {
-         Material* matl = d_sharedState->getMaterial( m );
-         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-         if(ice_matl){
-           ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m][c],
-                                              cv[m][c],Temp[m][c],press_eos[m],
-                                              dp_drho[m],dp_de[m]);
-
-           c_2 = dp_drho[m] + dp_de[m] * 
-                      (press_eos[m]/(rho_micro[m][c]*rho_micro[m][c]));
-         }
-         if(mpm_matl){
-            mpm_matl->getConstitutiveModel()->
-                 computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
-                                   dp_drho[m],c_2,mpm_matl);
-         }
-
-     //  speedSound[m][c] = sqrt(c_2)/gamma[m];// Isothermal speed of sound
-         speedSound[m][c] = sqrt(c_2);         // Isentropic speed of sound
-       }
-       //__________________________________
        // - Test for convergence 
        //  If sum of vol_frac_CC ~= vol_frac_not_close_packed then converged 
        sum = 0.0;
        for (int m = 0; m < numALLMatls; m++)  {
          sum += vol_frac[m][c];
        }
-       if (fabs(sum-vol_frac_not_close_packed) < convergence_crit)
+       if (fabs(sum-vol_frac_not_close_packed) < convergence_crit){
          converged = true;
+         //__________________________________
+         // Find the speed of sound based on the converged solution
+         for (int m = 0; m < numALLMatls; m++)  {
+           Material* matl = d_sharedState->getMaterial( m );
+           ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+           MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+           if(ice_matl){
+             ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m][c],
+                                              cv[m][c],Temp[m][c],press_eos[m],
+                                              dp_drho[m],dp_de[m]);
+
+             c_2 = dp_drho[m] + dp_de[m] * 
+                        (press_eos[m]/(rho_micro[m][c]*rho_micro[m][c]));
+           }
+           if(mpm_matl){
+              mpm_matl->getConstitutiveModel()->
+                   computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
+                                     dp_drho[m],c_2,mpm_matl);
+           }
+           speedSound[m][c] = sqrt(c_2);         // Isentropic speed of sound
+         }
+       }
      }   // end of converged
 
       delPress_tmp[c] = delPress;
