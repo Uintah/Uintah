@@ -3,6 +3,7 @@
 # makefile, at $(TOP).  The targets for this directory are
 # specified in sub.mk in this directory
 #
-TOP := @TOP@
+SRCTOP := @SRCTOP@
+OBJTOP := @OBJTOP@
 
-include $(TOP)/scripts/default.mk
+include $(OBJTOP)/$(SRCTOP)/scripts/default.mk
