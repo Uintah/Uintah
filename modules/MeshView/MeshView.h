@@ -17,6 +17,7 @@
 #include <UserModule.h>
 #include <Geometry/Point.h>
 #include <Field3D.h>
+#include <MUI.h>
 #include "connect.h"
 
 class ColormapPort;
@@ -27,21 +28,24 @@ class ObjGroup;
 class MeshView : public UserModule {
     GeometryOPort* ogeom;
     int abort_flag;
-
-    int numLevels;
+    MUI_slider_int *levSlide;
+    
+    int numLevels, oldLev;
+    int seedTet, oldSeed;
+    double Xmin, Xmax, Ymin, Ymax, Zmin, Zmax;
+    double clipX, oldClipX, clipY, oldClipY, clipZ, oldClipZ;
+    int deep;
+    int allLevels;
 
     int widget_id;
-
     double *data;
     int *tetra;
-    int *connect;
     
     int numVerts;
     int numTetra;
-    int *numCnct;
 
     LPTR *list;
-	LPTR *levels;
+    int	*levels;
 
 public:
     MeshView();
@@ -54,6 +58,7 @@ public:
     LPTR newList();
     void addTet(int row, int ind);
     void makeLevels();
+    void readDat();
 };
 
 #endif
