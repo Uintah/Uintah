@@ -57,14 +57,6 @@ public:
 private:
   GuiString datasetsStr_;
 
-  GuiInt iWrap_;
-  GuiInt jWrap_;
-  GuiInt kWrap_;
-
-  int iwrap_;
-  int jwrap_;
-  int kwrap_;
-
   vector< int > mesh_;
   vector< int > data_;
 
@@ -80,14 +72,6 @@ DECLARE_MAKER(NrrdFieldConverter)
 NrrdFieldConverter::NrrdFieldConverter(GuiContext* context)
   : Module("NrrdFieldConverter", context, Source, "Fields", "Fusion"),
     datasetsStr_(context->subVar("datasets")),
-
-    iWrap_(context->subVar("i-wrap")),
-    jWrap_(context->subVar("j-wrap")),
-    kWrap_(context->subVar("k-wrap")),
-
-    iwrap_(0),
-    jwrap_(0),
-    kwrap_(0),
 
     error_(false)
 {
@@ -224,41 +208,15 @@ NrrdFieldConverter::execute(){
 		// Cartesian coordinates.
 		mesh_.push_back( ic );
 	      } else {
-		error( dataset[0] + "is extra mesh data." );
+		error( dataset[0] + " is extra mesh data." );
 		error_ = true;
 		return;
 	      }
-
-	      structured = true;
-
-	      // Special Case - NIMROD data which has multiple components.
-	    } else if( property.find("Cylindrical - NIMROD") != string::npos ) {
-
-	      if( mesh_.size() == 0 ) {
-		mesh_.resize( 3 );
-		mesh_[0] =  mesh_[1] =  mesh_[2] = -1;
-	      }
-	    
-	      // Sort the three components.
-	      if( dataset[0].find( "R:Scalar" ) != string::npos &&
-		  nHandle->nrrd->dim == 3 ) 
-		mesh_[0] = ic;
-	      else if( dataset[0].find( "Z:Scalar" ) != string::npos && 
-		       nHandle->nrrd->dim == 3 ) 
-		mesh_[1] = ic; 
-	      else if( dataset[0].find( "PHI:Scalar" ) != string::npos && 
-		       nHandle->nrrd->dim == 2 )
-		mesh_[2] = ic;
-	      else {
-		error( dataset[0] + "is unknown NIMROD mesh data." );
-		error_ = true;
-		return;
-	      }	  
 
 	      structured = true;
 
 	    } else {
-	      error( property + "is an unsupported coordinate system." );
+	      error( property + " is an unsupported coordinate system." );
 	      error_ = true;
 	      return;
 	    }
@@ -278,40 +236,9 @@ NrrdFieldConverter::execute(){
 	    mesh_[0] = mesh_[1] = -1;
 	  }
 
-	  // The point list has two attributes: Topology == Unstructured
-	  // and Coordinate System == Cartesian
-	  if( nHandle->get_property( "Coordinate System", property ) ) {
-
-	    // Cartesian Coordinates.
-	    if( property.find("Cartesian") != string::npos ) {
-	      // Check to make sure the list of is rank two (Vector) or
-	      // three (Scalar) and that three are three coordinates.
-	      // If Scalar the last dim must be three.
-	      // If already Vector then nothing ...
-	      if( !(nHandle->nrrd->dim == 3 &&
-		    dataset[0].find( ":Scalar" ) != string::npos &&
-		    nHandle->nrrd->axis[2].size == 3) &&
-		  !(nHandle->nrrd->dim == 2 &&
-		    dataset[0].find( ":Vector" ) != string::npos) )
-		{
-		  error( "Mesh does not contain 3D points." );
-		  error( dataset[0] );
-		  error_ = true;
-		  return;
-		}
-
-	      mesh_[0] = ic;
-	    
-	      unstructured = true;
-	    } else {
-	      error( property + "is an unsupported coordinate system." );
-	      error_ = true;
-	      return;
-	    }
-	  }
 	  // The cell list has two attributes: Topology == Unstructured
 	  // and Cell Type == (see check below).
-	  else if( nHandle->get_property( "Cell Type", property ) ) {
+	  if( nHandle->get_property( "Cell Type", property ) ) {
 
 	    if( !(nHandle->nrrd->dim == 2 &&
 		  (dataset[0].find( ":Vector" ) != string::npos ||
@@ -366,6 +293,36 @@ NrrdFieldConverter::execute(){
 	    mesh_[1] = ic;
 	    unstructured = true;
 
+	  // The point list has two attributes: Topology == Unstructured
+	  // and Coordinate System == Cartesian
+	  } else if( nHandle->get_property( "Coordinate System", property ) ) {
+
+	    // Cartesian Coordinates.
+	    if( property.find("Cartesian") != string::npos ) {
+	      // Check to make sure the list of is rank two (Vector) or
+	      // three (Scalar) and that three are three coordinates.
+	      // If Scalar the last dim must be three.
+	      // If already Vector then nothing ...
+	      if( !(nHandle->nrrd->dim == 3 &&
+		    dataset[0].find( ":Scalar" ) != string::npos &&
+		    nHandle->nrrd->axis[2].size == 3) &&
+		  !(nHandle->nrrd->dim == 2 &&
+		    dataset[0].find( ":Vector" ) != string::npos) )
+		{
+		  error( "Mesh does not contain 3D points." );
+		  error( dataset[0] );
+		  error_ = true;
+		  return;
+		}
+
+	      mesh_[0] = ic;
+	    
+	      unstructured = true;
+	    } else {
+	      error( property + " is an unsupported coordinate system." );
+	      error_ = true;
+	      return;
+	    }
 	  } else {
 	    error( "Unknown unstructured mesh data found." );
 	    error_ = true;
@@ -409,62 +366,32 @@ NrrdFieldConverter::execute(){
   // If no data or data change, recreate the field.
   if( error_ ||
       !fHandle_.get_rep() ||
-      generation ||
-      iwrap_ != iWrap_.get() ||
-      jwrap_ != jWrap_.get() ||
-      kwrap_ != kWrap_.get() ) {
+      generation ) {
  
     error_ = false;
 
-    iwrap_ = iWrap_.get();
-    jwrap_ = jWrap_.get();
-    kwrap_ = kWrap_.get();
-
     vector<unsigned int> mdims;
-    vector<unsigned int> mwraps;
     int idim, jdim, kdim;
 
     if( structured ) {
       
       nHandles[mesh_[0]]->get_property( "Coordinate System", property );
 
-      if( mesh_.size() == 1 ) {
-	if( property.find("Cartesian") != string::npos ) {
+      if( property.find("Cartesian") != string::npos ) {
+	if( mesh_.size() == 1 ) {
 	  idim = nHandles[mesh_[0]]->nrrd->axis[1].size;
 	  jdim = nHandles[mesh_[0]]->nrrd->axis[2].size;
 	  kdim = nHandles[mesh_[0]]->nrrd->axis[3].size;
-
-	  if( idim == 1) { iwrap_ = 0; iWrap_.set(0); }
-	  if( jdim == 1) { jwrap_ = 0; jWrap_.set(0); }
-	  if( kdim == 1) { kwrap_ = 0; kWrap_.set(0); }
-
-	  if( idim > 1) { mdims.push_back( idim ); mwraps.push_back( iwrap_ ); }
-	  if( jdim > 1) { mdims.push_back( jdim ); mwraps.push_back( jwrap_ ); }
-	  if( kdim > 1) { mdims.push_back( kdim ); mwraps.push_back( kwrap_ ); }
+	  
+	} else if( mesh_.size() == 3 ) {
+	  idim = nHandles[mesh_[0]]->nrrd->axis[1].size;
+	  jdim = nHandles[mesh_[1]]->nrrd->axis[1].size;
+	  kdim = nHandles[mesh_[2]]->nrrd->axis[1].size;
 	}
-      } else if( mesh_.size() == 3 ) {
-	if( property.find("Cylindrical - NIMROD") != string::npos ) {
-	  if( nHandles[mesh_[0]]->nrrd->axis[1].size != 
-	      nHandles[mesh_[1]]->nrrd->axis[1].size ||
-	      nHandles[mesh_[0]]->nrrd->axis[2].size != 
-	      nHandles[mesh_[1]]->nrrd->axis[2].size ) {
-	    error( "Mesh dimension mismatch." );
-	    error_ = true;
-	    return;
-	  }
 
-	  jdim = nHandles[mesh_[0]]->nrrd->axis[1].size; // Radial
-	  kdim = nHandles[mesh_[0]]->nrrd->axis[2].size; // Theta
-	  idim = nHandles[mesh_[2]]->nrrd->axis[1].size; // Phi
-
-	  if( idim == 1) { iwrap_ = 0; iWrap_.set(0); }
-	  if( jdim == 1) { jwrap_ = 0; jWrap_.set(0); }
-	  if( kdim == 1) { kwrap_ = 0; kWrap_.set(0); }
-
-	  if( jdim > 1) { mdims.push_back( jdim ); mwraps.push_back( jwrap_ ); }
-	  if( kdim > 1) { mdims.push_back( kdim ); mwraps.push_back( kwrap_ ); }
-	  if( idim > 1) { mdims.push_back( idim ); mwraps.push_back( iwrap_ ); }
-	}
+	if( idim > 1) { mdims.push_back( idim ); }
+	if( jdim > 1) { mdims.push_back( jdim ); }
+	if( kdim > 1) { mdims.push_back( kdim ); }
       }
 
       structured = mdims.size();
@@ -472,20 +399,15 @@ NrrdFieldConverter::execute(){
       // Create the mesh.
       if( mdims.size() == 3 ) {
 	// 3D StructHexVol
-	mHandle = scinew StructHexVolMesh( mdims[0]+mwraps[0],
-					   mdims[1]+mwraps[1],
-					   mdims[2]+mwraps[2] );
+	mHandle = scinew StructHexVolMesh( mdims[0], mdims[1], mdims[2] );
 	
       } else if( mdims.size() == 2 ) {
 	// 2D StructQuadSurf
-	mHandle = scinew StructQuadSurfMesh( mdims[0]+mwraps[0],
-					     mdims[1]+mwraps[1] );
-	iwrap_ = 0;
+	mHandle = scinew StructQuadSurfMesh( mdims[0], mdims[1] );
 
       } else if( mdims.size() == 1 ) {
 	// 1D StructCurveMesh
-	mHandle = scinew StructCurveMesh( mdims[0]+mwraps[0] );
-	iwrap_ = jwrap_ = 0;
+	mHandle = scinew StructCurveMesh( mdims[0] );
 
       } else {
 	error( "Mesh dimensions do not make sense." );
@@ -508,8 +430,7 @@ NrrdFieldConverter::execute(){
       if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return;
     
       algo_mesh->execute(mHandle, nHandles, mesh_,
-			 idim, jdim, kdim,
-			 iwrap_, jwrap_, kwrap_);
+			 idim, jdim, kdim);
     
     } else if( unstructured ) {
 
@@ -694,16 +615,8 @@ NrrdFieldConverter::execute(){
     if (!module_dynamic_compile(ci, algo)) return;
     
     if( structured ) {
-
-      // For NIMROD vectors phi of the mesh is needed.
-      if( data_.size() && rank == 3 &&
-	  nHandles[mesh_[0]]->get_property( "Coordinate System", property ) &&
-	  property.find("Cylindrical - NIMROD") != string::npos )
-	data_.push_back( mesh_[2] );
-
       fHandle_ = algo->execute( mHandle, nHandles, data_,
-			        idim, jdim, kdim,
-			        iwrap_, jwrap_, kwrap_ );
+			        idim, jdim, kdim );
 
     } else if( unstructured ) {
       fHandle_ = algo->execute( mHandle, nHandles, data_ );
@@ -778,6 +691,9 @@ void get_nrrd_type( const unsigned int type,
     typeStr = string("double");
     typeName = string("double");
     break;
+  default:
+    typeStr = string("float");
+    typeName = string("float");
   }
 }
 

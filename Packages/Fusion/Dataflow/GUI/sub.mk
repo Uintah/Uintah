@@ -16,10 +16,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/FusionSlicePlot.tcl\
 	$(SRCDIR)/FusionFieldReader.tcl\
 	$(SRCDIR)/FusionFieldSetReader.tcl\
+	$(SRCDIR)/NIMRODConverter.tcl\
 	$(SRCDIR)/NrrdFieldConverter.tcl\
-	$(SRCDIR)/NIMRODNrrdConverter.tcl\
-	$(SRCDIR)/PPPLNrrdConverter.tcl\
-	$(SRCDIR)/PrismNrrdConverter.tcl\
 	$(SRCDIR)/MDSPlusFieldReader.tcl\
 	$(SRCDIR)/Plot2DViewer.tcl\
 	#$(SRCDIR)/ReactionDiffusion.tcl\

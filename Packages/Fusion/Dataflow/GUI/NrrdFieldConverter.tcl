@@ -36,20 +36,6 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
 	global $this-datasets
 
 	set $this-datasets ""
-
-	global $this-ndims
-	set $this-ndims 3
-
-	global $this-grid
-	set $this-grid -1
-
-	global $this-i-wrap
-	global $this-j-wrap
-	global $this-k-wrap
-
-	set $this-i-wrap    0
-	set $this-j-wrap    0
-	set $this-k-wrap    0
     }
 
     method ui {} {
@@ -73,49 +59,6 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
 	# since it is not valid.
 
 	toplevel $w
-
-	frame $w.wrap
-	label $w.wrap.l -text "Wrap Axis" -width 9 -anchor w -just left
-
-	pack $w.wrap.l -side left
-
-	for {set i 0} {$i < 3} {incr i 1} {
-
-	    if { $i == 0 } {
-		set index i
-		set axis i
-	    } elseif { $i == 1 } {
-		set index j
-		set axis j
-	    } elseif { $i == 2 } {
-		set index k
-		set axis k
-	    }
-
-	    global $this-$index-wrap
-
-	    frame $w.wrap.$index
-
-	    label $w.wrap.$index.l -text "$axis :" -width 4 -anchor w
-
-	    checkbutton $w.wrap.$index.wrap -variable $this-$index-wrap 
-
-	    pack $w.wrap.$index.l $w.wrap.$index.wrap -side left
-	}
-
-	global $this-ndims
-
-	if { [set $this-ndims] >= 3 } {
-	    pack $w.wrap.l $w.wrap.i $w.wrap.j $w.wrap.k -side left -padx 10 -pady 5
-	} elseif { [set $this-ndims] == 2 } {
-	    pack $w.wrap.l $w.wrap.i $w.wrap.j -side left -padx 10 -pady 5	    
-	} elseif { [set $this-ndims] == 1 } {
-	    pack $w.wrap.l $w.wrap.i -side left -padx 10 -pady 5	    
-	} elseif { [set $this-ndims] == 0 } {
-	    pack $w.wrap.l -side top -padx 10 -pady 5	    
-	}
-
-	pack $w.wrap -side top -pady 5
 
 	frame $w.grid
 	label $w.grid.l -text "Inputs: (Execute to show list)" -width 30 -just left
@@ -147,14 +90,6 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
 	set $this-datasets $datasets
 
         set w .ui[modname]
-
-	
-	if { $dims == 0 } {
-	    pack forget $w.wrap.l $w.wrap.i $w.wrap.j $w.wrap.k
-	} else {
-	    pack $w.wrap.l $w.wrap.i $w.wrap.j $w.wrap.k \
-		-side left -padx 10 -pady 5
-	}
 
 	if [ expr [winfo exists $w] ] {
 
