@@ -722,10 +722,12 @@ void ImpMPM::iterate(const ProcessorGroup*,
   new_dw->get(dispIncNormMax,lb->dispIncNormMax);
   new_dw->get(dispIncQNorm0, lb->dispIncQNorm0);
 
-  cerr << "dispIncNorm/dispIncNormMax = "
-       << dispIncNorm/(dispIncNormMax + 1.e-100) << "\n";
-  cerr << "dispIncQNorm/dispIncQNorm0 = "
-       << dispIncQNorm/(dispIncQNorm0 + 1.e-100) << "\n";
+  if(d_myworld->myrank() == 0){
+    cerr << "dispIncNorm/dispIncNormMax = "
+         << dispIncNorm/(dispIncNormMax + 1.e-100) << "\n";
+    cerr << "dispIncQNorm/dispIncQNorm0 = "
+         << dispIncQNorm/(dispIncQNorm0 + 1.e-100) << "\n";
+  }
   
   int count = 0;
   bool dispInc = false;
@@ -803,9 +805,13 @@ void ImpMPM::iterate(const ProcessorGroup*,
 
   subsched->get_dw(3)->finalize();
   subsched->advanceDataWarehouse(grid);
-  cerr << "dispInc = " << dispInc << " dispIncQ = " << dispIncQ << "\n";
+  if(d_myworld->myrank() == 0){
+    cerr << "dispInc = " << dispInc << " dispIncQ = " << dispIncQ << "\n";
+  }
   while(!(dispInc && dispIncQ)) {
-    cerr << "Iteration = " << count++ << "\n";
+    if(d_myworld->myrank() == 0){
+     cerr << "Iteration = " << count++ << "\n";
+    }
     subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
     subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
     subsched->execute(d_myworld);
@@ -814,10 +820,12 @@ void ImpMPM::iterate(const ProcessorGroup*,
     subsched->get_dw(3)->get(dispIncNormMax,lb->dispIncNormMax);
     subsched->get_dw(3)->get(dispIncQNorm0, lb->dispIncQNorm0);
 
-    cerr << "dispIncNorm/dispIncNormMax = "
-         << dispIncNorm/(dispIncNormMax + 1.e-100) << "\n";
-    cerr << "dispIncQNorm/dispIncQNorm0 = "
-         << dispIncQNorm/(dispIncQNorm0 + 1.e-100) << "\n";
+    if(d_myworld->myrank() == 0){
+      cerr << "dispIncNorm/dispIncNormMax = "
+           << dispIncNorm/(dispIncNormMax + 1.e-100) << "\n";
+      cerr << "dispIncQNorm/dispIncQNorm0 = "
+           << dispIncQNorm/(dispIncQNorm0 + 1.e-100) << "\n";
+    }
     if ((dispIncNorm/(dispIncNormMax + 1e-100) <= d_conv_crit_disp) &&
         dispIncNormMax != 0.0)
       dispInc = true;
@@ -1875,10 +1883,12 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
 	dispIncNormMax = dispIncNorm;
       }
 
-      cerr << "dispIncNorm = " << dispIncNorm << "\n";
-      cerr << "dispIncQNorm = " << dispIncQNorm << "\n";
-      cerr << "dispIncNormMax = " << dispIncNormMax << "\n";
-      cerr << "dispIncQNorm0 = " << dispIncQNorm0 << "\n";
+      if(d_myworld->myrank() == 0){
+        cerr << "dispIncNorm = " << dispIncNorm << "\n";
+        cerr << "dispIncQNorm = " << dispIncQNorm << "\n";
+        cerr << "dispIncNormMax = " << dispIncNormMax << "\n";
+        cerr << "dispIncQNorm0 = " << dispIncQNorm0 << "\n";
+      }
 
       new_dw->put(sum_vartype(dispIncNormMax),lb->dispIncNormMax);
       new_dw->put(sum_vartype(dispIncQNorm0), lb->dispIncQNorm0);
