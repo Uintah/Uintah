@@ -35,6 +35,7 @@
 #include <Geom/Tri.h>
 #include <Geometry/Point.h>
 #include <Geometry/Plane.h>
+#include <Math/Expon.h>
 #include <TCL/TCLvar.h>
 #include <iostream.h>
 #include <Datatypes/TriSurface.h>
@@ -279,8 +280,19 @@ void IsoSurface::execute()
 	widget_disc->adjust();
     }
     GeomGroup* group=new GeomGroup;
-    if (emit_surface.get())
+
+    if (emit_surface.get()) {
 	surf=new TriSurface;
+	Point min, max;
+	field->get_bounds(min,max);
+	Vector diff(max-min);
+	double spacing=Cbrt(diff.length());
+	double xdim=diff.x()/spacing+1;
+	double ydim=diff.x()/spacing+1;
+	double zdim=diff.x()/spacing+1;
+	surf->construct_grid(xdim,ydim,zdim,min,spacing);
+    }	
+
     group->set_matl(matl);
     ScalarFieldRG* regular_grid=field->getRG();
     ScalarFieldUG* unstructured_grid=field->getUG();
