@@ -35,7 +35,7 @@
 #include <Core/Containers/AVLTree.h>
 #include <Core/Util/soloader.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/share/share.h>
+#include <Dataflow/Network/share.h>
 
 namespace SCIRun {
 
@@ -74,7 +74,7 @@ namespace SCIRun {
     typedef AVLTreeIter<string,Category*> PackageIter;
     typedef AVLTreeIter<string,Package*> PackagesIter;
 
-    class PSECORESHARE PackageDB {
+    class SHARE PackageDB {
     public:
       PackageDB(GuiInterface* gui);
       ~PackageDB();
@@ -114,7 +114,11 @@ namespace SCIRun {
     // PackageDB is intended to be a singleton class, but nothing will break
     // if you instantiate it many times.  This is the singleton instance,
     // on which you should invoke operations:
-    PSECORESHARE extern PackageDB* packageDB;
+#if defined(_WIN32) && !defined(BUILD_Dataflow_Network)
+     __declspec(dllimport) PackageDB* packageDB;
+#else
+     extern PackageDB* packageDB;
+#endif
 
 } // End namespace SCIRun
 
