@@ -2481,7 +2481,7 @@ if test "$HAVE_BLAS" != "yes"; then
   # if HAVE_BLAS is yes at this point, then atlas has been found and we
   # don't want to check for blas.
 
-  if test "$with_blas" && test "$with_blas" != "yes"; then
+  if test "$with_blas"; then
     _sci_lib="$with_blas/lib"
     _sci_inc="$with_blas/include"
     _sci_specific=yes
@@ -3618,18 +3618,18 @@ sci_defs_files="$sci_defs_files include/sci_defs/mdsplus_testdefs.h"
 # with_hdf5 agument or from a package in the aclocal.m4 it.
 # These are the only two locations that the sci_required_* should be set.
 
-_sci_lib="/usr/local/lib"			# default directory
-_sci_inc="/usr/local/include"
-
 if test "$sci_required_hdf5" = "yes"; then 
 
   _sci_optional=required
   if test "$with_hdf5"; then
-    if test "$with_hdf5" != "yes"; then
-      _sci_lib="$with_hdf5/lib"			# user defined directory
-      _sci_inc="$with_hdf5/include"
-      _sci_optional=specific
-    fi
+    _sci_lib="$with_hdf5/lib"			# user defined directory
+    _sci_inc="$with_hdf5/include"
+    _sci_optional=specific
+  else
+#   _sci_lib="/usr/local/lib"			# default directory
+#   _sci_inc="/usr/local/include"
+    _sci_lib="$sci_thirdparty_lib"
+    _sci_inc="$sci_thirdparty_include"
   fi
 
   SCI_TRY_LINK(HDF5,hdf5 library and headers,hdf5.h,$_sci_inc,hdf5,$_sci_lib,,,$_sci_optional)
