@@ -660,6 +660,10 @@
 <xsl:when test="$type='float'">no</xsl:when>
 <xsl:when test="$type='double'">no</xsl:when>
 <xsl:when test="$type='bool'">no</xsl:when>
+<xsl:when test="$type='char'">no</xsl:when>
+<xsl:when test="$type='unsigned char'">no</xsl:when>
+<xsl:when test="$type='short'">no</xsl:when>
+<xsl:when test="$type='unsigned short'">no</xsl:when>
 <xsl:otherwise>yes</xsl:otherwise>
 </xsl:choose>
 </xsl:template>
