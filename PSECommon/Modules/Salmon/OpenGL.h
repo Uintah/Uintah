@@ -96,12 +96,21 @@ int query_OpenGL();
 #define DO_GETDATA 2
 #define REDRAW_DONE 4
 #define PICK_DONE 5
+#define DO_IMAGE 6
+#define IMAGE_DONE 7
 
 struct GetReq {
     int datamask;
     FutureValue<GeometryData*>* result;
     GetReq(int, FutureValue<GeometryData*>* result);
     GetReq();
+};
+
+struct ImgReq {
+  clString name;
+  clString type;
+  ImgReq( const clString& n, const clString& t);
+  ImgReq();
 };
 
 class OpenGL : public Renderer {
@@ -142,14 +151,21 @@ public:
     virtual void get_pick(Salmon*, Roe*, int, int,
       GeomObj*&, GeomPick*&, int& );
     virtual void hide();
-    virtual void dump_image(const clString&);
+    virtual void dump_image(const clString& fname,
+			    const clString& type = "raw");
     virtual void put_scanline(int y, int width, Color* scanline, int repeat=1);
+
+  virtual void saveImage(const clString& fname,
+		   const clString& type = "raw");
+  void real_saveImage(const clString& fname,
+		      const clString& type = "raw");
 
     clString myname;
     virtual void redraw_loop();
     SCICore::Thread::Mailbox<int> send_mb;
     SCICore::Thread::Mailbox<int> recv_mb;
     SCICore::Thread::Mailbox<GetReq> get_mb;
+    SCICore::Thread::Mailbox<ImgReq> img_mb;
 
     Salmon* salmon;
     Roe* roe;

@@ -36,12 +36,15 @@ PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Comm \
 	SCICore/Geom SCICore/Thread SCICore/Containers \
 	SCICore/TclInterface SCICore/TkExtensions SCICore/Util \
 	SCICore/TkExtensions SCICore/Datatypes
-LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+LIBS := $(TK_LIBRARY) $(GL_LIBS) -lifl -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/06/07 20:59:27  kuzimmer
+# Modifications to make the image save menu item work on SGIs
+#
 # Revision 1.3  2000/06/07 00:11:40  moulding
 # made some modifications that will allow the module make to edit and add
 # to this file

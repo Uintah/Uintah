@@ -191,7 +191,7 @@ int Salmon::process_event(int block)
 	    for(int i=0;i<roe.size();i++){
 		Roe* r=roe[i];
 		if(r->id == rmsg->rid){
-		    r->current_renderer->dump_image(rmsg->filename);
+                 r->current_renderer->saveImage(rmsg->filename, rmsg->format);
 		    break;
 		}
 	    }
@@ -580,6 +580,9 @@ void Salmon::emit_vars(ostream& out)
 
 //
 // $Log$
+// Revision 1.13  2000/06/07 20:59:27  kuzimmer
+// Modifications to make the image save menu item work on SGIs
+//
 // Revision 1.12  2000/06/06 15:08:16  dahart
 // - Split OpenGL.cc into OpenGL.cc and OpenGL.h to allow class
 // derivations of the OpenGL renderer.

@@ -75,7 +75,8 @@ public:
     virtual void get_pick(Salmon*, Roe*, int x, int y,
 			  GeomObj*&, GeomPick*&, int&)=0;
     virtual void hide()=0;
-    virtual void dump_image(const clString&);
+    virtual void saveImage(const clString&, const clString&) = 0;
+    virtual void dump_image(const clString&, const clString&);
     virtual void put_scanline(int y, int width, Color* scanline, int repeat=1)=0;
     virtual void listvisuals(TCLArgs&);
     virtual void setvisual(const clString& wname, int i, int width, int height);
@@ -101,6 +102,9 @@ public:
 
 //
 // $Log$
+// Revision 1.5  2000/06/07 20:59:26  kuzimmer
+// Modifications to make the image save menu item work on SGIs
+//
 // Revision 1.4  1999/08/29 00:46:42  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

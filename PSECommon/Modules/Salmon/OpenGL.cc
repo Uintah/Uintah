@@ -13,6 +13,7 @@
 //milan was here
 
 #include <PSECommon/Modules/Salmon/OpenGL.h>
+#include <ifl/iflFile.h>
 
 
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
@@ -26,6 +27,8 @@ namespace Modules {
 #define DO_GETDATA 2
 #define REDRAW_DONE 4
 #define PICK_DONE 5
+#define DO_IMAGE 6
+#define IMAGE_DONE 7
 
 static map<clString, ObjTag*>::iterator viter;
 
@@ -53,7 +56,8 @@ RegisterRenderer OpenGL_renderer("OpenGL", &query_OpenGL, &make_OpenGL);
 OpenGL::OpenGL()
 : tkwin(0), send_mb("OpenGL renderer send mailbox",10),
   recv_mb("OpenGL renderer receive mailbox", 10), helper(0),
-  get_mb("OpenGL renderer request mailbox", 5)
+  get_mb("OpenGL renderer request mailbox", 5),
+  img_mb("OpenGL renderer image data mailbox", 5)
 {
     encoding_mpeg = false;
     drawinfo=scinew SCICore::GeomSpace::DrawInfoOpenGL;
@@ -215,6 +219,9 @@ void OpenGL::redraw_loop()
 		} else if(r== DO_GETDATA) {
 		    GetReq req(get_mb.receive());
 		    real_getData(req.datamask, req.result);
+		} else if(r== DO_IMAGE) {
+		    ImgReq req(img_mb.receive());
+		    real_saveImage(req.name, req.type);
 		} else {
 		    // Gobble them up...
 		    nreply++;
@@ -256,6 +263,9 @@ void OpenGL::redraw_loop()
 		} else if(r== DO_GETDATA){
 		    GetReq req(get_mb.receive());
 		    real_getData(req.datamask, req.result);
+		} else if(r== DO_IMAGE) {
+		    ImgReq req(img_mb.receive());
+		    real_saveImage(req.name, req.type);
 		} else {
 		    nreply++;
 		    break;
@@ -998,7 +1008,7 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
     salmon->geomlock.readUnlock();
 }
 
-void OpenGL::dump_image(const clString& name) {
+void OpenGL::dump_image(const clString& name, const clString& type) {
     ofstream dumpfile(name());
     GLint vp[4];
     glGetIntegerv(GL_VIEWPORT,vp);
@@ -1513,6 +1523,56 @@ void OpenGL::setvisual(const clString& wname, int which, int width, int height)
   myname = wname;
 }
 
+void OpenGL::saveImage(const clString& fname,
+		       const clString& type) //= "raw")
+{
+  send_mb.send(DO_IMAGE);
+  img_mb.send(ImgReq(fname,type));
+}
+
+void OpenGL::real_saveImage(const clString& name,
+			    const clString& type) //= "raw")
+{
+  GLint vp[4];
+
+  if(current_drawer != this){
+    current_drawer=this;
+    TCLTask::lock();
+    glXMakeCurrent(dpy, win, cx);
+    TCLTask::unlock();
+  }
+
+  glGetIntegerv(GL_VIEWPORT,vp);
+  int n=3*vp[2]*vp[3];
+  unsigned char* pxl=scinew unsigned char[n];
+  glPixelStorei(GL_PACK_ALIGNMENT,1);
+  glReadBuffer(GL_FRONT);
+  glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
+
+  if(type == "raw"){
+    cerr << "Saving raw file "<<name<<":  size = " << vp[2] << "x" << vp[3] << endl;
+    ofstream dumpfile(name());
+    dumpfile.write((const char *)pxl,n);
+    dumpfile.close();
+  } else if(type == "rgb" || type == "ppm" || type == "jpg" ){
+    cerr << "Saving file "<< name <<endl;
+    iflSize dims(vp[2], vp[3], 3);
+    iflFileConfig fc(&dims, iflUChar);
+    iflStatus sts;
+    iflFile* file = iflFile::create(name(), NULL, &fc, NULL, &sts);
+    sts = file->setTile(0, 0, 0, vp[2], vp[3], 1, pxl);
+    file->close();
+//   } else if( type == "jpg" ){
+//     cerr<<"JPEG save Not implemented\n";
+//   } else if( type == "ppm" ){
+//     cerr<<"PPM save not implemented\n";
+  } else {
+    cerr<<"Error unknown image file type\n";
+  }
+  delete[] pxl;
+}
+
+
 void OpenGL::getData(int datamask, FutureValue<GeometryData*>* result)
 {
     send_mb.send(DO_GETDATA);
@@ -1586,12 +1646,22 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 {
 }
 
+ImgReq::ImgReq()
+{
+}
+ImgReq::ImgReq(const clString& n, const clString& t)
+  : name(n), type(t)
+{
+}
 
 } // End namespace Modules
 } // End namespace PSECommon
 
 //
 // $Log$
+// Revision 1.25  2000/06/07 20:59:25  kuzimmer
+// Modifications to make the image save menu item work on SGIs
+//
 // Revision 1.24  2000/06/06 15:08:15  dahart
 // - Split OpenGL.cc into OpenGL.cc and OpenGL.h to allow class
 // derivations of the OpenGL renderer.
