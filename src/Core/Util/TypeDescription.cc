@@ -219,7 +219,7 @@ string TypeDescription::cc_to_h(const string &dot_cc)
     dot_h.append("h");
   } else {
     cerr << "Warning: TypeDescription::cc_to_h input does not end in .cc" 
-	 << endl << "the string:" << dot_cc << endl;
+	 << endl << "the string: '" << dot_cc << "'" << endl;
   }
   return dot_h;
 }
