@@ -61,12 +61,12 @@ ROI::draw()
 
   
   vector<Polygon* > polys;
-  vector<Polygon* >::iterator it;
+  vector<Polygon* >::iterator pit;
   double tmin, tmax, dt;
   double ts[8];
   int i;
   for( brick = it.Start(); !it.isDone(); brick = it.Next()){
-    for(it = polys.begin(); it != polys.end(); it++) { delete *it; }
+    for(pit = polys.begin(); pit != polys.end(); pit++) { delete *pit; }
     polys.clear();
     Brick& b = *brick;
     for( i = 0; i < 8; i++)
