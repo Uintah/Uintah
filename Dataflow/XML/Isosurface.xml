@@ -77,8 +77,12 @@ Isosurfaces are generated for the volume input fields.
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>Color Map</name>
+        <name>Optional Color Map</name>
 	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+      <port>
+        <name>Optional Isovalues</name>
+	<datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
     <outputs>

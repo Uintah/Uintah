@@ -202,88 +202,109 @@ Isosurface::execute()
   }
 
   // Color the surface.
-  ColorMapIPort *inColorMap = (ColorMapIPort *)get_iport("Color Map");
+  ColorMapIPort *inColorMap = (ColorMapIPort *)get_iport("Optional Color Map");
   if (!inColorMap)
   {
-    error("Unable to initialize iport 'Color Map'.");
+    error("Unable to initialize iport 'Optional Color Map'.");
     return;
   }
   ColorMapHandle cmap;
   const bool have_ColorMap = inColorMap->get(cmap);
   
-  vector<double> isovals;
-  if (gui_active_isoval_selection_tab_.get() == "0")
-  { // slider / typed
-    const double val = gui_iso_value_.get();
-    if (val < prev_min_ || val > prev_max_)
-    {
-      warning("Typed isovalue out of range -- skipping isosurfacing.");
-      return;
-    }
-    isovals.push_back(val);
+  vector<double> isovals(0);
+  MatrixIPort *inIsoVals = (MatrixIPort *)get_iport("Optional Isovalues");
+  if (!inIsoVals)
+  {
+    error("Unable to initialize iport 'Optional Isovalues'.");
+    return;
   }
-  else if (gui_active_isoval_selection_tab_.get() == "1")
-  { // quantity
-    int num=gui_iso_value_quantity_.get();
-    if (num<1)
+  MatrixHandle inmat;
+  if (inIsoVals->get(inmat))
+  {
+    int i, j;
+    for (i=0; i < inmat->nrows(); i++)
     {
-      warning("Isosurface quantity must be at least one -- skipping isosurfacing.");
-      return;
-    }
-
-    string range = gui_iso_quantity_range_.get();
-    double qmax=prev_max_;
-    double qmin=prev_min_;
-    if (range == "colormap") {
-      if (!have_ColorMap) {
-	error("Error - I don't have a colormap");
-	return;
-      }
-      qmin=cmap->getMin();
-      qmax=cmap->getMax();
-    } else if (range == "manual") {
-      qmin=gui_iso_quantity_min_.get();
-      qmax=gui_iso_quantity_max_.get();
-    } // else we're using "field" and qmax and qmin were set above
-    
-    if (qmin>=qmax) {
-      error("Can't use quantity tab if Min == Max");
-      return;
-    }
-    double di=(qmax - qmin)/(num+1);
-    for (int i=0; i<num; i++) 
-      isovals.push_back((i+1)*di+qmin);
-  }
-  else if (gui_active_isoval_selection_tab_.get() == "2")
-  { // list
-    istringstream vlist(gui_iso_value_list_.get());
-    double val;
-    while(!vlist.eof())
-    {
-      vlist >> val;
-      if (vlist.fail())
+      for (j=0; j < inmat->ncols(); j++)
       {
-	if (!vlist.eof())
-	{
-	  vlist.clear();
-	  warning("List of Isovals was bad at character " +
-		  to_string((int)(vlist.tellg())) +
-		  "('" + ((char)(vlist.peek())) + "').");
-	}
-	break;
+	isovals.push_back(inmat->get(i, j));
       }
-      else if (!vlist.eof() && vlist.peek() == '%')
-      {
-	vlist.get();
-	val = prev_min_ + (prev_max_ - prev_min_) * val / 100.0;
-      }
-      isovals.push_back(val);
     }
   }
   else
   {
-    error("Bad active_isoval_selection_tab value");
-    return;
+    if (gui_active_isoval_selection_tab_.get() == "0")
+    { // slider / typed
+      const double val = gui_iso_value_.get();
+      if (val < prev_min_ || val > prev_max_)
+      {
+	warning("Typed isovalue out of range -- skipping isosurfacing.");
+	return;
+      }
+      isovals.push_back(val);
+    }
+    else if (gui_active_isoval_selection_tab_.get() == "1")
+    { // quantity
+      int num=gui_iso_value_quantity_.get();
+      if (num<1)
+      {
+	warning("Isosurface quantity must be at least one -- skipping isosurfacing.");
+	return;
+      }
+
+      string range = gui_iso_quantity_range_.get();
+      double qmax=prev_max_;
+      double qmin=prev_min_;
+      if (range == "colormap") {
+	if (!have_ColorMap) {
+	  error("Error - I don't have a colormap");
+	  return;
+	}
+	qmin=cmap->getMin();
+	qmax=cmap->getMax();
+      } else if (range == "manual") {
+	qmin=gui_iso_quantity_min_.get();
+	qmax=gui_iso_quantity_max_.get();
+      } // else we're using "field" and qmax and qmin were set above
+    
+      if (qmin>=qmax) {
+	error("Can't use quantity tab if Min == Max");
+	return;
+      }
+      double di=(qmax - qmin)/(num+1);
+      for (int i=0; i<num; i++) 
+	isovals.push_back((i+1)*di+qmin);
+    }
+    else if (gui_active_isoval_selection_tab_.get() == "2")
+    { // list
+      istringstream vlist(gui_iso_value_list_.get());
+      double val;
+      while(!vlist.eof())
+      {
+	vlist >> val;
+	if (vlist.fail())
+	{
+	  if (!vlist.eof())
+	  {
+	    vlist.clear();
+	    warning("List of Isovals was bad at character " +
+		    to_string((int)(vlist.tellg())) +
+		    "('" + ((char)(vlist.peek())) + "').");
+	  }
+	  break;
+	}
+	else if (!vlist.eof() && vlist.peek() == '%')
+	{
+	  vlist.get();
+	  val = prev_min_ + (prev_max_ - prev_min_) * val / 100.0;
+	}
+	isovals.push_back(val);
+      }
+    }
+    else
+    {
+      error("Bad active_isoval_selection_tab value");
+      return;
+    }
   }
 
   bool build_field = gui_build_field_.get();
