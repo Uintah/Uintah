@@ -83,6 +83,12 @@ OnDemandDataWarehouse::~OnDemandDataWarehouse()
      if(iter->second->removeReference())
 	delete iter->second;
   }
+
+  for (psetDBType::const_iterator iter = d_delsetDB.begin();
+       iter != d_delsetDB.end(); iter++) {
+     if(iter->second->removeReference())
+	delete iter->second;
+  }
 }
 
 bool OnDemandDataWarehouse::isFinalized() const
@@ -630,6 +636,22 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch)
   d_lock.readUnlock();
       throw UnknownVariable("ParticleSet", realPatch, matlIndex,
 			    "Cannot find particle set on patch");
+   }
+  d_lock.readUnlock();
+   return iter->second;
+}
+
+ParticleSubset*
+OnDemandDataWarehouse::getDeleteSubset(int matlIndex, const Patch* patch)
+{
+  d_lock.readLock();
+  const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
+   psetDBType::key_type key(matlIndex, realPatch);
+   psetDBType::iterator iter = d_delsetDB.find(key);
+   if(iter == d_delsetDB.end()){
+     d_lock.readUnlock();
+     throw UnknownVariable("DeleteSet", realPatch, matlIndex,
+			   "Cannot find delete set on patch");
    }
   d_lock.readUnlock();
    return iter->second;
@@ -1268,9 +1290,18 @@ void OnDemandDataWarehouse::print(ostream& intout, const VarLabel* label,
 }
 
 void
-OnDemandDataWarehouse::deleteParticles(ParticleSubset* /*delset*/)
+OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 {
-   // Not implemented
+  int matlIndex = delset->getMatlIndex();
+  Patch* patch = (Patch*) delset->getPatch();
+  psetDBType::key_type key(matlIndex, patch);
+  if(d_delsetDB.find(key) != d_delsetDB.end())
+    throw InternalError("deleteParticles called twice for patch");
+
+  d_delsetDB[key]=delset;
+  delset->addReference();
+  
+
 }
 
 void
