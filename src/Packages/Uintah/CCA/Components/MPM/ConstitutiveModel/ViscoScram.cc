@@ -670,9 +670,13 @@ double ViscoScram::computeRhoMicroCM(double pressure,
     double A = p_ref;       // Modified EOS
     double n = p_ref/bulk;
     rho_cur  = rho_orig*pow(pressure/A,n);
-  }else{                    // Standard EOS
-    rho_cur = rho_orig/(1-p_gauge/bulk);
   }
+  else {                      // STANDARD EOS
+    rho_cur = rho_orig*(p_gauge/bulk + sqrt((p_gauge/bulk)*(p_gauge/bulk) +1));
+  }
+//  else{                    // Standard EOS
+//    rho_cur = rho_orig/(1-p_gauge/bulk);
+//  }
   return rho_cur;
 
 }
@@ -693,12 +697,19 @@ void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
     pressure = A*pow(rho_cur/rho_orig,n);
     dp_drho  = (bulk/rho_orig)*pow(rho_cur/rho_orig,n-1);
     tmp      = dp_drho;       // speed of sound squared
-  }else{                       // STANDARD EOS
-    double p_g = bulk*(1.0 - rho_orig/rho_cur);
-    pressure   = p_ref + p_g;  
-    dp_drho    = bulk*rho_orig/(rho_cur*rho_cur);
-    tmp        = dp_drho;       // speed of sound squared
   }
+  else {                      // STANDARD EOS            
+    double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
+    pressure   = p_ref + p_g;
+    dp_drho    = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
+    tmp        = bulk/rho_cur;  // speed of sound squared
+  }
+//  else{                       // STANDARD EOS
+//    double p_g = bulk*(1.0 - rho_orig/rho_cur);
+//    pressure   = p_ref + p_g;  
+//    dp_drho    = bulk*rho_orig/(rho_cur*rho_cur);
+//    tmp        = dp_drho;       // speed of sound squared
+//  }
 }
 
 double ViscoScram::getCompressibility()
