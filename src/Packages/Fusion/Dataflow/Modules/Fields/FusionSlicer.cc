@@ -118,7 +118,6 @@ void FusionSlicer::execute(){
   FieldHandle fHandle;
 
   StructHexVolMesh *hvmInput;
-  StructHexVolField<double> *hvfInput;
 
   // Get a handle to the input field port.
   FieldIPort* ifield_port =
@@ -137,7 +136,6 @@ void FusionSlicer::execute(){
     error( "No handle or representation" );
     return;
   }
-  hvfInput = (StructHexVolField<double> *)(fHandle.get_rep());
 
   // Check to see if the input field has changed.
   if( fGeneration_ != fHandle->generation )
