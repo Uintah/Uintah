@@ -48,6 +48,8 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Checker.cc \
 	$(SRCDIR)/BBox.cc \
 	$(SRCDIR)/Exceptions.cc \
+	$(SRCDIR)/EMBMaterial.cc \
+	$(SRCDIR)/PortalMaterial.cc \
 	$(SRCDIR)/Names.cc \
 	$(SRCDIR)/Stats.cc \
 	$(SRCDIR)/CrowMarble.cc \

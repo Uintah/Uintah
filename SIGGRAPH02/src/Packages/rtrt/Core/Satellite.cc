@@ -13,7 +13,7 @@ Persistent* satellite_maker() {
 }
 
 // initialize the static member type_id
-PersistentTypeID Satellite::type_id("Satellite", "Material", satellite_maker);
+PersistentTypeID Satellite::type_id("Satellite", "Object", satellite_maker);
 
 void Satellite::animate(double t, bool& changed)
 {

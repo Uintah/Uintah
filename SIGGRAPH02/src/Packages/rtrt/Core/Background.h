@@ -26,7 +26,7 @@ namespace rtrt {
 using SCIRun::Vector;
 using SCIRun::Dot;
 
-class Background : public SCIRun::Persistent {
+class Background : public virtual SCIRun::Persistent {
   Color avg;
   Color origAvg_;
 public:
