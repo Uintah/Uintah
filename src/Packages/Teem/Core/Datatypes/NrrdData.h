@@ -80,6 +80,16 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
+  // Separate raw files.
+  void set_embed_object(bool v) { embed_object_ = v; }
+  bool get_embed_object() { return embed_object_; }
+  void set_filename( string &f )
+  { nrrd_fname_ = f; embed_object_ = false; }
+  const string get_filename() const { return nrrd_fname_; }
+
+protected:
+  bool    embed_object_;
+
 private:
   bool in_name_set(const string &s) const;
   //bool in_type_set(const string &s) const;
@@ -91,7 +101,10 @@ private:
   //! has a rep == 0 if there was no such mesh.
   //FieldHandle           originating_field_; 
 
+
+
   // To help with pio
+  public:
   string                nrrd_fname_;
 
   //static void load_valid_tuple_types();
