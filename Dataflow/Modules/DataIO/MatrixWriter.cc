@@ -81,9 +81,9 @@ void MatrixWriter::execute()
   Piostream* stream;
   clString ft(filetype_.get());
   if(ft=="Binary"){
-    stream=scinew BinaryPiostream(fn, Piostream::Write);
+    stream=scinew BinaryPiostream(fn(), Piostream::Write);
   } else { // "ASCII"
-    stream=scinew TextPiostream(fn, Piostream::Write);
+    stream=scinew TextPiostream(fn(), Piostream::Write);
   }
 
   // Check whether the file should be split into header and data

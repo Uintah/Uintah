@@ -39,6 +39,8 @@
 #include <Core/Containers/String.h>
 #include <Core/share/share.h>
 
+#include <string>
+
 namespace SCIRun {
 
 using std::string;
@@ -46,7 +48,6 @@ using std::map;
 using std::vector;
 using std::pair;
 
-class clString;
 class Persistent;
 
 //----------------------------------------------------------------------
@@ -67,7 +68,7 @@ public:
 
   typedef map<Persistent*, int>			MapPersistentInt;
   typedef map<int, Persistent*>			MapIntPersistent;
-  typedef map<clString, PersistentTypeID*>	MapClStringPersistentTypeID;
+  typedef map<string, PersistentTypeID*>	MapClStringPersistentTypeID;
 
   enum Direction {
     Read,
@@ -75,7 +76,7 @@ public:
   };
   
 protected:
-  Piostream(Direction, int, const clString & =clString(""));
+  Piostream(Direction, int, const string & =string(""));
   Direction dir;
   int version;
   int err;
@@ -85,15 +86,15 @@ protected:
   
   int current_pointer_id;
   virtual void emit_pointer(int&, int&)=0;
-  static bool readHeader(const clString& filename, char* hdr,
+  static bool readHeader(const string& filename, char* hdr,
     const char* type, int& version);
 public:
-  clString file_name;
+  string file_name;
 
   virtual ~Piostream();
-  virtual clString peek_class()=0;
+  virtual string peek_class()=0;
   int begin_class(const char* name, int current_version);
-  virtual int begin_class(const clString& name, int current_version)=0;
+  virtual int begin_class(const string& name, int current_version)=0;
   virtual void end_class()=0;
 
   void io(Persistent*&, const PersistentTypeID&);
@@ -112,13 +113,13 @@ public:
   virtual void io(unsigned long&)=0;
   virtual void io(double&)=0;
   virtual void io(float&)=0;
-  virtual void io(clString& string)=0;
+  virtual void io(string& str)=0;
 
   int reading();
   int writing();
   int error();
 
-  friend Piostream* auto_istream(const clString& filename);
+  friend Piostream* auto_istream(const string& filename);
 };
 
 //----------------------------------------------------------------------
@@ -140,9 +141,9 @@ SCICORESHARE inline void Pio(Piostream& stream, long& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, unsigned long& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, double& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, float& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, clString& data) { stream.io(data); }
+SCICORESHARE inline void Pio(Piostream& stream, string& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, Persistent& data) { data.io(stream); }
-SCICORESHARE        void Pio(Piostream& stream, string& data);
+SCICORESHARE        void Pio(Piostream& stream, clString& data);
 
 // GROUP: Templates for persistent io for C++ standard library units
 //////////

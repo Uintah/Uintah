@@ -56,12 +56,12 @@ using std::ostream;
 
 namespace SCIRun {
 
-TextPiostream::TextPiostream(const clString& filename, Direction dir)
+TextPiostream::TextPiostream(const string& filename, Direction dir)
 : Piostream(dir, -1, filename)
 {
     if(dir==Read){
 	ostr=0;
-	istr=new ifstream(filename());
+	istr=new ifstream(filename.c_str());
 	if(!istr){
 	    cerr << "Error opening file: " << filename << " for reading\n";
 	    err=1;
@@ -88,7 +88,7 @@ TextPiostream::TextPiostream(const clString& filename, Direction dir)
 	}
     } else {
 	istr=0;
-	ostr=scinew ofstream(filename());
+	ostr=scinew ofstream(filename.c_str());
 	ofstream& out=*ostr;
 	if(!out){
 	    cerr << "Error opening file: " << filename << " for writing\n";
@@ -108,10 +108,10 @@ TextPiostream::~TextPiostream()
 	delete ostr;
 }
 
-void TextPiostream::io(int do_quotes, clString& string)
+void TextPiostream::io(int do_quotes, string& str)
 {
     if(do_quotes){
-	io(string);
+	io(str);
     } else {
 	if(dir==Read){
 	    char buf[1000];
@@ -145,15 +145,15 @@ void TextPiostream::io(int do_quotes, clString& string)
 		}
 	    }
 	    *p=0;
-	    string=clString(buf);
+	    str = string(buf);
 	} else {
 	    ofstream& out=*ostr;
-	    out << string << " ";
+	    out << str << " ";
 	}
     }
 }
 
-clString TextPiostream::peek_class()
+string TextPiostream::peek_class()
 {
     expect('{');
     io(0, peekname);
@@ -161,12 +161,12 @@ clString TextPiostream::peek_class()
     return peekname;
 }
 
-int TextPiostream::begin_class(const clString& classname,
+int TextPiostream::begin_class(const string& classname,
 			       int current_version)
 {
     if(err)return -1;
     int version=current_version;
-    clString gname;
+    string gname;
     if(dir==Write){
 	gname=classname;
 	ostream& out=*ostr;
@@ -468,7 +468,7 @@ void TextPiostream::io(float& data)
     }
 }
 
-void TextPiostream::io(clString& data)
+void TextPiostream::io(string& data)
 {
     if(err)return;
     if(dir==Read){
@@ -505,7 +505,7 @@ void TextPiostream::io(clString& data)
 	}
 	*p=0;
 	expect(' ');
-	data=clString(buf);
+	data=string(buf);
     } else {
 	ofstream& out=*ostr;
 	out << "\"" << data << "\" ";
@@ -594,12 +594,12 @@ BinaryPiostream::~BinaryPiostream()
     }
 }
 
-BinaryPiostream::BinaryPiostream(const clString& filename, Direction dir)
+BinaryPiostream::BinaryPiostream(const string& filename, Direction dir)
 : Piostream(dir, -1, filename), have_peekname(0)
 {
     mmapped = false;
     if(dir==Read){
-   	fp = fopen (filename(), "r");
+   	fp = fopen (filename.c_str(), "r");
       	if(!fp){
            cerr << "Error opening file: " << filename << " for reading\n";
            err=1;
@@ -617,7 +617,7 @@ BinaryPiostream::BinaryPiostream(const clString& filename, Direction dir)
 	}
 	readHeader(filename, hdr, "BIN", version);
     } else {
-	fp=fopen(filename(), "w");
+	fp=fopen(filename.c_str(), "w");
 	if(!fp){
 	    cerr << "Error opening file: " << filename << " for writing\n";
 	    err=1;
@@ -677,19 +677,19 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir)
     }
 }
 
-clString BinaryPiostream::peek_class()
+string BinaryPiostream::peek_class()
 {
     have_peekname=1;
     io(peekname);
     return peekname;
 }
 
-int BinaryPiostream::begin_class(const clString& classname,
+int BinaryPiostream::begin_class(const string& classname,
 			       int current_version)
 {
     if(err)return -1;
     int version=current_version;
-    clString gname;
+    string gname;
     if(dir==Write){
 	gname=classname;
 	io(gname);
@@ -826,18 +826,18 @@ void BinaryPiostream::io(float& data)
     }
 }
 
-void BinaryPiostream::io(clString& data)
+void BinaryPiostream::io(string& data)
 {
     if(err)return;
     char* p=0;
     if(dir==Write)
-	p=const_cast<char *>(data());
+	p=const_cast<char *>(data.c_str());
     if(!xdr_wrapstring(xdr, &p)){
 	err=1;
 	cerr << "xdr_wrapstring failed\n";
     }
     if(dir==Read){
-	data=clString(p);
+	data=string(p);
 	free(p);
     }
 }
@@ -856,14 +856,14 @@ void BinaryPiostream::emit_pointer(int& have_data, int& pointer_id)
     }
 }
 
-GzipPiostream::GzipPiostream(const clString& filename, Direction dir)
+GzipPiostream::GzipPiostream(const string& filename, Direction dir)
 : Piostream(dir, -1)
 {
     if(dir==Read){
 	cerr << "GzipPiostream cannot read\n";
 	gzfile=0;
     } else {
-	gzfile=gzopen(filename(), "w");
+	gzfile=gzopen(filename.c_str(), "w");
 	char str[100];
 	sprintf(str, "SCI\nGZP\n001\n");
 	gzwrite(gzfile, str, strlen(str));
@@ -876,19 +876,19 @@ GzipPiostream::~GzipPiostream()
     gzclose(gzfile);
 }
 
-clString GzipPiostream::peek_class()
+string GzipPiostream::peek_class()
 {
     have_peekname=1;
     io(peekname);
     return peekname;
 }
 
-int GzipPiostream::begin_class(const clString& classname,
+int GzipPiostream::begin_class(const string& classname,
 			       int current_version)
 {
     if(err)return -1;
     int version=current_version;
-    clString gname;
+    string gname;
     if(dir==Write){
 	gname=classname;
 	io(gname);
@@ -1105,7 +1105,7 @@ void GzipPiostream::io(float& data)
     }
 }
 
-void GzipPiostream::io(clString& data)
+void GzipPiostream::io(string& data)
 {
     if(err)return;
     if(dir == Read) {
@@ -1115,8 +1115,8 @@ void GzipPiostream::io(clString& data)
 	    data+=c;
 	}
     } else {
-	int sz=strlen(data());
-	if (!gzwrite(gzfile, const_cast<char *>(data()), sz+1)) {
+	int sz=data.size();
+	if (!gzwrite(gzfile, (void *)(data.c_str()), sz+1)) {
 	    err=1;
 	    cerr << "gzwrite failed\n";
 	}
@@ -1129,10 +1129,10 @@ void GzipPiostream::emit_pointer(int& have_data, int& pointer_id)
     io(pointer_id);
 }
 
-GunzipPiostream::GunzipPiostream(const clString& filename, Direction dir)
+GunzipPiostream::GunzipPiostream(const string& filename, Direction dir)
     : Piostream(dir, -1), have_peekname(0)
 {
-    unzipfile=open(filename(), O_RDWR, 0666);
+    unzipfile=open(filename.c_str(), O_RDWR, 0666);
     if(unzipfile == -1){
 	cerr << "Error opening file: " << filename << " for reading\n";
 	err=1;
@@ -1145,19 +1145,19 @@ GunzipPiostream::~GunzipPiostream()
     close(unzipfile);
 }
 
-clString GunzipPiostream::peek_class()
+string GunzipPiostream::peek_class()
 {
     have_peekname=1;
     io(peekname);
     return peekname;
 }
 
-int GunzipPiostream::begin_class(const clString& classname,
+int GunzipPiostream::begin_class(const string& classname,
 			       int current_version)
 {
     if(err)return -1;
     int version=current_version;
-    clString gname;
+    string gname;
     if(dir==Write){
 	gname=classname;
 	io(gname);
@@ -1374,7 +1374,7 @@ void GunzipPiostream::io(float& data)
     }
 }
 
-void GunzipPiostream::io(clString& data)
+void GunzipPiostream::io(string& data)
 {
     if(err)return;
     if(dir == Read) {
@@ -1384,8 +1384,8 @@ void GunzipPiostream::io(clString& data)
 	    data+=c;
 	}
     } else {
-	int sz=strlen(data());
-	if (!write(unzipfile, data(), sz+1)) {
+	int sz=data.size();
+	if (!write(unzipfile, data.c_str(), sz+1)) {
 	    err=1;
 	    cerr << "unzipwrite failed\n";
 	}

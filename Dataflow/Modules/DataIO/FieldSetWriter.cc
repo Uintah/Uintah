@@ -77,9 +77,9 @@ void FieldSetWriter::execute()
   Piostream* stream;
   clString ft(filetype_.get());
   if(ft=="Binary"){
-    stream=scinew BinaryPiostream(fn, Piostream::Write);
+    stream=scinew BinaryPiostream(fn(), Piostream::Write);
   } else { // "ASCII"
-    stream=scinew TextPiostream(fn, Piostream::Write);
+    stream=scinew TextPiostream(fn(), Piostream::Write);
   }
 
   // Write the file

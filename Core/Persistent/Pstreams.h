@@ -56,14 +56,14 @@ class SCICORESHARE BinaryPiostream : public Piostream {
     bool mmapped;
     virtual void emit_pointer(int&, int&);
     int have_peekname;
-    clString peekname;
+    string peekname;
 public:
-    BinaryPiostream(const clString& filename, Direction dir);
+    BinaryPiostream(const string& filename, Direction dir);
     BinaryPiostream(int fd, Direction dir);
 
     virtual ~BinaryPiostream();
-    virtual clString peek_class();
-    virtual int begin_class(const clString& name, int);
+    virtual string peek_class();
+    virtual int begin_class(const string& name, int);
     virtual void end_class();
 
     virtual void begin_cheap_delim();
@@ -80,21 +80,21 @@ public:
     virtual void io(unsigned long&);
     virtual void io(double&);
     virtual void io(float&);
-    virtual void io(clString& string);
+    virtual void io(string& str);
 };
 
 class SCICORESHARE TextPiostream : public Piostream {
     std::ifstream* istr;
     std::ofstream* ostr;
     int have_peekname;
-    clString peekname;
+    string peekname;
     void expect(char);
     virtual void emit_pointer(int&, int&);
 public:
-    TextPiostream(const clString& filename, Direction dir);
+    TextPiostream(const string& filename, Direction dir);
     virtual ~TextPiostream();
-    virtual clString peek_class();
-    virtual int begin_class(const clString& name, int);
+    virtual string peek_class();
+    virtual int begin_class(const string& name, int);
     virtual void end_class();
 
     virtual void begin_cheap_delim();
@@ -111,21 +111,21 @@ public:
     virtual void io(unsigned long&);
     virtual void io(double&);
     virtual void io(float&);
-    virtual void io(clString& string);
-    void io(int, clString& string);
+    virtual void io(string& str);
+    void io(int, string& str);
 };
 
 class SCICORESHARE GzipPiostream : public Piostream {
     gzFile gzfile;
     int have_peekname;
-    clString peekname;
+    string peekname;
     void expect(char);
     virtual void emit_pointer(int&, int&);
 public:
-    GzipPiostream(const clString& filename, Direction dir);
+    GzipPiostream(const string& filename, Direction dir);
     virtual ~GzipPiostream();
-    virtual clString peek_class();
-    virtual int begin_class(const clString& name, int);
+    virtual string peek_class();
+    virtual int begin_class(const string& name, int);
     virtual void end_class();
 
     virtual void begin_cheap_delim();
@@ -142,22 +142,22 @@ public:
     virtual void io(unsigned long&);
     virtual void io(double&);
     virtual void io(float&);
-    virtual void io(clString& string);
-    void io(int, clString& string);
+    virtual void io(string& str);
+    void io(int, string& str);
     inline int fileOpen() { return (gzfile!=0); }
 };
 
 class SCICORESHARE GunzipPiostream : public Piostream {
     int unzipfile;	// file descriptor
     int have_peekname;
-    clString peekname;
+    string peekname;
     void expect(char);
     virtual void emit_pointer(int&, int&);
 public:
-    GunzipPiostream(const clString& filename, Direction dir);
+    GunzipPiostream(const string& filename, Direction dir);
     virtual ~GunzipPiostream();
-    virtual clString peek_class();
-    virtual int begin_class(const clString& name, int);
+    virtual string peek_class();
+    virtual int begin_class(const string& name, int);
     virtual void end_class();
 
     virtual void begin_cheap_delim();
@@ -174,8 +174,8 @@ public:
     virtual void io(unsigned long&);
     virtual void io(double&);
     virtual void io(float&);
-    virtual void io(clString& string);
-    void io(int, clString& string);
+    virtual void io(string& str);
+    void io(int, string& str);
     inline int fileOpen() { return (unzipfile!=0); }
 };
 
