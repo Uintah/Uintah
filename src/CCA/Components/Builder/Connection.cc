@@ -37,126 +37,81 @@ void Connection::resetPoints()
   
   int mid;
   
-  if(P.y()+h<R.y()-h){
-    mid=(P.x()+R.x())/2;		
+  if(P.x()+h<R.x()-h){
+    mid=(P.y()+R.y())/2;		
     
     QPointArray pa(12);
-    int ym=(P.y()+R.y())/2;
+    int xm=(P.x()+R.x())/2;
 
-    pa[0]=QPoint(P.x()-t,P.y());
-    pa[1]=QPoint(P.x()-t,P.y()+1);
-    pa[2]=QPoint(P.x()-t,P.y()+2);
+    pa[0]=QPoint(P.x(),P.y()-t);
+    pa[1]=QPoint(P.x()+1,P.y()-t);
+    pa[2]=QPoint(P.x()+2,P.y()-t);
 
-    if(P.x()<=mid) pa[3]=QPoint(pa[2].x(),ym+t);
-    else           pa[3]=QPoint(pa[2].x(),ym-t);
+    if(P.y()<=mid) pa[3]=QPoint(xm+t, pa[2].y());
+    else           pa[3]=QPoint(xm-t, pa[2].y());
      
-    pa[4]=QPoint(R.x()-t,pa[3].y());
+    pa[4]=QPoint(pa[3].x(),R.y()-t);
  
-    pa[5]=QPoint(pa[4].x(),R.y());
+    pa[5]=QPoint(R.x(),pa[4].y());
     
-    pa[6]=QPoint(R.x()+t,R.y());
+    pa[6]=QPoint(R.x(), R.y()+t);
 
-    if(P.x()<=mid) pa[7]=QPoint(pa[6].x(), ym-t);
-    else	   pa[7]=QPoint(pa[6].x(), ym+t);
+    if(P.y()<=mid) pa[7]=QPoint(xm-t,pa[6].y());
+    else	   pa[7]=QPoint(xm+t,pa[6].y());
 	
-    pa[8]=QPoint(P.x()+t,pa[7].y());
+    pa[8]=QPoint(pa[7].x(),P.y()+t);
     
-    pa[9]=QPoint(pa[8].x(),P.y()+2);
-    pa[10]=QPoint(pa[8].x(),P.y()+1);
-    pa[11]=QPoint(pa[8].x(),P.y());
+    pa[9]=QPoint(P.x()+2,pa[8].y());
+    pa[10]=QPoint(P.x()+1,pa[8].y());
+    pa[11]=QPoint(P.x(),pa[8].y());
  
     setPoints(pa);
 
   }
   else{
-    if(rUse.left()>rProvide.right()+2*t){
-      mid=(rUse.left()+rProvide.right())/2;		
+    if(rUse.top()>rProvide.bottom()+2*t){
+      mid=(rUse.top()+rProvide.bottom())/2;		
     }	
-    else if(rProvide.left()>rUse.right()+2*t){
-      mid=(rUse.right()+rProvide.left())/2;		
+    else if(rProvide.top()>rUse.bottom()+2*t){
+      mid=(rUse.bottom()+rProvide.top())/2;		
     }
     else{
-      mid=rUse.left()<rProvide.left()?rUse.left():rProvide.left();		
+      mid=rUse.top()<rProvide.top()?rUse.top():rProvide.top();		
       mid-=2*t;
     }
-QPointArray pa(12);
+    QPointArray pa(12);
+    
+    pa[0]=QPoint(P.x(),P.y()-t);
+    if(P.y()<mid) pa[1]=QPoint(P.x()+h+t,pa[0].y());
+    else          pa[1]=QPoint(P.x()+h-t,pa[0].y());
+    
+    if(P.x()+h<R.x()-h) pa[2]=QPoint(pa[1].x(),mid-t);
+    else                pa[2]=QPoint(pa[1].x(),mid+t);
+    
+    if(R.y()>mid) pa[3]=QPoint(R.x()-h+t,pa[2].y());
+    else	pa[3]=QPoint(R.x()-h-t,pa[2].y());
 
-	pa[0]=QPoint(P.x()-t,P.y());
-	if(P.x()<mid) pa[1]=QPoint(pa[0].x(),P.y()+h+t);
-	else          pa[1]=QPoint(pa[0].x(),P.y()+h-t);
- 	
-	if(P.y()+h<R.y()-h) pa[2]=QPoint(mid-t,pa[1].y());
-	else                pa[2]=QPoint(mid+t,pa[1].y());
-
-	if(R.x()>mid) pa[3]=QPoint(pa[2].x(),R.y()-h+t);
-	else					pa[3]=QPoint(pa[2].x(),R.y()-h-t);
-
-	pa[4]=QPoint(R.x()-t,pa[3].y());
-
-	pa[5]=QPoint(pa[4].x(),R.y());
-
-	pa[6]=QPoint(R.x()+t, pa[5].y());
-	
-	if(R.x()>mid) pa[7]=QPoint(pa[6].x(), R.y()-h-t);
-	else					pa[7]=QPoint(pa[6].x(), R.y()-h+t);
-	
-	if(P.y()+h<R.y()-h)	pa[8]=QPoint(mid+t,pa[7].y());
-	else	              pa[8]=QPoint(mid-t,pa[7].y());
-	
-	if(P.x()<mid) pa[9]=QPoint(pa[8].x(),P.y()+h-t);
-	else          pa[9]=QPoint(pa[8].x(),P.y()+h+t);
-
-	pa[10]=QPoint(P.x()+t,pa[9].y());
-
-	pa[11]=QPoint(pa[10].x(),P.y());
-
-	setPoints(pa);
+    pa[4]=QPoint(pa[3].x(),R.y()-t);
+    
+    pa[5]=QPoint(R.x(),pa[4].y());
+    
+    pa[6]=QPoint(pa[5].x(),R.y()+t);
+    
+    if(R.y()>mid) pa[7]=QPoint(R.x()-h-t,pa[6].y());
+    else	pa[7]=QPoint(R.x()-h+t,pa[6].y());
+    
+    if(P.x()+h<R.x()-h)	pa[8]=QPoint(pa[7].x(),mid+t);
+    else	              pa[8]=QPoint(pa[7].x(),mid-t);
+    
+    if(P.y()<mid) pa[9]=QPoint(P.x()+h-t,pa[8].y());
+    else          pa[9]=QPoint(P.x()+h+t,pa[8].y());
+    
+    pa[10]=QPoint(pa[9].x(),P.y()+t);
+    
+    pa[11]=QPoint(P.x(),pa[10].y());
+    
+    setPoints(pa);
   }
-
-/*	QPointArray pa(6);
-	int h=5; //may varies with different ports
-	pa[0]=P;
-	pa[1]=QPoint(P.x(),P.y()+h);
-	pa[2]=QPoint(mid,P.y()+h);
-	pa[3]=QPoint(mid,R.y()-h);
-	pa[4]=QPoint(R.x(),R.y()-h);
-	pa[5]=R;
-*/
-  /*
-	QPointArray pa(12);
-
-	pa[0]=QPoint(P.x()-t,P.y());
-	if(P.x()<mid) pa[1]=QPoint(pa[0].x(),P.y()+h+t);
-	else          pa[1]=QPoint(pa[0].x(),P.y()+h-t);
- 	
-	if(P.y()+h<R.y()-h) pa[2]=QPoint(mid-t,pa[1].y());
-	else                pa[2]=QPoint(mid+t,pa[1].y());
-
-	if(R.x()>mid) pa[3]=QPoint(pa[2].x(),R.y()-h+t);
-	else					pa[3]=QPoint(pa[2].x(),R.y()-h-t);
-
-	pa[4]=QPoint(R.x()-t,pa[3].y());
-
-	pa[5]=QPoint(pa[4].x(),R.y());
-
-	pa[6]=QPoint(R.x()+t, pa[5].y());
-	
-	if(R.x()>mid) pa[7]=QPoint(pa[6].x(), R.y()-h-t);
-	else					pa[7]=QPoint(pa[6].x(), R.y()-h+t);
-	
-	if(P.y()+h<R.y()-h)	pa[8]=QPoint(mid+t,pa[7].y());
-	else	              pa[8]=QPoint(mid-t,pa[7].y());
-	
-	if(P.x()<mid) pa[9]=QPoint(pa[8].x(),P.y()+h-t);
-	else          pa[9]=QPoint(pa[8].x(),P.y()+h+t);
-
-	pa[10]=QPoint(P.x()+t,pa[9].y());
-
-	pa[11]=QPoint(pa[10].x(),P.y());
-
-	setPoints(pa);
-  */
-
 }
 
 void Connection::drawShape ( QPainter & p)

@@ -44,8 +44,8 @@ Module::Module(NetworkCanvasView *parent, const string& moduleName,
   :QFrame(parent, moduleName.c_str() ), moduleName(moduleName), up(up), services(services), cid(cid)
 {
   pd=10; //distance between two ports
-  pw=10; //port width
-  ph=4; //prot height
+  pw=4; //port width
+  ph=10; //prot height
 		
   int dx=5;
 
@@ -182,14 +182,14 @@ void Module::paintEvent(QPaintEvent *e)
 
 QPoint Module::usePortPoint(int num)
 {
-	int x=pd+(pw+pd)*num+pw/2;
-	return QPoint(x,height());
+	int y=pd+(ph+pd)*num+ph/2;
+	return QPoint(width(),y);
 }
 
 QPoint Module::providePortPoint(int num)
 {
-	int x=pd+(pw+pd)*num+pw/2;
-	return QPoint(x,0);	
+	int y=pd+(ph+pd)*num+ph/2;
+	return QPoint(0,y);	
 }
 
 QPoint Module::usePortPoint(const std::string &portname)
@@ -262,11 +262,11 @@ QRect Module::portRect(int portnum, PortType porttype)
 {
 	if(porttype==PROVIDES){ //provides	
 		QPoint	r=providePortPoint(portnum);
-		return QRect(r.x()-pw/2,r.y(),pw,ph);
+		return QRect(r.x(),r.y()-ph/2,pw,ph);
 	}
 	else{
 		QPoint r=usePortPoint(portnum);
-		return QRect(r.x()-pw/2,r.y()-ph,pw,ph);
+		return QRect(r.x()-pw,r.y()-ph/2,pw,ph);
 	}
 }
 
