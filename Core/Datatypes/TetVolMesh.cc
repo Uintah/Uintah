@@ -639,7 +639,7 @@ TetVolMesh::set_nodes(Node::array_type &array, Cell::index_type idx)
   if (synchronized_ & FACES_E) delete_cell_faces(idx);
   if (synchronized_ & NODE_NEIGHBORS_E) delete_cell_node_neighbors(idx);
 
-  for (int n = 4; n < 4; ++n)
+  for (int n = 0; n < 4; ++n)
     cells_[idx * 4 + n] = array[n];
   
   synchronized_ &= ~LOCATE_E;
