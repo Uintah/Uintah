@@ -38,6 +38,8 @@ extern "C" {
 #endif
     void SCICORESHARE matsolve3by3(double mat[3][3], double rhs[3]);
     void SCICORESHARE matsolve3by3_cond(double mat[3][3], double rhs[3], double* rcond);
+    void SCICORESHARE min_norm_least_sq_3(double *A[3], double *b, double *x, double *bprime, int size, int offset_by_first_row);
+
 #ifdef __cplusplus
 }
 #endif
