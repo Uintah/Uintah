@@ -24,6 +24,8 @@ public:
 
   virtual void init( const string &, const string & );
 
+  string fullString();
+
 private:
   string host_;
   string program_;

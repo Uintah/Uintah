@@ -12,7 +12,6 @@ SciServicesImpl::SciServicesImpl()
 {
 }
 
-
 SciServicesImpl::~SciServicesImpl()
 {
   cerr << "SciServices " << id_ << " exit\n";
@@ -73,6 +72,13 @@ SciServicesImpl::init( const Framework &f, const ComponentID & id)
 { 
   framework_ = f; 
   id_ = id; 
+}
+
+void
+SciServicesImpl::done()
+{
+  framework_ = 0;
+  id_ = 0;
 }
 
 void 

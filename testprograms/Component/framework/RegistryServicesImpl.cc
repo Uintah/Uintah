@@ -41,11 +41,21 @@ RegistryServicesImpl::getActiveComponentList( array1<string> & components )
   for( ; iter != registry_->components_.end(); iter++ )
     {
       ComponentRecord * cr = (*iter).second;
-      ComponentID & cid = cr->id_;
-      components.push_back( cid->toString() );
+      ComponentIdImpl * cidp = 
+	dynamic_cast<ComponentIdImpl*>( cr->id_.getPointer());
+
+      components.push_back( cidp->fullString() );
     }
 
   registry_->connections_.readUnlock();
+}
+
+void
+RegistryServicesImpl::shutdown()
+{
+  FrameworkImpl * fw = 
+                      dynamic_cast<FrameworkImpl*>( framework_.getPointer() );
+  fw->shutdown();
 }
 
 } // namespace sci_cca

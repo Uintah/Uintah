@@ -25,8 +25,11 @@ Provider::setServices( const Services &svc )
 {
   ComponentImpl::setServices( svc );
 
-  PortInfo info = new PortInfoImpl( "Provides", "", 0 );
-  svc->addProvidesPort( test_port_, info );
+  if( svc )
+    {
+      PortInfo info = new PortInfoImpl( "Provides", "", 0 );
+      svc->addProvidesPort( test_port_, info );
+    }
 }
 
 } // namespace sci_cca
