@@ -68,7 +68,8 @@ bool BuildFEMatrix::build_FEMatrix(TetVolIntHandle hField,
   //------------------------------------------------
 {
   int np=Thread::numProcessors();
-  
+
+  np /= 2;
   if (np>10) {
     np=5;
   }
@@ -77,7 +78,7 @@ bool BuildFEMatrix::build_FEMatrix(TetVolIntHandle hField,
   hRhs = 0;
 
   BuildFEMatrixHandle hMaker = new BuildFEMatrix(hField, dirBC, tens, hA, hRhs, np);
-  cerr << "Number of processors: " << np << endl;
+  cerr << "SetupFEMatrix: number of threads being used = " << np << endl;
 
   Thread::parallel(Parallel<BuildFEMatrix>(hMaker.get_rep(), &BuildFEMatrix::parallel),
 		   np, true);
@@ -107,13 +108,24 @@ void BuildFEMatrix::parallel(int proc)
   //! Creating sparse matrix structure
   Array1<int> mycols(0, 15*ndof);
   
+  WallClockTimer t;
   if (proc==0){
+    t.start();
     hMesh_->compute_edges();
+    t.stop();
+    cerr << "SetupFEMatrix profiling:\n";
+    cerr << "   Time to compute edges (s) = "<<t.time()<<"\n";
+    t.clear();
+    t.start();
     hMesh_->compute_node_neighbors();
+    t.stop();
+    cerr << "   Time to compute node neighbors (s) = "<<t.time()<<"\n";
+    t.clear();
   }
 
   barrier_.wait(np_);
   
+  if (proc==0) t.start();
   TetVolMesh::node_array neib_nodes;
   for(i=start_node;i<end_node;i++){
     rows_[r++]=mycols.size();
@@ -131,6 +143,13 @@ void BuildFEMatrix::parallel(int proc)
     }
   }
   
+  if (proc==0) {
+    t.stop();
+    cerr << "   Time to get all of the neighbors (p) = "<<t.time()<<"\n";
+    t.clear();
+    t.start();
+  }
+
   colIdx_[proc]=mycols.size();
   
   //! check point
@@ -191,29 +210,49 @@ void BuildFEMatrix::parallel(int proc)
     a[i]=0;
   }
   
+  if (proc==0) {
+    t.stop();
+    cerr << "   Time to alloc and initialize matrices (p) = "<<t.time()<<"\n";
+    t.clear();
+    t.start();
+  }
+
   //----------------------------------------------------------
   //! Filling the matrix
   TetVolMesh::cell_iterator ii;
+  WallClockTimer lcl_timer, gbl_timer, mesh_timer;
   
   double lcl_matrix[4][4];
-  
+   
+  TetVolMesh::node_array cell_nodes(4);
   for (ii=hMesh_->cell_begin(); ii!=hMesh_->cell_end(); ++ii){
-  
-    TetVolMesh::node_array  cell_nodes;
+
+    if (proc==0) mesh_timer.start();
     hMesh_->get_nodes(cell_nodes, *ii); 
-    
+    if (proc==0) mesh_timer.stop();
+
     //! calculate local matrix if at least one node in the cell belongs to the process nodes range
     if (  (cell_nodes[0] >= start_node && cell_nodes[0] < end_node)
        || (cell_nodes[1] >= start_node && cell_nodes[1] < end_node)
        || (cell_nodes[2] >= start_node && cell_nodes[2] < end_node)
        || (cell_nodes[3] >= start_node && cell_nodes[3] < end_node)){
-       
+
+      if (proc==0) lcl_timer.start();
       build_local_matrix(lcl_matrix, *ii);
-     
+      if (proc==0) {lcl_timer.stop(); gbl_timer.start();}
       add_lcl_gbl(lcl_matrix, *ii, start_node, end_node);
+      if (proc==0) gbl_timer.stop();
     }
   }
   
+  if (proc==0) {
+    t.stop();
+    cerr << "   Time to fill in stiffness matrix (p) = "<<t.time()<<"\n";
+    cerr << "      time spent in build_local_matrix = "<<lcl_timer.time()<<"\n";
+    cerr << "      time spent in add_lcl_gbl = "<<gbl_timer.time()<<"\n";
+    cerr << "      time spent in get_nodes = "<<mesh_timer.time()<<"\n";
+  }
+
   barrier_.wait(np_);
  
   //! adjusting matrix for Dirichlet BC on first processor
@@ -318,8 +357,7 @@ void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::cell_inde
 
 void BuildFEMatrix::add_lcl_gbl(double lcl_a[4][4], TetVolMesh::cell_index c_ind, int s, int e)
 {
-  TetVolMesh::node_array cell_nodes;
-
+  TetVolMesh::node_array cell_nodes(4);
   hMesh_->get_nodes(cell_nodes, c_ind); 
 
   for (int i=0; i<4; i++) {
