@@ -96,10 +96,6 @@ public:
     int check_clip; // see if you should ignore clipping planes
     
     int clip_planes; // clipping planes that are on
-    double point_size; // so points can be thicker than 1 pixel
-    double line_width; // so lines can be thicker than 1 pixel
-    double polygon_offset_factor; // so lines and points are offset from faces
-    double polygon_offset_units; // so lines and points are offset from faces
 
     Material* current_matl;
     void set_matl(Material*);
@@ -128,6 +124,11 @@ public:
     double specular_scale_;
     double emission_scale_;
     double shininess_scale_;
+    double point_size_; // so points can be thicker than 1 pixel
+    double line_width_; // so lines can be thicker than 1 pixel
+    double polygon_offset_factor_; // so lines and points are offset from faces
+    double polygon_offset_units_; // so lines and points are offset from faces
+
 #ifndef _WIN32
     Display *dpy;
 #endif
