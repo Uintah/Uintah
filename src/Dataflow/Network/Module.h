@@ -221,7 +221,9 @@ protected:
 
   virtual void tcl_command(GuiArgs&, void*);
 
+  //private:
   GuiInterface* gui;
+protected:
   GuiContext* ctx;
 
   friend class ModuleHelper;

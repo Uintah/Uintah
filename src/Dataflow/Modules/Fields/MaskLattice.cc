@@ -30,14 +30,11 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/MaskedLatVolField.h>
-#include <Core/Geometry/BBox.h>
-#include <Core/Geometry/Point.h>
-#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/Datatypes/Clipper.h>
-#include <Core/Datatypes/FieldInterface.h>
+#include <Dataflow/Modules/Fields/MaskLattice.h>
+
 #include <iostream>
+#include <sci_hash_map.h>
 
 namespace SCIRun {
 
@@ -56,46 +53,6 @@ private:
 
 DECLARE_MAKER(MaskLattice)
 
-
-class ScalarClipper : public Clipper
-{
-private:
-  ScalarFieldInterfaceHandle sfi_;
-  string function_;
-  GuiInterface *gui_;
-  string id_;
-
-public:
-  ScalarClipper(ScalarFieldInterfaceHandle sfi,
-		string function,
-		GuiInterface *gui,
-		string id) :
-    sfi_(sfi),
-    function_(function),
-    gui_(gui),
-    id_(id)
-  { 
-  }
-
-  virtual bool inside_p(const Point &p)
-  {
-    double val;
-    if (sfi_->interpolate(val, p))
-    {
-      string result;
-      gui_->eval(id_ + " functioneval " +
-		 to_string(val) + " {" + function_ + "}",
-		 result);
-      if (result == "1")
-      {
-	return true;
-      }
-    }
-    return false;
-  }
-
-  virtual bool mesh_p() { return true; }
-};
 
 
 MaskLattice::MaskLattice(GuiContext* ctx)
@@ -131,103 +88,24 @@ MaskLattice::execute()
     error("This module only works on fields containing scalar data.");
     return;
   }
-  
-
-  LatVolField<double> *infield = 
-    dynamic_cast<LatVolField<double> *>(ifieldhandle.get_rep());
-  LatVolMesh *inmesh = infield->get_typed_mesh().get_rep();
-  const BBox bbox = inmesh->get_bounding_box();
-  MaskedLatVolMesh *mesh = scinew MaskedLatVolMesh(inmesh->get_ni(), 
-						   inmesh->get_nj(), 
-						   inmesh->get_nk(),
-						   bbox.min(), bbox.max());
-
-  MaskedLatVolField<double> *of = 
-    scinew MaskedLatVolField<double>(mesh, infield->data_at());
-
-  ScalarClipper clipper(ifieldhandle->query_scalar_interface(this), 
-			maskfunction_.get(),gui, id);
-
-
-  switch (infield->data_at())
+  if (ifieldhandle->data_at() != Field::CELL)
   {
-  case Field::NODE:
-    {
-      MaskedLatVolMesh::Node::iterator iter, iend;
-      mesh->begin(iter);
-      mesh->end(iend);
-      while (iter != iend)
-	{
-	  Point p;
-	  mesh->get_center(p,*iter);
-	  if (!clipper.inside_p(p))
-	    {
-	      MaskedLatVolMesh::Cell::index_type 
-		idx((*iter).mesh_, (*iter).i_, (*iter).j_, (*iter).k_);
-	      mesh->mask_cell(idx);
-	    }
-	  ++iter;
-	}
-    }
-    break;
-  case Field::EDGE:
-    {
-      MaskedLatVolMesh::Edge::iterator iter, iend;
-      mesh->begin(iter);
-      mesh->end(iend);
-      while (iter != iend)
-	{
-	  Point p;
-	  mesh->get_center(p,*iter);
-	  if (!clipper.inside_p(p))
-	    {
-	      MaskedLatVolMesh::Cell::index_type 
-		idx((*iter).mesh_, (*iter).i_, (*iter).j_, (*iter).k_);
-	      mesh->mask_cell(idx);
-	    }
-	  ++iter;
-	}
-    }
-    break;
-  case Field::FACE:
-    {
-      MaskedLatVolMesh::Face::iterator iter, iend;
-      mesh->begin(iter);
-      mesh->end(iend);
-      while (iter != iend)
-	{
-	  Point p;
-	  mesh->get_center(p,*iter);
-	  if (!clipper.inside_p(p))
-	    {
-	      MaskedLatVolMesh::Cell::index_type 
-		idx((*iter).mesh_, (*iter).i_, (*iter).j_, (*iter).k_);
-	      mesh->mask_cell(idx);
-	    }
-	  ++iter;
-	}
-    }
-    break;
-  default:
-  case Field::CELL:
-    {
-      MaskedLatVolMesh::Node::iterator iter, iend;
-      mesh->begin(iter);
-      mesh->end(iend);
-      while (iter != iend)
-	{	
-	  Point p;
-	  mesh->get_center(p,*iter);
-	  if (!clipper.inside_p(p))
-	    {
-	      MaskedLatVolMesh::Cell::index_type 
-		idx((*iter).mesh_, (*iter).i_, (*iter).j_, (*iter).k_);
-	      mesh->mask_cell(idx);
-	    }
-	  ++iter;
-	}
-    }
+    error("This module currently only works on fields containing data at cells.");
+    return;
   }
+  
+  const TypeDescription *ftd = ifieldhandle->get_type_description();
+  const TypeDescription *ltd = ifieldhandle->data_at_type_description();
+  CompileInfoHandle ci =
+    MaskLatticeAlgo::get_compile_info(ftd, ltd, maskfunction_.get());
+  Handle<MaskLatticeAlgo> algo;
+  if (!module_maybe_dynamic_compile(ci, algo))
+  {
+    //DynamicLoader::scirun_loader().remove_cc(*(ci.get_rep()), cout);
+    error("Your function would not compile.");
+    return;
+  }
+  FieldHandle ofield(algo->execute(ifieldhandle));
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Masked Field");
   if (!ofp) 
@@ -235,8 +113,51 @@ MaskLattice::execute()
     error("Unable to initialize oport 'Output Sample Field'.");
     return;
   }
-  FieldHandle ofh = of;
-  ofp->send(ofh);
+  ofp->send(ofield);
+}
+
+
+CompileInfoHandle
+MaskLatticeAlgo::get_compile_info(const TypeDescription *field_td,
+				  const TypeDescription *loc_td,
+				  string clipfunction)
+{
+  hash<const char *> H;
+  unsigned int hashval = H(clipfunction.c_str());
+
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  const string template_name("MaskLatticeInstance" + to_string(hashval));
+  static const string base_class_name("MaskLatticeAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_name + "." +
+		       field_td->get_filename() + "." +
+		       loc_td->get_filename() + ".",
+                       base_class_name, 
+                       template_name, 
+                       "Masked" + field_td->get_name() + ", " +
+		       "Masked" + loc_td->get_name() + ", " + 
+		       field_td->get_name() + ", " +
+		       loc_td->get_name());
+
+  // Code for the clip function.
+  string class_declaration =
+    string("\"\n\nusing namespace SCIRun;\n\n") + 
+    "template <class A, class B, class C, class D>\n" +
+    "class " + template_name + " : public MaskLatticeAlgoT<A, B, C, D>\n" +
+    "{\n" +
+    "  virtual bool vinside_p(double x, double y, double z,\n" +
+    "                         typename A::value_type v)\n" +
+    "  {\n" +
+    "    return " + clipfunction + ";\n" +
+    "  }\n" +
+    "};\n//";
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path + class_declaration);
+  field_td->fill_compile_info(rval);
+  return rval;
 }
 
 

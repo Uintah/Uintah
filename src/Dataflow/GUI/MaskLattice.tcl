@@ -26,20 +26,12 @@ itcl_class SCIRun_Fields_MaskLattice {
     }
 
     method set_defaults {} {
-	set $this-maskfunction "\$x > 0"
+	set $this-maskfunction "v > 0"
     }
     method execrunmode {} {
 	set $this-execmode execute
 	$this-c needexecute
     }
-    method functioneval {x function} {
-	if {![catch {expr $function} result]} {
-	    return $result
-	}
-	return 0
-    }
-
-
 
     method ui {} {
         set w .ui[modname]
