@@ -36,6 +36,7 @@
 #include <Core/Util/Signals.h>
 
 namespace SCIRun {
+using std::string;
   
 class Part;
 class SciEvent;
@@ -79,7 +80,7 @@ template<class T, class Arg>
 void PartInterface::report_children( T *t, void (T::*fun)(Arg) )
 {
   Slot1<T,Arg> slot(t, fun);
-  return report_children( slot );
+  report_children( slot );
 }
 
 
@@ -87,7 +88,7 @@ template<class T, class Arg>
 void PartInterface::report_children( T &t, void (T::*fun)(Arg) )
 {
   Slot1<T,Arg> slot(&t, fun);
-  return report_children( slot );
+  report_children( slot );
 }
 
 } // namespace SCIRun
