@@ -68,6 +68,11 @@ WARNING
 	 
 	 // Destructor
 	 virtual ~SingleVelContact();
+
+	 // Initialiation function, empty for Single Velocity contact
+	 virtual void initializeContact(const Region* region,
+					int vfindex,
+					DataWarehouseP& new_dw);
 	 
 	 // Basic contact methods
 	 virtual void exMomInterpolated(const ProcessorContext*,
@@ -88,6 +93,10 @@ WARNING
 #endif /* __SINGLE_VEL_H__ */
 
 // $Log$
+// Revision 1.7  2000/05/08 18:42:47  guilkey
+// Added an initializeContact function to all contact classes.  This is
+// a null function for all but the FrictionContact.
+//
 // Revision 1.6  2000/04/27 21:28:58  jas
 // Contact is now created using a factory.
 //

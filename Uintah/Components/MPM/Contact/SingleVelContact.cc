@@ -51,6 +51,13 @@ SingleVelContact::~SingleVelContact()
 
 }
 
+void SingleVelContact::initializeContact(const Region* region,
+					 int vfindex,
+					 DataWarehouseP& new_dw)
+{
+
+}
+
 void SingleVelContact::exMomInterpolated(const ProcessorContext*,
 					 const Region* region,
 					 const DataWarehouseP&,
@@ -159,6 +166,10 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.12  2000/05/08 18:42:46  guilkey
+// Added an initializeContact function to all contact classes.  This is
+// a null function for all but the FrictionContact.
+//
 // Revision 1.11  2000/05/02 18:41:18  guilkey
 // Added VarLabels to the MPM algorithm to comply with the
 // immutable nature of the DataWarehouse. :)

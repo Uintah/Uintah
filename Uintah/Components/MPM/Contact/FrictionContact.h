@@ -74,6 +74,11 @@ WARNING
 	 
 	 // Destructor
 	 virtual ~FrictionContact();
+
+         // Initialiation function create storage for traction and surf. norm.
+         virtual void initializeContact(const Region* region,
+                                        int vfindex,
+                                        DataWarehouseP& new_dw);
 	 
 	 // Basic contact methods
 	 virtual void exMomInterpolated(const ProcessorContext*,
@@ -94,6 +99,10 @@ WARNING
 #endif /* __FRICTION_H__ */
 
 // $Log$
+// Revision 1.5  2000/05/08 18:42:46  guilkey
+// Added an initializeContact function to all contact classes.  This is
+// a null function for all but the FrictionContact.
+//
 // Revision 1.4  2000/05/05 22:37:27  bard
 // Added frictional contact logic.  Compiles but doesn't yet work.
 //

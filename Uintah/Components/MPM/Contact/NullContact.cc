@@ -26,6 +26,13 @@ NullContact::~NullContact()
 
 }
 
+void NullContact::initializeContact(const Region* region,
+                                    int vfindex,
+                                    DataWarehouseP& new_dw)
+{
+
+}
+
 void NullContact::exMomInterpolated(const ProcessorContext*,
 				    const Region*,
 				    const DataWarehouseP& /*old_dw*/,
@@ -45,6 +52,10 @@ void NullContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.7  2000/05/08 18:42:46  guilkey
+// Added an initializeContact function to all contact classes.  This is
+// a null function for all but the FrictionContact.
+//
 // Revision 1.6  2000/05/02 06:07:14  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //
