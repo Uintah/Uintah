@@ -115,7 +115,7 @@ Component  specification dtd.
 <!ELEMENT device (devicename, description)>
 
 <!-- GUI description (words and pictures) -->
-<!ELEMENT gui (description, parameter+, img)>
+<!ELEMENT gui (description, parameter+, img+)>
 
 <!-- Description of 1 gui parameter. -->
 <!ELEMENT parameter (widget, datatype, label, description)>
