@@ -316,7 +316,7 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
     control_ = b.min() + diagv * 0.5;
   }
   if( control_id_ == -1 ){
-    GeomObj *w=control_widget_->GetWidget();
+    GeomHandle w =control_widget_->GetWidget();
     control_id_ = ogeom_->addObj( w, control_name, &control_lock_);
   }
 

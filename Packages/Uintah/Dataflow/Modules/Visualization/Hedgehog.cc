@@ -261,11 +261,11 @@ void Hedgehog::execute()
   if (init == 1) 
   {
     init = 0;
-    GeomObj *w2d = widget2d->GetWidget() ;
-    GeomObj *w3d = widget3d->GetWidget() ;
-    GeomGroup* w = new GeomGroup;
-    w->add(w2d);
-    w->add(w3d);
+    GeomHandle w2d = widget2d->GetWidget() ;
+    GeomHandle w3d = widget3d->GetWidget() ;
+    GeomHandle w = new GeomGroup;
+    ((GeomGroup*)w.get_rep())->add(w2d);
+    ((GeomGroup*)w.get_rep())->add(w3d);
     widget_id = ogeom->addObj( w, widget_name, &widget_lock );
 
     widget2d->Connect( ogeom );

@@ -231,10 +231,9 @@ void CuttingPlane::execute()
   {
 
     init = 0;
-    GeomObj *w = widget->GetWidget() ;
+    GeomHandle w = widget->GetWidget() ;
     Transform t;  t.post_translate( Vector( xt.get(), yt.get(), zt.get()));
-    GeomTransform *gt =
-      scinew GeomTransform( w, t);
+    GeomHandle gt = scinew GeomTransform( w, t);
     widget_id = ogeom->addObj( gt, widget_name, &widget_lock );
     widget->Connect( ogeom );
     widget->SetRatioR( 0.4 );
@@ -243,10 +242,9 @@ void CuttingPlane::execute()
     if (widget_id != 0) {
       ogeom->delObj( widget_id );
     }
-    GeomObj *w = widget->GetWidget() ;
+    GeomHandle w = widget->GetWidget() ;
     Transform t;  t.post_translate( Vector( xt.get(), yt.get(), zt.get()));
-    GeomTransform *gt =
-      scinew GeomTransform( w, t);
+    GeomHandle gt = scinew GeomTransform( w, t);
     widget_id = ogeom->addObj( gt, widget_name, &widget_lock );
   }
   if (need_find.get() != find)

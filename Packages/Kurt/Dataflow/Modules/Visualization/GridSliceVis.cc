@@ -65,6 +65,7 @@ using SCIRun::Interpolate;
 using SCIRun::GuiContext;
 using SCIRun::Point;
 using SCIRun::Vector;
+using SCIRun::GeomHandle;
 
 static std::string control_name("Control Widget");
 			 
@@ -317,7 +318,7 @@ void GridSliceVis::execute(void)
   //AuditAllocator(default_allocator);
   if(drawX.get() || drawY.get() || drawZ.get()){
     if( control_id == -1 ){
-      GeomObj *w=control_widget->GetWidget();
+      GeomHandle w=control_widget->GetWidget();
       control_id = ogeom->addObj( w, control_name, &control_lock);
       widget_moved(1);
     }
