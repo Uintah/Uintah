@@ -902,7 +902,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       if(mpm_matl){
         new_dw->allocate(vel_CC[m],  MIlb->velstar_CCLabel,     dwindex, patch);
         new_dw->allocate(Temp_CC[m], MIlb->temp_CC_scratchLabel,dwindex, patch);
-        new_dw->get(mass_L[m],        Ilb->rho_CCLabel,         dwindex, patch,
+        new_dw->allocate(mass_L[m],   Ilb->mass_L_CCLabel,      dwindex, patch);
+        new_dw->get(rho_CC[m],        Ilb->rho_CCLabel,         dwindex, patch,
 							        Ghost::None, 0);
         cv[m] = mpm_matl->getSpecificHeat();
       }
@@ -940,7 +941,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       if(mpm_matl){
        // Loaded rho_CC into mass_L for solid matl's, converting to mass_L
        for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-	  mass_L[m][*iter] *=vol;
+	  mass_L[m][*iter] = rho_CC[m][*iter]*vol;
        }
       }
     }
