@@ -108,7 +108,7 @@ for all modules and consists of the following elements:
   ports.  Every module has  at least one input or one output
   port.
   
-  \descitem{UI button} Pressing the \button{UI} button displays the
+  \descitem{UI button} Pressing the \guibutton{UI} button displays the
   module's control dialog. Some modules have no dialog, some have
   simple dialogs, and some have complex dialogs that allow
   elaborate control over the module.  Figure~\ref{fig:moddialog} shows
@@ -165,7 +165,7 @@ for all modules and consists of the following elements:
     selected modules.  See \secref{Creating a Sub-Network}{sec:crsubnet}.
     
     \menuitemdesc{Expand Sub-Network} Reverses the action of menu item
-    \menuitem{Make Sub-Network}.  This menu item is available only in
+    \guimenuitem{Make Sub-Network}.  This menu item is available only in
     a sub-network's pop-up menu.  See \secref{Expanding a
       Sub-Network}{sec:expsubnet}.
     
@@ -233,7 +233,7 @@ placed in the NetEdit frame.
   {../Figures/moddialog.gif}}
 \end{htmlonly}
 
-To change a module's properties, click its \button{UI} button.  This
+To change a module's properties, click its \guibutton{UI} button.  This
 displays the module's control dialog.  Use the dialog to change the
 module's properties.  Each \htmladdnormallinkfoot{module's reference
   documentation}{\latexhtml{http://software.sci.utah.edu/doc/}{../../../}Developer/Modules/index.html}
@@ -280,11 +280,11 @@ group is forgotten and a new group is created.
 \section{Destroying Modules}
 \label{sec:destroymod}
 
-To delete a module, choose menu item \menuitem{Destroy} from a module's
+To delete a module, choose menu item \guimenuitem{Destroy} from a module's
 pop-up menu.
 
 Multiple modules can be deleted at one time. Select one or more
-modules, then choose menu item \menuitem{Destroy} from a module's
+modules, then choose menu item \guimenuitem{Destroy} from a module's
 pop-up menu.
 
 \section{Moving Modules}
@@ -305,13 +305,13 @@ Modules may be temporarily disabled.  Disabled modules do not execute
 and data does not flow through them.
 
 To disable modules, select one or more modules, then
-choose menu item \menuitem{Disable} from a module's pop-up menu.
+choose menu item \guimenuitem{Disable} from a module's pop-up menu.
 
 Disabling a module disables all incoming and outgoing connections to
 the module and prevents the module from executing during execution of
 the network. Disabled modules are drawn in a darker shade of grey.
 
-To enable disabled modules, choose \menuitem{Enable} from a disabled
+To enable disabled modules, choose \guimenuitem{Enable} from a disabled
 module's pop-up menu.  Enabling one module enables all modules in a
 disabled module's group.
 
@@ -337,7 +337,7 @@ module.  In a network, you may use a sub-network as you would a
 module.
 
 To create a sub-network, select one or more modules, then choose item
-\menuitem{Create Sub-Network} from any selected module's pop-up menu.
+\guimenuitem{Create Sub-Network} from any selected module's pop-up menu.
 Selected modules will be replaced by a sub-network graphic and the
 sub-network editor will activate.  Sub-networks may be created in
 sub-networks.  The next section (\secref{Editing a
@@ -372,12 +372,12 @@ notes (see \secref{Editing and Displaying Module
 \section{Expanding a Sub-Network}
 \label{sec:expsubnet}
 
-Expanding a network reverses the action of menu item \menuitem{Create
+Expanding a network reverses the action of menu item \guimenuitem{Create
   Sub-Network}---all modules in a sub-network are returned to the
 network containing the sub-network and the sub-network is destroyed.
 This action cannot be undone.
 
-To expand a sub-network choose menu item \menuitem{Expand Sub-Network}
+To expand a sub-network choose menu item \guimenuitem{Expand Sub-Network}
 from the sub-network's pop-up menu.
 
 \section{Editing a Sub-Network}
@@ -424,10 +424,10 @@ A sub-network can be renamed by entering its new name into the
 
 Sub-networks can be saved for reuse in networks and sub-networks.
 
-Sub-networks are saved in the \directory{subnets} directory of \sr{}'s
+Sub-networks are saved in the \directory{Subnets} directory of \sr{}'s
 build directory, if it exists and is writable (which applies only when
 \sr{} has been built from its source code).  Otherwise, sub-networks
-are saved in the \directory{subnets} directory of a user's home
+are saved in the \directory{SCIRun/Subnets} directory of a user's home
 directory.
 
 To save a sub-network, press the sub-network's \guibutton{Sub-Network}
@@ -465,7 +465,7 @@ Module notes allow the user to document the purpose of each module by
 attaching notes to each module in the NetEdit window.  Notes can be
 displayed or hidden.
 
-To create or edit module notes, choose menu item \menuitem{Notes} from
+To create or edit module notes, choose menu item \guimenuitem{Notes} from
 a module's pop-up menu. Enter new notes or edit existing notes in
 the note editor dialog.
 
@@ -484,7 +484,7 @@ NetEdit to the right, top, left, right, or bottom of the module
 respectively. 
 
 Choose \guibutton{None} to hide module notes.  Displayed notes can be
-hidden by clicking \keyboard(Button2) when the pointer is on the
+hidden by clicking \keyboard{Button2} when the pointer is on the
 notes.  Hiding notes does not delete notes.
 
 The note editor dialog can be activated by clicking \keyboard{Button1}
@@ -497,7 +497,7 @@ on notes displayed in the NetEdit window.
 Each module supports a message log. The module writes error messages
 or other types of messages to its log.
 
-To display a modules log, choose \menuitem{Show Log} from a module's
+To display a module's log, choose \guimenuitem{Show Log} from a module's
 pop-up menu.
 
 
@@ -505,19 +505,19 @@ pop-up menu.
 \label{sec:connectmods}
 
 To connect the output (input) port of one module to the input (output)
-port of another module, use \keyboard(Button2). Clicking
-\keyboard(Button3) on a connection gives access to a pop-up menu. Use
+port of another module, use \keyboard{Button2}. Clicking
+\keyboard{Button3} on a connection gives access to a pop-up menu. Use
 the pop-up menu to disable, delete, or annotate a connection.
 
 To make a connection, position the mouse pointer over a module's input
 (output) port.  Then perform \keyboard{Button2-Drag} and drag the
 mouse pointer toward another module's output (input) port.
 
-When \keyboard(Button2) is pressed, the program shows all valid connections as black
+When \keyboard{Button2} is pressed, the program shows all valid connections as black
 lines.  It also draws one red colored connection, which is the
-connection made if the drag is stopped by releasing \keyboard(Button2).
+connection made if the drag is stopped by releasing \keyboard{Button2}.
 
-Make the connection by releasing \keyboard(Button2) when the pointer is over the
+Make the connection by releasing \keyboard{Button2} when the pointer is over the
 desired destination port, or when the red colored connection is the
 desired connection.  The connection is drawn using the color
 corresponding to the connection's data type.
@@ -532,7 +532,7 @@ Connection notes allow the user to document the purpose of
 each connection by attaching notes to each connection in the NetEdit window.
 Notes can be displayed or hidden.
 
-To create or edit connection notes, choose menu item \menuitem{Notes} from
+To create or edit connection notes, choose menu item \guimenuitem{Notes} from
 a connection's pop-up menu. Enter new notes or edit existing notes in
 the note editor dialog.
 
@@ -551,7 +551,7 @@ NetEdit to the right, top, left, right, or bottom of the connection
 respectively. 
 
 Choose \guibutton{None} to hide connection notes.  Displayed notes can be
-hidden by clicking \keyboard(Button2) when the pointer is over the
+hidden by clicking \keyboard{Button2} when the pointer is over the
 notes.  Hiding notes does not delete notes.
 
 The note editor dialog can be activated by clicking \keyboard{Button1}
@@ -561,19 +561,19 @@ on notes displayed in the NetEdit window.
 \label{sec:highlightconnect}
 
 To highlight the tree of connections affecting a connection, click
-\keyboard(Button1) anywhere on a connection.
+\keyboard{Button1} anywhere on a connection.
 
 To highlight the tree of connections downstream an output port,
-click \keyboard(Button1) on the output port.
+click \keyboard{Button1} on the output port.
 
 To highlight the tree of connections upstream an input port,
-click \keyboard(Button1) on the input port.
+click \keyboard{Button1} on the input port.
 
 \section{Disabling a Connection}
 \label{sec:disableconnect}
 
-To disable a connection, click \keyboard(Button3) on the connection to
-bring up the connection menu and select \menuitem{Disable}. The
+To disable a connection, click \keyboard{Button3} on the connection to
+bring up the connection menu and select \guimenuitem{Disable}. The
 connection appears grey.
 
 Disabling a connection prevents data from flowing through, as if it were
@@ -591,7 +591,7 @@ deletion.
 \section{Deleting a Connection}
 \label{sec:deleteconnections}
 
-To delete a connection, choose menu item \menuitem{Delete} from a
+To delete a connection, choose menu item \guimenuitem{Delete} from a
 connection's pop-up menu or click \keyboard{C-Button2} while the
 pointer is on a connection.
 
@@ -622,7 +622,7 @@ executed, it executes them (in parallel where possible).
 Network execution is mostly transparent.  That is, events that trigger
 module execution usually generate automatically. Sometimes,
 however, the user must manually
-generate a triggering event by choosing the \menuitem{Execute} item from a
+generate a triggering event by choosing the \guimenuitem{Execute} item from a
 module's pop-up menu.
 
 \subsection{Details}
@@ -671,7 +671,7 @@ Examples of feedback modules are \module{DipoleSearch} and
 
 It is useful to document the function of a network.  A network's note
 pad is used for this purpose.  To edit the network's note pad,
-select the \menuitem{Add Info} item from the main window's \menu{File}
+select the \guimenuitem{Add Info} item from the main window's \menu{File}
 menu.  This displays the network's note pad editor.  The editor
 allows the user to write notes on the purpose and use of the network.
 
@@ -682,17 +682,17 @@ allows the user to write notes on the purpose and use of the network.
 \filename{.net} (in the past they also had .sr and .uin
 extensions).  
 
-To save a network, select \menuitem{Save} item from the main window's
+To save a network, select \guimenuitem{Save} item from the main window's
 \menu{File} menu.  A file browser dialog prompts for the
 name and location of the network file.
 
-If  changes are made to an existing network, \menuitem{Save} 
+If  changes are made to an existing network, \guimenuitem{Save} 
 saves changes made to an existing net file.
 
 Save an existing network under a new name using the
-\menuitem{Save As...} menu item.  A file browser dialog prompts
+\guimenuitem{Save As...} menu item.  A file browser dialog prompts
 for the new name of the network file.  Subsequent uses of
-\menuitem{Save} saves changes to the newly created file.
+\guimenuitem{Save} saves changes to the newly created file.
 
 Network files are  \dfna{Tool Command Language}{TCL} scripts.
 These files can be edited, however, reasons for doing so are beyond
@@ -701,7 +701,7 @@ the scope of this guide.
 \section{Loading a Network}
 \label{sec:opennet}
 
-To load a network file, select the \menuitem{Load} item from the main
+To load a network file, select the \guimenuitem{Load} item from the main
 window's \menu{File} menu.   A file browser dialog prompts for the
 name and location of the network file.
 
@@ -712,21 +712,21 @@ the NetEdit frame, possibly overlapping the networks.
 \label{sec:insertnetwork}
 
 To avoid merging networks, select the
-\menuitem{Insert} item from the main window's \menu{File} menu. This
+\guimenuitem{Insert} item from the main window's \menu{File} menu. This
 option allows the user to place one \sr{} network next to another,
 avoiding overlap.  A file browser dialog prompts the user for the name and
 location of the network file.
 
 The new network is inserted into the upper left corner of the
 NetEdit frame.  If a network of modules already exists in the NetEdit
-frame, the \menuitem{Insert} command places a new network to the
+frame, the \guimenuitem{Insert} command places a new network to the
 immediate right of the existing network.
 
 \section{Clearing a Network}
 \label{sec:clearnetwork}
 
 To remove all modules and connections from the 
-NetEdit frame, select the \menuitem{Clear} item from the main window's
+NetEdit frame, select the \guimenuitem{Clear} item from the main window's
 \menu{File} menu.  A text box appears, confirming whether the
 user wants to proceed with or cancel the clearing operation.
 
@@ -742,7 +742,7 @@ rectangular region (outlined in black) in the Global View Frame is the
 network view tool and a window on the network world. The position of
 the view tool determines the part of the network visible in the
 NetEdit frame.  To view other parts of the network, press
-\keyboard(Button1) while the pointer is anywhere in the Global View
+\keyboard{Button1} while the pointer is anywhere in the Global View
 Frame---this moves the tool to the location of the pointer -- then
 drag the tool to the new location.
 
@@ -759,4 +759,4 @@ window. This shell displays the prompt
 It is possible to type \tcl{} \sr{} commands at the prompt.  For
 instance, to load a network type \keyboard{source 
 \ptext{network file name}}.  This has the same effect as the \menu{File}
-menu's \menuitem{Load} command.
+menu's \guimenuitem{Load} command.
