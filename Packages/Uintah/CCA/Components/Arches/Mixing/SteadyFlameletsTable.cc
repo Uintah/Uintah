@@ -58,6 +58,7 @@ SteadyFlameletsTable::problemSetup(const ProblemSpecP& params)
   // Define mixing table, which includes call reaction model constructor
   d_tableDimension = d_numMixingVars + d_numRxnVars + d_numMixStatVars + !(d_adiabatic)+1;
   readMixingTable(d_inputfile);
+  readChiTable();
   // Printing the indices of the species 
   cout<<"CO2 index is " << co2_index<<endl;
   cout<<"H2O index is " << h2o_index<<endl;
@@ -81,7 +82,7 @@ SteadyFlameletsTable::computeProps(const InletStream& inStream,
   if (inStream.d_mixVarVariance.size() != 0)
     mixFracVars = inStream.d_mixVarVariance[0];
   // Raj advised to multiply by 2.0
-  double scalDisp=2.0*inStream.d_scalarDisp;	
+  double scalDisp_filtered=2.0*inStream.d_scalarDisp;	
   if(mixFrac > 1.0)
 	mixFrac=1.0;
   else if (mixFrac < small)
@@ -91,6 +92,8 @@ SteadyFlameletsTable::computeProps(const InletStream& inStream,
   double var_limit=mixFracVars/((mixFrac*(1.0-mixFrac))+small);
   if(var_limit > 0.9)
   	mixFracVars=(2.0/3.0)*mixFracVars;
+  //Mapping the filtered khi to the flamelets khi
+  double scalDisp=scalDisp_filtered/chitableLookUp(mixFrac,mixFracVars);   
   // Clipping the scalar disspation to minimum and maximum levels  
   if(scalDisp < scalarDisp[0])
 	  scalDisp = scalarDisp[0];
@@ -99,11 +102,12 @@ SteadyFlameletsTable::computeProps(const InletStream& inStream,
   // Looking for the properties corresponding to the scalar dissipation 
   tableLookUp(mixFrac, mixFracVars, scalDisp, outStream); 
   // Debug print statements
-  /*cout<<"Temperature for properties is:  "<<outStream.d_temperature<<endl;
-  cout<<"Density for properties is:  "<<outStream.d_density<<endl;
+  //cout<<"Temperature for properties is:  "<<outStream.d_temperature<<endl;
+  /*cout<<"Density for properties is:  "<<outStream.d_density<<endl;
   cout<<"Mixture fraction is :  "<<mixFrac<<endl;
-  cout<<"Mixture fraction variance is :  "<<mixFracVars<<endl;
-  cout<<"Scalar Dissipation is :  "<< scalDisp<<endl; */
+  cout<<"Mixture fraction variance is :  "<<mixFracVars<<endl;*/
+  //cout<<"Filetered Scalar Dissipation is :  "<< scalDisp_filtered<<endl; 
+  //cout<<"Flamelets Scalar Dissipation is :  "<< scalDisp<<endl; 
 }
 
 //****************************************************************************
@@ -250,6 +254,58 @@ void SteadyFlameletsTable::tableLookUp(double mixfrac, double mixfracVars, doubl
   outStream.d_c2h2= (dhl_lo*s2[c2h2_index]-dhl_hi*s1[c2h2_index])/(dhl_lo-dhl_hi); 
 
 }
+
+//****************************************************************************
+//Interpolating for the integral to map the LES chi to flamelets chi 
+//****************************************************************************
+
+double SteadyFlameletsTable::chitableLookUp(double mixfrac, double mixfracVars)
+{
+
+  // nx - mixfrac, ny - mixfracVars
+  // Table is uniform in mixfrac and variance direction
+  // Computing the index and weighing factors for mixfraction  
+  int nx_lo, nx_hi;
+  double w_nxlo, w_nxhi;
+  nx_lo = (floor)(mixfrac/mixfrac_Div);
+  if (nx_lo < 0) 
+    nx_lo = 0;
+  if (nx_lo > dc_mixfraccount-2)
+    nx_lo = dc_mixfraccount-2;
+  nx_hi = nx_lo + 1;
+  w_nxlo = ((nx_hi*mixfrac_Div)-mixfrac)/mixfrac_Div;
+  if (w_nxlo < 0.0)
+    w_nxlo = 0.0;
+  if (w_nxlo > 1.0)
+    w_nxlo = 1.0;
+  w_nxhi = 1.0 - w_nxlo;
+  // Computing the index and weighing factors for mixfraction variance 
+  int ny_lo, ny_hi;
+  double w_nylo, w_nyhi;
+  ny_lo = (floor)(mixfracVars/mixvar_Div);
+  if (ny_lo < 0) 
+    ny_lo = 0;
+  if (ny_lo > dc_mixvarcount-2)
+    ny_lo = dc_mixvarcount-2;
+  ny_hi = ny_lo + 1;
+  w_nylo = ((ny_hi*mixvar_Div)-mixfracVars)/mixvar_Div;
+  if (w_nylo < 0.0)
+    w_nylo = 0.0;
+  if (w_nylo > 1.0)
+    w_nylo = 1.0;
+  w_nyhi = 1.0 - w_nylo;
+  // Finding the values for interpolation
+  double integral_11=chitable[nx_lo*dc_mixvarcount+ny_lo];
+  double integral_12=chitable[nx_hi*dc_mixvarcount+ny_lo];
+  double integral_21=chitable[nx_lo*dc_mixvarcount+ny_hi];
+  double integral_22=chitable[nx_hi*dc_mixvarcount+ny_hi];
+  // Interpolation
+  double integral=w_nylo*(w_nxlo*integral_11+w_nxhi*integral_12)+w_nyhi*(w_nxlo*integral_21+w_nxhi*integral_22);
+  if(integral == 0.0)
+	  integral=1.0;
+  return integral;
+}
+
 //****************************************************************************
 // Reading the flamelets mixing table
 //****************************************************************************
@@ -316,6 +372,40 @@ void SteadyFlameletsTable::readMixingTable(std::string inputfile)
   }//End of mixture fraction loop
   // Closing the file pointer
   fd.close();
+}
+//****************************************************************************
+// Reading the Chi table to relate  filtered chi to flamelets chi 
+//****************************************************************************
+
+void SteadyFlameletsTable::readChiTable()
+{
+  ifstream fd2("chiTbl.dat");
+  if(fd2.fail()){
+        cout<<" Unable to open the chi table file" <<endl;
+        exit(1);
+  }
+  double dum_reader1,dum_reader2;
+  //Read the number of mixture fractions and variances from the chi table 
+  fd2 >> dc_mixfraccount >>dc_mixvarcount;
+  cout << dc_mixfraccount << " " << dc_mixvarcount << endl;
+  // Calculating the spacing for uniform mixture fraction and variance 
+     mixfrac_Div=1.0/(dc_mixfraccount-1);
+     mixvar_Div=1.0/(dc_mixvarcount-1);
+  // Allocating the table space 
+  int size_chitbl = dc_mixfraccount*dc_mixvarcount;
+  chitable = vector <double> (size_chitbl);
+  //Reading the data
+  for (int jj=0;jj<dc_mixvarcount*dc_mixfraccount; jj++){
+			fd2 >> dum_reader1;
+			fd2 >> dum_reader2;
+                	// Read the integral 
+			fd2 >> chitable[jj];
+			//cout << chitable[jj]<< " ";
+			//cout<<endl;
+  }//End of data reading 
+  // Closing the file pointer
+  fd2.close();
+ 
 }
 
 
