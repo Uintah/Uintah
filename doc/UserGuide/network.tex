@@ -1,15 +1,24 @@
 % network.tex
 %
-% The Working with networks section.
 
 %begin{latexonly}
   \newcommand{\modgraphic}%
-  {\centerline{\epsfig{file=figures/modgraphic.eps,width=\columnwidth}}}
+  {\centerline{\epsfig{file=figures/modgraphic.eps,width=2in}}}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\srwindow}{%
-  \htmladdimg[align=top,width="90%",alt="SCIRun Window"]
+  \htmladdimg[align=top,width="90%",alt="SCIRun Module Graphic"]
   {../figures/modgraphic.gif}}
+\end{htmlonly}
+
+%begin{latexonly}
+  \newcommand{\moddialog}%
+  {\centerline{\epsfig{file=figures/moddialog.eps,width=3in}}}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\srwindow}{%
+  \htmladdimg[align=top,width="90%",alt="SCIRun Module Dialog"]
+  {../figures/moddialog.gif}}
 \end{htmlonly}
 
 \section{Working with Networks}
@@ -59,9 +68,10 @@ for all modules and consists of the following components:
   module.  Output ports connect to other modules' input ports.  Every
   module has, of course, at least 1 input or 1 output port.
 \item[UI button] Pressing the \button{UI} button displays the module's
-  control dialog. Some modules have no such dialog. Some have very
-  simple dialogs.  Some have very complex dialogs which allow elaborate
-  control over the module.  
+  control dialog. Some modules have no such dialog. Some have very simple
+  dialogs.  Some have very complex dialogs which allow elaborate control
+  over the module.  Figure~\ref{fig:moddialog} shows the control dialog for
+  \module{Show Fields} module.
 \item[Progress bar] Shows the module's progress.
 \item[Timer] Displays the amount of CPU time the module has consumed.
   Located to the left of the progress bar.
@@ -108,21 +118,32 @@ for all modules and consists of the following components:
 \begin{figure}[htb]
   \begin{makeimage}
   \end{makeimage}
-%  \modgraphic
+  \modgraphic
 %  \centerline{\epsfig{file=figures/modgraphic.eps,width=6in}}
-    \framebox{\parbox[3in]{\columnwidth}{The\dotfill Figure\\
-    \vspace{2in}\\
-    With some \dotfill dummy text}}
-  \caption{\label{fig:module} \sr{} module}
+%    \framebox{\parbox[3in]{\columnwidth}{The\dotfill Figure\\
+%    \vspace{2in}\\
+%    With some \dotfill dummy text}}
+  \caption{\label{fig:modgraphic} Module Graphic (\module{Show
+      Fields} Module)}
 \end{figure}
 
+\begin{figure}[htb]
+  \begin{makeimage}
+  \end{makeimage}
+  \moddialog
+%  \centerline{\epsfig{file=figures/moddialog.eps,width=6in}}
+%    \framebox{\parbox[3in]{\columnwidth}{The\dotfill Figure\\
+%    \vspace{2in}\\
+%    With some \dotfill dummy text}}
+  \caption{\label{fig:moddialog} Module Control Dialog (\module{Show
+      Fields} Module)}
+\end{figure}
 
 \subsection{Creating a Connection}
 \label{sec:connectmods}
 
 Mouse button 2 is used to connect the output (input) port of one module to the
 input (output) port of another module.  
-
 
 Position the mouse pointer over a module's input (output) port.  Then press
 button 2 and drag the the mouse pointer towards another module's output (input)
@@ -147,17 +168,28 @@ modules.
 To change a module's properties click its \button{UI} button.  This will
 display the module's control dialog.  Use this dialog to change the
 module's properties.  Each module's reference documentation explains the
-use of its control dialog.
+use of its control dialog.  Figure~\ref{fig:moddialog} shows the control
+dialog for the ????? module.
 
 \subsection{Executing a Network}
 \label{sec:executenet}
 
+``Network Execution'' means that 1 or more modules need to be executed in a
+coordinated fashion.
 
+Network execution is mostly transparent.  Execution is managed by
+\sr{}'s \dfn{scheduler}.  The scheduler knows when modules need to be
+executed (or reexecuted).  While you work (creating modules, connecting
+modules, and setting module parameters) the scheduler continuously examines
+your network (determines the data dependencies amongst modules) and will
+reexecute modules as needed.  Occasionally, you may need to force execution
+of a module by selecting the \menuitem{Execute} item from a module's popup
+menu.
 
 \subsection{Deleting a Connection}
 \label{sec:deleteconnections}
 
-A connection may be deleted by pressing button 3 while the pointer is
+Delete a connection by pressing button 3 while the pointer is
 over a connection.
 
 \subsection{Selecting Modules}
@@ -167,23 +199,22 @@ A few operations (see \secref{Moving Module(s)}{sec:movemod} and
 \secref{Destroying Module(s)}{sec:destroymod}) act on a group of
 modules.  There are 2 ways to create a group of modules.
 
-\begin{description}
-\item[Method 1] Press mouse button 2 while the pointer is in the network
-  pane but not over a module or a connection.  Then drag the mouse.  This
-  will draw a box outline.  Modules intersecting the box will be part of
-  the group.  Release button 2 to complete your selection.
-\item[Method 2] Select the first module by clicking mouse button 2 while
-  the pointer is over a module.  Then add modules to the group by pressing
-  (and holding down) the \keyboard{control} key while you click on modules
-  with button 2.
-\end{description}
-
-You may mix selection methods.  For both methods pressing the control key
-while making selections will add modules to the group.  If you don't press
-the control key then previous group will be forgotton and a new one
-will be created.
+\begin{enumerate}
+\item Press mouse button 2 while the pointer is in the network pane but not over
+a module or a connection.  Then drag the mouse.  This will draw a box
+outline.  Modules intersecting the box will be part of the group.  Release
+button 2 to complete your selection.
+\item Select the first module by clicking mouse button 2 while the pointer is
+over a module.  Then add modules to the group by pressing (and holding
+down) the \keyboard{control} key while you click on modules with button 2.
+\end{enumerate}
 
 Selected modules will be drawn in a slightly darker shade of grey.
+
+You may mix selection methods -- you may always add modules the group by
+pressing the control key while making selections using the above methods.
+If you don't press the control key then the previous group will be
+forgotton and a new one will be created.
 
 \subsection{Moving Module(s)}
 \label{sec:movemod}
@@ -241,19 +272,22 @@ to write notes or otherwise document the purpose and use of the network.
 \label{sec:savenet}
 
 \sr\ can save networks to files.  These network files have an extension of
-\filename{.net}.  
+\filename{.net} (although in the past they have also had .sr and .uin
+extensions).  
 
 To save a network select the \menuitem{Save} item from the main window's
-\menu{File} menu.  \sr\ will prompt you, via a file browser dialog, for the
+\menu{File} menu.  A file browser dialog will prompt you for the
 name (and location) of the network file.
 
+Network files are actually \dfna{Tool Command Language}{TCL} scripts and
+are editable.
 
 \subsection{Opening a Network}
 \label{sec:opennet}
 
 To open a network file select the \menuitem{Open} item from the main
-window's \menu{File} menu.  \sr\ will present you with a file browser
-dialog.  Use this dialog to choose a \filename{.net} file.
+window's \menu{File} menu.   A file browser dialog will prompt you for the
+name (and location) of the network file.
 
 Note that opening a network file merges the network in the file with the
 network in the network pane.  There is currently no way to ``close'' a
