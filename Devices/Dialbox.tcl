@@ -32,6 +32,7 @@ itcl_class Dialbox {
 	    set dialmaxs($i) 100.0
 	    set dialscales($i) 1.0
 	    set dialcommands($i) ""
+	    set dialstopcommands($i) ""
 	}
     }
 
@@ -68,8 +69,9 @@ itcl_class Dialbox {
     protected dialmaxs
     protected dialscales
     protected dialcommands
+    protected dialstopcommands
 
-    method bounded_dial {dial name val min max scale command} {
+    method bounded_dial {dial name val min max scale command {stopcmd ""}} {
 	if {$dial < 0 || $dial > 7} {
 	    puts "Invalid dial index "\$dial\" for \"$title\"."
 	    return
@@ -77,21 +79,21 @@ itcl_class Dialbox {
 	set dialtypes($dial) "bounded"
 	set dialmins($dial) $min
 	set dialmaxs($dial) $max
-	standard_dial $dial $name $val $scale $command
+	standard_dial $dial $name $val $scale $command $stopcmd
     }
 
-    method unbounded_dial {dial name val scale command} {
+    method unbounded_dial {dial name val scale command {stopcmd ""}} {
 	if {$dial < 0 || $dial > 7} {
 	    puts "Invalid dial index "\$dial\" for \"$title\"."
 	    return
 	}
 	set dialtypes($dial) "unbounded"
-	standard_dial $dial $name $val $scale $command
+	standard_dial $dial $name $val $scale $command $stopcmd
     }
     
     
 
-    method wrapped_dial {dial name val min max scale command} {
+    method wrapped_dial {dial name val min max scale command {stopcmd ""}} {
 	if {$dial < 0 || $dial > 7} {
 	    puts "Invalid dial index "\$dial\" for \"$title\"."
 	    return
@@ -99,20 +101,36 @@ itcl_class Dialbox {
 	set dialtypes($dial) "wrapped"
 	set dialmins($dial) $min
 	set dialmaxs($dial) $max
-	standard_dial $dial $name $val $scale $command
+	standard_dial $dial $name $val $scale $command $stopcmd
     }
 
     # Used by (dialtype)_dial methods only.
-    method standard_dial {dial name val scale command} {
+    method standard_dial {dial name val scale command {stopcmd ""}} {
 	set dialnames($dial) "$name"
 	set dialvals($dial) $val
 	set dialscales($dial) $scale
 	set dialcommands($dial) "$command"
+	set dialstopcommands($dial) "$stopcmd"
     }
 
+    protected after_id ""
+
     method dial_moved {dial val} {
+	if {$after_id != ""} {
+	    after cancel $after_id
+	}
+	set after_id [after 500 $this dial_stopped $dial $val]
 	if {$dialcommands($dial) != ""} {
 	    eval $dialcommands($dial) $val
+	}
+    }
+
+    method dial_stopped {dial val} {
+	puts "dial_stopped called..."
+	set after_id ""
+	if {$dialstopcommands($dial) != ""} {
+	    puts "stop command is $dialstopcommands($dial)"
+	    eval $dialstopcommands($dial) $val
 	}
     }
 

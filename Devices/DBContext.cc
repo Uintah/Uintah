@@ -84,7 +84,7 @@ DBCallbackBase::~DBCallbackBase()
 void DBCallbackBase::dispatch(DBContext* context, int which, double value,
 			      double delta)
 {
-    mailbox->send(new DBCallback_Message(this, context, which, value, delta, userdata));
+    mailbox->send(scinew DBCallback_Message(this, context, which, value, delta, userdata));
 }
 
 DBCallback_Message::DBCallback_Message(DBCallbackBase* mcb, DBContext* context,

@@ -68,7 +68,7 @@ TCLTask::TCLTask(int argc, char* argv[])
     // track down errors.  We need core dumps!
     XSetErrorHandler(x_error_handler);
     if(!tlock)
-	tlock=new Mutex;
+	tlock=scinew Mutex;
     Tcl_SetLock(do_lock, do_unlock);
     Tk_SetSelectProc((Tk_SelectProc*)Task::mtselect);
     tkMain(argc, argv);

@@ -14,6 +14,7 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Dataflow/Module.h>
+#include <Malloc/Allocator.h>
 #include <Multitask/Task.h>
 #include <TCL/TCL.h>
 #include <TCL/TCLTask.h>
@@ -88,7 +89,7 @@ static int do_command(ClientData cd, Tcl_Interp*, int argc, char* argv[])
 void TCL::add_command(const clString& command, TCL* callback, void* userdata)
 {
     TCLTask::lock();
-    TCLCommandData* command_data=new TCLCommandData;
+    TCLCommandData* command_data=scinew TCLCommandData;
     command_data->object=callback;
     command_data->userdata=userdata;
     Tcl_CreateCommand(the_interp, command(), do_command, command_data, 0);
@@ -186,7 +187,7 @@ clString TCLArgs::make_list(const clString& item1, const clString& item2,
 
 clString TCLArgs::make_list(const Array1<clString>& items)
 {
-    char** argv=new char*[items.size()];
+    char** argv=scinew char*[items.size()];
     for(int i=0;i<items.size();i++)
 	argv[i]=items[i]();
     char* list=Tcl_Merge(items.size(), argv);

@@ -29,6 +29,7 @@ itcl_class DialW {
     # Use either text or textVariable, not both.
     public initialDialtype ""
     public typeVariable ""
+    public dialtypeVariable ""
     public text ""
     public textVariable ""
     public variable ""
@@ -175,6 +176,9 @@ itcl_class DialW {
 	set f [expr $rad*4.77*$rate*[set $scaleVariable]/30.0]
 	set $variable [format %3.3f [expr $f+[set $variable]]]
 
+	global $dialtypeVariable
+	global $minVariable
+	global $maxVariable
 	if [expr ([string compare [set $dialtypeVariable] "bounded"]!=0)] {
 	    if [expr [set $variable] < [set $minVariable]] {
 		set $variable [set $minVariable]
