@@ -33,7 +33,8 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Algorithms/Visualization/mcube2.h>
-#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/TriSurfField.h>
 
 namespace SCIRun {
 
@@ -57,7 +58,7 @@ public:
   typedef typename Field::mesh_handle_type       mesh_handle_type;
   typedef typename mesh_type::Node::array_type         node_array_type;
 private:
-  Field *field_;
+  LockingHandle<Field> field_;
   mesh_handle_type mesh_;
   GeomTrianglesP *triangles_;
   bool build_trisurf_;
@@ -73,7 +74,7 @@ public:
   void extract( const cell_index_type &, double);
   void reset( int, bool build_trisurf=false );
   GeomObj *get_geom() { return triangles_; };
-  TriSurfMeshHandle get_trisurf() { return trisurf_; };
+  FieldHandle get_field(double val);
 };
   
 
@@ -169,6 +170,21 @@ void UHexMC<Field>::extract( const cell_index_type& cell, double iso )
   }
 }
 
+
+template<class Field>
+FieldHandle
+UHexMC<Field>::get_field(double value)
+{
+  TriSurfField<double> *fld = 0;
+  if (trisurf_.get_rep())
+  {
+    fld = scinew TriSurfField<double>(trisurf_, Field::NODE);
+    vector<double>::iterator iter = fld->fdata().begin();
+    while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
+  }
+  return fld;
+}
+     
      
 } // End namespace SCIRun
 

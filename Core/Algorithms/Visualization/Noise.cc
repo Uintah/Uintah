@@ -21,6 +21,8 @@
 #include <Core/Algorithms/Visualization/HexMC.h>
 #include <Core/Algorithms/Visualization/UHexMC.h>
 #include <Core/Algorithms/Visualization/TetMC.h>
+#include <Core/Algorithms/Visualization/TriMC.h>
+#include <Core/Algorithms/Visualization/QuadMC.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -41,8 +43,8 @@ NoiseAlg::get_h_file_path() {
   return path;
 }
 
-TriSurfMeshHandle
-NoiseAlg::get_trisurf()
+FieldHandle
+NoiseAlg::get_field()
 {
   return trisurf_;
 }
@@ -66,6 +68,15 @@ NoiseAlg::get_compile_info(const TypeDescription *td) {
   } else if (sname.find("HexVolField") != string::npos) {
     subname.append("UHexMC<" + td->get_name() + "> ");
     subinc.append(UHexMCBase::get_h_file_path());
+  } else if (sname.find("TriSurfField") != string::npos) {
+    subname.append("TriMC<" + td->get_name() + "> ");
+    subinc.append(TriMCBase::get_h_file_path());
+  } else if (sname.find("QuadSurfField") != string::npos) {
+    subname.append("QuadMC<" + td->get_name() + "> ");
+    subinc.append(QuadMCBase::get_h_file_path());
+  } else if (sname.find("ImageField") != string::npos) {
+    subname.append("QuadMC<" + td->get_name() + "> ");
+    subinc.append(QuadMCBase::get_h_file_path());
   } else {
     cerr << "Unsupported Field, needs to be of Lattice or Tet type." << endl;
     subname.append("Cannot compile this unsupported type");

@@ -25,9 +25,11 @@ SRCS     += \
         $(SRCDIR)/HexMC.cc		\
 	$(SRCDIR)/MarchingCubes.cc	\
 	$(SRCDIR)/Noise.cc		\
+	$(SRCDIR)/QuadMC.cc		\
 	$(SRCDIR)/RenderField.cc	\
 	$(SRCDIR)/Sage.cc		\
 	$(SRCDIR)/TetMC.cc		\
+	$(SRCDIR)/TriMC.cc		\
 	$(SRCDIR)/UHexMC.cc		\
 
 

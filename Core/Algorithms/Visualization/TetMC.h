@@ -32,7 +32,8 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geom/GeomTriangles.h>
-#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/TriSurfField.h>
 
 namespace SCIRun {
 
@@ -51,8 +52,9 @@ public:
   typedef typename Field::value_type             value_type;
   typedef typename Field::mesh_type              mesh_type;
   typedef typename Field::mesh_handle_type       mesh_handle_type;
+
 private:
-  Field *field_;
+  LockingHandle<Field> field_;
   mesh_handle_type mesh_;
   GeomTrianglesP *triangles_;
   bool build_trisurf_;
@@ -70,7 +72,7 @@ public:
   void extract( cell_index_type, double );
   void reset( int, bool build_trisurf=false);
   GeomObj *get_geom() { return triangles_->size() ? triangles_ : 0; };
-  TriSurfMeshHandle get_trisurf() { return trisurf_; };
+  FieldHandle get_field(double val);
 };
   
 
@@ -219,6 +221,19 @@ void TetMC<Field>::extract( cell_index_type cell, double v )
   }
 }
 
+template<class Field>
+FieldHandle
+TetMC<Field>::get_field(double value)
+{
+  TriSurfField<double> *fld = 0;
+  if (trisurf_.get_rep())
+  {
+    fld = scinew TriSurfField<double>(trisurf_, Field::NODE);
+    vector<double>::iterator iter = fld->fdata().begin();
+    while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
+  }
+  return fld;
+}
 
      
 } // End namespace SCIRun

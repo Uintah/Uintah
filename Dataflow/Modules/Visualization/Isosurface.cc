@@ -37,7 +37,6 @@ using std::ostringstream;
 #include <Core/Datatypes/MaskedTetVolField.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/MaskedLatVolField.h>
-#include <Core/Datatypes/TriSurfField.h>
 
 #include <Core/Algorithms/Visualization/TetMC.h>
 #include <Core/Algorithms/Visualization/HexMC.h>
@@ -150,7 +149,7 @@ void Isosurface::execute()
       mc_alg_->set_field( field.get_rep() );
       mc_alg_->search( iso_value, build_trisurf);
       surface = mc_alg_->get_geom();
-      trisurf_mesh_ = mc_alg_->get_trisurf();
+      trisurf_mesh_ = mc_alg_->get_field();
     }
     break;
   case 1:  // Noise
@@ -164,7 +163,7 @@ void Isosurface::execute()
 	noise_alg_->set_field(field.get_rep());
       }
       surface = noise_alg_->search(iso_value, build_trisurf);
-      trisurf_mesh_ = noise_alg_->get_trisurf();
+      trisurf_mesh_ = noise_alg_->get_field();
     }
     break;
   case 2:  // View Dependent
@@ -222,11 +221,7 @@ Isosurface::send_results()
 
   // output surface
   if (build_trisurf && trisurf_mesh_.get_rep()) {
-    TriSurfField<double> *ts = new TriSurfField<double>(trisurf_mesh_, Field::NODE);
-    vector<double>::iterator iter = ts->fdata().begin();
-    while (iter != ts->fdata().end()) { (*iter)=iso_value; ++iter; }
-    FieldHandle fH(ts);
-    osurf->send(fH);
+    osurf->send(trisurf_mesh_);
   }
 }
 
