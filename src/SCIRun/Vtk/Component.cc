@@ -45,8 +45,8 @@
 #include <SCIRun/Vtk/OutPort.h>
 #include <SCIRun/Vtk/Component.h>
 
-namespace SCIRun {
-namespace vtk {
+using namespace SCIRun;
+using namespace vtk;
 
 Component::Component()
 {
@@ -95,6 +95,7 @@ Component::getPort(const std::string &name)
 void
 Component::addPort(Port *port)
 {
+  port->setComponent(this);
   if(port->isInput())
     {
     iports.push_back((InPort*)port);
@@ -176,5 +177,9 @@ Component::popupUI()
   return 0;
 }
 
-} // end namespace SCIRun::vtk
-} // end namespace SCIRun
+void 
+Component::updateAllOutPorts(int flag){
+  for(unsigned i=0; i<oports.size(); i++){
+    oports[i]->update(flag);
+  }
+}
