@@ -148,6 +148,7 @@ void BCDataArray::determineIteratorLimits(Patch::FaceType face,
 
 }
 
+#if 0
 void BCDataArray::oldDetermineIteratorLimits(Patch::FaceType face, 
 					     const Patch* patch)
 
@@ -523,7 +524,7 @@ void BCDataArray::oldDetermineIteratorLimits(Patch::FaceType face,
 #endif
 
 }
-
+#endif
 
 
 void BCDataArray::addBCData(int mat_id,BCGeomBase* bc)
