@@ -57,8 +57,8 @@ public:
   typedef FaceIndex<index_type>       face_index;
   typedef FaceIterator<index_type>    face_iterator;
 
-  //typedef CellIndex<index_type>       cell_index;
-  //typedef CellIterator<index_type>    cell_iterator;
+  typedef CellIndex<index_type>       cell_index;
+  typedef CellIterator<index_type>    cell_iterator;
 
   
   typedef vector<node_index> node_array;

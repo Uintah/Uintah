@@ -22,7 +22,7 @@ public:
   } data_location;
 
 
-  Field();
+  Field(data_location at = NONE);
   virtual ~Field();
 
   //! Required virtual functions
@@ -43,7 +43,6 @@ protected:
 
   //! Where data is associated.
   data_location           data_at_;
-
 };
 
 typedef LockingHandle<Field> FieldHandle;

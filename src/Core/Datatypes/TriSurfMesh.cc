@@ -87,7 +87,7 @@ TriSurfMesh::face_end() const
 
 
 void
-TriSurfMesh::get_nodes_from_edge(node_array &array, edge_index idx) const
+TriSurfMesh::get_nodes(node_array &array, edge_index idx) const
 {
   static int table[6][2] =
   {
@@ -105,7 +105,7 @@ TriSurfMesh::get_nodes_from_edge(node_array &array, edge_index idx) const
 
 
 void
-TriSurfMesh::get_nodes_from_face(node_array &array, face_index idx) const
+TriSurfMesh::get_nodes(node_array &array, face_index idx) const
 {
   array.push_back(faces_[idx * 3 + 0]);
   array.push_back(faces_[idx * 3 + 1]);
@@ -114,7 +114,7 @@ TriSurfMesh::get_nodes_from_face(node_array &array, face_index idx) const
 
 
 void
-TriSurfMesh::get_edges_from_face(edge_array &array, face_index idx) const
+TriSurfMesh::get_edges(edge_array &array, face_index idx) const
 {
   array.push_back(idx * 3 + 0);
   array.push_back(idx * 3 + 1);
@@ -123,7 +123,7 @@ TriSurfMesh::get_edges_from_face(edge_array &array, face_index idx) const
 
 
 void
-TriSurfMesh::get_neighbor_from_edge(face_index &neighbor, edge_index idx) const
+TriSurfMesh::get_neighbor(face_index &neighbor, edge_index idx) const
 {
   neighbor = neighbors_[idx];
 }
@@ -143,16 +143,15 @@ void
 TriSurfMesh::locate_node(node_index &node, const Point &p)
 {
   // TODO: Use search structure instead of exaustive search.
-  int min_indx;
   double min_dist;
 
   if (points_.size() == 0)
   {
-    min_indx = node_end();
+    node = *node_end();
   }
   else
   {
-    min_indx = 0;
+    node = 0;
     min_dist = distance2(p, points_[0]);
   }
 
@@ -162,10 +161,9 @@ TriSurfMesh::locate_node(node_index &node, const Point &p)
     if (dist < min_dist)
     {
       min_dist = dist;
-      min_indx = i;
+      node = i;
     }
   }
-  node = min_indx;
 }
 
 

@@ -29,8 +29,8 @@ public:
   typedef LockingHandle<mesh_type>   mesh_handle_type;
   typedef FData                      fdata_type;
 
-  GenericField() {};
-  GenericField(data_location data_at) {};
+  GenericField() : Field() {};
+  GenericField(data_location data_at) : Field(data_at) {};
   virtual ~GenericField() {};
 
   //! Required virtual functions from field base.
@@ -41,10 +41,10 @@ public:
   //virtual InterpolateToScalar* query_interpolate_to_scalar() const {};
 
   //! Required interface to support Field Concept.
-  value_type &operator[] (typename Mesh::node_index i) {return fdata_[i]};
-  value_type &operator[] (typename Mesh::edge_index i) {return fdata_[i]};
-  value_type &operator[] (typename Mesh::face_index i) {return fdata_[i]};
-  value_type &operator[] (typename Mesh::cell_index i) {return fdata_[i]};
+  value_type &operator[] (typename Mesh::node_index i) {return fdata_[i];};
+  value_type &operator[] (typename Mesh::edge_index i) {return fdata_[i];};
+  value_type &operator[] (typename Mesh::face_index i) {return fdata_[i];};
+  value_type &operator[] (typename Mesh::cell_index i) {return fdata_[i];};
   
   mesh_handle_type get_typed_mesh() { return mesh_; };
 
