@@ -85,6 +85,15 @@ itcl_class VS_DataFlow_HotBox {
   }
   # end method launch_filebrowser
 
+  method toggle_FME_on {} {
+    if {[set $this-FME_on] == "yes"} {
+      # toggle FME control off
+      set $this-FME_on "no"
+    } else {set $this-FME_on "yes"}
+
+  }
+  # end method toggle_FME_on
+
   method set_selection { selection_id } {
     puts "VS_DataFlow_HotBox::set_selection{$selection_id}"
     switch $selection_id {
@@ -164,7 +173,7 @@ itcl_class VS_DataFlow_HotBox {
     frame $w.controls
     button $w.controls.adjds -text "Adjacency Data Source" -command ""
 
-    checkbutton $w.controls.togFME -text "Conenct to FME" -command ""
+    checkbutton $w.controls.togFME -text "Conenct to FME" -command "$this toggle_FME_on"
     $w.controls.togFME select
 
     button $w.controls.close -text "Close" -command "destroy $w"
