@@ -47,15 +47,29 @@
 #include <sys/stat.h>
 #include <mpi.h>
 
-using namespace std;
+//using namespace std;
 using namespace SCIRun;
 using namespace sci::cca;
 #define VERSION "2.0.0" // this needs to be synced with the contents of
                         // SCIRun/doc/edition.xml
 
+void
+usage()
+{
+  std::cout << "CCA Parallel Component Loader" << std::endl;
+  std::cout << "Usage: ploader [loader] [url]" << std::endl;
+  std::cout << "       loader               : loader name" << std::endl;
+  std::cout << "       url                  : framework url" << std::endl;
+  exit(0);
+}
+
+
 int
 main(int argc, char *argv[] )
 {
+    if (argc < 3) {
+	usage();
+    }
  /*Loader is MPI enabled*/
  MPI_Init(&argc,&argv);
  int mpi_size, mpi_rank;
@@ -67,11 +81,11 @@ main(int argc, char *argv[] )
     PIDL::initialize(mpi_rank, mpi_size);
   } 
   catch(const Exception& e) {
-    cerr << "Caught exception:\n";
-    cerr << e.message() << '\n';
+    std::cerr << "Caught exception:\n";
+    std::cerr << e.message() << '\n';
     abort();
   } catch(...) {
-    cerr << "Caught unexpected exception!\n";
+    std::cerr << "Caught unexpected exception!\n";
     abort();
   }
 
@@ -90,8 +104,8 @@ main(int argc, char *argv[] )
     ploader->addReference();
     ploader->addReference();
     ploader->addReference();
-    cout<< "ploader started!"<<endl;
-    cout<< "framwork url="<<frameworkURL<<endl;
+    std::cout << "ploader started!" << std::endl;
+    std::cout << "framwork url=" << frameworkURL << std::endl;
 
     MPI_Comm_size(MPI_COMM_WORLD,&(sl->mpi_size));
     MPI_Comm_rank(MPI_COMM_WORLD,&(sl->mpi_rank));
@@ -105,20 +119,20 @@ main(int argc, char *argv[] )
     MxNArrayRep* arrr = new MxNArrayRep(1,dr);
     sl->setCalleeDistribution("dURL",arrr);   //server is callee
    
-    vector<URL> vURL;
+    std::vector<URL> vURL;
     vURL.push_back(frameworkURL);
     
     Object::pointer obj=PIDL::objectFrom(vURL,1,0);
     //Object::pointer obj=PIDL::objectFrom(frameworkURL,1,0);
     if(obj.isNull()){
-      cerr<<"Cannot get framework from url="<<frameworkURL<<endl;
+      std::cerr << "Cannot get framework from url=" << frameworkURL << std::endl;
       return 0;
     }
     sci::cca::AbstractFramework::pointer framework=pidl_cast<sci::cca::AbstractFramework::pointer>(obj);
   
     typedef char urlString[100] ;
     urlString s;
-    strcpy(s, ploader->getURL().getString().c_str());
+    std::strcpy(s, ploader->getURL().getString().c_str());
 
     urlString *buf;
 
@@ -131,23 +145,23 @@ main(int argc, char *argv[] )
     if(sl->mpi_rank==0){
       SSIDL::array1< std::string> URLs;
       for(int i=0; i<sl->mpi_size; i++){
-	string url(buf[i]);
+	std::string url(buf[i]);
 	URLs.push_back(url);
-	cerr<<"ploader URLs["<<i<<"]="<<url<<endl;
+	std::cerr << "ploader URLs["<<i<<"]=" << url << std::endl;
       }
       framework->registerLoader(loaderName, URLs);
       delete buf;
     }
   }catch(const MalformedURL& e) {
-	cerr << "slaveTest.cc: Caught MalformedURL exception:\n";
-	cerr << e.message() << '\n';
+	std::cerr << "slaveTest.cc: Caught MalformedURL exception:\n";
+	std::cerr << e.message() << '\n';
   }
   catch(const Exception& e) {
-    cerr << "Caught exception:\n";
-    cerr << e.message() << '\n';
+    std::cerr << "Caught exception:\n";
+    std::cerr << e.message() << '\n';
     abort();
   } catch(...) {
-    cerr << "Caught unexpected exception!\n";
+    std::cerr << "Caught unexpected exception!\n";
     abort();
   }
 
