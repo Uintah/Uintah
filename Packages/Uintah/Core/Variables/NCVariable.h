@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Variables/NCVariableBase.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Variables/constGridVariable.h>
+#include <Packages/Uintah/Core/Variables/GridVariable.h>
 #include <Packages/Uintah/Core/IO/SpecializedRunLengthEncoder.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
@@ -70,7 +71,7 @@ WARNING
     inline void copyPointer(NCVariable<T>& copy)
     { Array3<T>::copyPointer(copy); }
 
-    virtual void copyPointer(NCVariableBase&);
+    virtual void copyPointer(Variable&);
 
     virtual bool rewindow(const IntVector& low, const IntVector& high)
     { return Array3<T>::rewindow(low, high); }    
@@ -82,17 +83,17 @@ WARNING
     
     //////////
     // Insert Documentation Here:
-    virtual NCVariableBase* clone();
-    virtual const NCVariableBase* clone() const;    
-    virtual NCVariableBase* cloneType() const
+    virtual GridVariable* clone();
+    virtual const GridVariable* clone() const;    
+    virtual GridVariable* cloneType() const
     { return scinew NCVariable<T>(); }
     virtual constNCVariableBase* cloneConstType() const
     { return scinew constGridVariable<NCVariableBase, NCVariable<T>, T>(); }
 
     // Clones the type with a variable having the given extents
     // but with null data -- good as a place holder.
-    virtual NCVariableBase* makePlaceHolder(const IntVector & low,
-					    const IntVector & high) const
+    virtual GridVariable* makePlaceHolder(const IntVector & low,
+                                          const IntVector & high) const
     {
       Array3Window<T>* window = scinew
       Array3Window<T>(0, IntVector(INT_MAX, INT_MAX, INT_MAX), low, high);
@@ -113,25 +114,27 @@ WARNING
     }
     virtual void allocate(const NCVariable<T>& src)
     { allocate(src.getLowIndex(), src.getHighIndex()); }
-    virtual void allocate(const NCVariableBase* src)
+    virtual void allocate(const GridVariable* src)
     { allocate(castFromBase(src)); }
 
     void copyPatch(const NCVariable<T>& src,
 		   const IntVector& lowIndex,
 		   const IntVector& highIndex);
-    virtual void copyPatch(const NCVariableBase* src,
+    virtual void copyPatch(const GridVariable* src,
 			   const IntVector& lowIndex,
 			   const IntVector& highIndex)
     { copyPatch(castFromBase(src), lowIndex, highIndex); }
     
     void copyData(const NCVariable<T>& src)
     { copyPatch(src, src.getLowIndex(), src.getHighIndex()); }
-    virtual void copyData(const NCVariableBase* src)
+    virtual void copyData(const GridVariable* src)
     { copyData(castFromBase(src)); }
     
     virtual void* getBasePointer() const;
     virtual const TypeDescription* virtualGetTypeDescription() const;
 
+    virtual void getSizes(IntVector& low, IntVector& high,
+			  IntVector& siz) const;
     virtual void getSizes(IntVector& low, IntVector& high,
 			  IntVector& dataLow, IntVector& siz,
 			  IntVector& strides) const;
@@ -205,7 +208,7 @@ WARNING
       : Array3<T>(window) {}
     NCVariable<T>& operator=(const NCVariable<T>&);
 
-    static const NCVariable<T>& castFromBase(const NCVariableBase* srcptr);
+    static const NCVariable<T>& castFromBase(const GridVariable* srcptr);
     static Variable* maker();
   };
    
@@ -238,7 +241,7 @@ WARNING
   }
    
   template<class T>
-  NCVariableBase*
+  GridVariable*
   NCVariable<T>::clone()
   {
     NCVariable<T>* tmp=scinew NCVariable<T>(*this);
@@ -246,7 +249,7 @@ WARNING
   }
 
   template<class T>
-  const NCVariableBase*
+  const GridVariable*
   NCVariable<T>::clone() const
   {
     NCVariable<T>* tmp=scinew NCVariable<T>(*this);
@@ -255,7 +258,7 @@ WARNING
    
   template<class T>
   void
-  NCVariable<T>::copyPointer(NCVariableBase& copy)
+  NCVariable<T>::copyPointer(Variable& copy)
   {
     NCVariable<T>* c = dynamic_cast<NCVariable<T>* >(&copy);
     if(!c)
@@ -286,7 +289,7 @@ WARNING
   }
 
   template<class T>
-  const NCVariable<T>& NCVariable<T>::castFromBase(const NCVariableBase* srcptr)
+  const NCVariable<T>& NCVariable<T>::castFromBase(const GridVariable* srcptr)
   {
     const NCVariable<T>* c = dynamic_cast<const NCVariable<T>* >(srcptr);
     if(!c)
@@ -327,6 +330,16 @@ WARNING
     return getTypeDescription();
   }
    
+  template<class T>
+  void
+  NCVariable<T>::getSizes(IntVector& low, IntVector& high, 
+			  IntVector& siz) const
+  {
+    low = this->getLowIndex();
+    high = this->getHighIndex();
+    siz = this->size();
+  }
+
   template<class T>
   void
   NCVariable<T>::getSizes(IntVector& low, IntVector& high,
