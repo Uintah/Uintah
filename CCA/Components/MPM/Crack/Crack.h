@@ -157,9 +157,6 @@ class Crack
      /************************ PRIVATE DATA MEMBERS *************************/
     MPI_Comm mpi_crack_comm;
 
-    double d_outputInterval;
-    double d_outputCrackInterval;
-
     SimulationStateP d_sharedState;
     Output* dataArchiver;
     string udaDir;
@@ -178,12 +175,14 @@ class Crack
     double rJ;                     // NJ = rJ/min_dCell
     int mS;                        // matID of saving J-integral
     double rdadx;                  // Ratio of crack growth to cell-size
-    bool d_useVolumeIntegral;      // If use the second term to get J-integral
+    bool useVolumeIntegral;        // If use the second term to get J-integral
 
     string d_calFractParameters;   // Flag if calculating fracture parameters
     string d_doCrackPropagation;   // Flag if doing crack propagation
     short calFractParameters;      // Flag if calculating fract para at this step
     short doCrackPropagation;      // Flag if doing crack propagation at this step
+    double calFractParasInterval;  // Interval of calculating fracture parameters
+    double crackPropInterval;      // Interval of crack propagation
     bool doCrackVisualization;     // Flag if output of crack elems, points
 
     // Data members of cracks
