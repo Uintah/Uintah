@@ -48,7 +48,7 @@ ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scal
    picks[Pick]->set_highlight(HighlightMaterial);
    CreateModeSwitch(0, picks[Pick]);
 
-   SetMode(Mode1, Switch0);
+   SetMode(Mode0, Switch0);
 
    FinishWidget();
 }
@@ -62,18 +62,18 @@ ArrowWidget::~ArrowWidget()
 void
 ArrowWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[GeomPoint])->move(variables[PointVar]->point(),
-					      1*widget_scale);
-   ((GeomCylinder*)geometries[GeomShaft])->move(variables[PointVar]->point(),
-						variables[PointVar]->point()
-						+ direction * widget_scale * 3.0,
-						0.5*widget_scale);
-   ((GeomCappedCone*)geometries[GeomHead])->move(variables[PointVar]->point()
-						 + direction * widget_scale * 3.0,
-						 variables[PointVar]->point()
-						 + direction * widget_scale * 5.0,
-						 widget_scale,
-						 0);
+   if (mode_switches[0]->get_state()) {
+      Point center(variables[PointVar]->point());
+      Vector direct(direction*widget_scale);
+      ((GeomSphere*)geometries[GeomPoint])->move(center, widget_scale);
+      ((GeomCylinder*)geometries[GeomShaft])->move(center,
+						   center + direct * 3.0,
+						   0.5*widget_scale);
+      ((GeomCappedCone*)geometries[GeomHead])->move(center + direct * 3.0,
+						    center + direct * 5.0,
+						    widget_scale,
+						    0);
+   }
 
    Vector v1, v2;
    direction.find_orthogonal(v1, v2);

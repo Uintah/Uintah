@@ -124,10 +124,8 @@ GuageWidget::GuageWidget( Module* module, CrowdMonitor* lock, double widget_scal
    w->add(sliderm);
    CreateModeSwitch(1, w);
 
-   SetMode(Mode1, Switch0|Switch1);
-   SetMode(Mode2, Switch0);
-
-   SetEpsilon(widget_scale*1e-6);
+   SetMode(Mode0, Switch0|Switch1);
+   SetMode(Mode1, Switch0);
 
    FinishWidget();
 }
@@ -141,29 +139,24 @@ GuageWidget::~GuageWidget()
 void
 GuageWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[GeomPointL])->move(variables[PointLVar]->point(),
-						  1*widget_scale);
-   ((GeomSphere*)geometries[GeomPointR])->move(variables[PointRVar]->point(),
-						  1*widget_scale);
-   ((GeomCappedCylinder*)geometries[GeomShaft])->move(variables[PointLVar]->point(),
-						      variables[PointRVar]->point(),
-						      0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[GeomResizeL])->move(variables[PointLVar]->point(),
-							variables[PointLVar]->point()
-							- (GetAxis() * 1.5 * widget_scale),
-							0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[GeomResizeR])->move(variables[PointRVar]->point(),
-							variables[PointRVar]->point()
-							+ (GetAxis() * 1.5 * widget_scale),
-							0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[GeomSlider])->move(variables[SliderVar]->point()
-						       - (GetAxis() * 0.3 * widget_scale),
-						       variables[SliderVar]->point()
-						       + (GetAxis() * 0.3 * widget_scale),
-						       1.1*widget_scale);
+   Point L(variables[PointLVar]->point()), R(variables[PointRVar]->point()), S(variables[SliderVar]->point());
 
-   SetEpsilon(widget_scale*1e-6);
+   if (mode_switches[0]->get_state()) {
+      ((GeomCappedCylinder*)geometries[GeomShaft])->move(L, R, 0.5*widget_scale);
+   }
 
+   if (mode_switches[1]->get_state()) {
+      ((GeomSphere*)geometries[GeomPointL])->move(L, widget_scale);
+      ((GeomSphere*)geometries[GeomPointR])->move(R, widget_scale);
+      ((GeomCappedCylinder*)geometries[GeomResizeL])->move(L, L - (GetAxis() * 1.5 * widget_scale),
+							   0.5*widget_scale);
+      ((GeomCappedCylinder*)geometries[GeomResizeR])->move(R, R + (GetAxis() * 1.5 * widget_scale),
+							   0.5*widget_scale);
+      ((GeomCappedCylinder*)geometries[GeomSlider])->move(S - (GetAxis() * 0.3 * widget_scale),
+							  S + (GetAxis() * 0.3 * widget_scale),
+							  1.1*widget_scale);
+   }
+   
    Vector v(GetAxis()), v1, v2;
    v.find_orthogonal(v1,v2);
    for (Index geom = 0; geom < NumPcks; geom++) {

@@ -33,7 +33,7 @@ enum { ConstAB, ConstBC, ConstCA, ConstCenter,
        ConstRadius, ConstCDist, ConstAngle };
 enum { GeomPointA, GeomPointB, GeomPointC,
        GeomSlider, GeomRing, GeomResizeA, GeomResizeB, GeomResizeC };
-enum { PickSphA, PickSphB, PickSphC, PickCyls,
+enum { PickSphA, PickSphB, PickSphC, PickRing,
        PickSlider, PickResizeA, PickResizeB, PickResizeC };
 
 RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
@@ -135,10 +135,10 @@ RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
 
    Index geom, pick;
    geometries[GeomRing] = new GeomTorus;
-   picks[PickCyls] = new GeomPick(geometries[GeomRing], module, this, PickCyls);
-   picks[PickCyls]->set_highlight(HighlightMaterial);
-   GeomMaterial* cylsm = new GeomMaterial(picks[PickCyls], EdgeMaterial);
-   CreateModeSwitch(0, cylsm);
+   picks[PickRing] = new GeomPick(geometries[GeomRing], module, this, PickRing);
+   picks[PickRing]->set_highlight(HighlightMaterial);
+   GeomMaterial* ringm = new GeomMaterial(picks[PickRing], EdgeMaterial);
+   CreateModeSwitch(0, ringm);
 
    GeomGroup* pts = new GeomGroup;
    for (geom = GeomPointA, pick = PickSphA;
@@ -182,13 +182,11 @@ RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
    GeomMaterial* slidersm = new GeomMaterial(picks[PickSlider], SliderMaterial);
    CreateModeSwitch(2, slidersm);
 
-   SetMode(Mode1, Switch0|Switch1|Switch2);
-   SetMode(Mode2, Switch0|Switch1);
-   SetMode(Mode3, Switch0|Switch2);
-   SetMode(Mode4, Switch0);
+   SetMode(Mode0, Switch0|Switch1|Switch2);
+   SetMode(Mode1, Switch0|Switch1);
+   SetMode(Mode2, Switch0|Switch2);
+   SetMode(Mode3, Switch0);
 
-   SetEpsilon(widget_scale*1e-6);
-   
    FinishWidget();
 }
 
@@ -201,48 +199,47 @@ RingWidget::~RingWidget()
 void
 RingWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[GeomPointA])->move(variables[PointAVar]->point(),
-					       1*widget_scale);
-   ((GeomSphere*)geometries[GeomPointB])->move(variables[PointBVar]->point(),
-					       1*widget_scale);
-   ((GeomSphere*)geometries[GeomPointC])->move(variables[PointCVar]->point(),
-					       1*widget_scale);
+   Point A(variables[PointAVar]->point()), B(variables[PointBVar]->point()), C(variables[PointCVar]->point());
+   
    Vector normal(Cross(GetAxis1(), GetAxis2()));
    if (normal.length2() < 1e-6) normal = Vector(1.0, 0.0, 0.0);
-   ((GeomTorus*)geometries[GeomRing])->move(variables[CenterVar]->point(), normal,
-					    variables[RadiusVar]->real(), 0.5*widget_scale);
-   Vector v(variables[SliderVar]->point()-variables[CenterVar]->point());
-   Vector slide;
-   if (v.length2() > 1e-6) {
-      slide = Cross(normal, v.normal());
+   
+   if (mode_switches[0]->get_state()) {
+      ((GeomTorus*)geometries[GeomRing])->move(variables[CenterVar]->point(), normal,
+					       variables[RadiusVar]->real(), 0.5*widget_scale);
+   }
+
+   if (mode_switches[1]->get_state()) {
+      ((GeomSphere*)geometries[GeomPointA])->move(A, widget_scale);
+      ((GeomSphere*)geometries[GeomPointB])->move(B, widget_scale);
+      ((GeomSphere*)geometries[GeomPointC])->move(C, widget_scale);
+      ((GeomCappedCylinder*)geometries[GeomResizeA])->move(A, A + (GetAxis1() * 1.5 * widget_scale),
+							   0.5*widget_scale);
+      ((GeomCappedCylinder*)geometries[GeomResizeB])->move(B, B + (GetAxis2() * 1.5 * widget_scale),
+							   0.5*widget_scale);
+      ((GeomCappedCylinder*)geometries[GeomResizeC])->move(C, C + (GetAxis3() * 1.5 * widget_scale),
+							   0.5*widget_scale);
+   }
+
+   Vector slide(variables[SliderVar]->point()-variables[CenterVar]->point());
+   if (slide.length2() > 1e-6) {
+      slide = Cross(normal, slide.normal());
       if (slide.length2() < 1e-6) slide = Vector(0.0, 1.0, 0.0);
    } else {
       slide = GetAxis1();
    }
-   ((GeomCappedCylinder*)geometries[GeomSlider])->move(variables[SliderVar]->point()
-						       - (slide * 0.3 * widget_scale),
-						       variables[SliderVar]->point()
-						       + (slide * 0.3 * widget_scale),
-						       1.1*widget_scale);
-   ((GeomCappedCylinder*)geometries[GeomResizeA])->move(variables[PointAVar]->point(),
-							variables[PointAVar]->point()
-							+ (GetAxis1() * 1.5 * widget_scale),
-							0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[GeomResizeB])->move(variables[PointBVar]->point(),
-							variables[PointBVar]->point()
-							+ (GetAxis2() * 1.5 * widget_scale),
-							0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[GeomResizeC])->move(variables[PointCVar]->point(),
-							variables[PointCVar]->point()
-							+ (GetAxis3() * 1.5 * widget_scale),
-							0.5*widget_scale);
+   if (mode_switches[2]->get_state()) {
+      ((GeomCappedCylinder*)geometries[GeomSlider])->move(variables[SliderVar]->point()
+							  - (slide * 0.3 * widget_scale),
+							  variables[SliderVar]->point()
+							  + (slide * 0.3 * widget_scale),
+							  1.1*widget_scale);
+   }
    
    ((DistanceConstraint*)constraints[ConstAB])->SetMinimum(1.0*widget_scale);
    ((DistanceConstraint*)constraints[ConstBC])->SetMinimum(1.0*widget_scale);
    ((DistanceConstraint*)constraints[ConstCA])->SetMinimum(1.0*widget_scale);
 
-   SetEpsilon(widget_scale*1e-6);
-   
    Vector spvec1(GetAxis1());
    Vector spvec2(variables[PointCVar]->point() - variables[PointBVar]->point());
    if (spvec2.length2() > 0.0) {
@@ -310,7 +307,7 @@ RingWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
    case PickSlider:
       variables[SliderVar]->SetDelta(delta);
       break;
-   case PickCyls:
+   case PickRing:
       MoveDelta(delta);
       break;
    }

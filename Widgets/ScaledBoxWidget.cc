@@ -400,30 +400,25 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
 
    GeomGroup* sliders = new GeomGroup;
    geometries[SliderCyl1] = new GeomCappedCylinder;
-   picks[PickSlider1] = new GeomPick(geometries[SliderCyl1],
-					   module, this, SliderCyl1);
+   picks[PickSlider1] = new GeomPick(geometries[SliderCyl1], module, this, SliderCyl1);
    picks[PickSlider1]->set_highlight(HighlightMaterial);
    sliders->add(picks[PickSlider1]);
    geometries[SliderCyl2] = new GeomCappedCylinder;
-   picks[PickSlider2] = new GeomPick(geometries[SliderCyl2],
-					   module, this, SliderCyl2);
+   picks[PickSlider2] = new GeomPick(geometries[SliderCyl2], module, this, SliderCyl2);
    picks[PickSlider2]->set_highlight(HighlightMaterial);
    sliders->add(picks[PickSlider2]);
    geometries[SliderCyl3] = new GeomCappedCylinder;
-   picks[PickSlider3] = new GeomPick(geometries[SliderCyl3],
-					   module, this, SliderCyl3);
+   picks[PickSlider3] = new GeomPick(geometries[SliderCyl3], module, this, SliderCyl3);
    picks[PickSlider3]->set_highlight(HighlightMaterial);
    sliders->add(picks[PickSlider3]);
    GeomMaterial* slidersm = new GeomMaterial(sliders, SliderMaterial);
    CreateModeSwitch(3, slidersm);
 
-   SetMode(Mode1, Switch0|Switch1|Switch2|Switch3);
-   SetMode(Mode2, Switch0|Switch1|Switch3);
-   SetMode(Mode3, Switch0|Switch2|Switch3);
-   SetMode(Mode4, Switch0|Switch3);
-   SetMode(Mode5, Switch0);
-
-   SetEpsilon(widget_scale*1e-6);
+   SetMode(Mode0, Switch0|Switch1|Switch2|Switch3);
+   SetMode(Mode1, Switch0|Switch1|Switch3);
+   SetMode(Mode2, Switch0|Switch2|Switch3);
+   SetMode(Mode3, Switch0|Switch3);
+   SetMode(Mode4, Switch0);
 
    FinishWidget();
 }
@@ -437,211 +432,122 @@ ScaledBoxWidget::~ScaledBoxWidget()
 void
 ScaledBoxWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[SmallSphereIUL])->move(variables[PointIULVar]->point(),
-						   0.5*widget_scale);
-   ((GeomSphere*)geometries[SmallSphereIUR])->move(variables[PointIURVar]->point(),
-						   0.5*widget_scale);
-   ((GeomSphere*)geometries[SmallSphereIDR])->move(variables[PointIDRVar]->point(),
-						   0.5*widget_scale);
-   ((GeomSphere*)geometries[SmallSphereIDL])->move(variables[PointIDLVar]->point(),
-						   0.5*widget_scale);
-   ((GeomSphere*)geometries[SmallSphereOUL])->move(variables[PointOULVar]->point(),
-						   0.5*widget_scale);
-   ((GeomSphere*)geometries[SmallSphereOUR])->move(variables[PointOURVar]->point(),
-						   0.5*widget_scale);
-   ((GeomSphere*)geometries[SmallSphereODR])->move(variables[PointODRVar]->point(),
-						   0.5*widget_scale);
-   ((GeomSphere*)geometries[SmallSphereODL])->move(variables[PointODLVar]->point(),
-						   0.5*widget_scale);
-   ((GeomSphere*)geometries[SphereIUL])->move(variables[PointIULVar]->point(),
-					      1*widget_scale);
-   ((GeomSphere*)geometries[SphereIUR])->move(variables[PointIURVar]->point(),
-					      1*widget_scale);
-   ((GeomSphere*)geometries[SphereIDR])->move(variables[PointIDRVar]->point(),
-					      1*widget_scale);
-   ((GeomSphere*)geometries[SphereIDL])->move(variables[PointIDLVar]->point(),
-					      1*widget_scale);
-   ((GeomSphere*)geometries[SphereOUL])->move(variables[PointOULVar]->point(),
-					      1*widget_scale);
-   ((GeomSphere*)geometries[SphereOUR])->move(variables[PointOURVar]->point(),
-					      1*widget_scale);
-   ((GeomSphere*)geometries[SphereODR])->move(variables[PointODRVar]->point(),
-					      1*widget_scale);
-   ((GeomSphere*)geometries[SphereODL])->move(variables[PointODLVar]->point(),
-					      1*widget_scale);
-   Point p(variables[PointOULVar]->point() + (variables[PointOURVar]->point()
-						 - variables[PointOULVar]->point()) / 3.0);
-   ((GeomCappedCylinder*)geometries[GeomResizeUU])->move(p - (GetAxis2() * 0.6 * widget_scale),
-							 p + (GetAxis2() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointOURVar]->point() + (variables[PointIURVar]->point()
-					     - variables[PointOURVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeUR])->move(p - (GetAxis2() * 0.6 * widget_scale),
-							 p + (GetAxis2() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointIURVar]->point() + (variables[PointIULVar]->point()
-					     - variables[PointIURVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeUD])->move(p - (GetAxis2() * 0.6 * widget_scale),
-							 p + (GetAxis2() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointIULVar]->point() + (variables[PointOULVar]->point()
-					     - variables[PointIULVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeUL])->move(p - (GetAxis2() * 0.6 * widget_scale),
-							 p + (GetAxis2() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointIURVar]->point() + (variables[PointOURVar]->point()
-					     - variables[PointIURVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeRU])->move(p - (GetAxis1() * 0.6 * widget_scale),
-							 p + (GetAxis1() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointOURVar]->point() + (variables[PointODRVar]->point()
-					     - variables[PointOURVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeRR])->move(p - (GetAxis1() * 0.6 * widget_scale),
-							 p + (GetAxis1() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointODRVar]->point() + (variables[PointIDRVar]->point()
-					     - variables[PointODRVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeRD])->move(p - (GetAxis1() * 0.6 * widget_scale),
-							 p + (GetAxis1() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointIDRVar]->point() + (variables[PointIURVar]->point()
-					     - variables[PointIDRVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeRL])->move(p - (GetAxis1() * 0.6 * widget_scale),
-							 p + (GetAxis1() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointIDLVar]->point() + (variables[PointIDRVar]->point()
-					     - variables[PointIDLVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeDU])->move(p - (GetAxis2() * 0.6 * widget_scale),
-							 p + (GetAxis2() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointIDRVar]->point() + (variables[PointODRVar]->point()
-					     - variables[PointIDRVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeDR])->move(p - (GetAxis2() * 0.6 * widget_scale),
-							 p + (GetAxis2() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointODRVar]->point() + (variables[PointODLVar]->point()
-					     - variables[PointODRVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeDD])->move(p - (GetAxis2() * 0.6 * widget_scale),
-							 p + (GetAxis2() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointODLVar]->point() + (variables[PointIDLVar]->point()
-					     - variables[PointODLVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeDL])->move(p - (GetAxis2() * 0.6 * widget_scale),
-							 p + (GetAxis2() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointOULVar]->point() + (variables[PointIULVar]->point()
-					     - variables[PointOULVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeLU])->move(p - (GetAxis1() * 0.6 * widget_scale),
-							 p + (GetAxis1() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointIULVar]->point() + (variables[PointIDLVar]->point()
-					     - variables[PointIULVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeLR])->move(p - (GetAxis1() * 0.6 * widget_scale),
-							 p + (GetAxis1() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointIDLVar]->point() + (variables[PointODLVar]->point()
-					     - variables[PointIDLVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeLD])->move(p - (GetAxis1() * 0.6 * widget_scale),
-							 p + (GetAxis1() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointODLVar]->point() + (variables[PointOULVar]->point()
-					     - variables[PointODLVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeLL])->move(p - (GetAxis1() * 0.6 * widget_scale),
-							 p + (GetAxis1() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointIULVar]->point() + (variables[PointIURVar]->point()
-					     - variables[PointIULVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeIU])->move(p - (GetAxis3() * 0.6 * widget_scale),
-							 p + (GetAxis3() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointIURVar]->point() + (variables[PointIDRVar]->point()
-					     - variables[PointIURVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeIR])->move(p - (GetAxis3() * 0.6 * widget_scale),
-							 p + (GetAxis3() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointIDRVar]->point() + (variables[PointIDLVar]->point()
-					     - variables[PointIDRVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeID])->move(p - (GetAxis3() * 0.6 * widget_scale),
-							 p + (GetAxis3() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointIDLVar]->point() + (variables[PointIULVar]->point()
-					     - variables[PointIDLVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeIL])->move(p - (GetAxis3() * 0.6 * widget_scale),
-							 p + (GetAxis3() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointOURVar]->point() + (variables[PointOULVar]->point()
-					     - variables[PointOURVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeOU])->move(p - (GetAxis3() * 0.6 * widget_scale),
-							 p + (GetAxis3() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointOULVar]->point() + (variables[PointODLVar]->point()
-					     - variables[PointOULVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeOR])->move(p - (GetAxis3() * 0.6 * widget_scale),
-							 p + (GetAxis3() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointODLVar]->point() + (variables[PointODRVar]->point()
-					     - variables[PointODLVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeOD])->move(p - (GetAxis3() * 0.6 * widget_scale),
-							 p + (GetAxis3() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   p = variables[PointODRVar]->point() + (variables[PointOURVar]->point()
-					     - variables[PointODRVar]->point()) / 3.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeOL])->move(p - (GetAxis3() * 0.6 * widget_scale),
-							 p + (GetAxis3() * 0.6 * widget_scale),
-							 0.75*widget_scale);
-   ((GeomCylinder*)geometries[CylIU])->move(variables[PointIULVar]->point(),
-					    variables[PointIURVar]->point(),
-					    0.5*widget_scale);
-   ((GeomCylinder*)geometries[CylIR])->move(variables[PointIURVar]->point(),
-					    variables[PointIDRVar]->point(),
-					    0.5*widget_scale);
-   ((GeomCylinder*)geometries[CylID])->move(variables[PointIDRVar]->point(),
-					    variables[PointIDLVar]->point(),
-					    0.5*widget_scale);
-   ((GeomCylinder*)geometries[CylIL])->move(variables[PointIDLVar]->point(),
-					    variables[PointIULVar]->point(),
-					    0.5*widget_scale);
-   ((GeomCylinder*)geometries[CylMU])->move(variables[PointIULVar]->point(),
-					    variables[PointOULVar]->point(),
-					    0.5*widget_scale);
-   ((GeomCylinder*)geometries[CylMR])->move(variables[PointIURVar]->point(),
-					    variables[PointOURVar]->point(),
-					    0.5*widget_scale);
-   ((GeomCylinder*)geometries[CylMD])->move(variables[PointIDRVar]->point(),
-					    variables[PointODRVar]->point(),
-					    0.5*widget_scale);
-   ((GeomCylinder*)geometries[CylML])->move(variables[PointIDLVar]->point(),
-					    variables[PointODLVar]->point(),
-					    0.5*widget_scale);
-   ((GeomCylinder*)geometries[CylOU])->move(variables[PointOULVar]->point(),
-					    variables[PointOURVar]->point(),
-					    0.5*widget_scale);
-   ((GeomCylinder*)geometries[CylOR])->move(variables[PointOURVar]->point(),
-					    variables[PointODRVar]->point(),
-					    0.5*widget_scale);
-   ((GeomCylinder*)geometries[CylOD])->move(variables[PointODRVar]->point(),
-					    variables[PointODLVar]->point(),
-					    0.5*widget_scale);
-   ((GeomCylinder*)geometries[CylOL])->move(variables[PointODLVar]->point(),
-					    variables[PointOULVar]->point(),
-					    0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[SliderCyl1])->move(variables[Slider1Var]->point()
-						       - (GetAxis1() * 0.3 * widget_scale),
-						       variables[Slider1Var]->point()
-						       + (GetAxis1() * 0.3 * widget_scale),
-						       1.1*widget_scale);
-   ((GeomCappedCylinder*)geometries[SliderCyl2])->move(variables[Slider2Var]->point()
-						       - (GetAxis2() * 0.3 * widget_scale),
-						       variables[Slider2Var]->point()
-						       + (GetAxis2() * 0.3 * widget_scale),
-						       1.1*widget_scale);
-   ((GeomCappedCylinder*)geometries[SliderCyl3])->move(variables[Slider3Var]->point()
-						       - (GetAxis3() * 0.3 * widget_scale),
-						       variables[Slider3Var]->point()
-						       + (GetAxis3() * 0.3 * widget_scale),
-						       1.1*widget_scale);
+   Real spherediam(widget_scale), resizediam(0.75*widget_scale), cylinderdiam(0.5*widget_scale);
+   Point IUL(variables[PointIULVar]->point());
+   Point IUR(variables[PointIURVar]->point());
+   Point IDR(variables[PointIDRVar]->point());
+   Point IDL(variables[PointIDLVar]->point());
+   Point OUL(variables[PointOULVar]->point());
+   Point OUR(variables[PointOURVar]->point());
+   Point ODR(variables[PointODRVar]->point());
+   Point ODL(variables[PointODLVar]->point());
+   
+   if (mode_switches[0]->get_state()) {
+      ((GeomCylinder*)geometries[CylIU])->move(IUL, IUR, cylinderdiam);
+      ((GeomCylinder*)geometries[CylIR])->move(IUR, IDR, cylinderdiam);
+      ((GeomCylinder*)geometries[CylID])->move(IDR, IDL, cylinderdiam);
+      ((GeomCylinder*)geometries[CylIL])->move(IDL, IUL, cylinderdiam);
+      ((GeomCylinder*)geometries[CylMU])->move(IUL, OUL, cylinderdiam);
+      ((GeomCylinder*)geometries[CylMR])->move(IUR, OUR, cylinderdiam);
+      ((GeomCylinder*)geometries[CylMD])->move(IDR, ODR, cylinderdiam);
+      ((GeomCylinder*)geometries[CylML])->move(IDL, ODL, cylinderdiam);
+      ((GeomCylinder*)geometries[CylOU])->move(OUL, OUR, cylinderdiam);
+      ((GeomCylinder*)geometries[CylOR])->move(OUR, ODR, cylinderdiam);
+      ((GeomCylinder*)geometries[CylOD])->move(ODR, ODL, cylinderdiam);
+      ((GeomCylinder*)geometries[CylOL])->move(ODL, OUL, cylinderdiam);
+      ((GeomSphere*)geometries[SmallSphereIUL])->move(IUL, cylinderdiam);
+      ((GeomSphere*)geometries[SmallSphereIUR])->move(IUR, cylinderdiam);
+      ((GeomSphere*)geometries[SmallSphereIDR])->move(IDR, cylinderdiam);
+      ((GeomSphere*)geometries[SmallSphereIDL])->move(IDL, cylinderdiam);
+      ((GeomSphere*)geometries[SmallSphereOUL])->move(OUL, cylinderdiam);
+      ((GeomSphere*)geometries[SmallSphereOUR])->move(OUR, cylinderdiam);
+      ((GeomSphere*)geometries[SmallSphereODR])->move(ODR, cylinderdiam);
+      ((GeomSphere*)geometries[SmallSphereODL])->move(ODL, cylinderdiam);
+   }
 
-   SetEpsilon(widget_scale*1e-6);
+   if (mode_switches[1]->get_state()) {
+      ((GeomSphere*)geometries[SphereIUL])->move(IUL, spherediam);
+      ((GeomSphere*)geometries[SphereIUR])->move(IUR, spherediam);
+      ((GeomSphere*)geometries[SphereIDR])->move(IDR, spherediam);
+      ((GeomSphere*)geometries[SphereIDL])->move(IDL, spherediam);
+      ((GeomSphere*)geometries[SphereOUL])->move(OUL, spherediam);
+      ((GeomSphere*)geometries[SphereOUR])->move(OUR, spherediam);
+      ((GeomSphere*)geometries[SphereODR])->move(ODR, spherediam);
+      ((GeomSphere*)geometries[SphereODL])->move(ODL, spherediam);
+   }
+
+   if (mode_switches[2]->get_state()) {
+      Vector resizelen1(GetAxis1()*0.6*widget_scale),
+	 resizelen2(GetAxis2()*0.6*widget_scale),
+	 resizelen3(GetAxis3()*0.6*widget_scale);
+      
+      Point p(OUL + (OUR - OUL) / 3.0);
+      ((GeomCappedCylinder*)geometries[GeomResizeUU])->move(p-resizelen2, p+resizelen2, resizediam);
+      p = OUR + (IUR - OUR) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeUR])->move(p-resizelen2, p+resizelen2, resizediam);
+      p = IUR + (IUL - IUR) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeUD])->move(p-resizelen2, p+resizelen2, resizediam);
+      p = IUL + (OUL - IUL) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeUL])->move(p-resizelen2, p+resizelen2, resizediam);
+      p = IUR + (OUR - IUR) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeRU])->move(p-resizelen1, p+resizelen1, resizediam);
+      p = OUR + (ODR - OUR) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeRR])->move(p-resizelen1, p+resizelen1, resizediam);
+      p = ODR + (IDR - ODR) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeRD])->move(p-resizelen1, p+resizelen1, resizediam);
+      p = IDR + (IUR - IDR) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeRL])->move(p-resizelen1, p+resizelen1, resizediam);
+      p = IDL + (IDR - IDL) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeDU])->move(p-resizelen2, p+resizelen2, resizediam);
+      p = IDR + (ODR - IDR) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeDR])->move(p-resizelen2, p+resizelen2, resizediam);
+      p = ODR + (ODL - ODR) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeDD])->move(p-resizelen2, p+resizelen2, resizediam);
+      p = ODL + (IDL - ODL) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeDL])->move(p-resizelen2, p+resizelen2, resizediam);
+      p = OUL + (IUL - OUL) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeLU])->move(p-resizelen1, p+resizelen1, resizediam);
+      p = IUL + (IDL - IUL) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeLR])->move(p-resizelen1, p+resizelen1, resizediam);
+      p = IDL + (ODL - IDL) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeLD])->move(p-resizelen1, p+resizelen1, resizediam);
+      p = ODL + (OUL - ODL) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeLL])->move(p-resizelen1, p+resizelen1, resizediam);
+      p = IUL + (IUR - IUL) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeIU])->move(p-resizelen3, p+resizelen3, resizediam);
+      p = IUR + (IDR - IUR) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeIR])->move(p-resizelen3, p+resizelen3, resizediam);
+      p = IDR + (IDL - IDR) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeID])->move(p-resizelen3, p+resizelen3, resizediam);
+      p = IDL + (IUL - IDL) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeIL])->move(p-resizelen3, p+resizelen3, resizediam);
+      p = OUR + (OUL - OUR) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeOU])->move(p-resizelen3, p+resizelen3, resizediam);
+      p = OUL + (ODL - OUL) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeOR])->move(p-resizelen3, p+resizelen3, resizediam);
+      p = ODL + (ODR - ODL) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeOD])->move(p-resizelen3, p+resizelen3, resizediam);
+      p = ODR + (OUR - ODR) / 3.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeOL])->move(p-resizelen3, p+resizelen3, resizediam);
+   }
+
+   if (mode_switches[3]->get_state()) {
+      ((GeomCappedCylinder*)geometries[SliderCyl1])->move(variables[Slider1Var]->point()
+							  - (GetAxis1() * 0.3 * widget_scale),
+							  variables[Slider1Var]->point()
+							  + (GetAxis1() * 0.3 * widget_scale),
+							  1.1*widget_scale);
+      ((GeomCappedCylinder*)geometries[SliderCyl2])->move(variables[Slider2Var]->point()
+							  - (GetAxis2() * 0.3 * widget_scale),
+							  variables[Slider2Var]->point()
+							  + (GetAxis2() * 0.3 * widget_scale),
+							  1.1*widget_scale);
+      ((GeomCappedCylinder*)geometries[SliderCyl3])->move(variables[Slider3Var]->point()
+							  - (GetAxis3() * 0.3 * widget_scale),
+							  variables[Slider3Var]->point()
+							  + (GetAxis3() * 0.3 * widget_scale),
+							  1.1*widget_scale);
+   }
 
    Vector spvec1(variables[PointIURVar]->point() - variables[PointIULVar]->point());
    Vector spvec2(variables[PointIDLVar]->point() - variables[PointIULVar]->point());

@@ -23,7 +23,7 @@
 const Index NumCons = 5;
 const Index NumVars = 7;
 const Index NumGeoms = 28;
-const Index NumPcks = 7;
+const Index NumPcks = 8;
 const Index NumMdes = 3;
 const Index NumSwtchs = 2;
 const Index NumSchemes = 5;
@@ -36,7 +36,7 @@ enum { GeomPointUL, GeomPointUR, GeomPointDR, GeomPointDL,
        GeomCornerUL, GeomCornerUR, GeomCornerDR, GeomCornerDL,
        GeomEdgeU, GeomEdgeR, GeomEdgeD, GeomEdgeL,
        GeomDiagUL, GeomDiagUR, GeomDiagDR, GeomDiagDL };
-enum { PickUp, PickCyls,
+enum { PickUp, PickCyls, PickShaft,
        PickResizeUp, PickResizeEye, PickEye, PickFore, PickLookAt };
 
 ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale,
@@ -113,8 +113,7 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale,
 
    GeomGroup* eyes = new GeomGroup;
    geometries[GeomEye] = new GeomSphere;
-   picks[PickEye] = new GeomPick(geometries[GeomEye], module,
-				 this, PickEye);
+   picks[PickEye] = new GeomPick(geometries[GeomEye], module, this, PickEye);
    picks[PickEye]->set_highlight(HighlightMaterial);
    eyes->add(picks[PickEye]);
 
@@ -137,8 +136,7 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale,
    Index geom;
    GeomGroup* resizes = new GeomGroup;
    geometries[GeomResizeUp] = new GeomCappedCylinder;
-   picks[PickResizeUp] = new GeomPick(geometries[GeomResizeUp], module, this,
-				      PickResizeUp);
+   picks[PickResizeUp] = new GeomPick(geometries[GeomResizeUp], module, this, PickResizeUp);
    picks[PickResizeUp]->set_highlight(HighlightMaterial);
    resizes->add(picks[PickResizeUp]);
    geometries[GeomResizeEye] = new GeomCappedCylinder;
@@ -148,18 +146,22 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale,
    resizes->add(picks[PickResizeEye]);
    GeomMaterial* resizem = new GeomMaterial(resizes, ResizeMaterial);
 
+   GeomGroup* shafts = new GeomGroup;
    geometries[GeomUpVector] = new GeomCylinder;
-   GeomMaterial* upvm = new GeomMaterial(geometries[GeomUpVector], EdgeMaterial);
+   shafts->add(geometries[GeomUpVector]);
+   geometries[GeomShaft] = new GeomCylinder;
+   shafts->add(geometries[GeomShaft]);
+   picks[PickShaft] = new GeomPick(shafts, module, this, PickShaft);
+   picks[PickShaft]->set_highlight(HighlightMaterial);
+   GeomMaterial* shaftm = new GeomMaterial(picks[PickShaft], EdgeMaterial);
 
    GeomGroup* w = new GeomGroup;
    w->add(eyesm);
    w->add(resizem);
-   w->add(upvm);
+   w->add(shaftm);
    CreateModeSwitch(0, w);
 
    GeomGroup* cyls = new GeomGroup;
-   geometries[GeomShaft] = new GeomCylinder;
-   cyls->add(geometries[GeomShaft]);
    for (geom = GeomPointUL; geom <= GeomPointDL; geom++) {
       geometries[geom] = new GeomSphere;
       cyls->add(geometries[geom]);
@@ -185,12 +187,10 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale,
    GeomMaterial* cylsm = new GeomMaterial(picks[PickCyls], EdgeMaterial);
    CreateModeSwitch(1, cylsm);
 
-   SetMode(Mode1, Switch0|Switch1);
-   SetMode(Mode2, Switch0);
-   SetMode(Mode3, Switch1);
+   SetMode(Mode0, Switch0|Switch1);
+   SetMode(Mode1, Switch0);
+   SetMode(Mode2, Switch1);
 
-   SetEpsilon(widget_scale*1e-6);
-   
    FinishWidget();
 }
 
@@ -203,82 +203,51 @@ ViewWidget::~ViewWidget()
 void
 ViewWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[GeomEye])->move(variables[EyeVar]->point(),
-					    1*widget_scale);
-   ((GeomSphere*)geometries[GeomFore])->move(variables[ForeVar]->point(),
-					     1*widget_scale);
-   ((GeomSphere*)geometries[GeomUp])->move(variables[UpVar]->point(),
-					   1*widget_scale);
-   ((GeomSphere*)geometries[GeomLookAt])->move(variables[LookAtVar]->point(),
-					       1*widget_scale);
-   ((GeomSphere*)geometries[GeomPointUL])->move(GetFrontUL(),
-						0.5*widget_scale);
-   ((GeomSphere*)geometries[GeomPointUR])->move(GetFrontUR(),
-						0.5*widget_scale);
-   ((GeomSphere*)geometries[GeomPointDR])->move(GetFrontDR(),
-						0.5*widget_scale);
-   ((GeomSphere*)geometries[GeomPointDL])->move(GetFrontDL(),
-						0.5*widget_scale);
-   ((GeomSphere*)geometries[GeomCornerUL])->move(GetBackUL(),
-						 0.5*widget_scale);
-   ((GeomSphere*)geometries[GeomCornerUR])->move(GetBackUR(),
-						 0.5*widget_scale);
-   ((GeomSphere*)geometries[GeomCornerDR])->move(GetBackDR(),
-						 0.5*widget_scale);
-   ((GeomSphere*)geometries[GeomCornerDL])->move(GetBackDL(),
-						 0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[GeomResizeUp])->move(variables[UpVar]->point(),
-							 variables[UpVar]->point()
-							 + (GetUpAxis() * 1.5 * widget_scale),
-							 0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[GeomResizeEye])->move(variables[EyeVar]->point(),
-							  variables[EyeVar]->point()
-							  - (GetEyeAxis() * 1.5 * widget_scale),
-							  0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomShaft])->move(variables[EyeVar]->point(),
-						variables[LookAtVar]->point(),
-						0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomUpVector])->move(variables[UpVar]->point(),
-						   variables[ForeVar]->point(),
-						   0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomCylU])->move(GetFrontUL(),
-					       GetFrontUR(),
-					       0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomCylR])->move(GetFrontUR(),
-					       GetFrontDR(),
-					       0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomCylD])->move(GetFrontDR(),
-					       GetFrontDL(),
-					       0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomCylL])->move(GetFrontDL(),
-					       GetFrontUL(),
-					       0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomEdgeU])->move(GetBackUL(),
-						GetBackUR(),
-						0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomEdgeR])->move(GetBackUR(),
-						GetBackDR(),
-						0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomEdgeD])->move(GetBackDR(),
-						GetBackDL(),
-						0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomEdgeL])->move(GetBackDL(),
-						GetBackUL(),
-						0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomDiagUL])->move(GetFrontUL(),
-						 GetBackUL(),
-						 0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomDiagUR])->move(GetFrontUR(),
-						 GetBackUR(),
-						 0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomDiagDR])->move(GetFrontDR(),
-						 GetBackDR(),
-						 0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomDiagDL])->move(GetFrontDL(),
-						 GetBackDL(),
-						 0.5*widget_scale);
+   Real spherediam(widget_scale), cylinderdiam(0.5*widget_scale);
 
-   SetEpsilon(widget_scale*1e-6);
+   if (mode_switches[0]->get_state()) {
+      ((GeomSphere*)geometries[GeomEye])->move(variables[EyeVar]->point(), spherediam);
+      ((GeomSphere*)geometries[GeomFore])->move(variables[ForeVar]->point(), spherediam);
+      ((GeomSphere*)geometries[GeomUp])->move(variables[UpVar]->point(), spherediam);
+      ((GeomSphere*)geometries[GeomLookAt])->move(variables[LookAtVar]->point(), spherediam);
+      ((GeomCylinder*)geometries[GeomShaft])->move(variables[EyeVar]->point(),
+						   variables[LookAtVar]->point(),
+						   cylinderdiam);
+      ((GeomCylinder*)geometries[GeomUpVector])->move(variables[UpVar]->point(),
+						      variables[ForeVar]->point(),
+						      cylinderdiam);
+      ((GeomCappedCylinder*)geometries[GeomResizeUp])->move(variables[UpVar]->point(),
+							    variables[UpVar]->point()
+							    + (GetUpAxis() * 1.5 * widget_scale),
+							    cylinderdiam);
+      ((GeomCappedCylinder*)geometries[GeomResizeEye])->move(variables[EyeVar]->point(),
+							     variables[EyeVar]->point()
+							     - (GetEyeAxis() * 1.5 * widget_scale),
+							     cylinderdiam);
+   }
+
+   if (mode_switches[1]->get_state()) {
+      ((GeomSphere*)geometries[GeomPointUL])->move(GetFrontUL(), cylinderdiam);
+      ((GeomSphere*)geometries[GeomPointUR])->move(GetFrontUR(), cylinderdiam);
+      ((GeomSphere*)geometries[GeomPointDR])->move(GetFrontDR(), cylinderdiam);
+      ((GeomSphere*)geometries[GeomPointDL])->move(GetFrontDL(), cylinderdiam);
+      ((GeomSphere*)geometries[GeomCornerUL])->move(GetBackUL(), cylinderdiam);
+      ((GeomSphere*)geometries[GeomCornerUR])->move(GetBackUR(), cylinderdiam);
+      ((GeomSphere*)geometries[GeomCornerDR])->move(GetBackDR(), cylinderdiam);
+      ((GeomSphere*)geometries[GeomCornerDL])->move(GetBackDL(), cylinderdiam);
+      ((GeomCylinder*)geometries[GeomCylU])->move(GetFrontUL(), GetFrontUR(), cylinderdiam);
+      ((GeomCylinder*)geometries[GeomCylR])->move(GetFrontUR(), GetFrontDR(), cylinderdiam);
+      ((GeomCylinder*)geometries[GeomCylD])->move(GetFrontDR(), GetFrontDL(), cylinderdiam);
+      ((GeomCylinder*)geometries[GeomCylL])->move(GetFrontDL(), GetFrontUL(), cylinderdiam);
+      ((GeomCylinder*)geometries[GeomEdgeU])->move(GetBackUL(), GetBackUR(), cylinderdiam);
+      ((GeomCylinder*)geometries[GeomEdgeR])->move(GetBackUR(), GetBackDR(), cylinderdiam);
+      ((GeomCylinder*)geometries[GeomEdgeD])->move(GetBackDR(), GetBackDL(), cylinderdiam);
+      ((GeomCylinder*)geometries[GeomEdgeL])->move(GetBackDL(), GetBackUL(), cylinderdiam);
+      ((GeomCylinder*)geometries[GeomDiagUL])->move(GetFrontUL(), GetBackUL(), cylinderdiam);
+      ((GeomCylinder*)geometries[GeomDiagUR])->move(GetFrontUR(), GetBackUR(), cylinderdiam);
+      ((GeomCylinder*)geometries[GeomDiagDR])->move(GetFrontDR(), GetBackDR(), cylinderdiam);
+      ((GeomCylinder*)geometries[GeomDiagDL])->move(GetFrontDL(), GetBackDL(), cylinderdiam);
+   }
 
    Vector spvec1(GetEyeAxis());
    Vector spvec2(GetUpAxis());
@@ -323,6 +292,7 @@ ViewWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
       variables[EyeVar]->SetDelta(delta);
       break;
    case PickCyls:
+   case PickShaft:
       MoveDelta(delta);
       break;
    }

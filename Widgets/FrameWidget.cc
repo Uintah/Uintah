@@ -186,13 +186,11 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale 
    GeomMaterial* resizem = new GeomMaterial(resizes, ResizeMaterial);
    CreateModeSwitch(2, resizem);
 
-   SetMode(Mode1, Switch0|Switch1|Switch2);
-   SetMode(Mode2, Switch0|Switch1);
-   SetMode(Mode3, Switch0|Switch2);
-   SetMode(Mode4, Switch0);
+   SetMode(Mode0, Switch0|Switch1|Switch2);
+   SetMode(Mode1, Switch0|Switch1);
+   SetMode(Mode2, Switch0|Switch2);
+   SetMode(Mode3, Switch0);
 
-   SetEpsilon(widget_scale*1e-6);
-   
    FinishWidget();
 }
 
@@ -205,54 +203,43 @@ FrameWidget::~FrameWidget()
 void
 FrameWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[GeomSPointUL])->move(variables[PointULVar]->point(),
-						 0.5*widget_scale);
-   ((GeomSphere*)geometries[GeomSPointUR])->move(variables[PointURVar]->point(),
-						 0.5*widget_scale);
-   ((GeomSphere*)geometries[GeomSPointDR])->move(variables[PointDRVar]->point(),
-						 0.5*widget_scale);
-   ((GeomSphere*)geometries[GeomSPointDL])->move(variables[PointDLVar]->point(),
-						 0.5*widget_scale);
-   ((GeomSphere*)geometries[GeomPointUL])->move(variables[PointULVar]->point(),
-						1*widget_scale);
-   ((GeomSphere*)geometries[GeomPointUR])->move(variables[PointURVar]->point(),
-						1*widget_scale);
-   ((GeomSphere*)geometries[GeomPointDR])->move(variables[PointDRVar]->point(),
-						1*widget_scale);
-   ((GeomSphere*)geometries[GeomPointDL])->move(variables[PointDLVar]->point(),
-						1*widget_scale);
-   Point p(variables[PointULVar]->point() + (variables[PointURVar]->point()
-					     - variables[PointULVar]->point()) / 2.0);
-   ((GeomCappedCylinder*)geometries[GeomResizeU])->move(p - (GetAxis2() * 0.6 * widget_scale),
-							p + (GetAxis2() * 0.6 * widget_scale),
-							0.75*widget_scale);
-   p = variables[PointURVar]->point() + (variables[PointDRVar]->point()
-					    - variables[PointURVar]->point()) / 2.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeR])->move(p - (GetAxis1() * 0.6 * widget_scale),
-							p + (GetAxis1() * 0.6 * widget_scale),
-							0.75*widget_scale);
-   p = variables[PointDRVar]->point() + (variables[PointDLVar]->point()
-					    - variables[PointDRVar]->point()) / 2.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeD])->move(p - (GetAxis2() * 0.6 * widget_scale),
-							p + (GetAxis2() * 0.6 * widget_scale),
-							0.75*widget_scale);
-   p = variables[PointDLVar]->point() + (variables[PointULVar]->point()
-					    - variables[PointDLVar]->point()) / 2.0;
-   ((GeomCappedCylinder*)geometries[GeomResizeL])->move(p - (GetAxis1() * 0.6 * widget_scale),
-							p + (GetAxis1() * 0.6 * widget_scale),
-							0.75*widget_scale);
-   ((GeomCylinder*)geometries[GeomCylU])->move(variables[PointULVar]->point(),
-					       variables[PointURVar]->point(),
-					       0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomCylR])->move(variables[PointURVar]->point(),
-					       variables[PointDRVar]->point(),
-					       0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomCylD])->move(variables[PointDRVar]->point(),
-					       variables[PointDLVar]->point(),
-					       0.5*widget_scale);
-   ((GeomCylinder*)geometries[GeomCylL])->move(variables[PointDLVar]->point(),
-					       variables[PointULVar]->point(),
-					       0.5*widget_scale);
+   Real spherediam(widget_scale), resizediam(0.75*widget_scale), cylinderdiam(0.5*widget_scale);
+   Point UL(variables[PointULVar]->point());
+   Point UR(variables[PointURVar]->point());
+   Point DR(variables[PointDRVar]->point());
+   Point DL(variables[PointDLVar]->point());
+
+   if (mode_switches[0]->get_state()) {
+      ((GeomCylinder*)geometries[GeomCylU])->move(UL, UR, cylinderdiam);
+      ((GeomCylinder*)geometries[GeomCylR])->move(UR, DR, cylinderdiam);
+      ((GeomCylinder*)geometries[GeomCylD])->move(DR, DL, cylinderdiam);
+      ((GeomCylinder*)geometries[GeomCylL])->move(DL, UL, cylinderdiam);
+      ((GeomSphere*)geometries[GeomSPointUL])->move(UL, cylinderdiam);
+      ((GeomSphere*)geometries[GeomSPointUR])->move(UR, cylinderdiam);
+      ((GeomSphere*)geometries[GeomSPointDR])->move(DR, cylinderdiam);
+      ((GeomSphere*)geometries[GeomSPointDL])->move(DL, cylinderdiam);
+   }
+   
+   if (mode_switches[1]->get_state()) {
+      ((GeomSphere*)geometries[GeomPointUL])->move(UL, spherediam);
+      ((GeomSphere*)geometries[GeomPointUR])->move(UR, spherediam);
+      ((GeomSphere*)geometries[GeomPointDR])->move(DR, spherediam);
+      ((GeomSphere*)geometries[GeomPointDL])->move(DL, spherediam);
+   }
+
+   if (mode_switches[2]->get_state()) {
+      Vector resizelen1(GetAxis1()*0.6*widget_scale),
+	 resizelen2(GetAxis2()*0.6*widget_scale);
+      
+      Point p(UL + (UR - UL) / 2.0);
+      ((GeomCappedCylinder*)geometries[GeomResizeU])->move(p - resizelen2, p + resizelen2, resizediam);
+      p = UR + (DR - UR) / 2.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeR])->move(p - resizelen1, p + resizelen1, resizediam);
+      p = DR + (DL - DR) / 2.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeD])->move(p - resizelen2, p + resizelen2, resizediam);
+      p = DL + (UL - DL) / 2.0;
+      ((GeomCappedCylinder*)geometries[GeomResizeL])->move(p - resizelen1, p + resizelen1, resizediam);
+   }
 
    ((DistanceConstraint*)constraints[ConstULUR])->SetMinimum(3.2*widget_scale);
    ((DistanceConstraint*)constraints[ConstDRDL])->SetMinimum(3.2*widget_scale);
@@ -261,10 +248,8 @@ FrameWidget::widget_execute()
    ((DistanceConstraint*)constraints[ConstULDR])->SetMinimum(sqrt(2*3.2*3.2)*widget_scale);
    ((DistanceConstraint*)constraints[ConstURDL])->SetMinimum(sqrt(2*3.2*3.2)*widget_scale);
 
-   SetEpsilon(widget_scale*1e-6);
-
-   Vector spvec1(variables[PointURVar]->point() - variables[PointULVar]->point());
-   Vector spvec2(variables[PointDLVar]->point() - variables[PointULVar]->point());
+   Vector spvec1(UR - UL);
+   Vector spvec2(DL - UL);
    if ((spvec1.length2() > 1e-6) && (spvec2.length2() > 1e-6)) {
       spvec1.normalize();
       spvec2.normalize();

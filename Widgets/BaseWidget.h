@@ -42,7 +42,7 @@ public:
    void SetScale( const Real scale );
    double GetScale() const;
 
-   inline void SetEpsilon( const Real Epsilon );
+   void SetEpsilon( const Real Epsilon );
 
    GeomSwitch* GetWidget();
 
@@ -53,6 +53,7 @@ public:
    void SetState( const int state );
 
    // This rotates through the "minimizations" or "gaudinesses" for the widget.
+   // Doesn't have to be overloaded.
    virtual void NextMode();
    Index GetMode() const;
 
@@ -84,13 +85,13 @@ protected:
    Array1<GeomObj*> geometries;
    Array1<GeomPick*> picks;
 
-   enum {Mode1,Mode2,Mode3,Mode4,Mode5,Mode6,Mode7,Mode8,Mode9};
+   enum {Mode0,Mode1,Mode2,Mode3,Mode4,Mode5,Mode6,Mode7,Mode8,Mode9};
    Index CurrentMode;
    Index NumSwitches;
    Array1<GeomSwitch*> mode_switches;
    Index NumModes;
    Array1<long> modes;
-   // modes is the bitwise OR of Switch1-Switch9
+   // modes contains the bitwise OR of Switch0-Switch8
    const long Switch0 = 0x0001;
    const long Switch1 = 0x0002;
    const long Switch2 = 0x0004;
@@ -110,6 +111,7 @@ protected:
 
    GeomSwitch* widget;
    Real widget_scale;
+   Real epsilon;
 
    Module* module;
    CrowdMonitor* lock;
@@ -129,13 +131,6 @@ protected:
 };
 
 inline ostream& operator<<( ostream& os, BaseWidget& w );
-
-
-inline void
-BaseWidget::SetEpsilon( const Real Epsilon )
-{
-   solve->SetEpsilon(Epsilon);
-}
 
 
 inline ostream&

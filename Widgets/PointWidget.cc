@@ -37,7 +37,7 @@ PointWidget::PointWidget( Module* module, CrowdMonitor* lock, double widget_scal
    picks[Pick]->set_highlight(HighlightMaterial);
    CreateModeSwitch(0, picks[Pick]);
 
-   SetMode(Mode1, Switch0);
+   SetMode(Mode0, Switch0);
    
    FinishWidget();
 }
@@ -51,8 +51,9 @@ PointWidget::~PointWidget()
 void
 PointWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[GeomPoint])->move(variables[PointVar]->point(),
-					      1*widget_scale);
+   if (mode_switches[0]->get_state())
+      ((GeomSphere*)geometries[GeomPoint])->move(variables[PointVar]->point(),
+						 widget_scale);
 }
 
 

@@ -60,10 +60,13 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
   SliderMaterial(SliderWidgetMaterial),
   ResizeMaterial(ResizeWidgetMaterial),
   SpecialMaterial(SpecialWidgetMaterial),
-  HighlightMaterial(HighlightWidgetMaterial)
+  HighlightMaterial(HighlightWidgetMaterial),
+  epsilon(1e-6)
 {
    for (Index i=0; i<NumSwitches; i++)
       mode_switches[i] = NULL;
+   for (i=0; i<NumModes; i++)
+      modes[i] = -1;
 }
 
 
@@ -80,11 +83,27 @@ BaseWidget::~BaseWidget()
    }
 }
 
+void
+BaseWidget::MoveDelta( const Vector& )
+{
+   Error("BaseWidget can't MoveDelta!");
+}
+
+
+Point
+BaseWidget::ReferencePoint() const
+{
+   Error("BaseWidget can't find ReferencPoint!");
+   return Point(0,0,0);
+}
+
 
 void
 BaseWidget::SetScale( const double scale )
 {
    widget_scale = scale;
+   solve->SetEpsilon(epsilon*widget_scale);
+   execute();
 }
 
 
@@ -95,25 +114,18 @@ BaseWidget::GetScale() const
 }
 
 
+void
+BaseWidget::SetEpsilon( const Real Epsilon )
+{
+   epsilon = Epsilon;
+   solve->SetEpsilon(epsilon*widget_scale);
+}
+
+
 GeomSwitch*
 BaseWidget::GetWidget()
 {
    return widget;
-}
-
-
-void
-BaseWidget::MoveDelta( const Vector& )
-{
-   Error("BaseWidget: Can't Move!");
-}
-
-
-Point
-BaseWidget::ReferencePoint() const
-{
-   Error("BaseWidget: Can't Determine ReferencePoint!");
-   return Point(0,0,0);
 }
 
 
@@ -194,8 +206,14 @@ BaseWidget::SetMode( const Index mode, const long swtchs )
 void
 BaseWidget::FinishWidget()
 {
+   for (Index i=0; i<NumModes; i++)
+      if (modes[i] == -1) {
+	 cerr << "BaseWidget Error:  Mode " << i << " is unitialized!" << endl;
+	 exit(-1);
+      }
+   
    GeomGroup* sg = new GeomGroup;
-   for (Index i=0; i<NumSwitches; i++) {
+   for (i=0; i<NumSwitches; i++) {
       if (modes[CurrentMode]&(1<<i))
 	 mode_switches[i]->set_state(1);
       else

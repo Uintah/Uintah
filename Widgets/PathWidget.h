@@ -42,6 +42,7 @@ private:
    GeomGroup* pointgroup;
    GeomGroup* tangentgroup;
    GeomGroup* orientgroup;
+   GeomGroup* upgroup;
    GeomGroup* splinegroup;
 
    Index npoints;

@@ -34,7 +34,7 @@ enum { Pick };
 
 CriticalPointWidget::CriticalPointWidget( Module* module, CrowdMonitor* lock, double widget_scale )
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMdes, NumSwtchs, widget_scale),
-  direction(0, 0, 1.0), crittype(AttractingFocus)
+  direction(0, 0, 1.0), crittype(Regular)
 {
    variables[PointVar] = new PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
 
@@ -53,13 +53,13 @@ CriticalPointWidget::CriticalPointWidget( Module* module, CrowdMonitor* lock, do
    CreateModeSwitch(0, picks[Pick]);
    
    GeomGroup* cyls = new GeomGroup;
-   geometries[GeomCylinder1] = new GeomCylinder;
+   geometries[GeomCylinder1] = new GeomCappedCylinder;
    cyls->add(geometries[GeomCylinder1]);
-   geometries[GeomCylinder2] = new GeomCylinder;
+   geometries[GeomCylinder2] = new GeomCappedCylinder;
    cyls->add(geometries[GeomCylinder2]);
-   geometries[GeomCylinder3] = new GeomCylinder;
+   geometries[GeomCylinder3] = new GeomCappedCylinder;
    cyls->add(geometries[GeomCylinder3]);
-   geometries[GeomCylinder4] = new GeomCylinder;
+   geometries[GeomCylinder4] = new GeomCappedCylinder;
    cyls->add(geometries[GeomCylinder4]);
    GeomMaterial* cylsm = new GeomMaterial(cyls, SpecialMaterial);
    CreateModeSwitch(1, cylsm);
@@ -85,16 +85,16 @@ CriticalPointWidget::CriticalPointWidget( Module* module, CrowdMonitor* lock, do
    cones->add(geometries[GeomCone3]);
    geometries[GeomCone4] = new GeomCappedCone;
    cones->add(geometries[GeomCone4]);
-   GeomMaterial* conesm = new GeomMaterial(cones, SpecialMaterial);
+   GeomMaterial* conesm = new GeomMaterial(cones, ResizeMaterial);
    CreateModeSwitch(3, conesm);
 
-   SetMode(Mode1, Switch0);
+   SetMode(Mode0, Switch0);
+   SetMode(Mode1, Switch0|Switch1|Switch3);
    SetMode(Mode2, Switch0|Switch1|Switch3);
    SetMode(Mode3, Switch0|Switch1|Switch3);
-   SetMode(Mode4, Switch0|Switch1|Switch3);
+   SetMode(Mode4, Switch0|Switch2|Switch3);
    SetMode(Mode5, Switch0|Switch2|Switch3);
    SetMode(Mode6, Switch0|Switch2|Switch3);
-   SetMode(Mode7, Switch0|Switch2|Switch3);
 
    FinishWidget();
 }
@@ -108,83 +108,174 @@ CriticalPointWidget::~CriticalPointWidget()
 void
 CriticalPointWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[GeomPoint])->move(variables[PointVar]->point(),
-					      1*widget_scale);
-   ((GeomCylinder*)geometries[GeomShaft])->move(variables[PointVar]->point(),
-						variables[PointVar]->point()
-						+ direction * widget_scale * 3.0,
-						0.5*widget_scale);
-   ((GeomCappedCone*)geometries[GeomHead])->move(variables[PointVar]->point()
-						 + direction * widget_scale * 3.0,
-						 variables[PointVar]->point()
-						 + direction * widget_scale * 5.0,
-						 widget_scale, 0);
-
-   Real cenoff(1.5), twocenoff(cenoff*2), diam(0.6);
+   Vector direct(direction);
+   Real extent(4.5*widget_scale);
+   Real sphererad(widget_scale), cylinderrad(0.5*widget_scale);
+   Real twocenoff(extent-cylinderrad), cenoff(twocenoff/2.0), diam(0.6*widget_scale);
+   Real conelen(1.5*widget_scale), conerad(0.8*widget_scale), cyllen(extent-conelen);
+   Point center(variables[PointVar]->point());
    Vector v1, v2;
-   direction.normal().find_orthogonal(v1,v2);
-   ((GeomCylinder*)geometries[GeomCylinder1])->move(variables[PointVar]->point(),
-						    variables[PointVar]->point()
-						    +v2*twocenoff*widget_scale,
-						    diam*widget_scale);
-   ((GeomCylinder*)geometries[GeomCylinder2])->move(variables[PointVar]->point(),
-						    variables[PointVar]->point()
-						    +v1*twocenoff*widget_scale,
-						    diam*widget_scale);
-   ((GeomCylinder*)geometries[GeomCylinder3])->move(variables[PointVar]->point(),
-						    variables[PointVar]->point()
-						    -v2*twocenoff*widget_scale,
-						    diam*widget_scale);
-   ((GeomCylinder*)geometries[GeomCylinder4])->move(variables[PointVar]->point(),
-						    variables[PointVar]->point()
-						    -v1*twocenoff*widget_scale,
-						    diam*widget_scale);
+   direct.normal().find_orthogonal(v1,v2);
 
-   ((GeomTorusArc*)geometries[GeomTorus1])->move(variables[PointVar]->point()
-						 +v2*cenoff*widget_scale,
-						 direction,
-						 cenoff*widget_scale, diam*widget_scale,
-						 v1, 0, 3.14159);
-   ((GeomTorusArc*)geometries[GeomTorus2])->move(variables[PointVar]->point()
-						 +v1*cenoff*widget_scale,
-						 direction,
-						 cenoff*widget_scale, diam*widget_scale,
-						 v1, 3.14159*0.5, 3.14159);
-   ((GeomTorusArc*)geometries[GeomTorus3])->move(variables[PointVar]->point()
-						 -v2*cenoff*widget_scale,
-						 direction,
-						 cenoff*widget_scale, diam*widget_scale,
-						 v1, 3.14159, 3.14159);
-   ((GeomTorusArc*)geometries[GeomTorus4])->move(variables[PointVar]->point()
-						 -v1*cenoff*widget_scale,
-						 direction,
-						 cenoff*widget_scale, diam*widget_scale,
-						 v1, 3.14159*1.5, 3.14159);
+   Point cylinder1end1, cylinder1end2;
+   Point cylinder2end1, cylinder2end2;
+   Point cylinder3end1, cylinder3end2;
+   Point cylinder4end1, cylinder4end2;
+   Point torus1center, torus2center, torus3center, torus4center;
+   Real torus1start, torus2start, torus3start, torus4start, torusangle(3.14159);
+   Point cone1end1, cone1end2;
+   Point cone2end1, cone2end2;
+   Point cone3end1, cone3end2;
+   Point cone4end1, cone4end2;
+   
+   switch (crittype) {
+   case Regular:
+      break;
+   case AttractingNode:
+      cone1end2 = center+v2*sphererad;
+      cone1end1 = cone1end2+v2*conelen;
+      cone2end2 = center+v1*sphererad;
+      cone2end1 = cone2end2+v1*conelen;
+      cone3end2 = center-v2*sphererad;
+      cone3end1 = cone3end2-v2*conelen;
+      cone4end2 = center-v1*sphererad;
+      cone4end1 = cone4end2-v1*conelen;
+      cylinder1end1 = cone1end1;
+      cylinder1end2 = center+v2*extent;
+      cylinder2end1 = cone2end1;
+      cylinder2end2 = center+v1*extent;
+      cylinder3end1 = cone3end1;
+      cylinder3end2 = center-v2*extent;
+      cylinder4end1 = cone4end1;
+      cylinder4end2 = center-v1*extent;
+      break;
+   case RepellingNode:
+      cylinder1end1 = center;
+      cylinder1end2 = center+v2*cyllen;
+      cylinder2end1 = center;
+      cylinder2end2 = center+v1*cyllen;
+      cylinder3end1 = center;
+      cylinder3end2 = center-v2*cyllen;
+      cylinder4end1 = center;
+      cylinder4end2 = center-v1*cyllen;
+      cone1end1 = cylinder1end2;
+      cone1end2 = cone1end1+v2*conelen;
+      cone2end1 = cylinder2end2;
+      cone2end2 = cone2end1+v1*conelen;
+      cone3end1 = cylinder3end2;
+      cone3end2 = cone3end1-v2*conelen;
+      cone4end1 = cylinder4end2;
+      cone4end2 = cone4end1-v1*conelen;
+      break;
+   case Saddle:
+      cylinder2end1 = center;
+      cylinder2end2 = center+v1*cyllen;
+      cylinder4end1 = center;
+      cylinder4end2 = center-v1*cyllen;
+      cone1end2 = center+v2*sphererad;
+      cone1end1 = cone1end2+v2*conelen;
+      cone2end1 = cylinder2end2;
+      cone2end2 = cone2end1+v1*conelen;
+      cone3end2 = center-v2*sphererad;
+      cone3end1 = cone3end2-v2*conelen;
+      cone4end1 = cylinder4end2;
+      cone4end2 = cone4end1-v1*conelen;
+      cylinder1end1 = cone1end1;
+      cylinder1end2 = center+v2*extent;
+      cylinder3end1 = cone3end1;
+      cylinder3end2 = center-v2*extent;
+      break;
+   case AttractingFocus:
+      Real weird(3.14159-2.2);
+      torus1center = center+v2*cenoff;
+      torus1start = 0+weird;
+      torus2center = center+v1*cenoff;
+      torus2start = 3.14159*0.5+weird;
+      torus3center = center-v2*cenoff;
+      torus3start = 3.14159+weird;
+      torus4center = center-v1*cenoff;
+      torus4start = 3.14159*1.5+weird;
+      cone1end2 = center+v2*sphererad;
+      cone1end1 = cone1end2+(v2+v1*1.4)/2.4*conelen;
+      cone2end2 = center+v1*sphererad;
+      cone2end1 = cone2end2+(v1-v2*1.4)/2.4*conelen;
+      cone3end2 = center-v2*sphererad;
+      cone3end1 = cone3end2-(v2+v1*1.4)/2.4*conelen;
+      cone4end2 = center-v1*sphererad;
+      cone4end1 = cone4end2-(v1-v2*1.4)/2.4*conelen;
+      break;
+   case RepellingFocus:
+      torus1center = center+v2*cenoff;
+      torus1start = 0;
+      torus2center = center+v1*cenoff;
+      torus2start = 3.14159*0.5;
+      torus3center = center-v2*cenoff;
+      torus3start = 3.14159;
+      torus4center = center-v1*cenoff;
+      torus4start = 3.14159*1.5;
+      cone1end1 = center+v2*twocenoff;
+      cone1end2 = cone1end1+v1*conelen;
+      cone2end1 = center+v1*twocenoff;
+      cone2end2 = cone2end1-v2*conelen;
+      cone3end1 = center-v2*twocenoff;
+      cone3end2 = cone3end1-v1*conelen;
+      cone4end1 = center-v1*twocenoff;
+      cone4end2 = cone4end1+v2*conelen;
+      break;
+   case SpiralSaddle:
+      weird = 3.14159-2.2;
+      torus1center = center+v2*cenoff;
+      torus1start = 0+weird;
+      torus2center = center+v1*cenoff;
+      torus2start = 3.14159*0.5;
+      torus3center = center-v2*cenoff;
+      torus3start = 3.14159+weird;
+      torus4center = center-v1*cenoff;
+      torus4start = 3.14159*1.5;
+      cone1end1 = center+v1*twocenoff;
+      cone1end2 = cone1end1-v2*conelen;
+      cone2end2 = center+v1*sphererad;
+      cone2end1 = cone2end2+(v1-v2*1.4)/2.4*conelen;
+      cone3end1 = center-v1*twocenoff;
+      cone3end2 = cone3end1+v2*conelen;
+      cone4end2 = center-v1*sphererad;
+      cone4end1 = cone4end2-(v1-v2*1.4)/2.4*conelen;
+      break;
+   }
 
-   Real conelen(1.5), conerad(0.8);
-   ((GeomCappedCone*)geometries[GeomCone1])->move(variables[PointVar]->point()
-						  +v2*twocenoff*widget_scale,
-						  variables[PointVar]->point()
-						  +v2*twocenoff*widget_scale+v1*conelen*widget_scale,
-						  conerad*widget_scale, 0);
-   ((GeomCappedCone*)geometries[GeomCone2])->move(variables[PointVar]->point()
-						  +v1*twocenoff*widget_scale,
-						  variables[PointVar]->point()
-						  +v1*twocenoff*widget_scale-v2*conelen*widget_scale,
-						  conerad*widget_scale, 0);
-   ((GeomCappedCone*)geometries[GeomCone3])->move(variables[PointVar]->point()
-						  -v2*twocenoff*widget_scale,
-						  variables[PointVar]->point()
-						  -v2*twocenoff*widget_scale-v1*conelen*widget_scale,
-						  conerad*widget_scale, 0);
-   ((GeomCappedCone*)geometries[GeomCone4])->move(variables[PointVar]->point()
-						  -v1*twocenoff*widget_scale,
-						  variables[PointVar]->point()
-						  -v1*twocenoff*widget_scale+v2*conelen*widget_scale,
-						  conerad*widget_scale, 0);
-
+   if (mode_switches[0]->get_state()) {
+      ((GeomSphere*)geometries[GeomPoint])->move(center, sphererad);
+      ((GeomCylinder*)geometries[GeomShaft])->move(center, center+direct*twocenoff, cylinderrad);
+      ((GeomCappedCone*)geometries[GeomHead])->move(center+direct*twocenoff,
+						    center+direct*(twocenoff+2.0*widget_scale),
+						    sphererad, 0);
+   }
+   
+   if (mode_switches[1]->get_state()) {
+      ((GeomCappedCylinder*)geometries[GeomCylinder1])->move(cylinder1end1, cylinder1end2, diam);
+      ((GeomCappedCylinder*)geometries[GeomCylinder2])->move(cylinder2end1, cylinder2end2, diam);
+      ((GeomCappedCylinder*)geometries[GeomCylinder3])->move(cylinder3end1, cylinder3end2, diam);
+      ((GeomCappedCylinder*)geometries[GeomCylinder4])->move(cylinder4end1, cylinder4end2, diam);
+   }
+   if (mode_switches[2]->get_state()) {
+      ((GeomTorusArc*)geometries[GeomTorus1])->move(torus1center, direct, cenoff, diam, v1,
+						    torus1start, torusangle);
+      ((GeomTorusArc*)geometries[GeomTorus2])->move(torus2center, direct, cenoff, diam, v1,
+						    torus2start, torusangle);
+      ((GeomTorusArc*)geometries[GeomTorus3])->move(torus3center, direct, cenoff, diam, v1,
+						    torus3start, torusangle);
+      ((GeomTorusArc*)geometries[GeomTorus4])->move(torus4center, direct, cenoff, diam, v1,
+						    torus4start, torusangle);
+   }
+   if (mode_switches[3]->get_state()) {
+      ((GeomCappedCone*)geometries[GeomCone1])->move(cone1end1, cone1end2, conerad, 0);
+      ((GeomCappedCone*)geometries[GeomCone2])->move(cone2end1, cone2end2, conerad, 0);
+      ((GeomCappedCone*)geometries[GeomCone3])->move(cone3end1, cone3end2, conerad, 0);
+      ((GeomCappedCone*)geometries[GeomCone4])->move(cone4end1, cone4end2, conerad, 0);
+   }
+   
    for (Index geom = 0; geom < NumPcks; geom++) {
-      picks[geom]->set_principal(direction, v1, v2);
+      picks[geom]->set_principal(direct, v1, v2);
    }
 }
 
