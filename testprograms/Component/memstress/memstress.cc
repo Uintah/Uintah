@@ -192,6 +192,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 	PIDL::serveObjects();
+        PIDL::finalize();
     } catch(const Exception& e) {
 	cerr << "Caught exception:\n";
 	cerr << e.message() << '\n';

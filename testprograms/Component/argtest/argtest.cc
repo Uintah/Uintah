@@ -671,6 +671,7 @@ int main(int argc, char* argv[])
       cerr << "argtest: " << us << " us/rep\n";
     }
     PIDL::serveObjects();
+    PIDL::finalize();
     cerr << "Argtest successful\n";
   } catch(const Exception& e) {
     cerr << "argtest caught exception:\n";

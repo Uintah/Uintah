@@ -127,6 +127,7 @@ int main(int argc, char* argv[])
 	abort();
     }
     PIDL::serveObjects();
+    PIDL::finalize();
     return 0;
 }
 
