@@ -41,7 +41,7 @@ PSELIBS := Packages/MIT/Core/Datatypes \
         Core/Geom Core/Geometry Core/Thread Core/GuiInterface
 
 LIBS := -L/usr/local/lib -L$(TCL_LIB_DIR) \
-	$(LAPACK_LIBRARY)  $(BLAS_LIBRARY) \
+	$(LAPACK_LIBRARY) \
 	 -lcvode -lunuran -lranlib -llinpack \
 	$(BLAS_LIBRARY) $(FLIBS) -lm
 
