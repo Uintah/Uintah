@@ -107,35 +107,49 @@ skip:
                accumcolor, cx);
 }
 
+static void eat_comments_and_whitespace(ifstream &str)
+{
+  char c;
+  str.get(c);
+  while (1) {
+    if (c==' '||c=='\t'||c=='\n') {
+      str.get(c);
+      continue;
+    } else if (c=='#') {
+      str.get(c);
+      while(c!='\n')
+        str.get(c);
+    } else {
+      str.unget();
+      break;
+    }
+  }
+}
+
 void ImageMaterial::read_image(char* filename)
 {
-    char buf[200];
-    sprintf(buf, "%s.hdr", filename);
-    ifstream in(buf);
-    if(!in){
-	cerr << "Error opening header: " << buf << '\n';
-	exit(1);
+  unsigned nu, nv;
+  double size;
+  ifstream indata(filename);
+  unsigned char color[3];
+  string token;
+
+  indata >> token; // P6
+  eat_comments_and_whitespace(indata);
+  indata >> nu >> nv;
+  eat_comments_and_whitespace(indata);
+  indata >> size;
+  eat_comments_and_whitespace(indata);
+  image.resize(nu, nv);
+  for(unsigned v=0;v<nv;++v){
+    for(unsigned u=0;u<nu;++u){
+      indata.read((char*)color, 3);
+      double r=color[0]/size;
+      double g=color[1]/size;
+      double b=color[2]/size;
+      image(u,v)=Color(r,g,b);
     }
-    int nu, nv;
-    in >> nu >> nv;
-    if(!in){
-	cerr << "Error reading header: " << buf << '\n';
-	exit(1);
-    }
-    ifstream indata(filename);
-    image.resize(nu, nv);
-    for(int i=0;i<nu;i++){
-	for(int j=0;j<nv;j++){
-	    unsigned char color[3];
-	    indata.read((char*)color, 3);
-	    double r=color[0]/255.;
-	    double g=color[1]/255.;
-	    double b=color[2]/255.;
-	    image(i,j)=Color(r,g,b);
-	}
-    }
-    if(!indata){
-	cerr << "Error reading image!\n";
-	exit(1);
-    }
+  }
 }
+
+
