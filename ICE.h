@@ -179,13 +179,14 @@ namespace Uintah {
                                  const LevelP&,                  
                                  const PatchSet*,
                                  const MaterialSubset*,              
-                                 const MaterialSet*); 
+                                 const MaterialSet*,
+                                 const bool firstIter); 
                                  
-      void scheduleSetupRHS(  SchedulerP&,
-                              const LevelP&,                  
+      void scheduleSetupRHS(  SchedulerP&,                
                               const PatchSet*, 
                               const MaterialSubset*,             
-                              const MaterialSet*); 
+                              const MaterialSet*,
+                              const bool insideOuterIterLoop); 
                                                   
       void scheduleUpdatePressure(  SchedulerP&,
                                    const LevelP&,
@@ -463,13 +464,15 @@ namespace Uintah {
                        const PatchSubset* patches,                      
                        const MaterialSubset* ,                          
                        DataWarehouse* old_dw,                           
-                       DataWarehouse* new_dw);
+                       DataWarehouse* new_dw,
+                       const bool firstIteration);
                        
       void setupRHS(const ProcessorGroup*,
                     const PatchSubset* patches,                      
                     const MaterialSubset* ,                          
                     DataWarehouse* old_dw,                           
-                    DataWarehouse* new_dw);
+                    DataWarehouse* new_dw,
+                    const bool insideOuterIterLoop);
                        
        void updatePressure(const ProcessorGroup*,
                            const PatchSubset* patches,                      
@@ -628,7 +631,6 @@ namespace Uintah {
       bool switchDebugMomentumExchange_CC;
       bool switchDebugSource_Sink;
       bool switchDebug_advance_advect;
-      bool switchDebugConvergence;
       bool switchTestConservation; 
       
       // debugging variables
