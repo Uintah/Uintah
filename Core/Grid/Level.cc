@@ -35,9 +35,9 @@ static AtomicCounter* ids = 0;
 static Mutex ids_init("ID init");
 
 Level::Level(Grid* grid, const Point& anchor, const Vector& dcell, 
-             int index, int id /*=-1*/)
+             int index, IntVector refinementRatio, int id /*=-1*/)
    : grid(grid), d_anchor(anchor), d_dcell(dcell), d_index(index),
-     d_patchDistribution(-1,-1,-1),
+     d_refinementRatio(refinementRatio), d_patchDistribution(-1,-1,-1),
      d_periodicBoundaries(0, 0, 0), d_id(id)
 {
   each_patch=0;
@@ -59,7 +59,6 @@ Level::Level(Grid* grid, const Point& anchor, const Vector& dcell,
     d_id = (*ids)++;
   else if(d_id >= *ids)
     ids->set(d_id+1);
-  refinementRatio = IntVector(2,2,2); // Hardcoded for now...
   d_timeRefinementRatio = 2;
 }
 
@@ -516,7 +515,7 @@ void Level::setBCTypes()
 	if(d_index != 0){
 	  // See if there are any patches on the coarse level at that face
 	  IntVector fineLow, fineHigh;
-	  patch->getFace(face, IntVector(0,0,0), refinementRatio,
+	  patch->getFace(face, IntVector(0,0,0), d_refinementRatio,
 			 fineLow, fineHigh);
 	  IntVector coarseLow = mapCellToCoarser(fineLow);
 	  IntVector coarseHigh = mapCellToCoarser(fineHigh);
@@ -641,55 +640,55 @@ const LevelP& Level::getFinerLevel() const
 
 IntVector Level::interpolateCellToCoarser(const IntVector& idx, Vector& weight) const
 {
-  IntVector i(idx-(refinementRatio-IntVector(1,1,1)));
-  weight=Vector(double(0.5+i.x()%refinementRatio.x())/double(refinementRatio.x()),
-		  double(0.5+i.y()%refinementRatio.y())/double(refinementRatio.y()),
-		  double(0.5+i.z()%refinementRatio.z())/double(refinementRatio.z()));
-  return i/refinementRatio;
+  IntVector i(idx-(d_refinementRatio-IntVector(1,1,1)));
+  weight=Vector(double(0.5+i.x()%d_refinementRatio.x())/double(d_refinementRatio.x()),
+		  double(0.5+i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
+		  double(0.5+i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
+  return i/d_refinementRatio;
 }
 
 IntVector Level::interpolateXFaceToCoarser(const IntVector& idx, Vector& weight) const
 {
-  IntVector i(idx-(refinementRatio-IntVector(refinementRatio.x(),1,1)));
-  weight=Vector(double(i.x()%refinementRatio.x())/double(refinementRatio.x()),
-		double(0.5+i.y()%refinementRatio.y())/double(refinementRatio.y()),
-		double(0.5+i.z()%refinementRatio.z())/double(refinementRatio.z()));
-  return i/refinementRatio;
+  IntVector i(idx-(d_refinementRatio-IntVector(d_refinementRatio.x(),1,1)));
+  weight=Vector(double(i.x()%d_refinementRatio.x())/double(d_refinementRatio.x()),
+		double(0.5+i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
+		double(0.5+i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
+  return i/d_refinementRatio;
 }
 
 IntVector Level::interpolateYFaceToCoarser(const IntVector& idx, Vector& weight) const
 {
-  IntVector i(idx-(refinementRatio-IntVector(1,refinementRatio.y(),1)));
-  weight=Vector(double(0.5+i.x()%refinementRatio.x())/double(refinementRatio.x()),
-		  double(i.y()%refinementRatio.y())/double(refinementRatio.y()),
-		  double(0.5+i.z()%refinementRatio.z())/double(refinementRatio.z()));
-  return i/refinementRatio;
+  IntVector i(idx-(d_refinementRatio-IntVector(1,d_refinementRatio.y(),1)));
+  weight=Vector(double(0.5+i.x()%d_refinementRatio.x())/double(d_refinementRatio.x()),
+		  double(i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
+		  double(0.5+i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
+  return i/d_refinementRatio;
 }
 
 IntVector Level::interpolateZFaceToCoarser(const IntVector& idx, Vector& weight) const
 {
-  IntVector i(idx-(refinementRatio-IntVector(1,1,refinementRatio.z())));
-  weight=Vector(double(0.5+i.x()%refinementRatio.x())/double(refinementRatio.x()),
-		double(0.5+i.y()%refinementRatio.y())/double(refinementRatio.y()),
-		double(i.z()%refinementRatio.z())/double(refinementRatio.z()));
-  return i/refinementRatio;
+  IntVector i(idx-(d_refinementRatio-IntVector(1,1,d_refinementRatio.z())));
+  weight=Vector(double(0.5+i.x()%d_refinementRatio.x())/double(d_refinementRatio.x()),
+		double(0.5+i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
+		double(i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
+  return i/d_refinementRatio;
 }
 
 IntVector Level::interpolateToCoarser(const IntVector& idx, const IntVector& dir,
 			      Vector& weight) const
 {
   IntVector d(IntVector(1,1,1)-dir);
-  IntVector i(idx-(refinementRatio-d-dir*refinementRatio));
+  IntVector i(idx-(d_refinementRatio-d-dir*d_refinementRatio));
   Vector o(d.asVector()*0.5);
-  weight=Vector(double(o.x()+i.x()%refinementRatio.x())/double(refinementRatio.x()),
-		  double(o.y()+i.y()%refinementRatio.y())/double(refinementRatio.y()),
-		  double(o.z()+i.z()%refinementRatio.z())/double(refinementRatio.z()));
-  return i/refinementRatio;
+  weight=Vector(double(o.x()+i.x()%d_refinementRatio.x())/double(d_refinementRatio.x()),
+		  double(o.y()+i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
+		  double(o.z()+i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
+  return i/d_refinementRatio;
 }
 
 IntVector Level::mapCellToCoarser(const IntVector& idx) const
 { 
-  IntVector ratio = idx/refinementRatio;
+  IntVector ratio = idx/d_refinementRatio;
   
 
   // If the fine cell index is negative
@@ -697,20 +696,20 @@ IntVector Level::mapCellToCoarser(const IntVector& idx) const
   // coarse cell. -Todd
   IntVector offset(0,0,0);
   if (idx.x()< 0){
-    offset.x((int)fmod((double)idx.x(),(double)refinementRatio.x()));
+    offset.x((int)fmod((double)idx.x(),(double)d_refinementRatio.x()));
   }
   if (idx.y()< 0){
-    offset.y((int)fmod((double)idx.y(),(double)refinementRatio.y()));
+    offset.y((int)fmod((double)idx.y(),(double)d_refinementRatio.y()));
   }  
   if (idx.z()< 0){
-    offset.z((int)fmod((double)idx.z(),(double)refinementRatio.z()));
+    offset.z((int)fmod((double)idx.z(),(double)d_refinementRatio.z()));
   }
   return ratio + offset;
 }
 
 IntVector Level::mapCellToFiner(const IntVector& idx) const
 {
-  IntVector fineCell = idx*grid->getLevel(d_index+1)->refinementRatio;
+  IntVector fineCell = idx*grid->getLevel(d_index+1)->d_refinementRatio;
  
   IntVector offset(0,0,0);
   if (idx.x()< 0){
@@ -727,12 +726,12 @@ IntVector Level::mapCellToFiner(const IntVector& idx) const
 
 IntVector Level::mapNodeToCoarser(const IntVector& idx) const
 {
-  return (idx+refinementRatio-IntVector(1,1,1))/refinementRatio;
+  return (idx+d_refinementRatio-IntVector(1,1,1))/d_refinementRatio;
 }
 
 IntVector Level::mapNodeToFiner(const IntVector& idx) const
 {
-  return idx*grid->getLevel(d_index+1)->refinementRatio;
+  return idx*grid->getLevel(d_index+1)->d_refinementRatio;
 }
 
 double Level::adjustDelt(double delt) const
