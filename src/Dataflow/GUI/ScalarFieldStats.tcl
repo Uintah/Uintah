@@ -101,15 +101,14 @@ itcl_class SCIRun_FieldsOther_ScalarFieldStats {
 	pack $w.size -side top -expand yes -fill x
 	label $w.size.l -text "Histogram Bins:  "
 	entry $w.size.e -textvariable $this-nbuckets
-	pack $w.size.l $w.size.e -side left -expand yes 
+	pack $w.size.l $w.size.e -side left -expand yes -pady 3
 
 	bind $w.size.e <Return> "$this resize_graph; $n"
 
-	button $w.close -text "Close" -command "wm withdraw $w"
-	pack $w.close -side top -expand yes -fill x
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
 
-
-       if { [set $this-is_fixed] } {
+	if { [set $this-is_fixed] } {
             $w.f2.b select
             $this fixedRange
         } else {
