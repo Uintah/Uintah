@@ -26,6 +26,7 @@ PSELIBS := \
 	Core/Datatypes   \
 	Core/Containers  \
 	Core/Thread      \
+	Core/Disclosure \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/CCA/Ports       \
