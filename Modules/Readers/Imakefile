@@ -3,23 +3,23 @@
 
 OBJS = ColumnMatrixReader.o  ContourSetReader.o   GeomReader.o  \
 	MatrixReader.o  MeshReader.o   \
-	MultiMeshReader.o   ScalarFieldReader.o   \
+	MultiMeshReader.o   ScalarFieldReader.o   SigmaSetReader.o   \
 	SurfaceReader.o   VectorFieldReader.o \
 	PointsReader.o
 GENSRCS = ColumnMatrixReader.cc ContourSetReader.cc  MatrixReader.cc \
 	MeshReader.cc  MultiMeshReader.cc  ScalarFieldReader.cc  \
-	SurfaceReader.cc  VectorFieldReader.cc
+	SigmaSetReader.cc  SurfaceReader.cc  VectorFieldReader.cc
 SRCS = $(GENSRCS) GeomReader.cc PointsReader.cc
 GENTCLS = ColumnMatrixReader.tcl ContourSetReader.tcl GeomReader.tcl \
 	MatrixReader.tcl MeshReader.tcl \
-	MultiMeshReader.tcl ScalarFieldReader.tcl \
+	MultiMeshReader.tcl ScalarFieldReader.tcl SigmaSetReader.tcl \
 	SurfaceReader.tcl VectorFieldReader.tcl
 TCLS = $(GENTCLS) PointsReader.tcl
 
 LIBNAME = Readers
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lTCL -lClasslib \
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL -lClasslib \
 	-lMultitask -lMalloc
 
 depend:: $(GENSRCS)
@@ -69,6 +69,12 @@ ScalarFieldReader.cc: Reader.cc
 
 ScalarFieldReader.tcl: Reader.tcl
 	sed 's/TYPE/ScalarField/g' < Reader.tcl > ScalarFieldReader.tcl
+
+SigmaSetReader.cc: Reader.cc
+	sed 's/TYPE/SigmaSet/g' < Reader.cc > SigmaSetReader.cc
+
+SigmaSetReader.tcl: Reader.tcl
+	sed 's/TYPE/SigmaSet/g' < Reader.tcl > SigmaSetReader.tcl
 
 SurfaceReader.cc: Reader.cc
 	sed 's/TYPE/Surface/g' < Reader.cc > SurfaceReader.cc
