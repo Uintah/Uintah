@@ -1,9 +1,8 @@
-
-#include "RousselierYield.h"	
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/RousselierYield.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <math.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 
 RousselierYield::RousselierYield(ProblemSpecP& ps)
 {
@@ -17,16 +16,16 @@ RousselierYield::~RousselierYield()
 	 
 double 
 RousselierYield::evalYieldCondition(const double sigEqv,
-                                  const double sigFlow,
-                                  const double traceSig,
-                                  const double porosity)
+				    const double sigFlow,
+				    const double traceSig,
+				    const double porosity)
 {
   double D = d_constant.D;
   double sig1 = d_constant.sig_1;
   double f = porosity;
   
   double Phi = sigEqv/(1.0-f) + D*sig1*f*exp((1.0/3.0)*traceSig/((1.0-f)*sig1))
-               - sigFlow;
+    - sigFlow;
 
   return Phi;
 }

@@ -5,13 +5,9 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
-#include <fstream>
-#include <iostream>
 #include <string>
-using std::cerr;
-using std::ifstream;
-using std::ofstream;
 
+using namespace std;
 using namespace Uintah;
 
 /// Create an instance of a Yield Condition.
