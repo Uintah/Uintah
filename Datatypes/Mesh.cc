@@ -628,7 +628,7 @@ int Element::orient()
 	faces[1]=tmp;
 	sgn=-sgn;
     }
-    if(sgn < 1.e-6){
+    if(sgn < 1.e-9){
 	return 0; // Degenerate...
     } else {
 	return 1;
@@ -796,68 +796,19 @@ void Mesh::draw_element(int in_element, GeomGroup* group)
     draw_element(e, group);
 }
 
-int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
+int Mesh::insert_delaunay(int node, GeometryOPort*)
 {
-    if(ogeom){
-	for(int i=0;i<ids.size();i++){
-	    cerr << "removing " << ids[i] << endl;
-	    ogeom->delObj(ids[i]);
-	}
-	ids.remove_all();
-    }
     if(!have_all_neighbors)
 	compute_face_neighbors();
     Point p(nodes[node]->p);
-//    cerr << "Adding node: " << node << " at point " << p << endl;
-    // Find which element this node is in
-    double scale=1;
-#if 0
-    if(ogeom){
-	Point min, max;
-	get_bounds(min, max);
-	Vector diag(max-min);
-	scale=diag.length()/1000;
-	double radius=scale;
-	GeomSphere* pt=scinew GeomSphere(p, radius);
-	GeomMaterial* pt_matl=scinew GeomMaterial(pt, ptmatl);
-	ids.add(ogeom->addObj(pt_matl, "delaunay - insert point"));
-    }
-#endif
     int in_element;
     if(!locate(p, in_element)){
 	return 0;
     }
 
-#if 0
-    if(ogeom){
-	GeomGroup* group=new GeomGroup;
-	GeomMaterial* matl=new GeomMaterial(group, inmatl);
-	draw_element(in_element, group);
-	ids.add(ogeom->addObj(group, "delaunay - inside element"));
-	ogeom->flushViewsAndWait();
-    }
-#endif
 
     Array1<int> to_remove;
     to_remove.add(in_element);
-//Debug only...
-    Array1<int> lookat;
-    lookat.add(in_element);
-
-#if 0
-    Element* ee=elems[in_element];
-    for(int ii=0;ii<4;ii++){
-	double dist2=(p-nodes[ee->n[ii]]->p).length2();
-	if(dist2 < 1.e-2){
-	   // We are going to call this a duplicate point.  Junk it.
-	   delete nodes[node];
-	   nodes[node]=0;
-	   cerr << "Killing node: " << node << endl;
-	   return 0;
-       }
-    }
-#endif
-
 
     // Find it's neighbors...
     // We might be able to fix this loop to make it
@@ -866,19 +817,11 @@ int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
     done.add(in_element);
     HashTable<Face, int> face_table;
     int i=0;
-#ifdef CHECKER
-    Array1<int> bound(elems.size());
-    for(int iii=0;iii<elems.size();iii++)
-	bound[iii]=0;
-#endif
     while(i<to_remove.size()){
 	// See if the neighbor should also be removed...
 	int tr=to_remove[i];
 	Element* e=elems[tr];
-#ifdef PRINTOUT
-	cerr << "Looking at " << tr << endl;
-	cerr << "Tetra: " << e->n[0] << ", " << e->n[1] << ", " << e->n[2] << ", " << e->n[3] << endl;
-#endif
+
 	// Add these faces to the list of exposed faces...
 	Face f1(e->n[1], e->n[2], e->n[3]);
 	Face f2(e->n[2], e->n[3], e->n[0]);
@@ -888,26 +831,6 @@ int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
 	// If the face is in the list, remove it.
 	// Otherwise, add it.
 	int dummy;
-#ifdef PRINTOUT
-	cerr << "Removing element: " << tr << endl;
-	if(face_table.lookup(f1, dummy))
-	    cerr << "1a. removing face: " << f1.n[0] << ", " << f1.n[1] << ", " << f1.n[2] << endl;
-	else
-	    cerr << "1a. inserting face: " << f1.n[0] << ", " << f1.n[1] << ", " << f1.n[2] << endl;
-	if(face_table.lookup(f2, dummy))
-	    cerr << "2a. removing face: " << f2.n[0] << ", " << f2.n[1] << ", " << f2.n[2] << endl;
-	else
-	    cerr << "2a. inserting face: " << f2.n[0] << ", " << f2.n[1] << ", " << f2.n[2] << endl;
-	if(face_table.lookup(f3, dummy))
-	    cerr << "3a. removing face: " << f3.n[0] << ", " << f3.n[1] << ", " << f3.n[2] << endl;
-	else
-	    cerr << "3a. inserting face: " << f3.n[0] << ", " << f3.n[1] << ", " << f3.n[2] << endl;
-	if(face_table.lookup(f4, dummy))
-	    cerr << "4a. removing face: " << f4.n[0] << ", " << f4.n[1] << ", " << f4.n[2] << endl;
-	else
-	    cerr << "4a. inserting face: " << f4.n[0] << ", " << f4.n[1] << ", " << f4.n[2] << endl;
-#endif
-
 
 	if(face_table.lookup(f1, dummy))
 	    face_table.remove(f1);
@@ -929,17 +852,12 @@ int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
 	else
 	    face_table.insert(f4, face_idx(tr, 3));
 
-#ifdef PRINTOUT
-	cerr << "Neighbors of " << tr << ":" << endl;
-#endif
 	for(int j=0;j<4;j++){
 	    int skip=0;
 	    int neighbor=e->face(j);
+// This loop sucks - fix it!
 	    for(int ii=0;ii<done.size();ii++){
 		if(neighbor==done[ii]){
-#ifdef PRINTOUT
-		    cerr << "Already done: " << neighbor << endl;
-#endif
 		    skip=1;
 		    break;
 		}
@@ -950,28 +868,14 @@ int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
 		// Process this neighbor
 		if(!skip){
 		    // See if this element is deleted by this point
-		    lookat.add(neighbor);
 		    Element* ne=elems[neighbor];
 		    Point cen;
 		    double rad2;
 		    ne->get_sphere2(cen, rad2);
 		    double ndist2=(p-cen).length2();
-		    cerr << "Element[" << neighbor << "], ndist2=" << ndist2 << ", rad2=" << rad2 << endl;
-		    if(ndist2 < rad2){
+		    if(ndist2 - rad2 < 1.e-6){
 			// This one must go...
-#ifdef PRINTOUT
-			cerr << "Adding element: " << neighbor << endl;
-#endif
 			to_remove.add(neighbor);
-		    } else {
-#ifdef CHECKER
-			bound[neighbor]++;
-			if(bound[neighbor] > 1){
-			    cerr << "Doing special hack!\n";
-			    to_remove.add(neighbor);
-			}
-			cerr << "Element is OK: " << neighbor << endl;
-#endif
 		    }
 		}
 		done.add(neighbor);
@@ -979,27 +883,11 @@ int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
 	}
 	i++;
     }
-    // Remove the to_remove elements...
-    GeomGroup* group=ogeom?new GeomGroup:0;
-    GeomMaterial* matl=ogeom?new GeomMaterial(group, remmatl):0;
-// Debug only...
-    Array1<Element*> removed(to_remove.size());
     for(i=0;i<to_remove.size();i++){
-	int idx=to_remove[i];
-	if(ogeom){
-	    draw_element(idx, group);
-	}
-	//debug only... delete elems[idx];
-	removed[i]=elems[idx];
-	cerr << "removed[" << i << "]=" << idx << endl;
-	elems[idx]=0;
+	int tr=to_remove[i];
+	delete elems[tr];
+	elems[tr]=0;
     }
-#if 0
-    if(ogeom){
-	ids.add(ogeom->addObj(matl, "delaunay - remove elements"));
-	ogeom->flushViewsAndWait();
-    }
-#endif
 
     // Add the new elements from the faces...
     HashTableIter<Face, int> fiter(&face_table);
@@ -1007,22 +895,9 @@ int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
     // Make a copy of the face table.  We use the faces in there
     // To compute the new neighborhood information
     HashTable<Face, int> new_faces(face_table);
-    group=ogeom?new GeomGroup:0;
-    matl=ogeom?new GeomMaterial(group, facematl):0;
+
     for(fiter.first();fiter.ok();++fiter){
 	Face f(fiter.get_key());
-	if(ogeom){
-	    Point p1(nodes[f.n[0]]->p);
-	    Point p2(nodes[f.n[1]]->p);
-	    Point p3(nodes[f.n[2]]->p);
-	    group->add(new GeomTri(p1, p2, p3));
-	}
-#ifdef PRINTOUT
-	cerr << endl << endl;
-	cerr << "New node is " << node << endl;
-	cerr << "Processing face: " << f.n[0] << ", " << f.n[1] << ", " << f.n[2] << endl;
-	cerr << "New element: " << elems.size() << endl;
-#endif
 	Element* ne=new Element(this, node, f.n[0], f.n[1], f.n[2]);
 	
 	// If the new element is not degenerate, add it to the mix...
@@ -1036,25 +911,6 @@ int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
 	    Face f4(ne->n[0], ne->n[1], ne->n[2]);
 	    int ef;
 
-#ifdef PRINTOUT
-	    int dummy;
-	if(new_faces.lookup(f1, dummy))
-	    cerr << "1b. removing face: " << f1.n[0] << ", " << f1.n[1] << ", " << f1.n[2] << endl;
-	else
-	    cerr << "1b. inserting face: " << f1.n[0] << ", " << f1.n[1] << ", " << f1.n[2] << endl;
-	if(new_faces.lookup(f2, dummy))
-	    cerr << "2b. removing face: " << f2.n[0] << ", " << f2.n[1] << ", " << f2.n[2] << endl;
-	else
-	    cerr << "2b. inserting face: " << f2.n[0] << ", " << f2.n[1] << ", " << f2.n[2] << endl;
-	if(new_faces.lookup(f3, dummy))
-	    cerr << "3b. removing face: " << f3.n[0] << ", " << f3.n[1] << ", " << f3.n[2] << endl;
-	else
-	    cerr << "3b. inserting face: " << f3.n[0] << ", " << f3.n[1] << ", " << f3.n[2] << endl;
-	if(new_faces.lookup(f4, dummy))
-	    cerr << "4b. removing face: " << f4.n[0] << ", " << f4.n[1] << ", " << f4.n[2] << endl;
-	else
-	    cerr << "4b. inserting face: " << f4.n[0] << ", " << f4.n[1] << ", " << f4.n[2] << endl;
-#endif
 	    if(new_faces.lookup(f1, ef)){
 		// We have this face...
 		if(ef==-1){
@@ -1063,16 +919,7 @@ int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
 		    int which_face=ef%4;
 		    int which_elem=ef/4;
 		    ne->faces[0]=which_elem;
-#ifdef PRINTOUT
-		    cerr << "which_elem=" << which_elem << endl;
-		    cerr << "which_face=" << which_face << endl;
-#endif
 		    elems[which_elem]->faces[which_face]=nen;
-#ifdef CHECKER
-		    Element* ee=elems[which_elem];
-		    Face ff(ee->n[(which_face+1)%4], ee->n[(which_face+2)%4], ee->n[(which_face+3)%4]);
-		    ASSERT(ff==f1);
-#endif
 		}
 		new_faces.remove(f1);
 	    } else {
@@ -1088,11 +935,6 @@ int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
 		    int which_elem=ef/4;
 		    ne->faces[1]=which_elem;
 		    elems[which_elem]->faces[which_face]=nen;
-#ifdef CHECKER
-		    Element* ee=elems[which_elem];
-		    Face ff(ee->n[(which_face+1)%4], ee->n[(which_face+2)%4], ee->n[(which_face+3)%4]);
-		    ASSERT(ff==f2);
-#endif
 		}
 		new_faces.remove(f2);
 	    } else {
@@ -1108,11 +950,6 @@ int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
 		    int which_elem=ef/4;
 		    ne->faces[2]=which_elem;
 		    elems[which_elem]->faces[which_face]=nen;
-#ifdef CHECKER
-		    Element* ee=elems[which_elem];
-		    Face ff(ee->n[(which_face+1)%4], ee->n[(which_face+2)%4], ee->n[(which_face+3)%4]);
-		    ASSERT(ff==f3);
-#endif
 		}
 		new_faces.remove(f3);
 	    } else {
@@ -1128,11 +965,6 @@ int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
 		    int which_elem=ef/4;
 		    ne->faces[3]=which_elem;
 		    elems[which_elem]->faces[which_face]=nen;
-#ifdef CHECKER
-		    Element* ee=elems[which_elem];
-		    Face ff(ee->n[(which_face+1)%4], ee->n[(which_face+2)%4], ee->n[(which_face+3)%4]);
-		    ASSERT(ff==f4);
-#endif
 		}
 		new_faces.remove(f4);
 	    } else {
@@ -1141,108 +973,13 @@ int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
 	    }
 	    elems.add(ne);
 	} else {
-	    elems.add(ne);
-	    GeomGroup* de=new GeomGroup;
-	    GeomMaterial* dematl=new GeomMaterial(de, facematl);
-	    draw_element(elems.size()-1, de);
-	    ids.add(ogeom->addObj(dematl, "delaunay - degenerate element"));
-
-	    Point min, max;
-	    get_bounds(min, max);
-	    Vector diag(max-min);
-	    scale=diag.length()/1000;
-	    double radius=scale;
-	    GeomSphere* pt=scinew GeomSphere(p, radius);
-	    GeomMaterial* pt_matl=scinew GeomMaterial(pt, ptmatl);
-	    ids.add(ogeom->addObj(pt_matl, "delaunay - insert point"));
-
-	    for(int i=0;i<removed.size();i++){
-		GeomGroup* re=new GeomGroup;
-		GeomMaterial* rematl=new GeomMaterial(re, remmatl);
-		ids.add(ogeom->addObj(rematl, "delaunay - remove element "+to_string(i)+")"));
-		draw_element(removed[i], re);
-		Point cen;
-		double rad2;
-		removed[i]->get_sphere2(cen, rad2);
-		GeomSphere* cs=new GeomSphere(cen, Sqrt(rad2));
-		GeomMaterial* csmatl=new GeomMaterial(cs, circummatl);
-		ids.add(ogeom->addObj(csmatl, clString("delaunay - circumsphere (element "+to_string(i)+")")));
-	    }
-	    for(i=0;i<lookat.size();i++){
-		int idx=lookat[i];
-		int addit=1;
-		for(int ii=0;ii<to_remove.size();ii++){
-		    if(to_remove[ii]==idx){
-			addit=0;
-			break;
-		    }
-		}
-		if(addit && elems[idx]){
-		    cerr << "Adding lookat " << idx << endl;
-		    GeomGroup* re=new GeomGroup;
-		    GeomMaterial* rematl=new GeomMaterial(re, lamatl);
-		    draw_element(idx, re);
-		    ids.add(ogeom->addObj(rematl, "delaunay - not removed element "+to_string(idx)+")"));
-		}
-	    }
-	    
 	    cerr << "Degenerate element (node=" << node << ")\n";
+	    cerr << "Volume=" << ne->volume() << endl;
 	    return 0;
 	}
     }
-#if 0
-    if(ogeom){
-	ids.add(ogeom->addObj(matl, "delaunay - void faces"));
-	ogeom->flushViewsAndWait();
-    }
-#endif
 
     // Check the consistency of the mesh....
-#ifdef CHECKER
-    HashTable<Face, int> facetab;
-    for(i=0;i<elems.size();i++){
-	Element* e=elems[i];
-	if(e){
-	    Face f1(e->n[1], e->n[2], e->n[3]);
-	    Face f2(e->n[2], e->n[3], e->n[0]);
-	    Face f3(e->n[3], e->n[0], e->n[1]);
-	    Face f4(e->n[0], e->n[1], e->n[2]);
-	    int n=0;
-	    int dummy;
-	    if(facetab.lookup(f1, dummy)){
-		n=dummy;
-		facetab.remove(f1);
-	    }
-	    n++;
-	    ASSERT(n<=2);
-	    n=0;
-	    facetab.insert(f1, n);
-	    if(facetab.lookup(f2, dummy)){
-		n=dummy;
-		facetab.remove(f2);
-	    }
-	    n++;
-	    ASSERT(n<=2);
-	    n=0;
-	    facetab.insert(f2, n);
-	    if(facetab.lookup(f3, dummy)){
-		n=dummy;
-		facetab.remove(f3);
-	    }
-	    n++;
-	    ASSERT(n<=2);
-	    n=0;
-	    facetab.insert(f3, n);
-	    if(facetab.lookup(f4, dummy)){
-		n=dummy;
-		facetab.remove(f4);
-	    }
-	    n++;
-	    ASSERT(n<=2);
-	    facetab.insert(f4, n);
-	}
-    }
-#endif
     return 1;
 }
 
