@@ -58,8 +58,9 @@ public:
 private:
   LockingHandle<Field> field_;
   mesh_handle_type mesh_;
-  GeomTrianglesP *triangles_;
-  bool build_trisurf_;
+  GeomFastTriangles *triangles_;
+  bool build_field_;
+  bool build_geom_;
   TriSurfMeshHandle trisurf_;
   map<long int, TriSurfMesh::Node::index_type> vertex_map_;
   vector<long int> node_vector_;
@@ -76,8 +77,8 @@ public:
   void extract( cell_index_type, double );
   void extract_n( cell_index_type, double );
   void extract_c( cell_index_type, double );
-  void reset( int, bool build_trisurf=false);
-  GeomObj *get_geom() { return triangles_->size() ? triangles_ : 0; };
+  void reset( int, bool build_field, bool build_geom);
+  GeomHandle get_geom() { return triangles_; }
   FieldHandle get_field(double val);
 };
   
@@ -89,14 +90,12 @@ PrismMC<Field>::~PrismMC()
     
 
 template<class Field>
-void PrismMC<Field>::reset( int n, bool build_trisurf )
+void PrismMC<Field>::reset( int n, bool build_field, bool build_geom )
 {
   n_ = 0;
 
-  build_trisurf_ = build_trisurf;
-
-  triangles_ = new GeomTrianglesP;
-  triangles_->reserve_clear((int)(1.3*n));
+  build_field_ = build_field;
+  build_geom_ = build_geom;
 
   vertex_map_.clear();
   typename Field::mesh_type::Node::size_type nsize;
@@ -109,10 +108,17 @@ void PrismMC<Field>::reset( int n, bool build_trisurf )
     node_vector_ = vector<long int>(nsize, -1);
   }
 
-  if (build_trisurf_)
-    trisurf_ = new TriSurfMesh; 
-  else 
-    trisurf_=0;
+  triangles_ = 0;
+  if (build_geom_)
+  {
+    triangles_ = scinew GeomFastTriangles;
+  }
+
+  trisurf_ = 0;
+  if (build_field_)
+  {
+    trisurf_ = scinew TriSurfMesh; 
+  }
 }
 
 
@@ -180,12 +186,16 @@ void PrismMC<Field>::extract_c( cell_index_type cell, double iso )
 
       for (j=0; j < nodes.size(); j++) { mesh_->get_center(p[j], nodes[j]); }
 
-      triangles_->add(p[0], p[1], p[2]);
+      if (build_geom_)
+      {
+	triangles_->add(p[0], p[1], p[2]);
       
-      if( nodes.size() == 4 )
-	triangles_->add(p[0], p[2], p[3]);
+	if( nodes.size() == 4 )
+	  triangles_->add(p[0], p[2], p[3]);
+      }
 
-      if (build_trisurf_) {
+      if (build_field_)
+      {
 	for (j=0; j <  nodes.size(); j ++)
 	  vertices[j] = find_or_add_nodepoint(nodes[j]);
 
@@ -250,8 +260,10 @@ void PrismMC<Field>::extract_n( cell_index_type cell, double iso )
     int v2 = edge_tab[i][1];
     q[i] = Interpolate(p[v1], p[v2], 
 		       (value[v1]-iso)/double(value[v1]-value[v2]));
-    if (build_trisurf_)
+    if (build_field_)
+    {
       surf_node[i] = find_or_add_edgepoint(node[v1], node[v2], q[i]);
+    }
   }    
   
   v = 0;
@@ -263,9 +275,14 @@ void PrismMC<Field>::extract_n( cell_index_type cell, double iso )
     // Degenerate triangle can be built since ponit were duplicated
     // above in order to make a hexvol for MC. 
     if( v0 != v1 && v0 != v2 && v1 != v2 ) {
-      triangles_->add(q[v0], q[v1], q[v2]);
-      if (build_trisurf_)
+      if (build_geom_)
+      {
+	triangles_->add(q[v0], q[v1], q[v2]);
+      }
+      if (build_field_)
+      {
 	trisurf_->add_triangle(surf_node[v0], surf_node[v1], surf_node[v2]);
+      }
     }
   }
 }
