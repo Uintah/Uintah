@@ -63,7 +63,7 @@ OnDemandDataWarehouse::~OnDemandDataWarehouse()
 
   for (dataLocationDBtype::const_iterator iter = d_dataLocation.begin();
        iter != d_dataLocation.end(); iter++) {
-    for (int i = 0; i<iter->second->size(); i++ )
+    for (int i = 0; i<(int)iter->second->size(); i++ )
       delete &(iter->second[i]);
     delete iter->second;
   }
@@ -571,7 +571,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
    IntVector high(patch->getCellHighIndex()+IntVector(h,h,h));
 
    level->selectPatches(low, high, neighbors);
-   for(int i=0;i<neighbors.size();i++){
+   for(int i=0;i<(int)neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
       if(neighbor){
 	 ParticleSubset* pset = getParticleSubset(matlIndex, neighbor);
@@ -616,7 +616,7 @@ OnDemandDataWarehouse::get(ParticleVariableBase& var,
       const vector<const Patch*>& neighbors = pset->getNeighbors();
       const vector<ParticleSubset*>& neighbor_subsets = pset->getNeighborSubsets();
       vector<ParticleVariableBase*> neighborvars(neighbors.size());
-      for(int i=0;i<neighbors.size();i++){
+      for(int i=0;i<(int)neighbors.size();i++){
 	 const Patch* neighbor=neighbors[i];
 	 if(!d_particleDB.exists(label, matlIndex, neighbors[i]))
 	    throw UnknownVariable(label->getName(), neighbor->getID(),
@@ -742,7 +742,7 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
       IntVector low(patch->getCellLowIndex()+IntVector(l,l,l));
       IntVector high(patch->getCellHighIndex()+IntVector(h,h,h));
       level->selectPatches(low, high, neighbors);
-      for(int i=0;i<neighbors.size();i++){
+      for(int i=0;i<(int)neighbors.size();i++){
 	 const Patch* neighbor = neighbors[i];
 	 if(neighbor){
 	    if(!d_ncDB.exists(label, matlIndex, neighbor))
@@ -909,7 +909,7 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
       IntVector low = lowIndex;
       IntVector high = highIndex;
       level->selectPatches(low, high, neighbors);
-      for(int i=0;i<neighbors.size();i++){
+      for(int i=0;i<(int)neighbors.size();i++){
 	 const Patch* neighbor = neighbors[i];
 	 if(neighbor){
 	    if(!d_ccDB.exists(label, matlIndex, neighbor))
@@ -980,7 +980,7 @@ OnDemandDataWarehouse::allocate(FCVariableBase& var,
 
    // Allocate the variable
    // Probably should be getFaceLowIndex() . . .
-   var.allocate(patch->getCellLowIndex(), patch->getCellHighIndex());
+   var.allocate(patch->getFaceLowIndex(), patch->getFaceHighIndex());
   d_lock.writeUnlock();
 }
 
@@ -991,7 +991,7 @@ OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
 			   int numGhostCells)
 {
   d_lock.readLock();
-#if 0
+#if 1
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
@@ -1000,7 +1000,7 @@ OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
 	 throw UnknownVariable(label->getName(), patch->getID(),
 			       patch->toString(), matlIndex);
       d_fcDB.get(label, matlIndex, patch, var);
-#if 0
+#if 1
    } else {
       int l,h;
       IntVector gc(numGhostCells, numGhostCells, numGhostCells);
@@ -1013,8 +1013,8 @@ OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
 	 // All 27 neighbors
 	 l=-1;
 	 h=1;
-	 lowIndex = patch->getCellLowIndex()-gc;
-	 highIndex = patch->getCellHighIndex()+gc;
+	 lowIndex = patch->getFaceLowIndex()-gc;
+	 highIndex = patch->getFaceHighIndex()+gc;
 	 cerr << "Faces around nodes is probably not functional!\n";
 	 break;
       case Ghost::AroundCells:
@@ -1023,46 +1023,47 @@ OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
 	 // all 6 faces
 	 l=-1;
 	 h=1;
-	 lowIndex = patch->getCellLowIndex()-gc;
-         highIndex = patch->getCellHighIndex()+gc;
+	 lowIndex = patch->getFaceLowIndex()-gc;
+         highIndex = patch->getFaceHighIndex()+gc;
 	 break;
       default:
 	 throw InternalError("Illegal ghost type");
       }
       var.allocate(lowIndex, highIndex);
-      long totalCells=0;
+      long totalFaces=0;
       // change it to traverse only thru patches with adjoining faces
-      for(int ix=l;ix<=h;ix++){
-	 for(int iy=l;iy<=h;iy++){
-	    for(int iz=l;iz<=h;iz++){
-	       const Patch* neighbor = patch->getNeighbor(IntVector(ix,iy,iz));
-	       if(neighbor){
-		  if(!d_fcDB.exists(label, matlIndex, neighbor))
-		     throw InternalError("Position variable does not exist: "+ 
-					 label->getName());
-		  FCVariableBase* srcvar = 
-		    d_fcDB.get(label, matlIndex, neighbor);
+      const Level* level = patch->getLevel();
+      std::vector<const Patch*> neighbors;
+      IntVector low(patch->getFaceLowIndex()+IntVector(l,l,l));
+      IntVector high(patch->getFaceHighIndex()+IntVector(h,h,h));
+      level->selectPatches(low,high,neighbors);
+      for(int i = 0;i<(int)neighbors.size();i++) {
+	const Patch* neighbor = neighbors[i];
+	if(neighbor){
+	  if(!d_fcDB.exists(label, matlIndex, neighbor))
+	    throw InternalError("Position variable does not exist: "+ 
+				label->getName());
+	  FCVariableBase* srcvar = 
+	    d_fcDB.get(label, matlIndex, neighbor);
 
-		  using SCICore::Geometry::Max;
-		  using SCICore::Geometry::Min;
+	  using SCICore::Geometry::Max;
+	  using SCICore::Geometry::Min;
 
-		  IntVector low = Max(lowIndex, neighbor->getCellLowIndex());
-		  IntVector high= Min(highIndex, neighbor->getCellHighIndex());
+	  IntVector low = Max(lowIndex, neighbor->getFaceLowIndex());
+	  IntVector high= Min(highIndex, neighbor->getFaceHighIndex());
 
-		  if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
-		      || ( high.z() < low.z() ) )
-		     throw InternalError("Patch doesn't overlap?");
-
-		  var.copyPatch(srcvar, low, high);
-		  IntVector dcells = high-low;
-		  totalCells+=dcells.x()*dcells.y()*dcells.z();
-	       }
-	    }
-	 }
+	  if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
+	      || ( high.z() < low.z() ) )
+	    throw InternalError("Patch doesn't overlap?");
+	  
+	  var.copyPatch(srcvar, low, high);
+	  IntVector dfaces = high-low;
+	  totalFaces+=dfaces.x()+dfaces.y()+dfaces.z();
+	}
       }
       IntVector dn = highIndex-lowIndex;
-      long wantcells = dn.x()*dn.y()*dn.z();
-      ASSERTEQ(wantcells, totalCells);
+      long wantfaces = dn.x()+dn.y()+dn.z();
+      ASSERTEQ(wantfaces, totalFaces);
    }
 #endif
   d_lock.readUnlock();
@@ -1128,7 +1129,7 @@ OnDemandDataWarehouse::get(SFCXVariableBase& var, const VarLabel* label,
       IntVector high = patch->getGhostCellHighIndex(numGhostCells);
       level->selectPatches(low, high, neighbors);
       // modify it to only ignore corner nodes
-      for(int i=0;i<neighbors.size();i++){
+      for(int i=0;i<(int)neighbors.size();i++){
 	 const Patch* neighbor = neighbors[i];
 	 if(neighbor){
 	    if(!d_sfcxDB.exists(label, matlIndex, neighbor))
@@ -1247,7 +1248,7 @@ OnDemandDataWarehouse::get(SFCYVariableBase& var, const VarLabel* label,
       IntVector low = patch->getGhostCellLowIndex(numGhostCells);
       IntVector high = patch->getGhostCellHighIndex(numGhostCells);
       level->selectPatches(low, high, neighbors);
-      for(int i=0;i<neighbors.size();i++){
+      for(int i=0;i<(int)neighbors.size();i++){
 	 const Patch* neighbor = neighbors[i];
 	 if(neighbor){
 	    if(!d_sfcyDB.exists(label, matlIndex, neighbor))
@@ -1366,7 +1367,7 @@ OnDemandDataWarehouse::get(SFCZVariableBase& var, const VarLabel* label,
       IntVector low = patch->getGhostCellLowIndex(numGhostCells);
       IntVector high=patch->getGhostCellHighIndex(numGhostCells);
       level->selectPatches(low, high, neighbors);
-      for(int i=0;i<neighbors.size();i++){
+      for(int i=0;i<(int)neighbors.size();i++){
 	 const Patch* neighbor = neighbors[i];
 	 if(neighbor){
 	    if(!d_sfczDB.exists(label, matlIndex, neighbor))
@@ -1609,6 +1610,9 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.57  2000/11/21 21:58:24  jas
+// Fixes for FCVariables.
+//
 // Revision 1.56  2000/10/13 20:46:40  sparker
 // Clean out foreign variables at finalize time
 //
