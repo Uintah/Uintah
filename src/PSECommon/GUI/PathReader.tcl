@@ -42,10 +42,6 @@ itcl_class PSECommon_Readers_PathReader {
 		set initdir $env(SCI_DATA)
 	    }
 	}
-
-	# if no initial file specified, the box will look for it
-	# in $this-filename
-	set initfile ""
 	
 	#######################################################
 	# to be modified for particular reader
@@ -70,7 +66,6 @@ itcl_class PSECommon_Readers_PathReader {
 		-cancel "destroy $w" \
 		-title $title \
 		-filetypes $types \
-	        -initialfile $initfile \
 		-initialdir $initdir \
 		-defaultextension $defext
     }
