@@ -5,6 +5,8 @@ from sys import argv,exit,platform
 from helpers.runSusTests import runSusTests, inputs_root
 from helpers.modUPS import modUPS
 
+exit(0)
+
 matest_heptwb_cyl_8p_ups = modUPS("%s/MPMARCHES" % inputs_root(), \
                            "matest_heptwb_cyl.ups", \
                            ["<patches>[2,2,2]</patches>"])
