@@ -45,13 +45,6 @@ RigidBodyContact::~RigidBodyContact()
 
 }
 
-void RigidBodyContact::initializeContact(const Patch* /*patch*/,
-					 int /*dwindex*/,
-					 DataWarehouse* /*new_dw*/)
-{
-
-}
-
 void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
 					 const PatchSubset* patches,
 					 const MaterialSubset* matls,

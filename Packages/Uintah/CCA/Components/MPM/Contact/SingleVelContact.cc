@@ -50,13 +50,6 @@ SingleVelContact::~SingleVelContact()
 
 }
 
-void SingleVelContact::initializeContact(const Patch* /*patch*/,
-					 int /*dwindex*/,
-					 DataWarehouse* /*new_dw*/)
-{
-
-}
-
 void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
 					 const PatchSubset* patches,
 					 const MaterialSubset* matls,

@@ -39,13 +39,6 @@ NullContact::~NullContact()
 
 }
 
-void NullContact::initializeContact(const Patch* /*patch*/,
-                                    int /*vfindex*/,
-                                    DataWarehouse* /*new_dw*/)
-{
-
-}
-
 void NullContact::exMomInterpolated(const ProcessorGroup*,
 				    const PatchSubset* patches,
 				    const MaterialSubset* matls,

@@ -67,11 +67,6 @@ WARNING
 	 // Destructor
 	 virtual ~SingleVelContact();
 
-	 // Initialiation function, empty for Single Velocity contact
-	 virtual void initializeContact(const Patch* patch,
-					int vfindex,
-					DataWarehouse* new_dw);
-	 
 	 // Basic contact methods
 	 virtual void exMomInterpolated(const ProcessorGroup*,
 					const PatchSubset* patches,
