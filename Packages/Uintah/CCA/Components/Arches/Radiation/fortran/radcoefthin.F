@@ -15,17 +15,17 @@ C      IMPLICIT NONE
 
       double precision GC(5),PkPa(6),PkPaL(6)
 
-      DATA PI/3.141593D0/,SIG/5.67E-08/,CTWO/1.4388d0/,small/1.0d-10/
+      DATA PI/3.141593D0/,SIG/5.67D-08/,CTWO/1.4388D0/,small/1.0D-10/
 
       PI1 = 1.0d0 / PI
 
       fraction(lambda)=1.0d0
 
       wavemin = 50
-      wavemax = 10000;
-      bands = 50; 
-      dom = (wavemax - wavemin)/(bands - 1); 
-      omega = wavemin - dom;
+      wavemax = 10000
+      bands = 50
+      dom = (wavemax - wavemin)/(bands - 1)
+      omega = wavemin - dom
 
         DO 200 M=1,bands
 
@@ -56,7 +56,7 @@ c     Partial Pressures of each specie in (atm)
                  PkPa(5) = 0.0d0
                  PkPa(6) = (1.0d0-(CO2(I,J,K)+H2O(I,J,K)))
 
-                 PkPaL(L)=(273./TG(I,J,K))*PkPa(L)*100.0d0*OPL
+                 PkPaL(L)=(273.0D0/TG(I,J,K))*PkPa(L)*100.0d0*OPL
 
                  GC(L)=0.0d0
                  PTOT=0.0d0
