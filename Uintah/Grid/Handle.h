@@ -1,26 +1,44 @@
-
-/*
- *  Handle.h: Smart Pointers..
- *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   April 1994
- *
- *  Copyright (C) 1994 SCI Group
- */
-
-#ifndef SCI_Containers_Handle_h
-#define SCI_Containers_Handle_h
+#ifndef UINTAH_GRID_HANDLE_H
+#define UINTAH_GRID_HANDLE_H
 
 #include <SCICore/Util/Assert.h>
+
+namespace Uintah {
+namespace Grid {
+
+/**************************************
+
+CLASS
+   Handle
+   
+   Short description...
+
+GENERAL INFORMATION
+
+   Handle.h
+
+   Steven G. Parker
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2000 SCI Group
+
+KEYWORDS
+   Handle
+
+DESCRIPTION
+   Long description...
+  
+WARNING
+  
+****************************************/
 
 namespace Uintah {
     namespace Grid {
 template<class T>
 class Handle {
-    T* rep;
 public:
     Handle();
     Handle(T*);
@@ -32,56 +50,58 @@ public:
     void detach();
 
     inline const T* operator->() const {
-	//ASSERT(rep != 0);
-	return rep;
+	//ASSERT(d_rep != 0);
+	return d_rep;
     }
     inline T* operator->() {
-	//ASSERT(rep != 0);
-	return rep;
+	//ASSERT(d_rep != 0);
+	return d_rep;
     }
     inline T* get_rep() const {
-	return rep;
+	return d_rep;
     }
     inline operator bool() const {
-	return rep != 0;
+	return d_rep != 0;
     }
+private:
+    T* d_rep;
 };
 
 template<class T>
 Handle<T>::Handle()
-: rep(0)
+: d_rep(0)
 {
 }
 
 template<class T>
 Handle<T>::Handle(T* rep)
-: rep(rep)
+: d_rep(rep)
 {
-    if(rep){
-	rep->addReference();
+    if(d_rep){
+	d_rep->addReference();
     }
 }
 
 template<class T>
 Handle<T>::Handle(const Handle<T>& copy)
-: rep(copy.rep)
+: d_rep(copy.d_rep)
 {
-    if(rep){
-	rep->addReference();
+    if(d_rep){
+	d_rep->addReference();
     }
 }
 
 template<class T>
 Handle<T>& Handle<T>::operator=(const Handle<T>& copy)
 {
-    if(rep != copy.rep){
-	if(rep){
-	    if(rep->removeReference())
-		delete rep;
+    if(d_rep != copy.d_rep){
+	if(d_rep){
+	    if(d_rep->removeReference())
+		delete d_rep;
 	}
-	rep=copy.rep;
-	if(rep){
-	    copy.rep->addReference();
+	d_rep=copy.d_rep;
+	if(d_rep){
+	    copy.d_rep->addReference();
 	}
     }
     return *this;
@@ -90,13 +110,13 @@ Handle<T>& Handle<T>::operator=(const Handle<T>& copy)
 template<class T>
 Handle<T>& Handle<T>::operator=(T* copy)
 {
-    if(rep){
-	if(rep->removeReference())
-	    delete rep;
+    if(d_rep){
+	if(d_rep->removeReference())
+	    delete d_rep;
     }
-    rep=copy;
-    if(rep){
-	rep->addReference();
+    d_rep=copy;
+    if(d_rep){
+	d_rep->addReference();
     }
     return *this;
 }
@@ -104,29 +124,36 @@ Handle<T>& Handle<T>::operator=(T* copy)
 template<class T>
 Handle<T>::~Handle()
 {
-    if(rep){
-	if(rep->removeReference())
-	    delete rep;
+    if(d_rep){
+	if(d_rep->removeReference())
+	    delete d_rep;
     }
 }
 
 template<class T>
 void Handle<T>::detach()
 {
-    //ASSERT(rep != 0);
-    rep->lock.lock();
-    if(rep->ref_cnt==1){
-	rep->lock.unlock();
+    //ASSERT(d_rep != 0);
+    d_rep->lock.lock();
+    if(d_rep->ref_cnt==1){
+	d_rep->lock.unlock();
 	return; // We have the only copy
     }
-    T* oldrep=rep;
-    rep=oldrep->clone();
+    T* oldrep=d_rep;
+    d_rep=oldrep->clone();
     oldrep->ref_cnt--;
     oldrep->lock.unlock();
-    rep->ref_cnt++;
+    d_rep->ref_cnt++;
 }
 
-}
-}
+} // end namespace Grid
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.3  2000/03/17 18:17:17  dav
+// fixed typo
+//
+//
 
 #endif
