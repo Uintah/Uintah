@@ -55,7 +55,7 @@ WARNING
   
 ****************************************/
 
-enum MPMType {STAND_MPMICE = 0, RIGID_MPMICE, SHELL_MPMICE};
+enum MPMType {STAND_MPMICE = 0, RIGID_MPMICE, SHELL_MPMICE, FRACTURE_MPMICE};
 
 class MPMICE : public SimulationInterface, public UintahParallelComponent {
 

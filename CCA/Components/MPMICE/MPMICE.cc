@@ -3,6 +3,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ShellMPM.h>
+#include <Packages/Uintah/CCA/Components/MPM/FractureMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -58,6 +59,7 @@ MPMICE::MPMICE(const ProcessorGroup* myworld)
   d_SMALL_NUM = d_ice->d_SMALL_NUM; 
   d_TINY_RHO  = d_ice->d_TINY_RHO;
   d_rigidMPM = false;
+  dataArchiver = 0;
   
   // Turn off all the debuging switches
   switchDebug_InterpolateNCToCC_0 = false;
@@ -72,17 +74,20 @@ MPMICE::MPMICE(const ProcessorGroup* myworld, MPMType mpmtype)
   Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
   d_rigidMPM = false;
-
+  
   switch(mpmtype) {
-    case RIGID_MPMICE:
-      d_mpm = scinew RigidMPM(myworld);
-      d_rigidMPM = true;
-      break;
-    case SHELL_MPMICE:
-      d_mpm = scinew ShellMPM(myworld);
-      break;
-    default:
-      d_mpm = scinew SerialMPM(myworld);
+  case RIGID_MPMICE:
+    d_mpm = scinew RigidMPM(myworld);
+    d_rigidMPM = true;
+    break;
+  case SHELL_MPMICE:
+    d_mpm = scinew ShellMPM(myworld);
+    break;
+  case FRACTURE_MPMICE:
+    d_mpm = scinew FractureMPM(myworld);
+    break;
+  default:
+    d_mpm = scinew SerialMPM(myworld);
   }
 
   d_ice      = scinew ICE(myworld);
@@ -116,13 +121,16 @@ double MPMICE::recomputeTimestep(double current_dt)
 //______________________________________________________________________
 //
 void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
-                       SimulationStateP& sharedState)
+			  SimulationStateP& sharedState)
 {
   d_sharedState = sharedState;
+  dataArchiver = dynamic_cast<Output*>(getPort("output"));
+
   //__________________________________
   //  M P M
   d_mpm->setMPMLabel(Mlb);
   d_mpm->setWithICE();
+  d_mpm->attachPort("output",dataArchiver);
   d_mpm->problemSetup(prob_spec, grid, d_sharedState);
   d_8or27 = d_mpm->flags->d_8or27; 
   if(d_8or27==8){
@@ -133,7 +141,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
   //__________________________________
   //  I C E
-  dataArchiver = dynamic_cast<Output*>(getPort("output"));
+
   if(!dataArchiver){
     throw InternalError("MPMICE needs a dataArchiever component to work");
   }
@@ -248,63 +256,50 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
  // Scheduling
   d_ice->scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
    
-  d_mpm->scheduleApplyExternalLoads(              sched, patches, mpm_matls);
-  d_mpm->scheduleInterpolateParticlesToGrid(      sched, patches, mpm_matls);
+  d_mpm->scheduleApplyExternalLoads(sched, patches, mpm_matls);
+  // Fracture
+  d_mpm->scheduleParticleVelocityField(sched, patches, mpm_matls);
+  d_mpm->scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
 
-  d_mpm->scheduleComputeHeatExchange(             sched, patches, mpm_matls);
+  d_mpm->scheduleComputeHeatExchange(sched, patches, mpm_matls);
+
+  // Fracture
+  d_mpm->scheduleAdjustCrackContactInterpolated(sched,patches,mpm_matls);
 
   // schedule the interpolation of mass and volume to the cell centers
-  scheduleInterpolateNCToCC_0(                    sched, patches, one_matl,
-                                                                  mpm_matls);
+  scheduleInterpolateNCToCC_0(sched, patches, one_matl, mpm_matls);
 
-  vector<PatchSubset*> maxMach_PSS(Patch::numFaces);                                                       
-  d_ice->scheduleMaxMach_on_Lodi_BC_Faces(        sched, level,   ice_matls, 
-                                                                  maxMach_PSS);
-                                                                  
-  scheduleComputePressure(                        sched, patches, ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  press_matl,
-                                                                  all_matls);
+  scheduleComputePressure(sched, patches, ice_matls_sub,mpm_matls_sub,
+			  press_matl,all_matls);
+
   if (d_ice->d_RateForm) {
-    d_ice->schedulecomputeDivThetaVel_CC(         sched, patches, ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  all_matls);
+    d_ice->schedulecomputeDivThetaVel_CC(sched, patches, ice_matls_sub,
+					 mpm_matls_sub,all_matls);
   }
   
-  d_ice->scheduleComputeTempFC(                   sched, patches, ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  all_matls);
+  d_ice->scheduleComputeTempFC( sched, patches, ice_matls_sub,mpm_matls_sub,
+				all_matls);
   d_ice->scheduleComputeModelSources(             sched, level,   all_matls);
 
   d_ice->scheduleUpdateVolumeFraction(            sched, level,   all_matls);
   
   if(d_ice->d_impICE) {        //  I M P L I C I T 
-    d_ice->scheduleImplicitPressureSolve(         sched, level,   patches,
-                                                                  one_matl, 
-                                                                  press_matl,
-                                                                  ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  all_matls);
+    d_ice->scheduleImplicitPressureSolve(sched, level,patches,one_matl, 
+					 press_matl,ice_matls_sub,
+					 mpm_matls_sub, all_matls);
                                                            
-    d_ice->scheduleComputeDel_P(                  sched,  level,  patches,  
-                                                                  one_matl,
-                                                                  press_matl,
-                                                                  all_matls);
+    d_ice->scheduleComputeDel_P(sched,  level,  patches, one_matl, press_matl,
+				all_matls);
   }                           //  IMPLICIT AND EXPLICIT
-  d_ice->scheduleComputeVel_FC(                 sched, patches,   ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  press_matl,
-                                                                  all_matls,
-                                                                  false);
+  d_ice->scheduleComputeVel_FC(sched, patches,   ice_matls_sub, mpm_matls_sub,
+			       press_matl, all_matls, false);
                                                                
-  d_ice->scheduleAddExchangeContributionToFCVel(sched, patches,   all_matls,
-                                                                  false);
+  d_ice->scheduleAddExchangeContributionToFCVel(sched, patches,all_matls,false);
                                                                   
   if(!(d_ice->d_impICE)){       //  E X P L I C I T 
     d_ice->scheduleComputeDelPressAndUpdatePressCC(sched,patches, press_matl,
-                                                                  ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  all_matls);
+						   ice_matls_sub,mpm_matls_sub,
+						   all_matls);
   } 
   
   d_mpm->scheduleExMomInterpolated(               sched, patches, mpm_matls);
@@ -337,6 +332,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   d_mpm->scheduleSolveHeatEquations(              sched, patches, mpm_matls);
   d_mpm->scheduleIntegrateAcceleration(           sched, patches, mpm_matls);
   d_mpm->scheduleIntegrateTemperatureRate(        sched, patches, mpm_matls);
+  d_mpm->scheduleAdjustCrackContactIntegrated(sched, patches, mpm_matls);
   
   scheduleComputeLagrangianValuesMPM(             sched, patches, one_matl,
                                                                   mpm_matls); 
@@ -355,6 +351,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
                                                                   
   d_ice->scheduleComputeLagrangian_Transported_Vars(sched,patches,ice_matls);
 
+
   scheduleInterpolateCCToNC(                      sched, patches, mpm_matls);
   d_mpm->scheduleExMomIntegrated(                 sched, patches, mpm_matls);
   d_mpm->scheduleSetGridBoundaryConditions(       sched, patches, mpm_matls);
@@ -362,12 +359,17 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   d_mpm->scheduleConvertLocalizedParticles(       sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, mpm_matls);
   //d_mpm->scheduleApplyExternalLoads(              sched, patches, mpm_matls);
-  
+
+  d_mpm->scheduleCalculateFractureParameters(    sched, patches, mpm_matls);
+  d_mpm->scheduleDoCrackPropagation(             sched, patches, mpm_matls);
+  d_mpm->scheduleMoveCracks(                     sched, patches, mpm_matls);
+  d_mpm->scheduleUpdateCrackFront(               sched, patches, mpm_matls);
+
+  vector<PatchSubset*> maxMach_PSS(Patch::numFaces);                                                       
+  d_ice->scheduleMaxMach_on_Lodi_BC_Faces(sched, level,ice_matls,maxMach_PSS);
                                    
-  d_ice->scheduleAdvectAndAdvanceInTime(          sched, patches, ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  press_matl,
-                                                                  ice_matls);
+  d_ice->scheduleAdvectAndAdvanceInTime(sched, patches, ice_matls_sub,
+					mpm_matls_sub,press_matl,ice_matls);
                                                                   
   if(d_ice->switchTestConservation) {
     d_ice->schedulePrintConservedQuantities(     sched, patches, ice_matls_sub,
@@ -547,6 +549,7 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   t->modifies(Mlb->gVelocityStarLabel, mss);             
   t->modifies(Mlb->gAccelerationLabel, mss);             
   t->computes(Mlb->gSp_vol_srcLabel);
+  t->computes(Mlb->GSp_vol_srcLabel);
   t->computes(Mlb->dTdt_NCLabel);
 
   sched->addTask(t, patches, mpm_matls);
@@ -1209,7 +1212,8 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int indx = mpm_matl->getDWIndex();
       NCVariable<Vector> gacceleration, gvelocity;
-      NCVariable<double> dTdt_NC, gSp_vol_src;
+      NCVariable<double> dTdt_NC, gSp_vol_src,GSp_vol_src;
+
       constCCVariable<double> mass_L_CC, sp_vol_src;
       constCCVariable<Vector> mom_L_ME_CC, old_mom_L_CC;
       constCCVariable<double> eng_L_ME_CC, old_int_eng_L_CC; 
@@ -1229,8 +1233,10 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
 
       new_dw->allocateAndPut(dTdt_NC,     Mlb->dTdt_NCLabel,    indx, patch);
       new_dw->allocateAndPut(gSp_vol_src, Mlb->gSp_vol_srcLabel,indx, patch);
+      new_dw->allocateAndPut(GSp_vol_src, Mlb->GSp_vol_srcLabel,indx, patch);
       dTdt_NC.initialize(0.0);
       gSp_vol_src.initialize(0.0);
+      GSp_vol_src.initialize(0.0);
       IntVector cIdx[8];
       Vector dvdt_tmp;
       double dTdt_tmp;
@@ -1241,6 +1247,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
         patch->findCellsFromNode(*iter,cIdx);
         for(int in=0;in<8;in++){
           gSp_vol_src[*iter]   +=  (sp_vol_src[cIdx[in]]/delT) * 0.125;
+          GSp_vol_src[*iter]   +=  (sp_vol_src[cIdx[in]]/delT) * 0.125;
         }
       }
      }
@@ -1253,6 +1260,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
           gvelocity[*iter]     +=  dvdt_tmp*.125*delT;
           gacceleration[*iter] +=  dvdt_tmp*.125;
           gSp_vol_src[*iter]   +=  (sp_vol_src[cIdx[in]]/delT) * 0.125;
+          GSp_vol_src[*iter]   +=  (sp_vol_src[cIdx[in]]/delT) * 0.125;
         }
       }
      }    
@@ -1468,6 +1476,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     int num_bad_cells = 0;
     double root_search_derivative = 0.;
 #endif
+
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       IntVector c = *iter;  
       int i = c.x(), j = c.y(), k = c.z();
@@ -1524,6 +1533,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          B   +=  Q[m]/(y[m] + d_SMALL_NUM);
          C   +=  1.0/(y[m]  + d_SMALL_NUM);
        } 
+       double vol_frac_not_close_packed = 1.;
        delPress = (A - vol_frac_not_close_packed - B)/C;
 #ifdef OREN_PRESS_EQ
        root_search_derivative = C;
@@ -1559,7 +1569,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        }
        //__________________________________
        // - Test for convergence 
-       //  If sum of vol_frac_CC ~= vol_frac_not_close_packed then converged 
+       //  If sum of vol_frac_CC ~= 1.0 then converged 
        sum = 0.0;
        for (int m = 0; m < numALLMatls; m++)  {
          sum += vol_frac[m][c];
@@ -1769,7 +1779,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          d_ice->printData(indx,patch,1,desc.str(),"rho_micro_CC",rho_micro[m]);
          d_ice->printData(indx,patch,1,desc.str(),"vol_frac_CC", vol_frac[m]);
       }
-
     }
   }  //patches
 }

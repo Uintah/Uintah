@@ -78,6 +78,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   NGP     = 1;
   NGN     = 1;
   d_doGridReset = true;
+  dataArchiver = 0;
 }
 
 SerialMPM::~SerialMPM()
