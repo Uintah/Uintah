@@ -57,6 +57,7 @@ public:
   virtual void execute();
 
 protected:
+  FieldHandle fieldout_;
   int fGeneration_;
 };
 
@@ -65,6 +66,7 @@ DECLARE_MAKER(Gradient)
 
 Gradient::Gradient(GuiContext* ctx)
   : Module("Gradient", ctx, Filter, "FieldsData", "SCIRun"),
+    fieldout_(0),
     fGeneration_(-1)
 {
 }
@@ -109,7 +111,6 @@ Gradient::execute()
   }
 
   // If no data or a changed recalcute.
-  FieldHandle fieldout(0);
   if( fGeneration_ != fieldin->generation )
   {
     fGeneration_ = fieldin->generation;
@@ -122,11 +123,11 @@ Gradient::execute()
     Handle<GradientAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
-    fieldout = algo->execute(fieldin);
+    fieldout_ = algo->execute(fieldin);
   }
 
   // Get a handle to the output field port.
-  if ( fieldout.get_rep() )
+  if ( fieldout_.get_rep() )
   {
     FieldOPort* ofp = (FieldOPort *) get_oport("Output Gradient");
 
@@ -137,7 +138,7 @@ Gradient::execute()
     }
 
     // Send the data downstream
-    ofp->send(fieldout);
+    ofp->send(fieldout_);
   }
 }
 
