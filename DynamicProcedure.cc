@@ -1,5 +1,6 @@
 //----- DynamicProcedure.cc --------------------------------------------------
 
+#include <TauProfilerForSCIRun.h>
 #include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/DynamicProcedure.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
@@ -34,6 +35,12 @@ using namespace std;
 
 using namespace Uintah;
 using namespace SCIRun;
+#define use_fortran
+#ifdef use_fortran
+#include <Packages/Uintah/CCA/Components/Arches/fortran/dynamic_1loop_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/dynamic_2loop_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/dynamic_3loop_fort.h>
+#endif
 
 
 //****************************************************************************
@@ -79,7 +86,7 @@ DynamicProcedure::sched_computeTurbSubmodel(const LevelP& level,
   d_filter->sched_buildFilterMatrix(level, sched);
 #endif
   SmagorinskyModel::sched_computeTurbSubmodel(level, sched, patches, matls);
-  Task* tsk = scinew Task("DynamicProcedure::TurbSubmodel",
+  Task* tsk = scinew Task("DynamicProcedure::computeTurbSubmodel",
 			  this,
 			  &DynamicProcedure::computeTurbSubmodel);
   
@@ -127,7 +134,7 @@ DynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 					    const bool Runge_Kutta_last_step)
 {
   {
-    Task* tsk = scinew Task("DynamicProcedure::ReTurbSubmodel",
+    Task* tsk = scinew Task("DynamicProcedure::reComputeTurbSubmodel",
 			    this,
 			    &DynamicProcedure::reComputeTurbSubmodel,
 			  Runge_Kutta_current_step, Runge_Kutta_last_step);
@@ -188,7 +195,7 @@ DynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     sched->addTask(tsk, patches, matls);
   }
   {
-    Task* tsk = scinew Task("DynamicProcedure::ReComputeFilterValues",
+    Task* tsk = scinew Task("DynamicProcedure::reComputeFilterValues",
 			    this,
 			    &DynamicProcedure::reComputeFilterValues,
 			  Runge_Kutta_current_step, Runge_Kutta_last_step);
@@ -434,6 +441,12 @@ DynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
     int startX = indexLow.x();
     int endX = indexHigh.x()+1;
 
+#ifdef use_fortran
+    IntVector start(startX, startY, startZ);
+    IntVector end(endX - 1, endY - 1, endZ -1);
+    fort_dynamic_3loop(SIJ[0],SIJ[1],SIJ[2],SIJ[3],SIJ[4],SIJ[5],
+	uVel,vVel,wVel,cellinfo->sew,cellinfo->sns,cellinfo->stb,start,end);
+#else
     for (int colZ = startZ; colZ < endZ; colZ ++) {
       for (int colY = startY; colY < endY; colY ++) {
 	for (int colX = startX; colX < endX; colX ++) {
@@ -442,65 +455,78 @@ DynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
 	  double vnp, vsp, vep, vwp, vtp, vbp;
 	  double wnp, wsp, wep, wwp, wtp, wbp;
 
-	  uep = uVel[IntVector(colX+1,colY,colZ)];
-	  uwp = uVel[currCell];
-	  unp = 0.25*(uVel[IntVector(colX+1,colY,colZ)] + uVel[currCell]
+	  double uvelcur = uVel[currCell];
+	  double vvelcur = vVel[currCell];
+	  double wvelcur = wVel[currCell];
+	  double uvelxp1 = uVel[IntVector(colX+1,colY,colZ)];
+	  double vvelyp1 = vVel[IntVector(colX,colY+1,colZ)];
+	  double wvelzp1 = wVel[IntVector(colX,colY,colZ+1)];
+
+	  uep = uvelxp1;
+	  uwp = uvelcur;
+	  unp = 0.25*(uvelxp1 + uvelcur
 		      + uVel[IntVector(colX+1,colY+1,colZ)] 
 		      + uVel[IntVector(colX,colY+1,colZ)]);
-	  usp = 0.25*(uVel[IntVector(colX+1,colY,colZ)] + uVel[currCell] +
+	  usp = 0.25*(uvelxp1 + uvelcur +
 		      uVel[IntVector(colX+1,colY-1,colZ)] +
 		      uVel[IntVector(colX,colY-1,colZ)]);
-	  utp = 0.25*(uVel[IntVector(colX+1,colY,colZ)] + uVel[currCell] +
+	  utp = 0.25*(uvelxp1 + uvelcur +
 		      uVel[IntVector(colX+1,colY,colZ+1)] + 
 		      uVel[IntVector(colX,colY,colZ+1)]);
-	  ubp = 0.25*(uVel[IntVector(colX+1,colY,colZ)] + uVel[currCell] + 
+	  ubp = 0.25*(uvelxp1 + uvelcur + 
 		      uVel[IntVector(colX+1,colY,colZ-1)] + 
 		      uVel[IntVector(colX,colY,colZ-1)]);
-	  vnp = vVel[IntVector(colX,colY+1,colZ)];
-	  vsp = vVel[currCell];
-	  vep = 0.25*(vVel[IntVector(colX,colY+1,colZ)] + vVel[currCell] +
+
+	  vnp = vvelyp1;
+	  vsp = vvelcur;
+	  vep = 0.25*(vvelyp1 + vvelcur +
 		      vVel[IntVector(colX+1,colY+1,colZ)] + 
 		      vVel[IntVector(colX+1,colY,colZ)]);
-	  vwp = 0.25*(vVel[IntVector(colX,colY+1,colZ)] + vVel[currCell] +
+	  vwp = 0.25*(vvelyp1 + vvelcur +
 		      vVel[IntVector(colX-1,colY+1,colZ)] + 
 		      vVel[IntVector(colX-1,colY,colZ)]);
-	  vtp = 0.25*(vVel[IntVector(colX,colY+1,colZ)] + vVel[currCell] + 
+	  vtp = 0.25*(vvelyp1 + vvelcur + 
 		      vVel[IntVector(colX,colY+1,colZ+1)] + 
 		      vVel[IntVector(colX,colY,colZ+1)]);
-	  vbp = 0.25*(vVel[IntVector(colX,colY+1,colZ)] + vVel[currCell] +
+	  vbp = 0.25*(vvelyp1 + vvelcur +
 		      vVel[IntVector(colX,colY+1,colZ-1)] + 
 		      vVel[IntVector(colX,colY,colZ-1)]);
 
-	  wtp = wVel[IntVector(colX,colY,colZ+1)];
-	  wbp = wVel[currCell];
-	  wep = 0.25*(wVel[IntVector(colX,colY,colZ+1)] + wVel[currCell] + 
+	  wtp = wvelzp1;
+	  wbp = wvelcur;
+	  wep = 0.25*(wvelzp1 + wvelcur + 
 		      wVel[IntVector(colX+1,colY,colZ+1)] + 
 		      wVel[IntVector(colX+1,colY,colZ)]);
-	  wwp = 0.25*(wVel[IntVector(colX,colY,colZ+1)] + wVel[currCell] +
+	  wwp = 0.25*(wvelzp1 + wvelcur +
 		      wVel[IntVector(colX-1,colY,colZ+1)] + 
 		      wVel[IntVector(colX-1,colY,colZ)]);
-	  wnp = 0.25*(wVel[IntVector(colX,colY,colZ+1)] + wVel[currCell] + 
+	  wnp = 0.25*(wvelzp1 + wvelcur + 
 		      wVel[IntVector(colX,colY+1,colZ+1)] + 
 		      wVel[IntVector(colX,colY+1,colZ)]);
-	  wsp = 0.25*(wVel[IntVector(colX,colY,colZ+1)] + wVel[currCell] +
+	  wsp = 0.25*(wvelzp1 + wvelcur +
 		      wVel[IntVector(colX,colY-1,colZ+1)] + 
 		      wVel[IntVector(colX,colY-1,colZ)]);
 
-	  //     calculate the grcolXd stracolXn rate tensor
+	  //     calculate the grid strain rate tensor
 
-	  (SIJ[0])[currCell] = (uep-uwp)/cellinfo->sew[colX];
-	  (SIJ[1])[currCell] = (vnp-vsp)/cellinfo->sns[colY];
-	  (SIJ[2])[currCell] = (wtp-wbp)/cellinfo->stb[colZ];
-	  (SIJ[3])[currCell] = 0.5*((unp-usp)/cellinfo->sns[colY] + 
-			       (vep-vwp)/cellinfo->sew[colX]);
-	  (SIJ[4])[currCell] = 0.5*((utp-ubp)/cellinfo->stb[colZ] + 
-			       (wep-wwp)/cellinfo->sew[colX]);
-	  (SIJ[5])[currCell] = 0.5*((vtp-vbp)/cellinfo->stb[colZ] + 
-			       (wnp-wsp)/cellinfo->sns[colY]);
+	  double sewcur = cellinfo->sew[colX];
+	  double snscur = cellinfo->sns[colY];
+	  double stbcur = cellinfo->stb[colZ];
+
+	  (SIJ[0])[currCell] = (uep-uwp)/sewcur;
+	  (SIJ[1])[currCell] = (vnp-vsp)/snscur;
+	  (SIJ[2])[currCell] = (wtp-wbp)/stbcur;
+	  (SIJ[3])[currCell] = 0.5*((unp-usp)/snscur + 
+			       (vep-vwp)/sewcur);
+	  (SIJ[4])[currCell] = 0.5*((utp-ubp)/stbcur + 
+			       (wep-wwp)/sewcur);
+	  (SIJ[5])[currCell] = 0.5*((vtp-vbp)/stbcur + 
+			       (wnp-wsp)/snscur);
 
 	}
       }
     }
+#endif
     if (xminus) { 
       for (int colZ = startZ; colZ < endZ; colZ ++) {
 	for (int colY = startY; colY < endY; colY ++) {
@@ -843,6 +869,10 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 					const bool Runge_Kutta_last_step)
 {
   for (int p = 0; p < patches->size(); p++) {
+  TAU_PROFILE_TIMER(compute1, "Compute1", "[reComputeFilterValues::compute1]" , TAU_USER);
+  TAU_PROFILE_TIMER(compute2, "Compute2", "[reComputeFilterValues::compute2]" , TAU_USER);
+  TAU_PROFILE_TIMER(compute3, "Compute3", "[reComputeFilterValues::compute3]" , TAU_USER);
+  TAU_PROFILE_TIMER(compute4, "Compute4", "[reComputeFilterValues::compute4]" , TAU_USER);
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
@@ -908,8 +938,8 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       new_dw->get(SIJ[ii], d_lab->d_strainTensorCompLabel, ii, patch,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    StencilMatrix<Array3<double> > LIJ;    //6 point tensor
-    StencilMatrix<Array3<double> > MIJ;    //6 point tensor
+//    StencilMatrix<Array3<double> > LIJ;    //6 point tensor
+//    StencilMatrix<Array3<double> > MIJ;    //6 point tensor
     StencilMatrix<Array3<double> > SHATIJ; //6 point tensor
     StencilMatrix<Array3<double> > betaIJ;  //6 point tensor
     StencilMatrix<Array3<double> > betaHATIJ; //6 point tensor
@@ -919,10 +949,10 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
     int tensorSize = 6; //  1-> 11, 2->22, 3->33, 4 ->12, 5->13, 6->23
     for (int ii = 0; ii < tensorSize; ii++) {
-      LIJ[ii].resize(idxLo, idxHi);
-      LIJ[ii].initialize(0.0);
-      MIJ[ii].resize(idxLo, idxHi);
-      MIJ[ii].initialize(0.0);
+//      LIJ[ii].resize(idxLo, idxHi);
+//      LIJ[ii].initialize(0.0);
+//      MIJ[ii].resize(idxLo, idxHi);
+//      MIJ[ii].initialize(0.0);
       SHATIJ[ii].resize(idxLo, idxHi);
       SHATIJ[ii].initialize(0.0);
       betaIJ[ii].resize(idxLo, idxHi);
@@ -962,8 +992,8 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
     Array3<double> IsI(idxLo, idxHi); // magnitude of strain rate
     IsI.initialize(0.0);
-    Array3<double> IshatI(idxLo, idxHi); // magnitude of test filter strain rate
-    IshatI.initialize(0.0);
+//    Array3<double> IshatI(idxLo, idxHi); // magnitude of test filter strain rate
+//    IshatI.initialize(0.0);
     Array3<double> UU(idxLo, idxHi);
     Array3<double> UV(idxLo, idxHi);
     Array3<double> UW(idxLo, idxHi);
@@ -989,37 +1019,54 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     int endX = idxHi.x();
     if (xplus) endX--;
 
+  TAU_PROFILE_START(compute1);
+#ifdef use_fortran
+    IntVector start(startX, startY, startZ);
+    IntVector end(endX - 1, endY - 1, endZ -1);
+    fort_dynamic_1loop(SIJ[0],SIJ[1],SIJ[2],SIJ[3],SIJ[4],SIJ[5],
+	ccuVel,ccvVel,ccwVel,IsI,betaIJ[0],betaIJ[1],betaIJ[2],
+	betaIJ[3],betaIJ[4],betaIJ[5],UU,UV,UW,VV,VW,WW,start,end);
+#else
     for (int colZ = startZ; colZ < endZ; colZ ++) {
       for (int colY = startY; colY < endY; colY ++) {
 	for (int colX = startX; colX < endX; colX ++) {
 	  IntVector currCell(colX, colY, colZ);
 	  // calculate absolute value of the grid strain rate
           // computes for the ghost cells too
-	  IsI[currCell] = sqrt(2*((SIJ[0])[currCell]*(SIJ[0])[currCell] + 
-				  (SIJ[1])[currCell]*(SIJ[1])[currCell] +
-				  (SIJ[2])[currCell]*(SIJ[2])[currCell] +
-				  2*((SIJ[3])[currCell]*(SIJ[3])[currCell] + 
-				     (SIJ[4])[currCell]*(SIJ[4])[currCell] +
-				     (SIJ[5])[currCell]*(SIJ[5])[currCell])));
+	  double sij0 = (SIJ[0])[currCell];
+	  double sij1 = (SIJ[1])[currCell];
+	  double sij2 = (SIJ[2])[currCell];
+	  double sij3 = (SIJ[3])[currCell];
+	  double sij4 = (SIJ[4])[currCell];
+	  double sij5 = (SIJ[5])[currCell];
+	  double isi_cur = sqrt(2.0*(sij0*sij0 + sij1*sij1 + sij2*sij2 +
+				     2.0*(sij3*sij3 + sij4*sij4 + sij5*sij5)));
+	  double uvel_cur = ccuVel[currCell];
+	  double vvel_cur = ccvVel[currCell];
+	  double wvel_cur = ccwVel[currCell];
+
+	  IsI[currCell] = isi_cur; 
 
 	  //    calculate the grid filtered stress tensor, beta
 
-	  (betaIJ[0])[currCell] = IsI[currCell]*(SIJ[0])[currCell];
-	  (betaIJ[1])[currCell] = IsI[currCell]*(SIJ[1])[currCell];
-	  (betaIJ[2])[currCell] = IsI[currCell]*(SIJ[2])[currCell];
-	  (betaIJ[3])[currCell] = IsI[currCell]*(SIJ[3])[currCell];
-	  (betaIJ[4])[currCell] = IsI[currCell]*(SIJ[4])[currCell];
-	  (betaIJ[5])[currCell] = IsI[currCell]*(SIJ[5])[currCell];
+	  (betaIJ[0])[currCell] = isi_cur*sij0;
+	  (betaIJ[1])[currCell] = isi_cur*sij1;
+	  (betaIJ[2])[currCell] = isi_cur*sij2;
+	  (betaIJ[3])[currCell] = isi_cur*sij3;
+	  (betaIJ[4])[currCell] = isi_cur*sij4;
+	  (betaIJ[5])[currCell] = isi_cur*sij5;
 	  // required to compute Leonard term
-	  UU[currCell] = ccuVel[currCell]*ccuVel[currCell];
-	  UV[currCell] = ccuVel[currCell]*ccvVel[currCell];
-	  UW[currCell] = ccuVel[currCell]*ccwVel[currCell];
-	  VV[currCell] = ccvVel[currCell]*ccvVel[currCell];
-	  VW[currCell] = ccvVel[currCell]*ccwVel[currCell];
-	  WW[currCell] = ccwVel[currCell]*ccwVel[currCell];
+	  UU[currCell] = uvel_cur*uvel_cur;
+	  UV[currCell] = uvel_cur*vvel_cur;
+	  UW[currCell] = uvel_cur*wvel_cur;
+	  VV[currCell] = vvel_cur*vvel_cur;
+	  VW[currCell] = vvel_cur*wvel_cur;
+	  WW[currCell] = wvel_cur*wvel_cur;
 	}
       }
     }
+#endif
+  TAU_PROFILE_STOP(compute1);
 #ifndef PetscFilter
     if (xminus) { 
       for (int colZ = startZ; colZ < endZ; colZ ++) {
@@ -1604,82 +1651,118 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }
 #endif  
+  TAU_PROFILE_START(compute2);
+#ifdef use_fortran
+    fort_dynamic_2loop(cellinfo->sew,cellinfo->sns,cellinfo->stb,
+	SHATIJ[0],SHATIJ[1],SHATIJ[2],SHATIJ[3],SHATIJ[4],SHATIJ[5],
+	IsI, IsImag, betaHATIJ[0],betaHATIJ[1],betaHATIJ[2],
+	betaHATIJ[3],betaHATIJ[4],betaHATIJ[5],filterUVel,
+	filterVVel,filterWVel,filterUU, filterVV, filterWW,
+	filterUV, filterUW, filterVW, MLI,MMI,indexLow,indexHigh);
+#else
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
-	  double delta = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+	  double delta = cellinfo->sew[colX]*
+			 cellinfo->sns[colY]*cellinfo->stb[colZ];
 	  double filter = pow(delta, 1.0/3.0);
 
 	  // test filter width is assumed to be twice that of the basic filter
 	  // needs following modifications:
 	  // a) make the test filter work for anisotropic grid
           // b) generalize the filter operation
-	  IsImag[currCell] = IsI[currCell];
-	  IshatI[currCell] = sqrt(2.0*((SHATIJ[0])[currCell]*(SHATIJ[0])[currCell] + 
-				     (SHATIJ[1])[currCell]*(SHATIJ[1])[currCell] +
-				     (SHATIJ[2])[currCell]*(SHATIJ[2])[currCell] +
-				     2.0*((SHATIJ[3])[currCell]*(SHATIJ[3])[currCell] + 
-					(SHATIJ[4])[currCell]*(SHATIJ[4])[currCell] +
-					(SHATIJ[5])[currCell]*(SHATIJ[5])[currCell])));
-	  (MIJ[0])[currCell] = 2.0*(filter*filter)*
+	  double shatij0 = (SHATIJ[0])[currCell];
+	  double shatij1 = (SHATIJ[1])[currCell];
+	  double shatij2 = (SHATIJ[2])[currCell];
+	  double shatij3 = (SHATIJ[3])[currCell];
+	  double shatij4 = (SHATIJ[4])[currCell];
+	  double shatij5 = (SHATIJ[5])[currCell];
+	  double IshatIcur = sqrt(2.0*(shatij0*shatij0 + shatij1*shatij1 +
+				       shatij2*shatij2 + 2.0*(shatij3*shatij3 + 
+				       shatij4*shatij4 + shatij5*shatij5)));
+
+//	  IshatI[currCell] = IshatIcur;
+
+	  IsImag[currCell] = IsI[currCell]; 
+
+
+	  double MIJ0cur = 2.0*(filter*filter)*
 	                       ((betaHATIJ[0])[currCell]-
-				2.0*2.0*IshatI[currCell]*(SHATIJ[0])[currCell]);
-	  (MIJ[1])[currCell] = 2.0*(filter*filter)*
+				2.0*2.0*IshatIcur*shatij0);
+//	  (MIJ[0])[currCell] = MIJ0cur;
+	  double MIJ1cur = 2.0*(filter*filter)*
 	                       ((betaHATIJ[1])[currCell]-
-				2.0*2.0*IshatI[currCell]*(SHATIJ[1])[currCell]);
-	  (MIJ[2])[currCell] = 2.0*(filter*filter)*
+				2.0*2.0*IshatIcur*shatij1);
+//	  (MIJ[1])[currCell] = MIJ1cur;
+	  double MIJ2cur = 2.0*(filter*filter)*
 	                       ((betaHATIJ[2])[currCell]-
-				2.0*2.0*IshatI[currCell]*(SHATIJ[2])[currCell]);
-	  (MIJ[3])[currCell] = 2.0*(filter*filter)*
+				2.0*2.0*IshatIcur*shatij2);
+//	  (MIJ[2])[currCell] = MIJ2cur;
+	  double MIJ3cur = 2.0*(filter*filter)*
 	                       ((betaHATIJ[3])[currCell]-
-				2.0*2.0*IshatI[currCell]*(SHATIJ[3])[currCell]);
-	  (MIJ[4])[currCell] = 2.0*(filter*filter)*
+				2.0*2.0*IshatIcur*shatij3);
+//	  (MIJ[3])[currCell] = MIJ3cur;
+	  double MIJ4cur = 2.0*(filter*filter)*
 	                       ((betaHATIJ[4])[currCell]-
-				2.0*2.0*IshatI[currCell]*(SHATIJ[4])[currCell]);
-	  (MIJ[5])[currCell] =  2.0*(filter*filter)*
+				2.0*2.0*IshatIcur*shatij4);
+//	  (MIJ[4])[currCell] = MIJ4cur;
+	  double MIJ5cur =  2.0*(filter*filter)*
 	                       ((betaHATIJ[5])[currCell]-
-				2.0*2.0*IshatI[currCell]*(SHATIJ[5])[currCell]);
+				2.0*2.0*IshatIcur*shatij5);
+//	  (MIJ[5])[currCell] = MIJ5cur; 
 
 
 	  // compute Leonard stress tensor
 	  // index 0: L11, 1:L22, 2:L33, 3:L12, 4:L13, 5:L23
-	  (LIJ[0])[currCell] = (filterUU[currCell] -
-				filterUVel[currCell]*
-				filterUVel[currCell]);
-	  (LIJ[1])[currCell] = (filterVV[currCell] -
-				filterVVel[currCell]*
-				filterVVel[currCell]);
-	  (LIJ[2])[currCell] = (filterWW[currCell] -
-				filterWVel[currCell]*
-				filterWVel[currCell]);
-	  (LIJ[3])[currCell] = (filterUV[currCell] -
-				filterUVel[currCell]*
-				filterVVel[currCell]);
-	  (LIJ[4])[currCell] = (filterUW[currCell] -
-				filterUVel[currCell]*
-				filterWVel[currCell]);
-	  (LIJ[5])[currCell] = (filterVW[currCell] -
-				filterVVel[currCell]*
-				filterWVel[currCell]);
+          double filterUVelcur = filterUVel[currCell];
+          double filterVVelcur = filterVVel[currCell];
+          double filterWVelcur = filterWVel[currCell];
+	  double LIJ0cur = (filterUU[currCell] -
+				filterUVelcur*
+				filterUVelcur);
+//	  (LIJ[0])[currCell] = LIJ0cur;
+	  double LIJ1cur = (filterVV[currCell] -
+				filterVVelcur*
+				filterVVelcur);
+//	  (LIJ[1])[currCell] = LIJ1cur; 
+	  double LIJ2cur = (filterWW[currCell] -
+				filterWVelcur*
+				filterWVelcur);
+//	  (LIJ[2])[currCell] = LIJ2cur;
+	  double LIJ3cur = (filterUV[currCell] -
+				filterUVelcur*
+				filterVVelcur);
+//	  (LIJ[3])[currCell] = LIJ3cur;
+	  double LIJ4cur = (filterUW[currCell] -
+				filterUVelcur*
+				filterWVelcur);
+//	  (LIJ[4])[currCell] = LIJ4cur;
+	  double LIJ5cur = (filterVW[currCell] -
+				filterVVelcur*
+				filterWVelcur);
+//	  (LIJ[5])[currCell] = LIJ5cur;
 
 	  // compute the magnitude of ML and MM
-	  MLI[currCell] = (MIJ[0])[currCell]*(LIJ[0])[currCell] +
-	                 (MIJ[1])[currCell]*(LIJ[1])[currCell] +
-	                 (MIJ[2])[currCell]*(LIJ[2])[currCell] +
-                         2.0*((MIJ[3])[currCell]*(LIJ[3])[currCell] +
-			      (MIJ[4])[currCell]*(LIJ[4])[currCell] +
-			      (MIJ[5])[currCell]*(LIJ[5])[currCell] );
-	  MMI[currCell] = (MIJ[0])[currCell]*(MIJ[0])[currCell] +
-	                 (MIJ[1])[currCell]*(MIJ[1])[currCell] +
-	                 (MIJ[2])[currCell]*(MIJ[2])[currCell] +
-                         2.0*((MIJ[3])[currCell]*(MIJ[3])[currCell] +
-			      (MIJ[4])[currCell]*(MIJ[4])[currCell] +
-			      (MIJ[5])[currCell]*(MIJ[5])[currCell] );
+	  MLI[currCell] = MIJ0cur*LIJ0cur +
+	                 MIJ1cur*LIJ1cur +
+	                 MIJ2cur*LIJ2cur +
+                         2.0*(MIJ3cur*LIJ3cur +
+			      MIJ4cur*LIJ4cur +
+			      MIJ5cur*LIJ5cur );
+	  MMI[currCell] = MIJ0cur*MIJ0cur +
+	                 MIJ1cur*MIJ1cur +
+	                 MIJ2cur*MIJ2cur +
+                         2.0*(MIJ3cur*MIJ3cur +
+			      MIJ4cur*MIJ4cur +
+			      MIJ5cur*MIJ5cur );
 		// calculate absolute value of the grid strain rate
 	}
       }
     }
+#endif
+  TAU_PROFILE_STOP(compute2);
+  TAU_PROFILE_START(compute3);
     startZ = indexLow.z();
     endZ = indexHigh.z()+1;
     startY = indexLow.y();
@@ -1900,6 +1983,7 @@ DynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }	
 
+  TAU_PROFILE_STOP(compute3);
 
   }
 }
@@ -2217,7 +2301,7 @@ DynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
 					    const int Runge_Kutta_current_step,
 					    const bool Runge_Kutta_last_step)
 {
-  Task* tsk = scinew Task("DynamicProcedure::computeScalarVar",
+  Task* tsk = scinew Task("DynamicProcedure::computeScalarVarince",
 			  this,
 			  &DynamicProcedure::computeScalarVariance,
 			  Runge_Kutta_current_step, Runge_Kutta_last_step);
