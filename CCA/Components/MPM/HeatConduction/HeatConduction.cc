@@ -14,6 +14,9 @@
 using namespace Uintah;
 using namespace SCIRun;
 
+#define EROSION
+#undef EROSION
+
 static DebugStream cout_doing("HeatConduction", false);
 static DebugStream cout_heat("MPMHeat", false);
 
@@ -53,7 +56,9 @@ void HeatConduction::scheduleComputeInternalHeatRate(SchedulerP& sched,
   t->requires(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
   t->requires(Task::NewDW, d_lb->pVolumeDeformedLabel,            gan, NGP);
   t->requires(Task::NewDW, d_lb->pInternalHeatRateLabel_preReloc, gan, NGP);
+#ifdef EROSION
   t->requires(Task::NewDW, d_lb->pErosionLabel_preReloc,          gan, NGP);
+#endif
   t->requires(Task::NewDW, d_lb->gTemperatureLabel,               gac, 2*NGP);
   t->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
 
@@ -156,7 +161,9 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
       constParticleVariable<double> pIntHeatRate;
       constParticleVariable<double> pMass;
       constParticleVariable<Vector> psize;
+#ifdef EROSION
       constParticleVariable<double> pErosion;
+#endif
       ParticleVariable<Vector>      pTemperatureGradient;
       constNCVariable<double>       gTemperature;
       constNCVariable<double>       gMass;
@@ -171,7 +178,9 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
       new_dw->get(pIntHeatRate, d_lb->pInternalHeatRateLabel_preReloc, pset);
       old_dw->get(pMass,        d_lb->pMassLabel,                      pset);
       old_dw->get(psize,      d_lb->pSizeLabel,           pset);
+#ifdef EROSION
       new_dw->get(pErosion,     d_lb->pErosionLabel_preReloc, pset);
+#endif
       new_dw->get(gTemperature, d_lb->gTemperatureLabel,   dwi, patch, gac,2*NGN);
       new_dw->get(gMass,        d_lb->gMassLabel,          dwi, patch, gnone, 0);
       new_dw->allocateAndPut(internalHeatRate, d_lb->gInternalHeatRateLabel,
@@ -210,7 +219,9 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
 
         pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
         for (int k = 0; k < d_flag->d_8or27; k++){
+#ifdef EROSION
           d_S[k] *= pErosion[idx];
+#endif
           for (int j = 0; j<3; j++) {
             pTemperatureGradient[idx][j] += 
               gTemperature[ni[k]] * d_S[k][j] * oodx[j];
@@ -227,7 +238,9 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
           // Project the mass weighted particle internal heat rate to
           // the grid
           if(patch->containsNode(ni[k])){
+#ifdef EROSION
              S[k] *= pErosion[idx];
+#endif
              gPIntHeatRate[ni[k]] +=  (pIntHeatRate_massWt*S[k]);
 
         if (cout_heat.active()) {
@@ -347,10 +360,10 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
 
 
 void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
-                                         const PatchSubset* patches,
-                                         const MaterialSubset*,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw)
+                                              const PatchSubset* patches,
+                                              const MaterialSubset*,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);

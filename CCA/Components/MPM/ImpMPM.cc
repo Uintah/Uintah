@@ -15,6 +15,8 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/LinearInterpolator.h>
 #include <Packages/Uintah/CCA/Components/MPM/HeatConduction/HeatConduction.h>
+#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
+#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -46,6 +48,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
 #include <Packages/Uintah/CCA/Components/MPM/SimpleSolver.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Packages/Uintah/CCA/Components/MPM/HeatConduction/HeatConduction.h>
 #include <sgi_stl_warnings_off.h>
 #include <set>
 #include <iostream>
@@ -76,6 +79,7 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   d_integrator = Implicit;
   d_dynamic = true;
   heatConductionModel = 0;
+  thermalContactModel = 0;
 }
 
 bool ImpMPM::restartableTimesteps()
@@ -95,6 +99,7 @@ ImpMPM::~ImpMPM()
 
   delete d_solver;
   delete heatConductionModel;
+  delete thermalContactModel;
 
 }
 
@@ -196,6 +201,9 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
    d_solver->initialize();
 
    heatConductionModel = scinew HeatConduction(sharedState,lb,flags);
+
+   thermalContactModel =
+     ThermalContactFactory::create(prob_spec, sharedState, lb,flags);
 
   // Pull out from Time section
   d_initialDt = 10000.0;
@@ -299,6 +307,7 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
 
   scheduleApplyExternalLoads(             sched, d_perproc_patches,matls);
   scheduleInterpolateParticlesToGrid(     sched, d_perproc_patches,matls);
+  scheduleComputeHeatExchange(            sched, d_perproc_patches, matls);
   scheduleDestroyMatrix(                  sched, d_perproc_patches,matls,false);
   scheduleCreateMatrix(                   sched, d_perproc_patches,matls);
   scheduleApplyBoundaryConditions(        sched, d_perproc_patches,matls);
@@ -308,7 +317,10 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
   scheduleIterate(                   sched,level,d_perproc_patches,matls);
 
   scheduleComputeStressTensor(            sched, d_perproc_patches,matls);
+  scheduleComputeInternalHeatRate(        sched, d_perproc_patches,matls);
+  scheduleSolveHeatEquations(             sched, d_perproc_patches,matls);
   scheduleComputeAcceleration(            sched, d_perproc_patches,matls);
+  scheduleIntegrateTemperatureRate(       sched, d_perproc_patches,matls);
   scheduleInterpolateToParticlesAndUpdate(sched, d_perproc_patches,matls);
   scheduleInterpolateStressToGrid(        sched, d_perproc_patches,matls);
 
@@ -344,6 +356,7 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVolumeOldLabel,        Ghost::AroundNodes,1);
   t->requires(Task::OldDW, lb->pAccelerationLabel,     Ghost::AroundNodes,1);
   t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::AroundNodes,1);
+  t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::AroundNodes,1);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::AroundNodes,1);
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,Ghost::AroundNodes,1);
 
@@ -357,9 +370,35 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gExternalForceLabel);
   t->computes(lb->gInternalForceLabel);
   t->computes(lb->TotalMassLabel);
+  t->computes(lb->gTemperatureLabel);
+  t->computes(lb->gTemperatureNoBCLabel);
+  t->computes(lb->gExternalHeatRateLabel);
 
   sched->addTask(t, patches, matls);
 }
+
+void ImpMPM::scheduleComputeHeatExchange(SchedulerP& sched,
+                                         const PatchSet* patches,
+                                         const MaterialSet* matls)
+{
+  /* computeHeatExchange
+   *   in(G.MASS, G.TEMPERATURE, G.EXTERNAL_HEAT_RATE)
+   *   operation(peform heat exchange which will cause each of
+   *   velocity fields to exchange heat according to 
+   *   the temperature differences)
+   *   out(G.EXTERNAL_HEAT_RATE) */
+
+  if (cout_doing.active())
+    cout_doing << getpid() << " Doing MPM::ThermalContact::computeHeatExchange " << endl;
+
+  Task* t = scinew Task("ThermalContact::computeHeatExchange",
+                        thermalContactModel,
+                        &ThermalContact::computeHeatExchange);
+
+  thermalContactModel->addComputesAndRequires(t, patches, matls);
+  sched->addTask(t, patches, matls);
+}
+
 
 void ImpMPM::scheduleDestroyMatrix(SchedulerP& sched,
                                    const PatchSet* patches,
@@ -637,6 +676,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVolumeOldLabel,        Ghost::None);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
   t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
+  t->requires(Task::OldDW, lb->pSizeLabel,             Ghost::None);
 
   t->computes(lb->pVelocityLabel_preReloc);
   t->computes(lb->pAccelerationLabel_preReloc);
@@ -648,6 +688,8 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pVolumeOldLabel_preReloc);
   t->computes(lb->pTemperatureLabel_preReloc);
   t->computes(lb->pDispLabel_preReloc);
+  t->computes(lb->pSizeLabel_preReloc);
+  
 
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
@@ -979,7 +1021,9 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMPMMatls();
     // Create arrays for the grid data
-    StaticArray<NCVariable<double> > gmass(numMatls),gvolume(numMatls);
+    StaticArray<NCVariable<double> > gmass(numMatls),gvolume(numMatls),
+      gTemperature(numMatls),gExternalHeatRate(numMatls),
+      gTemperatureNoBC(numMatls);
     StaticArray<NCVariable<Vector> > gvel_old(numMatls),gacc(numMatls);
     StaticArray<NCVariable<Vector> > dispNew(numMatls),gvelocity(numMatls);
     StaticArray<NCVariable<Vector> > gextforce(numMatls),gintforce(numMatls);
@@ -1003,7 +1047,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       int matl = mpm_matl->getDWIndex();
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
-      constParticleVariable<double> pmass, pvolume,pvolumeold;
+      constParticleVariable<double> pmass, pvolume,pvolumeold,pTemperature;
       constParticleVariable<Vector> pvelocity, pacceleration,pexternalforce;
 
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch,
@@ -1015,6 +1059,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pvolume,        lb->pVolumeLabel,            pset);
       old_dw->get(pvolumeold,     lb->pVolumeOldLabel,         pset);
       old_dw->get(pvelocity,      lb->pVelocityLabel,          pset);
+      old_dw->get(pTemperature,      lb->pTemperatureLabel,          pset);
       old_dw->get(pacceleration,  lb->pAccelerationLabel,      pset);
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
 
@@ -1022,10 +1067,15 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocateAndPut(gvolume[m],    lb->gVolumeLabel,       matl,patch);
       new_dw->allocateAndPut(gvel_old[m],   lb->gVelocityOldLabel,  matl,patch);
       new_dw->allocateAndPut(gvelocity[m],  lb->gVelocityLabel,     matl,patch);
+      new_dw->allocateAndPut(gTemperature[m],lb->gTemperatureLabel,matl,patch);
+      new_dw->allocateAndPut(gTemperatureNoBC[m],lb->gTemperatureNoBCLabel,matl,patch);
       new_dw->allocateAndPut(dispNew[m],    lb->dispNewLabel,       matl,patch);
       new_dw->allocateAndPut(gacc[m],       lb->gAccelerationLabel, matl,patch);
       new_dw->allocateAndPut(gextforce[m],  lb->gExternalForceLabel,matl,patch);
       new_dw->allocateAndPut(gintforce[m],  lb->gInternalForceLabel,matl,patch);
+      new_dw->allocateAndPut(gExternalHeatRate[m],lb->gExternalHeatRateLabel,
+                             matl,patch);
+
 
       gmass[m].initialize(d_SMALL_NUM_MPM);
       gvolume[m].initialize(0);
@@ -1036,6 +1086,9 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       dispNew[m].initialize(Vector(0,0,0));
       gvelocity[m].initialize(Vector(0,0,0));
       gintforce[m].initialize(Vector(0,0,0));
+      gTemperature[m].initialize(0.0);
+      gTemperatureNoBC[m].initialize(0.0);
+      gExternalHeatRate[m].initialize(0.0);
 
       double totalmass = 0;
       Vector total_mom(0.0,0.0,0.0);
@@ -1061,6 +1114,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             gmass[m][ni[k]]          += pmass[idx]          * S[k];
             gvolume[m][ni[k]]        += pvolumeold[idx]     * S[k];
             gextforce[m][ni[k]]      += pexternalforce[idx] * S[k];
+            gTemperature[m][ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
             gvel_old[m][ni[k]]       += pmom                * S[k];
             gacc[m][ni[k]]           += pmassacc            * S[k];
           }
@@ -1100,6 +1154,8 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gextforce[m][c]=GEXTFORCE[c];
         gvel_old[m][c]=GVEL_OLD[c]/(GMASS[c] + 1.e-200);
         gacc[m][c]=GACC[c]/(GMASS[c] + 1.e-200);
+        gTemperature[m][c] /= gmass[m][c];
+        gTemperatureNoBC[m][c] = gTemperature[m][c];
       }
      }
     }  // End loop over materials
@@ -2063,6 +2119,10 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       new_dw->get(dispNew,      lb->dispNewLabel,      dwindex, patch, gac, 1);
       new_dw->get(gacceleration,lb->gAccelerationLabel,dwindex, patch, gac, 1);
+
+      old_dw->get(psize,               lb->pSizeLabel,                 pset);
+      new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
+      psizeNew.copyData(psize);
      
       NCVariable<double> dTdt_create, massBurnFraction_create;  
       new_dw->allocateTemporary(dTdt_create, patch,Ghost::None,0);
@@ -2362,4 +2422,27 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 double ImpMPM::recomputeTimestep(double current_dt)
 {
   return current_dt*d_delT_decrease_factor;
+}
+
+
+void ImpMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls)
+{  
+  heatConductionModel->scheduleComputeInternalHeatRate(sched,patches,matls);
+}
+
+void ImpMPM::scheduleSolveHeatEquations(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls)
+{
+  heatConductionModel->scheduleSolveHeatEquations(sched,patches,matls);
+}
+
+
+void ImpMPM::scheduleIntegrateTemperatureRate(SchedulerP& sched,
+                                              const PatchSet* patches,
+                                              const MaterialSet* matls)
+{
+  heatConductionModel->scheduleIntegrateTemperatureRate(sched,patches,matls);
 }

@@ -15,8 +15,6 @@
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-//#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
-
 
 
 #include <sgi_stl_warnings_off.h>
@@ -36,6 +34,7 @@ using namespace SCIRun;
  class MPMPetscSolver;
  class SimpleSolver;
  class HeatConduction;
+ class ThermalContact;
 
 /**************************************
 
@@ -71,7 +70,6 @@ public:
   ImpMPM(const ProcessorGroup* myworld);
   virtual ~ImpMPM();
 
-	 
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
@@ -306,6 +304,9 @@ private:
   void scheduleInterpolateParticlesToGrid(     SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
 
+  void scheduleComputeHeatExchange(SchedulerP&, const PatchSet*,
+                                   const MaterialSet*);
+  
   void scheduleRigidBody(                      SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
 
@@ -325,6 +326,15 @@ private:
                                                const MaterialSet*);
 
   void scheduleComputeStressTensor(            SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
+
+  void scheduleComputeInternalHeatRate(        SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
+
+  void scheduleSolveHeatEquations(             SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
+
+  void scheduleIntegrateTemperatureRate(       SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
 
   void scheduleSolveForDuCG(                   SchedulerP&,const PatchSet*,
@@ -357,6 +367,7 @@ private:
   MPMFlags* flags;
 
   HeatConduction* heatConductionModel;
+  ThermalContact* thermalContactModel;
 
   double           d_nextOutputTime;
   double           d_outputInterval;
