@@ -669,13 +669,14 @@ void setBC(CCVariable<double>& var,
   constCCVariable<double> placeHolder;
   
   NG_BC_vars* ng = new NG_BC_vars;  // NG hack
-  ng->setNGBcs = false;;
+  ng->setNGBcs = false;
   
   
   setBC(var, type, placeHolder, placeHolder, patch, sharedState, 
         mat_id, new_dw,lv,ng);
   
-  delete lv, ng;
+  delete lv;
+  delete ng;
 } 
   
 void setBC(CCVariable<double>& press_CC,          
@@ -691,12 +692,13 @@ void setBC(CCVariable<double>& press_CC,
   Lodi_vars_pressBC* lv = new Lodi_vars_pressBC(0);
   lv->setLodiBcs = false;
   NG_BC_vars* ng = new NG_BC_vars;  // NG hack
-  ng->setNGBcs = false;;
+  ng->setNGBcs = false;
   
   setBC(press_CC, rho_micro, sp_vol, surroundingMatl_indx,
         whichVar, kind, p, sharedState, mat_id, new_dw, lv, ng); 
         
-  delete lv,ng;           
+  delete lv;
+  delete ng;           
 }          
 void setBC(CCVariable<Vector>& variable,
           const std::string& type,
@@ -709,11 +711,12 @@ void setBC(CCVariable<Vector>& variable,
   lv->setLodiBcs = false;
   
   NG_BC_vars* ng = new NG_BC_vars;  // NG hack
-  ng->setNGBcs = false;;
+  ng->setNGBcs = false;
    
   setBC( variable, type, p, sharedState, mat_id, new_dw, lv, ng);
   
-  delete lv, ng; 
+  delete lv;
+  delete ng; 
 }
 
 
