@@ -249,7 +249,6 @@ void MPMICE::scheduleInterpolateNCToCC_0(const Patch* patch,
 
      t->computes(new_dw, MIlb->cMassLabel,         idx, patch);
      t->computes(new_dw, MIlb->cVolumeLabel,       idx, patch);
-     //t->computes(new_dw, MIlb->rho_CCLabel,        idx, patch);  EXTRA
      t->computes(new_dw, MIlb->vel_CCLabel,        idx, patch);
      t->computes(new_dw, MIlb->temp_CCLabel,       idx, patch);
      t->computes(new_dw, MIlb->cv_CCLabel,         idx, patch);
@@ -1128,6 +1127,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       new_dw->get(Temp[m],   MIlb->temp_CCLabel,dwindex, patch, Ghost::None,0);
       new_dw->get(cv[m],     MIlb->cv_CCLabel,  dwindex, patch, Ghost::None,0);
       new_dw->get(mat_vol[m],MIlb->cVolumeLabel,dwindex, patch, Ghost::None,0);
+      new_dw->get(mass_CC[m],MIlb->cMassLabel,  dwindex, patch, Ghost::None,0);
     }
     new_dw->allocate(rho_CC[m],    Ilb->rho_CCLabel,       dwindex, patch);
     new_dw->allocate(vol_frac[m],  Ilb->vol_frac_CCLabel,  dwindex, patch);
@@ -1156,7 +1156,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 
       if(ice_matl){                // I C E
-        double gamma = ice_matl->getGamma();
+         double gamma = ice_matl->getGamma();
 
          rho_micro[m][*iter] =  ice_matl->getEOS()->computeRhoMicro(
                                            press_new[*iter],gamma,
@@ -1167,6 +1167,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                            press_eos[m],dp_drho[m], dp_de[m]);
 
          mat_volume[m] = mass_CC[m][*iter] * sp_vol_CC[m][*iter];
+         sp_vol_equil[m][*iter] = 1.0/rho_micro[m][*iter];
+
       } 
           
        if(mpm_matl){                //  M P M
@@ -1430,7 +1432,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     }
   }     // end of cell interator
 
-    fprintf(stderr, "\tmax number of iterations in any cell %i\n",test_max_iter);
+    fprintf(stderr,"\tmax number of iterations in any cell %i\n",test_max_iter);
 
 
 /*`==========TESTING==========*/ 
@@ -1440,15 +1442,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
      for (int m = 0; m < numALLMatls; m++) {
        Material* matl = d_sharedState->getMaterial( m );
-       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
        MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 
-       if(ice_matl){                // I C E
-        mat_mass[m] = mass_CC[m][*iter];
-       } 
+       mat_mass[m] = mass_CC[m][*iter];
           
        if(mpm_matl){                //  M P M
-        mat_mass[m] = rho_micro[m][*iter] * mat_vol[m][*iter];
        }
        rho_CC[m][*iter]   = mat_mass[m]/cell_vol + d_SMALL_NUM;           
      }
