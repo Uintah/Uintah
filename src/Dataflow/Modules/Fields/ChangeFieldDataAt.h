@@ -221,7 +221,7 @@ ChangeFieldDataAtAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
       const int nrows = osize;
 
       int *rr = scinew int[nrows + 1];
-      vector<int> cctmp;
+      vector<unsigned int> cctmp;
       vector<double> dtmp;
 
       typename FSRC::mesh_type::Cell::array_type tmparray;
@@ -268,7 +268,7 @@ ChangeFieldDataAtAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
       const int nrows = osize;
 
       int *rr = scinew int[nrows + 1];
-      vector<int> cctmp;
+      vector<unsigned int> cctmp;
       vector<double> dtmp;
 
       typename FSRC::mesh_type::Face::array_type tmparray;
@@ -315,7 +315,7 @@ ChangeFieldDataAtAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
       const int nrows = osize;
 
       int *rr = scinew int[nrows + 1];
-      vector<int> cctmp;
+      vector<unsigned int> cctmp;
       vector<double> dtmp;
 
       typename FSRC::mesh_type::Edge::array_type tmparray;
