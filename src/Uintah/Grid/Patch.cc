@@ -55,6 +55,16 @@ IntVector Patch::findCell(const Point& pos) const
    return IntVector(ix,iy,iz);
 }
 
+bool Patch::findCell(const Point& pos, IntVector& ci) const
+{
+   Vector cellpos = (pos-d_box.lower())*d_res/(d_box.upper()-d_box.lower());
+   int ix = Floor(cellpos.x());
+   int iy = Floor(cellpos.y());
+   int iz = Floor(cellpos.z());
+   ci = IntVector(ix,iy,iz);
+   return ix>= 0 && iy>=0 && iz>=0 && ix<d_res.x() && iy<d_res.y() && iz<d_res.z();
+}
+
 #if 0
 void Patch::findCell(const Vector& pos, int& ix, int& iy, int& iz) const
 {
@@ -407,6 +417,9 @@ Patch::determineGhostPatches( int numGhostCells )
      
 //
 // $Log$
+// Revision 1.10  2000/06/14 19:58:03  guilkey
+// Added a different version of findCell.
+//
 // Revision 1.9  2000/06/13 21:28:30  jas
 // Added missing TypeUtils.h for fun_forgottherestofname and copy constructor
 // was wrong for CellIterator.
