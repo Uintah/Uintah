@@ -998,8 +998,8 @@ class FusionViewerApp {
         set slice_tab0 ""
         set slice_tab1 ""
 
-        set contours_tab0 ""
-        set contours_tab1 ""
+        set contour_tab0 ""
+        set contour_tab1 ""
 
         set iso_tab0 ""
         set iso_tab1 ""
@@ -1246,7 +1246,7 @@ class FusionViewerApp {
 	global $mods(Isosurface-Slice-Contours)-active-isoval-selection-tab
 	change_iso_tab \
 	    [set $mods(Isosurface-Slice-Contours)-active-isoval-selection-tab] \
-	    $mods(Isosurface-Slice-Contours) contours
+	    $mods(Isosurface-Slice-Contours) contour
 
 	global $mods(Isosurface-Scalar-Slice)-active-isoval-selection-tab
 	change_iso_tab \
@@ -1772,7 +1772,7 @@ class FusionViewerApp {
 
 	build_isosurface_tabs \
 	    $f.contours $case $mods(Isosurface-Slice-Contours) \
-	    "contours" update_contourvals
+	    "contour" update_contourvals
 
 	pack $f.contours -side top -anchor nw -pady 3
     }
@@ -1846,7 +1846,7 @@ class FusionViewerApp {
 
 	set res [expr $range/(1.0e4*$scale)]
 
-	label $slider.isoval.l -text "Isovalue:"
+	label $slider.isoval.l -text "$suffix value:"
 	scale $slider.isoval.s \
 	    -from [set $isomod-isoval-min] \
 	    -to   [set $isomod-isoval-max] \
@@ -1880,7 +1880,7 @@ class FusionViewerApp {
 	global $isomod-isoval-quantity
 
 	iwidgets::spinner $quantity.isoquant \
-	    -labeltext "Number of evenly-spaced isovalues: " \
+	    -labeltext "No. evenly-spaced $suffix values: " \
 	    -width 5 -fixed 5 \
 	    -validate "$this set-quantity %P $isomod-isoval-quantity]" \
 	    -decrement "$this spin-quantity -1 $quantity.isoquant $isomod-isoval-quantity" \
@@ -1902,9 +1902,9 @@ class FusionViewerApp {
 	
 	global $isomod-isoval-list
 
-	label $list.isolist.l -text "List of Isovals:"
+	label $list.isolist.l -text "List of $suffix values:"
 	entry $list.isolist.e -width 40 -text $isomod-isoval-list
-	bind $list.isolist.e <Return> "$isomod-c update_isovals"
+	bind $list.isolist.e <Return> "$this update_isovals"
 	pack $list.isolist.l $list.isolist.e \
 	    -side left -anchor nw -padx 3 -fill both -expand 1
 	pack $list.isolist -side top -anchor nw -padx 3 -pady 3
@@ -2360,7 +2360,8 @@ class FusionViewerApp {
     }
 
 
-     method toggle_isosurfaces { } {
+    method toggle_isosurfaces { } {
+	update_isovals
 	toggle_isocontours 1
 
 	global mods connections
@@ -2427,13 +2428,13 @@ class FusionViewerApp {
 	disableConnectionID $connections(scalar_to_choose_iso) $disable
 	disableConnectionID $connections(choose_to_iso)        $disable
 	disableConnectionID $connections(iso_to_showfield)     $disable
-#       Disconnecting a dynamic port causes a hang
-#	disableConnectionID $connections(showfield_isosurfaces_to_sync)  $disable
+	#       Disconnecting a dynamic port causes a hang
+	#	disableConnectionID $connections(showfield_isosurfaces_to_sync)  $disable
 
-#	bind $iso_slider_tab0.isoval.s <ButtonRelease> $cmd
-#	bind $iso_slider_tab1.isoval.s <ButtonRelease> $cmd
-#	bind $iso_slider_tab0.isoval.val <Return> $cmd
-#	bind $iso_slider_tab1.isoval.val <Return> $cmd
+	#	bind $iso_slider_tab0.isoval.s <ButtonRelease> $cmd
+	#	bind $iso_slider_tab1.isoval.s <ButtonRelease> $cmd
+	#	bind $iso_slider_tab0.isoval.val <Return> $cmd
+	#	bind $iso_slider_tab1.isoval.val <Return> $cmd
 
 	enable_widget $isosurfaces_frame0.show
 	enable_widget $isosurfaces_frame1.show
@@ -4054,17 +4055,17 @@ class FusionViewerApp {
     variable slice_list_tab1
 
     # Scalar Slice Contours
-    variable contours_tab0
-    variable contours_tab1
+    variable contour_tab0
+    variable contour_tab1
 
-    variable contours_slider_tab0
-    variable contours_slider_tab1
+    variable contour_slider_tab0
+    variable contour_slider_tab1
 
-    variable contours_quantity_tab0
-    variable contours_quantity_tab1
+    variable contour_quantity_tab0
+    variable contour_quantity_tab1
 
-    variable contours_list_tab0
-    variable contours_list_tab1
+    variable contour_list_tab0
+    variable contour_list_tab1
 
     # Isosurfaces
     variable isosurfaces_frame0
