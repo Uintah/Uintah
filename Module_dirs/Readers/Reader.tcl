@@ -1,4 +1,6 @@
 
+catch {rename TYPEReader ""}
+
 itcl_class TYPEReader {
     inherit Module
     constructor {config} {
