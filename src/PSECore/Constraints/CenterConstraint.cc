@@ -161,15 +161,15 @@ CenterConstraint::Satisfy( const Index index, const Scheme scheme, const Real,
    case 1:
    case 2:
       ASSERTFAIL("CenterConstraint:  Can only satisfy center");
-      break;
+      //break;
    case 3:
       ASSERT(varCount >= 4);
       ASSERTFAIL("CenterConstraint:  Can only satisfy center");
-      break;
+      //break;
    case 4:
       ASSERT(varCount >= 5);
       ASSERTFAIL("CenterConstraint:  Can only satisfy center");
-      break;
+      //break;
    default:
       cerr << "Unknown variable in Center Constraint!" << endl;
       break;
@@ -182,6 +182,9 @@ CenterConstraint::Satisfy( const Index index, const Scheme scheme, const Real,
 
 //
 // $Log$
+// Revision 1.6  2000/06/15 19:50:56  sparker
+// Fixed warnings
+//
 // Revision 1.5  1999/10/07 02:07:15  sparker
 // use standard iostreams and complex type
 //
