@@ -177,6 +177,9 @@ void PackageDB::loadPackage(const clString& packPath)
     TCL::execute(string);
   }
   
+  postMessage("\nFinished loading packages.\n",false);
+  TCL::eval("update idletasks",result);
+  
   // don't do this.  Instead, create each package menu as it's loaded.
   //  TCL::execute("createCategoryMenu");
 }
@@ -375,6 +378,9 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.27  2000/11/30 22:21:47  moulding
+// added text that lets you know that package loading is done.
+//
 // Revision 1.26  2000/11/30 18:52:37  moulding
 // added cute little package load progress indicator to message window.
 //
