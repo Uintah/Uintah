@@ -285,8 +285,10 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
             -command "$this file_load" -width 11
         button $w.controls.save -text "Save" \
             -command "$this file_save" -width 11
+	button $w.controls.saveppm -text "Save PPM" \
+	    -command "$this-c saveppm" -width 11
 	pack $w.controls.addtriangle $w.controls.addrectangle \
-	    $w.controls.delete $w.controls.undo $w.controls.load $w.controls.save \
+	    $w.controls.saveppm $w.controls.delete $w.controls.undo $w.controls.load $w.controls.save\
 	    -padx 8 -pady 4 -fill x -expand yes -side left
 
 	pack $w.title  -fill x -padx 2 -pady 2
