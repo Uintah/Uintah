@@ -4,7 +4,7 @@
 <Uintah_specification>
 
    <Meta>
-	<title>J & K calculation for a rectangular rod with an elliptic crack under tension</title>
+	<title>SIF calculation for a rectangular rod with an elliptic crack under tension</title>
    </Meta>
 
    <Time>
