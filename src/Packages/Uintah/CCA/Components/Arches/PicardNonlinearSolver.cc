@@ -388,11 +388,6 @@ PicardNonlinearSolver::sched_dummySolve(SchedulerP& sched,
 		  Ghost::None, numGhostCells);
   }
 
-  int nofScalarVars = d_props->getNumMixStatVars();
-  for (int ii = 0; ii < nofScalarVars; ii++) {
-    tsk->requires(Task::NewDW, d_lab->d_scalarVarINLabel,
-		  Ghost::None, numGhostCells);
-  }
 
   //  if (d_reactingScalarSolve) {
   //    tsk->requires(Task::NewDW, d_lab->d_reactscalarINLabel,
@@ -412,10 +407,6 @@ PicardNonlinearSolver::sched_dummySolve(SchedulerP& sched,
   // warning **only works for one scalar
   for (int ii = 0; ii < nofScalars; ii++)
     tsk->computes(d_lab->d_scalarSPLabel);
-
-  // warning **only works for one scalar variance
-  for (int ii = 0; ii < nofScalarVars; ii++)
-    tsk->computes(d_lab->d_scalarVarSPLabel);
 
   //  if (d_reactingScalarSolve)
   //    tsk->computes(d_lab->d_reactscalarSPLabel);
@@ -677,14 +668,6 @@ PicardNonlinearSolver::dummySolve(const ProcessorGroup* ,
 		  Ghost::None, nofGhostCells);
     }
 
-    int nofScalarVars = d_props->getNumMixStatVars();
-    StaticArray< constCCVariable<double> > scalarVar (nofScalarVars);
-    if (nofScalarVars > 0) {
-      for (int ii = 0; ii < nofScalarVars; ii++) {
-	new_dw->get(scalarVar[ii], d_lab->d_scalarVarINLabel, matlIndex, patch, 
-		    Ghost::None, nofGhostCells);
-      }
-    }
 
     //    constCCVariable<double> reactscalar;
     //    if (d_reactingScalarSolve) {
@@ -726,14 +709,6 @@ PicardNonlinearSolver::dummySolve(const ProcessorGroup* ,
       scalar_new[ii].copyData(scalar[ii]); 
     }
 
-    StaticArray<CCVariable<double> > scalarVar_new(nofScalarVars);
-    if (nofScalarVars > 0) {
-      for (int ii = 0; ii < nofScalarVars; ii++) {
-	new_dw->allocateAndPut(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, 
-			       matlIndex, patch);
-	scalarVar_new[ii].copyData(scalarVar[ii]);
-      }
-    }
 
     //    CCVariable<double> new_reactscalar;
     //    if (d_reactingScalarSolve) {

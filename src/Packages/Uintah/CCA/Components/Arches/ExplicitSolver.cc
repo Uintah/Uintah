@@ -418,14 +418,6 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   }
 
-  int nofScalarVars = d_props->getNumMixStatVars();
-  // warning **only works for one scalarVar
-  if (nofScalarVars > 0) {
-    for (int ii = 0; ii < nofScalarVars; ii++) {
-      tsk->requires(Task::OldDW, d_lab->d_scalarVarSPLabel, 
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
-  }
   if (d_reactingScalarSolve) {
     tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -448,11 +440,6 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
     tsk->computes(d_lab->d_scalarINLabel);
   }
 
-  if (nofScalarVars > 0) {
-    for (int ii = 0; ii < nofScalarVars; ii++) {
-      tsk->computes(d_lab->d_scalarVarINLabel);
-    }
-  }
   if (d_reactingScalarSolver)
     tsk->computes(d_lab->d_reactscalarINLabel);
   if (d_enthalpySolve)
@@ -491,11 +478,6 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
 		  Ghost::None, numGhostCells);
   }
 
-  int nofScalarVars = d_props->getNumMixStatVars();
-  for (int ii = 0; ii < nofScalarVars; ii++) {
-    tsk->requires(Task::NewDW, d_lab->d_scalarVarINLabel,
-		  Ghost::None, numGhostCells);
-  }
 
   if (d_reactingScalarSolve)
     tsk->requires(Task::NewDW, d_lab->d_reactscalarINLabel,
@@ -519,10 +501,6 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   for (int ii = 0; ii < nofScalars; ii++)
     tsk->computes(d_lab->d_scalarSPLabel);
 
-  // warning **only works for one scalar variance
-  for (int ii = 0; ii < nofScalarVars; ii++)
-    tsk->computes(d_lab->d_scalarVarSPLabel);
-
   if (d_reactingScalarSolve)
     tsk->computes(d_lab->d_reactscalarSPLabel);
 
@@ -536,6 +514,14 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->computes(d_lab->d_totalflowOUTLabel);
   tsk->computes(d_lab->d_totalflowOUToutbcLabel);
   tsk->computes(d_lab->d_denAccumLabel);
+
+  tsk->requires(Task::OldDW, d_lab->d_maxAbsU_label);
+  tsk->requires(Task::OldDW, d_lab->d_maxAbsV_label);
+  tsk->requires(Task::OldDW, d_lab->d_maxAbsW_label);
+
+  tsk->computes(d_lab->d_maxAbsU_label);
+  tsk->computes(d_lab->d_maxAbsV_label);
+  tsk->computes(d_lab->d_maxAbsW_label);
 
   sched->addTask(tsk, patches, matls);  
   
@@ -1000,15 +986,6 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
-    int nofScalarVars = d_props->getNumMixStatVars();
-    StaticArray< constCCVariable<double> > scalarVar (nofScalarVars);
-    if (nofScalarVars > 0) {
-      for (int ii = 0; ii < nofScalarVars; ii++) {
-	old_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch, 
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
-      }
-    }
-
     constCCVariable<double> enthalpy;
     if (d_enthalpySolve)
       old_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, 
@@ -1061,14 +1038,6 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       scalar_new[ii].copyData(scalar[ii]); // copy old into new
     }
 
-    StaticArray<CCVariable<double> > scalarVar_new(nofScalarVars);
-    if (nofScalarVars > 0) {
-      for (int ii = 0; ii < nofScalarVars; ii++) {
-	new_dw->allocateAndPut(scalarVar_new[ii], d_lab->d_scalarVarINLabel, matlIndex, patch);
-	scalarVar_new[ii].copyData(scalarVar[ii]); // copy old into new
-      }
-    }
-
     constCCVariable<double> reactscalar;
     CCVariable<double> new_reactscalar;
     if (d_reactingScalarSolve) {
@@ -1110,12 +1079,6 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       /* new_dw->put(scalar_new[ii], d_lab->d_scalarINLabel, matlIndex, patch); */;
     }
 
-    if (nofScalarVars > 0) {
-      for (int ii = 0; ii < nofScalarVars; ii++) {
-	// allocateAndPut instead:
-	/* new_dw->put(scalarVar_new[ii], d_lab->d_scalarVarINLabel, matlIndex, patch); */;
-      }
-    }
     if (d_reactingScalarSolve)
       // allocateAndPut instead:
       /* new_dw->put(new_reactscalar, d_lab->d_reactscalarINLabel, matlIndex, patch); */;
@@ -1141,9 +1104,19 @@ void
 ExplicitSolver::dummySolve(const ProcessorGroup* ,
 			   const PatchSubset* patches,
 			   const MaterialSubset*,
-			   DataWarehouse* ,
+			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw)
 {
+  max_vartype mxAbsU;
+  max_vartype mxAbsV;
+  max_vartype mxAbsW;
+  old_dw->get(mxAbsU, d_lab->d_maxAbsU_label);
+  old_dw->get(mxAbsV, d_lab->d_maxAbsV_label);
+  old_dw->get(mxAbsW, d_lab->d_maxAbsW_label);
+  new_dw->put(mxAbsU, d_lab->d_maxAbsU_label);
+  new_dw->put(mxAbsV, d_lab->d_maxAbsV_label);
+  new_dw->put(mxAbsW, d_lab->d_maxAbsW_label);
+
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -1172,15 +1145,6 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     for (int ii = 0; ii < nofScalars; ii++) {
       new_dw->get(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
-
-    int nofScalarVars = d_props->getNumMixStatVars();
-    StaticArray< constCCVariable<double> > scalarVar (nofScalarVars);
-    if (nofScalarVars > 0) {
-      for (int ii = 0; ii < nofScalarVars; ii++) {
-	new_dw->get(scalarVar[ii], d_lab->d_scalarVarINLabel, matlIndex, patch, 
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
-      }
     }
 
     constCCVariable<double> reactscalar;
@@ -1247,15 +1211,6 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
       scalar_new[ii].copyData(scalar[ii]); 
     }
 
-    StaticArray<CCVariable<double> > scalarVar_new(nofScalarVars);
-    if (nofScalarVars > 0) {
-      for (int ii = 0; ii < nofScalarVars; ii++) {
-	new_dw->allocateAndPut(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, 
-			       matlIndex, patch);
-	scalarVar_new[ii].copyData(scalarVar[ii]);
-      }
-    }
-
     CCVariable<double> new_reactscalar;
     if (d_reactingScalarSolve) {
       new_dw->allocateAndPut(new_reactscalar, d_lab->d_reactscalarSPLabel, 
@@ -1300,11 +1255,6 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
       new_dw->put(scalar_new[ii], d_lab->d_scalarSPLabel, matlIndex, patch);
     }
 
-    if (nofScalarVars > 0) {
-      for (int ii = 0; ii < nofScalarVars; ii++) {
-	new_dw->put(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch);
-      }
-    }
 
     if (d_reactingScalarSolve)
       new_dw->put(new_reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch);
