@@ -29,7 +29,7 @@ X11SRCS = GeomX11.cc
 
 OBJS = Arrows.o  BBoxCache.o Color.o  Cone.o  Container.o  Cylinder.o  \
 	Disc.o  \
-	Geom.o  GeomRaytracer.o  Grid.o  Group.o  \
+	Geom.o  GeomRaytracer.o  Grid.o  Group.o  tGrid.o\
 	HeadLight.o  IndexedGroup.o Light.o  Lighting.o  Line.o  Material.o  \
 	Pick.o  PointLight.o  Polyline.o  Pt.o \
 	RenderMode.o  Scene.o  Sphere.o Switch.o  \
@@ -40,7 +40,7 @@ OBJS = Arrows.o  BBoxCache.o Color.o  Cone.o  Container.o  Cylinder.o  \
 	$(OPENGLOBJS) $(X11OBJS)
 SRCS = Arrows.cc BBoxCache.cc Color.cc Cone.cc Container.cc Cylinder.cc \
 	Disc.cc \
-	Geom.cc GeomRaytracer.cc Grid.cc Group.cc \
+	Geom.cc GeomRaytracer.cc Grid.cc Group.cc tGrid.cc\
 	HeadLight.cc IndexedGroup.cc Light.cc Lighting.cc Line.cc Material.cc \
 	Pick.cc PointLight.cc Polyline.cc Pt.cc \
 	RenderMode.cc Scene.cc Sphere.cc Switch.cc \
