@@ -51,6 +51,8 @@ MPMICELabel::MPMICELabel()
                      CCVariable<double>::getTypeDescription()); 
   NC_CCweightLabel     = VarLabel::create("NC_CCweight",
                      NCVariable<double>::getTypeDescription());
+  rho_CCScratchLabel   = VarLabel::create("rho_CCScratch",
+                     CCVariable<double>::getTypeDescription());
 
 } 
 
@@ -74,4 +76,5 @@ MPMICELabel::~MPMICELabel()
   VarLabel::destroy(scratch2Label);
   VarLabel::destroy(scratch3Label);
   VarLabel::destroy(NC_CCweightLabel);
+  VarLabel::destroy(rho_CCScratchLabel);
 }
