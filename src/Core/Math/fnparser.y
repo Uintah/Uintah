@@ -28,7 +28,9 @@
 
 %{
 
-#include <alloca.h>
+#if !defined(_AIX)
+#  include <alloca.h>
+#endif
 #include <iostream>
 #include <string.h>
 #include <strings.h>
