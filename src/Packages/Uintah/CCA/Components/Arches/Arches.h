@@ -43,6 +43,9 @@ WARNING
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <sgi_stl_warnings_off.h>
+#include <string>
+#include <sgi_stl_warnings_on.h>
 
 // Divergence constraint instead of drhodt in pressure equation
 //#define divergenceconstraint
@@ -145,6 +148,10 @@ public:
 	virtual bool need_recompile(double time, double dt,
 			    const GridP& grid);
 
+      virtual void sched_readCCInitialCondition(const LevelP& level,
+				   SchedulerP&);
+      virtual void sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
+				   SchedulerP&);
       // GROUP: Access Functions :
       ///////////////////////////////////////////////////////////////////////
 	// Boolean to see whether or not Enthalpy is solved for
@@ -211,6 +218,17 @@ private:
 				 DataWarehouse* ,
 				 DataWarehouse* new_dw);
 
+      void readCCInitialCondition(const ProcessorGroup*,
+		     const PatchSubset* patches,
+		     const MaterialSubset*,
+		     DataWarehouse* ,
+		     DataWarehouse* new_dw );
+
+      void interpInitialConditionToStaggeredGrid(const ProcessorGroup*,
+		     const PatchSubset* patches,
+		     const MaterialSubset*,
+		     DataWarehouse* ,
+		     DataWarehouse* new_dw );
 private:
 
       double d_deltaT;
@@ -245,6 +263,9 @@ private:
     string d_timeIntegratorType;
 
     bool d_recompile;
+
+    bool d_set_initial_condition;
+    std::string d_init_inputfile;
 
 }; // end class Arches
 

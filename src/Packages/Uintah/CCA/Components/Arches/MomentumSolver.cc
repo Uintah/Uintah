@@ -1475,11 +1475,11 @@ MomentumSolver::sched_averageRKHatVelocities(SchedulerP& sched,
 			  &MomentumSolver::averageRKHatVelocities,
 			  timelabels);
 
-  tsk->requires(Task::OldDW, d_lab->d_uVelRhoHatLabel,
+  tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,
                 Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_vVelRhoHatLabel,
+  tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,
                 Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_wVelRhoHatLabel,
+  tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,
                 Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1530,11 +1530,11 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(cellType, d_lab->d_cellTypeLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    old_dw->get(old_uvel, d_lab->d_uVelRhoHatLabel, 
+    old_dw->get(old_uvel, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    old_dw->get(old_vvel, d_lab->d_vVelRhoHatLabel, 
+    old_dw->get(old_vvel, d_lab->d_vVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    old_dw->get(old_wvel, d_lab->d_wVelRhoHatLabel, 
+    old_dw->get(old_wvel, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     new_dw->get(temp_density, d_lab->d_densityTempLabel, 
@@ -1610,6 +1610,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
       }
     }
 
+  if (d_boundaryCondition->anyArchesPhysicalBC()) {
   int outlet_celltypeval = d_boundaryCondition->outletCellType();
   int pressure_celltypeval = d_boundaryCondition->pressureCellType();
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -1888,6 +1889,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	}
       }
     }
+  }
   }
   }
 }
