@@ -84,14 +84,7 @@ void Mixing3::problemSetup(GridP&, SimulationStateP& in_state,
   m[0] = matl->getDWIndex();
   mymatls = new MaterialSet();
   mymatls->addAll(m);
-  mymatls->addReference();
-
-  // determine the specific heat of that matl.
-  Material* matl = sharedState->getMaterial( m[0] );
-  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-  if (ice_matl){
-    d_cv = ice_matl->getSpecificHeat();
-  }   
+  mymatls->addReference();  
 
   // Parse the Cantera XML file
   string fname;
@@ -385,7 +378,9 @@ void Mixing3::react(const ProcessorGroup*,
       old_dw->get(pressure, mi->pressure_CCLabel, matl, patch, Ghost::None, 0);
       constCCVariable<double> temperature;
       old_dw->get(temperature, mi->temperature_CCLabel, matl, patch, Ghost::None, 0);
-
+      constCCVariable<double>cv;
+      new_dw->get(cv, mi->specific_heatLabel, matl, patch, Ghost::None, 0);
+    
       CCVariable<double> energySource;
       new_dw->getModifiable(energySource,   mi->energy_source_CCLabel,
 			    matl, patch);
@@ -447,7 +442,7 @@ void Mixing3::react(const ProcessorGroup*,
 
 	double dtemp = lookup(numSpecies, idt, itemp, ipress, imf, new_mf);
 	dtemp *= dtscale;
-	double energyx = dtemp*d_cv*mass;
+	double energyx = dtemp * cv[idx] * mass;
 	energySource[idx] += energyx;
 	etotal += energyx;
 	for(int i = 0; i< numSpecies; i++)
