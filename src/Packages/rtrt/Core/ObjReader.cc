@@ -208,143 +208,144 @@ void addObjMaterial(Array1<Material*> &matl,
 
 bool
 rtrt::readObjFile(const string geom_fname, const string matl_fname, 
-		  Transform &t, Group *g, int gridsize) {
+		  Transform &t, Group *g, int gridsize, Material *m) {
    Array1<int> matl_has_tmap;
    Array1<int> matl_has_bmap;
    Array1<Material *> matl;
-   FILE *f=fopen(matl_fname.c_str(),"r");
-   if (!f) {
-     cerr << matl_fname << " -- failed to find/read input materials file\n";
-     return false;
-   }
-
    char buf[4096];
    double scratch[11];
    Array1<string> names;
-   int has_tmap=0;
-   int has_bmap=0;
-   int matl_complete=0;
-   Color Ka, Kd, Ks;
-   double opacity;
-   double Ns;
-   string name;
-   string tmap_name;
-   string bmap_name;
-   double n_in, n_out, R0, extinction_scale;
-   bool is_glass, is_metal, nothing_inside;
-   Color extinction_in, extinction_out;
-   double scale_bump=1;
-   is_glass=0;
-   is_metal=0;
-   R0=0;
-   opacity=1;
-   while(fgets(buf,4096,f)) {
-     if (buf[0] == '#') continue;
-     if (strncmp(&(buf[0]), "newmtl", strlen("newmtl")) == 0) {
-       if (matl_complete) {
-	 addObjMaterial(matl, Kd, Ks, opacity, Ns, name, names,
-			tmap_name, bmap_name, has_tmap, has_bmap,
-			matl_has_tmap, matl_has_bmap,
-			is_glass, is_metal, n_in, n_out, R0, extinction_in, 
-			extinction_out, nothing_inside, extinction_scale,
-			scale_bump);
-	 is_glass=0;
-	 is_metal=0;
-	 has_tmap=0;
-	 has_bmap=0;
-	 matl_complete=0;
-	 scale_bump=1;
-	 R0=0;
-	 opacity=1;
-       }
-       name=string(&buf[7]);
-       fgets(buf,4096,f);
-       Get3d(&buf[5], scratch);
-       Ka=Color(scratch[0], scratch[1], scratch[2]);
-       
-       fgets(buf,4096,f);
-       Get3d(&buf[5], scratch);
-       Kd=Color(scratch[0], scratch[1], scratch[2]);
-       
-       fgets(buf,4096,f);
-       Get3d(&buf[5], scratch);
-       Ks=Color(scratch[0], scratch[1], scratch[2]);
-       
-       fgets(buf,4096,f);
-       if (strncmp(&buf[2], "illum", strlen("illum")) == 0) {
-	 opacity=1;
-       } else if (strncmp(&buf[2], "glass", strlen("glass")) == 0) {
-	 Get11d(&buf[8], scratch);
-	 is_glass=1;
-	 n_in = scratch[0];
-	 n_out = scratch[1];
-	 R0 = scratch[2];
-	 extinction_in=Color(scratch[3], scratch[4], scratch[5]);
-	 extinction_out=Color(scratch[6], scratch[7], scratch[8]);
-	 nothing_inside=scratch[9];
-	 extinction_scale=scratch[10];
-       } else if (strncmp(&buf[2], "metal", strlen("metal")) == 0) {
-	 is_metal=1;
-       } else if (strncmp(&buf[2], "R0", strlen("R0")) == 0) {
-	 R0=atof(&buf[5]);
-	 cerr << "Using R0="<< R0 << "\n";
-       } else if (strncmp(&buf[2], "opacity", strlen("opacity")) == 0) {
-	 Get1d(&buf[10], scratch);
-	 opacity=scratch[0];
-	 if (opacity>1) opacity=1;
-       } else opacity=1;
-       
-       fgets(buf,4096,f);
-       Get1d(&buf[5], scratch);
-       Ns=scratch[0];
-       matl_complete=1;
-     } else if (strncmp(&buf[0], "map_Kd", strlen("map_Kd")) == 0) {
-       char *b = &(buf[7]);
-       int last = strlen(b) - 1;
-       while ((b[last] == '\r' || b[last] == '\n') && last>0) last--;
-       b[last+1]='\0';
-       string fname(b);
-       cerr << "Looking for texture map: >>"<<fname<<"<<\n";
-       FILE *f = fopen(fname.c_str(), "r");
-       if (f) {
-	 has_tmap=1;
-	 tmap_name=fname;
-	 fclose(f);
-       } else cerr << "Error - was unable to read texture map!\n";
-     } else if (strncmp(&buf[0], "map_bump", strlen("map_bump")) == 0) {
-       char *b = &(buf[9]);
-       int last = strlen(b) - 1;
-       while ((b[last] == '\r' || b[last] == '\n') && last>0) last--;
-       b[last+1]='\0';
-       string fname(b);
-       cerr << "Looking for bump map: >>"<<fname<<"<<\n";
-       FILE *f = fopen(fname.c_str(), "r");
-       if (f) {
-	 has_bmap=1;
-	 bmap_name=fname;
-	 fclose(f);
-       } else cerr << "Error - was unable to read bump map!\n";
-     } else if (strncmp(&buf[0], "scale_bump", strlen("scale_bump")) == 0) {
-       Get1d(&buf[11], scratch);
-       scale_bump=scratch[0];
-     } else {
-       cerr << "Ignoring matl line: "<<buf<<"\n";
+   if (!m) {
+     FILE *f=fopen(matl_fname.c_str(),"r");
+     if (!f) {
+       cerr << matl_fname << " -- failed to find/read input materials file\n";
+       return false;
      }
+
+     int has_tmap=0;
+     int has_bmap=0;
+     int matl_complete=0;
+     Color Ka, Kd, Ks;
+     double opacity;
+     double Ns;
+     string name;
+     string tmap_name;
+     string bmap_name;
+     double n_in, n_out, R0, extinction_scale;
+     bool is_glass, is_metal, nothing_inside;
+     Color extinction_in, extinction_out;
+     double scale_bump=1;
+     is_glass=0;
+     is_metal=0;
+     R0=0;
+     opacity=1;
+     while(fgets(buf,4096,f)) {
+       if (buf[0] == '#') continue;
+       if (strncmp(&(buf[0]), "newmtl", strlen("newmtl")) == 0) {
+	 if (matl_complete) {
+	   addObjMaterial(matl, Kd, Ks, opacity, Ns, name, names,
+			  tmap_name, bmap_name, has_tmap, has_bmap,
+			  matl_has_tmap, matl_has_bmap,
+			  is_glass, is_metal, n_in, n_out, R0, extinction_in, 
+			  extinction_out, nothing_inside, extinction_scale,
+			  scale_bump);
+	   is_glass=0;
+	   is_metal=0;
+	   has_tmap=0;
+	   has_bmap=0;
+	   matl_complete=0;
+	   scale_bump=1;
+	   R0=0;
+	   opacity=1;
+	 }
+	 name=string(&buf[7]);
+	 fgets(buf,4096,f);
+	 Get3d(&buf[5], scratch);
+	 Ka=Color(scratch[0], scratch[1], scratch[2]);
+	 
+	 fgets(buf,4096,f);
+	 Get3d(&buf[5], scratch);
+	 Kd=Color(scratch[0], scratch[1], scratch[2]);
+	 
+	 fgets(buf,4096,f);
+	 Get3d(&buf[5], scratch);
+	 Ks=Color(scratch[0], scratch[1], scratch[2]);
+	 
+	 fgets(buf,4096,f);
+	 if (strncmp(&buf[2], "illum", strlen("illum")) == 0) {
+	   opacity=1;
+	 } else if (strncmp(&buf[2], "glass", strlen("glass")) == 0) {
+	   Get11d(&buf[8], scratch);
+	   is_glass=1;
+	   n_in = scratch[0];
+	   n_out = scratch[1];
+	   R0 = scratch[2];
+	   extinction_in=Color(scratch[3], scratch[4], scratch[5]);
+	   extinction_out=Color(scratch[6], scratch[7], scratch[8]);
+	   nothing_inside=scratch[9];
+	   extinction_scale=scratch[10];
+	 } else if (strncmp(&buf[2], "metal", strlen("metal")) == 0) {
+	   is_metal=1;
+	 } else if (strncmp(&buf[2], "R0", strlen("R0")) == 0) {
+	   R0=atof(&buf[5]);
+	   cerr << "Using R0="<< R0 << "\n";
+	 } else if (strncmp(&buf[2], "opacity", strlen("opacity")) == 0) {
+	   Get1d(&buf[10], scratch);
+	   opacity=scratch[0];
+	   if (opacity>1) opacity=1;
+	 } else opacity=1;
+	 
+	 fgets(buf,4096,f);
+	 Get1d(&buf[5], scratch);
+	 Ns=scratch[0];
+	 matl_complete=1;
+       } else if (strncmp(&buf[0], "map_Kd", strlen("map_Kd")) == 0) {
+	 char *b = &(buf[7]);
+	 int last = strlen(b) - 1;
+	 while ((b[last] == '\r' || b[last] == '\n') && last>0) last--;
+	 b[last+1]='\0';
+	 string fname(b);
+	 cerr << "Looking for texture map: >>"<<fname<<"<<\n";
+	 FILE *f = fopen(fname.c_str(), "r");
+	 if (f) {
+	   has_tmap=1;
+	   tmap_name=fname;
+	   fclose(f);
+	 } else cerr << "Error - was unable to read texture map!\n";
+       } else if (strncmp(&buf[0], "map_bump", strlen("map_bump")) == 0) {
+	 char *b = &(buf[9]);
+	 int last = strlen(b) - 1;
+	 while ((b[last] == '\r' || b[last] == '\n') && last>0) last--;
+	 b[last+1]='\0';
+	 string fname(b);
+	 cerr << "Looking for bump map: >>"<<fname<<"<<\n";
+	 FILE *f = fopen(fname.c_str(), "r");
+	 if (f) {
+	   has_bmap=1;
+	   bmap_name=fname;
+	   fclose(f);
+	 } else cerr << "Error - was unable to read bump map!\n";
+       } else if (strncmp(&buf[0], "scale_bump", strlen("scale_bump")) == 0) {
+	 Get1d(&buf[11], scratch);
+	 scale_bump=scratch[0];
+       } else {
+	 cerr << "Ignoring matl line: "<<buf<<"\n";
+       }
+     }
+
+     // add the last material
+     if (matl_complete) {
+       addObjMaterial(matl, Kd, Ks, opacity, Ns, name, names,
+		      tmap_name, bmap_name, has_tmap, has_bmap,
+		      matl_has_tmap, matl_has_bmap,
+		      is_glass, is_metal, n_in, n_out, R0, extinction_in, 
+		      extinction_out, nothing_inside, extinction_scale,
+		      scale_bump);
+     }
+     fclose(f);
    }
 
-   // add the last material
-   if (matl_complete) {
-     addObjMaterial(matl, Kd, Ks, opacity, Ns, name, names,
-		    tmap_name, bmap_name, has_tmap, has_bmap,
-		    matl_has_tmap, matl_has_bmap,
-		    is_glass, is_metal, n_in, n_out, R0, extinction_in, 
-		    extinction_out, nothing_inside, extinction_scale,
-		    scale_bump);
-   }
-
-   fclose(f);
-
-   f=fopen(geom_fname.c_str(),"r");
+   FILE *f=fopen(geom_fname.c_str(),"r");
  
    if (!f) {
      cerr << geom_fname << " Woah - bad file name...\n";
@@ -352,6 +353,7 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
    }
    
    Material *curr_matl;
+   if (m) curr_matl=m;
    Array1<Point> pts;
    Array1<Vector> nml;
    Array1<Point> tex;
@@ -383,6 +385,10 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
        GetFace(&buf[2], pts, nml, tex, g1, curr_matl, t);
        break;
      case 'u': // usemtl
+       if (m) {
+	 cerr << "Ignoring usemtl line -- using default material instead.\n";
+	 break;
+       }
        string matl_str(&buf[7]);
        int i;
        for (i=0; i<names.size(); i++)
