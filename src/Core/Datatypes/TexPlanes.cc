@@ -113,6 +113,7 @@ TexPlanes::draw(Brick& b, Polygon* poly)
 {
   vector<Polygon *> polys;
   polys.push_back( poly );
+  loadColorMap( b );
   loadTexture( b );
   makeTextureMatrix( b );
   enableTexCoords();
