@@ -44,6 +44,7 @@
 #include <Dataflow/Comm/MessageTypes.h>
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/ModuleHelper.h>
+#include <Dataflow/Network/Scheduler.h>
 #include <Core/Geom/GeomObj.h>
 #include <Dataflow/Modules/Render/ViewGeom.h>
 #include <Dataflow/Modules/Render/OpenGL.h>
@@ -144,7 +145,7 @@ Viewer::do_execute()
   {
     if(!stop_rendering_ && mailbox.numItems() == 0)
     {
-      // See if anything needs to be redrawn...
+      // See if anything needs to be redrawn.
       int did_some=1;
       while(did_some)
       {
@@ -191,14 +192,15 @@ Viewer::process_event()
 
   case MessageTypes::GoAwayWarn:
     stop_rendering_ = true;
-    //stop spinning windows...
+    //stop spinning windows.
     for(unsigned i = 0; i < view_window_.size(); i++) {
       view_window_[i]->inertia_mode_ = 0;
     }    
     break;
 
   case MessageTypes::ExecuteModule:
-    // We ignore these messages...
+    // We (mostly) ignore these messages.
+    sched->report_execution_finished(msg);
     break;
 
   case MessageTypes::ViewWindowRedraw:
@@ -223,7 +225,7 @@ Viewer::process_event()
       }
       else
       {
-	// Do animation...
+	// Do animation.
 	r->redraw(rmsg->tbeg, rmsg->tend, rmsg->nframes,
 		  rmsg->framerate);
       }
@@ -367,7 +369,7 @@ Viewer::process_event()
 	      break;
 	    }
 	    if( i == lighting_.lights.size() )
-	      error("Error deleting light, light not in database...(lserial=" +
+	      error("Error deleting light, light not in database.(lserial=" +
 		    to_string(gmsg->lserial));
 	  }
 	}
@@ -391,7 +393,7 @@ Viewer::process_event()
   case MessageTypes::GeometryDelObj:
   case MessageTypes::GeometryDelAll:
     append_port_msg(gmsg);
-    msg=0; // Don't delete it yet...
+    msg=0; // Don't delete it yet.
     break;
 
   case MessageTypes::GeometryFlush:
@@ -407,7 +409,7 @@ Viewer::process_event()
     flushViews();
     if(gmsg->wait)
     {
-      // Synchronized redraw - do it now and signal them...
+      // Synchronized redraw - do it now and signal them.
       for(unsigned int i=0;i<view_window_.size();i++)
 	view_window_[i]->redraw_if_needed();
       gmsg->wait->up();
@@ -578,7 +580,7 @@ Viewer::delObj(GeomViewerPort* port, int serial)
   }
   else
   {
-    error("Error deleting object, object not in database...(serial=" +
+    error("Error deleting object, object not in database.(serial=" +
 	  to_string(serial) + ")" );
   }
 }
@@ -664,7 +666,7 @@ Viewer::tcl_command(GuiArgs& args, void* userdata)
 void
 Viewer::execute()
 {
-  // Never gets called...
+  // Never gets called.
   ASSERTFAIL("Viewer::execute() should not ever be called.");
 }
 
@@ -730,7 +732,7 @@ ViewerMessage::~ViewerMessage()
 void
 Viewer::append_port_msg(GeometryComm* gmsg)
 {
-  // Look up the right port number
+  // Look up the right port number.
   GeomViewerPort *pi;
   if (!(pi = ((GeomViewerPort*)ports_.getObj(gmsg->portno).get_rep())))
   {
@@ -738,8 +740,7 @@ Viewer::append_port_msg(GeometryComm* gmsg)
     return;
   }
   
-  // Queue up the messages until the
-  // flush...
+  // Queue up the messages until the flush.
   if(pi->msg_tail)
   {
     pi->msg_tail->next=gmsg;
@@ -755,7 +756,7 @@ Viewer::append_port_msg(GeometryComm* gmsg)
 void
 Viewer::flushPort(int portid)
 {
-  // Look up the right port number
+  // Look up the right port number.
   GeomViewerPort* pi;
   if(!(pi = ((GeomViewerPort*)ports_.getObj(portid).get_rep())))
   {

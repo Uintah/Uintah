@@ -290,9 +290,11 @@ Scheduler::do_scheduling_real(Module* exclude)
 
 
 void
-Scheduler::report_execution_finished(unsigned int serial)
+Scheduler::report_execution_finished(const MessageBase *msg)
 {
-  mailbox.send(scinew Module_Scheduler_Message(serial));
+  ASSERT(msg->type == MessageTypes::ExecuteModule);
+  Scheduler_Module_Message *sm_msg = (Scheduler_Module_Message *)msg;
+  mailbox.send(scinew Module_Scheduler_Message(sm_msg->serial));
 }
 
 
@@ -305,9 +307,9 @@ Scheduler::report_execution_finished_real(unsigned int serial)
     if (serial >= itr->base && serial < itr->base + itr->size)
     {
       itr->callback_count++;
-      if (itr->callback_count == itr->size-1)
+      if (itr->callback_count == itr->size)
       {
-        //cout << "EXECUTION DONE (except viewer)\n";
+        //cout << "EXECUTION DONE\n";
         serial_set.erase(itr);
         break;
       }

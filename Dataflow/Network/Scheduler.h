@@ -100,7 +100,8 @@ public:
   void do_scheduling();
   void request_multisend(OPort*);
 
-  void report_execution_finished(unsigned int serial);
+  // msg must be of type ModuleExecute.
+  void report_execution_finished(const MessageBase *msg);
 };
 
 
