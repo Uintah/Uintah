@@ -68,7 +68,7 @@ SingleProcessorScheduler::execute(const ProcessorGroup * pc,
    }
    dbg << "Executing " << ntasks << " tasks\n";
 
-   emitEdges(tasks);
+   makeTaskGraphDoc(tasks);
 
    for(int i=0;i<ntasks;i++){
       time_t t = time(NULL);
@@ -347,6 +347,9 @@ SingleProcessorScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.19  2000/09/27 00:10:16  witzel
+// emitEdges changed to makeTaskGraphDoc.
+//
 // Revision 1.18  2000/09/25 20:43:44  sparker
 // Quiet g++ warnings
 //
