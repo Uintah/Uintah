@@ -1159,7 +1159,7 @@ void SimpleCFD::applyViscosity(const ProcessorGroup*,
 void SimpleCFD::projectVelocity(const ProcessorGroup*,
 				const PatchSubset* patches,
 				const MaterialSubset* matls,
-				DataWarehouse* old_dw, DataWarehouse* new_dw)
+				DataWarehouse*, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1246,7 +1246,7 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
 void SimpleCFD::applyProjection(const ProcessorGroup*,
 				const PatchSubset* patches,
 				const MaterialSubset* matls,
-				DataWarehouse* old_dw, DataWarehouse* new_dw)
+				DataWarehouse*, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1450,7 +1450,7 @@ void SimpleCFD::updatebcs(const ProcessorGroup*,
 void SimpleCFD::interpolateVelocities(const ProcessorGroup*,
 				      const PatchSubset* patches,
 				      const MaterialSubset* matls,
-				      DataWarehouse* old_dw,
+				      DataWarehouse*,
 				      DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
