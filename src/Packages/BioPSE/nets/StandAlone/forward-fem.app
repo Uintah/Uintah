@@ -185,7 +185,7 @@ set $m15-faces-on {0}
 set $m15-edge_display_type {Cylinders}
 set $m15-node_scale [expr 0.01 * ${global-scale}]
 set $m15-edge_scale [expr 0.01 * ${global-scale}]
-set $m15-resolution {8}
+set $m15-edge-resolution {8}
 
 set $m16-stepsize [expr 0.004 * ${global-scale}]
 set $m16-tolerance [expr 0.004 * ${global-scale}]
@@ -232,6 +232,8 @@ set mods(ShowField-StreamLines) $m15
 set mods(ShowField-Electrodes) $m13
 
 set mods(GenStandardColorMaps) $m8
+
+set mods(ShowDipole) $m6
 
 global data_mode
 set data_mode "DWI"
@@ -345,7 +347,7 @@ class ForwardFEMApp {
 	set tips(VDetachedMsg) "Click hash marks to\nAttach to Viewer"
 	set tips(VAttachedMsg) "Click hash marks to\nDetach from the Viewer"
 
-	# Global Options Tab
+	# Viewer Options Tab
 
     }
     
@@ -452,45 +454,87 @@ class ForwardFEMApp {
 
     }
 
+    method set_dataset {} {
+	global mods
+	global DATADIR
+	global DATASET
 
-    method init_Pframe { m case } {
+	puts $DATASET
+
+	source $DATADIR/$DATASET/$DATASET.settings
+
+	#Fix up global scale.
+	global global_scale
+	global $mods(ShowDipole)-widgetSizeGui_
+	global $mods(ShowField-Electrodes)-node_scale
+	global $mods(ShowField-StreamLines)-node_scale
+	global $mods(ShowField-StreamLines)-edge_scale
+	global $mods(StreamLines)-stepsize
+	global $mods(StreamLines)-tolerance
+	set $mods(ShowDipole)-widgetSizeGui_ [expr 0.05 * ${global-scale}]
+	set $mods(ShowField-Electrodes)-node_scale [expr 0.03 * ${global-scale}]
+	set $mods(ShowField-StreamLines)-node_scale [expr 0.01 * ${global-scale}]
+	set $mods(ShowField-StreamLines)-edge_scale [expr 0.01 * ${global-scale}]
+	set $mods(StreamLines)-stepsize [expr 0.004 * ${global-scale}]
+	set $mods(StreamLines)-tolerance [expr 0.004 * ${global-scale}]
+
+
+
+	global $mods(FieldReader-conductivities)-filename
+	set $mods(FieldReader-conductivities)-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
+	global $mods(FieldReader-electrodes)-filename
+	set $mods(FieldReader-electrodes)-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
+	global $mods(FieldReader-probe)-filename
+	set $mods(FieldReader-probe)-filename $DATADIR/$DATASET/$DATASET-dipole.pcv.fld
+	$this execute_Data
+    }
+
+
+    method init_data_selection_frame { f } {
         global mods
-        
-	if { [winfo exists $m] } {
-	    ### Processing Steps
-	    #####################
-	    iwidgets::labeledframe $m.p \
-		-labelpos n -labeltext "Data Selection" 
-	    pack $m.p -side left -fill both -anchor n -expand 1
-	    
-	    set process [$m.p childsite]
 
-	    frame $process.fsel
-	    label $process.fsel.l -text "Conductivity File:"
-	    entry $process.fsel.e -textvar $mods(FieldReader-conductivities)-filename
-	    button $process.fsel.b -text Browse -command "$mods(FieldReader-conductivities) ui"
-	    pack $process.fsel.l $process.fsel.e $process.fsel.b
-	    pack $process.fsel
+	frame $f.datadir
+	label $f.datadir.l -text "DATADIR ="
+	entry $f.datadir.e -textvar DATADIR -width 120 -relief flat
+	pack $f.datadir.l $f.datadir.e -side left -anchor nw
+	pack $f.datadir -side top -anchor w -pady 10
 
-	    ### Attach/Detach button
-            frame $m.d 
-	    pack $m.d -side left -anchor e
-            for {set i 0} {$i<32} {incr i} {
-                button $m.d.cut$i -text " | " -borderwidth 0 \
-                    -foreground "gray25" \
-                    -activeforeground "gray25" \
-                    -command "$this switch_P_frames" 
-	        pack $m.d.cut$i -side top -anchor se -pady 0 -padx 0
-                if {$case == 0} {
-		    Tooltip $m.d.cut$i $tips(PDetachedMsg)
-		} else {
-		    Tooltip $m.d.cut$i $tips(PAttachedMsg)
-		}
-            }
+	iwidgets::labeledframe $f.dataset \
+	    -labelpos n -labeltext "DATASET" 
+	pack $f.dataset -side top -anchor w -fill x
 	    
-	}
-	
-        wm protocol .standalone WM_DELETE_WINDOW { NiceQuit }  
+	set dataset [$f.dataset childsite]
+
+	radiobutton $dataset.brain-eg -text "Brain EG" -variable DATASET -value brain-eg -command "$this set_dataset"
+	radiobutton $dataset.cyl3 -text "Cyl3" -variable DATASET -value cyl3 -command "$this set_dataset"
+	radiobutton $dataset.sphere -text "Sphere" -variable DATASET -value sphere -command "$this set_dataset"
+	radiobutton $dataset.utahtorso-lowres -text "Utah Torso Lowres" -variable DATASET -value utahtorso-lowres -command "$this set_dataset"
+	radiobutton $dataset.utahtorso -text "Utah Torso" -variable DATASET -value utahtorso -command "$this set_dataset"
+
+	pack $dataset.brain-eg $dataset.cyl3 $dataset.sphere $dataset.utahtorso-lowres $dataset.utahtorso -anchor w -side top
+
+	frame $f.cond
+	label $f.cond.l -text "Conductivity File:"
+	entry $f.cond.e -textvar $mods(FieldReader-conductivities)-filename -width 100
+	button $f.cond.b -text Browse -command "$mods(FieldReader-conductivities) ui"
+	pack $f.cond.l $f.cond.e $f.cond.b
+	pack $f.cond
+
+
+	frame $f.elec
+	label $f.elec.l -text "Electrode File:"
+	entry $f.elec.e -textvar $mods(FieldReader-electrodes)-filename -width 100
+	button $f.elec.b -text Browse -command "$mods(FieldReader-electrodes) ui"
+	pack $f.elec.l $f.elec.e $f.elec.b
+	pack $f.elec
+
+
+	frame $f.probe
+	label $f.probe.l -text "Probe File:"
+	entry $f.probe.e -textvar $mods(FieldReader-probe)-filename -width 100
+	button $f.probe.b -text Browse -command "$mods(FieldReader-probe) ui"
+	pack $f.probe.l $f.probe.e $f.probe.b
+	pack $f.probe
     }
     
     
@@ -516,8 +560,15 @@ class ForwardFEMApp {
             } else {
 		set vis_frame_tab2 $vis.tnb	    
             }
+
+
+	    set data [$vis.tnb add -label "Data Selection" -command "$this change_vis_frame 0"]
+
+	    init_data_selection_frame $data
 	    
-	    set page [$vis.tnb add -label "Data Vis" -command "$this change_vis_frame 0"]
+
+
+	    set page [$vis.tnb add -label "Vis Options" -command "$this change_vis_frame 1"]
 
 
 	    ### Isosurface
@@ -645,7 +696,7 @@ class ForwardFEMApp {
 
     method create_viewer_tab { vis } {
 	global mods
-	set page [$vis.tnb add -label "Global Options" -command "$this change_vis_frame 1"]
+	set page [$vis.tnb add -label "Viewer Options" -command "$this change_vis_frame 2"]
 	
 	iwidgets::labeledframe $page.viewer_opts \
 	    -labelpos nw -labeltext "Global Render Options"
@@ -812,7 +863,7 @@ class ForwardFEMApp {
 	pack $view_opts.buttons.v2.sethome $view_opts.buttons.v2.gohome \
 	    -side top -padx 2 -pady 2 -anchor ne -fill x
 	
-	$vis.tnb view "Data Vis"
+	$vis.tnb view "Data Selection"
     }
 
 
@@ -1653,12 +1704,15 @@ class ForwardFEMApp {
 
         if {$initialized != 0} {
 	    if {$which == 0} {
+		$vis_frame_tab1 view "Data Selection"
+		$vis_frame_tab2 view "Data Selection"
+	    } elseif {$which == 1} {
 		# Data Vis
-		$vis_frame_tab1 view "Data Vis"
-		$vis_frame_tab2 view "Data Vis"
+		$vis_frame_tab1 view "Vis Options"
+		$vis_frame_tab2 view "Vis Options"
 	    } else {
- 		$vis_frame_tab1 view "Global Options"
- 		$vis_frame_tab2 view "Global Options"
+ 		$vis_frame_tab1 view "Viewer Options"
+ 		$vis_frame_tab2 view "Viewer Options"
 	    }
 	}
     }
