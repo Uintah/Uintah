@@ -33,6 +33,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-def-color-b
 	global $this-node_scale
 	global $this-edge_scale
+	global $this-resolution
 	set $this-node_display_type Spheres
 	set $this-edge_display_type Lines
 	set $this-node_scale 0.03
@@ -43,6 +44,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-nodes-on 1
 	set $this-edges-on 1
 	set $this-faces-on 1
+	set $this-resolution 4
     }
 
     method raiseColor {col color colMsg} {
@@ -153,7 +155,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set e $this-edge_display_type
 	make_labeled_radio $window.options.disp.edge.radio \
 		"Edge Display Type" "$this-c edge_display_type" top \
-		$this-edge_display_type {Lines Cylinders}
+		$this-edge_display_type {Cylinders Lines}
 
 	if {$e == "Lines"} {
 	    $window.options.disp.node.radio.0 select
@@ -207,8 +209,15 @@ itcl_class SCIRun_Visualization_ShowField {
 	addColorSelection $window.def_col $this-def-color \
 		"default_color_change"
 
-	pack $window.options $window.def_col $window.control \
-		-padx 2 -pady 2 -side top
+	frame $window.resolution -relief groove -borderwidth 2
+	scale $window.resolution.scale -label "Cylinder and Sphere Resolution"\
+		-orient horizontal -variable $this-resolution -from 1 -to 15 \
+		-showvalue true -resolution 1
+	pack $window.resolution.scale -side top -fill both -expand 1
+
+	pack $window.options -padx 2 -pady 2 -side top
+	pack $window.resolution -padx 2 -pady 2 -side top -fill x -expand 1
+	pack $window.def_col $window.control -padx 2 -pady 2 -side top
 
 	button $window.control.execute -text Execute -command $n
 	button $window.control.dismiss -text Dismiss -command "destroy $window"
