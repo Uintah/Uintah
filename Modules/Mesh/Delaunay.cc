@@ -85,7 +85,8 @@ void Delaunay::execute()
 
     int nn=mesh->nodes.size();
     BBox bbox;
-    for(int i=0;i<nn;i++)
+    int i;
+    for(i=0;i<nn;i++)
 	bbox.extend(mesh->nodes[i]->p);
 
     double epsilon=.1*bbox.longest_edge();
