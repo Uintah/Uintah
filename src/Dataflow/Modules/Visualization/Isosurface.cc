@@ -249,10 +249,17 @@ Isosurface::initialize()
 void
 Isosurface::new_field( FieldHandle &field )
 {
+
   // reset the GUI
-  double min, max;
-  min = max = 0;
-  field->get_minmax(min, max);  
+  pair<double, double> minmax;
+  if ( !field->get("minmax", minmax) ) {
+    cerr << "field does not have minmax\n";
+    return;
+  }
+
+  double min = minmax.first;
+  double max = minmax.second;
+  
   if(min != prev_min || max != prev_max){
     ostringstream str;
     str << id << " set_minmax " << min << " " << max;
