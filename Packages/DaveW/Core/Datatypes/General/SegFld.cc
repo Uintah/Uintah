@@ -112,7 +112,18 @@ SegFld::SegFld(ScalarFieldRGchar* sf) {
     Point min, max;
     sf->get_bounds(min,max);
     set_bounds(min,max);
+//    bldFromCharOld(sf);
+#if 1
+    thin.resize(55);
+    thin.initialize(0);
+    thin[48]=0;
+    thin[49]=4;
+    thin[50]=1;
+    thin[51]=2;
+    thin[52]=5;
+    thin[53]=3;
     bldFromChar(sf);
+#endif
 }
 
 SegFld::~SegFld()
@@ -221,9 +232,204 @@ void SegFld::annexComponent(int old_comp, int new_comp) {
     compMembers[old_comp]=0;
 }
 
+void buildAssocList(Array1<Array1<int> > &full, int idx, Array1<int> &equiv) {
+    int i,j;
+    for (i=0; i<full[idx].size(); i++) {
+	int nidx=full[idx][i];
+	for (j=0; j<equiv.size(); j++)
+	    if (equiv[j]==nidx) break;
+	if (j == equiv.size()) { 
+	    equiv.add(nidx);
+	    buildAssocList(full, nidx, equiv);
+	}
+    }
+}
+	
+/* returns the lowest equivalency of the label i
+ * that is, the smallest label that is equivalent to this label */
+int Value (int i, Array1<int>& WorkingLabels) {
+  if (i == WorkingLabels[i])
+    return i;
+  else 
+    return (Value (WorkingLabels[i], WorkingLabels));
+}
+
+
+/* sets label i and all labels it knows are equivalent to it to a NewValue */
+void SetAll (int i, int NewValue, Array1<int>& WorkingLabels) { 
+  if (i == WorkingLabels[i]) {
+    WorkingLabels[i] = NewValue;
+  }
+  else {
+    SetAll (WorkingLabels[i], NewValue, WorkingLabels);
+    WorkingLabels[i] = NewValue;
+  }
+}
+
+void SetEquiv(int larger, int smaller, Array1<int>& WorkingLabels) {
+  int temp;
+
+  if (larger == smaller)
+    return;
+
+  /* make sure larger number really is larger */
+  if (larger < smaller) {
+    temp = larger;
+    larger = smaller;
+    smaller = temp;
+  }
+
+  if (smaller != WorkingLabels[smaller]) {
+    /* case 1:  when smaller number has an equivalency */
+    if (larger == WorkingLabels[larger]) 
+      WorkingLabels[larger] = Value (smaller, WorkingLabels);
+
+    /* case 2: when both numbers already have an equivalency */
+    else {
+      if (Value (smaller, WorkingLabels) < Value (larger, WorkingLabels))
+        SetAll (larger, Value(smaller, WorkingLabels), WorkingLabels);
+      else if (Value (smaller, WorkingLabels) > Value (larger, WorkingLabels))
+        SetAll (smaller, Value(larger, WorkingLabels), WorkingLabels);
+      /* avoid doing anything if smaller and larger are already equivalent */
+    }
+  }
+
+  /* case 3: when larger number already has an equivalency */
+  else if (larger != WorkingLabels[larger]) {
+    if (Value(larger, WorkingLabels) < smaller)
+      WorkingLabels[smaller] = Value(larger, WorkingLabels);
+    else if (Value(larger, WorkingLabels) > smaller)
+      SetAll (larger, smaller, WorkingLabels);
+    /* avoid doing anything if smaller and larger are already equivalent */
+  }
+
+  /* case 4: when neither has an equivalency yet */
+  else {
+    WorkingLabels [larger] = smaller;
+  }
+}
+
+/* remove duplicate equivalences     */
+void RemoveDup (int NumLabels, Array1<int>& WorkingLabels) {
+  int changed = 1;
+  int smallest;
+  int i;
+
+  while (changed) {
+    changed = 0;
+    for (i = NumLabels-1; i >= 0; i--) 
+      if (i != WorkingLabels[i]) {
+        smallest = Value(i, WorkingLabels);
+        if (WorkingLabels[i] != smallest) {
+          changed = 1;
+          SetAll (i, smallest, WorkingLabels);
+        }
+      }
+  }
+}
+
 void SegFld::bldFromChar(ScalarFieldRGchar* ch) {
+    int i,j,k;
+
+    cerr << "New bldFromChar...\n";
+    Array1<char> WorkingMatls;	// materials of components
+    Array1<int> WorkingLabels;	// labels of components
+    Array3<int> id(nx,ny,nz);	// component index for each voxel
+    id.initialize(-1);
+
+    // traverse all of the voxels
+    // for each voxel, if my material is the same as a neighbor, store their
+    // component index as "newid".  if we're the same as multiple neighbors
+    // with different component indices, add the bigger index to the "same"
+    // list of the small index.
+    // if we're not the same as any of our neighbors, we're a new component.
+    for (i=0; i<nx; i++)
+	for (j=0; j<ny; j++)
+	    for (k=0; k<nz; k++) {
+		char currMatl=ch->grid(i,j,k);
+		int newid=-1;
+		Array1<int> equiv;
+		if (i && (ch->grid(i-1,j,k)==currMatl)) {
+		    newid=id(i,j,k)=id(i-1,j,k);
+		    equiv.add(newid);
+		}
+		if (j && (ch->grid(i,j-1,k)==currMatl)) {
+		    newid=id(i,j,k)=id(i,j-1,k);
+		    int xx;
+		    for (xx=0; xx<equiv.size(); xx++) 
+			if (equiv[xx]==newid) break;
+		    if (xx == equiv.size()) equiv.add(newid);
+		}
+		if (k && (ch->grid(i,j,k-1)==currMatl)) {
+		    newid=id(i,j,k)=id(i,j,k-1);
+		    int xx;
+		    for (xx=0; xx<equiv.size(); xx++) 
+			if (equiv[xx]==newid) break;
+		    if (xx == equiv.size()) equiv.add(newid);
+		}
+		if (newid == -1) {
+		    id(i,j,k)=WorkingLabels.size();
+		    WorkingLabels.add(WorkingLabels.size());
+		    WorkingMatls.add(currMatl);
+		} else {
+		    int xx;
+		    for (xx=0; xx<equiv.size()-1; xx++)
+			SetEquiv(equiv[xx], equiv[xx+1], WorkingLabels);
+		}
+	    }
+    cerr << "Initial pass found "<<WorkingLabels.size()<<" components.  Removing equivalences...\n";
+
+    int NumLabels=WorkingLabels.size();
+
+    // RemoveDup() code
+    int changed = 1;
+    int smallest;
+    while (changed) {
+	changed = 0;
+	for (i = NumLabels-1; i >= 0; i--) 
+	    if (i != WorkingLabels[i]) {
+		smallest = Value(i, WorkingLabels);
+		if (WorkingLabels[i] != smallest) {
+		    changed = 1;
+		    SetAll (i, smallest, WorkingLabels);
+		}
+	    }
+    }
+
+    Array1<int> FinalLabels(NumLabels);
+
+    // CreateNewLabels() code
+    int counter = 0;
+    for (i = 0; i < NumLabels; i++) {
+	if (i == WorkingLabels[i])
+	    FinalLabels[i] = counter++;
+	else 
+	    FinalLabels[i] = FinalLabels[WorkingLabels[i]];
+    }
+    
+    for (i=0; i<compMembers.size(); i++) delete compMembers[i];
+    compMembers.resize(counter);
+    for (i=0; i<compMembers.size(); i++) compMembers[i]=new Array1<tripleInt>;
+    for (i=0; i<nx; i++)
+	for (j=0; j<ny; j++)
+	    for (k=0; k<nz; k++) {
+		id(i,j,k)=grid(i,j,k)=FinalLabels[id(i,j,k)];
+		compMembers[id(i,j,k)]->add(tripleInt(i,j,k));
+	    }
+
+    comps.resize(0);
+    for (i = 0; i < NumLabels; i++)
+	if (i == WorkingLabels[i])
+	    comps.add(get_index(WorkingMatls[i]-'0', 
+				compMembers[FinalLabels[i]]->size()));
+
+    printComponents();
+}
+
+void SegFld::bldFromCharOld(ScalarFieldRGchar* ch) {
     int i,j,k,ii,jj,kk;
     comps.resize(0);
+    cerr << "Old bldFromChar...\n";
     cerr << "Number of independent components: ";
     for (i=0; i<compMembers.size(); i++) delete compMembers[i];
     compMembers.resize(0);
@@ -293,6 +499,8 @@ void SegFld::bldFromChar(ScalarFieldRGchar* ch) {
 	    }
 	}
     }
+    cerr << "\n";
+    printComponents();
     cerr << "DONE!\n";
 }
 
@@ -422,6 +630,9 @@ void Pio(Piostream& stream, tripleInt& t) {
 
 //
 // $Log$
+// Revision 1.5  2000/03/04 00:16:32  dmw
+// update some DaveW stuff
+//
 // Revision 1.4  1999/10/07 02:06:21  sparker
 // use standard iostreams and complex type
 //
