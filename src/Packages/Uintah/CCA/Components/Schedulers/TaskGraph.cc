@@ -24,6 +24,27 @@
 #include <sstream>
 #include <unistd.h>
 
+#ifdef __digital__
+// DEC doesn't have this...
+namespace Uintah {
+  template <class Iter, class Compare>
+  bool is_sorted(Iter begin, Iter end, Compare compare)
+  {
+    if(begin == end)
+      return true;
+    Iter cur = begin;
+    Iter next = cur; next++;
+    while(next != end){
+      if (compare(*next, *cur))
+	return false;
+      cur = next;
+      next++;
+    }
+    return true;
+  }
+}
+#endif
+
 using namespace Uintah;
 
 using namespace SCIRun;

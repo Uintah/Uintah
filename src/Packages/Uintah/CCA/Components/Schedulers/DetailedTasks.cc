@@ -16,34 +16,22 @@ using namespace std;
 
 #ifdef __digital__
 // DEC doesn't have this...
-template <class Iter>
-bool is_sorted(Iter begin, Iter end)
-{
-  if(begin == end)
-    return true;
-  Iter cur = begin;
-  while(cur != end){
+namespace Uintah {
+  template <class Iter, class Compare>
+  bool is_sorted(Iter begin, Iter end, Compare compare)
+  {
+    if(begin == end)
+      return true;
+    Iter cur = begin;
     Iter next = cur; next++;
-    if (*next < *cur)
-      return false;
-    cur = next;
-  }
-  return true;
-}
-
-template <class Iter, class StrictWeakOrdering>
-bool is_sorted(Iter begin, Iter end, StrictWeakOrdering comp)
-{
-  if(begin == end)
+    while(next != end){
+      if (compare(*next, *cur))
+	return false;
+      cur = next;
+      next++;
+    }
     return true;
-  Iter cur = begin;
-  while(cur != end){
-    Iter next = cur; next++;
-    if (comp(*next, *cur))
-      return false;
-    cur = next;
   }
-  return true;
 }
 #endif
 
