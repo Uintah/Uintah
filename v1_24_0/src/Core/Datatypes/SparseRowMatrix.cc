@@ -268,13 +268,6 @@ SparseRowMatrix::get(int i, int j) const
   {
     if (h<l)
     {
-#if 0
-      cerr << "column " << j << " not found in row "<<i << ": ";
-      for (int idx=row_idx;idx<next_idx;idx++)
-	cerr << columns[idx] << " ";
-      cerr << endl;
-      ASSERTFAIL("Column not found");
-#endif
       static double zero;
       zero=0;
       return zero;
@@ -299,14 +292,60 @@ SparseRowMatrix::get(int i, int j) const
 void
 SparseRowMatrix::put(int i, int j, double d)
 {
-  get(i,j)=d;
+  int row_idx=rows[i];
+  int next_idx=rows[i+1];
+  int l=row_idx;
+  int h=next_idx-1;
+  for (;;)
+  {
+    if (h<l)
+    {
+      ASSERTFAIL("SparseRowMatrix::put into invalid(dataless) location.");
+    }
+    int m=(l+h)/2;
+    if (j<columns[m])
+    {
+      h=m-1;
+    }
+    else if (j>columns[m])
+    {
+      l=m+1;
+    }
+    else
+    {
+      a[m] = d;
+    }
+  }
 }
 
 
 void
 SparseRowMatrix::add(int i, int j, double d)
 {
-  get(i,j)+=d;
+  int row_idx=rows[i];
+  int next_idx=rows[i+1];
+  int l=row_idx;
+  int h=next_idx-1;
+  for (;;)
+  {
+    if (h<l)
+    {
+      ASSERTFAIL("SparseRowMatrix::add into invalid(dataless) location.");
+    }
+    int m=(l+h)/2;
+    if (j<columns[m])
+    {
+      h=m-1;
+    }
+    else if (j>columns[m])
+    {
+      l=m+1;
+    }
+    else
+    {
+      a[m] += d;
+    }
+  }
 }
 
 
