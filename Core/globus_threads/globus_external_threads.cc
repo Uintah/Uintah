@@ -214,7 +214,7 @@ static int globus_l_thread_deactivate(void)
 /*
  * globus_thread_exit()
  */
-extern "C" void globus_thread_exit( void *status )
+extern "C" void globus_thread_exit( void */*status*/ )
 {
     /* Call the thread specific data destructors */
     for (int i = 0; i < MAXKEYS; i++)

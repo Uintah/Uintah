@@ -130,8 +130,8 @@ PointWidget::geom_pick(GeomPick *p, ViewWindow *vw, int data, const BState &bs)
  *      BaseWidget execute method (which calls the redraw method).
  */
 void
-PointWidget::geom_moved( GeomPick*, int /* axis */, double dist,
-			 const Vector& delta, int pick, const BState&,
+PointWidget::geom_moved( GeomPick*, int /* axis */, double /*dist*/,
+			 const Vector& /*delta*/, int pick, const BState&,
 			 const Vector &pick_offset)
 {
   switch(pick)

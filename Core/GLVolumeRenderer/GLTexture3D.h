@@ -262,7 +262,7 @@ GLTexture3D::replace_bon_tree_data(Point min, Point max,
 				   int xoff, int yoff, int zoff,
 				   int xsize, int ysize, int zsize,
 				   int level, T *tex, Octree<Brick*>* parent,
-				   Semaphore* thread_sema, ThreadGroup *tg)
+				   Semaphore* thread_sema, ThreadGroup *)
 {
   Octree<Brick *> *node = parent;
 

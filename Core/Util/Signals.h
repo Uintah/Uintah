@@ -35,6 +35,10 @@
 #include <vector>
 #include <Core/Thread/Mutex.h>
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1681
+#endif
+
 namespace SCIRun {
 
 using std::cerr;
@@ -625,6 +629,10 @@ bool disconnect( Signal4<Arg1, Arg2, Arg3, Arg4> &s,
 }
 
 } // namespace SCIRun
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1681
+#endif
 
 #endif // Signals_h
 

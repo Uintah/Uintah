@@ -65,7 +65,7 @@ BoxObj::~BoxObj()
 }
 
 void
-BoxObj::recompute( bool pick)
+BoxObj::recompute( bool)
 {
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -90,7 +90,7 @@ BoxObj::select( double x, double y, int button )
 }
   
 void
-BoxObj::move( double x, double y, int button)
+BoxObj::move( double x, double y, int)
 {
   GLdouble px, py, pz;
 
@@ -115,7 +115,7 @@ BoxObj::move( double x, double y, int button)
 }
   
 void
-BoxObj::release( double x, double y, int )
+BoxObj::release( double , double , int )
 {
 }
   

@@ -60,7 +60,7 @@ namespace SCIRun {
     virtual ~SpanSpaceBase() {}
 
     static  PersistentTypeID type_id;
-    void    io(Piostream &stream) {}
+    void    io(Piostream &) {}
   };
   
   template <class T, class Index>

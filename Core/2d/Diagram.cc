@@ -123,7 +123,7 @@ Diagram::get_bounds( BBox2d &bb )
 
 
 void
-Diagram::tcl_command(GuiArgs& args, void* userdata)
+Diagram::tcl_command(GuiArgs& args, void*)
 {
   if ( args[1] == "select" ) {
     int plot = atoi( args[2].c_str() );
@@ -249,7 +249,7 @@ Diagram::add_zoom()
 }
 
 void 
-Diagram::zoom_in( int x, int y, int )
+Diagram::zoom_in( int , int , int )
 {
 //   zoom_stack_.push( x );
 //   zoom_stack_.push( y );
@@ -258,7 +258,7 @@ Diagram::zoom_in( int x, int y, int )
 }
 
 void 
-Diagram::zoom_out( int x, int y, int )
+Diagram::zoom_out( int , int , int )
 {
 //   int x = zoom_stack_.pop();
 //   int y = zoom_stack_.pop();
@@ -369,18 +369,18 @@ Diagram::button_release( int x, int y, int button )
 
 
 void
-Diagram::pan_start( int x, int y, int button )
+Diagram::pan_start( int , int , int )
 {
   ogl_->set_cursor ("fleur");
 }
 
 void
-Diagram::pan_move( int x, int y, int button )
+Diagram::pan_move( int , int , int )
 {
 }
 
 void
-Diagram::pan_end( int x, int y, int button )
+Diagram::pan_end( int , int , int )
 {
   ogl_->set_cursor ("left_ptr");
 

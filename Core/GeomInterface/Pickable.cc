@@ -38,18 +38,18 @@ WidgetPickable::~WidgetPickable()
 }
 
 void
-WidgetPickable::geom_pick(GeomPick*, ViewWindow*, int, const BState& bs)
+WidgetPickable::geom_pick(GeomPick*, ViewWindow*, int, const BState&)
 {
 }
  
 void
-WidgetPickable::geom_release(GeomPick*, int, const BState& bs)
+WidgetPickable::geom_release(GeomPick*, int, const BState&)
 {
 }
 
 void
 WidgetPickable::geom_moved(GeomPick*, int, double, const Vector&,
-			   int, const BState&, const Vector &pick_offset)
+			   int, const BState&, const Vector &)
 {
 }
 

@@ -640,7 +640,7 @@ BaseWidget::geom_release( GeomPick*, int /* cbdata */, const BState& )
 
 void
 BaseWidget::geom_moved(GeomPick*, int, double, const Vector&,
-		       int, const BState&, const Vector &pick_offset )
+		       int, const BState&, const Vector &/*pick_offset*/ )
 {
 }
 

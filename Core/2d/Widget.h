@@ -43,9 +43,9 @@ public:
   Widget( const string &name="" );
   virtual ~Widget();
 
-  virtual void select( double x, double y, int  ) {}
-  virtual void move( double x, double y, int  ) {}
-  virtual void release( double x, double y, int ) {}
+  virtual void select( double , double , int  ) {}
+  virtual void move( double , double , int  ) {}
+  virtual void release( double , double , int ) {}
 
   virtual void get_bounds(BBox2d&) {}
   
