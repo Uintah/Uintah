@@ -92,7 +92,7 @@ set auto_index(::PowerAppBase) "source [netedit getenv SCIRUN_SRCDIR]/Dataflow/G
 
 class BioImageApp {
     inherit ::PowerAppBase
-        
+    
     constructor {} {
 	global mods
 	toplevel .standalone
@@ -389,90 +389,55 @@ class BioImageApp {
 	    change_indicate_val 1
 	} elseif {[string first "ViewSlices" $which] != -1 && $state == "Completed"} {
             if {$2D_fixed == 0} {
-                # simulate a click in each window and set them to the correct views
 		global mods
+		set VS $mods(ViewSlices)
+		
+		setGlobal $VS-sagittal-viewport0-axis 0
+		setGlobal $VS-coronal-viewport0-axis 1
+		setGlobal $VS-axial-viewport0-axis 2
+
+		$this update_window_level_scales
 
 		# force initial draw in correct modes
-		global $mods(ViewSlices)-axial-viewport0-axis
-		global $mods(ViewSlices)-sagittal-viewport0-axis
-		global $mods(ViewSlices)-coronal-viewport0-axis
- 		global $mods(ViewSlices)-axial-viewport0-clut_ww
- 		global $mods(ViewSlices)-sagittal-viewport0-clut_ww
- 		global $mods(ViewSlices)-coronal-viewport0-clut_ww
- 		global $mods(ViewSlices)-axial-viewport0-clut_wl
- 		global $mods(ViewSlices)-sagittal-viewport0-clut_wl
- 		global $mods(ViewSlices)-coronal-viewport0-clut_wl
+		upvar \#0 $VS-min min $VS-max max
+                set ww [expr abs($max-$min)]
+                set wl [expr ($min+$max)/2.0]
 
-                global $mods(ViewSlices)-min $mods(ViewSlices)-max
-		set val_min [set $mods(ViewSlices)-min]
-		set val_max [set $mods(ViewSlices)-max]
-
-                set ww [expr int([expr abs([expr $val_max-$val_min])])]
-                set wl [expr [expr int($ww/2)]]
-
-		setGlobal $mods(ViewSlices)-sagittal-viewport0-axis 0
-		setGlobal $mods(ViewSlices)-coronal-viewport0-axis 1
-		setGlobal $mods(ViewSlices)-axial-viewport0-axis 2
-
-
-		set $mods(ViewSlices)-axial-viewport0-clut_ww $ww
-		set $mods(ViewSlices)-sagittal-viewport0-clut_ww $ww
-		set $mods(ViewSlices)-coronal-viewport0-clut_ww $ww
-
-		set $mods(ViewSlices)-axial-viewport0-clut_wl $wl
-		set $mods(ViewSlices)-sagittal-viewport0-clut_wl $wl
-		set $mods(ViewSlices)-coronal-viewport0-clut_wl $wl
-
-		$mods(ViewSlices)-c setclut
-
-		global slice_frame
-                $mods(ViewSlices)-c rebind $slice_frame(axial).bd.axial
-                $mods(ViewSlices)-c rebind $slice_frame(sagittal).bd.sagittal
-                $mods(ViewSlices)-c rebind $slice_frame(coronal).bd.coronal
-
-
-		# rebind 2D windows to call the ViewSlices callback and then BioImage's so we
-		# can catch the release
-	        
-		bind  $slice_frame(axial).bd.axial <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y;" ;#$this update_ViewSlices_button_release %b"
-		bind   $slice_frame(sagittal).bd.sagittal <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y" ;# $this update_ViewSlices_button_release %b"
-		bind  $slice_frame(coronal).bd.coronal <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y";# $this update_ViewSlices_button_release %b"
+		setGlobal $VS-clut_ww $ww
+		setGlobal $VS-clut_wl $wl
+		setGlobal vol_width $ww
+		setGlobal vol_level $wl
+                setGlobal $VS-background_threshold $min
+		
+		global $VS-clut_ww $VS-clut_wl
+		set command "$this change_window_width_and_level 0"
+		trace variable $VS-clut_ww w $command
+		trace variable $VS-clut_wl w $command
 
 		global vol_width vol_level
-		set vol_width $ww
-		set vol_level $wl
+		set command "$this change_volume_window_width_and_level 0"
+		trace variable vol_width w $command
+		trace variable vol_level w $command
 
-  	        set min [expr $wl-$ww/2]
-	        set max [expr $wl+$ww/2]
+		global $VS-min $VS-max
+		set command "$this update_window_level_scales"
+		trace variable $VS-min w $command
+		trace variable $VS-max w $command
 
- 		set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
- 		set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
- 		set Rescale [lindex [lindex $filters(0) $modules] 36] 
- 		global [set NrrdSetupTexture]-maxf [set NrrdSetupTexture]-minf
- 		global [set UnuJhisto]-maxs [set UnuJhisto]-mins
-		global [set Rescale]-min [set Rescale]-max
+		global $VS-background_threshold
+		set command "$VS-c background_thresh"
+		trace variable $VS-background_threshold w $command
+				
+		global slice_frame
+                $VS-c rebind $slice_frame(axial).bd.axial
+                $VS-c rebind $slice_frame(sagittal).bd.sagittal
+                $VS-c rebind $slice_frame(coronal).bd.coronal
 
- 		set [set NrrdSetupTexture]-maxf $max
- 		set [set NrrdSetupTexture]-minf $min
- 		set [set UnuJhisto]-maxs "$max nan"
- 		set [set UnuJhisto]-mins "$min nan"
-		set [set Rescale]-min $min
-		set [set Rescale]-max $max
-
-		upvar \#0 $mods(ViewSlices)-min min_val 
-                setGlobal $mods(ViewSlices)-background_threshold $min_val
+		$VS-c setclut
 
                 set 2D_fixed 1
-
-		# re-execute ViewSlices so that all the planes show up (hack)
-#                #$mods(ViewSlices)-c needexecute
 	    } 
-
-	    global $mods(ViewSlices)-min $mods(ViewSlices)-max
-
-	    $this update_planes_threshold_slider_min_max [set $mods(ViewSlices)-min] [set $mods(ViewSlices)-max]
 	    change_indicate_val 2
-
 	} elseif {[string first "Teem_NrrdData_NrrdInfo_1" $which] != -1 && $state == "Completed"} {
 	    set axis_num 0
 	    global slice_frame
@@ -481,9 +446,10 @@ class BioImageApp {
 		upvar \#0 $which-size$axis_num nrrd_size
 		if {![info exists nrrd_size]} return
 		set size [expr $nrrd_size - 1]
+		set sliderf $slice_frame($axis).modes.slider 
 
-		$slice_frame($axis).modes.slider.slice.s configure -from 0 -to $size
-		$slice_frame($axis).modes.slider.slab.s configure -from 0 -to $size
+		$sliderf.slice.s configure -from 0 -to $size
+		$sliderf.slab.s configure -from 0 -to $size
 
 		set $axis-size $size
 
@@ -1029,54 +995,6 @@ class BioImageApp {
 	    -cursor based_arrow_up
     }
 
-    method update_ViewSlices_button_release {b} {
- 	if {$b == 1} {
- 	    # Window/level just changed
- 	    global link_winlevel
- 	    if {$link_winlevel == 1} {
-		global mods vol_width vol_level
-		global $mods(ViewSlices)-axial-viewport0-clut_ww 
-		global $mods(ViewSlices)-axial-viewport0-clut_wl
-		
-		set ww [set $mods(ViewSlices)-axial-viewport0-clut_ww]
-		set wl [set $mods(ViewSlices)-axial-viewport0-clut_wl]
-		set min [expr $wl-$ww/2]
-		set max [expr $wl+$ww/2]
-
-		set vol_width $ww
-		set vol_level $wl
-		
- 		# Update the NrrdSetupTexture min/max and the 
- 		# UnuJhisto axis 0 mins/maxs
- 		set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
- 		set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
- 		set Rescale [lindex [lindex $filters(0) $modules] 36] 
-		
- 		global [set NrrdSetupTexture]-maxf [set NrrdSetupTexture]-minf
- 		global [set UnuJhisto]-maxs [set UnuJhisto]-mins
-		global [set Rescale]-min [set Rescale]-max
-		
- 		set [set NrrdSetupTexture]-maxf $max
- 		set [set NrrdSetupTexture]-minf $min
-		
- 		set [set UnuJhisto]-maxs "$max nan"
- 		set [set UnuJhisto]-mins "$min nan"
-		set [set Rescale]-min $min
-		set [set Rescale]-max $max
-
-		# execute modules if volume rendering enabled
-		global show_vol_ren
-		if {$show_vol_ren == 1} {
-		    [set Rescale]-c needexecute
-		    [set NrrdSetupTexture]-c needexecute
-		}
- 	    }
-
- 	    # update background threshold slider min/max 
-	    $mods(ViewSlices)-c background_thresh
- 	}
-    }
-
     #############################
     ### init_Pframe
     #############################
@@ -1203,7 +1121,7 @@ class BioImageApp {
     # once, so when case equals 0, create modules and ui, for case 1
     # just create ui.
     method add_Load {history case} {
-
+	
 	# if first time in this method (case == 0)
 	# create the modules and connections
 	if {$case == 0} {
@@ -1641,7 +1559,7 @@ class BioImageApp {
     method open_nrrd_reader_ui {i} {
 	# disable execute button and change behavior of execute command
 	set m [lindex [lindex $filters($i) $modules] 0]
-
+	
 	[set m] initialize_ui
 
 	.ui[set m].f7.execute configure -state disabled
@@ -2024,7 +1942,7 @@ class BioImageApp {
     method configure_readers { which } {
 
         $this check_crop
-
+	
 	set ChooseNrrd  [lindex [lindex $filters(0) $modules] $load_choose_input]
 	set NrrdReader  [lindex [lindex $filters(0) $modules] $load_nrrd]
 	set DicomNrrdReader  [lindex [lindex $filters(0) $modules] $load_dicom]
@@ -2088,10 +2006,10 @@ class BioImageApp {
 		disableModule $FieldReader 1
 	    } elseif {[set [set ChooseNrrd]-port-index] == 1} {
 		# dicom
-		disableModule $NrrdReader) 1
-		disableModule $DicomNrrdReader) 0
-		disableModule $AnalyzeNrrdReader) 1
-		disableModule $FieldReader) 1
+		disableModule $NrrdReader 1
+		disableModule $DicomNrrdReader 0
+		disableModule $AnalyzeNrrdReader 1
+		disableModule $FieldReader 1
 	    } elseif {[set [set ChooseNrrd]-port-index] == 2} {
 		# analyze
 		disableModule $NrrdReader 1
@@ -2133,7 +2051,8 @@ class BioImageApp {
             set vis_frame_tab$case $vis.tnb
 
 
-	    set page [$vis.tnb add -label "Planes" -command "$this change_vis_frame Planes; $this check_crop"]
+	    set command "$this change_vis_frame Planes; $this check_crop"
+	    set page [$vis.tnb add -label "Planes" -command $command]
 
             frame $page.planes 
             pack $page.planes -side top -anchor nw -expand no -fill x
@@ -2178,47 +2097,44 @@ class BioImageApp {
             grid configure $page.planes.zm -row 2 -column 1 -sticky "w"
 
             # display window and level
-            global $mods(ViewSlices)-axial-viewport0-clut_ww 
-            global $mods(ViewSlices)-axial-viewport0-clut_wl
-            global $mods(ViewSlices)-min $mods(ViewSlices)-max
-
             iwidgets::labeledframe $page.winlevel \
-                 -labeltext "Window/Level Controls" \
-                 -labelpos nw
+                 -labeltext "Window/Level Controls" -labelpos nw
             pack $page.winlevel -side top -anchor nw -expand no -fill x \
                 -pady 3
+
             set winlevel [$page.winlevel childsite]
-
-            frame $winlevel.ww
-            frame $winlevel.wl
-            pack $winlevel.ww $winlevel.wl -side top -anchor ne -pady 0
-
-            label $winlevel.ww.l -text "Window Width"
-            scale $winlevel.ww.s \
-                -variable $mods(ViewSlices)-axial-viewport0-clut_ww \
+	    set wwf $winlevel.ww
+	    set wlf $winlevel.wl
+            frame $wwf
+            frame $wlf
+            pack $wwf $wlf -side top -anchor ne -pady 0
+	    
+            label $wwf.l -text "Window Width"
+            scale $wwf.s \
+                -variable $mods(ViewSlices)-clut_ww \
                 -from 0 -to 9999 -length 120 -width 14 \
-                -showvalue false -orient horizontal \
-                -command "$this change_window_width"
-            Tooltip $winlevel.ww.s "Control the window width of\nthe 2D viewers"
-            bind $winlevel.ww.s <ButtonRelease> "$this execute_vol_ren_when_linked"
-            entry $winlevel.ww.e -textvariable $mods(ViewSlices)-axial-viewport0-clut_ww -width 6
-            bind $winlevel.ww.e <Return> "$this change_window_width 1; $this execute_vol_ren_when_linked"
-            pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left
+                -showvalue false -orient horizontal
+            Tooltip $wwf.s "Control the window width of\nthe 2D viewers"
+            entry $wwf.e -textvariable $mods(ViewSlices)-clut_ww -width 6
+            pack $wwf.l $wwf.s $wwf.e -side left
 
-            label $winlevel.wl.l -text "Window Level "
-            scale $winlevel.wl.s \
-                -variable $mods(ViewSlices)-axial-viewport0-clut_wl \
+            label $wlf.l -text "Window Level "
+            scale $wlf.s \
+                -variable $mods(ViewSlices)-clut_wl \
                 -from 0 -to 9999 -length 120 -width 14 \
-                -showvalue false -orient horizontal \
-                -command "$this change_window_level"
-            Tooltip $winlevel.wl.s "Control the window level of\nthe 2D viewers"
-            bind $winlevel.wl.s <ButtonRelease> "$this execute_vol_ren_when_linked"
-            entry $winlevel.wl.e -textvariable $mods(ViewSlices)-axial-viewport0-clut_wl -width 6
-            bind $winlevel.wl.e <Return> "$this change_window_level 1; $this execute_vol_ren_when_linked"
-            pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left
+                -showvalue false -orient horizontal
+            Tooltip $wlf.s "Control the window level of\nthe 2D viewers"
 
-            trace variable $mods(ViewSlices)-min w "$this update_window_level_scales"
-            trace variable $mods(ViewSlices)-max w "$this update_window_level_scales"
+            entry $wlf.e -textvariable $mods(ViewSlices)-clut_wl -width 6
+
+            pack $wlf.l $wlf.s $wlf.e -side left
+
+	    set command "$this change_window_width_and_level 1"
+            bind $wwf.e <Return> $command
+            bind $wwf.s <ButtonRelease> $command
+            bind $wlf.e <Return> $command
+            bind $wlf.s <ButtonRelease> $command
+
             # Background threshold
             frame $page.thresh 
             pack $page.thresh -side top -anchor nw -expand no -fill x
@@ -2229,9 +2145,7 @@ class BioImageApp {
                 -from 0 -to 100 \
  	        -orient horizontal -showvalue false \
  	        -length 140 -width 14 \
-	        -variable $mods(ViewSlices)-background_threshold \
-                -command "$mods(ViewSlices)-c background_thresh"
-	    bind $page.thresh.s <Button1-Motion> "$mods(ViewSlices)-c background_thresh"
+	        -variable $mods(ViewSlices)-background_threshold
             bind $page.thresh.s <ButtonPress-1> "$this check_crop"
             entry $page.thresh.l2 -textvariable $mods(ViewSlices)-background_threshold -width 6
             Tooltip $page.thresh.s "Clip out values less than\nspecified background threshold"
@@ -2302,99 +2216,26 @@ class BioImageApp {
 	    set maps [$page.isocolor childsite]
 
 	    global planes_mapType
-	    
-	    # Gray
-	    frame $maps.gray
-	    pack $maps.gray -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.gray.b -text "Gray" \
-		-variable planes_mapType \
-		-value 0 \
-		-command "$this update_planes_color_by"
-            Tooltip $maps.gray.b "Select color map for coloring planes"
-	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.gray.f -relief sunken -borderwidth 2
-	    pack $maps.gray.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.gray.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.gray.f.canvas -anchor e \
-		-fill both -expand 1
-	    
-	    draw_colormap Gray $maps.gray.f.canvas
-	    
-	    # Rainbow
-	    frame $maps.rainbow
-	    pack $maps.rainbow -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.rainbow.b -text "Rainbow" \
-		-variable planes_mapType \
-		-value 3 \
-		-command "$this update_planes_color_by"
-            Tooltip $maps.rainbow.b "Select color map for coloring planes"
-	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.rainbow.f -relief sunken -borderwidth 2
-	    pack $maps.rainbow.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.rainbow.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.rainbow.f.canvas -anchor e
-	    
-	    draw_colormap Rainbow $maps.rainbow.f.canvas
-	    
-	    # Darkhue
-	    frame $maps.darkhue
-	    pack $maps.darkhue -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.darkhue.b -text "Darkhue" \
-		-variable planes_mapType \
-		-value 4 \
-		-command "$this update_planes_color_by"
-            Tooltip $maps.darkhue.b "Select color map for coloring planes"
-	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.darkhue.f -relief sunken -borderwidth 2
-	    pack $maps.darkhue.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.darkhue.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.darkhue.f.canvas -anchor e
-	    
-	    draw_colormap Darkhue $maps.darkhue.f.canvas
-	    
-	    
-	    # Blackbody
-	    frame $maps.blackbody
-	    pack $maps.blackbody -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.blackbody.b -text "Blackbody" \
-		-variable planes_mapType \
-		-value 7 \
-		-command "$this update_planes_color_by"
-            Tooltip $maps.blackbody.b "Select color map for coloring planes"
-	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.blackbody.f -relief sunken -borderwidth 2 
-	    pack $maps.blackbody.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.blackbody.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.blackbody.f.canvas -anchor e
-	    
-	    draw_colormap Blackbody $maps.blackbody.f.canvas
-	    
-	    # Blue-to-Red
-	    frame $maps.bpseismic
-	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.bpseismic.b -text "Blue-to-Red" \
-		-variable planes_mapType \
-		-value 17 \
-		-command "$this update_planes_color_by"
-            Tooltip $maps.bpseismic.b "Select color map for coloring planes"
-	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.bpseismic.f -relief sunken -borderwidth 2
-	    pack $maps.bpseismic.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.bpseismic.f.canvas -anchor e
-	    
-	    draw_colormap "Blue-to-Red" $maps.bpseismic.f.canvas           
-
+	    foreach colormap { {gray 0} {rainbow 3} {darkhue 4} \
+				   {blackbody 7} {blue-to-Red 17} } {
+		set color [lindex $colormap 0]
+		set value [lindex $colormap 1]
+		set name [string totitle $color]
+		set f $maps.$color
+		frame $f
+		pack $f -side top -anchor nw -padx 3 -pady 1 -fill x -expand 1
+		radiobutton $f.b \
+		    -text $name -variable planes_mapType -value $value \
+		    -command "$this update_planes_color_by"
+		Tooltip $f.b "Select color map for coloring planes"
+		pack $f.b -side left -anchor nw -padx 3 -pady 0
+		frame $f.f -relief sunken -borderwidth 2
+		pack $f.f -padx 2 -pady 0 -side right -anchor e
+		canvas $f.f.canvas -bg \#ffffff -height $colormap_height \
+		    -width $colormap_width
+		pack $f.f.canvas -anchor e -fill both -expand 1
+		draw_colormap $name $f.f.canvas
+	    }
 
             #######
             set page [$vis.tnb add -label "Volume Rendering" -command "$this change_vis_frame \"Volume Rendering\"; $this check_crop"]
@@ -2408,10 +2249,8 @@ class BioImageApp {
 
 
             button $page.vol -text "Edit Transfer Function" \
-               -command "$this check_crop; $mods(EditColorMap2D) initialize_ui;
-                         wm title .ui${mods(EditColorMap2D)} {Transfer Function Editor}; 
-                         pack forget .ui$mods(EditColorMap2D).buttonPanel.btnBox.highlight"
-            Tooltip $page.vol "Open up the interface\nfor editing the transfer function"
+		-command "$this open_transfer_function_editor"
+	    Tooltip $page.vol "Open up the interface\nfor editing the transfer function"
             pack $page.vol -side top -anchor n -padx 3 -pady 3
             
             set VolumeVisualizer [lindex [lindex $filters(0) $modules] 14]
@@ -2432,178 +2271,179 @@ class BioImageApp {
                 -side left -fill x -padx 4 -pady 4
 
 
-        #----------------------------------------------------------
-        # Disable Lighting
-        #----------------------------------------------------------
-        set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10]
-        global [set NrrdSetupTexture]-valuesonly
-	checkbutton $page.lighting -text "Compute data for shaded volume rendering" \
-            -relief flat \
-            -variable [set NrrdSetupTexture]-valuesonly -onvalue 0 -offvalue 1 \
-            -anchor w -command "$this toggle_compute_shading"
-        Tooltip $page.lighting "Turn computing data for shaded volume\nrendering on/off."
-        pack $page.lighting -side top -fill x -padx 4
+	    #----------------------------------------------------------
+	    # Disable Lighting
+	    #----------------------------------------------------------
+	    set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10]
+	    global [set NrrdSetupTexture]-valuesonly
+	    checkbutton $page.lighting \
+		-text "Compute data for shaded volume rendering" \
+		-relief flat -offvalue 1 \
+		-variable [set NrrdSetupTexture]-valuesonly -onvalue 0 \
+		-anchor w -command "$this toggle_compute_shading"
+	    Tooltip $page.lighting \
+		"Turn computing data for shaded volume\nrendering on/off."
+	    pack $page.lighting -side top -fill x -padx 4
 
-        #-----------------------------------------------------------
-        # Shading
-        #-----------------------------------------------------------
-	checkbutton $page.shading -text "Show shaded volume rendering" -relief flat \
-            -variable [set VolumeVisualizer]-shading -onvalue 1 -offvalue 0 \
-            -anchor n -command "$n"
-        Tooltip $page.shading "If computed, turn use of shading on/off"
-        pack $page.shading -side top -fill x -padx 4
-
-
-        #-----------------------------------------------------------
-        # Sample Rates
-        #-----------------------------------------------------------
-        iwidgets::labeledframe $page.samplingrate \
-            -labeltext "Sampling Rates" -labelpos nw
-        pack $page.samplingrate -side top -anchor nw -expand no -fill x
-        set sratehi [$page.samplingrate childsite]
-
-        scale $sratehi.srate_hi -label "Final Rate" \
-            -variable [set VolumeVisualizer]-sampling_rate_hi \
-            -from 0.5 -to 20.0 \
-            -showvalue true -resolution 0.1 \
-            -orient horizontal -width 15 
-
-        scale $sratehi.srate_lo -label "Interactive Rate" \
-            -variable [set VolumeVisualizer]-sampling_rate_lo \
-            -from 0.1 -to 20.0 \
-            -showvalue true -resolution 0.1 \
-            -orient horizontal -width 15 
-        pack $sratehi.srate_hi $sratehi.srate_lo -side left -fill x -expand yes -padx 4
-	bind $sratehi.srate_hi <ButtonRelease> $n
-	bind $sratehi.srate_lo <ButtonRelease> $n
+	    #-----------------------------------------------------------
+	    # Shading
+	    #-----------------------------------------------------------
+	    checkbutton $page.shading -text "Show shaded volume rendering" \
+		-relief flat -variable [set VolumeVisualizer]-shading \
+		-onvalue 1 -offvalue 0 -anchor n -command "$n"
+	    Tooltip $page.shading "If computed, turn use of shading on/off"
+	    pack $page.shading -side top -fill x -padx 4
 
 
-        #-----------------------------------------------------------
-        # Global Opacity
-        #-----------------------------------------------------------
-        iwidgets::labeledframe $page.opacityframe \
-            -labeltext "Global Opacity" -labelpos nw
-        pack $page.opacityframe -side top -anchor nw \
-            -expand no -fill x
-        set oframe [$page.opacityframe childsite]
-
-	scale $oframe.opacity -variable [set VolumeVisualizer]-alpha_scale \
+	    #-----------------------------------------------------------
+	    # Sample Rates
+	    #-----------------------------------------------------------
+	    iwidgets::labeledframe $page.samplingrate \
+		-labeltext "Sampling Rates" -labelpos nw
+	    pack $page.samplingrate -side top -anchor nw -expand no -fill x
+	    set sratehi [$page.samplingrate childsite]
+	    
+	    scale $sratehi.srate_hi -label "Final Rate" \
+		-variable [set VolumeVisualizer]-sampling_rate_hi \
+		-from 0.5 -to 20.0 \
+		-showvalue true -resolution 0.1 \
+		-orient horizontal -width 15 
+	    
+	    scale $sratehi.srate_lo -label "Interactive Rate" \
+		-variable [set VolumeVisualizer]-sampling_rate_lo \
+		-from 0.1 -to 20.0 \
+		-showvalue true -resolution 0.1 \
+		-orient horizontal -width 15 
+	    pack $sratehi.srate_hi $sratehi.srate_lo \
+		-side left -fill x -expand yes -padx 4
+	    bind $sratehi.srate_hi <ButtonRelease> $n
+	    bind $sratehi.srate_lo <ButtonRelease> $n
+	    
+	    
+	    #-----------------------------------------------------------
+	    # Global Opacity
+	    #-----------------------------------------------------------
+	    iwidgets::labeledframe $page.opacityframe \
+		-labeltext "Global Opacity" -labelpos nw
+	    pack $page.opacityframe -side top -anchor nw \
+		-expand no -fill x
+	    set oframe [$page.opacityframe childsite]
+	    
+	    scale $oframe.opacity \
+		-variable [set VolumeVisualizer]-alpha_scale \
 		-from -1.0 -to 1.0 -length 150 \
 		-showvalue false -resolution 0.001 \
 		-orient horizontal -width 15
-        entry $oframe.opacityl -textvariable [set VolumeVisualizer]-alpha_scale -width 4 \
-            -relief flat
-        pack $oframe.opacity -side left -fill x -expand yes -padx 4
-        pack $oframe.opacityl -side left -fill x -padx 4
-	bind $oframe.opacity <ButtonRelease> $n
+	    entry $oframe.opacityl -relief flat \
+		-textvariable $VolumeVisualizer-alpha_scale -width 4 \
+		
+	    pack $oframe.opacity -side left -fill x -expand yes -padx 4
+	    pack $oframe.opacityl -side left -fill x -padx 4
+	    bind $oframe.opacity <ButtonRelease> $n
 
+	    #-----------------------------------------------------------
+	    # Volume Rendering Window Level Controls
+	    #-----------------------------------------------------------
+	    global link_winlevel vol_width vol_level
+	    
+	    iwidgets::labeledframe $page.winlevel \
+		-labeltext "Window/Level Controls" \
+		-labelpos nw
+	    pack $page.winlevel -side top -anchor nw -expand no -fill x
+	    set winlevel [$page.winlevel childsite]
+	    
+	    checkbutton $winlevel.link -text "Link to Slice Window/Level" \
+		-variable link_winlevel \
+		-command "$this link_windowlevels 1"
+	    Tooltip $winlevel.link "Link the changes of the\nwindow controls below to\nthe planes window controls"
+	    pack $winlevel.link -side top -anchor nw -pady 1
+	    
+	    set wwf $winlevel.ww
+	    set wlf $winlevel.wl
 
+	    frame $wwf
+	    frame $wlf
+	    pack $wwf $wlf -side top -anchor ne -pady 0
 
+	    label $wwf.l -text "Window Width"
+	    scale $wwf.s -variable vol_width \
+		-from 0 -to 9999 -length 120 -width 15 \
+		-showvalue false -orient horizontal
+	    Tooltip $wwf.s "Control the window width of\nthe volume rendering"
+	    entry $wwf.e -textvariable vol_width -width 6
+	    pack $wwf.l $wwf.s $wwf.e -side left
 
-        #-----------------------------------------------------------
-        # Volume Rendering Window Level Controls
-        #-----------------------------------------------------------
-        global vol_width
-        global vol_level
+	    label $wlf.l -text "Window Level "
+	    scale $wlf.s -variable vol_level \
+		-from 0 -to 9999 -length 120 -width 15 \
+		-showvalue false -orient horizontal
+	    Tooltip $wlf.s "Control the window width of\nthe volume rendering"
+	    entry $wlf.e -textvariable vol_level -width 6
+	    pack $wlf.l $wlf.s $wlf.e -side left
 
-        iwidgets::labeledframe $page.winlevel \
-            -labeltext "Window/Level Controls" \
-            -labelpos nw
-        pack $page.winlevel -side top -anchor nw -expand no -fill x
-        set winlevel [$page.winlevel childsite]
+	    set command "$this change_volume_window_width_and_level 1"
+	    bind $wlf.s <ButtonRelease> $command
+	    bind $wlf.e <Return> $command
+	    bind $wwf.s <ButtonRelease> $command
+	    bind $wwf.e <Return> $command
 
-        global link_winlevel
-        checkbutton $winlevel.link -text "Link to Slice Window/Level" \
-            -variable link_winlevel \
-            -command "$this link_windowlevels"
-        Tooltip $winlevel.link "Link the changes of the\nwindow controls below to\nthe planes window controls"
-        pack $winlevel.link -side top -anchor nw -pady 1
-
-        frame $winlevel.ww
-        frame $winlevel.wl
-        pack $winlevel.ww $winlevel.wl -side top -anchor ne -pady 0
-
-        label $winlevel.ww.l -text "Window Width"
-        scale $winlevel.ww.s -variable vol_width \
-            -from 0 -to 9999 -length 120 -width 15 \
-            -showvalue false -orient horizontal \
-            -command "$this change_volume_window_width_and_level"
-        Tooltip $winlevel.ww.s "Control the window width of\nthe volume rendering"
-        bind $winlevel.ww.s <ButtonRelease> "$this execute_vol_ren"
-        entry $winlevel.ww.e -textvariable vol_width -width 6
-	bind $winlevel.ww.e <Return> "$this change_volume_window_width_and_level 1; $mods(ViewSlices)-c background_thresh"
-        pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left
-
-        label $winlevel.wl.l -text "Window Level "
-        scale $winlevel.wl.s -variable vol_level \
-            -from 0 -to 9999 -length 120 -width 15 \
-            -showvalue false -orient horizontal \
-            -command "$this change_volume_window_width_and_level"
-        Tooltip $winlevel.wl.s "Control the window width of\nthe volume rendering"
-       bind $winlevel.wl.s <ButtonRelease> "$this execute_vol_ren"
-       entry $winlevel.wl.e -textvariable vol_level -width 6
-       bind $winlevel.wl.e <Return> "$this change_volume_window_width_and_level 1; $mods(ViewSlices)-c background_thresh"
-        pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left
-
-        trace variable $mods(ViewSlices)-min w "$this update_volume_window_level_scales"
-        trace variable $mods(ViewSlices)-max w "$this update_volume_window_level_scales"
-       
-        #-----------------------------------------------------------
-        # Transfer Function Widgets
-        #-----------------------------------------------------------
-
-        # Gradient threshold
-        set f $page.gthresh
-        frame $f
-        label $f.l -text "Gradient Threshold:"
-        set command "$mods(ViewSlices)-c gradient_thresh; 
+	    
+	    #-----------------------------------------------------------
+	    # Transfer Function Widgets
+	    #-----------------------------------------------------------
+	    
+	    # Gradient threshold
+	    set f $page.gthresh
+	    frame $f
+	    label $f.l -text "Gradient Threshold:"
+	    set command "$mods(ViewSlices)-c gradient_thresh; 
                      $mods(ViewSlices)-c redrawall"
-        scale $f.s \
-          -from 0.0 -to 1.0 -resolution 0.002 \
- 	  -orient horizontal -showvalue false \
- 	  -length 100 -width 14 \
-	  -variable $mods(ViewSlices)-gradient_threshold \
-          -command $command
-        bind $f <Button1-Motion> $command
-        entry $f.l2 -width 6 \
-           -textvariable $mods(ViewSlices)-gradient_threshold
-        pack $f.l -side left -anchor w
-        pack $f.l2 $f.s -side right -anchor e -padx 2
-        pack $f -side top -fill x -expand 0
-
-	frame $page.buttons -bd 0
-        button $page.buttons.paint -text "Add Paint Layer" \
-           -command "$mods(EditColorMap2D)-c addpaint"
-        button $page.buttons.undo -text "Undo Paint Stroke" \
-           -command "$mods(ViewSlices)-c undo"
-	pack $page.buttons.paint $page.buttons.undo -side left \
-           -fill x -padx 10 -pady 3 -expand 1
-        pack $page.buttons -side top -expand 0 -padx 0 -fill x -pady 3
-
-	set f $page.applyColormap2D
-	frame $f -bd 0
-	checkbutton $f.button -text "Show Transfer Function in 2D" \
-	    -variable "$mods(ViewSlices)-show_colormap2" \
-            -command "$mods(ViewSlices)-c needexecute"
-	pack $f.button -side left
-	pack $f -fill x -side top
-
-        $mods(EditColorMap2D) label_widget_columns $page.widgets_label
-        pack $page.widgets_label -side top -fill x -padx 2
-        iwidgets::scrolledframe $page.widgets -hscrollmode none \
-	    -vscrollmode static
-
-        pack $page.widgets -side top -fill both -expand yes -padx 2
-        $mods(EditColorMap2D) add_frame [$page.widgets childsite]
-
-
-        ### Renderer Options Tab
-	create_viewer_tab $vis "3D Options"
-
-        $vis.tnb view "Planes"
-
-
-	### Attach/Detach button
+	    scale $f.s \
+		-from 0.0 -to 1.0 -resolution 0.002 \
+		-orient horizontal -showvalue false \
+		-length 100 -width 14 \
+		-variable $mods(ViewSlices)-gradient_threshold \
+		-command $command
+	    bind $f <Button1-Motion> $command
+	    entry $f.l2 -width 6 \
+		-textvariable $mods(ViewSlices)-gradient_threshold
+	    pack $f.l -side left -anchor w
+	    pack $f.l2 $f.s -side right -anchor e -padx 2
+	    pack $f -side top -fill x -expand 0
+	    
+	    frame $page.buttons -bd 0
+	    button $page.buttons.paint -text "Add Paint Layer" \
+		-command "$mods(EditColorMap2D)-c addpaint"
+	    button $page.buttons.undo -text "Undo Paint Stroke" \
+		-command "$mods(ViewSlices)-c undo"
+	    pack $page.buttons.paint $page.buttons.undo -side left \
+		-fill x -padx 10 -pady 3 -expand 1
+	    pack $page.buttons -side top -expand 0 -padx 0 -fill x -pady 3
+	    
+	    set f $page.applyColormap2D
+	    frame $f -bd 0
+	    checkbutton $f.button -text "Show Transfer Function in 2D" \
+		-variable "$mods(ViewSlices)-show_colormap2" \
+		-command "$mods(ViewSlices)-c needexecute"
+	    pack $f.button -side left
+	    pack $f -fill x -side top
+	    
+	    $mods(EditColorMap2D) label_widget_columns $page.widgets_label
+	    pack $page.widgets_label -side top -fill x -padx 2
+	    iwidgets::scrolledframe $page.widgets -hscrollmode none \
+		-vscrollmode static
+	    
+	    pack $page.widgets -side top -fill both -expand yes -padx 2
+	    $mods(EditColorMap2D) add_frame [$page.widgets childsite]
+	    
+	    
+	    ### Renderer Options Tab
+	    create_viewer_tab $vis "3D Options"
+	    
+	    $vis.tnb view "Planes"
+	    
+	    
+	    ### Attach/Detach button
             frame $m.d 
 	    pack $m.d -side left -anchor e
             for {set i 0} {$i<42} {incr i} {
@@ -2619,6 +2459,14 @@ class BioImageApp {
 		}
             }
 	}
+    }
+
+    method open_transfer_function_editor {} {
+	global mods
+	$this check_crop
+	$mods(EditColorMap2D) initialize_ui
+	wm title .ui${mods(EditColorMap2D)} "Transfer Function Editor"
+	pack forget .ui$mods(EditColorMap2D).buttonPanel.btnBox.highlight
     }
 
     method toggle_compute_shading {} {
@@ -3383,179 +3231,99 @@ class BioImageApp {
 
     }
 
-    method update_window_level_scales {varname varele varop} {
+    method update_window_level_scales { args } {
 	global mods
-	global $mods(ViewSlices)-min $mods(ViewSlices)-max
+	upvar \#0 $mods(ViewSlices)-min min $mods(ViewSlices)-max max
+        set ww [expr abs($max - $min)]
+	set rez [expr $ww/1000.0]
+	set rez [expr ($rez>1.0)?1.0:$rez]
+	# foreach detached and attached right frame
+	foreach vfr "$attachedVFr $detachedVFr" {
+	    set prefix $vfr.f.vis.childsite.tnb.canvas.notebook.cs 
+	    $prefix.page1.cs.thresh.s configure \
+		-from $min -to $max -resolution $rez
+	    # foreach tab, (2D pane and volume rendering pane)
+	    foreach page "page1 page2" {
+		set f $prefix.$page.cs.winlevel.childsite
+		# configure window width scale
+		if [winfo exists $f.ww.s] {
+		    $f.ww.s configure -from 0 -to $ww -resolution $rez
+		}
+		# configure window level scale
+		if [winfo exists $f.wl.s] {
+		    $f.wl.s configure -from $min -to $max -resolution $rez
+		}
+	    }
+	}
+    }
 
-	set min [set $mods(ViewSlices)-min]
-	set max [set $mods(ViewSlices)-max]
-        set span [expr abs([expr $max-$min])]
+    method change_window_width_and_level { { execute 0 } args } {
+	global mods
+	$mods(ViewSlices)-c setclut ;# set windows to be dirty
+	if {$execute} {
+	    $mods(ViewSlices)-c background_thresh
+	}
+	$this link_windowlevels $execute
+    }
 
-	# configure window width scale
-	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.winlevel.childsite.ww.s \
-	    configure -from 0 -to $span
-	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.winlevel.childsite.ww.s \
-	    configure -from 0 -to $span
-
-	# configure window level scale
-	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.winlevel.childsite.wl.s \
-	    configure -from $min -to $max
-	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.winlevel.childsite.wl.s \
-	    configure -from $min -to $max
+    method change_volume_window_width_and_level { { execute 0 } args } {
+	# Change UnuJhisto and NrrdSetupTexture values
+	global mods vol_width vol_level link_winlevel
 	
-        $this update_volume_window_level_scales 1 2 3
-    }
-
-    method change_window_width { val } {
-	# sync other windows with axial window width
-	global mods
-	global $mods(ViewSlices)-axial-viewport0-clut_ww
-	global $mods(ViewSlices)-sagittal-viewport0-clut_ww
-	global $mods(ViewSlices)-coronal-viewport0-clut_ww
-
-	set val [set $mods(ViewSlices)-axial-viewport0-clut_ww]
-
-	set $mods(ViewSlices)-sagittal-viewport0-clut_ww $val
-	set $mods(ViewSlices)-coronal-viewport0-clut_ww $val
-
-	# set windows to be dirty
-	$mods(ViewSlices)-c setclut
-
-	$mods(ViewSlices)-c redrawall
-      
-        # if window levels linked, change the vol_width
-        global link_winlevel
-        if {$link_winlevel == 1} {
-	    global vol_width
-            set vol_width $val
-	    $this change_volume_window_width_and_level -1
-        }
-    }
-
-    method change_window_level { val } {
-	# sync other windows with axial window level
-	global mods
-	global $mods(ViewSlices)-axial-viewport0-clut_wl
-	global $mods(ViewSlices)-sagittal-viewport0-clut_wl
-	global $mods(ViewSlices)-coronal-viewport0-clut_wl
-
-	set v [set $mods(ViewSlices)-axial-viewport0-clut_wl]
-
-	set $mods(ViewSlices)-sagittal-viewport0-clut_wl $v
-	set $mods(ViewSlices)-coronal-viewport0-clut_wl $v
-
-	# set windows to be dirty
-	$mods(ViewSlices)-c setclut
-
-	$mods(ViewSlices)-c redrawall
-
-        # if window levels linked, change the vol_level
-        global link_winlevel
-        if {$link_winlevel == 1 && $val != -1} {
-	    global vol_level
-            set vol_level $val
-	    $this change_volume_window_width_and_level -1
-        }
-    }
-
-     method update_volume_window_level_scales {varname varele varop} {
- 	global mods
- 	global $mods(ViewSlices)-min $mods(ViewSlices)-max
-
- 	set min [set $mods(ViewSlices)-min]
- 	set max [set $mods(ViewSlices)-max]
-        set span [expr abs([expr $max-$min])]
-
- 	# configure window width scale
- 	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.winlevel.childsite.ww.s \
- 	    configure -from 0 -to $span
- 	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.winlevel.childsite.ww.s \
- 	    configure -from 0 -to $span
-
- 	# configure window level scale
- 	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.winlevel.childsite.wl.s \
- 	    configure -from $min -to $max
- 	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.winlevel.childsite.wl.s \
- 	    configure -from $min -to $max
+	set min [expr $vol_level-$vol_width/2.0]
+	set max [expr $vol_level+$vol_width/2.0]
 	
-     }
-
-     method change_volume_window_width_and_level { val } {
-	 # Change UnuJhisto and NrrdSetupTexture values
-	 global vol_width vol_level
-	 
-	 set min [expr $vol_level-$vol_width/2]
-	 set max [expr $vol_level+$vol_width/2]
-	 
-	 set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
-         set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
-         set Rescale [lindex [lindex $filters(0) $modules] 36] 
-         global [set NrrdSetupTexture]-maxf [set NrrdSetupTexture]-minf
-  	 global [set UnuJhisto]-maxs [set UnuJhisto]-mins
-  	 global [set UnuJhisto]-maxs [set UnuJhisto]-mins
-  	 global [set Rescale]-min [set Rescale]-max
-
-  	 set [set NrrdSetupTexture]-maxf $max
-      	 set [set NrrdSetupTexture]-minf $min
-       	 set [set UnuJhisto]-maxs "$max nan"
-       	 set [set UnuJhisto]-mins "$min nan"
-         set [set Rescale]-min $min
-	 set [set Rescale]-max $max
-
-         # if linked, change the ViewSlices window width and level
-         global link_winlevel
-         if {$link_winlevel == 1 && $val != -1} {
-	     global mods
-	     global $mods(ViewSlices)-axial-viewport0-clut_ww
-	     global $mods(ViewSlices)-axial-viewport0-clut_wl
-             set $mods(ViewSlices)-axial-viewport0-clut_ww $vol_width
-             set $mods(ViewSlices)-axial-viewport0-clut_wl $vol_level
-
-             # update all windows
-             $this change_window_width -1
-             $this change_window_level -1
-	 }
-      }
-
+	set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
+	setGlobal $NrrdSetupTexture-minf $min
+	setGlobal $NrrdSetupTexture-maxf $max
+	
+	set UnuJhisto [lindex [lindex $filters(0) $modules] 21]
+	setGlobal $UnuJhisto-mins "$min nan"
+	setGlobal $UnuJhisto-maxs "$max nan"
+	
+	set Rescale [lindex [lindex $filters(0) $modules] 36] 
+	setGlobal $Rescale-min $min
+	setGlobal $Rescale-max $max
+	
+	# if linked, change the ViewSlices window width and level
+	if {$link_winlevel == 1} {
+	    set link_winlevel 0
+	    setGlobal $mods(ViewSlices)-clut_ww $vol_width
+	    setGlobal $mods(ViewSlices)-clut_wl $vol_level
+	    set link_winlevel 1
+	}
+	
+	if { $execute } {
+	    $this execute_vol_ren
+	}
+	    
+    }
+    
      method execute_vol_ren {} {
      	# execute modules if volume rendering enabled
  	global show_vol_ren
  	if {$show_vol_ren == 1} {
    	    set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
    	    set Rescale [lindex [lindex $filters(0) $modules] 36] 
-    	    [set Rescale]-c needexecute
- 	    [set NrrdSetupTexture]-c needexecute
+    	    $Rescale-c needexecute
+ 	    $NrrdSetupTexture-c needexecute
          }
      }
 
-     method execute_vol_ren_when_linked {} {
-	 # execute volume rendering modules on change of window
-	 # and level only if they are linked
-	 global link_winlevel show_vol_ren 
-	 if {$link_winlevel == 1 && $show_vol_ren == 1} {
-   	    set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10] 
-   	    set Rescale [lindex [lindex $filters(0) $modules] 36] 
-    	    [set Rescale]-c needexecute
- 	    [set NrrdSetupTexture]-c needexecute
-	 }
-     }
-
-    method link_windowlevels {} {
-	global link_winlevel
-
+    method link_windowlevels { { execute 1 } } {
+	global link_winlevel mods
 	if {$link_winlevel == 1} {
 	    # Set vol_width and vol_level to Viewimage window width and level
-	    global vol_width vol_level mods
-	    global $mods(ViewSlices)-axial-viewport0-clut_ww
-	    global $mods(ViewSlices)-axial-viewport0-clut_wl
-
-            set vol_width [set $mods(ViewSlices)-axial-viewport0-clut_ww]
-            set vol_level [set $mods(ViewSlices)-axial-viewport0-clut_wl]
-
-            $this change_volume_window_width_and_level 1
+	    upvar \#0 $mods(ViewSlices)-clut_ww ww $mods(ViewSlices)-clut_wl wl
+	    set link_winlevel 0
+            setGlobal vol_width $ww
+            setGlobal vol_level $wl
+	    set link_winlevel 1
 
             # execute the volume rendering if it's on
-            $this execute_vol_ren
+	    if { $execute } {
+		$this execute_vol_ren
+	    }
 	} 
     }
 
@@ -4764,8 +4532,8 @@ class BioImageApp {
        global $mods(ViewSlices)-axial-viewport0-slab_max
        global $mods(ViewSlices)-sagittal-viewport0-slab_max
        global $mods(ViewSlices)-coronal-viewport0-slab_max
-       global $mods(ViewSlices)-axial-viewport0-clut_ww
-       global $mods(ViewSlices)-axial-viewport0-clut_wl
+       global $mods(ViewSlices)-clut_ww
+       global $mods(ViewSlices)-clut_wl
        global $mods(ViewSlices)-min $mods(ViewSlices)-max
        global $mods(ViewSlices)-axial-viewport0-axis
        global $mods(ViewSlices)-sagittal-viewport0-axis
@@ -4783,8 +4551,8 @@ class BioImageApp {
        set axial_slab_max [set $mods(ViewSlices)-axial-viewport0-slab_max]
        set sagittal_slab_max [set $mods(ViewSlices)-sagittal-viewport0-slab_max]
        set coronal_slab_max [set $mods(ViewSlices)-coronal-viewport0-slab_max]
-       set ww [set $mods(ViewSlices)-axial-viewport0-clut_ww]
-       set wl [set $mods(ViewSlices)-axial-viewport0-clut_wl]
+       set ww [set $mods(ViewSlices)-clut_ww]
+       set wl [set $mods(ViewSlices)-clut_wl]
 
        global $mods(Viewer)-ViewWindow_0-view-eyep-x 
        global $mods(Viewer)-ViewWindow_0-view-eyep-y 
@@ -4902,9 +4670,6 @@ class BioImageApp {
         # update components using globals
         $this update_orientations
         $this update_planes_color_by
-        $this update_planes_threshold_slider_min_max [set $mods(ViewSlices)-min] [set $mods(ViewSlices)-max]
-        $mods(ViewSlices)-c background_thresh
-        $this update_window_level_scales 1 2 3
         $this change_volume_window_width_and_level -1
         $this toggle_show_guidelines
 
@@ -4925,12 +4690,13 @@ class BioImageApp {
         }
 
         # reset saved ViewSlices variables
+        set $mods(ViewSlices)-clut_ww $ww
+        set $mods(ViewSlices)-clut_wl $wl
+
         set $mods(ViewSlices)-axial-viewport0-mode $axial_mode
         set $mods(ViewSlices)-axial-viewport0-slice $axial_slice
         set $mods(ViewSlices)-axial-viewport0-slab_min $axial_slab_min
         set $mods(ViewSlices)-axial-viewport0-slab_max $axial_slab_max
-        set $mods(ViewSlices)-axial-viewport0-clut_ww $ww
-        set $mods(ViewSlices)-axial-viewport0-clut_wl $wl
         set $mods(ViewSlices)-axial-viewport0-axis 2
 
         set $mods(ViewSlices)-sagittal-viewport0-mode $sagittal_mode
@@ -4966,38 +4732,23 @@ class BioImageApp {
        set 2D_fixed 1
     }	
 
-
-    method update_planes_threshold_slider_min_max { min max } {
-	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.thresh.s \
-	    configure -from $min -to $max
-	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.thresh.s \
-	    configure -from $min -to $max
-    }
-
     method toggle_show_guidelines {} {
-
-  	 $this check_crop
-
-         global mods show_guidelines
-         global $mods(ViewSlices)-axial-viewport0-show_guidelines
-         global $mods(ViewSlices)-sagittal-viewport0-show_guidelines
-         global $mods(ViewSlices)-coronal-viewport0-show_guidelines
-
-         set $mods(ViewSlices)-axial-viewport0-show_guidelines $show_guidelines
-         set $mods(ViewSlices)-sagittal-viewport0-show_guidelines $show_guidelines
-         set $mods(ViewSlices)-coronal-viewport0-show_guidelines $show_guidelines
-  }
+	$this check_crop
+	global mods show_guidelines
+	foreach axis {axial sagittal coronal} {
+	    setGlobal $mods(ViewSlices)-$axis-viewport0-show_guidelines \
+		$show_guidelines	    
+	}
+    }
 
     method update_planes_color_by {} {
         $this check_crop
 
         global planes_mapType
         set GenStandard [lindex [lindex $filters(0) $modules] 26]
-        global [set GenStandard]-mapType
-
-        set [set GenStandard]-mapType $planes_mapType
+	setGlobal $GenStandard-mapType $planes_mapType
         if {!$loading && $has_executed == 1} {
-	    [set GenStandard]-c needexecute
+	    $GenStandard-c needexecute
 	}
     }
 
@@ -5063,30 +4814,17 @@ class BioImageApp {
 
     method set_viewer_position {} {
 	global mods
-	
-	global $mods(Viewer)-ViewWindow_0-view-eyep-x
-	global $mods(Viewer)-ViewWindow_0-view-eyep-y
-	global $mods(Viewer)-ViewWindow_0-view-eyep-z
-   	set $mods(Viewer)-ViewWindow_0-view-eyep-x {560.899236544}
-        set $mods(Viewer)-ViewWindow_0-view-eyep-y {356.239586973}
-        set $mods(Viewer)-ViewWindow_0-view-eyep-z {178.810334192}
-
-	global $mods(Viewer)-ViewWindow_0-view-lookat-x
-	global $mods(Viewer)-ViewWindow_0-view-lookat-y
-	global $mods(Viewer)-ViewWindow_0-view-lookat-z
-        set $mods(Viewer)-ViewWindow_0-view-lookat-x {51.5}
-        set $mods(Viewer)-ViewWindow_0-view-lookat-y {47.0}
-        set $mods(Viewer)-ViewWindow_0-view-lookat-z {80.5}
-
-	global $mods(Viewer)-ViewWindow_0-view-up-x
-	global $mods(Viewer)-ViewWindow_0-view-up-y
-	global $mods(Viewer)-ViewWindow_0-view-up-z
-        set $mods(Viewer)-ViewWindow_0-view-up-x {-0.181561715965}
-        set $mods(Viewer)-ViewWindow_0-view-up-y {0.0242295849764}
-        set $mods(Viewer)-ViewWindow_0-view-up-z {0.983081009128}
-
-	global $mods(Viewer)-ViewWindow_0-view-fov
-        set $mods(Viewer)-ViewWindow_0-view-fov {20.0}
+	set vw $mods(Viewer)-ViewWindow_0
+   	setGlobal $vw-view-eyep-x {560.899236544}
+        setGlobal $vw-view-eyep-y {356.239586973}
+        setGlobal $vw-view-eyep-z {178.810334192}
+        setGlobal $vw-view-lookat-x {51.5}
+        setGlobal $vw-view-lookat-y {47.0}
+        setGlobal $vw-view-lookat-z {80.5}
+        setGlobal $vw-view-up-x {-0.181561715965}
+        setGlobal $vw-view-up-y {0.0242295849764}
+        setGlobal $vw-view-up-z {0.983081009128}
+        setGlobal $vw-view-fov {20.0}
     }
 
     method scroll_history {p which} {
