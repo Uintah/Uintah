@@ -80,6 +80,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   switchDebugSource_Sink          = false;
   switchDebug_advance_advect      = false;
   switchDebug_advectQFirst        = false;
+  switchTestConservation          = false;
 
   d_massExchange = false;
   
@@ -141,6 +142,8 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
 	switchDebug_advance_advect       = true;
       else if (debug_attr["label"] == "switchDebug_advectQFirst")
 	switchDebug_advectQFirst         = true;
+      else if (debug_attr["label"] == "switchTestConservation")
+        switchTestConservation           = true;
     }
   }
   cerr << "Pulled out the debugging switches from input file" << endl;
@@ -230,6 +233,8 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
     cout << "switchDebug_advance_advect is ON" << endl;
   if (switchDebug_advectQFirst == true) 
     cout << "switchDebug_advectQFirst is ON" << endl;
+  if (switchTestConservation == true)
+    cout << "switchTestConservation is ON" << endl;
 
 }
 /* ---------------------------------------------------------------------
@@ -701,14 +706,14 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
         new_dw->get(speedSound, lb->speedSound_CCLabel,
  		                            indx,patch,Ghost::None, 0);
         new_dw->get(vel, lb->vel_CCLabel, indx,patch,Ghost::None, 0);
-
-        for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+	
+	for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 	  double A = fudge_factor*CFL*dx.x()/(speedSound[*iter] + 
-					     fabs(vel[*iter].x())+ d_SMALL_NUM);
+					     fabs(vel[*iter].x())+d_SMALL_NUM);
 	  double B = fudge_factor*CFL*dx.y()/(speedSound[*iter] + 
-					     fabs(vel[*iter].y())+ d_SMALL_NUM);
+					     fabs(vel[*iter].y())+d_SMALL_NUM);
 	  double C = fudge_factor*CFL*dx.z()/(speedSound[*iter] + 
-					     fabs(vel[*iter].z())+ d_SMALL_NUM);
+					     fabs(vel[*iter].z())+d_SMALL_NUM);
 
 	  delt_CFL = std::min(A, delt_CFL);
 	  delt_CFL = std::min(B, delt_CFL);
@@ -2776,61 +2781,64 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
        mat_mass[m]    += mass;
       }
     }  // numICEmatls loop
-    //__________________________________
-    // This grossness checks to see if delPress
-    // near a ghost cell is > 0  
-    IntVector low, hi;
 
-    low = delPress_CC.getLowIndex();
-    hi  = delPress_CC.getHighIndex();
-    // x_plus
-    for (int j = low.y(); j<hi.y(); j++) {
-      for (int k = low.z(); k<hi.z(); k++) {
-        if( fabs(delPress_CC[IntVector(hi.x()-2,j,k)]) > 0.0 )  {
-          flag = 1;
-        }
-      }
-    }
-    // x_minus
-    for (int j = low.y(); j<hi.y(); j++) {
-      for (int k = low.z(); k<hi.z(); k++) {
-        if( fabs(delPress_CC[IntVector(low.x()+1,j,k)]) > 0.0 )  {
-          flag = 1;
-        }
-      }
-    }
-    // y_plus
-    for (int i = low.x(); i<hi.x(); i++) {
-      for (int k = low.z(); k<hi.z(); k++) {
-        if( fabs(delPress_CC[IntVector(i,hi.y()-2,k)]) > 0.0 )  {
-          flag = 1;
-        }
-      }
-    }
-    // y_minus
-    for (int i = low.x(); i<hi.x(); i++) {
-      for (int k = low.z(); k<hi.z(); k++) {
-        if( fabs(delPress_CC[IntVector(i,low.y()+1,k)]) > 0.0 )  {
-          flag = 1;
-        }
-      }
-    }
-    // z_plus
-    for (int i = low.x(); i<hi.x(); i++) {
+    if (switchTestConservation) {
+      //__________________________________
+      // This grossness checks to see if delPress
+      // near a ghost cell is > 0  
+      IntVector low, hi;
+      
+      low = delPress_CC.getLowIndex();
+      hi  = delPress_CC.getHighIndex();
+      // x_plus
       for (int j = low.y(); j<hi.y(); j++) {
-        if( fabs(delPress_CC[IntVector(i,j,hi.z()-2)]) > 0.0 )   {
-          flag = 1;
-        }
+	for (int k = low.z(); k<hi.z(); k++) {
+	  if( fabs(delPress_CC[IntVector(hi.x()-2,j,k)]) > 0.0 )  {
+	    flag = 1;
+	  }
+	}
       }
-    }
-    // z_minus
-    for (int i = low.x(); i<hi.x(); i++) {
+      // x_minus
       for (int j = low.y(); j<hi.y(); j++) {
-        if( fabs(delPress_CC[IntVector(i,j,low.z()+1)]) > 0.0 )   {
-          flag = 1;
-        }
+	for (int k = low.z(); k<hi.z(); k++) {
+	  if( fabs(delPress_CC[IntVector(low.x()+1,j,k)]) > 0.0 )  {
+	    flag = 1;
+	  }
+	}
       }
-    }
+      // y_plus
+      for (int i = low.x(); i<hi.x(); i++) {
+	for (int k = low.z(); k<hi.z(); k++) {
+	  if( fabs(delPress_CC[IntVector(i,hi.y()-2,k)]) > 0.0 )  {
+	    flag = 1;
+	  }
+	}
+      }
+      // y_minus
+      for (int i = low.x(); i<hi.x(); i++) {
+	for (int k = low.z(); k<hi.z(); k++) {
+	  if( fabs(delPress_CC[IntVector(i,low.y()+1,k)]) > 0.0 )  {
+	    flag = 1;
+	  }
+	}
+      }
+      // z_plus
+      for (int i = low.x(); i<hi.x(); i++) {
+	for (int j = low.y(); j<hi.y(); j++) {
+	  if( fabs(delPress_CC[IntVector(i,j,hi.z()-2)]) > 0.0 )   {
+	    flag = 1;
+	  }
+	}
+      }
+      // z_minus
+      for (int i = low.x(); i<hi.x(); i++) {
+	for (int j = low.y(); j<hi.y(); j++) {
+	  if( fabs(delPress_CC[IntVector(i,j,low.z()+1)]) > 0.0 )   {
+	    flag = 1;
+	  }
+	}
+      }
+    } // end switchTestConservation
   }  // patch loop
   
   //__________________________________

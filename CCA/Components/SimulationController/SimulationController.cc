@@ -439,14 +439,16 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	IntVector inLowCell = lowCell;
 	IntVector inHighCell = highCell;
 	
-	IntVector extraCells;
+	IntVector extraCells(0,0,0);
 	if(box_ps->get("extraCells", extraCells)){
 	  lowCell = lowCell-extraCells;
 	  highCell = highCell+extraCells;
 	}
+	level->setExtraCells(extraCells);
 	
 	IntVector resolution(highCell-lowCell);
 	IntVector inResolution(inHighCell-inLowCell);
+
 	if(resolution.x() < 1 || resolution.y() < 1 || resolution.z() < 1)
 	  throw ProblemSetupException("Degenerate patch");
 	
