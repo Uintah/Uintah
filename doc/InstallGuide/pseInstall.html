@@ -338,12 +338,11 @@
 	directory of your choosing.</b></a>
     </p>
 
-    <p class="firstpara">
-      SCIRun can be installed into any directory, whether within a user
-      home directory or a system application directory.  There is no "make
-      install" step in the build process, so which ever directory is chosen
-      is where SCIRun will be installed.
-    </p>
+    
+<p class="firstpara"> SCIRun can be installed into any directory, within a user 
+  home directory or a system application directory. There is no "make install" 
+  step in the build process, so SCIRun will be installed in the chosen directory. 
+</p>
 
     <p class="firstpara">
       The chosen install directory will be referred to as <b><i><font
@@ -447,12 +446,10 @@ tar xvf BioPSE.PKG.x.x.x.tar</font>
       installed above.
     </p>
 
-    <p class="firstpara">
-      There are many options for configuring SCIRun.  Chief among them
-      is the configure location.  SCIRun can be configured from within the
-      <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src 
-      directory, as is commonly done:
-    </p>
+    
+<p class="firstpara"> There are many options for configuring SCIRun with location 
+  as the chief option. SCIRun can be configured from within the <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src 
+  directory, as is commonly done: </p>
 
     <pre class="example"><font color=blue>cd <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src
 ./configure <b><i><font color=green>CONFIGURE_OPTIONS</font></i></b></font>
@@ -465,12 +462,11 @@ tar xvf BioPSE.PKG.x.x.x.tar</font>
     <pre class="example"><b><i><font color=green>BUILD_DIR</font></i></b> = <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/src
     </pre>
 
-    <p class="firstpara">
-      However, SCIRun can also be configured from locations other than
-      the source directory, which allows for having builds for multiple
-      platforms or for multiple ABI's (Applications Binary Interface)
-      while sharing a single source directory:
-    </p>
+    
+<p class="firstpara"> However, SCIRun can also be configured from locations other 
+  than the source directory which allows for having builds for multiple platforms, 
+  or for multiple ABI's (Applications Binary Interface) while sharing a single 
+  source directory: </p>
 
     <pre class="example"><font color=blue>cd <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun
 mkdir linux
@@ -493,12 +489,11 @@ cd ../sgi64
 <b><i><font color=green>BUILD_DIR</font></i></b> = <b><i><font color=green>INSTALL_DIR</font></i></b>/SCIRun/sgi64
     </pre>
 
-    <p class="firstpara">
-      In addition to the configure location, there are several options that
-      may be invoked at configure time by supplying configure with arguments.
-      The available <b><i><font color=green>CONFIGURE_OPTIONS</font></i></b>
-      can be found in the <a href="#conftable">appendix</a> below.
-    </p>
+    
+<p class="firstpara"> In addition to the configure location, there are several 
+  options that may be invoked at configure time by supplying the configure with 
+  arguments. The available <b><i><font color=green>CONFIGURE_OPTIONS</font></i></b> 
+  can be found in the <a href="#conftable">appendix</a> below. </p>
 
     <p class="firstpara">   
       <a name="Make"><b>3. Run GNU make in the <i><font
@@ -522,24 +517,22 @@ cd ../sgi64
       install machine.
     </p>
 
-    <p class="firstpara">
-      Just like configure, GNU make has some useful options.  The most commonly
-      used option for building SCIRun is the "number of jobs" option:
-    </p>
+    
+<p class="firstpara"> Just like configure, GNU make has some useful options. The 
+  "number of jobs" option, is the most commonly used option for building SCIRun 
+  : </p>
 
     <pre class="example"><font color=blue>gmake -j <b><i><font color=green>NUM_JOBS</font></i></b></font></pre>
 
-    <p class="firstpara">
-      Where <b><i><font color=green>NUM_JOBS</font></i></b> is an integer.
-      If the target install machine has multiple processors, setting
-      <b><i><font color=green>NUM_JOBS</font></i></b> to the number of
-      processors available will use all the processors to build SCIRun in
-      parallel, often significantly speeding up the time to build SCIRun.
-    </p>
+    
+<p class="firstpara"> Where <b><i><font color=green>NUM_JOBS</font></i></b> is 
+  an integer. If the target install machine has multiple processors, setting <b><i><font color=green>NUM_JOBS</font></i></b> 
+  to the number of processors available uses all the processors to build SCIRun 
+  in parallel, often significantly speeding up the time to build SCIRun. </p>
 
-    <p class="firstpara">
-      additional options for GNU make can be found <a href=http://www.gnu.org/manual/make/html_mono/make.html#SEC92>here</a>.
-    </p>
+    
+<p class="firstpara"> Additional options for GNU make can be found <a href=http://www.gnu.org/manual/make/html_mono/make.html#SEC92>here</a>. 
+</p>
 
 <p class="head"><a name="RunningSCIRun">Running SCIRun</a></p>
     <P class="firstpara">

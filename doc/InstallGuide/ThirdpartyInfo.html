@@ -45,7 +45,7 @@
 <p class="title">Thirdparty Software Installation and Build Information</p>
 <p class="subtitle">(Unix version - April 13, 2001)</p>
 
-<p class="head">Table of contents</p>
+<p class="head">Table of Contents</p>
 <ol class="toc">
       <LI><A HREF="#Prerequisites">Prerequisites</A></LI>
       <LI><A HREF="#Auto">Automatic Installation of All Thirdparty Software</A>
@@ -55,25 +55,20 @@
 </ol>
 
 <p class="head"><a name="Prerequisites">Prerequisites</a></p>
-    <p class="firstpara">
-      Use of this document requires experience with the SGI
-      Irix operating system and/or the Linux operating system.
-      Knowledge of file systems, programming in C/C++, building
-      software from tarball distributions and shell scripting will
-      be useful if not required.  The installation or upgrade of
-      core system components (such as the OS and compilers) may be
-      required.  As such, a system administrator's assistance may
-      be warranted.
-    </p>
+    
+<p class="firstpara"> Use of this document requires experience with the SGI Irix 
+  operating system and/or the Linux operating system. Knowledge of file systems, 
+  programming in C/C++, building software from tarball distributions and shell 
+  scripting will be useful, if not required. The installation or upgrade of core 
+  system components (such as the OS and compilers) may be required. As such, a 
+  system administrator's assistance may be warranted. </p>
 
-    <p class="firstpara">
-      The following information may help expedite the process of
-      installing the required third party software.  However, It is not
-      intended to replace the installation instructions, provided with
-      the software, only to supplement them.  Please read the
-      build instructions for each software distribution before attempting to
-      use these instructions.
-    </p>
+    
+<p class="firstpara"> The following information may help expedite installation 
+  of the required third party software. However, this information is not intended 
+  to replace the installation instructions that come with the software, but to 
+  supplement them. Please read the build instructions for each software distribution 
+  before attempting to use these instructions. </p>
 
     <p class="firstpara">
       This information does not apply to the installation and upgrade of
@@ -82,29 +77,21 @@
 
 <p class="head"><a name="Auto">Automatic Installation of All Thirdparty
     Software</a></p>
-    <p class="firstpara">
-      Because of many bugs and gotchas in the thirdparty installation
-      processes, the easiest and most dependable way to install the
-      third party software is by using the thirdparty install script created
-      by the SCI Institute.
-    </p>
-
-    <p class="firstpara">
-      However, if you want or need to install the third party software by
-      hand, you can continue by following the instructions on this page
-      starting at <a href="#Manual">Manual Installation of Required Thirdparty
-      Software</a>.
-    </p>
-
-    <p class="firstpara">
-      The automatic install script comes with all the necessary thirdparty
-      software, and does not require you to download anything else.
-    </p>
     
-    <p class="firstpara">
-      To use the automatic install script do the following:
-    </p>
+<p class="firstpara"> Because of many bugs and &quot;gotchas&quot; in the thirdparty 
+  installation process, the easiest and most dependable means of installation 
+  is the SCI Institute's thirdparty install script.</p>
 
+    
+<p class="firstpara"> However, users may conduct a manual installation by following 
+  the instructions on this page starting at <a href="#Manual">Manual Installation 
+  of Required Thirdparty Software</a>. </p>
+
+    
+<p class="firstpara"> The automatic install script comes with all the necessary 
+  thirdparty software, and does not require additional downloads. </p>
+<p class="firstpara">To use the automatic install script do the following: </p>
+    
     <p class="firstpara">
       <b>1.  Download the install script tar ball from
       <a href="http://ampano.cs.utah.edu/research/software/download.xml">
@@ -139,12 +126,10 @@ cd Thirdparty_install.x.x.x</font></pre>
       for 64 bit binaries and libraries.  64 bit is available for SGI only.
     </p>
 
-    <p class="firstpara">
-      you can also specify a faster parallel build by giving an 
-      integer which provides the "number of jobs" argument for GNU make
-      For example, to build 32 bit binaries and libraries using 12 jobs,
-      type the following:
-    </p>
+    
+<p class="firstpara"> You can also specify a faster parallel build by giving an 
+  integer which provides the "number of jobs" argument for GNU make For example, 
+  to build 32 bit binaries and libraries using 12 jobs, type the following: </p>
 
     <pre class="example"><font color=blue>python install 32 12</font></pre>
 
@@ -172,8 +157,8 @@ cd Thirdparty_install.x.x.x</font></pre>
       is required for building SCIRun itself.
     </p>
 
-<p class="subhead"><a name="Install">Recommended Installation Location of Third Party 
-    Software</a></p>
+<p class="subhead"><a name="Install">Recommended Installation Location of Thirdparty 
+  Software</a></p>
     <p class="firstpara">
       SCIRun uses the latest versions of all the software that it requires, and
       can be configured to use those versions regardless of where that 
@@ -303,43 +288,38 @@ CFLAGS = "-O -DXML_USE_NATIVE_TRANSCODER -DXML_USE_INMEM_MESSAGELOADER"
     </p>
 
 <p class="head"><a name="Gotchas">Known Issues For Manual Builds</a></p>
-    <p class="firstpara">
-      This section describes known issues with installing and building the
-      required third party software.  It also includes solutions when
-      available. 
-    </p>
+    
+<p class="firstpara"> This section describes known issues with installing and 
+  building the required third party software, including solutions when available. 
+</p>
 
 <p class="subhead">Path Specifications</p>
-    <p class="firstpara">
-     If any of the software, SCIRun or thirdparty, is installed into a user's
-     home directory, <i><b>do not</b></i> use abbreviations such as tilde
-     expansion when specifying paths.  Instead, use full absolute paths.
-     For example, use /home/bob/SCIRun instead of ~bob/SCIRun for the 
-     --prefix arguments when configuring.  Most abbreviation techniques will
-     not get expanded by the build scripts for any of the software.
-    </p>
+    
+<p class="firstpara"> <i><b>Do not</b></i> use abbreviations such as tilde expansion 
+  when specifying paths in any of the software, SCIRun or thirdparty, as installed 
+  in the user's home directory. Instead, use full absolute paths, for example, 
+  use /home/bob/SCIRun instead of ~bob/SCIRun for the --prefix arguments when 
+  configuring. Most abbreviation techniques will not expand by the build scripts 
+  for any of the software. </p>
 
-<p class="subhead">Building with 64 bit enabled on SGI</p>
-    <p class="firstpara">
-      Unfortunately, most of the required third party software didn't have
-      64 bit SGI platforms in mind when they wrote their configure scripts
-      and makefiles.  However, it is possible to build all the software in
-      64 bit with some effort.  In general, to get 64 bit versions of the
-      third party software it is necessary to edit Makefiles such that
-      the CFLAGS and LFLAGS macros have "-64" listed instead of "-n32".
-      In the case of the tcl distributions, this means editing the
-      makefiles (after configuring) by hand and replacing all instances of 
-      "-n32" with "-64".  For Xerces, this means changing the environment
-      variables listed above replacing all instances of  " -n32 " with " -64 ".
-    </p>
+<p class="subhead">Building with 64 bit Enabled on SGI</p>
+    
+<p class="firstpara"> Unfortunately, most of the required third party software 
+  does not take 64 bit SGI platforms into account when writing configure scripts 
+  and makefiles. However, with some effort, it is possible to build all the software 
+  in 64 bit. In general, to get 64 bit versions of the third party software it 
+  is necessary to edit Makefiles such that the CFLAGS and LFLAGS macros have "-64" 
+  listed instead of "-n32". In the case of the tcl distributions, this means editing 
+  the makefiles (after configuring) by hand and replacing all instances of "-n32" 
+  with "-64". For Xerces, this means changing the environment variables listed 
+  above replacing all instances of " -n32 " with " -64 ". </p>
 
 <p class="subhead">Building [incr Tcl/Tk]</p>
-    <p class="firstpara">
-      The [incr Tcl/Tk] distribution listed in the system requirements has a
-      bug in it:  The installation scripts are bundled without execute
-      permissions.  Before attempting to configure or make [incr Tcl/Tk],
-      type the following commands:
-    </p>
+    
+<p class="firstpara"> The [incr Tcl/Tk] distribution listed in the system requirements 
+  has a bug in it: the installation scripts are bundled without execute permissions. 
+  Before attempting to configure or make [incr Tcl/Tk], type the following commands: 
+</p>
 
     <pre class="example"><font color=blue>cd itcl3.1.0/config
 chmod a+x install-sh mkinstalldirs</font></pre>
@@ -349,11 +329,10 @@ chmod a+x install-sh mkinstalldirs</font></pre>
     </p>
 
 <p class="subhead">Building BLT</p>
-    <p class="firstpara">
-      The BLT make files have bugs in them that cause apparent errors in the
-      building process.  To build without the apparent errors, type the
-      following (in the order shown!) after configuring:
-    </p>
+    
+<p class="firstpara"> The BLT make files have bugs in them that cause apparent 
+  errors in the building process. To build without the apparent errors, type the 
+  following (in the order shown) after configuring: </p>
 
     <pre class="example"><font color=blue>cd blt2.4u
 make 
@@ -379,18 +358,16 @@ make -k install</font>
     <pre class="example"><font color=blue>cd xerces-c-src1_4_0/src
 chmod a+x configure runConfigure</font></pre>
 
-    <p class="firstpara">
-      There is no dependancy tree for the copy phase of the xerces build,
-      so using a -j flag (number of jobs) as a GNU make argument will cause
-      the build to fail.
-    </p>
+    
+<p class="firstpara"> There is no dependency tree for the copy phase of the xerces 
+  build, so using a -j flag (number of jobs) as a GNU make argument will cause 
+  the build to fail. </p>
 
-    <p class="firstpara">
-      There is no dependancy tree for the "install" target within the make
-      files, so passing "install" as an argument to the first time "make" is
-      typed will cause the build to fail.  Instead type "make" first, then
-      "make install".
-    </p>
+    
+<p class="firstpara"> There is no dependency tree for the "install" target within 
+  the make files, so passing "install" as an argument to the first time "make" 
+  is typed will cause the build to fail. Instead type "make" first, then "make 
+  install."</p>
 
     <p class="firstpara">
       The make system ignores errors in compilation and forces a link.  Verify
