@@ -68,6 +68,7 @@ private:
     double dfirst;
   };
 
+#ifdef HAVE_HASH_MAP
   struct edgepairequal
   {
     bool operator()(const edgepair_t &a, const edgepair_t &b) const
@@ -76,7 +77,6 @@ private:
     }
   };
 
-#ifdef HAVE_HASH_MAP
   struct edgepairhash
   {
     unsigned int operator()(const edgepair_t &a) const
@@ -91,9 +91,17 @@ private:
 		   edgepairhash,
 		   edgepairequal> edge_hash_type;
 #else
+  struct edgepairless
+  {
+    bool operator()(const edgepair_t &a, const edgepair_t &b) const
+    {
+      return a.first < b.first || (a.first == b.first && a.second < b.second);
+    }
+  };
+
   typedef map<edgepair_t,
 	      TriSurfMesh::Node::index_type,
-	      edgepairequal> edge_hash_type;
+	      edgepairless> edge_hash_type;
 #endif
 
   edge_hash_type   edge_map_;  // Unique edge cuts when surfacing node data

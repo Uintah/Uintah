@@ -78,7 +78,7 @@ ClipFieldAlgoT<FIELD>::execute_cell(ProgressReporter *mod,
 #else
   typedef map<unsigned int,
     typename FIELD::mesh_type::Node::index_type,
-    equal_to<unsigned int> > hash_type;
+    less<unsigned int> > hash_type;
 #endif
 
   hash_type nodemap;
@@ -180,7 +180,7 @@ ClipFieldAlgoT<FIELD>::execute_node(ProgressReporter *mod,
 #else
   typedef map<unsigned int,
     typename FIELD::mesh_type::Node::index_type,
-    equal_to<unsigned int> > hash_type;
+    less<unsigned int> > hash_type;
 #endif
 
   hash_type nodemap;

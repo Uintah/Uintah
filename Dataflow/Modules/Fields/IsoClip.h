@@ -78,7 +78,6 @@ private:
       return h(a.first ^ a.second);
     }
   };
-#endif
 
   struct edgepairequal
   {
@@ -87,6 +86,15 @@ private:
       return a.first == b.first && a.second == b.second;
     }
   };
+#else
+  struct edgepairless
+  {
+    bool operator()(const edgepair_t &a, const edgepair_t &b) const
+    {
+      return a.first < b.first || a.first == b.first && a.second < b.second;
+    }
+  };
+#endif
 
   struct facetriple_t
   {
@@ -103,7 +111,6 @@ private:
       return h(a.first ^ a.second ^ a.third);
     }
   };
-#endif
 
   struct facetripleequal
   {
@@ -112,6 +119,15 @@ private:
       return a.first == b.first && a.second == b.second && a.third == b.third;
     }
   };
+#else
+  struct facetripleless
+  {
+    bool operator()(const facetriple_t &a, const facetriple_t &b) const
+    {
+      return a.first < b.first || a.first == b.first && ( a.second < b.second || a.second == b.second && a.third < b.third);
+    }
+  };
+#endif
   
 
 #ifdef HAVE_HASH_MAP
@@ -132,15 +148,15 @@ private:
 #else
   typedef map<unsigned int,
 	      typename FIELD::mesh_type::Node::index_type,
-	      equal_to<unsigned int> > node_hash_type;
+	      less<unsigned int> > node_hash_type;
 
   typedef map<edgepair_t,
 	      typename FIELD::mesh_type::Node::index_type,
-	      edgepairequal> edge_hash_type;
+	      edgepairless> edge_hash_type;
 
   typedef map<facetriple_t,
 	      typename FIELD::mesh_type::Node::index_type,
-	      facetripleequal> face_hash_type;
+	      facetripleless> face_hash_type;
 #endif
 
   typename FIELD::mesh_type::Node::index_type
@@ -694,14 +710,6 @@ private:
     double dfirst;
   };
 
-  struct edgepairequal
-  {
-    bool operator()(const edgepair_t &a, const edgepair_t &b) const
-    {
-      return a.first == b.first && a.second == b.second;
-    }
-  };
-
 #ifdef HAVE_HASH_MAP
   struct edgepairhash
   {
@@ -709,6 +717,14 @@ private:
     {
       hash<unsigned int> h;
       return h(a.first ^ a.second);
+    }
+  };
+
+  struct edgepairequal
+  {
+    bool operator()(const edgepair_t &a, const edgepair_t &b) const
+    {
+      return a.first == b.first && a.second == b.second;
     }
   };
 
@@ -721,13 +737,21 @@ private:
 		   typename FIELD::mesh_type::Node::index_type,
 		   edgepairhash, edgepairequal> edge_hash_type;
 #else
+  struct edgepairless
+  {
+    bool operator()(const edgepair_t &a, const edgepair_t &b) const
+    {
+      return a.first < b.first || a.first == b.first && a.second < b.second;
+    }
+  };
+
   typedef map<unsigned int,
 	      typename FIELD::mesh_type::Node::index_type,
-	      equal_to<unsigned int> > node_hash_type;
+	      less<unsigned int> > node_hash_type;
 
   typedef map<edgepair_t,
 	      typename FIELD::mesh_type::Node::index_type,
-	      edgepairequal> edge_hash_type;
+	      edgepairless> edge_hash_type;
 #endif
 
   typename FIELD::mesh_type::Node::index_type

@@ -768,15 +768,6 @@ QuadSurfMesh::add_elem(Node::array_type a)
 
 
 
-struct edgecompare
-{
-  bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
-  {
-    return a.first == b.first && a.second == b.second;
-  }
-};
-
-
 #ifdef HAVE_HASH_MAP
 
 struct edgehash
@@ -785,6 +776,24 @@ struct edgehash
   {
     hash<int> hasher;
     return hasher(hasher(a.first) + a.second);
+  }
+};
+
+struct edgecompare
+{
+  bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
+  {
+    return a.first == b.first && a.second == b.second;
+  }
+};
+
+#else
+
+struct edgecompare
+{
+  bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
+  {
+    return a.first < b.first || a.first == b.first && a.second < b.second;
   }
 };
 
