@@ -47,7 +47,9 @@
 #include <SCIRun/Bridge/AutoBridge.h>
 
 namespace SCIRun {
+
 class SCIRunFramework;
+class ConnectionEvent;
 
 /**
  * \class BuilderService
@@ -80,17 +82,17 @@ class BuilderService : public sci::cca::ports::BuilderService,
       Returns a reference counted pointer to a newly-allocated BuilderService
       port.  The \em framework parameter is a pointer to the relevent framework
       and the \em name parameter will become the unique name for the new port.*/
-  static InternalComponentInstance* create(SCIRunFramework* framework,
-                                           const std::string& name);
+  static InternalComponentInstance*
+  create(SCIRunFramework* framework, const std::string& name);
   
   /** Creates an instance of the component of type \em className.  The
       parameter \em instanceName is the unique name of the newly created
       instance. This method is implemented through a createComponentInstance
       call to the SCIRunFramework. */
   virtual sci::cca::ComponentID::pointer
-  createInstance( const std::string& instanceName, const std::string& className,
-                  const sci::cca::TypeMap::pointer& properties);
-
+  createInstance(const std::string& instanceName,
+                 const std::string& className,
+                 const sci::cca::TypeMap::pointer &properties);
 
   /** Returns a list (array) of CCA ComponentIDs that exist in the
       BuilderService's framework. */
@@ -99,102 +101,108 @@ class BuilderService : public sci::cca::ports::BuilderService,
   /** Returns a CCA TypeMap (i.e. a map) that represents any properties
       associated with component \em cid */
   virtual sci::cca::TypeMap::pointer
-  getComponentProperties(const sci::cca::ComponentID::pointer& cid);
+  getComponentProperties(const sci::cca::ComponentID::pointer &cid);
 
   /** Associates the properties specified in \em map with an existing framework
       component \em cid.*/
-  virtual void setComponentProperties(const sci::cca::ComponentID::pointer& cid,
-                                      const sci::cca::TypeMap::pointer& map);
+  virtual void
+  setComponentProperties(const sci::cca::ComponentID::pointer &cid,
+                         const sci::cca::TypeMap::pointer &map);
 
   /** Returns the Component ID (opaque reference to a component instantiation)
       for the serialized component reference \em s. */
-  virtual sci::cca::ComponentID::pointer getDeserialization(const std::string& s);
+  virtual sci::cca::ComponentID::pointer
+  getDeserialization(const std::string &s);
 
   /** Returns the Component ID (opaque reference to a component instantiation)
       for the component instance named \em componentInstanceName. */
-  virtual sci::cca::ComponentID::pointer getComponentID(const std::string&
-                                                        componentInstanceName);
+  virtual sci::cca::ComponentID::pointer
+  getComponentID(const std::string &componentInstanceName);
 
   /** Removed the component instance \em toDie from the scope of the framework.
        The \em timeout parameter gives the maximum allowable wait (in seconds)
        for the operation to be completed.  An exception is thrown if the \em
        toDie component does not  exist, or cannot be destroyed in the given \em
        timeout period. */
-  virtual void destroyInstance(const sci::cca::ComponentID::pointer& toDie,
-                               float timeout);
+  virtual void
+  destroyInstance(const sci::cca::ComponentID::pointer &toDie, float timeout);
 
   /** Returns a list of \em provides ports for the given component instance \em
       cid.*/
   virtual SSIDL::array1<std::string>
-  getProvidedPortNames(const sci::cca::ComponentID::pointer& cid);
+  getProvidedPortNames(const sci::cca::ComponentID::pointer &cid);
 
   /** */
   virtual SSIDL::array1<std::string>
-  getUsedPortNames(const sci::cca::ComponentID::pointer& cid);
+  getUsedPortNames(const sci::cca::ComponentID::pointer &cid);
 
   /** */
   virtual sci::cca::TypeMap::pointer
-  getPortProperties(const sci::cca::ComponentID::pointer& cid,
+  getPortProperties(const sci::cca::ComponentID::pointer &cid,
                     const std::string& portname);
   
   /** */
-  virtual void setPortProperties(const sci::cca::ComponentID::pointer& cid,
-                                 const std::string& portname,
-                                 const sci::cca::TypeMap::pointer& map);
+  virtual void
+  setPortProperties(const sci::cca::ComponentID::pointer &cid,
+                    const std::string &portname,
+                    const sci::cca::TypeMap::pointer &map);
 
   /** */
   virtual sci::cca::ConnectionID::pointer
-  connect(const sci::cca::ComponentID::pointer& user,
-          const std::string& usingPortName,
-          const sci::cca::ComponentID::pointer& provider,
-          const ::std::string& providingPortName);
+  connect(const sci::cca::ComponentID::pointer &user,
+          const std::string &usingPortName,
+          const sci::cca::ComponentID::pointer &provider,
+          const ::std::string &providingPortName);
 
   /** */
   virtual SSIDL::array1<sci::cca::ConnectionID::pointer>
-  getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer>&
-                   componentList);
+  getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer>
+                       &componentList);
 
   /** */
   virtual sci::cca::TypeMap::pointer
-  getConnectionProperties(const sci::cca::ConnectionID::pointer& connID);
+  getConnectionProperties(const sci::cca::ConnectionID::pointer &connID);
 
   /** */
-  virtual void setConnectionProperties(const sci::cca::ConnectionID::pointer& connID,
-                                       const sci::cca::TypeMap::pointer& map);
+  virtual void
+  setConnectionProperties(const sci::cca::ConnectionID::pointer &connID,
+                          const sci::cca::TypeMap::pointer &map);
 
   /** */
-  virtual void disconnect(const sci::cca::ConnectionID::pointer& connID,
-                          float timeout);
+  virtual void
+  disconnect(const sci::cca::ConnectionID::pointer &connID, float timeout);
 
   /** */
-  virtual void disconnectAll(const sci::cca::ComponentID::pointer& id1,
-                             const sci::cca::ComponentID::pointer& id2,
-                             float timeout);
+  virtual void
+  disconnectAll(const sci::cca::ComponentID::pointer &id1,
+                const sci::cca::ComponentID::pointer &id2,
+                float timeout);
 
   /** */
   virtual SSIDL::array1<std::string>
-  getCompatiblePortList( const sci::cca::ComponentID::pointer& c1,
-                         const std::string& port1,
-                         const sci::cca::ComponentID::pointer& c2);
+  getCompatiblePortList(const sci::cca::ComponentID::pointer &c1,
+                        const std::string &port1,
+                        const sci::cca::ComponentID::pointer &c2);
 
 
   // Bridge methods 
   /** */
   virtual SSIDL::array1<std::string>
-  getBridgablePortList( const sci::cca::ComponentID::pointer& c1,
-                        const std::string& port1,
-                        const sci::cca::ComponentID::pointer& c2);
+  getBridgablePortList(const sci::cca::ComponentID::pointer &c1,
+                       const std::string &port1,
+                       const sci::cca::ComponentID::pointer &c2);
 
   /** */
-  virtual std::string generateBridge(const sci::cca::ComponentID::pointer& c1,
-                                     const string& port1,
-                                     const sci::cca::ComponentID::pointer& c2,
-                                     const string& port2);
+  virtual std::string
+  generateBridge(const sci::cca::ComponentID::pointer &c1,
+                 const string &port1,
+                 const sci::cca::ComponentID::pointer &c2,
+                 const string &port2);
   // END Bridge methods
 
   
   /** */
-  sci::cca::Port::pointer getService(const std::string&);
+  sci::cca::Port::pointer getService(const std::string &);
 
   /** */
   int addComponentClasses(const std::string &loaderName);
@@ -203,8 +211,9 @@ class BuilderService : public sci::cca::ports::BuilderService,
   int removeComponentClasses(const std::string &loaderName);
 
   /** */
-  int addLoader(const std::string &loaderName, const std::string &user,
-                const std::string &domain, const std::string &loaderPath );
+  int
+  addLoader(const std::string &loaderName, const std::string &user,
+            const std::string &domain, const std::string &loaderPath);
 
   /** */
   int removeLoader(const std::string &name);
@@ -216,8 +225,10 @@ class BuilderService : public sci::cca::ports::BuilderService,
     BuilderService(SCIRunFramework* fwk, const std::string& name);
     /** Returns the URL of this BuilderService component's framework. */
     std::string getFrameworkURL();
+    /** ? */
+    void emitConnectionEvent(ConnectionEvent* event);
 
-    std::vector<sci::cca::Services::pointer> servicesList;	
+    std::vector<sci::cca::Services::pointer> servicesList;  
     AutoBridge autobr;
   };
 }
