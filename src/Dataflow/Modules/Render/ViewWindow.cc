@@ -749,7 +749,7 @@ void ViewWindow::unicam_rot(int x, int y)
   //   XYpt        tp    = ptr->old(); 
   //   XYpt        te    = ptr->cur();
   float tp[2], te[2];
-  NormalizeMouseXY(_last_pix[0], _last_pix[1], &tp[0], &tp[1]);
+  NormalizeMouseXY((int)(_last_pix[0]), (int)(_last_pix[1]), &tp[0], &tp[1]);
   NormalizeMouseXY(x, y, &te[0], &te[1]);
   _last_pix[0] = x;
   _last_pix[1] = y;
@@ -819,7 +819,7 @@ void ViewWindow::unicam_zoom(int X, int Y)
 {
   float cn[2], ln[2];
   NormalizeMouseXY(X, Y, &cn[0], &cn[1]);
-  NormalizeMouseXY(_last_pix[0], _last_pix[1], &ln[0], &ln[1]);
+  NormalizeMouseXY((int)(_last_pix[0]), (int)(_last_pix[1]), &ln[0], &ln[1]);
 
   float delta[2];
   delta[0] = cn[0] - ln[0];
@@ -859,7 +859,7 @@ void ViewWindow::unicam_pan(int X, int Y)
 {
   float cn[2], ln[2];
   NormalizeMouseXY(X, Y, &cn[0], &cn[1]);
-  NormalizeMouseXY(_last_pix[0], _last_pix[1], &ln[0], &ln[1]);
+  NormalizeMouseXY((int)(_last_pix[0]), (int)(_last_pix[1]), &ln[0], &ln[1]);
 
   float delta[2];
   delta[0] = cn[0] - ln[0];
