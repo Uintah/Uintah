@@ -118,6 +118,9 @@ WARNING
       void getRequiresForComputes(const Task::Dependency* comp,
 				  vector<const Task::Dependency*>& reqs);
 
+      // Note: This just returns one of the computes for a given requires.
+      // Some reduction variables may have several computes and this will
+      // only return one of them.
       const Task::Dependency* getComputesForRequires(const Task::Dependency* req);
 
       int getNumTasks() const;
@@ -157,11 +160,12 @@ WARNING
       
       vector<Task*>        d_tasks;
 
-      typedef map<TaskProduct, const Task::Dependency*> actype;
+      typedef multimap<TaskProduct, const Task::Dependency*> actype;
       actype d_allcomps;
-
+      
       typedef multimap<TaskProduct, const Task::Dependency*> artype;
       artype d_allreqs;
+      
       int d_maxSerial;
    };
    
@@ -169,6 +173,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.10  2001/01/05 21:26:56  witzel
+// Made d_allcomps a multimap so that some reduction variables may allow
+// themselves to be computed multiple times (i.e. desirable for delT).
+//
 // Revision 1.9  2001/01/02 23:47:57  witzel
 // Changed VarLabelMaterialMap to be a map from a VarLabel string name to
 // the materials rather than from a VarLabel* because VarLabel*'s may

@@ -226,28 +226,42 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
        dep != reqs.end(); dep++){
       if(!dep->d_dw->isFinalized()){
 	 TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
-	 actype::const_iterator aciter = d_allcomps.find(p);
-	 Task* vtask = aciter->second->d_task;
-	 if(!vtask->sorted){
-	    if(vtask->visited){
-	       ostringstream error;
-	       error << "Cycle detected in task graph: trying to do\n\t"
-		     << task->getName();
-	       if(task->getPatch())
-		  error << " on patch " << task->getPatch()->getID();
-	       error << "\nbut already did:\n\t"
-		     << vtask->getName();
-	       if(vtask->getPatch())
-		  error << " on patch " << vtask->getPatch()->getID();
-	       error << ",\nwhile looking for variable: \n\t" 
-		     << dep->d_var->getName() << ", material " 
-		     << dep->d_matlIndex;
-	       if(dep->d_patch)
-		  error << ", patch " << dep->d_patch->getID();
-	       error << "\n";
-	       throw InternalError(error.str());
+	 pair<actype::const_iterator, actype::const_iterator> range;
+	 range = d_allcomps.equal_range(p);
+	 actype::const_iterator testiter = range.first;
+	 if ((++testiter) != range.second) {
+	    // more than one compute for a require
+	    if (!task->isReductionTask())
+	       // Only let reduction tasks require a multiple computed
+	       // variable. We may wish to change this in the future but
+	       // it isn't supported now.
+	       throw InternalError(string("Only reduction tasks may require a variable that has multiple computes.\n'") + task->getName() + "' is therefore invalid.\n");
+	 }
+	 
+	 for (actype::const_iterator aciter = range.first;
+	      aciter < range.second; aciter++) {
+	    Task* vtask = aciter->second->d_task;
+	    if(!vtask->sorted){
+	       if(vtask->visited){
+		  ostringstream error;
+		  error << "Cycle detected in task graph: trying to do\n\t"
+			<< task->getName();
+		  if(task->getPatch())
+		     error << " on patch " << task->getPatch()->getID();
+		  error << "\nbut already did:\n\t"
+			<< vtask->getName();
+		  if(vtask->getPatch())
+		     error << " on patch " << vtask->getPatch()->getID();
+		  error << ",\nwhile looking for variable: \n\t" 
+			<< dep->d_var->getName() << ", material " 
+			<< dep->d_matlIndex;
+		  if(dep->d_patch)
+		     error << ", patch " << dep->d_patch->getID();
+		  error << "\n";
+		  throw InternalError(error.str());
+	       }
+	       processTask(vtask, sortedTasks);
 	    }
-	    processTask(vtask, sortedTasks);
 	 }
       }
    }
@@ -307,7 +321,8 @@ TaskGraph::addTask(Task* task)
    for(Task::compType::const_iterator dep = comps.begin();
        dep != comps.end(); dep++){
       TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
-      if (!dep->d_var->allowsMultipleComputes()) {
+      if (!dep->d_var->typeDescription()->isReduction() ||
+	  !dep->d_var->allowsMultipleComputes()) {
 	 actype::iterator aciter = d_allcomps.find(p);
 	 if(aciter != d_allcomps.end()){
 	    cerr << "First task:\n";
@@ -317,7 +332,7 @@ TaskGraph::addTask(Task* task)
 	    throw InternalError("Two tasks compute the same result: "+dep->d_var->getName()+" (tasks: "+task->getName()+" and "+aciter->second->d_task->getName()+")");
 	 }
       }
-      d_allcomps[p] = dep;
+      d_allcomps.insert(actype::value_type(p, dep));
    }
 
    const Task::reqType& reqs = task->getRequires();
@@ -454,6 +469,10 @@ DependData::operator()( const DependData & d1, const DependData & d2 ) const {
 
 //
 // $Log$
+// Revision 1.15  2001/01/05 21:26:56  witzel
+// Made d_allcomps a multimap so that some reduction variables may allow
+// themselves to be computed multiple times (i.e. desirable for delT).
+//
 // Revision 1.14  2001/01/04 22:36:19  witzel
 // Added check of a VarLabel's allowMultipleComputes flag in addTask to
 // determine whether or not to complain when a VarLabel is computed multiple
