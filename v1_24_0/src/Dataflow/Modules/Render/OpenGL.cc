@@ -107,12 +107,12 @@ OpenGL::OpenGL(GuiInterface* gui, Viewer *viewer, ViewWindow *vw) :
   current_movie_frame_(0),
   movie_name_("./movie.%04d"),
   tk_gl_context_(0),
+  old_tk_gl_context_(0),
   myname_("Not Intialized"),
   // private member variables
   gui_(gui),
   helper_(0),
   helper_thread_(0),
-  tkwin_(0),
   viewer_(viewer),
   view_window_(vw),
   drawinfo_(scinew DrawInfoOpenGL),
@@ -167,12 +167,7 @@ OpenGL::~OpenGL()
   delete drawinfo_;
   drawinfo_ = 0;
 
-  if (tk_gl_context_) {
-    gui_->lock();
-    tk_gl_context_->release();
-    delete tk_gl_context_;
-    gui_->unlock();
-  }
+  if (tk_gl_context_) { delete tk_gl_context_; }
 
   if (pbuffer_) { delete pbuffer_; }
 }
@@ -434,16 +429,20 @@ OpenGL::render_and_save_image(int x, int y,
   // Don't need to raise if using pbuffer.
   // FIXME: this next line was apparently meant to raise the Viewer to the
   //        top... but it doesn't actually seem to work
-  Tk_RestackWindow(tk_gl_context_->tkwin_,Above,NULL);
+  if (tk_gl_context_)
+    Tk_RestackWindow(tk_gl_context_->tkwin_,Above,NULL);
 #endif
 
   gui_->lock();
+
   // Make sure our GL context is current
-  if(current_drawer != this)
+  if(current_drawer != this || tk_gl_context_ != old_tk_gl_context_) 
   {
-    current_drawer=this;
+    old_tk_gl_context_ = tk_gl_context_;
     tk_gl_context_->make_current();
+    current_drawer=this;
   }
+
   deriveFrustum();
 
   // Get Viewport dimensions
@@ -618,27 +617,29 @@ OpenGL::redraw_frame()
     gui_->unlock(); 
     return;
   }
-  if (tkwin_ != tk_gl_context_->tkwin_) {
-    tkwin_ = tk_gl_context_->tkwin_;
-    tk_gl_context_->make_current();
-    glXWaitX();
-    
-#if defined(HAVE_GLEW)
-    sci_glew_init();
-#endif
+  // Make sure our GL context is current
+  if((current_drawer != this) || (tk_gl_context_ != old_tk_gl_context_)) 
+  {
     current_drawer=this;
-    GLint data[1];
-    glGetIntegerv(GL_MAX_LIGHTS, data);
-    max_gl_lights_=data[0];
-    // Look for multisample extension...
-#ifdef __sgi
-    if(strstr((char*)glGetString(GL_EXTENSIONS), "GL_SGIS_multisample"))
-    {
-      cerr << "Enabling multisampling...\n";
-      glEnable(GL_MULTISAMPLE_SGIS);
-      glSamplePatternSGIS(GL_1PASS_SGIS);
-    }
+    tk_gl_context_->make_current();
+    if (tk_gl_context_ != old_tk_gl_context_) {
+      old_tk_gl_context_ = tk_gl_context_;
+#if defined(HAVE_GLEW)
+      sci_glew_init();
 #endif
+      GLint data[1];
+      glGetIntegerv(GL_MAX_LIGHTS, data);
+      max_gl_lights_=data[0];
+      // Look for multisample extension...
+#ifdef __sgi
+      if(strstr((char*)glGetString(GL_EXTENSIONS), "GL_SGIS_multisample"))
+      {
+	cerr << "Enabling multisampling...\n";
+	glEnable(GL_MULTISAMPLE_SGIS);
+	glSamplePatternSGIS(GL_1PASS_SGIS);
+      }
+#endif
+    }
   }
 
   // Get the window size
@@ -652,15 +653,6 @@ OpenGL::redraw_frame()
   timer.clear();
   timer.start();
 
-
-  // Make ourselves current
-  if(current_drawer != this)
-  {
-    current_drawer=this;
-    gui_->lock();
-    tk_gl_context_->make_current();
-    gui_->unlock();
-  }
   // Set up a pbuffer associated with tk_gl_context_
   // Get a lock on the geometry database...
   // Do this now to prevent a hold and wait condition with TCLTask
@@ -1142,14 +1134,17 @@ OpenGL::real_get_pick(int x, int y,
   pick_pick=0;
   pick_index = 0x12345678;
   // Make ourselves current
-  if(current_drawer != this)
+
+  // Make sure our GL context is current
+  if ((current_drawer != this) || (tk_gl_context_ != old_tk_gl_context_))
   {
     current_drawer=this;
+    old_tk_gl_context_ = tk_gl_context_;
     gui_->lock();
     tk_gl_context_->make_current();
-    //    cerr<<"viewer current\n";
     gui_->unlock();
   }
+
   // Setup the view...
   View view(view_window_->gui_view_.get());
   viewer_->geomlock_.readLock();
@@ -1721,161 +1716,6 @@ GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)
     glDisable(GL_CULL_FACE);
   }
 }
-
-
-
-#if 0
-
-void
-OpenGL::listvisuals(GuiArgs& args)
-{
-  TCLTask::lock();
-  Tk_Window topwin=Tk_MainWindow(the_interp);
-  if(!topwin)
-  {
-    cerr << "Unable to locate window!\n";
-    TCLTask::unlock();
-    return;
-  }
-  Display *display =Tk_Display(topwin);
-  int screen=Tk_ScreenNumber(topwin);
-  vector<string> visualtags;
-  vector<int> scores;
-  vector<XVisualInfo*> x11_visuals;
-  int nvis;
-  XVisualInfo* vinfo=XGetVisualInfo(display, 0, NULL, &nvis);
-  if(!vinfo)
-  {
-    args.error("XGetVisualInfo failed");
-    TCLTask::unlock();
-    return;
-  }
-  int i;
-  for(i=0;i<nvis;i++)
-  {
-    int score=0;
-    int value;
-    GETCONFIG(GLX_USE_GL);
-    if(!value)
-      continue;
-    GETCONFIG(GLX_RGBA);
-    if(!value)
-      continue;
-    GETCONFIG(GLX_LEVEL);
-    if(value != 0)
-      continue;
-    if(vinfo[i].screen != screen)
-      continue;
-    char buf[20];
-    sprintf(buf, "id=%02x, ", (unsigned int)(vinfo[i].visualid));
-    string tag(buf);
-    GETCONFIG(GLX_DOUBLEBUFFER);
-    if(value)
-    {
-      score+=200;
-      tag += "double, ";
-    }
-    else
-    {
-      tag += "single, ";
-    }
-    GETCONFIG(GLX_STEREO);
-    if(value)
-    {
-      score+=1;
-      tag += "stereo, ";
-    }
-    tag += "rgba=";
-    GETCONFIG(GLX_RED_SIZE);
-    tag+=to_string(value)+":";
-    score+=value;
-    GETCONFIG(GLX_GREEN_SIZE);
-    tag+=to_string(value)+":";
-    score+=value;
-    GETCONFIG(GLX_BLUE_SIZE);
-    tag+=to_string(value)+":";
-    score+=value;
-    GETCONFIG(GLX_ALPHA_SIZE);
-    tag+=to_string(value);
-    score+=value;
-    GETCONFIG(GLX_DEPTH_SIZE);
-    tag += ", depth=" + to_string(value);
-    score+=value*5;
-    GETCONFIG(GLX_STENCIL_SIZE);
-    score += value * 2;
-    tag += ", stencil="+to_string(value);
-    tag += ", accum=";
-    GETCONFIG(GLX_ACCUM_RED_SIZE);
-    tag += to_string(value) + ":";
-    GETCONFIG(GLX_ACCUM_GREEN_SIZE);
-    tag += to_string(value) + ":";
-    GETCONFIG(GLX_ACCUM_BLUE_SIZE);
-    tag += to_string(value) + ":";
-    GETCONFIG(GLX_ACCUM_ALPHA_SIZE);
-    tag += to_string(value);
-#ifdef __sgi
-    tag += ", samples=";
-    GETCONFIG(GLX_SAMPLES_SGIS);
-    if(value)
-      score+=50;
-    tag += to_string(value);
-#endif
-
-    tag += ", score=" + to_string(score);
-
-    visualtags.push_back(tag);
-    x11_visuals.push_back(&vinfo[i]);
-    scores.push_back(score);
-  }
-  for(i=0;(unsigned int)i<scores.size()-1;i++)
-  {
-    for(unsigned int j=i+1;j<scores.size();j++)
-    {
-      if(scores[i] < scores[j])
-      {
-	// Swap.
-	int tmp1 = scores[i];
-	scores[i] = scores[j];
-	scores[j] = tmp1;
-	string tmp2 = visualtags[i];
-	visualtags[i] = visualtags[j];
-	visualtags[j] = tmp2;
-	XVisualInfo* tmp3 = x11_visuals[i];
-	x11_visuals[i] = x11_visuals[j];
-	x11_visuals[j] = tmp3;
-      }
-    }
-  }
-  args.result(GuiArgs::make_list(visualtags));
-  TCLTask::unlock();
-}
-
-
-
-void
-OpenGL::setvisual(const string& wname, unsigned int which, int wid, int height)
-{
-  return;
-#if 0
-  if (which >= x11_visuals_.size())
-  {
-    cerr << "Invalid OpenGL visual, using default.\n";
-    which = 0;
-  }
-
-  //  tkwin_=0;
-  current_drawer=0;
-
-  gui_->execute("opengl " + wname +
-	       " -visual " + to_string((int)x11_visuals_[which]->visualid) +
-	       " -direct true" +
-	       " -geometry " + to_string(wid) + "x" + to_string(height));
-
-  myname_ = wname;
-#endif
-}
-
-#endif
 
 
 void
