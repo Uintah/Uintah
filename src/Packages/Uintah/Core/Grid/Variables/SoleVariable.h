@@ -31,8 +31,6 @@ namespace SCIRun {
 
 namespace Uintah {
 
-using namespace std;
-
 /**************************************
 
 CLASS
@@ -77,12 +75,12 @@ WARNING
     }
     virtual SoleVariableBase* clone() const;
     virtual void copyPointer(Variable&);
-    virtual void print(ostream& out)
+    virtual void print(std::ostream& out)
     { out << value; }
-    virtual void emitNormal(ostream& out, const IntVector& /*l*/,
+    virtual void emitNormal(std::ostream& out, const IntVector& /*l*/,
 			    const IntVector& /*h*/, ProblemSpecP /*varnode*/, bool /*outputDoubleAsFloat*/)
     { out.write((char*)&value, sizeof(double)); }
-    virtual void readNormal(istream& in, bool swapBytes)
+    virtual void readNormal(std::istream& in, bool swapBytes)
     {
       in.read((char*)&value, sizeof(double));
       if (swapBytes) swapbytes(value);
@@ -96,9 +94,9 @@ WARNING
 
     virtual const TypeDescription* virtualGetTypeDescription() const;
     virtual void getMPIInfo(int& count, MPI_Datatype& datatype);
-    virtual void getMPIData(vector<char>& buf, int& index);
-    virtual void putMPIData(vector<char>& buf, int& index);
-    virtual void getSizeInfo(string& elems, unsigned long& totsize,
+    virtual void getMPIData(std::vector<char>& buf, int& index);
+    virtual void putMPIData(std::vector<char>& buf, int& index);
+    virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
                              void*& ptr) const {
       elems="1";
       totsize = sizeof(T);
