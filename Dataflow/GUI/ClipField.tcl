@@ -15,10 +15,10 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_Clip {
+itcl_class SCIRun_Fields_ClipField {
     inherit Module
     constructor {config} {
-        set name Clip
+        set name ClipField
 
 	global $this-runmode
 

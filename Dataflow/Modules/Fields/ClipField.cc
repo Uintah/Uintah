@@ -17,7 +17,7 @@
 
 
 /*
- *  Clip.cc:  Rotate and flip field to get it into "standard" view
+ *  ClipField.cc:  Rotate and flip field to get it into "standard" view
  *
  *  Written by:
  *   Michael Callahan
@@ -33,14 +33,15 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/ScaledBoxWidget.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Clipper.h>
+#include <Dataflow/Modules/Fields/ClipField.h>
 #include <iostream>
 
 namespace SCIRun {
 
 
-class Clip : public Module
+class ClipField : public Module
 {
 private:
   ScaledBoxWidget *box_;
@@ -50,22 +51,22 @@ private:
   int  last_generation_;
 
 public:
-  Clip(const string& id);
-  virtual ~Clip();
+  ClipField(const string& id);
+  virtual ~ClipField();
 
   virtual void execute();
 
 };
 
 
-extern "C" Module* make_Clip(const string& id) {
-  return new Clip(id);
+extern "C" Module* make_ClipField(const string& id) {
+  return new ClipField(id);
 }
 
 
-Clip::Clip(const string& id)
-  : Module("Clip", id, Source, "Fields", "SCIRun"),
-    widget_lock_("Clip widget lock"),
+ClipField::ClipField(const string& id)
+  : Module("ClipField", id, Source, "Fields", "SCIRun"),
+    widget_lock_("ClipField widget lock"),
     mode_("runmode", id, this),
     last_generation_(0)
 {
@@ -73,13 +74,13 @@ Clip::Clip(const string& id)
 }
 
 
-Clip::~Clip()
+ClipField::~ClipField()
 {
 }
 
 
 void
-Clip::execute()
+ClipField::execute()
 {
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
@@ -122,7 +123,7 @@ Clip::execute()
       postMessage("Unable to initialize "+name+"'s oport\n");
       return;
     }
-    ogport->addObj(widget_group, "Clip Selection Widget",
+    ogport->addObj(widget_group, "ClipField Selection Widget",
 		   &widget_lock_);
     ogport->flushViews();
 
@@ -132,10 +133,29 @@ Clip::execute()
   if (mode_.get() == 1 || mode_.get() == 2)
   {
     ClipperHandle clipper = box_->get_clipper();
-    TetVolMeshHandle omesh = (TetVolMesh *)(ifieldhandle->mesh().get_rep());
-    TetVolMeshHandle nmesh = (TetVolMesh *)(omesh->clip(clipper).get_rep());
-    TetVol<double> *ofield =
-      scinew TetVol<double>(nmesh, ifieldhandle->data_at());
+    MeshHandle nmesh = ifieldhandle->mesh()->clip(clipper);
+    if (nmesh.get_rep() == 0)
+    {
+      error("Input field not clippable.");
+      return;
+    }
+
+    const TypeDescription *ftd = ifieldhandle->get_type_description();
+    CompileInfo *ci = ClipFieldAlgo::get_compile_info(ftd);
+    DynamicAlgoHandle algo_handle;
+    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+    {
+      cout << "Could not compile algorithm." << std::endl;
+      return;
+    }
+    ClipFieldAlgo *algo =
+      dynamic_cast<ClipFieldAlgo *>(algo_handle.get_rep());
+    if (algo == 0)
+    {
+      cout << "Could not get algorithm." << std::endl;
+      return;
+    }
+    FieldHandle ofield = algo->execute(nmesh, ifieldhandle->data_at());
 
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
     if (!ofield_port) {
@@ -146,6 +166,29 @@ Clip::execute()
     ofield_port->send(ofield);
   }
 }
+
+
+CompileInfo *
+ClipFieldAlgo::get_compile_info(const TypeDescription *fsrc)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("ClipFieldAlgoT");
+  static const string base_class_name("ClipFieldAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       fsrc->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       fsrc->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  fsrc->fill_compile_info(rval);
+  return rval;
+}
+
 
 
 
