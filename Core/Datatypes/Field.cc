@@ -6,8 +6,9 @@ namespace SCIRun{
 // initialize the static member type_id
 PersistentTypeID Field::type_id(type_name(0), "FieldData", NULL);
 
-Field::Field() :
-  data_at_(NONE)
+
+Field::Field(data_location at) :
+  data_at_(at)
 {
 }
 

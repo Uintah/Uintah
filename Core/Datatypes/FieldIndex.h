@@ -26,9 +26,8 @@ struct FieldIndexBase {
     index_(i) {}
 
   //! Required interface for an Index.
-  inline 
-  T& operator*() { return index_; }
-
+  operator T const &() const { return index_; }
+  
   T index_;
 };
 
