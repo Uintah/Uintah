@@ -3,7 +3,7 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/Light.h>
-#include <Packages/rtrt/Core/MinMax.h>
+#include <Core/Math/MinMax.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>

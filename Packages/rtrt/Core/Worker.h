@@ -14,8 +14,11 @@ namespace SCIRun {
 
 namespace rtrt {
 
-  using namespace SCIRun;
-  
+using SCIRun::Runnable;
+using SCIRun::Barrier;
+using SCIRun::Point;
+using SCIRun::Vector;
+
 //class Barrier;
 class Color;
 class Dpy;

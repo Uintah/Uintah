@@ -5,8 +5,8 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Runnable.h>
-#include <Packages/rtrt/Core/MiscMath.h>
-#include <Packages/rtrt/Core/MinMax.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Math/MinMax.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <GL/glx.h>

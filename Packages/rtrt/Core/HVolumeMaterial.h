@@ -21,8 +21,6 @@ namespace rtrt {
   class Worker;
   class VolumeDpy;
 
-  using namespace SCIRun;
-  
 class HVolumeMaterial: public Material {
   VolumeDpy *vdpy;
   ScalarTransform1D<float,float> *f1_to_f2;

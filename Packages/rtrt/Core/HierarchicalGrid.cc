@@ -16,8 +16,7 @@ extern "C" {
 }
 
 using namespace rtrt;
-using SCIRun::Thread;
-using SCIRun::Time;
+using namespace SCIRun;
 
 int HierarchicalGrid::L1Cells = 0;
 int HierarchicalGrid::L2Cells = 0;

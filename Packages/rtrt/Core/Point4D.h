@@ -6,8 +6,10 @@
 
 namespace rtrt {
 
-  using namespace SCIRun;
-  
+using SCIRun::Vector;
+using SCIRun::Dot;
+using SCIRun::Cross;
+
 class Point4D
 {
 

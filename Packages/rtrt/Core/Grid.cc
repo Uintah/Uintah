@@ -8,6 +8,8 @@
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <iostream>
 #include <stdlib.h>
+#include "Color.h"
+#include "LambertianMaterial.h"
 
 using namespace rtrt;
 using SCIRun::Thread;
@@ -18,6 +20,9 @@ Grid::Grid(Object* obj, int nsides)
 {
     grid=0;
     counts=0;
+
+    set_matl(new LambertianMaterial(Color(1,0,0)));
+
 }
 
 Grid::~Grid()
@@ -290,6 +295,11 @@ void Grid::intersect(const Ray& ray, HitInfo& hit,
     if(iz<0)
 	iz++;
 
+
+//      hit.hit(this,t);
+//      return;
+
+
     int idx=ix*nynz+iy*nz+iz;
 
     double next_x, next_y, next_z;
@@ -361,6 +371,9 @@ void Grid::compute_bounds(BBox& bbox, double offset)
 
 Vector Grid::normal(const Point&, const HitInfo&)
 {
+  return Vector (1,0,0);
+
     cerr << "Error: Grid normal should not be called!\n";
     return Vector(0,0,0);
+
 }

@@ -6,11 +6,12 @@
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/TrivialAllocator.h>
-#include <Packages/rtrt/Core/MiscMath.h>
+#include <Core/Math/MiscMath.h>
 #include <iostream>
 #include <float.h>
 
 using namespace rtrt;
+using namespace SCIRun;
 
 Box::Box(Material* matl, const Point& min, const Point& max )
     : Object(matl), min(min), max(max)

@@ -78,7 +78,7 @@ void Array2<T>::initialize(const T& t)
     ASSERT(objs != 0);
     for(int i=0;i<dm1;i++){
         for(int j=0;j<dm2;j++){
-	    objs[i][j][k]=t;
+	    objs[i][j]=t;
         }
     }
 }

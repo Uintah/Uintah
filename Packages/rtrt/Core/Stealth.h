@@ -11,10 +11,12 @@
 
 namespace rtrt {
 
-using namespace SCIRun;
+using SCIRun::Vector;
+using SCIRun::Point;
 
 using std::cout;
 using std::vector;
+using std::string;
 
 // "Stealth" comes from the DoD term for an invisible watcher on the
 // simulated battlefield.  The stealths are used in relation to

@@ -53,4 +53,30 @@ return Vector(N_x, N_y, N_z);
 
 }
 
+// return non-unit-length normal
+Vector GradientCell(const Point& pmin, const Point& pmax,
+                    const Point& p, float rho[2][2]) {
+
+double x = p.x();
+double y = p.y();
+
+double x_0 = pmin.x();
+double y_0 = pmin.y();
+
+double x_1 = pmax.x();
+double y_1 = pmax.y();
+
+double N_x, N_y, N_z;
+
+N_x  =     (y_1-y)*(rho[0][1]-rho[1][1])
+         + (y-y_0)*(rho[0][0]-rho[1][0]);
+
+N_y  =     (x_1-x)*(rho[1][0]-rho[1][1])
+         + (x-x_0)*(rho[0][0]-rho[0][1]);
+
+N_z =    (y_1-y_0)*(x_1-x_0);
+    
+return Vector(N_x, N_y, N_z);
+}
+
 } // end namespace rtrt

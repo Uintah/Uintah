@@ -11,8 +11,6 @@
 
 namespace rtrt {
 
-  using namespace SCIRun;
-  
 #ifndef MAXUNSIGNEDSHORT
 #define MAXUNSIGNEDSHORT 65535
 #endif

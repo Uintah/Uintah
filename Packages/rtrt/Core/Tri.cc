@@ -62,9 +62,8 @@ Tri::Tri(Material* matl, const Point& p1, const Point& p2,
 
 Tri::Tri(Material* matl, const Point& p1, const Point& p2,
 	 const Point& p3,
-	 const Vector& vn1, const Vector& vn2, const Vector& vn3)
-  : Object(matl), p1(p1), p2(p2), p3(p3),
-    vn1(vn1), vn2(vn2), vn3(vn3)
+	 const Vector& _vn1, const Vector& _vn2, const Vector& _vn3)
+  : Object(matl), p1(p1), p2(p2), p3(p3)
 {
     Vector v1(p2-p1);
     Vector v2(p3-p1);
@@ -100,6 +99,24 @@ Tri::Tri(Material* matl, const Point& p1, const Point& p2,
     e1p=Cross(e1, n);
     e2p=Cross(e2, n);
     e3p=Cross(e3, n);
+
+    if (_vn1.length2() > 1E-12 &&
+	_vn2.length2() > 1E-12 && 
+	_vn3.length2() > 1E-12) {
+
+      vn1 = _vn1.normal();
+      if (Dot(vn1,n) < 0)
+	vn1 = -vn1;
+      vn2 = _vn2.normal();
+      if (Dot(vn2,n) < 0)
+	vn2 = -vn2;
+      vn3 = _vn3.normal();
+      if (Dot(vn3,n) < 0)
+	vn3 = -vn3;
+    } else {
+      vn1 = vn2 = vn3 = n;
+    }
+
 }
 
 Tri::~Tri()
@@ -145,7 +162,13 @@ Vector Tri::normal(const Point&, const HitInfo& hitinfo)
   double beta = uv[0];
   double gamma = uv[1];
 
-  return (1-beta-gamma)*vn1 + beta*vn2 + gamma*vn3;
+//    printf("beta: %lf gamma: %lf\n",beta,gamma);
+
+  Vector norm((1.-beta-gamma)*vn1 + beta*vn2 + gamma*vn3);
+
+  norm.normalize();
+
+  return norm;
 }
 
 // I changed epsilon to 1e-9 to avoid holes in the bunny! -- Bill

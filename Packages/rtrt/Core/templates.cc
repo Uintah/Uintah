@@ -1,7 +1,19 @@
 
 #include <Packages/rtrt/Core/Array1.h>
+#include <Packages/rtrt/Core/Array2.h>
+#include <Packages/rtrt/Core/Heightfield.h>
+#include <Packages/rtrt/Core/BrickArray2.h>
 
 using rtrt::Array1;
+using rtrt::Array2;
+using rtrt::Heightfield;
+using rtrt::HMCell;
+using rtrt::BrickArray2;
+
+template struct HMCell<float>;
+template class BrickArray2<float>;
+template class Array2 < HMCell<float> >;
+template class rtrt::Heightfield<BrickArray2<float>,Array2<HMCell<float > > >;
 
 class Light;
 template class Array1<Light*>;

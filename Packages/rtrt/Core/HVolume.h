@@ -25,8 +25,8 @@
 
 namespace rtrt {
 
-using namespace std;
-using namespace SCIRun;
+using SCIRun::Mutex;
+using SCIRun::WorkQueue;
 
 template<class T>
 struct VMCell {

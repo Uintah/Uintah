@@ -1247,6 +1247,9 @@ class MeshNormalsToken : public Token
     str << "}" << endl;
   }
 
+  vector<double> *GetFaceNormals() { return &face_normals_; }
+  vector<double> *GetVertexNormals() { return &vertex_normals_; }
+
   virtual Token *MakeToken() { return new MeshNormalsToken(); }
 };
 

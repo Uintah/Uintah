@@ -8,8 +8,9 @@
 
 namespace rtrt {
 
-  using namespace SCIRun;
-  
+using SCIRun::Vector;
+using SCIRun::Dot;
+
 class Background {
     Color avg;
 public:

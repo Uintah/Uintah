@@ -9,9 +9,10 @@
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/Context.h>
 #include <Packages/rtrt/Core/Light.h>
-#include <Packages/rtrt/Core/MiscMath.h>
+#include <Core/Math/MiscMath.h>
 
 using namespace rtrt;
+using namespace SCIRun;
 
 Wood::Wood(const Color&  c1,const Color&  c2, double ringscale)
     : ringscale(ringscale), lightwood(c1), darkwood(c2)

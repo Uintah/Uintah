@@ -2,10 +2,11 @@
 #include <Packages/rtrt/Core/Turbulence.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Packages/rtrt/Core/MiscMath.h>
+#include <Core/Math/MiscMath.h>
 #include <Packages/rtrt/Core/Assert.h>
 
 using namespace rtrt;
+using namespace SCIRun;
 
 Turbulence::Turbulence(int _noctaves,double _a, double _s,
 						 int seed, int tblsize)

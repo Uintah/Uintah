@@ -2,13 +2,18 @@
 #ifndef Cylinder_H
 #define Cylinder_H 1
 
-#include <Packages/rtrt/Core/Object.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/UVMapping.h>
 #include <Core/Geometry/Transform.h>
 #include <stdlib.h>
 
 namespace rtrt {
+
+using SCIRun::Vector;
+using SCIRun::Point;
+using SCIRun::Transform;
 
 class Cylinder : public Object {
 protected:

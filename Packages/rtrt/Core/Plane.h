@@ -6,8 +6,10 @@
 
 namespace rtrt {
 
-  using namespace SCIRun;
-  
+using SCIRun::Vector;
+using SCIRun::Point;
+using SCIRun::Dot;
+
 class Plane {
 public:
     Point inplane;
