@@ -160,6 +160,10 @@ main(int argc, char *argv[] )
 {
   const int startnetno = parse_args( argc, argv );
 
+  // determine if we are loading an app
+  char* app = 0;
+  app = strstr(argv[startnetno],".app");
+
   // Start up TCL...
   TCLTask* tcl_task = new TCLTask(1, argv);  // Discard argv on Tk side.
   Thread* t=new Thread(tcl_task, "TCL main event loop");
@@ -188,6 +192,11 @@ main(int argc, char *argv[] )
   Scheduler* sched_task=new Scheduler(net);
 
   new NetworkEditor(net, gui);
+  // if loading an app, withdraw network editor
+  if(app) {
+    gui->eval("wm withdraw .", result);
+  }
+
 
   // Activate the scheduler.  Arguments and return
   // values are meaningless
@@ -241,7 +250,10 @@ main(int argc, char *argv[] )
   }
 
   // wait for the main window to display before continuing the startup.
-  gui->eval("tkwait visibility .top.globalViewFrame.canvas",result);
+  // if loading an app, don't wait
+  if(!app) {
+    gui->eval("tkwait visibility .top.globalViewFrame.canvas",result);
+  }
 
   // load the packages
   packageDB->loadPackage();
