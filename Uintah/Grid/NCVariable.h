@@ -4,6 +4,7 @@
 #include <Uintah/Grid/Array3.h>
 #include <Uintah/Grid/NCVariableBase.h>
 #include <Uintah/Grid/TypeDescription.h>
+#include <Uintah/Grid/TypeUtils.h>
 #include <Uintah/Interface/InputContext.h>
 #include <Uintah/Interface/OutputContext.h>
 #include <Uintah/Grid/TypeUtils.h>
@@ -378,6 +379,10 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 
 //
 // $Log$
+// Revision 1.31  2000/09/28 23:22:01  jas
+// Added (int) to remove g++ warnings for STL size().  Reordered initialization
+// to coincide with *.h declarations.
+//
 // Revision 1.30  2000/09/25 20:37:42  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >

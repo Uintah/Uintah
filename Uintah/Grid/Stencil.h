@@ -91,7 +91,7 @@ WARNING
       Stencil<T>*
       Stencil<T>::clone() const
       {
-	 return scinew Stencil<T>(*this);
+	 return new Stencil<T>(*this);
       }
    
    template<class T>
@@ -126,6 +126,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.5  2000/09/28 23:22:01  jas
+// Added (int) to remove g++ warnings for STL size().  Reordered initialization
+// to coincide with *.h declarations.
+//
 // Revision 1.4  2000/05/30 20:19:33  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

@@ -131,7 +131,7 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
    IntVector low(patch->getCellLowIndex()+IntVector(l,l,l));
    IntVector high(patch->getCellHighIndex()+IntVector(h,h,h));
    level->selectPatches(low, high, neighbors);
-   for(int i=0;i<neighbors.size();i++){
+   for(int i=0;i<(int)neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
       d_reqs.push_back(scinew Dependency(ds, var, matlIndex,
 					 neighbor, this));
@@ -223,9 +223,9 @@ Task::displayAll(ostream& out) const
 {
    display(out);
    out << '\n';
-   for(int i=0;i<d_reqs.size();i++)
+   for(int i=0;i<(int)d_reqs.size();i++)
       out << "requires: " << *d_reqs[i] << '\n';
-   for(int i=0;i<d_comps.size();i++)
+   for(int i=0;i<(int)d_comps.size();i++)
       out << "computes: " << *d_comps[i] << '\n';
 }
 
@@ -258,6 +258,10 @@ operator << (ostream &out, const Task::TaskType & tt)
 
 //
 // $Log$
+// Revision 1.24  2000/09/28 23:22:01  jas
+// Added (int) to remove g++ warnings for STL size().  Reordered initialization
+// to coincide with *.h declarations.
+//
 // Revision 1.23  2000/09/26 21:38:36  dav
 // minor updates
 //

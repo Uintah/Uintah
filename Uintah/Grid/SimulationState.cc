@@ -13,11 +13,13 @@ SimulationState::SimulationState(ProblemSpecP &ps)
    delt_label = scinew VarLabel("delT",
     ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
 
+
   // Get the physical constants that are shared between codes.
   // For now it is just gravity.
 
   ProblemSpecP phys_cons_ps = ps->findBlock("PhysicalConstants");
   phys_cons_ps->require("gravity",d_gravity);
+
 
 }
 
@@ -37,6 +39,10 @@ SimulationState::~SimulationState()
 
 //
 // $Log$
+// Revision 1.15  2000/09/28 23:22:01  jas
+// Added (int) to remove g++ warnings for STL size().  Reordered initialization
+// to coincide with *.h declarations.
+//
 // Revision 1.14  2000/09/25 20:37:43  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
