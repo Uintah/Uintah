@@ -14,7 +14,7 @@ SRCS     += \
 	$(SRCDIR)/RecipBasis.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Dataflow/Network \
+PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/TclInterface \
         Core/Geom Core/Datatypes Core/Geometry \

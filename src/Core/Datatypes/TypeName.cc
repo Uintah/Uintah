@@ -104,8 +104,8 @@ template<> string findTypeName(Transform*){
   return string("Transform");
 }
 
-template<> string findTypeName(NewmannBC*){
-  return string("NewmannBC");
+template<> string findTypeName(NeumannBC*){
+  return string("NeumannBC");
 }
 
 } // namespace SCIRun

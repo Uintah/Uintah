@@ -34,7 +34,7 @@ template <class T> string findTypeName(T*){
 class Vector;
 class Point;
 class Transform;
-class NewmannBC;
+class NeumannBC;
 
 template<> string findTypeName(float*);
 template<> string findTypeName(double*);
@@ -53,7 +53,7 @@ template<> string findTypeName(bool*);
 template<> string findTypeName(Vector*);
 template<> string findTypeName(Point*);
 template<> string findTypeName(Transform*);
-template<> string findTypeName(NewmannBC*);
+template<> string findTypeName(NeumannBC*);
 
 //////////
 // Function overloading for templates 

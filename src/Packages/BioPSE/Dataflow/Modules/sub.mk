@@ -9,9 +9,9 @@ SRCDIR := Packages/BioPSE/Dataflow/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/LeadField\
-#	$(SRCDIR)/Forward\
-#	$(SRCDIR)/Inverse\
+	$(SRCDIR)/Forward\
 #[INSERT NEW CATEGORY DIR HERE]
+#	$(SRCDIR)/Inverse\
 
 include $(OBJTOP_ABS)/scripts/recurse.mk
 

@@ -12,8 +12,8 @@ SRCS     += $(SRCDIR)/ArrowWidget.cc $(SRCDIR)/BaseWidget.cc \
 	$(SRCDIR)/RingWidget.cc $(SRCDIR)/ScaledBoxWidget.cc \
 	$(SRCDIR)/ScaledFrameWidget.cc $(SRCDIR)/ViewWidget.cc
 
-PSELIBS := Core/Datatypes Dataflow/Constraints Core/Exceptions \
-	Core/Geom Core/Thread Core/TclInterface \
+PSELIBS := Core/Datatypes Dataflow/Constraints Dataflow/Ports \
+	Core/Exceptions Core/Geom Core/Thread Core/TclInterface \
 	Core/Containers Core/Geometry
 LIBS := -lm
 
