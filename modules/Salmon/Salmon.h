@@ -73,7 +73,8 @@ public:
     virtual ~Salmon();
     virtual Module* clone(int deep);
     void initPort(Mailbox<int>*);
-    void addObj(int portno, GeomID serial, GeomObj *obj);
+    void addObj(int portno, GeomID serial, GeomObj *obj,
+		const clString&);
     void delObj(int portno, GeomID serial);
     void delAll(int portno);
     void flushViews();

@@ -100,7 +100,7 @@ void Salmon::do_execute()
 	    initPort(gmsg->reply);
 	    break;	
 	case MessageTypes::GeometryAddObj:
-	    addObj(gmsg->portno, gmsg->serial, gmsg->obj);
+	    addObj(gmsg->portno, gmsg->serial, gmsg->obj, gmsg->name);
 	    break;
 	case MessageTypes::GeometryDelObj:
 	    delObj(gmsg->portno, gmsg->serial);
@@ -360,7 +360,8 @@ void Salmon::flushViews()
     }
 }
 
-void Salmon::addObj(int portno, int serial, GeomObj *obj)
+void Salmon::addObj(int portno, int serial, GeomObj *obj,
+		    const clString& name)
 {
 //    cerr << "I'm adding an Object!\n";
     HashTable<int, GeomObj*>* serHash;
@@ -370,11 +371,9 @@ void Salmon::addObj(int portno, int serial, GeomObj *obj)
 	portHash.insert(portno, serHash);
     }
     serHash->insert(serial, obj);
-    char nm[30];
-    sprintf(nm, "Item %d", serial);
-    for (int i=0; i<topRoe.size(); i++) {
-	topRoe[i]->itemAdded(obj, nm);
-    }
+    clString pname(name+" ("+to_string(portno)+")");
+    for (int i=0; i<topRoe.size(); i++)
+	topRoe[i]->itemAdded(obj, pname);
 }
 
 void Salmon::delObj(int portno, int serial)
@@ -384,9 +383,8 @@ void Salmon::delObj(int portno, int serial)
 	GeomObj *g;
 	serHash->lookup(serial, g);
 	serHash->remove(serial);
-	for (int i=0; i<topRoe.size(); i++) {
+	for (int i=0; i<topRoe.size(); i++)
 	    topRoe[i]->itemDeleted(g);
-	}
 	delete g;
     } else {
 	cerr << "Error deleting object, not it database...(" << serial << ")" << endl;

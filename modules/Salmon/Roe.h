@@ -44,8 +44,9 @@ class GeomItem {
 public:
     GeomObj* geom;
     ToggleButtonC* btn;
-    char name[30];
+    clString name;
     int vis;
+    int active;
     GeomItem();
     ~GeomItem();
 };
@@ -181,7 +182,7 @@ public:
     Roe(const Roe&);
     ~Roe();
     void RoeInit(Salmon *s);
-    void itemAdded(GeomObj*, char*);
+    void itemAdded(GeomObj*, const clString&);
     void itemDeleted(GeomObj*);
     void rotate(double angle, Vector v, Point p);
     void rotate_obj(double angle, const Vector& v, const Point& p);

@@ -585,39 +585,62 @@ void Roe::make_current() {
     }
 }
 
-void Roe::itemAdded(GeomObj *g, char *name) {
-    GeomItem *item;
-    item= new GeomItem;
-    ToggleButtonC *bttn;
-    bttn = new ToggleButtonC;
-    item->btn=bttn;
-    item->vis=1;
-    item->geom=g;
-    strcpy(item->name, name);
-    geomItemA.add(item);
-    new MotifCallback<Roe>FIXCB(item->btn, XmNvalueChangedCallback,
-				&manager->mailbox, this,
-				&Roe::itemCB,
-				(void *) item, 0);
-    item->btn->SetSet(True);
-    item->btn->Create(*objRC, name);
-    for (int i=0; i<kids.size(); i++) {
-	kids[i]->itemAdded(g, name);
+void Roe::itemAdded(GeomObj *g, const clString& name)
+{
+    GeomItem *item=0;
+    for(int i=0;i<geomItemA.size();i++){
+	if(geomItemA[i]->name == name){
+	    // re-use this one...
+	    if(geomItemA[i]->active){
+		cerr << "Warning: two different objects with the same name given to Salmon" << endl;
+	    }
+	    item=geomItemA[i];
+	    break;
+	}
     }
+    evl->lock();
+    if(!item){
+	item= new GeomItem;
+	ToggleButtonC *bttn;
+	bttn = new ToggleButtonC;
+	item->btn=bttn;
+	item->vis=1;
+	item->name=name;
+	geomItemA.add(item);
+	new MotifCallback<Roe>FIXCB(item->btn, XmNvalueChangedCallback,
+				    &manager->mailbox, this,
+				    &Roe::itemCB,
+				    (void *) item, 0);
+	item->btn->SetSet(True);
+	item->btn->Create(*objRC, name());
+    } else {
+	XtManageChild(*item->btn);
+    }
+    item->geom=g;
+    item->active=1;
+
+    for (i=0; i<kids.size(); i++)
+	kids[i]->itemAdded(g, name);
+    evl->unlock();
+
     // invalidate the bounding box
     bb.reset();
 }
 
-void Roe::itemDeleted(GeomObj *g) {
+void Roe::itemDeleted(GeomObj *g)
+{
+    evl->lock();
     for (int i=0; i<geomItemA.size(); i++) {
 	if (geomItemA[i]->geom == g) {
-	    delete (geomItemA[i]->btn);
-	    geomItemA.remove(i);
+	    geomItemA[i]->geom=0;
+	    geomItemA[i]->active=0;
+	    XtUnmanageChild(*geomItemA[i]->btn);
 	}
     }
-    for (i=0; i<kids.size(); i++) {
+    for (i=0; i<kids.size(); i++)
 	kids[i]->itemDeleted(g);
-    }
+
+    evl->unlock();
     // invalidate the bounding box
     bb.reset();
 }
@@ -1565,6 +1588,7 @@ void Roe::update_modifier_widget()
     if(fh != old_fh || modefont==0){
 	modefont=new XFont(fh, XFont::Bold);
 	XSetFont(dpy, gc, modefont->font->fid);
+	old_fh=fh;
     }
     int fh2=fh/2;
     int fh4=fh2/2;
