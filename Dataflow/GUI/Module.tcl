@@ -242,8 +242,7 @@ itcl_class Module {
 	    -tags [modname] -anchor nw 
 
 	# Set up input/output ports
-	$this configureIPorts $canvas
-	$this configureOPorts $canvas
+	$this configurePorts $canvas
 	
 	# Try to find a position for the icon where it doesn't
 	# overlap other icons
@@ -314,86 +313,59 @@ itcl_class Module {
 	return $mconnected
     }
 
-    method configureIPorts {canvas} {
-	set modframe $canvas.module[modname]
-	set i 0
-	set temp "a"
-	while {[winfo exists $modframe.iport$i]} {
-	    destroy $modframe.iport$i
-	    destroy $modframe.iportlight$i
-	    incr i
-	}
-	set portinfo [$this-c iportinfo]
-	set i 0
-	global port_spacing
-	global port_width
-	global port_height
-	foreach t $portinfo {
-	    set portcolor [lindex $t 0]
-	    set connected [lindex $t 1]
-	    set x [expr $i*$port_spacing+6]
-	    if {$connected} {
-		set e "outtop"
-	    } else {
-		set e "top"
+
+    method configurePorts {canvas args} {
+	if ![llength $args] { set args "i o" }
+	foreach porttype $args {
+
+	    global port_spacing port_width port_height
+	    set isoport [string equal $porttype o]
+
+	    set modframe $canvas.module[modname]
+	    set i 0
+	    while {[winfo exists $modframe.port$porttype$i]} {
+		destroy $modframe.port$porttype$i
+		destroy $modframe.portlight$porttype$i
+		incr i
 	    }
-	    set port $modframe.iport$i
-	    bevel $port -width $port_width -height $port_height \
-		-borderwidth 3 -edge $e -background $portcolor \
-		-pto 2 -pwidth 7 -pborder 2
-	    place $port -bordermode outside -x $x -y 0 -anchor nw
-	    frame $modframe.iportlight$i -width $port_width -height 4 \
+	    set portinfo [$this-c $porttype.portinfo]
+	    set i 0
+	    foreach t $portinfo {
+		set portcolor [lindex $t 0]
+		set portname [join [lrange $t 2 3] ":"]
+		set x [expr $i*$port_spacing+6]
+		set e [expr $isoport?"bottom":"top"]
+		set e "[expr [lindex $t 1]?"out":""]$e"
+		set port $modframe.port$porttype$i
+		set portlight $modframe.portlight$porttype$i
+		bevel $port -width $port_width -height $port_height \
+		    -borderwidth 3 -edge $e -background $portcolor \
+		    -pto 2 -pwidth 7 -pborder 2
+		frame $portlight -width $port_width -height 4 \
 		    -relief raised -background black -borderwidth 0
-	    place $modframe.iportlight$i -in $modframe.iport$i \
-		    -x 0 -rely 1.0 -anchor nw
-	    bind $port <2> "startIPortConnection [modname] $i %x %y"
-	    bind $port <B2-Motion> "trackIPortConnection [modname] $i %x %y"
-	    bind $port <ButtonRelease-2> "endPortConnection"
-	    bind $port <ButtonPress-1> "TracePort [modname] 0 $i"
-	    bind $port <ButtonRelease-1> "canvasDelete tempConnection"
-	    incr i
-	} 
+		if $isoport {
+		    place $port -bordermode ignore -rely 1 -anchor sw -x $x
+		    place $portlight -in $port -x 0 -y 0 -anchor sw
+		} else {
+		    place $port -bordermode outside -x $x -y 0 -anchor nw
+		    place $portlight -in $port -x 0 -rely 1.0 -anchor nw
+		}
+
+	       
+		bind $port <2> "startPortConnection [modname] $i $porttype \"$portname\" %x %y"
+		bind $port <B2-Motion> "trackPortConnection [modname] $i $porttype %x %y"
+		bind $port <ButtonRelease-2> "endPortConnection"
+		bind $port <ButtonPress-1> "TracePort [modname] $isoport $i"
+		bind $port <ButtonRelease-1> "canvasDelete tempConnection"
+		
+		incr i
+	    } 
+	}
 	rebuildConnections [netedit getconnected [modname]] 0
     }
 
-    method configureOPorts {canvas} {
-	set modframe $canvas.module[modname]
-	set temp "a"
-	set i 0
-	while {[winfo exists $modframe.oport$i]} {
-	    destroy $modframe.oport$i
-	    destroy $modframe.oportlight$i
-	    incr i
-	}
-	set portinfo [$this-c oportinfo]
-	set i 0
-	global port_spacing port_width port_height
-	foreach t $portinfo {
-	    set portcolor [lindex $t 0]
-	    set connected [lindex $t 1]
-	    set x [expr $i*$port_spacing+6]
-	    if {$connected} {
-		set e "outbottom"
-	    } else {
-		set e "bottom"
-	    }
-	    set port $modframe.oport$i
-	    bevel $port -width $port_width -height $port_height \
-		    -borderwidth 3 -edge $e -background $portcolor \
-		    -pto 2 -pwidth 7 -pborder 2
-	    place $port -bordermode ignore -rely 1 -anchor sw -x $x
-	    frame $modframe.oportlight$i -width $port_width -height 4 \
-		    -relief raised -background black -borderwidth 0
-	    place $modframe.oportlight$i -in $port -x 0 -y 0 -anchor sw
-	    bind $port <2> "startOPortConnection [modname] $i %x %y"
-	    bind $port <B2-Motion> "trackOPortConnection [modname] $i %x %y"
-	    bind $port <ButtonRelease-2> "endPortConnection"
-	    bind $port <ButtonPress-1> "TracePort [modname] 1 $i"
-	    bind $port <ButtonRelease-1> "canvasDelete tempConnection"
-	    incr i
-	}
-	rebuildConnections [netedit getconnected [modname]] 0
-    }
+
+
    
     method setColorAndTitle {canvas color args} {
 	set m [modname]
@@ -702,61 +674,6 @@ proc regenMenu {modid menu_id canvas minicanvas} {
 
 }
 
-proc startIPortConnection {imodid iwhich x y} {
-    global maincanvas 
-    set coords [computeIPortCoords $imodid $iwhich]
-    set typename [lindex [lindex [$imodid-c iportinfo] $iwhich] 2]
-    set portname [lindex [lindex [$imodid-c iportinfo] $iwhich] 3]
-    set fullname $typename:$portname
-    frame $maincanvas.frame
-    label $maincanvas.frame.label -text $fullname -foreground white -bg #036
-    pack $maincanvas.frame $maincanvas.frame.label    
-    $maincanvas create window [lindex $coords 0] [lindex $coords 1] \
-	-window $maincanvas.frame -anchor sw -tags "tempname" 
-
-    # Find all of the OPorts of the same type and draw a temporary line
-    # to them....    
-    global new_conn_oports
-    set new_conn_oports [netedit findoports $imodid $iwhich]
-    foreach i $new_conn_oports {
-	set omodid [lindex $i 0]
-	set owhich [lindex $i 1]	
-	set path [routeConnection $omodid $owhich $imodid $iwhich]
-	eval $maincanvas create line $path -width 2 \
-	    -tags \"tempconnections iconn$owhich$omodid\"
-    }
-    global potential_connection
-    set potential_connection ""
-}
-
-proc startOPortConnection {omodid owhich x y} {
-    global maincanvas
-    set coords [computeOPortCoords $omodid $owhich]
-    set typename [lindex [lindex [$omodid-c oportinfo] $owhich] 2]
-    set portname [lindex [lindex [$omodid-c oportinfo] $owhich] 3]
-    set fullname $typename:$portname
-    frame $maincanvas.frame
-    label $maincanvas.frame.label -text $fullname -foreground white -bg #036
-    pack $maincanvas.frame $maincanvas.frame.label    
-    $maincanvas create window [lindex $coords 0] [lindex $coords 1] \
-	-window $maincanvas.frame -anchor nw -tags "tempname" 
-
-    # Find all of the IPorts of the same type and draw a temporary line
-    # to them....    
-    global new_conn_iports
-    set new_conn_iports [netedit findiports $omodid $owhich]
-    foreach i $new_conn_iports {
-	set imodid [lindex $i 0]
-	set iwhich [lindex $i 1]	
-	set path [routeConnection $omodid $owhich $imodid $iwhich]
-	eval $maincanvas create line $path -width 2 \
-	    -tags \"tempconnections oconn$iwhich$imodid\"
-    }
-    global potential_connection
-    set potential_connection ""
-}
-
-
 proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
     global maincanvas minicanvas
     set path [routeConnection $omodid $owhich $imodid $iwhich]
@@ -815,7 +732,6 @@ proc TracePort { modid isa_o_port args } {
     }
 }
 
-
 proc TracePipe { args } {
     if { [llength $args] != 4 } return
     eval lightPipe tempConnection $args
@@ -824,8 +740,6 @@ proc TracePipe { args } {
     TracePort [lindex $args 0] 0
     TracePort [lindex $args 2] 1
 }
-
-
 
 proc canvasDelete { args } {
     global maincanvas minicanvas
@@ -840,7 +754,6 @@ proc canvasRaise { args } {
 	$minicanvas raise $arg
     }
 }
-
 
 proc block_pipe { connid omodid owhich imodid iwhich pcolor} {
     global maincanvas minicanvas
@@ -885,8 +798,8 @@ proc addConnection {omodid owhich imodid iwhich args } {
     buildConnection $connid $portcolor $omodid $owhich $imodid $iwhich
 
     global maincanvas
-    $omodid configureOPorts $maincanvas
-    $imodid configureIPorts $maincanvas
+    $omodid configurePorts $maincanvas o
+    $imodid configurePorts $maincanvas i
 
     #if we got here from undo, record this action as undoable
     if [llength $args] {
@@ -906,8 +819,8 @@ proc destroyConnection {connid omodid imodid args} {
     $maincanvas delete $connid
     $minicanvas delete $connid
     netedit deleteconnection $connid $omodid 
-    $omodid configureOPorts $maincanvas
-    $imodid configureIPorts $maincanvas
+    $omodid configurePorts $maincanvas o
+    $imodid configurePorts $maincanvas i
 
     #if we got here from undo, record this action as undoable
     if [llength $args] {
@@ -933,7 +846,6 @@ proc scalePath { path } {
     return $minipath
 }
     
-	
 proc rebuildConnection { connid omodid owhich imodid iwhich} {    
     global maincanvas minicanvas
     set path [routeConnection $omodid $owhich $imodid $iwhich]
@@ -953,29 +865,40 @@ proc rebuildConnections {list color} {
     }
 }
 
-proc trackIPortConnection {imodid which x y} {
-    global new_conn_oports
-    if ![llength $new_conn_oports] return
-    # Get coords in canvas
+proc startPortConnection {modid which porttype portname x y} {
+    global maincanvas modname_font new_connports potential_connection
+    set isoport [string equal $porttype o]
+    set oppositeporttype [expr $isoport?"i":"o"]
+    $maincanvas create text [computePortCoords $modid $which $isoport] \
+	-text "$portname" -font $modname_font -tags "tempname" \
+	-fill white -anchor [expr $isoport?"nw":"sw"]
+    set new_conn_ports [netedit find.$oppositeporttype.ports $modid $which]
+    foreach i $new_conn_ports {
+	if $isoport { set path [eval routeConnection $modid $which $i]
+	} else { set path [eval routeConnection $i $modid $which] }
+	eval $maincanvas create line $path -width 2 \
+	    -tags \"tempconnections [join "temp $i" ""]\"
+    }
+    set potential_connection ""
+}
+
+proc trackPortConnection {modid which porttype x y} {
+    global new_conn_ports
+    if ![llength $new_conn_ports] return
+    set isoport [string equal $porttype o]
     global maincanvas
-    set ox1 [winfo x $maincanvas.module$imodid.iport$which]
-    set ox2 [lindex [$maincanvas coords $imodid] 0]
+    set ox1 [winfo x $maincanvas.module$modid.port$porttype$which]
+    set ox2 [lindex [$maincanvas coords $modid] 0]
     set x [expr $x+$ox1+$ox2]
-    set oy1 [winfo y $maincanvas.module$imodid.iport$which]
-    set oy2 [lindex [$maincanvas coords $imodid] 1]
+    set oy1 [winfo y $maincanvas.module$modid.port$porttype$which]
+    set oy2 [lindex [$maincanvas coords $modid] 1]
     set y [expr $y+$oy1+$oy2]
-    set c [computeIPortCoords $imodid $which]
-    set ix [lindex $c 0]
-    set iy [lindex $c 1]
-    set mindist [computeDist $x $y $ix $iy]
+    set c [computePortCoords $modid $which $isoport]
+    set mindist [eval computeDist $x $y $c]
     set minport ""
-    foreach i $new_conn_oports {
-	set omodid [lindex $i 0]
-	set owhich [lindex $i 1]
-	set c [computeOPortCoords $omodid $owhich]
-	set ox [lindex $c 0]
-	set oy [lindex $c 1]
-	set dist [computeDist $x $y $ox $oy]
+    foreach i $new_conn_ports {
+	set c [eval computePortCoords $i [expr !$isoport]]
+	set dist [eval computeDist $x $y $c]
 	if {$dist < $mindist} {
 	    set mindist $dist
 	    set minport $i
@@ -984,63 +907,20 @@ proc trackIPortConnection {imodid which x y} {
     $maincanvas itemconfigure tempconnections -fill black
 
     global potential_connection
-    if {$minport != ""} {
-	set omodid [lindex $minport 0]
-	set owhich [lindex $minport 1]
-	$maincanvas itemconfigure iconn$owhich$omodid -fill red
-	set potential_connection [list $omodid $owhich $imodid $which]
-    } else {
-	set potential_connection ""
-    }
+    set potential_connection ""
+    if {$minport != ""} {	
+	$maincanvas raise [join "temp $minport" ""]
+	$maincanvas itemconfigure [join "temp $minport" ""] -fill red
+	if {$isoport} { set potential_connection "$modid $which $minport"
+	} else { set potential_connection "$minport $modid $which" }
+    } 
 }
 
-proc trackOPortConnection {omodid which x y} {
-    global new_conn_iports
-    if ![llength $new_conn_iports] return
-    # Get coords in canvas
-    global maincanvas
-    set ox1 [winfo x $maincanvas.module$omodid.oport$which]
-    set ox2 [lindex [$maincanvas coords $omodid] 0]
-    set x [expr $x+$ox1+$ox2]
-    set oy1 [winfo y $maincanvas.module$omodid.oport$which]
-    set oy2 [lindex [$maincanvas coords $omodid] 1]
-    set y [expr $y+$oy1+$oy2]
-    set c [computeOPortCoords $omodid $which]
-    set ix [lindex $c 0]
-    set iy [lindex $c 1]
-    set mindist [computeDist $x $y $ix $iy]
-    set minport ""
-    foreach i $new_conn_iports {
-	set imodid [lindex $i 0]
-	set iwhich [lindex $i 1]
-	set c [computeIPortCoords $imodid $iwhich]
-	set ox [lindex $c 0]
-	set oy [lindex $c 1]
-	set dist [computeDist $x $y $ox $oy]
-	if {$dist < $mindist} {
-	    set mindist $dist
-	    set minport $i
-	}
-    }
-    $maincanvas itemconfigure tempconnections -fill black
-
-    global potential_connection
-    if {$minport != ""} {
-	set imodid [lindex $minport 0]
-	set iwhich [lindex $minport 1]
-	$maincanvas raise oconn$iwhich$imodid
-	$maincanvas itemconfigure oconn$iwhich$imodid -fill red
-	set potential_connection [list $omodid $which $imodid $iwhich]
-    } else {
-	set potential_connection ""
-    }
-}
 
 proc endPortConnection {} {
     global maincanvas
+    $maincanvas delet tempname
     $maincanvas delete tempconnections
-    $maincanvas delete tempname
-    destroy $maincanvas.frame
     global potential_connection
     if { $potential_connection != "" } {
 	eval addConnection $potential_connection 1
@@ -1113,8 +993,8 @@ proc redo {} {
 
 
 proc routeConnection {omodid owhich imodid iwhich} {
-    set outpos [computeOPortCoords $omodid $owhich]
-    set inpos [computeIPortCoords $imodid $iwhich]
+    set outpos [computePortCoords $omodid $owhich 1]
+    set inpos [computePortCoords $imodid $iwhich 0]
     set ox [lindex $outpos 0]
     set oy [lindex $outpos 1]
     set ix [lindex $inpos 0]
@@ -1150,20 +1030,12 @@ proc computePortCoords {modid which isoport} {
     return [list $x $y]
 }
 
-proc computeIPortCoords {modid which} {
-    return [computePortCoords $modid $which 0]
-}
-
-proc computeOPortCoords {modid which} {
-    return [computePortCoords $modid $which 1]
-}
-
-
 proc computeDist {x1 y1 x2 y2} {
     set dx [expr $x2-$x1]
     set dy [expr $y2-$y1]
     return [expr sqrt($dx*$dx+$dy*$dy)]
 }
+
 proc moduleStartDrag {maincanvas modid x y toggleOnly} {
     global ignoreModuleMove 
     set ignoreModuleMove 0
