@@ -77,6 +77,7 @@ WARNING
 	 double d_toughness;
 	 double d_thermal_cond;
 	 double d_spec_heat;
+	 double d_temp;
 	 std::vector<GeometryObject*> d_geom_objs;
 	 
 	 // Prevent copying of this class
@@ -92,6 +93,11 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.9  2000/04/28 21:05:45  jas
+// Cleaned up the creation of a material so it follows the order that is
+// specified in the input file.  Also added the temp field to the MPMMaterial
+// class.  All that is left to do is to read in the boundary conditions.
+//
 // Revision 1.8  2000/04/28 07:35:28  sparker
 // Started implementation of DataWarehouse
 // MPM particle initialization now works
