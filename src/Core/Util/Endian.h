@@ -34,9 +34,10 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <string>
-#ifdef __sgi
+#if HAVE_INTTYPES_H
 #include <inttypes.h>
-#else
+#endif
+#if HAVE_STDINT_H
 #include <stdint.h>
 #endif
 

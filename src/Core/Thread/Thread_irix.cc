@@ -654,12 +654,6 @@ Thread::pop_bstack(Thread_private* p, int oldstate)
   p->state=(Thread::ThreadState)oldstate;
 }
 
-int
-Thread::get_thread_id()
-{
-  return priv_->pid;
-}
-
 /*
  * Signal handling cruft
  */

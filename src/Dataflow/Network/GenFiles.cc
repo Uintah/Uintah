@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <sys/stat.h>
+#include <string.h>
 #include <Dataflow/Network/ComponentNode.h>
 #include <Dataflow/Network/SkeletonFiles.h>
 #include <Dataflow/Network/GenFiles.h>

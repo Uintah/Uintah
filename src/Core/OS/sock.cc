@@ -62,7 +62,7 @@ namespace SCIRun {
   
 // MAX -----------------------------------------------------------------
 template <class T>
-inline T MAX(T a, T b) { 
+inline T MMAX(T a, T b) { 
   return ((a < b) ? b : a); 
 }
 
@@ -129,7 +129,7 @@ Socket::FindReadyToRead(Socket** sockArray, int n, bool block) {
   for (i = 0; i < n; i++) {
     if (sockArray[i] && sockArray[i]->isConnected()) {
       FD_SET(sockArray[i]->fd, &readset);
-      maxfd = MAX(maxfd, sockArray[i]->fd);
+      maxfd = MMAX(maxfd, sockArray[i]->fd);
     }
   }
   

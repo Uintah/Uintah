@@ -298,7 +298,6 @@ DESCRIPTION
 	    static int push_bstack(Thread_private*, ThreadState s,
 				   const char* why);
 	    static void pop_bstack(Thread_private*, int oldstate);
-	    int get_thread_id();
 	    static void print_threads();
 
 	    // Cannot copy them

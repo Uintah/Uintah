@@ -18,7 +18,7 @@
 #ifndef SCIRun_Core_Util_sci_system
 #define SCIRun_Core_Util_sci_system 1
 
-#ifdef __sgi
+#if defined(__sgi) || defined(__digital__)
 #define sci_system system
 #include <stdlib.h>
 #else

@@ -52,6 +52,10 @@ using std::ostream;
 #include <sys/mman.h>
 #endif
 
+#ifdef __digital__
+typedef longlong_t __int64_t;
+#endif
+
 #define PERSISTENT_VERSION 1
 
 namespace SCIRun {

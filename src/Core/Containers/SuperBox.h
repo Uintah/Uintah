@@ -84,16 +84,20 @@ template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 class SuperBoxSet
 {
 public:
+  typedef SuperBox<BoxP, Point, Volume, Value, Evaluator> SuperBox;
+  typedef BasicBox<BoxP, Point, Volume, Value, Evaluator> BasicBox;
+  typedef CompositeBox<BoxP, Point, Volume, Value, Evaluator> CompositeBox;  
+#ifdef HAVE_HASH_MAP
   struct BoxHash
   {
     size_t operator()(BoxP box) const
     { return (size_t)box; }
   };
   
-  typedef SuperBox<BoxP, Point, Volume, Value, Evaluator> SuperBox;
-  typedef BasicBox<BoxP, Point, Volume, Value, Evaluator> BasicBox;
-  typedef CompositeBox<BoxP, Point, Volume, Value, Evaluator> CompositeBox;  
   typedef hash_map<BoxP, BasicBox*, BoxHash> BoxHashMap;
+#else
+  typedef map<BoxP, BasicBox*> BoxHashMap;
+#endif
   typedef vector<SuperBox*> SuperBoxContainer;
 public:
   SuperBoxSet()
@@ -902,7 +906,7 @@ CompositeBox<BoxP, Point, Volume, Value, Evaluator>*
 BasicBox<BoxP, Point, Volume, Value, Evaluator>::
 anyActiveEnclosingSuperBoxAlsoEnclosing(SuperBox* other) const
 {
-  set<CompositeBox*>::iterator iter;  
+  set<CompositeBox*>::const_iterator iter;  
   for (iter = getActiveEnclosingSuperBoxes().begin();
        iter != getActiveEnclosingSuperBoxes().end(); iter++) {
     if ((*iter)->contains(other))
@@ -1150,7 +1154,7 @@ buildActivatedMaximalSuperBoxes(BasicBoxPIterator begin,
 				RangeQuerier& rangeQuerier,
 				BoxHashMap& boxMap,
 				vector<SuperBox*>& maximalSuperBoxes,
-				const Region* withinRegion = 0)
+				const Region* withinRegion)
 {
   set<CompositeBox*, LexCompare> allExploredBoxes;
   for (BasicBoxPIterator iter = begin; iter != end; iter++) {
@@ -1443,7 +1447,11 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
   vector<SuperBox*>::iterator sb_iter;
 
   vector<BasicBox*> basicBoxes(n);
+#if HAVE_HASH_MAP
   BoxHashMap boxMap(n);
+#else
+  BoxHashMap boxMap;
+#endif
  
   int i = 0;
   for (BoxIterator it = begin; it != end; it++, i++) {

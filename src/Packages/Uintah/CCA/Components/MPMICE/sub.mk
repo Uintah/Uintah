@@ -23,6 +23,7 @@ PSELIBS := \
 	Core/Thread     \
 	Core/Datatypes  \
 	Core/Geometry   \
+	Core/Util	\
 	Dataflow/XMLUtil
 
 LIBS := $(XML_LIBRARY) -lm
