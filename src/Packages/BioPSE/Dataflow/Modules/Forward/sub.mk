@@ -32,8 +32,7 @@ SRCS     += $(SRCDIR)/ApplyFEMCurrentSource.cc\
 	    $(SRCDIR)/ConfigureElectrode.cc\
 	    $(SRCDIR)/DipoleInSphere.cc\
 	    $(SRCDIR)/FDMtoFEM.cc\
-	    $(SRCDIR)/FlipElectrode.cc\
-	    $(SRCDIR)/InsertElectrode.cc\
+	    $(SRCDIR)/InsertElectrodes.cc\
 	    $(SRCDIR)/InsertVoltageSource.cc\
 	    $(SRCDIR)/ModifyConductivities.cc\
 	    $(SRCDIR)/SetupBEMatrix.cc\
