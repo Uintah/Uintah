@@ -424,6 +424,28 @@ void TextPiostream::io(unsigned long& data)
     }
 }
 
+void TextPiostream::io(long long& data)
+{
+    if(err)return;
+    if(dir==Read){
+	ifstream& in=*istr;
+	in >> data;
+	if(!in){
+	    cerr << "Error reading long long\n";
+	    char buf[100];
+	    in.clear();
+	    in.getline(buf, 100);
+	    cerr << "Rest of line is: " << buf << endl;
+	    err=1;
+	    return;
+	}
+	expect(' ');
+    } else {
+	ofstream& out=*ostr;
+	out << data << " ";
+    }
+}
+
 void TextPiostream::io(double& data)
 {
     if(err)return;
@@ -808,6 +830,15 @@ void BinaryPiostream::io(unsigned long& data)
     }
 }
 
+void BinaryPiostream::io(long long& data)
+{
+    if(err)return;
+    if(!xdr_longlong_t(xdr, (__int64_t*)(&data))){
+	err=1;
+	cerr << "xdr_longlong_t failed\n";
+    }
+}
+
 void BinaryPiostream::io(double& data)
 {
     if(err)return;
@@ -1058,6 +1089,23 @@ void GzipPiostream::io(long& data)
 void GzipPiostream::io(unsigned long& data)
 {
     int sz=sizeof(unsigned long);
+    if(err)return;
+    if(dir == Read) {
+	if (gzread(gzfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "gzread failed\n";
+	}
+    } else {
+	if (!gzwrite(gzfile, &data, sz)) {
+	    err=1;
+	    cerr << "gzwrite failed\n";
+	}
+    }
+}
+
+void GzipPiostream::io(long long& data)
+{
+    int sz=sizeof(long long);
     if(err)return;
     if(dir == Read) {
 	if (gzread(gzfile, &data, sz) == -1) {
@@ -1327,6 +1375,23 @@ void GunzipPiostream::io(long& data)
 void GunzipPiostream::io(unsigned long& data)
 {
     int sz=sizeof(unsigned long);
+    if(err)return;
+    if(dir == Read) {
+	if (read(unzipfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "unzipread failed\n";
+	}
+    } else {
+	if (!write(unzipfile, &data, sz)) {
+	    err=1;
+	    cerr << "unzipwrite failed\n";
+	}
+    }
+}
+
+void GunzipPiostream::io(long long& data)
+{
+    int sz=sizeof(long long);
     if(err)return;
     if(dir == Read) {
 	if (read(unzipfile, &data, sz) == -1) {

@@ -77,6 +77,7 @@ public:
     virtual void io(unsigned int&);
     virtual void io(long&);
     virtual void io(unsigned long&);
+    virtual void io(long long&);
     virtual void io(double&);
     virtual void io(float&);
     virtual void io(string& str);
@@ -108,6 +109,7 @@ public:
     virtual void io(unsigned int&);
     virtual void io(long&);
     virtual void io(unsigned long&);
+    virtual void io(long long&);
     virtual void io(double&);
     virtual void io(float&);
     virtual void io(string& str);
@@ -139,6 +141,7 @@ public:
     virtual void io(unsigned int&);
     virtual void io(long&);
     virtual void io(unsigned long&);
+    virtual void io(long long&);
     virtual void io(double&);
     virtual void io(float&);
     virtual void io(string& str);
@@ -171,6 +174,7 @@ public:
     virtual void io(unsigned int&);
     virtual void io(long&);
     virtual void io(unsigned long&);
+    virtual void io(long long&);
     virtual void io(double&);
     virtual void io(float&);
     virtual void io(string& str);
