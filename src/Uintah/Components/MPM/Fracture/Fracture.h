@@ -19,11 +19,9 @@ namespace MPM {
 class Fracture {
 public:
   void   materialDefectsInitialize(const Region* region,
-                                   int vfindex,
                                    DataWarehouseP& new_dw);
   
   void   initializeFracture(const Region* region,
-                           int vfindex,
                            DataWarehouseP& new_dw);
   
   void   updateSurfaceNormalOfBoundaryParticle(
@@ -32,7 +30,7 @@ public:
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
   
-  void   labelSelfContactCells (
+  void   labelSelfContactNodesAndCells (
            const ProcessorContext*,
            const Region* region,
            DataWarehouseP& old_dw,
@@ -68,6 +66,9 @@ private:
   VarLabel*        pExternalForceLabel; 
   VarLabel*        pDeformationMeasureLabel;
   VarLabel*        pXLabel; 
+  
+  VarLabel*        gSelfContactLabel;
+  
   VarLabel*        cSelfContactLabel;
   VarLabel*        cSurfaceNormalLabel;
 
@@ -80,6 +81,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.8  2000/05/15 18:58:53  tan
+// Initialized NCVariables and CCVaribles for Fracture.
+//
 // Revision 1.7  2000/05/12 01:46:21  tan
 // Added initializeFracture linked to SerialMPM's actuallyInitailize.
 //
