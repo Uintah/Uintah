@@ -17,6 +17,7 @@ SRCS     += \
 	$(SRCDIR)/GLTextureBuilder.cc \
 	$(SRCDIR)/Isosurface.cc \
 	$(SRCDIR)/CuttingPlane.cc\
+	$(SRCDIR)/Hedgehog.cc\
 [INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/NodeHedgehog.cc \
 #	$(SRCDIR)/EigenEvaluator.cc \

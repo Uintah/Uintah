@@ -19,6 +19,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Isosurface.tcl\
 	$(SRCDIR)/GLTextureBuilder.tcl\
 	$(SRCDIR)/CuttingPlane.tcl\
+	$(SRCDIR)/Hedgehog.tcl\
 #[INSERT NEW TCL FILE HERE]
 #	$(SRCDIR)/EigenEvaluator.tcl\
 #	$(SRCDIR)/ParticleEigenEvaluator.tcl\
