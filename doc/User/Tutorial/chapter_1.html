@@ -146,7 +146,7 @@ color="maroon">
     HREF="../Guide/usersguide/srug4.html#sec:anatomyofamodule">User's Guide, Section 4.2, Anatomy of a Module</a>.</p> 
 <p>By joining the modules together, data passes through the pipe from one module to another; two or more connected modules form a SCIRun network, or <i>net</i>.</p>
 
-<p>All modules have an indicator that tells the user whether any messages exist in a module's log.  The different colors represent different types of messages: Blue represents a Remark (as the SampleField module indicates the number of seed points), yellow for Warning,and red for an error.  If you click the module's indicator, the log will open with the message.</p>
+<p>All modules have an indicator tells the user whether any messages exist in a module's log.  The different colors represent different types of messages. Blue represents a Remark (as the SampleField module indicates the number of seed points), yellow for Warning.  If you click the module's indicator, the log will open with a message.</p>
                                                               
                                                                                       
     <p>We will first create a FieldReader module that loads a SCIRun Field.</p>
@@ -317,6 +317,19 @@ color="maroon">
     </center>
     <div align="left">
 
+    <p><b>Dynamic Compilation</b></p>
+
+    <p>ShowField works with any of the SCIRun Field data types. These data types must be first compiled into a shared library, as needed, where they are saved for future use.  This process is called &quot;Dynamic Compilation.&quot;</p>
+
+    <p>In order to allow multiple users to run the same installation of SCIRun without conflict, each user must specify a directory in which they store dynamically compiled code. To do this, set the environment variable SCIRUN_ON_THE_FLY_LIBS_DIR to the directory in which you choose to place your dynamically compiled code, similar to <b>Figure 1.2.1 </b> and <b>Figure 1.2.2</b>.</p>
+
+<p>As a result, Dynamic Compilation causes a delay when the module executes for the first time. For more detail about this process, refer to the PDF document <a
+    href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
+    Compilation</a>.</p>
+
+
+<p>In addition, the module will turn a color while it compiles and all output will go to the module's log as a remark.</p>
+
 
     <p><b>Setting the ShowField User Interface</b></p>
 
@@ -347,20 +360,11 @@ color="maroon">
       <li><p>Go to the Edges tab and turn off the display of edges by deselecting the &quot;Show Edges&quot; check box.</p>  
       <li><p>Go the the Faces tab and repeat the same action.</p>
       <li><p>Close the ShowField GUI by pressing the Dismiss button.</p></ol>
-
-<p>In addition, the text tab on the ShowField UI allows the user to render the field data as text. By default, the text option is turned off.</p>
       
       <p>The ShowField module is now ready to render the nodes as blue
 	  spheres. The module will Interactively Update, by default, to execute after every change.  Or, you may select the Execute Button Only box to contain all changes until you press the Execute button. Consult the <a HREF="../Guide/usersguide/srug4.html#sec:executenet">
     User's Guide 4.5,
     Executing a Network</a>, for more details.</p> 
-    <p>ShowField works with any of the SCIRun Field data types. These data types must be first compiled into a shared library, as needed, where they are saved for future use.  This process is called &quot;Dynamic Compilation.&quot;</p>
-<p>As a result, Dynamic Compilation causes a delay when the module executes for the first time. For more detail about this process, refer to the PDF document <a
-    href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
-    Compilation</a>.
-
-
-<p>In addition, the module will turn a color while it compiles and all output will go to the module's log as a remark.</p>
 
 
     <p><b><A name="section-5">Viewer module</b><br></A>
