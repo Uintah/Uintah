@@ -5,7 +5,7 @@
 #include <Uintah/Grid/ParticleVariable.h>
 #include <SCICore/Geometry/Point.h>
 
-#include <list>
+#include <vector>
 
 namespace Uintah {
 namespace MPM {
@@ -15,9 +15,7 @@ using SCICore::Geometry::Point;
 class Matrix3;
 class Lattice;
 
-using std::list;
-
-class ParticlesNeighbor : public list<particleIndex> {
+class ParticlesNeighbor : public std::vector<particleIndex> {
 public:
 
   void  buildIncluding(const particleIndex& pIndex,
@@ -43,6 +41,9 @@ private:
 #endif //__PARTICLESNEIGHBOR_H__
 
 // $Log$
+// Revision 1.4  2000/06/23 21:56:30  tan
+// Use vector instead of list for cells-neighbor and particles-neighbor.
+//
 // Revision 1.3  2000/06/06 01:58:14  tan
 // Finished functions build particles neighbor for a given particle
 // index.

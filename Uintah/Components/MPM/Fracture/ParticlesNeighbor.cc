@@ -21,9 +21,9 @@ void  ParticlesNeighbor::buildIncluding(const particleIndex& pIndex,
     iter_cell != cellsNeighbor.end();
     ++iter_cell )
   {
-    list<particleIndex>& pList = lattice[*iter_cell].particleList;
-    for( list<particleIndex>::const_iterator iter_p = pList.begin();
-         iter_p != pList.end();
+    std::vector<particleIndex>& parts = lattice[*iter_cell].particles;
+    for( std::vector<particleIndex>::const_iterator iter_p = parts.begin();
+         iter_p != parts.end();
          ++iter_p )
     {
       push_back(*iter_p);
@@ -43,9 +43,9 @@ void  ParticlesNeighbor::buildExcluding(const particleIndex& pIndex,
     iter_cell != cellsNeighbor.end();
     ++iter_cell )
   {
-    list<particleIndex>& pList = lattice[*iter_cell].particleList;
-    for( list<particleIndex>::const_iterator iter_p = pList.begin();
-         iter_p != pList.end();
+    std::vector<particleIndex>& parts = lattice[*iter_cell].particles;
+    for( std::vector<particleIndex>::const_iterator iter_p = parts.begin();
+         iter_p != parts.end();
          ++iter_p )
     {
       if( (*iter_p) != pIndex ) push_back(*iter_p);
@@ -73,6 +73,9 @@ interpolatedouble(const ParticleVariable<double>& pdouble,
 } //namespace Uintah
 
 // $Log$
+// Revision 1.5  2000/06/23 21:56:40  tan
+// Use vector instead of list for cells-neighbor and particles-neighbor.
+//
 // Revision 1.4  2000/06/15 21:57:10  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data
