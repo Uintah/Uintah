@@ -25,10 +25,10 @@ SRCS     += \
 	$(SRCDIR)/MakeScalarField.cc\
 	$(SRCDIR)/MeshBoundary.cc\
 	$(SRCDIR)/MeshInterpVals.cc\
+	$(SRCDIR)/MeshNodeComponent.cc \
 	$(SRCDIR)/MeshRender.cc\
 	$(SRCDIR)/MeshToGeom.cc\
-	$(SRCDIR)/MeshView.cc\
-	$(SRCDIR)/SliceMeshToGeom.cc\
+	$(SRCDIR)/MeshView.cc
 #[INSERT NEW MODULE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
@@ -41,6 +41,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/09/07 06:35:15  dmw
+# Removed SliceMeshToGeom.cc reference in sub.mk
+#
 # Revision 1.6  2000/09/07 00:16:16  zyp
 # Removing the SliceMeshToGeom.cc because I accidently added it in my
 # last commit.  Also in the last commit I didn't add the comments
