@@ -26,9 +26,18 @@
     <authors>
       <author>Martin Cole</author>
     </authors>
-    <summary>The FieldBoundary module extracts a boundary surface from a volume field and is only implemented for volume meshes: HexVolMesh, TetVolMesh, and LatVolMesh.</summary>
+    <summary>The FieldBoundary module extracts a boundary surface from a volume field.</summary>
     <description>
-      <p>The FieldBoundary module pulls out the bounding surface of the incoming field, making it into a new field that it outputs through the TriSurfField.  This module does not have a GUI, but has one input port, Field, and two output ports, TriSurfField, and Interpolant.  The FieldBoundary module builds a TriSurfMesh of doubles (with no data) from the incoming volume field boundary. If the input of the incoming field does not contain faces, the module does nothing.</p>
+
+      <p>The FieldBoundary module pulls out the bounding surface of
+  the incoming field, making it into a new field that it outputs
+  through the BoundaryField port.  This module does not have a GUI,
+  but has one input port, Field, and two output ports, BoundaryField,
+  and Interpolant.  The FieldBoundary module builds a TriSurfMesh or
+  QuadSurfMesh of doubles (with no data) from the incoming volume
+  field boundary. If the input of the incoming field does not contain
+  faces, the module does nothing.</p>
+
       <developer>
 	<p>Any interior face should be shared by two cells.  The boundary surface is calculated as the module checks each face that is shared by two or more cells. The faces that exist in one cell only are boundary faces.  This module can be used as a debugging tool becuase errors or holes in the mesh will show up as boundary faces.</p>
       </developer>
@@ -52,9 +61,9 @@
     <outputs>
       <!-- one of (device port file) -->
       <port>
-	<name>TriSurfField</name>
+	<name>BoundaryField</name>
 	<description>
-	  <p>outputs a TriSurfFieldace of doubles.</p>
+	  <p>A TriSurfField or QuadSurfField of doubles.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
 	<componentname>ShowField</componentname>
@@ -62,7 +71,7 @@
       <port>
 	<name>Interpolant</name>
 	<description>
-	  <p>outputs the interpolant for the TriSurfFieldMesh.</p>
+	  <p>Outputs an interpolant from the input volume to the BoundaryField.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
 	<componentname>ShowField</componentname>
