@@ -514,6 +514,7 @@ bool Image::start_ppm_stream(char *filename) {
       return false;
     }
   }
+  return true;
 }
 
 void Image::end_ppm_stream() {
