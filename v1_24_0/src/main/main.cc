@@ -51,6 +51,7 @@
 #include <Core/Util/sci_system.h>
 #include <Core/Comm/StringSocket.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Geom/ShaderProgramARB.h>
 
 #include <Core/Services/ServiceLog.h>
 #include <Core/Services/ServiceDB.h>
@@ -80,10 +81,6 @@ using std::cout;
 #pragma set woff 1424
 #endif
 
-
-namespace SCIRun {
-extern void ShaderProgramARB_init_shaders_supported();
-}
 
 using namespace SCIRun;
 
@@ -500,7 +497,7 @@ main(int argc, char *argv[], char **environment) {
   const bool doing_regressions = sci_getenv_p("SCI_REGRESSION_TESTING");
 
   // Test for shaders.
-  SCIRun::ShaderProgramARB_init_shaders_supported();
+  SCIRun::ShaderProgramARB::init_shaders_supported();
 
   // Load the Network file specified from the command line
   if (startnetno) {
