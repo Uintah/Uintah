@@ -757,6 +757,7 @@ proc biopseFDialog_Config {w type argList} {
 	    {-command "" "" ""}
 	    {-filevar "" "" ""}
 	    {-cancel "" "" ""}
+	    {-execute "" "" ""}
 	    {-defaultextension "" "" ""}
 	}
 	set data(-initialfile) ""
@@ -772,6 +773,7 @@ proc biopseFDialog_Config {w type argList} {
 	    {-command "" "" ""}
 	    {-filevar "" "" ""}
 	    {-cancel "" "" ""}
+	    {-execute "" "" ""}
 	    {-formatvar "" "" ""}
 	    {-formats "" "" ""}
 	    {-splitvar "" "" ""}
@@ -928,8 +930,15 @@ static char updir_bits[] = {
     # is in the right order
     set data(okBtn)     [button $f2.ok     -text OK     -under 0 -width 6 \
 	-default active -pady 3]
-    set data(cancelBtn) [button $f3.cancel -text Cancel -under 0 -width 6\
-	-default normal -pady 3]
+    if { [string length $data(-execute)] } {
+       set data(executeBtn) [button $f3.execute -text Execute -under 0 -width 6\
+	  -default normal -pady 3]
+       set data(cancelBtn) [button $f4.cancel -text Cancel -under 0 -width 6\
+				 -default normal -pady 3]
+    } else {
+       set data(cancelBtn) [button $f3.cancel -text Cancel -under 0 -width 6\
+				 -default normal -pady 3]
+    }	
 
     # creating additional widgets for Save-dialog box
     if {![string compare $data(type) save]} {
@@ -991,7 +1000,7 @@ static char updir_bits[] = {
 	-relief raised -bd 2 -anchor w
 	set data(splitBtn) [checkbutton $f4.split -text Split -disabledforeground "" \
 		-onvalue 1 -offvalue 0 -width 5 -pady 2]
-	pack $data(splitBtn) -side right -padx 4 -anchor w
+
 
 	if { [set data(is_split)] } {	    
 	    $data(splitBtn) configure -state normal
@@ -1006,7 +1015,7 @@ static char updir_bits[] = {
 	}
 
 	pack $f4.lab -side left -padx 4
-	pack $data(formatMenuBtn) -expand yes -fill x -side right
+	pack $data(formatMenuBtn) -expand yes -fill x -side left
     }
 
     # pack the widgets in f2 and f3
@@ -1014,9 +1023,24 @@ static char updir_bits[] = {
     pack $f2.lab -side left -padx 4
     pack $f2.ent -expand yes -fill x -padx 2 -pady 0
     
-    pack $data(cancelBtn) -side right -padx 4 -anchor w
+
+    if { [string length $data(-execute)] } {
+	pack $data(executeBtn) -side right -padx 4 -anchor w
+    }
+
     pack $data(typeMenuLab) -side left -padx 4
-    pack $data(typeMenuBtn) -expand yes -fill x -side right
+    pack $data(typeMenuBtn) -expand yes -fill x -side left
+
+
+
+    if {![string compare $data(type) save]} {
+	pack $data(splitBtn) -side left -padx 4 -anchor w
+    }
+    pack $data(cancelBtn) -side right -padx 4 -anchor e
+   
+
+
+
 
     
     # Pack all the frames together. We are done with widget construction.
@@ -1031,6 +1055,9 @@ static char updir_bits[] = {
     
     $data(upBtn)     config -command "biopseFDialog_UpDirCmd $w"
     $data(okBtn)     config -command "biopseFDialog_OkCmd $w"
+    if { [string length $data(-execute)] } {
+	$data(executeBtn) config -command "set executeScript 1; biopseFDialog_OkCmd $w"
+    }
     $data(cancelBtn) config -command "biopseFDialog_CancelCmd $w"
 
     trace variable data(selectPath) w "biopseFDialog_SetPath $w"
@@ -1597,6 +1624,12 @@ proc biopseFDialog_Done {w {selectFilePath ""}} {
     
     # AS: final steps before returning: setting filename variable and executing command
     set $data(-filevar) $selectFilePath
-
-    eval $data(-command)
+    upvar \#0 executeScript execute
+    if { [info exists execute] } {
+	eval $data(-execute) 
+	unset execute
+    } else {
+	eval $data(-command) 
+    }
+	
 }
