@@ -41,7 +41,7 @@ namespace Uintah {
 	 d_window = 0;
       }
       Array3(int size1, int size2, int size3) {
-	 d_window=scinew Array3Window<T>(new Array3Data<T>(size1, size2, size3));
+	 d_window=scinew Array3Window<T>(new Array3Data<T>( IntVector(size1, size2, size3) ));
 	 d_window->addReference();
       }
       Array3(const IntVector& lowIndex, const IntVector& highIndex);
@@ -64,7 +64,7 @@ namespace Uintah {
       }
 
       IntVector size() const {
-	 return d_window->size();
+	 return d_window->getData()->size();
       }
       void initialize(const T& value) {
 	 d_window->initialize(value);
@@ -116,6 +116,11 @@ namespace Uintah {
    
 //
 // $Log$
+// Revision 1.12  2000/06/05 17:32:19  tan
+// Corrected errors in:
+//   1. Array3(int size1, int size2, int size3)
+//   2. size()
+//
 // Revision 1.11  2000/05/30 20:19:27  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
