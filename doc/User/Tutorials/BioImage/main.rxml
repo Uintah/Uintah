@@ -37,16 +37,16 @@
 
 <book id="main">
   <title>The BioImage Book (v. <!--%= doc.edition %-->)</title>
-  <part>
+  <part id="part.tut">
     <title>Tutorial</title>
-    &intro;
+<!--    &intro; -->
     &getting_started;
     &tooth_tut;
 <!--     &head_tut; -->
   </part>
 
-  <part>
-    <title>Reference Guide</title>
+  <part id="part.reference">
+    <title>Reference</title>
     &ref_ui;
     &ref_data;
     &ref_filters;
