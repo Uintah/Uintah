@@ -257,7 +257,8 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
 		Ghost::None, numGhostCells);
   tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::None, numGhostCells);
-  tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel, 
+  if (d_MAlab)
+    tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel, 
 		  Ghost::None, numGhostCells);
   int nofScalars = d_props->getNumMixVars();
   // warning **only works for one scalar
@@ -279,60 +280,9 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
   }
   tsk->computes(d_lab->d_densityINLabel);
   tsk->computes(d_lab->d_viscosityINLabel);
-  tsk->computes(d_lab->d_densityMicroINLabel);
+  if (d_MAlab)
+    tsk->computes(d_lab->d_densityMicroINLabel);
   sched->addTask(tsk, patches, matls);
-
-#if 0
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-      //copies old db to new_db and then uses non-linear
-      //solver to compute new values
-      Task* tsk = scinew Task( "PicardNonlinearSolver::initialGuess",patch,
-			   old_dw, new_dw, this,
-			   &PicardNonlinearSolver::setInitialGuess);
-      int numGhostCells = 0;
-      int matlIndex = 0;
-      if (d_MAlab) 
-	tsk->requires(new_dw, d_lab->d_mmcellTypeLabel, matlIndex, patch,
-		      Ghost::None, numGhostCells);
-      else
-	tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_lab->d_pressureSPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-      
-      int nofScalars = d_props->getNumMixVars();
-      for (int ii = 0; ii < nofScalars; ii++) {
-	tsk->requires(old_dw, d_lab->d_scalarSPLabel, ii, patch, 
-		      Ghost::None, numGhostCells);
-      }
-      tsk->requires(old_dw, d_lab->d_densityCPLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-      tsk->computes(new_dw, d_lab->d_cellTypeLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_lab->d_pressureINLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_lab->d_uVelocityINLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_lab->d_vVelocityINLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_lab->d_wVelocityINLabel, matlIndex, patch);
-      for (int ii = 0; ii < nofScalars; ii++) {
-	tsk->computes(new_dw, d_lab->d_scalarINLabel, ii, patch);
-      }
-      tsk->computes(new_dw, d_lab->d_densityINLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch);
-
-      sched->addTask(tsk, patches, matls);
-    }
-  }
-#endif
 }
 
 // ****************************************************************************
@@ -481,12 +431,14 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     int nofGhostCells = 0;
     CCVariable<double> denMicro;
-    old_dw->get(denMicro, d_lab->d_densityMicroLabel, 
-		matlIndex, patch, Ghost::None, nofGhostCells);
     CCVariable<double> denMicro_new;
-    new_dw->allocate(denMicro_new, d_lab->d_densityMicroINLabel, 
-		     matlIndex, patch);
-    denMicro_new = denMicro;
+    if (d_MAlab) {
+      old_dw->get(denMicro, d_lab->d_densityMicroLabel, 
+		  matlIndex, patch, Ghost::None, nofGhostCells);
+      new_dw->allocate(denMicro_new, d_lab->d_densityMicroINLabel, 
+		       matlIndex, patch);
+      denMicro_new = denMicro;
+    }
     CCVariable<int> cellType;
     if (d_MAlab)
       new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch,
@@ -581,7 +533,8 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     }
     new_dw->put(density_new, d_lab->d_densityINLabel, matlIndex, patch);
     new_dw->put(viscosity_new, d_lab->d_viscosityINLabel, matlIndex, patch);
-    new_dw->put(denMicro_new, d_lab->d_densityMicroINLabel, matlIndex, patch);
+    if (d_MAlab)
+      new_dw->put(denMicro_new, d_lab->d_densityMicroINLabel, matlIndex, patch);
   }
 }
 
