@@ -123,6 +123,7 @@ GV_TaskGraph::inflate(string xmlDir)
   }
   pGraph->computeMaxPathLengths();
   
+  delete parser;
   return pGraph;
 }
 

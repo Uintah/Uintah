@@ -110,6 +110,7 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks*/* dt*/, int rank)
     }
     graphfile << m_graphDoc << "\n";
   }
+  m_graphDoc->release();
 }
 
 bool

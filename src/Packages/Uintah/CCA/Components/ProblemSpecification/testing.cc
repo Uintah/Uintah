@@ -86,7 +86,7 @@ int main(int argc, char *argv[]){
   }
 
   
-
+  delete parser;
   exit(1);
 }
 

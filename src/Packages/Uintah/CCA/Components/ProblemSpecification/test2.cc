@@ -74,6 +74,8 @@ int main()
        mat_ps = mat_ps->findNextBlock() ) {
     cout << "name is " << mat_ps->getNodeName() << endl;
   }
+
+  prob_spec->d_node->getOwnerDocument()->release();
   exit(1);
 }
 
