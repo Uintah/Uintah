@@ -162,8 +162,8 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
 	  float, float, bool display_frames, 
 	  int pp_size, int scratchsize, bool fullscreen, bool frameless,
 	  bool rserver)
-  : fullScreenMode_( fullscreen ), 
-  showImage_(NULL), doAutoJitter_( false ),
+  : DpyBase("Real-time Ray Tracer"), fullScreenMode_( fullscreen ), 
+  doAutoJitter_( false ),
   showLights_( false ), lightsShowing_( false ),
   turnOnAllLights_( false ), turnOffAllLights_( false ),
   turnOnLight_( false ), turnOffLight_( false ),
@@ -175,7 +175,8 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
   nworkers(nworkers), pp_size_(pp_size), scratchsize_(scratchsize),
   bench(bench), ncounters(ncounters),
   c0(c0), c1(c1),
-  frameless(frameless),synch_frameless(0), display_frames(display_frames)
+  frameless(frameless),synch_frameless(0), display_frames(display_frames),
+  releaseSema("Dpy window wait", 0)
 {
   if(rserver)
     this->rserver = new RServer();
@@ -589,11 +590,6 @@ Dpy::renderFrame() {
   barrier->wait(nworkers+1);
 
   Image * displayedImage = scene->get_image(showing_scene);
-  // Tell Gui thread to display the image showImage_
-
-  //if( showImage_ != NULL ){
-  //  cout << "Warning, gui has not displayed previous frame!\n";
-  //}
 
   if(!bench){
     if(rserver){
