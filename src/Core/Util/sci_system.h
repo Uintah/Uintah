@@ -31,7 +31,7 @@ int sci_system (const char * string);
 }
 #endif
 
-#endif // __sgi
+#endif /* __sgi */
 
-#endif // SCIRun_Core_Util_sci_system
+#endif /* SCIRun_Core_Util_sci_system */
 
