@@ -14,11 +14,11 @@
    <Time>
        <maxTime>            1.0         </maxTime>
        <initTime>           0.0         </initTime>
-       <delt_min>           1.0e-15      </delt_min>
+       <delt_min>           1.0e-15     </delt_min>
        <delt_max>           1.0e-4      </delt_max>
-       <delt_init>          1.0e-7     </delt_init>
-       <max_delt_increase>  0.15         </max_delt_increase>
-       <!-- <max_iterations>     11          </max_iterations> -->
+       <delt_init>          1.0e-7      </delt_init>
+       <max_delt_increase>  0.15        </max_delt_increase>
+       <!--<max_iterations>     11          </max_iterations> -->
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -58,7 +58,7 @@
                               <value> 0.0   </value>
         </BCType>
         <BCType id = "2" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.,00.,0.] </value>
+                              <value> [0.,10.,0.] </value>
         </BCType>
         <BCType id = "2" label = "Temperature"  var = "Dirichlet">
                               <value> 300.0  </value>
