@@ -17,6 +17,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/CCA/Ports/Regridder.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
@@ -135,6 +136,10 @@ void AMRSimulationController::run()
    lb->problemSetup(ups, sharedState);
 
    output->initializeOutput(ups);
+
+   // set up regridder with initial infor about grid
+   Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
+   regridder->problemSetup(ups, sharedState, grid);
 
    if(d_myworld->myrank() == 0){
      cout << "Compiling initialization taskgraph...\n";
@@ -387,7 +392,7 @@ void AMRSimulationController::run()
      sharedState->setElapsedTime(t);
      sharedState->incrementCurrentTopLevelTimeStep();
 
-     if(needRecompile(t, delt, grid, sim, output, lb, levelids)){
+     if(needRecompile(t, delt, grid, sim, output, lb, regridder, levelids)){
        if(d_myworld->myrank() == 0)
 	 cout << "Compiling taskgraph...\n";
        double start = Time::currentSeconds();
@@ -514,22 +519,19 @@ AMRSimulationController::needRecompile(double time, double delt,
 				       SimulationInterface* sim,
 				       Output* output,
 				       LoadBalancer* lb,
+                                       Regridder* regridder,
 				       vector<int>& levelids)
 {
-  // Currently, output and sim can request a recompile.  --bryan
-  if(output && output->needRecompile(time, delt, grid))
-    return true;
-  if (sim && sim->needRecompile(time, delt, grid))
-    return true;
-  if (lb && lb->needRecompile(time, delt, grid))
-    return true;
-  if(static_cast<int>(levelids.size()) != grid->numLevels())
-    return true;
-  for(int i=0;i<grid->numLevels();i++){
-    if(grid->getLevel(i)->getID() != levelids[i])
-      return true;
-  }
-  return false;
+  // Currently, output, sim, lb, regridder can request a recompile.  --bryan
+  bool recompile = false;
+  
+  // do it this way so everybody can have a chance to maintain their state
+  recompile |= (output && output->needRecompile(time, delt, grid));
+  recompile |= (sim && sim->needRecompile(time, delt, grid));
+  recompile |= (lb && lb->needRecompile(time, delt, grid));
+  recompile |= (regridder && regridder->needRecompile(time, delt, grid));
+  recompile |= (static_cast<int>(levelids.size()) != grid->numLevels());
+  return recompile;
 }
 
 void
