@@ -48,6 +48,7 @@ stamp-defs: ${SRCTOP}/sci_testdefs.h.in ${OBJTOP}/config.status
 	echo timestamp > stamp-defs
 
 config.status: ${SRCTOP}/configure
+	@if test ${SRCTOP}/configure.in -nt config.cache; then echo "removing config.cache and confdefs.h as they may be out of date"; /bin/rm -f config.cache confdefs.h; fi
 	./config.status --recheck
 	./config.status
 
