@@ -44,7 +44,7 @@ C--------------------------------------------------------------------
       double precision cpplus
       double precision cpo
       double precision tcons
-      logical*1 ltest, l2up
+      logical*1 ltest, l2up, leno
 
       integer i
       integer j
@@ -54,6 +54,8 @@ C--------------------------------------------------------------------
       ltest = .false.
 c      l2up = .false.
       l2up = .true.
+c      leno = .true.
+      leno = .false.
 
 C--------------------------------------------------------------------
       if (.not.ltest) then
@@ -101,6 +103,7 @@ c    $              - sign*spm(i,j,k)
                cpplus = max(zero,smp)
                cpo = - min(zero,smp)*tcons
                if (l2up.and..not.ltest) smp = zero
+               if (leno.and..not.ltest) smp = zero
 c               su(i,j,k) = su(i,j,k) + cpo*phi(i,j,k)
 c               sp(i,j,k) = sp(i,j,k) - cpplus
                su(i,j,k) = su(i,j,k) - smp*phi(i,j,k)

@@ -135,6 +135,25 @@ public:
       void calculateScalarDiagonal(const ProcessorGroup*,
 				   const Patch* patch,
 				   int Index, ArchesVariables* vars);
+      ////////////////////////////////////////////////////////////////////////
+      // Documentation here
+      void calculateScalarENOscheme(const ProcessorGroup*,
+				   const Patch* patch,
+				   int Index,
+				   CellInformation* cellinfo,
+				   double maxAbsU, double maxAbsV,
+				   double maxAbsW,
+				   ArchesVariables* vars);
+
+
+      void calculateScalarWENOscheme(const ProcessorGroup*,
+				   const Patch* patch,
+				   int Index,
+				   CellInformation* cellinfo,
+				   double maxAbsU, double maxAbsV,
+				   double maxAbsW,
+				   ArchesVariables* vars);
+
 
       void computeDivergence(const ProcessorGroup*,
 				  const Patch* patch,

@@ -788,6 +788,25 @@ ArchesLabel::ArchesLabel()
 				   CCVariable<double>::getTypeDescription() );
 */
 
+// labels for max(abs(velocity)) for Lax-Friedrichs flux
+  d_maxAbsU_label = VarLabel::create("maxAbsU",
+				       max_vartype::getTypeDescription() );
+  d_maxAbsV_label = VarLabel::create("maxAbsV",
+				       max_vartype::getTypeDescription() );
+  d_maxAbsW_label = VarLabel::create("maxAbsW",
+				       max_vartype::getTypeDescription() );
+  d_maxAbsUPred_label = VarLabel::create("maxAbsUPred",
+				       max_vartype::getTypeDescription() );
+  d_maxAbsVPred_label = VarLabel::create("maxAbsVPred",
+				       max_vartype::getTypeDescription() );
+  d_maxAbsWPred_label = VarLabel::create("maxAbsWPred",
+				       max_vartype::getTypeDescription() );
+  d_maxAbsUInterm_label = VarLabel::create("maxAbsUInterm",
+				       max_vartype::getTypeDescription() );
+  d_maxAbsVInterm_label = VarLabel::create("maxAbsVInterm",
+				       max_vartype::getTypeDescription() );
+  d_maxAbsWInterm_label = VarLabel::create("maxAbsWInterm",
+				       max_vartype::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -1075,6 +1094,16 @@ ArchesLabel::~ArchesLabel()
 //  VarLabel::destroy(d_velocityDivergenceLabel);
 //  VarLabel::destroy(d_velocityDivergenceBCLabel);
 
+// labels for max(abs(velocity)) for Lax-Friedrichs flux
+  VarLabel::destroy(d_maxAbsU_label);
+  VarLabel::destroy(d_maxAbsV_label);
+  VarLabel::destroy(d_maxAbsW_label);
+  VarLabel::destroy(d_maxAbsUPred_label);
+  VarLabel::destroy(d_maxAbsVPred_label);
+  VarLabel::destroy(d_maxAbsWPred_label);
+  VarLabel::destroy(d_maxAbsUInterm_label);
+  VarLabel::destroy(d_maxAbsVInterm_label);
+  VarLabel::destroy(d_maxAbsWInterm_label);
 			
 }
 

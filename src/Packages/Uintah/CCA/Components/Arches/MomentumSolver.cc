@@ -27,6 +27,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Math/MiscMath.h>
 
 
 using namespace Uintah;
@@ -1009,6 +1010,14 @@ MomentumSolver::sched_buildLinearMatrixPred(SchedulerP& sched, const PatchSet* p
     tsk->computes(d_lab->d_uVelocitySPBCLabel);
 #endif
 
+#ifdef Scalar_ENO
+#ifdef correctorstep
+    tsk->computes(d_lab->d_maxAbsUPred_label);
+#else
+    tsk->computes(d_lab->d_maxAbsU_label);
+#endif
+#endif
+
     break;
 
   case Arches::YDIR:
@@ -1023,6 +1032,14 @@ MomentumSolver::sched_buildLinearMatrixPred(SchedulerP& sched, const PatchSet* p
     tsk->computes(d_lab->d_vVelocitySPBCLabel);
 #endif
 
+#ifdef Scalar_ENO
+#ifdef correctorstep
+    tsk->computes(d_lab->d_maxAbsVPred_label);
+#else
+    tsk->computes(d_lab->d_maxAbsV_label);
+#endif
+#endif
+
     break;
 
   case Arches::ZDIR:
@@ -1035,6 +1052,14 @@ MomentumSolver::sched_buildLinearMatrixPred(SchedulerP& sched, const PatchSet* p
     tsk->computes(d_lab->d_wVelocityPredLabel);
 #else
     tsk->computes(d_lab->d_wVelocitySPBCLabel);
+#endif
+
+#ifdef Scalar_ENO
+#ifdef correctorstep
+    tsk->computes(d_lab->d_maxAbsWPred_label);
+#else
+    tsk->computes(d_lab->d_maxAbsW_label);
+#endif
 #endif
 
     break;
@@ -1210,6 +1235,89 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
     }
 
+  #ifdef Scalar_ENO
+    double maxAbsU = 0.0;
+    double maxAbsV = 0.0;
+    double maxAbsW = 0.0;
+    double temp_absU, temp_absV, temp_absW;
+    IntVector ixLow;
+    IntVector ixHigh;
+    
+    switch (index) {
+    case Arches::XDIR:
+
+      ixLow = patch->getSFCXFORTLowIndex();
+      ixHigh = patch->getSFCXFORTHighIndex();
+    
+      for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
+        for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
+          for (int colX = ixLow.x(); colX <= ixHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+
+	      temp_absU = Abs(velocityVars.uVelRhoHat[currCell]);
+	      if (temp_absU > maxAbsU) maxAbsU = temp_absU;
+          }
+        }
+      }
+      #ifdef correctorstep
+      new_dw->put(max_vartype(maxAbsU), d_lab->d_maxAbsUPred_label); 
+      #else
+      new_dw->put(max_vartype(maxAbsU), d_lab->d_maxAbsU_label); 
+      #endif
+
+      break;
+    case Arches::YDIR:
+
+      ixLow = patch->getSFCYFORTLowIndex();
+      ixHigh = patch->getSFCYFORTHighIndex();
+    
+      for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
+        for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
+          for (int colX = ixLow.x(); colX <= ixHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+
+	      temp_absV = Abs(velocityVars.vVelRhoHat[currCell]);
+	      if (temp_absV > maxAbsV) maxAbsV = temp_absV;
+          }
+        }
+      }
+      #ifdef correctorstep
+      new_dw->put(max_vartype(maxAbsV), d_lab->d_maxAbsVPred_label); 
+      #else
+      new_dw->put(max_vartype(maxAbsV), d_lab->d_maxAbsV_label); 
+      #endif
+
+      break;
+    case Arches::ZDIR:
+
+      ixLow = patch->getSFCZFORTLowIndex();
+      ixHigh = patch->getSFCZFORTHighIndex();
+    
+      for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
+        for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
+          for (int colX = ixLow.x(); colX <= ixHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+
+	      temp_absW = Abs(velocityVars.wVelRhoHat[currCell]);
+	      if (temp_absW > maxAbsW) maxAbsW = temp_absW;
+          }
+        }
+      }
+      #ifdef correctorstep
+      new_dw->put(max_vartype(maxAbsW), d_lab->d_maxAbsWPred_label); 
+      #else
+      new_dw->put(max_vartype(maxAbsW), d_lab->d_maxAbsW_label); 
+      #endif
+
+      break;
+    default:
+      throw InvalidValue("Invalid index in max abs velocity calculation");
+    }
+  #endif
+
     switch (index) {
     case Arches::XDIR:
 #if 0
@@ -1326,6 +1434,10 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
   #endif 
     tsk->computes(d_lab->d_uVelocitySPBCLabel);
 
+#ifdef Scalar_ENO
+    tsk->computes(d_lab->d_maxAbsU_label);
+#endif
+
     break;
 
   case Arches::YDIR:
@@ -1344,6 +1456,10 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
   #endif 
     tsk->computes(d_lab->d_vVelocitySPBCLabel);
 
+#ifdef Scalar_ENO
+    tsk->computes(d_lab->d_maxAbsV_label);
+#endif
+
     break;
 
   case Arches::ZDIR:
@@ -1361,6 +1477,10 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif 
     tsk->computes(d_lab->d_wVelocitySPBCLabel);
+
+#ifdef Scalar_ENO
+    tsk->computes(d_lab->d_maxAbsW_label);
+#endif
 
     break;
 
@@ -1676,6 +1796,80 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     }
   #endif
 
+  #ifdef Scalar_ENO
+    double maxAbsU = 0.0;
+    double maxAbsV = 0.0;
+    double maxAbsW = 0.0;
+    double temp_absU, temp_absV, temp_absW;
+    IntVector ixLow;
+    IntVector ixHigh;
+    
+    switch (index) {
+    case Arches::XDIR:
+
+      ixLow = patch->getSFCXFORTLowIndex();
+      ixHigh = patch->getSFCXFORTHighIndex();
+    
+      for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
+        for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
+          for (int colX = ixLow.x(); colX <= ixHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+
+	      temp_absU = Abs(velocityVars.uVelRhoHat[currCell]);
+	      if (temp_absU > maxAbsU) maxAbsU = temp_absU;
+          }
+        }
+      }
+
+      new_dw->put(max_vartype(maxAbsU), d_lab->d_maxAbsU_label); 
+
+      break;
+    case Arches::YDIR:
+
+      ixLow = patch->getSFCYFORTLowIndex();
+      ixHigh = patch->getSFCYFORTHighIndex();
+    
+      for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
+        for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
+          for (int colX = ixLow.x(); colX <= ixHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+
+	      temp_absV = Abs(velocityVars.vVelRhoHat[currCell]);
+	      if (temp_absV > maxAbsV) maxAbsV = temp_absV;
+          }
+        }
+      }
+
+      new_dw->put(max_vartype(maxAbsV), d_lab->d_maxAbsV_label); 
+
+      break;
+    case Arches::ZDIR:
+
+      ixLow = patch->getSFCZFORTLowIndex();
+      ixHigh = patch->getSFCZFORTHighIndex();
+    
+      for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
+        for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
+          for (int colX = ixLow.x(); colX <= ixHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+
+	      temp_absW = Abs(velocityVars.wVelRhoHat[currCell]);
+	      if (temp_absW > maxAbsW) maxAbsW = temp_absW;
+          }
+        }
+      }
+
+      new_dw->put(max_vartype(maxAbsW), d_lab->d_maxAbsW_label); 
+
+      break;
+    default:
+      throw InvalidValue("Invalid index in max abs velocity calculation");
+    }
+  #endif
+
     switch (index) {
     case Arches::XDIR:
 #if 0
@@ -1767,6 +1961,10 @@ MomentumSolver::sched_buildLinearMatrixInterm(SchedulerP& sched, const PatchSet*
   #endif 
     tsk->computes(d_lab->d_uVelocityIntermLabel);
 
+#ifdef Scalar_ENO
+    tsk->computes(d_lab->d_maxAbsUInterm_label);
+#endif
+
     break;
 
   case Arches::YDIR:
@@ -1781,6 +1979,10 @@ MomentumSolver::sched_buildLinearMatrixInterm(SchedulerP& sched, const PatchSet*
   #endif 
     tsk->computes(d_lab->d_vVelocityIntermLabel);
 
+#ifdef Scalar_ENO
+    tsk->computes(d_lab->d_maxAbsVInterm_label);
+#endif
+
     break;
 
   case Arches::ZDIR:
@@ -1794,6 +1996,10 @@ MomentumSolver::sched_buildLinearMatrixInterm(SchedulerP& sched, const PatchSet*
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif 
     tsk->computes(d_lab->d_wVelocityIntermLabel);
+
+#ifdef Scalar_ENO
+    tsk->computes(d_lab->d_maxAbsWInterm_label);
+#endif
 
     break;
 
@@ -2012,6 +2218,81 @@ MomentumSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
       throw InvalidValue("Invalid index in RK3 step");
     }
   #endif
+
+  #ifdef Scalar_ENO
+    double maxAbsU = 0.0;
+    double maxAbsV = 0.0;
+    double maxAbsW = 0.0;
+    double temp_absU, temp_absV, temp_absW;
+    IntVector ixLow;
+    IntVector ixHigh;
+    
+    switch (index) {
+    case Arches::XDIR:
+
+      ixLow = patch->getSFCXFORTLowIndex();
+      ixHigh = patch->getSFCXFORTHighIndex();
+    
+      for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
+        for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
+          for (int colX = ixLow.x(); colX <= ixHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+
+	      temp_absU = Abs(velocityVars.uVelRhoHat[currCell]);
+	      if (temp_absU > maxAbsU) maxAbsU = temp_absU;
+          }
+        }
+      }
+
+      new_dw->put(max_vartype(maxAbsU), d_lab->d_maxAbsUInterm_label); 
+
+      break;
+    case Arches::YDIR:
+
+      ixLow = patch->getSFCYFORTLowIndex();
+      ixHigh = patch->getSFCYFORTHighIndex();
+    
+      for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
+        for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
+          for (int colX = ixLow.x(); colX <= ixHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+
+	      temp_absV = Abs(velocityVars.vVelRhoHat[currCell]);
+	      if (temp_absV > maxAbsV) maxAbsV = temp_absV;
+          }
+        }
+      }
+
+      new_dw->put(max_vartype(maxAbsV), d_lab->d_maxAbsVInterm_label); 
+
+      break;
+    case Arches::ZDIR:
+
+      ixLow = patch->getSFCZFORTLowIndex();
+      ixHigh = patch->getSFCZFORTHighIndex();
+    
+      for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
+        for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
+          for (int colX = ixLow.x(); colX <= ixHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+
+	      temp_absW = Abs(velocityVars.wVelRhoHat[currCell]);
+	      if (temp_absW > maxAbsW) maxAbsW = temp_absW;
+          }
+        }
+      }
+
+      new_dw->put(max_vartype(maxAbsW), d_lab->d_maxAbsWInterm_label); 
+
+      break;
+    default:
+      throw InvalidValue("Invalid index in max abs velocity calculation");
+    }
+  #endif
+
     switch (index) {
     case Arches::XDIR:
 #if 0
