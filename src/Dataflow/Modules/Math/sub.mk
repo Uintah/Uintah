@@ -29,6 +29,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Math
 
 SRCS     += \
+	$(SRCDIR)/BuildNoise.cc\
 	$(SRCDIR)/BuildTransform.cc\
 	$(SRCDIR)/CastMatrix.cc\
 	$(SRCDIR)/ErrorMetric.cc\
@@ -41,7 +42,7 @@ SRCS     += \
 #        $(SRCDIR)/ManipMatrix.cc\
 
 PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil \
-	Core/Datatypes Core/Persistent \
+	Core/Datatypes Core/Persistent Core/Math \
 	Core/Exceptions Core/Thread Core/Containers \
 	Core/GuiInterface Core/Geometry Core/Datatypes \
 	Core/Util Core/Geom Core/TkExtensions \

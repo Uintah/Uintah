@@ -88,9 +88,14 @@ void LinAlgBinary::execute() {
     error("LinAlgBinary: Add has not been implemented yet.");
     return;
   } else if (op == "Mult") {
-//    Matrix *m;
+    ColumnMatrix *bC = dynamic_cast<ColumnMatrix*>(bH.get_rep());
+    if (!bC) {
+      error("LinAlgBinary: Mult has only been implemented for Mat x ColMat.");
+      return;
+    }
+    
+    ColumnMatrix *r;
 //    omat_->send(MatrixHandle(m));
-    error("LinAlgBinary: Mult has not been implemented yet.");
     return;
   } else {
     warning("Don't know operation "+op);

@@ -73,64 +73,12 @@ void CastMatrix::execute() {
   string newtype = newtype_.get();
   MatrixHandle omH;
 
-  DenseMatrix *dm;
-  ColumnMatrix *cm;
-  SparseRowMatrix *sm;
-
-  if (newtype == "Dense") {
-    if (dynamic_cast<DenseMatrix *>(imH.get_rep())) {
-      oldtype_.set("DenseMatrix");
-      omH = imH;
-    } else if ((cm = dynamic_cast<ColumnMatrix *>(imH.get_rep()))) {
-      oldtype_.set("ColumnMatrix");
-      omH = cm->toDense();
-    } else if ((sm = dynamic_cast<SparseRowMatrix *>(imH.get_rep()))) {
-      oldtype_.set("SparseRowMatrix");
-      omH = sm->toDense();
-    } else {
-      error("CastMatrix: failed to determine type of input matrix.\n");
-      return;
-    }
-  } else if (newtype == "Sparse") {
-    if (dynamic_cast<SparseRowMatrix *>(imH.get_rep())) {
-      oldtype_.set("SparseRowMatrix");
-      omH = imH;
-    } else if ((dm = dynamic_cast<DenseMatrix *>(imH.get_rep()))) {
-      oldtype_.set("DenseMatrix");
-      omH = dm->toSparse();
-    } else if ((cm = dynamic_cast<ColumnMatrix *>(imH.get_rep()))) {
-      oldtype_.set("ColumnMatrix");
-      omH = cm->toSparse();
-    } else {
-      error("CastMatrix: failed to determine type of input matrix.\n");
-      return;
-    }
-  } else if (newtype == "Column") {
-    if (dynamic_cast<ColumnMatrix *>(imH.get_rep())) {
-      oldtype_.set("ColumnMatrix");
-      omH = imH;
-    } else if ((dm = dynamic_cast<DenseMatrix *>(imH.get_rep()))) {
-      oldtype_.set("DenseMatrix");
-      omH = dm->toColumn();
-    } else if ((sm = dynamic_cast<SparseRowMatrix *>(imH.get_rep()))) {
-      oldtype_.set("SparseRowMatrix");
-      omH = sm->toColumn();
-    } else {
-      error("CastMatrix: failed to determine type of input matrix.\n");
-      return;
-    }
-  } else if (newtype == "Same") {
-    if (dynamic_cast<ColumnMatrix *>(imH.get_rep())) {
-      oldtype_.set("ColumnMatrix");
-    } else if (dynamic_cast<DenseMatrix *>(imH.get_rep())) {
-      oldtype_.set("DenseMatrix");
-    } else if (dynamic_cast<SparseRowMatrix *>(imH.get_rep())) {
-      oldtype_.set("SparseRowMatrix");
-    } else {
-      error("CastMatrix: failed to determine type of input matrix.\n");
-      oldtype_.set("Error");
-    }
-    omH = imH;
+  if (newtype == "DenseMatrix") {
+    omH = imH->dense();
+  } else if (newtype == "SparseRowMatrix") {
+    omH = imH->sparse();
+  } else if (newtype == "ColumnMatrix") {
+    omH = imH->column();
   } else {
     error("CastMatrix: unknown cast type "+newtype);
     return;
