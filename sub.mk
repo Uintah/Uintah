@@ -29,8 +29,10 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 PSELIBS := \
        Packages/Uintah/CCA/Ports                       \
        Packages/Uintah/Core/Grid                       \
+       Packages/Uintah/Core/Util                       \
        Packages/Uintah/Core/Math                       \
        Packages/Uintah/Core/Disclosure                 \
+       Packages/Uintah/Core/GeometryPiece              \
        Packages/Uintah/Core/ProblemSpec                \
        Packages/Uintah/Core/Parallel                   \
        Packages/Uintah/Core/Exceptions                 \
