@@ -132,7 +132,7 @@ namespace Uintah {
       // includes all the vars except vectors...
       // increase the value if want to increase number of variables
       //
-      static const int NUM_DEP_VARS = 9;
+      static const int NUM_DEP_VARS;
 
     }; // End class Stream
 
