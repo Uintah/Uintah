@@ -3,6 +3,7 @@
 <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
 <meta name="generator" content="Adobe GoLive 4">
 <title>Geometry Visualization</title>
+<!-- Changed by: Ted Dustman, 20-Feb-2002 -->
 </head>
 
 <body bgcolor="#a9a9a9">
@@ -45,7 +46,7 @@
         modules: data reader, geometry converter, and renderer.<br> 
 
  
-	<p>We will read in the datafile from disk, set some rendering
+	<p>We will read [in the datafile from disk|<dfn>Field</dfn> data from a file], set some rendering
         properties for the nodes, edges, and faces (the
         nodes will be rendered as blue spheres), and render the
         geometry to the screen in an interactive viewing window.<br>  
@@ -65,18 +66,19 @@
 
         <p><b><H4><A name="#section 1">FieldReader User Interface</A></b></H4><br>
 
-        <p>You should set the environment variables in your shell
-        before we run SCIRun[link to 3.0 UG Starting SCIRun].  
+        <p>You should set [the|2] environment variables in your shell
+        before [we run|starting] SCIRun[link to 3.0 UG Starting SCIRun].  
 	<ol>
 	<li value="1.">The SCIRUN_DATA variable points to the location 
 	of the SCIRunData directory on your system.  
 	<li value="2.0">The SCIRUN_DATASET variable indicates which dataset to load
-	since many of our example networks run with a variety of inputs.
+	[since many of our example networks run with a variety of inputs|<clarify>].
 	</ol> 
 
         <p>For example, we will construct a network that loads a geometric mesh from disk 
 	and renders it to the screen. Such a network will work on a wide variety of inputs. 
-	The SCIRUN_DATASET variable indicates what the user selects to view.<br>
+	The SCIRUN_DATASET variable [indicates what the user selects to
+	view|selects the data set of interest.<br>
 
 	<p>To begin, in your Unix shell window:
 	<ol>
@@ -101,7 +103,7 @@
 	<p><br> 
 
 
-	<p>Having set these environment variables, you are now ready to run SCIRun.  
+	<p>Having set these environment variables, you are now ready to start SCIRun.  
 	<ol>
 	<li value="1.">Change into your SCIRun/src/ directory, and
         enter the command &quot;./scirun&quot;.  
@@ -162,8 +164,8 @@
 	<div align="left">
 	<p><br>
 
-	<p> We have just finished reading-in the SCIRun
-        &quot;Field&quot; dataset.  A Field contains a geometric mesh, and
+	<p> We have just [finished reading-in|loaded] the SCIRun
+        Field dataset.  A Field contains a geometric mesh and
         a collection of data values mapped onto that mesh.  In this case,
         we use a tetrahedral mesh with voltages defined at the nodes of the
         mesh.  The brief overview below describes the various types
@@ -214,9 +216,9 @@
         <p>We will now add a second module to our network.  
 	<ol>
 	<li value="1.">Select ShowField from the SCIRun/Visualization menu. 
-	Use this module to visualize various field types).</ol><br>  
-	<p>ShowField has a User Interface (UI) option for rendering geometry
-        from the field, and special options for rendering vector data.  
+	(Use this module to visualize various field types).</ol><br>  
+	<p>ShowField has a User Interface (UI) option for rendering [geometry
+        from the field|a field's geometery], and special options for rendering vector data.  
 	ShowField can use color to represent data within
         the geometry, if desired.  For now, we will 
         render blue spheres as the nodes of the geometry.<br>
@@ -229,8 +231,10 @@
 	</center>
 	<div align="left">
 
-        <p>The Nodes tab selects by default in addition to
-        the Sphere Display Type.  However, the default color is grey.<br>
+        <p>[The Nodes tab selects by default in addition to
+        the Sphere Display Type.|We will display the Field's nodes as
+	spheres and set their color to blue:]  [However,
+	the default color is grey.|]<br>
 
 	<ol>
         <li value= "3.">Select the Default Color button
@@ -255,16 +259,18 @@
 	whereas the Input ports are always on top. Each datatype in SCIRun that can pass 
 	through ports has a unique color. You may connect ports of the same color.
                   
-	<p>To hook the modules together,
+	<p>To hook the modules together:
 	<ol>       
-	<li value="1.">With your middle mouse button, select the yellow output port on
-        the FieldReader (<b>Figure 1.7.1</b>). You should see the name of the port and lines that indicate possible
-        connections.
-	<li value="2."> Drag your middle mouse toward the ShowField input
+	<li value="1.">[With your middle mouse button select|Position the
+	  mouse's pointer over] the yellow output port on
+        the FieldReader (<b>Figure 1.7.1</b>). [|Now press and hold down
+	the mouse's middle button]. You will see the name of
+	the port and lines that indicate possible connections.
+	<li value="2."> Drag [your middle] the mouse toward the ShowField input
         Field port (yellow). 
 	<li>When the line turns red (<b>Figure 1.7.2</b>), release the mouse
         button. 
-	<li>You should see a yellow datapipe connection
+	<li>You should see a yellow [|line showing] a [datapipe|data flow] connection
         between FieldReader and ShowField (<b>Figure 1.7.3</b>).</ol>
 
 	</div>
@@ -292,15 +298,22 @@
 	<li value="5.">Next, press the "Execute" button on the ShowField UI that forces the
         module to execute its algorithm. </ol><br>
 
-	<p>ShowField should work on any of our numerous Field types, each of which may contain 
+	<p>[ShowField should work on any of our numerous Field types, each of which may contain 
 	any data type. For example, ShowField should
         visualize TetVol with double data, or TetVol with Vector
         or Tensor data. This is also true for TriSurf and all of our Fields, 
 	creating a combined explosion of accepted types. We have
         used the C++ template mechanism to achieve such versatility, which also requires 
-	compiling all of the types we might ever use into our code base.<br>
+	compiling all of the types we might ever use into our code
+	base.|ShowField will work with any of the SCIRun Field data types.
+	However, you will notice a delay when ShowField is asked to
+	visualize a Field data type for the first time - this is because
+	the data type must be first compiled into a shared library (which
+	is saved for future runs of SCIRun).  See <a
+        href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
+        Compilation</a> for more information.]<br>
 
-        <p>Since we have compiled only algorithms with an
+        [<p>Since we have compiled only algorithms with an
         exact field type, this information becomes known only after a module
         recieves its input data. We accomplish this by using <a
         href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
@@ -310,10 +323,10 @@
 	This happens when the module compiles the algorithm specific to the field type, and loads it
         into SCIRun.  We cache away this compiled algorithm in a
         shared library, loading it without delay the next time you run
-        SCIRun.
+        SCIRun.|]
 
         <p>ShowField will then execute the newly loaded algorithm
-        passing its results along downstream.
+        passing its results [along downstream|to downstream modules].
 
         <p><b><A name="#section 5">Viewer module</b><br></A>
 
@@ -326,11 +339,12 @@
 	</ol> 
 
 	<p>As a result, the Viewer module has generated a new input port. The Viewer provides an example 
-	of SCIRun modules that have dynamic input ports. These dynamic ports always allow 
+	of SCIRun modules that have dynamic input ports. [These d|D]ynamic ports always allow 
 	the Viewer to accept additional data to render.<br>
 
-	<p>To see the graphical rendering of the data (<b>Figure 1.10</b>)
-	that passes into the Viewer module, press the Viewer UI button.<br>
+	<p>[To see the graphical rendering of the data (<b>Figure 1.10</b>)
+	that passes into the Viewer module, press the Viewer UI button.|To
+	render the data press the Viewer's UI button.  See <b>Figure 1.10</b>]<br>
 
 		
 	</div>
@@ -343,34 +357,35 @@
 	
 	<p> For more information about executing a network, go to [link UG 4.5].
 
-	<p><b><A name="#section 6">Navigating the ViewWindow</b><br></A>
+	<p><b><A name="#section 6">Navigating the Viewer Window</b><br></A>
 
-	<p>Since the viewer is one of the most important elements of SCIRun,
+	<p>Since the viewer is one of the most important [elements|modules] of SCIRun,
 	you may want to know more about its functionality.  The User's Guide 
 	[link to UG 5.0 Viewer] provides a full description of the Viewer.  
  
 	<p> <b>Figure 1.10</b> shows the Viewer window with the
-	network you have built earlier in this chapter.  In the lower window panel,
-	locate controls for setting the display.However, the controls you will 
+	network you have built earlier in this chapter.  [In the lower window panel,
+	locate|In the lower right corner of the Viewer's window you will
+	find buttons] for [setting|controlling] the display.  However, the controls you will 
 	use most frequently are not visible.
  
 	<p><b><A name="section 7">Mouse controls</b><br></A>
  
-	<p>The mouse has great functionality that works with the Viewer. 
+	<p>[The mouse has great functionality that works with the Viewer.|<Awkward>]
 	<ol>
 	<li value="1.">Move the mouse to the center of the Viewer window.
 	<li value="2."> Click and hold the left mouse button. 
 	<li>Slide the mouse and objects in the View window shift to follow the mouse movement.  
 	<li>Slide the mouse with the middle mouse button and objects stop
-	shifting and instead, begin to rotate.
- 	<li>Let the buttons go and move the mouse to the edge of
+	shifting and [|rotate] instead[, begin to rotate|].
+ 	<li>[Let|Release] the buttons [go|] and move the mouse to the edge of
 	the object in the viewer window.  
 	<li>Click, hold, and drag the middle mouse button. The object rotates in a
 	different direction.</ol><br>
   
-	<p>Up and down motions cause the objects to rotate counterclockwise and clockwise, 
+	<p>[Up and down motions cause the objects to rotate counterclockwise and clockwise, 
 	rather than around a horizontal axis by clicking on the middle of the
-	objects.<br>
+	objects|<Awkward>].<br>
  
 	<p>To picture the rotation action of the mouse, imagine the objects sitting 
 	within a sphere. To grab a point on the sphere, click the middle mouse button,
@@ -480,7 +495,7 @@
 	<li>Shift-click the widget's spheres (control points), and the widget 
 	rotates around its center. </ol>
  
-	<p> In order to greatly enhance your capabilities with SCIRun, learn more 
+	<p> [In order to greatly enhance your capabilities with SCIRun, l|L]earn more 
 	about the Viewer's components in the User's Guide.[link to UG 5.0 Visualization with the Viewer]<br>
  
         <p><b><A name="section 10">Saving and reloading networks[link to Ug 4.13]</b><br></A>
