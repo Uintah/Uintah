@@ -71,8 +71,8 @@ namespace SCIRun {
 #define PRISM_NTRIS  2
 #define PRISM_NQUADS 3
 
-#define isTRI(i)  (0<=i&&i< PRISM_NTRIS)
-#define isQUAD(i) ( PRISM_NTRIS<=i&&i< PRISM_NTRIS+ PRISM_NQUADS)
+#define isTRI(i)  ((i) < PRISM_NTRIS)
+#define isQUAD(i) ( PRISM_NTRIS <= (i) && (i) < PRISM_NTRIS + PRISM_NQUADS)
 
 static const unsigned int
 PrismFaceTable[PRISM_NFACES][4] = { { 0, 1, 2, 6 },
@@ -391,6 +391,7 @@ public:
 	      (Cross(p0-p3,p2-p0)).length())*0.5;
 
     }
+    ASSERTFAIL("Index not TRI or QUAD.");
   }
   double get_size(Cell::index_type idx) const
   {
@@ -445,15 +446,9 @@ public:
 
   int get_weights(const Point &p, Node::array_type &l, double *w);
   int get_weights(const Point & , Edge::array_type & , double * )
-  {
-    ASSERTFAIL("PrismVolMesh::get_weights for edges isn't supported");
-    return 0;
-  }
+  { ASSERTFAIL("PrismVolMesh::get_weights for edges isn't supported"); }
   int get_weights(const Point & , Face::array_type & , double * )
-  {
-    ASSERTFAIL("PrismVolMesh::get_weights for faces isn't supported");
-    return 0;
-  }
+  { ASSERTFAIL("PrismVolMesh::get_weights for faces isn't supported"); }
   int get_weights(const Point &p, Cell::array_type &l, double *w);
 
   void get_point(Point &result, Node::index_type index) const

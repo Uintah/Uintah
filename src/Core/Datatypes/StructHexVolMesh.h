@@ -113,15 +113,9 @@ public:
 
   int get_weights(const Point &, Node::array_type &, double *);
   int get_weights(const Point &, Edge::array_type &, double *)
-  {
-    ASSERTFAIL("StructHexVolMesh::get_weights for edges isn't supported");
-    return 0;
-  }
+  { ASSERTFAIL("StructHexVolMesh::get_weights for edges isn't supported"); }
   int get_weights(const Point &, Face::array_type &, double *)
-  {
-    ASSERTFAIL("StructHexVolMesh::get_weights for faces isn't supported");
-    return 0;
-  }
+  { ASSERTFAIL("StructHexVolMesh::get_weights for faces isn't supported"); }
   int get_weights(const Point &, Cell::array_type &, double *);
 
   void get_point(Point &point, const Node::index_type &index) const

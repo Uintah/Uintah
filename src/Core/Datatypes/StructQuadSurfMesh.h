@@ -149,16 +149,10 @@ public:
 
   int get_weights(const Point &p, Node::array_type &l, double *w);
   int get_weights(const Point & , Edge::array_type & , double * )
-  {
-    ASSERTFAIL("StructQuadSurfMesh::get_weights for edges isn't supported");
-    return 0;
-  }
+  { ASSERTFAIL("StructQuadSurfMesh::get_weights for edges isn't supported"); }
   int get_weights(const Point &p, Face::array_type &l, double *w);
   int get_weights(const Point & , Cell::array_type & , double * )
-  {
-    ASSERTFAIL("StructQuadSurfMesh::get_weights for cells isn't supported");
-    return 0;
-  }
+  { ASSERTFAIL("StructQuadSurfMesh::get_weights for cells isn't supported"); }
 
   void get_point(Point &point, const Node::index_type &index) const
   { get_center(point, index); }
