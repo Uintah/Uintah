@@ -877,7 +877,16 @@ void FastPiostream::emit_pointer(int& have_data, int& pointer_id)
 // BinaryPiostream -- portable
 BinaryPiostream::~BinaryPiostream()
 {
-#if defined(__APPLE__)
+#if defined(__APPLE__) && (__GNUC__ == 3) && (__GNUC_MINOR__  < 3)
+// On the Mac, x_destroy must be used if and only if you are running a
+// gcc versioned less than 3.3.  Note, we have run into a problem that
+// some gcc 3.3's needed to use x_destroy too.  However, when we
+// updated OSX (using the standard update utility) and we installed
+// the X developer kit, this strange behavior went away.  So, if you
+// are compiling on a Mac with 3.3 and you are getting an error in
+// this routine, please make sure that you update to the latest
+// patches for OSX and have the X developer kit installed.  If this is
+// the case, and you still have problems, please report them.
   if (xdr)
     if ((xdr)->x_ops)
       if ((xdr)->x_ops->x_destroy)
