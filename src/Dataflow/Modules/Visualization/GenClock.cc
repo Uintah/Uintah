@@ -66,11 +66,10 @@ protected:
   GuiInt    iType_;
   GuiInt    iShowTime_;
   GuiInt    iBbox_;
+  GuiString sFormat_;
   GuiDouble dMin_;
   GuiDouble dMax_;
   GuiDouble dCurrent_;
-  GuiString sUnits_;
-  GuiDouble dExp_;
   GuiInt    dSize_;
   GuiString sLocation_;
   GuiDouble color_r_;
@@ -80,11 +79,10 @@ protected:
   int    type_;
   int    showTime_;
   int    bbox_;
+  string format_;
   double min_;
   double max_;
   double current_;
-  string units_;
-  double exp_;
   int    size_;
   string location_;
 
@@ -102,11 +100,10 @@ GenClock::GenClock(GuiContext *context)
     iType_(context->subVar("type")),
     iShowTime_(context->subVar("showtime")),
     iBbox_(context->subVar("bbox")),
+    sFormat_(context->subVar("format")),
     dMin_(context->subVar("min")),
     dMax_(context->subVar("max")),
     dCurrent_(context->subVar("current")),
-    sUnits_(context->subVar("units")),
-    dExp_(context->subVar("exp")),
     dSize_(context->subVar("size")),
     sLocation_(context->subVar("location")),
     color_r_(ctx->subVar("color-r")),
@@ -156,8 +153,7 @@ void GenClock::execute(){
       bbox_     != iBbox_.get() ||
       min_      != dMin_.get() ||
       max_      != dMax_.get() ||
-      units_    != sUnits_.get() ||
-      exp_      != dExp_.get() ||
+      format_   != sFormat_.get() ||
       size_     != dSize_.get() ||
       location_ != sLocation_.get() ) {
 
@@ -171,8 +167,7 @@ void GenClock::execute(){
     bbox_     = iBbox_.get();
     min_      = dMin_.get();
     max_      = dMax_.get();
-    units_    = sUnits_.get();
-    exp_      = dExp_.get();
+    format_   = sFormat_.get();
     size_     = dSize_.get();
     location_ = sLocation_.get();
 
@@ -340,9 +335,9 @@ GeomHandle GenClock::generateTime( int &nchars )
 
   sprintf( fontstr, "%d", fontsize );
 
-  char timestr[12];
+  char timestr[64];
 
-  sprintf( timestr, "%8.3f %s", current_ * exp_, units_.c_str() );
+  sprintf( timestr, format_.c_str(), current_ );
 
   nchars = strlen( timestr );
 
