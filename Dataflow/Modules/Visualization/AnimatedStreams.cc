@@ -45,7 +45,11 @@ AnimatedStreams::AnimatedStreams(const string& id)
     generation(-1), timestep(-1),
     pause("pause",id, this),
     normals("normals", id, this),
+    lighting("lighting", id, this),
+    normal_method("normal_method", id, this),
+    iter_method("iter_method", id, this),
     stepsize("stepsize", id, this),
+    iterations("iterations", id, this),
     linewidth("linewidth", id, this),
     control_lock("AnimatedStreams position lock"),
     control_widget(0), control_id(-1),
@@ -118,43 +122,38 @@ void AnimatedStreams::execute(void)
     if( vf.get_rep() != field.get_rep() ){
       vf = field;
       // We need to figure out why the field has changed. If it changed because
-      // the grid changed we need to call SetVectorField which will resets the
-      // the streams.  If the grid didn't change, but the time step changed
+      // the grid or variable changed we need to call SetVectorField
+      // which will resets the the streams.
+      // If the grid didn't change, but the time step changed
       // then we can assume the field dimensions are the same and call
       // ChangeVectorField which doesn't reset the streams.  If we can't tell
-      // what the field generation is, call SetVectorField, because it
-      // probably didn't come from a Uintah::DataArchive.
+      // what the field generation or variable are, call SetVectorField,
+      // because it probably didn't come from a Uintah::DataArchive.
+      string new_varname("This is not a valid name");
       int new_generation = -1;
-      if (vf->get("generation",new_generation)) {
-	// generation property found, check now for timestep property
-	int new_timestep = -1;
-	if (vf->get("timestep",new_timestep)) {
-	  // now check for sameness of generation and timestep
-	  if (new_generation == generation) {
-	    if (new_timestep != timestep) {
-	      // same generation different timestep, swap out the vector field
-	      anistreams->ChangeVectorField( field );
-	      timestep = new_timestep;
-	    } // else do nothing (same generation and timestep)
-	  } else {
-	    // new DataArchive, set the vector field
-	    anistreams->SetVectorField( field );
-	    generation = new_generation;
-	    timestep = new_timestep;
-	  }
+      int new_timestep = -1;
+      // check for the properties
+      if (vf->get("varname",new_varname) &&
+	  vf->get("generation",new_generation) &&
+	  vf->get("timestep",new_timestep)) {
+	// check to make sure the variable name and generation are the same
+	if (new_varname == varname && new_generation == generation) {
+	  if (new_timestep != timestep)
+	    // same field, different timestep -> swap out the field
+		anistreams->ChangeVectorField( field );
+		timestep = new_timestep;
 	} else {
-	  // this is weird, the generation PropertyManager was found, but
-	  // not the timestep one.  Set the vector field, and print out
-	  // a warning.
-	  cerr << "WARNING:AnimatedStreams::execute:generation PropertyManager was found, but not the timestep.  Using new vector field.\n";
+	  // we have a different field
 	  anistreams->SetVectorField( field );
-	  // make sure these parameters get reset
-	  timestep = -1;
-	}    
+	  varname = new_varname;
+	  generation = new_generation;
+	  timestep = new_timestep;
+	}
       } else {
-	// generation parameter not found, set the vector field
+	// all the necessary properties don't exist
 	anistreams->SetVectorField( field );
 	// make sure these parameters get reset
+	varname = string("This is not a valid name");
 	generation = timestep = -1;
       }
     } // else the fields are the same and do nothing
@@ -164,12 +163,23 @@ void AnimatedStreams::execute(void)
       map = cmap;
     }
   }
- 
+
+  double dt = -1;
+  if (vf->get("delta_t",dt) && dt > 0) {
+    cerr << "Doing " << iterations.get() * dt << " iterations.  For delta_t = " << dt << "\n";
+    anistreams->SetIterations(iterations.get() * dt);
+    anistreams->SetIterationsPerStep(iterations.get());
+  } else {
+    anistreams->SetIterationsPerStep(1);
+  }
 
   anistreams->Pause( (bool)(pause.get()) );
   anistreams->Normals( (bool)(normals.get()) );
+  anistreams->Lighting( (bool)(lighting.get()) );
   anistreams->SetStepSize( stepsize.get() );
   anistreams->SetLineWidth( linewidth.get());
+  anistreams->SetNormalMethod( normal_method.get() );
+  anistreams->SetIterationMethod( iter_method.get() );
   //anistreams->UseWidget(true);
   if( !pause.get() ) {
     want_to_execute();
