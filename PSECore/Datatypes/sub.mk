@@ -15,8 +15,9 @@ SRCS     += $(SRCDIR)/BooleanPort.cc $(SRCDIR)/ColorMapPort.cc \
 	$(SRCDIR)/ScaledBoxWidgetDataPort.cc $(SRCDIR)/SoundPort.cc \
 	$(SRCDIR)/SurfacePort.cc $(SRCDIR)/VectorFieldPort.cc \
 	$(SRCDIR)/VoidStarPort.cc $(SRCDIR)/cMatrixPort.cc \
-	$(SRCDIR)/cVectorPort.cc $(SRCDIR)/SpanTree.cc \
-	$(SRCDIR)/SpanPort.cc $(SRCDIR)/templates.cc \
+	$(SRCDIR)/cVectorPort.cc \
+	$(SRCDIR)/SpanSpace.cc\
+	$(SRCDIR)/templates.cc \
 	$(SRCDIR)/PathPort.cc
 
 
@@ -29,6 +30,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/07/24 20:58:47  yarden
+# New datastructure to hold a SpanSpace (part of Noise)
+#
 # Revision 1.4  2000/07/19 06:35:00  samsonov
 # PathPort datatype moved from DaveW
 #
