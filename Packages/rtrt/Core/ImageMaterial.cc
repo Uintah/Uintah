@@ -14,6 +14,18 @@
 using namespace rtrt;
 using namespace std;
 
+ImageMaterial::ImageMaterial(int, char* texfile, ImageMaterial::Mode umode,
+			     ImageMaterial::Mode vmode,
+			     const Color& ambient, double Kd,
+			     const Color& specular, double specpow,
+			     double refl)
+    : umode(umode), vmode(vmode), ambient(ambient), Kd(Kd), specular(specular),
+      specpow(specpow), refl(refl),  transp(0), flip_(false), valid_(false)
+{
+    read_hdr_image(texfile);
+    outcolor=Color(0,0,0);
+}
+
 ImageMaterial::ImageMaterial(char* texfile, ImageMaterial::Mode umode,
 			     ImageMaterial::Mode vmode,
 			     const Color& ambient, double Kd,
@@ -187,6 +199,41 @@ void ImageMaterial::read_image(char* filename)
     }
   }
 
+  valid_ = true;
+}
+
+
+void ImageMaterial::read_hdr_image(char* filename)
+{
+   char buf[200];
+   sprintf(buf, "%s.hdr", filename);
+   ifstream in(buf);
+   if(!in){
+     cerr << "Error opening header: " << buf << '\n';
+     exit(1);
+   }
+   int nu, nv;
+   in >> nu >> nv;
+   if(!in){
+     cerr << "Error reading header: " << buf << '\n';
+     exit(1);
+   }
+   ifstream indata(filename);
+   image.resize(nu, nv);
+   for(int i=0;i<nu;i++){
+     for(int j=0;j<nv;j++){
+       unsigned char color[3];
+       indata.read((char*)color, 3);
+       double r=color[0]/255.;
+       double g=color[1]/255.;
+       double b=color[2]/255.;
+       image(i,j)=Color(r,g,b);
+     }
+   }
+   if(!indata){
+     cerr << "Error reading image!\n";
+     exit(1);
+   }
   valid_ = true;
 }
 
