@@ -120,23 +120,53 @@ setenv PATH $JAVA_HOME/bin:$PATH
   <section id="sec.cmake">
     <title id="sec.title.cmake">CMake Special Instructions</title>
 
-    <para>CMake is a program that generates Makefiles that build ITK.
-    CMake's configuration variables determine how ITK is built.
-    Command <command>ccmake</command> is used to configure CMake's
-    variables.  In particular, the value of CMake variable
-    <varname>BUILD_SHARED_LIBS</varname> must be explicitly set to
-    <userinput>
-    <!--%= doc.ifP(Doc::Linux) {"ON"};
-    doc.ifP(Doc::OSX) {"OFF"} %--></userinput>.</para>
-
-    <para>If <acronym>PNG</acronym> support in third party software has
-    been enabled (<xref linkend="sec.third_party_inst"/>) then CMake
-    variable <varname>ITK_USE_SYSTEM_PNG</varname> should be set to
-    <literal>ON</literal>, otherwise <varname>ITK_USE_SYSTEM_PNG</varname>
-    should be set to <literal>OFF</literal>.  When
-    <varname>ITK_USE_SYSTEM_PNG</varname> is set to <literal>ON</literal>
-    CMake may ask for the location of <acronym>PNG</acronym>
-    libraries.</para>
+    <para>CMake is a program that generates ITK's Makefiles.  CMake's
+    configuration variables determine how ITK is built.  Command
+    <command>ccmake</command> is used to configure CMake's variables.
+    After starting <command>ccmake</command>, turn on its advanced
+    mode by pressing key <keycap>t</keycap>, and then set the
+    following CMake variables to the indicated values:</para>
+    
+    <variablelist>
+      <varlistentry>
+	<term><varname>BUILD_SHARED_LIBS</varname></term>
+	<listitem>
+	  <para>Set this variable to the value <userinput><!--%= doc.ifP(Doc::Linux) {"ON"}; doc.ifP(Doc::OSX) {"OFF"} %--></userinput></para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><varname>ITK_USE_SYSTEM_PNG</varname></term>
+	<listitem>
+	  <para>If <acronym>PNG</acronym> support in the third party
+	  Teem software has been enabled (<xref
+	  linkend="sec.third_party_inst"/>) then CMake variable
+	  <varname>ITK_USE_SYSTEM_PNG</varname> should be set to
+	  <literal>ON</literal>, otherwise
+	  <varname>ITK_USE_SYSTEM_PNG</varname> should be set to
+	  <literal>OFF</literal>.  When
+	  <varname>ITK_USE_SYSTEM_PNG</varname> is set to
+	  <literal>ON</literal>, variables
+	  <varname>PNG_LIBRARY</varname> and
+	  <varname>PNG_PNG_INCLUDE_DIR</varname> may also need to be
+	  set.</para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><varname>PNG_LIBRARY</varname></term>
+	<listitem>
+	  <para>Set <varname>PNG_LIBRARY</varname> to the absolute
+	  pathname of the PNG library, for example, <filename><!--%= doc.ifP(Doc::Linux) {"/usr/local/lib/libpng.so"}; doc.ifP(Doc::OSX) {"/sw/lib/libpng.a"} %--></filename></para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><varname>PNG_PNG_INCLUDE_DIR</varname></term>
+	<listitem>
+	  <para>Set <varname>PNG_PNG_INCLUDE_DIR</varname> to the
+	  absolute pathname of the directory containing PNG include
+	  files, for example, <filename><!--%= doc.ifP(Doc::Linux) {"/usr/local/include"}; doc.ifP(Doc::OSX) {"/sw/include"} %--></filename></para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
 
   </section>
 

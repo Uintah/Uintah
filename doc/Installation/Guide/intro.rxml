@@ -125,21 +125,7 @@ DEALINGS IN THE SOFTWARE.
 	      </listitem>
 	      <listitem>
 		<para>Apple's X11 server software, Xcode developer
-		tools, and X11 software development kit.
-		<footnote>
-		  <para>Apple's X11 server software, Xcode developer
-		  tools, and X11 SDK are distributed with &osx; but
-		  are not part of the &osx; default installation.
-		  They are installed by double-clicking, in turn, the
-		  files <filename>X11User.pkg</filename>,
-		  <filename>Developer.mpkg</filename>, and
-		  <filename>X11SDK.pkg</filename>.  These files may be
-		  present on the hard drive, the &osx; installation
-		  CDs, or DVD.  <filename>Developer.mpkg</filename>
-		  and <filename>X11SDK.pkg</filename> are part of the
-		  Xcode distribution.</para>
-		</footnote>
-		</para>
+		tools, and X11 software development kit.</para>
 	      </listitem>
 	      <listitem>
 		<para>&sr;'s MatlabInterface package requires Matlab
@@ -180,7 +166,21 @@ DEALINGS IN THE SOFTWARE.
     </tgroup>
   </table>
 
-<!--%= doc.ifP(Doc::Linux) {%Q{-->
+  <!--%= doc.ifP(Doc::OSX) {%Q{-->
+  <para>Apple's X11 server software, Xcode developer tools, and X11
+  SDK are distributed with &osx; but are not part of the &osx; default
+  installation.  They are installed by double-clicking, in turn, the
+  files <filename>X11User.pkg</filename>,
+  <filename>Developer.mpkg</filename>, and
+  <filename>X11SDK.pkg</filename>.  These files may be present on the
+  hard drive, the &osx; installation CDs, or DVD.
+  <filename>Developer.mpkg</filename> and
+  <filename>X11SDK.pkg</filename> are part of the Xcode
+  distribution.</para>
+  <!--}} %-->
+
+
+  <!--%= doc.ifP(Doc::Linux) {%Q{-->
   <para>The &sr; <acronym>RPM</acronym> distribution
   does <emphasis>not</emphasis> provide support for
   <acronym>PETSc</acronym>.  <acronym>PETSc</acronym> support is
@@ -188,8 +188,8 @@ DEALINGS IN THE SOFTWARE.
 
   <para>See <xref linkend="intro.nvidia_notes" /> for information on
   the use of Nvidia graphics cards with &sr;</para>
-
-  <para>See <xref linkend="intro.ati_notes"/> for information on the
+ 
+ <para>See <xref linkend="intro.ati_notes"/> for information on the
   use of ATI cards and drivers with &sr;.</para>
 
   <para>See <xref linkend="intro.redhat_ent_notes" /> for information
@@ -199,24 +199,24 @@ DEALINGS IN THE SOFTWARE.
   via an <acronym>RPM</acronym>.  Otherwise, start with <xref
   linkend="sec.source_inst" /> to install &sr; from source
   code.</para>
-<!--}} %-->
+  <!--}} %-->
 
-<!--%= doc.ifP(Doc::Irix) {%Q{-->
+  <!--%= doc.ifP(Doc::Irix) {%Q{-->
   <para>Proceed to <xref
   linkend="sec.source_inst"/> to install &sr;.</para>
-<!--}} %-->
+  <!--}} %-->
 
-<!--%= doc.ifP(Doc::OSX) {%Q{-->
+  <!--%= doc.ifP(Doc::OSX) {%Q{-->
   <para>Proceed to <xref
   linkend="sec.dmg_inst"/> if installing &sr; from a disk image.
   Proceed to <xref linkend="sec.source_inst"/> if installing &sr; from
   its source code.</para>
-<!--}} %-->
+  <!--}} %-->
 
   <para>Read <xref linkend="sec.prepare" /> after installing
   &sr;.</para>
 
-<!--%= doc.ifP(Doc::Linux) {%Q{-->
+  <!--%= doc.ifP(Doc::Linux) {%Q{-->
   <section id="intro.nvidia_notes">
     <title id="intro.nvidia_notes.title">Linux and Nvidia Driver Notes</title>
 
@@ -282,6 +282,6 @@ DEALINGS IN THE SOFTWARE.
     this system at this time.  SCI will evaluate future versions of Redhat
     Enterprise</para>
   </section>
-<!--}} %-->
+  <!--}} %-->
 
 </section>
