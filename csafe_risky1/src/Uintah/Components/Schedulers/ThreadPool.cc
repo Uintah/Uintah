@@ -5,14 +5,18 @@
 #include <Uintah/Components/Schedulers/ThreadPool.h>
 
 #include <SCICore/Exceptions/InternalError.h>
+#include <SCICore/Thread/Time.h>
 #include <SCICore/Util/Assert.h>
 
 #include <iostream>
 #include <stdio.h>
 
 using std::cerr;
+
 using namespace Uintah;
+
 using SCICore::Exceptions::InternalError;
+using SCICore::Thread::Time;
 
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)
@@ -45,6 +49,7 @@ Worker::run()
    for(;;){
     d_ready->lock();
 
+    double beginTime = Time::currentSeconds();
 #if DAV_DEBUG
     cerrLock->lock(); cerr << "Worker " << d_id << " running: " 
 			  << *d_task << "\n"; cerrLock->unlock();
@@ -62,7 +67,10 @@ Worker::run()
 
     d_task = 0;
     d_pg = 0;
-    d_parent->done( d_id, task );
+
+    double endTime = Time::currentSeconds();
+
+    d_parent->done( d_id, task, endTime - beginTime );
   }
 }
 
@@ -72,6 +80,10 @@ ThreadPool::ThreadPool( int numWorkers ) :
   d_numWorkers( numWorkers ),
   d_numBusy( 0 )
 {
+  d_beginTime = Time::currentSeconds();
+
+  d_timeUsed = scinew double[ numWorkers ];
+
   // Only one thing (worker thread or threadPool itself) can be
   // modifying the workerQueue (actually a stack) at a time.
   d_workerQueueLock = scinew Mutex( "ThreadPool Worker Queue Lock" );
@@ -82,7 +94,7 @@ ThreadPool::ThreadPool( int numWorkers ) :
 
   for( int i = 0; i < numWorkers; i++ ){
 
-    char name[1024];
+    d_timeUsed[ i ] = 0.0;
 
     d_availableThreads.push( i );
 
@@ -93,11 +105,31 @@ ThreadPool::ThreadPool( int numWorkers ) :
 
     Worker * worker = scinew Worker( this, i, d_workerReadyLocks[ i ] );
 
+    char name[1024];
     sprintf( name, "Worker Thread %d", i );
+
     scinew Thread( worker, name );
 
     d_workers[ i ] = worker;
   }
+}
+
+double
+ThreadPool::getUtilization()
+{
+  double time = Time::currentSeconds();
+  double totalTimeUsed = 0;
+  double maxTime = d_numWorkers * ( time - d_beginTime );
+
+  d_workerQueueLock->lock();
+
+  for( int i = 0; i < d_numWorkers; i++ ){
+    totalTimeUsed += d_timeUsed[ i ];
+  }
+
+  d_workerQueueLock->unlock();
+
+  return totalTimeUsed / maxTime;
 }
 
 int
@@ -156,7 +188,7 @@ ThreadPool::assignThread( Task * task, const ProcessorGroup * pg )
 }
 
 void
-ThreadPool::done( int id, Task * task )
+ThreadPool::done( int id, Task * task, double timeUsed )
 {
   d_workerQueueLock->lock();
 
@@ -167,6 +199,8 @@ ThreadPool::done( int id, Task * task )
 #endif
 
   d_finishedTasks.push_back( task );
+
+  d_timeUsed[ id ] += timeUsed;
 
   d_availableThreads.push( id );
   d_numBusy--;
@@ -185,12 +219,18 @@ ThreadPool::getFinishedTasks( vector<Task *> & finishedTasks )
 
 //
 // $Log$
+// Revision 1.3.2.3  2000/10/19 05:17:56  sparker
+// Merge changes from main branch into csafe_risky1
+//
 // Revision 1.3.2.2  2000/10/10 05:28:04  sparker
 // Added support for NullScheduler (used for profiling taskgraph overhead)
 //
 // Revision 1.3.2.1  2000/09/29 06:09:55  sparker
 // g++ warnings
 // Support for sending only patch edges
+//
+// Revision 1.4  2000/10/10 18:27:02  dav
+// added support to track time/usage of threads
 //
 // Revision 1.3  2000/09/28 23:16:45  jas
 // Added (int) for anything returning the size of a STL component.  Added

@@ -2,103 +2,122 @@
 #ifndef UINTAH_HOMEBREW_ICE_H
 #define UINTAH_HOMEBREW_ICE_H
 
+#include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/CFDInterface.h>
-#include <Uintah/Grid/VarLabel.h>
+#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Components/ICE/ICELabel.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Grid/CellIterator.h>
 #include <SCICore/Geometry/Vector.h>
 
 using SCICore::Geometry::Vector;
 
 namespace Uintah {
-class Patch;
-class ProcessorGroup;
-
 namespace ICESpace {
 
-class ICE : public CFDInterface {
+class ICE : public UintahParallelComponent, public CFDInterface {
 public:
-   ICE();
+   ICE(const ProcessorGroup* myworld);
    virtual ~ICE();
    
    virtual void problemSetup(
                         const ProblemSpecP& params, 
                         GridP& grid,
-			   SimulationStateP&);
+			SimulationStateP&);
+
    virtual void scheduleInitialize(
                         const LevelP& level,
 			   SchedulerP&,
 			   DataWarehouseP&);
 
-   void actuallyInitialize(
-                        const ProcessorGroup*,
-			   const Patch* patch,
-			   DataWarehouseP& /* old_dw */,
-			   DataWarehouseP& new_dw);
    
-   virtual void scheduleComputeStableTimestep(
-                        const LevelP&,
+   virtual void scheduleComputeStableTimestep(const LevelP&,
 			   SchedulerP&,
 			   DataWarehouseP&);
-   void actuallyComputeStableTimestep(
-                        const ProcessorGroup*,
+
+   virtual void scheduleTimeAdvance(double t, 
+				    double dt, 
+				    const LevelP&, 
+				    SchedulerP&,
+				    DataWarehouseP&, 
+				    DataWarehouseP&);
+
+ protected:
+
+   void actuallyInitialize(const ProcessorGroup*,
 			   const Patch* patch,
-			   DataWarehouseP&,
-			   DataWarehouseP&);
+			   DataWarehouseP&  old_dw,
+			   DataWarehouseP& new_dw);
 
-   virtual void scheduleTimeAdvance(
-                        double t, 
-                        double dt, 
-			   const LevelP&, 
-			   SchedulerP&,
-			   DataWarehouseP&, 
-			   DataWarehouseP&);
+   void actuallyComputeStableTimestep(const ProcessorGroup*,
+				      const Patch* patch,
+				      DataWarehouseP&,
+				      DataWarehouseP&);
 
 
-   void actually_Bottom_of_main_loop(
-                        const ProcessorGroup*,
-			   const Patch* patch,
-			   DataWarehouseP&,
-			   DataWarehouseP&);
 
-   void actually_Top_of_main_loop(
-                        const ProcessorGroup*,
-		          const Patch* patch,
-		          DataWarehouseP&,
-		          DataWarehouseP&);
+   void actually_Bottom_of_main_loop(const ProcessorGroup*,
+				     const Patch* patch,
+			  	     DataWarehouseP&,
+				     DataWarehouseP&);
 
-   void actuallyStep1(
-                       const ProcessorGroup*,
-		         const Patch* patch,
-		         DataWarehouseP&,
-		         DataWarehouseP&);
+   void actually_Top_of_main_loop(const ProcessorGroup*,
+			          const Patch* patch,
+			          DataWarehouseP&,
+			          DataWarehouseP&);
 
-   void actuallyStep2(
-                        const ProcessorGroup*,
-		          const Patch* patch,
-		          DataWarehouseP&,
-		          DataWarehouseP&);
+   // compute speedSound
+   void actuallyStep1a(const ProcessorGroup*,
+		       const Patch* patch,
+		       DataWarehouseP&,
+		       DataWarehouseP&);
 
-   void actuallyStep3(
-                        const ProcessorGroup*,
-		          const Patch* patch,
-		          DataWarehouseP&,
-		          DataWarehouseP&);
+   // calculateEquilibrationPressure
+   void actuallyStep1b(const ProcessorGroup*,
+		       const Patch* patch,
+		       DataWarehouseP&,
+		       DataWarehouseP&);
 
-   void actuallyStep4(
-                        const ProcessorGroup*,
-		          const Patch* patch,
-		          DataWarehouseP&,
-		          DataWarehouseP&);
+   // computeFCVelocity
+   void actuallyStep1c(const ProcessorGroup*,
+		       const Patch* patch,
+		       DataWarehouseP&,
+		       DataWarehouseP&);
 
-   void actuallyStep5(
-                        const ProcessorGroup*,
-		          const Patch* patch,
-		          DataWarehouseP&,
-		          DataWarehouseP&);
+   // momentumExchangeFCVelocity
+   void actuallyStep1d(const ProcessorGroup*,
+		       const Patch* patch,
+		       DataWarehouseP&,
+		       DataWarehouseP&);
 
-   void actuallyStep6and7(
-                        const ProcessorGroup*,
+   // computeDivFCVelocity
+   // computeExplicitDelPress
+   void actuallyStep2(const ProcessorGroup*,
+		      const Patch* patch,
+		      DataWarehouseP&,
+		      DataWarehouseP&);
+
+   // computeFaceCenteredPressure
+   void actuallyStep3(const ProcessorGroup*,
+		      const Patch* patch,
+		      DataWarehouseP&,
+		      DataWarehouseP&);
+
+   void actuallyStep4(const ProcessorGroup*,
+		      const Patch* patch,
+		      DataWarehouseP&,
+		      DataWarehouseP&);
+
+   void actuallyStep5(const ProcessorGroup*,
+		      const Patch* patch,
+		      DataWarehouseP&,
+		      DataWarehouseP&);
+
+   void actuallyStep6and7(const ProcessorGroup*,
 		          const Patch* patch,
 		          DataWarehouseP&,
 		          DataWarehouseP&);
@@ -203,57 +222,11 @@ void after_each_step_wrapper(
                         double  ****wvel_CC);
 			  
    
-                        private:
- // These two will go away SOON - a really bad habit, won't work in parallel, blah blah blah
+ private:
+ ICELabel* lb; 
+ SimulationStateP d_sharedState;
+
  
- // Cell centered variables
-
-    const VarLabel* delTLabel;
-
-    const VarLabel* press_CCLabel;
-    const VarLabel* press_CCLabel_0;
-    const VarLabel* press_CCLabel_1;
-    const VarLabel* press_CCLabel_2;
-    const VarLabel* press_CCLabel_3;
-    const VarLabel* press_CCLabel_4;
-    const VarLabel* press_CCLabel_5;
-    const VarLabel* press_CCLabel_6_7;
-    
-    const VarLabel* rho_CCLabel;
-    const VarLabel* rho_CCLabel_0;
-    const VarLabel* rho_CCLabel_1;
-    const VarLabel* rho_CCLabel_2;
-    const VarLabel* rho_CCLabel_3;
-    const VarLabel* rho_CCLabel_4;
-    const VarLabel* rho_CCLabel_5;
-    const VarLabel* rho_CCLabel_6_7;
-    
-    const VarLabel* temp_CCLabel;
-    const VarLabel* temp_CCLabel_0;
-    const VarLabel* temp_CCLabel_1;
-    const VarLabel* temp_CCLabel_2;
-    const VarLabel* temp_CCLabel_3;
-    const VarLabel* temp_CCLabel_4;
-    const VarLabel* temp_CCLabel_5;
-    const VarLabel* temp_CCLabel_6_7;
-    
-    const VarLabel* vel_CCLabel;
-    const VarLabel* vel_CCLabel_0;
-    const VarLabel* vel_CCLabel_1;
-    const VarLabel* vel_CCLabel_2;
-    const VarLabel* vel_CCLabel_3;
-    const VarLabel* vel_CCLabel_4;
-    const VarLabel* vel_CCLabel_5;
-    const VarLabel* vel_CCLabel_6_7;
-    
-    const VarLabel* cv_CCLabel;
-    const VarLabel* div_velfc_CCLabel;
-
-// Face centered variables
-    const VarLabel* vel_FCLabel;
-    const VarLabel* press_FCLabel;
-    const VarLabel* tau_FCLabel;
-
    int  i,j,k,m,   
         xLoLimit,                       /* x array lower limits             */
         yLoLimit,                       /* y array lower limits             */
@@ -406,3 +379,39 @@ void after_each_step_wrapper(
 }
 
 #endif
+
+// $Log$
+// Revision 1.20.4.1  2000/10/19 05:17:39  sparker
+// Merge changes from main branch into csafe_risky1
+//
+// Revision 1.28  2000/10/16 20:31:00  guilkey
+// Step3 added
+//
+// Revision 1.27  2000/10/16 19:10:34  guilkey
+// Combined step1e with step2 and eliminated step1e.
+//
+// Revision 1.26  2000/10/16 18:32:40  guilkey
+// Implemented "step1e" of the ICE algorithm.
+//
+// Revision 1.25  2000/10/13 00:01:11  guilkey
+// More work on ICE
+//
+// Revision 1.24  2000/10/10 20:35:07  jas
+// Move some stuff around.
+//
+// Revision 1.23  2000/10/04 23:38:21  jas
+// All of the steps are in place with just dummy functions.  delT is
+// hardwired in for the moment so that we can actually do multiple
+// time steps with empty functions.
+//
+// Revision 1.22  2000/10/04 20:19:03  jas
+// Get rid of Labels.  Now in ICELabel.
+//
+// Revision 1.21  2000/10/04 19:26:46  jas
+// Changes to get ICE into UCF conformance.  Only skeleton for now.
+//
+
+
+
+
+

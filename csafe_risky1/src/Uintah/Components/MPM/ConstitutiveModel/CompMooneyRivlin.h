@@ -48,7 +48,6 @@ WARNING
 	    double PR;
 	 };
       private:
-	 friend const TypeDescription* fun_getTypeDescription(CMData*);
 	 CMData d_initialData;
 	 
 	 // Prevent copying of this class
@@ -105,9 +104,6 @@ WARNING
 
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to);
-	 const VarLabel* p_cmdata_label;
-	 const VarLabel* p_cmdata_label_preReloc;
-
       };
 
    }
@@ -116,6 +112,14 @@ WARNING
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.26.4.1  2000/10/19 05:17:47  sparker
+// Merge changes from main branch into csafe_risky1
+//
+// Revision 1.27  2000/10/11 01:30:28  guilkey
+// Made CMData no longer a per particle variable for these models.
+// None of them currently have anything worthy of being called StateData,
+// so no such struct was created.
+//
 // Revision 1.26  2000/09/12 16:52:10  tan
 // Reorganized crack surface contact force algorithm.
 //

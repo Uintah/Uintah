@@ -310,6 +310,15 @@ itcl_class Roe {
 	bind $w <Shift-ButtonPress-1> "$this-c mpick start %x %y %s %b"
 	bind $w <Shift-ButtonPress-2> "$this-c mpick start %x %y %s %b"
 	bind $w <Shift-ButtonPress-3> "$this-c mpick start %x %y %s %b"
+	
+	#-----------------------------------------------------------------
+	# by AS:
+	bind $w <Alt-ButtonPress-2> "$this-c mrotate_eyep start %x %y %t"
+	bind $w <Alt-Button2-Motion> "$this-c mrotate_eyep move %x %y %t"
+	bind $w <Alt-ButtonRelease-2> "$this-c mrotate_eyep end %x %y %t"
+	# end by AS
+	#-----------------------------------------------------------------
+
 	bind $w <Shift-Button1-Motion> "$this-c mpick move %x %y %s 1"
 	bind $w <Shift-Button2-Motion> "$this-c mpick move %x %y %s 2"
 	bind $w <Shift-Button3-Motion> "$this-c mpick move %x %y %s 3"
@@ -372,6 +381,7 @@ itcl_class Roe {
 	global "$this-global-movieFrame"
 	
 	global $this-do_stereo
+	global $this-sbase
 	global $this-do_bawgl
 	global $this-tracker_state
 	
@@ -388,6 +398,7 @@ itcl_class Roe {
 	set "$this-global-movieFrame" 0
 	    
 	set $this-do_stereo 0
+	set $this-sbase 0.01
 	set $this-do_bawgl 0
 	set $this-tracker_state 0
 	
@@ -482,8 +493,13 @@ itcl_class Roe {
 	
 	checkbutton $m.stereo -text "Stereo" -variable $this-do_stereo \
 		-command "$this-c redraw"
-	pack $m.stereo -side top
-
+	
+	scale $m.sbase -variable $this-sbase -length 100 -from 0.1 -to 10 \
+		-resolution 0.1 -orient horizontal -label "Base Scale:"
+	checkbutton $m.sr -text "Rot. Shift" -variable $this-sr -anchor w
+	pack $m.stereo $m.sbase $m.sr -side top
+	$m.sbase set 1
+	
 	# the stuff below doesn't have corresponding c-functions
 	
 	checkbutton $m.tracker -text "Tracker" -variable $this-tracker_state \

@@ -78,6 +78,9 @@ namespace Uintah {
       StencilMatrix<CCVariable<double> > scalarConvectCoeff; //7 point stencil
       CCVariable<double> scalarLinearSrc;
       CCVariable<double> scalarNonlinearSrc;
+      // for refdensity and refpressure
+      double den_Ref;
+      double press_ref;
       // for residual calculations
       double residPress;
       double truncPress;
@@ -104,6 +107,12 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.2.4.1  2000/10/19 05:17:27  sparker
+// Merge changes from main branch into csafe_risky1
+//
+// Revision 1.3  2000/09/29 20:32:36  rawat
+// added underrelax to pressure solver
+//
 // Revision 1.2  2000/08/01 23:28:43  skumar
 // Added residual calculation procedure and modified templates in linear
 // solver.  Added template for order-of-magnitude term calculation.

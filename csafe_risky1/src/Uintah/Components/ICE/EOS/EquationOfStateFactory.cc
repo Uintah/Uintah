@@ -26,6 +26,9 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
    return 0;
 }
 //$Log$
+//Revision 1.1.2.1  2000/10/19 05:17:41  sparker
+//Merge changes from main branch into csafe_risky1
+//
 //Revision 1.1  2000/10/06 04:02:16  jas
 //Move into a separate EOS directory.
 //

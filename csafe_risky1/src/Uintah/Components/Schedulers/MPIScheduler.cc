@@ -497,7 +497,9 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	    if(task->getPatch())
 	       dbg << " on patch " << task->getPatch()->getID() << '\n';
 	    double taskstart = Time::currentSeconds();
+	    //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
 	    task->doit(pc);
+	    //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
 	    double sendstart = Time::currentSeconds();
 	    
 #ifdef USE_VAMPIR
@@ -992,8 +994,7 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 	 new_dw->put(*newvar, reloc_new_labels[m][v]);
 	 delete newvar;
       }
-      for(int i=0;i<(int)subsets.size();i++)
-	 delete subsets[i];
+      delete keepset;
    }
    for(int i=0;i<(int)sr.size();i++){
       for(int m=0;m<reloc_numMatls;m++){
@@ -1045,6 +1046,9 @@ MPIScheduler::emitTime(char* label, double dt)
 
 //
 // $Log$
+// Revision 1.25.4.7  2000/10/19 05:17:55  sparker
+// Merge changes from main branch into csafe_risky1
+//
 // Revision 1.25.4.6  2000/10/17 01:00:37  sparker
 // More instrumentation
 //
@@ -1063,6 +1067,21 @@ MPIScheduler::emitTime(char* label, double dt)
 // Revision 1.25.4.1  2000/09/29 06:09:54  sparker
 // g++ warnings
 // Support for sending only patch edges
+//
+// Revision 1.30  2000/10/13 21:14:15  sparker
+// Commented out called to malloc audit
+//
+// Revision 1.29  2000/10/10 05:13:31  sparker
+// Repaired (a) memory leak in particle relcation
+//
+// Revision 1.28  2000/10/09 22:43:33  sparker
+// must free mpi buffer
+//
+// Revision 1.27  2000/09/30 05:33:10  sparker
+// Fixed typo
+//
+// Revision 1.26  2000/09/29 21:19:57  sparker
+// Do not log send or wait for the send if size == -1
 //
 // Revision 1.25  2000/09/27 20:49:55  witzel
 // It needed to receive in gatherParticles even for zero byte data.

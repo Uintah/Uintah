@@ -50,37 +50,6 @@ ICELabel::ICELabel()
     vol_frac_CCLabel = 
      scinew VarLabel("vol_frac_CC",   CCVariable<double>::getTypeDescription());
 
-    viscosity_CCLabel = 
-     scinew VarLabel("viscosity_CC",  CCVariable<double>::getTypeDescription());
-    xmom_source_CCLabel = 
-     scinew VarLabel("xmom_source_CC",CCVariable<double>::getTypeDescription());
-    ymom_source_CCLabel = 
-     scinew VarLabel("ymom_source_CC",CCVariable<double>::getTypeDescription());
-    zmom_source_CCLabel = 
-     scinew VarLabel("zmom_source_CC",CCVariable<double>::getTypeDescription());
-    int_eng_source_CCLabel = 
-     scinew VarLabel("intE_source_CC",CCVariable<double>::getTypeDescription());
-    xmom_L_CCLabel = 
-     scinew VarLabel("xmom_L_CC",CCVariable<double>::getTypeDescription());
-    ymom_L_CCLabel = 
-     scinew VarLabel("ymom_L_CC",CCVariable<double>::getTypeDescription());
-    zmom_L_CCLabel = 
-     scinew VarLabel("zmom_L_CC",CCVariable<double>::getTypeDescription());
-    int_eng_L_CCLabel = 
-     scinew VarLabel("intE_L_CC",CCVariable<double>::getTypeDescription());
-    mass_L_CCLabel = 
-     scinew VarLabel("mass_L_CC",CCVariable<double>::getTypeDescription());
-    rho_L_CCLabel = 
-     scinew VarLabel("rho_L_CC",CCVariable<double>::getTypeDescription());
-    xmom_L_ME_CCLabel = 
-     scinew VarLabel("xmom_L_ME_CC",CCVariable<double>::getTypeDescription());
-    ymom_L_ME_CCLabel = 
-     scinew VarLabel("ymom_L_ME_CC",CCVariable<double>::getTypeDescription());
-    zmom_L_ME_CCLabel = 
-     scinew VarLabel("zmom_L_ME_CC",CCVariable<double>::getTypeDescription());
-    int_eng_L_ME_CCLabel = 
-     scinew VarLabel("intE_L_ME_CC",CCVariable<double>::getTypeDescription());
-
   // Face centered variables
     uvel_FCLabel       = 
      scinew VarLabel("uvel_FC",   FCVariable<double>::getTypeDescription() );
@@ -96,12 +65,8 @@ ICELabel::ICELabel()
      scinew VarLabel("wvel_FCME", FCVariable<double>::getTypeDescription() );
     press_FCLabel     = 
      scinew VarLabel("press_FC",  FCVariable<double>::getTypeDescription() );
-    tau_X_FCLabel       = 
-     scinew VarLabel("tau_X_FC",    FCVariable<Vector>::getTypeDescription() );
-    tau_Y_FCLabel       = 
-     scinew VarLabel("tau_Y_FC",    FCVariable<Vector>::getTypeDescription() );
-    tau_Z_FCLabel       = 
-     scinew VarLabel("tau_Z_FC",    FCVariable<Vector>::getTypeDescription() );
+    tau_FCLabel       = 
+     scinew VarLabel("tau_FC",    FCVariable<Vector>::getTypeDescription() );
 } 
 
 ICELabel::~ICELabel()
@@ -115,45 +80,24 @@ ICELabel::~ICELabel()
     delete uvel_CCLabel;
     delete vvel_CCLabel;
     delete wvel_CCLabel;
-    delete speedSound_CCLabel;
-    delete speedSound_equiv_CCLabel;
     delete cv_CCLabel;
     delete rho_micro_CCLabel;
     delete div_velfc_CCLabel;
     delete vol_frac_CCLabel;
-    delete viscosity_CCLabel;
-    delete xmom_source_CCLabel;
-    delete ymom_source_CCLabel;
-    delete zmom_source_CCLabel;
-    delete int_eng_source_CCLabel;
-    delete xmom_L_CCLabel;
-    delete ymom_L_CCLabel;
-    delete zmom_L_CCLabel;
-    delete int_eng_L_CCLabel;
-    delete mass_L_CCLabel;
-    delete rho_L_CCLabel;
-    delete xmom_L_ME_CCLabel;
-    delete ymom_L_ME_CCLabel;
-    delete zmom_L_ME_CCLabel;
-    delete int_eng_L_ME_CCLabel;
+    delete speedSound_CCLabel;
 
     // Face centered variables
     delete uvel_FCLabel;
     delete vvel_FCLabel;
     delete wvel_FCLabel;
     delete press_FCLabel;
-    delete tau_X_FCLabel;
-    delete tau_Y_FCLabel;
-    delete tau_Z_FCLabel;
+    delete tau_FCLabel;
 
     delete delTLabel;
 }
 // $Log$
-// Revision 1.10  2000/10/19 02:44:52  guilkey
-// Added code for step5b.
-//
-// Revision 1.9  2000/10/18 21:02:17  guilkey
-// Added code for steps 4 and 5.
+// Revision 1.10.2.1  2000/10/19 05:17:39  sparker
+// Merge changes from main branch into csafe_risky1
 //
 // Revision 1.8  2000/10/17 04:13:25  jas
 // Implement hydrostatic pressure adjustment as part of step 1b.  Still need

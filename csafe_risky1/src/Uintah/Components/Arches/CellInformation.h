@@ -32,6 +32,7 @@ WARNING
 ****************************************/
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
+#include <Uintah/Components/Arches/CellInformationP.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Interface/SchedulerP.h>
@@ -43,7 +44,7 @@ namespace ArchesSpace {
   using namespace SCICore::Containers;
 
 
-struct CellInformation {
+struct CellInformation : public RefCounted {
   // for non-uniform grid these values will come from the
   // patch but for the time being we're assigning the values 
   // locally
