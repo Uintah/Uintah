@@ -254,16 +254,22 @@ public:
   void get_normal(Vector &result, Node::index_type idx) const;
 
   //@{
-  //! Support functions for the SCIRun Pio system, used to read and
-  //! write the meshes.
+  //! Support functions for the SCIRun Pio system.
+  /*! These functions and definitions are used by the Pio system to read
+   *  and write meshes.
+   */
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static  const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const;
   //@}
 
-  //! Used for dispatching on meshes if we don't already know the
-  //! exact mesh type that we are using.
+  //! Virtualized get_type_description().
+  /*! get_type_description is used for dispatching on meshes if we
+   *  don't already know the exact mesh type that we are using.  It is
+   *  especially convenient for dynamically compiling code templated
+   *  on mesh type.
+   */
   virtual const TypeDescription *get_type_description() const;
 
 private:
