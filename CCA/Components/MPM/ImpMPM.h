@@ -139,23 +139,18 @@ private:
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
-  void removeFixedDOF(                 const ProcessorGroup*, 
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls, 
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw);
-
   void rigidBody(                      const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
-  void applyBoundaryConditions(        const ProcessorGroup*,
+  void destroyMatrix(                  const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw);
+                                       DataWarehouse* new_dw,
+                                       const bool recursion);
 
   void createMatrix(                   const ProcessorGroup*,
                                        const PatchSubset* patches,
@@ -164,12 +159,23 @@ private:
                                        DataWarehouse* new_dw,
                                        const bool recursion);
 
-  void destroyMatrix(                  const ProcessorGroup*,
+  void applyBoundaryConditions(        const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw,
-                                       const bool recursion);
+                                       DataWarehouse* new_dw);
+
+  void computeContact(                 const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
+  void findFixedDOF(                   const ProcessorGroup*, 
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls, 
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
 
   // This is for the computation with the 24 x 24 matrix
   void computeStressTensor(            const ProcessorGroup*,
@@ -198,13 +204,6 @@ private:
   //////////
   // Insert Documentation Here:
   void computeInternalForce(           const ProcessorGroup*,
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw,
-                                       bool recursion);
-
-  void computeContactForce(            const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
@@ -264,12 +263,6 @@ private:
 				       DataWarehouse* old_dw,
 				       DataWarehouse* new_dw);
 
-  void scheduleCreateMatrix(        SchedulerP&, const PatchSet*,
-                                    const MaterialSet*, const bool recursion);
-
-  void scheduleDestroyMatrix(       SchedulerP&, const PatchSet*,
-                                    const MaterialSet*, const bool recursion);
-
   void scheduleComputeStressTensor( SchedulerP&, const PatchSet*,
                                     const MaterialSet*, const bool recursion);
 
@@ -277,9 +270,6 @@ private:
                                     const MaterialSet*,const bool recursion);
 
   void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
-				    const MaterialSet*, const bool recursion);
-
-  void scheduleComputeContactForce( SchedulerP&, const PatchSet*,
 				    const MaterialSet*, const bool recursion);
 
   void scheduleFormQ(               SchedulerP&, const PatchSet*,
@@ -291,13 +281,22 @@ private:
   void scheduleInterpolateParticlesToGrid(     SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
 
-  void scheduleRemoveFixedDOF(                 SchedulerP&, const PatchSet*, 
-                                               const MaterialSet*);
-
   void scheduleRigidBody(                      SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
 
+  void scheduleDestroyMatrix(      SchedulerP&, const PatchSet*,
+                                   const MaterialSet*, const bool recursion);
+
+  void scheduleCreateMatrix(       SchedulerP&, const PatchSet*,
+                                   const MaterialSet*, const bool recursion);
+
   void scheduleApplyBoundaryConditions(        SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
+
+  void scheduleComputeContact(                 SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
+
+  void scheduleFindFixedDOF(                   SchedulerP&, const PatchSet*, 
                                                const MaterialSet*);
 
   void scheduleComputeStressTensor(            SchedulerP&, const PatchSet*,
