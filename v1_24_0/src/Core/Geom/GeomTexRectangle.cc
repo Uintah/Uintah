@@ -58,8 +58,8 @@ PersistentTypeID GeomTexRectangle::type_id("GeomTexRectangle", "GeomObj", make_G
 GeomTexRectangle::GeomTexRectangle()
   : GeomObj(),
     texture_(0),
-    fId_(0),
     sId_(0),
+    fId_(0),
     numcolors_(0),
     width_(2),
     height_(2),
