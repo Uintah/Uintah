@@ -31,6 +31,6 @@
 
 // This needs to be synced with the contents of 
 // SCIRun/doc/edition.xml
-#define SCIRUN_VERSION "1.23.0"
+#define SCIRUN_VERSION "1.24.0"
 
 #endif
