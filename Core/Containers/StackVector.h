@@ -51,14 +51,13 @@ namespace SCIRun {
 template <class T, int CAPACITY>
 class StackVector {
 public:
-  int size_;
+  size_t size_;
   T data_[CAPACITY];
 
   typedef T        value_type;
   typedef T*       pointer;
   typedef T&       reference;
   typedef const T& const_reference;
-  typedef size_t   size_type;
   //typedef difference_type;
   typedef T*       iterator;
   typedef const T* const_iterator;
@@ -69,17 +68,17 @@ public:
   iterator end() { return data_+size_; }
   const_iterator begin() const { return data_; }
   const_iterator end() const { return data_+size_; }
-  size_type size() const { ASSERT(size_ <= CAPACITY); return size_; }
-  size_type max_size() const { return CAPACITY; }
-  size_type capacity() const { return CAPACITY; }
+  size_t size() const { ASSERT(size_ <= CAPACITY); return size_; }
+  size_t max_size() const { return CAPACITY; }
+  size_t capacity() const { return CAPACITY; }
   bool empty() const { return size_; }
-  reference operator[](size_type n) { return data_[n]; }
-  const_reference operator[](size_type n) const { return data_[n]; }
-  void resize(size_type s) { ASSERT(s <= CAPACITY); size_ = s; }
+  reference operator[](size_t n) { return data_[n]; }
+  const_reference operator[](size_t n) const { return data_[n]; }
+  void resize(size_t s) { ASSERT(s <= CAPACITY); size_ = s; }
   void push_back(T t) { ASSERT(size_ < CAPACITY); data_[size_] = t; size_++; }
   void clear() { size_ = 0; }
   StackVector() { size_ = 0xDEADBABE; }
-  StackVector(size_type s) { ASSERT(s <= CAPACITY); size_ = s; }
+  StackVector(size_t s) { ASSERT(s <= CAPACITY); size_ = s; }
   ~StackVector() {}
 };
 
