@@ -141,8 +141,7 @@ void SimulationController::run()
    
    Output* output = dynamic_cast<Output*>(getPort("output"));
    
-   while(t < 0) {
-//   while(t < timeinfo.maxTime) {
+   while(t < timeinfo.maxTime) {
       double wallTime = Time::currentSeconds() - start_time;
 
       delt_vartype delt_var;
@@ -422,6 +421,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.19  2000/05/11 21:25:51  sparker
+// Fixed main time loop
+//
 // Revision 1.18  2000/05/11 20:10:20  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //
