@@ -574,12 +574,12 @@ proc isaDefaultValue { var } {
 	eval $classname $command
     }
     # If the default variable hasn't been created in TCL yet...
-    if { [llength [uplevel \#0 info vars $command-$varname]] != 1 } { 
-	# Assume the variable we're checknig is DEFAULT and return TRUE
-	return 1
+    if { [llength [uplevel \#0 info vars \"$command-$varname\"]] != 1 } { 
+	# Assume the variable we're checknig is NOT DEFAULT and return FALSE
+	return 0
     }
     # Get the variables at the global level
-    upvar \#0 $command-$varname tocheck_value $module-$varname default_value
+    upvar \#0 "$command-$varname" tocheck_value "$module-$varname" default_value
     # Compare strings values exactly, returns FALSE if there is any differnce
     return [string equal $tocheck_value $default_value]
 }
