@@ -913,7 +913,7 @@ RBGSSolver::computeEnthalpyUnderrelax(const ProcessorGroup* ,
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-#define enthalpySolve_debug
+//#define enthalpySolve_debug
 #ifdef enthalpySolve_debug
 
   // code to print all values of any variable within
