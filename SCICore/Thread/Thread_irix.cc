@@ -921,11 +921,13 @@ Barrier::Barrier(const char* name)
 
 Barrier::~Barrier()
 {
-    if(use_fetchop){
-	fprintf(stderr, "***Alloc free: %p\n", d_priv->pvar);
-//	atomic_free_variable(reservoir, d_priv->pvar);
-    } else {
-	free_barrier(d_priv->barrier);
+    if (nprocessors > 1) {
+    	if(use_fetchop){
+	    fprintf(stderr, "***Alloc free: %p\n", d_priv->pvar);
+//	    atomic_free_variable(reservoir, d_priv->pvar);
+        } else {
+	    free_barrier(d_priv->barrier);
+        }
     }
     delete d_priv;
 }
@@ -1322,6 +1324,10 @@ SCICore::Thread::ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.17  2000/02/22 17:23:25  mmiller
+// Added check for 1 processor to Barrier destructor to prevent destructor from
+// freeing uninitialize barrier data member.  Was causing a SEGV.
+//
 // Revision 1.16  2000/02/16 00:29:45  sparker
 // Comented out thread changes for now
 //
