@@ -75,7 +75,7 @@ set $m0-current {0}
 set $m0-execmode {init}
 set $m0-delay {0}
 set $m0-inc-amount {1}
-set $m0-filename {/z/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10107.h5}
+set $m0-filename {/z/home/sci/allen/SCIRun/SCIRunData/fusion/NIMROD_10107.h5}
 set $m0-datasets {{/ NIMROD OUTPUTS CODE GRID PHI} {/ NIMROD OUTPUTS CODE GRID R} {/ NIMROD OUTPUTS CODE GRID Z} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD PHI} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD R} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD Z}}
 set $m0-dumpname {/tmp/NIMROD_10107.h5.dump}
 set $m0-ports {}

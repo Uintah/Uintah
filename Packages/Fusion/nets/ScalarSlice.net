@@ -3,8 +3,8 @@
 
 set name {Main}
 set bbox {17 15 405 624}
-set creationDate {Tue Aug 24 2004}
-set creationTime {18:39:00}
+set creationDate {Tue Aug 31 2004}
+set creationTime {09:04:17}
 set runDate {}
 set runTime {}
 set notes {}
@@ -68,23 +68,25 @@ set $m3-nodes-on {0}
 set $m3-edges-on {0}
 set $m3-normalize-vectors {0}
 set $m3-has_scalar_data {1}
-set $m3-node_scale {0.03}
 set $m3-edge_scale {0.03}
 set $m3-vectors_scale {1e-06}
 set $m3-scalars_scale {0.3}
 set $m3-show_progress {0}
 set $m3-field-name {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar}
 
+$m4 addViewer
+set $m4-ViewWindow_0-geometry 654x646+2546+514
+
 # Set GUI variables for the SCIRun->Render->Viewer Module
-set $m4-ViewWindow_0-view-eyep-x {-13.7880072088}
-set $m4-ViewWindow_0-view-eyep-y {-11.2935976907}
-set $m4-ViewWindow_0-view-eyep-z {39.6504194551}
-set $m4-ViewWindow_0-view-lookat-x {-0.265949316323}
-set $m4-ViewWindow_0-view-lookat-y {-1.67913800478}
+set $m4-ViewWindow_0-view-eyep-x {1.70006859303}
+set $m4-ViewWindow_0-view-eyep-y {-10.9091821169}
+set $m4-ViewWindow_0-view-eyep-z {0.0}
+set $m4-ViewWindow_0-view-lookat-x {1.70006859303}
+set $m4-ViewWindow_0-view-lookat-y {-0.0}
 set $m4-ViewWindow_0-view-lookat-z {0.0}
-set $m4-ViewWindow_0-view-up-x {0.731941201502}
-set $m4-ViewWindow_0-view-up-y {0.561624203887}
-set $m4-ViewWindow_0-view-up-z {0.385798303719}
+set $m4-ViewWindow_0-view-up-x {0.0}
+set $m4-ViewWindow_0-view-up-y {0.0}
+set $m4-ViewWindow_0-view-up-z {1.0}
 set $m4-ViewWindow_0-view-fov {20.0}
 set $m4-ViewWindow_0-sr {1}
 set $m4-ViewWindow_0-do_stereo {0}
@@ -106,6 +108,7 @@ set $m4-ViewWindow_0-bgcolor-g {0.0}
 set $m4-ViewWindow_0-bgcolor-b {0.0}
 set $m4-ViewWindow_0-currentvisual {0}
 set $m4-ViewWindow_0-caxes {0}
+set $m4-ViewWindow_0-pos {y0_z1}
 set $m4-ViewWindow_0-global-light0 {1}
 set $m4-ViewWindow_0-global-light1 {0}
 set $m4-ViewWindow_0-global-light2 {0}
@@ -119,8 +122,6 @@ set $m4-ViewWindow_0-global-clip {1}
 set $m4-ViewWindow_0-global-cull {0}
 set $m4-ViewWindow_0-global-dl {0}
 set $m4-ViewWindow_0-global-type {Gouraud}
-set "$m4-ViewWindow_0--NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar Nodes (1)" {1}
-set "$m4-ViewWindow_0--NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar Edges (1)" {1}
 set "$m4-ViewWindow_0--NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar Faces (1)" {1}
 
 # Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
@@ -136,9 +137,9 @@ set $m5-gamma {0.0}
 set $m6-i-dim {145}
 set $m6-j-dim {85}
 set $m6-k-dim {41}
-set $m6-i-index {73}
-set $m6-j-index {84}
-set $m6-k-index {2}
+set $m6-i-index {0}
+set $m6-j-index {0}
+set $m6-k-index {0}
 
 # Set GUI variables for the Fusion->Fields->NIMRODConverter Module
 set $m7-datasets {{-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-R:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-Z:Scalar} }
