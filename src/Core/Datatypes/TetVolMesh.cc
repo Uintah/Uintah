@@ -1122,6 +1122,52 @@ TetVolMesh::add_tet_unconnected(const Point &p0,
 }
 
 
+
+double 
+TetVolMesh::volume(TetVolMesh::Cell::index_type ci)
+{
+  TetVolMesh::Node::array_type n;
+  get_nodes(n, ci);
+  Point p1, p2, p3, p4;
+  get_point(p1, n[0]);
+  get_point(p2, n[1]);
+  get_point(p3, n[2]);
+  get_point(p4, n[3]);
+  double x1=p1.x();
+  double y1=p1.y();
+  double z1=p1.z();
+  double x2=p2.x();
+  double y2=p2.y();
+  double z2=p2.z();
+  double x3=p3.x();
+  double y3=p3.y();
+  double z3=p3.z();
+  double x4=p4.x();
+  double y4=p4.y();
+  double z4=p4.z();
+  double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
+  double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
+  double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
+  double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
+  return (a1+a2+a3+a4)/6.;
+}
+
+void
+TetVolMesh::orient(Cell::index_type ci) {
+  double sgn=volume(ci);
+  if(sgn < 0.0){
+    // Switch two of the edges so that the volume is positive
+    int tmp = cells_[ci * 4];
+    cells_[ci * 4] = cells_[ci * 4 + 1];
+    cells_[ci * 4 + 1] = tmp;
+    sgn=-sgn;
+  }
+  if(sgn < 1.e-9){ // return 0; // Degenerate...
+    cerr << "Warning - small element, volume=" << sgn << endl;
+  }
+}
+
+
 #define TETVOLMESH_VERSION 1
 
 void
@@ -1132,6 +1178,15 @@ TetVolMesh::io(Piostream &stream)
 
   SCIRun::Pio(stream, points_);
   SCIRun::Pio(stream, cells_);
+  // orient the tets..
+  Cell::iterator iter, endit;
+  begin(iter);
+  end(endit);
+  while(iter != endit) {
+    orient(*iter);
+    ++iter;
+  }
+
   SCIRun::Pio(stream, neighbors_);
 
   stream.end_class();

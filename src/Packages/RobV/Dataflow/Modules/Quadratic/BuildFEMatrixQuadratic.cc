@@ -442,7 +442,6 @@ void BuildFEMatrixQuadratic::build_local_matrix(Element elem,
 
   vector<pair<string, Tensor> > tens;
   qtv->get_property("conductivity_table", tens);
-
   int  ind = qtv->value(c_ind);
 
   if (UseCond) {

@@ -401,6 +401,10 @@ protected:
   grid_handle                 grid_;
   Mutex                       grid_lock_; // Bad traffic!
   
+
+  void orient(Cell::index_type ci);
+  double volume(TetVolMesh::Cell::index_type ci);
+
 public:
   inline grid_handle get_grid() {return grid_;}
 
