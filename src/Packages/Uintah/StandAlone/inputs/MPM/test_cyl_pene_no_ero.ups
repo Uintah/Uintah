@@ -14,7 +14,7 @@
   </Meta>
 
   <Time>
-    <maxTime>2.0e-5</maxTime>
+    <maxTime>2.1e-5</maxTime>
     <initTime>0.0</initTime>
     <delt_min>1.0e-16</delt_min>
     <delt_max>1.0e-6</delt_max>
@@ -47,7 +47,10 @@
     <save label = "g.mass"/>
     <save label = "g.volume"/>
     <save label = "g.stressFS"/>
+    <checkpoint cycle = "2" interval = "1.0e-5"/>
+    <!--
     <checkpoint cycle = "2" timestepInterval = "100"/>
+    -->
   </DataArchiver>
 
   <MPM>
@@ -63,8 +66,8 @@
     <ForceBC_force_increment_factor> 1.0        </ForceBC_force_increment_factor>
     <erosion algorithm = "none"/>
 <!--
-    <erosion algorithm = "RemoveMass"/>
     <erosion algorithm = "AllowNoTension"/>
+    <erosion algorithm = "RemoveMass"/>
 -->
   </MPM>
 
