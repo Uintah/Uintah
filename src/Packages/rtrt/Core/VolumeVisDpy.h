@@ -84,6 +84,7 @@ public:
 
   float t_inc;
   bool fast_render_mode;
+  // If this variable *ever* doesn't have 64 bits the code needs to be updated
   unsigned long long course_hash;
 };
 
