@@ -42,7 +42,8 @@ class FieldBoundaryAlgoAux : public DynamicAlgoBase
 public:
   virtual void execute(const MeshHandle mesh,
 		       FieldHandle &bndry,
-		       MatrixHandle &intrp) = 0;
+		       MatrixHandle &intrp,
+		       Field::data_location at) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *mesh,
@@ -62,7 +63,8 @@ public:
   //! virtual interface. 
   virtual void execute(const MeshHandle mesh,
 		       FieldHandle &boundary,
-		       MatrixHandle &interp);
+		       MatrixHandle &interp,
+		       Field::data_location at);
 
 };
 
@@ -71,12 +73,14 @@ template <class Msh>
 void 
 FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
 				    FieldHandle &boundary_fh,
-				    MatrixHandle &interp)
+				    MatrixHandle &interp,
+				    Field::data_location at)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
   map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type> vertex_map;
   typename map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type>::iterator node_iter;
   vector<typename Msh::Node::index_type> reverse_map;
+  vector<unsigned int> face_map;
 
   TriSurfMeshHandle tmesh = scinew TriSurfMesh;
 
@@ -142,37 +146,70 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
 	    {
 	      tmesh->add_triangle(node_idx[0], node_idx[i], node_idx[i-1]);
 	    }
+	    face_map.push_back(ci);
 	  }
 	  ++niter;
 	}
       }
     }
   }
-  TriSurfField<double> *ts = scinew TriSurfField<double>(tmesh, Field::NODE);
-  boundary_fh = ts;
 
-  typename Msh::Node::size_type nodesize;
-  mesh->size(nodesize);
-  const int nrows = reverse_map.size();
-  const int ncols = nodesize;
-  int *rr = scinew int[nrows+1];
-  int *cc = scinew int[nrows];
-  double *d = scinew double[nrows];
-
-  for (unsigned int i = 0; i < reverse_map.size(); i++)
+  if (at == Field::CELL)
   {
-    cc[i] = reverse_map[i];
-  }
+    TriSurfField<double> *ts = scinew TriSurfField<double>(tmesh, Field::FACE);
+    boundary_fh = ts;
 
-  int j;
-  for (j = 0; j < nrows; j++)
+    typename Msh::Elem::size_type elemsize;
+    mesh->size(elemsize);
+    const int nrows = face_map.size();
+    const int ncols = elemsize;
+    int *rr = scinew int[nrows+1];
+    int *cc = scinew int[nrows];
+    double *d = scinew double[nrows];
+
+    for (unsigned int i = 0; i < face_map.size(); i++)
+    {
+      cc[i] = face_map[i];
+    }
+
+    int j;
+    for (j = 0; j < nrows; j++)
+    {
+      rr[j] = j;
+      d[j] = 1.0;
+    }
+    rr[j] = j; // An extra entry goes on the end of rr.
+
+    interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
+  }
+  else 
   {
-    rr[j] = j;
-    d[j] = 1.0;
-  }
-  rr[j] = j; // An extra entry goes on the end of rr.
+    TriSurfField<double> *ts = scinew TriSurfField<double>(tmesh, Field::NODE);
+    boundary_fh = ts;
 
-  interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
+    typename Msh::Node::size_type nodesize;
+    mesh->size(nodesize);
+    const int nrows = reverse_map.size();
+    const int ncols = nodesize;
+    int *rr = scinew int[nrows+1];
+    int *cc = scinew int[nrows];
+    double *d = scinew double[nrows];
+
+    for (unsigned int i = 0; i < reverse_map.size(); i++)
+    {
+      cc[i] = reverse_map[i];
+    }
+
+    int j;
+    for (j = 0; j < nrows; j++)
+    {
+      rr[j] = j;
+      d[j] = 1.0;
+    }
+    rr[j] = j; // An extra entry goes on the end of rr.
+
+    interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
+  }
 }
 
 
@@ -185,7 +222,8 @@ public:
   //! virtual interface. 
   virtual void execute(const MeshHandle mesh,
 		       FieldHandle &boundary,
-		       MatrixHandle &interp);
+		       MatrixHandle &interp,
+		       Field::data_location at);
 
 };
 
@@ -195,12 +233,14 @@ template <class Msh>
 void 
 FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
 				     FieldHandle &boundary_fh,
-				     MatrixHandle &interp)
+				     MatrixHandle &interp,
+				     Field::data_location at)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
   map<typename Msh::Node::index_type, typename QuadSurfMesh::Node::index_type> vertex_map;
   typename map<typename Msh::Node::index_type, typename QuadSurfMesh::Node::index_type>::iterator node_iter;
   vector<typename Msh::Node::index_type> reverse_map;
+  vector<unsigned int> face_map;
 
   QuadSurfMeshHandle tmesh = scinew QuadSurfMesh;
 
@@ -268,34 +308,69 @@ FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
 	  std::reverse(node_idx.begin(), node_idx.end());
 	  tmesh->add_elem(node_idx);
 	}
+	face_map.push_back(ci);
       }
     }
   }
-  QuadSurfField<double> *ts = scinew QuadSurfField<double>(tmesh, Field::NODE);
-  boundary_fh = ts;
 
-  typename Msh::Node::size_type nodesize;
-  mesh->size(nodesize);
-  const int nrows = reverse_map.size();
-  const int ncols = nodesize;
-  int *rr = scinew int[nrows+1];
-  int *cc = scinew int[nrows];
-  double *d = scinew double[nrows];
-
-  for (unsigned int i = 0; i < reverse_map.size(); i++)
+  if (at == Field::CELL)
   {
-    cc[i] = reverse_map[i];
-  }
+    QuadSurfField<double> *ts =
+      scinew QuadSurfField<double>(tmesh, Field::FACE);
+    boundary_fh = ts;
+    
+    typename Msh::Elem::size_type nodesize;
+    mesh->size(nodesize);
+    const int nrows = face_map.size();
+    const int ncols = nodesize;
+    int *rr = scinew int[nrows+1];
+    int *cc = scinew int[nrows];
+    double *d = scinew double[nrows];
 
-  int j;
-  for (j = 0; j < nrows; j++)
+    for (unsigned int i = 0; i < face_map.size(); i++)
+    {
+      cc[i] = face_map[i];
+    }
+
+    int j;
+    for (j = 0; j < nrows; j++)
+    {
+      rr[j] = j;
+      d[j] = 1.0;
+    }
+    rr[j] = j; // An extra entry goes on the end of rr.
+
+    interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
+  }
+  else
   {
-    rr[j] = j;
-    d[j] = 1.0;
-  }
-  rr[j] = j; // An extra entry goes on the end of rr.
+    QuadSurfField<double> *ts =
+      scinew QuadSurfField<double>(tmesh, Field::NODE);
+    boundary_fh = ts;
+    
+    typename Msh::Node::size_type nodesize;
+    mesh->size(nodesize);
+    const int nrows = reverse_map.size();
+    const int ncols = nodesize;
+    int *rr = scinew int[nrows+1];
+    int *cc = scinew int[nrows];
+    double *d = scinew double[nrows];
 
-  interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
+    for (unsigned int i = 0; i < reverse_map.size(); i++)
+    {
+      cc[i] = reverse_map[i];
+    }
+
+    int j;
+    for (j = 0; j < nrows; j++)
+    {
+      rr[j] = j;
+      d[j] = 1.0;
+    }
+    rr[j] = j; // An extra entry goes on the end of rr.
+
+    interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
+  }
 }
 
 
@@ -308,7 +383,8 @@ public:
   //! virtual interface. 
   virtual void execute(const MeshHandle mesh,
 		       FieldHandle &boundary,
-		       MatrixHandle &interp);
+		       MatrixHandle &interp,
+		       Field::data_location at);
 
 };
 
@@ -317,12 +393,14 @@ template <class Msh>
 void 
 FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
 				      FieldHandle &boundary_fh,
-				      MatrixHandle &interp)
+				      MatrixHandle &interp,
+				      Field::data_location at)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
   map<typename Msh::Node::index_type, typename CurveMesh::Node::index_type> vertex_map;
   typename map<typename Msh::Node::index_type, typename CurveMesh::Node::index_type>::iterator node_iter;
   vector<typename Msh::Node::index_type> reverse_map;
+  vector<unsigned int> edge_map;
 
   CurveMeshHandle tmesh = scinew CurveMesh;
 
@@ -382,34 +460,67 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
 	}
 
 	tmesh->add_elem(node_idx);
+	edge_map.push_back(ci);
       }
     }
   }
-  CurveField<double> *ts = scinew CurveField<double>(tmesh, Field::NODE);
-  boundary_fh = ts;
 
-  typename Msh::Node::size_type nodesize;
-  mesh->size(nodesize);
-  const int nrows = reverse_map.size();
-  const int ncols = nodesize;
-  int *rr = scinew int[nrows+1];
-  int *cc = scinew int[nrows];
-  double *d = scinew double[nrows];
-
-  for (unsigned int i = 0; i < reverse_map.size(); i++)
+  if (at == Field::FACE)
   {
-    cc[i] = reverse_map[i];
-  }
+    CurveField<double> *ts = scinew CurveField<double>(tmesh, Field::NODE);
+    boundary_fh = ts;
 
-  int j;
-  for (j = 0; j < nrows; j++)
+    typename Msh::Elem::size_type nodesize;
+    mesh->size(nodesize);
+    const int nrows = edge_map.size();
+    const int ncols = nodesize;
+    int *rr = scinew int[nrows+1];
+    int *cc = scinew int[nrows];
+    double *d = scinew double[nrows];
+
+    for (unsigned int i = 0; i < edge_map.size(); i++)
+    {
+      cc[i] = edge_map[i];
+    }
+
+    int j;
+    for (j = 0; j < nrows; j++)
+    {
+      rr[j] = j;
+      d[j] = 1.0;
+    }
+    rr[j] = j; // An extra entry goes on the end of rr.
+
+    interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
+  }
+  else
   {
-    rr[j] = j;
-    d[j] = 1.0;
-  }
-  rr[j] = j; // An extra entry goes on the end of rr.
+    CurveField<double> *ts = scinew CurveField<double>(tmesh, Field::NODE);
+    boundary_fh = ts;
 
-  interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
+    typename Msh::Node::size_type nodesize;
+    mesh->size(nodesize);
+    const int nrows = reverse_map.size();
+    const int ncols = nodesize;
+    int *rr = scinew int[nrows+1];
+    int *cc = scinew int[nrows];
+    double *d = scinew double[nrows];
+
+    for (unsigned int i = 0; i < reverse_map.size(); i++)
+    {
+      cc[i] = reverse_map[i];
+    }
+
+    int j;
+    for (j = 0; j < nrows; j++)
+    {
+      rr[j] = j;
+      d[j] = 1.0;
+    }
+    rr[j] = j; // An extra entry goes on the end of rr.
+
+    interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
+  }
 }
 
 
@@ -420,7 +531,8 @@ class FieldBoundaryAlgo : public DynamicAlgoBase
 {
 public:
   virtual void execute(ProgressReporter *m, const MeshHandle mesh,
-		       FieldHandle &bndry, MatrixHandle &intrp) = 0;
+		       FieldHandle &bndry, MatrixHandle &intrp,
+		       Field::data_location at) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *mesh);
@@ -433,14 +545,16 @@ class FieldBoundaryAlgoT : public FieldBoundaryAlgo
 public:
   //! virtual interface. 
   virtual void execute(ProgressReporter *m, const MeshHandle mesh,
-		       FieldHandle &boundary, MatrixHandle &interp);
+		       FieldHandle &boundary, MatrixHandle &interp,
+		       Field::data_location at);
 };
 
 
 template <class Msh>
 void 
 FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
-				 FieldHandle &boundary, MatrixHandle &interp)
+				 FieldHandle &boundary, MatrixHandle &interp,
+				 Field::data_location at)
 {
   if (get_type_description((typename Msh::Elem *)0)->get_name() ==
       get_type_description((typename Msh::Cell *)0)->get_name())
@@ -472,7 +586,7 @@ FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
     Handle<FieldBoundaryAlgoAux> algo;
     if (DynamicCompilation::compile(ci, algo, true, mod))
     {
-      algo->execute(mesh, boundary, interp);
+      algo->execute(mesh, boundary, interp, at);
     }
   }
   else if (get_type_description((typename Msh::Elem *)0)->get_name() ==
@@ -484,7 +598,7 @@ FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *mod, const MeshHandle mesh,
     Handle<FieldBoundaryAlgoAux> algo;
     if (DynamicCompilation::compile(ci, algo, true, mod))
     {
-      algo->execute(mesh, boundary, interp);
+      algo->execute(mesh, boundary, interp, at);
     }
     else
     {
