@@ -100,6 +100,7 @@ int Field3DIPort::get_field(Field3DHandle& f)
     Field3DComm* comm=mailbox.receive();
     if(comm->has_field){
        f=comm->field;
+       recvd=1;
        delete comm;
        turn_off();
        return 1;
