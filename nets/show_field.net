@@ -1,4 +1,30 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
 # SCI Network 1.0
+
+if {[llength [array get env SCIRUN_DATA]] == 0} {
+   puts ""
+   puts "*** Error: this net depends on the SCIRUN_DATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
+   puts ""
+   return
+}
 
 ::netedit dontschedule
 
@@ -39,7 +65,7 @@ addConnection $m5 0 $m7 0
 set $m0-notes {}
 set $m0-show_status 1
 set $m0-pid 3032
-set $m0-filename {/res/sci/data1/SCIRunData/sphere537.tvd.fld}
+set $m0-filename $env(SCIRUN_DATA)/sphere537.tvd.fld}
 set $m1-notes {}
 set $m1-show_status 1
 set $m1-pid -2147483647

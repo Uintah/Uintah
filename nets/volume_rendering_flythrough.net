@@ -1,4 +1,30 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
 # SCI Network 1.0
+
+if {[llength [array get env SCIRUN_DATA]] == 0} {
+   puts ""
+   puts "*** Error: this net depends on the SCIRUN_DATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
+   puts ""
+   return
+}
 
 ::netedit dontschedule
 
@@ -48,7 +74,7 @@ set $m1-isFixed 0
 set $m2-notes {}
 set $m2-show_status 1
 set $m2-pid 13982
-set $m2-filename {/home/sci/data22/dmw/hep//HCG-250.sfrg}
+set $m2-filename $env(SCIRUN_DATA)/aneurysm.sm.fld
 set $m3-notes {}
 set $m3-show_status 1
 set $m3-pid -2147483647
@@ -104,7 +130,6 @@ set $m3-ViewWindow_0-sr 1
 set $m3-ViewWindow_0-do_bawgl 0
 set $m3-ViewWindow_0-drawimg -2147483647
 set $m3-ViewWindow_0-saveprefix {}
-set $m3-ViewWindow_0-Crosshair (1) 1
 set $m4-notes {}
 set $m4-show_status 1
 set $m4-pid 13984
@@ -148,7 +173,7 @@ set $m6-tcl_info {Editing existing path}
 set $m7-notes {}
 set $m7-show_status 1
 set $m7-pid 13987
-set $m7-filename {/local/sci/raid0/dmw/hep/path4.dat}
+set $m7-filename $env(SCIRUN_DATA)/aneurysm.path
 $m0 ui
 $m1 ui
 $m4 ui
