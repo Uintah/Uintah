@@ -16,6 +16,8 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Task.h>
+#include <Uintah/Grid/CCVariable.h>
+#include <Uintah/Grid/FCVariable.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Components/Arches/Arches.h>
 
@@ -47,49 +49,49 @@ RBGSSolver::RBGSSolver()
 
   // Momentum Solve requires (inputs)
   d_uVelocityCPBCLabel = scinew VarLabel("uVelocityCPBC",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelocityCPBCLabel = scinew VarLabel("vVelocityCPBC",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_uVelCoefMBLMLabel = scinew VarLabel("uVelCoefMBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelCoefMBLMLabel = scinew VarLabel("vVelCoefMBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelCoefMBLMLabel = scinew VarLabel("wVelCoefMBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcMBLMLabel = scinew VarLabel("uVelNonLinSrcMBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcMBLMLabel = scinew VarLabel("vVelNonLinSrcMBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcMBLMLabel = scinew VarLabel("wVelNonLinSrcMBLM",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
 
   // Momentum Solve Computes
   d_uVelResidualMSLabel = scinew VarLabel("uVelResidualMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelResidualMSLabel = scinew VarLabel("vVelResidualMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelResidualMSLabel = scinew VarLabel("wVelResidualMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_uVelCoefMSLabel = scinew VarLabel("uVelCoefMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelCoefMSLabel = scinew VarLabel("vVelCoefMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelCoefMSLabel = scinew VarLabel("wVelCoefMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcMSLabel = scinew VarLabel("uVelNonLinSrcMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcMSLabel = scinew VarLabel("vVelNonLinSrcMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcMSLabel = scinew VarLabel("wVelNonLinSrcMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_uVelocityMSLabel = scinew VarLabel("uVelocityMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_vVelocityMSLabel = scinew VarLabel("vVelocityMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
   d_wVelocityMSLabel = scinew VarLabel("wVelocityMS",
-				    CCVariable<double>::getTypeDescription() );
+				    FCVariable<double>::getTypeDescription() );
 
   // Momentum Solve Requires/Computes
   d_scalarSPLabel = scinew VarLabel("scalarSP",
@@ -596,9 +598,9 @@ RBGSSolver::vel_underrelax(const ProcessorGroup* ,
   int nofStencils = 7;
 
   // Patch based variables
-  CCVariable<double> velocity;
-  StencilMatrix<CCVariable<double> > velCoeff;
-  CCVariable<double> velNonLinSrc;
+  FCVariable<double> velocity;
+  StencilMatrix<FCVariable<double> > velCoeff;
+  FCVariable<double> velNonLinSrc;
 
   // Get the velocity from the old DW and velocity coefficients and non-linear
   // source terms from the new DW
@@ -690,9 +692,9 @@ RBGSSolver::vel_lisolve(const ProcessorGroup* ,
   int nofStencils = 7;
 
   // Variables
-  CCVariable<double> velocity;
-  StencilMatrix<CCVariable<double> > velCoeff;
-  CCVariable<double> velNonLinSrc;
+  FCVariable<double> velocity;
+  StencilMatrix<FCVariable<double> > velCoeff;
+  FCVariable<double> velNonLinSrc;
 
   // Get the velocity from the old DW and velocity coefficients and non-linear
   // source terms from the new DW
@@ -887,6 +889,10 @@ RBGSSolver::scalar_residCalculation(const ProcessorGroup* ,
 
 //
 // $Log$
+// Revision 1.10  2000/06/22 23:06:37  bbanerje
+// Changed velocity related variables to FCVariable type.
+// ** NOTE ** We may need 3 types of FCVariables (one for each direction)
+//
 // Revision 1.9  2000/06/21 07:51:01  bbanerje
 // Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
 // and made the stuff go through schedule_time_advance.

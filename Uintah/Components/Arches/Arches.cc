@@ -48,11 +48,11 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_pressureINLabel = scinew VarLabel("pressureIN", 
 				   CCVariable<double>::getTypeDescription() );
   d_uVelocityINLabel = scinew VarLabel("uVelocityIN", 
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_vVelocityINLabel = scinew VarLabel("vVelocityIN", 
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_wVelocityINLabel = scinew VarLabel("wVelocityIN", 
-				   CCVariable<double>::getTypeDescription() );
+				   FCVariable<double>::getTypeDescription() );
   d_scalarINLabel = scinew VarLabel("scalarIN", 
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityINLabel = scinew VarLabel("viscosityIN", 
@@ -265,9 +265,9 @@ Arches::paramInit(const ProcessorGroup* ,
 
   cerr << "Arches::paramInit\n";
 
-  CCVariable<double> uVelocity;
-  CCVariable<double> vVelocity;
-  CCVariable<double> wVelocity;
+  FCVariable<double> uVelocity;
+  FCVariable<double> vVelocity;
+  FCVariable<double> wVelocity;
   CCVariable<double> pressure;
   vector<CCVariable<double> > scalar(d_nofScalars);
   CCVariable<double> density;
@@ -347,6 +347,10 @@ Arches::paramInit(const ProcessorGroup* ,
 
 //
 // $Log$
+// Revision 1.45  2000/06/22 23:06:32  bbanerje
+// Changed velocity related variables to FCVariable type.
+// ** NOTE ** We may need 3 types of FCVariables (one for each direction)
+//
 // Revision 1.44  2000/06/20 20:42:35  rawat
 // added some more boundary stuff and modified interface to IntVector. Before
 // compiling the code you need to update /SCICore/Geometry/IntVector.h

@@ -16,6 +16,8 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/Task.h>
+#include <Uintah/Grid/CCVariable.h>
+#include <Uintah/Grid/FCVariable.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Components/Arches/Arches.h>
 
@@ -40,16 +42,14 @@ ScalarSolver::ScalarSolver(TurbulenceModel* turb_model,
 				 d_physicalConsts(physConst),
 				 d_generation(0)
 {
-  // BB : **WARNING** velocity is set as CCVariable (should be FCVariable)
-  // Change them to FCVariables and then remove this comment
   d_scalarSPLabel = scinew VarLabel("scalarSP",
 				CCVariable<double>::getTypeDescription() );
   d_uVelocityMSLabel = scinew VarLabel("uVelocityMS",
-				CCVariable<double>::getTypeDescription() );
+				FCVariable<double>::getTypeDescription() );
   d_vVelocityMSLabel = scinew VarLabel("vVelocityMS",
-				CCVariable<double>::getTypeDescription() );
+				FCVariable<double>::getTypeDescription() );
   d_wVelocityMSLabel = scinew VarLabel("wVelocityMS",
-				CCVariable<double>::getTypeDescription() );
+				FCVariable<double>::getTypeDescription() );
   d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
 				CCVariable<double>::getTypeDescription() );
   d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
@@ -227,6 +227,10 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.12  2000/06/22 23:06:37  bbanerje
+// Changed velocity related variables to FCVariable type.
+// ** NOTE ** We may need 3 types of FCVariables (one for each direction)
+//
 // Revision 1.11  2000/06/21 07:51:01  bbanerje
 // Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
 // and made the stuff go through schedule_time_advance.
