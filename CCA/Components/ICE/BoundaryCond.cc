@@ -120,8 +120,9 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
   }
   
   Vector gravity = sharedState->getGravity(); 
+  int timestep = sharedState->getCurrentTopLevelTimeStep();
   int numMatls  = sharedState->getNumICEMatls();
-  if ( lv->usingLODI ) {
+  if ( lv->usingLODI && timestep > 0 ) {
     numMatls += sharedState->getNumMPMMatls();
   }
       
