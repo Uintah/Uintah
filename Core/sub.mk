@@ -41,6 +41,7 @@ SUBDIRS := \
 	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \
 
+#	$(SRCDIR)/2d
 
 ifeq ($(BUILD_PARALLEL),yes)
 SUBDIRS := \
