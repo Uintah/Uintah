@@ -9,7 +9,7 @@ OPENGLSRCS = OpenGL_Ex.cc TrainSegment.cc
 OPENGLINCS = -I$(TOP)/Mesa/include -I/usr/openwin/include
 OPENGLLIBS = -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
 #else
-OPENGLINCS =
+OPENGLINCS = -I/usr/openwin/include
 OPENGLLIBS = -lGLU -lGL -lXext -lX11
 #endif
 #else
@@ -17,20 +17,21 @@ OPENGLOBJS =
 OPENGLSRCS = 
 #endif
 
-OBJS = ClipField.o  ExtractSurfs.o  FieldFilter.o  GenSigmaSet.o  \
-	Gradient.o  MMeshToSFUG.o  TransformField.o  FieldSeed.o \
-	MergeTensor.o FieldRGAug.o $(OPENGLOBJS)
-SRCS = ClipField.cc ExtractSurfs.cc FieldFilter.cc GenSigmaSet.cc \
-	Gradient.cc MMeshToSFUG.cc FieldSeed.cc MergeTensor.cc\
-	TransformField.cc FieldRGAug.cc $(OPENGLSRCS)
+OBJS = ClipField.o  ExtractSurfs.o  FieldFilter.o  FieldSeed.o \
+	GenSigmaSet.o  Gradient.o  GradientMagnitude.o  MMeshToSFUG.o  \
+	MergeTensor.o  TransformField.o  $(OPENGLOBJS)
+SRCS = ClipField.cc ExtractSurfs.cc FieldFilter.cc FieldSeed.cc \
+	GenSigmaSet.cc Gradient.cc GradientMagnitude.cc MMeshToSFUG.cc \
+	MergeTensor.cc TransformField.cc $(OPENGLSRCS)
 
 LIBNAME = Fields
 
 LOCALINCLUDES = $(OPENGLINCS)
 SO_LIBS =
 
-SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL -lClasslib \
-	-lMultitask $(OPENGLLIBS) -lscitk -ltk -lMalloc -lWidgets -lGeometry \
+SO_LDFLAGS = -L$(TOP)/lib -L/usr/openwin/lib -lDatatypes -lDataflow \
+	-lGeom -lTCL -lClasslib -lMultitask $(OPENGLLIBS) \
+	-lscitk -ltk -lMalloc -lWidgets -lGeometry \
 	-lm -lC -lc
 
 SCIDependTarget($(SRCS))
