@@ -453,12 +453,18 @@ public:
   void get_faces(Face::array_type &, Cell::index_type) const;
 
   //! get the parent element(s) of the given index
-  unsigned get_edges(Edge::array_type &, Node::index_type) const { return 0; }
-  unsigned get_faces(Face::array_type &, Node::index_type) const { return 0; }
-  unsigned get_faces(Face::array_type &, Edge::index_type) const { return 0; }
-  unsigned get_cells(Cell::array_type &, Node::index_type) { return 0; }
-  unsigned get_cells(Cell::array_type &, Edge::index_type) { return 0; }
-  unsigned get_cells(Cell::array_type &, Face::index_type) { return 0; }
+  unsigned get_edges(Edge::array_type &, Node::index_type) const
+  { ASSERTFAIL("LatVolMesh::get_edges not implemented."); return 0; }
+  unsigned get_faces(Face::array_type &, Node::index_type) const
+  { ASSERTFAIL("LatVolMesh::get_facess not implemented."); return 0; }
+  unsigned get_faces(Face::array_type &, Edge::index_type) const
+  { ASSERTFAIL("LatVolMesh::get_facess not implemented."); return 0; }
+  unsigned get_cells(Cell::array_type &, Node::index_type)
+  { ASSERTFAIL("LatVolMesh::get_facess not implemented."); return 0; }
+  unsigned get_cells(Cell::array_type &, Edge::index_type)
+  { ASSERTFAIL("LatVolMesh::get_facess not implemented."); return 0; }
+  unsigned get_cells(Cell::array_type &, Face::index_type)
+  { ASSERTFAIL("LatVolMesh::get_facess not implemented."); return 0; }
 
   //! return all cell_indecies that overlap the BBox in arr.
   void get_cells(Cell::array_type &arr, const BBox &box);
