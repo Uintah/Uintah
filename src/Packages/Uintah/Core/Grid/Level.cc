@@ -27,7 +27,8 @@ using namespace std;
 
 Level::Level(Grid* grid, const Point& anchor, const Vector& dcell)
    : grid(grid), d_anchor(anchor), d_dcell(dcell),
-     d_patchDistribution(-1,-1,-1)
+     d_patchDistribution(-1,-1,-1),
+     d_periodicBoundaries(0, 0, 0)
 {
   each_patch=0;
   all_patches=0;
