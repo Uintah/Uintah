@@ -63,7 +63,7 @@ WARNING
 
    class Level : public RefCounted {
    public:
-      Level(Grid* grid, const Point& anchor, const Vector& dcell);
+      Level(Grid* grid, const Point& anchor, const Vector& dcell, int index);
       virtual ~Level();
       
       void setPatchDistributionHint(const IntVector& patchDistribution);
@@ -107,6 +107,13 @@ WARNING
       
       void performConsistencyCheck() const;
       GridP getGrid() const;
+
+      const LevelP& getFineLevel() const
+      { return getRelativeLevel(1); }
+      const LevelP& getCoarseLevel() const
+      { return getRelativeLevel(-1); }
+     
+      const LevelP& getRelativeLevel(int offset) const;
 
       Vector dCell() const {
 	 return d_dcell;
@@ -154,6 +161,7 @@ WARNING
       Point d_anchor;
       Vector d_dcell;
       bool d_finalized;
+      int d_index; // number of the level
       IntVector d_idxLow;
       IntVector d_idxHigh;
       IntVector d_patchDistribution;

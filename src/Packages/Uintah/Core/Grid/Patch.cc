@@ -1331,7 +1331,17 @@ void Patch::computeExtents(VariableBasis basis, const IntVector& lowOffset,
     }
   }
 }
-  
+
+void Patch::getOtherLevelPatches(int levelOffset,
+				 Level::selectType& patches) const
+{
+  const LevelP& otherLevel = d_level->getRelativeLevel(levelOffset);
+  IntVector low = 
+    otherLevel->getCellIndex(d_level->getCellPosition(getLowIndex()));
+  IntVector high =
+    otherLevel->getCellIndex(d_level->getCellPosition(getHighIndex()));
+  otherLevel->selectPatches(low, high, patches); 
+}
 
 Patch::VariableBasis Patch::translateTypeToBasis(TypeDescription::Type type,
 						 bool mustExist)
