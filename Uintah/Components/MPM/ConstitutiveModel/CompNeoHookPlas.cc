@@ -284,18 +284,42 @@ double CompNeoHookPlas::computeStrainEnergy(const Region* region,
 					    const MPMMaterial* matl,
 					    DataWarehouseP& new_dw)
 {
-#ifdef WONT_COMPILE_YET
-  double se,J,U,W;
+  double U,W,J,se=0;
+  int matlindex = matl->getDWIndex();
 
-  J = deformationGradient.Determinant();
-  U = .5*d_Bulk*(.5*(pow(J,2.0) - 1.0) - log(J));
-  W = .5*d_Shear*(bElBar.Trace() - 3.0);
+  // Create array for the particle deformation
+  ParticleVariable<Matrix3> deformationGradient;
+  new_dw->get(deformationGradient, pDeformationMeasureLabel,
+              matlindex, region, Ghost::None, 0);
 
-  se = U + W;
+  // Get the elastic part of the shear strain
+  ParticleVariable<Matrix3> bElBar;
+  new_dw->get(bElBar, bElBarLabel, matlindex, region, Ghost::None, 0);
+  // Retrieve the array of constitutive parameters
+  ParticleVariable<CMData> cmdata;
+  new_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None, 0);
+  ParticleVariable<double> pvolume;
+  new_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None, 0);
+
+  ParticleSubset* pset = deformationGradient.getParticleSubset();
+  ASSERT(pset == pvolume.getParticleSubset());
+
+  for(ParticleSubset::iterator iter = pset->begin();
+     iter != pset->end(); iter++){
+     particleIndex idx = *iter;
+ 
+     double shear = cmdata[idx].Shear;
+     double bulk  = cmdata[idx].Bulk;
+
+     J = deformationGradient[idx].Determinant();
+
+     U = .5*bulk*(.5*(pow(J,2.0) - 1.0) - log(J));
+     W = .5*shear*(bElBar[idx].Trace() - 3.0);
+
+     se += (U + W)*pvolume[idx];
+  }
 
   return se;
-#endif
-  return 0;
 }
 
 void CompNeoHookPlas::addComputesAndRequires(Task* task,
@@ -388,6 +412,9 @@ p_array[2],
 #endif
 
 // $Log$
+// Revision 1.12  2000/05/17 21:10:07  guilkey
+// Fixed computeStrainEnergy so that it can be used as a diagnostic.
+//
 // Revision 1.11  2000/05/11 20:10:14  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //

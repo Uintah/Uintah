@@ -212,6 +212,8 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
    Vector dxpp = region->dCell()/obj->getNumParticlesPerCell();
    Vector dcorner = dxpp*0.5;
 
+   Vector spherevel,omega(0.0,10.0,0.0);
+
    particleIndex count = 0;
    for(CellIterator iter = region->getCellIterator(b); !iter.done(); iter++){
       Point lower = region->nodePosition(*iter) + dcorner;
@@ -222,8 +224,17 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 	       Point p = lower + dxpp*idx;
 	       if(piece->inside(p)){
 		  position[start+count]=p;
+                  if(p.z() > 0.0){
+//		    spherevel = Cross(omega,p-Point(0.,0.,1.25));
+		    spherevel = Cross(omega,p-Point(0.,0.,1.5)) - 
+						Vector(0.61,0.0,3.45);
+		  }
+		  else{
+		    spherevel = obj->getInitialVelocity();
+		  }
 		  volume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
-		  velocity[start+count]=obj->getInitialVelocity();
+//		  velocity[start+count]=obj->getInitialVelocity();
+		  velocity[start+count]=spherevel;
 		  mass[start+count]=d_density * volume[start+count];
 		  pexternalforce[start+count]=Vector(0,0,0); // for now
 		  count++;
