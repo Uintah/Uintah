@@ -131,7 +131,7 @@ public:
   //! get the center point (in object space) of an element
   void get_center(Point &result, Node::index_type idx) const
     { result = nodes_[idx]; }
-  void get_center(Point &, Edge::index_type) const {}
+  void get_center(Point &, Edge::index_type) const;
   void get_center(Point &, Face::index_type) const {}
   void get_center(Point &, Cell::index_type) const {}
 
