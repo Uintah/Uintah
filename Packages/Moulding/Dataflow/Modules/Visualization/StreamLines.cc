@@ -76,7 +76,7 @@ private:
   void FindStreamLineNodes(vector<Point>&, Point, float, float, int);
 
   // compute the inner terms of the RKF formula
-  int ComputeRKFTerms(vector<Vector>&,Point&, float);
+  int ComputeRKFTerms(vector<Vector>&,const Point&, float);
 };
 
 extern "C" MouldingSHARE Module* make_StreamLines(const clString& id) {
@@ -107,12 +107,10 @@ StreamLines::~StreamLines()
 
 int
 StreamLines::ComputeRKFTerms(vector<Vector>& v /* storage for terms */,
-			     Point& p          /* previous point */,
+			     const Point& p    /* previous point */,
 			     float s           /* current step size */)
 {
   int check = 0;
-
-  v.resize(6,Vector(0,0,0));
 
   check |= interp_->interpolate(p,v[0]);
   check |= interp_->interpolate(p+v[0]*d[1][0],v[1]);
@@ -128,6 +126,7 @@ StreamLines::ComputeRKFTerms(vector<Vector>& v /* storage for terms */,
   v[2]*=s;
   v[3]*=s;
   v[4]*=s;
+  v[5]*=s;
 
   return check;
 }
@@ -139,21 +138,22 @@ StreamLines::FindStreamLineNodes(vector<Point>& v /* storage for points */,
 				 float s          /* initial step size */,
 				 int n            /* max number of steps */)
 {
-  int loop = 0;
+  int loop;
   vector<Vector> terms;
   Vector error;
-  float err;
-  int check;
+  double err;
   Vector xv;
+
+  terms.resize(6,0);
 
   // add the initial point to the list of points found.
   v.push_back(x);
-  cerr << "found point = " << x << endl;
 
   for (loop=0;loop<n;loop++) {
 
     // compute the next set of terms
-    check = ComputeRKFTerms(terms,x,s);
+    if (!ComputeRKFTerms(terms,x,s))
+      break;
 
     // compute the approximate local truncation error
     error = terms[0]*ab[0]+terms[1]*ab[1]+terms[2]*ab[2]+
@@ -174,10 +174,9 @@ StreamLines::FindStreamLineNodes(vector<Point>& v /* storage for points */,
             terms[3]*a[3]+terms[4]*a[4]+terms[5]*a[5];
 
     // if the new point is inside the field, add it.  Otherwise stop.
-    if (interp_->interpolate(x,xv)) {
+    if (interp_->interpolate(x,xv))
       v.push_back(x);
-      cerr << "found point = " << x << endl;
-    } else
+    else
       break;
   }
 }
@@ -215,30 +214,29 @@ void StreamLines::execute()
 
   // get or generate seed_point(s) here
   vector<Point> seed_points;
-  seed_points.push_back(Point(0.03,0.03,0.03));
-  seed_points.push_back(Point(-0.03,-0.03,-0.03));
+  seed_points.push_back(Point(0.05,0.05,0.05));
+  //seed_points.push_back(Point(-0.03,-0.03,-0.03));
+  seed_points.push_back(Point(-0.05,-0.03,-0.05));
 
   // try to find the streamline for each seed point
   vector<Point>::iterator seed_iter = seed_points.begin();
+  int index = 0;
   while (seed_iter!=seed_points.end()) {
 
     // Is the seed point inside the field?
     Vector test(0);
-    if (!interp_->interpolate(*seed_iter,test)) {
-      postMessage("StreamLines: WARNING: seed point was not inside the field."
-		  "  Exiting.");
-      return;
-    } 
+    if (!interp_->interpolate(*seed_iter,test))
+      postMessage("StreamLines: WARNING: seed point "
+		  "was not inside the field.");
 
     cerr << "new streamline." << endl;
 
-    FindStreamLineNodes(nodes,*seed_iter,.1,.1,100);
+    FindStreamLineNodes(nodes,*seed_iter,.001,.001,2000);
 
     cerr << "done finding streamline." << endl;
 
     fdata.resize(fdata.size()+nodes.size());
 
-    int index = 0;
     vector<Point>::iterator node_iter = nodes.begin();
     if (node_iter!=nodes.end())
       n1 = mesh->add_node(*node_iter);
@@ -247,6 +245,7 @@ void StreamLines::execute()
       if (node_iter!=nodes.end()) {
 	n2 = mesh->add_node(*node_iter);
 	mesh->add_edge(n1,n2);
+	//cerr << "edge = " << n1 << " " << n2 << endl;
 	n1 = n2;
 	fdata[index] = index++;
       }
