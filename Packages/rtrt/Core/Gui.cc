@@ -87,7 +87,7 @@ using namespace rtrt;
 using namespace SCIRun;
 using namespace std;
 
-static GGT * activeGGT;
+static GGT * activeGGT = 0;
 
 PPMImage * livingRoomImage = NULL;
 PPMImage * scienceRoomImage = NULL;
@@ -227,6 +227,7 @@ GGT::GGT() :
 GGT::~GGT()
 {
   cleanup();
+  setActiveGGT(0);
 }
 
 void GGT::run() {
@@ -291,7 +292,7 @@ GGT::cleanup() {
   DpyBase::xlock();
   GLUI_Master.close_all();
   cerr << "GLUI_Master.close_all finished\n";
-  glutDestroyWindow(activeGGT->mainWindowID);
+  glutDestroyWindow(mainWindowID);
   cerr << "glutDestroyWindow finished\n";
   XCloseDisplay(glut_dpy);
   cerr << "XCloseDisplay for GGT finished\n";
