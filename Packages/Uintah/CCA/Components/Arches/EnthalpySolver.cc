@@ -323,6 +323,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
   }
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+   if (d_radiationCalc) 
     if (d_DORadiationCalc) {
       tsk->computes(d_lab->d_abskgINLabel);
       tsk->computes(d_lab->d_radiationSRCINLabel);
@@ -335,6 +336,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
     }
   }
   else {
+   if (d_radiationCalc) 
     if (d_DORadiationCalc) {
       tsk->modifies(d_lab->d_abskgINLabel);
       tsk->modifies(d_lab->d_radiationSRCINLabel);
