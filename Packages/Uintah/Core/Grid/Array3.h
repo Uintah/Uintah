@@ -53,7 +53,7 @@ WARNING
       ~iterator() {}
 
       iterator& operator=(const iterator& it2)
-      { d_array3 = it2.d_array3; d_index = it2.d_index; }
+      { d_array3 = it2.d_array3; d_index = it2.d_index; return *this; }
 
       inline bool operator==(const iterator& it2) const
       { return (d_index == it2.d_index) && (d_array3 == it2.d_array3); }
