@@ -1195,7 +1195,7 @@ if test -z "$UNI_PETSC_LIB_DIR" ; then
 fi
 
 if test "$UNI_PETSC_LIB_DIR"; then
-  UNI_PETSC_INC_DIR=$UNI_PETSC_DIR/include
+  UNI_PETSC_INC_DIR=-I$UNI_PETSC_DIR/include
   UNI_PETSC_DEF="#define UNI_PETSC"
   UNI_PETSC_LIBS="-lpetsc -lpetscsles -lpetscmat -lpetscvec \
                    -lpetscdm -lpetsccontrib -llapack -lblas -lg2c -lmpiuni"
@@ -1203,8 +1203,8 @@ if test "$UNI_PETSC_LIB_DIR"; then
 fi
 
 if test "$UNI_PETSC_LIB_DIR"; then
-  if test ! -f "$UNI_PETSC_INC_DIR/petsc.h" ||
-     test ! -f "$UNI_PETSC_INC_DIR/petscsles.h"; then
+  if test ! -f "$UNI_PETSC_DIR/include/petsc.h" ||
+     test ! -f "$UNI_PETSC_DIR/include/petscsles.h"; then
     AC_MSG_ERROR(Couldn't find the necessary uni-PETSc include files.)
   fi
 else
