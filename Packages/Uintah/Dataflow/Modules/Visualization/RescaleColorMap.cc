@@ -102,10 +102,12 @@ RescaleColorMap::~RescaleColorMap()
 
  void RescaleColorMap::get_minmax(FieldHandle field)
 {
+#if 0
   uintah_dispatch_scalar1(field, dispatch_minmax);
   if( !success_ ){
     SCIRun::RescaleColorMap::get_minmax( field );
   }
+#endif
 }
 
 
