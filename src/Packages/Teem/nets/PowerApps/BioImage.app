@@ -41,7 +41,7 @@ set DATASET [netedit getenv SCIRUN_DATASET]
 ::netedit dontschedule
 set bbox {0 0 3100 3100}
 
-set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 17 2900]
+set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 145 2629]
 
 global mods
 set mods(Viewer) $m1
@@ -1212,28 +1212,28 @@ class BioImageApp {
 	    disableModule $m4 1
 	    
 	    # create vis modules and inner connections
-	    set m7 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 1900]
+	    set m7 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 163 1848]
 #	    set m8 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 10 2191]
-	    set m9 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 517 2215]
+	    set m9 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 253 2139]
 #	    set m10 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJoin" 218 2278]
 #	    set m11 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 218 2198]
-	    set m11 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetupTexture" 182 1937]
-	    set m12 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 182 2674]
+	    set m11 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetupTexture" 235 1998]
+	    set m12 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 0 2263]
 #	    set m13 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuProject" 447 2138]
-	    set m14 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 375 2675]
-	    set m15 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 224 2760]
+	    set m14 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 181 2471]
+	    set m15 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 0 2548]
 #	    set m16 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 182 1937]
 #	    set m17 [addModuleAtPosition "SCIRun" "FieldsData" "NodeGradient" 182 1997]
 #	    set m18 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 182 2056]
-	    set m19 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq" 392 2473]
-	    set m20 [addModuleAtPosition "Teem" "UnuAtoM" "UnuGamma" 392 2535]
-	    set m21 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 392 2597]
-	    set m22 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJhisto" 410 2286]
-	    set m23 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 392 2348]
-	    set m24 [addModuleAtPosition "Teem" "UnuAtoM" "Unu1op" 392 2409]
-            set m26 [addModuleAtPosition "SCIRun" "Render" "ViewSlices" 704 2057]
-	    set m27 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 741 1977]
-	    set m28 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 369 1889]
+	    set m19 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq" 422 2266]
+	    set m20 [addModuleAtPosition "Teem" "UnuAtoM" "UnuGamma" 422 2330]
+	    set m21 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 422 2393]
+	    set m22 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJhisto" 440 2075]
+	    set m23 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 422 2139]
+	    set m24 [addModuleAtPosition "Teem" "UnuAtoM" "Unu1op" 422 2202]
+            set m26 [addModuleAtPosition "SCIRun" "Render" "ViewSlices" 163 2397]
+	    set m27 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 199 2264]
+	    set m28 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 0 1998]
 
 	    set m29 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPermute" 81 408]
 	    set m30 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 81 575]
