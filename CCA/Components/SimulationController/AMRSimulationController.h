@@ -14,8 +14,8 @@
 namespace Uintah {
 
 class SimulationInterface;
-  class Output;
-
+class Output;
+class LoadBalancer;  
 /**************************************
       
   CLASS
@@ -55,9 +55,9 @@ class SimulationInterface;
 
    private:
       void problemSetup(const ProblemSpecP&, GridP&);
-      bool need_recompile(double t, double delt, const GridP& level,
-			  SimulationInterface* cfd, Output* output,
-			  std::vector<int>& levelids);
+      bool needRecompile(double t, double delt, const GridP& level,
+			 SimulationInterface* cfd, Output* output,
+			 LoadBalancer* lb, std::vector<int>& levelids);
       AMRSimulationController(const AMRSimulationController&);
       AMRSimulationController& operator=(const AMRSimulationController&);
 

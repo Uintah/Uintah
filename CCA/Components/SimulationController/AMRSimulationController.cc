@@ -22,6 +22,8 @@
 #include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
@@ -66,27 +68,8 @@ void AMRSimulationController::doRestart(std::string restartFromDir, int timestep
    d_restartRemoveOldDir = removeOldDir;
 }
 
-
-#ifdef OUTPUT_AVG_ELAPSED_WALLTIME
-double stdDeviation(list<double>& vals, double& mean)
-{
-  if (vals.size() < 2)
-    return -1;
-
-  list<double>::iterator it;
-
-  mean = 0;
-  double variance = 0;
-  for (it = vals.begin(); it != vals.end(); it++)
-    mean += *it;
-  mean /= vals.size();
-
-  for (it = vals.begin(); it != vals.end(); it++)
-    variance += pow(*it - mean, 2);
-  variance /= (vals.size() - 1);
-  return sqrt(variance);
-}
-#endif
+// currently defined in SimpleSimulationController.cc
+double stdDeviation(double sum_of_x, double sum_of_x_squares, int n);
 
 void AMRSimulationController::run()
 {
@@ -148,6 +131,10 @@ void AMRSimulationController::run()
    sched->problemSetup(ups);
    SchedulerP scheduler(sched);
 
+   LoadBalancer* lb = dynamic_cast<LoadBalancer*>
+     (dynamic_cast<SchedulerCommon*>(sched)->getPort("load balancer"));
+   lb->problemSetup(ups);
+
    output->initializeOutput(ups);
 
    if(d_myworld->myrank() == 0){
@@ -166,23 +153,31 @@ void AMRSimulationController::run()
    // Thsi has to change for AMR restarting, to support the readin
    // of grid hierarchies (and with that a scheduler hierarchie)
    if(d_restarting){
-      // create a temporary DataArchive for reading in the checkpoints
-      // archive for restarting.
-      Dir restartFromDir(d_restartFromDir);
-      Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
-      DataArchive archive(checkpointRestartDir.getName(),
-			  d_myworld->myrank(), d_myworld->size());
-
-      double delt = 0;
-      archive.restartInitialize(d_restartTimestep, grid,
-				scheduler->get_dw(1), &t, &delt);
-      
-      output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
-			   d_restartFromScratch, d_restartRemoveOldDir);
-      scheduler->get_dw(1)->finalize();
-      sim->restartInitialize();
+     // create a temporary DataArchive for reading in the checkpoints
+     // archive for restarting.
+     Dir restartFromDir(d_restartFromDir);
+     Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
+     DataArchive archive(checkpointRestartDir.getName(),
+			 d_myworld->myrank(), d_myworld->size());
+     
+     double delt = 0;
+     archive.restartInitialize(d_restartTimestep, grid,
+			       scheduler->get_dw(1), &t, &delt);
+     
+     output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
+			  d_restartFromScratch, d_restartRemoveOldDir);
+     sharedState->setCurrentTopLevelTimeStep( output->getCurrentTimestep() );
+     // Tell the scheduler the generation of the re-started simulation.
+     // (Add +1 because the scheduler will be starting on the next
+     // timestep.)
+     scheduler->setGeneration( output->getCurrentTimestep()+1 );
+     
+     scheduler->get_dw(1)->setID( output->getCurrentTimestep() );
+     scheduler->get_dw(1)->finalize();
+     sim->restartInitialize();
    } else {
-      // Initialize the CFD and/or MPM data
+     sharedState->setCurrentTopLevelTimeStep( 0 );
+     // Initialize the CFD and/or MPM data
      for(int i=0;i<grid->numLevels();i++)
        sim->scheduleInitialize(grid->getLevel(i), scheduler);
    }
@@ -208,11 +203,10 @@ void AMRSimulationController::run()
    scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
    scheduler->execute(d_myworld);
 
-#ifdef OUTPUT_AVG_ELAPSED_WALLTIME
    int n = 0;
-   list<double> wallTimes;
    double prevWallTime;
-#endif
+   double sum_of_walltime = 0; // sum of all walltimes
+   double sum_of_walltime_squares = 0; // sum all squares of walltimes
 
    std::vector<int> levelids;
 
@@ -319,6 +313,7 @@ void AMRSimulationController::run()
        DumpAllocator(DefaultAllocator(), filename.c_str());
      }
      
+     //output timestep statistics
      if(d_myworld->myrank() == 0){
        cout << "Time=" << t << ", delT=" << delt 
 	    << ", elap T = " << wallTime 
@@ -337,20 +332,27 @@ void AMRSimulationController::run()
 	 cout << " (max)";
        }
        cout << endl;
-       
-#ifdef OUTPUT_AVG_ELAPSED_WALLTIME
-       if (n > 1) // ignore first set of elapsed times
-	 wallTimes.push_back(wallTime - prevWallTime);
 
-       if (wallTimes.size() > 1) {
+       // calculate mean/std dev
+       if (n > 2) // ignore times 0,1,2
+       {
+	 //wallTimes.push_back(wallTime - prevWallTime);
+	 sum_of_walltime += (wallTime - prevWallTime);
+	 sum_of_walltime_squares += pow(wallTime - prevWallTime,2);
+       }
+       if (n > 3) {
 	 double stdDev, mean;
-	 stdDev = stdDeviation(wallTimes, mean);
-	 ofstream timefile("avg_elapsed_walltime.txt");
-	 timefile << mean << " +- " << stdDev << endl;
+	 
+	 // divide by n-2 and not n, because we wait till n>2 to keep track
+	 // of our stats
+	 stdDev = stdDeviation(sum_of_walltime, sum_of_walltime_squares, n-2);
+	 mean = sum_of_walltime / (n-2);
+	 //	  ofstream timefile("avg_elapsed_walltime.txt");
+	 //	  timefile << mean << " +- " << stdDev << endl;
+	 cout << "Timestep mean: " << mean << " +- " << stdDev << endl;
        }
        prevWallTime = wallTime;
        n++;
-#endif
      }
 
      // Put the current time into the shared state so other components
@@ -359,7 +361,7 @@ void AMRSimulationController::run()
      sharedState->setElapsedTime(t);
      sharedState->incrementCurrentTopLevelTimeStep();
 
-     if(need_recompile(t, delt, grid, sim, output, levelids)){
+     if(needRecompile(t, delt, grid, sim, output, lb, levelids)){
        if(d_myworld->myrank() == 0)
 	 cout << "Compiling taskgraph...\n";
        double start = Time::currentSeconds();
@@ -624,16 +626,19 @@ void AMRSimulationController::problemSetup(const ProblemSpecP& params,
 }
 
 bool
-AMRSimulationController::need_recompile(double time, double delt,
-					const GridP& grid,
-					SimulationInterface* sim,
-					Output* output,
-					vector<int>& levelids)
+AMRSimulationController::needRecompile(double time, double delt,
+				       const GridP& grid,
+				       SimulationInterface* sim,
+				       Output* output,
+				       LoadBalancer* lb,
+				       vector<int>& levelids)
 {
   // Currently, output and sim can request a recompile.  --bryan
-  if(output && output->need_recompile(time, delt, grid))
+  if(output && output->needRecompile(time, delt, grid))
     return true;
-  if (sim && sim->need_recompile(time, delt, grid))
+  if (sim && sim->needRecompile(time, delt, grid))
+    return true;
+  if (lb && lb->needRecompile(time, delt, grid))
     return true;
   if(static_cast<int>(levelids.size()) != grid->numLevels())
     return true;
