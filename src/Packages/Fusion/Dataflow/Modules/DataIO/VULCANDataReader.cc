@@ -235,22 +235,25 @@ VULCANDataReader::execute(){
       return;
     }
 
-    int* cdata = scinew int[ncon*4];
+    double* cdata = scinew double[ncon*4];
 
     double *data[6];
+
+    int c0, c1, c2, c3;
 
     for( int i=0; i<6; i++ )
       data[i] = scinew double[ncon];
 
     for( int i=0, j=0; i<ncon; i++, j+=4 ) {
       fscanf(fp, "%d %d %d %d %d %lg %lg %lg %lg %lg %lg",
-	     &cdata[j+0], &cdata[j+1], &cdata[j+2], &cdata[j+3], &junk1,
-	     &data[0][i], &data[1][i], &data[2][i], &data[3][i], &data[4][i], &data[5][i]);
+	     &c0, &c1, &c2, &c3, &junk1,
+	     &data[0][i], &data[1][i], &data[2][i],
+	     &data[3][i], &data[4][i], &data[5][i]);
 
-      cdata[j+0]--; 
-      cdata[j+1]--;
-      cdata[j+2]--;
-      cdata[j+3]--;
+      cdata[j+0] = c0-1; 
+      cdata[j+1] = c1-1;
+      cdata[j+2] = c2-1;
+      cdata[j+3] = c3-1;
 
       if( ferror( fp ) || feof( fp ) ) {
 	error("Unable to read " + new_filename);
@@ -261,7 +264,7 @@ VULCANDataReader::execute(){
     // Connections
     nout = scinew NrrdData(false);
 
-    nrrdWrap(nout->nrrd, cdata, nrrdTypeInt, ndims+2, sink_size, ncon, 4);
+    nrrdWrap(nout->nrrd, cdata, nrrdTypeDouble, ndims+2, sink_size, ncon, 4);
 
     nout->nrrd->axis[0].label = strdup("Connections:Scalar");
     nout->nrrd->axis[1].label = strdup("Domain");
