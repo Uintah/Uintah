@@ -55,7 +55,7 @@ class VULCANConverterAlgo : public DynamicAlgoBase
 {
 protected:
   enum { NONE = 0, MESH = 1, SCALAR = 2, REALSPACE = 4, CONNECTION = 8 };
-  enum { OMEGA = 0, ZR = 1, PHI = 2, LIST = 4 };
+  enum { ZR = 0, PHI = 1, LIST = 2 };
 
 public:
   //! support the dynamically compiled algorithm concept
@@ -69,6 +69,7 @@ public:
 				 vector< int >& modes) = 0;
 };
 
+//////////MESH CREATION//////////////////////////////
 template< class NTYPE >
 class VULCANMeshConverterAlgoT : public VULCANConverterAlgo
 {
@@ -104,7 +105,18 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 
   NTYPE* ndata = scinew NTYPE[nPhi*nZR*3];
 
-  int rank = nHandles[mesh[ZR]]->nrrd->axis[nHandles[mesh[ZR]]->nrrd->dim-1].size;
+  vector< string > dataset;
+  nHandles[mesh[ZR]]->get_tuple_indecies(dataset);
+
+  int rank = 0;
+
+  if( dataset[0].find( "ZR:Scalar" ) != string::npos &&
+      nHandles[mesh[ZR]]->nrrd->dim == 3 ) {
+    rank = nHandles[mesh[ZR]]->nrrd->axis[nHandles[mesh[ZR]]->nrrd->dim-1].size;
+  } else if( dataset[0].find( "ZR:Vector" ) != string::npos &&
+      nHandles[mesh[ZR]]->nrrd->dim == 2 ) {
+    rank = 3;
+  }
 
   // Mesh uprolling.
   if( modes[0] ) {
@@ -114,7 +126,7 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 	ndata[cc*3  ] = ptrPhi[i];           // Phi
 	ndata[cc*3+1] = ptrZR[kj*rank + 1];  // R
 	ndata[cc*3+2] = ptrZR[kj*rank + 0];  // Z
-	
+
 	++cc;
       }
     }
@@ -122,7 +134,7 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
     for( i=0; i<nPhi; i++ ) {
       double cosPhi = cos( ptrPhi[i] );
       double sinPhi = sin( ptrPhi[i] );
-      
+
       for( kj=0; kj<nZR; kj++ ) {      
 	
 	// Mesh
@@ -135,25 +147,11 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
     }
   }
 
-  string source;
-
-  nHandles[mesh[PHI]]->get_property( string("Source"), source);
-
   nrrdWrap(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
 	   ndims+1, sink_size, nPhi*nZR);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
-
-  vector< string > dataset;
-
-  nHandles[mesh[PHI]]->get_tuple_indecies(dataset);
-
-  dataset[0].replace( dataset[0].find( "PHI:Scalar" ), 10, "XYZ:Vector" );
-
-  nout->nrrd->axis[0].label = strdup(dataset[0].c_str());
+  nout->nrrd->axis[0].label = strdup("XYZ:Vector");
   nout->nrrd->axis[1].label = strdup("Point List");
-
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[mesh[PHI]].get_rep()));
@@ -164,7 +162,7 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 }
 
 
-////////////////////////////////////////
+//////////CONNECTION CREATION//////////////////////////////
 template< class NTYPE >
 class VULCANConnectionConverterAlgoT : public VULCANConverterAlgo
 {
@@ -204,7 +202,7 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
   int rank = nHandles[mesh[LIST]]->nrrd->axis[nHandles[mesh[LIST]]->nrrd->dim-1].size;
 
   // Mesh
-  if( modes[0] ) { // Wrapping
+  if( 0 && modes[0] ) { // Wrapping
     for( i=0, j=1; i<nPhi; i++, j++ ) {
       for( kj=0; kj<nCon; kj++ ) {      
 	
@@ -241,15 +239,8 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
     }
   }
 
-  string source;
-
-  nHandles[mesh[LIST]]->get_property( string("Source"), source);
-
   nrrdWrap(nout->nrrd, ndata, nHandles[mesh[LIST]]->nrrd->type,
-	   ndims+2, sink_size, nPhi*nCon, hex);
-
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+	   ndims+2, sink_size, cc, hex);
 
   vector< string > dataset;
 
@@ -268,7 +259,7 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
   return  NrrdDataHandle( nout );	
 }
 
-////////////////////////////////////////
+//////////ASSUME CELL CENTERED FOR SCALAR DATA//////////////////////////////
 template< class NTYPE >
 class VULCANScalarConverterAlgoT : public VULCANConverterAlgo
 {
@@ -294,30 +285,28 @@ execute(vector< NrrdDataHandle >& nHandles,
   NrrdData *nout = scinew NrrdData(false);
 
   int nPhi = nHandles[mesh[PHI]]->nrrd->axis[1].size; // Phi
-  int nZR  = nHandles[data[0]]->nrrd->axis[1].size;   // Points
+  int nVal = nHandles[data[0]]->nrrd->axis[1].size;   // Values
 
-  NTYPE* ndata = scinew NTYPE[nPhi*nZR];
+  NTYPE* ndata = scinew NTYPE[nPhi*nVal-nVal];
 
   register int i, kj, cc=0;
 
+  //  NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI  ]]->nrrd->data);
   NTYPE *ptr = (NTYPE *)(nHandles[data[0]]->nrrd->data);
     
-  for( i=0; i<nPhi; i++ ) {
-    double cosPhi = cos( ptrMeshPhi[i] );
-    double sinPhi = sin( ptrMeshPhi[i] );
+  for( i=0; i<nPhi-1; i++ ) {
+    //    double cosPhi = cos( ptrMeshPhi[i] );
+    //    double sinPhi = sin( ptrMeshPhi[i] );
 
-    for( kj=0; kj<nZR; kj++ ) {
+    for( kj=0; kj<nVal; kj++ ) {
       
-      ndata[cc] =  ptr[kj];
+      ndata[cc] = ptr[kj];
       cc++;
     }
   }
 
   nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	   ndims+1, sink_size, nPhi*nZR);
-
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+	   ndims+1, sink_size, nPhi*nVal-nVal);
 
   vector< string > dataset;
 
@@ -347,6 +336,7 @@ public:
 };
 
 
+//////////ASSUME NODE CENTERED FOR REALSPACE//////////////////////////////
 template< class NTYPE >
 NrrdDataHandle
 VULCANRealSpaceConverterAlgoT< NTYPE >::
@@ -367,48 +357,42 @@ execute(vector< NrrdDataHandle >& nHandles,
 
   register int i,kj,cc = 0;
 
-  NTYPE *ptrZR      = (NTYPE *)(nHandles[data[ZR   ]]->nrrd->data);
-//  NTYPE *ptrOMEGA   = (NTYPE *)(nHandles[data[OMEGA]]->nrrd->data);
-  NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI  ]]->nrrd->data);
-//  NTYPE *ptrMeshZR  = (NTYPE *)(nHandles[mesh[ZR   ]]->nrrd->data);
+  NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
+  NTYPE *ptrZR      = (NTYPE *)(nHandles[data[ZR ]]->nrrd->data);
 
-  int rank = nHandles[data[ZR]]->nrrd->axis[nHandles[data[ZR]]->nrrd->dim-1].size;
+  int rank = 0;
+
+  vector< string > dataset;
+  nHandles[data[ZR]]->get_tuple_indecies(dataset);
+
+  if( dataset[0].find( "ZR:Scalar" ) != string::npos &&
+      nHandles[data[ZR]]->nrrd->dim == 3 ) {
+    rank = nHandles[data[ZR]]->nrrd->axis[nHandles[data[ZR]]->nrrd->dim-1].size;
+  } else if( dataset[0].find( "ZR:Vector" ) != string::npos &&
+      nHandles[data[ZR]]->nrrd->dim == 2 ) {
+    rank = 3;
+  }
 
   for( i=0; i<nPhi; i++ ) {
     double cosPhi = cos( ptrMeshPhi[i] );
     double sinPhi = sin( ptrMeshPhi[i] );
 
     for( kj=0; kj<nZR; kj++ ) {
-      
-      // Value
+
+      // Vector
       ndata[cc*3  ] =  ptrZR[kj*rank+1] * cosPhi;   // X
       ndata[cc*3+1] = -ptrZR[kj*rank+1] * sinPhi;   // Y
-      ndata[cc*3+2] =  ptrZR[kj*rank+0];            // Z
+      ndata[cc*3+2] =  ptrZR[kj*rank  ];            // Z
 
-      //ptrMeshZR[kj+1] * ptrOMEGA[kj];
-      
       ++cc;
     }
   }
 
-  string source;
-
-  nHandles[data[ZR]]->get_property( string("Source"), source);
-
   nrrdWrap(nout->nrrd, ndata, nHandles[data[ZR]]->nrrd->type,
 	   ndims+1, sink_size, nPhi*nZR);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
-
-  vector< string > dataset;
-
-  nHandles[data[ZR]]->get_tuple_indecies(dataset);
-
-  dataset[0].replace( dataset[0].find( "ZR:Scalar" ), 10, "XYZ:Vector" );
-
-  nout->nrrd->axis[0].label = strdup(dataset[0].c_str());
-  nout->nrrd->axis[1].label = strdup("Data");
+  nout->nrrd->axis[0].label = strdup("XYZ:Vector");
+  nout->nrrd->axis[1].label = strdup("Domain");
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[data[ZR]].get_rep()));
