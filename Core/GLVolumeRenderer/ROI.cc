@@ -57,8 +57,10 @@ ROI::draw()
   
   ROIIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
 
-  SliceTable st(volren->tex->min(),
-		volren->tex->max(), 
+   BBox box;
+  volren->tex->get_bounds(box);
+  SliceTable st(box.min(),
+		box.max(), 
 		viewRay,
 		volren->slices,
                 volren->tex->depth());

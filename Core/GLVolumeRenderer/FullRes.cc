@@ -27,6 +27,17 @@
 
 namespace SCIRun {
 
+#include <GL/glu.h>
+//  GLenum errCode;
+//  const GLubyte *errString;
+
+//  void glCheckForError(const char* message)
+//  {
+//    if((errCode = glGetError()) != GL_NO_ERROR){
+//      errString = gluErrorString(errCode);
+//      cerr<<"OpenGL Error: "<<message<<" "<<(const char*)errString<<endl;
+//    }
+//  }
 
 FullRes::FullRes(const GLVolumeRenderer* glvr ) :
   GLVolRenState( glvr )
@@ -50,8 +61,10 @@ FullRes::draw()
   
   FullResIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
 
-  SliceTable st(volren->tex->min(),
-		volren->tex->max(), 
+  BBox box;
+  volren->tex->get_bounds(box);
+  SliceTable st(box.min(),
+		box.max(), 
 		viewRay,
 		volren->slices,
                 volren->tex->depth());
@@ -73,7 +86,7 @@ FullRes::draw()
     st.getParameters( b, tmin, tmax, dt);
 
     b.ComputePolys( viewRay,  tmin, tmax, dt, ts, polys);
-    
+
     loadColorMap( b );
     loadTexture( b );
     makeTextureMatrix( b );
