@@ -1853,6 +1853,74 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	}
       }
     }
+    // boundary conditions...make a separate function apply Boundary
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    int wallID = d_boundaryCondition->wallCellType();
+    if (xminus) {
+      for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
+	for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
+	  int colX = indexLow.x();
+	  IntVector currCell(colX-1, colY, colZ);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (xplus) {
+      for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
+	for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
+	  int colX =  indexHigh.x();
+	  IntVector currCell(colX+1, colY, colZ);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (yminus) {
+      for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
+	for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
+	  int colY = indexLow.y();
+	  IntVector currCell(colX, colY-1, colZ);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (yplus) {
+      for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
+	for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
+	  int colY =  indexHigh.y();
+	  IntVector currCell(colX, colY+1, colZ);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (zminus) {
+      for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
+	  int colZ = indexLow.z();
+	  IntVector currCell(colX, colY, colZ-1);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (zplus) {
+      for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
+	  int colZ =  indexHigh.z();
+	  IntVector currCell(colX, colY, colZ+1);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
 
   }
 }
