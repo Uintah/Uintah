@@ -9,6 +9,7 @@ using namespace rtrt;
 Group::Group()
     : Object(0)
 {
+  was_processed = false;
 }
 
 Group::~Group()
@@ -118,21 +119,29 @@ void Group::collect_prims(Array1<Object*>& prims)
 
 void Group::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 {
-  all_children_are_groups=1;
-  for(int i=0;i<objs.size();i++) {
-    objs[i]->preprocess(maxradius, pp_offset, scratchsize);
-    objs[i]->compute_bounds(bbox, 1.e-5);
-    if (dynamic_cast<Group *>(objs[i]) == 0) all_children_are_groups=0;
-  }
-  if (all_children_are_groups) {
-    cerr << "YES!  ALL CHILDREN ARE GROUPS!\n";
+  if (!was_processed) {
+    all_children_are_groups=1;
+    for(int i=0;i<objs.size();i++) {
+      objs[i]->preprocess(maxradius, pp_offset, scratchsize);
+      objs[i]->compute_bounds(bbox, 1E-5);
+      if (dynamic_cast<Group *>(objs[i]) == 0) all_children_are_groups=0;
+    }
+    if (all_children_are_groups) {
+      cerr << "YES!  ALL CHILDREN ARE GROUPS!\n";
+    }
+    was_processed = true;
   }
 }
 
 
-void Group::compute_bounds(BBox& bb, double /*offset*/)
+void Group::compute_bounds(BBox& bb, double offset)
 {
-  bb.extend(bbox);
+  if (!was_processed)
+    for(int i=0;i<objs.size();i++) {
+      objs[i]->compute_bounds(bb, offset);
+    }
+  else
+    bb.extend(bbox);
 }
 
 void Group::prime(int n)

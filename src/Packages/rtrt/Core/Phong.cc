@@ -20,6 +20,6 @@ void Phong::shade(Color& result, const Ray& ray,
 		  double atten, const Color& accumcolor,
 		  Context* cx)
 {
-    phongshade(result, ambient, diffuse, specular, specpow, refl,
-	       ray, hit, depth, atten, accumcolor, cx);
+  phongshade(result, ambient, diffuse, specular, specpow, refl,
+	     ray, hit, depth, atten, accumcolor, cx);
 }

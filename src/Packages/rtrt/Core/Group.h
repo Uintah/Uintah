@@ -11,6 +11,7 @@ namespace rtrt {
 
 class Group : public Object {
 public:
+  bool was_processed;
     BBox bbox;
     bool all_children_are_groups;
     Array1<Object*> objs;

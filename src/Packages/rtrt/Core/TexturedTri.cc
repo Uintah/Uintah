@@ -31,6 +31,7 @@ TexturedTri::TexturedTri(Material* matl, const Point& p1, const Point& p2,
       n *= 1/sqrt(l);
     } else {
       bad = true;
+      return;
     }
 #else
     double l=n.normalize();
@@ -77,6 +78,7 @@ TexturedTri::TexturedTri(Material* matl, const Point& p1, const Point& p2,
       n *= 1/sqrt(l);
     } else {
       bad = true;
+      return;
     }
 #else
     double l=n.normalize();

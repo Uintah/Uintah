@@ -29,6 +29,7 @@ Tri::Tri(Material* matl, const Point& p1, const Point& p2,
     } else {
 	printf("BAD NORMAL!\n");
       bad = true;
+      return;
     }
     
 
@@ -76,6 +77,7 @@ Tri::Tri(Material* matl, const Point& p1, const Point& p2,
     } else {
 	printf("BAD NORMAL!\n");
       bad = true;
+      return;
     }
 #else
     double l=n.normalize();
