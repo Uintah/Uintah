@@ -448,6 +448,9 @@ private:
 	  // Unfortunately, this const cast hack is necessary.
 	  patch = ((LevelP)level)->getPatchFromPoint(level->getNodePosition(loc));
 	  break;
+	default:
+	  // Dd: Should this be an ERROR!?
+	  break;
 	}
       }
       if (patch == NULL)
