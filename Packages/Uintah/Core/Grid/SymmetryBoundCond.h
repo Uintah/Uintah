@@ -39,6 +39,7 @@ WARNING
       SymmetryBoundCond():BoundCondBase("Symmetry") {};
       SymmetryBoundCond(ProblemSpecP&) {d_type = "Symmetric";};
       virtual ~SymmetryBoundCond() {};
+      virtual SymmetryBoundCond* clone() {return new SymmetryBoundCond(*this);};
          
    private:
 #if 0

@@ -3,7 +3,8 @@
 
 using namespace Uintah;
 
-MassFractionBoundCond::MassFractionBoundCond(ProblemSpecP& ps,std::string& kind, 
+MassFractionBoundCond::MassFractionBoundCond(ProblemSpecP& ps,
+					     std::string& kind, 
                                               std::string& variableName):
   BoundCond<double>(kind)
 {
@@ -15,8 +16,8 @@ MassFractionBoundCond::~MassFractionBoundCond()
 {
 }
 
-double MassFractionBoundCond::getValue() const
-{
-  return d_value;
-}
 
+MassFractionBoundCond* MassFractionBoundCond::clone()
+{
+  return new MassFractionBoundCond(*this);
+}

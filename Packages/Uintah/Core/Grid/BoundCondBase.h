@@ -1,7 +1,6 @@
 #ifndef UINTAH_GRID_BoundCondBase_H
 #define UINTAH_GRID_BoundCondBase_H
 
-#include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
@@ -37,21 +36,17 @@ WARNING
   
 ****************************************/
 
-  class BoundCondBase : public RefCounted  {
+  class BoundCondBase  {
   public:
     BoundCondBase() {};
     BoundCondBase(const string type) : d_type(type) {};
     virtual ~BoundCondBase() {};
+    virtual BoundCondBase* clone() = 0;
     string getType() const { return d_type;};
     
   protected:
     string d_type;
     
-  private:
-#if 0
-    BoundCondBase(const BoundCondBase&);
-    BoundCondBase& operator=(const BoundCondBase&);
-#endif
   };
 } // End namespace Uintah
 

@@ -162,7 +162,7 @@ using namespace Uintah;
   template<class T> void fillFace(NCVariable<T>& var,const Patch* patch, 
 				  Patch::FaceType face, const T& value, 
 				  IntVector offset = IntVector(0,0,0)) { 
-    // cout <<"NCVariable.h: fillFace face "<<face<<endl;
+    //    cout <<"NCVariable.h: fillFace face "<<face<<endl;
     IntVector low,hi;
     low = patch->getInteriorNodeLowIndex();
     low+= offset;
@@ -177,8 +177,8 @@ using namespace Uintah;
       for (int j = low.y(); j<hi.y(); j++) {
 	for (int k = low.z(); k<hi.z(); k++) {
 	  var[IntVector(hi.x()-1,j,k)] = value;
-	  //cout<<"fillFace xPlus "<<"patch "<<patch->getID()<<" "<<
-	  //   IntVector(hi.x()-1,j,k)<<endl;
+	  //  cout<<"fillFace xPlus "<<"patch "<<patch->getID()<<" "<<
+	  //IntVector(hi.x()-1,j,k)<<endl;
 	}
       }
       break;
@@ -187,7 +187,7 @@ using namespace Uintah;
 	for (int k = low.z(); k<hi.z(); k++) {
 	  var[IntVector(low.x(),j,k)] = value;
 	  //cout<<"fillFace xMinus "<<"patch "<<patch->getID()<<" "<<
-	  //   IntVector(low.x(),j,k)<<endl;
+	  //	    IntVector(low.x(),j,k)<<endl;
 	}
       }
       break;
@@ -196,7 +196,7 @@ using namespace Uintah;
 	for (int k = low.z(); k<hi.z(); k++) {
 	  var[IntVector(i,hi.y()-1,k)] = value;
 	  //cout<<"fillFace yplus "<<"patch "<<patch->getID()<<" "<<
-	  //   IntVector(i,hi.y()-1,k)<<endl;
+	  //IntVector(i,hi.y()-1,k)<<endl;
 	}
       }
       break;
@@ -205,7 +205,7 @@ using namespace Uintah;
 	for (int k = low.z(); k<hi.z(); k++) {
 	  var[IntVector(i,low.y(),k)] = value;
 	  //cout<<"fillFace yminus "<<"patch "<<patch->getID()<<" "<<
-	  //   IntVector(i,low.y(),k)<<endl;
+	  // IntVector(i,low.y(),k)<<endl;
 	}
       }
       break;
@@ -214,7 +214,7 @@ using namespace Uintah;
 	for (int j = low.y(); j<hi.y(); j++) {
 	  var[IntVector(i,j,hi.z()-1)] = value;
 	  //cout<<"fillFace zplus "<<"patch "<<patch->getID()<<" "<<
-	  //   IntVector(i,j,hi.z()-1)<<endl;
+	  //IntVector(i,j,hi.z()-1)<<endl;
 	}
       }
       break;
@@ -223,7 +223,7 @@ using namespace Uintah;
 	for (int j = low.y(); j<hi.y(); j++) {
 	  var[IntVector(i,j,low.z())] = value;
 	  //cout<<"fillFace zminus "<<"patch "<<patch->getID()<<" "<<
-	  //   IntVector(i,j,low.z())<<endl;
+	  // IntVector(i,j,low.z())<<endl;
 	}
       }
       break;

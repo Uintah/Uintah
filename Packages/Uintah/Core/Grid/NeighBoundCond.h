@@ -39,6 +39,7 @@ WARNING
       NeighBoundCond() : BoundCondBase("Neighbor") {}; 
       NeighBoundCond(ProblemSpecP&) {};
       virtual ~NeighBoundCond() {};
+      virtual NeighBoundCond* clone() {return new NeighBoundCond(*this);};
 
    private:
 #if 0

@@ -7,15 +7,15 @@ DensityBoundCond::DensityBoundCond(ProblemSpecP& ps, std::string& kind)
   : BoundCond<double>(kind)
 {
   d_type = "Density";
-  ps->require("value",d_rho);
+  ps->require("value",d_value);
 }
 
 DensityBoundCond::~DensityBoundCond()
 {
 }
 
-double DensityBoundCond::getValue() const
+DensityBoundCond* DensityBoundCond::clone()
 {
-  return d_rho;
+  return new DensityBoundCond(*this);
 }
 

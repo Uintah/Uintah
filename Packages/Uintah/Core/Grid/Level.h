@@ -192,8 +192,6 @@ WARNING
       
       std::vector<Patch*> d_patches;
 
-     std::vector<BoundCondBase*> allbcs;
-     
       Grid* grid;
       Point d_anchor;
       Vector d_dcell;

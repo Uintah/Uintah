@@ -7,7 +7,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
 #include <Packages/Uintah/Core/Grid/BoundCondReader.h>
-
+#include <Packages/Uintah/Core/Grid/BoundCondData.h>
 
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
@@ -67,10 +67,6 @@ Level::~Level()
   // Delete all of the patches managed by this level
   for(patchIterator iter=d_virtualAndRealPatches.begin(); iter != d_virtualAndRealPatches.end(); iter++)
     delete *iter;
-#if 0
-  for(int i=0;i<(int)allbcs.size();i++)
-    delete allbcs[i];
-#endif
 
 #ifdef SELECT_RANGETREE
   delete d_rangeTree;
@@ -557,19 +553,16 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 	iter != d_virtualAndRealPatches.end(); iter++){
       Patch* patch = *iter;
       Patch::BCType bc_type = patch->getBCType(face_side);
-      BCData bc_data;
-      BCDataArray bcdata_array;
+      BoundCondData bc_data;
+
+      // For old boundary conditions
       reader.getBC(face_side,bc_data);
-      bcdata_array = reader.getBC(face_side);
       if (bc_type == Patch::None) {
 	patch->setBCValues(face_side,bc_data);
-	patch->setArrayBCValues(face_side,bcdata_array);
+	patch->setArrayBCValues(face_side,reader.d_BCReaderData[face_side]);
       }
     }  // end of patchIterator
   }
-
-  
-
 }
 
 Box Level::getBox(const IntVector& l, const IntVector& h) const

@@ -2,7 +2,6 @@
 #define UINTAH_GRID_BoundCondData_H
 
 #include <sgi_stl_warnings_off.h>
-#include <vector>
 #include <map>
 #include <string>
 #include <sgi_stl_warnings_on.h>
@@ -10,7 +9,6 @@
 #include <Packages/Uintah/Core/Grid/BoundCondBase.h>
 
 namespace Uintah {
-using std::vector;
 using std::map;
 using std::string;
 
@@ -43,18 +41,23 @@ WARNING
   
 ****************************************/
 
-  class BCData  {
+  class BoundCondData {
   public:
-    BCData();
-    ~BCData();
+    BoundCondData();
+    ~BoundCondData();
+    BoundCondData& operator=(const BoundCondData& rhs);
+    BoundCondData(const BoundCondData& rhs);
     void setBCValues(int mat_id,BoundCondBase* bc);
     const BoundCondBase* getBCValues(int mat_id,const string& type) const;
+    int getMatID() const;
     
    private:
-    // The vector is for the material id, the map is for the name of the
+    // The first map is for the material id (-1 for "all"), 
+    // the second map is for the name of the
     // bc type and then the actual bc data, i.e. 
     // "Velocity", VelocityBoundCond
-    vector<map<string,Handle<BoundCondBase> > > d_data;
+    typedef map<int,map<string,BoundCondBase* > > boundcondDataType;
+    boundcondDataType d_data;
     
   };
 } // End namespace Uintah

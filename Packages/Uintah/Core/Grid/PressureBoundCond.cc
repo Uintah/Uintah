@@ -7,15 +7,14 @@ PressureBoundCond::PressureBoundCond(ProblemSpecP& ps,std::string& kind)
   : BoundCond<double>(kind)
 {
   d_type = "Pressure";
-  ps->require("value",d_press);
+  ps->require("value",d_value);
 }
 
 PressureBoundCond::~PressureBoundCond()
 {
 }
 
-double PressureBoundCond::getValue() const
+PressureBoundCond* PressureBoundCond::clone()
 {
-  return d_press;
+  return new PressureBoundCond(*this);
 }
-

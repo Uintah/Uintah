@@ -38,15 +38,9 @@ WARNING
    public:
      DensityBoundCond(ProblemSpecP& ps,std::string& kind);
      virtual ~DensityBoundCond();
-     virtual double getValue() const;
+     virtual DensityBoundCond* clone();
      
    private:
-#if 0
-     DensityBoundCond(const DensityBoundCond&);
-     DensityBoundCond& operator=(const DensityBoundCond&);
-#endif
-     
-     double d_rho;
    };
 } // End namespace Uintah
 

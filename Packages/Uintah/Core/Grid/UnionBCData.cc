@@ -7,20 +7,13 @@ using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
-UnionBCData::UnionBCData() 
+UnionBCData::UnionBCData() : BCGeomBase()
 {
 }
 
-UnionBCData::UnionBCData(ProblemSpecP &ps) 
-{
-  //BoundCondFactory::create(ps,child);
-  
-}
 
 UnionBCData::UnionBCData(BCData& bc)
 {
-  //BoundCondFactory::create(ps,child);
-  
 }
 
 UnionBCData::~UnionBCData()
@@ -28,16 +21,16 @@ UnionBCData::~UnionBCData()
   for (int i = 0; i < (int) child.size(); i++) {
     delete child[i];
   }
+  child.clear();
 }
 
 UnionBCData::UnionBCData(const UnionBCData& mybc)
 {
-  for (int i = 0; i < (int) mybc.child.size(); i++) {
-    BCDataBase* bc;
-    bc = mybc.child[i]->clone();
-    child.push_back(bc);
-  }
+  vector<BCGeomBase*>::const_iterator itr;
+  for (itr=mybc.child.begin(); itr != mybc.child.end(); ++itr)
+    child.push_back((*itr)->clone());
 
+ 
   boundary=mybc.boundary;
   interior=mybc.interior;
   sfcx=mybc.sfcx;
@@ -48,11 +41,20 @@ UnionBCData::UnionBCData(const UnionBCData& mybc)
 
 UnionBCData& UnionBCData::operator=(const UnionBCData& rhs)
 {
-  for (int i = 0; i < (int) rhs.child.size(); i++) {
-    BCDataBase* bc;
-    bc = rhs.child[i]->clone();
-    child.push_back(bc);
-  }
+  if (this == &rhs)
+    return *this;
+
+  // Delete the lhs
+  vector<BCGeomBase*>::const_iterator itr;
+  for(itr=child.begin(); itr != child.end();++itr)
+    delete *itr;
+
+  child.clear();
+  
+  // copy the rhs to the lhs
+  for (itr=rhs.child.begin(); itr != rhs.child.end();++itr)
+    child.push_back((*itr)->clone());
+  
   boundary = rhs.boundary;
   interior = rhs.interior;
   sfcx=rhs.sfcx;
@@ -72,7 +74,12 @@ void UnionBCData::addBCData(BCData& bc)
 {
 }
 
-void UnionBCData::addBCData(BCDataBase* bc)
+void UnionBCData::addBC(BoundCondBase* bc)
+{
+  
+}
+
+void UnionBCData::addBCData(BCGeomBase* bc)
 {
   child.push_back(bc);
 }
@@ -81,57 +88,6 @@ void UnionBCData::getBCData(BCData& bc) const
 {
   child[0]->getBCData(bc);
 }
-
-void UnionBCData::setBoundaryIterator(vector<IntVector>& b)
-{
-  boundary = b;
-}
-
-void UnionBCData::setInteriorIterator(vector<IntVector>& i)
-{
-  interior = i;
-}
-
-void UnionBCData::setSFCXIterator(vector<IntVector>& i)
-{
-  sfcx = i;
-}
-
-void UnionBCData::setSFCYIterator(vector<IntVector>& i)
-{
-  sfcy = i;
-}
-
-void UnionBCData::setSFCZIterator(vector<IntVector>& i)
-{
-  sfcz = i;
-}
-
-void UnionBCData::getBoundaryIterator(vector<IntVector>& b) const
-{
-  b = boundary;
-}
-
-void UnionBCData::getInteriorIterator(vector<IntVector>& i) const
-{
-  i = interior;
-}
-
-void UnionBCData::getSFCXIterator(vector<IntVector>& i) const
-{
-  i = sfcx;
-}
-
-void UnionBCData::getSFCYIterator(vector<IntVector>& i) const
-{
-  i = sfcy;
-}
-
-void UnionBCData::getSFCZIterator(vector<IntVector>& i) const
-{
-  i = sfcz;
-}
-
 
 bool UnionBCData::inside(const Point &p) const 
 {
