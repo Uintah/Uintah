@@ -47,6 +47,8 @@ class HexIntMask : public Module {
   
 public:
   GuiString gui_exclude_;
+  unsigned int last_generation_;
+  string last_gui_exclude_;
   
   //! Constructor/Destructor
   HexIntMask(GuiContext *context);
@@ -64,7 +66,8 @@ DECLARE_MAKER(HexIntMask)
 
 HexIntMask::HexIntMask(GuiContext *context) : 
   Module("HexIntMask", context, Filter, "CreateModel", "CardioWave"),
-  gui_exclude_(context->subVar("exclude"))
+  gui_exclude_(context->subVar("exclude")),
+  last_generation_(0)
 {
 }
 
@@ -129,6 +132,15 @@ HexIntMask::execute()
 	  " field type is unsupported.");
     return;
   }
+
+  // Cache generation.
+  if (hvfield->generation == last_generation_ &&
+      gui_exclude_.get() == last_gui_exclude_)
+  {
+    return;
+  }
+  last_generation_ = hvfield->generation;
+  last_gui_exclude_ = gui_exclude_.get();
 
   vector<int> exclude;
   parse_exclude_list(gui_exclude_.get(), exclude);

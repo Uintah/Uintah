@@ -45,6 +45,8 @@ using std::endl;
 using namespace SCIRun;
 
 class HexToTet : public Module {
+private:
+  unsigned int last_generation_;
   
 public:
 
@@ -61,7 +63,8 @@ DECLARE_MAKER(HexToTet)
 
 
 HexToTet::HexToTet(GuiContext *context) : 
-  Module("HexToTet", context, Filter, "CreateModel", "CardioWave")
+  Module("HexToTet", context, Filter, "CreateModel", "CardioWave"),
+  last_generation_(0)
 {
 }
 
@@ -96,6 +99,13 @@ HexToTet::execute()
 	  " field type is unsupported.");
     return;
   }
+
+  // Cache generation.
+  if (hvfield->generation == last_generation_)
+  {
+    return;
+  }
+  last_generation_ = hvfield->generation;
 
   HexVolMeshHandle hvmesh = hvfield->get_typed_mesh();
   TetVolMeshHandle tvmesh = scinew TetVolMesh();
