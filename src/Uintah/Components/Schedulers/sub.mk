@@ -21,12 +21,15 @@ SRCS += $(SRCDIR)/templates.cc \
 
 PSELIBS := Uintah/Grid Uintah/Interface SCICore/Thread Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Util PSECore/XMLUtil
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.12.4.2  2000/10/06 23:57:54  witzel
+# Added vampir support.
+#
 # Revision 1.12.4.1  2000/10/02 15:02:45  sparker
 # Send only boundary particles
 #
