@@ -31,7 +31,7 @@
 
 #include <SCIRun/PortInstance.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/Babel/govcca.hh>
+#include <SCIRun/Babel/gov_cca.hh>
 #include <map>
 #include <string>
 #include <vector>
@@ -43,11 +43,11 @@ namespace SCIRun{
       Uses, Provides
     };
     BabelPortInstance(const std::string& portname, const std::string& classname,
-		    const govcca::TypeMap& properties,
+		    const gov::cca::TypeMap& properties,
 		    PortType porttype);
     BabelPortInstance(const std::string& portname, const std::string& classname,
-		    const govcca::TypeMap& properties,
-		    const govcca::Port& port,
+		    const gov::cca::TypeMap& properties,
+		    const gov::cca::Port& port,
 		    PortType porttype);
     ~BabelPortInstance();
     virtual bool connect(PortInstance*);
@@ -68,8 +68,8 @@ namespace SCIRun{
     friend class BabelComponentInstance;
     std::string name;
     std::string type;
-    govcca::TypeMap properties;
-    govcca::Port port;
+    gov::cca::TypeMap properties;
+    gov::cca::Port port;
 
     int useCount;
 

@@ -3,15 +3,15 @@
 // Symbol:        framework.TypeMap-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20021109 17:19:38 MST
-// Generated:     20021109 17:19:39 MST
+// SIDL Created:  20030306 10:46:20 MST
+// Generated:     20030306 10:46:22 MST
 // Description:   Client-side glue code for framework.TypeMap
 // 
 // WARNING: Automatically generated; changes will be lost
 // 
 // babel-version = 0.7.4
 // source-line   = 17
-// source-url    = file:/home/sparker/SCIRun/cca/../src/SCIRun/Babel/framework.sidl
+// source-url    = file:/home/sci/kzhang/SCIRun/cca-debug/../src/SCIRun/Babel/framework.sidl
 // 
 
 #ifndef included_framework_TypeMap_hh
@@ -44,6 +44,15 @@ namespace SIDL {
 // 
 #ifndef included_SIDL_BaseInterface_hh
 #include "SIDL_BaseInterface.hh"
+#endif
+#ifndef included_gov_cca_Type_hh
+#include "gov_cca_Type.hh"
+#endif
+#ifndef included_gov_cca_TypeMap_hh
+#include "gov_cca_TypeMap.hh"
+#endif
+#ifndef included_gov_cca_TypeMismatchException_hh
+#include "gov_cca_TypeMismatchException.hh"
 #endif
 
 namespace framework { 
@@ -136,12 +145,474 @@ namespace framework {
     ;
 
 
+
+    /**
+     * Create an exact copy of this Map 
+     */
+    ::gov::cca::TypeMap
+    cloneTypeMap() throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+    /**
+     * Create a new Map with no key/value associations. 
+     */
+    ::gov::cca::TypeMap
+    cloneEmpty() throw ( ::SIDL::NullIORException ) 
+    ;
+
+    /**
+     * user defined non-static method.
+     */
+    int32_t
+    getInt (
+      /*in*/ const ::std::string& key,
+      /*in*/ int32_t dflt
+    )
+    throw ( 
+      ::SIDL::NullIORException, ::gov::cca::TypeMismatchException
+    );
+
+
+    /**
+     * user defined non-static method.
+     */
+    int64_t
+    getLong (
+      /*in*/ const ::std::string& key,
+      /*in*/ int64_t dflt
+    )
+    throw ( 
+      ::SIDL::NullIORException, ::gov::cca::TypeMismatchException
+    );
+
+
+    /**
+     * user defined non-static method.
+     */
+    float
+    getFloat (
+      /*in*/ const ::std::string& key,
+      /*in*/ float dflt
+    )
+    throw ( 
+      ::SIDL::NullIORException, ::gov::cca::TypeMismatchException
+    );
+
+
+    /**
+     * user defined non-static method.
+     */
+    double
+    getDouble (
+      /*in*/ const ::std::string& key,
+      /*in*/ double dflt
+    )
+    throw ( 
+      ::SIDL::NullIORException, ::gov::cca::TypeMismatchException
+    );
+
+
+    /**
+     * user defined non-static method.
+     */
+    ::std::complex<float>
+    getFcomplex (
+      /*in*/ const ::std::string& key,
+      /*in*/ const ::std::complex<float>& dflt
+    )
+    throw ( 
+      ::SIDL::NullIORException, ::gov::cca::TypeMismatchException
+    );
+
+
+    /**
+     * user defined non-static method.
+     */
+    ::std::complex<double>
+    getDcomplex (
+      /*in*/ const ::std::string& key,
+      /*in*/ const ::std::complex<double>& dflt
+    )
+    throw ( 
+      ::SIDL::NullIORException, ::gov::cca::TypeMismatchException
+    );
+
+
+    /**
+     * user defined non-static method.
+     */
+    ::std::string
+    getString (
+      /*in*/ const ::std::string& key,
+      /*in*/ const ::std::string& dflt
+    )
+    throw ( 
+      ::SIDL::NullIORException, ::gov::cca::TypeMismatchException
+    );
+
+
+    /**
+     * user defined non-static method.
+     */
+    bool
+    getBool (
+      /*in*/ const ::std::string& key,
+      /*in*/ bool dflt
+    )
+    throw ( 
+      ::SIDL::NullIORException, ::gov::cca::TypeMismatchException
+    );
+
+
+    /**
+     * user defined non-static method.
+     */
+    ::SIDL::array<int>
+    getIntArray (
+      /*in*/ const ::std::string& key,
+      /*in*/ ::SIDL::array<int> dflt
+    )
+    throw ( 
+      ::SIDL::NullIORException, ::gov::cca::TypeMismatchException
+    );
+
+
+    /**
+     * user defined non-static method.
+     */
+    ::SIDL::array<long>
+    getLongArray (
+      /*in*/ const ::std::string& key,
+      /*in*/ ::SIDL::array<long> dflt
+    )
+    throw ( 
+      ::SIDL::NullIORException, ::gov::cca::TypeMismatchException
+    );
+
+
+    /**
+     * user defined non-static method.
+     */
+    ::SIDL::array<float>
+    getFloatArray (
+      /*in*/ const ::std::string& key,
+      /*in*/ ::SIDL::array<float> dflt
+    )
+    throw ( 
+      ::SIDL::NullIORException, ::gov::cca::TypeMismatchException
+    );
+
+
+    /**
+     * user defined non-static method.
+     */
+    ::SIDL::array<double>
+    getDoubleArray (
+      /*in*/ const ::std::string& key,
+      /*in*/ ::SIDL::array<double> dflt
+    )
+    throw ( 
+      ::SIDL::NullIORException, ::gov::cca::TypeMismatchException
+    );
+
+
+    /**
+     * user defined non-static method.
+     */
+    ::SIDL::array< ::SIDL::fcomplex>
+    getFcomplexArray (
+      /*in*/ const ::std::string& key,
+      /*in*/ ::SIDL::array< ::SIDL::fcomplex> dflt
+    )
+    throw ( 
+      ::SIDL::NullIORException, ::gov::cca::TypeMismatchException
+    );
+
+
+    /**
+     * user defined non-static method.
+     */
+    ::SIDL::array< ::SIDL::dcomplex>
+    getDcomplexArray (
+      /*in*/ const ::std::string& key,
+      /*in*/ ::SIDL::array< ::SIDL::dcomplex> dflt
+    )
+    throw ( 
+      ::SIDL::NullIORException, ::gov::cca::TypeMismatchException
+    );
+
+
+    /**
+     * user defined non-static method.
+     */
+    ::SIDL::array< ::std::string>
+    getStringArray (
+      /*in*/ const ::std::string& key,
+      /*in*/ ::SIDL::array< ::std::string> dflt
+    )
+    throw ( 
+      ::SIDL::NullIORException, ::gov::cca::TypeMismatchException
+    );
+
+
+    /**
+     * user defined non-static method.
+     */
+    ::SIDL::array<bool>
+    getBoolArray (
+      /*in*/ const ::std::string& key,
+      /*in*/ ::SIDL::array<bool> dflt
+    )
+    throw ( 
+      ::SIDL::NullIORException, ::gov::cca::TypeMismatchException
+    );
+
+
+
+    /**
+     * Assign a key and value. Any value previously assigned
+     * to the same key will be overwritten.  
+     */
+    void
+    putInt (
+      /*in*/ const ::std::string& key,
+      /*in*/ int32_t value
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
     /**
      * user defined non-static method.
      */
     void
-    temp() throw ( ::SIDL::NullIORException ) 
+    putLong (
+      /*in*/ const ::std::string& key,
+      /*in*/ int64_t value
+    )
+    throw ( ::SIDL::NullIORException ) 
     ;
+
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    putFloat (
+      /*in*/ const ::std::string& key,
+      /*in*/ float value
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    putDouble (
+      /*in*/ const ::std::string& key,
+      /*in*/ double value
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    putFcomplex (
+      /*in*/ const ::std::string& key,
+      /*in*/ const ::std::complex<float>& value
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    putDcomplex (
+      /*in*/ const ::std::string& key,
+      /*in*/ const ::std::complex<double>& value
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    putString (
+      /*in*/ const ::std::string& key,
+      /*in*/ const ::std::string& value
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    putBool (
+      /*in*/ const ::std::string& key,
+      /*in*/ bool value
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    putIntArray (
+      /*in*/ const ::std::string& key,
+      /*in*/ ::SIDL::array<int> value
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    putLongArray (
+      /*in*/ const ::std::string& key,
+      /*in*/ ::SIDL::array<long> value
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    putFloatArray (
+      /*in*/ const ::std::string& key,
+      /*in*/ ::SIDL::array<float> value
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    putDoubleArray (
+      /*in*/ const ::std::string& key,
+      /*in*/ ::SIDL::array<double> value
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    putFcomplexArray (
+      /*in*/ const ::std::string& key,
+      /*in*/ ::SIDL::array< ::SIDL::fcomplex> value
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    putDcomplexArray (
+      /*in*/ const ::std::string& key,
+      /*in*/ ::SIDL::array< ::SIDL::dcomplex> value
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    putStringArray (
+      /*in*/ const ::std::string& key,
+      /*in*/ ::SIDL::array< ::std::string> value
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    putBoolArray (
+      /*in*/ const ::std::string& key,
+      /*in*/ ::SIDL::array<bool> value
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+
+    /**
+     * Make the key and associated value disappear from the object. 
+     */
+    void
+    remove (
+      /*in*/ const ::std::string& key
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+
+    /**
+     *  Get all the names associated with a particular type
+     *  without exposing the data implementation details.  The keys
+     *  will be returned in an arbitrary order. If type specified is
+     *  None (no specification) all keys of all types are returned.
+     */
+    ::SIDL::array< ::std::string>
+    getAllKeys (
+      /*in*/ ::gov::cca::Type t
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+
+    /**
+     * Return true if the key exists in this map 
+     */
+    bool
+    hasKey (
+      /*in*/ const ::std::string& key
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
+
+
+    /**
+     * Return the type of the value associated with this key 
+     */
+    ::gov::cca::Type
+    typeOf (
+      /*in*/ const ::std::string& key
+    )
+    throw ( ::SIDL::NullIORException ) 
+    ;
+
 
 
     //////////////////////////////////////////////////

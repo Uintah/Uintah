@@ -39,6 +39,7 @@
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include <string>
 #include "framework.hh"
+#include "SIDL.hh"
 
 #ifdef __sgi
 #define IRIX
@@ -90,7 +91,7 @@ void BabelComponentModel::buildComponentList()
   }
 
   destroyComponentList();
-  string component_path = "../src/Babel/Components/Builder";
+  string component_path = "../src/CCA/Components/BabelTest/xml";
   while(component_path != ""){
     unsigned int firstColon = component_path.find(':');
     string dir;
@@ -160,14 +161,14 @@ void BabelComponentModel::readComponentDescription(const std::string& file)
   }
 }
 
-govcca::Services
+gov::cca::Services
 BabelComponentModel::createServices(const std::string& instanceName,
 				  const std::string& className,
-				  const govcca::TypeMap& properties)
+				  const gov::cca::TypeMap& properties)
 {
   /*
-  govcca::Component nullCom;
-  govcca::Services svc;
+  gov::cca::Component nullCom;
+  gov::cca::Services svc;
   cerr<<"need associate svc with ci in createServices!"<<endl;
   BabelComponentInstance* ci = new BabelComponentInstance(framework,
 							  instanceName, className,
@@ -179,7 +180,7 @@ BabelComponentModel::createServices(const std::string& instanceName,
   //ci->addReference();
 
   */
-  govcca::Services svc;
+  gov::cca::Services svc;
   cerr<<"BabelComponentModel::createServices() is not implemented !"<<endl;
   return svc;
 }
@@ -194,12 +195,12 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
 						     const std::string& type)
 {
   
-  govcca::Component component;
+  gov::cca::Component component;
   if(true){  //local component 
     componentDB_type::iterator iter = components.find(type);
     if(iter == components.end())
       return 0;
-
+    /*
     string lastname=type.substr(type.find('.')+1);  
     string so_name("lib/libBabel_Components_");
     so_name=so_name+lastname+".so";
@@ -216,7 +217,7 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
     for(int i=0;i<(int)makername.size();i++)
       if(makername[i] == '.')
 	makername[i]='_';
-  
+    
     cerr<<"looking for symbol:"<< makername<<endl;
     void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
     if(!maker_v){
@@ -224,11 +225,20 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
       cerr << SOError() << '\n';
       return 0;
     }
-    govcca::Component (*maker)() = (govcca::Component (*)())(maker_v);
+    gov::cca::Component (*maker)() = (gov::cca::Component (*)())(maker_v);
     cerr<<"about to create babel component"<<endl;
     component = (*maker)();
+    */
+    SIDL::BaseClass sidl_class = SIDL::Loader::createClass(type);
+    component = sidl_class;
+    if ( component._not_nil() ) { 
+      cerr<<"babel component of type "<<type<< " is loaded!"<<endl;
+    }
+    else
+            cerr<<"Cannot load babel component of type "<<type<<endl;
     cerr<<"babel component created!"<<endl;
-  }
+ 	
+    }
   else{ //remote component: need to be created by framework at url 
     cerr<<"remote babel components creation is not done!"<<endl;
     /*
@@ -238,8 +248,8 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
       return 0;
     }
 
-    gov::cca::AbstractFramework::pointer remoteFramework=
-      pidl_cast<gov::cca::AbstractFramework::pointer>(obj);
+    sci::cca::AbstractFramework::pointer remoteFramework=
+      pidl_cast<sci::cca::AbstractFramework::pointer>(obj);
 
     std::string comURL=remoteFramework->createComponent(name, type);
     //cerr<<"comURL="<<comURL<<endl;
@@ -248,7 +258,7 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
       cerr<<"got null obj(Component) from "<<url<<endl;
       return 0;
     }
-    component=pidl_cast<gov::cca::Component::pointer>(comObj);
+    component=pidl_cast<sci::cca::Component::pointer>(comObj);
     */
   }
 
@@ -258,7 +268,7 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
   cerr<<"services created !"<<endl;
   component.setServices(svc);
   cerr<<"component.setService done!"<<endl;
-  govcca::Component nullMap;
+  gov::cca::Component nullMap;
 
   BabelComponentInstance* ci = new BabelComponentInstance(framework, name, type,
 							  nullMap, 
@@ -298,7 +308,7 @@ std::string BabelComponentModel::createComponent(const std::string& name,
 						     
 {
   
-  gov::cca::Component::pointer component;
+  sci::cca::Component::pointer component;
   componentDB_type::iterator iter = components.find(type);
   if(iter == components.end())
     return "";
@@ -326,7 +336,7 @@ std::string BabelComponentModel::createComponent(const std::string& name,
     cerr << SOError() << '\n';
     return "";
   }
-  /*  gov::cca::Component::pointer (*maker)() = (gov::cca::Component::pointer (*)())(maker_v);
+  /*  sci::cca::Component::pointer (*maker)() = (sci::cca::Component::pointer (*)())(maker_v);
   component = (*maker)();
   //need to make sure addReference() will not cause problem
   component->addReference();

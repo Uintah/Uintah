@@ -3,15 +3,15 @@
 // Symbol:        framework.ComponentID-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20021109 17:19:38 MST
-// Generated:     20021109 17:19:39 MST
+// SIDL Created:  20030306 10:46:20 MST
+// Generated:     20030306 10:46:22 MST
 // Description:   Server-side implementation for framework.ComponentID
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 21
-// source-url    = file:/home/sparker/SCIRun/cca/../src/SCIRun/Babel/framework.sidl
+// source-url    = file:/home/sci/kzhang/SCIRun/cca-debug/../src/SCIRun/Babel/framework.sidl
 // 
 
 #ifndef included_framework_ComponentID_Impl_hh
@@ -31,6 +31,9 @@
 #endif
 #ifndef included_framework_ComponentID_hh
 #include "framework_ComponentID.hh"
+#endif
+#ifndef included_gov_cca_CCAException_hh
+#include "gov_cca_CCAException.hh"
 #endif
 
 
@@ -82,12 +85,26 @@ namespace framework {
 
 
     /**
-     * Produce a string that, within the current framework, uniquely defines 
-     * this component reference. 
+     * Returns the instance name provided in 
+     * &lt;code&gt;BuilderService.createInstance()&lt;/code&gt;
+     * or in 
+     * &lt;code&gt;AbstractFramework.getServices()&lt;/code&gt;.
+     * @throws CCAException if &lt;code&gt;ComponentID&lt;/code&gt; is invalid
      */
     ::std::string
-    toString() throw () 
-    ;
+    getInstanceName() throw ( 
+      ::gov::cca::CCAException
+    );
+
+    /**
+     * Returns a framework specific serialization of the ComponentID.
+     * @throws CCAException if &lt;code&gt;ComponentID&lt;/code&gt; is
+     * invalid.
+     */
+    ::std::string
+    getSerialization() throw ( 
+      ::gov::cca::CCAException
+    );
   };  // end class ComponentID_impl
 
 } // end namespace framework

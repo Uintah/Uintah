@@ -4,21 +4,21 @@ version framework 1.0;
 
 package framework{
 
-  class Services implements-all govcca.Services{
+  class Services implements-all gov.cca.Services{
 	opaque getData();
   };
 
-  class Component implements-all govcca.Component{
+  class Component implements-all gov.cca.Component{
   };
 
-  class Port implements-all govcca.Port{
+  class Port implements-all gov.cca.Port{
   };
 
-  class TypeMap implements-all govcca.TypeMap{
+  class TypeMap implements-all gov.cca.TypeMap{
   };
 	
 
-  class ComponentID implements-all govcca.ComponentID{
+  class ComponentID implements-all gov.cca.ComponentID{
 
   };
 	

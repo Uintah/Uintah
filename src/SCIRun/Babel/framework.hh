@@ -3,15 +3,15 @@
 // Symbol:        framework-v1.0
 // Symbol Type:   package
 // Babel Version: 0.7.4
-// SIDL Created:  20021109 17:19:36 MST
-// Generated:     20021109 17:19:39 MST
+// SIDL Created:  20030306 10:46:17 MST
+// Generated:     20030306 10:46:22 MST
 // Description:   Client-side glue code for framework
 // 
 // WARNING: Automatically generated; changes will be lost
 // 
 // babel-version = 0.7.4
 // source-line   = 5
-// source-url    = file:/home/sparker/SCIRun/cca/../src/SCIRun/Babel/framework.sidl
+// source-url    = file:/home/sci/kzhang/SCIRun/cca-debug/../src/SCIRun/Babel/framework.sidl
 // 
 
 #ifndef included_framework_hh

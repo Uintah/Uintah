@@ -3,15 +3,15 @@
 // Symbol:        framework.Component-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20021109 17:19:38 MST
-// Generated:     20021109 17:19:39 MST
+// SIDL Created:  20030306 10:46:20 MST
+// Generated:     20030306 10:46:23 MST
 // Description:   Server-side implementation for framework.Component
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 11
-// source-url    = file:/home/sparker/SCIRun/cca/../src/SCIRun/Babel/framework.sidl
+// source-url    = file:/home/sci/kzhang/SCIRun/cca-debug/../src/SCIRun/Babel/framework.sidl
 // 
 #include "framework_Component_Impl.hh"
 
@@ -37,12 +37,14 @@ void framework::Component_impl::_dtor() {
 
 // user defined non-static methods:
 /**
- * Obtain Services handle, through which the component communicates with the
- * framework. This is the one method that every CCA Component must implement. 
+ * Obtain Services handle, through which the 
+ * component communicates with the framework. 
+ * This is the one method that every CCA Component
+ * must implement. 
  */
 void
 framework::Component_impl::setServices (
-  /*in*/ ::govcca::Services svc ) 
+  /*in*/ ::gov::cca::Services services ) 
 throw () 
 {
   // DO-NOT-DELETE splicer.begin(framework.Component.setServices)

@@ -3,15 +3,15 @@
 // Symbol:        framework.ComponentID-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20021109 17:19:38 MST
-// Generated:     20021109 17:19:39 MST
+// SIDL Created:  20030306 10:46:20 MST
+// Generated:     20030306 10:46:22 MST
 // Description:   Client-side glue code for framework.ComponentID
 // 
 // WARNING: Automatically generated; changes will be lost
 // 
 // babel-version = 0.7.4
 // source-line   = 21
-// source-url    = file:/home/sparker/SCIRun/cca/../src/SCIRun/Babel/framework.sidl
+// source-url    = file:/home/sci/kzhang/SCIRun/cca-debug/../src/SCIRun/Babel/framework.sidl
 // 
 
 #ifndef included_framework_ComponentID_hh
@@ -22,6 +22,9 @@
 #endif
 #ifndef included_SIDL_BaseClass_hh
 #include "SIDL_BaseClass.hh"
+#endif
+#ifndef included_SIDL_BaseException_hh
+#include "SIDL_BaseException.hh"
 #endif
 #include "SIDL_String.h"
 #include "babel_config.h"
@@ -200,25 +203,82 @@ throw ( ::SIDL::NullIORException )
 
 
 /**
- * Produce a string that, within the current framework, uniquely defines 
- * this component reference. 
+ * Returns the instance name provided in 
+ * &lt;code&gt;BuilderService.createInstance()&lt;/code&gt;
+ * or in 
+ * &lt;code&gt;AbstractFramework.getServices()&lt;/code&gt;.
+ * @throws CCAException if &lt;code&gt;ComponentID&lt;/code&gt; is invalid
  */
 ::std::string
-framework::ComponentID::toString(  )
-throw ( ::SIDL::NullIORException ) 
-
+framework::ComponentID::getInstanceName(  )
+throw ( 
+  ::SIDL::NullIORException, ::gov::cca::CCAException
+)
 {
   if ( d_self == 0 ) {
     throw ::SIDL::NullIORException( ::std::string (
-      "Null IOR Pointer in \"framework::ComponentID::toString()\""
+      "Null IOR Pointer in \"framework::ComponentID::getInstanceName()\""
     ));
   }
   ::std::string _result;
   // pack args to dispatch to ior
   char * _local_result;
+  SIDL_BaseException__object * _exception = 0;
   // dispatch to ior
-  _local_result = (*(d_self->d_epv->f_toString))(d_self );
+  _local_result = (*(d_self->d_epv->f_getInstanceName))(d_self, &_exception );
   // unpack results and cleanup
+  if (_exception != 0 ) {
+    void * _p = 0;
+    if ( (_p=(*(_exception->d_epv->f__cast))(_exception,
+      "gov.cca.CCAException")) != 0 ) {
+      struct gov_cca_CCAException__object * _realtype = reinterpret_cast< 
+        struct gov_cca_CCAException__object*>(_p);
+      // Note: alternate constructor does not increment refcount.
+      throw ::gov::cca::CCAException( _realtype, false );
+    }
+  }
+  if (_local_result) {
+    _result = _local_result;
+    free( _local_result );
+  }
+  return _result;
+}
+
+
+
+/**
+ * Returns a framework specific serialization of the ComponentID.
+ * @throws CCAException if &lt;code&gt;ComponentID&lt;/code&gt; is
+ * invalid.
+ */
+::std::string
+framework::ComponentID::getSerialization(  )
+throw ( 
+  ::SIDL::NullIORException, ::gov::cca::CCAException
+)
+{
+  if ( d_self == 0 ) {
+    throw ::SIDL::NullIORException( ::std::string (
+      "Null IOR Pointer in \"framework::ComponentID::getSerialization()\""
+    ));
+  }
+  ::std::string _result;
+  // pack args to dispatch to ior
+  char * _local_result;
+  SIDL_BaseException__object * _exception = 0;
+  // dispatch to ior
+  _local_result = (*(d_self->d_epv->f_getSerialization))(d_self, &_exception );
+  // unpack results and cleanup
+  if (_exception != 0 ) {
+    void * _p = 0;
+    if ( (_p=(*(_exception->d_epv->f__cast))(_exception,
+      "gov.cca.CCAException")) != 0 ) {
+      struct gov_cca_CCAException__object * _realtype = reinterpret_cast< 
+        struct gov_cca_CCAException__object*>(_p);
+      // Note: alternate constructor does not increment refcount.
+      throw ::gov::cca::CCAException( _realtype, false );
+    }
+  }
   if (_local_result) {
     _result = _local_result;
     free( _local_result );

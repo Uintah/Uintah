@@ -31,7 +31,7 @@
 
 #include <SCIRun/ComponentModel.h>
 #include <SCIRun/ComponentInstance.h>
-#include <SCIRun/Babel/govcca.hh>
+#include <SCIRun/Babel/gov_cca.hh>
 #include <string>
 #include <map>
 
@@ -45,9 +45,9 @@ namespace SCIRun {
     BabelComponentModel(SCIRunFramework* framework);
     virtual ~BabelComponentModel();
 
-    govcca::Services createServices(const std::string& instanceName,
+    gov::cca::Services createServices(const std::string& instanceName,
 					       const std::string& className,
-					       const govcca::TypeMap& properties);
+					       const gov::cca::TypeMap& properties);
     virtual bool haveComponent(const std::string& type);
     virtual ComponentInstance* createInstance(const std::string& name,
 					      const std::string& type);

@@ -33,7 +33,7 @@ using namespace SCIRun;
 
 BabelPortInstance::BabelPortInstance(const std::string& name,
 				 const std::string& type,
-				 const govcca::TypeMap& properties,
+				 const gov::cca::TypeMap& properties,
 				 PortType porttype)
   : porttype(porttype), name(name), type(type), properties(properties),
     useCount(0)
@@ -42,8 +42,8 @@ BabelPortInstance::BabelPortInstance(const std::string& name,
 
 BabelPortInstance::BabelPortInstance(const std::string& name,
 				 const std::string& type,
-				 const govcca::TypeMap& properties,
-				 const govcca::Port& port,
+				 const gov::cca::TypeMap& properties,
+				 const gov::cca::Port& port,
 				 PortType porttype)
   : porttype(porttype), name(name), type(type), properties(properties),
     port(port), useCount(0)

@@ -3,15 +3,15 @@
 // Symbol:        framework.ComponentID-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20021109 17:19:38 MST
-// Generated:     20021109 17:19:39 MST
+// SIDL Created:  20030306 10:46:20 MST
+// Generated:     20030306 10:46:22 MST
 // Description:   Client-side glue code for framework.ComponentID
 // 
 // WARNING: Automatically generated; changes will be lost
 // 
 // babel-version = 0.7.4
 // source-line   = 21
-// source-url    = file:/home/sparker/SCIRun/cca/../src/SCIRun/Babel/framework.sidl
+// source-url    = file:/home/sci/kzhang/SCIRun/cca-debug/../src/SCIRun/Babel/framework.sidl
 // 
 
 #ifndef included_framework_ComponentID_hh
@@ -44,6 +44,9 @@ namespace SIDL {
 // 
 #ifndef included_SIDL_BaseInterface_hh
 #include "SIDL_BaseInterface.hh"
+#endif
+#ifndef included_gov_cca_CCAException_hh
+#include "gov_cca_CCAException.hh"
 #endif
 
 namespace framework { 
@@ -138,12 +141,27 @@ namespace framework {
 
 
     /**
-     * Produce a string that, within the current framework, uniquely defines 
-     * this component reference. 
+     * Returns the instance name provided in 
+     * &lt;code&gt;BuilderService.createInstance()&lt;/code&gt;
+     * or in 
+     * &lt;code&gt;AbstractFramework.getServices()&lt;/code&gt;.
+     * @throws CCAException if &lt;code&gt;ComponentID&lt;/code&gt; is invalid
      */
     ::std::string
-    toString() throw ( ::SIDL::NullIORException ) 
-    ;
+    getInstanceName() throw ( 
+      ::SIDL::NullIORException, ::gov::cca::CCAException
+    );
+
+
+    /**
+     * Returns a framework specific serialization of the ComponentID.
+     * @throws CCAException if &lt;code&gt;ComponentID&lt;/code&gt; is
+     * invalid.
+     */
+    ::std::string
+    getSerialization() throw ( 
+      ::SIDL::NullIORException, ::gov::cca::CCAException
+    );
 
 
     //////////////////////////////////////////////////
