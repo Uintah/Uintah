@@ -61,6 +61,7 @@ void Variable::emit(OutputContext& oc, const IntVector& l,
   else if (compressionModeHint == "gzip")
     use_gzip = true;
   else if (compressionModeHint != "" && compressionModeHint != "none") {
+    cout << "Invalid Compression Mode - throwing exception...\n";
     SCI_THROW(InvalidCompressionMode(compressionModeHint));
   }
 
@@ -70,9 +71,12 @@ void Variable::emit(OutputContext& oc, const IntVector& l,
   ostringstream outstream;
 
   if (use_rle) {
-    if (!emitRLE(outstream, l, h, oc.varnode))
+    if (!emitRLE(outstream, l, h, oc.varnode)) {
+      cout << "Invalid Compression Mode - throwing exception...\n";
+
       SCI_THROW(InvalidCompressionMode("rle",
 				   virtualGetTypeDescription()->getName()));
+    }
   }
   else
     emitNormal(outstream, l, h, oc.varnode, oc.outputDoubleAsFloat);
@@ -113,8 +117,11 @@ void Variable::emit(OutputContext& oc, const IntVector& l,
   unsigned long writebufferSize = (*writeoutString).size();
   ssize_t s = ::write(oc.fd, writebuffer, writebufferSize);
 
-  if(s != (long)writebufferSize)
+  if(s != (long)writebufferSize) {
+    cout << "Variable::emit - write system call failed with errno " << errno << ": " << strerror(errno) <<  endl;
+
     SCI_THROW(ErrnoException("Variable::emit (write call)", errno));
+  }
   oc.cur += writebufferSize;
 
   string compressionMode = compressionModeHint;
