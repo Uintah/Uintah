@@ -53,6 +53,7 @@ else
         Packages/Uintah/CCA/Components/SimulationController \
         Packages/Uintah/CCA/Components/Schedulers \
         Packages/Uintah/CCA/Components/ProblemSpecification \
+        Packages/Uintah/CCA/Components/Solvers \
         Packages/Uintah/CCA/Components/ICE \
         Packages/Uintah/CCA/Components/Examples \
         Packages/Uintah/CCA/Components/Arches \
