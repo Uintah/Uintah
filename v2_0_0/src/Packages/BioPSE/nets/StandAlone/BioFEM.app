@@ -469,6 +469,30 @@ class BioFEMApp {
 	set $mods(FieldReader-electrodes)-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
 	global $mods(FieldReader-probe)-filename
 	set $mods(FieldReader-probe)-filename $DATADIR/$DATASET/$DATASET-dipole.pcv.fld
+
+	global $mods(Viewer)-ViewWindow_0-view-eyep-x
+	global $mods(Viewer)-ViewWindow_0-view-eyep-y
+	global $mods(Viewer)-ViewWindow_0-view-eyep-z
+	global $mods(Viewer)-ViewWindow_0-view-lookat-x
+	global $mods(Viewer)-ViewWindow_0-view-lookat-y
+	global $mods(Viewer)-ViewWindow_0-view-lookat-z
+	global $mods(Viewer)-ViewWindow_0-view-up-x
+	global $mods(Viewer)-ViewWindow_0-view-up-y
+	global $mods(Viewer)-ViewWindow_0-view-up-z
+	global $mods(Viewer)-ViewWindow_0-view-fov
+
+	set $mods(Viewer)-ViewWindow_0-view-eyep-x ${view-eyep-x}
+	set $mods(Viewer)-ViewWindow_0-view-eyep-y ${view-eyep-y}
+	set $mods(Viewer)-ViewWindow_0-view-eyep-z ${view-eyep-z}
+	set $mods(Viewer)-ViewWindow_0-view-lookat-x ${view-lookat-x}
+	set $mods(Viewer)-ViewWindow_0-view-lookat-y ${view-lookat-y}
+	set $mods(Viewer)-ViewWindow_0-view-lookat-z ${view-lookat-z}
+	set $mods(Viewer)-ViewWindow_0-view-up-x ${view-up-x}
+	set $mods(Viewer)-ViewWindow_0-view-up-y ${view-up-y}
+	set $mods(Viewer)-ViewWindow_0-view-up-z ${view-up-z}
+	set $mods(Viewer)-ViewWindow_0-view-fov ${view-fov}
+
+
 	$this execute_Data
     }
 
