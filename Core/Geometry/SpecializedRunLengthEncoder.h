@@ -26,7 +26,7 @@
 // EqualElementSequencer version with the EqualIntervalSequencer
 
 namespace SCIRun {
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1375
 #endif
 
@@ -40,7 +40,7 @@ namespace SCIRun {
     public EqualIntervalSequencer<Point, Vector>
   { };
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
 #endif  
 }

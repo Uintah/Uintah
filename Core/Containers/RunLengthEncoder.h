@@ -397,7 +397,7 @@ private:
 template <class T, class Tdiff>
 Tdiff EqualIntervalSequencer<T, Tdiff>::defaultSequenceRule(0);
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1375
 #endif
 
@@ -427,7 +427,7 @@ template<>
 class DefaultRunLengthSequencer<double> : public EqualIntervalSequencer<double>
 { };
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
 #endif
 

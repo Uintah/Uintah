@@ -133,7 +133,7 @@ using namespace std;
 const int RANGE_LEFT = 0;
 const int RANGE_RIGHT = 1;
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1424
 #pragma set woff 1209
 #endif
@@ -1785,7 +1785,7 @@ setDiagonalDirections()
 
 } // End namespace SCIRun
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1424
 #pragma reset woff 1209
 #endif
