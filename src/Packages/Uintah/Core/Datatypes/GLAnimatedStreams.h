@@ -1,7 +1,7 @@
 #ifndef GLANIMATEDSTREAMS_H
 #define GLANIMATEDSTREAMS_H
 
-#include <sci_defs.h>
+#include <sci_defs/ogl_defs.h>
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Geometry/Point.h>

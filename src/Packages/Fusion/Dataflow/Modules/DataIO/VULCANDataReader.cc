@@ -39,7 +39,7 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <include/sci_defs/stat64_defs.h>
+#include <sci_defs/stat64_defs.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>

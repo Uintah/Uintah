@@ -43,7 +43,7 @@
   University of Utah. All Rights Reserved.
 */
 
-#include <include/sci_defs/chromium_defs.h>
+#include <sci_defs/chromium_defs.h>
 
 #include <Core/GLVolumeRenderer/GLVolRenState.h>
 #include <Core/GLVolumeRenderer/GLVolumeRenderer.h>

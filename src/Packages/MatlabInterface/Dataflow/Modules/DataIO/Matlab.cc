@@ -38,8 +38,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
 
-#include <sci_defs.h>              // for SCIRUN_OBJDIR 
-#include <Core/Util/sci_system.h> // for sci_system call
+#include <sci_defs/environment_defs.h> // for SCIRUN_OBJDIR 
+#include <Core/Util/sci_system.h>      // for sci_system call
 
 #include <Packages/MatlabInterface/Core/Util/transport.h>
 

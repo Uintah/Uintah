@@ -466,6 +466,8 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
     t2->modifies(lb->temp_CCLabel);
     t2->modifies(lb->press_CCLabel, press_matl, oims); 
 
+    cout << "ICE: press_matl: " << press_matl->size()<< "\n";
+
     sched->addTask(t2, level->eachPatch(), ice_matls);
   }
   
@@ -4386,7 +4388,7 @@ bool ICE::areAllValuesPositive( CCVariable<double> & src, IntVector& neg_cell )
   double numCells = 0;
   double sum_src = 0;
   //#if SCI_ASSERTION_LEVEL != 0  // turn off if assertion level = 0
-  //    add this when you turn it on (#include <sci_defs.h>)
+  //    add this when you turn it on (#include <sci_defs/error_defs.h>)
   IntVector lowIndex  = src.getLowIndex();
   IntVector highIndex = src.getHighIndex();
   for(int i=lowIndex.x();i<highIndex.x();i++) {

@@ -40,7 +40,7 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <include/sci_defs/bits_defs.h>
+#include <sci_defs/bits_defs.h>
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE

@@ -33,7 +33,7 @@
 
 #include <Core/CCA/Comm/Intra/IntraComm.h>
 
-#include <include/sci_defs/config_defs.h> // For MPIPP_H on SGI
+#include <sci_defs/config_defs.h> // For MPIPP_H on SGI
 #include <mpi.h>
 
 namespace SCIRun {

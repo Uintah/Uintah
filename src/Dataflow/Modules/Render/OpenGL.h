@@ -44,8 +44,8 @@
 #ifndef SCI_project_module_OpenGL_h
 #define SCI_project_module_OpenGL_h
 
-#include <include/sci_defs/collab_vis_defs.h>
-#include <include/sci_defs/image_defs.h>
+#include <sci_defs/collab_vis_defs.h>
+#include <sci_defs/image_defs.h>
 
 #include <tcl.h>
 #include <tk.h>

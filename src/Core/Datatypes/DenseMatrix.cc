@@ -39,8 +39,8 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <include/sci_defs/lapack_defs.h>
-#include <include/sci_defs/blas_defs.h>
+#include <sci_defs/lapack_defs.h>
+#include <sci_defs/blas_defs.h>
 
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>

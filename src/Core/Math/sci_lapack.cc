@@ -39,7 +39,7 @@
  *  Copyright (C) 2003 SCI Group
 */
 
-#include <include/sci_defs/lapack_defs.h>
+#include <sci_defs/lapack_defs.h>
 
 #include <math.h>
 #include <Core/Math/sci_lapack.h>

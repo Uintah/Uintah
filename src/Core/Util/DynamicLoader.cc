@@ -30,8 +30,8 @@
 //    Author : Martin Cole
 //    Date   : Mon May 21 10:57:38 2001
 
-#include <include/sci_defs/environment_defs.h>
-#include <include/sci_defs/compile_defs.h>
+#include <sci_defs/environment_defs.h>
+#include <sci_defs/compile_defs.h>
 
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/soloader.h>

@@ -40,7 +40,7 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <include/sci_defs/thread_defs.h>
+#include <sci_defs/thread_defs.h>
 
 #include <stdlib.h>
 #include <stdio.h>

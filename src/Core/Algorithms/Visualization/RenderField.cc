@@ -30,7 +30,7 @@
 //    Author : Martin Cole
 //    Date   : Tue May 22 10:57:12 2001
 
-#include <include/sci_defs/teem_defs.h>
+#include <sci_defs/teem_defs.h>
 
 #include <Core/Algorithms/Visualization/RenderField.h>
 #include <Core/Geom/GeomArrows.h>

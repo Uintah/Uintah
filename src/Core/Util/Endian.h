@@ -43,7 +43,7 @@
 #ifndef SCI_Endianness_h
 #define SCI_Endianness_h
 
-#include <include/sci_defs/config_defs.h>
+#include <sci_defs/config_defs.h>
 
 #if HAVE_INTTYPES_H
 #include <inttypes.h>

@@ -40,8 +40,8 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <include/sci_defs/mpi_defs.h>
-#include <include/sci_defs/globus_defs.h>
+#include <sci_defs/mpi_defs.h>
+#include <sci_defs/globus_defs.h>
 
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/Object_proxy.h>

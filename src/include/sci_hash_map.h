@@ -36,7 +36,7 @@
 #if !defined SCI_Hash_Map_h
 #define SCI_Hash_Map_h
 
-#include <include/sci_defs/hashmap_defs.h>
+#include <sci_defs/hashmap_defs.h>
 
 #define HAVE_HASH_MAP
 #ifdef HAVE_STD_HASHMAP

@@ -43,7 +43,7 @@
 #ifndef SCI_Containers_OffsetArray1_h
 #define SCI_Containers_OffsetArray1_h 1
 
-#include <include/sci_defs/template_defs.h>
+#include <sci_defs/template_defs.h>
 #include <Core/Persistent/Persistent.h>
 
 namespace SCIRun {
