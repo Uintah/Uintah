@@ -133,41 +133,43 @@ void Crack::RecollectCrackFrontNodes(const ProcessorGroup*,
 
         MPI_Barrier(mpi_crack_comm);
 
-        /* Task 2: Detect if crack-fronti-segment center is inside of
+        /* Task 1a: Detect if crack-front-segment center is inside of
                    materials for single crack-front-seg problems
         */
         int ncfSegs=(int)cfSegNodes[m].size()/2;
         short cfSegCenterInMat=YES;
         if(ncfSegs==1) {
+          int workID=-1;
           for(int i=0; i<patch_size; i++) {
-            if(pid==i) {
-              int seg=cfsset[m][i][0/*j*/];
-              int nd1=cfSegNodes[m][2*seg];
-              int nd2=cfSegNodes[m][2*seg+1];
-              Point center=cx[m][nd1]+(cx[m][nd2]-cx[m][nd1])/2.;
+            if(cfsset[m][i].size()==1) {workID=i; break;}
+          }
+          
+          if(pid==workID) {
+            int nd1=cfSegNodes[m][0];
+            int nd2=cfSegNodes[m][1];
+            Point cent=cx[m][nd1]+(cx[m][nd2]-cx[m][nd1])/2.;
 
-              // Get the node indices that surround the cell
-              if(d_8or27==8)
-                patch->findCellAndWeights(center, ni, S);
-              else if(d_8or27==27)
-                patch->findCellAndWeights27(center, ni, S, psize[0]);
+            // Get the node indices that surround the cell
+            if(d_8or27==8)
+              patch->findCellAndWeights(cent, ni, S);
+            else if(d_8or27==27)
+              patch->findCellAndWeights27(cent, ni, S, psize[0]);
 
-              for(int k = 0; k < d_8or27; k++) {
-                double totalMass=gmass[ni[k]]+Gmass[ni[k]];
-                if(totalMass<5*d_SMALL_NUM_MPM) {
-                  cfSegCenterInMat=NO;
-                  break;
-                }
+            for(int k = 0; k < d_8or27; k++) {
+              double totalMass=gmass[ni[k]]+Gmass[ni[k]];
+              if(totalMass<5*d_SMALL_NUM_MPM) {
+                cfSegCenterInMat=NO;
+                break;
               }
-            } // End of if(pid==i)
+            }
+          } // End of if(pid==workID) 
 
-            MPI_Bcast(&cfSegCenterInMat,1,MPI_SHORT,i,mpi_crack_comm);
-          } // End of loop over i
+          MPI_Bcast(&cfSegCenterInMat,1,MPI_SHORT,workID,mpi_crack_comm);
         } // End of if(ncfSegs==1)
 
         MPI_Barrier(mpi_crack_comm);
 
-        /* Task 3: Recollect crack-front segs, discarding the dead ones
+        /* Task 2: Recollect crack-front segs, discarding the dead ones
         */ 
         // Store crack-front parameters in temporary arraies
         int old_size=(int)cfSegNodes[m].size();
@@ -247,6 +249,7 @@ void Crack::RecollectCrackFrontNodes(const ProcessorGroup*,
       } // End of if(doCrackPropagation)
 
     } // End of loop over matls
+
   } // End of loop over patches
 }
 
@@ -458,6 +461,7 @@ void Crack::PropagateCrackFrontNodes(const ProcessorGroup*,
       } // End of if(doCrackPropagation)
 
     } // End of loop over matls
+
   } // End of loop over patches
 }
 
@@ -681,6 +685,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
 
       } // End of if(doCrackpropagation)
     } // End of loop over matls
+
   } // End of loop over patches
 }
 
