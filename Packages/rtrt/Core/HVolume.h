@@ -158,12 +158,12 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
     }
     indata.resize(nx, ny, nz);
     
-    double start=Time::currentSeconds();
+    double start=SCIRun::Time::currentSeconds();
     cerr << "Reading " << filebase << "...";
     cerr.flush();
     //    read(din.rdbuf()->fd(), indata.get_dataptr(), indata.get_datasize());
     read(din_fd, indata.get_dataptr(), indata.get_datasize());
-    double dt=Time::currentSeconds()-start;
+    double dt=SCIRun::Time::currentSeconds()-start;
     cerr << "done in " << dt << " seconds (" << (double)(sizeof(T)*nx*ny*nz)/dt/1024/1024 << " MB/sec)\n";
     //    if(!din){
     int s = close (din_fd);
@@ -181,24 +181,33 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
     Thread::parallel(phelper, bnp, true);
     delete work;
     
+    int bout_fd;
+#ifdef __sgi
     ///////////////////////////////////////////////////////////////
     // write the bricked data to a file, so that we don't have to rebrick it
     //    ofstream bout(buf);
     //    if (!bout) {
-    int bout_fd = open (buf, O_WRONLY | O_CREAT | O_TRUNC,
-			S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
+    bout_fd = open (buf, O_WRONLY | O_CREAT | O_TRUNC,
+		    S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
+#else
+    ASSERTFAIL("Can only write bricked data on SGI.");
+#endif    
+
     if (bout_fd == -1 ) {
       cerr << "Error in opening file " << buf << " for writing.\n";
       exit(1);
     }
     cerr << "Writing " << buf << "...";
-    start=Time::currentSeconds();	
+    start=SCIRun::Time::currentSeconds();	
     //    write(bout.rdbuf()->fd(), blockdata.get_dataptr(), blockdata.get_datasize());
     write(bout_fd, blockdata.get_dataptr(),blockdata.get_datasize());
-    dt=Time::currentSeconds()-start;
+    dt=SCIRun::Time::currentSeconds()-start;
     cerr << "done (" << (double)(blockdata.get_datasize())/dt/1024/1024 << " MB/sec)\n";
     indata.resize(0,0,0);
   } else {
+#ifndef __sgi
+    ASSERTFAIL("Can't do direct io on non-sgi machines.");
+#else
     struct dioattr s;
 #if 0
     if(fcntl(bin, F_DIOINFO, &s) == 0 && s.d_mem>0)
@@ -213,7 +222,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
 #endif
     cerr << "Reading " << buf << "...";
     cerr.flush();
-    double start=Time::currentSeconds();
+    double start=SCIRun::Time::currentSeconds();
 #if 1
     read(bin_fd, blockdata.get_dataptr(),blockdata.get_datasize());
 #else
@@ -239,10 +248,11 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
       }
       total+=t;
     }
-#endif
-    double dt=Time::currentSeconds()-start;
+#endif // sgi
+    double dt=SCIRun::Time::currentSeconds()-start;
     cerr << "done (" << (double)(blockdata.get_datasize())/dt/1024/1024 << " MB/sec)\n";
     close(bin_fd);
+#endif
   }
   
   xsize=new int[depth];
@@ -375,7 +385,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
   blockdata.resize(nx, ny, nz);
   
   // brick the data
-  double start=Time::currentSeconds();
+  double start=SCIRun::Time::currentSeconds();
   //cerr << "Bricking data...\n";
   //cerr.flush();
   int bnp=np>2?2:np;
@@ -388,7 +398,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
   Thread::parallel(phelper, bnp, true);
   delete work;
 
-  double dt=Time::currentSeconds()-start;
+  double dt=SCIRun::Time::currentSeconds()-start;
   cerr << "Bricking data...done (" << dt << " sec)\n";
   cerr.flush();
   indata.resize(0,0,0);

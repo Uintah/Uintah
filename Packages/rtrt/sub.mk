@@ -11,7 +11,7 @@ SUBDIRS := \
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := Core
-LIBS := $(GL_LIBS) $(FASTM_LIBS) -lm -lelf $(THREAD_LIBS) $(PERFEX_LIBRARY) 
+LIBS := $(GL_LIBS) $(FASTM_LIBS) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY) 
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
 
