@@ -15,6 +15,7 @@
 #include <Packages/rtrt/Core/ASETokens.h>
 #include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/DielectricMaterial.h>
+#include <Packages/rtrt/Core/PhongMaterial.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <fstream>
 #include <iostream>
@@ -194,12 +195,17 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
                         0);
           } else if (token->GetTMapFilename()=="") {
             ase_matls[token->GetIndex()] = 
+#if 1
+              new PhongMaterial(Color(diffuse),1.-token->GetTransparency(),
+                                .3,token->GetShine()*1000);
+#else
               new DielectricMaterial(1.,
                                      1.,
                                      1.-token->GetTransparency(),
                                      token->GetShine(),
                                      Color(diffuse),
                                      Color(diffuse));
+#endif
           } else {
             ase_matls[token->GetIndex()] = 
               new ImageMaterial((char*)(token->GetTMapFilename().c_str()),
