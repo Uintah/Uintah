@@ -1059,14 +1059,14 @@ proc licenseDialog { {firsttime 0} } {
 
 	set w .license.b.buttons
 	frame $w
-	button $w.accept -text Accept -command "licenseAccept"
-	button $w.decline -text Decline \
+	button $w.accept -text Accept -width 12 -command "licenseAccept"
+	button $w.decline -text Decline -width 12 \
 	    -command "set licenseResult cancel
                       catch {destroy .license}"
-	button $w.later -text Later \
+	button $w.later -text Later -width 12\
 	    -command "set licenseResult later
                       catch {destroy .license}"
-	pack $w.accept $w.decline $w.later -padx 5 -pady 5 -side right
+	pack $w.accept $w.decline $w.later -padx 5 -pady 5 -side left -padx 20
 	pack .license.b.buttons  .license.b.entry -side bottom
     } else {
 	button .license.b.ok -text OK -command {destroy .license}
