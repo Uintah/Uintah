@@ -121,7 +121,6 @@ labelCellSurfaceNormal (
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
-#if 0
   int numMatls = d_sharedState->getNumMatls();
   const MPMLabel* lb = MPMLabel::getLabels();
 
@@ -146,32 +145,37 @@ labelCellSurfaceNormal (
       ParticleSubset* pset = px.getParticleSubset();
       cSurfaceNormal.initialize(Vector(0,0,0));
 
-      for(ParticleSubset::iterator iter = pset->begin();
-	  iter != pset->end(); iter++)
+      for(ParticleSubset::iterator part_iter = pset->begin();
+	  part_iter != pset->end(); part_iter++)
       {
-	 particleIndex pIdx = *iter;
+	 particleIndex pIdx = *part_iter;
 	 IntVector cIdx = patch->findCell(px[pIdx]);
 
 	 Vector cellSurfaceNormal = cSurfaceNormal[cIdx];
 	 if( cellStatus(cellSurfaceNormal) == HAS_SEVERAL_BOUNDARY_SURFACE)
 	   continue;
 	 
-	 Vector particleSurfaceNormal = cSurfaceNormal[pIdx];
-	 if( Dot(cellSurfaceNormal,particleSurfaceNormal) > 0 ) {
-	   cellSurfaceNormal += particleSurfaceNormal;
+	 Vector particleSurfaceNormal = pSurfaceNormal[pIdx];
+	 if( SCICore::Geometry::Dot(cellSurfaceNormal,particleSurfaceNormal) > 0 ) {
+	   cSurfaceNormal[cIdx] += particleSurfaceNormal;
 	 }
-	 else {
-    	   setCellStatus(,&cellSurfaceNormal)
-	 }
-	 
-          +=
-           pSurfaceNormal[idx];
       };
 
+      for(CellIterator cell_iter = patch->getCellIterator(patch->getBox()); 
+        !cell_iter.done(); cell_iter++)
+      {
+        if( ( cellStatus(cSurfaceNormal[*cell_iter]) == 
+              HAS_SEVERAL_BOUNDARY_SURFACE ) ||
+            ( cellStatus(cSurfaceNormal[*cell_iter]) == 
+              INTERIOR_CELL) )
+        {
+          cSurfaceNormal[*cell_iter].normalize();
+        }
+      }
+      
       new_dw->put(cSurfaceNormal, lb->cSurfaceNormalLabel, vfindex, patch);
     }
   }
-#endif
 }
 
 void
@@ -270,6 +274,10 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.15  2000/06/02 19:13:39  tan
+// Finished function labelCellSurfaceNormal() to label the cell surface normal
+// according to the boundary particles surface normal information.
+//
 // Revision 1.14  2000/06/02 00:13:13  tan
 // Added ParticleStatus to determine if a particle is a BOUNDARY_PARTICLE
 // or a INTERIOR_PARTICLE.
