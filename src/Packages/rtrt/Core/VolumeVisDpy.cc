@@ -88,7 +88,6 @@ void VolumeVisDpy::run() {
 
   init();
 
-  glShadeModel(GL_FLAT);
   for(;;){
     XEvent e;
     XNextEvent(dpy, &e);
