@@ -166,9 +166,9 @@ Brick::compute_polygons(const Ray& view, double tmin, double tmax, double dt,
   Vector vdir = view.direction();
   Vector up;
   Vector right;
-  switch(MinIndex(abs(vdir.x()),
-                  abs(vdir.y()),
-                  abs(vdir.z()))) {
+  switch(MinIndex(fabs(vdir.x()),
+                  fabs(vdir.y()),
+                  fabs(vdir.z()))) {
   case 0:
     up.x(0.0); up.y(-vdir.z()); up.z(vdir.y());
     break;
@@ -210,7 +210,7 @@ Brick::compute_polygons(const Ray& view, double tmin, double tmax, double dt,
         double vx = Dot(vv[i] - vc, right);
         double vy = Dot(vv[i] - vc, up);
         // compute pseudo-angle
-        pa[i] = vy / (abs(vx) + abs(vy));
+        pa[i] = vy / (fabs(vx) + fabs(vy));
         if (vx < 0.0) pa[i] = 2.0 - pa[i];
         else if (vy < 0.0) pa[i] = 4.0 + pa[i];
         // init idx
