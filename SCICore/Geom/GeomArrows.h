@@ -56,12 +56,6 @@ public:
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
     virtual void get_bounds(BBox&);
-    virtual void get_bounds(BSphere&);
-    virtual void make_prims(Array1<GeomObj*>& free,
-			    Array1<GeomObj*>& dontfree);
-    virtual void preprocess();
-    virtual void intersect(const Ray& ray, Material*,
-			   Hit& hit);
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 

@@ -18,9 +18,8 @@
 #include <SCICore/Geom/GeomSave.h>
 #include <SCICore/Geom/GeomTri.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Math/TrigTable.h>
-#include <SCICore/Math/Trig.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/Trig.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -114,61 +113,6 @@ void GeomCone::get_bounds(BBox& bb)
     bb.extend_cyl(top, axis, top_rad);
 }
 
-void GeomCone::get_bounds(BSphere&)
-{
-    NOT_FINISHED("GeomCone::get_bounds");
-}
-
-void GeomCone::make_prims(Array1<GeomObj*>& free,
-			  Array1<GeomObj*>&)
-{
-    SinCosTable u(nu, 0, 2.*Pi);
-    for(int i=0;i<nv;i++){
-	double z1=double(i)/double(nv);
-	double z2=double(i+1)/double(nv);
-	double rad1=bot_rad+(top_rad-bot_rad)*z1;
-	double rad2=bot_rad+(top_rad-bot_rad)*z2;
-	Point b1(bottom+axis*z1);
-	Point b2(bottom+axis*z2);
-	Point l1, l2;
-	for(int j=0;j<nu;j++){
-	    double d1=u.sin(j)*rad1;
-	    double d2=u.cos(j)*rad1;
-	    Vector rv1a(v1*d1);
-	    Vector rv1b(v2*d2);
-	    Vector rv1(rv1a+rv1b);
-	    Point p1(b1+rv1);
-	    double d3=u.sin(j)*rad2;
-	    double d4=u.cos(j)*rad2;
-	    Vector rv2a(v1*d3);
-	    Vector rv2b(v2*d4);
-	    Vector rv2(rv2a+rv2b);
-	    Point p2(b2+rv2);
-	    if(j>0){
-		GeomTri* t1=scinew GeomTri(l1, l2, p1);
-//		t1->set_matl(matl);
-		free.add(t1);
-		GeomTri* t2=scinew GeomTri(l2, p1, p2);
-//		t2->set_matl(matl);
-		free.add(t2);
-	    }
-	    l1=p1;
-	    l2=p2;
-	}
-    }
-}
-
-void GeomCone::preprocess()
-{
-    NOT_FINISHED("GeomCone::preprocess");
-}
-
-void GeomCone::intersect(const Ray&, Material*,
-			 Hit&)
-{
-    NOT_FINISHED("GeomCone::intersect");
-}
-
 #define GEOMCONE_VERSION 1
 
 void GeomCone::io(Piostream& stream)
@@ -248,23 +192,6 @@ GeomObj* GeomCappedCone::clone()
     return scinew GeomCappedCone(*this);
 }
 
-void GeomCappedCone::make_prims(Array1<GeomObj*>&,
-				Array1<GeomObj*>&)
-{
-    NOT_FINISHED("GeomCappedCone::make_prims");
-}
-
-void GeomCappedCone::preprocess()
-{
-    NOT_FINISHED("GeomCappedCone::preprocess");
-}
-
-void GeomCappedCone::intersect(const Ray&, Material*,
-			 Hit&)
-{
-    NOT_FINISHED("GeomCappedCone::intersect");
-}
-
 #define GEOMCAPPEDCONE_VERSION 1
 
 void GeomCappedCone::io(Piostream& stream)
@@ -304,6 +231,10 @@ bool GeomCappedCone::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:19  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:06  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

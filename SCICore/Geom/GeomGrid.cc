@@ -163,7 +163,6 @@ void GeomGrid::compute_normals()
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geom/GeomSave.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <stdio.h>
 
@@ -274,48 +273,9 @@ void GeomGrid::get_bounds(BBox& bb)
     }
 }
 
-void GeomGrid::get_bounds(BSphere& bs)
-{
-    int nu=verts.dim1();
-    int nv=verts.dim2();
-    if (!image) {
-	Vector uu(u/(nu-1));
-	Vector vv(v/(nv-1));
-	Point rstart(corner);
-	for(int i=0;i<nu;i++){
-	    Point p(rstart);
-	    for(int j=0;j<nv;j++){
-		Point pp(p+w*verts(i, j));
-		bs.extend(pp);
-		p+=uu;
-	    }
-	    rstart+=vv;
-	}
-    } else {
-	bs.extend(corner-Vector(0.001,0.001,0.001));
-	bs.extend(corner+u+v+Vector(0.001,0.001,0.001));
-    }
-}
-
-void GeomGrid::make_prims(Array1<GeomObj*>&,
-			  Array1<GeomObj*>&)
-{
-    NOT_FINISHED("GeomGrid::make_prims");
-}
-
 GeomObj* GeomGrid::clone()
 {
     return scinew GeomGrid(*this);
-}
-
-void GeomGrid::preprocess()
-{
-    NOT_FINISHED("GeomGrid::preprocess");
-}
-
-void GeomGrid::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("GeomGrid::intersect");
 }
 
 #define GEOMGRID_VERSION 1
@@ -508,6 +468,10 @@ bool GeomGrid::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:20  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:08  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -47,12 +47,6 @@ public:
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
     virtual void get_bounds(BBox&);
-    virtual void get_bounds(BSphere&);
-    virtual void make_prims(Array1<GeomObj*>& free,
-			    Array1<GeomObj*>& dontfree);
-    virtual void preprocess();
-    virtual void intersect(const Ray& ray, Material*,
-			   Hit& hit);
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
@@ -64,6 +58,10 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:26  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:14  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

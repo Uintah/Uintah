@@ -51,11 +51,6 @@ protected:
 public:
     clString name;
     virtual ~Light();
-    virtual void compute_lighting(const View& view, const Point& at,
-				  Color&, Vector&)=0;
-    virtual GeomObj* geom()=0;
-    virtual void lintens(const OcclusionData& od, const Point& hit_position,
-			 Color& light, Vector& light_dir)=0;
     virtual void io(Piostream&);
 
     friend SCICORESHARE void Pio( Piostream&, Light*& );
@@ -71,6 +66,10 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:31  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:19  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -138,7 +138,6 @@ public:
     virtual ~GeomVertexPrim();
 
     virtual void get_bounds(BBox&);
-    virtual void get_bounds(BSphere&);
     
     void add(const Point&);
     void add(const Point&, const Vector&);
@@ -159,6 +158,10 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:30  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:18  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

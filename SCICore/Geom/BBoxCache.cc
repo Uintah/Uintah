@@ -30,13 +30,13 @@ PersistentTypeID GeomBBoxCache::type_id("GeomBBoxCache", "GeomObj",
 
 
 GeomBBoxCache::GeomBBoxCache(GeomObj* obj)
-:child(obj),bbox_cached(0),bsphere_cached(0)
+:child(obj),bbox_cached(0)
 {
 
 }
 
 GeomBBoxCache::GeomBBoxCache(GeomObj* obj, BBox &box)
-:child(obj),bbox_cached(1),bsphere_cached(0)
+:child(obj),bbox_cached(1)
 {
   bbox.extend( box );
 }
@@ -55,7 +55,7 @@ GeomObj* GeomBBoxCache::clone()
 
 void GeomBBoxCache::reset_bbox()
 {
-    bbox_cached = bsphere_cached = 0;
+    bbox_cached = 0;
 }
 
 void GeomBBoxCache::get_bounds(BBox& box)
@@ -69,37 +69,7 @@ void GeomBBoxCache::get_bounds(BBox& box)
     box.extend( bbox );
 }
 
-void GeomBBoxCache::get_bounds(BSphere& sphere)
-{
-    if (!bsphere_cached) {
-	child->get_bounds(sphere);
-	bsphere = sphere;
-	bsphere_cached = 1;
-    }
-    else {
-	sphere = bsphere;
-    }
-}
-
-
-void GeomBBoxCache::make_prims(Array1<GeomObj *>& free ,
-				Array1<GeomObj *>& dontfree )
-{
-    child->make_prims(free,dontfree);
-}
-
-void GeomBBoxCache::preprocess()
-{
-    child->preprocess();
-}
-
-void GeomBBoxCache::intersect(const Ray& ray, Material* m,
-			       Hit& hit)
-{
-    child->intersect(ray,m,hit);
-}
-
-#define GEOMBBOXCACHE_VERSION 1
+#define GEOMBBOXCACHE_VERSION 2
 
 void GeomBBoxCache::io(Piostream& stream)
 {
@@ -107,11 +77,24 @@ void GeomBBoxCache::io(Piostream& stream)
     using SCICore::Geometry::Pio;
     using SCICore::GeomSpace::Pio;
 
-    stream.begin_class("GeomBBoxCache", GEOMBBOXCACHE_VERSION);
+    int version=stream.begin_class("GeomBBoxCache", GEOMBBOXCACHE_VERSION);
     Pio(stream, bbox_cached);
-    Pio(stream, bsphere_cached);
+    if(version < 2){
+	int bsphere_cached;
+	Pio(stream, bsphere_cached);
+    }
     Pio(stream, bbox);
-    Pio(stream, bsphere);
+    if(version < 2){
+	// Old BSphere stuff...
+	stream.begin_cheap_delim();
+	int have_some;
+	Pio(stream, have_some);
+	Point cen;
+	Pio(stream, cen);
+	double rad;
+	Pio(stream, rad);
+	stream.end_cheap_delim();
+    }
     Pio(stream, child);
     stream.end_class();
 }
@@ -127,6 +110,10 @@ bool GeomBBoxCache::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:17  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:03  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

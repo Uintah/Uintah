@@ -17,11 +17,9 @@
 #include <SCICore/Geom/GeomSave.h>
 #include <SCICore/Geom/GeomTri.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/TrigTable.h>
-#include <SCICore/Math/Trig.h>
 #include <SCICore/Containers/String.h>
+#include <SCICore/Math/Trig.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -115,57 +113,6 @@ void GeomCylinder::get_bounds(BBox& bb)
     bb.extend_cyl(top, axis, rad);
 }
 
-void GeomCylinder::get_bounds(BSphere& bs)
-{
-  using namespace Geometry;
-
-    Point cen(Interpolate(bottom, top, 0.5));
-    double h2=height/2.;
-    double r=Sqrt(h2*h2+rad*rad);
-    bs.extend(cen, r);
-}
-
-void GeomCylinder::make_prims(Array1<GeomObj*>& free,
-			      Array1<GeomObj*>&)
-{
-    SinCosTable u(nu, 0, 2.*Pi);
-    for(int i=0;i<nv;i++){
-	double z1=double(i)/double(nv);
-	double z2=double(i+1)/double(nv);
-	Point b1(bottom+axis*z1);
-	Point b2(bottom+axis*z2);
-	Point l1, l2;
-	for(int j=0;j<nu;j++){
-	    double d1=u.sin(j);
-	    double d2=u.cos(j);
-	    Vector rv(v1*d1+v2*d2);
-	    Point p1(b1+rv);
-	    Point p2(b2+rv);
-	    if(j>0){
-		GeomTri* t1=scinew GeomTri(l1, l2, p1);
-//		t1->set_matl(matl);
-		free.add(t1);
-		GeomTri* t2=scinew GeomTri(l2, p1, p2);
-//		t2->set_matl(matl);
-		free.add(t2);
-	    }
-	    l1=p1;
-	    l2=p2;
-	}
-    }
-}
-
-void GeomCylinder::preprocess()
-{
-    NOT_FINISHED("GeomCylidner::preprocess");
-}
-
-void GeomCylinder::intersect(const Ray&, Material*,
-			     Hit&)
-{
-    NOT_FINISHED("GeomCylinder::intersect");
-}
-
 #define GEOMCYLINDER_VERSION 1
 
 void GeomCylinder::io(Piostream& stream)
@@ -243,23 +190,6 @@ GeomObj* GeomCappedCylinder::clone()
     return scinew GeomCappedCylinder(*this);
 }
 
-void GeomCappedCylinder::make_prims(Array1<GeomObj*>&,
-				    Array1<GeomObj*>&)
-{
-    NOT_FINISHED("GeomCappedCylinder::make_prims");
-}
-
-void GeomCappedCylinder::preprocess()
-{
-    NOT_FINISHED("GeomCappedCylinder::preprocess");
-}
-
-void GeomCappedCylinder::intersect(const Ray&, Material*,
-			     Hit&)
-{
-    NOT_FINISHED("GeomCappedCylinder::intersect");
-}
-
 #define GEOMCAPPEDCYLINDER_VERSION 1
 
 void GeomCappedCylinder::io(Piostream& stream)
@@ -304,6 +234,10 @@ bool GeomCappedCylinder::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:20  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:07  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

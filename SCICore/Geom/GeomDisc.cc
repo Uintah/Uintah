@@ -15,13 +15,9 @@
 #include <SCICore/Geom/GeomDisc.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
-#include <SCICore/Geom/GeomRaytracer.h>
 #include <SCICore/Geom/GeomTri.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
-#include <SCICore/Geometry/Ray.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/TrigTable.h>
 #include <SCICore/Math/Trig.h>
 
 namespace SCICore {
@@ -103,73 +99,6 @@ void GeomDisc::get_bounds(BBox& bb)
     bb.extend_cyl(cen, n, rad);
 }
 
-void GeomDisc::get_bounds(BSphere& bs)
-{
-    bs.extend(cen, rad*1.000001);
-}
-
-void GeomDisc::make_prims(Array1<GeomObj*>& free,
-			  Array1<GeomObj*>&)
-{
-    SinCosTable u(nu, 0, 2.*Pi);
-    for(int i=0;i<nv;i++){
-	double r1=rad*double(i)/double(nv);
-	double r2=rad*double(i+1)/double(nv);
-	Point l1, l2;
-	for(int j=0;j<nu;j++){
-	    double d1=u.sin(j);
-	    double d2=u.cos(j);
-	    Vector rv1a(v1*(d1*r1));
-	    Vector rv1b(v2*(d2*r1));	
-	    Vector rv1(rv1a+rv1b);
-	    Point p1(cen+rv1);
-	    Vector rv2a(v1*(d1*r2));
-	    Vector rv2b(v2*(d2*r2));	
-	    Vector rv2(rv2a+rv2b);
-	    Point p2(cen+rv2);
-	    if(j>0){
-		if(i>0){
-		    GeomTri* t1=scinew GeomTri(l1, l2, p1);
-//		    t1->set_matl(matl);
-		    free.add(t1);
-		}
-		GeomTri* t2=scinew GeomTri(l2, p1, p2);
-//		t2->set_matl(matl);
-		free.add(t2);
-	    }
-	    l1=p1;
-	    l2=p2;
-	}
-    }
-}
-
-void GeomDisc::preprocess()
-{
-    // Nothing to do...
-}
-
-void GeomDisc::intersect(const Ray& ray, Material* matl,
-			 Hit& hit)
-{
-    double tmp=Dot(n, ray.direction());
-    if(tmp > -1.e-6 && tmp < 1.e-6)return; // Parallel to plane
-    Vector v=cen-ray.origin();
-    double t=Dot(n, v)/tmp;
-    if(t<1.e-6)return;
-    if(hit.hit() && t > hit.t())return;
-    Point p(ray.origin()+ray.direction()*t);
-    Vector vr(p-cen);
-    if(vr.length2() < rad*rad){
-	// Hit...
-	hit.hit(t, this, matl);
-    }
-}
-
-Vector GeomDisc::normal(const Point&, const Hit&)
-{
-    return n;
-}
-
 #define GEOMDISC_VERSION 1
 
 void GeomDisc::io(Piostream& stream)
@@ -198,6 +127,10 @@ bool GeomDisc::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:20  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:07  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -64,44 +64,6 @@ void GeomIndexedGroup::get_bounds(BBox& bbox)
     }
 }
 
-void GeomIndexedGroup::get_bounds(BSphere& bsphere)
-{
-    HashTableIter<int, GeomObj*> iter(&objs);
-    for(iter.first();iter.ok();++iter) {
-	GeomObj *obj = iter.get_data();
-	obj->get_bounds(bsphere);
-    }
-}
-
-void GeomIndexedGroup::make_prims(Array1<GeomObj*>& free,
-				  Array1<GeomObj*>& dontfree)
-{
-    HashTableIter<int, GeomObj*> iter(&objs);   
-    for(iter.first();iter.ok();++iter) {
-	GeomObj *obj = iter.get_data();
-	obj->make_prims(free,dontfree);
-    }	
-}	
-
-void GeomIndexedGroup::preprocess()
-{
-    HashTableIter<int, GeomObj*> iter(&objs);
-    for(iter.first();iter.ok();++iter) {
-	GeomObj *obj = iter.get_data();
-	obj->preprocess();
-    }
-}
-
-void GeomIndexedGroup::intersect(const Ray& ray, Material* m,
-				 Hit& hit)
-{
-    HashTableIter<int, GeomObj*> iter(&objs);
-    for(iter.first();iter.ok();++iter) {
-	GeomObj *obj = iter.get_data();
-	obj->intersect(ray, m, hit);
-    }
-}
-
 #define GEOMINDEXEDGROUP_VERSION 1
 
 void GeomIndexedGroup::io(Piostream& stream)
@@ -188,6 +150,10 @@ HashTable<int,GeomObj*>* GeomIndexedGroup::getHash(void)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:31  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:19  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

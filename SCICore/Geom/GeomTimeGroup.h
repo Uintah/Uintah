@@ -15,7 +15,6 @@
 #define SCI_Geom_Time_Group_h 1
 
 #include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geometry/BSphere.h>
 #include <SCICore/Geometry/BBox.h>
 
 namespace SCICore {
@@ -42,16 +41,11 @@ public:
 
     virtual void reset_bbox();
     virtual void get_bounds(BBox&);
-    virtual void get_bounds(BSphere&);
 
 #ifdef SCI_OPENGL
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
-    virtual void make_prims(Array1<GeomObj*>& free,
-			    Array1<GeomObj*>& dontfree);
-    virtual void preprocess();
-    virtual void intersect(const Ray& ray, Material*,
-			   Hit& hit);
+
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
     virtual bool saveobj(ostream&, const clString& format, GeomSave*);
@@ -62,6 +56,10 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:27  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:15  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

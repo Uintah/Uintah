@@ -16,7 +16,6 @@
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
 #include <SCICore/Malloc/Allocator.h>
 #ifdef _WIN32
 #include <string.h>
@@ -61,31 +60,9 @@ void GeomTexSlices::get_bounds(BBox& bb)
   bb.extend(max);
 }
 
-void GeomTexSlices::get_bounds(BSphere& bs)
-{
-  bs.extend(min);
-  bs.extend(max);
-}
-
-void GeomTexSlices::make_prims(Array1<GeomObj*>&,
-			  Array1<GeomObj*>&)
-{
-    NOT_FINISHED("GeomTexSlices::make_prims");
-}
-
 GeomObj* GeomTexSlices::clone()
 {
     return scinew GeomTexSlices(*this);
-}
-
-void GeomTexSlices::preprocess()
-{
-    NOT_FINISHED("GeomTexSlices::preprocess");
-}
-
-void GeomTexSlices::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("GeomTexSlices::intersect");
 }
 
 #define GeomTexSlices_VERSION 1
@@ -107,6 +84,10 @@ bool GeomTexSlices::saveobj(ostream&, const clString& /*format*/, GeomSave*)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:26  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:14  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

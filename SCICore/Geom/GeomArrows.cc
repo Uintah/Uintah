@@ -18,7 +18,6 @@
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Persistent/Persistent.h>
 
@@ -101,33 +100,9 @@ void GeomArrows::get_bounds(BBox& bb)
     }
 }
 
-void GeomArrows::get_bounds(BSphere& bs)
-{
-    int n=positions.size();
-    for(int i=0;i<n;i++){
-	bs.extend(positions[i]);
-    }
-}
-
-void GeomArrows::make_prims(Array1<GeomObj*>&,
-			  Array1<GeomObj*>&)
-{
-    NOT_FINISHED("GeomArrows::make_prims");
-}
-
 GeomObj* GeomArrows::clone()
 {
     return scinew GeomArrows(*this);
-}
-
-void GeomArrows::preprocess()
-{
-    NOT_FINISHED("GeomArrows::preprocess");
-}
-
-void GeomArrows::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("GeomArrows::intersect");
 }
 
 #define GEOMARROWS_VERSION 1

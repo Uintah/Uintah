@@ -75,13 +75,6 @@ Salmon::Salmon(const clString& id)
 #endif
 
     ports.addObj(pi,portid);
-
-    // Fill it up with the defaults...
-    for(int i=0;i<lighting.lights.size();i++){
-	GeomObj* geom=lighting.lights[i]->geom();
-	if(geom)
-	    addObj(pi, i, geom, lighting.lights[i]->name, 0);
-    }
 }
 
 Salmon::~Salmon()
@@ -504,6 +497,10 @@ void Salmon::emit_vars(ostream& out)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:15  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:37:39  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

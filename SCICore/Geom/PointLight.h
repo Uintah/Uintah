@@ -27,11 +27,6 @@ class SCICORESHARE PointLight : public Light {
 public:
     PointLight(const clString& name, const Point&, const Color&);
     virtual ~PointLight();
-    virtual void compute_lighting(const View& view, const Point& at,
-				  Color&, Vector&);
-    virtual GeomObj* geom();
-    virtual void lintens(const OcclusionData& od, const Point& hit_position,
-			 Color& light, Vector& light_dir);
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 #ifdef SCI_OPENGL
@@ -44,6 +39,10 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:32  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:21  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -15,15 +15,10 @@
 #include <SCICore/Geom/GeomSphere.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
-#include <SCICore/Geom/GeomRaytracer.h>
 #include <SCICore/Geom/GeomSave.h>
 #include <SCICore/Geom/GeomTri.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
-#include <SCICore/Geometry/Ray.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/TrigTable.h>
-#include <SCICore/Math/Trig.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -80,92 +75,6 @@ void GeomSphere::get_bounds(BBox& bb)
     bb.extend(cen, rad);
 }
 
-void GeomSphere::get_bounds(BSphere& bs)
-{
-    bs.extend(cen, rad*1.000001);
-}
-
-void GeomSphere::make_prims(Array1<GeomObj*>& free,
-			    Array1<GeomObj*>&)
-{
-    SinCosTable u(nu, 0, 2.*Pi);
-    SinCosTable v(nv, 0, Pi, rad);
-    double cx=cen.x();
-    double cy=cen.y();
-    double cz=cen.z();
-
-    for(int j=0;j<nv-1;j++){
-	double r0=v.sin(j);
-	double z0=v.cos(j);
-	double r1=v.sin(j+1);
-	double z1=v.cos(j+1);
-	for(int i=0;i<nu-1;i++){
-	    double x0=u.sin(i);
-	    double y0=u.cos(i);
-	    double x1=u.sin(i+1);
-	    double y1=u.cos(i+1);
-	    Point p1(x0*r0+cx, y0*r0+cy, z0+cz);
-	    Point p2(x1*r0+cx, y1*r0+cy, z0+cz);
-	    Point p3(x0*r1+cx, y0*r1+cy, z1+cz);
-	    Point p4(x1*r1+cx, y1*r1+cy, z1+cz);
-	    if(j<nv-2){
-		GeomTri* t1=scinew GeomTri(p1, p3, p4);
-//		t1->set_matl(matl);
-		free.add(t1);
-	    }
-	    if(j>0){
-		GeomTri* t2=scinew GeomTri(p1, p4, p2);
-//		t2->set_matl(matl);
-		free.add(t2);
-	    }
-	}
-    }
-}
-
-void GeomSphere::preprocess()
-{
-    // Nothing to do...
-}
-
-void GeomSphere::intersect(const Ray& ray, Material* matl, Hit& hit)
-{
-  using namespace Geometry;
-
-    Vector OC(cen-ray.origin());
-    double tca=Dot(OC, ray.direction());
-    double l2oc=OC.length2();
-    double radius_sq=rad*rad;
-    if(l2oc <= radius_sq){
-	// Inside the sphere
-	double t2hc=radius_sq-l2oc+tca*tca;
-	double thc=Sqrt(t2hc);
-	double t=tca+thc;
-	hit.hit(t, this, matl);
-    } else {
-	if(tca < 0.0){
-	    // Behind ray, no intersections...
-	    return;
-	} else {
-	    double t2hc=radius_sq-l2oc+tca*tca;
-	    if(t2hc <= 0.0){
-		// Ray misses, no intersections...
-		return;
-	    } else {
-		double thc=Sqrt(t2hc);
-		hit.hit(tca-thc, this, matl);
-		// hit.hit(tca+thc, this, ???);
-	    }
-	}
-    }
-}
-
-Vector GeomSphere::normal(const Point& hitp, const Hit&)
-{
-    Vector normal(hitp-cen);
-    normal.normalize();
-    return normal;
-}
-
 #define GEOMSPHERE_VERSION 1
 
 void GeomSphere::io(Piostream& stream)
@@ -213,6 +122,10 @@ bool GeomSphere::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:25  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:13  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

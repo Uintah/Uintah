@@ -16,7 +16,6 @@
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
 #include <SCICore/Malloc/Allocator.h>
 #ifdef _WIN32
 #include <string.h>
@@ -125,33 +124,9 @@ void TexGeomGrid::get_bounds(BBox& bb)
   bb.extend(corner+u+v);
 }
 
-void TexGeomGrid::get_bounds(BSphere& bs)
-{
-  bs.extend(corner);
-  bs.extend(corner+u);
-  bs.extend(corner+v);
-  bs.extend(corner+u+v);
-}
-
-void TexGeomGrid::make_prims(Array1<GeomObj*>&,
-			  Array1<GeomObj*>&)
-{
-    NOT_FINISHED("TexGeomGrid::make_prims");
-}
-
 GeomObj* TexGeomGrid::clone()
 {
     return scinew TexGeomGrid(*this);
-}
-
-void TexGeomGrid::preprocess()
-{
-    NOT_FINISHED("TexGeomGrid::preprocess");
-}
-
-void TexGeomGrid::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("TexGeomGrid::intersect");
 }
 
 #define TexGeomGrid_VERSION 1
@@ -181,6 +156,10 @@ bool TexGeomGrid::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:35  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:25  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

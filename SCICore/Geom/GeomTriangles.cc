@@ -18,7 +18,6 @@
 #include <SCICore/Geom/GeomSave.h>
 #include <SCICore/Geom/GeomTri.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <stdio.h>
 
@@ -200,25 +199,9 @@ void GeomTriangles::add(GeomVertex* v1, GeomVertex* v2, GeomVertex* v3) {
     GeomVertexPrim::add(v3);
 }
 
-void GeomTriangles::make_prims(Array1<GeomObj*>&,
-			      Array1<GeomObj*>&)
-{
-    NOT_FINISHED("GeomTriangles::make_prims");
-}
-
 GeomObj* GeomTriangles::clone()
 {
     return scinew GeomTriangles(*this);
-}
-
-void GeomTriangles::preprocess()
-{
-    NOT_FINISHED("GeomTriangles::preprocess");
-}
-
-void GeomTriangles::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("GeomTriangles::intersect");
 }
 
 #define GEOMTRIANGLES_VERSION 1
@@ -752,29 +735,6 @@ void GeomTrianglesP::get_bounds(BBox& box)
 	box.extend(Point(points[i],points[i+1],points[i+2]));
 }
 
-void GeomTrianglesP::get_bounds(BSphere& box)
-{
-    for(int i=0;i<points.size();i+=3)
-	box.extend(Point(points[i],points[i+1],points[i+2]));
-}
-
-
-void GeomTrianglesP::make_prims(Array1<GeomObj*>& /*free */,
-				Array1<GeomObj*>& /*dontfree*/)
-{
-    NOT_FINISHED("GeomTrianglesP::make_prims");
-}
-
-void GeomTrianglesP::preprocess()
-{
-    NOT_FINISHED("GeomTrianglesP::preprocess");
-}
-
-void GeomTrianglesP::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("GeomTrianglesP::intersect");
-}
-
 #define GEOMTRIANGLESP_VERSION 1
 
 void GeomTrianglesP::io(Piostream& stream)
@@ -980,29 +940,6 @@ void GeomTrianglesVP::get_bounds(BBox& box)
 	box.extend(Point(points[i],points[i+1],points[i+2]));
 }
 
-void GeomTrianglesVP::get_bounds(BSphere& box)
-{
-    for(int i=0;i<points.size();i+=3)
-	box.extend(Point(points[i],points[i+1],points[i+2]));
-}
-
-
-void GeomTrianglesVP::make_prims(Array1<GeomObj*>& /*free */,
-				Array1<GeomObj*>& /*dontfree*/)
-{
-    NOT_FINISHED("GeomTrianglesVP::make_prims");
-}
-
-void GeomTrianglesVP::preprocess()
-{
-    NOT_FINISHED("GeomTrianglesVP::preprocess");
-}
-
-void GeomTrianglesVP::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("GeomTrianglesVP::intersect");
-}
-
 #define GEOMTRIANGLESVP_VERSION 1
 
 void GeomTrianglesVP::io(Piostream& stream)
@@ -1144,6 +1081,10 @@ bool GeomTrianglesVPC::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:28  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:16  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -15,7 +15,6 @@
 #include <SCICore/Geom/GeomQMesh.h>
 
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Util/NotFinished.h>
 
@@ -70,30 +69,9 @@ void GeomQMesh::get_bounds(BBox& bb)
     }
 }
 
-void GeomQMesh::get_bounds(BSphere&)
-{
-
-}
-
-void GeomQMesh::make_prims(Array1<GeomObj*>&,
-			  Array1<GeomObj*>&)
-{
-    NOT_FINISHED("GeomQMesh::make_prims");
-}
-
 GeomObj* GeomQMesh::clone()
 {
     return scinew GeomQMesh(*this);
-}
-
-void GeomQMesh::preprocess()
-{
-    NOT_FINISHED("GeomQMesh::preprocess");
-}
-
-void GeomQMesh::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("GeomQMesh::intersect");
 }
 
 #define GeomQMesh_VERSION 2
@@ -114,6 +92,10 @@ bool GeomQMesh::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:24  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:11  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

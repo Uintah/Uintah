@@ -140,18 +140,6 @@ GeomObj* GeomMaterial::clone()
     return scinew GeomMaterial(*this);
 }
 
-void GeomMaterial::make_prims(Array1<GeomObj*>& free,
-			      Array1<GeomObj*>& dontfree)
-{
-    child->make_prims(free, dontfree);
-}
-
-void GeomMaterial::intersect(const Ray& ray, Material* /* old_matl */,
-			     Hit& hit)
-{
-    child->intersect(ray, matl.get_rep(), hit);
-}
-
 #define GEOMMATERIAL_VERSION 1
 
 void GeomMaterial::io(Piostream& stream)

@@ -17,7 +17,6 @@
 #include <SCICore/Containers/String.h>
 #include <SCICore/Containers/TrivialAllocator.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
 #include <SCICore/Malloc/Allocator.h>
 
 #include <stdlib.h>
@@ -70,33 +69,6 @@ void GeomLine::get_bounds(BBox& bb)
     bb.extend(p2);
 }
 
-void GeomLine::get_bounds(BSphere& bs)
-{
-  using namespace Geometry;
-
-    Point cen(Interpolate(p1, p2, 0.5));
-    double rad=(p2-p1).length()/2.;
-    bs.extend(cen, rad);
-}
-
-void GeomLine::make_prims(Array1<GeomObj*>&,
-			  Array1<GeomObj*>& dontfree)
-{
-    GeomLine* line=this;
-    dontfree.add(line);
-}
-
-void GeomLine::preprocess()
-{
-    NOT_FINISHED("GeomLine::preprocess");
-}
-
-void GeomLine::intersect(const Ray&, Material*,
-			 Hit&)
-{
-    NOT_FINISHED("GeomLine::intersect");
-}
-
 #define GEOMLINE_VERSION 1
 
 void GeomLine::io(Piostream& stream)
@@ -146,33 +118,10 @@ GeomObj* GeomLines::clone()
   return new GeomLines(*this);
 }
 
-void GeomLines::make_prims(Array1<GeomObj*>&,
-			    Array1<GeomObj*>&)
-{
-    // Nothing to do...
-}
-
 void GeomLines::get_bounds(BBox& bb)
 {
   for(int i=0;i<pts.size();i++)
     bb.extend(pts[i]);
-}
-
-void GeomLines::get_bounds(BSphere& bs)
-{
-  for(int i=0;i<pts.size();i++)
-    bs.extend(pts[i]);
-}
-
-void GeomLines::preprocess()
-{
-    NOT_FINISHED("GeomLines::preprocess");
-}
-
-void GeomLines::intersect(const Ray&, Material*,
-			 Hit&)
-{
-    NOT_FINISHED("GeomLines::intersect");
 }
 
 #define GEOMLINES_VERSION 1
@@ -231,33 +180,10 @@ GeomObj* TexGeomLines::clone()
   return new TexGeomLines(*this);
 }
 
-void TexGeomLines::make_prims(Array1<GeomObj*>&,
-			      Array1<GeomObj*>&)
-{
-    // Nothing to do...
-}
-
 void TexGeomLines::get_bounds(BBox& bb)
 {
   for(int i=0;i<pts.size();i++)
     bb.extend(pts[i]);
-}
-
-void TexGeomLines::get_bounds(BSphere& bs)
-{
-  for(int i=0;i<pts.size();i++)
-    bs.extend(pts[i]);
-}
-
-void TexGeomLines::preprocess()
-{
-    NOT_FINISHED("TexGeomLines::preprocess");
-}
-
-void TexGeomLines::intersect(const Ray&, Material*,
-			 Hit&)
-{
-    NOT_FINISHED("TexGeomLines::intersect");
 }
 
 #define TexGeomLines_VERSION 1
@@ -469,6 +395,10 @@ void TexGeomLines::SortVecs()
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:21  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:08  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

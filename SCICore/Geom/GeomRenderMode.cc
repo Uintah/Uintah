@@ -18,8 +18,6 @@
 #include <SCICore/Geom/GeomTri.h>
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/TrigTable.h>
-#include <SCICore/Math/Trig.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -52,19 +50,6 @@ GeomObj* GeomRenderMode::clone()
     return scinew GeomRenderMode(*this);
 }
 
-void GeomRenderMode::make_prims(Array1<GeomObj*>& free,
-				Array1<GeomObj*>& dontfree)
-{
-    if(child)
-	child->make_prims(free, dontfree);
-}
-
-void GeomRenderMode::intersect(const Ray&, Material*,
-			       Hit&)
-{
-    NOT_FINISHED("GeomRenderMode::intersect");
-}
-
 #define GEOMRENDERMODE_VERSION 1
 
 void GeomRenderMode::io(Piostream& stream)
@@ -89,6 +74,10 @@ bool GeomRenderMode::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:24  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:12  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

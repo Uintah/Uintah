@@ -13,7 +13,6 @@
  */
 
 #include <SCICore/Geom/HeadLight.h>
-#include <SCICore/Geom/GeomRaytracer.h>
 #include <SCICore/Geom/View.h>
 #include <SCICore/Util/NotFinished.h>
 
@@ -36,38 +35,6 @@ HeadLight::~HeadLight()
 {
 }
 
-void HeadLight::lintens(const OcclusionData& od, const Point& hit_position,
-			 Color& light, Vector& light_dir)
-{
-    NOT_FINISHED("HeadLight::lintens");
-#if 0
-    if(od.level == 0){
-	// No need to do intersection test - we won't hit anything.
-	light=c;
-	light_dir=od.view->eyep()-p;
-	light_dir.normalize();
-    } else {
-	light_dir=od.view->eyep()-p;
-	double light_dist=light_dir.normalize();
-	double atten=od.raytracer->light_ray(p, od.view->eyep(), light_dir, light_dist);
-	light=c*atten;
-    }
-#endif
-}
-
-void HeadLight::compute_lighting(const View& view, const Point& at,
-				  Color& color, Vector& to)
-{
-    to=at-view.eyep();
-    to.normalize();
-    color=c;
-}
-
-GeomObj* HeadLight::geom()
-{
-    return 0; // Never seen
-}
-
 #define HEADLIGHT_VERSION 1
 
 void HeadLight::io(Piostream& stream)
@@ -87,6 +54,10 @@ void HeadLight::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:30  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:18  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

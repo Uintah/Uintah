@@ -47,14 +47,12 @@ GeomTimeGroup::GeomTimeGroup(const GeomTimeGroup& copy)
     for(int i=0;i<objs.size();i++){
 	GeomObj* cobj=copy.objs[i];
 	objs[i]=cobj->clone();
-	objs[i]->set_parent(this);
 	start_times[i] = copy.start_times[i];
     }
 }
 
 void GeomTimeGroup::add(GeomObj* obj,double time)
 {
-    obj->set_parent(this);
     objs.add(obj);
     start_times.add(time);
 }
@@ -100,21 +98,6 @@ void GeomTimeGroup::get_bounds(BBox& in_bb)
 #endif
 }
 
-void GeomTimeGroup::get_bounds(BSphere& in_sphere)
-{
-  for(int i=0;i<objs.size();i++)
-    objs[i]->get_bounds(in_sphere);
-}
-
-
-void GeomTimeGroup::make_prims(Array1<GeomObj*>& free,
-			 Array1<GeomObj*>& dontfree)
-{
-    for(int i=0;i<objs.size();i++){
-	objs[i]->make_prims(free, dontfree);
-    }
-}
-
 GeomTimeGroup::~GeomTimeGroup()
 {
     if(del_children){
@@ -132,22 +115,6 @@ void GeomTimeGroup::reset_bbox()
 {
     for(int i=0;i<objs.size();i++)
 	objs[i]->reset_bbox();
-}
-
-void GeomTimeGroup::preprocess()
-{
-    int i;
-    for(i=0;i<objs.size();i++){
-	objs[i]->preprocess();
-    }
-}
-
-void GeomTimeGroup::intersect(const Ray& ray, Material* matl,
-			  Hit& hit)
-{
-    for(int i=0;i<objs.size();i++){
-	objs[i]->intersect(ray, matl, hit);
-    }
 }
 
 #define GEOMTimeGroup_VERSION 1
@@ -188,6 +155,10 @@ bool GeomTimeGroup::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:26  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:14  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

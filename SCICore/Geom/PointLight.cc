@@ -37,27 +37,6 @@ PointLight::~PointLight()
 {
 }
 
-void PointLight::compute_lighting(const View&, const Point& at,
-				  Color& color, Vector& to)
-{
-    to=at-p;
-    to.normalize();
-    color=c;
-}
-
-GeomObj* PointLight::geom()
-{
-    return scinew GeomSphere(p, 1.0);
-}
-
-void PointLight::lintens(const OcclusionData&, const Point&,
-			 Color& light, Vector& light_dir)
-{
-    NOT_FINISHED("PointLight::lintens");
-    light=Color(1,1,1);
-    light_dir=Vector(0,1,0);
-}
-
 #define POINTLIGHT_VERSION 1
 
 void PointLight::io(Piostream& stream)
@@ -79,6 +58,10 @@ void PointLight::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:32  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:21  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

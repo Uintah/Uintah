@@ -25,15 +25,11 @@ PersistentTypeID GeomContainer::type_id("GeomContainer", "GeomObj", 0);
 GeomContainer::GeomContainer(GeomObj* child)
 : GeomObj(), child(child)
 {
-    if(child)
-	child->set_parent(this);
 }
 
 GeomContainer::GeomContainer(const GeomContainer& copy)
 : GeomObj(copy), child(copy.child->clone())
 {
-    if(child)
-	child->set_parent(this);
 }
 
 GeomContainer::~GeomContainer()
@@ -45,28 +41,6 @@ GeomContainer::~GeomContainer()
 void GeomContainer::get_bounds(BBox& bbox)
 {
     child->get_bounds(bbox);
-}
-
-void GeomContainer::get_bounds(BSphere& bsphere)
-{
-    child->get_bounds(bsphere);
-}
-
-void GeomContainer::make_prims(Array1<GeomObj*>& free,
-			       Array1<GeomObj*>& dontfree)
-{
-    child->make_prims(free, dontfree);
-}
-
-void GeomContainer::preprocess()
-{
-    child->preprocess();
-}
-
-void GeomContainer::intersect(const Ray& ray, Material* matl,
-			      Hit& hit)
-{
-    child->intersect(ray, matl, hit);
 }
 
 #define GEOMCONTAINER_VERSION 1
@@ -84,6 +58,10 @@ void GeomContainer::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:19  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:06  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

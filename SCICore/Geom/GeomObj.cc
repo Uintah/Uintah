@@ -22,12 +22,10 @@ namespace GeomSpace {
 PersistentTypeID GeomObj::type_id("GeomObj", "Persistent", 0);
 
 GeomObj::GeomObj()
-: parent(0)
 {
 }
 
 GeomObj::GeomObj(const GeomObj&)
-: parent(0)
 {
 }
 
@@ -38,20 +36,6 @@ GeomObj::~GeomObj()
 void GeomObj::reset_bbox()
 {
     // Nothing to do, by default.
-}
-
-Vector GeomObj::normal(const Point&, const Hit&)
-{
-    cerr << "ERROR: GeomObj::normal() shouldn't get called!!!\n";
-    return Vector(0,0,1);
-}
-
-void GeomObj::set_parent(GeomObj* p)
-{
-    if(parent){
-	cerr << "Warning: Object already has parent!\n";
-    }
-    parent=p;
 }
 
 void GeomObj::io(Piostream&)
@@ -72,6 +56,10 @@ void Pio( Piostream & stream, GeomObj *& obj )
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:22  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:09  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
