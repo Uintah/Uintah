@@ -702,7 +702,7 @@ bool VolumeVis2D::lookup_value(Voxel2D<float>& return_value,
   f = data(x_high, y_low,  z_high);
   g = data(x_high, y_high, z_low);
   h = data(x_high, y_high, z_high);
-  Voxel2D<float> lz1, lz2, lz3, lz4, ly1, ly2, value;
+  Voxel2D<float> lz1, lz2, lz3, lz4, ly1, ly2;
   lz1 = a * z_weight_low + b * (1 - z_weight_low);
   lz2 = c * z_weight_low + d * (1 - z_weight_low);
   lz3 = e * z_weight_low + f * (1 - z_weight_low);
