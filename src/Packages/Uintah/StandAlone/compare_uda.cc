@@ -265,7 +265,7 @@ void MaterialParticleVarData::createPatchMap()
   if (patchMap_)
     delete patchMap_;
   patchMap_ = scinew map<long64, const Patch*>();
-  for (int patch = 0; patch < particleVars_.size(); patch++) {
+  for (unsigned int patch = 0; patch < particleVars_.size(); patch++) {
     particleIndex count =
       particleVars_[patch]->getParticleSet()->numParticles();
     ParticleVariable<long64>* particleID =
@@ -335,7 +335,7 @@ void MaterialParticleData::sort()
 
   vector< pair<long64, int> > idIndices;
   
-  for (int i = 0; i < particleIDs_->getParticleVars().size(); i++) {
+  for (unsigned int i = 0; i < particleIDs_->getParticleVars().size(); i++) {
     ParticleVariable<long64>* pIDs = dynamic_cast<ParticleVariable<long64>*>(particleIDs_->getParticleVars()[i]);
     if (pIDs == 0) {
       cerr << "p.particleID must be a ParticleVariable<long64>\n";
@@ -354,13 +354,13 @@ void MaterialParticleData::sort()
   ::sort(idIndices.begin(), idIndices.end());
 
   vector<particleIndex> subsetIndices(idIndices.size());
-  for (particleIndex i = 0; i < idIndices.size(); i++) {
+  for (particleIndex i = 0; i < (particleIndex)idIndices.size(); i++) {
     subsetIndices[idIndices[i].second] = i;
   }
 
   ParticleSet* set = scinew ParticleSet((particleIndex)subsetIndices.size());
   ParticleSubset* subset = scinew ParticleSubset(set, false, matl_, 0);
-  for (int i = 0; i < subsetIndices.size(); i++)
+  for (unsigned int i = 0; i < subsetIndices.size(); i++)
     subset->addParticle(subsetIndices[i]);
   gather(subset);
 }
@@ -455,8 +455,8 @@ compare(MaterialParticleVarData& data2, ParticleVariable<T>* value1,
   ParticleSubset::iterator iter2 = pset2->begin();
   
   for ( ; iter1 != pset1->end() && iter2 != pset2->end(); iter1++, iter2++) {
-    if (!compare((*value1)[*iter1], (*value2)[*iter2], abs_tolerance,
-		 rel_tolerance)) {
+    if (!(::compare((*value1)[*iter1], (*value2)[*iter2], abs_tolerance,
+		    rel_tolerance))) {
       if (name_ != "p.particleID") {
 	ASSERT(getParticleID(*iter1) == data2.getParticleID(*iter2));
       }
