@@ -88,13 +88,14 @@
 
 \subsection{Summary} \indent
 
-The Matlaninterface module
+The MatlabInterface module
 enables calls to Matlab scripts within the \sr{} environment.
 This is accomplished
 by first establishing an independent Matlab process and second,
 as SCIRun communicates with that process via network sockets.
+
 Possible uses of the MatlabInterface include both simple tasks
-such as converting SCIRun files to Matlab files and vice versa.
+such as converting SCIRun files to Matlab files, and vice-versa.
 In addition, the module completes more complex tasks such as creating
 interactive \sr{} programs calling to Matlab scripts for real-time applications.
 
@@ -108,12 +109,12 @@ and may increase (depending on the network speed) if Matlab is
 runs at the remote host.
 
 The choice of a network communication model (as opposed to hard-compiling
-Matlab codes into \sr{}) is due to incompatibilities in Matlab
-libraries, and due to higher flexibility of the communication model.
+Matlab codes into \sr{}) is determined by incompatibilities in Matlab
+libraries, and by higher flexibility of the communication model.
 The network communication model allows both remote calls to Matlab
-scripts, as well as use of Matlab as a scripting engine to process
+scripts, and uses Matlab as a scripting engine to process
 interactive user requests. This model resolves potential licensing
-conflicts and provides convenience by saving extra installation time
+conflicts, and provides convenience by saving extra installation time
 in the situation where SCIRun and Matlab are installed on different hosts.
 
 \subsubsection{Location and Installation} \indent
@@ -122,14 +123,14 @@ We assume that the environment variable {\bf \$SCIRun} points to the root
 of the SCIRun source tree, and the package executables are compiled in the
 directory {\bf \$SCIRun/bin}.
 
-To install MatlabInterface package, at configure time provide the
+To install MatlabInterface package, at configure time, provide the
 following option to the configure script: \\
 {\bf configure --with-package=MatlabInterface} \\
 and run {\bf gmake } in {\bf \$SCIRun/bin} directory
 to compile the package. 
 
 The MatlabInterface {\bf Matlab} module, which provides communications with 
-Matlab engine on the \sr{} side, is located in MatlabInterface 
+the Matlab engine on the \sr{} side, is located in MatlabInterface 
 package under {\bf DataIO}. Matlab engine scripts, as well as test 
 example nets (({\bf tst*.net} files) are located in SCIRun source tree: \\
 {\bf \$SCIRun/src/Packages/MatlabInterface/matlab/engine }\\
@@ -137,19 +138,19 @@ example nets (({\bf tst*.net} files) are located in SCIRun source tree: \\
 \subsubsection{Examples} \indent
 
 Examples are the best way to learn how to work with MatlabInterface.
-There are five examples attached to the package. First three
+There are five examples attached to the package. The first three
 examples assume that SCIRun and Matlab reside on the same host.
-Example number four is for situation where SCIRun and Matlab are
-on the different hosts. The point of example 5 is to demonstrate
-application of the MatlabInterface to call focusing inversion routine.
+The fourth example addresses situations where SCIRun and Matlab are
+on different hosts. Example five demonstrates
+application of the MatlabInterface to call the focusing inversion routine.
 
-Three example scripts, named {\bf tst1.net, tst2.net and tst3.net}
-are written for the situation where SCIRun and 
+There are three example scripts, named {\bf tst1.net, tst2.net and tst3.net}
+that have been written for situations where SCIRun and 
 Matlab are installed on the same machine. 
-It is also assumed that the user works from under  a Linux (or Unix)
-shell and Matlab package is accessable in the path. 
+We also assume that the user works from under a Linux (or Unix)
+shell and the Matlab package may be accessed in the path. 
 
-To run examples, change current directory to \\
+To run these examples, change your current directory to \\
 {\bf cd \$SCIRun/src/Packages/MatlabInterface/matlab/engine } \\
 and execute SCIRun with first test net: \\
 {\bf \$SCIRun/bin/scirun  tst1.net} \\
@@ -159,11 +160,13 @@ The resulting screen appears in Figure \ref{fig:tst1}.
 
 The first test generates a random matrix under Matlab and sends the
 results to \sr{}, where the matrix is saved into a \sr{} file. 
+
 Figure \ref{fig:tst1} shows the SCIRun environment window on the top,
 and Unix terminal at the bottom, from where the package was started
 (window with black background and title ``rapture'' in Figure 
 \ref{fig:tst1}).  Certain diagnostic output is directed into Unix 
 terminal window. 
+
 The Matlab GUI dialog window (with the title
 ``Matlab\_O'' in Figure \ref{fig:tst1} is superimposed onto the \sr{}
 window. The Matlab commands are entered in the field with the white
@@ -172,15 +175,13 @@ In the first test example (Figure \ref{fig:tst1}
 the command is: \\
 {\bf o1=rand(5,5);} \\
 
-The host:
-port line is on top of the Matlab dialog window which
-contains the network address (IP or name and port) where the Matlab 
-engine will run. In this example, Matlab is on the same
-machine, so the IP address is local loopback {\bf 127.0.0.1} and 
+The host:the port line is on top of the Matlab dialog window that contains the network address (IP or name and port) where the Matlab 
+engine will run. In this example, Matlab operates on the same
+machine[|<as?>, so the IP address is local loopback {\bf 127.0.0.1} and 
 the port is {\bf 5517}. In general, ports with numbers above 5000
 are recommended for the use with MatlabInterface. 
 
-The host:port line is also used to set the debug {\it wordy} parameter.
+The host:the port line also sets the debug {\it wordy} parameter.
 This is an integer number that controls the wordiness
 of the diagnostic output. When {\it wordy} is 1, output is small, and
 when it is 5, the output is very wordy. When {\it wordy} $=0$ there
@@ -188,38 +189,40 @@ is no diagnostic output. The {\it wordyi} parameter follows immedeately after
 host:port and is separated by space. It can also be ommited, in which
 case {\it wordy} $=0$.
 
-There is a {\it Matlab} module to the left from the Matlab dialog window. 
-The module is labeled ``Matlab'' in Figure \ref{fig:tst1}, and has five input
+There is a {\it Matlab} module to the left from the Matlab dialog window,
+labeled ``Matlab'' in Figure \ref{fig:tst1}. This module has five input
 ports and five output ports, all of Matrix type (colored light blue). 
-When reffered to in the Matlab dialog window, the five input ports have mnemonic 
-names {\bf i1,i2,i3,i4,i5} respectively, and five output ports have
-names {\bf o1,o2,o3,o4,o5}. For example, the command: \\
+When referred to in the Matlab dialog window, the five input ports have mnemonic 
+names {\bf i1,i2,i3,i4,i5}, respectively, and five output ports have
+names {\bf o1,o2,o3,o4,o5}. 
+
+For example, the command: \\
 {\bf o1=rand(5,5);} \\
 will produce $5 \times 5$ random matrix and send the result
-into first output port (variable {\bf o1}. This example does
-not use any input ports of Matlab module.
+into the first output port (variable {\bf o1}. This example does
+not use any input ports of the Matlab module.
 
 To run the script, push the ``Execute'' button at the bottom of the
 Matlab dialog window. This will initiate the following
 sequence of events: \\
-1) the Matlab module fires \\
-2) module automatically runs MATLAB with engine script in the background  \\
-3) module compiles the engine components, if necessary \\
-4) engine starts listening at {\bf 127.0.0.1:5517} \\
+1) The Matlab module fires \\
+2) Module automatically runs MATLAB with engine script in the background  \\
+3) Module compiles the engine components, if necessary \\
+4) Engine starts listening at {\bf 127.0.0.1:5517} \\
 5) Matlab module sends the command to the engine via the socket\\
-6) engine receives and executes command, creates variable {\bf o1} \\
-7) variable {\bf o1} is sent back to \sr{} via the socket \\
+6) Engine receives and executes command, creates variable {\bf o1} \\
+7) Variable {\bf o1} is sent back to \sr{} via the socket \\
 8) \sr{} Matlab module receives matrix and sends it downstream
    to MatrixWriter which saves it to disk as {\bf rand1.mat} file. \\
 
 To finish the script, shut down the Matlab engine. 
-Push left mouse button on the
+Push your left mouse button on the
 Matlab module dialog box and choose ``destroy''. This will destroy
 the Matlab module and shut down the engine. After that, exit
 the \sr{} environment. 
 
 To check if the example was run properly, open file {\bf rand1.mat }
-with any ascii text editor and and see that it contains random
+with any ascii text editor and and see that it contains a random
 $5 \times 5$ matrix in \sr{} format. 
 
 \subsubsection{Example 2: Convert SCIRun file to raw ascii Matlab file} \indent
@@ -229,24 +232,27 @@ directory \\
 {\bf \$SCIRun/src/Packages/MatlabInterface/matlab/engine } \\
 start SCIRun again, this time with {\bf tst2.net} as command line argument: \\
 {\bf \$SCIRun/bin/scirun  tst2.net} \\
+
 The resulting window appears in Figure \ref{fig:tst2}. This
 script reads \sr{} file {\bf rand1.mat} from disk, sends
-it to Matlab where it is saved as {\bf rand2.mat} file
+it to Matlab where it is saved as {\bf rand2.mat}, filed
 in Matlab ascii format. This time, the command is : \\
 {\bf save -ascii rand2.dat i1;} \\
-and, only one input port {\bf i1} is used. Pushing the
+and, uses only one input port {\bf i1}. 
+
+Pushing the
 ``Execute'' button in Matlab dialog window results in
 the following sequence of events:
 1) MatrixReader fires and reads {\bf rand1.mat} from disk \\
 2) Matlab module fires, assepts the matrix on the first port \\
-3) automatically runs MATLAB with engine script in the background  \\
-4) engine starts listening at {\bf 127.0.0.1:5517} \\
-5) module sends matrix to the engine and creates {\it i1} variable\\
+3) Automatically runs MATLAB with engine script in the background  \\
+4) Engine starts listening at {\bf 127.0.0.1:5517} \\
+5) Module sends matrix to the engine and creates {\it i1} variable\\
 6) Matlab module sends the command to the engine via the socket\\
-7) engine receives and executes command, saving matrix to a file {\bf rand2.dat} \\
+7) Engine receives and executes command, saving matrix to a file {\bf rand2.dat} \\
 
 To finish the script, shut down the Matlab engine.
-Push left mouse button on the
+Push the left mouse button on the
 Matlab module dialog box and choose ``destroy.'' This will destroy
 the Matlab module and shut down the engine. After that, exit
 the \sr{} environment.
@@ -270,11 +276,11 @@ and, only one output port {\bf o1} is used. Pushing the
 ``Execute'' button in Matlab dialog window results in
 the following sequence of events:
 1) Matlab module fires \\
-2) automatically runs MATLAB with engine script in the background  \\
-3) engine starts listening at {\bf 127.0.0.1:5517} \\
+2) Automatically runs MATLAB with engine script in the background  \\
+3) Engine starts listening at {\bf 127.0.0.1:5517} \\
 4) Matlab module sends the command to the engine via the socket\\
-5) engine receives and executes command, creates variable {\bf o1} \\
-6) variable {\bf o1} is sent back to \sr{} via the socket \\
+5) Engine receives and executes command, creates variable {\bf o1} \\
+6) Variable {\bf o1} is sent back to \sr{} via the socket \\
 7) SCIRun Matlab module receives matrix and sends it downstream
    to MatrixWriter which saves it to disk as {\bf rand3.mat} file. \\
 
@@ -291,9 +297,9 @@ and {\bf rand2.dat}.
 \subsubsection{Example 4: SCIRun and Matlab are on different hosts} \indent
 
 There is no sample script provided for the situation where SCIRun and
-Matlab packages are installed on the different hosts. But the example
-could be easily made out of script {\bf tst1.net}.  In our example
-below we use two hosts, {\bf burn.cs.utah.edu} and
+Matlab packages have been installed on different hosts. But the example
+could easily be made out of script {\bf tst1.net}.  In our example
+below, we use two hosts, {\bf burn.cs.utah.edu} and
 {\bf rapture.sci.utah.edu}.
 
 Suppose that Matlab is running on host {\bf burn}. The
@@ -318,12 +324,12 @@ example.
 To run the script, push the ``Execute'' button at the bottom of the
 Matlab dialog window. This will initiate the following
 sequence of events: \\
-1) on {\bf rapture} the Matlab module fires \\
+1) On {\bf rapture} the Matlab module fires \\
 2) Matlab module on {\bf rapture} sends the command to the engine on
 {\bf burn} via the socket\\
-3) on {\bf burn}, the engine receives and executes command, creates variable {\bf o1} \\
-4) variable {\bf o1} is sent back from {\bf burn} to \sr{} on {\bf rapture} via the socket \\
-5) on {\bf rapture} \sr{} Matlab module receives matrix and sends it downstream
+3) On {\bf burn}, the engine receives and executes command, creates variable {\bf o1} \\
+4) Variable {\bf o1} is sent back from {\bf burn} to \sr{} on {\bf rapture} via the socket \\
+5) On {\bf rapture} \sr{} Matlab module receives matrix and sends it downstream
    to MatrixWriter which saves it to disk as {\bf rand1.mat} file. \\
 
 On {\bf rapture}, quit SCIRun. On {\bf burn}, push {\bf control-C} 
@@ -333,8 +339,7 @@ and quit Matlab (doing so will shut down the socket connection).
 \subsubsection{Example 5: Focusing inversion} \indent
 
 
-
-The focusing inversion is special solution of inverse problem
+The focusing inversion provides a special solution to the inverse problem
 \begin{equation}
 {\bf F} {\bf m} = {\bf d} 
 \end{equation}
@@ -348,27 +353,27 @@ as input, and outputs the solution, vector ${\bf m}$.
 Example 5 resides in \\
 {\bf \$SCIRun/src/Packages/MatlabInterface/matlab/fcs } \\
 
-The first part of the example prepares ``fake'' matrix ${\bf F}$ and 
+The first part of the example prepares a ``fake'' matrix ${\bf F}$ and 
 vector ${\bf d}$, by seeding ${\bf F}$ with random numbers,
 assuming sparse ${\bf m}$ and producing ${\bf d}={\bf F} {\bf m}$.
 
 To do that, 
 
-1) change directory to \\
+1) Change directory to \\
 {\bf \$SCIRun/src/Packages/MatlabInterface/matlab/fcs } \\
 
-2) change script {\bf scirun.bat} such that the path in
+2) Change script {\bf scirun.bat} such that the path in
    it points to location of scirun executable
    on your machine. Matlab should be in the
    path (check that by typing "which matlab")
 
-3) execute \sr{} with the command:\\
+3) Execute \sr{} with the command:\\
    {\bf scirun.bat prepare.net }\\
    and run the net within the SCIRun.
    This will produce files {\bf f.mat} and {\bf dd.mat}
    (sensitivity and data matrices).
 
-4) Destroy Matlab module manually
+4) Destroy the Matlab module manually
    (to shut down the Matlab)
    and quit SCIRun environment.
 
@@ -382,29 +387,29 @@ on Matlab script {\bf fcs.m} to produce the solution,
 and saves the solution into file {\bf res.mat}.
 To run focusing:
 
-1) execute SCIRun again, with the command:
+1) Execute SCIRun again, with the command:
 
    {\bf scirun.bat fcs.net}
 
    and run the net. This will produce file
    res.mat (result of focusing inversion)
 
-2) Destroy Matlab module manually
+2) Destroy the Matlab module manually
    (to shut down the matlab)
    and quit \sr{} environment.
 
-Resulting file {\bf res.mat} 
-is  a vector of 900 points. 
+The resulting file {\bf res.mat} 
+has  a vector of 900 points. 
 Open {\bf res.mat}
-and see that it is really a
+and see that it really is a
 sparse solution.
 
 
 \subsection{Detail} \indent
 
-The Matlab graphics does not work under current version of Matlab module.
+Matlab graphics does not work under the current version of the Matlab module.
 If the script contains graphics commands (like ``plot''), the 
-Matlab graphics window does not appear and the error may be produced.
+Matlab graphics window does not appear and may produce an error.
 
 \subsection{Credits} \indent
 
@@ -439,4 +444,5 @@ Matlab file and saves it in SCIRun format.
 } 
 
 \end{document}
+
 
