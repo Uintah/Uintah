@@ -79,14 +79,13 @@ public:
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
 					    const TypeDescription *ltd);
-
-  GeomSwitch*              node_switch_;
-  GeomSwitch*              edge_switch_;
-  GeomSwitch*              face_switch_;
-  GeomSwitch*              data_switch_;
+  
+  GeomHandle               node_switch_;
+  GeomHandle               edge_switch_;
+  GeomHandle               face_switch_;
+  GeomHandle               data_switch_;
 
 protected:
-  GeomArrows*              vec_node_;
   MaterialHandle           def_mat_handle_;
   ColorMapHandle           color_handle_;
   ind_mat_t               *mats_;
@@ -110,11 +109,11 @@ public:
 
 private:
   GeomSwitch *render_nodes(const Fld *fld, 
-			   const string &node_display_type,
+			   const string &node_display_mode,
 			   double node_scale,
 			   int node_resolution);
   GeomSwitch *render_edges(const Fld *fld,
-			   const string &edge_display_type,
+			   const string &edge_display_mode,
 			   double edge_scale,
 			   int cylinder_resolution);
   GeomSwitch *render_faces(const Fld *fld, 
@@ -125,11 +124,12 @@ private:
 				  bool use_default_material,
 				  MaterialHandle default_material);
 
-  void render_data(const Fld *fld, 
-		   const string &data_display_type,
-		   double scale, bool normalize, bool bidirectional);
+  GeomSwitch *render_data(const Fld *fld, 
+			  const string &data_display_mode,
+			  double scale, bool normalize, bool bidirectional,
+			  bool arrow_heads);
 
-  void render_materials(const Fld *fld, const string &data_display_type);
+  void render_materials(const Fld *fld, const string &data_display_mode);
 
   inline void add_sphere(const Point &p, double scale, 
 			 int resolution, GeomGroup *g, 
@@ -190,7 +190,7 @@ to_double(const Vector&, double &);
 template <class Dat>
 bool 
 add_data(const Point &, const Dat &, GeomArrows *, 
-	 GeomSwitch *, MaterialHandle &, const string &, double, bool, bool)
+	 MaterialHandle &, const string &, double, bool, bool)
 {
   return false;
 }
@@ -198,12 +198,12 @@ add_data(const Point &, const Dat &, GeomArrows *,
 template <>
 bool 
 add_data(const Point &, const Vector &, GeomArrows *, 
-	 GeomSwitch *, MaterialHandle &, const string &, double, bool, bool);
+	 MaterialHandle &, const string &, double, bool, bool);
 
 template <>
 bool 
 add_data(const Point &, const Tensor &, GeomArrows *, 
-	 GeomSwitch *, MaterialHandle &, const string &, double, bool, bool);
+	 MaterialHandle &, const string &, double, bool, bool);
 
 
 template <class Fld, class Loc>
@@ -279,7 +279,7 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
 			      const string &ndt, const string &edt,
 			      double ns, double es, double vs, bool normalize, 
 			      int sphere_res, int cyl_res,
-			      bool use_normals, bool use_transparency,
+			      bool use_normals, bool use_transp,
 			      bool bidirectional, bool arrow_heads)
 {
   Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
@@ -288,31 +288,38 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
   color_handle_ = color_handle;
 
   if (def_col) { render_materials(fld, ndt); }
-  if (nodes)   { node_switch_ = render_nodes(fld, ndt, ns, sphere_res); }
-  if (edges)   { edge_switch_ = render_edges(fld, edt, es, cyl_res); }
-  if (faces)   { face_switch_ = render_faces(fld, use_normals,
-					     use_transparency); }
+  if (nodes) { node_switch_ = render_nodes(fld, ndt, ns, sphere_res); }
+  if (edges) { edge_switch_ = render_edges(fld, edt, es, cyl_res); }
+  if (faces) { face_switch_ = render_faces(fld, use_normals, use_transp); }
   if (data)
   {
-    if (arrow_heads) vec_node_ = scinew GeomArrows(0.15, 0.6);
-    else vec_node_ = scinew GeomArrows(0, 0.6);
-    data_switch_ = scinew GeomSwitch(vec_node_);
-    render_data(fld, ndt, vs, normalize, bidirectional);
+    data_switch_ = render_data(fld, ndt, vs, normalize, bidirectional,
+			       arrow_heads);
   }
 }
 
 
 
 template <class Fld, class Loc>
-void 
+GeomSwitch *
 RenderField<Fld, Loc>::render_data(const Fld *fld,
-				   const string &display_type,
+				   const string &display_mode,
 				   double scale, 
 				   bool normalize,
-				   bool bidirectional)
+				   bool bidirectional,
+				   bool arrow_heads)
 {
-  //cerr << "rendering data_at" << endl;
-  double val = 0.0L;
+  GeomArrows *vec_node;
+  if (arrow_heads)
+  {
+    vec_node = scinew GeomArrows(0.15, 0.6);
+  }
+  else
+  {
+    vec_node = scinew GeomArrows(0, 0.6);
+  }
+  GeomSwitch *data_switch = scinew GeomSwitch(vec_node);
+
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
 
   typename Loc::iterator iter, end;
@@ -323,13 +330,14 @@ RenderField<Fld, Loc>::render_data(const Fld *fld,
     if (fld->value(tmp, *iter)) {
       Point p;
       mesh->get_center(p, *iter);
-      to_double(tmp, val);
+      //to_double(tmp, val);
       MaterialHandle m = choose_mat(false, *iter);
-      add_data(p, tmp, vec_node_, data_switch_, 
-	       m, display_type, scale, normalize, bidirectional); 
+      add_data(p, tmp, vec_node,
+	       m, display_mode, scale, normalize, bidirectional); 
     }
     ++iter;
   }
+  return data_switch;
 }
 
 
@@ -339,7 +347,7 @@ RenderField<Fld, Loc>::render_data(const Fld *fld,
 template <class Fld, class Loc>
 void 
 RenderField<Fld, Loc>::render_materials(const Fld *sfld, 
-					const string &node_display_type) 
+					const string &node_display_mode) 
 {
   //cerr << "rendering materials" << endl;
 
@@ -361,7 +369,7 @@ RenderField<Fld, Loc>::render_materials(const Fld *sfld,
       mesh->begin(niter);  
       typename Fld::mesh_type::Node::iterator niter_end;  
       mesh->end(niter_end);
-      const bool disks_p = node_display_type == "Disks";
+      const bool disks_p = node_display_mode == "Disks";
 
       while (niter != niter_end) {
 	typename Fld::value_type tmp;
@@ -512,10 +520,10 @@ RenderField<Fld, Loc>::render_materials(const Fld *sfld,
   }
 
   // Update these when the data changes. 
-  if (node_switch_) { node_switch_->reset_bbox(); }
-  if (edge_switch_) { edge_switch_->reset_bbox(); }
-  if (face_switch_) { face_switch_->reset_bbox(); }
-  if (data_switch_) { data_switch_->reset_bbox(); }
+  if (node_switch_.get_rep()) { node_switch_->reset_bbox(); }
+  if (edge_switch_.get_rep()) { edge_switch_->reset_bbox(); }
+  if (face_switch_.get_rep()) { face_switch_->reset_bbox(); }
+  if (data_switch_.get_rep()) { data_switch_->reset_bbox(); }
 }
 
 
@@ -523,7 +531,7 @@ RenderField<Fld, Loc>::render_materials(const Fld *sfld,
 template <class Fld, class Loc>
 GeomSwitch *
 RenderField<Fld, Loc>::render_nodes(const Fld *sfld, 
-				    const string &node_display_type,
+				    const string &node_display_mode,
 				    double node_scale,
 				    int node_resolution) 
 {
@@ -536,10 +544,10 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
 
   // 0 Points 1 Spheres 2 Axes 3 Disks
   int mode = 0;
-  if (node_display_type == "Points")       { mode = 0; }
-  else if (node_display_type == "Spheres") { mode = 1; }
-  else if (node_display_type == "Axes")    { mode = 2; }
-  else if (node_display_type == "Disks")   { mode = 3; }
+  if (node_display_mode == "Points")       { mode = 0; }
+  else if (node_display_mode == "Spheres") { mode = 1; }
+  else if (node_display_mode == "Axes")    { mode = 2; }
+  else if (node_display_mode == "Disks")   { mode = 3; }
 
   if (mode == 0) { // Points
     typename Fld::mesh_type::Node::size_type nsize;
@@ -613,14 +621,14 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
 template <class Fld, class Loc>
 GeomSwitch *
 RenderField<Fld, Loc>::render_edges(const Fld *sfld,
-				    const string &edge_display_type,
+				    const string &edge_display_mode,
 				    double edge_scale,
 				    int cylinder_resolution) 
 {
   //cerr << "rendering edgess" << endl;
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
 
-  const bool cyl = edge_display_type == "Cylinders";
+  const bool cyl = edge_display_mode == "Cylinders";
 
   GeomCLines* lines = NULL;
   GeomColoredCylinders* cylinders = NULL;

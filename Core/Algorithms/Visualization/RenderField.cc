@@ -27,7 +27,6 @@ RenderFieldBase::RenderFieldBase() :
   edge_switch_(0),
   face_switch_(0),
   data_switch_(0),
-  vec_node_(0),
   def_mat_handle_(0),
   color_handle_(0),
   mats_(0)
@@ -108,7 +107,6 @@ to_vector(const Vector &in, Vector &out)
 template <>
 bool 
 add_data(const Point &, const Tensor &, GeomArrows *, 
-	 GeomSwitch *,
 	 MaterialHandle &, const string &, double, bool, bool)
 {
   return false;
@@ -117,15 +115,18 @@ add_data(const Point &, const Tensor &, GeomArrows *,
 template <>
 bool 
 add_data(const Point &p, const Vector &d, GeomArrows *arrows, 
-	 GeomSwitch *,
 	 MaterialHandle &mat, const string &, double sf, bool normalize,
 	 bool bidirectional)
 {
   Vector v(d);
-  if (normalize) { v.safe_normalize(); }
-  arrows->add(p, v*sf, mat, mat, mat);
-  if (bidirectional) arrows->add(p, -v*sf, mat, mat, mat);
-  return true;
+  if (v.length2() > 1.e-12)
+  {
+    if (normalize) { v.safe_normalize(); }
+    arrows->add(p, v*sf, mat, mat, mat);
+    if (bidirectional) arrows->add(p, -v*sf, mat, mat, mat);
+    return true;
+  }
+  return false;
 }
 
 } // end namespace SCIRun
