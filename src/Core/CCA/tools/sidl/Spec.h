@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <string>
+#include <iosfwd>
 
 class Symbol;
 class SymbolTable;
@@ -16,6 +17,8 @@ class Argument;
 class SymbolTable;
 class Class;
 class Interface;
+class EmitState;
+class SState;
 
 class Definition {
 public:
@@ -23,6 +26,7 @@ public:
     virtual void staticCheck(SymbolTable*)=0;
     SymbolTable* getSymbolTable() const;
     std::string fullname() const;
+    virtual void emit(EmitState& out)=0;
 protected:
     Definition(const std::string& curfile, int lineno,
 	       const std::string& name);
@@ -30,8 +34,45 @@ protected:
     int lineno;
     std::string name;
     SymbolTable* symbols;
+    mutable bool emitted_declaration;
+    friend class Symbol;
 
     void checkMethods(const std::vector<Method*>&);
+};
+
+class CI : public Definition {
+public:
+    CI(const std::string& curfile, int lineno, const std::string& name,
+       MethodList*);
+    virtual ~CI();
+    void gatherParents(std::vector<CI*>& parents) const;
+    void gatherParentInterfaces(std::vector<Interface*>& parents) const;
+    void gatherMethods(std::vector<Method*>&) const;
+    void gatherVtable(std::vector<Method*>&) const;
+    std::vector<Method*>& myMethods();
+    std::string cppfullname(SymbolTable* forpackage) const;
+    std::string cppclassname() const;
+    MethodList* getMethods() const;
+protected:
+    virtual void emit(EmitState& out);
+    void emit_typeinfo(EmitState& e);
+    void emit_proxyclass(EmitState& e);
+    void emit_handlers(EmitState& e);
+    void emit_handler_table(EmitState& e);
+    void emit_handler_table_body(EmitState& e, int&, bool top);
+    void emit_interface(EmitState& e);
+    void emit_proxy(EmitState& e);
+    void emit_header(EmitState& e);
+    Class* parentclass;
+    std::vector<Interface*> parent_ifaces;
+    MethodList* mymethods;
+private:
+
+    bool singly_inherited() const;
+    void emit_recursive_vtable_comment(EmitState&, bool);
+    bool iam_class();
+    int isaHandler;
+    int vtable_base;
 };
 
 class Argument {
@@ -47,6 +88,17 @@ public:
     void staticCheck(SymbolTable* names) const;
     bool matches(const Argument* arg, bool checkmode) const;
     std::string fullsignature() const;
+
+    void emit_unmarshall(EmitState& e, const std::string& var,
+			 const std::string& bufname) const;
+    void emit_marshall(EmitState& e, const std::string& var,
+		       const std::string& bufname) const;
+    void emit_marshallsize(EmitState& e, const std::string& var) const;
+    void emit_startpoints(EmitState& e, const std::string& var) const;
+    void emit_prototype(SState&, SymbolTable* localScope) const;
+    void emit_prototype_defin(SState&, const std::string&,
+			      SymbolTable* localScope) const;
+    Mode getMode() const;
 private:
     Mode mode;
     Type* type;
@@ -65,11 +117,13 @@ public:
     void staticCheck(SymbolTable*) const;
 
     std::string fullsignature() const;
+
+    std::vector<Argument*>& getList();
 private:
     std::vector<Argument*> list;
 };
 
-class Class : public Definition {
+class Class : public CI {
 public:
     Class(const std::string& curfile, int lineno, const std::string& name,
 	  ScopedName* class_extends, ScopedNameList* class_implements,
@@ -77,17 +131,12 @@ public:
     Class(const std::string& curfile, int lineno, const std::string& name);
     virtual ~Class();
     virtual void staticCheck(SymbolTable*);
-    MethodList* getMethods() const;
     Class* getParentClass() const;
-    Method* findMethod(const Method*, bool recurse) const;
-    void gatherMethods(std::vector<Method*>&) const;
     Class* findParent(const std::string&);
+    Method* findMethod(const Method*, bool recurse) const;
 private:
     ScopedName* class_extends;
     ScopedNameList* class_implements;
-    MethodList* methods;
-    Class* parent_class;
-    std::vector<Interface*> parent_interfaces;
 };
 
 class DefinitionList {
@@ -97,24 +146,21 @@ public:
 
     void add(Definition*);
     void staticCheck(SymbolTable*) const;
+    void emit(EmitState& out);
 private:
     std::vector<Definition*> list;
 };
 
-class Interface : public Definition {
+class Interface : public CI {
 public:
     Interface(const std::string& curfile, int lineno, const std::string& id,
 	      ScopedNameList* interface_extends, MethodList*);
     Interface(const std::string& curfile, int lineno, const std::string& id);
     virtual ~Interface();
     virtual void staticCheck(SymbolTable*);
-    MethodList* getMethods() const;
     Method* findMethod(const Method*) const;
-    void gatherMethods(std::vector<Method*>&) const;
 private:
     ScopedNameList* interface_extends;
-    MethodList* methods;
-    std::vector<Interface*> parent_interfaces;
 };
 
 class Method {
@@ -148,6 +194,26 @@ public:
     int getLineno() const;
     std::string fullname() const;
     std::string fullsignature() const;
+
+    void emit_handler(EmitState& e) const;
+    void emit_comment(EmitState& e, const std::string& leader, bool filename) const;
+    enum Context {
+	Normal,
+	PureVirtual
+    };
+    void emit_prototype(SState& s,  Context ctx,
+			SymbolTable* localScope) const;
+    void emit_prototype_defin(EmitState& e, const std::string& prefix,
+			      SymbolTable* localScope) const;
+    void emit_proxy(EmitState& e, const std::string& fn,
+		    SymbolTable* localScope) const;
+
+    bool reply_required() const;
+    std::string get_classname() const;
+protected:
+    friend class CI;
+    int handlerNum;
+    int handlerOff;
 private:
     std::string curfile;
     int lineno;
@@ -172,6 +238,8 @@ public:
     void setInterface(Interface* c);
     Method* findMethod(const Method* match) const;
     void gatherMethods(std::vector<Method*>&) const;
+    void gatherVtable(std::vector<Method*>&) const;
+    std::vector<Method*>& getList();
 private:
     std::vector<Method*> list;
 };
@@ -182,6 +250,7 @@ public:
 	    DefinitionList* definition);
     virtual ~Package();
     virtual void staticCheck(SymbolTable*);
+    virtual void emit(EmitState& out);
 private:
     std::string name;
     DefinitionList* definition;
@@ -205,8 +274,10 @@ public:
 
     bool matches(const ScopedName*) const;
     std::string fullname() const;
+    std::string cppfullname(SymbolTable* forpackage=0) const;
 
     void bind(Symbol*);
+    Symbol* getSymbol() const;
 private:
     std::vector<std::string> names;
     bool leading_dot;
@@ -234,9 +305,11 @@ public:
     ~Specification();
 
     void add(DefinitionList*);
-    void staticCheck(SymbolTable* names) const;
+    void staticCheck();
+    void emit(std::ostream& out, std::ostream& headerout) const;
 private:
     std::vector<DefinitionList*> list;
+    SymbolTable* globals;
 };
 
 class Type {
@@ -245,9 +318,28 @@ protected:
 public:
     virtual ~Type();
     virtual void staticCheck(SymbolTable* names) const=0;
+    virtual void emit_unmarshall(EmitState& e, const std::string& arg,
+				 const std::string& bufname) const=0;
+    virtual void emit_marshall(EmitState& e, const std::string& arg,
+			       const std::string& bufname) const=0;
+    virtual void emit_marshallsize(EmitState& e, const std::string& arg) const=0;
+    virtual void emit_startpoints(EmitState& e, const std::string& arg) const=0;
+    virtual void emit_rettype(EmitState& e, const std::string& name) const=0;
+
+    enum ArgContext {
+	ReturnType,
+	ArgIn,
+	ArgOut,
+	ArgInOut,
+	ArrayTemplate
+    };
+    virtual void emit_prototype(SState& s, ArgContext ctx,
+				SymbolTable* localScope) const=0;
 
     virtual bool matches(const Type*) const=0;
     virtual std::string fullname() const=0;
+
+    virtual bool isvoid() const=0;
 
     static Type* arraytype();
     static Type* booltype();
@@ -267,14 +359,25 @@ public:
 class BuiltinType : public Type {
 public:
     virtual void staticCheck(SymbolTable* names) const;
+    virtual void emit_unmarshall(EmitState& e, const std::string& arg,
+				   const std::string& bufname) const;
+    virtual void emit_marshall(EmitState& e, const std::string& arg,
+			       const std::string& bufname) const;
+    virtual void emit_marshallsize(EmitState& e, const std::string& arg) const;
+    virtual void emit_startpoints(EmitState& e, const std::string& arg) const;
+    virtual void emit_rettype(EmitState& e, const std::string& name) const;
+    virtual void emit_prototype(SState& s, ArgContext ctx,
+				SymbolTable* localScope) const;
     virtual bool matches(const Type*) const;
     virtual std::string fullname() const;
+    virtual bool isvoid() const;
 protected:
     friend class Type;
-    BuiltinType(const std::string& cname);
+    BuiltinType(const std::string& cname, const std::string& nexusname);
     virtual ~BuiltinType();
 private:
     std::string cname;
+    std::string nexusname;
 };
 
 class NamedType : public Type {
@@ -282,8 +385,18 @@ public:
     NamedType(const std::string& curfile, int lineno, ScopedName*);
     virtual ~NamedType();
     virtual void staticCheck(SymbolTable* names) const;
+    virtual void emit_unmarshall(EmitState& e, const std::string& arg,
+				   const std::string& bufname) const;
+    virtual void emit_marshall(EmitState& e, const std::string& arg,
+			       const std::string& bufname) const;
+    virtual void emit_marshallsize(EmitState& e, const std::string& arg) const;
+    virtual void emit_startpoints(EmitState& e, const std::string& arg) const;
+    virtual void emit_rettype(EmitState& e, const std::string& name) const;
+    virtual void emit_prototype(SState& s, ArgContext ctx,
+				SymbolTable* localScope) const;
     virtual bool matches(const Type*) const;
     virtual std::string fullname() const;
+    virtual bool isvoid() const;
 protected:
     friend class Type;
 private:
@@ -295,8 +408,18 @@ private:
 class ArrayType : public Type {
 public:
     virtual void staticCheck(SymbolTable* names) const;
+    virtual void emit_unmarshall(EmitState& e, const std::string& arg,
+				   const std::string& bufname) const;
+    virtual void emit_marshall(EmitState& e, const std::string& arg,
+			       const std::string& bufname) const;
+    virtual void emit_marshallsize(EmitState& e, const std::string& arg) const;
+    virtual void emit_startpoints(EmitState& e, const std::string& arg) const;
+    virtual void emit_rettype(EmitState& e, const std::string& name) const;
+    virtual void emit_prototype(SState& s, ArgContext ctx,
+				SymbolTable* localScope) const;
     virtual bool matches(const Type*) const;
     virtual std::string fullname() const;
+    virtual bool isvoid() const;
 protected:
     friend class Type;
     ArrayType(Type* subtype, int dim);
@@ -307,8 +430,12 @@ private:
 };
 
 #endif
+
 //
 // $Log$
+// Revision 1.3  1999/09/17 05:07:26  sparker
+// Added nexus code generation capability
+//
 // Revision 1.2  1999/08/30 17:39:54  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)
