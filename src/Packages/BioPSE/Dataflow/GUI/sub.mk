@@ -32,6 +32,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/BuildMisfitField.tcl\
 	$(SRCDIR)/ConductivitySearch.tcl\
 	$(SRCDIR)/ConfigureElectrode.tcl\
+	$(SRCDIR)/ConfigureWireElectrode.tcl\
 	$(SRCDIR)/DipoleSearch.tcl\
 	$(SRCDIR)/InsertVoltageSource.tcl\
 	$(SRCDIR)/IntegrateCurrent.tcl\

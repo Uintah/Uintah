@@ -16,7 +16,7 @@
 #
 
 ##
- #  ConfigureElectrode.tcl: Set theta and phi for the dipole
+ #  ConfigureWireElectrode.tcl: Set theta and phi for the dipole
  #
  #  Written by:
  #   David Weinstein
@@ -30,19 +30,21 @@
  #
  ##
 
-catch {rename BioPSE_Forward_ConfigureElectrode ""}
+catch {rename BioPSE_Forward_ConfigureWireElectrode ""}
 
-itcl_class BioPSE_Forward_ConfigureElectrode {
+itcl_class BioPSE_Forward_ConfigureWireElectrode {
     inherit Module
     constructor {config} {
-        set name ConfigureElectrode
+        set name ConfigureWireElectrode
         set_defaults
     }
     method set_defaults {} {
-	global $this-active
-	set $this-active "front"
 	global $this-voltage
 	set $this-voltage 5
+	global $this-radius
+	set $this-radius 0.1
+	global $this-nu
+	set $this-nu 5
     }
     method make_entry {w text v c} {
         frame $w
@@ -63,19 +65,17 @@ itcl_class BioPSE_Forward_ConfigureElectrode {
         toplevel $w
         wm minsize $w 150 30
         frame $w.f
-	label $w.f.l -text "Active Side of Electrode:"
-	global $this-active
-	radiobutton $w.f.front -text "Front" \
-	    -variable $this-active -value "front"
-	radiobutton $w.f.back -text "Back" \
-	    -variable $this-active -value "back"
-	radiobutton $w.f.both -text "Both Sides" \
-	    -variable $this-active -value "both"
 	global $this-voltage
-	make_entry $w.f.v "Electrode Voltage:" $this-voltage \
+	make_entry $w.f.v "Voltage:" $this-voltage \
+		"$this-c needexecute"
+	global $this-radius
+	make_entry $w.f.r "Wire radius:" $this-radius \
+		"$this-c needexecute"
+	global $this-nu
+	make_entry $w.f.nu "Circular segments:" $this-nu \
 		"$this-c needexecute"
 	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.l $w.f.front $w.f.back $w.f.both $w.f.v $w.f.b -side top
+	pack $w.f.v $w.f.r $w.f.nu $w.f.b -side top
         pack $w.f -side top -fill x -expand yes
     }
 }
