@@ -46,62 +46,76 @@
 #include <Core/share/share.h>
 #include <math.h>
 
-inline SCICORESHARE double Pow(double d, double p)
-{
+namespace SCIRun {
+
+  inline SCICORESHARE double Pow(double d, double p)
+  {
     return pow(d,p);
-}
+  }
 
-inline SCICORESHARE int Sqrt(int i)
-{
+
+  inline double Pow(double x, unsigned int p)
+  {
+    double result=1;
+    while(p){
+      if(p&1)
+        result*=x;
+      x*=x;
+      p>>=1;
+    }
+    return result;
+  }
+
+  inline double Pow(double x, int p)
+  {
+    if(p < 0){
+      p=-p;
+      double result=1;
+      while(p){
+        if(p&1)
+          result*=x;
+        x*=x;
+        p>>=1;
+      }
+      return 1./result;
+    } else { 
+      double result=1;
+      while(p){
+        if(p&1)
+          result*=x;
+        x*=x;
+        p>>=1;
+      }
+      return result;
+    }
+  }
+
+  inline SCICORESHARE int Sqrt(int i)
+  {
     return (int)sqrt((double)i);
-}
+  }
 
-inline SCICORESHARE double Sqrt(double d)
-{
+  inline SCICORESHARE double Sqrt(double d)
+  {
     return sqrt(d);
-}
+  }
 
 #if defined(linux)||defined(_WIN32)
-inline double Cbrt(double d)
-{
+  inline double Cbrt(double d)
+  {
     return pow(d, 1./3.);
-}
+  }
 #else
-inline double Cbrt(double d)
-{
+  inline double Cbrt(double d)
+  {
     return cbrt(d);
-}
+  }
 #endif
 
-inline SCICORESHARE double Exp(double d)
-{
-    return exp(d);
-}
-
-inline SCICORESHARE double Exp10(double p)
-{
-    return pow(10.0, p);
-}
-
-inline SCICORESHARE double Hypot(double x, double y)
-{
-    return hypot(x, y);
-}
-
-inline SCICORESHARE double Sqr(double x)
-{
+  inline SCICORESHARE double Sqr(double x)
+  {
     return x*x;
+  }
 }
 
-inline SCICORESHARE double ipow(double x, int p)
-{
-  double result=1;
-  while(p){
-    if(p&1)
-      result*=x;
-    x*=x;
-      p>>=1;
-  }
-  return result;
-}
 #endif
