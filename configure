@@ -685,6 +685,7 @@ if test "$davew" = "yes"; then
                   DaveW/Modules/FEM/Makefile \
                   DaveW/Modules/ISL/Makefile \
                   DaveW/Modules/MEG/Makefile \
+                  DaveW/Modules/Path/Makefile \
                   DaveW/Modules/Readers/Makefile \
                   DaveW/Modules/SiRe/Makefile \
                   DaveW/Modules/Tensor/Makefile \
