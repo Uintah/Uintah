@@ -25,6 +25,7 @@ public:
 	TriggerPort,
 	ReSchedule,
 	MultiSend,
+	Demand,
 
 	MUIDispatch,
 
