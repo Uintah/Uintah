@@ -110,7 +110,9 @@
     // - only on the first timestep
     // - examine the vertical gradient of vol_frac for the nozzle matl (0)
     // - 
+    cout << "dataArchiver " << dataArchiver->getCurrentTimestep()<< endl;
     if (dataArchiver->getCurrentTimestep() == 1) {
+   
       Vector dx = patch->dCell();
       CellIterator iter=patch->getCellIterator();
       IntVector lo = iter.begin();
@@ -118,33 +120,67 @@
       const Level* level = getLevel(patches);
       Point this_cell_pos = level->getCellPosition(hi);
       
-      if (this_cell_pos.x() < 0.38){
+      cout << "this_cell_pos " << this_cell_pos << endl;
       
-        int k   = 0;
-        int mat = 0;
-        
-        for(int i = lo.x(); i < hi.x(); i++) {
-          for(int j = lo.y(); j < hi.y()-1; j++) {
-            IntVector c(i, j, k);
-            IntVector adj(i, j+1, k);
-            Point cell_pos = level->getCellPosition(c);
+      
+      int k   = 0;
+      int mat = 0;
+      //__________________________________
+      //  find the interior of the nozzle
+      for(int i = lo.x(); i < hi.x(); i++) {
+        for(int j = lo.y(); j < hi.y()-1; j++) {
+          IntVector c(i, j, k);
+          IntVector adj(i, j+1, k);
+          Point cell_pos = level->getCellPosition(c);
 
-            // compute vertical gradient of vol_frac
-            double gradY = (vol_frac[mat][adj] - vol_frac[mat][c])/dx.y();
-            
-            // if cell position is below a certain position
+          // compute vertical gradient of vol_frac
+          double gradY = (vol_frac[mat][adj] - vol_frac[mat][c])/dx.y();
 
-            if(vol_frac[mat][adj] > 0.001 && cell_pos.y() < 0.13){
-              if (fabs(gradY)>0.1){
-                cout << c << " adj " << vol_frac[mat][adj]
-                          << " c " << vol_frac[mat][c]
-                          << " gradY " << gradY << endl;
-                j = hi.y();
-              }
+          // if cell position is below a certain position
+
+          if(vol_frac[mat][adj] > 0.001 && 
+             cell_pos.y() < 0.15 && 
+             cell_pos.x() < 0.42){
+            if (fabs(gradY)>0.1){
+              cout << c << " adj " << vol_frac[mat][adj]
+                        << " c " << vol_frac[mat][c]
+                        << " gradY " << gradY
+                        << " cellPos " << cell_pos << endl;
+              j = hi.y();
             }
-          }
-        }
-      }
+          } // if in right area
+        } // j loop
+      }  // i loop
+
+      //__________________________________
+      //  Find the edge of the upper dome      
+      cout << "UPPER DOME" << endl;
+   
+      for(int j = lo.y(); j < hi.y()-1; j++) {
+        for(int i = hi.x() -1; i > lo.x()+1; i--) {
+          IntVector c(i, j, k);
+          IntVector adj(i-1, j, k);
+          Point cell_pos = level->getCellPosition(c);
+
+          // compute vertical gradient of vol_frac
+          double gradX = (vol_frac[mat][adj] - vol_frac[mat][c])/dx.x();
+
+          // if cell position is below a certain position
+
+          if(fabs(vol_frac[mat][adj]) > 0.001 && 
+             (c.y() < 170  && c.y() > 65) &&
+             (c.x() < 158 && c.x() >118) ){
+           //  cout << c << " gradX " << gradX << endl;
+            if (fabs(gradX)>0.1){
+              cout << c << " adj " << vol_frac[mat][adj]
+                        << " c " << vol_frac[mat][c]
+                        << " gradX " << gradX
+                        << " cellPos " << cell_pos << endl;
+              i = lo.x()+1;
+            }
+          } // if in right area
+        } // i loop
+      }  // j
     }
   #endif
 #endif  //running_NGC_nozzle
