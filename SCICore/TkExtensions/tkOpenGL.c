@@ -25,7 +25,7 @@
 
 #ifdef _WIN32
 #include <X11\XUtil.h>
-#include <tcltk\tk\win\tkWinInt.h>
+#include <tkWinInt.h>
 #define GLXContext HGLRC
 #endif
 
