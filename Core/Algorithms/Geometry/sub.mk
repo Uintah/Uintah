@@ -16,11 +16,17 @@
 #
 
 # Makefile fragment for this subdirectory
-SRCDIR := Core/Algorithms
 
-SUBDIRS := \
-	$(SRCDIR)/Geometry		\
-	$(SRCDIR)/Visualization		\
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+SRCDIR   := Core/Algorithms/Geometry
 
+SRCS     += \
+        $(SRCDIR)/CoregPts.cc \
+
+PSELIBS := Core/Datatypes Core/Containers Core/Thread \
+	Core/Exceptions Core/Geometry Core/Disclosure
+
+LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
