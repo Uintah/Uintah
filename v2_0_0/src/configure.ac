@@ -1489,7 +1489,7 @@ else
   *-darwin*)
     SCI_TRY_LINK(DL,dlopen in libdl,[
     #include <dlfcn.h>
-    ],$thirdparty/include,dl,$thirdparty/lib,,[
+    ],$sci_thirdparty_includes,dl,$sci_thirdparty_libs,,[
       dlopen("bogus", 0);
     ],not-optional)
     ;;

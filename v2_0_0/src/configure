@@ -8611,7 +8611,7 @@ _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
 
-for i in $thirdparty/include; do
+for i in $sci_thirdparty_includes; do
   # make sure it exists
   if test -d $i; then
     if test -z "$_sci_includes"; then
@@ -8633,7 +8633,7 @@ done
 
 _sci_lib_path=
 
-for i in $thirdparty/lib; do
+for i in $sci_thirdparty_libs; do
   # make sure it exists
   if test -d $i; then
     if test -z "$_sci_lib_path"; then
@@ -8682,7 +8682,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
 
-eval LIB_DIR_DL='"$thirdparty/lib"'
+eval LIB_DIR_DL='"$sci_thirdparty_libs"'
 eval DL_LIB_DIR_FLAG='"$_sci_lib_path"'
 eval DL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_DL="yes"
