@@ -1,0 +1,30 @@
+#!/bin/sh
+
+TEST=$1
+MALLOC_STATS=$2
+TMPDIR=$3
+ERRORS_TO=$4
+
+grep 'src' $MALLOC_STATS > $TMPDIR/scinew_malloc_stats
+retval=$?
+
+if [ $retval == "0" ]; then
+    echo "Memory leak test failed for $TEST."
+    if [ "$ERRORS_TO" != "" ]; then
+	cat > $TMPDIR/error.msg <<EOF
+Subject: *** Automated Memory Leak Alert ***
+To: $ERRORS_TO
+
+Memory leak test failed for $TEST.  
+Here are the object allocated with scinew but not deleted. 
+
+EOF
+        cat $TMPDIR/scinew_malloc_stats >> $TMPDIR/error.msg
+	/usr/lib/sendmail "$ERRORS_TO" < $TMPDIR/error.msg
+        echo "Mail sent"
+    fi
+    exit 1
+fi
+
+exit 0
+
