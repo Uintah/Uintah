@@ -36,7 +36,8 @@ itcl_class BioPSE_Forward_ModifyConductivities {
 
     method get_item {name} {
 	set ht .ui[modname].f.h
-	return [$ht entry cget $name -data]
+	set id [$ht find -name $name]
+	return [$ht entry cget $id -data]
     }
 
     method clear_all {} {
