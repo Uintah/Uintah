@@ -14,10 +14,7 @@
 #ifndef SCI_Classlib_Assert_h
 #define SCI_Classlib_Assert_h 1
 
-#ifdef SCI_ASSERTIONS
-#ifndef SCI_ASSERTION_LEVEL
-#define SCI_ASSERTION_LEVEL 2
-#endif
+#include <config.h>
 
 #include "Exceptions.h"
 
@@ -77,7 +74,7 @@
 #define ASSERTRANGE(c, l, h)
 #endif
 
-#else
+#if SCI_ASSERTION_LEVEL == 0
 
 #define ASSERTL1(condition)
 #define ASSERTL2(condition)
