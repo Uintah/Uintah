@@ -10761,6 +10761,15 @@ fi
 
 
 if test "$sci_check_plplot" = "yes"; then
+  if test "$with_plplot"; then
+    _sci_lib="$with_plplot/lib"
+    _sci_inc="$with_plplot/include"
+  else
+    _sci_lib="/usr/local/plplot/lib $sci_thirdparty_libs"
+    _sci_inc="/usr/local/plplot/include $sci_thirdparty_includes"
+  fi
+
+
 #  SCI_TRY_LINK(PLPLOTTCLTK,optional optimized plplottcltk library and headers,[
 #
 #  ],$_sci_inc,plplottcltk, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
@@ -10947,7 +10956,6 @@ LIBS=$_sci_savelibs
 _sci_lib_path=''
 _sci_libs=''
 _sci_includes=''
-
 
 
 
@@ -18757,6 +18765,13 @@ if test "$sci_check_mdsplus" = "yes"; then
     _sci_inc="/usr/local/mdsplus/include"
   fi
 
+# mdsplus is a C lib so it has to be checked as a C file not CC..
+  cxx="$CXX"
+  CXX="$CC"
+
+  ext="$ac_ext"
+  ac_ext="c"
+
 
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
@@ -18881,7 +18896,7 @@ eval INC_MDSPLUS_H=''
 eval HAVE_MDSPLUS_H="no"
 echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
-if test "optional" =  "not-optional"; then
+if test "not-optional" =  "not-optional"; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -18946,6 +18961,10 @@ echo "$as_me: error: One or more of the MDSPLUS components is missing." >&2;}
    { (exit 1); exit 1; }; }
     echo
   fi
+
+# Restore the previous settings.
+  CXX="$cxx"
+  ac_ext="$ext"
 fi #end sci_check_mdsplus
 
 
