@@ -553,14 +553,14 @@ EditTransferFunc2::presave()
   for (i = widgets_.size(); i < gui_name_.size(); i++)
   {
     const string num = to_string(i);
-    ctx->erase("name-" + num);
-    ctx->erase(num +"-color-r");
-    ctx->erase(num +"-color-g");
-    ctx->erase(num +"-color-b");
-    ctx->erase(num +"-color-a");
-    ctx->erase("state-" + num);
-    ctx->erase("shadeType-" + num);
-    ctx->erase("on-" + num);
+    //    ctx->erase("name-" + num);
+    //    ctx->erase(num +"-color-r");
+    //    ctx->erase(num +"-color-g");
+    //    ctx->erase(num +"-color-b");
+    //    ctx->erase(num +"-color-a");
+    //    ctx->erase("state-" + num);
+    //    ctx->erase("shadeType-" + num);
+    //    ctx->erase("on-" + num);
 
     delete gui_name_[i];
     delete gui_color_r_[i];
@@ -645,7 +645,7 @@ EditTransferFunc2::resize_gui(int n)
 
   if (i != 0)
   {
-    ctx->erase("marker");
+    //    ctx->erase("marker");
     GuiString marker(ctx->subVar("marker"));
     marker.set("end");
   }
