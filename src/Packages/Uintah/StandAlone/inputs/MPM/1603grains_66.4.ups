@@ -10549,8 +10549,8 @@
 		<lower>[0.0,0.0,0.0]</lower>
 		<upper>[0.1,0.1,0.21]</upper>
 		<patches>[1,1,1]</patches>
+		<resolution>[100,100,208]</resolution>
 	    </Box>
-	    <spacing>[.001,.001,.001]</spacing>
 	</Level>
         <BoundaryConditions>
                 <Face side = "x-">
