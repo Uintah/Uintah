@@ -113,7 +113,7 @@ itcl_class Teem_DataIO_HDF5DataReader {
 
 	# extansion to append if no extension supplied by user
 	set defext ".fld"
-	set title "Open nrrd file"
+	set title "Open HDF5 file"
 	
 	# file types to appers in filter box
 	set types {
@@ -270,15 +270,20 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	iwidgets::labeledframe $w.dm -labeltext "Data Management"
 	set dm [$w.dm childsite]
 
-	label $dm.mlabel -text "Merge like data" -width 15 -anchor w -just left
-	checkbutton $dm.merge -variable $this-mergeData
+	label $dm.mlikelabel -text "Merge like data" -width 15 -anchor w -just left
+	radiobutton $dm.mergelike -variable $this-mergeData -value 1
+	
+	label $dm.mtimelabel -text "Merge time data" -width 15 -anchor w -just left
+	radiobutton $dm.mergetime -variable $this-mergeData -value 2
 	
 	label $dm.asvt -text "Assume Vector-Tensor data" \
 	    -width 33 -anchor w -just left
 	checkbutton $dm.svt -variable $this-assumeSVT
 	
-	pack $dm.mlabel -side left
-	pack $dm.merge  -side left
+	pack $dm.mlikelabel -side left
+	pack $dm.mergelike  -side left
+	pack $dm.mtimelabel -side left -padx  20
+	pack $dm.mergetime  -side left
 	pack $dm.asvt   -side left -padx  20
 	pack $dm.svt    -side left
 
@@ -335,9 +340,9 @@ itcl_class Teem_DataIO_HDF5DataReader {
 
 	    pack $w.$i.l -side left
 
-	    scaleEntry4 $w.$i.start \
+	    scaleEntry2 $w.$i.start \
 		0 $count_val1 200 \
-		$this-$i-start $this-$i-start2 $i
+		$this-$i-start $this-$i-start2
 
 	    scaleEntry2 $w.$i.count \
 		1 $count_val  200 \
@@ -443,48 +448,6 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	    set $var2 $count }
 	
 	set $var1 [set $var2]
-    }
-
-
-    method scaleEntry4 { win start count length var1 var2 i } {
-	frame $win 
-	pack $win -side top -padx 5
-
-	scale $win.s -from $start -to $count -length $length \
-	    -variable $var1 -orient horizontal -showvalue false \
-	    -command "$this updateSliderEntry4 $i"
-
-	entry $win.e -width 4 -text $var2
-
-	bind $win.e <Return> \
-	    "$this manualSliderEntry4 $start $count $var1 $var2 $i"
-
-	pack $win.s -side left
-	pack $win.e -side bottom -padx 5
-    }
-
-    method updateSliderEntry4 { i someUknownVar } {
-
-	global $this-$i-start
-	global $this-$i-start2
-	global $this-$i-count
-	global $this-$i-count2
-
-	set $this-$i-start2 [set $this-$i-start]
-	set $this-$i-count2  [set $this-$i-count]
-    }
-
-    method manualSliderEntry4 { start count var1 var2 i } {
-
-	if { [set $var2] < $start } {
-	    set $var2 $start }
-	
-	if { [set $var2] > $count } {
-	    set $var2 $count }
-	
-	set $var1 [set $var2]
-
-	updateSliderEntry4 $i 0
     }
 
     method build_tree { filename } {
@@ -729,11 +692,11 @@ itcl_class Teem_DataIO_HDF5DataReader {
 		    $w.$i.stride.s configure -from 1 -to $count_val
 
 		    bind $w.$i.start.e <Return> \
-			"$this manualSliderEntry4 0 $count_val1 $this-$i-start $this-$i-start2 $i"
+			"$this manualSliderEntry 0 $count_val1 $this-$i-start $this-$i-start2 $i"
 		    bind $w.$i.count.e  <Return> \
-			"$this manualSliderEntry  1 $count_val $this-$i-count $this-$i-count2"
+			"$this manualSliderEntry 1 $count_val $this-$i-count $this-$i-count2"
 		    bind $w.$i.stride.e  <Return> \
-			"$this manualSliderEntry  1 $count_val $this-$i-stride $this-$i-stride2"
+			"$this manualSliderEntry 1 $count_val $this-$i-stride $this-$i-stride2"
 		}
 
 		# Update the count values to be at the initials values.
