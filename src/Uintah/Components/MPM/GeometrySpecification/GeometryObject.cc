@@ -32,6 +32,18 @@ GeometryObject::~GeometryObject()
 {
 }
 
+bool GeometryObject::inside(const Point &p) const
+{
+}
+
+void GeometryObject::add(GeometryObject* go)
+{
+}
+
+Box GeometryObject::getBoundingBox() const
+{
+}
+
 void GeometryObject::setObjInfo(int n,Point lo,Point hi,
 				Vector dx,IntVector nppc)
 {
@@ -472,6 +484,13 @@ void GeometryObject::fillWithParticles(vector<Material *> &materials,
 
   
 // $Log$
+// Revision 1.5  2000/04/19 21:31:08  jas
+// Revamping of the way objects are defined.  The different geometry object
+// subtypes only do a few simple things such as testing whether a point
+// falls inside the object and also gets the bounding box for the object.
+// The constructive solid geometry objects:union,difference, and intersection
+// have the same simple operations.
+//
 // Revision 1.4  2000/04/19 05:26:07  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)

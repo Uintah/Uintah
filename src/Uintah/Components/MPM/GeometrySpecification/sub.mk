@@ -9,10 +9,24 @@ SRCS     += $(SRCDIR)/GeometryGrid.cc $(SRCDIR)/GeometryObject.cc \
 	$(SRCDIR)/GeometryPiece.cc $(SRCDIR)/Material.cc \
 	$(SRCDIR)/Problem.cc $(SRCDIR)/BoxGeometryPiece.cc \
 	$(SRCDIR)/CylinderGeometryPiece.cc $(SRCDIR)/TriGeometryPiece.cc \
-	$(SRCDIR)/SphereGeometryPiece.cc 
+	$(SRCDIR)/SphereGeometryPiece.cc  $(SRCDIR)/BoxGeometryObject.cc \
+	$(SRCDIR)/SphereGeometryObject.cc \
+	$(SRCDIR)/CylinderGeometryObject.cc \
+	$(SRCDIR)/TriGeometryObject.cc \
+	$(SRCDIR)/UnionGeometryObject.cc \
+	$(SRCDIR)/DifferenceGeometryObject.cc \
+	$(SRCDIR)/IntersectionGeometryObject.cc 
+
 
 #
 # $Log$
+# Revision 1.3  2000/04/19 21:31:09  jas
+# Revamping of the way objects are defined.  The different geometry object
+# subtypes only do a few simple things such as testing whether a point
+# falls inside the object and also gets the bounding box for the object.
+# The constructive solid geometry objects:union,difference, and intersection
+# have the same simple operations.
+#
 # Revision 1.2  2000/04/14 02:05:47  jas
 # Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
 # Tri.  This made the GeometryObject class simpler since many of the
