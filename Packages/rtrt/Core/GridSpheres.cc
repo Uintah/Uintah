@@ -256,11 +256,13 @@ void GridSpheres::preprocess(double, int&, int&)
   float* p=spheres;
   int tc2=totalcells*totalcells;
   for(int i=0;i<nspheres;i++){
+#ifndef __ia64__
     double tnow=SCIRun::Time::currentSeconds();
     if(tnow-itime > 5.0){
       cerr << i << "/" << nspheres << '\n';
       itime=tnow;
     }
+#endif
     int sx, sy, sz, ex, ey, ez;
     float current_radius;
     if (dpy->radius_index > 0) {
@@ -311,11 +313,13 @@ void GridSpheres::preprocess(double, int&, int&)
   current.initialize(0);
   p=spheres;
   for(int i=0;i<nspheres;i++){
+#ifndef __ia64__
     double tnow=SCIRun::Time::currentSeconds();
     if(tnow-itime > 5.0){
       cerr << i << "/" << nspheres << '\n';
       itime=tnow;
     }
+#endif
     int sx, sy, sz, ex, ey, ez;
     float current_radius;
     if (dpy->radius_index > 0) {
