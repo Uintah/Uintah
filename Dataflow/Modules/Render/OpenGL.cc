@@ -885,7 +885,7 @@ void OpenGL::redraw_frame()
 	string pathname;
 	if (lasthash == -1) pathname = "./";
 	else pathname = segname.substr(0, lasthash+1);
-	string fname = segname.substr(lasthash+1, -1);
+	string fname = segname.substr(lasthash+1, segname.size()-(lasthash+1));
 	
 	//      cerr << "Saving a movie!\n";
 	if( viewwindow->makeMPEG ){
