@@ -56,10 +56,12 @@ namespace SCIRun {
 DECLARE_MAKER(RescaleColorMap)
 RescaleColorMap::RescaleColorMap(GuiContext* ctx)
   : Module("RescaleColorMap", ctx, Filter, "Visualization", "SCIRun"),
-    isFixed(ctx->subVar("isFixed")),
-    min(ctx->subVar("min")),
-    max(ctx->subVar("max")),
-    makeSymmetric(ctx->subVar("makeSymmetric"))
+    gIsFixed_(ctx->subVar("isFixed")),
+    gMin_(ctx->subVar("min")),
+    gMax_(ctx->subVar("max")),
+    gMakeSymmetric_(ctx->subVar("makeSymmetric")),
+    cGeneration_(-1),
+    error_(false)
 {
 }
 
@@ -70,103 +72,162 @@ RescaleColorMap::~RescaleColorMap()
 void
 RescaleColorMap::execute()
 {
-  ColorMapHandle cmap;
-  ColorMapIPort *imap = (ColorMapIPort *)get_iport("ColorMap");
+  ColorMapHandle cHandle;
+  ColorMapIPort *cmap_port = (ColorMapIPort *)get_iport("ColorMap");
   ColorMapOPort *omap = (ColorMapOPort *)get_oport("ColorMap");
-  if (!imap) {
+ 
+ if (!cmap_port) {
     error("Unable to initialize iport 'ColorMap'.");
     return;
   }
-  if (!omap) {
-    error("Unable to initialize oport 'ColorMap'.");
+
+  // the colormap input is required
+  if (!cmap_port->get(cHandle) || !(cHandle.get_rep())) {
+    error( "No colormap handle or representation" );
     return;
   }
-  if(!imap->get(cmap)) {
-    return;
+
+  bool update = false;
+
+  // Check to see if the input colormap has changed.
+  if( cGeneration_ != cHandle->generation )
+  {
+    cGeneration_ = cHandle->generation;
+    update = true;
   }
-  cmap.detach();
-  if( isFixed.get() ){
-    cmap->Scale(min.get(), max.get());
-    port_range_type range = get_iports("Field");
-    if (range.first == range.second) {
-      omap->send(cmap);
-      return;
-    }
+ 
+  string units;
+  unsigned int nFields = 0;
+  std::vector<FieldHandle> fHandles;
+
+  port_range_type range = get_iports("Field");
+  if (range.first != range.second) {
     port_map_type::iterator pi = range.first;
-    while (pi != range.second)
-    {
+    
+    while (pi != range.second) {
       FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);
       if (!ifield) {
 	error("Unable to initialize iport '" + to_string(pi->second) + "'.");
 	return;
       }
-      FieldHandle field;
-      if (ifield->get(field) && field.get_rep()) {
-	string units;
-	if (field->get_property("units", units))
-	  cmap->set_units(units);
+      
+      FieldHandle fHandle;
+      if (ifield->get(fHandle) && fHandle.get_rep()) {
+
+	fHandles.push_back(fHandle);
+
+	fHandle->get_property("units", units);
+
+	if( nFields == fGeneration_.size() ) {
+	  fGeneration_.push_back( fHandle->generation );
+	  update = true;
+	} else if ( fGeneration_[nFields] != fHandle->generation ) {
+	  fGeneration_[nFields] = fHandle->generation;
+	  update = true;
+	}
       }
       ++pi;
+      ++nFields;
     }
-    omap->send(cmap);
-  } else {
-    port_range_type range = get_iports("Field");
-    if (range.first == range.second)
-      return;
-    port_map_type::iterator pi = range.first;
-    // initialize the following so that the compiler will stop warning us about
-    // possibly using unitialized variables
-    double minv = MAXDOUBLE, maxv = -MAXDOUBLE;
-    int have_some=0;
-    while (pi != range.second)
-    {
-      FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);
-      if (!ifield) {
-	error("Unable to initialize iport '" + to_string(pi->second) + "'.");
+  }
+
+  while( fGeneration_.size() > nFields ) {
+    update = true;
+    fGeneration_.pop_back();
+  }
+
+  int isFixed = gIsFixed_.get();
+  double min = gMin_.get();
+  double max = gMax_.get();
+  int makeSymmetric = gMakeSymmetric_.get();
+
+  if( isFixed_ != isFixed ||
+      min_  != min  ||
+      max_  != max  ||
+      makeSymmetric_ != makeSymmetric ) {
+
+    isFixed_ = isFixed;
+    min_ = min;
+    max_ = max;
+    makeSymmetric_ = makeSymmetric;
+
+    update = true;
+  }
+
+  if( !cHandle_.get_rep() ||
+      update ||
+      error_ ) {
+
+    error_ = false;
+    cHandle_ = cHandle;
+
+    cHandle_.detach();
+
+    if( units.length() != 0 )
+      cHandle_->set_units(units);
+
+    if( isFixed ){
+      cHandle_->Scale(min, max);
+
+    } else {
+
+      if (fHandles.size() == 0) {
+	error("No field(s) provided -- Color map can not be rescaled.");
+	error_ = true;
 	return;
       }
-      FieldHandle field;
-      if (ifield->get(field) && field.get_rep()) {
+
+      // initialize the following so that the compiler will stop
+      // warning us about possibly using unitialized variables
+      double minv = MAXDOUBLE, maxv = -MAXDOUBLE;
+
+      for( unsigned int i=0; i<fHandles.size(); i++ ) {
+	FieldHandle fHandle = fHandles[i];
 
 	ScalarFieldInterfaceHandle sfi;
-	string units;
-	if (field->get_property("units", units))
-	  cmap->set_units(units);
-	if ((sfi = field->query_scalar_interface(this)).get_rep())
-	{
+
+	if ((sfi = fHandle->query_scalar_interface(this)).get_rep()) {
 	  sfi->compute_min_max(minmax_.first, minmax_.second);
 	} else {
-          error("RescaleColorMap::Not a scalar input field.");
-          return;
+	  error("An input field is not a scalar field.");
+	  error_ = true;
+	  return;
 	}
-	if (!have_some || (minmax_.first < minv)) {
-	  have_some=1;
+
+	if ( minv > minmax_.first)
 	  minv=minmax_.first;
-	}
-	if (!have_some || (minmax_.second > maxv)) {
-	  have_some=1;
+
+	if ( maxv < minmax_.second)
 	  maxv=minmax_.second;
-	}
       }
-      ++pi;
+
+      minmax_.first  = minv;
+      minmax_.second = maxv;
+
+      if ( makeSymmetric_ ) {
+	float biggest = Max(Abs(minmax_.first), Abs(minmax_.second));
+	minmax_.first  = -biggest;
+	minmax_.second =  biggest;
+      }
+
+      cHandle_->Scale( minmax_.first, minmax_.second);
+      gMin_.set( minmax_.first );
+      gMax_.set( minmax_.second );
     }
-    if (!have_some) {
-      warning("No field provided! -- Color map can not be rescaled.\n"
-	      "Make sure you connect a field to the field input port.");
-      omap->send(cmap);
+  }
+
+  // Get a handle to the output colormap port.
+  if( cHandle_.get_rep() ) {
+    ColorMapOPort *ocolormap_port = 
+      (ColorMapOPort *) get_oport("ColorMap");
+
+    if (!ocolormap_port) {
+      error("Unable to initialize "+name+"'s oport\n");
       return;
     }
-    minmax_.first=minv;
-    minmax_.second=maxv;
-    if ( makeSymmetric.get() ) {
-      float biggest = Max(Abs(minmax_.first), Abs(minmax_.second));
-      minmax_.first=-biggest;
-      minmax_.second=biggest;
-    }
-    cmap->Scale( minmax_.first, minmax_.second);
-    min.set( minmax_.first );
-    max.set( minmax_.second );
-    omap->send(cmap);
+
+    // Send the data downstream
+    ocolormap_port->send( cHandle_ );
   }
 }
 } // End namespace SCIRun

@@ -50,10 +50,24 @@ protected:
   bool success_;
 
 private:
-  GuiInt isFixed;
-  GuiDouble min;
-  GuiDouble max;
-  GuiInt makeSymmetric;
+  GuiInt gIsFixed_;
+  GuiDouble gMin_;
+  GuiDouble gMax_;
+  GuiInt gMakeSymmetric_;
+
+  int isFixed_;
+  double min_;
+  double max_;
+  int makeSymmetric_;
+
+  ColorMapHandle cHandle_;
+
+  int cGeneration_;
+
+  std::vector<int> fGeneration_;
+
+  bool error_;
+
   pair<double,double> minmax_;
 };
 
