@@ -396,6 +396,7 @@ static MPI_Datatype makeMPI_CMData()
    ASSERTEQ(sizeof(CompNeoHook::CMData), sizeof(double)*2);
    MPI_Datatype mpitype;
    MPI_Type_vector(1, 2, 2, MPI_DOUBLE, &mpitype);
+   MPI_Type_commit(&mpitype);
    return mpitype;
 }
 
@@ -412,6 +413,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.46  2000/09/26 17:08:35  sparker
+// Need to commit MPI types
+//
 // Revision 1.45  2000/09/22 07:10:57  tan
 // MPM code works with fracture in three point bending.
 //

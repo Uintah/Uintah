@@ -65,6 +65,7 @@ static MPI_Datatype makeMPI_Point()
    ASSERTEQ(sizeof(Point), sizeof(double)*3);
    MPI_Datatype mpitype;
    MPI_Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
+   MPI_Type_commit(&mpitype);
    return mpitype;
 }
 
@@ -83,6 +84,7 @@ static MPI_Datatype makeMPI_Vector()
    ASSERTEQ(sizeof(Vector), sizeof(double)*3);
    MPI_Datatype mpitype;
    MPI_Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
+   MPI_Type_commit(&mpitype);
    return mpitype;
 }
 
@@ -100,6 +102,9 @@ const TypeDescription* fun_getTypeDescription(Vector*)
 
 //
 // $Log$
+// Revision 1.5  2000/09/26 17:07:40  sparker
+// Need to commit MPI types
+//
 // Revision 1.4  2000/07/27 22:39:51  sparker
 // Implemented MPIScheduler
 // Added associated support

@@ -520,6 +520,7 @@ static MPI_Datatype makeMPI_CMData()
    ASSERTEQ(sizeof(CompMooneyRivlin::CMData), sizeof(double)*3);
    MPI_Datatype mpitype;
    MPI_Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
+   MPI_Type_commit(&mpitype);
    return mpitype;
 }
 
@@ -535,6 +536,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.69  2000/09/26 17:08:35  sparker
+// Need to commit MPI types
+//
 // Revision 1.68  2000/09/25 20:23:19  sparker
 // Quiet g++ warnings
 //
