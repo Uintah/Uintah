@@ -77,12 +77,6 @@ const int ALIGN=16;
 #define UCONV "%d"
 #endif
 
-extern "C" void audit() {
-  using namespace SCIRun;
-  AuditAllocator(DefaultAllocator());
-  fprintf(stderr, "Memory audit OK\n");
-}
-
 namespace SCIRun {
 
 // Dd: For AIX
