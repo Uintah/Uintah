@@ -199,12 +199,12 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
   d.met=met;
   d.np=np;
 
-  cerr << "starting up "<<np<<" threads.\n";
+  //cerr << "starting up "<<np<<" threads.\n";
   Thread::parallel (this,
 		    &StreamLinesAlgoT<SMESH, SLOC>::parallel_generate,
 //		    np, true, (SLData &)d);
 		    np, true, &d);
-  cerr << "threads made it out ok\n";
+  //cerr << "threads made it out ok\n";
 
   CurveMeshHandle cmesh = scinew CurveMesh();
   int count=0;
@@ -212,7 +212,7 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
   CurveMesh::Node::index_type n1, n2;
   Array1<CurveMesh::Node::index_type> nodemap;
 
-  cerr << "Adding nodes...\n";
+  //cerr << "Adding nodes...\n";
   int i,j;
   for (i=0; i<np; i++) {
     offsets[i]=count;
@@ -221,7 +221,7 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
       nodemap.add(cmesh->add_node(d.pts[i][j]));
     }
   }
-  cerr << "Adding edges...\n";
+  //cerr << "Adding edges...\n";
   for (i=0; i<np; i++) {
     for (j=0; j<d.edges[i].size(); j++) {
       cmesh->add_edge(nodemap[d.edges[i][j].first+offsets[i]],
@@ -229,14 +229,14 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
     }
   }
   CurveField<double> *cf = scinew CurveField<double>(cmesh, Field::NODE);
-  cerr << "Adding data...\n";
+  //cerr << "Adding data...\n";
   int ctr=0;
   for (i=0; i<np; i++) {
     for (j=0; j<d.vals[i].size(); j++, ctr++) {
       cf->fdata()[ctr]=d.vals[i][j];
     }
   }
-  cerr << "Done!\n";
+  //cerr << "Done!\n";
   cf->freeze();
 
   if (count == 0)
