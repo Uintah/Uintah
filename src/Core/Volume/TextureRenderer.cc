@@ -255,9 +255,9 @@ TextureRenderer::compute_view()
 }
 
 void
-TextureRenderer::load_brick(TextureBrickHandle brick)
+TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
 {
-  int nc = brick->nc();
+  int nc = use_cmap2?brick->nc():1;
 #if !defined(GL_ARB_fragment_program) && !defined(GL_ATI_fragment_shader)
   nc = 1;
 #endif
