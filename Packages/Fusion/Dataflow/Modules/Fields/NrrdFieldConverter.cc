@@ -977,7 +977,7 @@ NrrdFieldConverter::execute(){
 
 	  for( unsigned int jc=0; jc<mdims.size(); jc++ ) {
 	    if( ddims[jc] != mdims[jc] ) {
-	      error(  dataset[0] + "Mesh and Data sizes do not match." );
+	      error(  dataset[0] + " Mesh and Data sizes do not match." );
 
 	      {
 		ostringstream str;
@@ -991,13 +991,14 @@ NrrdFieldConverter::execute(){
 	      {
 		ostringstream str;
 
+		str << " Data dimensions: ";
 		for( unsigned int jc=0; jc<ddims.size(); jc++ )
 		  str << ddims[jc] << "  ";
 		error( str.str() );
 	      }
 
 	      error_ = true;
-	      return;
+	      //	      return;
 	    }
 	  }
 	} else {

@@ -152,9 +152,6 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
     nrrdWrap(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
 	     ndims+1, sink_size, idim, jdim, kdim);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
-
   vector< string > dataset;
 
   nHandles[mesh[PHI]]->get_tuple_indecies(dataset);
@@ -230,10 +227,6 @@ execute(vector< NrrdDataHandle >& nHandles,
   else if( source == string("HDF5") )
     nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
 	     ndims+1, sink_size, idim, jdim, kdim);
-
-
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
   vector< string > dataset;
 
@@ -319,9 +312,6 @@ execute(vector< NrrdDataHandle >& nHandles,
   else if( source == string("HDF5") )
     nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
 	     ndims+1, sink_size, idim, jdim, kdim);
-
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
   vector< string > dataset;
 
@@ -422,9 +412,6 @@ execute(vector< NrrdDataHandle >& nHandles,
   else if( source == string("HDF5") )
     nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
 	     ndims+1, sink_size, idim, jdim, kdim);
-
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
   vector< string > dataset;
 

@@ -482,16 +482,34 @@ execute(MeshHandle& mHandle,
 
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
-  FIELD *ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+  FIELD *ifield;
+  
+  if( data.size() == 0 ) {
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
 
-  if( data.size() == 1 ) {
+  } else if( data.size() == 1 ) {
+    NTYPE *ptr = (NTYPE *)(nHandles[data[0]]->nrrd->data);
+
+    int npts = nHandles[data[0]]->nrrd->axis[1].size;
+
+    typename FIELD::mesh_type::Node::iterator begin, end;
+
+    imesh->begin( begin );
+    imesh->end( end );
+
+    while (begin != end) {
+      ++begin;
+      --npts;
+    }
+
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh,
+				    npts == 0 ? Field::NODE : Field::CELL);
+
     typename FIELD::mesh_type::Node::iterator inodeItr;
 
     imesh->begin( inodeItr );
 
-    NTYPE *ptr = (NTYPE *)(nHandles[data[0]]->nrrd->data);
-
-    int npts = nHandles[data[0]]->nrrd->axis[1].size;
+    npts = nHandles[data[0]]->nrrd->axis[1].size;
 
     // Value
     for( int i=0; i<npts; i++ ) {
@@ -603,17 +621,36 @@ execute(MeshHandle& mHandle,
 	vector< int >& data)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
-  FIELD *ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+  FIELD *ifield;
 
-  if( data.size() == 1 ) {
-    typename FIELD::mesh_type::Node::iterator inodeItr;
+  if( data.size() == 0 ) {
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
 
-    imesh->begin( inodeItr );
-
+  } else if( data.size() == 1 ) {
     NTYPE *ptr = (NTYPE *)(nHandles[data[0]]->nrrd->data);
 
     int npts = nHandles[data[0]]->nrrd->axis[1].size;
 
+    typename FIELD::mesh_type::Node::iterator begin, end;
+
+    imesh->begin( begin );
+    imesh->end( end );
+
+    while (begin != end) {
+      ++begin;
+      --npts;
+    }
+
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh,
+				    npts == 0 ? Field::NODE : Field::CELL);
+
+    typename FIELD::mesh_type::Node::iterator inodeItr;
+
+    imesh->begin( inodeItr );
+
+    npts = nHandles[data[0]]->nrrd->axis[1].size;
+
+    // Value
     for( int i=0; i<npts; i++ ) {
 
       ifield->set_value( Vector( ptr[i*3  ],
@@ -622,11 +659,7 @@ execute(MeshHandle& mHandle,
 			 *inodeItr);	
       ++inodeItr;
     }
-  } else {
-    typename FIELD::mesh_type::Node::iterator inodeItr;
-
-    imesh->begin( inodeItr );
-
+  } else if( data.size() == 3 ) {
     NTYPE *ptr[3];
 
     ptr[0] = (NTYPE *)(nHandles[data[0]]->nrrd->data);
@@ -634,6 +667,25 @@ execute(MeshHandle& mHandle,
     ptr[2] = (NTYPE *)(nHandles[data[2]]->nrrd->data);
 
     int npts = nHandles[data[0]]->nrrd->axis[1].size;
+
+    typename FIELD::mesh_type::Node::iterator begin, end;
+
+    imesh->begin( begin );
+    imesh->end( end );
+
+    while (begin != end) {
+      ++begin;
+      --npts;
+    }
+
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh,
+				    npts == 0 ? Field::NODE : Field::CELL);
+
+    typename FIELD::mesh_type::Node::iterator inodeItr;
+
+    imesh->begin( inodeItr );
+
+    npts = nHandles[data[0]]->nrrd->axis[1].size;
 
     for( int i=0; i<npts; i++ ) {
 

@@ -56,7 +56,7 @@ public:
 
 private:
   enum { NONE = 0, MESH = 1, SCALAR = 2, REALSPACE = 4, CONNECTION = 8 };
-  enum { OMEGA = 0, ZR = 1, PHI = 2, LIST = 4 };
+  enum { ZR = 0, PHI = 1, LIST = 2 };
 
   GuiString datasetsStr_;
   GuiInt nModes_;
@@ -285,6 +285,10 @@ VULCANConverter::execute(){
 		  nHandle->nrrd->dim == 3 ) {
 		conversion_ = MESH;
 		mesh_[ZR] = ic;
+	      } else if( dataset[0].find( "ZR:Vector" ) != string::npos &&
+			 nHandle->nrrd->dim == 2 ) {
+		conversion_ = MESH;
+		mesh_[ZR] = ic;
 	      } else if( dataset[0].find( "PHI:Scalar" ) != string::npos && 
 			 nHandle->nrrd->dim == 2 ) {
 		mesh_[PHI] = ic;
@@ -294,7 +298,7 @@ VULCANConverter::execute(){
 		return;
 	      }
 	    } else {
-	      error( dataset[0] + property + " is an unsupported coordinate system." );
+	      error( dataset[0] + " " + property + " is an unsupported coordinate system." );
 	      error_ = true;
 	      return;
 	    }
@@ -307,7 +311,7 @@ VULCANConverter::execute(){
 	    return;
 	  }
 	} else {
-	  error( dataset[0] + property + "is an unsupported topology." );
+	  error( dataset[0] + " " + property + " is an unsupported topology." );
 	  error_ = true;
 	  return;
 	}
@@ -316,20 +320,20 @@ VULCANConverter::execute(){
 	if( property.find( "REALSPACE" ) != string::npos ) {
 
 	  if( data_.size() == 0 ) {
-	    data_.resize(2);
-	    data_[0] = data_[1] = -1;
+	    data_.resize(1);
+	    data_[0] = -1;
 	  }
 
-	  if( dataset[0].find( "OMEGA:Scalar" ) != string::npos && 
-	      nHandle->nrrd->dim == 3 ) {
-	    conversion_ = REALSPACE;
-	    data_[OMEGA] = ic; 
-	  } else if( dataset[0].find( "ZR:Scalar" ) != string::npos && 
+	  if( dataset[0].find( "ZR:Scalar" ) != string::npos && 
 	      nHandle->nrrd->dim == 3 ) {
 	    conversion_ = REALSPACE;
 	    data_[ZR] = ic; 
+	  } else if( dataset[0].find( "ZR:Vector" ) != string::npos && 
+	      nHandle->nrrd->dim == 2 ) {
+	    conversion_ = REALSPACE;
+	    data_[ZR] = ic; 
 	  } else if( dataset[0].find( ":Scalar" ) != string::npos && 
-		     nHandle->nrrd->dim == 4 ) {
+		     nHandle->nrrd->dim == 2 ) {
 	    conversion_ = SCALAR;
 	    data_[0] = ic;
 	  } else {
@@ -338,7 +342,7 @@ VULCANConverter::execute(){
 	    return;
 	  }
 	} else {	
-	  error( dataset[0] + property + " Unsupported Data Space." );
+	  error( dataset[0] + " " + property + " Unsupported Data Space." );
 	  error_ = true;
 	  return;
 	}
@@ -355,27 +359,31 @@ VULCANConverter::execute(){
     i++;
   
   if( conversion_ & MESH ) {
-    if( mesh_[ZR] == -1 || mesh_[PHI] == -1 ) {
+    if( mesh_[PHI] == -1 || mesh_[ZR] == -1 ) {
       error( "Not enough data for the mesh conversion." );
       error_ = true;
       return;
     }
   } else if( conversion_ & CONNECTION ) {
-    if( mesh_[LIST] == -1 || mesh_[ZR] == -1 || mesh_[PHI] == -1 ) {
+    if( mesh_[PHI] == -1 || mesh_[ZR] == -1 || mesh_[LIST] == -1 ) {
       error( "Not enough data for the connection conversion." );
       error_ = true;
       return;
     }
-  } else if ( conversion_ & REALSPACE ) {
-    if( mesh_[PHI] == -1 || i != data_.size() ) {
-      error( "Not enough data for the realspace conversion." );
+  } else if ( conversion_ & SCALAR || conversion_ & REALSPACE ) {
+    if( mesh_[PHI] == -1 || data_[ZR] == -1 ) {
+
+      if ( conversion_ & SCALAR )
+	error( "Not enough data for the scalar conversion." );
+      else if ( conversion_ & REALSPACE )
+	error( "Not enough data for the realspace conversion." );
+
       error_ = true;
       return;
     }
   }
 
-  if( (int) (conversion_ & MESH) != allowUnrolling_.get() )
-  {
+  if( (int) (conversion_ & MESH) != allowUnrolling_.get() ) {
     ostringstream str;
     str << id << " set_unrolling " << (conversion_ & MESH);
     
@@ -460,8 +468,6 @@ VULCANConverter::execute(){
     
     error_ = false;
 
-    int idim=0;
-
     string convertStr;
     unsigned int ntype;
 
@@ -496,21 +502,6 @@ VULCANConverter::execute(){
 
      } else if( conversion_ & REALSPACE ) {
       ntype = nHandles[mesh_[PHI]]->nrrd->type;
-
-      nHandles[mesh_[PHI]]->get_property( "Coordinate System", property );
-
-      if( property.find("Cylindrical - VULCAN") != string::npos ) {
-
-	idim = nHandles[data_[ZR]]->nrrd->axis[1].size; // ZR
-
-	for( unsigned int ic=0; ic<data_.size(); ic++ ) {
-	  if( nHandles[data_[ic]]->nrrd->axis[1].size != idim ) {
-	    error( "Data dimension mismatch." );
-	    //	    error_ = true;
-	    //	    return;
-	  }
-	}
-      }
 
       convertStr = "RealSpace";
     }
