@@ -30,8 +30,8 @@ public:
     int ny;
     int nz;
     Array3<Vector> grid;
-    Point get_point(int, int, int);
-    void locate(const Point&, int&, int&, int&);
+    virtual Point get_point(int, int, int);
+    virtual void locate(const Point&, int&, int&, int&);
 
     void resize(int, int, int);
     void set_bounds(const Point&, const Point&);
@@ -54,6 +54,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/12/28 20:45:18  kuzimmer
+// added cell-centered data structures
+//
 // Revision 1.3  1999/08/25 03:48:46  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
