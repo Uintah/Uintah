@@ -30,32 +30,45 @@
 
 @import url(common.css);
 
-body {
-  background-color: rgb(73, 91, 105);
+div#content { 
+  width: 792px;
+  height: 10in;
+  border: 4px solid  rgb(73, 91, 105);
+  background-color: lightslategray;
 }
 
-h1.page-title {
-  margin-left: auto;
+div.page-title { 
+  padding-bottom: 2px;                  
+  width: 50%;
+  margin-left: auto;                 
   margin-right: auto;
+  margin-bottom: 0.25in;                 
+}
+
+div.page-title h1 { 
   color: white;
 }
 
-h2.page-sub-title {
-  font-size: 100%;
-  background-color: white;
-  width: 2.0in;
-  margin-left: auto;
-  margin-right: auto;
+div.page-title h2 { 
+  color: white;
+}
+
+div.page-title h2 a:link {
+  color: white;                        
+}
+
+div.page-title h2 a:visited {
+  color: white;                        
 }
 
 div.doc-group {
   background-color: white;
   float: left;
-  margin-left: 5px;
-  margin-right: 5px;
+  margin-left: 4px;
+  margin-right: 4px;
   margin-top: 10px;
   margin-bottom: 10px;
-  width: 250px;
+  width: 252px;
   border: 1px dotted rgb(73, 91, 105);
 }
 

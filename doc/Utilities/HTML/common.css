@@ -33,9 +33,11 @@ Stylesheet imported by most other stylesheets.
 */
 
 body {
-  background-color: #213341; 
+  background-color: #213341;
   font-family: "Verdana", "Helvetica", "Geneva", "Swiss",
   "SunSans-Regular";
+  margin-top: 0;     
+  margin-bottom: 0;     
 }
 
 a:link {
@@ -90,6 +92,7 @@ img.top-banner {
   display: block;
   margin-left: auto;
   margin-right: auto;
+  border: none;                 
 }
 
 div#content {
@@ -97,7 +100,7 @@ div#content {
   width: 800px;
   margin-left: auto;
   margin-right: auto;
-}
+ }
 
 div#content-layer1 {
   padding-left: 5px;
@@ -109,11 +112,17 @@ div#content-layer1 {
   border-bottom: 0.25in solid rgb(73, 91, 105);
 }
 
-h1.page-title {
+div.page-title h1 { 
   text-align: center;
-  font-weight: bold;
-  font-size: 110%;
+  margin-bottom: 0;                
   color: black;
+  font-size: 125%;                    
+}
+
+div.page-title h2 {
+  text-align: center;
+  font-size: 90%;
+  margin-top: 0;
 }
 
 a#begin-toc {
