@@ -70,6 +70,7 @@
 \newcommand{\ModuleRefDetails}{\subsubsection*{Details}}
 \newcommand{\ModuleRefNotes}{\subsubsection*{Notes}}
 \newcommand{\ModuleRefCredits}{\subsubsection*{Credits}}
+\newcommand{\ModuleRefSection}[1]{\subsubsection*{#1}}
 \newcommand{\ModuleRefSubSection}[1]{\paragraph*{#1}}
 \newcommand{\ModuleRefSubSubSection}[1]{\subparagraph*{#1}}
 \newcommand{\ModuleRefFigName}[1]{#1}

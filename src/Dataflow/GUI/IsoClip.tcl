@@ -32,17 +32,23 @@ itcl_class SCIRun_FieldsCreate_IsoClip {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
 
-	entry $w.entry -textvariable $this-isoval
-	radiobutton $w.lte -text "Less Than" -value 1 -variable $this-lte
-	radiobutton $w.gte -text "Greater Than" -value 0 -variable $this-lte
-	button $w.execute -text "Execute" -command "$this-c needexecute"
-	pack $w.entry $w.lte $w.gte -side top -anchor w
-	pack $w.execute -side bottom -fill x
+	frame       $w.f
+	entry       $w.f.entry -textvariable $this-isoval
+	radiobutton $w.f.lte -text "Less Than"    -value 1 -variable $this-lte
+	radiobutton $w.f.gte -text "Greater Than" -value 0 -variable $this-lte
+
+	pack $w.f.lte   -pady 2
+	pack $w.f.gte   -pady 2
+	pack $w.f.entry -pady 2
+
+	pack $w.f -pady 4 -padx 4
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }

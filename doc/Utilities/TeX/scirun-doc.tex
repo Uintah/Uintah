@@ -19,7 +19,7 @@
 %
 % Recommened markup for latex docs.
 %
-                                %
+
 % (Mostly) Short cuts  ==============================
 \newcommand{\SCI}{{\em SCI}}
 \newcommand{\sci}{\SCI}
@@ -35,9 +35,6 @@
 \newcommand{\degrees}{{$^{\circ}$}}
 \newcommand{\splitline}{\begin{center}\rule{\columnwidth}{.7mm}\end{center}}
 \newcommand{\X}[1]{#1\index{#1}}
-\newcommand{\rob}{Rob MacLeod (macleod@cvrti.utah.edu)}
-\newcommand{\ted}{Ted Dustman (dustman@cvrti.utah.edu)}
-\newcommand{\blythe}{Blythe D Nobleman (blythe@cs.utah.edu)}
 \newcommand{\srig}{\sr{} Installation Guide}
 \newcommand{\srug}{\sr{} User's Guide}
 \newcommand{\srdg}{\sr{} Developer's Guide}
@@ -54,6 +51,9 @@
 % Inserts a right angle bracket.
 \newcommand{\ra}{\latexhtml{\textgreater}{>}}
 
+% Vertical elide.
+\newcommand{\velide}{\latexhtml{\(\vdots\)}{\begin{rawhtml}&#x22EE;\end{rawhtml}}}
+
 % Mark up commands =================================
 
 % Url
@@ -64,7 +64,7 @@
 \newcommand{\localhost}{\ipaddr{127.0.0.1}}
 
 % Acronym
-\newcommand{\acronym}[1]{#1}
+\newcommand{\acronym}[1]{{\scshape\lowercase{#1}}}
 
 % Predefined acronyms
 \newcommand{\gui}{\acronym{GUI}}
@@ -78,7 +78,7 @@
 
 % In the next command #1 is the term and #2 is the shortcut or acronym that
 % will be used in the rest of the document. 
-\newcommand{\dfna}[2]{\emph{#1} (#2)}
+\newcommand{\dfna}[2]{\emph{#1} (\acronym{#2})}
 
 % Directory name markup.
 \newcommand{\directory}[1]{\texttt{#1}}
@@ -98,6 +98,7 @@
 % Parameterized text - marks up text that is to be
 % substituted for by the reader.
 \newcommand{\ptext}[1]{\textit{#1}}
+\newcommand{\replaceable}[1]{\textit{#1}}
 
 % Markup text the user might see on his screen.
 \newcommand{\screen}[1]{\texttt{#1}}
@@ -144,6 +145,9 @@
 % Data type
 \newcommand{\datatype}[1]{\texttt{#1}}
 
+% Function
+\newcommand{\function}[1]{\texttt{#1}}
+
 % Markup an inline code fragment.
 \newcommand{\icode}[1]{\texttt{#1}}
 
@@ -183,6 +187,7 @@
 % The command's first argument is the link text (used only on the html
 % page) and the second argument is the section's label
 \newcommand{\secref}[2]{\hyperref[ref]{\emph{#1}}{Section~}{}{#2}}
+\newcommand{\chref}[2]{\hyperref[ref]{\emph{#1}}{Chapter~}{}{#2}}
 
 % A latex command
 \newcommand{\latexcommand}[1]{\texttt{\textbackslash#1}}
@@ -199,13 +204,18 @@
 % Mark up a mail address
 \newcommand{\mailto}[1]{\texttt{#1}}
 
+% XML start and end tags
+\newcommand{\xmlstarttag}[1]{\ab{\texttt{#1}}}
+\newcommand{\xmlendtag}[1]{\ab{/\texttt{#1}}}
+\newcommand{\xmlattrname}[1]{\texttt{#1}}
+
 % Sci Urls ========================================= 
 
 % www style urls.
 \newcommand{\scisoftware}{http://software.sci.utah.edu}
-\newcommand{\scisoftwareurl}{\htmlurl{\scisoftware}}
-\newcommand{\sciurl}{\htmlurl{http://www.sci.utah.edu}}
-\newcommand{\scidocurl}{\htmlurl{\scisoftware{}/doc}}
-\newcommand{\scidocurlplus}[1]{\htmlurl{\scisoftware{}/doc/#1}}
-\newcommand{\bugsurl}{\htmlurl{\scisoftware{}/bugzilla}}
-\newcommand{\scisoftwarearchiveurl}{\htmlurl{\scisoftware{}/archive\_entry.html}}
+\newcommand{\scisoftwareurl}{\scisoftware}
+\newcommand{\sciurl}{http://www.sci.utah.edu}
+\newcommand{\scidocurl}{\scisoftware{}/doc}
+\newcommand{\scidocurlplus}[1]{\scisoftware{}/doc/#1}
+\newcommand{\bugsurl}{\scisoftware{}/bugzilla}
+\newcommand{\scisoftwarearchiveurl}{\scisoftware{}/archive\_entry.html}

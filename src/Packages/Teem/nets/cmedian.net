@@ -23,7 +23,7 @@ addConnection $m5 0 $m6 0
 addConnection $m7 0 $m8 0
 addConnection $m8 0 $m5 0
 addConnection $m8 0 $m4 1
-addConnection $m8 0 $m10 1
+#addConnection $m8 0 $m10 1
 addConnection $m10 0 $m9 1
 addConnection $m8 0 $m9 0
 addConnection $m4 0 $m11 1

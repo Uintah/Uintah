@@ -35,32 +35,10 @@ INCLUDES += $(INSIGHT_INCLUDE)
 
 SRCDIR   := Packages/Insight/Dataflow/Modules/Filters
 
-#XMLS :=  $(wildcard $(SRCDIR)/XML/sci_*.xml)
-#XMLS :=  $(shell ls $(PATH_TO_SCIRUN)/$(SRCDIR)/XML/sci_*.xml)
-XMLS :=  \
-	sci_DiscreteGaussianImageFilter.xml \
-	sci_GradientRecursiveGaussianImageFilter.xml \
-        sci_GradientAnisotropicDiffusionImageFilter.xml \
-        sci_VectorGradientAnisotropicDiffusionImageFilter.xml \
-        sci_CurvatureAnisotropicDiffusionImageFilter.xml \
-        sci_VectorCurvatureAnisotropicDiffusionImageFilter.xml \
-        sci_GradientMagnitudeImageFilter.xml \
-	sci_WatershedRelabeler.xml \
-	sci_WatershedSegmentTreeGenerator.xml \
-	sci_WatershedSegmenter.xml \
-	sci_CannySegmentationLevelSetImageFilter.xml \
-	sci_ThresholdSegmentationLevelSetImageFilter.xml \
-	sci_ReflectImageFilter.xml \
-	sci_BinaryThresholdImageFilter.xml \
-	sci_WatershedImageFilter.xml \
-	sci_MeanImageFilter.xml \
-	sci_UnaryFunctorImageFilter.xml \
-	sci_VectorIndexSelectionCastImageFilter.xml \
-	sci_RescaleIntensityImageFilter.xml \
-#[INSERT NEW CODE FILE HERE]
+XMLS_PATH := $(PATH_TO_SCIRUN)/Packages/Insight/Dataflow/Modules/Filters/XML
+XMLS :=  $(shell ls $(XMLS_PATH)/sci_*.xml)
 
-
-SRC_GEN := $(patsubst sci_%.xml, $(SRCDIR)/%.cc, $(XMLS))
+SRC_GEN := $(patsubst $(XMLS_PATH)/sci_%.xml, $(SRCDIR)/%.cc, $(XMLS))
 
 CATEGORY := Filters
 CODEGEN := -classpath $(PATH_TO_SCIRUN)/tools/CodeGenerator/java:$(XALAN_PATH) SCIRun.GenerateSCIRunCode 
@@ -70,7 +48,7 @@ SRCS += ${SRC_GEN}
 $(SRCDIR)/%.cc : $(SRCDIR)/XML/sci_%.xml
 	java $(CODEGEN) $(PATH_TO_PACKAGE) $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/XML/sci_$*.xml $(PATH_TO_PACKAGE)/Core/CodeGenerator/XSL/SCIRun_generateCC.xsl $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/$*.cc
 	java $(CODEGEN) $(PATH_TO_PACKAGE) $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/XML/sci_$*.xml $(PATH_TO_PACKAGE)/Core/CodeGenerator/XSL/SCIRun_generateXML.xsl $(PATH_TO_PACKAGE)/Dataflow/XML/$*.xml
-	cp ../src/$@ $@
+	mv ../src/$@ $@
 
 PSELIBS := Packages/Insight/Core/Datatypes \
 	Core/Datatypes Dataflow/Network Dataflow/Ports \

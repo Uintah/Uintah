@@ -103,33 +103,33 @@ void NrrdSetProperty::execute() {
       double p_double;
       string p_string;
 
-      string name = nHandle->get_property_name( ic );
+      string pname = nHandle->get_property_name( ic );
       string type("other");
       string value("Can not display");
       int readonly = 1;
 
-      if( nHandle->get_property( name, p_int ) ) {
+      if( nHandle->get_property( pname, p_int ) ) {
 	type = string( "int" );
 	char tmpStr[128];
 	sprintf( tmpStr, "%d", p_int );
 	value = string( tmpStr );
 	readonly = 0;
 
-      } else if( nHandle->get_property( name, p_float ) ) {
+      } else if( nHandle->get_property( pname, p_float ) ) {
 	type = string( "float" );
 	char tmpStr[128];
 	sprintf( tmpStr, "%f", p_float );
 	value = string( tmpStr );
 	readonly = 0;
 
-      } else if( nHandle->get_property( name, p_double ) ) {
+      } else if( nHandle->get_property( pname, p_double ) ) {
 	type = string( "double" );
 	char tmpStr[128];
 	sprintf( tmpStr, "%f", p_double );
 	value = string( tmpStr );
 	readonly = 0;
 
-      } else if( nHandle->get_property( name, p_string ) ) {
+      } else if( nHandle->get_property( pname, p_string ) ) {
 	type = string( "string" );
 	value = p_string;
 	readonly = 0;
@@ -137,7 +137,7 @@ void NrrdSetProperty::execute() {
 
       ostringstream str;
       str << id << " setEntry {";
-      str << name << "} ";
+      str << pname << "} ";
       str << type << " {";
       str << value << "} ";
       str << readonly << " ";
@@ -242,22 +242,22 @@ void NrrdSetProperty::execute() {
     string p_string;
 
     if( types_[ic] == string( "int" ) &&
-	nHandle->get_property( name, p_int ) ) {
+	nHandle->get_property( properties_[ic], p_int ) ) {
       if( p_int != atoi( values_[ic].c_str() ) )
 	update = true;
 
     } else if( types_[ic] == string( "float" ) &&
-	nHandle->get_property( name, p_float ) ) {
+	nHandle->get_property( properties_[ic], p_float ) ) {
       if( p_float != atof( values_[ic].c_str() ) )
 	update = true;
 
     } else if( types_[ic] == string( "double" ) &&
-	nHandle->get_property( name, p_double ) ) {
+	nHandle->get_property( properties_[ic], p_double ) ) {
       if( p_double != atof( values_[ic].c_str() ) )
 	update = true;
 
     } else if( types_[ic] == string( "string" ) &&
-	nHandle->get_property( name, p_string ) ) {
+	nHandle->get_property( properties_[ic], p_string ) ) {
       if( p_string != values_[ic] )
 	update = true;
     }
@@ -297,19 +297,19 @@ void NrrdSetProperty::execute() {
 
     // Remove the deleted properties.
     for( unsigned int ic=0; ic<nHandle->nproperties(); ic++ ) {
-      string name = nHandle->get_property_name( ic );
+      string pname = nHandle->get_property_name( ic );
 
       unsigned int jc;
 
       // If the property is in the entries keep it.
       for( jc=0; jc<entries_; jc++ ) {
-	if( name == properties_[jc] )
+	if( pname == properties_[jc] )
 	  break;
       }
 
       // Otherwise if not found remove it.
       if( jc == entries_ )
-	nHandle->remove_property( name );
+	nHandle->remove_property( pname );
     }
 
     // Update the handles and generation numbers.

@@ -29,13 +29,10 @@
 
 <!ELEMENT default (#PCDATA)>
 
-<!ELEMENT datatypes (datatype*)>
+<!ELEMENT datatypes (array+)>
 
-<!ELEMENT datatype (member-var+)>
-  <!ATTLIST datatype name CDATA #REQUIRED>
-
-<!ELEMENT member-var (elem-type,size-call)>
-  <!ATTLIST member-var type CDATA #REQUIRED>
+<!ELEMENT array (elem-type, size-call)>
+  <!ATTLIST array name CDATA #REQUIRED>
 
 <!ELEMENT elem-type (#PCDATA)>
 

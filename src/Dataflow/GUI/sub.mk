@@ -68,6 +68,7 @@ SRCS := \
 	$(SRCDIR)/GenStandardColorMaps.tcl \
 	$(SRCDIR)/GenTransferFunc.tcl \
 	$(SRCDIR)/GLTextureBuilder.tcl \
+	$(SRCDIR)/ToolTipText.tcl \
 	$(SRCDIR)/Isosurface.tcl \
 	$(SRCDIR)/IsoClip.tcl \
 	$(SRCDIR)/LightWidget.tcl \
@@ -96,6 +97,9 @@ SRCS := \
 	$(SRCDIR)/SamplePlane.tcl \
 	$(SRCDIR)/SampleStructHex.tcl \
 	$(SRCDIR)/ScalarFieldStats.tcl \
+	$(SRCDIR)/SciDialog.tcl \
+	$(SRCDIR)/SciButtonPanel.tcl \
+	$(SRCDIR)/SciMoveToCursor.tcl \
 	$(SRCDIR)/SelectField.tcl \
 	$(SRCDIR)/SetProperty.tcl \
 	$(SRCDIR)/ShowColorMap.tcl \
@@ -104,6 +108,7 @@ SRCS := \
 	$(SRCDIR)/SolveMatrix.tcl \
 	$(SRCDIR)/StreamLines.tcl \
 	$(SRCDIR)/Submatrix.tcl \
+	$(SRCDIR)/Subnet.tcl \
 	$(SRCDIR)/SynchronizeGeometry.tcl \
 	$(SRCDIR)/TclStream.tcl \
 	$(SRCDIR)/TexCuttingPlanes.tcl \

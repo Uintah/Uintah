@@ -208,6 +208,19 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
 #endif
   // CollabVis code end
 
+  // Clip plane variables, declare them so that they are saved out.
+  ctx->subVar("clip-num");
+  ctx->subVar("clip-visible");
+  ctx->subVar("clip-selected");
+  for (unsigned int i = 0; i < 6; i++)
+  {
+    const string istr = to_string(i+1);
+    ctx->subVar("clip-visible-" + istr);
+    ctx->subVar("clip-normal-x-" + istr);
+    ctx->subVar("clip-normal-y-" + istr);
+    ctx->subVar("clip-normal-z-" + istr);
+    ctx->subVar("clip-normal-d-" + istr);
+  }
 }
 
 
@@ -2532,7 +2545,7 @@ void ViewWindow::redraw()
   ctx->reset();
   // Get animation variables
   double ct;
-  if(!ctx->getSub("current_time", ct)){
+  if(!ctx || !ctx->getSub("current_time", ct)){
     manager->error("Error reading current_time");
     return;
   }
@@ -2699,9 +2712,7 @@ void ViewWindow::dump_objects(const string& filename, const string& format)
 void ViewWindow::getData(int datamask, FutureValue<GeometryData*>* result)
 {
   if(current_renderer){
-    cerr << "calling current_renderer->getData\n";
     current_renderer->getData(datamask, result);
-    cerr << "current_renderer...\n";
   } else {
     result->send(0);
   }

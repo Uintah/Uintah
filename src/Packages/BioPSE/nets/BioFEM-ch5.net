@@ -1,0 +1,93 @@
+# SCI Network 1.20
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+set bbox {9 9 381 230}
+set Name {Main}
+
+# Create the Modules
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 9 9]
+set m1 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 9 88]
+set m2 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 181 88]
+set m3 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 9 173]
+set m4 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 199 10]
+
+# Set the Module Notes Dispaly Options
+
+# Create the Connections between Modules
+set c0 [addConnection $m1 0 $m3 0]
+set c1 [addConnection $m0 0 $m2 0]
+set c2 [addConnection $m0 0 $m1 0]
+set c3 [addConnection $m2 0 $m3 1]
+set c4 [addConnection $m4 0 $m2 1]
+
+# Mark which Connections are Disabled
+
+# Set the Connection Notes and Dislpay Options
+
+# Set the GUI variables for each Module
+set $m0-notes {}
+set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
+
+set $m1-notes {}
+set $m1-UseCondTCL {1}
+set $m1-UseBasisTCL {0}
+set $m1-nprocs {auto}
+
+set $m2-notes {}
+set $m2-sourceNodeTCL {0}
+set $m2-sinkNodeTCL {1}
+set $m2-modeTCL {dipole}
+
+set $m3-notes {}
+set $m3-target_error {0.000001}
+set $m3-flops {0}
+set $m3-floprate {0}
+set $m3-memrefs {0}
+set $m3-memrate {0}
+set $m3-orig_error {1}
+set $m3-current_error {9.84662e-07}
+set $m3-method {Conjugate Gradient & Precond. (SCI)}
+set $m3-precond {jacobi}
+set $m3-iteration {86}
+set $m3-maxiter {500}
+set $m3-use_previous_soln {1}
+set $m3-emit_partial {0}
+set $m3-emit_iter {50}
+set $m3-status {}
+set $m3-np {4}
+
+set $m4-notes {}
+set $m4-filename $DATADIR/$DATASET/$DATASET-dipole.pcv.fld
+
+::netedit scheduleok

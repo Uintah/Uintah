@@ -25,7 +25,7 @@ libraries, sample data sets, and &sr; documentation.</para>
 <para> The <ulink
 url="http://www-unix.mcs.anl.gov/petsc/petsc-2/"><acronym>PETSc</acronym></ulink>
 library adds equation solvers to &sr;'s SolveMatrix module.  The
-<ulink url="http://www.itk.org">Insight toolkit
+<ulink url="http://www.itk.org">Insight Toolkit
 (<acronym>ITK</acronym>)</ulink> provides segmentation, registration,
 and image processing filters encapsulated as &sr; modules.
 </para>
@@ -34,6 +34,13 @@ and image processing filters encapsulated as &sr; modules.
 &sr; has been tested on three platforms: SGI, Linux, and Mac OS X.
 Platform requirement guidelines are listed in <xref
 linkend="tbl.pltfm_req"/>.
+</para>
+
+<para>
+Disk space requirements for build from source code are listed in <xref
+linkend="tbl.disk_space"/>.
+</para>
+
 <table id="tbl.pltfm_req">
 <title>Platform Guidelines</title>
 <tgroup cols="3">
@@ -81,18 +88,16 @@ linkend="tbl.pltfm_req"/>.
 <para>Mac OS X 10.2.6 or Mac OS X 10.3</para>
 </listitem>
 <listitem>
-<para>December 2002 developer tools for &osx; 10.2.6</para>
+<para>December 2002 developer tools for &osx; 10.2</para>
 <para>&osx; 10.3 compatible developer tools for &osx; 10.3</para>
 </listitem>
 <listitem>
 <para>Apple's <ulink url="http://www.apple.com/macosx/x11/">X11
 Public Beta 3</ulink> and X11 <acronym>SDK</acronym> for &osx;
-10.2.6</para> <para>Apple's X11 and X11 <acronym>SDK</acronym>
-are distributed with &osx; but must be installed separately</para>
-</listitem>
-<listitem>
-<para><quote>dlcompat</quote> library (provides
-<function>dlopen</function> functionality)</para>
+10.2</para> 
+
+<para>Apple's X11 and X11 <acronym>SDK</acronym> for &osx; 10.3.
+X11 is distributed with &osx; 10.3 but must be installed separately</para>
 </listitem>
 <listitem>
 <para>G4 processor</para>
@@ -103,21 +108,40 @@ are distributed with &osx; but must be installed separately</para>
 </listitem>
 </itemizedlist>
 </entry>
+ </row>
+</tbody>
+</tgroup>
+</table>
+
+<table id="tbl.disk_space">
+<title>Disk Space Requirements</title>
+<tgroup cols="2">
+<tbody>
+<row>
+<entry><para>Build with debugging support</para></entry>
+<entry><para>1.3 GB</para></entry>
+</row>
+<row>
+<entry><para>Optimized build</para></entry>
+<entry><para>650 MB</para></entry>
+</row>
+<row>
+<entry><para>&sr; sample data (optional)</para></entry>
+<entry><para>1 GB</para></entry>
 </row>
 </tbody>
 </tgroup>
 </table>
-</para>
- 
+
 <para>
-On Linux systems (Mandrake 9 and Red Hat 8 and 9), &sr; binaries can be
-<link linkend="sec.rpminst">installed via
-an <acronym>RPM</acronym> package</link> or <link
-linkend="sec.source_inst">from &sr;'s source code distribution</link>.
-The &sr; <acronym>RPM</acronym> distribution does
-<emphasis>not</emphasis> provide support for <acronym>PETSc</acronym>.
-<acronym>PETSc</acronym> support is available only through the &sr;
-source code distribution.
+On Linux systems (Mandrake 9 and Red Hat 8 and 9), &sr; binaries can
+be <link linkend="sec.rpminst">installed via an <acronym>RPM</acronym>
+package</link> or <link linkend="sec.source_inst">from &sr;'s source
+code distribution</link>.  The &sr; <acronym>RPM</acronym>
+distribution does <emphasis>not</emphasis> provide support for
+<acronym>PETSc</acronym> or <acronym>ITK</acronym>.
+<acronym>PETSc</acronym> and <acronym>ITK</acronym> support is
+available only through the &sr; source code distribution.
 </para>
 
 <para>
@@ -129,19 +153,19 @@ distribution</link>.
 <para>
 Read  <citetitle pubwork="section"><xref
 endterm="title.prepare" linkend="sec.prepare"/></citetitle> after
-installing, but before starting &sr;.
+installing &sr;.
 </para>
 
 <para>
 Start with <citetitle
 pubwork="section"><xref linkend="sec.rpminst"
 endterm="title.rpminst"/></citetitle> if installing &sr; from an
-<acronym>RPM</acronym>.  Otherwise proceed as follows:
+<acronym>RPM</acronym>.  Otherwise, proceed as follows:
 <orderedlist>
 <listitem>
 <para>Read <citetitle pubwork="section"><xref linkend="sec.opt_inst"
 endterm="title.opt_inst"/></citetitle> if installing
-<acronym>PETSc</acronym> or Insight toolkit (<acronym>ITK</acronym>)
+<acronym>PETSc</acronym> or Insight Toolkit (<acronym>ITK</acronym>)
 support.  Note that support for <acronym>PETSc</acronym> and
 <acronym>ITK</acronym> is not provided by Linux <acronym>RPM</acronym>
 &sr; distributions.</para>

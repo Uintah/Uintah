@@ -15,6 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
+
 # Makefile fragment for this subdirectory
 
 SRCDIR   := main
@@ -25,6 +26,9 @@ ifeq ($(LARGESOS),yes)
 else
   PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
 	Core/Thread Core/Exceptions Core/Util Core/TkExtensions
+  ifeq ($(OS_NAME),Darwin)
+    PSELIBS += Core/Datatypes
+  endif
 endif
 
 LIBS := 

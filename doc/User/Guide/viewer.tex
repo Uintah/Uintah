@@ -32,13 +32,13 @@
 %% View of the extended viewer window
 %begin{latexonly}
   \newcommand{\extendedwindow}%
-  {\centerline{\epsfig{file=Figures/viewwindow-ext.eps.gz,height=4in,
-  bbllx=16, bblly=310, bburx=600, bbury=703}}}
+  {\centerline{\epsfig{file=Figures/viewbottom.eps.gz,height=4in,
+  bbllx=0, bblly=0, bburx=654, bbury=293}}}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\extendedwindow}{%
   \htmladdimg[align=top,width=649,alt="extended view window"]
-  {../Figures/viewwindow-ext.jpg}}
+  {../Figures/viewbottom.gif}}
 \end{htmlonly}
 
 %% Gauge widget image
@@ -89,6 +89,18 @@
   {../Figures/widget-ring.gif}}
 \end{htmlonly}
 
+%% Record movie dialog window
+%begin{latexonly}
+  \newcommand{\recordmoviewin}%
+  {\centerline{\epsfig{file=Figures/record_movie_win.eps.gz,
+  bbllx=0, bblly=0, bburx=257, bbury=175}}}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\recordmoviewin}{%
+  \htmladdimg[align=top,alt="Movie Recording Dialog"]
+  {../Figures/record_movie_win.gif}}
+\end{htmlonly}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand{\graphics}{\emph{Graphics}}
 
@@ -98,7 +110,7 @@
 
 This section describes the most frequently used \sr{} module,
 the \viewer{}, which displays interactive graphical
-output to the computer screen.  The \viewer{} will be used any time the user
+output to the computer screen.  The \viewer{} is used any time the user
 wants to see a geometry or spatial data. The \viewer{} also provides access to
 many simulation parameters and controls, and indirectly initiates new
 iterations of  simulation steps, which is important for computational steering (see \secref{Computational Steering}{sec:con-steering}).
@@ -116,8 +128,8 @@ lower portion where the majority of control buttons are found.
 Figure~\ref{fig:viewwindow} contains an example of a \viewer{} window.
 In the \graphics{} window, viewing is controlled by the mouse, mouse
 buttons, and various modifier keys (shift/control/alt).  In the lower
-window there are several buttons and sliders, the function of which
-will become clear in this section of the manual.
+window there are several buttons and sliders. Their function is
+described in this section.
 
 \begin{figure}[htb]
   \begin{makeimage}
@@ -146,7 +158,7 @@ configurations as follows:
   
   \buttondesc{Views} Lists a number of standard viewing angles
   and orientations.  The view directions align with the Cartesian axes
-  of the objects and the ``Up vector'' option sets the orientation of
+  of the objects, and the ``Up vector'' option sets the orientation of
   the objects when viewed along the selected axis.
 \end{description}
 
@@ -169,8 +181,13 @@ and \menu{Visual} menus.
   \menudesc{File} The \menu{File} menu contains the following items:
 
   \begin{description}
-    \menuitemdesc{Save image file...} Saves the
-    contents of the \viewer{} window as an image to a file.
+    \menuitemdesc{Save Image...} Saves the contents of the \viewer{}
+    window as an image to a file.  A dialog prompts the user for a
+    file name, an image format, and an image size.
+    
+    \menuitemdesc{Record Movie...} Saves the contents of the \viewer{}
+    window as a movie.  See \secref{Recording
+      Movies}{sec:recordmovies} for more information.
   \end{description}
   
   % All of the items below need further explication.
@@ -205,13 +222,55 @@ and \menu{Visual} menus.
   The list is ordered heuristically from most to least useful.
 \end{description}
 
+\section{Recording Movies}
+\label{sec:recordmovies} 
+\index{movies}
+
+\begin{figure}[htb]
+  \begin{makeimage}
+  \end{makeimage}
+  \recordmoviewin
+  \caption{\label{fig:recordmoviewin} Movie Recording Window}
+\end{figure}
+
+The \viewer{}'s recording control window controls movie recording.  See
+Figure~\ref{fig:recordmoviewin}.  Select \menuitem{Record Movie\dots} from
+the \viewer{} window's \menu{File} menu to show the movie control window.
+
+\sr{} records a movie by saving the content of the \viewer{} window to
+a file each time the \viewer{} window is redrawn.
+
+Two formats are supported, Silicon Graphic's RGB (``raw frames'') and
+MPEG.
+
+When recorded as raw frames, a movie will be saved as a series of RGB
+files.  Each file is named as follows:
+\filename{\replaceable{ddd}.\replaceable{name}.raw}, where
+\replaceable{ddd} is a 3 digit frame number and \replaceable{name} is
+the name typed into the control window's text entry field.
+
+When recorded in the MPEG format all frames of a movie will be saved
+in a file named \filename{\replaceable{name}.mpg}.
+
+The width and height of each frame is the same size as the width and
+height of the \viewer{} control window.  The width and height of each
+frame may be changed by clicking button \guibutton{Resize} and typing
+width and height values into the resize text boxes---this must be done
+before recording the movie.
+
+Click button \guibutton{Raw Frames} to begin a raw frames recording.
+Click button \guibutton{Mpeg} to begin an MPEG recording.  Each new
+\viewer{} window frame will be recorded.  Click button \guibutton{Stop
+\ Recording} to end a movie.
+
+
 \section{Mouse Control in the \viewer{} Window}
 \label{sec:view-mouse} 
 \index{Viewer@\viewer{}!mouse controls}
 
 The \viewer{}'s mouse controls are extensive and flexible.  The
 resulting action depends on the choice of mouse button, how the mouse
-is moved and simultaneously pressed control keys.  The description in
+is moved and simultaneously pressed control keys.  The descriptions in
 Tables~\ref{tab:view-mouse} and~\ref{tab:view-unicam} may seem
 complicated, but with practice, use of the mouse becomes intuitive.
 
@@ -282,7 +341,7 @@ default \viewer{} window expands to reveal an extended panel of
 control buttons as shown in Figure~\ref{fig:extviewwindow}.  Note that
 \button{[+]} changes to \button{[-]}.  Clicking on the \button{[-]}
 button hides the extended control panel.  The following sections
-describe the the control options available in the extended control
+describe the control options available in the extended control
 window.
 
 \begin{figure}[htb]
@@ -309,7 +368,7 @@ the following controls, reading from left to right:
   \item At the left end of each object
         in the list is a selection indicator that displays red
         when that object is 
-        selected.  The \viewer{} window only displays those objects that
+        selected.  The \viewer{} window only displays objects that
         are selected.
   \item Now comes the name of the object.
   \item Next the \button{Shading} control box determines the
@@ -322,7 +381,7 @@ the following controls, reading from left to right:
         rendering controls described in \secref{Rendering
         controls}{sec:view-rendering} below apply.  Clicking this box
         reveals a set of options that only apply to this object that
-        include Wire, Flat and Gouraud.
+        include Wire, Flat, and Gouraud.
 \end{itemize}
 
 
@@ -348,7 +407,7 @@ The lighting and shading options available are:
   into the background as a function of distance from the front.
   
   \descitem{BBox} Toggles whether the \viewer{} draws the selected
-  objects in full detail or as a simple bounding box.
+  objects in full detail, or as a simple bounding box.
   
   \descitem{Use Clip} Applies up to six clipping planes to the
   display.  To control the clipping plane locations, use the ``Edit
@@ -374,29 +433,10 @@ The right column of the extended \viewer{} window contains controls
 for displaying the axes and creating stereoscopic rendering.  
 
 \paragraph{Stereo viewing: } requires hardware LCD glasses synchronized
-with the display so visibility in each eye coincides with the
+with the display, so visibility in each eye coincides with the
 display of the appropriate view.  The ``Fusion Scale'' control provides a
-means of setting the eye separation and thus setting the view that is most
+means of setting the eye separation, and thus setting the view that is most
 suited to facial anatomy and distance from the screen.
-
-\subsection{Making Movies}
-\label{sec:view-movies} 
-\index{movies}
-
-The \viewer{} window in \SR{} has simple controls for capturing sequences
-of images into animations or movies.  Below is a description of how this works.
-
-In the left column of the extended \viewer{} window, there are controls for
-selecting movie type and initiating and stopping the acquisition of
-individual frames in the movie.
-
-\SR{} sends a frame to the movie after each ``redraw'' operation ( \ie{}
-each time something moves in the display or visualization parameters
-change).  If the MPEG package is available, then an option will be available for saving the animations as MPEG movies (See the
-\htmladdnormallink{Installation Manual}{\installguideurl} for details).
-
-There is also a button that forces the size of the graphical window to be
-352x240 pixels in size, which is a standard format well suited to MPEG.
 
 \section{Control Widgets}
 \label{sec:view-widgets} 
@@ -413,7 +453,7 @@ clicking and dragging on a cylindrical ``collar'' or a sphere element
 of the widget. Note that a single widget can have more than one
 purpose depending on the context in which it exists. The Gauge widget,
 for example, selects a clipping or display plane through a
-three-dimensional object and sets the seed points for a streamline
+three-dimensional object, and sets the seed points for a streamline
 module.
 
 This section describes the widgets available within \SR{} and \BIOPSE{}.
@@ -439,7 +479,7 @@ cylinders (D) extending from the spheres.
 
 \paragraph{Purpose} The primary use of the Gauge Widget is to set the
 location and density of streamlines emerging from the long cylinder.  It
-can also be used as a more general purpose three-dimensional slider or a
+can also be used as a more general purpose three-dimensional slider, or a
 source for a stream surface. 
 
 \paragraph{Controls} Clicking and dragging either sphere changes the widget's orientation.  Dragging either of the resize
@@ -463,12 +503,12 @@ density of seed points for a streamline source.
 
 
 \paragraph{Appearance} The
-Frame Widget(See Figure~\ref{fig:framewidget}) consists of four cylinders connected in a rectangle.  In
+Frame Widget (see Figure~\ref{fig:framewidget}) consists of four cylinders connected in a rectangle.  In
 the middle of each cylinder there is a sphere (B), from which
 a resize cylinder extends (C).
 
 \paragraph{Purpose} The Frame Widget is primarily used for image
-plane definition, defining stream volumes, and as a, "tie dye'' similar to
+plane definition, defining stream volumes, and as a "tie dye'' similar to
 the Ring Widget described in \secref{Ring Widget}{sec:view-ringwidget}.
 
 \paragraph{Controls} Dragging a sphere rotates the widget about its center. Dragging on a resize cylinder extends or contracts the rectangle.
@@ -531,7 +571,7 @@ a different color from the other cylinders) to indicate that it is the
 
 \paragraph{Purpose} The Ring Widget is primarily used to set the
 density of streamlines emerging from the ring. The ring serves as a set of
-seed points from which streamlines will emerge. The Ring Widget can 
+seed points from which streamlines emerge. The Ring Widget can 
 serve as a three-dimensional angle gauge, as a source for multiple
 streamlines throughout its surface, as a source for a stream surface from
 the outer ring, and as a source for a stream volume.  The Ring Widget can 
@@ -541,7 +581,7 @@ a function of the scalar value of the field at each point.
 \paragraph{Controls} Clicking and dragging the slider collar along the
 ring changes the density of the seed points or some other related
 parameter.  Dragging the spheres controls the orientation of the Ring
-Widget, while moving the resize cylinders changes the radius of the Ring
+Widget, while moving the resize cylinders change the radius of the Ring
 Widget about its center.  Dragging any other point on the ring moves the
 ring in space without changing its radius or orientation.
 

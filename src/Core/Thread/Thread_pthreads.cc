@@ -357,13 +357,14 @@ Thread::self()
 void
 Thread::join()
 {
-    Thread* us=Thread::self();
-    int os=push_bstack(us->priv_, JOINING, threadname_);
-    if(SEM_LOCK(&priv_->done) != 0)
-	throw ThreadError(std::string("SEM_LOCK failed")
-			  +strerror(errno));
-    pop_bstack(us->priv_, os);
-    detach();
+  pthread_t id = priv_->threadid;
+  
+  if(SEM_UNLOCK(&priv_->delete_ready) != 0)
+    throw ThreadError(std::string("SEM_UNLOCK failed") + strerror(errno));
+  
+  if(pthread_join(id, 0) != 0)
+    throw ThreadError(std::string("pthread_join failed")
+		      +strerror(errno));
 }
 
 int

@@ -18,38 +18,44 @@
 
 # SCI Network 1.0
 
-set DATADIR .
-if [info exists env(INSIGHT_DATA)] {
-   set DATADIR $env(INSIGHT_DATA)
-}
+#######################################################################
+# Check environment variables.  Ask user for input if not set:
+set results [sourceSettingsFile]
+set DATADIR [lindex $results 0]
+#######################################################################
+
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "Insight" "Filters" "MeanImageFilter" 10 104]
+set m0 [addModuleAtPosition "Insight" "Filters" "MeanImageFilter" 10 172]
 set m1 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat2D" 10 10]
 set m2 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat3D" 203 10]
-set m3 [addModuleAtPosition "Insight" "Converters" "ImageToField" 10 200]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 193 202]
-set m5 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 193 301]
-set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 394]
+set m3 [addModuleAtPosition "Insight" "Converters" "ImageToField" 10 258]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 195 252]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 195 338]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 420]
 set m7 [addModuleAtPosition "SCIRun" "Render" "Viewer" 10 491]
+set m8 [addModuleAtPosition "Insight" "DataIO" "Switch" 10 93]
 
-addConnection $m1 0 $m0 0
+
 addConnection $m0 0 $m3 0
 addConnection $m3 0 $m5 1
 addConnection $m4 0 $m5 0
 addConnection $m3 0 $m6 0
 addConnection $m5 0 $m6 1
 addConnection $m6 0 $m7 0
+addConnection $m1 0 $m8 0
+addConnection $m2 0 $m8 1
+addConnection $m8 0 $m0 0
 
 set $m0-notes {}
 set $m0-dimension {0}
 set $m0-radius0 {1}
 set $m0-radius1 {1}
 set $m1-notes {}
-set $m1-filename $DATADIR/BrainProtonDensitySlice.png
+set $m1-filename $DATADIR/insight/BrainProtonDensitySlice.mhd
 set $m2-notes {}
-set $m2-filename $DATADIR/BrainProtonDensity3Slices.mha
+set $m2-filename $DATADIR/insight/BrainProtonDensity3Slices.mha
 set $m3-notes {}
 set $m3-copy {0}
 set $m4-notes {}
@@ -176,6 +182,8 @@ set $m7-ViewWindow_0-global-dl {0}
 set $m7-ViewWindow_0-global-type {Gouraud}
 set $m7-ViewWindow_0-ortho-view {0}
 set $m7-ViewWindow_0-unused {1}
+set $m8-notes {}
+set $m8-which_port {1}
 $m0 initialize_ui
 
 ::netedit scheduleok

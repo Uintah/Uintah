@@ -133,7 +133,7 @@ public:
   void get_neighbors(Node::array_type &array, Node::index_type idx) const;
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(Node::index_type idx) const { return 0.0; };
+  double get_size(Node::index_type /*idx*/) const { return 0.0; };
   double get_size(Edge::index_type idx) const 
   {
     Node::array_type arr;
@@ -153,7 +153,7 @@ public:
     get_point(p2,ra[2]);
     return (Cross(p0-p1,p2-p0)).length()*0.5;
   }
-  double get_size(Cell::index_type idx) const { return 0.0; };
+  double get_size(Cell::index_type /*idx*/) const { return 0.0; };
   double get_length(Edge::index_type idx) const { return get_size(idx); };
   double get_area(Face::index_type idx) const { return get_size(idx); };
   double get_volume(Cell::index_type idx) const { return get_size(idx); };
@@ -164,9 +164,9 @@ public:
     get_neighbors(nodes, idx);
     return nodes.size();
   }
-  int get_valence(Edge::index_type idx) const { return 0; }
-  int get_valence(Face::index_type idx) const { return 0; }
-  int get_valence(Cell::index_type idx) const { return 0; }
+  int get_valence(Edge::index_type /*idx*/) const { return 0; }
+  int get_valence(Face::index_type /*idx*/) const { return 0; }
+  int get_valence(Cell::index_type /*idx*/) const { return 0; }
 
 
   void get_center(Point &p, Node::index_type i) const { get_point(p, i); }
@@ -255,6 +255,12 @@ private:
   vector<int>		edge_neighbors_;
   vector<Vector>	normals_;   //! normalized per node normal.
   vector<set<int> >	node_neighbors_;
+  Mutex		        point_lock_;
+  Mutex		        edge_lock_;
+  Mutex		        face_lock_;
+  Mutex			edge_neighbor_lock_;
+  Mutex			normal_lock_;
+  Mutex			node_neighbor_lock_;
   unsigned int		synchronized_;
 
 };

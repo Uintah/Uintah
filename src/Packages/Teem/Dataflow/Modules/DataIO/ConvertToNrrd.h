@@ -74,15 +74,12 @@ public:
 
 
 template <class T>
-void fill_data(T &, double *);
-
-template <>
-void fill_data<Vector>(Vector &v, double *p);
-
-template <class T>
 void fill_data(T &, double *) {
   ASSERTFAIL("should be only be called with Tensor or Vector types");
 }
+
+template <class T>
+void fill_data(T &, double *);
 
 template <>
 void fill_data<Tensor>(Tensor &t, double *p); 
@@ -134,6 +131,14 @@ get_raw_data_ptr<FData2d<double> >(FData2d<double> &, int);
 
 template <>
 void* 
+get_raw_data_ptr<FData2d<Vector> >(FData2d<Vector> &, int);
+
+template <>
+void* 
+get_raw_data_ptr<FData2d<Tensor> >(FData2d<Tensor> &, int);
+
+template <>
+void* 
 get_raw_data_ptr<FData3d<char> >(FData3d<char> &, int);
 
 template <>
@@ -182,6 +187,14 @@ get_raw_data_ptr<FData3d<Vector> >(FData3d<Vector> &, int);
 template <>
 void* 
 get_raw_data_ptr<FData3d<Tensor> >(FData3d<Tensor> &, int);
+
+template <>
+void* 
+get_raw_data_ptr<vector<Vector> >(vector<Vector> &, int);
+
+template <>
+void* 
+get_raw_data_ptr<vector<Tensor> >(vector<Tensor> &, int);
 
 template <class Fdata>
 void* get_raw_data_ptr(Fdata &data, int pad) {

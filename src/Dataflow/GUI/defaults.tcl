@@ -15,7 +15,37 @@
 #  University of Utah. All Rights Reserved.
 #
 
-set basecolor gray
+global port_spacing
+set port_spacing 18
+
+global port_width
+set port_width 13
+
+global port_height
+set port_height 7 
+
+global port_light_height
+set port_light_height 4
+
+global Color
+set Color(Selected) LightSkyBlue2
+set Color(Disabled) black
+set Color(Compiling) "\#f0e68c"
+set Color(Trace) red
+set Color(ConnDisabled) gray
+set Color(NetworkEditor) "\#036"
+set Color(SubnetEditor) purple4 ;#$Color(NetworkEditor)
+#set Color(NetworkEditor) "black"
+set Color(ErrorFrameBG) $Color(NetworkEditor)
+set Color(ErrorFrameFG) white
+set Color(IconFadeStart) $Color(NetworkEditor)
+set Color(Basecolor) gray
+#set Color(Basecolor) darkred
+
+global Subnet
+set Subnet(Loading) 0
+
+set basecolor $Color(Basecolor)
 
 . configure -background $basecolor
 

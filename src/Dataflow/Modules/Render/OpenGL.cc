@@ -952,11 +952,10 @@ OpenGL::redraw_frame()
 	for(;ii<maxlights;ii++)
 	  glDisable((GLenum)(GL_LIGHT0+ii));
 
-	// now set up the fog stuff
-	
-	glFogi(GL_FOG_MODE,GL_LINEAR);
+	// Now set up the fog stuff.
+	glFogi(GL_FOG_MODE, GL_LINEAR);
 	glFogf(GL_FOG_START,float(znear));
-	glFogf(GL_FOG_END,float(zfar));
+	glFogf(GL_FOG_END,float((zfar-znear) * 1.40 + znear));
 	GLfloat bgArray[4];
 	bgArray[0]=bg.r();
 	bgArray[1]=bg.g();
@@ -1882,10 +1881,8 @@ ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
   int i;
 
   drawinfo->clip_planes = 0; // set them all of for default
-  string num_clip("clip-num");
-
-  if (ctx->getSub("clip-visible",val) &&
-      ctx->getSub(num_clip,i))
+  if (ctx->getSub("clip-visible", val) &&
+      ctx->getSub("clip-num", i))
   {
 
     int cur_flag = CLIP_P5;
@@ -1893,26 +1890,22 @@ ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
     {
       while(i--)
       {
+	const string istr = to_string(i+1);
 	
-	string vis("clip-visible-"+to_string(i+1));
+	string vis("clip-visible-"+ istr);
 	
 	
-	if (ctx->getSub(vis,val))
+	if (ctx->getSub("clip-visible-" + istr, val))
 	{
 	  if (val == "1")
 	  {
 	    double plane[4];
-	    string nx("clip-normal-x-"+to_string(i+1));
-	    string ny("clip-normal-y-"+to_string(i+1));
-	    string nz("clip-normal-z-"+to_string(i+1));
-	    string nd("clip-normal-d-"+to_string(i+1));
-	
 	    int rval=0;
 	
-	    rval = ctx->getSub(nx,plane[0]);
-	    rval = ctx->getSub(ny,plane[1]);
-	    rval = ctx->getSub(nz,plane[2]);
-	    rval = ctx->getSub(nd,plane[3]);
+	    rval = ctx->getSub("clip-normal-x-" + istr, plane[0]);
+	    rval = ctx->getSub("clip-normal-y-" + istr, plane[1]);
+	    rval = ctx->getSub("clip-normal-z-" + istr, plane[2]);
+	    rval = ctx->getSub("clip-normal-d-" + istr, plane[3]);
 	
 	    double mag = sqrt(plane[0]*plane[0] +
 			      plane[1]*plane[1] +

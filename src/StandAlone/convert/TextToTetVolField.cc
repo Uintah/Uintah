@@ -41,6 +41,11 @@
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
+
+#if defined(__APPLE__)
+#  include <Core/Datatypes/MacForceLoad.h>
+#endif
+
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -108,12 +113,20 @@ void printUsageInfo(char *progName) {
 
 int
 main(int argc, char **argv) {
-  TetVolMesh *tvm = new TetVolMesh();
+
   if (argc < 4 || argc > 9) {
     printUsageInfo(argv[0]);
     return 0;
   }
+
+#if defined(__APPLE__)  
+  macForceLoad(); // Attempting to force load (and thus instantiation of
+	          // static constructors) Core/Datatypes;
+#endif
+
   setDefaults();
+
+  TetVolMesh *tvm = new TetVolMesh();
 
   char *ptsName = argv[1];
   char *tetsName = argv[2];

@@ -1,3 +1,10 @@
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+<!--%
+docroot = 
+  (doc.htmlOutput?() ? "../../.." : "http://software.sci.utah.edu") + "/doc"
+%-->
+
 <!--
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
@@ -52,19 +59,19 @@ the directory
 <filename><replaceable>build_dir</replaceable>/on-the-fly-libs</filename>
 for source installations and
 <filename>/usr/local/&sr;/bin/on-the-fly-libs</filename> for rpm
-installations.  The location of dynamically generated code can be
+installations.  The location of dynamically generated code is
 changed by setting the value of the environment variable
 <envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar> to the desired directory
 For example, in a shell terminal type:
 <literallayout class="monospaced">
 mkdir $(HOME)/&sr;_otf
 </literallayout>
-then for sh-type shells type:
+for sh-type shells type:
 <literallayout class="monospaced">
 SCIRUN_ON_THE_FLY_LIBS_DIR=$(HOME)/&sr;_otf
 export SCIRUN_ON_THE_FLY_LIBS_DIR
 </literallayout>
-and for csh-type shells type:
+for csh-type shells type:
 <literallayout class="monospaced">
 setenv SCIRUN_ON_THE_FLY_LIBS_DIR $(HOME)/&sr;_otf
 </literallayout>
@@ -82,9 +89,12 @@ startup. <filename>.scirunrc</filename> could contain, for example:
 <literallayout class="monospaced">
 SCIRUN_ON_THE_FLY_LIBS_DIR=$(HOME)/&sr;_otf
 </literallayout>
-See the <ulink
-url="../../User/Guide/usersguide/srug3.html#SECTION00045000000000000000">&sr;
-Users Guide</ulink> for more information on the use of
+See the <ulink url=
+<!--%=
+"\"#{docroot}/User/Guide/usersguide/srug3_6.html.html\""
+%-->
+>
+&sr; Users Guide</ulink> for more information on the use of
 <filename>.scirunrc</filename>.
 </para>
 
@@ -105,7 +115,7 @@ the same time) without the worry of dynamic compilation conflicts.
 For example, by specifying an <filename>on-the-fly-libs</filename>
 directory in their home directory, a user can run the same shared
 &sr; installed in <filename>/usr/local</filename> that another user
-is already running.</para>
+is running.</para>
 </listitem>
 <listitem>
 <para>It allows a <filename>/usr/local</filename> installation of &sr;
@@ -136,8 +146,11 @@ a directory that contains a collection of data set directories.
 </para>
 
 <para>
-When working with &sr;'s <ulink
-url="../../User/Tutorial/index.html">tutorial</ulink>, 
+When working with &sr;'s <ulink url=
+<!--%=
+"\"#{docroot}/User/Tutorial/index.html\""
+%-->
+>tutorial</ulink>, 
 the value of <envar>SCIRUN_DATA</envar> must refer to the sample
 data sets directory, <filename>&sr;Data</filename>.  
 </para>

@@ -54,12 +54,12 @@ document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTM
 
 <br/><br/>
 
-<table align="center" cellspacing="0" border="1" cellpadding="2">
+<table align="center" cellspacing="0" cellpadding="2">
 <thead>
 <tr>
 <th>
 <div class="title">Developer Documentation</div>
-<div class="subtitle">(for SCIRun version <!--%= doc.edition %-->)</div>
+<div class="subtitle">(for SCIRun v. <!--%= doc.edition %-->)</div>
 </th>
 </tr>
 </thead>
@@ -67,25 +67,26 @@ document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTM
 <tbody>
 <tr>
 <td>
-<ul>
-<li><a href="Modules/index.html">Module Reference</a><small><a href="Developer/Modules/srmrg.pdf">[PDF]</a></small>
+<div class="topic_info">
+<div class="topic_heading"><a class="heading" href="Guide/index.html">Guide</a>  <small><a href="Guide/srdg.pdf">[PDF]</a></small></div>
+<p>A guide to writing SCIRun modules, data types, and other code.</p>
+
+<div class="topic_heading"><a class="heading" href="FAQ/faq.html">FAQ</a> <small><a href="FAQ/faq.pdf">[PDF]</a></small>
+</div>
+<p>Common developer questions and answers.</p>
+
+<div class="topic_heading"><a class="heading" href="CodeViews/html/index.html">Source Code
+Views</a></div>
+<p>SCIRun source code from several points of view.</p>
+
+<div class="topic_heading"><a class="heading" href="Modules/index.html">Module Reference</a> <small><a href="Developer/Modules/srmrg.pdf">[PDF]</a></small></div>
 <p>Descriptions of SCIRun modules organized by package (and by
 category and alphabetically)</p>
-</li>
-<li><a href="Guide/index.html">Guide</a>  <small><a href="Guide/srdg.pdf">[PDF]</a></small>
-<p>A guide to writing SCIRun modules, data types, and other code.</p>
-</li>
-<li><a href="CodeViews/html/index.html">Source Code
-Views</a>
-<p>SCIRun source code from several points of view.</p>
-</li>
-<li><a href="FAQ/faq.html">FAQ</a> <small><a href="FAQ/faq.pdf">[PDF]</a></small>
-<p>Common developer questions and answers.</p>
-</li>
-<li><a href="../Documentum/index.html">Documenting SCIRun</a>
+
+<div><a class="heading" href="../Documentum/index.html">Documenting SCIRun</a></div>
 <p>Information for those writing or building SCIRun documentation.</p>
-</li>
-</ul>
+
+</div>
 </td>
 </tr>
 </tbody>

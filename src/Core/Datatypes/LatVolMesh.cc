@@ -453,6 +453,7 @@ LatVolMesh::get_neighbor(Cell::index_type &neighbor,
       neighbor.i_ = from.i_;
       neighbor.j_ = from.j_;
       neighbor.k_ = k-1;
+      neighbor.mesh_ = this;
       return true;
     }
     else if (k == (from.k_+1) && k < (nk_-1))
@@ -460,6 +461,7 @@ LatVolMesh::get_neighbor(Cell::index_type &neighbor,
       neighbor.i_ = from.i_;
       neighbor.j_ = from.j_;
       neighbor.k_ = k;
+      neighbor.mesh_ = this;
       return true;
     }
   }
@@ -478,6 +480,7 @@ LatVolMesh::get_neighbor(Cell::index_type &neighbor,
 	neighbor.i_ = i-1;
 	neighbor.j_ = from.j_;
 	neighbor.k_ = from.k_;
+	neighbor.mesh_ = this;
 	return true;
       }
       else if (i == (from.i_+1) && i < (ni_-1))
@@ -485,6 +488,7 @@ LatVolMesh::get_neighbor(Cell::index_type &neighbor,
 	neighbor.i_ = i;
 	neighbor.j_ = from.j_;
 	neighbor.k_ = from.k_;
+	neighbor.mesh_ = this;
 	return true;
       }
     }
@@ -501,6 +505,7 @@ LatVolMesh::get_neighbor(Cell::index_type &neighbor,
 	neighbor.i_ = from.i_;
 	neighbor.j_ = j-1;
 	neighbor.k_ = from.k_;
+	neighbor.mesh_ = this;
 	return true;
       }
       else if (j == (from.j_+1) && j < (nj_-1))
@@ -508,6 +513,7 @@ LatVolMesh::get_neighbor(Cell::index_type &neighbor,
 	neighbor.i_ = from.i_;
 	neighbor.j_ = j;
 	neighbor.k_ = from.k_;
+	neighbor.mesh_ = this;
 	return true;
       }
     }

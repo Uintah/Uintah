@@ -50,8 +50,10 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/GuiInterface/GuiCallback.h>
 #include <Core/GuiInterface/GuiInterface.h>
+#include <Core/GuiInterface/TCLstrbuff.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Util/sci_system.h>
 #include <fstream>
 #include <iostream>
 #include <stdio.h>
@@ -110,13 +112,14 @@ emit_tclstyle_copyright(ostream &out)
     "source $DATADIR/$DATASET/$DATASET.settings\n";
 }
 
-
-void NetworkEditor::save_network(const string& filename)
+void NetworkEditor::save_network(const string& filename, 
+				 const string &subnet_num)
 {
     ofstream out(filename.c_str());
+
     if(!out)
       return;
-    out << "# SCI Network 1.0\n";
+    out << "# SCI Network 1.20\n";
     if (getenv("SCI_INSERT_NET_COPYRIGHT")) { emit_tclstyle_copyright(out); }
     out << "\n";
     out << "::netedit dontschedule\n\n";
@@ -142,65 +145,36 @@ void NetworkEditor::save_network(const string& filename)
       out << "global notes\nset notes \"" << myvalue << "\"\n" ;
       out << "\n" ;
     }
-    if (!gui->get("modulesBbox", myvalue)){
-      out << "set bbox {" << myvalue << "}\n" ;
-      out << "\n" ;
-    }
-   
     gui->unlock();
+   
 
-
-    // --------------------------------------------------------------------
+    out.close();
+    net->read_unlock();
+    gui->execute("writeSubnetModulesAndConnections {"+filename+"} "+subnet_num);
+    net->read_lock();
+    out.open(filename.c_str(), ofstream::out | ofstream::app);
 
     int i;
-    for(i=0;i<net->nmodules();i++){
-        Module* module=net->module(i);
-	int x, y;
-	module->get_position(x,y);
-        out << "set m" << i << " [addModuleAtPosition \""
-            << module->packageName << "\" \""<< module->categoryName
-            <<"\" \""<< module->moduleName<<"\" "
-            << x << " " << y << "]\n";
-
-    }
-    out << "\n";
-    for(i=0;i<net->nconnections();i++){
-        Connection* conn=net->connection(i);
-	out << "addConnection $m";
-	// Find the "from" module...
-	int j;
-	for(j=0;j<net->nmodules();j++){
-	    Module* m=net->module(j);
-	    if(conn->oport->get_module() == m){
-	        out << j << " " << conn->oport->get_which_port();
-		break;
-	    }
-	}
-	out << " $m";
-	for(j=0;j<net->nmodules();j++){
-	    Module* m=net->module(j);
-	    if(conn->iport->get_module() == m){
-	        out << j << " " << conn->iport->get_which_port();
-		break;
-	    }
-	}
-	out << "\n";
-    }
-    out << "\n";
     // Emit variables...
+    string midx;
     for(i=0;i<net->nmodules();i++){
         Module* module=net->module(i);
-	string midx("$m" + to_string(i));
-	module->emit_vars(out, midx);
+	gui->eval("modVarName {"+filename+"} "+module->id, midx);
+	if (midx.size()) {
+	  module->emit_vars(out, midx);
+	}
     }
 
     for(i=0;i<net->nmodules();i++){
         Module* module=net->module(i);
-        string result;
-	gui->eval("winfo exists .ui" + module->id, result);
-	int res;
-	if(string_to_int(result, res) && (res == 1)) {
-	    out << "$m" << i << " initialize_ui\n";
+	gui->eval("modVarName {"+filename+"} "+module->id, midx);
+	if (midx.size()) {
+	  string result;
+	  gui->eval("winfo exists .ui" + module->id, result);
+	  int res;
+	  if(string_to_int(result, res) && (res == 1)) {
+	    out << midx << " initialize_ui\n";
+	  }
 	}
     }
     out << "\n";
@@ -224,13 +198,11 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    return;
 	}
 	Module* mod=net->add_module(args[2],args[3],args[4]);
-	if(!mod){
-	    args.error("Module not found");
-	    return;
+	if(mod){
+	  // Add a TCL command for this module...
+	  gui->add_command(mod->id+"-c", mod, 0);
+	  args.result(mod->id);
 	}
-	// Add a TCL command for this module...
-	gui->add_command(mod->id+"-c", mod, 0);
-	args.result(mod->id);
     } else if(args[1] == "deletemodule"){
 	if(args.count() < 3){
 	    args.error("netedit deletemodule needs a module name");
@@ -241,6 +213,13 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	if(!net->delete_module(args[2])){
 	    args.error("Cannot delete module "+args[2]);
 	}
+    } else if(args[1] == "deletemodule_warn"){
+	if(args.count() < 3){
+	    args.error("netedit deletemodule_warn needs a module name");
+	    return;
+	}
+	Module* mod=net->get_module_by_id(args[2]);
+	mod->delete_warn();
     } else if(args[1] == "addconnection"){
 	if(args.count() < 6){
 	    args.error("netedit addconnection needs 4 args");
@@ -289,12 +268,12 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	net->unblock_connection(args[2]);
     } else if(args[1] == "getconnected"){
 	if(args.count() < 3){
-	    args.error("netedit getconnections needs a module name");
+	    args.error("netedit getconnected needs a module name");
 	    return;
 	}
 	Module* mod=net->get_module_by_id(args[2]);
 	if(!mod){
-	    args.error("netedit addconnection can't find output module");
+	    args.error("netedit getconnected can't find output module");
 	    return;
 	}
 	vector<string> res;
@@ -303,12 +282,11 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    Port* p=mod->getIPort(i);
 	    for(int c=0;c<p->nconnections();c++){
 		Connection* conn=p->connection(c);
-		vector<string> cinfo(5);
-		cinfo[0]=conn->id;
-		cinfo[1]=conn->oport->get_module()->id;
-		cinfo[2]=to_string(conn->oport->get_which_port());
-		cinfo[3]=conn->iport->get_module()->id;
-		cinfo[4]=to_string(conn->iport->get_which_port());
+		vector<string> cinfo(4);
+		cinfo[0]=conn->oport->get_module()->id;
+		cinfo[1]=to_string(conn->oport->get_which_port());
+		cinfo[2]=conn->iport->get_module()->id;
+		cinfo[3]=to_string(conn->iport->get_which_port());
 		res.push_back(args.make_list(cinfo));
 	    }
 	}
@@ -316,12 +294,11 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    Port* p=mod->getOPort(i);
 	    for(int c=0;c<p->nconnections();c++){
 		Connection* conn=p->connection(c);
-		vector<string> cinfo(5);
-		cinfo[0]=conn->id;
-		cinfo[1]=conn->oport->get_module()->id;
-		cinfo[2]=to_string(conn->oport->get_which_port());
-		cinfo[3]=conn->iport->get_module()->id;
-		cinfo[4]=to_string(conn->iport->get_which_port());
+		vector<string> cinfo(4);
+		cinfo[0]=conn->oport->get_module()->id;
+		cinfo[1]=to_string(conn->oport->get_which_port());
+		cinfo[2]=conn->iport->get_module()->id;
+		cinfo[3]=to_string(conn->iport->get_which_port());
 		res.push_back(args.make_list(cinfo));
 	    }
 	}
@@ -346,73 +323,6 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	return;
       }
       args.result(packageDB->getCategoryName(args[2], args[3], args[4]));
-    } else if(args[1] == "findiports" || args[1] == "find.i.ports"){
-	// Find all of the iports in the network that have the same type
-	// As the specified one...
-	if(args.count() < 4){
-	    args.error("netedit findiports needs a module name and port number");
-	    return;
-	}
-	Module* mod=net->get_module_by_id(args[2]);
-	if(!mod){
-	    args.error("cannot find module "+args[2]);
-	    return;
-	}
-	int which;
-	if(!string_to_int(args[3], which) ||
-	   which < 0 || which >= mod->numOPorts())
-	{
-	    args.error("bad port number");
-	    return;
-	}
-	OPort* oport=mod->getOPort(which);
-	vector<string> iports;
-	for(int i=0;i<net->nmodules();i++){
-	    Module* m=net->module(i);
-	    for(int j=0;j<m->numIPorts();j++){
-		IPort* iport=m->getIPort(j);
-		if(iport->nconnections() == 0 && 
-		   oport->get_typename() == iport->get_typename()){
-		    iports.push_back(args.make_list(m->id, to_string(j)));
-		}
-	    }
-	}
-	args.result(args.make_list(iports));
-    } else if(args[1] == "findoports" || args[1] == "find.o.ports"){
-	// Find all of the oports in the network that have the same type
-	// As the specified one...
-	if(args.count() < 4){
-	    args.error("netedit findoports needs a module name and port number");
-	    return;
-	}
-	Module* mod=net->get_module_by_id(args[2]);
-	if(!mod){
-	    args.error("cannot find module "+args[2]);
-	    return;
-	}
-	int which;
-	if(!string_to_int(args[3], which) || which<0 || which>=mod->numIPorts())
-	{
-	    args.error("bad port number");
-	    return;
-	}
-	IPort* iport=mod->getIPort(which);
-	if(iport->nconnections() > 0){
-	    // Already connected - none
-	    args.result("");
-	    return;
-	}
-	vector<string> oports;
-	for(int i=0;i<net->nmodules();i++){
-	    Module* m=net->module(i);
-	    for(int j=0;j<m->numOPorts();j++){
-		OPort* oport=m->getOPort(j);
-		if(oport->get_typename() == iport->get_typename()){
-		    oports.push_back(args.make_list(m->id, to_string(j)));
-		}
-	    }
-	}
-	args.result(args.make_list(oports));
     } else if(args[1] == "dontschedule"){
     } else if(args[1] == "scheduleok"){
 	net->schedule();
@@ -432,7 +342,43 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    args.error("savenetwork needs a filename");
 	    return;
 	}
-	save_network(args[2]);
+	string filename = args[2];
+	for (int i = 3; i < args.count() - 1; i++)
+	  filename = filename +" "+args[i];
+	save_network(filename,args[args.count()-1]);
+    } else if(args[1] == "packageName"){
+        if(args.count() != 3){
+	    args.error("packageName needs a module id");
+	}
+	Module* mod=net->get_module_by_id(args[2]);
+	if(!mod){
+	  args.error("cannot find module "+args[2]);
+	  return;
+	}
+	args.result(mod->packageName);
+	return;
+    } else if(args[1] == "categoryName"){
+        if(args.count() != 3){
+	    args.error("categoryName needs a module id");
+	}
+	Module* mod=net->get_module_by_id(args[2]);
+	if(!mod){
+	  args.error("cannot find module "+args[2]);
+	  return;
+	}
+	args.result(mod->categoryName);
+	return;
+    }  else if(args[1] == "moduleName"){
+        if(args.count() != 3){
+	    args.error("moduleName needs a module id");
+	}
+	Module* mod=net->get_module_by_id(args[2]);
+	if(!mod){
+	  args.error("cannot find module "+args[2]);
+	  return;
+	}
+	args.result(mod->moduleName);
+	return;
     } else if (args[1] == "create_pac_cat_mod"){
       if (args.count()!=7) {
           args.error("create_pac_cat_mod needs 5 arguments");
@@ -508,6 +454,13 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 		     "  Check your paths and names and try again.");
 	return;
       }
+    } else if (args[1] == "sci_system" && args.count() > 2){
+      string command = args[2];
+      for (int i = 3; i < args.count(); i++) {
+	command = command + " " + args[i];
+      }
+      sci_system(command.c_str());
+      return;
     } else {
 	args.error("Unknown minor command for netedit");
     }

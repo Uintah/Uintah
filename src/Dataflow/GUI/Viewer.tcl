@@ -31,6 +31,12 @@ itcl_class SCIRun_Render_Viewer {
 	set_defaults
     }
     destructor {
+	foreach window [winfo children .] {
+	    if ![string first .ui[modname] $window] {
+		destroy $window
+	    }
+	}
+	    
 	foreach rid $viewwindow {
 	    destroy .ui[$rid modname]
 
@@ -233,7 +239,7 @@ itcl_class ViewWindow {
 	menu $w.menu.file.menu
 #	$w.menu.file.menu add command -label "Save geom file..." -underline 0 \
 #		-command "$this makeSaveObjectsPopup"
-	$w.menu.file.menu add command -label "Save image file..." \
+	$w.menu.file.menu add command -label "Save Image..." \
 	    -underline 0 -command "$this makeSaveImagePopup"
 	$w.menu.file.menu add command -label "Record Movie..." \
 	    -underline 0 -command "$this makeSaveMoviePopup"
@@ -1112,6 +1118,8 @@ itcl_class ViewWindow {
 	pack $w.f -fill x -expand 1
     }	
 
+
+
     method makeClipPopup {} {
 	set w .clip[modname]
 	if {[winfo exists $w]} {
@@ -1124,37 +1132,32 @@ itcl_class ViewWindow {
 	set clip $this-clip
 
 	global $clip-num
-	set $clip-num 6
-
 	global $clip-normal-x
 	global $clip-normal-y
 	global $clip-normal-z
 	global $clip-normal-d
 	global $clip-visible
-	set $clip-visible 0
-	set $clip-normal-d 0.0
-	set $clip-normal-x 1.0
-	set $clip-normal-y 0.0
-	set $clip-normal-z 0.0
+	global $clip-selected
 
-	for {set i 1} {$i <= [set $clip-num]} {incr i 1} {
-	    set mod $i
-
-
-	    global $clip-normal-x-$mod
-	    global $clip-normal-y-$mod
-	    global $clip-normal-z-$mod
-	    global $clip-normal-d-$mod
-	    global $clip-visible-$mod
-	    set $clip-visible-$mod 0
-	    set $clip-normal-d-$mod 0.0
-	    set $clip-normal-x-$mod 1.0
-	    set $clip-normal-y-$mod 0.0
-	    set $clip-normal-z-$mod 0.0
+	if {![info exists $clip-num]} {
+	    set $clip-num 6
+	    
+	    for {set i 1} {$i <= [set $clip-num]} {incr i 1} {
+		set mod $i
+		global $clip-normal-x-$mod
+		global $clip-normal-y-$mod
+		global $clip-normal-z-$mod
+		global $clip-normal-d-$mod
+		global $clip-visible-$mod
+		set $clip-visible-$mod 0
+		set $clip-normal-d-$mod 0.0
+		set $clip-normal-x-$mod 1.0
+		set $clip-normal-y-$mod 0.0
+		set $clip-normal-z-$mod 0.0
+	    }
+	    set $clip-selected 1
 	}
 	set c "$this setClip ; $this-c redraw"
-	global $clip-selected
-	set $clip-selected 1
 	set menup [tk_optionMenu $w.which $clip-selected 1 2 3 4 5 6]
 
 	for {set i 0}  {$i < [set $clip-num]} {incr i 1} {
@@ -1170,6 +1173,8 @@ itcl_class ViewWindow {
 	pack $w.normal -side left -expand yes -fill x
 	frame $w.f -relief groove -borderwidth 2
 	pack $w.f -expand yes -fill x
+
+	useClip
     }
 
     method useClip {} {
@@ -1666,7 +1671,7 @@ itcl_class ViewWindow {
            return
         }
 
-	toplevel $w
+	#toplevel $w
 
 	set initdir ""
 
@@ -1701,10 +1706,10 @@ itcl_class ViewWindow {
 	######################################################
 	
 	makeSaveFilebox \
-		-parent $w \
+		-parent . \
 		-filevar $this-saveFile \
-		-command "$this doSaveImage; destroy $w" \
-		-cancel "destroy $w" \
+		-command "$this doSaveImage; destroy " \
+		-cancel "destroy " \
 		-title $title \
 		-filetypes $types \
 	        -initialfile $defname \
@@ -1921,13 +1926,19 @@ itcl_class EmbeddedViewWindow {
 	init_frame
     }
 
-    method setWindow {w} {
+    method setWindow {w width height} {
 	$this-c listvisuals .standalone
 
 	if {[winfo exists $w]} {
 	    destroy $w
 	}
-	$this-c switchvisual $w 0 640 512
+
+	global emb_win
+	set emb_win $w
+
+	#$this-c switchvisual $w 0 640 670
+	$this-c switchvisual $w 0 $width $height
+	
 	if {[winfo exists $w]} {
 	    bindEvents $w
 	}
@@ -1986,11 +1997,9 @@ itcl_class EmbeddedViewWindow {
     }
 
     method removeMFrame {w} {
-	puts EVW:removeMFrame
     }
     
     method addMFrame {w} {
-	puts EVW:addMFrame
     }
 
     method init_frame {} {
@@ -2031,22 +2040,20 @@ itcl_class EmbeddedViewWindow {
     }
 
     method resize { } {
-	puts EVW:resize
     }
 
     method switch_frames {} {
-	puts EVW:switch_frames
     }
 
     method updatePerf {p1 p2 p3} {
     }
 
-    method switchvisual {idx} {
+    method switchvisual {idx width height} {
 	set w .ui[modname]
 	if {[winfo exists $w.wframe.draw]} {
 	    destroy $w.wframe.draw
 	}
-	$this-c switchvisual $w.wframe.draw $idx 640 512
+	$this-c switchvisual $w.wframe.draw $idx $width $height
 	if {[winfo exists $w.wframe.draw]} {
 	    bindEvents $w.wframe.draw
 	    pack $w.wframe.draw -expand yes -fill both
@@ -2054,19 +2061,15 @@ itcl_class EmbeddedViewWindow {
     }	
 
     method bench {bench} {
-	puts EVW:bench
     }
 
     method makeViewPopup {} {
-	puts EVW:makeViewPopup
     }
 
     method makeSceneMaterialsPopup {} {
-	puts EVW:makeSceneMaterialsPopup
     }
 
     method makeBackgroundPopup {} {
-	puts EVW:makeBackgroundPopup
     }
 
     method updateMode {msg} {
@@ -2089,183 +2092,211 @@ itcl_class EmbeddedViewWindow {
 	set "$this-$objid-cull" 0
 	set "$this-$objid-dl" 0
 
-	$this-c autoview
+	# $this-c autoview
     }
 
     method addObjectToFrame {objid name frame} {
-	puts EVW:addObjectToFrame
     }
 
     method addObject2 {objid} {
-	$this-c autoview
+	# $this-c autoview
     }
     
     method addObjectToFrame_2 {objid frame} {
-	puts EVW:addObjectToFrame_2
     }
     
 
     method removeObject {objid} {
-	puts EVW:removeObject
     }
 
     method removeObjectFromFrame {objid frame} {
-	puts EVW:removeObjectFromFrame
     }
 
     method makeLineWidthPopup {} {
-	puts EVW:makeLineWidthPopup
     }	
 
     method makePolygonOffsetPopup {} {
-	puts EVW:makePolygonOffsetPopup
     }	
 
     method makePointSizePopup {} {
-	puts makePointSizePopup
     }	
 
     method makeClipPopup {} {
-	puts makeClipPopup
     }
 
     method useClip {} {
-	puts useClip
     }
 
     method setClip {} {
-	puts setClip
     }
 
     method invertClip {} {
-	puts invertClip
     }
 
     method makeAnimationPopup {} {
-	puts makeAnimationPopup
     }
 
     method setFrameRate {rate} {
     }
 
     method frametime {} {
-	puts frametime
     }
 
     method rstep {} {
-	puts rstep
     }
 
     method rew {} {
-	puts rew
     }
 
     method rplay {} {
-	puts rplay
     }
 
     method play {} {
-	puts play
     }
 
     method step {} {
-	puts step
     }
 
     method ff {} {
-	puts ff
     }
 
     method crap {} {
-	puts crap
     }
 
     method translate {axis amt} {
-	puts translate
     }
 
     method rotate {axis amt} {
-	puts rotate
     }
 
     method rscale {amt} {
-	puts rscale
     }
 
     method zoom {amt} {
-	puts zoom
     }
 
     method pan {amt} {
-	puts pan
     }
 
     method tilt {amt} {
-	puts tilt
     }
 
     method fov {amt} {
-	puts fov
     }
 
     method makeSaveObjectsPopup {} {
-	puts makeSaveObjectsPopup
     }
 
     method doSaveObjects {} {
-	puts doSaveObjects
     }
 
     method do_validate_x {path} {
-	puts do_validate_x
     }
 
     method do_validate_y {path} {
-	puts do_validate_y
     }
 
     method do_aspect {t} {
-	puts do_aspect
     }
 
     method makeLightSources {} {
-	puts makeLightSources
     }
 	
     method makeLightControl { w i } {
-	puts makeLightControl
     }
 
     method lightColor { w c i } {
-	puts lightColor
     }
 
     method setColor { w c  i color} {
-	puts setColor
     }
 
     method resetLights { w } {
-	puts resetLights
     }
 
     method moveLight { c i x y } {
-	puts moveLight
     }
 
     method lightSwitch {i} {
-	puts lightSwitch
     }
 	
     method makeSaveImagePopup {} {
-	puts makeSaveImagePopup
+	global $this-saveFile
+	global $this-saveType
+	global $this-resx
+	global $this-resy
+	global $this-aspect
+	global env
+	global emb_win
+
+	set $this-resx [winfo width $emb_win]
+	set $this-resy [winfo height $emb_win]
+	
+	set w .ui[modname]-saveImage
+
+	if {[winfo exists $w]} {
+	   raise $w
+           return
+        }
+
+	toplevel $w
+
+	set initdir ""
+
+	# place to put preferred data directory
+	# it's used if $this-filename is empty
+	
+	if {[info exists env(SCIRUN_DATA)]} {
+	    set initdir $env(SCIRUN_DATA)
+	} elseif {[info exists env(SCI_DATA)]} {
+	    set initdir $env(SCI_DATA)
+	} elseif {[info exists env(PSE_DATA)]} {
+	    set initdir $env(PSE_DATA)
+	}
+
+	#######################################################
+	# to be modified for particular reader
+
+	# extansion to append if no extension supplied by user
+	set defext ""
+	
+	# name to appear initially
+	set defname "MyImage.ppm"
+	set title "Save ViewWindow Image"
+
+	# file types to appers in filter box
+	set types {
+	    {{All Files}    {.*}}
+	    {{PPM File}     {.ppm}}
+	    {{Raw File}     {.raw}}
+	}
+	
+	######################################################
+	
+	makeSaveFilebox \
+		-parent $w \
+		-filevar $this-saveFile \
+		-command "$this doSaveImage; destroy $w" \
+		-cancel "destroy $w" \
+		-title $title \
+		-filetypes $types \
+	        -initialfile $defname \
+		-initialdir $initdir \
+		-defaultextension $defext \
+		-formatvar $this-saveType \
+                -formats {ppm raw "by_extension"} \
+	        -imgwidth $this-resx \
+	        -imgheight $this-resy
     }
     
     method changeName { w type} {
-	puts changeName
     }
 
     method doSaveImage {} {
-	puts doSaveImage
+	global $this-saveFile
+	global $this-saveType
+	$this-c dump_viewwindow [set $this-saveFile] [set $this-saveType] [set $this-resx] [set $this-resy]
+	$this-c redraw
     }
 }
 

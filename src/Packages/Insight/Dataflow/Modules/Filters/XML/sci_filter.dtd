@@ -17,12 +17,12 @@
 -->
 
 
-<!ELEMENT filter (include+, filter-sci)>
+<!ELEMENT filter (((include, include) | include), filter-sci)>
 
 <!ELEMENT include EMPTY>
   <!ATTLIST include href CDATA #REQUIRED>
 
-<!ELEMENT filter-sci (package, category, instantiations, includes)>
+<!ELEMENT filter-sci (package, category, instantiations, includes?)>
   <!ATTLIST filter-sci name CDATA #REQUIRED>
 
 <!ELEMENT package (#PCDATA)>
@@ -33,7 +33,6 @@
   <!ATTLIST instantiations use-defaults (yes|no) "no">
 
 <!ELEMENT instance (type+)>
-  <!ATTLIST instance num CDATA #REQUIRED>
 
 <!ELEMENT type (value)>
   <!ATTLIST type name CDATA #REQUIRED>

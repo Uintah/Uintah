@@ -96,6 +96,8 @@ itcl_class SCIRun_Visualization_StreamLines {
 
 	frame $w.meth -relief groove -borderwidth 2
 	label $w.meth.label -text "Computation Method"
+	radiobutton $w.meth.cw -text "Cell Walk" \
+	    -variable $this-method -value 5
 	radiobutton $w.meth.ab -text "Adams-Bashforth Multi-Step" \
 	    -variable $this-method -value 0
 	#radiobutton $w.meth.o2 -text "Adams Moulton Multi Step" -variable $this-method \
@@ -108,7 +110,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 	    -variable $this-method -value 4
 	
 	pack $w.meth.label -side top -fill both
-	pack $w.meth.ab $w.meth.heun $w.meth.rk4 $w.meth.rkf \
+	pack $w.meth.cw $w.meth.ab $w.meth.heun $w.meth.rk4 $w.meth.rkf \
 	    -side top -anchor w
 
 

@@ -138,7 +138,8 @@ Module::Module(const string& name, GuiContext* ctx,
     helper(0),
     helper_thread(0),
     network(0), 
-    notes(ctx->subVar("notes"))
+    notes(ctx->subVar("notes")),
+    show_stats_(true)
 {
   stacksize=0;
 
@@ -199,7 +200,8 @@ Module::Module(const string& name, GuiContext* ctx,
       delete[] datatype;
     }
   } else {
-    cerr << "Cannot find module info for module: " << moduleName << '\n';
+    cerr << "Cannot find module info for module: " 
+	 << packageName << "/" << categoryName << "/" << moduleName << '\n';
   }
 
   // the last port listed in the .xml file may or may not be dynamic.
@@ -215,14 +217,20 @@ Module::~Module()
 {
 }
 
+void Module::delete_warn() 
+{
+  set_show_stats(false);
+  MessageBase *msg = scinew MessageBase(MessageTypes::GoAwayWarn);
+  mailbox.send(msg);
+}
 
 void Module::kill_helper()
 {
   if (helper_thread)
   {
     // kill the helper thread
-    MessageBase msg(MessageTypes::GoAway);
-    mailbox.send(&msg);
+    MessageBase *msg = scinew MessageBase(MessageTypes::GoAway);
+    mailbox.send(msg);
     helper_thread->join();
     helper_thread = 0;
   }
@@ -356,88 +364,32 @@ void Module::accumulate_progress(int n)
 // Port stuff
 void Module::add_iport(IPort* port)
 {
-  if(lastportdynamic && dynamic_port_maker) {
-    gui->execute(id+" module_grow "+to_string(iports.size()));
-  }
   port->set_which_port(iports.size());
   iports.add(port);
-  reconfigure_iports();
+  gui->execute("drawPorts "+id+" i");
 }
 
 void Module::add_oport(OPort* port)
 {
-    port->set_which_port(oports.size());
-    oports.add(port);
-    reconfigure_oports();
+  port->set_which_port(oports.size());
+  oports.add(port);
+  gui->execute("drawPorts "+id+" o");
 }
 
 void Module::remove_iport(int which)
 {
   // remove the indicated port, then
   // collapse the remaining ports together
-  int loop1,loop2;
-  string omod,imod,ip,op;
-  string command;
-  Connection *conn = 0;
-
-  // remove (and collapse)
   iports.remove(which);  
-
+  gui->execute("removePort {"+id+" "+to_string(which)+" i}");
   // rename the collapsed ports and their connections
   // to reflect the positions they collapsed to.
-  for (loop1=which;loop1<iports.size();loop1++) {
-
-    iports[loop1]->set_which_port(iports[loop1]->get_which_port()-1);
-
-    for (loop2=0;loop2<iports[loop1]->nconnections();loop2++) {
-
-      conn = iports[loop1]->connection(loop2);
-      omod = conn->oport->get_module()->id;
-      op = to_string(conn->oport->get_which_port());
-      imod = conn->iport->get_module()->id;
-      ip = to_string(conn->iport->get_which_port());
-
-      iports[loop1]->connection(loop2)->id = 
-	omod+"_p"+op+"_to_"+imod+"_p"+ip;
-
-      command = "global maincanvas; $maincanvas itemconfigure " +
-	omod + "_p" + op + "_to_" + imod + "_p" + to_string(loop1+1) +
-	" -tags " + iports[loop1]->connection(loop2)->id;
-      gui->execute(command);
-
-      command = "global minicanvas; $minicanvas itemconfigure " +
-	omod + "_p" + op + "_to_" + imod + "_p" + to_string(loop1+1) +
-	" -tags " + iports[loop1]->connection(loop2)->id;
-      gui->execute(command);
-      
-      command = "global maincanvas; $maincanvas bind " +
-	iports[loop1]->connection(loop2)->id +
-	" <ButtonPress-3> \"destroyConnection " +
-	iports[loop1]->connection(loop2)->id +
-	" " + omod + " " + imod + " 1\"";
-      gui->execute(command);
-
-      command = "global maincanvas; set temp \"a\"\n$maincanvas bind " +
-	iports[loop1]->connection(loop2)->id +
-	" <ButtonPress-1> \"lightPipe $temp "+ omod + " " + op + " " +
-	imod + " " + ip + "\"";
-      gui->execute(command);
-
-      command = "global maincanvas; $maincanvas bind " +
-	iports[loop1]->connection(loop2)->id +
-	" <ButtonRelease-1> \"resetPipe $temp " + omod + " " + imod + "\"";
-      gui->execute(command);
-
-      command = "global maincanvas; $maincanvas bind " +
-	iports[loop1]->connection(loop2)->id +
-	" <Control-Button-1> \"raisePipe " +
-	iports[loop1]->connection(loop2)->id + "\"";
-      gui->execute(command);
-
-    }
+  for (int port=which;port<iports.size();port++) {
+    iports[port]->set_which_port(iports[port]->get_which_port()-1);
+    for (int connNum=0;connNum<iports[port]->nconnections();connNum++)
+      iports[port]->connection(connNum)->makeID();
   }
-  gui->execute(id+" module_shrink"); 
-  reconfigure_iports();
+  gui->execute("drawPorts "+id+" i");
 }
 
 port_range_type Module::get_iports(const string &name)
@@ -650,30 +602,57 @@ void Module::tcl_command(GuiArgs& args, void*)
     args.error("netedit needs a minor command");
     return;
   }
-  if(args[1] == "iportinfo" || args[1] == "i.portinfo"){
-    vector<string> info(iports.size());
-    for(int i=0;i<iports.size();i++){
-      IPort* port=iports[i];
-      vector<string> pi;
-      pi.push_back(port->get_colorname());
-      pi.push_back(to_string(port->nconnections()>0));
-      pi.push_back(port->get_typename());
-      pi.push_back(port->get_portname());
-      info[i]=args.make_list(pi);
-    }
-    args.result(args.make_list(info));
-  } else if(args[1] == "oportinfo" || args[1] == "o.portinfo"){
-    vector<string> info(oports.size());
-    for(int i=0;i<oports.size();i++){
-      OPort* port=oports[i];
-      vector<string> pi;
-      pi.push_back(port->get_colorname());
-      pi.push_back(to_string(port->nconnections()>0));
-      pi.push_back(port->get_typename());
-      pi.push_back(port->get_portname());
-      info[i]=args.make_list(pi);
-    }
-    args.result(args.make_list(info));
+  if(args[1] == "oportcolor") {
+    if (args.count() != 3)
+      args.error(args[0]+" "+args[1]+" takes a port #");
+    int pnum;
+    if (!string_to_int(args[2], pnum))
+      args.error(args[0]+" "+args[1]+" cant parse port #"+args[2]);
+    if (pnum >= oports.size() || pnum < 0)
+      args.error(args[0]+" "+args[1]+" port #"+args[2]+" invalid");
+
+    args.result(oports[pnum]->get_colorname());
+
+  } else if(args[1] == "iportcolor") {
+    if (args.count() != 3)
+      args.error(args[0]+" "+args[1]+" takes a port #");
+    int pnum;
+    if (!string_to_int(args[2], pnum))
+      args.error(args[0]+" "+args[1]+" cant parse port #"+args[2]);
+    if (pnum >= iports.size() || pnum < 0)
+      args.error(args[0]+" "+args[1]+" port #"+args[2]+" invalid");
+
+    args.result(iports[pnum]->get_colorname());
+
+  } else if(args[1] == "oportname") {
+    if (args.count() != 3)
+      args.error(args[0]+" "+args[1]+" takes a port #");
+    int pnum;
+    if (!string_to_int(args[2], pnum))
+      args.error(args[0]+" "+args[1]+" cant parse port #"+args[2]);
+    if (pnum >= oports.size() || pnum < 0)
+      args.error(args[0]+" "+args[1]+" port #"+args[2]+" invalid");
+
+    args.result(oports[pnum]->get_typename()+" "+oports[pnum]->get_portname());
+
+  } else if(args[1] == "iportname") {
+    if (args.count() != 3)
+      args.error(args[0]+" "+args[1]+" takes a port #");
+    int pnum;
+    if (!string_to_int(args[2], pnum))
+      args.error(args[0]+" "+args[1]+" cant parse port #"+args[2]);
+    if (pnum >= iports.size() || pnum < 0)
+      args.error(args[0]+" "+args[1]+" port #"+args[2]+" invalid");
+
+    args.result(iports[pnum]->get_typename()+" "+iports[pnum]->get_portname());
+  } else if(args[1] == "oportcount") {
+    if (args.count() != 2)
+      args.error(args[0]+" "+args[1]+" takes no arguments");
+    args.result(to_string(oports.size()));
+  } else if(args[1] == "iportcount") {
+    if (args.count() != 2)
+      args.error(args[0]+" "+args[1]+" takes no arguments");
+    args.result(to_string(iports.size()));
   } else if(args[1] == "needexecute"){
     if(!abort_flag){
       abort_flag=1;
@@ -793,20 +772,6 @@ void Module::do_execute()
     OPort* port=oports[i];
     port->finish();
   }
-}
-
-void Module::reconfigure_iports()
-{
-  if(id.size()==0)
-    return;
-  //  gui->execute("global maincanvas\n"+id+" configureIPorts $maincanvas");
-}
-
-void Module::reconfigure_oports()
-{
-  if (id.size()==0)
-    return;
-  //gui->execute("global maincanvas\n"+id+" configureOPorts $maincanvas");
 }
 
 void Module::request_multisend(OPort* p1)

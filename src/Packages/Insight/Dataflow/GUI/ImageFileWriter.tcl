@@ -47,12 +47,12 @@ itcl_class Insight_DataIO_ImageFileWriter {
 	set defname "MyImage.mhd"
 	set defext ".mhd"
 	############
-        toplevel $w
+        #toplevel $w
 	makeSaveFilebox \
-	    -parent $w \
+	    -parent . \
 	    -filevar $this-FileName \
-	    -command "$this-c needexecute; destroy $w" \
-	    -cancel "destroy $w" \
+	    -command "$this-c needexecute; destroy " \
+	    -cancel "destroy " \
 	    -title "Save Image File" \
 	    -filetypes $types \
 	    -initialfile $defname \

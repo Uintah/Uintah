@@ -136,7 +136,7 @@
 <!-- ============ HEADER INFORMATION ========= -->
 <!-- ========================================= -->
 <xsl:template name="header">
-<xsl:text disable-output-escaping="yes">&lt;!DOCTYPE component SYSTEM &quot;../../../../../doc/Utilities/XML/component.dtd&quot;&gt;
+<xsl:text disable-output-escaping="yes">&lt;!DOCTYPE component SYSTEM &quot;../../../../Dataflow/XML/component.dtd&quot;&gt;
 </xsl:text>
 </xsl:template>
 

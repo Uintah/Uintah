@@ -17,10 +17,10 @@
 %
 
 \documentclass[11pt,titlepage]{book}
-\usepackage[]{fancyhdr}
+\usepackage[]{html}
 \usepackage[]{graphics}
 \usepackage[]{epsfig}
-\usepackage[]{html}
+\usepackage[]{alltt}
 \usepackage{makeidx}
 %\begin{latexonly}
 \usepackage[]{../../Utilities/TeX/scirun-doc}
@@ -39,37 +39,26 @@
 \begin{htmlonly}
 \input{srugmacros.tex}
 \end{htmlonly}
+\newcommand{\clearemptydoublepage}{\newpage{\pagestyle{empty}\cleardoubleapage}}
 
 \begin{document}
 
-% The title page
 \input{title}
-\newpage
+\pagenumbering{roman}
 \tableofcontents
-\newpage
-
-% Now the main chapters of the manual
+\clearpage
+\pagenumbering{arabic}
 \input{intro}
 \input{concepts}
-\newpage
+\input{packages}
 \input{running}
 \input{network}
 \input{viewer}
-\input{packages}
-%\input{ui}
 \input{converters}
-%\input{samples}
+\input{itk_sr}
 
-% Now the glossary, appendiced, bibliography, and index
-\newpage
-%\input{glossary}
-\newpage
-%\input{appendices}
-
-\newpage
 \bibliography{usersguide.bib}
 \bibliographystyle{unsrt}
-\newpage
 \printindex
 
 \end{document}
