@@ -236,6 +236,16 @@ DEALINGS IN THE SOFTWARE.
 	      </imageobject>
 	    </mediaobject>
 	  </figure>
+	  <para>
+	    Other controls for moving the slice plane:
+	    <simplelist type="vert" columns="1">
+	      <member>Keyboard &lt; &gt; : previous/next slice</member>
+	      <member>Keyboard +/-: zoom in and out on the slice</member>
+	      <member>Keyboard Arrow Keys: move the slice up/down right/left</member>
+	      <member>Mouse Scroll Wheel : previous/next slice</member>
+	      <member>Shift-Mouse Scroll Wheel : zoom in and out on the slice</member>
+	    </simplelist>
+	  </para>
         </section><!-- end:Moving the slice plane -->
       
         <section><title>Changing slice colormaps</title>
@@ -265,6 +275,19 @@ DEALINGS IN THE SOFTWARE.
 	        <imageobject>
 		<imagedata fileref="Figures/planesTab.jpg" align="center" format="JPG"/>
 	        </imageobject>
+	      </mediaobject>
+	    </figure>
+	    <figure id="fig.rainbow_color_applied"><title>Rainbow colormap</title>
+	      <mediaobject>
+		<textobject>
+		  <phrase>Rainbow colormap</phrase>
+		</textobject>
+		<imageobject>
+		  <imagedata fileref="Figures/rainbow_color_applied.eps" align="center" format="EPS"/>
+		</imageobject>
+		<imageobject>
+		  <imagedata fileref="Figures/rainbow_color_applied.jpg" align="center" format="JPG"/>
+		</imageobject>
 	      </mediaobject>
 	    </figure>	
 	  </para>
@@ -310,7 +333,8 @@ DEALINGS IN THE SOFTWARE.
 	  </mediaobject>
 	  </figure>	
 	  <para>
-	    The easiest way to change the "window width" and "level" is using the slider in the Planes pane (image here).
+	    The easiest way to change the "window width" and "level" is using the slider 
+	    <xref linkend="fig.windowWidthLevelControlsDefault"/> in the Planes pane.
 	    There are two sliders which can be used to set the window width and level. It is also possible to type
 	    in a numerical value for the window with and level by clicking on the digit displayed next to the 
 	    slider and typing in a value.
@@ -346,7 +370,7 @@ DEALINGS IN THE SOFTWARE.
 	    <title>Enamel epmhasized with window and level</title>
 	    <mediaobject>
 	      <textobject>
-	        <phrase>Enamel emphasized wit window and level.</phrase>
+	        <phrase>Enamel emphasized with window and level.</phrase>
 	      </textobject>
 	      <imageobject>
 	      <imagedata fileref="Figures/enamel_window_level_view.eps" align="center" format="EPS"/>
@@ -507,18 +531,19 @@ DEALINGS IN THE SOFTWARE.
 	      or 'G' of the dataset. Areas with high Gradient Magnitude correspond to
 	      material borders in the dataset.
 	    </para>
-	    <para>
-	      In the tooth histogram <xref linkend="fig.histo"/> there are four distinct
-	      materials, denoted by areas of high concentration near the bottom of the
-	      histogram.
-	    </para>
-	    <para>
-	      If we do an "add rectangle" and drag the newly formed rectangle over to the
-	      first material, we see that the material corresponds to the root of the
-	      tooth.
-	    </para>
-	    <figure id="fig.root_tf"><title>Adding color to the transfer function</title>
-              <mediaobject>
+	    <section><title>Assigning color to the different tooth materials</title>
+	      <para>
+		In the tooth histogram <xref linkend="fig.histo"/> there are four distinct
+		materials, denoted by areas of high concentration near the bottom of the
+		histogram.
+	      </para>
+	      <para>
+		If we do an "add rectangle" and drag the newly formed rectangle over to the
+		first material, we see that the material corresponds to the root of the
+		tooth.
+	      </para>
+	      <figure id="fig.root_tf"><title>Adding color to the transfer function</title>
+	      <mediaobject>
 		<textobject>
 		  <phrase>Adding color tp the transfer function</phrase>
 		</textobject>
@@ -529,9 +554,9 @@ DEALINGS IN THE SOFTWARE.
 		  <imagedata fileref="Figures/root_tf.jpg" align="center" format="JPG"/>
 		</imageobject>
 	      </mediaobject>
-	    </figure>
-	    <figure id="fig.root_ren"><title>The root of the tooth displayed in the viewer</title>
-              <mediaobject>
+	      </figure>
+	      <figure id="fig.root_ren"><title>The root of the tooth displayed in the viewer</title>
+	      <mediaobject>
 		<textobject>
 		  <phrase>The root of the tooth displayed in the viewer</phrase>
 		</textobject>
@@ -542,14 +567,14 @@ DEALINGS IN THE SOFTWARE.
 		  <imagedata fileref="Figures/root_ren.jpg" align="center" format="JPG"/>
 		</imageobject>
 	      </mediaobject>
-	    </figure>
-	    <para>
-	      Similarly, we discover the air surrounding the tooth <xref linkend="fig.air_ren"/>,
-	      the tooth dentin <xref linkend="fig.dentin_ren"/> and tooth 
-	      enamel <xref linkend="fig.enamel_ren"/>.
-	    </para>
-	    <figure id="fig.air_tf"><title>Adding color to the transfer function</title>
-              <mediaobject>
+	      </figure>
+	      <para>
+		Similarly, we discover the air surrounding the tooth <xref linkend="fig.air_ren"/>,
+		the tooth dentin <xref linkend="fig.dentin_ren"/> and tooth 
+		enamel <xref linkend="fig.enamel_ren"/>.
+	      </para>
+	      <figure id="fig.air_tf"><title>Adding color to the transfer function</title>
+	      <mediaobject>
 		<textobject>
 		  <phrase>Adding color tp the transfer function</phrase>
 		</textobject>
@@ -560,9 +585,9 @@ DEALINGS IN THE SOFTWARE.
 		  <imagedata fileref="Figures/air_tf.jpg" align="center" format="JPG"/>
 		</imageobject>
 	      </mediaobject>
-	    </figure>
-	    <figure id="fig.air_ren"><title>The air around the tooth displayed in the viewer</title>
-              <mediaobject>
+	      </figure>
+	      <figure id="fig.air_ren"><title>The air around the tooth displayed in the viewer</title>
+	      <mediaobject>
 		<textobject>
 		  <phrase>The air around the tooth displayed in the viewer</phrase>
 		</textobject>
@@ -573,8 +598,8 @@ DEALINGS IN THE SOFTWARE.
 		  <imagedata fileref="Figures/air_ren.jpg" align="center" format="JPG"/>
 		</imageobject>
 	      </mediaobject>
-	    </figure>
-	    <figure id="fig.dentin_tf"><title>Adding color to the transfer function</title>
+	      </figure>
+	      <figure id="fig.dentin_tf"><title>Adding color to the transfer function</title>
               <mediaobject>
 		<textobject>
 		  <phrase>Adding color to the transfer function</phrase>
@@ -586,8 +611,8 @@ DEALINGS IN THE SOFTWARE.
 		  <imagedata fileref="Figures/dentin_tf.jpg" align="center" format="JPG"/>
 		</imageobject>
 	      </mediaobject>
-	    </figure>
-	    <figure id="fig.dentin_ren"><title>The dentin of the tooth displayed in the viewer</title>
+	      </figure>
+	      <figure id="fig.dentin_ren"><title>The dentin of the tooth displayed in the viewer</title>
               <mediaobject>
 		<textobject>
 		  <phrase>The dentin of the tooth displayed in the viewer</phrase>
@@ -599,8 +624,8 @@ DEALINGS IN THE SOFTWARE.
 		  <imagedata fileref="Figures/dentin_ren.jpg" align="center" format="JPG"/>
 		</imageobject>
 	      </mediaobject>
-	    </figure>
-	    <figure id="fig.enamel_tf"><title>Adding color to the transfer function</title>
+	      </figure>
+	      <figure id="fig.enamel_tf"><title>Adding color to the transfer function</title>
               <mediaobject>
 		<textobject>
 		  <phrase>Adding color tp the transfer function</phrase>
@@ -612,8 +637,8 @@ DEALINGS IN THE SOFTWARE.
 		  <imagedata fileref="Figures/enamel_tf.jpg" align="center" format="JPG"/>
 		</imageobject>
 	      </mediaobject>
-	    </figure>
-	    <figure id="fig.enamel_ren"><title>The enamel of the tooth displayed in the viewer</title>
+	      </figure>
+	      <figure id="fig.enamel_ren"><title>The enamel of the tooth displayed in the viewer</title>
               <mediaobject>
 		<textobject>
 		  <phrase>The enamel of the tooth displayed in the viewer</phrase>
@@ -625,7 +650,51 @@ DEALINGS IN THE SOFTWARE.
 		  <imagedata fileref="Figures/enamel_ren.jpg" align="center" format="JPG"/>
 		</imageobject>
 	      </mediaobject>
-	    </figure>
+	      </figure>
+	    </section><!-- end:Assigning color to the different tooth materials -->
+	    <section><title>Assinging color to the borders between materials</title>
+	      <para>
+		The arcs in the histogram <xref linkend="fig.histo"/> represent the borders
+		between different materials in the tooth dataset. If we add a triangle to the
+		transfer function and position it on the arc <xref linkend="fig.border_dentin_enamel_tf"/>
+		connecting the dentin and enamel, we see the dentin-enamel border displayed 
+		<xref linkend="fig.border_dentin_enamel_ren"/> in the viewer window.
+	      </para>
+	      <figure id="fig.border_dentin_enamel_tf"><title>Adding color to the transfer function</title>
+              <mediaobject>
+		<textobject>
+		  <phrase>Adding color tp the transfer function</phrase>
+		</textobject>
+		<imageobject>
+		  <imagedata fileref="Figures/border_dentin_enamel_tf.eps" align="center" format="EPS"/>
+		</imageobject>
+		<imageobject>
+		  <imagedata fileref="Figures/border_dentin_enamel_tf.jpg" align="center" format="JPG"/>
+		</imageobject>
+	      </mediaobject>
+	      </figure>
+	      <figure id="fig.border_dentin_enamel_ren"><title>Adding color to the transfer function</title>
+              <mediaobject>
+		<textobject>
+		  <phrase>Adding color tp the transfer function</phrase>
+		</textobject>
+		<imageobject>
+		  <imagedata fileref="Figures/border_dentin_enamel_ren.eps" align="center" format="EPS"/>
+		</imageobject>
+		<imageobject>
+		  <imagedata fileref="Figures/border_dentin_enamel_ren.jpg" align="center" format="JPG"/>
+		</imageobject>
+	      </mediaobject>
+	      </figure>
+	    </section><!-- end:Assinging color to the borders between materials -->
+	    <section><title>Additional controls in the Edit Transfer Function window</title>
+	      <para>
+		The other controls in the Edit Transfer Function window can be used to
+		turn the individual color widget on/off, change their color or assign
+		then a name. There are also controls to load/save the color widgets to disk,
+		and to delete individual color widgets.
+	      </para>
+	    </section><!-- end:Other controls in the Edit Transfer Function window -->
 	  </section><!-- end:The Edit Transfer Function Window -->
 	</section><!-- end: Editing the Transfer Fuction -->
       </section><!-- end:Volume Rendering -->
