@@ -176,6 +176,22 @@ namespace Uintah {
 
       const VarLabel* cutCellLabel;
       const VarLabel* d_cutCellInfoLabel;
+      const VarLabel* d_normal1Label;
+      const VarLabel* d_normal2Label;
+      const VarLabel* d_normal3Label;
+      const VarLabel* d_centroid1Label;
+      const VarLabel* d_centroid2Label;
+      const VarLabel* d_centroid3Label;
+      const VarLabel* d_totAreaLabel;
+      const VarLabel* d_pGasAreaFracXPLabel;
+      const VarLabel* d_pGasAreaFracXELabel;
+      const VarLabel* d_pGasAreaFracYPLabel;
+      const VarLabel* d_pGasAreaFracYNLabel;
+      const VarLabel* d_pGasAreaFracZPLabel;
+      const VarLabel* d_pGasAreaFracZTLabel;
+      const VarLabel* d_nextCutCellILabel;
+      const VarLabel* d_nextCutCellJLabel;
+      const VarLabel* d_nextCutCellKLabel;
 
     };
 
