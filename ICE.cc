@@ -1066,7 +1066,6 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;  
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 //  task->requires( Task::OldDW, lb->delTLabel);    FOR AMR
-  task->requires( Task::NewDW, lb->press_equil_CCLabel,press_matl, oims, gn );
   task->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2);
   task->requires( Task::NewDW, lb->uvel_FCMELabel,     gac,2);
   task->requires( Task::NewDW, lb->vvel_FCMELabel,     gac,2);
@@ -2954,23 +2953,21 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     CCVariable<double> sum_rho_CC;
     CCVariable<double> press_CC;
     CCVariable<double> term1, term2, term3;
-    constCCVariable<double> pressure;
     StaticArray<CCVariable<double> > placeHolder(0);
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
    
     const IntVector gc(1,1,1);
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->getModifiable( press_CC,     lb->press_CCLabel,     0, patch);
     new_dw->allocateAndPut(delP_Dilatate,lb->delP_DilatateLabel,0, patch);
     new_dw->allocateAndPut(delP_MassX,   lb->delP_MassXLabel,   0, patch);
-    new_dw->allocateAndPut(press_CC,     lb->press_CCLabel,     0, patch);
     new_dw->allocateAndPut(term2,        lb->term2Label,        0, patch);
     new_dw->allocateAndPut(term3,        lb->term3Label,        0, patch);
     new_dw->allocateAndPut(sum_rho_CC,   lb->sum_rho_CCLabel,   0, patch); 
 
     new_dw->allocateTemporary(q_advected, patch);
     new_dw->allocateTemporary(term1,      patch);
-    new_dw->get(pressure,  lb->press_equil_CCLabel,0,patch,gn,0);
 
     term1.initialize(0.);
     term2.initialize(0.);
@@ -3059,8 +3056,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       } 
     }  //matl loop
     delete advector;
-    
-    press_CC.copyData(pressure);
 
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
