@@ -4,7 +4,9 @@
 namespace Uintah {
   struct CompNeoHookPlasStateData {
     double Alpha;
-  };   
+  };
+  class TypeDescription;
+  const TypeDescription* fun_getTypeDescription(CompNeoHookPlasStateData*);
 }
 
 #include <Core/Util/Endian.h>
@@ -13,7 +15,6 @@ namespace SCIRun {
   inline void swapbytes( Uintah::CompNeoHookPlasStateData& d)
     { swapbytes(d.Alpha); }
 } // namespace SCIRun
-
 
 #include "ConstitutiveModel.h"  
 #include <math.h>
