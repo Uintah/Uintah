@@ -252,7 +252,10 @@ Thread::niceAbort()
   print_threads();
   fprintf(stderr, "\n");
   fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
-  fprintf(stderr, "Occured for thread:\n \"%s\"", s->threadname_);
+  if(s)
+    fprintf(stderr, "Occured for thread:\n \"%s\"", s->threadname_);
+  else
+    fprintf(stderr, "With NULL thread pointer\n");
 	
   for (;;) {
     if (strcasecmp(smode, "ask") == 0) {

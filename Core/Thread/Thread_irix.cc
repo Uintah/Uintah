@@ -171,11 +171,9 @@ Thread_shutdown(Thread* thread, bool actually_exit)
   if(thread->cpu_ != -1)
     thread->migrate(-1);
 
-  delete thread;
-
-  priv->thread=0;
-  thread_local->current_thread=0;
   lock_scheduler();
+  thread_local->current_thread=0;
+  priv->thread=0;
   /* Remove it from the active queue */
   int i;
   for(i=0;i<nactive;i++){
@@ -196,12 +194,15 @@ Thread_shutdown(Thread* thread, bool actually_exit)
   }
   unlock_scheduler();
   Thread::checkExit();
+  delete thread;
+
   if(pid == main_pid){
     priv->state=Thread::PROGRAM_EXIT;
     if(uspsema(main_sema) == -1)
       throw ThreadError(std::string("uspsema failed on main_sema")
 			+strerror(errno));
   }
+  delete priv;
   if(actually_exit)
     _exit(0);
 }
@@ -421,7 +422,7 @@ Thread::exitAll(int code)
   exiting=true;
   exit_code=code;
 
-  if(nactive == 0)
+  if(nactive == 0 && nidle == 0)
     ::exit(code);
 
   // We want to do this:
@@ -430,6 +431,7 @@ Thread::exitAll(int code)
   // to things like par, perfex, and other things that somehow end
   // up in the same share group.  So we have to kill each process
   // independently...
+  lock_scheduler();
   pid_t me=getpid();
   for(int i=0;i<nidle;i++){
     if(idle[i]->pid != me)
@@ -439,8 +441,10 @@ Thread::exitAll(int code)
     if(active[i]->pid != me)
       kill(active[i]->pid, SIGQUIT);
   }
-  if(idle_main && idle_main->pid != me)
+  if(idle_main && idle_main->pid != me){
     kill(idle_main->pid, SIGQUIT);
+  }
+  unlock_scheduler();
   kill(me, SIGQUIT);
   fprintf(stderr, "Should not reach this point!\n");
 }
