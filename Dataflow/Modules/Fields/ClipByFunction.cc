@@ -31,7 +31,7 @@
 #include <Core/Util/DynamicCompilation.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Core/Datatypes/Field.h>
@@ -123,7 +123,7 @@ ClipByFunction::execute()
       ClipByFunctionAlgo::get_compile_info(ftd, clipfunc, hoffset);
     if (!DynamicCompilation::compile(ci, algo, false, this))
     {
-      DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+      //DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
       error("Your function would not compile.");
       return;
     }
@@ -156,8 +156,9 @@ ClipByFunction::execute()
   algo->u4 = gui_uservar4_.get();
   algo->u5 = gui_uservar5_.get();
 
+  MatrixHandle interpolant(0);
   FieldHandle ofield =
-    algo->execute(this, ifieldhandle, clipmode);
+    algo->execute(this, ifieldhandle, clipmode, interpolant);
   
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
   if (!ofield_port)
@@ -167,6 +168,14 @@ ClipByFunction::execute()
   }
 
   ofield_port->send(ofield);
+
+  MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Interpolant");
+  if (!omatrix_port)
+  {
+    error("Unable to initialize oport 'Interpolant'.");
+    return;
+  }
+  omatrix_port->send(interpolant);
 }
 
 
