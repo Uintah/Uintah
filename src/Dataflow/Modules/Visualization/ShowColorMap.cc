@@ -37,6 +37,8 @@ class ShowColorMap : public Module {
   GuiString gui_length_;
   GuiString gui_side_;
   GuiInt gui_numlabels_;
+  GuiDouble gui_scale_;
+  GuiString gui_units_;
   GuiInt gui_text_color_;
   MaterialHandle text_color_;
 
@@ -53,6 +55,8 @@ ShowColorMap::ShowColorMap(GuiContext* ctx)
     gui_length_(ctx->subVar("length")),
     gui_side_(ctx->subVar("side")),
     gui_numlabels_(ctx->subVar("numlabels")),
+    gui_scale_(ctx->subVar("scale")),
+    gui_units_(ctx->subVar("units")),
     gui_text_color_(ctx->subVar("text_color"))
 {
 }
@@ -132,6 +136,9 @@ ShowColorMap::execute()
 				       ref0 + along,
 				       ref0 + along + out,
 				       ref0 + out);
+  double scale = gui_scale_.get();
+  string str = gui_units_.get();
+  if (str == "") str = cmap->units;
 
   sq->set_texture( cmap->rawRGBA_ );
   all->add( sq );
@@ -139,8 +146,8 @@ ShowColorMap::execute()
   if (numlabels > 1 && numlabels < 50)
   {
     // Fill in the text.
-    const double minval = cmap->getMin();
-    const double maxval = cmap->getMax();
+    const double minval = cmap->getMin()*scale;
+    const double maxval = cmap->getMax()*scale;
 
     Point p0  = ref0 - out * 0.02; 
     char value[80];
@@ -148,7 +155,7 @@ ShowColorMap::execute()
     for(int i = 0; i < numlabels; i++ )
     {
       sprintf(value, "%.2g %s", minval + (maxval-minval)*(i/(numlabels-1.0)),
-	      cmap->units.c_str());
+	      str.c_str());
       labels->add(scinew GeomText(value, p0 + along * (i/(numlabels-1.0))));
       labels->add(new GeomLine(p0 + along * (i/(numlabels-1.0)),
 			       p0 + along * (i/(numlabels-1.0)) + out * 0.5));
