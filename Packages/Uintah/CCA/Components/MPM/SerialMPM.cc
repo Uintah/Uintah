@@ -13,6 +13,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
@@ -20,6 +21,7 @@
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
+#include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SoleVariable.h>
@@ -289,6 +291,8 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                SchedulerP   & sched,
                                int, int ) // AMR Parameters
 {
+  if ( level->getIndex() != level->getGrid()->numLevels()-1)
+    return;
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
@@ -874,6 +878,69 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   }
   
   sched->addTask(t, patches, matls);
+}
+
+void SerialMPM::scheduleRefine(const LevelP& fineLevel, 
+                               SchedulerP& scheduler)
+{
+  // do nothing for now
+}
+
+void SerialMPM::scheduleRefineInterface(const LevelP& fineLevel, 
+                                        SchedulerP& scheduler,
+                                        int step, int nsteps)
+{
+  // do nothing for now
+}
+
+void SerialMPM::scheduleCoarsen(const LevelP& coarseLevel, 
+                                SchedulerP& sched)
+{
+  // do nothing for now
+}
+
+/// Schedule to mark flags for AMR regridding
+void SerialMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
+                                      SchedulerP& sched)
+{
+  // main way is to count particles, but for now we only want particles on
+  // the finest level.  Thus to schedule cells for regridding during the 
+  // execution, we'll coarsen the flagged cells (see coarsen).
+
+  cout_doing << "SerialMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
+  // Estimate error - this should probably be in it's own schedule,
+  // and the simulation controller should not schedule it every time step
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Task* task = scinew Task("errorEstimate", this, &SerialMPM::errorEstimate);
+  
+  // if the finest level, compute flagged cells
+  if (coarseLevel->getIndex() == coarseLevel->getGrid()->numLevels()-1) {
+    task->requires(Task::NewDW, lb->pXLabel,     gac, 0);
+  }
+  else {
+    task->requires(Task::NewDW, d_sharedState->get_refineFlag_label(),
+                   0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+  }
+  task->modifies(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
+  task->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMPMMaterials());
+
+}
+
+/// Schedule to mark initial flags for AMR regridding
+void SerialMPM::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
+                                             SchedulerP& sched)
+{
+  cout_doing << "SerialMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
+  // Estimate error - this should probably be in it's own schedule,
+  // and the simulation controller should not schedule it every time step
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Task* task = scinew Task("errorEstimate", this, &SerialMPM::initialErrorEstimate);
+  task->requires(Task::NewDW, lb->pXLabel,     gac, 0);
+
+  task->modifies(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
+  task->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMPMMaterials());
 }
 
 void SerialMPM::printParticleCount(const ProcessorGroup* pg,
@@ -2791,7 +2858,6 @@ void SerialMPM::printParticleLabels(vector<const VarLabel*> labels,
   }
 }
 
-
 void SerialMPM::scheduleParticleVelocityField(SchedulerP&,  const PatchSet*,
 					      const MaterialSet*)
 {
@@ -2808,7 +2874,6 @@ void SerialMPM::scheduleAdjustCrackContactIntegrated(SchedulerP&,
 						     const MaterialSet*)
 {
 }
-
 
 void SerialMPM::scheduleCalculateFractureParameters(SchedulerP&, 
 						    const PatchSet*,
@@ -2832,3 +2897,100 @@ void SerialMPM::scheduleUpdateCrackFront(SchedulerP& sched,
 					 const MaterialSet* matls)
 {
 }
+
+void SerialMPM::initialErrorEstimate(const ProcessorGroup*,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse*,
+                                     DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    
+    cout_doing << "Doing errorEstimate on patch "<< patch->getID()<<" \t\t\t AMRSimpleCFD" << '\n';
+    CCVariable<int> refineFlag;
+    PerPatch<int> refinePatchFlag;
+    new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
+                          0, patch);
+    new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
+                0, patch);
+    
+    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      // Loop over particles
+      ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
+      constParticleVariable<Point> px;
+      new_dw->get(px, lb->pXLabel, pset);
+      
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        refineFlag[patch->getLevel()->getCellIndex(px[*iter])] = true;
+        refinePatchFlag.setData(true);
+      }
+    }
+  }
+}
+
+void SerialMPM::errorEstimate(const ProcessorGroup* group,
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw)
+{
+  // coarsen the errorflag.
+  cout_doing << "Doing Serial::errorEstimate" << '\n';
+  const Level* level = getLevel(patches);
+  if (level->getIndex() == level->getGrid()->numLevels()-1) {
+    // on finest level, we do the same thing as initialErrorEstimate, so call it
+    initialErrorEstimate(group, patches, matls, old_dw, new_dw);
+  }
+  else {
+    const Level* fineLevel = level->getFinerLevel().get_rep();
+  
+    for(int p=0;p<patches->size();p++){  
+      const Patch* coarsePatch = patches->get(p);
+      cout_doing << "\t\t on patch " << coarsePatch->getID();
+      // Find the overlapping regions...
+
+      CCVariable<int> refineFlag;
+      PerPatch<int> refinePatchFlag;
+      
+      new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
+                            0, coarsePatch);
+      new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
+                  0, coarsePatch);
+    
+      Level::selectType finePatches;
+      coarsePatch->getFineLevelPatches(finePatches);
+      
+      for(int i=0;i<finePatches.size();i++){
+        const Patch* finePatch = finePatches[i];
+        
+        // Get the particle data
+        constCCVariable<int> fineErrorFlag;
+        new_dw->get(fineErrorFlag, d_sharedState->get_refineFlag_label(), 0, finePatch,
+                    Ghost::None, 0);
+        
+        IntVector fl(finePatch->getCellLowIndex());
+        IntVector fh(finePatch->getCellHighIndex());
+        IntVector l(fineLevel->mapCellToCoarser(fl));
+        IntVector h(fineLevel->mapCellToCoarser(fh));
+        l = Max(l, coarsePatch->getCellLowIndex());
+        h = Min(h, coarsePatch->getCellHighIndex());
+        
+        for(CellIterator iter(l, h); !iter.done(); iter++){
+          IntVector fineStart(level->mapCellToFiner(*iter));
+          
+          for(CellIterator inside(IntVector(0,0,0), fineLevel->getRefinementRatio());
+              !inside.done(); inside++){
+            if (fineErrorFlag[fineStart+*inside]) {
+              refineFlag[*iter] = 1;
+              refinePatchFlag.setData(1);
+            }
+          }
+        }
+      }  // fine patch loop
+    } // coarse patch loop 
+  }
+}  
