@@ -64,6 +64,8 @@ WARNING
     // Insert Documentation Here:
     virtual void compile(const ProcessorGroup * pc, bool init_timestep ) = 0;
     virtual void execute(const ProcessorGroup * pc ) = 0;
+
+    virtual SchedulerP createSubScheduler() = 0;
        
     //////////
     // Insert Documentation Here:
