@@ -23,14 +23,17 @@ DataWarehouse::~DataWarehouse()
 DataWarehouseP
 DataWarehouse::getTop() const{
   DataWarehouseP parent = d_parent;
-  while (parent->d_parent) {
-    parent = parent->d_parent;
-  }
+  //while (parent->d_parent) {
+   // parent = parent->d_parent;
+  //}
   return parent;
 }
 
 //
 // $Log$
+// Revision 1.9  2000/08/16 04:39:09  bbanerje
+// Commented out while loop in DataWarehouse::getTop
+//
 // Revision 1.8  2000/07/28 03:01:07  rawat
 // modified createDatawarehouse and added getTop function
 //
