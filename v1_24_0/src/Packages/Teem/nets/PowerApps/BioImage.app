@@ -150,7 +150,7 @@ class BioImageApp {
 	set i_width 260
 
 	set viewer_width 436
-	set viewer_height 570 
+	set viewer_height 620 
 	
 	set notebook_width 305
 	set notebook_height [expr $viewer_height - 50]
