@@ -26,7 +26,7 @@ MultiMaterial::io(SCIRun::Piostream &str)
     material_stack_.resize(size);
   }
   
-  for (int i = 0; i < size; i++) {
+  for (unsigned int i = 0; i < size; i++) {
     MatPercent* m = 0;
     if (str.reading()) {
       m = new MatPercent(0, 0.0);
