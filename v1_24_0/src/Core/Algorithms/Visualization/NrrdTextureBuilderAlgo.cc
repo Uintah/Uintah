@@ -139,7 +139,8 @@ NrrdTextureBuilderAlgo::build(ProgressReporter *report,
   texture->lock_bricks();
   vector<TextureBrickHandle>& bricks = texture->bricks();
   if (nx != texture->nx() || ny != texture->ny() || nz != texture->nz() ||
-      nc != texture->nc() || card_mem != texture->card_mem() ||
+      nc != texture->nc() || nb[0] != texture->nb(0) ||
+      card_mem != texture->card_mem() ||
       bbox.min() != texture->bbox().min() ||
       bbox.max() != texture->bbox().max())
   {
