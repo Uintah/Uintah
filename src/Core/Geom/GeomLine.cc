@@ -211,8 +211,10 @@ GeomObj* GeomCLines::clone()
 
 void GeomCLines::get_bounds(BBox& bb)
 {
-  for(unsigned int i=0;i<points_.size();i++)
-    bb.extend(points_[i]);
+  for(unsigned int i=0;i<points_.size();i+=3)
+  {
+    bb.extend(Point(points_[i+0], points_[i+1], points_[i+2]));
+  }
 }
 
 #define GEOMLINES_VERSION 1
@@ -238,13 +240,47 @@ bool GeomCLines::saveobj(ostream&, const string&, GeomSave*)
 #endif
 }
 
-void GeomCLines::add(const Point& p1, MaterialHandle c1,
-		     const Point& p2, MaterialHandle c2)
+
+static unsigned char
+COLOR_FTOB(double v)
 {
-  points_.push_back(p1);
-  points_.push_back(p2);
-  colors_.push_back(c1);
-  colors_.push_back(c2);
+  const int inter = (int)(v * 255 + 0.5);
+  if (inter > 255) return 255;
+  if (inter < 0) return 0;
+  return (unsigned char)inter;
+}
+
+
+void
+GeomCLines::add(const Point& p1, MaterialHandle c1,
+		const Point& p2, MaterialHandle c2)
+{
+  points_.push_back(p1.x());
+  points_.push_back(p1.y());
+  points_.push_back(p1.z());
+  points_.push_back(p2.x());
+  points_.push_back(p2.y());
+  points_.push_back(p2.z());
+
+  const unsigned char r0 = COLOR_FTOB(c1->diffuse.r());
+  const unsigned char g0 = COLOR_FTOB(c1->diffuse.g());
+  const unsigned char b0 = COLOR_FTOB(c1->diffuse.b());
+  const unsigned char a0 = COLOR_FTOB(c1->transparency);
+
+  colors_.push_back(r0);
+  colors_.push_back(g0);
+  colors_.push_back(b0);
+  colors_.push_back(a0);
+
+  const unsigned char r1 = COLOR_FTOB(c2->diffuse.r());
+  const unsigned char g1 = COLOR_FTOB(c2->diffuse.g());
+  const unsigned char b1 = COLOR_FTOB(c2->diffuse.b());
+  const unsigned char a1 = COLOR_FTOB(c2->transparency);
+
+  colors_.push_back(r1);
+  colors_.push_back(g1);
+  colors_.push_back(b1);
+  colors_.push_back(a1);
 }
 
 // for lit streamlines

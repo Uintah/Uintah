@@ -76,6 +76,7 @@ class ShowField : public Module
   int                      edge_id_;
   int                      face_id_;
   int                      data_id_;
+  int                      text_id_;
 
   //! top level nodes for switching on and off..
   //! Options for rendering nodes.
@@ -101,6 +102,14 @@ class ShowField : public Module
   GuiInt                   arrow_heads_on_;
   bool                     data_dirty_;
   string                   cur_field_data_type_;
+
+  //! Options for rendering text.
+  GuiInt                   text_on_;
+  GuiInt                   text_use_default_color_;
+  GuiDouble                text_color_r_;
+  GuiDouble                text_color_g_;
+  GuiDouble                text_color_b_;
+  bool                     text_dirty_;
   
   //! default color and material
   GuiDouble                def_color_r_;
@@ -134,6 +143,7 @@ class ShowField : public Module
     EDGE,
     FACE,
     DATA,
+    TEXT,
     DATA_AT
   };
   vector<bool>               render_state_;
@@ -176,6 +186,12 @@ ShowField::ShowField(GuiContext* ctx) :
   arrow_heads_on_(ctx->subVar("arrow-heads-on")),
   data_dirty_(true),
   cur_field_data_type_("none"),
+  text_on_(ctx->subVar("text-on")),
+  text_use_default_color_(ctx->subVar("text-use-default-color")),
+  text_color_r_(ctx->subVar("text-color-r")),
+  text_color_g_(ctx->subVar("text-color-g")),
+  text_color_b_(ctx->subVar("text-color-b")),
+  text_dirty_(true),
   def_color_r_(ctx->subVar("def-color-r")),
   def_color_g_(ctx->subVar("def-color-g")),
   def_color_b_(ctx->subVar("def-color-b")),
@@ -207,6 +223,7 @@ ShowField::ShowField(GuiContext* ctx) :
   render_state_[DATA] = vectors_on_.get();
 }
 
+
 ShowField::~ShowField()
 {
   bool changed_visibility = false;
@@ -233,6 +250,12 @@ ShowField::~ShowField()
     ogeom_->delObj(data_id_);
     changed_visibility = true;
     data_id_ = 0;
+  }
+  if (text_id_)
+  {
+    ogeom_->delObj(text_id_);
+    changed_visibility = true;
+    text_id_ = 0;
   }
   if (changed_visibility)
   {
@@ -298,6 +321,7 @@ ShowField::determine_dirty(FieldHandle fld_handle)
     faces_dirty_ = true; 
     data_dirty_ = true;
     data_at_dirty_ = true;
+    text_dirty_ = true;
     Material *m = scinew Material(Color(def_color_r_.get(), def_color_g_.get(),
 					def_color_b_.get()));
     m->transparency = def_color_a_.get();
@@ -310,6 +334,8 @@ ShowField::determine_dirty(FieldHandle fld_handle)
     face_id_ = 0;
     if (data_id_) ogeom_->delObj(data_id_);
     data_id_ = 0;
+    if (text_id_) ogeom_->delObj(text_id_);
+    text_id_ = 0;
 
     if (bounding_vector_) delete bounding_vector_;
     bounding_vector_ = scinew Vector();
@@ -326,10 +352,13 @@ ShowField::determine_dirty(FieldHandle fld_handle)
       return false; 
     }
     data_at_dirty_ = true; //we need to rerender colors..
+    edges_dirty_ = true; // Edges don't cache color.
+    text_dirty_ = true; // Text doesn't cache color.
   } //else both are the same as last time, nothing dirty.
   
   return true;
 }
+
 
 void 
 ShowField::execute()
@@ -376,11 +405,15 @@ ShowField::execute()
     //warning("No ColorMap in port 2 ColorMap.");
     if (colormap_generation_ != -1) {
       data_at_dirty_ = true;
+      edges_dirty_ = true;
+      text_dirty_ = true;
     }
     colormap_generation_ = -1;
   } else if (colormap_generation_ != color_handle->generation) {
     colormap_generation_ = color_handle->generation;  
     data_at_dirty_ = true;
+    edges_dirty_ = true;
+    text_dirty_ = true;
   }
 
   if (resolution_.get() != res_) {
@@ -410,10 +443,12 @@ ShowField::execute()
   edges_on_.reset();
   faces_on_.reset();
   vectors_on_.reset();
+  text_on_.reset();
   bool do_nodes = nodes_on_.get() && nodes_dirty_;
   bool do_edges = edges_on_.get() && edges_dirty_;
   bool do_faces = faces_on_.get() && faces_dirty_;
   bool do_data  = vectors_on_.get() && data_dirty_;
+  bool do_text  = text_on_.get() && text_dirty_;
 
   if (render_state_[NODE] != nodes_on_.get()) {
     if (node_id_) ogeom_->delObj(node_id_);
@@ -434,6 +469,11 @@ ShowField::execute()
     if (data_id_) ogeom_->delObj(data_id_);
     data_id_ = 0;
     render_state_[DATA] = vectors_on_.get();
+  }  
+  if (render_state_[TEXT] != text_on_.get()) {
+    if (text_id_) ogeom_->delObj(text_id_);
+    text_id_ = 0;
+    render_state_[TEXT] = text_on_.get();
   }  
 
   normalize_vectors_.reset();
@@ -481,10 +521,23 @@ ShowField::execute()
       data_id_ = ogeom_->addObj(renderer_->data_switch_, "Vector Data");
     }
   }
+  if (do_text) {
+    text_dirty_ = false;
+    if (renderer_.get_rep() && text_on_.get()) {
+      if (text_id_) ogeom_->delObj(text_id_);
+      MaterialHandle m = scinew Material(Color(text_color_r_.get(),
+					       text_color_g_.get(),
+					       text_color_b_.get()));
+      GeomSwitch *text =
+	renderer_->render_text(fld_handle, text_use_default_color_.get(), m);
+      text_id_ = ogeom_->addObj(text, "Text Data");
+    }
+  }
   if (data_at_dirty_) { data_at_dirty_ = false; }
 
   ogeom_->flushViews();
 }
+
 
 void 
 ShowField::maybe_execute(toggle_type_e dis_type) 
@@ -503,6 +556,9 @@ ShowField::maybe_execute(toggle_type_e dis_type)
 	break;
     case DATA :
       do_execute = vectors_on_.get();
+	break;
+    case TEXT :
+      do_execute = text_on_.get();
 	break;
     case DATA_AT :
       do_execute = true;
@@ -544,6 +600,12 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     def_mat_handle_ = m;
     data_at_dirty_ = true;
     maybe_execute(DATA_AT);
+  } else if (args[1] == "text_color_change") {
+    text_color_r_.reset();
+    text_color_g_.reset();
+    text_color_b_.reset();
+    text_dirty_ = true;
+    maybe_execute(TEXT);
   } else if (args[1] == "node_display_type") {
     nodes_dirty_ = true;
     if (now && node_id_) {
@@ -621,6 +683,27 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
       ogeom_->flushViews();
       data_id_ = 0;
     }
+  } else if (args[1] == "toggle_display_text"){
+    // Toggle the GeomSwitch.
+    text_on_.reset();
+    if ((text_on_.get()) && (text_id_ == 0))
+    {
+      text_dirty_ = true;
+      maybe_execute(TEXT);
+    }
+    else if (!text_on_.get() && text_id_)
+    {
+      ogeom_->delObj(text_id_);
+      ogeom_->flushViews();
+      text_id_ = 0;
+    }
+  } else if (args[1] == "rerender_text"){
+    text_dirty_ = true;
+    if (now && text_id_) {
+      ogeom_->delObj(text_id_);
+      text_id_ = 0;
+    }
+    maybe_execute(TEXT);
   } else if (args[1] == "toggle_normalize"){
     // Toggle the GeomSwitch.
     normalize_vectors_.reset();

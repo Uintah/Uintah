@@ -1986,28 +1986,35 @@ void GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
-void GeomCLines::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomCLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    if(!pre_draw(di, matl, 0)) return;
+  if(!pre_draw(di, matl, 0)) return;
 
-    di->polycount+=points_.size()/2;
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+  di->polycount+=points_.size()/6;
 
-    glLineWidth(line_width_);
-    glBegin(GL_LINES);
-    for (unsigned int i=0; i < points_.size(); i++)
-    {
-      glColor3d(colors_[i]->diffuse.r(),
-		colors_[i]->diffuse.g(),
-		colors_[i]->diffuse.b());
-      glVertex3d(points_[i].x(), points_[i].y(), points_[i].z());
-    }
-    glEnd();
+  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
-    glLineWidth(1.0);
+  //glEnable(GL_BLEND);
+  //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    post_draw(di);
+  glLineWidth(line_width_);
+
+  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+  glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
+
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_COLOR_ARRAY);
+
+  glDrawArrays(GL_LINES, 0, points_.size()/3);
+
+  glLineWidth(1.0);
+
+  //glDisable(GL_BLEND);
+
+  post_draw(di);
 }
+
 
 //const int OD_TEX_INIT = 4096; // 12tg bit of clip planes...
 
