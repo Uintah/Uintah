@@ -3,7 +3,7 @@
 <?xml-stylesheet href="../../../../../doc/Utilities/XML/package-component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
-<component name="PrismNrrdConverter" category="Fields">
+<component name="NrrdFieldConverter" category="Fields">
   <overview>
     <authors>
     </authors>

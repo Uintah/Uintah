@@ -15,29 +15,27 @@
 #  University of Utah. All Rights Reserved.
 #
 
-# GUI for PPPLNrrdConverter module
+# GUI for NrrdFieldConverter module
 # by Allen R. Sanderson
 # May 2003
 
 # This GUI interface is for selecting a file name via the makeOpenFilebox
 # and other reading functions.
 
-catch {rename Fusion_Fields_PPPLNrrdConverter ""}
+catch {rename Fusion_Fields_NrrdFieldConverter ""}
 
-itcl_class Fusion_Fields_PPPLNrrdConverter {
+itcl_class Fusion_Fields_NrrdFieldConverter {
     inherit Module
     constructor {config} {
-        set name PPPLNrrdConverter
+        set name NrrdFieldConverter
         set_defaults
     }
 
     method set_defaults {} {
 
 	global $this-datasets
-	global $this-datadims
 
 	set $this-datasets ""
-	set $this-datadims ""
 
 	global $this-ndims
 	set $this-ndims 3
@@ -81,27 +79,31 @@ itcl_class Fusion_Fields_PPPLNrrdConverter {
 
 	pack $w.wrap.l -side left
 
-	global $this-ndims
-
 	for {set i 0} {$i < 3} {incr i 1} {
+
 	    if { $i == 0 } {
 		set index i
+		set axis i
 	    } elseif { $i == 1 } {
 		set index j
+		set axis j
 	    } elseif { $i == 2 } {
 		set index k
+		set axis k
 	    }
 
 	    global $this-$index-wrap
 
 	    frame $w.wrap.$index
 
-	    label $w.wrap.$index.l -text " $index :" -width 3 -anchor w
+	    label $w.wrap.$index.l -text "$axis :" -width 4 -anchor w
 
 	    checkbutton $w.wrap.$index.wrap -variable $this-$index-wrap 
 
 	    pack $w.wrap.$index.l $w.wrap.$index.wrap -side left
 	}
+
+	global $this-ndims
 
 	if { [set $this-ndims] >= 3 } {
 	    pack $w.wrap.l $w.wrap.i $w.wrap.j $w.wrap.k -side left -padx 10 -pady 5
@@ -116,7 +118,7 @@ itcl_class Fusion_Fields_PPPLNrrdConverter {
 	pack $w.wrap -side top -pady 5
 
 	frame $w.grid
-	label $w.grid.l -text "Grid: (Execute to show list)" -width 30 -just left
+	label $w.grid.l -text "Inputs: (Execute to show list)" -width 30 -just left
 
 	pack $w.grid.l  -side left
 	pack $w.grid -side top
@@ -124,9 +126,7 @@ itcl_class Fusion_Fields_PPPLNrrdConverter {
 	frame $w.datasets
 	
 	global $this-datasets
-	global $this-datadims
-
-	set_names [set $this-datasets] [set $this-datadims]
+	set_names 1 [set $this-datasets]
 
 	pack $w.datasets -side top -pady 10
 
@@ -138,15 +138,23 @@ itcl_class Fusion_Fields_PPPLNrrdConverter {
 	pack $w.misc -side bottom -pady 10
     }
 
-    method set_names {datasets datadims} {
+    method set_names {dims datasets} {
 
+	global $this-ndims
 	global $this-datasets
-	global $this-datadims
 
+	set $this-ndims $dims
 	set $this-datasets $datasets
-	set $this-datadims $datadims
 
         set w .ui[modname]
+
+	
+	if { $dims == 0 } {
+	    pack forget $w.wrap.l $w.wrap.i $w.wrap.j $w.wrap.k
+	} else {
+	    pack $w.wrap.l $w.wrap.i $w.wrap.j $w.wrap.k \
+		-side left -padx 10 -pady 5
+	}
 
 	if [ expr [winfo exists $w] ] {
 
@@ -162,50 +170,14 @@ itcl_class Fusion_Fields_PPPLNrrdConverter {
 		if [ expr [winfo exists $w.datasets.$i] ] {
 		    $w.datasets.$i configure -text $dataset
 		} else {
-		    set len [string length $dataset]
-		    radiobutton $w.datasets.$i -text $dataset -width $len \
-			-anchor w -just left -variable $this-grid -value $i \
-			-command "$this select_dataset $i"
+		    set len [expr [string length $dataset] + 5 ]
+		    label $w.datasets.$i -text $dataset -width $len \
+			-anchor w -just left
 		}
 
-		pack $w.datasets.$i -side top -fill x
+		pack $w.datasets.$i -side top
 
 		incr i 1
-	    }
-	}
-    }
-
-    method select_dataset {dataset} {
-	global $this-datasets
-	global $this-datadims
-
-        set w .ui[modname]
-
-	if [ expr [winfo exists $w] ] {
-	    set i 0
-
-	    foreach $this-ndims [set $this-datadims] {
-		if { $i == $dataset } {
-		    break
-		} else {
-		    incr i 1
-		}
-	    }
-
-	    # Update the count values to be at the initials values.
-
-	    pack forget $w.wrap.i
-	    pack forget $w.wrap.k
-	    pack forget $w.wrap.j
-	    
-	    if { [set $this-ndims] >= 5 } {
-		pack $w.wrap.l $w.wrap.i $w.wrap.j $w.wrap.k -side left -padx 10 -pady 5
-	    } elseif { [set $this-ndims] == 4 } {
-		pack $w.wrap.l $w.wrap.i $w.wrap.j -side left -padx 10 -pady 5	    
-	    } elseif { [set $this-ndims] == 3 } {
-		pack $w.wrap.l $w.wrap.i -side left -padx 10 -pady 5	    
-	    } elseif { [set $this-ndims] <= 2 } {
-		pack $w.wrap.l -side left -padx 10 -pady 5	    
 	    }
 	}
     }
