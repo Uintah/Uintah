@@ -1192,6 +1192,10 @@ proc sourceSettingsFile {} {
 
 	displayErrorWarningOrInfo "*** Using SCIRUN_DATA=$DATADIR" info
 	displayErrorWarningOrInfo "*** Using SCIRUN_DATASET=$DATASET" info
+	
+	netedit setenv SCIRUN_DATA "$DATADIR"
+	netedit setenv SCIRUN_DATASET "$DATASET"
+
 	setGlobal recentlyCalledSourceSettingsFile 1
 	after 10000 uplevel \#0 unset recentlyCalledSourceSettingsFile
 
