@@ -30,11 +30,11 @@ using namespace Uintah;
 using namespace std;
 //__________________________________
 //  To turn on the output
-//  setenv SCI_DEBUG "SIMPLE_RXN_DOING_COUT:+,SIMPLE_RXN_DBG_COUT:+"
-//  SIMPLE_RXN_DBG:  dumps out during problemSetup 
-//  SIMPLE_RXN_DOING_COUT:   dumps when tasks are scheduled and performed
-static DebugStream cout_doing("SIMPLE_RXN_DOING_COUT", false);
-static DebugStream cout_dbg("SIMPLE_RXN_DBG_COUT", false);
+//  setenv SCI_DEBUG "PINTO300TEST_DOING_COUT:+,PINTO300TEST_DBG_COUT:+"
+//  PINTO300TEST_DBG:  dumps out during problemSetup 
+//  PINTO300TEST_DOING_COUT:   dumps when tasks are scheduled and performed
+static DebugStream cout_doing("PINTO300TEST_DOING_COUT", false);
+static DebugStream cout_dbg("PINTO300TEST_DBG_COUT", false);
 /*`==========TESTING==========*/
 static DebugStream oldStyleAdvect("oldStyleAdvect",false); 
 /*==========TESTING==========`*/
@@ -76,7 +76,7 @@ if (!oldStyleAdvect.active()){
 /*==========TESTING==========`*/
 
 
-  cout_doing << "Doing problemSetup \t\t\t\tSIMPLE_RXN" << endl;
+  cout_doing << "Doing problemSetup \t\t\t\tPINTO300TEST" << endl;
   sharedState = in_state;
   d_matl = sharedState->parseAndLookupMaterial(params, "material");
 
@@ -95,7 +95,7 @@ void PinTo300Test::scheduleInitialize(SchedulerP& sched,
                                    const LevelP& level,
                                    const ModelInfo*)
 {
-  cout_doing << "SIMPLERXN::scheduleInitialize " << endl;
+  cout_doing << "PINTO300TEST::scheduleInitialize " << endl;
   Task* t = scinew Task("PinTo300Test::initialize", this, &PinTo300Test::initialize);
 
   t->modifies(lb->sp_vol_CCLabel);
@@ -115,7 +115,7 @@ void PinTo300Test::initialize(const ProcessorGroup*,
                            DataWarehouse*,
                            DataWarehouse* new_dw)
 {
-  cout_doing << "Doing Initialize \t\t\t\t\tSIMPLE_RXN" << endl;
+  cout_doing << "Doing Initialize \t\t\t\t\tPINTO300TEST" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     int indx = d_matl->getDWIndex();
@@ -169,7 +169,7 @@ void PinTo300Test::computeSpecificHeat(CCVariable<double>& cv_new,
                                     DataWarehouse* new_dw,
                                     const int indx)
 { 
-  cout_doing << "Doing computeSpecificHeat on patch "<<patch->getID()<< "\t SIMPLERXN" << endl;
+  cout_doing << "Doing computeSpecificHeat on patch "<<patch->getID()<< "\t PINTO300TEST" << endl;
 
   int test_indx = d_matl->getDWIndex();
   //__________________________________
@@ -193,7 +193,7 @@ void PinTo300Test::scheduleMassExchange(SchedulerP& sched,
                               const LevelP& level,
                               const ModelInfo* mi)
 {
-  cout_doing << "SIMPLE_RXN::scheduleMassExchange" << endl;
+  cout_doing << "PINTO300TEST::scheduleMassExchange" << endl;
   Task* t = scinew Task("PinTo300Test::massExchange", 
                    this,&PinTo300Test::massExchange, mi);
 
@@ -217,7 +217,7 @@ void PinTo300Test::massExchange(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     int indx = d_matl->getDWIndex();
-    cout_doing << "Doing massExchange on patch "<<patch->getID()<< "\t\t\t\t SIMPLERXN" << endl;
+    cout_doing << "Doing massExchange on patch "<<patch->getID()<< "\t\t\t\t PINTO300TEST" << endl;
     CCVariable<double> mass_src, sp_vol_src;
     new_dw->getModifiable(mass_src,   mi->mass_source_CCLabel,  indx,patch);
     new_dw->getModifiable(sp_vol_src, mi->sp_vol_source_CCLabel,indx,patch);
@@ -229,16 +229,22 @@ void PinTo300Test::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
                                           const LevelP& level,
                                           const ModelInfo* mi)
 {
-  cout_doing << "SIMPLE_RXN::scheduleMomentumAndEnergyExchange " << endl;
+  cout_doing << "PINTO300TEST::scheduleMomentumAndEnergyExchange " << endl;
   Task* t = scinew Task("PinTo300Test::momentumAndEnergyExchange", 
                    this,&PinTo300Test::momentumAndEnergyExchange, mi);
                      
   Ghost::GhostType  gn = Ghost::None;  
-  Ghost::GhostType  gac = Ghost::AroundCells;
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  
+  MaterialSubset* press_matl = scinew MaterialSubset();
+  press_matl->add(0);
+  press_matl->addReference();
+  
   //t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
   t->requires(Task::OldDW, mi->density_CCLabel,          gn);
   t->requires(Task::OldDW, mi->temperature_CCLabel,      gn);
   t->requires(Task::OldDW, lb->press_CCLabel,            gn);
+  t->requires(Task::NewDW, lb->press_equil_CCLabel, press_matl, oims, gn );
   //t->requires(Task::NewDW, lb->specific_heatLabel,       gn);
   //t->requires(Task::OldDW, mi->delT_Label); turn off for AMR
   
@@ -259,23 +265,22 @@ void PinTo300Test::momentumAndEnergyExchange(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   old_dw->get(delT, mi->delT_Label, level);
   Ghost::GhostType gn = Ghost::None;         
-  Ghost::GhostType gac = Ghost::AroundCells; 
-  
+    
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing momentumAndEnergyExch... on patch "<<patch->getID()<< "\t\tSIMPLERXN" << endl;
+    cout_doing << "Doing momentumAndEnergyExch... on patch "<<patch->getID()<< "\t\tPinTo300Test" << endl;
 
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
 
       // Get density, temperature, and energy source
       constCCVariable<double> rho_CC;
-      old_dw->get(rho_CC, mi->density_CCLabel,          matl, patch, gn, 0);
       constCCVariable<double> oldTemp;
-      old_dw->get(oldTemp,     mi->temperature_CCLabel, matl, patch, gn, 0);
       constCCVariable<double> press;
-      old_dw->get(press,     lb->press_CCLabel, matl, patch, gn, 0);
       CCVariable<double> energySource;
+      old_dw->get(rho_CC,  mi->density_CCLabel,     matl, patch, gn, 0);
+      old_dw->get(oldTemp, mi->temperature_CCLabel, matl, patch, gn, 0);
+      new_dw->get(press,   lb->press_equil_CCLabel,0,     patch, gn, 0);
       new_dw->getModifiable(energySource,   
                             mi->energy_source_CCLabel,  matl, patch);
 
@@ -289,13 +294,18 @@ void PinTo300Test::momentumAndEnergyExchange(const ProcessorGroup*,
       double cv = 716.5;
       double cp = gamma*cv;
       double flameTemp = 300.0;
+      
+      
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
         double mass = rho_CC[c]*volume;
         double newTemp = flameTemp*press[c]/101325;
+        
         double energyx =( newTemp - oldTemp[c]) * cp * mass;
         energySource[c] += energyx;
         totalEnergy += energyx;
+        
+        
         if(newTemp > maxTemp)
           maxTemp = newTemp;
         double dtemp = newTemp-oldTemp[c];
