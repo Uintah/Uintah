@@ -871,10 +871,13 @@ case $host in
 
     if test $NEED_OSX_HACK == yes; then
 	SOFLAGS="-dynamiclib -init __ZNSt8ios_base4InitC4Ev \${LIBDIR}/../osx/osx_init.o  ${SOFLAGS}"
+        DEF_NEED_OSX_HACK="#define NEED_OSX_HACK 1"
+        DEF_THREAD="#define SCI_PTHREAD 1"
     else
 	SOFLAGS="-dynamiclib"
     fi
     AC_SUBST(NEED_OSX_HACK)
+    AC_SUBST(DEF_NEED_OSX_HACK)
     ;;
 
   *)
