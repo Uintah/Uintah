@@ -1,8 +1,8 @@
 /*
- *  OldSFRGtoNewLatticeVol.cc: Converter
+ *  OldSurfaceToNewTriSurf.cc
  *
  *  Written by:
- *   David Weinstein
+ *   David Weinstein and Michae Callahan
  *   Department of Computer Science
  *   University of Utah
  *   February 2001
@@ -11,7 +11,8 @@
  */
 
 #include <Packages/FieldConverters/Core/Datatypes/TriSurface.h>
-//#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/TriSurf.h>
+#include <Core/Persistent/Pstreams.h>
 
 #include <iostream>
 #include <fstream>
@@ -24,9 +25,11 @@ using std::endl;
 using namespace SCIRun;
 using namespace FieldConverters;
 
+int
 main(int argc, char **argv) {
   SurfaceHandle handle;
   
+  // Read in a TriSurface
   if (argc !=3) {
     cerr << "Usage: "<<argv[0]<<" OldSurf NewTriSurf\n";
     exit(0);
@@ -46,20 +49,37 @@ main(int argc, char **argv) {
     cerr << "Error - surface wasn't a TriSurface.\n";
   }
 
-#if 0
-  ScalarFieldRGBase *base=dynamic_cast<ScalarFieldRGBase*>(handle.get_rep());
-  if (!base) {
-    cerr << "Error - input Field wasn't an SFRG.\n";
-    exit(0);
+  
+  TriSurfMesh *tsm = new TriSurfMesh();
+
+
+  int i;
+  for (i=0; i<ts->points.size(); i++)
+  {
+    tsm->add_point(ts->points[i]);
   }
 
-  FieldHandle fH;
+  for (i=0; i<ts->elements.size(); i++)
+  {
+    const TSElement *ele = ts->elements[i];
+    tsm->add_triangle(ele->i1, ele->i2, ele->i3);
+  }
 
-  // TO_DO:
-  // make a new Field, set it to fH, and give it a mesh and data like base's
+  tsm->connect();
+  
+  
+  //bcidx
+  //bcval
+  //valtype
 
-  BinaryPiostream stream(argv[2], Piostream::Write);
-  Pio(stream, fH);
-#endif
+  //normtype
+  //normals
+  //havenormals
+
+  // Write out the new field.
+  BinaryPiostream out_stream(argv[2], Piostream::Write);
+  TriSurfMeshHandle tsmh(tsm);
+  Pio(out_stream, tsmh);
+
   return 0;  
 }    
