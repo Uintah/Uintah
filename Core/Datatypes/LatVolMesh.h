@@ -447,9 +447,12 @@ public:
   void get_nodes(Node::array_type &, Edge::index_type) const;
   void get_nodes(Node::array_type &, Face::index_type) const;
   void get_nodes(Node::array_type &, Cell::index_type) const;
-  void get_edges(Edge::array_type &, Face::index_type) const {}
-  void get_edges(Edge::array_type &, Cell::index_type) const {}
-  void get_faces(Face::array_type &, Cell::index_type) const {}
+  void get_edges(Edge::array_type &, Face::index_type) const {
+    ASSERTFAIL("LatVolMesh::get_edges not implemented."); }
+  void get_edges(Edge::array_type &, Cell::index_type) const {
+    ASSERTFAIL("LatVolMesh::get_edges not implemented."); }
+  void get_faces(Face::array_type &, Cell::index_type) const {
+    ASSERTFAIL("LatVolMesh::get_faces not implemented."); }
 
   //! get the parent element(s) of the given index
   unsigned get_edges(Edge::array_type &, Node::index_type) const { return 0; }
