@@ -22,6 +22,11 @@
         a vector of entry pairs, each containing the tensor and a
         reference name.
       </p>
+      <p>
+        The 'Tensor Matrix' input port is optional.  If there is an
+        Nx9 or 9xN matrix present on that port, then default
+        conductivities will be extracted from that matrix.
+      </p>
     </description>
   </overview>
   <io>
@@ -29,6 +34,10 @@
       <port>
         <name>Input</name>
 	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Tensor Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
     <outputs>
