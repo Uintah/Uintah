@@ -65,7 +65,7 @@ public:
   //! Persistent I/O.
   static  SCIRun::PersistentTypeID type_id;
   virtual void io(SCIRun::Piostream &stream);
-  friend void SCIRun::Pio(SCIRun::Piostream&, Material*&);
+  friend void SCIRun::Pio(SCIRun::Piostream&, rtrt::Material*&);
   
   //ambient color (irradiance/pi) at position with surface normal
   inline Color ambient(Scene* scene, const Vector& normal) const {
