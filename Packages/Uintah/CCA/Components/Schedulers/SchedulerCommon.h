@@ -116,8 +116,8 @@ WARNING
 			  int rank = 0);
     void emitNode(const DetailedTask* dt, double start, double duration,
 		  double execution_duration, 
-		  long long execution_flops,
-		  long long communication_flops = 0);
+		  double execution_flops,
+		  double communication_flops = 0);
     void finalizeNodes(int process=0);
     
     virtual void verifyChecksum() = 0;
