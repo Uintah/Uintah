@@ -196,18 +196,15 @@ void FieldSlicer::execute(){
   }
 
   // Check to see if the dimensions have changed.
-  if( idim_ != iDim_.get() ||
+  if( dims  != Dims_.get() ||
+      idim_ != iDim_.get() ||
       jdim_ != jDim_.get() ||
       kdim_ != kDim_.get() )
   {
     // Dims has callback on it, so it must be set it after i, j, and k.
-    iDim_.set(idim_);
-    jDim_.set(jdim_);
-    kDim_.set(kdim_);
-    Dims_.set(dims);
-
     ostringstream str;
-    str << id << " set_size 0 0 0";
+    str << id << " set_size ";
+    str << dims << "  " << idim_ << " " << jdim_ << " " << kdim_;
     gui->execute(str.str().c_str());
 
     updateAll = true;
