@@ -740,7 +740,9 @@ void WriteOverviewNodeToStream(overview_node* n, std::ofstream& o)
   }
 
   if (n->summary && n->summary!=NOT_SET)
-    o << "    <summary>" << n->summary << "</summary>" << endl;
+    o << "    <summary>" << endl
+      << "      " << n->summary << endl
+      << "    </summary>" << endl;
     
   if (n->description && n->description!=NOT_SET)
     o << "    <description>" << endl
