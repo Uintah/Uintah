@@ -5,12 +5,12 @@ recognize the distribution tree when it sees it.
 
 Useful configuration flags:
 
- --with-enterleave	- enable the annoying "Entering directory..."
+ --enable-enterleave	- enable the annoying "Entering directory..."
 			  and "Leaving directory..." messages from
 			  make, which help emacs find the errors from
 			  the compile output.
 
- --with-64bit		- compile in 64 bit mode instead of in 32 bit
+ --enable-64bit		- compile in 64 bit mode instead of in 32 bit
 			  mode.   Available on the following
 			  platforms:
 				Irix
