@@ -1,13 +1,14 @@
 
-#include <Thread/Barrier.h>
-#include <Thread/Mutex.h>
-#include <Thread/PoolMutex.h>
-#include <Thread/RealtimeThread.h>
-#include <Thread/Semaphore.h>
-#include <Thread/ThreadGroup.h>
-#include <Thread/ThreadListener.h>
-#include <Thread/ThreadEvent.h>
-#include <Thread/Thread.h>
+#include "Barrier.h"
+#include "ConditionVariable.h"
+#include "Mutex.h"
+#include "PoolMutex.h"
+#include "RealtimeThread.h"
+#include "Semaphore.h"
+#include "ThreadGroup.h"
+#include "ThreadListener.h"
+#include "ThreadEvent.h"
+#include "Thread.h"
 #include <iostream.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,7 +59,7 @@ static bool initialized;
 static pthread_mutex_t sched_lock;
 static pthread_mutex_t pool_mutex[N_POOLMUTEX];
 static pthread_key_t thread_key;
-static double ticks_to_seconds=1./CLK_TCK;
+static struct timeval start_time;
 
 static void lock_scheduler() {
     if(pthread_mutex_lock(&sched_lock)){
@@ -74,10 +75,81 @@ static void unlock_scheduler() {
     }
 }
 
-Barrier::Barrier(const char*, int) { NF }
-Barrier::Barrier(const char*, ThreadGroup*) { NF }
-Barrier::~Barrier() { NF }
-void Barrier::wait() { NF }
+static int push_bstack(Thread_private* p, int state, const char* name) {
+    int oldstate=p->state;
+    p->state=state;
+    p->blockstack[p->bstacksize]=name;
+    p->bstacksize++;
+    if(p->bstacksize>MAXBSTACK){
+	fprintf(stderr, "Blockstack Overflow!\n");
+	Thread::niceAbort();
+    }
+    return oldstate;
+}
+
+static void pop_bstack(Thread_private* p, int oldstate) {
+    p->bstacksize--;
+    p->state=oldstate;
+}
+
+// This is only used for the single processor implementation
+struct Barrier_private {
+    Mutex mutex;
+    ConditionVariable cond0;
+    ConditionVariable cond1;
+    int cc;
+    int nwait;
+    Barrier_private();
+};
+
+Barrier_private::Barrier_private()
+: cond0("Barrier condition 0"), cond1("Barrier condition 1"),
+  mutex("Barrier lock"), nwait(0), cc(0)
+{
+}   
+
+Barrier::Barrier(const char* name, int nthreads)
+ : name(name), nthreads(nthreads), threadGroup(0)
+{
+    if(!initialized){
+	Thread::initialize();
+    }
+    priv=new Barrier_private;
+}
+
+Barrier::Barrier(const char* name, ThreadGroup* threadGroup)
+ : name(name), nthreads(0), threadGroup(threadGroup)
+{
+    if(!initialized){
+	Thread::initialize();
+    }
+    priv=new Barrier_private;
+}
+
+Barrier::~Barrier()
+{
+    delete priv;
+}
+
+void Barrier::wait()
+{
+    int n=threadGroup?threadGroup->nactive(true):nthreads;
+    Thread_private* p=Thread::currentThread()->priv;
+    int oldstate=push_bstack(p, STATE_BLOCK_SEMAPHORE, name);
+    priv->mutex.lock();
+    ConditionVariable& cond=priv->cc?priv->cond0:priv->cond1;
+    int me=priv->nwait++;
+    if(priv->nwait == n){
+	// Wake everybody up...
+	priv->nwait=0;
+	priv->cc=1-priv->cc;
+	cond.cond_broadcast();
+    } else {
+	cond.wait(priv->mutex);
+    }
+    priv->mutex.unlock();
+    pop_bstack(p, oldstate);
+}
 
 struct Mutex_private {
     pthread_mutex_t mutex;
@@ -283,12 +355,35 @@ void Thread::os_start(bool) {
     unlock_scheduler();
 }
 
-double Thread::currentSeconds() { NF;return 0; }
+double Thread::currentSeconds() {
+    struct timeval now_time;
+    if(gettimeofday(&now_time, 0) != 0){
+	perror("gettimeofday");
+	Thread::niceAbort();
+    }
+    return (now_time.tv_sec-start_time.tv_sec)+(now_time.tv_usec-start_time.tv_usec)*1.e-6;
+}
 void Thread::stop() { NF }
 void Thread::resume() { NF }
-SysClock Thread::currentTicks() { NF; return 0; }
-int Thread::couldBlock(const char*) { NF; return 0; }
-void Thread::couldBlock(int) { NF }
+
+SysClock Thread::currentTicks() { 
+    struct timeval now_time;
+    if(gettimeofday(&now_time, 0) != 0){
+	perror("gettimeofday");
+	Thread::niceAbort();
+    }
+    return (now_time.tv_sec-start_time.tv_sec)*100000+(now_time.tv_usec-start_time.tv_usec);
+}
+
+int Thread::couldBlock(const char* why) {
+    Thread_private* p=Thread::currentThread()->priv;
+    return push_bstack(p, STATE_BLOCK_ANY, why);
+}
+
+void Thread::couldBlock(int restore) {
+    Thread_private* p=Thread::currentThread()->priv;
+    pop_bstack(p, restore);
+}
 
 void Thread::detach() {
     if(sem_post(&priv->delete_ready) != 0){
@@ -303,10 +398,14 @@ void Thread::detach() {
 }
 
 void Thread::setPriority(int) { NF }
-double Thread::ticksPerSecond() { NF; return 0; }
+double Thread::ticksPerSecond() { return 1000000; }
 void Thread::exitAll(int) { NF }
 
 void Thread::initialize() {
+    if(gettimeofday(&start_time, 0) != 0){
+	perror("getimeofday");
+	Thread::niceAbort();
+    }
     if(pthread_mutex_init(&sched_lock, NULL) != 0){
 	perror("pthread_mutex_init");
 	Thread::niceAbort();
@@ -382,8 +481,8 @@ void Thread::waitFor(SysClock time) {
     if(time<=0)
 	return;
     struct timespec ts;
-    ts.tv_sec=(int)(time*ticks_to_seconds);
-    ts.tv_nsec=(int)(1.e9*(time*ticks_to_seconds-ts.tv_sec));
+    ts.tv_sec=(int)(time*1.e-6);
+    ts.tv_nsec=(int)(1.e9*(time*1.e-6-ts.tv_sec));
     while (nanosleep(&ts, &ts) == 0) /* Nothing */ ;
 }
 
