@@ -7,12 +7,14 @@
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/CFDInterface.h>
+#include <Uintah/Interface/DataWarehouseP.h>
 
 namespace Uintah {
 namespace Components {
 
 using Uintah::Parallel::UintahParallelComponent;
 using Uintah::Interface::CFDInterface;
+using Uintah::Interface::DataWarehouseP;
 
 /**************************************
 
@@ -77,6 +79,9 @@ private:
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 02:57:00  dav
+// more namespace, cocoon, etc
+//
 // Revision 1.2  2000/03/16 22:26:14  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

@@ -1,3 +1,5 @@
+/* REFERENCED */
+static char *id="@(#) $Id$";
 
 #include <Uintah/Components/MPM/SerialMPM.h>
 
@@ -16,19 +18,22 @@
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h> // TEMPORARY
 #include <SCICore/Geometry/Vector.h>
-using SCICore::Geometry::Vector;
 #include <SCICore/Geometry/Point.h>
-using SCICore::Geometry::Point;
 #include <SCICore/Math/MinMax.h>
-using SCICore::Math::Max;
 #include <iostream>
-using std::cerr;
-using std::string;
 #include <fstream>
-using std::ofstream;
 
 #include "GeometrySpecification/Problem.h"
 
+namespace Uintah {
+namespace Components {
+
+using SCICore::Geometry::Vector;
+using SCICore::Geometry::Point;
+using SCICore::Math::Max;
+using std::cerr;
+using std::string;
+using std::ofstream;
 
 SerialMPM::SerialMPM()
 {
@@ -596,7 +601,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
     new_dw->put(pexternalforce, "p.externalforce", region, 0);
 }
 
+// end namespace Components
+// end namespace Uintah
+
 // $Log$
+// Revision 1.6  2000/03/17 02:57:01  dav
+// more namespace, cocoon, etc
+//
 // Revision 1.5  2000/03/16 01:11:23  guilkey
 // To timeStep added tasks to do contact.
 //
