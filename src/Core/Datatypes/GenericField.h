@@ -186,6 +186,7 @@ const string GenericField<Mesh, FData>::type_name(int n)
 template <class Mesh, class FData>
 void GenericField<Mesh, FData>::io(Piostream& stream)
 {
+  // we need to pass -1 to type_name() on SGI to fix a compile bug
   stream.begin_class(type_name(-1), GENERICFIELD_VERSION);
   Field::io(stream);
   mesh_->io(stream);
