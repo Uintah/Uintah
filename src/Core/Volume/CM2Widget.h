@@ -268,7 +268,7 @@ public:
   static PersistentTypeID type_id;
 
   Segments &	get_segments() { return segments_; }
-  void		set_dirty(bool dirty);
+  void		set_dirty(bool dirty){ dirty_ = dirty; }
 
 protected:
   // nrrdSpatialResample ...
