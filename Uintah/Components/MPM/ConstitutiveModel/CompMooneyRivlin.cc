@@ -332,30 +332,31 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   ParticleVariable<Vector> pCrackSurfaceNormal;
   ParticleVariable<double> pVolume;
 
-  ParticleSubset* outsidePset = old_dw->getParticleSubset(matlindex, patch,
-	Ghost::AroundNodes, 1, lb->pXLabel);
+  ParticleSubset* pset_patchAndGhost = old_dw->getParticleSubset(
+     matlindex, patch, Ghost::AroundNodes, 1, lb->pXLabel);
 
-  old_dw->get(pX, lb->pXLabel, outsidePset);
-  new_dw->get(pIsBroken, lb->pIsBrokenLabel_preReloc, outsidePset);
-  new_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel_preReloc, outsidePset);
-  new_dw->get(pVolume, lb->pVolumeLabel_preReloc, outsidePset);
-
-  ParticleSubset* insidePset = old_dw->getParticleSubset(matlindex, patch);
-  ParticleVariable<Vector> pCrackSurfaceContactForce;
-  new_dw->allocate(pCrackSurfaceContactForce,
-     lb->pCrackSurfaceContactForceLabel, insidePset);
+  old_dw->get(pX, lb->pXLabel, pset_patchAndGhost);
+  new_dw->get(pIsBroken, lb->pIsBrokenLabel_preReloc, pset_patchAndGhost);
+  new_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel_preReloc, 
+    pset_patchAndGhost);
+  new_dw->get(pVolume, lb->pVolumeLabel_preReloc, pset_patchAndGhost);
 
   Lattice lattice(pX);
   ParticlesNeighbor particles;
 
+  ParticleSubset* pset_patchOnly = old_dw->getParticleSubset(
+     matlindex, patch);
 
-  for(ParticleSubset::iterator iter = insidePset->begin();
-          iter != insidePset->end(); iter++)
+  ParticleVariable<Vector> pCrackSurfaceContactForce;
+  new_dw->allocate(pCrackSurfaceContactForce,
+     lb->pCrackSurfaceContactForceLabel, pset_patchOnly);
+
+  for(ParticleSubset::iterator iter = pset_patchOnly->begin();
+          iter != pset_patchOnly->end(); iter++)
   {
     pCrackSurfaceContactForce[*iter] = Vector(0.,0.,0.);
   }
 
-#if 0
   IntVector cellIdx;
   double C1 = ( d_initialData.C1 + d_initialData.C1 )/2;
   double C2 = ( d_initialData.C2 + d_initialData.C2 )/2;
@@ -363,8 +364,8 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   double PR = ( d_initialData.PR + d_initialData.PR )/2;
   double C4 = .5*(C1*(5.*PR-2) + C2*(11.*PR-5)) / (1. - 2.*PR);
 
-  for(ParticleSubset::iterator iter = insidePset->begin();
-          iter != insidePset->end(); iter++)
+  for(ParticleSubset::iterator iter = pset_patchOnly->begin();
+          iter != pset_patchOnly->end(); iter++)
   {
     particleIndex pIdx = *iter;
     patch->findCell(pX[pIdx],cellIdx);
@@ -375,13 +376,17 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
     double size1 = pow(pVolume[pIdx],0.3333);
 
     //crack surface contact force
-    for(int pNeighbor=0; pNeighbor<particles.size();++pNeighbor)
+    for(int pNeighbor=0; pNeighbor<particles.size(); ++pNeighbor)
     {
       particleIndex pContact = particles[pNeighbor];
+      if(pContact == pIdx) continue;
 
-      if( pIsBroken[pContact] && 
-          pIsBroken[pIdx] &&
-	  Dot(pCrackSurfaceNormal[pContact],pCrackSurfaceNormal[pIdx]) < -0.5 )
+      if(!particles.visible( pIdx,
+                            pX[pContact],
+		            pX,
+		            pIsBroken,
+		            pCrackSurfaceNormal,
+		            pVolume) ) 
       {
         const Point& X2 = pX[pContact];
 
@@ -423,7 +428,6 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
       }
     }
   }
-#endif
 
   new_dw->put(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel_preReloc);
 
@@ -435,21 +439,23 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   double delT_new = delT;
 
   ParticleVariable<double> pMass;
-  new_dw->get(pMass, lb->pMassLabel_preReloc, insidePset);
+  new_dw->get(pMass, lb->pMassLabel_preReloc, pset_patchOnly);
 
-  double tolerance = 0.00001;
+  double tolerance = 0.001;
   
   Vector dx = patch->dCell();
   double dxLength = dx.length() * tolerance;
 
-  for(ParticleSubset::iterator iter = insidePset->begin();
-          iter != insidePset->end(); iter++)
+  /*
+  for(ParticleSubset::iterator iter = pset_patchOnly->begin();
+          iter != pset_patchOnly->end(); iter++)
   {
     double force = pCrackSurfaceContactForce[*iter].length();
     if(force > 0) {
       delT_new = Min(delT_new,sqrt(2*dxLength*pMass[*iter]/force));
     }
   }
+  */
 
   new_dw->put(delt_vartype(delT_new), lb->delTAfterCrackSurfaceContactLabel);
 }
@@ -507,6 +513,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.75  2000/12/10 06:42:29  tan
+// Modifications on fracture contact computations.
+//
 // Revision 1.74  2000/11/30 22:59:19  guilkey
 // Got rid of the if(! in front of all of the patch->findCellAnd...
 // since this is no longer needed.

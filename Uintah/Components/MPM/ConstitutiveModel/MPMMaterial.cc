@@ -174,12 +174,19 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    ParticleVariable<Vector> pCrackSurfaceNormal;
    ParticleVariable<Vector> pCrackSurfaceContactForce;
    ParticleVariable<double> pTensileStrength;
+   ParticleVariable<Vector> pImageVelocity;
    
    if(d_fracture) {
-     new_dw->allocate(pIsBroken, lb->pIsBrokenLabel, subset);
-     new_dw->allocate(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, subset);
-     new_dw->allocate(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel, subset);
-     new_dw->allocate(pTensileStrength, lb->pTensileStrengthLabel, subset);
+     new_dw->allocate(pIsBroken, 
+       lb->pIsBrokenLabel, subset);
+     new_dw->allocate(pCrackSurfaceNormal, 
+       lb->pCrackSurfaceNormalLabel, subset);
+     new_dw->allocate(pCrackSurfaceContactForce, 
+       lb->pCrackSurfaceContactForceLabel, subset);
+     new_dw->allocate(pTensileStrength, 
+       lb->pTensileStrengthLabel, subset);
+     new_dw->allocate(pImageVelocity, 
+       lb->pImageVelocityLabel, subset);
    }
    
    particleIndex start = 0;
@@ -206,6 +213,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 	pIsBroken[pIdx] = 0;
 	pCrackSurfaceNormal[pIdx] = Vector(0.,0.,0.);
 	pCrackSurfaceContactForce[pIdx] = Vector(0.,0.,0.);
+	pImageVelocity[pIdx] = Vector(0.,0.,0.);
      }
 
      pexternalforce[pIdx] = Vector(0.0,0.0,0.0);
@@ -248,6 +256,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      new_dw->put(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel);
      new_dw->put(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel);
      new_dw->put(pTensileStrength, lb->pTensileStrengthLabel);
+     new_dw->put(pImageVelocity, lb->pImageVelocityLabel);
    }
 }
 
@@ -421,6 +430,9 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.54  2000/12/10 06:42:29  tan
+// Modifications on fracture contact computations.
+//
 // Revision 1.53  2000/11/22 01:40:59  guilkey
 // Moved forward declaration of GeometryPiece
 //
