@@ -1072,11 +1072,14 @@ AtomicCounter::operator++()
     // they are so fast (microsecond), and never block...
     return (int)atomic_fetch_and_increment((atomic_var_t*)priv_)+1;
   } else {
-    int oldstate=Thread::couldBlock(name_);
+    int oldstate;
+    if (Thread::self()) 
+      oldstate=Thread::couldBlock(name_);
     priv_->lock.lock();
     int ret=++priv_->value;
     priv_->lock.unlock();
-    Thread::couldBlockDone(oldstate);
+    if (Thread::self())
+      Thread::couldBlockDone(oldstate);
     return ret;
   }
 }
@@ -1087,11 +1090,14 @@ AtomicCounter::operator++(int)
   if(use_fetchop){
     return (int)atomic_fetch_and_increment((atomic_var_t*)priv_);
   } else {
-    int oldstate=Thread::couldBlock(name_);
+    int oldstate;
+    if (Thread::self()) 
+      oldstate=Thread::couldBlock(name_);
     priv_->lock.lock();
     int ret=priv_->value++;
     priv_->lock.unlock();
-    Thread::couldBlockDone(oldstate);
+    if (Thread::self()) 
+      Thread::couldBlockDone(oldstate);
     return ret;
   }
 }
@@ -1102,11 +1108,14 @@ AtomicCounter::operator--()
   if(use_fetchop){
     return (int)atomic_fetch_and_decrement((atomic_var_t*)priv_)-1;
   } else {
-    int oldstate=Thread::couldBlock(name_);
+    int oldstate;
+    if (Thread::self()) 
+      oldstate=Thread::couldBlock(name_);
     priv_->lock.lock();
     int ret=--priv_->value;	
     priv_->lock.unlock();
-    Thread::couldBlockDone(oldstate);
+    if (Thread::self()) 
+      Thread::couldBlockDone(oldstate);
     return ret;
   }
 }
@@ -1117,11 +1126,14 @@ AtomicCounter::operator--(int)
   if(use_fetchop){
     return (int)atomic_fetch_and_increment((atomic_var_t*)priv_);
   } else {
-    int oldstate=Thread::couldBlock(name_);
+    int oldstate;
+    if (Thread::self()) 
+      oldstate=Thread::couldBlock(name_);
     priv_->lock.lock();
     int ret=priv_->value--;
     priv_->lock.unlock();
-    Thread::couldBlockDone(oldstate);
+    if (Thread::self()) 
+      Thread::couldBlockDone(oldstate);
     return ret;
   }
 }
