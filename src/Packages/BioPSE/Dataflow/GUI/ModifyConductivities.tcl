@@ -160,15 +160,7 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 	pack $w.controls.execute $w.controls.reset \
 	    -side left -fill x -expand y
 
-	grid rowconfig    $w 0 -weight 1 -minsize 0
-	grid columnconfig $w 0 -weight 1 -minsize 0
-	
-	grid $w.title -in $w -padx 1 -pady 1 \
-	    -row 0 -column 0 -rowspan 1 -columnspan 1 -sticky news
-	grid $w.tensors -in $w -padx 1 -pady 1 \
-	    -row 1 -column 0 -rowspan 1 -columnspan 1 -sticky news
-	grid $w.controls -in $w -padx 1 -pady 1 \
-	    -row 2 -column 0 -rowspan 1 -columnspan 1 -sticky news
+	pack $w.title $w.tensors $w.controls -side top -fill x
 
 	create_entries
     }
