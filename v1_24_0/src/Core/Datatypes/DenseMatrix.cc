@@ -51,6 +51,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/Assert.h>
+#include <Core/Exceptions/FileNotFound.h>
 #include <iostream>
 #include <vector>
 
@@ -563,7 +564,8 @@ DenseMatrix::submatrix(int r1, int c1, int r2, int c2)
 
 #define DENSEMATRIX_VERSION 3
 
-void DenseMatrix::io(Piostream& stream)
+void
+DenseMatrix::io(Piostream& stream)
 {
 
   int version=stream.begin_class("DenseMatrix", DENSEMATRIX_VERSION);
@@ -590,8 +592,18 @@ void DenseMatrix::io(Piostream& stream)
       if (separate_raw_) {
 	Pio(stream, raw_filename_);
 	FILE *f=fopen(raw_filename_.c_str(), "r");
-	fread(data[0], sizeof(double), nr*nc, f);
-	fclose(f);
+	if (f)
+	{
+	  fread(data[0], sizeof(double), nr*nc, f);
+	  fclose(f);
+	}
+	else
+	{
+	  const string errmsg = "Error reading separated file '" +
+	    raw_filename_ + "'";
+	  cerr << errmsg << "\n";
+	  throw scinew FileNotFound(errmsg);
+	}
       }
     } else {
       separate_raw_ = false;
