@@ -33,7 +33,7 @@ TensorParticles::TensorParticles()
 TensorParticles::TensorParticles(
 		 const vector <ParticleVariable<Matrix3> >& tensors,
 		 PSet* pset) :
-  tensors(tensors),  psetH(pset), have_minmax(false)
+  have_minmax(false),  psetH(pset), tensors(tensors)
 {
 }
 

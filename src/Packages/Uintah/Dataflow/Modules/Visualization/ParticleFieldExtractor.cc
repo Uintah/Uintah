@@ -71,7 +71,7 @@ ParticleFieldExtractor::ParticleFieldExtractor(const string& id)
     pvVar("pvVar", id, this),
     ptVar("ptVar", id, this),
     pNMaterials("pNMaterials", id, this),
-    archiveH(0), positionName(""), particleIDs(""),
+    positionName(""), particleIDs(""), archiveH(0),
     num_materials(0)
 { 
   //////////// Initialization code goes here

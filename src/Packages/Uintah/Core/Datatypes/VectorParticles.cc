@@ -35,7 +35,7 @@ VectorParticles::VectorParticles()
 VectorParticles::VectorParticles(
 		 const vector <ParticleVariable<Vector> >& vectors,
 		 PSet* pset) :
-  vectors(vectors),  psetH(pset), have_minmax(false)
+  have_minmax(false), psetH(pset), vectors(vectors)
 {
 }
 
