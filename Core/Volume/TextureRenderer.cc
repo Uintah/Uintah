@@ -377,11 +377,8 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
   }
   brick->set_dirty(false);
   glActiveTexture(GL_TEXTURE0);
-  int errcode = glGetError();
-  if(errcode != GL_NO_ERROR) {
-    cerr << "VolumeRenderer::load_texture | "
-         << (char*)gluErrorString(errcode) << "\n";
-  }
+
+  CHECK_OPENGL_ERROR("VolumeRenderer::load_texture end");
 #endif
 }
 

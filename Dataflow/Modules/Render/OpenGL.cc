@@ -995,7 +995,7 @@ OpenGL::redraw_frame()
   viewer_->geomlock_.readUnlock();
 
   // Look for errors
-  CHECK_OPENGL_ERROR("after drawing objects: ")
+  CHECK_OPENGL_ERROR("OpenGL::redraw after drawing objects: ")
 
   // Report statistics
   timer.stop();
@@ -1237,12 +1237,9 @@ OpenGL::real_get_pick(int x, int y,
 
     glFlush();
     int hits=glRenderMode(GL_RENDER);
-    GLenum errcode;
-    while((errcode=glGetError()) != GL_NO_ERROR)
-    {
-      cerr << "We got an error from GL: " << (char*)gluErrorString(errcode)
-	   << "\n";
-    }
+
+    CHECK_OPENGL_ERROR("OpenGL::real_get_pick");
+
     gui_->unlock();
     GLuint min_z;
 #ifdef SCI_64BITS
@@ -1957,12 +1954,7 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
 
   if(datamask&(GEOM_COLORBUFFER|GEOM_DEPTHBUFFER/*CollabVis*/|GEOM_MATRICES))
   {
-    GLenum errcode;
-    while((errcode=glGetError()) != GL_NO_ERROR)
-    {
-      cerr << "We got an error from GL: " <<
-	(char*)gluErrorString(errcode) << "\n";
-    }
+    CHECK_OPENGL_ERROR("OpenGL::real_getData");
     gui_->unlock();
   }
   result->send(res);

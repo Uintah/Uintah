@@ -441,12 +441,9 @@ VolumeRenderer::draw_volume()
 
     blend_buffer_->set_use_default_shader(false);
   }
-  // Look for errors
-  GLenum errcode;
-  if((errcode=glGetError()) != GL_NO_ERROR) {
-    cerr << "VolumeRenderer::end | "
-         << (char*)gluErrorString(errcode) << "\n";
-  }
+
+  CHECK_OPENGL_ERROR("VolumeRenderer::draw_volume end");
+
   tex_->unlock_bricks();
 #endif
 }
@@ -680,7 +677,6 @@ VolumeRenderer::multi_level_draw()
   double tmax = floor(ts[7]/dt)*dt;
   int count = 1;
   int reset_val = (int)(pow(2.0, levels - 1));
-//   cerr<<"tmin = "<<tmin<<", tmax = "<<tmax<<"\n";
 
   vector<vector<TextureBrickHandle> > blevels;
   blevels.resize(levels);
@@ -828,12 +824,8 @@ VolumeRenderer::multi_level_draw()
     delete *it;
   }
 
-  // Look for errors
-  GLenum errcode;
-  if((errcode=glGetError()) != GL_NO_ERROR) {
-    cerr << "VolumeRenderer::end | "
-         << (char*)gluErrorString(errcode) << "\n";
-  }
+  CHECK_OPENGL_ERROR("VolumeRenderer::multi_level_draw end");
+
   tex_->unlock_bricks();
 #endif  
 }
