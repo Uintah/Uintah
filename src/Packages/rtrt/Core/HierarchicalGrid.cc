@@ -264,6 +264,13 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
     }
 
     grid=new Object*[total];
+
+    total_ = total;
+    if( total == 0 )
+      {
+	cout << "HGrid: error, total is 0 for " << this << "\n";
+      }
+
     for(int i=0;i<total;i++)
 	grid[i]=0;
 
