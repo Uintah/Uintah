@@ -77,7 +77,7 @@ WARNING
       
       // Get all of the requires needed from the old data warehouse
       // (carried forward).
-      const set<const VarLabel*>& getInitialRequires() const
+      const set<const VarLabel*, VarLabel::Compare>& getInitialRequires() const
       { return d_initreqs; }
 
       int getNumTasks() const;
@@ -123,7 +123,7 @@ WARNING
      vector<Task::Edge*> edges;
 
       // data required from old data warehouse
-     set<const VarLabel*> d_initreqs;
+     set<const VarLabel*, VarLabel::Compare> d_initreqs;
       
    };
 
