@@ -49,6 +49,7 @@ public:
   virtual ~HairObj();
 
   double at() { return pos_; }
+  void recompute();
   virtual void select( double x, double y, int b );
   virtual void move( double x, double y, int b );
   virtual void release( double x, double y, int b );

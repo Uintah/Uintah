@@ -48,7 +48,6 @@ class SCICORESHARE DrawObj : public Datatype {
 private:
   Mutex *lock_;
   string name_;
-  bool enabled_;
   DrawObj *parent_;
 
  protected:
@@ -64,8 +63,7 @@ public:
   void set_name ( const string &name) { name_=name;}
   DrawObj *parent() { return parent_; }
   void set_parent( DrawObj *p ) { parent_ = p; }
-  bool is_enabled() { return enabled_; }
-  void enable( bool state ) { enabled_ = state; }
+
   virtual void set_opengl ( OpenGLWindow *w ) { ogl_ = w ; }
   virtual void need_redraw() {}
   virtual void reset_bbox();

@@ -23,6 +23,7 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/GuiInterface/TclObj.h>
 #include <Core/Thread/Mutex.h>
@@ -55,6 +56,9 @@ private:
 public:
   Graph( const string & );
   virtual ~Graph() {}
+
+  void lock() { TCLTask::lock(); }
+  void unlock() { TCLTask::unlock(); }
 
   void add( const string &, DrawObj *);
   virtual void tcl_command(TCLArgs&, void*);

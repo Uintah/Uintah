@@ -56,6 +56,7 @@ HairObj::HairObj( const BBox2d &bbox, const string &name)
   : Widget(name), 
     from_(bbox.min().x()), to_(bbox.max().x()), pos_( (from_+to_)/2 )
 {
+  set_bbox( bbox );
 }
 
 
@@ -64,8 +65,11 @@ HairObj::~HairObj()
 }
 
 void
-HairObj::select( double x, double y, int  )
+HairObj::recompute()
 {
+  from_ = bbox_.min().x();
+  to_ = bbox_.max().x();
+
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
@@ -75,10 +79,18 @@ HairObj::select( double x, double y, int  )
   glGetIntegerv( GL_VIEWPORT, viewport );
   glPopMatrix();
 }
+void
+HairObj::select( double x, double y, int  )
+{
+  recompute();
+}
   
 void
 HairObj::move( double x, double y, int )
 {
+  if ( from_ != bbox_.min().x() || to_ != bbox_.max().x() ) 
+    recompute();
+
   GLdouble px, py, pz;
   gluUnProject( x, y, 0, model, proj, viewport, &px, &py, &pz );
   if ( px >= from_ && px <= to_ )
@@ -88,6 +100,9 @@ HairObj::move( double x, double y, int )
 void
 HairObj::release( double x, double y, int )
 {
+  if ( from_ != bbox_.min().x() || to_ != bbox_.max().x() ) 
+    recompute();
+
   GLdouble px, py, pz;
   gluUnProject( x, y, 0, model, proj, viewport, &px, &py, &pz );
   if ( px >= from_ && px <= to_ )

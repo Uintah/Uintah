@@ -33,6 +33,8 @@
 #include <Core/2d/Polyline.h>
 #include <Core/2d/Diagram.h>
 #include <Core/2d/Hairline.h>
+#include <Core/2d/BoxObj.h>
+#include <Core/2d/Zoom.h>
 #include <Core/2d/Axes.h>
 
 #include <GL/gl.h>
@@ -116,7 +118,7 @@ Diagram::draw()
       }
     }
     else { // select_mode == one
-      if ( poly_[selected_]->is_enabled() ) {
+      if ( active_[selected_] ) {
 	BBox2d bbox;
 	poly_[selected_]->get_bounds( bbox );
 	if ( bbox.valid() ) {
@@ -154,8 +156,9 @@ Diagram::draw()
 void
 Hairline::draw()
 {
-  update();
+  //  update_hair();
   hair_->draw();
+  //update();
 }
 
 void
@@ -221,6 +224,20 @@ Axes::draw()
   // restore the projection
   glPopMatrix();
 }
+
+
+void
+BoxObj::draw()
+{
+  cerr << "BoxObj draw" << endl;
+}
+
+void
+Zoom::draw()
+{
+  cerr << "ZoomObj draw" << endl;
+}
+
 
 } // End namespace SCIRun
 

@@ -54,6 +54,7 @@ public:
   virtual ~Hairline();
 
   //void add( Polyline *);
+  void update_hair();
   void update();
 
   virtual void select( double x, double y, int b );

@@ -30,8 +30,9 @@ class Graph {
 
 	# menubar
 	iwidgets::menubar $w.menu 
-	puts "tcl graph menu at $w.menu"
-	
+	$w.menu add menubutton .opt -text "Opt"
+
+
 	# Options
 	frame $w.opt
 
@@ -56,7 +57,7 @@ class Graph {
 	# pack $w.info 
 	pack $w.menu -fill x -expand yes
 	pack $w.opt -anchor w 
-	pack $w.graph -expand yes  -fill y
+	pack $w.graph -expand yes  -fill both
     }
 
 }

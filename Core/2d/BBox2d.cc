@@ -40,7 +40,7 @@ BBox2d::BBox2d()
 }
 
 BBox2d::BBox2d(const Point2d& min, const Point2d& max):
-  have_some(false), min_(min), max_(max)
+  have_some(true), min_(min), max_(max)
 {
 }
 

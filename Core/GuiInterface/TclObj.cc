@@ -81,7 +81,7 @@ TclObj::tcl_eval( const string &s, string &result )
 void
 TclObj::tcl_exec()
 {
-  cerr << "TclObj::exec " << tcl_.str() << endl;
+  //cerr << "TclObj::exec " << tcl_.str() << endl;
   TCL::execute( tcl_.str().c_str() );
   tcl_.str( " ");
   tcl_ << id_ << " ";
@@ -99,7 +99,7 @@ TclObj::set_id( const string & id )
   
   ostringstream cmd;
   cmd << script_ << " " << id_;
-  cerr << "TclObj::set_id  " << cmd.str() << endl;
+  //cerr << "TclObj::set_id  " << cmd.str() << endl;
   TCL::execute( cmd.str().c_str() );
   
   tcl_ << id_ << " ";}
@@ -108,11 +108,11 @@ void
 TclObj::set_window( const string & window, const string& args,  bool exec )
 {
   window_ = window;
-  cerr << "TclObj args = " << args << endl;
+  //cerr << "TclObj args = " << args << endl;
   if ( exec ) {
     ostringstream cmd;
     cmd << id_ << " ui " << window << " " << args;
-    cerr << "TclObj::set_window  " << cmd.str() << endl;
+    //cerr << "TclObj::set_window  " << cmd.str() << endl;
     TCL::execute( cmd.str().c_str() );
   }
 }

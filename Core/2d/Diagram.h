@@ -84,6 +84,8 @@ public:
   void button_release( int x, int y, int button );
 
   void add_hairline();
+  void add_zoom();
+
  public:
   // For OpenGL
 #ifdef SCI_OPENGL

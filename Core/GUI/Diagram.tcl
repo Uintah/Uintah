@@ -61,6 +61,8 @@ class Diagram {
 
 	$menu add command .widgets.hairline -label Hairline -underline 0 \
 	    -command "$this widget hairline"
+	$menu add command .widgets.zoom -label Zoom -underline 0 \
+	    -command "$this widget zoom"
 
 	#
 	# option area
