@@ -173,6 +173,19 @@ QuadraticTetVolMesh::ave_point(const Point &p0, const Point &p1) const
   return rval;
 }
 
+void 
+QuadraticTetVolMesh::get_nodes(Node::array_type &array, 
+			       Edge::index_type idx) const
+{
+  TetVolMesh::get_nodes(array, idx);
+}
+void 
+QuadraticTetVolMesh::get_nodes(Node::array_type &array, 
+			       Face::index_type idx) const
+{
+  TetVolMesh::get_nodes(array, idx);
+}
+
 void
 QuadraticTetVolMesh::get_nodes(Node::array_type &array, 
 			       Cell::index_type idx) const
@@ -187,6 +200,86 @@ QuadraticTetVolMesh::get_nodes(Node::array_type &array,
   array.push_back(sz + cindex + 4);
   array.push_back(sz + cindex + 5);
 }
+
+void 
+QuadraticTetVolMesh::get_edges(Edge::array_type &array, 
+			       Face::index_type idx) const
+{
+  TetVolMesh::get_edges(array, idx);
+}
+void 
+QuadraticTetVolMesh::get_edges(Edge::array_type &array, 
+			       Cell::index_type idx) const
+{
+  TetVolMesh::get_edges(array, idx);
+}
+void 
+QuadraticTetVolMesh::get_faces(Face::array_type &array, 
+			       Cell::index_type idx) const
+{
+  TetVolMesh::get_faces(array, idx);
+}
+bool 
+QuadraticTetVolMesh::get_neighbor(Cell::index_type &neighbor, 
+				  Cell::index_type from,
+				  Face::index_type idx) const
+{
+  return TetVolMesh::get_neighbor(neighbor, from, idx);
+}
+void 
+QuadraticTetVolMesh::get_neighbors(Cell::array_type &array, 
+				   Cell::index_type idx) const
+{
+  TetVolMesh::get_neighbors(array, idx);
+}
+void 
+QuadraticTetVolMesh::get_neighbors(Node::array_type &array, 
+				   Node::index_type idx) const
+{
+  TetVolMesh::get_neighbors(array, idx);
+}
+void 
+QuadraticTetVolMesh::get_center(Point &result, Node::index_type idx) const
+{
+  TetVolMesh::get_center(result, idx);
+}
+void 
+QuadraticTetVolMesh::get_center(Point &result, Edge::index_type idx) const
+{
+  TetVolMesh::get_center(result, idx);
+}
+void 
+QuadraticTetVolMesh::get_center(Point &result, Face::index_type idx) const
+{
+  TetVolMesh::get_center(result, idx);
+}
+void 
+QuadraticTetVolMesh::get_center(Point &result, Cell::index_type idx) const
+{
+  TetVolMesh::get_center(result, idx);
+}
+bool 
+QuadraticTetVolMesh::locate(Node::index_type &loc, const Point &p)
+{
+  return TetVolMesh::locate(loc, p);
+}
+bool 
+QuadraticTetVolMesh::locate(Edge::index_type &loc, const Point &p)
+{
+  return TetVolMesh::locate(loc, p);
+}
+bool 
+QuadraticTetVolMesh::locate(Face::index_type &loc, const Point &p)
+{
+  return TetVolMesh::locate(loc, p);
+}
+bool 
+QuadraticTetVolMesh::locate(Cell::index_type &loc, const Point &p)
+{
+  return TetVolMesh::locate(loc, p);
+}
+
+
 
 void 
 QuadraticTetVolMesh::get_point(Point &result, Node::index_type index) const

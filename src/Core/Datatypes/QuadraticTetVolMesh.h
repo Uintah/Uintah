@@ -50,7 +50,28 @@ public:
   void size(Face::size_type &) const;
   void size(Cell::size_type &) const;
 
+  void get_nodes(Node::array_type &array, Edge::index_type idx) const;
+  void get_nodes(Node::array_type &array, Face::index_type idx) const;
   void get_nodes(Node::array_type &array, Cell::index_type idx) const;
+  void get_edges(Edge::array_type &array, Face::index_type idx) const;
+  void get_edges(Edge::array_type &array, Cell::index_type idx) const;
+  void get_faces(Face::array_type &array, Cell::index_type idx) const;
+  bool get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
+		   Face::index_type idx) const;
+  void get_neighbors(Cell::array_type &array, Cell::index_type idx) const;
+  //! must call compute_node_neighbors before calling get_neighbors.
+  void get_neighbors(Node::array_type &array, Node::index_type idx) const;
+  void get_center(Point &result, Node::index_type idx) const;
+  void get_center(Point &result, Edge::index_type idx) const;
+  void get_center(Point &result, Face::index_type idx) const;
+  void get_center(Point &result, Cell::index_type idx) const;
+
+  //! return false if point is out of range.
+  bool locate(Node::index_type &loc, const Point &p);
+  bool locate(Edge::index_type &loc, const Point &p);
+  bool locate(Face::index_type &loc, const Point &p);
+  bool locate(Cell::index_type &loc, const Point &p);
+
   void get_point(Point &result, Node::index_type index) const;
 
   void get_weights(const Point& p, Node::array_type &l, 

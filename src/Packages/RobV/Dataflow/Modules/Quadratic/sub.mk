@@ -14,8 +14,9 @@ SRCDIR   := Packages/RobV/Dataflow/Modules/Quadratic
 
 SRCS     += \
 	$(SRCDIR)/BuildFEMatrixQuadratic.cc\
+	$(SRCDIR)/ConvertTet.cc\
 	$(SRCDIR)/DipoleMatrixSourceRHSQuadratic.cc\
-	$(SRCDIR)/TetVolField2QuadraticTetVolField.cc\
+	$(SRCDIR)/TetVol2QuadraticTetVol.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
