@@ -20,7 +20,7 @@
 
    <DataArchiver>
         <filebase>methaneplumeexplicit.uda</filebase>
-	<outputInterval>0.02</outputInterval>
+	<outputTimestepInterval>2</outputTimestepInterval>
 	<save label="mmgasVolFrac"/>
 	<save label = "KineticEnergy"/>
 	<save label = "TotalMass"/>
@@ -57,7 +57,7 @@
 	<save label="totHtFluxY"/>
 	<save label="totHtFluxZ"/>
 
-	<checkpoint interval="0.1" cycle="2"/>
+	<checkpoint timestepInterval="10" cycle="2"/>
 
    </DataArchiver>
 
