@@ -346,7 +346,7 @@ int main(int argc, char** argv)
   int depth=3;
   char *filename = 0;
   bool timevary=false;
-  char *bg="./envmap";
+  char *bg="./envmap.ppm";
   char *outfile = 0;
   int nworkers = 1;
   bool dilate = true;
