@@ -66,6 +66,8 @@ WARNING
                           const Vector& dx,
                           CCVariable<double>& Temp_CC);
 
+	 virtual double getCompressibility(double press);
+	 
 	 double getGasConstant() const;
 
         protected:

@@ -345,6 +345,11 @@ void CompNeoHook::computePressEOSCM(const double rho_cur,double& pressure,
   tmp = sqrt((bulk + 4.*shear/3.)/rho_cur);  // speed of sound squared
 }
 
+double CompNeoHook::getCompressibility()
+{
+  return 1.0/d_initialData.Bulk;
+}
+
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1209

@@ -181,14 +181,14 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
 
-    old_dw->get(px,                  lb->pXLabel,                  pset);
-    old_dw->get(bElBar,              bElBarLabel,                  pset);
-    old_dw->get(statedata_old,       p_statedata_label,            pset);
-    old_dw->get(pmass,               lb->pMassLabel,               pset);
-    old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    new_dw->allocate(pstress,        lb->pStressLabel,             pset);
-    new_dw->allocate(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
+    old_dw->get(px,                    lb->pXLabel,                      pset);
+    old_dw->get(bElBar,                bElBarLabel,                      pset);
+    old_dw->get(statedata_old,         p_statedata_label,                pset);
+    old_dw->get(pmass,                 lb->pMassLabel,                   pset);
+    old_dw->get(pvelocity,             lb->pVelocityLabel,               pset);
+    old_dw->get(deformationGradient,   lb->pDeformationMeasureLabel,     pset);
+    new_dw->allocate(pstress,          lb->pStressLabel_afterStrainRate, pset);
+    new_dw->allocate(pvolume_deformed, lb->pVolumeDeformedLabel,         pset);
     new_dw->allocate(deformationGradient_new,
 		     lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocate(bElBar_new, bElBarLabel_preReloc, pset);
@@ -446,6 +446,11 @@ void CompNeoHookPlas::computePressEOSCM(const double rho_cur,double& pressure,
   pressure = p_ref + p_g;
   dp_drho  = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
   tmp = sqrt((bulk + 4.*shear/3.)/rho_cur);  // speed of sound squared
+}
+
+double CompNeoHookPlas::getCompressibility()
+{
+  return 1.0/d_initialData.Bulk;
 }
 
 #ifdef __sgi

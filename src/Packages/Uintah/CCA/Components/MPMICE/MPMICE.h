@@ -100,12 +100,19 @@ public:
   void scheduleInterpolateCCToNC(SchedulerP&, const PatchSet*,
 				 const MaterialSet*);
 
+  void scheduleComputeNonEquilibrationPressure(SchedulerP&, 
+                                               const PatchSet*,
+                                               const MaterialSubset*,
+                                               const MaterialSubset*,
+                                               const MaterialSubset*,
+					       const MaterialSet*);
+
   void scheduleComputeEquilibrationPressure(SchedulerP&, 
                                             const PatchSet*,
                                             const MaterialSubset*,
                                             const MaterialSubset*,
                                             const MaterialSubset*,
-					         const MaterialSet*);
+					    const MaterialSet*);
 
 
   void scheduleInterpolatePressCCToPressNC(SchedulerP&, 
@@ -157,6 +164,12 @@ public:
 			 const MaterialSubset* matls,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw);
+
+  void computeNonEquilibrationPressure(const ProcessorGroup*,
+				       const PatchSubset* patch,
+				       const MaterialSubset* matls,
+				       DataWarehouse*, 
+				       DataWarehouse*);
 
   void computeEquilibrationPressure(const ProcessorGroup*,
 				    const PatchSubset* patch,

@@ -83,6 +83,8 @@ WARNING
                                         double& dp_drho, double& ss_new,
                                         const MPMMaterial* matl);
 	 
+         virtual double getCompressibility();
+
 	 // initialize  each particle's constitutive model data
 	 virtual void initializeCMData(const Patch* patch,
 				       const MPMMaterial* matl,
