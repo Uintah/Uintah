@@ -1733,7 +1733,8 @@ getGridVar(VariableBase& var, DWDatabase& db,
 	  errmsg << " on patch " << patch->getID();
 	errmsg << " for material " << matlIndex;
 	//SCI_THROW(InternalError(errmsg.str().c_str()));
-	warn << "WARNING: this needs to be fixed:\n" << errmsg.str() << '\n';
+	//warn << "WARNING: this needs to be fixed:\n" << errmsg.str() << '\n';
+       cout << "WARNING: this needs to be fixed:\n" << errmsg.str() << '\n';
       }
     }
     
