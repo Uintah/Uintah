@@ -4193,8 +4193,8 @@ void ColorMapTex::draw(DrawInfoOpenGL* di, Material* matl, double)
   glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-  glTexImage1D( GL_TEXTURE_1D, 0, GL_RGB, 256, 0,
-		GL_RGBA, GL_UNSIGNED_BYTE,texture );
+  glTexImage1D( GL_TEXTURE_1D, 0, GL_RGB, numcolors_, 0,
+		GL_RGBA, GL_UNSIGNED_BYTE, texture_ );
 
   if (GL_NO_ERROR == glGetError()){
     glEnable(GL_TEXTURE_1D);
@@ -4203,10 +4203,10 @@ void ColorMapTex::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
     glBegin( GL_QUADS );
-      glTexCoord2f(0.0, 0.0); glVertex3f( a.x(), a.y(), a.z() );
-      glTexCoord2f(1.0, 0.0); glVertex3f( b.x(), b.y(), b.z() );
-      glTexCoord2f(1.0, 1.0); glVertex3f( c.x(), c.y(), c.z() );
-      glTexCoord2f(0.0, 1.0); glVertex3f( d.x(), d.y(), d.z() );
+      glTexCoord2f(0.0, 0.0); glVertex3f( a_.x(), a_.y(), a_.z() );
+      glTexCoord2f(1.0, 0.0); glVertex3f( b_.x(), b_.y(), b_.z() );
+      glTexCoord2f(1.0, 1.0); glVertex3f( c_.x(), c_.y(), c_.z() );
+      glTexCoord2f(0.0, 1.0); glVertex3f( d_.x(), d_.y(), d_.z() );
     glEnd();
     glFlush();
   
