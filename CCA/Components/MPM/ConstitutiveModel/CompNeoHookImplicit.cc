@@ -131,20 +131,10 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 					 const bool recursion)
 
 {
-
-  IntVector nodes(0,0,0);
-  int num_nodes(0);
-
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
-    nodes = patch->getNNodes();
-    num_nodes += (nodes.x())*(nodes.y())*(nodes.z())*3;
-  }
-
-  for(int pp=0;pp<patches->size();pp++){
-    const Patch* patch = patches->get(pp);
-    cerr <<"Doing computeStressTensor on " << patch->getID()
-	 <<"\t\t\t\t IMPM"<< "\n" << "\n";
+//    cerr <<"Doing computeStressTensor on " << patch->getID()
+//	 <<"\t\t\t\t IMPM"<< "\n" << "\n";
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
@@ -169,6 +159,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> deformationGradient,bElBar_old;
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pvolume,pvolumeold;
+    constParticleVariable<double> ptemperature;
     ParticleVariable<double> pvolume_deformed;
     constNCVariable<Vector> dispNew;
     delt_vartype delT;
@@ -177,20 +168,22 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
       DataWarehouse* parent_old_dw = 
 	new_dw->getOtherDataWarehouse(Task::ParentOldDW);
       pset = parent_old_dw->getParticleSubset(dwi, patch);
-      parent_old_dw->get(px,             lb->pXLabel,              pset);    
-      parent_old_dw->get(pvolume,        lb->pVolumeLabel,         pset);
-      parent_old_dw->get(pvolumeold,     lb->pVolumeOldLabel,      pset);      
+      parent_old_dw->get(px,             lb->pXLabel,                  pset);
+      parent_old_dw->get(pvolume,        lb->pVolumeLabel,             pset);
+      parent_old_dw->get(pvolumeold,     lb->pVolumeOldLabel,          pset);
+      parent_old_dw->get(ptemperature,   lb->pTemperatureLabel,        pset);
       parent_old_dw->get(deformationGradient,
-			 lb->pDeformationMeasureLabel, pset);
-      parent_old_dw->get(bElBar_old, lb->bElBarLabel, pset);
+                                         lb->pDeformationMeasureLabel, pset);
+      parent_old_dw->get(bElBar_old,     lb->bElBarLabel,              pset);
     }
     else {
       pset = old_dw->getParticleSubset(dwi, patch);
-      old_dw->get(px,             lb->pXLabel,              pset);      
-      old_dw->get(deformationGradient,lb->pDeformationMeasureLabel,pset);
-      old_dw->get(bElBar_old, lb->bElBarLabel, pset);
+      old_dw->get(px,                  lb->pXLabel,                  pset);
+      old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
+      old_dw->get(bElBar_old,          lb->bElBarLabel,              pset);
       old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
-      old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);    
+      old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);
+      old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     }
     
     if (recursion)
@@ -221,6 +214,18 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
       // Get the node indices that surround the cell
       IntVector ni[8];
       Vector d_S[8];
+
+#if 0
+      if(ptemperature[idx] < 300.0){
+//      if(px[idx].x() < 4.0 && dwi == 0){
+         shear = d_initialData.Shear*2.0;
+         bulk  = d_initialData.Bulk *2.0;
+      }
+      else{
+         shear = d_initialData.Shear;
+         bulk  = d_initialData.Bulk ;
+      }
+#endif
       
       patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
       vector<int> dof(0);
@@ -285,7 +290,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
       
       // get the volumetric part of the deformation
       double J = deformationGradient_new[idx].Determinant();
-      
+
       fbar = deformationGradientInc * 
 	pow(deformationGradientInc.Determinant(),-1./3.);
 
@@ -301,7 +306,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
       // compute the total stress (volumetric + deviatoric)
       pstress[idx] = Identity*p + shrTrl/J;
 
-            
       double coef1 = bulk;
       double coef2 = 2.*bulk*log(J);
 
@@ -415,6 +419,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
      constParticleVariable<Matrix3> deformationGradient,bElBar_old;
      ParticleVariable<Matrix3> pstress;
      constParticleVariable<double> pvolume,pvolumeold;
+     constParticleVariable<double> ptemperature;
      ParticleVariable<double> pvolume_deformed;
      constNCVariable<Vector> dispNew;
      delt_vartype delT;
@@ -422,22 +427,21 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
      old_dw->get(delT,lb->delTLabel);
      old_dw->get(px,                  lb->pXLabel,                  pset);
      old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
-     old_dw->get(pvolumeold,          lb->pVolumeOldLabel,             pset);
+     old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);
+     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
 
      new_dw->get(dispNew,lb->dispNewLabel,dwi,patch,Ghost::AroundCells,1);
-     new_dw->getModifiable(pstress,        lb->pStressLabel_preReloc, pset);
-     new_dw->getModifiable(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
-     old_dw->get(deformationGradient,
-			lb->pDeformationMeasureLabel, pset);
-     old_dw->get(bElBar_old, lb->bElBarLabel, pset);
+     new_dw->getModifiable(pstress,          lb->pStressLabel_preReloc,   pset);
+     new_dw->getModifiable(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
+     old_dw->get(deformationGradient,        lb->pDeformationMeasureLabel,pset);
+     old_dw->get(bElBar_old,                 lb->bElBarLabel,             pset);
      new_dw->allocateAndPut(deformationGradient_new,
 			    lb->pDeformationMeasureLabel_preReloc, pset);
-     new_dw->allocateAndPut(bElBar_new,lb->bElBarLabel_preReloc, pset);
+     new_dw->allocateAndPut(bElBar_new,lb->bElBarLabel_preReloc,   pset);
 
      double shear = d_initialData.Shear;
      double bulk  = d_initialData.Bulk;
 
-     IntVector nodes = patch->getNNodes();
      for(ParticleSubset::iterator iter = pset->begin();
 	 iter != pset->end(); iter++){
 	particleIndex idx = *iter;
@@ -448,6 +452,17 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 	IntVector ni[8];
 	Vector d_S[8];
 
+#if 0
+        if(ptemperature[idx] < 300.0){
+//       if(px[idx].x() < 4.0 && dwi == 0){
+          shear = d_initialData.Shear*2.0;
+          bulk  = d_initialData.Bulk *2.0;
+        }
+        else{
+           shear = d_initialData.Shear;
+           bulk  = d_initialData.Bulk ;
+        }
+#endif
 	patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
 	for(int k = 0; k < 8; k++) {
@@ -512,22 +527,23 @@ void CompNeoHookImplicit::addComputesAndRequires(Task* task,
   // new version uses ParentOldDW
 
   if (recursion) {
-    task->requires(Task::ParentOldDW, lb->pXLabel,      matlset, Ghost::None);
-    task->requires(Task::ParentOldDW, lb->pVolumeLabel, matlset, Ghost::None);
-    task->requires(Task::ParentOldDW,lb->pVolumeOldLabel,matlset,Ghost::None);
+    task->requires(Task::ParentOldDW, lb->pXLabel,         matlset,Ghost::None);
+    task->requires(Task::ParentOldDW, lb->pVolumeLabel,    matlset,Ghost::None);
+    task->requires(Task::ParentOldDW, lb->pVolumeOldLabel, matlset,Ghost::None);
     task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
-		   matlset,Ghost::None);
-    task->requires(Task::ParentOldDW,lb->bElBarLabel,matlset,
-		   Ghost::None);
+                                                           matlset,Ghost::None);
+    task->requires(Task::ParentOldDW,lb->bElBarLabel,      matlset,Ghost::None);
+    task->requires(Task::ParentOldDW,lb->pTemperatureLabel,matlset,Ghost::None);
     task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
   }
   else {
-    task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
-    task->requires(Task::OldDW, lb->pVolumeLabel, matlset, Ghost::None);
-    task->requires(Task::OldDW,lb->pVolumeOldLabel,matlset,Ghost::None);
+    task->requires(Task::OldDW, lb->pXLabel,         matlset, Ghost::None);
+    task->requires(Task::OldDW, lb->pVolumeLabel,    matlset, Ghost::None);
+    task->requires(Task::OldDW, lb->pVolumeOldLabel, matlset, Ghost::None);
     task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
-		   matlset, Ghost::None);
-    task->requires(Task::OldDW,lb->bElBarLabel,matlset,Ghost::None);
+                                                     matlset, Ghost::None);
+    task->requires(Task::OldDW,lb->bElBarLabel,      matlset, Ghost::None);
+    task->requires(Task::OldDW,lb->pTemperatureLabel,matlset,Ghost::None);
     task->requires(Task::NewDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
   }
   
@@ -567,11 +583,7 @@ void CompNeoHookImplicit::addComputesAndRequires(Task* task,
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->bElBarLabel_preReloc,matlset);
   task->computes(lb->delTLabel);
-  
-
 }
-
-
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double CompNeoHookImplicit::computeRhoMicroCM(double pressure, 
