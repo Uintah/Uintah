@@ -53,6 +53,9 @@ namespace Uintah {
     //////////
     // Destructor
     virtual ~PlaneShellPiece();
+    
+    /// Make a clone
+    PlaneShellPiece* clone();
 	 
     //////////
     // Determines whether a point is inside the plane. 

@@ -54,6 +54,9 @@ namespace Uintah {
     /*! \brief Destructor */
     //////////////////////////////////////////////////////////////////////
     virtual ~CylinderShellPiece();
+
+    /// Make a clone
+    CylinderShellPiece* clone();
 	 
     //////////////////////////////////////////////////////////////////////
     /*! \brief Determines whether a point is inside the cylinder.  */

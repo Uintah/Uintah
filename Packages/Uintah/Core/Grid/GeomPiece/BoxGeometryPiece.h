@@ -64,6 +64,10 @@ WARNING
 	 // Destructor
 	 virtual ~BoxGeometryPiece();
 	 
+
+	 /// Make a clone
+	 BoxGeometryPiece* clone();
+
 	 //////////
 	 // Determines whether a point is inside the box.
 	 virtual bool inside(const Point &p) const;

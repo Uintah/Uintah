@@ -59,6 +59,9 @@ namespace Uintah {
     // Destructor
     virtual ~FileGeometryPiece();
 	 
+    /// Make a clone
+    FileGeometryPiece* clone();
+
     //////////
     // Determines whether a point is inside the box.
     virtual bool inside(const Point &p) const;

@@ -65,6 +65,10 @@ WARNING
 	 //////////
 	 // Destructor
 	 virtual ~SphereMembraneGeometryPiece();
+
+
+	 /// Make a clone
+	 SphereMembraneGeometryPiece* clone();
 	 
 	 //////////
 	 // Determines whether a point is inside the sphere. 

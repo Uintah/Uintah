@@ -64,9 +64,19 @@ WARNING
 	 // Construtor that takes two geometry pieces
 	 DifferenceGeometryPiece(GeometryPiece* p1, GeometryPiece* p2);
 
+	 /// Copy constructor
+	 DifferenceGeometryPiece(const DifferenceGeometryPiece& rhs);
+
+	 /// Assignment operator
+	 DifferenceGeometryPiece& operator=(const DifferenceGeometryPiece&);
+
 	 //////////
 	 // Destructor
 	 virtual ~DifferenceGeometryPiece();
+
+	 
+	 /// Make a clone
+	 DifferenceGeometryPiece* clone();
 	 
 	 //////////
 	 // Determines whether a point is inside the union Piece.

@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 
 using namespace Uintah;
@@ -41,6 +42,11 @@ PlaneShellPiece::PlaneShellPiece(ProblemSpecP& ps)
 // Destructor
 PlaneShellPiece::~PlaneShellPiece()
 {
+}
+
+PlaneShellPiece* PlaneShellPiece::clone()
+{
+  return scinew PlaneShellPiece(*this);
 }
 
 //////////

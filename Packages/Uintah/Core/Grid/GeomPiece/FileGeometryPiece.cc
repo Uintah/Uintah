@@ -1,6 +1,7 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/FileGeometryPiece.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
@@ -52,6 +53,11 @@ FileGeometryPiece::FileGeometryPiece(const string& file_name)
 
 FileGeometryPiece::~FileGeometryPiece()
 {
+}
+
+FileGeometryPiece* FileGeometryPiece::clone()
+{
+  return scinew FileGeometryPiece(*this);
 }
 
 bool FileGeometryPiece::inside(const Point& p) const

@@ -85,6 +85,9 @@ namespace Uintah {
     /*! Destructor */
     //////////////////////////////////////////////////////////////////////
     virtual ~SmoothCylGeomPiece();
+
+    /// Make a clone
+    SmoothCylGeomPiece* clone();
 	 
     //////////////////////////////////////////////////////////////////////
     /*! Determines whether a point is inside the cylinder. */

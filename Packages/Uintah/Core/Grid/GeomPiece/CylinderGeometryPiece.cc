@@ -1,7 +1,7 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/CylinderGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
-
+#include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/Vector.h>
@@ -62,6 +62,13 @@ CylinderGeometryPiece::CylinderGeometryPiece(const Point& top,
 CylinderGeometryPiece::~CylinderGeometryPiece()
 {
 }
+
+
+CylinderGeometryPiece* CylinderGeometryPiece::clone()
+{
+  return scinew CylinderGeometryPiece(*this);
+}
+
 
 bool CylinderGeometryPiece::inside(const Point &p) const
 {

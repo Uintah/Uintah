@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 
 using namespace Uintah;
@@ -53,6 +54,11 @@ SmoothCylGeomPiece::SmoothCylGeomPiece(ProblemSpecP& ps)
 // Destructor
 SmoothCylGeomPiece::~SmoothCylGeomPiece()
 {
+}
+
+SmoothCylGeomPiece* SmoothCylGeomPiece::clone()
+{
+  return scinew SmoothCylGeomPiece(*this);
 }
 
 /////////////////////////////////////////////////////////////////////////////

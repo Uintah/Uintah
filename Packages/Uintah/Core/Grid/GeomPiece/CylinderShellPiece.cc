@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -36,6 +37,12 @@ CylinderShellPiece::CylinderShellPiece(ProblemSpecP& ps)
 // Destructor
 CylinderShellPiece::~CylinderShellPiece()
 {
+}
+
+
+CylinderShellPiece* CylinderShellPiece::clone()
+{
+  return scinew CylinderShellPiece(*this);
 }
 
 ///////////
