@@ -362,7 +362,7 @@ itcl_class Teem_DataIO_DicomNrrdReader {
 
 		    for {set j 0} {$j < [llength $list_files]} {incr j} {
 			set $this-entry-files$i [ concat [set $this-entry-files$i] [lindex $list_files $j] ]
-			puts [set $this-entry-files$i]
+			#puts [set $this-entry-files$i]
 		    }
 
 		    set $this-max-entries [expr [set $this-max-entries] + 1]
