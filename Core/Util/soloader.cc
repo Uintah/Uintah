@@ -40,7 +40,7 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
 	return SymbolAddress;
 }
 
-void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, char* symbolname)
+void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname)
 {
     void* SymbolAddress = 0;
      
