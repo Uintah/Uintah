@@ -71,7 +71,12 @@ public:
 
   virtual GeomSwitch *render_text(FieldHandle fld,
 				  bool use_default_material,
-				  MaterialHandle default_material) = 0;
+				  MaterialHandle default_material,
+				  bool render_data,
+				  bool render_nodes,
+				  bool render_edges,
+				  bool render_faces,
+				  bool render_cells) = 0;
 
   RenderFieldBase();
   virtual ~RenderFieldBase();
@@ -107,6 +112,15 @@ public:
 		      bool use_normals, bool use_transparency,
 		      bool bidirectional, bool arrow_heads);
 
+  virtual GeomSwitch *render_text(FieldHandle fld,
+				  bool use_default_material,
+				  MaterialHandle default_material,
+				  bool render_data,
+				  bool render_nodes,
+				  bool render_edges,
+				  bool render_faces,
+				  bool render_cells);
+
 private:
   GeomSwitch *render_nodes(const Fld *fld, 
 			   const string &node_display_mode,
@@ -120,9 +134,21 @@ private:
 			   bool use_normals,
 			   bool use_transparency);
 
-  virtual GeomSwitch *render_text(FieldHandle fld,
-				  bool use_default_material,
-				  MaterialHandle default_material);
+  GeomSwitch *render_text_data(FieldHandle fld,
+			       bool use_default_material,
+			       MaterialHandle default_material);
+  GeomSwitch *render_text_nodes(FieldHandle fld,
+  				bool use_default_material,
+  				MaterialHandle default_material);
+  GeomSwitch *render_text_edges(FieldHandle fld,
+  				bool use_default_material,
+  				MaterialHandle default_material);
+  GeomSwitch *render_text_faces(FieldHandle fld,
+  				bool use_default_material,
+  				MaterialHandle default_material);
+  GeomSwitch *render_text_cells(FieldHandle fld,
+				bool use_default_material,
+				MaterialHandle default_material);
 
   GeomSwitch *render_data(const Fld *fld, 
 			  const string &data_display_mode,
@@ -813,7 +839,50 @@ template <class Fld, class Loc>
 GeomSwitch *
 RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
 				   bool use_default_material,
-				   MaterialHandle default_material)
+				   MaterialHandle default_material,
+				   bool render_data,
+				   bool render_nodes,
+				   bool render_edges,
+				   bool render_faces,
+				   bool render_cells)
+{
+  GeomGroup *texts = scinew GeomGroup;
+  GeomSwitch *text_switch = scinew GeomSwitch(texts);
+
+  if (render_data)
+  {
+    texts->add(render_text_data(field_handle, use_default_material,
+				default_material));
+  }
+  if (render_nodes)
+  {
+    texts->add(render_text_nodes(field_handle, use_default_material,
+				 default_material));
+  }
+  if (render_edges)
+  {
+    texts->add(render_text_edges(field_handle, use_default_material,
+				 default_material));
+  }
+  if (render_faces)
+  {
+    texts->add(render_text_faces(field_handle, use_default_material,
+				 default_material));
+  }
+  if (render_cells)
+  {
+    texts->add(render_text_cells(field_handle, use_default_material,
+				 default_material));
+  }
+  return text_switch;
+}
+
+
+template <class Fld, class Loc>
+GeomSwitch *
+RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
+					bool use_default_material,
+					MaterialHandle default_material)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
@@ -822,7 +891,9 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
 
   GeomGroup *texts = scinew GeomGroup;
   GeomSwitch *text_switch = scinew GeomSwitch(texts);
-
+  char buffer[256];
+  char format[256];
+  snprintf(format, 256, "%%%d.%df", 1, 2);
   typename Loc::iterator iter, end;
   mesh->begin(iter);
   mesh->end(end);
@@ -833,7 +904,9 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
       mesh->get_center(p, *iter);
       double val;
       to_double(tmp, val);
-      const std::string as_str = to_string(val);
+      
+      snprintf(buffer, 256, format, val);
+      const std::string as_str(buffer);
       MaterialHandle m;
       if (use_default_material)
       {
@@ -847,8 +920,172 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
     }
     ++iter;
   }
+
   return text_switch;
 }
+
+
+template <class Fld, class Loc>
+GeomSwitch *
+RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
+					 bool use_default_material,
+					 MaterialHandle default_material)
+{
+  Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
+  ASSERT(fld);
+
+  typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
+  mesh->synchronize(Mesh::NODES_E);
+  
+  GeomGroup *texts = scinew GeomGroup;
+  GeomSwitch *text_switch = scinew GeomSwitch(texts);
+  char buffer[256];
+  typename Fld::mesh_type::Node::iterator iter, end;
+  mesh->begin(iter);
+  mesh->end(end);
+  Point p;
+  while (iter != end)
+  {
+    mesh->get_center(p, *iter);
+    snprintf(buffer, 256, "%d", (int)(*iter));
+    const std::string as_str(buffer);
+    MaterialHandle m;
+    if (use_default_material)
+    {
+      m = default_material;
+    }
+    else
+    {
+      m = choose_mat(use_default_material, *iter);
+    }
+    texts->add(scinew GeomText(as_str, p, m->diffuse));
+
+    ++iter;
+  }
+  return text_switch;
+}
+
+
+template <class Fld, class Loc>
+GeomSwitch *
+RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
+					 bool use_default_material,
+					 MaterialHandle default_material)
+{
+  Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
+  ASSERT(fld);
+
+  typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
+  mesh->synchronize(Mesh::EDGES_E);
+
+  GeomGroup *texts = scinew GeomGroup;
+  GeomSwitch *text_switch = scinew GeomSwitch(texts);
+  char buffer[256];
+  typename Fld::mesh_type::Edge::iterator iter, end;
+  mesh->begin(iter);
+  mesh->end(end);
+  Point p;
+  while (iter != end)
+  {
+    mesh->get_center(p, *iter);
+    snprintf(buffer, 256, "%d", (int)(*iter));
+    const std::string as_str(buffer);
+    MaterialHandle m;
+    if (use_default_material)
+    {
+      m = default_material;
+    }
+    else
+    {
+      m = choose_mat(use_default_material, *iter);
+    }
+    texts->add(scinew GeomText(as_str, p, m->diffuse));
+ 
+    ++iter;
+  }
+  return text_switch;
+}
+
+template <class Fld, class Loc>
+GeomSwitch *
+RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
+					 bool use_default_material,
+					 MaterialHandle default_material)
+{
+  Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
+  ASSERT(fld);
+
+  typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
+  mesh->synchronize(Mesh::FACES_E);
+
+  GeomGroup *texts = scinew GeomGroup;
+  GeomSwitch *text_switch = scinew GeomSwitch(texts);
+  char buffer[256];
+  typename Fld::mesh_type::Face::iterator iter, end;
+  mesh->begin(iter);
+  mesh->end(end);
+  Point p;
+  while (iter != end)
+  {
+    mesh->get_center(p, *iter);
+    snprintf(buffer, 256, "%d", (int)(*iter));
+    const std::string as_str(buffer);
+    MaterialHandle m;
+    if (use_default_material)
+    {
+      m = default_material;
+    }
+    else
+    {
+      m = choose_mat(use_default_material, *iter);
+    }
+    texts->add(scinew GeomText(as_str, p, m->diffuse));
+
+    ++iter;
+  }
+  return text_switch;
+}
+
+template <class Fld, class Loc>
+GeomSwitch *
+RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
+					 bool use_default_material,
+					 MaterialHandle default_material)
+{
+  Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
+  ASSERT(fld);
+
+  typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
+  mesh->synchronize(Mesh::CELLS_E);
+
+  GeomGroup *texts = scinew GeomGroup;
+  GeomSwitch *text_switch = scinew GeomSwitch(texts);
+  char buffer[256];
+  typename Fld::mesh_type::Cell::iterator iter, end;
+  mesh->begin(iter);
+  mesh->end(end);
+  Point p;
+  while (iter != end)
+  {
+    mesh->get_center(p, *iter);
+    snprintf(buffer, 256, "%d", (int)(*iter));
+    const std::string as_str(buffer);
+    MaterialHandle m;
+    if (use_default_material)
+    {
+      m = default_material;
+    }
+    else
+    {
+      m = choose_mat(use_default_material, *iter);
+    }
+    texts->add(scinew GeomText(as_str, p, m->diffuse));
+
+    ++iter;
+  }
+  return text_switch;
+}
+
 
 } // end namespace SCIRun
 
