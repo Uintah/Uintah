@@ -1149,6 +1149,7 @@ AC_SUBST(PETSC_DIR)
 AC_SUBST(PETSC_SUB)
 AC_SUBST(PETSC_ARCH)
 
+<<<<<<< configure.in
 ##-- Check for BLAS ------------------------------------------------
 
 AC_ARG_WITH(blas,
@@ -1187,7 +1188,7 @@ if test -z "$BLAS_LIB_DIR"; then
 fi
 
 if test "$blas" &&
-   test -z "BLAS_LIB_DIR"; then
+   test -z "$BLAS_LIB_DIR"; then
   AC_MSG_RESULT(no)
   AC_MSG_WARN(BLAS library not found)
   AC_MSG_ERROR(Stopping.)
@@ -1244,7 +1245,7 @@ if test -z "$LAPACK_LIB_DIR"; then
 fi
 
 if test "$lapack" &&
-   test -z "LAPACK_LIB_DIR"; then
+   test -z "$LAPACK_LIB_DIR"; then
   AC_MSG_RESULT(no)
   AC_MSG_WARN(LAPACK library not found)
   AC_MSG_ERROR(Stopping.)
