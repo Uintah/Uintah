@@ -499,12 +499,16 @@ OPort* Module::get_oport(int item)
 
 IPort* Module::get_iport(const string& name)
 {
-  return getIPort(name);
+  IPort *p = getIPort(name);
+  if (p == 0) throw "Unable to initialize iport '" + name + "'.";
+  return p;
 }
 
 OPort* Module::get_oport(const string& name)
 {
-  return getOPort(name);
+  OPort *p = getOPort(name);
+  if (p == 0) throw "Unable to initialize oport '" + name + "'.";
+  return p;
 }
 
 IPort* Module::getIPort(const string &name)
@@ -866,6 +870,14 @@ void Module::do_execute()
 	error("Thread Stacktrace:");
 	error(e.stackTrace());
       }
+  }
+  catch (const string a)
+  {
+    error(a);
+  }
+  catch (const char *a)
+  {
+    error(string(a));
   }
   catch (...)
   {
