@@ -79,7 +79,7 @@ frame .right -relief groove -borderwidth 2
 pack .right -side right -anchor nw -fill y -padx 2 -pady 2
 set i 0
 foreach t {Contours EEG FDM FEM Fields Matrix Mesh Readers \
-	   Salmon Sound Surface Visualization Writers} {
+	   Remote Salmon Sound Surface Visualization Writers} {
 	IndexDir .right.$i -text "Modules/$t: " -name DIR_Modules_$t \
 		-dir Modules/$t
 	incr i
