@@ -43,7 +43,7 @@ stamp-h: ${SRCTOP}/sci_config.h.in ${OBJTOP}/config.status
 
 sci_defs.h: stamp-defs
 stamp-defs: ${SRCTOP}/sci_testdefs.h.in ${OBJTOP}/config.status
-	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES="`echo $${Here} | sed -e "s!^$${Top}/!!" -e "s!^$${Top}!.!"`/sci_testdefs.h" CONFIG_HEADERS="" ./config.status ) 1>&2
+	@( CONFIG_FILES="sci_testdefs.h" CONFIG_HEADERS="" ./config.status ) 1>&2
 	@if cmp -s sci_defs.h sci_testdefs.h 2>/dev/null; then echo "sci_defs.h is unchanged"; rm -f sci_testdefs.h; else  mv sci_testdefs.h sci_defs.h; echo "sci_defs.h is changed"; fi
 	echo timestamp > stamp-defs
 
