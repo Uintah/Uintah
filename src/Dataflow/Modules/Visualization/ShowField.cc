@@ -158,33 +158,35 @@ ShowField::execute()
   if(!geom_handle.get_rep()){
     cerr << "No Geometry in port 1 field" << endl;
     return;
+  } else if (geom_gen_ != geom_handle->generation) {
+    geom_gen_ = geom_handle->generation;  
+    nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
   }
 
   FieldHandle data_handle;
   data_->get(data_handle);
   if(!data_handle.get_rep()){
     cerr << "No Data in port 2 field" << endl;
-    return;
+    if (data_gen_) {
+      nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
+    }
+    data_gen_ = -1;
+  } else if (data_gen_ != data_handle->generation) {
+    data_gen_ = data_handle->generation;
+    nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
   }
 
   ColorMapHandle color_handle;
   color_->get(color_handle);
   if(!color_handle.get_rep()){
     cerr << "No ColorMap in port 3 ColorMap" << endl;
-    return;
-  }
-  // See if any input is new.
-  if ((geom_gen_ != geom_handle->generation) || 
-      (data_gen_ != data_handle->generation) || 
-      (colm_gen_ != color_handle->generation)) 
-  {
-    // input has changed, rerender everything.
-    nodes_dirty_ = true;
-    edges_dirty_ = true;
-    faces_dirty_ = true;
-    geom_gen_ = geom_handle->generation;    
-    data_gen_ = data_handle->generation;
+    if (colm_gen_) {
+      nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
+    }
+    colm_gen_ = -1;
+  } else if (colm_gen_ != color_handle->generation) {
     colm_gen_ = color_handle->generation;
+    nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
   }
 
   // check to see if we have something to do.
@@ -198,8 +200,10 @@ ShowField::execute()
       TetVol<double> *tv = 0;
       TetVol<double> *tv1 = 0;
       tv = dynamic_cast<TetVol<double>*>(geom_handle.get_rep());
-      tv1 = dynamic_cast<TetVol<double>*>(data_handle.get_rep());
-      if (tv && tv1) { 
+      if (data_gen_) {
+	tv1 = dynamic_cast<TetVol<double>*>(data_handle.get_rep());
+      }
+      if (tv) { 
 	// need faces and edges.
 	tv->finish_mesh();
 	render(tv, tv1, color_handle); 
@@ -247,6 +251,14 @@ ShowField::execute()
   ogeom_->flushViews();
 }
 
+inline
+MaterialHandle choose_mat(bool def, ColorMapHandle cm, double val) {
+  static Material m(Color(.5, .5, .5));
+  static MaterialHandle mh(&m);
+  if (def) return mh;
+  return cm->lookup(val);
+}
+
 template <class Field>
 bool
 ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm) 
@@ -264,19 +276,23 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
     // First pass: over the nodes
     typename Field::mesh_type::node_iterator niter = mesh->node_begin();  
     while (niter != mesh->node_end()) {
+      // Use a default color?
+      bool def_color = (c_index == 0);
     
       Point p;
       mesh->get_point(p, *niter);
-      double val;
-      if (! c_index->value(val, *niter)) { return false; }
+      // val is double because the color index field must be scalar.
+      double val = 0.L;
+      if ((c_index) && (! c_index->value(val, *niter))) { def_color = true; }
 
       node_scale_.reset();
       if (node_display_type_.get() == "Spheres") {
-	add_sphere(p, node_scale_.get(), nodes, cm->lookup(val));
+	add_sphere(p, node_scale_.get(), nodes, 
+		   choose_mat(def_color, cm, val));
       } else if (node_display_type_.get() == "Axes") {
-	add_axis(p, node_scale_.get(), nodes, cm->lookup(val));
+	add_axis(p, node_scale_.get(), nodes, choose_mat(def_color, cm, val));
       } else {
-	add_point(p, pts, cm->lookup(val));
+	add_point(p, pts, choose_mat(def_color, cm, val));
       }
       ++niter;
     }
@@ -290,19 +306,26 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
     edge_switch_ = scinew GeomSwitch(edges);
     // Second pass: over the edges
     typename Field::mesh_type::edge_iterator eiter = mesh->edge_begin();  
-    while (eiter != mesh->edge_end()) {        
+    while (eiter != mesh->edge_end()) {  
+      // Use a default color?
+      bool def_color = (c_index == 0);
+
       typename Field::mesh_type::node_array nodes;
       mesh->get_nodes(nodes, *eiter); ++eiter;
     
       Point p1, p2;
       mesh->get_point(p1, nodes[0]);
       mesh->get_point(p2, nodes[1]);
-      double val1;
-      if (! c_index->value(val1, nodes[0])) { return false; }
-      double val2;
-      if (! c_index->value(val2, nodes[1])) { return false; } 
+      double val1 = 0.L;
+      if ((c_index) && (! c_index->value(val1, nodes[0]))) { 
+	def_color = true; 
+      }
+      double val2 = 0.L;
+      if ((c_index) && (! c_index->value(val2, nodes[1]))) { 
+	def_color = true; 
+      }
       val1 = (val1 + val2) * .5;
-      add_edge(p1, p2, 1.0, edges, cm->lookup(val1));
+      add_edge(p1, p2, 1.0, edges, choose_mat(def_color, cm, val1));
     }
   }
 
@@ -311,7 +334,10 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
     face_switch_ = scinew GeomSwitch(faces);
     // Third pass: over the faces
     typename Field::mesh_type::face_iterator fiter = mesh->face_begin();  
-    while (fiter != mesh->face_end()) {        
+    while (fiter != mesh->face_end()) {  
+      // Use a default color?
+      bool def_color = (c_index == 0);
+
       typename Field::mesh_type::node_array nodes;
       mesh->get_nodes(nodes, *fiter); ++fiter;
       
@@ -319,14 +345,24 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
       mesh->get_point(p1, nodes[0]);
       mesh->get_point(p2, nodes[1]);
       mesh->get_point(p3, nodes[2]);
-      double val1;
-      if (! c_index->value(val1, nodes[0])) { return false; }
-      double val2;
-      if (! c_index->value(val2, nodes[1])) { return false; } 
-      double val3;
-      if (! c_index->value(val3, nodes[2])) { return false; } 
-      add_face(p1, p2, p3, cm->lookup(val1), cm->lookup(val2), 
-	       cm->lookup(val3), faces);
+      double val1 = 0.L;
+      if ((c_index) && (! c_index->value(val1, nodes[0]))) { 
+	def_color = true; 
+      }
+      double val2 = 0.L;
+      if ((c_index) && (! c_index->value(val2, nodes[1]))) { 
+	def_color = true; 
+      }
+      double val3 = 0.L;
+      if ((c_index) && (! c_index->value(val3, nodes[2]))) { 
+	def_color = true; 
+      }
+
+      add_face(p1, p2, p3, 
+	       choose_mat(def_color, cm, val1), 
+	       choose_mat(def_color, cm, val2), 
+	       choose_mat(def_color, cm, val3), 
+	       faces);
     }
   }
 }
