@@ -1593,9 +1593,13 @@ proc moduleDuplicate { module } {
     global Subnet
     networkHasChanged
  
-    set bbox [$Subnet(Subnet$Subnet($module)_canvas) bbox $module]
-    set x [lindex $bbox 0]
-    set y [expr 20 + [lindex $bbox 3]]
+    set canvas $Subnet(Subnet$Subnet($module)_canvas) 
+    set canvassize [$canvas cget -scrollregion]
+    set ulx [expr [lindex [$canvas xview] 0]*[lindex $canvassize 2]]
+    set uly [expr [lindex [$canvas yview] 0]*[lindex $canvassize 3]]
+    set bbox [$canvas bbox $module]
+    set x [expr [lindex $bbox 0]-$ulx]
+    set y [expr 20 + [lindex $bbox 3] - $uly]
 
     set newmodule [eval addModuleAtPosition [modulePath $module] $x $y]
 
