@@ -13,12 +13,6 @@ namespace Uintah {
                            int n8or27,
                            bool haveLoadCurve,
 			   bool doErosion);
-    DefaultParticleCreator(MPMMaterial* matl, 
-                           MPMLabel* lb,
-                           int n8or27,
-                           bool haveLoadCurve,
-			   bool doErosion,
-			   bool haveShell);
     virtual ~DefaultParticleCreator();
 
     virtual ParticleSubset* createParticles(MPMMaterial* matl,

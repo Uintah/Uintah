@@ -33,18 +33,6 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   registerPermanentParticleState(matl,lb);
 }
 
-ParticleCreator::ParticleCreator(MPMMaterial* matl, 
-                                 MPMLabel* lb,
-                                 int n8or27, 
-                                 bool haveLoadCurve,
-				 bool doErosion,
-                                 bool haveShell) 
-  : d_8or27(n8or27), d_useLoadCurves(haveLoadCurve), d_doErosion(doErosion)
-{
-  registerPermanentParticleState(matl,lb);
-  registerPermanentShellParticleState(lb);
-}
-
 ParticleCreator::~ParticleCreator()
 {
 }
@@ -410,45 +398,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
   matl->getConstitutiveModel()->addParticleState(particle_state,
 						 particle_state_preReloc);
 
-}
-
-///////////////////////////////////////////////////////////////////////////
-//
-// Register shell related variables for non shell materials for 
-// relocation
-//
-void
-ParticleCreator::registerPermanentShellParticleState(MPMLabel* lb)
-{
-  particle_state.push_back(lb->pThickTopLabel);
-  particle_state.push_back(lb->pThickBotLabel);
-  particle_state.push_back(lb->pInitialThickTopLabel);
-  particle_state.push_back(lb->pInitialThickBotLabel);
-  particle_state.push_back(lb->pNormalLabel);
-  particle_state.push_back(lb->pInitialNormalLabel);
-  particle_state.push_back(lb->pNormalRotRateLabel);
-  particle_state.push_back(lb->pRotationLabel);
-  particle_state.push_back(lb->pDefGradTopLabel);
-  particle_state.push_back(lb->pDefGradCenLabel);
-  particle_state.push_back(lb->pDefGradBotLabel);
-  particle_state.push_back(lb->pStressTopLabel);
-  particle_state.push_back(lb->pStressCenLabel);
-  particle_state.push_back(lb->pStressBotLabel);
-
-  particle_state_preReloc.push_back(lb->pThickTopLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pThickBotLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pInitialThickTopLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pInitialThickBotLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pNormalLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pInitialNormalLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pNormalRotRateLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pRotationLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pDefGradTopLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pDefGradCenLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pDefGradBotLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pStressTopLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pStressCenLabel_preReloc);
-  particle_state_preReloc.push_back(lb->pStressBotLabel_preReloc);
 }
 
 int ParticleCreator::checkForSurface(const GeometryPiece* piece, const Point p,
