@@ -390,7 +390,7 @@ public:
   virtual FieldHandle execute(MeshHandle mHandle,
 			      vector< NrrdDataHandle > nHandles,
 			      vector< int > data,
-			      int idim, int jdim, int kdim) = 0;
+			      int idim, int jdim, int kdim, int permute) = 0;
   
   virtual FieldHandle execute(MeshHandle mHandle,
 			      vector< NrrdDataHandle > nHandles,
@@ -411,7 +411,7 @@ public:
   virtual FieldHandle execute(MeshHandle mHandle,
 			      vector< NrrdDataHandle > nHandles,
 			      vector< int > data,
-			      int idim, int jdim, int kdim);
+			      int idim, int jdim, int kdim, int permute);
 
   virtual FieldHandle execute(MeshHandle mHandle,
 			      vector< NrrdDataHandle > nHandles,
@@ -425,7 +425,7 @@ NrrdFieldConverterFieldAlgoScalar<FIELD, MESH, NTYPE>::
 execute(MeshHandle mHandle,
 	vector< NrrdDataHandle > nHandles,
 	vector< int > data,
-	int idim, int jdim, int kdim)
+	int idim, int jdim, int kdim, int permute)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
   FIELD *ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
@@ -437,12 +437,15 @@ execute(MeshHandle mHandle,
 
     NTYPE *ptr = (NTYPE *)(nHandles[data[0]]->nrrd->data);
 
-    register int i, j, k;
+    register int i, j, k, index;
 
     for( k=0; k<kdim; k++ ) {
       for( j=0; j<jdim; j++ ) {
 	for( i=0; i<idim; i++ ) {
-	  int index = (i * jdim + j) * kdim + k;
+	  if( permute )
+	    index = (k * jdim + j) * idim + i;
+	  else 
+	    index = (i * jdim + j) * kdim + k;
 	
 	  // Value
 	  ifield->set_value( ptr[index], *inodeItr);
@@ -501,7 +504,7 @@ public:
   virtual FieldHandle execute(MeshHandle mHandle,
 		       vector< NrrdDataHandle > nHandles,
 		       vector< int > data,
-		       int idim, int jdim, int kdim);
+		       int idim, int jdim, int kdim, int permute);
 
   virtual FieldHandle execute(MeshHandle mHandle,
 			      vector< NrrdDataHandle > nHandles,
@@ -515,7 +518,7 @@ NrrdFieldConverterFieldAlgoVector<FIELD, MESH, NTYPE>::
 execute(MeshHandle mHandle,
 	vector< NrrdDataHandle > nHandles,
 	vector< int > data,
-	int idim, int jdim, int kdim)
+	int idim, int jdim, int kdim, int permute)
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
   FIELD *ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
@@ -525,14 +528,17 @@ execute(MeshHandle mHandle,
 
     imesh->begin( inodeItr );
 
-    register int i, j, k;
+    register int i, j, k, index;
 				  
     NTYPE *ptr = (NTYPE *)(nHandles[data[0]]->nrrd->data);
 
     for( k=0; k<kdim; k++ ) {
       for( j=0; j<jdim; j++ ) {
 	for( i=0; i<idim; i++ ) {
-	  int index = (i * jdim + j) * kdim + k;
+	  if( permute )
+	    index = (k * jdim + j) * idim + i;
+	  else 
+	    index = (i * jdim + j) * kdim + k;
 	
 	  ifield->set_value( Vector( ptr[index*3  ],
 				     ptr[index*3+1],
@@ -547,7 +553,7 @@ execute(MeshHandle mHandle,
 
     imesh->begin( inodeItr );
 
-    register int i, j, k;
+    register int i, j, k, index;
 				  
     NTYPE *ptr[3] ={NULL,NULL,NULL};
 
@@ -558,7 +564,10 @@ execute(MeshHandle mHandle,
     for( k=0; k<kdim; k++ ) {
       for( j=0; j<jdim; j++ ) {
 	for( i=0; i<idim; i++ ) {
-	  int index = (i * jdim + j) * kdim + k;
+	  if( permute )
+	    index = (k * jdim + j) * idim + i;
+	  else 
+	    index = (i * jdim + j) * kdim + k;
 	
 	  ifield->set_value( Vector( ptr[0][index],
 				     ptr[1][index],

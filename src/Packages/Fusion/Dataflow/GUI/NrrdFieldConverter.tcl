@@ -33,6 +33,9 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
 	global $this-datasets
 	set $this-datasets ""
 
+	global $this-permute
+	set $this-permute 0
+ 
 	global $this-nomesh
 	set $this-nomesh 0
     }
@@ -58,6 +61,18 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
 	# since it is not valid.
 
 	toplevel $w
+
+	global $this-permute
+
+	frame $w.permute
+	label $w.permute.label -text "Permute the data" \
+	    -width 40 -anchor w -just left
+	checkbutton $w.permute.button -variable $this-permute
+	
+	pack $w.permute.button $w.permute.label -side left
+
+	pack $w.permute -side top
+
 
 	global $this-nomesh
 
