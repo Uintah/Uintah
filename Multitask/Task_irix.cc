@@ -92,7 +92,7 @@ static void make_arena()
     if(!arena_created){
 	usconfig(CONF_ARENATYPE, US_SHAREDONLY);
 	usconfig(CONF_INITSIZE, 16*1024*1024);
-	usconfig(CONF_INITUSERS, (unsigned int)80);
+	usconfig(CONF_INITUSERS, (unsigned int)800);
 	char* lockfile=tempnam(NULL, "sci");
 	arena=usinit(lockfile);
 	free(lockfile);
