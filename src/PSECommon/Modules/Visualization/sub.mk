@@ -52,6 +52,9 @@ SRCS     += \
 	$(SRCDIR)/WidgetTest.cc\
 	$(SRCDIR)/FastRender.c\
 	$(SRCDIR)/HedgehogLitLines.cc\
+        $(SRCDIR)/GLTextureBuilder.cc\
+        $(SRCDIR)/TextureVolVis.cc\
+        $(SRCDIR)/TexCuttingPlanes.cc\
 #[INSERT NEW CODE FILE HERE]
 
 #	$(SRCDIR)/Span.cc\
@@ -70,6 +73,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.11  2000/12/09 17:29:50  moulding
+# Port Kurt's volume rendering stuff to linux and move it to PSECommon.
+#
 # Revision 1.10  2000/11/30 17:58:29  moulding
 # moved IsoSurfaceSP -> IsoSurfaceMSRG
 #
