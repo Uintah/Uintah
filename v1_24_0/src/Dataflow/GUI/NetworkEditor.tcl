@@ -145,7 +145,7 @@ proc makeNetworkEditor {} {
 	-menu .main_menu.file.menu
     menu .main_menu.file.menu -tearoff false
     menu .main_menu.file.menu.new -tearoff false
-    .main_menu.file.menu.new add command -label "Module..." \
+    .main_menu.file.menu.new add command -label "Create Module Skeleton..." \
         -underline 0 -command "ComponentWizard"
 
     # Create the "File" Menu sub-menus.  Create (most of) them in the
@@ -175,7 +175,7 @@ proc makeNetworkEditor {} {
 	-command "updateRunDateAndTime 0; netedit scheduleall" -state disabled
 
     .main_menu.file.menu add separator
-    .main_menu.file.menu add cascade -label "New" -underline 0\
+    .main_menu.file.menu add cascade -label "Wizards" -underline 0 \
         -menu .main_menu.file.menu.new -state disabled
     .main_menu.file.menu add separator
 
