@@ -280,11 +280,15 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       switch(task->getType()){
       case Task::Reduction:
 	 {
+	    double reducestart = Time::currentSeconds();
 	    const vector<Task::Dependency*>& comps = task->getComputes();
 	    ASSERTEQ(comps.size(), 1);
 	    const Task::Dependency* dep = comps[0];
 	    OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
 	    dw->reduceMPI(dep->d_var, d_myworld);
+	    double reduceend = Time::currentSeconds();
+	    time_t t(NULL);
+	    emitNode(tasks[i], t, reduceend - reducestart);
 	 }
 	 break;
       case Task::Scatter:
@@ -424,7 +428,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
    }
 
    dw->finalize();
-   finalizeNodes();
+   finalizeNodes(me);
 }
 
 void
@@ -786,6 +790,12 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.16  2000/09/08 17:49:53  witzel
+// Adding taskgraph output support for multiple processors
+// (so that it actually works):
+// calling emitNodes for reductionTasks (in execute()), and
+// passing the process number to finalizeNodes.
+//
 // Revision 1.15  2000/08/31 20:39:00  jas
 // Fixed problem with particles crossing patch boundaries for multi-materials.
 //
