@@ -351,8 +351,7 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 	adding_new_particles = true;
       if(subsets.size() == 1 && keepset == orig_pset && !adding_new_particles){
 	// carry forward old data
-	//new_dw->saveParticleSubset(orig_pset, matl, patch);
-        new_dw->saveParticleSubset(matl, patch, orig_pset);
+        new_dw->saveParticleSubset(orig_pset, matl, patch);
 	ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
 	new_dw->put(*posvar, reloc_new_posLabel);
 	for(int v=0;v<numVars;v++){
@@ -950,8 +949,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
       ParticleSubset* orig_pset = old_dw->getParticleSubset(matl, patch);
       if(recvs == 0 && subsets.size() == 1 && keepset == orig_pset){
 	// carry forward old data
-	//new_dw->saveParticleSubset(orig_pset, matl, patch);
-        new_dw->saveParticleSubset(matl, patch, orig_pset);
+	new_dw->saveParticleSubset(orig_pset, matl, patch);
 	ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
 	new_dw->put(*posvar, reloc_new_posLabel);
 	for(v=0;v<numVars;v++){

@@ -430,7 +430,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
   sort(sorted_reqs.begin(), sorted_reqs.end(), comparator);
   vector<DependencyBatch*>::iterator sorted_iter = sorted_reqs.begin();
   for( ; sorted_iter != sorted_reqs.end(); sorted_iter++) {
-    DependencyBatch* batch = (*iter).first;
+    DependencyBatch* batch = *sorted_iter;
     if( dbg.active() ) {
       cerrLock.lock(); dbg << d_myworld->myrank() << " Handle Batch: " << 
                          batch << *(batch->fromTask) << "\n";
