@@ -46,7 +46,8 @@ using namespace SCITeem;
 
 class PSECORESHARE NrrdFieldConverter : public Module {
 public:
-  enum {UNKNOWN=0,UNSTRUCTURED=1,STRUCTURED=2,IRREGULAR=4,REGULAR=8};
+  enum {UNKNOWN=0,UNSTRUCTURED=1,STRUCTURED=2,IRREGULAR=4,REGULAR=8,
+	NODE=16,CELL=32 };
 
 public:
   NrrdFieldConverter(GuiContext*);
@@ -67,6 +68,7 @@ protected:
 
   unsigned int topology_;
   unsigned int geometry_;
+  unsigned int data_at_;
 
   vector< int > nGenerations_;
 
@@ -972,45 +974,63 @@ NrrdFieldConverter::execute(){
 	    }
 	}
 
-	if( ddims.size() == mdims.size() ||
-	    ddims.size() == mdims.size() + 1 ) {
 
-	  for( unsigned int jc=0; jc<mdims.size(); jc++ ) {
-	    if( ddims[jc] != mdims[jc] ) {
-	      error(  dataset[0] + " Mesh and Data sizes do not match." );
+	if( data_.size() ) {
 
-	      {
-		ostringstream str;
+	  switch( nHandles[data_[0]]->nrrd->axis[1].center ) {
+	  case nrrdCenterCell:
+	    break;
 
-		str << " Mesh dimensions: ";
-		for( unsigned int jc=0; jc<mdims.size(); jc++ )
-		  str << mdims[jc] << "  ";
-		error( str.str() );
+	  case nrrdCenterNode:
+ 
+	    if( ddims.size() == mdims.size() ||
+		ddims.size() == mdims.size() + 1 ) {
+
+	      for( unsigned int jc=0; jc<mdims.size(); jc++ ) {
+		if( ddims[jc] != mdims[jc] ) {
+		  error(  dataset[0] + " Mesh and Data sizes do not match." );
+
+		  {
+		    ostringstream str;
+
+		    str << " Mesh dimensions: ";
+		    for( unsigned int jc=0; jc<mdims.size(); jc++ )
+		      str << mdims[jc] << "  ";
+		    error( str.str() );
+		  }
+
+		  {
+		    ostringstream str;
+
+		    str << " Data dimensions: ";
+		    for( unsigned int jc=0; jc<ddims.size(); jc++ )
+		      str << ddims[jc] << "  ";
+		    error( str.str() );
+		  }
+
+		  error_ = true;
+		  return;
+		}
 	      }
+	    } else {
+	      error( dataset[0] + "Mesh and Data are not of the same rank." );
 
-	      {
-		ostringstream str;
+	      ostringstream str;
 
-		str << " Data dimensions: ";
-		for( unsigned int jc=0; jc<ddims.size(); jc++ )
-		  str << ddims[jc] << "  ";
-		error( str.str() );
-	      }
-
+	      str << "Mesh rank " << mdims.size() << "  ";
+	      str << "Data rank " << ddims.size();
+	      error( str.str() );
 	      error_ = true;
-	      //	      return;
+	      return;
 	    }
+
+	    break;
+
+	  default:
+	    error( dataset[0] + " No data location." );
+	    error_ = true;
+	    return;
 	  }
-	} else {
-	  error( dataset[0] + "Mesh and Data are not of the same rank." );
-
-	  ostringstream str;
-
-	  str << "Mesh rank " << mdims.size() << "  ";
-	  str << "Data rank " << ddims.size();
-	  error( str.str() );
-	  error_ = true;
-	  return;
 	}
       }
 
