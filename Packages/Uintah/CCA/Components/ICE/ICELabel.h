@@ -17,7 +17,8 @@ namespace Uintah {
     // Cell centered variables
     const VarLabel* press_CCLabel;
     const VarLabel* press_equil_CCLabel;
-    const VarLabel* delPress_CCLabel;
+    const VarLabel* delP_DilatateLabel;
+    const VarLabel* delP_MassXLabel;
     const VarLabel* rho_micro_CCLabel;
     const VarLabel* sp_vol_CCLabel;
     const VarLabel* sp_vol_equilLabel;
