@@ -77,6 +77,11 @@ IsoSurface::IsoSurface()
     old_min=-1.e30;
     old_max=1.e30;
     need_seed=0;
+
+    widget_matl=new MaterialProp(Color(0,0,0), Color(0,0,.6),
+				 Color(.5,.5,.5), 20);
+    widget_highlight_matl=new MaterialProp(Color(0,0,0), Color(.7,.7,.7),
+					   Color(0,0,.6), 20);
 }
 
 IsoSurface::IsoSurface(const IsoSurface& copy, int deep)
@@ -117,9 +122,28 @@ void IsoSurface::execute()
 	need_seed=0;
     }
     if(do_3dwidget){
-	GeomSphere* ptobj=new GeomSphere(seed_point, 0.05);
-	//ptobj->make it movable()
-	widget_id=ogeom->addObj(ptobj);
+	double widget_scale=0.05;
+	GeomSphere* ptobj=new GeomSphere(seed_point, 1*widget_scale);
+	Vector grad(field->gradient(seed_point));
+	grad.normalize();
+	Point cone_top(seed_point+grad*(2*widget_scale));
+	GeomCylinder* cylinder=new GeomCylinder(seed_point, cone_top,
+						0.5*widget_scale);
+	Point cyl_top(cone_top+grad*0.5);
+	GeomCone* cone=new GeomCone(cone_top, cyl_top,
+				    0.75*widget_scale, 0);
+	GeomDisc* disc=new GeomDisc(cone_top, grad,
+				    0.75*widget_scale);
+	ObjGroup* widget=new ObjGroup;
+	widget->add(ptobj);
+	widget->add(cylinder);
+	widget->add(cone);
+	widget->add(disc);
+	widget->set_matl(widget_matl);
+	GeomPick* pick=new GeomPick(grad);
+	pick->set_highlight(widget_highlight_matl);
+	widget->set_pick(pick);
+	widget_id=ogeom->addObj(widget);
     }
     ObjGroup* group=new ObjGroup;
     switch(field->get_rep()){

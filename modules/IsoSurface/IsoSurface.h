@@ -20,6 +20,7 @@
 class ColormapPort;
 class Field3DIPort;
 class GeometryOPort;
+class MaterialProp;
 class MUI_slider_real;
 class ObjGroup;
 
@@ -44,6 +45,8 @@ class IsoSurface : public UserModule {
     MUI_slider_real* value_slider;
 
     int widget_id;
+    MaterialProp* widget_matl;
+    MaterialProp* widget_highlight_matl;
 
     int iso_cube(int, int, int, double, ObjGroup*, const Field3DHandle&);
     void iso_tetra(int, double, ObjGroup*, const Field3DHandle&);
