@@ -131,6 +131,9 @@ WARNING
      
      CellIterator getCellIterator(const Box& b) const;
      CellIterator getExtraCellIterator(const Box& b) const;
+     CellIterator getFaceCellIterator(const FaceType& face, 
+                                const string& domain="minusEdgeCells") const;
+
      
      //////////
      // Insert Documentation Here:

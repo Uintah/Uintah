@@ -374,6 +374,47 @@ Patch::getExtraCellIterator(const IntVector gc) const
 }
 
 
+CellIterator    
+Patch::getFaceCellIterator(const FaceType& face, const string& domain) const
+{ 
+  // Iterate over the GhostCells on a particular face
+  // if domain == plusEdgeCells this includes the edge and corner cells.
+  // T.Harman
+  
+  IntVector lowPt  = d_inLowIndex;
+  IntVector highPt = d_inHighIndex;
+  if(domain == "plusEdgeCells"){
+    lowPt   = d_lowIndex;
+    highPt  = d_highIndex;
+  }
+
+  if (face == Patch::xplus) {           //  X P L U S
+     lowPt.x(d_inHighIndex.x());
+     highPt.x(d_inHighIndex.x()+1);
+  }
+  if(face == Patch::xminus){            //  X M I N U S
+    highPt.x(d_inLowIndex.x());
+    lowPt.x(d_inLowIndex.x()-1);
+  }
+  if(face == Patch::yplus) {            //  Y P L U S
+    lowPt.y(d_inHighIndex.y());
+    highPt.y(d_inHighIndex.y()+1);
+  }
+  if(face == Patch::yminus) {           //  Y M I N U S
+    highPt.y(d_inLowIndex.y());
+    lowPt.y(d_inLowIndex.y()-1);
+  }
+  if (face == Patch::zplus) {           //  Z P L U S
+    lowPt.z(d_inHighIndex.z());
+    highPt.z(d_inHighIndex.z()+1);
+  }
+  if (face == Patch::zminus) {          //  Z M I N U S
+    highPt.z(d_inLowIndex.z());
+    lowPt.z(d_inLowIndex.z()-1);
+  } 
+  return CellIterator(lowPt, highPt);
+}
+
 
 Box Patch::getGhostBox(const IntVector& lowOffset,
 		       const IntVector& highOffset) const
