@@ -1144,3 +1144,4 @@ proc renameModule {$mmodid} {
     raise $box
     $box configure -title "Rename MacroModule"
     $box configure -background darkgray
+}
