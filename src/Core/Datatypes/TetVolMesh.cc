@@ -133,6 +133,10 @@ TetVolMesh::TetVolMesh(const TetVolMesh &copy):
   grid_lock_("TetVolMesh grid_ fill lock"),
   synchronized_(copy.synchronized_)
 {
+  synchronized_ &= ~EDGES_E;
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronized_ &= ~FACES_E;
+  synchronized_ &= ~FACE_NEIGHBORS_E;
 }
 
 TetVolMesh::~TetVolMesh()
@@ -214,8 +218,7 @@ TetVolMesh::transform(Transform &t)
   }
   
   // Recompute grid.
-  grid_=0;
-  compute_grid();
+  synchronized_ &= ~LOCATE_E;
 }
 
 
