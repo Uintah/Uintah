@@ -13,9 +13,10 @@ SRCDIR := Packages/Fusion/Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
-	$(SRCDIR)/FusionFieldReader.tcl\
-	$(SRCDIR)/MDSPlusFieldReader.tcl\
 	$(SRCDIR)/EditFusionField.tcl\
+	$(SRCDIR)/FusionFieldReader.tcl\
+	$(SRCDIR)/FusionSlicer.tcl\
+	$(SRCDIR)/MDSPlusFieldReader.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Fusion/Dataflow/GUI
 
