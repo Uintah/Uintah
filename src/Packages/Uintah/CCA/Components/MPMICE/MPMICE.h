@@ -232,7 +232,6 @@ protected:
   SerialMPM*       d_mpm;
   ICE*             d_ice;
   bool             d_fracture;
-  Handle<MaterialSubset> d_prod_matls;
 
   double d_dbgTime; 
   double d_dbgStartTime;
