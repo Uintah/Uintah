@@ -17,6 +17,7 @@
 #include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Exceptions/ArrayIndexOutOfBounds.h>
+#include <SCICore/Exceptions/DimensionMismatch.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Util/DebugStream.h>
@@ -33,6 +34,7 @@ using SCICore::Geometry::Point;
 using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
 using SCICore::Exceptions::ArrayIndexOutOfBounds;
+using SCICore::Exceptions::DimensionMismatch;
 using SCICore::Math::Min;
 using SCICore::Math::Max;
 using std::ostringstream;
@@ -58,6 +60,8 @@ public:
   // return the value at the given position
   T& operator[](int);
   T& grid(int, int, int);
+  T& grid(int, int);
+  T& grid(int);
 
   /////////
   // Return the min and max data values;
@@ -66,6 +70,8 @@ public:
   //////////
   // Resize the attribute to the specified dimensions
   virtual void resize(int, int, int);
+  virtual void resize(int, int);
+  virtual void resize(int);
 
   virtual string get_info();  
 
@@ -75,7 +81,7 @@ public:
   static PersistentTypeID type_id;
 
   
-private:
+protected:
   vector<T> data;
   static DebugStream dbg;
 };
@@ -91,7 +97,7 @@ template <class T> DebugStream FlatSAttrib<T>::dbg("FlatSAttrib", true);
 template <class T> PersistentTypeID FlatSAttrib<T>::type_id("FlatSAttrib", "Datatype", 0);
 
 template <class T> FlatSAttrib<T>::FlatSAttrib()
-  :SAttrib(){
+  :SAttrib() {
 }
 
 template <class T> FlatSAttrib<T>::FlatSAttrib(const FlatSAttrib& copy)
@@ -116,34 +122,67 @@ template <class T> FlatSAttrib<T>::FlatSAttrib(int ix):
 template <class T> FlatSAttrib<T>::~FlatSAttrib(){
 }
 
-template <class T> T& FlatSAttrib<T>::operator[](int i){
-  if(i > data.size() - 1){
-    throw ArrayIndexOutOfBounds(data.size(), 0, i);
+template <class T> T& FlatSAttrib<T>::operator[](int i) {
+  if(i >= data.size()) {
+    throw ArrayIndexOutOfBounds(i, 0, (long)data.size());
   }
   return data[i];
 }
 
-template <class T> T& FlatSAttrib<T>::grid(int ix, int iy, int iz){
-  
-  //  if(dims_set < 3){
-  //  throw ArrayIndexOutOfBounds(ix, 0, nx);
-  //}
-  //else if(ix>=nx || ix<0){
-  //  throw ArrayIndexOutOfBounds(ix, 0, nx);
-  //}
-  //else if(iy>=ny || iz>=nz || ix<0 || iy<0 || iz<0){
-  // dbg << "grid("<<ix<<","<<iy<<","<<iz<<") == ["<<(iz*(nx*ny)+iy*(nx)+ix)<<"]"<<"=="<<data[iz*(nx*ny)+iy*(nx)+ix]<<endl;
+template <class T> T& FlatSAttrib<T>::grid(int ix, int iy, int iz) {
+#ifdef MIKE_DEBUG
+  if (dims_set != 3) {
+    throw DimensionMismatch(3, dims_set);
+  }
+  if(ix >= nx) {
+    throw ArrayIndexOutOfBounds(ix, 0, nx);
+  }
+  if (iy >= ny) {
+    throw ArrayIndexOutOfBounds(iy, 0, ny);
+  }
+  if (iz >= nz) {
+    throw ArrayIndexOutOfBounds(iz, 0, nz);
+  }
+#endif
   return data[iz*(nx*ny)+iy*(nx)+ix];  
+}
+
+
+template <class T> T& FlatSAttrib<T>::grid(int ix, int iy) {
+#ifdef MIKE_DEBUG
+  if (dims_set != 2) {
+    throw DimensionMismatch(2, dims_set);
+  }
+  if (ix >= nx) {
+    throw ArrayIndexOutOfBounds(ix, 0, nx);
+  }
+  if (iy >= ny) {
+    throw ArrayIndexOutOfBounds(iy, 0, ny);
+  }
+#endif
+  return data[iy*(nx)+ix];  
+}
+
+template <class T> T& FlatSAttrib<T>::grid(int ix) {
+#ifdef MIKE_DEBUG
+  if (dims_set != 1) {
+    throw DimensionMismatch(1, dims_set);
+  }
+  if (ix >= nx) {
+    throw ArrayIndexOutOfBounds(ix, 0, nx);
+  }
+#endif
+  return data[ix];  
 }
 
 template <class T> bool FlatSAttrib<T>::compute_minmax(){
   has_minmax = 1;
-  if(data.empty()){
+  if(data.empty()) {
     min = 0;
     max = 0;
     return false;
   }
-  else{
+  else {
     vector<T>::iterator itr;
     T lmin = data[0];
     T lmax = lmin;
@@ -157,12 +196,30 @@ template <class T> bool FlatSAttrib<T>::compute_minmax(){
   }
 }
 
-template <class T> void FlatSAttrib<T>::resize(int x, int y, int z){
+template <class T> void FlatSAttrib<T>::resize(int x, int y, int z) {
+  if (!(dims_set == 0 || dims_set == 3)) throw DimensionMismatch(3, dims_set);
+  dims_set = 3;
   nx = x;
   ny = y;
   nz = z;
-  dims_set = 3;
   data.resize(x*y*z);
+}
+
+
+template <class T> void FlatSAttrib<T>::resize(int x, int y) {
+  if (!(dims_set == 0 || dims_set == 2)) throw DimensionMismatch(2, dims_set);
+  dims_set = 2;
+  nx = x;
+  ny = y;
+  data.resize(x*y);
+}
+
+
+template <class T> void FlatSAttrib<T>::resize(int x) {
+  if (!(dims_set == 0 || dims_set == 1)) throw DimensionMismatch(1, dims_set);
+  dims_set = 1;
+  nx = x;
+  data.resize(x);
 }
 
 template <class T> string FlatSAttrib<T>::get_info(){
@@ -188,7 +245,7 @@ template <class T> void FlatSAttrib<T>::io(Piostream&){
 
 
 
-#endif
+#endif  // SCI_project_FlatSAttrib_h
 
 
 

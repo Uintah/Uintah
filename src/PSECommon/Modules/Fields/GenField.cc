@@ -27,6 +27,7 @@
 #include <SCICore/Datatypes/MeshGeom.h>
 #include <SCICore/Datatypes/MeshGeom.h>
 #include <SCICore/Datatypes/FlatSAttrib.h>
+#include <SCICore/Datatypes/Accel3SAttrib.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Containers/String.h>
@@ -83,6 +84,7 @@ GenField::~GenField()
   {
   }
     
+#if 0
 void GenField::execute()
   {
     double mnx, mny, mnz;
@@ -168,6 +170,93 @@ void GenField::execute()
       ofield->send(osf);
     }
   }
+#else
+void GenField::execute()
+  {
+    double mnx, mny, mnz;
+    double retd;
+    clString mfval, retval;
+    int mgeomtype;
+    char procstr[1000];
+    // Get the dimensions, subtract 1 for use in the inner loop
+    mnx=nx.get()-1;
+    mny=ny.get()-1;
+    mnz=nz.get()-1;
+    mfval=fval.get();
+    mgeomtype = geomtype.get();
+    dbg << "geomtype: " << mgeomtype << endl; 
+    if(mgeomtype == 1){
+      LatticeGeom *geom = new LatticeGeom();
+      if(!geom){
+	error("Failed new: new LatticeGeom");
+	return;
+      }
+      Accel3SAttrib<double> *attrib = new Accel3SAttrib<double>();
+      if(!attrib){
+	error("Failed new: new Accel3SAttrib");
+	return;
+      }
+      GenSField<double, LatticeGeom, Accel3SAttrib<double> > *osf = new GenSField<double, LatticeGeom, Accel3SAttrib<double> >(geom, attrib);
+      if(!osf){
+	error("Failed new: new GenSField");
+	return;
+      }
+      osf->set_bbox(Point(0, 0, 0), Point(mnx, mny, mnz));
+      osf->resize(mnx+1, mny+1, mnz+1);
+      for(int k=0; k <= mnx; k++){
+	for(int j=0; j <= mny; j++){
+	  for(int i=0; i <= mnz; i++){
+	    // set the values of x, y, and z; normalize to range from 0 to 1
+	    sprintf(procstr, "set x %f; set y %f; set z %f",
+		    i/mnx, j/mny,  k/mnz);
+	    TCL::eval(procstr, retval);
+	    sprintf(procstr, "expr %s", mfval());
+	    int err = TCL::eval(procstr, retval);
+	    if(err){
+	      // Error in evaluation of user defined function, give warning and return
+	      error("Error in evaluation of function defined by user in GenField");
+	      return;
+	    }
+	    retval.get_double(retd);
+	    attrib->grid(i, j, k) = retd;
+	  }
+	}
+      }
+      ofield->send(osf);
+    }
+    else if(mgeomtype == 2){
+      MeshGeom *geom = new MeshGeom();
+      if(!geom){
+	error("Failed new: new MeshGeom");
+	return;
+      }
+      FlatSAttrib<double> *attrib = new FlatSAttrib<double>();
+      if(!attrib){
+	error("Failed new: new FlatSAttrib");
+	return;
+      }
+      GenSField<double, MeshGeom> *osf = new GenSField<double, MeshGeom>(geom, attrib);
+      if(!osf){
+	error("Failed new: new GenSField");
+	return;
+      }
+      vector<Node> nodes(mnx*mny*mnz);
+      vector<Tetrahedral> tets;
+      int l = 0;
+      for(int k=0; k <= mnx; k++){
+	for(int j=0; j <= mny; j++){
+	  for(int i=0; i <= mnz; i++){
+	    // create the point at (i, j, k)
+	    nodes[l++].p = Point(i, j, k);
+	    // Assign the value of 
+	    
+	  }
+	}
+      }
+      ofield->send(osf);
+    }
+  }
+#endif
 
 } // End namespace Modules
 } // End namespace PSECommon

@@ -14,6 +14,8 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Datatypes/GenSField.h>
 #include <SCICore/Datatypes/FlatSAttrib.h>
+#include <SCICore/Datatypes/Accel2SAttrib.h>
+#include <SCICore/Datatypes/Accel3SAttrib.h>
 
 #include <SCICore/Datatypes/ScalarField.h>
 using namespace SCICore::Datatypes;
@@ -37,6 +39,8 @@ template class LockingHandle<Mesh>;
 template class LockingHandle<Surface>;
 
 template class FlatSAttrib<double>;
+template class Accel2SAttrib<double>;
+template class Accel3SAttrib<double>;
 template class GenSField<double, LatticeGeom>;
 
 #ifdef __sgi

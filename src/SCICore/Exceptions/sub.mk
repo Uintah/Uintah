@@ -8,9 +8,12 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := SCICore/Exceptions
 
 SRCS     += $(SRCDIR)/ArrayIndexOutOfBounds.cc \
-	$(SRCDIR)/AssertionFailed.cc $(SRCDIR)/ErrnoException.cc \
-	$(SRCDIR)/Exception.cc $(SRCDIR)/FileNotFound.cc \
-	$(SRCDIR)/InternalError.cc
+	    $(SRCDIR)/AssertionFailed.cc \
+	    $(SRCDIR)/DimensionMismatch.cc \
+	    $(SRCDIR)/ErrnoException.cc \
+	    $(SRCDIR)/Exception.cc \
+	    $(SRCDIR)/FileNotFound.cc \
+	    $(SRCDIR)/InternalError.cc
 
 PSELIBS := 
 LIBS := $(TRACEBACK_LIB)
@@ -19,6 +22,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5.2.1  2000/08/08 01:06:57  michaelc
+# Accel SAttrib classes
+#
 # Revision 1.5  2000/05/20 08:06:14  sparker
 # New exception classes
 #
