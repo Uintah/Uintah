@@ -218,7 +218,7 @@ inline Vector Vector::operator*(const double s) const
 
 // Allows for double * Vector so that everything doesn't have to be
 // Vector * double
-inline Vector operator*(double s, const Vector& v) {
+inline Vector operator*(const double s, const Vector& v) {
     return v*s;
 }
 
