@@ -174,7 +174,9 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
   //__________________________________
   //  Find the product and reactant matl subset
   MaterialSubset* prod_sub  = scinew MaterialSubset();
+  prod_sub->addReference();
   MaterialSubset* react_sub = scinew MaterialSubset();
+  react_sub->addReference();
  
   for (int m = 0; m < numALLMatls; m++) {
     Material* matl = d_sharedState->getMaterial(m);
@@ -283,6 +285,19 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
 				    Mlb->d_particleState_preReloc,
 				    Mlb->pXLabel, Mlb->d_particleState,
 				    Mlb->pParticleIDLabel, mpm_matls);
+
+   // whatever tasks use press_matl will have their own reference to it.
+  if (press_matl->removeReference())
+    delete press_matl; 
+  // whatever tasks use one_matl will have their own reference to it.
+  if (one_matl->removeReference())
+    delete one_matl;
+  // whatever tasks use prod_sub will have their own reference to it.
+  if (prod_sub->removeReference())
+    delete prod_sub;
+  // whatever tasks use react_sub will have their own reference to it.
+  if (react_sub->removeReference())
+    delete react_sub;
 }
 
 //______________________________________________________________________
