@@ -60,12 +60,7 @@ EditFieldAlgoCountT<MESH>::execute(MeshHandle mesh_h,
 
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
 
-  Mesh::synchronized_t sync;
-  sync.set(Mesh::NODES_E);
-  sync.set(Mesh::EDGES_E);
-  sync.set(Mesh::FACES_E);
-  sync.set(Mesh::CELLS_E);
-  mesh->synchronize(sync);
+  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
 
   int count = 0;
   node_iter_type ni; mesh->begin(ni);
