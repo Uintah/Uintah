@@ -52,7 +52,7 @@ static const char FTNE = '>';
 // Function to return name of type of its argument
 template <class T> const string find_type_name(T*)
 {
-  return T::type_name();
+  return T::type_name(-1);
 }
 
 class Vector;

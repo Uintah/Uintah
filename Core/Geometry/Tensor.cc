@@ -126,7 +126,7 @@ Tensor::~Tensor()
 {
 }
 
-string Tensor::type_name() {
+string Tensor::type_name(int) {
   static const string str("Tensor");
   return str;
 }

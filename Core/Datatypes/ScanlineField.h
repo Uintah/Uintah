@@ -144,8 +144,8 @@ ScanlineField<Data>::maker()
 
 template <class Data>
 PersistentTypeID
-ScanlineField<Data>::type_id(type_name(),
-		GenericField<ScanlineMesh, vector<Data> >::type_name(),
+ScanlineField<Data>::type_id(type_name(-1),
+		GenericField<ScanlineMesh, vector<Data> >::type_name(-1),
                 maker); 
 
 template <class Data>

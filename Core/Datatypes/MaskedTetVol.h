@@ -106,8 +106,8 @@ MaskedTetVol<T>::maker()
 
 template <class T>
 PersistentTypeID 
-MaskedTetVol<T>::type_id(type_name(), 
-			 TetVol<T>::type_name(),
+MaskedTetVol<T>::type_id(type_name(-1), 
+			 TetVol<T>::type_name(-1),
 			 maker);
 
 
@@ -115,7 +115,7 @@ template <class T>
 void 
 MaskedTetVol<T>::io(Piostream& stream)
 {
-  stream.begin_class(type_name(), MASKED_TET_VOL_VERSION);
+  stream.begin_class(type_name(-1), MASKED_TET_VOL_VERSION);
   TetVol<T>::io(stream);
   Pio(stream, mask_);
   stream.end_class();

@@ -58,7 +58,7 @@ public:
   Tensor& operator+=(const Tensor&);
   Tensor operator*(const double) const;
 
-  static string type_name();
+  static string type_name(int i = -1);
   
   double mat_[3][3];
   void build_eigens();
