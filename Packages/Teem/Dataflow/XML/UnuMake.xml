@@ -61,7 +61,7 @@ reading data from many seperate files, it may be easier to put their filenames
 in a response file; there can be one or more filenames per line of the
 response file.</p>
      <p>Write Header : Check to write out a .nhdr file.  This file can be specified by browsing to it by clicking the Specify Header File button.</p>
-     <p>Kind : Specify the kind of the first axis. Other axes kinds may be set using UnuAxinfo.</p>
+     <p>Kind : Specify the kind of the first axis. Other axes kinds may be set using <modref package="Teem" name="UnuAxinfo"/>.</p>
      <p>Size : Specify the sizes separated by a single space.  This indicates the number of samples along each axis.</p>
      <p>Spacing : These float values will indicate the spacing between samples. These should be separated by white space.</p>
      <p>Labels : Short string labels for each axis.  These labels should be separated by a space.</p>
