@@ -644,7 +644,7 @@ class BioFEMApp {
 	    
             bind $vis.indicator <Button> {app display_module_error} 
 	    
-            label $vis.indicatorL -text "Select Execute to start..."
+            label $vis.indicatorL -text "Press Execute to Load Data..."
             pack $vis.indicatorL -side bottom -anchor sw -padx 5 -pady 3
 	    
 	    
@@ -718,9 +718,9 @@ class BioFEMApp {
 	pack $view_opts.buttons.v1 -side left -anchor nw
 	
 	
-	button $view_opts.buttons.v1.autoview -text "Autoview" \
+	button $view_opts.buttons.v1.autoview -text "Autoview (Ctrl-v)" \
 	    -command "$mods(Viewer)-ViewWindow_0-c autoview" \
-	    -width 12 -padx 3 -pady 3
+	    -width 15 -padx 3 -pady 3
 	
 	pack $view_opts.buttons.v1.autoview -side top -padx 3 -pady 3 \
 	    -anchor n -fill x
@@ -731,7 +731,7 @@ class BioFEMApp {
 	
 	menubutton $view_opts.buttons.v1.views.def -text "Views" \
 	    -menu $view_opts.buttons.v1.views.def.m -relief raised \
-	    -padx 3 -pady 3  -width 12
+	    -padx 3 -pady 3  -width 15
 	
 	menu $view_opts.buttons.v1.views.def.m -tearoff 0
 
@@ -840,11 +840,11 @@ class BioFEMApp {
 	pack $view_opts.buttons.v2 -side left -anchor nw
 	
 	button $view_opts.buttons.v2.sethome -text "Set Home View" -padx 3 -pady 3 \
-	    -command "$mods(Viewer)-ViewWindow_0-c sethome"
+	    -command "$mods(Viewer)-ViewWindow_0-c sethome" -width 15
 	
 	button $view_opts.buttons.v2.gohome -text "Go Home" \
 	    -command "$mods(Viewer)-ViewWindow_0-c gohome" \
-	    -padx 3 -pady 3
+	    -padx 3 -pady 3 -width 15
 	
 	pack $view_opts.buttons.v2.sethome $view_opts.buttons.v2.gohome \
 	    -side top -padx 2 -pady 2 -anchor ne -fill x
@@ -1011,7 +1011,7 @@ class BioFEMApp {
 	    $vis_frame_tab1 view $c_left_tab
 	    $vis_frame_tab2 view $c_left_tab
 
-	    change_indicator_labels "Select Execute to start..."
+	    change_indicator_labels "Press Execute to Load Data..."
 	}	
     }
 
