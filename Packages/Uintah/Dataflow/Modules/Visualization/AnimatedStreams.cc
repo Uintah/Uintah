@@ -47,9 +47,8 @@ AnimatedStreams::AnimatedStreams(const string& id)
     normals("normals", id, this),
     lighting("lighting", id, this),
     normal_method("normal_method", id, this),
-    iter_method("iter_method", id, this),
+    use_deltat("use_deltat", id, this),
     stepsize("stepsize", id, this),
-    iterations("iterations", id, this),
     linewidth("linewidth", id, this),
     control_lock("AnimatedStreams position lock"),
     control_widget(0), control_id(-1),
@@ -166,11 +165,11 @@ void AnimatedStreams::execute(void)
 
   double dt = -1;
   if (vf->get("delta_t",dt) && dt > 0) {
-    cerr << "Doing " << iterations.get() * dt << " iterations.  For delta_t = " << dt << "\n";
-    anistreams->SetIterations(iterations.get() * dt);
-    anistreams->SetIterationsPerStep(iterations.get());
+    cerr << "Delta_t = " << dt << "\n";
+    anistreams->SetDeltaT(dt);
   } else {
-    anistreams->SetIterationsPerStep(1);
+    anistreams->SetDeltaT(-1);
+    use_deltat.set(0);
   }
 
   anistreams->Pause( (bool)(pause.get()) );
@@ -179,7 +178,7 @@ void AnimatedStreams::execute(void)
   anistreams->SetStepSize( stepsize.get() );
   anistreams->SetLineWidth( linewidth.get());
   anistreams->SetNormalMethod( normal_method.get() );
-  anistreams->SetIterationMethod( iter_method.get() );
+  anistreams->UseDeltaT( (bool)use_deltat.get() );
   //anistreams->UseWidget(true);
   if( !pause.get() ) {
     want_to_execute();
