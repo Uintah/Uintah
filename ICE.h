@@ -299,7 +299,15 @@ using namespace SCIRun;
                                const IntVector d_dbgEndIndx,  
                                IntVector& low,                 
                                IntVector& high);               
-                                                    
+      
+      void createDirs( const string& desc, string& path);
+      
+      void find_gnuplot_origin_And_dx(const Patch*,
+                                     const IntVector,
+                                     const IntVector,
+                                     double *,
+                                     double *);
+                                                           
       void Message(int abort, const string& message1, const string& message2,
                  const string& message3);
 
@@ -409,6 +417,7 @@ using namespace SCIRun;
       double d_dbgOutputInterval;
       double d_dbgNextDumpTime;
       double d_dbgOldTime;
+      bool   d_dbgGnuPlot;
       IntVector d_dbgBeginIndx;
       IntVector d_dbgEndIndx; 
       int d_dbgSigFigs;
