@@ -4,6 +4,35 @@
 
 <package name="Uintah">
   <guiPath>GUI</guiPath>
+  <scirun-library category="Visualization">
+    <soNames>
+      <soName>libUintah_Modules_Visualization.so</soName>
+      <soName>libUintah.so</soName>
+    </soNames>
+  <dataflow-component name="GridVisualizer">
+    <meta>
+      <authors>
+        <author>James Bigler</author>
+      </authors>
+      <version-date>Mon Jun  5 14:15:55 MDT 2000</version-date>
+      <version>1.0</version>
+      <description>Visualize a Uintah Grid in wireframe</description>
+      <documentation>This module is used display the patch boundaries and node locations.  Each level has a unique color.  It is hard coded for up to six different colors (or levels), and after the sixth level it reuses the last color.  The node locations have the same color as the patch boundaries, but are darker.  The colors are as follows:
+Level 1: Red
+Level 2: Green
+Level 3: Blue
+Level 4: Yellow
+Level 5: Cyan
+Level 6: Magenta</documentation>
+    </meta>
+    <inputs>Archive</inputs>
+    <outputs>Geometry</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GridVisualizer</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
   <scirun-library category="MPMViz">
   <soNames>
     <soName>libUintah_Modules_MPMViz.so</soName>
@@ -225,6 +254,22 @@
       <creationFunction>make_TriangleReader</creationFunction>
     </implementation>
   </dataflow-component>
+  <dataflow-component name="ArchiveReader">
+    <meta>
+      <authors>
+        <author>KurtZimmerman</author>
+      </authors>
+      <version-date>June 2000</version-date>
+      <version>1.0</version>
+      <description>Selects Uintah Data Archives</description>
+    </meta>
+    <inputs></inputs>
+    <outputs> Archive </outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ArchiveReader</creationFunction>
+    </implementation>
+  </dataflow-component>
   <dataflow-component name="MPReaderMultiFile">
     <meta>
       <authors>
@@ -242,6 +287,7 @@
     </implementation>
   </dataflow-component>
   </scirun-library>
+
   <scirun-library category="Writers">
   <soNames>
     <soName>libUintah_Modules_Writers.so</soName>
