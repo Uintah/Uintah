@@ -29,7 +29,6 @@
 
 #include <FieldConverters/Core/Datatypes/ScalarFieldUG.h>
 #include <Core/Util/NotFinished.h>
-#include <Core/Containers/String.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>

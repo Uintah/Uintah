@@ -46,17 +46,17 @@ class NrrdToField : public Module {
   NrrdIPort* inrrd;
   FieldOPort* ofield;
 public:
-  NrrdToField(const clString& id);
+  NrrdToField(const string& id);
   virtual ~NrrdToField();
   virtual void execute();
 };
 
-extern "C" Module* make_NrrdToField(const clString& id) {
+extern "C" Module* make_NrrdToField(const string& id) {
   return new NrrdToField(id);
 }
 
 
-NrrdToField::NrrdToField(const clString& id):Module("NrrdToField", id, Filter)
+NrrdToField::NrrdToField(const string& id):Module("NrrdToField", id, Filter)
 {
   // Create the input port
   inrrd = scinew NrrdIPort(this, "Nrrd", NrrdIPort::Atomic);

@@ -42,7 +42,7 @@ using namespace SCIRun;
 namespace FieldConverters {
 
 typedef struct SurfInfo {
-  clString name;		// names of surfaces
+  string name;  		// names of surfaces
   Array1<int> faces;		// indices of faces in each surface
   Array1<int> faceOrient;	// is each face properly oriented
   int matl;			// segmented material type in each surf

@@ -29,7 +29,6 @@
 
 #include <FieldConverters/Core/Datatypes/ScalarField.h>
 #include <FieldConverters/Core/Datatypes/ScalarFieldRGBase.h>
-#include <Core/Containers/String.h>
 #include <iostream>
 using std::cerr;
 

@@ -42,16 +42,16 @@ class NrrdWriter : public Module {
     GuiString filename_;
     GuiString filetype_;
 public:
-    NrrdWriter(const clString& id);
+    NrrdWriter(const string& id);
     virtual ~NrrdWriter();
     virtual void execute();
 };
 
-extern "C" Module* make_NrrdWriter(const clString& id) {
+extern "C" Module* make_NrrdWriter(const string& id) {
   return new NrrdWriter(id);
 }
 
-NrrdWriter::NrrdWriter(const clString& id)
+NrrdWriter::NrrdWriter(const string& id)
 : Module("NrrdWriter", id, Source, "DataIO", "Teem"), 
   filename_("filename", id, this),
   filetype_("filetype", id, this)
@@ -73,21 +73,21 @@ void NrrdWriter::execute()
     return;
 
   // If no name is provided, return
-  clString fn(filename_.get());
+  string fn(filename_.get());
   if(fn == "") {
     error("Warning: no filename in NrrdWriter");
     return;
   }
 
   FILE *f;
-  if (!(f = fopen(fn(), "wt"))) {
+  if (!(f = fopen(fn.c_str(), "wt"))) {
     cerr << "Error opening file "<<fn<<"\n";
     return;
   }
 
   if (nrrdWrite(f, handle->nrrd)) {
     char *err = biffGet(NRRD);      
-    cerr << "Error writing nrrd "<<fn<<": "<<err<<"\n";
+    cerr << "Error writing nrrd " << fn << ": " << err << "\n";
     free(err);
     biffDone(NRRD);
     fclose(f);

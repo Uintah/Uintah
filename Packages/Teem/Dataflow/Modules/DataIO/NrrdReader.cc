@@ -42,19 +42,19 @@ class NrrdReader : public Module {
   NrrdOPort* outport_;
   GuiString filename_;
   NrrdDataHandle handle_;
-  clString old_filename_;
+  string old_filename_;
   time_t old_filemodification_;
 public:
-  NrrdReader(const clString& id);
+  NrrdReader(const string& id);
   virtual ~NrrdReader();
   virtual void execute();
 };
 
-extern "C" Module* make_NrrdReader(const clString& id) {
+extern "C" Module* make_NrrdReader(const string& id) {
   return new NrrdReader(id);
 }
 
-NrrdReader::NrrdReader(const clString& id)
+NrrdReader::NrrdReader(const string& id)
 : Module("NrrdReader", id, Source, "DataIO", "Teem"), 
   filename_("filename", id, this),
   old_filemodification_(0)
@@ -70,12 +70,12 @@ NrrdReader::~NrrdReader()
 
 void NrrdReader::execute()
 {
-  clString fn(filename_.get());
+  string fn(filename_.get());
 
   // Read the status of this file so we can compare modification timestamps
   struct stat buf;
   if (stat(fn(), &buf)) {
-    error(clString("FieldReader error - file not found ")+fn);
+    error(string("FieldReader error - file not found ")+fn);
     return;
   }
 
