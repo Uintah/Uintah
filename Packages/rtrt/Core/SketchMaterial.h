@@ -3,7 +3,6 @@
 #define SKETCHMATERIAL_H 1
 
 #include <Packages/rtrt/Core/Material.h>
-#include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/HitInfo.h>
@@ -11,6 +10,10 @@
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/SketchMaterialBase.h>
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
+
+#include <Core/Geometry/Point.h>
+#include <Core/Math/Expon.h>
+
 #include <teem/nrrd.h>
 #include <teem/gage.h>
 #include <stdlib.h>
@@ -476,9 +479,9 @@ SketchMaterial<ArrayType, DataType>::color(const Vector &N, const Vector &V,
 #endif
   double spec;
   if (exponent > 0) {
-    spec = attenuation * specular * ipow(exponent, spec_coeff);
+    spec = attenuation * specular * SCIRun::Pow(exponent, spec_coeff);
   } else {
-    spec = attenuation * specular * ipow(-exponent, spec_coeff);
+    spec = attenuation * specular * SCIRun::Pow(-exponent, spec_coeff);
   }
   
   result = light_color * (object_color *(ambient+attenuation*diffuse*L_N_dot)
@@ -491,7 +494,7 @@ SketchMaterial<ArrayType, DataType>::color(const Vector &N, const Vector &V,
     double attenuation = 1;
 
     Vector R = N * (2.0 * L_N_dot) - L;
-    double spec = attenuation * specular * ipow(Max(Dot(R, V),0.0), spec_coeff);
+    double spec = attenuation * specular * SCIRun::Pow(Max(Dot(R, V),0.0), spec_coeff);
 
     result = light_color * (object_color *(ambient+attenuation*diffuse*L_N_dot)
 			    + Color(spec, spec, spec));
