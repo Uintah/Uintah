@@ -333,8 +333,10 @@ private:
   ProblemSpecP getTimestep(double time, XMLURL& url);
   string queryEndianness();  
   int queryNBits();  
+
+  // find the variable - the boundary layer is necessary for restarts
   void query( Variable& var, ProblemSpecP vnode, XMLURL url,
-	      int matlIndex,	const Patch* patch );
+	      int matlIndex, const Patch* patch, const IntVector* boundary = 0);
 
   void queryVariables( const ProblemSpecP vars, vector<string>& names,
 		       vector<const TypeDescription*>& types);
