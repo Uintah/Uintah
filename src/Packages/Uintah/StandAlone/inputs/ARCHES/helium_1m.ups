@@ -7,7 +7,7 @@
    </Meta>
 
    <Time>
-	<maxTime>20.0</maxTime>
+	<maxTime>10.0</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.01</delt_max>
@@ -15,8 +15,8 @@
    </Time>
 
    <DataArchiver>
-        <filebase>sandia_helium.uda</filebase>
-	<outputInterval>0.1</outputInterval>
+        <filebase>sandia_helium_3m360.uda</filebase>
+	<outputInterval>0.004</outputInterval>
 	<save label = "uvwout"/>
 	<save label = "totalflowIN"/>
 	<save label = "totalflowOUT"/>
@@ -35,7 +35,7 @@
 	<save label = "continuityResidual"/>
         <save label = "filterdrhodt"/>
 	<save label = "cellType"/>
-	<checkpoint cycle = "2" interval = "0.1"/>
+	<checkpoint cycle = "2" interval = "0.004"/>
         <outputDoubleAsFloat/>
         <compression>gzip</compression>
    </DataArchiver>
@@ -50,8 +50,8 @@
 	<Level>
 	    <Box label = "1">
 	        <lower>[0,0,0]</lower>
-	        <upper>[4,4,4]</upper>
-	        <resolution>[150,150,150]</resolution>
+	        <upper>[3,3,3]</upper>
+	        <resolution>[360,361,361]</resolution>
                 <extraCells>[1,1,1]</extraCells>
 		<patches>[3,4,4]</patches>
 	    </Box>
@@ -138,7 +138,7 @@
 		    <TurblengthScale>0.04</TurblengthScale>
 		    <inletType>primary</inletType>
 		    <geom_object>
-		      <box label = "botWall">
+		      <box label = "botwall">
 			<min>[-1,-1,-1]</min>
 			<max>[0,5,5]</max>
 		      </box>
@@ -153,8 +153,8 @@
 		    <inletType>primary</inletType>
 		    <geom_object>
 		      <cylinder label = "inlet">
-			<bottom>[-5,2,2]</bottom>
-			<top>[0,2,2]</top>
+			<bottom>[-5,1.5,1.5]</bottom>
+			<top>[0,1.5,1.5]</top>
 			<radius> .5 </radius>
 		      </cylinder>
 		    </geom_object>
@@ -168,20 +168,20 @@
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
 		      <box label = "posY_xzWall">
-			<min>[0,4,-1]</min>
-			<max>[4,5,5]</max>
+			<min>[0,3,-1]</min>
+			<max>[3,4,4]</max>
 		      </box>
 		      <box label = "zeroY_xzWall">
 			<min>[0,-1,-1]</min>
-			<max>[4,0,5]</max>
+			<max>[3,0,4]</max>
 		      </box>
 		      <box label = "posZ_xyWall">
-			<min>[0,-1,4]</min>
-			<max>[4,5,5]</max>
+			<min>[0,-1,3]</min>
+			<max>[3,4,4]</max>
 		      </box>
                       <box label = "zeroZ_xyWall">	
 			<min>[0,-1,-1]</min>
-			<max>[4,5,0]</max>
+			<max>[3,4,0]</max>
 		      </box>
 		    </geom_object>
 		</PressureBC>
@@ -194,8 +194,8 @@
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
 		      <box label = "topWall">
-			<min>[4,-1,-1]</min>
-			<max>[5,5,5]</max>
+			<min>[3,-1,-1]</min>
+			<max>[4,4,4]</max>
 		      </box>
 		    </geom_object>
 		</outletBC>
@@ -205,7 +205,7 @@
 		<gravity>[-9.8,0,0]</gravity>
 		<pressure>0.0</pressure>
 		<viscosity>0.000020</viscosity>
-		<schmidtNo>0.7</schmidtNo>
+		<schmidtNo>0.2</schmidtNo>
 	    </PhysicalConstants>
 
 	    <ExplicitSolver>
