@@ -18,7 +18,6 @@
 namespace Uintah {
   using namespace std;
   class LoadBalancer;
-  class ProcessorGroup;
   class Task;
 /**************************************
 
@@ -73,8 +72,8 @@ WARNING
     
     //////////
     // Insert Documentation Here:
-    virtual void compile(const ProcessorGroup * pc) = 0;
-    virtual void execute(const ProcessorGroup * pc) = 0;
+    virtual void compile() = 0;
+    virtual void execute() = 0;
 
     virtual SchedulerP createSubScheduler() = 0;
        

@@ -1024,9 +1024,9 @@ public:
     task->computes(flop_label);
     subsched->addTask(task, level->eachPatch(), matlset);
 
-    subsched->compile(world);
+    subsched->compile();
     subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
-    subsched->execute(world);
+    subsched->execute();
 
     double e=0;
     switch(params->norm){
@@ -1109,7 +1109,7 @@ public:
       task->computes(D_label);
       task->computes(flop_label);
       subsched->addTask(task, level->eachPatch(), matlset);
-      subsched->compile(world);
+      subsched->compile();
       
       //__________________________________
       //  Main iteration
@@ -1118,7 +1118,7 @@ public:
 	subsched->advanceDataWarehouse(grid);
 	subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
 	subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNonPermanent);
-	subsched->execute(world);
+	subsched->execute();
 	switch(params->norm){
 	case CGSolverParams::L1:
 	case CGSolverParams::L2:

@@ -675,7 +675,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
   scheduleUpdateGridKinematics(    subsched,level->eachPatch(),matls);
   scheduleCheckConvergence(subsched,level,  level->eachPatch(),matls);
 
-  subsched->compile(d_myworld);
+  subsched->compile();
 
   int count = 0;
   bool dispInc = false;
@@ -732,7 +732,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
     count++;
     subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
     subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
-    subsched->execute(d_myworld);  // THIS ACTUALLY GETS THE WORK DONE
+    subsched->execute();  // THIS ACTUALLY GETS THE WORK DONE
     subsched->get_dw(3)->get(dispIncNorm,   lb->dispIncNorm);
     subsched->get_dw(3)->get(dispIncQNorm,  lb->dispIncQNorm); 
     subsched->get_dw(3)->get(dispIncNormMax,lb->dispIncNormMax);
