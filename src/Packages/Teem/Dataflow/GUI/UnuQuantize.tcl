@@ -49,20 +49,20 @@ itcl_class Teem_UnuNtoZ_UnuQuantize {
         global $this-minf
         global $this-maxf
         global $this-nbits
+	global $this-useinputmin
+	global $this-useinputmax
+	global $this-realmin
+	global $this-realmax
+
         set $this-minf 0
         set $this-maxf 255
 	set $this-nbits 32
+	set $this-useinputmin 1
+	set $this-useinputmax 1
+	set $this-realmin "unknown"
+	set $this-realmax "unknown"
     }
 
-    method update_min_max {min max} {
-	set w .ui[modname]
-	if {[winfo exists $w]} {
-	    puts $min
-	    puts $max
-	    $w.f.min newvalue $min
-	    $w.f.max newvalue $max
-	}
-    }
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -73,19 +73,60 @@ itcl_class Teem_UnuNtoZ_UnuQuantize {
         wm minsize $w 200 80
         frame $w.f
         pack $w.f -padx 2 -pady 2 -side top -expand yes
-	global $this-minf
-	expscale $w.f.min -orient horizontal -label "Min:" \
-	        -variable $this-minf -command ""
-	global $this-maxf
-	expscale $w.f.max -orient horizontal -label "Max:" \
-	        -variable $this-maxf -command ""
-	global $this-nbits
-	make_labeled_radio $w.f.nbits "Number of bits:" "" \
-	 		left $this-nbits \
-			{{8 8} \
-			{16 16} \
-			{32 32}}
-	pack $w.f.min $w.f.max $w.f.nbits -side top -expand 1 -fill x
+
+
+ 	frame $w.f.vals 
+ 	pack $w.f.vals -side top -anchor nw -expand yes -fill x
+
+	frame $w.f.vals.min
+ 	pack $w.f.vals.min -side left -anchor nw -expand yes -fill x \
+	    -padx 4
+
+        label $w.f.vals.min.l -text "Min:" 
+	entry $w.f.vals.min.v -textvariable $this-realmin \
+	    -width 10 -state disabled -relief flat -foreground "#663399"
+        pack $w.f.vals.min.l $w.f.vals.min.v -side left -expand yes -fill x
+
+	frame $w.f.vals.max
+ 	pack $w.f.vals.max -side left -anchor nw -expand yes -fill x \
+	    -padx 4
+
+        label $w.f.vals.max.l -text "Max:" 
+	entry $w.f.vals.max.v -textvariable $this-realmax \
+	    -width 10 -state disabled -relief flat -foreground "#663399"
+        pack $w.f.vals.max.l $w.f.vals.max.v -side left -expand yes -fill x
+
+	frame $w.f.min -relief groove -borderwidth 2
+	pack $w.f.min -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.min.v -labeltext "Min:" \
+	    -textvariable $this-minf
+        pack $w.f.min.v -side top -expand yes -fill x
+
+        checkbutton $w.f.min.useinputmin \
+	    -text "Use lowest value of input nrrd as min" \
+	    -variable $this-useinputmin
+        pack $w.f.min.useinputmin -side top -expand yes -fill x
+
+
+	frame $w.f.max -relief groove -borderwidth 2
+	pack $w.f.max -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.max.v -labeltext "Max:" \
+	    -textvariable $this-maxf
+        pack $w.f.max.v -side top -expand yes -fill x
+
+        checkbutton $w.f.max.useinputmax \
+	    -text "Use highest value of input nrrd as max" \
+	    -variable $this-useinputmax
+        pack $w.f.max.useinputmax -side top -expand yes -fill x
+
+ 	make_labeled_radio $w.f.nbits "Number of bits:" "" \
+ 	 		left $this-nbits \
+ 			{{8 8} \
+ 			{16 16} \
+ 			{32 32}}
+	pack $w.f.nbits -side top -expand 1 -fill x
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w

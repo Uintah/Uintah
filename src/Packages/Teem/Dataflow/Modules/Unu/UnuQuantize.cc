@@ -1,4 +1,4 @@
-/*
+/* 
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -56,6 +56,10 @@ class UnuQuantize : public Module {
   NrrdOPort* onrrd_;
   GuiDouble minf_;
   GuiDouble maxf_;
+  GuiInt useinputmin_;
+  GuiInt useinputmax_;
+  GuiDouble realmin_;
+  GuiDouble realmax_;
   GuiInt nbits_;
   double last_minf_;
   double last_maxf_;
@@ -76,6 +80,10 @@ UnuQuantize::UnuQuantize(GuiContext *ctx)
   : Module("UnuQuantize", ctx, Filter, "UnuNtoZ", "Teem"),
     minf_(ctx->subVar("minf")),
     maxf_(ctx->subVar("maxf")),
+    useinputmin_(ctx->subVar("useinputmin")),
+    useinputmax_(ctx->subVar("useinputmax")),
+    realmin_(ctx->subVar("realmin")),
+    realmax_(ctx->subVar("realmax")),
     nbits_(ctx->subVar("nbits")), last_minf_(0),
     last_maxf_(0), last_nbits_(0), last_generation_(-1), last_nrrdH_(0)
 {
@@ -111,20 +119,29 @@ UnuQuantize::execute()
   if (last_generation_ != nrrdH->generation) {
     // set default values for min,max
     NrrdRange *range = nrrdRangeNewSet(nrrdH->nrrd, nrrdBlind8BitRangeState);
-    cout << "min and max: " << range->min << " " << range->max << endl;
-    ostringstream str;
-    str << id.c_str() << " update_min_max " << range->min
-	<< " " << range->max << endl;
+    realmin_.set(range->min);
+    realmax_.set(range->max);
     delete range;
-    gui->execute(str.str());
     minf_.reset();
     maxf_.reset();
+    useinputmin_.reset();
+    useinputmax_.reset();
   }
 
 
 
   double minf=minf_.get();
   double maxf=maxf_.get();
+
+  // use input min/max if specified
+  if (useinputmin_.get()) {
+    minf = realmin_.get();
+  }
+
+  if (useinputmax_.get()) {
+    maxf = realmax_.get();
+  }
+  
   int nbits=nbits_.get();
   if (last_generation_ == nrrdH->generation &&
       last_minf_ == minf &&
@@ -134,11 +151,13 @@ UnuQuantize::execute()
     onrrd_->send(last_nrrdH_);
     return;
   }
+
   // must detach because we are about to modify the input nrrd.
   last_generation_ = nrrdH->generation;
   nrrdH.detach(); 
 
   Nrrd *nin = nrrdH->nrrd;
+
 
   msgStream_ << "Quantizing -- min="<<minf<<
     " max="<<maxf<<" nbits="<<nbits<<endl;
@@ -151,8 +170,6 @@ UnuQuantize::execute()
     free(err);
     return;
   }
-  // propogate sci added data
-  //nrrd->copy_sci_data(*nrrdH.get_rep());
 
   last_minf_ = minf;
   last_maxf_ = maxf;
