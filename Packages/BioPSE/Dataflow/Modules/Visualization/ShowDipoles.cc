@@ -149,8 +149,7 @@ void ShowDipoles::execute(){
     double max;
     for (i=0; i<field_pcv->fdata().size(); i++) {
       double dv=field_pcv->fdata()[i].length();
-      if (dv<0.00000001) dv=1;
-      if (i==0 || dv<max) max=dv;
+      if (i==0 || dv>max) max=dv;
     }
 
     for (i=0; i<field_pcv->fdata().size(); i++) {
@@ -176,8 +175,8 @@ void ShowDipoles::execute(){
     if (gidx_) ogeom_->delObj(gidx_);
     if (showLinesGui_.get()) {
       GeomLines *g=new GeomLines;
-      for (int i=0; i<pts.size()-2; i++) 
-	for (int j=i+1; j<pts.size()-1; j++) 
+      for (int i=0; i<pts.size()-1; i++) 
+	for (int j=i+1; j<pts.size(); j++) 
 	  g->add(pts[i], pts[j]);
       GeomMaterial *gm=new GeomMaterial(g, new Material(Color(.8,.8,.2)));
       gidx_=ogeom_->addObj(gm, string("Dipole Lines"));
