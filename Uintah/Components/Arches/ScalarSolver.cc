@@ -166,9 +166,9 @@ ScalarSolver::sched_buildLinearMatrix(const LevelP& level,
       // differencing
       // computes all the components of velocity
       // added one more argument of index to specify scalar component
-      tsk->computes(new_dw, d_scalarCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_scalarLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_scalarNonLinSrcLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_scalarCoefLabel, index, patch);
+      tsk->computes(new_dw, d_scalarLinSrcLabel, index, patch);
+      tsk->computes(new_dw, d_scalarNonLinSrcLabel, index, patch);
 
       sched->addTask(tsk);
     }
@@ -203,6 +203,10 @@ void ScalarSolver::buildLinearMatrix(const ProcessorContext* pc,
 
 //
 // $Log$
+// Revision 1.6  2000/06/14 20:40:49  rawat
+// modified boundarycondition for physical boundaries and
+// added CellInformation class
+//
 // Revision 1.5  2000/06/12 21:30:00  bbanerje
 // Added first Fortran routines, added Stencil Matrix where needed,
 // removed unnecessary CCVariables (e.g., sources etc.)

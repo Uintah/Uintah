@@ -5,6 +5,7 @@ static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/SmagorinskyModel.h>
 #include <Uintah/Components/Arches/PhysicalConstants.h>
+#include <Uintah/Components/Arches/CellInformation.h>
 #include <Uintah/Grid/Stencil.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Grid/Level.h>
@@ -109,7 +110,7 @@ SmagorinskyModel::sched_computeTurbSubmodel(const LevelP& level,
 			      patch, old_dw, new_dw, this,
 			      &SmagorinskyModel::computeTurbSubmodel);
 
-      int numGhostCells = 1;
+      int numGhostCells = 0;
       int matlIndex = 0;
       tsk->requires(old_dw, d_uVelocityLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
@@ -142,7 +143,7 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorContext* pc,
   // Get the velocity, density and viscosity from the old data warehouse
   // (tmp) velocity should be FCVariable
   int matlIndex = 0;
-  int numGhostCells = 1;
+  int numGhostCells = 0;
   CCVariable<double> uVelocity;
   old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
@@ -215,7 +216,7 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorContext* pc,
 					  int index)
 {
   int matlIndex = 0;
-  int numGhostCells = 1;
+  int numGhostCells = 0;
   CCVariable<double> uVelocity;
   old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
@@ -381,6 +382,10 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorContext* pc,
 
 //
 // $Log$
+// Revision 1.12  2000/06/14 20:40:49  rawat
+// modified boundarycondition for physical boundaries and
+// added CellInformation class
+//
 // Revision 1.11  2000/06/12 21:30:00  bbanerje
 // Added first Fortran routines, added Stencil Matrix where needed,
 // removed unnecessary CCVariables (e.g., sources etc.)

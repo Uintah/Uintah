@@ -15,7 +15,7 @@ SRCS     += $(SRCDIR)/Arches.cc $(SRCDIR)/BoundaryCondition.cc \
 	$(SRCDIR)/LinearSolver.cc \
 	$(SRCDIR)/PressureSolver.cc $(SRCDIR)/MomentumSolver.cc \
 	$(SRCDIR)/ScalarSolver.cc $(SRCDIR)/RBGSSolver.cc \
-	$(SRCDIR)/Source.cc
+	$(SRCDIR)/Source.cc $(SRCDIR)/CellInformation.cc
 
 
 SUBDIRS := $(SRCDIR)/fortran
@@ -30,6 +30,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.15  2000/06/14 20:40:50  rawat
+# modified boundarycondition for physical boundaries and
+# added CellInformation class
+#
 # Revision 1.14  2000/06/13 20:47:31  bbanerje
 # Correct version of sub.mk (sub.mk removed from .cvsignore)
 #

@@ -43,12 +43,15 @@ none
 #include <SCICore/Containers/Array1.h>
 #include <vector>
 namespace Uintah {
-namespace ArchesSpace {
-//class StencilMatrix;
- using namespace SCICore::Containers;
-
- class TurbulenceModel;
- class Properties;
+  class VarLabel;
+  namespace MPM {
+    class GeometryPiece;
+  }
+  namespace ArchesSpace {
+    using namespace SCICore::Containers;
+    using namespace Uintah::MPM;
+    class TurbulenceModel;
+    class Properties;
 
 class BoundaryCondition
 {
@@ -75,6 +78,10 @@ public:
    ~BoundaryCondition();
    
    void problemSetup(const ProblemSpecP& params);
+   // initialize celltyping
+   void BoundaryCondition::cellTypeInit(const ProcessorContext*,
+				   const Patch* patch,
+				   DataWarehouseP& old_dw,  DataWarehouseP&);
    // GROUP:  Methods
    ////////////////////////////////////////////////////////////////////////
    // Set boundary conditions terms. 
@@ -162,6 +169,8 @@ public:
      double density;
      // inlet area
      double area;
+     // stores the geometry information, read from problem specs
+     GeometryPiece* d_geomPiece;
      FlowInlet(int numMix, int cellID);
      void problemSetup(ProblemSpecP& params);
    };
@@ -173,6 +182,8 @@ public:
      double density;
      double refPressure;
      double area;
+     // stores the geometry information, read from problem specs
+     GeometryPiece* d_geomPiece;
      PressureInlet(int numMix, int cellID);
      void problemSetup(ProblemSpecP& params);
    };
@@ -182,11 +193,24 @@ public:
      double turb_lengthScale;
      double density;
      double area;
+     // stores the geometry information, read from problem specs
+     GeometryPiece* d_geomPiece;
      FlowOutlet(int numMix, int cellID);
      void problemSetup(ProblemSpecP& params);
    };
-   // Diff BC types, stores the numbers for different boundary types
+   struct WallBdry {
+     int d_cellTypeID;
+     double area;
+     // stores the geometry information, read from problem specs
+     GeometryPiece* d_geomPiece;
+     WallBdry(int cellID);
+     void problemSetup(ProblemSpecP& params);
+   };
+
+   // variable labels
+   const VarLabel* d_cellTypeLabel;
    std::vector<int> d_cellTypes;
+   WallBdry* d_wallBdry;
    int d_numInlets;
    int d_numMixingScalars;
    std::vector<FlowInlet> d_flowInlets;

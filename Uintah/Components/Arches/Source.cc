@@ -7,6 +7,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/Arches/StencilMatrix.h>
 #include <Uintah/Components/Arches/TurbulenceModel.h>
 #include <Uintah/Components/Arches/PhysicalConstants.h>
+#include <Uintah/Components/Arches/CellInformation.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/Level.h>

@@ -118,7 +118,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 					  double time, double delta_t)
 {
   //initializes and allocates vars for new_dw
-  sched_initialize(level, sched, old_dw, new_dw);
+  //  sched_initialize(level, sched, old_dw, new_dw);
 
   int nlIterations = 0;
   double nlResidual = 2.0*d_resTol;;
@@ -177,7 +177,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     nlResidual = computeResidual(level, sched, new_dw, new_dw);
 #endif
 
-  }while((nlIterations < d_nonlinear_its)||(nlResidual > d_resTol));
+  }while((nlIterations < d_nonlinear_its)&&(nlResidual > d_resTol));
 
   return(0);
 }
@@ -362,6 +362,10 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.23  2000/06/14 20:40:49  rawat
+// modified boundarycondition for physical boundaries and
+// added CellInformation class
+//
 // Revision 1.22  2000/06/13 06:02:31  bbanerje
 // Added some more StencilMatrices and vector<CCVariable> types.
 //

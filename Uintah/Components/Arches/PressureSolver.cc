@@ -55,32 +55,32 @@ PressureSolver::PressureSolver(int nDim,
   d_viscosityLabel = scinew VarLabel("viscosity",
 				     CCVariable<double>::getTypeDescription() );
   // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_uVelConvCoefLabel = scinew VarLabel("uVelocityConvectCoeff",
+  d_uVelConvCoefLabel = scinew VarLabel("uVelocityConvectCoeffP",
 				       CCVariable<double>::getTypeDescription() );
-  d_vVelConvCoefLabel = scinew VarLabel("vVelocityConvectCoeff",
+  d_vVelConvCoefLabel = scinew VarLabel("vVelocityConvectCoeffP",
 				       CCVariable<double>::getTypeDescription() );
-  d_wVelConvCoefLabel = scinew VarLabel("wVelocityConvectCoeff",
+  d_wVelConvCoefLabel = scinew VarLabel("wVelocityConvectCoeffP",
 				       CCVariable<double>::getTypeDescription() );
   // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_uVelCoefLabel = scinew VarLabel("uVelocityCoeff",
+  d_uVelCoefLabel = scinew VarLabel("uVelocityCoeffP",
 				   CCVariable<double>::getTypeDescription() );
-  d_vVelCoefLabel = scinew VarLabel("vVelocityCoeff",
+  d_vVelCoefLabel = scinew VarLabel("vVelocityCoeffP",
 				   CCVariable<double>::getTypeDescription() );
-  d_wVelCoefLabel = scinew VarLabel("wVelocityCoeff",
+  d_wVelCoefLabel = scinew VarLabel("wVelocityCoeffP",
 				   CCVariable<double>::getTypeDescription() );
   // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_uVelLinSrcLabel = scinew VarLabel("uVelLinearSource",
+  d_uVelLinSrcLabel = scinew VarLabel("uVelLinearSourceP",
 				     CCVariable<double>::getTypeDescription() );
-  d_vVelLinSrcLabel = scinew VarLabel("vVelLinearSource",
+  d_vVelLinSrcLabel = scinew VarLabel("vVelLinearSourceP",
 				     CCVariable<double>::getTypeDescription() );
-  d_wVelLinSrcLabel = scinew VarLabel("wVelLinearSource",
+  d_wVelLinSrcLabel = scinew VarLabel("wVelLinearSourceP",
 				     CCVariable<double>::getTypeDescription() );
   // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_uVelNonLinSrcLabel = scinew VarLabel("uVelNonlinearSource",
+  d_uVelNonLinSrcLabel = scinew VarLabel("uVelNonlinearSourceP",
 					CCVariable<double>::getTypeDescription() );
-  d_vVelNonLinSrcLabel = scinew VarLabel("vVelNonlinearSource",
+  d_vVelNonLinSrcLabel = scinew VarLabel("vVelNonlinearSourceP",
 					CCVariable<double>::getTypeDescription() );
-  d_wVelNonLinSrcLabel = scinew VarLabel("wVelNonlinearSource",
+  d_wVelNonLinSrcLabel = scinew VarLabel("wVelNonlinearSourceP",
 					CCVariable<double>::getTypeDescription() );
   d_presCoefLabel = scinew VarLabel("pressureCoeff",
 				       CCVariable<double>::getTypeDescription() );
@@ -279,6 +279,10 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.18  2000/06/14 20:40:49  rawat
+// modified boundarycondition for physical boundaries and
+// added CellInformation class
+//
 // Revision 1.17  2000/06/07 06:13:55  bbanerje
 // Changed CCVariable<Vector> to CCVariable<double> for most cases.
 // Some of these variables may not be 3D Vectors .. they may be Stencils

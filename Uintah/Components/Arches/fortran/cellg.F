@@ -17,15 +17,15 @@ c*********************************************************************
      &     CNNV, CSNV, CSSV,
      &     CTT, CBT, CBB,
      &     CTTW, CBTW, CBBW,
-     &     RR, RA, RV, RONE,
-     &     RCV, RCVA,
+c     &     RR, RA, RV, RONE,
+c     &     RCV, RCVA,
      &     XX, XU, YY, YV, ZZ, ZW,
      &     EFAC, WFAC, NFAC, SFAC, TFAC, BFAC,
      &     FAC1U, FAC2U, FAC3U, FAC4U,
      &     FAC1V, FAC2V, FAC3V, FAC4V,
      &     FAC1W, FAC2W, FAC3W, FAC4W,
      &     IESDU, IWSDU, JNSDV, JSSDV, KTSDW, KBSDW,
-     &     LCORD,
+c     &     LCORD,
      &     ierr)
 C-----------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
@@ -77,12 +77,12 @@ c*********************************************************************
       double precision CTTW(indexLow(3):indexHigh(3))
       double precision CBTW(indexLow(3):indexHigh(3))
       double precision CBBW(indexLow(3):indexHigh(3))
-      double precision RR(indexLow(2):indexHigh(2))
-      double precision RA(indexLow(2):indexHigh(2))
-      double precision RV(indexLow(2):indexHigh(2))
-      double precision RONE(indexLow(2):indexHigh(2))
-      double precision RCV(indexLow(2):indexHigh(2))
-      double precision RCVA(indexLow(2):indexHigh(2))
+c      double precision RR(indexLow(2):indexHigh(2))
+c      double precision RA(indexLow(2):indexHigh(2))
+c      double precision RV(indexLow(2):indexHigh(2))
+c      double precision RONE(indexLow(2):indexHigh(2))
+c      double precision RCV(indexLow(2):indexHigh(2))
+c      double precision RCVA(indexLow(2):indexHigh(2))
       double precision XX(indexLow(1):indexHigh(1))
       double precision XU(indexLow(1):indexHigh(1))
       double precision YY(indexLow(2):indexHigh(2))
@@ -113,7 +113,7 @@ c*********************************************************************
       integer JSSDV(indexLow(2):indexHigh(2))
       integer KTSDW(indexLow(3):indexHigh(3))
       integer KBSDW(indexLow(3):indexHigh(3))
-      logical LCORD
+c      logical LCORD
       integer ierr
 
 c*********************************************************************
@@ -150,29 +150,29 @@ C-----------------------------------------------------------------------
 C     CYLINDRICAL METRICS
 C-----------------------------------------------------------------------
 
-      DO 10 J=jBegGhost,jEndGhost
-         RONE(J) = ONE
- 10   CONTINUE
-      DO 100 J = jBegGhost,jEndGhost
-        RR(J) = YY(J)
-        IF (.NOT. LCORD) RR(J) = ONE
-  100 CONTINUE
-      IF (LCORD) THEN
-        RV(jBegGhost) = (THREE*RR(jBegGhost)-RR(JST))/TWO
-      ELSE
-        RV(jBegGhost) = ONE
-      END IF
-      DO 600 J = JST,jEndGhost
-        RV(J) = PT5*(RR(J)+RR(J-1))
-        RCV(J) = PT5*(RV(J)+RV(J-1))
-        RA(J-1) = RCV(J)
-  600 CONTINUE
-      RCV(jBegGhost) = (THREE*RV(jBegGhost)-RV(JST))/TWO
-      RA(jEndGhost) = RR(jEndGhost)
+c      DO 10 J=jBegGhost,jEndGhost
+c         RONE(J) = ONE
+c 10   CONTINUE
+c      DO 100 J = jBegGhost,jEndGhost
+c       RR(J) = YY(J)
+c        IF (.NOT. LCORD) RR(J) = ONE
+c  100 CONTINUE
+c      IF (LCORD) THEN
+c        RV(jBegGhost) = (THREE*RR(jBegGhost)-RR(JST))/TWO
+c      ELSE
+c        RV(jBegGhost) = ONE
+c      END IF
+c      DO 600 J = JST,jEndGhost
+c        RV(J) = PT5*(RR(J)+RR(J-1))
+c        RCV(J) = PT5*(RV(J)+RV(J-1))
+c       RA(J-1) = RCV(J)
+c  600 CONTINUE
+c      RCV(jBegGhost) = (THREE*RV(jBegGhost)-RV(JST))/TWO
+c      RA(jEndGhost) = RR(jEndGhost)
 c
-      DO 610 J = JST,JEND
-         RCVA(J) = PT5*(RCV(J)+RCV(J+1))
- 610  CONTINUE
+c      DO 610 J = JST,JEND
+c         RCVA(J) = PT5*(RCV(J)+RCV(J+1))
+c 610  CONTINUE
 c      
 
 C-----------------------------------------------------------------------
@@ -341,8 +341,8 @@ C-----------------------------------------------------------------------
   250 CONTINUE
       DZPB(kBegGhost) = DZPB(KST) 
       DZTP(kEndGhost) = DZTP(KEND) 
-      IF (LCORD) DZPB(kBegGhost) = DZPB(KEND)
-      IF (LCORD) DZTP(kEndGhost) = DZTP(KST)
+c      IF (LCORD) DZPB(kBegGhost) = DZPB(KEND)
+c      IF (LCORD) DZTP(kEndGhost) = DZTP(KST)
       DO 400 K = kBegGhost,kEndGhost
         STB(K) = PT5*(DZTP(K)+DZPB(K))
   400 CONTINUE
@@ -359,13 +359,13 @@ C-----------------------------------------------------------------------
   750 CONTINUE
       DZPBW(kBegGhost) = DZTPW(kBegGhost)
       DZTPW(kEndGhost) = DZPBW(kEndGhost)
-      IF (LCORD) DZPBW(kBegGhost) = DZPBW(KEND)
-      IF (LCORD) DZTPW(kEndGhost) = DZTPW(KST)
+c      IF (LCORD) DZPBW(kBegGhost) = DZPBW(KEND)
+c      IF (LCORD) DZTPW(kEndGhost) = DZTPW(KST)
       DO 775 K = kBegGhost,kEndGhost
         STBW(K) = PT5*(DZTPW(K)+DZPBW(K))
   775 CONTINUE
-      IF (LCORD) STBW(kBegGhost) = STBW(KEND)
-      IF (LCORD) STBW(kEndGhost) = STBW(KST)
+c      IF (LCORD) STBW(kBegGhost) = STBW(KEND)
+c      IF (LCORD) STBW(kEndGhost) = STBW(KST)
 
 *     factors for differencing schemes: p-cell
 
@@ -422,6 +422,10 @@ C$DIR NO_RECURRENCE
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/06/14 20:40:53  rawat
+c modified boundarycondition for physical boundaries and
+c added CellInformation class
+c
 c Revision 1.1  2000/04/12 20:31:44  rawat
 c modified PressureSolver and added fortran subroutines
 c

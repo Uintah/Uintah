@@ -184,6 +184,7 @@ private:
       const VarLabel* d_vVelocityLabel;
       const VarLabel* d_wVelocityLabel;
       const VarLabel* d_viscosityLabel;
+      const VarLabel* d_cellTypeLabel;
 
 }; // end class Arches
 
@@ -192,6 +193,10 @@ private:
 
 //
 // $Log$
+// Revision 1.27  2000/06/14 20:40:48  rawat
+// modified boundarycondition for physical boundaries and
+// added CellInformation class
+//
 // Revision 1.26  2000/06/13 06:02:31  bbanerje
 // Added some more StencilMatrices and vector<CCVariable> types.
 //

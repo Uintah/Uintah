@@ -5,6 +5,7 @@ static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/Discretization.h>
 #include <Uintah/Components/Arches/StencilMatrix.h>
+#include <Uintah/Components/Arches/CellInformation.h>
 #include <Uintah/Grid/Stencil.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Grid/Level.h>
@@ -514,6 +515,10 @@ Discretization::calculateScalarDiagonal(const ProcessorContext*,
 
 //
 // $Log$
+// Revision 1.14  2000/06/14 20:40:48  rawat
+// modified boundarycondition for physical boundaries and
+// added CellInformation class
+//
 // Revision 1.13  2000/06/13 06:02:31  bbanerje
 // Added some more StencilMatrices and vector<CCVariable> types.
 //

@@ -7,7 +7,8 @@
 
 SRCDIR   := Uintah/Components/Arches/fortran
 
-SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F
+SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
+	$(SRCDIR)/cellg.F
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
 #	$(SRCDIR)/arrmax.F $(SRCDIR)/assign.F $(SRCDIR)/bcp.F \
@@ -40,6 +41,10 @@ FFLAGS += -g -O3 -OPT:IEEE_arithmetic=3 -CG:if_conversion=false:reverse_if_conve
 
 #
 # $Log$
+# Revision 1.7  2000/06/14 20:40:53  rawat
+# modified boundarycondition for physical boundaries and
+# added CellInformation class
+#
 # Revision 1.6  2000/06/13 20:51:45  bbanerje
 # Fortran flags not overwritten now (but still not done thru configure)
 #
