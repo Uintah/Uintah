@@ -307,6 +307,9 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       new_dw->getModifiable(deformGrad_rec,
 			    lb->pDeformationMeasureLabel_preReloc, pset);
       new_dw->getModifiable(bElBar_rec, lb->bElBarLabel_preReloc, pset);
+      new_dw->getModifiable(deformationGradient_new,
+			    lb->pDeformationMeasureLabel_preReloc, pset);
+      new_dw->getModifiable(bElBar_new, lb->bElBarLabel_preReloc, pset);
     }
     else {
       old_dw->get(deformGrad_no_rec,lb->pDeformationMeasureLabel,pset);
@@ -462,6 +465,15 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	}
 	cout << endl;
       }
+#if 0
+      for (int i = 1; i<= 3; i++) {
+	for (int j = 1; j <= 3; j++) {
+	  cout << "defGrad_new(" << i << "," << j << ")= " 
+	       << deformationGradient_new[idx](i,j)  << "\t";
+	}
+	cout << endl;
+      }
+#endif
 #endif
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient_new[idx] = deformationGradientInc *
@@ -640,8 +652,7 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
 {
    for(int pp=0;pp<patches->size();pp++){
      const Patch* patch = patches->get(pp);
-     Matrix3 velGrad,Shear,deformationGradientInc,
-       dispGrad,fbar;
+     Matrix3 velGrad,Shear,deformationGradientInc,dispGrad,fbar;
 
      Matrix3 Identity;
 
@@ -848,8 +859,6 @@ void CompNeoHook::addComputesAndRequiresImplicit(Task* task,
   }
   
 
-  task->requires(Task::OldDW, lb->delTLabel);
-  
   if(d_8or27==27){
     task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
   }
