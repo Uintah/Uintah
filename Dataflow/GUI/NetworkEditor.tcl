@@ -40,6 +40,10 @@ global maincanvas
 set maincanvas ".bot.neteditFrame.canvas"
 global minicanvs
 set minicanvas ".top.globalViewFrame.canvas"
+global netedit_canvas
+set netedit_canvas $maincanvas
+global netedit_mini_canvas
+set netedit_mini_canvas $minicanvas
 
 global loading
 set loading 0
@@ -243,14 +247,14 @@ proc modulesMenuPressCB { x y } {
 
 proc handleResize { minicanv maincanv box w h } {
     global SCALEX SCALEY
-
+    global minicanvas maincanvas
     set ulx  [lindex [$minicanv coords $box] 0]
     set uly  [lindex [$minicanv coords $box] 1]
 
     set wid [ expr [ winfo width $maincanv ] / $SCALEX ]
     set hei [ expr [ winfo height $maincanv ] / $SCALEY ]
 
-    $minicanv coords $box $ulx $uly [expr $ulx + $wid] [expr $uly + $hei]
+    $minicanvas coords $box $ulx $uly [expr $ulx + $wid] [expr $uly + $hei]
 }
 
 proc updateCanvasX { box beg end } {
