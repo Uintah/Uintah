@@ -110,8 +110,8 @@ namespace Uintah {
 
          const VarLabel* p_statedata_label;
          const VarLabel* p_statedata_label_preReloc;
-//         const VarLabel* bElBarLabel;
-//         const VarLabel* bElBarLabel_preReloc;
+         const VarLabel* pRandLabel;
+         const VarLabel* pRandLabel_preReloc;
 
       };
 } // End namespace Uintah
