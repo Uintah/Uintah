@@ -26,17 +26,17 @@ itcl_class Teem_Tend_TendEstim {
         set_defaults
     }
     method set_defaults {} {
-        global threshold
-        set threshold 0.0
+        global $this-threshold
+        set $this-threshold 0.0
 
-        global soft
-        set soft 0.0
+        global $this-soft
+        set $this-soft 0.0
 
-        global bmatrix
-        set bmatrix ""
+        global $this-bmatrix
+        set $this-bmatrix ""
 
-        global scale
-        set scale 0.0
+        global $this-scale
+        set $this-scale 0.0
 
 
     }

@@ -26,35 +26,35 @@ itcl_class Teem_Tend_TendEpireg {
         set_defaults
     }
     method set_defaults {} {
-        global this-gradient_list
-        set this-gradient_list ""
+        global $this-gradient_list
+        set $this-gradient_list ""
 
-        global this-reference
-        set this-reference "-1"
+        global $this-reference
+        set $this-reference "-1"
 
-        global this-blur_x
-        set this-blur_x 1.0
+        global $this-blur_x
+        set $this-blur_x 1.0
 
-        global this-blur_y
-        set this-blur_y 2.0
+        global $this-blur_y
+        set $this-blur_y 2.0
 
-        global this-threshold
-        set this-threshold 0.0
+        global $this-threshold
+        set $this-threshold 0.0
 
         global this-cc_analysis
-        set this-cc_analysis 1
+        set $this-cc_analysis 1
 
-        global this-fitting
-        set this-fitting 0.70
+        global $this-fitting
+        set $this-fitting 0.70
 
-        global this-kernel
-        set this-kernel "cubicCR"
+        global $this-kernel
+        set $this-kernel "cubicCR"
 
-        global this-sigma
-        set this-sigma 0.0
+        global $this-sigma
+        set $this-sigma 0.0
 
-	global this-extent
-	set this-extent 0.5
+	global $this-extent
+	set $this-extent 0.5
     }
 
     method update_text {} {

@@ -26,8 +26,8 @@ itcl_class Teem_Tend_TendBmat {
         set_defaults
     }
     method set_defaults {} {
-        global gradient_list
-        set gradient_list ""
+        global $this-gradient_list
+        set $this-gradient_list ""
 
 
     }

@@ -26,17 +26,17 @@ itcl_class Teem_Unu_UnuHisto {
         set_defaults
     }
     method set_defaults {} {
-        global bins
-        set bins 0
+        global $this-bins
+        set $this-bins 0
 
-        global min
-        set min 0.0
+        global $this-min
+        set $this-min 0.0
 
-        global max
-        set max 0.0
+        global $this-max
+        set $this-max 0.0
 
-        global type
-        set type ""
+        global $this-type
+        set $this-type ""
 
 
     }

@@ -26,14 +26,14 @@ itcl_class Teem_Unu_UnuAxsplit {
         set_defaults
     }
     method set_defaults {} {
-        global axis
-        set axis 0
+        global $this-axis
+        set $this-axis 0
 
-        global fastsize
-        set fastsize 0
+        global $this-fastsize
+        set $this-fastsize 0
 
-        global slowsize
-        set slowsize 0
+        global $this-slowsize
+        set $this-slowsize 0
 
 
     }

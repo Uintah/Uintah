@@ -26,11 +26,11 @@ itcl_class Teem_Tend_TendAnvol {
         set_defaults
     }
     method set_defaults {} {
-        global aniso_metric
-        set aniso_metric  "tenAniso_Tr"
+        global $this-aniso_metric
+        set $this-aniso_metric  "tenAniso_FA"
 
-        global threshold
-        set threshold 0.5
+        global $this-threshold
+        set $this-threshold 100
 
 
     }
