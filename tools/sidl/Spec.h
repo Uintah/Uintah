@@ -195,7 +195,7 @@ public:
     std::string fullname() const;
     std::string fullsignature() const;
 
-    void emit_handler(EmitState& e) const;
+    void emit_handler(EmitState& e, CI* emit_class) const;
     void emit_comment(EmitState& e, const std::string& leader, bool filename) const;
     enum Context {
 	Normal,
@@ -433,6 +433,12 @@ private:
 
 //
 // $Log$
+// Revision 1.4  1999/09/21 06:13:01  sparker
+// Fixed bugs in multiple inheritance
+// Added round-trip optimization
+// To support this, we store Startpoint* in the endpoint instead of the
+//    object final type.
+//
 // Revision 1.3  1999/09/17 05:07:26  sparker
 // Added nexus code generation capability
 //

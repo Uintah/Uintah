@@ -49,6 +49,10 @@ public:\n\
     {\n\
         return ptr != 0;\n\
     }\n\
+    inline operator ::Component::PIDL::Object_interface*() const\n\
+    {\n\
+        return ptr;\n\
+    }\n\
 ";
 
 struct Leader {
@@ -118,8 +122,8 @@ void Specification::emit(std::ostream& out, std::ostream& hdr) const
     hdr << "\n";
     hdr << "#include <Component/PIDL/Object.h>\n";
     hdr << "#include <Component/PIDL/pidl_cast.h>\n";
-    hdr << "#include <Component/PIDL/array.h>\n";
-    hdr << "#include <Component/PIDL/string.h>\n";
+    hdr << "#include <Component/CIA/array1.h>\n";
+    hdr << "#include <Component/CIA/string.h>\n";
     hdr << "\n";
     hdr << e.fwd.str();
     hdr << e.decl.str();
@@ -138,6 +142,7 @@ void Specification::emit(std::ostream& out, std::ostream& hdr) const
     out << "#include <Component/PIDL/ProxyBase.h>\n";
     out << "#include <Component/PIDL/ReplyEP.h>\n";
     out << "#include <Component/PIDL/Reference.h>\n";
+    out << "#include <Component/PIDL/ServerContext.h>\n";
     out << "#include <Component/PIDL/TypeInfo.h>\n";
     out << "#include <Component/PIDL/TypeInfo_internal.h>\n";
     out << "#include <SCICore/Util/NotFinished.h>\n";
@@ -374,7 +379,7 @@ void CI::emit_handlers(EmitState& e)
 	e.handlerNum++;
 	m->handlerNum=e.handlerNum;
 	m->handlerOff=handlerOff++;
-	m->emit_handler(e);
+	m->emit_handler(e, this);
     }
 }
 
@@ -438,6 +443,7 @@ void CI::emit_handler_table_body(EmitState& e, int& vtable_base, bool top)
 		(*iter)->vtable_base=vtable_base;
 	    }
 	}
+	vtable_base+=vtab.size()+1;
 	return;
     }
     // For each parent, emit the handler table...
@@ -537,7 +543,7 @@ void Method::emit_prototype_defin(EmitState& e, const std::string& prefix,
     e.out << ")";
 }
 
-void Method::emit_handler(EmitState& e) const
+void Method::emit_handler(EmitState& e, CI* emit_class) const
 {
     // Server-side handlers
     emit_comment(e, "", true);
@@ -568,8 +574,9 @@ void Method::emit_handler(EmitState& e) const
     e.out << "    if(int _gerr=globus_nexus_buffer_destroy(_recvbuff))\n";
     e.out << "        throw ::Component::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
     e.out << "    void* _v=globus_nexus_endpoint_get_user_pointer(_ep);\n";
-    string myclass=get_classname();
-    e.out << "    " << myclass << "* _obj=static_cast<" << myclass << "*>(_v);\n";
+    string myclass=emit_class->cppfullname(0)+"_interface";
+    e.out << "    ::Component::PIDL::ServerContext* _sc=static_cast<::Component::PIDL::ServerContext*>(_v);\n";
+    e.out << "    " << myclass << "* _obj=static_cast<" << myclass << "*>(_sc->d_ptr);\n";
     e.out << "\n";
     e.out << "    // Call the method\n";
     // Call the method...
@@ -734,9 +741,7 @@ void CI::emit_header(EmitState& e)
 	} else {
 	    e.decl << ", ";
 	}
-	if(!iam_class())
-	    e.decl << "virtual ";
-	e.decl << "public " << (*iter)->cppfullname(e.decl.currentPackage) << "_interface";
+	e.decl << "virtual public " << (*iter)->cppfullname(e.decl.currentPackage) << "_interface";
     }
     if(!haveone)
 	e.decl << "virtual public ::Component::PIDL::Object_interface";
@@ -787,7 +792,24 @@ void CI::emit_interface(EmitState& e)
     std::string fn=cppfullname(0)+"_interface";
     std::string cn=cppclassname()+"_interface";
     e.out << fn << "::" << cn << "(bool initServer)\n";
-    e.out << "{\n";
+    if(parent_ifaces.size() != 0 || parentclass)
+	e.out << " : ";
+    if(parentclass)
+	e.out << parentclass->cppclassname() << "_interface(false)";
+    if(parent_ifaces.size() > 0){
+	vector<Interface*> parents;
+	gatherParentInterfaces(parents);
+	SymbolTable* localScope=symbols->getParent();
+	for(vector<Interface*>::iterator iter=parents.begin();
+	    iter != parents.end(); iter++){
+	    if(*iter != this){
+		if(parentclass || iter != parents.begin())
+		    e.out << ",\n   ";
+		e.out << (*iter)->cppfullname(localScope) << "_interface(false)";
+	    }
+	}
+    }
+    e.out << "\n{\n";
     e.out << "    if(initServer)\n";
     e.out << "        initializeServer(" << cppfullname(0) << "::_getTypeInfo(), this);\n";
     e.out << "}\n\n";
@@ -809,8 +831,16 @@ void CI::emit_proxy(EmitState& e)
 	fn=fn.substr(2);
     std::string cn=cppclassname()+"_proxy";
     e.out << fn << "::" << cn << "(const ::Component::PIDL::Reference& ref)\n";
-    e.out << " : ::Component::PIDL::ProxyBase(ref)";
-    e.out << ", " << cppclassname() << "_interface(false)\n";
+    SymbolTable* localScope=symbols->getParent();
+    e.out << " : " << cppfullname(localScope) << "_interface(false)";
+    vector<Interface*> parents;
+    gatherParentInterfaces(parents);
+    for(vector<Interface*>::iterator iter=parents.begin();
+	iter != parents.end(); iter++){
+	e.out  << ",\n   "<< (*iter)->cppfullname(localScope) << "_interface(false)";
+    }
+    e.out << ",\n   ";
+    e.out << "::Component::PIDL::ProxyBase(ref)";
     e.out << "\n";
     e.out << "{\n";
     e.out << "}\n\n";
@@ -828,7 +858,6 @@ void CI::emit_proxy(EmitState& e)
 
     std::vector<Method*> vtab;
     gatherVtable(vtab);
-    SymbolTable* localScope=symbols->getParent();
     for(vector<Method*>::const_iterator iter=vtab.begin();
 	iter != vtab.end();iter++){
 	e.out << '\n';
@@ -1108,14 +1137,14 @@ void BuiltinType::emit_prototype(SState& out, ArgContext ctx,
 	switch(ctx){
 	case ReturnType:
 	case ArrayTemplate:
-	    out << "::Component::PIDL::string";
+	    out << "::CIA::string";
 	    break;
 	case ArgIn:
-	    out << "const ::Component::PIDL::string&";
+	    out << "const ::CIA::string&";
 	    break;
 	case ArgOut:
 	case ArgInOut:
-	    out << "::Component::PIDL::string&";
+	    out << "::CIA::string&";
 	    break;
 	}
     } else {
@@ -1145,7 +1174,18 @@ void NamedType::emit_unmarshall(EmitState& e, const string& arg,
     e.out << "        ::Component::PIDL::Reference _ref;\n";
     e.out << "        globus_nexus_get_startpoint(" << bufname << ", &_ref.d_sp, 1);\n";
     e.out << "        _ref.d_vtable_base=" << arg << "_vtable_base;\n";
-    e.out << "        " << arg << "=new " << name->cppfullname(0) << "_proxy(_ref);\n";
+    e.out << "        if(globus_nexus_startpoint_to_current_context(&_ref.d_sp)){\n";
+    e.out << "            globus_nexus_endpoint_t* _ep;\n";
+    e.out << "            if(int _gerr=globus_nexus_startpoint_get_endpoint(&_ref.d_sp, &_ep))\n";
+    e.out << "                throw ::Component::PIDL::GlobusError(\"get_endpoint\", _gerr);\n";
+    e.out << "            void* _ptr=globus_nexus_endpoint_get_user_pointer(_ep);\n";
+    e.out << "            ::Component::PIDL::ServerContext* _sc=static_cast<::Component::PIDL::ServerContext*>(_ptr);\n";
+    e.out << "            " << arg << "=dynamic_cast<" << name->cppfullname(0) << "_interface*>(_sc->d_objptr);\n";
+    e.out << "            if(int _gerr=globus_nexus_startpoint_destroy(&_ref.d_sp))\n";
+    e.out << "                throw ::Component::PIDL::GlobusError(\"startpoint_destroy\", _gerr);\n";
+    e.out << "        } else {\n";
+    e.out << "            " << arg << "=new " << name->cppfullname(0) << "_proxy(_ref);\n";
+    e.out << "        }\n";
     e.out << "    }\n";
 }
 
@@ -1206,6 +1246,12 @@ void NamedType::emit_prototype(SState& out, ArgContext ctx,
 
 //
 // $Log$
+// Revision 1.2  1999/09/21 06:13:01  sparker
+// Fixed bugs in multiple inheritance
+// Added round-trip optimization
+// To support this, we store Startpoint* in the endpoint instead of the
+//    object final type.
+//
 // Revision 1.1  1999/09/17 05:07:26  sparker
 // Added nexus code generation capability
 //

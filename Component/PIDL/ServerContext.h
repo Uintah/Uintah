@@ -25,6 +25,8 @@ namespace Component {
 	    const TypeInfo* d_typeinfo;
 	    globus_nexus_endpoint_t d_endpoint;
 	    int d_objid;
+	    Object_interface* d_objptr;
+	    void* d_ptr;
 	};
     }
 }
@@ -33,6 +35,12 @@ namespace Component {
 
 //
 // $Log$
+// Revision 1.2  1999/09/21 06:13:00  sparker
+// Fixed bugs in multiple inheritance
+// Added round-trip optimization
+// To support this, we store Startpoint* in the endpoint instead of the
+//    object final type.
+//
 // Revision 1.1  1999/08/30 17:39:48  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

@@ -15,8 +15,6 @@
 #include <Component/PIDL/TypeInfo_internal.h>
 #include <Component/PIDL/TypeInfo.h>
 #include <SCICore/Exceptions/InternalError.h>
-#include <iostream>
-using std::cerr;
 using Component::PIDL::TypeInfo_internal;
 using SCICore::Exceptions::InternalError;
 
@@ -51,7 +49,6 @@ void TypeInfo_internal::add_castable(const TypeInfo_internal* ti, int vtoffset)
     if(iter_classname == classname_map.end()){
 	// Insert this...
 	classname_map[ti->fullclassname]=MapType::mapped_type(ti, vtoffset);
-	cerr << "parent " << fullclassname << ": Added " << ti->fullclassname << " at offset " << vtoffset << '\n';
 	const_cast<TypeInfo_internal*>(ti)->add_castables(this, vtoffset);
     } else {
 	if(iter_classname->second.first->uuid != ti->uuid){
@@ -68,12 +65,18 @@ void TypeInfo_internal::add_castables(TypeInfo_internal* parent, int vtoffset)
     // our castable list to our parent
     for(MapType::iterator iter=classname_map.begin();
 	iter != classname_map.end(); iter++){
-	parent->add_castable(iter->second.first, iter->second.second+vtoffset);
+	parent->add_castable(iter->second.first, iter->second.second+vtoffset-TypeInfo::vtable_methods_start);
     }
 }
 
 //
 // $Log$
+// Revision 1.2  1999/09/21 06:13:00  sparker
+// Fixed bugs in multiple inheritance
+// Added round-trip optimization
+// To support this, we store Startpoint* in the endpoint instead of the
+//    object final type.
+//
 // Revision 1.1  1999/09/17 05:08:10  sparker
 // Implemented component model to work with sidl code generator
 //
