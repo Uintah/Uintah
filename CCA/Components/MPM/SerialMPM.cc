@@ -580,7 +580,7 @@ void SerialMPM::printParticleCount(const ProcessorGroup* pg,
   if(pg->myrank() == 0){
     static bool printed=false;
     if(!printed){
-      cerr << "Created " << pcount << " total particles\n";
+      cerr << "Created " << (long) pcount << " total particles\n";
       printed=true;
     }
   }

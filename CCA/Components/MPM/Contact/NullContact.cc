@@ -6,7 +6,7 @@
 // present in the problem, so doing contact wouldn't make
 // sense.
 
-#include "NullContact.h"
+#include <Packages/Uintah/CCA/Components/MPM/Contact/NullContact.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>

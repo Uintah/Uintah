@@ -1,4 +1,4 @@
-#include "Sparse.h"
+#include <Packages/Uintah/Core/Math/Sparse.h>
 #include <iostream>
 using namespace std;
 

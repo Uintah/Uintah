@@ -1,6 +1,6 @@
 // RigidBodyContact.cc
 
-#include "RigidBodyContact.h"
+#include <Packages/Uintah/CCA/Components/MPM/Contact/RigidBodyContact.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>

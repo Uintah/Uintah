@@ -1,4 +1,4 @@
-#include "ImplicitParticleCreator.h"
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ImplicitParticleCreator.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>

@@ -1,9 +1,9 @@
-#include "ParticleVariable.h"
-#include "CCVariable.h"
-#include "NCVariable.h"
-#include "SFCXVariable.h"
-#include "SFCYVariable.h"
-#include "SFCZVariable.h"
+#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/NCVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>

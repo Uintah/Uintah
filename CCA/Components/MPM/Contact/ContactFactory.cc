@@ -1,8 +1,8 @@
-#include "ContactFactory.h"
-#include "NullContact.h"
-#include "SingleVelContact.h"
-#include "FrictionContact.h"
-#include "RigidBodyContact.h"
+#include <Packages/Uintah/CCA/Components/MPM/Contact/ContactFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/Contact/NullContact.h>
+#include <Packages/Uintah/CCA/Components/MPM/Contact/SingleVelContact.h>
+#include <Packages/Uintah/CCA/Components/MPM/Contact/FrictionContact.h>
+#include <Packages/Uintah/CCA/Components/MPM/Contact/RigidBodyContact.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Core/Malloc/Allocator.h>
