@@ -33,6 +33,7 @@ namespace Uintah {
       const VarLabel* pSurfLabel;
       const VarLabel* pIsBrokenLabel; //for fracture
       const VarLabel* pCrackSurfaceNormalLabel; //for fracture
+      const VarLabel* pMicrocrackSizeLabel; //for fracture
       const VarLabel* pTemperatureLabel; //for heat conduction
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pTemperatureRateLabel; //for heat conduction
@@ -51,6 +52,7 @@ namespace Uintah {
       const VarLabel* pSurfLabel_preReloc;
       const VarLabel* pIsBrokenLabel_preReloc; //for fracture
       const VarLabel* pCrackSurfaceNormalLabel_preReloc; //for fracture
+      const VarLabel* pMicrocrackSizeLabel_preReloc; //for fracture
       const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
       const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
       const VarLabel* pTemperatureRateLabel_preReloc; //for heat conduction
@@ -99,6 +101,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.24  2000/09/07 21:11:04  tan
+// Added particle variable pMicrocrackSize for fracture.
+//
 // Revision 1.23  2000/09/05 05:15:49  tan
 // Moved Fracture Model to MPMMaterial class.
 //

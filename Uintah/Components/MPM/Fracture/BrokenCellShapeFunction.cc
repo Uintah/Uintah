@@ -9,12 +9,14 @@ namespace MPM {
 BrokenCellShapeFunction::
 BrokenCellShapeFunction( const Lattice& lattice,
                          const ParticleVariable<int>& pIsBroken,
-			 const ParticleVariable<Vector>& pCrackSurfaceNormal )
+			 const ParticleVariable<Vector>& pCrackSurfaceNormal,
+			 const ParticleVariable<double>& pMicrocrackSize )
 
 
 : d_lattice(lattice),
   d_pIsBroken(pIsBroken),
-  d_pCrackSurfaceNormal(pCrackSurfaceNormal)
+  d_pCrackSurfaceNormal(pCrackSurfaceNormal),
+  d_pMicrocrackSize(pMicrocrackSize)
 {
 }
 
@@ -87,6 +89,9 @@ getVisiability(int partIdx,const IntVector& nodeIdx) const
 } //namespace Uintah
 
 // $Log$
+// Revision 1.6  2000/09/07 21:11:10  tan
+// Added particle variable pMicrocrackSize for fracture.
+//
 // Revision 1.5  2000/09/05 19:39:00  tan
 // Fracture starts to run in Uintah/MPM!
 //

@@ -112,6 +112,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
      if(mpm_matl->getFractureModel()){
        lb->registerPermanentParticleState(m,lb->pCrackSurfaceNormalLabel,
 					  lb->pCrackSurfaceNormalLabel_preReloc); 
+       lb->registerPermanentParticleState(m,lb->pMicrocrackSizeLabel,
+					  lb->pMicrocrackSizeLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pIsBrokenLabel,
 					  lb->pIsBrokenLabel_preReloc); 
      }
@@ -218,6 +220,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	       t->requires(old_dw, lb->pIsBrokenLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
    	       t->requires(old_dw, lb->pCrackSurfaceNormalLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+   	       t->requires(old_dw, lb->pMicrocrackSizeLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
    	    }
 
@@ -536,6 +540,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			Ghost::AroundNodes, 1 );
    	       t->requires(old_dw, lb->pCrackSurfaceNormalLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
+   	       t->requires(old_dw, lb->pMicrocrackSizeLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
    	    }
 						
 	    t->requires(old_dw, lb->pMassLabel, idx, patch, Ghost::None);
@@ -620,9 +626,12 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			 Ghost::None);
 	      t->requires( old_dw, lb->pCrackSurfaceNormalLabel, idx, patch,
 			 Ghost::None);
+	      t->requires( old_dw, lb->pMicrocrackSizeLabel, idx, patch,
+			 Ghost::None);
 
 	      t->computes( new_dw, lb->pIsBrokenLabel_preReloc, idx, patch );
 	      t->computes( new_dw, lb->pCrackSurfaceNormalLabel_preReloc, idx, patch );
+	      t->computes( new_dw, lb->pMicrocrackSizeLabel_preReloc, idx, patch );
 	    }
 	 }
 
@@ -683,6 +692,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
    if(d_fracture) {
      new_dw->pleaseSave(lb->pCrackSurfaceNormalLabel, numMatls);
      new_dw->pleaseSave(lb->pIsBrokenLabel, numMatls);
+     new_dw->pleaseSave(lb->pMicrocrackSizeLabel, numMatls);
    }
 
    new_dw->pleaseSaveIntegrated(lb->StrainEnergyLabel);
@@ -937,16 +947,18 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pTemperature,   lb->pTemperatureLabel, pset);
       
       ParticleVariable<Vector> pCrackSurfaceNormal;
+      ParticleVariable<double> pMicrocrackSize;
       ParticleVariable<int> pIsBroken;
       Lattice* lattice;
       BrokenCellShapeFunction* brokenCellShapeFunction;
       if(mpm_matl->getFractureModel()) {
         old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
+	old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
 	old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
 	
         lattice = scinew Lattice(px);
 	brokenCellShapeFunction = scinew BrokenCellShapeFunction(*lattice,
-	   pIsBroken,pCrackSurfaceNormal);
+	   pIsBroken,pCrackSurfaceNormal,pMicrocrackSize);
       }
 
       // Create arrays for the grid data
@@ -1503,16 +1515,18 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pexternalForce, lb->pExternalForceLabel, pset);
 
       ParticleVariable<Vector> pCrackSurfaceNormal;
+      ParticleVariable<double> pMicrocrackSize;
       ParticleVariable<int> pIsBroken;
       Lattice* lattice;
       BrokenCellShapeFunction* brokenCellShapeFunction;
       if(mpm_matl->getFractureModel()) {
         old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
+	old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
 	old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
 	
         lattice = scinew Lattice(px);
 	brokenCellShapeFunction = scinew BrokenCellShapeFunction(*lattice,
-	   pIsBroken,pCrackSurfaceNormal);
+	   pIsBroken,pCrackSurfaceNormal,pMicrocrackSize);
       }
 
       // Get the arrays of grid data on which the new particle values depend
@@ -1759,6 +1773,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.132  2000/09/07 21:11:04  tan
+// Added particle variable pMicrocrackSize for fracture.
+//
 // Revision 1.131  2000/09/06 20:41:46  tan
 // Fixed bugs on pleasesave for fracture stuff.
 //
