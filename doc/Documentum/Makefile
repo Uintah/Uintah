@@ -35,8 +35,9 @@ default: documentum module-xml module-latex
 
 documentum : documentum.html
 
+.DELETE_ON_ERROR: documentum.html
 documentum.html : documentum.xml
-	-java com.icl.saxon.StyleSheet -w2 $< ${STYLESHEET_PATH}/srdocbook.xsl >$@
+	java com.icl.saxon.StyleSheet -w2 $< ${STYLESHEET_PATH}/srdocbook.xsl >$@
 
 module-xml : module-xml.dvi
 
