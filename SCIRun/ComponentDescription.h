@@ -43,21 +43,35 @@
 
 #include <string>
 
-namespace SCIRun {
-  class ComponentModel;
-  class SCIRunFramework;
-  class ComponentDescription {
-  public:
-    ComponentDescription();
-    virtual ~ComponentDescription();
+namespace SCIRun
+{
 
-    virtual std::string getType() const = 0;
-    virtual const ComponentModel* getModel() const = 0;
-    virtual std::string getLoaderName() const;
-  private:
-    ComponentDescription(const ComponentDescription&);
-    ComponentDescription& operator=(const ComponentDescription&);
-  };
-}
+class ComponentModel;
+class SCIRunFramework;
+
+/** \class ComponentDescription
+ *
+ * 
+ */
+class ComponentDescription
+{
+public:
+  ComponentDescription();
+  virtual ~ComponentDescription();
+
+  /** Returns the name of type of the component described by this class. */
+  virtual std::string getType() const = 0;
+
+  /** Returns the name of the component model to which this component belongs. */
+  virtual const ComponentModel* getModel() const = 0;
+
+  /** ? */
+  virtual std::string getLoaderName() const;
+private:
+  ComponentDescription(const ComponentDescription&);
+  ComponentDescription& operator=(const ComponentDescription&);
+};
+
+} // end namespace SCIRun
 
 #endif

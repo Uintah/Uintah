@@ -101,22 +101,30 @@ class BuilderService : public sci::cca::ports::BuilderService,
   virtual sci::cca::TypeMap::pointer
   getComponentProperties(const sci::cca::ComponentID::pointer& cid);
 
-  /** */
+  /** Associates the properties specified in \em map with an existing framework
+      component \em cid.*/
   virtual void setComponentProperties(const sci::cca::ComponentID::pointer& cid,
                                       const sci::cca::TypeMap::pointer& map);
 
-  /** */
+  /** Returns the Component ID (opaque reference to a component instantiation)
+      for the serialized component reference \em s. */
   virtual sci::cca::ComponentID::pointer getDeserialization(const std::string& s);
 
-  /** */
+  /** Returns the Component ID (opaque reference to a component instantiation)
+      for the component instance named \em componentInstanceName. */
   virtual sci::cca::ComponentID::pointer getComponentID(const std::string&
                                                         componentInstanceName);
 
-  /** */
+  /** Removed the component instance \em toDie from the scope of the framework.
+       The \em timeout parameter gives the maximum allowable wait (in seconds)
+       for the operation to be completed.  An exception is thrown if the \em
+       toDie component does not  exist, or cannot be destroyed in the given \em
+       timeout period. */
   virtual void destroyInstance(const sci::cca::ComponentID::pointer& toDie,
                                float timeout);
 
-  /** */
+  /** Returns a list of \em provides ports for the given component instance \em
+      cid.*/
   virtual SSIDL::array1<std::string>
   getProvidedPortNames(const sci::cca::ComponentID::pointer& cid);
 

@@ -52,8 +52,9 @@ namespace SCIRun {
 
 /** \class ComponentClassDescriptionAdapter
  *
+ * An adaptor class that converts the SCIRun ComponentDescription interface
+ * into the standard CCA ComponentClassDescription interface.
  * 
- * \todo Should this class be in the SCIRun namespace?
  */
 class ComponentClassDescriptionAdapter
   : public sci::cca::ComponentClassDescription
@@ -62,9 +63,11 @@ public:
   ComponentClassDescriptionAdapter(const ComponentDescription*);
   ~ComponentClassDescriptionAdapter();
 
-  /** */
+  /** Returns the instance name of the component class provided   */
   virtual std::string getComponentClassName();
-  /** */
+
+  /** A nonstandard method.  This returns the name of the component model
+      associated with the component class. */
   virtual std::string getComponentModelName();
   /** */
   virtual std::string getLoaderName();

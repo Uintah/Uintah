@@ -49,6 +49,7 @@
 #include <string>
 
 namespace SCIRun {
+
 class ComponentDescription;
 class ComponentModel;
 class ComponentInstance;
@@ -56,7 +57,6 @@ class InternalComponentModel;
 class CCAComponentModel;
 class BabelComponentModel;
 class VtkComponentModel;
-
 
 /**
  * \class SCIRunFramework
@@ -67,8 +67,9 @@ class VtkComponentModel;
  * connecting components (the underlying framework).  Most interaction with the
  * underlying framework is actually done through the BuilderService port, but the
  * BuilderService relies on some of the methods and ivars implemented
- * in this class.  BuilderService is obtained through the CCA Services object.
- * The Services object is retrieved via SCIRunFramework::getServices.
+ * in this class.  BuilderService is obtained through a CCA Services object,
+ * which is the standard link between a CCA component and its framework.
+ * A Services object is retrieved via SCIRunFramework::getServices.
  *
  * The BuilderService class is a standard CCA object responsible for
  * instantiating and connecting components.  In order to do this, it relies on
@@ -84,12 +85,25 @@ class VtkComponentModel;
  *
  * \par How to use this class
  *
+ * NEED SOME TEXT HERE  LIFTED THIS EXAMPLE FROM THE CCA SPEC
  * \code
+ * int functionName() {
+ *    ::sci::sandia::ccafe::Framework fwkimpl;
+ *    ::sci::cca::AbstractFrameworkPtr fwk;
+ *
+ *    fwk = fwkimpl.getStandardFramework();
+ *    ::sci::cca::Services_Interface * svc = 0;
+ *    svc = fwk->getServices("instance0","AppDriver",0);
+ *    // From here on, access all services, components, etc
+ *    // through svc.
+ *    ...
+ *    // when done
+ *    fwk->releaseServices(svc);
+ *    svc = 0;
+ *    fwk->shutdownFramework();
  *
  * \endcode
- * 
- * 
- 
+ *
  * 
  * \sa BuilderService AbstractFramework 
  * \todo createTypeMap is not fully implemented
@@ -280,4 +294,3 @@ protected:
 } // end namespace SCIRun
 
 #endif
-
