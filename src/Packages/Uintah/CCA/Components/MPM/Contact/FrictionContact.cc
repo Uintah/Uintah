@@ -484,10 +484,10 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 
 	 //	 double scale_factor=0.0;
 	 //	 if(d_vol_const > 0.0){
-	 //	   scale_factor=(2.*totalNodalVol/cell_vol-1.+d_vol_const)/d_vol_const;
+	 //	   scale_factor=(totalNodalVol/cell_vol-1.+d_vol_const)/d_vol_const;
 	 //	   scale_factor=Max(0.0,scale_factor);
 	 //	 }
-	 //	 else if(2.*totalNodalVol/cell_vol > 1.0){
+	 //	 else if(totalNodalVol/cell_vol > 1.0){
 	 //	   scale_factor=1.0;
 	 //	 }
 
