@@ -28,11 +28,11 @@ itcl_class SCIRun_Visualization_GLTextureBuilder {
 	global $this-max_brick_dim
 	global $this-min
 	global $this-max
-	global $this-isFixed
+	global $this-is_fixed
 	set $this-max_brick_dim 0 
 	set $this-min 0
 	set $this-max 1
-	set $this-isFixed 0
+	set $this-is_fixed 0
     }
     method ui {} {
 	set w .ui[modname]
@@ -56,16 +56,17 @@ itcl_class SCIRun_Visualization_GLTextureBuilder {
 	    $this SetDims [set $this-max_brick_dim]
 	}
 
-       frame $w.f1 -relief flat
+	global $this-is_fixed
+        frame $w.f1 -relief flat
         pack $w.f1 -side top -expand yes -fill x
-        radiobutton $w.f1.b -text "Auto Scale"  -variable $this-isFixed -value 0 \
-            -command "$this autoScale"
+        radiobutton $w.f1.b -text "Auto Scale"  -variable $this-is_fixed \
+		-value 0 -command "$this autoScale"
         pack $w.f1.b -side left
 
         frame $w.f2 -relief flat
         pack $w.f2 -side top -expand yes -fill x
-        radiobutton $w.f2.b -text "Fixed Scale"  -variable $this-isFixed -value 1 \
-            -command "$this fixedScale"
+        radiobutton $w.f2.b -text "Fixed Scale"  -variable $this-is_fixed \
+		-value 1 -command "$this fixedScale"
         pack $w.f2.b -side left
 
         frame $w.f3 -relief flat
@@ -85,20 +86,20 @@ itcl_class SCIRun_Visualization_GLTextureBuilder {
 	button $w.b -text Close -command "wm withdraw $w"
 	pack $w.b -side bottom -fill x
 
-       if { [set $this-isFixed] } {
+       if { [set $this-is_fixed] } {
             $w.f2.b select
             $this fixedScale
         } else {
             $w.f1.b select
             $this autoScale
         }
-     }
+    }
 
     method autoScale { } {
-        global $this-isFixed
+        global $this-is_fixed
         set w .ui[modname]
         
-        set $this-isFixed 0
+        set $this-is_fixed 0
 
         set color "#505050"
 
@@ -112,10 +113,10 @@ itcl_class SCIRun_Visualization_GLTextureBuilder {
     }
 
     method fixedScale { } {
-        global $this-isFixed
+        global $this-is_fixed
         set w .ui[modname]
 
-        set $this-isFixed 1
+        set $this-is_fixed 1
 
 
         $w.f3.l1 configure -foreground black
