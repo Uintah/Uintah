@@ -2,6 +2,7 @@
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/InternalError.h>
 #include <iostream>
 #include <iomanip>
 
@@ -22,7 +23,7 @@ JWLC::JWLC(ProblemSpecP& ps)
 JWLC::~JWLC()
 {
 }
-
+//__________________________________
 double JWLC::computeRhoMicro(double press, double,
                              double cv, double Temp)
 {
@@ -91,9 +92,9 @@ double JWLC::computeRhoMicro(double press, double,
   return rhoM;
   
 }
-
+//__________________________________
 // Return (1/v)*(dv/dT)  (constant pressure thermal expansivity)
-double JWLC::getAlpha(double, double sp_v, double P, double cv)
+double JWLC::getAlpha(double, double , double , double )
 {
   // Cheating here a bit, computing v*(dT/dv) and returning the inverse of that
   double alpha=0.;
@@ -101,15 +102,14 @@ double JWLC::getAlpha(double, double sp_v, double P, double cv)
 }
 
 //__________________________________
-//
 void JWLC::computeTempCC(const Patch* patch,
-                        const string& comp_domain,
-                        const CCVariable<double>& press, 
-                        const double&,
-                        const double& cv,
-                        const CCVariable<double>& rhoM, 
-                        CCVariable<double>& Temp,
-                        Patch::FaceType face)
+                         const string& comp_domain,
+                         const CCVariable<double>&, 
+                         const CCVariable<double>&,
+                         const CCVariable<double>&,
+                         const CCVariable<double>&, 
+                         CCVariable<double>& Temp,
+                         Patch::FaceType face)
 {
   if(comp_domain == "WholeDomain") {
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
@@ -128,10 +128,7 @@ void JWLC::computeTempCC(const Patch* patch,
 }
 
 //__________________________________
-//
-
-void JWLC::computePressEOS(double rhoM, double,
-                          double cv, double Temp,
+void JWLC::computePressEOS(double rhoM, double, double, double,
                           double& press, double& dp_drho, double& dp_de)
 {
   // Pointwise computation of thermodynamic quantities
@@ -149,61 +146,15 @@ void JWLC::computePressEOS(double rhoM, double,
 //______________________________________________________________________
 // Update temperature boundary conditions due to hydrostatic pressure gradient
 // call this after set Dirchlet and Neuman BC
-void JWLC::hydrostaticTempAdjustment(Patch::FaceType face, 
-                          const Patch* patch,
-                          Vector& grav,
-                          const double& gamma,
-                          const double& cv,
-                          const Vector& dx,
-                          CCVariable<double>& Temp_CC)
+void JWLC::hydrostaticTempAdjustment(Patch::FaceType, 
+                                    const Patch*,
+                                    const vector<IntVector>&,
+                                    Vector&,
+                                    const CCVariable<double>&,
+                                    const CCVariable<double>&,
+                                    const Vector&,
+                                    CCVariable<double>&)
 { 
-    double delTemp_hydro;
-    switch (face) {
-    case Patch::xplus:
-      delTemp_hydro = grav.x()*dx.x()/ ( (gamma - 1.0) * cv );
-      for (CellIterator iter = patch->getFaceCellIterator(face,"plusEdgeCells");
-         !iter.done();iter++) { 
-        Temp_CC[*iter] += delTemp_hydro; 
-      }
-      break;
-    case Patch::xminus:
-      delTemp_hydro = grav.x()*dx.x()/ ( (gamma - 1.0) * cv );
-      for (CellIterator iter = patch->getFaceCellIterator(face,"plusEdgeCells");
-         !iter.done();iter++) { 
-        Temp_CC[*iter] -= delTemp_hydro; 
-      }
-      break;
-    case Patch::yplus:
-      delTemp_hydro = grav.y()*dx.y()/ ( (gamma - 1.0) * cv );
-      for (CellIterator iter = patch->getFaceCellIterator(face,"plusEdgeCells");
-         !iter.done();iter++) { 
-        Temp_CC[*iter] += delTemp_hydro; 
-      }
-      break;
-    case Patch::yminus:
-      delTemp_hydro = grav.y()*dx.y()/ ( (gamma - 1.0) * cv );
-      for (CellIterator iter = patch->getFaceCellIterator(face,"plusEdgeCells");
-         !iter.done();iter++) { 
-        Temp_CC[*iter] -= delTemp_hydro; 
-      }
-      break;
-    case Patch::zplus:
-      delTemp_hydro = grav.z()*dx.z()/ ( (gamma - 1.0) * cv );
-      for (CellIterator iter = patch->getFaceCellIterator(face,"plusEdgeCells");
-         !iter.done();iter++) { 
-        Temp_CC[*iter] += delTemp_hydro; 
-      }
-      break;
-    case Patch::zminus:
-      delTemp_hydro = grav.z()*dx.z()/ ( (gamma - 1.0) * cv );
-      for (CellIterator iter = patch->getFaceCellIterator(face,"plusEdgeCells");
-         !iter.done();iter++) { 
-        Temp_CC[*iter] -= delTemp_hydro; 
-      }
-      break;
-    case Patch::numFaces:
-      break;
-   case Patch::invalidFace:
-      break;
-    }
+  throw InternalError( "ERROR:ICE:EOS:JWLC: hydrostaticTempAdj() \n"
+                       " has not been implemented" );
 }

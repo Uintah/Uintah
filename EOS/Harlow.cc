@@ -2,6 +2,7 @@
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/InternalError.h>
 
 using namespace Uintah;
 
@@ -33,16 +34,28 @@ double Harlow::computeRhoMicro(double press, double gamma,
 //__________________________________
 //
 void Harlow::computeTempCC(const Patch* patch,
-                                const CCVariable<double>& press, 
-                                const double& gamma,
-                                const double& cv,
-                                const CCVariable<double>& rho_micro, 
-                                CCVariable<double>& Temp)
+                             const string& comp_domain,
+                             const CCVariable<double>& press, 
+                             const CCVariable<double>& gamma,
+                             const CCVariable<double>& cv,
+                             const CCVariable<double>& rho_micro, 
+                             CCVariable<double>& Temp,
+                             Patch::FaceType face)
 {
-  const IntVector gc(1,1,1);  // include ghostcells in the calc.
-
-  for (CellIterator iter = patch->getCellIterator(gc);!iter.done();iter++) {                     
-    Temp[*iter]= press[*iter]/ ( (gamma - 1.0) * cv * rho_micro[*iter] );
+  if(comp_domain == "WholeDomain") {
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      Temp[c]= press[c]/ ( (gamma[c] - 1.0) * cv[c] * rho_micro[c] );
+    }
+  } 
+  // Although this isn't currently being used
+  // keep it around it could be useful
+  if(comp_domain == "FaceCells") {     
+    for (CellIterator iter = patch->getFaceCellIterator(face);
+         !iter.done();iter++) {
+      IntVector c = *iter;                    
+      Temp[c]= press[c]/ ( (gamma[c] - 1.0) * cv[c] * rho_micro[c] );
+    }
   }
 }
 
@@ -56,4 +69,19 @@ void Harlow::computePressEOS(double rhoM, double gamma,
   press   = (gamma - 1.0)*rhoM*cv*Temp;
   dp_drho = (gamma - 1.0)*cv*Temp;
   dp_de   = (gamma - 1.0)*rhoM;
+}
+//______________________________________________________________________
+// Update temperature boundary conditions due to hydrostatic pressure gradient
+// call this after set Dirchlet and Neuman BC
+void Harlow::hydrostaticTempAdjustment(Patch::FaceType, 
+                                         const Patch*,
+                                         const vector<IntVector>&,
+                                         Vector&,
+                                         const CCVariable<double>&,
+                                         const CCVariable<double>&,
+                                         const Vector&,
+                                         CCVariable<double>&)
+{ 
+  throw InternalError( "ERROR:ICE:EOS:Harlow: hydrostaticTempAdj() \n"
+                       " has not been implemented" );
 }
