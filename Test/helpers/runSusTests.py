@@ -285,11 +285,11 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     cu_rc = system("compare_sus_runs %s %s %s %s > compare_sus_runs.log.txt 2>&1" % (testname, getcwd(), compare_root, susdir))
     if cu_rc != 0:
 	if cu_rc == 5 * 256:
-     	    print "\t*** Warning, %s has changed.  You must update the gold standard." % (input(test))
+     	    print "\t*** Warning, %s has changed or has different defaults.\n\tYou must update the gold standard." % (input(test))
     	    print '\t<A href=\"%s/compare_sus_runs.log.txt\">See compare_sus_runs.log</A> for more comparison information.' % (logpath)
  	    print "%s" % replace_msg
 	elif cu_rc == 10 * 256:
-     	    print "\t*** Warning, %s has changed.  You must update the gold standard." % (input(test))
+     	    print "\t*** Warning, %s has changed or has different defaults.\n\tYou must update the gold standard." % (input(test))
     	    print "\tAll other comparison tests passed so the change was likely trivial."
  	    print "%s" % replace_msg
 	elif cu_rc == 1 * 256:
@@ -333,7 +333,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
 	    print "\tMemory leak tests passed. (Note: no previous memory usage stats)."
 
     # if comparison tests fail, return here, so mem_leak tests can run
-    if cu_rc != 0:
+    if cu_rc == 5 * 256 or cu_rc == 1 * 256:
         return 2;
   return 0
 
