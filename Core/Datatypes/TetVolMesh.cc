@@ -610,14 +610,21 @@ TetVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 }
 
 
+// Always returns nodes in counter-clockwise order
 void
-TetVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
+TetVolMesh::get_nodes(Node::array_type &a, Face::index_type idx) const
 {
-  array.clear();
-  const int base = idx/4*4;
-  for (int i = base; i < base+4; i++)
-    if (i != idx.index_)
-      array.push_back(cells_[i]);
+  a.resize(3);  
+  const unsigned int offset = idx%4;
+  const unsigned int b = idx - offset; // base cell index
+  switch (offset)
+  {
+  case 0: a[0] = cells_[b+3]; a[1] = cells_[b+2]; a[2] = cells_[b+1]; break;
+  case 1: a[0] = cells_[b+0]; a[1] = cells_[b+2]; a[2] = cells_[b+3]; break;
+  case 2: a[0] = cells_[b+3]; a[1] = cells_[b+1]; a[2] = cells_[b+0]; break;
+  default:
+  case 3: a[0] = cells_[b+0]; a[1] = cells_[b+1]; a[2] = cells_[b+2]; break;
+  }
 }
 
 
@@ -1071,7 +1078,7 @@ void
 TetVolMesh::compute_grid()
 {
   grid_lock_.lock();
-  if (grid_.get_rep() != 0) {grid_lock_.unlock(); return;} // only create once.
+  //  if (grid_.get_rep() != 0) {grid_lock_.unlock(); return;} // only create once.
 
   BBox bb = get_bounding_box();
   if (!bb.valid()) { grid_lock_.unlock(); return; }
@@ -1463,9 +1470,155 @@ TetVolMesh::insert_node(const Point &p)
   return true;
 }
 
+ 
+/* From Comp.Graphics.Algorithms FAQ 5.21
+ * Circumsphere of 4 points a,b,c,d
+ * 
+ *    |                                                                       |
+ *    | |d-a|^2 [(b-a)x(c-a)] + |c-a|^2 [(d-a)x(b-a)] + |b-a|^2 [(c-a)x(d-a)] |
+ *    |                                                                       |
+ * r= -------------------------------------------------------------------------
+ *                             | bx-ax  by-ay  bz-az |
+ *                           2 | cx-ax  cy-ay  cz-az |
+ *                             | dx-ax  dy-ay  dz-az |
+ * 
+ *
+ *
+ *        |d-a|^2 [(b-a)x(c-a)] + |c-a|^2 [(d-a)x(b-a)] + |b-a|^2 [(c-a)x(d-a)]
+ * m= a + ---------------------------------------------------------------------
+ *                               | bx-ax  by-ay  bz-az |
+ *                             2 | cx-ax  cy-ay  cz-az |
+ *                               | dx-ax  dy-ay  dz-az |
+ */
+
+pair<Point,double>
+TetVolMesh::circumsphere(const Cell::index_type cell)
+{
+  const Point &a = points_[cells_[cell*4+0]];
+  const Point &b = points_[cells_[cell*4+1]];
+  const Point &c = points_[cells_[cell*4+2]];
+  const Point &d = points_[cells_[cell*4+3]];
+
+  const Vector bma = b-a;
+  const Vector cma = c-a;
+  const Vector dma = d-a;
+
+  const double denominator = 
+    2*(bma.x()*(cma.y()*dma.z()-dma.y()*cma.z())-
+       bma.y()*(cma.x()*dma.z()-dma.x()*cma.z())+
+       bma.z()*(cma.x()*dma.y()-dma.x()*cma.y()));
+  
+  const Vector numerator = 
+    dma.length2()*Cross(bma,cma) + 
+    cma.length2()*Cross(dma,bma) +
+    bma.length2()*Cross(cma,dma);
+
+  return make_pair(a+numerator/denominator,numerator.length()/denominator);
+}
+
+
+// Bowyer-Watson Node insertion for Delaunay Tetrahedralization
 void
 TetVolMesh::insert_node_watson(const Point &p)
 {
+  Cell::index_type cell;
+  synchronize(LOCATE_E | FACE_NEIGHBORS_E);
+  if (!locate(cell,p)) { cerr << "Watson outside volume: " << p.x() << ", " << p.y() << ", " << p.z() << endl;
+  return; }
+
+  Node::index_type new_point_index = add_point(p);
+
+  // set of tets checked for circumsphere point intersection
+  set<Cell::index_type> cells_checked, cells_removed;
+  cells_removed.insert(cell);
+  cells_checked.insert(cell);
+  
+  unsigned int face;
+  // set of faces that need to be checked for neighboring tet removal
+  set<Face::index_type> faces_todo;
+  for (face = cell*4; face < cell*4+4; ++face)
+    faces_todo.insert(Face::index_type(face));
+
+  // set of node triplets that form face on hull interior
+  vector<Node::array_type> hull_nodes;
+
+  // Propagate front until we have checked all faces on hull
+  while (!faces_todo.empty())
+  {
+    set<Face::index_type> faces = faces_todo;  
+    set<Face::index_type>::iterator faces_iter = faces.begin();
+    set<Face::index_type>::iterator faces_end = faces.end();
+    faces_todo.clear();
+    for (;faces_iter != faces_end; ++faces_iter)
+    {
+      // Face index of neighboring tet that shares this face
+      Face::index_type nbr;
+      if (!get_neighbor(nbr, *faces_iter))
+      {
+	// This was a boundary face, therefore on the hull
+	hull_nodes.push_back(Node::array_type());
+	get_nodes(hull_nodes.back(),*faces_iter);
+      }
+      else // not a boundary face
+      {	
+	// Index of neighboring tet that we need to check for removal
+        cell = Cell::index_type(nbr/4);
+	// Check to see if we didnt reach this cell already from other path
+	if (cells_checked.find(cell) == cells_checked.end())
+	{
+	  cells_checked.insert(cell);
+	  // Get the circumsphere of tet
+	  pair<Point,double> sphere = circumsphere(cell);
+	  if ((sphere.first - p).length() < sphere.second)
+	  {
+	    // Point is within circumsphere of Cell
+	    // mark for removal
+	    cells_removed.insert(cell);
+	    // Now add all of its faces (minus the one we crossed to get here)
+	    // to be crossed the next time around
+	    for (face = cell*4; face < cell*4+4; ++face)
+	      if (face != nbr) // dont add nbr already crossed
+		faces_todo.insert(Face::index_type(face));
+	  }
+	  else
+	  {
+	    // The point is not within the circumsphere of the cell
+	    // therefore the face we crossed is on the interior hull
+	    hull_nodes.push_back(Node::array_type());
+	    get_nodes(hull_nodes.back(),*faces_iter);
+	  }
+	}
+      }
+    }
+  }
+
+  unsigned int num_hull_faces = hull_nodes.size();
+  unsigned int num_cells_removed = cells_removed.size();
+  ASSERT(num_hull_faces >= num_cells_removed);
+  
+  // A list of all tets that were modifed/added
+  vector<Cell::index_type> tets(num_hull_faces);
+  
+  // Re-define already allocated tets to include new point
+  // and the 3 points of an interior hulls face  
+  set<Cell::index_type>::iterator cells_removed_iter = cells_removed.begin();
+  for (face = 0; face < num_cells_removed; face++)
+  {
+    tets[face] = mod_tet(*cells_removed_iter, 
+			 hull_nodes[face][0],
+			 hull_nodes[face][1],
+			 hull_nodes[face][2],
+			 new_point_index);
+    ++cells_removed_iter;
+  }
+
+  for (face = num_cells_removed; face < num_hull_faces; face++)
+  {
+    tets[face] = add_tet(hull_nodes[face][0],
+			 hull_nodes[face][1],
+			 hull_nodes[face][2],
+			 new_point_index);
+  }
 }
 
 
