@@ -73,22 +73,42 @@ public:
                        const sci::cca::Component::pointer& component);
   virtual ~CCAComponentInstance();
   
-  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
-      SCIRunFramework::Services. */
-  sci::cca::Port::pointer getPort(const std::string& name);
-  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
-      SCIRunFramework::Services. */  
+/**
+* @param portName The previously registered or provide port which
+* 	   the component now wants to use.
+* @exception CCAException with the following types: NotConnected, PortNotDefined, 
+*                NetworkError, OutOfMemory.
+*/
+// calls getPortNonblocking from inside critical section
+sci::cca::Port::pointer getPort(const std::string& name);
+
+/**
+* @return The named port, if it exists and is connected or self-provided,
+* 	      or NULL if it is registered and is not yet connected. Does not
+* 	      return if the Port is neither registered nor provided, but rather
+* 	      throws an exception.
+* @param portName registered or provided port that
+* 	     the component now wants to use.
+* @exception CCAException with the following types: PortNotDefined, OutOfMemory.
+*/
+// throws CCA exception if port type is PROVIDES (??)
+// returns null if port's connections vector size != 1
+// otherwise returns port peer (1st element of connections vector)
   sci::cca::Port::pointer getPortNonblocking(const std::string& name);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */ 
   void releasePort(const std::string& name);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   sci::cca::TypeMap::pointer createTypeMap();
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   void registerUsesPort(const std::string& name, const std::string& type,
                         const sci::cca::TypeMap::pointer& properties);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   void unregisterUsesPort(const std::string& name);
@@ -99,12 +119,15 @@ public:
                        const std::string& name,
                        const std::string& type,
                        const sci::cca::TypeMap::pointer& properties);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   void removeProvidesPort(const std::string& name);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   sci::cca::TypeMap::pointer getPortProperties(const std::string& portName);
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   sci::cca::ComponentID::pointer getComponentID();
