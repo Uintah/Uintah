@@ -67,7 +67,7 @@ private:
 
 DECLARE_MAKER(FieldCage)
 FieldCage::FieldCage(GuiContext* ctx) : 
-  Module("FieldCage", ctx, Filter, "Fields", "SCIRun"), 
+  Module("FieldCage", ctx, Filter, "FieldsOther", "SCIRun"), 
   infield_(0),
   ogeom_(0),
   sizex_(ctx->subVar("sizex")),

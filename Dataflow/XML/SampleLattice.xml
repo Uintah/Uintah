@@ -21,7 +21,7 @@
 -->
 
 
-<component name="SampleLattice" category="Fields">
+<component name="SampleLattice" category="FieldsCreate">
   <overview>
     <authors>
       <author>Michael Callahan</author>

@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_FieldCage {
+itcl_class SCIRun_FieldsOther_FieldCage {
     inherit Module
     constructor {config} {
         set name FieldCage

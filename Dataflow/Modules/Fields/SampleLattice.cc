@@ -61,7 +61,7 @@ private:
 DECLARE_MAKER(SampleLattice)
 
 SampleLattice::SampleLattice(GuiContext* ctx)
-  : Module("SampleLattice", ctx, Filter, "Fields", "SCIRun"),
+  : Module("SampleLattice", ctx, Filter, "FieldsCreate", "SCIRun"),
     size_x_(ctx->subVar("sizex")),
     size_y_(ctx->subVar("sizey")),
     size_z_(ctx->subVar("sizez")),

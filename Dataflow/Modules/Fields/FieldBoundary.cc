@@ -64,7 +64,7 @@ private:
 
 DECLARE_MAKER(FieldBoundary)
 FieldBoundary::FieldBoundary(GuiContext* ctx) : 
-  Module("FieldBoundary", ctx, Filter, "Fields", "SCIRun"),
+  Module("FieldBoundary", ctx, Filter, "FieldsCreate", "SCIRun"),
   infield_gen_(-1),
   tri_fh_(0), interp_fh_(0)
 {

@@ -52,7 +52,7 @@ public:
 
 DECLARE_MAKER(ManageFieldMesh)
 ManageFieldMesh::ManageFieldMesh(GuiContext* ctx)
-  : Module("ManageFieldMesh", ctx, Filter, "Fields", "SCIRun")
+  : Module("ManageFieldMesh", ctx, Filter, "FieldsGeometry", "SCIRun")
 {
 }
 

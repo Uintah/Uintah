@@ -98,7 +98,7 @@ DECLARE_MAKER(SampleField)
 
 
 SampleField::SampleField(GuiContext* ctx)
-  : Module("SampleField", ctx, Filter, "Fields", "SCIRun"),
+  : Module("SampleField", ctx, Filter, "FieldsCreate", "SCIRun"),
     
     firsttime_(true),
     widgetid_(0),

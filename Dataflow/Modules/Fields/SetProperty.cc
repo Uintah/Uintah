@@ -29,7 +29,7 @@ public:
 
 DECLARE_MAKER(SetProperty)
 SetProperty::SetProperty(GuiContext* ctx)
-: Module("SetProperty", ctx, Filter,"Fields", "SCIRun"),
+: Module("SetProperty", ctx, Filter,"FieldsOther", "SCIRun"),
   prop_(ctx->subVar("prop")), val_(ctx->subVar("val")),
   mesh_prop_(ctx->subVar("meshprop"))
 {

@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_SampleLattice {
+itcl_class SCIRun_FieldsCreate_SampleLattice {
     inherit Module
     constructor {config} {
         set name SampleLattice

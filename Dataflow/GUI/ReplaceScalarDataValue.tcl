@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_ReplaceScalarDataValue {
+itcl_class SCIRun_FieldsData_ReplaceScalarDataValue {
     inherit Module
     constructor {config} {
         set name ReplaceScalarDataValue

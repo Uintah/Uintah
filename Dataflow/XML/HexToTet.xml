@@ -21,7 +21,7 @@
 -->
 
 
-<component name="HexToTet" category="Fields">
+<component name="HexToTet" category="FieldsGeometry">
   <overview>
     <authors>
       <author>Michael Callahan</author>

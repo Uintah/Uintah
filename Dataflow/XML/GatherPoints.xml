@@ -21,7 +21,7 @@
 -->
 
 
-<component name="GatherPoints" category="Fields">
+<component name="GatherPoints" category="FieldsCreate">
   <overview>
     <authors>
       <author>David Weinstein</author>

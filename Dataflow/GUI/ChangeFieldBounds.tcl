@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_ChangeFieldBounds {
+itcl_class SCIRun_FieldsGeometry_ChangeFieldBounds {
     inherit Module
     constructor {config} {
         set name ChangeFieldBounds

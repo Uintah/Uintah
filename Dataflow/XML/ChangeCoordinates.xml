@@ -20,7 +20,7 @@
   University of Utah. All Rights Reserved.
 -->
 
-<component name="ChangeCoordinates" category="Fields">
+<component name="ChangeCoordinates" category="FieldsGeometry">
   <overview>
     <authors>
       <author>David Weinstein</author>

@@ -57,7 +57,7 @@ DECLARE_MAKER(MaskLattice)
 
 
 MaskLattice::MaskLattice(GuiContext* ctx)
-  : Module("MaskLattice", ctx, Filter, "Fields", "SCIRun"),
+  : Module("MaskLattice", ctx, Filter, "FieldsData", "SCIRun"),
     maskfunction_(ctx->subVar("maskfunction"))
 {
 }

@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_TransformData3 {
+itcl_class SCIRun_FieldsData_TransformData3 {
     inherit Module
     constructor {config} {
         set name TransformData3

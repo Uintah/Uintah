@@ -21,7 +21,7 @@
 -->
 
 
-<component name="ChooseField" category="Fields">
+<component name="ChooseField" category="FieldsOther">
   <overview>
     <authors>
       <author>David Weinstein</author>

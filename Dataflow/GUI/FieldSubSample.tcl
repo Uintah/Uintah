@@ -21,7 +21,7 @@
 
 # This GUI interface is for sub sampling a topologically structured field.
 
-itcl_class SCIRun_Fields_FieldSubSample {
+itcl_class SCIRun_FieldsCreate_FieldSubSample {
     inherit Module
     constructor {config} {
         set name FieldSubSample

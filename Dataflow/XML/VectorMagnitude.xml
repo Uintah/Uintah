@@ -21,7 +21,7 @@
 -->
 
 
-<component name="VectorMagnitude" category="Fields">
+<component name="VectorMagnitude" category="FieldsData">
   <overview>
     <authors>
       <author>Michael Callahan</author>

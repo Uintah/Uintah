@@ -53,7 +53,7 @@ DECLARE_MAKER(TransformVectorData)
 
 
 TransformVectorData::TransformVectorData(GuiContext* ctx)
-  : Module("TransformVectorData", ctx, Filter,"Fields", "SCIRun"),
+  : Module("TransformVectorData", ctx, Filter,"FieldsData", "SCIRun"),
     functionx_(ctx->subVar("functionx")),
     functiony_(ctx->subVar("functiony")),
     functionz_(ctx->subVar("functionz")),

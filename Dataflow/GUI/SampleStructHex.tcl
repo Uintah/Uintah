@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_SampleStructHex {
+itcl_class SCIRun_FieldsCreate_SampleStructHex {
     inherit Module
     constructor {config} {
         set name SampleStructured

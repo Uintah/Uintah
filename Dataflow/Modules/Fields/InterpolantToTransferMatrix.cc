@@ -56,7 +56,7 @@ public:
 DECLARE_MAKER(InterpolantToTransferMatrix)
 
 InterpolantToTransferMatrix::InterpolantToTransferMatrix(GuiContext* ctx)
-  : Module("InterpolantToTransferMatrix", ctx, Filter, "Fields", "SCIRun")
+  : Module("InterpolantToTransferMatrix", ctx, Filter, "FieldsOther", "SCIRun")
 {
 }
 

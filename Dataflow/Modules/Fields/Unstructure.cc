@@ -59,7 +59,7 @@ private:
 
 DECLARE_MAKER(Unstructure)
 Unstructure::Unstructure(GuiContext* ctx)
-  : Module("Unstructure", ctx, Filter, "Fields", "SCIRun"),
+  : Module("Unstructure", ctx, Filter, "FieldsGeometry", "SCIRun"),
     last_generation_(0),
     ofieldhandle_(0)
 {

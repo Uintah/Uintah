@@ -90,7 +90,7 @@ DECLARE_MAKER(IsoClip)
 
 
 IsoClip::IsoClip(GuiContext* ctx)
-  : Module("IsoClip", ctx, Filter, "Fields", "SCIRun"),
+  : Module("IsoClip", ctx, Filter, "FieldsCreate", "SCIRun"),
     gui_isoval_(ctx->subVar("isoval")),
     gui_lte_(ctx->subVar("lte")),
     last_field_generation_(0),

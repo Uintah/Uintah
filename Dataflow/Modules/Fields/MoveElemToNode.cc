@@ -52,7 +52,7 @@ protected:
 DECLARE_MAKER(MoveElemToNode)
 
 MoveElemToNode::MoveElemToNode(GuiContext* ctx)
-  : Module("MoveElemToNode", ctx, Filter, "Fields", "SCIRun"),
+  : Module("MoveElemToNode", ctx, Filter, "FieldsData", "SCIRun"),
     ifield_generation_(0)
 {
 }

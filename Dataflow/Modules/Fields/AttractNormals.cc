@@ -74,7 +74,7 @@ public:
 
 DECLARE_MAKER(AttractNormals)
 AttractNormals::AttractNormals(GuiContext* ctx)
-  : Module("AttractNormals", ctx, Filter, "Fields", "SCIRun")
+  : Module("AttractNormals", ctx, Filter, "FieldsData", "SCIRun")
 {
 }
 

@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_MapDataToMeshCoord {
+itcl_class SCIRun_FieldsGeometry_MapDataToMeshCoord {
     inherit Module
     constructor {config} {
         set name MapDataToMeshCoord

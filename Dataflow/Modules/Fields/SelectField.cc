@@ -55,7 +55,7 @@ public:
 
 DECLARE_MAKER(SelectField)
 SelectField::SelectField(GuiContext* ctx)
-  : Module("SelectField", ctx, Filter, "Fields", "SCIRun"),
+  : Module("SelectField", ctx, Filter, "FieldsOther", "SCIRun"),
     widget_lock_("SelectField widget lock"),
     value_(ctx->subVar("stampvalue")),
     mode_(ctx->subVar("runmode")),

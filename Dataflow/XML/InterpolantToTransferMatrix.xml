@@ -21,7 +21,7 @@
 -->
 
 
-<component name="InterpolantToTransferMatrix" category="Fields">
+<component name="InterpolantToTransferMatrix" category="FieldsOther">
   <overview>
     <authors>
       <author>Michael Callahan</author>

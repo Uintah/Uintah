@@ -61,7 +61,7 @@ DECLARE_MAKER(HexToTet)
 
 
 HexToTet::HexToTet(GuiContext *context) : 
-  Module("HexToTet", context, Filter, "Fields", "SCIRun"),
+  Module("HexToTet", context, Filter, "FieldsGeometry", "SCIRun"),
   last_generation_(0)
 {
 }

@@ -47,7 +47,7 @@ public:
 
 DECLARE_MAKER(ChooseField)
 ChooseField::ChooseField(GuiContext* ctx)
-  : Module("ChooseField", ctx, Filter, "Fields", "SCIRun"),
+  : Module("ChooseField", ctx, Filter, "FieldsOther", "SCIRun"),
     port_index_(ctx->subVar("port-index"))
 {
 }

@@ -55,7 +55,7 @@ DECLARE_MAKER(TransformData2)
 
 
 TransformData2::TransformData2(GuiContext* ctx)
-  : Module("TransformData2", ctx, Filter,"Fields", "SCIRun"),
+  : Module("TransformData2", ctx, Filter,"FieldsData", "SCIRun"),
     function_(ctx->subVar("function")),
     outputdatatype_(ctx->subVar("outputdatatype"))
 {

@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_ScalarFieldStats {
+itcl_class SCIRun_FieldsOther_ScalarFieldStats {
     inherit Module
     protected draw_graph_needed 0
     constructor {config} {

@@ -21,7 +21,7 @@
 -->
 
 
-<component name="Probe" category="Fields">
+<component name="Probe" category="FieldsCreate">
   <overview>
     <authors>
       <author>Michael Callahan</author>

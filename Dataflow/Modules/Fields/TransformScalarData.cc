@@ -54,7 +54,7 @@ DECLARE_MAKER(TransformScalarData)
 
 
 TransformScalarData::TransformScalarData(GuiContext* ctx)
-  : Module("TransformScalarData", ctx, Filter,"Fields", "SCIRun"),
+  : Module("TransformScalarData", ctx, Filter,"FieldsData", "SCIRun"),
     method_(ctx->subVar("method")),
     function_(ctx->subVar("function")),
     imin_(ctx->subVar("imin")),

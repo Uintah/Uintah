@@ -21,7 +21,7 @@
 -->
 
 
-<component name="ManageFieldMesh" category="Fields">
+<component name="ManageFieldMesh" category="FieldsGeometry">
   <overview>
     <authors>
       <author>Michael Callahan</author>

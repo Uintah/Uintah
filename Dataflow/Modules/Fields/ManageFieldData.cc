@@ -52,7 +52,7 @@ public:
 
 DECLARE_MAKER(ManageFieldData)
 ManageFieldData::ManageFieldData(GuiContext* ctx)
-  : Module("ManageFieldData", ctx, Filter, "Fields", "SCIRun")
+  : Module("ManageFieldData", ctx, Filter, "FieldsData", "SCIRun")
 {
 }
 

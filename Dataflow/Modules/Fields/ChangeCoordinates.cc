@@ -50,7 +50,7 @@ public:
 
 DECLARE_MAKER(ChangeCoordinates)
 ChangeCoordinates::ChangeCoordinates(GuiContext* ctx)
-  : Module("ChangeCoordinates", ctx, Filter, "Fields", "SCIRun"),
+  : Module("ChangeCoordinates", ctx, Filter, "FieldsGeometry", "SCIRun"),
     gui_oldsystem_(ctx->subVar("oldsystem")),
     gui_newsystem_(ctx->subVar("newsystem"))
 {

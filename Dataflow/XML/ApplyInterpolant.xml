@@ -21,7 +21,7 @@
 -->
 
 
-<component name="ApplyInterpolant" category="Fields">
+<component name="ApplyInterpolant" category="FieldsData">
   <overview>
     <authors>
       <author>David Weinstein</author>

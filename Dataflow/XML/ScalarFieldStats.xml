@@ -21,7 +21,7 @@
 -->
 
 
-<component name="ScalarFieldStats" category="Fields">
+<component name="ScalarFieldStats" category="FieldsOther">
   <overview>
     <authors>
       <author>Kurt Zimmerman</author>

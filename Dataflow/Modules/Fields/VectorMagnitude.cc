@@ -54,7 +54,7 @@ protected:
 DECLARE_MAKER(VectorMagnitude)
 
 VectorMagnitude::VectorMagnitude(GuiContext* ctx)
-  : Module("VectorMagnitude", ctx, Filter, "Fields", "SCIRun"),
+  : Module("VectorMagnitude", ctx, Filter, "FieldsData", "SCIRun"),
     fGeneration_(-1)
 {
 }

@@ -63,7 +63,7 @@ private:
 DECLARE_MAKER(SamplePlane)
   
 SamplePlane::SamplePlane(GuiContext* ctx) : 
-  Module("SamplePlane", ctx, Filter, "Fields", "SCIRun"),
+  Module("SamplePlane", ctx, Filter, "FieldsCreate", "SCIRun"),
   size_x_(ctx->subVar("sizex")),
   size_y_(ctx->subVar("sizey")),
   axis_(ctx->subVar("axis")),

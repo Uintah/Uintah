@@ -88,7 +88,7 @@ public:
 DECLARE_MAKER(Probe)
 
   Probe::Probe(GuiContext* ctx)
-    : Module("Probe", ctx, Filter, "Fields", "SCIRun"),
+    : Module("Probe", ctx, Filter, "FieldsCreate", "SCIRun"),
       widget_lock_("Probe widget lock"),
       last_input_generation_(0),
       gui_locx_(ctx->subVar("locx")),

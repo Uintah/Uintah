@@ -64,7 +64,7 @@ public:
 
 DECLARE_MAKER(DirectInterpolate)
 DirectInterpolate::DirectInterpolate(GuiContext* ctx) : 
-  Module("DirectInterpolate", ctx, Filter, "Fields", "SCIRun"),
+  Module("DirectInterpolate", ctx, Filter, "FieldsData", "SCIRun"),
   interpolation_basis_(ctx->subVar("interpolation_basis")),
   map_source_to_single_dest_(ctx->subVar("map_source_to_single_dest")),
   exhaustive_search_(ctx->subVar("exhaustive_search")),

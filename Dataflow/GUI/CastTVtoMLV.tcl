@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class SCIRun_Fields_CastTVtoMLV {
+itcl_class SCIRun_FieldsGeometry_CastTVtoMLV {
     inherit Module
     constructor {config} {
         set name CastTVtoMLV

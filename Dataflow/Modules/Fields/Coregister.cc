@@ -63,7 +63,7 @@ public:
 DECLARE_MAKER(Coregister)
 
 Coregister::Coregister(GuiContext* ctx)
-  : Module("Coregister", ctx, Filter, "Fields", "SCIRun"),
+  : Module("Coregister", ctx, Filter, "FieldsOther", "SCIRun"),
     allowScale_(ctx->subVar("allowScale")),
     allowRotate_(ctx->subVar("allowRotate")),
     allowTranslate_(ctx->subVar("allowTranslate")), seed_(ctx->subVar("seed")),
