@@ -171,8 +171,6 @@ void* MxNScheduleEntry::waitCompleteArray()
       recv_mutex.unlock();
     }
     //Refresh semaphores
-    //while (meta_sema.tryDown());
-    meta_sema.up((int) caller_rep.size());
     while (arr_wait_sema.tryDown());
 
   }  
@@ -185,7 +183,8 @@ void MxNScheduleEntry::reportMetaRecvDone(int size)
   if (scht == callee) {
     //::std::cout << "Meta " << caller_rep.size() << " of " << size << "\n"; 
     if (size == static_cast<int>(caller_rep.size())) { 
-      meta_sema.up((int) 2*caller_rep.size());
+      while (meta_sema.tryDown());
+      meta_sema.up((int) 4*caller_rep.size());
       ::std::cout << "UP Meta semaphore\n";
     }
   }  
