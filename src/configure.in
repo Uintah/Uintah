@@ -2287,12 +2287,10 @@ AC_SUBST(INC_XERCESC_H)
 if test "$pkg_uintah" = "yes"; then
   echo
   AC_CHECKING(for required MPI components...)
-  needed="not-optional"
   echo
 else
   echo
   AC_CHECKING(for optional components...)
-  needed="optional"
   echo
 fi
 
@@ -2324,11 +2322,11 @@ case $host in
          dirs="$thirdparty/lib $SCI_LAB_TP_LIBS"
       fi
 
-      SCI_CHECK_LIB($dirs,mpi,main,,,$needed)
+      SCI_CHECK_LIB($dirs,mpi,main,,,optional)
 
       if test -z "$HAVE_LIB_MPI"; then
-         SCI_CHECK_LIB($dirs,mpich,main,,,$needed)
-         SCI_CHECK_LIB($LIB_DIR_MPICH,pmpich,main,,,$needed)
+         SCI_CHECK_LIB($dirs,mpich,main,,,optional)
+         SCI_CHECK_LIB($LIB_DIR_MPICH,pmpich,main,,,optional)
 
          if test "$HAVE_LIB_MPICH" && test "$HAVE_LIB_PMPICH"; then
 	    HAVE_LIB_MPI="$HAVE_LIB_MPICH"
@@ -2349,7 +2347,7 @@ case $host in
       fi
 esac
 
-if test "$with_mpi" && test ! "$DEF_MPI"; then
+if (test "$with_mpi" || test "$pkg_uintah" = "yes") && test ! "$DEF_MPI"; then
    echo
    SCI_MSG_ERROR(one or more of the MPI components is missing.)
 fi
