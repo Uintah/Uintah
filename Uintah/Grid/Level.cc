@@ -68,6 +68,16 @@ Patch* Level::addPatch(const IntVector& lowIndex, const IntVector& highIndex,
     return r;
 }
 
+Patch* Level::getPatchFromPoint(const Point& p)
+{
+  for(int i=0;i<d_patches.size();i++){
+    Patch* r = d_patches[i];
+    if( r->getBox().contains( p ) )
+      return r;
+  }
+  return 0;
+}
+
 int Level::numPatches() const
 {
   return (int)d_patches.size();
@@ -267,6 +277,9 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 
 //
 // $Log$
+// Revision 1.18  2000/07/11 19:32:16  kuzimmer
+// Added getPatchFromPoint(const Point& p)
+//
 // Revision 1.17  2000/07/11 15:53:56  tan
 // Changed the following to be const member function.
 //       void getIndexRange(SCICore::Geometry::BBox& b) const;
