@@ -87,6 +87,8 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
     {
       cerr << "WARNING: duplicate type in Persistent "
 	   << "Object Type Database: " << type << endl;
+      persistentTypeIDMutex.unlock();
+      return;
     }
   }
   
