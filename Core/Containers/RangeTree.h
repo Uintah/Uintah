@@ -237,8 +237,9 @@ private:
 
   // Node class for the tree's at every level except the bottom
   // d==0 level (which is a BaseLevelSet instead).
-  struct RangeTreeNode
+  class RangeTreeNode
   {
+  public:
     // RangeTreeNode constructor -- builds the tree recursively.
     // d is the dimension level (0..dimensions-1)
     // dSorted is a vector of Points sorted with respect to dimension d.
@@ -250,7 +251,7 @@ private:
     RangeTreeNode(int d, TPoint** dSorted, TPoint*** subDSorted,
 		  int low, int high, RangeTree* entireTree);
 
-    void deleteStructure(int d);
+    static void deleteStructure(RangeTreeNode* node, int d);
 
     inline bool isLeaf()
     { return leftChild_ == NULL; }
@@ -273,6 +274,8 @@ private:
       BaseLevelSet* bls;
     } lowerLevel_;
     TPoint* point_; // either the leaf point or the sorting mid point
+  protected:
+    ~RangeTreeNode() {}
   };
 
   // Associated data structure for the base level (d == 0).
@@ -729,7 +732,7 @@ RangeTree(list<TPoint*> points, int dimensions)
   int d = dimensions - 1;
   root_ = scinew RangeTreeNode(d, pointSorts[d], pointSorts, 0, n, this);
 
-  for (i = 0; i < d; i++)
+  for (i = 0; i < dimensions; i++)
     delete[] pointSorts[i];
   delete[] pointSorts;
 }
@@ -737,8 +740,7 @@ RangeTree(list<TPoint*> points, int dimensions)
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::~RangeTree()
 {
-  root_->deleteStructure(DIMENSIONS_ - 1);
-  delete root_;
+  RangeTreeNode::deleteStructure(root_, DIMENSIONS_ - 1);
   if (ALLOW_NEAREST_NEIGHBOR_QUERY) {
     for (int i = 0; i < numDiagDirections_; i++)
       delete diagonalDirections_[i];
@@ -930,20 +932,21 @@ RangeTreeNode(int d, TPoint** dSorted, TPoint*** subDSorted, int low, int high,
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 void
 RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::RangeTreeNode::
-deleteStructure(int d)
+deleteStructure(RangeTreeNode* node, int d)
 {
-  if (d > 1)
-    lowerLevel_.rtn->deleteStructure(d-1);
-  else
-    delete lowerLevel_.bls;
-
-  if (leftChild_ != NULL) {
-    leftChild_->deleteStructure(d);
-    delete leftChild_;
-    ASSERT(rightChild_ != NULL)
-    rightChild_->deleteStructure(d);
-    delete rightChild_;
+  if (d > 1) {
+    deleteStructure(node->lowerLevel_.rtn, d-1);
   }
+  else
+    delete node->lowerLevel_.bls;
+
+  if (node->leftChild_ != NULL) {
+    deleteStructure(node->leftChild_, d);
+    ASSERT(node->rightChild_ != NULL)
+    deleteStructure(node->rightChild_, d);
+  }
+  
+  delete node;
 }
 
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
