@@ -16,6 +16,11 @@
 #include <Datatypes/SurfacePort.h>
 #include <Datatypes/ScalarField.h>
 #include <Datatypes/ScalarFieldRG.h>
+#include <Datatypes/ScalarFieldRGBase.h>
+#include <Datatypes/ScalarFieldRGdouble.h>
+#include <Datatypes/ScalarFieldRGfloat.h>
+#include <Datatypes/ScalarFieldRGint.h>
+#include <Datatypes/ScalarFieldRGchar.h>
 #include <Geometry/Point.h>
 #include <TCL/TCLvar.h>
 #include <stdio.h>
@@ -44,7 +49,7 @@ public:
     virtual Module* clone(int deep);
     virtual void execute();
     ScalarFieldHandle fldHandle;
-    ScalarFieldRG* osf;
+    ScalarFieldRGBase* osf;
 };
 
 extern "C" {
@@ -90,11 +95,17 @@ void ClipField::execute()
     ScalarFieldHandle ifh;
     if(!ifield->get(ifh))
 	return;
-    ScalarFieldRG* isf=ifh->getRG();
+    ScalarFieldRGBase* isf=ifh->getRGBase();
     if(!isf){
 	error("ClipField can't deal with unstructured grids!");
 	return;
     }
+
+    ScalarFieldRGdouble *ifd=isf->getRGDouble();
+    ScalarFieldRGfloat *iff=isf->getRGFloat();
+    ScalarFieldRGint *ifi=isf->getRGInt();
+    ScalarFieldRGchar *ifc=isf->getRGChar();
+    
     int mxx, mxy, mxz, mnx, mny, mnz;
     mxx=x_max.get()-1;
     mxy=y_max.get()-1;
@@ -106,19 +117,65 @@ void ClipField::execute()
 	mxx!=last_x_max || mxy!=last_y_max || mxz!=last_z_max ||
 	mnx!=last_x_min || mny!=last_y_min || mnz != last_z_min) {
 	first_time=0;
-	fldHandle = osf = 0;
-	fldHandle = osf = new ScalarFieldRG;
-	osf->resize(mxx-mnx+1, mxy-mny+1, mxz-mnz+1);
-	for (int i=0; i<=mxx-mnx; i++) {
-	    for (int j=0; j<=mxy-mny; j++) {
-		for (int k=0; k<=mxz-mnz; k++) {
-		    osf->grid(i,j,k)=isf->grid(i+mnx, j+mny, k+mnz);
+	if (ifd) {
+	    ScalarFieldRGdouble *of;
+	    fldHandle = of = 0;
+	    fldHandle = of = new ScalarFieldRGdouble;
+	    of->resize(mxx-mnx+1, mxy-mny+1, mxz-mnz+1);
+	    for (int i=0; i<=mxx-mnx; i++) {
+		for (int j=0; j<=mxy-mny; j++) {
+		    for (int k=0; k<=mxz-mnz; k++) {
+			of->grid(i,j,k)=ifd->grid(i+mnx, j+mny, k+mnz);
+		    }
 		}
 	    }
+	    of->compute_minmax();
+	    osf=of;
+	} else if (iff) {
+	    ScalarFieldRGfloat *of;
+	    fldHandle = of = 0;
+	    fldHandle = of = new ScalarFieldRGfloat;
+	    of->resize(mxx-mnx+1, mxy-mny+1, mxz-mnz+1);
+	    for (int i=0; i<=mxx-mnx; i++) {
+		for (int j=0; j<=mxy-mny; j++) {
+		    for (int k=0; k<=mxz-mnz; k++) {
+			of->grid(i,j,k)=iff->grid(i+mnx, j+mny, k+mnz);
+		    }
+		}
+	    }
+	    of->compute_minmax();
+	    osf=of;
+	} else if (ifi) {
+	    ScalarFieldRGint *of;
+	    fldHandle = of = 0;
+	    fldHandle = of = new ScalarFieldRGint;
+	    of->resize(mxx-mnx+1, mxy-mny+1, mxz-mnz+1);
+	    for (int i=0; i<=mxx-mnx; i++) {
+		for (int j=0; j<=mxy-mny; j++) {
+		    for (int k=0; k<=mxz-mnz; k++) {
+			of->grid(i,j,k)=ifi->grid(i+mnx, j+mny, k+mnz);
+		    }
+		}
+	    }
+	    of->compute_minmax();
+	    osf=of;
+	} else {
+	    ScalarFieldRGchar *of;
+	    fldHandle = of = 0;
+	    fldHandle = of = new ScalarFieldRGchar;
+	    of->resize(mxx-mnx+1, mxy-mny+1, mxz-mnz+1);
+	    for (int i=0; i<=mxx-mnx; i++) {
+		for (int j=0; j<=mxy-mny; j++) {
+		    for (int k=0; k<=mxz-mnz; k++) {
+			of->grid(i,j,k)=ifc->grid(i+mnx, j+mny, k+mnz);
+		    }
+		}
+	    }
+	    of->compute_minmax();
+	    osf=of;
 	}
 	osf->set_bounds(Point(mnx-1, mny-1, mnz-1), 
 			Point(mxx-1, mxy-1, mxz-1));
-	osf->compute_minmax();
 	last_x_max=mxx;
 	last_y_max=mxy;
 	last_z_max=mxz;
