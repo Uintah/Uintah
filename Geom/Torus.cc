@@ -24,6 +24,7 @@
 GeomTorus::GeomTorus(int nu, int nv)
 : GeomObj(), nu(nu), nv(nv), cen(0,0,0), axis(0,0,1), rad1(1), rad2(.1)
 {
+    adjust();
 }
 
 GeomTorus::GeomTorus(const Point& cen, const Vector& axis,
@@ -131,9 +132,7 @@ void GeomTorusArc::adjust()
     double cangle=Dot(z, axis);
     zrotangle=-Acos(cangle);
 
-    xrotaxis=z;
-    cangle=Dot(zero,zrotaxis)+Dot(x,zrotaxis);
-    xrotangle=-Acos(cangle);
+    xrotangle=Acos(Dot(zero,zrotaxis))+Acos(Dot(x,zrotaxis));
 }
 
 GeomObj* GeomTorusArc::clone()

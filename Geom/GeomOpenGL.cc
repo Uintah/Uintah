@@ -66,6 +66,7 @@ void DrawInfoOpenGL::reset()
 {
     polycount=0;
     current_matl=0;
+    ignore_matl=0;
 }
 
 DrawInfoOpenGL::~DrawInfoOpenGL()
@@ -99,7 +100,7 @@ void DrawInfoOpenGL::set_drawtype(DrawType dt)
 
 void DrawInfoOpenGL::set_matl(Material* matl)
 {
-    if(matl==current_matl)
+    if(matl==current_matl || ignore_matl)
 	return;
     current_matl=matl;
     float color[4];
@@ -218,7 +219,15 @@ void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
     if(di->pickmode)
 	glPushName((GLuint)this);
-    child->draw(di, matl, time);
+    if(selected){
+	di->set_matl(highlight.get_rep());
+	int old_ignore=di->ignore_matl;
+	di->ignore_matl=1;
+	child->draw(di, highlight.get_rep(), time);
+	di->ignore_matl=old_ignore;
+    } else {
+	child->draw(di, matl, time);
+    }
     if(di->pickmode)
 	glPopName();
 }
@@ -590,7 +599,7 @@ void GeomTorusArc::draw(DrawInfoOpenGL* di, Material* matl, double)
     glPushMatrix();
     glTranslated(cen.x(), cen.y(), cen.z());
     glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
-    glRotated(RtoD(xrotangle), xrotaxis.x(), xrotaxis.y(), xrotaxis.z());
+    glRotated(RtoD(xrotangle), 0, 0, 1);//xrotaxis.x(), xrotaxis.y(), xrotaxis.z());
     di->polycount+=2*(nu-1)*(nv-1);
 
     // Draw the torus
@@ -743,20 +752,15 @@ void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl, double)
     switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
 	{
-	    glBegin(GL_LINES);
 	    verts[0]->emit_point(di);
 	    verts[1]->emit_point(di);
-	    for(int i=2;i<verts.size();i+=2){
-		verts[i]->emit_point(di);
+	    for(int i=2;i<verts.size();i++){
+		glBegin(GL_LINE_LOOP);
 		verts[i-2]->emit_point(di);
-		verts[i]->emit_point(di);
 		verts[i-1]->emit_point(di);
-		verts[i+1]->emit_point(di);
 		verts[i]->emit_point(di);
-		verts[i+1]->emit_point(di);
-		verts[i-1]->emit_point(di);
+		glEnd();
 	    }
-	    glEnd();
 	}
 	break;
     case DrawInfoOpenGL::Flat:

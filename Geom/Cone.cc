@@ -21,6 +21,7 @@
 GeomCone::GeomCone(int nu, int nv)
 : GeomObj(), nu(nu), nv(nv), bottom(0,0,0), top(0,0,1), bot_rad(1), top_rad(0)
 {
+    adjust();
 }
 
 GeomCone::GeomCone(const Point& bottom, const Point& top,
@@ -155,13 +156,11 @@ GeomCappedCone::GeomCappedCone(const Point& bottom, const Point& top,
 : GeomCone(bottom, top, bot_rad, top_rad, nu, nv), nvdisc1(nvdisc1),
   nvdisc2(nvdisc2)
 {
-    adjust();
 }
 
 GeomCappedCone::GeomCappedCone(const GeomCappedCone& copy)
 : GeomCone(copy), nvdisc1(copy.nvdisc1), nvdisc2(copy.nvdisc2)
 {
-    adjust();
 }
 
 GeomCappedCone::~GeomCappedCone()

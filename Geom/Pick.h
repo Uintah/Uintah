@@ -20,21 +20,30 @@
 #include <Geometry/Vector.h>
 #include <Multitask/ITC.h>
 
+class BaseWidget;
 class MessageBase;
 class Module;
 
 class GeomPick : public GeomContainer {
     Array1<Vector> directions;
     MaterialHandle highlight;
-    Mailbox<MessageBase*>* mailbox;
     Module* module;
     void* cbdata;
     GeomPick(const GeomPick&);
+
+    int selected;
+
+    BaseWidget* widget;
+    int widget_data;
 public:
-    GeomPick(GeomObj*, Module*);
-    GeomPick(GeomObj*, Module* module, const Vector&);
-    GeomPick(GeomObj*, Module* module, const Vector&, const Vector&);
-    GeomPick(GeomObj*, Module* module, const Vector&, const Vector&, const Vector&);
+    GeomPick(GeomObj*, Module* module);
+    GeomPick(GeomObj*, Module* module, BaseWidget*, int widget_data);
+    GeomPick(GeomObj*, Module* module,
+	     const Vector&);
+    GeomPick(GeomObj*, Module* module,
+	     const Vector&, const Vector&);
+    GeomPick(GeomObj*, Module* module,
+	     const Vector&, const Vector&, const Vector&);
     GeomPick(GeomObj*, Module* module, const Array1<Vector>&);
     virtual ~GeomPick();
     virtual GeomObj* clone();
@@ -44,12 +53,11 @@ public:
     void set_principal(const Vector&, const Vector&);
     void set_principal(const Vector&, const Vector&, const Vector&);
     void set_highlight(const MaterialHandle& matl);
-    void set_reply(Mailbox<MessageBase*>*);
-    void set_cbdata(void*);
+    void set_module_data(void*);
+    void set_widget_data(int);
 
     void pick();
-    void moved(int axis, double distance,
-	       const Vector& delta);
+    void moved(int axis, double distance, const Vector& delta);
     void release();
 
     // For OpenGL

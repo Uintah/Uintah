@@ -22,8 +22,9 @@
 #include <Math/Trig.h>
 
 GeomDisc::GeomDisc(int nu, int nv)
-: GeomObj(), nu(nu), nv(nv)
+: GeomObj(), n(0,0,1), rad(1), nu(nu), nv(nv)
 {
+    adjust();
 }
 
 GeomDisc::GeomDisc(const Point& cen, const Vector& n,

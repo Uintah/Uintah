@@ -41,6 +41,8 @@ public:
     Material* current_matl;
     void set_matl(Material*);
 
+    int ignore_matl;
+
     GLUquadricObj* qobj;
 
     void reset();

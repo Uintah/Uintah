@@ -12,12 +12,25 @@
  */
 
 #include <Geom/Pick.h>
-#include <Geom/PickMessage.h>
 #include <Dataflow/Module.h>
+#include <Widgets/BaseWidget.h>
 
 GeomPick::GeomPick(GeomObj* obj, Module* module)
-: GeomContainer(obj), module(module), mailbox(0), cbdata(0),
-  directions(6)
+: GeomContainer(obj), module(module), cbdata(0),
+  directions(6), widget(0), selected(0)
+{
+    directions[0]=Vector(1,0,0);
+    directions[1]=Vector(-1,0,0);
+    directions[2]=Vector(0,1,0);
+    directions[3]=Vector(0,-1,0);
+    directions[4]=Vector(0,0,1);
+    directions[5]=Vector(0,0,-1);
+}
+
+GeomPick::GeomPick(GeomObj* obj, Module* module,
+		   BaseWidget* widget, int widget_data)
+: GeomContainer(obj), module(module), cbdata(0),
+  directions(6), widget(widget), widget_data(widget_data), selected(0)
 {
     directions[0]=Vector(1,0,0);
     directions[1]=Vector(-1,0,0);
@@ -28,14 +41,16 @@ GeomPick::GeomPick(GeomObj* obj, Module* module)
 }
 
 GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1)
-: GeomContainer(obj), module(module), directions(2), mailbox(0), cbdata(0)
+: GeomContainer(obj), module(module), directions(2), cbdata(0),
+  widget(0), selected(0)
 {
     directions[0]=v1;
     directions[1]=-v1;
 }
 
 GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1, const Vector& v2)
-: GeomContainer(obj), module(module), directions(4), mailbox(0), cbdata(0)
+: GeomContainer(obj), module(module), directions(4), cbdata(0),
+  widget(0), selected(0)
 {
     directions[0]=v1;
     directions[1]=-v1;
@@ -45,7 +60,8 @@ GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1, const Vector&
 
 GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1, const Vector& v2,
 		   const Vector& v3)
-: GeomContainer(obj), module(module), directions(6), mailbox(0), cbdata(0)
+: GeomContainer(obj), module(module), directions(6), cbdata(0),
+  widget(0), selected(0)
 {
     directions[0]=v1;
     directions[1]=-v1;
@@ -57,7 +73,8 @@ GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1, const Vector&
 
 GeomPick::GeomPick(const GeomPick& copy)
 : GeomContainer(copy), directions(copy.directions), highlight(copy.highlight),
-  mailbox(0), cbdata(copy.cbdata), module(copy.module)
+  cbdata(copy.cbdata), module(copy.module), widget(copy.widget),
+  selected(copy.selected)
 {
 }
 
@@ -75,41 +92,40 @@ void GeomPick::set_highlight(const MaterialHandle& matl)
     highlight=matl;
 }
 
-void GeomPick::set_cbdata(void* _cbdata)
+void GeomPick::set_module_data(void* _cbdata)
 {
     cbdata=_cbdata;
 }
 
+void GeomPick::set_widget_data(int _wd)
+{
+    widget_data=_wd;
+}
+
 void GeomPick::pick()
 {
-    if(mailbox){
-	// Send a message...
-        mailbox->send(new GeomPickMessage(module, cbdata));
-    } else {
-	// Do it directly..
+    selected=1;
+    if(widget)
+	widget->geom_pick(widget_data);
+    if(module)
 	module->geom_pick(cbdata);
-    }
 }
 
 void GeomPick::release()
 {
-    if(mailbox){
-	// Send a message...
-        mailbox->send(new GeomPickMessage(module, cbdata, 0));
-    } else {
-	// Do it directly..
+    selected=0;
+    if(widget)
+	widget->geom_release(widget_data);
+    if(module)
 	module->geom_release(cbdata);
-    }
 }
 
 void GeomPick::moved(int axis, double distance, const Vector& delta)
 {
-    if(mailbox){
-	// Send a message...
-        mailbox->send(new GeomPickMessage(module, axis, distance, delta, cbdata));
-    } else {
+    if(widget)
+	widget->geom_moved(axis, distance, delta, widget_data);
+    if(module)
 	module->geom_moved(axis, distance, delta, cbdata);
-    }
 }
 
 int GeomPick::nprincipal() {

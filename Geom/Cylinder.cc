@@ -22,7 +22,9 @@
 
 GeomCylinder::GeomCylinder(int nu, int nv)
 : GeomObj(), nu(nu), nv(nv), top(0,0,1), bottom(0,0,0), rad(1)
-{}
+{
+    adjust();
+}
 
 GeomCylinder::GeomCylinder(const Point& bottom, const Point& top,
 			   double rad, int nu, int nv)
