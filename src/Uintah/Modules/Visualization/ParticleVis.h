@@ -46,15 +46,14 @@ class ParticleVis : public Module {
     const int MIN_NV;
     const int MAX_NV;
     MaterialHandle outcolor;
-       
-    int last_idx;
+
+    bool hasIDs;    int last_idx;
     int last_generation;
     void *cbClass;
  public:
     ParticleVis(const clString& id);
     virtual ~ParticleVis();
     virtual void geom_pick(GeomPick*, void*, GeomObj*);
-
     virtual void execute();
 };
 
