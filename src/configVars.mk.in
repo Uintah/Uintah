@@ -79,8 +79,8 @@ TIME_IMPL = $(SRCDIR)/@TIME_IMPL@
 SUBDIRS := Core Dataflow StandAlone $(COMPONENT_DIRS) main \
 	testprograms $(PACKAGE_DIRS)
 
-HAVE_OSX := @HAVE_OSX@
-ifeq ($(HAVE_OSX),yes)
+NEED_OSX_HACK := @NEED_OSX_HACK@
+ifeq ($(NEED_OSX_HACK),yes)
   SUBDIRS := osx $(SUBDIRS)
 endif
 
