@@ -89,10 +89,8 @@ void Phong::shade(Color& result, const Ray& ray,
       cx->stats->ds[depth].inshadow++;
     }
   }
-    
-  const Color & ambient = cx->scene->getAmbientColor();
 
-  result=(ambient+difflight)*diffuse+specular*speclight;
+  result=(ambient(cx->scene, normal)+difflight)*diffuse+specular*speclight;
 
   if (depth < cx->scene->maxdepth && (refl>0 )){
     double thresh=cx->scene->base_threshold;
