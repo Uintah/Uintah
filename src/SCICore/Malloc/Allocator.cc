@@ -36,6 +36,7 @@
 #include <string.h>
 #endif
 
+#include <sys/param.h>
 #include <stdio.h>
 #include <sci_config.h>
 
@@ -399,10 +400,12 @@ Allocator* MakeAllocator()
 	if(!default_allocator)
 	    default_allocator=a;
 	char* file=getenv("MALLOC_TRACE");
-	if(strlen(file) == 0){
+	if(!file || strlen(file) == 0){
 	    a->trace_out=stderr;
 	} else {
-	    a->trace_out=fopen(file, "w");
+	    char filename[MAXPATHLEN];
+	    sprintf(filename, file, getpid());
+	    a->trace_out=fopen(filename, "w");
 	    setvbuf(a->trace_out, (char*)a->alloc(4096+BUFSIZ, "Malloc trace buffer"), _IOFBF, 4096+BUFSIZ);
 	    if(!a->trace_out){
 		perror("fopen");
@@ -427,10 +430,12 @@ Allocator* MakeAllocator()
 	if(!default_allocator)
 	    default_allocator=a;
 	char* file=getenv("MALLOC_STATS");
-	if(strlen(file) == 0){
+	if(!file || strlen(file) == 0){
 	    a->stats_out=stderr;
 	} else {
-	    a->stats_out=fopen(file, "w");
+	    char filename[MAXPATHLEN];
+	    sprintf(filename, file, getpid());
+	    a->stats_out=fopen(filename, "w");
 	    setvbuf(a->stats_out, (char*)a->alloc(4096+BUFSIZ, "Malloc stats buffer"), _IOFBF, 4096+BUFSIZ);
 	    if(!a->stats_out){
 		perror("fopen");
@@ -1200,6 +1205,17 @@ void DumpAllocator(Allocator* a)
 
 //
 // $Log$
+// Revision 1.15  2000/12/10 08:32:26  sparker
+// (merge from csafe_risky1)
+// MALLOC_STATS and MALLOC_TRACE can now contain a "%d", which gets the
+//   pid of the output
+// Fixed a null-deref problem
+//
+// Revision 1.14.2.1  2000/10/10 05:26:44  sparker
+// MALLOC_STATS and MALLOC_TRACE can now contain a "%d", which gets the
+//   pid of the output
+// Fixed a null-deref problem
+//
 // Revision 1.14  2000/09/25 19:47:33  sparker
 // Quiet warnings under g++
 //
