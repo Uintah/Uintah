@@ -80,6 +80,7 @@ private:
 public:
     TriSurface(Representation r=TriSurf);
     TriSurface(const TriSurface& copy, Representation r=TriSurf);
+    TriSurface& operator=(const TriSurface&);
     virtual ~TriSurface();
     virtual Surface* clone();
 
@@ -139,6 +140,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/09/02 03:24:32  dmw
+// added = operator for TriSurface
+//
 // Revision 1.3  1999/08/25 03:48:44  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
