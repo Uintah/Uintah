@@ -145,10 +145,13 @@ protected:
   void AddMpegFrame();
   void EndMpeg();
 #ifdef __sgi
+#if (_MIPS_SZPTR == 64)
+#else
   CLhandle compressorHdl;
   int compressedBufferSize;
   CLbufferHdl compressedBufferHdl;
   ofstream os;
+#endif
 #endif
   MpegEncoder mpEncoder;
   bool encoding_mpeg;
