@@ -53,12 +53,13 @@ NullScheduler::verifyChecksum()
 void 
 NullScheduler::advanceDataWarehouse(const GridP& grid)
 {
-  if( !dws_[Task::NewDW] )
-    dws_[ Task::NewDW ] = scinew OnDemandDataWarehouse(d_myworld, this, 0, grid);
+  for(int i=0;i<(int)dws.size();i++)
+    if( !dws[i] )
+      dws[i] = scinew OnDemandDataWarehouse(d_myworld, this, 0, grid);
 }
 
 void
-NullScheduler::actuallyCompile(const ProcessorGroup* pg, bool scrubNew)
+NullScheduler::actuallyCompile(const ProcessorGroup* pg)
 {
   if( dts_ )
     delete dts_;
@@ -69,10 +70,7 @@ NullScheduler::actuallyCompile(const ProcessorGroup* pg, bool scrubNew)
 
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
-  if( useInternalDeps() )
-    dts_ = graph.createDetailedTasks( pg, lb, scrubNew, true );
-  else
-    dts_ = graph.createDetailedTasks( pg, lb, scrubNew, false );
+  dts_ = graph.createDetailedTasks( pg, lb, useInternalDeps() );
 
   if(dts_->numTasks() == 0){
     cerr << "WARNING: Scheduler executed, but no tasks\n";
@@ -95,7 +93,7 @@ NullScheduler::execute(const ProcessorGroup *)
   }
   if(firstTime){
     firstTime=false;
-    dws_[Task::NewDW]->put(delt_vartype(1.0), delt);
+    dws[dws.size()-1]->put(delt_vartype(1.0), delt);
   }
 }
 

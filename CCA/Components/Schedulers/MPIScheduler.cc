@@ -111,7 +111,7 @@ MPIScheduler::verifyChecksum()
 }
 
 void
-MPIScheduler::actuallyCompile(const ProcessorGroup* pg, bool scrubNew)
+MPIScheduler::actuallyCompile(const ProcessorGroup* pg)
 {
   TAU_PROFILE("MPIScheduler::compile()", " ", TAU_USER); 
 
@@ -126,10 +126,7 @@ MPIScheduler::actuallyCompile(const ProcessorGroup* pg, bool scrubNew)
 
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
-  if( useInternalDeps() )
-    dts_ = graph.createDetailedTasks( pg, lb, scrubNew, true );
-  else
-    dts_ = graph.createDetailedTasks( pg, lb, scrubNew, false );
+  dts_ = graph.createDetailedTasks( pg, lb, useInternalDeps() );
 
   if(dts_->numTasks() == 0)
     cerr << "WARNING: Scheduler executed, but no tasks\n";
@@ -163,8 +160,8 @@ MPIScheduler::wait_till_all_done()
 void
 MPIScheduler::initiateTask( DetailedTask          * task )
 {
-  double start_total_comm_flops = mpi_info_.totalcommflops;
-  double start_total_exec_flops = mpi_info_.totalexecflops;
+  long long start_total_comm_flops = mpi_info_.totalcommflops;
+  long long start_total_exec_flops = mpi_info_.totalexecflops;
 
   double recvstart = Time::currentSeconds();
 #ifdef USE_PERFEX_COUNTERS
@@ -242,8 +239,12 @@ MPIScheduler::runTask( DetailedTask         * task )
   
 #ifdef USE_PERFEX_COUNTERS
   start_counters(0, 19);
-#endif  
-  task->doit(pg_, dws_[Task::OldDW].get_rep(), dws_[Task::NewDW].get_rep());
+#endif
+  // TODO - make this not reallocated for each task...
+  vector<DataWarehouseP> plain_old_dws(dws.size());
+  for(int i=0;i<(int)dws.size();i++)
+    plain_old_dws[i] = dws[i].get_rep();
+  task->doit(pg_, dws, plain_old_dws);
 #ifdef USE_PERFEX_COUNTERS
   read_counters(0, &dummy, 19, &exec_flops);
   mpi_info_.totalexecflops += exec_flops;
@@ -255,7 +256,7 @@ MPIScheduler::runTask( DetailedTask         * task )
 
   double sendstart = Time::currentSeconds();
   postMPISends( task );
-  task->done(dws_[Task::OldDW].get_rep(), dws_[Task::NewDW].get_rep());
+  task->done(dws);
   double stop = Time::currentSeconds();
 
   sendsLock.lock(); // Dd... could do better?
@@ -287,10 +288,9 @@ MPIScheduler::runReductionTask( DetailedTask         * task )
   const Task::Dependency* comp = task->getTask()->getComputes();
   ASSERT(!comp->next);
   
-  OnDemandDataWarehouse* dw = dws_[Task::NewDW].get_rep();
-  dw->reduceMPI(comp->var, comp->matls /*task->getMaterials() */,
-		d_myworld);
-  task->done(dws_[Task::OldDW].get_rep(), dws_[Task::NewDW].get_rep());
+  OnDemandDataWarehouse* dw = dws[comp->mapDataWarehouse()].get_rep();
+  dw->reduceMPI(comp->var, comp->reductionLevel, comp->matls, d_myworld);
+  task->done(dws);
 }
 
 void
@@ -319,16 +319,17 @@ MPIScheduler::postMPISends( DetailedTask         * task )
     // Create the MPI type
     int to = batch->toTasks.front()->getAssignedResourceIndex();
     for(DetailedDep* req = batch->head; req != 0; req = req->next){
-      OnDemandDataWarehouse* dw = dws_[req->req->dw].get_rep();
+      OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
       if( mixedDebug.active() ) {
 	cerrLock.lock();
 	mixedDebug << " --> sending " << *req << '\n';
 	cerrLock.unlock();
       }
 
-      dbg << pg_->myrank() << " --> sending " << *req << '\n';
-      dw->sendMPI(*ss_, batch, pg_, reloc_new_posLabel_,
-		  mpibuff, dws_[Task::OldDW].get_rep(), req);
+      dbg << pg_->myrank() << " --> sending " << *req << " from dw " << dw->getID() << '\n';
+      dw->sendMPI(*ss_, batch, pg_, reloc_new_posLabel_, mpibuff,
+		  dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep(),
+		  req);
     }
     // Post the send
     if(mpibuff.count()>0){
@@ -428,8 +429,8 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, RecvRecord& recvs,
 
     // Create the MPI type
     for(DetailedDep* req = batch->head; req != 0; req = req->next){
-      OnDemandDataWarehouse* dw = dws_[req->req->dw].get_rep();
-      dbg << pg_->myrank() << " <-- receiving " << *req << '\n';
+      OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
+      dbg << pg_->myrank() << " <-- receiving " << *req << " into dw " << dw->getID() << '\n';
 
       if( mixedDebug.active() ) {
 	cerrLock.lock();
@@ -438,7 +439,13 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, RecvRecord& recvs,
 	cerrLock.unlock();
       }
 
-      dw->recvMPI(mpibuff, batch, pg_, dws_[Task::OldDW].get_rep(), req);
+      dw->recvMPI(mpibuff, batch, pg_,
+		  dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep(),
+		  req);
+      if (!req->isNonDataDependency()) {
+	dts_->setScrubCount(req->req->var, req->matl, req->fromPatch,
+			    req->req->mapDataWarehouse(), dws);
+      }
 
       if( mixedDebug.active() ) {
 	cerrLock.lock();
@@ -531,7 +538,7 @@ MPIScheduler::processMPIRecvs( DetailedTask *, RecvRecord& recvs,
 } // end processMPIRecvs()
 
 void
-MPIScheduler::execute(const ProcessorGroup * pg )
+MPIScheduler::execute(const ProcessorGroup * pg)
 {
    TAU_PROFILE("MPIScheduler::execute()", " ", TAU_USER); 
 
@@ -557,7 +564,28 @@ MPIScheduler::execute(const ProcessorGroup * pg )
   ASSERT(pg_ == 0);
   pg_ = pg;
   
-  dbg << "MPIScheduler executing\n";
+  int ntasks = dts_->numLocalTasks();
+  if(dbg.active()){
+    dbg << "MPIScheduler executing " << dts_->numTasks() << " tasks (" << ntasks << " local), ";
+    for(int i=0;i<numOldDWs;i++){
+      dbg << "from DWs: ";
+      if(dws[i])
+	dbg << dws[i]->getID() << ", ";
+      else
+	dbg << "Null, ";
+    }
+    if(dws.size()-numOldDWs>1){
+      dbg << "intermediate DWs: ";
+      for(unsigned int i=numOldDWs;i<dws.size()-1;i++)
+	dbg << dws[i]->getID() << ", ";
+    }
+    if(dws[dws.size()-1])
+      dbg << " to DW: " << dws[dws.size()-1]->getID();
+    else
+      dbg << " to DW: Null";
+    dbg << "\n";
+  }
+  dts_->initializeScrubs(dws);
   dts_->initTimestep();
 
   d_labels.clear();
@@ -590,10 +618,7 @@ MPIScheduler::execute(const ProcessorGroup * pg )
   mpi_info_.totaltestmpi = 0;
   mpi_info_.totalwaitmpi = 0;
 
-  int ntasks = dts_->numLocalTasks();
   int numTasksDone = 0;
-
-  dbg << "Executing " << dts_->numTasks() << " tasks (" << ntasks << " local)\n";
 
   // TEMPORARY
 //  cerrLock.lock();
@@ -664,7 +689,7 @@ MPIScheduler::execute(const ProcessorGroup * pg )
       } // end case Task::InitialSend or Task::Normal
       break;
     default:
-      throw InternalError("Unknown task type");
+      SCI_THROW(InternalError("Unknown task type"));
     } // end switch( task->getTask()->getType() )
   } // end while( numTasksDone < ntasks )
 
@@ -711,8 +736,8 @@ MPIScheduler::execute(const ProcessorGroup * pg )
   sends_.waitall(pg_);
   emitTime("final wait");
 
-  dws_[Task::NewDW]->finalize(); // Dd: I think this is NewDW
-  finalizeNodes(me);
+  finalizeTimestep();
+
   int junk;
   MPI_Buffer_detach(&mpibuffer, &junk);
   delete[] mpibuffer;

@@ -1,6 +1,7 @@
 
 
 #include <Packages/Uintah/CCA/Components/Schedulers/RoundRobinLoadBalancer.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -89,25 +90,28 @@ RoundRobinLoadBalancer::createPerProcessorPatchSet(const LevelP& level,
 
 
 void
-RoundRobinLoadBalancer::createNeighborhood(const Level* level,
+RoundRobinLoadBalancer::createNeighborhood(const GridP& grid,
 					   const ProcessorGroup* group)
 {
   int me = group->myrank();
   // WARNING - this should be determined from the taskgraph? - Steve
   int maxGhost = 2;
   neighbors.clear();
-  for(Level::const_patchIterator iter = level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch = *iter;
-    if(getPatchwiseProcessorAssignment(patch, group) == me){
-      Level::selectType n;
-      IntVector lowIndex, highIndex;
-      patch->computeVariableExtents(Patch::CellBased, Ghost::AroundCells,
-				    maxGhost, n, lowIndex, highIndex);
-      for(int i=0;i<(int)n.size();i++){
-	const Patch* neighbor = n[i];
-	if(neighbors.find(neighbor) == neighbors.end())
-	  neighbors.insert(neighbor);
+  for(int l=0;l<grid->numLevels();l++){
+    const LevelP& level = grid->getLevel(l);
+    for(Level::const_patchIterator iter = level->patchesBegin();
+	iter != level->patchesEnd(); iter++){
+      const Patch* patch = *iter;
+      if(getPatchwiseProcessorAssignment(patch, group) == me){
+	Level::selectType n;
+	IntVector lowIndex, highIndex;
+	patch->computeVariableExtents(Patch::CellBased, Ghost::AroundCells,
+				      maxGhost, n, lowIndex, highIndex);
+	for(int i=0;i<(int)n.size();i++){
+	  const Patch* neighbor = n[i];
+	  if(neighbors.find(neighbor) == neighbors.end())
+	    neighbors.insert(neighbor);
+	}
       }
     }
   }

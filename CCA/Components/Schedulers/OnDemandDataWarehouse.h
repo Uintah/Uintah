@@ -4,11 +4,10 @@
 #include <Core/Thread/CrowdMonitor.h>
 
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DWDatabase.h>
 #include <Packages/Uintah/Core/Grid/VarLabelMatlPatch.h>
+#include <Packages/Uintah/Core/Grid/VarLabelMatlPatchDW.h>
 
 #include <map>
 #include <iosfwd>
@@ -22,8 +21,11 @@ namespace SCIRun {
 
 namespace Uintah {
 
-using namespace std;
-using namespace SCIRun;
+  int getDB_ID(const Patch* patch);
+  int getDB_ID(const Level* level);
+
+  using namespace std;
+  using namespace SCIRun;
   class BufferInfo;
   class DependencyBatch;
   class DetailedDep;
@@ -79,14 +81,14 @@ public:
 				      int matlIndex, const Patch*);   
    
    // Reduction Variables
-   virtual void allocate(ReductionVariableBase&, const VarLabel*,
-			 int matIndex = -1);
    virtual void get(ReductionVariableBase&, const VarLabel*,
-		    int matIndex = -1);
+		    const Level* level = 0, int matIndex = -1);
    virtual void put(const ReductionVariableBase&, const VarLabel*,
-		    int matIndex = -1);
+		    const Level* level = 0, int matIndex = -1);
    virtual void override(const ReductionVariableBase&, const VarLabel*,
-			 int matIndex = -1);
+			 const Level* level = 0, int matIndex = -1);
+   virtual void print(ostream& intout, const VarLabel* label,
+		      const Level* level, int matlIndex = -1);
 
    // Particle Variables
    virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
@@ -197,6 +199,13 @@ public:
    // Remove particles that are no longer relevant
    virtual void deleteParticles(ParticleSubset* delset);
 
+   virtual ScrubMode setScrubbing(ScrubMode);
+
+   // For related datawarehouses
+   virtual DataWarehouse* getOtherDataWarehouse(Task::WhichDW);
+   virtual void transferFrom(DataWarehouse*, const VarLabel*,
+			     const PatchSubset*, const MaterialSubset*);
+
    virtual bool isFinalized() const;
    virtual bool exists(const VarLabel*, const Patch*) const;
    
@@ -205,9 +214,6 @@ public:
    virtual void emit(OutputContext&, const VarLabel* label,
 		     int matlIndex, const Patch* patch);
 
-   virtual void print(ostream& intout, const VarLabel* label,
-		      int matlIndex = -1);
-
    void sendMPI(SendState& ss, DependencyBatch* batch,
 		const ProcessorGroup* world, const VarLabel* pos_var,
 		BufferInfo& buffer, OnDemandDataWarehouse* old_dw,
@@ -215,37 +221,33 @@ public:
    void recvMPI(BufferInfo& buffer, DependencyBatch* batch,
 		const ProcessorGroup* world, OnDemandDataWarehouse* old_dw,
 		const DetailedDep* dep);
-   void reduceMPI(const VarLabel* label, const MaterialSubset* matls,
-		  const ProcessorGroup* world);
+   void reduceMPI(const VarLabel* label, const Level* level,
+		  const MaterialSubset* matls, const ProcessorGroup* world);
 
    // Scrub counter manipulator functions -- when the scrub count goes to
-   // zero, the data is scrubbed.
-   virtual void setScrubCountIfZero(const VarLabel* label, int matlIndex,
-				    const Patch* patch, int count)
-   { addScrubCount(label, matlIndex, patch, 0, count); }
-   virtual void decrementScrubCount(const VarLabel* label, int matlIndex,
-				    const Patch* patch, int count = 1,
-				    unsigned int addIfZero = 0)
-   { addScrubCount(label, matlIndex, patch, -count, addIfZero); }
+   // zero, the data is deleted
+   void setScrubCount(const VarLabel* label, int matlIndex,
+		      const Patch* patch, int count);
+   void decrementScrubCount(const VarLabel* label, int matlIndex,
+			    const Patch* patch);
+   void scrub(const VarLabel* label, int matlIndex, const Patch* patch);
+   void initializeScrubs(int dwid, const map<VarLabelMatlPatchDW, int>& scrubcounts);
 
-   // scrub everything with a scrubCount of zero
-   virtual void scrubExtraneous();
-  
    void logMemoryUse(ostream& out, unsigned long& total, const string& tag);
 
    // must be called by the thread that will run the test
-   virtual void pushRunningTask(const Task* task);
-   virtual void popRunningTask();  
+   void pushRunningTask(const Task* task, vector<OnDemandDataWarehouseP>* dws);
+   void popRunningTask();  
 
    // does a final check to see if gets/puts/etc. consistent with
    // requires/computes/modifies for the current task.
-   virtual void checkTasksAccesses(const PatchSubset* patches,
-				   const MaterialSubset* matls);
+   void checkTasksAccesses(const PatchSubset* patches,
+			   const MaterialSubset* matls);
+
+   ScrubMode getScrubMode() const {
+     return d_scrubMode;
+   }
 private:
-   void addScrubCount(const VarLabel* label, int matlIndex,
-		      const Patch* patch, int count = 1,
-		      unsigned int addIfZero = 0);
-  
    enum AccessType {
      NoAccess = 0, PutAccess, GetAccess, ModifyAccess
    };
@@ -267,14 +269,15 @@ private:
 
    struct RunningTaskInfo {
      RunningTaskInfo()
-       : d_task(0) {}
-     RunningTaskInfo(const Task* task)
-       : d_task(task) {}
+       : d_task(0), dws(0) {}
+     RunningTaskInfo(const Task* task, vector<OnDemandDataWarehouseP>* dws)
+       : d_task(task), dws(dws) {}
      RunningTaskInfo(const RunningTaskInfo& copy)
-       : d_task(copy.d_task), d_accesses(copy.d_accesses) {}
+       : d_task(copy.d_task), dws(copy.dws), d_accesses(copy.d_accesses) {}
      RunningTaskInfo& operator=(const RunningTaskInfo& copy)
-     { d_task = copy.d_task; d_accesses = copy.d_accesses; return *this; }
+     { d_task = copy.d_task; dws = copy.dws; d_accesses = copy.d_accesses; return *this; }
      const Task* d_task;
+     vector<OnDemandDataWarehouseP>* dws;
      VarAccessMap d_accesses;
    };  
 
@@ -344,14 +347,14 @@ private:
    typedef map<const VarLabel*, variableListType*, VarLabel::Compare> dataLocationDBtype;
    typedef map<pair<int, const Patch*>, ParticleSubset*> psetDBType;
 
-   DWDatabase<NCVariableBase>        d_ncDB;
-   DWDatabase<CCVariableBase>        d_ccDB;
-   DWDatabase<SFCXVariableBase>      d_sfcxDB;
-   DWDatabase<SFCYVariableBase>      d_sfcyDB;
-   DWDatabase<SFCZVariableBase>      d_sfczDB;
-   DWDatabase<ParticleVariableBase>  d_particleDB;
-   DWDatabase<ReductionVariableBase> d_reductionDB;
-   DWDatabase<PerPatchBase>          d_perpatchDB;
+   DWDatabase<NCVariableBase, Patch>        d_ncDB;
+   DWDatabase<CCVariableBase, Patch>        d_ccDB;
+   DWDatabase<SFCXVariableBase, Patch>      d_sfcxDB;
+   DWDatabase<SFCYVariableBase, Patch>      d_sfcyDB;
+   DWDatabase<SFCZVariableBase, Patch>      d_sfczDB;
+   DWDatabase<ParticleVariableBase, Patch>  d_particleDB;
+   DWDatabase<ReductionVariableBase, Level> d_reductionDB;
+   DWDatabase<PerPatchBase, Patch>          d_perpatchDB;
    psetDBType                        d_psetDB;
    psetDBType                        d_delsetDB;
 
@@ -373,10 +376,7 @@ private:
    inline RunningTaskInfo* getCurrentTaskInfo();
     
    map<Thread*, list<RunningTaskInfo> > d_runningTasks;
-  
-   // Internal VarLabel for the position of this DataWarehouse
-   // ??? with respect to what ???? 
-   //const VarLabel * d_positionLabel;
+   ScrubMode d_scrubMode;
 };
 
 } // end namespace Uintah

@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/UnknownVariable.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
+#include <Packages/Uintah/Core/Grid/VarLabelMatlPatchDW.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
@@ -21,7 +22,6 @@ using std::iostream;
 using std::ostringstream;
 
 using namespace SCIRun;
-   
    /**************************************
      
      CLASS
@@ -50,35 +50,32 @@ using namespace SCIRun;
      WARNING
       
      ****************************************/
-template<class VarType>
-class DWDatabase {
-public:
+ template<class VarType, class DomainType>
+   class DWDatabase {
+   public:
    DWDatabase();
    ~DWDatabase();
 
-   // Note: for global variables, use matlIndex = -1, patch = NULL
-  
-   bool exists(const VarLabel* label, int matlIndex, const Patch* patch) const;
-   bool exists(const VarLabel* label, const Patch* patch) const;
-   void put(const VarLabel* label, int matlindex, const Patch* patch,
+   bool exists(const VarLabel* label, int matlIndex, const DomainType* dom) const;
+   bool exists(const VarLabel* label, const DomainType* dom) const;
+   void put(const VarLabel* label, int matlindex, const DomainType* dom,
 	    VarType* var, bool replace);
-   void get(const VarLabel* label, int matlindex, const Patch* patch,
+   void get(const VarLabel* label, int matlindex, const DomainType* dom,
 	    VarType& var) const;
    inline VarType* get(const VarLabel* label, int matlindex,
-		const Patch* patch) const;
-   void copyAll(const DWDatabase& from, const VarLabel*, const Patch* patch);
+		const DomainType* dom) const;
    void print(ostream&) const;
    void cleanForeign();
 
    // Scrub counter manipulator functions -- when the scrub count goes to
    // zero, the data is scrubbed.
-   // Note: count can be negative to decrement.
-   void addScrubCount(const VarLabel* label, int matlindex,
-		      const Patch* patch, int count, unsigned int addIfZero=0);
+   void decrementScrubCount(const VarLabel* label, int matlindex,
+			    const DomainType* dom);
+   void setScrubCount(const VarLabel* label, int matlindex,
+		      const DomainType* dom, int count);
+   void scrub(const VarLabel* label, int matlindex, const DomainType* dom);
+   void initializeScrubs(int dwid, const map<VarLabelMatlPatchDW, int>& scrubcounts);
 
-   // scrub everything with a scrubcount of zero
-   void scrubExtraneous();
-  
    void logMemoryUse(ostream& out, unsigned long& total,
 		     const std::string& tag, int dwid);
 private:
@@ -90,18 +87,17 @@ private:
    };
   
    const DataItem& getDataItem(const VarLabel* label, int matlindex,
-			       const Patch* patch) const;
-   void scrub(const VarLabel* label, int matlindex, const Patch* patch);
+			       const DomainType* dom) const;
     
    typedef vector<DataItem> dataDBtype;
 
-   class PatchRecord {
+   class DomainRecord {
    public:
-      PatchRecord(const Patch*);
-      ~PatchRecord();
+      DomainRecord(const DomainType*);
+      ~DomainRecord();
 
-      const Patch* getPatch()
-      { return patch; }
+      const DomainType* getDomain()
+      { return dom; }
 
       void putVar(int matlIndex, VarType* var, bool replace);
 
@@ -116,15 +112,15 @@ private:
       bool empty() const
       { return count == 0; }
    private:
-      const Patch* patch;
+      const DomainType* dom;
       dataDBtype vars;
       int count;
    };
 
-   typedef map<const Patch*, PatchRecord*> patchDBtype;
+   typedef map<const int, DomainRecord*> domainDBtype;
    struct NameRecord {
       const VarLabel* label;
-      patchDBtype patches;
+      domainDBtype domains;
 
       NameRecord(const VarLabel* label);
       ~NameRecord();
@@ -133,239 +129,204 @@ private:
    typedef map<const VarLabel*, NameRecord*, VarLabel::Compare> nameDBtype;
    nameDBtype names;
 
-   typedef map<const VarLabel*, DataItem, VarLabel::Compare> globalDBtype;
-   // globals are defined for all patches and materials
-   // (patch == NULL, matlIndex = -1)
-   globalDBtype globals; 
-
    DWDatabase(const DWDatabase&);
    DWDatabase& operator=(const DWDatabase&);      
 };
 
-template<class VarType>
-DWDatabase<VarType>::DWDatabase()
+template<class VarType, class DomainType>
+DWDatabase<VarType, DomainType>::DWDatabase()
 {
 }
 
-template<class VarType>
-DWDatabase<VarType>::~DWDatabase()
+template<class VarType, class DomainType>
+DWDatabase<VarType, DomainType>::~DWDatabase()
 {
-   for(typename nameDBtype::iterator iter = names.begin();
-       iter != names.end(); iter++){
-     
-     if (iter->first->typeDescription() != 0) {
-       ostringstream msgstr;
-       msgstr << "Failed to scrub: " << iter->first->getName()
-	      << " completely";
-       throw InternalError(msgstr.str());       
-     } 
-     delete iter->second;
-   }
-   for(typename globalDBtype::iterator iter = globals.begin();
-       iter != globals.end(); iter++){
-      delete iter->second.var;
-   }
-}
-
-template<class VarType>
-void DWDatabase<VarType>::scrubExtraneous()
-{
-  // scrub all vars with scrubcounts of zero
-  list<const VarLabel*> labelsToRemove;
-  
   for(typename nameDBtype::iterator iter = names.begin();
       iter != names.end(); iter++){
-    list<const Patch*> patchesToRemove;
-    patchDBtype& patchDB = iter->second->patches;
-    typename patchDBtype::iterator patchRecordIter;
-    for (patchRecordIter = patchDB.begin(); patchRecordIter != patchDB.end();
-	 ++patchRecordIter) {
-      PatchRecord* patchRecord = patchRecordIter->second;
-      const dataDBtype& vars = patchRecord->getVars();
-      for (unsigned int m = 0; m < vars.size(); m++) {
-	DataItem* dataItem = patchRecord->getDataItem(m);
-	if (dataItem && dataItem->scrubCount == 0)
-	  patchRecord->removeVar(m);
-      }
-      if (patchRecord->empty()) {
-	delete patchRecord;
-	patchesToRemove.push_back(patchRecordIter->first);
-      }
-    }
-    for (list<const Patch*>::iterator patchIter = patchesToRemove.begin();
-	 patchIter != patchesToRemove.end(); ++patchIter) {
-      patchDB.erase(*patchIter);
-    }
-    if (patchDB.size() == 0) {
-      delete iter->second;
-      labelsToRemove.push_back(iter->first);
-    }
-  }
-  for (list<const VarLabel*>::iterator labelIter = labelsToRemove.begin();
-       labelIter != labelsToRemove.end(); ++labelIter) {
-    names.erase(*labelIter);
-  }
 
-  labelsToRemove.clear();
-  for(typename globalDBtype::iterator iter = globals.begin();
-      iter != globals.end(); iter++){
-    if (iter->second.scrubCount == 0) {
-      delete iter->second.var;
-      labelsToRemove.push_back(iter->first);
+#ifdef DEBUG
+    // This can happen in some normal cases (especially at program
+    // shutdown), but catching it is useful for debugging the scrubbing
+    // stuff...
+    if (iter->first->typeDescription() != 0
+	&& iter->first->typeDescription()->getType() != TypeDescription::ReductionVariable) {
+      ostringstream msgstr;
+      msgstr << "Failed to scrub: " << iter->first->getName()
+	     << " completely";
+      SCI_THROW(InternalError(msgstr.str()));
     }
-  }
-  for (list<const VarLabel*>::iterator labelIter = labelsToRemove.begin();
-       labelIter != labelsToRemove.end(); ++labelIter) {
-    globals.erase(*labelIter);
+#endif
+    delete iter->second;
   }
 }
 
-template<class VarType>
+template<class VarType, class DomainType>
 void
-DWDatabase<VarType>::cleanForeign()
+DWDatabase<VarType, DomainType>::cleanForeign()
 {
-   for(typename nameDBtype::iterator iter = names.begin();
-       iter != names.end(); iter++){
-      NameRecord* nr = iter->second;
-      for(typename patchDBtype::iterator iter = nr->patches.begin();
-	  iter != nr->patches.end(); iter++){
-	 PatchRecord* pr = iter->second;
-	 for (int m = 0; m < (int)pr->getVars().size(); m++) {
-	    const VarType* var = pr->getVars()[m].var;
-	    if(var && var->isForeign()){
-	      pr->removeVar(m);
-	    }
-	 }
+  for(typename nameDBtype::iterator iter = names.begin();
+      iter != names.end(); iter++){
+    NameRecord* nr = iter->second;
+    for(typename domainDBtype::iterator iter = nr->domains.begin();
+	iter != nr->domains.end(); iter++){
+      DomainRecord* pr = iter->second;
+      for (int m = 0; m < (int)pr->getVars().size(); m++) {
+	const VarType* var = pr->getVars()[m].var;
+	if(var && var->isForeign()){
+	  pr->removeVar(m-1);
+	}
       }
-   }
-
-   list<const VarLabel*> toBeRemoved;
-   for(typename globalDBtype::iterator iter = globals.begin();
-       iter != globals.end(); iter++){
-      VarType* var = iter->second.var;
-      if(var && var->isForeign()){
-	 toBeRemoved.push_back(iter->first);
-	 delete var;
-      }
-   }
-   
-   for (list<const VarLabel*>::iterator iter = toBeRemoved.begin();
-	iter != toBeRemoved.end(); iter++)
-      globals.erase(*iter);
+    }
+  }
 }
 
-template<class VarType>
-void DWDatabase<VarType>::
-addScrubCount(const VarLabel* label, int matlIndex,
-	      const Patch* patch, int count, unsigned int addIfZero)
+template<class VarType, class DomainType>
+void DWDatabase<VarType, DomainType>::
+decrementScrubCount(const VarLabel* label, int matlIndex,
+		    const DomainType* dom)
 {
+  DataItem& data = const_cast<DataItem&>(getDataItem(label, matlIndex, dom));
   // Dav's conjectures on how this works:
-  //   addScrubCount is called the first time with "addIfZero" set to some X.  
+  //   setScrubCount is called the first time with "count" set to some X.  
   //   This X represents the number of tasks that will use the var.  Later,
-  //   after a task has used the var, it will call addScrubCount with 
-  //   "count" set to -1 (in order to decrement the value of scrubCount.
+  //   after a task has used the var, it will call decrementScrubCount
   //   If scrubCount then is equal to 0, the var is scrubbed.
 
-  DataItem& data = const_cast<DataItem&>(getDataItem(label, matlIndex, patch));
-
-  // If it was zero to begin with, then add addIfZero first.
-  if (data.scrubCount == 0)
-    data.scrubCount += addIfZero;
-  data.scrubCount += count;
-  ASSERT(data.scrubCount >= 0);
-  if (data.scrubCount == 0) {
-    // some things can get scrubbed right after the task creates it.
-    scrub(label, matlIndex, patch);
-  }
+  ASSERT(data.scrubCount > 0);
+  if(!--data.scrubCount)
+    scrub(label, matlIndex, dom);
 }
 
-template<class VarType>
-void
-DWDatabase<VarType>::scrub(const VarLabel* var, int matlIndex,
-			   const Patch* patch)
+template<class VarType, class DomainType>
+void DWDatabase<VarType, DomainType>::
+setScrubCount(const VarLabel* label, int matlIndex,
+	      const DomainType* dom, int count)
 {
-  if (matlIndex < 0) {
-    if (patch == NULL) {
-      // get from globals
-      typename globalDBtype::const_iterator globaliter = globals.find(var);
-      if (globaliter != globals.end() && globaliter->second.var != 0) {
-	delete globaliter->second.var;
-	globals.erase(var);
-	return; // found and scrubbed
-      }
-      else
-	throw UnknownVariable(var->getName(),
-			      "no global variable with this name");
-    }
-    else
-      throw InternalError("matlIndex must be >= 0");
-  }
-  else {
-    typename nameDBtype::iterator iter = names.find(var);
-    if(iter != names.end()){
-      patchDBtype& patchDB = iter->second->patches;
-      typename patchDBtype::iterator patchRecordIter = patchDB.find(patch);
-      PatchRecord* patchRecord;
-      if (patchRecordIter != patchDB.end() &&
-	  ((patchRecord = patchRecordIter->second) != 0)) {
-	ASSERT(patchRecord->getDataItem(matlIndex)->scrubCount == 0);
-	patchRecord->removeVar(matlIndex);
-	if (patchRecord->empty()) {
-	  delete patchRecord;
-	  patchDB.erase(patchRecordIter);
-	  if (patchDB.size() == 0) {
-	    delete iter->second;
-	    names.erase(iter);
-	  }
+  DataItem& data = const_cast<DataItem&>(getDataItem(label, matlIndex, dom));
+  ASSERT(data.var != 0); // should have thrown an exception before
+  if(data.scrubCount == 0)
+    data.scrubCount = count;
+}
+
+template<class VarType, class DomainType>
+void
+DWDatabase<VarType, DomainType>::scrub(const VarLabel* var, int matlIndex,
+				       const DomainType* dom)
+{
+  ASSERT(matlIndex >= -1);
+  int domainid = getDB_ID(dom);
+  typename nameDBtype::iterator iter = names.find(var);
+  if(iter != names.end()){
+    domainDBtype& domainDB = iter->second->domains;
+    typename domainDBtype::iterator domainRecordIter = domainDB.find(domainid);
+    DomainRecord* domainRecord;
+    if (domainRecordIter != domainDB.end() &&
+	((domainRecord = domainRecordIter->second) != 0)) {
+      ASSERTEQ(domainRecord->getDataItem(matlIndex)->scrubCount, 0);
+      domainRecord->removeVar(matlIndex);
+      if (domainRecord->empty()) {
+	delete domainRecord;
+	domainDB.erase(domainRecordIter);
+	if (domainDB.size() == 0) {
+	  delete iter->second;
+	  names.erase(iter);
 	}
-	return; // found and scrubbed
       }
+      return; // found and scrubbed
     }
   }
 
   // scrub not found
   ostringstream msgstr;
   msgstr << var->getName() << ", matl " << matlIndex
-	 << ", patch " << (patch ? patch->getID() : -1)
+	 << ", patch/level " << domainid
 	 << " not found for scrubbing.";
 
-  throw InternalError(msgstr.str());
+  SCI_THROW(InternalError(msgstr.str()));
 }
 
-template<class VarType>
-DWDatabase<VarType>::NameRecord::NameRecord(const VarLabel* label)
+template<class VarType, class DomainType>
+void
+DWDatabase<VarType, DomainType>::initializeScrubs(int dwid,
+						  const map<VarLabelMatlPatchDW, int>& scrubcounts)
+{
+  // loop over each variable, probing the scrubcount map. Set the
+  // scrubcount appropriately.  if the variable has no entry in
+  // the scrubcount map, delete it
+  for(typename nameDBtype::iterator nameiter = names.begin();
+      nameiter != names.end();){
+    NameRecord* nr = nameiter->second;
+    for(typename domainDBtype::iterator domainiter = nr->domains.begin();
+	domainiter != nr->domains.end();){
+      DomainRecord* rr = domainiter->second;
+      for(int i=0;i<(int)rr->getVars().size();i++){
+	if(rr->getVars()[i].var){
+	  // See if it is in the scrubcounts map.  matls are offset by 1
+	  VarLabelMatlPatchDW key(nr->label, i-1, rr->getDomain(), dwid);
+	  map<VarLabelMatlPatchDW, int>::const_iterator iter = scrubcounts.find(key);
+	  if(iter == scrubcounts.end()){
+	    // Delete this...
+	    rr->removeVar(i-1);
+	  } else {
+	    ASSERTEQ(rr->getDataItem(i-1)->scrubCount, 0);
+	    rr->getDataItem(i-1)->scrubCount = iter->second;
+	  }
+	}
+      }
+      if(rr->empty()) {
+	const DomainType* dom = rr->getDomain();
+	delete rr;
+	nr->domains.erase(domainiter);
+	domainiter = nr->domains.lower_bound(getDB_ID(dom));
+      } else {
+	++domainiter;
+      }
+    }
+    if(nr->domains.size() == 0){
+      const VarLabel* var = nr->label;
+      delete nr;
+      names.erase(nameiter);
+      nameiter = names.lower_bound(var);
+    } else {
+      ++nameiter;
+    }
+  }
+}
+
+template<class VarType, class DomainType>
+DWDatabase<VarType, DomainType>::NameRecord::NameRecord(const VarLabel* label)
    : label(label)
 {
 }
 
-template<class VarType>
-DWDatabase<VarType>::NameRecord::~NameRecord()
+template<class VarType, class DomainType>
+DWDatabase<VarType, DomainType>::NameRecord::~NameRecord()
 {
-   for(typename patchDBtype::iterator iter = patches.begin();
-       iter != patches.end(); iter++){
+   for(typename domainDBtype::iterator iter = domains.begin();
+       iter != domains.end(); iter++){
       delete iter->second;
    }   
 }
 
-template<class VarType>
-DWDatabase<VarType>::PatchRecord::PatchRecord(const Patch* patch)
-  : patch(patch), count(0)
+template<class VarType, class DomainType>
+DWDatabase<VarType, DomainType>::DomainRecord::DomainRecord(const DomainType* dom)
+  : dom(dom), count(0)
 {
 }
 
-template <class VarType>
-void DWDatabase<VarType>::PatchRecord::putVar(int matlIndex, VarType* var,
+template <class VarType, class DomainType>
+void DWDatabase<VarType, DomainType>::DomainRecord::putVar(int matlIndex, VarType* var,
 					      bool replace)
-{   
-  if(matlIndex >= (int)vars.size()){
-    vars.resize(matlIndex+1);
+{
+  if(matlIndex+1 >= (int)vars.size()){
+    vars.resize(matlIndex+2);
   }
   
-  VarType* oldVar = vars[matlIndex].var;
+  VarType* oldVar = vars[matlIndex+1].var;
   
   if (oldVar != 0) {
     if (!replace) {
-      throw InternalError("Put replacing old variable");
+      SCI_THROW(InternalError("Put replacing old variable"));
     }
 
     // replace
@@ -376,272 +337,191 @@ void DWDatabase<VarType>::PatchRecord::putVar(int matlIndex, VarType* var,
   else {
     if (var != 0) count++;
   }
-  vars[matlIndex].var = var;      
+  vars[matlIndex+1].var = var;      
 }
 
-template <class VarType>
-inline typename DWDatabase<VarType>::DataItem*
-DWDatabase<VarType>::PatchRecord::getDataItem(int matlIndex)
+template <class VarType, class DomainType>
+inline typename DWDatabase<VarType, DomainType>::DataItem*
+DWDatabase<VarType, DomainType>::DomainRecord::getDataItem(int matlIndex)
 {
-  if (matlIndex < (int)vars.size())
-    return &vars[matlIndex];
+  if (matlIndex+1 < (int)vars.size())
+    return &vars[matlIndex+1];
   else
     return 0;
 }
 
-template <class VarType>
-inline VarType* DWDatabase<VarType>::PatchRecord::getVar(int matlIndex) const
+template <class VarType, class DomainType>
+inline VarType* DWDatabase<VarType, DomainType>::DomainRecord::getVar(int matlIndex) const
 {
-  if (matlIndex < (int)vars.size())
-    return vars[matlIndex].var;
+  if (matlIndex+1 < (int)vars.size())
+    return vars[matlIndex+1].var;
   else
     return 0;
 }
 
-template <class VarType>
-inline void DWDatabase<VarType>::PatchRecord::removeVar(int matlIndex)
+template <class VarType, class DomainType>
+inline void DWDatabase<VarType, DomainType>::DomainRecord::removeVar(int matlIndex)
 {
-  if (matlIndex < (int)vars.size()) {
-    if (vars[matlIndex].var != 0) {
-      //ASSERT(vars[matlIndex].scrubCount == 0);
-      delete vars[matlIndex].var;
-      vars[matlIndex].var = 0;
-      count--;
+  ASSERT(matlIndex+1 < (int)vars.size());
+  ASSERT(vars[matlIndex+1].var != 0);
+  ASSERT(vars[matlIndex+1].scrubCount == 0);
+  delete vars[matlIndex+1].var;
+  vars[matlIndex+1].var = 0;
+  count--;
+}
+
+template<class VarType, class DomainType>
+DWDatabase<VarType, DomainType>::DomainRecord::~DomainRecord()
+{
+  for(typename dataDBtype::iterator iter = vars.begin();
+      iter != vars.end(); iter++){
+    if(iter->var){
+      delete iter->var;
+    }
+  }   
+}
+
+template<class VarType, class DomainType>
+bool DWDatabase<VarType, DomainType>::exists(const VarLabel* label, int matlIndex,
+				 const DomainType* dom) const
+{
+  int domainid = getDB_ID(dom);
+ 
+  typename nameDBtype::const_iterator nameiter = names.find(label);
+  if(nameiter != names.end()) {
+    NameRecord* nr = nameiter->second;
+    typename domainDBtype::const_iterator domainiter = nr->domains.find(domainid);
+    if(domainiter != nr->domains.end()) {
+      DomainRecord* rr = domainiter->second;
+      if (rr->getVar(matlIndex) != 0) return true;
     }
   }
+  return false;
 }
 
-template<class VarType>
-DWDatabase<VarType>::PatchRecord::~PatchRecord()
+template<class VarType, class DomainType>
+bool DWDatabase<VarType, DomainType>::exists(const VarLabel* label, const DomainType* dom) const
 {
-   for(typename dataDBtype::iterator iter = vars.begin();
-       iter != vars.end(); iter++){
-      if(iter->var){
-	 delete iter->var;
+  int domainid = getDB_ID(dom);
+  typename nameDBtype::const_iterator nameiter = names.find(label);
+  if(nameiter != names.end()) {
+    NameRecord* nr = nameiter->second;
+    typename domainDBtype::const_iterator domainiter = nr->domains.find(domainid);
+    if(domainiter != nr->domains.end()) {
+      DomainRecord* rr = domainiter->second;
+      for(int i=0; i<(int)rr->getVars().size(); i++){
+	if(rr->getVars()[i].var != 0){
+	  return true;
+	}
       }
-   }   
+    }
+  }
+  return false;
 }
 
-template<class VarType>
-bool DWDatabase<VarType>::exists(const VarLabel* label, int matlIndex,
-				 const Patch* patch) const
-{
-   if (patch && patch->isVirtual())
-     patch = patch->getRealPatch();
-   if (matlIndex < 0)
-      return (patch == NULL) && (globals.find(label) != globals.end());
-  
-   typename nameDBtype::const_iterator nameiter = names.find(label);
-   if(nameiter != names.end()) {
-      NameRecord* nr = nameiter->second;
-      typename patchDBtype::const_iterator patchiter = nr->patches.find(patch);
-      if(patchiter != nr->patches.end()) {
-	 PatchRecord* rr = patchiter->second;
-	 if (rr->getVar(matlIndex) != 0) return true;
-      }
-   }
-   return false;
-}
-
-template<class VarType>
-bool DWDatabase<VarType>::exists(const VarLabel* label, const Patch* patch) const
-{
-   if (patch && patch->isVirtual())
-     patch = patch->getRealPatch();
-   typename nameDBtype::const_iterator nameiter = names.find(label);
-   if(nameiter != names.end()) {
-      NameRecord* nr = nameiter->second;
-      typename patchDBtype::const_iterator patchiter = nr->patches.find(patch);
-      if(patchiter != nr->patches.end()) {
-	 PatchRecord* rr = patchiter->second;
-	 for(int i=0; i<(int)rr->getVars().size(); i++){
-	    if(rr->getVars()[i].var != 0){
-	       return true;
-	    }
-	 }
-      }
-   }
-   if (patch == NULL) {
-      // try globals as last resort
-      return globals.find(label) != globals.end();
-   }
-   return false;
-}
-
-template<class VarType>
-void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
-			      const Patch* patch,
+template<class VarType, class DomainType>
+void DWDatabase<VarType, DomainType>::put(const VarLabel* label, int matlIndex,
+			      const DomainType* dom,
 			      VarType* var,
 			      bool replace)
 {
-  ASSERT(patch == 0 || !patch->isVirtual());
-  if(matlIndex < 0) {
-    if (patch == NULL) {
-      // add to globals
-      typename globalDBtype::iterator globaliter = globals.find(label);
-      if (globaliter == globals.end()) {
-	globals[label].var = var;
-	return;
-      }
-      else if (replace) {
-	DataItem& globalData = globals[label];
-	if (globalData.var != NULL) {
-	  ASSERT(globalData.var != var);
-	  delete globalData.var;
-	}
-	globalData.var = var;
-	return;
-      }
-      else
-	 throw InternalError("Put replacing old global variable");	
-    }
-    else
-      throw InternalError("matlIndex must be >= 0");
+  ASSERT(matlIndex+1 >= 0);
+  
+  int domainid = getDB_ID(dom);
+  typename nameDBtype::iterator nameiter = names.find(label);
+  if(nameiter == names.end()){
+    names[label] = scinew NameRecord(label);
+    nameiter = names.find(label);
+  }
+
+  NameRecord* nr = nameiter->second;
+  typename domainDBtype::const_iterator domainiter = nr->domains.find(domainid);
+  if(domainiter == nr->domains.end()) {
+    nr->domains[domainid] = scinew DomainRecord(dom);
+    domainiter = nr->domains.find(domainid);
   }
   
-   typename nameDBtype::iterator nameiter = names.find(label);
-   if(nameiter == names.end()){
-      names[label] = scinew NameRecord(label);
-      nameiter = names.find(label);
-   }
-
-   NameRecord* nr = nameiter->second;
-   typename patchDBtype::const_iterator patchiter = nr->patches.find(patch);
-   if(patchiter == nr->patches.end()) {
-      nr->patches[patch] = scinew PatchRecord(patch);
-      patchiter = nr->patches.find(patch);
-   }
-
-   PatchRecord* rr = patchiter->second;
-   rr->putVar(matlIndex, var, replace);
+  DomainRecord* rr = domainiter->second;
+  rr->putVar(matlIndex, var, replace);
 }
 
-template<class VarType>
-const typename DWDatabase<VarType>::DataItem&
-DWDatabase<VarType>::getDataItem(const VarLabel* label, int matlIndex,
-				 const Patch* patch) const
+template<class VarType, class DomainType>
+const typename DWDatabase<VarType, DomainType>::DataItem&
+DWDatabase<VarType, DomainType>::getDataItem(const VarLabel* label, int matlIndex,
+				 const DomainType* dom) const
 {
-   ASSERT(patch == 0 || !patch->isVirtual());
-   if(matlIndex < 0) {
-      if (patch == NULL) {
-         // get from globals
-         typename globalDBtype::const_iterator globaliter =globals.find(label);
-         if (globaliter != globals.end() && globaliter->second.var != 0)
-	    return globaliter->second;
-         else
-	    throw UnknownVariable(label->getName(),
-                                  "no global variable with this name");
-      }
-      else
-         throw InternalError("matlIndex must be >= 0");
-   }
+  ASSERT(matlIndex+1 >= 0);
   
-   typename nameDBtype::const_iterator nameiter = names.find(label);
-   if(nameiter == names.end())
-      throw UnknownVariable(label->getName(), patch, matlIndex,
-			    "no variable name");
+  typename nameDBtype::const_iterator nameiter = names.find(label);
+  if(nameiter == names.end())
+    SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex,
+			      "no variable name"));
 
-   NameRecord* nr = nameiter->second;
+  NameRecord* nr = nameiter->second;
 
-   typename patchDBtype::const_iterator patchiter = nr->patches.find(patch);
-   if(patchiter == nr->patches.end())
-      throw UnknownVariable(label->getName(), patch, matlIndex,
-			    "no patch with this variable name");
+  int domainid = getDB_ID(dom);
+  typename domainDBtype::const_iterator domainiter = nr->domains.find(domainid);
+  if(domainiter == nr->domains.end())
+    SCI_THROW(UnknownVariable(label->getName(), -98, dom, matlIndex,
+			      "no domain with this variable name"));
 
-   DataItem* dataItem = patchiter->second->getDataItem(matlIndex);
-   if (dataItem == 0 || (dataItem->var == 0)) {
-      throw UnknownVariable(label->getName(), patch, matlIndex,
-			    "no material with this patch and variable name");
-   }
-   return *dataItem;
+  DataItem* dataItem = domainiter->second->getDataItem(matlIndex);
+  if (dataItem == 0 || (dataItem->var == 0)) {
+    SCI_THROW(UnknownVariable(label->getName(), -97, dom, matlIndex,
+			  "no material with this domain and variable name"));
+  }
+  return *dataItem;
 }
 
-template<class VarType>
-inline VarType* DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
-					 const Patch* patch) const
+template<class VarType, class DomainType>
+inline VarType* DWDatabase<VarType, DomainType>::get(const VarLabel* label, int matlIndex,
+					 const DomainType* dom) const
 {
-  const DataItem& dataItem = getDataItem(label, matlIndex, patch);
+  const DataItem& dataItem = getDataItem(label, matlIndex, dom);
   ASSERT(dataItem.var != 0); // should have thrown an exception before
   return dataItem.var;
 }
 
-template<class VarType>
-void DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
-			      const Patch* patch,
-			      VarType& var) const
+template<class VarType, class DomainType>
+void DWDatabase<VarType, DomainType>::get(const VarLabel* label, int matlIndex,
+					  const DomainType* dom,
+					  VarType& var) const
 {
-   if (patch && patch->isVirtual()) {
-     VarType* tmp = get(label, matlIndex, patch->getRealPatch());
-     var.copyPointer(*tmp);
-     var.offsetGrid(patch->getVirtualOffset());
-   }
-   else {
-     VarType* tmp = get(label, matlIndex, patch);
-     var.copyPointer(*tmp);
-   }
+  VarType* tmp = get(label, matlIndex, dom);
+  var.copyPointer(*tmp);
 }
 
-template<class VarType>
-void DWDatabase<VarType>::copyAll(const DWDatabase& from,
-				  const VarLabel* label,
-				  const Patch* patch)
+template<class VarType, class DomainType>
+void DWDatabase<VarType, DomainType>::print(std::ostream& out) const
 {
-   ASSERT(patch == 0 || !patch->isVirtual());
-  
-   typename nameDBtype::const_iterator nameiter = from.names.find(label);
-   if(nameiter == from.names.end())
-      return;
-
-   NameRecord* nr = nameiter->second;
-   typename patchDBtype::const_iterator patchiter = nr->patches.find(patch);
-   if(patchiter == nr->patches.end())
-      return;
-
-   PatchRecord* rr = patchiter->second;
-
-   for(int i=0;i<rr->getVars().size();i++){
-      if(rr->getVars()[i].var)
-	 put(label, i, patch, rr->getVars()[i].var->clone(), false);
-   }
-
-   globals = from.globals;
-}
-
-template<class VarType>
-void DWDatabase<VarType>::print(std::ostream& out) const
-{
-   for(typename nameDBtype::const_iterator nameiter = names.begin();
-       nameiter != names.end(); nameiter++){
-      NameRecord* nr = nameiter->second;
-      out << nr->label->getName() << '\n';
-      for(typename patchDBtype::const_iterator patchiter = nr->patches.begin();
-	  patchiter != nr->patches.end();patchiter++){
-	 PatchRecord* rr = patchiter->second;
-	 out <<  "  " << *(rr->patch) << '\n';
-	 for(int i=0;i<(int)rr->getVars().size();i++){
-	    if(rr->getVars()[i].var){
-	       out << "    Material " << i << '\n';
-	    }
-	 }
+  for(typename nameDBtype::const_iterator nameiter = names.begin();
+      nameiter != names.end(); nameiter++){
+    NameRecord* nr = nameiter->second;
+    out << nr->label->getName() << '\n';
+    for(typename domainDBtype::const_iterator domainiter = nr->domains.begin();
+	domainiter != nr->domains.end();domainiter++){
+      DomainRecord* rr = domainiter->second;
+      out <<  "  " << getDB_ID(rr->getDomain()) << '\n';
+      for(int i=0;i<(int)rr->getVars().size();i++){
+	if(rr->getVars()[i].var){
+	  out << "    Material " << i-1 << '\n';
+	}
       }
-   }
-
-   for( typename globalDBtype::const_iterator globaliter = globals.begin();
-	globaliter != globals.end(); globaliter++ )
-     out << (*globaliter).first->getName() << '\n';
+    }
+  }
 }
 
-template<class VarType>
+template<class VarType, class DomainType>
 void
-DWDatabase<VarType>::logMemoryUse(ostream& out, unsigned long& total,
+DWDatabase<VarType, DomainType>::logMemoryUse(ostream& out, unsigned long& total,
 				  const std::string& tag, int dwid)
 {
   for(typename nameDBtype::iterator iter = names.begin();
       iter != names.end(); iter++){
     NameRecord* nr = iter->second;
-    for(typename patchDBtype::iterator iter = nr->patches.begin();
-	iter != nr->patches.end(); iter++){
-      PatchRecord* pr = iter->second;
+    for(typename domainDBtype::iterator iter = nr->domains.begin();
+	iter != nr->domains.end(); iter++){
+      DomainRecord* pr = iter->second;
       for(int i=0;i<(int)pr->getVars().size();i++){
 	VarType* var = pr->getVars()[i].var;
 	if(var){
@@ -652,23 +532,10 @@ DWDatabase<VarType>::logMemoryUse(ostream& out, unsigned long& total,
 	  var->getSizeInfo(elems, totsize, ptr);
 	  const TypeDescription* td = label->typeDescription();
 	  logMemory(out, total, tag, label->getName(), (td?td->getName():"-"),
-		    pr->getPatch(), i, elems, totsize, ptr, dwid);
+		    pr->getDomain(), i, elems, totsize, ptr, dwid);
 	}
       }
     }
-  }
-  
-  for(typename globalDBtype::iterator iter = globals.begin();
-      iter != globals.end(); iter++){
-    const VarLabel* label = iter->first;
-    VarType* var = iter->second.var;
-    string elems;
-    unsigned long totsize;
-    void* ptr;
-    var->getSizeInfo(elems, totsize, ptr);
-    const TypeDescription* td = label->typeDescription();
-    logMemory(out, total, tag, label->getName(), (td?td->getName():"-"),
-	      0, -1, elems, totsize, ptr, dwid);
   }
 }
 

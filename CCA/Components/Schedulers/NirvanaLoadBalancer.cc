@@ -2,6 +2,7 @@
 
 #include <Packages/Uintah/CCA/Components/Schedulers/NirvanaLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -37,10 +38,6 @@ static int getproc(const IntVector& l, const IntVector& d,
 void NirvanaLoadBalancer::assignResources(DetailedTasks& graph,
 					  const ProcessorGroup* group)
 {
-#if 0
-  static bool first=true;
-  int me = group->myrank();
-#endif
   int nTasks = graph.numTasks();
   const Level* level = 0;
   for(int i=0;i<nTasks && !level;i++){
@@ -58,10 +55,10 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks& graph,
   numProcs = group->size();
   processors_per_host = numProcs/numhosts;
   if(processors_per_host * numhosts != numProcs)
-    throw InternalError("NirvanaLoadBalancer will not work with uneven numbers of processors per host");
+    SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven numbers of processors per host"));
   patches_per_processor = npatches/numProcs;
   if(patches_per_processor * numProcs != npatches) {
-    throw InternalError("NirvanaLoadBalancer will not work with uneven number of patches per processor");
+    SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven number of patches per processor"));
   }
   
   IntVector max(-1,-1,-1);
@@ -69,7 +66,7 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks& graph,
       iter != level->patchesEnd(); iter++){
     IntVector l;
     if(!(*iter)->getLayoutHint(l))
-      throw InternalError("NirvanaLoadBalancer requires layout hints");
+      SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints"));
     max = Max(max, l);
   }
   max+=IntVector(1,1,1);
@@ -81,18 +78,14 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks& graph,
       const Patch* patch = patches->get(0);
       IntVector l;
       if(!patch->getLayoutHint(l))
-	throw InternalError("NirvanaLoadBalancer requires layout hints");
+	SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints"));
       int idx = getproc(l, d, layout, patches_per_processor, processors_per_host);
-#if 0
-      if(me == 0 && first)
-	cerr << idx << ": " << *patch << '\n';
-#endif
       task->assignResource(idx);
       for(int i=1;i<patches->size();i++){
 	const Patch* p = patches->get(i);
 	IntVector l;
 	if(!p->getLayoutHint(l))
-	  throw InternalError("NirvanaLoadBalancer requires layout hints");
+	  SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints"));
 	int pidx = getproc(l, d, layout, patches_per_processor, processors_per_host);
 	if(pidx != idx){
 	  cerr << "WARNING: inconsistent task assignment in NirvanaLoadBalancer\n";
@@ -112,9 +105,6 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks& graph,
       }
     }
   }
-#if 0
-  first=false;
-#endif
 }
 
 int NirvanaLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
@@ -126,10 +116,10 @@ int NirvanaLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
     numProcs = group->size();
     processors_per_host = numProcs/numhosts;
     if(processors_per_host * numhosts != numProcs)
-      throw InternalError("NirvanaLoadBalancer will not work with uneven numbers of processors per host");
+      SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven numbers of processors per host"));
     patches_per_processor = npatches/numProcs;
     if(patches_per_processor * numProcs != npatches) {
-      throw InternalError("NirvanaLoadBalancer will not work with uneven number of patches per processor");
+      SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven number of patches per processor"));
     }
     IntVector max(-1,-1,-1);
     const Level* level = patch->getLevel();
@@ -137,7 +127,7 @@ int NirvanaLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
 	iter != level->patchesEnd(); iter++){
       IntVector l;
       if(!(*iter)->getLayoutHint(l))
-	throw InternalError("NirvanaLoadBalancer requires layout hints");
+	SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints"));
       max = Max(max, l);
     }
     max+=IntVector(1,1,1);
@@ -146,7 +136,7 @@ int NirvanaLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
   
   IntVector l;
   if(!patch->getLayoutHint(l))
-    throw InternalError("NirvanaLoadBalancer requires layout hints");
+    SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints"));
   int pidx = getproc(l, d, layout, patches_per_processor, processors_per_host);
   return pidx;
 }
@@ -171,25 +161,28 @@ NirvanaLoadBalancer::createPerProcessorPatchSet(const LevelP& level,
 
 
 void
-NirvanaLoadBalancer::createNeighborhood(const Level* level,
+NirvanaLoadBalancer::createNeighborhood(const GridP& grid,
 					const ProcessorGroup* group)
 {
   int me = group->myrank();
   // WARNING - this should be determined from the taskgraph? - Steve
   int maxGhost = 2;
   neighbors.clear();
-  for(Level::const_patchIterator iter = level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch = *iter;
-    if(getPatchwiseProcessorAssignment(patch, group) == me){
-      Level::selectType n;
-      IntVector lowIndex, highIndex;
-      patch->computeVariableExtents(Patch::CellBased, Ghost::AroundCells,
-				    maxGhost, n, lowIndex, highIndex);
-      for(int i=0;i<(int)n.size();i++){
-	const Patch* neighbor = n[i];
-	if(neighbors.find(neighbor) == neighbors.end())
-	  neighbors.insert(neighbor);
+  for(int l=0;l<grid->numLevels();l++){
+    const LevelP& level = grid->getLevel(l);
+    for(Level::const_patchIterator iter = level->patchesBegin();
+	iter != level->patchesEnd(); iter++){
+      const Patch* patch = *iter;
+      if(getPatchwiseProcessorAssignment(patch, group) == me){
+	Level::selectType n;
+	IntVector lowIndex, highIndex;
+	patch->computeVariableExtents(Patch::CellBased, Ghost::AroundCells,
+				      maxGhost, n, lowIndex, highIndex);
+	for(int i=0;i<(int)n.size();i++){
+	  const Patch* neighbor = n[i];
+	  if(neighbors.find(neighbor) == neighbors.end())
+	    neighbors.insert(neighbor);
+	}
       }
     }
   }

@@ -44,8 +44,7 @@ SimpleScheduler::verifyChecksum()
 }
 
 void
-SimpleScheduler::actuallyCompile(const ProcessorGroup*,
-				 bool)
+SimpleScheduler::actuallyCompile(const ProcessorGroup*)
 {
   graph.topologicalSort(tasks);
 }
@@ -59,6 +58,9 @@ SimpleScheduler::execute(const ProcessorGroup * pc)
   }
   dbg << "Executing " << ntasks << " tasks\n";
   
+  vector<DataWarehouseP> plain_old_dws(dws.size());
+  for(int i=0;i<(int)dws.size();i++)
+    plain_old_dws[i] = dws[i].get_rep();
   for(int i=0;i<ntasks;i++){
     double start = Time::currentSeconds();
     Task* task = tasks[i];
@@ -69,22 +71,18 @@ SimpleScheduler::execute(const ProcessorGroup * pc)
 	const PatchSubset* patch_subset = patchset->getSubset(p);
 	for(int m=0;m<matlset->size();m++){
 	  const MaterialSubset* matl_subset = matlset->getSubset(m);
-	  task->doit( pc, patch_subset, matl_subset, 
-		      dws_[Task::OldDW].get_rep(),
-		      dws_[Task::NewDW].get_rep() );
+	  task->doit( pc, patch_subset, matl_subset, plain_old_dws);
 	}
       }
     } else {
-      task->doit(pc, 0, 0, dws_[Task::OldDW].get_rep(),
-		 dws_[Task::NewDW].get_rep());
+      task->doit(pc, 0, 0, plain_old_dws);
     }
     double dt = Time::currentSeconds()-start;
     dbg << "Completed task: " << tasks[i]->getName()
 	<< " (" << dt << " seconds)\n";
   }
 
-  dws_[Task::NewDW]->finalize();
-  finalizeNodes();
+  finalizeTimestep();
 }
 
 void

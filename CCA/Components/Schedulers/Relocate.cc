@@ -19,7 +19,7 @@
 #include <map>
 #include <set>
 
-#define RELOCATE_TAG            0x1000000
+#define RELOCATE_TAG            0x3fff
 
 using namespace std;
 using namespace Uintah;
@@ -280,7 +280,7 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 	  if(i == (int)neighbors.size()){
 	    // Make sure that the particle really left the world
 	    if(level->containsPoint(px[idx]))
-	      throw InternalError("Particle fell through the cracks!");
+	      SCI_THROW(InternalError("Particle fell through the cracks!"));
 	  } else {
 	    // Save this particle set for sending later
 	    const Patch* toPatch=neighbors[i];
@@ -670,7 +670,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	  if(i == (int)neighbors.size()){
 	    // Make sure that the particle really left the world
 	    if(level->containsPoint(px[idx]))
-	      throw InternalError("Particle fell through the cracks!");
+	      SCI_THROW(InternalError("Particle fell through the cracks!"));
 	  } else {
 	    // Save this particle set for sending later
 	    const Patch* toPatch=neighbors[i];
