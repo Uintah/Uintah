@@ -100,7 +100,7 @@ LIBRARY_HANDLE PackageDB::findLibInPath(string lib, string path)
   string tempPaths = path;
   string dir;
 
-  // try to find the package library in the specified paths
+  // try to find the library in the specified path
   while (tempPaths!="") {
     const unsigned int firstColon = tempPaths.find(':');
     if(firstColon < tempPaths.size()) {
@@ -111,14 +111,13 @@ LIBRARY_HANDLE PackageDB::findLibInPath(string lib, string path)
       tempPaths="";
     }
 
-    std::cerr << "looking for " << (dir+"/"+lib).c_str() << std::endl;
-    
     handle = GetLibraryHandle((dir+"/"+lib).c_str());
     if (handle)
       return handle;
   }
 
-  // if not yet found, try to find it in the LD_LIBRARY_PATH (last resort)
+  // if not yet found, try to find it in the rpath 
+  // or the LD_LIBRARY_PATH (last resort)
   handle = GetLibraryHandle(lib.c_str());
     
   return handle;
