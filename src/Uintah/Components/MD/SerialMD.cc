@@ -1,7 +1,7 @@
 /* REFERENCED */
 static char *id="@(#) $Id$";
 
-#include <Uintah/Components/MPM/SerialMPM.h>
+#include <Uintah/Components/MD/SerialMD.h>
 #include <Uintah/Grid/Array3Index.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
@@ -28,10 +28,10 @@ static char *id="@(#) $Id$";
 #include <iostream>
 #include <fstream>
 
-#include <Uintah/Components/MPM/MPMLabel.h>
+#include <Uintah/Components/MD/MDLabel.h>
 
 using namespace Uintah;
-using namespace Uintah::MPM;
+using namespace Uintah::MD;
 
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
@@ -41,33 +41,33 @@ using SCICore::Math::Max;
 using namespace std;
 
 
-SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
+SerialMD::SerialMD( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
 {
 }
 
-SerialMPM::~SerialMPM()
+SerialMD::~SerialMD()
 {
 }
 
-void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
+void SerialMD::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 			     SimulationStateP& sharedState)
 {
 }
 
-void SerialMPM::scheduleInitialize(const LevelP& level,
+void SerialMD::scheduleInitialize(const LevelP& level,
 				   SchedulerP& sched,
 				   DataWarehouseP& dw)
 {
 }
 
-void SerialMPM::scheduleComputeStableTimestep(const LevelP&,
+void SerialMD::scheduleComputeStableTimestep(const LevelP&,
 					      SchedulerP&,
 					      DataWarehouseP&)
 {
 }
 
-void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
+void SerialMD::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 				    const LevelP&         level,
 				          SchedulerP&     sched,
 				          DataWarehouseP& old_dw, 
@@ -76,6 +76,9 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 }
 
 // $Log$
+// Revision 1.2  2000/06/10 04:09:52  tan
+// Added MDLabel class.
+//
 // Revision 1.1  2000/06/09 18:02:08  tan
 // Create SerialMD to do molecular dynamics simulations.
 //
