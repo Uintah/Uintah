@@ -96,11 +96,10 @@ protected:
   GuiString      playmode_;
   GuiString      dependence_;
   GuiInt         current_;
-  GuiString      execmode_;
   GuiInt         delay_;
   GuiInt         inc_amount_;
   int            inc_;
-  bool           stop_;
+  string         execmode_;
   int            last_input_;
   NrrdDataHandle last_output_;
 
