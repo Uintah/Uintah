@@ -284,6 +284,11 @@ GenericField<Mesh, FData>::is_scalar() const
   return ::SCIRun::is_scalar<value_type>();
 }
 
+// Turn off warning for CHECKARRAYBOUNDS
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1183
+#endif
+
 template <class Mesh, class FData>
 bool
 GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::Node::index_type i) const
@@ -386,6 +391,12 @@ GenericField<Mesh, FData>::value(typename mesh_type::Cell::index_type i) const
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
   return fdata_[i];
 }
+
+// Reenable warning for CHECKARRAYBOUNDS
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1183
+#endif
+
 
 template <class Mesh, class FData>
 typename GenericField<Mesh, FData>::fdata_type &
