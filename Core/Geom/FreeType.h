@@ -127,6 +127,7 @@ public:
   void			render(int, int, unsigned char *);
   void			get_bounds(BBox &);
   void			set_anchor(anchor_e anchor) { anchor_ = anchor; }
+  void			set_position(const Point &pt);
 #ifdef HAVE_FREETYPE
   FT_Vector		ft_position(); 
 #endif

@@ -354,4 +354,9 @@ FreeTypeText::render(int width, int height, unsigned char *buffer)
 }
 
 
+void
+FreeTypeText::set_position(const Point &pt) {
+  position_ = pt;
+}
+
 } // End namespace SCIRun
