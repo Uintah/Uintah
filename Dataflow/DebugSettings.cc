@@ -51,8 +51,8 @@ void DebugSettings::tcl_command(TCLArgs& args, void*)
     Array1<clString> debuglist(debug->size());
     
     DebugIter iter(debug);
-    int i=0;
-    for(iter.first();iter.ok();++iter){
+    int i;
+    for(iter.first(),i=0;iter.ok();++iter,++i){
 	DebugVars& debug_vars=*iter.get_data();
 	Array1<clString> vars(debug_vars.size());
 	for(int j=0;j<debug_vars.size();j++){
