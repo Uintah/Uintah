@@ -2985,14 +2985,23 @@ void ICE::setBC(CCVariable<Vector>& variable, const string& kind,
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
-    BoundCondBase* bcs;
+    BoundCondBase *bcs,*sym_bcs;
     BoundCond<Vector>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
       bcs = patch->getBCValues(mat_id,kind,face);
+      sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
       new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
     } else
       continue;
 
+    if (sym_bcs != 0) {
+      // First set the Neumann conditions for the non-normal faces
+      variable.fillFaceFlux(face,Vector(0.,0.,0.),dx);
+      // Then zero out the component that is normal to the face, the
+      // Neumann conditions will be retained.
+      variable.fillFaceNormal(face);
+    }
+      
     if (new_bcs != 0) {
       if (new_bcs->getKind() == "Dirichlet") 
 	variable.fillFace(face,new_bcs->getValue());
