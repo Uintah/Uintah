@@ -10,7 +10,6 @@
 SRCDIR := Packages/DaveW/Dataflow/Modules
 
 SUBDIRS := \
-	$(SRCDIR)/CS684\
 	$(SRCDIR)/EEG\
 	$(SRCDIR)/EGI\
 	$(SRCDIR)/FDM\
@@ -18,8 +17,9 @@ SUBDIRS := \
 	$(SRCDIR)/ISL\
 	$(SRCDIR)/MEG\
 	$(SRCDIR)/Readers\
-	$(SRCDIR)/Tensor\
 	$(SRCDIR)/Writers\
+#	$(SRCDIR)/CS684\
+#	$(SRCDIR)/Tensor\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SRCTOP)/scripts/recurse.mk

@@ -12,10 +12,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Mesh
 
 SRCS     += \
-	$(SRCDIR)/Delaunay.cc\
 	$(SRCDIR)/ExtractMesh.cc\
 	$(SRCDIR)/HexMeshToGeom.cc\
-	$(SRCDIR)/InsertDelaunay.cc\
 	$(SRCDIR)/MakeScalarField.cc\
 	$(SRCDIR)/MeshBoundary.cc\
 	$(SRCDIR)/MeshFindSurfNodes.cc\
@@ -23,8 +21,10 @@ SRCS     += \
 	$(SRCDIR)/MeshNodeComponent.cc\
 	$(SRCDIR)/MeshRender.cc\
 	$(SRCDIR)/MeshToGeom.cc\
-	$(SRCDIR)/MeshView.cc\
 	$(SRCDIR)/TransformMesh.cc
+#	$(SRCDIR)/MeshView.cc\
+#	$(SRCDIR)/InsertDelaunay.cc\
+#	$(SRCDIR)/Delaunay.cc\
 #[INSERT NEW MODULE HERE]
 
 PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Dataflow/Widgets \

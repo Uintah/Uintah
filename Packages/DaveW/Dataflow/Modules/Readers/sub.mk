@@ -16,8 +16,9 @@ SRCS     += \
 	$(SRCDIR)/GenesisMatrixReader.cc\
 	$(SRCDIR)/SegFldReader.cc\
 	$(SRCDIR)/SigmaSetReader.cc\
-	$(SRCDIR)/TensorFieldReader.cc\
 #[INSERT NEW CODE FILE HERE]
+
+#	$(SRCDIR)/TensorFieldReader.cc\
 
 PSELIBS := Packages/DaveW/Core/Datatypes/General Dataflow/Network \
 	Dataflow/Ports Core/Exceptions Core/Thread Core/Containers \

@@ -12,12 +12,12 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/FEM
 
 SRCS     += \
-	$(SRCDIR)/ApplyBC.cc\
-	$(SRCDIR)/BuildFEMatrix.cc\
-	$(SRCDIR)/ComposeError.cc\
-        $(SRCDIR)/ErrorInterval.cc\
-	$(SRCDIR)/FEMError.cc\
-        $(SRCDIR)/MeshRefiner.cc\
+	$(SRCDIR)/BuildFEMatrix.cc
+#	$(SRCDIR)/ApplyBC.cc\
+#	$(SRCDIR)/ComposeError.cc\
+#        $(SRCDIR)/ErrorInterval.cc\
+#	$(SRCDIR)/FEMError.cc\
+#        $(SRCDIR)/MeshRefiner.cc
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Core/Datatypes \

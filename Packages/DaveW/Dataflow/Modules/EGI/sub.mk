@@ -12,8 +12,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/DaveW/Dataflow/Modules/EGI
 
 SRCS     += \
-	$(SRCDIR)/Anneal.cc\
 	$(SRCDIR)/DipoleInSphere.cc\
+#	$(SRCDIR)/Anneal.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Dataflow/Ports Dataflow/Network Core/Containers \

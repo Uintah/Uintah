@@ -13,7 +13,6 @@ SRCDIR   := Packages/DaveW/Dataflow/Modules/EEG
 
 SRCS     += \
 	$(SRCDIR)/BldEEGMesh.cc\
-	$(SRCDIR)/Coregister.cc\
 	$(SRCDIR)/RescaleSegFld.cc\
 	$(SRCDIR)/SFRGtoSFUG.cc\
 	$(SRCDIR)/STreeExtractSurf.cc\
@@ -21,9 +20,10 @@ SRCS     += \
 	$(SRCDIR)/SegFldToSurfTree.cc\
 	$(SRCDIR)/SelectSurfNodes.cc\
 	$(SRCDIR)/Taubin.cc\
-	$(SRCDIR)/Thermal.cc\
 	$(SRCDIR)/TopoSurfToGeom.cc\
-	$(SRCDIR)/SliceMaker.cc\
+#	$(SRCDIR)/Coregister.cc\
+#	$(SRCDIR)/SliceMaker.cc\
+#	$(SRCDIR)/Thermal.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/DaveW/Core/Datatypes/General \

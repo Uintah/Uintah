@@ -157,6 +157,7 @@ struct MeshGrid {
   int locate(Mesh* mesh, const Point& p, double epsilon);
 };
 
+#if 0
 struct MeshOctree {
   Point mid;
   Array1<int> elems;
@@ -166,26 +167,26 @@ struct MeshOctree {
 
   int locate(Mesh* mesh, const Point& p, double epsilon);
 };
-
+#endif
 
 class Mesh;
 typedef LockingHandle<Mesh> MeshHandle;
 
 class SCICORESHARE Mesh : public Datatype {
   friend class MeshGrid;
-  friend class MeshOctree;
+//  friend class MeshOctree;
   friend class Element;
 
 protected:
   MeshGrid grid;
-  MeshOctree *octree;
+//  MeshOctree *octree;
   int bld_grid;
   //Array1<NodeHandle> nodes;
   //Array1<Element*> elems;
   //Array1<Array1<double> > cond_tensors;
 
-  std::vector<int> *delaunay_generation;
-  int current_generation;
+//  std::vector<int> *delaunay_generation;
+//  int current_generation;
 
 public:
   Array1<NodeHandle> nodes;
@@ -230,9 +231,9 @@ public:
   void compute_neighbors();
   void compute_face_neighbors();
 
-  bool insert_delaunay( int node );
-  bool insert_delaunay( const Point& );
-  void remove_delaunay(int node, int fill);
+//  bool insert_delaunay( int node );
+//  bool insert_delaunay( const Point& );
+//  void remove_delaunay(int node, int fill);
   void pack_nodes();
   void pack_elems();
   void pack_all();
@@ -259,8 +260,8 @@ private:
 			 const Point& orig, const Vector& dir);
   bool overlaps(Element* e, const Point& min, const Point& max);
 
-  void make_octree(int level, MeshOctree*& octree, const Point& min,
-		   const Point& max, const Array1<int>& elems);
+//  void make_octree(int level, MeshOctree*& octree, const Point& min,
+//		   const Point& max, const Array1<int>& elems);
 
   void make_grid(int nx, int ny, int nz, const Point &min, const Point &max,
 		 double eps);
