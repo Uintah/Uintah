@@ -9,6 +9,7 @@
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/IntVector.h>
 #include <SCICore/Math/MiscMath.h>
+#include <SCICore/Math/MinMax.h>
 
 #include <string>
 #include <iosfwd>
@@ -23,6 +24,8 @@ namespace Uintah {
    using SCICore::Geometry::Vector;
    using SCICore::Geometry::IntVector;
    using SCICore::Math::RoundUp;
+   using SCICore::Math::Min;
+   using SCICore::Math::Max;
    
    class NodeSubIterator;
    class NodeIterator;
@@ -157,35 +160,31 @@ WARNING
       // Determines if "region" is within (or the same as) this
       // region.
       inline bool contains(const Region& region) const {
-	 return ( ( ( ( region.d_box.lower().x() >= d_box.lower().x() &&
-			region.d_box.lower().x() <= d_box.upper().x() ) || 
-		      ( region.d_box.lower().x() <= d_box.lower().x() &&
-			region.d_box.lower().x() >= d_box.upper().x() ) ) &&
+	    int myMinX = Min( d_box.lower().x(), d_box.upper().x() );
+	    int myMinY = Min( d_box.lower().y(), d_box.upper().y() );
+	    int myMinZ = Min( d_box.lower().z(), d_box.upper().z() );
 
-		    ( ( region.d_box.lower().y() >= d_box.lower().y() &&
-			region.d_box.lower().y() <= d_box.upper().y() ) || 
-		      ( region.d_box.lower().y() <= d_box.lower().y() &&
-			region.d_box.lower().y() >= d_box.upper().y() ) ) &&
+	    int myMaxX = Max( d_box.lower().x(), d_box.upper().x() );
+	    int myMaxY = Max( d_box.lower().y(), d_box.upper().y() );
+	    int myMaxZ = Max( d_box.lower().z(), d_box.upper().z() );
 
-		    ( ( region.d_box.lower().z() >= d_box.lower().z() &&
-			region.d_box.lower().z() <= d_box.upper().z() ) || 
-		      ( region.d_box.lower().z() <= d_box.lower().z() &&
-			region.d_box.lower().z() >= d_box.upper().z() ) ) ) &&
+	    int regMinX = Min( region.d_box.lower().x(), 
+			       region.d_box.upper().x() );
+	    int regMinY = Min( region.d_box.lower().y(), 
+			       region.d_box.upper().y() );
+	    int regMinZ = Min( region.d_box.lower().z(),
+			       region.d_box.upper().z() );
 
-		  ( ( ( region.d_box.upper().x() >= d_box.lower().x() &&
-			region.d_box.upper().x() <= d_box.upper().x() ) || 
-		      ( region.d_box.upper().x() <= d_box.lower().x() &&
-			region.d_box.upper().x() >= d_box.upper().x() ) ) &&
+	    int regMaxX = Max( region.d_box.lower().x(),
+			       region.d_box.upper().x() );
+	    int regMaxY = Max( region.d_box.lower().y(),
+			       region.d_box.upper().y() );
+	    int regMaxZ = Max( region.d_box.lower().z(),
+			       region.d_box.upper().z() );
 
-		    ( ( region.d_box.upper().y() >= d_box.lower().y() &&
-			region.d_box.upper().y() <= d_box.upper().y() ) || 
-		      ( region.d_box.upper().y() <= d_box.lower().y() &&
-			region.d_box.upper().y() >= d_box.upper().y() ) ) &&
-
-		    ( ( region.d_box.upper().z() >= d_box.lower().z() &&
-			region.d_box.upper().z() <= d_box.upper().z() ) || 
-		      ( region.d_box.upper().z() <= d_box.lower().z() &&
-			region.d_box.upper().z() >= d_box.upper().z() ) ) ) );
+	 return( myMinX >= regMinX && myMaxX <= regMaxX && 
+		 myMinY >= regMinY && myMaxY <= regMaxY && 
+		 myMinZ >= regMinZ && myMaxZ <= regMaxZ );
       }
 
       //////////
@@ -225,14 +224,31 @@ WARNING
       //////////
       // Insert Documentation Here:
       Box d_box;
+
+      //////////
+      // These are just coordinates of the ghostcell boxes around
+      // this region.  There are 26 of them.
+      Box d_top, d_topRight, d_topLeft, d_topBack, d_topFront,
+	  d_topRightBack, d_topRightFront, d_topLeftBack, 
+	  d_topLeftFront;
+      Box d_bottom, d_bottomRight, d_bottomLeft, d_bottomBack,
+	  d_bottomFront, d_bottomRightBack, d_bottomRightFront,
+	  d_bottomLeftBack, d_bottomLeftFront;
+      Box d_right, d_left, d_back, d_front, d_rightBack,
+	  d_rightFront, d_leftBack, d_leftFront;
       
+      ////////// 
+      // Pre-calculates the upper/lower points of the 26 adjacent
+      // regions based on the number of ghost cells.
+      void determineGhostRegions( int numGhostCells );
+
       //////////
       // Insert Documentation Here:
       IntVector d_lowIndex;
       IntVector d_highIndex;
       IntVector d_res;
 
-      const Region* neighbors[27];
+      const Region* d_neighbors[27];
       
       int d_id;
       friend class NodeIterator;
@@ -244,6 +260,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Region* r);
 
 //
 // $Log$
+// Revision 1.21  2000/05/28 17:25:06  dav
+// adding mpi stuff
+//
 // Revision 1.20  2000/05/20 08:09:27  sparker
 // Improved TypeDescription
 // Finished I/O
