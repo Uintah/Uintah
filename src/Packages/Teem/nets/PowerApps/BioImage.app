@@ -2050,8 +2050,6 @@ class BioImageApp {
 	}
     }
     
-    
-
     #############################
     ### init_Vframe
     #############################
@@ -2207,6 +2205,18 @@ class BioImageApp {
             pack $page.font.l -side left -anchor w -padx 2
             pack $page.font.l2 $page.font.s -side right -anchor e -padx 2
             pack $page.font -side top -fill x -expand 0
+
+
+            frame $page.fontc
+            label $page.fontc.l -text "Font Color:"
+
+	    button $page.fontc.c -width 4 -command \
+	        "$mods(ViewSlices) raise_color $page.fontc.c $mods(ViewSlices)-color_font set_font_sizes" -background white -activebackground white
+
+            pack $page.fontc.l -side left -anchor w -padx 2
+            pack $page.fontc.c -side right -anchor e -padx 2
+            pack $page.fontc -side top -fill x -expand 0
+
            
 	    checkbutton $page.lines -text "Show Guidelines" \
 		-variable show_guidelines \
@@ -2219,6 +2229,11 @@ class BioImageApp {
 		-command "$mods(ViewSlices)-c texture_rebind" 
             pack $page.2Dtext -side top -anchor nw -padx 4 -pady 7
             Tooltip $page.2Dtext "Turn filtering 2D textures\non/off"
+
+	    checkbutton $page.anatomical -text "Anatomical Coordinates" \
+		-variable $mods(ViewSlices)-anatomical_coordinates \
+		-command "$mods(ViewSlices)-c redrawall" 
+            pack $page.anatomical -side top -anchor nw -padx 4 -pady 7
 
 	    global planes_color
 	    iwidgets::labeledframe $page.isocolor \
