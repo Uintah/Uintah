@@ -56,6 +56,10 @@ WARNING
 	 SphereGeometryPiece(ProblemSpecP &);
 	 
 	 //////////
+	 //  Constructor that takes a origin and radius
+	 SphereGeometryPiece(const Point& origin, double radius);
+	 
+	 //////////
 	 // Destructor
 	 virtual ~SphereGeometryPiece();
 	 
@@ -67,6 +71,12 @@ WARNING
 	 // Returns the bounding box surrounding the box.
 	 virtual Box getBoundingBox() const;
 	 
+	 //////////
+	 // Get the center and radius
+	 //
+	 inline Point origin() const {return d_origin;}
+	 inline double radius() const {return d_radius;}
+
       private:
 	 
 	 Point d_origin;

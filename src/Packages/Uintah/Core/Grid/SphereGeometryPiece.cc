@@ -26,6 +26,16 @@ SphereGeometryPiece::SphereGeometryPiece(ProblemSpecP& ps)
   d_radius = rad;
 }
 
+SphereGeometryPiece::SphereGeometryPiece(const Point& origin,
+		                         double radius)
+{
+  if ( radius <= 0.0)
+    SCI_THROW(ProblemSetupException("Input File Error: Sphere radius must be > 0.0"));
+  
+  d_origin = origin;
+  d_radius = radius;
+}
+
 SphereGeometryPiece::~SphereGeometryPiece()
 {
 }
