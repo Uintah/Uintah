@@ -522,6 +522,7 @@ OpenGLDestroy(clientData)
     ckfree((char *) OpenGLPtr);
 }
 
+static GLXContext first_context = 0;
 
 SCICORESHARE GLXContext OpenGLGetContext(interp, name)
     Tcl_Interp* interp;
@@ -597,7 +598,8 @@ SCICORESHARE GLXContext OpenGLGetContext(interp, name)
       OpenGLPtr->cx =
 	glXCreateContext(OpenGLPtr->display,
 			 OpenGLPtr->vi,
-			 0, OpenGLPtr->direct);
+			 first_context, OpenGLPtr->direct);
+      if (!first_context) first_context = OpenGLPtr->cx;
 			 
 
 
