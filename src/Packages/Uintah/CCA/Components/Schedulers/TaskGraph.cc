@@ -275,8 +275,41 @@ TaskGraph::setupTaskConnections()
 	  }
 	}
 	if(count == 0 && (!req->matls || req->matls->size() > 0) 
-	   && (!req->patches || req->patches->size() > 0))
+	   && (!req->patches || req->patches->size() > 0)){
+	  if(req->patches){
+	    cerr << req->patches->size() << "Patches: ";
+	    for(int i=0;i<req->patches->size();i++)
+	      cerr << req->patches->get(i)->getID() << " ";
+	    cerr << '\n';
+	  } else {
+	    cerr << "Patches from task: ";
+	    const PatchSet* patches = task->getPatchSet();
+	    for(int i=0;i<patches->size();i++){
+	      const PatchSubset* pat=patches->getSubset(i);
+	      for(int i=0;i<pat->size();i++)
+		cerr << pat->get(i)->getID() << " ";
+	      cerr << " ";
+	    }
+	    cerr << '\n';
+	  }
+	  if(req->matls){
+	    cerr << req->matls->size() << "Matls: ";
+	    for(int i=0;i<req->matls->size();i++)
+	      cerr << req->matls->get(i) << " ";
+	    cerr << '\n';
+	  } else {
+	    cerr << "Matls from task: ";
+	    const MaterialSet* matls = task->getMaterialSet();
+	    for(int i=0;i<matls->size();i++){
+	      const MaterialSubset* mat = matls->getSubset(i);
+	      for(int i=0;i<mat->size();i++)
+		cerr << mat->get(i) << " ";
+	      cerr << " ";
+	    }
+	    cerr << '\n';
+	  }
 	  throw InternalError("Scheduler could not find specific production for variable: "+req->var->getName()+", required for task: "+task->getName());
+	}
       }
     }
   }
@@ -383,10 +416,16 @@ TaskGraph::addTask(Task* task, const PatchSet* patchset,
 		   const MaterialSet* matlset)
 {
   task->setSets(patchset, matlset);
-  d_tasks.push_back(task);
-
-  if(dbg.active())
-    dbg << "Adding task: " << *task << "\n";
+  if((patchset && patchset->totalsize() == 0)
+     || (matlset && matlset->totalsize() == 0)){
+    delete task;
+    if(dbg.active())
+      dbg << "Killing empty task: " << *task << "\n";
+  } else {
+    d_tasks.push_back(task);
+    if(dbg.active())
+      dbg << "Adding task: " << *task << "\n";
+  }
 }
 
 void
