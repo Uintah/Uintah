@@ -24,24 +24,15 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Dataflow Core
 else
   PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
-	Core/Thread Core/Exceptions Core/Util
+	Core/Thread Core/Exceptions Core/Util Core/TkExtensions
 endif
 
-LIBS := $(GL_LIBS)
+LIBS := 
 ifeq ($(NEED_SONAME),yes)
 LIBS := $(LIBS) $(XML_LIBRARY) $(TK_LIBRARY) -ldl -lz
 endif
 
 PROGRAM := $(PROGRAM_PSE)
-
-CFLAGS_MAIN   := $(CFLAGS) -DPSECORETCL=\"$(SRCTOP_ABS)/Dataflow/GUI\" \
-                      -DSCICORETCL=\"$(SRCTOP_ABS)/Core/GUI\" \
-                      -DITCL_WIDGETS=\"$(ITCL_WIDGETS)\" \
-                      -DDEF_LOAD_PACK=\"$(LOAD_PACKAGE)\" \
-	              -DSRCTOP=\"$(SRCTOP_ABS)\" -DOBJTOP=\"$(OBJTOP_ABS)\"
-
-$(SRCDIR)/main.o:	$(SRCDIR)/main.cc Makefile
-	$(CXX) $(CFLAGS_MAIN) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
