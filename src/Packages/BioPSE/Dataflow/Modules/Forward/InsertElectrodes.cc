@@ -27,7 +27,8 @@ class InsertElectrodes : public Module {
 				TetVolMeshHandle mesh,
 				Array1<Point> &inner,
 				Array1<Point> &outer,
-				double voltage);
+				double voltage,
+				TetVolMesh* electrodeElements);
   bool point_in_loop(const Point &pt, 
 		     const Array1<Point> &contour, 
 		     const Plane &pl);
@@ -85,7 +86,8 @@ void InsertElectrodes::insertContourIntoTetMesh(
 				TetVolMeshHandle tet_mesh,
 				Array1<Point> &inner,
 				Array1<Point> &outer,
-				double voltage) {
+				double voltage,
+				TetVolMesh* electrodeElements) {
 //  cerr << "entering insertCountourIntoTetMesh\n";
   Plane electrode_plane;
   if (Cross(inner[1]-inner[0], inner[1]-inner[2]).length2()>1.e-5) {
@@ -193,6 +195,11 @@ void InsertElectrodes::insertContourIntoTetMesh(
       double centroid_dist = electrode_plane.eval_point(centroid);
       if (centroid_dist>0) {
 //	cerr << "above plane";
+	if (electrodeElements) {
+	  Point pts[4];
+	  for (i=0; i<4; i++) tet_mesh->get_point(pts[i], tet_nodes[i]);
+	  electrodeElements->add_tet_unconnected(pts[0], pts[1], pts[2], pts[3]);
+	}
 	int remap=0;
 	for (i=0; i<4; i++) {
 	  if (is_electrode_node[tet_nodes[i]] > 0) {
@@ -221,6 +228,11 @@ void InsertElectrodes::execute() {
     postMessage("Unable to initialize "+name+"'s omesh port\n");
     return;
   }
+  FieldOPort* oelec = (FieldOPort *) get_oport("ElectrodeElements");
+  if (!oelec) {
+    postMessage("Unable to initialize "+name+"'s oelec port\n");
+    return;
+  }
   
   FieldHandle imeshH, ielecH;
 
@@ -241,6 +253,10 @@ void InsertElectrodes::execute() {
   imeshH->get("conductivity_table", conds);
   vector<pair<string, Tensor> > *newConds =
     new vector<pair<string, Tensor> >(conds);
+  int have_units = 0;
+  string units;
+  if (imeshH->mesh()->get("units", units)) have_units=1;
+
   for (int ii=0; ii<newConds->size(); ii++) {
 //    cerr << "New conds ["<<ii<<"] = "<<(*newConds)[ii].first<<" , "<<(*newConds)[ii].second<<"\n";
   }
@@ -262,7 +278,7 @@ void InsertElectrodes::execute() {
 
     TetVol<int> *field = dynamic_cast<TetVol<int>*>(imeshH.get_rep());
     TetVolMeshHandle mesh = field->get_typed_mesh();
-
+    TetVolMeshHandle elecElemsH;
     port_map_type::iterator pi = range.first;
     while (pi != range.second) {
       FieldIPort *ielec = (FieldIPort *)get_iport(pi->second);
@@ -296,15 +312,25 @@ void InsertElectrodes::execute() {
       inner.add(inner[0]);
       outer.add(outer[0]);
 
+      TetVolMesh* electrodeElements = 0;
+      if (pi == range.first) electrodeElements = scinew TetVolMesh;
+
       // modify mergedDirichletNodes, and mergedMesh to have new nodes
       insertContourIntoTetMesh(*mergedDirichletNodes, mesh,
-			       inner, outer, voltage);
+			       inner, outer, voltage, electrodeElements);
       
+      if (pi == range.first) elecElemsH = electrodeElements;
       ++pi;
     }
     imeshH->store("dirichlet", *mergedDirichletNodes, false);
     imeshH->store("conductivity_table", *newConds, false);
+    if (have_units) imeshH->mesh()->store("units", units, false);
     omesh->send(imeshH);
+    if (elecElemsH.get_rep()) {
+      TetVol<double>* elec = scinew TetVol<double>(elecElemsH, Field::NODE);
+      FieldHandle elecH(elec);
+      oelec->send(elecH);
+    }
   } else {
     cerr << "Error - unable to get electrode.\n";
     omesh->send(imeshH);
