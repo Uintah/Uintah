@@ -63,8 +63,13 @@
     </para>
   </preface>
 
+  <beginpage/>
   &chapter1;
+
+  <beginpage/>
   &chapter2;
+
+  <beginpage/>
   &chapter3;
 
 </book>

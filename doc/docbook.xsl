@@ -25,6 +25,9 @@
 <!-- ***************** web displayable templates **************** -->
 <!-- ************************************************************ -->
 
+<xsl:template match="beginpage" mode="web">
+</xsl:template>
+
 <xsl:template match="table" mode="web">
   <center>
     <table border="1"><xsl:apply-templates mode="web"/></table>
@@ -132,6 +135,10 @@
 <!-- ************************************************************ -->
 <!-- *********************** printable templates **************** -->
 <!-- ************************************************************ -->
+
+<xsl:template match="beginpage" mode="print">
+  <hr size="3" />
+</xsl:template>
 
 <xsl:template match="table" mode="print">
   <center>
@@ -420,8 +427,6 @@
 
 <xsl:for-each select="./chapter">
   <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
-
-  <hr size="3"/>
 
   <p class="ptitle">Chapter <xsl:value-of select="$chapnum"/>: <xsl:value-of select="./title"/></p>
 
