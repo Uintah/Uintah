@@ -1,105 +1,35 @@
-From bugzilla-daemon@sci.utah.edu Sat Feb 15 16:08:01 2003
-Return-Path: <apache@sci.utah.edu>
-Received: from mom.cvrti.utah.edu ([155.100.140.5] verified)
-  by mail.cvrti.utah.edu (CommuniGate Pro SMTP 4.0)
-  with ESMTP id 1820893 for dustman@xserve.cvrti.utah.edu; Sat, 15 Feb 2003 16:08:01 -0700
-Received: from mercury.sci.utah.edu (dns2.sci.utah.edu [155.98.16.33])
-	by mom.cvrti.utah.edu (8.9.1/8.9.1) with ESMTP id QAA820073
-	for <dustman@cvrti.utah.edu>; Sat, 15 Feb 2003 16:08:01 -0700 (MST)
-Received: from virgil.sci.utah.edu (virgil.sci.utah.edu [155.98.16.32])
-	by mercury.sci.utah.edu (8.12.6/8.12.2) with ESMTP id h1FN81bc020278
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NOT)
-	for <dustman@cvrti.utah.edu>; Sat, 15 Feb 2003 16:08:01 -0700
-Received: (from apache@localhost)
-	by virgil.sci.utah.edu (8.11.3/8.11.3) id h1FN80508616;
-	Sat, 15 Feb 2003 16:08:00 -0700
-Date: Sat, 15 Feb 2003 16:08:00 -0700
-Message-Id: <200302152308.h1FN80508616@virgil.sci.utah.edu>
-From: bugzilla-daemon@sci.utah.edu
-To: dustman@cvrti.utah.edu
-Subject: [Bug 555] New: README file in Thirdparty incomplete
-X-Bugzilla-Reason: AssignedTo
+Third Party Installation README
+-------------------------------
 
-http://software.sci.utah.edu/bugzilla/show_bug.cgi?id=555
+Python 1.5.2 (or later) and GNU make (3.79 or later) must be present
+before running the third party installation script.
 
-           Summary: README file in Thirdparty incomplete
-           Product: SCIRun
-           Version: 1.8.0
-          Platform: SGI
-        OS/Version: IRIX
-            Status: NEW
-          Severity: normal
-          Priority: P2
-         Component: Documentation
-        AssignedTo: dustman@cvrti.utah.edu
-        ReportedBy: macleod@cvrti.utah.edu
+The third party installation script is invoked as follows:
 
+  python install dir 32|64 jobs
 
-The README file in the thirdparty directory of 1.8 is not complete nor 
-helpful for installation:
+where "dir" is the directory in which the third-party software will be
+installed (although it is actually installed in a sub-directory of the
+specified one---see "NOTE" below), "32|64" specifies one of 32 bit or
+64 bit binaries, and "jobs" is the number of jobs that make will create
+when building the software. For example:
 
-You must have at least version 1.5.2 python to use the install script.
-
- Usage: <path> [bits] [jobs]
-
-
- - <path>     : path to top of your installation 
- - [bits]     : make a 32 bit or 64 bit build. 32 is default.
- - [jobs]     : an integer to be passed to gmake (-j NUM_JOBS).
-                defaults to 2.
-
-You may now reinstall, by re-running the the same command line as your 
-first attempt.  You will then be prompted to decide to reinstall all of 
-the targets. If you enter y to do so, the previous installation will be
-deleted, and the new installation will be built there.  
-
-If you want to reinstall selected packages only, enter n to the
-reinstall all prompt, and you will be asked package by package which
-ones to reinstall. For each package that you select, install will
-delete the previous installation and reinstall from the distribution.
-
-If any of the commands to install fail (i.e. one of the makes for a
-third party package fails) install will exit.
-
-------------------------------------------------------------------
-
-It should read more like the installation guide, which describes the actual 
-command required for making the libraries.
-------------------------------------------------------------------------
-
-Run the third party installation script: 
-
-
-python install dir 32|64 jobs
-
-where dir is the directory in which the third-party software will be installed 
-(although it is actually installed in a sub-directory of the specified one), 32|
-64 specifies one of 32 bit or 64 bit binaries, and jobs is the number of 
-jobs that make will create when building the software. For example: 
-
-
-python install /usr/local/SCIRun_Third_Party 64 2
+  python install /usr/local/SCIRun_Third_Party 64 2
 
 or 
 
+  python install /usr/local/SCIRun_Third_Party 32 1
 
-python install /usr/local/SCIRun_Third_Party 32 1
+When finished, the installation script will display the complete name
+of the third-party software installation directory---make note of this
+value (and see "NOTE" below).
 
-When finished, the installation script will display the complete name of 
-the third-party software installation directory—make note of this value. 
+You may reinstall part or all of the third-party software by repeating
+the previous command. You will be asked to replace all or part of the
+installation. Just answer 'y' or 'n' to the script until you have
+selected the exact re-installation you wish.
 
-
-Note
-The name of the third-party installation directory reflects the parameters 
-given to the install script. This allows you to maintain multiple third-party 
-installations for different operating systems and machine architectures. 
-
-You may reinstall part or all of the third-party software by repeating the 
-previous command. You will be asked to replace all or part of the 
-installation. Just answer y or n to the script until you have selected the 
-exact reinstallation you wish.
-
-
-
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+NOTE: The name of the third-party installation directory reflects the
+parameters given to the install script. This allows you to maintain
+multiple third-party installations for different operating systems and
+machine architectures.
