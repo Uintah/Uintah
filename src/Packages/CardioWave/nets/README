@@ -144,7 +144,30 @@ quit SCIRun, so it can close the output file correctly.
 
 To create a camera path, add an EditPath module to your net
 (SCIRun->Render->EditPath) and attach its second output port (purple)
-to a Viewer module input port.  
+to a Viewer module input port.  On the EditPath UI, you can choose
+viewpoint "key frames" and have it interpolate between them (linear or
+cubic), and/or you can have it create a circle of key frames.  My
+suggestion would be to play with this module to get a feel for it --
+just create a new net from scratch with a Viewer and a EditPath, hook
+them together, and play around with the settings on this module.
+
+
+
+
+Adding Bandwidth Minimization
+=============================
+
+I've set up the infrastructure for your bandwidth minimization code.
+It will go in:
+$SCIRUN/src/Packages/CardioWave/Core/Algorithms/CuthillMcKee.{c,h}
+The code I have in there now is a place holder (it just prints to the
+screen the names of the input and output SPR files, and build a
+default "map" vector that has every node index mapping to itself).
+I extended the SetupFVMatrix UI to include a text-entry field for the
+name of the bandwidth minimized matrix.  Anyhow, you should go into
+that file and add your code there.  Let me know if you have any
+questions, but I think it should be pretty straight-forward once you
+look at that .c file.
 
 
 
