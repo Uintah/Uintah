@@ -548,6 +548,14 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
     particle_state_preReloc.push_back(lb->pLoadCurveIDLabel_preReloc);
   }
 
+  particle_state.push_back(lb->pInternalHeatRateLabel);
+  particle_state.push_back(lb->pDeformationMeasureLabel);
+  particle_state.push_back(lb->pStressLabel);
+
+  particle_state_preReloc.push_back(lb->pInternalHeatRateLabel_preReloc);
+  particle_state_preReloc.push_back(lb->pDeformationMeasureLabel_preReloc);
+  particle_state_preReloc.push_back(lb->pStressLabel_preReloc);
+
   matl->getConstitutiveModel()->addParticleState(particle_state,
 						 particle_state_preReloc);
 
