@@ -1092,7 +1092,7 @@ proc subDATADIRandDATASET { val } {
 proc genSubnetScript { subnet { tab "__auto__" }  } {
     netedit presave
 
-    global Subnet Disabled Notes
+    global Subnet Disabled Notes ConnectionRoutes
     set connections ""
     set modVar(Subnet${subnet}) "Subnet"
 
@@ -1176,6 +1176,12 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 	set id [makeConnID $conn]
 	if { [info exists Disabled($id)] && $Disabled($id) } {
 	    append script "${tab}set Disabled(\$c$i) \{1\}\n"
+	}
+
+	if { [info exists ConnectionRoutes($id)] && \
+		 [string length $ConnectionRoutes($id)] } {
+	    append script "${tab}set ConnectionRoutes(\$c$i) "
+	    append script "\{$ConnectionRoutes($id)\}\n"
 	}
 
 	if { [info exists Notes($id)] && [string length $Notes($id)] } {
