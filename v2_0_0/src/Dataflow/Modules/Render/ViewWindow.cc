@@ -80,6 +80,24 @@ using std::ostringstream;
 
 namespace SCIRun {
   
+class KillRenderer :public Runnable {
+public:
+  KillRenderer(OpenGL *cr, Viewer* m, ViewWindow *vw) :
+    cur_renderer_(cr),
+    manager_(m),
+    vw_(vw)
+  {}
+  
+  void run() {
+    cur_renderer_->kill_helper();
+    manager_->delete_viewwindow(vw_);
+  }
+private:
+  OpenGL     *cur_renderer_;
+  Viewer     *manager_;
+  ViewWindow *vw_;
+};
+
 //static DebugSwitch autoview_sw("ViewWindow", "autoview");
 static ViewWindow::MapStringObjTag::iterator viter;
 
@@ -2360,26 +2378,6 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
 
   } else if (args[1] == "killwindow") {
     
-    class KillRenderer :public Runnable {
-    public:
-      KillRenderer(OpenGL *cr, Viewer* m, ViewWindow *vw) :
-	cur_renderer_(cr),
-	manager_(m),
-	vw_(vw)
-      {}
-      
-      void run() {
-	cur_renderer_->kill_helper();
-	manager_->delete_viewwindow(vw_);
-      }
-    private:
-      OpenGL     *cur_renderer_;
-      Viewer     *manager_;
-      ViewWindow *vw_;
-    };
-    
-    
-
     inertia_mode=0;
     KillRenderer *kr = scinew KillRenderer(current_renderer, manager, 
 					   (ViewWindow*)this);
