@@ -73,7 +73,7 @@ Following is the result of a side by side diff comparison of the dat files.
 
 EOF
          diff -y --width 160 --suppress-common-lines -x "*.xml" -x "taskgraph"  $TEST_UDADIR $COMPARE_UDADIR >> $TMPDIR/error.msg
-         mailx -s "Automated Correctness Regression Alert" "$TEST_ERRORS_TO" < $TMPDIR/error.msg
+         mailx -s "Automated Correctness Regression Alert" "$ERRORS_TO" < $TMPDIR/error.msg
          echo "Mail sent\n"
        fi
        exit 1
