@@ -112,10 +112,10 @@ BundleGetField::execute()
       return;
     }
 
-  int numfields = handle->numfields();
+  int numfields = handle->numFields();
   for (int p = 0; p < numfields; p++)
     {
-      fieldlist += "{" + handle->getfieldname(p) + "} ";
+      fieldlist += "{" + handle->getFieldName(p) + "} ";
     }
 
   guifields_.set(fieldlist);
@@ -145,9 +145,9 @@ BundleGetField::execute()
     } 
 
  
-  if (handle->isfield(field1name))
+  if (handle->isField(field1name))
     {
-      fhandle = handle->getfield(field1name);
+      fhandle = handle->getField(field1name);
       ofport->send(fhandle);
     }
         
@@ -174,9 +174,9 @@ BundleGetField::execute()
     }
 
  
-  if (handle->isfield(field2name))
+  if (handle->isField(field2name))
     {
-      fhandle = handle->getfield(field2name);
+      fhandle = handle->getField(field2name);
       ofport->send(fhandle);
     }
         
@@ -202,9 +202,9 @@ BundleGetField::execute()
         }
     }
  
-  if (handle->isfield(field3name))
+  if (handle->isField(field3name))
     {
-      fhandle = handle->getfield(field3name);
+      fhandle = handle->getField(field3name);
       ofport->send(fhandle);
     }
         
