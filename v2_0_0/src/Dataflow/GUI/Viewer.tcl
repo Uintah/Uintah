@@ -1671,7 +1671,7 @@ itcl_class ViewWindow {
            return
         }
 
-	toplevel $w
+	#toplevel $w
 
 	set initdir ""
 
@@ -1706,10 +1706,10 @@ itcl_class ViewWindow {
 	######################################################
 	
 	makeSaveFilebox \
-		-parent $w \
+		-parent . \
 		-filevar $this-saveFile \
-		-command "$this doSaveImage; destroy $w" \
-		-cancel "destroy $w" \
+		-command "$this doSaveImage; destroy " \
+		-cancel "destroy " \
 		-title $title \
 		-filetypes $types \
 	        -initialfile $defname \
