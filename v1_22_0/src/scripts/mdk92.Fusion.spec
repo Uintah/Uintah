@@ -34,7 +34,7 @@
 %define distro  Mandrake 9.2
 %define debug   opt
 %define thirdpartydotver 0
-%define thirdpartyversion 1.20
+%define thirdpartyversion 1.22
 %define hdf5    hdf5-1.6.2
 %define ftgl	ftgl-2.0.9
 
@@ -69,6 +69,7 @@ source3:	Fusion.PKG.%{version}.tar.gz
 source4:	DataIO.PKG.%{version}.tar.gz
 source5:	%{hdf5}.tar.gz
 source6:	%{ftgl}.tar.gz
+source7:        SCIRun-otf-files.tar.gz
 
 %description
 SCIRun is a Problem Solving Environment (PSE), and a computational steering software system. SCIRun allows a scientist or engineer to interactively steer a computation, changing parameters, recomputing, and then revisualizing--all within the same programming environment. The tightly integrated modular environment provided by SCIRun allows computational steering to be applied to the broad range of advanced scientific computations that are addressed by the SCI Institute.
@@ -119,7 +120,10 @@ python $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver
 rm -rf /usr/local/SCIRun/bin
 mkdir -p /usr/local/SCIRun/bin
 cd /usr/local/SCIRun/bin
-/usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" --with-ftgl="/usr/local/%{ftgl}/FTGL" --with-hdf5="/usr/local/%{hdf5}" --with-mdsplus="/usr/local/mdsplus"  --enable-package="Fusion DataIO Teem"
+/usr/local/SCIRun/src/con
+figure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" --with-ftgl="/usr/local/%{ftgl}/FTGL" --with-hdf5="/usr/local/%{hdf5}" --with-mdsplus="/usr/local/mdsplus"  --enable-package="Fusion DataIO Teem"
+cd /usr/local/SCIRun/bin/on-the-fly-libs
+tar -xvzf %{source7}
 cd /usr/local/SCIRun/bin/
 gmake
 
