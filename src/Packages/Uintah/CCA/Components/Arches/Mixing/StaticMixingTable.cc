@@ -57,7 +57,7 @@ StaticMixingTable::problemSetup(const ProblemSpecP& params)
   db->require("inputfile",d_inputfile);
   // Set up for MixingModel table
   d_numMixingVars = 1;
-  // Set nonadiabatic flat to read nonadiabatic tables
+  // Get nonadiabatic flag to see if we are using nonadiabatic table
   db->getWithDefault("nonadiabatic_table",d_nonadiabatic_table,true);
   // Define mixing table, which includes call reaction model constructor
   readMixingTable(d_inputfile);
