@@ -32,21 +32,14 @@
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Parts/PartInterface.h>
 #include <Core/Parts/GraphPart.h>
-#include <typeinfo>
 
 namespace SCIRun {
 
 PartInterface::PartInterface( Part *part, PartInterface *parent, 
-			      const string &type )
+			      const string &type, bool initialize )
   : type_(type), part_(part),  parent_(parent)
 {
-    const type_info &ti = typeid(this); 
-    cerr << "PartInterface: typeid = " << ti.name() << endl;
-
-    //if ( parent )
-    //  parent->add_child(this);  // can't call add_child from constructor
-                                  // because 'this' isn't fully typed yet
-    // Must put in derived type instead (see GraphPart.cc)
+  if ( initialize ) init();
 }
  
 PartInterface::~PartInterface()
@@ -55,6 +48,12 @@ PartInterface::~PartInterface()
     delete children_[i];
 }
 
+void
+PartInterface::init()
+{
+  if ( parent_ )
+    parent_->add_child(this);
+}
 
 void
 PartInterface::add_child( PartInterface *child )

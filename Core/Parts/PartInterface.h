@@ -48,9 +48,10 @@ protected:
   vector<PartInterface *> children_;
 
 public:
-  PartInterface( Part *, PartInterface *parent, const string &type );
+  PartInterface( Part *, PartInterface *parent, const string &type, bool=true);
   virtual ~PartInterface();
-  
+
+  virtual void init();
   Part *part() { return part_; }
   
   void add_child( PartInterface *);
