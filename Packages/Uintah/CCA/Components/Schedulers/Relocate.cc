@@ -227,7 +227,7 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
       
       ASSERT(is_sorted(pset->begin(), pset->end()));
       ASSERT(is_sorted(delset->begin(), delset->end()));
-      ASSERTEQ(*pset->begin(), 0);
+      ASSERT(pset->begin() == NULL || *pset->begin() == 0);
 
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
