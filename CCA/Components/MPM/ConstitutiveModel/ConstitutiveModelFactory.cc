@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/TransIsoHyper.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/TransIsoHyperImplicit.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyper.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookPlas.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
@@ -65,6 +66,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     else if (flags->d_integrator_type == "implicit")
       return(scinew TransIsoHyperImplicit(child,lb,flags));
   }
+  
+  else if (mat_type ==  "visco_trans_iso_hyper")
+    return(scinew ViscoTransIsoHyper(child,lb,flags));
 
   else if (mat_type ==  "ideal_gas")
     return(scinew IdealGasMP(child,lb,flags));

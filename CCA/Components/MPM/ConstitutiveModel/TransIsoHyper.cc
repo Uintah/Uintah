@@ -447,8 +447,6 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
         qVisco = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
       }
       */
-
-      //cout <<"************************************************************************" << endl;
       //________________________________Failure and stress terms
       fail[idx] = 0.;
       if (failure == 1)
@@ -486,9 +484,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
           if (e1 < e3) swap(e1,e3);
           if (e2 < e3) swap(e2,e3);
           };
-        //cout <<"e1=" << e1 << " e2=" << e2 << " e3=" << e3 << endl;
         double max_shear_strain = (e1-e3)/2.;
-        //cout <<"max_shear_strain=" << max_shear_strain << endl;
         if (max_shear_strain<= crit_shear)
           {deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
                - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
@@ -499,8 +495,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
           fail[idx] = 1.;
           matrix_failed = 1.;
           }
-        //cout << "dev_stress=" << endl;
-        //cout << deviatoric_stress << endl;
+
         //________________________________fiber stress term + failure of fibers
         if (stretch[idx] <= crit_stretch)
           {fiber_stress = (DY*dWdI4tilde*I4tilde
@@ -511,9 +506,6 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
           fail[idx] = 2.;
           fiber_failed =1.;
           }
-        //cout << "fiber stretch =" << stretch[idx] << endl;
-        //cout << "fiber stress=" << endl;
-        //cout << fiber_stress << endl;
         if ( (matrix_failed + fiber_failed) == 2.)
           fail[idx] = 3.;
         //________________________________hydrostatic pressure term
@@ -526,11 +518,6 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
               p = 0.;
             pressure = Identity*p;
           }
-        //cout << "J=" << J <<endl;
-        //cout << "log J=" << log(J) <<endl;
-        //cout << "bulk=" << Bulk << endl;
-        //cout <<"pressure="<< endl;
-        //cout << pressure << endl;
         //_______________________________Cauchy stress
         pstress[idx] = pressure + deviatoric_stress + fiber_stress;
         }
@@ -549,10 +536,6 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
           pstress[idx] = pressure + deviatoric_stress + fiber_stress;
         }
       //________________________________end stress
-      //cout <<"stress=" << endl;
-      //cout << pstress[idx] << endl;
-      //cout << "corresponding def gradient =" << endl;
-      //cout << deformationGradient_new[idx] <<endl;
 
       // Compute the strain energy for all the particles
       U = .5*log(J)*log(J)*Bulk;
@@ -575,7 +558,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)),
                 lb->delTLabel);
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
   }
@@ -605,8 +588,7 @@ void TransIsoHyper::carryForward(const PatchSubset* patches,
     old_dw->get(pmass,           lb->pMassLabel,                       pset);
     old_dw->get(pfibdir,         lb->pFiberDirLabel,                   pset);
 
-    new_dw->allocateAndPut(pdefm_new,lb->pDeformationMeasureLabel_preReloc,
-                           pset);
+    new_dw->allocateAndPut(pdefm_new,lb->pDeformationMeasureLabel_preReloc,pset);
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
     new_dw->allocateAndPut(pfibdir_new,      lb->pFiberDirLabel_preReloc, pset);
