@@ -79,7 +79,7 @@ public:
                 FIXED,
                 SYMMETRY,
                 NEIGHBOR };
-private:
+protected:
   //////////
   // Insert Documentation Here:
   void actuallyInitialize(const ProcessorGroup*,
@@ -169,6 +169,14 @@ private:
 			     const Patch* patch,
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw);
+
+  //////////
+  // Insert Documentation Here:
+  void integrateTemperatureRate(const ProcessorGroup*,
+				      const Patch* patch,
+				      DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw);
+
   //////////
   // Insert Documentation Here:
   void interpolateToParticlesAndUpdate(const ProcessorGroup*,
@@ -196,6 +204,9 @@ private:
    
 //
 // $Log$
+// Revision 1.47  2000/07/17 23:30:49  tan
+// Fixed some problems in MPM heat conduction.
+//
 // Revision 1.46  2000/07/05 23:43:30  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling
