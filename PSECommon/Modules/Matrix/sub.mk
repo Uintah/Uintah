@@ -25,6 +25,7 @@ SRCS     += \
 	$(SRCDIR)/MatSelectVec.cc\
 	$(SRCDIR)/MatVec.cc\
 	$(SRCDIR)/SolveMatrix.cc\
+	$(SRCDIR)/VecVec.cc\
 	$(SRCDIR)/VisualizeMatrix.cc\
 	$(SRCDIR)/cConjGrad.cc\
 	$(SRCDIR)/cPhase.cc\
@@ -40,6 +41,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/11/02 21:43:32  dmw
+# added VecVec module
+#
 # Revision 1.5  2000/10/24 05:57:35  moulding
 # new module maker Phase 2: new module maker goes online
 #
