@@ -10,21 +10,21 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <Containers/Array2.h>
-#include <Datatypes/ScalarField.h>
-#include <Datatypes/ScalarFieldRGBase.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Datatypes/ScalarFieldRGdouble.h>
-#include <Datatypes/ScalarFieldRGfloat.h>
-#include <Datatypes/ScalarFieldRGint.h>
-#include <Datatypes/ScalarFieldRGshort.h>
-#include <Datatypes/ScalarFieldRGuchar.h>
-#include <Datatypes/ScalarFieldRGchar.h>
-#include <Geometry/BBox.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
-#include <Math/MinMax.h>
-#include <Persistent/Pstreams.h>
+#include <SCICore/Containers/Array2.h>
+#include <SCICore/Datatypes/ScalarField.h>
+#include <SCICore/Datatypes/ScalarFieldRGBase.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
+#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
+#include <SCICore/Datatypes/ScalarFieldRGint.h>
+#include <SCICore/Datatypes/ScalarFieldRGshort.h>
+#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
+#include <SCICore/Datatypes/ScalarFieldRGchar.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Persistent/Pstreams.h>
 #include <fstream.h>
 #include <iostream.h>
 #include <math.h>
@@ -38,10 +38,11 @@ typedef enum {DOUBLE, FLOAT, INT, SHORT, UCHAR, CHAR} VTYPE; // voxel type
 typedef enum {SCI, PCGV, NRRD, RAW} FTYPE; // file type
 typedef enum {BIN, ASCII} BTYPE; // binary / ascii type (for SCI)
 
-using namespace SCICore::PersistentSpace;
+using namespace SCICore::Containers;
 using namespace SCICore::Datatypes;
 using namespace SCICore::Geometry;
 using namespace SCICore::Math;
+using namespace SCICore::PersistentSpace;
 
 VTYPE inVoxel;
 VTYPE outVoxel;
