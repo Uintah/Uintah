@@ -915,6 +915,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	    int matl = matls->get(m);
 	    DetailedTask* creator;
 	    Task::Dependency* comp = 0;
+	    bool alreadyThere = false;
 	    if(req->dw == Task::OldDW){
 	      int proc = findVariableLocation(lb, pg, req, neighbor, matl);
 	      creator = dt->getOldDWSendTask(proc);
@@ -926,18 +927,30 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 					     creator, comp);
 	      else
 		didFind = ct.findcomp(req, neighbor, matl, creator, comp);
-	      if(!didFind) {
-		cerr << "Failure finding " << *req << " for " << *task<< endl;
-		cerr << "creator=" << *creator << '\n';
-		cerr << "neighbor=" << *neighbor << '\n';
-		cerr << "me=" << pg->myrank() << '\n';
-		//throw InternalError("Failed to find comp for dep!");
-		continue;
+	      if (!didFind) {
+		if (task->getTask()->assumesDataInNewDW() &&
+		    req->numGhostCells == 0) {
+		  // The data is assumed to be there already.
+		  // Note:  this may need to be more sophisticated to handle
+		  // the possibility that the data is on another processor.
+		  alreadyThere = true;
+		}
+		else {
+		  cerr << "Failure finding " << *req << " for " << *task
+		       << endl;
+		  cerr << "creator=" << *creator << '\n';
+		  cerr << "neighbor=" << *neighbor << '\n';
+		  cerr << "me=" << pg->myrank() << '\n';
+		  //throw InternalError("Failed to find comp for dep!");
+		  continue;
+		}
 	      }
 	    }
-	    dt->possiblyCreateDependency(creator, comp, neighbor,
-					 task, req, patch,
-					 matl, l, h);
+	    if (!alreadyThere) {
+	      dt->possiblyCreateDependency(creator, comp, neighbor,
+					   task, req, patch,
+					   matl, l, h);
+	    }
 	    if (modifies) {
 	      // Add links to the modifying task from anything requiring
 	      // the variable before it's modified so that it never gets
