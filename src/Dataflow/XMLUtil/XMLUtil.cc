@@ -7,11 +7,15 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <strings.h>
+#include <stdio.h>
 using namespace std;
 using namespace SCICore::Geometry;
 
 namespace PSECore {
    namespace XMLUtil {
+
+const char _NOTSET_[] = "(null string)";
 
 DOM_Node findNode(const std::string &name,DOM_Node node)
 {
@@ -508,6 +512,118 @@ bool get(const DOM_Node& node,
       }
    }
    return false;
+}
+
+char* getSerializedAttributes(DOM_Node& d)
+{
+  char* string = 0;
+  char* fullstring = new char[1];
+  char* newstring = 0;
+
+  fullstring[0]='\0';
+
+  DOM_NamedNodeMap attr = d.getAttributes();
+  int length = attr.getLength();
+  int index = 0;
+  for(DOM_Node n=attr.item(index);
+      index!=length;n=attr.item(++index)) {
+    string = new char[strlen(n.getNodeName().transcode())+
+		      strlen(n.getNodeValue().transcode())+5];
+    sprintf(string," %s=\"%s\"",n.getNodeName().transcode(),
+	    n.getNodeValue().transcode());
+
+    int newlength = strlen(string)+strlen(fullstring);
+    newstring = new char[newlength+1];
+    newstring[0]='\0';
+    sprintf(newstring,"%s%s",fullstring,string);
+    delete[] fullstring;
+    fullstring = newstring;
+    newstring = 0;
+
+    delete[] string;
+    string = 0;
+  }
+
+  return fullstring;
+}
+
+char* getSerializedChildren(DOM_Node& d)
+{
+  char* temp = 0;
+  char* temp2 = 0;
+  char* string = 0;
+  char* fullstring = new char[1];
+  char* newstring = 0;
+
+  fullstring[0]='\0';
+
+  for (DOM_Node n=d.getFirstChild();n!=0;n=n.getNextSibling()) {
+    if (n.getNodeType()==DOM_Node::TEXT_NODE) {
+      string = new char[strlen(n.getNodeValue().transcode())+1];
+      string[0]='\0';
+      sprintf(string,"%s",n.getNodeValue().transcode());
+    } else {
+      temp = getSerializedAttributes(n);
+      temp2 = getSerializedChildren(n);
+      string = new char[2*strlen(n.getNodeName().transcode())+
+		        strlen(temp)+strlen(temp2)+6];
+      string[0]='\0';
+      sprintf(string,"<%s%s>%s</%s>",n.getNodeName().transcode(),
+	      temp,temp2,n.getNodeName().transcode());
+      delete[] temp;
+    } 
+    
+    int newlength = strlen(string) + strlen(fullstring);
+    newstring = new char[newlength+1];
+    newstring[0]='\0';
+    
+    sprintf(newstring,"%s%s",fullstring,string);
+    delete[] fullstring;
+    fullstring = newstring;
+    newstring = 0;
+    
+    delete[] string;
+    string = 0;
+  }
+  
+  return fullstring;
+}
+
+char* removeWhiteSpace(char* string)
+{
+  char* newstring = 0;
+  int index1 = 0, index2 = 0;
+
+  index2 = strlen(string)-1;
+
+  newstring = new char[index2+2];
+  newstring[0] = '\0';
+
+  while ((string[index1]==' '||
+	 string[index1]=='\t' ||
+	 string[index1]=='\n' ||
+	 string[index1]=='\r') &&
+	 index1<=index2) index1++;
+
+  while ((string[index2]==' '||
+	 string[index2]=='\t' ||
+	 string[index2]=='\n' ||
+	 string[index2]=='\r') &&
+	 index2>=index1) index2--;
+
+  if (index1>index2) {
+    delete [] string;
+    return NOT_SET;
+  }
+
+  string[index2+1]='\0';
+  sprintf(newstring,"%s",&string[index1]);
+
+  sprintf(string,"%s",newstring);
+
+  delete[] newstring;
+
+  return string;
 }
 
 }

@@ -10,8 +10,6 @@
 #ifndef FILEUTILS_H
 #define FILEUTILS_H 1
 
-#include <map>
-
 namespace PSECore {
 namespace Dataflow {
 
@@ -24,18 +22,6 @@ namespace Dataflow {
 // 
 
 void InsertStringInFile(char* filename, char* match, char* insert);
-
-
-////////////////////////////////////
-//
-// GetFilenamesEndingWith()
-//
-// returns a std::map of strings that contains
-// all the files with extension "ext" inside
-// the directory named "dir"
-//
-
-std::map<int,char*>* GetFilenamesEndingWith(char* dir, char* ext);
 
 } // Dataflow
 } // PSECore
