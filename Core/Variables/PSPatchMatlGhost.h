@@ -41,12 +41,12 @@ namespace Uintah {
 
 struct PSPatchMatlGhost {
   PSPatchMatlGhost(const Patch* patch, int matl, 
-                   Ghost::GhostType gt = Ghost::None, int ngc = 0)
-    : patch_(patch), matl_(matl), gt_(gt), numGhostCells_(ngc)
+                   Ghost::GhostType gt = Ghost::None, int ngc = 0, int dwid = 0)
+    : patch_(patch), matl_(matl), gt_(gt), numGhostCells_(ngc), dwid_(dwid)
   {}
   PSPatchMatlGhost(const PSPatchMatlGhost& copy)
     : patch_(copy.patch_), matl_(copy.matl_), gt_(copy.gt_), 
-       numGhostCells_(copy.numGhostCells_)
+       numGhostCells_(copy.numGhostCells_), dwid_(copy.dwid_)
   {}
   
   bool operator<(const PSPatchMatlGhost& other) const;
@@ -54,6 +54,7 @@ struct PSPatchMatlGhost {
   int matl_;
   Ghost::GhostType gt_;
   int numGhostCells_;
+  int dwid_;
 };  
 
 } // End namespace Uintah
