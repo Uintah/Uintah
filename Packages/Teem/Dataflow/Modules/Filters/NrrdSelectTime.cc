@@ -58,7 +58,7 @@ private:
 DECLARE_MAKER(NrrdSelectTime)
   
 NrrdSelectTime::NrrdSelectTime(GuiContext* ctx) : 
-  Module("NrrdSelectTime", ctx, Filter,"Filters", "Teem"),
+  Module("NrrdSelectTime", ctx, Iterator,"Filters", "Teem"),
   selectable_min_(ctx->subVar("selectable_min")),
   selectable_max_(ctx->subVar("selectable_max")),
   selectable_inc_(ctx->subVar("selectable_inc")),
@@ -87,6 +87,7 @@ NrrdSelectTime::send_selection(NrrdDataHandle nrrd_handle,
 			       int which, unsigned int time_axis, bool last_p)
 {
   NrrdOPort *onrrd = (NrrdOPort *)get_oport("Time Slice");
+  onrrd->set_dont_cache();
   if (!onrrd) {
     error("Unable to initialize oport 'Time Slice'.");
     return;
@@ -306,7 +307,6 @@ NrrdSelectTime::execute()
   {
     if (playmode_.get() == "inc_w_exec")
     {
-      cerr << "inc with exec mode" << endl;
       int which = current_.get();
 
       send_selection(nrrd_handle, which, time_axis, true);
