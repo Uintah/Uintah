@@ -584,7 +584,7 @@ proc fadeinIcon { modid { seconds 0.333 } { center 0 }} {
 	$modid setColorAndTitle
 	return
     }
-    global Color Subnet
+    global Color Subnet FadeInID
     if $center {
 	set canvas $Subnet(Subnet$Subnet($modid)_canvas)
 	set bbox [$canvas bbox $modid]
@@ -604,21 +604,28 @@ proc fadeinIcon { modid { seconds 0.333 } { center 0 }} {
 	}
     }
 
-    set frequency 12
+    set frequency 24
     set period [expr double(1000.0/$frequency)]
     set t $period
     set stopAt [expr double($seconds*1000.0)]
     set dA [expr double(1.0/($seconds*$frequency))]
     set alpha $dA
 	    
+    if [info exists FadeInID($modid)] {
+	foreach id $FadeInID($modid) {
+	    after cancel $id
+	}
+    }
+    set FadeInID($modid) ""
+
     $modid setColorAndTitle $Color(IconFadeStart)
     while { $t < $stopAt } {
 	set color [blend $Color(Selected) $Color(IconFadeStart) $alpha]
-	after [expr int($t)] "$modid setColorAndTitle $color"
+	lappend FadeInID($modid) [after [expr int($t)] "$modid setColorAndTitle $color"]
 	set alpha [expr double($alpha+$dA)]
 	set t [expr double($t+$period)]
     }
-    after [expr int($t)] "$modid setColorAndTitle"
+    lappend FadeInID($modid) [after [expr int($t)] "$modid setColorAndTitle"]
 }
 	
 proc moduleMenu {x y modid} {
