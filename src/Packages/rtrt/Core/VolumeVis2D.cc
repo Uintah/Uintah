@@ -31,11 +31,11 @@ using namespace rtrt;
 
 // template<class T>
 VolumeVis2D::VolumeVis2D( BrickArray3<Voxel2D<float> >& _data,
-			  Voxel2D<float> data_min, Voxel2D<float> data_max,
-			  int nx, int ny, int nz,
-			  Point min, Point max,
-			  double spec_coeff, double ambient, double diffuse,
-			  double specular, Volvis2DDpy *dpy ):
+			     Voxel2D<float> data_min, Voxel2D<float> data_max,
+			     int nx, int ny, int nz,
+			     Point min, Point max,
+			     double spec_coeff, double ambient, double diffuse,
+			     double specular, Volvis2DDpy *dpy ):
   Object(this), dpy(dpy), cdpy(0), cutplane_active(false),
   data_min(data_min), data_max(data_max), diag(max - min),
   nx(nx), ny(ny), nz(nz), use_cutplane_material(false),
@@ -100,8 +100,143 @@ VolumeVis2D::~VolumeVis2D() {
 }
 
 // template<class T>
+void
+VolumeVis2D::mouseDown(int x, int y, const Ray& ray, const HitInfo& hit)
+{
+  cerr << "mouseDown was called\n";
+
+  Point p = ray.origin() + ray.direction() * hit.min_t - min.vector();
+
+  float norm_step_x = inv_diag.x() * (nx - 1 );
+  float norm_step_y = inv_diag.y() * (ny - 1 );
+  float norm_step_z = inv_diag.z() * (nz - 1 );
+
+  // get the indices and weights for the indices
+  float step = p.x() * norm_step_x;
+  int x_low = bound((int)step, 0, data.dim1()-2);
+  int x_high = x_low+1;
+  float x_weight_low = x_high - step;
+  
+  step = p.y() * norm_step_y;
+  int y_low = bound((int)step, 0, data.dim2()-2);
+  int y_high = y_low+1;
+  float y_weight_low = y_high - step;
+  
+  step = p.z() * norm_step_z;
+  int z_low = bound((int)step, 0, data.dim3()-2);
+  int z_high = z_low+1;
+  float z_weight_low = z_high - step;
+  
+  ////////////////////////////////////////////////////////////
+  // do the interpolation
+  
+  Voxel2D<float> a, b, c, d, e, f, g, h;
+  a = data(x_low,  y_low,  z_low);
+  b = data(x_low,  y_low,  z_high);
+  c = data(x_low,  y_high, z_low);
+  d = data(x_low,  y_high, z_high);
+  e = data(x_high, y_low,  z_low);
+  f = data(x_high, y_low,  z_high);
+  g = data(x_high, y_high, z_low);
+  h = data(x_high, y_high, z_high);
+  
+  Voxel2D<float> lz1, lz2, lz3, lz4, ly1, ly2, value;
+  lz1 = a * z_weight_low + b * (1 - z_weight_low);
+  lz2 = c * z_weight_low + d * (1 - z_weight_low);
+  lz3 = e * z_weight_low + f * (1 - z_weight_low);
+  lz4 = g * z_weight_low + h * (1 - z_weight_low);
+  
+  ly1 = lz1 * y_weight_low + lz2 * (1 - y_weight_low);
+  ly2 = lz3 * y_weight_low + lz4 * (1 - y_weight_low);
+  
+  value = ly1 * x_weight_low + ly2 * (1 - x_weight_low);
+
+  dpy->store_voxel( a );
+  dpy->store_voxel( b );
+  dpy->store_voxel( c );
+  dpy->store_voxel( d );
+  dpy->store_voxel( e );
+  dpy->store_voxel( f );
+  dpy->store_voxel( g );
+  dpy->store_voxel( h );
+  dpy->store_voxel( value );
+}
+
+void
+VolumeVis2D::mouseUp( int x, int y, const Ray& ray, const HitInfo& hit )
+{
+  cerr << "mouseUp was called\n";
+  dpy->delete_voxel_storage();
+}
+
+void
+VolumeVis2D::mouseMotion( int x, int y, const Ray& ray, const HitInfo& hit )
+{
+  cerr << "mouseMotion was called\n";
+  dpy->delete_voxel_storage();
+  
+  cerr << dpy->cp_voxels.size();
+  Point p = ray.origin() + ray.direction() * hit.min_t - min.vector();
+
+  float norm_step_x = inv_diag.x() * (nx - 1 );
+  float norm_step_y = inv_diag.y() * (ny - 1 );
+  float norm_step_z = inv_diag.z() * (nz - 1 );
+
+  // get the indices and weights for the indices
+  float step = p.x() * norm_step_x;
+  int x_low = bound((int)step, 0, data.dim1()-2);
+  int x_high = x_low+1;
+  float x_weight_low = x_high - step;
+  
+  step = p.y() * norm_step_y;
+  int y_low = bound((int)step, 0, data.dim2()-2);
+  int y_high = y_low+1;
+  float y_weight_low = y_high - step;
+  
+  step = p.z() * norm_step_z;
+  int z_low = bound((int)step, 0, data.dim3()-2);
+  int z_high = z_low+1;
+  float z_weight_low = z_high - step;
+  
+  ////////////////////////////////////////////////////////////
+  // do the interpolation
+  
+  Voxel2D<float> a, b, c, d, e, f, g, h;
+  a = data(x_low,  y_low,  z_low);
+  b = data(x_low,  y_low,  z_high);
+  c = data(x_low,  y_high, z_low);
+  d = data(x_low,  y_high, z_high);
+  e = data(x_high, y_low,  z_low);
+  f = data(x_high, y_low,  z_high);
+  g = data(x_high, y_high, z_low);
+  h = data(x_high, y_high, z_high);
+  
+  Voxel2D<float> lz1, lz2, lz3, lz4, ly1, ly2, value;
+  lz1 = a * z_weight_low + b * (1 - z_weight_low);
+  lz2 = c * z_weight_low + d * (1 - z_weight_low);
+  lz3 = e * z_weight_low + f * (1 - z_weight_low);
+  lz4 = g * z_weight_low + h * (1 - z_weight_low);
+  
+  ly1 = lz1 * y_weight_low + lz2 * (1 - y_weight_low);
+  ly2 = lz3 * y_weight_low + lz4 * (1 - y_weight_low);
+  
+  value = ly1 * x_weight_low + ly2 * (1 - x_weight_low);
+
+  dpy->store_voxel( a );
+  dpy->store_voxel( b );
+  dpy->store_voxel( c );
+  dpy->store_voxel( d );
+  dpy->store_voxel( e );
+  dpy->store_voxel( f );
+  dpy->store_voxel( g );
+  dpy->store_voxel( h );
+  dpy->store_voxel( value );
+}
+
+
+// template<class T>
 void VolumeVis2D::intersect(Ray& ray, HitInfo& hit, DepthStats* ,
-			    PerProcessorContext* ) {
+			       PerProcessorContext* ) {
   // determines the min and max t of the intersections with the boundaries
   double t1, t2, tx1, tx2, ty1, ty2, tz1, tz2;
 
@@ -154,8 +289,6 @@ void VolumeVis2D::intersect(Ray& ray, HitInfo& hit, DepthStats* ,
       vs.coe = Neither;
       // Compute cutting plane intersection (t_cp)
       double dt = Dot( ray.direction(), cutplane_normal );
-//        double t_cp = (cutplane_displacement -
-//  		     Dot( cutplane_normal, ray.origin() ))/dt;
       double plane = Dot(cutplane_normal, ray.origin())-cutplane_displacement;
       double t_cp = -plane/dt;
       if( plane > 0 || t_cp < t2 ) {
@@ -548,7 +681,7 @@ void VolumeVis2D::compute_grad( Ray ray, Point p, Vector gradient,
   opacity += opacity;//_factor;
 }
 
-//template<class T>
+// template<class T>
 void VolumeVis2D::animate(double, bool& changed)
 {
   if( cdpy ) {
