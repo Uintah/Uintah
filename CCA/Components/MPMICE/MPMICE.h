@@ -10,6 +10,8 @@
 #include <Packages/Uintah/CCA/Ports/MPMCFDInterface.h>
 #include <Packages/Uintah/CCA/Ports/MPMInterface.h>
 #include <Packages/Uintah/CCA/Ports/CFDInterface.h>
+#include <Packages/Uintah/CCA/Ports/Output.h>
+
 
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
@@ -203,11 +205,10 @@ public:
                 NEIGHBOR };
 
 protected:
-
   MPMICE(const MPMICE&);
   MPMICE& operator=(const MPMICE&);
-	 
-  SimulationStateP d_sharedState;
+  SimulationStateP d_sharedState; 
+  Output* dataArchiver;
   MPMLabel* Mlb;
   ICELabel* Ilb;
   MPMICELabel* MIlb;
