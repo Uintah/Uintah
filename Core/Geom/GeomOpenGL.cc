@@ -5391,6 +5391,18 @@ void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
   if(!pre_draw(di, matl, 0)) return;
+
+  int ii = 0;
+  // Disable clipping planes for sticky objects.
+  vector<bool> cliplist(6, false);
+  for (ii = 0; ii < 6; ii++)
+  {
+    if (glIsEnabled((GLenum)(GL_CLIP_PLANE0+ii)))
+    {
+      glDisable((GLenum)(GL_CLIP_PLANE0+ii));
+      cliplist[ii] = true;
+    }
+  }
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
@@ -5409,6 +5421,14 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 
+  // Reenable clipping planes.
+  for (ii = 0; ii < 6; ii++)
+  {
+    if (cliplist[ii])
+    {
+      glEnable((GLenum)(GL_CLIP_PLANE0+ii));
+    }
+  }
   post_draw(di);
 }  
 
