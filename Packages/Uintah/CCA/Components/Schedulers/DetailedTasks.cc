@@ -683,7 +683,7 @@ DetailedTasks::initTimestep()
 
 void DetailedTasks::initializeBatches()
 {
-  cerr << "Initializing Batches\n";
+//  cerr << "Initializing Batches\n";
   for (int i = 0; i < (int)batches.size(); i++) {
     batches[i]->reset();
   }
