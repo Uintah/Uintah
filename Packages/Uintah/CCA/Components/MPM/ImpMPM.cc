@@ -89,10 +89,7 @@ ImpMPM::~ImpMPM()
     cout << "Freeing patches!!\n";
   }
 
-  int numMatls = d_sharedState->getNumMPMMatls();
-  for(int m = 0; m < numMatls; m++){
-    delete d_solver[m];
-  }
+  delete d_solver;
 
 }
 
@@ -143,17 +140,12 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
    ProblemSpecP child = mpm_mat_ps->findBlock("contact");
    std::string con_type = "null";
    child->get("type",con_type);
-   d_single_velocity = false;
    d_rigid_body = false;
 
    if (con_type == "rigid"){
       d_rigid_body = true;
       Vector defaultDir(1,1,1);
       child->getWithDefault("direction",d_contact_dirs, defaultDir);
-   }
-   else if (con_type == "single_velocity"){
-      d_single_velocity = true;
-      cout << "single" << endl;
    }
 
    if(flags->d_useLoadCurves){
@@ -173,19 +165,11 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
    }
 
 #ifdef HAVE_PETSC
-   d_solver = vector<MPMPetscSolver*>(numMatls);
+   d_solver = scinew MPMPetscSolver();
 #else
-   d_solver = vector<SimpleSolver*>(numMatls);
+   d_solver = scinew SimpleSolver();
 #endif
-
-   for(int m=0;m<numMatls;m++){
-#ifdef HAVE_PETSC
-     d_solver[m] = scinew MPMPetscSolver();
-#else
-     d_solver[m] = scinew SimpleSolver();
-#endif
-     d_solver[m]->initialize();
-   }
+   d_solver->initialize();
 
   // Pull out from Time section
   d_initialDt = 10000.0;
@@ -325,13 +309,6 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* matls)
 {
-  /* interpolateParticlesToGrid
-   *   in(P.MASS, P.VELOCITY, P.NAT_X)
-   *   operation(interpolate the P.MASS and P.VEL to the grid
-   *             using P.NAT_X and some shape function evaluations)
-   *   out(G.MASS, G.VELOCITY) */
-
-
   Task* t = scinew Task("ImpMPM::interpolateParticlesToGrid",
                         this,&ImpMPM::interpolateParticlesToGrid);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::AroundNodes,1);
@@ -343,8 +320,6 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,Ghost::AroundNodes,1);
 
   t->computes(lb->gMassLabel);
-  t->computes(lb->gMassLabel,d_sharedState->getAllInOneMatl(),
-              Task::OutOfDomain);
 
   t->computes(lb->gVolumeLabel);
   t->computes(lb->gVelocityOldLabel);
@@ -354,22 +329,6 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gExternalForceLabel);
   t->computes(lb->gInternalForceLabel);
   t->computes(lb->TotalMassLabel);
-
-  sched->addTask(t, patches, matls);
-}
-
-void ImpMPM::scheduleRigidBody(SchedulerP& sched,
-                               const PatchSet* patches,
-                               const MaterialSet* matls)
-{
-  Task* t = scinew Task("ImpMPM::rigidBody",
-                        this,&ImpMPM::rigidBody);
-
-  t->requires(Task::NewDW, lb->gMassLabel,         Ghost::None);
-  t->requires(Task::NewDW, lb->gVelocityOldLabel,  Ghost::None);
-  t->requires(Task::OldDW, d_sharedState->get_delt_label());
-
-  t->modifies(lb->dispNewLabel);
 
   sched->addTask(t, patches, matls);
 }
@@ -416,15 +375,12 @@ void ImpMPM::scheduleComputeContact(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::computeContact",
                          this, &ImpMPM::computeContact);
 
-  t->requires(Task::NewDW,lb->gMassLabel, Ghost::None);
   t->requires(Task::OldDW,d_sharedState->get_delt_label());
-
-  t->modifies(lb->gVelocityOldLabel);
-  t->modifies(lb->gAccelerationLabel);
   if(d_rigid_body){
     t->modifies(lb->dispNewLabel);
+    t->requires(Task::NewDW,lb->gMassLabel,        Ghost::None);
+    t->requires(Task::NewDW,lb->gVelocityOldLabel, Ghost::None);
   }
-
   t->computes(lb->gContactLabel);  
 
   sched->addTask(t, patches, matls);
@@ -959,11 +915,25 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                <<"\t\t IMPM"<< "\n" << "\n";
 
     int numMatls = d_sharedState->getNumMPMMatls();
+    // Create arrays for the grid data
+    StaticArray<NCVariable<double> > gmass(numMatls),gvolume(numMatls);
+    StaticArray<NCVariable<Vector> > gvel_old(numMatls),gacc(numMatls);
+    StaticArray<NCVariable<Vector> > dispNew(numMatls),gvelocity(numMatls);
+    StaticArray<NCVariable<Vector> > gextforce(numMatls),gintforce(numMatls);
+    StaticArray<NCVariable<Vector> > dispInc(numMatls);
 
-    NCVariable<double> gmassglobal;
-    new_dw->allocateAndPut(gmassglobal,lb->gMassLabel,
-                     d_sharedState->getAllInOneMatl()->get(0), patch);
-    gmassglobal.initialize(d_SMALL_NUM_MPM);
+    NCVariable<double> GMASS, GVOLUME;
+    NCVariable<Vector> GVEL_OLD, GACC, GEXTFORCE;
+    new_dw->allocateTemporary(GMASS,     patch,Ghost::None,0);
+    new_dw->allocateTemporary(GVOLUME,   patch,Ghost::None,0);
+    new_dw->allocateTemporary(GVEL_OLD,  patch,Ghost::None,0);
+    new_dw->allocateTemporary(GACC,      patch,Ghost::None,0);
+    new_dw->allocateTemporary(GEXTFORCE, patch,Ghost::None,0);
+    GMASS.initialize(0.);
+    GVOLUME.initialize(0.);
+    GVEL_OLD.initialize(Vector(0.,0.,0.));
+    GACC.initialize(Vector(0.,0.,0.));
+    GEXTFORCE.initialize(Vector(0.,0.,0.));
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -985,29 +955,24 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pacceleration,  lb->pAccelerationLabel,      pset);
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
 
-      // Create arrays for the grid data
-      NCVariable<double> gmass,gvolume;
-      NCVariable<Vector> gvelocity_old,gacceleration,dispNew,gvelocity;
-      NCVariable<Vector> gexternalforce,ginternalforce;
-      NCVariable<Vector> dispInc;
+      new_dw->allocateAndPut(gmass[m],      lb->gMassLabel,         matl,patch);
+      new_dw->allocateAndPut(gvolume[m],    lb->gVolumeLabel,       matl,patch);
+      new_dw->allocateAndPut(gvel_old[m],   lb->gVelocityOldLabel,  matl,patch);
+      new_dw->allocateAndPut(gvelocity[m],  lb->gVelocityLabel,     matl,patch);
+      new_dw->allocateAndPut(dispNew[m],    lb->dispNewLabel,       matl,patch);
+      new_dw->allocateAndPut(gacc[m],       lb->gAccelerationLabel, matl,patch);
+      new_dw->allocateAndPut(gextforce[m],  lb->gExternalForceLabel,matl,patch);
+      new_dw->allocateAndPut(gintforce[m],  lb->gInternalForceLabel,matl,patch);
 
-      new_dw->allocateAndPut(gmass,         lb->gMassLabel,         matl,patch);
-      new_dw->allocateAndPut(gvolume,       lb->gVolumeLabel,       matl,patch);
-      new_dw->allocateAndPut(gvelocity_old, lb->gVelocityOldLabel,  matl,patch);
-      new_dw->allocateAndPut(gvelocity,     lb->gVelocityLabel,     matl,patch);
-      new_dw->allocateAndPut(dispNew,       lb->dispNewLabel,       matl,patch);
-      new_dw->allocateAndPut(gacceleration, lb->gAccelerationLabel, matl,patch);
-      new_dw->allocateAndPut(gexternalforce,lb->gExternalForceLabel,matl,patch);
-      new_dw->allocateAndPut(ginternalforce,lb->gInternalForceLabel,matl,patch);
+      gmass[m].initialize(d_SMALL_NUM_MPM);
+      gvolume[m].initialize(0);
+      gvel_old[m].initialize(Vector(0,0,0));
+      gacc[m].initialize(Vector(0,0,0));
+      gextforce[m].initialize(Vector(0,0,0));
 
-      gmass.initialize(d_SMALL_NUM_MPM);
-      gvolume.initialize(0);
-      gvelocity_old.initialize(Vector(0,0,0));
-      gvelocity.initialize(Vector(0,0,0));
-      dispNew.initialize(Vector(0,0,0));
-      gacceleration.initialize(Vector(0,0,0));
-      gexternalforce.initialize(Vector(0,0,0));
-      ginternalforce.initialize(Vector(0,0,0));
+      dispNew[m].initialize(Vector(0,0,0));
+      gvelocity[m].initialize(Vector(0,0,0));
+      gintforce[m].initialize(Vector(0,0,0));
 
       double totalmass = 0;
       Vector total_mom(0.0,0.0,0.0);
@@ -1032,80 +997,52 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         // Must use the node indices
         for(int k = 0; k < 8; k++) {
           if(patch->containsNode(ni[k])) {
-            gmass[ni[k]]          += pmass[idx]          * S[k];
-            gvolume[ni[k]]        += pvolumeold[idx]     * S[k];
-            gexternalforce[ni[k]] += pexternalforce[idx] * S[k];
-            gvelocity_old[ni[k]]  += pmom                * S[k];
-            gacceleration[ni[k]]  += pmassacc            * S[k];
+            gmass[m][ni[k]]          += pmass[idx]          * S[k];
+            gvolume[m][ni[k]]        += pvolumeold[idx]     * S[k];
+            gextforce[m][ni[k]]      += pexternalforce[idx] * S[k];
+            gvel_old[m][ni[k]]       += pmom                * S[k];
+            gacc[m][ni[k]]           += pmassacc            * S[k];
           }
+        }
+      }
+
+      if(mpm_matl->getIsRigid()){
+        for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+          IntVector c = *iter;
+          gvel_old[m][c] /= (gmass[m][c] + 1.e-200);
+          gacc[m][c]     /= (gmass[m][c] + 1.e-200);
+        }
+      }
+
+      if(!mpm_matl->getIsRigid()){
+        for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+          IntVector c = *iter;
+          GMASS[c]+=gmass[m][c];
+          GVOLUME[c]+=gvolume[m][c];
+          GEXTFORCE[c]+=gextforce[m][c];
+          GVEL_OLD[c]+=gvel_old[m][c];
+          GACC[c]+=gacc[m][c];
         }
       }
       
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-        IntVector c = *iter;
-        gvelocity_old[c] /= (gmass[*iter] + 1.e-200);
-        gacceleration[c] /= (gmass[*iter] + 1.e-200);
-        gmassglobal[c]   += gmass[c];
-      }
-
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
     }  // End loop over materials
+
+    // Give all non-rigid materials the same nodal values
+    for(int m = 0; m < numMatls; m++){
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+     if(!mpm_matl->getIsRigid()){
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        gmass[m][c]=GMASS[c];
+        gvolume[m][c]=GVOLUME[c];
+        gextforce[m][c]=GEXTFORCE[c];
+        gvel_old[m][c]=GVEL_OLD[c]/(GMASS[c] + 1.e-200);
+        gacc[m][c]=GACC[c]/GMASS[c];
+      }
+     }
+    }  // End loop over materials
   }  // End loop over patches
-}
-
-void ImpMPM::rigidBody(const ProcessorGroup*,
-                       const PatchSubset* patches,
-                       const MaterialSubset* ,
-                       DataWarehouse* old_dw,
-                       DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    cout_doing <<"Doing rigidBody on patch " << patch->getID()
-               <<"\t\t IMPM"<< "\n" << "\n";
-
-    // The purpose of this task is to set the known new displacements
-    // based on the rigid body velocity so that the stresses are
-    // computed correctly in the first pass through computeStressTensor
-    // This is not necessary, but not doing it wastes an iteration each
-    // timestep.
-
-    // Get rigid body data
-    constNCVariable<Vector> vel_rigid;
-    constNCVariable<double> mass_rigid;
-    int numMatls = d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      if(mpm_matl->getIsRigid()){
-        int RM = mpm_matl->getDWIndex();
-        new_dw->get(vel_rigid, lb->gVelocityOldLabel,RM,patch,Ghost::None,0);
-        new_dw->get(mass_rigid,lb->gMassLabel,       RM,patch,Ghost::None,0);
-      }
-    }
-
-
-    // Get and modify non-rigid data
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int matl = mpm_matl->getDWIndex();
-      if(!mpm_matl->getIsRigid()){
-        NCVariable<Vector> dispNew;                     
-        new_dw->getModifiable(dispNew,lb->dispNewLabel,matl, patch);
-
-        delt_vartype dt;
-        old_dw->get(dt, d_sharedState->get_delt_label() );
-
-        for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-          IntVector n = *iter;
-          if(!compare(mass_rigid[n],0.0)){
-            dispNew[n] = Vector(vel_rigid[n].x()*dt*d_contact_dirs.x(),
-                                vel_rigid[n].y()*dt*d_contact_dirs.y(),
-                                vel_rigid[n].z()*dt*d_contact_dirs.z());
-          }
-        }
-      }
-    }
-  }
 }
 
 void ImpMPM::destroyMatrix(const ProcessorGroup*,
@@ -1117,9 +1054,7 @@ void ImpMPM::destroyMatrix(const ProcessorGroup*,
 {
   cout_doing <<"Doing destroyMatrix " <<"\t\t\t\t\t IMPM" << "\n" << "\n";
 
-  for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++ ) {
-    d_solver[m]->destroyMatrix(recursion);
-  }
+  d_solver->destroyMatrix(recursion);
 }
 
 void ImpMPM::createMatrix(const ProcessorGroup*,
@@ -1128,22 +1063,25 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw)
 {
-  int numMatls = d_sharedState->getNumMPMMatls();
-  for (int m = 0; m < numMatls; m++) {
-    map<int,int> dof_diag;
-    for(int pp=0;pp<patches->size();pp++){
-      const Patch* patch = patches->get(pp);
-      cout_doing <<"Doing createMatrix on patch " << patch->getID() 
-                 << "\t\t\t\t IMPM"    << "\n" << "\n";
-      d_solver[m]->createLocalToGlobalMapping(d_myworld,d_perproc_patches,
-                                              patches);
-      
-      IntVector lowIndex = patch->getNodeLowIndex();
-      IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+  map<int,int> dof_diag;
+  for(int pp=0;pp<patches->size();pp++){
+    const Patch* patch = patches->get(pp);
+    cout_doing <<"Doing createMatrix on patch " << patch->getID() 
+               << "\t\t\t\t IMPM"    << "\n" << "\n";
+    d_solver->createLocalToGlobalMapping(d_myworld,d_perproc_patches,patches);
+    
+    IntVector lowIndex = patch->getNodeLowIndex();
+    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
 
-      Array3<int> l2g(lowIndex,highIndex);
-      d_solver[m]->copyL2G(l2g,patch);
+    Array3<int> l2g(lowIndex,highIndex);
+    d_solver->copyL2G(l2g,patch);
 
+    CCVariable<int> visited;
+    new_dw->allocateTemporary(visited,patch,Ghost::AroundCells,1);
+    visited.initialize(0);
+
+    int numMatls = d_sharedState->getNumMPMMatls();
+    for (int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();    
       constParticleVariable<Point> px;
@@ -1153,9 +1091,6 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
                                                           lb->pXLabel);
       old_dw->get(px,lb->pXLabel,pset);
       
-      CCVariable<int> visited;
-      new_dw->allocateTemporary(visited,patch,Ghost::AroundCells,1);
-      visited.initialize(0);
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -1180,14 +1115,11 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
               dof_diag[dofi] += 1;
             }
           }
-          
-        }
-      }
-      
-    }
-    d_solver[m]->createMatrix(d_myworld,dof_diag);
+         }
+       }
+     } 
   }
-  
+  d_solver->createMatrix(d_myworld,dof_diag);
 }
 
 void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
@@ -1203,11 +1135,11 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
+    d_solver->copyL2G(l2g,patch);
 
     // Apply grid boundary conditions to the velocity before storing the data
     IntVector offset =  IntVector(0,0,0);
     for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++ ) {
-      d_solver[m]->copyL2G(l2g,patch);
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matl = mpm_matl->getDWIndex();
       
@@ -1215,11 +1147,6 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 
       new_dw->getModifiable(gvelocity_old,lb->gVelocityOldLabel, matl, patch);
       new_dw->getModifiable(gacceleration,lb->gAccelerationLabel,matl, patch);
-#if 0
-      IntVector low,high;
-      patch->getLevel()->findNodeIndexRange(low,high);
-      high -= IntVector(1,1,1);
-#endif
 
       for(Patch::FaceType face = Patch::startFace;
           face <= Patch::endFace; face=Patch::nextFace(face)){
@@ -1253,9 +1180,9 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
                   dof[0] = l2g_node_num;
                   dof[1] = l2g_node_num+1;
                   dof[2] = l2g_node_num+2;
-                  d_solver[m]->d_DOF.insert(dof[0]);
-                  d_solver[m]->d_DOF.insert(dof[1]);
-                  d_solver[m]->d_DOF.insert(dof[2]);
+                  d_solver->d_DOF.insert(dof[0]);
+                  d_solver->d_DOF.insert(dof[1]);
+                  d_solver->d_DOF.insert(dof[2]);
                 }
               }
               delete vel_bcs;
@@ -1312,11 +1239,11 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
                 dof[1] = l2g_node_num+1;
                 dof[2] = l2g_node_num+2;
                 if (DOF.x())
-                  d_solver[m]->d_DOF.insert(dof[0]);
+                  d_solver->d_DOF.insert(dof[0]);
                 if (DOF.y())
-                  d_solver[m]->d_DOF.insert(dof[1]);
+                  d_solver->d_DOF.insert(dof[1]);
                 if (DOF.z())
-                  d_solver[m]->d_DOF.insert(dof[2]);
+                  d_solver->d_DOF.insert(dof[2]);
               }
               delete sym_bcs;
             }
@@ -1343,48 +1270,13 @@ void ImpMPM::computeContact(const ProcessorGroup*,
 
     delt_vartype dt;
 
-    Ghost::GhostType  gnone = Ghost::None;
     int numMatls = d_sharedState->getNumMPMMatls();
-    StaticArray<constNCVariable<double> >  gmass(numMatls);
-    StaticArray<NCVariable<Vector> >  gvel(numMatls);
-    StaticArray<NCVariable<Vector> >  gacc(numMatls);
     StaticArray<NCVariable<int> >  contact(numMatls);
     for(int n = 0; n < numMatls; n++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( n );
       int dwi = mpm_matl->getDWIndex();
-
-      new_dw->get(gmass[n],              lb->gMassLabel,     dwi,patch,gnone,0);
-      new_dw->getModifiable(gvel[n],     lb->gVelocityOldLabel,   dwi,patch);
-      new_dw->getModifiable(gacc[n],     lb->gAccelerationLabel,  dwi,patch);
       new_dw->allocateAndPut(contact[n], lb->gContactLabel,       dwi,patch);
       contact[n].initialize(0);
-    }
-
-    Vector centerOfMassVelocity;
-    Vector centerOfMassAcceleration;
-
-    if(d_single_velocity){
-     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      Vector centerOfMassMom(0.,0.,0.);
-      Vector centerOfMassAcc(0.,0.,0.);
-      double centerOfMassMass=0.;
-      for(int n = 0; n < numMatls; n++){
-        centerOfMassMom +=gvel[n][c] * gmass[n][c];
-        centerOfMassAcc +=gacc[n][c] * gmass[n][c];
-        centerOfMassMass+=gmass[n][c];
-      }
-
-      for(int n = 0; n < numMatls; n++){
-        if(!compare(gmass[n][c],centerOfMassMass)){
-          centerOfMassVelocity    =centerOfMassMom/centerOfMassMass;
-          centerOfMassAcceleration=centerOfMassAcc/centerOfMassMass;
-          gvel[n][c]  = centerOfMassVelocity;
-          gacc[n][c]  = centerOfMassAcceleration;
-          contact[n][c] = 1;
-        }
-      }
-     }
     }
 
     if(d_rigid_body){
@@ -1439,46 +1331,45 @@ void ImpMPM::findFixedDOF(const ProcessorGroup*,
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
+    d_solver->copyL2G(l2g,patch);
 
+    bool firstTimeThrough=true;
     int numMatls = d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+     if(!mpm_matl->getIsRigid() && firstTimeThrough){ 
+      firstTimeThrough=false;
       int matlindex = mpm_matl->getDWIndex();
-      d_solver[m]->copyL2G(l2g,patch);
-        constNCVariable<double> mass;
-        constNCVariable<int> contact;
-        new_dw->get(mass,   lb->gMassLabel,   matlindex,patch,Ghost::None,0);
-        new_dw->get(contact,lb->gContactLabel,matlindex,patch,Ghost::None,0);
+      constNCVariable<double> mass;
+      constNCVariable<int> contact;
+      new_dw->get(mass,   lb->gMassLabel,   matlindex,patch,Ghost::None,0);
+      new_dw->get(contact,lb->gContactLabel,matlindex,patch,Ghost::None,0);
 
-        for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-          IntVector n = *iter;
-          int dof[3];
-          int l2g_node_num = l2g[n];
-          dof[0] = l2g_node_num;
-          dof[1] = l2g_node_num+1;
-          dof[2] = l2g_node_num+2;
+      for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+        IntVector n = *iter;
+        int dof[3];
+        int l2g_node_num = l2g[n];
+        dof[0] = l2g_node_num;
+        dof[1] = l2g_node_num+1;
+        dof[2] = l2g_node_num+2;
 
-          // Just look on the grid to see if the gmass is 0 and then remove that
-          if (compare(mass[n],0.)) {
-            d_solver[m]->d_DOF.insert(dof[0]);
-            d_solver[m]->d_DOF.insert(dof[1]);
-            d_solver[m]->d_DOF.insert(dof[2]);
-          }
-          if (contact[n] == 1) {  // Single Vel Contact imposed on these nodes
-            d_solver[m]->d_DOF.insert(dof[0]);
-            d_solver[m]->d_DOF.insert(dof[1]);
-            d_solver[m]->d_DOF.insert(dof[2]);
-          }
-          if (contact[n] == 2) {  // Rigid Contact imposed on these nodes
-            for(int i=0;i<3;i++){
-              if(d_contact_dirs[i]==1){
-               d_solver[m]->d_DOF.insert(dof[i]);  // specifically, these DOFs
-              }
+        // Just look on the grid to see if the gmass is 0 and then remove that
+        if (compare(mass[n],0.)) {
+          d_solver->d_DOF.insert(dof[0]);
+          d_solver->d_DOF.insert(dof[1]);
+          d_solver->d_DOF.insert(dof[2]);
+        }
+        if (contact[n] == 2) {  // Rigid Contact imposed on these nodes
+          for(int i=0;i<3;i++){
+            if(d_contact_dirs[i]==1){
+             d_solver->d_DOF.insert(dof[i]);  // specifically, these DOFs
             }
           }
-        }
-    }
-  }
+        }// contact ==2
+      }  // node iterator
+     }   // if not rigid
+    }    // loop over matls
+  }      // patches
 }
 
 void ImpMPM::computeStressTensor(const ProcessorGroup*,
@@ -1494,7 +1385,7 @@ void ImpMPM::computeStressTensor(const ProcessorGroup*,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw,
-                            d_solver[m], recursion);
+                            d_solver, recursion);
   }
   
 }
@@ -1517,11 +1408,14 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
 
+    bool firstTimeThrough=true;
     int numMatls = d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+     if(!mpm_matl->getIsRigid() && firstTimeThrough){ 
+      firstTimeThrough=false;
       int matlindex = mpm_matl->getDWIndex();
-      d_solver[m]->copyL2G(l2g,patch);
+      d_solver->copyL2G(l2g,patch);
    
       constNCVariable<double> gmass;
       delt_vartype dt;
@@ -1545,13 +1439,13 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
         v[0] = gmass[*iter]*(4./(dt*dt));
         for(int ii=0;ii<3;ii++){
           dof[0] = l2g_node_num+ii;
-          d_solver[m]->fillMatrix(1,dof,1,dof,v);
+          d_solver->fillMatrix(1,dof,1,dof,v);
         }
-      }
-    } 
+      }  // node iterator
+     }   // if
+    }    // matls
   }
-  for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++)
-    d_solver[m]->finalizeMatrix();
+  d_solver->finalizeMatrix();
 }
             
 void ImpMPM::computeInternalForce(const ProcessorGroup*,
@@ -1573,7 +1467,12 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
     oodx[2] = 1.0/dx.z();
     
     int numMPMMatls = d_sharedState->getNumMPMMatls();
-    
+
+    StaticArray<NCVariable<Vector> > int_force(numMPMMatls);
+    NCVariable<Vector> INT_FORCE;
+    new_dw->allocateTemporary(INT_FORCE,     patch,Ghost::None,0);
+    INT_FORCE.initialize(Vector(0,0,0));
+
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -1581,8 +1480,10 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
       constParticleVariable<Point>   px;
       constParticleVariable<double>  pvol;
       constParticleVariable<Matrix3> pstress;
-      NCVariable<Vector>             int_force;
-      
+
+      new_dw->allocateAndPut(int_force[m],lb->gInternalForceLabel,  dwi, patch);
+      int_force[m].initialize(Vector(0,0,0));
+
       DataWarehouse* parent_old_dw = 
         new_dw->getOtherDataWarehouse(Task::ParentOldDW);
 
@@ -1590,12 +1491,9 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
                                               Ghost::AroundNodes,1,lb->pXLabel);
 
       parent_old_dw->get(px,   lb->pXLabel,    pset);
-      new_dw->allocateAndPut(int_force,lb->gInternalForceLabel,  dwi, patch);
-
       new_dw->get(pvol,    lb->pVolumeDeformedLabel,  pset);
       new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
 
-      int_force.initialize(Vector(0,0,0));
       IntVector ni[8];
       Vector d_S[8];
 
@@ -1609,12 +1507,26 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
         for (int k = 0; k < 8; k++){
           if(patch->containsNode(ni[k])){
            Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-           int_force[ni[k]] -= (div * pstress[idx])  * pvol[idx];    
+           int_force[m][ni[k]] -= (div * pstress[idx])  * pvol[idx];    
           }
         }
       }
-    }
-  }
+      for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+        IntVector n = *iter;
+        INT_FORCE[n]+=int_force[m][n];
+      }
+    }  // matls
+
+    for(int m = 0; m < numMPMMatls; m++){
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+     if(!mpm_matl->getIsRigid()){
+      for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+        IntVector n = *iter;
+        int_force[m][n]=INT_FORCE[n];
+      }
+     }
+    }  // matls
+  }    // patches
 }
 
 void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
@@ -1630,12 +1542,15 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
+    d_solver->copyL2G(l2g,patch);
 
+    bool firstTimeThrough=true;
     int numMatls = d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+     if(!mpm_matl->getIsRigid() && firstTimeThrough){ 
+      firstTimeThrough=false;
       int dwi = mpm_matl->getDWIndex();
-      d_solver[m]->copyL2G(l2g,patch);
 
       delt_vartype dt;
       Ghost::GhostType  gnone = Ghost::None;
@@ -1681,13 +1596,14 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
           v[2] -= (dispNew[n].z()*fodts - velocity[n].z()*fodt -
                    accel[n].z())*mass[n];
         }
-        d_solver[m]->fillVector(dof[0],double(v[0]));
-        d_solver[m]->fillVector(dof[1],double(v[1]));
-        d_solver[m]->fillVector(dof[2],double(v[2]));
+        d_solver->fillVector(dof[0],double(v[0]));
+        d_solver->fillVector(dof[1],double(v[1]));
+        d_solver->fillVector(dof[2],double(v[2]));
       }
-      d_solver[m]->assembleVector();
-    }
-  }
+      d_solver->assembleVector();
+     } // first time through non-rigid
+    }  // matls
+  }    // patches
 }
 
 void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
@@ -1707,16 +1623,9 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
     IntVector nodes = patch->getNNodes();
     num_nodes += (nodes.x())*(nodes.y())*(nodes.z())*3;
   }
-    
-  int numMatls = d_sharedState->getNumMPMMatls();
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-    if(!mpm_matl->getIsRigid()){  // i.e. Leave dispInc zero for Rigd Bodies
-      // remove fixed degrees of freedom and solve K*du = Q
-      d_solver[m]->removeFixedDOF(num_nodes);
-      d_solver[m]->solve();   
-    }
-  }
+
+  d_solver->removeFixedDOF(num_nodes);
+  d_solver->solve();   
 }
 
 void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
@@ -1732,6 +1641,14 @@ void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
     cout_doing <<"Doing getDisplacementIncrement on patch " << patch->getID()
                <<"\t\t\t\t IMPM"<< "\n" << "\n";
 
+    IntVector lowIndex = patch->getNodeLowIndex();
+    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    Array3<int> l2g(lowIndex,highIndex);
+    d_solver->copyL2G(l2g,patch);
+ 
+    vector<double> x;
+    int begin = d_solver->getSolution(x);
+  
     int numMatls = d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1740,27 +1657,14 @@ void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
       NCVariable<Vector> dispInc;
       new_dw->allocateAndPut(dispInc,lb->dispIncLabel,matlindex,patch);
       dispInc.initialize(Vector(0.));
-
-      if(!mpm_matl->getIsRigid()){  // i.e. Leave dispInc zero for Rigd Bodies
-        // remove fixed degrees of freedom and solve K*du = Q
-
-        IntVector lowIndex = patch->getNodeLowIndex();
-        IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
-        Array3<int> l2g(lowIndex,highIndex);
-        d_solver[m]->copyL2G(l2g,patch);
-  
-        vector<double> x;
-        int begin = d_solver[m]->getSolution(x);
-  
-        for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
-          IntVector n = *iter;
-          int dof[3];
-          int l2g_node_num = l2g[n] - begin;
-          dof[0] = l2g_node_num;
-          dof[1] = l2g_node_num+1;
-          dof[2] = l2g_node_num+2;
-          dispInc[n] = Vector(x[dof[0]],x[dof[1]],x[dof[2]]);
-        }
+      for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+        IntVector n = *iter;
+        int dof[3];
+        int l2g_node_num = l2g[n] - begin;
+        dof[0] = l2g_node_num;
+        dof[1] = l2g_node_num+1;
+        dof[2] = l2g_node_num+2;
+        dispInc[n] = Vector(x[dof[0]],x[dof[1]],x[dof[2]]);
       }
     }
   }
@@ -1833,16 +1737,6 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
         velocity[n] = dispNew[n]*(2./dt) - oneifdyn*velocity_old[n];
       }
 
-      if(d_single_velocity){  // overwrite some of the values computed above
-        for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
-          IntVector n = *iter;
-          if(contact[n]==1){
-            dispNew[n]  = velocity_old[n]*dt;
-            velocity[n] = dispNew[n]*(2./dt) - oneifdyn*velocity_old[n];
-          }
-        }
-      }
-
       if(d_rigid_body){  // overwrite some of the values computed above
         for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
           IntVector n = *iter;
@@ -1869,77 +1763,71 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
                               DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
+   const Patch* patch = patches->get(p);
 
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
-    Array3<int> l2g(lowIndex,highIndex);
+   cout_doing <<"Doing checkConvergence on patch " << patch->getID()
+              <<"\t\t\t IMPM"<< "\n" << "\n";
 
-    cout_doing <<"Doing checkConvergence on patch " << patch->getID()
-               <<"\t\t\t IMPM"<< "\n" << "\n";
+   IntVector lowIndex = patch->getNodeLowIndex();
+   IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+   Array3<int> l2g(lowIndex,highIndex);
+   d_solver->copyL2G(l2g,patch);
 
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-     int matlindex = mpm_matl->getDWIndex();
-     d_solver[m]->copyL2G(l2g,patch);
+   int matlindex = 0;
 
-     if(!mpm_matl->getIsRigid()){
-      constNCVariable<Vector> dispInc;
-      new_dw->get(dispInc,lb->dispIncLabel,matlindex,patch,Ghost::None,0);
-      
-      double dispIncNorm  = 0.;
-      double dispIncQNorm = 0.;
-      vector<double> getQ;
-      int begin = d_solver[m]->getRHS(getQ);
-      for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++) {
-        IntVector n = *iter;
-        int dof[3];
-        int l2g_node_num = l2g[n] - begin;
-        dof[0] = l2g_node_num;
-        dof[1] = l2g_node_num+1;
-        dof[2] = l2g_node_num+2;
-        dispIncNorm += Dot(dispInc[n],dispInc[n]);
-        dispIncQNorm += dispInc[n].x()*getQ[dof[0]] + 
-          dispInc[n].y()*getQ[dof[1]] +  dispInc[n].z()*getQ[dof[2]];
-      }
-      // We are computing both dispIncQNorm0 and dispIncNormMax (max residuals)
-      // We are computing both dispIncQNorm and dispIncNorm (current residuals)
+    constNCVariable<Vector> dispInc;
+    new_dw->get(dispInc,lb->dispIncLabel,matlindex,patch,Ghost::None,0);
+    
+    double dispIncNorm  = 0.;
+    double dispIncQNorm = 0.;
+    vector<double> getQ;
+    int begin = d_solver->getRHS(getQ);
+    for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+      IntVector n = *iter;
+      int dof[3];
+      int l2g_node_num = l2g[n] - begin;
+      dof[0] = l2g_node_num;
+      dof[1] = l2g_node_num+1;
+      dof[2] = l2g_node_num+2;
+      dispIncNorm += Dot(dispInc[n],dispInc[n]);
+      dispIncQNorm += dispInc[n].x()*getQ[dof[0]] +
+      dispInc[n].y()*getQ[dof[1]] +  dispInc[n].z()*getQ[dof[2]];
+    }
+    // We are computing both dispIncQNorm0 and dispIncNormMax (max residuals)
+    // We are computing both dispIncQNorm and dispIncNorm (current residuals)
 
-      double dispIncQNorm0,dispIncNormMax;
-      sum_vartype dispIncQNorm0_var,dispIncNormMax_var;
-      old_dw->get(dispIncQNorm0_var, lb->dispIncQNorm0);
-      old_dw->get(dispIncNormMax_var,lb->dispIncNormMax);
+    double dispIncQNorm0,dispIncNormMax;
+    sum_vartype dispIncQNorm0_var,dispIncNormMax_var;
+    old_dw->get(dispIncQNorm0_var, lb->dispIncQNorm0);
+    old_dw->get(dispIncNormMax_var,lb->dispIncNormMax);
 
-      dispIncQNorm0 = dispIncQNorm0_var;
-      dispIncNormMax = dispIncNormMax_var;
+    dispIncQNorm0 = dispIncQNorm0_var;
+    dispIncNormMax = dispIncNormMax_var;
 
-      bool first_iteration=false;
-      if (compare(dispIncQNorm0,0.)){
-        first_iteration = true;
-        dispIncQNorm0 = dispIncQNorm;
-      }
+    bool first_iteration=false;
+    if (compare(dispIncQNorm0,0.)){
+      first_iteration = true;
+      dispIncQNorm0 = dispIncQNorm;
+    }
 
-      if (dispIncNorm > dispIncNormMax){
-        dispIncNormMax = dispIncNorm;
-      }
+    if (dispIncNorm > dispIncNormMax){
+      dispIncNormMax = dispIncNorm;
+    }
 
-      // The following is being done because the denominator in the
-      // convergence criteria is carried forward each iteration.  Since 
-      // every patch puts this into the sum_vartype, the value is multiplied
-      // by the number of patches.  Predividing by numPatches fixes this.
-      int numPatches = patch->getLevel()->numPatches();
-      if(!first_iteration){
-        dispIncQNorm0/=((double) numPatches);
-        dispIncNormMax/=((double) numPatches);
-      }
+    // The following is being done because the denominator in the
+    // convergence criteria is carried forward each iteration.  Since 
+    // every patch puts this into the sum_vartype, the value is multiplied
+    // by the number of patches.  Predividing by numPatches fixes this.
+    int numPatches = patch->getLevel()->numPatches();
+    if(!first_iteration){
+      dispIncQNorm0/=((double) numPatches);
+      dispIncNormMax/=((double) numPatches);
+    }
 
-      new_dw->put(sum_vartype(dispIncNorm),   lb->dispIncNorm);
-      new_dw->put(sum_vartype(dispIncQNorm),  lb->dispIncQNorm);
-      new_dw->put(sum_vartype(dispIncNormMax),lb->dispIncNormMax);
-      new_dw->put(sum_vartype(dispIncQNorm0), lb->dispIncQNorm0);
-     }
-
-    }  // End of loop over materials
+    new_dw->put(sum_vartype(dispIncNorm),   lb->dispIncNorm);
+    new_dw->put(sum_vartype(dispIncQNorm),  lb->dispIncQNorm);
+    new_dw->put(sum_vartype(dispIncNormMax),lb->dispIncNormMax);
+    new_dw->put(sum_vartype(dispIncQNorm0), lb->dispIncQNorm0);
   }  // End of loop over patches
 
 }
@@ -2168,6 +2056,13 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumMPMMatls();
     double integralTraction = 0.;
     double integralArea = 0.;
+
+    NCVariable<Matrix3>       GSTRESS;
+    new_dw->allocateTemporary(GSTRESS, patch, Ghost::None,0);
+    GSTRESS.initialize(Matrix3(0.));
+    StaticArray<NCVariable<Matrix3> >         gstress(numMatls);
+    StaticArray<constNCVariable<double> >     gmass(numMatls);
+
     Vector dx = patch->dCell();
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -2176,19 +2071,17 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
       constParticleVariable<Point>   px;
       constParticleVariable<double>  pmass;
       constParticleVariable<Matrix3> pstress;
-      NCVariable<Matrix3>            gstress;
-      constNCVariable<double>        gmass;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                               Ghost::AroundNodes,1,lb->pXLabel);
-      old_dw->get(px,   lb->pXLabel,    pset);
-      old_dw->get(pmass,lb->pMassLabel, pset);
-      new_dw->get(gmass,lb->gMassLabel, dwi, patch,Ghost::None,0);
-      new_dw->allocateAndPut(gstress,  lb->gStressForSavingLabel,dwi, patch);
+      old_dw->get(px,      lb->pXLabel,    pset);
+      old_dw->get(pmass,   lb->pMassLabel, pset);
+      new_dw->get(gmass[m],lb->gMassLabel, dwi, patch,Ghost::None,0);
+      new_dw->allocateAndPut(gstress[m],lb->gStressForSavingLabel,dwi, patch);
 
       new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
 
-      gstress.initialize(Matrix3(0.));
+      gstress[m].initialize(Matrix3(0.));
       IntVector ni[8];
       double S[8];
       Matrix3 stressmass;
@@ -2204,13 +2097,13 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
 
         for (int k = 0; k < 8; k++){
           if(patch->containsNode(ni[k])){
-           gstress[ni[k]]       += stressmass * S[k];
+           gstress[m][ni[k]]       += stressmass * S[k];
           }
         }
       }
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
-        gstress[c] /= (gmass[c]+1.e-200);
+        GSTRESS[c] += (gstress[m][c]);
       }
       IntVector low = patch-> getInteriorNodeLowIndex();
       IntVector hi  = patch-> getInteriorNodeHighIndex();
@@ -2228,8 +2121,8 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
             for (int i = low.x(); i<hi.x(); i++) {
               for (int k = low.z(); k<hi.z(); k++) {
                 integralTraction +=
-                  gstress[IntVector(i,J,k)](2,2)*dx.x()*dx.z();
-                if(fabs(gstress[IntVector(i,J,k)](2,2)) > 1.e-12){
+                  gstress[m][IntVector(i,J,k)](2,2)*dx.x()*dx.z();
+                if(fabs(gstress[m][IntVector(i,J,k)](2,2)) > 1.e-12){
                   integralArea+=dx.x()*dx.z();
                 }
               }
@@ -2240,6 +2133,16 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     }  // Loop over matls
     new_dw->put(sum_vartype(integralTraction), lb->NTractionZMinusLabel);
     new_dw->put(sum_vartype(integralArea),     lb->integralAreaLabel);
+
+    for(int m = 0; m < numMatls; m++){
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+     if(!mpm_matl->getIsRigid()){
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+        IntVector c = *iter;
+        gstress[m][c] = GSTRESS[c]/(gmass[m][c]+1.e-200);
+      }
+     }
+    }  // Loop over matls
   }
 }
 

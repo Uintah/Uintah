@@ -369,9 +369,9 @@ private:
   const PatchSet* d_perproc_patches;
 
 #ifdef HAVE_PETSC
-  vector<MPMPetscSolver*> d_solver;
+  MPMPetscSolver* d_solver;
 #else
-  vector<SimpleSolver*> d_solver;
+  SimpleSolver* d_solver;
 #endif
 
   bool d_dynamic;
