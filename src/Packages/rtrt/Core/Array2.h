@@ -18,10 +18,10 @@
 
 namespace rtrt {
 template<class T> class Array2;
-template<int> void Pio(SCIRun::Piostream&, rtrt::Array2<int>& data);
-template<float> void Pio(SCIRun::Piostream&, rtrt::Array2<float>& data);
-template<double> void Pio(SCIRun::Piostream&, rtrt::Array2<double>& data);
 template<class T> void Pio(SCIRun::Piostream& stream, rtrt::Array2<T>& data);
+template<> void Pio(SCIRun::Piostream&, rtrt::Array2<int>& data);
+template<> void Pio(SCIRun::Piostream&, rtrt::Array2<float>& data);
+template<> void Pio(SCIRun::Piostream&, rtrt::Array2<double>& data);
 template<class T> void Pio(SCIRun::Piostream& stream, rtrt::Array2<T>*& data);
 
 
