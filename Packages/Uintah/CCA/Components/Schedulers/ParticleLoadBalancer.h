@@ -63,9 +63,11 @@ namespace Uintah {
     //! Asks the load balancer if it is dynamic.
     virtual bool isDynamic() { return true; }
 
+    //    virtual void doRegridTimestep() { d_state = regridLoadBalance;}
+
     //! Assigns the patches to the processors they ended up on in the previous
     //! Simulation.
-    void restartInitialize(ProblemSpecP& pspec, XMLURL);
+    void restartInitialize(ProblemSpecP& pspec, XMLURL, const GridP& grid);
     
   private:
     enum { static_lb, cyclic_lb, random_lb, particle_lb };
@@ -98,7 +100,7 @@ namespace Uintah {
     ProblemSpecP d_pspec;
     
     enum {
-      idle = 0, postLoadBalance, checkLoadBalance, restartLoadBalance
+      idle = 0, postLoadBalance, checkLoadBalance, restartLoadBalance, regridLoadBalance
     };
     
     double d_lbThreshold; //< gain threshold to exceed to require lb'ing

@@ -304,12 +304,13 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
   }
  
   double start = Time::currentSeconds();
-  // for dynamic lb's, set up initial patch config
-  d_lb->possiblyDynamicallyReallocate(grid, false); 
   
   if(d_restarting){
     d_sim->restartInitialize();
   } else {
+    // for dynamic lb's, set up initial patch config
+    d_lb->possiblyDynamicallyReallocate(grid, false); 
+
     d_sharedState->setCurrentTopLevelTimeStep( 0 );
     t = d_timeinfo->initTime;
     // Initialize the CFD and/or MPM data

@@ -555,8 +555,7 @@ ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
     return false;
   }
   if (d_dynamicAlgorithm == static_lb && d_state != postLoadBalance)
-    // should only happen on the first timestep, and we need to do this on a
-    // restart
+    // should only happen on the first timestep
     return d_state != idle; 
 
   int old_state = d_state;
@@ -590,14 +589,23 @@ ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
     } 
 
 void
-ParticleLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl)
+ParticleLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl, const GridP& grid)
 {
   // here we need to grab the uda data to reassign patch data to the 
   // processor that will get the data
   d_state = idle;
 
+  int numPatches = 0;
+
+  for(int l=0;l<grid->numLevels();l++){
+    const LevelP& level = grid->getLevel(l);
+    numPatches += level->numPatches();
+  }
+
+  d_processorAssignment.resize(numPatches);
+
   dbg << " PLB: restartInitialize\n";
-  d_state = restartLoadBalance;
+  d_state = idle;
   for (unsigned i = 0; i < d_processorAssignment.size(); i++)
     d_processorAssignment[i]= -1;
 
@@ -730,11 +738,17 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, bool
     (sc->get_dw(0));
 
 
-  if (dw == 0) {
+  if (dw == 0 || d_state == regridLoadBalance) {
     // on the first timestep, just assign the patches in a simple fashion
     // then on the next timestep do the real work
+    
+    // if this is a regrid timestep, there must be a better way to do this,
+    // but basically for now to get things working just reassign everything.
+    
+    if (d_state == regridLoadBalance) // assign before resetting, we'll need it to copy data
+      d_oldAssignment = d_processorAssignment;
+    
     d_processorAssignment.resize(numPatches);
-    d_oldAssignment.resize(d_processorAssignment.size());
 
     for(int l=0;l<grid->numLevels();l++){
       const LevelP& level = grid->getLevel(l);
@@ -749,13 +763,15 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, bool
       }
     }
 
-    d_oldAssignment = d_processorAssignment;
+    if (dw == 0)
+      d_oldAssignment = d_processorAssignment;
     if (d_dynamicAlgorithm != static_lb)
       d_state = checkLoadBalance;  // l.b. on next timestep
     else
       d_state = postLoadBalance;
   }
   // set up on a restart when lb is static
+  /*
   else if (d_dynamicAlgorithm == static_lb) {
     d_oldAssignment = d_processorAssignment;
 
@@ -774,6 +790,7 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, bool
     d_state = postLoadBalance;
     
   }
+  */
   else {
     //d_oldAssignment = d_processorAssignment;
     d_tempAssignment.clear();
