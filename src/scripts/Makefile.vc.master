@@ -34,7 +34,7 @@
 
 ########################################################################################
 #
-# include the user specified system configuration
+# include the user specified build configuration
 #
 
 !include <$(TOP)\src\scripts\Makefile.vc.config>
@@ -89,8 +89,8 @@ MACHINE          = -MACHINE:ALPHA
 VERSION_CFLAGS   = -Zi -Od -GZ -MDd -DDEBUG
 VERSION_LFLAGS   = -DEBUG -DEBUGTYPE:BOTH -PDBTYPE:SEPT -nodefaultlib:libcd.lib msvcrtd.lib
 APPENDIX         = d
-!elseif ("$(VERSION"=="Release")
-VERSION_CFLAGS   = -Ox -MD
+!elseif ("$(VERSION)"=="Release")
+VERSION_CFLAGS   = -O2 -MD
 VERSION_LFLAGS   = -RELEASE -nodefaultlib:libc.lib msvcrt.lib
 APPENDIX         =
 !endif
