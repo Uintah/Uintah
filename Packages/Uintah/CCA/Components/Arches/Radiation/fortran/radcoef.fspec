@@ -1,5 +1,5 @@
 void radcoef(IntVector idxlo, IntVector idxhi,
-	     constCCVariable<double> tg,
+	     CCVariable<double> tg,
 	     constCCVariable<double> co2,
              constCCVariable<double> h2o,
 	     constCCVariable<int> pcell,

@@ -159,7 +159,7 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
     IntVector domLo = patch->getCellLowIndex();
     IntVector domHi = patch->getCellHighIndex();    
 
-    fort_radcoef(idxLo, idxHi, constvars->temperature, 
+    fort_radcoef(idxLo, idxHi, vars->temperature, 
 		 constvars->co2, constvars->h2o, constvars->cellType, ffield, 
 		 d_opl, constvars->sootFV, vars->ABSKG, vars->ESRCG,
 		 cellinfo->xx, cellinfo->yy, cellinfo->zz, fraction, 
@@ -167,7 +167,7 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
     /*
 //<<<<<<< DORadiationModel.cc
 //=======
-    fort_radcoef(idxLo, idxHi, constvars->temperature, 
+    fort_radcoef(idxLo, idxHi, vars->temperature, 
 		 constvars->co2, constvars->h2o, constvars->cellType,
 		 ffield, d_opl,
 		 constvars->sootFV, vars->ABSKG, vars->ESRCG,
@@ -197,7 +197,7 @@ DORadiationModel::boundarycondition(const ProcessorGroup*,
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     
 
-  fort_rdombc(idxLo, idxHi, constvars->cellType, ffield, constvars->temperature,
+  fort_rdombc(idxLo, idxHi, constvars->cellType, ffield, vars->temperature,
 	      vars->ABSKG,
 	      xminus, xplus, yminus, yplus, zminus, zplus, lprobone, lprobtwo, lprobthree);
 
@@ -283,7 +283,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
   if(lradcal==true){    
               fort_radcal(idxLo, idxHi, vars->ABSKG, vars->ESRCG,
-		cellinfo->xx, cellinfo->yy, cellinfo->zz, bands, dom, omega, constvars->cellType, ffield, constvars->co2, constvars->h2o, constvars->sootFV, constvars->temperature, lprobone, lprobtwo, lambda, fraction, rgamma, sd15, sd, sd7, sd3, d_opl);
+		cellinfo->xx, cellinfo->yy, cellinfo->zz, bands, dom, omega, constvars->cellType, ffield, constvars->co2, constvars->h2o, constvars->sootFV, vars->temperature, lprobone, lprobtwo, lambda, fraction, rgamma, sd15, sd, sd7, sd3, d_opl);
   }
 
   for (int direcn = 1; direcn <=d_totalOrds; direcn++)
@@ -298,7 +298,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       fort_rdomsolve(idxLo, idxHi, constvars->cellType, wall, ffield, cellinfo->sew,
 		     cellinfo->sns, cellinfo->stb, vars->ESRCG, direcn, oxi, omu,
 		     oeta, wt, 
-		     constvars->temperature, vars->ABSKG, vars->cenint, volume,
+		     vars->temperature, vars->ABSKG, vars->cenint, volume,
 		     su, aw, as, ab, ap,
 		     areaew, arean, areatb, volq, vars->src, plusX, plusY, plusZ, fraction, bands, vars->qfluxe, vars->qfluxw,
 		    vars->qfluxn, vars->qfluxs,
