@@ -462,11 +462,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 #		    $w.$i.stride
 	}
 
-	frame $w.misc
-	button $w.misc.execute -text "Execute" -command "$this-c needexecute"
-	button $w.misc.close -text Close -command "destroy $w"
-	pack $w.misc.execute $w.misc.close -side left -padx 25
-
 	pack $w.l -side top -padx 10 -pady 5
 
 	if { [set $this-ndims] == 0 } {
@@ -476,8 +471,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		pack $w.$i
 	    }
 	}
-
-	pack $w.misc -side top -padx 10 -pady 5	    
 
 
 	# When building the UI prevent the selection from taking place
@@ -523,10 +516,12 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	# Makesure the datasets are saved once everything is built.
 	set $this-datasets $datasets
-
  	set allow_selection true
 
 	animate
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
     method scaleEntry2 { win start count length var1 var2 } {
