@@ -135,12 +135,16 @@ WARNING
                                      DataWarehouse* new_dw,
                                      const int indx) = 0;
                                      
-    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
+     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                        SchedulerP& sched) =0;                                  
     
      virtual void scheduleCheckNeedAddMaterial(SchedulerP&,
                                                const LevelP& level,
                                                const ModelInfo*);
+                                               
+     virtual void scheduleTestConservation(SchedulerP&,
+                                           const PatchSet* patches,
+                                           const ModelInfo* mi)=0;    
 
     bool computesThermoTransportProps() const;
     bool d_modelComputesThermoTransportProps;
