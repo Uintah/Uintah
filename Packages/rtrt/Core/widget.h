@@ -20,7 +20,7 @@ namespace rtrt {
     virtual void invertColor( void ) = 0;
     virtual void changeColor( float r, float g, float b ) = 0;
     virtual void reflectTrans( void ) = 0;
-    void blend( GLfloat texture_dest[4], float r, float g, float b, float a );
+    void blend( GLfloat dest[4], float r, float g, float b, float a, float m );
 
     //private:
     Texture <GLfloat> *transText;
