@@ -211,6 +211,13 @@ private:
   int maxlights;
   DrawInfoOpenGL* drawinfo;
   WallClockTimer fpstimer;
+  // Frame counter This is used to keep track of how many frames the
+  // statistics are being used for.  When we go to update the on
+  // screen statistics we will check to see if the elapsed time is
+  // greater than .33 seconds.  If not we increment this counter and
+  // don't display the statistics.  When the accumulated time becomes
+  // greater than .33 seconds, we update our statistics.
+  unsigned int num_frames;
   double current_time;
   int old_stereo;
   GLuint imglist;
