@@ -22,12 +22,12 @@
 #include <Geometry/BBox.h>
 
 GeomObj::GeomObj()
-: matl(0)
+: matl(0), pick(0)
 {
 }
 
 GeomObj::GeomObj(const GeomObj& copy)
-: matl(copy.matl)
+: matl(copy.matl), pick(copy.pick)
 {
 }
 
@@ -512,10 +512,65 @@ void GeomCylinder::draw(DrawInfo* di)
 	}
 	glEnd();
 	break;
-    case DrawInfo::Gouraud:
-    case DrawInfo::Phong:
     case DrawInfo::Flat:
-	NOT_FINISHED("GeomCylinder::Draw");
+	for(i=0;i<nv;i++){
+	    double z1=double(i)/double(nv);
+	    double z2=double(i+1)/double(nv);
+	    Point b1(bottom+axis*z1);
+	    Point b2(bottom+axis*z2);
+	    glBegin(GL_TRIANGLE_STRIP);
+	    for(int j=0;j<nu;j++){
+		double d1=u.sin(j);
+		double d2=u.cos(j);
+		Point p1(b1+v1*d1+v2*d2);
+		Point p2(b2+v1*d1+v2*d2);
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		glVertex3d(p2.x(), p2.y(), p2.z());
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfo::Gouraud:
+	for(j=0;j<nu-1;j++){
+	    glBegin(GL_TRIANGLE_STRIP);
+	    double d1=u.sin(j);
+	    double d2=u.cos(j);
+	    double d3=u.sin(j+1);
+	    double d4=u.cos(j+1);
+	    Vector n1(v1*d1+v2*d2);
+	    Vector n2(v1*d3+v2*d4);
+	    Point pn1(bottom+n1);
+	    Point pn2(bottom+n2);
+	    glNormal3d(n1.x(), n1.y(), n1.z());
+	    for(i=0;i<=nv;i++){
+		double z1=double(i)/double(nv);
+		Point p1(pn1+axis*z1);
+		Point p2(pn2+axis*z1);
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		glVertex3d(p2.x(), p2.y(), p2.z());
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfo::Phong:
+	for(i=0;i<nv;i++){
+	    double z1=double(i)/double(nv);
+	    double z2=double(i+1)/double(nv);
+	    Point b1(bottom+axis*z1);
+	    Point b2(bottom+axis*z2);
+	    glBegin(GL_TRIANGLE_STRIP);
+	    for(int j=0;j<nu;j++){
+		double d1=u.sin(j);
+		double d2=u.cos(j);
+		Vector n(v1*d1+v2*d2);
+		Point p1(b1+n);
+		Point p2(b2+n);
+		glNormal3d(-n.x(), -n.y(), -n.z());
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		glVertex3d(p2.x(), p2.y(), p2.z());
+	    }
+	    glEnd();
+	}
 	break;
     }
     if(matl)
@@ -529,8 +584,6 @@ GeomCone::GeomCone(const Point& bottom, const Point& top,
 {
     if(axis.length2() < 1.e-6){
 	cerr << "Degenerate Cone!\n";
-    } else {
-	axis.normalize();
     }
     Vector v0(Cross(axis, Vector(1,0,0)));
     if(v0.length2() == 0){
@@ -540,6 +593,7 @@ GeomCone::GeomCone(const Point& bottom, const Point& top,
     v1.normalize();
     v2=Cross(axis, v1);
     v2.normalize();
+    tilt=(bot_rad-top_rad)/axis.length2();
 }
 
 GeomCone::GeomCone(const GeomCone& copy)
@@ -569,16 +623,106 @@ void GeomCone::draw(DrawInfo* di)
 {
     if(matl)
 	di->push_matl(matl);
+    SinCosTable u(nu, 0, 2.*Pi);
+    int i,j;
+    di->polycount+=nu*nv;
     switch(di->drawtype){
     case DrawInfo::WireFrame:
-    case DrawInfo::Gouraud:
-    case DrawInfo::Phong:
+	for(i=0;i<=nv;i++){
+	    double z=double(i)/double(nv);
+	    double rad=bot_rad+(top_rad-bot_rad)*z;
+	    Vector up(axis*z);
+	    Point bot_up(bottom+up);
+	    glBegin(GL_LINE_LOOP);
+	    for(int j=0;j<nu-1;j++){
+		double d1=u.sin(j);
+		double d2=u.cos(j);
+		Point p(bot_up+v1*(d1*rad)+v2*(d2*rad));
+		glVertex3d(p.x(), p.y(), p.z());
+	    }
+	    glEnd();
+	}
+	glBegin(GL_LINES);
+	for(j=0;j<nu-1;j++){
+	    double d1=u.sin(j);
+	    double d2=u.cos(j);
+	    Point p1(bottom+v1*(d1*bot_rad)+v2*(d2*bot_rad));
+	    Point p2(top+v1*(d1*top_rad)+v2*(d2*top_rad));
+	    glVertex3d(p1.x(), p1.y(), p1.z());
+	    glVertex3d(p2.x(), p2.y(), p2.z());
+	}
+	glEnd();
+	break;
     case DrawInfo::Flat:
-	NOT_FINISHED("GeomCone::draw");
+	for(i=0;i<nv;i++){
+	    double z1=double(i)/double(nv);
+	    double z2=double(i+1)/double(nv);
+	    double rad1=bot_rad+(top_rad-bot_rad)*z1;
+	    double rad2=bot_rad+(top_rad-bot_rad)*z2;
+	    Point b1(bottom+axis*z1);
+	    Point b2(bottom+axis*z2);
+	    glBegin(GL_TRIANGLE_STRIP);
+	    for(int j=0;j<nu;j++){
+		double d1=u.sin(j)*rad1;
+		double d2=u.cos(j)*rad1;
+		Point p1(b1+v1*d1+v2*d2);
+		double d3=u.sin(j)*rad2;
+		double d4=u.cos(j)*rad2;
+		Point p2(b2+v1*d3+v2*d4);
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		glVertex3d(p2.x(), p2.y(), p2.z());
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfo::Gouraud:
+	for(j=0;j<nu-1;j++){
+	    glBegin(GL_TRIANGLE_STRIP);
+	    double d1=u.sin(j);
+	    double d2=u.cos(j);
+	    double d3=u.sin(j+1);
+	    double d4=u.cos(j+1);
+	    Vector n1(v1*d1+v2*d2);
+	    Vector n2(v1*d3+v2*d4);
+	    Vector n(n1+axis*tilt);
+	    glNormal3d(n.x(), n.y(), n.z());
+	    for(i=0;i<=nv;i++){
+		double z1=double(i)/double(nv);
+		double rad=bot_rad+(top_rad-bot_rad)*z1;
+		Point p1(bottom+n1*rad+axis*z1);
+		Point p2(bottom+n2*rad+axis*z1);
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		glVertex3d(p2.x(), p2.y(), p2.z());
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfo::Phong:
+	for(i=0;i<nv;i++){
+	    double z1=double(i)/double(nv);
+	    double z2=double(i+1)/double(nv);
+	    double rad1=bot_rad+(top_rad-bot_rad)*z1;
+	    double rad2=bot_rad+(top_rad-bot_rad)*z2;
+	    Point b1(bottom+axis*z1);
+	    Point b2(bottom+axis*z2);
+	    glBegin(GL_TRIANGLE_STRIP);
+	    for(int j=0;j<nu;j++){
+		double d1=u.sin(j);
+		double d2=u.cos(j);
+		Vector n(v1*d1+v2*d2);
+		Point p1(b1+n*rad1);
+		Point p2(b2+n*rad2);
+		Vector nn(n+axis*tilt);
+		glNormal3d(-nn.x(), -nn.y(), -nn.z());
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		glVertex3d(p2.x(), p2.y(), p2.z());
+	    }
+	    glEnd();
+	}
 	break;
     }
     if(matl)
-	di->push_matl(matl);
+	di->pop_matl();
 }
 
 GeomDisc::GeomDisc(const Point& cen, const Vector& normal,
@@ -628,7 +772,7 @@ void GeomDisc::draw(DrawInfo* di)
     di->polycount+=nu*nv;
     switch(di->drawtype){
     case DrawInfo::WireFrame:
-	for(i=1;i<nv+1;i++){
+	for(i=1;i<=nv;i++){
 	    glBegin(GL_LINE_LOOP);
 	    double r=rad*double(i)/double(nv);
 	    for(int j=0;j<nu-1;j++){

@@ -168,6 +168,7 @@ public:
 class GeomCone : public GeomObj {
     Vector v1;
     Vector v2;
+    double tilt;
 public:
     Point bottom;
     Point top;
