@@ -1053,8 +1053,8 @@ Patch::getCellIterator(const Box& b) const
 {
    Point l = d_level->positionToIndex(b.lower());
    Point u = d_level->positionToIndex(b.upper());
-   IntVector low((int)l.x(), (int)l.y(), (int)l.z());
-   IntVector high(RoundUp(u.x()), RoundUp(u.y()), RoundUp(u.z()));
+   IntVector low(RoundDown(l.x()), RoundDown(l.y()), RoundDown(l.z()));
+   IntVector high(RoundUp(u.x()),  RoundUp(u.y()),   RoundUp(u.z()));
    low = Max(low, getCellLowIndex());
    high = Min(high, getCellHighIndex());
    return CellIterator(low, high);
@@ -1064,8 +1064,8 @@ Patch::getExtraCellIterator(const Box& b) const
 {
    Point l = d_level->positionToIndex(b.lower());
    Point u = d_level->positionToIndex(b.upper());
-   IntVector low((int)l.x(), (int)l.y(), (int)l.z());
-   IntVector high(RoundUp(u.x()), RoundUp(u.y()), RoundUp(u.z()));
+   IntVector low(RoundDown(l.x()), RoundDown(l.y()), RoundDown(l.z()));
+   IntVector high(RoundUp(u.x()),  RoundUp(u.y()),   RoundUp(u.z()));
    low = Min(low, getCellLowIndex());
    high = Max(high, getCellHighIndex());
    return CellIterator(low, high);
