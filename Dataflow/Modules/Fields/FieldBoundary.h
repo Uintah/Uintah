@@ -442,7 +442,7 @@ FieldBoundaryAlgoT<Msh>::execute(ModuleReporter *mod, const MeshHandle mesh,
   }
   else
   {
-    mod->error("Boundary module only works on volumes.");
+    mod->error("Boundary module only works on volumes and surfaces.");
   }
 
   // Set the source range for the interpolation field.
