@@ -83,7 +83,7 @@
       </Face>
       
       <Face side = "z-">
-        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face> 
       
