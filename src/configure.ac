@@ -2348,6 +2348,32 @@ AC_SUBST(INSIGHT_LIB_DIR_FLAG)
 AC_SUBST(INC_INSIGHT_H)
 AC_SUBST(DEF_INSIGHT)
 
+## -- search for java xalan --
+
+## -- first, if any of the following packages are requested then we need xalan-j
+if test "$pkg_Insight" = "yes"; then
+	sci_check_xalan="yes"
+fi
+
+## -- second, if xalan-j is needed then check that the three .jar files are there.
+
+if test "$sci_check_xalan" ; then
+  AC_MSG_CHECKING(for xalan-j.)
+
+  if test "$with_xalan"; then
+	dir="$with_xalan"
+  else
+	dir="$sci_thirdparty_dir"
+  fi
+  if test -a $dir/bin/xalan.jar -a $dir/bin/xml-apis.jar -a $dir/bin/xercesImpl.jar; then
+	AC_MSG_RESULT($dir)
+	XALAN_PATH="$dir/bin/xalan.jar:$dir/bin/xml-apis.jar:$dir/bin/xercesImpl.jar"
+  else	
+	AC_MSG_RESULT(not found)
+  fi
+fi
+
+AC_SUBST(XALAN_PATH)
 
 ##  --  search for xalan-c++ --
 if test "$with_xalan"; then
