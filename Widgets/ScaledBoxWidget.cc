@@ -22,10 +22,11 @@
 
 const Index NumCons = 27;
 const Index NumVars = 22;
-const Index NumGeoms = 47;
-const Index NumMatls = 5;
-const Index NumSchemes = 4;
+const Index NumGeoms = 55;
 const Index NumPcks = 18;
+const Index NumMdes = 5;
+const Index NumSwtchs = 4;
+const Index NumSchemes = 4;
 
 enum { ConstIULODR, ConstOULIDR, ConstIDLOUR, ConstODLIUR,
        ConstHypo, ConstDiag,
@@ -35,7 +36,9 @@ enum { ConstIULODR, ConstOULIDR, ConstIDLOUR, ConstODLIUR,
        ConstLine1, ConstSDist1, ConstRatio1,
        ConstLine2, ConstSDist2, ConstRatio2,
        ConstLine3, ConstSDist3, ConstRatio3 };
-enum { SphereIUL, SphereIUR, SphereIDR, SphereIDL,
+enum { SmallSphereIUL, SmallSphereIUR, SmallSphereIDR, SmallSphereIDL,
+       SmallSphereOUL, SmallSphereOUR, SmallSphereODR, SmallSphereODL,
+       SphereIUL, SphereIUR, SphereIDR, SphereIDL,
        SphereOUL, SphereOUR, SphereODR, SphereODL,
        CylIU, CylIR, CylID, CylIL,
        CylMU, CylMR, CylMD, CylML,
@@ -54,7 +57,7 @@ enum { PickSphIUL, PickSphIUR, PickSphIDR, PickSphIDL,
        PickSlider1, PickSlider2, PickSlider3 };
 
 ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMdes, NumSwtchs, widget_scale)
 {
    Real INIT = 1.0*widget_scale;
    variables[PointIULVar] = new PointVariable("PntIUL", solve, Scheme1, Point(0, 0, 0));
@@ -353,23 +356,33 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
    constraints[ConstODRDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[ConstODRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[PointMatl] = PointWidgetMaterial;
-   materials[EdgeMatl] = EdgeWidgetMaterial;
-   materials[SliderMatl] = SliderWidgetMaterial;
-   materials[ResizeMatl] = ResizeWidgetMaterial;
-   materials[HighMatl] = HighlightWidgetMaterial;
-
    Index geom, pick;
+   GeomGroup* cyls = new GeomGroup;
+   for (geom = SmallSphereIUL; geom <= SmallSphereODL; geom++) {
+      geometries[geom] = new GeomSphere;
+      cyls->add(geometries[geom]);
+   }
+   for (geom = CylIU; geom <= CylOL; geom++) {
+      geometries[geom] = new GeomCylinder;
+      cyls->add(geometries[geom]);
+   }
+   picks[PickCyls] = new GeomPick(cyls, module);
+   picks[PickCyls]->set_highlight(HighlightMaterial);
+   picks[PickCyls]->set_cbdata((void*)PickCyls);
+   GeomMaterial* cylsm = new GeomMaterial(picks[PickCyls], EdgeMaterial);
+   CreateModeSwitch(0, cylsm);
+
    GeomGroup* pts = new GeomGroup;
    for (geom = SphereIUL, pick = PickSphIUL;
 	geom <= SphereODL; geom++, pick++) {
       geometries[geom] = new GeomSphere;
       picks[pick] = new GeomPick(geometries[geom], module);
-      picks[pick]->set_highlight(materials[HighMatl]);
+      picks[pick]->set_highlight(HighlightMaterial);
       picks[pick]->set_cbdata((void*)pick);
       pts->add(picks[pick]);
    }
-   GeomMaterial* ptsm = new GeomMaterial(pts, materials[PointMatl]);
+   GeomMaterial* ptsm = new GeomMaterial(pts, PointMaterial);
+   CreateModeSwitch(1, ptsm);
    
    GeomGroup* resizes = new GeomGroup;
    GeomGroup* face;
@@ -381,49 +394,41 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
 	 face->add(geometries[geom2]);
       }
       picks[pick] = new GeomPick(face, module);
-      picks[pick]->set_highlight(materials[HighMatl]);
+      picks[pick]->set_highlight(HighlightMaterial);
       picks[pick]->set_cbdata((void*)pick);
       resizes->add(picks[pick]);
    }
-   GeomMaterial* resizem = new GeomMaterial(resizes, materials[ResizeMatl]);
-
-   GeomGroup* cyls = new GeomGroup;
-   for (geom = CylIU; geom <= CylOL; geom++) {
-      geometries[geom] = new GeomCylinder;
-      cyls->add(geometries[geom]);
-   }
-   picks[PickCyls] = new GeomPick(cyls, module);
-   picks[PickCyls]->set_highlight(materials[HighMatl]);
-   picks[PickCyls]->set_cbdata((void*)PickCyls);
-   GeomMaterial* cylsm = new GeomMaterial(picks[PickCyls], materials[EdgeMatl]);
+   GeomMaterial* resizem = new GeomMaterial(resizes, ResizeMaterial);
+   CreateModeSwitch(2, resizem);
 
    GeomGroup* sliders = new GeomGroup;
    geometries[SliderCyl1] = new GeomCappedCylinder;
    picks[PickSlider1] = new GeomPick(geometries[SliderCyl1], module);
-   picks[PickSlider1]->set_highlight(materials[HighMatl]);
+   picks[PickSlider1]->set_highlight(HighlightMaterial);
    picks[PickSlider1]->set_cbdata((void*)PickSlider1);
    sliders->add(picks[PickSlider1]);
    geometries[SliderCyl2] = new GeomCappedCylinder;
    picks[PickSlider2] = new GeomPick(geometries[SliderCyl2], module);
-   picks[PickSlider2]->set_highlight(materials[HighMatl]);
+   picks[PickSlider2]->set_highlight(HighlightMaterial);
    picks[PickSlider2]->set_cbdata((void*)PickSlider2);
    sliders->add(picks[PickSlider2]);
    geometries[SliderCyl3] = new GeomCappedCylinder;
    picks[PickSlider3] = new GeomPick(geometries[SliderCyl3], module);
-   picks[PickSlider3]->set_highlight(materials[HighMatl]);
+   picks[PickSlider3]->set_highlight(HighlightMaterial);
    picks[PickSlider3]->set_cbdata((void*)PickSlider3);
    sliders->add(picks[PickSlider3]);
-   GeomMaterial* slidersm = new GeomMaterial(sliders, materials[SliderMatl]);
+   GeomMaterial* slidersm = new GeomMaterial(sliders, SliderMaterial);
+   CreateModeSwitch(3, slidersm);
 
-   GeomGroup* w = new GeomGroup;
-   w->add(ptsm);
-   w->add(resizem);
-   w->add(cylsm);
-   w->add(slidersm);
+   SetMode(Mode1, Switch0|Switch1|Switch2|Switch3);
+   SetMode(Mode2, Switch0|Switch1|Switch3);
+   SetMode(Mode3, Switch0|Switch2|Switch3);
+   SetMode(Mode4, Switch0|Switch3);
+   SetMode(Mode5, Switch0);
 
    SetEpsilon(widget_scale*1e-6);
 
-   FinishWidget(w);
+   FinishWidget();
 }
 
 
@@ -435,6 +440,22 @@ ScaledBoxWidget::~ScaledBoxWidget()
 void
 ScaledBoxWidget::widget_execute()
 {
+   ((GeomSphere*)geometries[SmallSphereIUL])->move(variables[PointIULVar]->point(),
+						   0.5*widget_scale);
+   ((GeomSphere*)geometries[SmallSphereIUR])->move(variables[PointIURVar]->point(),
+						   0.5*widget_scale);
+   ((GeomSphere*)geometries[SmallSphereIDR])->move(variables[PointIDRVar]->point(),
+						   0.5*widget_scale);
+   ((GeomSphere*)geometries[SmallSphereIDL])->move(variables[PointIDLVar]->point(),
+						   0.5*widget_scale);
+   ((GeomSphere*)geometries[SmallSphereOUL])->move(variables[PointOULVar]->point(),
+						   0.5*widget_scale);
+   ((GeomSphere*)geometries[SmallSphereOUR])->move(variables[PointOURVar]->point(),
+						   0.5*widget_scale);
+   ((GeomSphere*)geometries[SmallSphereODR])->move(variables[PointODRVar]->point(),
+						   0.5*widget_scale);
+   ((GeomSphere*)geometries[SmallSphereODL])->move(variables[PointODLVar]->point(),
+						   0.5*widget_scale);
    ((GeomSphere*)geometries[SphereIUL])->move(variables[PointIULVar]->point(),
 					      1*widget_scale);
    ((GeomSphere*)geometries[SphereIUR])->move(variables[PointIURVar]->point(),
@@ -779,6 +800,8 @@ ScaledBoxWidget::MoveDelta( const Vector& delta )
    variables[PointOURVar]->MoveDelta(delta);
    variables[PointODRVar]->MoveDelta(delta);
    variables[PointODLVar]->MoveDelta(delta);
+
+   execute();
 }
 
 

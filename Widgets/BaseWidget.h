@@ -33,8 +33,8 @@ class BaseWidget {
 public:
    BaseWidget( Module* module, CrowdMonitor* lock,
 	       const Index vars, const Index cons,
-	       const Index geoms, const Index mats,
-	       const Index picks,
+	       const Index geoms, const Index picks,
+	       const Index modes, const Index switches,
 	       const Real widget_scale );
    BaseWidget( const BaseWidget& );
    ~BaseWidget();
@@ -49,11 +49,12 @@ public:
    virtual void MoveDelta( const Vector& delta );
    virtual Point ReferencePoint() const;
    
-   void SetMaterial( const Index mindex, const MaterialHandle m );
-   MaterialHandle& GetMaterial( const Index mindex ) const;
-
    int GetState();
    void SetState( const int state );
+
+   // This rotates through the "minimizations" or "gaudinesses" for the widget.
+   virtual void NextMode();
+   Index GetMode() const;
 
    inline const Point& GetPointVar( const Index vindex ) const;
    inline Real GetRealVar( const Index vindex ) const;
@@ -76,14 +77,36 @@ protected:
    Index NumConstraints;
    Index NumVariables;
    Index NumGeometries;
-   Index NumMaterials;
    Index NumPicks;
 
    Array1<BaseConstraint*> constraints;
    Array1<BaseVariable*> variables;
    Array1<GeomObj*> geometries;
-   Array1<MaterialHandle> materials;
    Array1<GeomPick*> picks;
+
+   enum {Mode1,Mode2,Mode3,Mode4,Mode5,Mode6,Mode7,Mode8,Mode9};
+   Index CurrentMode;
+   Index NumSwitches;
+   Array1<GeomSwitch*> mode_switches;
+   Index NumModes;
+   Array1<long> modes;
+   // modes is the bitwise OR of Switch1-Switch9
+   const long Switch0 = 0x0001;
+   const long Switch1 = 0x0002;
+   const long Switch2 = 0x0004;
+   const long Switch3 = 0x0008;
+   const long Switch4 = 0x0010;
+   const long Switch5 = 0x0020;
+   const long Switch6 = 0x0040;
+   const long Switch7 = 0x0080;
+   const long Switch8 = 0x0100;
+
+   MaterialHandle PointMaterial;
+   MaterialHandle EdgeMaterial;
+   MaterialHandle SliderMaterial;
+   MaterialHandle ResizeMaterial;
+   MaterialHandle SpecialMaterial;
+   MaterialHandle HighlightMaterial;
 
    GeomSwitch* widget;
    Real widget_scale;
@@ -91,17 +114,12 @@ protected:
    Module* module;
    CrowdMonitor* lock;
 
-   void FinishWidget(GeomObj* w);
+   void CreateModeSwitch( const Index snum, GeomObj* o );
+   void SetMode( const Index mode, const long swtchs );
+   void FinishWidget();
 
 protected:
    // These affect ALL widgets!!!
-   inline void SetPointWidgetMaterial( const MaterialHandle m );
-   inline void SetEdgeWidgetMaterial( const MaterialHandle m );
-   inline void SetSliderWidgetMaterial( const MaterialHandle m );
-   inline void SetResizeWidgetMaterial( const MaterialHandle m );
-   inline void SetSpecialWidgetMaterial( const MaterialHandle m );
-   inline void SetHighlightWidgetMaterial( const MaterialHandle m );
-   
    static MaterialHandle PointWidgetMaterial;
    static MaterialHandle EdgeWidgetMaterial;
    static MaterialHandle SliderWidgetMaterial;
@@ -143,48 +161,6 @@ BaseWidget::GetRealVar( const Index vindex ) const
    ASSERT(vindex<NumVariables);
 
    return variables[vindex]->real();
-}
-
-
-inline void
-BaseWidget::SetPointWidgetMaterial( const MaterialHandle m )
-{
-   PointWidgetMaterial = m;
-}
-
-
-inline void
-BaseWidget::SetEdgeWidgetMaterial( const MaterialHandle m )
-{
-   EdgeWidgetMaterial = m;
-}
-
-
-inline void
-BaseWidget::SetSliderWidgetMaterial( const MaterialHandle m )
-{
-   SliderWidgetMaterial = m;
-}
-
-
-inline void
-BaseWidget::SetResizeWidgetMaterial( const MaterialHandle m )
-{
-   ResizeWidgetMaterial = m;
-}
-
-
-inline void
-BaseWidget::SetSpecialWidgetMaterial( const MaterialHandle m )
-{
-   SpecialWidgetMaterial = m;
-}
-
-
-inline void
-BaseWidget::SetHighlightWidgetMaterial( const MaterialHandle m )
-{
-   HighlightWidgetMaterial = m;
 }
 
 

@@ -35,8 +35,6 @@ public:
 
    // Variable indexs
    enum { PointVar };
-   // Material indexs
-   enum { PointMatl, HighMatl };
 };
 
 

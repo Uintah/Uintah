@@ -19,26 +19,23 @@
 const Index NumCons = 0;
 const Index NumVars = 1;
 const Index NumGeoms = 4;
-const Index NumMatls = 3;
 const Index NumPcks = 1;
+const Index NumMdes = 1;
+const Index NumSwtchs = 1;
 // const Index NumSchemes = 1;
 
 enum { GeomCenter, GeomAxis1, GeomAxis2, GeomAxis3 };
 enum { Pick };
 
 CrosshairWidget::CrosshairWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale),
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMdes, NumSwtchs, widget_scale),
   axis1(1, 0, 0), axis2(0, 1, 0), axis3(0, 0, 1)
 {
    variables[CenterVar] = new PointVariable("Crosshair", solve, Scheme1, Point(0, 0, 0));
 
-   materials[CenterMatl] = PointWidgetMaterial;
-   materials[AxesMatl] = EdgeWidgetMaterial;
-   materials[HighMatl] = HighlightWidgetMaterial;
-
    GeomGroup* axes = new GeomGroup;
    geometries[GeomCenter] = new GeomSphere;
-   GeomMaterial* centerm = new GeomMaterial(geometries[GeomCenter], materials[CenterMatl]);
+   GeomMaterial* centerm = new GeomMaterial(geometries[GeomCenter], PointMaterial);
    axes->add(centerm);
    geometries[GeomAxis1] = new GeomCappedCylinder;
    axes->add(geometries[GeomAxis1]);
@@ -46,12 +43,15 @@ CrosshairWidget::CrosshairWidget( Module* module, CrowdMonitor* lock, double wid
    axes->add(geometries[GeomAxis2]);
    geometries[GeomAxis3] = new GeomCappedCylinder;
    axes->add(geometries[GeomAxis3]);
-   GeomMaterial* axesm = new GeomMaterial(axes, materials[AxesMatl]);
+   GeomMaterial* axesm = new GeomMaterial(axes, EdgeMaterial);
    picks[Pick] = new GeomPick(axesm, module);
-   picks[Pick]->set_highlight(materials[HighMatl]);
+   picks[Pick]->set_highlight(HighlightMaterial);
    picks[Pick]->set_cbdata((void*)Pick);
+   CreateModeSwitch(0, picks[Pick]);
 
-   FinishWidget(picks[Pick]);
+   SetMode(Mode1, Switch0);
+
+   FinishWidget();
 }
 
 
@@ -99,6 +99,8 @@ void
 CrosshairWidget::MoveDelta( const Vector& delta )
 {
    variables[CenterVar]->MoveDelta(delta);
+
+   execute();
 }
 
 
@@ -113,6 +115,7 @@ void
 CrosshairWidget::SetPosition( const Point& p )
 {
    variables[CenterVar]->Move(p);
+
    execute();
 }
 
@@ -133,6 +136,7 @@ CrosshairWidget::SetAxes( const Vector& v1, const Vector& v2, const Vector& v3 )
       axis1 = v1.normal();
       axis2 = v2.normal();
       axis3 = v3.normal();
+
       execute();
    }
 }

@@ -33,13 +33,12 @@ public:
    void SetPosition( const Point& );
    const Point& GetPosition() const;
    
-   void SetDirect( const Vector& v );
-   const Vector& GetDirect() const;
+   void SetDirection( const Vector& v );
+   const Vector& GetDirection() const;
 
    // Variable indexs
    enum { PointVar };
-   // Material indexs
-   enum { PointMatl, EdgeMatl, HighMatl };
+
 private:
    Vector direction;
 };

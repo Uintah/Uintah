@@ -47,8 +47,7 @@ public:
    // Variable indexs
    enum { PointULVar, PointURVar, PointDRVar, PointDLVar,
 	  Dist1Var, Dist2Var, HypoVar };
-   // Material indexs
-   enum { PointMatl, EdgeMatl, ResizeMatl, HighMatl };
+
 private:
    Vector oldaxis1, oldaxis2;
 };

@@ -16,11 +16,13 @@
 #define SCI_project_View_Widget_h 1
 
 #include <Widgets/BaseWidget.h>
+#include <Geom/View.h>
 
 
 class ViewWidget : public BaseWidget {
 public:
-   ViewWidget( Module* module, CrowdMonitor* lock, double widget_scale );
+   ViewWidget( Module* module, CrowdMonitor* lock, double widget_scale,
+	       const Real AspectRatio=1.3333);
    ViewWidget( const ViewWidget& );
    ~ViewWidget();
 
@@ -30,20 +32,29 @@ public:
    virtual void MoveDelta( const Vector& delta );
    virtual Point ReferencePoint() const;
 
-   Vector GetAxis1();
-   Vector GetAxis2();
-   Point GetUL();
-   Point GetUR();
-   Point GetDR();
-   Point GetDL();
+   View& GetView();
+   Vector& GetUpVector();
+   Real GetFOV() const;
+
+   void SetAspectRatio( const Real aspect );
+   Real GetAspectRatio() const;
+   
+   Vector GetEyeAxis();
+   Vector GetUpAxis();
+   Point GetFrontUL();
+   Point GetFrontUR();
+   Point GetFrontDR();
+   Point GetFrontDL();
+   Point GetBackUL();
+   Point GetBackUR();
+   Point GetBackDR();
+   Point GetBackDL();
 
    // Variable indexs
-   enum { PointULVar, PointURVar, PointDRVar, PointDLVar,
-	  EyeVar, ForeVar, ForeEyeVar, BackVar, BackEyeVar,
-	  Dist1Var, Dist2Var, HypoVar, RatioVar };
-   // Material indexs
-   enum { PointMatl, EdgeMatl, SpecialMatl, ResizeMatl, HighMatl };
+   enum { EyeVar, ForeVar, LookAtVar, UpVar, UpDistVar, EyeDistVar, FOVVar };
+   
 private:
+   Real ratio;
    Vector oldaxis1;
    Vector oldaxis2;
 };

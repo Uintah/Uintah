@@ -24,8 +24,9 @@
 const Index NumCons = 7;
 const Index NumVars = 8;
 const Index NumGeoms = 8;
-const Index NumMatls = 6;
 const Index NumPcks = 8;
+const Index NumMdes = 4;
+const Index NumSwtchs = 3;
 const Index NumSchemes = 5;
 
 enum { ConstAB, ConstBC, ConstCA, ConstCenter,
@@ -36,7 +37,7 @@ enum { PickSphA, PickSphB, PickSphC, PickCyls,
        PickSlider, PickResizeA, PickResizeB, PickResizeC };
 
 RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1),
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMdes, NumSwtchs, widget_scale*0.1),
   oldaxis1(1, 0, 0), oldaxis2(-0.5, -sqrt(0.75), 0), oldaxis3(-0.5, sqrt(0.75), 0)
 {
    Real INIT = widget_scale*2.0/3.0;
@@ -132,66 +133,65 @@ RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
    constraints[ConstCA]->VarChoices(Scheme5, 1, 1, 1);
    constraints[ConstCA]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[PointMatl] = PointWidgetMaterial;
-   materials[EdgeMatl] = EdgeWidgetMaterial;
-   materials[SliderMatl] = SliderWidgetMaterial;
-   materials[ResizeMatl] = ResizeWidgetMaterial;
-   materials[SpecialMatl] = SpecialWidgetMaterial;
-   materials[HighMatl] = HighlightWidgetMaterial;
-
    Index geom, pick;
+   geometries[GeomRing] = new GeomTorus;
+   picks[PickCyls] = new GeomPick(geometries[GeomRing], module);
+   picks[PickCyls]->set_highlight(HighlightMaterial);
+   picks[PickCyls]->set_cbdata((void*)PickCyls);
+   GeomMaterial* cylsm = new GeomMaterial(picks[PickCyls], EdgeMaterial);
+   CreateModeSwitch(0, cylsm);
+
    GeomGroup* pts = new GeomGroup;
    for (geom = GeomPointA, pick = PickSphA;
 	geom <= GeomPointC; geom++, pick++) {
       geometries[geom] = new GeomSphere;
       picks[pick] = new GeomPick(geometries[geom], module);
-      picks[pick]->set_highlight(materials[HighMatl]);
+      picks[pick]->set_highlight(HighlightMaterial);
       picks[pick]->set_cbdata((void*)pick);
       pts->add(picks[pick]);
    }
-   GeomMaterial* ptsm = new GeomMaterial(pts, materials[PointMatl]);
+   GeomMaterial* ptsm = new GeomMaterial(pts, PointMaterial);
    
-   geometries[GeomRing] = new GeomTorus;
-   picks[PickCyls] = new GeomPick(geometries[GeomRing], module);
-   picks[PickCyls]->set_highlight(materials[HighMatl]);
-   picks[PickCyls]->set_cbdata((void*)PickCyls);
-   GeomMaterial* cylsm = new GeomMaterial(picks[PickCyls], materials[EdgeMatl]);
-
    geometries[GeomResizeA] = new GeomCappedCylinder;
    picks[PickResizeA] = new GeomPick(geometries[GeomResizeA], module);
-   picks[PickResizeA]->set_highlight(materials[HighMatl]);
+   picks[PickResizeA]->set_highlight(HighlightMaterial);
    picks[PickResizeA]->set_cbdata((void*)PickResizeA);
-   GeomMaterial* resizeam = new GeomMaterial(picks[PickResizeA], materials[SpecialMatl]);
+   GeomMaterial* resizeam = new GeomMaterial(picks[PickResizeA], SpecialMaterial);
 
    GeomGroup* resbc = new GeomGroup;
    geometries[GeomResizeB] = new GeomCappedCylinder;
    picks[PickResizeB] = new GeomPick(geometries[GeomResizeB], module);
-   picks[PickResizeB]->set_highlight(materials[HighMatl]);
+   picks[PickResizeB]->set_highlight(HighlightMaterial);
    picks[PickResizeB]->set_cbdata((void*)PickResizeB);
    resbc->add(picks[PickResizeB]);
    geometries[GeomResizeC] = new GeomCappedCylinder;
    picks[PickResizeC] = new GeomPick(geometries[GeomResizeC], module);
-   picks[PickResizeC]->set_highlight(materials[HighMatl]);
+   picks[PickResizeC]->set_highlight(HighlightMaterial);
    picks[PickResizeC]->set_cbdata((void*)PickResizeC);
    resbc->add(picks[PickResizeC]);
-   GeomMaterial* resizebcm = new GeomMaterial(resbc, materials[ResizeMatl]);
-
-   geometries[GeomSlider] = new GeomCappedCylinder;
-   picks[PickSlider] = new GeomPick(geometries[GeomSlider], module);
-   picks[PickSlider]->set_highlight(materials[HighMatl]);
-   picks[PickSlider]->set_cbdata((void*)PickSlider);
-   GeomMaterial* slidersm = new GeomMaterial(picks[PickSlider], materials[SliderMatl]);
+   GeomMaterial* resizebcm = new GeomMaterial(resbc, ResizeMaterial);
 
    GeomGroup* w = new GeomGroup;
    w->add(ptsm);
-   w->add(cylsm);
    w->add(resizeam);
    w->add(resizebcm);
-   w->add(slidersm);
+   CreateModeSwitch(1, w);
+
+   geometries[GeomSlider] = new GeomCappedCylinder;
+   picks[PickSlider] = new GeomPick(geometries[GeomSlider], module);
+   picks[PickSlider]->set_highlight(HighlightMaterial);
+   picks[PickSlider]->set_cbdata((void*)PickSlider);
+   GeomMaterial* slidersm = new GeomMaterial(picks[PickSlider], SliderMaterial);
+   CreateModeSwitch(2, slidersm);
+
+   SetMode(Mode1, Switch0|Switch1|Switch2);
+   SetMode(Mode2, Switch0|Switch1);
+   SetMode(Mode3, Switch0|Switch2);
+   SetMode(Mode4, Switch0);
 
    SetEpsilon(widget_scale*1e-6);
    
-   FinishWidget(w);
+   FinishWidget();
 }
 
 
@@ -327,6 +327,8 @@ RingWidget::MoveDelta( const Vector& delta )
    variables[PointCVar]->MoveDelta(delta);
    variables[CenterVar]->MoveDelta(delta);
    variables[SliderVar]->MoveDelta(delta);
+
+   execute();
 }
 
 
@@ -347,6 +349,7 @@ RingWidget::SetPosition( const Point& center, const Vector& normal, const Real r
    variables[PointAVar]->Move(center+v1*radius);
    variables[PointBVar]->Move(center-v1*radius*0.5-v2*radius*sqrt(0.75));
    variables[PointCVar]->Set(center-v1*radius*0.5+v2*radius*sqrt(0.75));
+
    execute();
 }
 
@@ -367,6 +370,7 @@ RingWidget::SetRatio( const Real ratio )
 {
    ASSERT((ratio>=0.0) && (ratio<=1.0));
    variables[AngleVar]->Set(ratio*2.0*3.14159 - 3.14159);
+
    execute();
 }
 

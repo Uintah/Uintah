@@ -21,24 +21,26 @@
 
 const Index NumCons = 8;
 const Index NumVars = 7;
-const Index NumGeoms = 12;
-const Index NumMatls = 4;
+const Index NumGeoms = 16;
 const Index NumPcks = 9;
+const Index NumMdes = 4;
+const Index NumSwtchs = 3;
 const Index NumSchemes = 6;
 
 enum { ConstULDR, ConstURDL, ConstPyth, ConstPlane,
        ConstULUR, ConstULDL, ConstDRUR, ConstDRDL };
-enum { GeomPointUL, GeomPointUR, GeomPointDR, GeomPointDL,
+enum { GeomSPointUL, GeomSPointUR, GeomSPointDR, GeomSPointDL,
+       GeomPointUL, GeomPointUR, GeomPointDR, GeomPointDL,
        GeomCylU, GeomCylR, GeomCylD, GeomCylL,
        GeomResizeU, GeomResizeR, GeomResizeD, GeomResizeL };
 enum { PickSphUL, PickSphUR, PickSphDR, PickSphDL, PickCyls,
        PickResizeU, PickResizeR, PickResizeD, PickResizeL };
 
 FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1),
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMdes, NumSwtchs, widget_scale),
   oldaxis1(1, 0, 0), oldaxis2(0, 1, 0)
 {
-   Real INIT = 1.0*widget_scale;
+   Real INIT = widget_scale;
    // Schemes 5/6 are used by the picks in GeomMoved!!
    variables[PointULVar] = new PointVariable("PntUL", solve, Scheme1, Point(0, 0, 0));
    variables[PointURVar] = new PointVariable("PntUR", solve, Scheme2, Point(INIT, 0, 0));
@@ -147,52 +149,54 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale 
    constraints[ConstDRDL]->VarChoices(Scheme6, 0, 0, 0);
    constraints[ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[PointMatl] = PointWidgetMaterial;
-   materials[EdgeMatl] = EdgeWidgetMaterial;
-   materials[ResizeMatl] = ResizeWidgetMaterial;
-   materials[HighMatl] = HighlightWidgetMaterial;
-
    Index geom, pick;
+   GeomGroup* cyls = new GeomGroup;
+   for (geom = GeomSPointUL; geom <= GeomSPointDL; geom++) {
+      geometries[geom] = new GeomSphere;
+      cyls->add(geometries[geom]);
+   }
+   for (geom = GeomCylU; geom <= GeomCylL; geom++) {
+      geometries[geom] = new GeomCylinder;
+      cyls->add(geometries[geom]);
+   }
+   picks[PickCyls] = new GeomPick(cyls, module);
+   picks[PickCyls]->set_highlight(HighlightMaterial);
+   picks[PickCyls]->set_cbdata((void*)PickCyls);
+   GeomMaterial* cylsm = new GeomMaterial(picks[PickCyls], EdgeMaterial);
+   CreateModeSwitch(0, cylsm);
+
    GeomGroup* pts = new GeomGroup;
    for (geom = GeomPointUL, pick = PickSphUL;
 	geom <= GeomPointDL; geom++, pick++) {
       geometries[geom] = new GeomSphere;
       picks[pick] = new GeomPick(geometries[geom], module);
-      picks[pick]->set_highlight(materials[HighMatl]);
+      picks[pick]->set_highlight(HighlightMaterial);
       picks[pick]->set_cbdata((void*)pick);
       pts->add(picks[pick]);
    }
-   GeomMaterial* ptsm = new GeomMaterial(pts, materials[PointMatl]);
+   GeomMaterial* ptsm = new GeomMaterial(pts, PointMaterial);
+   CreateModeSwitch(1, ptsm);
    
    GeomGroup* resizes = new GeomGroup;
    for (geom = GeomResizeU, pick = PickResizeU;
 	geom <= GeomResizeL; geom++, pick++) {
       geometries[geom] = new GeomCappedCylinder;
       picks[pick] = new GeomPick(geometries[geom], module);
-      picks[pick]->set_highlight(materials[HighMatl]);
+      picks[pick]->set_highlight(HighlightMaterial);
       picks[pick]->set_cbdata((void*)pick);
       resizes->add(picks[pick]);
    }
-   GeomMaterial* resizem = new GeomMaterial(resizes, materials[ResizeMatl]);
+   GeomMaterial* resizem = new GeomMaterial(resizes, ResizeMaterial);
+   CreateModeSwitch(2, resizem);
 
-   GeomGroup* cyls = new GeomGroup;
-   for (geom = GeomCylU; geom <= GeomCylL; geom++) {
-      geometries[geom] = new GeomCylinder;
-      cyls->add(geometries[geom]);
-   }
-   picks[PickCyls] = new GeomPick(cyls, module);
-   picks[PickCyls]->set_highlight(materials[HighMatl]);
-   picks[PickCyls]->set_cbdata((void*)PickCyls);
-   GeomMaterial* cylsm = new GeomMaterial(picks[PickCyls], materials[EdgeMatl]);
-
-   GeomGroup* w = new GeomGroup;
-   w->add(ptsm);
-   w->add(resizem);
-   w->add(cylsm);
+   SetMode(Mode1, Switch0|Switch1|Switch2);
+   SetMode(Mode2, Switch0|Switch1);
+   SetMode(Mode3, Switch0|Switch2);
+   SetMode(Mode4, Switch0);
 
    SetEpsilon(widget_scale*1e-6);
    
-   FinishWidget(w);
+   FinishWidget();
 }
 
 
@@ -204,16 +208,24 @@ FrameWidget::~FrameWidget()
 void
 FrameWidget::widget_execute()
 {
+   ((GeomSphere*)geometries[GeomSPointUL])->move(variables[PointULVar]->point(),
+						 0.5*widget_scale);
+   ((GeomSphere*)geometries[GeomSPointUR])->move(variables[PointURVar]->point(),
+						 0.5*widget_scale);
+   ((GeomSphere*)geometries[GeomSPointDR])->move(variables[PointDRVar]->point(),
+						 0.5*widget_scale);
+   ((GeomSphere*)geometries[GeomSPointDL])->move(variables[PointDLVar]->point(),
+						 0.5*widget_scale);
    ((GeomSphere*)geometries[GeomPointUL])->move(variables[PointULVar]->point(),
-						   1*widget_scale);
+						1*widget_scale);
    ((GeomSphere*)geometries[GeomPointUR])->move(variables[PointURVar]->point(),
-						   1*widget_scale);
+						1*widget_scale);
    ((GeomSphere*)geometries[GeomPointDR])->move(variables[PointDRVar]->point(),
-						   1*widget_scale);
+						1*widget_scale);
    ((GeomSphere*)geometries[GeomPointDL])->move(variables[PointDLVar]->point(),
-						   1*widget_scale);
+						1*widget_scale);
    Point p(variables[PointULVar]->point() + (variables[PointURVar]->point()
-						- variables[PointULVar]->point()) / 2.0);
+					     - variables[PointULVar]->point()) / 2.0);
    ((GeomCappedCylinder*)geometries[GeomResizeU])->move(p - (GetAxis2() * 0.6 * widget_scale),
 							p + (GetAxis2() * 0.6 * widget_scale),
 							0.75*widget_scale);
@@ -256,10 +268,10 @@ FrameWidget::widget_execute()
 
    Vector spvec1(variables[PointURVar]->point() - variables[PointULVar]->point());
    Vector spvec2(variables[PointDLVar]->point() - variables[PointULVar]->point());
-   if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0)) {
+   if ((spvec1.length2() > 1e-6) && (spvec2.length2() > 1e-6)) {
       spvec1.normalize();
       spvec2.normalize();
-      Vector v = Cross(spvec1, spvec2);
+      Vector v(Cross(spvec1, spvec2));
       for (Index geom = 0; geom < NumPcks; geom++) {
 	 if ((geom == PickResizeU) || (geom == PickResizeD))
 	    picks[geom]->set_principal(spvec2);
@@ -344,6 +356,8 @@ FrameWidget::MoveDelta( const Vector& delta )
    variables[PointURVar]->MoveDelta(delta);
    variables[PointDRVar]->MoveDelta(delta);
    variables[PointDLVar]->MoveDelta(delta);
+
+   execute();
 }
 
 

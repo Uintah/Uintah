@@ -20,10 +20,11 @@
 
 const Index NumCons = 18;
 const Index NumVars = 11;
-const Index NumGeoms = 44;
-const Index NumMatls = 4;
-const Index NumSchemes = 4;
+const Index NumGeoms = 52;
 const Index NumPcks = 15;
+const Index NumMdes = 4;
+const Index NumSwtchs = 3;
+const Index NumSchemes = 4;
 
 enum { ConstIULODR, ConstOULIDR, ConstIDLOUR, ConstODLIUR,
        ConstHypo, ConstDiag,
@@ -32,6 +33,8 @@ enum { ConstIULODR, ConstOULIDR, ConstIDLOUR, ConstODLIUR,
        ConstOULUR, ConstOULDL, ConstODRUR, ConstODRDL };
 enum { SphereIUL, SphereIUR, SphereIDR, SphereIDL,
        SphereOUL, SphereOUR, SphereODR, SphereODL,
+       SmallSphereIUL, SmallSphereIUR, SmallSphereIDR, SmallSphereIDL,
+       SmallSphereOUL, SmallSphereOUR, SmallSphereODR, SmallSphereODL,
        CylIU, CylIR, CylID, CylIL,
        CylMU, CylMR, CylMD, CylML,
        CylOU, CylOR, CylOD, CylOL,
@@ -47,7 +50,7 @@ enum { PickSphIUL, PickSphIUR, PickSphIDR, PickSphIDL,
        PickResizeL, PickResizeI, PickResizeO };
 
 BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMdes, NumSwtchs, widget_scale)
 {
    Real INIT = 1.0*widget_scale;
    variables[PointIULVar] = new PointVariable("PntIUL", solve, Scheme1, Point(0, 0, 0));
@@ -245,22 +248,33 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
    constraints[ConstODRDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[ConstODRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[PointMatl] = PointWidgetMaterial;
-   materials[EdgeMatl] = EdgeWidgetMaterial;
-   materials[ResizeMatl] = ResizeWidgetMaterial;
-   materials[HighMatl] = HighlightWidgetMaterial;
-
    Index geom, pick;
+   GeomGroup* cyls = new GeomGroup;
+   for (geom = SmallSphereIUL; geom <= SmallSphereODL; geom++) {
+      geometries[geom] = new GeomSphere;
+      cyls->add(geometries[geom]);
+   }
+   for (geom = CylIU; geom <= CylOL; geom++) {
+      geometries[geom] = new GeomCylinder;
+      cyls->add(geometries[geom]);
+   }
+   picks[PickCyls] = new GeomPick(cyls, module);
+   picks[PickCyls]->set_highlight(HighlightMaterial);
+   picks[PickCyls]->set_cbdata((void*)PickCyls);
+   GeomMaterial* cylsm = new GeomMaterial(picks[PickCyls], EdgeMaterial);
+   CreateModeSwitch(0, cylsm);
+
    GeomGroup* pts = new GeomGroup;
    for (geom = SphereIUL, pick = PickSphIUL;
 	geom <= SphereODL; geom++, pick++) {
       geometries[geom] = new GeomSphere;
       picks[pick] = new GeomPick(geometries[geom], module);
-      picks[pick]->set_highlight(materials[HighMatl]);
+      picks[pick]->set_highlight(HighlightMaterial);
       picks[pick]->set_cbdata((void*)pick);
       pts->add(picks[pick]);
    }
-   GeomMaterial* ptsm = new GeomMaterial(pts, materials[PointMatl]);
+   GeomMaterial* ptsm = new GeomMaterial(pts, PointMaterial);
+   CreateModeSwitch(1, ptsm);
    
    GeomGroup* resizes = new GeomGroup;
    GeomGroup* face;
@@ -272,30 +286,21 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
 	 face->add(geometries[geom2]);
       }
       picks[pick] = new GeomPick(face, module);
-      picks[pick]->set_highlight(materials[HighMatl]);
+      picks[pick]->set_highlight(HighlightMaterial);
       picks[pick]->set_cbdata((void*)pick);
       resizes->add(picks[pick]);
    }
-   GeomMaterial* resizem = new GeomMaterial(resizes, materials[ResizeMatl]);
+   GeomMaterial* resizem = new GeomMaterial(resizes, ResizeMaterial);
+   CreateModeSwitch(2, resizem);
 
-   GeomGroup* cyls = new GeomGroup;
-   for (geom = CylIU; geom <= CylOL; geom++) {
-      geometries[geom] = new GeomCylinder;
-      cyls->add(geometries[geom]);
-   }
-   picks[PickCyls] = new GeomPick(cyls, module);
-   picks[PickCyls]->set_highlight(materials[HighMatl]);
-   picks[PickCyls]->set_cbdata((void*)PickCyls);
-   GeomMaterial* cylsm = new GeomMaterial(picks[PickCyls], materials[EdgeMatl]);
-
-   GeomGroup* w = new GeomGroup;
-   w->add(ptsm);
-   w->add(resizem);
-   w->add(cylsm);
+   SetMode(Mode1, Switch0|Switch1|Switch2);
+   SetMode(Mode2, Switch0|Switch1);
+   SetMode(Mode3, Switch0|Switch2);
+   SetMode(Mode4, Switch0);
 
    SetEpsilon(widget_scale*1e-6);
 
-   FinishWidget(w);
+   FinishWidget();
 }
 
 
@@ -323,6 +328,22 @@ BoxWidget::widget_execute()
 					      1*widget_scale);
    ((GeomSphere*)geometries[SphereODL])->move(variables[PointODLVar]->point(),
 					      1*widget_scale);
+   ((GeomSphere*)geometries[SmallSphereIUL])->move(variables[PointIULVar]->point(),
+						   0.5*widget_scale);
+   ((GeomSphere*)geometries[SmallSphereIUR])->move(variables[PointIURVar]->point(),
+						   0.5*widget_scale);
+   ((GeomSphere*)geometries[SmallSphereIDR])->move(variables[PointIDRVar]->point(),
+						   0.5*widget_scale);
+   ((GeomSphere*)geometries[SmallSphereIDL])->move(variables[PointIDLVar]->point(),
+						   0.5*widget_scale);
+   ((GeomSphere*)geometries[SmallSphereOUL])->move(variables[PointOULVar]->point(),
+						   0.5*widget_scale);
+   ((GeomSphere*)geometries[SmallSphereOUR])->move(variables[PointOURVar]->point(),
+						   0.5*widget_scale);
+   ((GeomSphere*)geometries[SmallSphereODR])->move(variables[PointODRVar]->point(),
+						   0.5*widget_scale);
+   ((GeomSphere*)geometries[SmallSphereODL])->move(variables[PointODLVar]->point(),
+						   0.5*widget_scale);
    Point p(variables[PointOULVar]->point() + (variables[PointOURVar]->point()
 					      - variables[PointOULVar]->point()) / 3.0);
    ((GeomCappedCylinder*)geometries[GeomResizeUU])->move(p - (GetAxis2() * 0.6 * widget_scale),
@@ -599,6 +620,8 @@ BoxWidget::MoveDelta( const Vector& delta )
    variables[PointOURVar]->MoveDelta(delta);
    variables[PointODRVar]->MoveDelta(delta);
    variables[PointODLVar]->MoveDelta(delta);
+
+   execute();
 }
 
 
@@ -609,3 +632,38 @@ BoxWidget::ReferencePoint() const
 	   + (variables[PointODRVar]->point()
 	      -variables[PointIULVar]->point())/2.0);
 }
+
+
+Vector
+BoxWidget::GetAxis1()
+{
+   Vector axis(variables[PointIURVar]->point() - variables[PointIULVar]->point());
+   if (axis.length2() <= 1e-6)
+      return oldaxis1;
+   else
+      return (oldaxis1 = axis.normal());
+}
+
+
+Vector
+BoxWidget::GetAxis2()
+{
+   Vector axis(variables[PointIDLVar]->point() - variables[PointIULVar]->point());
+   if (axis.length2() <= 1e-6)
+      return oldaxis2;
+   else
+      return (oldaxis2 = axis.normal());
+}
+
+
+Vector
+BoxWidget::GetAxis3()
+{
+   Vector axis(variables[PointOULVar]->point() - variables[PointIULVar]->point());
+   if (axis.length2() <= 1e-6)
+      return oldaxis3;
+   else
+      return (oldaxis3 = axis.normal());
+}
+
+

@@ -18,28 +18,29 @@
 const Index NumCons = 0;
 const Index NumVars = 1;
 const Index NumGeoms = 1;
-const Index NumMatls = 2;
 const Index NumPcks = 1;
+const Index NumMdes = 1;
+const Index NumSwtchs = 1;
 // const Index NumSchemes = 1;
 
 enum { GeomPoint };
 enum { Pick };
 
 PointWidget::PointWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMdes, NumSwtchs, widget_scale)
 {
    variables[PointVar] = new PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
 
-   materials[PointMatl] = PointWidgetMaterial;
-   materials[HighMatl] = HighlightWidgetMaterial;
-
    geometries[GeomPoint] = new GeomSphere;
-   GeomMaterial* sphm = new GeomMaterial(geometries[GeomPoint], materials[PointMatl]);
+   GeomMaterial* sphm = new GeomMaterial(geometries[GeomPoint], PointMaterial);
    picks[Pick] = new GeomPick(sphm, module);
-   picks[Pick]->set_highlight(materials[HighMatl]);
+   picks[Pick]->set_highlight(HighlightMaterial);
    picks[Pick]->set_cbdata((void*)Pick);
+   CreateModeSwitch(0, picks[Pick]);
 
-   FinishWidget(picks[Pick]);
+   SetMode(Mode1, Switch0);
+   
+   FinishWidget();
 }
 
 
@@ -72,6 +73,8 @@ void
 PointWidget::MoveDelta( const Vector& delta )
 {
    variables[PointVar]->MoveDelta(delta);
+
+   execute();
 }
 
 
@@ -86,6 +89,7 @@ void
 PointWidget::SetPosition( const Point& p )
 {
    variables[PointVar]->Move(p);
+
    execute();
 }
 

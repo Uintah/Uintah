@@ -20,38 +20,38 @@
 const Index NumCons = 0;
 const Index NumVars = 1;
 const Index NumGeoms = 3;
-const Index NumMatls = 3;
 const Index NumPcks = 1;
+const Index NumMdes = 1;
+const Index NumSwtchs = 1;
 // const Index NumSchemes = 1;
 
 enum { GeomPoint, GeomShaft, GeomHead };
 enum { Pick };
 
 ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale),
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMdes, NumSwtchs, widget_scale),
   direction(0, 0, 1.0)
 {
    variables[PointVar] = new PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
 
-   materials[PointMatl] = PointWidgetMaterial;
-   materials[EdgeMatl] = EdgeWidgetMaterial;
-   materials[HighMatl] = HighlightWidgetMaterial;
-
    GeomGroup* arr = new GeomGroup;
    geometries[GeomPoint] = new GeomSphere;
-   GeomMaterial* sphm = new GeomMaterial(geometries[GeomPoint], materials[PointMatl]);
+   GeomMaterial* sphm = new GeomMaterial(geometries[GeomPoint], PointMaterial);
    arr->add(sphm);
    geometries[GeomShaft] = new GeomCylinder;
-   GeomMaterial* cylm = new GeomMaterial(geometries[GeomShaft], materials[EdgeMatl]);
+   GeomMaterial* cylm = new GeomMaterial(geometries[GeomShaft], EdgeMaterial);
    arr->add(cylm);
    geometries[GeomHead] = new GeomCappedCone;
-   GeomMaterial* conem = new GeomMaterial(geometries[GeomHead], materials[EdgeMatl]);
+   GeomMaterial* conem = new GeomMaterial(geometries[GeomHead], EdgeMaterial);
    arr->add(conem);
    picks[Pick] = new GeomPick(arr, module);
-   picks[Pick]->set_highlight(materials[HighMatl]);
+   picks[Pick]->set_highlight(HighlightMaterial);
    picks[Pick]->set_cbdata((void*)Pick);
+   CreateModeSwitch(0, picks[Pick]);
 
-   FinishWidget(picks[Pick]);
+   SetMode(Mode1, Switch0);
+
+   FinishWidget();
 }
 
 
@@ -100,6 +100,8 @@ void
 ArrowWidget::MoveDelta( const Vector& delta )
 {
    variables[PointVar]->MoveDelta(delta);
+
+   execute();
 }
 
 
@@ -114,6 +116,7 @@ void
 ArrowWidget::SetPosition( const Point& p )
 {
    variables[PointVar]->Move(p);
+
    execute();
 }
 
@@ -126,15 +129,16 @@ ArrowWidget::GetPosition() const
 
 
 void
-ArrowWidget::SetDirect( const Vector& v )
+ArrowWidget::SetDirection( const Vector& v )
 {
    direction = v;
+
    execute();
 }
 
 
 const Vector&
-ArrowWidget::GetDirect() const
+ArrowWidget::GetDirection() const
 {
    return direction;
 }

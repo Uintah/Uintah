@@ -39,8 +39,7 @@ public:
 
    // Variable indexs
    enum { CenterVar };
-   // Material indexs
-   enum { CenterMatl, AxesMatl, HighMatl };
+   
 private:
    Vector axis1, axis2, axis3;
 };

@@ -30,52 +30,18 @@ public:
    virtual void MoveDelta( const Vector& delta );
    virtual Point ReferencePoint() const;
 
-   inline Vector GetAxis1();
-   inline Vector GetAxis2();
-   inline Vector GetAxis3();
+   Vector GetAxis1();
+   Vector GetAxis2();
+   Vector GetAxis3();
 
    // Variable indexs
    enum { PointIULVar, PointIURVar, PointIDRVar, PointIDLVar,
 	  PointOULVar, PointOURVar, PointODRVar, PointODLVar,
 	  DistVar, HypoVar, DiagVar };
-   // Material indexs
-   enum { PointMatl, EdgeMatl, ResizeMatl, HighMatl };
+
 private:
    Vector oldaxis1, oldaxis2, oldaxis3;
 };
-
-
-inline Vector
-BoxWidget::GetAxis1()
-{
-   Vector axis(variables[PointIURVar]->point() - variables[PointIULVar]->point());
-   if (axis.length2() <= 1e-6)
-      return oldaxis1;
-   else
-      return (oldaxis1 = axis.normal());
-}
-
-
-inline Vector
-BoxWidget::GetAxis2()
-{
-   Vector axis(variables[PointIDLVar]->point() - variables[PointIULVar]->point());
-   if (axis.length2() <= 1e-6)
-      return oldaxis2;
-   else
-      return (oldaxis2 = axis.normal());
-}
-
-
-inline Vector
-BoxWidget::GetAxis3()
-{
-   Vector axis(variables[PointOULVar]->point() - variables[PointIULVar]->point());
-   if (axis.length2() <= 1e-6)
-      return oldaxis3;
-   else
-      return (oldaxis3 = axis.normal());
-}
 
 
 #endif

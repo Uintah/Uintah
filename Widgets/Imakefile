@@ -6,10 +6,11 @@
 OBJS = BaseWidget.o \
 	ArrowWidget.o \
 	BoxWidget.o \
+	CriticalPointWidget.o \
 	CrosshairWidget.o \
-	FixedFrameWidget.o \
 	FrameWidget.o \
 	GuageWidget.o \
+	PathWidget.o \
 	PointWidget.o \
 	RingWidget.o \
 	ScaledBoxWidget.o \
@@ -18,10 +19,11 @@ OBJS = BaseWidget.o \
 SRCS = BaseWidget.cc \
 	ArrowWidget.cc \
 	BoxWidget.cc \
+	CriticalPointWidget.cc \
 	CrosshairWidget.cc \
-	FixedFrameWidget.cc \
 	FrameWidget.cc \
 	GuageWidget.cc \
+	PathWidget.cc \
 	PointWidget.cc \
 	RingWidget.cc \
 	ScaledBoxWidget.cc \
