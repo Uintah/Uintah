@@ -63,7 +63,7 @@ WARNING
 		     const PatchSubset* patches,
 		     const MaterialSubset* matls,
 		     DataWarehouse* old_dw, DataWarehouse* new_dw,
-		     LevelP, SchedulerP);
+		     LevelP, Scheduler*);
     void iterate(const ProcessorGroup*,
 		 const PatchSubset* patches,
 		 const MaterialSubset* matls,
