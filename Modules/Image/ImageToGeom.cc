@@ -86,6 +86,7 @@ void ImageToGeom::execute()
 	{
 	    int xres=image->xres();
 	    int yres=image->yres();
+#if 0
 	    GeomGrid* grid=new GeomGrid(image->xres(), image->yres(),
 					Point(0,0,0),
 					Vector(xres-1,0,0),
@@ -99,6 +100,7 @@ void ImageToGeom::execute()
 	    }
 	    grid->compute_normals();
 	    obj=grid;
+#endif
 	}
 	break;
     default:
