@@ -19,8 +19,12 @@ itcl_class Hedgehog {
     method set_defaults {} {
 	global $this-length_scale
 	set $this-length_scale 0.1
+	global $this-head_length
+	set $this-head_length 0.3
 	global $this-width_scale
 	set $this-width_scale 0.1
+	global $this-type
+	set $this-type 2D
 	$this-c needexecute
     }
     method ui {} {
@@ -31,16 +35,15 @@ itcl_class Hedgehog {
 	}
 	toplevel $w
 	wm minsize $w 300 20
-	frame $w.f -width 30
-	pack $w.f -padx 2 -pady 2 -fill x
 	set n "$this-c needexecute "
 
-	make_labeled_radio $w.f.wids "Plane Type:" $n \
-		top $this-cutting_plane_type \
-		{{Plane 0} {Surface 1} \
-		{ContourLines 2}}
-	pack $w.f.wids -side left -padx 5 -anchor w
+	frame $w.f
+	pack $w.f -side top -fill x -padx 2 -pady 2
 
+	make_labeled_radio $w.f.type "Hedgehog type:" $n \
+		top $this-type \
+		{2D 3D}
+	pack $w.f.type -side left -padx 5 -anchor w
 	button $w.f.findxy -text "Find XY" -command "$this-c findxy"
 	pack $w.f.findxy -pady 2 -side top -ipadx 3 -anchor e
 	
@@ -50,19 +53,23 @@ itcl_class Hedgehog {
 	button $w.f.findxz -text "Find XZ" -command "$this-c findxz"
 	pack $w.f.findxz -pady 2 -side top -ipadx 3 -anchor e
 
-	expscale $w.scale -orient horizontal -label "Scale:" \
-		-variable $this-scale -command $n
-	$w.scale-win- configure
-	pack $w.scale -fill x -pady 2
-	expscale $w.offset -orient horizontal -label "Offset:" \
-		-variable $this-offset -command $n
-	pack $w.offset -fill x -pady 2
-	scale $w.num_contours -orient horizontal -label "Contours:" \
-		-from 2 -to 500 -length 5c \
+	expscale $w.length_scale -orient horizontal -label "Length scale:" \
+		-variable $this-length_scale -command $n
+	pack $w.length_scale -side top -fill x
+
+	scale $w.head_length -orient horizontal -label "Head length:" \
+		-from 0 -to 1 -length 3c \
                 -showvalue true \
-                -resolution 1 \
-		-variable $this-num_contours -command $n 
-	pack $w.num_contours -fill x -pady 2
-		
+                -resolution 0.001 \
+		-variable $this-head_length -command $n 
+	pack $w.head_length -side left -fill x -pady 2
+	scale $w.width_scale -orient horizontal -label "Base width:" \
+		-from 0 -to 1 -length 3c \
+                -showvalue true \
+                -resolution 0.001 \
+		-variable $this-width_scale -command $n 
+	pack $w.width_scale -side right -fill x -pady 2
+	
+
     }
 }

@@ -2,10 +2,10 @@
  *  Hedgehog.cc:  
  *
  *  Written by:
- *   Colette Mullenhoff
+ *   Steven G. Parker
  *   Department of Computer Science
  *   University of Utah
- *   May 1995
+ *   June 1995
  *
  *  Copyright (C) 1995 SCI Group
  */
@@ -13,7 +13,6 @@
 #include <Classlib/Array1.h>
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Dataflow/ModuleList.h>
 #include <Datatypes/ColormapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/ScalarFieldPort.h>
@@ -27,6 +26,7 @@
 #include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 
+#include <Widgets/ScaledBoxWidget.h>
 #include <Widgets/ScaledFrameWidget.h>
 #include <iostream.h>
 
@@ -42,13 +42,17 @@ class Hedgehog : public Module {
    CrowdMonitor widget_lock;
    int init;
    int widget_id;
-   ScaledFrameWidget *widget;
+   ScaledBoxWidget* widget3d;
+   ScaledFrameWidget *widget2d;
    virtual void widget_moved(int last);
    TCLdouble length_scale;
    TCLdouble width_scale;
+   TCLdouble head_length;
+   TCLstring type;
    MaterialHandle outcolor;
    int grid_id;
-   int need_find;
+   int need_find2d;
+   int need_find3d;
 
 public:
    Hedgehog(const clString& id);
@@ -60,13 +64,12 @@ public:
    virtual void tcl_command(TCLArgs&, void*);
 };
 
-static Module* make_Hedgehog(const clString& id)
+extern "C" {
+Module* make_Hedgehog(const clString& id)
 {
    return scinew Hedgehog(id);
 }
-
-static RegisterModule db1("Fields", "Hedgehog", make_Hedgehog);
-static RegisterModule db2("Visualization", "Hedgehog", make_Hedgehog);
+};
 
 static clString module_name("Hedgehog");
 static clString widget_name("Hedgehog Widget");
@@ -74,7 +77,9 @@ static clString widget_name("Hedgehog Widget");
 Hedgehog::Hedgehog(const clString& id)
 : Module("Hedgehog", id, Filter), 
   length_scale("length_scale", id, this),
-  width_scale("width_scale", id, this)
+  width_scale("width_scale", id, this),
+  head_length("head_length", id, this),
+  type("type", id, this)
 {
     // Create the input ports
     // Need a scalar field and a colormap
@@ -95,17 +100,21 @@ Hedgehog::Hedgehog(const clString& id)
     init = 1;
     float INIT(.1);
 
-    widget = scinew ScaledFrameWidget(this, &widget_lock, INIT);
+    widget2d = scinew ScaledFrameWidget(this, &widget_lock, INIT);
+    widget3d = scinew ScaledBoxWidget(this, &widget_lock, INIT);
     grid_id=0;
 
-    need_find=1;
+    need_find2d=1;
+    need_find3d=1;
     
     outcolor=scinew Material(Color(0,0,0), Color(0,0,0), Color(0,0,0), 0);
 }
 
 Hedgehog::Hedgehog(const Hedgehog& copy, int deep)
 : Module(copy, deep), length_scale("length_scale", id, this),
-  width_scale("width_scale", id, this)
+  width_scale("width_scale", id, this),
+  head_length("head_length", id, this),
+  type("type", id, this)
 {
    NOT_FINISHED("Hedgehog::Hedgehog");
 }
@@ -137,101 +146,140 @@ void Hedgehog::execute()
     if (init == 1) 
     {
 	init = 0;
-	GeomObj *w = widget->GetWidget() ;
+	GeomObj *w2d = widget2d->GetWidget() ;
+	GeomObj *w3d = widget3d->GetWidget() ;
+	GeomGroup* w = new GeomGroup;
+	w->add(w2d);
+	w->add(w3d);
 	widget_id = ogeom->addObj( w, module_name, &widget_lock );
-	widget->Connect( ogeom );
-	widget->SetRatioR( 0.2 );
-	widget->SetRatioD( 0.2 );
+
+	widget2d->Connect( ogeom );
+	widget2d->SetRatioR( 0.2 );
+	widget2d->SetRatioD( 0.2 );
+
+	widget3d->Connect( ogeom );
+	widget3d->SetRatioR( 0.2 );
+	widget3d->SetRatioD( 0.2 );
+	widget3d->SetRatioI( 0.2 );
     }
-    if (need_find != 0)
-    {
-	Point min, max;
-	vfield->get_bounds( min, max );
-	Point center = min + (max-min)/2.0;
-	double max_scale;
-	if (need_find == 1)
-	{   // Find the field and put in optimal place
-	    // in xy plane with reasonable frame thickness
+    int do_3d=1;
+    if(type.get() == "2D")
+	do_3d=0;
+
+    widget2d->SetState(!do_3d);
+    widget3d->SetState(do_3d);
+    double ld=vfield->longest_dimension();
+    if (do_3d){
+	if(need_find3d != 0){
+	    Point min, max;
+	    vfield->get_bounds( min, max );
+	    Point center = min + (max-min)/2.0;
 	    Point right( max.x(), center.y(), center.z());
 	    Point down( center.x(), min.y(), center.z());
-	    widget->SetPosition( center, right, down);
-	    max_scale = Max( (max.x() - min.x()), (max.y() - min.y()) );
+	    Point in( center.x(), center.y(), min.z());
+	    widget3d->SetPosition( center, right, down, in);
+	    widget3d->SetScale( ld/20. );
 	}
-	else if (need_find == 2)
-	{   // Find the field and put in optimal place
-	    // in yz plane with reasonable frame thickness
-	    Point right( center.x(), center.y(), max.z());
-	    Point down( center.x(), min.y(), center.z());	    
-	    widget->SetPosition( center, right, down);
-	    max_scale = Max( (max.z() - min.z()), (max.y() - min.y()) );
+	need_find3d = 0;
+    } else {
+	if (need_find2d != 0){
+	    Point min, max;
+	    vfield->get_bounds( min, max );
+	    Point center = min + (max-min)/2.0;
+	    double max_scale;
+	    if (need_find2d == 1) {
+		// Find the field and put in optimal place
+		// in xy plane with reasonable frame thickness
+		Point right( max.x(), center.y(), center.z());
+		Point down( center.x(), min.y(), center.z());
+		widget2d->SetPosition( center, right, down);
+		max_scale = Max( (max.x() - min.x()), (max.y() - min.y()) );
+	    } else if (need_find2d == 2) {
+		// Find the field and put in optimal place
+		// in yz plane with reasonable frame thickness
+		Point right( center.x(), center.y(), max.z());
+		Point down( center.x(), min.y(), center.z());	    
+		widget2d->SetPosition( center, right, down);
+		max_scale = Max( (max.z() - min.z()), (max.y() - min.y()) );
+	    } else {
+		// Find the field and put in optimal place
+		// in xz plane with reasonable frame thickness
+		Point right( max.x(), center.y(), center.z());
+		Point down( center.x(), center.y(), min.z());	    
+		widget2d->SetPosition( center, right, down);
+		max_scale = Max( (max.x() - min.x()), (max.z() - min.z()) );
+	    }
+	    widget2d->SetScale( max_scale/20. );
+	    need_find2d = 0;
 	}
-	else
-	{   // Find the field and put in optimal place
-	    // in xz plane with reasonable frame thickness
-	    Point right( max.x(), center.y(), center.z());
-	    Point down( center.x(), center.y(), min.z());	    
-	    widget->SetPosition( center, right, down);
-	    max_scale = Max( (max.x() - min.x()), (max.z() - min.z()) );
-	}
-	widget->SetScale( max_scale/20. );
-	need_find = 0;
     }
-
+    
     // get the position of the frame widget
-    Point 	corner, center, R, D;
-    widget->GetPosition( center, R, D);
+    Point 	center, R, D, I;
+    int u_num, v_num, w_num;
+    if(do_3d){
+	widget3d->GetPosition( center, R, D, I);
+	double u_fac = widget3d->GetRatioR();
+	double v_fac = widget3d->GetRatioD();
+	double w_fac = widget3d->GetRatioI();
+	u_num = (int)(u_fac*100);
+	v_num = (int)(v_fac*100);
+	w_num = (int)(w_fac*100);
+    } else {
+	widget2d->GetPosition( center, R, D);
+	I = center;
+	double u_fac = widget2d->GetRatioR();
+	double v_fac = widget2d->GetRatioD();
+	u_num = (int)(u_fac*100);
+	v_num = (int)(v_fac*100);
+	w_num = 2;
+    }
     Vector v1 = R - center,
-           v2 = D - center;
-         
+    v2 = D - center,
+    v3 = I - center;
+    
     // calculate the corner and the
     // u and v vectors of the cutting plane
-    corner = (center - v1) - v2;
+    Point corner = center - v1 - v2 - v3;
     Vector u = v1 * 2.0,
-           v = v2 * 2.0;
-
+    v = v2 * 2.0,
+    w = v3 * 2.0;
+    
     // create the grid for the cutting plane
-    double u_fac = widget->GetRatioR(),
-           v_fac = widget->GetRatioD(),
-           lenscale = length_scale.get(),
-           widscale = width_scale.get();
-
-    int u_num = (int) (u_fac * 100),
-        v_num = (int) (v_fac * 100);
-
-    cout << "u fac = " << u_fac << "\nv fac = " << v_fac << endl;
-
-    double ld=vfield->longest_dimension();
-    GeomArrows* arrows = new GeomArrows(widscale*ld);
-    Vector unorm=u.normal();
-    Vector vnorm=v.normal();
-    Vector N(Cross(unorm, vnorm));
+    double lenscale = length_scale.get(),
+    widscale = width_scale.get(),
+    headlen = head_length.get();
+    
+    GeomArrows* arrows = new GeomArrows(widscale*ld, 1.0-headlen);
     for (int i = 0; i < u_num; i++)
 	for (int j = 0; j < v_num; j++)
-	{
-	    Point p = corner + u * ((double) i/(u_num-1)) + 
-		v * ((double) j/(v_num-1));
-
-	    // Query the vector field...
-	    Vector v;
-	    if (vfield->interpolate( p, v)){
-		if(have_sfield){
-		    // get the color from cmap for p 	    
-		    MaterialHandle matl;
-		    double sval;
-		    if (ssfield->interpolate( p, sval))
-			matl = cmap->lookup( sval);
-		    else
-		    {
-			matl = outcolor;
+	    for(int k = 0; k < w_num; k++)
+		{
+		    Point p = corner + u * ((double) i/(u_num-1)) + 
+			v * ((double) j/(v_num-1)) +
+			    w * ((double) k/(w_num-1));
+		    
+		    // Query the vector field...
+		    Vector vv;
+		    if (vfield->interpolate( p, vv)){
+			if(have_sfield){
+			    // get the color from cmap for p 	    
+			    MaterialHandle matl;
+			    double sval;
+			    if (ssfield->interpolate( p, sval))
+				matl = cmap->lookup( sval);
+			    else
+				{
+				    matl = outcolor;
+				}
+			    arrows->add(p, vv*lenscale, matl, matl, matl);
+			} else {
+			    arrows->add(p, vv*lenscale);
+			}
 		    }
-		    arrows->add(p, v*lenscale, matl, matl, matl);
-		} else {
-		    arrows->add(p, v*lenscale);
 		}
-	    }
-	}
     grid_id = ogeom->addObj(arrows, module_name);
-
+    
     // delete the old grid/cutting plane
     if (old_grid_id != 0)
 	ogeom->delObj( old_grid_id );
@@ -240,37 +288,46 @@ void Hedgehog::execute()
 void Hedgehog::widget_moved(int last)
 {
     if(last && !abort_flag)
-    {
-	abort_flag=1;
-	want_to_execute();
-    }
+	{
+	    abort_flag=1;
+	    want_to_execute();
+	}
 }
 
 
 void Hedgehog::tcl_command(TCLArgs& args, void* userdata)
 {
     if(args.count() < 2)
-    {
-	args.error("Streamline needs a minor command");
-	return;
-    }
+	{
+	    args.error("Streamline needs a minor command");
+	    return;
+	}
     if(args[1] == "findxy")
-    {
-	need_find=1;
-	want_to_execute();
-    }
+	{
+	    if(type.get() == "2D")
+		need_find2d=1;
+	    else
+		need_find3d=1;
+	    want_to_execute();
+	}
     else if(args[1] == "findyz")
-    {
-	need_find=2;
-	want_to_execute();
-    }
+	{
+	    if(type.get() == "2D")
+		need_find2d=2;
+	    else
+		need_find3d=1;
+	    want_to_execute();
+	}
     else if(args[1] == "findxz")
-    {
-	need_find=3;
-	want_to_execute();
-    }
+	{
+	    if(type.get() == "2D")
+		need_find2d=3;
+	    else
+		need_find3d=1;
+	    want_to_execute();
+	}
     else
-    {
-	Module::tcl_command(args, userdata);
-    }
+	{
+	    Module::tcl_command(args, userdata);
+	}
 }
