@@ -23,7 +23,6 @@ PSELIBS := \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/Core/Math        \
-	Core/Datatypes		         \
 	Core/Exceptions Core/Thread      \
 	Core/Geometry Dataflow/XMLUtil   \
 	Core/Util 			 \

@@ -14,11 +14,11 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MinMax.h>
+#include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/NotFinished.h>
 #include <fstream>
 #include <iostream>
-#include <Core/Datatypes/DenseMatrix.h>
 
 using std::cerr;
 using namespace Uintah;
@@ -267,8 +267,8 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     Matrix3 velGrad,Shear,deformationGradientInc,dispGrad,fbar;
-    DenseMatrix kmat(24,24);
-    DenseMatrix kgeo(24,24);
+    FastMatrix kmat(24, 24);
+    FastMatrix kgeo(24, 24);
     
     Matrix3 Identity;
     
@@ -306,9 +306,11 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
-
-    DenseMatrix B(6,24);
-    DenseMatrix Bnl(3,24);
+    
+    FastMatrix B(6,24);
+    FastMatrix Btrans(24, 6);
+    FastMatrix Bnl(3,24);
+    FastMatrix Bnltrans(24, 3);
     
     IntVector nodes = patch->getNNodes();
     int num_nodes = (nodes.x())*(nodes.y())*(nodes.z())*3;
@@ -351,36 +353,36 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	     << "\t" << d_S[k](2)*oodx[2] << endl;
 #endif
 	
-	B[0][3*k] = d_S[k](0)*oodx[0];
-	B[3][3*k] = d_S[k](1)*oodx[1];
-	B[5][3*k] = d_S[k](2)*oodx[2];
-	B[1][3*k] = 0.;
-	B[2][3*k] = 0.;
-	B[4][3*k] = 0.;
+	B(0, 3*k) = d_S[k](0)*oodx[0];
+	B(3, 3*k) = d_S[k](1)*oodx[1];
+	B(5, 3*k) = d_S[k](2)*oodx[2];
+	B(1, 3*k) = 0.;
+	B(2, 3*k) = 0.;
+	B(4, 3*k) = 0.;
 	
-	B[1][3*k+1] = d_S[k](1)*oodx[1];
-	B[3][3*k+1] = d_S[k](0)*oodx[0];
-	B[4][3*k+1] = d_S[k](2)*oodx[2];
-	B[0][3*k+1] = 0.;
-	B[2][3*k+1] = 0.;
-	B[5][3*k+1] = 0.;
+	B(1, 3*k+1) = d_S[k](1)*oodx[1];
+	B(3, 3*k+1) = d_S[k](0)*oodx[0];
+	B(4, 3*k+1) = d_S[k](2)*oodx[2];
+	B(0, 3*k+1) = 0.;
+	B(2, 3*k+1) = 0.;
+	B(5, 3*k+1) = 0.;
 	
-	B[2][3*k+2] = d_S[k](2)*oodx[2];
-	B[4][3*k+2] = d_S[k](1)*oodx[1];
-	B[5][3*k+2] = d_S[k](0)*oodx[0];
-	B[0][3*k+2] = 0.;
-	B[1][3*k+2] = 0.;
-	B[3][3*k+2] = 0.;
+	B(2, 3*k+2) = d_S[k](2)*oodx[2];
+	B(4, 3*k+2) = d_S[k](1)*oodx[1];
+	B(5, 3*k+2) = d_S[k](0)*oodx[0];
+	B(0, 3*k+2) = 0.;
+	B(1, 3*k+2) = 0.;
+	B(3, 3*k+2) = 0.;
 	
-	Bnl[0][3*k] = d_S[k](0)*oodx[0];
-	Bnl[1][3*k] = 0.;
-	Bnl[2][3*k] = 0.;
-	Bnl[0][3*k+1] = 0.;
-	Bnl[1][3*k+1] = d_S[k](1)*oodx[1];
-	Bnl[2][3*k+1] = 0.;
-	Bnl[0][3*k+2] = 0.;
-	Bnl[1][3*k+2] = 0.;
-	Bnl[2][3*k+2] = d_S[k](2)*oodx[2];
+	Bnl(0, 3*k) = d_S[k](0)*oodx[0];
+	Bnl(1, 3*k) = 0.;
+	Bnl(2, 3*k) = 0.;
+	Bnl(0, 3*k+1) = 0.;
+	Bnl(1, 3*k+1) = d_S[k](1)*oodx[1];
+	Bnl(2, 3*k+1) = 0.;
+	Bnl(0, 3*k+2) = 0.;
+	Bnl(1, 3*k+2) = 0.;
+	Bnl(2, 3*k+2) = d_S[k](2)*oodx[2];
       }
       
       // Find the stressTensor using the displacement gradient
@@ -461,50 +463,50 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       cout << "mubar = " << mubar << " coef1 = " << coef1 << " coef2 = " 
 	   << coef2 << endl;
 #endif
-      DenseMatrix D(6,6);
+      FastMatrix D(6, 6);
       
-      D[0][0] = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(1,1));
-      D[0][1] = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(1,1) + shrTrl(2,2));
-      D[0][2] = coef1 -2.*mubar*1./3. - 2./3.*(shrTrl(1,1) + shrTrl(3,3));
-      D[0][3] =  - 2./3.*(shrTrl(1,2));
-      D[0][4] =  - 2./3.*(shrTrl(1,3));
-      D[0][5] =  - 2./3.*(shrTrl(2,3));
-      D[1][1] = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(2,2));
-      D[1][2] = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(2,2) + shrTrl(3,3));
-      D[1][3] =  - 2./3.*(shrTrl(1,2));
-      D[1][4] =  - 2./3.*(shrTrl(1,3));
-      D[1][5] =  - 2./3.*(shrTrl(2,3));
-      D[2][2] = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(3,3));
-      D[2][3] =  - 2./3.*(shrTrl(1,2));
-      D[2][4] =  - 2./3.*(shrTrl(1,3));
-      D[2][5] =  - 2./3.*(shrTrl(2,3));
-      D[3][3] =  -.5*coef2 + mubar;
-      D[3][4] = 0.;
-      D[3][5] = 0.;
-      D[4][4] =  -.5*coef2 + mubar;
-      D[4][5] = 0.;
-      D[5][5] =  -.5*coef2 + mubar;
+      D(0, 0) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(1,1));
+      D(0, 1) = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(1,1) + shrTrl(2,2));
+      D(0, 2) = coef1 -2.*mubar*1./3. - 2./3.*(shrTrl(1,1) + shrTrl(3,3));
+      D(0, 3) =  - 2./3.*(shrTrl(1,2));
+      D(0, 4) =  - 2./3.*(shrTrl(1,3));
+      D(0, 5) =  - 2./3.*(shrTrl(2,3));
+      D(1, 1) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(2,2));
+      D(1, 2) = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(2,2) + shrTrl(3,3));
+      D(1, 3) =  - 2./3.*(shrTrl(1,2));
+      D(1, 4) =  - 2./3.*(shrTrl(1,3));
+      D(1, 5) =  - 2./3.*(shrTrl(2,3));
+      D(2, 2) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(3,3));
+      D(2, 3) =  - 2./3.*(shrTrl(1,2));
+      D(2, 4) =  - 2./3.*(shrTrl(1,3));
+      D(2, 5) =  - 2./3.*(shrTrl(2,3));
+      D(3, 3) =  -.5*coef2 + mubar;
+      D(3, 4) = 0.;
+      D(3, 5) = 0.;
+      D(4, 4) =  -.5*coef2 + mubar;
+      D(4, 5) = 0.;
+      D(5, 5) =  -.5*coef2 + mubar;
       
-      D[1][0]=D[0][1];
-      D[2][0]=D[0][2];
-      D[2][1]=D[1][2];
-      D[3][0]=D[0][3];
-      D[3][1]=D[1][3];
-      D[3][2]=D[2][3];
-      D[4][0]=D[0][4];
-      D[4][1]=D[1][4];
-      D[4][2]=D[2][4];
-      D[4][3]=D[3][4];
-      D[5][0]=D[0][5];
-      D[5][1]=D[1][5];
-      D[5][2]=D[2][5];
-      D[5][3]=D[3][5];
-      D[5][4]=D[4][5];
+      D(1, 0)=D(0, 1);
+      D(2, 0)=D(0, 2);
+      D(2, 1)=D(1, 2);
+      D(3, 0)=D(0, 3);
+      D(3, 1)=D(1, 3);
+      D(3, 2)=D(2, 3);
+      D(4, 0)=D(0, 4);
+      D(4, 1)=D(1, 4);
+      D(4, 2)=D(2, 4);
+      D(4, 3)=D(3, 4);
+      D(5, 0)=D(0, 5);
+      D(5, 1)=D(1, 5);
+      D(5, 2)=D(2, 5);
+      D(5, 3)=D(3, 5);
+      D(5, 4)=D(4, 5);
       
-      DenseMatrix sig(3,3);
+      FastMatrix sig(3, 3);
       for (int i = 0; i < 3; i++) {
 	for (int j = 0; j < 3; j++) {
-	  sig.put(i,j, (pstress[idx])(i+1,j+1));
+	  sig(i,j)=pstress[idx](i+1,j+1);
 	}
       }
 #if 0
@@ -525,7 +527,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 #if 0
       for (int i = 0; i < 6; i++) {
 	for (int j = 0; j < 6; j++) {
-	  cout << "D[" << i << "][" << j << "]= " << D[i][j] << "\t";
+	  cout << "D(" << i << ", " << j << ")= " << D(i, j) << "\t";
 	}
 	cout << endl;
       }
@@ -544,19 +546,20 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	cout << endl;
       }
 #endif
+      // This could be sped up significantly... - Steve
       // Perform kmat = B.transpose()*D*B*volold
-      DenseMatrix out(24,6);
-      DenseMatrix* Btrans = B.transpose();
-      Mult(out,*Btrans,D);
-      Mult(kmat,out,B);
-      kmat.mult(volold);
+      FastMatrix out(24,6);
+      Btrans.transpose(B);
+      out.multiply(Btrans, D);
+      kmat.multiply(out, B);
+      kmat.multiply(volold);
       
       // Perform kgeo = Bnl.transpose*sig*Bnl*volnew;
-      DenseMatrix out1(24,3);
-      DenseMatrix* Bnltrans = Bnl.transpose();
-      Mult(out1,*Bnltrans,sig);
-      Mult(kgeo,out1,Bnl);
-      kgeo.mult(volnew);
+      FastMatrix out1(24,3);
+      Bnltrans.transpose(Bnl);
+      out1.multiply(Bnltrans, sig);
+      kgeo.multiply(out1, Bnl);
+      kgeo.multiply(volnew);
       
       for (int I = 0; I < 24;I++) {
 	int dofi = dof[I];
@@ -568,7 +571,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	  cout << "kmat[" << I << "][" << J << "]= " << kmat[I][J] << endl;
 	  cout << "kgeo[" << I << "][" << J << "]= " << kgeo[I][J] << endl;
 #endif
-	  KK[dofi][dofj] = KK[dofi][dofj] + (kmat[I][J] + kgeo[I][J]);
+	  KK[dofi][dofj] = KK[dofi][dofj] + (kmat(I, J) + kgeo(I, J));
 #if 0
 	  cout << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
 	       << endl;
@@ -687,10 +690,10 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
        pstress[idx] = Identity*p + shrTrl/J;
 
 
-       DenseMatrix sig(3,3);
+       FastMatrix sig(3, 3);
        for (int i = 0; i < 3; i++) {
 	 for (int j = 0; j < 3; j++) {
-	   sig.put(i,j, (pstress[idx])(i+1,j+1));
+	   sig(i,j)=pstress[idx](i+1,j+1);
 	 }
        }
 
