@@ -336,58 +336,101 @@ sub-networks.  The next section (\secref{Editing a
   Sub-Network}{sec:editsubnet}) explains the use of the sub-network
 editor.
 
-In a sub-network graphic, the CPU time and Progress Bar are
-replaced by the \guibutton{Sub-Network} button.  The sub-network
-editor is activated by pressing button \guibutton{Sub-Network}.
-Pressing button \guibutton{UI} activates control dialogs for all
-modules in the sub-network.  Control dialogs can be activated
+A \guibutton{Sub-Network} button replaces the CPU time and Progress
+Bar in the sub-network graphic.
+% Need a figure here showing the sub-network graphic.
+
+A sub-network's editor is activated by pressing the
+\guibutton{Sub-Network} button.
+
+Pressing button \guibutton{UI} activates control dialogs of all
+modules in a sub-network.  Control dialogs can be activated
 individually in the sub-network editor.
 
-
-\section{Editing a Sub-Network}
-\label{sec:editsubnet}
-
-The sub-network editor works similarly to the NetEdit window.  All
-network editing features of the NetEdit window are available in the
-sub-network editor.  The sub-network editor is activated by pressing a
-sub-network's \guibutton{Sub-Network} button.
-
-In addition, sub-networks can have input and output ports and these
-can be created in the sub-network editor.  Sub-network input ports can
-be created by making a connection between the input port of a module
-(a module in the sub-network) and the top edge of the sub-network
-editor window.  Sub-network output ports can be created by making a
-connection between the output port of a module (a module in the
-sub-network) and the bottom edge of the sub-network editor window.
-
-A sub-network can be renamed by entering the new name into the text
-entry widget labeled \guilabel{Name}.
-
-%% \section{Saving and Reusing Sub-Networks}
-%% \label{sec:savesubnet}
-
-%% A sub-network can be saved for reuse in other networks or
-%% sub-networks.  To save a sub-network, activate the sub-network by
-%% pressing its \guibutton{Sub-Network} button, then press button
-%% \guibutton{Save}.
-
-%% A sub-network can be reused by 
+In a network, a sub-network behaves as does a module.  A sub-network
+has input and/or output ports (orginating from modules within the
+sub-network) that can be connected to modules outside of the
+sub-network.  Each sub-network has a pop-up menu and a set of editable
+notes (see \secref{Editing and Displaying Module
+  Notes}{sec:modnotes}).  A sub-network does not support a log (see
+\secref{Viewing a Module's Log}{sec:viewmodslog}).
 
 \section{Expanding a Sub-Network}
 \label{sec:expsubnet}
 
 Expanding a network reverses the action of menu item \menuitem{Create
-  Sub-Network}.  To expand a sub-network choose menu item
-\menuitem{Expand Sub-Network} from the sub-network's pop-up menu.
-  This action cannot be ``undone.''
+  Sub-Network}---all modules in a sub-network are returned to the
+network containing the sub-network and the sub-network is destroyed.
+This action cannot be undone.
 
+To expand a sub-network choose menu item \menuitem{Expand Sub-Network}
+from the sub-network's pop-up menu.
+
+\section{Editing a Sub-Network}
+\label{sec:editsubnet}
+
+The sub-network editor is activated by pressing a sub-network's
+\guibutton{Sub-Network} button.  The sub-network editor works similarly
+to the NetEdit window.  All network editing features of the NetEdit
+window are available in the sub-network editor---modules can be
+created, connections can be made, \etc{}
+
+Sub-networks have input and/or output ports.  These are created in the
+sub-network editor.  Sub-network input ports are created by making a
+connection between the input port of a module (in the sub-network) and
+the top edge of the sub-network editor window.  Sub-network output
+ports are created by making a connection between the output port of a
+module (in the sub-network) and the bottom edge of the sub-network
+editor window.
+
+A sub-network can be renamed by entering its new name into the
+\guilabel{Name} text entry widget.
+
+\section{Saving a Sub-network}
+\label{sec:savesubnet}
+
+Sub-networks can be saved for reuse in networks and sub-networks.
+
+Sub-networks are saved in the \directory{subnets} directory of \sr{}'s
+build directory, if it exists and is writable (which applies only when
+\sr{} has been built from its source code).  Otherwise, sub-networks
+are saved in the \directory{subnets} directory of a user's home
+directory.
+
+To save a sub-network, press the sub-network's \guibutton{Sub-Network}
+button, which activates the sub-network's editor, then press the
+editor's \guibutton{Save} button.
+
+Saved sub-networks are listed as menu items in the \menu{Sub-network}
+package menu (which is available in the NetEdit window's \menu{File}
+menu and popup menu).
+
+\secref{Loading a Sub-Network}{sec:loadsubnet} gives instructions for
+loading sub-networks into networks and sub-networks.
+
+%% Note:  I don't like the terminology used here.  ``creating''
+%% subnetworks and ``loading'' subnetworks ought to be ``making'' or
+%% ``building'' and ``loading'' ought to be ``instantiating'' or
+%% ``creating''.
+\section{Loading a Sub-Network}
+\label{sec:loadsubnet}
+
+Saved sub-networks are loaded into networks and sub-networks by
+selecting their names from the \menu{Sub-network} package menu.
+Package menus are accessed from the main window's menu bar or from the
+NetEdit frame's pop-up menu.  Unlike other package menus, the
+\menu{Sub-network} menu has no category sub-menus.
+
+A sub-network may be loaded one or more times in a network.  Each time
+a sub-network is loaded a new instance of it is created in the
+network.
 
 \section{Editing and Displaying Module Notes}
 \label{sec:modnotes}
 
-Module notes allow the user to document the purpose of
-each module by attaching notes to each module in the NetEdit window.
-Notes can be displayed or hidden.
+Module notes allow the user to document the purpose of each module by
+attaching notes to each module in the NetEdit window.  Notes can be
+displayed or hidden.
 
 To create or edit module notes, choose menu item \menuitem{Notes} from
 a module's pop-up menu. Enter new notes or edit existing notes in
