@@ -14,6 +14,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/ReductionVariable.h>
 #include <Packages/Uintah/Core/Grid/SoleVariable.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/VarLabelMatlLevel.h>
@@ -227,9 +228,9 @@ void AMRSimulationController::run()
    // the number of levels the regridder can handle .
    // Only do if not restarting
 
-   if (!d_restarting)
+   if (!d_restarting && regridder->isAdaptive())
      while (currentGrid->numLevels() < regridder->maxLevels() &&
-            regridder->flaggedCellsOnFinestLevel(currentGrid)) {
+            regridder->flaggedCellsOnFinestLevel(currentGrid, scheduler)) {
        oldGrid = currentGrid;
        cout << "  DOING ANOTHER INITIALIZATION REGRID!!!!\n";
        currentGrid = regridder->regrid(oldGrid.get_rep(), scheduler, ups);
@@ -682,7 +683,7 @@ AMRSimulationController::initializeErrorEstimate(const ProcessorGroup*,
       CCVariable<int> refineFlag;
       new_dw->allocateAndPut(refineFlag, sharedState->get_refineFlag_label(),
 			     matl, patch);
-      refineFlag.initialize(false);
+      refineFlag.initialize(0);
     }
   }
 }
