@@ -117,6 +117,8 @@ public:
     Array1<IPort*> iports;
     std::map<clString,OPort*> auto_oports;
     std::map<clString,IPort*> auto_iports;
+    char lastportdynamic;
+    iport_maker dynamic_port_maker;
     ModuleHelper* helper;
     int have_own_dispatch;
 
@@ -232,6 +234,10 @@ typedef Module* (*ModuleMaker)(const clString& id);
 
 //
 // $Log$
+// Revision 1.16  2000/12/05 19:08:29  moulding
+// added support for dynamic ports to the auto port facility, although it is not
+// yet fully operational.
+//
 // Revision 1.15  2000/11/21 22:44:30  moulding
 // initial commit of auto-port facility (not yet operational).
 //
