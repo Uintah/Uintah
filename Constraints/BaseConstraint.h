@@ -17,6 +17,7 @@
 
 #include <Constraints/BaseVariable.h>
 #include <Classlib/Array2.h>
+#include <Classlib/String.h>
 
 
 class BaseConstraint {

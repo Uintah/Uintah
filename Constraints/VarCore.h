@@ -17,9 +17,6 @@
 
 #include <Constraints/manifest.h>
 #include <Geometry/Point.h>
-/*#include <Classlib/Array1.h>
-#include <Classlib/Array2.h>
-#include <Classlib/String.h>*/
 
 
 // VarCore is the data of a Variable.  It implements the polymorphism.

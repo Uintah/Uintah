@@ -11,14 +11,34 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-
-#include <stdio.h>
-#include <string.h>
 #include <Constraints/ConstraintSolver.h>
 #include <Classlib/Debug.h>
+#include <stdio.h>
+#include <string.h>
 
 static DebugSwitch cs_debug("ConstraintSolver", "Print");
 static DebugSwitch cs2_debug("ConstraintSolver", "Stack");
+
+
+enum RecurseType { UnInit, RecurseInitial, RecurseNormal, RecurseMax };
+
+typedef unsigned char uchar;
+struct StackItem {
+   inline StackItem() : var(NULL), rtype(UnInit), iter(0) {}
+   inline StackItem( BaseVariable* v ) : var(v), rtype(RecurseInitial), iter(0) {}
+   inline StackItem( BaseVariable* v, const uchar rt, const uchar i ) : var(v), rtype(rt), iter(i) {}
+   inline StackItem( const StackItem& i ) : var(i.var), rtype(i.rtype), iter(i.iter) {}
+   inline ~StackItem() {}
+   
+   StackItem& operator=( const StackItem& i ) { var=i.var; rtype=i.rtype; iter=i.iter; return *this; }
+   int operator==( const StackItem& i ) { return (var==i.var)&&(rtype==i.rtype)&&(iter==i.iter); }
+
+   void print( ostream& os=cout ) { os<<"StackItem:  "<<var->GetName()<<","<<rtype<<","<<iter<<endl; }
+   
+   BaseVariable* var;
+   uchar rtype;
+   uchar iter;
+};
 
 
 ostream& operator<<( ostream& os, StackItem& i ) {
@@ -44,13 +64,15 @@ ostream& operator<<( ostream& os, StackItem& i ) {
 
 
 ConstraintSolver::ConstraintSolver()
-: Epsilon(1E-6), stack(200), NumVariables(0), variables(0), MaxDepth(25)
+: Epsilon(1E-6), stack(200), NumVariables(0), variables(0), MaxDepth(25),
+  changed(0)
 {
 }
 
 
 ConstraintSolver::ConstraintSolver( const Real epsilon )
-: Epsilon(epsilon), stack(200), NumVariables(0), variables(0), MaxDepth(25)
+: Epsilon(epsilon), stack(200), NumVariables(0), variables(0), MaxDepth(25),
+  changed(0)
 {
 }
 
@@ -111,6 +133,8 @@ ConstraintSolver::RemoveVariable( BaseVariable* v )
 void
 ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Scheme scheme )
 {
+   changed = !(var->data.epsilonequal(Epsilon, newValue));
+   
    Index index, index2;
    int abort(0);
    VarCore newval(newValue);

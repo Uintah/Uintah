@@ -15,10 +15,8 @@
 #ifndef SCI_project_Base_Variable_h
 #define SCI_project_Base_Variable_h 1
 
-//#include <Constraints/manifest.h>
 #include <Constraints/VarCore.h>
 #include <Classlib/Array1.h>
-//#include <Classlib/Array2.h>
 #include <Classlib/String.h>
 
 
