@@ -75,10 +75,10 @@ public:
 { return parent::operator[](idx.patch_->getLevelIndex())
     [IntVector(idx.i_,idx.j_,idx.k_)]; } 
   const value_type &operator[](typename LevelMesh::face_index idx) const
-{ return parent::operator[](idx.patch_->getLevelIndex())
+{ return parent::operator[](0)
     [IntVector(idx.i_,0,0)];}
 const value_type &operator[](typename LevelMesh::edge_index idx) const 
-{ return parent::operator[](idx.patch_->getLevelIndex())
+{ return parent::operator[](0)
     [IntVector(idx.i_, 0, 0)]; }
 const value_type &operator[](typename LevelMesh::node_index idx) const
 { return parent::operator[](idx.patch_->getLevelIndex())
@@ -88,10 +88,10 @@ value_type &operator[](typename LevelMesh::cell_index idx)
 { return parent::operator[](idx.patch_->getLevelIndex())
     [IntVector(idx.i_,idx.j_,idx.k_)]; } 
 value_type &operator[](typename LevelMesh::face_index idx)
-{ return parent::operator[](idx.patch_->getLevelIndex())
+{ return parent::operator[](0)
     [IntVector(idx.i_, 0, 0)]; }
 value_type &operator[](typename LevelMesh::edge_index idx)
-{ return parent::operator[](idx.patch_->getLevelIndex())
+{ return parent::operator[](0)
     [IntVector(idx.i_, 0, 0)]; }
 value_type &operator[](typename LevelMesh::node_index idx)
 { return parent::operator[](idx.patch_->getLevelIndex())
@@ -295,12 +295,22 @@ LevelField<Data>::type_name(int n)
 
 
 //! compute the gradient g, at point p
-/* template <>  */
-/* bool LevelField<Matrix3>::get_gradient(Vector &, Point &p); */
+template <> 
+bool LevelField<Matrix3>::get_gradient(Vector &, const Point &p);
 
-/* template <>  */
-/* bool LevelField<Vector>::get_gradient(Vector &, Point &p); */
+template <> 
+bool LevelField<Vector>::get_gradient(Vector &, const Point &p);
+/* template<> */
+/* bool LevelField<Vector>::get_gradient(Vector&, const Point&)  */
+/* { */
+/*   return false; */
+/* } */
 
+/* template<> */
+/* bool LevelField<Matrix3>::get_gradient(Vector&, const Point&)  */
+/* { */
+/*   return false; */
+/* } */
 
 template <class Data>
 bool LevelField<Data>::get_gradient(Vector &g, const Point &p) {
@@ -418,6 +428,7 @@ bool LevelField<Data>::interpolate(Data &g, const Point &p) {
   }
   return true;
 }
+
 
 }
 #endif // Datatypes_LevelField_h

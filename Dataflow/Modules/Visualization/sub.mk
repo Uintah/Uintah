@@ -6,11 +6,6 @@ SRCDIR   := Packages/Uintah/Dataflow/Modules/Visualization
 
 SRCS     += \
 	$(SRCDIR)/GridVisualizer.cc \
-	$(SRCDIR)/TimestepSelector.cc \
-	$(SRCDIR)/ScalarFieldExtractor.cc \
-	$(SRCDIR)/VectorFieldExtractor.cc \
-	$(SRCDIR)/TensorFieldExtractor.cc \
-	$(SRCDIR)/ParticleFieldExtractor.cc \
 	$(SRCDIR)/RescaleColorMapForParticles.cc \
 	$(SRCDIR)/ParticleVis.cc \
 	$(SRCDIR)/RescaleColorMap.cc \
@@ -20,10 +15,6 @@ SRCS     += \
 	$(SRCDIR)/Hedgehog.cc\
 [INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/NodeHedgehog.cc \
-#	$(SRCDIR)/EigenEvaluator.cc \
-#	$(SRCDIR)/ParticleEigenEvaluator.cc \
-#	$(SRCDIR)/TensorFieldOperator.cc \
-#	$(SRCDIR)/TensorParticlesOperator.cc
 
 PSELIBS := \
 	Dataflow/Network Dataflow/Ports \
@@ -38,7 +29,8 @@ PSELIBS := \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/Core/Datatypes   \
-	Packages/Uintah/CCA/Components/MPM
+	Packages/Uintah/CCA/Components/MPM \
+	Packages/Uintah/Dataflow/Modules/Selectors
 
 LIBS := $(XML_LIBRARY) -lm
 

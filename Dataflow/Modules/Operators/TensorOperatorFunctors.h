@@ -9,9 +9,8 @@
 
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 
-namespace Uintah {
-
 /* Functors used by TensorFieldOperator and TensorParticlesOperator */
+using Uintah::Matrix3;
 
 struct TensorElementExtractionOp
 {
@@ -98,6 +97,5 @@ inline pair<double, Vector> EigenOp::operator()(Matrix3 M)
 }
 */
 
-} // end namespace Uintah
 
 

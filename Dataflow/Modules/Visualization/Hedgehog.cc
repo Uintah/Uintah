@@ -26,6 +26,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
+#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Dataflow/Widgets/ScaledBoxWidget.h>
 #include <Dataflow/Widgets/ScaledFrameWidget.h>
 
@@ -39,7 +41,6 @@ using std::cerr;
 #define CP_SURFACE 1
 #define CP_CONTOUR 2
 
-using namespace SCIRun;
 
 namespace Uintah {
 /**************************************
@@ -81,6 +82,9 @@ WARNING
 
 
 ****************************************/
+
+using namespace SCIRun;
+
 
 class Hedgehog : public Module {
   FieldIPort *invectorfield;
@@ -146,9 +150,9 @@ public:
         //                                  findxz
   virtual void tcl_command(TCLArgs&, void*);
   bool interpolate(FieldHandle f, const Point& p, Vector& val);
-  bool interpolate(FieldHandle sfld_, const Point& p, double& val);
-  bool get_dimensions(FieldHandle f, int& nx, int& ny, int& nz);
-  template <class Mesh>  bool get_dimensions(Mesh, int&, int&, int&);
+  bool interpolate(FieldHandle f, const Point& p, double& val);
+//  bool get_dimensions(FieldHandle f, int& nx, int& ny, int& nz);
+//  template <class Mesh>  bool get_dimensions(Mesh, int&, int&, int&);
 
 };
 
@@ -217,9 +221,15 @@ void Hedgehog::execute()
   if (!invectorfield->get( vfield ))
     return;
 
+
   if( vfield->get_type_name(1) != "Vector" ){
     cerr<<"First field must be a Vector field.\n";
     return;
+  }
+  
+  if(vfield->get_type_name(0) != "LevelField" &&
+     vfield->get_type_name(0) != "LatticeVol" ){
+    cerr<<"Not a LatticeVol or LevelField\n";
   }
 
 
@@ -464,98 +474,169 @@ void Hedgehog::tcl_command(TCLArgs& args, void* userdata)
 	{
 	    Module::tcl_command(args, userdata);
 	}
+
 }
 
-template <class Mesh>
-bool 
-Hedgehog::get_dimensions(Mesh, int&, int&, int&)
-  {
-    return false;
-  }
+// template <class Mesh>
+// bool 
+// Hedgehog::get_dimensions(Mesh, int&, int&, int&)
+// {
+//   return false;
+// }
 
-template<> 
-bool Hedgehog::get_dimensions(LevelMeshHandle m,
-				 int& nx, int& ny, int& nz)
-  {
-    nx = m->get_nx();
-    ny = m->get_ny();
-    nz = m->get_nz();
-    return true;
-  }
+// template<> 
+// bool Hedgehog::get_dimensions(LevelMeshHandle m,
+// 				 int& nx, int& ny, int& nz)
+// {
+//   nx = m->get_nx();
+//   ny = m->get_ny();
+//   nz = m->get_nz();
+//   return true;
+// }
 
-bool
-Hedgehog::get_dimensions(FieldHandle texfld_,  int& nx, int& ny, int& nz)
+// template<> 
+// bool Hedgehog::get_dimensions(LatVolMeshHandle m,
+// 				 int& nx, int& ny, int& nz)
+// {
+//   nx = m->get_nx();
+//   ny = m->get_ny();
+//   nz = m->get_nz();
+//   return true;
+// }
+
+// bool
+// Hedgehog::get_dimensions(FieldHandle texfld_,  int& nx, int& ny, int& nz)
+// {
+//   const string type = texfld_->get_type_name(1);
+//   if( texfld_->get_type_name(0) == "LevelField" ){
+//     LevelMeshHandle mesh_;
+//     if (type == "Vector") {
+//       LevelField<Vector> *fld =
+// 	dynamic_cast<LevelField<Vector>*>(texfld_.get_rep());
+//       mesh_ = fld->get_typed_mesh();
+//     } else {
+//       cerr << "Hedgehog error - unknown LevelField type: " << type << endl;
+//       return false;
+//     }
+//     return get_dimensions( mesh_, nx, ny, nz );
+//   } else if(texfld_->get_type_name(0) == "LatticeVol"){
+//     LatVolMeshHandle mesh_;
+//     if (type == "Vector") {
+//       LatticeVol<Vector> *fld =
+// 	dynamic_cast<LatticeVol<Vector>*>(texfld_.get_rep());
+//       mesh_ = fld->get_typed_mesh();
+//     } else {
+//       cerr << "Hedgehog error - unknown LatticeVol type: " << type << endl;
+//       return false;
+//     }
+//     return get_dimensions( mesh_, nx, ny, nz );
+//   } else {
+//     return false;
+//   }
+// }
+
+bool  
+Hedgehog::interpolate(FieldHandle vfld, const Point& p, Vector& val)
 {
-  LevelMeshHandle mesh_;
-  const string type = texfld_->get_type_name(1);
-  if (type == "Vector") {
-    LevelField<Vector> *fld =
-      dynamic_cast<LevelField<Vector>*>(texfld_.get_rep());
-    mesh_ = fld->get_typed_mesh();
-  } else if (type == "double") {
-    LevelField<double> *fld =
-      dynamic_cast<LevelField<double>*>(texfld_.get_rep());
-    mesh_ = fld->get_typed_mesh();
-  } else if (type == "float") {
-    LevelField<float> *fld =
-      dynamic_cast<LevelField<float>*>(texfld_.get_rep());
-    mesh_ = fld->get_typed_mesh();
-  } else if (type == "long_int") {
-    LevelField<unsigned int> *fld =
-      dynamic_cast<LevelField<unsigned int>*>(texfld_.get_rep());
-    mesh_ = fld->get_typed_mesh();
+  const string field_type = vfld->get_type_name(0);
+  const string type = vfld->get_type_name(1);
+  if( field_type == "LevelField"){
+    if (type == "Vector") {
+      if( LevelField<Vector> *fld =
+	dynamic_cast<LevelField<Vector>*>(vfld.get_rep())){
+	return fld->interpolate(val ,p);
+      } else {
+	return false;
+      }
+    } else {
+      cerr << "Uintah::Hedgehog::interpolate:: error - unknown Field type: " << type << endl;
+      return false;
+    }
   } else {
-    cerr << "Hedgehog error - unknown LevelField or Vector type: " << type << endl;
+    if( field_type == "LatticeVol"){
+      if (type == "Vector") {
+	LatticeVol<Vector> *fld =
+	  dynamic_cast<LatticeVol<Vector>*>(vfld.get_rep());
+	return fld->interpolate(val ,p);
+      } else {
+	cerr << "Uintah::Hedgehog::interpolate:: error - unknown Field type: " << type << endl;
+	return false;
+      }
+    }    
     return false;
   }
-  return get_dimensions( mesh_, nx, ny, nz );
 }
 
 
 bool  
-Hedgehog::interpolate(FieldHandle vfld_, const Point& p, Vector& val)
+Hedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
 {
-  const string field_type = vfld_->get_type_name(0);
-  const string type = vfld_->get_type_name(1);
-  if (type == "Vector") {
-    LevelField<Vector> *fld =
-      dynamic_cast<LevelField<Vector>*>(vfld_.get_rep());
-    return fld->interpolate(val ,p);
+  const string field_type = sfld->get_type_name(0);
+  const string type = sfld->get_type_name(1);
+  if( sfld->get_type_name(0) == "LevelField" ){
+    if (type == "double") {
+      if(LevelField<double> *fld =
+	dynamic_cast<LevelField<double>*>(sfld.get_rep())){;
+	return fld->interpolate(val ,p);
+      } else {
+	return false;
+      }
+    } else if (type == "float") {
+      float result;
+      bool success;
+      LevelField<float> *fld =
+	dynamic_cast<LevelField<float>*>(sfld.get_rep());
+      success = fld->interpolate(result ,p);   
+      val = (double)result;
+      return success;
+    } else if (type == "long") {
+      long result;
+      bool success;
+      LevelField<long> *fld =
+	dynamic_cast<LevelField<long>*>(sfld.get_rep());
+      success =  fld->interpolate(result,p);
+      val = (double)result;
+      return success;
+    } else {
+      cerr << "Uintah::Hedgehog::interpolate:: error - unimplemented Field type: " << type << endl;
+      return false;
+    }
+  } else if( sfld->get_type_name(0) == "LatticeVol" ){
+    if (type == "double") {
+      LatticeVol<double> *fld =
+	dynamic_cast<LatticeVol<double>*>(sfld.get_rep());
+      return fld->interpolate(val ,p);
+    } else if (type == "float") {
+      float result;
+      bool success;
+      LatticeVol<float> *fld =
+	dynamic_cast<LatticeVol<float>*>(sfld.get_rep());
+      success = fld->interpolate(result ,p);   
+      val = (double)result;
+      return success;
+    } else if (type == "long") {
+      long result;
+      bool success;
+      LatticeVol<long> *fld =
+	dynamic_cast<LatticeVol<long>*>(sfld.get_rep());
+      success =  fld->interpolate(result,p);
+      val = (double)result;
+      return success;
+    } else if (type == "int") {
+      int result;
+      bool success;
+      LatticeVol<int> *fld =
+	dynamic_cast<LatticeVol<int>*>(sfld.get_rep());
+      success =  fld->interpolate(result,p);
+      val = (double)result;
+      return success;
+    } else {
+      cerr << "Uintah::Hedgehog::interpolate:: error - unimplemented Field type: " << type << endl;
+      return false;
+    }
   } else {
-    cerr << "Uintah::Hedgehog::interpolate:: error - unknow Field type: " << type << endl;
     return false;
   }
-  
 }
-bool  
-Hedgehog::interpolate(FieldHandle sfld_, const Point& p, double& val)
-{
-  const string field_type = sfld_->get_type_name(0);
-  const string type = sfld_->get_type_name(1);
-  if (type == "double") {
-    LevelField<double> *fld =
-      dynamic_cast<LevelField<double>*>(sfld_.get_rep());
-    return fld->interpolate(val ,p);
-  } else if (type == "float") {
-    float result;
-    bool success;
-    LevelField<float> *fld =
-      dynamic_cast<LevelField<float>*>(sfld_.get_rep());
-    success = fld->interpolate(result ,p);   
-    val = (double)result;
-    return success;
-  } else if (type == "long") {
-    long result;
-    bool success;
-    LevelField<long> *fld =
-      dynamic_cast<LevelField<long>*>(sfld_.get_rep());
-    success =  fld->interpolate(result,p);
-    val = (double)result;
-    return success;
-  } else {
-    cerr << "Uintah::Hedgehog::interpolate:: error - unknown Field type: " << type << endl;
-    return false;
-  }
-  
-}
+
 } // End namespace Uintah

@@ -1,6 +1,6 @@
 
-itcl_class Uintah_Visualization_TensorParticlesOperator {
-    inherit Uintah_Visualization_TensorOperator
+itcl_class Uintah_Operators_TensorParticlesOperator {
+    inherit Uintah_Operators_TensorOperator
 
     constructor {config} {
 	set name TensorParticlesOperator

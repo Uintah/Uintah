@@ -3,7 +3,9 @@
 SRCDIR := Packages/Uintah/Dataflow/Modules
 
 SUBDIRS := \
-	$(SRCDIR)/Readers       \
+	$(SRCDIR)/Operators    \
+	$(SRCDIR)/Selectors    \
+	$(SRCDIR)/DataIO       \
 	$(SRCDIR)/Visualization \
 #[INSERT NEW CATEGORY DIR HERE]
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../../doc/ReferenceGuide/component.dtd">
 
-<component name="ArchiveReader" category="Readers">
+<component name="ArchiveReader" category="DataIO">
   <overview>
     <authors>
       <author>Packages/KurtZimmerman</author>

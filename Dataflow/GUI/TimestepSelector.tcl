@@ -22,7 +22,7 @@
 
 catch {rename TimestepSelector ""}
 
-itcl_class Uintah_Visualization_TimestepSelector { 
+itcl_class Uintah_Selectors_TimestepSelector { 
     inherit Module 
 
     constructor {config} { 

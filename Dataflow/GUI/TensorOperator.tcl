@@ -1,5 +1,5 @@
 
-itcl_class Uintah_Visualization_TensorOperator {
+itcl_class Uintah_Operators_TensorOperator {
     inherit Module
 
     method set_defaults {} {
