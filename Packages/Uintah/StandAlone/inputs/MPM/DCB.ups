@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
-<!-- @version: Updated 4/6/03-->
+<!-- @version: Updated 8/4/03-->
 <Uintah_specification>
 
    <Meta>
@@ -8,7 +8,7 @@
    </Meta>
 
    <Time>
-	<maxTime>1.2</maxTime>
+	<maxTime>0.8</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.001</delt_max>
@@ -16,7 +16,7 @@
    </Time>
    <DataArchiver>
         <filebase>DCB.uda</filebase>
-	<outputInterval>.024</outputInterval>
+	<outputInterval>.02</outputInterval>
 	<save label = "KineticEnergy"/>
 	<save label = "TotalMass"/>
 	<save label = "StrainEnergy"/>
@@ -29,7 +29,7 @@
 	<save label = "g.mass"/>
 	<save label = "g.stressFS"/>
 
-	<checkpoint cycle = "2" interval = "0.01"/>
+	<checkpoint cycle = "2" interval = "0.2"/>
    </DataArchiver>
 
     <MPM>
