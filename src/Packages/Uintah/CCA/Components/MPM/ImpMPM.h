@@ -230,6 +230,12 @@ private:
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
+  void getDisplacementIncrement(const ProcessorGroup*,
+				const PatchSubset* patches,
+				const MaterialSubset* matls,
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw);
+
 
   void updateGridKinematics(           const ProcessorGroup*,
                                        const PatchSubset* patches,
@@ -304,6 +310,9 @@ private:
 
   void scheduleSolveForDuCG(                   SchedulerP&,const PatchSet*,
                                                const MaterialSet*);
+
+  void scheduleGetDisplacementIncrement(SchedulerP&, const PatchSet*,
+					const MaterialSet*);
 
   void scheduleComputeAcceleration(            SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
