@@ -29,7 +29,6 @@ SRCS := \
 	$(SRCDIR)/ChooseNrrd.tcl\
 	$(SRCDIR)/EditTupleAxis.tcl\
 	$(SRCDIR)/FieldToNrrd.tcl\
-	$(SRCDIR)/HDF5DataReader.tcl\
 	$(SRCDIR)/NrrdInfo.tcl\
 	$(SRCDIR)/NrrdSetProperty.tcl\
 	$(SRCDIR)/NrrdReader.tcl\
