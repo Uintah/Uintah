@@ -26,6 +26,7 @@ SRCS     += \
 	$(SRCDIR)/DebugStream.cc \
 	$(SRCDIR)/DynamicLoader.cc \
 	$(SRCDIR)/Endian.cc \
+	$(SRCDIR)/SizeTypeConvert.cc \
 	$(SRCDIR)/MacroSubstitute.cc \
 	$(SRCDIR)/RCParse.cc \
 	$(SRCDIR)/RWS.cc \
