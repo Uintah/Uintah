@@ -42,6 +42,7 @@ public:
 	GeometryFlushViews,
 	GeometryGetData,
 	GeometryGetNRoe,
+	GeometrySetView,
 
 	GeometryPick,
 	GeometryRelease,
@@ -70,6 +71,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/12/03 00:36:07  dmw
+// more files for the setView message
+//
 // Revision 1.3  1999/08/26 23:56:07  moulding
 // changed SCICORESHARE to PSECORESHARE
 //

@@ -128,6 +128,7 @@ public:
 
     int getNRoe();
     GeometryData* getData(int which_roe, int mask);
+    void setView(int which_roe, View view);
 };
 
 } // End namespace Datatypes
@@ -135,6 +136,9 @@ public:
 
 //
 // $Log$
+// Revision 1.7  1999/12/03 00:36:09  dmw
+// more files for the setView message
+//
 // Revision 1.6  1999/09/16 23:03:49  mcq
 // Fixed a few little bugs, hopefully didn't introduce more.  Started ../doc
 //
