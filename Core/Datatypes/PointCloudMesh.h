@@ -154,12 +154,10 @@ public:
   { points_[index] = point; }
 
   //! use these to build up a new PointCloud mesh
-  Node::index_type add_node(Point p)
-  { points_.push_back(p); return points_.size()-1; }
-
+  Node::index_type add_node(const Point &p) { return add_point(p); }
   Node::index_type add_point(const Point &p);
 
-  MeshHandle clip(Clipper &c);
+  virtual MeshHandle clip(Clipper &c);
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
