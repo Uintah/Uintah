@@ -25,10 +25,8 @@
 #include <Core/Geometry/Point.h>
 #include <iostream>
 
-using std::cerr;
-
 namespace Kurt {
-
+using std::cerr;
 using SCIRun::ColorMapHandle;
 using SCIRun::FieldHandle;
 using SCIRun::Point;

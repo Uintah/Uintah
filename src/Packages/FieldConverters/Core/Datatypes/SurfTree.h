@@ -38,8 +38,8 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
 //#include <stdlib.h> // For size_t
-using namespace SCIRun;
 namespace FieldConverters {
+using namespace SCIRun;
 
 typedef struct SurfInfo {
   string name;  		// names of surfaces
