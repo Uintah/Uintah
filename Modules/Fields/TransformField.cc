@@ -5,84 +5,91 @@
  *   David Weinstein
  *   Department of Computer Science
  *   University of Utah
- *   December 1995
+ *   March 1999
  *
- *  Copyright (C) 1995 SCI Group
+ *  Copyright (C) 1999 SCI Group
  */
 
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Dataflow/Module.h>
+#include <Datatypes/Matrix.h>
+#include <Datatypes/MatrixPort.h>
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Geometry/BBox.h>
-#include <Math/Expon.h>
-#include <Math/MusilRNG.h>
-#include <Math/Trig.h>
 #include <TCL/TCLvar.h>
 #include <iostream.h>
 #include <stdio.h>
 #include <Malloc/Allocator.h>
 
-static void buildRotateMatrix(double rm[][3], double angle, const Vector& axis) {
-    // From Foley and Van Dam, Pg 227
-    // NOTE: Element 0,1 is wrong in the text!
-    double sintheta=Sin(angle);
-    double costheta=Cos(angle);
-    double ux=axis.x();
-    double uy=axis.y();
-    double uz=axis.z();
-    rm[0][0]=ux*ux+costheta*(1-ux*ux);
-    rm[0][1]=ux*uy*(1-costheta)-uz*sintheta;
-    rm[0][2]=uz*ux*(1-costheta)+uy*sintheta;
-    rm[1][0]=ux*uy*(1-costheta)+uz*sintheta;
-    rm[1][1]=uy*uy+costheta*(1-uy*uy);
-    rm[1][2]=uy*uz*(1-costheta)-ux*sintheta;
-    rm[2][0]=uz*ux*(1-costheta)-uy*sintheta;
-    rm[2][1]=uy*uz*(1-costheta)+ux*sintheta;
-    rm[2][2]=uz*uz+costheta*(1-uz*uz);
+static Point transformPt(double m[4][4], const Point& p) {
+    double pIn[4];
+    double pOut[4];
+    pIn[0]=p.x(); pIn[1]=p.y(); pIn[2]=p.z(); pIn[3]=1;
+    pOut[0]=pOut[1]=pOut[2]=pOut[3]=0;
+
+    for (int i=0; i<4; i++)
+	for (int j=0; j<4; j++)
+	    pOut[i] += m[i][j]*pIn[j];
+
+    return Point(pOut[0]/pOut[3], pOut[1]/pOut[3], pOut[2]/pOut[3]);
 }
 
-static Vector rotateVector(const Vector& v_r, double rm[][3]) {
-    return Vector(v_r.x()*rm[0][0]+v_r.y()*rm[0][1]+v_r.z()*rm[0][2],
-		  v_r.x()*rm[1][0]+v_r.y()*rm[1][1]+v_r.z()*rm[1][2],
-		  v_r.x()*rm[2][0]+v_r.y()*rm[2][1]+v_r.z()*rm[2][2]);
+static void buildTransformMatrix(double m[4][4], MatrixHandle mH) {
+    for (int i=0; i<4; i++)
+	for (int j=0; j<4; j++)
+	    m[i][j]=(*mH.get_rep())[i][j];
 }
 
-// transform a pt by pushing it though a rotation matrix (M) and adding a
-// displacement Vector (v)
-static Point transformPt(double m[3][3], const Point& p, const Vector& v, double sx,
-		  double sy, double sz) {
-    return Point((p.x()*m[0][0]+p.y()*m[0][1]+p.z()*m[0][2])*sx+v.x(),
-		 (p.x()*m[1][0]+p.y()*m[1][1]+p.z()*m[1][2])*sy+v.y(),
-		 (p.x()*m[2][0]+p.y()*m[2][1]+p.z()*m[2][2])*sz+v.z());
-}
+static void buildInverseMatrix(double mA[4][4], double mI[4][4]) {
+    double a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p;
+    a=mA[0][0]; b=mA[0][1]; c=mA[0][2]; d=mA[0][3];
+    e=mA[1][0]; f=mA[1][1]; g=mA[1][2]; h=mA[1][3];
+    i=mA[2][0]; j=mA[2][1]; k=mA[2][2]; l=mA[2][3];
+    m=mA[3][0]; n=mA[3][1]; o=mA[3][2]; p=mA[3][3];
 
+    double q=a*f*k*p - a*f*l*o - a*j*g*p + a*j*h*o + a*n*g*l - a*n*h*k
+	- e*b*k*p + e*b*l*o + e*j*c*p - e*j*d*o - e*n*c*l + e*n*d*k
+	+ i*b*g*p - i*b*h*o - i*f*c*p + i*f*d*o + i*n*c*h - i*n*d*g
+	- m*b*g*l + m*b*h*k + m*f*c*l - m*f*d*k - m*j*c*h + m*j*d*g;
+
+    if (q<0.000000001) {
+	mI[0][0]=mI[1][1]=mI[2][2]=mI[3][3]=1;
+	mI[1][0]=mI[1][2]=mI[1][3]=0;
+	mI[2][0]=mI[2][1]=mI[2][3]=0;
+	mI[3][0]=mI[3][1]=mI[3][2]=0;
+	cerr << "ERROR - matrix is singular!!!\n";
+	return;
+    }
+    mI[0][0]=(f*k*p - f*l*o - j*g*p + j*h*o + n*g*l - n*h*k)/q;
+    mI[0][1]=-(b*k*p - b*l*o - j*c*p + j*d*o + n*c*l - n*d*k)/q;
+    mI[0][2]=(b*g*p - b*h*o - f*c*p + f*d*o + n*c*h - n*d*g)/q;
+    mI[0][3]=-(b*g*l - b*h*k - f*c*l + f*d*k + j*c*h - j*d*g)/q;
+
+    mI[1][0]=-(e*k*p - e*l*o - i*g*p + i*h*o + m*g*l - m*h*k)/q;
+    mI[1][1]=(a*k*p - a*l*o - i*c*p + i*d*o + m*c*l - m*d*k)/q;
+    mI[1][2]=-(a*g*p - a*h*o - e*c*p + e*d*o + m*c*h - m*d*g)/q;
+    mI[1][3]=(a*g*l - a*h*k - e*c*l + e*d*k + i*c*h - i*d*g)/q;
+
+    mI[2][0]=(e*j*p - e*l*n - i*f*p + i*h*n + m*f*l - m*h*j)/q;
+    mI[2][1]=-(a*j*p - a*l*n - i*b*p + i*d*n + m*b*l - m*d*j)/q;
+    mI[2][2]=(a*f*p - a*h*n - e*b*p + e*d*n + m*b*h - m*d*f)/q;
+    mI[2][3]=-(a*f*l - a*h*j - e*b*l + e*d*j + i*b*h - i*d*f)/q;
+
+    mI[3][0]=-(e*j*o - e*k*n - i*f*o + i*g*n + m*f*k - m*g*j)/q;
+    mI[3][1]=(a*j*o - a*k*n - i*b*o + i*c*n + m*b*k - m*c*j)/q;
+    mI[3][2]=-(a*f*o - a*g*n - e*b*o + e*c*n + m*b*g - m*c*f)/q;
+    mI[3][3]=(a*f*k - a*g*j - e*b*k + e*c*j + i*b*g - i*c*f)/q;
+}
+    
 class TransformField : public Module {
     ScalarFieldIPort *iport;
+    MatrixIPort *imat;
     ScalarFieldOPort *oport;
-    TCLdouble rx, ry, rz, th;
-    TCLdouble tx, ty, tz;
-    TCLdouble scale, scalex, scaley, scalez;
-    TCLint flipx, flipy, flipz;
-    TCLint origin;
     ScalarFieldHandle osfh;
-    double last_rx;
-    double last_ry;
-    double last_rz;
-    double last_th;
-    double last_tx;
-    double last_ty;
-    double last_tz;
-    double last_scale;
-    double last_scalex;
-    double last_scaley;
-    double last_scalez;
-    int last_flipx;
-    int last_flipy;
-    int last_flipz;
-    int last_origin;
-    int generation;
+    int matGen;
+    int sfGen;
 public:
     TransformField(const clString& id);
     TransformField(const TransformField&, int deep);
@@ -101,41 +108,19 @@ Module* make_TransformField(const clString& id)
 static clString module_name("TransformField");
 
 TransformField::TransformField(const clString& id)
-: Module("TransformField", id, Source),
-  rx("rx", id, this), ry("ry", id, this), rz("rz", id, this), 
-  th("th", id, this),
-  tx("tx", id, this), ty("ty", id, this), tz("tz", id, this),
-  scalex("scalex", id, this), scaley("scaley", id, this), 
-  scalez("scalez", id, this), 
-  scale("scale", id, this),
-  flipx("flipx", id, this), flipy("flipy", id, this), 
-  flipz("flipz", id, this), origin("origin", id, this),
-  generation(-1), last_rx(0), last_ry(0), last_rz(0), last_th(0),
-  last_tx(0), last_ty(0), last_tz(0), last_scale(0),	
-  last_scalex(0), last_scaley(0), last_scalez(0),
-  last_flipx(0), last_flipy(0), last_flipz(0), last_origin(0)
+: Module("TransformField", id, Source), matGen(-1), sfGen(-1)
 {
     // Create the input port
     iport = scinew ScalarFieldIPort(this, "SFRG", ScalarFieldIPort::Atomic);
     add_iport(iport);
+    imat = scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
+    add_iport(imat);
     oport = scinew ScalarFieldOPort(this, "SFRG",ScalarFieldIPort::Atomic);
     add_oport(oport);
 }
 
 TransformField::TransformField(const TransformField& copy, int deep)
-: Module(copy, deep),
-  rx("rx", id, this), ry("ry", id, this), rz("rz", id, this),
-  th("th", id, this),
-  tx("tx", id, this), ty("ty", id, this), tz("tz", id, this),
-  scalex("scalex", id, this), scaley("scaley", id, this), 
-  scalez("scalez", id, this), 
-  flipx("flipx", id, this), flipy("flipy", id, this), 
-  flipz("flipz", id, this), origin("origin", id, this),
-  scale("scale", id, this),
-  generation(-1), last_rx(0), last_ry(0), last_rz(0), last_th(0),
-  last_tx(0), last_ty(0), last_tz(0), last_scale(0),
-  last_scalex(0), last_scaley(0), last_scalez(0), 
-  last_flipx(0), last_flipy(0), last_flipz(0), last_origin(0)
+: Module(copy, deep), matGen(-1), sfGen(-1)
 {
     NOT_FINISHED("TransformField::TransformField");
 }
@@ -157,70 +142,40 @@ void TransformField::execute()
     ScalarFieldRG* isfrg=sfIH->getRG();
     if (!isfrg) return;
 
-    double rxx=rx.get();
-    double ryy=ry.get();
-    double rzz=rz.get();
-    double rtt=th.get();
-    double txx=tx.get();
-    double tyy=ty.get();
-    double tzz=tz.get();
-    double new_scale=scale.get();
-    double s=pow(10.,new_scale);
-    double new_scalex=scalex.get();
-    double sx=pow(10.,new_scalex)*s;
-    double new_scaley=scaley.get();
-    double sy=pow(10.,new_scaley)*s;
-    double new_scalez=scalez.get();
-    double sz=pow(10.,new_scalez)*s;
-    int fx=flipx.get();
-    int fy=flipy.get();
-    int fz=flipz.get();
-    int orig=origin.get();
+    MatrixHandle mIH;
+    imat->get(mIH);
+    if (!mIH.get_rep()) return;
 
-    if (generation == isfrg->generation && 
-	rxx==last_rx && ryy==last_ry && rzz==last_rz && rtt==last_th &&
-	txx==last_rx && tyy==last_ry && tzz==last_rz && 
-	fx==last_flipx && fy==last_flipy && fz==last_flipz && 
-	new_scale == last_scale && orig==last_origin) {
-	oport->send(osfh);
-	return;
-    }
+    if (matGen == mIH->generation && sfGen == sfIH->generation) return;
 
-    last_rx = rxx;
-    last_ry = ryy;
-    last_rz = rzz;
-    last_th = rtt;
-    last_tx = txx;
-    last_ty = tyy;
-    last_tz = tzz;
-    last_scale = new_scale;
-    last_scalex = new_scalex;
-    last_scaley = new_scaley;
-    last_scalez = new_scalez;
-    last_flipx = fx;
-    last_flipy = fy;
-    last_flipz = fz;
-    last_origin = orig;
-    Vector axis(rxx,ryy,rzz);
-    if (!axis.length2()) axis.x(1);
-    axis.normalize();
+    if ((mIH->nrows() != 4) || (mIH->ncols() != 4)) return;
 
-    // rotate about the center!
+    ScalarFieldRG* sf=scinew ScalarFieldRG;
+    osfh=sf;
 
-    if (fx) sx*=-1;
-    if (fy) sy*=-1;
-    if (fz) sz*=-1;
+    int nx=isfrg->nx;
+    int ny=isfrg->ny;
+    int nz=isfrg->nz;
 
+    sf->resize(nx, ny, nz);
     Point min, max;
     isfrg->get_bounds(min, max);
-    Point c(Interpolate(min, max, 0.5));
-    Vector v(c.vector());
-    Vector tr(txx,tyy,tzz);
+    sf->set_bounds(min, max);
 
-    double m[3][3];
-    buildRotateMatrix(m, rtt, axis);
+    double m[4][4], mInv[4][4];
+    buildTransformMatrix(m, mIH);
+    buildInverseMatrix(m, mInv);
 
-    // make the new ScalarField here!
+    for (int i=0; i<nx; i++)
+	for (int j=0; j<ny; j++)
+	    for (int k=0; k<nz; k++) {
+		Point oldp(isfrg->get_point(i,j,k));
+		Point newp(transformPt(mInv, oldp));
+		double val;
+		if (!isfrg->interpolate(newp, val)) val=0;
+		sf->grid(i,j,k)=val;
+	    }
+
     oport->send(osfh);
     return;
 }
