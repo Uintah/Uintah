@@ -182,7 +182,8 @@ parse_args( int argc, char *argv[] )
           if (stat(arg.c_str(),&buf) < 0)
             {
               std::cerr << "Couldn't find net file " << arg
-                        << ".\nNo such file or directory.  Exiting." << std::endl;
+                        << ".\nNo such file or directory.  Exiting." 
+			<< std::endl;
               exit(0);
             }
 
@@ -250,6 +251,84 @@ public:
   }
 };
 
+// Services start up... 
+void
+start_eai() {
+  // Create a database of all available services. The next piece of code
+  // Scans both the SCIRun as well as the Packages directories to find
+  // Services that need to be started. Services allow communication with
+  // thirdparty software and are Threads that run asychronicly with
+  // with the rest of SCIRun. Since the thirdparty software may be running
+  // on a different platform it allows for connecting to remote machines
+  // and running the service on a different machine 
+  ServiceDBHandle servicedb = scinew ServiceDB;     
+  // load all services and find all makers
+  servicedb->loadpackages();
+  // activate all services
+  servicedb->activateall();
+  
+  // Services are started and created by the ServiceManager, 
+  // which will be launched here
+  // Two competing managers will be started, 
+  // one for purely internal usage and one that
+  // communicates over a socket. 
+  // The latter will only be created if a port is set.
+  // If the current instance of SCIRun should not provide any services 
+  // to other instances of SCIRun over the internet, 
+  // the second manager will not be launched
+  
+  const char *chome = sci_getenv("HOME");
+  string scidir("");
+  if (chome)
+    scidir = chome+string("/SCIRun/");
+
+  // A log file is not necessary but handy for debugging purposes
+  ServiceLogHandle internallogfile = 
+    scinew ServiceLog(scidir+"scirun_internal_servicemanager.log");
+  
+  IComAddress internaladdress("internal","servicemanager");
+  ServiceManager* internal_service_manager = 
+    scinew ServiceManager(servicedb, internaladdress, internallogfile); 
+  Thread* t_int = 
+    scinew Thread(internal_service_manager, "internal service manager",
+		  0, Thread::NotActivated);
+  t_int->setStackSize(1024*20);
+  t_int->activate(false);
+  t_int->detach();
+  
+  
+  // Use the following environment setting to switch on IPv6 support
+  // Most machines should be running a dual-host stack for the internet
+  // connections, so it should not hurt to run in IPv6 mode. In most case
+  // ipv4 address will work as well.
+  // It might be useful
+  std::string ipstr(sci_getenv_p("SCIRUN_SERVICE_IPV6")?"ipv6":"");
+  
+  // Start an external service as well
+  const char *serviceport_str = sci_getenv("SCIRUN_SERVICE_PORT");
+  // If its not set in the env, we're done
+  if (!serviceport_str) return;
+  
+  // The protocol for conencting has been called "scirun"
+  // In the near future this should be replaced with "sciruns" for
+  // a secure version which will run over ssl. 
+  
+  // A log file is not necessary but handy for debugging purposes
+  ServiceLogHandle externallogfile = 
+    scinew ServiceLog(scidir+"scirun_external_servicemanager.log"); 
+  
+  IComAddress externaladdress("scirun","",serviceport_str,ipstr);
+  ServiceManager* external_service_manager = 
+    scinew ServiceManager(servicedb,externaladdress,externallogfile); 
+  Thread* t_ext = 
+    scinew Thread(external_service_manager,"external service manager",
+		  0, Thread::NotActivated);
+  t_ext->setStackSize(1024*20);
+  t_ext->activate(false);
+  t_ext->detach();
+}  
+
+
 
 int
 main(int argc, char *argv[], char **environment) {
@@ -268,16 +347,15 @@ main(int argc, char *argv[], char **environment) {
   // Always switch on this option
   // It is needed for running external applications
   bool use_eai = true;
-  // if (sci_getenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE")) use_eai = true;
+  // bool use_eai = sci_getenv_p("SCIRUN_EXTERNAL_APPLICATION_INTERFACE");
+
 
   // The environment has been setup
   // Now split of a process for running external processes
-  
-  if (use_eai)
-    {
-      systemcallmanager_ = scinew SystemCallManager();
-      systemcallmanager_->create();
-    }
+  if (use_eai) {
+    systemcallmanager_ = scinew SystemCallManager();
+    systemcallmanager_->create();
+  }
 
 #if defined(__APPLE__)  
   macImportExportForceLoad(); // Attempting to force load (and thus
@@ -285,80 +363,14 @@ main(int argc, char *argv[], char **environment) {
   macForceLoad();             // of Core/Datatypes and Core/ImportExport.
 #endif
 
-
-  if (use_eai)
-    {
-      // Services start up... 
-
-      // Create a database of all available services. The next piece of code
-      // Scans both the SCIRun as well as the Packages directories to find
-      // Services that need to be started. Services allow communication with
-      // thirdparty software and are Threads that run asychronicly with
-      // with the rest of SCIRun. Since the thirdparty software may be running
-      // on a different platform it allows for connecting to remote machines
-      // and running the service on a different machine 
-     
-
-      ServiceDBHandle servicedb = scinew ServiceDB;     
-
-      servicedb->loadpackages();        // load all services and find all makers
-      servicedb->activateall();         // activate all services
-
-      
-      // Services are started and created by the ServiceManager, which will be launched here
-      // Two competing managers will be started, one for purely internal usage and one that
-      // communicates over a socket. The latter will only be created if a port is set.
-      // If the current instance of SCIRun should not provide any services to other instances
-      // of SCIRun over the internet, the second manager will not be launched
-      
-      // A log file is not necessary but handy for debugging purposes
-      ServiceLogHandle internallogfile = scinew ServiceLog("scirun_internal_servicemanager.log");
-      
-      IComAddress internaladdress("internal","servicemanager");
-      ServiceManager* internal_service_manager = scinew ServiceManager(servicedb,internaladdress,internallogfile); 
-      Thread* t_int = scinew Thread(internal_service_manager,"internal service manager",0,Thread::NotActivated);
-      t_int->setStackSize(1024*20);
-      t_int->activate(false);
-      t_int->detach();
-
-      // Start an external service as well
-      const char *serviceport_str = sci_getenv("SCIRUN_SERVICE_PORT");
-
-      // Use the following environment setting is used to switch on IPv6 support
-      // Most machines should be running a dual-host stack for the internet
-      // connections, so it should not hurt to run in IPv6 mode. In most case
-      // ipv4 address will work as well.
-      //
-      // It might be useful
-      const char *serviceport_protocol = sci_getenv("SCIRUN_SERVICE_IPV6");
-      std::string ipstr("");
-      if (serviceport_protocol)
-        {
-          std::string protocol(serviceport_protocol);
-          if ((protocol=="YES")||(protocol== "Y")||(protocol=="yes")||(protocol=="y")||(protocol=="1")||(protocol=="true")) ipstr = "ipv6";
-        }
-      
-      if (serviceport_str)
-        {
-          // The protocol for conencting has been called "scirun"
-          // In the near future this should be replaced with "sciruns" for
-          // a secure version which will run over ssl. 
-        
-          // A log file is not necessary but handy for debugging purposes
-          ServiceLogHandle externallogfile = scinew ServiceLog("scirun_external_servicemanager.log"); 
-        
-          IComAddress externaladdress("scirun","",serviceport_str,ipstr);
-          ServiceManager* external_service_manager = scinew ServiceManager(servicedb,externaladdress,externallogfile); 
-          Thread* t_ext = scinew Thread(external_service_manager,"external service manager",0,Thread::NotActivated);
-          t_ext->setStackSize(1024*20);
-          t_ext->activate(false);
-          t_ext->detach();
-        }
-    }
+  if (use_eai) {
+    start_eai();
+  }
   
   // Start up TCL...
   Network* net=new Network();
-  TCLThread* tcl_task = new TCLThread(argc,argv, net, startnetno);// Only passes program name to TCL
+  // Only passes program name to TCL
+  TCLThread* tcl_task = new TCLThread(argc,argv, net, startnetno);
   // We need to start the thread in the NotActivated state, so we can
   // change the stack size.  The 0 is a pointer to a ThreadGroup which
   // will default to the global thread group.
