@@ -48,11 +48,13 @@ PersistentTypeID Path::type_id("Path", "Datatype", make_Path);
 
 Path::Path(): sint(30)
 {
+  //upV=scinew Cubic3DPWI<Vector>();
+  //fov=scinew CubicPWI();
   upV=scinew Linear3DPWI<Vector>();
   fov=scinew LinearPWI();
-
+  lookatP=scinew Linear3DPWI<Point>();
   eyeP=NULL;
-  lookatP=NULL;
+  // lookatP=NULL;
   reset();
 
   set_path_t(CUBIC);
@@ -264,9 +266,6 @@ bool Path::build_path(){
       param.add(sum);
     }
     
-    //std::cout << "Linear Path Length: " << sum << std::endl;
-    //std::cout << "Parameters of the path: " << param << std::endl;
-    
     Array1<Point> epts;
     Array1<Point> lpts;
     Array1<Vector> vects;
@@ -288,8 +287,6 @@ bool Path::build_path(){
       rotFrames.add(tmp);
     }
 
-    //std::cout << "Quats are built. Rotation frames:" <<  rotFrames << std::endl;
-
     // rotational parametrization by angles; no normalization
     sum=0;
     q_param.remove_all();
@@ -301,41 +298,6 @@ bool Path::build_path(){
       q_param.add(sum);
     }
     
-    //std::cout << "Parametrization is done. Total angle:" << sum  << std::endl;
-    //std::cout << "parametrization array:" << std::endl << q_param  << std::endl;
- 
-    // testing quaternions:
-    // test_quat();
-    
-    //*****************************************************************
-    /*  //Attempt to optimize splines by supplying tangents to interpolation
-        //objects correlated with tangent of space curve
-    Array1<Vector> drvs;
-    drvs.resize(keyViews.size());
-    Vector k;
-    double dx, dy, dz, d, delta;
-    for (int i=0; i<drvs.size(); i++){
-      k=Cross(Vector(keyViews[i].lookat()-keyViews[i].eyep()), keyViews[i].up());
-      if (i==0 || i==drvs.size()-1){
-	int fi=i, si;
-	si=(i==0)?i+1:i-1;
-	delta=param[si]-param[fi];
-	dx=(epts[si].x()-epts[fi].x())/delta;
-	dy=(epts[si].y()-epts[fi].y())/delta;
-	dz=(epts[si].z()-epts[fi].z())/delta;
-      }
-      else {
-	delta=param[i+1]-param[i-1];
-	dx=(epts[i+1].x()-epts[i-1].x())/delta;
-	dy=(epts[i+1].y()-epts[i-1].y())/delta;
-	dz=(epts[i+1].z()-epts[i-1].z())/delta;
-      }
-      d=sqrt(dx*dx+dy*dy+dz*dz);
-      k.normalize();
-      drvs[i]=k*(-d);
-    }
-    */
-
     if (eyeP->set_data(param, epts) && lookatP->set_data(param, lpts) && upV->set_data(param, vects) 
 	&& fov->set_data(param, fovs) && resample_path()){
 	 is_built=1;
@@ -380,9 +342,6 @@ bool Path::resample_path(){
   
   path_dist=pathPoints[ns-1];
   
-  // std::cout << "Last w on the sampling: " << w << std::endl;
-  // std::cout << "path length got from arc_length parametrization: " << path_dist << std::endl;
-  
   dist_prm.remove_all();
   dist_prm.resize(ns);
   double s=0;
@@ -392,14 +351,10 @@ bool Path::resample_path(){
   dist_prm[0]=0;
   for (int i=1; i<ns; i++){
     s=delta*i*path_dist;
-    while (pathPoints[j]<s) j++;
+    while ((s-pathPoints[j])>10e-13) j++;
     w=(s-pathPoints[j-1])/(pathPoints[j]-pathPoints[j-1]);
-    // if (!(i%50)) std::cout << "w[" << i << "]=" << w  << ", j[" << i << "]=" << j << ", s[" << i << "]=" << s << ", delta=" << delta << ", path_dist" << path_dist << std::endl;
     dist_prm[i]=(j*w+(1-w)*(j-1))*delta*paramd;    
   }
-
-  //  for (int i=0; i< dist_prm.size(); i+=50)
-  //  std::cout << "dist_rm[" << i << "]=" << dist_prm[i]  << std::endl;
 
   return is_sampled;
 }
@@ -425,17 +380,6 @@ int Path::calc_view(double w, View& v){
   double qw=(w-param[p])/(param[p+1]-param[p]);
 
   Quaternion q=Slerp(rotFrames[p], rotFrames[p+1], qw);
-  MSG(" INTERPOLATED QUATERNION WITH qw=");
-  MSG(qw);
-  MSG(q);
-  MSG("First quat:");
-  MSG(rotFrames[0]);
-  q.get_frame(dir, up, tang);
-  MSG("Frame got:");
-  MSG(dir);
-  MSG(up);
-  MSG(tang);
-  v=View(ep, ep+dir, up, fv);
 #endif
 
 #ifndef QUATERNIONS
@@ -471,17 +415,17 @@ bool Path::set_path_t(int t){
     is_run=is_built=0;
     if (path_t!=KEYFRAMED){
       delete eyeP;                          // safe on NULL pointers
-      delete lookatP;
+      //      delete lookatP;
 
       switch (path_t){
       case CUBIC:
 	eyeP=scinew Cubic3DPWI<Point>();
-	lookatP=scinew Cubic3DPWI<Point>();
+	//lookatP=scinew Cubic3DPWI<Point>();
 	return true;
 	
       case LINEAR:
 	eyeP=scinew Linear3DPWI<Point>();
-	lookatP=scinew Linear3DPWI<Point>();
+	//lookatP=scinew Linear3DPWI<Point>();
 	return true;
       default:
 	break;
@@ -526,7 +470,7 @@ double Path::get_delta(){
     int d=1;
     if (ps>path_dist/2){  // ensuring the path point not in first and last acc zones at a time
       ps=path_dist/2;
-      d=2*ps*PI/step_size;
+      d=(int)(2*ps*PI/step_size);
     }
     
     bool is_fzone=(is_back)?(pathP>(path_dist-ps)):(pathP<ps);
@@ -616,7 +560,12 @@ bool Path::get_nextPP(View& v, int& curr_view, double& curr_speed, double& curr_
 
 //
 // $Log$
+// Revision 1.4  2000/09/28 05:57:56  samsonov
+// minor fix
+//
 // Revision 1.3  2000/08/22 07:18:33  moulding
+//
+//
 // changed   default:   to  default:   to appease the GCC on linux
 //           }                break;
 //                          }

@@ -195,7 +195,7 @@ inline void Path::set_arc_param(){
   int sz=dist_prm.size();
   ASSERT(sz>=ns && ns > 0 && path_prm<=dist_prm[sz-1]);
   int j=1;
-  while (dist_prm[j]<path_prm) j++;
+  while ((path_prm-dist_prm[j])>10e-13) j++;
   
   double  w=(path_prm-dist_prm[j-1])/(dist_prm[j]-dist_prm[j-1]);
   double delta=path_dist/(ns-1);
@@ -208,6 +208,9 @@ inline void Path::set_arc_param(){
 
 //
 // $Log$
+// Revision 1.3  2000/09/28 05:57:56  samsonov
+// minor fix
+//
 // Revision 1.2  2000/08/09 07:15:55  samsonov
 // final version and Cocoon comments
 //
