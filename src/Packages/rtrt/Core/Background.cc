@@ -13,12 +13,24 @@ using namespace std;
 Persistent* cbackground_maker() {
   return new ConstantBackground();
 }
+Persistent* lbackground_maker() {
+  return new LinearBackground();
+}
+Persistent* embackground_maker() {
+  return new EnvironmentMapBackground();
+}
 
 // initialize the static member type_id
 PersistentTypeID Background::type_id("Background", "Persistent", 0);
 PersistentTypeID ConstantBackground::type_id("ConstantBackground", 
 					     "Background", 
 					     cbackground_maker);
+PersistentTypeID LinearBackground::type_id("LinearBackground", 
+					   "Background", 
+					   lbackground_maker);
+PersistentTypeID EnvironmentMapBackground::type_id("EnvironmentMapBackground", 
+						   "Background", 
+						   embackground_maker);
 
 Background::Background(const Color& avg)
   : avg(avg), origAvg_( avg )
@@ -114,7 +126,7 @@ EnvironmentMapBackground::color_in_direction( const Vector& DIR , Color& result)
     //
     // Convert to local basis
     //
-    Vector dir = ChangeToBasis( DIR );
+  Vector dir = DIR /*ChangeToBasis( DIR )*/;
 
     // cerr << "direction  = " << dir << endl;
     // Map direction vector dir to (u,v) coordinates
@@ -122,11 +134,11 @@ EnvironmentMapBackground::color_in_direction( const Vector& DIR , Color& result)
     //double r = atan2( sqrt( dir.x()*dir.x() + dir.y()*dir.y() ), dir.z() );
     //r /= M_PI;  /* -0.5 .. 0.5 */
     //double phi = atan2( dir.y(), dir.x() );
-    double r =  sqrt( dir.x()*dir.x() + dir.y()*dir.y() );
-    double v = atan2( dir.x(), dir.y() ) / ( 2.0*M_PI ) + 0.5;
-    double u = atan2( r, dir.z() ) / M_PI;
-    // double u = ( ( atan2( dir.y(), dir.x() ) + M_PI ) / ( 2.0*M_PI ) );
-    // double v = ( ( asin( dir.z() ) + (0.5*M_PI) ) / M_PI );
+  //double r =  sqrt( dir.x()*dir.x() + dir.y()*dir.y() );
+  //double v = atan2( dir.x(), dir.y() ) / ( 2.0*M_PI ) + 0.5;
+  //double u = atan2( r, dir.z() ) / M_PI;
+    double u = ( ( atan2( dir.y(), dir.x() ) + M_PI ) / ( 2.0*M_PI ) );
+    double v = ( ( asin( dir.z() ) + (0.5*M_PI) ) / M_PI );
     //double u = Clamp( r * cos( phi ) + 0.5, 0.0, 1.0 );
     //double v = Clamp( r * sin( phi ) + 0.5, 0.0, 1.0 );
 
@@ -140,19 +152,35 @@ EnvironmentMapBackground::color_in_direction( const Vector& DIR , Color& result)
     //double v = (DIR.x()+1)/2.;
     //double u = (DIR.z()+1)/2.;
     
-    int i=int( v*( _width - 1 ) );
-    int j=int( u*( _height - 1 ) );
-    result = _image( i, j ) * ambientScale_;
+    //int i=int( v*( _width - 1 ) );
+    //int j=int( u*( _height - 1 ) );
+    //result = _image( i, j ) * ambientScale_;
+
+    // image dimensions include interpolation slop
+    u *= (_image.dim1()-3);
+    v *= (_image.dim2()-3);
+    
+    int iu = (int)u;
+    int iv = (int)v;
+
+    double tu = u-iu;
+    double tv = v-iv;
+
+    result = _image(iu,iv)*(1-tu)*(1-tv)+
+      _image(iu+1,iv)*tu*(1-tv)+
+      _image(iu,iv+1)*(1-tu)*tv+
+      _image(iu+1,iv+1)*tu*tv;
 }
 
 const int BACKGROUND_VERSION = 1;
 const int CBACKGROUND_VERSION = 1;
+const int LBACKGROUND_VERSION = 1;
+const int EMBACKGROUND_VERSION = 1;
 
 void 
 Background::io(SCIRun::Piostream &str)
 {
   str.begin_class("Background", BACKGROUND_VERSION);
-  Background::io(str);
   SCIRun::Pio(str, avg);
   SCIRun::Pio(str, origAvg_);
   str.end_class();
@@ -161,8 +189,35 @@ void
 ConstantBackground::io(SCIRun::Piostream &str)
 {
   str.begin_class("ConstantBackground", CBACKGROUND_VERSION);
+  Background::io(str);
   SCIRun::Pio(str, C);
   SCIRun::Pio(str, origC_);
+  str.end_class();
+}
+void 
+LinearBackground::io(SCIRun::Piostream &str)
+{
+  str.begin_class("LinearBackground", LBACKGROUND_VERSION);
+  Background::io(str);
+  SCIRun::Pio(str, C1);
+  SCIRun::Pio(str, C2);
+  SCIRun::Pio(str, origC1_);
+  SCIRun::Pio(str, origC2_);
+  SCIRun::Pio(str, direction_to_C1);
+  str.end_class();
+}
+void 
+EnvironmentMapBackground::io(SCIRun::Piostream &str)
+{
+  str.begin_class("EnvironmentMapBackground", EMBACKGROUND_VERSION);
+  Background::io(str);
+  SCIRun::Pio(str, ambientScale_);
+  SCIRun::Pio(str, _width);
+  SCIRun::Pio(str, _height);
+  rtrt::Pio(str, _image);
+  SCIRun::Pio(str, _up);
+  SCIRun::Pio(str, _u);
+  SCIRun::Pio(str, _v);
   str.end_class();
 }
 
@@ -173,6 +228,33 @@ void Pio(SCIRun::Piostream& stream, rtrt::Background*& obj)
   stream.io(pobj, rtrt::Background::type_id);
   if(stream.reading()) {
     obj=dynamic_cast<rtrt::Background*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+void Pio(SCIRun::Piostream& stream, rtrt::ConstantBackground*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::ConstantBackground::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::ConstantBackground*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+void Pio(SCIRun::Piostream& stream, rtrt::LinearBackground*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::LinearBackground::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::LinearBackground*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+void Pio(SCIRun::Piostream& stream, rtrt::EnvironmentMapBackground*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::EnvironmentMapBackground::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::EnvironmentMapBackground*>(pobj);
     //ASSERT(obj != 0)
   }
 }

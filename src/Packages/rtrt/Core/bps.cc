@@ -34,6 +34,7 @@ void usage(char* progname)
 
 int main(int argc, char* argv[])
 {
+    cout << "Program starting\n";
     int np=0;
     int count=0;
     if(argc != 3){
@@ -41,14 +42,17 @@ int main(int argc, char* argv[])
     }
     np=atoi(argv[1]);
     count=atoi(argv[2]);
+#if 0
     Barrier* barrier=new Barrier("test barrier");
     ThreadGroup* group=new ThreadGroup("test group");
     for(int i=0;i<np;i++){
 	char buf[100];
 	sprintf(buf, "worker %d", i);
-	new Thread(new BPS(barrier, count, i), buf, group);
+	//	new Thread(new BPS(barrier, count, i), buf, group);
     }
     group->join();
+#endif
+    cout << "Program ending\n";
 }
 
 BPS::BPS(Barrier* barrier, int count, int proc)

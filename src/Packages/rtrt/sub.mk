@@ -4,8 +4,9 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
 SRCDIR := Packages/rtrt
 
-ifneq ($(USE_SOUND),no)
-   SOUNDDIR := $(SRCDIR)/Sound
+ifeq ($(findstring -n32, $(C_FLAGS)),-n32)
+#ifneq ($(USE_SOUND),no)
+    SOUNDDIR := $(SRCDIR)/Sound
 endif
 
 SUBDIRS := \

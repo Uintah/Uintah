@@ -27,20 +27,21 @@ Camera::Camera()
 
 Camera::Camera(const Point& eye, const Point& lookat,
 	       const Vector& up, double fov)
-  : eye(eye), lookat(lookat), up(up), fov(fov), eyesep(1)
+  : eye(eye), lookat(lookat), up(up), fov(fov), eyesep(1), 
+  verticalFov_(fov), windowAspectRatio_(1.0)
 
 {
-    setup();
+  setup();
 }
 
 Camera::~Camera()
 {
 }
 
-void Camera::makeRay(Ray& ray, double x, double y, double, double iyres)
+void Camera::makeRay(Ray& ray, double x, double y, double ixres, double iyres)
 {
     ray.set_origin(eye);
-    double screenx=(x+0.5)*iyres-0.5;
+    double screenx=(x+0.5)*ixres-0.5;
     Vector sv(v*screenx);
     double screeny=(y+0.5)*iyres-0.5;
     Vector su(u*screeny);
@@ -49,10 +50,10 @@ void Camera::makeRay(Ray& ray, double x, double y, double, double iyres)
     ray.set_direction(raydir);
 }
 
-void Camera::makeRayL(Ray& ray, double x, double y, double, double iyres)
+void Camera::makeRayL(Ray& ray, double x, double y, double ixres, double iyres)
 {
     ray.set_origin(eye-v*5*eyesep*iyres);
-    double screenx=(x+0.5)*iyres-0.5;
+    double screenx=(x+0.5)*ixres-0.5;
     Vector sv(v*screenx+v*5*iyres*eyesep);
     double screeny=(y+0.5)*iyres-0.5;
     Vector su(u*screeny);
@@ -61,10 +62,10 @@ void Camera::makeRayL(Ray& ray, double x, double y, double, double iyres)
     ray.set_direction(raydir);
 }
 
-void Camera::makeRayR(Ray& ray, double x, double y, double, double iyres)
+void Camera::makeRayR(Ray& ray, double x, double y, double ixres, double iyres)
 {
     ray.set_origin(eye+v*5*eyesep*iyres);
-    double screenx=(x+0.5)*iyres-0.5;
+    double screenx=(x+0.5)*ixres-0.5;
     Vector sv(v*screenx-v*5*iyres*eyesep);
     double screeny=(y+0.5)*iyres-0.5;
     Vector su(u*screeny);
@@ -92,9 +93,9 @@ void Camera::setup()
     u=Cross(v, direction);
     u.normalize();
 
-    double height=2.0*dist*tan(fov*0.5*M_PI/180.);
+    double height=2.0*dist*tan(verticalFov_*0.5*M_PI/180.0);
     u*=height;
-    double width=2.0*dist*tan(fov*0.5*M_PI/180.);
+    double width=2.0*dist*tan(fov*0.5*M_PI/180.0);
     v*=width;
 
 }
@@ -148,9 +149,19 @@ Point Camera::get_lookat() const
     return lookat;
 }
 
-void Camera::set_fov(double f)
+void
+Camera::setWindowAspectRatio( double ratio )
+{
+  windowAspectRatio_ = ratio;
+  verticalFov_ = fov * ratio;
+  setup();
+}
+
+void
+Camera::set_fov(double f)
 {
     fov=f;
+    verticalFov_ = fov * windowAspectRatio_;
 }
 
 double Camera::get_eyesep() const
@@ -164,13 +175,13 @@ double Camera::get_fov() const
 }
 
 void Camera::getParams(Point& origin, Vector& direction,
-		       Vector& up, Vector& side, double& vfov)
+		       Vector& up, Vector& side, double& theFov)
 {
     origin=eye;
     direction=this->direction;
     up=u;
     side=v;
-    vfov=fov;
+    theFov=fov;
 }
 
 void
@@ -184,7 +195,7 @@ void
 Camera::flatten() // reset pitch to 0 and roll to 0.(note: no roll currently)
 {
   lookat.z( eye.z() );   // Clears Pitch
-  up = Vector( 0, 0, 1 ); // Clears Roll
+  up = Vector( 0, 0, .999 ); // Clears Roll
   setup();
 }
 

@@ -71,6 +71,9 @@ void Light::init() {
   if ( !white_halo )
     white_halo = new HaloMaterial(flat_white,4);
 
+  if( intensity_ == 0.0 )
+    turnOff();
+
   // Create a yellow sphere that can be rendered in the location
   // of the light.
   sphere_ = new Sphere( white_halo /*flat_yellow*/, pos, 0.1 );
@@ -79,25 +82,36 @@ void Light::init() {
 Light::Light(const Point& pos,
 	     const Color& color,
 	     double radius,
-	     double intensity ) :
+	     double intensity, /* = 1.0 */
+	     bool   moodLight  /* = false */ ) :
   radius(radius), 
   intensity_(intensity), 
+  origIntensity_(intensity), 
   currentColor_(color*intensity), 
   origColor_(color), 
   pos(pos),
-  isOn_(true)
+  isOn_(true),
+  moodLight_(moodLight)
 {
   init();
 }
 
 void
-Light::updateIntensity( double intensity )
+Light::modifyCurrentIntensity( double scale )
 {
-  if( intensity < 0 ) intensity = 0;
-  else if( intensity > 1.0 ) intensity = 1.0;
+  // Not a perfect implementation, but will work for now.
+  double inten = intensity_ * scale;
+  updateIntensity( inten );
+}
 
-  currentColor_ = origColor_ * intensity;
-  intensity_ = intensity;
+void
+Light::updateIntensity( double toIntensity )
+{
+  if( toIntensity < 0 ) toIntensity = 0;
+  else if( toIntensity > 1.0 ) toIntensity = 1.0;
+
+  currentColor_ = origColor_ * toIntensity;
+  intensity_ = toIntensity;
 }
 
 void
@@ -118,6 +132,7 @@ Light::io(SCIRun::Piostream &str)
   SCIRun::Pio(str, currentColor_);
   SCIRun::Pio(str, origColor_);
   SCIRun::Pio(str, pos);
+  SCIRun::Pio(str, moodLight_);
   SCIRun::Pio(str, isOn_);
   if (str.reading()) {
     init();

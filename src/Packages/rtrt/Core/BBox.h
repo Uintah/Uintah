@@ -3,7 +3,7 @@
 #define BBOX_H 1
 
 #include <Packages/rtrt/Core/Ray.h>
-#include <Core/Persistent/Pstreams.h>
+#include <Core/Persistent/Persistent.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Math/MiscMath.h>
@@ -12,7 +12,7 @@ namespace rtrt {
   class BBox;
 }
 namespace SCIRun {
-  void Pio(Piostream&, rtrt::BBox&);
+  void Pio(Piostream&, rtrt::BBox*&);
 }
 
 namespace rtrt {
@@ -22,7 +22,7 @@ using SCIRun::Point;
 using SCIRun::Min;
 using SCIRun::Max;
 
-class BBox {
+class BBox : public SCIRun::Persistent {
 protected:
   Point cmin;
   Point cmax;
@@ -38,7 +38,9 @@ public:
   }
   BBox(const BBox& copy);
 
-  friend void SCIRun::Pio(SCIRun::Piostream&, rtrt::BBox&);
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, rtrt::BBox*&);
 
   inline int valid() const {return have_some;}
   void reset();
@@ -91,6 +93,15 @@ public:
     } else return intersect_nontrivial(ray, min_t);
   }
 
+  inline bool contains_point(const Point &p) const {
+    return (cmin.x()<=p.x() && p.x()<=cmax.x() &&
+	    cmin.y()<=p.y() && p.y()<=cmax.y() &&
+	    cmin.z()<=p.z() && p.z()<=cmax.z());
+  }
+  inline bool contains_point(const Ray &ray, double &t) const {
+    return contains_point(ray.eval(t));
+  }
+  
   Point center() const;
   double longest_edge();
   inline Point min() const {

@@ -14,17 +14,169 @@ using rtrt::Array2;
 using rtrt::Heightfield;
 using rtrt::HMCell; 
 using rtrt::BrickArray2;
+
+namespace SCIRun {
+template<>
+void Pio(Piostream& stream, rtrt::Array1<int>& array)
+{
+  stream.begin_class("rtrtArray1", ARRAY1_VERSION);
+  int size=array.size();
+  Pio(stream, size);
+  if(stream.reading()){
+    array.remove_all();
+    array.grow(size);
+  }
+  int* obj_arr = array.get_objs();
+  if (stream.supports_block_io()) {
+    stream.block_io(obj_arr, sizeof(int), size);
+  } else {
+    for(int i = 0; i < size; i++) {
+      Pio(stream, obj_arr[i]);
+    }
+  }
+  stream.end_class();
+}
+
+template<>
+void Pio(Piostream& stream, rtrt::Array1<float>& array)
+{
+  stream.begin_class("rtrtArray1", ARRAY1_VERSION);
+  int size=array.size();
+  Pio(stream, size);
+  if(stream.reading()){
+    array.remove_all();
+    array.grow(size);
+  }
+  float* obj_arr = array.get_objs();
+  if (stream.supports_block_io()) {
+    stream.block_io(obj_arr, sizeof(float), size);
+  } else {
+    for(int i = 0; i < size; i++) {
+      Pio(stream, obj_arr[i]);
+    }
+  }
+  stream.end_class();
+}
+
+template<>
+void Pio(Piostream& stream, rtrt::Array1<double>& array)
+{
+  stream.begin_class("rtrtArray1", ARRAY1_VERSION);
+  int size=array.size();
+  Pio(stream, size);
+  if(stream.reading()){
+    array.remove_all();
+    array.grow(size);
+  }
+  double* obj_arr = array.get_objs();
+  if (stream.supports_block_io()) {
+    stream.block_io(obj_arr, sizeof(double), size);
+  } else {
+    for(int i = 0; i < size; i++) {
+      Pio(stream, obj_arr[i]);
+    }
+  }
+  stream.end_class();
+}
+
+}
+
 namespace rtrt {
   class Object;
   class VolumeBase;
   class Volume;
   class Material;
+
+
+
+template<> void Pio(SCIRun::Piostream& stream, rtrt::Array2<int>& data)
+{
+  stream.begin_class("rtrtArray2", Array2_VERSION);
+  if(stream.reading()){
+    // Allocate the array...
+    int d1, d2;
+    SCIRun::Pio(stream, d1);
+    SCIRun::Pio(stream, d2);
+    data.resize(d1, d2);
+  } else {
+    SCIRun::Pio(stream, data.dm1);
+    SCIRun::Pio(stream, data.dm2);
+  }
+
+  if (stream.supports_block_io()) {
+    stream.block_io(data.objs, sizeof(int), data.dm1*data.dm1);
+  } else {
+    for(int i=0;i<data.dm1;i++){
+      for(int j=0;j<data.dm2;j++){
+	SCIRun::Pio(stream, data.objs[i][j]);
+      }
+    }
+  }
+  stream.end_class();
+}
+
+template<> void Pio(SCIRun::Piostream& stream, rtrt::Array2<float>& data)
+{
+  stream.begin_class("rtrtArray2", Array2_VERSION);
+  if(stream.reading()){
+    // Allocate the array...
+    int d1, d2;
+    SCIRun::Pio(stream, d1);
+    SCIRun::Pio(stream, d2);
+    data.resize(d1, d2);
+  } else {
+    SCIRun::Pio(stream, data.dm1);
+    SCIRun::Pio(stream, data.dm2);
+  }
+
+  if (stream.supports_block_io()) {
+    stream.block_io(data.objs, sizeof(float), data.dm1*data.dm1);
+  } else {
+    for(int i=0;i<data.dm1;i++){
+      for(int j=0;j<data.dm2;j++){
+	SCIRun::Pio(stream, data.objs[i][j]);
+      }
+    }
+  }
+  stream.end_class();
+}
+
+template<> void Pio(SCIRun::Piostream& stream, rtrt::Array2<double>& data)
+{
+  stream.begin_class("rtrtArray2", Array2_VERSION);
+  if(stream.reading()){
+    // Allocate the array...
+    int d1, d2;
+    SCIRun::Pio(stream, d1);
+    SCIRun::Pio(stream, d2);
+    data.resize(d1, d2);
+  } else {
+    SCIRun::Pio(stream, data.dm1);
+    SCIRun::Pio(stream, data.dm2);
+  }
+
+  if (stream.supports_block_io()) {
+    stream.block_io(data.objs, sizeof(double), data.dm1*data.dm1);
+  } else {
+    for(int i=0;i<data.dm1;i++){
+      for(int j=0;j<data.dm2;j++){
+	SCIRun::Pio(stream, data.objs[i][j]);
+      }
+    }
+  }
+  stream.end_class();
+}
+
 }
 
 template struct HMCell<float>;
 template class rtrt::BrickArray2<float>;
 template class Array2 < HMCell<float> >;
 template class Heightfield<BrickArray2<float>,Array2<HMCell<float > > >;
+
+
+
+
 
 template class Array1<Light*>;
 
@@ -41,6 +193,7 @@ template class Array1<SCIRun::Point>;
 template class Array1<SCIRun::Vector>;
 
 template class Array1<int>;
+template class Array1<float>;
 template class Array1<double>;
 
 template class Array1<Material*>;

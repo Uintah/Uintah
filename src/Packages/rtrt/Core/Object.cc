@@ -17,7 +17,7 @@ static UVPlane default_mapping(Point(0,0,0), Vector(1,0,0), Vector(0,1,0));
 PersistentTypeID Object::type_id("Object", "Persistent", 0);
 
 Object::Object(Material* matl, UVMapping* uv)
-  : matl(matl), uv(uv), was_preprocessed(false)
+  : matl(matl), uv(uv), animGrid(0), was_preprocessed(false)
 {
   if(!uv)
     this->uv=&default_mapping;
@@ -127,11 +127,13 @@ Object::io(SCIRun::Piostream &str)
 namespace SCIRun {
 void Pio(SCIRun::Piostream& stream, rtrt::Object*& obj)
 {
-  SCIRun::Persistent* pobj=obj;
-  stream.io(pobj, rtrt::Object::type_id);
-  if(stream.reading()) {
-    obj=dynamic_cast<rtrt::Object*>(pobj);
-    //ASSERT(obj != 0)
+  SCIRun::Persistent* p;
+  if (stream.reading()) {
+    stream.io(p, rtrt::Object::type_id);
+    obj=dynamic_cast<rtrt::Object*>(p);
+  } else {
+    p = obj;
+    stream.io(p, rtrt::Object::type_id);
   }
 }
 } // end namespace SCIRun

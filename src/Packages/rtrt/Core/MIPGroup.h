@@ -8,10 +8,12 @@ namespace rtrt {
 
 class MIPGroup : public Group {
 public:
-    MIPGroup();
-    virtual ~MIPGroup();
-    virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
-			   PerProcessorContext*);
+  MIPGroup();
+  virtual ~MIPGroup();
+  virtual void io(SCIRun::Piostream &stream) 
+  { ASSERTFAIL("Pio not supported"); }
+  virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
+			 PerProcessorContext*);
 };
 
 } // end namespace rtrt

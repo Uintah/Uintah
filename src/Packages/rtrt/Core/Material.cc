@@ -37,12 +37,12 @@ Vector Material::reflection(const Vector& v, const Vector n) const {
 }
 
 
-double Material::phong_term( const Vector& E, const Vector& L, const Vector& n, double ex) const {
+double Material::phong_term( const Vector& E, const Vector& L, const Vector& n, int ex) const {
   Vector H= L - E;
   H.normalize();
   double cos_alpha= Dot(H, n );
   if ( cos_alpha > 0 )
-    return pow( cos_alpha, ex );
+    return ipow( cos_alpha, ex );
   else
     return 0;
 }
@@ -50,7 +50,7 @@ double Material::phong_term( const Vector& E, const Vector& L, const Vector& n, 
 void Material::phongshade(Color& result,
 			  const Color& diffuse,
 			  const Color& specular,
-			  double spec_coeff,
+			  int spec_coeff,
 			  double refl,
 			  const Ray& ray,
 			  const HitInfo& hit,
@@ -83,6 +83,9 @@ void Material::phongshade(Color& result,
     else 
       light=my_lights[i-ngloblights];
 
+    if( !light->isOn() )
+      continue;
+
     Vector light_dir=light->get_pos()-hitpos;
     if (ray_objnormal_dot*Dot(normal,light_dir)>0) {
       cx->stats->ds[depth].inshadow++;
@@ -105,7 +108,7 @@ void Material::phongshade(Color& result,
 	H.normalize();
 	double cos_alpha= Dot(H, normal);
 	if ( cos_alpha > 0 )
-	  speclight+=light->get_color() * /*shadowfactor * */pow( cos_alpha, spec_coeff);
+	  speclight+=light->get_color() * /*shadowfactor * */ipow( cos_alpha, spec_coeff);
       }
     } else {
       cx->stats->ds[depth].inshadow++;
@@ -141,6 +144,8 @@ Material::io(SCIRun::Piostream &str)
   SCIRun::Pio(str, my_lights);
   AmbientType &tmp = local_ambient_mode;
   SCIRun::Pio(str, (unsigned int&)tmp);
+  SCIRun::Pio(str, uscale);
+  SCIRun::Pio(str, vscale);
   str.end_class();
 }
 

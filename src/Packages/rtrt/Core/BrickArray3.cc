@@ -131,7 +131,7 @@ BrickArray3<T>::~BrickArray3()
 template<class T>
 void BrickArray3<T>::initialize(const T& t)
 {
-    int n=dm1*dm2*dm3;
+    int n=totaldm1*totaldm2*totaldm3;
     for(int i=0;i<n;i++)
 	objs[i]=t;
 }

@@ -1,3 +1,4 @@
+#if !defined(linux)
 #include <Packages/rtrt/Sound/SoundThread.h>
 
 #include <Packages/rtrt/Sound/Sound.h>
@@ -6,6 +7,7 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Gui.h>
 
+#include <Core/Thread/Time.h>
 #include <Core/Math/MinMax.h>
 
 #include <dmedia/audiofile.h>
@@ -29,7 +31,7 @@ const int SoundThread::numChannels_ = 2;
 
 SoundThread::SoundThread( const Camera * eyepoint, Scene * scene,
 			  Gui * gui ) :
-  eyepoint_( eyepoint ), scene_( scene ), gui_( gui )
+  eyepoint_( eyepoint ), scene_( scene ), gui_( gui ), sleepTime_(0.0)
 {
   ALpv  pv;
 
@@ -61,7 +63,7 @@ SoundThread::SoundThread( const Camera * eyepoint, Scene * scene,
   alSetQueueSize( config_, samplingRate_ * 2 );
   alSetSampFmt(   config_, AL_SAMPFMT_TWOSCOMP );
   alSetChannels(  config_, numChannels_ );
-  alSetWidth(     config_, AL_SAMPLE_8 );
+  alSetWidth(     config_, AL_SAMPLE_16 );
 
   char portName[20];
   sprintf( portName, "rtrt sounds %d", portNum );
@@ -87,8 +89,8 @@ SoundThread::~SoundThread()
 void
 SoundThread::run()
 {
-  signed char * quiet = new signed char[(int)(samplingRate_+1) * numChannels_];
-  signed char * mix   = new signed char[(int)(samplingRate_+1) * numChannels_];
+  short * quiet = new short[(int)(samplingRate_+1) * numChannels_];
+  short * mix   = new short[(int)(samplingRate_+1) * numChannels_];
 
   // Initialize "quiet" buffer to all -128's.
   for( int cnt = 0; cnt < samplingRate_*numChannels_; cnt++ ) {
@@ -97,7 +99,7 @@ SoundThread::run()
 
   for( int cnt = 0; cnt < soundQueue_.size(); cnt++ )
     {
-      soundQueue_[cnt]->activate();
+      soundQueue_[cnt]->load();
     }
 
   gui_->soundThreadNowActive();
@@ -106,10 +108,15 @@ SoundThread::run()
     {
       int maxFrames = 0;
 
+      if( sleepTime_ )
+	{
+	  Time::waitFor( sleepTime_ );
+	}
+
       if( soundQueue_.size() > 0 )
 	{
 	  Point left, right;
-	  eyepoint_->get_ears( left, right, 1.0 );
+	  eyepoint_->get_ears( left, right, 0.3 );
 
 	  const Point & eye = eyepoint_->get_eye();
 
@@ -128,9 +135,11 @@ SoundThread::run()
 	  for( int cnt = 0; (globalVolume > 0) && (cnt < soundQueue_.size()); 
 	       cnt++ )
 	    {
-	      Sound       * sound = soundQueue_[cnt];
-	      int           frames;
-	      signed char * buffer;
+	      Sound * sound = soundQueue_[cnt];
+	      int     frames;
+	      short * buffer;
+
+	      if( !sound->isOn() ) continue;
 
 	      double leftVolume = sound->volume( left );
 	      double rightVolume = sound->volume( right );
@@ -143,10 +152,6 @@ SoundThread::run()
 
 		  maxFrames = Max( frames, maxFrames );
 
-		  //if( frames < samplingRate_ && !sound->repeat() ) 
-		  //  {
-		  //    cout << "removing sound\n";
-		  //  }
 		  for( int cnt = 0; cnt < frames; cnt++ )
 		    {
 		      mix[cnt*2]   += buffer[cnt] * leftVolume  * 
@@ -185,3 +190,4 @@ SoundThread::playSound( Sound * sound )
 {
   soundQueue_.push_back( sound );
 }
+#endif

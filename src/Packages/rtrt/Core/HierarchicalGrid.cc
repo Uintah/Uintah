@@ -2,6 +2,7 @@
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Array1.h>
+#include <Packages/rtrt/Core/Names.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Thread/Thread.h>
@@ -45,6 +46,7 @@ HierarchicalGrid::HierarchicalGrid( Object* obj, int nsides,
     _level( 1 ),
     np(np)
 {
+  work=0;
 }
 
 HierarchicalGrid::HierarchicalGrid( Object* obj, int nsides,
@@ -66,12 +68,39 @@ HierarchicalGrid::~HierarchicalGrid( void )
     // There's probably a memory leak somewhere
 }
 
+void HierarchicalGrid::calc_clipped_se(const BBox& obj_bbox, const BBox& bbox,
+				       const Vector& diag,
+				       int nx, int ny, int nz,
+				       int& sx, int& sy, int& sz,
+				       int& ex, int& ey, int& ez)
+{
+  Vector s((obj_bbox.min()-bbox.min())/diag);
+  Vector e((obj_bbox.max()-bbox.min())/diag);
+  sx=(int)(s.x()*nx);
+  sy=(int)(s.y()*ny);
+  sz=(int)(s.z()*nz);
+  ex=(int)(e.x()*nx);
+  ey=(int)(e.y()*ny);
+  ez=(int)(e.z()*nz);
+  sx=Max(Min(sx, nx-1), 0);
+  sy=Max(Min(sy, ny-1), 0);
+  sz=Max(Min(sz, nz-1), 0);
+  ex=Max(Min(ex, nx-1), 0);
+  ey=Max(Min(ey, ny-1), 0);
+  ez=Max(Min(ez, nz-1), 0);
+}
+
 void 
 HierarchicalGrid::preprocess( double maxradius, int& pp_offset, 
 			      int& scratchsize )
 {
     if (was_preprocessed) return;
     was_preprocessed=true;
+
+    if (Names::hasName(this)) std::cerr << "\n\n"
+                              << "\n==========================================================\n"
+					<< "* Building Hierarchical Grid for Object " << Names::getName(this)
+                              << "\n==========================================================\n";
 
     obj->preprocess(maxradius, pp_offset, scratchsize);
 
@@ -241,7 +270,7 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
     Array1<int> current(ngrid);
     Array1<int> whichCellPos( ngrid );
     current.initialize(0);
-    whichCellPos.initialize(0);
+    whichCellPos.initialize(-1);
 
     int pos = 0;
 
@@ -272,7 +301,8 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
 
     if (_level == 1) {
       work = new WorkQueue("HGrid");
-      work->refill(ngrid, 4, 5);
+      work->refill(ngrid, 1, 5);
+      
 //      work->refill(ngrid, np, 5);
       pdata.dx = dx;
       pdata.dy = dy;
@@ -284,7 +314,7 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
       pdata.whichCellPos = whichCellPos;
       pdata.objList = objList;
       Parallel<HierarchicalGrid> phelper(this, &HierarchicalGrid::gridit);
-      Thread::parallel(phelper, 4, true);
+      Thread::parallel(phelper, 1, true);
 //      Thread::parallel(phelper, np, true);
       delete work;
     } else {
@@ -352,9 +382,19 @@ void HierarchicalGrid::gridit(int proc)
       kk=i-ii*nynz-jj*nz;
       if (proc==0 && (i%10 == 5)) {
 	cerr << "HGrid parallel preprocess: ("<<i<<" of "<<sx<<"-"<<ex<<") of "<<nx*ny*nz <<"\n";
-	cerr <<"   "<<L1CellsWithChildren*100./L1Cells<<"% of L1 cells have children\n";
-	cerr <<"   "<<L2CellsWithChildren*100./L2Cells<<"% of L2 cells have children\n";
-	cerr <<"   "<<TotalLeafPrims*1./LeafCells<<" tris / leaf.\n";
+	if(L1Cells)
+	  cerr <<"   "<<L1CellsWithChildren*100./L1Cells<<"% of L1 cells have children\n";
+	else
+	  cerr <<"   no  L1 children\n";
+	if(L2Cells)
+	  cerr <<"   "<<L2CellsWithChildren*100./L2Cells<<"% of L2 cells have children\n";
+	else
+	  cerr <<"   no L2 children\n";
+	if(LeafCells)
+	  cerr <<"   "<<TotalLeafPrims*1./LeafCells<<" tris / leaf.\n";
+	else
+	  cerr <<"   no leafs\n";
+	
       }
       if( pdata.whichCell[i] > 0 && !grid[pdata.whichCellPos[i]] ) {
 	BBox b(Point(bbox.min()+Vector(ii*pdata.dx, jj*pdata.dy, kk*pdata.dz)),

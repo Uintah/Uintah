@@ -38,7 +38,11 @@ protected:
   Point eye;
   Point lookat;
   Vector up;
+
   double fov;
+  double verticalFov_;
+  double windowAspectRatio_;
+
   Vector u, v;
   Vector uhat, vhat, what;
   Vector direction;
@@ -77,8 +81,11 @@ public:
 
   void set_lookat(const Point&);
   Point get_lookat() const;
+
   void set_fov(double fov);
   double get_fov() const;
+  void setWindowAspectRatio( double ratio );
+
   double get_eyesep() const;
   void set_eye(const Point&);
   void scale_eyesep(double scale);

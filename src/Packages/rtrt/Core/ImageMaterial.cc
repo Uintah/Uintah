@@ -47,9 +47,13 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 
   PPMImage ppm(texfile,flipped);
   if (ppm.valid())  {
-      valid_=true;
-      int nu, nv;
-      ppm.get_dimensions_and_data(image, nu, nv);
+    valid_=true;
+    int nu, nv;
+    ppm.get_dimensions_and_data(image, nu, nv);
+  } else {
+    cerr << "Error reading ImageMaterial: "<<texfile<<"\n";
+    image.resize(3,3);
+    image(0,0)=Color(1,0,1);
   }
   outcolor=Color(0,0,0);
 }
@@ -67,6 +71,10 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
       valid_=true;
       int nu, nv;
       ppm.get_dimensions_and_data(image, nu, nv);
+  } else {
+    cerr << "Error reading ImageMaterial: "<<texfile<<"\n";
+    image.resize(3,3);
+    image(0,0)=Color(1,0,1);
   }
   outcolor=Color(0,0,0);
 }
@@ -110,7 +118,7 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
     double u=uv.u()*uscale;
     double v=uv.v()*vscale;
     switch(umode){
-    case None:
+    case Nothing:
 	if(u<0 || u>1){
 	    diffuse=outcolor;
 	    goto skip;
@@ -130,7 +138,7 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
 	    u=0;
     };
     switch(vmode){
-    case None:
+    case Nothing:
 	if(v<0 || v>1){
 	    diffuse=outcolor;
 	    goto skip;
@@ -187,8 +195,9 @@ ImageMaterial::read_hdr_image(const string &filename)
      }
    }
    if(!indata){
-     cerr << "Error reading image!\n";
-     exit(1);
+     cerr << "Error reading ImageMaterial: " << filename << "\n";
+     image.resize(3,3);
+     image(0,0)=Color(0.7,0.7,0.7);     
    }
   valid_ = true;
 }
@@ -200,19 +209,16 @@ ImageMaterial::io(SCIRun::Piostream &str)
 {
   str.begin_class("ImageMaterial", IMAGEMATERIAL_VERSION);
   Material::io(str);
-  Mode &tmp = umode;
-  SCIRun::Pio(str, (unsigned int&)tmp);
-  Mode &tmp2 = vmode;
-  SCIRun::Pio(str, (unsigned int&)tmp2);
+  SCIRun::Pio(str, (unsigned int&)umode);
+  SCIRun::Pio(str, (unsigned int&)vmode);
   SCIRun::Pio(str, Kd);
   SCIRun::Pio(str, specular);
   SCIRun::Pio(str, specpow);
   SCIRun::Pio(str, refl);
   SCIRun::Pio(str, transp);
-// MARTY: FIX ME
-//  SCIRun::Pio(str, image);
+  rtrt::Pio(str, image);
   SCIRun::Pio(str, outcolor);
-  SCIRun::Pio(str, valid_);
+  SCIRun::Pio(str, valid_);    
   SCIRun::Pio(str, filename_);
   str.end_class();
 }

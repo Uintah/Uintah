@@ -6,8 +6,10 @@
 #include <string>
 #include <vector>
 
+#if !defined( linux )
 #include <dmedia/audiofile.h>
 #include <dmedia/audio.h>
+#endif
 
 namespace rtrt {
 
@@ -42,10 +44,14 @@ public:
   // Returns a pointer into the soundBuffer_; increments current sound
   // buffer location.  If there are less frames left in the sound then
   // requested, actualNumframes will hold the number of frames left.
-  signed char * getFrames( int numFrames, int & actualNumframes );
+  short * getFrames( int numFrames, int & actualNumframes );
 
   // Actually load the sound.  SOUND WILL NOT PLAY UNTIL THIS IS CALLED!
-  void    activate();
+  void    load();
+
+  // If sound is on, it will play if you are near it.  If not, no sound.
+  void    playNow() { on_ = true; playNow_ = true; }
+  bool    isOn() { return on_; }
 
   // Continually repeat this sound?
   bool    repeat() { return continuous_; }
@@ -61,13 +67,20 @@ public:
   const string getName() const { return name_; }
 
 private:
-  signed char * soundBuffer_;
+  // loaded_ is used so that when a sound is pio'ed back in, when the
+  // SoundThread calls activate, the sound will not load itself again.
+  bool          loaded_;
+
+  short       * soundBuffer_;
   int           numFrames_;
 
   int           bufferLocation_;
 
   bool          continuous_;
   double        constantVol_;
+
+  bool          on_;
+  bool          playNow_;
 
   string        filename_;
   string        name_;

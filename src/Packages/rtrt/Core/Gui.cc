@@ -8,6 +8,7 @@
 #include <Packages/rtrt/Core/Ball.h>
 #include <Packages/rtrt/Core/BallMath.h>
 #include <Packages/rtrt/Core/Stealth.h>
+#include <Packages/rtrt/Core/Names.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Image.h>
@@ -16,10 +17,13 @@
 #include <Packages/rtrt/Core/DynamicInstance.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/Worker.h>
+#include <Packages/rtrt/Core/PPMImage.h>
 #include <Packages/rtrt/Core/params.h>
 #include <Packages/rtrt/Core/SelectableGroup.h>
 #include <Packages/rtrt/Core/SpinningInstance.h>
 #include <Packages/rtrt/Core/CutGroup.h>
+#include <Packages/rtrt/Core/PPMImage.h>
+#include <Packages/rtrt/Core/Trigger.h>
 #if !defined(linux)
 #  include <Packages/rtrt/Sound/SoundThread.h>
 #  include <Packages/rtrt/Sound/Sound.h>
@@ -38,17 +42,33 @@
 
 #include <vector>
 
+// From Glyph.cc
+namespace rtrt {
+  extern float glyph_threshold;
+}
+  
+//oogl
+extern ShadedPrim   * backgroundTexQuad; // from rtrt.cc
+extern BasicTexture * backgroundTex;     // from rtrt.cc
+
+////////////////////////////////////////////
+
 extern "C" Display *__glutDisplay;
 
-double ORBIT_SPEED  = 1;
+double ORBIT_SPEED  = 0;
 double ROTATE_SPEED = 1;
-bool   HOLO_ON      = false;
 
 using namespace rtrt;
 using namespace SCIRun;
 using namespace std;
 
 static Gui * activeGui;
+
+PPMImage * livingRoomImage = NULL;
+PPMImage * scienceRoomImage = NULL;
+PPMImage * museumRoomImage = NULL;
+PPMImage * underwaterRoomImage = NULL;
+PPMImage * galaxyRoomImage = NULL;
 
 static double    prev_time[3]; // history for quaternions and time
 static HVect     prev_quat[3];
@@ -115,19 +135,29 @@ static Transform prev_trans;
 // Used for loading in routes.  (Is monotonicly increasing)
 static int routeNumber = 0;
 
+// If someone accidentally types in a huge number to the number of
+// threads spinner, the machine goes into a fit.  If possible, this
+// number should be set dynamically based on the number of processors
+// on the machine that rtrt is running on.
+#define MAX_NUM_THREADS 120
+
 Gui::Gui() :
   selectedLightId_(0), selectedRouteId_(0), selectedObjectId_(0),
-  selectedSoundId_(0), soundsWindowVisible(false),
-  routeWindowVisible(false), lightsWindowVisible(false),
+  selectedTriggerId_(-1), selectedSoundId_(0), soundsWindowVisible(false),
+  routeWindowVisible(false), lightsWindowVisible(false), 
+  triggersWindowVisible(false),
   objectsWindowVisible(false), mainWindowVisible(true),
-  lightList(NULL), routeList(NULL), objectList(NULL), soundList_(NULL),
+  lightList(NULL), routeList(NULL), soundList_(NULL),
   r_color_spin(NULL), g_color_spin(NULL), b_color_spin(NULL), 
   lightIntensity_(NULL), enableSounds_(false),
   lightBrightness_(1.0),
   mouseDown_(0), beQuiet_(true),
   lightsOn_(true), lightsBeingRendered_(false),
-  keypadAttached_(0), rightButtonMenuActive_(true),
-  displayRStats_(false), displayPStats_(false)
+  rightButtonMenuActive_(true),
+  displayRStats_(false), displayPStats_(false),
+  bottomGraphicTrig_(NULL), activeMTT_(NULL), queuedMTT_(NULL),
+  leftGraphicTrig_(NULL), recheckBackgroundCnt_(10),
+  csafeTrig_(NULL), geophysicsTrig_(NULL), visWomanTrig_(NULL)
 {
   inputString_[0] = 0;
 }
@@ -151,7 +181,7 @@ Gui::handleMenuCB( int item )
 {
   switch( item ) {
   case TOGGLE_HOT_SPOTS:
-    activeGui->dpy_->scene->hotspots = !activeGui->dpy_->scene->hotspots;
+    activeGui->toggleHotspotsCB( -1 );
     break;
   case TOGGLE_GUI:
     activeGui->toggleGui();
@@ -240,6 +270,197 @@ Gui::setupFonts()
 }
 
 void
+Gui::handleTriggers()
+{
+  // Handle Active Trigger
+  if( activeGui->activeMTT_ )
+    {
+      Trigger * next = NULL;
+      // next is NULL if no next trigger associated with this trigger.
+      bool result = activeGui->activeMTT_->advance( next );
+      if( result == false ) // done, remove from active list.
+	{
+	  if( activeGui->queuedMTT_ )
+	    {
+	      if( next )
+		{
+		  double quedPriority = activeGui->queuedMTT_->getPriority();
+		  double nextPriority = next->getPriority();
+		  if( quedPriority < nextPriority )
+		    {
+		      cout << "using 'next' trigger: " <<next->getName()<<"\n";
+		      cout << " priorities: " << nextPriority << ", "
+			   << quedPriority << "\n";
+		      activeGui->activeMTT_ = next;
+		    }
+		  else
+		    {
+		      activeGui->activeMTT_ = activeGui->queuedMTT_;
+		      activeGui->queuedMTT_ = NULL;
+		    }
+		}
+	      else
+		{
+		  cout << "moving in queued trigger: " << 
+		    activeGui->queuedMTT_->getName() << "\n";
+		  activeGui->activeMTT_ = activeGui->queuedMTT_;
+		  activeGui->queuedMTT_ = NULL;
+		}
+	    }
+	  else
+	    {
+	      activeGui->activeMTT_ = next;
+	    }
+	  if( activeGui->activeMTT_ ) 
+	    {
+	      cout << "using next trigger: " << next->getName() << "\n";
+	      activeGui->activeMTT_->activate();
+	    }
+	}
+    }
+
+  // Check all triggers.
+  vector<Trigger*> & triggers = dpy_->scene->getTriggers();
+  for( int cnt = 0; cnt < triggers.size(); cnt++ )
+    {
+      Trigger * trigger = triggers[cnt];
+      bool result = trigger->check( activeGui->camera_->eye );
+      if( result == true && trigger != activeGui->activeMTT_ )
+	{
+	  // The trigger is in range, so determine what to do with it
+	  // based on its priority and the active triggers priority.
+	  if( activeGui->activeMTT_ )
+	    {
+	      if( trigger == activeGui->queuedMTT_ ) // already queued.
+		continue;
+	      double trigPriority = trigger->getPriority();
+	      double currPriority = activeGui->activeMTT_->getPriority();
+	      if( currPriority <= trigPriority )
+		{ // Tell current to stop and queue up new trigger.
+		  cout << "deactivating current trigger: " <<
+		    activeGui->activeMTT_->getName() << " to start " <<
+		    trigger->getName() << "\n";
+		  activeGui->activeMTT_->deactivate();
+		  activeGui->queuedMTT_ = trigger;
+		}
+	      else if( activeGui->queuedMTT_ )
+		{
+		  double quedPriority = activeGui->queuedMTT_->getPriority();
+		  if( trigPriority > quedPriority )
+		    {
+		      activeGui->queuedMTT_ = trigger;
+		    }
+		  
+		}
+	    }
+	  else
+	    {
+	      cout << "starting " << trigger->getName() << "\n";
+	      activeGui->activeMTT_ = trigger;
+	      activeGui->activeMTT_->activate();
+	    }
+	}
+    }
+
+  // Deal with bottom graphic trigger
+  if( activeGui->bottomGraphicTrig_ )
+    {
+      Trigger * next = NULL;
+      activeGui->bottomGraphicTrig_->advance( next );
+      if( next )
+	{
+	  activeGui->bottomGraphicTrig_ = next;
+	  next->activate();
+	}
+      else
+	{
+	  // Calling check() just to advance the time of the trigger.
+	  activeGui->bottomGraphicTrig_->check( Point(0,0,0) );
+	}
+    }
+
+  // Deal with left graphic trigger
+  if( activeGui->leftGraphicTrig_ )
+    {
+      Trigger * next = NULL;
+      activeGui->leftGraphicTrig_->advance( next );
+      if( next )
+	{
+	  activeGui->leftGraphicTrig_ = next;
+	  next->activate();
+	}
+      else
+	{
+	  // Calling check() just to advance the time of the trigger.
+	  activeGui->leftGraphicTrig_->check( Point(0,0,0) );
+	}
+    }
+} // end handleTriggers()
+
+void
+Gui::drawBackground()
+{
+  glutSetWindow( glutDisplayWindowId );
+
+  glViewport(0, 0, 1280, 1024);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(0, 1280, 0, 1024);
+  glDisable( GL_DEPTH_TEST );
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glTranslatef(0.375, 0.375, 0.0);
+
+  backgroundTex->reset( GL_FLOAT, &((*(activeGui->backgroundImage_))(0,0)) );
+  backgroundTexQuad->draw();
+#if 0   // this was for two-screen mode for the demo at SIGGRAPH
+  // the following prevents flickering on the second channel
+  glViewport(1280,0,1280,1024);
+  backgroundTexQuad->draw();
+  // reset the viewport after the flickering is fixed
+  glViewport(0, 0, 1280, 1024);
+#endif
+}
+
+void
+Gui::redrawBackgroundCB()
+{
+  if( activeGui->dpy_->fullScreenMode_ ) {
+    if( !activeGui->backgroundImage_ ) return;
+    // update loop will check for a new background, see it is different,
+    // and update correctly.
+    activeGui->recheckBackgroundCnt_ = 10; // forces a redraw
+    activeGui->backgroundImage_ = NULL;
+  }
+}
+
+bool
+Gui::setBackgroundImage( int room )
+{
+  PPMImage * current = backgroundImage_;
+
+  switch( room ) {
+  case 0:
+    backgroundImage_ = scienceRoomImage;
+    break;
+  case 1:
+    backgroundImage_ = livingRoomImage;
+    break;
+  case 2:
+    backgroundImage_ = galaxyRoomImage;
+    break;
+  case 3:
+    backgroundImage_ = museumRoomImage;
+    break;
+  default:
+    backgroundImage_ = underwaterRoomImage;
+    break;
+  }
+
+  return (current != backgroundImage_);
+}
+
+void
 Gui::idleFunc()
 {
   Dpy               * dpy = activeGui->dpy_;
@@ -252,25 +473,45 @@ Gui::idleFunc()
 
   if( activeGui->enableSounds_ )
     {
-      activeGui->enableSounds_ = false;
+      // Sound Thread has finished loading sounds and is now active...
+      // ...so turn on the sound GUIs.
+      activeGui->enableSounds_ = false; 
       activeGui->openSoundPanelBtn_->enable();
       activeGui->soundVolumeSpinner_->enable();
       activeGui->startSoundThreadBtn_->set_name( "Sounds Started" );
     }
 
+  glutSetWindow( activeGui->glutDisplayWindowId );
+  activeGui->handleTriggers();
+
   // I know this is a hack... 
   if( dpy->showImage_ ){
 
-    glutSetWindow( activeGui->glutDisplayWindowId );
+    // Display textual information on the screen:
+    char buf[100];
+    sprintf( buf, "%3.1lf fps", activeGui->priv->FrameRate );
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(0, priv->xres, 0, priv->yres);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef(0.375, 0.375, 0.0);
+    bool redrawBG = false;
+    if( dpy->fullScreenMode_ )
+      {
+	redrawBG = activeGui->checkBackgroundWindow();
+	if( redrawBG ) activeGui->drawBackground();
+      }
 
-    dpy->showImage_->draw();
+    dpy->showImage_->draw( dpy->renderWindowSize_, dpy->fullScreenMode_ );
+    if( dpy->fullScreenMode_ )
+      activeGui->displayText(fontbase, 133, 333, buf, Color(1,1,1));
+    else
+      activeGui->displayText(fontbase, 5, 5, buf, Color(1,1,1));
+
+    if( dpy->fullScreenMode_ ) {
+      glutSwapBuffers();
+      // Need to draw into other buffer so that as we "continuously"
+      // flip them, it doesn't look bad.
+      if( redrawBG ) activeGui->drawBackground();
+      dpy->showImage_->draw( dpy->renderWindowSize_, dpy->fullScreenMode_ );
+      activeGui->displayText(fontbase, 133, 333, buf, Color(1,1,1));
+    }
 
     if( activeGui->displayRStats_ )
       {
@@ -291,18 +532,16 @@ Gui::idleFunc()
 
     dpy->showImage_ = NULL;
 
-    // Display textual information on the screen:
-    char buf[100];
-    sprintf( buf, "%3.1lf fps", activeGui->priv->FrameRate );
-    activeGui->displayText(fontbase, 10, 3, buf, Color(1,1,1));
-
-    glutSwapBuffers(); 
-
     // Let the Dpy thread start drawing the next image.
     //activeGui->priv->waitDisplay->unlock();
     if( activeGui->mainWindowVisible ) {
       activeGui->update(); // update the gui each time a frame is finished.
     }
+    if( !dpy->fullScreenMode_ )
+      glutSwapBuffers(); 
+  } else {
+    if( dpy->fullScreenMode_ )
+      glutSwapBuffers(); 
   }
 }
 
@@ -336,7 +575,9 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   case '+':
     if (activeGui->shiftDown_) {
       // increase planet orbit speed
-      ORBIT_SPEED*=1.1;
+      if (ORBIT_SPEED<.02) ORBIT_SPEED=1;
+      else ORBIT_SPEED*=1.9;
+      cerr << "orbit speed: " << ORBIT_SPEED << endl;
     } else if (activeGui->ctrlDown_) {
       // increase planet rotate speed
       ROTATE_SPEED*=1.1;
@@ -348,10 +589,12 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   case '-':
     if (activeGui->shiftDown_) {
       // decrease planet orbit speed
-      ORBIT_SPEED*=.9;
+      if (ORBIT_SPEED<.1) ORBIT_SPEED=0;
+      else ORBIT_SPEED*=.6;
+      cerr << "orbit speed: " << ORBIT_SPEED << endl;
     } else if (activeGui->ctrlDown_) {
       // decrease planet rotate speed
-      ROTATE_SPEED*=.9;
+      ROTATE_SPEED*=.6;
     } else {
       activeGui->stealth_->decelerate();
     }
@@ -408,7 +651,16 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     activeGui->stealth_->toggleGravity();
     break;
   case 't':
-    activeGui->dpy_->scene->hotspots = !activeGui->dpy_->scene->hotspots;
+    if( activeGui->dpy_->scene->hotSpotMode_ )
+      activeGui->dpy_->scene->hotSpotMode_ = 0;
+    else
+      activeGui->dpy_->scene->hotSpotMode_ = 1;
+    break;
+  case 'T':
+    if( activeGui->dpy_->scene->hotSpotMode_ )
+      activeGui->dpy_->scene->hotSpotMode_ = 0;
+    else
+      activeGui->dpy_->scene->hotSpotMode_ = 2;
     break;
   case 'Q':
     activeGui->beQuiet_ = !activeGui->beQuiet_;
@@ -460,7 +712,8 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   case 13: // Enter
     if (activeGui->shiftDown_) {
       // toggle holo room on/off
-      HOLO_ON = !HOLO_ON;
+      activeGui->dpy_->holoToggle_ = !activeGui->dpy_->holoToggle_;
+      cout << "holo room is now " << activeGui->dpy_->holoToggle_ << endl;
     } else {
       activeGui->camera_->flatten(); // Right yourself (0 pitch, 0 roll)
     }
@@ -506,6 +759,20 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     activeGui->displayPStats_ = !activeGui->displayPStats_;
     break;
 
+  case 'f':
+    if( activeGui->dpy_->fullScreenMode_ )
+      activeGui->dpy_->toggleRenderWindowSize_ = true;
+    else
+      cout << "Can't toggle to full res on non-full screen mode.\n";
+    break;
+
+  case 27: // Escape key... need to find a symbolic name for this...
+    activeGui->quit();
+    break;
+  default:
+    printf("unknown regular key %d\n", key);
+    break;
+
 #if 0
     // below is for blending "pixels" in
     // frameless rendering...
@@ -515,19 +782,19 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     //doing_frameless = 1-doing_frameless; // just toggle...
     cerr << synch_frameless << " Synch?\n";
     break;
-  case '2':
-    stereo=!stereo;
-    break;
   case '1':
     cout << "NOTICE: Use 2 key to toggle Stereo\n";
     cout << "      : 1 key is deprecated and may go away\n";
     break;
-  case 'f':
+  case '2':
+    stereo=!stereo;
+    break;
+
     FPS -= 1;
     if (FPS <= 0.0) FPS = 1.0;
     FrameRate = 1.0/FPS;
     break;
-  case 'F':
+
     FPS += 1.0;
     FrameRate = 1.0/FPS;
     cerr << FPS << endl;
@@ -537,12 +804,6 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     scene->get_image(showing_scene)->save("images/image.raw");
     break;
 #endif
-  case 27: // Escape key... need to find a symbolic name for this...
-    activeGui->quit();
-    break;
-  default:
-    printf("unknown regular key %d\n", key);
-    break;
   }
 } // end handleKeyPress();
 
@@ -714,6 +975,19 @@ Gui::handleWindowResizeCB( int width, int height )
 {
   printf("window resized\n");
 
+  glutSetWindow( activeGui->glutDisplayWindowId );
+
+  glViewport(0, 0, activeGui->dpy_->priv->xres, activeGui->dpy_->priv->yres);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(0, activeGui->dpy_->priv->xres, 0, activeGui->dpy_->priv->yres);
+  glDisable( GL_DEPTH_TEST );
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glTranslatef(0.375, 0.375, 0.0);
+
+  return;
+
   DpyPrivate * priv = activeGui->priv;
 
   // Resize the image...
@@ -761,6 +1035,7 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 	}
       if( activeGui->shiftDown_ )
 	{
+	  // Move towares/away from the lookat point.
 	  double scl;
 	  double xmtn=-(last_x-mouse_x);
 	  double ymtn=-(last_y-mouse_y);
@@ -772,6 +1047,7 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 	  Vector dir = activeGui->camera_->lookat - activeGui->camera_->eye;
 	  activeGui->camera_->eye += dir*scl;
 	} else {
+	  // Zoom in/out.
 	  double scl;
 	  double xmtn= last_x - mouse_x;
 	  double ymtn= last_y - mouse_y;
@@ -787,7 +1063,7 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 	    fov = MIN_FOV;
 	  else if( fov > MAX_FOV )
 	    fov = MAX_FOV;
-	  activeGui->camera_->fov = fov;
+	  activeGui->camera_->set_fov( fov );
 	  activeGui->fovSpinner_->set_float_val( fov );
 	}
       activeGui->camera_->setup();
@@ -861,21 +1137,25 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 void
 Gui::handleSpaceballMotionCB( int sbm_x, int sbm_y, int sbm_z )
 {
-  if( abs(sbm_x) > 10 )
-    activeGui->camera_->moveLaterally( sbm_x/50.0 );
-  if( abs(sbm_y) > 10 )
-    activeGui->camera_->moveVertically( sbm_y/50.0 );
-  if( abs(sbm_z) > 10 )
-    activeGui->camera_->moveForwardOrBack( sbm_z/50.0 );
+  double sensitivity = 100.0;
+
+  if( abs(sbm_x) > 2 )
+    activeGui->camera_->moveLaterally( sbm_x / sensitivity );
+  if( abs(sbm_y) > 2 )
+    activeGui->camera_->moveVertically( sbm_y / sensitivity );
+  if( abs(sbm_z) > 2 )
+    activeGui->camera_->moveForwardOrBack( sbm_z / sensitivity );
 }
 
 void
 Gui::handleSpaceballRotateCB( int sbr_x, int sbr_y, int sbr_z )
 {
-  if( abs(sbr_x) > 20 )
-    activeGui->camera_->changePitch( sbr_x/1000.0 );
-  if( abs(sbr_y) > 20 )
-    activeGui->camera_->changeFacing( sbr_y/500.0 );
+  double sensitivity = 1000.0;
+
+  if( abs(sbr_x) > 2 )
+    activeGui->camera_->changePitch( sbr_x / (sensitivity*2) );
+  if( abs(sbr_y) > 2 )
+    activeGui->camera_->changeFacing( sbr_y / sensitivity );
   // Don't allow roll (at least for now)
 }
 
@@ -917,6 +1197,16 @@ Gui::toggleObjectsWindowCB( int /*id*/ )
 }
 
 void
+Gui::toggleTriggersWindowCB( int /*id*/ )
+{
+  if( activeGui->triggersWindowVisible )
+    activeGui->triggersWindow_->hide();
+  else
+    activeGui->triggersWindow_->show();
+  activeGui->triggersWindowVisible = !activeGui->triggersWindowVisible;
+}
+
+void
 Gui::toggleSoundWindowCB( int /*id*/ )
 {
   if( activeGui->soundsWindowVisible )
@@ -950,11 +1240,13 @@ Gui::updateLightPanelCB( int /*id*/ )
 
   if( light->isOn() )
     {
+      activeGui->lightOnOffBtn_->set_name( "Turn Off" );
       activeGui->lightsColorPanel_->enable();
       activeGui->lightsPositionPanel_->enable();
     }
   else
     {
+      activeGui->lightOnOffBtn_->set_name( "Turn On" );
       activeGui->lightsColorPanel_->disable();
       activeGui->lightsPositionPanel_->disable();
     }
@@ -967,11 +1259,6 @@ Gui::updateRouteCB( int /*id*/ )
   goToRouteBeginningCB( -1 );
 }
 
-void
-Gui::updateObjectCB( int /*id*/ )
-{
-  resetObjSelection();
-}
 
 void
 Gui::updateSoundCB( int /*id*/ )
@@ -980,8 +1267,6 @@ Gui::updateSoundCB( int /*id*/ )
   activeGui->currentSound_ = activeGui->sounds_[ activeGui->selectedSoundId_ ];
 
   Point & location = activeGui->currentSound_->locations_[0];
-
-  cout << "point is " << location << "\n";
 
   activeGui->soundOriginX_->set_float_val( location.x() );
   activeGui->soundOriginY_->set_float_val( location.y() );
@@ -1004,17 +1289,41 @@ Gui::toggleShowLightsCB( int /*id*/ )
 }
 
 void
+Gui::toggleLightOnOffCB( int /*id*/ )
+{
+  Light * light = activeGui->lights_[ activeGui->selectedLightId_ ];
+  if( light->isOn() )
+    {
+      // turn it off
+      activeGui->lightOnOffBtn_->set_name( "Turn On" );
+      light->turnOff();
+      activeGui->lightsColorPanel_->disable();
+      activeGui->lightsPositionPanel_->disable();
+    }
+  else
+    {
+      // turn it on
+      activeGui->lightOnOffBtn_->set_name( "Turn Off" );
+      light->turnOn();
+      activeGui->lightsColorPanel_->enable();
+      activeGui->lightsPositionPanel_->enable();
+    }
+}
+
+void
 Gui::toggleLightSwitchesCB( int /*id*/ )
 {
   if( activeGui->lightsOn_ ) {
     activeGui->toggleLightsOnOffBtn_->set_name( "Turn On Lights" );
     activeGui->dpy_->turnOffAllLights_ = true;
+    activeGui->dpy_->turnOnAllLights_ = false;
     activeGui->lightsOn_ = false;
     activeGui->lightsColorPanel_->disable();
     activeGui->lightsPositionPanel_->disable();
   } else {
     activeGui->toggleLightsOnOffBtn_->set_name( "Turn Off Lights" );
     activeGui->dpy_->turnOnAllLights_ = true;
+    activeGui->dpy_->turnOffAllLights_ = false;
     activeGui->lightsOn_ = true;
     activeGui->lightsColorPanel_->enable();
     activeGui->lightsPositionPanel_->enable();
@@ -1111,77 +1420,72 @@ void
 Gui::createObjectWindow( GLUI * window )
 {
   GLUI_Panel * panel = window->add_panel( "Objects" );
-
-  objectList = window->add_listbox_to_panel( panel, "Selected Object",
-					    &selectedObjectId_,
-					    OBJECT_LIST_ID, updateObjectCB );
-
+					    
   Array1<Object*> & objects = dpy_->scene->objectsOfInterest_;
   for( int num = 0; num < objects.size(); num++ )
     {
       char name[ 1024 ];
-      sprintf( name, "%s", objects[ num ]->name_.c_str() );
-      objectList->add_item( num, name );
+      sprintf( name, "%s", Names::getName(objects[num]));
+
+      SelectableGroup *sg = dynamic_cast<SelectableGroup*>(objects[num]);
+      if (sg) {
+
+	window->add_separator_to_panel( panel );
+
+	window->add_statictext_to_panel( panel, name );
+
+	window->add_checkbox_to_panel( panel, "Cycle Objects", NULL,
+				       num,
+				       SGAutoCycleCB );
+
+	window->add_button_to_panel( panel, "Next Item",
+				     num,
+				     SGNextItemCB );	
+      }
+
+      SpinningInstance *si = dynamic_cast<SpinningInstance*>(objects[num]);
+      if (si) {    
+	window->add_separator_to_panel( panel );
+
+	window->add_statictext_to_panel( panel, name );
+
+	window->add_checkbox_to_panel( panel, "Spin/Freeze", NULL,
+				       num,
+				       SISpinCB );
+	window->add_button_to_panel( panel, "Inc Magnify",
+				     num,
+				     SIIncMagCB );
+	window->add_button_to_panel( panel, "Dec Magnify",
+				     num,
+				     SIDecMagCB );
+	
+	window->add_button_to_panel( panel, "Slide Up",
+				     num,
+				     SISlideUpCB );
+	window->add_button_to_panel( panel, "Slide Down",
+				     num,
+				     SISlideDownCB );		
+      }
+
+      CutGroup * cut = dynamic_cast<CutGroup*>( objects[num] );
+      if (cut) {
+	window->add_separator_to_panel( panel );
+
+	window->add_statictext_to_panel( panel, name );
+
+	window->add_button_to_panel( panel, "On/Off",
+				     num,
+				     CGOnCB );
+	window->add_button_to_panel( panel, "Spin/Freeze",
+				     num,
+				     CGSpinCB );
+
+      }      
+
+      if (num&&(!(num%6))) window->add_column_to_panel( panel, true );
     }
-
-  window->add_statictext_to_panel( panel, "Position:" );
-  window->add_statictext_to_panel( panel, "Type:" );
-  window->add_statictext_to_panel( panel, "Material:" );
-
-  attachKeypadBtn_ = window->add_button_to_panel( panel, "Attach Keypad",
-						  ATTACH_KEYPAD_BTN_ID,
-						  attachKeypadCB );
-
   
-  GLUI_Rollout * moreControls = 
-    window->add_rollout_to_panel( panel, "More Controls", false );  
-
-  window->add_statictext_to_panel( moreControls, "Rotating" );
-
-  /*GLUI_Rotation * objectRotator = */
-    window->add_rotation_to_panel( moreControls, "Rotator", 
-				   (float*)(dpy_->objectRotationMatrix_) );
-
-  window->add_column_to_panel( moreControls, true);
-
-  window->add_statictext_to_panel( moreControls, "Switching" );
-
-  SGAutoButton_ = window->add_checkbox_to_panel( moreControls, "N/A", NULL,
-						 0,
-						 SGChangeCB );
-  SGCycleButton_ = window->add_button_to_panel( moreControls, "N/A",
-						1,
-						SGChangeCB );
-
-  window->add_column_to_panel( moreControls, true);
-
-  window->add_statictext_to_panel( moreControls, "Spinning" );
-  
-  SIAutoButton_ = window->add_checkbox_to_panel( moreControls, "N/A", NULL,
-						 0,
-						 SIChangeCB );
-  SIIncMagButton_ = window->add_button_to_panel( moreControls, "N/A",
-						 1,
-						 SIChangeCB );
-  SIDecMagButton_ = window->add_button_to_panel( moreControls, "N/A",
-						 2,
-						 SIChangeCB );
-
-  SIUpButton_ = window->add_button_to_panel( moreControls, "N/A",
-					     3,
-					     SIChangeCB );
-  SIDownButton_ = window->add_button_to_panel( moreControls, "N/A",
-					       4,
-					       SIChangeCB );
-
-  window->add_column_to_panel( moreControls, true);
-
-  window->add_statictext_to_panel( moreControls, "Cutting" );
-
-  CutToggleButton_ = window->add_button_to_panel( moreControls, "N/A",
-						  0,
-						  CutToggleCB );
-
+  window->add_separator_to_panel( panel );
   window->add_button_to_panel( panel, "Close",
 			       -1, toggleObjectsWindowCB );
 } // end createObjectWindow()
@@ -1231,6 +1535,70 @@ Gui::createSoundsWindow( GLUI * window )
 }
 
 void
+Gui::createTriggersWindow( GLUI * window )
+{
+  vector<Trigger*> triggers = dpy_->scene->getTriggers();
+
+  GLUI_Panel * panel = window->add_panel( "Triggers" );
+
+  triggerList_ = window->add_listbox_to_panel( panel, "Selected Trigger",
+					       &selectedTriggerId_ );
+					     
+  GLUI_Button * doit = window->add_button_to_panel( panel, "Activate",
+						    -1, activateTriggerCB );
+
+  window->add_button( "Close", -1, toggleTriggersWindowCB );
+
+  if( triggers.size() > 0 ) selectedTriggerId_ = 0;
+
+  for( int num = 0; num < triggers.size(); num++ )
+    {
+      char name[ 1024 ];
+      sprintf( name, "%s", triggers[ num ]->getName().c_str() );
+      cout << "name: " << name << "\n";
+
+      triggerList_->add_item( num, name );
+    }
+}
+
+void
+Gui::activateTriggerCB( int /* id */ )
+{
+  if( activeGui->selectedTriggerId_ == -1 ) return;
+  vector<Trigger*> triggers = activeGui->dpy_->scene->getTriggers();
+  Trigger * trig = triggers[ activeGui->selectedTriggerId_ ];
+
+  if( trig->isSoundTrigger() )
+    {
+      trig->activate();
+    }
+  else // image trigger
+    {
+      // Turn the Priority up so the trigger will be sure to run.
+      trig->setPriority( Trigger::HighTriggerPriority );
+      Trigger * next = trig->getNext();
+      while( next && next != trig )
+	{ // Set priorities of all triggers in sequence.
+	  next->setPriority( Trigger::HighTriggerPriority );
+	  next = next->getNext();
+	}
+
+      if( activeGui->activeMTT_ ) // If a trigger is already running...
+	{
+	  cout << "QUEUING trigger: " << trig->getName() << "\n";
+	  activeGui->activeMTT_->deactivate(); // then tell it to stop.
+	  activeGui->queuedMTT_ = trig;        // and queue up the new trigger.
+	}
+      else
+	{
+	  cout << "activating TRIGGER: " << trig->getName() << "\n";
+	  activeGui->activeMTT_ = trig;
+	  activeGui->activeMTT_->activate();
+	}
+    }
+}
+
+void
 Gui::startSoundThreadCB( int /*id*/ )
 {
 #if !defined(linux)
@@ -1254,149 +1622,101 @@ Gui::soundThreadNowActive()
   activeGui->enableSounds_ = true;
 }
 
-void
-Gui::resetObjSelection() {
-  activeGui->stealth_ = activeGui->dpy_->stealth_;
-  activeGui->keypadAttached_ = 0;
-  activeGui->attachKeypadBtn_->set_name( "Attach Keypad" );
-  activeGui->SGAutoButton_->set_name( "N/A" );
-  activeGui->SGCycleButton_->set_name( "N/A" );
-  activeGui->SIAutoButton_->set_name( "N/A" );
-  activeGui->SIIncMagButton_->set_name( "N/A" );
-  activeGui->SIDecMagButton_->set_name( "N/A" );
-  activeGui->SIUpButton_->set_name( "N/A" );
-  activeGui->SIDownButton_->set_name( "N/A" );
-  activeGui->CutToggleButton_->set_name( "N/A" );
-  activeGui->SIAutoButton_->set_int_val(0);
-  activeGui->SGAutoButton_->set_int_val(0);
-  activeGui->stealth_->stopAllMovement();
-  activeGui->dpy_->attachedObject_ = NULL;
-  activeGui->attachedSG_ = NULL;
-  activeGui->attachedSI_ = NULL;
+void Gui::SGAutoCycleCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  SelectableGroup *obj = dynamic_cast<SelectableGroup*>(objects[id]);
+  obj->toggleAutoswitch();
 }
 
-void Gui::SGChangeCB( int id ) {
-  
-  if ((activeGui->keypadAttached_ == 2) && (activeGui->attachedSG_)) {
-    if (!id) {
-      activeGui->attachedSG_->toggleAutoswitch();
-    } else {
-      activeGui->attachedSG_->nextChild();
-    }
-    activeGui->SGAutoButton_->set_int_val(activeGui->attachedSG_->Autoswitch());
-  }
-}
-
-void Gui::SIChangeCB( int id ) {
-  
-  if ((activeGui->keypadAttached_ == 3) && (activeGui->attachedSI_)) {
-    switch (id) {
-    case 0:
-      activeGui->attachedSI_->toggleDoSpin();      
-      break;
-    case 1:
-      activeGui->attachedSI_->incMagnification();      
-      break;
-    case 2:
-      activeGui->attachedSI_->decMagnification();      
-      break;
-    case 3:
-      activeGui->attachedSI_->upPole();      
-      break;
-    case 4:
-      activeGui->attachedSI_->downPole();      
-      break;
-    }
-    activeGui->SIAutoButton_->set_int_val(activeGui->attachedSI_->doSpin());
-  }
-}
-
-void Gui::CutToggleCB( int /*id*/ ) {
-  
-  if ((activeGui->keypadAttached_ == 4) && (activeGui->attachedCut_)) {
-    activeGui->attachedCut_->toggleOn();
-  }
-}
-
-void
-Gui::attachKeypadCB( int /*id*/ )
+void Gui::SGNextItemCB( int id )
 {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  SelectableGroup * sg = dynamic_cast<SelectableGroup*>(objects[id]);  
+  sg->nextChild();
+  Object * newObj = sg->getCurrentChild();
+  if( Names::hasName( newObj ) ) {
+    Trigger * trig = NULL;
 
-  if (activeGui->keypadAttached_) {
-    resetObjSelection();
-    return;
+    if( Names::getName(newObj) == "Visible Female Volume" ) {
+      trig = activeGui->visWomanTrig_;
+    } else if( Names::getName(newObj) == "Brain Volume" ) {
+      trig = NULL;
+    } else if( Names::getName(newObj) == "CSAFE Fire Volume" ) {
+      trig = activeGui->csafeTrig_;
+    } else if( Names::getName(newObj) == "Geological Volume" ) {
+      trig = activeGui->geophysicsTrig_;
+    } else if( Names::getName(newObj) == "Sheep Heart Volume" ) {
+      trig = NULL;
+    }
+
+    if( trig ) {
+      trig->setPriority( Trigger::HighTriggerPriority );
+      if( activeGui->activeMTT_ ) // If a trigger is already running...
+	{
+	  activeGui->activeMTT_->deactivate(); // then tell it to stop.
+	  activeGui->queuedMTT_ = trig;        // and queue up the new trigger.
+	}
+      else // just start this trigger
+	{
+	  activeGui->activeMTT_ = trig;
+	  activeGui->activeMTT_->activate();
+	}
+    }
   }
-  
-  Object * obj = 
-    activeGui->dpy_->scene->objectsOfInterest_[ activeGui->selectedObjectId_ ];
+}
 
-  DynamicInstance * instance = dynamic_cast<DynamicInstance*>( obj );
-  if( instance ) 
-    {
-      resetObjSelection();
-      activeGui->keypadAttached_ = 1;
-      activeGui->attachKeypadBtn_->set_name( "Detach Keypad" );
-      activeGui->dpy_->attachedObject_ = instance;
-      activeGui->stealth_ = activeGui->dpy_->objectStealth_;
-    }
+void Gui::SISpinCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  SpinningInstance *obj = dynamic_cast<SpinningInstance*>(objects[id]);  
+  obj->toggleDoSpin();      
+}
+void Gui::SIIncMagCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  SpinningInstance *obj = dynamic_cast<SpinningInstance*>(objects[id]);  
+  obj->incMagnification();      
+}
+void Gui::SIDecMagCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  SpinningInstance *obj = dynamic_cast<SpinningInstance*>(objects[id]);  
+  obj->decMagnification();      
+}
+void Gui::SISlideUpCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  SpinningInstance *obj = dynamic_cast<SpinningInstance*>(objects[id]);  
+  obj->upPole();      
+}
+void Gui::SISlideDownCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  SpinningInstance *obj = dynamic_cast<SpinningInstance*>(objects[id]);  
+  obj->downPole();      
+}
 
-  SelectableGroup *sg = dynamic_cast<SelectableGroup*>(obj);
-  if (sg) 
-    {
-      resetObjSelection();
-      activeGui->keypadAttached_ = 2;
-      activeGui->attachKeypadBtn_->set_name( "Detach Keypad" );
-      activeGui->SGAutoButton_->set_name( "Auto Switch" );
-      activeGui->SGCycleButton_->set_name( "Next Object" );
-      activeGui->SGAutoButton_->set_int_val(sg->Autoswitch());
-      activeGui->attachedSG_ = sg;
-    }
+void Gui::CGOnCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  CutGroup *obj = dynamic_cast<CutGroup*>(objects[id]);  
+  obj->toggleOn();
+}
 
-  SpinningInstance *si = dynamic_cast<SpinningInstance*>(obj);
-  if (si) 
-    {
-      resetObjSelection();
-      activeGui->keypadAttached_ = 3;
-      activeGui->attachKeypadBtn_->set_name( "Detach Keypad" );
-      activeGui->SIAutoButton_->set_name( "Auto Spin" );
-      activeGui->SIIncMagButton_->set_name( "Inc Magnify" );
-      activeGui->SIDecMagButton_->set_name( "Dec Magnify" );
-      activeGui->SIUpButton_->set_name( "Slide Up" );
-      activeGui->SIDownButton_->set_name( "Slide Down" );
-      activeGui->SIAutoButton_->set_int_val(si->doSpin()); 
-      activeGui->attachedSI_ = si;
-    }
-
-  CutGroup * cut = dynamic_cast<CutGroup*>( obj );
-  if( cut ) 
-    {
-      resetObjSelection();
-      activeGui->keypadAttached_ = 4;
-      activeGui->attachKeypadBtn_->set_name( "Detach Keypad" );
-      activeGui->CutToggleButton_->set_name( "Toggle Cut" );
-      activeGui->attachedCut_ = cut;
-    }
-
-
+void Gui::CGSpinCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  CutGroup *obj = dynamic_cast<CutGroup*>(objects[id]);  
+  obj->toggleAnimate();
 }
 
 void
 Gui::addLight( Light * light )
 {
-  int numLights = lights_.size();
+  string & name = light->name_;
+  if( name != "" ) {
+    int numLights = lights_.size();
+    char namec[1024];
+    sprintf( namec, "%s", name.c_str() );
 
-  string name = light->name_;
-  if( name == "" ) {
-    name = "Unnamed";
+    lightList->add_item( numLights, namec );
+    lights_.push_back( light );
+
+    updateLightPanelCB( -1 );
   }
-
-  char namec[1024];
-  sprintf( namec, "%s", name.c_str() );
-
-  lightList->add_item( numLights, namec );
-  lights_.push_back( light );
-
-  updateLightPanelCB( -1 );
 }
 
 void
@@ -1410,7 +1730,7 @@ Gui::createLightWindow( GLUI * window )
     window->add_spinner_to_panel( panel, "Ambient Level:", GLUI_SPINNER_FLOAT,
 				  &ambientBrightness_, -1, updateAmbientCB );
   ambientIntensity_->set_float_limits( 0.0, 1.0 );
-  ambientIntensity_->set_speed( 0.03 );
+  ambientIntensity_->set_speed( 0.05 );
 
   window->add_separator_to_panel( panel );
 
@@ -1421,7 +1741,10 @@ Gui::createLightWindow( GLUI * window )
     window->add_spinner_to_panel( panel, "Intensity:", GLUI_SPINNER_FLOAT,
 				  &lightBrightness_, -1, updateIntensityCB );
   lightIntensity_->set_float_limits( 0.0, 1.0 );
-  lightIntensity_->set_speed( 0.01 );
+  lightIntensity_->set_speed( 0.1 );
+
+  lightOnOffBtn_ = window->add_button_to_panel( panel, "Turn Off",
+						-1, toggleLightOnOffCB );
 
   lightsColorPanel_ = window->add_panel_to_panel( panel, "Color" );
 
@@ -1472,7 +1795,6 @@ Gui::createLightWindow( GLUI * window )
 
   window->add_button_to_panel( panel, "Close",
 			       1, toggleLightsWindowCB );
-
 }
 
 
@@ -1499,19 +1821,20 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   glutAttachMenu(GLUT_RIGHT_BUTTON);
 
   // Build GLUI Windows
-  activeGui->mainWindow = GLUI_Master.create_glui( "SIGGRAPH", 0, 400, 20 );
+  activeGui->mainWindow = GLUI_Master.create_glui( "SIGGRAPH", 0, 804, 0 );
   if( !showGui ){
     activeGui->mainWindow->hide();
     activeGui->mainWindowVisible = false;
   }
 
-  activeGui->routeWindow = GLUI_Master.create_glui( "Route", 0, 400, 400 );
-  activeGui->lightsWindow = GLUI_Master.create_glui( "Lights", 0, 500, 400 );
-  activeGui->objectsWindow = GLUI_Master.create_glui( "Objects", 0, 600, 400 );
-  activeGui->soundsWindow = GLUI_Master.create_glui( "Sounds", 0, 700, 400 );
+  activeGui->routeWindow     = GLUI_Master.create_glui( "Route",   0,900,400 );
+  activeGui->lightsWindow    = GLUI_Master.create_glui( "Lights",  0,900,500 );
+  activeGui->objectsWindow   = GLUI_Master.create_glui( "Objects", 0,900,600 );
+  activeGui->soundsWindow    = GLUI_Master.create_glui( "Sounds",  0,900,700 );
+  activeGui->triggersWindow_ = GLUI_Master.create_glui( "Triggers",0,900,800 );
 
   activeGui->getStringWindow = 
-                    GLUI_Master.create_glui( "Input Request", 0, 400, 400 );
+                    GLUI_Master.create_glui( "Input Request", 0, 900, 600 );
 
   //  activeGui->routeWindow->set_main_gfx_window( winId );
   //  activeGui->lightsWindow->set_main_gfx_window( winId );
@@ -1522,12 +1845,14 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   activeGui->lightsWindow->hide();
   activeGui->objectsWindow->hide();
   activeGui->soundsWindow->hide();
+  activeGui->triggersWindow_->hide();
 
   activeGui->getStringWindow->hide();
 
   activeGui->createRouteWindow( activeGui->routeWindow );
   activeGui->createLightWindow( activeGui->lightsWindow );
   activeGui->createObjectWindow( activeGui->objectsWindow );
+  activeGui->createTriggersWindow( activeGui->triggersWindow_ );
   activeGui->createGetStringWindow( activeGui->getStringWindow );
 
   /////////////////////////////////////////////////////////
@@ -1658,7 +1983,7 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
 			  &(activeGui->dpy_->numThreadsRequested_),
 			  NUM_THREADS_SPINNER_ID );
   activeGui->numThreadsSpinner_->set_speed( 0.0001 );
-  activeGui->numThreadsSpinner_->set_int_limits( 1, 128 );
+  activeGui->numThreadsSpinner_->set_int_limits( 1, MAX_NUM_THREADS );
 
   // ...This probably goes to the objects window...
   GLUI_Button * toggleMaterials = activeGui->mainWindow->
@@ -1693,8 +2018,17 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
 	}
     }
 #endif
+  
+  activeGui->glyphThresholdSpinner_ = activeGui->mainWindow->
+    add_spinner_to_panel( otherControls, "Glyph Threshold",
+			  GLUI_SPINNER_FLOAT, 
+			  &glyph_threshold,
+			  -1);
+  activeGui->glyphThresholdSpinner_->set_speed( 0.1 );
+  activeGui->glyphThresholdSpinner_->set_float_limits( 0, 1 );
+  
   // 
-  activeGui->depthValue_ = 2;
+  activeGui->depthValue_ = activeGui->priv->maxdepth;
   GLUI_Spinner * depthSpinner = activeGui->mainWindow->
     add_spinner_to_panel( display_panel, "Ray Depth", GLUI_SPINNER_INT, 
 			  &(activeGui->depthValue_), DEPTH_SPINNER_ID, 
@@ -1710,20 +2044,70 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
     add_button_to_panel( button_panel, "Routes",
 			 ROUTE_BUTTON_ID, toggleRoutesWindowCB );
   activeGui->mainWindow->add_column_to_panel( button_panel );
+
   activeGui->mainWindow->
     add_button_to_panel( button_panel, "Lights",
 			 LIGHTS_BUTTON_ID, toggleLightsWindowCB );
   activeGui->mainWindow->add_column_to_panel( button_panel );
+
   activeGui->mainWindow->
     add_button_to_panel( button_panel, "Objects",
 			 OBJECTS_BUTTON_ID, toggleObjectsWindowCB );
   activeGui->mainWindow->add_column_to_panel( button_panel );
+
   activeGui->openSoundPanelBtn_ = activeGui->mainWindow->
     add_button_to_panel( button_panel, "Sounds",
 			 OBJECTS_BUTTON_ID, toggleSoundWindowCB );
   activeGui->openSoundPanelBtn_->disable();
+  activeGui->mainWindow->add_column_to_panel( button_panel );
+
+  activeGui->mainWindow->
+    add_button_to_panel( button_panel, "Triggers",
+			 OBJECTS_BUTTON_ID, toggleTriggersWindowCB );
+
+
+  ///////////////////////////////////////////////////////////
+
+  if( activeGui->dpy_->fullScreenMode_ )
+    {
+      livingRoomImage = new PPMImage( 
+	"/usr/sci/data/Geometry/interface/backgrounds/bkgrnd_livingroom.ppm",
+	true );
+      scienceRoomImage = new PPMImage( 
+	"/usr/sci/data/Geometry/interface/backgrounds/bkgrnd_science.ppm",
+	true );
+      museumRoomImage = new PPMImage( 
+	"/usr/sci/data/Geometry/interface/backgrounds/bkgrnd_museum.ppm",
+	true );
+      underwaterRoomImage = new PPMImage( 
+	"/usr/sci/data/Geometry/interface/backgrounds/bkgrnd_atlantis.ppm",
+	true );
+      galaxyRoomImage = new PPMImage( 
+	"/usr/sci/data/Geometry/interface/backgrounds/bkgrnd_galaxy.ppm",
+	true );
+      activeGui->backgroundImage_ = scienceRoomImage;
+
+      ///////// CREATE SOME TRIGGERS
+      ///// VIS WOMEN
+      string ifpath = "/usr/sci/data/Geometry/interface/";      
+      vector<Point> loc;
+      PPMImage * ppm = 
+	new PPMImage(ifpath+"scienceroom/science_vis-woman.ppm", true);
+      loc.clear(); loc.push_back(Point(-30,-30,1.9));
+      activeGui->visWomanTrig_ = new Trigger( "Visible Woman", loc, 1,
+					      60,ppm,true );
+      ///// GEOPHYSICS
+      ppm = new PPMImage(ifpath+"scienceroom/science_geophysics.ppm", true);
+      loc.clear(); loc.push_back(Point(-40,-40,1.9));
+      activeGui->geophysicsTrig_ = new Trigger( "Geophysics", loc, 1,
+						30,ppm,true );
+      ///// C-SAFE
+      ppm = new PPMImage(ifpath+"scienceroom/science_firespread.ppm", true);
+      loc.clear(); loc.push_back(Point(-50,-50,1.9));
+      activeGui->csafeTrig_ = new Trigger( "C-SAFE Fire", loc, 1,30,ppm,true );
+    }
   printf("done createmenus\n");
-}
+} // end createMenus()
 
 const string
 Gui::getFacingString() const
@@ -1827,6 +2211,53 @@ Gui::update()
 
 } // end update()
 
+bool
+Gui::checkBackgroundWindow()
+{
+  // See if we have moved nearer to another room... return true if so.
+
+  if( recheckBackgroundCnt_ == 10 )
+    {
+      recheckBackgroundCnt_ = 0;
+      static vector<Point> positions;
+      if( positions.size() == 0 )
+	{
+	  positions.push_back( Point(  -8,  8, 2) ); //  science
+	  positions.push_back( Point(  10, -6, 2) ); //  living
+	  positions.push_back( Point(   8, 10, 2) ); //  galaxy
+	  positions.push_back( Point(  -7, -5, 2) ); //  museum
+
+	  positions.push_back( Point(  0,  -6, 2) ); //  southTube
+	  positions.push_back( Point(  0,  10, 2) ); //  northTube
+	  positions.push_back( Point( -10, -2, 2) ); //  westTube
+	  positions.push_back( Point(  10,  2, 2) ); //  eastTube
+	}
+
+      double minDist = 99999;
+      int    index   = -1;
+
+      const Point & eye = camera_->get_eye();
+
+      for( int cnt = 0; cnt < 8; cnt++ )
+	{
+	  double dist = (positions[cnt] - eye).length2();
+	  if( dist < minDist )
+	    {
+	      minDist = dist;
+	      index = cnt;
+	    }
+	}
+      cout << "closest to " << index << "\n";
+      if( index != -1 )
+	return setBackgroundImage( index );
+    }
+  else
+    {
+      recheckBackgroundCnt_++;
+    }
+  return false;
+}
+
 void
 Gui::updateSoundPanel()
 {
@@ -1853,7 +2284,10 @@ Gui::toggleTransmissionModeCB( int /* id */ )
 void
 Gui::toggleHotspotsCB( int /*id*/ )
 {
-  activeGui->dpy_->scene->hotspots = !activeGui->dpy_->scene->hotspots;
+  if( activeGui->dpy_->scene->hotSpotMode_ == 2 )
+    activeGui->dpy_->scene->hotSpotMode_ = 0;
+  else
+    activeGui->dpy_->scene->hotSpotMode_++;
 }
 
 
@@ -1865,9 +2299,11 @@ Gui::toggleGui()
     objectsWindow->hide();
     soundsWindow->hide();
     lightsWindow->hide();
+    triggersWindow_->hide();
     mainWindow->hide();
     
     lightsWindowVisible = false;
+    triggersWindowVisible = false;
     routeWindowVisible = false;
     objectsWindowVisible = false;
     soundsWindowVisible = false;
@@ -2501,4 +2937,5 @@ Gui::drawrstats(int nworkers, vector<Worker*> & workers,
     column+=dx;
   }
 } // end draw_rstats()
+
 

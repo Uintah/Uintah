@@ -3,8 +3,10 @@
 
 #include <Core/Thread/Runnable.h>
 
+#if !defined( linux )
 #include <dmedia/audiofile.h>
 #include <dmedia/audio.h>
+#endif
 
 #include <vector>
 
@@ -29,12 +31,20 @@ public:
 
   void playSound( Sound * sound );
 
+  //// Used to shut off the thread from using up CPU resources.
+  // Put the sound thread to sleep for N seconds.
+  void goToSleep( double seconds ) { sleepTime_ = seconds; }
+
 private:
+#if !defined(linux)
   ALconfig        config_;
   ALport          audioPort_;
+#endif
   double          samplingRate_;
 
   vector<Sound*>  soundQueue_;
+
+  double             sleepTime_;
 
   const Camera     * eyepoint_;
         Scene      * scene_;

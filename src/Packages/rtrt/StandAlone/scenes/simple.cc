@@ -99,8 +99,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   scene->addSound( sound );
 #endif
 
-  objOfInterest->name_ = "cube";
-  scene->addObjectOfInterest( objOfInterest, true );
+  scene->addObjectOfInterest( "cube", objOfInterest, true );
 
   Light * light = new Light(Point(20,20,50), Color(1,1,1), 0.8);
   light->name_ = "main light";

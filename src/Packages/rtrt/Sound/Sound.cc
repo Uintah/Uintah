@@ -18,10 +18,20 @@ Sound::Sound( const string        & filename,
 	            double          constantVol /* = -1 */ ) :
   filename_(filename), name_(name), continuous_(repeat), locations_(locations),
   distance2_(distance*distance), bufferLocation_(0), numFrames_(0),
-  constantVol_(constantVol)
+  constantVol_(constantVol), loaded_(false), playNow_(false)
 {
   if( constantVol_ > 1.0 )
     constantVol_ = 1.0;
+
+  if( continuous_ )
+    {
+      on_ = true;
+    }
+  else
+    {
+      on_ = false;
+      playNow_ = false;
+    }
 }
 
 Sound::~Sound()
@@ -30,7 +40,7 @@ Sound::~Sound()
   delete[] soundBuffer_;
 }
 
-signed char *
+short *
 Sound::getFrames( int numFramesRequested, int & actualNumframes )
 {
   if( bufferLocation_ + numFramesRequested >= numFrames_ )
@@ -42,11 +52,13 @@ Sound::getFrames( int numFramesRequested, int & actualNumframes )
       actualNumframes = numFramesRequested;
     }
 
-  signed char * loc = &(soundBuffer_[ bufferLocation_ ]);
+  short * loc = &(soundBuffer_[ bufferLocation_ ]);
 
   if( actualNumframes < numFramesRequested ) // reset to beginning
     {
       //cout << "reseting sound\n";
+      if( !continuous_ )
+	on_ = false;
       bufferLocation_ = 0;
     }
   else
@@ -61,8 +73,11 @@ double
 Sound::volume( const Point & location )
 {
   int size = locations_.size();
-  if( size == 0 )
+  if( size == 0 || !on_ )
     return 0;
+
+  if( playNow_ )
+    return constantVol_;
 
   double minDist2 = 9999999.9;
   for( int cnt = 0; cnt < size; cnt++ )
@@ -93,8 +108,12 @@ Sound::volume( const Point & location )
 }
 
 void
-Sound::activate()
+Sound::load()
 {
+#if !defined(linux)
+  if( loaded_ ) return;
+  loaded_ = true;
+
   AFfilehandle file = afOpenFile(filename_.c_str(),"r",0);
 
   cout << "Loading sound file: " << filename_ << "\n";
@@ -124,14 +143,14 @@ Sound::activate()
 
   numFrames_ = afGetFrameCount( file, AF_DEFAULT_TRACK );
                                                  
-  unsigned char * tempBuffer = new unsigned char[ numFrames_ ];
-  soundBuffer_ = new signed char[ numFrames_ ];
+  short * tempBuffer = new short[ numFrames_ ];
+  soundBuffer_       = new short[ numFrames_ ];
 
   int frames = afReadFrames( file,AF_DEFAULT_TRACK, tempBuffer, 
 			     numFrames_ );
 
-  float max = -9999;
-  float min = 9999;
+  float max = -99999;
+  float min = 99999;
 
   for( int cnt = 0; cnt < numFrames_; cnt++ )
     {
@@ -146,11 +165,7 @@ Sound::activate()
   float min2 = 99999; float max2 = -99999;
   for( int cnt = 0; cnt < numFrames_; cnt++ )
     {
-      // This may not be true:
-      //
-      // Divide by X means we can play X sounds simultaneously at full
-      // volume without going out of range.
-      int val = tempBuffer[cnt] - 127;
+      int val = tempBuffer[cnt];
 
       soundBuffer_[cnt] = val;
 
@@ -168,4 +183,18 @@ Sound::activate()
        << numFrames_ << " frames\n";
 
   afCloseFile( file );
+#endif
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

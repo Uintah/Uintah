@@ -17,6 +17,18 @@ namespace SCIRun {
 
 namespace rtrt {
 
+inline double ipow(double x, int p)
+{
+  double result=1;
+  while(p){
+    if(p&1)
+      result*=x;
+    x*=x;
+    p>>=1;
+  }
+  return result;
+}
+
 using SCIRun::Vector;
 using SCIRun::Point;
 
@@ -39,7 +51,7 @@ protected:
   // parameter block.
   void phongshade(Color& result,
 		  const Color& diffuse, const Color& specular,
-		  double spec_coeff, double refl,
+		  int spec_coeff, double refl,
 		  const Ray& ray, const HitInfo& hit,
 		  int depth, 
 		  double atten, const Color& accumcolor,
@@ -96,7 +108,7 @@ public:
   Vector reflection(const Vector& v, const Vector n) const;
 
   // gives the phong term without color of light or kh
-  double phong_term( const Vector& e, const Vector& l, const Vector& n, double exponent) const;
+  double phong_term( const Vector& e, const Vector& l, const Vector& n, int exponent) const;
 
   //    virtual int get_scratchsize() {
   //      return 0;

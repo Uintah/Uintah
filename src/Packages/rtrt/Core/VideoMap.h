@@ -26,35 +26,36 @@ namespace rtrt
 class VideoMap : public Material
 {
 private:
-   int nx;                             // pixel width of frames
-   int ny;                             // pixel height of frames
-   int numFrames;                      // number of image files to loop
-   int curFrame;                       // frame index at last intersection
-   double loopTime;                    // time for one complete video loop
-   double framesPerSec;                // variable frame speed
-   double curTime;                     // time at last intersect
-   double specPower;                   // area of highlight
-   double refl;                        // 
-   Color specular;                     // highlight color
-   Array1< Array2 <Color> * > frames;  // array of images to loop
+  int nx;                             // pixel width of frames
+  int ny;                             // pixel height of frames
+  int numFrames;                      // number of image files to loop
+  int curFrame;                       // frame index at last intersection
+  double loopTime;                    // time for one complete video loop
+  double framesPerSec;                // variable frame speed
+  double curTime;                     // time at last intersect
+  double specPower;                   // area of highlight
+  double refl;                        // 
+  Color specular;                     // highlight color
+  Array1< Array2 <Color> * > frames;  // array of images to loop
    
 public:   
-   /*******************************************************************/
-   // do not use!
-   VideoMap ();
-   /*******************************************************************/
-   // fileName must be in format "name%d.ppm" 
-   // files must be named in format --
-   //      named name0.ppm , name1.ppm , ... ,  name[numFrames-1].ppm
-   VideoMap (char* _fileName, int _numFrames, double _framesPerSec,
-	     const Color& _specular, double _specPower, double _refl);
-   ~VideoMap ();
-   /*******************************************************************/
-   // looks up diffuse color in current frame,  then calls default 
-   // Material::PhongShade()
-   virtual void shade (Color& result, const Ray& ray, const HitInfo& hit, 
-	               int depth, double atten, const Color& accumcolor,
-		       Context* cx); 	    
+  /*******************************************************************/
+  // do not use!
+  VideoMap ();
+  /*******************************************************************/
+  // fileName must be in format "name%d.ppm" 
+  // files must be named in format --
+  //      named name0.ppm , name1.ppm , ... ,  name[numFrames-1].ppm
+  VideoMap (char* _fileName, int _numFrames, double _framesPerSec,
+	    const Color& _specular, double _specPower, double _refl);
+  ~VideoMap ();
+  /*******************************************************************/
+  // looks up diffuse color in current frame,  then calls default 
+  // Material::PhongShade()
+  virtual void shade (Color& result, const Ray& ray, const HitInfo& hit, 
+		      int depth, double atten, const Color& accumcolor,
+		      Context* cx); 	    
+  virtual void io(SCIRun::Piostream &stream) { ASSERTFAIL("not implemented"); }
 };   
 
 } // namespace rtrt

@@ -28,21 +28,22 @@ class SHLambertianMaterial : public Material {
 
 public:
 
-    SHLambertianMaterial( const Color& R, char* envmap, float scale = 10.0, 
-			  int type = 1 );
-    virtual ~SHLambertianMaterial( void );
-    virtual void shade( Color& result, const Ray& ray,
-			const HitInfo& hit, int depth,
-			double atten, const Color& accumcolor,
-			Context* cx );
+  SHLambertianMaterial( const Color& R, char* envmap, float scale = 10.0, 
+			int type = 1 );
+  virtual ~SHLambertianMaterial( void );
+  virtual void io(SCIRun::Piostream &stream) { ASSERTFAIL("not implemented"); }
+  virtual void shade( Color& result, const Ray& ray,
+		      const HitInfo& hit, int depth,
+		      double atten, const Color& accumcolor,
+		      Context* cx );
     
 private:
 
-    Color irradCoeffs( const Vector& N ) const;
+  Color irradCoeffs( const Vector& N ) const;
 
-    Color albedo;
-    Color L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22;
-    float fudgeFactor;
+  Color albedo;
+  Color L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22;
+  float fudgeFactor;
 
 };
 

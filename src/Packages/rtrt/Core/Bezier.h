@@ -16,13 +16,30 @@
 #define PATCH_OVERLAP 0.05
 
 namespace rtrt {
+  class Bezier;
+}
+
+namespace SCIRun {
+  void Pio(Piostream&, rtrt::Bezier*&);
+}
+
+namespace rtrt {
 
 class Bezier: public Object {
 
 public:
     
-  Bezier(Material *, Mesh *, double u0=0, double u1=1, double v0=0, double v1=1);
-  Bezier(Material *, Mesh *, Mesh *, double u0, double u1, double v0, double v1);
+  Bezier(Material *, Mesh *, double u0=0, double u1=1, double v0=0, 
+	 double v1=1);
+  Bezier(Material *, Mesh *, Mesh *, double u0, double u1, double v0, 
+	 double v1);
+
+  Bezier() : Object(0) {} // for Pio.
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, Bezier*&);
 
   inline void setParams(double u0, double u1, double v0, double v1)
   {
@@ -127,52 +144,52 @@ public:
   }
 
   /*inline void intersect(Ray &r, HitInfo &hit, DepthStats* st,
-			  PerProcessorContext *ppc) {
+    PerProcessorContext *ppc) {
       
-      Point orig(r.origin());    
-      Vector dir(r.direction());
-      Vector idir(1./dir.x(), 1./dir.y(), 1./dir.z());
-      double u,v;
+    Point orig(r.origin());    
+    Vector dir(r.direction());
+    Vector idir(1./dir.x(), 1./dir.y(), 1./dir.z());
+    double u,v;
       
-      if (bvintersect(orig,idir,hit)) {
-	//if (1) {
-	if (isleaf) {
-	  double t;
-	  Point P;
+    if (bvintersect(orig,idir,hit)) {
+    //if (1) {
+    if (isleaf) {
+    double t;
+    Point P;
 	  
-	  // reset initial guess
-	  u = .5*(ustart+ufinish);
-	  v = .5*(vstart+vfinish);
-	  if(control->Hit(r,u,v,t,P,ustart,ufinish,vstart,vfinish,ppc)) {
-	    if (hit.hit(this,t)) {
-	      Vector *n = (Vector *)hit.scratchpad;
-	      *n = control->getNormal(u,v,ppc);
-	    }
-	  } else {
-	    // reset initial guess
-	    u = .5*(ustart+ufinish);
-	    v = .5*(vstart+vfinish);
-	  }
-	} else {
-	  nw->intersect(r,hit,st,ppc);
-	  ne->intersect(r,hit,st,ppc);
-	  se->intersect(r,hit,st,ppc);
-	  sw->intersect(r,hit,st,ppc);
-	}
-      }
+    // reset initial guess
+    u = .5*(ustart+ufinish);
+    v = .5*(vstart+vfinish);
+    if(control->Hit(r,u,v,t,P,ustart,ufinish,vstart,vfinish,ppc)) {
+    if (hit.hit(this,t)) {
+    Vector *n = (Vector *)hit.scratchpad;
+    *n = control->getNormal(u,v,ppc);
+    }
+    } else {
+    // reset initial guess
+    u = .5*(ustart+ufinish);
+    v = .5*(vstart+vfinish);
+    }
+    } else {
+    nw->intersect(r,hit,st,ppc);
+    ne->intersect(r,hit,st,ppc);
+    se->intersect(r,hit,st,ppc);
+    sw->intersect(r,hit,st,ppc);
+    }
+    }
     }*/
 
-    inline Vector normal(const Point&, const HitInfo& hit)
-      {
-	// We computed the normal at intersect time and tucked it
-	// away in the scratchpad...
-	Vector* n=(Vector*)hit.scratchpad;
-	return *n;
-      }
+  inline Vector normal(const Point&, const HitInfo& hit)
+  {
+    // We computed the normal at intersect time and tucked it
+    // away in the scratchpad...
+    Vector* n=(Vector*)hit.scratchpad;
+    return *n;
+  }
 
-    virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
-    void Out(int,int);
-    void Print();
+  virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
+  void Out(int,int);
+  void Print();
     
 private:
 

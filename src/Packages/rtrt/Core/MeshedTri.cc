@@ -150,7 +150,6 @@ MeshedColoredTri::io(SCIRun::Piostream &str)
   SCIRun::Pio(str, p2);
   SCIRun::Pio(str, p3);
   SCIRun::Pio(str, n1);
-  SCIRun::Pio(str, d);
   str.end_class();
 }
 
@@ -167,7 +166,7 @@ void Pio( Piostream& stream, rtrt::MeshedColoredTri*& obj )
 }
 }
 
-MeshedColoredTri::MeshedColoredTri(Material* , TriMesh* tm, 
+MeshedColoredTri::MeshedColoredTri(TriMesh* tm, 
 				   const int& p1, const int& p2, const int& p3,
 				   const int& n1)
   : MeshedTri(this,tm,p1,p2,p3,n1)
@@ -195,3 +194,4 @@ void MeshedColoredTri::shade(Color& result, const Ray& ray,
   phongshade(result,diff_color,spec_color,80,0,ray,hit,depth,atten,
 	     accumcolor,cx);
 }
+

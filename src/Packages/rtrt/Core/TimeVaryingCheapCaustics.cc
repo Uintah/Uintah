@@ -4,14 +4,34 @@
 #include <iostream>
 
 using namespace rtrt;
+using namespace std;
 using namespace SCIRun;
 
-TimeVaryingCheapCaustics::TimeVaryingCheapCaustics( char *fileNames, int numFiles, 
-						    Point minPoint, Vector uAxis, 
-						    Vector vAxis, Color lightColor, 
-						    float timeScale, float tilingFactor):
-  minPoint(minPoint), uAxis(uAxis), vAxis(vAxis), lightColor(lightColor),
-  timeScale(timeScale), tilingFactor(tilingFactor), numFiles(numFiles)
+Persistent* TVCC_maker() {
+  return new TimeVaryingCheapCaustics();
+}
+
+// initialize the static member type_id
+PersistentTypeID TimeVaryingCheapCaustics::type_id("TimeVaryingCheapCaustics", 
+						   "Persistent", 
+						   TVCC_maker);
+
+
+TimeVaryingCheapCaustics::TimeVaryingCheapCaustics(char *fileNames, 
+						   int numFiles, 
+						   Point minPoint, 
+						   Vector uAxis, 
+						   Vector vAxis, 
+						   Color lightColor, 
+						   float timeScale, 
+						   float tilingFactor) :
+  minPoint(minPoint), 
+  uAxis(uAxis), 
+  vAxis(vAxis), 
+  lightColor(lightColor),
+  timeScale(timeScale), 
+  tilingFactor(tilingFactor), 
+  numFiles(numFiles)
 {
   totalTime = timeScale*numFiles;
   projAxis = Cross(uAxis,vAxis);
@@ -126,8 +146,52 @@ Color TimeVaryingCheapCaustics::GetCausticColor( Point atPoint, float currTime )
   float pct2 = useTime-timeIdx1;
   float pct1 = 1-pct2;
 
+  if( timeIdx1 == numFiles )
+    {
+      cout << "WARNING: TimeVaryingCheapCaustics WOULD HAVE DIED!";
+      timeIdx1--;
+    }
+
+
   float color = pct1 * (*caustics[timeIdx1])(u,v) + 
     pct2 * (*caustics[timeIdx2])(u,v);
   return color*lightColor;
 }
 
+const int TIMEVARYINGCHEAPCAUSTICS_VERSION = 1;
+
+void 
+TimeVaryingCheapCaustics::io(SCIRun::Piostream &str)
+{
+  str.begin_class("TimeVaryingCheapCaustics", 
+		  TIMEVARYINGCHEAPCAUSTICS_VERSION);
+  SCIRun::Pio(str, caustics);
+  SCIRun::Pio(str, timeScale);
+  SCIRun::Pio(str, tilingFactor);
+  SCIRun::Pio(str, currentTime);
+  SCIRun::Pio(str, lightColor);
+  SCIRun::Pio(str, minPoint);
+  SCIRun::Pio(str, uAxis);
+  SCIRun::Pio(str, vAxis);
+  SCIRun::Pio(str, uVecLen);
+  SCIRun::Pio(str, vVecLen);
+  SCIRun::Pio(str, uDim);
+  SCIRun::Pio(str, vDim);
+  SCIRun::Pio(str, projAxis);
+  SCIRun::Pio(str, totalTime);
+  SCIRun::Pio(str, uSizePerTile);
+  SCIRun::Pio(str, vSizePerTile);
+  str.end_class();
+}
+
+namespace SCIRun {
+void Pio(SCIRun::Piostream& stream, rtrt::TimeVaryingCheapCaustics*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::TimeVaryingCheapCaustics::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::TimeVaryingCheapCaustics*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

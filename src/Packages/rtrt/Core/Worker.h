@@ -49,6 +49,8 @@ class Worker : public Runnable {
   int  oldNumWorkers_;
   
 public:
+  int rendering_scene;
+
   Worker(Dpy* dpy, Scene* scene, int num, int pp_size, int scratchsize,
 	 int ncounters, int c0, int c1);
   virtual ~Worker();

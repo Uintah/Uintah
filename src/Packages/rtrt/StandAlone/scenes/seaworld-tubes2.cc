@@ -1,4 +1,6 @@
 #include <Packages/rtrt/Core/Camera.h>
+#include <Packages/rtrt/Core/TimeVaryingInstance.h>
+#include <Packages/rtrt/Core/InstanceWrapperObject.h>
 #include <Packages/rtrt/Core/BV1.h>
 #include <Packages/rtrt/Core/Grid.h>
 #include <Packages/rtrt/Core/HierarchicalGrid.h>
@@ -27,7 +29,6 @@
 #include <string.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Packages/rtrt/Core/BV1.h>
 #include <Packages/rtrt/Core/DielectricMaterial.h>
 #include <Packages/rtrt/Core/Cylinder.h>
 #include <Packages/rtrt/Core/Sphere.h>
@@ -91,9 +92,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *rock2 = new Group;
   Group *rock3 = new Group;
   Group *rock4 = new Group;
-  Group *rock5 = new Group;
   Group *iceberg = new Group;
   Group *iceberg2 = new Group;
+  Group *iceberg3 = new Group;
   Group *craters = new Group;
   Group *rock_tower = new Group;
 
@@ -101,19 +102,14 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	                                                        Point(0,0,6), Vector(1,0,0), Vector(0,1,0),
 							        Color(0.5,0.5,0.5), 0.1, .3);// last should be .6
   
-  //Material* glass_to_air = new DielectricMaterial(1.0, 1.5, 0.04, 400.0, Color(.80, .93 , .87), Color(1,1,1), false);
-  //Material* water_to_glass = new DielectricMaterial(1.5, 1.3, 0.04, 400.0, Color(.80, .84 , .93), Color(1,1,1), false);
-
-//  Material* glass_to_air   = new DielectricMaterial(1.0, 1.0, 0.01, 400.0, Color(1, 1, 1), Color(1,1,1), false);
-  Material* water_to_glass = new DielectricMaterial(1.0, 1.2, 0.004, 400.0, Color(.9, .93, 1), Color(1,1,1), false, 1);
+  Material* water_to_glass = new DielectricMaterial(1.0, 1.2, 0.0, 400.0, Color(.97, .98, 1), Color(1,1,1), false, 1);
   Material* air_bubble     = new DielectricMaterial(1.0, 1.1, 0.004, 400.0, Color(1, 1, 1), Color(1.01,1.01,1.01), false);
 //  Material* water_to_glass   = new PhongMaterial(Color(.5, .5, .5), .2, 0.8, 20, true); 
 //  Material* water_to_glass   = new InvisibleMaterial(); 
   Material* white = new LambertianMaterial(Color(0.8,0.8,0.8));
   Material* red = new LambertianMaterial(Color(1,0,0));
-  Material* tan = new SeaLambertianMaterial(Color(0.6,0.6,0.2), tvcc);
-  //Material* tan = new LambertianMaterial(Color(0.6,0.6,0.2));
-  Material* seawhite = new SeaLambertianMaterial(Color(0.3,0.3,0.3), tvcc);
+  SeaLambertianMaterial* tan = new SeaLambertianMaterial(Color(0.6,0.6,0.2), tvcc);
+  SeaLambertianMaterial* seawhite = new SeaLambertianMaterial(Color(0.3,0.3,0.3), tvcc);
   Material* black = new PhongMaterial(Color(0.05,0.05,0.05), 1.0);
   Material* metal = new MetalMaterial(Color(0.1,0.1,0.1));
   Material* marble1 = new CrowMarble(4.5, Vector(.3, .3, 0), Color(.9,.9,.9), Color(.8, .8, .8), Color(.7, .7, .7)); 
@@ -127,75 +123,79 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   
   /**********************************************************************/
   // south tube
-
+  
   // glass tube
-//  Object *south_tube_inner = new Cylinder(glass_to_air, Point(-4, -6, 1), Point(4, -6, 1), 2);
-  Object *south_tube_outer = new Cylinder(water_to_glass, Point(-4, -6, 1), Point(4, -6, 1), 2.05);
-//  south_tube->add(south_tube_inner);
+  //Object *south_tube_inner = new Cylinder(glass_to_air, Point(-4, -6, 1), Point(4, -6, 1), 2);
+  Object *south_tube_outer = new Cylinder(water_to_glass, Point(-4, -6, 1), Point(7.5, -6, 1), 2.05);
+  //south_tube->add(south_tube_inner);
   south_tube->add(south_tube_outer);
   // floor
-  south_tube->add(new Rect(checker, Point(0, -6, 0), Vector(4, 0, 0), Vector(0, 1.5, 0)));
+  south_tube->add(new Rect(checker, Point(1.75, -6, 0), Vector(5.75, 0, 0), Vector(0, 1.5, 0)));
   // north curb
-  south_tube->add(new Rect(white, Point(0, -4.25, .25), Vector(4, 0, 0), Vector(0, .15, 0)));
-  south_tube->add(new Rect(white, Point(0, -4.475, .1), Vector(4, 0, 0), Vector(0, -.025, -.1)));
-  south_tube->add(new Cylinder(white, Point(-4, -4.4, .2), Point(4, -4.4, .2), .05));
+  south_tube->add(new Rect(white, Point(1.75, -4.25, .25), Vector(5.75, 0, 0), Vector(0, .15, 0)));
+  south_tube->add(new Rect(white, Point(1.75, -4.475, .1), Vector(5.75, 0, 0), Vector(0, -.025, -.1)));
+  south_tube->add(new Cylinder(white, Point(-4, -4.4, .2), Point(7.5, -4.4, .2), .05));
   // south curb
-  south_tube->add(new Rect(white, Point(0, -7.75, .25), Vector(4, 0, 0), Vector(0, .15, 0)));
-  south_tube->add(new Rect(white, Point(0, -7.525, .1), Vector(4, 0, 0), Vector(0, .025, -.1)));
-  south_tube->add(new Cylinder(white, Point(-4, -7.6, .2), Point(4, -7.6, .2), .05));
+  south_tube->add(new Rect(white, Point(1.75, -7.75, .25), Vector(5.75, 0, 0), Vector(0, .15, 0)));
+  south_tube->add(new Rect(white, Point(1.75, -7.525, .1), Vector(5.75, 0, 0), Vector(0, .025, -.1)));
+  south_tube->add(new Cylinder(white, Point(-4, -7.6, .2), Point(7.5, -7.6, .2), .05));
   // seals
   // west seal
-  south_tube->add(new Ring(black, Point(-4, -6, 1), Vector(1, 0, 0), 1.9, .3));
-  south_tube->add(new Ring(black, Point(-3.9, -6, 1), Vector(1, 0, 0), 1.9, .3));
-  south_tube->add(new Cylinder(black, Point(-3.9, -6, 1), Point(-4, -6, 1), 1.9));
-  south_tube->add(new Cylinder(black, Point(-3.9, -6, 1), Point(-4, -6, 1), 2.2));
+  south_tube->add(new Ring(black, Point(-3.8, -6, 1), Vector(1, 0, 0), 1.9, .3));
+  south_tube->add(new Ring(black, Point(-3.7, -6, 1), Vector(1, 0, 0), 1.9, .3));
+  south_tube->add(new Cylinder(black, Point(-3.7, -6, 1), Point(-3.8, -6, 1), 1.9));
+  south_tube->add(new Cylinder(black, Point(-3.7, -6, 1), Point(-3.8, -6, 1), 2.2));
   // east seal
-  south_tube->add(new Ring(black, Point(4, -6, 1), Vector(1, 0, 0), 1.9, .3));
-  south_tube->add(new Ring(black, Point(3.9, -6, 1), Vector(1, 0, 0), 1.9, .3));
-  south_tube->add(new Cylinder(black, Point(3.9, -6, 1), Point(4, -6, 1), 1.9));
-  south_tube->add(new Cylinder(black, Point(3.9, -6, 1), Point(4, -6, 1), 2.2));  
-  
-  all_tubes->add(south_tube);
+  south_tube->add(new Ring(black, Point(7.5, -6, 1), Vector(1, 0, 0), 1.9, .3));
+  south_tube->add(new Ring(black, Point(7.4, -6, 1), Vector(1, 0, 0), 1.9, .3));
+  south_tube->add(new Cylinder(black, Point(7.4, -6, 1), Point(7.5, -6, 1), 1.9));
+  south_tube->add(new Cylinder(black, Point(7.4, -6, 1), Point(7.5, -6, 1), 2.2));
 
+  Object * bv = new BV1(south_tube);
+  bv->set_name("south_tube");
+  all_tubes->add(bv);
+  
 
   /**********************************************************************/
   // north tube
 
-//  Object *north_tube_inner = new Cylinder(glass_to_air, Point(-4, 10, 1), Point(4, 10, 1), 2);
+  //  Object *north_tube_inner = new Cylinder(glass_to_air, Point(-4, 10, 1), Point(4, 10, 1), 2);
   Object *north_tube_outer = new Cylinder(water_to_glass, Point(-4, 10, 1), Point(4, 10, 1), 2.05);
-//  north_tube->add(north_tube_inner);
+  //  north_tube->add(north_tube_inner);
   north_tube->add(north_tube_outer);
   // floor
   north_tube->add(new Rect(checker, Point(0, 10, 0), Vector(4, 0, 0), Vector(0, 1.5 ,0)));
   // south curb
   north_tube->add(new Rect(white, Point(0, 8.25, .25), Vector(4, 0, 0), Vector(0, .15, 0)));
-  north_tube->add(new Rect(white, Point(0, 8.475, .1), Vector(4, 0, 0), Vector(0, -.025, -.1)));
+  north_tube->add(new Rect(white, Point(0, 8.475, .1), Vector(4, 0, 0), Vector(0, .025, -.1)));
   north_tube->add(new Cylinder(white, Point(-4, 8.4, .2), Point(4, 8.4, .2), .05));
   // north curb
   north_tube->add(new Rect(white, Point(0, 11.75, .25), Vector(4, 0, 0), Vector(0, .15, 0)));
-  north_tube->add(new Rect(white, Point(0, 11.525, .1), Vector(4, 0, 0), Vector(0, .025, -.1)));
+  north_tube->add(new Rect(white, Point(0, 11.525, .1), Vector(4, 0, 0), Vector(0, -.025, -.1)));
   north_tube->add(new Cylinder(white, Point(-4, 11.6, .2), Point(4, 11.6, .2), .05));
   // seals
   // west seal
-  south_tube->add(new Ring(black, Point(-4, 10, 1), Vector(1, 0, 0), 1.9, .3));
-  south_tube->add(new Ring(black, Point(-3.9, 10, 1), Vector(1, 0, 0), 1.9, .3));
-  south_tube->add(new Cylinder(black, Point(-3.9, 10, 1), Point(-4, 10, 1), 1.9));
-  south_tube->add(new Cylinder(black, Point(-3.9, 10, 1), Point(-4, 10, 1), 2.2));
+  north_tube->add(new Ring(black, Point(-3.8, 10, 1), Vector(1, 0, 0), 1.9, .3));
+  north_tube->add(new Ring(black, Point(-3.7, 10, 1), Vector(1, 0, 0), 1.9, .3));
+  north_tube->add(new Cylinder(black, Point(-3.7, 10, 1), Point(-3.8, 10, 1), 1.9));
+  north_tube->add(new Cylinder(black, Point(-3.7, 10, 1), Point(-3.8, 10, 1), 2.2));
   // east seal
-  south_tube->add(new Ring(black, Point(4, 10, 1), Vector(1, 0, 0), 1.9, .3));
-  south_tube->add(new Ring(black, Point(3.9, 10, 1), Vector(1, 0, 0), 1.9, .3));
-  south_tube->add(new Cylinder(black, Point(3.9, 10, 1), Point(4, 10, 1), 1.9));
-  south_tube->add(new Cylinder(black, Point(3.9, 10, 1), Point(4, 10, 1), 2.2)); 
-    
-  all_tubes->add(north_tube);
-
+  north_tube->add(new Ring(black, Point(4, 10, 1), Vector(1, 0, 0), 1.9, .3));
+  north_tube->add(new Ring(black, Point(3.9, 10, 1), Vector(1, 0, 0), 1.9, .3));
+  north_tube->add(new Cylinder(black, Point(3.9, 10, 1), Point(4, 10, 1), 1.9));
+  north_tube->add(new Cylinder(black, Point(3.9, 10, 1), Point(4, 10, 1), 2.2)); 
+  
+  bv = new BV1(north_tube);
+  bv->set_name("north_tube");
+  all_tubes->add(bv);
+   
   /**********************************************************************/
   // west tube
 
   // glass tube
-//  Object *west_tube_inner = new Cylinder(glass_to_air, Point(-10, -4, 1), Point(-10, 4, 1), 2);
+  //  Object *west_tube_inner = new Cylinder(glass_to_air, Point(-10, -4, 1), Point(-10, 4, 1), 2);
   Object *west_tube_outer = new Cylinder(water_to_glass, Point(-10, -4, 1), Point(-10, 4, 1), 2.05);
-//  west_tube->add(west_tube_inner);
+  //  west_tube->add(west_tube_inner);
   west_tube->add(west_tube_outer);
 
   // floor
@@ -210,49 +210,62 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   west_tube->add(new Cylinder(white, Point(-11.6, -4, .2), Point(-11.6, 4, .2), .05));
   // seals
   // west seal
-  south_tube->add(new Ring(black, Point(10, -4, 1), Vector(0, 1, 0), 1.9, .3));
-  south_tube->add(new Ring(black, Point(10, -3.9, 1), Vector(0, 1, 0), 1.9, .3));
-  south_tube->add(new Cylinder(black, Point(10, -3.9, 1), Point(10, -4, 1), 1.9));
-  south_tube->add(new Cylinder(black, Point(10, -3.9, 1), Point(10, -4, 1), 2.2));
+  west_tube->add(new Ring(black, Point(-10, -3.8, 1), Vector(0, 1, 0), 1.9, .3));
+  west_tube->add(new Ring(black, Point(-10, -3.7, 1), Vector(0, 1, 0), 1.9, .3));
+  west_tube->add(new Cylinder(black, Point(-10, -3.7, 1), Point(-10, -3.8, 1), 1.9));
+  west_tube->add(new Cylinder(black, Point(-10, -3.7, 1), Point(-10, -3.8, 1), 2.2));
   // east seal
-  south_tube->add(new Ring(black, Point(10, 4, 1), Vector(0, 1, 0), 1.9, .3));
-  south_tube->add(new Ring(black, Point(10, 3.9, 1), Vector(0, 1, 0), 1.9, .3));
-  south_tube->add(new Cylinder(black, Point(10, 3.9, 1), Point(10, 4, 1), 1.9));
-  south_tube->add(new Cylinder(black, Point(10, 3.9, 1), Point(10, 4, 1), 2.2)); 
+  west_tube->add(new Ring(black, Point(-10, 3.8, 1), Vector(0, 1, 0), 1.9, .3));
+  west_tube->add(new Ring(black, Point(-10, 3.7, 1), Vector(0, 1, 0), 1.9, .3));
+  west_tube->add(new Cylinder(black, Point(-10, 3.7, 1), Point(-10, 3.8, 1), 1.9));
+  west_tube->add(new Cylinder(black, Point(-10, 3.7, 1), Point(-10, 3.8, 1), 2.2)); 
  
-  all_tubes->add(west_tube);
+  bv = new BV1(west_tube);
+  bv->set_name("west_tube");
 
+  all_tubes->add(bv);
+
+      
   /**********************************************************************/
   // east tube
-  
-// Object *east_tube_inner = new Cylinder(glass_to_air, Point(10, -4, 1), Point(10, 4, 1), 2);
-  Object *east_tube_outer = new Cylinder(water_to_glass, Point(10, -4, 1), Point(10, 4, 1), 2.05);
-// east_tube->add(east_tube_inner);
+
+  Point center_point1(10, .25, 0);
+  Vector center_vec1(10, .25, 0);
+  Point south_point1(10, -3.5, 1);
+  Point north_point1(10, 4, 1);
+  Vector north_vec1(10, 4, 1);
+  Vector south_vec1(10, -3.5, 1);
+  //Object *east_tube_inner = new Cylinder(glass_to_air, Point(10, -4, 1), Point(10, 4, 1), 2);
+  Object *east_tube_outer = new Cylinder(water_to_glass, south_point1, north_point1, 2.05);
+  //east_tube->add(east_tube_inner);
   east_tube->add(east_tube_outer);
   // floor
-  east_tube->add(new Rect(checker, Point(10, 0, 0), Vector(1.5, 0, 0), Vector(0, 4, 0)));
+  east_tube->add(new Rect(checker, center_point1, Vector(1.5, 0, 0), Vector(0, 3.75, 0)));
   // west curb
-  east_tube->add(new Rect(white, Point(8.25, 0, .25), Vector(0, 4, 0), Vector(-.15, 0, 0)));
-  east_tube->add(new Rect(white, Point(8.475, 0, .1), Vector(0, 4, 0), Vector(.025, 0, -.1)));
-  east_tube->add(new Cylinder(white, Point(8.4, -4, .2), Point(8.4, 4, .2), .05));
+  east_tube->add(new Rect(white, Point(8.25, .25, .25), Vector(0, 3.75, 0), Vector(-.15, 0, 0)));
+  east_tube->add(new Rect(white, Point(8.475, .25, .1), Vector(0, 3.75, 0), Vector(.025, 0, -.1)));
+  east_tube->add(new Cylinder(white, Point(8.4, -3.5, .2), Point(8.4, 4, .2), .05));
   // east curb
-  east_tube->add(new Rect(white, Point(11.75, 0, .25), Vector(0, 4, 0), Vector(-.15, 0, 0)));
-  east_tube->add(new Rect(white, Point(11.525, 0, .1), Vector(0, 4, 0), Vector(-.025,0, -.1)));
-  east_tube->add(new Cylinder(white, Point(11.6, -4, .2), Point(11.6, 4, .2), .05));
+  east_tube->add(new Rect(white, Point(11.75, .25, .25), Vector(0, 3.75, 0), Vector(-.15, 0, 0)));
+  east_tube->add(new Rect(white, Point(11.525, .25, .1), Vector(0, 3.75, 0), Vector(-.025,0, -.1)));
+  east_tube->add(new Cylinder(white, Point(11.6, -3.5, .2), Point(11.6, 4, .2), .05));
   // seals
-  // west seal
-  south_tube->add(new Ring(black, Point(-10, -4, 1), Vector(0, 1, 0), 1.9, .3));
-  south_tube->add(new Ring(black, Point(-10, -3.9, 1), Vector(0, 1, 0), 1.9, .3));
-  south_tube->add(new Cylinder(black, Point(-10, -3.9, 1), Point(-10, -4, 1), 1.9));
-  south_tube->add(new Cylinder(black, Point(-10, -3.9, 1), Point(-10, -4, 1), 2.2));
-  // east seal
-  south_tube->add(new Ring(black, Point(-10, 4, 1), Vector(0, 1, 0), 1.9, .3));
-  south_tube->add(new Ring(black, Point(-10, 3.9, 1), Vector(0, 1, 0), 1.9, .3));
-  south_tube->add(new Cylinder(black, Point(-10, 3.9, 1), Point(-10, 4, 1), 1.9));
-  south_tube->add(new Cylinder(black, Point(-10, 3.9, 1), Point(-10, 4, 1), 2.2));
- 
-  all_tubes->add(east_tube);
+  // south seal
+  east_tube->add(new Ring(black, Point(10, -3.5, 1), Vector(0, 1, 0), 1.9, .3));
+  east_tube->add(new Ring(black, Point(10, -3.4, 1), Vector(0, 1, 0), 1.9, .3));
+  east_tube->add(new Cylinder(black, Point(10, -3.4, 1), Point(10, -3.5, 1), 1.9));
+  east_tube->add(new Cylinder(black, Point(10, -3.4, 1), Point(10, -3.5, 1), 2.2));
+  // north seal
+  east_tube->add(new Ring(black, Point(10, 4, 1), Vector(0, 1, 0), 1.9, .3));
+  east_tube->add(new Ring(black, Point(10, 3.9, 1), Vector(0, 1, 0), 1.9, .3));
+  east_tube->add(new Cylinder(black, Point(10, 3.9, 1), Point(10, 4, 1), 1.9));
+  east_tube->add(new Cylinder(black, Point(10, 3.9, 1), Point(10, 4, 1), 2.2));
 
+  bv = new BV1(east_tube);
+  bv->set_name("east_tube");
+  all_tubes->add(bv);
+
+    
   /*********************************************************************/
   // ruins
 
@@ -284,8 +297,12 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   ruins->add(new Cylinder(seawhite, Point(0, 0, -.9), Point(0, 0, -.5), 6.5));
 
   // pedestals for columns
-  ruins->add(new Box(seawhite, Point(-5.5, -13, -.8), Point(5.5, -10, -.2)));
+  ruins->add(new Box(seawhite, Point(-4.5, -13, -.8), Point(6.5, -10, -.2)));
 
+
+  ruins->add(new Box(seawhite, Point(7.3,-15.5,-1.5), Point(19.5,-3.3,0)));
+  ruins->add(new Box(seawhite, Point(-23.3,-25.5,-1.5), Point(-3.5,-3.5,0)));
+  
   Array1<Material *> matls;
   string env_map;
   Transform t, t1, t2, t3;
@@ -293,7 +310,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   /**********************************************************************/ 
   // read in columns 
   t.pre_scale(Vector(.02, .02, .02));
-  t.pre_translate(Vector(-4, -10.81, .67));
+  t.pre_translate(Vector(-2.5, -10.81, .67));
   if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
 	           "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
 	           t,col1))
@@ -333,12 +350,11 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
      exit(1);
   
   // columns by west tube
-    // columns by west tube
   t.load_identity();
   t.pre_scale(Vector(.02, .02, .02));
   t.pre_rotate(-1.3, Vector(0, 1, 0));
   t.pre_rotate(-.4, Vector(0, 0, 1));
-  t.pre_translate(Vector(-16, 4, -1.2));
+  t.pre_translate(Vector(-16, 5, -1.2));
   if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
                    "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
                    t,col7))
@@ -347,7 +363,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // columns by west tube
   t.load_identity();
   t.pre_scale(Vector(.02, .02, .02));
-  t.pre_translate(Vector(-16, -4, -.8));
+  t.pre_translate(Vector(-16, -2, -.8));
   if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
                    "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
                    t,col8))
@@ -357,7 +373,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t.pre_scale(Vector(.02, .02, .02));
   t.pre_rotate(.1, Vector(0, 1, 0));
   t.pre_rotate(.2, Vector(1, 0, 0));
-  t.pre_translate(Vector(-19, -4, -.8));
+  t.pre_translate(Vector(-19, -2, -.8));
   if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
                    "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
                    t,col9))
@@ -365,7 +381,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // columns by west tube
   t.load_identity(); 
   t.pre_scale(Vector(.02, .02, .02));
-  t.pre_translate(Vector(-19, 4, -.8));
+  t.pre_translate(Vector(-19, 5, -.8));
   if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
                    "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
                    t,col10))
@@ -540,13 +556,13 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // plants by parthenon
   t3.load_identity();
   t3.pre_scale(Vector(.16, .06, .06));
-  t3.pre_rotate(-.8, Vector(0, 0, 1));
-  t3.pre_translate(Vector(-1, -27.6, 1.3));
+  //t3.pre_rotate(-.8, Vector(0, 0, 1));
+  t3.pre_translate(Vector(1, -15.6, 1.3));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aqua11.mtl",
                    t3, patch5))
     exit(-1);
- 
+/* 
   t3.load_identity();
   t3.pre_rotate(3.78, Vector(0, 0, 1));
   t3.pre_scale(Vector(2.2, 2.3, 2));
@@ -573,7 +589,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    "/usr/sci/data/Geometry/models/read_in_models/models_rtrt/aq13.mtl",
                    t3, patch6))
     exit(-1);
-
+*/
   /**********************************************************************/
   // gazebo ////////////////////////////////////////
   t3.load_identity();
@@ -617,22 +633,22 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     exit(-1);
 
   /**********************************************************************/
-  // parth 
+/*  // parth 
   t3.load_identity();
   t3.pre_rotate(M_PI + 1.5, Vector(0, 0, 1));
-  t3.pre_scale(Vector(.07, .04, .07));
-  t3.pre_translate(Vector(-5, -40, -4));
+  t3.pre_scale(Vector(.08, .04, .08));
+  t3.pre_translate(Vector(0, -50, -4));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/keith/parthenon/The_Parthenon.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/keith/parthenon/The_Parthenon.mtl",
                    t3, parth))
     exit(-1);
-
+*/
   /**********************************************************************/
   // temple2
   t3.load_identity();
   t3.pre_rotate(M_PI / 2.0 , Vector(1, 0, 0));
-  t3.pre_scale(Vector(3, 3, 3));
-  t3.pre_translate(Vector(10, -30, 0));
+  t3.pre_scale(Vector(4.5, 4.5, 4.5));
+  t3.pre_translate(Vector(4, -30, 0));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models1/temple/Greek_temple.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/models1/temple/Greek_temple.mtl",
                    t3, temple2))
@@ -649,7 +665,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     exit(-1);
  
   /**********************************************************************/
-  // iceberg1
+/*  // iceberg1
   t3.load_identity();
   t3.pre_scale(Vector(.3, .3, .3));
   t3.pre_translate(Vector(-60, 30, 0));
@@ -657,17 +673,27 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    "/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG1.mtl",
                    t3, iceberg))
     exit(-1);
-
+*/
   /**********************************************************************/
   // iceberg2
   t3.load_identity();
-  t3.pre_scale(Vector(.3, .3, .3));
-  t3.pre_translate(Vector(60, -40, 0));
+  t3.pre_scale(Vector(1.4, .5, .9));
+  t3.pre_translate(Vector(0, -70, 0));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG1.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG1.mtl",
                    t3, iceberg2))
     exit(-1);
 
+  /**********************************************************************/
+/*  // iceberg3
+  t3.load_identity();
+  t3.pre_scale(Vector(.3, .3, .3));
+  t3.pre_translate(Vector(50, 32, 0));
+  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG2.obj",
+                   "/usr/sci/data/Geometry/models/read_in_models/models1/icebergs/ICEBERG2.mtl",
+                   t3, iceberg3))
+    exit(-1);
+*/
 
  
   /**********************************************************************/
@@ -677,7 +703,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *shell1 = new Group;
   Group *shell2 = new Group;
   Group *shell3 = new Group;
-  Group *anker = new Group;
   Group *krabbe = new Group;
   Group *school1 = new Group;
   Group *school2 = new Group;
@@ -686,7 +711,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *tiger = new Group;
   Group *pot1 = new Group;
   
-  t3.load_identity();
+/*  t3.load_identity();
   t3.pre_scale(Vector(.0001, .0001, .0001));
   // t3.pre_rotate(M_PI / 2.0 , Vector(1, 0, 0));
   t3.pre_translate(Vector(-2, 20, 2.5));
@@ -694,15 +719,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    "/usr/sci/data/Geometry/models/read_in_models/keith/sharks/shark1.mtl",
                    t3, shark1))
       exit(-1);
-
-  t3.load_identity();
-  t3.pre_scale(Vector(.1, .1, .1));
-  t3.pre_translate(Vector(-20, -1, -.8));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/Anker/anker.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/Anker/anker.mtl",
-                   t3, anker))
-      exit(-1);
-
+*/
   t3.load_identity();
   t3.pre_rotate(-.25 * M_PI, Vector(0, 0, 1));
   t3.pre_rotate(.1 * M_PI, Vector(-1, 0, 0));
@@ -712,40 +729,26 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    "/usr/sci/data/Geometry/models/read_in_models/fish/krabbe/krabbe.mtl",
                    t3, krabbe))
       exit(-1); 
-
+  
   t3.load_identity();
   t3.pre_scale(Vector(1.2, 1.2, 1.2));
-  t3.pre_translate(Vector(-1, -3, 1.5));
+  t3.pre_translate(Vector(0, -3, 1.5));
+  t3.pre_rotate(M_PI * .1, Vector(0, 0, 1));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
                    t3, school1))
       exit(-1);
- 
-  t3.pre_translate(Vector(0, -.5, -.25));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
-                   t3, school2))
-      exit(-1);
-
-  t3.pre_translate(Vector(-.5 ,-.5, .5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
-                   t3, school3))
-      exit(-1);  
-  t3.pre_translate(Vector(1.20, .2, -.3));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
-                   t3, school4))
-      exit(-1);
 
   t3.load_identity();
   t3.pre_scale(Vector(1.3, 1.3, 1.3));
-  t3.pre_translate(Vector(2, 7, 1));
+  //t3.pre_translate(Vector(2, 7, 1));
+  t3.pre_translate(Vector(0, 3, 1));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.mtl",
                    t3, tiger))
-      exit(-1);  
+     exit(-1);
 
+ 
   t3.load_identity();
   t3.pre_rotate(-.6 , Vector(1, 0, 0));
   t3.pre_scale(Vector(.04, .04, .04));
@@ -755,7 +758,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    t3, shell1))
       exit(-1);
 
-  t3.pre_translate(Vector(-23, -4.5, 0));
+  t3.pre_translate(Vector(-23.5, -2.5, 0));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/schnecken1/shell1.obj",
 	           "/usr/sci/data/Geometry/models/read_in_models/fish/schnecken1/shell1.mtl",
 	           t3, shell2))
@@ -765,7 +768,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t.pre_scale(Vector(.15, .15, .15));
   //t.pre_rotate(-1.3, Vector(0, 1, 0));
   t.pre_rotate(-1.1, Vector(1, 0, 0));
-  t.pre_translate(Vector(14, -.5, -.3));
+  t.pre_translate(Vector(14, -.5, -.4));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/schnecken2/shell2.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/fish/schnecken2/shell2.mtl",
                    t,shell3))
@@ -781,94 +784,232 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                    "/usr/sci/data/Geometry/models/oceanpots_obj/pot3.mtl",
                    t,pot1))
         exit(1);
-   
-  all_tubes->add(new Grid (shell1, 15));
-  all_tubes->add(new Grid (shell2, 15));
-  all_tubes->add(new Grid (shell3, 15));
-  all_tubes->add(new Grid (pot1, 15));
-  all_tubes->add(new Grid (tiger, 10));
-  all_tubes->add(new Grid (school1, 10));
-  all_tubes->add(new Grid (school2, 10));
-  all_tubes->add(new Grid (school3, 10));
-  all_tubes->add(new Grid (school4, 10));
-  all_tubes->add(new Grid (krabbe, 10));
-  all_tubes->add(new BV1  (anker));
-  all_tubes->add(new BV1  (shark1));
-  all_tubes->add(new Grid (col1, 15));
-  all_tubes->add(new Grid (col2, 15));
-  all_tubes->add(new Grid (col3, 15));
-  all_tubes->add(new Grid (col4, 15));
-  all_tubes->add(new Grid (col7, 15));
-  all_tubes->add(new Grid (col8, 15));
-  all_tubes->add(new Grid (col9, 15));
-  all_tubes->add(new Grid (col10, 15));
-    
-  all_tubes->add(new Grid (col5, 35));
-  // all_tubes->add(new HierarchicalGrid (col5, 4, 4, 4, 10, 10, 1));
 
-  all_tubes->add(new Grid (col6, 35));
-  // all_tubes->add(new HierarchicalGrid (col6, 4, 4, 4, 10, 10, 1));
+   Grid* grid = new Grid(school1, 30);
 
-  all_tubes->add(new HierarchicalGrid (patch1, 4, 4, 4, 10, 10, 1));
+   FishInstance1* TVI1
+      = new FishInstance1(new InstanceWrapperObject(grid), .25, .25, .3, .5, .05, -3, 0);
+   FishInstance1* TVI2
+      = new FishInstance1(new InstanceWrapperObject(grid), .20, .2, .25, .6, .05, 0, -.5);
+   FishInstance1* TVI3
+      = new FishInstance1(new InstanceWrapperObject(grid), .25, .28, .275, .7, .05, 1.5, .7);
+   FishInstance1* TVI4
+      = new FishInstance1(new InstanceWrapperObject(grid), .15, .31, .31, .4, .05, 4.5, .2);
+   FishInstance1* TVI5
+      = new FishInstance1(new InstanceWrapperObject(grid), .2, .26, .325, .8, .05, -8.5, -.25);
+   FishInstance1* TVI6
+      = new FishInstance1(new InstanceWrapperObject(grid), .35, .38, .3, .65, .05, -6.5, .2);
+   FishInstance1* TVI7
+      = new FishInstance1(new InstanceWrapperObject(grid), .15, .2, .26, .55, .05, -2, .6);
+
+  t3.load_identity();
+  t3.pre_scale(Vector(1.3, 1.3, 1.3));
+  //t3.pre_translate(Vector(2, 7, 1));
+  t3.pre_translate(Vector(0, 3, 1));
+  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.obj",
+                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.mtl",
+                   t3, tiger))
+     exit(-1);
+
+   Grid* grid2 = new Grid(tiger, 30);
+   FishInstance2* TVI8
+      = new FishInstance2(new InstanceWrapperObject(grid2), .35, .25, .3, .4, .05, 5, .28);
+   FishInstance2* TVI9
+      = new FishInstance2(new InstanceWrapperObject(grid2), .25, .2, .35, .6, .05, 0, 0);
+   FishInstance2* TVI10
+      = new FishInstance2(new InstanceWrapperObject(grid2), .3, .15, .25, .5, .05, 3, -.2);
+
+   all_tubes->add(TVI1);
+   all_tubes->add(TVI2);
+   all_tubes->add(TVI3);
+   all_tubes->add(TVI4);
+   all_tubes->add(TVI5);
+   all_tubes->add(TVI6);
+   all_tubes->add(TVI7);
+
+   all_tubes->add(TVI8);
+   all_tubes->add(TVI9);
+   all_tubes->add(TVI10);
+
+  Object* temp;
+
+  temp = new Grid (shell1, 15);
+  temp->set_name("shell1");
+  all_tubes->add(temp);
+
+  temp = new Grid (shell2, 15);
+  temp->set_name("shell2");
+  all_tubes->add(temp);
+  
+  temp = new Grid (shell3, 15);
+  temp->set_name("shell3");
+  all_tubes->add(temp);
+ 
+  temp = new Grid (pot1, 15);
+  temp->set_name("pot1");
+  all_tubes->add(temp);
+  
+  temp = new Grid (krabbe, 15);
+  temp->set_name("krabbe");
+  all_tubes->add(temp);  
+
+/*  temp = new Grid (shark1, 15);
+  temp->set_name("shark1");
+  all_tubes->add(temp);
+*/  
+  temp = new Grid (col1, 15);
+  temp->set_name("col1");
+  all_tubes->add(temp);
+  
+  temp = new Grid (col2, 15);
+  temp->set_name("col2");
+  all_tubes->add(temp);
+  
+  temp = new Grid (col3, 15);
+  temp->set_name("col3");
+  all_tubes->add(temp);
+  
+  temp = new Grid (col4, 15);
+  temp->set_name("col4");
+  all_tubes->add(temp);
+  
+  temp = new Grid (col7, 15);
+  temp->set_name("col7");
+  all_tubes->add(temp);
+  
+  temp = new Grid (col8, 15);
+  temp->set_name("col8");
+  all_tubes->add(temp);
+  
+  temp = new Grid (col9, 15);
+  temp->set_name("col9");
+  all_tubes->add(temp);
+  
+  temp = new Grid (col10, 15);
+  temp->set_name("col10");
+  all_tubes->add(temp);
+  
+
+  Group* erect_group = new Group();  
+
+  //temp = new Grid (col5, 35);
+  temp = (new HierarchicalGrid (col5, 6, 6, 6, 10, 10, 4));
+  temp->set_name("col5");
+  all_tubes->add(temp);
+  //all_tubes->add(new HierarchicalGrid (col5, 6, 4, 4, 10, 10, 4));
+
+  //temp = new Grid (col6, 35);
+  temp = (new HierarchicalGrid (col6, 6, 6, 6, 10, 10, 4));
+  temp->set_name("col6");
+  all_tubes->add(temp);  
+
+  temp = new HierarchicalGrid (patch1, 6, 6, 6, 10, 10, 4);
+  temp->set_name("patch1");
+  all_tubes->add(temp);  
   // all_tubes->add(new Grid (patch1, 25));
-
-  all_tubes->add(new HierarchicalGrid (patch2, 4, 4, 4, 10, 10, 1));
+  
+  temp = new HierarchicalGrid (patch2, 6, 6, 6, 10, 10, 4); 
+  temp->set_name("patch2");
+  all_tubes->add(temp);
   // all_tubes->add(new Grid (patch2, 30));
 
+  temp = new HierarchicalGrid (patch3, 6, 6, 6, 10, 10, 4); 
+  temp->set_name("patch3");
+  all_tubes->add(temp);  
   //  all_tubes->add(new Grid (patch3, 20));
   // all_tubes->add(new Grid (patch3, 20));
-  all_tubes->add(new HierarchicalGrid (patch3, 6, 6, 6, 10, 10, 1));
 
-  //  all_tubes->add(new BV1  (patch4));
-  all_tubes->add(new HierarchicalGrid (patch4, 6, 6, 6, 10, 10, 1));
+  temp = new HierarchicalGrid (patch4, 6, 6, 6, 10, 10, 4); 
+  temp->set_name("patch4");
+  all_tubes->add(temp);
+  // all_tubes->add(new BV1  (patch4));
+  // all_tubes->add(new HierarchicalGrid (patch4, 6, 6, 6, 10, 10, 4));
   // all_tubes->add(new Grid (patch4, 20));
 
-  //  all_tubes->add(new BV1  (patch5));
-  all_tubes->add(new HierarchicalGrid (patch5, 6, 6, 6, 10, 10, 1));
+  temp = new HierarchicalGrid (patch5, 6, 6, 6, 10, 10, 4);
+  temp->set_name("patch5");
+  all_tubes->add(temp);  
+  // all_tubes->add(new BV1  (patch5));
   // all_tubes->add(new Grid (patch5, 20));
 
-  //  all_tubes->add(new BV1  (patch6));
-  all_tubes->add(new HierarchicalGrid (patch6, 8, 8, 8, 10, 10, 1));
+/*  temp = new HierarchicalGrid (patch6, 6, 6, 6, 10, 10, 4);
+  temp->set_name("patch6");
+  all_tubes->add(temp);
+  // all_tubes->add(new BV1  (patch6));
   // all_tubes->add(new Grid (patch6, 20));
-
+*/      
+  temp = new HierarchicalGrid (gazebo, 8, 8, 6, 10, 10, 4);
+  temp->set_name("gazebo");
+  all_tubes->add(temp);  
   //  all_tubes->add(new Grid (gazebo, 15));
-  all_tubes->add(new HierarchicalGrid (gazebo, 8, 8, 6, 10, 10, 1));
 
+  temp = new HierarchicalGrid (erect, 6, 6, 6, 10, 10, 4);
+  temp->set_name("erect");
+  all_tubes->add(temp);  
   // all_tubes->add(new Grid (erect, 10));
-  all_tubes->add(new HierarchicalGrid (erect, 10, 6, 6, 10, 10, 1));
 
+  temp = new HierarchicalGrid(temple, 6, 6, 6, 10, 10, 4);
+  temp->set_name("temple");
+  all_tubes->add(temp);  
   // all_tubes->add(new Grid(temple, 10));
-  all_tubes->add(new HierarchicalGrid(temple, 6, 6, 6, 10, 10, 1));
 
-  // all_tubes->add(new Grid(parth, 10));
-  all_tubes->add(new HierarchicalGrid(parth, 4, 4, 4, 10, 10, 1));
+/*  temp = new HierarchicalGrid(parth, 4, 4, 4, 10, 10, 4);
+  temp->set_name("parth");
+  all_tubes->add(temp);  
+*/  // all_tubes->add(new Grid(parth, 10));
 
+  temp = new HierarchicalGrid(temple2, 6, 6, 6, 10, 10, 4);
+  temp->set_name("temple2");
+  all_tubes->add(temp);  
   // all_tubes->add(new Grid(temple2, 20));
-  all_tubes->add(new HierarchicalGrid(temple2, 6, 6, 6, 10, 10, 1));
 
-  //  all_tubes->add(new HierarchicalGrid (rock1, 4, 4, 4, 10, 10, 1));
-  all_tubes->add(new Grid (rock1, 40));
+  temp = new HierarchicalGrid (rock1, 5, 5, 5, 10, 10, 4);
+  temp->set_name("rock1");
+  all_tubes->add(temp); 
+  // all_tubes->add(new Grid (rock1, 40));
 
-  // all_tubes->add(new HierarchicalGrid (rock2, 4, 4, 4, 10, 10, 1));
-  all_tubes->add(new Grid (rock2, 40));
+  //temp = new Grid (rock2, 80);
+  temp = (new HierarchicalGrid (rock2, 5, 5, 5, 10, 10, 4));
+  temp->set_name("rock2");
+  all_tubes->add(temp);  
+  // all_tubes->add(new HierarchicalGrid (rock2, 20, 6, 6, 10, 10, 4));
 
-  all_tubes->add(new Grid (rock3, 40));
-  //all_tubes->add(new HierarchicalGrid (rock3, 4, 4, 4, 10, 10, 1));
-  
-  all_tubes->add(new Grid (rock4, 40));
-  //all_tubes->add(new HierarchicalGrid (rock4, 4, 4, 4, 10, 10, 1));
-  
-  all_tubes->add(new Grid (rock5, 40));
-  //all_tubes->add(new HierarchicalGrid (rock5, 4, 4, 4, 10, 10, 1));
-  
-  all_tubes->add(new Grid (iceberg, 20));
+  //temp = new Grid (rock3, 80);
+  temp = (new HierarchicalGrid (rock3, 5, 5, 5, 10, 10, 4));
+  temp->set_name("rock3");
+  all_tubes->add(temp);  
+  // all_tubes->add(new HierarchicalGrid (rock3, 20, 6, 6, 10, 10, 4));
 
-  all_tubes->add(new Grid (iceberg2, 20));
+  //temp = new Grid (rock4, 80);
+  temp = (new HierarchicalGrid (rock4, 5, 5, 5, 10, 10, 4));
+  temp->set_name("rock4");
+  all_tubes->add(temp);  
+  //  all_tubes->add(new HierarchicalGrid (rock4, 20, 6, 6, 10, 10, 4));
 
-  all_tubes->add(new HierarchicalGrid(rock_tower, 6, 6, 6, 10, 10, 1));
+/*  temp = new Grid (iceberg, 40);
+  temp->set_name("iceberg");
+  all_tubes->add(temp);  
+*/
+  temp = new Grid (iceberg2, 40);
+  temp->set_name("iceberg2");
+  all_tubes->add(temp);  
+
+/*  temp = new Grid (iceberg3, 40);
+  temp->set_name("iceberg3");
+  all_tubes->add(temp);  
+*/
+  temp = new HierarchicalGrid(rock_tower, 6, 6, 6, 10, 10, 4);
+  temp->set_name("rock_tower");
+  all_tubes->add(temp);  
   // all_tubes->add(new Grid(rock_tower, 10));
- 
-  all_tubes->add(ruins);  
+  
+//  temp = new BV1(erect_group);
+//  temp->set_name("erect_group");
+//  all_tubes->add(temp);
+
+  temp = new BV1(ruins);
+  temp->set_name("ruins");
+  all_tubes->add(temp);  
   
   /*********************************************************************/
   // bubbles
@@ -904,16 +1045,29 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(0.1, 0.1, 0.4);
   Scene *scene = new Scene(all_tubes, cam, bgcolor, cdown, cup, groundplane, 0.5);
+ 
   scene->addObjectOfInterest(bubbles, true); 
-  bubbles->name_ = "bubbles";
+  scene->addObjectOfInterest(TVI1, true);
+  scene->addObjectOfInterest(TVI2, true);
+  scene->addObjectOfInterest(TVI3, true);
+  scene->addObjectOfInterest(TVI4, true);
+  scene->addObjectOfInterest(TVI5, true);
+  scene->addObjectOfInterest(TVI6, true);
+  scene->addObjectOfInterest(TVI7, true);
+
+  scene->addObjectOfInterest(TVI8, true);
+  scene->addObjectOfInterest(TVI9, true);
+  scene->addObjectOfInterest(TVI10, true);
+  scene->addObjectOfInterest(tan, true);
+  scene->addObjectOfInterest(seawhite, true);
+
+  
+  bubbles->set_name("bubbles");
 
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
-  scene->add_light(new Light(Point(20, 20, 90), Color(.3,.3,.3), 0));
-  //scene->add_light(new Light(Point(0, -10, 2.9), Color(.8,.8,.8), 0));
-  //scene->add_light(new Light(Point(0, 10, 2.9), Color(.8,.8,.8), 0));
-  //scene->add_light(new Light(Point(-10, 0, 2.9), Color(.8,.8,.8), 0));
-  //scene->add_light(new Light(Point(10, 0, 2.9), Color(.8,.8,.8), 0));
+  //scene->add_light(new Light(Point(20, 20, 90), Color(.3,.3,.3), 0));
   scene->animate=true;
+  
   return scene;
 }

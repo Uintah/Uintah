@@ -142,15 +142,18 @@ void GetFace(char *buf, Array1<Point> &pts, Array1<Vector> &nml,
 			t.project_normal(nml[nrmis[s0]]), 
 			t.project_normal(nml[nrmis[s1]]), 
 			t.project_normal(nml[nrmis[s2]]));
-      tri->set_texcoords(tex[uvis[s0]], tex[uvis[s1]], tex[uvis[s2]]);
-      g->add(tri);
+      if( !tri->isbad() ) {
+	tri->set_texcoords(tex[uvis[s0]], tex[uvis[s1]], tex[uvis[s2]]);
+	g->add(tri);
+      }
     } else {
       Tri *tri = 
 	new Tri(mat, t.project(p1), t.project(p2), t.project(p3), 
 		t.project_normal(nml[nrmis[s0]]), 
 		t.project_normal(nml[nrmis[s1]]), 
 		t.project_normal(nml[nrmis[s2]]));
-      g->add(tri);
+      if( !tri->isbad() )
+	g->add(tri);
     }
   }
 }
@@ -209,9 +212,17 @@ void addObjMaterial(Array1<Material*> &matl,
 bool
 rtrt::readObjFile(const string geom_fname, const string matl_fname, 
 		  Transform &t, Group *g, int gridsize, Material *m) {
+  Array1<Material *> new_matls;
+  return readObjFile(geom_fname, matl_fname, t, new_matls, g, gridsize, m);
+}
+
+bool
+rtrt::readObjFile(const string geom_fname, const string matl_fname, 
+		  Transform &t, Array1<Material *> &matl, Group *g, 
+		  int gridsize, Material *m) {
    Array1<int> matl_has_tmap;
    Array1<int> matl_has_bmap;
-   Array1<Material *> matl;
+   matl.resize(0);
    char buf[4096];
    double scratch[11];
    Array1<string> names;
@@ -312,7 +323,9 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
 	   tmap_name=fname;
 	   fclose(f);
 	 } else cerr << "Error - was unable to read texture map!\n";
-       } else if (strncmp(&buf[0], "map_bump", strlen("map_bump")) == 0) {
+       } 
+       /*
+	 else if (strncmp(&buf[0], "map_bump", strlen("map_bump")) == 0) {
 	 char *b = &(buf[9]);
 	 int last = strlen(b) - 1;
 	 while ((b[last] == '\r' || b[last] == '\n') && last>0) last--;
@@ -328,7 +341,10 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
        } else if (strncmp(&buf[0], "scale_bump", strlen("scale_bump")) == 0) {
 	 Get1d(&buf[11], scratch);
 	 scale_bump=scratch[0];
-       } else {
+       }
+      */ 
+       
+       else {
 	 cerr << "Ignoring matl line: "<<buf<<"\n";
        }
      }
@@ -353,7 +369,11 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
    }
    
    Material *curr_matl;
-   if (m) curr_matl=m;
+   if (m) { 
+     curr_matl=m; 
+     matl.resize(0); 
+     matl.add(m); 
+   }
    Array1<Point> pts;
    Array1<Vector> nml;
    Array1<Point> tex;

@@ -38,6 +38,10 @@ DpyBase::DpyBase(const char *name, const int window_mode):
 DpyBase::~DpyBase() {
 }
 
+static int DPY_INITX=1300;
+static int DPY_NX=0;
+static int DPY_NY=0;
+
 int DpyBase::open_display() {
   xlock.lock();
   // Open an OpenGL window
@@ -87,13 +91,17 @@ int DpyBase::open_display() {
   atts.border_pixel = 0;
   atts.colormap=cmap;
   atts.event_mask=StructureNotifyMask|ExposureMask|ButtonPressMask|ButtonReleaseMask|ButtonMotionMask|KeyPressMask|KeyReleaseMask;
+  //DDM Added for SIGGRAPH demo to make it pop up on 2nd display
   win=XCreateWindow(dpy, RootWindow(dpy, screen),
-		    0, 0, xres, yres, 0, vi->depth,
+		    DPY_INITX+DPY_NX, DPY_NY, xres, yres, 0, vi->depth,
 		    InputOutput, vi->visual, flags, &atts);
+  DPY_NX+=20;
+  DPY_NY+=yres;
   XTextProperty tp;
   XStringListToTextProperty(&cwindow_name, 1, &tp);
   XSizeHints sh;
-  sh.flags = USSize;
+  sh.flags = USPosition|USSize;
+  
   XSetWMProperties(dpy, win, &tp, &tp, 0, 0, &sh, 0, 0);
   
   XMapWindow(dpy, win);
@@ -205,7 +213,12 @@ void DpyBase::set_resolution(const int xres_in, const int yres_in) {
   yres = yres_in;
 }
 
+extern bool pin;
 void DpyBase::run() {
+
+  if(pin)
+    Thread::self()->migrate(127);
+
   open_display();
 
   init();
@@ -221,7 +234,8 @@ void DpyBase::run() {
 
   for(;;){
     // Now we need to test to see if we should die
-    if (scene->get_rtrt_engine()->stop_execution() || on_death_row) {
+    //if (scene->get_rtrt_engine()->stop_execution() || on_death_row) {
+    if (on_death_row) {
       close_display();
       return;
     }
@@ -234,7 +248,8 @@ void DpyBase::run() {
     // That way we don't waste time redrawing after each event
     while (XEventsQueued(dpy, QueuedAfterReading)) {
       // Now we need to test to see if we should die
-      if (scene->get_rtrt_engine()->stop_execution() || on_death_row) {
+      //if (scene->get_rtrt_engine()->stop_execution() || on_death_row) {
+      if (on_death_row) {
 	close_display();
 	return;
       }

@@ -17,6 +17,8 @@
 #include <Packages/rtrt/Core/HierarchicalGrid.h>
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/PPMImage.h>
+#include <Packages/rtrt/Core/Trigger.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Gui.h>
@@ -31,13 +33,102 @@
 #include <sys/param.h>
 
 #include <GL/glut.h>
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1430
+#pragma set woff 3201
+#pragma set woff 1375
+#endif
 #include <glui.h>
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1430
+#pragma reset woff 3201
+#pragma reset woff 1375
+#endif
+
+
+#include "oogl/vec2.h"
+#include "oogl/basicTexture.h"
+#include "oogl/shader.h"
+#include "oogl/planarQuad.h"
+#include "oogl/shadedPrim.h"
+#include "oogl/renderPass.h"
+
+/////////////////////////////////////////////////
+// OOGL stuff
+BasicTexture * backgroundTex;
+ShadedPrim   * backgroundTexQuad;
+ShadedPrim   * blendTexQuad;
+BasicTexture * blendTex;
+Blend        * blend = NULL;
+
+ShadedPrim   * bottomGraphicTexQuad;
+BasicTexture * bottomGraphicTex;
+ShadedPrim   * leftGraphicTexQuad;
+BasicTexture * leftGraphicTex;
+
+BasicTexture * rtrtBotTex; // Bottom 512 pixels
+BasicTexture * rtrtTopTex; // Top 64 pixels
+ShadedPrim   * rtrtBotTexQuad;
+ShadedPrim   * rtrtTopTexQuad;
+
+BasicTexture * rtrtMidTopTex; // Medium Size RTRT Render Window (512x320)
+ShadedPrim   * rtrtMidTopTexQuad;
+BasicTexture * rtrtMidBotTex; // Medium Size RTRT Render Window (512x320)
+ShadedPrim   * rtrtMidBotTexQuad;
+
+/////////////////////////////////////////////////
 
 using namespace rtrt;
 using namespace std;
 
 using SCIRun::Thread;
 using SCIRun::ThreadGroup;
+
+bool use_pm = true;
+bool pin = false;
+#ifdef __sgi
+#include <sys/types.h>
+#include <sys/pmo.h>
+#include <sys/attributes.h>
+#include <sys/conf.h>
+#include <sys/hwgraph.h>
+#include <sys/stat.h>
+#include <invent.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+static void mld_alloc(unsigned long size, int nmld, 
+		      pmo_handle_t*& mlds, pmo_handle_t& mldset)
+{
+  mlds = new pmo_handle_t[nmld];
+
+  for(int i=0; i<nmld; i++) {
+    mlds[i] = mld_create( 0, size );
+    if ((long)mlds[i] < 0) {
+      perror("mld_create()");
+      exit(1);
+    }
+  }
+  mldset = mldset_create( mlds, nmld );
+  if ((long) mldset < 0) {
+    perror("mldset_create");
+    exit(1);
+  }
+
+  if ( mldset_place( mldset, TOPOLOGY_FREE, 0, 0, RQMODE_ADVISORY ) < 0) {
+    perror("mldset_place");
+    fprintf( stderr, "set: %p nmld: %d ( ", (void *)mldset, nmld );
+    for(int i=0; i<nmld; i++)
+      fprintf( stderr, "%d ", mlds[i] );
+    fprintf( stderr, ")\n" );
+    exit(1);
+  }
+}
+#endif
+
+Trigger * loadBottomGraphic();
+Trigger * loadLeftGraphic();
+int       mainWindowId = -1;
 
 static void usage(char* progname)
 {
@@ -84,6 +175,8 @@ static void usage(char* progname)
   cerr << " -udp             - update rate - how often to synchronuze cameras\n";
   cerr << "                    as a fraction of pixels per/proc\n";
   cerr << " -sound           - start sound thread\n";
+  cerr << " -fullscreen      - run in full screen mode\n";
+  cerr << " -demo            - spiffy gratuitous border animations\n";
   cerr << " -jitter          - jittered masks - fixed table for now\n";
   cerr << " -worker_gltest   - calls run_gl_test from worker threads\n";
   cerr << " -display_gltest  - calls run_gl_test from display thread\n";
@@ -115,15 +208,20 @@ namespace rtrt {
 
 //extern int do_jitter;
 
-// For glut to call, but since we are always redrawing (currently)
-// glut doesn't need to redraw for use.
-void doNothingCB()
-{
-}
+#if HAVE_IEEEFP_H
+#include <ieeefp.h>
+#endif
+
+bool fullscreen = false;
+bool demo = false;
 
 int
 main(int argc, char* argv[])
 {
+#if HAVE_IEEEFP_H
+    fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
+#endif
+
   RTRT* rtrt_engine = new RTRT();
 
   int xres=360;
@@ -134,7 +232,7 @@ main(int argc, char* argv[])
   int gridcellsize = -1;
   int gridcellsizeL2=4;
   int gridcellsizeL3=4;
-  int minObjs1 = 100;
+  int minObjs1 = 20;
   int minObjs2 = 20;
 
   int c0;
@@ -170,6 +268,10 @@ main(int argc, char* argv[])
       i++;
       rtrt_engine->nworkers=atoi(argv[i]);
       rtrt_engine->np = rtrt_engine->nworkers;
+    } else if(strcmp(argv[i], "-nomempolicy") == 0){
+      use_pm=false;
+    } else if(strcmp(argv[i], "-pin") == 0){
+      pin=true;
     } else if(strcmp(argv[i], "-nobv")==0){
       use_bv=0;
     } else if(strcmp(argv[i], "-bv")==0){
@@ -276,6 +378,10 @@ main(int argc, char* argv[])
 	  cerr << "Woah - bad frameless argument, Hilbert or Scan\n";
 	}
       }
+    } else if(strcmp(argv[i],"-fullscreen")==0) {
+      fullscreen = true;
+    } else if(strcmp(argv[i],"-demo")==0) {
+      demo = true;
     } else if(strcmp(argv[i],"-jitter")==0) {
       rtrt_engine->do_jitter=1;
     } else if(strcmp(argv[i],"-sound")==0) {
@@ -333,8 +439,34 @@ main(int argc, char* argv[])
     usage(argv[0]);
     exit(1);
   }
+
+#ifdef __sgi
+  if(use_pm){
+    unsigned long mempernode = 300*1024*1024;
+    // How can we tell if it should be 2 or 4 processors per node?
+    unsigned long numnodes = Thread::numProcessors()/4;
+    pmo_handle_t *mlds=0;
+    pmo_handle_t mldset=0;
+    mld_alloc(mempernode, numnodes, mlds, mldset);
+    policy_set_t ps;
+    pm_filldefault(&ps);
+    ps.placement_policy_name = "PlacementRoundRobin";
+    ps.placement_policy_args = (void*)mldset;
+    pmo_handle_t policy = pm_create(&ps);
+    if(policy == -1){
+      perror("pm_create");
+      exit(1);
+    }
+    pmo_handle_t old1=pm_setdefault(policy, MEM_DATA);
+    cerr << "old1=" << old1 << '\n';
+    pmo_handle_t old2=pm_setdefault(policy, MEM_TEXT);
+    cerr << "old2=" << old2 << '\n';
+    // STACK is left as first touch...
+  }
+#endif
   char scenefile[MAXPATHLEN];
   char pioscenefile[MAXPATHLEN];
+  SceneHandle sh;
 
   // test for pio'd version
   sprintf(pioscenefile, "./%s.scn", scenename);
@@ -342,9 +474,10 @@ main(int argc, char* argv[])
   struct stat buf;
   if (! stat(pioscenefile, &buf)) {
     cerr << "pio read: " << pioscenefile << endl;
-    SceneHandle sh(scene);
+    sh = scene;
     SCIRun::Piostream *str;
     str = new SCIRun::FastPiostream (pioscenefile, SCIRun::Piostream::Read);
+    //str = new SCIRun::TextPiostream (pioscenefile, SCIRun::Piostream::Read);
     SCIRun::Pio(*str, sh);
     scene = sh.get_rep();
   } else {
@@ -382,10 +515,12 @@ main(int argc, char* argv[])
     // test for pio'd version
     sprintf(scnfile, "./%s.scn", scenename);
     str = new SCIRun::FastPiostream (scnfile,SCIRun::Piostream::Write);
+    //str = new SCIRun::TextPiostream (scnfile,SCIRun::Piostream::Write);
 
     // Write it out.
-    SceneHandle sh(scene);
+    sh = scene;
     SCIRun::Pio(*str, sh);
+    delete str;
     cerr << "Saved scene to " << scenename << ".scn" << endl;
     exit(0);
   }
@@ -402,7 +537,8 @@ main(int argc, char* argv[])
     scene->shadow_mode = shadow_mode;
 
   scene->no_aa=no_aa;
-  
+  scene->maxdepth = 8;
+
   if(use_bv){
     if(scene->nprims() > 1){
       cerr << "*********************************************************\n";
@@ -416,7 +552,7 @@ main(int argc, char* argv[])
 	scene->set_object(new BV2(scene->get_object()));
       } else if(use_bv==3){
 	  if (gridcellsize == -1) {
-	      Array1<Object*> prims;	
+	      rtrt::Array1<Object*> prims;	
 	      scene->get_object()->collect_prims(prims);
 	      gridcellsize = (int)ceil(pow(prims.size(),1./3.));
 	      cerr << "PS " << prims.size() << " GSS " << gridcellsize << endl;
@@ -447,8 +583,21 @@ main(int argc, char* argv[])
 	cerr << "WARNING: Unknown bv method\n";
       }
     }
+  } else {
+    scene->set_object( scene->get_object() );
   }
   
+  Trigger * bottomGraphicTrigger = NULL;
+  Trigger * leftGraphicTrigger = NULL;
+  if( fullscreen ) { // For Demo... and oogl stuff 
+      xres = 512; // Start in low res mode.
+      yres = 288;
+//    xres = 1024; // Start in low res mode.
+//    yres = 576;
+  } else {
+    if( demo ) demo = false; // If not in full screen mode, no demo stuff.
+  }
+
   if(!scene->get_image(0)){
     Image* image0=new Image(xres, yres, false);
     scene->set_image(0, image0);
@@ -488,11 +637,20 @@ main(int argc, char* argv[])
     rtrt_engine->Gjitter_valsb[ii] *= 0.25;
   }
   
+  double aspectRatio = (double)yres/(double)xres;
+
+  // 0.5625 is the 9 to 5 (ish?) aspect ratio.
+  scene->get_camera(0)->setWindowAspectRatio( aspectRatio );
+  scene->get_camera(1)->setWindowAspectRatio( aspectRatio );
+
   // Start up display thread...
   Dpy* dpy=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
 		   ncounters, c0, c1, 1.0, 1.0, display_frames,
-		   pp_size, scratchsize, do_frameless==true);
+		   pp_size, scratchsize, fullscreen, do_frameless==true );
+
   Gui * gui = new Gui;
+
+
 
   Gui::setActiveGui( gui );
   gui->setDpy( dpy );
@@ -502,10 +660,172 @@ main(int argc, char* argv[])
   printf("start glut inits\n");
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
 
-  int mainWindowId = glutCreateWindow("RTRT");
+  glutInitWindowPosition( 0, 0 );
 
-  glutInitWindowPosition( 20, 20 );
-  glutReshapeWindow( xres, yres );
+  mainWindowId = glutCreateWindow("RTRT");
+
+  if( fullscreen ) {
+    //glutFullScreen(); // only if full screen is 1280x1024
+    glutReshapeWindow( 1280, 1024 );
+  } else {
+    glutReshapeWindow( xres, yres );
+  }
+
+  //////////////////////////////////////////////////////////////////
+  // OOGL stuff
+
+  if( fullscreen ) {
+    //// BACKGROUND QUAD STUFF
+
+    float z = 0.0;  
+    bool  genTexCoords = true;
+    Vec2f lowerLeft( 0, 0 );
+    Vec2f upperRight( 2048, 1024 );
+
+    PlanarQuad * backgroundQuad=
+      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
+    backgroundQuad->compile();
+
+    Vec2i texDimen(2048,1024);
+    backgroundTex = 
+      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_REPLACE,
+			NULL, GL_FLOAT, NULL );
+
+    Shader * backgroundTexShader = new Shader( backgroundTex );
+    backgroundTexQuad = new ShadedPrim( backgroundQuad, backgroundTexShader );
+
+    //// BLEND QUAD STUFF
+
+    blend = new Blend( Vec4f(1.0, 1.0, 1.0, 0.5) );
+
+    lowerLeft.set( 127, 65 );
+    upperRight.set( 1150, 319 );
+    PlanarQuad * blendQuad=
+      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
+
+    texDimen.set(1024,256);
+    blendTex = 
+      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_MODULATE,
+			NULL, GL_FLOAT, NULL );
+
+    Shader * blendTexShader = new Shader( blendTex, blend );
+    blendTexQuad = new ShadedPrim( blendQuad, blendTexShader );
+
+    //// BOTTOM GRAPHIC QUAD STUFF
+
+    lowerLeft.set( 0, 0 );
+    upperRight.set( 2047, 63 );
+    PlanarQuad * bottomGraphicQuad =
+      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
+
+    texDimen.set(2048,64);
+    bottomGraphicTex = 
+      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_MODULATE,
+			NULL, GL_FLOAT, NULL );
+    Shader * bottomGraphicTexShader = new Shader( bottomGraphicTex );
+    bottomGraphicTexQuad = new ShadedPrim( bottomGraphicQuad, 
+					   bottomGraphicTexShader );
+  
+    //// LEFT GRAPHIC QUAD STUFF
+
+    lowerLeft.set( 0, 0 );
+    upperRight.set( 63, 1023 );
+    PlanarQuad * leftGraphicQuad =
+      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
+
+    texDimen.set(64,1024);
+    leftGraphicTex = 
+      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_MODULATE,
+			NULL, GL_FLOAT, NULL );
+    Shader * leftGraphicTexShader = new Shader( leftGraphicTex );
+    leftGraphicTexQuad = new ShadedPrim( leftGraphicQuad, 
+					 leftGraphicTexShader );
+  
+    //// RTRT QUAD STUFF -- NEED 2 QUADS (512 Tall + 64 Tall)
+
+    lowerLeft.set(   128, 328 );
+    upperRight.set( 1152, 840 );
+    PlanarQuad * rtrtBotQuad=
+      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
+    rtrtBotQuad->compile();
+
+    texDimen.set(1024,512);
+    rtrtBotTex = 
+      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGBA, GL_REPLACE );
+
+    Shader * rtrtBotTexShader = new Shader( rtrtBotTex );
+    rtrtBotTexQuad = new ShadedPrim( rtrtBotQuad, rtrtBotTexShader );
+
+    lowerLeft.set( 128, 840 );
+    upperRight.set( 1152, 904 );
+
+    PlanarQuad * rtrtTopQuad=
+      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
+    rtrtTopQuad->compile();
+
+    texDimen.set(1024,64);
+    rtrtTopTex = 
+      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGBA, GL_REPLACE );
+
+    Shader * rtrtTopTexShader = new Shader( rtrtTopTex );
+    rtrtTopTexQuad = new ShadedPrim( rtrtTopQuad, rtrtTopTexShader );
+
+    // MEDIUM RESOLUTION RTRT RENDER WINDOW
+    lowerLeft.set(   128, 328 );
+    upperRight.set( 1152, 840 );
+
+    PlanarQuad * rtrtMidBotQuad=
+      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
+    rtrtMidBotQuad->compile();
+
+    texDimen.set(512,256);
+    rtrtMidBotTex = 
+      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGBA, GL_REPLACE );
+
+    Shader * rtrtMidBotTexShader = new Shader( rtrtMidBotTex );
+    rtrtMidBotTexQuad = new ShadedPrim( rtrtMidBotQuad, rtrtMidBotTexShader );
+
+    lowerLeft.set(   128, 840 );
+    upperRight.set( 1152, 904 );
+
+    PlanarQuad * rtrtMidTopQuad=
+      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
+    rtrtMidTopQuad->compile();
+
+    texDimen.set(512,32);
+    rtrtMidTopTex = 
+      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGBA, GL_REPLACE );
+
+    Shader * rtrtMidTopTexShader = new Shader( rtrtMidTopTex );
+    rtrtMidTopTexQuad = new ShadedPrim( rtrtMidTopQuad, rtrtMidTopTexShader );
+  }
+
+  // end OOGL stuff
+  //////////////////////////////////////////////////////////////////
+
+  // All non-sound triggers will be drawn to the blend quad...  let
+  // them know about it.
+  vector<Trigger*> & triggers = scene->getTriggers();
+  for( int cnt = 0; cnt < triggers.size(); cnt++ ) {
+    Trigger * trigger = triggers[cnt];
+    if( !trigger->isSoundTrigger() )
+      {
+	trigger->setDrawableInfo( blendTex, blendTexQuad, blend );
+	Trigger * next = trigger->getNext();
+
+	while( next != NULL && next != trigger )
+	  {
+	    next->setDrawableInfo( blendTex, blendTexQuad, blend );
+	    next = next->getNext();
+	  }
+      }
+  }
+  if( demo ) { // Load the fancy dynamic graphics
+    bottomGraphicTrigger = loadBottomGraphic();
+    leftGraphicTrigger = loadLeftGraphic();
+    gui->setBottomGraphic( bottomGraphicTrigger );
+    gui->setLeftGraphic( leftGraphicTrigger );
+  }
 
   cout << "sb: " << glutDeviceGet( GLUT_HAS_SPACEBALL ) << "\n";
 
@@ -518,7 +838,7 @@ main(int argc, char* argv[])
   glutSpaceballButtonFunc( Gui::handleSpaceballButtonCB );
 
   glutReshapeFunc( Gui::handleWindowResizeCB );
-  glutDisplayFunc( doNothingCB );
+  glutDisplayFunc( Gui::redrawBackgroundCB );
 
   // Must do this after glut is initialized.
   Gui::createMenus( mainWindowId, startSoundThread, show_gui);  
@@ -530,7 +850,8 @@ main(int argc, char* argv[])
   }
   for( ; cnt < scene->nlights()+scene->nPerMatlLights(); cnt++ ) {
     Light *light = scene->per_matl_light( cnt - scene->nlights() );
-    light->name_ = light->name_ + " (pm)";
+    if( light->name_ != "" )
+      light->name_ = light->name_ + " (pm)";
     gui->addLight( light );
   }
   printf("end glut inits\n");
@@ -567,3 +888,79 @@ main(int argc, char* argv[])
  
 }
 
+
+// Returns first trigger in sequence.
+Trigger * 
+loadBottomGraphic()
+{
+  cout << "Loading Bottom Graphics\n";
+  vector<Point> locations;
+  locations.push_back(Point(0,0,0));
+
+  Trigger * next = NULL;
+  Trigger * ninety;
+
+  for( int frame = 90; frame >= 30; frame-- )
+    {
+      char name[256];
+      sprintf( name,
+         "/usr/sci/data/Geometry/interface/frames_bottom/interface00%d.ppm",
+	       frame );
+
+      PPMImage * ppm = new PPMImage( name, true );
+
+      Trigger * trig = 
+	new Trigger( "bottom bar", locations, 0, 0.02, ppm, false, NULL,
+		     false, next );
+
+      trig->setDrawableInfo( bottomGraphicTex, bottomGraphicTexQuad );
+      if( frame == 90 )
+	ninety = trig;
+
+      next = trig;
+    }
+
+  ninety->setNext( next );
+  ninety->setDelay( 5.0 );
+
+  cout << "Done Loading Bottom Graphics\n";
+  return next;
+}
+
+// Returns first trigger in sequence.
+Trigger * 
+loadLeftGraphic()
+{
+  cout << "Loading Left Graphics\n";
+  vector<Point> locations;
+  locations.push_back(Point(0,0,0));
+
+  Trigger * next = NULL;
+  Trigger * ninety;
+
+  for( int frame = 90; frame >= 30; frame-- )
+    {
+      char name[256];
+      sprintf( name,
+         "/usr/sci/data/Geometry/interface/frames_left_side/interface00%d.ppm",
+	       frame );
+
+      PPMImage * ppm = new PPMImage( name, true );
+
+      Trigger * trig = 
+	new Trigger( "bottom bar", locations, 0, 0.02, ppm, false, NULL,
+		     false, next );
+      trig->setDrawableInfo( leftGraphicTex, leftGraphicTexQuad );
+
+      if( frame == 90 )
+	ninety = trig;
+
+      next = trig;
+    }
+
+  ninety->setNext( next );
+  ninety->setDelay( 10.0 );
+
+  cout << "Done Loading Left Graphics\n";
+  return next;
+}

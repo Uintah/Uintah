@@ -1,6 +1,7 @@
 #ifndef MESH_H
 #define MESH_H
 
+#include <Core/Persistent/Persistent.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Core/Geometry/Vector.h>
@@ -13,24 +14,38 @@
 #define ROOT_TOL 1E-3
 
 namespace rtrt {
+class Mesh;
+}
+namespace SCIRun {
+void Pio(Piostream&, rtrt::Mesh*&);
+}
+
+namespace rtrt {
 
 using SCIRun::Vector;
 using SCIRun::Point;
 using SCIRun::Dot;
 using SCIRun::Cross;
 
-class Mesh {
+class Mesh : public SCIRun::Persistent {
 public:
-    Mesh (int, int);
-    ~Mesh();
-    Mesh *Copy();
-    void Out(int, int);
-    void Print();
-    Point **getPts(Vector &, Vector &, Vector &);
+  Mesh (int, int);
+  ~Mesh();
+  Mesh *Copy();
+  Mesh() {} // for Pio.
 
-    inline int get_scratchsize() {
-      return (int)(msize*nsize*sizeof(Point));
-    }
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, Mesh*&);
+
+  void Out(int, int);
+  void Print();
+  Point **getPts(Vector &, Vector &, Vector &);
+
+  inline int get_scratchsize() {
+    return (int)(msize*nsize*sizeof(Point));
+  }
 
   inline void get_scratch(double* &thetau, double* &thetav,
 			  double* &dthetau, double* &dthetav,
@@ -44,34 +59,34 @@ public:
     dthetav = &scratch[nsize+msize+nsize];
   }
 
-    inline void SetPoint (Point p, int i, int j)
-    {
-	mesh[i][j] = p;
+  inline void SetPoint (Point p, int i, int j)
+  {
+    mesh[i][j] = p;
+  }
+
+  inline void RowSplit(int row, Mesh *newm, double w)
+  {
+    newm->mesh[row][nsize-1] = mesh[row][nsize-1];
+
+    for (int j=1; j<nsize; j++) {
+      for (int k=nsize-1; k>=j; k--)
+	//mesh[row][k].blend(mesh[row][k-1],mesh[row][k],w);
+	mesh[row][k] = SCIRun::Interpolate(mesh[row][k-1], mesh[row][k], w);
+      newm->mesh[row][nsize-1-j] = mesh[row][nsize-1];
     }
+  }
 
-    inline void RowSplit(int row, Mesh *newm, double w)
-    {
-	newm->mesh[row][nsize-1] = mesh[row][nsize-1];
+  inline void ColSplit(int col, Mesh *newm, double w)
+  {
+    newm->mesh[msize-1][col] = mesh[msize-1][col];
 
-	for (int j=1; j<nsize; j++) {
-	    for (int k=nsize-1; k>=j; k--)
-	      //mesh[row][k].blend(mesh[row][k-1],mesh[row][k],w);
-	      mesh[row][k] = SCIRun::Interpolate(mesh[row][k-1], mesh[row][k], w);
-	    newm->mesh[row][nsize-1-j] = mesh[row][nsize-1];
-	}
+    for (int j=1; j<msize; j++) {
+      for (int k=msize-1; k>=j; k--)
+	//mesh[k][col].blend(mesh[k-1][col],mesh[k][col],w);
+	mesh[k][col] = SCIRun::Interpolate(mesh[k-1][col], mesh[k][col], w);
+      newm->mesh[msize-1-j][col] = mesh[msize-1][col];
     }
-
-    inline void ColSplit(int col, Mesh *newm, double w)
-    {
-	newm->mesh[msize-1][col] = mesh[msize-1][col];
-
-	for (int j=1; j<msize; j++) {
-	    for (int k=msize-1; k>=j; k--)
-	      //mesh[k][col].blend(mesh[k-1][col],mesh[k][col],w);
-	      mesh[k][col] = SCIRun::Interpolate(mesh[k-1][col], mesh[k][col], w);
-	    newm->mesh[msize-1-j][col] = mesh[msize-1][col];
-	}
-    }
+  }
 
   inline void SubDivide(Mesh **nw, Mesh **ne, Mesh **se, Mesh **sw,
 			double w)
@@ -91,17 +106,17 @@ public:
     }
   }
 
-    inline void RowSplit(int row, double w, Point *sub)
-    {
-      Point *m=mesh[row];
+  inline void RowSplit(int row, double w, Point *sub)
+  {
+    Point *m=mesh[row];
       
-      sub = &(sub[row*nsize]);
+    sub = &(sub[row*nsize]);
       
-      sub[0] = m[0];
-      for (int j=1; j<nsize; j++, m=sub)
-	for (int k=nsize-1; k>=j; k--)
-	  sub[k] = SCIRun::Interpolate(m[k-1], m[k], w);
-    }
+    sub[0] = m[0];
+    for (int j=1; j<nsize; j++, m=sub)
+      for (int k=nsize-1; k>=j; k--)
+	sub[k] = SCIRun::Interpolate(m[k-1], m[k], w);
+  }
   
   inline void ColSplit(int col, double w, Point *sub)
   {
@@ -184,59 +199,59 @@ public:
     d1 = Dot(Su, p2);
   }
 
-    inline void Fv(const Vector &Sv, const Vector &p1, const Vector &p2,
-                   double &d0, double &d1)
-    {
-      d0 = Dot(Sv, p1);
-      d1 = Dot(Sv, p2);
-    }
+  inline void Fv(const Vector &Sv, const Vector &p1, const Vector &p2,
+		 double &d0, double &d1)
+  {
+    d0 = Dot(Sv, p1);
+    d1 = Dot(Sv, p2);
+  }
 
-    inline void ray_planes(const Ray &r, Vector &p1, double &p1d,
-                           Vector &p2, double &p2d)
-    {
-        Point ro(r.origin());
-        Vector rdir(r.direction());
-        double rdx,rdy,rdz;
-        double rdxmag, rdymag, rdzmag;
+  inline void ray_planes(const Ray &r, Vector &p1, double &p1d,
+			 Vector &p2, double &p2d)
+  {
+    Point ro(r.origin());
+    Vector rdir(r.direction());
+    double rdx,rdy,rdz;
+    double rdxmag, rdymag, rdzmag;
 
-        rdx = rdir.x();
-        rdy = rdir.y();
-        rdz = rdir.z();
+    rdx = rdir.x();
+    rdy = rdir.y();
+    rdz = rdir.z();
 
-        rdxmag = fabs(rdx);
-        rdymag = fabs(rdy);
-        rdzmag = fabs(rdz);
+    rdxmag = fabs(rdx);
+    rdymag = fabs(rdy);
+    rdzmag = fabs(rdz);
 
-        if (rdxmag > rdymag && rdxmag > rdzmag) 
-            p1 = Vector(rdy,-rdx,0);
-        else
-            p1 = Vector(0,rdz,-rdy);
+    if (rdxmag > rdymag && rdxmag > rdzmag) 
+      p1 = Vector(rdy,-rdx,0);
+    else
+      p1 = Vector(0,rdz,-rdy);
 
-        p2 = Cross(p1, rdir);
+    p2 = Cross(p1, rdir);
 
-        // Each plane contains the ray origin
-        p1d = -Dot(p1, ro);
-        p2d = -Dot(p2, ro);
-    }
+    // Each plane contains the ray origin
+    p1d = -Dot(p1, ro);
+    p2d = -Dot(p2, ro);
+  }
 
   inline void gentheta(double *theta, double t, int n) 
   {
-        int i;
-	double pow_w1=1., pow_w2=1.;
-	double w1=t, w2=(1.-t);
+    int i;
+    double pow_w1=1., pow_w2=1.;
+    double w1=t, w2=(1.-t);
 
-	for (i=0; i<n; i++)	
-	  theta[i] = comb_table[n-1][i];
+    for (i=0; i<n; i++)	
+      theta[i] = comb_table[n-1][i];
 	
-        for (i=0; i<n; i++) {
+    for (i=0; i<n; i++) {
 
-	  theta[i] *= pow_w1;
-	  theta[n-i-1] *= pow_w2;
+      theta[i] *= pow_w1;
+      theta[n-i-1] *= pow_w2;
 
-	  pow_w1 *= w1;
-	  pow_w2 *= w2;
-	}
+      pow_w1 *= w1;
+      pow_w2 *= w2;
     }
+  }
 
   inline void gendtheta(double *dtheta, double t, int n) 
   {
@@ -305,75 +320,75 @@ public:
     S = P;
     Su = Pu.vector();
     Sv = Pv.vector();
-}
-    inline double calc_t(const Ray &r, Point &S)
-    {
-        Vector d(r.direction());
-	Vector oS(S-r.origin());
+  }
+  inline double calc_t(const Ray &r, Point &S)
+  {
+    Vector d(r.direction());
+    Vector oS(S-r.origin());
 
-	return Dot(d, oS)/Dot(d, d);
-    }
+    return Dot(d, oS)/Dot(d, d);
+  }
     
-    inline int Hit(const Ray &r, double &u, double &v, double &t,
-                   double ulow, double uhigh, double vlow, double vhigh,
-		   PerProcessorContext *ppc)
-    {
-	int i;
-	double j11, j12, j21, j22;
-	double f,g;
-	//double fold, gold;
-	double rootdist;
-	//double oldrootdist;
-	double invdetJ;
-	//int tdiv=0;
+  inline int Hit(const Ray &r, double &u, double &v, double &t,
+		 double ulow, double uhigh, double vlow, double vhigh,
+		 PerProcessorContext *ppc)
+  {
+    int i;
+    double j11, j12, j21, j22;
+    double f,g;
+    //double fold, gold;
+    double rootdist;
+    //double oldrootdist;
+    double invdetJ;
+    //int tdiv=0;
         
-        // Planes containing ray
-        Vector p1,p2;
-        double p1d=0,p2d=0;
+    // Planes containing ray
+    Vector p1,p2;
+    double p1d=0,p2d=0;
         
-        ray_planes(r,p1,p1d,p2,p2d);
+    ray_planes(r,p1,p1d,p2,p2d);
         
-	Point S;
-	Vector Su, Sv;
+    Point S;
+    Vector Su, Sv;
 
-	Eval(u,v,S,Su,Sv,ppc);
-	F(S,p1,p1d,p2,p2d,f,g);
-	rootdist = fabs(f) + fabs(g);
-	for (i=0; i<MAXITER; i++)
-	  {
-	      Fu(Su,p1,p2,j11,j21);
-	      Fv(Sv,p1,p2,j12,j22);
-	      invdetJ = 1./(j11*j22-j12*j21);
+    Eval(u,v,S,Su,Sv,ppc);
+    F(S,p1,p1d,p2,p2d,f,g);
+    rootdist = fabs(f) + fabs(g);
+    for (i=0; i<MAXITER; i++)
+    {
+      Fu(Su,p1,p2,j11,j21);
+      Fv(Sv,p1,p2,j12,j22);
+      invdetJ = 1./(j11*j22-j12*j21);
 	      
-	      u -= invdetJ*(j22*f-j12*g);
-	      v -= invdetJ*(j11*g-j21*f);
+      u -= invdetJ*(j22*f-j12*g);
+      v -= invdetJ*(j11*g-j21*f);
 	      
-	      /*if ((u<=ulow) || (u>=uhigh) ||
-		  (v<=vlow) || (v>=vhigh))
-		return 0;*/
+      /*if ((u<=ulow) || (u>=uhigh) ||
+	(v<=vlow) || (v>=vhigh))
+	return 0;*/
 	      
-	      Eval(u,v,S,Su,Sv,ppc);
-	      //fold = f;
-	      //gold = g;
-	      //oldrootdist = rootdist;
+      Eval(u,v,S,Su,Sv,ppc);
+      //fold = f;
+      //gold = g;
+      //oldrootdist = rootdist;
 	      
-	      F(S,p1,p1d,p2,p2d,f,g);
+      F(S,p1,p1d,p2,p2d,f,g);
 	      
-	      rootdist = fabs(f)+fabs(g);
+      rootdist = fabs(f)+fabs(g);
 	      
-	      /*if (rootdist > oldrootdist)
-		return 0;*/
-	      if (rootdist < ROOT_TOL) {
-		if ((u<=ulow) || (u>=uhigh) ||
-		    (v<=vlow) || (v>=vhigh))
-		  return 0;
-                t = calc_t(r,S);
+      /*if (rootdist > oldrootdist)
+	return 0;*/
+      if (rootdist < ROOT_TOL) {
+	if ((u<=ulow) || (u>=uhigh) ||
+	    (v<=vlow) || (v>=vhigh))
+	  return 0;
+	t = calc_t(r,S);
                 
-		return 1;
-	      }
-	    }
-	return 0;
+	return 1;
       }
+    }
+    return 0;
+  }
 
   //Uses Broyden's Method....
   inline int Hit_Broyden(const Ray &r, double &u, double &v, double &t,
@@ -430,9 +445,9 @@ public:
       
       // Failure conditions
       /*if ((rootdist > rootdist_1) ||
-	  (u<ulow) || (u>uhigh) ||
-	  (v<vlow) || (v>vhigh))
-      return 0;*/
+	(u<ulow) || (u>uhigh) ||
+	(v<vlow) || (v>vhigh))
+	return 0;*/
       
       // Continue condition
       if (rootdist > ROOT_TOL) {
@@ -477,8 +492,8 @@ public:
 	  
 	  // Failure conditions
 	  /*if ((rootdist > rootdist_1) ||
-	      (u<ulow) || (u>uhigh) ||
-	      (v<vlow) || (v>vhigh))
+	    (u<ulow) || (u>uhigh) ||
+	    (v<vlow) || (v>vhigh))
 	    return 0;*/
 	  
 	  // Success condition

@@ -10,9 +10,20 @@
 #include <math.h>
 
 using namespace rtrt;
+using namespace SCIRun;
 
-PhongMaterial::PhongMaterial(const Color& Rd, double opacity, double Rphong, double phong_exponent, bool refl)
-    : Rd(Rd), opacity(opacity), Rphong(Rphong), phong_exponent(phong_exponent)
+Persistent* phongMaterial_maker() {
+  return new PhongMaterial();
+}
+
+// initialize the static member type_id
+PersistentTypeID PhongMaterial::type_id("PhongMaterial", "Material", 
+				     phongMaterial_maker);
+
+
+PhongMaterial::PhongMaterial(const Color& Rd, double opacity, double Rphong, 
+			     double phong_exponent, bool refl)
+  : Rd(Rd), opacity(opacity), Rphong(Rphong), phong_exponent(phong_exponent)
 {
   reflects = refl;
 }
@@ -59,6 +70,10 @@ void PhongMaterial::shade(Color& result, const Ray& ray,
 	  light=cx->scene->light(i);
         else 
 	  light=my_lights[i-ngloblights];
+
+	if( !light->isOn() )
+	  continue;
+
 	Vector light_dir=light->get_pos()-hitpos;
 	if (ray_objnormal_dot*Dot(normal,light_dir)>0) {
 	  cx->stats->ds[depth].inshadow++;
@@ -107,4 +122,31 @@ void PhongMaterial::shade(Color& result, const Ray& ray,
     }
 
     result=surfcolor;
+}
+
+const int PHONGMATERIAL_VERSION = 1;
+
+void 
+PhongMaterial::io(SCIRun::Piostream &str)
+{
+  str.begin_class("PhongMaterial", PHONGMATERIAL_VERSION);
+  Material::io(str);
+  SCIRun::Pio(str, Rd);
+  SCIRun::Pio(str, opacity);
+  SCIRun::Pio(str, Rphong);
+  SCIRun::Pio(str, phong_exponent);
+  SCIRun::Pio(str, reflects);
+  str.end_class();
+}
+
+namespace SCIRun {
+void Pio(SCIRun::Piostream& stream, rtrt::PhongMaterial*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::PhongMaterial::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::PhongMaterial*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
 }

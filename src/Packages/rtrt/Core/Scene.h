@@ -37,7 +37,7 @@ class Material;
 class ShadowBase;
 class Group;
 class Scene;
-
+class Trigger;
 #if !defined(linux)
 class SoundThread;
 class Sound;
@@ -150,6 +150,11 @@ public:
     return ambientColor_;
   }
 
+  inline void setBaseAmbientColor(const Color &c) {
+    origAmbientColor_ = c;
+    ambientColor_ = origAmbientColor_ * ambientScale_;
+  }
+
   inline double getAmbientLevel() { return ambientScale_; }
 
   inline void setAmbientLevel( float scale ) {
@@ -171,13 +176,10 @@ public:
   
   // Render a sphere in the scene for each light.
   void renderLights( bool on ); 
-  // Remove lights from active light list.
-  void turnOffAllLights( Light * exceptThisLight = NULL ); 
+
+  // left is % left on... ranging from 1.0 to 0.0 to turn it off.
   void turnOffAllLights( double left ); 
-  // Put all lights back in the active light list.
-  void turnOnAllLights();
-  void turnOffLight( Light * light );
-  void turnOnLight( Light * light );
+  void turnOnAllLights(); // Put all lights back in the active light list.
 
   inline int nlights() {
     return lights.size();
@@ -196,6 +198,11 @@ public:
     return lightbits;
   }
 
+  void add_light(Light*);
+  void add_permanent_light(Light*);
+  void add_per_matl_light(Light*);
+  void add_perm_per_matl_light(Light*);
+
   inline void set_rtrt_engine(RTRT* _rtrt) {
     rtrt_engine = _rtrt;
   }
@@ -204,9 +211,6 @@ public:
     return rtrt_engine;
   }
   
-  void add_light(Light*);
-  void add_per_matl_light(Light*);
-  void add_per_matl_mood_light(Light*);
   int nprims();
   
   WorkQueue work;
@@ -215,10 +219,24 @@ public:
 
 #if !defined(linux)
   // Used mainly by make_scene to register sounds with the application.
-  void           addSound( Sound * sound ) { sounds_.push_back( sound ); }
-  vector<Sound*> getSounds() { return sounds_; }
-  int            soundVolume() const { return soundVolume_; }
+  void             addSound( Sound * sound ) { sounds_.push_back( sound ); }
+  vector<Sound*> & getSounds() { return sounds_; }
+  int              soundVolume() const { return soundVolume_; }
 #endif
+
+  void               addTrigger( Trigger * trigger );
+  vector<Trigger*> & getTriggers() { return triggers_; }
+
+  // These are mostly used by multi-scene to update the main scene...
+  Array1<Object*>   &  getObjectsOfInterest() { return objectsOfInterest_; }
+  Array1<Object*>   &  getAnimateObjects() { return animateObjects_; }
+  Array1<Object*>   &  getDynBBoxObjs() { return dynamicBBoxObjects_; }
+  Array1<DpyBase*>  &  getDisplays() { return displays; }
+  Array1<DpyBase*>  &  getAuxDisplays() { return aux_displays; }
+  Array1<Material*> &  getMaterials() { return materials; }
+  vector<string>    &  getRouteNames() { return routeNames_; }
+  vector<string>    &  getRoomsForRoutes() { return roomsForRoutes_; }
+  Array1<ShadowBase*> & getShadows() { return shadows; }
   
   void preprocess(double maxradius, int& pp_offset, int& scratchsize);
   Array1<ShadowBase*> shadows;
@@ -245,7 +263,7 @@ public:
   int ref_cnt;
   SCIRun::Mutex lock;
 
-  inline bool doHotSpots() const { return hotspots; }
+  inline int getHotSpotsMode() const { return hotSpotMode_; }
 
   // Display image as a "transmission".  Ie: turn off every other scan line.
   // (Net effect of this is to double the frame rate.)
@@ -256,8 +274,11 @@ public:
   // via this call.  If the "name_" of the object is "", then the
   // Gui will not display the object.  Also, animate will (now) only 
   // be called on objects that have been added through this function
-  // with the "animate" flag set to true.
-  void addObjectOfInterest( Object * obj, bool animate = false );
+  // with the "animate" flag set to true.  If you have an object that needs
+  // to change its bounding box on the fly, then you need to set the
+  // remakebbox flag to true.
+  void addObjectOfInterest( Object * obj, bool animate = false, bool remakebbox = false );
+  void addObjectOfInterest( const string& name, Object * obj, bool animate = false, bool remakebbox = false );
 
   void attach_display(DpyBase *dpy);
   void attach_auxiliary_display(DpyBase *dpy);
@@ -299,18 +320,26 @@ private:
 #endif
   int              soundVolume_;
 
+  // List of triggers that we need to constantly check to see
+  // if they have fired.
+  vector<Trigger*> triggers_;
+  
   // Points to either mainGroup_ or mainGroupWithLights_;
   Object * obj;
 
-  Object * mainGroup_;
+  Group  * mainGroup_;
   Group  * mainGroupWithLights_;
   Group  * lightsGroup_;
+  Group  * permanentLightsGroup_;
 
   // Objects that are to be presented to the GUI for user interaction.
   Array1<Object*> objectsOfInterest_;
 
   // Objects that will have their animate() function called:
   Array1<Object*> animateObjects_;
+
+  // Objects that, when they have their animate() function called, must recompute bbox
+  Array1<Object*> dynamicBBoxObjects_;
   
   Camera* camera0;
   Camera* camera1;
@@ -333,7 +362,6 @@ private:
   // Lights that are on.
   Array1<Light*> lights;
   Array1<Light*> per_matl_lights;
-  Array1<Light*> per_matl_mood_lights; //these increase intesity when it gets dark
 
   // Lights that have been turned off.
   Array1<Light*> nonActiveLights_;
@@ -346,7 +374,7 @@ private:
   Color  ambientColor_;
   Color  origAmbientColor_;
 
-  bool hotspots;
+  int  hotSpotMode_; // 0 == off, 1 == normal, 2 == half screen
   bool transmissionMode_;
 
   Array1<Material*> materials;

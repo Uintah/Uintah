@@ -44,29 +44,37 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/terrain.mo \
 	$(SRCDIR)/heightfield.mo \
 	$(SRCDIR)/graphics-museum.mo \
+	$(SRCDIR)/min-museum.mo \
+	$(SRCDIR)/3min-museum.mo \
 	$(SRCDIR)/living-room.mo \
-	$(SRCDIR)/science-room.mo \
         $(SRCDIR)/seaworld-tubes2.mo \
+        $(SRCDIR)/seaworld-tubes3.mo \
 	$(SRCDIR)/sphere-room2.mo \
 	$(SRCDIR)/seaworld-tubes.mo \
 	$(SRCDIR)/multi-scene.mo \
 	$(SRCDIR)/cutdemo.mo  \
 	$(SRCDIR)/basic-sea.mo  \
+	$(SRCDIR)/volume_color.mo \
 	$(SRCDIR)/envmap-sphere.mo  \
 	$(SRCDIR)/single-sphere.mo  \
-	$(SRCDIR)/ramsey.mo \
 	$(SRCDIR)/spinning_instance_demo.mo \
+	$(SRCDIR)/david.mo \
+	$(SRCDIR)/david_old.mo \
 	$(SRCDIR)/VolumeVisMod.mo \
+	$(SRCDIR)/davidhead.mo  \
+	$(SRCDIR)/science-room.mo \
+	$(SRCDIR)/science-room-full.mo \
+	$(SRCDIR)/stadium.mo \
+#	$(SRCDIR)/dtiglyph.mo 
+#	$(SRCDIR)/ramsey.mo \
+# 	$(SRCDIR)/miptest.mo \
 	$(SRCDIR)/uintahdata.mo \
-# 	$(SRCDIR)/cbox.mo \
-# 	$(SRCDIR)/david.mo \
-# 	$(SRCDIR)/davidhead.mo \
-# 	$(SRCDIR)/stmatthew.mo \
 # 	$(SRCDIR)/venus.mo \
-# 	$(SRCDIR)/lucy.mo \
-# 	$(SRCDIR)/mus_barrier.mo \
-# 	$(SRCDIR)/buddha.mo 
-#	$(SRCDIR)/dtiglyph.mo \
+# 	$(SRCDIR)/crank.mo 
+# 	$(SRCDIR)/cbox.mo \
+#	$(SRCDIR)/graphics-museum-works.mo \
+# 	$(SRCDIR)/buddha.mo \
+
 
 ifeq ($(findstring Uintah, $(LOAD_PACKAGE)),Uintah)
 SCENES += \
@@ -104,7 +112,10 @@ $(SRCDIR)/VolumeVisMod.mo: $(SRCDIR)/VolumeVisMod.o
 	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lnrrd -lair -lbiff -lnrrd -lm $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 $(SRCDIR)/dtiglyph.mo: $(SRCDIR)/dtiglyph.o
-	$(CXX) -o $@ -L$(TEEM_LIB_DIR) $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS) -lten -ldye -lell -lnrrd -lhest -lbiff -lair -lm $(GLUI_LIBRARY) $(GLUT_LIBRARY)
+	$(CXX) -o $@ -L$(TEEM_LIB_DIR) $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lten -ldye -lell -lnrrd -lhest -lbiff -lair -lm $(GLUI_LIBRARY) $(GLUT_LIBRARY) -m
+
+$(SRCDIR)/science-room.mo: $(SRCDIR)/science-room.o
+	$(CXX) -o $@ -L$(TEEM_LIB_DIR) $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lten -ldye -lell -lnrrd -lhest -lbiff -lair -lm $(GLUI_LIBRARY) $(GLUT_LIBRARY) -m
 
 $(SRCDIR)/uintahparticle2.mo: $(SRCDIR)/uintahparticle2.o
 	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS) $(GLUI_LIBRARY) $(GLUT_LIBRARY)

@@ -7,12 +7,54 @@
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array1.h>
 
+///////////////////////////////////////////
+// OOGL stuff
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424
+#pragma set woff 1682
+#pragma set woff 3201
+#pragma set woff 3303
+#pragma set woff 1506
+#endif
+#include <oogl/basicTexture.h>
+#include <oogl/shadedPrim.h>
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#pragma reset woff 1682
+#pragma reset woff 3201
+#pragma reset woff 3303
+#pragma reset woff 1506
+#endif
+
+class Blend : public GenAttrib
+{
+public:
+  Blend() {}
+  Blend( const Vec4f& color ) {m_color = color;}
+  void alpha( float alpha ) {m_color[3] = alpha;}
+  
+protected:
+  virtual void bindDef() {
+    glEnable(GL_BLEND);
+    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+    glColor4fv( m_color.v() );
+  }
+  virtual void releaseDef() {
+    glDisable(GL_BLEND);
+  }
+//
+///////////////////////////////////////////
+
+private:
+  Vec4f m_color;
+};
+
 namespace rtrt {
-class Image;
+  class Image;
 }
 
 namespace SCIRun {
-void Pio(Piostream&, rtrt::Image*&);
+  void Pio(Piostream&, rtrt::Image*&);
 }
 
 namespace rtrt {
@@ -62,16 +104,13 @@ public:
   void resize_image();
   void resize_image(const int new_xres, const int new_yres);
   
-  inline int get_xres() const {
-    return xres;
-  }
-  inline int get_yres() const {
-    return yres;
-  }
-  inline bool get_stereo() const {
-    return stereo;
-  }
-  void draw();
+  inline int get_xres() const { return xres; }
+  inline int get_yres() const { return yres; }
+  inline bool get_stereo() const { return stereo; }
+
+  void draw( int  window_size, // 0 == large, 1 == medium
+	     bool fullscreen ); 
+
   void set(const Pixel& value);
   inline Pixel& operator()(int x, int y) {
     return image[y][x];
@@ -112,7 +151,6 @@ class ImageTile {
   double xo,yo;  // x/y origin on uv plane for tile
   
   double xs,ys;  // vectors can be used for mapping
-
   float  glscale; // for glPixelZoom
 
   int tileID;    // fixed number of potential tile sizes - 4x4 -> ??

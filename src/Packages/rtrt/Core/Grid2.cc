@@ -16,6 +16,8 @@ using namespace std;
 using SCIRun::Thread;
 using SCIRun::Time;
 
+namespace rtrt {
+
 Grid2::Grid2(Object* obj, int nsides)
     : Object(0), obj(obj), nsides(nsides)
 {
@@ -353,13 +355,6 @@ void Grid2::intersect(Ray& ray, HitInfo& hit,
     }
 }
 
-void Grid2::light_intersect(Light*, Ray& lightray,
-			  HitInfo& hit, double, Color&,
-			  DepthStats* ds, PerProcessorContext* ppc)
-{
-    intersect(lightray, hit, ds, ppc);
-}
-
 void Grid2::animate(double, bool&)
 {
     //obj->animate(t);
@@ -448,7 +443,7 @@ void Grid2::insert(Object* object, const BBox& obj_bbox)
   object->set_grid_position (tag_in > 0, tag_out > 0);
 }
 
-
+} // end namespace
 
 
 /*

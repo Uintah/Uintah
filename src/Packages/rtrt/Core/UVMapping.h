@@ -6,7 +6,6 @@
 #include <Core/Persistent/Persistent.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/rtrt/Core/vec.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 
 namespace rtrt {
@@ -14,6 +13,7 @@ class UVMapping;
 }
 namespace SCIRun {
 class Point;
+class Vector;
 void Pio(Piostream&, rtrt::UVMapping*&);
 }
 
