@@ -77,22 +77,25 @@ using std::pair;
 		  const MaterialSubset* matls,
 		  DataWarehouse* old_dw,
 		  DataWarehouse* new_dw,
-		  Dir* p_dir, int timestep,
+		  Dir* p_dir,
 		  const VarLabel*);
 
       // Method to output reduction variables to a single file
       void outputReduction(const ProcessorGroup*,
+			   const PatchSubset* patch,
+			   const MaterialSubset* matls,
 			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw,
-			   double time);
+			   DataWarehouse* new_dw);
 
       // This calls output for all of the checkpoint reduction variables
       // which will end up in globals.xml / globals.data -- in this way,
       // all this data will be output by one process avoiding conflicts.
       void outputCheckpointReduction(const ProcessorGroup* world,
+				     const PatchSubset* patch,
+				     const MaterialSubset* matls,
 				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw,
-				     int timestep);
+				     DataWarehouse* new_dw);
+
       //////////
       // Get the current time step
       virtual int getCurrentTimestep()
@@ -150,6 +153,8 @@ using std::pair;
       string d_lastTimestepLocation;
       bool d_wasOutputTimestep;
       bool d_wasCheckpointTimestep;
+
+      double d_currentTime;
 
       bool d_wereSavesAndCheckpointsInitialized;      
       // d_saveLabelNames is a temporary list containing VarLabel
