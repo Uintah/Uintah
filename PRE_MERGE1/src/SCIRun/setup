@@ -1,0 +1,49 @@
+
+echo ""
+
+echo -n "Setting TOP to: "
+set THISDIR = `pwd`
+chdir ../..;
+setenv TOP `pwd`
+chdir $THISDIR
+unset THISDIR
+echo "$TOP"
+
+#setenv ARCH irix64
+setenv ARCH irix32
+
+echo ""
+echo "Set up for $ARCH architecture!"
+echo ""
+
+# For some reason, on raptor, you have to have "library" at the end of these:
+setenv ITCL_LIBRARY $TOP/src/3rdParty/tcl/itcl/itcl/library
+setenv ITK_LIBRARY $TOP/src/3rdParty/tcl/itcl/itk/library
+setenv TCL_LIBRARY $TOP/src/3rdParty/tcl/tcl/library
+setenv TK_LIBRARY $TOP/src/3rdParty/tcl/tk/library
+setenv BLT_LIBRARY $TOP/src/3rdParty/tcl/blt2.4h/library
+
+#setenv ITCL_LIBRARY $TOP/src/3rdParty/tcl/itcl/itcl
+#setenv ITK_LIBRARY $TOP/src/3rdParty/tcl/itcl/itk
+#setenv TCL_LIBRARY $TOP/src/3rdParty/tcl/tcl
+#setenv TK_LIBRARY $TOP/src/3rdParty/tcl/tk
+
+setenv SCI_WORK        $TOP/src/SCICore
+setenv PSE_WORK        $TOP/src/PSECommon/GuiFiles
+setenv APPLICATION     $TOP/src/SCIRun/GuiFiles
+
+
+echo "Set APPLICATION to $APPLICATION"
+echo ""
+
+setenv LD_LIBRARY_PATH $TOP/$ARCH/PSECommon/lib:$TOP/$ARCH/SCICore/lib:$TOP/$ARCH/3rdParty/lib:$TOP/$ARCH/SCIRun/lib
+
+# This used to be called SCI_DATA
+setenv PSE_DATA        /home/sci/data19/kuzimmer/data/tecplot/3D/collision
+
+echo "Set PSE_DATA (previously known as SCI_DATA) to $PSE_DATA"
+echo ""
+
+
+
+

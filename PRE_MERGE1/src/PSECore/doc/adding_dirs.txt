@@ -1,0 +1,8 @@
+
+
+To make a new directory in the repository:
+
+1) cvs add the directory
+2) Edit the Imakefile to make in that directory
+3) cvs checkout modules and add an entry
+4) Edit sci_config.tcl to add it
