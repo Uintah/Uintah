@@ -77,8 +77,6 @@ FusionSlicePlotAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
     
     FIELD<double> *ofield = scinew FIELD<double>(omesh, ifield->data_at());
 
-
-    
     typename FIELD<TYPE>::fdata_type::iterator in  = ifield->fdata().begin();
     typename FIELD<TYPE>::fdata_type::iterator end = ifield->fdata().end();
     typename FIELD<double>::fdata_type::iterator out = ofield->fdata().begin();
@@ -86,11 +84,13 @@ FusionSlicePlotAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
     typename FIELD<TYPE>::mesh_type::Node::index_type node = 0;
     unsigned int counter = 0;
 
+    imesh ->synchronize( Mesh::NORMALS_E );
+
     Point pt;
     Vector vec;
 
     pair<double, double> minmax;
-    
+
     if ( !ifield->get_property("minmax", minmax)) {
       sfi->compute_min_max(minmax.first, minmax.second);
 
@@ -104,12 +104,12 @@ FusionSlicePlotAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
 
       *out = *in;  // Copy the data.
 
-      // Get the normal from the orginal surface since it should be planar.
-      imesh->get_normal(vec, node);      
-
       // Get the orginal point on the mesh.
       omesh->get_point(pt, node);
       
+      // Get the normal from the orginal surface since it should be planar.
+      imesh->get_normal(vec, node);      
+
       // Normalize then scale the offset value before adding to the point.
       pt += ( (*in - minmax.first) * scale ) * vec;
 
@@ -118,7 +118,6 @@ FusionSlicePlotAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
       ++in; ++out;
 
       node = ++counter;
-
     }
 
     return FieldHandle( ofield );
