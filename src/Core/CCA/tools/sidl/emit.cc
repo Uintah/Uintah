@@ -344,12 +344,11 @@ void CI::emit(EmitState& e)
     (*iter)->emit(e);
   }
   
-  emit_proxyclass(e);
   emitted_declaration=true;
+  emit_proxyclass(e);
   if(!do_emit)
     return;
   
-  emitted_declaration=true;
   emit_header(e);
 
   e.instanceNum++;
