@@ -501,3 +501,40 @@ BBox::TestTz( const Point& e, const Vector& v, double tz, Point& hitNear )
   
   return 0;
 }
+
+
+void BBox::test_rigorous(RigorousTest* __test){
+
+  Point p;
+  BBox b;
+
+  b.extend(Point(0,0,1));
+  b.extend(Point(0,1,2));
+  b.extend(Point(3,3,3));
+  TEST(b.max()==Point(3,3,3));
+
+  TEST(maxint(1,2)==2);
+
+  /*  4(int x=0;x<=10;++x){
+    for(int y=0;y<=10;++y){
+      for(int z=0;z<=10;++z){
+	p.x(x);
+	p.y(y);
+	p.z(z);
+
+	b.extend(p);
+
+	TEST(b.min()==Point(0,0,0));
+	TEST(b.max()==p);
+
+	cout << "Min: " << b.min() << "\tMax: " << b.max() << endl;
+	b.reset();
+       }
+    }
+  }
+  
+  */
+ 
+
+
+}
