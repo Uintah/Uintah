@@ -1367,8 +1367,7 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       if (switchDebug_vel_FC ) {
 #if 0
         ostringstream desc;
-        desc << "TOP_vel_FC_Mat_" << indx << "_patch_" 
-                   << patch->getID(); 
+        desc << "TOP_vel_FC_Mat_" << indx << "_patch_"<< patch->getID(); 
         printData(  patch, 1, desc.str(), "rho_CC",      rho_CC);
         printData(  patch, 1, desc.str(), "rho_micro_CC",rho_micro_CC);
         printData(  patch, 1, desc.str(), "sp_vol_CC",  sp_vol_CC);
@@ -1381,6 +1380,7 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       SFCXVariable<double> uvel_FC;
       SFCYVariable<double> vvel_FC;
       SFCZVariable<double> wvel_FC;
+      StaticArray<CCVariable<double> > scratch(3); 
       new_dw->allocate(uvel_FC, lb->uvel_FCLabel, indx, patch);
       new_dw->allocate(vvel_FC, lb->vvel_FCLabel, indx, patch);
       new_dw->allocate(wvel_FC, lb->wvel_FCLabel, indx, patch);
@@ -1388,92 +1388,60 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       uvel_FC.initialize(0.0, lowIndex,patch->getSFCXHighIndex());
       vvel_FC.initialize(0.0, lowIndex,patch->getSFCYHighIndex());
       wvel_FC.initialize(0.0, lowIndex,patch->getSFCZHighIndex());
-      
+      for(int dir=0; dir < 3; dir ++) {
+        new_dw->allocate(scratch[dir], lb->scratchLabel, indx, patch);
+      }
+      vector<IntVector> adj_offset(3);
+      adj_offset[0] = IntVector(-1, 0, 0);    // X faces
+      adj_offset[1] = IntVector(0, -1, 0);    // Y faces
+      adj_offset[2] = IntVector(0,  0, -1);   // Z faces     
+
       double term1, term2, term3, rho_FC, sp_vol_brack;
       
       if(doMechOld < -1.5) {
-       //__________________________________
-       //   B O T T O M   F A C E S 
-       int offset=1; // 0=Compute all faces in computational domain
-                     // 1=Skip the faces at the border between interior and gc
-       for(CellIterator iter=patch->getSFCYIterator(offset);!iter.done();
-           iter++){
-         IntVector cur = *iter;
-         IntVector adj(cur.x(),cur.y()-1,cur.z()); 
-         rho_FC = rho_CC[adj] + rho_CC[cur];
-         ASSERT(rho_FC > 0.0);
-         //__________________________________
-         // interpolation to the face
-         term1 = (rho_CC[adj] * vel_CC[adj].y() +
-                  rho_CC[cur] * vel_CC[cur].y())/(rho_FC);            
-         //__________________________________
-         // pressure term           
-         sp_vol_brack = 2.*(sp_vol_CC[adj] * sp_vol_CC[cur])/
-                            (sp_vol_CC[adj] + sp_vol_CC[cur]); 
-                                      
-         term2 =   delT * sp_vol_brack *
-           (press_CC[cur] - press_CC[adj])/dx.y();
-               
-         //__________________________________
-         // gravity term
-         term3 =  delT * gravity.y();
-         vvel_FC[cur] = term1- term2 + term3;
-       }
-
+      
+      int offset=1;      // 0=Compute all faces in computational domain
+                         // 1=Skip the faces at the border between interior and gc
       //__________________________________
-      //  L E F T   F A C E 
-       for(CellIterator iter=patch->getSFCXIterator(offset);!iter.done();
-           iter++){
-         IntVector cur = *iter;
-         IntVector adj(cur.x()-1,cur.y(),cur.z()); 
-         
-         rho_FC = rho_CC[adj] + rho_CC[cur];
-         ASSERT(rho_FC > 0.0);
-         //__________________________________
-         // interpolation to the face
-         term1 = (rho_CC[adj] * vel_CC[adj].x() +
-                 rho_CC[cur] * vel_CC[cur].x())/(rho_FC);
-         //__________________________________
-         // pressure term
-         sp_vol_brack = 2.*(sp_vol_CC[adj] * sp_vol_CC[cur])/
-                           (sp_vol_CC[adj] + sp_vol_CC[cur]); 
-                                      
-         term2 =   delT * sp_vol_brack *
-           (press_CC[cur] - press_CC[adj])/dx.x();
-         //__________________________________
-         // gravity term
-         term3 =  delT * gravity.x();
-         uvel_FC[cur] = term1- term2 + term3;
-       }
-       
-       //__________________________________
-       //  B A C K    F A C E
-       for(CellIterator iter=patch->getSFCZIterator(offset);!iter.done();
-           iter++){
-         IntVector cur = *iter;
-         IntVector adj(cur.x(),cur.y(),cur.z()-1); 
-         
-         rho_FC = rho_CC[adj] + rho_CC[cur];
-         ASSERT(rho_FC > 0.0);
-         //__________________________________
-         // interpolation to the face
-         term1 = (rho_CC[adj] * vel_CC[adj].z() +
-                  rho_CC[cur] * vel_CC[cur].z())/(rho_FC);
-         //__________________________________
-         // pressure term
-         sp_vol_brack = 2.*(sp_vol_CC[adj] * sp_vol_CC[cur])/
-                           (sp_vol_CC[adj] + sp_vol_CC[cur]); 
-                                      
-         term2 =   delT * sp_vol_brack *
-           (press_CC[cur] - press_CC[adj])/dx.z();
- 
-         //__________________________________
-         // gravity term
-         term3 =  delT * gravity.z();
-         wvel_FC[cur] = term1- term2 + term3;
-       }
-      }  // if doMech
+      //  Compute vel_FC for each face
+      for (int dir= 0; dir < 3; dir++) {
+        for(CellIterator iter=patch->getSFCIterator(dir,offset);!iter.done(); iter++){
+          IntVector cur = *iter;
+          IntVector adj = cur + adj_offset[dir]; 
+          rho_FC = rho_CC[adj] + rho_CC[cur];
+          ASSERT(rho_FC > 0.0);
+          //__________________________________
+          // interpolation to the face
+          term1 = (rho_CC[adj] * vel_CC[adj](dir) +
+                   rho_CC[cur] * vel_CC[cur](dir))/(rho_FC);            
+          //__________________________________
+          // pressure term           
+          sp_vol_brack = 2.*(sp_vol_CC[adj] * sp_vol_CC[cur])/
+                            (sp_vol_CC[adj] + sp_vol_CC[cur]); 
 
+          term2 =   delT * sp_vol_brack *
+            (press_CC[cur] - press_CC[adj])/dx(dir);
+
+          //__________________________________
+          // gravity term
+          term3 =  delT * gravity(dir);
+          scratch[dir][cur] = term1- term2 + term3;
+        }
+      }
+      //__________________________________
+      //  Extract the different components
+      for(CellIterator iter=patch->getSFCXIterator(offset);!iter.done(); iter++){
+        IntVector cur = *iter;
+        uvel_FC[cur] = scratch[0][cur];   
+      }
+      for(CellIterator iter=patch->getSFCYIterator(offset);!iter.done(); iter++){
+        IntVector cur = *iter;
+        vvel_FC[cur] = scratch[1][cur];   
+      }
+      for(CellIterator iter=patch->getSFCZIterator(offset);!iter.done(); iter++){
+        IntVector cur = *iter;
+        wvel_FC[cur] = scratch[2][cur];   
+      }
       //__________________________________
       // (*)vel_FC BC are updated in 
       // ICE::addExchangeContributionToFCVel()
@@ -1485,12 +1453,12 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
    //---- P R I N T   D A T A ------ 
       if (switchDebug_vel_FC ) {
         ostringstream desc;
-        desc <<  "bottom_of_vel_FC_Mat_" << indx << "_patch_" 
-                  << patch->getID();
+        desc <<"bottom_of_vel_FC_Mat_" << indx << "_patch_"<< patch->getID();
         printData_FC( patch,1, desc.str(), "uvel_FC", uvel_FC);
         printData_FC( patch,1, desc.str(), "vvel_FC", vvel_FC);
         printData_FC( patch,1, desc.str(), "wvel_FC", wvel_FC);
       }
+    }  // if doMech
     } // matls loop
   }  // patch loop
 }
@@ -1562,7 +1530,6 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     vector<double> b(numMatls);
     vector<double> X(numMatls);
     DenseMatrix beta(numMatls,numMatls),a(numMatls,numMatls);
-
     DenseMatrix K(numMatls,numMatls), junk(numMatls,numMatls);
 
     beta.zero();
@@ -1591,8 +1558,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       uvel_FCME[m].initialize(0.0, lowIndex,patch->getSFCXHighIndex());
       vvel_FCME[m].initialize(0.0, lowIndex,patch->getSFCYHighIndex());
       wvel_FCME[m].initialize(0.0, lowIndex,patch->getSFCZHighIndex());
-    }
- 
+    }   
     //__________________________________
     //    B O T T O M  F A C E -- B  E  T  A      
     //  Note this includes b[m][m]
@@ -1601,14 +1567,14 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     int offset=1;   // 0=Compute all faces in computational domain
                     // 1=Skip the faces at the border between interior and gc
     for(CellIterator iter=patch->getSFCYIterator(offset);!iter.done();iter++){
-      IntVector curcell = *iter;
-      IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z()); 
+      IntVector cur = *iter;
+      IntVector adj(cur.x(),cur.y()-1,cur.z()); 
       for(int m = 0; m < numMatls; m++) {
         for(int n = 0; n < numMatls; n++) {
-          tmp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
+          tmp = (vol_frac_CC[n][adj] + vol_frac_CC[n][cur]) * K[n][m];
    
-          sp_vol_brack = (sp_vol_CC[m][adjcell] * sp_vol_CC[m][curcell])/
-                         (sp_vol_CC[m][adjcell] + sp_vol_CC[m][curcell]);                         
+          sp_vol_brack = (sp_vol_CC[m][adj] * sp_vol_CC[m][cur])/
+                         (sp_vol_CC[m][adj] + sp_vol_CC[m][cur]);                         
           beta[m][n] = sp_vol_brack * delT * tmp;
           a[m][n] = -beta[m][n];
         }
@@ -1627,7 +1593,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       for(int m = 0; m < numMatls; m++) {
        b[m] = 0.0;
        for(int n = 0; n < numMatls; n++)  {
-         b[m] += beta[m][n] * (vvel_FC[n][curcell] - vvel_FC[m][curcell]);
+         b[m] += beta[m][n] * (vvel_FC[n][cur] - vvel_FC[m][cur]);
        }
       }
       //__________________________________
@@ -1635,7 +1601,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       //   - backout velocities           
       matrixSolver(numMatls,a,b,X);
       for(int m = 0; m < numMatls; m++) {
-       vvel_FCME[m][curcell] = vvel_FC[m][curcell] + X[m];
+       vvel_FCME[m][cur] = vvel_FC[m][cur] + X[m];
       }
     }
 
@@ -1645,15 +1611,15 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     //  You need to make sure that mom_exch_coeff[m][m] = 0
     //   - form off diagonal terms of (a)
     for(CellIterator iter=patch->getSFCXIterator(offset);!iter.done();iter++){
-      IntVector curcell = *iter;
-      IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z()); 
+      IntVector cur = *iter;
+      IntVector adj(cur.x()-1,cur.y(),cur.z()); 
 
       for(int m = 0; m < numMatls; m++)  {
        for(int n = 0; n < numMatls; n++)  {
-         tmp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
+         tmp = (vol_frac_CC[n][adj] + vol_frac_CC[n][cur]) * K[n][m];
 
-          sp_vol_brack = (sp_vol_CC[m][adjcell] * sp_vol_CC[m][curcell])/
-                         (sp_vol_CC[m][adjcell] + sp_vol_CC[m][curcell]);
+          sp_vol_brack = (sp_vol_CC[m][adj] * sp_vol_CC[m][cur])/
+                         (sp_vol_CC[m][adj] + sp_vol_CC[m][cur]);
                            
           beta[m][n] = sp_vol_brack * delT * tmp;
           a[m][n] = -beta[m][n];
@@ -1674,7 +1640,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       for(int m = 0; m < numMatls; m++)  {
        b[m] = 0.0;
        for(int n = 0; n < numMatls; n++)  {
-         b[m] += beta[m][n] * (uvel_FC[n][curcell] - uvel_FC[m][curcell]);
+         b[m] += beta[m][n] * (uvel_FC[n][cur] - uvel_FC[m][cur]);
        }
       }
       //__________________________________
@@ -1682,7 +1648,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       //   - backout velocities
       matrixSolver(numMatls,a,b,X);
       for(int m = 0; m < numMatls; m++) {
-       uvel_FCME[m][curcell] = uvel_FC[m][curcell] + X[m];
+       uvel_FCME[m][cur] = uvel_FC[m][cur] + X[m];
       }   
     }
     //__________________________________
@@ -1691,14 +1657,14 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     //  You need to make sure that mom_exch_coeff[m][m] = 0
     //   - form off diagonal terms of (a)
     for(CellIterator iter=patch->getSFCZIterator(offset);!iter.done();iter++){
-      IntVector curcell = *iter;
-      IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1); 
+      IntVector cur = *iter;
+      IntVector adj(cur.x(),cur.y(),cur.z()-1); 
       for(int m = 0; m < numMatls; m++)  {
         for(int n = 0; n < numMatls; n++) {
-          tmp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
+          tmp = (vol_frac_CC[n][adj] + vol_frac_CC[n][cur]) * K[n][m];
   
-          sp_vol_brack = (sp_vol_CC[m][adjcell] * sp_vol_CC[m][curcell])/
-                         (sp_vol_CC[m][adjcell] + sp_vol_CC[m][curcell]);
+          sp_vol_brack = (sp_vol_CC[m][adj] * sp_vol_CC[m][cur])/
+                         (sp_vol_CC[m][adj] + sp_vol_CC[m][cur]);
                            
           beta[m][n] = sp_vol_brack * delT * tmp;
           a[m][n] = -beta[m][n];
@@ -1718,7 +1684,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       for(int m = 0; m < numMatls; m++) {
        b[m] = 0.0;
        for(int n = 0; n < numMatls; n++) {
-         b[m] += beta[m][n] * (wvel_FC[n][curcell] - wvel_FC[m][curcell]);
+         b[m] += beta[m][n] * (wvel_FC[n][cur] - wvel_FC[m][cur]);
        }
       }
       //__________________________________
@@ -1726,7 +1692,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       //   - backout velocities 
       matrixSolver(numMatls,a,b,X);
       for(int m = 0; m < numMatls; m++) {
-       wvel_FCME[m][curcell] = wvel_FC[m][curcell] + X[m];
+       wvel_FCME[m][cur] = wvel_FC[m][cur] + X[m];
       }
     }
     for (int m = 0; m < numMatls; m++)  {
@@ -1972,65 +1938,56 @@ void ICE::computePressFC(const ProcessorGroup*,
     SFCXVariable<double> pressX_FC;
     SFCYVariable<double> pressY_FC;
     SFCZVariable<double> pressZ_FC;
+    StaticArray<CCVariable<double> > scratch(3); 
     new_dw->allocate(pressX_FC,lb->pressX_FCLabel, 0, patch);
     new_dw->allocate(pressY_FC,lb->pressY_FCLabel, 0, patch);
     new_dw->allocate(pressZ_FC,lb->pressZ_FCLabel, 0, patch);
+    
+    for(int dir=0; dir < 3; dir ++) {
+      new_dw->allocate(scratch[dir], lb->scratchLabel, 0, patch);
+    }
+    vector<IntVector> adj_offset(3);
+    adj_offset[0] = IntVector(-1, 0, 0);    // X faces
+    adj_offset[1] = IntVector(0, -1, 0);    // Y faces
+    adj_offset[2] = IntVector(0,  0, -1);   // Z faces     
 
-    // Compute the face centered velocities
     for(int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       new_dw->get(rho_CC[m],lb->rho_CCLabel,indx,patch,Ghost::AroundCells,1);
     }
-
+    
     //__________________________________
-    //  B O T T O M   F A C E
-    for(CellIterator iter=patch->getSFCYIterator();!iter.done();iter++){
-      IntVector curcell = *iter;
-      IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z());
-      sum_rho     = 0.0;
-      sum_rho_adj = 0.0;
-      for(int m = 0; m < numMatls; m++) {
-       sum_rho      += rho_CC[m][curcell];
-       sum_rho_adj  += rho_CC[m][adjcell];
-      }
+    //  For each face compute something
+    for (int dir= 0; dir < 3; dir++) {
+      for(CellIterator iter=patch->getSFCIterator(dir);!iter.done(); iter++){
+        IntVector cur = *iter;
+        IntVector adj = cur + adj_offset[dir]; 
+        sum_rho     = 0.0;
+        sum_rho_adj = 0.0;
+        for(int m = 0; m < numMatls; m++) {
+          sum_rho      += rho_CC[m][cur];
+          sum_rho_adj  += rho_CC[m][adj];
+        }
 
-      A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
-      pressY_FC[curcell] = A/((1/sum_rho)+(1.0/sum_rho_adj));
+        A =  (press_CC[cur]/sum_rho) + (press_CC[adj]/sum_rho_adj);
+        scratch[dir][cur] = A/((1/sum_rho)+(1.0/sum_rho_adj));
+      }
     }
     //__________________________________
-    //  L E F T   F A C E
-    for(CellIterator iter=patch->getSFCXIterator();!iter.done();iter++){
-      IntVector curcell = *iter;
-      IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z());
-      sum_rho     = 0.0;
-      sum_rho_adj = 0.0;
-
-      for(int m = 0; m < numMatls; m++) {
-       sum_rho      += rho_CC[m][curcell];
-       sum_rho_adj  += rho_CC[m][adjcell];
-      }
-
-      A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
-      pressX_FC[curcell] = A/((1/sum_rho)+(1.0/sum_rho_adj));
+    //  Extract the different components
+    for(CellIterator iter=patch->getSFCXIterator();!iter.done(); iter++){
+      IntVector cur = *iter;
+      pressX_FC[cur] = scratch[0][cur];   
     }
-    //__________________________________
-    //     B A C K   F A C E 
-    for(CellIterator iter=patch->getSFCZIterator();!iter.done();iter++){
-      IntVector curcell = *iter;
-      IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1);
-      sum_rho     = 0.0;
-      sum_rho_adj = 0.0;
-      
-      for(int m = 0; m < numMatls; m++) {
-       sum_rho      += rho_CC[m][curcell];
-       sum_rho_adj  += rho_CC[m][adjcell];
-      }
-
-      A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
-      pressZ_FC[curcell]=A/((1/sum_rho)+(1.0/sum_rho_adj));
+    for(CellIterator iter=patch->getSFCYIterator();!iter.done(); iter++){
+      IntVector cur = *iter;
+      pressY_FC[cur] = scratch[1][cur];   
     }
-
+    for(CellIterator iter=patch->getSFCZIterator();!iter.done(); iter++){
+      IntVector cur = *iter;
+      pressZ_FC[cur] = scratch[2][cur];   
+    }
     new_dw->put(pressX_FC,lb->pressX_FCLabel, 0, patch);
     new_dw->put(pressY_FC,lb->pressY_FCLabel, 0, patch);
     new_dw->put(pressZ_FC,lb->pressZ_FCLabel, 0, patch);
@@ -2859,17 +2816,12 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
            (vel_CC[n][c].x() - vel_CC[m][c].x());
         }
       }
-  
-
       multiplyMatrixAndVector(numMatls,a_inverse,b,X);
       for(int m = 0; m < numMatls; m++) {
         vel_CC[m][c].x( vel_CC[m][c].x() + X[m] );
       }
 
       //---------- Y - M O M E N T U M
-      // -  F O R M   R H S   (b)
-      // -  push a copy of (a) into the solver
-      // -  Add exchange contribution to orig value
       for(int m = 0; m < numMatls; m++) {
         b[m] = 0.0;
 
@@ -2884,9 +2836,6 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }
 
       //---------- Z - M O M E N T U M
-      // -  F O R M   R H S   (b)
-      // -  push a copy of (a) into the solver
-      // -  Adde exchange contribution to orig value
       for(int m = 0; m < numMatls; m++)  {
         b[m] = 0.0;
 
@@ -3194,7 +3143,7 @@ void ICE::setBC(CCVariable<double>& press_CC,
            fabs(gravity.y()) > 0.0  || 
            fabs(gravity.z()) > 0.0) {
         CCVariable<double> rho_micro_tmp;
-        new_dw->allocate(rho_micro_tmp, lb->rho_micro_CCLabel, 0, patch);
+        new_dw->allocate(rho_micro_tmp, lb->scratchLabel, 0, patch);
         if (which_Var == "sp_vol") {
           for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
             IntVector c = *iter;
