@@ -9,6 +9,7 @@ if test "$1" = "" -o "$2" = "" -o "$3" = ""; then
   echo "GLOBUSTOP is the directory where to install globus"
   echo "PSETOP is the directory where the PSE/src is located"
   echo "THREADLIBS is either -lpthread or -lfetchop"
+  exit
 fi
 
 globuspath=$1
