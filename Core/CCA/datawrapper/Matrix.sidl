@@ -109,7 +109,7 @@ interface Matrix
 }; //End of Namespace SSIDL
 
 package MatrixPorts {
-  interface MatrixPort extends sci.cca.Port
+  interface Matrix extends sci.cca.Port
   {	
     void inMatrix(in SSIDL.Matrix omx);
   };

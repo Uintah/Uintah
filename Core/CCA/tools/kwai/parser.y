@@ -106,7 +106,7 @@ symTable* symT;
 %token<number> INTEGER
 %token<string> VERSION_STRING
 
-%type<text> mode type return_type scoped_identifier dot_identifier_star comma_scoped_identifier_star 
+%type<text> mode type return_type scoped_identifier dot_identifier_star comma_scoped_identifier_star opt_comma_number
 %type<kPkg> package
 %type<kObj> class interface definition
 %type<kObj_list> definition_star 
@@ -244,7 +244,7 @@ dot_identifier_star: /* Empty */
 		     |
 		     dot_identifier_star '.' IDENTIFIER
 		     {
-                       strcat($1,".");  
+                       strcat($1,"::");  
                        $$ = strcat($1,$3); 
 		     }
 		     ;
@@ -605,7 +605,11 @@ type: BOOL
       |
       ARRAY '<' type opt_comma_number '>'
       {
-       $$ = "array";
+       $$ = new char[300];
+       $$ = strcat($$,"array<");
+       $$ = strcat($$,$3);
+       $$ = strcat($$,$4);
+       $$ = strcat($$,">");
       }
       |
       scoped_identifier
@@ -616,10 +620,16 @@ type: BOOL
 
 opt_comma_number: /* Empty */
 		  {
+                   $$ = "";
 		  }
 		  |
 		  ',' INTEGER
 		  {
+                   $$ = new char[20];
+                   $$ = strcat($$,",");
+                   char i[2];
+                   i[0] = $2+48; i[1] = '\0';
+                   $$ = strcat($$,i);
 		  }
 		  ;
 

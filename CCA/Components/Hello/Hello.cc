@@ -41,6 +41,7 @@
 #include <CCA/Components/Hello/Hello.h>
 #include <iostream>
 #include <CCA/Components/Builder/QtUtils.h>
+#include <Core/Thread/Time.h>
 
 using namespace std;
 using namespace SCIRun;
@@ -92,22 +93,25 @@ int myGoPort::go(){
     return 1;
   }
   cerr<<"Hello.go.getPort...";
-  sci::cca::Port::pointer pp=services->getPort("stringport");	
-  cerr<<"Done\n";
-  if(pp.isNull()){
-    cerr<<"stringport is not available!\n";
-    return 1;
-  }  
-  else{
-    cerr<<"stringport is not null\n";
-  }
-  cerr<<"Hello.go.pidl_cast...";
-  sci::cca::ports::StringPort::pointer sp=pidl_cast<sci::cca::ports::StringPort::pointer>(pp);
-  cerr<<"Done\n";
+  double st = SCIRun::Time::currentSeconds();
 
-  cerr<<"Hello.go.port.getString...";
+  sci::cca::Port::pointer pp=services->getPort("stringport");	
+  //cerr<<"Done\n";
+  //if(pp.isNull()){
+  //  cerr<<"stringport is not available!\n";
+  //  return 1;
+  //}  
+  //else{
+  //  cerr<<"stringport is not null\n";
+  //}
+  //cerr<<"Hello.go.pidl_cast...";
+  sci::cca::ports::StringPort::pointer sp=pidl_cast<sci::cca::ports::StringPort::pointer>(pp);
+  //cerr<<"Done\n";
   std::string name=sp->getString();
-  cerr<<"Done\n";
+
+  double t=Time::currentSeconds()-st;
+  ::std::cerr << "Done in " << t << "secs\n";
+  ::std::cerr << t*1000*1000 << " us/rep\n";
 
 
   services->releasePort("stringport");

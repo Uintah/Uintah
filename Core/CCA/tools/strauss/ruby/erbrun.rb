@@ -44,29 +44,76 @@ method = port.elements["n:method"]
 methodname = method.attributes["name"]
 methodret = method.attributes["retType"]
 
-def outDefArgs( methodname , doc )
+#prints a comma delimited list of arguments' fullnames of a given method
+#... to init arguments within a method declaration
+def outDefArgs( methodname , doc , typeModFunc )
   m = doc.root.elements["n:port/n:method[@name='"+methodname+"']"]
   out = ""
-  if (m) then m.elements.each("n:argument") { |arg| out += arg.attributes["type"]+" "+arg.attributes["name"]+"," } end 
+  if (m) then m.elements.each("n:argument") { |arg| out += typeModFunc.call(arg.attributes["type"])+" "+arg.attributes["name"]+"," } end 
   out.slice!(out.length-1,out.length)
   print out
 end
 
-#same as outDefArgs but starts with a comma is args exist
-def commaoutDefArgs( methodname , doc )
+#prints a semicolon+line delimited list of arguments' fullnames of a given method
+#... to init arguments within a function
+def semioutDefArgs( methodname , doc , typeModFunc )
   m = doc.root.elements["n:port/n:method[@name='"+methodname+"']"]
   out = ""
-  if (m) then m.elements.each("n:argument") { |arg| out += ","+arg.attributes["type"]+" "+arg.attributes["name"] } end
+  if (m) then m.elements.each("n:argument") { |arg| out += typeModFunc.call(arg.attributes["type"])+" "+arg.attributes["name"]+";\n" } end
   print out
 end
 
+#same as outDefArgs but starts with a comma if args exist
+def commaoutDefArgs( methodname , doc , typeModFunc )
+  m = doc.root.elements["n:port/n:method[@name='"+methodname+"']"]
+  out = ""
+  if (m) then m.elements.each("n:argument") { |arg| out += ","+typeModFunc.call(arg.attributes["type"])+" "+arg.attributes["name"] } end
+  print out
+end
 
+#prints out a list of arguments of a method, formatted as if calling the method (not fullnames)
+#... to call a method
 def outCallArgs( methodname , doc )
   m = doc.root.elements["n:port/n:method[@name='"+methodname+"']"]
   out = ""
   if (m) then m.elements.each("n:argument") { |arg| out += arg.attributes["name"]+"," } end
   out.slice!(out.length-1,out.length)
   print out
+end
+
+# convert type to CCA bindings use
+def ccaType( type )
+  case type
+    when /array/
+      return "array1<int>"
+    else
+      return type
+  end
+end
+
+# convert type to Babel bindings use
+def babelType( type )
+  case type
+    when "string"
+      return "char*"
+    when "int"
+      return "int32_t"
+    when /array/
+      a = type.slice(6,type.length-1) 
+      t, dim = a.split(/,/)
+      return "SIDL_"+t+"__array*"
+    else
+      return type
+  end
+end
+
+
+#shorthand functions
+def ifNEQPrint( what, to, text)
+  if (what != to) then print text end 
+end
+def ifEQPrint( what, to, text)
+  if (what == to) then print text end
 end
 
 makename = args[2]

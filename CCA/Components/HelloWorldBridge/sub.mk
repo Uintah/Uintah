@@ -36,7 +36,7 @@ SRCDIR   := CCA/Components/HelloWorldBridge
 SRCS     += \
 	$(SRCDIR)/HelloWorldBridge.cc
 
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm CCA/Components/BabelTest/NewPort\
 	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 #QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
 LIBS := $(QT_LIBRARY)

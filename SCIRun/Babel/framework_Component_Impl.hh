@@ -31,15 +31,15 @@
 // Symbol:        framework.Component-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20040105 13:31:24 MST
-// Generated:     20040105 13:31:27 MST
+// SIDL Created:  20040129 15:00:03 MST
+// Generated:     20040129 15:00:06 MST
 // Description:   Server-side implementation for framework.Component
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 11
-// source-url    = file:/home/kzhang/SCIRun/debug/../src/SCIRun/Babel/framework.sidl
+// source-url    = file:/home/sci/damevski/SCIRun/ccadebug-RH8/../src/SCIRun/Babel/framework.sidl
 // 
 
 #ifndef included_framework_Component_Impl_hh
