@@ -18,7 +18,7 @@
 #ifndef SCI_project_Network_h
 #define SCI_project_Network_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 
 #include <SCICore/Multitask/ITC.h>
 #include <SCICore/Containers/Array1.h>
@@ -38,7 +38,7 @@ class Connection;
 class Module;
 class NetworkEditor;
 
-class SCICORESHARE Network {
+class PSECORESHARE Network {
     Mutex the_lock;
     int read_file(const clString&);
 
@@ -91,6 +91,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/26 23:59:07  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.2  1999/08/17 06:38:23  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -15,13 +15,13 @@
 #ifndef SCI_project_Line_Constraint_h
 #define SCI_project_Line_Constraint_h 1
 
-#include <SCICore/share/share.h>
+#include <PSECore/share/share.h>
 #include <PSECore/Constraints/BaseConstraint.h>
 
 namespace PSECore {
 namespace Constraints {
 
-class SCICORESHARE LineConstraint : public BaseConstraint {
+class PSECORESHARE LineConstraint : public BaseConstraint {
 public:
    LineConstraint( const clString& name,
 		   const Index numSchemes,
@@ -39,6 +39,9 @@ protected:
 
 //
 // $Log$
+// Revision 1.3  1999/08/26 23:57:02  moulding
+// changed SCICORESHARE to PSECORESHARE
+//
 // Revision 1.2  1999/08/17 06:38:17  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
