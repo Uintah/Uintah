@@ -33,8 +33,8 @@ stylesheet_nochunk=${STYLESHEET_XSL_HTML}/srdocbook.xsl
 stylesheet_print=${STYLESHEET_DSSSL_PRINT}/docbook.dsl
 rxmlsrcs := ${wildcard *.rxml} ${wildcard dev/*.rxml} ${wildcard src/*.rxml}
 psfigures := ${patsubst %.gif,%.ps,${wildcard dev/Figures/*.gif}}
-edition := ../../edition.xml
 treetop := ../../..
+edition := ${treetop}/src/main/sci_version.h
 
 .PHONY: all html print clean veryclean
 

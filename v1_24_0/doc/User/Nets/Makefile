@@ -35,8 +35,8 @@ rxmlsrcs := ${wildcard *.rxml */*.rxml}
 psfigures := \
   ${patsubst %.gif,%.ps,${wildcard */*.gif}} \
   ${patsubst %.jpg,%.ps,${wildcard */*.jpg}}
-
-edition := ../../edition.xml
+treetop := ../../..
+edition := ${treetop}/src/main/sci_version.h
 
 .PHONY: all html print clean veryclean
 

@@ -35,7 +35,7 @@
 treetop := ../../..
 
 # edition file
-edition := ${treetop}/doc/edition.xml
+edition := ${treetop}/src/main/sci_version.h
 
 # Latex command
 latex := latex -interaction=nonstopmode

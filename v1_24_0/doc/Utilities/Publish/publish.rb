@@ -28,7 +28,6 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
 #
 # Update, build, and deliver scirun docs.
 #

@@ -56,7 +56,7 @@ tar: index.html products
 	-rm -f ${tarfile} ${tarball}
 	cd ../..; ${tarcmd} ${tarlist}
 
-index.html: index.rhtml edition.xml
+index.html: index.rhtml ${edition}
 	eruby --delimiters html $< >$@
 
 # Build all docs.
