@@ -180,6 +180,7 @@ class Configuration < ConfHash
   Update = "update"
   PwdOnly = "pwdOnly"
   Clean = "clean"
+  DB_DTD = "dbdtd"
 
   def Configuration.new(file)
     eval("Configuration[#{File.new(file, 'r').read}]").init()
@@ -205,6 +206,7 @@ class Configuration < ConfHash
     self[Update] = true if missing?(Update)
     self[LogFile] = $stderr if missing?(LogFile)
     self[Clean] = false if missing?(Clean)
+    self[DB_DTD] = "/usr/local/share/sgml/dtd/docbook/4.1/docbook.dtd" if missing?(DB_DTD)
     $log = Log.new(self[LogFile])
     validate()
 
@@ -277,6 +279,7 @@ class Configuration < ConfHash
     errorIfEmpty(Make)
     errorIfNotBoolean(Update)
     errorIfNotBoolean(Clean)
+    errorIfNotString(DB_DTD)
   end
 
   def initializeGroupsDB()
@@ -327,6 +330,7 @@ class Docs
     ENV["STYLESHEET_DSSSL_PRINT"] = @conf[Configuration::Stylesheet_DSSSL_Print]
     ENV["XML_DCL"] = @conf[Configuration::XML_DCL]
     ENV["CATALOG"] = @conf[Configuration::Catalog]
+    ENV["DB_DTD"] = @conf[Configuration::DB_DTD]
 
     pwd = Dir.pwd
     trys = 0
