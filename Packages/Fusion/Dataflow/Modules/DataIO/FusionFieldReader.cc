@@ -288,9 +288,9 @@ void FusionFieldReader::execute(){
 	readOrder[GRID_R_Z_PHI] > -1 ) {
     
       if( repeated )
-	hvm = scinew StructHexVolMesh(idim, jdim, kdim);
+	hvm = scinew StructHexVolMesh(idim, jdim-1, kdim-1);
       else
-	hvm = scinew StructHexVolMesh(idim, jdim+1, kdim+1);
+	hvm = scinew StructHexVolMesh(idim, jdim, kdim);
     }
     else {
       error( string("No grid present - unable to create the field(s).") );
@@ -341,8 +341,8 @@ void FusionFieldReader::execute(){
 
     register unsigned int i, j, k;
 
-    for( k=0; k<kdim; k++ ) {
-      for( j=0; j<jdim; j++ ) {
+    for( k=0; k<kdim - repeated ? 1 : 0; k++ ) {
+      for( j=0; j<jdim - repeated ? 1 : 0; j++ ) {
 	for( i=0; i<idim; i++ ) {
 
 	  // Read the data in no matter the order.
@@ -541,8 +541,22 @@ void FusionFieldReader::execute(){
 	}
       }
 
+
+      if( repeated ) {
+	for( i=0; i<idim; i++ ) {
+	  // Read the data in no matter the order.
+	  for( index=0; index<nVals; index++ ) {
+	    ifs >> data[index];			
+	    
+	    if( ifs.eof() ) {
+	      error( string("Could not read grid ") + new_filename );
+	    }
+	  }
+	}
+      }
+
       // If needed repeat the radial values for this theta.
-      if( !repeated )
+/*      if( !repeated )
       {
 	Point pt;
 
@@ -570,10 +584,26 @@ void FusionFieldReader::execute(){
 	    efield->set_value(efield->value( node0 ), node);
 	}
       }
+*/
+    }
+
+    if( repeated ) {
+      for( j=0; j<jdim; j++ ) {
+	for( i=0; i<idim; i++ ) {
+	  // Read the data in no matter the order.
+	  for( index=0; index<nVals; index++ ) {
+	    ifs >> data[index];			
+
+	    if( ifs.eof() ) {
+	      error( string("Could not read grid ") + new_filename );
+	    }
+	  }
+	}
+      }
     }
 
     // If needed repeat the first phi slice.
-    if( !repeated )
+  /*    if( !repeated )
     {
       Point pt;
 
@@ -603,8 +633,9 @@ void FusionFieldReader::execute(){
 	    efield->set_value(efield->value( node0 ), node);
 	}
       }
-    }
 
+    }
+*/
     // Make sure that all of the data was read.
     string tmpStr;
 
