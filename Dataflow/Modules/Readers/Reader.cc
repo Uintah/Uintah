@@ -17,8 +17,8 @@
 
 #include <SCICore/Util/NotFinished.h>
 #include <PSECommon/Dataflow/Module.h>
-#include <PSECommon/CommonDatatypes/TYPEPort.h>
-#include <PSECommon/CommonDatatypes/TYPE.h>
+#include <PSECommon/Datatypes/TYPEPort.h>
+#include <PSECommon/Datatypes/TYPE.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCLvar.h>

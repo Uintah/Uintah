@@ -10,9 +10,9 @@
 
 #include <Util/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CoreDatatypes/ScalarField.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
+#include <Datatypes/ScalarFieldPort.h>
+#include <Datatypes/ScalarField.h>
+#include <Datatypes/ScalarFieldRG.h>
 #include <Malloc/Allocator.h>
 #include <TclInterface/TCLTask.h>
 #include <TclInterface/TCLvar.h>
@@ -25,7 +25,7 @@ namespace SCIRun {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::PersistentSpace;
 
@@ -160,6 +160,11 @@ void TiffReader::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:59  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:40:03  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -174,7 +179,7 @@ void TiffReader::execute()
 // moved TiffReader to SCIRun from PSECore
 //
 // Revision 1.2  1999/04/27 22:57:54  dav
-// updates in Modules for CoreDatatypes
+// updates in Modules for Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:30  dav
 // Import sources

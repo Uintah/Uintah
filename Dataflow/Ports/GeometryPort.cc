@@ -12,8 +12,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/CommonDatatypes/GeometryPort.h>
-#include <PSECore/CommonDatatypes/GeometryComm.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/GeometryComm.h>
 
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Containers/String.h>
@@ -26,7 +26,7 @@
 #include <iostream.h>
 
 namespace PSECore {
-namespace CommonDatatypes {
+namespace Datatypes {
 
 static clString Geometry_type("Geometry");
 static clString Geometry_color("magenta3");
@@ -322,11 +322,16 @@ GeometryData::Print()
   cerr << endl;
 }
 
-} // End namespace CommonDatatypes
+} // End namespace Datatypes
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:48:20  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/19 23:18:03  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

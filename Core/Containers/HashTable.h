@@ -28,10 +28,10 @@ namespace Tester {
   class RigorousTest;
 }
 
-namespace CoreDatatypes {
+namespace Datatypes {
   void Pio(); // This is a dummy declaration to get things to compile.
               // There is no "void Pio();"  It just allows the:
-              // "using SCICore::CoreDatatypes::Pio;" to compile for
+              // "using SCICore::Datatypes::Pio;" to compile for
               // HashTables outside of GeomSpace;
 }
 
@@ -488,7 +488,7 @@ void Pio(Piostream& stream, HashTable<Key, Data>& t)
     using SCICore::PersistentSpace::Pio;
     using SCICore::GeomSpace::Pio;
     using SCICore::Containers::Pio;
-    using SCICore::CoreDatatypes::Pio;
+    using SCICore::Datatypes::Pio;
     stream.begin_class("HashTable", HASHTABLE_VERSION);
     Pio(stream, t.nelems);
     Pio(stream, t.hash_size);
@@ -535,6 +535,11 @@ void Pio(Piostream& stream, HashTable<Key, Data>& t)
 
 //
 // $Log$
+// Revision 1.6  1999/08/25 03:48:29  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.5  1999/08/19 23:52:58  sparker
 // Removed extraneous includes of iostream.h  Fixed a few NotFinished.h
 // problems.  May have broken KCC support.

@@ -16,9 +16,9 @@
 #include <sci_config.h>
 #include <SCICore/Containers/String.h>
 #include <PSECore/Dataflow/Module.h>
-#include <SCICore/CoreDatatypes/BasicSurfaces.h>
-#include <PSECore/CommonDatatypes/SurfacePort.h>
-#include <SCICore/CoreDatatypes/SurfTree.h>
+#include <SCICore/Datatypes/BasicSurfaces.h>
+#include <PSECore/Datatypes/SurfacePort.h>
+#include <SCICore/Datatypes/SurfTree.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <iostream.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -28,11 +28,11 @@ namespace PSECommon {
 namespace Modules {
 
 using PSECore::Dataflow::Module;
-using PSECore::CommonDatatypes::SurfTree;
-using PSECore::CommonDatatypes::SurfaceIPort;
-using PSECore::CommonDatatypes::SurfaceOPort;
-using PSECore::CommonDatatypes::SurfaceHandle;
-using PSECore::CommonDatatypes::TriSurface;
+using PSECore::Datatypes::SurfTree;
+using PSECore::Datatypes::SurfaceIPort;
+using PSECore::Datatypes::SurfaceOPort;
+using PSECore::Datatypes::SurfaceHandle;
+using PSECore::Datatypes::TriSurface;
 
 using namespace SCICore::TclInterface;
 using SCICore::Containers::Array1;
@@ -107,6 +107,11 @@ void LabelSurface::execute()
 
 //
 // $Log$
+// Revision 1.6  1999/08/25 03:48:00  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.5  1999/08/19 23:17:54  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

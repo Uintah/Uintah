@@ -37,7 +37,7 @@ namespace Containers {
  namespace GeomSpace {
   void Pio();  // This is a dummy declaration to get things to compile.
  }
- namespace CoreDatatypes {
+ namespace Datatypes {
   void Pio();  // This is a dummy declaration to get things to compile.
  }
  namespace Geometry {
@@ -346,14 +346,14 @@ void Pio(Piostream& stream, Array1<T>& array)
   using namespace SCICore::PersistentSpace;
   using namespace SCICore::Geometry;
   using namespace SCICore::Containers;
-  using namespace SCICore::CoreDatatypes;
+  using namespace SCICore::Datatypes;
   using namespace DaveW::Datatypes;
 #else
   using SCICore::GeomSpace::Pio;
   using SCICore::PersistentSpace::Pio;
   using SCICore::Geometry::Pio;
   using SCICore::Containers::Pio;
-  using SCICore::CoreDatatypes::Pio;
+  using SCICore::Datatypes::Pio;
   using DaveW::Datatypes::Pio;
 #endif
 
@@ -381,6 +381,11 @@ void Pio(Piostream& stream, Containers::Array1<T>*& array) {
 
 //
 // $Log$
+// Revision 1.8  1999/08/25 03:48:29  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.7  1999/08/24 06:23:59  dmw
 // Added in everything for the DaveW branch
 //

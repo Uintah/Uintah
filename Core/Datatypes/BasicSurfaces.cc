@@ -12,7 +12,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/CoreDatatypes/BasicSurfaces.h>
+#include <SCICore/Datatypes/BasicSurfaces.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Geom/GeomCylinder.h>
 #include <SCICore/Geom/GeomGroup.h>
@@ -27,7 +27,7 @@
 #include <stdio.h>
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 using TclInterface::TCL;
 using GeomSpace::GeomGroup;
@@ -753,11 +753,16 @@ void PointsSurface::set_surfnodes(const Array1<NodeHandle>& nodes) {
     }
 }
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:48:30  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/23 06:30:34  sparker
 // Linux port
 // Added X11 configuration options
@@ -783,7 +788,7 @@ void PointsSurface::set_surfnodes(const Array1<NodeHandle>& nodes) {
 // added beginnings of support for g++ compilation
 //
 // Revision 1.1  1999/04/27 21:14:26  dav
-// working on CoreDatatypes
+// working on Datatypes
 //
 // Revision 1.2  1999/04/25 04:14:33  dav
 // oopps...?

@@ -19,8 +19,8 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
-#include <SCICore/CoreDatatypes/VectorFieldRG.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Datatypes/VectorFieldRG.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
@@ -804,6 +804,11 @@ VectorFieldHandle TecplotReader::makeVectorField(int ii, int jj,
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:49:04  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/18 21:45:27  sparker
 // Array1 const correctness, and subsequent fixes
 // Array1 bug fix courtesy Tom Thompson

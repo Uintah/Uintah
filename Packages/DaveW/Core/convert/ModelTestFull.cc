@@ -16,7 +16,7 @@
 #include <Containers/Array1.h>
 #include <Containers/String.h>
 #include <Persistent/Pstreams.h>
-#include <CoreDatatypes/Mesh.h>
+#include <Datatypes/Mesh.h>
 #include <Geometry/Point.h>
 #include "MSops.h"
 #include "TopoModel.h"
@@ -27,15 +27,15 @@
 #include "TRegion.h"
 #include <stdio.h>
 
-#define Element		SCICore::CoreDatatypes::Element
-#define Mesh		SCICore::CoreDatatypes::Mesh
-#define MeshHandle	SCICore::CoreDatatypes::MeshHandle
-#define Node		SCICore::CoreDatatypes::Node
-#define NodeHandle	SCICore::CoreDatatypes::NodeHandle
+#define Element		SCICore::Datatypes::Element
+#define Mesh		SCICore::Datatypes::Mesh
+#define MeshHandle	SCICore::Datatypes::MeshHandle
+#define Node		SCICore::Datatypes::Node
+#define NodeHandle	SCICore::Datatypes::NodeHandle
 #define Point		SCICore::Geometry::Point
 
 using namespace SCICore::PersistentSpace;
-using namespace SCICore::CoreDatatypes;
+using namespace SCICore::Datatypes;
 
 main(int argc, char **argv) {
     Array1<Point> p(8);

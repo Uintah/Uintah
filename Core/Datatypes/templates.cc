@@ -11,26 +11,26 @@
 #include <SCICore/Containers/Queue.h>
 #include <SCICore/Multitask/AsyncReply.h>
 #include <SCICore/Multitask/Mailbox.h>
-#include <SCICore/CoreDatatypes/cMatrix.h>
-#include <SCICore/CoreDatatypes/cVector.h>
-#include <SCICore/CoreDatatypes/Boolean.h>
-#include <SCICore/CoreDatatypes/ColorMap.h>
-#include <SCICore/CoreDatatypes/ColumnMatrix.h>
-#include <SCICore/CoreDatatypes/ContourSet.h>
-#include <SCICore/CoreDatatypes/DenseMatrix.h>
-#include <SCICore/CoreDatatypes/HexMesh.h>
-#include <SCICore/CoreDatatypes/Image.h>
-#include <SCICore/CoreDatatypes/Interval.h>
-#include <SCICore/CoreDatatypes/LockArray3.h>
-#include <SCICore/CoreDatatypes/ScalarField.h>
-#include <SCICore/CoreDatatypes/Surface.h>
-#include <SCICore/CoreDatatypes/SurfTree.h>
-#include <SCICore/CoreDatatypes/VectorField.h>
-#include <SCICore/CoreDatatypes/VoidStar.h>
+#include <SCICore/Datatypes/cMatrix.h>
+#include <SCICore/Datatypes/cVector.h>
+#include <SCICore/Datatypes/Boolean.h>
+#include <SCICore/Datatypes/ColorMap.h>
+#include <SCICore/Datatypes/ColumnMatrix.h>
+#include <SCICore/Datatypes/ContourSet.h>
+#include <SCICore/Datatypes/DenseMatrix.h>
+#include <SCICore/Datatypes/HexMesh.h>
+#include <SCICore/Datatypes/Image.h>
+#include <SCICore/Datatypes/Interval.h>
+#include <SCICore/Datatypes/LockArray3.h>
+#include <SCICore/Datatypes/ScalarField.h>
+#include <SCICore/Datatypes/Surface.h>
+#include <SCICore/Datatypes/SurfTree.h>
+#include <SCICore/Datatypes/VectorField.h>
+#include <SCICore/Datatypes/VoidStar.h>
 
 using namespace SCICore::PersistentSpace;
 using namespace SCICore::Containers;
-using namespace SCICore::CoreDatatypes;
+using namespace SCICore::Datatypes;
 using namespace SCICore::GeomSpace;
 
 template class Array1<Array1<double> >;

@@ -16,12 +16,12 @@
 
 #include <SCICore/share/share.h>
 class ostream;
-#include <SCICore/CoreDatatypes/cMatrix.h>
+#include <SCICore/Datatypes/cMatrix.h>
 #include <SCICore/Math/Complex.h>
-#include <SCICore/CoreDatatypes/cVector.h>
+#include <SCICore/Datatypes/cVector.h>
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 class SCICORESHARE cSMatrix:public cMatrix{
   
@@ -48,11 +48,16 @@ public:
 
 };
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:48:48  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/19 23:52:59  sparker
 // Removed extraneous includes of iostream.h  Fixed a few NotFinished.h
 // problems.  May have broken KCC support.
@@ -71,7 +76,7 @@ public:
 // added SCICore .h files to /include directories
 //
 // Revision 1.1  1999/04/25 04:07:24  dav
-// Moved files into CoreDatatypes
+// Moved files into Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:52  dav
 // Import sources

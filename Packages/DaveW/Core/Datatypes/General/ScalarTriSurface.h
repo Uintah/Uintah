@@ -25,7 +25,7 @@ namespace Datatypes {
 using SCICore::Containers::Array1;
 using SCICore::Geometry::Point;
 
-using namespace SCICore::CoreDatatypes;
+using namespace SCICore::Datatypes;
 
 class ScalarTriSurface : public TriSurface {
 public:
@@ -49,6 +49,11 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/25 03:47:34  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.1  1999/08/23 02:53:00  dmw
 // Dave's Datatypes
 //

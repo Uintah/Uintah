@@ -17,18 +17,18 @@
 #include <PSECore/Dataflow/Module.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <iostream.h>
-#include <SCICore/CoreDatatypes/cSMatrix.h>
-#include <SCICore/CoreDatatypes/cDMatrix.h>
-#include <PSECore/CommonDatatypes/cMatrixPort.h>
-#include <SCICore/CoreDatatypes/cVector.h>
-#include <PSECore/CommonDatatypes/cVectorPort.h>
+#include <SCICore/Datatypes/cSMatrix.h>
+#include <SCICore/Datatypes/cDMatrix.h>
+#include <PSECore/Datatypes/cMatrixPort.h>
+#include <SCICore/Datatypes/cVector.h>
+#include <PSECore/Datatypes/cVectorPort.h>
 #include <SCICore/Math/Complex.h>
 
 namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -242,6 +242,11 @@ void cConjGrad::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:47:52  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 23:17:49  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.
@@ -263,7 +268,7 @@ void cConjGrad::tcl_command(TCLArgs& args, void* userdata)
 // Initial commit
 //
 // Revision 1.2  1999/04/27 22:57:51  dav
-// updates in Modules for CoreDatatypes
+// updates in Modules for Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:31  dav
 // Import sources

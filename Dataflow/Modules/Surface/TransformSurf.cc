@@ -14,11 +14,11 @@
 
 #include <Util/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CoreDatatypes/BasicSurfaces.h>
-#include <CommonDatatypes/ScalarTriSurface.h>
-#include <CommonDatatypes/SurfTree.h>
-#include <CoreDatatypes/TriSurface.h>
+#include <Datatypes/SurfacePort.h>
+#include <Datatypes/BasicSurfaces.h>
+#include <Datatypes/ScalarTriSurface.h>
+#include <Datatypes/SurfTree.h>
+#include <Datatypes/TriSurface.h>
 #include <Geometry/BBox.h>
 #include <Math/Expon.h>
 #include <Math/MusilRNG.h>
@@ -31,7 +31,7 @@ namespace PSECommon {
 namespace Modules {
 
 using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECommon::Datatypes;
 using namespace SCICore::Geometry;
 using namespace SCICore::TclInterface;
 
@@ -294,6 +294,11 @@ void TransformSurf::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:02  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/18 20:20:00  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

@@ -29,14 +29,14 @@ namespace SCICore {
   namespace Multitask {
     class Mutex;
   }
-  namespace CoreDatatypes {
+  namespace Datatypes {
     class ColorImage;
     class DepthImage;
   }
 }
 
 namespace PSECore {
-namespace CommonDatatypes {
+namespace Datatypes {
 
 using PSECore::Dataflow::IPort;
 using PSECore::Dataflow::OPort;
@@ -50,8 +50,8 @@ using SCICore::Multitask::Mailbox;
 using SCICore::Multitask::CrowdMonitor;
 using SCICore::GeomSpace::GeomObj;
 using SCICore::GeomSpace::View;
-using SCICore::CoreDatatypes::ColorImage;
-using SCICore::CoreDatatypes::DepthImage;
+using SCICore::Datatypes::ColorImage;
+using SCICore::Datatypes::DepthImage;
 
 class GeometryComm;
 
@@ -129,11 +129,16 @@ public:
     GeometryData* getData(int which_roe, int mask);
 };
 
-} // End namespace CommonDatatypes
+} // End namespace Datatypes
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:20  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:08  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

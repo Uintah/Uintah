@@ -10,7 +10,7 @@ TCL_LIB_FLAG  = @TCL_LIB_FLAG@
 TK_LIB_FLAG   = @TK_LIB_FLAG@
 ITCL_LIB_FLAG = @ITCL_LIB_FLAG@
 
-SUBDIRS = Comm Constraints Dataflow CommonDatatypes Widgets
+SUBDIRS = Comm Constraints Dataflow Datatypes Widgets
 SOLIB   = libPSECore.so
 
 SOLIBRARIES = -L$(OBJTOP)/SCICore -lSCICore \

@@ -12,13 +12,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/CoreDatatypes/Mesh.h>
+#include <SCICore/Datatypes/Mesh.h>
 
 #include <SCICore/Containers/FastHashTable.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Containers/TrivialAllocator.h>
-#include <SCICore/CoreDatatypes/ColumnMatrix.h>
+#include <SCICore/Datatypes/ColumnMatrix.h>
 #include <SCICore/Geom/GeomGroup.h>
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Geom/GeomSphere.h>
@@ -30,7 +30,7 @@
 #include <fstream.h>
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 using SCICore::Containers::TrivialAllocator;
 using SCICore::Containers::FastHashTable;
@@ -1564,10 +1564,10 @@ void Mesh::get_boundary_lines(Array1<Point>&)
 void Pio(Piostream& stream, Element*& data)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::CoreDatatypes::Pio;
+    using SCICore::Datatypes::Pio;
 
     if(stream.reading())
-	data=new SCICore::CoreDatatypes::Element(0,0,0,0,0);
+	data=new SCICore::Datatypes::Element(0,0,0,0,0);
     stream.begin_cheap_delim();
     Pio(stream, data->n[0]);
     Pio(stream, data->n[1]);
@@ -1577,7 +1577,7 @@ void Pio(Piostream& stream, Element*& data)
     stream.end_cheap_delim();
 }
 
-void Pio(Piostream& stream, SCICore::CoreDatatypes::NodeVersion1& node)
+void Pio(Piostream& stream, SCICore::Datatypes::NodeVersion1& node)
 {
     using SCICore::Geometry::Pio;
 
@@ -1586,7 +1586,7 @@ void Pio(Piostream& stream, SCICore::CoreDatatypes::NodeVersion1& node)
     stream.end_cheap_delim();
 }
 
-void Pio(Piostream& stream, SCICore::CoreDatatypes::ElementVersion1& elem)
+void Pio(Piostream& stream, SCICore::Datatypes::ElementVersion1& elem)
 {
     stream.begin_cheap_delim();
     SCICore::PersistentSpace::Pio(stream, elem.n0);
@@ -1601,6 +1601,11 @@ void Pio(Piostream& stream, SCICore::CoreDatatypes::ElementVersion1& elem)
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:35  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:48  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -1612,13 +1617,13 @@ void Pio(Piostream& stream, SCICore::CoreDatatypes::ElementVersion1& elem)
 // added beginnings of support for g++ compilation
 //
 // Revision 1.3  1999/04/27 21:14:27  dav
-// working on CoreDatatypes
+// working on Datatypes
 //
 // Revision 1.2  1999/04/25 04:14:38  dav
 // oopps...?
 //
 // Revision 1.1  1999/04/25 04:07:10  dav
-// Moved files into CoreDatatypes
+// Moved files into Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:48  dav
 // Import sources

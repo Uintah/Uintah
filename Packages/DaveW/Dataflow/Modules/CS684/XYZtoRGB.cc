@@ -14,8 +14,8 @@
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/Array2.h>
 #include <SCICore/Containers/String.h>
-#include <PSECore/CommonDatatypes/VoidStarPort.h>
-#include <SCICore/CoreDatatypes/VoidStar.h>
+#include <PSECore/Datatypes/VoidStarPort.h>
+#include <SCICore/Datatypes/VoidStar.h>
 #define Colormap XColormap
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -45,10 +45,10 @@ namespace DaveW {
 namespace Modules {
 
 using namespace DaveW::Datatypes;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace PSECore::Dataflow;
 using namespace SCICore::Containers;
-using namespace SCICore::CoreDatatypes;
+using namespace SCICore::Datatypes;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Math;
 using namespace SCICore::TclInterface;

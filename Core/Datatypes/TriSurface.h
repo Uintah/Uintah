@@ -11,16 +11,16 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_CoreDatatypes_TriSurface_h
-#define SCI_CoreDatatypes_TriSurface_h 1
+#ifndef SCI_Datatypes_TriSurface_h
+#define SCI_Datatypes_TriSurface_h 1
 
-#include <SCICore/CoreDatatypes/Surface.h>
+#include <SCICore/Datatypes/Surface.h>
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Geometry/Point.h>
 #include <stdlib.h> // For size_t
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 using Containers::Array1;
 using Geometry::Point;
@@ -134,11 +134,16 @@ public:
     static PersistentTypeID type_id;
 };
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:44  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:57  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -156,7 +161,7 @@ public:
 // added SCICore .h files to /include directories
 //
 // Revision 1.1  1999/04/27 21:14:30  dav
-// working on CoreDatatypes
+// working on Datatypes
 //
 // Revision 1.2  1999/04/25 04:14:46  dav
 // oopps...?

@@ -12,7 +12,7 @@
  *  Copyright (C) 1994, 1996 SCI Group 
  */
 
-#include <SCICore/CoreDatatypes/ScalarFieldRGBase.h>
+#include <SCICore/Datatypes/ScalarFieldRGBase.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
@@ -23,7 +23,7 @@
 #endif
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 PersistentTypeID ScalarFieldRGBase::type_id("ScalarFieldRGBase", "ScalarField", 0);
 
@@ -370,11 +370,16 @@ void ScalarFieldRGBase::distribute_samples()
   }
 }
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:37  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:50  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -386,7 +391,7 @@ void ScalarFieldRGBase::distribute_samples()
 // added beginnings of support for g++ compilation
 //
 // Revision 1.1  1999/04/25 04:07:11  dav
-// Moved files into CoreDatatypes
+// Moved files into Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:50  dav
 // Import sources
