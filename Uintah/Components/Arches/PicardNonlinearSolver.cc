@@ -106,15 +106,14 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   sched_setInitialGuess(level, sched, old_dw, new_dw);
 
   // Save the initial guess
-  new_dw->pleaseSave(d_lab->d_pressureINLabel, 0);
-  new_dw->pleaseSave(d_lab->d_uVelocityINLabel, 0);
-  new_dw->pleaseSave(d_lab->d_vVelocityINLabel, 0);
-  new_dw->pleaseSave(d_lab->d_wVelocityINLabel, 0);
+  new_dw->pleaseSave(d_lab->d_pressureINLabel, 1);
+  new_dw->pleaseSave(d_lab->d_uVelocityINLabel, 1);
+  new_dw->pleaseSave(d_lab->d_vVelocityINLabel, 1);
+  new_dw->pleaseSave(d_lab->d_wVelocityINLabel, 1);
   int nofScalars = d_props->getNumMixVars();
-  for (int ii = 0; ii < nofScalars; ii++) 
-    new_dw->pleaseSave(d_lab->d_scalarINLabel, ii);
-  new_dw->pleaseSave(d_lab->d_densityINLabel, 0);
-  new_dw->pleaseSave(d_lab->d_viscosityINLabel, 0);
+  new_dw->pleaseSave(d_lab->d_scalarINLabel, nofScalars);
+  new_dw->pleaseSave(d_lab->d_densityINLabel, 1);
+  new_dw->pleaseSave(d_lab->d_viscosityINLabel, 1);
 
   // Start the iterations
   int nlIterations = 0;
@@ -136,7 +135,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     d_pressSolver->solve(level, sched, old_dw, new_dw, time, delta_t);
 
     // Save the calculated pressure
-    new_dw->pleaseSave(d_lab->d_pressurePSLabel, 0);
+    new_dw->pleaseSave(d_lab->d_pressurePSLabel, 1);
 
     // if external boundary then recompute velocities using new pressure
     // and puts them in nonlinear_dw
@@ -159,9 +158,9 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     }
     
     // Save the calculated velocities
-    new_dw->pleaseSave(d_lab->d_uVelocitySPBCLabel, 0);
-    new_dw->pleaseSave(d_lab->d_vVelocitySPBCLabel, 0);
-    new_dw->pleaseSave(d_lab->d_wVelocitySPBCLabel, 0);
+    new_dw->pleaseSave(d_lab->d_uVelocitySPBCLabel, 1);
+    new_dw->pleaseSave(d_lab->d_vVelocitySPBCLabel, 1);
+    new_dw->pleaseSave(d_lab->d_wVelocitySPBCLabel, 1);
 
     // equation for scalars
     // require : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN (new_dw)
@@ -172,10 +171,10 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve multiple scalars
       d_scalarSolver->solve(level, sched, old_dw, new_dw, time, delta_t, index);
-
-      // Save the scalars
-      new_dw->pleaseSave(d_lab->d_scalarSPLabel, index);
     }
+
+    // Save the scalars
+    new_dw->pleaseSave(d_lab->d_scalarSPLabel, nofScalars);
 
     // update properties
     // require : densityIN
@@ -183,7 +182,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     d_props->sched_reComputeProps(level, sched, old_dw, new_dw);
 
     // Save the density
-    new_dw->pleaseSave(d_lab->d_densityCPLabel, 0);
+    new_dw->pleaseSave(d_lab->d_densityCPLabel, 1);
 
     // LES Turbulence model to compute turbulent viscosity
     // that accounts for sub-grid scale turbulence
@@ -192,7 +191,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     d_turbModel->sched_reComputeTurbSubmodel(level, sched, old_dw, new_dw);
 
     // Save the viscosity
-    new_dw->pleaseSave(d_lab->d_viscosityCTSLabel, 0);
+    new_dw->pleaseSave(d_lab->d_viscosityCTSLabel, 1);
 
 
     ++nlIterations;
@@ -392,6 +391,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.42  2000/08/16 19:36:40  bbanerje
+// Changed second argument in pleaseSave from matlIndex to numMaterials.
+//
 // Revision 1.41  2000/08/15 05:10:15  bbanerje
 // Added pleaseSave after each solve.
 //
