@@ -37,6 +37,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
@@ -62,8 +63,8 @@ class DipoleInSphere : public Module {
   //! Private Data
 
   //! input ports
-  MatrixIPort* iportDip_;
   FieldIPort*  iportGeom_;
+  FieldIPort*  iportDip_;
 
   //! output port
   FieldOPort*  oportPot_;
@@ -91,9 +92,9 @@ DipoleInSphere::DipoleInSphere(const clString& id)
   iportGeom_ = new FieldIPort(this, "Sphere", FieldIPort::Atomic);
   add_iport(iportGeom_);
   
-  iportDip_ = new MatrixIPort(this, "Dipoles", MatrixIPort::Atomic);
+  iportDip_ = new FieldIPort(this, "Dipole Sources", FieldIPort::Atomic);
   add_iport(iportDip_);
-  
+
   // Create the output port
   oportPot_ = new FieldOPort(this, "SphereWithPots", FieldIPort::Atomic);
   add_oport(oportPot_);
@@ -110,45 +111,61 @@ void DipoleInSphere::execute() {
   FieldHandle field_handle;
   
   if (!iportGeom_->get(field_handle)){
-    msgStream_ << "Cann't get data" << endl;
+    msgStream_ << "Cann't get mesh data" << endl;
     return;
   }
   
   if (!field_handle.get_rep()) {
-    msgStream_ << "Error: empty surface" << endl;
+    msgStream_ << "Error: empty mesh" << endl;
     return;
   }
  
   if (field_handle->get_type_name(0) == "TriSurf" && field_handle->get_type_name(1) == "double"){
     
-    
     TriSurf<double>* pSurf = dynamic_cast<TriSurf<double>*>(field_handle.get_rep());
     TriSurfMeshHandle hMesh = new TriSurfMesh(*(pSurf->get_typed_mesh().get_rep()));
     TriSurfHandle hNewSurf = new TriSurf<double>(hMesh, Field::NODE);
     
-    MatrixHandle matrix_handle;
+    FieldHandle dip_handle;
     
-    if (iportDip_->get(matrix_handle) 
-	&& matrix_handle.get_rep()){
-
-      if (matrix_handle->ncols()!=6){
-	msgStream_ << "Error: dipoles must have 6 parameters" << endl;
-	return;
+    if (iportDip_->get(dip_handle) 
+	&& dip_handle.get_rep() &&
+	dip_handle->get_type_name(0) == "PointCloud" 
+	&& dip_handle->get_type_name(1) == "Vector"){
+      
+      PointCloud<Vector>*  pDips = dynamic_cast<PointCloud<Vector>*>(dip_handle.get_rep());
+      PointCloudMeshHandle hMesh = pDips->get_typed_mesh();
+      
+      PointCloudMesh::node_iterator ii;
+      Point p;
+      Vector qdip;
+      vector<Vector> dips;
+      vector<Point>  pos;
+      for (ii=hMesh->node_begin(); ii!=hMesh->node_end(); ++ii){
+	if (pDips->value(qdip, *ii)){
+	  dips.push_back(qdip);
+	  hMesh->get_point(p, *ii);
+	  pos.push_back(p);
+	}
       }
       
-      DenseMatrix* mtrx = matrix_handle->getDense();
-      
-      if (!mtrx){
-	msgStream_ << "Error: Dipoles should be defined in DenseMatrix" << endl;
-	return;
+      DenseMatrix dip_mtrx(pos.size(), 6);
+      int i;
+      msgStream_ << "Dipoles: " << endl;
+      for (i=0; i<pos.size(); ++i){
+	qdip = dips[i];
+	p = pos[i];
+	dip_mtrx[i][0] = p.x(); dip_mtrx[i][1] = p.y();  dip_mtrx[i][2] = p.z();
+	dip_mtrx[i][3] = qdip.x(); dip_mtrx[i][4] = qdip.y();  dip_mtrx[i][5] = qdip.z();
+	msgStream_ << "Pos: " << p << ", moment: " << qdip << endl;
       }
       
       update_state(JustStarted);
-      fillOneSpherePotentials(*mtrx, hNewSurf);
+      fillOneSpherePotentials(dip_mtrx, hNewSurf);
       oportPot_->send(FieldHandle(hNewSurf.get_rep()));
     }
     else {
-      msgStream_ << "No dipole info found in dipole matrix supplied" << endl;
+      msgStream_ << "No dipole info found in the mesh supplied or supplied field is not of type PointCloud<Vector>" << endl;
     }
    
   }
@@ -174,7 +191,7 @@ void DipoleInSphere::fillOneSpherePotentials(DenseMatrix& dips, TriSurfHandle hS
   
   double gamma=1;
   double E[3];
-  msgStream_ << "Radius= " << R << endl;
+  msgStream_ << "Radius of the sphere is " << R << endl;
   Point p;
 
   if (hMesh->node_begin()!=hMesh->node_end()){ // don't want to iterate if no dipoles
@@ -203,11 +220,11 @@ void DipoleInSphere::fillOneSpherePotentials(DenseMatrix& dips, TriSurfHandle hS
 	  F[k] = (1/(4*M_PI*gamma*rho)) * (2*(E[k]-dips[id][k])/pow(rho,2) +
 					   (1/pow(R,2)) * (E[k] + (E[k]*S/R - R*dips[id][k])/(rho+R-S/R)));
 	  V += F[k]*dips[id][k+3];
+	  
 	}
+	
 	data[*niter] += V;
-	msgStream_ << "Point: " << p << ", pot = " << V << endl;
       }
-      
       ++niter;
     }
   }    
