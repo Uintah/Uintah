@@ -50,7 +50,24 @@ itcl_class SCIRun_Visualization_TextureBuilder {
 	set $this-is_fixed 0
 	set $this-card_mem 16
 	set $this-card_mem_auto 1
+
+	# Backwards compatability with GLTextureBuilder
+	global $this-max_brick_dim
+	global $this-sel_brick_dim
+	global $this-min ->vmin
+	global $this-max ->vmax
+	trace variable $this-min w "$this backcompat-min"
+	trace variable $this-max w "$this backcompat-max"
     }
+
+    method backcompat-min {a b c} {
+	set $this-vmin [set $this-min]
+    }
+
+    method backcompat-max {a b c} {
+	set $this-vmax [set $this-max]
+    }
+
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
