@@ -407,7 +407,7 @@ void Transform::project_inplace(Point& p) const
   p = t;
 }
 
-Point Transform::unproject(const Point& p)
+Point Transform::unproject(const Point& p) const
 {
   if(!inverse_valid) compute_imat();
   return Point(imat[0][0]*p.x()+imat[0][1]*p.y()+imat[0][2]*p.z()+imat[0][3],
@@ -416,7 +416,7 @@ Point Transform::unproject(const Point& p)
 	       imat[3][0]*p.x()+imat[3][1]*p.y()+imat[3][2]*p.z()+imat[3][3]);
 }
 
-void Transform::unproject(const Point& p, Point& res) 
+void Transform::unproject(const Point& p, Point& res) const
 {
       
   if(!inverse_valid) compute_imat();
@@ -430,7 +430,7 @@ void Transform::unproject(const Point& p, Point& res)
 	(imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z()+imat[2][3]));
 }
 
-void Transform::unproject_inplace(Point& p) 
+void Transform::unproject_inplace(Point& p) const
 {
   Point t = p;
 
@@ -446,7 +446,7 @@ void Transform::unproject_inplace(Point& p)
   p = t;
 }
 
-Vector Transform::unproject(const Vector& p)
+Vector Transform::unproject(const Vector& p) const
 {
   if(!inverse_valid) compute_imat();
   return Vector(imat[0][0]*p.x()+imat[0][1]*p.y()+imat[0][2]*p.z(),
@@ -454,7 +454,7 @@ Vector Transform::unproject(const Vector& p)
 		imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z());
 }
 
-void Transform::unproject(const Vector& v, Vector& res) 
+void Transform::unproject(const Vector& v, Vector& res) const
 {
   if(!inverse_valid) compute_imat();
   res.x(imat[0][0]*v.x()+imat[0][1]*v.y()+imat[0][2]*v.z());
@@ -462,7 +462,7 @@ void Transform::unproject(const Vector& v, Vector& res)
   res.z(imat[2][0]*v.x()+imat[2][1]*v.y()+imat[2][2]*v.z());
 }
 
-void Transform::unproject_inplace(Vector& v) 
+void Transform::unproject_inplace(Vector& v) const
 {
   Vector t = v;
   if(!inverse_valid) compute_imat();
@@ -472,7 +472,7 @@ void Transform::unproject_inplace(Vector& v)
   v = t;
 }
 
-Vector Transform::project_normal(const Vector& p)
+Vector Transform::project_normal(const Vector& p) const
 {
   if(!inverse_valid) compute_imat();
   double x=imat[0][0]*p.x()+imat[1][0]*p.y()+imat[2][0]*p.z();
@@ -481,7 +481,7 @@ Vector Transform::project_normal(const Vector& p)
   return Vector(x, y, z);
 }
 
-void Transform::project_normal(const Vector& p, Vector& res) 
+void Transform::project_normal(const Vector& p, Vector& res)  const
 {
   if(!inverse_valid) compute_imat();
   res.x(imat[0][0]*p.x()+imat[1][0]*p.y()+imat[2][0]*p.z());
@@ -489,7 +489,7 @@ void Transform::project_normal(const Vector& p, Vector& res)
   res.z(imat[0][2]*p.x()+imat[1][2]*p.y()+imat[2][2]*p.z());
 }
 
-void Transform::project_normal_inplace(Vector& p) 
+void Transform::project_normal_inplace(Vector& p) const
 {
   if(!inverse_valid) compute_imat();
   Vector res;
@@ -581,7 +581,7 @@ void Transform::invert() {
     }
 }
 
-void Transform::compute_imat()
+void Transform::compute_imat() const
 {
   double a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p;
   a=mat[0][0]; b=mat[0][1]; c=mat[0][2]; d=mat[0][3];
