@@ -185,6 +185,8 @@ public:
   Node::index_type add_node(const Point &p) { return add_point(p); }
   Node::index_type add_point(const Point &p);
   Elem::index_type add_elem(Node::array_type a) { return a[0]; }
+  void node_reserve(size_t s) { points_.reserve(s); }
+  void elem_reserve(size_t s) { points_.reserve(s); }
 
   virtual bool is_editable() const { return true; }
   virtual int dimensionality() const { return 0; }

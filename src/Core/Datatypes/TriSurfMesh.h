@@ -226,6 +226,8 @@ public:
   void add_triangle(Node::index_type, Node::index_type, Node::index_type);
   void add_triangle(const Point &p0, const Point &p1, const Point &p2);
   Elem::index_type add_elem(Node::array_type a);
+  void node_reserve(size_t s) { points_.reserve(s); }
+  void elem_reserve(size_t s) { faces_.reserve(s*3); }
   virtual bool is_editable() const { return true; }
   virtual int dimensionality() const { return 2; }
 

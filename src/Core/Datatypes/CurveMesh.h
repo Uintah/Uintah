@@ -192,6 +192,8 @@ public:
       edges_.push_back(index_pair_type(a[0],a[1]));
       return static_cast<Elem::index_type>(nodes_.size()-1);
     }
+  void node_reserve(size_t s) { nodes_.reserve(s); }
+  void elem_reserve(size_t s) { edges_.reserve(s*2); }
 
   virtual bool is_editable() const { return true; }
   virtual int dimensionality() const { return 1; }
