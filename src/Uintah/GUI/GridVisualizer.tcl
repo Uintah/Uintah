@@ -654,8 +654,8 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	blt::table $cs
 
 	# set up columns for time idicies
-	blt::table $cs [label $cs.time_list_title -text "Time Step"] \
-		-cspan 2 0,0
+	blt::table $cs [label $cs.time_list_title -text "TimeStep"] \
+		0,0 -cspan 2
 	set time_list_length [llength $time_list]
 	for { set i 0 } { $i < $time_list_length } {incr i} {
 	    # the array index
