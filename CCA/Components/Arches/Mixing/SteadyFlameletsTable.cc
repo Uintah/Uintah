@@ -100,14 +100,15 @@ SteadyFlameletsTable::computeProps(const InletStream& inStream,
   else if (scalDisp > scalarDisp[d_scaldispcount-1])
 	  scalDisp = scalarDisp[d_scaldispcount-1];
   // Looking for the properties corresponding to the scalar dissipation 
+  // Debug print 
   tableLookUp(mixFrac, mixFracVars, scalDisp, outStream); 
   // Debug print statements
-  //cout<<"Temperature for properties is:  "<<outStream.d_temperature<<endl;
-  /*cout<<"Density for properties is:  "<<outStream.d_density<<endl;
+  /*cout<<"Temperature for properties is:  "<<outStream.d_temperature<<endl;
+  cout<<"Density for properties is:  "<<outStream.d_density<<endl;
   cout<<"Mixture fraction is :  "<<mixFrac<<endl;
-  cout<<"Mixture fraction variance is :  "<<mixFracVars<<endl;*/
-  //cout<<"Filetered Scalar Dissipation is :  "<< scalDisp_filtered<<endl; 
-  //cout<<"Flamelets Scalar Dissipation is :  "<< scalDisp<<endl; 
+  cout<<"Mixture fraction variance is :  "<<mixFracVars<<endl;
+  cout<<"Filetered Scalar Dissipation is :  "<< scalDisp_filtered<<endl; 
+  cout<<"Flamelets Scalar Dissipation is :  "<< scalDisp<<endl;*/ 
 }
 
 //****************************************************************************
@@ -118,7 +119,7 @@ SteadyFlameletsTable::computeProps(const InletStream& inStream,
 void SteadyFlameletsTable::tableLookUp(double mixfrac, double mixfracVars, double scalDisp, Stream& outStream)
 {
   double small = 1.0e-10;
-  // nx - mixfrac, nh - Scalar dissipation 
+  // nx - mixfrac, sd - Scalar dissipation 
   
   std::vector <double> fmg = vector <double>(d_varcount);
   std::vector <double> fpmg = vector <double>(d_varcount);
@@ -126,38 +127,38 @@ void SteadyFlameletsTable::tableLookUp(double mixfrac, double mixfracVars, doubl
   std::vector <double> s2 = vector <double>(d_varcount);
 
   // Scalar dissipation lookup
-  int nhl_lo=0, nhl_hi=0;
-  double dhl_lo=0.0, dhl_hi=0.0;
+  int nsd_lo=0, nsd_hi=0;
+  double dsd_lo=0.0, dsd_hi=0.0;
   if(scalDisp == 0.0){
-	nhl_lo=0;
-	nhl_hi=0;
-        dhl_lo=0.0;
-        dhl_hi=1.0;
+	nsd_lo=0;
+	nsd_hi=0;
+        dsd_lo=0.0;
+        dsd_hi=1.0;
   }
   else{
-	for(int hl_index=0; hl_index < d_scaldispcount-1; hl_index++){
-		dhl_lo = scalarDisp[hl_index]-scalDisp;
-		dhl_hi = scalarDisp[hl_index+1]-scalDisp;
-		if((dhl_lo*dhl_hi) == 0.0 && hl_index != 0){
-			nhl_lo=hl_index+1;
-			nhl_hi=nhl_lo;
+	for(int sd_index=0; sd_index < d_scaldispcount-1; sd_index++){
+		dsd_lo = scalarDisp[sd_index]-scalDisp;
+		dsd_hi = scalarDisp[sd_index+1]-scalDisp;
+		if((dsd_lo*dsd_hi) == 0.0 && sd_index != 0){
+			nsd_lo=sd_index+1;
+			nsd_hi=nsd_lo;
                         break;
 		}
-		else if((dhl_lo*dhl_hi) <= 0.0){
-			nhl_lo=hl_index;
-			nhl_hi=nhl_lo+1;
+		else if((dsd_lo*dsd_hi) <= 0.0){
+			nsd_lo=sd_index;
+			nsd_hi=nsd_lo+1;
                         break;
 		}
 	}
 
   }
-  /*cout<< "nhl_lo is :" << nhl_lo<<endl;
-  cout<< "nhl_hi is :" << nhl_hi<<endl;
-  cout<< "dhl_lo is :" << dhl_lo<<endl;
-  cout<< "dhl_hi is :" << dhl_hi<<endl;*/
+  /*cout<< "nsd_lo is :" << nsd_lo<<endl;
+  cout<< "nsd_hi is :" << nsd_hi<<endl;
+  cout<< "d_sdlo is :" << dsd_lo<<endl;
+  cout<< "d_sdhi is :" << dsd_hi<<endl;*/
  
   // Main loop - Scalar dissipation
-  for(int m_index = nhl_lo; m_index <= nhl_hi; m_index++){ 
+  for(int m_index = nsd_lo; m_index <= nsd_hi; m_index++){ 
   int nx_lo, nx_hi;
 
   //Mixture fraction 
@@ -177,63 +178,79 @@ void SteadyFlameletsTable::tableLookUp(double mixfrac, double mixfracVars, doubl
                 break;
 	}
   }
-
   //cout<<"nx_lo index is  : "<<nx_lo<<endl;
   //cout<<"nx_hi index is  : "<<nx_hi<<endl;
 
   
-  // variance is uniform table
+  // variance is non uniform table
   double max_curr_Zvar = mixfrac*(1.0-mixfrac);
   double max_Zvar = min(mixfracVars,max_curr_Zvar);
-  double g, gi1, gp, gi2;
-  if(meanMix[nx_lo]<=small || fabs(meanMix[nx_lo]-1.0)<=small)
-	g=0.0;
+  double dfv11, dfv12, dfv21, dfv22;
+  int k1,k2,k1p,k2p;
+  if(meanMix[nx_lo]<=small || fabs(meanMix[nx_lo]-1.0)<=small){
+	k1=0;
+	k1p=0;
+	dfv11=0.0;
+	dfv12=1.0;
+  }
   else{
-	gi1=max_Zvar*meanMix[nx_lo]*(1.0-meanMix[nx_lo])/(max_curr_Zvar+small);
-        g=gi1*double(d_mixvarcount-1)/(meanMix[nx_lo]*(1.0-meanMix[nx_lo]));
+	  for (int v_ind=0; v_ind < d_mixvarcount-1; v_ind++)
+	  {
+		  // Varaince is stored as first entry in the table
+		dfv11 = table[nx_lo*d_scaldispcount*d_mixvarcount+m_index*d_mixvarcount+v_ind][0]-max_Zvar;
+		dfv12 = table[nx_lo*d_scaldispcount*d_mixvarcount+m_index*d_mixvarcount+v_ind+1][0]-max_Zvar;
+		if((dfv11*dfv12) == 0.0 && v_ind != 0){
+			k1=v_ind+1;
+			k1p=k1;
+                	break;
+		}
+		else if((dfv11*dfv12) <= 0.0){
+			k1=v_ind;
+			k1p=k1+1;
+                	break;
+		}
+	  }
   }
 
   if(meanMix[nx_hi]<=small || fabs(meanMix[nx_hi]-1.0)<=small){
-	gp=0.0;
+	k2=0;
+	k2p=0;
+	dfv21=0.0;
+	dfv22=1.0;
   }
   else{
-	gi2=max_Zvar*meanMix[nx_hi]*(1.0-meanMix[nx_hi])/(max_curr_Zvar+small);
-        gp=gi2*double(d_mixvarcount-1)/(meanMix[nx_hi]*(1.0-meanMix[nx_hi]));
-
+	  for (int v_ind=0; v_ind < d_mixvarcount-1; v_ind++)
+	  {
+		dfv21 = table[nx_hi*d_scaldispcount*d_mixvarcount+m_index*d_mixvarcount+v_ind][0]-max_Zvar;
+		dfv22 = table[nx_hi*d_scaldispcount*d_mixvarcount+m_index*d_mixvarcount+v_ind+1][0]-max_Zvar;
+		if((dfv21*dfv22) == 0.0 && v_ind != 0){
+			k2=v_ind+1;
+			k2p=k2;
+                	break;
+		}
+		else if((dfv21*dfv22) <= 0.0){
+			k2=v_ind;
+			k2p=k2+1;
+                	break;
+		}
+	  }
   }
-  //cout<<" G value is :"<<g<<endl;
-  //cout<<"GP value is :"<<gp<<endl;
-  int k1,k2,k1p,k2p;
-  k1=floor(g);
-  if(k1 < 0)
-	k1=0;
-  if(k1 > d_mixvarcount-2)
-	k1=d_mixvarcount-2;
-  //cout<<"Index of K1 is: "<<k1<<endl;
-  k1p=k1+1;
-  k2=floor(gp);
-  if(k2 < 0)
-	k2=0;
-  if(k2 > d_mixvarcount-2)
-	k2=d_mixvarcount-2;
-  //cout<<"Index of K2 is: "<<k2<<endl;
-  k2p=k2+1;
   //Interpolating the values
   for(int ii=0; ii< d_varcount; ii++){
-  	fmg[ii]=(g-double(k1))*table[nx_lo*d_scaldispcount*d_mixvarcount+m_index*d_mixvarcount+k1p][ii]-(g-double(k1p))*table[nx_lo*d_scaldispcount*d_mixvarcount+m_index*d_mixvarcount+k1][ii];
+  	fmg[ii]=(dfv11*table[nx_lo*d_scaldispcount*d_mixvarcount+m_index*d_mixvarcount+k1p][ii]-dfv12*table[nx_lo*d_scaldispcount*d_mixvarcount+m_index*d_mixvarcount+k1][ii])/(dfv11-dfv12);
   //cout<< "FMG is :"<<fmg[2]<<endl;
-  	fpmg[ii]=(gp-double(k2))*table[nx_hi*d_scaldispcount*d_mixvarcount+m_index*d_mixvarcount+k2p][ii]-(gp-double(k2p))*table[nx_hi*d_scaldispcount*d_mixvarcount+m_index*d_mixvarcount+k2][ii];
+  	fpmg[ii]=(dfv21*table[nx_hi*d_scaldispcount*d_mixvarcount+m_index*d_mixvarcount+k2p][ii]-dfv22*table[nx_hi*d_scaldispcount*d_mixvarcount+m_index*d_mixvarcount+k2][ii])/(dfv21-dfv22);
   //cout<< "FPMG is : "<<fpmg[2]<<endl;
   }
 
- if(nhl_lo==nhl_hi){
+ if(nsd_lo==nsd_hi){
 	  for(int ii=0; ii< d_varcount; ii++){
 		s1[ii]=(df1*fpmg[ii]-df2*fmg[ii])/(df1-df2);
         	s2[ii]=s1[ii];
 	  }
 	break;
   }
-  else if(m_index == nhl_lo){
+  else if(m_index == nsd_lo){
 	  for(int ii=0; ii< d_varcount; ii++)
   		s1[ii]=(df1*fpmg[ii]-df2*fmg[ii])/(df1-df2);
   }
@@ -245,13 +262,13 @@ void SteadyFlameletsTable::tableLookUp(double mixfrac, double mixfracVars, doubl
   }	
   //cout<<"value of S1_temperature is "<<s1[2]<<endl;
   //cout<<"value of S2_temperature is "<<s2[2]<<endl;
-  outStream.d_temperature= (dhl_lo*s2[2]-dhl_hi*s1[2])/(dhl_lo-dhl_hi);  
-  outStream.d_density=(dhl_lo*s2[1]-dhl_hi*s1[1])/(dhl_lo-dhl_hi) *1000.0;  
+  outStream.d_temperature= (dsd_lo*s2[2]-dsd_hi*s1[2])/(dsd_lo-dsd_hi);  
+  outStream.d_density=(dsd_lo*s2[1]-dsd_hi*s1[1])/(dsd_lo-dsd_hi) *1000.0;  
   outStream.d_cp= 0.0; // Not in the table  
   outStream.d_enthalpy= 0.0; // Not in the table  
-  outStream.d_co2= (dhl_lo*s2[co2_index]-dhl_hi*s1[co2_index])/(dhl_lo-dhl_hi);  
-  outStream.d_h2o= (dhl_lo*s2[h2o_index]-dhl_hi*s1[h2o_index])/(dhl_lo-dhl_hi); 
-  outStream.d_c2h2= (dhl_lo*s2[c2h2_index]-dhl_hi*s1[c2h2_index])/(dhl_lo-dhl_hi); 
+  outStream.d_co2= (dsd_lo*s2[co2_index]-dsd_hi*s1[co2_index])/(dsd_lo-dsd_hi);  
+  outStream.d_h2o= (dsd_lo*s2[h2o_index]-dsd_hi*s1[h2o_index])/(dsd_lo-dsd_hi); 
+  outStream.d_c2h2= (dsd_lo*s2[c2h2_index]-dsd_hi*s1[c2h2_index])/(dsd_lo-dsd_hi); 
 
 }
 
@@ -301,7 +318,8 @@ double SteadyFlameletsTable::chitableLookUp(double mixfrac, double mixfracVars)
   double integral_22=chitable[nx_hi*dc_mixvarcount+ny_hi];
   // Interpolation
   double integral=w_nylo*(w_nxlo*integral_11+w_nxhi*integral_12)+w_nyhi*(w_nxlo*integral_21+w_nxhi*integral_22);
-  if(integral == 0.0)
+  // To fix the low integrals/zeros from the chi table
+  if(integral < 1.0e-5)
 	  integral=1.0;
   return integral;
 }
