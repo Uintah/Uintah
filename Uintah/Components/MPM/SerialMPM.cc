@@ -366,6 +366,38 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 sched->addTask( t );
       }
       
+      if (d_heatConductionInvolved) {
+	 /*
+	  * computeInternalHeatRate
+	  *   in(P.X, P.VOLUME, P.TEMPERATUREGRADIENT)
+	  *   operation(evaluate the grid internal heat rate using 
+	  *   P.TEMPERATUREGRADIENT and the gradients of the
+	  *   shape functions)
+	  * out(G.INTERNALHEATRATE)
+	  */
+
+	 Task* t = new Task("SerialMPM::computeInternalHeatRate",
+			    region, old_dw, new_dw,
+			    this, &SerialMPM::computeInternalHeatRate);
+
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+
+	    t->requires(old_dw, lb->pXLabel, idx, region,
+			Ghost::AroundNodes, 1 );
+	    t->requires(old_dw, lb->pVolumeLabel, idx, region,
+			Ghost::AroundNodes, 1 );
+	    t->requires( new_dw, lb->pTemperatureGradientLabel, idx, region,
+			 Ghost::AroundNodes, 1);
+
+	    t->computes( new_dw, lb->gInternalHeatRateLabel, idx, region );
+	 }
+
+	 sched->addTask( t );
+      }
+      
+      
       {
 	 /*
 	  * solveEquationsMotion
@@ -386,6 +418,32 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			 Ghost::None);
 
 	    t->computes( new_dw, lb->gAccelerationLabel, idx, region);
+	 }
+
+	 sched->addTask(t);
+      }
+
+      if (d_heatConductionInvolved) {
+	 /*
+	  * solveHeatEquations
+	  *   in(G.MASS, G.INTERNALHEATRATE, G.EXTERNALHEATRATE)
+	  *   out(G.TEMPERATURERATE)
+	  * 
+	  */
+	 Task* t = new Task("SerialMPM::solveHeatEquations",
+			    region, old_dw, new_dw,
+			    this, &SerialMPM::solveHeatEquations);
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    t->requires( new_dw, lb->gMassLabel, idx, region,
+			 Ghost::None);
+	    t->requires( new_dw, lb->gInternalHeatRateLabel, idx, region,
+			 Ghost::None);
+	    t->requires( new_dw, lb->gExternalHeatRateLabel, idx, region,
+			 Ghost::None);
+
+	    t->computes( new_dw, lb->gTemperatureRateLabel, idx, region);
 	 }
 
 	 sched->addTask(t);
@@ -508,6 +566,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    if(d_heatConductionInvolved) {
 	      t->requires(new_dw, lb->gTemperatureRateLabel, idx, region,
 			Ghost::AroundCells, 1);
+              t->computes(new_dw, lb->pTemperatureRateLabel, idx, region);
               t->computes(new_dw, lb->pTemperatureLabel, idx, region);
 	    }
 	 }
@@ -1121,6 +1180,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       ParticleVariable<Vector> pvelocity;
       ParticleVariable<double> pmass;
       ParticleVariable<double> pTemperature; //for heat conduction
+      ParticleVariable<double> pTemperatureRate; //for heat conduction
       NCVariable<double> gTemperatureRate; //for heat conduction
 
       old_dw->get(px,        lb->pXLabel, matlindex, region, Ghost::None, 0);
@@ -1206,7 +1266,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
         // Update the particle's position and velocity
         px[idx]        += vel * delt;
         pvelocity[idx] += acc * delt;
-        if(d_heatConductionInvolved) pTemperature[idx] += temp * delt;
+        if(d_heatConductionInvolved) {
+          pTemperatureRate[idx] = temp;
+          pTemperature[idx] += temp * delt;
+        }
         
         ke += .5*pmass[idx]*pvelocity[idx].length2();
 
@@ -1235,6 +1298,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       new_dw->put(pexternalforce, lb->pExternalForceLabel, matlindex, region);
 
       if(d_heatConductionInvolved) {
+        new_dw->put(pTemperatureRate, lb->pTemperatureRateLabel, matlindex, region);
         new_dw->put(pTemperature, lb->pTemperatureLabel, matlindex, region);
       }
 
@@ -1312,6 +1376,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.68  2000/05/30 04:26:17  tan
+// Heat conduction algorithm integrated into scheduleTimeAdvance().
+//
 // Revision 1.67  2000/05/26 23:07:03  tan
 // Rewrite interpolateToParticlesAndUpdate to include heat conduction.
 //
