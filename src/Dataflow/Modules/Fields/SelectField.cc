@@ -108,13 +108,17 @@ SelectField::execute()
     const BBox bbox = output_field_->mesh()->get_bounding_box();
     const Point &bmin = bbox.min();
     const Point &bmax = bbox.max();
-    //    const Point center = Point(bmin.x()+(bmax.x()-bmin.x())/2.,
-    //			       bmin.y()+(bmax.y()-bmin.y())/2.,
-    //			       bmin.z()+(bmax.z()-bmin.z())/2.);
-    const Point center = bmin;
+#if 0
+    const Point center = bmin + Vector(bmax - bmin) * 0.5;
     const Point right = center + Vector((bmax.x()-bmin.x())/2.,0,0);
     const Point down = center + Vector(0,(bmax.y()-bmin.y())/2.,0);
     const Point in = center + Vector(0,0,(bmax.z()-bmin.z())/2.);
+#else
+    const Point center = bmin + Vector(bmax - bmin) * 0.25;
+    const Point right = center + Vector((bmax.x()-bmin.x())/4.0, 0, 0);
+    const Point down = center + Vector(0, (bmax.y()-bmin.y())/4.0, 0);
+    const Point in = center + Vector(0, 0, (bmax.z()-bmin.z())/4.0);
+#endif
     const double l2norm = (bmax - bmin).length();
 
     box_->SetScale(l2norm * 0.015);
@@ -186,7 +190,7 @@ SelectFieldCreateAlgo::get_compile_info(const TypeDescription *msrc,
   static const string base_class_name("SelectFieldCreateAlgo");
 
   const string::size_type loc = fsrc->get_name().find_first_of('<');
-  const string fout = fsrc->get_name().substr(0, loc) + "<unsigned char> ";
+  const string fout = fsrc->get_name().substr(0, loc) + "<int> ";
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
