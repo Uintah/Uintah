@@ -530,6 +530,7 @@ void ICE::actuallyInitializeAddedMaterial(const ProcessorGroup*,
                                           DataWarehouse*, 
                                           DataWarehouse* new_dw)
 {
+  new_dw->unfinalize();
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing InitializeAddedMaterial on patch " << patch->getID() 
@@ -581,6 +582,7 @@ void ICE::actuallyInitializeAddedMaterial(const ProcessorGroup*,
       vol_frac_CC[c] = rho_CC[c]*sp_vol_CC[c];  //needed for LODI BCs
     }
   }  // patch loop 
+  new_dw->refinalize();
 }
 
 /* ---------------------------------------------------------------------
