@@ -6,6 +6,7 @@
 #include <iostream>
 #include <SCICore/Math/MinMax.h>
 #include <Uintah/Grid/Material.h>
+#include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <SCICore/Geometry/Vector.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/ProblemSpec.h>
@@ -15,6 +16,7 @@ using std::endl;
 using SCICore::Math::Max;
 using SCICore::Geometry::Vector;
 using Uintah::Material;
+using Uintah::MPM::MPMMaterial;
 using SCICore::Geometry::Vector;
 
 namespace Uintah {
@@ -59,9 +61,14 @@ namespace Uintah {
       }
       
       void registerMaterial(Material*);
+      void registerMPMMaterial(MPMMaterial*);
       int getNumMatls() const {
 	 return (int)matls.size();
       }
+      int getNumMPMMatls() const {
+	 return (int)mpm_matls.size();
+      }
+
       int getNumVelFields() const {
 	int num_vf=0;
 	for (int i = 0; i < (int)matls.size(); i++) {
@@ -69,8 +76,12 @@ namespace Uintah {
 	}
 	return num_vf+1;
       }
+
       Material* getMaterial(int idx) const {
 	 return matls[idx];
+      }
+      MPMMaterial* getMPMMaterial(int idx) const {
+	 return mpm_matls[idx];
       }
 
 
@@ -84,6 +95,7 @@ namespace Uintah {
       
       const VarLabel* delt_label;
       std::vector<Material*> matls;
+      std::vector<MPMMaterial*> mpm_matls;
       Vector d_gravity;
 
    };
@@ -92,6 +104,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.13  2000/11/07 22:42:40  guilkey
+// Added a vector of MPMMaterial* so that we no longer need to do the
+// dynamic cast of a Material* to an MPMMaterial*.  The point here is to
+// make coupling with either Arches or ICE more straigtforward.
+//
 // Revision 1.12  2000/09/28 23:22:01  jas
 // Added (int) to remove g++ warnings for STL size().  Reordered initialization
 // to coincide with *.h declarations.

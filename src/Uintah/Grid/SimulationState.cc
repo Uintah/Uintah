@@ -3,6 +3,7 @@
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/ReductionVariable.h>
 #include <Uintah/Grid/Material.h>
+#include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Uintah/Grid/Reductions.h>
 #include <SCICore/Malloc/Allocator.h>
 
@@ -29,16 +30,29 @@ void SimulationState::registerMaterial(Material* matl)
    matls.push_back(matl);
 }
 
+void SimulationState::registerMPMMaterial(MPMMaterial* matl)
+{
+  // matl->setDWIndex((int)mpm_matls.size());
+   mpm_matls.push_back(matl);
+}
+
 SimulationState::~SimulationState()
 {
   delete delt_label;
 
   for (int i = 0; i < (int)matls.size(); i++) 
     delete matls[i];
+  for (int i = 0; i < (int)mpm_matls.size(); i++) 
+    delete mpm_matls[i];
 }
 
 //
 // $Log$
+// Revision 1.16  2000/11/07 22:42:40  guilkey
+// Added a vector of MPMMaterial* so that we no longer need to do the
+// dynamic cast of a Material* to an MPMMaterial*.  The point here is to
+// make coupling with either Arches or ICE more straigtforward.
+//
 // Revision 1.15  2000/09/28 23:22:01  jas
 // Added (int) to remove g++ warnings for STL size().  Reordered initialization
 // to coincide with *.h declarations.
