@@ -84,7 +84,7 @@ ViewWindow::ViewWindow(Viewer* s, const clString& id)
     saveprefix("saveprefix", id, this),
     curFrame(0),curName("movie"),pos("pos", id, this),
     caxes("caxes", id, this),iaxes("iaxes", id, this), 
-    doingMovie(false),makeMPEG(false)
+    doingMovie(false), makeMPEG(false), dolly_throttle(0)
 {
   inertia_mode=0;
   bgcolor.set(Color(0,0,0));
@@ -382,7 +382,70 @@ void ViewWindow::mouse_translate(int action, int x, int y, int, int, int)
   }
 }
 
-#if 0
+
+// Dolly into and out-of the scene
+// -- moving left/right decreases/increases the speed of motion (throttle)
+// -- moving down/up moves the user into/out-of the scene
+// -- throttle is *not* reset on mouse release
+// -- throttle is reset on autoview
+// -- throttle is normalized by the length of the diagonal of the scene's bbox 
+
+void ViewWindow::mouse_dolly(int action, int x, int y, int, int, int)
+{
+  switch(action){
+  case MouseStart:
+    {
+      if (dolly_throttle == 0) {
+	BBox bbox;
+	get_bounds(bbox);
+	dolly_throttle_scale=bbox.diagonal().length()/
+	  Max(current_renderer->xres, current_renderer->yres);
+	dolly_throttle=1;
+      }
+      last_x=x;
+      last_y=y;
+      total_dolly=0;
+      char str[100];
+      sprintf(str, "dolly: %.3g (th=%.3g)", total_dolly,
+	      dolly_throttle);
+      update_mode_string(str);
+    }
+    break;
+  case MouseMove:
+    {
+      double dly;
+      double xmtn=last_x-x;
+      double ymtn=last_y-y;
+      last_x = x;
+      last_y = y;
+
+      if (Abs(xmtn)>Abs(ymtn)) {
+	double scl=-xmtn/200;
+	if (scl<0) scl=1/(1-scl); else scl+=1;
+	dolly_throttle *= scl;
+      } else {
+	dly=-ymtn*(dolly_throttle*dolly_throttle_scale);
+	total_dolly+=dly;
+	View tmpview(view.get());
+	Vector dolly(tmpview.lookat()-tmpview.eyep());
+	dolly*=dly;
+	tmpview.lookat(tmpview.lookat()+dolly);
+	tmpview.eyep(tmpview.eyep()+dolly);
+	view.set(tmpview);
+	need_redraw=1;
+      }
+      char str[100];
+      sprintf(str, "dolly: %.3g (th=%.3g)", total_dolly, 
+	      dolly_throttle);
+      update_mode_string(str);
+    }
+    break;
+  case MouseEnd:
+    update_mode_string("");
+    break;
+  }	
+}
+
 void ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
 {
   switch(action){
@@ -413,7 +476,7 @@ void ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
       view.set(tmpview);
       need_redraw=1;
       ostringstream str;
-      str << "scale: " << total_x*100 << "%";
+      str << "scale: " << total_scale*100 << "%";
       update_mode_string(str.str().c_str());
     }
     break;
@@ -422,7 +485,7 @@ void ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
     break;
   }	
 }
-#else
+
 float ViewWindow::WindowAspect()
 {
   float w = current_renderer->xres;
@@ -544,7 +607,7 @@ Vector ViewWindow::CameraToWorld(Vector v)
   return mat * v;
 }
 
-void ViewWindow::choose(int X, int Y)
+void ViewWindow::unicam_choose(int X, int Y)
 {
   //   MyTranslateCamera(Vector(0.1,0,0));
   //   BBox bbox;
@@ -604,7 +667,7 @@ void ViewWindow::choose(int X, int Y)
   }
 }
 
-void ViewWindow::rot   (int x, int y)
+void ViewWindow::unicam_rot(int x, int y)
 {
   //  float myTEST = X;
   //  cerr << "myTEST = " << myTEST << "\t" << "X = " << X << endl;
@@ -693,7 +756,7 @@ void ViewWindow::rot   (int x, int y)
   }
 }
 
-void ViewWindow::zoom  (int X, int Y)
+void ViewWindow::unicam_zoom(int X, int Y)
 {
   float cn[2], ln[2];
   NormalizeMouseXY(X, Y, &cn[0], &cn[1]);
@@ -733,7 +796,7 @@ void ViewWindow::zoom  (int X, int Y)
   MyTranslateCamera(trans2);
 }
 
-void ViewWindow::pan   (int X, int Y)
+void ViewWindow::unicam_pan(int X, int Y)
 {
   float cn[2], ln[2];
   NormalizeMouseXY(X, Y, &cn[0], &cn[1]);
@@ -812,7 +875,7 @@ Point ViewWindow::film_pt    (double x, double y, double z)
   return tmpview.eyep() + dir * z;
 }
 
-void ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
+void ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
 {
   //   static int first=1;
   //   if (first) {
@@ -905,10 +968,10 @@ void ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
   case MouseMove:
     {
       switch (unicam_state) {
-      case UNICAM_CHOOSE:   choose(x, y); break;
-      case UNICAM_ROT:      rot   (x, y); break;
-      case UNICAM_PAN:      pan   (x, y); break;
-      case UNICAM_ZOOM:     zoom  (x, y); break;
+      case UNICAM_CHOOSE:   unicam_choose(x, y); break;
+      case UNICAM_ROT:      unicam_rot(x, y); break;
+      case UNICAM_PAN:      unicam_pan(x, y); break;
+      case UNICAM_ZOOM:     unicam_zoom(x, y); break;
       }
 
       need_redraw=1;
@@ -947,8 +1010,6 @@ void ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
     break;
   }	
 }
-
-#endif
 
 void ViewWindow::mouse_rotate(int action, int x, int y, int, int, int time)
 {
@@ -1425,10 +1486,14 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
       cerr << "Redraw event dropped, mailbox full!\n";
   } else if(args[1] == "mtranslate"){
     do_mouse(&ViewWindow::mouse_translate, args);
+  } else if(args[1] == "mdolly"){
+    do_mouse(&ViewWindow::mouse_dolly, args);
   } else if(args[1] == "mrotate"){
     do_mouse(&ViewWindow::mouse_rotate, args);
   } else if(args[1] == "mscale"){
     do_mouse(&ViewWindow::mouse_scale, args);
+  } else if(args[1] == "municam"){
+    do_mouse(&ViewWindow::mouse_unicam, args);
   } else if(args[1] == "mpick"){
     do_mouse(&ViewWindow::mouse_pick, args);
   } else if(args[1] == "sethome"){
@@ -1800,6 +1865,7 @@ void ViewWindow::do_mouse(MouseHandler handler, TCLArgs& args)
 
 void ViewWindow::autoview(const BBox& bbox)
 {
+  dolly_throttle=0;
   if(bbox.valid()){
     View cv(view.get());
     // Animate lookat point to center of BBox...

@@ -165,6 +165,9 @@ public:
   Transform prev_trans;
   double eye_dist;
   double total_scale;
+  double total_dolly;
+  double dolly_throttle;
+  double dolly_throttle_scale;
   int prev_time[3];		// history for quaternions and time
   HVect prev_quat[3];
   
@@ -211,8 +214,10 @@ public:
   void bawgl_pick(int action, GLint iv[3], GLfloat fv[4]);
   // -- BAWGL -- 
 
+  void mouse_dolly(int, int, int, int, int, int);
   void mouse_translate(int, int, int, int, int, int);
   void mouse_scale(int, int, int, int, int, int);
+  void mouse_unicam(int, int, int, int, int, int);
   void mouse_rotate(int, int, int, int, int, int);
   void mouse_rotate_eyep(int, int, int, int, int, int);
   void mouse_pick(int, int, int, int, int, int);
@@ -240,10 +245,10 @@ public:
   enum {UNICAM_CHOOSE = 0, UNICAM_ROT, UNICAM_PAN, UNICAM_ZOOM};
   int  unicam_state;
 
-  void choose(int X, int Y);
-  void rot   (int X, int Y);
-  void zoom  (int X, int Y);
-  void pan   (int X, int Y);
+  void unicam_choose(int X, int Y);
+  void unicam_rot(int X, int Y);
+  void unicam_zoom(int X, int Y);
+  void unicam_pan(int X, int Y);
 
   void   ShowFocusSphere();
   void   HideFocusSphere();
