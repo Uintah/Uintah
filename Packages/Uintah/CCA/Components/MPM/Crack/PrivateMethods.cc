@@ -1,6 +1,6 @@
 /********************************************************************************
     Crack.cc
-    PART SEVEN: PRIVATE METHODS 
+    PART EIGHT: PRIVATE METHODS 
 
     Created by Yajun Guo in 2002-2004.
 ********************************************************************************/
@@ -9,7 +9,7 @@
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h> // for Fracture
+#include <Packages/Uintah/Core/Math/Short27.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -671,7 +671,7 @@ void Crack::ApplySymmetricBCsToCrackPoints(const Vector& cs,
 
 // Calculate normals, tangential normals and bi-normals of crack plane 
 // at  crack-front nodes
-short Crack::CalculateCrackFrontNormals(const int& mm)
+short Crack::SmoothCrackFrontAndCalculateNormals(const int& mm)
 {
   int i=-1,l=-1,k=-1;
   int cfNodeSize=(int)cfSegNodes[mm].size();
@@ -696,10 +696,6 @@ short Crack::CalculateCrackFrontNormals(const int& mm)
 
   for(k=0; k<cfNodeSize;k++) {
     // Step a: Collect crack points for current sub-crack
-    int node=cfSegNodes[mm][k];
-    int segs[2];
-    FindSegsFromNode(mm,node,segs);
-
     if(k>maxIdx) { // The next sub-crack
       maxIdx=cfSegMaxIdx[mm][k];
       minIdx=cfSegMinIdx[mm][k];
@@ -732,7 +728,8 @@ short Crack::CalculateCrackFrontNormals(const int& mm)
 
     // Step b: Define how to smooth the sub-crack
     int n=numPts;             // number of points (>=2)
-    int m=(int)(numSegs/2)+2; // number of intervals (>=2)
+    //int m=int)(numSegs/2)+2; // number of intervals (>=2)
+    int m=2;                  // just two segments 
     int n1=7*m-3;
 
     // Arries starting from 1
@@ -827,10 +824,9 @@ short Crack::CalculateCrackFrontNormals(const int& mm)
     // Step d: Smooth crack-front points and store tangential vectors
     for(i=minIdx;i<=maxIdx;i++) { // Loop over all nodes on the sub-crack 
       int ki=idx[i];
-      
       // Smooth crack-front points
-      // int ni=cfSegNodes[mm][i];
-      // cx[mm][ni]=pts[ki];  
+      int ni=cfSegNodes[mm][i];
+      cx[mm][ni]=pts[ki];  
 
       // Store tangential vectors
       if(minNode==maxNode && (i==minIdx || i==maxIdx)) {
@@ -1085,9 +1081,114 @@ short Crack::CubicSpline(const int& n, const int& m, const int& n1,
   return flag;
 }
 
+void Crack::CalculateCrackFrontNormals(const int& mm)
+{
+  // Task 1: Calculate crack-front tangential normals
+  int cfNodeSize=cfSegNodes[mm].size();
+  cfSegV3[mm].clear();
+  cfSegV3[mm].resize(cfNodeSize);
+  for(int k=0; k<cfNodeSize; k++) {
+    int minIdx=cfSegMinIdx[mm][k];
+    int maxIdx=cfSegMaxIdx[mm][k];
+    int minNode=cfSegNodes[mm][minIdx];
+    int maxNode=cfSegNodes[mm][maxIdx];
+    int preIdx=cfSegPreIdx[mm][k];
+
+    if(preIdx<0) {// Not operated
+      int node1=-1;
+      if(minNode==maxNode && (k==minIdx || k==maxIdx)) { 
+        // for the end of enclosed crack
+        node1=cfSegNodes[mm][maxIdx-2];
+      }
+      else {
+        int k1=(k-2)<minIdx ? minIdx : k-2;
+        node1=cfSegNodes[mm][k1];
+      }
+      Point pt1=cx[mm][node1];
+
+      int node2=-1;
+      if(minNode==maxNode && (k==minIdx || k==maxIdx)) {
+        // for the end of enclosed crack
+        node2=cfSegNodes[mm][minIdx+2];
+      }
+      else {
+        int k2=(k+2)>maxIdx ? maxIdx : k+2;
+        node2=cfSegNodes[mm][k2];
+      }
+      Point pt2=cx[mm][node2];
+ 
+      cfSegV3[mm][k]=-TwoPtsDirCos(pt1,pt2);
+    }
+
+    else {// calculated
+      cfSegV3[mm][k]=cfSegV3[mm][preIdx];
+    }
+
+  }
+
+   /* Task 2: Calculate normals of crack plane at crack-front nodes
+  */
+  cfSegV2[mm].clear();
+  cfSegV2[mm].resize(cfNodeSize);
+  for(int k=0; k<cfNodeSize; k++) {
+    int node=cfSegNodes[mm][k];
+    int preIdx=cfSegPreIdx[mm][k];
+
+    if(preIdx<0) {// Not operated
+      Vector v2T=Vector(0.,0.,0.);
+      double totalArea=0.;
+      for(int i=0; i<(int)ce[mm].size(); i++) {// Loop over crack elems
+        // Three nodes of the elems
+        int n1=ce[mm][i].x();
+        int n2=ce[mm][i].y();
+        int n3=ce[mm][i].z();
+        if(node==n1 || node==n2 || node==n3) {
+          // Three points of the triangle
+          Point p1=cx[mm][n1];
+          Point p2=cx[mm][n2];
+          Point p3=cx[mm][n3];
+          // Lengths of sides of the triangle
+          double a=(p1-p2).length();
+          double b=(p1-p3).length();
+          double c=(p2-p3).length();
+          // Half of perimeter of the triangle
+          double s=(a+b+c)/2.;
+          // Area of the triangle
+          double thisArea=sqrt(s*(s-a)*(s-b)*(s-c));
+          // Normal of the triangle
+          Vector thisNorm=TriangleNormal(p1,p2,p3);
+          // Area-weighted normal vector
+          v2T+=thisNorm*thisArea;
+          // Total area of crack plane related to the node
+          totalArea+=thisArea;
+        }
+      } // End of loop over crack elems
+      v2T/=totalArea;
+      cfSegV2[mm][k]=v2T/v2T.length();
+    }
+    else { // Calculated
+      cfSegV2[mm][k]=cfSegV2[mm][preIdx];
+    }
+  } // End of loop over crack-front nodes
+
+  /* Task 3: Calculate bi-normals of crack plane at crack-front nodes
+             and adjust crack-plane normals to make sure the three axes
+             are perpendicular to each other.
+  */
+  cfSegV1[mm].clear();
+  cfSegV1[mm].resize(cfNodeSize);
+  for(int k=0; k<cfNodeSize; k++) {
+    Vector V1=Cross(cfSegV2[mm][k],cfSegV3[mm][k]);
+    cfSegV1[mm][k]=V1/V1.length();
+    Vector V2=Cross(cfSegV3[mm][k],cfSegV1[mm][k]);
+    cfSegV2[mm][k]=V2/V2.length();
+  }
+
+}
+
 // Output crack elems, points, and crack-front nodes
 // for visualization during crack propagagtion
-void Crack::OutputCrackGeometry(const int& matIdx, const int& timestepIdx)
+void Crack::OutputCrackGeometry(const int& m, const int& timestep)
 {
   bool timeToDump = dataArchiver->wasOutputTimestep();
   if(timeToDump) {
@@ -1097,19 +1198,19 @@ void Crack::OutputCrackGeometry(const int& matIdx, const int& timestepIdx)
     // cf.matXXX.timestepYYYYY (crack front nodes)
     // Those files are stored in .uda.XXX/tXXXXX/crackData/
 
-    char timebuf[10],matbuf[10];
-    sprintf(timebuf,"%d",timestepIdx);
-    sprintf(matbuf,"%d",matIdx);
+    char timestepbuf[10],matbuf[10];
+    sprintf(timestepbuf,"%d",timestep);
+    sprintf(matbuf,"%d",m);
 
     // Task 1: Create output directories
     char crackDir[200]="";
     strcat(crackDir,udaDir.c_str());
     strcat(crackDir,"/t");
-    if(timestepIdx<10) strcat(crackDir,"0000");
-    else if(timestepIdx<100) strcat(crackDir,"000");
-    else if(timestepIdx<1000) strcat(crackDir,"00");
-    else if(timestepIdx<10000) strcat(crackDir,"0");
-    strcat(crackDir,timebuf);
+    if(timestep<10) strcat(crackDir,"0000");
+    else if(timestep<100) strcat(crackDir,"000");
+    else if(timestep<1000) strcat(crackDir,"00");
+    else if(timestep<10000) strcat(crackDir,"0");
+    strcat(crackDir,timestepbuf);
     strcat(crackDir,"/crackData");
     
     mkdir(crackDir,0777);
@@ -1118,22 +1219,22 @@ void Crack::OutputCrackGeometry(const int& matIdx, const int& timestepIdx)
     char ceFileName[200]="";
     strcat(ceFileName,crackDir); 
     strcat(ceFileName,"/ce.mat");
-    if(matIdx<10) strcat(ceFileName,"00");
-    else if(matIdx<100) strcat(ceFileName,"0");
+    if(m<10) strcat(ceFileName,"00");
+    else if(m<100) strcat(ceFileName,"0");
     strcat(ceFileName,matbuf);
 
     char cxFileName[200]="";
     strcat(cxFileName,crackDir);
     strcat(cxFileName,"/cx.mat");
-    if(matIdx<10) strcat(cxFileName,"00");
-    else if(matIdx<100) strcat(cxFileName,"0");
+    if(m<10) strcat(cxFileName,"00");
+    else if(m<100) strcat(cxFileName,"0");
     strcat(cxFileName,matbuf);
 
     char cfFileName[200]="";
     strcat(cfFileName,crackDir);
     strcat(cfFileName,"/cf.mat");
-    if(matIdx<10) strcat(cfFileName,"00");
-    else if(matIdx<100) strcat(cfFileName,"0");
+    if(m<10) strcat(cfFileName,"00");
+    else if(m<100) strcat(cfFileName,"0");
     strcat(cfFileName,matbuf);
 
     ofstream outputCE(ceFileName, ios::out);
@@ -1146,21 +1247,21 @@ void Crack::OutputCrackGeometry(const int& matIdx, const int& timestepIdx)
     }
 
     // Output crack elems 
-    for(int i=0; i<(int)ce[matIdx].size(); i++) {
-      outputCE << ce[matIdx][i].x() << " " << ce[matIdx][i].y() << " "
-               << ce[matIdx][i].z() << endl;
+    for(int i=0; i<(int)ce[m].size(); i++) {
+      outputCE << ce[m][i].x() << " " << ce[m][i].y() << " "
+               << ce[m][i].z() << endl;
     }
 
     // Output crack points
-    for(int i=0; i<(int)cx[matIdx].size(); i++) {
-      outputCX << cx[matIdx][i].x() << " " << cx[matIdx][i].y() << " "
-               << cx[matIdx][i].z() << endl;
+    for(int i=0; i<(int)cx[m].size(); i++) {
+      outputCX << cx[m][i].x() << " " << cx[m][i].y() << " "
+               << cx[m][i].z() << endl;
     }
 
     // Output crack-front nodes
-    for(int i=0; i<(int)cfSegNodes[matIdx].size()/2; i++) {
-      outputCF << cfSegNodes[matIdx][2*i] << " "
-               << cfSegNodes[matIdx][2*i+1] << endl;
+    for(int i=0; i<(int)cfSegNodes[m].size()/2; i++) {
+      outputCF << cfSegNodes[m][2*i] << " "
+               << cfSegNodes[m][2*i+1] << endl;
     }
   }
 }
