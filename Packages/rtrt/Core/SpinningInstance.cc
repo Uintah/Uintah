@@ -152,40 +152,46 @@ void SpinningInstance::animate(double time, bool& changed) {
   *t=*location_trans;
   //the pretranslate is done in the constructor
   t->pre_rotate(time*rate, axis);
+  
   t->pre_translate(cen-Point(0,0,0));
   changed = true;
+  
 }
 
 void SpinningInstance::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 				 PerProcessorContext* ppc)
 {
-  
+
   double min_t = hit.min_t;
   if (!bbox.intersect(ray, min_t)) return;	  
-
-  Ray tray;
-  HitInfo thit=hit;
   
+  Ray tray;  
   ray.transform(t,tray);
-  
-  //this give a slight speed improvement 4.2 fps to 4.4 in one test
-  //it accounts for the fact that the spinning bbox is larger than original
-  min_t = hit.min_t;
-  if (!bbox_orig.intersect(tray, min_t)) return;
+  //double scale = tray.direction().length() / ray.direction().length();
 
-  min_t = hit.min_t;
+  HitInfo thit;
+  if (hit.was_hit) thit.min_t = hit.min_t;// * scale;
+  min_t = thit.min_t;
+
+  if (!bbox_orig.intersect(tray, min_t)) return;
   
-  o->intersect(tray,thit,st,ppc);
+  o->intersect(tray, thit, st, ppc);
   
   // if the ray hit one of our objects....
-  if (min_t > thit.min_t)
+  if (thit.was_hit)
     {
-      InstanceHit* i = (InstanceHit*)(thit.scratchpad);
-      Point p = ray.origin() + thit.min_t*ray.direction();
-      i->normal = thit.hit_obj->normal(p,thit);
-      i->obj = thit.hit_obj;
-      thit.hit_obj = this;
-      hit = thit;
-    }
+      min_t = thit.min_t;// / scale;
+      if(hit.hit(this, min_t)){
+	InstanceHit* i = (InstanceHit*)(hit.scratchpad);
+	Point p = ray.origin() + min_t*ray.direction();
+	i->normal = thit.hit_obj->normal(p,thit);
+	i->obj = thit.hit_obj;
+      }
+    }	      
+
 }
+
+
+
+
 

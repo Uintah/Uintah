@@ -60,11 +60,13 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     return 0;
   }
 
+  /*
   //between doors
   Point Eye(-5.85, 6.2, 1.6);
   Point Lookat(-13.5, 13.5, 2.0);
   Vector Up(0,0,1);
   double fov=60;
+  */
 
   /*
   //outside room
@@ -74,13 +76,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   double fov=60;
   */
 
-  /*
   //centered above room
   Point Eye(-8, 8, 11);
   Point Lookat(-8, 8, 0);
   Vector Up(0, 1, 0);
   double fov=40;
-  */
 
   Camera cam(Eye,Lookat,Up,fov);
 
@@ -108,23 +108,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   Group* ceiling_floor=new Group();
   ceiling_floor->add(check_floor);
 
-  Material* whittedimg = 
-    new ImageMaterial("/usr/sci/projects/rtrt/textures/whitted",
-		      ImageMaterial::Clamp, ImageMaterial::Clamp,
-		      0.4, Color(0,0,0), 1, 1, 0);
-  
-  Object* pic1=
-    new Parallelogram(whittedimg, Point(-7.35, 11.9, 2.5), 
-		      Vector(0,0,-1), Vector(-1.3,0,0));
-
-  Material* bumpimg = 
-    new ImageMaterial("/usr/sci/projects/rtrt/textures/bump",
-		      ImageMaterial::Clamp, ImageMaterial::Clamp,
-		      0.4, Color(0,0,0), 1, 1, 0);
-
-  Object* pic2=
-    new Parallelogram(bumpimg, Point(-11.9, 7.35, 2.5), 
-		      Vector(0, 0, -1), Vector(0, 1.3, 0));
 
   Material* white = new LambertianMaterial(Color(0.8,0.8,0.8));
 
@@ -134,22 +117,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   west_wall->add(new Rect(white, Point(-12, 8, 2), 
 		       Vector(0, 4, 0), Vector(0, 0, 2)));
 
-//  south_wall->add(new Rect(white, Point(-8, 4, 2), 
-//		       Vector(4, 0, 0), Vector(0, 0, 2)));
-
-  // doorway cut out of South wall for W. tube: attaches to Graphic Museum scene
-
   south_wall->add(new Rect(white, Point(-11.5, 4, 2), 
 		       Vector(0.5, 0, 0), Vector(0, 0, 2)));
   south_wall->add(new Rect(white, Point(-7.5, 4, 3), 
 		       Vector(3.5, 0, 0), Vector(0, 0, 1)));
   south_wall->add(new Rect(white, Point(-6.5, 4, 1), 
 		       Vector(2.5, 0, 0), Vector(0, 0, 1)));
-
-//  east_wall->add(new Rect(white, Point(-4, 8, 2), 
-//		       Vector(0, 4, 0), Vector(0, 0, 2)));
-
-  // doorway cut out of East wall for N. tube: attaches to Living Room scene
 
   east_wall->add(new Rect(white, Point(-4, 11.5, 2), 
 		       Vector(0, 0.5, 0), Vector(0, 0, 2)));
@@ -158,12 +131,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   east_wall->add(new Rect(white, Point(-4, 6.5, 1), 
 		       Vector(0, 2.5, 0), Vector(0, 0, 1)));
 
-  // add the ceiling
-//  ceiling_floor->add(new Rect(white, Point(-8, 8, 4),
-//		       Vector(4, 0, 0), Vector(0, 4, 0)));
-
-  west_wall->add(pic1);
-  north_wall->add(pic2);
 
   Material *silver = new MetalMaterial(Color(0.7,0.73,0.8), 12);
   Material *air_to_glass = new DielectricMaterial(1.5, 0.66, 0.04, 400.0, Color(.87, .80, .93), Color(1,1,1), false);
@@ -361,15 +328,20 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   Transform *dtrans = new Transform();
 
   dtrans->pre_translate(Vector(8, -8, -2)); 
+  //dtrans->rotate(Vector(0,1,0), Vector(0,-1,0));
   dtrans->rotate(Vector(1,0,0), Vector(0,0,1));
   //don't do the next one, it's good for static images but it will be rotated again and
   //that will bloat the bounding box uneccessarily
   //dtrans->rotate(Vector(0,1,0), Vector(-.70,.70,0)); 
+
+  //for testing scale in Instance
+  //dtrans->pre_scale(Vector(4, 4, 4)); 
+
   dtrans->pre_translate(Vector(-8, 8, 2));
 
 #ifdef DOINST
 #ifdef DOSPIN
-  SpinningInstance *dinst = new SpinningInstance(diw, dtrans, Point(-8,8,2), Vector(0,0,1), 0.5);
+  SpinningInstance *dinst = new SpinningInstance(diw, dtrans, Point(-8,8,2), Vector(0,0,1), 0.1);
 #else
   Instance *dinst = new Instance(diw, dtrans);
 #endif
@@ -419,9 +391,10 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane, 0.5);
 
   scene->maxdepth = 8;
-  scene->add_light(new Light(Point(-8, 8, 3.9), Color(.8,.8,.8), 0));
+  scene->add_light(new Light(Point(-10, 8, 3.9), Color(.8,.8,.8), 0));
   scene->animate=true;
 
+  scene->addObjectOfInterest( sg, true );
 #ifdef DOVFEM
   scene->attach_display(vdpy);
   (new Thread(vdpy, "Volume Dpy"))->detach();
