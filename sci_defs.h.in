@@ -10,6 +10,7 @@
 #define SCI_@NBITS@BITS
 @PARALLEL_DEFINE@
 @THREAD_DEFINE@
+@MALLOC_DEFINE@
 
 /* Someday, we should make this a config variable - it might help the
    optimizer, at the cost of more difficult debugging */

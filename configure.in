@@ -675,6 +675,20 @@ AC_SUBST(GL_LIB_DIR)
 
 ##-- Other paths for Uintah ------------------------------------------
 
+AC_ARG_ENABLE(enable_sci_malloc,
+	[  --enable-sci-malloc		Use SCI malloc checker],
+	[enable_sci_malloc="$enableval"],
+	[enable_sci_malloc=${enable_sci_malloc='yes'}])
+
+if test "$enable_sci_malloc" = "yes"; then
+	MALLOC_DEFINE=""
+else
+	MALLOC_DEFINE="#define DISABLE_SCI_MALLOC"
+fi
+AC_SUBST(MALLOC_DEFINE)
+	
+##-- Other paths for Uintah ------------------------------------------
+
 AC_ARG_WITH(petsc,
 	[  --with-petsc=<path-to-petsc>  <path-to-petsc>],
 	[withpetsc="$withval"],
@@ -812,6 +826,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.69  2000/09/14 15:33:47  sparker
+# Added a configure flag --disable-sci-malloc
+#
 # Revision 1.68  2000/09/12 15:48:02  sparker
 # Added --with-petsc configuration flag
 #
