@@ -1225,8 +1225,9 @@ OnDemandDataWarehouse::getRegion(constNCVariableBase& constVar,
       SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex));
     NCVariableBase* tmpVar = constVar.cloneType();
     d_ncDB.get(label, matlIndex, patch, *tmpVar);
-    IntVector l(Max(patch->getNodeLowIndex(), low));
-    IntVector h(Min(patch->getNodeHighIndex(), high));
+    IntVector l(Max(patch->getLowIndex(Patch::NodeBased, label->getBoundaryLayer()), low));
+    IntVector h(Min(patch->getHighIndex(Patch::NodeBased, label->getBoundaryLayer()), high));
+    
     var->copyPatch(tmpVar, l, h);
     delete tmpVar;
     IntVector diff(h-l);
@@ -1260,8 +1261,8 @@ OnDemandDataWarehouse::getRegion(constCCVariableBase& constVar,
       SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex));
     CCVariableBase* tmpVar = constVar.cloneType();
     d_ccDB.get(label, matlIndex, patch, *tmpVar);
-    IntVector l(Max(patch->getCellLowIndex(), low));
-    IntVector h(Min(patch->getCellHighIndex(), high));
+    IntVector l(Max(patch->getLowIndex(Patch::CellBased, label->getBoundaryLayer()), low));
+    IntVector h(Min(patch->getHighIndex(Patch::CellBased, label->getBoundaryLayer()), high));
     var->copyPatch(tmpVar, l, h);
     delete tmpVar;
     IntVector diff(h-l);
@@ -1295,8 +1296,8 @@ OnDemandDataWarehouse::getRegion(constSFCXVariableBase& constVar,
       SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex));
     SFCXVariableBase* tmpVar = constVar.cloneType();
     d_sfcxDB.get(label, matlIndex, patch, *tmpVar);
-    IntVector l(Max(patch->getSFCXLowIndex(), low));
-    IntVector h(Min(patch->getSFCXHighIndex(), high));
+    IntVector l(Max(patch->getLowIndex(Patch::XFaceBased, label->getBoundaryLayer()), low));
+    IntVector h(Min(patch->getHighIndex(Patch::XFaceBased, label->getBoundaryLayer()), high));
     var->copyPatch(tmpVar, l, h);
     delete tmpVar;
     IntVector diff(h-l);
@@ -1330,8 +1331,8 @@ OnDemandDataWarehouse::getRegion(constSFCYVariableBase& constVar,
       SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex));
     SFCYVariableBase* tmpVar = constVar.cloneType();
     d_sfcyDB.get(label, matlIndex, patch, *tmpVar);
-    IntVector l(Max(patch->getSFCYLowIndex(), low));
-    IntVector h(Min(patch->getSFCYHighIndex(), high));
+    IntVector l(Max(patch->getLowIndex(Patch::YFaceBased, label->getBoundaryLayer()), low));
+    IntVector h(Min(patch->getHighIndex(Patch::YFaceBased, label->getBoundaryLayer()), high));
     var->copyPatch(tmpVar, l, h);
     delete tmpVar;
     IntVector diff(h-l);
@@ -1365,8 +1366,8 @@ OnDemandDataWarehouse::getRegion(constSFCZVariableBase& constVar,
       SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex));
     SFCZVariableBase* tmpVar = constVar.cloneType();
     d_sfczDB.get(label, matlIndex, patch, *tmpVar);
-    IntVector l(Max(patch->getSFCZLowIndex(), low));
-    IntVector h(Min(patch->getSFCZHighIndex(), high));
+    IntVector l(Max(patch->getLowIndex(Patch::YFaceBased, label->getBoundaryLayer()), low));
+    IntVector h(Min(patch->getHighIndex(Patch::YFaceBased, label->getBoundaryLayer()), high));
     var->copyPatch(tmpVar, l, h);
     delete tmpVar;
     IntVector diff(h-l);
