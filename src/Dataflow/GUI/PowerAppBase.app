@@ -70,10 +70,10 @@ class PowerAppBase {
         set saveFile ""
 
 	# Indicator variables
+        set indicator0 ""
         set indicator1 ""
-        set indicator2 ""
+        set indicatorL0 ""
         set indicatorL1 ""
-        set indicatorL2 ""
         set indicatorID 0
         set indicate 0
         set cycle 0
@@ -939,7 +939,7 @@ class PowerAppBase {
     # it starts over. Only when indicate is a 1 does this
     # function call itself again.
     method change_indicator {} {
-	if {[winfo exists $indicator2] == 1} {
+	if {[winfo exists $indicator1] == 1} {
 	    
 	    if {$indicatorID != 0} {
 		after cancel $indicatorID
@@ -948,44 +948,44 @@ class PowerAppBase {
 	    
 	    if {$indicate == 0} {
 		# reset and do nothing
+		$indicator0 raise res all
 		$indicator1 raise res all
-		$indicator2 raise res all
 		after cancel $indicatorID
 	    } elseif {$indicate == 1} {
 		# indicate something is happening
 		if {$cycle == 0} { 
+		    $indicator0 raise swirl all
 		    $indicator1 raise swirl all
-		    $indicator2 raise swirl all
-		    $indicator1 move swirl $i_back 0
-		    $indicator2 move swirl $i_back 0		  
+		    $indicator0 move swirl $i_back 0
+		    $indicator1 move swirl $i_back 0		  
 		    set cycle 1
 		} elseif {$cycle == 1} {
+		    $indicator0 move swirl $i_move 0
 		    $indicator1 move swirl $i_move 0
-		    $indicator2 move swirl $i_move 0
 		    set cycle 2
 		} elseif {$cycle == 2} {
+		    $indicator0 move swirl $i_move 0
 		    $indicator1 move swirl $i_move 0
-		    $indicator2 move swirl $i_move 0
 		    set cycle 3
 		} else {
+		    $indicator0 move swirl $i_move 0
 		    $indicator1 move swirl $i_move 0
-		    $indicator2 move swirl $i_move 0
 		    set cycle 0
 		} 
 		set indicatorID [after 200 "$this change_indicator"]
 	    } elseif {$indicate == 2} {
 		# indicate complete
+		$indicator0 raise comp1 all
 		$indicator1 raise comp1 all
-		$indicator2 raise comp1 all
 		
+		$indicator0 raise comp2 all
 		$indicator1 raise comp2 all
-		$indicator2 raise comp2 all
 	    } else {
+		$indicator0 raise error1 all
 		$indicator1 raise error1 all
-		$indicator2 raise error1 all
 		
+		$indicator0 raise error2 all
 		$indicator1 raise error2 all
-		$indicator2 raise error2 all
 		after cancel $indicatorID
 	    }
 	}
@@ -1373,12 +1373,12 @@ class PowerAppBase {
     
     # These point to the indicator canvas and are used to raise different canvases.
     # One points to the attached frame and the other to the detached
+    variable indicator0
     variable indicator1
-    variable indicator2
 
     # These point to the progress indicator labels of the attached and detached frames
+    variable indicatorL0
     variable indicatorL1
-    variable indicatorL2
 
     # Represents the state of the progress graph
     # 0 = Reset the indicator

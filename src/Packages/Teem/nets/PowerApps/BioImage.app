@@ -117,11 +117,11 @@ class BioImageApp {
 
 	set loading_ui 0
 
+	set vis_frame_tab0 ""
 	set vis_frame_tab1 ""
-	set vis_frame_tab2 ""
 
+	set history0 ""
 	set history1 ""
-	set history2 ""
 
 	set dimension 3
 
@@ -352,14 +352,14 @@ class BioImageApp {
  		if {$dimension == 3} {
  		    global [set NrrdInfo]-size2
  		    set 2_samples [set [set NrrdInfo]-size2]
- 		    $history1.f0.childsite.ui.samples configure -text \
+ 		    $history0.f0.childsite.ui.samples configure -text \
  			"Original Samples: ($0_samples, $1_samples, $2_samples)"
- 		    $history2.f0.childsite.ui.samples configure -text \
+ 		    $history1.f0.childsite.ui.samples configure -text \
  			"Original Samples: ($0_samples, $1_samples, $2_samples)"
  		} elseif {$dimension == 2} {
- 		    $history1.f0.childsite.ui.samples configure -text \
+ 		    $history0.f0.childsite.ui.samples configure -text \
  			"Original Samples: ($0_samples, $1_samples)"
- 		    $history2.f0.childsite.ui.samples configure -text \
+ 		    $history1.f0.childsite.ui.samples configure -text \
  			"Original Samples: ($0_samples, $1_samples)"
  		} else {
  		    puts "ERROR: Only 2D and 3D data supported."
@@ -439,8 +439,8 @@ class BioImageApp {
     }
     
     method change_indicator_labels { msg } {
+	$indicatorL0 configure -text $msg
 	$indicatorL1 configure -text $msg
-	$indicatorL2 configure -text $msg
     }
 
     method keypress {w} {
@@ -826,11 +826,7 @@ class BioImageApp {
 	    set grid_rows 1
 	    set num_filters 1	 	 
 
-	    if {$case == 0} {
-		set history1 $history
-	    } else {
-		set history2 $history
-	    }
+	    set history$case $history
 	    
             ### Indicator
 	    frame $m.p.indicator -relief sunken -borderwidth 2
@@ -845,13 +841,9 @@ class BioImageApp {
             label $m.p.indicatorL -text "Press Execute to Load Volume..."
             pack $m.p.indicatorL -side bottom -anchor sw -padx 5 -pady 3
 	    
-            if {$case == 0} {
-		set indicator1 $m.p.indicator.canvas
-		set indicatorL1 $m.p.indicatorL
-            } else {
-		set indicator2 $m.p.indicator.canvas
-		set indicatorL2 $m.p.indicatorL
-            }
+	    set indicator$case $m.p.indicator.canvas
+	    set indicatorL$case $m.p.indicatorL
+
 	    Tooltip $m.p.indicatorL $tips(IndicatorLabel)
 	    
             construct_indicator $m.p.indicator.canvas
@@ -1349,8 +1341,8 @@ class BioImageApp {
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 1
 # 	    if {$initialized != 0} {
+# 		$data_tab0 view "Nrrd"
 # 		$data_tab1 view "Nrrd"
-# 		$data_tab2 view "Nrrd"
 # 		set c_data_tab "Nrrd"
 # 	    }
         } elseif {$which == "Dicom"} {
@@ -1360,8 +1352,8 @@ class BioImageApp {
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 1
 #             if {$initialized != 0} {
+# 		$data_tab0 view "Dicom"
 # 		$data_tab1 view "Dicom"
-# 		$data_tab2 view "Dicom"
 # 		set c_data_tab "Dicom"
 # 	    }
         } elseif {$which == "Analyze"} {
@@ -1372,8 +1364,8 @@ class BioImageApp {
 	    disableModule $AnalyzeNrrdReader 0
 	    disableModule $FieldReader 1
 # 	    if {$initialized != 0} {
+# 		$data_tab0 view "Analyze"
 # 		$data_tab1 view "Analyze"
-# 		$data_tab2 view "Analyze"
 # 		set c_data_tab "Analyze"
 # 	    }
         } elseif {$which == "Field"} {
@@ -1384,8 +1376,8 @@ class BioImageApp {
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 0
 # 	    if {$initialized != 0} {
+# 		$data_tab0 view "Field"
 # 		$data_tab1 view "Field"
-# 		$data_tab2 view "Field"
 # 		set c_data_tab "Field"
 # 	    }
 	} elseif {$which == "all"} {
@@ -1441,11 +1433,7 @@ class BioImageApp {
 		-height [expr $vis_height - 25] -tabpos n
 	    pack $vis.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
 
-            if {$case == 0} {
-               set vis_frame_tab1 $vis.tnb
-            } else {
-               set vis_frame_tab2 $vis.tnb	    
-            }
+            set vis_frame_tab$case $vis.tnb
 
 	    set page [$vis.tnb add -label "Vis Options" \
 			  -command "$this change_vis_frame \"Vis Options\""]
@@ -1457,11 +1445,7 @@ class BioImageApp {
                 -equaltabs false
 	    pack $v.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
 
-            if {$case == 0} {
-               #set vis_frame_tab1 $vis.tnb
-            } else {
-               #set vis_frame_tab2 $vis.tnb	    
-            }
+            #set vis_frame_tab$case $vis.tnb
 
 	    set page [$v.tnb add -label "Planes"]
 
@@ -1844,12 +1828,12 @@ class BioImageApp {
         if {$initialized != 0} {
 	    if {$which == "Vis Options"} {
 		# Vis Options
+		$vis_frame_tab0 view "Vis Options"
 		$vis_frame_tab1 view "Vis Options"
-		$vis_frame_tab2 view "Vis Options"
 		set c_vis_tab "Vis Options"
 	    } else {
+ 		$vis_frame_tab0 view "Viewer Options"
  		$vis_frame_tab1 view "Viewer Options"
- 		$vis_frame_tab2 view "Viewer Options"
 		set c_vis_tab "Viewer Options"
 	    }
 	}
@@ -1923,11 +1907,11 @@ class BioImageApp {
 
 	# Make current frame regular
 	set p f$current
+	$history0.$p configure -background grey75 -foreground black -borderwidth 2
 	$history1.$p configure -background grey75 -foreground black -borderwidth 2
-	$history2.$p configure -background grey75 -foreground black -borderwidth 2
 
+        $this add_Resample_UI $history0 $row $num_filters
         $this add_Resample_UI $history1 $row $num_filters
-        $this add_Resample_UI $history2 $row $num_filters
 
         if {!$insert} {
 	    $attachedPFr.f.p.sf justify bottom
@@ -1991,11 +1975,11 @@ class BioImageApp {
 
 	# Make current frame regular
 	set p f$current
+	$history0.$p configure -background grey75 -foreground black -borderwidth 2
 	$history1.$p configure -background grey75 -foreground black -borderwidth 2
-	$history2.$p configure -background grey75 -foreground black -borderwidth 2
 
+        $this add_Crop_UI $history0 $row $num_filters
         $this add_Crop_UI $history1 $row $num_filters
-        $this add_Crop_UI $history2 $row $num_filters
 
         if {!$insert} {
 	    $attachedPFr.f.p.sf justify bottom
@@ -2058,11 +2042,11 @@ class BioImageApp {
 
 	# Make current frame regular
 	set p f$current
+	$history0.$p configure -background grey75 -foreground black -borderwidth 2
 	$history1.$p configure -background grey75 -foreground black -borderwidth 2
-	$history2.$p configure -background grey75 -foreground black -borderwidth 2
 
+        $this add_Cmedian_UI $history0 $row $num_filters
         $this add_Cmedian_UI $history1 $row $num_filters
-        $this add_Cmedian_UI $history2 $row $num_filters
 
         if {!$insert} {
 	    $attachedPFr.f.p.sf justify bottom
@@ -2125,11 +2109,11 @@ class BioImageApp {
 
 	# Make current frame regular
 	set p f$current
+	$history0.$p configure -background grey75 -foreground black -borderwidth 2
 	$history1.$p configure -background grey75 -foreground black -borderwidth 2
-	$history2.$p configure -background grey75 -foreground black -borderwidth 2
 
+        $this add_Histo_UI $history0 $row $num_filters
         $this add_Histo_UI $history1 $row $num_filters
-        $this add_Histo_UI $history2 $row $num_filters
 
         if {!$insert} {
 	    $attachedPFr.f.p.sf justify bottom
@@ -2433,11 +2417,11 @@ class BioImageApp {
 	set current_row [lindex $filters($current) $which_row]
 
 	# remove ui
+	grid remove $history0.f$current 
 	grid remove $history1.f$current 
-	grid remove $history2.f$current 
 
+	grid remove $history0.eye$current
 	grid remove $history1.eye$current
-	grid remove $history2.eye$current
 	
 	set next [lindex $filters($current) $next_index]
 	set current_choose [lindex $filters($current) $choose_port]
@@ -2531,10 +2515,10 @@ class BioImageApp {
 	    if {[info exists filters($i)]} {
 		set tmp_row [lindex $filters($i) $which_row]
 		if {$tmp_row != -1 && ($tmp_row > $row || $tmp_row == $row)} {
+		    grid forget $history0.f$i
+		    grid forget $history0.eye$i
 		    grid forget $history1.f$i
 		    grid forget $history1.eye$i
-		    grid forget $history2.f$i
-		    grid forget $history2.eye$i
 		    
 		    set filters($i) [lreplace $filters($i) $which_row $which_row [expr $tmp_row + 1] ]		    
 		    lappend re_pack $i
@@ -2545,10 +2529,10 @@ class BioImageApp {
 	for {set i 0} {$i < [llength $re_pack]} {incr i} {
 	    set index [lindex $re_pack $i]
 	    set new_row [lindex $filters($index) $which_row]
+	    grid config $history0.f$index -row $new_row -column 1 -sticky "nw"
+	    grid config $history0.eye$index -row $new_row -column 0 -sticky "nw"
 	    grid config $history1.f$index -row $new_row -column 1 -sticky "nw"
 	    grid config $history1.eye$index -row $new_row -column 0 -sticky "nw"
-	    grid config $history2.f$index -row $new_row -column 1 -sticky "nw"
-	    grid config $history2.eye$index -row $new_row -column 0 -sticky "nw"
 	}
     }
 
@@ -2560,10 +2544,10 @@ class BioImageApp {
 	    if {[info exists filters($i)]} {
 		set tmp_row [lindex $filters($i) $which_row]
 		if {$tmp_row != -1 && $tmp_row > $row } {
+		    grid forget $history0.f$i
+		    grid forget $history0.eye$i
 		    grid forget $history1.f$i
 		    grid forget $history1.eye$i
-		    grid forget $history2.f$i
-		    grid forget $history2.eye$i
 		    
 		    set filters($i) [lreplace $filters($i) $which_row $which_row [expr $tmp_row - 1] ]		    
 		    lappend re_pack $i
@@ -2574,10 +2558,10 @@ class BioImageApp {
 	for {set i 0} {$i < [llength $re_pack]} {incr i} {
 	    set index [lindex $re_pack $i]
 	    set new_row [lindex $filters($index) $which_row]
+	    grid config $history0.f$index -row $new_row -column 1 -sticky "nw"
+	    grid config $history0.eye$index -row $new_row -column 0 -sticky "nw"
 	    grid config $history1.f$index -row $new_row -column 1 -sticky "nw"
 	    grid config $history1.eye$index -row $new_row -column 0 -sticky "nw"
-	    grid config $history2.f$index -row $new_row -column 1 -sticky "nw"
-	    grid config $history2.eye$index -row $new_row -column 0 -sticky "nw"
 	}
     }
 
@@ -2604,13 +2588,13 @@ class BioImageApp {
 
 	# fix old one
 	set p f$current
+	$history0.$p configure -background grey75 -foreground black -borderwidth 2
 	$history1.$p configure -background grey75 -foreground black -borderwidth 2
-	$history2.$p configure -background grey75 -foreground black -borderwidth 2
 	
 	set current $which
 	set p f$current
+	$history0.$p configure -background $scolor -foreground white -borderwidth 2
 	$history1.$p configure -background $scolor -foreground white -borderwidth 2
-	$history2.$p configure -background $scolor -foreground white -borderwidth 2
     }
 
     method change_label {x y which} {
@@ -2618,7 +2602,7 @@ class BioImageApp {
 	if {![winfo exists .standalone.change_label]} {
 	    # bring up ui to type name
 	    global new_label
-	    set old_label [$history1.f$which.childsite.expand.l cget -text]
+	    set old_label [$history0.f$which.childsite.expand.l cget -text]
 	    set new_label $old_label
 	    
 	    toplevel .standalone.change_label
@@ -2655,8 +2639,8 @@ class BioImageApp {
 	    
 	    if {$new_label != "CaNceL" && $new_label != $old_label} {
 		# change label
+		$history0.f$which.childsite.expand.l configure -text $new_label
 		$history1.f$which.childsite.expand.l configure -text $new_label
-		$history2.f$which.childsite.expand.l configure -text $new_label
 	    }
 	} else {
 	    SciRaise .standalone.change_label
@@ -2671,21 +2655,21 @@ class BioImageApp {
 	if {$visible == 1} {
 	    # hide
 
+	    $history0.f$num.childsite.expand.b configure -image $show
 	    $history1.f$num.childsite.expand.b configure -image $show
-	    $history2.f$num.childsite.expand.b configure -image $show
 	    
+	    pack forget $history0.f$num.childsite.ui 
 	    pack forget $history1.f$num.childsite.ui 
-	    pack forget $history2.f$num.childsite.ui 
 
 	    set filters($num) [lreplace $filters($num) $visibility $visibility 0]
 	} else {
 	    # show
 
+	    $history0.f$num.childsite.expand.b configure -image $hide
 	    $history1.f$num.childsite.expand.b configure -image $hide
-	    $history2.f$num.childsite.expand.b configure -image $hide
 
+	    pack $history0.f$num.childsite.ui -side top -expand yes -fill both
 	    pack $history1.f$num.childsite.ui -side top -expand yes -fill both
-	    pack $history2.f$num.childsite.ui -side top -expand yes -fill both
 
 	    set filters($num) [lreplace $filters($num) $visibility $visibility 1]
 	}
@@ -2720,8 +2704,8 @@ class BioImageApp {
 	}
 
 	# update attach/detach one
-        $history1.f$num.childsite.ui.kernel select $which
-	$history2.f$num.childsite.ui.kernel select $which
+        $history0.f$num.childsite.ui.kernel select $which
+	$history1.f$num.childsite.ui.kernel select $which
 
     }
 
@@ -2747,8 +2731,8 @@ class BioImageApp {
 	    set t "Gaussian"
 	}
 
+        $history0.f$num.childsite.ui.kernel select $t
         $history1.f$num.childsite.ui.kernel select $t
-        $history2.f$num.childsite.ui.kernel select $t
     }
 
     method make_entry {w text v num} {
@@ -2911,10 +2895,10 @@ class BioImageApp {
 		if {[info exists filters($i)]} {
 		    set tmp_row [lindex $filters($i) $which_row]
 		    if {$tmp_row != -1 } {
+			destroy $history0.f$i
+			destroy $history0.eye$i
 			destroy $history1.f$i
 			destroy $history1.eye$i
-			destroy $history2.f$i
-			destroy $history2.eye$i
 		    }
 		}
 	    }
@@ -2957,26 +2941,26 @@ class BioImageApp {
 		    set t [lindex $filters($i) $filter_type]
 		    set last_valid $i
 		    if {[string equal $t "load"]} {
+			$this add_Load_UI $history0 $status $i
 			$this add_Load_UI $history1 $status $i
-			$this add_Load_UI $history2 $status $i
 		    } elseif {[string equal $t "resample"]} {
+			$this add_Resample_UI $history0 $status $i
 			$this add_Resample_UI $history1 $status $i
-			$this add_Resample_UI $history2 $status $i
 			$this update_kernel $i
 		    } elseif {[string equal $t "crop"]} {
+			$this add_Crop_UI $history0 $status $i
 			$this add_Crop_UI $history1 $status $i
-			$this add_Crop_UI $history2 $status $i
 		    } elseif {[string equal $t "cmedian"]} {
+			$this add_Cmedian_UI $history0 $status $i
 			$this add_Cmedian_UI $history1 $status $i
-			$this add_Cmedian_UI $history2 $status $i
 		    } elseif {[string equal $t "histo"]} {
+			$this add_Histo_UI $history0 $status $i
 			$this add_Histo_UI $history1 $status $i
-			$this add_Histo_UI $history2 $status $i
 		    } else {
 			puts "Error: Unknown filter type - $t"
 		    }
+		    $history0.$p configure -background grey75 -foreground black -borderwidth 2
 		    $history1.$p configure -background grey75 -foreground black -borderwidth 2
-		    $history2.$p configure -background grey75 -foreground black -borderwidth 2
 		}
 	    }
 
@@ -2994,8 +2978,8 @@ class BioImageApp {
  	    set IsVAttached 1
  	    set executing_modules 0
 
+ 	    $indicatorL0 configure -text "Press Execute to run to save point..."
  	    $indicatorL1 configure -text "Press Execute to run to save point..."
- 	    $indicatorL2 configure -text "Press Execute to run to save point..."
 	}	
     }
 
@@ -3079,16 +3063,15 @@ class BioImageApp {
 
 
     # Data Selection
+    variable vis_frame_tab0
     variable vis_frame_tab1
-    variable vis_frame_tab2
-
 
     variable filters
     variable num_filters
     variable loading_ui
 
+    variable history0
     variable history1
-    variable history2
 
     variable dimension
 
