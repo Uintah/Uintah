@@ -66,7 +66,7 @@ DECLARE_MAKER(MatrixWriter)
 
 MatrixWriter::MatrixWriter(GuiContext* ctx)
   : GenericWriter<MatrixHandle>("MatrixWriter", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types")),
+    gui_types_(ctx->subVar("types", false)),
     gui_exporttype_(ctx->subVar("exporttype")),
     split_(ctx->subVar("split"))
 {

@@ -65,7 +65,7 @@ DECLARE_MAKER(ColorMapWriter)
 
 ColorMapWriter::ColorMapWriter(GuiContext* ctx)
   : GenericWriter<ColorMapHandle>("ColorMapWriter", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types")),
+    gui_types_(ctx->subVar("types", false)),
     gui_exporttype_(ctx->subVar("exporttype"))
 {
   ColorMapIEPluginManager mgr;

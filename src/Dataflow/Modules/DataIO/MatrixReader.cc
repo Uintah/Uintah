@@ -63,7 +63,7 @@ public:
 DECLARE_MAKER(MatrixReader)
 MatrixReader::MatrixReader(GuiContext* ctx)
   : GenericReader<MatrixHandle>("MatrixReader", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types")),
+    gui_types_(ctx->subVar("types", false)),
     gui_filetype_(ctx->subVar("filetype"))
 {
   MatrixIEPluginManager mgr;

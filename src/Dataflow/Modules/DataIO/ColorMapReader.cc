@@ -64,7 +64,7 @@ DECLARE_MAKER(ColorMapReader)
 
 ColorMapReader::ColorMapReader(GuiContext* ctx)
   : GenericReader<ColorMapHandle>("ColorMapReader", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types")),
+    gui_types_(ctx->subVar("types", false)),
     gui_filetype_(ctx->subVar("filetype"))
 {
   ColorMapIEPluginManager mgr;
