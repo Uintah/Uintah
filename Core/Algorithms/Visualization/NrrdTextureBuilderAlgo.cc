@@ -245,7 +245,8 @@ NrrdTextureBuilderAlgo::build_bricks(vector<TextureBrickHandle>& bricks,
         (double)data_size[0]/(double)brick_size[0];
       for (int i=0; i<num_brick[0]; i++)
       {
-        if (num_brick[0] * num_brick[1] * num_brick[2] == 1)
+        if (num_brick[0] * num_brick[1] * num_brick[2] == 1 &&
+	    brick_pad[0] == nx && brick_pad[1] == ny && brick_pad[2] == nz)
 	{
 	  NrrdTextureBrick *b = scinew NrrdTextureBrick(0, 0,
             i < num_brick[0]-1 ? brick_size[0] : brick_pad[0],
