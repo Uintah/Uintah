@@ -29,29 +29,29 @@ INSTFAQ=../Installation/FAQ/faq.xml
 USERFAQ=../User/FAQ/faq.xml
 DEVFAQ=../Developer/FAQ/faq.xml
 FAQS=${INSTFAQ} ${USERFAQ} ${DEVFAQ}
-DIRLEVEL=1
+TREETOP=../../
 
 all: index.html faq1.html faq2.html faq3.html printable.html
 
 index.html: ${FAQBOOK} ${FAQS} ${STYLESHEET}
 	java org.apache.xalan.xslt.Process -IN ${FAQBOOK} -XSL ${STYLESHEET} \
-	-OUT index.html -PARAM dir ${DIRLEVEL} -PARAM cont 0 -HTML
+	-OUT index.html -PARAM treetop ${TREETOP} -PARAM cont 0 -HTML
 
 faq1.html: ${INSTFAQ} ${STYLESHEET}
 	java org.apache.xalan.xslt.Process -IN ${FAQBOOK} -XSL ${STYLESHEET} \
-	-OUT faq1.html -PARAM dir ${DIRLEVEL} -PARAM cont 1 -HTML
+	-OUT faq1.html -PARAM treetop ${TREETOP} -PARAM cont 1 -HTML
 
 faq2.html: ${USERFAQ} ${STYLESHEET}
 	java org.apache.xalan.xslt.Process -IN ${FAQBOOK} -XSL ${STYLESHEET} \
-	-OUT faq2.html -PARAM dir ${DIRLEVEL} -PARAM cont 2 -HTML
+	-OUT faq2.html -PARAM treetop ${TREETOP} -PARAM cont 2 -HTML
 
 faq3.html: ${DEVFAQ} ${STYLESHEET}
 	java org.apache.xalan.xslt.Process -IN ${FAQBOOK} -XSL ${STYLESHEET} \
-	-OUT faq3.html -PARAM dir ${DIRLEVEL} -PARAM cont 3 -HTML
+	-OUT faq3.html -PARAM treetop ${TREETOP} -PARAM cont 3 -HTML
 
 printable.html: ${FAQBOOK} ${STYLESHEET}
 	java org.apache.xalan.xslt.Process -IN ${FAQBOOK} -XSL ${STYLESHEET} \
-	-OUT printable.html -PARAM dir ${DIRLEVEL} -PARAM cont print -HTML
+	-OUT printable.html -PARAM treetop ${TREETOP} -PARAM cont print -HTML
 
 clean:
 	-rm *~
