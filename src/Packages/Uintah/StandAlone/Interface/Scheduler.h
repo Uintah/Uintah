@@ -9,6 +9,7 @@ namespace Uintah {
 
   namespace Grid {
     class Task;
+    class VarLabel;
   }
 
   namespace Parallel {
@@ -20,6 +21,7 @@ namespace Interface {
 using Uintah::Parallel::UintahParallelPort;
 using Uintah::Parallel::ProcessorContext;
 using Uintah::Grid::Task;
+using Uintah::Grid::VarLabel;
 
 /**************************************
 
@@ -65,7 +67,7 @@ public:
 
     //////////
     // Insert Documentation Here:
-    virtual void addTarget(const std::string& name) = 0;
+    virtual void addTarget(const VarLabel*) = 0;
 
     //////////
     // Insert Documentation Here:
@@ -85,6 +87,11 @@ private:
 
 //
 // $Log$
+// Revision 1.6  2000/04/19 05:26:19  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.5  2000/04/11 07:10:54  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications
