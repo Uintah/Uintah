@@ -3317,29 +3317,25 @@ GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
   if (!pre_draw(di, matl, 1)) return;
   di->polycount += size();
 
+
+  glShadeModel(GL_FLAT);
+  glDisable(GL_NORMALIZE);
   if (di->currently_lit)
   {
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
-#else
-    glDisable(GL_NORMALIZE);
 #endif
-    glNormalPointer(GL_FLOAT, 0, &(normals_.front()));
+    if (di->get_drawtype() == DrawInfoOpenGL::Flat) {
+      glNormalPointer(GL_FLOAT, 0, &(face_normals_.front()));
+    }
+    else {
+      glNormalPointer(GL_FLOAT, 0, &(normals_.front()));
+      glShadeModel(GL_SMOOTH);
+    }
     glEnableClientState(GL_NORMAL_ARRAY);
   }
-  else
-  {
+  else {
     glDisableClientState(GL_NORMAL_ARRAY);
-    glDisable(GL_NORMALIZE);
-  }
-
-  if (di->get_drawtype() == DrawInfoOpenGL::Flat)
-  {
-    glShadeModel(GL_FLAT);
-  }
-  else
-  {
-    glShadeModel(GL_SMOOTH);
   }
 
   glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
@@ -3353,12 +3349,8 @@ GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
   glDrawArrays(GL_TRIANGLES, 0, points_.size()/3);
 
   glDisableClientState(GL_NORMAL_ARRAY);
-
   glEnable(GL_NORMALIZE);
-  if (di->get_drawtype() == DrawInfoOpenGL::Flat)
-  {
-    glShadeModel(GL_SMOOTH);
-  }
+  glShadeModel(GL_SMOOTH);
 
   post_draw(di);
 }

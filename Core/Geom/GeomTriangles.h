@@ -82,6 +82,7 @@ protected:
   vector<float> points_;
   vector<unsigned char> colors_;
   vector<float> normals_;
+  vector<float> face_normals_;
   MaterialHandle material_;
 
 public:
