@@ -55,11 +55,12 @@
 ##  PLEASE DO NOT COMMIT ANY CHANGES WITH OUT HAVING ONE OF THE 
 ##  ABOVE REVIEW YOUR CHANGES.
 ##
-##  NOTE: When committing this file, do NOT commit both configure.ac
-##  and configure at the same time.  Please commit configure.ac FIRST,
-##  then commit configure separately.  It saves people from conflicts
-##  with autoconf.
-##   - Steve
+##  It used to be the case that the SCIRun make system tried to run
+##  autconf automatically if configure.ac had changed.  This caused a
+##  number of problems and has been removed.  Therefore the order
+##  of committing configure and configure.ac no longer matters.  I
+##  suggest committing them both at the same time now.
+##    - Dav
 ##
 ##  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
