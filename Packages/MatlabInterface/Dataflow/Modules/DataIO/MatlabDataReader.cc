@@ -51,7 +51,6 @@
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
-#include <Packages/Teem/Core/Datatypes/NrrdData.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/Matrix.h>

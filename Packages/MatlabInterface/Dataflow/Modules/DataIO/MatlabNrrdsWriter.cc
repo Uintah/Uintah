@@ -38,7 +38,6 @@
 #include <vector>
 #include <Dataflow/Network/Module.h>
 #include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
-#include <Packages/Teem/Core/Datatypes/NrrdData.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>

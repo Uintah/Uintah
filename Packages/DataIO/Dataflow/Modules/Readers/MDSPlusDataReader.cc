@@ -45,7 +45,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 
-#include <Packages/Teem/Core/Datatypes/NrrdData.h>
 #include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
 
 #include <Packages/DataIO/share/share.h>

@@ -42,8 +42,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/share/share.h>
 #include <Core/GuiInterface/GuiVar.h>
-
-#include <Teem/Core/Datatypes/NrrdData.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 
 namespace SCITeem {

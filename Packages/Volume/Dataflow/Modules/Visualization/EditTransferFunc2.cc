@@ -41,7 +41,6 @@
 #include <Packages/Volume/Dataflow/Ports/Colormap2Port.h>
 #include <Packages/Volume/Core/Datatypes/CM2Shader.h>
 #include <Packages/Volume/Core/Datatypes/CM2Widget.h>
-#include <Packages/Teem/Core/Datatypes/NrrdData.h>
 #include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
 
 #include <Core/Geom/GeomOpenGL.h>
