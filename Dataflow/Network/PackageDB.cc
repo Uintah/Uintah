@@ -70,8 +70,10 @@ void PackageDB::loadPackage(const clString& packPath)
   clString result;
   char string[100];
   int index=0;
+
+  bool loading = false;
+
   while(packagePath!="") {
-    
     // Strip off the first element, leave the rest in the path for the next
     // iteration.
     
@@ -96,6 +98,16 @@ void PackageDB::loadPackage(const clString& packPath)
     clString xmldir = packageElt+"/XML";
     std::map<int,char*>* files = 
       GetFilenamesEndingWith((char*)xmldir(),".xml");
+
+    if ( !loading ) {
+      TCL::execute(clString("toplevel .loading -width 100 -height 20; "
+			    "update idletasks"));
+      loading = true;
+    }
+    TCL::execute(clString("iwidgets::feedback .loading.fb -labeltext "
+			  + packageElt +
+			  " -steps " + to_string(int(files->size())) + ";"
+			  "pack .loading.fb; update idletasks"));
     component_node* node = 0;
     for (char_iter i=files->begin();
 	 i!=files->end();
@@ -168,17 +180,19 @@ void PackageDB::loadPackage(const clString& packPath)
 					    opinfo));
 	}
 	registerModule(info);
-	postMessageNoCRLF(".",false);
+	TCL::execute(clString(".loading.fb step"));
+	//postMessageNoCRLF(".",false);
 	TCL::eval("update idletasks",result);
       }
     }
-    postMessage("\n",false);
     TCL::eval("update idletasks",result);
     sprintf(string,"createPackageMenu %d",index++);
     TCL::execute(string);
+    TCL::execute(clString("destroy .loading.fb"));
   }
   
   postMessage("\nFinished loading packages.\n",false);
+  TCL::execute(clString("destroy .loading"));
   TCL::eval("update idletasks",result);
   
   // don't do this.  Instead, create each package menu as it's loaded.
@@ -387,6 +401,9 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.31  2000/12/12 22:37:15  yarden
+// replace Moulding progress report with a popup window.
+//
 // Revision 1.30  2000/12/05 19:03:38  moulding
 // added lastportdynamic to module_info struct
 //
