@@ -287,4 +287,13 @@ const TypeDescription* get_type_description(string*)
   return td;
 }
 
+const TypeDescription* get_type_description(unsigned long*)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("unsigned long", "builtin", "builtin");
+  }
+  return td;
+}
+
 } // end namespace SCIRun

@@ -26,6 +26,7 @@ template class FData3d<char>;
 template class FData3d<unsigned int>;
 template class FData3d<unsigned short>;
 template class FData3d<unsigned char>;
+template class FData3d<unsigned long>;
 
 template class GenericField<LatVolMesh, FData3d<Tensor> >;
 template class GenericField<LatVolMesh, FData3d<Vector> >;
@@ -37,6 +38,7 @@ template class GenericField<LatVolMesh, FData3d<char> >;
 template class GenericField<LatVolMesh, FData3d<unsigned int> >;
 template class GenericField<LatVolMesh, FData3d<unsigned short> >;
 template class GenericField<LatVolMesh, FData3d<unsigned char> >;
+template class GenericField<LatVolMesh, FData3d<unsigned long> >;
 
 template class LatVolField<Tensor>;
 template class LatVolField<Vector>;
@@ -48,6 +50,7 @@ template class LatVolField<char>;
 template class LatVolField<unsigned int>;
 template class LatVolField<unsigned short>;
 template class LatVolField<unsigned char>;
+template class LatVolField<unsigned long>;
 
 const TypeDescription* get_type_description(LatVolField<Tensor> *);
 const TypeDescription* get_type_description(LatVolField<Vector> *);
@@ -59,6 +62,7 @@ const TypeDescription* get_type_description(LatVolField<char> *);
 const TypeDescription* get_type_description(LatVolField<unsigned int> *);
 const TypeDescription* get_type_description(LatVolField<unsigned short> *);
 const TypeDescription* get_type_description(LatVolField<unsigned char> *);
+const TypeDescription* get_type_description(LatVolField<unsigned long> *);
 
 template class MaskedLatVolField<Tensor>;
 template class MaskedLatVolField<Vector>;

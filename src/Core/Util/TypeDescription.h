@@ -98,6 +98,7 @@ const TypeDescription* get_type_description(char*);
 const TypeDescription* get_type_description(unsigned char*);
 const TypeDescription* get_type_description(bool*);
 const TypeDescription* get_type_description(string*);
+const TypeDescription* get_type_description(unsigned long*);
 
 template <class T>
 const TypeDescription* get_type_description(vector<T>*)

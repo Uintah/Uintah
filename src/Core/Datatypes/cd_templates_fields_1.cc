@@ -26,6 +26,7 @@ template class FData2d<char>;
 template class FData2d<unsigned int>;
 template class FData2d<unsigned short>;
 template class FData2d<unsigned char>;
+template class FData2d<unsigned long>;
 
 template class GenericField<ImageMesh, FData2d<Tensor> >;
 template class GenericField<ImageMesh, FData2d<Vector> >;
@@ -37,6 +38,7 @@ template class GenericField<ImageMesh, FData2d<char> >;
 template class GenericField<ImageMesh, FData2d<unsigned int> >;
 template class GenericField<ImageMesh, FData2d<unsigned short> >;
 template class GenericField<ImageMesh, FData2d<unsigned char> >;
+template class GenericField<ImageMesh, FData2d<unsigned long> >;
 
 template class ImageField<Tensor>;
 template class ImageField<Vector>;
@@ -48,6 +50,7 @@ template class ImageField<char>;
 template class ImageField<unsigned int>;
 template class ImageField<unsigned short>;
 template class ImageField<unsigned char>;
+template class ImageField<unsigned long>;
 
 const TypeDescription* get_type_description(ImageField<Tensor> *);
 const TypeDescription* get_type_description(ImageField<Vector> *);
@@ -59,6 +62,7 @@ const TypeDescription* get_type_description(ImageField<char> *);
 const TypeDescription* get_type_description(ImageField<unsigned int> *);
 const TypeDescription* get_type_description(ImageField<unsigned short> *);
 const TypeDescription* get_type_description(ImageField<unsigned char> *);
+const TypeDescription* get_type_description(ImageField<unsigned long> *);
 
 
 template class GenericField<QuadSurfMesh, vector<Tensor> >;       
