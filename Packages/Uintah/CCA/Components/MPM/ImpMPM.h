@@ -343,6 +343,7 @@ private:
   
   bool dynamic;
   bool d_rigid_body;
+  bool d_single_velocity;
   
   IntegratorType d_integrator;
 
