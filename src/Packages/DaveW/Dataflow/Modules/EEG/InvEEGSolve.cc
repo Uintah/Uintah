@@ -51,7 +51,6 @@
 #include <PSECore/Datatypes/MatrixPort.h>
 #include <PSECore/Datatypes/MeshPort.h>
 #include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Containers/HashTable.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Datatypes/ColumnMatrix.h>
 #include <SCICore/Datatypes/DenseMatrix.h>
@@ -956,6 +955,10 @@ void InvEEGSolve::execute() {
 
 //
 // $Log$
+// Revision 1.10  2000/03/17 18:44:21  dahart
+// Replaced all instances of HashTable<class X, class Y> with the STL
+// map<class X, class Y>.  Removed all includes of HashTable.h
+//
 // Revision 1.9  2000/03/17 09:25:33  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
