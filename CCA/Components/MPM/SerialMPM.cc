@@ -71,6 +71,13 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   d_min_part_mass = 3.e-15;
   NGP     = 1;
   NGN     = 1;
+
+  d_artificialDampCoeff = 0.0;
+  d_dampingRateLabel = 
+    VarLabel::create("dampingRate", sum_vartype::getTypeDescription() );
+  d_dampingCoeffLabel = 
+    VarLabel::create("dampingCoeff", max_vartype::getTypeDescription() );
+
 }
 
 SerialMPM::~SerialMPM()
@@ -79,6 +86,8 @@ SerialMPM::~SerialMPM()
   delete contactModel;
   delete thermalContactModel;
   MPMPhysicalBCFactory::clean();
+  VarLabel::destroy(d_dampingRateLabel);
+  VarLabel::destroy(d_dampingCoeffLabel);
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
@@ -91,6 +100,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
    if(mpm_soln_ps) {
      mpm_soln_ps->get("nodes8or27", d_8or27);
      mpm_soln_ps->get("minimum_particle_mass", d_min_part_mass);
+     mpm_soln_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
    }
    if(d_8or27==8){
      NGP=1;
@@ -163,6 +173,12 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(d_sharedState->get_delt_label());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
 
+  // artificial damping coeff initialized to 0.0
+  if (d_artificialDampCoeff > 0.0) {
+     t->computes(d_dampingRateLabel); 
+     t->computes(d_dampingCoeffLabel); 
+  }
+
   int numMPM = d_sharedState->getNumMPMMatls();
   const PatchSet* patches = level->eachPatch();
   for(int m = 0; m < numMPM; m++){
@@ -211,6 +227,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleApplyExternalLoads(             sched, patches, matls);
+  scheduleCalculateDampingRate(           sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
@@ -546,6 +563,29 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
+void SerialMPM::scheduleCalculateDampingRate(SchedulerP& sched,
+					     const PatchSet* patches,
+					     const MaterialSet* matls)
+{
+ /*
+  * calculateDampingRate
+  *   in(G.VELOCITY_STAR, P.X, P.Size)
+  *   operation(Calculate the interpolated particle velocity and
+  *             sum the squares of the velocities over particles)
+  *   out(sum_vartpe(dampingRate)) 
+  */
+  if (d_artificialDampCoeff > 0.0) {
+    Task* t=scinew Task("SerialMPM::calculateDampingRate", this, 
+			&SerialMPM::calculateDampingRate);
+    t->requires(Task::NewDW, lb->gVelocityStarLabel, Ghost::AroundCells, NGN);
+    t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
+    if(d_8or27==27) t->requires(Task::OldDW, lb->pSizeLabel, Ghost::None);
+
+    t->computes(d_dampingRateLabel);
+    sched->addTask(t, patches, matls);
+  }
+}
+
 void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 						       const PatchSet* patches,
 						       const MaterialSet* matls)
@@ -583,6 +623,15 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
    t->requires(Task::OldDW, lb->pSizeLabel,            Ghost::None);
   }
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
+
+  // The dampingCoeff (alpha) is 0.0 for standard usage, otherwise
+  // it is determined by the damping rate if the artificial damping
+  // coefficient Q is greater than 0.0
+  if (d_artificialDampCoeff > 0.0) {
+    t->requires(Task::OldDW, d_dampingCoeffLabel);
+    t->requires(Task::NewDW, d_dampingRateLabel);
+    t->computes(d_dampingCoeffLabel);
+  }
 
   if(d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
@@ -642,6 +691,14 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
     cellNAPID.initialize(0);
 
+    // Initialize the artificial damping ceofficient (alpha) to zero
+    if (d_artificialDampCoeff > 0.0) {
+      double alpha = 0.0;    
+      double alphaDot = 0.0;    
+      new_dw->put(max_vartype(alpha), d_dampingCoeffLabel);
+      new_dw->put(sum_vartype(alphaDot), d_dampingRateLabel);
+    }
+
     for(int m=0;m<matls->size();m++){
       //cerrLock.lock();
       //NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
@@ -655,11 +712,8 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
        mpm_matl->getConstitutiveModel()->initializeCMData(patch,
 						mpm_matl, new_dw);
     }
-
   }
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
-
-
 }
 
 
@@ -1553,6 +1607,63 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup*,
   }  // patch loop
 }
 
+void SerialMPM::calculateDampingRate(const ProcessorGroup*,
+				     const PatchSubset* patches,
+				     const MaterialSubset* ,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw)
+{
+  if (d_artificialDampCoeff > 0.0) {
+    for(int p=0;p<patches->size();p++){
+      const Patch* patch = patches->get(p);
+
+      cout_doing <<"Doing calculateDampingRate on patch " 
+		 << patch->getID() << "\t MPM"<< endl;
+
+      double alphaDot = 0.0;
+      int numMPMMatls=d_sharedState->getNumMPMMatls();
+      for(int m = 0; m < numMPMMatls; m++){
+	MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+	int dwi = mpm_matl->getDWIndex();
+
+	// Get the arrays of particle values to be changed
+	constParticleVariable<Point> px;
+	constParticleVariable<Vector> psize;
+
+	// Get the arrays of grid data on which the new part. values depend
+	constNCVariable<Vector> gvelocity_star;
+
+	ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+	old_dw->get(px, lb->pXLabel, pset);
+	if(d_8or27==27) old_dw->get(psize, lb->pSizeLabel, pset);
+	Ghost::GhostType  gac = Ghost::AroundCells;
+	new_dw->get(gvelocity_star,   lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
+
+	IntVector ni[MAX_BASIS];
+	double S[MAX_BASIS];
+	Vector d_S[MAX_BASIS];
+
+	// Calculate artificial dampening rate based on the interpolated particle
+	// velocities (ref. Ayton et al., 2002, Biophysical Journal, 1026-1038)
+	// d(alpha)/dt = 1/Q Sum(vp*^2)
+	ParticleSubset::iterator iter = pset->begin();
+	for(;iter != pset->end(); iter++){
+	  particleIndex idx = *iter;
+	  if (d_8or27 == 27) 
+	    patch->findCellAndWeightsAndShapeDerivatives27(px[idx],ni,S,d_S,psize[idx]);
+	  else
+	    patch->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S);
+	  Vector vel(0.0,0.0,0.0);
+	  for (int k = 0; k < d_8or27; k++) vel += gvelocity_star[ni[k]]*S[k];
+	  alphaDot += Dot(vel,vel);
+	}
+	alphaDot /= d_artificialDampCoeff;
+      } 
+      new_dw->put(sum_vartype(alphaDot), d_dampingRateLabel);
+    }
+  }
+}
+
 
 void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 						const PatchSubset* patches,
@@ -1579,6 +1690,19 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
    delt_vartype delT;
    old_dw->get(delT, d_sharedState->get_delt_label() );
 
+   // Artificial Damping 
+   double alphaDot = 0.0;
+   double alpha = 0.0;
+   if (d_artificialDampCoeff > 0.0) {
+     max_vartype dampingCoeff; 
+     sum_vartype dampingRate;
+     old_dw->get(dampingCoeff, d_dampingCoeffLabel);
+     new_dw->get(dampingRate, d_dampingRateLabel);
+     alpha = (double) dampingCoeff;
+     alphaDot = (double) dampingRate;
+     alpha += alphaDot*delT; // Calculate damping coefficient from damping rate
+     new_dw->put(max_vartype(alpha), d_dampingCoeffLabel);
+   }
 
    for(int m = 0; m < numMPMMatls; m++){
      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1690,10 +1814,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
           // Update the particle's position and velocity
           pxnew[idx]           = px[idx] + vel * delT;
-          pvelocitynew[idx]    = pvelocity[idx] + acc * delT;
+          pvelocitynew[idx]    = pvelocity[idx] + (acc - alpha*vel)*delT;
           pTempNew[idx]        = pTemperature[idx] + tempRate * delT;
           pSp_volNew[idx]      = pSp_vol[idx] + sp_vol_dt * delT;
-    
+
           double rho;
 	  if(pvolume[idx] > 0.){
 	    rho = pmass[idx]/pvolume[idx];
