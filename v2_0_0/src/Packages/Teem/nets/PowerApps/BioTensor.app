@@ -3803,6 +3803,11 @@ class BioTensorApp {
 				    "Please specify an existing nrrd file\nwith a T2 reference image before\nexecuting." -type ok -icon info -parent .standalone] 
 		    return
 		}
+		global $mods(NrrdReader1)-axis
+		set $mods(NrrdReader1)-axis axis0
+
+		global $mods(NrrdReader-T2)-axis
+		set $mods(NrrdReader-T2)-axis axis0
 	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
 		# Dicom 
 
