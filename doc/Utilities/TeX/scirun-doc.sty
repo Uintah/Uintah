@@ -1,5 +1,23 @@
 % -*-latex-*-
-% Recommened markup for module descriptions.
+%
+%  The contents of this file are subject to the University of Utah Public
+%  License (the "License"); you may not use this file except in compliance
+%  with the License.
+%
+%  Software distributed under the License is distributed on an "AS IS"
+%  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+%  License for the specific language governing rights and limitations under
+%  the License.
+%
+%  The Original Source Code is SCIRun, released March 12, 2001.
+%
+%  The Original Source Code was developed by the University of Utah.
+%  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+%  University of Utah. All Rights Reserved.
+%
+
+%
+% Recommened markup for latex docs.
 %
                                 %
 % (Mostly) Short cuts  ==============================
@@ -20,20 +38,21 @@
 \newcommand{\rob}{Rob MacLeod (macleod@cvrti.utah.edu)}
 \newcommand{\ted}{Ted Dustman (dustman@cvrti.utah.edu)}
 \newcommand{\blythe}{Blythe D Nobleman (blythe@cs.utah.edu)}
+\newcommand{\srig}{\sr{} Installation Guide}
 \newcommand{\srug}{\sr{} User's Guide}
 \newcommand{\srdg}{\sr{} Developer's Guide}
 
 % Literal ~ character
-\newcommand{\ltilde}{\symbol{'176}}
+\newcommand{\ltilde}{\textasciitilde}
 
 % Encloses its argument between angle brackets.
-\newcommand{\ab}[1]{\latexhtml{$<$#1$>$}{<#1>}}
+\newcommand{\ab}[1]{\latexhtml{\textless{}#1\textgreater}{<#1>}}
 
 % Inserts a left angle bracket.
-\newcommand{\la}{\latexhtml{$<$}{<}}
+\newcommand{\la}{\latexhtml{\textless}{<}}
 
 % Inserts a right angle bracket.
-\newcommand{\ra}{\latexhtml{$>$}{>}}
+\newcommand{\ra}{\latexhtml{\textgreater}{>}}
 
 % Mark up commands =================================
 
@@ -167,6 +186,12 @@
 % A latex package
 \newcommand{\latexpackage}[1]{\textit{#1}}
 
+% Use these in place of missing content.
+\newcommand{\missing}[1]{\emph{#1 - Coming Soon.}}
+
+% Use this to make note of incomplete content.
+\newcommand{\incomplete}{\emph{More Comming Soon.}}
+
 % Mark up a mail address
 \newcommand{\mailto}[1]{\texttt{#1}}
 
@@ -177,11 +202,3 @@
 \newcommand{\sciurl}{\url{http://www.sci.utah.edu}}
 \newcommand{\scidocurl}{\scisoftwareurl}
 \newcommand{\bugsurl}{\scisoftwareurl/bugzilla}
-
-% Internal commands - don't use these. =============
-
-\newcommand{\Package}[1]{#1}
-\newcommand{\Category}[1]{#1}
-\newcommand{\Module}[1]{#1}
-\newcommand{\ModuleRef}[3]{\section{#1} #1 is in category #2 of package #3}
-
