@@ -12,6 +12,8 @@ itcl_class WidgetTest {
 	set $this-widget_scale 0.01
 	global $this-widget_type
 	set $this-widget_type 6
+	$this-c select
+	$this-c needexecute
     }
     method ui {} {
 	set w .ui$this
