@@ -109,6 +109,12 @@ ICELabel::ICELabel()
     VarLabel::create("pressY_FC", SFCYVariable<double>::getTypeDescription() );
   pressZ_FCLabel     =
     VarLabel::create("pressZ_FC", SFCZVariable<double>::getTypeDescription() );
+  TempX_FCLabel     = 
+    VarLabel::create("TempX_FC",  SFCXVariable<double>::getTypeDescription() );
+  TempY_FCLabel     =
+    VarLabel::create("TempY_FC",  SFCYVariable<double>::getTypeDescription() );
+  TempZ_FCLabel     = 
+    VarLabel::create("TempZ_FC",  SFCZVariable<double>::getTypeDescription() );
   press_diffX_FCLabel = VarLabel::create("press_diffX_FC",
                                   SFCXVariable<double>::getTypeDescription() );
   press_diffY_FCLabel = VarLabel::create("press_diffY_FC",
@@ -198,6 +204,9 @@ ICELabel::~ICELabel()
     VarLabel::destroy(pressX_FCLabel);
     VarLabel::destroy(pressY_FCLabel);
     VarLabel::destroy(pressZ_FCLabel);
+    VarLabel::destroy(TempX_FCLabel);
+    VarLabel::destroy(TempY_FCLabel);
+    VarLabel::destroy(TempZ_FCLabel);
     VarLabel::destroy(press_diffX_FCLabel);
     VarLabel::destroy(press_diffY_FCLabel);
     VarLabel::destroy(press_diffZ_FCLabel);
