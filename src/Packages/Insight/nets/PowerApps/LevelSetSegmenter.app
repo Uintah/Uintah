@@ -41,255 +41,315 @@ set m1 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 10 10]
 set m2 [addModuleAtPosition "Teem" "DataIO" "DicomNrrdReader" 183 10]
 set m3 [addModuleAtPosition "Teem" "DataIO" "AnalyzeNrrdReader" 355 10]
 set m4 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 88]
-set m5 [addModuleAtPosition "Teem" "UnuAtoM" "UnuCrop" 28 170]
-set m6 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 244]
-set m7 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 243 166]
-set m8 [addModuleAtPosition "SCIRun" "FieldsOther" "ScalarFieldStats" 243 225]
-set m9 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 419 167]
-set m10 [addModuleAtPosition "Teem" "UnuAtoM" "UnuMinmax" 594 168]
-set m11 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 10 307]
-set m12 [addModuleAtPosition "Insight" "Filters" "GradientAnisotropicDiffusionImageFilter" 87 405]
-set m13 [addModuleAtPosition "Insight" "Filters" "CurvatureAnisotropicDiffusionImageFilter" 389 404]
-set m14 [addModuleAtPosition "Insight" "Filters" "DiscreteGaussianImageFilter" 703 403]
-set m15 [addModuleAtPosition "Insight" "Filters" "ThresholdSegmentationLevelSetImageFilter" 69 963]
-set Notes($m15) {Create Sticky from Speed Image and send to Viewer 2
-             (Red/Blue ColorMap w/Resolution 2)}
-set Notes($m15-Position) {def}
-set Notes($m15-Color) {#ff02ff}
-set m16 [addModuleAtPosition "Insight" "Filters" "ExtractImageFilter" 87 564]
-set m17 [addModuleAtPosition "Insight" "DataIO" "ChooseImage" 87 486]
-set m18 [addModuleAtPosition "Insight" "Filters" "BinaryThresholdImageFilter" 69 1039]
-set Notes($m18) {Create Sticky and Send to Viewer 1
-        (ColorMap resolution 2)}
-set Notes($m18-Position) {def}
-set Notes($m18-Color) {#ff04ff}
-set m19 [addModuleAtPosition "SCIRun" "FieldsCreate" "SeedPoints" 766 829]
-set Notes($m19) {Viewer 1}
-set Notes($m19-Position) {s}
-set Notes($m19-Color) {#ff08ff}
-set m20 [addModuleAtPosition "Insight" "Filters" "BinaryThresholdImageFilter" 534 770]
-set m21 [addModuleAtPosition "Insight" "Converters" "ImageToField" 766 771]
-set m22 [addModuleAtPosition "Insight" "Filters" "ExtractImageFilter" 351 638]
-#set m23 [addModuleAtPosition "Insight" "DataIO" "ChooseImage" 69 886]
-set m24 [addModuleAtPosition "Insight" "DataIO" "ImageFileWriter" 69 1428]
-set m25 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 257 612]
-set m26 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 351 695]
-set m27 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 450 1167]
-set m28 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 550 1367]
-set m29 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 912 1158]
-set m30 [addModuleAtPosition "Insight" "Filters" "PasteImageFilter" 69 1343]
-set m31 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 310 2425]
-set m32 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 985 573]
-set m33 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 310 2500]
-set m34 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1128 572]
-set m35 [addModuleAtPosition "Teem" "UnuAtoM" "UnuMinmax" 163 1734]
-set m36 [addModuleAtPosition "SCIRun" "Render" "ViewSlices" 985 1506]
-set Notes($m36) {Viewer 3}
-set Notes($m36-Position) {def}
-set Notes($m36-Color) {#ff02ff}
-set m37 [addModuleAtPosition "Insight" "Converters" "BuildSeedVolume" 766 907]
-set m38 [addModuleAtPosition "SCIRun" "Render" "Viewer" 643 1284]
-set m39 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 149 783]
-set m40 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 257 562]
-set m41 [addModuleAtPosition "Insight" "Converters" "ImageToField" 149 707]
-set m42 [addModuleAtPosition "Insight" "Converters" "ImageToField" 307 1118]
-set m43 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 307 1194]
-set m44 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 450 1117]
-set m45 [addModuleAtPosition "Insight" "Converters" "ImageToField" 768 1109]
-set m46 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 912 1108]
-set m47 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 768 1192]
-set m48 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 534 832]
-set m49 [addModuleAtPosition "SCIRun" "Visualization" "GenTitle" 1155 965]
-set m50 [addModuleAtPosition "SCIRun" "Visualization" "GenTitle" 1185 1030]
-set m51 [addModuleAtPosition "Insight" "Filters" "PasteImageFilter" 339 1576]
-#set m52 [addModuleAtPosition "Insight" "Converters" "Image2DToImage3D" 339 1309]
-set m53 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 339 1641]
-set Notes($m53) {volume render float volume}
-set Notes($m53-Position) {s}
-set Notes($m53-Color) {#ff0aff}
-set m54 [addModuleAtPosition "SCIRun" "Render" "Viewer" 554 2660]
-#set m55 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 340 2020]
-#set m56 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 847 2044]
-#set m57 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJoin" 548 2107]
-set m58 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 548 2027]
-set m59 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 512 2503]
-#set m60 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuProject" 776 1967]
-set m61 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 704 2501]
-set m62 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 554 2589]
-set m63 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetupTexture" 512 1766]
-set m64 [addModuleAtPosition "SCIRun" "Visualization" "GenTitle" 731 2580]
-#set m65 [addModuleAtPosition "Teem" "Converters" "FieldToNrrd" 512 1885]
-set m66 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq" 722 2302]
-set m67 [addModuleAtPosition "Teem" "UnuAtoM" "UnuGamma" 722 2364]
-set m68 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 722 2426]
-set m69 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJhisto" 740 2115]
-set m70 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 722 2177]
-set m71 [addModuleAtPosition "Teem" "UnuAtoM" "Unu1op" 722 2238]
-#set m72 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 513 2227]
-set m73 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 1008 693]
-set m74 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 160 338]
-set m75 [addModuleAtPosition "Teem" "UnuAtoM" "UnuMinmax" 336 340]
-set m76 [addModuleAtPosition "Teem" "UnuAtoM" "UnuMinmax" 1070 777]
-
-set m77 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 617 493]
-set m78 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxdelete" 617 551]
-set m79 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 617 612]
-set m80 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxdelete" 351 754]
-#set m81 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 351 811]
-set m82 [addModuleAtPosition "Insight" "Converters" "FloatToUChar" 31 1222]
-set m83 [addModuleAtPosition "Insight" "DataIO" "ImageFileWriter" 531 1619]
-#set m85 [addModuleAtPosition "Insight" "Converters" "UCharToFloat" 351 868]
-set m86 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 388 1281]
-set m87 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 388 1350]
-set m88 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 550 1317]
-#set m89 [addModuleAtPosition "Insight" "Filters" "BinaryThresholdImageFilter" 766 964]
-set m90 [addModuleAtPosition "Insight" "Converters" "ImageToField" 958 841]
-set m91 [addModuleAtPosition "SCIRun" "FieldsCreate" "SeedPoints" 958 898]
-set m92 [addModuleAtPosition "Insight" "Converters" "BuildSeedVolume" 976 964]
-
-set m93 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 351 821]
-set m94 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 333 893]
-set m95 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 766 973]
-set m96 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 766 1041]
-set m97 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 69 885]
-
+set Notes($m4) {Determines which
+file type is read.}
+set Notes($m4-Position) {def}
+set Notes($m4-Color) {white}
+set m5 [addModuleAtPosition "Teem" "UnuAtoM" "UnuCrop" 28 393]
+set m6 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 456]
+set Notes($m6) {Use cropped vs. original
+volume for smoothing.}
+set Notes($m6-Position) {def}
+set Notes($m6-Color) {white}
+set m7 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 82 167]
+set m8 [addModuleAtPosition "SCIRun" "FieldsOther" "ScalarFieldStats" 82 226]
+set m9 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 254 228]
+set m10 [addModuleAtPosition "Teem" "UnuAtoM" "UnuMinmax" 279 166]
+set m11 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 452 802]
+set m12 [addModuleAtPosition "Insight" "Filters" "GradientAnisotropicDiffusionImageFilter" 470 886]
+set m13 [addModuleAtPosition "Insight" "Filters" "CurvatureAnisotropicDiffusionImageFilter" 766 887]
+set m14 [addModuleAtPosition "Insight" "Filters" "DiscreteGaussianImageFilter" 1080 886]
+set m15 [addModuleAtPosition "Insight" "Filters" "ThresholdSegmentationLevelSetImageFilter" 338 2066]
+set m16 [addModuleAtPosition "Insight" "Filters" "ExtractImageFilter" 452 1214]
+set Notes($m16) {Pull out
+current slice.}
+set Notes($m16-Position) {def}
+set Notes($m16-Color) {white}
+set m17 [addModuleAtPosition "Insight" "DataIO" "ChooseImage" 452 965]
+set m18 [addModuleAtPosition "Insight" "Filters" "BinaryThresholdImageFilter" 60 2209]
+set m19 [addModuleAtPosition "SCIRun" "FieldsCreate" "SeedPoints" 707 1549]
+set m20 [addModuleAtPosition "Insight" "Filters" "BinaryThresholdImageFilter" 397 1492]
+set Notes($m20) {Thresholding
+seed.}
+set Notes($m20-Position) {def}
+set Notes($m20-Color) {white}
+set m21 [addModuleAtPosition "Insight" "Converters" "ImageToField" 707 1491]
+set Notes($m21) {Positive
+seed points.}
+set Notes($m21-Position) {def}
+set Notes($m21-Color) {white}
+set m22 [addModuleAtPosition "Insight" "Filters" "ExtractImageFilter" 127 1486]
+set Notes($m22) {Prev, next, or
+current seed.}
+set Notes($m22-Position) {def}
+set Notes($m22-Color) {white}
+set m23 [addModuleAtPosition "Insight" "DataIO" "ImageFileWriter" 99 2749]
+set Notes($m23) {Writer for 
+binary volume.}
+set Notes($m23-Position) {def}
+set Notes($m23-Color) {white}
+set m24 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 422 2445]
+set m25 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 127 1543]
+set m26 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 898 2442]
+set m27 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 664 2439]
+set m28 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1159 2435]
+set m29 [addModuleAtPosition "Insight" "Filters" "PasteImageFilter" 60 2671]
+set Notes($m29) {Execute from
+pressing Commit.}
+set Notes($m29-Position) {def}
+set Notes($m29-Color) {white}
+set m30 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 175 3109]
+set m31 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 1250 1059]
+set m32 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 175 3171]
+set m33 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1268 1268]
+set m34 [addModuleAtPosition "Teem" "UnuAtoM" "UnuMinmax" 547 3026]
+set m35 [addModuleAtPosition "SCIRun" "Render" "ViewSlices" 1232 1330]
+set Notes($m35) {Viewer 3}
+set Notes($m35-Position) {def}
+set Notes($m35-Color) {#ff02ff}
+set m36 [addModuleAtPosition "Insight" "Converters" "BuildSeedVolume" 725 1616]
+set m37 [addModuleAtPosition "SCIRun" "Render" "Viewer" 1069 3149]
+set m38 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 404 2504]
+set m39 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 422 2384]
+set m40 [addModuleAtPosition "Insight" "Converters" "ImageToField" 404 2323]
+set Notes($m40) {Current
+slice.}
+set Notes($m40-Position) {def}
+set Notes($m40-Color) {white}
+set m41 [addModuleAtPosition "Insight" "Converters" "ImageToField" 880 2322]
+set Notes($m41) {Segmentation
+result slice.}
+set Notes($m41-Position) {def}
+set Notes($m41-Color) {white}
+set m42 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 880 2503]
+set m43 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 898 2382]
+set m44 [addModuleAtPosition "Insight" "Converters" "ImageToField" 1141 2313]
+set Notes($m44) {Speed
+image slice}
+set Notes($m44-Position) {def}
+set Notes($m44-Color) {white}
+set m45 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1159 2373]
+set m46 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1141 2500]
+set m47 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 397 1554]
+set m48 [addModuleAtPosition "SCIRun" "Visualization" "GenTitle" 910 3070]
+set m49 [addModuleAtPosition "SCIRun" "Visualization" "GenTitle" 933 3010]
+set m50 [addModuleAtPosition "Insight" "Filters" "PasteImageFilter" 338 2672]
+set Notes($m50) {Execute from
+pressing Commit.}
+set Notes($m50-Position) {def}
+set Notes($m50-Color) {white}
+set m51 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 338 2936]
+set Notes($m51) {Volume rendering
+modules}
+set Notes($m51-Position) {e}
+set Notes($m51-Color) {#fffeff}
+set m52 [addModuleAtPosition "SCIRun" "Render" "Viewer" 501 3609]
+set m53 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 387 3109]
+set m54 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 369 3171]
+set m55 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 537 3479]
+set m56 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 501 3544]
+set m57 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetupTexture" 369 3025]
+set m58 [addModuleAtPosition "SCIRun" "Visualization" "GenTitle" 709 3481]
+set m59 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq" 555 3293]
+set m60 [addModuleAtPosition "Teem" "UnuAtoM" "UnuGamma" 555 3355]
+set m61 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 555 3417]
+set m62 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJhisto" 573 3109]
+set m63 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 555 3171]
+set m64 [addModuleAtPosition "Teem" "UnuAtoM" "Unu1op" 555 3232]
+set m65 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 1232 1121]
+set Notes($m65) {Toggle for ViewSlices
+to view original or smoothed.}
+set Notes($m65-Position) {def}
+set Notes($m65-Color) {white}
+set m66 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 75 597]
+set m67 [addModuleAtPosition "Teem" "UnuAtoM" "UnuMinmax" 94 535]
+set m68 [addModuleAtPosition "Teem" "UnuAtoM" "UnuMinmax" 1275 1201]
+set m69 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 452 1276]
+set m70 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxdelete" 452 1334]
+set m71 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 452 1395]
+set m72 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxdelete" 127 1602]
+set m73 [addModuleAtPosition "Insight" "Converters" "FloatToUChar" 60 2607]
+set m74 [addModuleAtPosition "Insight" "DataIO" "ImageFileWriter" 382 2749]
+set Notes($m74) {Writer for
+float volume.}
+set Notes($m74-Position) {def}
+set Notes($m74-Color) {white}
+set m75 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 646 2318]
+set Notes($m75) {Current
+seed slice}
+set Notes($m75-Position) {def}
+set Notes($m75-Color) {white}
+set m76 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 646 2498]
+set m77 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 664 2380]
+set m78 [addModuleAtPosition "Insight" "Converters" "ImageToField" 961 1489]
+set Notes($m78) {Negative 
+seed points.}
+set Notes($m78-Position) {def}
+set Notes($m78-Color) {white}
+set m79 [addModuleAtPosition "SCIRun" "FieldsCreate" "SeedPoints" 961 1546]
+set m80 [addModuleAtPosition "Insight" "Converters" "BuildSeedVolume" 979 1612]
+set m81 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 379 1684]
+set Notes($m81) {Change when
+seeding method
+changes.}
+set Notes($m81-Position) {def}
+set Notes($m81-Color) {white}
+set m82 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 839 1762]
+set Notes($m82) {Add positive seeds
+to selected seed
+method output.}
+set Notes($m82-Position) {def}
+set Notes($m82-Color) {white}
+set m83 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 821 1829]
+set Notes($m83) {Change if using
+seeds only or
+combination.}
+set Notes($m83-Position) {def}
+set Notes($m83-Color) {white}
+set m84 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 821 1889]
+set Notes($m84) {Subtract
+negative seeds.}
+set Notes($m84-Position) {def}
+set Notes($m84-Color) {white}
+set m85 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 793 1967]
 
 # Create the Connections between Modules
-set c1 [addConnection $m18 0 $m82 0]
-set c2 [addConnection $m30 0 $m24 0]
-set c3 [addConnection $m79 0 $m21 0]
-set c4 [addConnection $m79 0 $m41 0]
-set c5 [addConnection $m79 0 $m20 0]
-set c6 [addConnection $m20 0 $m48 0]
-set c7 [addConnection $m21 0 $m19 0]
-set c8 [addConnection $m73 0 $m36 0]
-set c9 [addConnection $m41 0 $m39 0]
-set c10 [addConnection $m42 0 $m43 0]
-set c11 [addConnection $m45 0 $m47 0]
-set c12 [addConnection $m53 0 $m63 0]
-set c13 [addConnection $m11 0 $m13 0]
-set c14 [addConnection $m11 0 $m14 0]
-set c15 [addConnection $m11 0 $m12 0]
-set c16 [addConnection $m17 0 $m32 0]
-set c17 [addConnection $m17 0 $m16 0]
-set c18 [addConnection $m80 0 $m93 0]
-set c19 [addConnection $m15 0 $m51 0]
-set c20 [addConnection $m18 0 $m42 0]
-set c21 [addConnection $m51 0 $m83 0]
-set c22 [addConnection $m48 0 $m93 1]
-set c23 [addConnection $m11 0 $m17 0]
-set c24 [addConnection $m30 0 $m22 0]
-set c25 [addConnection $m63 0 $m59 0]
-set c26 [addConnection $m22 0 $m26 0]
-set c27 [addConnection $m51 0 $m53 0]
-set c28 [addConnection $m37 0 $m94 0]
-set c29 [addConnection $m15 0 $m18 0]
-set c30 [addConnection $m15 1 $m45 0]
-set c31 [addConnection $m19 1 $m37 0]
-set c32 [addConnection $m86 0 $m87 0]
-set c33 [addConnection $m88 0 $m28 0]
-set c34 [addConnection $m63 1 $m58 0]
-set c35 [addConnection $m27 0 $m43 1]
-set c36 [addConnection $m28 0 $m87 1]
-set c37 [addConnection $m59 0 $m62 0]
-set c38 [addConnection $m49 0 $m38 0]
-set c39 [addConnection $m62 0 $m54 0]
-set c40 [addConnection $m63 1 $m69 2]
-set c41 [addConnection $m58 0 $m59 1]
-set c42 [addConnection $m7 0 $m8 0]
-set c43 [addConnection $m31 0 $m33 0]
-set c44 [addConnection $m1 0 $m4 0]
-set c45 [addConnection $m4 0 $m6 0]
-set c46 [addConnection $m4 0 $m9 0]
-set c47 [addConnection $m4 0 $m5 0]
-set c48 [addConnection $m4 0 $m10 0]
-set c49 [addConnection $m6 0 $m11 0]
-set c50 [addConnection $m33 0 $m62 1]
-set c51 [addConnection $m71 0 $m66 0]
-set c52 [addConnection $m70 0 $m71 0]
-set c53 [addConnection $m67 0 $m68 0]
-set c54 [addConnection $m66 0 $m67 0]
-set c55 [addConnection $m53 0 $m35 0]
-set c56 [addConnection $m93 0 $m94 1]
-set c57 [addConnection $m90 0 $m91 0]
-set c58 [addConnection $m25 0 $m39 1]
-set c59 [addConnection $m29 0 $m47 1]
-set c60 [addConnection $m79 0 $m37 1]
-set c61 [addConnection $m79 0 $m15 1]
-set c62 [addConnection $m91 1 $m92 0]
-set c63 [addConnection $m53 0 $m69 1]
-set c64 [addConnection $m37 0 $m95 0]
-set c65 [addConnection $m12 0 $m17 1]
-set c66 [addConnection $m40 0 $m25 0]
-set c67 [addConnection $m44 0 $m27 0]
-set c68 [addConnection $m46 0 $m29 0]
-set c69 [addConnection $m50 0 $m38 1]
-set c70 [addConnection $m2 0 $m4 1]
-set c71 [addConnection $m5 0 $m6 1]
-set c72 [addConnection $m69 0 $m70 1]
-set c73 [addConnection $m94 0 $m95 1]
-set c74 [addConnection $m79 0 $m92 1]
-set c75 [addConnection $m95 0 $m96 0]
-set c76 [addConnection $m68 0 $m61 1]
-set c77 [addConnection $m92 0 $m96 1]
-set c78 [addConnection $m13 0 $m17 2]
-set c79 [addConnection $m39 0 $m38 2]
-set c80 [addConnection $m61 0 $m62 2]
-set c81 [addConnection $m34 0 $m36 2]
-set c82 [addConnection $m3 0 $m4 2]
-set c83 [addConnection $m4 0 $m7 2]
-set c84 [addConnection $m96 0 $m97 0]
-set c85 [addConnection $m41 0 $m25 1]
-set c86 [addConnection $m43 0 $m38 3]
-set c86 [addConnection $m47 0 $m38 4]
-set c87 [addConnection $m6 0 $m73 0]
-set c88 [addConnection $m32 0 $m73 1]
-set c89 [addConnection $m6 0 $m74 0]
-set c90 [addConnection $m6 0 $m75 0]
-set c91 [addConnection $m73 0 $m76 0]
-set c92 [addConnection $m16 0 $m77 0]
-set c93 [addConnection $m77 0 $m78 0]
-set c94 [addConnection $m78 0 $m79 0]
-set c95 [addConnection $m26 0 $m80 0]
-set c95 [addConnection $m97 0 $m15 0]
-set c96 [addConnection $m96 0 $m86 2]
-set c97 [addConnection $m82 0 $m30 0]
-set c98 [addConnection $m42 0 $m27 1]
-set c99 [addConnection $m86 0 $m28 1]
-set c100 [addConnection $m45 0 $m29 1]
-set c101 [addConnection $m79 0 $m90 0]
-set c102 [addConnection $m87 0 $m38 5]
+set c1 [addConnection $m36 0 $m83 0]
+set c2 [addConnection $m36 0 $m82 0]
+set c3 [addConnection $m73 0 $m29 0]
+set c4 [addConnection $m21 0 $m19 0]
+set c5 [addConnection $m40 0 $m38 0]
+set c6 [addConnection $m41 0 $m42 0]
+set c7 [addConnection $m44 0 $m46 0]
+set c8 [addConnection $m78 0 $m79 0]
+set c9 [addConnection $m25 0 $m72 0]
+set c10 [addConnection $m51 0 $m57 0]
+set c11 [addConnection $m51 0 $m34 0]
+set c12 [addConnection $m69 0 $m70 0]
+set c13 [addConnection $m11 0 $m17 0]
+set c14 [addConnection $m11 0 $m13 0]
+set c15 [addConnection $m11 0 $m14 0]
+set c16 [addConnection $m11 0 $m12 0]
+set c17 [addConnection $m71 0 $m21 0]
+set c18 [addConnection $m71 0 $m40 0]
+set c19 [addConnection $m71 0 $m78 0]
+set c20 [addConnection $m71 0 $m20 0]
+set c21 [addConnection $m85 0 $m15 0]
+set c22 [addConnection $m17 0 $m31 0]
+set c23 [addConnection $m17 0 $m16 0]
+set c24 [addConnection $m18 0 $m73 0]
+set c25 [addConnection $m18 0 $m41 0]
+set c26 [addConnection $m20 0 $m47 0]
+set c27 [addConnection $m16 0 $m69 0]
+set c28 [addConnection $m22 0 $m25 0]
+set c29 [addConnection $m29 0 $m23 0]
+set c30 [addConnection $m29 0 $m22 0]
+set c31 [addConnection $m50 0 $m51 0]
+set c32 [addConnection $m50 0 $m74 0]
+set c33 [addConnection $m15 0 $m18 0]
+set c34 [addConnection $m15 0 $m50 0]
+set c35 [addConnection $m15 1 $m44 0]
+set c36 [addConnection $m19 1 $m36 0]
+set c37 [addConnection $m79 1 $m80 0]
+set c38 [addConnection $m30 0 $m32 0]
+set c39 [addConnection $m39 0 $m24 0]
+set c40 [addConnection $m43 0 $m26 0]
+set c41 [addConnection $m45 0 $m28 0]
+set c42 [addConnection $m77 0 $m27 0]
+set c43 [addConnection $m48 0 $m37 0]
+set c44 [addConnection $m54 0 $m56 0]
+set c45 [addConnection $m56 0 $m52 0]
+set c46 [addConnection $m7 0 $m8 0]
+set c47 [addConnection $m75 0 $m76 0]
+set c48 [addConnection $m1 0 $m4 0]
+set c49 [addConnection $m4 0 $m6 0]
+set c50 [addConnection $m4 0 $m9 0]
+set c51 [addConnection $m4 0 $m5 0]
+set c52 [addConnection $m4 0 $m10 0]
+set c53 [addConnection $m6 0 $m11 0]
+set c54 [addConnection $m6 0 $m65 0]
+set c55 [addConnection $m6 0 $m66 0]
+set c56 [addConnection $m6 0 $m67 0]
+set c57 [addConnection $m65 0 $m35 0]
+set c58 [addConnection $m65 0 $m68 0]
+set c59 [addConnection $m83 0 $m84 0]
+set c60 [addConnection $m57 0 $m54 0]
+set c61 [addConnection $m57 1 $m53 0]
+set c62 [addConnection $m64 0 $m59 0]
+set c63 [addConnection $m63 0 $m64 0]
+set c64 [addConnection $m84 0 $m85 0]
+set c65 [addConnection $m70 0 $m71 0]
+set c66 [addConnection $m72 0 $m81 0]
+set c67 [addConnection $m60 0 $m61 0]
+set c68 [addConnection $m59 0 $m60 0]
+set c69 [addConnection $m80 0 $m84 1]
+set c70 [addConnection $m40 0 $m24 1]
+set c71 [addConnection $m41 0 $m26 1]
+set c72 [addConnection $m44 0 $m28 1]
+set c73 [addConnection $m31 0 $m65 1]
+set c74 [addConnection $m47 0 $m81 1]
+set c75 [addConnection $m51 0 $m62 1]
+set c76 [addConnection $m71 0 $m36 1]
+set c77 [addConnection $m71 0 $m80 1]
+set c78 [addConnection $m71 0 $m15 1]
+set c79 [addConnection $m12 0 $m17 1]
+set c80 [addConnection $m49 0 $m37 1]
+set c81 [addConnection $m58 0 $m52 1]
+set c82 [addConnection $m24 0 $m38 1]
+set c83 [addConnection $m26 0 $m42 1]
+set c84 [addConnection $m27 0 $m76 1]
+set c85 [addConnection $m28 0 $m46 1]
+set c86 [addConnection $m32 0 $m56 1]
+set c87 [addConnection $m75 0 $m27 1]
+set c88 [addConnection $m2 0 $m4 1]
+set c89 [addConnection $m81 0 $m82 1]
+set c90 [addConnection $m82 0 $m83 1]
+set c91 [addConnection $m5 0 $m6 1]
+set c92 [addConnection $m62 0 $m63 1]
+set c93 [addConnection $m53 0 $m54 1]
+set c94 [addConnection $m61 0 $m55 1]
+set c95 [addConnection $m13 0 $m17 2]
+set c96 [addConnection $m55 0 $m56 2]
+set c97 [addConnection $m33 0 $m35 2]
+set c98 [addConnection $m38 0 $m37 2]
+set c99 [addConnection $m3 0 $m4 2]
+set c100 [addConnection $m4 0 $m7 2]
+set c101 [addConnection $m57 1 $m62 2]
+set c102 [addConnection $m84 0 $m75 2]
 set c103 [addConnection $m14 0 $m17 3]
-set c104 [addConnection $m64 0 $m54 1]
-set c105 [addConnection $m19 0 $m38 6]
-set c106 [addConnection $m91 0 $m38 7]
+set c104 [addConnection $m42 0 $m37 3]
+set c105 [addConnection $m46 0 $m37 4]
+set c106 [addConnection $m76 0 $m37 5]
+set c107 [addConnection $m19 0 $m37 6]
+set c108 [addConnection $m79 0 $m37 7]
 
 
 # Set GUI variables
+# NrrdReader_0
 if {[netedit getenv LEVELSETSEGMENTER_LOAD_FILE] == ""} {
     setGlobal $m1-filename "/usr/sci/data/Medical/ucsd/king_filt/king_filt-full.nhdr"
 } else {
     setGlobal $m1-filename "[netedit getenv LEVELSETSEGMENTER_LOAD_FILE]"
 }
 
+# UnuCrop_0
 setGlobal $m5-uis {3}
 
-
+# ScalarFieldStats_0
 setGlobal $m8-setdata 1
 trace variable $m8-args w "app update_histo_graph_callback"
 
+# GradientAnisotropicDiffusion_0
 setGlobal $m12-time_step 0.0625
 setGlobal $m12-iterations 5
 setGlobal $m12-conductance 0.5
 
+# CurvatureAnisotropicDiffusion_0
 setGlobal $m13-time_step 0.0625
 setGlobal $m13-iterations 5
 setGlobal $m13-conductance 0.5
 
-
-setGlobal $m16-uis {3}
-setGlobal $m16-num-dims {3}
-
+# ThresholdSegmentationLevelSetImageFilter_0
 setGlobal $m15-isovalue {0.5}
 setGlobal $m15-curvature_scaling {1.0}
 setGlobal $m15-propagation_scaling {1.0}
@@ -300,11 +360,17 @@ setGlobal $m15-smoothing_conductance {0.5}
 setGlobal $m15-smoothing_time_step {0.1}
 setGlobal $m15-maximum_iterations {0}
 
+# ExtractImageFilter_0
+setGlobal $m16-uis {3}
+setGlobal $m16-num-dims {3}
+
+# BinaryThresholdImageFilter_0
 setGlobal $m18-lower_threshold 0.0
 setGlobal $m18-upper_threshold 100.0
 setGlobal $m18-inside_value {1}
 setGlobal $m18-outside_value {0}
 
+# SeedPoints_0
 setGlobal $m19-num_seeds 0
 setGlobal $m19-probe_scale 10
 setGlobal $m19-widget 1
@@ -312,218 +378,260 @@ setGlobal $m19-red 0.5
 setGlobal $m19-green 0.0
 setGlobal $m19-blue 0.0
 
+# BinaryThresholdImageFilter_1
 setGlobal $m20-inside_value {0}
 setGlobal $m20-outside_value {1}
 
+# ImageToField_0
 setGlobal $m21-copy {1}
 
+# ExtractImageFilter_1
 setGlobal $m22-uis {3}
 
+# ImageFileWriter_0
 if {[netedit getenv LEVELSETSEGMENTER_SAVE_BINARY_FILE] == ""} {
-    setGlobal $m24-filename "/tmp/binary.mhd"
+    setGlobal $m23-filename "/tmp/binary.mhd"
 } else {
-    setGlobal $m24-filename "[netedit getenv LEVELSETSEGMENTER_SAVE_BINARY_FILE]"
+    setGlobal $m23-filename "[netedit getenv LEVELSETSEGMENTER_SAVE_BINARY_FILE]"
 }
 
-setGlobal $m30-uis 3
+# PasteImageFilter_0
+setGlobal $m29-uis 3
 
-setGlobal $m33-isFixed 1
-setGlobal $m33-min 0
-setGlobal $m33-max 1
+# RescaleColorMap_0
+setGlobal $m32-isFixed 1
+setGlobal $m32-min 0
+setGlobal $m32-max 1
 
-setGlobal $m34-width {552}
-setGlobal $m34-height {40}
-setGlobal $m34-mapName {Gray}
+# GenStandardColorMaps_0
+setGlobal $m33-width {552}
+setGlobal $m33-height {40}
+setGlobal $m33-mapName {Gray}
 
-setGlobal $m35-min0 0
-setGlobal $m35-max0 0
+# UnuMinmax_0
+setGlobal $m34-min0 0
+setGlobal $m34-max0 0
 
-setGlobal $m36-crop_minPadAxis0 0
-setGlobal $m36-crop_maxPadAxis0 0
-setGlobal $m36-crop_minPadAxis1 0
-setGlobal $m36-crop_maxPadAxis1 0
-setGlobal $m36-crop_minPadAxis2 0
-setGlobal $m36-crop_maxPadAxis2 0
-setGlobal $m36-show_text {1}
-setGlobal $m36-anatomical_coordinates {0}
+# ViewSlices_0
+setGlobal $m35-crop_minPadAxis0 0
+setGlobal $m35-crop_maxPadAxis0 0
+setGlobal $m35-crop_minPadAxis1 0
+setGlobal $m35-crop_maxPadAxis1 0
+setGlobal $m35-crop_minPadAxis2 0
+setGlobal $m35-crop_maxPadAxis2 0
+setGlobal $m35-show_text {1}
+setGlobal $m35-anatomical_coordinates {0}
 
-setGlobal $m37-inside_value {0}
-setGlobal $m37-outside_value {1}
+# BuildSeedVolume_0
+setGlobal $m36-inside_value {0}
+setGlobal $m36-outside_value {1}
 
-setGlobal $m38-ViewWindow_0-raxes 0
-setGlobal $m38-ViewWindow_0-ortho-view 1
-setGlobal $m38-ViewWindow_0-pos "z1_y1"
+# Viewer_0
+setGlobal $m37-ViewWindow_0-raxes 0
+setGlobal $m37-ViewWindow_0-ortho-view 1
+setGlobal $m37-ViewWindow_0-pos "z1_y1"
+setGlobal $m37-ViewWindow_1-raxes 0
+setGlobal $m37-ViewWindow_1-ortho-view 1
+setGlobal $m37-ViewWindow_1-pos "z1_y1"
+setGlobal {$m37-ViewWindow_1-Transparent Faces (2)} 0
+setGlobal {$m37-ViewWindow_1-Transparent Faces (4)} 0
+setGlobal {$m37-ViewWindow_0-Title (2)} 0
+setGlobal {$m37-ViewWindow_1-Title (1)} 0
 
-setGlobal $m38-ViewWindow_1-raxes 0
-setGlobal $m38-ViewWindow_1-ortho-view 1
-setGlobal $m38-ViewWindow_1-pos "z1_y1"
+# ShowField_0
+setGlobal $m38-faces-on 1
+setGlobal $m38-faces-usetexture 1
+setGlobal $m38-nodes-on 0
+setGlobal $m38-edges-on 0
 
-setGlobal {$m38-ViewWindow_1-Transparent Faces (2)} 0
-setGlobal {$m38-ViewWindow_1-Transparent Faces (4)} 0
-setGlobal {$m38-ViewWindow_0-Title (2)} 0
-setGlobal {$m38-ViewWindow_1-Title (1)} 0
+# GenStandardColorMaps_1
+setGlobal $m39-width {552}
+setGlobal $m39-height {40}
+setGlobal $m39-mapName {Gray}
 
+# ImageToField_0
+setGlobal $m40-copy 1
 
-setGlobal $m39-faces-on 1
-setGlobal $m39-faces-usetexture 1
-setGlobal $m39-nodes-on 0
-setGlobal $m39-edges-on 0
-
-
-setGlobal $m40-width {552}
-setGlobal $m40-height {40}
-setGlobal $m40-mapName {Gray}
-
+# ImageToField_1
 setGlobal $m41-copy 1
-setGlobal $m42-copy 1
 
-setGlobal $m43-faces-on 1
-setGlobal $m43-faces-usetexture 1
-setGlobal $m43-use-transparency 1
-setGlobal $m43-nodes-on 0
-setGlobal $m43-edges-on 0
+# ShowField_1
+setGlobal $m42-faces-on 1
+setGlobal $m42-faces-usetexture 1
+setGlobal $m42-use-transparency 1
+setGlobal $m42-nodes-on 0
+setGlobal $m42-edges-on 0
 
-setGlobal $m44-positionList {{0 0} {273 00} {277 40} {552 40}}
-setGlobal $m44-nodeList {3 4 5 6}
-setGlobal $m44-width {552}
-setGlobal $m44-height {40}
-setGlobal $m44-mapName {BP Seismic}
-setGlobal $m44-resolution {2}
-setGlobal $m44-realres {2}
-setGlobal $m44-reverse {1}
+# GenStandardColorMaps_2
+setGlobal $m43-positionList {{0 0} {273 00} {277 40} {552 40}}
+setGlobal $m43-nodeList {3 4 5 6}
+setGlobal $m43-width {552}
+setGlobal $m43-height {40}
+setGlobal $m43-mapName {BP Seismic}
+setGlobal $m43-resolution {2}
+setGlobal $m43-realres {2}
+setGlobal $m43-reverse {1}
 
-setGlobal $m45-copy 1
+# ImageToField_2
+setGlobal $m44-copy 1
 
-setGlobal $m46-width {552}
-setGlobal $m46-height {40}
-setGlobal $m46-mapName {BP Seismic}
-setGlobal $m46-resolution {2}
-setGlobal $m46-realres {2}
+# GenStandardColorMaps_3
+setGlobal $m45-width {552}
+setGlobal $m45-height {40}
+setGlobal $m45-mapName {BP Seismic}
+setGlobal $m45-resolution {2}
+setGlobal $m45-realres {2}
 
-setGlobal $m47-faces-on 1
-setGlobal $m47-use-transparency 1
-setGlobal $m47-faces-usetexture 0
-setGlobal $m47-nodes-on 0
-setGlobal $m47-edges-on 0
+# ShowField_2
+setGlobal $m46-faces-on 1
+setGlobal $m46-use-transparency 1
+setGlobal $m46-faces-usetexture 0
+setGlobal $m46-nodes-on 0
+setGlobal $m46-edges-on 0
 
+# GenTitle_0
+setGlobal $m48-bbox 0
+setGlobal $m48-showValue 0
+setGlobal $m48-format "Current Seeds and Segmentation"
+setGlobal $m48-location "Top Center"
+
+# GenTitle_1
 setGlobal $m49-bbox 0
 setGlobal $m49-showValue 0
-setGlobal $m49-format "Current Seeds and Segmentation"
+setGlobal $m49-format "Speed Image"
 setGlobal $m49-location "Top Center"
 
-setGlobal $m50-bbox 0
-setGlobal $m50-showValue 0
-setGlobal $m50-format "Speed Image"
-setGlobal $m50-location "Top Center"
+# PasteImageFilter_1
+setGlobal $m50-uis {3}
 
-setGlobal $m51-uis {3}
+# UnuQuantize_0
+setGlobal $m53-nbits {8}
 
-setGlobal $m58-nbits {8}
+# EditColorMap2D_0
+setGlobal $m55-on-0 {1}
+setGlobal $m55-on-1 {0}
+setGlobal $m55-panx {-0.02734375}
+setGlobal $m55-pany {-0.01171875}
+setGlobal $m55-scale_factor {1.0}
+setGlobal $m55-faux {1}
+setGlobal $m55-histo {0.5}
+setGlobal $m55-selected_widget {0}
+setGlobal $m55-selected_object {9}
+setGlobal $m55-name-0 {Generic}
+setGlobal $m55-0-color-r {0.8}
+setGlobal $m55-0-color-g {0.0}
+setGlobal $m55-0-color-b {0.0}
+setGlobal $m55-0-color-a {1.0}
+setGlobal $m55-state-0 {r 0 0.00390622 0.015625 0.537109 0.613281 0.25}
+setGlobal $m55-shadeType-0 {0}
+setGlobal $m55-name-1 {Rectangle}
+setGlobal $m55-1-color-r {0.0}
+setGlobal $m55-1-color-g {0.0}
+setGlobal $m55-1-color-b {0.8}
+setGlobal $m55-1-color-a {1.0}
+setGlobal $m55-state-1 {r 0 0.50304 0.0117188 0.459851 0.61407 0.737198}
+setGlobal $m55-shadeType-1 {0}
+setGlobal $m55-marker {end}
 
+# VolumeVisualizer_0
+setGlobal $m56-alpha_scale {0.0}
+setGlobal $m56-shading {1}
+setGlobal $m56-specular {0.388}
+setGlobal $m56-shine {24}
 
-# EDIT TO SHOW VALUES AROUND 0.0
-setGlobal $m61-on-0 {1}
-setGlobal $m61-on-1 {0}
-setGlobal $m61-panx {-0.02734375}
-setGlobal $m61-pany {-0.01171875}
-setGlobal $m61-scale_factor {1.0}
-setGlobal $m61-faux {1}
-setGlobal $m61-histo {0.5}
-setGlobal $m61-selected_widget {0}
-setGlobal $m61-selected_object {9}
-setGlobal $m61-name-0 {Generic}
-setGlobal $m61-0-color-r {0.8}
-setGlobal $m61-0-color-g {0.0}
-setGlobal $m61-0-color-b {0.0}
-setGlobal $m61-0-color-a {1.0}
-setGlobal $m61-state-0 {r 0 0.00390622 0.015625 0.537109 0.613281 0.25}
-setGlobal $m61-shadeType-0 {0}
-setGlobal $m61-name-1 {Rectangle}
-setGlobal $m61-1-color-r {0.0}
-setGlobal $m61-1-color-g {0.0}
-setGlobal $m61-1-color-b {0.8}
-setGlobal $m61-1-color-a {1.0}
-setGlobal $m61-state-1 {r 0 0.50304 0.0117188 0.459851 0.61407 0.737198}
-setGlobal $m61-shadeType-1 {0}
-setGlobal $m61-marker {end}
+# NrrdSetupTexture_0
+setGlobal $m57-useinputmin 0
+setGlobal $m57-useinputmax 0
+setGlobal $m57-minf 0
+setGlobal $m57-maxf 0
 
-setGlobal $m62-alpha_scale {0.0}
-setGlobal $m62-shading {1}
-setGlobal $m62-specular {0.388}
-setGlobal $m62-shine {24}
+# GenTitle_2
+setGlobal $m58-bbox {0}
+setGlobal $m58-showValue {0}
+setGlobal $m58-format "Volume Rendering"
+setGlobal $m58-location "Top Center"
 
-setGlobal $m63-useinputmin 0
-setGlobal $m63-useinputmax 0
-setGlobal $m63-minf 0
-setGlobal $m63-maxf 0
+# UnuHeq_0
+setGlobal $m59-bins {3000}
+setGlobal $m59-sbins {1}
 
-setGlobal $m64-bbox {0}
-setGlobal $m64-showValue {0}
-setGlobal $m64-format "Volume Rendering"
-setGlobal $m64-location "Top Center"
+# UnuGamma_0
+setGlobal $m60-gamma {0.5}
 
-setGlobal $m66-bins {3000}
-setGlobal $m66-sbins {1}
+# UnuQuantize_1
+setGlobal $m61-nbits {8}
 
-setGlobal $m67-gamma {0.5}
+# UnuJhisto_0
+setGlobal $m62-bins {512 256}
+setGlobal $m62-mins {0 nan}
+setGlobal $m62-maxs {6 nan}
+setGlobal $m62-type {nrrdTypeFloat}
 
-setGlobal $m68-nbits {8}
+# Unu2op_0
+setGlobal $m63-operator {+}
 
-setGlobal $m69-bins {512 256}
-setGlobal $m69-mins {0 nan}
-setGlobal $m69-maxs {6 nan}
-setGlobal $m69-type {nrrdTypeFloat}
+# Unu1op_0
+setGlobal $m64-operator {log}
 
-setGlobal $m70-operator {+}
+# UnuAxdelete_0
+setGlobal $m70-axis 2
 
-setGlobal $m71-operator {log}
+# UnuAxdelete_1
+setGlobal $m72-axis 2
 
-setGlobal $m78-axis 2
-
-setGlobal $m80-axis 2
-
+# ImageFileWriter_1
 if {[netedit getenv LEVELSETSEGMENTER_SAVE_FLOAT_FILE] == ""} {
-    setGlobal $m83-filename "/tmp/float.mhd"
+    setGlobal $m74-filename "/tmp/float.mhd"
 } else {
-    setGlobal $m83-filename "[netedit getenv LEVELSETSEGMENTER_SAVE_FLOAT_FILE]"
+    setGlobal $m74-filename "[netedit getenv LEVELSETSEGMENTER_SAVE_FLOAT_FILE]"
 }
 
-setGlobal $m86-copy 1
+# NrrdToField_0
+setGlobal $m75-copy 1
 
-setGlobal $m87-faces-on 1
-setGlobal $m87-faces-usetexture 1
-setGlobal $m87-use-transparency 1
-setGlobal $m87-nodes-on 0
-setGlobal $m87-edges-on 0
+# ShowField_3
+setGlobal $m76-faces-on 1
+setGlobal $m76-faces-usetexture 1
+setGlobal $m76-use-transparency 1
+setGlobal $m76-nodes-on 0
+setGlobal $m76-edges-on 0
 
-setGlobal $m88-positionList {{0 0} {273 0} {277 40} {552 40}}
-setGlobal $m88-nodeList {3 4 5 6}
-setGlobal $m88-width {552}
-setGlobal $m88-height {40}
-setGlobal $m88-mapName {BP Seismic}
-setGlobal $m88-resolution {2}
-setGlobal $m88-realres {2}
-setGlobal $m88-reverse {1}
+# GenStandardColorMaps_4
+setGlobal $m77-positionList {{0 0} {273 0} {277 40} {552 40}}
+setGlobal $m77-nodeList {3 4 5 6}
+setGlobal $m77-width {552}
+setGlobal $m77-height {40}
+setGlobal $m77-mapName {BP Seismic}
+setGlobal $m77-resolution {2}
+setGlobal $m77-realres {2}
+setGlobal $m77-reverse {1}
 
-setGlobal $m90-copy {1}
+# ImageToField_3
+setGlobal $m78-copy {1}
 
-setGlobal $m91-num_seeds 0
-setGlobal $m91-probe_scale 10
-setGlobal $m91-widget 1
-setGlobal $m91-red 0.0
-setGlobal $m91-green 0.0
-setGlobal $m91-blue 0.5
+# SeedPoints_1
+setGlobal $m79-num_seeds 0
+setGlobal $m79-probe_scale 10
+setGlobal $m79-widget 1
+setGlobal $m79-red 0.0
+setGlobal $m79-green 0.0
+setGlobal $m79-blue 0.5
 
-setGlobal $m92-inside_value {1}
-setGlobal $m92-outside_value {0}
+# BuildSeedVolume_1
+setGlobal $m80-inside_value {1}
+setGlobal $m80-outside_value {0}
 
-setGlobal $m93-port-index {1}
+# ChooseNrrd_0
+setGlobal $m81-port-index {1}
 
-setGlobal $m94-operator {min}
+# Unu2op_1
+setGlobal $m82-operator {min}
 
-setGlobal $m95-port-index {1}
+# ChooseNrrd_1
+setGlobal $m83-port-index {1}
 
-setGlobal $m96-operator {max}
+# Unu2op_2
+setGlobal $m84-operator {max}
 
 
 ::netedit scheduleok
@@ -531,8 +639,8 @@ setGlobal $m96-operator {max}
 
 # global array indexed by module name to keep track of modules
 global mods
-set mods(Viewer) $m38
-set mods(ViewSlices) $m36
+set mods(Viewer) $m37
+set mods(ViewSlices) $m35
 
 # readers
 set mods(NrrdReader) $m1
@@ -548,9 +656,9 @@ set mods(NrrdToImage-Reader) $m11
 set mods(UnuCrop) $m5
 set mods(ChooseNrrd-Crop) $m6
 
-set mods(NrrdInfo-Size) $m74
-set mods(UnuMinMax-Size) $m75
-set mods(UnuMinMax-Smoothed) $m76
+set mods(NrrdInfo-Size) $m66
+set mods(UnuMinMax-Size) $m67
+set mods(UnuMinMax-Smoothed) $m68
 
 # Smoothing
 set mods(Smooth-Gradient) $m12
@@ -562,76 +670,73 @@ set mods(ChooseImage-Smooth) $m17
 set mods(LevelSet) $m15
 set mods(ExtractSlice) $m16
 set mods(BinaryThreshold-Slice) $m18
-#set mods(BinaryThreshold-Prev) $m20
-#set mods(ImageToField-Slice) $m33
-set mods(ImageToField-Seg) $m42
-set mods(GenStandard-Seg) $m44
+set mods(ImageToField-Seg) $m41
+set mods(GenStandard-Seg) $m43
 
 # Seeds
-set mods(BinaryThreshold-Seeds) $m20
+set mods(BinaryThreshold-Seeds) $m20 
 set mods(SampleField-Seeds) $m19
-set mods(SampleField-SeedsNeg) $m91
-#set mods(ChooseImage-Seeds) $m23
-set mods(BuildSeedVolume) $m37
-set mods(ImageToField-Seeds) $m86
-set mods(ImageToField-SeedsNeg) $m90
-set mods(BuildSeedVolume-Neg) $m92
-set mods(Unu2op-Max) $m94
-set mods(Unu2op-Min) $m96
-set mods(ChooseNrrd-Combine) $m93
-set mods(ChooseNrrd-Seeds) $m95
-set mods(GenTitle-Seg) $m49
+set mods(SampleField-SeedsNeg) $m79
+set mods(BuildSeedVolume) $m36
+    # NrrdToField
+set mods(ImageToField-Seeds) $m75 
+    # NrrdToField
+set mods(ImageToField-SeedsNeg) $m78
+set mods(BuildSeedVolume-Neg) $m80
+set mods(Unu2op-Max) $m82
+set mods(Unu2op-Min) $m84
+set mods(ChooseNrrd-Combine) $m81
+set mods(ChooseNrrd-Seeds) $m83
+set mods(GenTitle-Seg) $m48
 
 # 2D vis
-set mods(ChooseNrrd-2D) $m73
+set mods(ChooseNrrd-2D) $m65
 
 # volume rendering
-set mods(Viewer-VolRen) $m54
-set mods(EditColorMap2D) $m61
+set mods(Viewer-VolRen) $m52
+set mods(EditColorMap2D) $m55
 
 # Prev/Next slice
-set mods(ImageToField-Prev) $m26
-set mods(UnuAxdelete-Prev) $m80
-#set mods(NrrdToImage-Prev) $m81
-set mods(Extract-Prev) $m22
-#set mods(UCharToFloat) $m85
+set mods(ImageToField-Prev) $m25
+set mods(UnuAxdelete-Prev) $m72
+set mods(Extract-Prev) $m22 
 
 # Feature Image
-set mods(ImageToField-Feature) $m77
-set mods(UnuAxdelete-Feature) $m78
-set mods(NrrdToImage-Feature) $m79
-set mods(ShowField-Feature) $m39
+set mods(ImageToField-Feature) $m69 
+set mods(UnuAxdelete-Feature) $m70
+set mods(NrrdToImage-Feature) $m71
+set mods(ShowField-Feature) $m38
 
-set mods(ShowField-Seg) $m43
-set mods(ShowField-Speed) $m47
-set mods(ShowField-Seed) $m87
+set mods(ShowField-Seg) $m42
+set mods(ShowField-Speed) $m46
+set mods(ShowField-Seed) $m76
 
-set mods(GenTitle-Speed) $m50
+set mods(GenTitle-Speed) $m49
 
 
 # Binary/Float Segmented Volume
-set mods(PasteImageFilter-Binary) $m30
-set mods(PasteImageFilter-Float) $m51
+set mods(PasteImageFilter-Binary) $m29
+set mods(PasteImageFilter-Float) $m50
 
 # binary readers/writers
-set mods(ImageFileWriter-Binary) $m24
-set mods(ImageFileWriter-Float) $m83
+set mods(ImageFileWriter-Binary) $m23
+set mods(ImageFileWriter-Float) $m74
 
 # volume rendering
-set mods(ImageToNrrd-Vol) $m53
-set mods(VolumeVisualizer) $m62
-set mods(UnuMinmax-Vol) $m35
-set mods(RescaleColorMap-Vol) $m33
-set mods(UnuJhisto-Vol) $m69
-set mods(NrrdSetupTexture-Vol) $m63
-set mods(GenTitle-Vol) $m64
+set mods(ImageToNrrd-Vol) $m51
+set mods(VolumeVisualizer) $m56
+set mods(UnuMinmax-Vol) $m34
+set mods(RescaleColorMap-Vol) $m32
+set mods(UnuJhisto-Vol) $m62
+set mods(NrrdSetupTexture-Vol) $m57
+set mods(GenTitle-Vol) $m58
 
 
 
 global axis
 set axis 2
-setGlobal $m78-axis $axis
-setGlobal $m80-axis $axis
+setGlobal $m70-axis $axis
+setGlobal $m72-axis $axis
 
 global smooth_region
 set smooth_region vol
@@ -787,16 +892,12 @@ class LevelSetSegmenterApp {
 	disableModule $mods(Smooth-Curvature) 1
 	disableModule $mods(Smooth-Blur) 1
 	
-	# Disable Volume Rendering
-
 	# Disable prev/next segmentation as seeds
-	disableModule $mods(ImageToField-Prev) 1
-#	disableModule $mods(NrrdToImage-Prev) 1
+	disableModule $mods(ImageToNrrd-Prev) 1
 	disableModule $mods(Extract-Prev) 1
 
 	# Level Set
 	disableModule $mods(LevelSet) 1
-#	disableModule $mods(ImageToField-Slice) 1
 
 	# Feature image into Level Set
 	disableModule $mods(ImageToField-Feature) 1
@@ -810,14 +911,7 @@ class LevelSetSegmenterApp {
 	disableModule $mods(PasteImageFilter-Binary)  1
 
 	# Seed Points
-#	disableModule $mods(SampleField-Seeds) 1
-#	disableModule $mods(SampleField-SeedsNeg) 1
 	disableModule $mods(ImageToField-Seeds) 1
-#	disableModule $mods(BuildSeedVolume) 1
-#	disableModule $mods(ImageToField-SeedsNeg) 1
-#	disableModule $mods(BuildSeedVolume-Neg) 1
-#	disableModule $mods(Unu2op-Max) 1
-#	disableModule $mods(Unu2op-Min) 1
 
     }
 
@@ -2941,7 +3035,7 @@ class LevelSetSegmenterApp {
 	# Create initial segmentation and display it
 	# by executing the appropriate set of modules
 	disableModule $mods(Extract-Prev) 1
-	disableModule $mods(ImageToField-Prev) 1
+	disableModule $mods(ImageToNrrd-Prev) 1
 	disableModule $mods(UnuAxdelete-Prev) 1
 	disableModule $mods(BinaryThreshold-Seeds) 1
 
@@ -3007,7 +3101,7 @@ class LevelSetSegmenterApp {
 	    }
 
 	    disableModule $mods(Extract-Prev) 0
-	    disableModule $mods(ImageToField-Prev) 0
+	    disableModule $mods(ImageToNrrd-Prev) 0
 	    disableModule $mods(UnuAxdelete-Prev) 0
 	    $mods(SampleField-Seeds) send
 	    $mods(SampleField-SeedsNeg) send
@@ -3058,7 +3152,7 @@ class LevelSetSegmenterApp {
 	    }
 
 	    disableModule $mods(Extract-Prev) 0
-	    disableModule $mods(ImageToField-Prev) 0
+	    disableModule $mods(ImageToNrrd-Prev) 0
 	    disableModule $mods(UnuAxdelete-Prev) 0
 	    $mods(SampleField-Seeds) send
 	    $mods(SampleField-SeedsNeg) send
@@ -3092,7 +3186,7 @@ class LevelSetSegmenterApp {
 	    }
 
 	    disableModule $mods(Extract-Prev) 0
-	    disableModule $mods(ImageToField-Prev) 0
+	    disableModule $mods(ImageToNrrd-Prev) 0
 	    disableModule $mods(UnuAxdelete-Prev) 0
 	    $mods(SampleField-Seeds) send
 	    $mods(SampleField-SeedsNeg) send
