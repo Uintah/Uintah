@@ -129,7 +129,7 @@ itcl_class ViewWindow {
 	$viewer-c addviewwindow $this
 	set w .ui[modname]
 	toplevel $w
-	bind $w <Destroy> "$this destroyViewWindow %W" 
+	bind $w <Destroy> "$this killWindow %W" 
 	wm title $w "ViewWindow"
 	wm iconname $w "ViewWindow"
 	wm minsize $w 100 100
@@ -437,13 +437,13 @@ itcl_class ViewWindow {
 	bind $w <Lock-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
-# DMW: didn't want this since it overrides what's saved in the .sr file
-#	bind $w <Map> "$this-c autoview"
     }
 
-    method destroyViewWindow { vw } {
-	set w .ui[modname]
-	if {"$vw"=="$w"} { $this-c destroy }
+    method killWindow { vw } {
+        set w .ui[modname]
+	if {"$vw"=="$w"} {
+	    $this-c killwindow
+	}
     }
 
     method removeMFrame {w} {

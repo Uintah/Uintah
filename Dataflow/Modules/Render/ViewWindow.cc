@@ -1696,10 +1696,6 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
     // redraw message gets dispatched.
     if(!manager->mailbox.trySend(scinew ViewerMessage(id)))
       cerr << "Redraw event dropped, mailbox full!\n";
-  } else if(args[1] == "destroy"){
-    // we should kill the thread also, but don't
-    inertia_mode=0;
-    manager->delete_viewwindow(this);
   } else if(args[1] == "anim_redraw"){
     // We need to dispatch this one to the
     // remote thread We use an ID string
@@ -1960,6 +1956,11 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
       df.up(v);
     }
     animate_to_view(df, 2.0);
+  } else if (args[1] == "killwindow") {
+    current_renderer->kill_helper();
+    inertia_mode=0;
+    manager->delete_viewwindow(this);
+    return;
   } else if(args[1] == "saveobj") {
     if(args.count() != 4){
       args.error("ViewWindow::dump_viewwindow needs an output file name and format!");
