@@ -34,7 +34,8 @@ Finish and FIX:
       Use waiting queue in redraw loop to defer things that are locked
       implement read_try_lock for CrowdMonitor	
       Reset bounding boxes when changed
-      Resizable window
+DONE      Resizable window
+      Widget performance
       Fix +/- button
       Better in/out buttons
       New node types:
