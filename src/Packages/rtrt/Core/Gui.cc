@@ -18,7 +18,7 @@
 #include <Core/Geometry/Transform.h>
 
 #include <GL/glut.h>
-#include </home/sci/dav/glui_v2_1_beta/glui.h>
+#include <glui.h>
 
 using namespace rtrt;
 using namespace SCIRun;
