@@ -9,6 +9,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/MPM/Contact/ContactFactory.h>
 #include <Uintah/Components/MPM/Fracture/FractureFactory.h>
 #include <Uintah/Components/MPM/Fracture/Fracture.h>
+#include <Uintah/Components/MPM/ThermalContact/ThermalContactFactory.h>
 #include <Uintah/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Uintah/Grid/Array3Index.h>
 #include <Uintah/Grid/Grid.h>
@@ -53,7 +54,6 @@ using namespace std;
 SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
-   d_heatConductionInvolved = false;
 }
 
 SerialMPM::~SerialMPM()
@@ -76,10 +76,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
    d_fractureModel = FractureFactory::create(prob_spec,sharedState);
 
-
-   if (d_heatConductionInvolved) {
-     d_thermalContactModel = new ThermalContact;
-   }
+   d_thermalContactModel = ThermalContactFactory::create(prob_spec,
+     sharedState);
   
    cerr << "SerialMPM::problemSetup not done\n";
 }
@@ -184,7 +182,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    t->computes(new_dw, lb->gVelocityLabel, idx, patch );
 	    t->computes(new_dw, lb->gExternalForceLabel, idx, patch );
 
-            if (d_heatConductionInvolved) {
+            if (d_thermalContactModel) {
               t->requires(old_dw, lb->pTemperatureLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
               t->computes(new_dw, lb->gTemperatureLabel, idx, patch );
@@ -195,7 +193,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 sched->addTask(t);
       }
 
-      if (d_heatConductionInvolved) {
+      if (d_thermalContactModel) {
 	 /* computeHeatExchange
 	  *   in(G.MASS, G.TEMPERATURE, G.EXTERNAL_HEAT_RATE)
 	  *   operation(peform heat exchange which will cause each of
@@ -330,7 +328,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 sched->addTask( t );
       }
       
-      if (d_heatConductionInvolved) {
+      if (d_thermalContactModel) {
 	 /*
 	  * computeInternalHeatRate
 	  *   in(P.X, P.VOLUME, P.TEMPERATUREGRADIENT)
@@ -387,7 +385,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 sched->addTask(t);
       }
 
-      if (d_heatConductionInvolved) {
+      if (d_thermalContactModel) {
 	 /*
 	  * solveHeatEquations
 	  *   in(G.MASS, G.INTERNALHEATRATE, G.EXTERNALHEATRATE)
@@ -529,7 +527,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    t->requires(old_dw, lb->pParticleIDLabel, idx, patch, Ghost::None);
 	    t->computes(new_dw, lb->pParticleIDLabel_preReloc, idx, patch);
 
-	    if(d_heatConductionInvolved) {
+	    if(d_thermalContactModel) {
 	      t->requires(new_dw, lb->gTemperatureLabel, idx, patch,
 			Ghost::None);
               t->computes(new_dw, lb->pTemperatureRateLabel_preReloc, idx, patch);
@@ -682,7 +680,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
       plabels.push_back(lb->pSurfaceNormalLabel); //for fracture
       plabels.push_back(lb->pAverageMicrocrackLength); //for fracture
    }
-   if(d_heatConductionInvolved){
+   if(d_thermalContactModel){
       plabels.push_back(lb->pTemperatureLabel); //for heat conduction
       plabels.push_back(lb->pTemperatureGradientLabel); //for heat conduction
       plabels.push_back(lb->pTemperatureRateLabel); //for heat conduction
@@ -708,7 +706,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
      plabels_preReloc.push_back(lb->pAverageMicrocrackLength_preReloc); //frac.
    }
 
-   if(d_heatConductionInvolved){
+   if(d_thermalContactModel){
       plabels_preReloc.push_back(lb->pTemperatureLabel_preReloc); //for heat 
       plabels_preReloc.push_back(lb->pTemperatureGradientLabel_preReloc); //heat
       plabels_preReloc.push_back(lb->pTemperatureRateLabel_preReloc); //heat
@@ -852,7 +850,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocate(gvelocity,     lb->gVelocityLabel, vfindex, patch);
       new_dw->allocate(externalforce, lb->gExternalForceLabel, vfindex, patch);
 
-      if (d_heatConductionInvolved) {
+      if (d_thermalContactModel) {
         ParticleVariable<double> pTemperature;
         NCVariable<double> gTemperature;
         old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
@@ -893,7 +891,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	       externalforce[ni[k]] += pexternalforce[idx] * S[k];
 	       totalmass += pmass[idx] * S[k];
 	       
-  	       if (d_heatConductionInvolved) {
+  	       if (d_thermalContactModel) {
     	         gTemperature[ni[k]] += pTemperature[idx] * pmass[idx] * S[k];
   	       }
 	    }
@@ -904,7 +902,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 //	 if(gmass[*iter] != 0.0){
 	 if(gmass[*iter] >= 1.e-10){
 	    gvelocity[*iter] *= 1./gmass[*iter];
-	    if (d_heatConductionInvolved) {
+	    if (d_thermalContactModel) {
     	      gTemperature[*iter] /= gmass[*iter];
 	    }
 	 }
@@ -938,7 +936,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->put(gmass,         lb->gMassLabel, vfindex, patch);
       new_dw->put(gvelocity,     lb->gVelocityLabel, vfindex, patch);
       new_dw->put(externalforce, lb->gExternalForceLabel, vfindex, patch);
-      if (d_heatConductionInvolved) {
+      if (d_thermalContactModel) {
         new_dw->put(gTemperature, lb->gTemperatureLabel, vfindex, patch);
       }
     }
@@ -1349,7 +1347,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gacceleration, lb->gMomExedAccelerationLabel, vfindex, patch,
 		  Ghost::AroundCells, 1);
 		  
-      if(d_heatConductionInvolved) {
+      if(d_thermalContactModel) {
         old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
         new_dw->allocate(pTemperatureRate,lb->pTemperatureRateLabel, pset);
         new_dw->allocate(pTemperatureGradient, lb->pTemperatureGradientLabel,
@@ -1410,7 +1408,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         vel = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
 
-        if(d_heatConductionInvolved) {
+        if(d_thermalContactModel) {
           pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
           tempRate = 0;
         }
@@ -1420,7 +1418,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	   vel += gvelocity_star[ni[k]]  * S[k];
 	   acc += gacceleration[ni[k]]   * S[k];
 	   
-	   if(d_heatConductionInvolved) {
+	   if(d_thermalContactModel) {
 	      tempRate = gTemperatureRate[ni[k]] * S[k];
 	      for (int j = 0; j<3; j++){
 		 pTemperatureGradient[idx](j+1) += 
@@ -1432,7 +1430,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         // Update the particle's position and velocity
         px[idx]        += vel * delT;
         pvelocity[idx] += acc * delT;
-        if(d_heatConductionInvolved) {
+        if(d_thermalContactModel) {
           pTemperatureRate[idx] = tempRate;
           pTemperature[idx] += tempRate * delT;
         }
@@ -1455,7 +1453,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       new_dw->put(sum_vartype(ke), lb->KineticEnergyLabel);
 
-      if(d_heatConductionInvolved) {
+      if(d_thermalContactModel) {
         new_dw->put(pTemperatureRate, lb->pTemperatureRateLabel_preReloc);
         new_dw->put(pTemperature, lb->pTemperatureLabel_preReloc);
         new_dw->put(pTemperatureGradient, lb->pTemperatureGradientLabel_preReloc);
@@ -1522,14 +1520,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 #endif
 }
 
-void SerialMPM::crackGrow(const ProcessorGroup*,
-                          const Patch* /*patch*/,
-                          DataWarehouseP& /*old_dw*/,
-                          DataWarehouseP& /*new_dw*/)
-{
-}
-
 // $Log$
+// Revision 1.89  2000/06/20 04:12:55  tan
+// WHen d_thermalContactModel != NULL, heat conduction will be included in MPM
+// algorithm.  The d_thermalContactModel is set by ThermalContactFactory according
+// to the information in ProblemSpec from input file.
+//
 // Revision 1.88  2000/06/19 23:52:12  guilkey
 // Added boolean d_burns so that certain stuff only gets done
 // if a burn model is present.  Not to worry, the if's on this
