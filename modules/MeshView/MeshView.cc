@@ -35,6 +35,8 @@ static Module* make_MeshView()
 static RegisterModule db1("Fields", "MeshView", make_MeshView);
 static RegisterModule db2("Visualization", "MeshView", make_MeshView);
 
+static clString mesh_name("Mesh");
+
 MeshView::MeshView()
 : UserModule("MeshView", Source)
 {
@@ -153,7 +155,7 @@ void MeshView::execute()
 	}
     }
   
-    ogeom -> addObj(group);
+    ogeom -> addObj(group, mesh_name);
 }	
 
 void MeshView::initList()
