@@ -364,12 +364,14 @@ bool GuiContext::setString(const std::string& varname, const std::string& value)
 }
 
 bool GuiContext::stringIsaListElement(const string &str) {
+  return false; // TODO: make this work with normal variables that contain []
   if (!str.length()) 
     return false;
   return (str[str.length()-1] == ']');
 }
 
 bool GuiContext::stringIsaMap(const string &str) {
+  return false; // TODO: make this work with normal variables that contain ()
   if (!str.length()) 
     return false;
   return (str[str.length()-1] == ')');
