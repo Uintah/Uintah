@@ -42,13 +42,15 @@
 #include <SCIRun/Internal/InternalComponentInstance.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <iostream>
-using namespace SCIRun;
-using namespace std;
 
-InternalComponentDescription::InternalComponentDescription(InternalComponentModel* model,
-							   const std::string& serviceType,
-							   InternalComponentInstance* (*create)(SCIRunFramework*, const std::string&),
-							   bool isSingleton)
+namespace SCIRun {
+
+InternalComponentDescription
+::InternalComponentDescription(InternalComponentModel* model,
+                               const std::string& serviceType,
+                               InternalComponentInstance* (*create)(SCIRunFramework*,
+                                                                    const std::string&),
+                               bool isSingleton)
   : model(model), serviceType(serviceType), create(create), isSingleton(isSingleton)
 {
   singleton_instance=0;
@@ -56,12 +58,14 @@ InternalComponentDescription::InternalComponentDescription(InternalComponentMode
 
 InternalComponentDescription::~InternalComponentDescription()
 {
-  cerr << "What if singleton_instance is refcounted?\n";
+  std::cerr << "What if singleton_instance is refcounted?" << std::endl;
   if(singleton_instance)
+    {
     delete singleton_instance;
+    }
 }
 
-string InternalComponentDescription::getType() const
+std::string InternalComponentDescription::getType() const
 {
   return serviceType;
 }
@@ -70,3 +74,5 @@ const ComponentModel* InternalComponentDescription::getModel() const
 {
   return model;
 }
+
+} // end namespace SCIRun

@@ -46,28 +46,47 @@
 #include <map>
 #include <string>
 
-namespace SCIRun {
-  class ComponentDescription;
-  class InternalComponentDescription;
-  class SCIRunFramework;
-  class InternalComponentModel : public ComponentModel {
-  public:
-      
+namespace SCIRun
+{
+class ComponentDescription;
+class InternalComponentDescription;
+class SCIRunFramework;
+
+/**
+ * \class InternalComponentModel
+ *
+ */
+class InternalComponentModel : public ComponentModel
+{
+public:
     InternalComponentModel(SCIRunFramework* framework);
     virtual ~InternalComponentModel();
 
-    virtual bool haveComponent(const std::string& type);
-    virtual ComponentInstance* createInstance(const std::string& name,
-					      const std::string& type);
-    virtual bool destroyInstance(ComponentInstance *ci);
-    sci::cca::Port::pointer getFrameworkService(const std::string& type,
-						const std::string& componentName);
-    bool releaseFrameworkService(const std::string& type,
-				 const std::string& componentName);
-    virtual std::string getName() const;
-    virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
-				       bool);
-  private:
+  /** */
+  virtual bool haveComponent(const std::string& type);
+
+  /** */
+  virtual ComponentInstance* createInstance(const std::string& name,
+                                            const std::string& type);
+
+  /** */
+  virtual bool destroyInstance(ComponentInstance *ci);
+
+  /** */
+  sci::cca::Port::pointer getFrameworkService(const std::string& type,
+                                              const std::string& componentName);
+  
+  /** */
+  bool releaseFrameworkService(const std::string& type,
+                               const std::string& componentName);
+
+  /** */
+  virtual std::string getName() const;
+
+  /** */
+  virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
+                                     bool);
+private:
     std::map<std::string, InternalComponentDescription*> services;
     SCIRunFramework* framework;
 

@@ -47,16 +47,15 @@
 #include <vector>
 
 namespace SCIRun {
-class SCIRunFramework;
 
+class SCIRunFramework;
 
 /**
  * \class ComponentEventService
  *
  * The component event service is a CCA port that is used to register command objects
- * (analogous to callback methods) with events broadcast from 
-
- *mplementation of a command/observer pattern.  Thi
+ * (analogous to callback methods) with events broadcast from
+ *
  *
  */
 class ComponentEventService : public sci::cca::ports::ComponentEventService,
@@ -69,35 +68,39 @@ public:
       a smart pointer to the newly allocated object registered in the framework
       \em fwk with the instance name \em name. */
   static InternalComponentInstance* create(SCIRunFramework* fwk,
-					     const std::string& name);
-
+                                           const std::string& name);
+  
   /** ? */
   sci::cca::Port::pointer getService(const std::string&);
-
+  
   /** ? */
   virtual void addComponentEventListener(sci::cca::ports::ComponentEventType type,
-                     const sci::cca::ports::ComponentEventListener::pointer& l,
+                        const sci::cca::ports::ComponentEventListener::pointer& l,
                                          bool playInitialEvents);
   
   /** ? */
   virtual void
   removeComponentEventListener(sci::cca::ports::ComponentEventType type,
-                               const sci::cca::ports::ComponentEventListener::pointer& l);
+                        const sci::cca::ports::ComponentEventListener::pointer& l);
   
   virtual void moveComponent(const sci::cca::ComponentID::pointer& id, int x, int y);
   private:
 
-    struct Listener {
-      sci::cca::ports::ComponentEventType type;
-      sci::cca::ports::ComponentEventListener::pointer l;
-      Listener(sci::cca::ports::ComponentEventType type, const sci::cca::ports::ComponentEventListener::pointer& l)
-	: type(type), l(l)
-      {
-      }
-    };
-    std::vector<Listener*> listeners;
-    ComponentEventService(SCIRunFramework* fwk, const std::string& name);
+  struct Listener
+  {
+    sci::cca::ports::ComponentEventType type;
+    sci::cca::ports::ComponentEventListener::pointer l;
+    Listener(sci::cca::ports::ComponentEventType type,
+             const sci::cca::ports::ComponentEventListener::pointer& l)
+      : type(type), l(l)
+    {  }
+    
   };
-}
+  std::vector<Listener*> listeners;
+  ComponentEventService(SCIRunFramework* fwk, const std::string& name);
+};
+
+
+} // end namespace SCIRun
 
 #endif
