@@ -36,10 +36,13 @@
 #include <Core/Datatypes/MeshBase.h>
 #include <Core/share/share.h>
 #include <string>
+#include <iostream>
 
 namespace SCIRun {
 
 using std::string;
+using std::cerr;
+using std::endl;
 
 class SCICORESHARE LatVolMesh : public MeshBase
 {
@@ -325,8 +328,11 @@ public:
 
   //! similar to get_cells() with face_index argument, but
   //  returns the "other" cell if it exists, not all that exist
-  void get_neighbor(cell_index &, face_index) const {}
-
+  bool get_neighbor(cell_index &neighbor, cell_index from, 
+		    face_index idx) const {
+    cerr << "LatVolMesh::get_neighbor not implemented." << endl;
+    ASSERT(0);
+  }
   //! get the center point (in object space) of an element
   void get_center(Point &, node_index) const;
   void get_center(Point &, edge_index) const {}

@@ -55,7 +55,7 @@ public:
 
   /*! Ask mesh to compute edges and faces. Does nothing if mesh 
     is already finished. */
-  void finish_mesh() { get_typed_mesh()->finish(); }
+  void finish_mesh() { get_typed_mesh()->finish_mesh(); }
 
   bool get_gradient(Vector &, Point &);
   Vector cell_gradient(TetVolMesh::cell_index);

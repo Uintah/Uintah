@@ -37,11 +37,11 @@
 #include <Core/Datatypes/FieldIterator.h>
 #include <vector>
 #include <Core/Persistent/PersistentSTL.h>
-#include <hash_set>
+#include <hash_map>
 
 namespace SCIRun {
 
-using std::hash_set;
+using std::hash_map;
 
 class SCICORESHARE TetVolMesh : public MeshBase
 {
@@ -127,7 +127,7 @@ public:
   void fill_data(Iter begin, Iter end, Functor fill_ftor);
   
   //! (re)create the edge and faces data based on cells.
-  void finish();
+  virtual void finish_mesh();
   void compute_edges();
   void compute_faces();
   void compute_node_neighbors();
@@ -285,27 +285,29 @@ private:
     }
   };
 
+  typedef hash_map<Face, face_index, FaceHash> face_ht;
+  typedef hash_map<Edge, edge_index, EdgeHash> edge_ht;
 
   /*! container for face storage. Must be computed each time 
     nodes or cells change. */
   vector<Face>             faces_;
-  hash_set<Face, FaceHash> face_table_;
+  face_ht                  face_table_;
   Mutex                    face_table_lock_;
   /*! container for edge storage. Must be computed each time 
     nodes or cells change. */
   vector<Edge>             edges_; 
-  hash_set<Edge, EdgeHash> edge_table_;
+  edge_ht                  edge_table_;
   Mutex                    edge_table_lock_;
 
 
 
   inline
   void hash_edge(node_index n1, node_index n2, 
-		 cell_index ci, hash_set<Edge, EdgeHash> &table) const;
+		 cell_index ci, edge_ht &table) const;
 
   inline
   void hash_face(node_index n1, node_index n2, node_index n3,
-		 cell_index ci, hash_set<Face, FaceHash> &table) const;
+		 cell_index ci, face_ht &table) const;
 
   //! useful functors
   struct FillNodeNeighbors {
@@ -326,8 +328,7 @@ private:
     node_array                   nodes_;
   };
 
-  vector<vector<node_index> > node_neighbors_;
-  
+  vector<vector<node_index> > node_neighbors_;  
   Mutex                       node_nbor_lock_;
 };
 

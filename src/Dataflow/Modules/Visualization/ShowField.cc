@@ -46,7 +46,7 @@
 #include <Core/Geom/Switch.h>
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomLine.h>
-#include <Core/Geom/GeomTri.h>
+#include <Core/Geom/GeomTriangles.h>
 #include <Core/Geom/Pt.h>
 
 #include <Core/GuiInterface/GuiVar.h>
@@ -129,7 +129,7 @@ public:
 		       GeomGroup *g, MaterialHandle m0);
   inline void add_face(const Point &p1, const Point &p2, const Point &p3, 
 		       MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
-		       GeomGroup *g);
+		       GeomTriangles *g);
 
   virtual void tcl_command(TCLArgs& args, void* userdata);
 
@@ -141,7 +141,7 @@ ShowField::finish_mesh(Msh* m) {}
 
 template <>
 void 
-ShowField::finish_mesh(TetVolMesh* tvm) { tvm->finish(); }
+ShowField::finish_mesh(TetVolMesh* tvm) { tvm->finish_mesh(); }
 
 ShowField::ShowField(const clString& id) : 
   Module("ShowField", id, Filter, "Visualization", "SCIRun"), 
@@ -375,7 +375,7 @@ ShowField::render_faces(const Fld *sfld)
 {
   if (faces_dirty_) {
     typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
-    GeomGroup* faces = scinew GeomGroup;
+    GeomTriangles* faces = scinew GeomTriangles;
     face_switch_ = scinew GeomSwitch(faces);
     // Third pass: over the faces
     typename Fld::mesh_type::face_iterator fiter = mesh->face_begin();  
@@ -450,10 +450,11 @@ ShowField::render(const F1 *fld)
 void 
 ShowField::add_face(const Point &p0, const Point &p1, const Point &p2, 
 		    MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
-		    GeomGroup *g) 
+		    GeomTriangles *g) 
 {
-  GeomTri *t = new GeomTri(p0, p1, p2, m0, m1, m2);
-  g->add(t);
+  g->add(p0, m0, 
+	 p1, m2, 
+	 p2, m1);
 }
 
 void 
