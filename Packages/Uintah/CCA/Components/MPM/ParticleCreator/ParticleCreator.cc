@@ -9,6 +9,7 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
@@ -17,6 +18,7 @@
 
 using namespace Uintah;
 using std::vector;
+using std::cerr;
 
 
 ParticleCreator::ParticleCreator(MPMMaterial* matl, MPMLabel* lb,int n8or27) 
@@ -39,6 +41,9 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 				 vector<GeometryObject*>& d_geom_objs)
 {
   
+  // Print the physical boundary conditions
+  printPhysicalBCs();
+
   int dwi = matl->getDWIndex();
   ParticleSubset* subset = allocateVariables(numParticles,dwi,lb,patch,new_dw);
 
@@ -77,7 +82,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 	  pvolume[start+count]     = (*volumes)[i];
 	  pvelocity[start+count]   =(*obj)->getInitialVelocity();
 	  ptemperature[start+count]=(*obj)->getInitialTemperature();
-         psp_vol[start+count]     =1.0/matl->getInitialDensity(); 
+          psp_vol[start+count]     =1.0/matl->getInitialDensity(); 
 	  pmass[start+count]=matl->getInitialDensity()*pvolume[start+count];
          
 	  // Apply the force BC if applicable
@@ -128,26 +133,35 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 		((long64)cell_idx.y() << 32) |
 		((long64)cell_idx.z() << 48);
 	      if(piece->inside(p)){
-		position[start+count]=p;
-		pvolume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
-		pvelocity[start+count]=(*obj)->getInitialVelocity();
-		ptemperature[start+count]=(*obj)->getInitialTemperature();
-	       psp_vol[start+count]=1.0/matl->getInitialDensity(); 
+                particleIndex pidx = start+count; 
+		position[pidx]=p;
+		pvolume[pidx]=dxpp.x()*dxpp.y()*dxpp.z();
+		pvelocity[pidx]=(*obj)->getInitialVelocity();
+		ptemperature[pidx]=(*obj)->getInitialTemperature();
+	        psp_vol[pidx]=1.0/matl->getInitialDensity(); 
 
 		// Calculate particle mass
-		double partMass =matl->getInitialDensity()*pvolume[start+count];
-		pmass[start+count] = partMass;
+		double partMass =matl->getInitialDensity()*pvolume[pidx];
+		pmass[pidx] = partMass;
 		
+                // If the particle is on the surface and if there is
+                // a physical BC attached to it then mark with the 
+                // physical BC pointer
+		if (checkForSurface(piece,p,dxpp)) {
+                  pLoadCurveID[pidx] = getLoadCurveID(p, dxpp);
+                } else {
+                  pLoadCurveID[pidx] = 0;
+                }
+
 		// Apply the force BC if applicable
 		Vector pExtForce(0,0,0);
 		applyForceBC(dxpp, p, partMass, pExtForce);
-		pexternalforce[start+count] = pExtForce;
+		pexternalforce[pidx] = pExtForce;
 		
 		// Determine if particle is on the surface
-		// int surf = checkForSurface(piece,p,dxpp);
 		short int& myCellNAPID = cellNAPID[cell_idx];
-		pparticleID[start+count] = cellID | (long64)myCellNAPID;
-		psize[start+count] = size;
+		pparticleID[pidx] = cellID | (long64)myCellNAPID;
+		psize[pidx] = size;
 		ASSERT(myCellNAPID < 0x7fff);
 		myCellNAPID++;
 		count++;
@@ -161,8 +175,42 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     start += count;
   }
 
-
   return subset;
+}
+
+// Get the LoadCurveID applicable for this material point
+// WARNING : Should be called only once per particle during a simulation 
+// because it updates the number of particles to which a BC is applied.
+int
+ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp)
+{
+  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
+    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+        
+    //cout << " BC Type = " << bcs_type << endl;
+    if (bcs_type == "Pressure") {
+      PressureBC* pbc = 
+        dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      if (pbc->flagMaterialPoint(pp, dxpp)) {
+        return pbc->loadCurveID(); 
+      }
+    }
+  }
+  return 0;
+}
+
+// Print MPM physical boundary condition information
+void
+ParticleCreator::printPhysicalBCs()
+{
+  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
+    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+    if (bcs_type == "Pressure") {
+      PressureBC* pbc = 
+        dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      cerr << *pbc << endl;
+    }
+  }
 }
 
 void ParticleCreator::applyForceBC(const Vector& dxpp, 
@@ -187,7 +235,7 @@ void ParticleCreator::applyForceBC(const Vector& dxpp,
         //     << " Force Density = " << bc->getForceDensity() 
         //     << " Particle Mass = " << pMass << endl;
       }
-    }
+    } 
   }
 }
 
@@ -209,6 +257,7 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(pparticleID,    lb->pParticleIDLabel,    subset);
   new_dw->allocateAndPut(psize,          lb->pSizeLabel,          subset);
   new_dw->allocateAndPut(psp_vol,        lb->pSp_volLabel,        subset); 
+  new_dw->allocateAndPut(pLoadCurveID,   lb->pLoadCurveIDLabel,   subset); 
 
   return subset;
 
@@ -309,6 +358,9 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
     particle_state.push_back(lb->pSizeLabel);
     particle_state_preReloc.push_back(lb->pSizeLabel_preReloc);
   }
+
+  particle_state.push_back(lb->pLoadCurveIDLabel);
+  particle_state_preReloc.push_back(lb->pLoadCurveIDLabel_preReloc);
 
   matl->getConstitutiveModel()->addParticleState(particle_state,
 						 particle_state_preReloc);
