@@ -158,6 +158,25 @@ LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox)
 }
 
 
+//! return iterators over that fall within or on the BBox
+void
+LatVolMesh::get_cell_range(Cell::range_iter &iter, Cell::iterator &end,
+			   const BBox &box) {
+  // get the min and max points of the bbox and make sure that they lie
+  // inside the mesh boundaries.
+  BBox mesh_boundary = get_bounding_box();
+  Point max = Min(box.max(), mesh_boundary.max());
+  Point min = Max(box.min(), mesh_boundary.min());
+  Cell::index_type min_index, max_index;
+  locate(min_index, min);
+  locate(max_index, max);
+  end = Cell::iterator(this, min_index.i_, min_index.j_, max_index.k_);
+  iter = Cell::range_iter(this,
+			  min_index.i_, min_index.j_, min_index.k_,
+			  max_index.i_, max_index.j_, max_index.k_);
+}
+
+
 void
 LatVolMesh::get_center(Point &result, Node::index_type idx) const
 {

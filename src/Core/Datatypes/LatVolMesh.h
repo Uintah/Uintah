@@ -258,6 +258,57 @@ public:
     }
   };
 
+  // This iterator is designed to loop over a sub-set of the mesh
+  struct RangeCellIter : public CellIter
+  {
+    RangeCellIter() : CellIter() {}
+    // Pre: min, and max are both valid iterators over this mesh
+    //      min.A <= max.A where A is (i_, j_, k_)
+    RangeCellIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k,
+		  unsigned max_i, unsigned max_j, unsigned max_k)
+      : CellIter(m, i, j, k), min_i_(i), min_j_(j), min_k_(k),
+	max_i_(max_i), max_j_(max_j), max_k_(max_k)
+    {}
+
+    const CellIndex &operator *() const { return (const CellIndex&)(*this); }
+
+    RangeCellIter &operator++()
+    {
+      i_++;
+      // Did i_ loop over the line
+      // mesh_->min_x is the starting point of the x range for the mesh
+      // min_i_ is the starting point of the range on x
+      // max_x_ is the ending point of the range on x
+      if (i_ >= mesh_->min_x_ + max_i_) {
+	// set i_ to the beginning of the range
+	i_ = min_i_;
+	j_++;
+	// Did j_ loop over the face
+	// mesh_->min_y_ is the starting point of the y range for the mesh
+	// min_j is the starting point of the range on y
+	// max_j is the ending point of the range on y
+	if (j_ >= mesh_->min_y_ + max_j_) {
+	  j_ = min_j_;
+	  k_++;
+	}
+      }
+      return *this;
+    }
+
+  private:
+    // The minimum extents
+    unsigned min_i_, min_j_, min_k_;
+    // The maximum extents
+    unsigned max_i_, max_j_, max_k_;
+
+    RangeCellIter operator++(int)
+    {
+      RangeCellIter result(*this);
+      operator++();
+      return result;
+    }
+  };
+
   //typedef LatIndex        under_type;
 
   //! Index and Iterator types required for Mesh Concept.
@@ -287,6 +338,7 @@ public:
     typedef CellIter           iterator;
     typedef CellIndex          size_type;
     typedef vector<index_type> array_type;
+    typedef RangeCellIter      range_iter;
   };
 
   typedef Cell Elem;
@@ -296,6 +348,8 @@ public:
   friend class EdgeIter;
   friend class FaceIter;
 
+  friend class RangeCellIter;
+  
   LatVolMesh()
     : min_x_(0), min_y_(0), min_z_(0),
       nx_(1), ny_(1), nz_(1) {}
@@ -364,6 +418,9 @@ public:
 
   //! return all cell_indecies that overlap the BBox in arr.
   void get_cells(Cell::array_type &arr, const BBox &box);
+  //! return iterators over that fall within or on the BBox
+  void get_cell_range(Cell::range_iter &begin, Cell::iterator &end,
+		      const BBox &box);
 
   //! similar to get_cells() with Face::index_type argument, but
   //  returns the "other" cell if it exists, not all that exist
