@@ -408,6 +408,7 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
   datanum--;
   
   CatmullRomSpline<Color> spline(0);
+#if 0
   spline.add(Color(.4,.4,.4));
   spline.add(Color(.4,.4,1));
   //    for(int i=0;i<2;i++)
@@ -416,6 +417,26 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
   spline.add(Color(1,1,.4));
   //    for(int i=0;i<300;i++)
   spline.add(Color(1,.4,.4));
+#else
+  spline.add(Color(0,0,1));
+  spline.add(Color(0,0.4,1));
+  spline.add(Color(0,0.8,1));
+  spline.add(Color(0,1,0.8));
+  spline.add(Color(0,1,0.4));
+  spline.add(Color(0,1,0));
+  spline.add(Color(0.4,1,0));
+  spline.add(Color(0.8,1,0));
+  spline.add(Color(1,0.9176,0));
+  spline.add(Color(1,0.8,0));
+  spline.add(Color(1,0.4,0));
+  spline.add(Color(1,0,0));
+  //{ 0 0 255}   { 0 102 255}
+  //{ 0 204 255}  { 0 255 204}
+  //{ 0 255 102}  { 0 255 0}
+  //{ 102 255 0}  { 204 255 0}
+  //{ 255 234 0}  { 255 204 0}
+  //{ 255 102 0}  { 255 0 0} }}
+#endif  
   int ncolors=5000;
   Array1<Material*> matls(ncolors);
   float Ka=.8;
@@ -426,8 +447,8 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
   for(int i=0;i<ncolors;i++){
     float frac=float(i)/(ncolors-1);
     Color c(spline(frac));
-    matls[i]=new Phong(c*Ka, c*Kd, c*Ks, specpow, refl);
-    //matls[i]=new LambertianMaterial(c*Kd);
+    //matls[i]=new Phong(c*Ka, c*Kd, c*Ks, specpow, refl);
+    matls[i]=new LambertianMaterial(c*Kd);
   }
   
   
@@ -639,7 +660,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   //Color averagelight(0,0,0);
   double ambient_scale=1.0;
   
-  Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
+  //  Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
+  Color bgcolor(0,0,0);
   
   Group* all = new Group();
   // the value will be checked later and the program will abort
