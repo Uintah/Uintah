@@ -937,6 +937,28 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
 	}
     }
 
+    {
+	int nelems=elems.size();
+	for(int i=0;i<nelems;i++){
+	    Element* e=elems[i];
+	    if(e){
+		Point cen;
+		double rad2;
+		double err;
+		e->get_sphere2(cen, rad2, err);
+		for(int ii=0;ii<node;ii++){
+		    Point p(nodes[ii]->p);
+		    double ndist2=(p-cen).length2();
+		    if(ndist2 < rad2-1.e-6){
+			cerr << "Invalid tesselation!\n";
+			cerr << "ndist2=" << ndist2 << endl;
+			cerr << "rad2=" << rad2 << endl;
+			cerr << "err=" << err << endl;
+		    }
+		}
+	    }
+	}
+    }
     return 1;
 }
 
