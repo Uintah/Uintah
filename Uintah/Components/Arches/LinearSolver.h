@@ -212,6 +212,18 @@ public:
 
 
    virtual void matrixCreate(const LevelP& level, LoadBalancer* lb) = 0;
+   virtual void setPressMatrix(const ProcessorGroup* pc, const Patch* patch,
+			       DataWarehouseP& old_dw,
+			       DataWarehouseP& new_dw, 
+			       ArchesVariables* vars,
+			       const ArchesLabel* lab,
+			       int patchNumber) = 0;
+   
+
+   virtual void pressLinearSolve() = 0;
+   virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars) = 0;
+   virtual void destroyMatrix() = 0;
+
 protected:
 
 private:
@@ -224,6 +236,9 @@ private:
 
 //
 // $Log$
+// Revision 1.15  2000/09/21 21:45:05  rawat
+// added petsc parallel stuff
+//
 // Revision 1.14  2000/09/20 18:05:33  sparker
 // Adding support for Petsc and per-processor tasks
 //

@@ -1075,8 +1075,29 @@ RBGSSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
 {
 }
 
+void 
+RBGSSolver::pressLinearSolve()
+{
+}
+
+void 
+RBGSSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
+{
+}
+
+void
+RBGSSolver::destroyMatrix()
+{
+}
+
+
+
+
 //
 // $Log$
+// Revision 1.25  2000/09/21 21:45:05  rawat
+// added petsc parallel stuff
+//
 // Revision 1.24  2000/09/20 18:05:34  sparker
 // Adding support for Petsc and per-processor tasks
 //

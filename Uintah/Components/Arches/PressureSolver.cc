@@ -523,17 +523,26 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
     }
   }
   MPI_Reduce();
-  solve
+  // solve
+  d_linearSolver->pressLinearSolve();
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
     {
        int proc = find_processor_assignment(patch);
        if(proc == me){
-	  unpack from linear solver.
+	 //	  unpack from linear solver.
+	 d_linearSolver->copyPressSoln(patch, d_pressureVars);
+	 normPressure(pc, patch, d_pressureVars);
+	 // put back the results
+	 new_dw->put(d_pressureVars->pressure, d_lab->d_pressurePSLabel, 
+		     matlIndex, patch);
+
        }
     }
   }
+  // destroy matrix
+  d_linearSolver->destroyMatrix();
 #endif
 }
 
@@ -586,7 +595,12 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
 #endif
   // for parallel code lisolve will become a recursive task and 
   // will make the following subroutine separate
-  d_linearSolver->pressLisolve(pc, patch, old_dw, new_dw, d_pressureVars, d_lab);
+  // get patch numer ***warning****
+  int patchNumber = 0;
+  // sets matrix
+  d_linearSolver->setPressMatrix(pc, patch, old_dw, new_dw, d_pressureVars, d_lab,
+				 patchNumber);
+  //  d_linearSolver->pressLisolve(pc, patch, old_dw, new_dw, d_pressureVars, d_lab);
 
   normPressure(pc, patch, d_pressureVars);
   // put back the results
@@ -631,6 +645,9 @@ PressureSolver::normPressure(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.50  2000/09/21 21:45:05  rawat
+// added petsc parallel stuff
+//
 // Revision 1.49  2000/09/20 18:05:33  sparker
 // Adding support for Petsc and per-processor tasks
 //

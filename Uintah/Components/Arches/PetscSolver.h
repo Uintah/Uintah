@@ -212,6 +212,17 @@ public:
       void finalizeSolver();
 
    virtual void matrixCreate(const LevelP& level, LoadBalancer* lb);
+   virtual void setPressMatrix(const ProcessorGroup* pc, const Patch* patch,
+			       DataWarehouseP& old_dw,
+			       DataWarehouseP& new_dw, 
+			       ArchesVariables* vars,
+			       const ArchesLabel* lab,
+			       int patchNumber);
+   
+
+   virtual void pressLinearSolve();
+   virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars);
+   virtual void destroyMatrix();
 protected:
 
 private:
@@ -225,6 +236,8 @@ private:
 #ifdef HAVE_PETSC
    vector<int> d_petscIndex;
    Mat A;
+   Vec d_x, d_b, d_u;
+   SLES sles;
 #endif
 }; // End class PetscSolver.h
 
@@ -235,6 +248,9 @@ private:
   
 //
 // $Log$
+// Revision 1.5  2000/09/21 21:45:05  rawat
+// added petsc parallel stuff
+//
 // Revision 1.4  2000/09/20 18:05:33  sparker
 // Adding support for Petsc and per-processor tasks
 //
