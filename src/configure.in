@@ -15,6 +15,14 @@
 #  University of Utah. All Rights Reserved.
 #
 
+#
+# NOTE: When committing this file, do NOT commit both configure.in
+# and configure at the same time.  Please commit configure.in FIRST,
+# then commit configure separately.  It saves people from conflicts
+# with autoconf.
+#  - Steve
+#
+
 ## XXX: Should probably set AC_PREFIX_DEFAULT to something good some day.
 ## TODO:
 ##  - Automatically detect TEMPLATE_BOX and TEMPLATE_TAG variables
@@ -260,6 +268,7 @@ case $host in
              fi
 #           fi
 	   F77=f77
+	   FLIBS="-lftn"
 	   FFLAGS="$BINARYFLAGS $extra_cflags"
            CFLAGS="-fullwarn -xansi -LANG:std $BINARYFLAGS $extra_cflags"
 	   ASFLAGS="$BINARYFLAGS ${ASFLAGS}"
@@ -282,6 +291,7 @@ case $host in
   *-linux-gnu)
      CFLAGS="-Wall $extra_cflags"
      FFLAGS="$extra_cflags"
+     FLIBS="-lg2c"
      TEMPLATE_TAG=
      TEMPLATE_BOX="<>"
      SOFLAGS="-shared ${SOFLAGS}"
@@ -304,6 +314,7 @@ esac
 
 AC_SUBST(F77)
 AC_SUBST(FFLAGS)
+AC_SUBST(FLIBS)
 AC_SUBST(PLATFORM_LDFLAGS)
 AC_SUBST(NEED_SONAME)
 AC_SUBST(SSTREAM_COMPAT)
@@ -1523,24 +1534,7 @@ if test "$uintah" = "yes" ; then
 fi
 
 ##-- Generate Output Files ---------------------------------------------------
-AC_OUTPUT( $output_files )
-
-## I tried adding these after a "," to the AC_OUTPUT list...
-#  Then I tried using AC_OUTPUT_COMMANDS to do them.
-#  For whatever reason, when added to AC_OUTPUT, it just
-#  create files ",", "echo", "755" etc.
-#  When used in AC_OUTPUT_COMMANDS, the echo used the entire
-#  line as an argument to echo, instead of running all the
-#  commands.  If someone knows what is going on, please
-#  feel free to fix this back.  Dd.
-
-echo timestamp > stamp-h
-
-# Only do the following if configuring with Uintah
-# - Uintah specific shell commands.
-if test "$uintah" = "yes" ; then
-   chmod 755 Packages/Uintah/tools/fspec.pl
-fi
+AC_OUTPUT( [$output_files], echo timestamp > stamp-h )
 
 if cmp -s sci_defs.h sci_testdefs.h 2>/dev/null; then
   echo "sci_defs.h is unchanged"
