@@ -1475,7 +1475,7 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
 	fixedDOF.insert(dof[2]);
       }
     }
-
+#if 0
     for(Patch::FaceType face = Patch::startFace;
 	face <= Patch::endFace; face=Patch::nextFace(face)){
       if (patch->getBCType(face)==Patch::None) { 
@@ -1495,6 +1495,7 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
 	}
       }
     }
+#endif
   }
   d_solver->removeFixedDOF(fixedDOF,num_nodes);
 
