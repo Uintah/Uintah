@@ -399,19 +399,23 @@ public:
     static MusilRNG rng(1249);
     Node::array_type ra;
     get_nodes(ra,ei);
-    Point p0,p1,p2;
+    Point p0,p1,p2,p3;
     get_point(p0,ra[0]);
     get_point(p1,ra[1]);
-    get_point(p2,ra[2]);
+    get_point(p2,ra[3]);
+    get_point(p3,ra[4]
     Vector v0 = p1-p0;
     Vector v1 = p2-p0;
+    Vector v2 = p3-p0;
     double t = rng()*v0.length2();
     double u = rng()*v1.length2();
-    if ( (t+u)>1 ) {
+    double v = rng()*v2.length2();
+    if ( (t+u+v)>1 ) {
       t = 1.-t;
       u = 1.-u;
+      v = 1.-v;
     }
-    p = p0+(v0*t)+(v1*u);
+    p = p0+(v0*t)+(v1*u)+(v2*v);
   }
   
   virtual void io(Piostream&);
