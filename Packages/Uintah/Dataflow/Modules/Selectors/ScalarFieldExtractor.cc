@@ -197,7 +197,7 @@ void ScalarFieldExtractor::execute()
   int idx = handle->timestep();
 
 
-  int max_workers = Max(Thread::numProcessors()/2, 8);
+  int max_workers = Max(Thread::numProcessors()/2, 4);
   Semaphore* thread_sema = scinew Semaphore( "scalar extractor semahpore",
 					     max_workers); 
 
