@@ -49,7 +49,12 @@ public:
 				    DataWarehouseP&, 
 				    DataWarehouseP&);
 
- protected:
+   void setICELabel(ICELabel* Ilb)
+   {
+        lb = Ilb;
+   };
+
+ public:
 
    void actuallyInitialize(const ProcessorGroup*,
 			   const Patch* patch,
@@ -288,6 +293,10 @@ void after_each_step_wrapper(
 #endif
 
 // $Log$
+// Revision 1.36  2000/11/15 00:51:54  guilkey
+// Changed code to take advantage of the ICEMaterial stuff I committed
+// recently in preparation for coupling the two codes.
+//
 // Revision 1.35  2000/11/14 04:02:11  jas
 // Added getExtraCellIterator and things now appear to be working up to
 // face centered velocity calculations.
