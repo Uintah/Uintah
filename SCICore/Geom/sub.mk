@@ -29,7 +29,7 @@ SRCS     += $(SRCDIR)/GeomObj.cc $(SRCDIR)/GeomOpenGL.cc \
 	$(SRCDIR)/GeomPolyline.cc $(SRCDIR)/TexSquare.cc \
 	$(SRCDIR)/tGrid.cc $(SRCDIR)/GeomPick.cc $(SRCDIR)/Pickable.cc \
 	$(SRCDIR)/TCLGeom.cc $(SRCDIR)/TCLView.cc \
-	$(SRCDIR)/templates.cc
+	$(SRCDIR)/templates.cc 	$(SRCDIR)/GeomDL.cc
 
 PSELIBS := SCICore/Persistent SCICore/Geometry SCICore/Exceptions \
 	SCICore/Math SCICore/Containers SCICore/Thread \
@@ -40,6 +40,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/07/28 21:13:18  yarden
+# GeomDL: Create and manage a display list for its child.
+# the user can select to ignore it via check buttons in Salmon
+#
 # Revision 1.4  2000/05/31 21:54:01  kuzimmer
 # Changes to make the ColorMapKey Module work properly
 #
