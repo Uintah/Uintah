@@ -848,6 +848,73 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
   }
 }
 
+void SerialMPM::computeHeatRateGeneratedByInternalHeatFlux(
+                                     const ProcessorContext*,
+				     const Region* region,
+				     DataWarehouseP& old_dw,
+				     DataWarehouseP& new_dw)
+{
+
+  Vector dx = region->dCell();
+  double oodx[3];
+  oodx[0] = 1.0/dx.x();
+  oodx[1] = 1.0/dx.y();
+  oodx[2] = 1.0/dx.z();
+
+  int numMatls = d_sharedState->getNumMatls();
+
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      double thermalConductivity = mpm_matl->getThermalConductivity();
+      int matlindex = matl->getDWIndex();
+      int vfindex = matl->getVFIndex();
+      ParticleVariable<Point>  px;
+      ParticleVariable<double> pvol;
+      ParticleVariable<Vector> pTemperatureGradient;
+      NCVariable<double>       internalHeatRate;
+
+      old_dw->get(px,      pXLabel, matlindex, region,
+		  Ghost::AroundNodes, 1);
+      old_dw->get(pvol,    pVolumeLabel, matlindex, region,
+		  Ghost::AroundNodes, 1);
+      old_dw->get(pTemperatureGradient, pTemperatureGradientLabel, matlindex, region,
+		  Ghost::AroundNodes, 1);
+
+      new_dw->allocate(internalHeatRate, gInternalHeatRateLabel, vfindex, region);
+  
+      ParticleSubset* pset = px.getParticleSubset();
+
+      ASSERT(pset->numParticles() == px.getParticleSubset()->numParticles());
+      ASSERT(pset->numParticles() == pvol.getParticleSubset()->numParticles());
+      ASSERT(pset->numParticles() == pTemperatureGradient.getParticleSubset()->numParticles());
+
+      internalHeatRate.initialize(0.);
+
+      for(ParticleSubset::iterator iter = pset->begin();
+         iter != pset->end(); iter++){
+         particleIndex idx = *iter;
+  
+         // Get the node indices that surround the cell
+         IntVector ni[8];
+         Vector d_S[8];
+         if(!region->findCellAndShapeDerivatives(px[idx], ni, d_S))
+  	   continue;
+
+         for (int k = 0; k < 8; k++){
+	  if(region->containsNode(ni[k])){
+           Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
+	   internalHeatRate[ni[k]] -= SCICore::Geometry::Dot( div, pTemperatureGradient[idx] ) * 
+	                              pvol[idx] * thermalConductivity;
+	  }
+         }
+      }
+      new_dw->put(internalHeatRate, gInternalHeatRateLabel, vfindex, region);
+    }
+  }
+}
+
 void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 				     const Region* region,
 				     DataWarehouseP& /*old_dw*/,
@@ -1158,6 +1225,10 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.64  2000/05/26 02:27:48  tan
+// Added computeHeatRateGeneratedByInternalHeatFlux() for thermal field
+// computation.
+//
 // Revision 1.63  2000/05/25 23:03:11  guilkey
 // Implemented calls to addComputesAndRequires for the Contact
 // funtions (addComputesAndRequiresInterpolated and
