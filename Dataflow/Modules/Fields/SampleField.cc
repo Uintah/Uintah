@@ -32,6 +32,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Containers/StringUtil.h>
@@ -56,6 +57,7 @@ class SampleField : public Module
   GeometryOPort  *ogport_;
 
   BBox           ifield_bbox_;
+  BBox           ring_bbox_;
   int            widgetid_;
   int            wtype_;   // 0 none, 1 rake, 2 ring, 3 frame
   Point          endpoint0_;
@@ -311,24 +313,86 @@ SampleField::execute_rake(FieldHandle ifield)
 void
 SampleField::execute_ring(FieldHandle ifield)
 {
+  const BBox ibox = ifield->mesh()->get_bounding_box();
+  bool reset = force_rake_reset_.get();
+  force_rake_reset_.set(0);
+  bool resize = !bbox_similar_to(ring_bbox_, ibox);
   if (!ring_)
   {
-    ring_ = scinew RingWidget(this, &widget_lock_, widgetscale_.get());
+    ring_ = scinew RingWidget(this, &widget_lock_, widgetscale_.get(), false);
     ring_->Connect(ogport_);
 
-    if (ringstate_.get() == "")
+    if (ringstate_.get() != "")
     {
-      Vector xaxis0(0.0, 0.0, 0.2);
-      Vector yaxis0(0.2, 0.0, 0.0);
-      Point center0(0.5, 0.0, 0.0);
-      Vector normal0(Cross(xaxis0, yaxis0));
-      double radius0 = 0.2;
-      ring_->SetPosition(center0, normal0, radius0);
+      ring_->SetStateString(ringstate_.get());
+
+      // Check for state validity here.  If not valid then // reset = true;
     }
     else
     {
-      ring_->SetStateString(ringstate_.get());
+      reset = true;
     }
+  }
+
+  if (reset || resize)
+  {
+    Point c, nc;
+    Vector n, nn;
+    double r, nr;
+    double s, ns;
+
+    if (reset)
+    {
+      Vector xaxis(0.0, 0.0, 0.2);
+      Vector yaxis(0.2, 0.0, 0.0);
+      Point center(0.5, 0.0, 0.0);
+      Vector normal(Cross(xaxis, yaxis));
+      double radius = 0.2;
+
+      const double dx = 2.0;
+      const double dy = 2.0;
+      const double dz = 2.0;
+  
+      // This size seems empirically good.
+      const double quarterl2norm = sqrt(dx * dx + dy * dy + dz * dz) / 4.0;
+
+      ring_bbox_.reset();
+      ring_bbox_.extend(Point(-1.0, -1.0, -1.0));
+      ring_bbox_.extend(Point(1.0, 1.0, 1.0));
+      c = center;
+      n = normal;
+      r = radius;
+      s = quarterl2norm * .06;
+    }
+    else
+    {
+      // Get the old coordinates.
+      ring_->GetPosition(c, n, r);
+      s = ring_->GetScale();
+    }
+    
+    // Build a transform.
+    Transform trans;
+    trans.load_identity();
+    const Vector scale =
+      (ibox.max() - ibox.min()) / (ring_bbox_.max() - ring_bbox_.min());
+    trans.pre_translate(-ring_bbox_.min().asVector());
+    trans.pre_scale(scale);
+    trans.pre_translate(ibox.min().asVector());
+    
+    // Do the transform.
+    trans.project(c, nc);
+    nn = n; //trans.project_normal(n, nn);
+    nr = (r * scale).length() / sqrt(3.0);
+    ns = (s * scale).length() / sqrt(3.0);
+
+    // Apply the new coordinates.
+    ring_->SetPosition(nc, nn, nr);
+    ring_->SetRadius(nr);
+    ring_->SetScale(ns);
+    widgetscale_.set(ns);
+
+    ring_bbox_ = ibox;
   }
 
   if (wtype_ != 2)
