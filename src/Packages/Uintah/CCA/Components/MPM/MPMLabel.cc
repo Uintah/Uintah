@@ -398,7 +398,12 @@ MPMLabel::MPMLabel()
                         NCVariable<Vector>::getTypeDescription() );
   GDisplacementLabel = VarLabel::create("G.displacement",
                         NCVariable<Vector>::getTypeDescription() );
- 
+
+  GSp_volLabel     =  VarLabel::create("G.sp_vol",
+                        NCVariable<double>::getTypeDescription());
+
+  GSp_vol_srcLabel =  VarLabel::create("G.sp_vol_src",
+                        NCVariable<double>::getTypeDescription()); 
   // -----------------------------------------------------------------------
 
   pVolumeOldLabel_preReloc = VarLabel::create("pVolumeOld+",
@@ -535,7 +540,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(bElBarLabel_preReloc);
   VarLabel::destroy(pVolumeOldLabel_preReloc);
 
- // for Farcture ----------------------------------------------
+ // for Farcture ----------------------------------
   VarLabel::destroy(pX0Label);
   VarLabel::destroy(pX0Label_preReloc);
 
@@ -564,6 +569,9 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gDisplacementLabel);
   VarLabel::destroy(GDisplacementLabel);
 
+  VarLabel::destroy(GSp_volLabel);
+  VarLabel::destroy(GSp_vol_srcLabel);
+  // ------------------------------------------
   // Destroy Material point erosion labels
   VarLabel::destroy(pErosionLabel);
   VarLabel::destroy(pErosionLabel_preReloc);
