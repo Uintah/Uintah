@@ -23,8 +23,7 @@ namespace SCIRun{
 // initialize the static member type_id
 PersistentTypeID Mesh::type_id("Mesh", "PropertyManager", NULL);
 
-Mesh::Mesh() :
-  frozen_(false)
+Mesh::Mesh()
 {
 }
 
@@ -32,22 +31,6 @@ Mesh::~Mesh()
 {
 }
 
-void 
-Mesh::thaw() 
-{
-  // Call detach on the mesh before thawing.  Assert that has happened.
-  ASSERT(ref_cnt <= 1);
-  // Clean up properties.
-  clear_transient();
-
-  frozen_ = false;
-}
-
-void 
-Mesh::freeze() 
-{
-  frozen_ = true;
-}
 
 const int MESHBASE_VERSION = 2;
 
