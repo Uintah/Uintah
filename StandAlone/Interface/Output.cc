@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 #include "Output.h"
 #include <iostream>
@@ -17,6 +18,9 @@ Output::~Output()
 
 //
 // $Log$
+// Revision 1.6  2000/09/25 20:39:14  sparker
+// Quiet g++ compiler warnings
+//
 // Revision 1.5  2000/05/15 19:39:52  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups

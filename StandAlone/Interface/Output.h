@@ -5,7 +5,7 @@
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/SimulationStateP.h>
-#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <SCICore/OS/Dir.h>
@@ -86,6 +86,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.13  2000/09/25 20:39:14  sparker
+// Quiet g++ compiler warnings
+//
 // Revision 1.12  2000/09/08 17:02:51  witzel
 // Added virtual methods for getting the current timestep, the last
 // timestep directory (where data was output), and whether the last
