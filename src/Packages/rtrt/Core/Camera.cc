@@ -15,7 +15,7 @@ Camera::Camera()
 
 Camera::Camera(const Point& eye, const Point& lookat,
 	       const Vector& up, double fov)
-    : eye(eye), lookat(lookat), up(up), fov(fov)
+  : eye(eye), lookat(lookat), up(up), fov(fov), eyesep(1)
 {
     setup();
 }
@@ -39,9 +39,9 @@ void Camera::makeRay(Ray& ray, double x, double y, double, double iyres)
 #endif
 void Camera::makeRayL(Ray& ray, double x, double y, double, double iyres)
 {
-    ray.set_origin(eye-v*5*iyres);
+    ray.set_origin(eye-v*5*eyesep*iyres);
     double screenx=(x+0.5)*iyres-0.5;
-    Vector sv(v*screenx);
+    Vector sv(v*screenx+v*5*iyres*eyesep);
     double screeny=(y+0.5)*iyres-0.5;
     Vector su(u*screeny);
     Vector raydir=su+sv+direction;
@@ -50,9 +50,9 @@ void Camera::makeRayL(Ray& ray, double x, double y, double, double iyres)
 }
 void Camera::makeRayR(Ray& ray, double x, double y, double, double iyres)
 {
-    ray.set_origin(eye+v*5*iyres);
+    ray.set_origin(eye+v*5*eyesep*iyres);
     double screenx=(x+0.5)*iyres-0.5;
-    Vector sv(v*screenx);
+    Vector sv(v*screenx-v*5*iyres*eyesep);
     double screeny=(y+0.5)*iyres-0.5;
     Vector su(u*screeny);
     Vector raydir=su+sv+direction;
@@ -99,6 +99,11 @@ void Camera::set_eye(const Point& e)
     eye=e;
 }
 
+void Camera::scale_eyesep(double scale)
+{
+  eyesep*=scale;
+}
+
 void Camera::set_up(const Vector& u)
 {
     up=u;
@@ -122,6 +127,11 @@ Point Camera::get_lookat() const
 void Camera::set_fov(double f)
 {
     fov=f;
+}
+
+double Camera::get_eyesep() const
+{
+  return eyesep;
 }
 
 double Camera::get_fov() const
