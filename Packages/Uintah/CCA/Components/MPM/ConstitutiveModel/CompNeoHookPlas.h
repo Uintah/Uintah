@@ -42,6 +42,8 @@ WARNING
 
       class CompNeoHookPlas : public ConstitutiveModel {
 	 // Create datatype for storing model parameters
+      private:
+        bool d_useModifiedEOS;
       public:
 	 struct CMData {
 	    double Bulk;

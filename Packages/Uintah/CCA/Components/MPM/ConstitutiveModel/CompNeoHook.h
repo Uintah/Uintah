@@ -27,6 +27,7 @@ namespace Uintah {
       class CompNeoHook : public ConstitutiveModel {
       private:
          // Create datatype for storing model parameters
+	  bool d_useModifiedEOS; 
       public:
          struct CMData {
             double Bulk;
