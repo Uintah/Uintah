@@ -70,16 +70,22 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP sched)
     
     Point anchor;
     Vector spacing;
+    IntVector extraCells;
 
     if (levelIdx < oldGrid->numLevels()) {
       anchor = oldGrid->getLevel(levelIdx)->getAnchor();
       spacing = oldGrid->getLevel(levelIdx)->dCell();
+      extraCells = oldGrid->getLevel(levelIdx)->getExtraCells();
     } else {
       anchor = newGrid->getLevel(levelIdx-1)->getAnchor();
       spacing = newGrid->getLevel(levelIdx-1)->dCell() / d_cellRefinementRatio[levelIdx-1];
+      extraCells = newGrid->getLevel(levelIdx-1)->getExtraCells();
     }
 
     LevelP newLevel = newGrid->addLevel(anchor, spacing);
+    newLevel->setExtraCells(extraCells);
+
+    cout << "HierarchicalRegridder::regrid(): Setting extra cells to be: " << extraCells << endl;
 
     for (int x = 0; x < d_patchNum[levelIdx].x(); x++ ) {                            // Loop over fine level patches
       for (int y = 0; y < d_patchNum[levelIdx].y(); y++ ) {
