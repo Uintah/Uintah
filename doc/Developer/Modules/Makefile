@@ -70,7 +70,7 @@ endef
 
 # Make package index.html
 define makepkgindex
-ruby ${treetop}/doc/Utilities/HTML/makepkgindex.rb ${1} ${2} ${3}
+ruby ${pkgindexgenscript} ${1} ${2} ${3}
 endef 
 
 # ########## Variables
@@ -86,6 +86,9 @@ xmlsrtreetop:=../../../
 
 # Top of tree relative to Package XML dirs
 xmlpkgtreetop:= ../../../../../
+
+# Script that generates package index files
+pkgindexgenscript:=${treetop}/doc/Utilities/HTML/makepkgindex.rb
 
 # Phony targets.
 .PHONY: default SCIRun BioPSE Teem Fusion VDT MatlabInterface clean veryclean
@@ -128,7 +131,8 @@ SCIRun_tex_html_dirs:=${call texhtmldirs,${SCIRun_tex_dir}}
 
 SCIRun : SCIRun.html
 
-SCIRun.html : ${SCIRun_xml_html_files} ${SCIRun_tex_html_dirs}
+SCIRun.html : ${SCIRun_xml_html_files} ${SCIRun_tex_html_dirs} \
+		${pkgindexgenscript}
 	${call makepkgindex,SCIRun,${SCIRun_xml_dir},${SCIRun_tex_dir}}
 
 ${SCIRun_xml_html_files}: %.html: %.xml
@@ -152,7 +156,8 @@ BioPSE_tex_html_dirs:=${call texhtmldirs,${BioPSE_tex_dir}}
 
 BioPSE : BioPSE.html
 
-BioPSE.html : ${BioPSE_xml_html_files} ${BioPSE_tex_html_dirs}
+BioPSE.html : ${BioPSE_xml_html_files} ${BioPSE_tex_html_dirs} \
+		${pkgindexgenscript}
 	${call makepkgindex,BioPSE,${BioPSE_xml_dir},${BioPSE_tex_dir}}
 
 ${BioPSE_xml_html_files}: %.html: %.xml
@@ -176,7 +181,8 @@ Teem_tex_html_dirs:=${call texhtmldirs,${Teem_tex_dir}}
 
 Teem : Teem.html
 
-Teem.html : ${Teem_xml_html_files} ${Teem_tex_html_dirs}
+Teem.html : ${Teem_xml_html_files} ${Teem_tex_html_dirs} \
+		${pkgindexgenscript}
 	${call makepkgindex,Teem,${Teem_xml_dir},${Teem_tex_dir}}
 
 ${Teem_xml_html_files}: %.html: %.xml
@@ -200,7 +206,8 @@ VDT_tex_html_dirs:=${call texhtmldirs,${VDT_tex_dir}}
 
 VDT : VDT.html
 
-VDT.html : ${VDT_xml_html_files} ${VDT_tex_html_dirs}
+VDT.html : ${VDT_xml_html_files} ${VDT_tex_html_dirs} \
+		${pkgindexgenscript}
 	${call makepkgindex,VDT,${VDT_xml_dir},${VDT_tex_dir}}
 
 ${VDT_xml_html_files}: %.html: %.xml
@@ -224,7 +231,8 @@ MatlabInterface_tex_html_dirs:=${call texhtmldirs,${MatlabInterface_tex_dir}}
 
 MatlabInterface : MatlabInterface.html
 
-MatlabInterface.html : ${MatlabInterface_xml_html_files} ${MatlabInterface_tex_html_dirs}
+MatlabInterface.html : ${MatlabInterface_xml_html_files} \
+		${MatlabInterface_tex_html_dirs} ${pkgindexgenscript}
 	${call makepkgindex,MatlabInterface,${MatlabInterface_xml_dir},${MatlabInterface_tex_dir}}
 
 ${MatlabInterface_xml_html_files}: %.html: %.xml
@@ -248,7 +256,8 @@ Fusion_tex_html_dirs:=${call texhtmldirs,${Fusion_tex_dir}}
 
 Fusion : Fusion.html
 
-Fusion.html : ${Fusion_xml_html_files} ${Fusion_tex_html_dirs}
+Fusion.html : ${Fusion_xml_html_files} ${Fusion_tex_html_dirs} \
+		${pkgindexgenscript}
 	${call makepkgindex,Fusion,${Fusion_xml_dir},${Fusion_tex_dir}}
 
 ${Fusion_xml_html_files}: %.html: %.xml
@@ -258,7 +267,7 @@ ${Fusion_tex_html_dirs}: %: %.tex
 	${call textohtml,${dir $@}}
 
 Fusion_clean:
-	${call texclean ${MatlabInterface_tex_dir}}
+	@echo $@
 
 Fusion_veryclean:
 	-rm -f ${Fusion_xml_html_files} ${Fusion_tex_html_files}
