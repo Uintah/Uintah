@@ -1,3 +1,4 @@
+<?xml version="1.0"?> 
 <!--
    For more information, please see: http://software.sci.utah.edu
 
@@ -26,7 +27,6 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<?xml version="1.0"?> 
 <xsl:stylesheet 
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
