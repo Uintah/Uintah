@@ -324,6 +324,14 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 }
 
 
+bool
+DynamicLoader::remove_cc(const CompileInfo &info, ostream &serr)
+{
+  string full = get_compile_dir() + "/" + info.filename_ + "cc";
+  unlink(full.c_str());
+}
+
+
 //! DynamicLoader::create_cc
 //!
 //! Write a .cc file, from the compile info.
