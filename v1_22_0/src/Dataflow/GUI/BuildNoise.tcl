@@ -30,7 +30,7 @@
 itcl_class SCIRun_Math_BuildNoise {
     inherit Module
     constructor {config} {
-        set name Noise
+        set name BuildNoise
         set_defaults
     }
     method set_defaults {} {
