@@ -161,8 +161,11 @@ LevelMesh::get_center(Point &result, Cell::index_type idx) const
 bool
 LevelMesh::locate(Cell::index_type &cell, const Point &p) const
 {
-  if( grid_->getLevel(level_)->containsPoint(p) ) {
-    IntVector idx = grid_->getLevel(level_)->getCellIndex( p );
+  IntVector l, h;
+  grid_->getLevel(level_)->findCellIndexRange(l, h);
+  IntVector idx = grid_->getLevel(level_)->getCellIndex( p );
+  if( idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
+      && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z() ){
     cell.i_ = (int)idx.x();
     cell.j_ = (int)idx.y();
     cell.k_ = (int)idx.z();
