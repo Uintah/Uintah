@@ -229,15 +229,25 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     // copy the data into the brickArray
     cerr << "Number of data members = " << n->num << endl;
     float *p = (float*)n->data; // get the pointer to the raw data
+    data_min = data_max = *p;
     for (int z = 0; z < nz; z++)
       for (int y = 0; y < ny; y++)
-	for (int x = 0; x < nx; x++)
-	  data(x,y,z) = *p++;
+	for (int x = 0; x < nx; x++) {
+	  float val = *p++;
+	  data(x,y,z) = val;
+	  // also find the min and max
+	  if (val < data_min)
+	    data_min = val;
+	  else if (val > data_max)
+	    data_max = val;
+	}
+#if 0
     // compute the min and max of the data
     double dmin,dmax;
     nrrdMinMaxFind(&dmin,&dmax,n);
     data_min = (float)dmin;
     data_max = (float)dmax;
+#endif
     // delete the memory that is no longer in use
     nrrdNuke(n);
   } else {
