@@ -55,7 +55,7 @@ WARNING
       
     public:
       // Constructor
-      NullContact(ProblemSpecP& ps,SimulationStateP& ss, MPMLabel* lb,
+      NullContact(SimulationStateP& ss, MPMLabel* lb,
 		  MPMFlags* MFlag);
       
       // Destructor
