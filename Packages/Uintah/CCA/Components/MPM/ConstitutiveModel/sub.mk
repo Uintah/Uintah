@@ -14,7 +14,12 @@ SRCS     += \
 	$(SRCDIR)/HypoElastic.cc              	\
 	$(SRCDIR)/MWViscoElastic.cc           	\
 	$(SRCDIR)/IdealGasMP.cc               	\
-	$(SRCDIR)/Membrane.cc 
+	$(SRCDIR)/Membrane.cc 			\
+	$(SRCDIR)/ParticleCreator.cc	\
+	$(SRCDIR)/DefaultParticleCreator.cc	\
+	$(SRCDIR)/ImplicitParticleCreator.cc	\
+	$(SRCDIR)/FractureParticleCreator.cc	\
+	$(SRCDIR)/MembraneParticleCreator.cc	
 
 PSELIBS := Packages/Uintah/Core/Grid \
 	Packages/Uintah/CCA/Components/ICE \

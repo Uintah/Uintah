@@ -1,18 +1,14 @@
 #ifndef __MPM_MATERIAL_H__
 #define __MPM_MATERIAL_H__
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/GeometryPiece.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 #include <vector>
-
-#define IMPLICIT
-//#undef IMPLICIT
 
 namespace SCIRun {
   class Point;
@@ -24,6 +20,7 @@ namespace Uintah {
 using namespace SCIRun;
 
  class Patch;
+ class DataWarehouse;
  class VarLabel;
  class GeometryObject;
  class GeometryPiece;
@@ -69,55 +66,20 @@ WARNING
 	 
 	 //////////
 	 // Return correct constitutive model pointer for this material
-	 ConstitutiveModel * getConstitutiveModel() const;
+	 ConstitutiveModel* getConstitutiveModel() const;
 
 	 // Return correct burn model pointer for this material
-	 Burn * getBurnModel();
+	 Burn* getBurnModel();
 
 	 // Return correct EOS model pointer for this material
 	 EquationOfState* getEOSModel() const;
 	 
-	 particleIndex countParticles(const Patch*) const;
-	 particleIndex countParticles(GeometryObject* obj,
-				      const Patch*) const;
+	 particleIndex countParticles(const Patch* patch);
+
 	 void createParticles(particleIndex numParticles,
 			      CCVariable<short int>& cellNAPID,
 			      const Patch*,
 			      DataWarehouse* new_dw);
-
-	 particleIndex createParticles(GeometryObject* obj,
-				       particleIndex start,
-				       ParticleVariable<Point>& position,
-				       ParticleVariable<Vector>& velocity,
-				       ParticleVariable<Vector>& pexternalforce,
-				       ParticleVariable<double>& mass,
-				       ParticleVariable<double>& volume,
-				       ParticleVariable<double>& temperature,
-				       ParticleVariable<Vector>& size,
-#ifdef IMPLICIT
-				       ParticleVariable<Vector>& pacceleration,
-				       ParticleVariable<double>& pvolumeold,
-				       ParticleVariable<Matrix3>& bElBar,
-#endif
-				       ParticleVariable<long64>& particleID,
-				       CCVariable<short int>& cellNAPID,
-				       const Patch*);
-
-	 particleIndex createParticles(GeometryObject* obj,
-				       particleIndex start,
-				       ParticleVariable<Point>& position,
-				       ParticleVariable<Vector>& velocity,
-				       ParticleVariable<Vector>& pexternalforce,
-				       ParticleVariable<double>& mass,
-				       ParticleVariable<double>& volume,
-				       ParticleVariable<double>& temperature,
-				       ParticleVariable<Vector>& size,
-				       ParticleVariable<long64>& particleID,
-				       CCVariable<short int>& cellNAPID,
-				       const Patch*,
-				       ParticleVariable<Vector>& ptang1,
-				       ParticleVariable<Vector>& ptang2,
-				       ParticleVariable<Vector>& pnorm);
 
          //for HeatConductionModel
          double getThermalConductivity() const;
@@ -137,18 +99,17 @@ WARNING
 
 	 MPMLabel* lb;
 	 // Specific constitutive model associated with this material
-	 ConstitutiveModel *d_cm;
+	 ConstitutiveModel* d_cm;
 
          // Burn model
-	 Burn *d_burn;
+	 Burn* d_burn;
 
 	 // EOS model
 	 EquationOfState* d_eos;
 
-         bool d_membrane;
-#if 0
+
 	 ParticleCreator* d_particle_creator;
-#endif 
+
 	 double d_density;
 
          //for HeatConductionModel
