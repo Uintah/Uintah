@@ -148,26 +148,28 @@ void CuttingPlane::execute()
 	    // in xy plane with reasonable frame thickness
 	    Point right( max.x(), center.y(), center.z());
 	    Point down( center.x(), min.y(), center.z());
-	    widget->SetPosition( center, right, down);
 	    max_scale = Max( (max.x() - min.x()), (max.y() - min.y()) );
+	    widget->SetScale( max_scale/30. );
+	    widget->SetPosition( center, right, down);
 	}
 	else if (need_find == 2)
 	{   // Find the field and put in optimal place
 	    // in yz plane with reasonable frame thickness
 	    Point right( center.x(), center.y(), max.z());
 	    Point down( center.x(), min.y(), center.z());	    
-	    widget->SetPosition( center, right, down);
 	    max_scale = Max( (max.z() - min.z()), (max.y() - min.y()) );
+	    widget->SetScale( max_scale/30. );
+	    widget->SetPosition( center, right, down);
 	}
 	else
 	{   // Find the field and put in optimal place
 	    // in xz plane with reasonable frame thickness
 	    Point right( max.x(), center.y(), center.z());
 	    Point down( center.x(), center.y(), min.z());	    
-	    widget->SetPosition( center, right, down);
 	    max_scale = Max( (max.x() - min.x()), (max.z() - min.z()) );
+	    widget->SetScale( max_scale/30. );
+	    widget->SetPosition( center, right, down);
 	}
-	widget->SetScale( max_scale/30. );
 	need_find = 0;
     }
 
