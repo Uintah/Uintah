@@ -118,7 +118,7 @@
     <!--____________________________________________________________________-->
     <CFD>
        <cfl>0.5</cfl>
-       <CanAddMaterial>true</CanAddMaterial>
+       <CanAddICEMaterial>true</CanAddICEMaterial>
        <ICE>
         <max_iteration_equilibration> 1000 </max_iteration_equilibration>
         <advection type = "SecondOrder"/>
