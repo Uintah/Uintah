@@ -6,7 +6,7 @@ extern "C" {
 extern int yylex(void);
 int yyerror(char*);
 }
-#include "Spec.h"
+#include <tools/sidl/Spec.h>
 Specification specs;
 extern char* curfile;
 extern int lineno;
@@ -460,6 +460,9 @@ int yyerror(char* s)
 
 //
 // $Log$
+// Revision 1.3  2000/03/20 19:39:41  sparker
+// Added VPATH support
+//
 // Revision 1.2  1999/08/30 17:39:55  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

@@ -27,12 +27,15 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/Anneal.tcl $(SRCDIR)/BldBRDF.tcl \
 	$(SRCDIR)/TensorFieldReader.tcl $(SRCDIR)/TensorFieldWriter.tcl \
 	$(SRCDIR)/Thermal.tcl $(SRCDIR)/TopoSurfToGeom.tcl \
 	$(SRCDIR)/XYZtoRGB.tcl
-	scripts/createTclIndex DaveW/GUI
+	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/DaveW/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:36:00  sparker
+# Added VPATH support
+#
 # Revision 1.1  2000/03/17 09:25:25  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository

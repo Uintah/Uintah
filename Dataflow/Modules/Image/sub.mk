@@ -3,7 +3,7 @@
 # $Id$
 #
 
-include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := SCIRun/Modules/Image
 
@@ -25,10 +25,13 @@ PSELIBS := SCIRun/Datatypes/Image PSECore/Dataflow PSECore/Datatypes \
 	SCICore/Math SCICore/TkExtensions
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
-include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:38:12  sparker
+# Added VPATH support
+#
 # Revision 1.1  2000/03/17 09:29:08  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository

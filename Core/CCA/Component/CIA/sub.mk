@@ -3,7 +3,7 @@
 # $Id$
 #
 
-include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Component/CIA
 
@@ -28,10 +28,13 @@ GENHDRS := $(SRCDIR)/CIA_sidl.h
 PSELIBS := Component/PIDL
 LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common
 
-include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/03/20 19:35:45  sparker
+# Added VPATH support
+#
 # Revision 1.2  2000/03/17 09:43:44  sparker
 # Fixed dependencies for $(GENHDRS)
 #
