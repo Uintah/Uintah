@@ -37,14 +37,36 @@ using SCICore::Exceptions::Exception;
 using namespace std;
 using namespace Uintah;
 
-void usage(const std::string& badarg, const std::string& progname)
+void quit( const std::string & msg = "" )
 {
-    if(badarg != "")
+  if( msg != "" )
+    {
+      cerr << msg << "\n";
+    }
+  Parallel::finalizeManager();
+  exit( 1 );
+}
+
+void usage( const std::string & message,
+	    const std::string& badarg,
+	    const std::string& progname)
+{
+  if( Parallel::usingMPI() && 
+      Parallel::getRootProcessorGroup()->myrank() == 0 )
+    {
+      cerr << message << "\n";
+      if(badarg != "")
 	cerr << "Error parsing argument: " << badarg << '\n';
-    cerr << "Usage: " << progname << " [options]\n\n";
-    cerr << "Valid options are:\n";
-    cerr << "NOT FINISHED\n";
-    exit(1);
+      cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
+      cerr << "Valid options are:\n";
+      cerr << "-mpm                 : \n";
+      cerr << "-arches              : \n";
+      cerr << "-nthreads <#>        : \n";
+      cerr << "-scheduler <name>    : Don't specify, use system default!\n";
+      cerr << "-loadbalancer <name> : Don't specify, use system default!\n";
+      cerr << "\n\n";
+    }
+  quit();
 }
 
 int main(int argc, char** argv)
@@ -80,32 +102,31 @@ int main(int argc, char** argv)
 	    do_ice=true;
 	} else if(s == "-nthreads"){
 	    if(++i == argc){
-		cerr << "You must provide a number of threads for -nthreads\n";
-		usage(s, argv[0]);
+		usage("You must provide a number of threads for -nthreads",
+		      s, argv[0]);
 	    }
 	    numThreads = atoi(argv[i]);
 	} else if(s == "-scheduler"){
 	   if(++i == argc){
-	      cerr << "You must provide a scheduler name for -scheduler\n";
-	      usage(s, argv[0]);
+	      usage("You must provide a scheduler name for -scheduler",
+		    s, argv[0]);
 	   }
 	   scheduler = argv[i]; 
 	} else if(s == "-loadbalancer"){
 	   if(++i == argc){
-	      cerr << "You must provide a load balancer name for -loadbalancer\n";
-	      usage(s, argv[0]);
+	      usage("You must provide a load balancer name for -loadbalancer",
+		    s, argv[0]);
 	   }
 	} else {
 	    if(filename!="")
-		usage(s, argv[0]);
+		usage("", s, argv[0]);
 	    else
 		filename = argv[i];
 	}
     }
 
     if(filename == ""){
-	cerr << "No input file specified\n";
-	usage("", argv[0]);
+      usage("No input file specified", "", argv[0]);
     }
 
     if(scheduler == ""){
@@ -122,25 +143,20 @@ int main(int argc, char** argv)
      * Check for valid argument combinations
      */
     if(do_mpm && (do_ice || do_arches)){
-	cerr << "MPM doesn't yet work with ICE/Arches\n";
-	usage("", argv[0]);
+	usage( "MPM doesn't yet work with ICE/Arches", "", argv[0]);
     }
     if(do_ice && do_arches){
-	cerr << "ICE and Arches do not work together\n";
-	usage("", argv[0]);
+	usage( "ICE and Arches do not work together", "", argv[0]);
     }
     if(do_ice && numThreads>0){
-	cerr << "ICE doesn't support threads yet\n";
-	usage("", argv[0]);
+	usage( "ICE doesn't support threads yet", "", argv[0]);
     }
     if(do_arches && numThreads>0){
-	cerr << "Arches doesn't do threads yet\n";
-	usage("", argv[0]);
+	usage( "Arches doesn't do threads yet", "", argv[0]);
     }
 
     if(!(do_ice || do_arches || do_mpm)){
-	cerr << "You need to specify -arches, -ice, or -mpm\n";
-	usage("", argv[0]);
+	usage( "You need to specify -arches, -ice, or -mpm", "", argv[0]);
     }
 
     /*
@@ -195,8 +211,7 @@ int main(int argc, char** argv)
 	} else if(loadbalancer == "RoundRobinLoadBalancer"){
 	   bal = scinew RoundRobinLoadBalancer(world);
 	} else {
-	   cerr << "Unknown load balancer: " << loadbalancer << '\n';
-	   exit(1);
+	   quit( "Unknown load balancer: " + loadbalancer );
 	}
 
 	// Scheduler
@@ -211,8 +226,7 @@ int main(int argc, char** argv)
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
 	} else {
-	   cerr << "Unknown schduler: " << scheduler << '\n';
-	   exit(1);
+	   quit( "Unknown schduler: " + scheduler );
 	}
 
 	/*
@@ -239,6 +253,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.17  2000/08/08 21:23:20  dav
+// Changes so that 'usage' under MPI works correctly.
+//
 // Revision 1.16  2000/07/27 22:39:40  sparker
 // Implemented MPIScheduler
 // Added associated support
