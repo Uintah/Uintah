@@ -443,7 +443,7 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
     {
      d_psetDB[key] = psubset =
        scinew ParticleSubset(scinew ParticleSet(numParticles), true,
-			     matlIndex, patch);
+			     matlIndex, patch, 0);
     }
     (static_cast<ParticleVariableBase*>(&var))->allocate(psubset);
 //      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
