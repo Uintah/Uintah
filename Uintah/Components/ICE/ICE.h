@@ -221,8 +221,18 @@ namespace Uintah {
       void printData(const  Patch* patch,int include_GC,char message1[],
 		     char message2[], const  CCVariable<double>& q_CC);
 
-      void printData(const  Patch* patch,int include_GC,char message1[],
-		     char message2[], const  CCVariable<Vector>& q_CC);
+      void printVector(const  Patch* patch,int include_GC,char message1[],
+		     char message2[], int component, 
+                   const CCVariable<Vector>& q_CC);
+                   
+       void printData_FC(const  Patch* patch,int include_GC,char message1[],
+		      char message2[], const SFCXVariable<double>& q_FC);
+                    
+       void printData_FC(const  Patch* patch,int include_GC,char message1[],
+		      char message2[], const SFCYVariable<double>& q_FC);
+                    
+       void printData_FC(const  Patch* patch,int include_GC,char message1[],
+		      char message2[], const SFCZVariable<double>& q_FC);
       
       ICELabel* lb; 
       SimulationStateP d_sharedState;
@@ -297,6 +307,21 @@ namespace Uintah {
 #endif
 
 // $Log$
+// Revision 1.51  2001/01/10 00:47:18  harman
+// ICE.cc ICELabel.h ICELabel.cc ICE.h
+// -changed how vol_frac is computed in actuallyStep1b
+// -changed step4b requires to press_CC
+// -Fixed small error in OFS calculation
+// -Added instrumentation
+// -Added
+//     ICE::printVector
+//     ICE::printData_FC
+// -Added bullet proofing at the bottom of equilibration pressure function
+// -changed pressdP_CCLabel to press_CCLabel in all steps downstream of explicit delPress
+// -Added new label press_equil_CCLabel.  This represents the pressure coming out
+// of the equilibration pressure calculation. This label replaced press_CCLabel between
+// the equilibration press calc and explicit delPress calc.
+//
 // Revision 1.50  2001/01/06 03:50:11  jas
 // Added back in setBC for CCVariables and Velocity boundary conditions that
 // was inadvertently deleted in previous commit.  {x,y,z}mom_L_ME used this

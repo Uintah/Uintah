@@ -15,42 +15,34 @@ using SCICore::Geometry::Vector;
 
 ICELabel::ICELabel()
 {
-
     delTLabel
 	 = scinew VarLabel("delT",      delt_vartype::getTypeDescription() );
-
     press_CCLabel     =
      scinew VarLabel("press_CC",    CCVariable<double>::getTypeDescription() );
-    pressdP_CCLabel   =
-     scinew VarLabel("pressdP_CC",  CCVariable<double>::getTypeDescription() );
+    press_equil_CCLabel   =
+     scinew VarLabel("press_equil_CC",  CCVariable<double>::getTypeDescription() );
     delPress_CCLabel  =
      scinew VarLabel("delPress_CC", CCVariable<double>::getTypeDescription() );
-
     rho_CCLabel       = 
      scinew VarLabel("rho_CC",    CCVariable<double>::getTypeDescription() );
-
     temp_CCLabel      = 
      scinew VarLabel("temp_CC",   CCVariable<double>::getTypeDescription() );
     vel_CCLabel       = 
      scinew VarLabel("vel_CC",    CCVariable<Vector>::getTypeDescription() );
-
     cv_CCLabel        = 
      scinew VarLabel("cv_CC",         CCVariable<double>::getTypeDescription());
     rho_micro_CCLabel = 
      scinew VarLabel("rho_micro_CC",  CCVariable<double>::getTypeDescription());
     rho_micro_equil_CCLabel = 
       scinew VarLabel("rho_micro_equil_CC",  CCVariable<double>::getTypeDescription());
-
     speedSound_CCLabel = 
      scinew VarLabel("speedSound_CC", CCVariable<double>::getTypeDescription());
     speedSound_equiv_CCLabel = 
      scinew VarLabel("speedSound_equiv_CC", CCVariable<double>::getTypeDescription());
-
     div_velfc_CCLabel = 
      scinew VarLabel("div_velfc_CC",  CCVariable<double>::getTypeDescription());
     vol_frac_CCLabel = 
      scinew VarLabel("vol_frac_CC",   CCVariable<double>::getTypeDescription());
-
     viscosity_CCLabel = 
      scinew VarLabel("viscosity_CC",  CCVariable<double>::getTypeDescription());
     mom_source_CCLabel = 
@@ -111,10 +103,10 @@ ICELabel::ICELabel()
 ICELabel::~ICELabel()
 {
     // Cell centered variables
-    delete  press_CCLabel;
-    delete  pressdP_CCLabel;
-    delete  delPress_CCLabel;
-    delete  rho_CCLabel;
+    delete press_CCLabel;
+    delete press_equil_CCLabel;
+    delete delPress_CCLabel;
+    delete rho_CCLabel;
     delete temp_CCLabel;
     delete vel_CCLabel;
     delete speedSound_CCLabel;
@@ -151,6 +143,21 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.24  2001/01/10 00:47:18  harman
+// ICE.cc ICELabel.h ICELabel.cc ICE.h
+// -changed how vol_frac is computed in actuallyStep1b
+// -changed step4b requires to press_CC
+// -Fixed small error in OFS calculation
+// -Added instrumentation
+// -Added
+//     ICE::printVector
+//     ICE::printData_FC
+// -Added bullet proofing at the bottom of equilibration pressure function
+// -changed pressdP_CCLabel to press_CCLabel in all steps downstream of explicit delPress
+// -Added new label press_equil_CCLabel.  This represents the pressure coming out
+// of the equilibration pressure calculation. This label replaced press_CCLabel between
+// the equilibration press calc and explicit delPress calc.
+//
 // Revision 1.23  2001/01/08 22:01:55  jas
 // Removed #if 0  #endif pairs surrounding unused code related to momentum
 // variables that are now combined into CCVariables<Vector>.  This includes
