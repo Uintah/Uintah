@@ -92,12 +92,27 @@ WARNING
 				       ParticleVariable<Vector>& pexternalforce,
 				       ParticleVariable<double>& mass,
 				       ParticleVariable<double>& volume,
-				       ParticleVariable<int>& pissurf,
 				       ParticleVariable<double>& temperature,
-				       ParticleVariable<double>& tensilestrength,
+				       ParticleVariable<double>& tensilestrengt,
 				       ParticleVariable<long64>& particleID,
 				       CCVariable<short int>& cellNAPID,
 				       const Patch*);
+
+	 particleIndex createParticles(GeometryObject* obj,
+				       particleIndex start,
+				       ParticleVariable<Point>& position,
+				       ParticleVariable<Vector>& velocity,
+				       ParticleVariable<Vector>& pexternalforce,
+				       ParticleVariable<double>& mass,
+				       ParticleVariable<double>& volume,
+				       ParticleVariable<double>& temperature,
+				       ParticleVariable<double>& tensilestrengt,
+				       ParticleVariable<long64>& particleID,
+				       CCVariable<short int>& cellNAPID,
+				       const Patch*,
+				       ParticleVariable<Vector>& ptang1,
+				       ParticleVariable<Vector>& ptang2,
+				       ParticleVariable<Vector>& pnorm);
 
 	 int checkForSurface(const GeometryPiece* piece,
 				const Point p, const Vector dxpp);
@@ -121,6 +136,8 @@ WARNING
 
 	 // Specific constitutive model associated with this material
 	 ConstitutiveModel *d_cm;
+
+         bool d_membrane;
 
          // Burn model
 	 Burn *d_burn;
