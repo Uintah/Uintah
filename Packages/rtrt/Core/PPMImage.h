@@ -4,16 +4,25 @@
 
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array2.h>
+
 #include <vector>
 #include <string>
 #include <iostream>
-#include <stdio.h>
 #include <fstream>
+
+#include <stdio.h>
 #include <stdlib.h>
 
 namespace rtrt {
 
-static void eat_comments_and_whitespace(ifstream &str)
+using std::ifstream;
+using std::ofstream;
+using std::cout;
+using std::cerr;
+using std::vector;
+using std::string;
+
+void eat_comments_and_whitespace(ifstream &str)
 {
   char c;
   str.get(c);
@@ -96,7 +105,7 @@ class PPMImage
     ofstream outdata(filename);
     if (!outdata.is_open()) {
       cerr << "PPMImage: ERROR: I/O fault: couldn't write image file: "
-	   << filename << endl;
+	   << filename << "\n";
       return false;
     }
     if (bin)
@@ -139,7 +148,7 @@ class PPMImage
     
     if (!indata.is_open()) {
       cerr << "PPMImage: ERROR: I/O fault: no such file: " 
-           << filename << endl;
+           << filename << "\n";
       valid_ = false;
       return false;
     }
@@ -147,7 +156,7 @@ class PPMImage
     indata >> token; // P6
     if (token != "P6" && token != "P3") {
       cerr << "PPMImage: WARNING: format error: file not a PPM: "
-           << filename << endl;
+           << filename << "\n";
     }
 
     eat_comments_and_whitespace(indata);
