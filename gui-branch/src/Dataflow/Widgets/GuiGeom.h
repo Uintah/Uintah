@@ -43,6 +43,8 @@ class SCICORESHARE GuiColor : public GuiVar {
   GuiDouble g;
   GuiDouble b;
 public:
+  GuiColor(const string& name, Part* part);
+  // backward compatibility
   GuiColor(const string& name, const string& id, Part* part);
   ~GuiColor();
   
