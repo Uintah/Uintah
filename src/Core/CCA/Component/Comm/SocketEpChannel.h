@@ -57,11 +57,20 @@ namespace SCIRun {
     void runAccept();
     void runService(int new_fd);
 
+    static inline long getIP(){
+      return ip;
+    }
+
   private:
   
     /////////////
     // File descriptor for the socket
-    int sockfd;  
+
+    int sockfd;
+
+    char *hostname;
+    static long ip;
+    unsigned short port;
 
     ////////////
     // The table of handlers from the sidl generated file
@@ -79,6 +88,7 @@ namespace SCIRun {
     /////////////
     // Server context object
     void *object;
+
 
     /////////////
     // flag to indicate if the SpChannel is dead

@@ -63,25 +63,10 @@ namespace SCIRun {
     void unmarshalSpChannel(SpChannel* channel);
     void destroyMessage();
 
-
-    void setSocketEp(SocketEpChannel* ep);
-    void setSocketSp(SocketSpChannel* sp);
+    void setLocalObject(void *obj);
 
     inline static int sendall(int sockfd, void *buf, int len);
     inline static int recvall(int sockfd, void *buf, int len);
-
-
-    //static methods
-    static bool isLocal(const std::string& tag);
-    static void setSiteTag();
-    static std::string getSiteTag();
-    static std::string getHostname();
-
-    static std::string sitetag;  //  hostname:pid
-    static std::string hostname; // hostname;
-
-    //debug methods
-    void desplayMessage();
 
   private:
     inline void marshalBuf(const void *buf, int fullsize);
@@ -91,8 +76,6 @@ namespace SCIRun {
     //message layout
     //   [size(long)] [id (int)] [other marshaled segements]
     void *msg;
-    SocketEpChannel *ep;
-    SocketSpChannel *sp;
     int capacity;
     int msg_size;
     static const int INIT_SIZE=1024;

@@ -36,6 +36,12 @@
 #include <sys/socket.h>
 #include <errno.h>
 #include <unistd.h>
+#include <iostream>
+#include <unistd.h>
+#include <string.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 
 
 #include <iostream>
@@ -43,40 +49,27 @@
 #include <Core/CCA/Component/Comm/SocketMessage.h>
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/PIDL/URL.h>
 
 using namespace std;
 using namespace SCIRun;
 
 
-string SocketMessage::sitetag;
-string SocketMessage::hostname;
-
 SocketMessage::SocketMessage(int sockfd, void *msg)
 {
-  this->ep=NULL;
-  this->sp=NULL;
   this->msg=msg;
   this->sockfd=sockfd;
   this->object=NULL;
   msg_size=0;
-  //if(this->msg==NULL) createMessage();
-}
-
-void
-SocketMessage::setSocketEp(SocketEpChannel* ep)
-{
-  this->ep=ep;
-}
-
-void
-SocketMessage::setSocketSp(SocketSpChannel* sp)
-{
-  this->sp=sp;
 }
 
 SocketMessage::~SocketMessage() {
   if(msg!=NULL) free(msg);
+}
+
+void SocketMessage::setLocalObject(void *obj){
+  object=obj;
 }
 
 void 
@@ -119,19 +112,12 @@ SocketMessage::marshalLong(const long *buf, int size){
 void 
 SocketMessage::marshalSpChannel(SpChannel* channel){
   SocketSpChannel * chan = dynamic_cast<SocketSpChannel*>(channel);
+  SocketStartPoint *sp=chan->sp;
 
-  //cerr<<"MarshaSp:"<<chan->ep_url<<endl;
-
-  //marshalBuf(&(chan->sockfd), sizeof(int));
-  int urlSize=chan->ep_url.size(); 
-  marshalBuf(&urlSize, sizeof(int));
-  marshalBuf(chan->ep_url.c_str(), urlSize);
-
-  int tagSize=sitetag.size();
-  marshalBuf(&tagSize, sizeof(int));
-  marshalBuf(sitetag.c_str(), tagSize);
-
-  marshalBuf(&(chan->object), sizeof(int));
+  marshalBuf(&(sp->ip), sizeof(long));
+  marshalBuf(&(sp->port), sizeof(short));
+  marshalBuf(&(sp->pid), sizeof(int));
+  marshalBuf(&(sp->object), sizeof(int));
 }
 
 void 
@@ -139,7 +125,6 @@ SocketMessage::sendMessage(int handler){
   memcpy((char*)msg, &msg_size, sizeof(long));
   memcpy((char*)msg+sizeof(long), &handler, sizeof(int));
   
-  if(sockfd==-1) sockfd=sp->sockfd;
   if(sockfd==-1) throw CommError("SocketMessage::sendMessage", -1);
 
   //cerr<<"SEND MSG (sid="<<sockfd<<"):"<<msg_size<<" bytes, handlerID="<<handler<<endl;
@@ -150,7 +135,6 @@ SocketMessage::sendMessage(int handler){
 
 void 
 SocketMessage::waitReply(){
-  if(sockfd==-1) sockfd=sp->sockfd;
   if(sockfd==-1) throw CommError("waitReply", -1);
   int headerSize=sizeof(long)+sizeof(int);
   void *buf=malloc(headerSize);
@@ -168,20 +152,7 @@ SocketMessage::waitReply(){
     throw CommError("recv", errno);
   }
   
-  /*
-  //print the msg
-  printf("\nMsg=");
-  for(int i=0; i<headerSize; i++){
-    printf("%4u",((unsigned char*)buf)[i]);
-  }
-  
-  for(int i=0; i<msg_size-headerSize; i++){
-    printf("%4u",((unsigned char*)msg)[i]);
-  }
-  printf("\n\n");
-  */
   free(buf);
-  
   msg_size=0;
 }
 
@@ -222,49 +193,47 @@ SocketMessage::unmarshalLong(long *buf, int size){
 void 
 SocketMessage::unmarshalSpChannel(SpChannel* channel){
   SocketSpChannel * chan = dynamic_cast<SocketSpChannel*>(channel);
-  //unmarshalBuf(&(chan->sockfd), sizeof(int));
-  int urlSize;
-  unmarshalBuf(&urlSize, sizeof(int));
-  char *buf=new char[urlSize+1];
-  unmarshalBuf(buf, urlSize);
-  buf[urlSize]='\0';
-  chan->ep_url=buf;
-  delete []buf;
-  //cerr<<"UnmarshaSp:"<<chan->ep_url<<endl;
+  SocketStartPoint *sp=chan->sp;
 
+  unmarshalBuf(&(sp->ip), sizeof(long));
+  unmarshalBuf(&(sp->port), sizeof(short));
+  unmarshalBuf(&(sp->pid), sizeof(int));
+  unmarshalBuf(&(sp->object), sizeof(int));
 
-  int tagSize;
-  unmarshalBuf(&tagSize, sizeof(int));
-  buf=new char[tagSize+1];
-  unmarshalBuf(buf, tagSize);
-  buf[tagSize]='\0';
-  string sp_sitetag=buf;
-  delete []buf;
-  //cerr<<"UnmarshaSp:"<<sp_sitetag<<endl;
+  sp->refcnt=1;
+  //TODO: check local object 
+  if(sp->ip==SocketEpChannel::getIP() && sp->pid==PIDL::getPID() && sp->object!=NULL){
+    sp->sockfd=-1; 
+  }
+  else{
+    sp->object=NULL;
+    //cerr<<"sockfd opened\n";
+    struct sockaddr_in their_addr; // connector's address information 
+    
+    if( (sp->sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+      throw CommError("socket", errno);
+    }
 
-  unmarshalBuf(&object, sizeof(int));  
+    their_addr.sin_family = AF_INET;                   // host byte order 
+    their_addr.sin_port = htons(sp->port);  // short, network byte order 
+    their_addr.sin_addr = *(struct in_addr*)(&(sp->ip));
+    memset(&(their_addr.sin_zero), '\0', 8);  // zero the rest of the struct 
+    
+    if(connect(sp->sockfd, (struct sockaddr *)&their_addr,sizeof(struct sockaddr)) == -1) {
+      perror("connect");
+      throw CommError("connect", errno);
+    }
 
-  //if(!isLocal(sp_sitetag))
-
-  //cerr<<"unmarshalSpChannel::openConnection\n";
-  //chan->openConnection(URL(chan->ep_url));
-
-  //chan->ep_url=ep_url;
-
-  //This is only a temporary solution
-  /*Message *msg=chan->getMessage();
-  msg->createMessage();
-  msg->sendMessage(-100);  //call deleteReference
-  msg->destroyMessage();
-  */
-  ////////////////////////////////
+    Message *msg=chan->getMessage();
+    msg->createMessage();
+    msg->sendMessage(-101);  //call deleteReference
+    msg->destroyMessage(); 
+  }
 }
 
 void* 
 SocketMessage::getLocalObj(){
-  if(object!=NULL) return object;
-  if(ep==NULL) return NULL; //throw CommError("SocketMessagegetLocalObj", -1);
-  return ep->object; 
+  return object;
 }
 
 void SocketMessage::destroyMessage() {
@@ -323,53 +292,4 @@ SocketMessage::recvall(int sockfd, void *buf, int len)
   if(n==-1) perror("recv");
   return n==-1?-1:0; // return -1 on failure, 0 on success
 } 
-
-
-
-bool 
-SocketMessage::isLocal(const string& tag){
-  return tag==sitetag;
-}
-
-
-string
-SocketMessage::getHostname(){
-  return hostname;
-}
-
-void
-SocketMessage::setSiteTag(){
-  char *name=new char[128];
-  if(gethostname(name, 127)==-1){
-    throw CommError("gethostname", errno);
-  }
-  hostname=name;
-  delete []name;
-
-  pid_t pid=getpid();
-
-  ostringstream o;
-  o << hostname << ":" << pid;
-
-  sitetag=o.str();
-
-  //cerr<<"sitetag="<<sitetag<<endl;
-}
-
-string
-SocketMessage::getSiteTag(){
-  return sitetag;
-}
-
-
-void 
-SocketMessage::desplayMessage(){
-  //print the msg
-  printf("\nMsg=");
-  for(int i=0; i<msg_size; i++){
-    printf("%02x",((unsigned char*)msg)[i]);
-  }
-  printf("\n\n");
-}
-
 
