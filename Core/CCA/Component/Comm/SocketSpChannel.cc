@@ -42,8 +42,12 @@
 #include <netdb.h>
 #include <Core/CCA/Component/Comm/CommError.h>
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
+#include <Core/CCA/Component/Comm/SocketEpChannel.h>
 #include <Core/CCA/Component/Comm/SocketMessage.h>
 #include <Core/CCA/Component/PIDL/URL.h>
+#include <Core/CCA/Component/PIDL/Object.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/Component/PIDL/ServerContext.h>
 #include <Core/Thread/Thread.h>
 
 
@@ -53,28 +57,54 @@ using namespace SCIRun;
 int
 SocketSpChannel::cnt_c(0);
 
-int
-SocketSpChannel::cnt_o(0);
+//#define SHOW_SP_REF_COUNT
 
 SocketSpChannel::SocketSpChannel() { 
-  //cerr<<"SocketSpChannel"<< ++cnt_c<<"\n";
-  sockfd = -1;
-  object=NULL;
-  primary=false;
+  sp=new (struct SocketStartPoint);
+  sp->sockfd=-1; 
+  sp->refcnt=1;
+#ifdef SHOW_SP_REF_COUNT
+  cerr<<"SocketSpChannel cnt_c (NEW SP)="<<++cnt_c<<" sp="<<sp->refcnt<<endl;
+#endif
+}
+
+SocketSpChannel::SocketSpChannel(struct SocketStartPoint *sp) { 
+  this->sp=sp;
+  sp->refcnt++;
+#ifdef SHOW_SP_REF_COUNT
+  cerr<<"SocketSpChannel cnt_c="<<++cnt_c<<" sp="<<sp->refcnt<<endl;
+#endif
 }
 
 SocketSpChannel::~SocketSpChannel(){
-  //cerr<<"~SocketSpChannel "<<--cnt_c<<"\n";
-  if(primary && sockfd!=-1){
-    closeConnection();
+  //TODO: need synchronization for sp->refcnt
+  
+  --(sp->refcnt);
+#ifdef SHOW_SP_REF_COUNT
+  cerr<<"SocketSpChannel cnt_c="<<--cnt_c<<" sp="<<sp->refcnt<<endl;
+#endif
+  if(sp->refcnt ==0){
+    if(sp->sockfd!=-1){
+      //cerr<<"Shutdown Service thread\n";
+      Message *msg=getMessage();
+      msg->createMessage();
+      msg->sendMessage(-100); //quit service 
+      msg->destroyMessage(); 
+    
+      close(sp->sockfd);
+      sp->sockfd=-1;
+      //cerr<<"sockfd closed\n";
+    }
+    else{
+    }
+    delete sp;
   }
 }
 
 void SocketSpChannel::openConnection(const URL& url) {
-  //cerr<<"openConnection cnt_o="<<++cnt_o<<"\n";
-  primary=true;
-  if(sockfd!=-1) return;
-  ep_url=url.getString();
+  if(sp->sockfd!=-1) return;
+  //cerr<<"sockfd opened\n";
+
   struct hostent *he;
   struct sockaddr_in their_addr; // connector's address information 
 
@@ -83,7 +113,7 @@ void SocketSpChannel::openConnection(const URL& url) {
     throw CommError("gethostbyname", errno);
   }
      
-  if( (sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+  if( (sp->sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
     throw CommError("socket", errno);
   }
 
@@ -92,44 +122,53 @@ void SocketSpChannel::openConnection(const URL& url) {
   their_addr.sin_addr = *((struct in_addr *)he->h_addr);
   memset(&(their_addr.sin_zero), '\0', 8);  // zero the rest of the struct 
 
-  if(connect(sockfd, (struct sockaddr *)&their_addr,sizeof(struct sockaddr)) == -1) {
+  if(connect(sp->sockfd, (struct sockaddr *)&their_addr,sizeof(struct sockaddr)) == -1) {
     throw CommError("connect", errno);
   }
+
+  if(sp->sockfd!=-1){
+    Message *msg=getMessage();
+    msg->createMessage();
+    msg->sendMessage(-102); //ask for object 
+    msg->waitReply();
+
+    msg->unmarshalInt(&(sp->pid));
+    msg->unmarshalInt((int*)(&(sp->object)));
+    msg->destroyMessage(); 
+  }
+
+  sp->ip=their_addr.sin_addr.s_addr;
+  sp->port=url.getPortNumber();
+  //sp->spec
 }
 
 SpChannel* SocketSpChannel::SPFactory(bool deep) {
-  //I am not sure about this yet.
-  SocketSpChannel *new_sp=new SocketSpChannel(); 
-
-  deep=ep_url.size()!=0; //should remove this after clearify what is deep.
-
-  if(deep){
-    //cerr<<"SPFactory::openConnection to URL="<<ep_url<<"\n";
-
-    new_sp->openConnection(ep_url);
-  }
-  else{
-    new_sp->ep_url=ep_url;
-    new_sp->sockfd=sockfd;
-  }
-  new_sp->primary=deep;
+  SocketSpChannel *new_sp=new SocketSpChannel(sp); 
   return new_sp;
 }
 
 void SocketSpChannel::closeConnection() {
-  //cerr<<"closeConnection cnt_o="<<--cnt_o<<"\n";
-  Message *msg=getMessage();
-  msg->createMessage();
-  msg->sendMessage(1);  //call deleteReference
-  msg->destroyMessage(); 
-  close(sockfd);
-  sockfd=-1;
+  if(sp->sockfd!=-1){
+    Message *msg=getMessage();
+    msg->createMessage();
+    msg->sendMessage(1); 
+    msg->destroyMessage(); 
+  }
+  else{
+    cerr<<" trying local closeConnection ###\n";
+    if(sp->ip==SocketEpChannel::getIP() && sp->pid==PIDL::getPID() && sp->object!=NULL){
+	::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(sp->object);
+	_sc->d_objptr->deleteReference();
+	cerr<<" local closeConnection ###\n";
+    }
+  }
 }
 
 //new message is created and user should call destroyMessage to delete it.
 Message* SocketSpChannel::getMessage() {
-  SocketMessage* msg = new SocketMessage(sockfd);
-  msg->setSocketSp(this);
+  //if(sp->sockfd==-1) throw CommError("SocketSpChannel::getMessage", -1);
+  SocketMessage *msg=new SocketMessage(sp->sockfd);
+  msg->setLocalObject(sp->object);
   return msg;
 }
 

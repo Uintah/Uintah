@@ -48,12 +48,15 @@
 #include <Core/CCA/Component/Comm/SocketMessage.h>
 #include <Core/CCA/Component/Comm/SocketThread.h>
 #include <Core/CCA/Component/PIDL/Object.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/PIDL/ServerContext.h>
 
 #include <Core/Thread/Thread.h>
 
 using namespace std;
 using namespace SCIRun;
+
+long SocketEpChannel::ip(0);
 
 SocketEpChannel::SocketEpChannel(){ 
   struct sockaddr_in my_addr;    // my address information
@@ -75,10 +78,29 @@ SocketEpChannel::SocketEpChannel(){
   object=NULL;
   accept_thread=NULL;
   dead=false;
+
+  hostname=new char[128];
+  if(gethostname(hostname, 127)==-1){
+    throw CommError("gethostname", errno);
+  } 
+
+  struct hostent *he;
+  if((he=gethostbyname(hostname)) == NULL){
+    throw CommError("gethostbyname", errno);
+  }
+
+  ip=*((long*)he->h_addr);
+
+  socklen_t namelen=sizeof(struct sockaddr);
+  if(getsockname(sockfd, (struct sockaddr*)&my_addr, &namelen )==-1){
+    throw CommError("getsockname", errno);
+  }  
+  port=ntohs(my_addr.sin_port);
 }
 
 SocketEpChannel::~SocketEpChannel(){ 
   if(handler_table!=NULL) delete []handler_table;
+  delete []hostname;
 }
 
 
@@ -95,20 +117,9 @@ void SocketEpChannel::closeConnection() {
 }
 
 string SocketEpChannel::getUrl() {
-  struct sockaddr_in my_addr;
-  my_addr.sin_port=11111;
-  socklen_t namelen=sizeof(struct sockaddr);
-  if(getsockname(sockfd, (struct sockaddr*)&my_addr, &namelen )==-1){
-    throw CommError("getsockname", errno);
-  }
-  char *hostname=new char[128];
-  //strcpy(hostname,inet_ntoa(my_addr.sin_addr));
+
   std::ostringstream o;
-  if(gethostname(hostname, 127)==-1){
-    throw CommError("gethostname", errno);
-  } 
-  o << "socket://" << hostname << ":" << ntohs(my_addr.sin_port) << "/";
-  delete []hostname;
+  o << "socket://" << hostname << ":" << port << "/";
   return o.str();
 }
 
@@ -119,9 +130,8 @@ void SocketEpChannel::activateConnection(void* obj){
 }
 
 Message* SocketEpChannel::getMessage() {
-  SocketMessage* msg = new SocketMessage(sockfd);
-  msg->setSocketEp(this);
-  return msg;
+  //this should not be never called!
+  throw CommError("SocketEpChannel::getMessage", -1);
 }
 
 void SocketEpChannel::allocateHandlerTable(int size){
@@ -137,8 +147,36 @@ SocketEpChannel::registerHandler(int num, void* handle){
 void 
 SocketEpChannel::bind(SpChannel* spchan){
   SocketSpChannel *chan=dynamic_cast<SocketSpChannel*>(spchan);
-  chan->ep_url=getUrl();
-  //might save spchan for reference
+  SocketStartPoint *sp=chan->sp;
+  sp->ip=ip;
+  sp->port=port;
+  sp->pid=PIDL::getPID();
+  sp->object=object;
+
+  /*
+  struct sockaddr_in their_addr; // connector's address information 
+
+  if( (sp->sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+    throw CommError("socket", errno);
+  }
+
+  their_addr.sin_family = AF_INET;                   // host byte order 
+  their_addr.sin_port = htons(sp->port);  // short, network byte order 
+  their_addr.sin_addr = *(struct in_addr*)(&(sp->ip));
+  memset(&(their_addr.sin_zero), '\0', 8);  // zero the rest of the struct 
+
+  if(connect(sp->sockfd, (struct sockaddr *)&their_addr,sizeof(struct sockaddr)) == -1) {
+    perror("connect #2");
+    throw CommError("connect", errno);
+  }
+
+  Message *msg=chan->getMessage();
+  msg->createMessage();
+  msg->sendMessage(-101);  //call deleteReference
+  msg->destroyMessage(); 
+
+  sp->object=NULL;
+  */
 }
 
 
@@ -147,6 +185,7 @@ SocketEpChannel::runAccept(){
   fd_set read_fds; // temp file descriptor list for select()
   struct timeval timeout;
   // add the listener to the master set
+
   while(!dead && sockfd!=-1){
     timeout.tv_sec=0;
     timeout.tv_usec=0;
@@ -173,11 +212,10 @@ SocketEpChannel::runAccept(){
       
       Thread *t= new Thread(new SocketThread(this, NULL, -2, new_fd), "SocketServiceThread", 0, Thread::Activated);
       t->detach();
-    } 
-    //::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(object);
-    //cerr<<"Reference Count="<< _sc->d_objptr->getRefCount()<<endl;
-    //if(_sc->d_objptr->getRefCount()==0) break;
-    
+    }
+    // for test only, should not keep, because if object is already deleted, segmentation fault occurs.
+    ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(object);
+    if(_sc->d_objptr->getRefCount()==0) break;
    }
   close(sockfd);
   sockfd=-1;
@@ -212,26 +250,35 @@ SocketEpChannel::runService(int new_fd){
 
     //filter internal messages
     if(id<=-100){
-      if(id==-100){ //deleteReference
-	if(object==NULL) throw CommError("Access Null object", -1);
+      if(id==-100){ //quit service
+	close(new_fd);
+	break;
+      }
+      else if(id==-101){ //delete Reference
 	::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(object);
 	_sc->d_objptr->deleteReference();
+      
+      }
+      else if(id==-102){ //return object, pid
+	SocketMessage* msg=new SocketMessage(new_fd);
+	msg->createMessage();
+	int pid=PIDL::getPID();
+	msg->marshalInt(&pid);
+	msg->marshalInt((int*)(&object));
+	msg->sendMessage(0);
+	msg->destroyMessage();
       }
     }
     else{
       SocketMessage* new_msg=new SocketMessage(new_fd, buf);
-      new_msg->setSocketEp(this);
+      new_msg->setLocalObject(object);
       //The SocketHandlerThread is responsible to free the buf.   
 
       Thread* t = new Thread(new SocketThread(this, new_msg, id, new_fd), "SocketHandlerThread", 0, Thread::Activated);
       t->detach();
-      if(id==1){
-	close(new_fd);
-	//cerr<<"ServiceThread exits\n";
-	break;
-      }
     }
   }  
+  //cerr<<"ServiceThread stops\n";
 }
 
 

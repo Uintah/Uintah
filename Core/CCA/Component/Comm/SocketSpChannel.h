@@ -35,38 +35,35 @@
 
 namespace SCIRun {
   using namespace std;
+
+  struct SocketStartPoint{
+    int sockfd;
+    long ip;
+    unsigned short port;
+    int spec; //not used
+    int pid;
+    void *object;
+    int refcnt;
+  };
+
+
+
   class SocketSpChannel : public SpChannel {
     friend class SocketMessage;
     friend class SocketEpChannel;
   public:
 
     SocketSpChannel();
-    SocketSpChannel(const SocketSpChannel& copy);
-    SocketSpChannel& operator=(const SocketSpChannel& copy);
-    virtual ~SocketSpChannel();
+    ~SocketSpChannel();
     void openConnection(const URL& url);
     void closeConnection();
     Message* getMessage();
     SpChannel* SPFactory(bool deep);
 
   private:
-  
-    /////////////
-    // File descriptor for the socket
-    int sockfd;  
-
-    /////////////
-    // URL of the endpoint
-    string ep_url;
-
-    /////////////
-    // The server context object
-    void *object;
-
-    bool primary;
-
+    SocketSpChannel(struct SocketStartPoint *sp);
+    struct SocketStartPoint *sp;
     static int cnt_c;
-    static int cnt_o;
   };
 }
 
