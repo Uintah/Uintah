@@ -19,8 +19,10 @@
 # Build module html files from their xml equivalents.  Also generate a
 # cover page for each package of module descriptions.
 #
-# Each package has its own directory in which its module description files
-# are stored. 
+# Generated html is stored alongside its source xml.
+#
+# The variable GROUP is expected to be set to one of biopse, scirun, or
+#  unitah. If its not set or is empty then biopse is assumed.
 #
 # This file uses xalan-java 2.3.1 or higher to process the xml files.
 # The environment variable CLASSPATH must point to xalan.jar, xml-api.jar,
@@ -32,7 +34,7 @@
 #  Convert xml file to html
 define xmltohtml
 @echo $@
-@sed "s#\".*component.dtd#\"${treetop}/doc/Utilities/XML/component.dtd#" $< >${notdir $<}
+@-sed "s#\".*component.dtd#\"${treetop}/doc/Utilities/XML/component.dtd#" $< >${notdir $<}
 @-java org.apache.xalan.xslt.Process -IN ${notdir $<} -XSL ${stylesheet} \
 -OUT $@ -PARAM treetop ${1} -HTML
 @-rm ${notdir $<}
@@ -76,8 +78,14 @@ xmlpkgtreetop:= ../../../../../
 # Phony targets.
 .PHONY: default scirun biopse uintah clean veryclean
 
-# Default
-default: biopse
+# Default target
+ifndef GROUP
+GROUP = biopse
+endif
+ifeq (${strip ${GROUP}},)
+GROUP = biopse
+endif
+default: ${GROUP}
 
 # Other possibilities
 scirun : SCIRun
@@ -165,3 +173,4 @@ clean:
 
 veryclean: clean ${addsuffix _clean,${packages}}
 	-rm ${addsuffix .html,${packages}}
+
