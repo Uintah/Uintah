@@ -71,6 +71,34 @@ ClippingPlane::~ClippingPlane()
 void
 ClippingPlane::execute()
 {
+  const int axis = 2;  // x y z planes
+  Transform trans;
+  trans.load_identity();
+
+  double angle = 0;
+  Vector axis_vector(0.0, 0.0, 1.0);
+  switch (axis)
+  {
+  case 0:
+    angle = M_PI * -0.5; 
+    axis_vector = Vector(0.0, 1.0, 0.0);
+    break;
+
+  case 1:
+    angle = M_PI * 0.5; 
+    axis_vector = Vector(1.0, 0.0, 0.0);
+    break;
+
+  case 2:
+    angle = 0.0;
+    axis_vector = Vector(0.0, 0.0, 1.0);
+    break;
+
+  default:
+    break;
+  }
+  trans.pre_rotate(angle, axis_vector);
+
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
@@ -88,8 +116,35 @@ ClippingPlane::execute()
     {
       datatype_ = VECTOR;
     }
-  }
+  
+    // Compute Transform.
+    BBox box = ifieldhandle->mesh()->get_bounding_box();
 
+    Point loc(box.min());
+    Vector diag(box.diagonal());
+    switch (axis)
+    {
+    case 0:
+      loc.x(loc.x() + diag.x() * 0.5);
+      break;
+
+    case 1:
+      loc.y(loc.y() + diag.y() * 0.5);
+      break;
+
+    case 2:
+      loc.z(loc.z() + diag.z() * 0.5);
+      break;
+      
+    default:
+      break;
+    }
+
+    trans.pre_scale(diag);
+    trans.pre_translate(Vector(loc));
+  }
+  //trans.pre_rotate(angle, axis_vector);
+  
   // Create blank mesh.
   unsigned int sizex = 20;
   unsigned int sizey = 20;
@@ -113,6 +168,7 @@ ClippingPlane::execute()
   }
 
   // Transform field.
+  ofh->mesh()->transform(trans);
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Clipping Plane");
   ofp->send(ofh);
