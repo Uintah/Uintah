@@ -55,13 +55,6 @@ public:
                             GridP& grid,
 			    SimulationStateP&);
 	 
-  ///////////////////////////////////////////////////////////////////////////
-  //
-  // Schedule general initialization
-  //
-  virtual void scheduleInitialize(const LevelP& level,
-				  SchedulerP&);
-	 
 protected:
 
   ///////////////////////////////////////////////////////////////////////////
@@ -74,24 +67,6 @@ protected:
 				    string integrator, bool haveLoadCurve,
 				    bool doErosion);
 	 
-  ///////////////////////////////////////////////////////////////////////////
-  //
-  // Actually initialize
-  //
-  virtual void actuallyInitialize(const ProcessorGroup* pg,
-				  const PatchSubset* patches,
-				  const MaterialSubset* matls,
-				  DataWarehouse* old_dw,
-				  DataWarehouse* new_dw);
-
-  ///////////////////////////////////////////////////////////////////////////
-  //
-  // Initialize shell related variables for non shell materials
-  //
-  void initializeShellVariables(const Patch* patch,
-			        const MPMMaterial* matl,
-			        DataWarehouse* new_dw);
-
   ///////////////////////////////////////////////////////////////////////////
   //
   // Schedule interpolation from particles to the grid
@@ -117,25 +92,6 @@ protected:
 				    const MaterialSubset* ,
 				    DataWarehouse* old_dw,
 				    DataWarehouse* new_dw);
-
-  ///////////////////////////////////////////////////////////////////////////
-  //
-  // Schedule computation of stress tensor .. This is a copy of the
-  // SerialMPM one + extra variables for shells
-  //
-  virtual void scheduleComputeStressTensor(SchedulerP& sched,
-					   const PatchSet* patches,
-					   const MaterialSet* matls);
-
-  ///////////////////////////////////////////////////////////////////////////
-  //
-  // Actually compute of stress tensor using the constitutive model
-  //
-  virtual void computeStressTensor(const ProcessorGroup* pg,
-				   const PatchSubset* patches,
-				   const MaterialSubset* matl,
-				   DataWarehouse* old_dw,
-				   DataWarehouse* new_dw);
 
   ///////////////////////////////////////////////////////////////////////////
   //
@@ -199,23 +155,21 @@ protected:
 
   ///////////////////////////////////////////////////////////////////////////
   //
-  // Schedule interpolation of rotation rate from grid to particles and update
+  // Schedule update of the particle normal rotation rate 
   //
-  void schedInterpolateRotToParticlesAndUpdate(SchedulerP& sched,
-					       const PatchSet* patches,
-					       const MaterialSet* matls);
+  void schedParticleNormalRotRateUpdate(SchedulerP& sched,
+					const PatchSet* patches,
+					const MaterialSet* matls);
 
   ///////////////////////////////////////////////////////////////////////////
   //
-  // Actually interpolate rotation rate from grid to particles and update
+  // Actually update the particle normal rotation rate 
   //
-  void interpolateRotToParticlesAndUpdate(const ProcessorGroup*,
-					  const PatchSubset* patches,
-					  const MaterialSubset* ,
-					  DataWarehouse* old_dw,
-					  DataWarehouse* new_dw);
-
-
+  void particleNormalRotRateUpdate(const ProcessorGroup*,
+				   const PatchSubset* patches,
+				   const MaterialSubset* ,
+				   DataWarehouse* old_dw,
+				   DataWarehouse* new_dw);
 private:
 
   ///////////////////////////////////////////////////////////////////////////
