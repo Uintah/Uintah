@@ -38,16 +38,18 @@
       <p>
         The message(s) is/are similar to the following:
       </p>
-      <pre>
-        Loading package 'SCIRun'
-        Unable to load module 'CastField' :
-         - can't find symbol 'make_CastField'
-
+      <pre>Loading package 'SCIRun'
+Unable to load module 'CastField' :
+- can't find symbol 'make_CastField'
+      </pre>
+      <p>
         or
-
-        Unable to load all of package 'Teem' (category 'DataIO' failed) :
-        - libPackages_Teem_Dataflow.so: cannot open shared object file: No such file or directory
-        - libPackages_Teem_Dataflow_Modules_DataIO.so: cannot open shared object file: No such file or directory
+      </p>
+      <pre>Unable to load all of package 'Teem' (category 'DataIO' failed) :
+- libPackages_Teem_Dataflow.so: cannot open shared object file: No
+such file or directory
+- libPackages_Teem_Dataflow_Modules_DataIO.so: cannot open shared
+object file: No such file or directory
       </pre>
     </question>
     <answer>
@@ -90,32 +92,32 @@
         SCIRun has been tested on the following Linux distributions:
       </p>
       <p>
-        <ol>
-          <li>Mandrake 7.2 & 8.0</li>
-          <li>Redhat 6.2, 7.0 & 7.1</li>
-          <li>SuSE 6.4, 7.0 & 7.2</li>
+        <ul>
+          <li>Mandrake 7.2 &amp; 8.0</li>
+          <li>Redhat 6.2, 7.0 &amp; 7.1</li>
+          <li>SuSE 6.4, 7.0 &amp; 7.2</li>
           <li>Debian testing</li>
-        </ol> 
+        </ul> 
       </p>
       <p>
         SCIRun has been tested on the following PC processor configurations:
       </p>
       <p>
-        <ol>
+        <ul>
           <li>Dual Intel Pentium II</li>
           <li>Single Intel Pentium III</li>
           <li>Dual Intel Pentium III</li>
           <li>Single Intel Pentium 4</li>
           <li>Single AMD Athlon</li>
-        </ol>
+        </ul>
       </p>
       <p>
         SCIRun has been tested with the following graphics cards:
       </p>
       <p>
-        <ol>
-          <li>NVIDIA GeForce, GeForce II, GeForce3</li>
-        </ol>
+        <ul>
+          <li>NVIDIA GeForce, GeForce II &amp; GeForce3</li>
+        </ul>
       </p>
     </answer>
   </entry>

@@ -26,7 +26,7 @@
           
 
 -->
-
+ 
 <faq name="Technical FAQ">
   <description>
     <p>
@@ -45,30 +45,29 @@ installing, maintaining, and developing within SCIRun.
       <p>
         The output of SCIRun after it signals the abort looks like this:
       </p>
-      <pre>
-        Thread "main"(pid 251775) caught signal SIGABRT (Abort)
-        Backtrace:
-        0x5ff69224: SCIRun::Thread::niceAbort(void)
-        0x5ff7106c: handle_abort_signals
-        0xc37f7c0: sig_fixup_mask
-        0xfb11100: prctl
-        0xc37ee00: pthread_kill
-        0xc37fef8: _SGIPT_libc_raise
-        0xc378068: ptctl
-        0xfaf3e20: raise
-        0xfa668a4: abort
-        0xae40958: terminate(void)
-        0xae40788: __call_terminate
-        0xae42ba8: __throw
-        0x5ff72ad0: SCIRun::Thread::os_start(bool)
-        0x5ff68c7c: SCIRun::Thread::Thread(SCIRun::Runnable*,const
-        char*,SCIRun::ThreadGroup*,SCIRun::Thread::ActiveState)
-        0x100057c4: main
-        251775: main (state=running)
+      <pre>Thread "main"(pid 251775) caught signal SIGABRT (Abort)
+Backtrace:
+0x5ff69224: SCIRun::Thread::niceAbort(void)
+0x5ff7106c: handle_abort_signals
+0xc37f7c0: sig_fixup_mask
+0xfb11100: prctl
+0xc37ee00: pthread_kill
+0xc37fef8: _SGIPT_libc_raise
+0xc378068: ptctl
+0xfaf3e20: raise
+0xfa668a4: abort
+0xae40958: terminate(void)
+0xae40788: __call_terminate
+0xae42ba8: __throw
+0x5ff72ad0: SCIRun::Thread::os_start(bool)
+0x5ff68c7c: SCIRun::Thread::Thread(SCIRun::Runnable*,const
+char*,SCIRun::ThreadGroup*,SCIRun::Thread::ActiveState)
+0x100057c4: main
+251775: main (state=running)
  
-        Abort signalled by pid: 251775
-        Occured for thread:
-        "main"resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)?
+Abort signalled by pid: 251775
+Occured for thread:
+"main"resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)?
       </pre>
     </question>
     <answer>
@@ -114,13 +113,11 @@ installing, maintaining, and developing within SCIRun.
         The solution is to update your compiler to version 2.95.2 or 2.95.3.
         You can check your existing compilers version by typing:
       </p>
-      <pre>
-        gcc --version
-       
+      <pre>gcc --version</pre>
+      <p> 
         or
-  
-        g++ --version
-      </pre>
+      </p>
+      <pre>g++ --version</pre>
     </answer>
   </entry>
 
@@ -135,10 +132,9 @@ installing, maintaining, and developing within SCIRun.
       <p>
         The error message displayed contains the following warning:
       </p>
-      <pre>
-        ...
-        Warning: Option 'std' not in group 'LANG' (LANG:std)
-        ...
+      <pre>...
+Warning: Option 'std' not in group 'LANG' (LANG:std)
+...
       </pre>
     </question>
     <answer>
@@ -161,7 +157,7 @@ installing, maintaining, and developing within SCIRun.
       <p>
         When installing any of the software into your home directory
         be sure to use complete and absolute paths when providing
-        configure argumenst.  </b>Do Not</b> use tilde expansion or
+        configure argumenst.  <b>Do Not</b> use tilde expansion or
         any other short cuts, as they will not be properly expanded
         by the install scripts and makefiles.
       </p>
@@ -180,7 +176,7 @@ installing, maintaining, and developing within SCIRun.
         build a 64 bit version of SCIRun, you first need to have 64
         bit versions of the thirdparty software.  Then, configure
         SCIRun with the "--enable-64bit" option and rebuild.
-      <p>
+      </p>
       <p>
         Unfortunately, most of the required third party software did
         not take 64 bit SGI platforms into account when writing
@@ -193,7 +189,7 @@ installing, maintaining, and developing within SCIRun.
         configuring) by hand and replacing all instances of "-n32"
         with "-64". For Xerces, this means changing the environment
         variables listed above replacing all instances of " -n32 "
-        with " -64 ". 
+        with " -64 " before configuring. 
       </p>       
     </answer>
   </entry>
@@ -217,8 +213,8 @@ installing, maintaining, and developing within SCIRun.
         configure or make [incr Tcl/Tk], type the following commands:  
       </p>
 
-      <pre class="example"><font color=blue>cd itcl3.1.0/config
-chmod a+x install-sh mkinstalldirs</font>
+      <pre class="example">cd itcl3.1.0/config
+chmod a+x install-sh mkinstalldirs
       </pre>
 
       <p>
@@ -236,18 +232,18 @@ chmod a+x install-sh mkinstalldirs</font>
         configuring: 
       </p> 
 
-      <pre class="example"><font color=blue>cd blt2.4u
+      <pre class="example">cd blt2.4u
 make 
 cd src/shared
 make 
 cd ../..
 make -k install
 cd src/shared
-make -k install</font>
+make -k install
       </pre>
 
       <p>
-        Building Xerces-C++
+        <b><i>Building Xerces-C++</i></b>
       </p>
 
       <p>
@@ -262,8 +258,8 @@ make -k install</font>
         commands: 
       </p>
 
-      <pre class="example"><font color=blue>cd xerces-c-src1_4_0/src
-chmod a+x configure runConfigure</font>
+      <pre class="example">cd xerces-c-src1_4_0/src
+chmod a+x configure runConfigure
       </pre>
 
       <p> 
@@ -288,21 +284,25 @@ chmod a+x configure runConfigure</font>
       </p>
     </answer>
   </entry>
-
+ 
   <entry>
     <question>
-      When I try to configure SCIRun, it says that it cannot find
-      header files for one or more of the Tcl distributions, but my 
-      system has the correct versions for all the Tcl distributions.
+      <p>
+        When I try to configure SCIRun, it says that it cannot find
+        header files for one or more of the Tcl distributions, but my 
+        system has the correct versions for all the Tcl distributions.
+      </p>
     </question>
     <answer>
-      SCIRun currently requires the full source of Tcl and Tk to be
-      installed.  This is required because SCIRun defines a few Tk
-      widgets of it's own, and needs some headers from the source that
-      aren't included with typical installations.  If your system
-      already has the correct Tcl and Tk versions installed, you will
-      have to re-install (see above) in order to have the sources
-      included. 
+      <p>
+        SCIRun currently requires the full source of Tcl and Tk to be
+        installed.  This is required because SCIRun defines a few Tk
+        widgets of it's own, and needs some headers from the source that
+        aren't included with typical installations.  If your system
+        already has the correct Tcl and Tk versions installed, you will
+        have to re-install (see above) in order to have the sources
+        included. 
+      </p>
     </answer>
   </entry>
 

@@ -3,6 +3,38 @@
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 <xsl:param name="dir"/>
 
+<xsl:template match="p" mode="question">
+  <xsl:param name="num"/>
+  <p class="question">
+    <a>
+      <xsl:attribute name="name">
+        <xsl:value-of select="$num"/>
+      </xsl:attribute>
+      <b><xsl:apply-templates/></b>
+    </a>
+  </p>
+</xsl:template>
+
+<xsl:template match="pre" mode="question">
+  <div class="box">
+    <pre class="example">
+      <font color="blue"><b><xsl:apply-templates/></b></font>
+    </pre>
+  </div>
+</xsl:template>
+
+<xsl:template match="p" mode="answer">
+  <p class="firstpara"><xsl:apply-templates/></p>
+</xsl:template>
+
+<xsl:template match="pre" mode="answer">
+  <div class="box">
+    <pre class="example">
+      <font color="blue"><xsl:apply-templates/></font>
+    </pre>
+  </div>
+</xsl:template>
+
 <xsl:template match="@*|node()">
   <xsl:copy>
     <xsl:apply-templates select="@*"/>
@@ -102,6 +134,25 @@
 
 <hr size="1" />
 
+<ol>
+<xsl:for-each select="/faq/entry">
+  <xsl:variable name="num"><xsl:number/></xsl:variable>
+  <xsl:for-each select="./question">
+    <xsl:for-each select="./p">
+      <xsl:variable name="num2"><xsl:number/></xsl:variable>
+      <xsl:if test="$num2=1">
+        <li><p class="firstpara">
+        <a><xsl:attribute name="href">
+           <xsl:value-of select="concat('#',$num)"/></xsl:attribute>
+        <xsl:apply-templates/></a></p></li>
+      </xsl:if>
+    </xsl:for-each>
+  </xsl:for-each>
+</xsl:for-each>
+</ol>
+
+<!--
+
 <xsl:for-each select="/faq/entry">
   <xsl:variable name="num"><xsl:number/></xsl:variable>
   <xsl:for-each select="./question">
@@ -110,12 +161,14 @@
       <xsl:if test="$num2=1">
         <p class="firstpara"><b><xsl:value-of select="$num"/></b>
         <a><xsl:attribute name="href">
-           <xsl:value-of select="concat('techfaq.xml?dir=2','#',$num)"/></xsl:attribute>
+           <xsl:value-of select="concat('#',$num)"/></xsl:attribute>
         <xsl:apply-templates/></a></p>
       </xsl:if>
     </xsl:for-each>
   </xsl:for-each>
 </xsl:for-each>
+
+-->
 
 <hr size="1" />
 
@@ -124,26 +177,18 @@
 
   <!-- Question -->
   <xsl:for-each select="./question">
-      <span class="dropcap">Q: </span>
-        <xsl:for-each select="./p">
-      <p class="question"><a><xsl:attribute name="name">
-         <xsl:value-of select="$num"/></xsl:attribute>
-      <b><xsl:apply-templates/></b></a></p>
-    </xsl:for-each>
-    <xsl:for-each select="./pre">
-      <pre class="example"><b><xsl:apply-templates/></b></pre>
-    </xsl:for-each>
+    <span class="dropcap">Q: </span>
+    <xsl:apply-templates mode="question">
+      <xsl:with-param name="num">
+        <xsl:value-of select="$num"/>
+      </xsl:with-param>
+    </xsl:apply-templates>
   </xsl:for-each>
 
   <!-- Answer -->
   <xsl:for-each select="./answer">
     <span class="dropcap">A: </span>
-    <xsl:for-each select="./p">
-      <p  class="firstpara"><xsl:apply-templates/></p>
-    </xsl:for-each>
-    <xsl:for-each select="./pre">
-      <pre class="example"><xsl:apply-templates/></pre>
-    </xsl:for-each>
+    <xsl:apply-templates mode="answer"/>
   </xsl:for-each>
   <hr size="1" />
 </xsl:for-each>
