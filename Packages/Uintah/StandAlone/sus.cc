@@ -137,11 +137,11 @@ usage( const std::string & message,
       cerr << "Valid options are:\n";
       cerr << "-h[elp]              : This usage information.\n";
       cerr << "-mpm                 : \n";
-      cerr << "-mpmf                : \n";  // option for Fracture
-      cerr << "-rmpm                : \n";  // option for rigid MPM
-      cerr << "-smpm                : \n";  // option for shell MPM
-      cerr << "-smpmice             : \n";  // option for shell MPM with ICE
-      cerr << "-rmpmice             : \n";  // option for rigid MPM with ICE
+      cerr << "-mpmf                : option for Fracture\n";
+      cerr << "-rmpm                : option for rigid MPM\n";
+      cerr << "-smpm                : option for shell MPM\n";
+      cerr << "-smpmice             : option for shell MPM with ICE\n";
+      cerr << "-rmpmice             : option for rigid MPM with ICE\n";
       cerr << "-ice                 : \n";
       cerr << "-arches              : \n";
       cerr << "-AMR                 : use AMR simulation controller\n";
