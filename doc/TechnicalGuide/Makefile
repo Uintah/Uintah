@@ -19,43 +19,38 @@
 # XML to HTML.  therefore, to use this makefile you must have xt.jar, xp.jar 
 # and sax.jar listed in your CLASSPATH, i.e.: 
 #
-#   export CLASSPATH=xt.jar:xp.jar:sax.jar:$CLASSPATH
+#   export CLASSPATH=./xt.jar:./xp.jar:./sax.jar:$CLASSPATH
 #
 
 # a gzip'd tarball of the TechnicalGuide in the form of HTML files.
 FINALTARGET = TechnicalGuideHtml.tar.gz
 
-# list all of the TechnicalGuide's chapters here, including TOC and print.
-# the chapters are named by part and chapter: part 1 chapter 3 = p1c3
-# TOC is the Table of Contents and print is the entire book in html, suitable
-# for printing from a web browser (Netscape 6 or Explorer 6) to a pdf file.
+# each chapter (a single .xml file) is converted to a single .html file.
+# get list of all chapters (part 1 chapter 3 = p1c3), TOC and print
+BASENAMES   = $(shell ls -1 p?c?.xml | sed 's,.xml,,g') TOC printable
 
-BASENAMES   = TOC \
-              p1c1 p1c2 p1c3 \
-              p2c1 p2c2 p2c3 p2c4 p2c5 p2c6 p2c7 p2c8 p2c9 \
-              p3c1 \
-              p4c1 \
-              print
+#############################################################################
 
-HTMLNAMES   = $(patsubst %,%.html,$(BASENAMES))
+.SUFFIXES:
+.SUFFIXES: .xml .html 
+
+HTMLNAMES   = $(patsubst %,%.html,$(BASENAMES) $(OTHERNAMES))
+
+JFLAGS      = com.jclark.xsl.sax.Driver TechnicalGuide.xml
 
 default: $(FINALTARGET)
 
 TechnicalGuideHtml.tar.gz: TechnicalGuideHtml.tar
+	rm -f TechnicalGuideHtml.tar.gz
 	gzip TechnicalGuideHtml.tar
 
 TechnicalGuideHtml.tar: $(HTMLNAMES)
+	rm -f TechnicalGuideHtml.tar
 	cd ..; \
         tar cvf TechnicalGuide/TechnicalGuideHtml.tar TechnicalGuide/*.html
 
-$(HTMLNAMES): TechnicalGuide.xml
-	@for i in $(BASENAMES); do \
-          echo \
-          java com.jclark.xsl.sax.Driver TechnicalGuide.xml \
-               ../docbook.xsl $$i.html dir=2 cont=$$i; \
-          java com.jclark.xsl.sax.Driver TechnicalGuide.xml \
-               ../docbook.xsl $$i.html dir=2 cont=$$i; \
-        done
+.xml.html TOC.html printable.html: ../docbook.xsl ../doc_styles.css
+	java $(JFLAGS) ../docbook.xsl $*.html dir=2 cont=$* 
 
 clean: 
 	rm -f TechnicalGuideHtml.tar.gz

@@ -2,21 +2,21 @@
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1//EN" 
 "../docbookx.dtd" 
 [
+<!ENTITY edition  SYSTEM "../edition.xml">
 <!ENTITY p1c1 SYSTEM "p1c1.xml">
 <!ENTITY p1c2 SYSTEM "p1c2.xml">
 <!ENTITY p1c3 SYSTEM "p1c3.xml">
 <!ENTITY requirements SYSTEM "requirements.xml">
 <!ENTITY recommendations SYSTEM "recommendations.xml">
-<!ENTITY p2c1 SYSTEM "../../src/Dataflow/Network/doc/dirspec.xml">
-<!ENTITY p2c2 SYSTEM "../../src/Core/Disclosure/doc/dirspec.xml">
-<!ENTITY p2c3 SYSTEM "../../src/Core/GuiInterface/doc/dirspec.xml">
-<!ENTITY p2c4 SYSTEM "../../src/Core/Malloc/doc/dirspec.xml">
-<!ENTITY p2c5 SYSTEM "../../src/Core/Persistent/doc/dirspec.xml">
-<!ENTITY p2c6 SYSTEM "../../src/Core/TkExtensions/doc/dirspec.xml">
-<!ENTITY p2c7 SYSTEM "../../src/Core/Util/doc/dirspec.xml">
-<!ENTITY p2c8 SYSTEM "../../src/Core/Exceptions/doc/dirspec.xml">
-<!ENTITY p2c9 SYSTEM "../../src/Dataflow/Constraints/doc/dirspec.xml">
-<!ENTITY edition  SYSTEM "../edition.xml">
+<!ENTITY p2c1 SYSTEM "p2c1.xml">
+<!ENTITY p2c2 SYSTEM "p2c2.xml">
+<!ENTITY p2c3 SYSTEM "p2c3.xml">
+<!ENTITY p2c4 SYSTEM "p2c4.xml">
+<!ENTITY p2c5 SYSTEM "p2c5.xml">
+<!ENTITY p2c6 SYSTEM "p2c6.xml">
+<!ENTITY p2c7 SYSTEM "p2c7.xml">
+<!ENTITY p2c8 SYSTEM "p2c8.xml">
+<!ENTITY p2c9 SYSTEM "p2c9.xml">
 <!ENTITY appendix SYSTEM "appendix.xml">
 ]>
 
