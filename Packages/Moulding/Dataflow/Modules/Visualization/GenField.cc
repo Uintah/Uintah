@@ -12,6 +12,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/LatticeVol.h>
+#include <math.h>
 
 #include <Packages/Moulding/share/share.h>
 
@@ -49,38 +50,27 @@ GenField::~GenField(){
 
 void GenField::execute()
 {
-#if 0
-  // create an example 3D field of Vectors, which is 64^3
-  // and has extents equal to [-3.15,3.15]x[-3.15,3.15]x[-3.15,3.15]
-  int x,y,z;
-  x = y = z = 64;        // number of samples in each dimension
-  double b = 3.15;   
-  Point start(-b,-b,-b); // extents of the geometry.
-  Point end(b,b,b);
+  LatticeVol<Vector> *vf = scinew LatticeVol<Vector>(Field::NODE);
+  LatVolMesh* mesh = dynamic_cast<LatVolMesh*>(vf->get_typed_mesh().get_rep());
+  LatVolMesh::node_size_type size(64,64,64);
+  LatticeVol<Vector>::fdata_type &fdata = vf->fdata();
+  mesh->set_nx(64);
+  mesh->set_ny(64);
+  mesh->set_nz(64);
+  mesh->set_min(Point(-31.4,-30.0,-10.0));
+  mesh->set_max(Point(31.4,30.0,10.0));
+  fdata.resize(size);
 
-  // create geometry and attribute objects.  Note that the
-  // geometry and the attribute have the same dimensions (3D),
-  // and the same number of samples (x,y,z) in each dimension.
-  LatticeGeom* geom = scinew LatticeGeom(x,y,z,start,end);
-  DiscreteAttrib<Vector>* attr = scinew FlatAttrib<Vector>(x,y,z);
+  LatVolMesh::node_iterator ni = mesh->node_begin();
+  LatVolMesh::node_index i;
+  Point p;
+  for (;ni!=mesh->node_end();++ni) {
+    i = *ni;
+    mesh->get_point(p,i);
+    fdata[i] = Vector(1.0,4*sin(p.x()),0);
+  }
 
-  // create a field using the above geometry and attribute.
-  GenVField<Vector,LatticeGeom>* field = 
-    scinew GenVField<Vector,LatticeGeom>(geom,attr);
-
-  // populate the field with some values.
-  int i,j,k;
-  double gap = b*2.0/(x-1);  // distance between nodes along the x axis
-
-  for (i=0;i<x;i++) 
-    for (j=0;j<y;j++)
-      for (k=0;k<z;k++)
-	attr->set3(i,j,k,Vector(1,sin(-b+i*gap),0));
-
-  // send the field out the output port.
-  FieldHandle* handle = scinew FieldHandle(field);
-  oport->send(*handle);
-#endif
+  oport->send(vf);
 }
 
 void GenField::tcl_command(TCLArgs& args, void* userdata)
