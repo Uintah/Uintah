@@ -13,6 +13,8 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
+#include <sys/types.h>
+#include <unistd.h>
 
 
 namespace SCICore {
@@ -56,6 +58,7 @@ public:
 
 private:
   vector< CCVariable<T> > _vars;
+  vector<const Patch* > _patches;
   GridP _grid;
   LevelP _level;
   string _varname;
@@ -119,24 +122,25 @@ void CCScalarField<T>::computeHighLowIndices()
 template <class T>
 T CCScalarField<T>::grid(int i, int j, int k)
 {
-  static const Patch* patch = 0;
-  static int ii = 0;
+  //static const Patch* patch = 0;
+  static map<int, int> pidToIndex;
   IntVector id(i,j,k);
   id = low + id;
-
-  if( patch !=0 && patch->containsNode(id)) {
-    return _vars[ii][id];
+  int pid = getpid();
+  int index = pidToIndex[ pid ];
+  
+  if( _patches[index]->containsNode(id)) {
+    return _vars[index][id];
   } else {
-    ii = 0;
-    for(Level::const_patchIterator r = _level->patchesBegin();
-	r != _level->patchesEnd(); r++, ii++){
-      if( (*r)->containsCell( id ) ){
-	patch = (*r);
-	return _vars[ii][id];
+    index = 0;
+    static vector< CCVariable<T> >::iterator it;
+    for( it = _vars.begin(); it != _vars.end(); it++, index++){
+      if( _patches[index]->containsNode(id) ){
+	pidToIndex[ pid ] = index;
+	return _vars[index][id];
       }
     }
   }
-  patch = 0;
   return 0;
 }
 
@@ -150,6 +154,7 @@ template <class T>
 void CCScalarField<T>::AddVar( const CCVariable<T>& v, const Patch* p)
 {
   _vars.push_back( v );
+  _patches.push_back( p );
   low = SCICore::Geometry::Min( low, p->getCellLowIndex());
   high = SCICore::Geometry::Max( high, p->getCellHighIndex());
   nx = high.x() - low.x();

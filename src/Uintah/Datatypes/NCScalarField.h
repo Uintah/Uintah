@@ -14,6 +14,8 @@
 #include <SCICore/Math/MiscMath.h>
 #include <values.h>
 #include <vector>
+#include <sys/types.h>
+#include <unistd.h>
 
 namespace SCICore {
   namespace Datatypes {
@@ -62,7 +64,7 @@ public:
 //   const NCVariable<T>& var(int i){ return _vars[i];}
 private:
   vector< NCVariable<T> > _vars;
-  vector< Patch* > _patches;
+  vector<const Patch* > _patches;
   GridP _grid;
   LevelP _level;
   string _varname;
@@ -130,25 +132,25 @@ void NCScalarField<T>::computeHighLowIndices()
 template <class T>
 T NCScalarField<T>::grid(int i, int j, int k)
 {
-  static const Patch* patch = 0;
-  static int ii = 0;
+  //static const Patch* patch = 0;
+  static map<int, int> pidToIndex;
   IntVector id(i,j,k);
   id = low + id;
-
-
-  if( patch !=0 && patch->containsNode(id)) {
-    return _vars[ii][id];
+  int pid = getpid();
+  int index = pidToIndex[ pid ];
+  
+  if( _patches[index]->containsNode(id)) {
+    return _vars[index][id];
   } else {
-    ii = 0;
-    for(Level::const_patchIterator r = _level->patchesBegin();
-	r != _level->patchesEnd(); r++, ii++){
-      if( (*r)->containsNode( id ) ){
-	patch = (*r);
-	return _vars[ii][id];
+    index = 0;
+    static vector< NCVariable<T> >::iterator it;
+    for( it = _vars.begin(); it != _vars.end(); it++, index++){
+      if( _patches[index]->containsNode(id) ){
+	pidToIndex[ pid ] = index;
+	return _vars[index][id];
       }
     }
   }
-  patch = 0;
   return 0;
 }
 
@@ -162,6 +164,7 @@ template <class T>
 void NCScalarField<T>::AddVar( const NCVariable<T>& v, const Patch* p)
 {
   _vars.push_back( v );
+  _patches.push_back( p );
   low = SCICore::Geometry::Min( low, p->getNodeLowIndex());
   high = SCICore::Geometry::Max( high, p->getNodeHighIndex());
   nx = high.x() - low.x();
