@@ -51,7 +51,7 @@ struct DpyPrivate;
   bool       fullScreenMode_;
     Window parentWindow;
     int nstreams;
-    Semaphore releaseSema;
+    Semaphore parentSema;
 
   // Begin Gui Interaction Flags:
   bool       doAutoJitter_; // Jitter when not moving
@@ -152,6 +152,8 @@ public:
   int synching_frameless() { return synch_frameless; }
   
   void register_worker(int i, Worker* worker);
+
+  void wait_on_close();
 };
 
 } // end namespace rtrt

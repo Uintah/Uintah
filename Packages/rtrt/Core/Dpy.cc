@@ -176,7 +176,8 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
 	  float, float, bool display_frames, 
 	  int pp_size, int scratchsize, bool fullscreen, bool frameless,
 	  bool rserver, bool stereo)
-  : DpyBase("Real-time Ray Tracer"), fullScreenMode_( fullscreen ), 
+  : DpyBase("Real-time Ray Tracer", DoubleBuffered, false),
+  fullScreenMode_( fullscreen ), 
   doAutoJitter_( false ),
   showLights_( false ), lightsShowing_( false ),
   turnOnAllLights_( false ), turnOffAllLights_( false ),
@@ -191,7 +192,7 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
   exit_after_bench(true), ncounters(ncounters),
   c0(c0), c1(c1),
   frameless(frameless),synch_frameless(0), display_frames(display_frames),
-  releaseSema("Dpy window wait", 0)
+  parentSema("Dpy window wait", 0)
 {
   if(rserver)
     this->rserver = new RServer();
@@ -277,7 +278,7 @@ int Dpy::get_num_procs() {
 void Dpy::release(Window win)
 {
   parentWindow=win;
-  releaseSema.up();
+  parentSema.up();
 }
 
 void
@@ -291,7 +292,7 @@ Dpy::run()
   //  cerr << "priv->xres = "<<priv->xres<<", priv->yres = "<<priv->yres<<'\n';
   io_lock_.unlock();
 
-  releaseSema.down();
+  parentSema.down();
   if(rserver){
     rserver->openWindow(parentWindow);
     rserver->resize(priv->xres, priv->yres);
@@ -343,8 +344,9 @@ Dpy::run()
       //cerr << "priv->xres = "<<priv->xres<<", priv->yres = "<<priv->yres<<'\n';
 
       // Exit if you are supposed to.
-      if (nworkers == 0) {
+      if (nworkers == 0 || should_close()) {
         cout << "Dpy is closing\n";
+	parentSema.up();
         cleanup();
         return;
       }
@@ -372,16 +374,8 @@ Dpy::run()
 	}
       }
 
-#if 0
-      // Exit if you are supposed to.
-      if (scene->get_rtrt_engine()->stop_execution()) {
-	cout << "Dpy going down\n";
-        cleanup();
-        return;
-        //	Thread::exit();
-      }
-#endif
-      // Slurp up X events...
+      // Slurp up X events....  We don't need these as they are
+      // handled by the parent window.
       if(!rserver){
 	while (XEventsQueued(dpy, QueuedAfterReading)){
 	  XEvent e;
@@ -861,5 +855,16 @@ Dpy::get_barriers( Barrier *& mainBarrier, Barrier *& addSubThreads )
 {
   mainBarrier   = barrier;
   addSubThreads = addSubThreads_;
+}
+
+void Dpy::wait_on_close() {
+  parentSema.down();
+  // Now wait for the thread to have exited
+  unsigned int i =0;
+  while(my_thread_ != 0) {
+    i++;
+    if (i %10000 == 0)
+      cerr << "+";
+  }
 }
 
