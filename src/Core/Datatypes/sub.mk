@@ -43,6 +43,9 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/QuadraticTetVolMesh.cc        \
 	$(SRCDIR)/ScanlineMesh.cc           	\
 	$(SRCDIR)/SparseRowMatrix.cc	    	\
+	$(SRCDIR)/StructCurveMesh.cc	    	\
+	$(SRCDIR)/StructQuadSurfMesh.cc	    	\
+	$(SRCDIR)/StructHexVolMesh.cc	    	\
 	$(SRCDIR)/TetVolMesh.cc 	    	\
 	$(SRCDIR)/TriSurfMesh.cc	    	\
 	$(SRCDIR)/TypeName.cc		    	\
@@ -52,7 +55,8 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/cd_templates_fields_2.cc    	\
 	$(SRCDIR)/cd_templates_fields_3.cc    	\
 	$(SRCDIR)/cd_templates_fields_4.cc    	\
-	$(SRCDIR)/cd_templates_fields_5.cc
+	$(SRCDIR)/cd_templates_fields_5.cc	\
+	$(SRCDIR)/cd_templates_fields_6.cc
 
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
