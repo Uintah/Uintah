@@ -31,6 +31,7 @@ namespace Uintah {
     bool        d_useLoadCurves; // Flag for using load curves
     bool        d_createNewParticles; // Flag to decide whether to create
                                          // new particles after failure
+    bool        d_addNewMaterial; // Flag to decide whether to create
     bool        d_doErosion; // Flag to decide whether to erode or not
     bool        d_with_color;         // to turn on the color variable
     bool        d_fracture;         // to turn on fracture

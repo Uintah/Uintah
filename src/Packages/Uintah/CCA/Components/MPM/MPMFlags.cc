@@ -21,6 +21,7 @@ MPMFlags::MPMFlags()
   d_accStrainEnergy = false;
   d_useLoadCurves = false;
   d_createNewParticles = false;
+  d_addNewMaterial = false;
   d_with_color = false;
   d_fracture = false;
   d_finestLevelOnly = false;
@@ -54,6 +55,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   if (!adiabaticHeatingOn) d_adiabaticHeating = 1.0;
   ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);
   ps->get("create_new_particles", d_createNewParticles);
+  ps->get("manual_new_material", d_addNewMaterial);
   ProblemSpecP erosion_ps = ps->findBlock("erosion");
   if (erosion_ps) {
     if (erosion_ps->getAttribute("algorithm", d_erosionAlgorithm)) {
@@ -74,6 +76,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   dbg << " Accumulate Strain Energy    = " << d_accStrainEnergy << endl;
   dbg << " Adiabatic Heating On        = " << d_adiabaticHeating << endl;
   dbg << " Create New Particles        = " << d_createNewParticles << endl;
+  dbg << " Add New Material            = " << d_addNewMaterial << endl;
   dbg << " Do Erosion ?                = " << d_doErosion << endl;
   dbg << "  Erosion Algorithm          = " << d_erosionAlgorithm << endl;
   dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
