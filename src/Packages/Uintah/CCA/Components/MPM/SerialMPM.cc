@@ -66,6 +66,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   d_with_arches = false;
   contactModel = 0;
   thermalContactModel = 0;
+  d_8or27 = 8;
 }
 
 SerialMPM::~SerialMPM()
@@ -82,9 +83,11 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
    d_sharedState = sharedState;
 
    ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
-   if(!mpm_soln_ps->get("nodes8or27", d_8or27))
-      d_8or27 = 8;
 
+   if(mpm_soln_ps) {
+     mpm_soln_ps->get("nodes8or27", d_8or27);
+    }
+    
    MPMPhysicalBCFactory::create(prob_spec);
 
    contactModel = ContactFactory::create(prob_spec,sharedState, lb, d_8or27);

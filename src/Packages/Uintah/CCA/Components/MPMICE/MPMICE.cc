@@ -79,8 +79,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   d_mpm->setMPMLabel(Mlb);
   d_mpm->setWithICE();
   d_mpm->problemSetup(prob_spec, grid, d_sharedState);
-  d_8or27 = d_mpm->get8or27();
-  
+  d_8or27 = d_mpm-> d_8or27; 
   //__________________________________
   //  I C E
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
@@ -867,6 +866,8 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       IntVector nodeIdx[8];
       
       //---- P R I N T   D A T A ------ 
+/*`==========TESTING==========*/
+#if 0
       if(switchDebug_InterpolateNCToCC_0) {
         ostringstream desc;
         desc<< "TOP_MPMICE::interpolateNCToCC_0_mat_%d_patch_%d "<<
@@ -878,6 +879,8 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         printNCVector( patch, 1,desc.str(), "gvelocity.Y", 1, gvelocity);
         printNCVector( patch, 1,desc.str(), "gvelocity.Z", 2, gvelocity);
       }
+#endif 
+/*==========TESTING==========`*/
       //__________________________________
       //  compute CC Variables
       for(CellIterator iter =patch->getCellIterator();!iter.done();iter++){
@@ -1408,7 +1411,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           desc<<"TOP_equilibration_Mat_%d_patch_%d "<< indx<< patch->getID();
           d_ice->printData( patch,1,desc.str(),"rho_CC_new",rho_CC_new[m]);    
           d_ice->printData( patch,1,desc.str(),"rho_micro", rho_micro[m]);     
-          d_ice->printData( patch,0,desc.str(),"speedSound",speedSound_new[m]); 
+        //  d_ice->printData( patch,0,desc.str(),"speedSound",speedSound_new[m]); 
           d_ice->printData( patch,1,desc.str(),"Temp_CC",   Temp[m]);     
           d_ice->printData( patch,1,desc.str(),"vol_frac_CC",vol_frac[m]);
         }
