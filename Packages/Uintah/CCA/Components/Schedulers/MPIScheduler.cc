@@ -828,10 +828,11 @@ MPIScheduler::execute()
     emitTime("final wait");
   if(restartable){
     // Copy the restart flag to all processors
-    int restart = dws[dws.size()-1]->timestepRestarted();
-    MPI_Allreduce(&restart, &restart, 1, MPI_INT, MPI_LOR,
+    int myrestart = dws[dws.size()-1]->timestepRestarted();
+    int netrestart;
+    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR,
                   d_myworld->getComm());
-    if(restart)
+    if(netrestart)
       dws[dws.size()-1]->restartTimestep();
   }
 
