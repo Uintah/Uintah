@@ -48,13 +48,14 @@ WARNING
                                   double cv, double Temp,
                                   double& press, double& dp_drho,
                                   double& dp_de);
-        //per patch                          
         virtual void computeTempCC(const Patch* patch,
-                                const CCVariable<double>& press, 
-                                const double& gamma,
-                                const double& cv,
-                                const CCVariable<double>& rho_micro, 
-                                CCVariable<double>& Temp);
+                                   const string& comp_domain,
+                                   const CCVariable<double>& press, 
+                                   const double& gamma,
+                                   const double& cv,
+                                   const CCVariable<double>& rho_micro, 
+                                   CCVariable<double>& Temp,
+                                   Patch::FaceType face=Patch::xplus);
 
 
         double getGasConstant() const;
