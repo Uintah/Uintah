@@ -115,11 +115,8 @@ bool GeomBBoxCache::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
-// Revision 1.7.2.2  2000/10/26 10:04:31  moulding
+// Revision 1.7.2.3  2000/10/26 17:18:35  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.7.2.1  2000/09/28 03:13:37  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.9  2000/07/06 23:18:55  yarden
 // fix a bug if the bbox is not valid

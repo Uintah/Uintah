@@ -232,8 +232,8 @@ public:
 
 //
 // $Log$
-// Revision 1.4.2.1  2000/09/28 03:12:19  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.4.2.2  2000/10/26 17:18:38  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.5  2000/06/06 16:01:46  dahart
 // - Added get_triangles() to several classes for serializing triangles to

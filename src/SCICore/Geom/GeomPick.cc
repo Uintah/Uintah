@@ -212,11 +212,8 @@ bool GeomPick::saveobj(ostream& out, const clString& format, GeomSave* saveinfo)
 
 //
 // $Log$
-// Revision 1.3.2.2  2000/10/26 10:04:31  moulding
+// Revision 1.3.2.3  2000/10/26 17:18:37  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.3.2.1  2000/09/28 03:12:19  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.4  2000/08/11 15:49:06  bigler
 // Removed the int index and replaced it with a GeomObj* picked_obj.

@@ -118,8 +118,8 @@ public:
 
 //
 // $Log$
-// Revision 1.6.2.1  2000/09/28 03:12:18  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.6.2.2  2000/10/26 17:18:37  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.7  2000/07/28 21:16:44  yarden
 // add dli (display list)  flag to draw info

@@ -150,11 +150,8 @@ bool GeomGroup::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
-// Revision 1.8.2.2  2000/10/26 10:04:31  moulding
+// Revision 1.8.2.3  2000/10/26 17:18:36  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.8.2.1  2000/09/28 03:12:18  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.9  2000/06/06 16:01:44  dahart
 // - Added get_triangles() to several classes for serializing triangles to
