@@ -257,7 +257,7 @@ void SimulationController::run()
 
       unsigned long avg_memuse = memuse;
       unsigned long max_memuse = memuse;
-      if (d_myworld->size() > 0) {
+      if (d_myworld->size() > 1) {
 	MPI_Reduce(&memuse, &avg_memuse, 1, MPI_UNSIGNED_LONG, MPI_SUM, 0,
 		   d_myworld->getComm());
 	avg_memuse /= d_myworld->size(); // only to be used by processor 0
