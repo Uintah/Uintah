@@ -233,10 +233,13 @@ SynchronizeGeometry::append_msg(GeometryComm* gmsg)
 void
 SynchronizeGeometry::forward_saved_msg()
 {
-  int i, num_flush;
+  {
+    ostringstream str;
+    str << " Checking " << max_portno_ << " ports.";
+    remark( str.str() );
+  }
 
-  cout << "SynchronizeGeometry::forward_saved_msg called, checking " <<
-    max_portno_ << " ports.\n";
+  int i, num_flush;
 
   num_flush = 0;
   for (i = 0; i < max_portno_; i++)
@@ -248,7 +251,10 @@ SynchronizeGeometry::forward_saved_msg()
 	  tmp_gmsg->type == MessageTypes::GeometryFlushViews)
       {
 	num_flush++;
-	cout << "  port " << i << " is ready.\n";
+
+	ostringstream str;
+	str << "  port " << i << " is ready.";
+	remark( str.str() );
 	break;
       }
       tmp_gmsg = tmp_gmsg->next;
@@ -257,9 +263,9 @@ SynchronizeGeometry::forward_saved_msg()
 
   if (num_flush == numIPorts() - 1)
   {
-    cout << " All were ready, flushing.\n";
-    for (i = 0; i < max_portno_; i++)
-    {
+    remark( " All were ready, flushing." );
+
+    for (i = 0; i < max_portno_; i++) {
       flush_port(i);
 
 #if 0
