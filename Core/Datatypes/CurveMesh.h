@@ -107,10 +107,6 @@ public:
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
 
-  //! set the mesh statistics
-  void resize_nodes(Node::size_type n) { nodes_.resize(n); }
-  void resize_edges(Edge::size_type n) { edges_.resize(n); }
-
   //! get the child elements of the given index
   void get_nodes(Node::array_type &a, Edge::index_type i) const
     { a.resize(2,0); a[0] = edges_[i].first; a[1] = edges_[i].second; }
