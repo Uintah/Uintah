@@ -38,6 +38,8 @@ c*********************************************************************
       integer jBeg, jEnd
       integer kBeg, kEnd
 
+      double precision fcutoff
+
 C-----------------------------------------------------------------------
 C     Set up the locals
 C-----------------------------------------------------------------------
@@ -48,6 +50,9 @@ C-----------------------------------------------------------------------
       jEnd = indexHigh(2)
       kEnd = indexHigh(3)
 
+c      fcutoff = 0.985
+      fcutoff = 0.1
+
 C-----------------------------------------------------------------------
 C     RESET all mmcell type to flowtype
 C-----------------------------------------------------------------------
@@ -56,6 +61,14 @@ C-----------------------------------------------------------------------
             DO 100 I = iBeg,iEnd
                if (PCELL(I,J,K).eq.MMWALLID)
      $              PCELL(I,J,K) = FLOWCELLID
+
+#if 0
+               if (voidfrac(i,j,k).lt.0.9999999) then
+                  print*, 'PRINTING VOID FRACTION AT', i,j,k
+                  print*, voidfrac(i,j,k)
+               endif
+#endif
+
  100        CONTINUE
  200     CONTINUE
  300  CONTINUE
@@ -71,6 +84,14 @@ C-----------------------------------------------------------------------
                   print*, 'location of mmwallid = ',i,j,k
 
                end if
+
+#if 0
+c     debug, to test parallelism, sk, April 19, 2002
+               if (voidfrac(i,j,k) .gt. 0.00000001) then
+                  voidfrac(i,j,k) = 1.0
+               endif
+c     end debug
+#endif
 
  110        CONTINUE
  210     CONTINUE

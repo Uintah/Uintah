@@ -153,7 +153,7 @@ EnthalpySolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
   tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
-  if (d_MAlab) {
+  if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
     tsk->requires(Task::OldDW, d_MAlab->d_enth_mmLinSrc_CCLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -260,7 +260,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->allocateTemporary(enthalpyVars.scalarLinearSrc,  patch);
     new_dw->allocateAndPut(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcSBLMLabel, matlIndex, patch);
  
-    if (d_MAlab) {
+    if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
 
       new_dw->getCopy(enthalpyVars.mmEnthSu, d_MAlab->d_enth_mmNonLinSrc_CCLabel,
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -286,7 +286,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 				    delta_t, cellinfo, 
 				    &enthalpyVars );
 
-    if (d_MAlab) {
+    if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
 
       d_source->addMMEnthalpySource(pc, patch, cellinfo,
 				    &enthalpyVars);
@@ -462,7 +462,7 @@ EnthalpySolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   }      // added one more argument of index to specify enthalpy component
 
-  if (d_MAlab) {
+  if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
     tsk->requires(Task::NewDW, d_MAlab->d_enth_mmLinSrc_CCLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -608,7 +608,7 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
     }
 
-    if (d_MAlab) {
+    if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
 
       new_dw->getCopy(enthalpyVars.mmEnthSu, d_MAlab->d_enth_mmNonLinSrc_CCLabel,
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -634,7 +634,7 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 				    &enthalpyVars );
 
     // Add enthalpy source terms due to multimaterial intrusions
-    if (d_MAlab) {
+    if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
 
       d_source->addMMEnthalpySource(pc, patch, cellinfo,
       				    &enthalpyVars);
@@ -675,7 +675,8 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 					     cellinfo,
 					     &enthalpyVars);
 #if 0
-      if (d_MAlab)
+      //stuff below doesn't exist yet
+      if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange())
 	d_boundaryCondition->mmenthalpyRadWallBC(pc, patch,
 						 cellinfo,
 						 &enthalpyVars);
@@ -738,6 +739,14 @@ EnthalpySolver::sched_enthalpyLinearSolvePred(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_enthNonLinSrcPredLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  if (d_MAlab) {
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  } 
+
 #ifdef correctorstep
   tsk->computes(d_lab->d_enthalpyPredLabel);
 #else
@@ -827,13 +836,25 @@ EnthalpySolver::enthalpyLinearSolvePred(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->allocateTemporary(enthalpyVars.residualEnthalpy,  patch);
 
+    if (d_MAlab) {
+      new_dw->getCopy(enthalpyVars.cellType, d_lab->d_cellTypeLabel,
+		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->getCopy(enthalpyVars.voidFraction, d_lab->d_mmgasVolFracLabel,
+		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+
   // apply underelax to eqn
     d_linearSolver->computeEnthalpyUnderrelax(pc, patch,
 					    &enthalpyVars);
-    // make it a separate task later
-    d_linearSolver->enthalpyLisolve(pc, patch, delta_t, 
-    &enthalpyVars, cellinfo, d_lab);
-				  // put back the results
+
+    if (d_MAlab) 
+      d_boundaryCondition->enthalpyLisolve_mm(pc, patch, delta_t, 
+					      &enthalpyVars, 
+					      cellinfo, d_lab);
+    else
+      d_linearSolver->enthalpyLisolve(pc, patch, delta_t, 
+				      &enthalpyVars, cellinfo, d_lab);
+
 #if 0
     cerr << "print enthalpy solve after predict" << endl;
     enthalpyVars.enthalpy.print(cerr);

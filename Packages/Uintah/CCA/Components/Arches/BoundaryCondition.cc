@@ -48,7 +48,6 @@ using namespace Uintah;
 using namespace SCIRun;
 
 #include <Packages/Uintah/CCA/Components/Arches/fortran/celltypeInit_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/areain_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/profscalar_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/calpbc_fort.h>
@@ -70,8 +69,11 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradwallbc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/addpressuregrad_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmwallbc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_computevel_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
 
 //****************************************************************************
 // Constructor for BoundaryCondition
@@ -646,8 +648,19 @@ BoundaryCondition::sched_computePressureBC(SchedulerP& sched, const PatchSet* pa
 			  &BoundaryCondition::calcPressureBC);
 
   // This task requires the pressure
+
+#ifdef ExactMPMArchesInitialize
+  if (d_MAlab)
+    tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  else
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+#else
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+#endif
+
   tsk->requires(Task::NewDW, d_lab->d_pressureINLabel, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
@@ -692,8 +705,19 @@ BoundaryCondition::calcPressureBC(const ProcessorGroup* ,
     SFCZVariable<double> wVelocity;
 
     // get cellType, pressure and velocity
+
+#ifdef ExactMPMArchesInitialize
+    if (d_MAlab)
+      new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch, Ghost::None,
+		  Arches::ZEROGHOSTCELLS);
+    else
+      new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
+		  Arches::ZEROGHOSTCELLS);
+#else
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
+#endif
+
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
     new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
@@ -3621,4 +3645,335 @@ BoundaryCondition::setFluxBC(const ProcessorGroup*,
     break;
   }
 }
+
+void 
+BoundaryCondition::calculateVelRhoHat_mm(const ProcessorGroup* ,
+			    const Patch* patch,
+			    int index, double delta_t,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars)
+
+{
+  // Get the patch bounds and the variable bounds
+  IntVector idxLo;
+  IntVector idxHi;
+  // for explicit solver
+  int ioff, joff, koff;
+
+  switch (index) {
+  case Arches::XDIR:
+    idxLo = patch->getSFCXFORTLowIndex();
+    idxHi = patch->getSFCXFORTHighIndex();
+    ioff = 1; joff = 0; koff = 0;
+
+    fort_mm_explicit_vel(idxLo, idxHi, 
+			 vars->uVelRhoHat,
+			 vars->uVelocity,
+			 vars->uVelocityCoeff[Arches::AE], 
+			 vars->uVelocityCoeff[Arches::AW], 
+			 vars->uVelocityCoeff[Arches::AN], 
+			 vars->uVelocityCoeff[Arches::AS], 
+			 vars->uVelocityCoeff[Arches::AT], 
+			 vars->uVelocityCoeff[Arches::AB], 
+			 vars->uVelocityCoeff[Arches::AP], 
+			 vars->uVelNonlinearSrc,
+			 vars->new_density,
+			 cellinfo->sewu, cellinfo->sns, cellinfo->stb,
+			 delta_t, ioff, joff, koff,
+			 vars->cellType,
+			 d_mmWallID);
+    break;
+  case Arches::YDIR:
+    idxLo = patch->getSFCYFORTLowIndex();
+    idxHi = patch->getSFCYFORTHighIndex();
+    ioff = 0; joff = 1; koff = 0;
+
+    fort_mm_explicit_vel(idxLo, idxHi, 
+			 vars->vVelRhoHat,
+			 vars->vVelocity,
+			 vars->vVelocityCoeff[Arches::AE], 
+			 vars->vVelocityCoeff[Arches::AW], 
+			 vars->vVelocityCoeff[Arches::AN], 
+			 vars->vVelocityCoeff[Arches::AS], 
+			 vars->vVelocityCoeff[Arches::AT], 
+			 vars->vVelocityCoeff[Arches::AB], 
+			 vars->vVelocityCoeff[Arches::AP], 
+			 vars->vVelNonlinearSrc,
+			 vars->new_density,
+			 cellinfo->sew, cellinfo->snsv, cellinfo->stb,
+			 delta_t, ioff, joff, koff,
+			 vars->cellType,
+			 d_mmWallID);
+
+    break;
+  case Arches::ZDIR:
+    idxLo = patch->getSFCZFORTLowIndex();
+    idxHi = patch->getSFCZFORTHighIndex();
+    ioff = 0; joff = 0; koff = 1;
+
+    fort_mm_explicit_vel(idxLo, idxHi, 
+			 vars->wVelRhoHat,
+			 vars->wVelocity,
+			 vars->wVelocityCoeff[Arches::AE], 
+			 vars->wVelocityCoeff[Arches::AW], 
+			 vars->wVelocityCoeff[Arches::AN], 
+			 vars->wVelocityCoeff[Arches::AS], 
+			 vars->wVelocityCoeff[Arches::AT], 
+			 vars->wVelocityCoeff[Arches::AB], 
+			 vars->wVelocityCoeff[Arches::AP], 
+			 vars->wVelNonlinearSrc,
+			 vars->new_density,
+			 cellinfo->sew, cellinfo->sns, cellinfo->stbw,
+			 delta_t, ioff, joff, koff,
+			 vars->cellType,
+			 d_mmWallID);
+
+    vars->residWVel = 1.0E-7;
+    vars->truncWVel = 1.0;
+
+    break;
+  default:
+    throw InvalidValue("Invalid index in LinearSolver for velocity");
+  }
+}
+
+//****************************************************************************
+// Scalar Solve for Multimaterial
+//****************************************************************************
+void 
+BoundaryCondition::scalarLisolve_mm(const ProcessorGroup*,
+				    const Patch* patch,
+				    double delta_t,
+				    ArchesVariables* vars,
+				    CellInformation* cellinfo,
+				    const ArchesLabel*)
+{
+  // Get the patch bounds and the variable bounds
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+#if implict_defined
+
+  IntVector domLo = vars->scalar.getFortLowIndex();
+  IntVector domHi = vars->scalar.getFortHighIndex();
+
+  IntVector domLoDen = vars->old_density.getFortLowIndex();
+  IntVector domHiDen = vars->old_density.getFortHighIndex();
+
+  Array1<double> e1;
+  Array1<double> f1;
+  Array1<double> e2;
+  Array1<double> f2;
+  Array1<double> e3;
+  Array1<double> f3;
+
+  IntVector Size = domHi - domLo + IntVector(1,1,1);
+
+  e1.resize(Size.x());
+  f1.resize(Size.x());
+  e2.resize(Size.y());
+  f2.resize(Size.y());
+  e3.resize(Size.z());
+  f3.resize(Size.z());
+
+  sum_vartype resid;
+  sum_vartype trunc;
+
+  old_dw->get(resid, lab->d_scalarResidLabel);
+  old_dw->get(trunc, lab->d_scalarTruncLabel);
+
+  double nlResid = resid;
+  double trunc_conv = trunc*1.0E-7;
+  double theta = 0.5;
+  int scalarIter = 0;
+  double scalarResid = 0.0;
+  do {
+    //fortran call for lineGS solver
+    fort_linegs(idxLo, idxHi,
+		vars->scalar,
+		vars->scalarCoeff[Arches::AE],
+		vars->scalarCoeff[Arches::AW],
+		vars->scalarCoeff[Arches::AN],
+		vars->scalarCoeff[Arches::AS],
+		vars->scalarCoeff[Arches::AT],
+		vars->scalarCoeff[Arches::AB],
+		vars->scalarCoeff[Arches::AP],
+		vars->scalarNonlinearSrc,
+		e1, f1, e2, f2, e3, f3, theta);
+		
+    computeScalarResidual(pc, patch, old_dw, new_dw, index, vars);
+    scalarResid = vars->residScalar;
+    ++scalarIter;
+  } while((scalarIter < d_maxSweeps)&&((scalarResid > d_residual*nlResid)||
+				      (scalarResid > trunc_conv)));
+  cerr << "After scalar " << index <<" solve " << scalarIter << " " << scalarResid << endl;
+  cerr << "After scalar " << index <<" solve " << nlResid << " " << trunc_conv <<  endl;
+#endif
+
+  fort_mm_explicit(idxLo, idxHi, vars->scalar, vars->old_scalar,
+		   vars->scalarCoeff[Arches::AE], 
+		   vars->scalarCoeff[Arches::AW], 
+		   vars->scalarCoeff[Arches::AN], 
+		   vars->scalarCoeff[Arches::AS], 
+		   vars->scalarCoeff[Arches::AT], 
+		   vars->scalarCoeff[Arches::AB], 
+		   vars->scalarCoeff[Arches::AP], 
+		   vars->scalarNonlinearSrc, vars->old_density,
+		   cellinfo->sew, cellinfo->sns, cellinfo->stb, 
+		   delta_t,
+		   vars->cellType, d_mmWallID);
+
+     for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+       for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+	for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+	  IntVector currCell(ii,jj,kk);
+	  if (vars->scalar[currCell] > 1.0)
+	    vars->scalar[currCell] = 1.0;
+	  else if (vars->scalar[currCell] < 0.0)
+	    vars->scalar[currCell] = 0.0;
+	}
+      }
+    }
+
+#ifdef scalarSolve_debug
+
+     cerr << " NEW scalar VALUES " << endl;
+     for (int ii = 5; ii <= 9; ii++) {
+       for (int jj = 7; jj <= 12; jj++) {
+	 for (int kk = 7; kk <= 12; kk++) {
+	   cerr.width(14);
+	   cerr << " point coordinates "<< ii << " " << jj << " " << kk ;
+	   cerr << " new scalar = " << vars->scalar[IntVector(ii,jj,kk)] ; 
+	   cerr << " cellType = " << vars->cellType[IntVector(ii,jj,kk)] ; 
+	   cerr << " void fraction = " << vars->voidFraction[IntVector(ii,jj,kk)] << endl; 
+	 }
+       }
+     }
+#endif
+
+#ifdef ARCHES_DEBUG
+    cerr << " After Scalar Explicit solve : " << endl;
+    cerr << "Print Scalar: " << endl;
+    vars->scalar.print(cerr);
+#endif
+
+    vars->residScalar = 1.0E-7;
+    vars->truncScalar = 1.0;
+
+}
+
+//****************************************************************************
+// Enthalpy Solve for Multimaterial
+//****************************************************************************
+void 
+BoundaryCondition::enthalpyLisolve_mm(const ProcessorGroup*,
+				      const Patch* patch,
+				      double delta_t,
+				      ArchesVariables* vars,
+				      CellInformation* cellinfo,
+				      const ArchesLabel*)
+{
+  // Get the patch bounds and the variable bounds
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+#if implict_defined
+
+  IntVector domLo = vars->enthalpy.getFortLowIndex();
+  IntVector domHi = vars->enthalpy.getFortHighIndex();
+
+  IntVector domLoDen = vars->old_density.getFortLowIndex();
+  IntVector domHiDen = vars->old_density.getFortHighIndex();
+
+  Array1<double> e1;
+  Array1<double> f1;
+  Array1<double> e2;
+  Array1<double> f2;
+  Array1<double> e3;
+  Array1<double> f3;
+
+  IntVector Size = domHi - domLo + IntVector(1,1,1);
+
+  e1.resize(Size.x());
+  f1.resize(Size.x());
+  e2.resize(Size.y());
+  f2.resize(Size.y());
+  e3.resize(Size.z());
+  f3.resize(Size.z());
+
+  sum_vartype resid;
+  sum_vartype trunc;
+
+  old_dw->get(resid, lab->d_enthalpyResidLabel);
+  old_dw->get(trunc, lab->d_enthalpyTruncLabel);
+
+  double nlResid = resid;
+  double trunc_conv = trunc*1.0E-7;
+  double theta = 0.5;
+  int scalarIter = 0;
+  double scalarResid = 0.0;
+  do {
+    //fortran call for lineGS solver
+    fort_linegs(idxLo, idxHi,
+		vars->enthalpy,
+		vars->scalarCoeff[Arches::AE],
+		vars->scalarCoeff[Arches::AW],
+		vars->scalarCoeff[Arches::AN],
+		vars->scalarCoeff[Arches::AS],
+		vars->scalarCoeff[Arches::AT],
+		vars->scalarCoeff[Arches::AB],
+		vars->scalarCoeff[Arches::AP],
+		vars->scalarNonlinearSrc,
+		e1, f1, e2, f2, e3, f3, theta);
+		
+    computeScalarResidual(pc, patch, old_dw, new_dw, index, vars);
+    scalarResid = vars->residScalar;
+    ++scalarIter;
+  } while((scalarIter < d_maxSweeps)&&((scalarResid > d_residual*nlResid)||
+				      (scalarResid > trunc_conv)));
+  cerr << "After scalar " << index <<" solve " << scalarIter << " " << scalarResid << endl;
+  cerr << "After scalar " << index <<" solve " << nlResid << " " << trunc_conv <<  endl;
+#endif
+
+  fort_mm_explicit(idxLo, idxHi, vars->enthalpy, vars->old_enthalpy,
+		   vars->scalarCoeff[Arches::AE], 
+		   vars->scalarCoeff[Arches::AW], 
+		   vars->scalarCoeff[Arches::AN], 
+		   vars->scalarCoeff[Arches::AS], 
+		   vars->scalarCoeff[Arches::AT], 
+		   vars->scalarCoeff[Arches::AB], 
+		   vars->scalarCoeff[Arches::AP], 
+		   vars->scalarNonlinearSrc, vars->old_density,
+		   cellinfo->sew, cellinfo->sns, cellinfo->stb, 
+		   delta_t,
+		   vars->cellType, d_mmWallID);
+
+#ifdef enthalpySolve_debug
+
+     cerr << " NEW enthalpy VALUES " << endl;
+     for (int ii = 5; ii <= 9; ii++) {
+       for (int jj = 7; jj <= 12; jj++) {
+	 for (int kk = 7; kk <= 12; kk++) {
+	   cerr.width(14);
+	   cerr << " point coordinates "<< ii << " " << jj << " " << kk ;
+	   cerr << " new scalar = " << vars->enthalpy[IntVector(ii,jj,kk)] ; 
+	   cerr << " cellType = " << vars->cellType[IntVector(ii,jj,kk)] ; 
+	   cerr << " void fraction = " << vars->voidFraction[IntVector(ii,jj,kk)] << endl; 
+	 }
+       }
+     }
+#endif
+
+#ifdef ARCHES_DEBUG
+    cerr << " After Scalar Explicit solve : " << endl;
+    cerr << "Print Scalar: " << endl;
+    vars->enthalpy.print(cerr);
+#endif
+
+    vars->residScalar = 1.0E-7;
+    vars->truncScalar = 1.0;
+
+}
+
+
 

@@ -542,9 +542,15 @@ namespace Uintah {
       // for density
       const VarLabel* d_densityPredLabel;
       // labels for pressure solver
+
       const VarLabel* d_uVelRhoHatLabel;
       const VarLabel* d_vVelRhoHatLabel;
       const VarLabel* d_wVelRhoHatLabel;
+
+      const VarLabel* d_uVelRhoHat_CCLabel;
+      const VarLabel* d_vVelRhoHat_CCLabel;
+      const VarLabel* d_wVelRhoHat_CCLabel;
+
       // divergence constraint
       const VarLabel* d_divConstraintLabel;
 
