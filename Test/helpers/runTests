@@ -130,7 +130,7 @@ EOF
 	echo "$WEBLOG" >> "$BUILDROOT"/mail.msg
     fi
     sendmail "$SEND_MAIL_TO" < "$BUILDROOT"/mail.msg
-    rm -f "$BUILDROOT"/mail.msg
+#   rm -f "$BUILDROOT"/mail.msg
 fi
 
 remake_file=""
@@ -143,16 +143,16 @@ fi
 if [ "$MAIL_REMAKE_LOG_TO" != "" -a "$remake_file" != "" ]; then
     subject="Failed to compile scirun with Uintah on `hostname`"
 
-    cat > "$BUILDROOT"/mail.msg <<EOF
+    cat > "$BUILDROOT"/make_mail.msg <<EOF
 Subject: $subject
 To: $MAIL_REMAKE_LOG_TO
 $remake_file:
 
 EOF
-    cat $remake_file >> "$BUILDROOT"/mail.msg
+    cat $remake_file >> "$BUILDROOT"/make_mail.msg
 
-    sendmail "$MAIL_REMAKE_LOG_TO" < "$BUILDROOT"/mail.msg
-    rm -f "$BUILDROOT"/mail.msg
+    sendmail "$MAIL_REMAKE_LOG_TO" < "$BUILDROOT"/make_mail.msg
+    rm -f "$BUILDROOT"/make_mail.msg
 fi
 
 if [ $failed = "0" ]; then
