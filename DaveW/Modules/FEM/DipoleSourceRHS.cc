@@ -11,6 +11,7 @@
 
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/ColumnMatrixPort.h>
+#include <PSECore/Datatypes/MatrixPort.h>
 #include <PSECore/Datatypes/MeshPort.h>
 #include <PSECore/Datatypes/SurfacePort.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -29,6 +30,7 @@ using namespace SCICore::Geometry;
 class DipoleSourceRHS : public Module {
     MeshIPort* inmesh;
     ColumnMatrixIPort * isource;
+    MatrixIPort * isrcmat;
     ColumnMatrixIPort* irhs;
     ColumnMatrixOPort* orhs;
     ColumnMatrixOPort* oidx;
@@ -55,6 +57,8 @@ DipoleSourceRHS::DipoleSourceRHS(const clString& id)
     add_iport(isource);
     irhs=scinew ColumnMatrixIPort(this, "Input RHS",ColumnMatrixIPort::Atomic);
     add_iport(irhs);
+    isrcmat=scinew MatrixIPort(this, "SourceMat", MatrixIPort::Atomic);
+    add_iport(isrcmat);
 
     // Create the output ports
     orhs=scinew ColumnMatrixOPort(this,"Output RHS",ColumnMatrixIPort::Atomic);
@@ -72,9 +76,21 @@ void DipoleSourceRHS::execute()
      MeshHandle mesh;
 //     cerr << "DipoleSourceRHS: about to read inputs...\n";
      if (!inmesh->get(mesh) || !mesh.get_rep()) return;
-     ColumnMatrixHandle mh;
-     ColumnMatrix *mp;
-     if (!isource->get(mh) || !(mp=mh.get_rep())) return;
+
+     ColumnMatrixHandle mh=0;
+     ColumnMatrix *mp=0;
+
+     MatrixHandle mmh=0;
+     Matrix* mmp=0;
+     
+     if ((!isource->get(mh) || !(mp=mh.get_rep())) &&
+	 (!isrcmat->get(mmh) || !(mmp=mmh.get_rep()))) return; 
+     
+     if ((mp && mp->nrows()<6) || (mmp && mmp->nrows()<6)) {
+       cerr << "Error - dipole source must have at least six rows\n";
+       return;
+     }
+
 //     cerr << "DipoleSourceRHS: got inputs!\n";
      ColumnMatrixHandle rhsh;
      ColumnMatrix* rhs = scinew ColumnMatrix(mesh->nodes.size());
@@ -88,10 +104,22 @@ void DipoleSourceRHS::execute()
      else
 	 rhs->zero();
 
-     Vector dir((*mp)[3], (*mp)[4], (*mp)[5]);
-     Point p((*mp)[0], (*mp)[1], (*mp)[2]);
-     if (mp->nrows() == 7) loc=(int)((*mp)[6]);
-     if (mesh->locate(p, loc)) {
+     Vector dir;
+     Point p;
+     int nsrcs=1;
+     if (mmp) nsrcs=mmp->nrows();
+     
+     for (int ii=0; ii<nsrcs; ii++) {
+       if (mp) {
+	 dir=Vector((*mp)[3], (*mp)[4], (*mp)[5]);
+	 p=Point((*mp)[0], (*mp)[1], (*mp)[2]);
+	 if (mp->nrows() == 7) loc=(int)((*mp)[6]);
+       } else {
+	 dir=Vector((*mmp)[ii][3], (*mmp)[ii][4], (*mmp)[ii][5]);
+	 p=Point((*mmp)[ii][0], (*mmp)[ii][1], (*mmp)[ii][2]);
+	 if (mmp->nrows() == 7) loc=(int)((*mmp)[ii][6]);
+       }
+       if (mesh->locate(p, loc)) {
 //	 cerr << "DipoleSourceRHS: Found Dipole in element "<<loc<<"\n";
 	 double s1, s2, s3, s4;
 
@@ -123,12 +151,16 @@ void DipoleSourceRHS::execute()
 
 #if 0
 	 cerr << "DipoleSourceRHS :: Here's the RHS vector: ";
-	 for (int ii=0; ii<mesh->nodes.size(); ii++) 
-	     cerr << (*rhs)[ii]<<" ";
+	 for (int jj=0; jj<mesh->nodes.size(); jj++) 
+	     cerr << (*rhs)[jj]<<" ";
 	 cerr << "\n";
 	 cerr << "DipoleSourceRHS :: Here's the dipole: ";
-	 for (ii=0; ii<5; ii++) 
-	     cerr << (*mp)[ii]<<" ";
+	 if (mmp)
+	   for (jj=0; jj<5; jj++) 
+	     cerr << (*mmp)[ii][jj]<<" ";
+	 else
+	   for (jj=0; jj<5; jj++) 
+	     cerr << (*mp)[jj]<<" ";
 	 cerr << "\n";
 #endif
 
@@ -151,6 +183,7 @@ void DipoleSourceRHS::execute()
      (*idxvec)[4]=loc*3+2;
      (*idxvec)[5]=dir.z();
      oidx->send(ColumnMatrixHandle(idxvec));
+     }
 }
 
 } // End namespace Modules
@@ -159,8 +192,8 @@ void DipoleSourceRHS::execute()
 
 //
 // $Log$
-// Revision 1.6  2000/08/01 18:03:03  dmw
-// fixed errors
+// Revision 1.7  2000/10/17 15:38:37  dmw
+// Can now take a matrix of dipoles
 //
 // Revision 1.5  2000/03/17 09:25:43  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
