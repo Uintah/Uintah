@@ -1,9 +1,9 @@
 #include <Uintah/Components/ICE/ICELabel.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/NCVariable.h>
-#include <Uintah/Grid/XFCVariable.h>
-#include <Uintah/Grid/YFCVariable.h>
-#include <Uintah/Grid/ZFCVariable.h>
+#include <Uintah/Grid/SFCXVariable.h>
+#include <Uintah/Grid/SFCYVariable.h>
+#include <Uintah/Grid/SFCZVariable.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Grid/PerPatch.h>
@@ -98,29 +98,29 @@ ICELabel::ICELabel()
 
   // Face centered variables
     uvel_FCLabel       = 
-     scinew VarLabel("uvel_FC",   XFCVariable<double>::getTypeDescription() );
+     scinew VarLabel("uvel_FC",   SFCXVariable<double>::getTypeDescription() );
     vvel_FCLabel       = 
-     scinew VarLabel("vvel_FC",   YFCVariable<double>::getTypeDescription() );
+     scinew VarLabel("vvel_FC",   SFCYVariable<double>::getTypeDescription() );
     wvel_FCLabel       = 
-     scinew VarLabel("wvel_FC",   ZFCVariable<double>::getTypeDescription() );
+     scinew VarLabel("wvel_FC",   SFCZVariable<double>::getTypeDescription() );
     uvel_FCMELabel       = 
-     scinew VarLabel("uvel_FCME", XFCVariable<double>::getTypeDescription() );
+     scinew VarLabel("uvel_FCME", SFCXVariable<double>::getTypeDescription() );
     vvel_FCMELabel       = 
-     scinew VarLabel("vvel_FCME", YFCVariable<double>::getTypeDescription() );
+     scinew VarLabel("vvel_FCME", SFCYVariable<double>::getTypeDescription() );
     wvel_FCMELabel       = 
-     scinew VarLabel("wvel_FCME", ZFCVariable<double>::getTypeDescription() );
+     scinew VarLabel("wvel_FCME", SFCZVariable<double>::getTypeDescription() );
     pressX_FCLabel     = 
-     scinew VarLabel("pressX_FC",  XFCVariable<double>::getTypeDescription() );
+     scinew VarLabel("pressX_FC",  SFCXVariable<double>::getTypeDescription() );
     pressY_FCLabel     = 
-     scinew VarLabel("pressY_FC",  YFCVariable<double>::getTypeDescription() );
+     scinew VarLabel("pressY_FC",  SFCYVariable<double>::getTypeDescription() );
     pressZ_FCLabel     = 
-     scinew VarLabel("pressZ_FC",  ZFCVariable<double>::getTypeDescription() );
+     scinew VarLabel("pressZ_FC",  SFCZVariable<double>::getTypeDescription() );
     tau_X_FCLabel       = 
-     scinew VarLabel("tau_X_FC",   XFCVariable<Vector>::getTypeDescription() );
+     scinew VarLabel("tau_X_FC",   SFCXVariable<Vector>::getTypeDescription() );
     tau_Y_FCLabel       = 
-     scinew VarLabel("tau_Y_FC",   YFCVariable<Vector>::getTypeDescription() );
+     scinew VarLabel("tau_Y_FC",   SFCYVariable<Vector>::getTypeDescription() );
     tau_Z_FCLabel       = 
-     scinew VarLabel("tau_Z_FC",   ZFCVariable<Vector>::getTypeDescription() );
+     scinew VarLabel("tau_Z_FC",   SFCZVariable<Vector>::getTypeDescription() );
 } 
 
 ICELabel::~ICELabel()
@@ -174,6 +174,10 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.15  2000/12/05 15:45:30  jas
+// Now using SFC{X,Y,Z} data types.  Fixed some small bugs and things appear
+// to be working up to the middle of step 2.
+//
 // Revision 1.14  2000/11/28 03:50:28  jas
 // Added {X,Y,Z}FCVariables.  Things still don't work yet!
 //

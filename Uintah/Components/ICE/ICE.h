@@ -10,9 +10,9 @@
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Components/ICE/ICELabel.h>
 #include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/XFCVariable.h>
-#include <Uintah/Grid/YFCVariable.h>
-#include <Uintah/Grid/ZFCVariable.h>
+#include <Uintah/Grid/SFCXVariable.h>
+#include <Uintah/Grid/SFCYVariable.h>
+#include <Uintah/Grid/SFCZVariable.h>
 #include <Uintah/Grid/CellIterator.h>
 #include <SCICore/Geometry/Vector.h>
 
@@ -205,29 +205,29 @@ namespace Uintah {
       void setBC(CCVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);
       
-      void setBC(XFCVariable<double>& variable,const std::string& type, 
+      void setBC(SFCXVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
-      void setBC(XFCVariable<double>& variable,const std::string& type,
+      void setBC(SFCXVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);
-      void setBC(YFCVariable<double>& variable,const std::string& type, 
+      void setBC(SFCYVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
-      void setBC(YFCVariable<double>& variable,const std::string& type,
+      void setBC(SFCYVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);
-      void setBC(ZFCVariable<double>& variable,const std::string& type, 
+      void setBC(SFCZVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
-      void setBC(ZFCVariable<double>& variable,const std::string& type,
+      void setBC(SFCZVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);
       
-      void influxOutfluxVolume(const XFCVariable<double>& uvel_CC,
-			       const YFCVariable<double>& vvel_CC,
-			       const ZFCVariable<double>& wvel_CC,
+      void influxOutfluxVolume(const SFCXVariable<double>& uvel_CC,
+			       const SFCYVariable<double>& vvel_CC,
+			       const SFCZVariable<double>& wvel_CC,
 			       const double& delT, const Patch* patch,
 			       CCVariable<fflux>& OFS, CCVariable<eflux>& OFE,
 			       CCVariable<fflux>& IFS, CCVariable<eflux>& IFE);
       
-      void outflowVolCentroid(const XFCVariable<double>& uvel_CC,
-			      const YFCVariable<double>& vvel_CC,
-			      const ZFCVariable<double>& wvel_CC,
+      void outflowVolCentroid(const SFCXVariable<double>& uvel_CC,
+			      const SFCYVariable<double>& vvel_CC,
+			      const SFCZVariable<double>& wvel_CC,
 			      const double& delT, const Vector& dx,
 			      CCVariable<fflux>& r_out_x,
 			      CCVariable<fflux>& r_out_y,
@@ -317,6 +317,10 @@ namespace Uintah {
 #endif
 
 // $Log$
+// Revision 1.40  2000/12/05 15:45:30  jas
+// Now using SFC{X,Y,Z} data types.  Fixed some small bugs and things appear
+// to be working up to the middle of step 2.
+//
 // Revision 1.39  2000/11/28 03:50:28  jas
 // Added {X,Y,Z}FCVariables.  Things still don't work yet!
 //

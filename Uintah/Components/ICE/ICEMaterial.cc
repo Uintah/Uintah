@@ -187,6 +187,8 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
        uvel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity().x();
        vvel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity().y();
        wvel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity().z();
+       cout << "velocity = " << uvel_CC[*iter] << " " << vvel_CC[*iter]
+	    << " " << wvel_CC[*iter] << endl;
        speedSound[*iter] = d_speed_of_sound;
        visc_CC[*iter]    = d_viscosity;
        temp[*iter]       = d_geom_objs[i]->getInitialTemperature();
@@ -201,6 +203,10 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 }
 
 // $Log$
+// Revision 1.9  2000/12/05 15:45:30  jas
+// Now using SFC{X,Y,Z} data types.  Fixed some small bugs and things appear
+// to be working up to the middle of step 2.
+//
 // Revision 1.8  2000/11/28 03:50:28  jas
 // Added {X,Y,Z}FCVariables.  Things still don't work yet!
 //
