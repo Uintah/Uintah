@@ -2,7 +2,7 @@
 #include <config/sci.cf>
 
 OBJS = BBox.o  Grid.o  Plane.o  Point.o  Transform.o  Vector.o
-SRCS = BBox.cc Grid.cc Plane.o  Point.cc Transform.cc Vector.cc
+SRCS = BBox.cc Grid.cc Plane.cc Point.cc Transform.cc Vector.cc
 
 LIBNAME = Geometry
 
