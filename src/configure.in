@@ -2097,7 +2097,7 @@ fi
 
 SCI_CHECK_HEADERS($LIBPLPLOT/../include /usr/include/plplot,plplot.h,$INCTCL_H $INCTK_H,,optional)
 
-if test "$HAVE_LIBPLPLOT" && test "$HAVE_PLPLOT_H"; then
+if test "$HAVE_LIBPLPLOTD" && test "$HAVE_PLPLOT_H"; then
     DEF_PLPLOT="#define HAVE_PLPLOT 1"
 fi
 
@@ -2350,7 +2350,7 @@ if test "$HAVE_MDSLIB_H"; then
    INCMDSPLUS_H=$INCMDSLIB_H
 fi
 
-if test "$LIBMDSPLUS" && test "$INCMDSPLUS_H"; then
+if test "$HAVE_LIBMDSLIB_CLIENT" && test "$HAVE_MDSLIB_H"; then
     DEF_MDSPLUS="#define HAVE_MDSPLUS 1"
 fi
 
