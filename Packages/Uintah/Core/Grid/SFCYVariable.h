@@ -88,7 +88,8 @@ WARNING
     virtual void getSizes(IntVector& low, IntVector& high,
 			  IntVector& siz) const;
     virtual void getSizes(IntVector& low, IntVector& high,
-			  IntVector& siz, IntVector& strides) const;
+			  IntVector& dataLow, IntVector& siz,
+			  IntVector& strides) const;
 
     // Replace the values on the indicated face with value
     void fillFace(Patch::FaceType face, const T& value,
@@ -462,11 +463,13 @@ WARNING
   }
   template<class T>
   void
-  SFCYVariable<T>::getSizes(IntVector& low, IntVector& high, IntVector& siz,
+  SFCYVariable<T>::getSizes(IntVector& low, IntVector& high,
+			    IntVector& dataLow, IntVector& siz,
 			    IntVector& strides) const
   {
     low=getLowIndex();
     high=getHighIndex();
+    dataLow = getWindow()->getOffset();   
     siz=size();
     strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
 			(int)(sizeof(T)*siz.y()*siz.x()));

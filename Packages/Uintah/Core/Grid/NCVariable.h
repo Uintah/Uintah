@@ -89,7 +89,8 @@ WARNING
     virtual const TypeDescription* virtualGetTypeDescription() const;
 
     virtual void getSizes(IntVector& low, IntVector& high,
-			  IntVector& siz, IntVector& strides) const;
+			  IntVector& dataLow, IntVector& siz,
+			  IntVector& strides) const;
     // Replace the values on the indicated face with value
     void fillFace(Patch::FaceType face, const T& value, 
 		  IntVector offset = IntVector(0,0,0))
@@ -365,11 +366,13 @@ WARNING
    
   template<class T>
   void
-  NCVariable<T>::getSizes(IntVector& low, IntVector& high, IntVector& siz,
+  NCVariable<T>::getSizes(IntVector& low, IntVector& high,
+			  IntVector& dataLow, IntVector& siz,
 			  IntVector& strides) const
   {
     low=getLowIndex();
     high=getHighIndex();
+    dataLow = getWindow()->getOffset();
     siz=size();
     strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
 			(int)(sizeof(T)*siz.y()*siz.x()));

@@ -85,10 +85,14 @@ WARNING
      
     virtual void* getBasePointer();
     virtual const TypeDescription* virtualGetTypeDescription() const;
+
+    // If the window is the same size as its data then dataLow == low,
+    // otherwise low may be offset from dataLow.
     virtual void getSizes(IntVector& low, IntVector& high,
 			  IntVector& siz) const;
     virtual void getSizes(IntVector& low, IntVector& high,
-			  IntVector& siz, IntVector& strides) const;
+			  IntVector& dataLow, IntVector& siz,
+			  IntVector& strides) const;
 
 
     // Replace the values on the indicated face with value
@@ -463,11 +467,13 @@ WARNING
 
   template<class T>
   void
-  SFCZVariable<T>::getSizes(IntVector& low, IntVector& high, IntVector& siz,
+  SFCZVariable<T>::getSizes(IntVector& low, IntVector& high,
+			    IntVector& dataLow, IntVector& siz,
 			    IntVector& strides) const
   {
     low=getLowIndex();
     high=getHighIndex();
+    dataLow = getWindow()->getOffset();
     siz=size();
     strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
 			(int)(sizeof(T)*siz.y()*siz.x()));
