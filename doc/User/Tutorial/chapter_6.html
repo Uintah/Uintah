@@ -3,9 +3,6 @@
 <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
 <meta name="generator" content="Adobe GoLive 4">
 <title>Putting Simulation and Visualization Together</title>
-<!-- Changed by: Ted Dustman, 25-Feb-2002 -->
-<!-- Last update: Fri Mar  1 01:37:07 2002 by Rob MacLeod
-    -  last round before first release -->
 </head>
 
 <body bgcolor="#a9a9a9">
@@ -55,65 +52,55 @@
         <p><b>Chapter Overview</b><br>
 
         <p>In Chapters 1-4, we constructed a set of visualization
-	networks to explore scalar and vector Fields. In the previous chapter, 
+	networks to explore scalar and vector fields. In the previous chapter, 
 	we implemented a network to solve a bioelectric finite element problem.  
 	The output of that network was a solution vector, <img height="16"
 	    width="13" 
 	src="images/phi.gif">, containing the potential at each of the
 	nodes in the finite element mesh.
 
-	<p>In this chapter, we will put these two pieces together.  We
-	will reuse the finite element simulation network from <a
+	<p>In this chapter, we will reuse the finite element simulation network from <a
 	    href="chapter_5.html">Chapter 5</a>,  
 	as well as the visualization network from  <a
 	    href="chapter_4.html">Chapter 4</a>.  The 
-	only missing piece is a module that can connect the solution
+	only missing piece is a module that connects the solution
 	vector of scalar values to the nodes of the tetrahedral finite
-	element mesh.  The module ManageFieldData accomplishes this task,
-	as described below.
+	element mesh.  The ManageFieldData module accomplishes this task,
+	as described in the sections that follow.
 
      <p><b><A name="section-1">ManageFieldData</b><br></A>
 
-     <p>The ManageFieldData module splits its Field input and
-             then combines it with its Matrix input and creates a new Field
-	    and Matrix output: 
+     <p>The ManageFieldData module performs two simultaneous operations.  First, the module splits the input field into its mesh part and data values. These data values are then passed through the output matrix port.  Second, the module combines the mesh part with the matrix input, creating a new field output. 
+        
+	There are a few rules for the behavior of the module that
+	increase its versatility and its complexity:
         <ul>
-        <li>First the module splits its input Field into a mesh part and a
-	    data part. 
-        <li>Then the module combines this mesh part with the Matrix input
-	     to form a new Field, which goes to the Field output port. 
-        <li>Finally, the data part of the original Field is converted to
-            a Matrix and sent to the Matrix output port.
-        </ul>
-	There are a few rules to the behavior of the module that further
-	increase its versatility (and, unfortunately, its complexity):
-        <ul>
-        <li>If there is no input Matrix then the output Field will be
-            the same as the input Field.
-        <li>If the input Field's data are scalar then the output Matrix
-            will be a column matrix.
-        <li>If the input Field's data contains N vectors, then the output
-	    matrix will be of dimension Nx3.
-        <li>If the field contains N tensors the output matrix will be of
+        <p><li>If the module has no input matrix then the output field will be
+            the same as the input field.</p>
+        <p><li>If the input field's data are scalar then the output matrix
+            will be a column matrix.</p>
+        <p><li>If the input field's data contains N vectors, then the output
+	    matrix will be of dimension Nx3.</p>
+        <p><li>If the field contains N tensors the output matrix will be of
             dimension Nx9 where the
-             tensor is flattened out in left-to-right, top-to-bottom order.
-         <li>The number of rows in the input Matrix should equal the number
-            of data values in the input Field.
-        <LI> The output Field's type is the same as the input Field's
+             tensor is flattened out in left-to-right, top-to-bottom, order.</p>
+         <p><li>The number of rows in the input matrix should equal the number
+            of data values in the input field.</p>
+        <p><li> The output field's type is the same as the input field's
          type.  For instance, if the input field is a vector field, the
-         output Field will also be a vector field (and the input matrix
+         output field will also be a vector field (and the input matrix
          must be Nx3 where N is equal to the number of
-         data values in the input field).
+         data values in the input field).</p>
         </ul>
 
         <p><b><A name="section-2">Combining simulation and
 	visualization</b><br></A> 
 
-	<p>Combining the finite element simulation net from <a
-	href="chapter_5.html#figure-5.2"> Chapter 5, (Figure 5.2).</a>  
+	<p>Use the Insert option to combine the finite element simulation net from <a
+	href="chapter_5.html#figure-5.2"> Chapter 5, (Figure 5.2),</a>  
 	with the visualization net from <a
-	href="chapter_4.html#figure-4.1">Chapter 4, (Figure 4.1),</a> 
-	and adding a ManageFieldData module between them, you
+	href="chapter_4.html#figure-4.1">Chapter 4, (Figure 4.1).</a> 
+	  Add a ManageFieldData module between them, and you
 	should have a net that looks like that in <b>Figure 6.1</b>. 
 
       </div>
@@ -124,9 +111,8 @@
 	<div align="left">
 	<p>
 
-	<p> Executing the network, you should have an image in your
-	ViewWindow that 
-	looks like <b>Figure 6.2</b>. </P>
+	<p> Executing the network, the image in your
+	ViewWindow should look like <b>Figure 6.2</b>. </p>
 
       </div>
 	<center>
