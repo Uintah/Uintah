@@ -64,8 +64,9 @@ WARNING
 	 const VarLabel* gNormTractionLabel;
 	 const VarLabel* gSurfNormLabel; 
 	 const VarLabel* gStressLabel; 
-	 const VarLabel* pStressLabel; 
-	 const VarLabel* pXLabel; 
+	 // const VarLabel* pStressLabel; 
+	 //const VarLabel* pXLabel; 
+	
 	 
       public:
 	 // Constructor
@@ -109,6 +110,9 @@ WARNING
 #endif /* __FRICTION_H__ */
 
 // $Log$
+// Revision 1.9  2000/05/26 22:05:40  jas
+// Using Singleton class MPMLabel for label management.
+//
 // Revision 1.8  2000/05/26 21:37:35  jas
 // Labels are now created and accessed using Singleton class MPMLabel.
 //
