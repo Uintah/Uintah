@@ -215,6 +215,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     BV1* obj=new BV1(group);
 
     scene->set_object(obj);
+    scene->addObjectOfInterest(group, true);
     scene->add_light(new Light(Point(1000,-3000,0), Color(1,1,1), 0));
     scene->select_shadow_mode( No_Shadows );
     return scene;
