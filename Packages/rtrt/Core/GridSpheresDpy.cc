@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include <Packages/rtrt/visinfo/visinfo.h>
 #include <stdio.h>
+#include <string>
 
+using std::string;
 using namespace rtrt;
 using SCIRun::Mutex;
 using SCIRun::Thread;
@@ -59,7 +61,9 @@ void GridSpheresDpy::setup_vars() {
     new_range_begin=new float[ndata];
     new_range_end=new float[ndata];
     for(int i=0;i<ndata;i++){
-      cerr << "\t\t\t\tmin["<<i<<"] = "<<min[i]<<",\tmax["<<i<< "] = "<<max[i] << endl;
+      if (var_names != 0)
+	cerr << var_names[i];
+      cerr << "\t\t\tmin["<<i<<"] = "<<min[i]<<",\tmax["<<i<< "] = "<<max[i] << endl;
       // this takes into account of
       // min/max equaling each other
       if (min[i] == max[i]) {
@@ -230,7 +234,7 @@ void GridSpheresDpy::run()
 }
 
 static void printString(GLuint fontbase, double x, double y,
-			char *s, const Color& c)
+			const char *s, const Color& c)
 {
   glColor3f(c.red(), c.green(), c.blue());
   
@@ -311,7 +315,7 @@ void GridSpheresDpy::compute_hist(GLuint fid)
   //cerr << "GridSpheresDpy:compute_hist:end\n";
 }
 
-static int calc_width(XFontStruct* font_struct, char* str)
+static int calc_width(XFontStruct* font_struct, const char* str)
 {
   XCharStruct overall;
   int ascent, descent;
@@ -358,8 +362,15 @@ void GridSpheresDpy::draw_hist(GLuint fid, XFontStruct* font_struct,
       gluOrtho2D(0, xres, 0, h);
       offset+=nhist;
       char buf[100];
+      // print the min on the left
       sprintf(buf, "%g", min[j]);
       printString(fid, 2, descent+1, buf, Color(0,1,1));
+      // print the variable name in the middle
+      if (var_names != 0) {
+	int x = (int)((xres - calc_width(font_struct,var_names[j].c_str()))/2);
+	printString(fid, x, descent+1, var_names[j].c_str(), Color(1,1,1));
+      }
+      // print the max on the right
       sprintf(buf, "%g", max[j]);
       int w=calc_width(font_struct, buf);
       printString(fid, xres-2-w, descent+1, buf, Color(0,1,1));
@@ -469,6 +480,7 @@ void GridSpheresDpy::attach(GridSpheres* g) {
     ndata = g->ndata + 3;
     grids.add(g);
     g->dpy = this;
+    var_names = g->var_names;
   }
 }
 

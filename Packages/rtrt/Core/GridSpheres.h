@@ -7,6 +7,9 @@
 #include "Color.h"
 #include "Material.h"
 #include "GridSpheresDpy.h"
+#include <string>
+
+using std::string;
 
 namespace rtrt {
 
@@ -31,6 +34,7 @@ class GridSpheres : public Object, public Material {
   float iradius;
   int nmatls;
   Material** matls;
+  string *var_names;
   double specpow;
   double refl;
   double transp;
@@ -57,7 +61,8 @@ class GridSpheres : public Object, public Material {
 public:
   GridSpheres(float* spheres, float* min, float* max,
 	      int nspheres, int ndata, int nsides, int depth,
-	      float radius, int nmatls, Material** matls);
+	      float radius, int nmatls, Material** matls,
+	      string *var_names = 0);
   virtual ~GridSpheres();
   virtual void intersect(const Ray& ray,
 			 HitInfo& hit, DepthStats* st,
