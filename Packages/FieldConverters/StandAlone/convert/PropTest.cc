@@ -14,9 +14,11 @@
 
 using namespace SCIRun;
 
-main(int argc, char **argv) {  
+int
+main(int argc, char **argv)
+{  
   TetVol<double> *field = new TetVol<double>;
-  field->set_string("date", "today");
+  field->store("date", "today");
   delete(field);
   return 0;  
 }    
