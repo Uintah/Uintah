@@ -94,6 +94,8 @@ proc makeNetworkEditor {} {
 	-command "popupInsertMenu" -state disabled
     .main_menu.file.menu add command -label "Clear" -underline 0 \
 	-command "ClearCanvas" -state disabled
+    .main_menu.file.menu add command -label "Execute All" -underline 0 \
+	-command "ExecuteAll" -state disabled
     .main_menu.file.menu add cascade -label "New" -underline 0\
         -menu .main_menu.file.menu.new -state disabled
 
@@ -248,6 +250,7 @@ proc activate_file_submenus { } {
     .main_menu.file.menu entryconfig 3 -state active
     .main_menu.file.menu entryconfig 4 -state active
     .main_menu.file.menu entryconfig 5 -state active
+    .main_menu.file.menu entryconfig 6 -state active
 }
 
 proc handle_bad_startnet { netfile } {
@@ -863,6 +866,11 @@ proc NiceQuit {} {
 	set modules ""
 	netedit quit
     }   
+}
+
+
+proc ExecuteAll {} {
+    netedit scheduleall
 }
 
 
