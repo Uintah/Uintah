@@ -28,6 +28,15 @@ default: all
 %.tex :: %
 
 #
+# If a sidl-generated file uses templates, it's possible that the MIPSPro
+# CC will decide to recompile the .cc file at link time to get the template
+# instantiation. If make has already removed the _sidl.cc file since it's an
+# intermediate file, the compilation will fail. This prevents make from 
+# deleting these files.
+#
+.PRECIOUS: %_sidl.h %_sidl.cc
+
+#
 # Directory variables
 #
 SRCTOP  := @top_srcdir@
@@ -350,6 +359,11 @@ endif
 
 #
 # $Log$
+# Revision 1.32  2000/07/25 17:53:55  jehall
+# - Prevent make from deleting automatically generated *_sidl.{h,cc} files,
+#   since the MIPSPro CC may need them at link time for template
+#   instantiations.
+#
 # Revision 1.31  2000/07/03 19:09:45  jehall
 # - Fixed "argument list too long" problems in make clean
 #
