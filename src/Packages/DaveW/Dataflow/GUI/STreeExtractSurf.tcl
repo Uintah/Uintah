@@ -12,6 +12,9 @@
  #  Log Information:
  #
  #  $Log$
+ #  Revision 1.4  1999/11/17 00:31:02  dmw
+ #  fixed a typo -- all of these modules said Davew instead of DaveW
+ #
  #  Revision 1.3  1999/09/02 21:30:45  moulding
  #  took out the modname method; it's in the base itcl clase module (module.tcl)
  #
@@ -43,6 +46,8 @@ itcl_class DaveW_EEG_STreeExtractSurf {
     method set_defaults {} {
 	global $this-surfid
 	set $this-surfid ""
+	global $this-remapTCL
+	set $this-remapTCL 1
     }
     method ui {} {
         set w .ui[modname]
@@ -61,6 +66,8 @@ itcl_class DaveW_EEG_STreeExtractSurf {
 	entry $w.f.surf.e -relief sunken -width 10 -textvariable $this-surfid
 	pack $w.f.surf.l $w.f.surf.e -side left
 	pack $w.f.surf -side left -fill x
-        pack $w.f -side top -expand yes
+	global $this-remapTCL
+	checkbutton $w.b -text "Renumber points" -variable $this-remapTCL
+        pack $w.f $w.b -side top -expand yes
     }
 }
