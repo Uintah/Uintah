@@ -125,7 +125,7 @@ void CompNeoHookImplicit::computeStableTimestep(const Patch* patch,
   new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
-#if 0
+
 void CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 				      const MPMMaterial* matl,
 				      DataWarehouse* old_dw,
@@ -256,7 +256,6 @@ void CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
   }
 }
 
-#endif
 
 void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches,
 					      const MPMMaterial* matl,
@@ -311,10 +310,8 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
     
     int dwi = matl->getDWIndex();
 
-    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-
-    cerr << "number of particles = " << pset->numParticles() << endl;
-    constParticleVariable<Point> px,px_ghost;
+    ParticleSubset* pset;
+    constParticleVariable<Point> px;
     ParticleVariable<Matrix3> deformationGradient_new,bElBar_new;
     constParticleVariable<Matrix3> deformationGradient,bElBar_old;
     ParticleVariable<Matrix3> pstress;
@@ -323,20 +320,27 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
     constNCVariable<Vector> dispNew;
     delt_vartype delT;
     
-    old_dw->get(px,                  lb->pXLabel,                  pset);
-    old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
-    old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);
     if (recursion) {
+      DataWarehouse* parent_old_dw = 
+	new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+      pset = parent_old_dw->getParticleSubset(dwi, patch);
+      parent_old_dw->get(px,             lb->pXLabel,              pset);    
+      parent_old_dw->get(pvolume,        lb->pVolumeLabel,         pset);
+      parent_old_dw->get(pvolumeold,     lb->pVolumeOldLabel,      pset);      
       old_dw->get(deformationGradient,lb->pDeformationMeasureLabel_preReloc,
 		  pset);
       old_dw->get(bElBar_old, lb->bElBarLabel_preReloc, pset);
     }
     else {
+      pset = old_dw->getParticleSubset(dwi, patch);
+      old_dw->get(px,             lb->pXLabel,              pset);      
       old_dw->get(deformationGradient,lb->pDeformationMeasureLabel,pset);
       old_dw->get(bElBar_old, lb->bElBarLabel, pset);
+      old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
+      old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);    
     }
-
     
+    cerr << "number of particles = " << pset->numParticles() << endl;
   
     if (recursion)
       old_dw->get(dispNew,lb->dispNewLabel,dwi,patch,Ghost::AroundCells,1);
@@ -869,10 +873,13 @@ void CompNeoHookImplicit::addComputesAndRequiresImplicit(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeLabel, matlset, Ghost::None);
-  task->requires(Task::OldDW,lb->pVolumeOldLabel,matlset,Ghost::None);
+  // task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
+  // new version uses ParentOldDW
+
   if (recursion) {
+    task->requires(Task::ParentOldDW, lb->pXLabel,      matlset, Ghost::None);
+    task->requires(Task::ParentOldDW, lb->pVolumeLabel, matlset, Ghost::None);
+    task->requires(Task::ParentOldDW,lb->pVolumeOldLabel,matlset,Ghost::None);
     task->requires(Task::OldDW, lb->pDeformationMeasureLabel_preReloc,
 		   matlset,Ghost::None);
     task->requires(Task::OldDW,lb->bElBarLabel_preReloc,matlset,
@@ -880,6 +887,9 @@ void CompNeoHookImplicit::addComputesAndRequiresImplicit(Task* task,
     task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
   }
   else {
+    task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
+    task->requires(Task::OldDW, lb->pVolumeLabel, matlset, Ghost::None);
+    task->requires(Task::OldDW,lb->pVolumeOldLabel,matlset,Ghost::None);
     task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
 		   matlset, Ghost::None);
     task->requires(Task::OldDW,lb->bElBarLabel,matlset,Ghost::None);
