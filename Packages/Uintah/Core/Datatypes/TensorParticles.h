@@ -4,7 +4,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <Packages/Uintah/Core/Datatypes/PSet.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/ShareAssignParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -64,7 +64,7 @@ public:
   TensorParticles();
   //////////
   // Constructor
-  TensorParticles(const vector <ParticleVariable<Matrix3> >& tensors,
+  TensorParticles(const vector<ShareAssignParticleVariable<Matrix3> >& tensors,
 		  PSet* pset );
 
   // GROUP: Destructors
@@ -75,7 +75,7 @@ public:
   // GROUP: Access
   //////////
   // return the Tensors
-  vector<ParticleVariable<Matrix3> >& get(){ return tensors; }
+  vector<ShareAssignParticleVariable<Matrix3> >& get(){ return tensors; }
   PSet* getParticleSet(){ return psetH.get_rep(); }
 
 
@@ -85,7 +85,7 @@ public:
   void Set(PSetHandle psh){ psetH = psh;}
   //////////  
   // Set the Tensors
-  void Set(vector <ParticleVariable<Matrix3> >& s){ tensors = s; }
+  void Set(vector<ShareAssignParticleVariable<Matrix3> >& s){ tensors = s; }
 
   void AddVar( const ParticleVariable<Matrix3> parts );
 
@@ -112,7 +112,7 @@ private:
 
   string _varname;
   int _matIndex;
-  vector<ParticleVariable<Matrix3> >  tensors;
+  vector<ShareAssignParticleVariable<Matrix3> >  tensors;
 };
 
 } // End namespace Uintah
