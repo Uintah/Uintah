@@ -11,9 +11,9 @@
 #include <math.h>
 #include <iostream>
 
-#ifndef HAVE_FASTM
-#define fsqrt sqrt
-#endif
+//#ifndef HAVE_FASTM
+//#define fsqrt sqrt
+//#endif
 
 using namespace rtrt;
 

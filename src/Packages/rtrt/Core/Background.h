@@ -19,17 +19,14 @@ public:
 
 
     // expects a unit vector
-    virtual Color color_in_direction( const Vector& v) const = 0;
+    virtual void color_in_direction( const Vector& v, Color& c) const = 0;
 
     // gives some approximate value
-    inline const Color& average( ) const;
+  inline const Color& average( ) const {
+    return avg;
+  }
 
 };
-
-const Color& Background::average() const {
-    return avg;
-}
-
 
 class ConstantBackground : public Background {
 protected:
@@ -38,7 +35,7 @@ public:
     ConstantBackground(const Color& C);
     virtual ~ConstantBackground();
 
-    virtual Color color_in_direction(const Vector& v) const; 
+    virtual void color_in_direction(const Vector& v, Color& c) const; 
 };
 
 
@@ -52,7 +49,7 @@ public:
 
     virtual ~LinearBackground();   
     
-    virtual Color color_in_direction(const Vector& v) const ;
+    virtual void color_in_direction(const Vector& v, Color& c) const ;
 
 };
 
@@ -65,7 +62,7 @@ public:
       
       virtual ~EnvironmentMapBackground( void );
       
-      virtual Color color_in_direction(const Vector& v) const ;
+      virtual void color_in_direction(const Vector& v, Color& c) const ;
       
   protected:
       

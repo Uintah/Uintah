@@ -23,14 +23,14 @@ struct Pixel {
     }
     inline void set(const Color& color) {
 	float rr=color.r;
-	rr=rr<0?0:rr>1?1:rr;
+	rr=rr<0.f?0.f:rr>1.f?1.f:rr;
 	float gg=color.g;
-	gg=gg<0?0:gg>1?1:gg;
+	gg=gg<0.f?0.f:gg>1.f?1.f:gg;
 	float bb=color.b;
-	bb=bb<0?0:bb>1?1:bb;
-	r=(unsigned char)(rr*255.);
-	g=(unsigned char)(gg*255.);
-	b=(unsigned char)(bb*255.);
+	bb=bb<0.f?0.f:bb>1.f?1.f:bb;
+	r=(unsigned char)(rr*255.f);
+	g=(unsigned char)(gg*255.f);
+	b=(unsigned char)(bb*255.f);
 	a=255;
     }
 };
@@ -60,6 +60,9 @@ public:
     inline Pixel& operator()(int x, int y) {
 	return image[y][x];
     }
+  void set(int x, int y, const Color& value) {
+    image[y][x].set(value);
+  }
     void save(char* file);
 };
 #if 0

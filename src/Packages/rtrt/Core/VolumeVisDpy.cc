@@ -354,9 +354,9 @@ void VolumeVisDpy::compute_hist(GLuint fid) {
   //cerr << "VolumeVisDpy:compute_hist:end\n";
 }
 
-void draw_bbox(GLuint fid, XFontStruct* font_struct) {
-
-}
+//void draw_bbox(GLuint fid, XFontStruct* font_struct) {
+//
+//}
 
 void VolumeVisDpy::draw_hist(GLuint fid, XFontStruct* font_struct) {
   int descent=font_struct->descent;
@@ -415,10 +415,7 @@ void VolumeVisDpy::draw_hist(GLuint fid, XFontStruct* font_struct) {
 // and their corresponding opacities.  No alpha blending is used, because we
 // are using a black background.  This allows us the ablility to just multiply
 // the corresponding colors, by the alpha value.
-void VolumeVisDpy::draw_alpha_curve(GLuint /*fid*/, XFontStruct* font_struct) {
-  int descent=font_struct->descent;
-  int textheight=font_struct->descent+font_struct->ascent+2;
-
+void VolumeVisDpy::draw_alpha_curve(GLuint /*fid*/, XFontStruct* /*font_struct*/) {
   // set up the frame for the lower half of the user interface.
   int s=5;
   int e=yres/2-5;

@@ -271,20 +271,23 @@ void Worker::run()
 	      }
 	    } else {
 	      double stime;
-	      if(scene->doHotSpots())
-		//stime=Thread::currentSeconds();
+	      if(scene->doHotSpots()){
 		stime=SCIRun::Time::currentSeconds();
-	      for(int y=sy;y<ey;y++){
-		for(int x=sx;x<ex;x++){
-		  camera->makeRay(ray, x+xoffset, y+yoffset, ixres, iyres);
-		  traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
-		  if(scene->doHotSpots()){
-		    //double etime=Thread::currentSeconds();
+		for(int y=sy;y<ey;y++){
+		  for(int x=sx;x<ex;x++){
+		    camera->makeRay(ray, x+xoffset, y+yoffset, ixres, iyres);
+		    traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
 		    double etime=SCIRun::Time::currentSeconds();
 		    double t=etime-stime;	
 		    stime=etime;
 		    (*image)(x,y).set(CMAP(t));
-		  } else {
+		  }
+		}
+	      } else {
+		for(int y=sy;y<ey;y++){
+		  for(int x=sx;x<ex;x++){
+		    camera->makeRay(ray, x+xoffset, y+yoffset, ixres, iyres);
+		    traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
 		    (*image)(x,y).set(result);
 		  }
 		}
@@ -696,9 +699,9 @@ void Worker::run()
 		double etime=SCIRun::Time::currentSeconds();
 		double t=etime-stime;	
 		stime=etime;
-		(*image)(x,y).set(CMAP(t));
+		image->set(x,y, CMAP(t));
 	    } else {
-		(*image)(x,y).set(wc);
+	      image->set(x,y,wc);
 	    }
 #else
 	    Color wc = lastC[ci] + (*clrs[wcI&1])[ci]*float(-0.5);
@@ -710,9 +713,9 @@ void Worker::run()
 		double etime=SCIRun::Time::currentSeconds();
 		double t=etime-stime;	
 		stime=etime;
-		(*image)(x,y).set(CMAP(t));
+		image->set(x,y, CMAP(t));
 	    } else {
-		(*image)(x,y).set(wc);
+	      image->set(x,y, wc);
 	    }
 #endif
 #if 0
@@ -808,9 +811,9 @@ void Worker::run()
 		  double etime=SCIRun::Time::currentSeconds();
 		  double t=etime-stime;	
 		  stime=etime;
-		  (*image)(x,y).set(CMAP(t));
+		  set->set(x,y, CMAP(t));
 	      } else {
-		  (*image)(x,y).set(wc);
+		image->set(x,y, wc);
 	      }
 #else
 	      //do this, then blend into the frame buffer
@@ -829,9 +832,9 @@ void Worker::run()
 		  double etime=SCIRun::Time::currentSeconds();
 		  double t=etime-stime;	
 		  stime=etime;
-		  (*image)(x,y).set(CMAP(t));
+		  image->set(x,y, CMAP(t));
 	      } else {
-		  (*image)(x,y).set(sc);
+		image->set(x,y, sc);
 	      }
 #else
 	      if (doAverage) {
@@ -847,9 +850,9 @@ void Worker::run()
 		    double etime=SCIRun::Time::currentSeconds();
 		    double t=etime-stime;	
 		    stime=etime;
-		    (*image)(x,y).set(CMAP(t));
+		    image->set(x,y, CMAP(t));
 		} else {
-		    (*image)(x,y).set(wc);
+		  image->set(x,y, wc);
 		}
 	      } else {
 		Color sc = lastCs[ci] + (*clrs[wcI&3])[ci]*float(-0.25); // subtract off
@@ -866,9 +869,9 @@ void Worker::run()
 		    double etime=SCIRun::Time::currentSeconds();
 		    double t=etime-stime;	
 		    stime=etime;
-		    (*image)(x,y).set(CMAP(t));
+		    image->set(x,y, CMAP(t));
 		} else {
-		    (*image)(x,y).set(result);
+		  image->set(x,y, result);
 		}
 	      }
 #endif
@@ -920,11 +923,11 @@ void Worker::traceRay(Color& result, const Ray& ray, int depth,
   obj->intersect(ray, hit, &cx->stats->ds[depth], ppc);
   if(hit.was_hit){
     cx->ppc = ppc;
-    hit.hit_obj->get_matl(hit)->shade(result, ray, hit, depth,
+    hit.hit_obj->get_matl()->shade(result, ray, hit, depth,
 				   atten, accumcolor, cx);
   } else {
     cx->stats->ds[depth].nbg++;
-    result=scene->get_bgcolor( ray.direction() );
+    scene->get_bgcolor( ray.direction(), result );
   }
 }
 
@@ -936,11 +939,11 @@ void Worker::traceRay(Color& result, const Ray& ray, int depth,
   cx->stats->ds[depth].nrays++;
   obj->intersect(ray, hit, &cx->stats->ds[depth], ppc);
   if(hit.was_hit){
-    hit.hit_obj->get_matl(hit)->shade(result, ray, hit, depth,
+    hit.hit_obj->get_matl()->shade(result, ray, hit, depth,
 				   atten, accumcolor, cx);
   } else {
     cx->stats->ds[depth].nbg++;
-    result=scene->get_bgcolor( ray.direction() );
+    scene->get_bgcolor( ray.direction(), result );
   }
 }
 
@@ -951,13 +954,13 @@ void Worker::traceRay(Color& result, const Ray& ray,
   Context cx(this, scene, stats[0]);
   scene->get_object()->intersect(ray, hit, &cx.stats->ds[0], ppc);
   if(hit.was_hit){
-    hit.hit_obj->get_matl(hit)->shade(result, ray, hit, 0,
+    hit.hit_obj->get_matl()->shade(result, ray, hit, 0,
 				   0.0, Color(0,0,0), &cx);
     hitpos=ray.origin()+ray.direction()*hit.min_t;
     hitobj=hit.hit_obj;
   } else {
       hitobj=0;
-      result=scene->get_bgcolor( ray.direction() );
+      scene->get_bgcolor( ray.direction(), result );
   }
 }
 

@@ -193,9 +193,9 @@ void BV1::make_tree(int nprims, Object** subprims, double* slabs, int which){
     if(nprims==1){
 	return;
     } else {
-	int i;	
 	int split=(nprims+1)/2;
 #if 0
+	int i;	
 	// Sort by X...
 	my_qsort(&subprims[0], slabs, nprims, 0);
 	BBox xbox1;

@@ -37,6 +37,7 @@ void Group::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
     objs[i]->intersect(ray, hit, st, ppc);
   }
 #else
+  // This should go in a different object type - Steve
   double min_t = MAXDOUBLE;
   if (!bbox.intersect(ray, min_t)) return;
   
