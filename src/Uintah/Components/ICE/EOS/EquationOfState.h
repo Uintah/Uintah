@@ -63,10 +63,24 @@ WARNING
 					       DataWarehouseP& old_dw,
 					       DataWarehouseP& new_dw) const=0;
 
+	 // C&R for rho micro calc.
+	 virtual void addComputesAndRequiresRM(Task* task,
+					       const ICEMaterial* matl,
+					       const Patch* patch,
+					       DataWarehouseP& old_dw,
+					       DataWarehouseP& new_dw) const=0;
+
+	 // C&R for press eos calc.
+	 virtual void addComputesAndRequiresPEOS(Task* task,
+					       const ICEMaterial* matl,
+					       const Patch* patch,
+					       DataWarehouseP& old_dw,
+					       DataWarehouseP& new_dw) const=0;
+
          virtual void computeSpeedSound(const Patch* patch,
-                                 const ICEMaterial* matl,
-                                 DataWarehouseP& old_dw,
-                                 DataWarehouseP& new_dw) = 0;
+					const ICEMaterial* matl,
+					DataWarehouseP& old_dw,
+					DataWarehouseP& new_dw) = 0;
 
          virtual void computeRhoMicro(const Patch* patch,
 				      const ICEMaterial* matl,
@@ -105,6 +119,11 @@ WARNING
 #endif  // __EQUATION_OF_STATE_H__
 
 // $Log$
+// Revision 1.5  2000/10/14 02:49:50  jas
+// Added implementation of compute equilibration pressure.  Still need to do
+// the update of BCS and hydrostatic pressure.  Still some issues with
+// computes and requires - will compile but won't run.
+//
 // Revision 1.4  2000/10/11 00:26:25  jas
 // Made some functions virtual = 0;
 //
