@@ -139,6 +139,7 @@ main(int argc, char* argv[])
   int ncounters=0;
   bool bench=false;
   ShadowType shadow_mode = No_Shadows;
+  bool override_scene_shadow_mode = false;
   bool no_aa=false;
   double bvscale=.3;
   char* criteria1="db, stereo, max rgb, max accumrgb";
@@ -149,6 +150,8 @@ main(int argc, char* argv[])
   bool display_frames=true;
 
   bool startSoundThread = false;
+
+  bool show_gui = true;
 
   printf("before glutInit\n");
   glutInit( &argc, argv );
@@ -221,9 +224,11 @@ main(int argc, char* argv[])
       bench=true;
     } else if(strcmp(argv[i], "-no_shadows")==0){
       shadow_mode = No_Shadows;
+      override_scene_shadow_mode = true;
     } else if(strcmp(argv[i], "-shadows")==0){
       i++;
       shadow_mode = (ShadowType)atoi(argv[i]);
+      override_scene_shadow_mode = true;
     } else if(strcmp(argv[i], "-no_aa")==0){
       no_aa=true;
     } else if(strcmp(argv[i], "-bvscale")==0){
@@ -309,6 +314,8 @@ main(int argc, char* argv[])
       rtrt_engine->worker_run_gl_test = true;
     } else if (strcmp(argv[i], "-display_gltest") == 0) {
       rtrt_engine->display_run_gl_test = true;
+    } else if (strcmp(argv[i], "-no_gui") == 0) {
+      show_gui = false;
     } else {
       cerr << "Unknown option: " << argv[i] << '\n';
       usage(argv[0]);
@@ -354,6 +361,9 @@ main(int argc, char* argv[])
     cerr << "Unknown shadow mode: " << shadow_mode << '\n';
     exit(1);
   }
+
+  if (override_scene_shadow_mode)
+    scene->shadow_mode = shadow_mode;
 
   scene->no_aa=no_aa;
   
@@ -485,7 +495,7 @@ main(int argc, char* argv[])
   glutReshapeFunc( Gui::handleWindowResizeCB );
   glutDisplayFunc( doNothingCB );
 
-  Gui::createMenus( mainWindowId );  // Must do this after glut is initialized.
+  Gui::createMenus( mainWindowId , show_gui);  // Must do this after glut is initialized.
 
   // Let the GUI know about the lights.
   int cnt;
