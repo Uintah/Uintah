@@ -73,23 +73,30 @@ void SimpleSimulationController::doCombinePatches(std::string fromDir)
    d_fromDir = fromDir;
 }
 
-double stdDeviation(list<double>& vals, double& mean)
+// use better stdDeviation formula below
+//double stdDeviation(list<double>& vals, double& mean)
+//{
+//  if (vals.size() < 2)
+//    return -1;
+
+//  list<double>::iterator it;
+
+//  mean = 0;
+//  double variance = 0;
+//  for (it = vals.begin(); it != vals.end(); it++)
+//    mean += *it;
+//  mean /= vals.size();
+
+//  for (it = vals.begin(); it != vals.end(); it++)
+//    variance += pow(*it - mean, 2);
+//  variance /= (vals.size() - 1);
+//  return sqrt(variance);
+//}
+
+double stdDeviation(double sum_of_x, double sum_of_x_squares, int n)
 {
-  if (vals.size() < 2)
-    return -1;
-
-  list<double>::iterator it;
-
-  mean = 0;
-  double variance = 0;
-  for (it = vals.begin(); it != vals.end(); it++)
-    mean += *it;
-  mean /= vals.size();
-
-  for (it = vals.begin(); it != vals.end(); it++)
-    variance += pow(*it - mean, 2);
-  variance /= (vals.size() - 1);
-  return sqrt(variance);
+  // better formula for stdDev than above - less memory and quicker.
+  return sqrt((n*sum_of_x_squares - sum_of_x*sum_of_x)/(n*n));
 }
 
 void 
@@ -258,9 +265,12 @@ SimpleSimulationController::run()
    if(output)
      output->executedTimestep();
 
+   // vars used to calculate standard deviation
    int n = 0;
-   list<double> wallTimes;
+   //list<double> wallTimes;
    double prevWallTime;
+   double sum_of_walltime = 0; // sum of all walltimes
+   double sum_of_walltime_squares = 0; // sum all squares of walltimes
    
    bool first=true;
    int  iterations = 0;
@@ -386,11 +396,18 @@ SimpleSimulationController::run()
 	cout << endl;
 
 	if (n > 1) // ignore first set of elapsed times
-	  wallTimes.push_back(wallTime - prevWallTime);
-
-	if (wallTimes.size() > 1) {
+	{
+	  //wallTimes.push_back(wallTime - prevWallTime);
+	  sum_of_walltime += (wallTime - prevWallTime);
+	  sum_of_walltime_squares += pow(wallTime - prevWallTime,2);
+	}
+	if (n > 2) {
 	  double stdDev, mean;
-	  stdDev = stdDeviation(wallTimes, mean);
+
+	  // divide by n-1 and not n, because we wait till n>1 to keep track
+          // of our stats
+	  stdDev = stdDeviation(sum_of_walltime, sum_of_walltime_squares, n-1);
+	  mean = sum_of_walltime / (n-1);
 	  //	  ofstream timefile("avg_elapsed_walltime.txt");
 	  //	  timefile << mean << " +- " << stdDev << endl;
 	  cout << "Timestep mean: " << mean << " +- " << stdDev << endl;
