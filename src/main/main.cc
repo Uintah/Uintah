@@ -157,24 +157,12 @@ int main(int argc, char** argv)
 	WaitForSingleObject(forever,INFINITE);
 #endif
 
-#ifndef __sgi
-	SCICore::Thread::Semaphore wait("main wait", 0);
-	wait.down();
-#endif
-	
     // Never reached
     return 0;
 }
 
 //
 // $Log$
-// Revision 1.12.2.3  2000/10/26 13:38:55  moulding
-// merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.13  2000/06/09 20:37:38  yarden
-// add a wait on a semaphore to prevent the system to start
-// deleting objects too soon.
-//
 // Revision 1.12  2000/03/17 09:30:48  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

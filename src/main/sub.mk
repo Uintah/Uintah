@@ -19,7 +19,7 @@ else
   endif
 endif
 
-LIBS := $(GL_LIBS)
+LIBS :=  
 ifeq ($(BUILD_PARALLEL),yes)
 LIBS := $(LIBS) -L$(GLOBUS_LIB_DIR) -lglobus_io
 endif
@@ -34,28 +34,13 @@ CFLAGS_MAIN   := $(CFLAGS) -DPSECORETCL=\"$(SRCTOP_ABS)/PSECore/GUI\" \
                       -DITCL_WIDGETS=\"$(ITCL_WIDGETS)\" \
                       -DDEFAULT_PACKAGE_PATH=\"$(PACKAGE_PATH)\"
 
-$(SRCDIR)/main.o:	$(SRCDIR)/main.cc Makefile
+$(SRCDIR)/main.o:	$(SRCDIR)/main.cc
 	$(CXX) $(CFLAGS_MAIN) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 
 include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
-# Revision 1.4.2.3  2000/10/26 13:38:56  moulding
-# merge HEAD into FIELD_REDESIGN
-#
-# Revision 1.6  2000/10/20 19:19:31  yarden
-# make main.o depend on the toplevel Makefile. This will ensure
-# that main.cc is recompiled when a new set of packages is configured
-# in.  (main.cc is compiled with PACKAGE_PATH=... flag )
-#
-# Revision 1.5  2000/06/20 22:36:06  yarden
-# add %(GL_LIBS) as the first item while linking pse.
-# this is a kludge that enables the Linux version to work
-# with NVidia's hardware accelerated drivers (0.9.3).
-# the problem showed up as a segmentation error inside _init in
-# NVidia GLX library.
-#
 # Revision 1.4  2000/03/23 10:30:53  sparker
 # Now need to link pse with SCICore/Exceptions
 #
