@@ -19,8 +19,8 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 
-#include <dom/DOMImplementation.hpp>
-#include <dom/DOMImplementationRegistry.hpp>
+#include <xercesc/dom/DOMImplementation.hpp>
+#include <xercesc/dom/DOMImplementationRegistry.hpp>
 
 #include <fstream>
 #include <iostream>
