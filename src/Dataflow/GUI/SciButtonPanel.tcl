@@ -62,15 +62,27 @@ proc makeSciButtonPanel { parent close_window this args } {
   pack  $parent.btnBox -anchor e
 
   # Parse options
-  set make_exec_btn 1
   set make_help_btn 1
+  set make_exec_btn 1
+  set make_close_btn 1
+  set make_find_btn 1
+
   foreach argName $args {
-      if { $argName == "-no_execute" } {
-	  listFindAndRemove args $argName
-	  set make_exec_btn 0
-      } elseif { $argName == "-no_help" } {
+      if { $argName == "-no_help" } {
 	  listFindAndRemove args $argName
 	  set make_help_btn 0
+
+      } elseif { $argName == "-no_execute" } {
+	  listFindAndRemove args $argName
+	  set make_exec_btn 0
+
+      } elseif { $argName == "-no_close" } {
+	  listFindAndRemove args $argName
+	  set make_close_btn 0
+
+      } elseif { $argName == "-no_find" } {
+	  listFindAndRemove args $argName
+	  set make_find_btn 0
       } 
   }
 
@@ -127,22 +139,26 @@ proc makeSciButtonPanel { parent close_window this args } {
 	  "Instructs SCIRun to run this (and any connected) module(s)"
   }
 
-  button $parent.btnBox.close -width 10 -text "Close" \
-      -command "wm withdraw $close_window"
-  pack   $parent.btnBox.close -padx $outside_pad -pady $outside_pad -side left
-  Tooltip $parent.btnBox.close "Hides this GUI"
+  if { $make_close_btn } {
+      button $parent.btnBox.close -width 10 -text "Close" \
+	  -command "wm withdraw $close_window"
+      pack   $parent.btnBox.close -padx $outside_pad -pady $outside_pad -side left
+      Tooltip $parent.btnBox.close "Hides this GUI"
+  }
 
   # Vertical separator
-  frame $parent.btnBox.separator -width 2 -relief sunken -borderwidth 2
-  pack  $parent.btnBox.separator \
-      -fill y -padx $outside_pad -pady $outside_pad -side left
+  if { $make_find_btn } {
+      frame $parent.btnBox.separator -width 2 -relief sunken -borderwidth 2
+      pack  $parent.btnBox.separator \
+	  -fill y -padx $outside_pad -pady $outside_pad -side left
 
-  button $parent.btnBox.highlight \
-      -width 10 -text "Find" -command "fadeinIcon [$this modname] 1 1"
-  pack $parent.btnBox.highlight \
-      -padx $outside_pad -pady $outside_pad -side left
-  Tooltip $parent.btnBox.highlight \
-      "Highlights (on the Network Editor) the\nmodule that corresponds to this GUI"
+      button $parent.btnBox.highlight \
+	  -width 10 -text "Find" -command "fadeinIcon [$this modname] 1 1"
+      pack $parent.btnBox.highlight \
+	  -padx $outside_pad -pady $outside_pad -side left
+      Tooltip $parent.btnBox.highlight \
+	  "Highlights (on the Network Editor) the\nmodule that corresponds to this GUI"
+  }
 
   # Override the destroy window decoration and make it only close the window
   wm protocol $close_window WM_DELETE_WINDOW "wm withdraw $close_window"
