@@ -59,10 +59,9 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static string typeName(int);
+  vector<EdgeSimp> d_edge;
 
 protected:
-
-  vector<EdgeSimp> d_edge;
 
 private:
   static DebugStream dbg;
