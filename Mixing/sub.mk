@@ -29,6 +29,7 @@ SUBDIRS := $(SRCDIR)/fortran
 include $(SCIRUN_SCRIPTS)/recurse.mk
 PSELIBS := \
 	Packages/Uintah/Core/ProblemSpec   \
+	Packages/Uintah/Core/Util   \
 	Packages/Uintah/Core/Exceptions    \
 	Packages/Uintah/Core/Math          \
 	Packages/Uintah/CCA/Components/Models          \

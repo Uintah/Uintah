@@ -3,13 +3,13 @@
 #define Uintah_Components_Arches_Discretization_h
 
 //#include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
-//#include <Packages/Uintah/Core/Variables/CCVariable.h>
+//#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 //#include <Packages/Uintah/Core/Grid/FCVariable.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Variables/VarLabel.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
