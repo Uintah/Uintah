@@ -1288,12 +1288,12 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     // Get the required data
 
 #ifdef correctorstep
-    new_dw->getCopy(pressureVars.density, d_lab->d_densityPredLabel, 
+    new_dw->getCopy(pressureVars.density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
     new_dw->getCopy(pressureVars.new_density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
 #else
-    new_dw->getCopy(pressureVars.density, d_lab->d_densityCPLabel, 
+    new_dw->getCopy(pressureVars.density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
     new_dw->getCopy(pressureVars.new_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
@@ -1971,6 +1971,8 @@ PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		  Ghost::AroundCells, numGhostCells+1);
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		  Ghost::AroundCells, numGhostCells);
+    tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
+		  Ghost::AroundCells, numGhostCells+1);
     tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
 		  Ghost::AroundCells, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
@@ -2096,7 +2098,7 @@ PressureSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     // Get the reference density
     // Get the required data
 
-    new_dw->getCopy(pressureVars.density, d_lab->d_densityCPLabel, 
+    new_dw->getCopy(pressureVars.density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
     new_dw->getCopy(pressureVars.new_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
