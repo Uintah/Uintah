@@ -24,6 +24,7 @@ else
   PSELIBS := \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Parallel \
+	Packages/Uintah/Core/Math \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/CCA/Ports \
 	Packages/Uintah/CCA/Components/MPM \
@@ -33,10 +34,11 @@ else
 	Packages/Uintah/CCA/Components/Schedulers \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
 	Packages/Uintah/CCA/Components/ICE \
-	$(ARCHES) \
+	$(ARCHES)        \
 	Dataflow/Network \
-	Core/Exceptions \
-	Core/Thread
+	Core/Exceptions  \
+	Core/Thread      \
+	Core/Util
 
 endif
 LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBS)
@@ -49,17 +51,18 @@ ifeq ($(LARGESOS),yes)
 PSELIBS := Datflow Packages/Uintah
 else
 PSELIBS := \
-	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/CCA/Ports \
-	Packages/Uintah/CCA/Components/MPM \
+	Packages/Uintah/Core/Exceptions    \
+	Packages/Uintah/Core/Grid          \
+	Packages/Uintah/Core/Math          \
+	Packages/Uintah/Core/Disclosure    \
+	Packages/Uintah/Core/ProblemSpec   \
+	Packages/Uintah/CCA/Ports          \
 	Dataflow/XMLUtil \
-	Core/Exceptions \
-	Core/Geometry \
-	Core/Thread \
-	Core/Util \
-	Core/OS \
+	Core/Exceptions  \
+	Core/Geometry    \
+	Core/Thread      \
+	Core/Util        \
+	Core/OS          \
 	Core/Containers
 endif
 LIBS 	:= $(XML_LIBRARY) $(MPI_LIBRARY)
@@ -72,17 +75,18 @@ ifeq ($(LARGESOS),yes)
 PSELIBS := Datflow Packages/Uintah
 else
 PSELIBS := \
-	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/CCA/Ports \
-	Packages/Uintah/CCA/Components/MPM \
+	Packages/Uintah/Core/Exceptions    \
+	Packages/Uintah/Core/Grid          \
+	Packages/Uintah/Core/Disclosure    \
+	Packages/Uintah/Core/Math          \
+	Packages/Uintah/Core/ProblemSpec   \
+	Packages/Uintah/CCA/Ports          \
 	Dataflow/XMLUtil \
-	Core/Exceptions \
-	Core/Geometry \
-	Core/Thread \
-	Core/Util \
-	Core/OS \
+	Core/Exceptions  \
+	Core/Geometry    \
+	Core/Thread      \
+	Core/Util        \
+	Core/OS          \
 	Core/Containers
 endif
 LIBS 	:= $(XML_LIBRARY) $(MPI_LIBRARY) -lm
