@@ -30,6 +30,9 @@ namespace SCIRun {
 using std::vector;
 using std::string;
 
+class SurfaceGeom;
+typedef LockingHandle<SurfaceGeom> SurfaceGeomHandle;
+
 class SurfaceGeom : public ContourGeom
 {
 public:
@@ -45,11 +48,10 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static string typeName(int);
-  
-protected:
-  
   vector<list<int> > d_face;
 
+protected:
+  
 private:
   static DebugStream dbg;
 };

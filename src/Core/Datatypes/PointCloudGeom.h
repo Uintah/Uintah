@@ -49,13 +49,13 @@ public:
 
   virtual string getInfo();
   virtual string getTypeName(int=0);
-
+  vector<NodeSimp> d_node;
+  
 protected:
 
   virtual bool computeBoundingBox();
 
-  vector<NodeSimp> d_node;
-
+  
 private:
   static DebugStream dbg;
 };
