@@ -1318,7 +1318,7 @@ class BioImageApp {
 	    disableModule $m32 1
 
 	    # set some ui parameters
-	    setGlobal $m1-filename $data_dir/volume/tooth.nhdr
+	    setGlobal $m1-filename ${data_dir}volume/tooth.nhdr
 
 #	    setGlobal $m8-nbits {8}
 #	    setGlobal $m8-useinputmin 0
@@ -2828,17 +2828,20 @@ class BioImageApp {
                 global [set NrrdReader]-filename
                 set filename [set [set NrrdReader]-filename]
 
-                if {[string first "$data_dir/volume/tooth.nhdr" $filename] != -1 && 
-		    [file exists "$data_dir/volume/tooth.xff"]} {
-                    set [set EditColorMap2]-filename "$data_dir/volume/tooth.xff"
+                puts "filename is $filename"
+                if {[string first "${data_dir}volume/tooth.nhdr" $filename] != -1 && 
+		    [file exists "${data_dir}volume/tooth.xff"]} {
+                    puts "loading ${data_dir}volume/tooth.xff"
+                    set [set EditColorMap2]-filename "${data_dir}volume/tooth.xff"
                     after 500 "[set EditColorMap2] swatch_load tooth"
-                } elseif {[string first "$data_dir/volume/engine.nhdr" $filename] != -1 && 
-		    [file exists "$data_dir/volume/engine.xff"]} {
-                    set [set EditColorMap2]-filename "$data_dir/volume/engine.xff"
+                } elseif {[string first "${data_dir}volume/engine.nhdr" $filename] != -1 && 
+		    [file exists "${data_dir}volume/engine.xff"]} {
+                    puts "loading ${data_dir}volume/engine.xff"
+                    set [set EditColorMap2]-filename "${data_dir}volume/engine.xff"
                     after 500 "[set EditColorMap2] swatch_load engine"
-                } elseif {[string first "$data_dir/volume/CThead.nhdr" $filename] != -1 && 
-		    [file exists "$data_dir/volume/CThead.xff"]} {
-                    set [set EditColorMap2]-filename "$data_dir/volume/CThead.xff"
+                } elseif {[string first "${data_dir}volume/CThead.nhdr" $filename] != -1 && 
+		    [file exists "${data_dir}volume/CThead.xff"]} {
+                    set [set EditColorMap2]-filename "${data_dir}volume/CThead.xff"
                     after 500 "[set EditColorMap2] swatch_load CThead"
                 } 
             }
