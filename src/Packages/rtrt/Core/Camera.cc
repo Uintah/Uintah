@@ -16,6 +16,7 @@
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <string>
 #include <sgi_stl_warnings_on.h>
 
 using namespace rtrt;
@@ -206,6 +207,50 @@ Camera::print()
   cerr << "-lookat " << lookat.x() << ' ' << lookat.y() << ' ' << lookat.z() << ' ';
   cerr << "-up " << up.x() << ' ' << up.y() << ' ' << up.z() << ' ';
   cerr << "-fov " << fov << '\n';
+}
+
+bool Camera::read(const char* buf) {
+  bool call_setup = false;
+
+  istringstream in(buf);
+  string token;
+  in >> token;
+
+  while(in) {
+    double v1, v2, v3;
+    if (token == "-eye") {
+      in >> v1 >> v2 >> v3;
+      if (!in.fail()) {
+        call_setup = true;
+        eye = Point(v1, v2, v3);
+        cerr << "Setting eye to "<<eye<<"\n";
+      } else in.clear();
+    } else if (token == "-lookat") {
+      in >> v1 >> v2 >> v3;
+      if (!in.fail()) {
+        call_setup = true;
+        lookat = Point(v1, v2, v3);
+        cerr << "Setting lookat to "<<lookat<<"\n";
+      } else in.clear();
+    } else if (token == "-up") {
+      in >> v1 >> v2 >> v3;
+      if (!in.fail()) {
+        call_setup = true;
+        up = Vector(v1, v2, v3);
+        cerr << "Setting up to "<<up<<"\n";
+      } else in.clear();
+    } else if (token == "-fov") {
+      in >> v1;
+      if (!in.fail()) {
+        call_setup = true;
+        set_fov(v1);
+        cerr << "Setting fov to "<<fov<<"\n";
+      } else in.clear();
+    }
+    in >> token;
+  }
+  if (call_setup) setup();
+  return call_setup;
 }
 
 void Camera::set_eye(const Point& e)
