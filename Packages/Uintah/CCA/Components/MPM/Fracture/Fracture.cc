@@ -13,6 +13,7 @@ Fracture::Fracture(ProblemSpecP& ps)
 
 Fracture::~Fracture()
 {
+  delete lb;
 }
 
 int Fracture::getConstraint() const

@@ -9,8 +9,9 @@ namespace Uintah {
   class MPMPhysicalBCFactory
   {
   public:
-      static void create(const ProblemSpecP& ps);
-      static std::vector<MPMPhysicalBC*> mpmPhysicalBCs;
+    static void create(const ProblemSpecP& ps);
+    static void clean(); // delete all mpmPhysicalBCs
+    static std::vector<MPMPhysicalBC*> mpmPhysicalBCs;
   };
 } // End namespace Uintah
 
