@@ -27,9 +27,17 @@ MPMICELabel::MPMICELabel()
 			CCVariable<Vector>::getTypeDescription() );
   mom_L_CCLabel    = scinew VarLabel( "mom_L_CC",
 			CCVariable<Vector>::getTypeDescription() );
+  mom_L_ME_CCLabel = scinew VarLabel("mom_L_ME_CC",
+                     CCVariable<Vector>::getTypeDescription());
+  int_eng_L_CCLabel= scinew VarLabel("int_eng_L_CC",
+                     CCVariable<Vector>::getTypeDescription());
+  int_eng_L_ME_CCLabel = scinew VarLabel("int_eng_L_ME_CC",
+                     CCVariable<Vector>::getTypeDescription());
   dvdt_CCLabel     = scinew VarLabel( "dvdt_CC",
 			CCVariable<Vector>::getTypeDescription() );
   temp_CCLabel     = scinew VarLabel("temp_CC",
+			CCVariable<double>::getTypeDescription() );
+  temp_CC_scratchLabel = scinew VarLabel("temp_CC_scratch",
 			CCVariable<double>::getTypeDescription() );
   vol_frac_CCLabel = scinew VarLabel("vol_frac_CC",
 			CCVariable<double>::getTypeDescription());
@@ -68,8 +76,12 @@ MPMICELabel::~MPMICELabel()
   delete vel_CCLabel;
   delete velstar_CCLabel;
   delete mom_L_CCLabel;
+  delete mom_L_ME_CCLabel;
+  delete int_eng_L_CCLabel;
+  delete int_eng_L_ME_CCLabel;
   delete dvdt_CCLabel;
   delete temp_CCLabel;
+  delete temp_CC_scratchLabel;
   delete speedSound_CCLabel;
   delete cv_CCLabel;
   delete rho_CCLabel;
