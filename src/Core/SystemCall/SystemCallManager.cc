@@ -160,11 +160,11 @@ void SystemCallProcess::wait()
 SystemCallManager::SystemCallManager() :
     lock("system_call_manager_lock"),
     ref_cnt(0),
-    processidcnt_(1),
+    exit_(false),
+    childpid_(0),
     child_in_(0),
     child_out_(0),
-    childpid_(0),
-    exit_(false)
+    processidcnt_(1)
 {
 }
 

@@ -213,8 +213,8 @@ class SystemCallManager : public SystemCallBase {
     
   private:
     pid_t    childpid_;                    // Pid for process launching the children
-    int        child_in_;                    // input to child stream
-    int        child_out_;                    // output from child stream
+    int      child_in_;                    // input to child stream
+    int      child_out_;                   // output from child stream
     
     int                              processidcnt_;  // Each processes gets a new internal process ID
     std::list<SystemCallProcess*>    processlist_;   // Keep track of all processes launched
