@@ -58,7 +58,9 @@ itcl_class SCIRun_Render_Viewer {
 	if {$rid == -1} {
 	    set rid [makeViewWindowID]
 	}
-	ViewWindow $rid -viewer $this
+        
+        ViewWindow $rid -viewer $this 
+
 	lappend viewwindow $rid
     }
 }
@@ -86,6 +88,10 @@ itcl_class ViewWindow {
     method set_defaults {} {
 
 	# set defaults values for parameters that weren't set in a script
+
+        # CollabVis code begin 
+        global $this-have_collab_vis 
+        # CollabVis code end
 
 	global $this-saveFile
 	global $this-saveType
@@ -184,6 +190,12 @@ itcl_class ViewWindow {
 	set $this-def-color-g 1.0
 	set $this-def-color-b 1.0
 
+        # CollabVis code begin
+        if {[set $this-have_collab_vis]} {
+	    global $this-view_server
+	    if {![info exists $this-view_server]} {set $this-view_server 0}
+        }
+        # CollabVis code end
     }
 
     destructor {
@@ -197,7 +209,7 @@ itcl_class ViewWindow {
 	wm title $w "ViewWindow"
 	wm iconname $w "ViewWindow"
 	wm minsize $w 100 100
-	set_defaults
+	set_defaults 
 
 	frame $w.menu -relief raised -borderwidth 3
 	pack $w.menu -fill x
@@ -671,12 +683,21 @@ itcl_class ViewWindow {
 		-command "$m.objlist.canvas yview"
 	pack $m.objlist.scroll -fill y -side right -padx 2 -pady 2
 	
+        # CollabVis code begin
+        if {[set $this-have_collab_vis]} {
+	    checkbutton $m.view_server -text "Remote" -variable \
+                $this-view_server -onvalue 2 -offvalue 0 \
+                -command "$this-c doServer"
+	    pack $m.view_server -side top
+        }
+	# CollabVis code end
+
         checkbutton $m.caxes -text "Show Axes" -variable $this-caxes -onvalue 1 -offvalue 0 -command "$this-c centerGenAxes; $this-c redraw"
         checkbutton $m.raxes -text "Orientation" -variable $this-raxes -onvalue 1 -offvalue 0 -command "$this-c rotateGenAxes; $this-c redraw"
 	# checkbutton $m.iaxes -text "Icon Axes" -variable $this-iaxes -onvalue 1 -offvalue 0 -command "$this-c iconGenAxes; $this-c redraw"
 	# pack $m.caxes $m.iaxes -side top
 	pack $m.caxes -side top
-	pack $m.raxes -side top
+	pack $m.raxes -side top 
 
 	checkbutton $m.stereo -text "Stereo" -variable $this-do_stereo \
 		-command "$this-c redraw"
