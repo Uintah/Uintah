@@ -74,7 +74,7 @@ namespace Uintah {
       // Return pointer to the data 
       // (**WARNING**not complete implementation)
       inline T* getPointer() {
-	return (data->getPointer());
+	return data ? (data->getPointer()) : 0;
       }
       
       ///////////////////////////////////////////////////////////////////////
@@ -143,13 +143,23 @@ namespace Uintah {
 				    const IntVector& highIndex)
       : data(data), offset(offset), lowIndex(lowIndex), highIndex(highIndex)
       {
-	 CHECKARRAYBOUNDS(lowIndex.x()-offset.x(), 0, data->size().x());
-	 CHECKARRAYBOUNDS(lowIndex.y()-offset.y(), 0, data->size().y());
-	 CHECKARRAYBOUNDS(lowIndex.z()-offset.z(), 0, data->size().z());
-	 CHECKARRAYBOUNDS(highIndex.x()-offset.x(), 0, data->size().x()+1);
-	 CHECKARRAYBOUNDS(highIndex.y()-offset.y(), 0, data->size().y()+1);
-	 CHECKARRAYBOUNDS(highIndex.z()-offset.z(), 0, data->size().z()+1);
-	 data->addReference();
+	// null data can be used for a place holder in OnDemandDataWarehouse
+	if (data != 0) {
+	  CHECKARRAYBOUNDS(lowIndex.x()-offset.x(), 0, data->size().x());
+	  CHECKARRAYBOUNDS(lowIndex.y()-offset.y(), 0, data->size().y());
+	  CHECKARRAYBOUNDS(lowIndex.z()-offset.z(), 0, data->size().z());
+	  CHECKARRAYBOUNDS(highIndex.x()-offset.x(), 0, data->size().x()+1);
+	  CHECKARRAYBOUNDS(highIndex.y()-offset.y(), 0, data->size().y()+1);
+	  CHECKARRAYBOUNDS(highIndex.z()-offset.z(), 0, data->size().z()+1);
+	  data->addReference();
+	}
+	else {
+	  // To use null data, put the offset as {INT_MAX, INT_MAX, INT_MAX}.
+	  // This way, when null is used accidentally, this assertion will
+	  // fail while allowing purposeful (and hopefully careful) uses
+	  // of null data.
+	  ASSERT(offset == IntVector(INT_MAX, INT_MAX, INT_MAX));
+	}
       }
    
    template<class T>

@@ -56,7 +56,8 @@ WARNING
       virtual void copyPointer(SFCXVariableBase&) = 0;
       
       virtual bool rewindow(const IntVector& low, const IntVector& high) = 0;
-
+      virtual void offsetGrid(IntVector /*offset*/) = 0;
+     
       //////////
       // Insert Documentation Here:
       virtual SFCXVariableBase* clone() = 0;
@@ -65,6 +66,11 @@ WARNING
       // Make a new default object of the base class.
       virtual SFCXVariableBase* cloneType() const = 0;
       virtual constSFCXVariableBase* cloneConstType() const = 0;     
+
+      // Clones the type with a variable having the given extents
+      // but with null data -- good as a place holder.
+      virtual SFCXVariableBase* makePlaceHolder(IntVector low,
+						IntVector high) const = 0;
      
       virtual void allocate(const Patch*) = 0;
       virtual void allocate(const IntVector& lowIndex,

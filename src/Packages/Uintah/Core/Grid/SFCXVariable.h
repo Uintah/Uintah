@@ -84,6 +84,16 @@ WARNING
     { return scinew constGridVariable<SFCXVariableBase, SFCXVariable<T>, T>();
     }
 
+    // Clones the type with a variable having the given extents
+    // but with null data -- good as a place holder.
+    virtual SFCXVariableBase* makePlaceHolder(IntVector low,
+					    IntVector high) const
+    {
+      Array3Window<T>* window = scinew
+      Array3Window<T>(0, IntVector(INT_MAX, INT_MAX, INT_MAX), low, high);
+      return scinew SFCXVariable<T>(window);
+    }    
+
     //////////
     // Insert Documentation Here:
     virtual void allocate(const IntVector& lowIndex,
@@ -181,6 +191,8 @@ WARNING
   protected:
     SFCXVariable(const SFCXVariable<T>&);
   private:
+    SFCXVariable(Array3Window<T>* window)
+      : Array3<T>(window) {}
     SFCXVariable<T>& operator=(const SFCXVariable<T>&);
     
     static const SFCXVariable<T>& castFromBase(const SFCXVariableBase* srcptr);
