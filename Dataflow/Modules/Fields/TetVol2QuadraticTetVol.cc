@@ -106,7 +106,6 @@ TetVol2QuadraticTetVol::debug_tets(TetVolMeshHandle in,
     ++iter;
     TetVolMesh::Node::array_type n;
     in->get_nodes(n, idx);
-    int nnum = 1;
     TetVolMesh::Node::array_type::iterator niter = n.begin();
     while (niter != n.end()) {
       cout << "Node: " << *niter + 1 << endl;

@@ -90,7 +90,6 @@ main(int argc, char **argv) {
   cerr << "Matrix size: "<<nr<<" x "<<nc<<"\n";
   int r,c;
   double x;
-  double dc=0;
   for (r=0; r<nr; r++) {
     for (c=0; c<nc; c++) {
       datastream >> x;
