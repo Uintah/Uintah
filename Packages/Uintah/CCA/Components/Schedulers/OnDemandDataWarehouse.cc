@@ -100,8 +100,11 @@ OnDemandDataWarehouse::~OnDemandDataWarehouse()
 
   for (psetAddDBType::const_iterator iter = d_addsetDB.begin();
        iter != d_addsetDB.end(); iter++) {
-    //     if(iter->second->removeReference())  ask Steve about this;
-	delete iter->second;
+    map<const VarLabel*, ParticleVariableBase*>::const_iterator pvar_itr;
+    for (pvar_itr = iter->second->begin(); pvar_itr != iter->second->end();
+	 pvar_itr++)
+      delete pvar_itr->second;
+    delete iter->second;
   }
 }
 
