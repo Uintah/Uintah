@@ -8,7 +8,6 @@
 #include <stdio.h>
 
 #include <iostream>
-#include <mpi.h>
 
 using namespace Uintah;
 using SCIRun::Thread;
