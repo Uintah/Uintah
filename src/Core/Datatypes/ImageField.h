@@ -75,7 +75,6 @@ public:
   { newsize(1, size); }
 
   static const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const;
 };
 
 
@@ -107,16 +106,6 @@ FData2d<Data>::type_name(int n)
 
 
 template <class Data>
-const string
-FData2d<Data>::get_type_name(int n) const
-{
-  return type_name(n);
-}
-
-
-
-
-template <class Data>
 class ImageField : public GenericField< ImageMesh, FData2d<Data> >
 {
 public:
@@ -135,7 +124,6 @@ public:
   virtual void io(Piostream &stream);
 
   static const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const { return type_name(n); }
   virtual const TypeDescription* get_type_description(int n = -1) const;
 
 private:

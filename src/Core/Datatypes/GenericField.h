@@ -98,7 +98,6 @@ public:
   virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
   static  const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const;
   virtual const TypeDescription* get_type_description(int n = -1) const;
 
   // -- mutability --
@@ -395,13 +394,6 @@ const string GenericField<Mesh, FData>::type_name(int n)
   {
     return find_type_name((FData *)0);
   }
-}
-
-template <class Mesh, class FData>
-const string
-GenericField<Mesh, FData>::get_type_name(int n) const
-{
-  return type_name(n);
 }
 
 template <class Mesh, class FData>

@@ -261,7 +261,6 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static  const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const;
   //@}
 
   //! Virtualized get_type_description().

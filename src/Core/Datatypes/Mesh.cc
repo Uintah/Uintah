@@ -57,5 +57,11 @@ Mesh::type_name(int n)
   return name;
 }
 
+const string
+Mesh::get_type_name(int n) const
+{
+  ASSERT(n==0);
+  return get_type_description()->get_name();
+}
 
 }
