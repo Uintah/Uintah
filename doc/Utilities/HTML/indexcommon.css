@@ -19,12 +19,15 @@ University of Utah. All Rights Reserved.
 
 @import url(common.css);
 
-h1.page-title {
+body {
   background-color: rgb(73, 91, 105);
-  background-image: none;                
+}
+
+h1.page-title {
   text-align: center;
   font-weight: bold;
   font-size: 110%;
+  color: white;
 }
 
 h2.page-sub-title {
@@ -33,9 +36,7 @@ h2.page-sub-title {
   width: 2.0in;
   margin-left: auto;
   margin-right: auto;
-  border: 1px dotted rgb(73, 91, 105);
 }
-
 
 img.top-banner {
   display: block;
@@ -47,14 +48,10 @@ div.content {
   width: 800px;
   margin-left: auto;
   margin-right: auto;
-  background-color: rgb(73, 91, 105);
-  border-bottom: 1in solid rgb(73, 91, 105);
 }
 
 div.content-layer1 {
-  background-color: #213341;
   width: 700px;
-  height: 800px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -70,12 +67,11 @@ div.doc-group {
   border: 1px dotted rgb(73, 91, 105);
 }
 
-h1 {
+div.doc-group h1 {
   margin-top: 0;
   text-align: center;
   font-size: 100%;
-  background-image: url(../Figures/bg.png);
-  background-repeat: repeat;
+  background-color: #213341;
   color: white;
 }
 
