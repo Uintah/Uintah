@@ -37,8 +37,8 @@ static bool computeDt = false;
 #define HMX 1
  /*==========TESTING==========`*/
  
-//#define DOING
-#undef DOING
+#define DOING
+//#undef DOING
 
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
