@@ -102,7 +102,22 @@ public:
   virtual double  get(int, int) const = 0;
   virtual void    put(int r, int c, double val) = 0;
   virtual void    add(int r, int c, double val) = 0;
-  virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& v)=0;
+
+  // getRowNonzeros is deprecated.  Use getRowNonzerosNoCopy instead.
+  virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& v) = 0;
+  // getRowNonzerosNocopy returns:
+  //   vals = The values.  They are not guaranteed 
+  //     to be nonzero, but some of the zeros may be missing.
+  //   cols = The columns associated with the vals.  This may be NULL, in
+  //     which case the cols are 0-(size-1) (a full row).
+  //   size = The number of entries in vals.
+  //   stride = The matrix may not be in row order, so this is how far
+  //     to walk in vals.  For example vals (and cols) should be
+  //     accessed as vals[3*stride] to get the fourth value.  As of this
+  //     time all the matrices return 1 for this value.
+  //   For example usage see Dataflow/Modules/Fields/ApplyInterpMatrix.h
+  virtual void getRowNonzerosNoCopy(int r, int &size, int &stride,
+                                    int *&cols, double *&vals) = 0;
 
   virtual Matrix* transpose() = 0;
   virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,

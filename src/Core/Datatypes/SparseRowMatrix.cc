@@ -407,6 +407,17 @@ SparseRowMatrix::getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val)
 
 
 void
+SparseRowMatrix::getRowNonzerosNoCopy(int r, int &size, int &stride,
+                                      int *&cols, double *&vals)
+{
+  size = rows[r+1] - rows[r];
+  stride = 1;
+  cols = columns + rows[r];
+  vals = a + rows[r];
+}
+
+
+void
 SparseRowMatrix::zero()
 {
   double* ptr=a;
