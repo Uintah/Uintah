@@ -157,9 +157,9 @@ MPWrite::BeginGrid( clString name,
       os.write((char *) &(Y[0]), sizeof(double) * Y.size());
       os.write((char *) &(Y[0]), sizeof(double) * Z.size());
     } else {
-      for(int i = 0; i < X.size(); i++)	os << X[i] << " ";
-      for(int i = 0; i < Y.size(); i++) os << Y[i] << " ";
-      for(int i = 0; i < Z.size(); i++) os << Z[i] << " ";
+      for(int i = 0; i < (int)X.size(); i++)	os << X[i] << " ";
+      for(int i = 0; i < (int)Y.size(); i++) os << Y[i] << " ";
+      for(int i = 0; i < (int)Z.size(); i++) os << Z[i] << " ";
       
     }
     
@@ -230,7 +230,7 @@ int
 MPWrite::AddSVarToGrid( clString name,  // variable name check
 		       ScalarField* var )
 {
-  if( svCount >= sVars.size() ){
+  if( svCount >= (int)sVars.size() ){
     cerr<<"Error: no more scalar values can be added.\n";
     return 0;
   }
@@ -270,7 +270,7 @@ MPWrite::AddSVarToGrid( clString name,  // variable name check
 int
 MPWrite::AddSVarToGrid(clString name, double *sf, int length)
 {
-  if( svCount >= sVars.size() ){
+  if( svCount >= (int)sVars.size() ){
     cerr<<"Error: no more scalar values can be added.\n";
     return 0;
   }
@@ -300,11 +300,11 @@ int
 MPWrite::AddVecVarToGrid( clString name,
 		  VectorField*  var )
 {
-  if(!(svCount <= sVars.size())) {
+  if(!(svCount <= (int)sVars.size())) {
     cerr<<"Error: you must write out all scalar values first.\n";
     return 0;
   }
-    if( vvCount >= vVars.size() ){
+    if( vvCount >= (int)vVars.size() ){
     cerr<<"Error: no more vector values can be added.\n";
     return 0;
   }
@@ -342,11 +342,11 @@ int
 MPWrite::AddVecVarToGrid( clString name,
 		       Vector* vf, int length)
 {
-  if(!(svCount <= sVars.size())) {
+  if(!(svCount <= (int)sVars.size())) {
     cerr<<"Error: you must write out all scalar values first.\n";
     return 0;
   }
-    if( vvCount >= vVars.size() ){
+    if( vvCount >= (int)vVars.size() ){
     cerr<<"Error: no more vector values can be added.\n";
     return 0;
   }
@@ -376,11 +376,11 @@ int
 MPWrite::AddVecVarToGrid( clString name,
 			  double* vf, int length)
 {
-  if(!(svCount <= sVars.size())) {
+  if(!(svCount <= (int)sVars.size())) {
     cerr<<"Error: you must write out all scalar values first.\n";
     return 0;
   }
-  if( vvCount >= vVars.size() ){
+  if( vvCount >= (int)vVars.size() ){
     cerr<<"Error: no more vector values can be added.\n";
     return 0;
   }
@@ -475,13 +475,13 @@ MPWrite::AddParticle( Point p, // position
     if(fileType == BIN){
       os.write((char *) &p, sizeof(double)*3);
       os.write((char *) &(scalars[0]), sizeof(double)*scalars.size());
-      for(j = 0; j < vectors.size(); j++){
+      for(j = 0; j < (int)vectors.size(); j++){
 	os.write((char *) &(vectors[j]), sizeof(double) * 3);
       }
     } else {
       os << p.x() << " " << p.y()<<" "<<p.z()<<" ";
-      for( i = 0; i < scalars.size(); i++) os << scalars[i]<< " ";
-      for( i = 0; i < vectors.size(); i++) {
+      for( i = 0; i < (int)scalars.size(); i++) os << scalars[i]<< " ";
+      for( i = 0; i < (int)vectors.size(); i++) {
 	os << vectors[i].x()<< " ";
 	os << vectors[i].y()<< " ";
 	os << vectors[i].z()<< " ";
@@ -505,14 +505,14 @@ MPWrite::EndParticles()
   while(pCount < pN){
     pCount++;
     if ( fileType == BIN ){
-      for(i = 0; i < sVars.size(); i++)
+      for(i = 0; i < (int)sVars.size(); i++)
 	os.write((char *) &s, sizeof(double));
-      for(j = 0; j < vVars.size(); j++){
+      for(j = 0; j < (int)vVars.size(); j++){
 	os.write((char*) v, sizeof(double)*3);
       }
     } else {
-      for(i = 0; i < sVars.size(); i++) os << s << " ";
-      for(i = 0; i < vVars.size(); i++) {
+      for(i = 0; i < (int)sVars.size(); i++) os << s << " ";
+      for(i = 0; i < (int)vVars.size(); i++) {
 	os << v[0] << " ";
 	os << v[1] << " ";
 	os << v[2] << " ";
