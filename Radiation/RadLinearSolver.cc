@@ -586,7 +586,7 @@ RadLinearSolver::radLinearSolve()
 
   if(me == 0) {
      cerr << "SLESSolve: Norm of error: " << norm << ", iterations: " << its << ", time: " << Time::currentSeconds()-solve_start << " seconds\n";
-     cerr << "Init Norm: " << init_norm << " Error reduced by: " << norm/init_norm << endl;
+     cerr << "Init Norm: " << init_norm << " Error reduced by: " << norm/(init_norm+1.0e-20) << endl;
      cerr << "Sum of RHS vector: " << sum_b << endl;
   }
 #if 1
@@ -609,10 +609,10 @@ RadLinearSolver::radLinearSolve()
     throw PetscError(ierr, "MatDestroy");
 
 #endif
-  if ((norm/init_norm < 1.0)&& (norm < 2.0))
+  if ((norm/(init_norm+1.0e-20) < 1.0)&& (norm < 2.0))
     return true;
   else
-    return true;
+    return false;
 }
 
 
