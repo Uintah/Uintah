@@ -68,13 +68,13 @@ void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
   params->require("BurnCoeff",        d_BurnCoeff);
   params->require("refPressure",      d_refPress);
 
-  vector<int> m(2);
+  vector<int> m(3);
   m[0] = matl0->getDWIndex();
   m[1] = matl1->getDWIndex();
+  m[2] = 0;             // needed for the pressure and NC_CCWeight
   mymatls = new MaterialSet();
   mymatls->addAll(m);
   mymatls->addReference();
-  
 }
 //______________________________________________________________________
 //     
@@ -101,7 +101,7 @@ void Simple_Burn::scheduleMassExchange(SchedulerP& sched,
 {
   Task* t = scinew Task("Simple_Burn::massExchange",
 			this, &Simple_Burn::massExchange, mi);
-  
+  cout_doing << "SIMPLE_BURN::scheduleMassExchange "<<  endl;  
   t->requires( Task::OldDW, mi->delT_Label);
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
@@ -157,7 +157,7 @@ void Simple_Burn::massExchange(const ProcessorGroup*,
   delt_vartype delT;
   old_dw->get(delT, mi->delT_Label);
 
-  ASSERT(matls->size() == 2);
+//  ASSERT(matls->size() == 2);
   int m0 = matl0->getDWIndex();
   int m1 = matl1->getDWIndex();
  
@@ -270,7 +270,7 @@ void Simple_Burn::massExchange(const ProcessorGroup*,
           Temp =std::max(Temp, gasTempZ_FC[c + IntVector(0,0,1)] );
         }
         surfaceTemp[c] = Temp;
-
+#if 0
         double gradRhoX = 0.25 *
                           ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
                             NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
@@ -316,9 +316,9 @@ void Simple_Burn::massExchange(const ProcessorGroup*,
         double TmpX = fabs(normalX*delX);
         double TmpY = fabs(normalY*delY);
         double TmpZ = fabs(normalZ*delZ);
+#endif
 
-        double surfArea = delX*delY*delZ / (TmpX+TmpY+TmpZ); 
-//             double surfArea = delX*delY; 
+        double surfArea = delX*delY;  
         onSurface[c] = surfArea; // debugging var
 
         //__________________________________
