@@ -296,7 +296,7 @@ void NrrdData::io(Piostream& stream) {
 
   if (stream.reading()) {
     Pio(stream, nrrd_fname_);
-    if (nrrdLoad(nrrd = nrrdNew(), strdup(nrrd_fname_.c_str()), nrrdIONew())) {
+    if (nrrdLoad(nrrd = nrrdNew(), nrrd_fname_.c_str(), 0)) {
       char *err = biffGet(NRRD);
       cerr << "Error reading nrrd " << nrrd_fname_ << ": " << err << endl;
       free(err);
@@ -314,7 +314,7 @@ void NrrdData::io(Piostream& stream) {
       no = nrrdIONew();
       no->encoding = nrrdEncodingAscii;
     } 
-    if (nrrdSave(strdup(nrrd_fname_.c_str()), nrrd, no)) {
+    if (nrrdSave(nrrd_fname_.c_str(), nrrd, no)) {
       char *err = biffGet(NRRD);      
       cerr << "Error writing nrrd " << nrrd_fname_ << ": "<< err << endl;
       free(err);

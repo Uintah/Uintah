@@ -2616,7 +2616,7 @@ if test "$sci_check_teem" = "yes"; then
   fi
   
   SCI_TRY_LINK(TEEM,teem library and headers,[
-   #include <nrrd.h>
+   #include <teem/nrrd.h>
    ],$_sci_inc,teem,$_sci_lib,-lm,,not-optional)
 
   if test "$HAVE_TEEM" = "yes"; then

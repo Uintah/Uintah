@@ -179,7 +179,7 @@ NrrdReader::read_nrrd()
     } else { // assume it is just a nrrd
 
       NrrdData *n = scinew NrrdData;
-      if (nrrdLoad(n->nrrd=nrrdNew(), strdup(fn.c_str()), nrrdIONew())) {
+      if (nrrdLoad(n->nrrd=nrrdNew(), strdup(fn.c_str()), 0)) {
 	char *err = biffGetDone(NRRD);
 	error("Read error on '" + fn + "': " + err);
 	free(err);
