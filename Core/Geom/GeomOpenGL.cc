@@ -1172,6 +1172,111 @@ void GeomCappedCone::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
+
+void
+GeomCones::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if(!pre_draw(di, matl, 1)) return;
+
+    di->polycount+=points_.size() * nu_ * 2;
+
+    const bool texturing =
+      di->using_cmtexture_ && indices_.size() == points_.size() / 2;
+    if (texturing)
+    {
+      glColor4d(1.0, 1.0, 1.0, 1.0);
+
+      glEnable(GL_TEXTURE_1D);
+      glDisable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+    }
+
+    const bool coloring = colors_.size() == points_.size() * 2;
+    const bool use_local_radii = radii_.size() == points_.size()/2;
+    
+    float nz = 1.0/6.0;
+    float nzm = 1.0/sqrt(1.0 + 1.0 + nz*nz);
+    nz *= nzm;
+    float tabx[40];
+    float taby[40];
+    float ntabx[40];
+    float ntaby[40];
+    for (int j=0; j<nu_; j++)
+    {
+      tabx[j] = sin(2.0 * M_PI * j / nu_);
+      taby[j] = cos(2.0 * M_PI * j / nu_);
+      ntabx[j] = sin(2.0 * M_PI * (j+0.5) / nu_) * nzm;
+      ntaby[j] = cos(2.0 * M_PI * (j+0.5) / nu_) * nzm;
+    }
+
+    glEnable(GL_NORMALIZE);
+
+    for (unsigned int i=0; i < points_.size(); i+=2)
+    {
+      Vector v0(points_[i+1] - points_[i+0]);
+      Vector v1, v2;
+      v0.find_orthogonal(v1, v2);
+      if (use_local_radii)
+      {
+	v1 *= radii_[i/2];
+	v2 *= radii_[i/2];
+      }
+      else
+      {
+	v1 *= radius_;
+	v2 *= radius_;
+      }
+
+      float matrix[16];
+      matrix[0] = v1.x();
+      matrix[1] = v1.y();
+      matrix[2] = v1.z();
+      matrix[3] = 0.0;
+      matrix[4] = v2.x();
+      matrix[5] = v2.y();
+      matrix[6] = v2.z();
+      matrix[7] = 0.0;
+      matrix[8] = v0.x();
+      matrix[9] = v0.y();
+      matrix[10] = v0.z();
+      matrix[11] = 0.0;
+      matrix[12] = points_[i].x();
+      matrix[13] = points_[i].y();
+      matrix[14] = points_[i].z();
+      matrix[15] = 1.0;
+
+      glPushMatrix();
+      glMultMatrixf(matrix);
+
+      if (coloring) { glColor3ubv(&(colors_[i*2])); }
+      if (texturing) { glTexCoord1f(indices_[i/2]); }
+
+      glBegin(GL_TRIANGLES);
+      for (int k = 0; k < nu_; k++)
+      {
+	glNormal3f(ntabx[k], ntaby[k], nz);
+	glVertex3f(0.0, 0.0, 1.0);
+	
+	glNormal3f(tabx[(k+1)%nu_]*nzm, taby[(k+1)%nu_]*nzm, nz);
+	glVertex3f(tabx[(k+1)%nu_], taby[(k+1)%nu_], 0.0);
+
+	glNormal3f(tabx[k], taby[k], 1.0/6.0);
+	glVertex3f(tabx[k], taby[k], 0.0);
+      }
+      glEnd();
+
+      glPopMatrix();
+    }
+
+    glLineWidth(1.0);
+
+    glDisable(GL_TEXTURE_1D);
+    glDisable(GL_NORMALIZE);
+
+    post_draw(di);
+}
+
+
 void
 GeomContainer::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
@@ -1255,24 +1360,13 @@ GeomCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       for (int k=0; k<nu_+1; k++)
       {
 	glNormal3f(tabx[k%nu_], taby[k%nu_], 0.0);
-	if (coloring)
-	{
-	  glColor3ubv(&(colors_[i*4]));
-	}
-	if (texturing)
-	{
-	  glTexCoord1f(indices_[i]);
-	}
+
+	if (coloring) { glColor3ubv(&(colors_[i*4])); }
+	if (texturing) { glTexCoord1f(indices_[i]); }
 	glVertex3f(tabx[k%nu_], taby[k%nu_], 0.0);
 
-	if (coloring)
-	{
-	  glColor3ubv(&(colors_[(i+1)*4]));
-	}
-	if (texturing)
-	{
-	  glTexCoord1f(indices_[i+1]);
-	}
+	if (coloring) { glColor3ubv(&(colors_[(i+1)*4])); }
+	if (texturing) { glTexCoord1f(indices_[i+1]); }
 	glVertex3f(tabx[k%nu_], taby[k%nu_], 1.0);
       }
       glEnd();
@@ -1360,37 +1454,20 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       for (k=0; k<nu_+1; k++)
       {
 	glNormal3f(tabx[k%nu_], taby[k%nu_], 0.0);
-	if (coloring)
-	{
-	  glColor3ubv(&(colors_[i*4]));
-	}
-	if (texturing)
-	{
-	  glTexCoord1f(indices_[i]);
-	}
+
+	if (coloring) { glColor3ubv(&(colors_[i*4])); }
+	if (texturing) { glTexCoord1f(indices_[i]); }
 	glVertex3f(tabx[k%nu_], taby[k%nu_], 0.0);
 
-	if (coloring)
-	{
-	  glColor3ubv(&(colors_[(i+1)*4]));
-	}
-	if (texturing)
-	{
-	  glTexCoord1f(indices_[i+1]);
-	}
+	if (coloring) { glColor3ubv(&(colors_[(i+1)*4])); }
+	if (texturing) { glTexCoord1f(indices_[i+1]); }
 	glVertex3f(tabx[k%nu_], taby[k%nu_], 1.0);
       }
       glEnd();
 
       // Bottom cap
-      if (coloring)
-      {
-	glColor3ubv(&(colors_[i*4]));
-      }
-      if (texturing)
-      {
-	glTexCoord1f(indices_[i]);
-      }
+      if (coloring) { glColor3ubv(&(colors_[i*4])); }
+      if (texturing) { glTexCoord1f(indices_[i]); }
       glNormal3f(0.0, 0.0, -1.0);
       glBegin(GL_TRIANGLE_FAN);
       glVertex3f(0.0, 0.0, 0.0);
@@ -1401,14 +1478,8 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       glEnd();
 
       // Top cap
-      if (coloring)
-      {
-	glColor3ubv(&(colors_[(i+1)*4]));
-      }
-      if (texturing)
-      {
-	glTexCoord1f(indices_[i+1]);
-      }
+      if (coloring) { glColor3ubv(&(colors_[(i+1)*4])); }
+      if (texturing) { glTexCoord1f(indices_[i+1]); }
       glNormal3f(0.0, 0.0, 1.0);
       glBegin(GL_TRIANGLE_FAN);
       glVertex3f(0.0, 0.0, 1.0);
@@ -3344,7 +3415,7 @@ GeomSpheres::draw(DrawInfoOpenGL* di, Material* matl, double)
   for (unsigned int i=0; i < centers_.size(); i++)
   {
     if (using_texture) { glTexCoord1f(indices_[i]); }
-    if (using_color) { glColor4ubv(&(colors_[i*4])); }
+    if (using_color) { glColor3ubv(&(colors_[i*4])); }
 
     glPushMatrix();
 
