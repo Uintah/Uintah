@@ -16,18 +16,16 @@ class CylinderGeometryObject : public GeometryObject {
 
  public:
 
-  enum AXIS {X = 1, Y = 2, Z = 3};
-
   CylinderGeometryObject(ProblemSpecP &);
   virtual ~CylinderGeometryObject();
 
   virtual bool inside(const Point &p) const;
   virtual Box getBoundingBox() const;
+ 
  private:
-  AXIS  d_axis;
-  Point d_origin;
-  double d_length;
-  double d_radius;
+   Point d_bottom;
+   Point d_top;
+   double d_radius;
  
   
 
@@ -39,6 +37,10 @@ class CylinderGeometryObject : public GeometryObject {
 #endif // __CYLINDER_GEOMTRY_OBJECT_H__
 
 // $Log$
+// Revision 1.5  2000/04/21 22:59:25  jas
+// Can create a generalized cylinder (removed the axis aligned constraint).
+// Methods for finding bounding box and the inside test are completed.
+//
 // Revision 1.4  2000/04/20 22:58:14  sparker
 // Resolved undefined symbols
 // Trying to make stuff work
