@@ -250,11 +250,11 @@ Thread_shutdown(Thread* thread)
       active[i-1]=active[i];
    }
    numActive--;
-   if(pthread_setspecific(thread_key, 0) != 0)
-     fprintf(stderr, "Warning: pthread_setspecific failed");
    unlock_scheduler();
    bool wait_main = priv->ismain;
    delete thread;
+   if(pthread_setspecific(thread_key, 0) != 0)
+     fprintf(stderr, "Warning: pthread_setspecific failed");
    priv->thread=0;
    delete priv;
    Thread::checkExit();
