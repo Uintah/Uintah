@@ -19,7 +19,13 @@ if test -z "$debugging"; then
   AC_MSG_WARN([
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-
+    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it, the true
+    error most likely will show up.
   ])
 fi
 
