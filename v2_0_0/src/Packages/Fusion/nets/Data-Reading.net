@@ -2,98 +2,122 @@
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 51 191]
-set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 18 371]
-set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 18 802]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 460 253]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 51 110]
-set m5 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 18 269]
-set m6 [addModuleAtPosition "Fusion" "DataIO" "MDSPlusFieldReader" 18 12]
-set m7 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 295 208]
-set m8 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 261 115]
-set m9 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 261 299]
-set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 261 378]
-set m11 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 734 101]
-set m12 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 752 189]
-set m13 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldDataType" 734 260]
-set m14 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 734 334]
-set m15 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 734 504]
-set m16 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 734 420]
-set m17 [addModuleAtPosition "Fusion" "DataIO" "MDSPlusFieldReader" 680 9]
-set m18 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 530 419]
-set m19 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 1239 87]
-set m20 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 1031 320]
-set m21 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1031 414]
-set m22 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 1499 299]
-set m23 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1499 403]
-set m24 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1070 242]
-set m25 [addModuleAtPosition "SCIRun" "Fields" "VectorMagnitude" 1088 143]
-set m26 [addModuleAtPosition "SCIRun" "Fields" "VectorMagnitude" 1553 120]
-set m27 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1535 209]
-set m28 [addModuleAtPosition "Fusion" "DataIO" "MDSPlusFieldReader" 1013 5]
-set m29 [addModuleAtPosition "Fusion" "DataIO" "MDSPlusFieldReader" 1481 7]
-set m30 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1256 16]
-set m31 [addModuleAtPosition "Fusion" "DataIO" "MDSPlusFieldReader" 460 7]
-set m32 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 478 171]
-set m33 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 530 321]
-set m34 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 478 88]
+set bbox {}
+
+set m0 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 252 446]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 219 626]
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 219 1057]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 661 508]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 252 365]
+set m5 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldSubSample" 219 524]
+set m6 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldBoundary" 496 463]
+set m7 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldSubSample" 462 370]
+set m8 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 462 554]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 462 633]
+set m10 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 935 356]
+set m11 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 953 444]
+set m12 [addModuleAtPosition "SCIRun" "FieldsData" "ChangeFieldDataType" 935 515]
+set m13 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 935 589]
+set m14 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 935 759]
+set m15 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldSubSample" 935 675]
+set m16 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 731 674]
+set m17 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 1440 342]
+set m18 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 1232 575]
+set m19 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1232 669]
+set m20 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1271 497]
+set m21 [addModuleAtPosition "SCIRun" "FieldsData" "VectorMagnitude" 1289 398]
+set m22 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1457 271]
+set m23 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 679 426]
+set m24 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 731 576]
+set m25 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 679 343]
+set m26 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 14 34]
+set m27 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 32 149]
+set m28 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 237 156]
+set m29 [addModuleAtPosition "Fusion" "Fields" "NrrdFieldConverter" 219 257]
+set m30 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 715 49]
+set m31 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 679 151]
+set m32 [addModuleAtPosition "Fusion" "Fields" "NrrdFieldConverter" 661 239]
+set m33 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 989 37]
+set m34 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 953 156]
+set m35 [addModuleAtPosition "Fusion" "Fields" "NrrdFieldConverter" 935 268]
+set m36 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 1286 59]
+set m37 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 1250 165]
+set m38 [addModuleAtPosition "Fusion" "Fields" "NrrdFieldConverter" 1232 256]
 
 addConnection $m0 0 $m1 1
 addConnection $m1 0 $m2 0
 addConnection $m3 1 $m2 1
 addConnection $m4 0 $m0 0
 addConnection $m5 0 $m1 0
-addConnection $m6 0 $m5 0
-addConnection $m6 0 $m0 1
-addConnection $m8 0 $m7 0
-addConnection $m7 0 $m9 1
+addConnection $m7 0 $m6 0
+addConnection $m6 0 $m8 1
+addConnection $m7 0 $m8 0
 addConnection $m8 0 $m9 0
-addConnection $m9 0 $m10 0
-addConnection $m10 0 $m2 2
-addConnection $m6 0 $m8 0
-addConnection $m0 0 $m10 1
-addConnection $m11 1 $m12 0
-addConnection $m11 0 $m13 0
-addConnection $m13 0 $m14 0
-addConnection $m12 0 $m14 1
-addConnection $m14 0 $m16 0
-addConnection $m16 0 $m15 0
-addConnection $m18 0 $m15 1
-addConnection $m14 0 $m18 1
-addConnection $m19 0 $m20 1
-addConnection $m20 0 $m21 0
-addConnection $m22 0 $m23 0
-addConnection $m24 0 $m21 1
-addConnection $m25 0 $m24 1
-addConnection $m26 0 $m27 1
-addConnection $m27 0 $m23 1
-addConnection $m17 3 $m11 0
-addConnection $m28 1 $m19 0
-addConnection $m28 1 $m20 0
-addConnection $m28 1 $m25 0
-addConnection $m29 1 $m22 0
-addConnection $m29 1 $m26 0
-addConnection $m30 0 $m24 0
-addConnection $m15 1 $m2 3
-addConnection $m19 1 $m2 4
-addConnection $m21 0 $m2 5
-addConnection $m31 0 $m3 0
+addConnection $m9 0 $m2 2
+addConnection $m0 0 $m9 1
+addConnection $m10 1 $m11 0
+addConnection $m10 0 $m12 0
+addConnection $m12 0 $m13 0
+addConnection $m11 0 $m13 1
+addConnection $m13 0 $m15 0
+addConnection $m15 0 $m14 0
+addConnection $m16 0 $m14 1
+addConnection $m13 0 $m16 1
+addConnection $m17 0 $m18 1
+addConnection $m18 0 $m19 0
+addConnection $m20 0 $m19 1
+addConnection $m21 0 $m20 1
+addConnection $m22 0 $m20 0
+addConnection $m14 1 $m2 3
+addConnection $m17 1 $m2 4
+addConnection $m19 0 $m2 5
+addConnection $m23 0 $m3 1
+addConnection $m24 0 $m16 0
+addConnection $m25 0 $m23 0
+addConnection $m26 1 $m27 0
+addConnection $m26 2 $m27 1
+addConnection $m26 3 $m28 0
+addConnection $m27 0 $m29 0
+addConnection $m28 0 $m29 1
+addConnection $m29 0 $m5 0
+addConnection $m29 0 $m0 1
+addConnection $m29 0 $m7 0
+addConnection $m26 0 $m31 0
+addConnection $m32 0 $m3 0
+addConnection $m32 0 $m23 1
+addConnection $m26 1 $m31 1
+addConnection $m27 0 $m32 0
 addConnection $m31 0 $m32 1
-addConnection $m32 0 $m3 1
-addConnection $m33 0 $m18 0
-addConnection $m34 0 $m32 0
+addConnection $m30 0 $m31 2
+addConnection $m30 1 $m31 3
+addConnection $m26 0 $m34 0
+addConnection $m26 1 $m34 1
+addConnection $m33 0 $m34 2
+addConnection $m33 1 $m34 3
+addConnection $m35 0 $m10 0
+addConnection $m27 0 $m35 0
+addConnection $m34 0 $m35 1
+addConnection $m26 0 $m37 0
+addConnection $m26 1 $m37 1
+addConnection $m36 0 $m37 2
+addConnection $m36 1 $m37 3
+addConnection $m27 0 $m38 0
+addConnection $m37 0 $m38 1
+addConnection $m38 0 $m18 0
+addConnection $m38 0 $m17 0
+addConnection $m38 0 $m21 0
 
 set $m0-notes {}
-set $m0-show_status {1}
 set $m0-isFixed {0}
-set $m0-min {          206.084}
-set $m0-max {           125631}
+set $m0-min {214.876514338368}
+set $m0-max {119068.52571986339}
 set $m0-makeSymmetric {0}
 set $m1-notes {}
-set $m1-show_status {1}
 set $m1-nodes-on {1}
+set $m1-nodes-transparency {0}
 set $m1-nodes-as-disks {0}
 set $m1-edges-on {0}
+set $m1-edges-transparency {0}
 set $m1-faces-on {0}
 set $m1-use-normals {0}
 set $m1-use-transparency {0}
@@ -101,9 +125,12 @@ set $m1-vectors-on {0}
 set $m1-normalize-vectors {0}
 set $m1-has_vector_data {0}
 set $m1-bidirectional {0}
-set $m1-arrow-heads-on {1}
+set $m1-vector-usedefcolor {0}
 set $m1-tensors-on {0}
 set $m1-has_tensor_data {0}
+set $m1-scalars-on {0}
+set $m1-scalars-transparency {0}
+set $m1-has_scalar_data {1}
 set $m1-text-on {0}
 set $m1-text-use-default-color {1}
 set $m1-text-color-r {1.0}
@@ -126,21 +153,23 @@ set $m1-node_display_type {Points}
 set $m1-edge_display_type {Lines}
 set $m1-data_display_type {Arrows}
 set $m1-tensor_display_type {Boxes}
+set $m1-scalar_display_type {Points}
 set $m1-active_tab {Faces}
 set $m1-node_scale {0.03}
 set $m1-edge_scale {0.03}
 set $m1-vectors_scale {0.03}
 set $m1-tensors_scale {0.30}
+set $m1-scalars_scale {0.30}
 set $m1-show_progress {0}
 set $m1-interactive_mode {Interactive}
+set $m1-field-name {}
+set $m1-field-name-update {1}
 set $m1-node-resolution {6}
 set $m1-edge-resolution {6}
 set $m1-data-resolution {6}
 set $m2-notes {}
-set $m2-show_status {1}
 set $m3-notes {}
-set $m3-show_status {1}
-set $m3-isoval {10000.000}
+set $m3-isoval {5667}
 set $m3-isoval-min {-21160.3}
 set $m3-isoval-max {21160.3}
 set $m3-isoval-typed {0}
@@ -160,7 +189,6 @@ set $m3-color-r {0.4}
 set $m3-color-g {0.2}
 set $m3-color-b {0.9}
 set $m4-notes {}
-set $m4-show_status {1}
 set $m4-tcl_status {Calling GenStandardColorMaps!}
 set $m4-positionList {{0 6} {387 6}}
 set $m4-nodeList {65 66}
@@ -172,437 +200,502 @@ set $m4-resolution {64}
 set $m4-realres {64}
 set $m4-gamma {0.00}
 set $m5-notes {}
-set $m5-show_status {1}
 set $m5-wrap {1}
 set $m5-dims {3}
-set $m5-i-dim {241}
-set $m5-j-dim {240}
-set $m5-k-dim {40}
+set $m5-i-dim {41}
+set $m5-j-dim {241}
+set $m5-k-dim {241}
 set $m5-i-start {0}
 set $m5-j-start {0}
 set $m5-k-start {0}
-set $m5-i-stop {240}
-set $m5-j-stop {0}
-set $m5-k-stop {0}
-set $m5-i-stride {10}
-set $m5-j-stride {5}
+set $m5-i-stop {40}
+set $m5-j-stop {240}
+set $m5-k-stop {240}
+set $m5-i-stride {1}
+set $m5-j-stride {1}
 set $m5-k-stride {1}
 set $m5-i-wrap {0}
-set $m5-j-wrap {1}
-set $m5-k-wrap {1}
+set $m5-j-wrap {0}
+set $m5-k-wrap {0}
 set $m6-notes {}
-set $m6-show_status {1}
-set $m6-serverName {atlas.gat.com}
-set $m6-treeName {NIMROD}
-set $m6-shotNumber {10115}
-set $m6-sliceNumber {100}
-set $m6-sliceRange {0}
-set $m6-sliceStart {0}
-set $m6-sliceStop {246}
-set $m6-sliceSkip {4}
-set $m6-bPressure {1}
-set $m6-bBField {0}
-set $m6-bVField {0}
-set $m6-bJField {0}
-set $m6-space {0}
-set $m6-mode {0}
 set $m7-notes {}
-set $m7-show_status {1}
+set $m7-wrap {1}
+set $m7-dims {3}
+set $m7-i-dim {41}
+set $m7-j-dim {241}
+set $m7-k-dim {241}
+set $m7-i-start {0}
+set $m7-j-start {0}
+set $m7-k-start {0}
+set $m7-i-stop {40}
+set $m7-j-stop {240}
+set $m7-k-stop {240}
+set $m7-i-stride {1}
+set $m7-j-stride {1}
+set $m7-k-stride {1}
+set $m7-i-wrap {0}
+set $m7-j-wrap {0}
+set $m7-k-wrap {0}
 set $m8-notes {}
-set $m8-show_status {1}
-set $m8-wrap {1}
-set $m8-dims {3}
-set $m8-i-dim {241}
-set $m8-j-dim {240}
-set $m8-k-dim {40}
-set $m8-i-start {0}
-set $m8-j-start {0}
-set $m8-k-start {0}
-set $m8-i-stop {240}
-set $m8-j-stop {0}
-set $m8-k-stop {0}
-set $m8-i-stride {10}
-set $m8-j-stride {5}
-set $m8-k-stride {1}
-set $m8-i-wrap {0}
-set $m8-j-wrap {1}
-set $m8-k-wrap {1}
+set $m8-interpolation_basis {linear}
+set $m8-map_source_to_single_dest {0}
+set $m8-exhaustive_search {1}
+set $m8-exhaustive_search_max_dist {-1}
+set $m8-np {1}
 set $m9-notes {}
-set $m9-show_status {1}
-set $m9-interpolation_basis {linear}
-set $m9-map_source_to_single_dest {0}
-set $m9-exhaustive_search {1}
-set $m9-exhaustive_search_max_dist {-1}
-set $m9-np {1}
+set $m9-nodes-on {0}
+set $m9-nodes-transparency {0}
+set $m9-nodes-as-disks {0}
+set $m9-edges-on {0}
+set $m9-edges-transparency {0}
+set $m9-faces-on {1}
+set $m9-use-normals {0}
+set $m9-use-transparency {1}
+set $m9-vectors-on {0}
+set $m9-normalize-vectors {}
+set $m9-has_vector_data {0}
+set $m9-bidirectional {0}
+set $m9-vector-usedefcolor {0}
+set $m9-tensors-on {0}
+set $m9-has_tensor_data {0}
+set $m9-scalars-on {0}
+set $m9-scalars-transparency {0}
+set $m9-has_scalar_data {1}
+set $m9-text-on {0}
+set $m9-text-use-default-color {1}
+set $m9-text-color-r {1.0}
+set $m9-text-color-g {1.0}
+set $m9-text-color-b {1.0}
+set $m9-text-backface-cull {0}
+set $m9-text-fontsize {1}
+set $m9-text-precision {2}
+set $m9-text-render_locations {0}
+set $m9-text-show-data {1}
+set $m9-text-show-nodes {0}
+set $m9-text-show-edges {0}
+set $m9-text-show-faces {0}
+set $m9-text-show-cells {0}
+set $m9-def-color-r {0.5}
+set $m9-def-color-g {0.5}
+set $m9-def-color-b {0.5}
+set $m9-def-color-a {0.5}
+set $m9-node_display_type {Points}
+set $m9-edge_display_type {Lines}
+set $m9-data_display_type {Arrows}
+set $m9-tensor_display_type {Boxes}
+set $m9-scalar_display_type {Points}
+set $m9-active_tab {Faces}
+set $m9-node_scale {0.03}
+set $m9-edge_scale {0.015}
+set $m9-vectors_scale {0.30}
+set $m9-tensors_scale {0.30}
+set $m9-scalars_scale {0.30}
+set $m9-show_progress {}
+set $m9-interactive_mode {Interactive}
+set $m9-field-name {}
+set $m9-field-name-update {1}
+set $m9-node-resolution {6}
+set $m9-edge-resolution {6}
+set $m9-data-resolution {6}
 set $m10-notes {}
-set $m10-show_status {1}
-set $m10-nodes-on {0}
-set $m10-nodes-as-disks {0}
-set $m10-edges-on {0}
-set $m10-faces-on {1}
-set $m10-use-normals {0}
-set $m10-use-transparency {1}
-set $m10-vectors-on {0}
-set $m10-normalize-vectors {}
-set $m10-has_vector_data {0}
-set $m10-bidirectional {0}
-set $m10-arrow-heads-on {1}
-set $m10-tensors-on {0}
-set $m10-has_tensor_data {0}
-set $m10-text-on {0}
-set $m10-text-use-default-color {1}
-set $m10-text-color-r {1.0}
-set $m10-text-color-g {1.0}
-set $m10-text-color-b {1.0}
-set $m10-text-backface-cull {0}
-set $m10-text-fontsize {1}
-set $m10-text-precision {2}
-set $m10-text-render_locations {0}
-set $m10-text-show-data {1}
-set $m10-text-show-nodes {0}
-set $m10-text-show-edges {0}
-set $m10-text-show-faces {0}
-set $m10-text-show-cells {0}
-set $m10-def-color-r {0.5}
-set $m10-def-color-g {0.5}
-set $m10-def-color-b {0.5}
-set $m10-def-color-a {0.5}
-set $m10-node_display_type {Points}
-set $m10-edge_display_type {Lines}
-set $m10-data_display_type {Arrows}
-set $m10-tensor_display_type {Boxes}
-set $m10-active_tab {Faces}
-set $m10-node_scale {0.03}
-set $m10-edge_scale {0.015}
-set $m10-vectors_scale {0.30}
-set $m10-tensors_scale {0.30}
-set $m10-show_progress {}
-set $m10-interactive_mode {Interactive}
-set $m10-node-resolution {6}
-set $m10-edge-resolution {6}
-set $m10-data-resolution {6}
 set $m11-notes {}
-set $m11-show_status {1}
+set $m11-row_or_col {col}
+set $m11-selectable_min {0}
+set $m11-selectable_max {                2}
+set $m11-selectable_inc {3}
+set $m11-selectable_units {Units}
+set $m11-range_min {2}
+set $m11-range_max {2}
+set $m11-playmode {once}
+set $m11-dependence {independent}
+set $m11-current {2}
+set $m11-execmode {init}
+set $m11-delay {0}
+set $m11-inc-amount {1}
+set $m11-send-amount {1}
+set $m11-update-function {1}
 set $m12-notes {}
-set $m12-show_status {1}
-set $m12-row_or_col {col}
-set $m12-selectable_min {0}
-set $m12-selectable_max {                2}
-set $m12-selectable_inc {3}
-set $m12-selectable_units {Units}
-set $m12-range_min {2}
-set $m12-range_max {2}
-set $m12-playmode {once}
-set $m12-current {2}
-set $m12-execmode {init}
-set $m12-delay {0}
-set $m12-inc-amount {1}
-set $m12-send-amount {1}
+set $m12-outputdatatype {double}
 set $m13-notes {}
-set $m13-show_status {1}
-set $m13-outputdatatype {double}
 set $m14-notes {}
-set $m14-show_status {1}
+set $m14-isoval {45716}
+set $m14-isoval-min {-334672}
+set $m14-isoval-max {334672}
+set $m14-isoval-typed {0}
+set $m14-isoval-quantity {1}
+set $m14-quantity-range {colormap}
+set $m14-quantity-min {0}
+set $m14-quantity-max {100}
+set $m14-isoval-list {0.0 1.0 2.0 3.0}
+set $m14-extract-from-new-field {1}
+set $m14-algorithm {0}
+set $m14-build_trisurf {0}
+set $m14-np {1}
+set $m14-active-isoval-selection-tab {0}
+set $m14-active_tab {MC}
+set $m14-update_type {on release}
+set $m14-color-r {0.4}
+set $m14-color-g {0.2}
+set $m14-color-b {0.9}
 set $m15-notes {}
-set $m15-show_status {1}
-set $m15-isoval {50000.000}
-set $m15-isoval-min {-334672}
-set $m15-isoval-max {334672}
-set $m15-isoval-typed {0}
-set $m15-isoval-quantity {1}
-set $m15-quantity-range {colormap}
-set $m15-quantity-min {0}
-set $m15-quantity-max {100}
-set $m15-isoval-list {0.0 1.0 2.0 3.0}
-set $m15-extract-from-new-field {1}
-set $m15-algorithm {0}
-set $m15-build_trisurf {0}
-set $m15-np {1}
-set $m15-active-isoval-selection-tab {0}
-set $m15-active_tab {MC}
-set $m15-update_type {on release}
-set $m15-color-r {0.4}
-set $m15-color-g {0.2}
-set $m15-color-b {0.9}
+set $m15-wrap {1}
+set $m15-dims {3}
+set $m15-i-dim {41}
+set $m15-j-dim {241}
+set $m15-k-dim {241}
+set $m15-i-start {0}
+set $m15-j-start {0}
+set $m15-k-start {0}
+set $m15-i-stop {40}
+set $m15-j-stop {240}
+set $m15-k-stop {240}
+set $m15-i-stride {1}
+set $m15-j-stride {1}
+set $m15-k-stride {1}
+set $m15-i-wrap {0}
+set $m15-j-wrap {0}
+set $m15-k-wrap {0}
 set $m16-notes {}
-set $m16-show_status {1}
-set $m16-wrap {1}
-set $m16-dims {3}
-set $m16-i-dim {241}
-set $m16-j-dim {240}
-set $m16-k-dim {40}
-set $m16-i-start {0}
-set $m16-j-start {0}
-set $m16-k-start {0}
-set $m16-i-stop {240}
-set $m16-j-stop {0}
-set $m16-k-stop {0}
-set $m16-i-stride {10}
-set $m16-j-stride {5}
-set $m16-k-stride {1}
-set $m16-i-wrap {0}
-set $m16-j-wrap {1}
-set $m16-k-wrap {1}
+set $m16-isFixed {0}
+set $m16-min {0}
+set $m16-max {0}
+set $m16-makeSymmetric {0}
 set $m17-notes {}
-set $m17-show_status {1}
-set $m17-serverName {atlas.gat.com}
-set $m17-treeName {NIMROD}
-set $m17-shotNumber {10115}
-set $m17-sliceNumber {100}
-set $m17-sliceRange {0}
-set $m17-sliceStart {0}
-set $m17-sliceStop {246}
-set $m17-sliceSkip {4}
-set $m17-bPressure {0}
-set $m17-bBField {0}
-set $m17-bVField {0}
-set $m17-bJField {1}
-set $m17-space {1}
-set $m17-mode {2}
+set $m17-endpoints {1}
+set $m17-endpoint0x {         -1.57635}
+set $m17-endpoint0y {         0.818859}
+set $m17-endpoint0z {         0.130889}
+set $m17-endpoint1x {         -1.57727}
+set $m17-endpoint1y {         0.827625}
+set $m17-endpoint1z {         0.131512}
+set $m17-widgetscale {         0.102001}
+set $m17-maxseeds {1}
+set $m17-numseeds {10}
+set $m17-rngseed {1}
+set $m17-rnginc {1}
+set $m17-clamp {0}
+set $m17-autoexecute {0}
+set $m17-type {}
+set $m17-dist {impuni}
+set $m17-whichtab {Widget}
 set $m18-notes {}
-set $m18-show_status {1}
-set $m18-isFixed {0}
-set $m18-min {          -356935}
-set $m18-max {           356935}
-set $m18-makeSymmetric {0}
+set $m18-stepsize {0.025}
+set $m18-tolerance {0.0001}
+set $m18-maxsteps {1500}
+set $m18-direction {2}
+set $m18-color {1}
+set $m18-remove-colinear {1}
+set $m18-method {4}
+set $m18-np {1}
 set $m19-notes {}
-set $m19-show_status {1}
-set $m19-endpoints {1}
-set $m19-endpoint0x {         -1.57635}
-set $m19-endpoint0y {         0.818859}
-set $m19-endpoint0z {         0.130889}
-set $m19-endpoint1x {         -1.57727}
-set $m19-endpoint1y {         0.827625}
-set $m19-endpoint1z {         0.131512}
-set $m19-widgetscale {         0.102001}
-set $m19-maxseeds {1}
-set $m19-numseeds {10}
-set $m19-rngseed {1}
-set $m19-rnginc {1}
-set $m19-clamp {0}
-set $m19-autoexecute {0}
-set $m19-type {}
-set $m19-dist {impuni}
-set $m19-whichtab {Widget}
+set $m19-nodes-on {0}
+set $m19-nodes-transparency {0}
+set $m19-nodes-as-disks {0}
+set $m19-edges-on {1}
+set $m19-edges-transparency {0}
+set $m19-faces-on {0}
+set $m19-use-normals {0}
+set $m19-use-transparency {0}
+set $m19-vectors-on {0}
+set $m19-normalize-vectors {}
+set $m19-has_vector_data {0}
+set $m19-bidirectional {0}
+set $m19-vector-usedefcolor {0}
+set $m19-tensors-on {0}
+set $m19-has_tensor_data {0}
+set $m19-scalars-on {0}
+set $m19-scalars-transparency {0}
+set $m19-has_scalar_data {0}
+set $m19-text-on {0}
+set $m19-text-use-default-color {1}
+set $m19-text-color-r {1.0}
+set $m19-text-color-g {1.0}
+set $m19-text-color-b {1.0}
+set $m19-text-backface-cull {0}
+set $m19-text-fontsize {1}
+set $m19-text-precision {2}
+set $m19-text-render_locations {0}
+set $m19-text-show-data {1}
+set $m19-text-show-nodes {0}
+set $m19-text-show-edges {0}
+set $m19-text-show-faces {0}
+set $m19-text-show-cells {0}
+set $m19-def-color-r {0.5}
+set $m19-def-color-g {0.5}
+set $m19-def-color-b {0.5}
+set $m19-def-color-a {0.5}
+set $m19-node_display_type {Spheres}
+set $m19-edge_display_type {Lines}
+set $m19-data_display_type {Arrows}
+set $m19-tensor_display_type {Boxes}
+set $m19-scalar_display_type {Points}
+set $m19-active_tab {Nodes}
+set $m19-node_scale {0.03}
+set $m19-edge_scale {0.015}
+set $m19-vectors_scale {0.30}
+set $m19-tensors_scale {0.30}
+set $m19-scalars_scale {0.30}
+set $m19-show_progress {}
+set $m19-interactive_mode {Interactive}
+set $m19-field-name {}
+set $m19-field-name-update {1}
+set $m19-node-resolution {6}
+set $m19-edge-resolution {6}
+set $m19-data-resolution {6}
 set $m20-notes {}
-set $m20-show_status {1}
-set $m20-stepsize {0.025}
-set $m20-tolerance {0.0001}
-set $m20-maxsteps {1500}
-set $m20-direction {2}
-set $m20-color {1}
-set $m20-remove-colinear {1}
-set $m20-method {4}
-set $m20-np {1}
+set $m20-isFixed {0}
+set $m20-min {      1.37981e-05}
+set $m20-max {        0.0835954}
+set $m20-makeSymmetric {0}
 set $m21-notes {}
-set $m21-show_status {1}
-set $m21-nodes-on {0}
-set $m21-nodes-as-disks {0}
-set $m21-edges-on {1}
-set $m21-faces-on {0}
-set $m21-use-normals {0}
-set $m21-use-transparency {0}
-set $m21-vectors-on {0}
-set $m21-normalize-vectors {}
-set $m21-has_vector_data {0}
-set $m21-bidirectional {0}
-set $m21-arrow-heads-on {1}
-set $m21-tensors-on {0}
-set $m21-has_tensor_data {0}
-set $m21-text-on {0}
-set $m21-text-use-default-color {1}
-set $m21-text-color-r {1.0}
-set $m21-text-color-g {1.0}
-set $m21-text-color-b {1.0}
-set $m21-text-backface-cull {0}
-set $m21-text-fontsize {1}
-set $m21-text-precision {2}
-set $m21-text-render_locations {0}
-set $m21-text-show-data {1}
-set $m21-text-show-nodes {0}
-set $m21-text-show-edges {0}
-set $m21-text-show-faces {0}
-set $m21-text-show-cells {0}
-set $m21-def-color-r {0.5}
-set $m21-def-color-g {0.5}
-set $m21-def-color-b {0.5}
-set $m21-def-color-a {0.5}
-set $m21-node_display_type {Spheres}
-set $m21-edge_display_type {Lines}
-set $m21-data_display_type {Arrows}
-set $m21-tensor_display_type {Boxes}
-set $m21-active_tab {Nodes}
-set $m21-node_scale {0.03}
-set $m21-edge_scale {0.015}
-set $m21-vectors_scale {0.30}
-set $m21-tensors_scale {0.30}
-set $m21-show_progress {}
-set $m21-interactive_mode {Interactive}
-set $m21-node-resolution {6}
-set $m21-edge-resolution {6}
-set $m21-data-resolution {6}
 set $m22-notes {}
-set $m22-show_status {1}
-set $m22-stepsize {0.25}
-set $m22-tolerance {0.0001}
-set $m22-maxsteps {1500}
-set $m22-direction {1}
-set $m22-color {1}
-set $m22-remove-colinear {1}
-set $m22-method {4}
-set $m22-np {1}
+set $m22-tcl_status {Calling GenStandardColorMaps!}
+set $m22-positionList {}
+set $m22-nodeList {}
+set $m22-width {1}
+set $m22-height {1}
+set $m22-mapType {3}
+set $m22-minRes {12}
+set $m22-resolution {255}
+set $m22-realres {255}
+set $m22-gamma {0}
 set $m23-notes {}
-set $m23-show_status {1}
-set $m23-nodes-on {0}
-set $m23-nodes-as-disks {0}
-set $m23-edges-on {1}
-set $m23-faces-on {0}
-set $m23-use-normals {0}
-set $m23-use-transparency {0}
-set $m23-vectors-on {0}
-set $m23-normalize-vectors {}
-set $m23-has_vector_data {0}
-set $m23-bidirectional {0}
-set $m23-arrow-heads-on {1}
-set $m23-tensors-on {0}
-set $m23-has_tensor_data {0}
-set $m23-text-on {0}
-set $m23-text-use-default-color {1}
-set $m23-text-color-r {1.0}
-set $m23-text-color-g {1.0}
-set $m23-text-color-b {1.0}
-set $m23-text-backface-cull {0}
-set $m23-text-fontsize {1}
-set $m23-text-precision {2}
-set $m23-text-render_locations {0}
-set $m23-text-show-data {1}
-set $m23-text-show-nodes {0}
-set $m23-text-show-edges {0}
-set $m23-text-show-faces {0}
-set $m23-text-show-cells {0}
-set $m23-def-color-r {0.5}
-set $m23-def-color-g {0.5}
-set $m23-def-color-b {0.5}
-set $m23-def-color-a {0.5}
-set $m23-node_display_type {Spheres}
-set $m23-edge_display_type {Lines}
-set $m23-data_display_type {Arrows}
-set $m23-tensor_display_type {Boxes}
-set $m23-active_tab {Nodes}
-set $m23-node_scale {0.03}
-set $m23-edge_scale {0.015}
-set $m23-vectors_scale {0.30}
-set $m23-tensors_scale {0.30}
-set $m23-show_progress {}
-set $m23-interactive_mode {Interactive}
-set $m23-node-resolution {6}
-set $m23-edge-resolution {6}
-set $m23-data-resolution {6}
+set $m23-isFixed {0}
+set $m23-min {0}
+set $m23-max {0}
+set $m23-makeSymmetric {0}
 set $m24-notes {}
-set $m24-show_status {1}
-set $m24-isFixed {0}
-set $m24-min {      1.37981e-05}
-set $m24-max {        0.0835954}
-set $m24-makeSymmetric {0}
+set $m24-tcl_status {Calling GenStandardColorMaps!}
+set $m24-positionList {}
+set $m24-nodeList {}
+set $m24-width {1}
+set $m24-height {1}
+set $m24-mapType {3}
+set $m24-minRes {12}
+set $m24-resolution {255}
+set $m24-realres {255}
+set $m24-gamma {0}
 set $m25-notes {}
-set $m25-show_status {1}
+set $m25-tcl_status {Calling GenStandardColorMaps!}
+set $m25-positionList {}
+set $m25-nodeList {}
+set $m25-width {1}
+set $m25-height {1}
+set $m25-mapType {3}
+set $m25-minRes {12}
+set $m25-resolution {255}
+set $m25-realres {255}
+set $m25-gamma {0}
 set $m26-notes {}
-set $m26-show_status {1}
+set $m26-selectable_min {0}
+set $m26-selectable_max {100}
+set $m26-selectable_inc {1}
+set $m26-range_min {0}
+set $m26-range_max {0}
+set $m26-playmode {once}
+set $m26-current {0}
+set $m26-execmode {init}
+set $m26-delay {0}
+set $m26-inc-amount {1}
+set $m26-filename {/z/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10115_000_001.h5}
+set $m26-datasets {{/ NIMROD OUTPUTS CODE GRID K} {/ NIMROD OUTPUTS CODE GRID PHI} {/ NIMROD OUTPUTS CODE GRID R} {/ NIMROD OUTPUTS CODE GRID Z} {/ NIMROD OUTPUTS CODE SLICES T00000 REALSPACE PRESSURE Values}}
+set $m26-dumpname {/tmp/NIMROD_10115_000_001.h5.dump}
+set $m26-ports {}
+set $m26-ndims {0}
+set $m26-mergeData {1}
+set $m26-assumeSVT {1}
+set $m26-animate {0}
+set $m26-0-dim {2}
+set $m26-0-start {0}
+set $m26-0-count {1}
+set $m26-0-stride {1}
+set $m26-1-dim {2}
+set $m26-1-start {0}
+set $m26-1-count {1}
+set $m26-1-stride {1}
+set $m26-2-dim {2}
+set $m26-2-start {0}
+set $m26-2-count {1}
+set $m26-2-stride {1}
+set $m26-3-dim {2}
+set $m26-3-start {0}
+set $m26-3-count {1}
+set $m26-3-stride {1}
+set $m26-4-dim {2}
+set $m26-4-start {0}
+set $m26-4-count {1}
+set $m26-4-stride {1}
+set $m26-5-dim {2}
+set $m26-5-start {0}
+set $m26-5-count {1}
+set $m26-5-stride {1}
 set $m27-notes {}
-set $m27-show_status {1}
-set $m27-isFixed {0}
-set $m27-min {0}
-set $m27-max {1}
-set $m27-makeSymmetric {0}
+set $m27-datasets {{-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-R:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-Z:Scalar} }
+set $m27-nmodes {0}
 set $m28-notes {}
-set $m28-show_status {1}
-set $m28-serverName {atlas.gat.com}
-set $m28-treeName {NIMROD}
-set $m28-shotNumber {10115}
-set $m28-sliceNumber {100}
-set $m28-sliceRange {0}
-set $m28-sliceStart {0}
-set $m28-sliceStop {0}
-set $m28-sliceSkip {1}
-set $m28-bPressure {0}
-set $m28-bBField {1}
-set $m28-bVField {0}
-set $m28-bJField {0}
-set $m28-space {1}
-set $m28-mode {3}
+set $m28-datasets {-NIMROD-OUTPUTS-CODE-SLICES-T00000-REALSPACE-PRESSURE-Values:Scalar}
+set $m28-nmodes {0}
 set $m29-notes {}
-set $m29-show_status {1}
-set $m29-serverName {atlas.gat.com}
-set $m29-treeName {NIMROD}
-set $m29-shotNumber {10115}
-set $m29-sliceNumber {100}
-set $m29-sliceRange {0}
-set $m29-sliceStart {0}
-set $m29-sliceStop {0}
-set $m29-sliceSkip {1}
-set $m29-bPressure {0}
-set $m29-bBField {1}
-set $m29-bVField {0}
-set $m29-bJField {0}
-set $m29-space {0}
-set $m29-mode {3}
+set $m29-datasets {{-NIMROD-OUTPUTS-CODE-GRID-XYZ:Vector} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-REALSPACE-PRESSURE-Values:Scalar} }
 set $m30-notes {}
-set $m30-show_status {1}
-set $m30-tcl_status {Calling GenStandardColorMaps!}
-set $m30-positionList {}
-set $m30-nodeList {}
-set $m30-width {1}
-set $m30-height {1}
-set $m30-mapType {3}
-set $m30-minRes {12}
-set $m30-resolution {255}
-set $m30-realres {255}
-set $m30-gamma {0}
+set $m30-selectable_min {0}
+set $m30-selectable_max {100}
+set $m30-selectable_inc {1}
+set $m30-range_min {0}
+set $m30-range_max {0}
+set $m30-playmode {once}
+set $m30-current {0}
+set $m30-execmode {init}
+set $m30-delay {0}
+set $m30-inc-amount {1}
+set $m30-filename {/z/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10115_000_001.h5}
+set $m30-datasets {{/ NIMROD OUTPUTS CODE SLICES T00000 PERTURBED IMAGINARY PRESSURE Values} {/ NIMROD OUTPUTS CODE SLICES T00000 PERTURBED REAL PRESSURE Values}}
+set $m30-dumpname {/tmp/NIMROD_10115_000_001.h5.dump}
+set $m30-ports {}
+set $m30-ndims {3}
+set $m30-mergeData {1}
+set $m30-assumeSVT {1}
+set $m30-animate {0}
+set $m30-0-dim {3}
+set $m30-0-start {0}
+set $m30-0-count {3}
+set $m30-0-stride {1}
+set $m30-1-dim {241}
+set $m30-1-start {0}
+set $m30-1-count {241}
+set $m30-1-stride {1}
+set $m30-2-dim {241}
+set $m30-2-start {0}
+set $m30-2-count {241}
+set $m30-2-stride {1}
+set $m30-3-dim {2}
+set $m30-3-start {0}
+set $m30-3-count {1}
+set $m30-3-stride {1}
+set $m30-4-dim {2}
+set $m30-4-start {0}
+set $m30-4-count {1}
+set $m30-4-stride {1}
+set $m30-5-dim {2}
+set $m30-5-start {0}
+set $m30-5-count {1}
+set $m30-5-stride {1}
 set $m31-notes {}
-set $m31-show_status {1}
-set $m31-serverName {atlas.gat.com}
-set $m31-treeName {NIMROD}
-set $m31-shotNumber {10115}
-set $m31-sliceNumber {100}
-set $m31-sliceRange {0}
-set $m31-sliceStart {0}
-set $m31-sliceStop {0}
-set $m31-sliceSkip {1}
-set $m31-bPressure {1}
-set $m31-bBField {0}
-set $m31-bVField {0}
-set $m31-bJField {0}
-set $m31-space {1}
-set $m31-mode {1}
+set $m31-datasets {{-NIMROD-OUTPUTS-CODE-GRID-K:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-IMAGINARY-PRESSURE-Values:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-REAL-PRESSURE-Values:Scalar} }
+set $m31-nmodes {3}
+set $m31-mode-0 {0}
+set $m31-mode-1 {1}
+set $m31-mode-2 {0}
+set $m31-mode-3 {0}
 set $m32-notes {}
-set $m32-show_status {1}
-set $m32-isFixed {0}
-set $m32-min {         -21160.3}
-set $m32-max {          21160.3}
-set $m32-makeSymmetric {0}
+set $m32-datasets {{-NIMROD-OUTPUTS-CODE-GRID-XYZ:Vector} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-SUM-MODE-PRESSURE-Values:Scalar} }
 set $m33-notes {}
-set $m33-show_status {1}
-set $m33-tcl_status {Calling GenStandardColorMaps!}
-set $m33-positionList {}
-set $m33-nodeList {}
-set $m33-width {1}
-set $m33-height {1}
-set $m33-mapType {3}
-set $m33-minRes {12}
-set $m33-resolution {255}
-set $m33-realres {255}
-set $m33-gamma {0}
+set $m33-selectable_min {0}
+set $m33-selectable_max {100}
+set $m33-selectable_inc {1}
+set $m33-range_min {0}
+set $m33-range_max {0}
+set $m33-playmode {once}
+set $m33-current {0}
+set $m33-execmode {init}
+set $m33-delay {0}
+set $m33-inc-amount {1}
+set $m33-filename {/z/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10115_000_001.h5}
+set $m33-datasets {{/ NIMROD OUTPUTS CODE SLICES T00000 PERTURBED IMAGINARY JFIELD PHI} {/ NIMROD OUTPUTS CODE SLICES T00000 PERTURBED IMAGINARY JFIELD R} {/ NIMROD OUTPUTS CODE SLICES T00000 PERTURBED IMAGINARY JFIELD Z} {/ NIMROD OUTPUTS CODE SLICES T00000 PERTURBED REAL JFIELD PHI} {/ NIMROD OUTPUTS CODE SLICES T00000 PERTURBED REAL JFIELD R} {/ NIMROD OUTPUTS CODE SLICES T00000 PERTURBED REAL JFIELD Z}}
+set $m33-dumpname {/tmp/NIMROD_10115_000_001.h5.dump}
+set $m33-ports {}
+set $m33-ndims {3}
+set $m33-mergeData {1}
+set $m33-assumeSVT {1}
+set $m33-animate {0}
+set $m33-0-dim {3}
+set $m33-0-start {0}
+set $m33-0-count {3}
+set $m33-0-stride {1}
+set $m33-1-dim {241}
+set $m33-1-start {0}
+set $m33-1-count {241}
+set $m33-1-stride {1}
+set $m33-2-dim {241}
+set $m33-2-start {0}
+set $m33-2-count {241}
+set $m33-2-stride {1}
+set $m33-3-dim {2}
+set $m33-3-start {0}
+set $m33-3-count {1}
+set $m33-3-stride {1}
+set $m33-4-dim {2}
+set $m33-4-start {0}
+set $m33-4-count {1}
+set $m33-4-stride {1}
+set $m33-5-dim {2}
+set $m33-5-start {0}
+set $m33-5-count {1}
+set $m33-5-stride {1}
 set $m34-notes {}
-set $m34-show_status {1}
-set $m34-tcl_status {Calling GenStandardColorMaps!}
-set $m34-positionList {}
-set $m34-nodeList {}
-set $m34-width {1}
-set $m34-height {1}
-set $m34-mapType {3}
-set $m34-minRes {12}
-set $m34-resolution {255}
-set $m34-realres {255}
-set $m34-gamma {0}
+set $m34-datasets {{-NIMROD-OUTPUTS-CODE-GRID-K:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-IMAGINARY-JFIELD-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-IMAGINARY-JFIELD-R:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-IMAGINARY-JFIELD-Z:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-REAL-JFIELD-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-REAL-JFIELD-R:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-REAL-JFIELD-Z:Scalar} }
+set $m34-nmodes {3}
+set $m34-mode-0 {0}
+set $m34-mode-1 {0}
+set $m34-mode-2 {1}
+set $m34-mode-3 {0}
+set $m35-notes {}
+set $m35-datasets {{-NIMROD-OUTPUTS-CODE-GRID-XYZ:Vector} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-SUM-MODE-JFIELD-XYZ:Vector} }
+set $m36-notes {}
+set $m36-selectable_min {0}
+set $m36-selectable_max {100}
+set $m36-selectable_inc {1}
+set $m36-range_min {0}
+set $m36-range_max {0}
+set $m36-playmode {once}
+set $m36-current {0}
+set $m36-execmode {init}
+set $m36-delay {0}
+set $m36-inc-amount {1}
+set $m36-filename {/z/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10115_000_001.h5}
+set $m36-datasets {{/ NIMROD OUTPUTS CODE SLICES T00000 PERTURBED IMAGINARY BFIELD PHI} {/ NIMROD OUTPUTS CODE SLICES T00000 PERTURBED IMAGINARY BFIELD R} {/ NIMROD OUTPUTS CODE SLICES T00000 PERTURBED IMAGINARY BFIELD Z} {/ NIMROD OUTPUTS CODE SLICES T00000 PERTURBED REAL BFIELD PHI} {/ NIMROD OUTPUTS CODE SLICES T00000 PERTURBED REAL BFIELD R} {/ NIMROD OUTPUTS CODE SLICES T00000 PERTURBED REAL BFIELD Z}}
+set $m36-dumpname {/tmp/NIMROD_10115_000_001.h5.dump}
+set $m36-ports {}
+set $m36-ndims {3}
+set $m36-mergeData {1}
+set $m36-assumeSVT {1}
+set $m36-animate {0}
+set $m36-0-dim {3}
+set $m36-0-start {0}
+set $m36-0-count {3}
+set $m36-0-stride {1}
+set $m36-1-dim {241}
+set $m36-1-start {0}
+set $m36-1-count {241}
+set $m36-1-stride {1}
+set $m36-2-dim {241}
+set $m36-2-start {0}
+set $m36-2-count {241}
+set $m36-2-stride {1}
+set $m36-3-dim {2}
+set $m36-3-start {0}
+set $m36-3-count {1}
+set $m36-3-stride {1}
+set $m36-4-dim {2}
+set $m36-4-start {0}
+set $m36-4-count {1}
+set $m36-4-stride {1}
+set $m36-5-dim {2}
+set $m36-5-start {0}
+set $m36-5-count {1}
+set $m36-5-stride {1}
+set $m37-notes {}
+set $m37-datasets {{-NIMROD-OUTPUTS-CODE-GRID-K:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-IMAGINARY-BFIELD-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-IMAGINARY-BFIELD-R:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-IMAGINARY-BFIELD-Z:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-REAL-BFIELD-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-REAL-BFIELD-R:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-REAL-BFIELD-Z:Scalar} }
+set $m37-nmodes {3}
+set $m37-mode-0 {0}
+set $m37-mode-1 {0}
+set $m37-mode-2 {0}
+set $m37-mode-3 {1}
+set $m38-notes {}
+set $m38-datasets {{-NIMROD-OUTPUTS-CODE-GRID-XYZ:Vector} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-PERTURBED-SUM-ALL-BFIELD-XYZ:Vector} }
+$m3 initialize_ui
+$m26 initialize_ui
+$m31 initialize_ui
+$m34 initialize_ui
 
 ::netedit scheduleok

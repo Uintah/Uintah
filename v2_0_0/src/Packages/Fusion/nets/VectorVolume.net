@@ -2,37 +2,91 @@
 
 ::netedit dontschedule
 
-global notes
-set notes ""
+global userName
+set userName ""
 
-set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 16 17]
-set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 198 219]
-set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 16 306]
-set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 16 403]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 198 40]
-set m5 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 16 157]
-set m6 [addModuleAtPosition "SCIRun" "Fields" "VectorMagnitude" 216 136]
+global runDate
+set runDate ""
+
+global runTime
+set runTime ""
+
+set bbox {}
+
+set m0 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 17 17]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 200 407]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 17 490]
+set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 17 590]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 200 213]
+set m5 [addModuleAtPosition "SCIRun" "FieldsData" "VectorMagnitude" 218 317]
+set m6 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 17 102]
+set m7 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 216 105]
+set m8 [addModuleAtPosition "Fusion" "Fields" "NrrdFieldConverter" 17 212]
 
 addConnection $m1 0 $m2 1
 addConnection $m2 0 $m3 0
 addConnection $m4 0 $m1 0
-addConnection $m5 0 $m2 0
-addConnection $m0 2 $m5 0
-addConnection $m6 0 $m1 1
-addConnection $m0 2 $m6 0
+addConnection $m5 0 $m1 1
+addConnection $m0 0 $m6 0
+addConnection $m0 1 $m6 1
+addConnection $m0 0 $m7 0
+addConnection $m0 2 $m7 1
+addConnection $m6 0 $m8 0
+addConnection $m7 0 $m8 1
+addConnection $m8 0 $m2 0
+addConnection $m8 0 $m5 0
 
 set $m0-notes {}
-set $m0-show_status {1}
-set $m0-filename {/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10089_00.mds}
+set $m0-selectable_min {0}
+set $m0-selectable_max {100}
+set $m0-selectable_inc {1}
+set $m0-range_min {0}
+set $m0-range_max {0}
+set $m0-playmode {once}
+set $m0-current {0}
+set $m0-execmode {init}
+set $m0-delay {0}
+set $m0-inc-amount {1}
+set $m0-filename {/z/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10107.h5}
+set $m0-datasets {{/ NIMROD OUTPUTS CODE GRID PHI} {/ NIMROD OUTPUTS CODE GRID R} {/ NIMROD OUTPUTS CODE GRID Z} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD PHI} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD R} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD Z}}
+set $m0-dumpname {/tmp/NIMROD_10107.h5.dump}
+set $m0-ports {}
+set $m0-ndims {0}
+set $m0-mergeData {1}
+set $m0-assumeSVT {1}
+set $m0-animate {0}
+set $m0-0-dim {41}
+set $m0-0-start {0}
+set $m0-0-count {41}
+set $m0-0-stride {1}
+set $m0-1-dim {2}
+set $m0-1-start {0}
+set $m0-1-count {1}
+set $m0-1-stride {1}
+set $m0-2-dim {2}
+set $m0-2-start {0}
+set $m0-2-count {1}
+set $m0-2-stride {1}
+set $m0-3-dim {2}
+set $m0-3-start {0}
+set $m0-3-count {1}
+set $m0-3-stride {1}
+set $m0-4-dim {2}
+set $m0-4-start {0}
+set $m0-4-count {1}
+set $m0-4-stride {1}
+set $m0-5-dim {2}
+set $m0-5-start {0}
+set $m0-5-count {1}
+set $m0-5-stride {1}
 set $m1-notes {}
-set $m1-show_status {1}
 set $m1-isFixed {0}
-set $m1-min {          1.50851}
-set $m1-max {          3.31555}
+set $m1-min {1.0082668980557725}
+set $m1-max {2.2249904662634514}
 set $m1-makeSymmetric {0}
 set $m2-notes {}
-set $m2-show_status {1}
 set $m2-nodes-on {0}
+set $m2-nodes-transparency {0}
 set $m2-nodes-as-disks {1}
 set $m2-edges-on {0}
 set $m2-edges-transparency {0}
@@ -43,9 +97,12 @@ set $m2-vectors-on {1}
 set $m2-normalize-vectors {0}
 set $m2-has_vector_data {1}
 set $m2-bidirectional {0}
-set $m2-arrow-heads-on {0}
+set $m2-vector-usedefcolor {0}
 set $m2-tensors-on {0}
 set $m2-has_tensor_data {0}
+set $m2-scalars-on {0}
+set $m2-scalars-transparency {0}
+set $m2-has_scalar_data {0}
 set $m2-text-on {0}
 set $m2-text-use-default-color {1}
 set $m2-text-color-r {1.0}
@@ -68,20 +125,22 @@ set $m2-node_display_type {Points}
 set $m2-edge_display_type {Lines}
 set $m2-data_display_type {Arrows}
 set $m2-tensor_display_type {Boxes}
+set $m2-scalar_display_type {Points}
 set $m2-active_tab {Vectors}
 set $m2-node_scale {0.0300}
 set $m2-edge_scale {0.0300}
 set $m2-vectors_scale {0.100}
 set $m2-tensors_scale {0.30}
+set $m2-scalars_scale {0.30}
 set $m2-show_progress {0}
 set $m2-interactive_mode {Interactive}
+set $m2-field-name {}
+set $m2-field-name-update {1}
 set $m2-node-resolution {6}
 set $m2-edge-resolution {6}
 set $m2-data-resolution {6}
 set $m3-notes {}
-set $m3-show_status {1}
 set $m4-notes {}
-set $m4-show_status {1}
 set $m4-tcl_status {Calling GenStandardColorMaps!}
 set $m4-positionList {}
 set $m4-nodeList {}
@@ -93,25 +152,14 @@ set $m4-resolution {255}
 set $m4-realres {255}
 set $m4-gamma {0.00}
 set $m5-notes {}
-set $m5-show_status {1}
-set $m5-wrap {1}
-set $m5-dims {3}
-set $m5-i-dim {385}
-set $m5-j-dim {192}
-set $m5-k-dim {10}
-set $m5-i-start {0}
-set $m5-j-start {0}
-set $m5-k-start {0}
-set $m5-i-stop {384}
-set $m5-j-stop {0}
-set $m5-k-stop {0}
-set $m5-i-stride {10}
-set $m5-j-stride {5}
-set $m5-k-stride {1}
-set $m5-i-wrap {0}
-set $m5-j-wrap {1}
-set $m5-k-wrap {1}
 set $m6-notes {}
-set $m6-show_status {1}
+set $m6-datasets {{-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-R:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-Z:Scalar} }
+set $m6-nmodes {0}
+set $m7-notes {}
+set $m7-datasets {{-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-R:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-Z:Scalar} }
+set $m7-nmodes {0}
+set $m8-notes {}
+set $m8-datasets {{-NIMROD-OUTPUTS-CODE-GRID-XYZ:Vector} {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-XYZ:Vector} }
+$m0 initialize_ui
 
 ::netedit scheduleok
