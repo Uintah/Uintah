@@ -44,6 +44,11 @@ public:
     double      *rawBlue;
     double      *rawAlpha;
 
+    Array1<float> *rawRampAlpha;
+    Array1<float> *rawRampAlphaT;
+    Array1<Color> *rawRampColor;
+    Array1<float> *rawRampColorT;
+
     unsigned int            flag;
     
     int non_diffuse_constant;   // 1 if non diffuse materials are constant

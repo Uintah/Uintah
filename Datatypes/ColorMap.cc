@@ -14,6 +14,7 @@
 #include <Datatypes/ColorMap.h>
 #include <Classlib/String.h>
 #include <Malloc/Allocator.h>
+#include <iostream.h>
 
 static Persistent* make_ColorMap()
 {
@@ -123,6 +124,19 @@ void ColorMap::SetRaw(const Array1<Color>& rgb, Array1<float>& rgbT,
     rawAlpha[i] = alphas[i];
   }
 
+  // this time i want the ramp information
+  rawRampAlpha = new Array1<float>;
+  *rawRampAlpha = ialpha;
+
+  rawRampAlphaT = new Array1<float>;
+  *rawRampAlphaT = alphaT;
+  
+  // convert float scalar values to ints
+  rawRampColorT = new Array1<float>;
+  *rawRampColorT = rgbT;
+  
+  rawRampColor = new Array1<Color>;
+  *rawRampColor = rgb;
 }
 
 ColorMap::~ColorMap()
