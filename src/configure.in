@@ -930,7 +930,7 @@ case $host in
     CPP="$CC"
     CXXCPP="$CXX -c"
     ##  this WOFF is required for configure 
-    WOFF="-woff 3303 -woff 1047 -Wl,-woff -Wl,84"
+    WOFF=" -woff 3303 -woff 1047 -Wl,-woff -Wl,84"
     CPPFLAGS=" $WOFF -LANG:std"
     if test "$is_64bit" = "yes"; then
       BINARYFLAGS="-64 -mips4"
@@ -1189,8 +1189,11 @@ AC_SUBST(INCX_H)
 FLIBS=""
 case $host in 
   *-irix*)
-    SCI_CHECK_LIB($thirdparty/lib,ftn,main,FLIBS=-lftn,,,)
-    SCI_CHECK_LIB($thirdparty/lib,fortran,main,FLIBS=$FLIBS -lfortran,,,)
+    SCI_CHECK_LIB($thirdparty/lib,ftn,main,FLIB1=-lftn,,,)
+    SCI_CHECK_LIB($thirdparty/lib,fortran,main,FLIB2=-lfortran,,,)
+    if test -n "$FLIB1" && test -n "FLIB2"; then
+      FLIBS="$FLIB1 $FLIB2"
+    fi
     ;;
   *linux*)
     SCI_CHECK_LIB($thirdparty/lib,g2c,main,FLIBS=-lg2c,,,)
