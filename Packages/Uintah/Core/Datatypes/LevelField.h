@@ -64,11 +64,11 @@ public:
 
 
   LevelData():
-    vector<Array3<Data> >(), begin_initialized(false),
-    end_initialized(false), begin_(0), end_(0){}
+    vector<Array3<Data> >(), begin_(0), begin_initialized(false),
+    end_(0), end_initialized(false) {}
   LevelData(const LevelData& data) :
-    vector<Array3<Data> >(data), begin_initialized(false),
-    end_initialized(false), begin_(0), end_(0){}
+    vector<Array3<Data> >(data), begin_(0), begin_initialized(false),
+    end_(0), end_initialized(false) {}
   virtual ~LevelData(){ }
   
   const value_type &operator[](typename LevelMesh::cell_index idx) const 
