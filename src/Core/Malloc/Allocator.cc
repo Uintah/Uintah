@@ -505,9 +505,11 @@ void* Allocator::alloc(size_t size, const char* tag)
     // Fill in the region between the end of the allocation and the
     // end of the chunk.
     if(strict){
-	char i=(char)(long)d;
-	for(char* p=d+obj->reqsize;p<(char*)sent2;p++)
-	    *p++=i++;
+	unsigned int i = 0xffff5a5a;
+	unsigned int start = (obj->reqsize+sizeof(int))/sizeof(int);
+	for(unsigned int* p=(unsigned int*)d+start;
+	    p<(unsigned int*)sent2;p++)
+	    *p++=i;
     }
 
     if(trace_out)
@@ -586,11 +588,10 @@ void* Allocator::alloc_big(size_t size, const char* tag)
 	    sent2->first_word=sent2->second_word=SENT_VAL_FREE;
 	if(strict){
 	    // Fill in the data region with markers.
-	    unsigned long* p=(unsigned long*)d;
-	    unsigned long* last=(unsigned long*)sent2;
-	    unsigned long i=(unsigned long)p;
-	    for(;p<last;p++)
-		*p++=i++;
+	    unsigned int i = 0xffff5a5a;
+	    for(unsigned int* p=(unsigned int*)d;
+		p<(unsigned int*)sent2;p++)
+		*p++=i;
 	}
     }
 
@@ -641,9 +642,11 @@ void* Allocator::alloc_big(size_t size, const char* tag)
     // Fill in the region between the end of the allocation and the
     // end of the chunk.
     if(strict){
-	char i=(char)(long)d;
-	for(char* p=d+obj->reqsize;p<(char*)sent2;p++)
-	    *p++=i++;
+	unsigned int i = 0xffff5a5a;
+	unsigned int start = (obj->reqsize+sizeof(int))/sizeof(int);
+	for(unsigned int* p=(unsigned int*)d+start;
+	    p<(unsigned int*)sent2;p++)
+	    *p++=i;
     }
 
     if(trace_out)
@@ -682,9 +685,11 @@ void* Allocator::realloc(void* dobj, size_t newsize)
 	// Fill in the region between the end of the allocation and the
 	// end of the chunk.
 	if(strict){
-	    char i=(char)(long)d;
-	    for(char* p=d+oldobj->reqsize;p<(char*)sent2;p++)
-		*p++=i++;
+	    unsigned int i = 0xffff5a5a;
+	    unsigned int start = (oldobj->reqsize+sizeof(int))/sizeof(int);
+	    for(unsigned int* p=(unsigned int*)d+start;
+		p<(unsigned int*)sent2;p++)
+		*p++=i;
 	}
 	if(trace_out)
 	    fprintf(trace_out, "R %08p %d %08p %d (%s)\n", dobj, oldsize, dobj, newsize, oldobj->tag);
@@ -801,11 +806,10 @@ void Allocator::free(void* dobj)
       
       if(strict){
 	// Fill in the data region with markers.
-	unsigned long* p=(unsigned long*)d;
-	unsigned long* last=(unsigned long*)sent2;
-	unsigned long i=(unsigned long)p;
-	for(;p<last;p++)
-	  *p++=i++;
+	  unsigned int i = 0xffff5a5a;
+	  for(unsigned int* p=(unsigned int*)d;
+	      p<(unsigned int*)sent2;p++)
+	      *p++=i;
       }
     }
     unlock();
@@ -848,11 +852,10 @@ void Allocator::fill_bin(AllocBin* bin)
 		sent2->first_word=sent2->second_word=SENT_VAL_FREE;
 	    if(strict){
 		// Fill in the data region with markers.
-		unsigned long* p=(unsigned long*)d;
-		unsigned long* last=(unsigned long*)sent2;
-		unsigned long i=(unsigned long)p;
-		for(;p<last;p++)
-		    *p++=i++;
+		unsigned int i = 0xffff5a5a;
+		for(unsigned int* p=(unsigned int*)d;
+		    p<(unsigned int*)sent2;p++)
+		    *p++=i;
 	    }
 	}
 	bin->ntotal+=nalloc;
@@ -949,12 +952,13 @@ void Allocator::audit(Tag* obj, int what)
 
     // Check the space between the end of the allocation and the sentinel...
     if(strict && (what == OBJFREEING || what == OBJINUSE)){
-	char i=(char)(long)d;
-	for(char* p=d+obj->reqsize;p<(char*)sent2;p++){
-	    char p1=*p++;
-	    char p2=i++;
-	    if(p1 != p2){
-		fprintf(stderr, "p1=%d, p2=%d\n", (int)p1, (int)p2);
+	unsigned int i = 0xffff5a5a;
+	unsigned int start = (obj->reqsize+sizeof(int))/sizeof(int);
+	for(unsigned int* p=(unsigned int*)d+start;
+	    p<(unsigned int*)sent2;p++){
+	    unsigned int p1=*p++;
+	    if(p1 != i){
+		fprintf(stderr, "p1=0x%x (should be 0x%x)\n", (int)p1, (int)i);
 		fprintf(stderr, "Object has been corrupted immediately ");
 		fprintf(stderr, "after the allocated region\n");
 		fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
@@ -964,13 +968,11 @@ void Allocator::audit(Tag* obj, int what)
     }
     if(strict && what == OBJFREE){
 	// Check the markers in the data region...
-	unsigned long* p=(unsigned long*)d;
-	unsigned long* last=(unsigned long*)sent2;
-	unsigned long i=(unsigned long)p;
-	for(;p<last;p++){
-	    unsigned long p1=*p++;
-	    unsigned long p2=i++;
-	    if(p1 != p2){
+	unsigned int i = 0xffff5a5a;
+	for(unsigned int* p=(unsigned int*)d;
+	    p<(unsigned int*)sent2;p++){
+	    unsigned int p1=*p++;
+	    if(p1 != i){
 		fprintf(stderr, "Object has been written after free\n");
 		fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
 		AllocError("Write after free");
@@ -1190,6 +1192,10 @@ void DumpAllocator(Allocator* a)
 
 //
 // $Log$
+// Revision 1.10  2000/02/24 06:04:54  sparker
+// 0xffff5a5a (NaN) is now the fill pattern
+// Added #if 1 to malloc/new.cc to make it easier to turn them on/off
+//
 // Revision 1.9  1999/10/13 05:59:52  sparker
 // Fixed pthreads configuration problem in Malloc for non x86 linux boxen
 //
