@@ -254,6 +254,10 @@ void ConditionBase::setupMasks(int& shift)
     getRegion(i)->idx = i<<this->shift;
 }
 
+BCRegionBase::~BCRegionBase()
+{
+}
+
 void BCRegionBase::getRange(const Patch* patch, IntVector& l, IntVector& h,
 			    const IntVector& topoffset)
 {

@@ -12,6 +12,10 @@
 #include <string>
 #include <vector>
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424
+#endif
+
 namespace Uintah {
   class GeometryPiece;
   class RegionDB;
@@ -33,6 +37,7 @@ namespace Uintah {
       : piece(piece), offset(offset)
       {
       }
+    virtual ~BCRegionBase();
     friend class ConditionBase;
 
     const GeometryPiece* piece;
@@ -242,5 +247,9 @@ namespace Uintah {
     BoundaryConditions& operator=(const BoundaryConditions&);
   };
 }
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#endif
 
 #endif
