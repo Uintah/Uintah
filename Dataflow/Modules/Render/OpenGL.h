@@ -207,7 +207,8 @@ private:
 
   void make_image();
 
-  void redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomHandle obj);
+  void redraw_obj(Viewer* viewer, ViewWindow* viewwindow,
+		  GeomHandle obj, bool sticky = false);
   void pick_draw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomHandle obj);
 
 
