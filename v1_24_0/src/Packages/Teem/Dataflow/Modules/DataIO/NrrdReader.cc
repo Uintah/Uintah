@@ -44,6 +44,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Ports/NrrdPort.h>
+#include <Core/Util/sci_system.h>
+#include <Core/Containers/StringUtil.h>
 #include <sys/stat.h>
 #include <sstream>
 
@@ -127,10 +129,14 @@ NrrdReader::read_nrrd()
     read_handle_ = 0;
 
     int len = fn.size();
+    // Filename as string
+    const string filename(fn);
     const string ext(".nd");
+    const string vff_ext(".vff");
+
 
     // check that the last 3 chars are .nd for us to pio
-    if (fn.substr(len - 3, 3) == ext) {
+    if (fn.substr(len - ext.size(), ext.size()) == ext) {
       Piostream *stream = auto_istream(fn);
       if (!stream)
       {
@@ -148,24 +154,74 @@ NrrdReader::read_nrrd()
       }
       delete stream;
     } else { // assume it is just a nrrd
+      if (fn.substr(len - vff_ext.size(), vff_ext.size()) == vff_ext){
+	//write a nrrd vff header to /tmp and use that instead
+	
+	string::size_type loc = filename.find_last_of("/");
+	const string basefilename =
+	  (loc==string::npos)?filename:filename.substr(loc+1);
 
-      NrrdData *n = scinew NrrdData;
-      if (nrrdLoad(n->nrrd=nrrdNew(), strdup(fn.c_str()), 0)) {
-	char *err = biffGetDone(NRRD);
-	error("Read error on '" + fn + "': " + err);
-	free(err);
-	return true;
-      }
-      read_handle_ = n;
-      for (int i = 0; i < read_handle_->nrrd->dim; i++) {
-	if (!(airExists_d(read_handle_->nrrd->axis[i].min) && 
-	      airExists_d(read_handle_->nrrd->axis[i].max)))
-	  nrrdAxisInfoMinMaxSet(read_handle_->nrrd, i, nrrdCenterNode);
+	
+	// Base filename with first extension removed.
+	loc = basefilename.find_last_of(".");
+	const string basenoext = basefilename.substr(0, loc);
+
+	// Filename with first extension removed.
+	loc = filename.find_last_of(".");
+	const string noext = filename.substr(0, loc);
+
+	// Temporary filename.
+	string tmpfilename = "/tmp/" + basenoext + "-" +
+	  to_string((unsigned int)(getpid())) + ".nhdr";
+
+	ASSERT(sci_getenv("SCIRUN_OBJDIR"));
+	string command =
+	  string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
+	  "vff2nrrd %f %t";
+	while ((loc = command.find("%f")) != string::npos){
+	  command.replace(loc, 2, filename);
+	}
+	while ((loc = command.find("%t")) != string::npos){
+	  command.replace(loc, 2, tmpfilename);
+	}
+	const int status = sci_system(command.c_str());
+	ASSERT(status == 0);
+
+	NrrdData *n = scinew NrrdData;
+	if (nrrdLoad(n->nrrd=nrrdNew(), strdup(tmpfilename.c_str()), 0)) {
+	  char *err = biffGetDone(NRRD);
+	  error("Read error on '" + tmpfilename + "': " + err);
+	  free(err);
+	  return true;
+	}
+	read_handle_ = n;
+	for (int i = 0; i < read_handle_->nrrd->dim; i++) {
+	  if (!(airExists_d(read_handle_->nrrd->axis[i].min) && 
+		airExists_d(read_handle_->nrrd->axis[i].max)))
+	    nrrdAxisInfoMinMaxSet(read_handle_->nrrd, i, nrrdCenterNode);
+	}
+	
+	
+      } else {
+      
+	NrrdData *n = scinew NrrdData;
+	if (nrrdLoad(n->nrrd=nrrdNew(), strdup(fn.c_str()), 0)) {
+	  char *err = biffGetDone(NRRD);
+	  error("Read error on '" + fn + "': " + err);
+	  free(err);
+	  return true;
+	}
+	read_handle_ = n;
+	for (int i = 0; i < read_handle_->nrrd->dim; i++) {
+	  if (!(airExists_d(read_handle_->nrrd->axis[i].min) && 
+		airExists_d(read_handle_->nrrd->axis[i].max)))
+	    nrrdAxisInfoMinMaxSet(read_handle_->nrrd, i, nrrdCenterNode);
+	}
       }
     }
     return true;
-    }
-     return false;
+  }
+    return false;
 }
 
 
