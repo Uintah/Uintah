@@ -196,6 +196,9 @@ itcl_class ViewWindow {
 	    if {![info exists $this-view_server]} {set $this-view_server 0}
         }
         # CollabVis code end
+
+	global $this-ortho-view
+	if {![info exists $this-ortho-view]} { set $this-ortho-view 0 }
     }
 
     destructor {
@@ -694,19 +697,21 @@ itcl_class ViewWindow {
 
         checkbutton $m.caxes -text "Show Axes" -variable $this-caxes -onvalue 1 -offvalue 0 -command "$this-c centerGenAxes; $this-c redraw"
         checkbutton $m.raxes -text "Orientation" -variable $this-raxes -onvalue 1 -offvalue 0 -command "$this-c rotateGenAxes; $this-c redraw"
+	checkbutton $m.ortho -text "Ortho View" -variable $this-ortho-view -onvalue 1 -offvalue 0 -command "$this-c redraw"
 	# checkbutton $m.iaxes -text "Icon Axes" -variable $this-iaxes -onvalue 1 -offvalue 0 -command "$this-c iconGenAxes; $this-c redraw"
 	# pack $m.caxes $m.iaxes -side top
-	pack $m.caxes -side top
-	pack $m.raxes -side top 
-
+	pack $m.caxes -side top -anchor w
+	pack $m.raxes -side top -anchor w
+	pack $m.ortho -side top -anchor w
+    
 	checkbutton $m.stereo -text "Stereo" -variable $this-do_stereo \
 		-command "$this-c redraw"
-	pack $m.stereo -side top
+	pack $m.stereo -side top -anchor w
 	
 	scale $m.sbase -variable $this-sbase -length 100 -from 0.1 -to 2 \
 		-resolution 0.02 -orient horizontal -label "Fusion Scale:" \
 		-command "$this-c redraw"
-	pack $m.sbase -side top
+	pack $m.sbase -side top -anchor w
 #	checkbutton $m.sr -text "Fixed\nFocal\nDepth" -variable $this-sr -anchor w
 #	pack $m.sr -side top
 	
