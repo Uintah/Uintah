@@ -41,7 +41,7 @@
 namespace SCIRun {
 using std::cerr;
 using std::endl;
-
+using std::vector;
 
 template <class Mesh, class FData>
 class GenericField: public Field 
