@@ -226,7 +226,7 @@ namespace Uintah {
     d_scheduler->get_dw(1)->finalize();
     ProblemSpecP pspec = archive.getRestartTimestepDoc();
     XMLURL url = archive.getRestartTimestepURL();
-    d_lb->restartInitialize(pspec, url);
+    //d_lb->restartInitialize(pspec, url);
     
     d_output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
                            d_restartFromScratch, d_restartRemoveOldDir);

@@ -76,6 +76,9 @@ WARNING
     virtual bool needRecompile(double, double, const GridP&)
       { return false; }
 
+    //! In AMR, we need to tell the Load balancer that we're regridding
+    //    virtual void doRegridTimestep() {}
+
     //! Reads the problem spec file for the LoadBalancer section, and looks 
     //! for entries such as outputNthProc, dynamicAlgorithm, and interval.
     virtual void problemSetup(ProblemSpecP&, SimulationStateP& state) = 0;
@@ -104,7 +107,7 @@ WARNING
     virtual int getNthProc() { return 1; }
 
     //! Tells the load balancer on which procs data was output.
-    virtual void restartInitialize(ProblemSpecP&, XMLURL /*tsurl*/) {}
+    virtual void restartInitialize(ProblemSpecP&, XMLURL /*tsurl*/, const GridP&) {}
   private:
     LoadBalancer(const LoadBalancer&);
     LoadBalancer& operator=(const LoadBalancer&);
