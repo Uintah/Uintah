@@ -3616,26 +3616,29 @@ class BioImageApp {
 	set m1 [lindex [lindex $filters(0) $modules] 26]
         global $m1-nodeList $m1-positionList
 
-        # if threshold is set at borders, only have two control points
-        if {$planes_threshold == [set $mods(ViewImage)-min]} {
-	    set $m1-positionList {{0 0} {441 0}}
-            set $m1-nodeList {514 1055}
-	} elseif {$planes_threshold == [set $mods(ViewImage)-max]} {
-	    set $m1-positionList {{0 40} {441 40}}
-            set $m1-nodeList {514 803}	    
-	} else {	    
-	    # otherwise, use 4 points
-	    set range [expr [set $mods(ViewImage)-max] - [set $mods(ViewImage)-min]]
-            set new_x [expr round ([expr [expr 441.0 / $range] * $planes_threshold])]
-
-            set $m1-positionList {{0 40} {$new_x 40} {$new_x 0} {441 0}}
-            set $m1-positionList [lreplace [set $m1-positionList] 1 1 "[expr $new_x - 5] 40"]
-            set $m1-positionList [lreplace [set $m1-positionList] 2 2 "[expr $new_x + 5] 0"]
-            set $m1-nodeList {514 797 1072 1425}
-       }
-
+        # the node positions are based on the threshold value which must
+        # be within the min/max of the data. Therefore, this cannot compute
+        # ranges unless it has been executed at least once.
         if {$has_executed == 1} {
+	    # if threshold is set at borders, only have two control points
+	    if {$planes_threshold == [set $mods(ViewImage)-min]} {
+                set $m1-positionList {{0 0} {441 0}}
+                set $m1-nodeList {514 1055}
+            } elseif {$planes_threshold == [set $mods(ViewImage)-max]} {
+	        set $m1-positionList {{0 40} {441 40}}
+                set $m1-nodeList {514 803}	    
+	    } else {	    
+	        # otherwise, use 4 points
+	        set range [expr [set $mods(ViewImage)-max] - [set $mods(ViewImage)-min]]
+                set new_x [expr round ([expr [expr 441.0 / $range] * $planes_threshold])]
+
+                set $m1-positionList {{0 40} {$new_x 40} {$new_x 0} {441 0}}
+                set $m1-positionList [lreplace [set $m1-positionList] 1 1 "[expr $new_x - 5] 40"]
+                set $m1-positionList [lreplace [set $m1-positionList] 2 2 "[expr $new_x + 5] 0"]
+                set $m1-nodeList {514 797 1072 1425}
+            }
 	    $m1-c needexecute
+          }
 	}
     }
 
