@@ -59,10 +59,10 @@ GLVolRenState::computeView(Ray& ray)
 void
 GLVolRenState::drawPolys( vector<Polygon *> polys )
 {
-  int i,j,k;
+  int i;
   
-  for(i = 0; i < polys.size(); i++){
-    switch( polys[i]->size() ) {
+  for (i = 0; i < polys.size(); i++) {
+    switch (polys[i]->size() ) {
     case 1:
       glBegin(GL_POINTS);
       glVertex3f((*(polys[i]))[0].x(),(*(polys[i]))[0].y(),
@@ -90,12 +90,16 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
     case 4:
     case 5:
     case 6:
-      glBegin(GL_POLYGON);
-      for(k =0; k < polys[i]->size(); k++){
-	glVertex3f((*(polys[i]))[k].x(),(*(polys[i]))[k].y(),
-		   (*(polys[i]))[k].z());
+      {
+	int k;
+	glBegin(GL_POLYGON);
+	for(k =0; k < polys[i]->size(); k++)
+	{
+	  glVertex3f((*(polys[i]))[k].x(),(*(polys[i]))[k].y(),
+		     (*(polys[i]))[k].z());
+	}
+	glEnd();
       }
-      glEnd();
       break;
     }
   }
@@ -117,7 +121,6 @@ GLVolRenState::loadColorMap(Brick& brick)
 void 
 GLVolRenState::loadTexture(Brick& brick)
 {
-  int i;
   if( !brick.texName() || reload ) {
     if( !brick.texName() )
       glGenTextures(1, brick.texNameP());
@@ -251,7 +254,7 @@ GLVolRenState::drawWireFrame(const Brick& brick)
 {
   int i;
   glEnable(GL_DEPTH_TEST);
-  double r,g,b;
+//   double r,g,b;
 //   char c;
 //   r = drand48();
 //   g = drand48();

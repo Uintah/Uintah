@@ -194,7 +194,8 @@ void MapHistogram (unsigned long* pulHistogram, kz_pixel_t Min, kz_pixel_t Max,
     const unsigned long ulMin = (unsigned long) Min;
 
     for (i = 0; i < uiNrGreylevels; i++) {
-	ulSum += pulHistogram[i]; pulHistogram[i]=(unsigned long)(ulMin+(float)ulSum*fScale);
+	ulSum += pulHistogram[i];
+	pulHistogram[i] = ulMin + (unsigned long)(ulSum * (double)fScale);
 	if (pulHistogram[i] > Max) pulHistogram[i] = Max;
     }
 }

@@ -216,7 +216,7 @@ GLVolumeRenderer::BuildTransferFunctions( )
 {
   const int tSize = 256;
   int defaultSamples = 512;
-  double L = (tex->max() - tex->min()).length();
+  //  double L = (tex->max() - tex->min()).length();
   //  double dt = L/defaultSamples;
   float mul = 1.0/(tSize - 1);
   if( tex->depth() > 8 ) {

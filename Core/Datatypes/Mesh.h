@@ -88,30 +88,6 @@ struct PotentialDifferenceBC {
 };
 
 
-#if 0
-struct Node : public Persistent {
-  Point p;
-
-  int ref_cnt;
-
-  Array1<int> elems;
-  
-  DirichletBC* bc;
-  int fluxBC;
-  PotentialDifferenceBC* pdBC;
-
-  Node(const Point &p);
-  Node(const Node &n);
-  Node *clone();
-  ~Node();
-
-  void io(Piostream&);
-  static PersistentTypeID type_id;
-
-  void *operator new(size_t);
-  void operator delete(void*, size_t);
-};
-#else
 struct Node {
   Point p;
 
@@ -127,7 +103,7 @@ struct Node {
   Node *clone();
   ~Node();
 };
-#endif
+
 
 struct NodeVersion1 {
   Point p;

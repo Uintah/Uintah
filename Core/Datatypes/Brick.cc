@@ -110,7 +110,7 @@ Brick::~Brick()
 }
 
 
-BBox&
+BBox
 Brick::bbox() const
 {
   BBox bb;
@@ -122,14 +122,15 @@ Brick::bbox() const
 void Brick::ComputePoly(Ray r, double t, Polygon*& p) const
 {
   double t0, t1;
-  int i,j,k, tIndex = 1;
+  //int i,j,k, tIndex = 1;
+  int j;
   Point p0, p1;
   Ray edgeList[6];
   Ray texEdgeList[6];
   Point intersects[6];
   Point texcoords[6];
   Vector view = r.direction();
-  bool buildEdgeList = true;
+  //bool buildEdgeList = true;
   RayStep dts[6];
   int nIntersects = 0;
   p0 = r.parameter(t);
@@ -168,7 +169,8 @@ Brick::ComputePolys(Ray r, double tmin, double tmax,
 
   double t = tmax; 
   double t0, t1;
-  int i,j,k, tIndex = 1;
+  //int i,j,k, tIndex = 1;
+  int j, tIndex = 1;
   Point p0, p1;
 
   Ray edgeList[6];

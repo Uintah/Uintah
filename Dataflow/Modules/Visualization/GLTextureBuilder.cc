@@ -108,7 +108,7 @@ void GLTextureBuilder::execute(void)
 {
   //  Display *dpy;
   // GLXContext cx;
-  static bool init = false;
+  //static bool init = false;
   ScalarFieldHandle sfield;
   static int oldBrickSize = 0;
   if (!inscalarfield->get(sfield)) {
