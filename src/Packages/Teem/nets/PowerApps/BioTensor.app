@@ -9825,13 +9825,3 @@ bind all <Control-v> {
     global mods
     $mods(Viewer)-ViewWindow_0-c autoview
 }
-
-bind all <Control-n> {
-    if {[winfo exists .]} {
-	if {[winfo ismapped .]} {
-	    wm withdraw .
-	} else {
-	    wm deiconify  .
-	}
-    }
-}

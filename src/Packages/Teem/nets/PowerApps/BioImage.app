@@ -84,9 +84,9 @@ global show_guidelines
 set show_plane_x 1
 set show_plane_y 1
 set show_plane_z 1
-set show_MIP_x 1
-set show_MIP_y 1
-set show_MIP_z 1
+set show_MIP_x 0
+set show_MIP_y 0
+set show_MIP_z 0
 set show_guidelines 1
 global planes_mapType
 set planes_mapType 0
@@ -380,9 +380,9 @@ class BioImageApp {
 		$this update_planes_threshold_slider_min_max
 
  	    # turn off MIP stuff
-#              after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice0 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-#              after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice1 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-#              after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice2 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+              after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice0 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+              after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice1 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+              after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice2 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 
                 set 2D_fixed 1
 	    } 
@@ -4586,8 +4586,5 @@ bind all <Control-v> {
     $mods(Viewer)-ViewWindow_0-c autoview
 }
 
-bind all <Control-n> {
-    wm deiconify .
-}
 
 
