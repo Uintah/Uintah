@@ -1,6 +1,7 @@
 #ifndef SCALARPARTICLES_H
 #define SCALARPARTICLES_H
 
+#include "PSet.h"
 #include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <Uintah/Interface/DataArchive.h>
@@ -67,9 +68,8 @@ public:
   ScalarParticles();
   //////////
   // Constructor
-  ScalarParticles(const vector <ParticleVariable<Point> >& positions,
-		 const vector <ParticleVariable<double> >& scalars,
-		 void* callbackClass);
+  ScalarParticles(const vector <ParticleVariable<double> >& scalars,
+		  PSet* pset );
 
   // GROUP: Destructors
   //////////
@@ -78,34 +78,22 @@ public:
  
   // GROUP: Access
   //////////
-  // return the Points
-  vector<ParticleVariable<Point> >&  getPositions(){ return positions;}
-
-  //////////
   // return the Scalars
   vector<ParticleVariable<double> >& get(){ return scalars; }
+  PSet* getParticleSet(){ return psetH.get_rep(); }
 
-  //////////
-  // return the callback
-  void* getCallbackClass(){ return cbClass; }
+
   // GROUP: Modify
+  //////////  
+  // Set the Particle Set Handle
+  void Set(PSetHandle psh){ psetH = psh;}
   //////////  
   // Set the Scalars
   void Set(vector <ParticleVariable<double> >& s){ scalars = s; }
-  //////////
-  // Set the particle Positions
-  void SetPositions(vector <ParticleVariable<Point> >& p){ positions = p; }
-  // Set the particle ids
-  //////////
-  // Set callback class
-  void SetCallbackClass( void* cbc){ cbClass = cbc; }
 
-  void AddVar( const ParticleVariable<Point> locs,
-	       const ParticleVariable<double> parts,
-	       const Patch* p);
+  void AddVar( const ParticleVariable<double> parts );
 
-  void SetGrid( GridP g ){ _grid = g; }
-  void SetLevel( LevelP l){ _level = l; }
+
   void SetName( string vname ) { _varname = vname; }
   void SetMaterial( int index) { _matIndex = index; }
 	       
@@ -115,13 +103,8 @@ public:
   static PersistentTypeID type_id;
 
   void get_minmax(double& v0, double& v1);
-  void get_bounds(Point& p0, Point& p1);
+  void get_bounds(Point& p0, Point& p1){ psetH->get_bounds(p0,p1);}
 protected:
-  bool have_bounds;
-  Point bmin;
-  Point bmax;
-  Vector diagonal;
-  void compute_bounds();
 
   bool have_minmax;
   double data_min;
@@ -130,16 +113,11 @@ protected:
 
 
 private:
+  PSetHandle psetH;
 
 
-  void* cbClass;
-
-  GridP _grid;
-  LevelP _level;
   string _varname;
   int _matIndex;
-
-  vector<ParticleVariable<Point> >  positions;
   vector<ParticleVariable<double> >  scalars;
 
 };

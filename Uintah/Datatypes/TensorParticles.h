@@ -1,18 +1,21 @@
 #ifndef TENSORPARTICLES_H
 #define TENSORPARTICLES_H
 
+#include "PSet.h"
 #include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <Uintah/Interface/DataArchive.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Grid/ParticleVariable.h>
+#include <Uintah/Grid/Grid.h>
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Grid/Patch.h>
 #include <SCICore/Persistent/Persistent.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
-#include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/Patch.h>
 #include <iostream>
+#include <vector>
+using std::vector;
 
 namespace Uintah {
 namespace Datatypes {
@@ -65,9 +68,8 @@ public:
   TensorParticles();
   //////////
   // Constructor
-  TensorParticles(const vector <ParticleVariable<Point> >& positions,
-		 const vector <ParticleVariable<Matrix3> >& tensors,
-		 void* callbackClass);
+  TensorParticles(const vector <ParticleVariable<Matrix3> >& tensors,
+		  PSet* pset );
 
   // GROUP: Destructors
   //////////
@@ -76,65 +78,50 @@ public:
  
   // GROUP: Access
   //////////
-  // return the Points
-  vector <ParticleVariable<Point> >&  getPositions(){ return positions;}
-  //////////
   // return the Tensors
-  vector <ParticleVariable<Matrix3> >& get(){ return tensors; }
-  //////////
-  // return the callback
-  void* getCallbackClass(){ return cbClass; }
+  vector<ParticleVariable<Matrix3> >& get(){ return tensors; }
+  PSet* getParticleSet(){ return psetH.get_rep(); }
+
+
   // GROUP: Modify
   //////////  
+  // Set the Particle Set Handle
+  void Set(PSetHandle psh){ psetH = psh;}
+  //////////  
   // Set the Tensors
-  void Set(const vector<ParticleVariable<Matrix3> >& s){ tensors = s; }
-  //////////
-  // Set the particle Positions
-  void SetPositions(const vector<ParticleVariable<Point> >& p){ positions = p; }
-  //////////
-  // Set callback class
-  void SetCallbackClass( void* cbc){ cbClass = cbc; }
+  void Set(vector <ParticleVariable<Matrix3> >& s){ tensors = s; }
 
-  void AddVar( const ParticleVariable<Point> locs,
-	       const ParticleVariable<Matrix3> tens,
-	       const Patch* p);
+  void AddVar( const ParticleVariable<Matrix3> parts );
 
-  void SetGrid( GridP g ){ _grid = g; }
-  void SetLevel( LevelP l){ _level = l; }
+
   void SetName( string vname ) { _varname = vname; }
   void SetMaterial( int index) { _matIndex = index; }
+	       
+
   // Persistant representation
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
-  // returns the min and max L2 norm
   void get_minmax(double& v0, double& v1);
-  void get_bounds(Point& p0, Point& p1);
+  void get_bounds(Point& p0, Point& p1){ psetH->get_bounds(p0,p1);}
 protected:
-  bool have_bounds;
-  Point bmin;
-  Point bmax;
-  Vector diagonal;
-  void compute_bounds();
 
   bool have_minmax;
   double data_min;
   double data_max;
   void compute_minmax();
 
+
 private:
+  PSetHandle psetH;
 
 
-  void* cbClass;
-  GridP  _grid;
-  LevelP _level;
   string _varname;
   int _matIndex;
+  vector<ParticleVariable<Matrix3> >  tensors;
 
-  vector<ParticleVariable<Point> >positions;
-  vector<ParticleVariable<Matrix3> > tensors;
 };
 
 } // end namespace Datatypes
-} // end namespace Kurt
+} // end namespace Uintah
 #endif

@@ -1,4 +1,3 @@
-
 #include "VectorParticles.h"
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -6,9 +5,10 @@
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/Grid.h>
-
+using std::vector;
 namespace Uintah {
 namespace Datatypes {
+
 
 using Uintah::DataArchive;
 using Uintah::ParticleVariable;
@@ -32,15 +32,14 @@ void VectorParticles::io(Piostream&)
 }
 
 VectorParticles::VectorParticles()
+  : have_minmax(false), psetH(0)
 {
 }
 
 VectorParticles::VectorParticles(
-			 const vector <ParticleVariable<Point> >& positions,
-			 const vector <ParticleVariable<Vector> >& vectors,
-			 void* callbackClass) :
-  positions(positions), vectors(vectors), cbClass(callbackClass),
-  have_bounds(false), have_minmax(false)
+		 const vector <ParticleVariable<Vector> >& vectors,
+		 PSet* pset) :
+  vectors(vectors),  psetH(pset), have_minmax(false)
 {
 }
 
@@ -48,48 +47,14 @@ VectorParticles::VectorParticles(
 VectorParticles::~VectorParticles()
 {
 }
-void 
-VectorParticles:: AddVar( const ParticleVariable<Point> locs,
-			  const ParticleVariable<Vector> parts,
-			  const Patch*)
+
+
+void VectorParticles:: AddVar( const ParticleVariable<Vector> parts )
 {
-  positions.push_back( locs );
   vectors.push_back( parts );
 }
 
-void VectorParticles::compute_bounds()
-{
-  if( have_bounds )
-    return;
 
-  Point min(1e30,1e30,1e30), max(-1e30,-1e30,-1e30);
-
-  vector<ParticleVariable<Point> >::iterator it;
-  for( it = positions.begin(); it != positions.end(); it++){
-    ParticleSubset *ps = (*it).getParticleSubset();
-    for(ParticleSubset::iterator iter = ps->begin();
-	iter != ps->end(); iter++){
-      max = SCICore::Geometry::Max((*it)[ *iter ], max);
-      min = SCICore::Geometry::Min((*it)[ *iter ], min);
-    }
-  }
-  if (min == max) {
-    min = Point(0,0,0);
-    max = Point(1,1,1);
-  }
-  have_bounds = true;
-  bmin = min;
-  bmax = max;
-}
-
-void VectorParticles::get_bounds(Point& p0, Point& p1)
-{
-  if( !have_bounds)
-    compute_bounds();
-
-  p0 = bmin;
-  p1 = bmax;
-}
 
 void VectorParticles::compute_minmax()
 {
@@ -127,4 +92,4 @@ void VectorParticles::get_minmax(double& v0, double& v1)
 }
 
 } // end namespace Datatypes
-} // end namespace Kurt
+} // end namespace Uintah

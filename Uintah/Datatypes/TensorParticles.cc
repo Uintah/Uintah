@@ -5,9 +5,10 @@
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/Grid.h>
-
+using std::vector;
 namespace Uintah {
 namespace Datatypes {
+
 
 using Uintah::DataArchive;
 using Uintah::ParticleVariable;
@@ -31,15 +32,14 @@ void TensorParticles::io(Piostream&)
 }
 
 TensorParticles::TensorParticles()
+  : have_minmax(false), psetH(0)
 {
 }
 
 TensorParticles::TensorParticles(
-			   const vector <ParticleVariable<Point> >& positions,
-			   const vector <ParticleVariable<Matrix3> >& tensors,
-			   void* callbackClass) :
-  positions(positions), tensors(tensors), cbClass(callbackClass),
-  have_bounds(false), have_minmax(false)
+		 const vector <ParticleVariable<Matrix3> >& tensors,
+		 PSet* pset) :
+  tensors(tensors),  psetH(pset), have_minmax(false)
 {
 }
 
@@ -48,48 +48,12 @@ TensorParticles::~TensorParticles()
 {
 }
 
-void 
-TensorParticles:: AddVar( const ParticleVariable<Point> locs,
-			  const ParticleVariable<Matrix3> tens,
-			  const Patch*)
+
+void TensorParticles:: AddVar( const ParticleVariable<Matrix3> parts )
 {
-  positions.push_back( locs );
-  tensors.push_back( tens );
+  tensors.push_back( parts );
 }
 
-void TensorParticles::compute_bounds()
-{
-  if( have_bounds )
-    return;
-
-  Point min(1e30,1e30,1e30), max(-1e30,-1e30,-1e30);
-
-  vector<ParticleVariable<Point> >::iterator it;
-  for( it = positions.begin(); it != positions.end(); it++){
-    ParticleSubset *ps = (*it).getParticleSubset();
-    for(ParticleSubset::iterator iter = ps->begin();
-	iter != ps->end(); iter++){
-      max = SCICore::Geometry::Max((*it)[ *iter ], max);
-      min = SCICore::Geometry::Min((*it)[ *iter ], min);
-    }
-  }
-  if (min == max) {
-    min = Point(0,0,0);
-    max = Point(1,1,1);
-  }
-  have_bounds = true;
-  bmin = min;
-  bmax = max;
-}
-
-void TensorParticles::get_bounds(Point& p0, Point& p1)
-{
-  if( !have_bounds)
-    compute_bounds();
-
-  p0 = bmin;
-  p1 = bmax;
-}
 
 void TensorParticles::compute_minmax()
 {
@@ -126,4 +90,4 @@ void TensorParticles::get_minmax(double& v0, double& v1)
   v1 = data_max; 
 }
 } // end namespace Datatypes
-} // end namespace Kurt
+} // end namespace Uintah
