@@ -68,6 +68,7 @@ void VolumeVisDpy::attach(VolumeVis *volume) {
   // will get called before VolumeVis starts cranking!
   data_min = min(data_min, volume->data_min);
   data_max = max(data_max, volume->data_max);
+  scale = 1/(data_max - data_min);
 
   color_transform.scale(data_min,data_max);
   alpha_transform.scale(data_min,data_max);
