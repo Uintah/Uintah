@@ -18,6 +18,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-3      </delt_init>
+       <!--<max_iterations>     5       </max_iterations> -->
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -115,21 +116,20 @@
        <Level>
            <Box label="1">
               <lower>        [0,0,0]    </lower>
-              <upper>        [5,5,5]    </upper>
+              <upper>        [1,1,1]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
            </Box>
-           <spacing>         [1,1,1]    </spacing>
+           <spacing>         [.1,.1,.1]    </spacing>
        </Level>
-
        <Level>
            <Box label="2">
-              <lower>        [2,2,2]    </lower>
-              <upper>        [4,4,4]    </upper>
+              <lower>        [.2,.2,.2]    </lower>
+              <upper>        [.7,.7,.7]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
            </Box>
-           <spacing>         [0.5,0.5,0.5]    </spacing>
+           <spacing>         [0.05,0.05,0.05]    </spacing>
        </Level>
     </Grid>    
     <!--____________________________________________________________________-->
