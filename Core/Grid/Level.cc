@@ -132,20 +132,7 @@ void Level::performConsistencyCheck() const
   // See if abutting boxes have consistent bounds
 }
 
-void Level::getIndexRange(BBox& b) const
-{
-  for(int i=0;i<(int)d_patches.size();i++){
-    Patch* r = d_patches[i];
-    IntVector l( r->getNodeLowIndex() );
-    IntVector u( r->getNodeHighIndex() );
-    Point lower( l.x(), l.y(), l.z() );
-    Point upper( u.x(), u.y(), u.z() );
-    b.extend(lower);
-    b.extend(upper);
-  }
-}
-
-void Level::getIndexRange(IntVector& lowIndex,IntVector& highIndex) const
+void Level::findIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
   lowIndex = d_patches[0]->getNodeLowIndex();
   highIndex = d_patches[0]->getNodeHighIndex();
