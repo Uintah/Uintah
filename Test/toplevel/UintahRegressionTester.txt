@@ -36,6 +36,7 @@ Other Items
   sub.mk
   sus
   compare_uda
+  Adding tests: (MPM,ARCHES,etc.)
 
 ****************************************************************************
 Introduction
@@ -678,7 +679,9 @@ Usage:
 Side effects:
   Looks for memory leaks in stats_file, and outputs them to 
 tmpdir/scinew_malloc_stats.  Then calls highwater_percent.pl to check
-memory usage.
+memory usage. If the percentage returned is greater than 10, an error is
+posted, if it returns a percentage less that -5%, than it replaces the stats
+in the goldStandard.
 
 ------------
 compare_dats - Uintah/Test/helpers/compare_dats - sh script
@@ -834,5 +837,67 @@ Valid options are:
 Note: The absolute and relative tolerance tests must both fail
       for a comparison to fail.
 
+
+-----------
+Adding tests: (MPM,ARCHES,etc.)
+-----------
+
+In the src/Packages/Uintah directory there is a directory called
+test.  In that directory there are several directories (helpers, toplevel,
+etc.) and several files (ARCHES, MPM, etc.).  These files are the test
+files.
+
+Copy one of the test files to a new file (if you need to make so it formats
+the right chem.bin file like Arches does, I would use ARCHES, otherwise I
+would use anything else.  The main difference is that ARCHES uses a
+callback function to set up the chem.bin stuff.).
+
+You'll need to edit a few things in that file.  First, you'll notice a big
+list called TESTS.  TESTS is a list of tests.  There can be as many tests
+as you like, but each test must be a list of 5-6 items.  For example, in
+MPM we find one of the tests:
+
+("heatcond2mat", "heatcond2mat.ups", "", 1, "ALL")
+
+The first parameter is the name of the test.  It doesn't really matter
+what the name is, most people just use the name of the ups file, but
+doesn't need to be.
+
+The second parameter is the name of the ups file.
+The third is any additional flags that you want to pass to sus.
+The fourth is the number of processors to use.
+The fifth is which operating system to run on.  Current choices are
+"Linux", "IRIX64", or "ALL"  - these are case-sensitive.
+An optional sixth parameter is the chem file name (see ARCHES), or
+  any other info that may need to be processed before running the test.
+
+Okay, that was a lot of writing but shouldn't be too much work.
+
+Next, you'll notice the exit(runSusTests(...)) call at the very
+bottom.  All you need to do here is change the third argument to
+<algo>, where algo is the algorithm directly passed into sus,
+like "ice" or "mpmarches", AND the uppercase version of algo must be the
+name of a directory with ups files (ICE, MPMARCHES).
+If you need a chem file, or need to do some other work before the just 
+pass the name of the callback function.
+
+The callback function, if passed into runSusTests will be called before
+executing every test.  It must have the same parameters as the runSusTest
+function, found in runSusTests.py.  In the case of ARCHES, it sets up 
+necessary symbolic links for the test to run, by referencing the last item
+in the TESTS list.
+
+Finally, if you look at the top of ARCHES you'll see:
+from helpers.modUPS import modUPS
+
+methane8patch_ups = modUPS(...)
+
+This is a method for using the same ups file with different parameters. If
+you want to use it, follow the same style you see in ARCHES
+(modUPS(directory, filename, [list-of-changes]) ), but it's not required.  
+You'll need the from helpers/modUPS import modUPS line.  See modUPS docs.
+
+Then add that file to the cvs repository and commit it, and the regression
+tester will see it and take care of the rest!
 
 *****************************************************************************
