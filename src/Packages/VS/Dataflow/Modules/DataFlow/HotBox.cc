@@ -153,6 +153,7 @@ private:
   GuiString adjacencydatasource_;
   GuiString boundingboxdatasource_;
   GuiString injurylistdatasource_;
+  GuiString oqafmadatasource_;
   GuiString geometrypath_;
 
   // the current selection
@@ -268,6 +269,7 @@ HotBox::HotBox(GuiContext* ctx)
   adjacencydatasource_(ctx->subVar("adjacencydatasource")),
   boundingboxdatasource_(ctx->subVar("boundingboxdatasource")),
   injurylistdatasource_(ctx->subVar("injurylistdatasource")),
+  oqafmadatasource_(ctx->subVar("oqafmadatasource")),
   geometrypath_(ctx->subVar("geometrypath")),
   currentselection_(ctx->subVar("currentselection")),
   gui_curTime_(ctx->subVar("currentTime")),
@@ -921,6 +923,13 @@ HotBox::executeOQAFMA()
 
   ns1__processStruQLResponse resultStruQL;
   ServiceInterfaceSoapBinding ws;
+
+  // set the Web Services URL
+  const string oqafmaDataSrc(oqafmadatasource_.get());
+  if(strcmp(ws.endpoint, oqafmaDataSrc.c_str()))
+  { // OQAFMA Web services URL has changed
+    ws.endpoint = strdup(oqafmaDataSrc.c_str());
+  }
 
   // get the current selection
   const string currentSelection(currentselection_.get());
