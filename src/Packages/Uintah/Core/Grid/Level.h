@@ -98,7 +98,10 @@ WARNING
 
       void getSpatialRange(BBox& b) const;
 
-      void findIndexRange(IntVector& lowIndex, IntVector& highIndex) const;
+      void findIndexRange(IntVector& lowIndex, IntVector& highIndex) const
+	{ findNodeIndexRange(lowIndex, highIndex); }
+      void findNodeIndexRange(IntVector& lowIndex, IntVector& highIndex) const;
+      void findCellIndexRange(IntVector& lowIndex, IntVector& highIndex) const;
       
       void performConsistencyCheck() const;
       GridP getGrid() const;
@@ -130,7 +133,8 @@ WARNING
 
       const PatchSet* eachPatch() const;
       const PatchSet* allPatches() const;
-      const Patch* selectPatch( const IntVector& idx) const;
+      const Patch* selectPatchForCellIndex( const IntVector& idx) const;
+      const Patch* selectPatchForNodeIndex( const IntVector& idx) const;
    private:
       Level(const Level&);
       Level& operator=(const Level&);
