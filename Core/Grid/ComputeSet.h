@@ -310,6 +310,7 @@ WARNING
   bool ComputeSubset<T>::compareElems(T e1, T e2)
   { return e1 < e2; }
   
+  
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1424 // template parameter not used in declaring arguments
 #pragma set woff 1209 // constant controlling expressions (passBackDifference)
@@ -473,6 +474,11 @@ WARNING
     }
     return true;
   }
-}
+} // end namespace Uintah
+
+#ifdef __PGI
+#include <Packages/Uintah/Core/Grid/ComputeSet_special.cc>
+#endif
+
 
 #endif
