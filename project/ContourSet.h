@@ -18,23 +18,24 @@
 #include <Classlib/Array1.h>
 #include <Classlib/LockingHandle.h>
 #include <Geometry/Point.h>
+#include <Geometry/Vector.h>
 
 class ContourSet;
 typedef LockingHandle<ContourSet> ContourSetHandle;
 
 class ContourSet : public Datatype {
 public:
-    double space;
     Array1<Array1<Point> > contours;
+    Vector basis[3];
+    Vector origin;
+    double space;
+
     ContourSet();
     ContourSet(const ContourSet &copy);
     virtual ~ContourSet();
-    enum Orientation {
-	x, 
-	y,
-	z,
-    };
-    Orientation axis;
+    void translate(const Vector &v);
+    void scale(double sc);
+    void rotate(const Vector &rot);
     // Persistent representation...
     virtual void io(Piostream&);
 };

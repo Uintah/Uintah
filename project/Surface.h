@@ -29,7 +29,7 @@ public:
     Surface(const Surface& copy);
     virtual ~Surface();
     virtual int inside(const Point& p)=0;
-    
+    virtual ObjGroup* getGeomFromSurface()=0;
     // Persistent representation...
     virtual void io(Piostream&);
 };
@@ -49,6 +49,7 @@ public:
     TriSurface(const TriSurface& copy);
     virtual ~TriSurface();
     virtual int inside(const Point& p);
+    virtual ObjGroup* getGeomFromSurface();
     void add_point(const Point& p);
     void add_triangle(int i1, int i2, int i3);
 };

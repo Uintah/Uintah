@@ -38,6 +38,16 @@ int TriSurface::inside(const Point& p) {
     return 1;
 }
 
+ObjGroup* TriSurface::getGeomFromSurface() {
+    ObjGroup* group = new ObjGroup;
+    for (int i=0; i<elements.size(); i++) {
+	group->add(new Triangle(points[elements[i]->i1], 
+				points[elements[i]->i2],
+				points[elements[i]->i3]));
+    }
+    return group;
+}
+
 void TriSurface::add_point(const Point& p) {
     points.add(p);
 }
