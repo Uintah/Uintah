@@ -108,8 +108,6 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
 
 Patch::~Patch()
 {
-  d_BoundaryFaces.clear();
-
   if(in_database){
 //     patches.erase( patches.find(getID()));
     patches.erase( getID() );
@@ -940,32 +938,6 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
 	       IntVector(getBCType(xplus) == Neighbor?0:1,
 			 getBCType(yplus) == Neighbor?0:1,
 			 getBCType(zplus) == Neighbor?0:1);
-
-
-   // If this face has a BCType of Patch::None, make sure
-   // that it is in the list of d_BoundaryFaces, otherwise, make
-   // sure that it is not in this list.
-
-   // I thought vector<> had the find() function, but I guess not.
-   //   vector<FaceType>::iterator faceIdx = d_BoundaryFaces.find(face);
-
-   vector<FaceType>::iterator faceIdx = d_BoundaryFaces.begin();
-   vector<FaceType>::iterator faceEnd = d_BoundaryFaces.end();
-
-   while (faceIdx != faceEnd) {
-     if (*faceIdx == face) break;
-     faceIdx++;
-   }
-
-   if (newbc == Patch::None) {
-     if (faceIdx == d_BoundaryFaces.end()) {
-       d_BoundaryFaces.push_back(face);
-     }
-   } else {
-     if (faceIdx != d_BoundaryFaces.end()) {
-       d_BoundaryFaces.erase(faceIdx);
-     }
-   }     
 }
 
 void 
@@ -983,11 +955,13 @@ Patch::setArrayBCValues(Patch::FaceType face, BCDataArray& bc)
 {
   // At this point need to set up the iterators for each BCData type:
   // Side, Rectangle, Circle, Difference, and Union.
-  IntVector l,h,li,hi,ln,hn;
+  IntVector l,h,li,hi,ln,hn,l_pts,h_pts;
   getFaceCells(face,0,l,h);
   getFaceCells(face,-1,li,hi);
   getFaceNodes(face,0,ln,hn);
 
+  l_pts = li;
+  h_pts = hi;
   // Loop over the various material ids.
  
   BCDataArray::bcDataArrayType::const_iterator mat_id_itr;
@@ -995,24 +969,46 @@ Patch::setArrayBCValues(Patch::FaceType face, BCDataArray& bc)
        mat_id_itr != bc.d_BCDataArray.end(); ++mat_id_itr) {
     int mat_id = mat_id_itr->first;
     for (int c = 0; c < bc.getNumberChildren(mat_id); c++) {
-      CellIterator interior(li,hi);
+      CellIterator interior(li,hi), candidatePoints(l_pts,h_pts);
       vector<IntVector> bound,inter,nbound;
-      for (CellIterator boundary(l,h);!boundary.done();boundary++,interior++) {
-	Point p = this->getLevel()->getCellPosition(*boundary);
-	if ((bc.getChild(mat_id,c))->inside(p)) {
+      for (CellIterator boundary(l,h);!boundary.done();boundary++,interior++,
+	     candidatePoints++) {
+	IntVector nodes[8];
+	findNodesFromCell(*candidatePoints,nodes);
+	Point pts[8];
+	Vector p;
+	for (int i = 0; i < 8; i++)
+	  pts[i] = this->getLevel()->getNodePosition(nodes[i]);
+	if (face == Patch::xminus)
+	  p = (pts[0].asVector()+pts[1].asVector()+pts[2].asVector()
+	       +pts[3].asVector())/4.;
+	if (face == Patch::xplus)
+      	  p = (pts[4].asVector()+pts[5].asVector()+pts[6].asVector()
+	       +pts[7].asVector())/4.;
+	if (face == Patch::yminus)
+      	  p = (pts[0].asVector()+pts[1].asVector()+pts[4].asVector()
+	       +pts[5].asVector())/4.;
+	if (face == Patch::yplus)
+      	  p = (pts[2].asVector()+pts[3].asVector()+pts[6].asVector()
+	       +pts[7].asVector())/4.;
+	if (face == Patch::zminus)
+      	  p = (pts[0].asVector()+pts[2].asVector()+pts[4].asVector()
+	       +pts[6].asVector())/4.;
+	if (face == Patch::zplus)
+      	  p = (pts[1].asVector()+pts[3].asVector()+pts[5].asVector()
+	       +pts[7].asVector())/4.;
+	
+	if ((bc.getChild(mat_id,c))->inside(Point(p.x(),p.y(),p.z()))) 
 	  bound.push_back(*boundary);
-	  inter.push_back(*interior);
-	}
+	
       }
       for (NodeIterator boundary(ln,hn);!boundary.done();boundary++) {
 	Point p = this->getLevel()->getNodePosition(*boundary);
-	if ((bc.getChild(mat_id,c))->inside(p)) {
+	if ((bc.getChild(mat_id,c))->inside(p)) 
 	  nbound.push_back(*boundary);
-	}
       }
       bc.setBoundaryIterator(mat_id,bound,c);
       bc.setNBoundaryIterator(mat_id,nbound,c);
-      bc.setInteriorIterator(mat_id,inter,c);
     }
   }
   array_bcs[face] = bc;
@@ -1038,8 +1034,10 @@ BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
 const BoundCondBase*
 Patch::getArrayBCValues(Patch::FaceType face,int mat_id,string type,
 			vector<IntVector>& bound, 
-			vector<IntVector>& inter, 
 			vector<IntVector>& nbound,
+			vector<IntVector>& sfx, 
+			vector<IntVector>& sfy, 
+			vector<IntVector>& sfz,
 			int child) const
 {
   map<Patch::FaceType,BCDataArray >* m = 
@@ -1047,8 +1045,11 @@ Patch::getArrayBCValues(Patch::FaceType face,int mat_id,string type,
   BCDataArray* ubc = &((*m)[face]);
   const BoundCondBase* bc = ubc->getBoundCondData(mat_id,type,child);
   ubc->getBoundaryIterator(mat_id,bound,child);
-  ubc->getInteriorIterator(mat_id,inter,child);
   ubc->getNBoundaryIterator(mat_id,nbound,child);
+  ubc->getSFCZIterator(mat_id,sfx,child);
+  ubc->getSFCYIterator(mat_id,sfy,child);
+  ubc->getSFCZIterator(mat_id,sfz,child);
+
   return bc;
 }
 

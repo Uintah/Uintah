@@ -170,9 +170,9 @@ BCReader::read(ProblemSpecP& bc_ps)
 	     << bc  << endl;
 #endif
 	// This is for the old boundary conditions.
-	if (d_bcs.size() < face_side + 1) {
-	  d_bcs.resize(face_side + 1);
-	  d_bcs[face_side].setBCValues(mat_id,bc);
+	if (int (d_bcs.size()) < face_side + 1) {
+	 d_bcs.resize(face_side + 1);
+	 d_bcs[face_side].setBCValues(mat_id,bc);
 	}
 	bctype_data.insert(pair<int,BoundCondBase*>(mat_id,bc->clone()));
 	delete bc;

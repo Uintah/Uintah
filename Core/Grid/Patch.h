@@ -345,8 +345,10 @@ WARNING
      const BoundCondBase* getArrayBCValues(FaceType face,int mat_id,
 					   string type,
 					   vector<IntVector>& b,
-					   vector<IntVector>& i,
 					   vector<IntVector>& nb,
+					   vector<IntVector>& sfx,
+					   vector<IntVector>& sfy,
+					   vector<IntVector>& sfz,
 					   int child) const;
      
 

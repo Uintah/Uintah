@@ -33,7 +33,10 @@ UnionBCData::UnionBCData(const UnionBCData& mybc)
 
  
   boundary=mybc.boundary;
-  interior=mybc.interior;
+  nboundary=mybc.nboundary;
+  sfcx=mybc.sfcx;
+  sfcy=mybc.sfcy;
+  sfcz=mybc.sfcz;
 }
 
 UnionBCData& UnionBCData::operator=(const UnionBCData& rhs)
@@ -53,7 +56,10 @@ UnionBCData& UnionBCData::operator=(const UnionBCData& rhs)
     child.push_back((*itr)->clone());
   
   boundary = rhs.boundary;
-  interior = rhs.interior;
+  nboundary = rhs.nboundary;
+  sfcx=rhs.sfcx;
+  sfcy=rhs.sfcy;
+  sfcz=rhs.sfcz;
 
   return *this;
 }
