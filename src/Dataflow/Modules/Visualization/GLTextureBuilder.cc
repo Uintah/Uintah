@@ -86,6 +86,8 @@ void GLTextureBuilder::execute(void)
 
 void GLTextureBuilder::real_execute(FieldHandle sfield)
 {
+  char me[] = "GLTextureBuilder::real_execute:";
+  
   if (!sfield.get_rep() ||
       (sfield->mesh()->get_type_description()->get_name() !=
        get_type_description((LatVolMesh *)0)->get_name()))
@@ -119,7 +121,7 @@ void GLTextureBuilder::real_execute(FieldHandle sfield)
     // this constructor will take in a min and max, and if is_fixed is set
     // it will set the values to that range... otherwise it auto-scales
     tex_ = scinew GLTexture3D(sfield, minV, maxV, is_fixed);
-
+    
     if (!is_fixed) { // if not fixed, overwrite min/max values on Gui
       tex_->getminmax(minV, maxV);
       min_.set(minV);
@@ -137,16 +139,23 @@ void GLTextureBuilder::real_execute(FieldHandle sfield)
       maxV = max;
     }
 
+    // The boolean result of GLTexture3D::replace_data is whether or not the
+    // data structure was able to be reused.  It has nothing to do with the
+    // actuall values in the field (i.e. if they changed or not.  Therefore
+    // we need to check to see if the min and max values of the field have
+    // changed.
     if( !tex_->replace_data(sfield, minV, maxV, is_fixed) ){
       // see note above
       tex_ = scinew GLTexture3D(sfield, minV, maxV, is_fixed);
-      if (!is_fixed) {
-	tex_->getminmax(minV, maxV);
-	min_.set(minV);
-	max_.set(maxV);
-      }
+
       tex_->set_brick_size(sel_brick_dim_.get());
       old_brick_size_ = sel_brick_dim_.get();
+    }
+
+    if (!is_fixed) {
+      tex_->getminmax(minV, maxV);
+      min_.set(minV);
+      max_.set(maxV);
     }
   }
   else if (old_brick_size_ != sel_brick_dim_.get())
@@ -164,13 +173,15 @@ void GLTextureBuilder::real_execute(FieldHandle sfield)
     if( !tex_->replace_data(sfield, minV, maxV, is_fixed) ){
       // see note above
       tex_ = scinew GLTexture3D(sfield, minV, maxV, is_fixed);
-      if (!is_fixed) {
-	tex_->getminmax(minV, maxV);
-	min_.set(minV);
-	max_.set(maxV);
-      }
     }    
+
+    if (!is_fixed) {
+      tex_->getminmax(minV, maxV);
+      min_.set(minV);
+      max_.set(maxV);
+    }
   }
+
   old_min_ = (int)minV;
   old_max_ = (int)maxV;
 
