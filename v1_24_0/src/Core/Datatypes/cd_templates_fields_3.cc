@@ -29,7 +29,6 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/PrismVolField.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/MaskedTetVolField.h>

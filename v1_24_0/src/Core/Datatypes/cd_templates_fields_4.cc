@@ -29,7 +29,6 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/CurveField.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/MaskedTriSurfField.h>
