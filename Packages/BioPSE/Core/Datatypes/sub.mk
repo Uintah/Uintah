@@ -27,6 +27,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Core/Datatypes
 
 SRCS     += $(SRCDIR)/NeumannBC.cc \
+	    $(SRCDIR)/SegLatVolField.cc \
+	    $(SRCDIR)/SepSurf.cc \
 	    $(SRCDIR)/TypeName.cc \
 #[INSERT NEW CODE FILE HERE]
 
