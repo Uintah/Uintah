@@ -95,6 +95,47 @@ itcl_class SCIRun_Render_Viewer {
 	lappend openViewersList $rid
 	return $rid
     }
+
+    # writeStateToScript
+    # Called from genSubnetScript, it will append the TCL
+    # commands needed to initialize this module's variables
+    # after it is created.  This is located here in the Module class
+    # so sub-classes (like SCIRun_Render_Viewer) can specialize
+    # the variables they write out
+    #
+    # 'scriptVar' is the name of the TCL variable one level
+    # up that we will append our commands to 
+    # 'i' is the number indicating the prefix for the variables
+    # 'tab' is the indent string to make it look pretty
+    method writeStateToScript { scriptVar i { tab "" }} {
+	upvar 1 $scriptVar script
+	set module [modname]
+	set num 0
+	foreach w [winfo children .] {
+	    if { [string first .ui$module $w] == 0 && \
+		     [winfo exists $w.bsframe] } {
+		append script "\n${tab}\$m$i addViewer"
+		# since the viewer always initially comes up without
+		# the extended controls, save the geometry to only
+		# include the menu, viewer gl window, and standard controls
+		set width [winfo width $w.bsframe]
+		set height1 [winfo height $w.menu]
+		set height2 [winfo height $w.wframe]
+		set height3 [winfo height $w.bsframe]
+		
+		# Depending if the extended controls are attached/detached,
+		# there are 5-8 pixels used for padding, hence the magic 7
+		set height [expr $height1 + $height2 + $height3 + 7]
+		set x [winfo rootx $w]
+		set y [winfo rooty $w]
+		append script "\n${tab}set \$m$i-ViewWindow_$num"
+		append script "-geometry $width\x$height\+$x\+$y\n"
+		incr num
+	    }
+	}
+
+	Module::writeStateToScript $scriptVar $i $tab
+    }
 }
 
 
@@ -173,7 +214,6 @@ itcl_class BaseViewWindow {
 	initGlobal $this-def-color-b 1.0
 
 	initGlobal $this-ortho-view 0
-	initGlobal $this-currentvisual 0
 
 	initGlobal $this-trackViewWindow0 1
 
@@ -193,7 +233,6 @@ itcl_class BaseViewWindow {
 	setGlobal $this-do_bawgl 0
 	setGlobal $this-tracker_state 0
 	setGlobal $this-currentvisual 0
-	setGlobal $this-currentvisualhelper 0
     }
 
     method bindEvents {w} {
@@ -259,6 +298,11 @@ itcl_class BaseViewWindow {
 	initGlobal "$this-$objid-clip" 1
 	initGlobal "$this-$objid-cull" 0
 	initGlobal "$this-$objid-dl" 0
+	global ModuleSavedVars
+	set vid [$viewer modname]
+	foreach state {type light fog debug clip cull dl} {
+	    lappend ModuleSavedVars($vid) "ViewWindow[number]-$objid-$state"
+	}
     }
 
 	
@@ -314,7 +358,13 @@ itcl_class BaseViewWindow {
 
     method updateMode {args} {}
     method updatePerf {args} {}
-    method removeObject {args} {}
+    method removeObject {objid} { 
+	global ModuleSavedVars
+	set vid [$viewer modname]
+	foreach state {type light fog debug clip cull dl} {
+	    listFindAndRemove ModuleSavedVars($vid) "$this-$objid-$state"
+	}
+    }
 }
 
 
@@ -399,11 +449,11 @@ itcl_class ViewWindow {
 	    -menu $w.menu.visual.menu
 	menu $w.menu.visual.menu
 	set i 0
-	global $this-currentvisual
 	foreach t [$this-c listvisuals $w] {
 	    $w.menu.visual.menu add radiobutton -value $i -label $t \
 		-variable $this-currentvisual \
-		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*"
+		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*" \
+		-command "$this switchvisual"
 	    incr i
 	}
 
@@ -521,8 +571,7 @@ itcl_class ViewWindow {
 	init_frame $msframe.f "Double-click here to detach - - - - - - - - - - - - - - - - - - - - -"
 	# End initialization of attachment
 
-	switchvisual [set $this-currentvisual]
-	trace variable $this-currentvisual w "$this currentvisualtrace"
+	switchvisual
 
 	$this-c startup
 	
@@ -835,26 +884,18 @@ itcl_class ViewWindow {
 	$bsframe.pf.perf3 configure -text $p3
     }
 
-    method currentvisualtrace { args } {
-	upvar \#0 $this-currentvisual visual $this-currentvisualhelper helper
-	if { $visual != $helper } {
-	    switchvisual $visual
-	}
-    }
-
-    method switchvisual { idx } {
+    method switchvisual {} {
+	upvar \#0 $this-currentvisual visual
 	set w .ui[modname]
 	set renderWindow $w.wframe.draw
 	if { [winfo exists $renderWindow] } {
 	    destroy $renderWindow
 	}
-	$this-c switchvisual $renderWindow $idx 640 512
+	$this-c switchvisual $renderWindow $visual 640 512
 	if { [winfo exists $renderWindow] } {
 	    bindEvents $renderWindow
 	    pack $renderWindow -expand yes -fill both
 	}
-	upvar \#0 $this-currentvisual visual $this-currentvisualhelper helper
-	set helper $visual
     }	
 
     method makeViewPopup {} {
@@ -935,7 +976,7 @@ itcl_class ViewWindow {
 	set w .ui[modname]
 	set m $frame.f
 	# if the object frame exists already, assume it was pack
-	# forgotten by removeObject, just pack it again to whow it
+	# forgotten by removeObject, just pack it again to show it
 	if { [winfo exists $m.objlist.canvas.frame.objt$objid] } {
 	    pack $m.objlist.canvas.frame.objt$objid \
 		-side top -anchor w -fill x -expand y
@@ -1013,6 +1054,7 @@ itcl_class ViewWindow {
     method removeObject {objid} {
 	removeObjectFromFrame $objid $detachedFr
 	removeObjectFromFrame $objid [$attachedFr childsite]
+	BaseViewWindow::removeObject $objid
     }
 
     method removeObjectFromFrame {objid frame} {

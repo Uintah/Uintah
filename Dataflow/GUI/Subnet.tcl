@@ -1053,6 +1053,7 @@ proc addSubnetToDatabase { script } {
 
 
 proc subDATADIRandDATASET { val } {
+    if { ![envBool SCIRUN_NET_SUBSTITUTE_DATADIR] } { return $val }
     set tmpval $val
     set tmp [netedit getenv SCIRUN_DATA]
     if { [string length $tmp] } {
@@ -1187,89 +1188,10 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 	}
     }
     
-    set sub_datadir_p [envBool SCIRUN_NET_SUBSTITUTE_DATADIR]
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
-	incr i
-	if [isaSubnetIcon $module] continue
-	set modstr [join [modulePath $module] ->]
-
-	if { [string equal "SCIRun->Render->Viewer" $modstr] } {
-	    set num 0
-	    foreach w [winfo children .] {
-		if { [string first .ui$module $w] == 0 && \
-			 [winfo exists $w.bsframe] } {
-		    append script "\n${tab}$modVar($module) addViewer"
-		    # since the viewer always initially comes up without
-		    # the extended controls, save the geometry to only
-		    # include the menu, viewer gl window, and standard controls
-		    set width [winfo width $w.bsframe]
-		    set height1 [winfo height $w.menu]
-		    set height2 [winfo height $w.wframe]
-		    set height3 [winfo height $w.bsframe]
-
-		    # Depending if the extended controls are attached/detached,
-		    # there are 5-8 pixels used for padding, hence the magic 7
-		    set height [expr $height1 + $height2 + $height3 + 7]
-		    set x [winfo rootx $w]
-		    set y [winfo rooty $w]
-		    append script "\n${tab}set $modVar($module)-ViewWindow_$num-geometry $width\x$height\+$x\+$y\n"
-		    incr num
-		}
-	    }
-	}
-
-	set write_vars ""
-	global ModuleSavedVars ModuleSubstitutedVars
-	if { [info exists ModuleSavedVars($module)] } {
-	    set classname [join [modulePath $module] _]
-	    foreach var $ModuleSavedVars($module) {
-		if { ![isaDefaultValue $module $var $classname] } {
-		    lappend write_vars $var
-		}
-	    }
-	}
-
-	if { [llength $write_vars] } {
-	    # Write the comment line for this modules GUI values
-	    append script "\n${tab}\# Set GUI variables for the $modstr Module\n"
-	    foreach var $write_vars {
-		upvar \#0 $module-$var val
-		set varname "\$m$i-${var}"
-		if { [llength $varname] > 1 } {
-		    set varname \"${varname}\"
-		}
-
-		if { [info exists ModuleSubstitutedVars($module)] && \
-		     [lsearch $ModuleSubstitutedVars($module) $var] != -1 } {
-		    if { $sub_datadir_p } {
-			set tmpval [subDATADIRandDATASET $val]
-		    } else {
-			set tmpval $val
-		    }
-		    append script "${tab}set $varname \"${tmpval}\"\n"
-		} else {
-		    if { [llength $val] == 1 && ![string is integer $val] } {
-			set failed [catch "set num [format %.[string length $val]e $val]"]
-			if { !$failed } {
-			    set failed [catch "set num [expr $num]"]
-			}
-			if { !$failed } {
-			    append script "${tab}set $varname \{$num\}\n"
-			    continue
-			}
-		    }
-		    append script "${tab}set $varname \{${val}\}\n"
-		}
-	    }
-	}
-	
-	# Write command to open GUI on load if it was open on save
-	if [windowIsMapped .ui$module] {
-	    append script "\n${tab}\# Open the $modstr UI\n"
-	    append script "${tab}\$m$i initialize_ui\n"
-	}	
-    }   
+	$module writeStateToScript script [incr i] $tab
+    }
 
     return $script
 }
