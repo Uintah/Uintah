@@ -48,6 +48,30 @@ Matrix::io(Piostream& stream)
   stream.end_class();
 }
 
+SCICORESHARE Matrix *Add(Matrix *A, Matrix *B) {
+  ASSERT(A->nrows() == B->nrows());
+  ASSERT(A->ncols() == B->ncols());
+  ASSERTFAIL("Matrix addition not yet implemented.");
+  return A;
+  /*
+  SparseMatrix *s;
+  DenseMatrix *d;
+  ColumnMatrix *c;
+  if (d=dynamic_cast<DenseMatrix *>(A)) return d->add(B->dense());
+  else if (d=dynamic_cast<DenseMatrix *>(B)) return d->add(A->dense());
+  else if (c=dynamic_cast<ColumnMatrix *>(A)) return c->add(B->column());
+  else if (c=dynamic_cast<ColumnMatrix *>(B)) return c->add(A->column());
+  else if (s=dynamic_cast<SparseRowMatrix *>(A)) return s->add(B->sparse());
+  else (s=dynamic_cast<SparseRowMatrix *>(B)) return s->add(A->sparse());
+  */
+}
+
+SCICORESHARE Matrix *Mult(Matrix *A, Matrix *B) {
+  ASSERT(A->ncols() == B->nrows());
+  ASSERTFAIL("Matrix multiplication not yet implemented.");
+  return A;
+}
+
 void
 Mult(ColumnMatrix& result, const Matrix& mat, const ColumnMatrix& v)
 {

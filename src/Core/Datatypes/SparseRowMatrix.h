@@ -59,8 +59,9 @@ public:
   //! Destructor
   virtual ~SparseRowMatrix();
 
-  DenseMatrix *toDense();
-  ColumnMatrix *toColumn();
+  virtual DenseMatrix *dense();
+  virtual SparseRowMatrix *sparse();
+  virtual ColumnMatrix *column();
 
   //! Assignement operator
   SparseRowMatrix& operator=(const SparseRowMatrix&);

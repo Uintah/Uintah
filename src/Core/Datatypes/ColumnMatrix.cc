@@ -69,7 +69,11 @@ ColumnMatrix::ColumnMatrix(const ColumnMatrix& c)
   }
 }
 
-DenseMatrix *ColumnMatrix::toDense()
+ColumnMatrix *ColumnMatrix::column() {
+  return this;
+}
+
+DenseMatrix *ColumnMatrix::dense()
 {
   DenseMatrix *dm = scinew DenseMatrix(rows, 1);
   for (int i=0; i<rows; i++)
@@ -77,7 +81,7 @@ DenseMatrix *ColumnMatrix::toDense()
   return dm;
 }
 
-SparseRowMatrix *ColumnMatrix::toSparse() {
+SparseRowMatrix *ColumnMatrix::sparse() {
   int nnz = 0;
   int r;
   int *row = scinew int[rows+1];

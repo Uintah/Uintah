@@ -54,6 +54,9 @@ protected:
 
 public:
   virtual Matrix* clone()=0;
+  virtual DenseMatrix* dense()=0;
+  virtual SparseRowMatrix* sparse()=0;
+  virtual ColumnMatrix* column()=0;
   virtual Matrix* transpose()=0;
   virtual double* get_val() { return 0; }
   virtual int* get_row() { return 0; }
@@ -61,6 +64,9 @@ public:
 
   virtual double& get(int, int) const=0;
   inline MatrixRow operator[](int r);
+
+  friend SCICORESHARE Matrix *Add(Matrix *, Matrix *);
+  friend SCICORESHARE Matrix *Mult(Matrix *, Matrix *);
 
   virtual void zero()=0;
   virtual int nrows() const=0;
