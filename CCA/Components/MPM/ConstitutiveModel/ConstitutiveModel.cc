@@ -52,7 +52,65 @@ void ConstitutiveModel::addComputesAndRequires(Task*,
 {
 }
 
+/////////
+// Add initial computes with erosion
+void 
+ConstitutiveModel::addInitialComputesAndRequiresWithErosion(Task* task,
+				     const MPMMaterial* matl,
+				     const PatchSet* patches,
+				     std::string algorithm)
+{
+  d_erosionAlgorithm = algorithm;
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->computes(lb->pErosionLabel, matlset);
+  cout << "Erosion Algorithm = " << d_erosionAlgorithm << endl;
 
+  addInitialComputesAndRequires(task, matl, patches);
+}
+
+//////////
+// Initialize CM data with erosion 
+void 
+ConstitutiveModel::initializeCMDataWithErosion(const Patch* patch,
+			     const MPMMaterial* matl,
+			     DataWarehouse* new_dw)
+{
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(),
+						   patch);
+  ParticleVariable<double> pErosion;
+  new_dw->allocateAndPut(pErosion, lb->pErosionLabel, pset);
+  ParticleSubset::iterator iter = pset->begin();
+  for (; iter != pset->end(); iter++) {
+    pErosion[*iter] = 1.0;
+  }
+
+  initializeCMData(patch, matl, new_dw);
+}
+
+//////////
+// Computes and requires with erosion
+void 
+ConstitutiveModel::addComputesAndRequiresWithErosion(Task* task,
+					const MPMMaterial* matl,
+					const PatchSet* patch) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW, lb->pErosionLabel, matlset, Ghost::None);
+  task->computes(lb->pErosionLabel_preReloc, matlset);
+  addComputesAndRequires(task, matl, patch);
+}
+
+//////////
+// Stress update with erosion
+void 
+ConstitutiveModel::computeStressTensorWithErosion(const PatchSubset* patches,
+				const MPMMaterial* matl,
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw)
+{
+  cout << "Using dummy compute stress tensor" << endl;
+  computeStressTensor(patches, matl, old_dw, new_dw);
+}
 
 //______________________________________________________________________
 //          HARDWIRE FOR AN IDEAL GAS -Todd 

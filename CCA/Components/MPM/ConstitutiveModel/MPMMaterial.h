@@ -61,7 +61,7 @@ WARNING
       class MPMMaterial : public Material {
       public:
 	 MPMMaterial(ProblemSpecP&, MPMLabel* lb, int n8or27,string integrat,
-                     bool haveLoadCurve);
+                     bool haveLoadCurve, bool doErosion);
 	 
 	 ~MPMMaterial();
 	 

@@ -140,6 +140,10 @@ using std::vector;
       const VarLabel* pAccelerationLabel_preReloc;
       const VarLabel* pVolumeOldLabel_preReloc;
 
+      // Labels for particle erosion
+      const VarLabel* pErosionLabel;
+      const VarLabel* pErosionLabel_preReloc;
+
       // MPM Physical BC labels (permanent particle state)
       const VarLabel* materialPointsPerLoadCurveLabel;
       const VarLabel* pLoadCurveIDLabel;

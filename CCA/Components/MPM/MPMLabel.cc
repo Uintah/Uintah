@@ -404,6 +404,12 @@ MPMLabel::MPMLabel()
   pVolumeOldLabel_preReloc = VarLabel::create("pVolumeOld+",
 			       ParticleVariable<double>::getTypeDescription()); 
 
+  // Material point erosion algorithms
+  pErosionLabel = VarLabel::create("p.erosion",
+                            ParticleVariable<double>::getTypeDescription());
+  pErosionLabel_preReloc = VarLabel::create("p.erosion+",
+                            ParticleVariable<double>::getTypeDescription());
+  
   // MPM Physical BC labels (permanent particle state)
   materialPointsPerLoadCurveLabel = VarLabel::create("pointsPerCurve", 
                             sumlong_vartype::getTypeDescription());
@@ -558,13 +564,15 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gDisplacementLabel);
   VarLabel::destroy(GDisplacementLabel);
 
-  // -----------------------------------------------------------
-
+  // Destroy Material point erosion labels
+  VarLabel::destroy(pErosionLabel);
+  VarLabel::destroy(pErosionLabel_preReloc);
 
   // Destroy the MPM Physical BC pointer labels
   VarLabel::destroy(materialPointsPerLoadCurveLabel);
   VarLabel::destroy(pLoadCurveIDLabel);
   VarLabel::destroy(pLoadCurveIDLabel_preReloc);
+
   // Destroy the MPM Damping rate labels
   VarLabel::destroy(pDampingRateLabel);
   VarLabel::destroy(pDampingCoeffLabel);
