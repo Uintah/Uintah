@@ -32,6 +32,7 @@ Disc::~Disc()
 void Disc::preprocess(double, int&, int&)
 {
   // Set up unit transformation
+  xform.load_identity();
   xform.rotate(Vector(0,0,1), n);
   xform.pre_translate(cen.asVector());
 }
@@ -77,7 +78,6 @@ void Disc::light_intersect(const Ray& ray, HitInfo& hit, Color&,
 
 void Disc::compute_bounds(BBox& bbox, double offset)
 {
-#if 1
   Vector v(1,0,0);
   Vector v2, v3;
   v2=Cross(n,v);
@@ -94,13 +94,9 @@ void Disc::compute_bounds(BBox& bbox, double offset)
   bbox.extend(cen-n*offset);
   bbox.extend(cen-v3*(1.74*radius+offset));
   bbox.extend(cen+v3*(1.74*radius+offset));
-#else
-  bbox.extend(cen+Vector(1,1,1)*(radius+offset));
-  bbox.extend(cen-Vector(1,1,1)*(radius+offset));
-#endif
 }
 
-void Disc::uv(UV &uv, const Point &p, const HitInfo &hit)
+void Disc::uv(UV &uv, const Point &p, const HitInfo &/*hit*/)
 {
   Point xp = xform.project(p);
   uv.set(xp.x()/tex_scale.x(),xp.y()/tex_scale.y());
