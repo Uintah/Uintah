@@ -43,20 +43,32 @@ namespace SCIRun {
 class ModifyConductivities : public Module
 {
 private:
-  int last_field_generation_;
+  GuiInt              gui_num_entries_;
+  vector<GuiString *> gui_names_;
+  vector<GuiString *> gui_sizes_;
+  vector<GuiString *> gui_m00_;
+  vector<GuiString *> gui_m01_;
+  vector<GuiString *> gui_m02_;
+  vector<GuiString *> gui_m10_;
+  vector<GuiString *> gui_m11_;
+  vector<GuiString *> gui_m12_;
+  vector<GuiString *> gui_m20_;
+  vector<GuiString *> gui_m21_;
+  vector<GuiString *> gui_m22_;
   vector<pair<string, Tensor> > last_field_tensors_;
   vector<pair<string, Tensor> > last_gui_tensors_;
-  bool addnew_;
-  bool redo_gui_;
+  int                           last_field_generation_;
+  bool                          reset_gui_;
+
+  void resize_gui(int num);
+  void update_to_gui(vector<pair<string, Tensor> > &tensors);
+  void update_from_gui(vector<pair<string, Tensor> > &tensors);
+  bool different_tensors(const vector<pair<string, Tensor> > &a,
+			 const vector<pair<string, Tensor> > &b);
 
 public:
   ModifyConductivities(GuiContext *context);
   virtual ~ModifyConductivities();
-
-  void update_to_gui(const vector<pair<string, Tensor> > &tensors);
-  bool update_from_gui(vector<pair<string, Tensor> > &tensors);
-  bool different_tensors(const vector<pair<string, Tensor> > &a,
-			 const vector<pair<string, Tensor> > &b);
 
   virtual void execute();
   virtual void tcl_command(GuiArgs &args, void *);
@@ -67,11 +79,12 @@ DECLARE_MAKER(ModifyConductivities)
 
 
 ModifyConductivities::ModifyConductivities(GuiContext *context)
-  : Module("ModifyConductivities", context, Filter, "Forward", "BioPSE"),
+  : Module("ModifyConductivities", context, Filter, "Modeling", "BioPSE"),
+    gui_num_entries_(context->subVar("num-entries")),
     last_field_generation_(0),
-    addnew_(false),
-    redo_gui_(false)
+    reset_gui_(false)
 {
+  resize_gui(0);
 }
 
 
@@ -81,135 +94,87 @@ ModifyConductivities::~ModifyConductivities()
 }
 
 
+
 void
-ModifyConductivities::update_to_gui(const vector<pair<string, Tensor> > &tensors)
+ModifyConductivities::resize_gui(int num)
 {
-  string result;
-  gui->eval(id + " isopen", result);
-  if (result != "open")
+  gui_num_entries_.set(num);
+  unsigned int i;
+  // Expand the gui elements.
+  for (i = gui_names_.size(); i < (unsigned int)gui_num_entries_.get(); i++)
   {
-    return;
-  }
-  gui->eval(id + " ui", result);
-  gui->eval(id + " clear_all", result);
-
-  for (unsigned int i=0; i < tensors.size(); i++)
-  {
-    string command = id + " set_item i" + to_string(i) +
-      " { Material \"" + tensors[i].first + "\" Scale 1.0 C00 " +
-      to_string(tensors[i].second.mat_[0][0]) + " C01 " +
-      to_string(tensors[i].second.mat_[0][1]) + " C02 " +
-      to_string(tensors[i].second.mat_[0][2]) + " C10 " +
-      to_string(tensors[i].second.mat_[1][0]) + " C11 " +
-      to_string(tensors[i].second.mat_[1][1]) + " C12 " +
-      to_string(tensors[i].second.mat_[1][2]) + " C20 " +
-      to_string(tensors[i].second.mat_[2][0]) + " C21 " +
-      to_string(tensors[i].second.mat_[2][1]) + " C22 " +
-      to_string(tensors[i].second.mat_[2][2]) + " }";
-
-    gui->eval(command, result);
+    ostringstream oss;
+    oss << i;
+    gui_names_.push_back(new GuiString(ctx->subVar("names-" + oss.str())));
+    gui_sizes_.push_back(new GuiString(ctx->subVar("sizes-" + oss.str())));
+    gui_m00_.push_back(new GuiString(ctx->subVar("m00-" + oss.str())));
+    gui_m01_.push_back(new GuiString(ctx->subVar("m01-" + oss.str())));
+    gui_m02_.push_back(new GuiString(ctx->subVar("m02-" + oss.str())));
+    gui_m10_.push_back(new GuiString(ctx->subVar("m10-" + oss.str())));
+    gui_m11_.push_back(new GuiString(ctx->subVar("m11-" + oss.str())));
+    gui_m12_.push_back(new GuiString(ctx->subVar("m12-" + oss.str())));
+    gui_m20_.push_back(new GuiString(ctx->subVar("m20-" + oss.str())));
+    gui_m21_.push_back(new GuiString(ctx->subVar("m21-" + oss.str())));
+    gui_m22_.push_back(new GuiString(ctx->subVar("m22-" + oss.str())));
   }
 }
 
 
-static string
-getafter(const string &after, const string &str)
+void
+ModifyConductivities::update_to_gui(vector<pair<string, Tensor> > &tensors)
 {
-  string::size_type start = str.find(after) + after.length() + 1;
-  string::size_type end;
-  if (str[start] != '{')
+  // Update GUI
+  resize_gui(tensors.size());
+  for (unsigned int i = 0; i <tensors.size(); i++)
   {
-    end = str.find(' ', start);
+    gui_names_[i]->set(tensors[i].first);
+    gui_sizes_[i]->set("1.0");
+
+    gui_m00_[i]->set(to_string(tensors[i].second.mat_[0][0]));
+    gui_m01_[i]->set(to_string(tensors[i].second.mat_[0][1]));
+    gui_m02_[i]->set(to_string(tensors[i].second.mat_[0][2]));
+
+    gui_m10_[i]->set(to_string(tensors[i].second.mat_[1][0]));
+    gui_m11_[i]->set(to_string(tensors[i].second.mat_[1][1]));
+    gui_m12_[i]->set(to_string(tensors[i].second.mat_[1][2]));
+
+    gui_m20_[i]->set(to_string(tensors[i].second.mat_[2][0]));
+    gui_m21_[i]->set(to_string(tensors[i].second.mat_[2][1]));
+    gui_m22_[i]->set(to_string(tensors[i].second.mat_[2][2]));
+
+    string result;
+    gui->eval(id + " create_entries", result);
   }
-  else
-  {
-    start++;
-    end = str.find('}', start);
-  }
-  return str.substr(start, end - start);
 }
 
 
 
-bool
+void
 ModifyConductivities::update_from_gui(vector<pair<string, Tensor> > &tensors)
 {
-  string result;
-  gui->eval(id + " isopen", result);
-  if (result != "open")
+  gui_num_entries_.reset();
+  resize_gui(gui_num_entries_.get());
+  tensors.resize(gui_names_.size());
+  for (unsigned int i = 0; i <tensors.size(); i++)
   {
-    return false;
-  }
-
-  for (unsigned int i = 0; i < tensors.size(); i++)
-  {
-    const string command = id + " get_item i" + to_string(i);
-    gui->eval(command, result);
-
-    tensors[i].first = getafter("Material", result);
-
-    const string m00 = getafter("C00", result);
-    if (m00 != to_string(tensors[i].second.mat_[0][0]))
-    {
-      tensors[i].second.mat_[0][0] = atof(m00.c_str());
-    }
-
-    const string m01 = getafter("C01", result);
-    if (m01 != to_string(tensors[i].second.mat_[0][1]))
-    {
-      tensors[i].second.mat_[0][1] = atof(m01.c_str());
-    }
-
-    const string m02 = getafter("C02", result);
-    if (m02 != to_string(tensors[i].second.mat_[0][2]))
-    {
-      tensors[i].second.mat_[0][2] = atof(m02.c_str());
-    }
-
-    const string m10 = getafter("C10", result);
-    if (m10 != to_string(tensors[i].second.mat_[1][0]))
-    {
-      tensors[i].second.mat_[1][0] = atof(m10.c_str());
-    }
-
-    const string m11 = getafter("C11", result);
-    if (m11 != to_string(tensors[i].second.mat_[1][1]))
-    {
-      tensors[i].second.mat_[1][1] = atof(m11.c_str());
-    }
-
-    const string m12 = getafter("C12", result);
-    if (m12 != to_string(tensors[i].second.mat_[1][2]))
-    {
-      tensors[i].second.mat_[1][2] = atof(m12.c_str());
-    }
-
-    const string m20 = getafter("C20", result);
-    if (m20 != to_string(tensors[i].second.mat_[2][0]))
-    {
-      tensors[i].second.mat_[2][0] = atof(m20.c_str());
-    }
-
-    const string m21 = getafter("C21", result);
-    if (m21 != to_string(tensors[i].second.mat_[2][1]))
-    {
-      tensors[i].second.mat_[2][1] = atof(m21.c_str());
-    }
-
-    const string m22 = getafter("C22", result);
-    if (m22 != to_string(tensors[i].second.mat_[2][2]))
-    {
-      tensors[i].second.mat_[2][2] = atof(m22.c_str());
-    }
-
-    const double scale = atof(getafter("Scale", result).c_str());
+    tensors[i].first = gui_names_[i]->get();
+    tensors[i].second.mat_[0][0] = atof(gui_m00_[i]->get().c_str());
+    tensors[i].second.mat_[0][1] = atof(gui_m01_[i]->get().c_str());
+    tensors[i].second.mat_[0][2] = atof(gui_m02_[i]->get().c_str());
+    tensors[i].second.mat_[1][0] = atof(gui_m10_[i]->get().c_str());
+    tensors[i].second.mat_[1][1] = atof(gui_m11_[i]->get().c_str());
+    tensors[i].second.mat_[1][2] = atof(gui_m12_[i]->get().c_str());
+    tensors[i].second.mat_[2][0] = atof(gui_m20_[i]->get().c_str());
+    tensors[i].second.mat_[2][1] = atof(gui_m21_[i]->get().c_str());
+    tensors[i].second.mat_[2][2] = atof(gui_m22_[i]->get().c_str());
+    const double scale = atof(gui_sizes_[i]->get().c_str());
     if (scale != 1.0 && scale != 0.0)
     {
       tensors[i].second = tensors[i].second * scale;
     }
   }
-  return true;
 }
+
 
 
 bool
@@ -241,6 +206,7 @@ ModifyConductivities::different_tensors(const vector<pair<string, Tensor> > &a,
 }
 
 
+
 void
 ModifyConductivities::execute()
 {
@@ -268,7 +234,6 @@ ModifyConductivities::execute()
   bool created_p = false;
   if (!field->get_property("conductivity_table", field_tensors))
   {
-    //remark("Using identity conductivity tensors.");
     created_p = true;
     ScalarFieldInterface *sfi = field->query_scalar_interface(this);
     double minval, maxval;
@@ -285,6 +250,10 @@ ModifyConductivities::execute()
     {
       error("Invalid number of tensors to create, no property to manage.");
       return;
+    }
+    else
+    {
+      remark("No tensors found, using default identity tensors.");
     }
 
     field_tensors.resize((unsigned int)(maxval + 1.5));
@@ -309,7 +278,7 @@ ModifyConductivities::execute()
     }
     created_p = true;
   }
-  
+
   // New input tensors, update the gui.
   if (different_tensors(field_tensors, last_field_tensors_))
   {
@@ -318,18 +287,17 @@ ModifyConductivities::execute()
     last_gui_tensors_ = field_tensors;
   }
 
-  if (redo_gui_)
+  if (reset_gui_)
   {
     update_to_gui(last_gui_tensors_);
-    redo_gui_ = false;
+    reset_gui_ = false;
   }
 
   vector<pair<string, Tensor> > gui_tensors;
   gui_tensors.resize(last_gui_tensors_.size());
-  if (!update_from_gui(gui_tensors))
-  {
-    gui_tensors = last_gui_tensors_;
-  }
+  update_from_gui(gui_tensors);
+
+#if 0  
   if (addnew_)
   {
     addnew_ = false;
@@ -359,7 +327,8 @@ ModifyConductivities::execute()
 
     gui->eval(command, result);
   }
-  
+#endif
+
   bool changed_table_p = false;
   if (different_tensors(gui_tensors, last_gui_tensors_) ||
       different_tensors(gui_tensors, field_tensors) ||
@@ -368,7 +337,6 @@ ModifyConductivities::execute()
     field.detach();
 
     field->set_property("conductivity_table", gui_tensors, false);
-    last_gui_tensors_ = gui_tensors;
     changed_table_p = true;
   }
 
@@ -385,18 +353,9 @@ ModifyConductivities::execute()
 void
 ModifyConductivities::tcl_command(GuiArgs &args, void *extra)
 {
-  if (args.count() == 2 && args[1] == "addnew")
+  if (args.count() == 2 && args[1] == "reset_gui")
   {
-    addnew_ = true;
-    if (!abort_flag)
-    {
-      abort_flag = 1;
-      want_to_execute();
-    }
-  }
-  else if (args.count() == 2 && args[1] == "redo_gui")
-  {
-    redo_gui_ = true;
+    reset_gui_ = true;
     if (!abort_flag)
     {
       abort_flag = 1;
