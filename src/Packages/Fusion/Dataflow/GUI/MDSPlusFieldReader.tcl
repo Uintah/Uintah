@@ -31,6 +31,9 @@ itcl_class Fusion_DataIO_MDSPlusFieldReader {
 	global $this-treeName
 	global $this-shotNumber
 	global $this-sliceNumber
+	global $this-sliceRange
+	global $this-sliceStart
+	global $this-sliceStop
 
 	global $this-bPressure
 	global $this-bBField
@@ -41,6 +44,9 @@ itcl_class Fusion_DataIO_MDSPlusFieldReader {
 	set $this-treeName "NIMROD"
 	set $this-shotNumber "10089"
 	set $this-sliceNumber "0"
+	set $this-sliceRange 0
+	set $this-sliceStart 0
+	set $this-sliceStop 0
 
 	set $this-bPressure 0
 	set $this-bBField 0
@@ -56,6 +62,9 @@ itcl_class Fusion_DataIO_MDSPlusFieldReader {
 	global $this-treeName
 	global $this-shotNumber
 	global $this-sliceNumber
+	global $this-sliceRange
+	global $this-sliceStart
+	global $this-sliceStop
 
 	global $this-bPressure
 	global $this-bBField
@@ -77,6 +86,16 @@ itcl_class Fusion_DataIO_MDSPlusFieldReader {
 	labelEntry $w.tree   "Tree"   $this-treeName
 	labelEntry $w.shot   "Shot"   $this-shotNumber
 	labelEntry $w.slice  "Slice"  $this-sliceNumber
+
+	frame $w.range
+
+	checkbutton $w.range.check -text "Range" -variable $this-sliceRange
+	pack $w.range.check -side left
+
+	labelEntry $w.range.start "Start" $this-sliceStart
+	labelEntry $w.range.stop  "Stop"  $this-sliceStop
+
+	pack $w.range.start $w.range.stop  -side top
 
 
 	frame $w.space
@@ -110,7 +129,7 @@ itcl_class Fusion_DataIO_MDSPlusFieldReader {
 	pack $w.check.cb3 -side left -padx 25
 	pack $w.check.cb4 -side left -padx 25
 
-	pack $w.space $w.mode $w.check -padx 10 -pady 10
+	pack $w.range $w.space $w.mode $w.check -padx 10 -pady 10
 
 	button $w.button -text "Download" -command "$this-c needexecute"
 
@@ -127,8 +146,3 @@ itcl_class Fusion_DataIO_MDSPlusFieldReader {
 	pack $win.e -padx 5 -side left
     }
 }
-
-
-
-
-
