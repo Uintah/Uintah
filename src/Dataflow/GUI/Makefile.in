@@ -4,6 +4,8 @@ OBJTOP   = ../..
 
 include $(OBJTOP)/scripts/targets.mk
 
+VPATH = $(SRCDIR)
+
 all:: tclIndex
 
 tclIndex : ArrowWidget.tcl BaseWidget.tcl BoxWidget.tcl \
@@ -12,5 +14,5 @@ tclIndex : ArrowWidget.tcl BaseWidget.tcl BoxWidget.tcl \
 	   PathWidget.tcl PointWidget.tcl RingWidget.tcl ScaledBoxWidget.tcl \
 	   ScaledFrameWidget.tcl ViewWidget.tcl defaults.tcl devices.tcl \
 	   platformSpecific.tcl
-	$(SRCTOP)/scripts/createTclIndex
+	$(SRCTOP)/scripts/createTclIndex $(SRCDIR)
 
