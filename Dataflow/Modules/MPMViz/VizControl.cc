@@ -32,9 +32,8 @@ LOG
 
 #include <Uintah/Datatypes/Particles/MPVizParticleSet.h>
 #include <Uintah/Datatypes/Particles/MPParticleGridReader.h>
+#include <Uintah/Datatypes/Particles/MFMPParticleGridReader.h>
 #include "VizControl.h"
-
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <iostream> 
 #include <sstream>
@@ -103,14 +102,31 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
     args.result( result );
   } else if( args[1] == "getParticleSetNames"){
     if(args.count() != 2 ) {
+      cerr<< "#args = "<< args.count() << endl;
       args.error("VizControl--getParticleSetNames");
       return;
     }
+
+    cerr << "I made it here \n";
     if(pgrh.get_rep() == 0){
+      args.result("");
       return;
     }
     if( MPParticleGridReader* mppgr =
 	dynamic_cast<MPParticleGridReader*> (pgrh.get_rep())){
+      result = "";
+      for(i = 0; i < mppgr->GetNParticleSets(); i++){
+	ParticleSetHandle  psh = mppgr->GetParticleSet( i );
+	if(MPVizParticleSet* mpvps =
+	   dynamic_cast<MPVizParticleSet*> (psh.get_rep())){
+	  result += mpvps->getName();
+	}
+	if(i < mppgr->GetNParticleSets()-1) result += clString(" ");
+      }
+      std::cerr<<"     result = "<< result<<endl;
+      args.result( result );
+    } else if ( MFMPParticleGridReader* mppgr =
+	dynamic_cast<MFMPParticleGridReader*> (pgrh.get_rep())){
       result = "";
       for(i = 0; i < mppgr->GetNParticleSets(); i++){
 	ParticleSetHandle  psh = mppgr->GetParticleSet( i );
@@ -133,11 +149,34 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
     }
     
     if(pgrh.get_rep() == 0){
+      args.result("");
       return;
     }
     clString name = args[2];
     if( MPParticleGridReader* pgr =
 	dynamic_cast<MPParticleGridReader *> (pgrh.get_rep()) ){
+      Array1<clString> vars;
+      for(i = 0; i < pgr->GetNParticleSets(); i++){
+	ParticleSetHandle  psh = pgr->GetParticleSet( i );
+	if(MPVizParticleSet* ps =
+	   dynamic_cast<MPVizParticleSet*> (psh.get_rep())){
+	  if(ps->getName() == name){
+	    ps->list_scalars( vars );
+	    if ( vars.size() > 0)
+	      result = vars[0];
+	    for( j = 1; j < vars.size(); j++){
+	      result += clString( " " + vars[j]);
+	    }
+	    std::cerr<<"     result = "<<result<<endl;
+	    args.result( result );
+	    break;
+	  }
+	}
+      }
+      if( i == pgr->GetNParticleSets() )
+	args.error("VizControl--getParticleSetScalarNames--varname does not exist");
+    } else if( MFMPParticleGridReader* pgr =
+	dynamic_cast<MFMPParticleGridReader *> (pgrh.get_rep()) ){
       Array1<clString> vars;
       for(i = 0; i < pgr->GetNParticleSets(); i++){
 	ParticleSetHandle  psh = pgr->GetParticleSet( i );
@@ -165,6 +204,7 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
       return;
     }
     if(pgrh.get_rep() == 0){
+      args.result("");
       return;
     }
     clString name = args[2];
@@ -190,7 +230,30 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	if( i == pgr->GetNParticleSets() )
 	  args.error("VizControl--getParticleSetScalarNames: varname does not exist");
       }
+    }  else if( MFMPParticleGridReader* pgr = 
+		dynamic_cast<MFMPParticleGridReader *> (pgrh.get_rep()) ){
+      Array1<clString> vars;
+      for(i = 0; i < pgr->GetNParticleSets(); i++){
+	ParticleSetHandle  psh = pgr->GetParticleSet( i );
+	if(MPVizParticleSet* ps =
+	   dynamic_cast<MPVizParticleSet*> (psh.get_rep())){
+	  if(ps->getName() == name){
+	    ps->list_vectors( vars );
+	    result = "";
+	    if ( vars.size() > 1)
+	      result = vars[1];
+	    for( j = 2; j < vars.size(); j++){
+	      result += clString( " " + vars[j]);
+	    }
+	    std::cerr<<"     result = "<<result<<endl;
+	    args.result( result );
+	  }
+	}
+	if( i == pgr->GetNParticleSets() )
+	  args.error("VizControl--getParticleSetScalarNames: varname does not exist");
+      }
     }  
+
   } else if( args[1] == "getGridScalarNames"){
     if(args.count() != 3 ) {
       args.error("VizControl--getGridScalarNames");
@@ -202,6 +265,28 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
     clString name = args[2];
     if( MPParticleGridReader* pgr =
 	dynamic_cast<MPParticleGridReader*> (pgrh.get_rep()) ){
+      Array1<clString> vars;
+
+      for(i = 0; i < pgr->GetNGrids(); i++){
+	if(pgr->GetGrid( i )->getName() == name){
+	  pgr->GetGrid( i )->getScalarNames( vars );
+	  result = "";
+	  if ( vars.size() > 0)
+	    result = vars[0];
+	  for( j = 1; j < vars.size(); j++){
+	    result += clString( " " + vars[j]);
+
+	  }
+
+	  std::cerr<<"     result = "<<result<<endl;
+
+	  args.result( result );
+	}
+	if( i == pgr->GetNGrids() )
+	  args.error("VizControl--getGridScalarNames: varname does not exist");
+      }
+    } else if( MFMPParticleGridReader* pgr =
+	dynamic_cast<MFMPParticleGridReader*> (pgrh.get_rep()) ){
       Array1<clString> vars;
 
       for(i = 0; i < pgr->GetNGrids(); i++){
@@ -234,6 +319,25 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
     clString name = args[2];
     if( MPParticleGridReader* pgr = 
 	dynamic_cast<MPParticleGridReader*> (pgrh.get_rep()) ){
+      Array1<clString> vars;
+      for(i = 0; i < pgr->GetNGrids(); i++){
+	if(pgr->GetGrid( i )->getName() == name){
+	  pgr->GetGrid( i )->getVectorNames( vars );
+	  cerr<<"vars size = "<<vars.size()<<endl;
+	  result = "";
+	  if ( vars.size() > 0)
+	    result = vars[0];
+	  for( j = 1; j < vars.size(); j++){
+	    result += clString( " " + vars[j]);
+	  }
+	  std::cerr<<"     result = "<<result<<endl;
+	  args.result( result );
+	}
+	if( i == pgr->GetNGrids() )
+	  args.error("VizControl--getGridVectorNames: varname does not exist");
+      }
+    } else if( MFMPParticleGridReader* pgr = 
+	dynamic_cast<MFMPParticleGridReader*> (pgrh.get_rep()) ){
       Array1<clString> vars;
       for(i = 0; i < pgr->GetNGrids(); i++){
 	if(pgr->GetGrid( i )->getName() == name){
@@ -485,6 +589,7 @@ void VizControl::execute()
 
    ParticleGridReaderHandle handle;
    if(!in->get(handle)){
+     std::cerr<<"Didn't get a handle\n";
      return;
    }
   
