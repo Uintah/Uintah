@@ -75,8 +75,14 @@ WARNING
 					  int step, int nsteps);
      virtual void scheduleCoarsen(const LevelP& coarseLevel, 
 				  SchedulerP& scheduler);
+
+     /// Schedule to mark flags for AMR regridding
      virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
 					SchedulerP& sched);
+
+     /// Schedule to mark initial flags for AMR regridding
+     virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
+                                               SchedulerP& sched);
 
      // Redo a timestep if current time advance is not converging.
      // Returned time is the new dt to use.

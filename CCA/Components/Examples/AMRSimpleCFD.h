@@ -23,6 +23,8 @@ namespace Uintah {
 
     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
 				       SchedulerP& sched);
+    virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
+                                              SchedulerP& sched);
   protected:
     virtual void refineBoundaries(const Patch* patch,
 				  CCVariable<double>& val,
@@ -68,7 +70,7 @@ namespace Uintah {
     void errorEstimate(const ProcessorGroup*,
 		       const PatchSubset* patches,
 		       const MaterialSubset* matls,
-		       DataWarehouse*, DataWarehouse* new_dw);
+		       DataWarehouse*, DataWarehouse* new_dw, bool initial);
     AMRSimpleCFD(const AMRSimpleCFD&);
     AMRSimpleCFD& operator=(const AMRSimpleCFD&);
 

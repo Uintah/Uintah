@@ -45,6 +45,12 @@ void SimulationInterface::scheduleErrorEstimate(const LevelP&,
   throw InternalError("scheduleErrorEstimate not implemented for this component");
 }
 
+void SimulationInterface::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
+                                                       SchedulerP& sched)
+{
+  throw InternalError("scheduleErrorEstimate not implemented for this component");
+}
+
 double SimulationInterface::recomputeTimestep(double)
 {
   throw InternalError("recomputeTimestep not implemented for this component");
