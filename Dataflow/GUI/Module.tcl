@@ -665,6 +665,11 @@ proc regenModuleMenu { modid menu_id } {
 
     # 'Destroy' module Menu Option
     $menu_id add command -label "Destroy" -command "moduleDestroy $modid"
+
+    # 'Duplicate' module Menu Option
+    if { ![$modid is_subnet] } {
+	$menu_id add command -label "Duplicate" -command "moduleDuplicate $modid"
+    }
     
     # 'Show Log' module Menu Option
     if {![$modid is_subnet]} {
@@ -1194,8 +1199,6 @@ proc moduleDestroy {modid} {
     array unset Disabled $modid
     array unset Notes $modid*
 
-
-
     $modid delete
     if { ![isaSubnetIcon $modid] } {
 	after 500 "netedit deletemodule $modid"
@@ -1206,6 +1209,26 @@ proc moduleDestroy {modid} {
 	destroy .ui$modid
     }
 }
+
+proc moduleDuplicate { module } {
+    global Subnet CurrentlySelectedModules
+    networkHasChanged
+ 
+    set bbox [$Subnet(Subnet$Subnet($module)_canvas) bbox $module]
+    set x [lindex $bbox 0]
+    set y [expr 20 + [lindex $bbox 3]]
+
+    set newmodule [eval addModuleAtPosition [modulePath $module] $x $y]
+
+    foreach oldvar [uplevel \#0 info vars $module-*] { 
+	set pos [expr [string length $module]-1]
+	set newvar [string replace $oldvar 0 $pos $newmodule]
+	upvar \#0 $oldvar oldval
+	catch "uplevel set \"$newvar\" \{$oldval\}"
+    }
+
+}
+
 
 proc moduleDestroySelected {} {
     global CurrentlySelectedModules 
