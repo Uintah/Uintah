@@ -27,14 +27,8 @@
 */
 
 
-#include <sci_defs/ogl_defs.h>
-
-#if defined(HAVE_GLEW)
-#include <GL/glew.h>
-#else
-#include <GL/gl.h>
+#include <sci_gl.h>
 #include <sci_glu.h>
-#endif
 
 #include <Core/GLVolumeRenderer/GLTexRenState.h>
 

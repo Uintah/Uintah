@@ -42,11 +42,7 @@
 #ifndef GLTexture3DBuilder_h
 #define GLTexture3DBuilder_h
 
-// #if defined( HAVE_GLEW )
-// #include <GL/glew.h>
-// #else
-// #include <GL/gl.h>
-// #endif
+#include <sci_gl.h>
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/GLVolumeRenderer/Brick.h>

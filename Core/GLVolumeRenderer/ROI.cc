@@ -26,15 +26,8 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-#include <sci_defs/ogl_defs.h>
-
-#if defined(HAVE_GLEW)
-#include <GL/glew.h>
-#else
-#include <GL/gl.h>
+#include <sci_gl.h>
 #include <sci_glu.h>
-#endif
 
 #include <Core/GLVolumeRenderer/ROI.h>
 #include <Core/GLVolumeRenderer/ROIIterator.h>

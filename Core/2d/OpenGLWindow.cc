@@ -36,9 +36,7 @@
  */
 
 
-#include <GL/gl.h>
-#include <sci_glu.h>
-#include <GL/glx.h>
+#include <sci_gl.h>
 
 #include <tcl.h>
 #include <tk.h>

@@ -35,7 +35,7 @@
 #include <afxwin.h>
 #define vsnprintf _vsnprintf
 #endif
-#include <GL/gl.h>
+#include <sci_gl.h>
 #include "glprintf.h"
 #include "asciitable.h"
 #include <string.h> /* for strlen() */

@@ -33,8 +33,7 @@
 #ifdef _WIN32
 #include <afxwin.h>
 #endif
-#include <GL/gl.h>
-#include <sci_glu.h>
+#include <sci_gl.h>
 #include <stdio.h>
 
 #define MY_FILTER GL_LINEAR_MIPMAP_LINEAR
