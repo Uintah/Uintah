@@ -45,6 +45,7 @@ SRCS     += \
             $(SRCDIR)/JNIUtils.cc \
             $(SRCDIR)/PTIISCIRun.cc \
             $(SRCDIR)/ptolemy_scirun_SCIRunJNIActor.cc \
+	    $(SRCDIR)/pt_S_scirun.cc \
 #[INSERT NEW CODE FILE HERE]
 #$(SRCDIR)/PTIIJNIUtil.cc \
 
