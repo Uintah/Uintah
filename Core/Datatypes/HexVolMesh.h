@@ -204,9 +204,6 @@ public:
   void get_normal(Vector &/*normal*/, Node::index_type /*index*/) const
   { ASSERTFAIL("not implemented") }
 
-  //! TODO: Remove this function?
-  double get_element_size(const Elem::index_type &ci) {return get_volume(ci);}
-
   void get_random_point(Point &, const Cell::index_type &i, int seed=0) const;
 
   //! the double return val is the volume of the Hex.

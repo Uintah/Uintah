@@ -193,8 +193,6 @@ public:
 
   void get_random_point(Point &, const Face::index_type &, int seed=0) const;
 
-  double get_element_size(const Elem::index_type &fi) { return get_area(fi); }
-
   //! the double return val is the area of the triangle.
   double get_gradient_basis(Face::index_type fi, Vector& g0, Vector& g1,
 			    Vector& g2);
